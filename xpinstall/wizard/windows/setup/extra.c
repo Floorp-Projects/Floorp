@@ -7125,52 +7125,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     wsprintf(sgProduct.szRegPath, "Software\\%s\\%s\\%s", sgProduct.szCompanyName, sgProduct.szProductNameInternal, sgProduct.szUserAgent);
 
   gbRestrictedAccess = VerifyRestrictedAccess();
-  if(gbRestrictedAccess && !gbForceInstall)
-  {
-    // User does not have the appropriate privileges on this system
-    // (-f "force install" option overrides this check)
-    char szTitle[MAX_BUF_TINY];
-    int  iRvMB;
-
-    switch(sgProduct.mode)
-    {
-      case NORMAL:
-        if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "", szBuf, sizeof(szBuf), szFileIniInstall))
-          lstrcpy(szTitle, "Setup");
-        else
-          wsprintf(szTitle, szBuf, sgProduct.szProductName);
-
-        GetPrivateProfileString("Strings", "Message NORMAL Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        iRvMB = MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONEXCLAMATION | MB_DEFBUTTON2);
-
-        // force a local GRE to avoid problems with non-admin installs
-        // but don't override an explicit command-line choice
-        if (sgProduct.greType == GRE_TYPE_NOT_SET)
-          sgProduct.greType = GRE_LOCAL;
-        break;
-
-      case AUTO:
-        ShowMessage(szMsgInitSetup, FALSE);
-        GetPrivateProfileString("Strings", "Message AUTO Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
-        ShowMessage(szBuf, TRUE);
-        Delay(5);
-        ShowMessage(szBuf, FALSE);
-        iRvMB = IDNO;
-        break;
-
-      default:
-        iRvMB = IDNO;
-        break;
-    }
-
-    if(iRvMB == IDNO)
-    {
-      /* User chose not to continue with the lack of
-       * appropriate access privileges */
-      PostQuitMessage(1);
-      return(1);
-    }
-  }
 
   /* get main install path */
   if(LocatePreviousPath("Locate Previous Product Path", szPreviousPath, sizeof(szPreviousPath)) == FALSE)
@@ -7281,6 +7235,51 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   iRv = ParseCommandLine(szMsgInitSetup, lpszCmdLine);
   if(iRv)
     return(iRv);
+
+  if(gbRestrictedAccess && !gbForceInstall)
+  {
+    // User does not have the appropriate privileges on this system
+    // (-f "force install" option overrides this check)
+    char szTitle[MAX_BUF_TINY];
+    int  iRvMB;
+
+    switch(sgProduct.mode)
+    {
+      case NORMAL:
+        if(!GetPrivateProfileString("Messages", "MB_WARNING_STR", "", szBuf, sizeof(szBuf), szFileIniInstall))
+          lstrcpy(szTitle, "Setup");
+        else
+          wsprintf(szTitle, szBuf, sgProduct.szProductName);
+
+        GetPrivateProfileString("Strings", "Message NORMAL Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        iRvMB = MessageBox(hWndMain, szBuf, szTitle, MB_YESNO | MB_ICONEXCLAMATION | MB_DEFBUTTON2);
+
+        /* force a local GRE to avoid problems with non-admin installs */
+        sgProduct.greType = GRE_LOCAL;
+        break;
+
+      case AUTO:
+        ShowMessage(szMsgInitSetup, FALSE);
+        GetPrivateProfileString("Strings", "Message AUTO Restricted Access", "", szBuf, sizeof(szBuf), szFileIniConfig);
+        ShowMessage(szBuf, TRUE);
+        Delay(5);
+        ShowMessage(szBuf, FALSE);
+        iRvMB = IDNO;
+        break;
+
+      default:
+        iRvMB = IDNO;
+        break;
+    }
+
+    if(iRvMB == IDNO)
+    {
+      /* User chose not to continue with the lack of
+       * appropriate access privileges */
+      PostQuitMessage(1);
+      return(1);
+    }
+  }
 
   /* make a copy of sgProduct.szPath to be used in the Setup Type dialog */
   lstrcpy(szTempSetupPath, sgProduct.szPath);
