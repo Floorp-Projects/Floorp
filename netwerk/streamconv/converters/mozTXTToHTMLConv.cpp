@@ -53,9 +53,10 @@ const PRFloat64 growthRate = 1.2;
 // Bug 183111, editor now replaces multiple spaces with leading
 // 0xA0's and a single ending space, so need to treat 0xA0's as spaces.
 // 0xA0 is the Latin1/Unicode character for "non-breaking space (nbsp)"
+// Also recognize the Japanese ideographic space 0x3000 as a space.
 static inline PRBool IsSpace(const PRUnichar aChar)
 {
-  return (nsCRT::IsAsciiSpace(aChar) || aChar == 0xA0);
+  return (nsCRT::IsAsciiSpace(aChar) || aChar == 0xA0 || aChar == 0x3000);
 }
 
 // Escape Char will take ch, escape it and append the result to 
