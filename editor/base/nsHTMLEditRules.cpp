@@ -1050,7 +1050,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
           return NS_OK;  // bail to default
           
         // do not delete across table structures
-        if (mEditor->IsTableElement(leftParent) || mEditor->IsTableElement(rightParent))
+        if (nsHTMLEditUtils::IsTableElement(leftParent) || nsHTMLEditUtils::IsTableElement(rightParent))
         {
           *aCancel = PR_TRUE;
           return NS_OK;
@@ -1159,7 +1159,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
           return NS_OK;  // bail to default
           
         // do not delete across table structures
-        if (mEditor->IsTableElement(leftParent) || mEditor->IsTableElement(rightParent))
+        if (nsHTMLEditUtils::IsTableElement(leftParent) || nsHTMLEditUtils::IsTableElement(rightParent))
         {
           *aCancel = PR_TRUE;
           return NS_OK;
@@ -1197,7 +1197,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
       // Note: do NOT delete table elements this way.
       PRBool bIsEmptyNode;
       res = mEditor->IsEmptyNode(node, &bIsEmptyNode, PR_TRUE, PR_FALSE);
-      if (bIsEmptyNode && !mEditor->IsTableElement(node))
+      if (bIsEmptyNode && !nsHTMLEditUtils::IsTableElement(node))
         nodeToDelete = node;
       else 
       {
@@ -1336,7 +1336,7 @@ nsHTMLEditRules::WillDeleteSelection(nsIDOMSelection *aSelection,
       rightParent = mEditor->GetBlockNodeParent(endNode);
     
     // do not delete across table structures
-    if (mEditor->IsTableElement(leftParent) || mEditor->IsTableElement(rightParent))
+    if (nsHTMLEditUtils::IsTableElement(leftParent) || nsHTMLEditUtils::IsTableElement(rightParent))
     {
       *aCancel = PR_TRUE;
       return NS_OK;
@@ -2346,7 +2346,7 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
     
     // if it's a table element (but not a table), forget any "current" div, and 
     // instead put divs inside any th's and td's inside the table element
-    if (mEditor->IsTableElement(curNode) && !mEditor->IsTable(curNode))
+    if (nsHTMLEditUtils::IsTableElement(curNode) && !nsHTMLEditUtils::IsTable(curNode))
     {
       res = AlignTableElement(curNode, alignType);
       if (NS_FAILED(res)) return res;
@@ -2417,7 +2417,7 @@ nsHTMLEditRules::AlignTableElement(nsIDOMNode *aNode, const nsString *alignType)
     if (NS_FAILED(res)) return res;
     node = do_QueryInterface(content);
     if (!node) return NS_ERROR_FAILURE;
-    if (mEditor->IsTableCell(node))
+    if (nsHTMLEditUtils::IsTableCell(node))
     {
       isupports = do_QueryInterface(node);
       arrayOfNodes->AppendElement(isupports);
@@ -2514,7 +2514,7 @@ nsHTMLEditRules::GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOf
   {
     if (  ( aList && (nsHTMLEditUtils::IsList(node)     || 
                       nsHTMLEditUtils::IsListItem(node) ) )
-       || ( aTbl && mEditor->IsTableElement(node) )  )
+       || ( aTbl && nsHTMLEditUtils::IsTableElement(node) )  )
     {
       res = GetInnerContent(node, outArrayOfNodes, aList, aTbl);
       if (NS_FAILED(res)) return res;
@@ -3096,7 +3096,7 @@ nsHTMLEditRules::GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes,
     
     // scan for table elements.  If we find table elements other than table,
     // replace it with a list of any editable non-table content.
-    if (mEditor->IsTableElement(testNode) && !mEditor->IsTable(testNode))
+    if (nsHTMLEditUtils::IsTableElement(testNode) && !nsHTMLEditUtils::IsTable(testNode))
     {
       (*outArrayOfNodes)->RemoveElementAt(i);
       res = GetInnerContent(testNode, *outArrayOfNodes, PR_FALSE);
@@ -3166,7 +3166,7 @@ nsHTMLEditRules::GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfN
     
     // scan for table elements.  If we find table elements other than table,
     // replace it with a list of any editable non-table content.  Ditto for list elements.
-    if (mEditor->IsTableElement(testNode) ||
+    if (nsHTMLEditUtils::IsTableElement(testNode) ||
         nsHTMLEditUtils::IsList(testNode) || 
         nsHTMLEditUtils::IsListItem(testNode) )
     {
@@ -3709,7 +3709,7 @@ nsHTMLEditRules::ShouldMakeEmptyBlock(nsIDOMSelection *aSelection,
     if (NS_FAILED(res)) return res;
     
     // is selection point in the body? or a cell?
-    if (nsHTMLEditUtils::IsBody(parent) || mEditor->IsTableCell(parent))
+    if (nsHTMLEditUtils::IsBody(parent) || nsHTMLEditUtils::IsTableCellOrCaption(parent))
     {
       *outMakeEmpty = PR_TRUE;
       return res;
@@ -3816,7 +3816,7 @@ nsHTMLEditRules::MakeBlockquote(nsISupportsArray *arrayOfNodes)
     if (NS_FAILED(res)) return res;
 
     // if the node is a table element or list item, dive inside
-    if ( (mEditor->IsTableElement(curNode) && !(mEditor->IsTable(curNode))) || 
+    if ( (nsHTMLEditUtils::IsTableElement(curNode) && !(nsHTMLEditUtils::IsTable(curNode))) || 
          nsHTMLEditUtils::IsListItem(curNode) )
     {
       curBlock = 0;  // forget any previous block
@@ -4234,7 +4234,7 @@ nsHTMLEditRules::AdjustSpecialBreaks(PRBool aSafeToAskFrames)
     res = mEditor->IsEmptyNode(node, &bIsEmptyNode, PR_FALSE, PR_FALSE, aSafeToAskFrames);
     if (NS_FAILED(res)) return res;
     if (bIsEmptyNode
-        && (nsHTMLEditUtils::IsListItem(node) || mEditor->IsTableCell(node)))
+        && (nsHTMLEditUtils::IsListItem(node) || nsHTMLEditUtils::IsTableCellOrCaption(node)))
     {
       isupports = do_QueryInterface(node);
       arrayOfNodes->AppendElement(isupports);
@@ -4541,7 +4541,7 @@ nsHTMLEditRules::InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2
 
   nsCOMPtr<nsIDOMNode> tn1, tn2, node = aNode1, temp;
   
-  while (node && !mEditor->IsTableElement(node))
+  while (node && !nsHTMLEditUtils::IsTableElement(node))
   {
     node->GetParentNode(getter_AddRefs(temp));
     node = temp;
@@ -4549,7 +4549,7 @@ nsHTMLEditRules::InDifferentTableElements(nsIDOMNode *aNode1, nsIDOMNode *aNode2
   tn1 = node;
   
   node = aNode2;
-  while (node && !mEditor->IsTableElement(node))
+  while (node && !nsHTMLEditUtils::IsTableElement(node))
   {
     node->GetParentNode(getter_AddRefs(temp));
     node = temp;

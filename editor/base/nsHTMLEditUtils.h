@@ -46,7 +46,9 @@ public:
   static PRBool IsListItem(nsIDOMNode *aNode);
   static PRBool IsTable(nsIDOMNode *aNode);
   static PRBool IsTableRow(nsIDOMNode *aNode);
+  static PRBool IsTableElement(nsIDOMNode *aNode);
   static PRBool IsTableCell(nsIDOMNode *aNode);
+  static PRBool IsTableCellOrCaption(nsIDOMNode *aNode);
   static PRBool IsList(nsIDOMNode *aNode);
   static PRBool IsOrderedList(nsIDOMNode *aNode);
   static PRBool IsUnorderedList(nsIDOMNode *aNode);

@@ -442,9 +442,6 @@ protected:
 
   NS_IMETHOD IsSubordinateBlock(nsString &aTag, PRBool &aIsTag);
 
-  static PRBool IsTable(nsIDOMNode *aNode);
-  static PRBool IsTableCell(nsIDOMNode *aNode);
-  static PRBool IsTableElement(nsIDOMNode *aNode);
   static nsCOMPtr<nsIDOMNode> GetEnclosingTable(nsIDOMNode *aNode);
 
   /** content-based query returns PR_TRUE if <aProperty aAttribute=aValue> effects aNode

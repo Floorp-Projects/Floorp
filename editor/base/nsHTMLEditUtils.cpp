@@ -234,6 +234,26 @@ nsHTMLEditUtils::IsListItem(nsIDOMNode *node)
 
 
 ///////////////////////////////////////////////////////////////////////////
+// IsTableElement: true if node an html table, td, tr, ...
+//                  
+PRBool 
+nsHTMLEditUtils::IsTableElement(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null node passed to nsHTMLEditor::IsTableElement");
+  nsAutoString tagName;
+  nsEditor::GetTagString(node,tagName);
+  if (tagName.EqualsWithConversion("table") || tagName.EqualsWithConversion("tr") || 
+      tagName.EqualsWithConversion("td")    || tagName.EqualsWithConversion("th") ||
+      tagName.EqualsWithConversion("thead") || tagName.EqualsWithConversion("tfoot") ||
+      tagName.EqualsWithConversion("tbody") || tagName.EqualsWithConversion("caption"))
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
 // IsTable: true if node an html table
 //                  
 PRBool 
@@ -277,6 +297,26 @@ nsHTMLEditUtils::IsTableCell(nsIDOMNode *node)
   nsEditor::GetTagString(node,tag);
   tag.ToLowerCase();
   if (tag.EqualsWithConversion("td") || tag.EqualsWithConversion("th"))
+  {
+    return PR_TRUE;
+  }
+  return PR_FALSE;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsTableCell: true if node an html td or th
+//                  
+PRBool 
+nsHTMLEditUtils::IsTableCellOrCaption(nsIDOMNode *node)
+{
+  NS_PRECONDITION(node, "null parent passed to nsHTMLEditUtils::IsTableCell");
+  nsAutoString tag;
+  nsEditor::GetTagString(node,tag);
+  tag.ToLowerCase();
+  if (tag.EqualsWithConversion("td") || 
+      tag.EqualsWithConversion("th") ||
+      tag.EqualsWithConversion("caption") )
   {
     return PR_TRUE;
   }
