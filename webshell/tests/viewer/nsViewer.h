@@ -35,7 +35,7 @@
 #define WIDGET_DLL "libwidgetunix.so"
 #define GFXWIN_DLL "libgfxunix.so"
 #define VIEW_DLL   "libraptorview.so"
-#define WEB_DLL    "libraptorweb.so"
+#define WEB_DLL    "libraptorwebwidget.so"
 #endif
 
 #define MAXPATHLEN 1024
