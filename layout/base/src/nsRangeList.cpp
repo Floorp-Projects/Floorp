@@ -232,7 +232,7 @@ private:
   nsDOMSelection *mDomSelections[NUM_SELECTIONTYPES];
 
   //batching
-  PRUint32 mBatching;
+  PRInt32 mBatching;
   PRBool mChangesDuringBatching;
   PRBool mNotifyFrames;
   
@@ -1184,7 +1184,7 @@ nsDOMSelection::~nsDOMSelection()
   PRUint32 cnt = 0;
   nsresult rv = mRangeArray->Count(&cnt);
   NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
-  PRInt32 j;
+  PRUint32 j;
   for (j=0; j<cnt; j++)
 	{
 	  mRangeArray->RemoveElementAt(0);
@@ -1217,12 +1217,16 @@ nsDOMSelection::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(nsIEnumerator::GetIID())) {
     nsRangeListIterator *iter = new nsRangeListIterator(this);
+    if (!iter)
+       return NS_ERROR_OUT_OF_MEMORY;
     *aInstancePtr = (void*) (nsIEnumerator *) iter;
     NS_ADDREF_THIS();
     return NS_OK;
   }
   if (aIID.Equals(nsIBidirectionalEnumerator::GetIID())) {
     nsRangeListIterator *iter = new nsRangeListIterator(this);
+    if (!iter)
+       return NS_ERROR_OUT_OF_MEMORY;
     *aInstancePtr = (void*) (nsIBidirectionalEnumerator *) iter;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -1648,6 +1652,7 @@ nsDOMSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PR
             endOffset > aContentOffset){
           if (!details){
             details = new SelectionDetails;
+
             newDetails = details;
           }
           else{
