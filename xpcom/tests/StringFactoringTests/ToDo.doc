@@ -2,10 +2,10 @@
 
   - Decide: do I really want to define |Equals| (i.e., so many extra signatures)
 
-  - Make |ns[C]String| rename its converting operations to, e.g., |EqualsWithConversion|,
+  . Make |ns[C]String| rename its converting operations to, e.g., |EqualsWithConversion|,
     |AssignWithConversion|, |CompareWithConversion|, |AppendWithConversion|, etc.
 
-  - Bring |Equals| and |Compare| into scope
+  . Bring |Equals| and |Compare| into scope
 
   . Implement chunky iterators
 
@@ -34,7 +34,7 @@
 
   - Add tests for the shared string smart pointer
 
-  - Implement the shared string smart pointer
+  . Implement the shared string smart pointer
 
   . Figure out why StdStringWrapper isn't as good as raw std::string
 
