@@ -32,11 +32,17 @@
   1) factoring code with nsXMLContentSink - There's some amount of
      common code between this and the HTML content sink. This will
      increase as we support more and more HTML elements. How can code
-     from the code be factored?
+     from XML/HTML be factored?
 
   TO DO ------------------------
 
   1) Make sure all shortcut syntax works right.
+
+  2) Implement default namespaces. Take a look at how nsIXMLDocument
+     does namespaces: should we storing tag/namespace pairs instead of
+     the entire URI in the elements?
+
+  3) Write a test harness.
 
 */
 
