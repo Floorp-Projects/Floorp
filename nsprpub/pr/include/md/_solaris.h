@@ -111,7 +111,9 @@
 #define _PR_HAVE_GETIPNODEBYADDR
 #define _PR_INET6_PROBE
 #define _PR_ACCEPT_INHERIT_NONBLOCK
-#ifndef _PR_INET6
+#ifdef _PR_INET6
+#define _PR_HAVE_INET_NTOP
+#else
 #define AF_INET6 26
 #define AI_V4MAPPED 0x0001 
 #define AI_ALL      0x0002
