@@ -131,17 +131,19 @@ nsXBLSpecialDocInfo::GetHandlers(nsIXBLDocumentInfo* aInfo,
     nsCOMPtr<nsIDocument> doc;
     aInfo->GetDocument(getter_AddRefs(doc));
     nsCOMPtr<nsIContent> root = getter_AddRefs(doc->GetRootContent());
-    PRInt32 childCount;
-    root->ChildCount(childCount);
-    for (PRInt32 i = 0; i < childCount; i++) {
-      nsCOMPtr<nsIContent> child;
-      root->ChildAt(i, *getter_AddRefs(child));
-      nsAutoString id;
-      child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
-      if (id.EqualsWithConversion(nsPromiseFlatCString(aRef))) {
-        NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
-        aInfo->SetPrototypeBinding(aRef, binding);
-        break;
+    if (root) { // no root, no handlers. don't crash please.
+      PRInt32 childCount;
+      root->ChildCount(childCount);
+      for (PRInt32 i = 0; i < childCount; i++) {
+        nsCOMPtr<nsIContent> child;
+        root->ChildAt(i, *getter_AddRefs(child));
+        nsAutoString id;
+        child->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
+        if (id.EqualsWithConversion(nsPromiseFlatCString(aRef))) {
+          NS_NewXBLPrototypeBinding(aRef, child, aInfo, getter_AddRefs(binding));
+          aInfo->SetPrototypeBinding(aRef, binding);
+          break;
+        }
       }
     }
   }
