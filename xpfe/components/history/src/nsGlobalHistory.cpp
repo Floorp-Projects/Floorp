@@ -2783,8 +2783,6 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
   if (NS_SUCCEEDED(rv))
     rv = dayArray->AppendElement(finduri);
 
-  PRUint32 arraylength;
-  dayArray->Count(&arraylength);
   return NS_NewArrayEnumerator(aResult, dayArray);
 }
 
