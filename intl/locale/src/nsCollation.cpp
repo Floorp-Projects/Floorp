@@ -162,6 +162,31 @@ PRInt32 nsCollation::CompareRawSortKey(const PRUint8* key1, const PRUint32 len1,
   return result;
 }
 
+nsresult nsCollation::CreateASCIISortKey(nsICollation *inst, const nsCollationStrength strength, 
+                                         const PRUnichar* stringIn, char* key, PRUint32 *outLen)
+{
+  NS_ENSURE_ARG_POINTER(stringIn);
+  NS_ENSURE_ARG_POINTER(key);
+
+  // ASCII key is twice as large as the original raw key.
+  // In order to avoid overrun the raw data while encoding,
+  // place the raw key at higher address in the buffer
+  // then place encoded data from begining of the buffer.
+  NS_ASSERTION(!(*outLen % 2), "the key length should be even");
+  PRUint8 *rawKey = (PRUint8 *)key + (*outLen / 2);
+  nsresult rv = inst->CreateRawSortKey(strength, nsDependentString(stringIn), rawKey, outLen);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  const char* hexChars = "0123456789ABCDEF";
+  for (PRUint32 i = 0; i < *outLen; i++) {
+    *key++ = hexChars[*rawKey >> 4];
+    *key++ = hexChars[*rawKey & 0x0f];
+    rawKey++;
+  }
+
+  return rv;
+}
+
 nsresult nsCollation::NormalizeString(const nsAString& stringIn, nsAString& stringOut)
 {
   if (!mCaseConversion) {
