@@ -579,13 +579,19 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
   // we need to make sure we call ::Show/HideWindow() to generate the 
   // necessary activate/deactivate events. Calling ::ShowHide() is
   // not adequate, unless we don't want activation (popups). (pinkerton).
-  if ( bState && !mBounds.IsEmpty() ) {
+  //
+  // [ we're still tinkering with the bit commented out below. it causes
+  //   problems on osX, but breaks the classic build by not allowing the
+  //   hidden window to be seen by FrontWindow(). We'll fix this later, but
+  //   want to get the trunk back to normalcy. See bug 
+  //     http://bugzilla.mozilla.org/show_bug.cgi?id=70388
+  //   for details (pinkerton) ]
+  if ( bState /* && !mBounds.IsEmpty() */ ) {
     if ( mAcceptsActivation )
       ::ShowWindow(mWindowPtr);
     else {
       ::ShowHide(mWindowPtr, true);
       ::BringToFront(mWindowPtr); // competes with ComeToFront, but makes popups work
-      //::SendBehind(::FrontWindow(), mWindowPtr);
     }
     if (mZoomOnShow) {
       PRInt32 sizemode;
