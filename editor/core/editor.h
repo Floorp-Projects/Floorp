@@ -16,6 +16,7 @@
  * Reserved.
  */
 
+#include "prmon.h"
 #include "nsIEditor.h"
 #include "nsIContextLoader.h"
 #include "COM_auto_ptr.h"
