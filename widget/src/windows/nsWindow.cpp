@@ -4989,7 +4989,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       mIMECompUnicode->SetCapacity((compStrLen / sizeof(WCHAR))+1);
 
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext, GCS_RESULTSTR,
-        (LPVOID)mIMECompUnicode->get(), mIMECompString->mCapacity, compStrLen);
+        (LPVOID)mIMECompUnicode->get(), (mIMECompString->mCapacity * sizeof(WCHAR)), compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
       ((PRUnichar*)mIMECompUnicode->get())[compStrLen] = '\0';
       mIMECompUnicode->mLength = compStrLen;
@@ -5127,7 +5127,7 @@ BOOL nsWindow::OnIMEComposition(LPARAM  aGCS)
       NS_IMM_GETCOMPOSITIONSTRINGW(hIMEContext,
         GCS_COMPSTR,
         (LPVOID)mIMECompUnicode->get(),
-        mIMECompUnicode->mCapacity, compStrLen);
+        (mIMECompUnicode->mCapacity * sizeof(WCHAR)), compStrLen);
       compStrLen = compStrLen / sizeof(WCHAR);
       ((PRUnichar*)mIMECompUnicode->get())[compStrLen] = '\0';
       mIMECompUnicode->mLength = compStrLen;
