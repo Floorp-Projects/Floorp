@@ -251,7 +251,7 @@ nsJVMManager::PostEvent(PRUint32 threadID, nsIRunnable* runnable, PRBool async)
 			if (async)
 				eventQueue->PostEvent(runnableEvent);
 			else
-				eventQueue->PostSynchronousEvent(runnableEvent);
+				eventQueue->PostSynchronousEvent(runnableEvent, nsnull);
 		}
 		NS_IF_RELEASE(eventQueue);
 	}
