@@ -531,10 +531,10 @@ void HTMLAttributesImpl::List(FILE* out, PRInt32 aIndent) const
   nsString buffer;
 
   while (nsnull != attr) {
-    fputs("\n", out);
     for (PRInt32 index = aIndent; --index >= 0; ) fputs("  ", out);
     attr->ToString(buffer);
     fputs(buffer, out);
+    fputs("\n", out);
     attr = attr->mNext;
   }
 }
