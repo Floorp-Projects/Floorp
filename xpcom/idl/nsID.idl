@@ -16,31 +16,21 @@
  * Reserved.
  */
 
-#include "nsID.idl"
-%{C++
-#include "nsDebug.h"
-#include "nsTraceRefcnt.h"
-#include "nsID.h"
-#include "nsIID.h"
-#include "nsError.h"
-
-#include "nsISupportsUtils.h"
-%}
-
-native nsQIResult(void *);
-native voidStar(void*);
-native voidStarRef(void**);
-native nsCIDRef(nsCID&);
-native nsIIDRef(nsIID&);
-
-typedef unsigned long   nsrefcnt;
-
-[
- object,
-	uuid(00000000-0000-0000-c000-000000000046)
-]
-interface nsISupports {
-  void QueryInterface(in nsIID uuid, out nsQIResult result);
-  [notxpcom] void AddRef();
-  [notxpcom] void Release();
+/* declare nsID in IDL */
+/*
+struct nsID {
+  unsigned long m0;
+  unsigned short m1;
+  unsigned short m2;
+  unsigned short m3[8];
 };
+typedef nsID nsIID;
+typedef nsID nsCID;
+*/
+
+/* the above doesn't make nsID/nsIID/nsCID pass by reference in
+ * method calls so we make these fake interfaces:
+ */
+interface nsID {};
+interface nsIID {};
+interface nsCID {};
