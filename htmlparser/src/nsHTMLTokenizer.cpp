@@ -504,7 +504,10 @@ nsresult nsHTMLTokenizer::ConsumeTag(PRUnichar aChar,CToken*& aToken,nsScanner& 
 
         result=aScanner.Peek(theNextChar, 1);
         if(NS_OK==result) {
-          if(nsCRT::IsAsciiAlpha(theNextChar)||(kGreaterThan==theNextChar)) {
+          // xml allow non ASCII tag name, consume as end tag. need to make xml view source work
+          PRBool isXML=((eXMLText==mDocType) || (eXHTMLText==mDocType));
+          if(nsCRT::IsAsciiAlpha(theNextChar)||(kGreaterThan==theNextChar)|| 
+             (isXML && (! nsCRT::IsAscii(theNextChar)))) { 
             result=ConsumeEndTag(aChar,aToken,aScanner);
           }
           else result=ConsumeComment(aChar,aToken,aScanner);
