@@ -160,6 +160,10 @@ CPPSRCS += nsNativeAppSupportBase.cpp
 RESFILE = splashos2.res
 endif
 
+ifeq ($(MOZ_WIDGET_TOOLKIT),mac)
+LIBS	+= $(TK_LIBS)
+endif
+
 ifeq ($(MOZ_WIDGET_TOOLKIT),gtk)
 SPLASH_XPM = $(srcdir)/splash.xpm
 CPPSRCS += nsNativeAppSupportGtk.cpp \
