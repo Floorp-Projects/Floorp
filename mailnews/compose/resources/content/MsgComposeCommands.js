@@ -55,6 +55,7 @@ var msgWindow = Components.classes["@mozilla.org/messenger/msgwindow;1"].createI
 /**
  * Global variables, need to be re-initialized every time mostly because we need to release them when the window close
  */
+var gHideMenus;
 var gMsgCompose;
 var gAccountManager;
 var gIOService;
@@ -129,7 +130,7 @@ function InitializeGlobalVariables()
   gCharsetTitle = null;
   gCharsetConvertManager = Components.classes['@mozilla.org/charset-converter-manager;1'].getService(Components.interfaces.nsICharsetConverterManager2);
   gMailSession = Components.classes["@mozilla.org/messenger/services/session;1"].getService(Components.interfaces.nsIMsgMailSession);
-
+  gHideMenus = false;
   // We are storing the value of the bool logComposePerformance inorder to avoid logging unnecessarily.
   if (sMsgComposeService)
     gLogComposePerformance = sMsgComposeService.logComposePerformance;
@@ -201,6 +202,16 @@ var gComposeRecyclingListener = {
     //Reset menu options
     document.getElementById("format_auto").setAttribute("checked", "true");
     document.getElementById("priority_normal").setAttribute("checked", "true");
+
+    //Reset toolbars that could be hidden
+    if (gHideMenus) {
+      document.getElementById("formatMenu").hidden = false;
+      document.getElementById("insertMenu").hidden = false;
+      var showFormat = document.getElementById("menu_showFormatToolbar")
+      showFormat.hidden = false;
+      if (showFormat.getAttribute("checked") == "true")
+        document.getElementById("FormatToolbar").hidden = false;
+    }
 
     //Reset editor
     EditorResetFontAndColorAttributes();
@@ -1914,11 +1925,11 @@ function OutputFormatMenuSelect(target)
         case "format_html":  gSendFormat = nsIMsgCompSendFormat.HTML;        break;
         case "format_both":  gSendFormat = nsIMsgCompSendFormat.Both;        break;
       }
-    var hideMenus = (gSendFormat == nsIMsgCompSendFormat.PlainText);
-    format_menubar.hidden = hideMenus;
-    insert_menubar.hidden = hideMenus;
-    show_menuitem.hidden = hideMenus;
-    toolbar.hidden = hideMenus ||
+    gHideMenus = (gSendFormat == nsIMsgCompSendFormat.PlainText);
+    format_menubar.hidden = gHideMenus;
+    insert_menubar.hidden = gHideMenus;
+    show_menuitem.hidden = gHideMenus;
+    toolbar.hidden = gHideMenus ||
       (show_menuitem.getAttribute("checked") == "false");
   }
 }
