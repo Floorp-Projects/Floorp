@@ -45,7 +45,8 @@ class StringTable {
     public String intern(String str) {
         String result = (String) strings.get(str);
         if (result == null) {
-            result = str;
+            // copy the string, to trim to minimum size.
+            result = str = new String(str);
             strings.put(str, str);
         }
         return result;
