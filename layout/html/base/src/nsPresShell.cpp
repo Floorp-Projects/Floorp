@@ -1342,13 +1342,16 @@ struct CantRenderReplacedElementEvent : public PLEvent {
   ~CantRenderReplacedElementEvent();
 
   PresShell* mShell;
-  nsIFrame*  mFrame;
+  nsIContent*  mContent; // using content rather than frame, see bug #3605
 };
 
 static void PR_CALLBACK
 HandlePLEvent(CantRenderReplacedElementEvent* aEvent)
 {
-  aEvent->mShell->HandleCantRenderReplacedElementEvent(aEvent->mFrame);
+  nsIFrame* frame;
+  if (NS_SUCCEEDED(aEvent->mShell->GetPrimaryFrameFor(aEvent->mContent, &frame))) {
+    aEvent->mShell->HandleCantRenderReplacedElementEvent(frame);
+  }
 }
 
 static void PR_CALLBACK
@@ -1360,9 +1363,11 @@ DestroyPLEvent(CantRenderReplacedElementEvent* aEvent)
 CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(PresShell* aShell,
                                                                nsIFrame*  aFrame)
 {
+  nsIContent* content;
   mShell = aShell;
   NS_ADDREF(mShell);
-  mFrame = aFrame;
+  aFrame->GetContent(&content);
+  mContent = content;
   PL_InitEvent(this, nsnull, (PLHandleEventProc)::HandlePLEvent,
                (PLDestroyEventProc)::DestroyPLEvent);
 }
@@ -1370,6 +1375,7 @@ CantRenderReplacedElementEvent::CantRenderReplacedElementEvent(PresShell* aShell
 CantRenderReplacedElementEvent::~CantRenderReplacedElementEvent()
 {
   NS_RELEASE(mShell);
+  NS_RELEASE(mContent);
 }
 
 NS_IMETHODIMP
