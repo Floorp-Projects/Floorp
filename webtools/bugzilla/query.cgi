@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,66 +19,90 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source "CGI.tcl"
+# Contains some global routines used throughout the CGI scripts of Bugzilla.
 
-if {[catch {
+use diagnostics;
+use strict;
+
+require "CGI.pl";
+
+# Shut up misguided -w warnings about "used only once":
+
+use vars @::legal_resolution,
+  @::legal_product,
+  @::legal_bug_status,
+  @::legal_priority,
+  @::legal_resolution,
+  @::legal_platform,
+  @::legal_components,
+  @::legal_versions,
+  @::legal_severity,
+  %::FORM;
 
 
-
-if {[info exists FORM(GoAheadAndLogIn)]} {
+if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
-    confirm_login
+    confirm_login();
+}
+
+if (!defined $::COOKIE{"DEFAULTQUERY"}) {
+    $::COOKIE{"DEFAULTQUERY"} = Param("defaultquery");
+}
+
+if (!defined $::buffer || $::buffer eq "") {
+    $::buffer = $::COOKIE{"DEFAULTQUERY"};
+}
+
+my %default;
+my %type;
+
+foreach my $name ("bug_status", "resolution", "assigned_to", "rep_platform",
+                  "priority", "bug_severity", "product", "reporter", "op_sys",
+                  "component", "version") {
+    $default{$name} = "";
+    $type{$name} = 0;
 }
 
 
-if {![info exists COOKIE(DEFAULTQUERY)]} {
-    set COOKIE(DEFAULTQUERY) [Param defaultquery]
-}
-
-if {![info exists buffer] || $buffer == ""} {
-    set buffer $COOKIE(DEFAULTQUERY)
-}
-
-foreach name {bug_status resolution assigned_to rep_platform priority \
-                  bug_severity product reporter op_sys component  \
-                  version} {
-    set default($name) ""
-    set type($name) 0
-}
-
-foreach item [split $buffer "&"] {
-    set el [ split $item = ]
-    set value [url_decode [lindex $el 1]]
-    set name [lindex $el 0]
-    if {[info exists default($name)]} {
-        if {$default($name) != ""} {
-            append default($name) "|$value"
-            set type($name) 1
+foreach my $item (split(/\&/, $::buffer)) {
+    my @el = split(/=/, $item);
+    my $name = $el[0];
+    my $value;
+    if ($#el > 0) {
+        $value = url_decode($el[1]);
+    } else {
+        $value = "";
+    }
+    if (defined $default{$name}) {
+        if ($default{$name} ne "") {
+            $default{$name} .= "|$value";
+            $type{$name} = 1;
         } else {
-            set default($name) $value
+            $default{$name} = $value;
+        }
+    }
+}
+                  
+
+
+my $namelist = "";
+
+foreach my $i (sort (keys %::COOKIE)) {
+    if ($i =~ /^QUERY_/) {
+        if ($::COOKIE{$i} ne "") {
+            my $name = substr($i, 6); 
+            $namelist .= "<OPTION>$name";
         }
     }
 }
 
-foreach i [lsort [array names COOKIE]] {
-    switch -glob $i {
-        QUERY_* {
-            if {$COOKIE($i) != ""} {
-                set name [crange $i 6 end]
-                append namelist "<OPTION>$name"
-            }
-        }
-    }
-}
-        
-puts "Set-Cookie: BUGLIST=
-Content-type: text/html\n"
+print "Set-Cookie: BUGLIST=
+Content-type: text/html\n\n";
 
-GetVersionTable
-set who [GeneratePeopleInput assigned_to $default(assigned_to)]
-set reporter [GeneratePeopleInput reporter $default(reporter)]
-set qa_assigned_to_who [GeneratePeopleInput qa_assigned_to ""]
+GetVersionTable();
+my $who = GeneratePeopleInput("assigned_to", $default{"assigned_to"});
+my $reporter = GeneratePeopleInput("reporter", $default{"reporter"});
 
 
 # Muck the "legal product" list so that the default one is always first (and
@@ -86,14 +110,16 @@ set qa_assigned_to_who [GeneratePeopleInput qa_assigned_to ""]
 
 # Commented out, until we actually have enough products for this to matter.
 
-# set w [lsearch $legal_product $default(product)]
+# set w [lsearch $legal_product $default{"product"}]
 # if {$w >= 0} {
-#    set legal_product [concat $default(product) [lreplace $legal_product $w $w]]
+#    set legal_product [concat $default{"product"} [lreplace $legal_product $w $w]]
 # }
 
-PutHeader "Bugzilla Query Page" "Query Page"
+PutHeader("Bugzilla Query Page", "Query Page");
 
-puts "
+push @::legal_resolution, "---"; # Oy, what a hack.
+
+print "
 <FORM NAME=queryForm METHOD=GET ACTION=\"buglist.cgi\">
 
 <table>
@@ -107,27 +133,27 @@ puts "
 <tr>
 <td align=left valign=top>
 <SELECT NAME=\"bug_status\" MULTIPLE SIZE=7>
-[make_options $legal_bug_status $default(bug_status) $type(bug_status)]
+@{[make_options(\@::legal_bug_status, $default{'bug_status'}, $type{'bug_status'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"resolution\" MULTIPLE SIZE=7>
-[make_options [concat $legal_resolution [list "---"]] $default(resolution) $type(resolution)]
+@{[make_options(\@::legal_resolution, $default{'resolution'}, $type{'resolution'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"rep_platform\" MULTIPLE SIZE=7>
-[make_options $legal_platform $default(rep_platform) $type(rep_platform)]
+@{[make_options(\@::legal_platform, $default{'rep_platform'}, $type{'rep_platform'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"priority\" MULTIPLE SIZE=7>
-[make_options $legal_priority $default(priority) $type(priority) ]
+@{[make_options(\@::legal_priority, $default{'priority'}, $type{'priority'})]}
 </SELECT>
 </td>
 <td align=left valign=top>
 <SELECT NAME=\"bug_severity\" MULTIPLE SIZE=7>
-[make_options $legal_severity $default(bug_severity) $type(bug_severity)]
+@{[make_options(\@::legal_severity, $default{'bug_severity'}, $type{'bug_severity'})]}
 </SELECT>
 </tr>
 </table>
@@ -154,19 +180,19 @@ puts "
 
 <td align=left valign=top>
 <SELECT NAME=\"product\" MULTIPLE SIZE=5>
-[make_options $legal_product $default(product) $type(product)]
+@{[make_options(\@::legal_product, $default{'product'}, $type{'product'})]}
 </SELECT>
 </td>
 
 <td align=left valign=top>
 <SELECT NAME=\"version\" MULTIPLE SIZE=5>
-[make_options $legal_versions $default(version) $type(version)]
+@{[make_options(\@::legal_versions, $default{'version'}, $type{'version'})]}
 </SELECT>
 </td>
 
 <td align=left valign=top>
 <SELECT NAME=\"component\" MULTIPLE SIZE=5>
-[make_options $legal_components $default(component) $type(component)]
+@{[make_options(\@::legal_components, $default{'component'}, $type{'component'})]}
 </SELECT>
 </td>
 
@@ -193,10 +219,11 @@ puts "
 
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=doit CHECKED> Run this query
-<BR>"
+<BR>
+";
 
-if {[info exists namelist]} {
-    puts "
+if ($namelist ne "") {
+    print "
 <table cellspacing=0 cellpadding=0><tr>
 <td><INPUT TYPE=radio NAME=cmdtype VALUE=editnamed> Load the remembered query:</td>
 <td rowspan=3><select name=namedcmd>$namelist</select>
@@ -207,7 +234,7 @@ if {[info exists namelist]} {
 </tr></table>"
 }
 
-puts "
+print "
 <INPUT TYPE=radio NAME=cmdtype VALUE=asdefault> Remember this as the default query
 <BR>
 <INPUT TYPE=radio NAME=cmdtype VALUE=asnamed> Remember this query, and name it:
@@ -227,19 +254,18 @@ puts "
 </CENTER>
 </FORM>
 
-"
+";
 
 
-if {[info exists COOKIE(Bugzilla_login)]} {
-    if {[cequal $COOKIE(Bugzilla_login) [Param maintainer]]} {
-        puts "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>"
+if (defined $::COOKIE{"Bugzilla_login"}) {
+    if ($::COOKIE{"Bugzilla_login"} eq Param("maintainer")) {
+        print "<a href=editparams.cgi>Edit Bugzilla operating parameters</a><br>\n";
     }
-    puts "<a href=relogin.cgi>Log in as someone besides <b>$COOKIE(Bugzilla_login)</b></a><br>"
+    print "<a href=relogin.cgi>Log in as someone besides <b>$::COOKIE{'Bugzilla_login'}</b></a><br>\n";
 }
-puts "<a href=changepassword.cgi>Change your password.</a><br>"
-puts "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>"
+print "<a href=changepassword.cgi>Change your password.</a><br>\n";
+print "<a href=\"enter_bug.cgi\">Create a new bug.</a><br>\n";
 
-}]} {
-    puts "\n\nQuery Page Error\n$errorInfo"
-    # exec /usr/lib/sendmail -t << "To: terry\n\n$errorInfo\n"
-}
+
+
+

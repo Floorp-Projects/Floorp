@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,70 +19,79 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source "CGI.tcl"
+use diagnostics;
+use strict;
 
-puts "Content-type: text/html"
+require "CGI.pl";
+
+print "Content-type: text/html\n";
 
 # The master list not only says what fields are possible, but what order
 # they get displayed in.
 
-set masterlist {opendate changeddate severity priority platform owner reporter status
-    resolution component product version project os summary summaryfull }
+my @masterlist = ("opendate", "changeddate", "severity", "priority",
+                  "platform", "owner", "reporter", "status", "resolution",
+                  "component", "product", "version", "project", "os",
+                  "summary", "summaryfull");
 
 
-if {[info exists FORM(rememberedquery)]} {
-    if {[info exists FORM(resetit)]} {
-        set collist $default_column_list
+my @collist;
+if (defined $::FORM{'rememberedquery'}) {
+    if (defined $::FORM{'resetit'}) {
+        @collist = @::default_column_list;
     } else {
-        set collist {}
-        foreach i $masterlist {
-            if {[info exists FORM(column_$i)]} {
-                lappend collist $i
+        foreach my $i (@masterlist) {
+            if (defined $::FORM{"column_$i"}) {
+                push @collist, $i;
             }
         }
     }
-    puts "Set-Cookie: COLUMNLIST=$collist ; path=/ ; expires=Sun, 30-Jun-99 00:00:00 GMT"
-    puts "Refresh: 0; URL=buglist.cgi?$FORM(rememberedquery)"
-    puts ""
-    puts "<TITLE>What a hack.</TITLE>"
-    puts "Resubmitting your query with new columns..."
-    exit
+    my $list = join(" ", @collist);
+    print "Set-Cookie: COLUMNLIST=$list ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT\n";
+    print "Refresh: 0; URL=buglist.cgi?$::FORM{'rememberedquery'}\n";
+    print "\n";
+    print "<TITLE>What a hack.</TITLE>\n";
+    print "Resubmitting your query with new columns...\n";
+    exit;
 }
 
-if {[info exists COOKIE(COLUMNLIST)]} {
-    set collist $COOKIE(COLUMNLIST)
+if (defined $::COOKIE{'COLUMNLIST'}) {
+    @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
 } else {
-    set collist $default_column_list
+    @collist = @::default_column_list;
 }
 
-foreach i $masterlist {
-    set desc($i) $i
+
+my %desc;
+foreach my $i (@masterlist) {
+    $desc{$i} = $i;
 }
 
-set desc(summary) "Summary (first 60 characters)"
-set desc(summaryfull) "Full Summary"
+$desc{'summary'} = "Summary (first 60 characters)";
+$desc{'summaryfull'} = "Full Summary";
 
 
-puts ""
-puts "Check which columns you wish to appear on the list, and then click on"
-puts "submit."
-puts "<p>"
-puts "<FORM ACTION=colchange.cgi>"
-puts "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$buffer>"
+print "\n";
+print "Check which columns you wish to appear on the list, and then click\n";
+print "on submit.\n";
+print "<p>\n";
+print "<FORM ACTION=colchange.cgi>\n";
+print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
 
-foreach i $masterlist {
-    if {[lsearch $collist $i] >= 0} {
-        set c CHECKED
+foreach my $i (@masterlist) {
+    my $c;
+    if (lsearch(\@collist, $i) >= 0) {
+        $c = 'CHECKED';
     } else {
-        set c ""
+        $c = '';
     }
-    puts "<INPUT TYPE=checkbox NAME=column_$i $c>$desc($i)<br>"
+    print "<INPUT TYPE=checkbox NAME=column_$i $c>$desc{$i}<br>\n";
 }
-puts "<P>"
-puts "<INPUT TYPE=\"submit\" VALUE=\"Submit\">"
-puts "</FORM>"
-puts "<FORM ACTION=colchange.cgi>"
-puts "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$buffer>"
-puts "<INPUT TYPE=HIDDEN NAME=resetit VALUE=1>"
-puts "<INPUT TYPE=\"submit\" VALUE=\"Reset to Bugzilla default\">"
-puts "</FORM>"
+print "<P>\n";
+print "<INPUT TYPE=\"submit\" VALUE=\"Submit\">\n";
+print "</FORM>\n";
+print "<FORM ACTION=colchange.cgi>\n";
+print "<INPUT TYPE=HIDDEN NAME=rememberedquery VALUE=$::buffer>\n";
+print "<INPUT TYPE=HIDDEN NAME=resetit VALUE=1>\n";
+print "<INPUT TYPE=\"submit\" VALUE=\"Reset to Bugzilla default\">\n";
+print "</FORM>\n";

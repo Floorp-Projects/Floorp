@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,94 +19,95 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source "CGI.tcl"
-puts "Content-type: text/html"
-puts ""
+use diagnostics;
+use strict;
 
-ConnectToDatabase
+require "CGI.pl";
+
+print "Content-type: text/html\n";
+print "\n";
+
+ConnectToDatabase();
 
 
-proc Status {str} {
-    puts "$str <P>"
-    flush stdout
+sub Status {
+    my ($str) = (@_);
+    print "$str <P>\n";
 }
 
-proc Alert {str} {
-    Status "<font color=red>$str</font>"
+sub Alert {
+    my ($str) = (@_);
+    Status("<font color=red>$str</font>");
 }
 
-proc BugLink {id} {
-    return "<a href='show_bug.cgi?id=$id'>$id</a>"
+sub BugLink {
+    my ($id) = (@_);
+    return "<a href='show_bug.cgi?id=$id'>$id</a>";
 }
 
 
-PutHeader "Bugzilla Sanity Check"  "Bugzilla Sanity Check"
+PutHeader("Bugzilla Sanity Check");
 
-puts "OK, now running sanity checks.<P>"
+print "OK, now running sanity checks.<P>\n";
 
-Status "Checking profile ids..."
+Status("Checking profile ids...");
 
-SendSQL "select userid,login_name from profiles"
+SendSQL("select userid,login_name from profiles");
 
-while {[MoreSQLData]} {
-    lassign [FetchSQLData] id email
-    if {[regexp {^[^@, ]*@[^@, ]*\.[^@, ]*$} $email]} {
-        set profid($id) 1
+my @row;
+
+my %profid;
+
+while (@row = FetchSQLData()) {
+    my ($id, $email) = (@row);
+    if ($email =~ /^[^@, ]*@[^@, ]*\.[^@, ]*$/) {
+        $profid{$id} = 1;
     } else {
-        if {$id != ""} {
-            Alert "Bad profile id $id &lt;$email&gt;."
-        }
+        Alert "Bad profile id $id &lt;$email&gt;."
     }
 }
 
 
-catch {[unset profid(0)]}
+undef $profid{0};
 
 
-Status "Checking reporter/assigned_to ids"
-SendSQL "select bug_id,reporter,assigned_to from bugs"
+Status("Checking reporter/assigned_to ids");
+SendSQL("select bug_id,reporter,assigned_to from bugs");
 
-while {[MoreSQLData]} {
-    lassign [FetchSQLData] id reporter assigned_to
-    if {$id == ""} {
-        continue
+my %bugid;
+
+while (@row = FetchSQLData()) {
+    my($id, $reporter, $assigned_to) = (@row);
+    $bugid{$id} = 1;
+    if (!defined $profid{$reporter}) {
+        Alert("Bad reporter $reporter in " . BugLink($id));
     }
-    set bugid($id) 1
-    if {![info exists profid($reporter)]} {
-        Alert "Bad reporter $reporter in [BugLink $id]"
-    }
-    if {![info exists profid($assigned_to)]} {
-        Alert "Bad assigned_to $assigned_to in [BugLink $id]"
+    if (!defined $profid{$assigned_to}) {
+        Alert("Bad assigned_to $assigned_to in" . BugLink($id));
     }
 }
 
-Status "Checking CC table"
+Status("Checking CC table");
 
-SendSQL "select bug_id,who from cc";
-while {[MoreSQLData]} {
-    lassign [FetchSQLData] id cc
-    if {$cc == ""} {
-        continue
-    }
-    if {![info exists profid($cc)]} {
-        Alert "Bad cc $cc in [BugLink $id]"
+SendSQL("select bug_id,who from cc");
+while (@row = FetchSQLData()) {
+    my ($id, $cc) = (@row);
+    if (!defined $profid{$cc}) {
+        Alert("Bad cc $cc in " . BugLink($id));
     }
 }
 
 
-Status "Checking activity table"
+Status("Checking activity table");
 
-SendSQL "select bug_id,who from bugs_activity"
+SendSQL("select bug_id,who from bugs_activity");
 
-while {[MoreSQLData]} {
-    lassign [FetchSQLData] id who
-    if {$who == ""} {
-        continue
+while (@row = FetchSQLData()) {
+    my ($id, $who) = (@row);
+    if (!defined $bugid{$id}) {
+        Alert("Bad bugid " . BugLink($id));
     }
-    if {![info exists bugid($id)]} {
-        Alert "Bad bugid [BugLink $id]"
-    }
-    if {![info exists profid($who)]} {
-        Alert "Bad who $who in [BugLink $id]"
+    if (!defined $profid{$who}) {
+        Alert("Bad who $who in " . BugLink($id));
     }
 }

@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,44 +19,57 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source "CGI.tcl"
-source "defparams.tcl"
+use diagnostics;
+use strict;
 
-confirm_login
+require "CGI.pl";
+require "defparams.pl";
 
-puts "Content-type: text/html\n"
+# Shut up misguided -w warnings about "used only once":
+use vars %::param,
+    %::param_default,
+    @::param_list,
+    %::COOKIE;
 
-if {![cequal [Param "maintainer"] $COOKIE(Bugzilla_login)]} {
-    puts "<H1>Sorry, you aren't the maintainer of this system.</H1>"
-    puts "And so, you aren't allowed to edit the parameters of it."
-    exit
+
+confirm_login();
+
+print "Content-type: text/html\n\n";
+
+if (Param("maintainer") ne $::COOKIE{'Bugzilla_login'}) {
+    print "<H1>Sorry, you aren't the maintainer of this system.</H1>\n";
+    print "And so, you aren't allowed to edit the parameters of it.\n";
+    exit;
 }
 
 
-PutHeader "Saving new parameters" "Saving new parameters"
+PutHeader("Saving new parameters");
 
-foreach i $param_list {
-    if {[info exists FORM(reset-$i)]} {
-        set FORM($i) $param_default($i)
+foreach my $i (@::param_list) {
+#    print "Processing $i...<BR>\n";
+    if (exists $::FORM{"reset-$i"}) {
+        $::FORM{$i} = $::param_default{$i};
     }
-    if {![cequal $FORM($i) [Param $i]]} {
-        if {![cequal $param_checker($i) ""]} {
-            set ok [$param_checker($i) $FORM($i)]
-            if {![cequal $ok ""]} {
-                puts "New value for $i is invalid: $ok<p>"
-                puts "Please hit <b>Back</b> and try again."
-                exit
+    $::FORM{$i} =~ s/\r\n/\n/;     # Get rid of windows-style line endings.
+    if ($::FORM{$i} ne Param($i)) {
+        if (defined $::param_checker{$i}) {
+            my $ref = $::param_checker{$i};
+            my $ok = &$ref($::FORM{$i});
+            if ($ok ne "") {
+                print "New value for $i is invalid: $ok<p>\n";
+                print "Please hit <b>Back</b> and try again.\n";
+                exit;
             }
         }
-        puts "Changed $i.<br>"
-        set param($i) $FORM($i)
+        print "Changed $i.<br>\n";
+        $::param{$i} = $::FORM{$i}
     }
 }
 
 
-WriteParams
+WriteParams();
 
-puts "OK, done.<p>"
-puts "<a href=editparams.cgi>Edit the params some more.</a><p>"
-puts "<a href=query.cgi>Go back to the query page.</a>"
+print "OK, done.<p>\n";
+print "<a href=editparams.cgi>Edit the params some more.</a><p>\n";
+print "<a href=query.cgi>Go back to the query page.</a>\n";
     

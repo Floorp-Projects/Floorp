@@ -110,7 +110,6 @@ proc SortIgnoringCase {a b} {
 
 
 proc make_popup { name src default listtype {onchange {}}} {
-    set last ""
     set popup "<SELECT NAME=$name"
     if {$listtype > 0} {
         append popup " SIZE=5"

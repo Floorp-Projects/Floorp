@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,135 +19,149 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
+use diagnostics;
+use strict;
 
-source CGI.tcl
+require "CGI.pl";
 
-if {![info exists FORM(product)]} {
-    GetVersionTable
-    if {[array size versions] != 1} {
-        puts "Content-type: text/html\n"
-        PutHeader "Enter Bug" "Enter Bug"
+# Shut up misguided -w warnings about "used only once":
+use vars @::legal_platform,
+    @::buffer,
+    @::legal_severity,
+    @::legal_opsys,
+    @::legal_priority;
+
+
+if (!defined $::FORM{'product'}) {
+    GetVersionTable();
+    my @prodlist = keys %::versions;
+    if ($#prodlist != 0) {
+        print "Content-type: text/html\n\n";
+        PutHeader("Enter Bug");
         
-        puts "<H2>First, you must pick a product on which to enter a bug.</H2>"
-        foreach p [lsort [array names versions]] {
-            puts "<a href=\"enter_bug.cgi?product=[url_quote $p]\"&$buffer>$p</a><br>"
+        print "<H2>First, you must pick a product on which to enter\n";
+        print "a bug.</H2>\n";
+        foreach my $p (sort (@prodlist)) {
+            print "<a href=\"enter_bug.cgi?product=" . url_quote($p) . "\"&$::buffer>$p</a><br>\n";
         }
-        exit
+        exit;
     }
-    set FORM(product) [array names versions]
+    $::FORM{'product'} = $prodlist[0];
 }
 
-set product $FORM(product)
+my $product = $::FORM{'product'};
 
-confirm_login
+confirm_login();
 
-puts "Content-type: text/html\n"
+print "Content-type: text/html\n\n";
 
-
-
-proc pickplatform {} {
-    global env FORM
-    if {[formvalue rep_platform] != ""} {
-        return [formvalue rep_platform]
+sub formvalue {
+    my ($name, $default) = (@_);
+    if (exists $::FORM{$name}) {
+        return $::FORM{$name};
     }
-    switch -regexp $env(HTTP_USER_AGENT) {
-        {Mozilla.*\(X11} {return "X-Windows"}
-        {Mozilla.*\(Windows} {return "PC"}
-        {Mozilla.*\(Macintosh} {return "Macintosh"}
-        {Mozilla.*\(Win} {return "PC"}
-        default {return "PC"}
+    if (defined $default) {
+        return $default;
+    }
+    return "";
+}
+
+sub pickplatform {
+    my $value = formvalue("rep_platform");
+    if ($value ne "") {
+        return $value;
+    }
+    for ($ENV{'HTTP_USER_AGENT'}) {
+        /Mozilla.*\(X11/ && do {return "X-Windows";};
+        /Mozilla.*\(Windows/ && do {return "PC";};
+        /Mozilla.*\(Macintosh/ && do {return "Macintosh";};
+        /Mozilla.*\(Win/ && do {return "PC";};
+        # default
+        return "PC";
     }
 }
 
 
 
-proc pickversion {} {
-    global env versions product FORM
-    
-    set version [formvalue version]
-    if {$version == ""} {
-        regexp {Mozilla[ /]([^ ]*) } $env(HTTP_USER_AGENT) foo version
- 
-        switch -regexp $env(HTTP_USER_AGENT) {
-            {4\.09} { set version "4.5" }
+sub pickversion {
+    my $version = formvalue('version');
+    if ($version eq "") {
+        if ($ENV{'HTTP_USER_AGENT'} =~ m@Mozilla[ /]([^ ]*)@) {
+            $version = $1;
         }
     }
     
-    if {[lsearch -exact $versions($product) $version] >= 0} {
-        return $version
+    if (lsearch($::versions{$product}, $version) >= 0) {
+        return $version;
     } else {
-        if {[info exists COOKIE(VERSION-$product)]} {
-            if {[lsearch -exact $versions($product) $COOKIE(VERSION-$Product)] >= 0} {
-                return $COOKIE(VERSION-$Product)
+        if (defined $::COOKIE{"VERSION-$product"}) {
+            if (lsearch($::versions{$product},
+                        $::COOKIE{"VERSION-$product"}) >= 0) {
+                return $::COOKIE{"VERSION-$product"};
             }
         }
     }
-    return [lindex $versions($product) 0]
+    return $::versions{$product}->[0];
 }
 
 
-proc pickcomponent {} {
-    global components product FORM
-    set result [formvalue component]
-    if {![cequal $result ""] && \
-            [lsearch -exact $components($product) $result] < 0} {
-        set result ""
+sub pickcomponent {
+    my $result =formvalue('component');
+    if ($result ne "" && lsearch($::components{$product}, $result) < 0) {
+        $result = "";
     }
-    return $result
+    return $result;
 }
 
 
-proc pickos {} {
-    global env FORM
-    if {[formvalue op_sys] != ""} {
-        return [formvalue op_sys]
+sub pickos {
+    if (formvalue('op_sys') ne "") {
+        return formvalue('op_sys');
     }
-    switch -regexp $env(HTTP_USER_AGENT) {
-        {Mozilla.*\(.*;.*; IRIX.*\)}    {return "IRIX"}
-        {Mozilla.*\(.*;.*; 32bit.*\)}   {return "Windows 95"}
-        {Mozilla.*\(.*;.*; 16bit.*\)}   {return "Windows 3.1"}
-        {Mozilla.*\(.*;.*; 68K.*\)}     {return "System 7.5"}
-        {Mozilla.*\(.*;.*; PPC.*\)}     {return "System 7.5"}
-        {Mozilla.*\(.*;.*; OSF.*\)}     {return "OSF/1"}
-        {Mozilla.*\(.*;.*; Linux.*\)}   {return "Linux"}
-        {Mozilla.*\(.*;.*; SunOS 5.*\)} {return "Solaris"}
-        {Mozilla.*\(.*;.*; SunOS.*\)}   {return "SunOS"}
-        {Mozilla.*\(.*;.*; SunOS.*\)}   {return "SunOS"}
-        {Mozilla.*\(Win16.*\)}          {return "Windows 3.1"}
-        {Mozilla.*\(Win95.*\)}          {return "Windows 95"}
-        {Mozilla.*\(WinNT.*\)}          {return "Windows NT"}
-        default {return "other"}
+    for ($ENV{'HTTP_USER_AGENT'}) {
+        /Mozilla.*\(.*;.*; IRIX.*\)/    && do {return "IRIX";};
+        /Mozilla.*\(.*;.*; 32bit.*\)/   && do {return "Windows 95";};
+        /Mozilla.*\(.*;.*; 16bit.*\)/   && do {return "Windows 3.1";};
+        /Mozilla.*\(.*;.*; 68K.*\)/     && do {return "System 7.5";};
+        /Mozilla.*\(.*;.*; PPC.*\)/     && do {return "System 7.5";};
+        /Mozilla.*\(.*;.*; OSF.*\)/     && do {return "OSF/1";};
+        /Mozilla.*\(.*;.*; Linux.*\)/   && do {return "Linux";};
+        /Mozilla.*\(.*;.*; SunOS 5.*\)/ && do {return "Solaris";};
+        /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+        /Mozilla.*\(.*;.*; SunOS.*\)/   && do {return "SunOS";};
+        /Mozilla.*\(Win16.*\)/          && do {return "Windows 3.1";};
+        /Mozilla.*\(Win95.*\)/          && do {return "Windows 95";};
+        /Mozilla.*\(WinNT.*\)/          && do {return "Windows NT";};
+        # default
+        return "other";
     }
 }
 
-proc formvalue {name {default ""}} {
-    global FORM
-    if {[info exists FORM($name)]} {
-        return [FormData $name]
-    }
-    return $default
-}
 
-GetVersionTable
+GetVersionTable();
 
-set assign_element [GeneratePersonInput assigned_to 1 [formvalue assigned_to]]
-set cc_element [GeneratePeopleInput cc [formvalue cc ""]]
+my $assign_element = GeneratePersonInput('assigned_to', 1,
+                                         formvalue('assigned_to'));
+my $cc_element = GeneratePeopleInput('cc', formvalue('cc'));
 
 
-set priority_popup [make_popup priority $legal_priority [formvalue priority "P2"] 0]
-set sev_popup [make_popup bug_severity $legal_severity [formvalue bug_severity "normal"] 0]
-set platform_popup [make_popup rep_platform $legal_platform [pickplatform] 0]
-set opsys_popup [make_popup op_sys $legal_opsys [pickos] 0]
+my $priority_popup = make_popup('priority', \@::legal_priority,
+                                formvalue('priority', 'P2'), 0);
+my $sev_popup = make_popup('bug_severity', \@::legal_severity,
+                           formvalue('bug_severity', 'normal'), 0);
+my $platform_popup = make_popup('rep_platform', \@::legal_platform,
+                                pickplatform(), 0);
+my $opsys_popup = make_popup('op_sys', \@::legal_opsys, pickos(), 0);
 
-set component_popup [make_popup component $components($product) \
-                         [formvalue component] 1]
+my $component_popup = make_popup('component', $::components{$product},
+                                 formvalue('component'), 1);
 
-PutHeader "Enter Bug" "Enter Bug"
+PutHeader ("Enter Bug");
 
-puts "
+print "
 <FORM NAME=enterForm METHOD=POST ACTION=\"post_bug.cgi\">
 <INPUT TYPE=HIDDEN NAME=bug_status VALUE=NEW>
-<INPUT TYPE=HIDDEN NAME=reporter VALUE=$COOKIE(Bugzilla_login)>
+<INPUT TYPE=HIDDEN NAME=reporter VALUE=$::COOKIE{'Bugzilla_login'}>
 <INPUT TYPE=HIDDEN NAME=product VALUE=$product>
   <TABLE CELLSPACING=2 CELLPADDING=0 BORDER=0>
   <TR>
@@ -156,7 +170,7 @@ puts "
   </TR>
   <TR>
     <td ALIGN=right valign=top><B>Version:</B></td>
-    <td>[Version_element [pickversion] $product]</td>
+    <td>" . Version_element(pickversion(), $product) . "</td>
     <td align=right valign=top><b>Component:</b></td>
     <td>$component_popup</td>
   </TR>
@@ -193,17 +207,23 @@ puts "
   <TR>
     <TD ALIGN=RIGHT><B>URL:</B>
     <TD COLSPAN=5>
-      <INPUT NAME=bug_file_loc SIZE=60 value=\"[value_quote [formvalue bug_file_loc]]\"></TD>
+      <INPUT NAME=bug_file_loc SIZE=60 value=\"" .
+    value_quote(formvalue('bug_file_loc')) .
+    "\"></TD>
   </TR>
   <TR>
     <TD ALIGN=RIGHT><B>Summary:</B>
     <TD COLSPAN=5>
-      <INPUT NAME=short_desc SIZE=60 value=\"[value_quote [formvalue short_desc]]\"></TD>
+      <INPUT NAME=short_desc SIZE=60 value=\"" .
+    value_quote(formvalue('short_desc')) .
+    "\"></TD>
   </TR>
   <tr><td>&nbsp<td> <td> <td> <td> <td> </tr>
   <tr>
     <td aligh=right valign=top><B>Description:</b>
-    <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>[value_quote [formvalue comment]]</TEXTAREA><BR></td>
+    <td colspan=5><TEXTAREA WRAP=HARD NAME=comment ROWS=10 COLS=80>" .
+    value_quote(formvalue('comment')) .
+    "</TEXTAREA><BR></td>
   </tr>
   <tr>
     <td></td>
@@ -219,9 +239,7 @@ puts "
   <INPUT TYPE=hidden name=form_name VALUE=enter_bug>
 </FORM>
 
-Some fields initialized from your user-agent, <b>$env(HTTP_USER_AGENT)</b>.
-If you think it got it wrong, please tell $maintainer what it should have been.
+Some fields initialized from your user-agent, <b>$ENV{'HTTP_USER_AGENT'}</b>.
+If you think it got it wrong, please tell " . Param('maintainer') . " what it should have been.
 
-</BODY></HTML>"
-
-flush stdout
+</BODY></HTML>";

@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -20,66 +20,81 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 
-source "CGI.tcl"
-source "defparams.tcl"
+use diagnostics;
+use strict;
 
-confirm_login
+require "CGI.pl";
+require "defparams.pl";
 
-puts "Content-type: text/html\n"
+# Shut up misguided -w warnings about "used only once":
+use vars @::param_desc,
+    @::param_list,
+    %::COOKIE;
 
-if {![cequal [Param "maintainer"] $COOKIE(Bugzilla_login)]} {
-    puts "<H1>Sorry, you aren't the maintainer of this system.</H1>"
-    puts "And so, you aren't allowed to edit the parameters of it."
-    exit
+confirm_login();
+
+print "Content-type: text/html\n\n";
+
+if (Param("maintainer") ne $::COOKIE{Bugzilla_login}) {
+    print "<H1>Sorry, you aren't the maintainer of this system.</H1>\n";
+    print "And so, you aren't allowed to edit the parameters of it.\n";
+    exit;
 }
 
 
-PutHeader "Edit parameters" "Edit parameters"
+PutHeader("Edit parameters");
 
-puts "This lets you edit the basic operating parameters of bugzilla.  Be careful!"
-puts "<p>"
-puts "Any item you check Reset on will get reset to its default value."
+print "This lets you edit the basic operating parameters of bugzilla.\n";
+print "Be careful!\n";
+print "<p>\n";
+print "Any item you check Reset on will get reset to its default value.\n";
 
-puts "<form method=post action=doeditparams.cgi><table>"
+print "<form method=post action=doeditparams.cgi><table>\n";
 
-set rowbreak "<tr><td colspan=2><hr></td></tr>"
-puts $rowbreak
+my $rowbreak = "<tr><td colspan=2><hr></td></tr>";
+print $rowbreak;
 
-foreach i $param_list {
-    puts "<tr><th align=right valign=top>$i:</th><td>$param_desc($i)</td></tr>"
-    puts "<tr><td valign=top><input type=checkbox name=reset-$i>Reset</td><td>"
-    set value [Param $i]
-    switch $param_type($i) {
-	t {
-	    puts "<input size=80 name=$i value=\"[value_quote $value]\">"
-	}
-	l {
-	    puts "<textarea wrap=hard name=$i rows=10 cols=80>[value_quote $value]</textarea>"
-	}
-        b {
-            if {$value} {
-                set on "checked"
-                set off ""
+foreach my $i (@::param_list) {
+    print "<tr><th align=right valign=top>$i:</th><td>$::param_desc{$i}</td></tr>\n";
+    print "<tr><td valign=top><input type=checkbox name=reset-$i>Reset</td><td>\n";
+    my $value = Param($i);
+    SWITCH: for ($::param_type{$i}) {
+	/^t$/ && do {
+            print "<input size=80 name=$i value=\"" .
+                value_quote($value) . '">\n';
+            last SWITCH;
+	};
+	/^l$/ && do {
+            print "<textarea wrap=hard name=$i rows=10 cols=80>" .
+                value_quote($value) . "</textarea>\n";
+            last SWITCH;
+	};
+        /^b$/ && do {
+            my $on;
+            my $off;
+            if ($value) {
+                $on = "checked";
+                $off = "";
             } else {
-                set on ""
-                set off "checked"
+                $on = "";
+                $off = "checked";
             }
-            puts "<input type=radio name=$i value=1 $on>On "
-            puts "<input type=radio name=$i value=0 $off>Off"
-        }
-        default {
-            puts "<font color=red><blink>Unknown param type $param_type($i)!!!</blink></font>"
-        }
+            print "<input type=radio name=$i value=1 $on>On\n";
+            print "<input type=radio name=$i value=0 $off>Off\n";
+            last SWITCH;
+        };
+        # DEFAULT
+        print "<font color=red><blink>Unknown param type $::param_type{$i}!!!</blink></font>\n";
     }
-    puts "</td></tr>"
-    puts $rowbreak
+    print "</td></tr>\n";
+    print $rowbreak;
 }
 
-puts "</table>"
+print "</table>\n";
 
-puts "<input type=reset value=\"Reset form\"><br>"
-puts "<input type=submit value=\"Submit changes\">"
+print "<input type=reset value=\"Reset form\"><br>\n";
+print "<input type=submit value=\"Submit changes\">\n";
 
-puts "</form>"
+print "</form>\n";
 
-puts "<p><a href=query.cgi>Skip all this, and go back to the query page</a>"
+print "<p><a href=query.cgi>Skip all this, and go back to the query page</a>\n";

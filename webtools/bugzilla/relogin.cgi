@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,13 +19,13 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source CGI.tcl
+use diagnostics;
+use strict;
+
+require "CGI.pl";
 
 
-
-
-
-puts "Set-Cookie: Bugzilla_login= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
+print "Set-Cookie: Bugzilla_login= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
 Set-Cookie: Bugzilla_logincookie= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
 Set-Cookie: Bugzilla_password= ; path=/; expires=Sun, 30-Jun-80 00:00:00 GMT
 Content-type: text/html
@@ -35,19 +35,19 @@ The cookie that was remembering your login is now gone.  The next time you
 do an action that requires a login, you will be prompted for it.
 <p>
 <a href=query.cgi>Back to the query page.</a>
-"
+";
 
-exit
+exit;
 
 # The below was a different way, that prompted you for a login right then.
 
-catch {unset COOKIE(Bugzilla_login)}
-catch {unset COOKIE(Bugzilla_password)}
-confirm_login
+# catch {unset COOKIE(Bugzilla_login)}
+# catch {unset COOKIE(Bugzilla_password)}
+# confirm_login
 
-puts "Content-type: text/html\n"
-puts "<H1>OK, logged in.</H1>"
-puts "You are now logged in as <b>$COOKIE(Bugzilla_login)</b>."
-puts "<p>"
-puts "<a href=query.cgi>Back to the query page.</a>"
+# puts "Content-type: text/html\n"
+# puts "<H1>OK, logged in.</H1>"
+# puts "You are now logged in as <b>$COOKIE(Bugzilla_login)</b>."
+# puts "<p>"
+# puts "<a href=query.cgi>Back to the query page.</a>"
 

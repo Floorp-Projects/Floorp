@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -20,11 +20,18 @@
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
 
-source "CGI.tcl"
-puts "Content-type: text/html\n"
-puts "<TITLE>Full Text Bug Listing</TITLE>"
+use diagnostics;
+use strict;
 
-set generic_query {
+require "CGI.pl";
+
+# Shut up misguided -w warnings about "used only once":
+use vars %::FORM;
+
+print "Content-type: text/html\n\n";
+print "<TITLE>Full Text Bug Listing</TITLE>\n";
+
+my $generic_query  = "
 select
   bugs.bug_id,
   bugs.product,
@@ -42,34 +49,39 @@ select
   bugs.short_desc
 from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
-}
+";
 
-ConnectToDatabase
+ConnectToDatabase();
 
-foreach bug [split $FORM(buglist) :] {
-  SendSQL "$generic_query bugs.bug_id = $bug\n"
+foreach my $bug (split(/:/, $::FORM{'buglist'})) {
+    SendSQL("$generic_query bugs.bug_id = $bug");
 
-  if { [ MoreSQLData ] } {
-    set result [ FetchSQLData ]
-    puts "<IMG SRC=\"1x1.gif\" WIDTH=1 HEIGHT=80 ALIGN=LEFT>"
-    puts "<TABLE WIDTH=100%>"
-    puts "<TD COLSPAN=4><TR><DIV ALIGN=CENTER><B><FONT =\"+3\">[html_quote [lindex $result 15]]</B></FONT></DIV>"
-    puts "<TR><TD><B>Bug#:</B> <A HREF=\"show_bug.cgi?id=[lindex $result 0]\">[lindex $result 0]</A>"
-    puts "<TD><B>Product:</B> [lindex $result 1]"
-    puts "<TD><B>Version:</B> [lindex $result 2]"
-    puts "<TD><B>Platform:</B> [lindex $result 3]"
-    puts "<TR><TD><B>OS/Version:</B> [lindex $result 4]"
-    puts "<TD><B>Status:</B> [lindex $result 5]"
-    puts "<TD><B>Severity:</B> [lindex $result 6]"
-    puts "<TD><B>Priority:</B> [lindex $result 7]"
-    puts "<TR><TD><B>Resolution:</B> [lindex $result 8]</TD>"
-    puts "<TD><B>Assigned To:</B> [lindex $result 9]"
-    puts "<TD><B>Reported By:</B> [lindex $result 10]"
-    puts "<TR><TD><B>Component:</B> [lindex $result 11]"
-    puts "<TR><TD COLSPAN=6><B>URL:</B> [html_quote [lindex $result 12]]"
-    puts "<TR><TD COLSPAN=6><B>Summary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B> [html_quote [lindex $result 13]]"
-    puts "<TR><TD><B>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B>\n</TABLE>"
-    puts "<PRE>[html_quote [GetLongDescription $bug]]</PRE>"
-    puts "<HR>"
-  }
+    my @row;
+    if (@row = FetchSQLData()) {
+        my ($id, $product, $version, $platform, $opsys, $status, $severity,
+            $priority, $resolution, $assigned, $reporter, $component, $url,
+            $shortdesc) = (@row);
+        print "<IMG SRC=\"1x1.gif\" WIDTH=1 HEIGHT=80 ALIGN=LEFT>\n";
+        print "<TABLE WIDTH=100%>\n";
+        print "<TD COLSPAN=4><TR><DIV ALIGN=CENTER><B><FONT =\"+3\">" .
+            html_quote($shortdesc) .
+                "</B></FONT></DIV>\n";
+        print "<TR><TD><B>Bug#:</B> <A HREF=\"show_bug.cgi?id=$id\">$id</A>\n";
+        print "<TD><B>Product:</B> $product\n";
+        print "<TD><B>Version:</B> $version\n";
+        print "<TD><B>Platform:</B> $platform\n";
+        print "<TR><TD><B>OS/Version:</B> $opsys\n";
+        print "<TD><B>Status:</B> $status\n";
+        print "<TD><B>Severity:</B> $severity\n";
+        print "<TD><B>Priority:</B> $priority\n";
+        print "<TR><TD><B>Resolution:</B> $resolution</TD>\n";
+        print "<TD><B>Assigned To:</B> $assigned\n";
+        print "<TD><B>Reported By:</B> $reporter\n";
+        print "<TR><TD><B>Component:</B> $component\n";
+        print "<TR><TD COLSPAN=6><B>URL:</B> " . html_quote($url) . "\n";
+        print "<TR><TD COLSPAN=6><B>Summary&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B> " . html_quote($shortdesc) . "\n";
+        print "<TR><TD><B>Description&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;:</B>\n</TABLE>\n";
+        print "<PRE>" . html_quote(GetLongDescription($bug)) . "</PRE>\n";
+        print "<HR>\n";
+    }
 }

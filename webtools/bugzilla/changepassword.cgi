@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -18,61 +18,74 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-source "CGI.tcl"
 
-confirm_login
+#! /usr/bonsaitools/bin/mysqltcl
+# -*- Mode: tcl; indent-tabs-mode: nil -*-
 
-if {![info exists FORM(pwd1)]} {
-    puts "Content-type: text/html
+require "CGI.pl";
+
+confirm_login();
+
+if (! defined $::FORM{'pwd1'}) {
+    print "Content-type: text/html
 
 <H1>Change your password</H1>
 <form method=post>
 <table>
 <tr>
-<td align=right>Please enter the new password for <b>$COOKIE(Bugzilla_login)</b>:</td>
+<td align=right>Please enter the new password for <b>$::COOKIE{'Bugzilla_login'}</b>:</td>
 <td><input type=password name=pwd1></td>
 </tr>
 <tr>
 <td align=right>Re-enter your new password:</td>
 <td><input type=password name=pwd2></td>
 </table>
-<input type=submit value=Submit>"
-    exit
+<input type=submit value=Submit>\n";
+    exit;
 }
 
-if {![cequal $FORM(pwd1) $FORM(pwd2)]} {
-    puts "Content-type: text/html
+if ($::FORM{'pwd1'} ne $::FORM{'pwd2'}) {
+    print "Content-type: text/html
 
 <H1>Try again.</H1>
-The two passwords you entered did not match.  Please click <b>Back</b> and try again."
-    exit
+The two passwords you entered did not match.  Please click <b>Back</b> and try again.\n";
+    exit;
 }
 
 
-set pwd $FORM(pwd1)
+my $pwd = $::FORM{'pwd1'};
 
 
-if {![regexp {^[a-zA-Z0-9-_]*$} $pwd] || [clength $pwd] < 3 || [clength $pwd] > 15} {
-    puts "Content-type: text/html
+if ($pwd !~ /^[a-zA-Z0-9-_]*$/ || length($pwd) < 3 || length($pwd) > 15) {
+    print "Content-type: text/html
 
 <H1>Sorry; we're picky.</H1>
 Please choose a password that is between 3 and 15 characters long, and that
 contains only numbers, letters, hyphens, or underlines.
 <p>
-Please click <b>Back</b> and try again."
-    exit
+Please click <b>Back</b> and try again.\n";
+    exit;
 }
 
 
-puts "Content-type: text/html\n"
+print "Content-type: text/html\n\n";
 
-SendSQL "select encrypt('$pwd')"
-set encrypted [lindex [FetchSQLData] 0]
+# Generate a random salt.
 
-SendSQL "update profiles set password='$pwd',cryptpassword='$encrypted' where login_name='[SqlQuote $COOKIE(Bugzilla_login)]'"
-SendSQL "update logincookies set cryptpassword = '$encrypted' where cookie = $COOKIE(Bugzilla_logincookie)"
+sub x {
+    my $sc="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789./";
+    return substr($sc, int (rand () * 100000) % (length ($sc) + 1), 1);
+}
+my $salt  = x() . x();
 
-puts "<H1>OK, done.</H1>
+my $encrypted = crypt($pwd, $salt);
+
+SendSQL("update profiles set password='$pwd',cryptpassword='$encrypted' where login_name=" .
+        SqlQuote($::COOKIE{'Bugzilla_login'}));
+
+SendSQL("update logincookies set cryptpassword = '$encrypted' where cookie = $::COOKIE{'Bugzilla_logincookie'}");
+
+print "<H1>OK, done.</H1>
 Your new password has been set.
 <p>
-<a href=query.cgi>Back to query page.</a>"
+<a href=query.cgi>Back to query page.</a>\n";

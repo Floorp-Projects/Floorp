@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,77 +19,91 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-puts "Content-type: multipart/x-mixed-replace;boundary=ThisRandomString"
-puts ""
-puts "--ThisRandomString"
+use diagnostics;
+use strict;
+
+print "Content-type: multipart/x-mixed-replace;boundary=ThisRandomString\n";
+print "\n";
+print "--ThisRandomString\n";
 
 
-# The below "if catch" stuff, if uncommented, will trap any error, and
-# mail the error messages to terry.  What a hideous, horrible
-# debugging hack.
+require "CGI.pl";
 
-# if {[catch {
+# Shut up misguided -w warnings about "used only once":
+
+use vars @::legal_platform,
+    @::versions,
+    @::legal_product,
+    @::legal_component,
+    %::MFORM,
+    @::components,
+    @::legal_severity,
+    @::legal_priority,
+    @::default_column_list,
+    @::legal_resolution_no_dup;
 
 
-source "CGI.tcl"
 
-ConnectToDatabase
+ConnectToDatabase();
 
-if {![info exists FORM(cmdtype)]} {
+if (!defined $::FORM{'cmdtype'}) {
     # This can happen if there's an old bookmark to a query...
-    set FORM(cmdtype) doit
+    $::FORM{'cmdtype'} = 'doit';
 }
 
-switch $FORM(cmdtype) {
-    runnamed {
-        set buffer $COOKIE(QUERY_$FORM(namedcmd))
-        ProcessFormFields $buffer
-    }
-    editnamed {
-        puts "Content-type: text/html
-Refresh: 0; URL=query.cgi?$COOKIE(QUERY_$FORM(namedcmd))
+
+CMD: for ($::FORM{'cmdtype'}) {
+    /^runnamed$/ && do {
+        $::buffer = $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
+        ProcessFormFields $::buffer;
+        last CMD;
+    };
+    /^editnamed$/ && do {
+	my $url = "query.cgi?" . $::COOKIE{"QUERY_" . $::FORM{"namedcmd"}};
+        print "Content-type: text/html
+Refresh: 0; URL=$url
 
 <TITLE>What a hack.</TITLE>
-Loading your query named <B>$FORM(namedcmd)</B>..."
-        exit
-    }
-    forgetnamed {
-        puts "Set-Cookie: QUERY_$FORM(namedcmd)= ; path=/ ; expires=Sun, 30-Jun-99 00:00:00 GMT
+Loading your query named <B>$::FORM{'namedcmd'}</B>...";
+        exit;
+    };
+    /^forgetnamed$/ && do {
+        print "Set-Cookie: QUERY_" . $::FORM{'namedcmd'} . "= ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
 Content-type: text/html
 
 <HTML>
 <TITLE>Forget what?</TITLE>
-OK, the <B>$FORM(namedcmd)</B> query is gone.
+OK, the <B>$::FORM{'namedcmd'}</B> query is gone.
 <P>
-<A HREF=query.cgi>Go back to the query page.</A>"
-    exit
-    }
-    asnamed {
-        if {[regexp {^[a-zA-Z0-9_ ]+$} $FORM(newqueryname)]} {
-    puts "Set-Cookie: QUERY_$FORM(newqueryname)=$buffer ; path=/ ; expires=Sun, 30-Jun-99 00:00:00 GMT
+<A HREF=query.cgi>Go back to the query page.</A>";
+        exit;
+    };
+    /^asnamed$/ && do {
+        if ($::FORM{'newqueryname'} =~ /^[a-zA-Z0-9_ ]+$/) {
+    print "Set-Cookie: QUERY_" . $::FORM{'newqueryname'} . "=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
 Content-type: text/html
 
 <HTML>
 <TITLE>OK, done.</TITLE>
-OK, you now have a new query named <B>$FORM(newqueryname)</B>.
+OK, you now have a new query named <B>$::FORM{'newqueryname'}</B>.
 
 <P>
 
-<A HREF=query.cgi>Go back to the query page.</A>"
+<A HREF=query.cgi>Go back to the query page.</A>";
         } else {
-            puts "Content-type: text/html
+            print "Content-type: text/html
 
 <HTML>
 <TITLE>Picky, picky.</TITLE>
 Query names can only have letters, digits, spaces, or underbars.  You entered 
-\"<B>$FORM(newqueryname)</B>\", which doesn't cut it.
+\"<B>$::FORM{'newqueryname'}</B>\", which doesn't cut it.
 <P>
-Click the <B>Back</B> button and type in a valid name for this query."
+Click the <B>Back</B> button and type in a valid name for this query.";
         }
-        exit
-    }
-    asdefault {
-        puts "Set-Cookie: DEFAULTQUERY=$buffer ; path=/ ; expires=Sun, 30-Jun-99 00:00:00 GMT
+        exit;
+    };
+    /^asdefault$/ && do {
+        print "Set-Cookie: DEFAULTQUERY=$::buffer ; path=/ ; expires=Sun, 30-Jun-2029 00:00:00 GMT
 Content-type: text/html
 
 <HTML>
@@ -98,78 +112,82 @@ OK, you now have a new default query.
 
 <P>
 
-<A HREF=query.cgi>Go back to the query page, using the new default.</A>"
-        exit
+<A HREF=query.cgi>Go back to the query page, using the new default.</A>";
+        exit;
+    };
+}
+
+
+sub DefCol {
+    my ($name, $k, $t, $s, $q) = (@_);
+    
+    $::key{$name} = $k;
+    $::title{$name} = $t;
+    if (defined $s && $s ne "") {
+        $::sortkey{$name} = $s;
     }
-}
-
-proc qadd { item } {
-  global query
-  append query "$item"
-}
-
-
-proc DefCol {name k t {s ""} {q 0}} {
-    global key title sortkey needquote
-    set key($name) $k
-    set title($name) $t
-    if {![cequal $s ""]} {
-        set sortkey($name) $s
+    if (!defined $q || $q eq "") {
+        $q = 0;
     }
-    set needquote($name) $q
+    $::needquote{$name} = $q;
 }
 
-DefCol opendate "date_format(bugs.creation_ts,'Y-m-d')" Opened bugs.creation_ts
-DefCol changeddate "date_format(bugs.delta_ts,'Y-m-d')" Changed bugs.delta_ts
-DefCol severity "substring(bugs.bug_severity, 1, 3)" Sev bugs.bug_severity
-DefCol priority "substring(bugs.priority, 1, 3)" Pri bugs.priority
-DefCol platform "substring(bugs.rep_platform, 1, 3)" Plt bugs.rep_platform
-DefCol owner "assign.login_name" Owner assign.login_name
-DefCol reporter "report.login_name" Reporter report.login_name
-DefCol status "substring(bugs.bug_status,1,4)" State bugs.bug_status
-DefCol resolution "substring(bugs.resolution,1,4)" Res bugs.resolution
-DefCol summary "substring(bugs.short_desc, 1, 60)" Summary {} 1
-DefCol summaryfull "bugs.short_desc" Summary {} 1
-DefCol component "substring(bugs.component, 1, 8)" Comp bugs.component
-DefCol product "substring(bugs.product, 1, 8)" Product bugs.product
-DefCol version "substring(bugs.version, 1, 5)" Vers bugs.version
-DefCol os "substring(bugs.op_sys, 1, 4)" OS bugs.op_sys
+DefCol("opendate", "date_format(bugs.creation_ts,'Y-m-d')", "Opened",
+       "bugs.creation_ts");
+DefCol("changeddate", "date_format(bugs.delta_ts,'Y-m-d')", "Changed",
+       "bugs.delta_ts");
+DefCol("severity", "substring(bugs.bug_severity, 1, 3)", "Sev",
+       "bugs.bug_severity");
+DefCol("priority", "substring(bugs.priority, 1, 3)", "Pri", "bugs.priority");
+DefCol("platform", "substring(bugs.rep_platform, 1, 3)", "Plt",
+       "bugs.rep_platform");
+DefCol("owner", "assign.login_name", "Owner", "assign.login_name");
+DefCol("reporter", "report.login_name", "Reporter", "report.login_name");
+DefCol("status", "substring(bugs.bug_status,1,4)", "State", "bugs.bug_status");
+DefCol("resolution", "substring(bugs.resolution,1,4)", "Result",
+       "bugs.resolution");
+DefCol("summary", "substring(bugs.short_desc, 1, 60)", "Summary", "", 1);
+DefCol("summaryfull", "bugs.short_desc", "Summary", "", 1);
+DefCol("component", "substring(bugs.component, 1, 8)", "Comp",
+       "bugs.component");
+DefCol("product", "substring(bugs.product, 1, 8)", "Product", "bugs.product");
+DefCol("version", "substring(bugs.version, 1, 5)", "Vers", "bugs.version");
+DefCol("os", "substring(bugs.op_sys, 1, 4)", "OS", "bugs.op_sys");
 
-if {[info exists COOKIE(COLUMNLIST)]} {
-    set collist $COOKIE(COLUMNLIST)
+my @collist;
+if (defined $::COOKIE{'COLUMNLIST'}) {
+    @collist = split(/ /, $::COOKIE{'COLUMNLIST'});
 } else {
-    set collist $default_column_list
+    @collist = @::default_column_list;
 }
 
-set dotweak [info exists FORM(tweak)]
+my $dotweak = defined $::FORM{'tweak'};
 
-if {$dotweak} {
-    confirm_login
+if ($dotweak) {
+    confirm_login();
 }
 
 
-puts "Content-type: text/html\n"
+print "Content-type: text/html\n\n";
 
-set query "
-select
-        bugs.bug_id"
+my $query = "select bugs.bug_id";
 
 
-foreach c $collist {
-    if {[info exists needquote($c)] } {
-        append query ",
-\t$key($c)"
+foreach my $c (@collist) {
+    if (exists $::needquote{$c}) {
+        $query .= ",
+\t$::key{$c}";
     }
 }
 
 
-if {$dotweak} {
-    append query ",
+if ($dotweak) {
+    $query .= ",
 bugs.product,
-bugs.bug_status"
+bugs.bug_status";
 }
 
-append query "
+$query .= "
 from   bugs,
        profiles assign,
        profiles report,
@@ -178,271 +196,263 @@ where  bugs.assigned_to = assign.userid
 and    bugs.reporter = report.userid
 and    bugs.product = projector.program
 and    bugs.version = projector.value
-"
+";
 
-if {[info exists FORM(sql)]} {
-  append query "and (\n[join [url_decode $FORM(sql)] { }]\n)"
+if (defined $::FORM{'sql'}) {
+  $query .= "and (\n$::FORM('sql')\n)"
 } else {
+  my @legal_fields = ("bug_id", "product", "version", "rep_platform", "op_sys",
+                      "bug_status", "resolution", "priority", "bug_severity",
+                      "assigned_to", "reporter", "bug_file_loc", "component");
 
-
-  set legal_fields { bug_id product version rep_platform op_sys bug_status
-                     resolution priority bug_severity assigned_to reporter
-                     bug_file_loc component}
-
-  foreach field [array names FORM] {
-    if { [ lsearch $legal_fields $field ] != -1 && ![cequal $FORM($field) ""]} {
-      qadd "\tand (\n"
-      set or ""
-      if { $field == "assigned_to" || $field == "reporter"} {
-        foreach p [split $FORM($field) ","] {
-          qadd "\t\t${or}bugs.$field = [DBNameToIdAndCheck $p]\n"
-          set or "or "
-        }
-      } else {
-        foreach v $MFORM($field) {
-          if {[cequal $v "(empty)"]} {
-              qadd "\t\t${or}bugs.$field is null\n"
+  foreach my $field (keys %::FORM) {
+      my $or = "";
+      if (lsearch(\@legal_fields, $field) != -1 && $::FORM{$field} ne "") {
+          $query .= "\tand (\n";
+          if ($field eq "assigned_to" || $field eq "reporter") {
+              foreach my $p (split(/,/, $::FORM{$field})) {
+                  my $whoid = DBNameToIdAndCheck($p);
+                  $query .= "\t\t${or}bugs.$field = $whoid\n";
+                  $or = "or ";
+              }
           } else {
-              if {[cequal $v "---"]} {
-                  qadd "\t\t${or}bugs.$field = ''\n"
-              } else {
-                  qadd "\t\t${or}bugs.$field = '$v'\n"
+              my $ref = $::MFORM{$field};
+              foreach my $v (@$ref) {
+                  if ($v eq "(empty)") {
+                      $query .= "\t\t${or}bugs.$field is null\n";
+                  } else {
+                      if ($v eq "---") {
+                          $query .= "\t\t${or}bugs.$field = ''\n";
+                      } else {
+                          $query .= "\t\t${or}bugs.$field = " . SqlQuote($v) .
+                              "\n";
+                      }
+                  }
+                  $or = "or ";
               }
           }
-          set or "or "
-        }
+          $query .= "\t)\n";
       }
-      qadd "\t)\n"
-    }
   }
+}
 
-  if {[lookup FORM changedin] != ""} {
-      set c [string trim $FORM(changedin)]
-      if {$c != ""} {
-          if {![regexp {^[0-9]*$} $c]} {
-              puts "
+if (defined $::FORM{'changedin'}) {
+    my $c = trim($::FORM{'changedin'});
+    if ($c ne "") {
+        if ($c !~ /^[0-9]*$/) {
+            print "
 The 'changed in last ___ days' field must be a simple number.  You entered 
 \"$c\", which doesn't cut it.
 <P>
-Click the <B>Back</B> button and try again."
-              exit
-          }
-          qadd "and to_days(now()) - to_days(bugs.delta_ts) <= $FORM(changedin) "
-      }
-  }
-
-  foreach f {short_desc long_desc} {
-      set s [SqlQuote [string trim [lookup FORM $f]]]
-      if {$s != ""} {
-          if {[lookup FORM [set f]_type] == "regexp"} {
-              qadd "and $f regexp '$s' "
-          } else {
-              qadd "and instr($f, '$s') "
-          }
-      }
-  }
-
-
-}
-
-
-if {[info exists FORM(order)]} {
-    qadd "order by "
-    switch -glob $FORM(order) {
-        *.* {}
-        *Number* {
-            set FORM(order) bugs.bug_id
+Click the <B>Back</B> button and try again.";
+              exit;
         }
-        *Import* {
-            set FORM(order) bugs.priority
-        }
-        *Assign* {
-            set FORM(order) "assign.login_name, bugs.bug_status, priority, bugs.bug_id"
-        }
-        default {
-            set FORM(order) "bugs.bug_status, priorities.rank, assign.login_name, bugs.bug_id"
-        }
-    }
-    if {[cequal [cindex $FORM(order) 0] "\{"]} {
-        # I don't know why this happens, but...
-        set FORM(order) [lindex $FORM(order) 0]
-    }
-    qadd $FORM(order)
-}
-
-puts "Please stand by ... <p>"
-if {[info exists FORM(debug)]} {
-    puts "<pre>$query</pre>"
-}
-flush stdout
-SendSQL $query
-
-set count 0
-set bugl ""
-proc pnl { str } {
-  global bugl
-  append bugl "$str"
-}
-
-regsub -all {[&?]order=[^&]*} $buffer {} fields
-regsub -all {[&?]cmdtype=[^&]*} $fields {} fields
-
-
-if {[info exists FORM(order)]} {
-    regsub -all { } ", $FORM(order)" "%20" oldorder
-} else {
-    set oldorder ""
-}
-
-if {$dotweak} {
-    pnl "<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">"
-}
-
-set tablestart "<TABLE CELLSPACING=0 CELLPADDING=2>
-<TR ALIGN=LEFT><TH>
-<A HREF=\"buglist.cgi?[set fields]&order=bugs.bug_id\">ID</A>"
-
-
-foreach c $collist {
-    if { [info exists needquote($c)] } {
-        if {$needquote($c)} {
-            append tablestart "<TH WIDTH=100% valigh=left>"
-        } else {
-            append tablestart "<TH valign=left>"
-        }
-        if {[info exists sortkey($c)]} {
-            append tablestart "<A HREF=\"buglist.cgi?[set fields]&order=$sortkey($c)$oldorder\">$title($c)</A>"
-        } else {
-            append tablestart $title($c)
-        }
+        $query .= "and to_days(now()) - to_days(bugs.delta_ts) <= $c ";
     }
 }
 
-append tablestart "\n"
-
-set dotweak [info exists FORM(tweak)]
-
-set p_true 1
-
-while { $p_true } {
-    set result [FetchSQLData]
-    set p_true [MoreSQLData]
-    if { $result != "" } { 
-        set bug_id [lvarpop result]
-        if {![info exists seen($bug_id)]} {
-            set seen($bug_id) 1
-            incr count
-            if {($count % 200) == 0} {
-                # Too big tables take too much browser memory...
-                pnl "</TABLE>$tablestart"
-            }
-            if {[info exists buglist]} {
-                append buglist ":$bug_id"
+foreach my $f ("short_desc", "long_desc") {
+    if (defined $::FORM{$f}) {
+        my $s = SqlQuote(trim($::FORM{$f}));
+        if ($s ne "") {
+            if ($::FORM{$f . "_type"} eq "regexp") {
+                $query .= "and $f regexp $s ";
             } else {
-                set buglist $bug_id
+                $query .= "and instr($f, $s) ";
             }
-            pnl "<TR VALIGN=TOP ALIGN=LEFT><TD>"
-            if {$dotweak} {
-                pnl "<input type=checkbox name=id_$bug_id>"
-            }
-            pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">"
-            pnl "$bug_id</A> "
-            foreach c $collist {
-                set value [lvarpop result]
-                set nowrap {} 
-
-                #-- This cursor is used to pick the login_name to be
-                #   displayed on the query list as the field value may or
-                #   maynot have vales associated to it
-
-                if { $c == "qa_assigned_to"} {
-                     set dml_cur [ oraopen $lhandle ]
-
-                     orasql $dml_cur "select login_name 
-                                      from   profiles 
-                                      where  userid = $value"
-
-                     set cur_resultset [orafetch $dml_cur]
-
-                     if {$cur_resultset != ""} { 
-                         set  value $cur_resultset 
-                         set nowrap {nowrap}
-                     } else {
-                         set  value ""
-                     }
-
-                     oraclose $dml_cur
-
-                } 
-
-                if { [info exists needquote($c)] && $needquote($c)} {
-                    set value [html_quote $value]
-                } else {
-                    set value "<nobr>$value</nobr>"
-                }
-                pnl "<td $nowrap>$value"
-            }
-            if {$dotweak} {
-                set value [lvarpop result]
-                set prodarray($value) 1
-                set value [lvarpop result]
-                set statusarray($value) 1
-            }
-            pnl "\n"
         }
     }
 }
-puts ""
-puts "--ThisRandomString"
 
-set toolong 0
-puts "Content-type: text/html"
-if { [info exists buglist] } {
-    if {[clength $buglist] < 4000} {
-        puts "Set-Cookie: BUGLIST=$buglist"
-    } else {
-        puts "Set-Cookie: BUGLIST="
-        set toolong 1
+
+if (defined $::FORM{'order'} && $::FORM{'order'} ne "") {
+    $query .= "order by ";
+    ORDER: for ($::FORM{'order'}) {
+        /\./ && do {
+            # This (hopefully) already has fieldnames in it, so we're done.
+            last ORDER;
+        };
+        /Number/ && do {
+            $::FORM{'order'} = "bugs.bug_id";
+            last ORDER;
+        };
+        /Import/ && do {
+            $::FORM{'order'} = "bugs.priority";
+            last ORDER;
+        };
+        /Assign/ && do {
+            $::FORM{'order'} = "assign.login_name, bugs.bug_status, priority, bugs.bug_id";
+            last ORDER;
+        };
+        # DEFAULT
+        $::FORM{'order'} = "bugs.bug_status, priorities.rank, assign.login_name, bugs.bug_id";
+    }
+    $query .= $::FORM{'order'};
+}
+
+print "Please stand by ... <p>\n";
+if (defined $::FORM{'debug'}) {
+    print "<pre>$query</pre>\n";
+}
+
+SendSQL($query);
+
+my $count = 0;
+$::bugl = "";
+sub pnl {
+    my ($str) = (@_);
+    $::bugl  .= $str;
+}
+
+my $fields = $::buffer;
+$fields =~ s/[&?]order=[^&]*//g;
+$fields =~ s/[&?]cmdtype=[^&]*//g;
+
+
+my $oldorder;
+
+if (defined $::FORM{'order'}) {
+    $oldorder = url_quote(", $::FORM{'order'}");
+} else {
+    $oldorder = "";
+}
+
+if ($dotweak) {
+    pnl "<FORM NAME=changeform METHOD=POST ACTION=\"process_bug.cgi\">";
+}
+
+my $tablestart = "<TABLE CELLSPACING=0 CELLPADDING=2>
+<TR ALIGN=LEFT><TH>
+<A HREF=\"buglist.cgi?$fields&order=bugs.bug_id\">ID</A>";
+
+
+foreach my $c (@collist) {
+    if (exists $::needquote{$c}) {
+        if ($::needquote{$c}) {
+            $tablestart .= "<TH WIDTH=100% valigh=left>";
+        } else {
+            $tablestart .= "<TH valign=left>";
+        }
+        if (defined $::sortkey{$c}) {
+            $tablestart .= "<A HREF=\"buglist.cgi?$fields&order=$::sortkey{$c}$oldorder\">$::title{$c}</A>";
+        } else {
+            $tablestart .= $::title{$c};
+        }
     }
 }
-puts ""
-set env(TZ) PST8PDT
 
-PutHeader "Bug List" "Bug List"
+$tablestart .= "\n";
 
-puts -nonewline "
+
+my @row;
+my %seen;
+my @bugarray;
+my %prodhash;
+my %statushash;
+
+while (@row = FetchSQLData()) {
+    my $bug_id = shift @row;
+    if (!defined $seen{$bug_id}) {
+        $seen{$bug_id} = 1;
+        $count++;
+        if ($count % 200 == 0) {
+            # Too big tables take too much browser memory...
+            pnl "</TABLE>$tablestart";
+        }
+        push @bugarray, $bug_id;
+        pnl "<TR VALIGN=TOP ALIGN=LEFT><TD>";
+        if ($dotweak) {
+            pnl "<input type=checkbox name=id_$bug_id>";
+        }
+        pnl "<A HREF=\"show_bug.cgi?id=$bug_id\">";
+        pnl "$bug_id</A> ";
+        foreach my $c (@collist) {
+            my $value = shift @row;
+            my $nowrap = "";
+
+            if (exists $::needquote{$c} && $::needquote{$c}) {
+                $value = html_quote($value);
+            } else {
+                $value = "<nobr>$value</nobr>";
+            }
+            pnl "<td $nowrap>$value";
+        }
+        if ($dotweak) {
+            my $value = shift @row;
+            $prodhash{$value} = 1;
+            $value = shift @row;
+            $statushash{$value} = 1;
+        }
+        pnl "\n";
+    }
+}
+
+
+my $buglist = join(":", @bugarray);
+
+
+print "\n";
+print "--ThisRandomString\n";
+
+
+my $toolong = 0;
+print "Content-type: text/html\n";
+if (length($buglist) < 4000) {
+    print "Set-Cookie: BUGLIST=$buglist\n";
+} else {
+    print "Set-Cookie: BUGLIST=\n";
+    $toolong = 1;
+}
+
+print "\n";
+
+PutHeader("Bug List");
+
+print "
 <CENTER>
-<B>[fmtclock [getclock ]]</B>"
-if {[info exists FORM(debug)]} { puts "<PRE>$query</PRE>" }
+<B>" .  time2str("%a %b %e %T %Z %Y", time()) . "</B>";
 
-if {$toolong} {
-    puts "<h2>This list is too long for bugzilla's little mind; the"
-    puts "Next/Prev/First/Last buttons won't appear.</h2>"
+if (defined $::FORM{'debug'}) {
+    print "<PRE>$query</PRE>\n";
 }
 
-set cdata [ split [read_file -nonewline "comments"] "\n" ]
-random seed
-puts {<HR><I><A HREF="newquip.html">}
-puts [lindex $cdata [random [llength $cdata]]]</I></A></CENTER>
-puts "<HR SIZE=10>$tablestart"
-puts $bugl
-puts "</TABLE>"
-
-switch $count {
-    0 {
-        puts "Zarro Boogs found."
-    }
-    1 {
-        puts "One bug found."
-    }
-    default {
-        puts "$count bugs found."
-    }
+if ($toolong) {
+    print "<h2>This list is too long for bugzilla's little mind; the\n";
+    print "Next/Prev/First/Last buttons won't appear.</h2>\n";
 }
 
-if {$dotweak} {
-    GetVersionTable
-    puts "
+# This is stupid.  We really really need to move the quip list into the DB!
+
+my $quip;
+if (open (COMMENTS, "<data/comments")) {
+    my @cdata;
+    while (<COMMENTS>) {
+        push @cdata, $_;
+    }
+    close COMMENTS;
+    $quip = $cdata[int(rand($#cdata + 1))];
+} else {
+    $quip = "Bugzilla would like to put a random quip here, but nobody has entered any.";
+}
+        
+
+print "<HR><I><A HREF=newquip.html>$quip\n";
+print "</I></A></CENTER>\n";
+print "<HR SIZE=10>$tablestart\n";
+print $::bugl;
+print "</TABLE>\n";
+
+if ($count == 0) {
+    print "Zarro Boogs found.\n";
+} elsif ($count == 1) {
+    print "One bug found.\n";
+} else {
+    print "$count bugs found.\n";
+}
+
+if ($dotweak) {
+    GetVersionTable();
+    print "
 <SCRIPT>
 numelements = document.changeform.elements.length;
 function SetCheckboxes(value) {
@@ -452,35 +462,26 @@ function SetCheckboxes(value) {
     }
 }
 document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCheckboxes(false);\\\"> <input type=button value=\\\"Check All\\\" onclick=\\\"SetCheckboxes(true);\\\">\");
-</SCRIPT>"
-    set resolution_popup [make_options $legal_resolution_no_dup FIXED]
-    GetVersionTable
-    set prod_list [array names prodarray]
-    set list $prod_list
-    set legal_target_versions $versions([lvarpop list])
-    foreach p $list {
-        set legal_target_versions [intersect $legal_target_versions \
-                                       $versions($p)]
+</SCRIPT>";
+    my $resolution_popup = make_options(\@::legal_resolution_no_dup, "FIXED");
+    my @prod_list = keys %prodhash;
+    my @list = @prod_list;
+    my @legal_versions;
+    my @legal_component;
+    if ($#prod_list == 1) {
+        @legal_versions = @{$::versions{$prod_list[0]}};
+        @legal_component = @{$::components{$prod_list[0]}};
     }
-    set version_popup [make_options \
-                              [concat "-blank-" $legal_target_versions] \
-                              $dontchange]
-    set platform_popup [make_options $legal_platform $dontchange]
-    set priority_popup [make_options $legal_priority $dontchange]
-    set sev_popup [make_options $legal_severity $dontchange]
-    if {[llength $prod_list] == 1} {
-        set prod_list [lindex $prod_list 0 ]
-        set legal_component [linsert $components($prod_list) 0 { }]
-    } else {
-        set legal_component { }
-    }
-
-    set component_popup [make_options $legal_component $dontchange]
-
-    set product_popup [make_options $legal_product $dontchange]
+    
+    my $version_popup = make_options(\@legal_versions, $::dontchange);
+    my $platform_popup = make_options(\@::legal_platform, $::dontchange);
+    my $priority_popup = make_options(\@::legal_priority, $::dontchange);
+    my $sev_popup = make_options(\@::legal_severity, $::dontchange);
+    my $component_popup = make_options(\@::legal_component, $::dontchange);
+    my $product_popup = make_options(\@::legal_product, $::dontchange);
 
 
-    puts "
+    print "
 <hr>
 <TABLE>
 <TR>
@@ -506,67 +507,68 @@ document.write(\" <input type=button value=\\\"Uncheck All\\\" onclick=\\\"SetCh
 
 <B>Additional Comments:</B>
 <BR>
-<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>"
+<TEXTAREA WRAP=HARD NAME=comment ROWS=5 COLS=80></TEXTAREA><BR>";
 
     # knum is which knob number we're generating, in javascript terms.
 
-    set knum 0
-    puts "
+    my $knum = 0;
+    print "
 <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
-        Do nothing else<br>"
-    incr knum
-    puts "
+        Do nothing else<br>";
+    $knum++;
+    print "
 <INPUT TYPE=radio NAME=knob VALUE=accept>
-        Accept bugs (change status to <b>ASSIGNED</b>)<br>"
-    incr knum
-    if {![info exists statusarray(CLOSED)] && \
-            ![info exists statusarray(VERIFIED)] && \
-            ![info exists statusarray(RESOLVED)]} {
-        puts "
+        Accept bugs (change status to <b>ASSIGNED</b>)<br>";
+    $knum++;
+    if (!defined $statushash{'CLOSED'} &&
+        !defined $statushash{'VERIFIED'} &&
+        !defined $statushash{'RESOLVED'}) {
+        print "
 <INPUT TYPE=radio NAME=knob VALUE=clearresolution>
-        Clear the resolution<br>"
-        incr knum
-        puts "
+        Clear the resolution<br>";
+        $knum++;
+        print "
 <INPUT TYPE=radio NAME=knob VALUE=resolve>
         Resolve bugs, changing <A HREF=\"bug_status.html\">resolution</A> to
         <SELECT NAME=resolution
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\">
-          $resolution_popup</SELECT><br>"
-        incr knum
+          $resolution_popup</SELECT><br>";
+        $knum++;
     }
-    if {![info exists statusarray(NEW)] && \
-            ![info exists statusarray(ASSIGNED)] && \
-            ![info exists statusarray(REOPENED)]} {
-        puts "
-<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bugs<br>"
-        incr knum
+    if (!defined $statushash{'NEW'} &&
+        !defined $statushash{'ASSIGNED'} &&
+        !defined $statushash{'REOPENED'}) {
+        print "
+<INPUT TYPE=radio NAME=knob VALUE=reopen> Reopen bugs<br>";
+        $knum++;
     }
-    if {[llength [array names statusarray]] == 1} {
-        if {[info exists statusarray(RESOLVED)]} {
-            puts "
+    my @statuskeys = keys %statushash;
+    if ($#statuskeys == 1) {
+        if (defined $statushash{'RESOLVED'}) {
+            print "
 <INPUT TYPE=radio NAME=knob VALUE=verify>
-        Mark bugs as <b>VERIFIED</b><br>"
-            incr knum
+        Mark bugs as <b>VERIFIED</b><br>";
+            $knum++;
         }
-        if {[info exists statusarray(VERIFIED)]} {
-            puts "
+        if (defined $statushash{'VERIFIED'}) {
+            print "
 <INPUT TYPE=radio NAME=knob VALUE=close>
-        Mark bugs as <b>CLOSED</b><br>"
-            incr knum
+        Mark bugs as <b>CLOSED</b><br>";
+            $knum++;
         }
     }
-    puts "
+    print "
 <INPUT TYPE=radio NAME=knob VALUE=reassign> 
         <A HREF=\"bug_status.html#assigned_to\">Reassign</A> bugs to
         <INPUT NAME=assigned_to SIZE=32
           ONCHANGE=\"document.changeform.knob\[$knum\].checked=true\"
-          VALUE=\"$COOKIE(Bugzilla_login)\"><br>"
-    incr knum
-    puts "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
-          Reassign bugs to owner of selected component<br>"
-    incr knum
+          VALUE=\"$::COOKIE{'Bugzilla_login'}\"><br>";
+    $knum++;
+    print "<INPUT TYPE=radio NAME=knob VALUE=reassignbycomponent>
+          Reassign bugs to owner of selected component<br>";
+    $knum++;
 
-    puts "
+    print "
 <p>
 <font size=-1>
 To make changes to a bunch of bugs at once:
@@ -577,35 +579,19 @@ To make changes to a bunch of bugs at once:
 <li> Click the below \"Commit\" button.
 </ol></font>
 <INPUT TYPE=SUBMIT VALUE=Commit>
-</FORM><hr>"
+</FORM><hr>\n";
 }
 
 
-if {$count > 0} {
-  puts "<FORM METHOD=POST ACTION=\"long_list.cgi\">
+if ($count > 0) {
+    print "<FORM METHOD=POST ACTION=\"long_list.cgi\">
 <INPUT TYPE=HIDDEN NAME=buglist VALUE=$buglist>
 <INPUT TYPE=SUBMIT VALUE=\"Long Format\">
 <A HREF=\"query.cgi\">Query Page</A>
-<A HREF=\"colchange.cgi?$buffer\">Change columns</A>
-</FORM>"
-    if {!$dotweak && $count > 1} {
-        puts "<A HREF=\"buglist.cgi?[set fields]&tweak=1\">Make changes to several of these bugs at once.</A>"
+<A HREF=\"colchange.cgi?$::buffer\">Change columns</A>
+</FORM>";
+    if (!$dotweak && $count > 1) {
+        print "<A HREF=\"buglist.cgi?$fields&tweak=1\">Make changes to several of these bugs at once.</A>\n";
     }
 }
-puts "--ThisRandomString--"
-flush stdout
-
-#
-# Below is second part of hideous "if catch" stuff from above. 
-#
-#
-# 
-# }]} {
-#     exec /usr/lib/sendmail -t << "To: terry@mozilla.org
-# 
-# 
-# $query
-# 
-# $errorInfo
-# "
-# }
+print "\n--ThisRandomString--\n";

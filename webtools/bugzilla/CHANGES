@@ -10,6 +10,26 @@ query the CVS tree.  For example,
 will tell you what has been changed in the last week.
 
 
+
+
+9/15/98 Everything has been ported to Perl.  NO MORE TCL.  This
+transition should be relatively painless, except for the "params"
+file.  This is the file that contains parameters you've set up on the
+editparams.cgi page.  Before changing to Perl, this was a tcl-syntax
+file, stored in the same directory as the code; after the change to
+Perl, it becomes a perl-syntax file, stored in a subdirectory named
+"data".
+
+So, if updating from an older version of Bugzilla, you will need to
+edit data/param, change the email address listed for
+$::param{'maintainer'}, and then go revisit the editparams.cgi page
+and reset all the parameters to your taste.  Fortunately, your old
+params file will still be around, and so you ought to be able to
+cut&paste important bits from there.
+
+
+
+
 9/2/98 Changed the way password validation works.  We now keep a
 crypt'd version of the password in the database, and check against
 that.  (This is silly, because we're also keeping the plaintext

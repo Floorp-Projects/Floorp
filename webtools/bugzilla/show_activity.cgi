@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,40 +19,45 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source "CGI.tcl"
-puts "Content-type: text/html\n"
+use diagnostics;
+use strict;
 
-puts "<HTML>
-<H1>Changes made to bug $FORM(id)</H1>
-"
-set query "
+require "CGI.pl";
+
+print "Content-type: text/html\n\n";
+
+PutHeader("Changes made to bug $::FORM{'id'}", "Activity log",
+          "Bug $::FORM{'id'}");
+
+my $query = "
         select bugs_activity.field, bugs_activity.when,
                 bugs_activity.oldvalue, bugs_activity.newvalue,
                 profiles.login_name
         from bugs_activity,profiles
-        where bugs_activity.bug_id = $FORM(id)
+        where bugs_activity.bug_id = $::FORM{'id'}
         and profiles.userid = bugs_activity.who
-        order by bugs_activity.when"
+        order by bugs_activity.when";
 
-ConnectToDatabase
-SendSQL $query
+ConnectToDatabase();
+SendSQL($query);
 
-puts "<table border cellpadding=4>"
-puts "<tr>"
-puts "    <th>Who</th><th>What</th><th>Old value</th><th>New value</th><th>When</th>"
-puts "</tr>"
+print "<table border cellpadding=4>\n";
+print "<tr>\n";
+print "    <th>Who</th><th>What</th><th>Old value</th><th>New value</th><th>When</th>\n";
+print "</tr>\n";
 
-while { [MoreSQLData] } {
-    set value [FetchSQLData]
-    lassign $value field when old new who
-
-    puts "<tr>"
-    puts "<td>$who</td>"
-    puts "<td>$field</td>"
-    puts "<td>[value_quote $old]</td>"
-    puts "<td>[value_quote $new]</td>"
-    puts "<td>$when</td>"
-    puts "</tr>"
+my @row;
+while (@row = FetchSQLData()) {
+    my ($field,$when,$old,$new,$who) = (@row);
+    $old = value_quote($old);
+    $new = value_quote($new);
+    print "<tr>\n";
+    print "<td>$who</td>\n";
+    print "<td>$field</td>\n";
+    print "<td>$old</td>\n";
+    print "<td>$new</td>\n";
+    print "<td>$when</td>\n";
+    print "</tr>\n";
 }
-puts "</table>"
-puts "<hr><a href=show_bug.cgi?id=$FORM(id)>Back to bug $FORM(id)</a>"
+print "</table>\n";
+print "<hr><a href=show_bug.cgi?id=$::FORM{'id'}>Back to bug $::FORM{'id'}</a>\n";

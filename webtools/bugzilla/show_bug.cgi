@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,26 +19,31 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source "CGI.tcl"
-puts "Content-type: text/html"
-puts ""
+use diagnostics;
+use strict;
 
+print "Content-type: text/html\n";
+print "\n";
 
-if {[lookup FORM id] == ""} {
-  puts "<H2>Search By Bug Number</H2>"
-  puts "<FORM METHOD=GET ACTION=\"show_bug.cgi\">"
-  puts "You may find a single bug by entering its bug id here: "
-  puts "<INPUT NAME=id>"
-  puts "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Bug\">"
-  puts "</FORM>"
-  exit 0
+require "CGI.pl";
+
+if (!defined $::FORM{'id'}) {
+    print "<H2>Search By Bug Number</H2>\n";
+    print "<FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
+    print "You may find a single bug by entering its bug id here: \n";
+    print "<INPUT NAME=id>\n";
+    print "<INPUT TYPE=\"submit\" VALUE=\"Show Me This Bug\">\n";
+    print "</FORM>\n";
+    exit;
 }
-ConnectToDatabase
 
-GetVersionTable
+ConnectToDatabase();
 
-PutHeader "Bugzilla bug $FORM(id)" "Bugzilla Bug" $FORM(id)
-navigation_header
+GetVersionTable();
 
-puts "<HR>"
-source "bug_form.tcl"
+PutHeader("Bugzilla bug $::FORM{'id'}", "Bugzilla Bug", $::FORM{'id'});
+navigation_header();
+
+print "<HR>\n";
+
+do "bug_form.pl";

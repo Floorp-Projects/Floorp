@@ -24,10 +24,12 @@ this document!)
 First, you need some other things:
 
    1) MySQL database server.
-   2) Tcl 7.6
-   3) TclX 7.6
-   4) mysqltcl program (hmm.. This was tricky.. Read on)
-   5) Some kind of HTTP server so you could use CGI scripts
+   2) Perl5.004 or greater, including MySQL support and the Date::Format
+      package from CPAN.
+   3) Some kind of HTTP server so you could use CGI scripts
+
+Earlier versions of Bugzilla required TCL.  THIS IS NO LONGER TRUE.
+All dependencies on TCL have been removed.
 
 1.1 Getting and setting up MySQL database
 
@@ -43,43 +45,8 @@ writable by all users on your machine and change access level
 later. This would save you a lot of time trying to guess whether it's
 permissions or a mistake in the script that make things fail.
 
-1.2-3 Getting and building Tcl & TclX 7.6
 
-    Tcl homepage is at http://www.scriptics.com. You may get sources
-for UNIX from ftp://ftp.scriptics.com/pub/tcl/tcl7_6/tcl7.6p2.tar.gz.
-TclX is an extension for Tcl that adds a lot of useful functions that
-are heavily used in the Bugzilla tool. 
-TclX page is http://www.neosoft.com/tclx. Download sources from
-ftp://ftp.neosoft.com/pub/tcl/TclX/tclX7.6.0.tar.gz. Watch out for the
-case of the letters in URL. These guys are going to bring some fun
-into your life by spelling their program name in various ways.
-
-    Now you've probably got both Tcl and TclX 7.6. You may try to use
-version 8.X but I'm not sure about results. Unfortunately I'm not an
-expert in "Tcl&Co.".
-
-    Build and install Tcl first. Then build and install TclX. This
-should go without serious problems
-
-1.4 mysqltcl - the tricky part
-
-   Grab msqltcl 1.50 (yes, "msqltcl" without 'y'. That's not a typo) from
-MySQL site's contributed software area (http://www.tcx.se/Contrib/) or
-from mSQL site (www.hughes.com.au). I've used version 1.50 and it
-works for me, though you may try more recent version at your own
-risk. You're risking anyway. 
-
-   Then grab mysqltcl.c-patch from MySQL's contrib area and apply this
-patch to msqltcl.c file from msqltcl-1.50 distribution. 
-
-   Try to make msqltcl binary which is in fact mYsqltcl already. Very
-likely that you will not be able to compile it without modifications.
-    
-   You can use the patch in APPENDIX 1 to see what changes I had to make
-to compile mysqltcl. Your mileage may vary.
-
-
-1.5 HTTP server
+1.2 HTTP server
 
 You have a freedom of choice here - Apache, Netscape or any other
 server on UNIX would do. The only thing - to make configuration easier
@@ -120,8 +87,8 @@ like to customize some things.
 Create yourself an account.  (Try to enter a new bug, and it will
 prompt you for your login.  Give it your email address, and have it
 mail you your password.)  Go visit the query page; that ought to force
-the creation of the "params" file in your installation dir.  Edit the
-params file, and change the line that says "set param(maintainer)" to
+the creation of the "data/params" file in your installation dir.  Edit the
+data/params file, and change the line that sets "$::param{'maintainer'}" to
 have your email address as the maintainer.  Go visit the query page
 again; there should now be a link at the bottom that invites you to
 edit the parameters.  (If you have cookies turned off, you'll have to
@@ -134,131 +101,8 @@ Tweak the parameters to taste.  Be careful.
 
 It's a good idea to set up a daily cronjob that does
 
-	cd <your-installation-dir> ; ./whineatnews.tcl
+	cd <your-installation-dir> ; ./whineatnews.pl
 
 This causes email that gets sent to anyone who has a NEW bug that
 hasn't been touched for several days.  For more info, see the
 whinedays and whinemail parameters.
-
-
-
-*******************************************************
-APPENDIXES
-*******************************************************
-
-
-APPENDIX 1. Patch to build mysqltcl.
---------------------------------------
-
-diff -u -r msqltcl-1.50/Makefile mysqltcl-1.50/Makefile
---- msqltcl-1.50/Makefile	Tue Jun  6 07:25:39 1995
-+++ mysqltcl-1.50/Makefile	Tue Jun 23 18:20:07 1998
-@@ -38,11 +38,11 @@
- #
- #----- Tcl/Tk libraries & such
- # Path for Tcl include files.
--TCLINCL = -I/usr/local/include
-+TCLINCL = -I../include
- # Path for Tk include files, if different from the above.
- TKINCL =
- # Libraries required to link plain Tcl.
--TCLLIBS = -L/usr/local/lib -ltcl -lm
-+TCLLIBS = -L../lib -ltclx7.6.0 -ltcl7.6 -lm -lnsl -lsocket
- # Libraries required to link plain Tk.
- TKLIBS = -L/usr/local/lib -ltk -ltcl -lX11 -lm
- 
-@@ -66,11 +66,11 @@
- #
- #----- Tcl/Tk libraries & such
- # Path for Tcl include files.
--NEWTCLINCL = -I/usr/local/new/include
-+NEWTCLINCL = -I../include
- # Path for Tk include files, if different from the above.
- NEWTKINCL =
- # Libraries required to link plain Tcl.
--NEWTCLLIBS = -L/usr/local/new/lib -ltcl -lm
-+NEWTCLLIBS = -L../lib -ltclx7.6.0 -ltcl7.6 -lm -lnsl -lsocket
- # Libraries required to link plain Tk.
- NEWTKLIBS = -L/usr/local/new/lib -ltk -ltcl -lX11 -lm
- 
-@@ -82,7 +82,7 @@
- # Path for TclX/TkX include files, if different from plain Tcl.
- NEWTCLXINCL =
- # Extra libraries required to link TclX.
--NEWTCLXLIBS = -L/usr/local/new/lib -ltclx
-+NEWTCLXLIBS = -L../mysql/lib -ltclx
- # Extra libraries required to link TkX.
- NEWTKXLIBS = -L/usr/local/new/lib -ltkx -ltclx
- # TclX/TkX 'AppInit' files (base names).
-@@ -94,16 +94,16 @@
- #
- #----- mSQL libraries & such
- # Path for mSQL include files.
--MSQLINCL = -I/usr/local2/src/Minerva/include
-+MSQLINCL = -I../mysql/include
- # Libraries required to link an mSQL application.
--MSQLLIB = -L/usr/local2/src/Minerva/lib -lmsql
-+MSQLLIB = -L../mysql/lib -lmysqlclient
- 
- #===== END OF CONFIGURATION DEFINITIONS =====
- 
- INCL = -I. ${MSQLINCL} ${TCLINCL} ${TKINCL}
- CFLAGS = ${OPTIM} -c
- LDFLAGS = ${OPTIM}
--PROGS = msqltcl msqlwish
-+PROGS = msqltcl # msqlwish
- TCLLINK = ${MSQLLIB} ${TCLLIBS}
- TKLINK = ${MSQLLIB} ${TKLIBS}
- 
-diff -u -r msqltcl-1.50/new-tclAppInit.c mysqltcl-1.50/new-tclAppInit.c
---- msqltcl-1.50/new-tclAppInit.c	Tue Jun  6 07:25:38 1995
-+++ mysqltcl-1.50/new-tclAppInit.c	Tue Jun 23 18:28:14 1998
-@@ -14,7 +14,7 @@
- static char sccsid[] = "@(#) tclAppInit.c 1.11 94/12/17 16:14:03";
- #endif /* not lint */
- 
--#include "tcl.h"
-+#include "tclExtend.h"
- 
- /*
-  * The following variable is a special hack that is needed in order for
-@@ -48,7 +48,7 @@
-     int argc;			/* Number of command-line arguments. */
-     char **argv;		/* Values of command-line arguments. */
- {
--    Tcl_Main(argc, argv);
-+    TclX_Main(argc, argv, Tcl_AppInit);
-     return 0;			/* Needed only to prevent compiler warning. */
- }
- 
-@@ -79,6 +79,10 @@
- 	return TCL_ERROR;
-     }
- 
-+    if (Tclx_Init(interp) == TCL_ERROR) {
-+	return TCL_ERROR;
-+    }
-+
-     /*
-      * Call the init procedures for included packages.  Each call should
-      * look like this:
-@@ -90,7 +94,7 @@
-      * where "Mod" is the name of the module.
-      */
- 
--    if (Msqltcl_Init(interp) == TCL_ERROR) {
-+    if (Mysqltcl_Init(interp) == TCL_ERROR) {
- 	return TCL_ERROR;
-     }
- 
-@@ -106,6 +110,6 @@
-      * then no user-specific startup file will be run under any conditions.
-      */
- 
--    tcl_RcFileName = "~/.tclshrc";
-+/*    tcl_RcFileName = "~/.tclshrc"; */
-     return TCL_OK;
- }
-
-
-

@@ -71,6 +71,10 @@ set param_list {}
 #
 # t -- A short text entry field (suitable for a single line)
 # l -- A long text field (suitable for many lines)
+# b -- A boolean value (either 1 or 0)
+# defenum -- This param defines an enum that defines a column in one of
+#	     the database tables.  The name of the parameter is of the form
+#	     "tablename.columnname".
 
 # This very first one is silly.  At some point, "superuserness" should be an
 # attribute of the person's profile entry, and not a single name like this.
@@ -89,6 +93,22 @@ proc check_urlbase {url} {
     }
     return ""
 }
+
+
+DefParam usedespot {If this is on, then we are using the Despot system to control our database of users.  Bugzilla won't ever write into the user database, it will let the Despot code maintain that.  And Bugzilla will send the user over to Despot URLs if they need to change their password.  Also, in that case, Bugzilla will treat the passwords stored in the database as being crypt'd, not plaintext.} b 0
+
+DefParam despotbaseurl {The base URL for despot.  Used only if <b>usedespot</b> is turned on, above.} t {http://cvs-mirror.mozilla.org/webtools/despot/despot.cgi} check_despotbaseurl
+
+
+proc check_despotbaseurl {url} {
+    if {![regexp {^http.*cgi$} $url]} {
+	return "must be a legal URL, that starts with http and ends with .cgi"
+    }
+    return ""
+}
+
+
+
 
 DefParam bannerhtml {The html that gets emitted at the head of every Bugzilla page.} l {<TABLE BGCOLOR="#000000" WIDTH="100%" BORDER=0 CELLPADDING=0 CELLSPACING=0>
 <TR><TD><A HREF="http://www.mozilla.org/"><IMG
@@ -148,3 +168,4 @@ You will get this message once a day until you've dealt with these bugs!
 DefParam defaultquery {This is the default query that initially comes up when you submit a bug.  It's in URL parameter format, which makes it hard to read.  Sorry!} t "bug_status=NEW&bug_status=ASSIGNED&bug_status=REOPENED&product=Mozilla&order=%22Importance%22"
 
 
+DefParam bugs.bug_status {The different statuses that a bug 

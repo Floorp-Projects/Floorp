@@ -1,5 +1,5 @@
-#! /usr/bonsaitools/bin/mysqltcl
-# -*- Mode: tcl; indent-tabs-mode: nil -*-
+#!/usr/bonsaitools/bin/perl -w
+# -*- Mode: perl; indent-tabs-mode: nil -*-
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -19,293 +19,293 @@
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 
-source "CGI.tcl"
+use diagnostics;
+use strict;
 
-confirm_login
+require "CGI.pl";
 
-puts "Content-type: text/html\n"
+# Shut up misguided -w warnings about "used only once":
 
-GetVersionTable
+use vars %::versions,
+    %::components,
+    %::COOKIE;
 
-if {![cequal $FORM(product) $dontchange]} {
-    set prod [FormData product]
-    set vok [expr [lsearch -exact $versions($prod) \
-                       [FormData version]] >= 0]
-    set cok [expr [lsearch -exact $components($prod) \
-                       [FormData component]] >= 0]
-    if {!$vok || !$cok} {
-        puts "<H1>Changing product means changing version and component.</H1>"
-        puts "You have chosen a new product, and now the version and/or"
-        puts "component fields are not correct.  (Or, possibly, the bug did"
-        puts "not have a valid component or version field in the first place.)"
-        puts "Anyway, please set the version and component now.<p>"
-        puts "<form>"
-        puts "<table>"
-        puts "<tr>"
-        puts "<td align=right><b>Product:</b></td>"
-        puts "<td>$prod</td>"
-        puts "</tr><tr>"
-        puts "<td align=right><b>Version:</b></td>"
-        puts "<td>[Version_element [FormData version] $prod]</td>"
-        puts "</tr><tr>"
-        puts "<td align=right><b>Component:</b></td>"
-        puts "<td>[Component_element [FormData component] $prod]</td>"
-        puts "</tr>"
-        puts "</table>"
-        foreach i [array names FORM] {
-            if {[lsearch -exact {version component} $i] < 0} {
-                puts "<input type=hidden name=$i value=\"[value_quote $FORM($i)]\">"
+confirm_login();
+
+print "Content-type: text/html\n\n";
+
+GetVersionTable();
+
+if ($::FORM{'product'} ne $::dontchange) {
+    my $prod = $::FORM{'product'};
+    my $vok = lsearch($::versions{$prod}, $::FORM{'version'}) >= 0;
+    my $cok = lsearch($::components{$prod}, $::FORM{'component'}) >= 0;
+    if (!$vok || !$cok) {
+        print "<H1>Changing product means changing version and component.</H1>\n";
+        print "You have chosen a new product, and now the version and/or\n";
+        print "component fields are not correct.  (Or, possibly, the bug did\n";
+        print "not have a valid component or version field in the first place.)\n";
+        print "Anyway, please set the version and component now.<p>\n";
+        print "<form>\n";
+        print "<table>\n";
+        print "<tr>\n";
+        print "<td align=right><b>Product:</b></td>\n";
+        print "<td>$prod</td>\n";
+        print "</tr><tr>\n";
+        print "<td align=right><b>Version:</b></td>\n";
+        print "<td>" . Version_element($::FORM{'version'}, $prod) . "</td>\n";
+        print "</tr><tr>\n";
+        print "<td align=right><b>Component:</b></td>\n";
+        print "<td>" . Component_element($::FORM{'component'}, $prod) . "</td>\n";
+        print "</tr>\n";
+        print "</table>\n";
+        foreach my $i (keys %::FORM) {
+            if ($i ne 'version' && $i ne 'component') {
+                print "<input type=hidden name=$i value=\"" .
+                value_quote($::FORM{$i}) . "\">\n";
             }
         }
-        puts "<input type=submit value=Commit>"
-        puts "</form>"
-        puts "</hr>"
-        puts "<a href=query.cgi>Cancel all this and go back to the query page.</a>"
-        exit
+        print "<input type=submit value=Commit>\n";
+        print "</form>\n";
+        print "</hr>\n";
+        print "<a href=query.cgi>Cancel all this and go back to the query page.</a>\n";
+        exit;
     }
 }
 
 
-if {[info exists FORM(id)]} {
-    set idlist $FORM(id)
+my @idlist;
+if (defined $::FORM{'id'}) {
+    push @idlist, $::FORM{'id'};
 } else {
-    set idlist {}
-    foreach i [array names FORM] {
-        if {[string match "id_*" $i]} {
-            lappend idlist [crange $i 3 end]
+    foreach my $i (keys %::FORM) {
+        if ($i =~ /^id_/) {
+            push @idlist, substr($i, 3);
         }
     }
 }
 
-if {![info exists FORM(who)]} {
-    set FORM(who) $COOKIE(Bugzilla_login)
+if (!defined $::FORM{'who'}) {
+    $::FORM{'who'} = $::COOKIE{'Bugzilla_login'};
 }
 
-puts "<TITLE>Update Bug $idlist</TITLE>"
-if {[info exists FORM(id)]} {
-    navigation_header
+print "<TITLE>Update Bug " . join(" ", @idlist) . "</TITLE>\n";
+if (defined $::FORM{'id'}) {
+    navigation_header();
 }
-puts "<HR>"
-set query "update bugs\nset"
-set comma ""
-umask 0
+print "<HR>\n";
+$::query = "update bugs\nset";
+$::comma = "";
+umask(0);
 
-proc DoComma {} {
-    global query comma
-    append query "$comma\n    "
-    set comma ","
+sub DoComma {
+    $::query .= "$::comma\n    ";
+    $::comma = ",";
 }
 
-proc ChangeStatus {str} {
-    global dontchange query
-    if {![cequal $str $dontchange]} {
-        DoComma
-        append query "bug_status = '$str'"
+sub ChangeStatus {
+    my ($str) = (@_);
+    if ($str ne $::dontchange) {
+        DoComma();
+        $::query .= "bug_status = '$str'";
     }
 }
 
-proc ChangeResolution {str} {
-    global dontchange query
-    if {![cequal $str $dontchange]} {
-        DoComma
-        append query "resolution = '$str'"
+sub ChangeResolution {
+    my ($str) = (@_);
+    if ($str ne $::dontchange) {
+        DoComma();
+        $::query .= "resolution = '$str'";
     }
 }
 
 
-
-
-foreach field {rep_platform priority bug_severity url summary \
-                   component bug_file_loc short_desc \
-                   product version component} {
-    if {[info exists FORM($field)]} {
-        if {![cequal $FORM($field) $dontchange]} {
-            DoComma
-            regsub -all "'" [FormData $field] "''" value
-            append query "$field = '$value'"
+foreach my $field ("rep_platform", "priority", "bug_severity", "url",
+                   "summary", "component", "bug_file_loc", "short_desc",
+                   "product", "version", "component") {
+    if (defined $::FORM{$field}) {
+        if ($::FORM{$field} ne $::dontchange) {
+            DoComma();
+            $::query .= "$field = " . SqlQuote($::FORM{$field});
         }
     }
 }
 
 
 
-ConnectToDatabase
+ConnectToDatabase();
 
-switch -exact $FORM(knob) {
-    none {}
-    accept {
-        ChangeStatus ASSIGNED
-    }
-    clearresolution {
-        ChangeResolution {}
-    }
-    resolve {
-        ChangeStatus RESOLVED
-        ChangeResolution $FORM(resolution)
-    }
-    reassign {
-        ChangeStatus NEW
-        DoComma
-        set newid [DBNameToIdAndCheck $FORM(assigned_to)]
-        append query "assigned_to = $newid"
-    }
-    reassignbycomponent {
-        if {[cequal $FORM(component) $dontchange]} {
-            puts "You must specify a component whose owner should get assigned"
-            puts "these bugs."
+SWITCH: for ($::FORM{'knob'}) {
+    /^none$/ && do {
+        last SWITCH;
+    };
+    /^accept$/ && do {
+        ChangeStatus('ASSIGNED');
+        last SWITCH;
+    };
+    /^clearresolution$/ && do {
+        ChangeResolution('');
+        last SWITCH;
+    };
+    /^resolve$/ && do {
+        ChangeStatus('RESOLVED');
+        ChangeResolution($::FORM{'resolution'});
+        last SWITCH;
+    };
+    /^reassign$/ && do {
+        ChangeStatus('NEW');
+        DoComma();
+        my $newid = DBNameToIdAndCheck($::FORM{'assigned_to'});
+        $::query .= "assigned_to = $newid";
+        last SWITCH;
+    };
+    /^reassignbycomponent$/ && do {
+        if ($::FORM{'component'} eq $::dontchange) {
+            print "You must specify a component whose owner should get\n";
+            print "assigned these bugs.\n";
             exit 0
         }
-        ChangeStatus NEW
-        DoComma
-        SendSQL "select initialowner from components
-where program='[SqlQuote $FORM(product)]'
-and value='[SqlQuote $FORM(component)]'"
-        set newname [lindex [FetchSQLData] 0]
-        set newid [DBNameToIdAndCheck $newname 1]
-        append query "assigned_to = $newid"
-    }   
-    reopen {
-        ChangeStatus REOPENED
-    }
-    verify {
-        ChangeStatus VERIFIED
-    }
-    close {
-        ChangeStatus CLOSED
-    }
-    duplicate {
-        ChangeStatus RESOLVED
-        ChangeResolution DUPLICATE
-        set num $FORM(dup_id)
-        if {[catch {incr num}]} {
-            puts "You must specify a bug number of which this bug is a"
-            puts "duplicate.  The bug has not been changed."
-            exit
+        ChangeStatus('NEW');
+        SendSQL("select initialowner from components where program=" .
+                SqlQuote($::FORM{'product'}) . " and value=" .
+                SqlQuote($::FORM{'component'}));
+        my $newname = FetchOneColumn();
+        my $newid = DBNameToIdAndCheck($newname, 1);
+        DoComma();
+        $::query .= "assigned_to = $newid";
+        last SWITCH;
+    };   
+    /^reopen$/ && do {
+        ChangeStatus('REOPENED');
+        last SWITCH;
+    };
+    /^verify$/ && do {
+        ChangeStatus('VERIFIED');
+        last SWITCH;
+    };
+    /^close$/ && do {
+        ChangeStatus('CLOSED');
+        last SWITCH;
+    };
+    /^duplicate$/ && do {
+        ChangeStatus('RESOLVED');
+        ChangeResolution('DUPLICATE');
+        my $num = trim($::FORM{'dup_id'});
+        if ($num !~ /^[0-9]*$/) {
+            print "You must specify a bug number of which this bug is a\n";
+            print "duplicate.  The bug has not been changed.\n";
+            exit;
         }
-        if {$FORM(dup_id) == $FORM(id)} {
-            puts "Nice try.  But it doesn't really make sense to mark a bug as"
-            puts "a duplicate of itself, does it?"
-            exit
+        if ($::FORM{'dup_id'} == $::FORM{'id'}) {
+            print "Nice try.  But it doesn't really make sense to mark a\n";
+            print "bug as a duplicate of itself, does it?\n";
+            exit;
         }
-        AppendComment $FORM(dup_id) $FORM(who) "*** Bug $FORM(id) has been marked as a duplicate of this bug. ***"
-        append FORM(comment) "\n\n*** This bug has been marked as a duplicate of $FORM(dup_id) ***"
-        exec ./processmail $FORM(dup_id) < /dev/null > /dev/null 2> /dev/null &
-    }
-    default {
-        puts "Unknown action $FORM(knob)!"
+        AppendComment($::FORM{'dup_id'}, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
+        $::FORM{'comment'} .= "\n\n*** This bug has been marked as a duplicate of $::FORM{'dup_id'} ***";
+        system("./processmail $::FORM{'dup_id'} < /dev/null > /dev/null 2> /dev/null &");
+        last SWITCH;
+    };
+    # default
+    print "Unknown action $::FORM{'knob'}!\n";
+    exit;
+}
+
+
+if ($#idlist < 0) {
+    print "You apparently didn't choose any bugs to modify.\n";
+    print "<p>Click <b>Back</b> and try again.\n";
+    exit;
+}
+
+if ($::comma eq "") {
+    if (!defined $::FORM{'comment'} || $::FORM{'comment'} =~ /^\s*$/) {
+        print "Um, you apparently did not change anything on the selected\n";
+        print "bugs. <p>Click <b>Back</b> and try again.\n";
         exit
     }
 }
 
+my $basequery = $::query;
 
-if {[lempty $idlist]} {
-    puts "You apparently didn't choose any bugs to modify."
-    puts "<p>Click <b>Back</b> and try again."
-    exit
-}
-
-if {[cequal $comma ""]} {
-    set comment {}
-    if {[info exists FORM(comment)]} {
-        set comment $FORM(comment)
-    }
-    if {[cequal $comment ""]} {
-        puts "Um, you apparently did not change anything on the selected bugs."
-        puts "<p>Click <b>Back</b> and try again."
-        exit
-    }
-}
-
-set basequery $query
-
-proc SnapShotBug {id} {
-    global log_columns
-    SendSQL "select [join $log_columns ","] from bugs where bug_id = $id"
-    return [FetchSQLData]
+sub SnapShotBug {
+    my ($id) = (@_);
+    SendSQL("select " . join(',', @::log_columns) .
+            " from bugs where bug_id = $id");
+    return FetchSQLData();
 }
 
 
-foreach id $idlist {
-    SendSQL "lock tables bugs write, bugs_activity write, cc write, profiles write"
-    set oldvalues [SnapShotBug $id]
+foreach my $id (@idlist) {
+    SendSQL("lock tables bugs write, bugs_activity write, cc write, profiles write");
+    my @oldvalues = SnapShotBug($id);
 
-    set query "$basequery\nwhere bug_id = $id"
+    my $query = "$basequery\nwhere bug_id = $id";
     
-# puts "<PRE>$query</PRE>"
+# print "<PRE>$query</PRE>\n";
 
-    if {![cequal $comma ""]} {
-        if { [SendSQL $query] != 0 } {
-          puts "<H1>Error -- Changes not applied</H1>"
-          puts "OK, the database rejected the changes for some reason"
-          puts "which bugzilla can't deal with.  The error string returned"
-          puts "was:<PRE>$oramsg(errortxt)</PRE>"
-          puts "Here is the query which caused the error:"
-          puts "<PRE>$query</PRE>"
-        }
-        while {[MoreSQLData]} {
-            FetchSQLData
-        }
+    if ($::comma ne "") {
+        SendSQL($query);
     }
     
-    if {[info exists FORM(comment)]} {
-        AppendComment $id $FORM(who) [FormData comment]
+    if (defined $::FORM{'comment'}) {
+        AppendComment($id, $::FORM{'who'}, $::FORM{'comment'});
     }
     
-    if {[info exists FORM(cc)] && [ShowCcList $id] != [lookup FORM cc]} {
-        set ccids(zz) 1
-        unset ccids(zz)
-        foreach person [split $FORM(cc) " ,"] {
-            if {![cequal $person ""]} {
-                set cid [DBNameToIdAndCheck $person]
-                set ccids($cid) 1
+    if (defined $::FORM{'cc'} && ShowCcList($id) ne $::FORM{'cc'}) {
+        my %ccids;
+        foreach my $person (split(/[ ,]/, $::FORM{'cc'})) {
+            if ($person ne "") {
+                my $cid = DBNameToIdAndCheck($person);
+                $ccids{$cid} = 1;
             }
         }
         
-        SendSQL "delete from cc where bug_id = $id"
-        while {[MoreSQLData]} { FetchSQLData }
-        foreach ccid [array names ccids] {
-            SendSQL "insert into cc (bug_id, who) values ($id, $ccid)"
-            while { [ MoreSQLData ] } { FetchSQLData }
+        SendSQL("delete from cc where bug_id = $id");
+        foreach my $ccid (keys %ccids) {
+            SendSQL("insert into cc (bug_id, who) values ($id, $ccid)");
         }
     }
 
-#    oracommit $lhandle
-
-    set newvalues [SnapShotBug $id]
-    foreach col $log_columns {
-        set old [lvarpop oldvalues]
-        set new [lvarpop newvalues]
-        if {![cequal $old $new]} {
-            if {![info exists whoid]} {
-                set whoid [DBNameToIdAndCheck $FORM(who)]
-                SendSQL "select delta_ts from bugs where bug_id = $id"
-                set timestamp [lindex [FetchSQLData] 0]
+    my @newvalues = SnapShotBug($id);
+    my $whoid;
+    my $timestamp;
+    foreach my $col (@::log_columns) {
+        my $old = shift @oldvalues;
+        my $new = shift @newvalues;
+        if ($old ne $new) {
+            if (!defined $whoid) {
+                $whoid = DBNameToIdAndCheck($::FORM{'who'});
+                SendSQL("select delta_ts from bugs where bug_id = $id");
+                $timestamp = FetchOneColumn();
             }
-            if {[cequal $col assigned_to]} {
-                set old [DBID_to_name $old]
-                set new [DBID_to_name $new]
+            if ($col eq 'assigned_to') {
+                $old = DBID_to_name($old);
+                $new = DBID_to_name($new);
             }
-            set q "insert into bugs_activity (bug_id,who,when,field,oldvalue,newvalue) values ($id,$whoid,$timestamp,'[SqlQuote $col]','[SqlQuote $old]','[SqlQuote $new]')"
+            $col = SqlQuote($col);
+            $old = SqlQuote($old);
+            $new = SqlQuote($new);
+            my $q = "insert into bugs_activity (bug_id,who,when,field,oldvalue,newvalue) values ($id,$whoid,$timestamp,$col,$old,$new)";
             # puts "<pre>$q</pre>"
-            SendSQL $q
+            SendSQL($q);
         }
     }
     
-    puts "<TABLE BORDER=1><TD><H1>Changes Submitted</H1>"
-    puts "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>"
-    flush stdout
+    print "<TABLE BORDER=1><TD><H1>Changes Submitted</H1>\n";
+    print "<TD><A HREF=\"show_bug.cgi?id=$id\">Back To BUG# $id</A></TABLE>\n";
 
-    SendSQL "unlock tables"
+    SendSQL("unlock tables");
 
-    exec ./processmail $id < /dev/null > /dev/null 2> /dev/null &
+    system("./processmail $id < /dev/null > /dev/null 2> /dev/null &");
 }
 
-if {[info exists next_bug]} {
-    set FORM(id) $next_bug
-    puts "<HR>"
+if (defined $::next_bug) {
+    $::FORM{'id'} = $::next_bug;
+    print "<HR>\n";
 
-    navigation_header
-    source "bug_form.tcl"
+    navigation_header();
+    do "bug_form.tcl";
 } else {
-  puts "<BR><A HREF=\"query.cgi\">Back To Query Page</A>"
+    print "<BR><A HREF=\"query.cgi\">Back To Query Page</A>\n";
 }
