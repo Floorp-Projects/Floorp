@@ -23,13 +23,19 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= libxpt
 
-SIMPLE_PROGRAMS	= PrimitiveTest SimpleTypeLib
+SIMPLE_PROGRAMS	= PrimitiveTest SimpleTypeLib TestInterfaceInfo
 
 CSRCS		= PrimitiveTest.c SimpleTypeLib.c
+
+CPPSRCS		= 			\
+		  TestInterfaceInfo.cpp \
+		  $(NULL)
 
 LDFLAGS		= 		\
 		  -L$(DIST)/bin \
 		  -lxpt 	\
+		  -lxpcom	\
+		  -lreg		\
 		  $(NSPR_LIBS) 	\
 		  $(NULL)
 

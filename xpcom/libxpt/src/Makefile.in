@@ -28,7 +28,12 @@ CSRCS		= xpt_struct.c 	\
 		  xpt_xdr.c	\
 		  $(NULL)
 
-REQUIRES	= $(MODULE)
+CPPSRCS		= nsInterfaceInfo.cpp              \
+		  nsInterfaceInfoManager.cpp       \
+		  nsXPTParamInfo.cpp               \
+		  $(NULL)
+
+REQUIRES	= $(MODULE) xpcom
 
 export:: libs
 
