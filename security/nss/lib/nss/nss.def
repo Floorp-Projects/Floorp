@@ -625,6 +625,7 @@ NSS_Get_SEC_BooleanTemplate;
 NSS_Get_SEC_NullTemplate;
 NSS_Get_SEC_SignedCertificateTemplate;
 NSS_Get_SEC_UTF8StringTemplate;
+SECKEY_DecodeDERSubjectPublicKeyInfo;
 ;+    local:
 ;+       *;
 ;+};
