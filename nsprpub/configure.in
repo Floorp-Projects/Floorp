@@ -1048,7 +1048,12 @@ case "$target" in
     OS_LIBS="$OS_LIBS -lc"
     _OPTIMIZE_FLAGS=-O2
     COMPILER_TAG=_glibc
-    CPU_ARCH_TAG=_${target_cpu}
+    if echo "$OS_TEST" | grep -c 86 >/dev/null; then
+        CPU_ARCH=x86
+    else
+        CPU_ARCH=$OS_TEST
+    fi
+    CPU_ARCH_TAG=_${CPU_ARCH}
     case "${target_cpu}" in
     alpha)
         AC_DEFINE(_ALPHA_)
@@ -1059,7 +1064,6 @@ case "$target" in
     i?86)
         AC_DEFINE(i386)
         PR_MD_ASFILES=os_Linux_x86.s
-        CPU_ARCH_TAG=_x86
         ;;
     ia64)
         PR_MD_ASFILES=os_Linux_ia64.s
