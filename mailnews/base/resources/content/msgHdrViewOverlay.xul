@@ -31,6 +31,11 @@ Rights Reserved.
 <script src="chrome://messenger/content/mime.js"/>
 
 	<toolbox id="msgHeaderView">
+        <toolbar id="viewAllHeadersToolbar" hide="true">
+            <box id="viewAllHeadersBox" class="header-part1" align="vertical" flex="1" collapsed="true">
+            </box>
+        </toolbar>
+
 		<toolbar id="headerPart1" hide="true">
 			<box class="header-splitter" align="horizontal" flex="1">
 				<box class="header-part1" align="vertical" flex="1">
@@ -70,12 +75,12 @@ Rights Reserved.
 			<box class="header-part2" align="vertical" flex="1">
 				<box id="ToBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&toField.label;" popup="allHeadersPopup"/>
-            <html class="headervalue" id="ToValueShort" flex="1">
+            <html class="headerValue" id="ToValueShort" flex="1">
             <button class="showMoreAddressesButton" id="ToValueToggleIcon" 
                 oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
             </html>
 
-            <html class="headervalue" id="ToValueLong" collapsed="true" flex="1">
+            <html class="headerValue" id="ToValueLong" collapsed="true" flex="1">
             <button class="showFewerAddressesButton"  
                oncommand="ToggleLongShortAddresses('ToValueShort', 'ToValueLong');"/>
             </html>
@@ -83,12 +88,12 @@ Rights Reserved.
 
 			    <box id="CcBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&ccField.label;" popup="allHeadersPopup"/>
-              <html class="headervalue" id="CcValueShort" flex="1">
+              <html class="headerValue" id="CcValueShort" flex="1">
               <button class="showMoreAddressesButton" id="CcValueToggleIcon" 
                 oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
               </html>
 
-              <html class="headervalue" id="CcValueLong" collapsed="true" flex="1">
+              <html class="headerValue" id="CcValueLong" collapsed="true" flex="1">
               <button class="showFewerAddressesButton"  
                 oncommand="ToggleLongShortAddresses('CcValueShort', 'CcValueLong');"/>
               </html>
@@ -96,7 +101,7 @@ Rights Reserved.
 
         	<box id="NewsgroupBox" class="headerBox" align="horizontal" collapsed="true">
             <text class="headerdisplayname" value="&newsgroupsField.label;" popup="allHeadersPopup"/>
-            <html class="headervalue" id="NewsgroupValue" flex="1">*</html>
+            <html class="headerValue" id="NewsgroupValue" flex="1">*</html>
 				  </box>
 			</box>
 		</toolbar>
@@ -105,7 +110,7 @@ Rights Reserved.
       <box class="header-part3" align="vertical" flex="1">
         <box id="UserAgentBox" class="headerBox" align="horizontal" collapsed="true">
           <text class="headerdisplayname" value="&userAgentField.label;" popup="allHeadersPopup"/>
-          <html class="headervalue" id="UserAgentValue" flex="1">*</html>
+          <html class="headerValue" id="UserAgentValue" flex="1">*</html>
         </box>
       </box>
     </toolbar>
