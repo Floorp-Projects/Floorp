@@ -347,6 +347,14 @@ void nsSpecialFileSpec::operator = (Type aType)
             }
             break;
 
+	    case App_UserChromeDirectory:
+            {
+                *this = nsSpecialFileSpec(App_UserProfileDirectory50);
+                *this += "Chrome";
+                break;
+            }
+            break;    
+
         case App_DefaultsFolder50:
             GetDefaultsFolder(*this);
             break;
