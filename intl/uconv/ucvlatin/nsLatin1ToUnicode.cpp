@@ -17,25 +17,27 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "pratom.h"
 #include "nsLatin1ToUnicode.h"
-#include "nsUCvLatinCID.h"
-#include "nsUCvLatinDll.h"
+
+//----------------------------------------------------------------------
+// Global functions and data [declaration]
+
+static PRUint16 g_Latin1MappingTable[] = {
+#include "8859-1.ut"
+};
+
+static PRInt16 g_Latin1ShiftTable[] =  {
+  1, u1ByteCharset ,
+  ShiftCell(0,0,0,0,0,0,0,0)
+};
 
 //----------------------------------------------------------------------
 // Class nsLatin1ToUnicode [implementation]
 
-NS_IMPL_ISUPPORTS(nsLatin1ToUnicode, kIUnicodeDecoderIID);
-
 nsLatin1ToUnicode::nsLatin1ToUnicode() 
+: nsTableDecoderSupport((uShiftTable*) &g_Latin1ShiftTable, 
+                        (uMappingTable*) &g_Latin1MappingTable)
 {
-  NS_INIT_REFCNT();
-  PR_AtomicIncrement(&g_InstanceCount);
-}
-
-nsLatin1ToUnicode::~nsLatin1ToUnicode() 
-{
-  PR_AtomicDecrement(&g_InstanceCount);
 }
 
 nsresult nsLatin1ToUnicode::CreateInstance(nsISupports ** aResult) 
@@ -45,38 +47,7 @@ nsresult nsLatin1ToUnicode::CreateInstance(nsISupports ** aResult)
 }
 
 //----------------------------------------------------------------------
-// Interface nsICharsetConverter [implementation]
-
-NS_IMETHODIMP nsLatin1ToUnicode::Convert(PRUnichar * aDest, 
-                                         PRInt32 aDestOffset,
-                                         PRInt32 * aDestLength, 
-                                         const char * aSrc, 
-                                         PRInt32 aSrcOffset, 
-                                         PRInt32 * aSrcLength)
-{
-  // XXX hello, this isn't ASCII! So do a table-driven mapping for Latin1
-
-  aSrc += aSrcOffset;
-  aDest += aDestOffset;
-  PRInt32 len = PR_MIN(*aSrcLength, *aDestLength);
-  const char * srcEnd = aSrc+len;
-
-  for (;aSrc<srcEnd;) *aDest++ = ((PRUint8)*aSrc++);
-
-  nsresult res = (*aSrcLength > len)? NS_PARTIAL_MORE_OUTPUT : NS_OK;
-  *aSrcLength = *aDestLength = len;
-
-  return res;
-}
-
-NS_IMETHODIMP nsLatin1ToUnicode::Finish(PRUnichar * aDest, 
-                                        PRInt32 aDestOffset,
-                                        PRInt32 * aDestLength)
-{
-  // it is really only a stateless converter...
-  *aDestLength = 0;
-  return NS_OK;
-}
+// Subclassing of nsTableDecoderSupport class [implementation]
 
 NS_IMETHODIMP nsLatin1ToUnicode::Length(const char * aSrc, 
                                         PRInt32 aSrcOffset, 
@@ -85,16 +56,5 @@ NS_IMETHODIMP nsLatin1ToUnicode::Length(const char * aSrc,
 {
   // we are a single byte to Unicode converter, so...
   *aDestLength = aSrcLength;
-  return NS_EXACT_LENGTH;
-}
-
-NS_IMETHODIMP nsLatin1ToUnicode::Reset()
-{
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsLatin1ToUnicode::SetInputErrorBehavior(PRInt32 aBehavior)
-{
-  // no input error possible, this encoding is too simple
-  return NS_OK;
+  return NS_OK_UDEC_EXACTLENGTH;
 }

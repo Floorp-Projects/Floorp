@@ -36,6 +36,7 @@
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeDecodeUtil.h"
+#include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsICharsetConverterManager.h"
