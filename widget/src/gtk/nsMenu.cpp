@@ -386,3 +386,4 @@ NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
 {
 	return NS_OK;
 }
+
