@@ -488,28 +488,15 @@ NS_IMETHODIMP nsChromeRegistry::GetOverlayDataSource(nsIURI *aChromeURL, nsIRDFD
   rv = SplitURL(aChromeURL, package, provider, remaining);
   if (NS_FAILED(rv)) return rv;
 
-  nsCAutoString overlayFile;
-
   // Retrieve the mInner data source.
-  overlayFile = mInstallRoot;
-  overlayFile += package;
+  nsCAutoString overlayFile = package;
   overlayFile += "/";
   overlayFile += provider;
   overlayFile += "/";
   overlayFile += "overlays.rdf";
 
-  nsStringKey skey(overlayFile);
-  nsCOMPtr<nsISupports> supports = getter_AddRefs(NS_STATIC_CAST(nsISupports*, mDataSourceTable->Get(&skey)));
-  if (supports)
-  {
-    nsCOMPtr<nsIRDFDataSource> dataSource = do_QueryInterface(supports, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-      *aResult = dataSource;
-      NS_ADDREF(*aResult);
-    }
-  }
-  return NS_OK;
+  // XXX For now, only support install-based overlays (not profile-based overlays)
+  return LoadDataSource(overlayFile, aResult, PR_FALSE);
 }
 
 
