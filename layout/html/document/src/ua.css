@@ -333,8 +333,6 @@ IFRAME {
 }
 INPUT {
   vertical-align: bottom;
-  font-family: "XXXHACK";
-  font-size: 100pt;
 }
 SELECT {
   vertical-align: bottom;
@@ -347,6 +345,4 @@ OPTION {
 }
 TEXTAREA {
   vertical-align: bottom;
-  font-family: "XXXHACK";
-  font-size: 100pt;
 }
