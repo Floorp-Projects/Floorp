@@ -26,7 +26,6 @@
 #include "nsIObserverList.h"
 #include "nsObserverList.h"
 #include "nsHashtable.h"
-#include "nsVoidArray.h"
 #include "nsString.h"
 
 static NS_DEFINE_IID(kIObserverServiceIID, NS_IOBSERVERSERVICE_IID);
@@ -37,9 +36,13 @@ static NS_DEFINE_IID(kObserverServiceCID, NS_OBSERVERSERVICE_CID);
 
 class nsObserverService : public nsIObserverService {
 public:
-    static nsresult GetObserverService(nsIObserverService** anObserverService);
 
-    NS_IMETHOD    GetObserverList(nsString* aTopic, nsIObserverList** anObserverList);
+	static nsresult GetObserverService(nsIObserverService** anObserverService);
+    
+	NS_IMETHOD AddObserver(nsIObserver** anObserver, nsString* aTopic);
+    NS_IMETHOD RemoveObserver(nsIObserver** anObserver, nsString* aTopic);
+	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic);
+
    
     nsObserverService();
     ~nsObserverService(void);
@@ -48,6 +51,8 @@ public:
 
    
 private:
+	
+    NS_IMETHOD GetObserverList(nsIObserverList** anObserverList, nsString* aTopic);
 
     nsHashtable   *mObserverTopicTable;
 
@@ -95,7 +100,7 @@ nsresult nsObserverService::GetObserverService(nsIObserverService** anObserverSe
     return NS_OK;
 }
 
-nsresult nsObserverService::GetObserverList(nsString* aTopic, nsIObserverList** anObserverList)
+nsresult nsObserverService::GetObserverList(nsIObserverList** anObserverList, nsString* aTopic)
 {
     if (anObserverList == NULL)
     {
@@ -142,6 +147,80 @@ nsresult nsObserverService::GetObserverList(nsString* aTopic, nsIObserverList** 
 	return NS_OK;
 }
 
+nsresult nsObserverService::AddObserver(nsIObserver** anObserver, nsString* aTopic)
+{
+	nsIObserverList* anObserverList;
+	nsresult rv;
+
+    if (anObserver == NULL)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+	if (aTopic == NULL)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+	rv = GetObserverList(&anObserverList, aTopic);
+	if (NS_FAILED(rv)) return rv;
+
+	if (anObserverList) {
+        return anObserverList->AddObserver(anObserver);
+    }
+ 	
+	return NS_ERROR_FAILURE;
+}
+
+nsresult nsObserverService::RemoveObserver(nsIObserver** anObserver, nsString* aTopic)
+{
+	nsIObserverList* anObserverList;
+	nsresult rv;
+
+    if (anObserver == NULL)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+	if (aTopic == NULL)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+	rv = GetObserverList(&anObserverList, aTopic);
+	if (NS_FAILED(rv)) return rv;
+
+	if (anObserverList) {
+        return anObserverList->RemoveObserver(anObserver);
+    }
+ 	
+	return NS_ERROR_FAILURE;
+}
+
+nsresult nsObserverService::EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic)
+{
+	nsIObserverList* anObserverList;
+	nsresult rv;
+
+    if (anEnumerator == NULL)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+	if (aTopic == NULL)
+    {
+        return NS_ERROR_NULL_POINTER;
+    }
+
+	rv = GetObserverList(&anObserverList, aTopic);
+	if (NS_FAILED(rv)) return rv;
+
+	if (anObserverList) {
+        return anObserverList->EnumerateObserverList(anEnumerator);
+    }
+ 	
+	return NS_ERROR_FAILURE;
+}
 
 
 ////////////////////////////////////////////////////////////////////////////////

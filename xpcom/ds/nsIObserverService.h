@@ -38,7 +38,9 @@ class nsIObserverService : public nsISupports {
 public:
     static const nsIID& GetIID() { static nsIID iid = NS_IOBSERVERSERVICE_IID; return iid; }
 
-    NS_IMETHOD  GetObserverList(nsString* aTopic, nsIObserverList** anObserverList) = 0;    
+ 	NS_IMETHOD AddObserver(nsIObserver** anObserver, nsString* aTopic) = 0;
+    NS_IMETHOD RemoveObserver(nsIObserver** anObserver, nsString* aTopic) = 0;
+	NS_IMETHOD EnumerateObserverList(nsIEnumerator** anEnumerator, nsString* aTopic) = 0;
 };
 
 extern NS_BASE nsresult NS_NewObserverService(nsIObserverService** anObserverService);

@@ -2,7 +2,6 @@
 #include "nsISupports.h"
 #include "nsRepository.h"
 #include "nsIObserverService.h"
-#include "nsIObserverList.h"
 #include "nsIObserver.h"
 #include "nsString.h"
 
@@ -21,10 +20,10 @@ int main(int argc, char *argv[])
 	nsIObserverService *anObserverService = NULL;
     nsresult rv;
 
- /*   nsComponentManager::RegisterComponent(kObserverServiceCID,
+    nsComponentManager::RegisterComponent(kObserverServiceCID,
                                            "ObserverService", 
                                            NS_OBSERVERSERVICE_PROGID,
-                                           BASE_DLL,PR_TRUE, PR_TRUE);*/
+                                           BASE_DLL,PR_FALSE, PR_FALSE);
 
 	nsresult res = nsRepository::CreateInstance(kObserverServiceCID,
 												NULL,
@@ -34,9 +33,8 @@ int main(int argc, char *argv[])
 	
 	if (res == NS_OK) {
 
-        nsString  aTopic("tagobserver");
+        nsString  aTopic("htmlparser");
 
-        nsIObserverList* anObserverList;
         nsIObserver *anObserver;
         nsIObserver *aObserver = nsnull;
         nsIObserver *bObserver = nsnull;
@@ -47,26 +45,22 @@ int main(int argc, char *argv[])
 												(void **) &anObserver);
                                                 
 
-        rv = anObserverService->GetObserverList(&aTopic, &anObserverList);
-        if (NS_FAILED(rv)) return rv;
- 
-        NS_NewObserver(&aObserver);
+        rv = NS_NewObserver(&aObserver);
+		if (NS_FAILED(rv)) return rv;
     
         
-        if (anObserverList) {
-            anObserverList->AddObserver(&aObserver);
-        }
-          
-        NS_NewObserver(&bObserver);
+        rv = anObserverService->AddObserver(&aObserver, &aTopic);
+		if (NS_FAILED(rv)) return rv;
+ 
+		
+        rv = NS_NewObserver(&bObserver);
+		if (NS_FAILED(rv)) return rv;
 
-
-        if (anObserverList) {
-            anObserverList->AddObserver(&bObserver);
-        }
-
-
+        rv = anObserverService->AddObserver(&bObserver, &aTopic);
+		if (NS_FAILED(rv)) return rv;
+ 
 		nsIEnumerator* e;
-		rv = anObserverList->EnumerateObserverList(&e);
+		rv = anObserverService->EnumerateObserverList(&e, &aTopic);
 		if (NS_FAILED(rv)) return rv;
 		nsISupports *inst;
  
@@ -75,8 +69,14 @@ int main(int argc, char *argv[])
             if (NS_SUCCEEDED(rv)) {
               rv = inst->QueryInterface(nsIObserver::GetIID(), (void**)&anObserver);
             }
-            anObserver->Notify(nsnull);
+            rv = anObserver->Notify(nsnull);
          }
+
+        rv = anObserverService->RemoveObserver(&aObserver, &aTopic);
+		if (NS_FAILED(rv)) return rv;
+
+        rv = anObserverService->RemoveObserver(&bObserver, &aTopic);
+		if (NS_FAILED(rv)) return rv;
 
   
         

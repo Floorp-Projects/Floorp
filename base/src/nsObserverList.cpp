@@ -18,12 +18,8 @@
 
 #define NS_IMPL_IDS
 #include "pratom.h"
-//#include "nsIFactory.h"
-//#include "nsIServiceManager.h"
-#include "nsRepository.h"
 #include "nsIObserverList.h"
 #include "nsObserverList.h"
-#include "nsHashtable.h"
 #include "nsString.h"
 #include "nsAutoLock.h"
 
@@ -73,6 +69,7 @@ nsObserverList::~nsObserverList(void)
 nsresult nsObserverList::AddObserver(nsIObserver** anObserver)
 {
 	nsresult rv;
+	PRBool inserted;
     
 	NS_AUTOLOCK(mLock);
 
@@ -87,14 +84,17 @@ nsresult nsObserverList::AddObserver(nsIObserver** anObserver)
     }
 
 	if(*anObserver) {
-		mObserverList->AppendElement(*anObserver);      
+		inserted = mObserverList->AppendElement(*anObserver); 
+		return inserted ? NS_OK : NS_ERROR_FAILURE;
     }
 
-	return NS_OK;
+	return NS_ERROR_FAILURE;
 }
 
 nsresult nsObserverList::RemoveObserver(nsIObserver** anObserver)
 {
+	PRBool removed;
+
  	NS_AUTOLOCK(mLock);
 
     if (anObserver == NULL)
@@ -103,10 +103,11 @@ nsresult nsObserverList::RemoveObserver(nsIObserver** anObserver)
     }  
 
 	if(*anObserver) {
-		mObserverList->RemoveElement(*anObserver);      
+		removed = mObserverList->RemoveElement(*anObserver);  
+		return removed ? NS_OK : NS_ERROR_FAILURE;
     }
 
-    return NS_OK;
+    return NS_ERROR_FAILURE;
 
 }
 
