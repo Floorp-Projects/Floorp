@@ -691,13 +691,13 @@ nsMovieSoundRequest::OnStreamComplete(nsIStreamLoader *aLoader,
   if (NS_FAILED(aStatus))
     return NS_ERROR_FAILURE;
 
-  nsXPIDLCString  contentType;
+  nsCAutoString contentType;
 
   nsCOMPtr<nsIRequest>    request;
   aLoader->GetRequest(getter_AddRefs(request));
   nsCOMPtr<nsIChannel>  channel = do_QueryInterface(request);
   if (channel)
-    channel->GetContentType(getter_Copies(contentType));
+    channel->GetContentType(contentType);
   
   // we could use a Pointer data handler type, and avoid this
   // allocation/copy, in QuickTime 5 and above.
