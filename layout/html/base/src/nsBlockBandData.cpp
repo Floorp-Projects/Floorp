@@ -92,6 +92,14 @@ nsBlockBandData::GetAvailableSpace(nscoord aY)
   if (NS_UNCONSTRAINEDSIZE == mSpace.width) {
     mAvailSpace.width = NS_UNCONSTRAINEDSIZE;
   }
+#ifdef DEBUG_kipp
+  if (mAvailSpace.width != NS_UNCONSTRAINEDSIZE) {
+    NS_ASSERTION((mAvailSpace.width > -200000) && (mAvailSpace.width < 200000), "oy");
+  }
+  if (mAvailSpace.height != NS_UNCONSTRAINEDSIZE) {
+    NS_ASSERTION((mAvailSpace.height > -200000) && (mAvailSpace.height < 200000), "oy");
+  }
+#endif
 }
 
 /**
