@@ -2010,7 +2010,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
    * inside a *non-browser* window. Note this mechanism s'd go away once 
    * we have the protocol registry and window manager available
    */
-  if (isMail || !isBrowser) {
+  if (isMail) {
     //Ask the container to load the appropriate component for the URL.
 
     if (root) {
