@@ -1454,7 +1454,7 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   if (mHasHorizontalScrollbar && mHScrollbarBox) {
     SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX);
     SetAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(scrollAreaRect.width)*0.8));
-    SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel, PR_FALSE);
+    SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel);
   } 
 
   if (mHScrollbarBox) {
