@@ -782,7 +782,7 @@ KeychainFormSubmitObserver::Notify(nsIContent* node, nsIDOMWindowInternal* windo
       return NS_OK;
     
     nsIURI* docURL = doc->GetDocumentURL();
-    if (NS_FAILED(rv) || !docURL)
+    if (!docURL)
       return NS_OK;
 
     nsCAutoString host;
@@ -950,7 +950,7 @@ KeychainFormSubmitObserver::CheckChangeDataYN(nsIDOMWindowInternal* window)
       // pre-fill the fields if that's the case.
       //
       nsIURI* docURL = doc->GetDocumentURL();
-      if (NS_FAILED(rv) || !docURL)
+      if (!docURL)
         return;
   
       NSMutableString* username = [NSMutableString string];
