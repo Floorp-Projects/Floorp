@@ -26,6 +26,11 @@
     </content>
 
     <implementation>
+      <field name="_closeHandler">(function(event) {
+        if (!document.documentElement.cancelDialog())
+          event.preventDefault();
+      })</field>
+
       <property name="buttons"
                 onget="return this.getAttribute('buttons');"
                 onset="this._configureButtons(val); return val;"/>
@@ -33,7 +38,7 @@
       <method name="acceptDialog">
         <body>
         <![CDATA[
-          this._doButtonCommand("accept");
+          return this._doButtonCommand("accept");
         ]]>
         </body>
       </method>
@@ -41,7 +46,7 @@
       <method name="cancelDialog">
         <body>
         <![CDATA[
-          this._doButtonCommand("cancel");
+          return this._doButtonCommand("cancel");
         ]]>
         </body>
       </method>
@@ -65,6 +70,9 @@
         
         // hide/show the appropriate buttons
         this._configureButtons(this.getAttribute("buttons"));
+
+        // listen for when window is closed via native close buttons
+        window.addEventListener("close", this._closeHandler, false);
 
         // give focus to the first focusable element in the dialog
         window.addEventListener("load", this.setInitialFocus, false);
@@ -150,7 +158,7 @@
         <body>
         <![CDATA[
           var dialog = aEvent.target._dialog;
-          dialog._doButtonCommand(aEvent.target.getAttribute("dlgtype"));
+          return dialog._doButtonCommand(aEvent.target.getAttribute("dlgtype"));
         ]]>
         </body>
       </method>
@@ -170,7 +178,9 @@
                 window.setTimeout(function() {window.close();}, 1);
               }
             }
+            return noCancel;
           }
+          return true;
         ]]>
         </body>
       </method>
