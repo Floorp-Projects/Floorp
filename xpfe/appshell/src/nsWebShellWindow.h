@@ -56,10 +56,6 @@
 #include "nsCOMPtr.h"
 #include "nsXULWindow.h"
 
-#if defined(XP_MAC) || defined(XP_MACOSX)
-#define USE_NATIVE_MENUS
-#endif
-
 /* Forward declarations.... */
 struct PLEvent;
 
@@ -87,7 +83,7 @@ public:
   nsWebShellWindow();
 
   // nsISupports interface...
-  NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS
 
   NS_IMETHOD LockUntilChromeLoad() { mLockedUntilChromeLoad = PR_TRUE; return NS_OK; }
   NS_IMETHOD GetLockedState(PRBool& aResult) { aResult = mLockedUntilChromeLoad; return NS_OK; }
@@ -177,12 +173,18 @@ public:
 
 protected:
   
-#ifdef USE_NATIVE_MENUS
   nsCOMPtr<nsIDOMNode>     FindNamedDOMNode(const nsAString &aName, nsIDOMNode * aParent, PRInt32 & aCount, PRInt32 aEndCount);
   nsCOMPtr<nsIDOMDocument> GetNamedDOMDoc(const nsAString & aWebShellName);
   void DynamicLoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
+#if 0
+  void LoadMenus(nsIDOMDocument * aDOMDoc, nsIWidget * aParentWindow);
+  NS_IMETHOD               CreateMenu(nsIMenuBar * aMenuBar, nsIDOMNode * aMenuNode, nsString & aMenuName);
+  void LoadSubMenu(nsIMenu * pParentMenu, nsIDOMElement * menuElement,nsIDOMNode * menuNode);
+  NS_IMETHOD LoadMenuItem(nsIMenu * pParentMenu, nsIDOMElement * menuitemElement, nsIDOMNode * menuitemNode);
 #endif
 
+  nsCOMPtr<nsIDOMNode>     GetDOMNodeFromWebShell(nsIWebShell *aShell);
+  void                     ExecuteStartupCode();
   void                     LoadContentAreas();
   PRBool                   ExecuteCloseHandler();
 
