@@ -989,8 +989,8 @@ void CLinkToolbar::SetMinimumRows(int rowWidth)
 	{
         // Get the current button
 		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
-        if (!pButton)
-			return;
+        if (!pButton) // Separator
+			continue;
 
         CSize s = pButton->GetMinimalButtonSize();
         int tempTotal = totalLine + s.cx;
@@ -1090,8 +1090,8 @@ void CLinkToolbar::LayoutButtons(int nIndex)
 	{
         // Get the current button
 		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
-        if (!pButton)
-			return;
+		if (!pButton)
+			continue;
 
         if (numChars == 0)
         {
@@ -1117,7 +1117,9 @@ void CLinkToolbar::LayoutButtons(int nIndex)
 		{
 			// Get the current button
 			CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
-       
+			if (!pButton)  // Separator
+				continue;
+
             // See how much this num chars takes up
             ComputeLayoutInfo(pButton, numChars, rowWidth, usedSpace);
         }
@@ -1141,7 +1143,9 @@ void CLinkToolbar::LayoutButtons(int nIndex)
 	{
         // Get the current button
 		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
-       
+        if (!pButton)  // Separator
+			continue;
+
         buttonSize = pButton->GetButtonSize();  // The size we must be
         
         int tempTotal = nStartX + buttonSize.cx;
@@ -1204,7 +1208,9 @@ void CLinkToolbar::WidthChanged(int animWidth)
 	{
         // Get the current button
 		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
-         
+        if (!pButton)  // Separator
+			continue;
+
         if (numChars == 0)
         {
             numChars = pButton->GetMaxTextCharacters();
@@ -1229,7 +1235,9 @@ void CLinkToolbar::WidthChanged(int animWidth)
 		{
 			// Get the current button
 			CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
-       
+			if (!pButton)
+				continue;
+
             // See how much this num chars takes up
             ComputeLayoutInfo(pButton, numChars, rowWidth, usedSpace);
         }
@@ -1254,7 +1262,9 @@ void CLinkToolbar::WidthChanged(int animWidth)
 	{
         // Get the current button
 		CLinkToolbarButton* pButton = (CLinkToolbarButton*)(HT_GetNodeFEData(item));
-       
+        if (!pButton)
+			continue;
+
         buttonSize = pButton->GetButtonSize();  // The size we must be
         
         int tempTotal = nStartX + buttonSize.cx;
