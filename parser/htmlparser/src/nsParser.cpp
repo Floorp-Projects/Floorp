@@ -97,9 +97,10 @@ public:
     nsIDTD* theDTD;
     NS_NewNavHTMLDTD(&theDTD);    //do this as a default HTML DTD...
     mDTDDeque.Push(theDTD);
+#if 0
     NS_NewOtherHTMLDTD(&theDTD);  //do this as the default DTD for strict documents...
     mDTDDeque.Push(theDTD);
-
+#endif
     mHasViewSourceDTD=PR_FALSE;
     mHasRTFDTD=mHasXMLDTD=PR_FALSE;
   }
