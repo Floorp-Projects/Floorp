@@ -203,6 +203,9 @@ function TruncateStringAtWordEnd(string, maxLength, addEllipses)
       maxLength -= 3; 
     string = string.replace(RegExp("(.{0," + maxLength + "})\\s.*"), "$1")
 
+    if (string.length > maxLength)
+      string = string.slice(0, maxLength);
+
     if (addEllipses)
       string += "...";
     return string;
