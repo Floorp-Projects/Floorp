@@ -37,6 +37,7 @@ CHROME_CONTENT = \
 		platformInputBindings.xul \
 		platformEditorBindings.xul \
 		platformTextAreaBindings.xul \
+		platformHTMLBindings.xml \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

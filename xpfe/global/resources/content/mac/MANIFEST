@@ -4,4 +4,4 @@ platformBrowserBindings.xul
 platformInputBindings.xul
 platformTextAreaBindings.xul
 platformEditorBindings.xul
-
+platformHTMLBindings.xml

@@ -69,6 +69,14 @@ CHROME_CONTENT= \
 	.\wizardOverlay.js \
 	.\wizardOverlay.xul \
 	.\treePopups.js \
+	.\content.css \
+	.\xulBindings.xml \
+	.\htmlBindings.xml \
+	.\menulistBindings.xml \
+	.\radioBindings.xml \
+	.\tabBindings.xml \
+	.\treeBindings.xml \
+	.\xul.css \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
