@@ -2667,7 +2667,6 @@ nsDOMSelection::~nsDOMSelection()
   PRUint32 cnt = 0;
   if (mSelectionListeners)
   {
-	  PRUint32 cnt;
     nsresult rv = mSelectionListeners->Count(&cnt);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Count failed");
     for (PRUint32 i=0;i < cnt; i++)
