@@ -32,6 +32,8 @@
 
 #include "ToolbarItem.h"
 
+class XFE_RDFPopupMenu;
+
 class XFE_ToolbarButton : public XFE_ToolbarItem
 {
 public:
@@ -88,7 +90,7 @@ protected:
 	//                                                                  //
 	//////////////////////////////////////////////////////////////////////
 	virtual void	activate			();
-	virtual void	popup				();
+	virtual void	popup				(XEvent *event);
 
 private:
 
@@ -106,6 +108,7 @@ private:
  										 XtPointer		clientData,
  										 XtPointer		callData);
 
+	XFE_RDFPopupMenu *		_popup;
 };
 
 #endif // _xfe_toolbar_button_h_

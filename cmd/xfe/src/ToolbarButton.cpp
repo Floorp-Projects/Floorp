@@ -30,6 +30,7 @@
 #include "ToolbarButton.h"
 #include "RDFUtils.h"
 #include "BrowserFrame.h"			// for fe_reuseBrowser()
+#include "PopupMenu.h"
 
 #include <Xfe/Button.h>
 
@@ -40,7 +41,8 @@ XFE_ToolbarButton::XFE_ToolbarButton(XFE_Frame *		frame,
 									 Widget				parent,
                                      HT_Resource		htResource,
 									 const String		name) :
-	XFE_ToolbarItem(frame,parent,htResource,name)
+	XFE_ToolbarItem(frame,parent,htResource,name),
+    _popup(NULL)
 {
 }
 //////////////////////////////////////////////////////////////////////////
@@ -232,24 +234,29 @@ XFE_ToolbarButton::activate()
 	// Other URLs
 	else if (!HT_IsContainer(entry))
 	{
-        MWContext *		context = getAncestorContext();
-
-        // Give HT a chance to handle the launch
-        if (!HT_Launch(entry, context)) {
-            char *			address = HT_GetNodeURL(entry);
-            URL_Struct *	url = NET_CreateURLStruct(address,NET_DONT_RELOAD);
-		
-            XP_ASSERT( context != NULL );
-		
-            fe_reuseBrowser(context,url);
-        }
+        XFE_RDFUtils::launchEntry(getAncestorContext(), entry);
 	}
 }
 //////////////////////////////////////////////////////////////////////////
 /* virtual */ void
-XFE_ToolbarButton::popup()
+XFE_ToolbarButton::popup(XEvent *event)
 {
-	printf("popup(%s) - Write Me Please.\n",XtName(m_widget));
+	if (_popup)
+	{
+        // Destroy old one
+        delete _popup;
+    }
+	HT_Resource		entry = getHtResource();
+    HT_View         view  = HT_GetView(entry);
+
+    _popup = new XFE_RDFPopupMenu("popup",
+                                   FE_GetToplevelWidget(),
+                                   view,
+                                   TRUE,   // isWorkspace
+                                   FALSE); // background commands
+		
+	_popup->position(event);
+	_popup->show();
 }
 //////////////////////////////////////////////////////////////////////////
 
@@ -273,12 +280,13 @@ XFE_ToolbarButton::activateCB(Widget		/* w */,
 /* static */ void
 XFE_ToolbarButton::popupCB(Widget			/* w */,
 						   XtPointer		clientData,
-						   XtPointer		/* callData */)
+						   XtPointer		callData)
 {
 	XFE_ToolbarButton * button = (XFE_ToolbarButton *) clientData;
+    XmAnyCallbackStruct *cbs = (XmAnyCallbackStruct *) callData;
 
 	XP_ASSERT( button != NULL );
 
-	button->popup();
+	button->popup(cbs->event);
 }
 //////////////////////////////////////////////////////////////////////////
