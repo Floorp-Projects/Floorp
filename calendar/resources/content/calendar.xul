@@ -321,7 +321,7 @@
  
    <hbox id="calendar-content-box" flex="1">
 
-      <vbox id="left-hand-content" flex="1" persist="width">
+      <vbox id="left-hand-content" persist="width">
       <tabbox id="tablist">
          <tabs>
             <tab label="&calendar.calendartab.label;"/>
