@@ -1306,18 +1306,16 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     jsval fval, *sp, *oldsp;
     JSObject *aobj;
-    jsuint length;
+    jsuint length = 0;
     void *mark;
     uintN i;
     JSBool ok;
     JSStackFrame *fp;
 
-    if (argc != 2 ||
-	!JSVAL_IS_OBJECT(argv[1]) ||
-	!(aobj = JSVAL_TO_OBJECT(argv[1])) ||
-	!js_HasLengthProperty(cx, aobj, &length)) {
-	return fun_call(cx, obj, argc, argv, rval);
-    }
+    if (argc == 0)
+        /* will get globalObject as 'this'
+                    and no other agurments */
+        return fun_call(cx, obj, argc, argv, rval);
 
     if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_FUNCTION, &argv[-1]))
 	return JS_FALSE;
@@ -1330,6 +1328,24 @@ fun_apply(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
                              JS_GetStringBytes(JS_ValueToString(cx, fval)));
         return JS_FALSE;
     }
+
+    if (argc >= 2)
+        /* if the second arg is null or undefined, call the
+           function with zero args */
+        if ((argv[1] == JSVAL_NULL) || (argv[1] == JSVAL_VOID))
+            argc = 0;
+        else {
+            /* the second arg must be an array (or arguments object) */
+            if (!(aobj = JSVAL_TO_OBJECT(argv[1]))
+                    || ((OBJ_GET_CLASS(cx, aobj) != &js_ArgumentsClass)
+                        && (OBJ_GET_CLASS(cx, aobj) != &js_ArrayClass))) {
+	        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                     JSMSG_BAD_APPLY_ARGS);
+                return JS_FALSE;
+            }
+            if (!js_GetLengthProperty(cx, aobj, &length))
+                return JS_FALSE;
+        }
 
     /* Convert the first arg to 'this' and skip over it. */
     if (!js_ValueToObject(cx, argv[0], &obj))
