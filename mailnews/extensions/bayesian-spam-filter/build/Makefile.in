@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= bayesfilt
-LIBRARY_NAME	= bayesfilt
+MODULE		= bayesflt
+LIBRARY_NAME	= bayesflt
 META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= bayesflt
@@ -53,7 +53,7 @@ CPPSRCS		= nsBayesianFilterFactory.cpp
 EXPORTS		= nsBayesianFilterCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)bayesfilt_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)bayesflt_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

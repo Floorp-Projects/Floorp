@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= msgmailviews
-LIBRARY_NAME	= msgmailviews
+MODULE		= mailview
+LIBRARY_NAME	= mailview
 META_COMPONENT = mail
 EXPORT_LIBRARY = 1
 SHORT_LIBNAME	= mailview
@@ -53,7 +53,7 @@ CPPSRCS		= nsMsgMailViewsFactory.cpp
 EXPORTS		= nsMsgMailViewsCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)msgmailviews_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)mailview_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \

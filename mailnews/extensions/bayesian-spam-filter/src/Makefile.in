@@ -26,8 +26,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= bayesfilt
-LIBRARY_NAME	= bayesfilt_s
+MODULE		= bayesflt
+LIBRARY_NAME	= bayesflt_s
 META_COMPONENT = mail
 REQUIRES	= xpcom \
 		  string \
