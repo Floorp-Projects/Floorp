@@ -1,14 +1,23 @@
-# Netscape Search - Sherlock Plug-in for Navigator 6.0 Beta 1
+# Netscape Search - Sherlock Plug-in for Navigator 6.0
 # Copyright (C)2000 Netscape Communications Corp.
 
 <SEARCH
-	name="Netscape"
+	name="Netscape Search"
 	description = "Netscape Search"
 	method="GET"
 	action="http://search.netscape.com/cgi-bin/search"
 >
 
 <INPUT NAME="search" user>
+
+<INTERPRET
+	browserResultType = "result"
+	bannerStart="<!--AD_TAG VENDOR=AOL WIDTH=468 HEIGHT=60-->"
+	bannerEnd="<!--/AD_TAG-->"
+	resultListStart = "<!----**Netcenter**---->"
+	resultListEnd = "Groups of reviewed web sites related to your search term."
+	resultItemStart = "<LI>"
+>
 
 <INTERPRET
 	browserResultType = "category"

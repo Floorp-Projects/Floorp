@@ -1,11 +1,10 @@
 # Sherlock Plugin for Netscape Open Directory
 # Copyright (c) 2000 Netscape Communications Corp.
 # Author - Myron Rosmarin
-# 
 
 <search 
-     name        = "Music - Artist by Rolling Stone"
-     description = "Music - Artist by Rolling Stone"
+     name        = "Music: Artists by Rolling Stone"
+     description = "Music: Artists by Rolling Stone"
      method      = "GET"
      action      = "http://rollingstone.netscape.com/artist/list.btq"
 >
