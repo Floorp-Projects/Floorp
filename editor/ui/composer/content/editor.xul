@@ -136,10 +136,11 @@
     <titledbutton id="openButton"/>
     <titledbutton id="saveButton"/>
     <titledbutton id="previewButton"/>
+ <!--     <toolbarseparator/>  -->
     <titledbutton id="printButton" />
     <titledbutton id="findButton"/>
     <titledbutton id="spellingButton"/>
-    <menuseparator/>
+      <toolbarseparator/>
     <titledbutton id="imageButton"/>
     <titledbutton id="hlineButton"/>
     <titledbutton id="tableButton"/>
@@ -167,11 +168,13 @@
     <titledbutton id="boldButton"/>
     <titledbutton id="italicButton"/>
     <titledbutton id="underlineButton"/>
+      <toolbarseparator/>
     <titledbutton id="ulButton"/>
     <titledbutton id="olButton"/>
     <titledbutton id="outdentButton"/>
     <titledbutton id="indentButton"/>
 
+      <toolbarseparator/>
     <menu>
       <titledbutton id="AlignPopupButton"/>
       <menupopup id="AlignmentPopup"/>
