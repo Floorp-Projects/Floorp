@@ -440,10 +440,10 @@ nsresult nsRenderingContextWin :: SetupDC(HDC aOldDC, HDC aNewDC)
   mOrigSolidPen = ::SelectObject(aNewDC, mBlackPen);
 
   // If this is a palette device, then select and realize the palette
-  HPALETTE  pal = ((nsDeviceContextWin*)mContext)->GetLogicalPalette();
-
-  if (nsnull != pal) {
-    mOrigPalette = ::SelectPalette(aNewDC, pal, FALSE);
+  nsPaletteInfo palInfo;
+  mContext->GetPaletteInfo(palInfo);
+  if (palInfo.isPaletteDevice && palInfo.palette) {
+    mOrigPalette = ::SelectPalette(aNewDC, (HPALETTE)palInfo.palette, FALSE);
     // Don't do the realization for an off-screen memory DC
     if (nsnull == aOldDC) {
       ::RealizePalette(aNewDC);

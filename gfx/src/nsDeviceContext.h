@@ -72,6 +72,8 @@ public:
 
   NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace);
 
+  NS_IMETHOD GetPaletteInfo(nsPaletteInfo&);
+
 protected:
   virtual ~DeviceContextImpl();
 

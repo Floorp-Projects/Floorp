@@ -38,6 +38,17 @@ typedef void * nsNativeDeviceContext;
 { 0x5931c580, 0xb917, 0x11d1,    \
 { 0xa8, 0x24, 0x00, 0x40, 0x95, 0x9a, 0x28, 0xc9 } }
 
+//a cross platform way of specifying a native palette handle
+typedef void * nsPalette;
+
+//structure used to return information about a device's palette capabilities
+struct nsPaletteInfo {
+  PRPackedBool  isPaletteDevice;
+  PRUint8       sizePalette;  // number of entries in the palette
+  PRUint8       numReserved;  // number of reserved palette entries
+  nsPalette     palette;      // native palette handle
+};
+
 /**
  * Constants identifying pre-defined icons.
  * @see #LoadIcon()
@@ -135,6 +146,11 @@ public:
    * You must call IL_ReleaseColorSpace() when you're done using the color space.
    */
   NS_IMETHOD GetILColorSpace(IL_ColorSpace*& aColorSpace) = 0;
+
+  /**
+   * Returns information about the device's palette capabilities.
+   */
+  NS_IMETHOD GetPaletteInfo(nsPaletteInfo&) = 0;
 };
 
 #endif /* nsIDeviceContext_h___ */
