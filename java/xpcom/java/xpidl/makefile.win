@@ -31,7 +31,7 @@ XPIDLDIR = $(DEPTH)\xpcom\typelib\xpidl
 
 
 OBJS =  \
-	$(XPIDLDIR)\$(OBJDIR)\xpidl.obj		\
+	.\$(OBJDIR)\xpidl.obj		\
 	.\$(OBJDIR)\xpidl_idl.obj	\
 	$(XPIDLDIR)\$(OBJDIR)\xpidl_util.obj	\
 	$(XPIDLDIR)\$(OBJDIR)\xpidl_header.obj	\
