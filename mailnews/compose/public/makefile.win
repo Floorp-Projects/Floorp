@@ -18,29 +18,27 @@
 DEPTH=..\..\..
 MODULE=msgcompose
 
-# nsIMsgCompose.idl nsIMsgSend.idl soon
-XPIDLSRCS =							\
-			$(NULL)
+XPIDLSRCS =										\
+				.\nsIMsgComposeService.idl		\
+				.\nsIMsgCompose.idl				\
+				.\nsIMsgCompFields.idl			\
+				.\nsIMsgSendLater.idl			\
+				$(NULL)
 
 ################################################################################
 ## exports
 
-EXPORTS =	 						\
-			nsIMsgCompose.h			\
-			nsMsgComposeFact.h		\
-			nsIMsgCompFields.h		\
-			nsMsgCompFieldsFact.h	\
-			nsIMsgSend.h			\
-			nsIMsgSendLater.h			\
-			nsMsgSendFact.h			\
-			nsMsgSendLaterFact.h			\
-			nsISmtpUrl.h			\
-			nsISmtpService.h		\
-			MsgCompGlue.h			\
-			nsIDOMComposeAppCore.h	\
-			nsIComposer.h			\
-			nsMsgComposeBE.h			\
-			$(NULL)
+EXPORTS =										\
+				nsMsgComposeFact.h				\
+				nsMsgCompFieldsFact.h			\
+				nsIMsgSend.h					\
+				nsMsgSendFact.h					\
+				nsMsgSendLaterFact.h			\
+				nsISmtpUrl.h					\
+				nsISmtpService.h				\
+				MsgCompGlue.h					\
+				nsMsgComposeBE.h				\
+				$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 

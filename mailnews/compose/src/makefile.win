@@ -25,14 +25,15 @@ include <$(DEPTH)\config\config.mak>
 
 EXPORTS=    nsSmtpUrl.h             \
             nsSmtpProtocol.h        \
-      			nsSmtpService.h			\
-		      	nsComposeAppCore.h		\
-			      nsComposer.h			\
-			      nsMsgCompPrefs.h		\
+            nsSmtpService.h                 \
+            nsMsgCompPrefs.h                \
             nsMsgZapIt.h \
             nsMsgCreate.h \
             nsMsgSendLater.h \
-	    nsMsgCompUtils.h \
+            nsMsgCompUtils.h \
+			nsMsgComposeService.h \
+			nsMsgCompose.h \
+			nsMsgCompFields.h \
             $(NULL)
 
 ################################################################################
@@ -40,36 +41,34 @@ EXPORTS=    nsSmtpUrl.h             \
 
 LIBRARY_NAME=msgcompose_s
 
-CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj		\
-            .\$(OBJDIR)\nsSmtpUrl.obj			\
-            .\$(OBJDIR)\MsgCompGlue.obj			\
-      			.\$(OBJDIR)\nsSmtpProtocol.obj		\
-      			.\$(OBJDIR)\nsMsgSend.obj			\
-      			.\$(OBJDIR)\nsMsgSendPart.obj		\
-      			.\$(OBJDIR)\nsSmtpService.obj		\
-      			.\$(OBJDIR)\nsJSComposeAppCore.obj	\
-      			.\$(OBJDIR)\nsComposeAppCore.obj	\
-      			.\$(OBJDIR)\nsComposer.obj			\
-      			.\$(OBJDIR)\nsComposerNameSet.obj	\
-      			.\$(OBJDIR)\nsMsgCompPrefs.obj		\
+CPP_OBJS=   .\$(OBJDIR)\nsMsgCompFields.obj             \
+            .\$(OBJDIR)\nsSmtpUrl.obj                   \
+                                .\$(OBJDIR)\MsgCompGlue.obj                     \
+                        .\$(OBJDIR)\nsSmtpProtocol.obj          \
+                        .\$(OBJDIR)\nsMsgSend.obj                       \
+                        .\$(OBJDIR)\nsMsgSendPart.obj           \
+                        .\$(OBJDIR)\nsSmtpService.obj           \
+                        .\$(OBJDIR)\nsMsgComposeService.obj     \
+                        .\$(OBJDIR)\nsMsgCompose.obj            \
+                        .\$(OBJDIR)\nsMsgCompPrefs.obj          \
             .\$(OBJDIR)\nsMsgZapIt.obj \
-        		.\$(OBJDIR)\nsMsgCreate.obj \
-      	  	.\$(OBJDIR)\nsMsgCopy.obj \
-      		  .\$(OBJDIR)\nsMsgSendLater.obj \
-        		.\$(OBJDIR)\nsMsgDeliveryListener.obj \
-        		.\$(OBJDIR)\nsMsgComposeStringBundle.obj \
-        		.\$(OBJDIR)\nsMsgEncoders.obj \
-        		.\$(OBJDIR)\nsMsgCompUtils.obj \
-        		.\$(OBJDIR)\nsMsgI18N.obj \
-        		.\$(OBJDIR)\nsMsgAttachmentHandler.obj \
-        		.\$(OBJDIR)\nsMsgPrompts.obj \
+                        .\$(OBJDIR)\nsMsgCreate.obj \
+                .\$(OBJDIR)\nsMsgCopy.obj \
+                  .\$(OBJDIR)\nsMsgSendLater.obj \
+                        .\$(OBJDIR)\nsMsgDeliveryListener.obj \
+                        .\$(OBJDIR)\nsMsgComposeStringBundle.obj \
+                        .\$(OBJDIR)\nsMsgEncoders.obj \
+                        .\$(OBJDIR)\nsMsgCompUtils.obj \
+                        .\$(OBJDIR)\nsMsgI18N.obj \
+                        .\$(OBJDIR)\nsMsgAttachmentHandler.obj \
+                        .\$(OBJDIR)\nsMsgPrompts.obj \
             $(NULL)
 
 
 include <$(DEPTH)\config\rules.mak>
 
 libs:: $(LIBRARY)
-	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 
 clobber::
-	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
