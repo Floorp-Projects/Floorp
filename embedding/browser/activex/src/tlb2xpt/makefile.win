@@ -19,34 +19,34 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\..\..
+DEPTH = ..\..\..\..\..
 
+REQUIRES = \
+    xpcom \
+    $(NULL)
 
-REQUIRES	= xpcom \
-		  $(NULL)
-MAKE_OBJ_TYPE	= EXE
+MAKE_OBJ_TYPE = EXE
 PROGRAM = .\$(OBJDIR)\tlb2xpt.exe
 
-LCFLAGS = /D "WIN32" /GX
+LCFLAGS = /D "WIN32" -DEXPORT_XPT_API /GX
 
-LLIBS=                      \
- $(DIST)\lib\xpcomxpt_s.lib \
- $(NULL)
+LLIBS = \
+    $(DIST)\lib\xpcomxpt_s.lib \
+    $(NULL)
 
+OBJS = \
+    .\$(OBJDIR)\tlb2xpt.obj  \
+    .\$(OBJDIR)\TypeDesc.obj \
+    $(NULL)
 
-OBJS =  \
-	.\$(OBJDIR)\tlb2xpt.obj		\
-	.\$(OBJDIR)\TypeDesc.obj	\
-	$(NULL)
-
-MOZ_NO_COVERAGE=1
+MOZ_NO_COVERAGE = 1
 
 include <$(DEPTH)\config\rules.mak>
 
 export:: $(PROGRAM)
-	$(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
+    $(MAKE_INSTALL) $(PROGRAM) $(DIST)\bin
 
 clobber::
-	rm -f $(DIST)\bin\tlb2xpt.exe
+    rm -f $(DIST)\bin\tlb2xpt.exe
 
 
