@@ -20,7 +20,7 @@
 #include "nsTreeFrame.h"
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
-
+#include "nsTreeCellFrame.h"
 
 //
 // NS_NewTreeFrame
@@ -42,10 +42,27 @@ NS_NewTreeFrame (nsIFrame*& aNewFrame)
 
 // Constructor
 nsTreeFrame::nsTreeFrame()
-:nsTableFrame() {}
+:nsTableFrame() { }
 
 // Destructor
 nsTreeFrame::~nsTreeFrame()
 {
 }
 
+void nsTreeFrame::SetSelection(nsIPresContext& aPresContext, nsTreeCellFrame* pFrame)
+{
+	ClearSelection(aPresContext);
+	mSelectedItems.AppendElement(pFrame);
+	pFrame->Select(aPresContext, PR_TRUE);
+}
+
+void nsTreeFrame::ClearSelection(nsIPresContext& aPresContext)
+{
+	PRInt32 count = mSelectedItems.Count();
+	for (PRInt32 i = 0; i < count; i++)
+	{
+		// Tell the tree cell to clear its selection.
+		nsTreeCellFrame* pFrame = (nsTreeCellFrame*)mSelectedItems.ElementAt(i);
+		pFrame->Select(aPresContext, PR_FALSE);
+	}
+}

@@ -20,6 +20,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsHTMLAtoms.h"
 #include "nsTreeCellFrame.h"
+#include "nsTreeFrame.h"
 #include "nsIStyleContext.h"
 #include "nsIPresContext.h"
 #include "nsIViewManager.h"
@@ -106,8 +107,14 @@ nsTreeCellFrame::Init(nsIPresContext&  aPresContext,
 			}
 			else mIsHeader = PR_FALSE;
 			NS_IF_RELEASE(parentContext);
+
+			// Get the table frame.
+			pRowGroupFrame->GetParent((nsIFrame*&)mTreeFrame);
 		}
   }
+
+  mNormalContext = aContext;
+
   return nsTableCellFrame::Init(aPresContext, aContent, aParent, aContext);
 }
 
@@ -155,20 +162,23 @@ nsTreeCellFrame::HandleMouseDownEvent(nsIPresContext& aPresContext,
   else
   {
     // Perform a selection
-		SetSelection(aPresContext);
-
+	if (mSelectedContext == nsnull)
+	{
+		nsIAtom * selectedPseudo = NS_NewAtom(":TREE-SELECTION");
+		mSelectedContext = aPresContext.ResolvePseudoStyleContextFor(mContent, selectedPseudo, mStyleContext);
+		NS_RELEASE(selectedPseudo); 
+	}
+	mTreeFrame->SetSelection(aPresContext, this);
   }
   return NS_OK;
 }
 
 void
-nsTreeCellFrame::SetSelection(nsIPresContext& aPresContext)
+nsTreeCellFrame::Select(nsIPresContext& aPresContext, PRBool isSelected)
 {
-  nsIAtom * selectedPseudo = NS_NewAtom(":TREE-SELECTION");
-  mSelectedContext = aPresContext.ResolvePseudoStyleContextFor(mContent, selectedPseudo, mStyleContext);
-	SetStyleContext(&aPresContext, mSelectedContext);
-	
-  ForceDrawFrame(this);
-
-  NS_RELEASE(selectedPseudo); 
+	if (isSelected)
+		SetStyleContext(&aPresContext, mSelectedContext);
+	else SetStyleContext(&aPresContext, mNormalContext);
+		
+	ForceDrawFrame(this);
 }
