@@ -226,23 +226,7 @@ function OnLoadNewMailList()
 
   // set popup with address book names
   var abPopup = document.getElementById('abPopup');
-  if ( abPopup )
-  {
-    var menupopup = document.getElementById('abPopup-menupopup');
-
-    if ( selectedAB && menupopup && menupopup.childNodes )
-    {
-      for ( var index = menupopup.childNodes.length - 1; index >= 0; index-- )
-      {
-        if ( menupopup.childNodes[index].getAttribute('value') == selectedAB )
-        {
-          abPopup.label = menupopup.childNodes[index].getAttribute('label');
-          abPopup.value = menupopup.childNodes[index].getAttribute('value');
-          break;
-        }
-      }
-    }
-  }
+  abPopup.value = selectedAB;
 
   AppendNewRowAndSetFocus();
   awFitDummyRows(1);

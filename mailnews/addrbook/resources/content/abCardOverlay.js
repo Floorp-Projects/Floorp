@@ -123,29 +123,7 @@ function OnLoadNewCard()
 
   // set popup with address book names
   var abPopup = document.getElementById('abPopup');
-  if ( abPopup )
-  {
-    var menupopup = document.getElementById('abPopup-menupopup');
-
-    if ( editCard.selectedAB && menupopup && menupopup.childNodes )
-    {
-      for ( var index = menupopup.childNodes.length - 1; index >= 0; index-- )
-      {
-        if ( menupopup.childNodes[index].getAttribute('value') == editCard.selectedAB )
-        {
-          abPopup.label = menupopup.childNodes[index].getAttribute('label');
-          abPopup.value = menupopup.childNodes[index].getAttribute('value');
-          break;
-        }
-      }
-    }
-    else {
-      // Default to the first valid addressbook when none is
-      // selected. (the 0th is an empty/invalid entry)
-      abPopup.label = menupopup.childNodes[1].getAttribute('label');
-      abPopup.value = menupopup.childNodes[1].getAttribute('value');
-    }
-  }
+  abPopup.value = editCard.selectedAB || kPersonalAddressbookURI;
 
   if (gHideABPicker && abPopup) {
     abPopup.hidden = true;
