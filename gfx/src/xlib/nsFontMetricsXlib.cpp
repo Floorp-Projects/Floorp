@@ -2597,4 +2597,34 @@ nsFontMetricsXlib::GetSpaceWidth(nscoord &aSpaceWidth)
   return NS_OK;
 }
 
+NS_IMETHODIMP  nsFontMetricsXlib::GetNormalLineHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight + mLeading;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsXlib::GetEmHeight(nscoord &aHeight)
+{
+  aHeight = mEmHeight;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsXlib::GetEmAscent(nscoord &aAscent)
+{
+  aAscent = mEmAscent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsXlib::GetEmDescent(nscoord &aDescent)
+{
+  aDescent = mEmDescent;
+  return NS_OK;
+}
+
+NS_IMETHODIMP  nsFontMetricsXlib::GetMaxHeight(nscoord &aHeight)
+{
+  aHeight = mMaxHeight;
+  return NS_OK;
+}
+
 #endif /* FONT_SWITCHING */

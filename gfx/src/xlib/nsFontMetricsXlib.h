@@ -176,6 +176,10 @@ protected:
   nscoord             mAscent;
   nscoord             mDescent;
   nscoord             mLeading;
+  nscoord             mEmHeight;
+  nscoord             mEmAscent;
+  nscoord             mEmDescent;
+  nscoord             mMaxHeight;
   nscoord             mMaxAscent;
   nscoord             mMaxDescent;
   nscoord             mMaxAdvance;

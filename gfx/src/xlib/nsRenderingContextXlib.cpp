@@ -671,7 +671,33 @@ nsRenderingContextXlib::DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord 
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsRenderingContextXlib::DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
+{
+  nscoord diffX, diffY;
 
+  PR_LOG(RenderingContextXlibLM, PR_LOG_DEBUG, ("nsRenderingContextXlib::DrawStdLine()\n"));
+  if (nsnull == mTMatrix || nsnull == mRenderingSurface)
+    return NS_ERROR_FAILURE;
+
+  mTMatrix->TransformCoord(&aX0,&aY0);
+  mTMatrix->TransformCoord(&aX1,&aY1);
+  
+  diffX = aX1-aX0;
+  diffY = aY1-aY0;
+
+  if (0!=diffX) {
+    diffX = (diffX>0?1:-1);
+  }
+  if (0!=diffY) {
+    diffY = (diffY>0?1:-1);
+  }
+
+  ::XDrawLine(mDisplay, mRenderingSurface->GetDrawable(),
+              mRenderingSurface->GetGC(), aX0, aY0, aX1 - diffX, aY1 - diffY);
+
+  return NS_OK;
+}
 
 NS_IMETHODIMP
 nsRenderingContextXlib::DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
@@ -1368,6 +1394,8 @@ nsRenderingContextXlib::DrawImage(nsIImage *aImage, const nsRect& aSRect, const 
   return NS_OK;
 }
 
+#if 0
+// in nsRenderingContextImpl
 /** ---------------------------------------------------
  *  See documentation in nsIRenderingContext.h
  *	@update 3/16/00 dwc
@@ -1379,6 +1407,7 @@ nsRenderingContextXlib::DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoor
 
   return NS_OK;
 }
+#endif
 
 NS_IMETHODIMP
 nsRenderingContextXlib::CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,

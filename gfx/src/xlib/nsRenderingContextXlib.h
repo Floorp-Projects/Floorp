@@ -23,7 +23,7 @@
 #ifndef nsRenderingContextXlib_h___
 #define nsRenderingContextXlib_h___
 
-#include "nsIRenderingContext.h"
+#include "nsRenderingContextImpl.h"
 #include "nsUnitConversion.h"
 #include "nsFont.h"
 #include "nsIFontMetrics.h"
@@ -42,7 +42,7 @@
 
 class GraphicsState;
 
-class nsRenderingContextXlib : public nsIRenderingContext
+class nsRenderingContextXlib : public nsRenderingContextImpl
 {
  public:
   nsRenderingContextXlib();
@@ -104,8 +104,11 @@ class nsRenderingContextXlib : public nsIRenderingContext
   NS_IMETHOD DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
   NS_IMETHOD DrawStdLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1);
 
+#if 0
+  // in nsRenderingContextImpl
   NS_IMETHOD DrawPath(nsPathPoint aPointArray[], PRInt32 aNumPts);
   NS_IMETHOD FillPath(nsPathPoint aPointArray[], PRInt32 aNumPts);
+#endif
 
   NS_IMETHOD FillRect(const nsRect& aRect);
   NS_IMETHOD FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -115,8 +118,11 @@ class nsRenderingContextXlib : public nsIRenderingContext
 
   NS_IMETHOD DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+#if 0
+  //  in nsRenderingContextImpl
   NS_IMETHOD FillStdPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
   NS_IMETHOD RasterPolygon(const nsPoint aPoints[], PRInt32 aNumPoints);
+#endif
 
   NS_IMETHOD DrawEllipse(const nsRect& aRect);
   NS_IMETHOD DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight);
@@ -158,9 +164,12 @@ class nsRenderingContextXlib : public nsIRenderingContext
                        nscoord aWidth, nscoord aHeight); 
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aRect);
   NS_IMETHOD DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect);
+#if 0
+  // in nsRenderingContextImpl
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX0,nscoord aY0,nscoord aX1,nscoord aY1,
                         nscoord aWidth,nscoord aHeight);
   NS_IMETHOD DrawTile(nsIImage *aImage,nscoord aX, nscoord aY, const nsRect&);
+#endif
 
   NS_IMETHOD CopyOffScreenBits(nsDrawingSurface aSrcSurf, PRInt32 aSrcX, PRInt32 aSrcY,
                                const nsRect &aDestBounds, PRUint32 aCopyFlags);
