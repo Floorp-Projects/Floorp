@@ -77,6 +77,11 @@ extern nsresult COOKIE_Enumerate
      nsCookiePolicy * policy);
 extern void COOKIE_Remove
   (const char* host, const char* name, const char* path, const PRBool blocked);
+extern nsresult COOKIE_AddCookie(char *aDomain, char *aPath,
+                  char *aName, char *aValue,
+                  PRBool aSecure, PRBool aIsDomain,
+                  time_t aExpires,
+                  nsCookieStatus aStatus, nsCookiePolicy aPolicy);
 
 typedef struct _cookie_CookieStruct {
   char * path;

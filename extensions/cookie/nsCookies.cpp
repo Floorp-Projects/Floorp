@@ -199,7 +199,8 @@ cookie_LogFailure(PRBool set_cookie, nsIURI * curURL, const char * cookieString,
     gCookieLog = PR_NewLogModule("cookie");
   }
   nsCAutoString spec;
-  nsresult result = curURL->GetSpec(spec);
+  if (curURL)
+    curURL->GetSpec(spec);
 
   PR_LOG(gCookieLog, PR_LOG_WARNING,
     ("%s%s%s\n", "===== ", set_cookie ? "COOKIE NOT ACCEPTED" : "COOKIE NOT SENT", " ====="));
@@ -393,7 +394,8 @@ cookie_CheckForMaxCookiesFromHost(const char * cur_host) {
 
 /* search for previous exact match */
 PRIVATE cookie_CookieStruct *
-cookie_CheckForPrevCookie(char * path, char * hostname, char * name) {
+cookie_CheckForPrevCookie(const char * path, const char * hostname,
+                          const char * name) {
   cookie_CookieStruct * cookie_s;
   if (cookie_list == nsnull) {
     return nsnull;
@@ -1229,7 +1231,6 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
 
   char *semi_colon, *ptr, *equal;
   PRBool isSecure=PR_FALSE, isDomain=PR_FALSE;
-  PRBool bCookieAdded;
   PRBool pref_scd = PR_FALSE;
 
   /* Only allow cookies to be set in the listed contexts.
@@ -1584,111 +1585,30 @@ cookie_SetCookieString(nsIURI * curURL, nsIPrompt *aPrompter, const char * setCo
     return;
   }
 
-  /* limit the number of cookies from a specific host or domain */
-  cookie_CheckForMaxCookiesFromHost(host_from_header);
-
-  if (cookie_list) {
-    if(cookie_list->Count() > MAX_NUMBER_OF_COOKIES-1) {
-      cookie_RemoveOldestCookie();
-    }
-  }
-  prev_cookie = cookie_CheckForPrevCookie (path_from_header, host_from_header, name_from_header);
-  if(prev_cookie) {
-    prev_cookie->expires = cookie_TrimLifetime(timeToExpire);
-    PR_FREEIF(prev_cookie->cookie);
-    PR_FREEIF(prev_cookie->path);
-    PR_FREEIF(prev_cookie->host);
-    PR_FREEIF(prev_cookie->name);
-    prev_cookie->cookie = cookie_from_header;
-    prev_cookie->path = path_from_header;
-    prev_cookie->host = host_from_header;
-    prev_cookie->name = name_from_header;
-    prev_cookie->isSecure = isSecure;
-    prev_cookie->isDomain = isDomain;
-    prev_cookie->lastAccessed = get_current_time();
-    prev_cookie->status = status;
-    prev_cookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
-  } else {
-    cookie_CookieStruct * tmp_cookie_ptr;
-    size_t new_len;
-
-    /* construct a new cookie_struct */
-    prev_cookie = PR_NEW(cookie_CookieStruct);
-    if(!prev_cookie) {
-      PR_FREEIF(path_from_header);
-      PR_FREEIF(host_from_header);
-      PR_FREEIF(name_from_header);
-      PR_FREEIF(cookie_from_header);
-      nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-      cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Unable to allocate memory for new cookie");
-#endif
-      return;
-    }
-    
-    /* copy */
-    prev_cookie->cookie = cookie_from_header;
-    prev_cookie->name = name_from_header;
-    prev_cookie->path = path_from_header;
-    prev_cookie->host = host_from_header;
-    prev_cookie->expires = cookie_TrimLifetime(timeToExpire);
-    prev_cookie->isSecure = isSecure;
-    prev_cookie->isDomain = isDomain;
-    prev_cookie->lastAccessed = get_current_time();
-    prev_cookie->status = status;
-    prev_cookie->policy = cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel));
-    if(!cookie_list) {
-      cookie_list = new nsVoidArray();
-      if(!cookie_list) {
-        PR_FREEIF(path_from_header);
-        PR_FREEIF(name_from_header);
-        PR_FREEIF(host_from_header);
-        PR_FREEIF(cookie_from_header);
-        PR_Free(prev_cookie);
-        nsCRT::free(setCookieHeaderInternal);
-#if defined(PR_LOGGING)
-        cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "Unable to allocate memory for cookie list");
-#endif
-        return;
-      }
-    }
-
-    /* add it to the list so that it is before any strings of smaller length */
-    bCookieAdded = PR_FALSE;
-    new_len = PL_strlen(prev_cookie->path);
-    for (PRInt32 i = cookie_list->Count(); i > 0;) {
-      i--;
-      tmp_cookie_ptr = NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
-      NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
-      if(new_len <= PL_strlen(tmp_cookie_ptr->path)) {
-        cookie_list->InsertElementAt(prev_cookie, i+1);
-        bCookieAdded = PR_TRUE;
-        break;
-      }
-    }
-    if ( !bCookieAdded ) {
-      /* no shorter strings found in list */
-      cookie_list->InsertElementAt(prev_cookie, 0);
-    }
-#if defined(PR_LOGGING)
-        cookie_LogSuccess(SET_COOKIE, curURL, setCookieHeader, prev_cookie);
-#endif
-  }
-
-  /* At this point we know a cookie has changed. Make a note to write the cookies to file. */
-  cookie_changed = PR_TRUE;
   nsCRT::free(setCookieHeaderInternal);
-
-  /* Notify statusbar if we need to turn on the cookie icon */
-  if (prev_cookie->status == nsICookie::STATUS_DOWNGRADED ||
-      prev_cookie->status == nsICookie::STATUS_FLAGGED) {
-    nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
-    if (os) {
-        rv = os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
-    }
+  rv = COOKIE_AddCookie(host_from_header, path_from_header,
+                        name_from_header, cookie_from_header,
+                        isSecure, isDomain, timeToExpire,
+                        status,
+                        cookie_GetPolicy(P3P_SitePolicy(curURL, aHttpChannel)));
+#if defined(PR_LOGGING)
+  if (NS_SUCCEEDED(rv))
+    cookie_LogFailure(SET_COOKIE, curURL, setCookieHeader, "cookie_add failed");
+  else {
+    cookie_CookieStruct logCookie; // temporary for logging purposes
+    logCookie.path = path_from_header;
+    logCookie.host = host_from_header;
+    logCookie.name = name_from_header;
+    logCookie.cookie = cookie_from_header;
+    logCookie.expires = timeToExpire;
+    logCookie.lastAccessed = get_current_time();
+    logCookie.isSecure = isSecure;
+    logCookie.isDomain = isDomain;
+    logCookie.status = status;
+    logCookie.policy = nsICookie::POLICY_UNKNOWN; // unused in log
+    cookie_LogSuccess(SET_COOKIE, curURL, setCookieHeader, &logCookie);
   }
-
-  return;
+#endif
 }
 
 PUBLIC void
@@ -2205,6 +2125,106 @@ COOKIE_Remove
       }
     }
   }
+}
+
+// this is a backdoor. normally use COOKIE_SetCookieString.
+// caller must hand off ownership of the strings to us.
+PUBLIC nsresult
+COOKIE_AddCookie(char *aDomain, char *aPath,
+                 char *aName, char *aValue,
+                 PRBool aSecure, PRBool aIsDomain,
+                 time_t aExpires,
+                 nsCookieStatus aStatus, nsCookiePolicy aPolicy)
+{
+  PRBool cookieAdded = PR_FALSE;
+  cookie_CookieStruct *prev_cookie;
+
+  /* limit the number of cookies */
+  cookie_CheckForMaxCookiesFromHost(aDomain);
+  if (cookie_list && cookie_list->Count() >= MAX_NUMBER_OF_COOKIES)
+    cookie_RemoveOldestCookie();
+
+  aExpires = cookie_TrimLifetime(aExpires);
+
+  prev_cookie = cookie_CheckForPrevCookie (aPath, aDomain, aName);
+  if(prev_cookie) {
+    PR_FREEIF(prev_cookie->path);
+    PR_FREEIF(prev_cookie->host);
+    PR_FREEIF(prev_cookie->name);
+    PR_FREEIF(prev_cookie->cookie);
+
+    prev_cookie->path = aPath;
+    prev_cookie->host = aDomain;
+    prev_cookie->name = aName;
+    prev_cookie->cookie = aValue;
+    prev_cookie->expires = aExpires;
+    prev_cookie->lastAccessed = get_current_time();
+    prev_cookie->isSecure = aSecure;
+    prev_cookie->isDomain = aIsDomain;
+    prev_cookie->status = aStatus;
+    prev_cookie->policy = aPolicy;
+    cookieAdded = PR_TRUE;
+  } else {
+    // construct a new cookie_struct
+    if (!cookie_list)
+      cookie_list = new nsVoidArray();
+
+    prev_cookie = PR_NEW(cookie_CookieStruct);
+    if (prev_cookie) {
+      prev_cookie->path = aPath;
+      prev_cookie->host = aDomain;
+      prev_cookie->name = aName;
+      prev_cookie->cookie = aValue;
+      prev_cookie->expires = aExpires;
+      prev_cookie->lastAccessed = get_current_time();
+      prev_cookie->isSecure = aSecure;
+      prev_cookie->isDomain = aIsDomain;
+      prev_cookie->status = aStatus;
+      prev_cookie->policy = aPolicy;
+    }
+
+    if (prev_cookie && cookie_list) {
+      // add it to the list so that it is before any strings of smaller length
+      size_t new_len = PL_strlen(prev_cookie->path);
+      for (PRInt32 i = cookie_list->Count(); i > 0;) {
+        i--;
+        cookie_CookieStruct *tmp_cookie_ptr =
+              NS_STATIC_CAST(cookie_CookieStruct*, cookie_list->ElementAt(i));
+        NS_ASSERTION(tmp_cookie_ptr, "corrupt cookie list");
+        if (new_len <= PL_strlen(tmp_cookie_ptr->path)) {
+          cookie_list->InsertElementAt(prev_cookie, i+1);
+          cookieAdded = PR_TRUE;
+          break;
+        }
+      }
+      if (!cookieAdded ) {
+        /* no shorter strings found in list */
+        cookie_list->InsertElementAt(prev_cookie, 0);
+        cookieAdded = PR_TRUE;
+      }
+    } else {
+      PR_FREEIF(aPath);
+      PR_FREEIF(aDomain);
+      PR_FREEIF(aName);
+      PR_FREEIF(aValue);
+      PR_FREEIF(prev_cookie);
+    }
+  }
+
+  if (cookieAdded) {
+    // Make a note to write the cookies to file
+    cookie_changed = PR_TRUE;
+
+    // Notify statusbar if we need to turn on the cookie icon
+    if (prev_cookie->status == nsICookie::STATUS_DOWNGRADED ||
+        prev_cookie->status == nsICookie::STATUS_FLAGGED) {
+      nsCOMPtr<nsIObserverService> os(do_GetService("@mozilla.org/observer-service;1"));
+      if (os)
+        os->NotifyObservers(nsnull, "cookieIcon", NS_LITERAL_STRING("on").get());
+    }
+    return NS_OK;
+  }
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 MODULE_PRIVATE nsresult
