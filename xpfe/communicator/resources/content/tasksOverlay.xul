@@ -21,8 +21,7 @@
 <keyset id="keyset">
   <key id="key_navigator"   xulkey="true" key="&navigatorCmd.commandkey;"   observes="Tasks:Navigator"/>
   <key id="key_editor"      xulkey="true" key="&editorCmd.commandkey;"      observes="Tasks:Editor"/>
-  <key id="key_addressbook" xulkey="true" shift="true" 
-       key="&addressBookCmd.commandkey;" observes="Tasks:AddressBook"/>
+  <key id="key_addressbook" xulkey="true" key="&addressBookCmd.commandkey;" observes="Tasks:AddressBook"/>
 </keyset>
 
 <broadcasterset id="broadcasterset">
@@ -43,11 +42,12 @@
         </template>
 
         <menupopup id="taskPopup">
-          <menuitem  accesskey="&navigatorCmd.accesskey;" key="key_navigator" observes="Tasks:Navigator"/>
-          <menuitem  accesskey="&editorCmd.accesskey;" key="key_editor" observes="Tasks:Editor" />
-          <menuseparator/>
-
+          <menuitem accesskey="&navigatorCmd.accesskey;" key="key_navigator" observes="Tasks:Navigator"/>
+          <menuitem accesskey="&editorCmd.accesskey;" key="key_editor" observes="Tasks:Editor" />
           <menuitem accesskey="&addressBookCmd.accesskey;" key="key_addressbook" observes="Tasks:AddressBook"/>
+
+          <!-- Overlays get stuffed in here. -->
+
           <menuseparator/>
 
           <menu value="&walletMenu.label;" accesskey="&walletMenu.accesskey;">

@@ -11,7 +11,7 @@
 <!ENTITY editorCmd.commandkey				"4">
 <!ENTITY addressBookCmd.label				"Address Book">  
 <!ENTITY addressBookCmd.accesskey			"a">
-<!ENTITY addressBookCmd.commandkey			"2">
+<!ENTITY addressBookCmd.commandkey			"5">
 
 <!ENTITY toolsMenu.label					"Tools"> 
 <!ENTITY toolsMenu.accesskey				"t">
