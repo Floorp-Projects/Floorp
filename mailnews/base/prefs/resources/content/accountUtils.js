@@ -115,8 +115,13 @@ function showMailIntegrationDialog() {
             }
         }
         catch (ex) {}
-        if (!prefLocked && !mapiRegistry.isDefaultMailClient)
+        try {
+          if (!prefLocked && !mapiRegistry.isDefaultMailClient)
             mapiRegistry.showMailIntegrationDialog();
+        }
+        catch (ex) {
+          dump("mapi code failed:  " + ex + "\n");
+        }
     }
 }
 
