@@ -31,8 +31,10 @@ LCFLAGS = \
         $(DEFINES) \
         $(NULL)
 
+
 LINCS= \
     -I$(XPDIST)\public\editor   \
+    -I$(XPDIST)\public\txtsvc   \
     -I$(XPDIST)\public\js       \
 	-I$(XPDIST)\public\netlib 	\
     -I$(XPDIST)\public\network 	\

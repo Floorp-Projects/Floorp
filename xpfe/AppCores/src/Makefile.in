@@ -23,6 +23,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+REQUIRES = txtsvc
+
 LIBRARY_NAME = appcores
 # This is no longer a component because the mailnew app links with it.
 # Since appcores are supposed to be going away, we are going to put

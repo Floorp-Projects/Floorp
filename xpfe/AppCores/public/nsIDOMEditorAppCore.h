@@ -114,6 +114,28 @@ public:
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin)=0;
 
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin)=0;
+
+  NS_IMETHOD    StartSpellChecking(nsString& aReturn)=0;
+
+  NS_IMETHOD    GetFirstMisspelledWord(nsString& aReturn)=0;
+
+  NS_IMETHOD    GetNextMisspelledWord(nsString& aReturn)=0;
+
+  NS_IMETHOD    GetSuggestedWord(nsString& aReturn)=0;
+
+  NS_IMETHOD    CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aReturn)=0;
+
+  NS_IMETHOD    ReplaceWord(const nsString& aMisspelledWord, const nsString& aReplaceWord, PRBool aAllOccurrences)=0;
+
+  NS_IMETHOD    IgnoreWordAllOccurrences(const nsString& aWord)=0;
+
+  NS_IMETHOD    AddWordToDictionary(const nsString& aWord)=0;
+
+  NS_IMETHOD    RemoveWordFromDictionary(const nsString& aWord)=0;
+
+  NS_IMETHOD    GetPersonalDictionaryWord(nsString& aReturn)=0;
+
+  NS_IMETHOD    CloseSpellChecking()=0;
 };
 
 
@@ -157,6 +179,17 @@ public:
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
+  NS_IMETHOD    StartSpellChecking(nsString& aReturn);  \
+  NS_IMETHOD    GetFirstMisspelledWord(nsString& aReturn);  \
+  NS_IMETHOD    GetNextMisspelledWord(nsString& aReturn);  \
+  NS_IMETHOD    GetSuggestedWord(nsString& aReturn);  \
+  NS_IMETHOD    CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aReturn);  \
+  NS_IMETHOD    ReplaceWord(const nsString& aMisspelledWord, const nsString& aReplaceWord, PRBool aAllOccurrences);  \
+  NS_IMETHOD    IgnoreWordAllOccurrences(const nsString& aWord);  \
+  NS_IMETHOD    AddWordToDictionary(const nsString& aWord);  \
+  NS_IMETHOD    RemoveWordFromDictionary(const nsString& aWord);  \
+  NS_IMETHOD    GetPersonalDictionaryWord(nsString& aReturn);  \
+  NS_IMETHOD    CloseSpellChecking();  \
 
 
 
@@ -200,6 +233,17 @@ public:
   NS_IMETHOD    SetToolbarWindow(nsIDOMWindow* aWin) { return _to SetToolbarWindow(aWin); }  \
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to SetContentWindow(aWin); }  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to SetWebShellWindow(aWin); }  \
+  NS_IMETHOD    StartSpellChecking(nsString& aReturn) { return _to StartSpellChecking(aReturn); }  \
+  NS_IMETHOD    GetFirstMisspelledWord(nsString& aReturn) { return _to GetFirstMisspelledWord(aReturn); }  \
+  NS_IMETHOD    GetNextMisspelledWord(nsString& aReturn) { return _to GetNextMisspelledWord(aReturn); }  \
+  NS_IMETHOD    GetSuggestedWord(nsString& aReturn) { return _to GetSuggestedWord(aReturn); }  \
+  NS_IMETHOD    CheckCurrentWord(const nsString& aSuggestedWord, PRBool* aReturn) { return _to CheckCurrentWord(aSuggestedWord, aReturn); }  \
+  NS_IMETHOD    ReplaceWord(const nsString& aMisspelledWord, const nsString& aReplaceWord, PRBool aAllOccurrences) { return _to ReplaceWord(aMisspelledWord, aReplaceWord, aAllOccurrences); }  \
+  NS_IMETHOD    IgnoreWordAllOccurrences(const nsString& aWord) { return _to IgnoreWordAllOccurrences(aWord); }  \
+  NS_IMETHOD    AddWordToDictionary(const nsString& aWord) { return _to AddWordToDictionary(aWord); }  \
+  NS_IMETHOD    RemoveWordFromDictionary(const nsString& aWord) { return _to RemoveWordFromDictionary(aWord); }  \
+  NS_IMETHOD    GetPersonalDictionaryWord(nsString& aReturn) { return _to GetPersonalDictionaryWord(aReturn); }  \
+  NS_IMETHOD    CloseSpellChecking() { return _to CloseSpellChecking(); }  \
 
 
 extern "C" NS_DOM nsresult NS_InitEditorAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
