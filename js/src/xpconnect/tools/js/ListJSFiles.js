@@ -7,8 +7,8 @@ function ListJSFilesInDir(dir) {
     if(!dir.isDirectory())
         return;
     var list = dir.directoryEntries;    
-    while(list.HasMoreElements()) {
-        file = list.GetNext().QueryInterface(nsIFile);
+    while(list.hasMoreElements()) {
+        file = list.getNext().QueryInterface(nsIFile);
         if(file.isDirectory())
             ListJSFilesInDir(file);
         else if(file.leafName.match(/\.js$/i))

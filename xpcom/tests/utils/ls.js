@@ -57,8 +57,8 @@ function ls_dir(file, recur)
 
 function foreach_iter(iter, fun)
 {
-    while (iter.HasMoreElements()) {
-	var item = iter.GetNext().QueryInterface(nsILocalFile);
+    while (iter.hasMoreElements()) {
+	var item = iter.getNext().QueryInterface(nsILocalFile);
 	fun(item);
     }
 }

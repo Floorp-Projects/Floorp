@@ -709,9 +709,9 @@ function fillContextMenu(name)
         if (!cmdEnum) break;
 
         var nextCmdArray = new Array();
-        while (cmdEnum.HasMoreElements())
+        while (cmdEnum.hasMoreElements())
         {
-            var cmd = cmdEnum.GetNext();
+            var cmd = cmdEnum.getNext();
             if (!cmd) break;
 
             if (nodeIndex == 0)

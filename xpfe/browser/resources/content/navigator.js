@@ -1512,20 +1512,20 @@ function TileWindow()
 	var yOffset = screen.availRight;
 	do
 	{
-		var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
+		var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
 		if ( currentWindow.screenX == screenX && currentWindow.screenY == screenY )
 		{
 			alreadyThere = true;
 			break;
 		}	
-	} while ( enumerator.HasMoreElements() )
+	} while ( enumerator.hasMoreElements() )
 	
 	if ( alreadyThere )
 	{
 		enumerator = windowManagerInterface.getEnumerator( null );
 		do
 		{
-			var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.GetNext() );
+			var currentWindow = windowManagerInterface.convertISupportsToDOMWindow ( enumerator.getNext() );
 			if ( currentWindow.screenX == screenX+xOffset*xShift+yOffset*xShift   && currentWindow.screenY == screenY+yShift*xOffset && window != currentWindow )
 			{
 				xOffset++;
@@ -1537,7 +1537,7 @@ function TileWindow()
 				}
 				enumerator = windowManagerInterface.getEnumerator( null );
 			}	
-		} while ( enumerator.HasMoreElements() )
+		} while ( enumerator.hasMoreElements() )
 	}
 	
 	if ( xOffset > 0 || yOffset >0 )
