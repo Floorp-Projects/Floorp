@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.5 $ 
-# $Date: 2002/05/01 02:35:15 $ 
+# $Revision: 1.6 $ 
+# $Date: 2002/05/01 02:36:26 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/regenerate.cgi,v $ 
 # $Name:  $ 
@@ -53,7 +53,7 @@ use FileStructure;
 
 #       Main        
 {
-    $tree = 'Project_A';
+    $tree = 'SeaMonkey';
     $url = FileStructure::get_filename($tree, 'tree_URL');
 
     HTMLPopUp::regenerate_HTML_pages();
