@@ -23,7 +23,7 @@
 #include "nsMultiMixedConv.h"
 #include "nsMemory.h"
 #include "plstr.h"
-#include "nsIHTTPChannel.h"
+#include "nsIHttpChannel.h"
 #include "nsIAtom.h"
 #include "nsIServiceManager.h"
 #include "nsNetUtil.h"
@@ -255,11 +255,9 @@ nsMultiMixedConv::OnStartRequest(nsIRequest *request, nsISupports *ctxt) {
     if (NS_FAILED(rv)) return rv;
     
     // ask the HTTP channel for the content-type and extract the boundary from it.
-    nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(channel, &rv);
+    nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(channel, &rv);
     if (NS_SUCCEEDED(rv)) {
-        nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom("content-type")));
-        if (!header) return NS_ERROR_OUT_OF_MEMORY;
-        rv = httpChannel->GetResponseHeader(header, getter_Copies(delimiter));
+        rv = httpChannel->GetResponseHeader("content-type", getter_Copies(delimiter));
         if (NS_FAILED(rv)) return rv;
     } else {
         // try asking the channel directly
@@ -490,9 +488,6 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
             *colon = '\0';
             nsCAutoString headerStr(cursor);
             headerStr.CompressWhitespace();
-            headerStr.ToLowerCase();
-            nsCOMPtr<nsIAtom> header(dont_AddRef(NS_NewAtom(headerStr.get())));
-            if (!header) return NS_ERROR_OUT_OF_MEMORY;
             *colon = ':';
 
             nsCAutoString headerVal(colon + 1);
@@ -507,9 +502,9 @@ nsMultiMixedConv::ParseHeaders(nsIChannel *aChannel, char *&aPtr,
                 // setting headers on the HTTP channel
                 // causes HTTP to notify, again if necessary,
                 // it's header observers.
-                nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(aChannel);
+                nsCOMPtr<nsIHttpChannel> httpChannel = do_QueryInterface(aChannel);
                 if (httpChannel) {
-                    rv = httpChannel->SetResponseHeader(header, headerVal);
+                    rv = httpChannel->SetResponseHeader(headerStr, headerVal);
                     if (NS_FAILED(rv)) return rv;
                 }
             }

@@ -29,7 +29,6 @@
 #include "nsIIOService.h"
 #include "nsIThreadPool.h"
 #include "nsIObserverService.h"
-#include "nsIProtocolProxyService.h"
 #include "nsAutoLock.h"
 
 // {25029490-F132-11d2-9588-00805F369F95}
@@ -55,7 +54,6 @@ protected:
     static nsSupportsHashtable* mRootConnectionList;
 
     nsCOMPtr<nsIIOService> mIOSvc;
-    nsCOMPtr<nsIProtocolProxyService>   mProxySvc;
 };
 
 #endif /* nsFtpProtocolHandler_h___ */

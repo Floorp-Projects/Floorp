@@ -41,7 +41,6 @@
 #include "nsNetUtil.h"
 #include "nsIDNSService.h" // for host error code
 #include "nsIWalletService.h"
-#include "nsIProxy.h"
 #include "nsIMemory.h"
 #include "nsIStringStream.h"
 #include "nsIPref.h"
@@ -1872,44 +1871,7 @@ nsFtpState::CreateTransport(const char * host, PRInt32 port, PRUint32 bufferSegm
                     sts,
                     kSocketTransportServiceCID,
                     &rv);
-    
-    if (NS_FAILED(rv)) return rv;
-    
-    PRBool usingProxy;
-    if (NS_SUCCEEDED(mChannel->GetUsingTransparentProxy(&usingProxy)) && usingProxy) {
         
-        nsCOMPtr<nsIProxy> channelProxy = do_QueryInterface(mChannel, &rv);
-        
-        if (NS_SUCCEEDED(rv)) {
-            
-            nsXPIDLCString proxyHost;
-            nsXPIDLCString proxyType;
-            PRInt32 proxyPort;
-            
-            rv = channelProxy->GetProxyHost(getter_Copies(proxyHost));
-            if (NS_FAILED(rv)) return rv;
-            
-            rv = channelProxy->GetProxyPort(&proxyPort);
-            if (NS_FAILED(rv)) return rv;
-
-            rv = channelProxy->GetProxyType(getter_Copies(proxyType));
-            if (NS_SUCCEEDED(rv) && nsCRT::strcasecmp(proxyType, "socks") == 0) {
-                
-                return sts->CreateTransportOfType("socks", host, port, proxyHost, proxyPort,
-                                                  bufferSegmentSize,
-                                                  bufferMaxSize, 
-                                                  o_pTrans);
-                
-            }
-                
-            return sts->CreateTransport(host, port, proxyHost, proxyPort,
-                                        bufferSegmentSize,
-                                        bufferMaxSize,
-                                        o_pTrans);
-                
-        }
-    }
-    
     return sts->CreateTransport(host, port, nsnull, PRUint32(-1),
                                 bufferSegmentSize,
                                 bufferMaxSize,

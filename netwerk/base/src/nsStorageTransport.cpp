@@ -290,7 +290,8 @@ nsStorageTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 }
 
 NS_IMETHODIMP
-nsStorageTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks, PRBool isBackground)
+nsStorageTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
+                                             PRUint32 flags)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -404,7 +405,7 @@ nsStorageTransport::nsReadRequest::~nsReadRequest()
 
 nsresult
 nsStorageTransport::nsReadRequest::SetListener(nsIStreamListener *aListener,
-                                  nsISupports *aListenerContext)
+                                               nsISupports *aListenerContext)
 {
     nsresult rv = NS_OK;
 
@@ -438,18 +439,24 @@ nsStorageTransport::nsReadRequest::Process()
     // always clear this flag initially
     mWaitingForWrite = PR_FALSE;
 
-    PRUint32 count = 0;
-
-    rv = mTransport->Available(mTransferOffset, &count);
-    if (NS_FAILED(rv)) return rv; 
-
     if (!mOnStartFired) {
         // no need to proxy this callback
         (void) mListener->OnStartRequest(this, mListenerContext);
         mOnStartFired = PR_TRUE;
     }
 
-    count = PR_MIN(count, mTransferCount);
+    PRUint32 count = 0;
+
+    if (mCanceled) {
+        // forcing the transfer count to zero indicates that we are done.
+        mTransferCount = 0;
+    }
+    else {
+        rv = mTransport->Available(mTransferOffset, &count);
+        if (NS_FAILED(rv)) return rv; 
+
+        count = PR_MIN(count, mTransferCount);
+    }
 
     if (count) {
         count = PR_MIN(count, MAX_IO_CHUNK);
@@ -564,7 +571,7 @@ nsStorageTransport::nsReadRequest::SetLoadFlags(nsLoadFlags loadFlags)
 
 NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::OnStartRequest(nsIRequest *aRequest,
-                                     nsISupports *aContext)
+                                                  nsISupports *aContext)
 {
     NS_NOTREACHED("nsStorageTransport::nsReadRequest::OnStartRequest");
     return NS_ERROR_FAILURE;
@@ -581,18 +588,26 @@ nsStorageTransport::nsReadRequest::OnStopRequest(nsIRequest *aRequest,
 
 NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::OnDataAvailable(nsIRequest *aRequest,
-                                      nsISupports *aContext,
-                                      nsIInputStream *aInput,
-                                      PRUint32 aOffset,
-                                      PRUint32 aCount)
+                                                   nsISupports *aContext,
+                                                   nsIInputStream *aInput,
+                                                   PRUint32 aOffset,
+                                                   PRUint32 aCount)
 {
     nsresult rv = NS_OK;
+    PRUint32 priorOffset = mTransferOffset;
 
     rv = mListener->OnDataAvailable(aRequest, aContext, aInput, aOffset, aCount);
-
     NS_ASSERTION(rv != NS_BASE_STREAM_WOULD_BLOCK, "not implemented");
 
     if (NS_FAILED(rv)) return rv;
+
+    // avoid an infinite loop
+    if (priorOffset == mTransferOffset) {
+        NS_WARNING("nsIStreamListener::OnDataAvailable implementation did not "
+                   "consume any data!");
+        // end the read
+        (void) Cancel(NS_ERROR_UNEXPECTED);
+    }
 
     // post the next message...
     return Process();
@@ -612,16 +627,18 @@ nsStorageTransport::nsReadRequest::Available(PRUint32 *aCount)
 }
 
 NS_IMETHODIMP
-nsStorageTransport::nsReadRequest::Read(char *aBuf, PRUint32 aCount, PRUint32 *aBytesRead)
+nsStorageTransport::nsReadRequest::Read(char *aBuf,
+                                        PRUint32 aCount,
+                                        PRUint32 *aBytesRead)
 {
     return ReadSegments(nsWriteToBuffer, aBuf, aCount, aBytesRead);
 }
 
 NS_IMETHODIMP
 nsStorageTransport::nsReadRequest::ReadSegments(nsWriteSegmentFun aWriter,
-                                   void *aClosure,
-                                   PRUint32 aCount,
-                                   PRUint32 *aBytesRead)
+                                                void *aClosure,
+                                                PRUint32 aCount,
+                                                PRUint32 *aBytesRead)
 {
     NS_ENSURE_TRUE(mTransport, NS_BASE_STREAM_CLOSED);
 
@@ -799,25 +816,25 @@ nsStorageTransport::nsOutputStream::Flush()
 
 NS_IMETHODIMP
 nsStorageTransport::nsOutputStream::Write(const char *aBuf,
-                    PRUint32 aCount,
-                    PRUint32 *aBytesWritten)
+                                          PRUint32 aCount,
+                                          PRUint32 *aBytesWritten)
 {
     return WriteSegments(nsReadFromBuffer, (void *) aBuf, aCount, aBytesWritten);
 }
 
 NS_IMETHODIMP
 nsStorageTransport::nsOutputStream::WriteFrom(nsIInputStream *aInput,
-                        PRUint32 aCount,
-                        PRUint32 *aBytesWritten)
+                                              PRUint32 aCount,
+                                              PRUint32 *aBytesWritten)
 {
     return WriteSegments(nsReadFromInputStream, aInput, aCount, aBytesWritten);
 }
 
 NS_IMETHODIMP
 nsStorageTransport::nsOutputStream::WriteSegments(nsReadSegmentFun aReader,
-                            void *aClosure,
-                            PRUint32 aCount,
-                            PRUint32 *aBytesWritten)
+                                                  void *aClosure,
+                                                  PRUint32 aCount,
+                                                  PRUint32 *aBytesWritten)
 {
     NS_ENSURE_TRUE(mTransport, NS_BASE_STREAM_CLOSED);
 

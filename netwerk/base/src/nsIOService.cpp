@@ -35,12 +35,14 @@
 #include "nsIErrorService.h" 
 #include "netCore.h"
 #include "nsIObserverService.h"
+#include "nsIHttpProtocolHandler.h"
 
 static NS_DEFINE_CID(kFileTransportService, NS_FILETRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kDNSServiceCID, NS_DNSSERVICE_CID);
 static NS_DEFINE_CID(kErrorServiceCID, NS_ERRORSERVICE_CID);
+static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -75,9 +77,16 @@ nsIOService::Init()
                                       NS_GET_IID(nsIFileTransportService),
                                       getter_AddRefs(mFileTransportService));
     if (NS_FAILED(rv)) return rv;
+
     rv = nsServiceManager::GetService(kDNSServiceCID,
                                       NS_GET_IID(nsIDNSService),
                                       getter_AddRefs(mDNSService));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = nsServiceManager::GetService(kProtocolProxyServiceCID,
+                                      NS_GET_IID(nsIProtocolProxyService),
+                                      getter_AddRefs(mProxyService));
+    if (NS_FAILED(rv)) return rv;
 
     // XXX hack until xpidl supports error info directly (http://bugzilla.mozilla.org/show_bug.cgi?id=13423)
     nsCOMPtr<nsIErrorService> errorService = do_GetService(kErrorServiceCID, &rv);
@@ -254,8 +263,7 @@ nsIOService::ExtractScheme(const char* inURI, PRUint32 *startPos,
 }
 
 nsresult
-nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
-                    nsIURI* *result, nsIProtocolHandler* *hdlrResult)
+nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI, nsIURI* *result)
 {
     nsresult rv;
     nsIURI* base;
@@ -281,18 +289,7 @@ nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
     nsCRT::free(scheme);
     if (NS_FAILED(rv)) return rv;
 
-    if (hdlrResult) {
-        *hdlrResult = handler;
-        NS_ADDREF(*hdlrResult);
-    }
     return handler->NewURI(aSpec, base, result);
-}
-
-NS_IMETHODIMP
-nsIOService::NewURI(const char* aSpec, nsIURI* aBaseURI,
-                    nsIURI* *result)
-{
-    return NewURI(aSpec, aBaseURI, result, nsnull);
 }
 
 NS_IMETHODIMP
@@ -309,6 +306,31 @@ nsIOService::NewChannelFromURI(nsIURI *aURI, nsIChannel **result)
     rv = GetProtocolHandler((const char*)scheme, getter_AddRefs(handler));
     if (NS_FAILED(rv)) return rv;
 
+    PRBool useProxy = PR_FALSE;
+    if (mProxyService) {
+        mProxyService->GetProxyEnabled(&useProxy);
+        if (useProxy) {
+            nsXPIDLCString host, type;
+            PRInt32 port;
+            rv = mProxyService->ExamineForProxy(aURI, getter_Copies(host), &port, getter_Copies(type));
+            if (NS_SUCCEEDED(rv) && type.get())
+            {
+                // we are going to proxy this channel and the only protocol that can do proxying is http
+                rv = GetProtocolHandler("http", getter_AddRefs(handler));
+                if (NS_FAILED(rv)) return rv;
+                
+                nsCOMPtr<nsIHttpProtocolHandler> httpHandler = do_QueryInterface(handler, &rv);
+                if (NS_FAILED(rv)) 
+                    return rv;
+
+                if (!httpHandler)
+                    return NS_ERROR_NULL_POINTER;
+
+                return httpHandler->NewProxyChannel(aURI, host, port, type, result);
+            }
+        }
+    }
+
     rv = handler->NewChannel(aURI, result);
     return rv;
 }
@@ -318,12 +340,10 @@ nsIOService::NewChannel(const char *aSpec, nsIURI *aBaseURI, nsIChannel **result
 {
     nsresult rv;
     nsCOMPtr<nsIURI> uri;
-    nsCOMPtr<nsIProtocolHandler> handler;
-    rv = NewURI(aSpec, aBaseURI, getter_AddRefs(uri), getter_AddRefs(handler));
+    rv = NewURI(aSpec, aBaseURI, getter_AddRefs(uri));
     if (NS_FAILED(rv)) return rv;
 
-    rv = handler->NewChannel(uri, result);
-    return rv;
+    return NewChannelFromURI(uri, result);
 }
 
 NS_IMETHODIMP

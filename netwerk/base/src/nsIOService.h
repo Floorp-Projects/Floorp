@@ -28,6 +28,7 @@
 #include "nsISocketTransportService.h" 
 #include "nsIFileTransportService.h" 
 #include "nsIDNSService.h" 
+#include "nsIProtocolProxyService.h"
 #include "nsCOMPtr.h"
 #include "nsURLHelper.h"
 #include "nsWeakPtr.h"
@@ -67,8 +68,9 @@ protected:
     nsCOMPtr<nsISocketTransportService> mSocketTransportService;
     nsCOMPtr<nsIFileTransportService>   mFileTransportService;
     nsCOMPtr<nsIDNSService>             mDNSService;
+    nsCOMPtr<nsIProtocolProxyService>   mProxyService;
     nsCOMPtr<nsIEventQueueService> mEventQueueService;
-
+    
     // Cached protocol handlers
     nsWeakPtr                  mWeakHandler[NS_N(gScheme)];
 };

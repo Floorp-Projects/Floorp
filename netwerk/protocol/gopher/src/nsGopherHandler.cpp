@@ -1,3 +1,4 @@
+
 /* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
@@ -32,8 +33,8 @@
 #include "nsIServiceManager.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIProgressEventSink.h"
-#include "nsIHTTPProtocolHandler.h"
-#include "nsIHTTPChannel.h"
+//#include "nsIHTTPProtocolHandler.h"
+//#include "nsIHTTPChannel.h"
 #include "nsIErrorService.h"
 #include "nsNetUtil.h"
 #include "prlog.h"
@@ -43,23 +44,16 @@ PRLogModuleInfo* gGopherLog = nsnull;
 #endif
 
 static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kProtocolProxyServiceCID, NS_PROTOCOLPROXYSERVICE_CID);
-static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
+//static NS_DEFINE_CID(kHTTPHandlerCID, NS_IHTTPHANDLER_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
 nsGopherHandler::nsGopherHandler() {
     NS_INIT_REFCNT();
-    nsresult rv;
-
 #ifdef PR_LOGGING
     if (!gGopherLog)
         gGopherLog = PR_NewLogModule("nsGopherProtocol");
 #endif
-
-    mProxySvc = do_GetService(kProtocolProxyServiceCID, &rv);
-    if (!mProxySvc)
-        NS_WARNING("Failed to get proxy service!\n");
 }
 
 nsGopherHandler::~nsGopherHandler() {
@@ -129,72 +123,6 @@ nsGopherHandler::NewChannel(nsIURI* url, nsIChannel* *result)
         return rv;
     }
 
-    // Proxy code is largly taken from the ftp and http protocol handlers
-
-    PRBool useProxy = PR_FALSE;
-    
-    if (mProxySvc &&
-        NS_SUCCEEDED(mProxySvc->GetProxyEnabled(&useProxy)) && useProxy) {
-
-        rv = mProxySvc->ExamineForProxy(url, channel);
-        if (NS_FAILED(rv)) return rv;
-    }
-
-    useProxy = PR_FALSE;
-    if (NS_SUCCEEDED(channel->GetUsingProxy(&useProxy)) && useProxy) {
-        nsCOMPtr<nsIChannel> proxyChannel;
-        // if an gopher proxy is enabled, push things off to HTTP.
-        
-        nsCOMPtr<nsIHTTPProtocolHandler> httpHandler =
-            do_GetService(kHTTPHandlerCID, &rv);
-        if (NS_FAILED(rv)) return rv;
-        
-        // rjc says: the dummy URI (for the HTTP layer) needs to be a
-        // syntactically valid URI
-
-        nsCOMPtr<nsIURI> uri;
-        rv = NS_NewURI(getter_AddRefs(uri), "http://example.com");
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = httpHandler->NewChannel(uri, getter_AddRefs(proxyChannel));
-        if (NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsIHTTPChannel> httpChannel = do_QueryInterface(proxyChannel, &rv);
-        if (NS_FAILED(rv)) return rv;
-        
-        nsXPIDLCString spec;
-        rv = url->GetSpec(getter_Copies(spec));
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = httpChannel->SetProxyRequestURI(spec.get());
-        if (NS_FAILED(rv)) return rv;
-        
-        nsCOMPtr<nsIProxy> proxyHTTP = do_QueryInterface(httpChannel, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsXPIDLCString proxyHost;
-        rv = channel->GetProxyHost(getter_Copies(proxyHost));
-        if (NS_FAILED(rv)) return rv;
-        
-        rv = proxyHTTP->SetProxyHost(proxyHost);
-        if (NS_FAILED(rv)) return rv;
-        
-        PRInt32 proxyPort;
-        rv = channel->GetProxyPort(&proxyPort);
-        if (NS_FAILED(rv)) return rv;
-
-        rv = proxyHTTP->SetProxyPort(proxyPort);
-        if (NS_FAILED(rv)) return rv;
-        
-        nsXPIDLCString proxyType;
-        rv = channel->GetProxyType(getter_Copies(proxyType));
-
-        if (NS_SUCCEEDED(rv))
-            proxyHTTP->SetProxyType(proxyType);
-
-        rv = channel->SetProxyChannel(proxyChannel);
-    }
-    
     *result = channel;
     return rv;
 }

@@ -40,9 +40,21 @@ interface nsITransport : nsISupports
     /**
      * Get/set notificationCallbacks for this transport.
      */
-    readonly attribute nsIInterfaceRequestor notificationCallbacks;
+    nsIInterfaceRequestor getNotificationCallbacks();
     void setNotificationCallbacks(in nsIInterfaceRequestor callbacks,
-                                  in boolean isBackground);
+                                  in unsigned long flags);
+
+    /**
+     * If the notificationCallbacks provide a nsIProgressEventSink
+     * implementation, then progress is by default reported to the thread
+     * that called setNotificationCallbacks.  The following flags provide
+     * finer control over progress notifications:
+     *
+     * DONT_REPORT_PROGRESS - progress notifications are not sent.
+     * DONT_PROXY_PROGRESS  - progress notifications can occur on any thread.
+     */
+    const unsigned long DONT_REPORT_PROGRESS = 1;
+    const unsigned long DONT_PROXY_PROGRESS  = 2;
 
     /**
      * Open an input stream on this transport.
@@ -104,9 +116,9 @@ interface nsITransport : nsISupports
      * ask the transport to not proxy the callback.  The caller must then
      * be prepared to handle callbacks on any thread.
      */
-    const unsigned long DONT_PROXY_STREAM_OBSERVER = 1 << 0;
-    const unsigned long DONT_PROXY_STREAM_LISTENER = 1 << 1;
-    const unsigned long DONT_PROXY_STREAM_PROVIDER = 1 << 1;
+    const unsigned long DONT_PROXY_OBSERVER = 1 << 0;
+    const unsigned long DONT_PROXY_LISTENER = 1 << 1;
+    const unsigned long DONT_PROXY_PROVIDER = 1 << 1;
 
 };
 

@@ -1,0 +1,127 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*- */
+/*
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is Mozilla.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications.  Portions created by Netscape Communications are
+ * Copyright (C) 2001 by Netscape Communications.  All
+ * Rights Reserved.
+ * 
+ * Contributor(s): 
+ *   Gagan Saksena <gagan@netscape.com> (original author)
+ *   Darin Fisher <darin@netscape.com>
+ */
+
+#include "nsIProtocolHandler.idl"
+
+[scriptable, uuid(122c91c0-2485-40ba-89c9-b895934921bc)]
+interface nsIHttpProtocolHandler : nsIProtocolHandler
+{
+    /**
+     * Constructs a new http proxy channel.
+     *
+     * @param uri       - the desired request-URI (eg. ftp://ftp.mozilla.org/)
+     * @param proxyHost - the proxy hostname
+     * @param proxyPort - the proxy port
+     * @param proxyType - the proxy type (usually "http" or "socks")
+     */
+    nsIChannel newProxyChannel(in nsIURI uri, 
+                               in string proxyHost,
+                               in long proxyPort,
+                               in string proxyType);
+
+    /**
+     * Get the HTTP advertised user agent string.
+     */
+    readonly attribute string userAgent;
+
+    /**
+     * Get the application name.
+	 *
+     * @return The name of this application (eg. "Mozilla").
+     */
+    readonly attribute string appName;
+
+    /**
+     * Get the application version string.
+     *
+     * @return The complete version (major and minor) string. (eg. "5.0")
+     */
+    readonly attribute string appVersion;
+
+    /**
+     * @return The vendor name.
+     */
+    attribute string vendor;
+
+    /**
+     * @return The vendor sub string.
+     */
+    attribute string vendorSub;
+    
+    /**
+     * @return The vendor comment.
+     */
+    attribute string vendorComment;
+
+    /**
+     * @return The product name.
+     */
+    attribute string product;
+
+    /**
+     * @return A product sub string.
+     */
+    attribute string productSub;
+
+    /**
+     * @return A product comment.
+     */
+    attribute string productComment;
+
+    /**
+     * Get the current platform.
+     *
+     * @return The platform this application is running on
+     *		   (eg. "Windows", "Macintosh", "X11")
+     */
+    readonly attribute string platform;
+
+    /**
+     * Get the current oscpu.
+     *
+     * @return The oscpu this application is running on
+     */
+    readonly attribute string oscpu;
+
+    /**
+     * Get the translation of the application. The value for language
+     * is usually a 2-letter code such as "en" and occasionally a 
+     * five-character code to indicate a language subtype, such as "zh_CN". 
+     */
+    attribute string language;
+
+    /**
+     * Get/Set the application comment misc portion.
+     */
+    attribute string misc;
+};
+
+%{C++
+// HTTP protocol handler will do_GetService() on each ContractId that is
+// registered under this category when it comes alive.
+#define NS_HTTP_STARTUP_CATEGORY "http-startup-category"
+// If the resulting service implements nsIObserver, then its Observer
+// method will be invoked with the following topic.
+#define NS_HTTP_STARTUP_TOPIC (NS_LITERAL_STRING("http-startup").get())
+%}

@@ -34,10 +34,6 @@
 [scriptable, uuid(0492D011-CD2F-11d2-B013-006097BFC036)]
 interface nsIProxy : nsISupports
 {
-    attribute string proxyHost;
-    
-    /* -1 on Set call indicates switch to default port */
-    attribute long proxyPort;
-    
-    attribute string proxyType;
+
 };
+

@@ -39,11 +39,11 @@ CPPSRCS		= \
 		TestFileInput.cpp \
 		TestFileTransport.cpp \
 		TestProtocols.cpp \
+        TestHttp.cpp \
 		urltest.cpp \
 		TestFileInput2.cpp \
 		TestRes.cpp \
 		TestCallbacks.cpp \
-        TestSyncHTTP.cpp \
 		TestDBMAccess.cpp \
 		$(NULL)
 

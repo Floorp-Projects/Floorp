@@ -38,12 +38,17 @@ public:
     virtual ~nsSOCKSSocketInfo();
     
     NS_DECL_ISUPPORTS
-    NS_DECL_NSIPROXY
     NS_DECL_NSISOCKSSOCKETINFO
     
+    NS_IMETHOD GetProxyHost(char * *aProxyHost); 
+    NS_IMETHOD SetProxyHost(const char * aProxyHost); 
+    NS_IMETHOD GetProxyPort(PRInt32 *aProxyPort); 
+    NS_IMETHOD SetProxyPort(PRInt32 aProxyPort); 
+    NS_IMETHOD GetProxyType(char * *aProxyType); 
+    NS_IMETHOD SetProxyType(const char * aProxyType); 
+
 protected:
     
-    // nsIProxy
     char*	mProxyHost;
     PRInt32	mProxyPort;
     char*        mProxyType;
@@ -72,7 +77,7 @@ nsSOCKSSocketInfo::~nsSOCKSSocketInfo()
     PR_FREEIF(mProxyHost);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsSOCKSSocketInfo, nsISOCKSSocketInfo, nsIProxy)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsSOCKSSocketInfo, nsISOCKSSocketInfo);
 
 NS_IMETHODIMP 
 nsSOCKSSocketInfo::GetProxyHost(char * *aProxyHost)

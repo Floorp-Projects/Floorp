@@ -103,7 +103,7 @@ public:
     };
 
 protected:
-    nsCOMPtr<nsIProgressEventSink>      mProgress;
+    nsCOMPtr<nsIProgressEventSink>      mProgressSink;
     nsCOMPtr<nsIInterfaceRequestor>     mNotificationCallbacks;
     nsCOMPtr<nsIStreamIO>               mStreamIO;
     char                               *mContentType;
@@ -150,7 +150,7 @@ protected:
 #endif
 };
 
-#define NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE   (2*1024)
-#define NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE    (8*1024)
+#define NS_FILE_TRANSPORT_DEFAULT_SEGMENT_SIZE   (4096)
+#define NS_FILE_TRANSPORT_DEFAULT_BUFFER_SIZE    (4*4096) // 16k max
 
 #endif // nsFileTransport_h__
