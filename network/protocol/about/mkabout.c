@@ -1,3 +1,21 @@
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.0 (the "NPL"); you may not use this file except in
+ * compliance with the NPL.  You may obtain a copy of the NPL at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the NPL is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
+ * for the specific language governing rights and limitations under the
+ * NPL.
+ *
+ * The Initial Developer of this code under the NPL is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
+ * Reserved.
+ */
+
 #include "rosetta.h"
 #include "xp.h"
 #include "net.h"
@@ -10,7 +28,7 @@
 #include "xplocale.h"
 #include "prefapi.h"
 #include "secnav.h"
-#ifndef MODULAR_NETLIB
+#ifndef STANDALONE_IMAGE_LIB
 #include "libimg.h"
 #endif
 #include "il_strm.h"
@@ -21,6 +39,7 @@
 #include "shist.h"
 #include "prmem.h"
 #include "plstr.h"
+#include "plhash.h"
 
 #include "abouturl.h"
 
@@ -55,31 +74,59 @@ extern int XP_DOCUMENT_INFO ;
 extern int XP_THE_WINDOW_IS_NOW_INACTIVE ;
 extern int MK_MALFORMED_URL_ERROR;
 
-/* The bit flags for the about colon access int */
-#define ABOUT_CURRENT       1
-#define ABOUT_PICS          2
-#define ABOUT_CACHE         4
-#define ABOUT_CACHE_MEM     8
-#define ABOUT_CACHE_IMAGE   16
-#define ABOUT_STREAMS       32
-#define ABOUT_DOCUMENT      64
-#define ABOUT_GLOBAL        128
-#define ABOUT_FECONTEXT     256
-#define ABOUT_AUTHORS       512
-#define ABOUT_CONFIG        1024
-#define ABOUT_MINIBUFFER    2048
-#define ABOUT_FONTS         4096
-#define ABOUT_COOKIES       8192
-#define ABOUT_SIGNONS       16384
-#define ABOUT_LOGOUT        32768
-PRIVATE int32 aboutAccess = 0;
+static PRHashTable *net_AboutTable = NULL;
 
-/* This is a hidden/obscured pref with a misleading name. */
-MODULE_PRIVATE int PR_CALLBACK NET_AboutColonAccessPrefChanged(const char *pref, void *data) {
-    aboutAccess = 0;
-    if (PREF_OK != PREF_GetIntPref("network.dnsAttempt", &aboutAccess) )
-        aboutAccess = 0;
-    return TRUE;
+PRIVATE PRIntn net_AboutComparator(const void *v1, const void *v2)
+{
+    char *idx = NULL;
+    if (idx = PL_strchr((char *) v1, '?')) {
+        int len = (int)(idx - (char *) v1);
+        return PL_strncasecmp((char *) v1, (char *) v2, len) == 0;
+    } else {
+        return PL_strcasecmp((char *) v1, (char *) v2) == 0;
+    }
+}
+
+PRIVATE PLHashNumber net_HashAbout(const void *key)
+{
+    PLHashNumber h;
+    const PRUint8 *s;
+
+    h = 0;
+    for (s = (const PRUint8*)key; *s && *s != (PRUint8) '?'; s++)
+        h = (h >> 28) ^ (h << 4) ^ *s;
+    return h;
+}
+
+PRIVATE PRBool net_DoRegisteredAbout(const char *which, ActiveEntry *entry)
+{
+    NET_AboutCB cb;
+    if (cb = (NET_AboutCB) PL_HashTableLookup(net_AboutTable, which)) {
+        return cb(which, entry->format_out, entry->URL_s, entry->window_id);
+    }
+    return PR_FALSE;
+}
+
+PRIVATE PRBool net_about_enabled(const char *which)
+{
+  char *which2;
+  char buf[256];
+  XP_Bool res = FALSE;
+  if (!which)
+    return PR_FALSE;
+    
+  which2 = PL_strdup(which);
+  if (which2) {
+    char *args = PL_strchr(which2, '?');
+    if (args)
+      *args = '\0';
+    
+    PR_snprintf(buf, 246, "network.about-enabled.%s", which2);
+    res = TRUE;
+    PREF_GetBoolPref(buf, &res);
+    PR_Free(which2);
+  }
+  return (PRBool) res;
 }
 
 PRIVATE void
@@ -354,16 +401,24 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 	void * fe_data = NULL;
 	Bool   uses_fe_data=FALSE;
 
-	
 	if (colon)
 	  which = colon + 1;
 
+
+    if (NET_URL_Type(which)) {
+      if (!net_about_enabled("current"))
+        return MK_MALFORMED_URL_ERROR;
+    } else {
+      if (!net_about_enabled(which))
+        return MK_MALFORMED_URL_ERROR;
+    }
+    
 	if(0)
 	  {
 		/* placeholder to make ifdef's easier */
 	  }
 #ifdef MOZILLA_CLIENT
-	else if(NET_URL_Type(which) && !(aboutAccess & ABOUT_CURRENT))
+	else if(NET_URL_Type(which))
 	  {
 	    /* this url is asking for document info about this
 		 * URL.
@@ -371,8 +426,8 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		 */
 		net_OutputURLDocInfo(cur_entry->window_id, which, &data, &length);
 		StrAllocCopy(content_type, TEXT_HTML);
-	  }
-	else if(!PL_strncasecmp(which, "pics", 4) && !(aboutAccess & ABOUT_PICS))
+	  }	
+	else if(!PL_strncasecmp(which, "pics", 4))
 	  {
 		data = net_gen_pics_document(cur_entry);
    		if (data) {
@@ -382,50 +437,42 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
         } 
 	  }
 #if defined(CookieManagement)
-	else if(!PL_strcasecmp(which, "cookies") && !(aboutAccess & ABOUT_COOKIES))
+	else if(!PL_strcasecmp(which, "cookies"))
 	{
 		NET_DisplayCookieInfoAsHTML(cur_entry->window_id);
 		return(-1);
 	}
 #endif
 #if defined(SingleSignon)
-        else if(!PL_strcasecmp(which, "signons") && !(aboutAccess & ABOUT_SIGNONS))
+        else if(!PL_strcasecmp(which, "signons"))
 	{
 		SI_DisplaySignonInfoAsHTML(cur_entry->window_id);
 		return(-1);
 	}
 #endif
-	else if(!PL_strncasecmp(which, "cache", 5)  && !(aboutAccess & ABOUT_CACHE))
+	else if(!PL_strncasecmp(which, "cache", 5))
 	  {
 		NET_DisplayCacheInfoAsHTML(cur_entry);
 		return(-1);
 	  }
-	else if(!PL_strcasecmp(which, "memory-cache") && !(aboutAccess & ABOUT_CACHE_MEM))
+	else if(!PL_strcasecmp(which, "memory-cache"))
 	  {
 		NET_DisplayMemCacheInfoAsHTML(cur_entry);
 		return(-1);
 	  }
-	else if(!PL_strcasecmp(which, "logout") && !(aboutAccess & ABOUT_LOGOUT) )
+	else if(!PL_strcasecmp(which, "logout"))
 	  {
 		NET_RemoveAllAuthorizations();
 		return(-1);
 	  }
-#ifndef MODULAR_NETLIB
-	else if(!PL_strcasecmp(which, "image-cache") && !(aboutAccess & ABOUT_CACHE_IMAGE))
-	  {
-	IL_DisplayMemCacheInfoAsHTML(cur_entry->format_out, cur_entry->URL_s,
-				     cur_entry->window_id);
-		return(-1);
-	  }
-#endif
 #ifdef DEBUG
-    else if(!PL_strcasecmp(which, "streams") && !(aboutAccess & ABOUT_STREAMS))
+    else if(!PL_strcasecmp(which, "streams"))
       {
-	NET_DisplayStreamInfoAsHTML(cur_entry);
-	return(-1);
+        NET_DisplayStreamInfoAsHTML(cur_entry);
+        return(-1);
       }
 #endif /* DEBUG */
-	else if(!PL_strcasecmp(which, "document") && !(aboutAccess & ABOUT_DOCUMENT))
+	else if(!PL_strcasecmp(which, "document"))
 	  {
 		char buf[64];
 		History_entry *his;
@@ -480,18 +527,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		if(cur_entry->URL_s->window_chrome)
 		  {
 			memset(cur_entry->URL_s->window_chrome, 0, sizeof(Chrome));
-			/* it should be MWContextDialog
-			 * but X isn't ready for it yet...
-			 */
-/* X is ready for MWContextDialog now...
- *#ifdef XP_UNIX
- *                      cur_entry->URL_s->window_chrome->type = MWContextBrowser;
- *#else
- */
 			cur_entry->URL_s->window_chrome->type = MWContextDialog;
-/*
- *#endif
- */
 			cur_entry->URL_s->window_chrome->show_scrollbar = TRUE;
 			cur_entry->URL_s->window_chrome->allow_resize = TRUE;
 			cur_entry->URL_s->window_chrome->allow_close = TRUE;
@@ -535,7 +571,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		length = PL_strlen(data);
 		StrAllocCopy(content_type, TEXT_HTML);
 	  }
-	else if(!PL_strncasecmp(which, "Global", 6)  && !(aboutAccess & ABOUT_GLOBAL))
+	else if(!PL_strncasecmp(which, "Global", 6))
 	  {
 		cur_entry->status = NET_DisplayGlobalHistoryInfoAsHTML(
 													cur_entry->window_id,
@@ -545,7 +581,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		return(-1);
 
 	  }
-	else if(!PL_strncmp(which, "FeCoNtExT=", 10) && !(aboutAccess & ABOUT_FECONTEXT))
+	else if(!PL_strncmp(which, "FeCoNtExT=", 10))
 	  {
 		MWContext *old_ctxt;
 		
@@ -572,7 +608,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 
       }
 #endif /* MOZILLA_CLIENT */
-	else if(!PL_strncasecmp(which, "authors", 7) && !(aboutAccess & ABOUT_AUTHORS))
+	else if(!PL_strncasecmp(which, "authors", 7))
 	  {
 		static const char *d =
 		  ("<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html\" "
@@ -587,7 +623,7 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 	    uses_fe_data = FALSE;
 	  }
 	/* Admin Kit/xp prefs diagnostic support */
-	else if (!PL_strncasecmp(which, "config", 6) && !(aboutAccess & ABOUT_CONFIG))
+	else if (!PL_strncasecmp(which, "config", 6))
 	{
 		data = PREF_AboutConfig();
 		if (data) {
@@ -595,23 +631,11 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 			content_type = PL_strdup(TEXT_HTML);
 		}
 	}
-#if defined(XP_UNIX) && !defined(MODULAR_NETLIB)
-	else if (!PL_strncasecmp(which, "minibuffer", 10) && !(aboutAccess & ABOUT_MINIBUFFER))
-	{
-		extern void FE_ShowMinibuffer(MWContext *);
-
-		FE_ShowMinibuffer(cur_entry->window_id);
-	}
-#endif
-#ifdef WEBFONTS
-	else if (!PL_strncasecmp(which, "fonts", 5) && !(aboutAccess & ABOUT_FONTS))
-	{
-		NF_AboutFonts(cur_entry->window_id, which);
-		return (-1);
-	}
-#endif /* WEBFONTS */
     else
       {
+        if (net_DoRegisteredAbout(which, cur_entry)) {
+            return -1;
+        }
 	    fe_data = FE_AboutData(which, &data, &length, &content_type);
 	    uses_fe_data=TRUE;
       }
@@ -669,7 +693,6 @@ PRIVATE int net_output_about_url(ActiveEntry * cur_entry)
 		PR_Free(data);
 		PR_Free(content_type);
 	  }
-
 
     return(-1);
 }
@@ -847,6 +870,18 @@ PRIVATE Bool net_about_kludge(URL_Struct *URL_s)
 	}
 }
 
+PRBool NET_RegisterAboutProtocol(const char *token,
+                                 NET_AboutCB callback)
+{
+    if (!token || !callback) {
+        return PR_FALSE;
+    }
+    if (PL_HashTableLookup(net_AboutTable, token) != NULL) {
+        return PR_FALSE;
+    }
+    PL_HashTableAdd(net_AboutTable, token, callback);
+}
+
 PRIVATE int32
 net_AboutLoad(ActiveEntry *ce)
 {
@@ -871,17 +906,24 @@ net_AboutStub(ActiveEntry *ce)
 PRIVATE void
 net_CleanupAbout(void)
 {
+    PL_HashTableDestroy(net_AboutTable);
 }
 
 PUBLIC void
 NET_InitAboutProtocol(void)
 {
-        static NET_ProtoImpl about_proto_impl;
+    static NET_ProtoImpl about_proto_impl;
 
-        about_proto_impl.init = net_AboutLoad;
-        about_proto_impl.process = net_AboutStub;
-        about_proto_impl.interrupt = net_AboutStub;
-        about_proto_impl.cleanup = net_CleanupAbout;
+    about_proto_impl.init = net_AboutLoad;
+    about_proto_impl.process = net_AboutStub;
+    about_proto_impl.interrupt = net_AboutStub;
+    about_proto_impl.cleanup = net_CleanupAbout;
 
-        NET_RegisterProtocolImplementation(&about_proto_impl, ABOUT_TYPE_URL);
+    NET_RegisterProtocolImplementation(&about_proto_impl, ABOUT_TYPE_URL);
+
+    net_AboutTable = PL_NewHashTable(32, 
+                                     net_HashAbout, 
+                                     net_AboutComparator,
+                                     PL_CompareValues,
+                                     NULL, NULL);
 }
