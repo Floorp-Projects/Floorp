@@ -1697,16 +1697,8 @@ NS_IMETHODIMP nsBulletFrame::OnStartContainer(imgIRequest *aRequest,
     if (shell) {
       NS_ASSERTION(mParent, "No parent to pass the reflow request up to.");
       if (mParent) {
-        // Reflow the first child of the parent not the bullet frame.
-        // The bullet frame is not in a line list so marking it dirty
-        // has no effect. The reflowing of the bullet frame is done 
-        // indirectly.
-        nsIFrame* frame = mParent->GetFirstChild(nsnull);
-        NS_ASSERTION(frame, "No frame to mark dirty for bullet frame.");
-        if (frame) {
-          frame->AddStateBits(NS_FRAME_IS_DIRTY);
-          mParent->ReflowDirtyChild(shell, frame);
-        }
+        mState |= NS_FRAME_IS_DIRTY;
+        mParent->ReflowDirtyChild(shell, this);
       }
     }
   }

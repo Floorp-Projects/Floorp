@@ -5937,10 +5937,27 @@ nsBlockFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
       }
     }
 
-    // Mark the line containing the child frame dirty.
-    line_iterator fline = FindLineFor(aChild);
-    if (fline != end_lines())
-      MarkLineDirty(fline);
+    if (aChild == mBullet && HaveOutsideBullet()) {
+      // The bullet lives in the first line, unless the first line has
+      // height 0 and there is a second line, in which case it lives
+      // in the second line.
+      line_iterator bulletLine = begin_lines();
+      if (bulletLine != end_lines() && bulletLine->mBounds.height == 0 &&
+          bulletLine != mLines.back()) {
+        bulletLine = bulletLine.next();
+      }
+      
+      if (bulletLine != end_lines()) {
+        MarkLineDirty(bulletLine);
+      }
+      // otherwise we have an empty line list, and ReflowDirtyLines
+      // will handle reflowing the bullet.
+    } else {
+      // Mark the line containing the child frame dirty.
+      line_iterator fline = FindLineFor(aChild);
+      if (fline != end_lines())
+        MarkLineDirty(fline);
+    }
   }
 
   // Either generate a reflow command to reflow the dirty child or 
