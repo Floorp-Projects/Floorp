@@ -116,7 +116,7 @@ function InitializeGlobalVariables()
   defaultSaveOperation = "draft";
   gSendOrSaveOperationInProgress = false;
   gCloseWindowAfterSave = false;
-  gIsOffline = false;
+  gIsOffline = gIOService.offline;
   gSessionAdded = false;
   gCurrentAutocompleteDirectory = null;
   gAutocompleteSession = null;
