@@ -83,8 +83,8 @@ nsMenuBarListener::KeyUp(nsIDOMEvent* aKeyEvent)
   if (theChar == NS_VK_ALT && mAltKeyDown) {
     // The ALT key was down and is now up.
     mMenuBarFrame->ToggleMenuActiveState();
-    mAltKeyDown = PR_FALSE; 
   }
+  mAltKeyDown = PR_FALSE; 
 #endif
 
   PRBool active = mMenuBarFrame->IsActive();
