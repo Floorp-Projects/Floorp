@@ -101,11 +101,7 @@ nsMalloc::DidAlloc(void* ptr)
 
 // For the definition of CallCacheFlushers()
 #ifdef XP_MAC
-#  ifndef NSPR20
-#    include "prmacos.h"
-#  else
 #    include "MacMemAllocator.h"
-#  endif
 #endif
 
 NS_METHOD_(void)
