@@ -58,10 +58,12 @@ interface nsIWebBrowserPersist : nsISupports
   const unsigned long PERSIST_FLAGS_FIXUP_ORIGINAL_DOM = 128;
   /** Fix links relative to destination location (not origin) */
   const unsigned long PERSIST_FLAGS_FIXUP_LINKS_TO_DESTINATION = 256;
-  /** Don't do any adjustments to links */
+  /** Don't make any adjustments to links */
   const unsigned long PERSIST_FLAGS_DONT_FIXUP_LINKS = 512;
   /** Force serialization of output (one file at a time; not concurrent) */
   const unsigned long PERSIST_FLAGS_SERIALIZE_OUTPUT = 1024;
+  /** Don't make any adjustments to filenames */
+  const unsigned long PERSIST_FLAGS_DONT_CHANGE_FILENAMES = 2048;
 
   /**
    * Flags governing how data is fetched and saved from the network. 

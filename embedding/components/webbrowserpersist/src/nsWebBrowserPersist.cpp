@@ -611,7 +611,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(
 
     if (data && data->mFile)
     {
-        if (data->mCalcFileExt)
+        if (data->mCalcFileExt && !(mPersistFlags & PERSIST_FLAGS_DONT_CHANGE_FILENAMES))
         {
             // this is the first point at which the server can tell us the mimetype
             CalculateAndAppendFileExt(data->mFile, channel, data->mOriginalLocation);
@@ -1810,6 +1810,11 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
     {
         nsCAutoString nameFromURL;
         url->GetFileName(nameFromURL);
+        if (mPersistFlags & PERSIST_FLAGS_DONT_CHANGE_FILENAMES)
+        {
+            fileName.AssignWithConversion(NS_UnescapeURL(nameFromURL).get());
+            goto end;
+        }
         if (!nameFromURL.IsEmpty())
         {
             // Unescape the file name (GetFileName escapes it)
@@ -1841,7 +1846,7 @@ nsWebBrowserPersist::MakeFilenameFromURI(nsIURI *aURI, nsString &aFilename)
 
     // Note: Filename could be empty at this point, but we'll deal with that
     //       problem later.
-
+end:
     aFilename = fileName;
     return NS_OK;
 }
