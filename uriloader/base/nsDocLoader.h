@@ -33,6 +33,7 @@
 #include "nsISupportsArray.h"
 #include "nsVoidArray.h"
 #include "nsString.h"
+#include "nsIChannel.h"
 #include "nsCOMPtr.h"
 
 
