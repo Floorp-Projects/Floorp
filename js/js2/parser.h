@@ -40,7 +40,7 @@ namespace JavaScript {
 		const char16 *p;				// Position in source text
 		const char16 *end;				// End of source text; *end is a null character
 	  public:
-		String source;			        // Source text
+		const String source;			// Source text
 		const String sourceLocation;	// Description of location from which the source text came
 	  private:
 		const uint32 initialLineNum;	// One-based number of current line
@@ -85,10 +85,13 @@ namespace JavaScript {
 // Lexer
 //
 
+	void escapeString(Formatter &f, const char16 *begin, const char16 *end, char16 quote);
+	void quoteString(Formatter &f, const String &s, char16 quote);
+
+
 	class Token {
-		static const char *const kindNames[];
 	  public:
-		enum Kind {	// Keep synchronized with kindNames table
+		enum Kind {	// Keep synchronized with kindNames and tokenBinaryOperatorInfos tables
 		  // Special
 			end,						// End of token stream
 
@@ -217,42 +220,42 @@ namespace JavaScript {
 			With,						// with
 
 		  // Non-reserved words
-			Box,						// box
+			Attribute,					// attribute
 			Constructor,				// constructor
-			Field,						// field
 			Get,						// get
 			Language,					// language
 			Local,						// local
-			Method,						// method
+			Namespace,					// namespace
 			Override,					// override
 			Set,						// set
-			Version,					// version
+			Use,						// use
 			
 			identifier,					// Non-keyword identifier (may be same as a keyword if it contains an escape code)
 
-			KindsEnd,					// End of token kinds
-			KeywordsBegin = Abstract,	// Beginning of range of special identifier tokens
-			KeywordsEnd = identifier,	// End of range of special identifier tokens
-			NonReservedBegin = Box,		// Beginning of range of non-reserved words
-			NonReservedEnd = identifier,// End of range of non-reserved words
-			KindsWithCharsBegin = number,// Beginning of range of tokens for which the chars field (below) is valid
-			KindsWithCharsEnd = regExp+1// End of range of tokens for which the chars field (below) is valid
+			kindsEnd,					// End of token kinds
+			keywordsBegin = Abstract,	// Beginning of range of special identifier tokens
+			keywordsEnd = identifier,	// End of range of special identifier tokens
+			nonreservedBegin = Attribute,// Beginning of range of non-reserved words
+			nonreservedEnd = identifier,// End of range of non-reserved words
+			kindsWithCharsBegin = number,// Beginning of range of tokens for which the chars field (below) is valid
+			kindsWithCharsEnd = regExp+1// End of range of tokens for which the chars field (below) is valid
 		};
 
 #define CASE_TOKEN_NONRESERVED	\
-		 Token::Box:			\
+		 Token::Attribute:		\
 	case Token::Constructor:	\
-	case Token::Field:			\
 	case Token::Get:			\
 	case Token::Language:		\
 	case Token::Local:			\
-	case Token::Method:			\
+	case Token::Namespace:		\
 	case Token::Override:		\
 	case Token::Set:			\
-	case Token::Version:		\
+	case Token::Use:			\
 	case Token::identifier
 
 	  private:
+		static const char *const kindNames[kindsEnd];
+
 	  #ifdef DEBUG
 		bool valid;						// True if this token has been initialized
 	  #endif
@@ -269,16 +272,16 @@ namespace JavaScript {
 
 	  public:
 		static void initKeywords(World &world);
-		static bool isIdentifierKind(Kind kind) {ASSERT(NonReservedEnd == identifier && KindsEnd == identifier+1); return kind >= NonReservedBegin;}
+		static bool isIdentifierKind(Kind kind) {ASSERT(nonreservedEnd == identifier && kindsEnd == identifier+1); return kind >= nonreservedBegin;}
 		static bool isSpecialKind(Kind kind) {return kind <= regExp || kind == identifier;}
-		static const char *kindName(Kind kind) {ASSERT(uint(kind) < KindsEnd); return kindNames[kind];}
+		static const char *kindName(Kind kind) {ASSERT(uint(kind) < kindsEnd); return kindNames[kind];}
 
 		Kind getKind() const {ASSERT(valid); return kind;}
 		bool hasKind(Kind k) const {ASSERT(valid); return kind == k;}
 		bool getLineBreak() const {ASSERT(valid); return lineBreak;}
 		uint32 getPos() const {ASSERT(valid); return pos;}
 		const StringAtom &getIdentifier() const {ASSERT(valid && id); return *id;}
-		const String &getChars() const {ASSERT(valid && kind >= KindsWithCharsBegin && kind < KindsWithCharsEnd); return chars;}
+		const String &getChars() const {ASSERT(valid && kind >= kindsWithCharsBegin && kind < kindsWithCharsEnd); return chars;}
 		float64 getValue() const {ASSERT(valid && kind == number); return value;}
 
 		friend Formatter &operator<<(Formatter &f, Kind k) {f << kindName(k); return f;}
@@ -434,7 +437,8 @@ namespace JavaScript {
 
 
 	struct ExprNode: ParseNode {
-		enum Kind {						// Actual class			Operands
+		enum Kind {						// Actual class			Operands	// Keep synchronized with kindNames
+			none,
 			identifier,					// IdentifierExprNode	<name>
 			number,						// NumberExprNode		<value>
 			string,						// StringExprNode		<str>
@@ -444,12 +448,15 @@ namespace JavaScript {
 			False,						// ExprNode				false
 			This,						// ExprNode				this
 			Super,						// ExprNode				super
+			Public,						// ExprNode				public
+			Package,					// ExprNode				package
+			Private,					// ExprNode				private
 
 			parentheses,				// UnaryExprNode		(<op>)
 			numUnit,					// NumUnitExprNode		<num> "<str>"   or   <num><str>
 			exprUnit,					// ExprUnitExprNode		(<op>) "<str>"
-			qualifiedIdentifier,		// OpIdentifierExprNode	<op> :: <name>
-			
+			qualify,					// BinaryExprNode		<op1> :: <op2> (right-associative:  a::b::c represented as a::(b::c))
+
 			objectLiteral,				// PairListExprNode		{<field>:<value>, <field>:<value>, ..., <field>:<value>}
 			arrayLiteral,				// PairListExprNode		[<value>, <value>, ..., <value>]
 			functionLiteral,			// FunctionExprNode		function <function>
@@ -458,11 +465,11 @@ namespace JavaScript {
 			New,						// InvokeExprNode		new <op>(<field>:<value>, <field>:<value>, ..., <field>:<value>)
 			index,						// InvokeExprNode		<op>[<field>:<value>, <field>:<value>, ..., <field>:<value>]
 
-			dot,						// BinaryExprNode		<op1> . <op2>  // <op2> must be identifier or qualifiedIdentifier
+			dot,						// BinaryExprNode		<op1> . <op2>  // <op2> must be identifier or qualify
 			dotParen,					// BinaryExprNode		<op1> .( <op2> )
 			at,							// BinaryExprNode		<op1> @ <op2>   or   <op1> @( <op2> )
 
-			Delete,						// UnaryExprNode		delete <op>
+			Delete,						// UnaryExprNode		delete <op>		// Begin of isUnaryKind()
 			Typeof,						// UnaryExprNode		typeof <op>
 			Eval,						// UnaryExprNode		eval <op>
 			preIncrement,				// UnaryExprNode		++ <op>
@@ -472,7 +479,7 @@ namespace JavaScript {
 			plus,						// UnaryExprNode		+ <op>
 			minus,						// UnaryExprNode		- <op>
 			complement,					// UnaryExprNode		~ <op>
-			logicalNot,					// UnaryExprNode		! <op>
+			logicalNot,					// UnaryExprNode		! <op>			// End of isUnaryKind()
 
 			add,						// BinaryExprNode		<op1> + <op2>
 			subtract,					// BinaryExprNode		<op1> - <op2>
@@ -500,7 +507,7 @@ namespace JavaScript {
 			In,							// BinaryExprNode		<op1> in <op2>
 			Instanceof,					// BinaryExprNode		<op1> instanceof <op2>
 
-			assignment,					// BinaryExprNode		<op1> = <op2>
+			assignment,					// BinaryExprNode		<op1> = <op2>	// Begin of isAssigningKind()
 			addEquals,					// BinaryExprNode		<op1> += <op2>
 			subtractEquals,				// BinaryExprNode		<op1> -= <op2>
 			multiplyEquals,				// BinaryExprNode		<op1> *= <op2>
@@ -514,14 +521,17 @@ namespace JavaScript {
 			bitwiseOrEquals,			// BinaryExprNode		<op1> |= <op2>
 			logicalAndEquals,			// BinaryExprNode		<op1> &&= <op2>
 			logicalXorEquals,			// BinaryExprNode		<op1> ^^= <op2>
-			logicalOrEquals,			// BinaryExprNode		<op1> ||= <op2>
+			logicalOrEquals,			// BinaryExprNode		<op1> ||= <op2>	// End of isAssigningKind()
 
 			conditional,				// TernaryExprNode		<op1> ? <op2> : <op3>
-			comma						// BinaryExprNode		<op1> , <op2>	// Comma expressions only
+			comma,						// BinaryExprNode		<op1> , <op2>	// Comma expressions only
+			
+			kindsEnd
 		};
 		
 	  private:
 		Kind kind;						// The node's kind
+		static const char *const kindNames[kindsEnd];
 	  public:
 
 		ExprNode(uint32 pos, Kind kind): ParseNode(pos), kind(kind) {}
@@ -529,33 +539,41 @@ namespace JavaScript {
 		Kind getKind() const {return kind;}
 		bool hasKind(Kind k) const {return kind == k;}
 
-		static bool isFieldKind(Kind kind) {return kind == identifier || kind == number || kind == string || kind == qualifiedIdentifier;}
+		static bool isFieldKind(Kind kind) {return kind == identifier || kind == number || kind == string || kind == qualify;}
+		static bool isAssigningKind(Kind kind) {return kind >= assignment && kind <= logicalOrEquals;}
+		static bool isUnaryKind(Kind kind) {return kind >= Delete && kind <= logicalNot;}
+		static const char *kindName(Kind kind) {ASSERT(uint(kind) < kindsEnd); return kindNames[kind];}
+
+		virtual void print(PrettyPrinter &f) const;
 	};
+
+	// Print e onto f.
+	inline PrettyPrinter &operator<<(PrettyPrinter &f, const ExprNode *e) {ASSERT(e); e->print(f); return f;}
+
 
 	struct IdentifierExprNode: ExprNode {
 		const StringAtom &name;			// The identifier
 
 		IdentifierExprNode(uint32 pos, Kind kind, const StringAtom &name):
 				ExprNode(pos, kind), name(name) {}
-	};
-	
-	struct OpIdentifierExprNode: IdentifierExprNode {
-		ExprNode *op;					// The namespace expression or indexed expression; non-nil only
 
-		OpIdentifierExprNode(uint32 pos, Kind kind, const StringAtom &name, ExprNode *op):
-				IdentifierExprNode(pos, kind, name), op(op) {ASSERT(op);}
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct NumberExprNode: ExprNode {
 		float64 value;					// The number's value
 
 		NumberExprNode(uint32 pos, float64 value): ExprNode(pos, number), value(value) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct StringExprNode: ExprNode {
 		String &str;					// The string
 
 		StringExprNode(uint32 pos, Kind kind, String &str): ExprNode(pos, kind), str(str) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct RegExpExprNode: ExprNode {
@@ -564,6 +582,8 @@ namespace JavaScript {
 
 		RegExpExprNode(uint32 pos, Kind kind, const StringAtom &regExp, String &flags):
 				ExprNode(pos, kind), regExp(regExp), flags(flags) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct NumUnitExprNode: StringExprNode { // str is the unit string
@@ -572,6 +592,8 @@ namespace JavaScript {
 
 		NumUnitExprNode(uint32 pos, Kind kind, String &numStr, float64 num, String &unitStr):
 				StringExprNode(pos, kind, unitStr), numStr(numStr), num(num) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct ExprUnitExprNode: StringExprNode { // str is the unit string
@@ -579,12 +601,16 @@ namespace JavaScript {
 
 		ExprUnitExprNode(uint32 pos, Kind kind, ExprNode *op, String &unitStr):
 				StringExprNode(pos, kind, unitStr), op(op) {ASSERT(op);}
+
+		void print(PrettyPrinter &f) const;
 	};
 
 	struct FunctionExprNode: ExprNode {
 		FunctionDefinition function;	// Function definition
 
 		FunctionExprNode(uint32 pos, Kind kind): ExprNode(pos, kind) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 	
 	struct ExprList: ArenaObject {
@@ -606,6 +632,8 @@ namespace JavaScript {
 		ExprPairList *pairs;			// Linked list of pairs
 
 		PairListExprNode(uint32 pos, Kind kind, ExprPairList *pairs): ExprNode(pos, kind), pairs(pairs) {}
+
+		void print(PrettyPrinter &f) const;
 	};
 
 	struct InvokeExprNode: PairListExprNode {
@@ -613,12 +641,16 @@ namespace JavaScript {
 
 		InvokeExprNode(uint32 pos, Kind kind, ExprNode *op, ExprPairList *pairs):
 				PairListExprNode(pos, kind, pairs), op(op) {ASSERT(op);}
+
+		void print(PrettyPrinter &f) const;
 	};
 
 	struct UnaryExprNode: ExprNode {
 		ExprNode *op;					// The unary operator's operand; non-nil only
 
 		UnaryExprNode(uint32 pos, Kind kind, ExprNode *op): ExprNode(pos, kind), op(op) {ASSERT(op);}
+
+		void print(PrettyPrinter &f) const;
 	};
 
 	struct BinaryExprNode: ExprNode {
@@ -627,6 +659,8 @@ namespace JavaScript {
 
 		BinaryExprNode(uint32 pos, Kind kind, ExprNode *op1, ExprNode *op2):
 				ExprNode(pos, kind), op1(op1), op2(op2) {ASSERT(op1 && op2);}
+
+		void print(PrettyPrinter &f) const;
 	};
 
 	struct TernaryExprNode: ExprNode {
@@ -636,6 +670,8 @@ namespace JavaScript {
 
 		TernaryExprNode(uint32 pos, Kind kind, ExprNode *op1, ExprNode *op2, ExprNode *op3):
 				ExprNode(pos, kind), op1(op1), op2(op2), op3(op3) {ASSERT(op1 && op2 && op3);}
+
+		void print(PrettyPrinter &f) const;
 	};
 
 
@@ -827,17 +863,47 @@ namespace JavaScript {
 
 		ExprNode *parseIdentifierQualifiers(ExprNode *e, bool &foundQualifiers);
 		ExprNode *parseParenthesesAndIdentifierQualifiers(const Token &tParen, bool &foundQualifiers);
-		IdentifierExprNode *parseQualifiedIdentifier(const Token &t);
+		ExprNode *parseQualifiedIdentifier(const Token &t);
 		PairListExprNode *parseArrayLiteral(const Token &initialToken);
 		PairListExprNode *parseObjectLiteral(const Token &initialToken);
 		ExprNode *parsePrimaryExpression();
 		BinaryExprNode *parseMember(ExprNode *target, const Token &tOperator, ExprNode::Kind kind, ExprNode::Kind parenKind);
 		InvokeExprNode *parseInvoke(ExprNode *target, uint32 pos, Token::Kind closingTokenKind, ExprNode::Kind invokeKind);
-	  public:
 		ExprNode *parsePostfixExpression(bool newExpression = false);
-		ExprNode *parseNonAssignmentExpression(bool noIn);
-		ExprNode *parseAssignmentExpression(bool noIn);
-		ExprNode *parseExpression(bool noIn);
+		ExprNode *parseUnaryExpression();
+
+		enum Precedence {
+			pNone,				// End tag
+			pExpression,		// Expression
+			pAssignment,		// AssignmentExpression
+			pConditional,		// ConditionalExpression
+			pLogicalOr,			// LogicalOrExpression
+			pLogicalXor,		// LogicalXorExpression
+			pLogicalAnd,		// LogicalAndExpression
+			pBitwiseOr,			// BitwiseOrExpression
+			pBitwiseXor,		// BitwiseXorExpression
+			pBitwiseAnd,		// BitwiseAndExpression
+			pEquality,			// EqualityExpression
+			pRelational,		// RelationalExpression
+			pShift,				// ShiftExpression
+			pAdditive,			// AdditiveExpression
+			pMultiplicative,	// MultiplicativeExpression
+			pUnary,				// UnaryExpression
+			pPostfix			// PostfixExpression
+		};
+
+		struct BinaryOperatorInfo {
+			ExprNode::Kind kind;		// The kind of BinaryExprNode the operator should generate; ExprNode::none if not a binary operator
+			Precedence precedenceLeft;	// Operators in this operator's left subexpression with precedenceLeft or higher are reduced
+			Precedence precedenceRight;	// This operator's precedence
+		};
+		static const BinaryOperatorInfo tokenBinaryOperatorInfos[Token::kindsEnd];
+		struct StackedSubexpression;
+
+	  public:
+		ExprNode *parseExpression(bool noIn, bool noAssignment = false, bool noComma = false);
+		ExprNode *parseNonAssignmentExpression(bool noIn) {return parseExpression(noIn, true, true);}
+		ExprNode *parseAssignmentExpression(bool noIn) {return parseExpression(noIn, false, true);}
 	};
 }
 #endif
