@@ -79,11 +79,18 @@ FixedTableLayoutStrategy::AssignNonPctColumnWidths(nsIPresContext*          aPre
   PRInt32 colX;
   // availWidth is used as the basis for percentage width columns. It is aComputedWidth
   // minus table border, padding, & cellspacing
+  nscoord spacingX = mTableFrame->GetCellSpacingX();
+  mCellSpacingTotal = spacingX;
+  for (colX = 0; colX < numCols; colX++){
+    if (mTableFrame->GetNumCellsOriginatingInCol(colX) > 0) {
+      mCellSpacingTotal += spacingX;
+    }
+  }
   nscoord availWidth = (NS_UNCONSTRAINEDSIZE == aComputedWidth) 
     ? NS_UNCONSTRAINEDSIZE
     : aComputedWidth - aReflowState.mComputedBorderPadding.left - 
       aReflowState.mComputedBorderPadding.right - 
-      ((numCols + 1) * mTableFrame->GetCellSpacingX());
+      mCellSpacingTotal;
   
   PRInt32 specifiedCols = 0;  // the number of columns whose width is given
   nscoord totalColWidth = 0;  // the sum of the widths of the columns 
