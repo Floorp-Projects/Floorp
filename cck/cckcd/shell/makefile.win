@@ -19,22 +19,13 @@
 #
 # Contributor(s): 
 
-DEPTH=..
+DEPTH=..\..\..
 
-DIRS=globals driver ib customcd cckcd cckwiz 
+DIRS=bmps nsetup32
 
 include <$(DEPTH)\config\rules.mak>
 
 include <$(DEPTH)\cck\InitDist.win>
 
 export::
-	-mkdir $(CCKDIST)
-	-mkdir $(CCKDIST)\CCKTool
-	-mkdir $(CCKDIST)\CCKTool\Configs
-	-mkdir $(CCKDIST)\CCKTool\NCIFiles
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell\bmps
-	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Autorun\Shell\nsetup32
-	-mkdir $(CCKDIST)\CCKTool\Shell
+	$(MAKE_INSTALL) * $(CCKDIST)\CCKTool\Shell

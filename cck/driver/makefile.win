@@ -100,7 +100,13 @@ PROGRAM = .\$(OBJDIR)\$(EXENAME).EXE
 
 !include "$(DEPTH)\config\rules.mak"
 
+include <$(DEPTH)\cck\InitDist.win>
+
+export::
+	$(MAKE_INSTALL) NCITemplate $(CCKDIST)\CCKTool
+	$(MAKE_INSTALL) cck.che $(CCKDIST)\CCKTool
+
 install::$(PROGRAM)
-	$(MAKE_INSTALL) $(PROGRAM) ..\cckwiz
+	$(MAKE_INSTALL) $(PROGRAM) $(CCKDIST)\CCKTool
 
 $(PROGRAM):: $(OBJDIR) $(OBJS) $(RESFILE)

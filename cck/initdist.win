@@ -15,27 +15,18 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH=..
-DEPTH2=..\..
-CCKDIR=$(LOCALDEPTH)\dist
+CCKDIST=$(DEPTH)\cck\dist
 
-INIFILES=.\cckwiz\iniFiles
-BITMAPS=.\cckwiz\bitmaps
-NSZIP=$(DEPTH)\xpinstall\wizard\windows\nszip
+#NSZIP=$(DEPTH)\xpinstall\wizard\windows\nszip
 
-MKDIRdist:
-	@echo +++ make: Creating directory: \dist
-	@echo.
-	-mkdir .\dist\iniFiles
+#export::
+#	@echo +++ make: Creating directory: \dist
+#	@echo.
+#	-mkdir $(INIFILES)
 
-COPYIniFiles:
-	-cd .\dist\iniFiles
-	#-copy $(LOCALDEPTH) $(INIFILES)\*.*  .\dist\iniFiles
-	$(MAKE_INSTALL) $(DEPTH2) $(INIFILES)\*.*
-
-MAKENSZIP:
-	-cd $(NSZIP)
-     	nmake -f makefile.win
+#MAKENSZIP:
+#	-cd $(NSZIP)
+#     	nmake -f makefile.win
 
 
 

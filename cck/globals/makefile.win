@@ -63,8 +63,10 @@ LLFLAGS= /NODEFAULTLIB msvcirt.lib msvcrt.lib
 
 include <$(DEPTH)\config\rules.mak>
 
+include <$(DEPTH)\cck\InitDist.win>
+
 export:: $(DLLNAME).h
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll ..\cckwiz
+	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(CCKDIST)\CCKTool
 
 libs:: $(DLL)
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).lib ..\lib
