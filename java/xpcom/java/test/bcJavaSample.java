@@ -23,7 +23,7 @@ import org.mozilla.xpcom.*;
 import java.lang.reflect.*;
 public class bcJavaSample implements bcIJavaSample {
     public bcJavaSample() {
-	System.out.println("--[java]bcJavaSample constructor");
+        System.out.println("--[java]bcJavaSample constructor");
     }
     public void test0() {
 	System.out.println("--[java]bcJavaSample.test0 ");
@@ -42,32 +42,30 @@ public class bcJavaSample implements bcIJavaSample {
 	}
     }
     public void test2(bcIJavaSample o) {
-	System.out.println("--[java]bcJavaSample.test2");
-	System.out.println("--[java]bcJavaSample.test2 :)))) Hey Hong");
-	if (o != null) {
-	    System.out.println("--[java]bcJavaSample.test2 o!= null");
+        System.out.println("--[java]bcJavaSample.test2");
+        System.out.println("--[java]bcJavaSample.test2 :)))) Hi there");
+        if (o != null) {
+            System.out.println("--[java]bcJavaSample.test2 o!= null");
 	    o.test0();
-	} else {
-	    System.out.println("--[java]bcJavaSample.test2 o== null");
-	}
+        } else {
+            System.out.println("--[java]bcJavaSample.test2 o== null");
+        }
     }
     static IID iid;
     static { 
-	try {
-	    Method[] methods = null;
-	    Class bcIJavaSampleClass = Class.forName("bcIJavaSample");
-	    Method[] javaSampleMethods = bcIJavaSampleClass.getMethods();
-	    methods = new Method[3];
-	    methods[0] = javaSampleMethods[javaSampleMethods.length-3];
-	    methods[1] = javaSampleMethods[javaSampleMethods.length-2];
-	    methods[2] = javaSampleMethods[javaSampleMethods.length-1];
-	    System.out.println(methods[0]+" "+methods[1]+" "+methods[2]);
-	    iid = new IID(bcIJavaSample.BC_IJAVASAMPLE_IID_STRING);
-	    
-	    ProxyFactory.registerInterfaceForIID(bcIJavaSampleClass,iid);
-	    new ProxyClass(iid, methods); 
-	} catch (Exception e) {
-	    
-	}
+        try {
+            Method[] methods = null;
+            Class bcIJavaSampleClass = Class.forName("bcIJavaSample");
+            methods = new Method[3];
+            methods[0] = bcIJavaSampleClass.getDeclaredMethod("test0",new Class[]{});
+            methods[1] = bcIJavaSampleClass.getDeclaredMethod("test1",new Class[]{Integer.TYPE});
+            methods[2] = bcIJavaSampleClass.getDeclaredMethod("test2",new Class[]{bcIJavaSampleClass});
+            System.out.println(methods[0]+" "+methods[1]+" "+methods[2]);
+            iid = new IID(bcIJavaSample.BC_IJAVASAMPLE_IID_STRING);
+            ProxyFactory.registerInterfaceForIID(bcIJavaSampleClass,iid);
+            new ProxyClass(iid, methods); 
+        } catch (Exception e) {
+            
+        }
     }
 };

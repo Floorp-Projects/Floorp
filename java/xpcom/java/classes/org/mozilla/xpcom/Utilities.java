@@ -25,15 +25,15 @@ import java.lang.reflect.*;
 
 public class Utilities {
     static Object callMethodByIndex(Object obj, IID iid, int mid, Object[] args) {
-	System.out.println("--org.mozilla.xpcom.Utilities.callMethodByIndex "+args.length+" "+mid);
+	System.out.println("--[java]org.mozilla.xpcom.Utilities.callMethodByIndex "+args.length+" "+mid);
 	for (int i = 0; i < args.length; i++) {
-	    System.out.println("--callMethodByIndex args["+i+"] = "+args[i]);
+	    System.out.println("--[java]callMethodByIndex args["+i+"] = "+args[i]);
 	}
 	Method method = getMethodByIndex(mid,iid);
 	System.out.println("--callMethodByIndex method "+method);
 	try {
 	    if (method != null) {
-		method.invoke(obj,args); 
+            method.invoke(obj,args); 
 	    }
 	} catch (Exception e) {
 	    e.printStackTrace();
@@ -41,36 +41,40 @@ public class Utilities {
 	return null; //nb for testing
     }
     static Object callMethod(long oid, Method method, IID iid, long orb , Object[] args) {
-	System.out.println("--[java]Utilities.callMethod "+method);
-	int mid = getIndexByMethod(method, iid);
-	if (mid <= 0) {
-	    return null;
-	}
-	System.out.println("--[java]Utilities.callMethod "+mid);
-	return callMethodByIndex(oid,mid,iid.getString(), orb, args);
+        System.out.println("--[java]Utilities.callMethod "+method);
+        int mid = getIndexByMethod(method, iid);
+        if (mid <= 0) {
+            return null;
+        }
+        System.out.println("--[java]Utilities.callMethod "+mid);
+        return callMethodByIndex(oid,mid,iid.getString(), orb, args);
     }
-
+    
     private static Method getMethodByIndex(int index, IID iid) {
-	Method result = null;
-	ProxyClass proxyClass = ProxyClass.getProxyClass(iid);
-	if (proxyClass != null) {
-	    result = proxyClass.getMethodByIndex(index);
-	}
-	return result;
+        Method result = null;
+        ProxyClass proxyClass = ProxyClass.getProxyClass(iid);
+        if (proxyClass != null) {
+            result = proxyClass.getMethodByIndex(index);
+        }
+        return result;
     }
     private static int getIndexByMethod(Method method, IID iid) {
-	int result = 0;
-	ProxyClass proxyClass = ProxyClass.getProxyClass(iid);
-	if (proxyClass != null) {
-	    result = proxyClass.getIndexByMethod(method);
-	}
-	return result;
+        int result = 0;
+        ProxyClass proxyClass = ProxyClass.getProxyClass(iid);
+        if (proxyClass != null) {
+            result = proxyClass.getIndexByMethod(method);
+        }
+        return result;
     }
     private static native  Object callMethodByIndex(long oid, int index, String iid, long orb, Object[] args);
     static {
-	System.loadLibrary("bcjavastubs");
+        System.loadLibrary("bcjavastubs");
     }
 }
+
+
+
+
 
 
 

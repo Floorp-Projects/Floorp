@@ -36,6 +36,7 @@ bcXPCOMStub::~bcXPCOMStub() {
 }
 
 void bcXPCOMStub::Dispatch(bcICall *call) {
+    
     bcIID iid; bcOID oid; bcMID mid;
     call->GetParams(&iid, &oid, &mid);
     nsIInterfaceInfo *interfaceInfo;

@@ -22,7 +22,7 @@
 #
 
 
-DEPTH=../../../..
+DEPTH		=../../../..
 topsrcdir	= @top_srcdir@
 srcdir		= @srcdir@
 VPATH		= @srcdir@
@@ -48,12 +48,12 @@ CPPSRCS =  \
 	   org_mozilla_xpcom_Utilities.cpp \
 	   $(NULL)
 
-CXXFLAGS        += $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE  -I$(CONNECT_SRC)/public
+CXXFLAGS        += -I$(JDKHOME)/include -I$(JDKHOME)/include/linux $(MOZ_TOOLKIT_REGISTRY_CFLAGS) -D_REENTRANT -DOJI_DISABLE -I$(CONNECT_SRC)/public
 
 DSO_LDOPTS += \
       -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/ \
-      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/classic \
-      -ljava -ljvm \
+      -L$(JDKHOME)/jre/lib/$(HOSTTYPE)/server \
+      -ljvm  \
       $(NULL)
       
 ifneq ($(OS_ARCH), Linux)
@@ -61,7 +61,11 @@ DSO_LDOPTS      += \
                   -lthread -lXm -lX11 -lXt -lm
 endif
 		
-
+EXTRA_DSO_LDOPTS += \
+      -L$(DIST)/bin/components/ \
+      -lbcorb \
+      $(NULL)
+      
 include $(topsrcdir)/config/rules.mk
 
 

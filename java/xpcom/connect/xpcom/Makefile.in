@@ -34,14 +34,14 @@ LIBRARY_NAME = bcorb
 MODULE          = bcorb
 IS_COMPONENT    = 1
 
-OBJS =  \
-           .\$(OBJDIR)\bcORB.cpp \
-	   ..\$(OBJDIR)\src\Allocator.cpp \
-	   ..\$(OBJDIR)\src\Call.cpp \
-	   ..\$(OBJDIR)\src\Marshaler.cpp \
-	   ..\$(OBJDIR)\src\ORB.cpp  \
-	   ..\$(OBJDIR)\src\UnMarshaler.cpp \
-	   ..\$(OBJDIR)\src\util.cpp \
+CPPSRCS =  \
+           bcORB.cpp \
+	   ../src/Allocator.cpp \
+	   ../src/Call.cpp \
+	   ../src/Marshaler.cpp \
+	   ../src/ORB.cpp  \
+	   ../src/UnMarshaler.cpp \
+	   ../src/util.cpp \
 	   $(NULL)
 	   
 EXPORTS = \

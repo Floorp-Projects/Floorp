@@ -26,52 +26,58 @@ import java.util.*;
 
 public class ProxyClass { //nb it should not be public
     public ProxyClass(IID _iid, Method[] _methods) { //nb it should not be public
-	iid = _iid;
-	methods = _methods;
-	if (classes == null) {
-	    classes = new Hashtable();
-	}
-	classes.put(iid, this);
+        iid = _iid;
+        methods = _methods;
+        if (classes == null) {
+            classes = new Hashtable();
+        }
+        classes.put(iid, this);
     }
     Method getMethodByIndex(int mid) { //first method has index equal to 'offset'
-	System.out.println("--[java]ProxyClass.GetMehodByIndex "+mid);
-	Method result = null;
-	try {
-	    result = methods[mid-offset];
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
-	return result;
+        System.out.println("--[java]ProxyClass.GetMehodByIndex "+mid);
+        Method result = null;
+        try {
+            result = methods[mid-offset];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return result;
     }
     int getIndexByMethod(Method method) { 
-	int result = 0;
-	if (method == null
-	    ||methods == null) {
-	    return result;
-	}
-	for (int i = 0; i < methods.length; i++) {
-	    if (methods[i].equals(method)) {
-		result = i + offset;
-		break;
-	    }
-	}
-	return result;
+        int result = 0;
+        if (method == null
+            ||methods == null) {
+            return result;
+        }
+        for (int i = 0; i < methods.length; i++) {
+            if (methods[i].equals(method)) {
+                result = i + offset;
+                break;
+            }
+        }
+        return result;
     }
 
     static ProxyClass getProxyClass(IID iid) {
-	ProxyClass result = null;
-	Object obj =  null;
-	if (classes != null) {
-	    obj = classes.get(iid);
-	    if (obj != null
-		&& (obj instanceof ProxyClass)) {
-		result = (ProxyClass)obj;
-	    }
-	}
-	return result;
+        ProxyClass result = null;
+        Object obj =  null;
+        if (classes != null) {
+            obj = classes.get(iid);
+            if (obj != null
+                && (obj instanceof ProxyClass)) {
+                result = (ProxyClass)obj;
+            }
+        }
+        return result;
     }
     private IID iid;
     private Method[] methods;
     private final int offset = 3; //from xpcom
     static Hashtable classes = null;
 }
+
+
+
+
+
+

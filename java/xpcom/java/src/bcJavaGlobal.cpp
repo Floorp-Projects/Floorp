@@ -31,29 +31,41 @@ JavaVM *bcJavaGlobal::jvm = NULL;
 #define PATH_SEPARATOR ':'
 #endif
 
+#ifdef JRI_MD_H //we are using jni.h from netscape
+#define JNIENV
+#else 
+#define JNIENV  (void**)
+#endif
+
 JNIEnv * bcJavaGlobal::GetJNIEnv(void) {
-    JNIEnv * res;
+    printf("--bcJavaGlobal::GetJNIEnv begin\n");
+    JNIEnv * env;
+    int res;
     if (!jvm) {
-	StartJVM();
+        StartJVM();
     }
     if (jvm) {
-	jvm->AttachCurrentThread(&res,NULL);
+        res = jvm->AttachCurrentThread(JNIENV &env,NULL);
     }
-    printf("--bcJavaGlobal::GetJNIEnv \n");
-    return res;
+    printf("--bcJavaGlobal::GetJNIEnv %d\n",res);
+    return env;
 }
 
+
 void bcJavaGlobal::StartJVM() {
+    printf("--bcJavaGlobal::StartJVM begin\n");
     JNIEnv *env = NULL;
     jint res;
     jsize jvmCount;
     JNI_GetCreatedJavaVMs(&jvm, 1, &jvmCount);
+    printf("--bcJavaGlobal::StartJVM after GetCreatedJavaVMs\n");
     if (jvmCount) {
         return;
     }
     JDK1_1InitArgs vm_args;
     char classpath[1024];
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
+    printf("--[c++] version %d",(int)vm_args.version);
     vm_args.version = 0x00010001;
     /* Append USER_CLASSPATH to the default system class path */
     sprintf(classpath, "%s%c%s",
@@ -65,9 +77,36 @@ void bcJavaGlobal::StartJVM() {
     vm_args.properties = props;
     vm_args.classpath = classpath;
     /* Create the Java VM */
-    res = JNI_CreateJavaVM(&jvm, &env, &vm_args);
-    printf("--bcJavaGlobal::StartJVM jvm started\n");
+    res = JNI_CreateJavaVM(&jvm, JNIENV &env, &vm_args);
+#if 0
+    char classpath[1024];
+    JavaVMInitArgs vm_args;
+    JavaVMOption options[2];
+    sprintf(classpath, "-Djava.class.path=%s",PR_GetEnv("CLASSPATH"));
+    options[0].optionString = classpath;
+    options[1].optionString="-Djava.compiler=NONE";
+    vm_args.version = 0x00010002;
+    vm_args.options = options;
+    vm_args.nOptions = 1;
+    vm_args.ignoreUnrecognized = JNI_TRUE;
+    /* Create the Java VM */
+    res = JNI_CreateJavaVM(&jvm, (void**)&env, &vm_args);
+#endif
+    printf("--bcJavaGlobal::StartJVM jvm started res %d\n",res);
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
