@@ -484,7 +484,7 @@ nsresult nsNntpTestDriver::OnListAllGroups()
 
 	m_url->SetSpec(m_urlString); // reset spec
     printf("Running %s\n", m_urlString);
-	rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
+	rv = m_nntpProtocol->LoadUrl(m_url, nsnull);
 	return rv;
 }
 
@@ -507,7 +507,7 @@ nsresult nsNntpTestDriver::OnListIDs()
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
         PRInt32 status = 0;
-        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
+        rv = m_nntpProtocol->LoadUrl(m_url, nsnull);
     }
 
 	return rv;
@@ -532,7 +532,7 @@ nsresult nsNntpTestDriver::OnListArticle()
         PRInt32 status = 0;
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url, nsnull, &status);
+        rv = m_nntpProtocol->LoadUrl(m_url, nsnull);
     }
     
 	return rv;
@@ -563,7 +563,7 @@ nsresult nsNntpTestDriver::OnSearch()
         PRInt32 status = 0 ;
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-        rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
+        rv = m_nntpProtocol->LoadUrl(m_url, nsnull);
     }
     
 	return rv;
@@ -637,7 +637,7 @@ nsNntpTestDriver::OnPostMessage()
     m_url->SetMessageToPost(post);
     
     printf("Running %s\n", m_urlString);
-    rv = m_nntpProtocol->LoadURL(m_url, nsnull /* display stream */, &status);
+    rv = m_nntpProtocol->LoadUrl(m_url, nsnull);
 
 	return rv;
 }
@@ -680,7 +680,7 @@ nsresult nsNntpTestDriver::OnGetGroup()
     if (NS_SUCCEEDED(rv)) {
         SetupUrl(m_userData);
         printf("Running %s\n", m_urlString);
-		rv = m_nntpProtocol->LoadURL(m_url, nsnull /* displayStream */, &status);
+		rv = m_nntpProtocol->LoadUrl(m_url, nsnull);
 	} // if user provided the data...
 
 	return rv;
@@ -707,7 +707,7 @@ nsresult nsNntpTestDriver::OnReadNewsRC()
 	// a read newsrc url is of the form: news://
 	// or news://HOST
     printf("Running %s\n", m_urlString);
-	rv = m_nntpProtocol->LoadURL(m_url, nsnull, &status);
+	rv = m_nntpProtocol->LoadUrl(m_url, nsnull);
 	return rv;
 }
 

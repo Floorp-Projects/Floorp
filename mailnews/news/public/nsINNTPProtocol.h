@@ -38,7 +38,7 @@ public:
     NS_IMETHOD Initialize(nsIURL * aURL, nsITransport * transportLayer) = 0;
     
     // aConsumer is typically a display stream you may want the results to be displayed into...
-    NS_IMETHOD LoadURL(nsIURL * aURL, nsISupports * aConsumer, PRInt32 * _retval) = 0;
+    NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer) = 0;
     
     // returns true if we are currently running a url and false otherwise...
     NS_IMETHOD IsRunningUrl(PRBool * _retval) = 0;

@@ -33,7 +33,7 @@ interface nsINNTPProtocol : nsIStreamListener {
     void Initialize(in nsIURL aURL, in nsITransport transportLayer);
           
 	// aConsumer is typically a display stream you may want the results to be displayed into...
-    long LoadURL(in nsIURL aURL, in nsISupports aConsumer);
+    void LoadUrl(in nsIURL aURL, in nsISupports aConsumer);
     
     // returns true if we are currently running a url and false otherwise...
     boolean IsRunningUrl();
