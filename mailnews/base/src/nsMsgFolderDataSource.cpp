@@ -1959,8 +1959,8 @@ nsresult nsMsgFolderDataSource::DoNewFolder(nsIMsgFolder *folder, nsISupportsArr
 	nsCOMPtr<nsIRDFLiteral> literal = do_QueryInterface(elem, &rv);
 	if(NS_SUCCEEDED(rv))
 	{
-		PRUnichar *name;
-		literal->GetValue(&name);
+		nsXPIDLString name;
+		literal->GetValue(getter_Copies(name));
 
 		rv = folder->CreateSubfolder(name,mWindow);
 		
