@@ -496,26 +496,26 @@ nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create, nsIMsgOfflineImapOperation **offlineOp)
 {
   PRBool newOp = PR_FALSE;
-	mdb_bool	hasOid;
-	mdbOid		rowObjectId;
+  mdb_bool	hasOid;
+  mdbOid		rowObjectId;
   mdb_err   err;
-
+  
   nsresult rv = GetAllOfflineOpsTable();
   NS_ENSURE_SUCCESS(rv, rv);
-
-	if (!offlineOp || !m_mdbAllOfflineOpsTable)
-		return NS_ERROR_NULL_POINTER;
-
-	*offlineOp = NULL;
-
-	rowObjectId.mOid_Id = msgKey;
-	rowObjectId.mOid_Scope = m_offlineOpsRowScopeToken;
-	err = m_mdbAllOfflineOpsTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
-	if (err == NS_OK && m_mdbStore && (hasOid  || create))
-	{
-		nsIMdbRow *offlineOpRow;
-		err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &offlineOpRow);
-
+  
+  if (!offlineOp || !m_mdbAllOfflineOpsTable)
+    return NS_ERROR_NULL_POINTER;
+  
+  *offlineOp = NULL;
+  
+  rowObjectId.mOid_Id = msgKey;
+  rowObjectId.mOid_Scope = m_offlineOpsRowScopeToken;
+  err = m_mdbAllOfflineOpsTable->HasOid(GetEnv(), &rowObjectId, &hasOid);
+  if (err == NS_OK && m_mdbStore && (hasOid  || create))
+  {
+    nsIMdbRow *offlineOpRow;
+    err = m_mdbStore->GetRow(GetEnv(), &rowObjectId, &offlineOpRow);
+    
     if (create)
     {
       if (!offlineOpRow)
@@ -529,39 +529,41 @@ NS_IMETHODIMP nsMailDatabase::GetOfflineOpForKey(nsMsgKey msgKey, PRBool create,
         newOp = PR_TRUE;
       }
     }
-
-		if (err == NS_OK && offlineOpRow)
-		{
+    
+    if (err == NS_OK && offlineOpRow)
+    {
       *offlineOp = new nsMsgOfflineImapOperation(this, offlineOpRow);
       if (*offlineOp)
         (*offlineOp)->SetMessageKey(msgKey);
       nsCOMPtr <nsIMsgDBHdr> msgHdr;
-
-			GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
-			if (msgHdr)
-			{
-				imapMessageFlagsType imapFlags = kNoImapMsgFlag;
+      
+      GetMsgHdrForKey(msgKey, getter_AddRefs(msgHdr));
+      if (msgHdr)
+      {
+        imapMessageFlagsType imapFlags = kNoImapMsgFlag;
         PRUint32 msgHdrFlags;
         msgHdr->GetFlags(&msgHdrFlags);
-				if (msgHdrFlags & MSG_FLAG_READ)
-					imapFlags |= kImapMsgSeenFlag;
-				if (msgHdrFlags & MSG_FLAG_REPLIED)
-					imapFlags |= kImapMsgAnsweredFlag;
-				if (msgHdrFlags & MSG_FLAG_MARKED)
-					imapFlags |= kImapMsgFlaggedFlag;
-				if (msgHdrFlags & MSG_FLAG_FORWARDED)
-					imapFlags |= kImapMsgForwardedFlag;
-				(*offlineOp)->SetNewFlags(imapFlags);
+        if (msgHdrFlags & MSG_FLAG_READ)
+          imapFlags |= kImapMsgSeenFlag;
+        if (msgHdrFlags & MSG_FLAG_REPLIED)
+          imapFlags |= kImapMsgAnsweredFlag;
+        if (msgHdrFlags & MSG_FLAG_MARKED)
+          imapFlags |= kImapMsgFlaggedFlag;
+        if (msgHdrFlags & MSG_FLAG_FORWARDED)
+          imapFlags |= kImapMsgForwardedFlag;
+        if (msgHdrFlags & MSG_FLAG_IMAP_DELETED)
+          imapFlags |= kImapMsgDeletedFlag;
+        (*offlineOp)->SetNewFlags(imapFlags);
       }
       NS_IF_ADDREF(*offlineOp);
-		}
+    }
     if (!hasOid && m_dbFolderInfo)
     {
       PRInt32 newFlags;
       m_dbFolderInfo->OrFlags(MSG_FOLDER_FLAG_OFFLINEEVENTS, &newFlags);
     }
-	}
-
+  }
+  
   return (err == 0) ? NS_OK : NS_ERROR_FAILURE;
 
 }
