@@ -1178,11 +1178,13 @@ static PRBool SetColor(const nsCSSValue& aValue, const nscolor aParentColor,
       result = PR_TRUE;
     }
   }
-  else if (eCSSUnit_Enumerated == unit) {
+  else if (eCSSUnit_Integer == unit) {
     nsILookAndFeel* look = nsnull;
     if (NS_SUCCEEDED(aPresContext->GetLookAndFeel(&look)) && look) {
       nsILookAndFeel::nsColorID colorID = (nsILookAndFeel::nsColorID)aValue.GetIntValue();
-      look->GetColor(colorID, aResult);
+      if (NS_SUCCEEDED(look->GetColor(colorID, aResult))) {
+        result = PR_TRUE;
+      }
       NS_RELEASE(look);
     }
   }
