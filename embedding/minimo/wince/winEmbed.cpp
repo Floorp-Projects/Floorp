@@ -77,10 +77,12 @@ nsresult PR_CALLBACK
 app_getModuleInfo(nsStaticModuleInfo **info, PRUint32 *count);
 #endif
 
-
+#define TASKBAR_H 22
 
 // Foward declarations of functions included in this code module:
 static BOOL    CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL    CALLBACK StatusDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
+static BOOL    CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam);
 
 static nsresult InitializeWindowCreator();
 static nsresult OpenWebPage(const char * url);
@@ -94,27 +96,39 @@ static PRBool    gRunCondition = PR_TRUE;
 static UINT      gDialogCount = 0;
 static HINSTANCE ghInstanceApp = NULL;
 static BOOL      gActive = TRUE;
+static BOOL      gBusy = TRUE;
 
-// A list of URLs to populate the URL drop down list with
+// minimo/wince/ list of URLs to populate the URL drop down list with
 static const TCHAR *gDefaultURLs[] = 
 {
-    _T("http://www.mozilla.org/"),
-    _T("http://www.netscape.com/"),
-    _T("http://www.mozilla.org/quality/browser/standards/html/"),
     _T("http://browsertest.web.aol.com/tests/javascript/javascpt/index.htm"),
-    _T("http://www.yahoo.com/"),
-    _T("http://www.travelocity.com/"),
+    _T("http://www.cnn.com/"),
     _T("http://www.disney.com/"),
+    _T("http://www.ebay.com/"),
     _T("http://www.go.com/"),
     _T("http://www.google.com/"),
-    _T("http://www.ebay.com/"),
+    _T("http://www.hotmail.com/"),
+    _T("http://www.javasoft.com/")
+    _T("http://www.mozilla.org/"),
+    _T("http://www.mozilla.org/quality/browser/standards/html/"),
+    _T("http://www.netscape.com/"),
+    _T("http://www.quicken.com/"),
     _T("http://www.shockwave.com/"),
     _T("http://www.slashdot.org/"),
-    _T("http://www.quicken.com/"),
-    _T("http://www.hotmail.com/"),
-    _T("http://www.cnn.com/"),
-    _T("http://www.javasoft.com/")
+    _T("http://www.travelocity.com/"),
+    _T("http://www.yahoo.com/"),
 };
+
+
+
+typedef struct MinimoWindowContext
+{
+    HWND mMainWindow;
+    HWND mStatusWindow;
+    HWND mHeadsUpWindow;
+
+} MinimoWindowContext;
+
 
 int main(int argc, char *argv[])
 {
@@ -126,11 +140,6 @@ int main(int argc, char *argv[])
         SetForegroundWindow (hWndExistingInstance);    
 		return FALSE;
 	}
-
-#ifdef WINCE
-    _wfreopen(L"COM1:", L"w+",stdout);
-    _wfreopen(L"COM1:", L"w",stderr);
-#endif
 
     ghInstanceApp = GetModuleHandle(NULL);
 
@@ -152,11 +161,7 @@ int main(int argc, char *argv[])
     InitializeWindowCreator();
     
     // Open the initial browser window
-    OpenWebPage("http://www.google.com");
-    
-    // Main message loop.
-    // NOTE: We use a fake event and a timeout in order to process idle stuff for
-    //       Mozilla every 1/10th of a second.
+    OpenWebPage("resource://gre/res/start.html");
     
     WPARAM rv = AppCallbacks::RunEventLoop(gRunCondition);
 
@@ -189,14 +194,6 @@ nsresult InitializeWindowCreator()
     return NS_ERROR_FAILURE;
 }
 
-//-----------------------------------------------------------------------------
-
-//
-//  FUNCTION: OpenWebPage()
-//
-//  PURPOSE: Opens a new browser dialog and starts it loading to the
-//           specified url.
-//
 nsresult OpenWebPage(const char *url)
 {
     nsresult  rv;
@@ -224,12 +221,6 @@ nsresult OpenWebPage(const char *url)
     return rv;
 }   
 
-//
-//  FUNCTION: GetBrowserFromChrome()
-//
-//  PURPOSE: Returns the HWND for the webbrowser container associated
-//           with the specified chrome.
-//
 HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
 {
     if (!aChrome)
@@ -242,24 +233,11 @@ HWND GetBrowserFromChrome(nsIWebBrowserChrome *aChrome)
     return hwnd;
 }
 
-
-//
-//  FUNCTION: GetBrowserDlgFromChrome()
-//
-//  PURPOSE: Returns the HWND for the browser dialog associated with
-//           the specified chrome.
-//
 HWND GetBrowserDlgFromChrome(nsIWebBrowserChrome *aChrome)
 {
     return GetParent(GetBrowserFromChrome(aChrome));
 }
 
-
-//
-//  FUNCTION: ResizeEmbedding()
-//
-//  PURPOSE: Resizes the webbrowser window to fit its container.
-//
 nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
 {
     if (!chrome)
@@ -292,13 +270,6 @@ nsresult ResizeEmbedding(nsIWebBrowserChrome* chrome)
     return NS_OK;
 }
 
-
-
-//
-//  FUNCTION: UpdateUI()
-//
-//  PURPOSE: Refreshes the buttons and menu items in the browser dialog
-//
 void UpdateUI(nsIWebBrowserChrome *aChrome)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
@@ -327,55 +298,202 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
         clipCmds->CanPaste(&canPaste);
     }
 
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+    
     HWND button;
-    button = GetDlgItem(hwndDlg, IDC_BACK);
+
+    button = GetDlgItem(mwcontext->mStatusWindow, IDC_BACK);
     if (button)
       EnableWindow(button, canGoBack);
-    button = GetDlgItem(hwndDlg, IDC_FORWARD);
+
+    button = GetDlgItem(mwcontext->mStatusWindow, IDC_FORWARD);
     if (button)
       EnableWindow(button, canGoForward);
 }
 
-
-VOID APIENTRY HandlePopupMenu(HWND hwnd, nsIWebNavigation* webBrowser)
+void LoadURL(nsIWebNavigation* webNavigation, char* url)
 {
-    PRBool canCopy = PR_FALSE;
-    PRBool canPaste = PR_FALSE;
-
-    nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-    if (clipCmds)
-    {
-        clipCmds->CanCopySelection(&canCopy);
-        clipCmds->CanPaste(&canPaste);
-    }
-
-    UINT copyFlags  = canCopy  ? MF_GRAYED : MF_ENABLED;
-    UINT pasteFlags = canPaste ? MF_GRAYED : MF_ENABLED;
-    
-    HMENU hMenu = CreatePopupMenu();
-
-    AppendMenuW(hMenu, copyFlags  | MF_STRING, MOZ_Copy,      L"Copy");
-    AppendMenuW(hMenu, pasteFlags | MF_STRING, MOZ_Paste,     L"Paste");
-    AppendMenuW(hMenu, MF_ENABLED | MF_STRING, MOZ_SelectAll, L"Select All");
-
-    AppendMenuW(hMenu, MF_SEPARATOR, 0, NULL);
-
-    AppendMenuW(hMenu, MF_ENABLED | MF_STRING, MOZ_Copy,      L"aaaaa");
-
-    TrackPopupMenu(hMenu, 0, 20, 20, 0, hwnd, NULL);
-    
-    DestroyMenu(hMenu);
+    webNavigation->LoadURI(NS_ConvertASCIItoUCS2(url).get(),
+                           nsIWebNavigation::LOAD_FLAGS_NONE,
+                           nsnull,
+                           nsnull,
+                           nsnull);
 }
 
-//
-//  FUNCTION: BrowserDlgProc()
-//
-//  PURPOSE: Browser dialog windows message handler.
-//
-//  COMMENTS:
-//
-//    The code for handling buttons and menu actions is here.
-//
+void LoadURLInURLBar(HWND hwndDlg, nsIWebNavigation* webNavigation)
+{
+    TCHAR szURL[2048];
+    memset(szURL, 0, sizeof(szURL));
+    GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL, sizeof(szURL) / sizeof(szURL[0]) - 1);
+ 
+    LoadURL(webNavigation, szURL);
+}
+
+BOOL CALLBACK HeadsUpDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+
+    HWND hwndBrowser = GetDlgItem(mwcontext->mMainWindow, IDC_BROWSER);
+
+    nsIWebBrowserChrome *chrome = nsnull ;
+    if (hwndBrowser)
+    {
+        chrome = (nsIWebBrowserChrome *) GetWindowLong(hwndBrowser, GWL_USERDATA);
+    }
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIWebNavigation> webNavigation;
+    if (chrome)
+    {
+        chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+        webNavigation = do_QueryInterface(webBrowser);
+    }
+
+    switch (uMsg)
+    {
+
+        case WM_INITDIALOG:
+        {
+            SetWindowTextW(hwndDlg, L"Headsup Display");
+        }
+        return TRUE;
+
+        case WM_COMMAND:
+        {
+            if (!webBrowser)
+            {
+                return TRUE;
+            }
+            
+            // Test which command was selected
+            switch (LOWORD(wParam))
+            {
+            case IDC_ADDRESS:
+                if (HIWORD(wParam) == CBN_EDITCHANGE || HIWORD(wParam) == CBN_SELCHANGE)
+                {
+                    // User has changed the address field so enable the Go button
+                    EnableWindow(GetDlgItem(hwndDlg, IDC_GO), TRUE);
+                }
+                else if (HIWORD(wParam) == CBN_SELENDOK)
+                {
+                    HWND hwndAddress = GetDlgItem(hwndDlg, IDC_ADDRESS);
+
+                    // Find the current selected item and get the item's length.
+                    int t = SendMessage(hwndAddress, CB_GETCURSEL, 0, 0);
+                    int l = SendMessage(hwndAddress, CB_GETLBTEXTLEN, t, 0);
+
+                    // Get the text
+                    char* buffer = new char[l + 1];
+                    SendMessage(hwndAddress, CB_GETLBTEXT, t, (long) buffer);
+                    
+                    // Set the text area so that we can see it
+                    SetDlgItemText(hwndDlg, IDC_ADDRESS, buffer);
+
+                    // Load the url.
+                    LoadURL(webNavigation, buffer);
+
+                    delete buffer;
+                }
+                break;
+                
+            case IDC_GO:
+                {
+                LoadURLInURLBar(hwndDlg,webNavigation);
+                }
+                break;
+                
+            case IDC_STOP:
+                webNavigation->Stop(nsIWebNavigation::STOP_ALL);
+                UpdateUI(chrome);
+                break;
+                
+            case IDC_RELOAD:
+                webNavigation->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
+                break;
+
+            case IDC_Hide:
+            {
+                RECT rect;
+                ::ShowWindow(mwcontext->mHeadsUpWindow, SW_HIDE);
+                ::GetWindowRect(mwcontext->mHeadsUpWindow, &rect);
+                ::InvalidateRect(mwcontext->mMainWindow, &rect, TRUE);
+                ::SetForegroundWindow(mwcontext->mMainWindow);
+                break;
+            }
+       
+            case IDM_EXIT:
+                PostMessage(hwndDlg, WM_SYSCOMMAND, SC_CLOSE, 0);
+                break;
+                
+                // Go menu commands
+            case IDC_BACK:
+            case MOZ_GoBack:
+                webNavigation->GoBack();
+                UpdateUI(chrome);
+                break;
+                
+            case IDC_FORWARD:
+            case MOZ_GoForward:
+                webNavigation->GoForward();
+                UpdateUI(chrome);
+                break;
+                
+            }
+        }
+    }
+    return FALSE;
+}
+
+
+static HBRUSH yellowBrush = NULL;
+
+BOOL CALLBACK StatusDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
+{
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+
+    HWND hwndBrowser = GetDlgItem(mwcontext->mMainWindow, IDC_BROWSER);
+
+    nsIWebBrowserChrome *chrome = nsnull ;
+    if (hwndBrowser)
+    {
+        chrome = (nsIWebBrowserChrome *) GetWindowLong(hwndBrowser, GWL_USERDATA);
+    }
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIWebNavigation> webNavigation;
+    if (chrome)
+    {
+        chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+        webNavigation = do_QueryInterface(webBrowser);
+    }
+
+    switch (uMsg) {
+
+    case WM_INITDIALOG:
+        {
+            yellowBrush = CreateSolidBrush(RGB(255,255,204));
+            SetWindowTextW(hwndDlg, L"Progress");
+        }
+        return TRUE;
+
+    case WM_CTLCOLORDLG:
+        return (BOOL) yellowBrush;
+
+    case WM_DESTROY:
+        DeleteObject(yellowBrush);
+        break;
+
+    case WM_COMMAND:
+        {
+            switch (LOWORD(wParam))
+            {
+                case IDC_STOP:
+                    webNavigation->Stop(nsIWebNavigation::STOP_ALL);
+                    UpdateUI(chrome);
+            }
+        }
+    }
+    return FALSE;
+}
+
 BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lParam)
 {
     // Get the browser and other pointers since they are used a lot below
@@ -392,6 +510,8 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         chrome->GetWebBrowser(getter_AddRefs(webBrowser));
         webNavigation = do_QueryInterface(webBrowser);
     }
+
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);        
 
     // Test the message
     switch (uMsg)
@@ -418,210 +538,53 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
             return TRUE;
         }
         break;
-
+    
+    case WM_HIBERNATE: /* not sure about this */
+        // fall through.
     case WM_CLOSE:
-        gActive = FALSE;
-        gRunCondition = FALSE;
-
-        DestroyWindow(hwndDlg);
+        {
+            gActive = FALSE;
+            gRunCondition = FALSE;
+            
+            DestroyWindow(mwcontext->mStatusWindow);
+            DestroyWindow(mwcontext->mHeadsUpWindow);
+            DestroyWindow(mwcontext->mMainWindow);
+            free((void*) mwcontext);
+        }
         return 0;
 
     case WM_DESTROY:
         PostQuitMessage(0);
         return 0;
 
-    case WM_COMMAND:
-        if (!webBrowser)
-        {
-            return TRUE;
-        }
-
-        // Test which command was selected
-        switch (LOWORD(wParam))
-        {
-        case IDC_ADDRESS:
-            if (HIWORD(wParam) == CBN_EDITCHANGE || HIWORD(wParam) == CBN_SELCHANGE)
-            {
-                // User has changed the address field so enable the Go button
-                EnableWindow(GetDlgItem(hwndDlg, IDC_GO), TRUE);
-            }
-            break;
-
-        case IDC_GO:
-            {
-                TCHAR szURL[2048];
-                memset(szURL, 0, sizeof(szURL));
-                GetDlgItemText(hwndDlg, IDC_ADDRESS, szURL, sizeof(szURL) / sizeof(szURL[0]) - 1);
-                webNavigation->LoadURI(NS_ConvertASCIItoUCS2(szURL).get(),
-                                       nsIWebNavigation::LOAD_FLAGS_NONE,
-                                       nsnull,
-                                       nsnull,
-                                       nsnull);
-            }
-            break;
-
-        case IDC_STOP:
-            webNavigation->Stop(nsIWebNavigation::STOP_ALL);
-            UpdateUI(chrome);
-            break;
-
-        case IDC_FUNCTIONS:
-            HandlePopupMenu(hwndDlg, webNavigation);
-            break;
-
-
-        case IDC_RELOAD:
-            webNavigation->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
-            break;
-
-        case IDM_EXIT:
-            PostMessage(hwndDlg, WM_SYSCOMMAND, SC_CLOSE, 0);
-            break;
-
-
-        case MOZ_Cut:
-            {
-                nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-                clipCmds->CutSelection();
-            }
-            break;
-
-        case MOZ_Copy:
-            {
-                nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-                clipCmds->CopySelection();
-            }
-            break;
-
-        case MOZ_Paste:
-            {
-                nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-                clipCmds->Paste();
-            }
-            break;
-
-        case MOZ_SelectAll:
-            {
-                nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-                clipCmds->SelectAll();
-            }
-            break;
-
-        // Go menu commands
-        case IDC_BACK:
-        case MOZ_GoBack:
-            webNavigation->GoBack();
-            UpdateUI(chrome);
-            break;
-
-        case IDC_FORWARD:
-        case MOZ_GoForward:
-            webNavigation->GoForward();
-            UpdateUI(chrome);
-            break;
-
-        }
-
-        return TRUE;
 
     case WM_ACTIVATE:
         {
-            SHFullScreen( hwndDlg, SHFS_SHOWTASKBAR | SHFS_SHOWSIPBUTTON );
-
             nsCOMPtr<nsIWebBrowserFocus> focus(do_GetInterface(webBrowser));
-            if(focus)
+
+            switch (wParam)
             {
-                switch (wParam)
-                {
-                case WA_ACTIVE:
-                    focus->Activate();
-                    gActive = TRUE;
-                    break;
-                case WA_INACTIVE:
-                    focus->Deactivate();
-                    gActive = FALSE;
-                    break;
-                default:
-                    break;
-                }
+               case WA_ACTIVE:
+                   gActive = TRUE;
+                   if (focus)
+                       focus->Activate();
+                   break;
+                   
+               case WA_INACTIVE:
+                   if (focus)
+                       focus->Deactivate();
+               default:
+                   break;
             }
         }
-        break;
+        return 0;
 
     case WM_SIZE:
-        {
-            UINT newDlgWidth = LOWORD(lParam);
-            UINT newDlgHeight = HIWORD(lParam);
-
-            // TODO Reposition the control bar - for the moment it's fixed size
-
-            // Reposition the status area. Status bar
-            // gets any space that the fixed size progress bar doesn't use.
-            int progressWidth;
-            int statusWidth;
-            int statusHeight;
-            HWND hwndStatus = GetDlgItem(hwndDlg, IDC_STATUS);
-            if (hwndStatus) {
-              RECT rcStatus;
-              GetWindowRect(hwndStatus, &rcStatus);
-              statusHeight = rcStatus.bottom - rcStatus.top;
-            } else
-              statusHeight = 0;
-
-            HWND hwndProgress = GetDlgItem(hwndDlg, IDC_PROGRESS);
-            if (hwndProgress) {
-              RECT rcProgress;
-              GetWindowRect(hwndProgress, &rcProgress);
-              progressWidth = rcProgress.right - rcProgress.left;
-            } else
-              progressWidth = 0;
-            statusWidth = newDlgWidth - progressWidth;
-
-            if (hwndStatus)
-              SetWindowPos(hwndStatus,
-                           HWND_TOP,
-                           0, newDlgHeight - statusHeight,
-                           statusWidth,
-                           statusHeight,
-                           SWP_NOZORDER);
-            if (hwndProgress)
-              SetWindowPos(hwndProgress,
-                           HWND_TOP,
-                           statusWidth, newDlgHeight - statusHeight,
-                           0, 0,
-                           SWP_NOSIZE | SWP_NOZORDER);
-
-            // Resize the browser area (assuming the browse is
-            // sandwiched between the control bar and status area)
-            RECT rcBrowser;
-            POINT ptBrowser;
-            GetWindowRect(hwndBrowser, &rcBrowser);
-            ptBrowser.x = rcBrowser.left;
-            ptBrowser.y = rcBrowser.top;
-            ScreenToClient(hwndDlg, &ptBrowser);
-            int browserHeight = newDlgHeight - ptBrowser.y - statusHeight;
-            if (browserHeight < 1)
-            {
-                browserHeight = 1;
-            }
-            SetWindowPos(hwndBrowser,
-                         HWND_TOP,
-                         0, 0,
-                         newDlgWidth,
-                         newDlgHeight - ptBrowser.y - statusHeight,
-                         SWP_NOMOVE | SWP_NOZORDER);
-        }
-        return TRUE;
+        return 0; /*If an application processes this message, it should return zero.*/
     }
     return FALSE;
 }
 
-
-//
-//  FUNCTION: StartupProfile()
-//
-//  PURPOSE: 
-//
 nsresult StartupProfile()
 {
 
@@ -646,50 +609,58 @@ nsresult StartupProfile()
 
 }
 
-///////////////////////////////////////////////////////////////////////////////
-// WebBrowserChromeUI
-//
-//  FUNCTION: CreateNativeWindow()
-//
-//  PURPOSE: Creates a new browser dialog.
-//
-//  COMMENTS:
-//
-//    This function loads the browser dialog from a resource template
-//    and returns the HWND for the webbrowser container dialog item
-//    to the caller.
-//
-nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
+nativeWindow 
+WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 {
   // Load the browser dialog from resource
   HWND hwndDialog;
   PRUint32 chromeFlags;
 
   chrome->GetChromeFlags(&chromeFlags);
-  if ((chromeFlags & nsIWebBrowserChrome::CHROME_ALL) == nsIWebBrowserChrome::CHROME_ALL)
-    hwndDialog = CreateDialog(ghInstanceApp,
-                              MAKEINTRESOURCE(IDD_BROWSER),
-                              NULL,
-                              BrowserDlgProc);
-  else
-    hwndDialog = CreateDialog(ghInstanceApp,
-                              MAKEINTRESOURCE(IDD_BROWSER_NC),
-                              NULL,
-                              BrowserDlgProc);
+  hwndDialog = CreateDialog(ghInstanceApp,
+                            MAKEINTRESOURCE(IDD_BROWSER),
+                            NULL,
+                            BrowserDlgProc);
   if (!hwndDialog)
     return NULL;
+
+  HWND statusDialog = CreateDialog(ghInstanceApp,
+                                   MAKEINTRESOURCE(IDD_STATUS_DISPLAY),
+                                   NULL,
+                                   StatusDlgProc);
+
+  if (!statusDialog) {
+      MessageBox(0, "statusDialog failed", "error", 0);
+      return NULL;
+  }
+
+  HWND headsupDialog = CreateDialog(ghInstanceApp,
+                                    MAKEINTRESOURCE(IDD_HEADSUP_DISPLAY),
+                                    NULL,
+                                    HeadsUpDlgProc);
+
+  if (!headsupDialog)
+  {
+      MessageBox(0, "headsupDialog failed", "error", 0);
+      return NULL;
+  }
 
   RECT rtDesktop;
   SystemParametersInfo(SPI_GETWORKAREA, 0, &rtDesktop, NULL);
 
+#define STATUS_DIALOG_H 50
+#define HEADSUP_DIALOG_H 300
 
-  int screenH = GetSystemMetrics(SM_CYSCREEN) - 20;
+  int screenH = GetSystemMetrics(SM_CYSCREEN) - TASKBAR_H;
   int screenW = GetSystemMetrics(SM_CXSCREEN) ;
-
-  MoveWindow(hwndDialog, 0, 0, screenW, screenH, TRUE);
+  
+  MoveWindow(hwndDialog,    0, 0, screenW, screenH, TRUE);
+  MoveWindow(headsupDialog, 0, 0, screenW, HEADSUP_DIALOG_H, TRUE);
+  MoveWindow(statusDialog,  0, 0, screenW, STATUS_DIALOG_H, TRUE);
+  
 
   // Add some interesting URLs to the address drop down
-  HWND hwndAddress = GetDlgItem(hwndDialog, IDC_ADDRESS);
+  HWND hwndAddress = GetDlgItem(headsupDialog, IDC_ADDRESS);
   if (hwndAddress) {
     for (int i = 0; i < sizeof(gDefaultURLs) / sizeof(gDefaultURLs[0]); i++)
     {
@@ -699,24 +670,33 @@ nativeWindow WebBrowserChromeUI::CreateNativeWindow(nsIWebBrowserChrome* chrome)
 
   // Fetch the browser window handle
   HWND hwndBrowser = GetDlgItem(hwndDialog, IDC_BROWSER);
+  MoveWindow(hwndBrowser, 0, 0, screenW, screenH, TRUE);
+
   SetWindowLong(hwndBrowser, GWL_USERDATA, (LONG)chrome);  // save the browser LONG_PTR.
   SetWindowLong(hwndBrowser, GWL_STYLE, GetWindowLong(hwndBrowser, GWL_STYLE) | WS_CLIPCHILDREN);
 
+  MinimoWindowContext *mwcontext = (MinimoWindowContext*) malloc(sizeof(MinimoWindowContext));
+  
+  mwcontext->mMainWindow = hwndDialog;
+  mwcontext->mStatusWindow = statusDialog;
+  mwcontext->mHeadsUpWindow = headsupDialog;
+
+  SetWindowLong(hwndDialog,    GWL_USERDATA, (LONG)mwcontext);  
+  SetWindowLong(headsupDialog, GWL_USERDATA, (LONG)mwcontext);  
+  SetWindowLong(statusDialog,  GWL_USERDATA, (LONG)mwcontext);  
+
   // Activate the window
   PostMessage(hwndDialog, WM_ACTIVATE, WA_ACTIVE, 0);
+
+  ::ShowWindow(hwndDialog, SW_SHOW);
 
   gDialogCount++;
 
   return hwndBrowser;
 }
 
-
-//
-// FUNCTION: Destroy()
-//
-// PURPOSE: Destroy the window specified by the chrome
-//
-void WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
+void 
+WebBrowserChromeUI::Destroy(nsIWebBrowserChrome* chrome)
 {
   nsCOMPtr<nsIWebBrowser> webBrowser;
   nsCOMPtr<nsIWebNavigation> webNavigation;
@@ -772,11 +752,8 @@ void WebBrowserChromeUI::Destroyed(nsIWebBrowserChrome* chrome)
     }
 }
 
-
-//
-// FUNCTION: Set the input focus onto the browser window
-//
-void WebBrowserChromeUI::SetFocus(nsIWebBrowserChrome *chrome)
+void 
+WebBrowserChromeUI::SetFocus(nsIWebBrowserChrome *chrome)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(chrome);
     if (hwndDlg == NULL)
@@ -788,27 +765,22 @@ void WebBrowserChromeUI::SetFocus(nsIWebBrowserChrome *chrome)
     ::SetFocus(hwndBrowser);
 }
 
-//
-//  FUNCTION: UpdateStatusBarText()
-//
-//  PURPOSE: Set the status bar text.
-//
-void WebBrowserChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText)
+void 
+WebBrowserChromeUI::UpdateStatusBarText(nsIWebBrowserChrome *aChrome, const PRUnichar* aStatusText)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
+
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+
     nsCString status; 
     if (aStatusText)
         status.AssignWithConversion(aStatusText);
-    SetDlgItemText(hwndDlg, IDC_STATUS, status.get());
+
+    SetDlgItemText(mwcontext->mStatusWindow, IDC_STATUS, status.get());
 }
 
-
-//
-//  FUNCTION: UpdateCurrentURI()
-//
-//  PURPOSE: Updates the URL address field
-//
-void WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
+void 
+WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
 {
     nsCOMPtr<nsIWebBrowser> webBrowser;
     nsCOMPtr<nsIWebNavigation> webNavigation;
@@ -822,39 +794,55 @@ void WebBrowserChromeUI::UpdateCurrentURI(nsIWebBrowserChrome *aChrome)
         nsCAutoString uriString;
         currentURI->GetAsciiSpec(uriString);
         HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
-        SetDlgItemText(hwndDlg, IDC_ADDRESS, uriString.get());
+        MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+        SetDlgItemText(mwcontext->mHeadsUpWindow, IDC_ADDRESS, uriString.get());
     }
 }
 
-
-//
-//  FUNCTION: UpdateBusyState()
-//
-//  PURPOSE: Refreshes the stop/go buttons in the browser dialog
-//
-void WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
+void 
+WebBrowserChromeUI::UpdateBusyState(nsIWebBrowserChrome *aChrome, PRBool aBusy)
 {
+    gBusy = aBusy;
+
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+
+    if (aBusy) {
+        ::ShowWindow(mwcontext->mStatusWindow, SW_SHOW);
+        ::SetForegroundWindow(mwcontext->mStatusWindow);
+    }
+    else
+    {
+        RECT rect;
+        ::ShowWindow(mwcontext->mStatusWindow, SW_HIDE);
+        ::GetWindowRect(mwcontext->mStatusWindow, &rect);
+        ::InvalidateRect(mwcontext->mMainWindow, &rect, TRUE);
+        ::SetForegroundWindow(mwcontext->mMainWindow);
+    }
+        
+
     HWND button;
-    button = GetDlgItem(hwndDlg, IDC_STOP);
+    button = GetDlgItem(mwcontext->mHeadsUpWindow, IDC_STOP);
+
     if (button)
         EnableWindow(button, aBusy);
-    button = GetDlgItem(hwndDlg, IDC_GO);
+
+    button = GetDlgItem(mwcontext->mHeadsUpWindow, IDC_GO);
+
     if (button)
         EnableWindow(button, !aBusy);
+
     UpdateUI(aChrome);
 }
 
-
-//
-//  FUNCTION: UpdateProgress()
-//
-//  PURPOSE: Refreshes the progress bar in the browser dialog
-//
-void WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax)
+void
+WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aCurrent, PRInt32 aMax)
 {
     HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
-    HWND hwndProgress = GetDlgItem(hwndDlg, IDC_PROGRESS);
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+ 
+    HWND hwndProgress = GetDlgItem(mwcontext->mStatusWindow, IDC_PROGRESS);
+
     if (aCurrent < 0)
     {
         aCurrent = 0;
@@ -870,60 +858,62 @@ void WebBrowserChromeUI::UpdateProgress(nsIWebBrowserChrome *aChrome, PRInt32 aC
     }
 }
 
-//
-//  FUNCTION: ShowContextMenu()
-//
-//  PURPOSE: Display a context menu for the given node
-//
-void WebBrowserChromeUI::ShowContextMenu(nsIWebBrowserChrome *aChrome, PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
+void 
+WebBrowserChromeUI::ShowContextMenu(nsIWebBrowserChrome *aChrome, PRUint32 aContextFlags, nsIDOMEvent *aEvent, nsIDOMNode *aNode)
 {
-    // TODO code to test context flags and display a popup menu should go here
 }
 
-//
-//  FUNCTION: ShowTooltip()
-//
-//  PURPOSE: Show a tooltip
-//
-void WebBrowserChromeUI::ShowTooltip(nsIWebBrowserChrome *aChrome, PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
+void 
+WebBrowserChromeUI::ShowTooltip(nsIWebBrowserChrome *aChrome, PRInt32 aXCoords, PRInt32 aYCoords, const PRUnichar *aTipText)
 {
-    // TODO code to show a tooltip should go here
 }
 
-//
-//  FUNCTION: HideTooltip()
-//
-//  PURPOSE: Hide the tooltip
-//
-void WebBrowserChromeUI::HideTooltip(nsIWebBrowserChrome *aChrome)
+void 
+WebBrowserChromeUI::HideTooltip(nsIWebBrowserChrome *aChrome)
 {
-    // TODO code to hide a tooltip should go here
 }
 
-void WebBrowserChromeUI::ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow)
+void 
+WebBrowserChromeUI::ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow)
 {
   HWND win = GetBrowserDlgFromChrome(aChrome);
-  ::ShowWindow(win, aShow ? SW_RESTORE : SW_HIDE);
+  ::ShowWindow(win, aShow ? SW_SHOW : SW_HIDE);
 }
 
 void WebBrowserChromeUI::SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight)
 {
-  HWND hchrome = GetBrowserDlgFromChrome(aChrome);
-  HWND hbrowser = GetBrowserFromChrome(aChrome);
-  RECT chromeRect, browserRect;
-
-  ::GetWindowRect(hchrome,  &chromeRect);
-  ::GetWindowRect(hbrowser, &browserRect);
-
-  PRInt32 decoration_x = (browserRect.left - chromeRect.left) + 
-                         (chromeRect.right - browserRect.right);
-  PRInt32 decoration_y = (browserRect.top - chromeRect.top) + 
-                         (chromeRect.bottom - browserRect.bottom);
-
-  ::MoveWindow(hchrome, chromeRect.left, chromeRect.top,
-               aWidth+decoration_x,
-               aHeight+decoration_y, TRUE);
 }
+
+boolean 
+WebBrowserChromeUI::DoubleClick(nsIWebBrowserChrome *aChrome, PRInt32 x, PRInt32 y)
+{
+    HWND hwndDlg = GetBrowserDlgFromChrome(aChrome);
+    MinimoWindowContext* mwcontext = (MinimoWindowContext*) GetWindowLong(hwndDlg, GWL_USERDATA);
+
+    HWND hwndBrowser = GetDlgItem(mwcontext->mMainWindow, IDC_BROWSER);
+
+    nsIWebBrowserChrome *chrome = nsnull ;
+    if (hwndBrowser)
+    {
+        chrome = (nsIWebBrowserChrome *) GetWindowLong(hwndBrowser, GWL_USERDATA);
+    }
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nsCOMPtr<nsIWebNavigation> webNavigation;
+    if (chrome)
+    {
+        chrome->GetWebBrowser(getter_AddRefs(webBrowser));
+        webNavigation = do_QueryInterface(webBrowser);
+    }
+
+    // Stop any current load.
+    webNavigation->Stop(nsIWebNavigation::STOP_ALL);
+
+
+    // Show our heads up display.
+    ::ShowWindow(mwcontext->mHeadsUpWindow, SW_SHOW);
+    return true;
+}
+
 
 //-----------------------------------------------------------------------------
 // AppCallbacks
@@ -992,15 +982,9 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
     {
       if (!::GetMessage(&msg, NULL, 0, 0)) 
       {
-        // WM_QUIT
-        aRunCondition = PR_FALSE;
-        break;
+          aRunCondition = PR_FALSE;
+          break;
       }
-
-      PRBool wasHandled = PR_FALSE;
-      ::NS_HandleEmbeddingEvent(msg, wasHandled);
-      if (wasHandled)
-        continue;
 
       eventQ->ProcessPendingEvents();
 
@@ -1011,7 +995,9 @@ PRUint32 AppCallbacks::RunEventLoop(PRBool &aRunCondition)
     // Do idle stuff
     if (gActive)
     {
-        ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
+        if (!gBusy)
+            ::MsgWaitForMultipleObjects(1, &hFakeEvent, FALSE, 100, QS_ALLEVENTS);
+
         eventQ->ProcessPendingEvents();
     }
   }

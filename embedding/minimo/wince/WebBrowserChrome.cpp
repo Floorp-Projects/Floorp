@@ -40,6 +40,11 @@
 #include "nsIRequest.h"
 #include "nsCWebBrowser.h"
 #include "nsIProfileChangeStatus.h"
+#include "nsPIDOMWindow.h"
+#include "nsIDOMEventReceiver.h"
+#include "nsIDOMNSEvent.h"
+#include "nsIDOMEventTarget.h"
+#include "nsIContent.h"
 
 // Local includes
 #include "resource.h"
@@ -90,8 +95,21 @@ nsresult WebBrowserChrome::CreateBrowser(PRInt32 aX, PRInt32 aY,
 
     nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, this));
     nsCOMPtr<nsIWeakReference> thisListener(do_GetWeakReference(listener));
-    (void)mWebBrowser->AddWebBrowserListener(thisListener, 
-        NS_GET_IID(nsIWebProgressListener));
+    (void)mWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIWebProgressListener));
+
+    // get the content DOM window for that web browser
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+    if (!domWindow)
+      return NS_ERROR_FAILURE;
+
+    // get the private DOM window
+    nsCOMPtr<nsPIDOMWindow> domWindowPrivate = do_QueryInterface(domWindow);
+    // and the root window for that DOM window
+    nsPIDOMWindow* piWin = domWindowPrivate->GetPrivateRoot();
+
+    nsCOMPtr<nsIDOMEventReceiver> eventHandler = do_QueryInterface(piWin->GetChromeEventHandler());
+    eventHandler->AddEventListenerByIID(this, NS_GET_IID(nsIDOMMouseListener));
 
     // The window has been created. Now register for history notifications
     mWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsISHistoryListener));
@@ -123,6 +141,8 @@ NS_INTERFACE_MAP_BEGIN(WebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIObserver)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMEventListener)
+   NS_INTERFACE_MAP_ENTRY(nsIDOMMouseListener)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -265,7 +285,13 @@ NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIReque
         WebBrowserChromeUI::UpdateBusyState(this, PR_FALSE);
         WebBrowserChromeUI::UpdateProgress(this, 0, 100);
         WebBrowserChromeUI::UpdateStatusBarText(this, nsnull);
-        ContentFinishedLoading();
+
+        if (NS_FAILED(status))
+        {
+          char buffer[100];
+          sprintf(buffer, "Error loading page (status=%d)", status);
+          MessageBox(0, buffer, "Error", 0);
+        }
     }
 
     return NS_OK;
@@ -435,21 +461,6 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
     return NS_OK;
 }
 
-void WebBrowserChrome::ContentFinishedLoading()
-{
-  // if it was a chrome window and no one has already specified a size,
-  // size to content
-  if (mWebBrowser && !mSizeSet &&
-     (mChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
-    nsCOMPtr<nsIDOMWindow> contentWin;
-    mWebBrowser->GetContentDOMWindow(getter_AddRefs(contentWin));
-    if (contentWin)
-        contentWin->SizeToContent();
-    WebBrowserChromeUI::ShowWindow(this, PR_TRUE);
-  }
-}
-
-
 //*****************************************************************************
 // WebBrowserChrome::nsIEmbeddingSiteWindow
 //*****************************************************************************   
@@ -561,3 +572,79 @@ NS_IMETHODIMP WebBrowserChrome::OnHideTooltip()
     WebBrowserChromeUI::HideTooltip(this);
     return NS_OK;
 }
+
+//*****************************************************************************
+// WebBrowserChrome::nsIDOMEventListener
+//*****************************************************************************   
+
+NS_IMETHODIMP WebBrowserChrome::HandleEvent(nsIDOMEvent* aEvent)
+{
+  return NS_OK;
+}
+
+//*****************************************************************************
+// WebBrowserChrome::nsIDOMMouseEvent
+//*****************************************************************************   
+
+NS_IMETHODIMP WebBrowserChrome::MouseDown(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebBrowserChrome::MouseUp(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebBrowserChrome::MouseClick(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebBrowserChrome::MouseDblClick(nsIDOMEvent* aDOMEvent)
+{
+  nsCOMPtr<nsIDOMMouseEvent> mouseEvent = do_QueryInterface(aDOMEvent);
+  if (!mouseEvent)
+    return NS_OK;
+
+  // We want to hide events that are in anonymous content such as a scrollbar.
+
+  nsCOMPtr<nsIDOMNSEvent> nsEvent(do_QueryInterface(aDOMEvent));
+  if (!nsEvent)
+    return NS_OK;
+
+  nsCOMPtr<nsIDOMEventTarget> targetNode;
+  aDOMEvent->GetTarget(getter_AddRefs(targetNode));
+
+  nsCOMPtr<nsIDOMEventTarget> originalTargetNode;
+  nsEvent->GetOriginalTarget(getter_AddRefs(originalTargetNode));
+
+  if (originalTargetNode != targetNode)
+    return NS_OK;
+
+  PRInt32 screenX, screenY;
+  mouseEvent->GetScreenX(&screenX);
+  mouseEvent->GetScreenY(&screenY);
+  
+  boolean handled = WebBrowserChromeUI::DoubleClick(this, screenX, screenY);
+  
+  if (handled) 
+  {
+    aDOMEvent->StopPropagation();
+    aDOMEvent->PreventDefault();
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebBrowserChrome::MouseOver(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP WebBrowserChrome::MouseOut(nsIDOMEvent* aDOMEvent)
+{
+  return NS_OK;
+}
+
+

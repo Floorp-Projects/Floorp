@@ -47,6 +47,8 @@
 #include "nsISHistoryListener.h"
 #include "nsIContextMenuListener.h"
 #include "nsITooltipListener.h"
+#include "nsIDOMMouseListener.h"
+#include "nsIDOMMouseEvent.h"
 
 class WebBrowserChromeUI
 {
@@ -65,6 +67,10 @@ public:
     static void HideTooltip(nsIWebBrowserChrome *aChrome);
     static void ShowWindow(nsIWebBrowserChrome *aChrome, PRBool aShow);
     static void SizeTo(nsIWebBrowserChrome *aChrome, PRInt32 aWidth, PRInt32 aHeight);
+
+    static boolean DoubleClick(nsIWebBrowserChrome *aChrome, PRInt32 x, PRInt32 y);
+    
+    
 };
 
 class WebBrowserChrome   : public nsIWebBrowserChrome,
@@ -76,7 +82,8 @@ class WebBrowserChrome   : public nsIWebBrowserChrome,
                            public nsIObserver,
                            public nsIContextMenuListener,
                            public nsITooltipListener,
-                           public nsSupportsWeakReference
+                           public nsSupportsWeakReference,
+                           public nsIDOMMouseListener
 
 {
 public:
@@ -94,6 +101,18 @@ public:
     NS_DECL_NSICONTEXTMENULISTENER
     NS_DECL_NSITOOLTIPLISTENER
 
+      // nsIDOMEventListener
+   NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);
+
+      // nsIDOMMouseListener
+    NS_IMETHOD MouseDown(nsIDOMEvent* aDOMEvent);
+    NS_IMETHOD MouseUp(nsIDOMEvent* aDOMEvent);
+    NS_IMETHOD MouseClick(nsIDOMEvent* aDOMEvent);
+    NS_IMETHOD MouseDblClick(nsIDOMEvent* aDOMEvent);
+    NS_IMETHOD MouseOver(nsIDOMEvent* aDOMEvent);
+    NS_IMETHOD MouseOut(nsIDOMEvent* aDOMEvent);
+
+
     nsresult CreateBrowser(PRInt32 aX, PRInt32 aY, PRInt32 aCX, PRInt32 aCY,
                            nsIWebBrowser **aBrowser);
 
@@ -102,8 +121,6 @@ public:
    
 protected:
     nsresult SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRInt32 info1=0, PRUint32 info2=0);
-
-    void ContentFinishedLoading();
 
     nativeWindow mNativeWindow;
     PRUint32     mChromeFlags;
