@@ -82,6 +82,8 @@ struct nsCSSValueList {
   nsCSSValueList(const nsCSSValueList& aCopy);
   ~nsCSSValueList(void);
 
+  static PRBool Equal(nsCSSValueList* aList1, nsCSSValueList* aList2);
+
   nsCSSValue      mValue;
   nsCSSValueList* mNext;
 };
@@ -113,6 +115,8 @@ struct nsCSSShadow {
   nsCSSShadow(void);
   nsCSSShadow(const nsCSSShadow& aCopy);
   ~nsCSSShadow(void);
+
+  static PRBool Equal(nsCSSShadow* aList1, nsCSSShadow* aList2);
 
   nsCSSValue mColor;
   nsCSSValue mXOffset;
@@ -366,6 +370,8 @@ struct nsCSSCounterData {
   nsCSSCounterData(const nsCSSCounterData& aCopy);
   ~nsCSSCounterData(void);
 
+  static PRBool Equal(nsCSSCounterData* aList1, nsCSSCounterData* aList2);
+
   nsCSSValue        mCounter;
   nsCSSValue        mValue;
   nsCSSCounterData* mNext;
@@ -375,6 +381,8 @@ struct nsCSSQuotes {
   nsCSSQuotes(void);
   nsCSSQuotes(const nsCSSQuotes& aCopy);
   ~nsCSSQuotes(void);
+
+  static PRBool Equal(nsCSSQuotes* aList1, nsCSSQuotes* aList2);
 
   nsCSSValue    mOpen;
   nsCSSValue    mClose;

@@ -39,7 +39,6 @@
 #define nsCSS1Parser_h___
 
 #include "nsISupports.h"
-#include "nsChangeHint.h"
 #include "nsAString.h"
 
 class nsIStyleRule;
@@ -91,7 +90,7 @@ public:
                                        nsIURI*                  aBaseURL,
                                        nsCSSDeclaration*        aDeclaration,
                                        PRBool                   aParseOnlyOneDecl,
-                                       nsChangeHint*            aHint,
+                                       PRBool*                  aChanged,
                                        PRBool                   aClearOldDecl) = 0;
 
   NS_IMETHOD ParseRule(const nsAString&   aRule,
@@ -102,7 +101,7 @@ public:
                            const nsAString& aPropValue,
                            nsIURI* aBaseURL,
                            nsCSSDeclaration* aDeclaration,
-                           nsChangeHint* aHint) = 0;
+                           PRBool* aChanged) = 0;
 };
 
 nsresult

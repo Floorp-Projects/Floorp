@@ -122,6 +122,20 @@ nsCSSValueList::~nsCSSValueList(void)
   CSS_IF_DELETE(mNext);
 }
 
+/* static */ PRBool
+nsCSSValueList::Equal(nsCSSValueList* aList1, nsCSSValueList* aList2)
+{
+  if (aList1 == aList2)
+    return PR_TRUE;
+    
+  nsCSSValueList *p1 = aList1, *p2 = aList2;
+  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
+    if (p1->mValue != p2->mValue)
+      return PR_FALSE;
+  }
+  return !p1 && !p2; // true if same length, false otherwise
+}
+
 // --- nsCSSColor -----------------
 
 nsCSSColor::nsCSSColor(void)
@@ -194,6 +208,23 @@ nsCSSShadow::~nsCSSShadow(void)
 {
   MOZ_COUNT_DTOR(nsCSSShadow);
   CSS_IF_DELETE(mNext);
+}
+
+/* static */ PRBool
+nsCSSShadow::Equal(nsCSSShadow* aList1, nsCSSShadow* aList2)
+{
+  if (aList1 == aList2)
+    return PR_TRUE;
+
+  nsCSSShadow *p1 = aList1, *p2 = aList2;
+  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
+    if (p1->mColor != p2->mColor ||
+        p1->mXOffset != p2->mXOffset ||
+        p1->mYOffset != p2->mYOffset ||
+        p1->mRadius != p2->mRadius)
+      return PR_FALSE;
+  }
+  return !p1 && !p2; // true if same length, false otherwise
 }
 
 // --- nsCSSText -----------------
@@ -827,6 +858,21 @@ nsCSSCounterData::~nsCSSCounterData(void)
   CSS_IF_DELETE(mNext);
 }
 
+/* static */ PRBool
+nsCSSCounterData::Equal(nsCSSCounterData* aList1, nsCSSCounterData* aList2)
+{
+  if (aList1 == aList2)
+    return PR_TRUE;
+
+  nsCSSCounterData *p1 = aList1, *p2 = aList2;
+  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
+    if (p1->mCounter != p2->mCounter ||
+        p1->mValue != p2->mValue)
+      return PR_FALSE;
+  }
+  return !p1 && !p2; // true if same length, false otherwise
+}
+
 nsCSSQuotes::nsCSSQuotes(void)
   : mNext(nsnull)
 {
@@ -846,6 +892,21 @@ nsCSSQuotes::~nsCSSQuotes(void)
 {
   MOZ_COUNT_DTOR(nsCSSQuotes);
   CSS_IF_DELETE(mNext);
+}
+
+/* static */ PRBool
+nsCSSQuotes::Equal(nsCSSQuotes* aList1, nsCSSQuotes* aList2)
+{
+  if (aList1 == aList2)
+    return PR_TRUE;
+
+  nsCSSQuotes *p1 = aList1, *p2 = aList2;
+  for ( ; p1 && p2; p1 = p1->mNext, p2 = p2->mNext) {
+    if (p1->mOpen != p2->mOpen ||
+        p1->mClose != p2->mClose)
+      return PR_FALSE;
+  }
+  return !p1 && !p2; // true if same length, false otherwise
 }
 
 // --- nsCSSContent -----------------

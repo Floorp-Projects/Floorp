@@ -281,10 +281,10 @@ nsDOMCSSDeclaration::ParsePropertyValue(const nsAString& aPropName,
     return result;
   }
 
-  nsChangeHint uselessHint = NS_STYLE_HINT_NONE;
+  PRBool changed;
   result = cssParser->ParseProperty(aPropName, aPropValue, baseURI, decl,
-                                    &uselessHint);
-  if (NS_SUCCEEDED(result)) {
+                                    &changed);
+  if (NS_SUCCEEDED(result) && changed) {
     result = DeclarationChanged();
   }
 
@@ -318,13 +318,13 @@ nsDOMCSSDeclaration::ParseDeclaration(const nsAString& aDecl,
     return result;
   }
 
-  nsChangeHint uselessHint = NS_STYLE_HINT_NONE;
+  PRBool changed;
   result = cssParser->ParseAndAppendDeclaration(aDecl, baseURI, decl,
                                                 aParseOnlyOneDecl,
-                                                &uselessHint,
+                                                &changed,
                                                 aClearOldDecl);
   
-  if (NS_SUCCEEDED(result)) {
+  if (NS_SUCCEEDED(result) && changed) {
     result = DeclarationChanged();
   }
 
