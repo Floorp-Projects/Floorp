@@ -259,7 +259,7 @@ nsHTTPConn::Request(int aResumePos)
     memset(hdr, 0, kHdrBufSize);
     if (mProxiedURL)
     {
-        sprintf(hdr, "GET %s HTTP/1.1%s", mProxiedURL, kCRLF);
+        sprintf(hdr, "GET %s HTTP/1.0%s", mProxiedURL, kCRLF);
         strcpy(req, hdr);
 
         memset(hdr, 0, kHdrBufSize);
@@ -284,7 +284,7 @@ nsHTTPConn::Request(int aResumePos)
     }
     else
     {
-        sprintf(hdr, "GET %s HTTP/1.1%s", mPath, kCRLF);
+        sprintf(hdr, "GET %s HTTP/1.0%s", mPath, kCRLF);
         strcpy(req, hdr);
 
         memset(hdr, 0, kHdrBufSize);
