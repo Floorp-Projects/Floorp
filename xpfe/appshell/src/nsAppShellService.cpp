@@ -555,15 +555,19 @@ nsAppShellService::JustCreateTopWindow(nsIWebShellWindow *aParent,
     widgetInitData.mWindowType = aChromeMask & NS_CHROME_OPEN_AS_DIALOG ?
                                  eWindowType_dialog : eWindowType_toplevel;
 
-    widgetInitData.mBorderStyle = eBorderStyle_border;
-    if (aChromeMask & NS_CHROME_TITLEBAR_ON)
-      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_title);
-    if (aChromeMask & NS_CHROME_WINDOW_CLOSE_ON)
-      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_close);
-    if (aChromeMask & NS_CHROME_WINDOW_RESIZE_ON)
-      widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh);
-    if (widgetInitData.mBorderStyle == eBorderStyle_border) // no additions
+    if ((aChromeMask & NS_CHROME_ALL_CHROME) == NS_CHROME_ALL_CHROME)
       widgetInitData.mBorderStyle = eBorderStyle_all;
+    else {
+      widgetInitData.mBorderStyle = eBorderStyle_none; // assumes none == 0x00
+      if (aChromeMask & NS_CHROME_WINDOW_BORDERS_ON)
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_border);
+      if (aChromeMask & NS_CHROME_TITLEBAR_ON)
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_title);
+      if (aChromeMask & NS_CHROME_WINDOW_CLOSE_ON)
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_close);
+      if (aChromeMask & NS_CHROME_WINDOW_RESIZE_ON)
+        widgetInitData.mBorderStyle = NS_STATIC_CAST(enum nsBorderStyle, widgetInitData.mBorderStyle | eBorderStyle_resizeh | eBorderStyle_minimize | eBorderStyle_maximize | eBorderStyle_menu);
+    }
 
     if (aInitialWidth == NS_SIZETOCONTENT ||
         aInitialHeight == NS_SIZETOCONTENT) {
