@@ -40,6 +40,10 @@
 #include "nsMsgUtils.h"
 #include "nsNewsUtils.h"
 
+#ifdef DEBUG_sspitzer
+#define DEBUG_NOISY_NEWS 1
+#endif
+
 //not using nsMsgLineBuffer yet, but I need to soon...
 //#include "nsMsgLineBuffer.h"
 
@@ -61,11 +65,6 @@ nsMsgNewsFolder::nsMsgNewsFolder(void)
     mHaveReadNameFromDB(PR_FALSE), mGettingNews(PR_FALSE),
     mInitialized(PR_FALSE), mNewsDatabase(nsnull), m_optionLines(nsnull)
 {
-
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::nsMsgNewsFolder\n");
-#endif
-
 //  NS_INIT_REFCNT(); done by superclass
 }
 
@@ -83,9 +82,6 @@ NS_IMPL_RELEASE_INHERITED(nsMsgNewsFolder, nsMsgFolder)
 
 NS_IMETHODIMP nsMsgNewsFolder::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::QueryInterface()\n");
-#endif
 	if (!aInstancePtr) return NS_ERROR_NULL_POINTER;
 	*aInstancePtr = nsnull;
 	if (aIID.Equals(nsIMsgNewsFolder::GetIID()))
@@ -152,7 +148,7 @@ nsMsgNewsFolder::isNewsHost()
     // if we get here, mURI looks like this:  news://x
     // where x is non-empty, and may contain "/"
     char *rightAfterTheRoot = mURI+kNewsRootURILen+1;
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
     printf("search for a slash in %s\n",rightAfterTheRoot);
 #endif
     if (PL_strstr(rightAfterTheRoot,"/") == nsnull) {
@@ -185,7 +181,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
 	char is_newsgroup[512];
   PRBool rv;
 
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
   printf("MapHostToNewsrcFile(%s,%s,%s,??)\n",newshostname,(const char *)fatFile, newshostname);
 #endif
   lookingFor = PR_smprintf("newsrc-%s",newshostname);
@@ -204,9 +200,7 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
 
   /* we expect the first line to be NEWSRC_MAP_FILE_COOKIE */
 	rv = inputStream.readline(buffer, sizeof(buffer));
-#ifdef DEBUG_sspitzer_
-  printf("buffer = %s\n", buffer);
-#endif
+
   if ((!rv) || (PL_strncmp(buffer, NEWSRC_MAP_FILE_COOKIE, PL_strlen(NEWSRC_MAP_FILE_COOKIE)))) {
     newsrcFile = "";
     inputStream.close();
@@ -226,10 +220,6 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
       return NS_ERROR_FAILURE;
     }  
 
-#ifdef DEBUG_sspitzer_
-    printf("buffer = %s\n", buffer);    
-#endif
-    
     /*
       This used to be scanf() call which would incorrectly
       parse long filenames with spaces in them.  - JRE
@@ -255,24 +245,32 @@ nsMsgNewsFolder::MapHostToNewsrcFile(char *newshostname, nsFileSpec &fatFile, ns
       }
 
 		if(!PL_strncmp(is_newsgroup, "TRUE", 4)) {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
       printf("is_newsgroups_file = TRUE\n");
 #endif
     }
     else {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
       printf("is_newsgroups_file = FALSE\n");
 #endif
     }
     
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
     printf("psuedo_name=%s,filename=%s\n", psuedo_name, filename);
 #endif
     if (!PL_strncmp(psuedo_name,lookingFor,PL_strlen(lookingFor))) {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
       printf("found a match for %s\n",lookingFor);
 #endif
+
+#ifdef FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS
       newsrcFile = filename;
+#else
+	  // the fat file is storing the newsrc files relative to the directory the fat
+	  // file is in.  so we'll use that.
+	  newsrcFile = fatFile;
+	  newsrcFile.SetLeafName(filename);
+#endif /* FAT_STORES_ABSOLUTE_NEWSRC_FILE_PATHS */
       inputStream.close();
       PR_FREEIF(lookingFor);
       return NS_OK;
@@ -300,7 +298,7 @@ nsMsgNewsFolder::GetNewsrcFile(char *newshostname, nsFileSpec &path, nsFileSpec 
   // the fat file lives in the same directory as
   // the newsrc files
   nsFileSpec fatFile(path);
-  fatFile.SetLeafName("fat");
+  fatFile.SetLeafName(FAT_FILE_NAME);
 
   rv = MapHostToNewsrcFile(newshostname, fatFile, newsrcFile);
 #else
@@ -337,13 +335,13 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
       return NS_ERROR_OUT_OF_MEMORY;
     }
 
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NOISY_NEWS
     printf("CreateSubFolders:  %s = %s\n", mURI, (const char *)path);
 #endif
     nsFileSpec newsrcFile("");
     rv = GetNewsrcFile(newshostname, path, newsrcFile);
     if (rv == NS_OK) {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_NOISY_NEWS
       printf("uri = %s newsrc file = %s\n", mURI, (const char *)newsrcFile);
 #endif
       rv = LoadNewsrcFileAndCreateNewsgroups(newsrcFile);
@@ -353,7 +351,7 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     newshostname = nsnull;
   }
   else {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
     printf("%s is not a host, so it has no newsgroups.\n", mURI);
 #endif
     rv = NS_OK;
@@ -364,9 +362,6 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 
 nsresult nsMsgNewsFolder::AddSubfolder(nsAutoString name, nsIMsgFolder **child)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::AddSubfolder()\n");
-#endif
 	if(!child)
 		return NS_ERROR_NULL_POINTER;
 
@@ -412,10 +407,7 @@ nsresult nsMsgNewsFolder::ParseFolder(nsFileSpec& path)
 NS_IMETHODIMP
 nsMsgNewsFolder::Enumerate(nsIEnumerator **result)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::Enumerate()\n");
-#endif
-  nsresult rv; 
+  nsresult rv = NS_OK;
 
   // for now, news folders contain both messages and folders
   // server is a folder, and it contains folders
@@ -465,9 +457,6 @@ nsMsgNewsFolder::AddDirectorySeparator(nsFileSpec &path)
 NS_IMETHODIMP
 nsMsgNewsFolder::GetSubFolders(nsIEnumerator* *result)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::GetSubFolders()\n");
-#endif
   if (!mInitialized) {
     nsFileSpec path;
     nsresult rv = GetPath(path);
@@ -499,9 +488,6 @@ nsMsgNewsFolder::ReplaceElement(nsISupports* element, nsISupports* newElement)
 //returns NS_OK.  Otherwise returns a failure error value.
 nsresult nsMsgNewsFolder::GetDatabase()
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::GetDatabase()\n");
-#endif
 	if (mNewsDatabase == nsnull)
 	{
 		nsNativeFileSpec path;
@@ -515,7 +501,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 		if (NS_SUCCEEDED(rv) && newsDBFactory)
 		{
 			folderOpen = newsDBFactory->Open(path, PR_TRUE, (nsIMsgDatabase **) &mNewsDatabase, PR_FALSE);
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
       if (NS_SUCCEEDED(folderOpen)) {
         printf ("newsDBFactory->Open() succeeded\n");
       }
@@ -541,9 +527,6 @@ nsresult nsMsgNewsFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::GetMessages()\n");
-#endif
 	nsresult rv = GetDatabase();
 
 	if(NS_SUCCEEDED(rv))
@@ -562,9 +545,6 @@ nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetThreads(nsIEnumerator** threadEnumerator)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::GetThreads()\n");
-#endif
 	nsresult rv = GetDatabase();
 	
 	if(NS_SUCCEEDED(rv))
@@ -596,9 +576,6 @@ nsMsgNewsFolder::GetThreadForMessage(nsIMessage *message, nsIMsgThread **thread)
 
 NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::BuildFolderURL()\n");
-#endif
   const char *urlScheme = "news:";
 
   if(!url)
@@ -626,9 +603,6 @@ NS_IMETHODIMP nsMsgNewsFolder::BuildFolderURL(char **url)
   */
 nsresult nsMsgNewsFolder::CreateDirectoryForFolder(nsFileSpec &path)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::CreateDirectoryForFolder()\n");
-#endif
 #if 0
 	nsresult rv = NS_OK;
 
@@ -769,9 +743,6 @@ NS_IMETHODIMP nsMsgNewsFolder::Adopt(nsIMsgFolder *srcFolder, PRUint32 *outPos)
 NS_IMETHODIMP 
 nsMsgNewsFolder::GetChildNamed(const char *name, nsISupports ** aChild)
 {
-#ifdef DEBUG_sspitzer
-  printf("nsMsgNewsFolder::GetChildNamed(%s)\n",name);
-#endif
   NS_ASSERTION(aChild, "NULL child");
 
   // will return nsnull if we can't find it
@@ -1020,10 +991,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetRememberedPassword(char ** password)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::GetPath()\n");
-#endif
-  nsFileSpec nopath("");
+ nsFileSpec nopath("");
   if (mPath == nopath) {
     nsresult rv = nsNewsURI2Path(kNewsRootURI, mURI, mPath);
     if (NS_FAILED(rv)) return rv;
@@ -1261,10 +1229,6 @@ msg_LineBuffer (const char *net_buffer, PRInt32 net_buffer_size,
 									  void *closure),
 				void *closure)
 {
-#ifdef DEBUG_sspitzer_
-  printf("msg_LineBuffer()\n");
-#endif
-
   int status = 0;
   if (*buffer_fpP > 0 && *bufferP && (*bufferP)[*buffer_fpP - 1] == CR &&
 	  net_buffer_size > 0 && net_buffer[0] != LF) {
@@ -1374,9 +1338,6 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
       break;
     }
     else {
-#ifdef DEBUG_sspitzer_
-      printf("%d: %s\n", numread, buffer);
-#endif
       msg_LineBuffer(buffer, numread,
                      &ibuffer, &ibuffer_size, &ibuffer_fp,
                      FALSE,
@@ -1404,19 +1365,12 @@ nsMsgNewsFolder::LoadNewsrcFileAndCreateNewsgroups(nsFileSpec &newsrcFile)
 PRInt32
 nsMsgNewsFolder::ProcessLine_s(char* line, PRUint32 line_size, void* closure)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::ProcessLine_s()\n");
-#endif
   return ((nsMsgNewsFolder*) closure)->ProcessLine(line, line_size);
 }
 
 PRInt32
 nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
 {
-#ifdef DEBUG_sspitzer_
-  printf("nsMsgNewsFolder::ProcessLine()\n");
-#endif
-
 	/* guard against blank line lossage */
 	if (line[0] == '#' || line[0] == CR || line[0] == LF) return 0;
 
@@ -1459,7 +1413,7 @@ nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
 	}
   
   if (subscribed) {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
     printf("subscribed: %s\n", line);
 #endif
 
@@ -1471,7 +1425,7 @@ nsMsgNewsFolder::ProcessLine(char* line, PRUint32 line_size)
     child = nsnull;
   }
   else {
-#ifdef DEBUG_sspitzer_
+#ifdef DEBUG_NOISY_NEWS
     printf("NOT subscribed: %s\n", line);
 #endif
   }
