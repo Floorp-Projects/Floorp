@@ -1164,7 +1164,7 @@ nsIMEGtkIC::GetInputStyle() {
         prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NOTHING;
       } else if (!nsCRT::strcmp(input_style, VAL_INPUTSTYLE_NONE)) {
         prefered_preedit_style = (GdkIMStyle) GDK_IM_PREEDIT_NONE;
-        prefered_status_style = (GdkIMStyle) GDK_IM_PREEDIT_NONE;
+        prefered_status_style = (GdkIMStyle) GDK_IM_STATUS_NONE;
       }
       nsCRT::free(input_style);
     }
