@@ -20,8 +20,8 @@
 # Contributor(s): 
 
 !if "$(MSSDK)" == ""
-!message This module requires the MS Platform SDK to be installed.
-!else
+!message Warning this module requires the MS Platform SDK to be installed if you are using VC5.0 or earlier.
+!endif
 
 DLLNAME = mozctl
 QUIET =
@@ -115,7 +115,8 @@ clobber::
 $(DEFFILE) : mkctldef.bat
 	mkctldef.bat $(DEFFILE)
 
-MozillaControl_i.c MozillaControl.h: MozillaControl.idl
+MozillaControl_i.c \
+MozillaControl.h: MozillaControl.idl
 	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
 
 ControlSite.cpp \
@@ -125,7 +126,7 @@ PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
 ItemContainer.cpp : StdAfx.h ItemContainer.h
 
 MozillaControl.cpp \
-StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
+StdAfx.cpp: StdAfx.h MozillaControl_i.c MozillaControl.h MozillaBrowser.h WebShellContainer.h
 
 IEHtmlNode.cpp : StdAfx.h IEHtmlNode.h
 
@@ -143,5 +144,3 @@ WebShellContainer.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h IOleCommandTargetImpl.h
 
 guids.cpp: StdAfx.h guids.h
-
-!endif
