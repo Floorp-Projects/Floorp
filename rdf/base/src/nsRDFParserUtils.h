@@ -39,13 +39,13 @@ public:
     static void
     StripAndConvert(nsString& aResult);
 
-    nsresult
+    static nsresult
     GetQuotedAttributeValue(const nsString& aSource, 
                             const nsString& aAttribute,
                             nsString& aValue);
 
 
-    void
+    static void
     FullyQualifyURI(const nsIURL* base, nsString& spec);
 
 };
