@@ -45,6 +45,8 @@ sub code {
     local($macro, $text) = @_;
     $code = $table_base + $table_item_count;
 
+    print H "\n";
+    print H "/* ", $text, " */\n";
     printf H "#define %-40s (%dL)\n", $macro, $code;
 
     print C "\t{\"", $macro, "\",    \"", $text, "\"},\n";
@@ -100,6 +102,7 @@ while ($_ = <INPUT>) {
     }
 }
 
+print H "\n";
 print H "extern void ", $table_name, "_InitializePRErrorTable","(void);\n";
 printf H "#define ERROR_TABLE_BASE_%s (%dL)\n", $table_name, $table_base;
 
