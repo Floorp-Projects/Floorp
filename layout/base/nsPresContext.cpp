@@ -67,7 +67,8 @@ nsPresContext::nsPresContext()
 {
   NS_INIT_REFCNT();
   nsLayoutAtoms::AddrefAtoms();
-  mCompatibilityMode = eCompatibility_NavQuirks;
+  mCompatibilityMode = eCompatibility_Standard;
+  mCompatibilityLocked = PR_FALSE;
   mWidgetRenderingMode = eWidgetRendering_Native;  // to be changed to _Gfx soon!
 
 #ifdef _WIN32
@@ -184,7 +185,23 @@ nsPresContext::GetUserPreferences()
   }
 
   if (NS_OK == mPrefs->GetIntPref("nglayout.compatibility.mode", &prefInt)) {
-    mCompatibilityMode = (enum nsCompatibility)prefInt;  // bad cast
+    switch (prefInt) {
+      case 1: 
+        mCompatibilityLocked = PR_TRUE;  
+        mCompatibilityMode = eCompatibility_Standard;   
+        break;
+      case 2: 
+        mCompatibilityLocked = PR_TRUE;  
+        mCompatibilityMode = eCompatibility_NavQuirks;  
+        break;
+      case 0:   // auto
+      default:
+        mCompatibilityLocked = PR_FALSE;  
+        break;
+    }
+  }
+  else {
+    mCompatibilityLocked = PR_FALSE;  // auto
   }
 
   if (NS_OK == mPrefs->GetIntPref("nglayout.widget.mode", &prefInt)) {
@@ -316,7 +333,9 @@ nsPresContext::GetCompatibilityMode(nsCompatibility* aResult)
 NS_IMETHODIMP
 nsPresContext::SetCompatibilityMode(nsCompatibility aMode)
 {
-  mCompatibilityMode = aMode;
+  if (! mCompatibilityLocked) {
+    mCompatibilityMode = aMode;
+  }
   return NS_OK;
 }
 
