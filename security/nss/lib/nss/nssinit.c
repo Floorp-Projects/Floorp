@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.32 2001/12/07 01:35:58 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.33 2002/01/09 23:22:13 javi%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -55,7 +55,11 @@
 #define NSS_MAX_FLAG_SIZE  sizeof("readOnly")+sizeof("noCertDB")+ \
 	sizeof("noModDB")+sizeof("forceOpen")+sizeof("passwordRequired")
 #define NSS_DEFAULT_MOD_NAME "NSS Internal Module"
+#ifdef macintosh
+#define SECMOD_DB "Security Modules"
+#else
 #define SECMOD_DB "secmod.db"
+#endif
 
 static char *
 nss_makeFlags(PRBool readOnly, PRBool noCertDB, 
