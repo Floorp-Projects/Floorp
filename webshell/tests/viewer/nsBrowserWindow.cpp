@@ -199,12 +199,6 @@ static NS_DEFINE_CID(kLayoutDebuggerCID, NS_LAYOUT_DEBUGGER_CID);
   extern nsresult NS_NewCheckButton(nsICheckButton** aControl);
 #endif
 
-// prototypes
-#if 0
-static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
-#endif
-static void* GetItemsNativeData(nsISupports* aObject);
-
 //******* Cleanup Above here***********/
 
 //*****************************************************************************
@@ -1161,55 +1155,6 @@ nsBrowserWindow::DoFileOpen()
 
 #define DIALOG_FONT      "Helvetica"
 #define DIALOG_FONT_SIZE 10
-
-/**--------------------------------------------------------------------------------
- * Main Handler
- *--------------------------------------------------------------------------------
- */
-#if 0
-nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
-{
-  //printf("HandleEvent aEvent->message %d\n", aEvent->message);
-  nsEventStatus result = nsEventStatus_eIgnore;
-  if (aEvent == nsnull ||  aEvent->widget == nsnull) {
-    return result;
-  }
-
-  if (aEvent->message == 301 || aEvent->message == 302) {
-    //int x = 0;
-  }
-
-  void * data;
-  aEvent->widget->GetClientData(data);
-
-  if (data == nsnull) {
-    nsIWidget * parent = aEvent->widget->GetParent();
-    if (parent != nsnull) {
-      parent->GetClientData(data);
-      NS_RELEASE(parent);
-    }
-  }
-  
-  if (data != nsnull) {
-    nsBrowserWindow * browserWindow = (nsBrowserWindow *)data;
-    result = browserWindow->ProcessDialogEvent(aEvent);
-  }
-
-  return result;
-}
-#endif
-
-static void* GetItemsNativeData(nsISupports* aObject)
-{
-  void*                   result = nsnull;
-  nsIWidget*      widget;
-  if (NS_OK == aObject->QueryInterface(kIWidgetIID,(void**)&widget))
-  {
-    result = widget->GetNativeData(NS_NATIVE_WIDGET);
-    NS_RELEASE(widget);
-  }
-  return result;
-}
 
 //---------------------------------------------------------------
 NS_IMETHODIMP nsBrowserWindow::FindNext(const nsString &aSearchStr, PRBool aMatchCase, PRBool aSearchDown, PRBool &aIsFound)
