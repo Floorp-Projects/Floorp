@@ -1522,7 +1522,7 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
   // that will act as the scolling mechanism for the viewport
   // XXX We should only do this when presenting to the screen, i.e., for galley
   // mode and print-preview, but not when printing
-  PRBool       isScrollable = PR_TRUE;
+  PRBool       isScrollable = PR_FALSE;
   nsISupports* container;
   if (nsnull != aPresContext) {
     aPresContext->GetContainer(&container);
@@ -1532,8 +1532,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresContext* aPresContext,
       if (nsnull != webShell) {
         PRInt32 scrolling = -1;
         webShell->GetScrolling(scrolling);
-        if (NS_STYLE_OVERFLOW_HIDDEN == scrolling) {
-          isScrollable = PR_FALSE;
+        if (NS_STYLE_OVERFLOW_HIDDEN != scrolling) {
+          isScrollable = PR_TRUE;
         }
         NS_RELEASE(webShell);
       }
