@@ -97,6 +97,7 @@
 #include "nsMsgSimulateError.h"
 #include "nsNetCID.h"
 #include "nsMsgUtils.h"
+#include "nsIRDFService.h"
 
 // use these macros to define a class IID for our component. Our object currently 
 // supports two interfaces (nsISupports and nsIMsgCompose) so we want to define constants 
@@ -3012,7 +3013,7 @@ nsMsgComposeAndSend::DeliverMessage()
   {
     return SaveAsDraft();
   }
-  else if (m_deliver_mode == nsMsgSaveAsTemplate) 
+  else if (m_deliver_mode == nsMsgSaveAsTemplate)
   {
     return SaveAsTemplate();
   }
@@ -3396,6 +3397,34 @@ nsMsgComposeAndSend::DeliverAsNewsExit(nsIURI *aUrl, nsresult aExitCode)
   return NS_OK;
 }
 
+PRBool nsMsgComposeAndSend::CanSaveMessagesToFolder(const char *folderURL)
+{
+  nsresult rv;
+  nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCOMPtr<nsIRDFResource> resource;
+  rv = rdf->GetResource(folderURL, getter_AddRefs(resource));
+  if (NS_FAILED(rv))
+    return PR_FALSE;
+
+  nsCOMPtr <nsIMsgFolder> thisFolder;
+  thisFolder = do_QueryInterface(resource, &rv);
+  if (NS_FAILED(rv) || !thisFolder)
+    return PR_FALSE;
+
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  rv = thisFolder->GetServer(getter_AddRefs(server));
+  if (NS_FAILED(rv) || !server)
+    return PR_FALSE;
+
+  // See if we are allowed to save/file msgs to this folder.
+  PRBool canSave;
+  rv = server->GetCanFileMessagesOnServer(&canSave);
+  return canSave;
+}
+
 // 
 // Now, start the appropriate copy operation.
 //
@@ -3403,9 +3432,9 @@ nsresult
 nsMsgComposeAndSend::DoFcc()
 {
   //
-  // Just cleanup and return success if no FCC is necessary
+  // Just cleanup and return success if we're not allowed to save msgs to FCC folder.
   //
-  if (!mCompFields->GetFcc() || !*mCompFields->GetFcc())
+  if (! CanSaveMessagesToFolder(mCompFields->GetFcc()))
   {
 #ifdef NS_DEBUG
   printf("\nCopy operation disabled by user!\n");

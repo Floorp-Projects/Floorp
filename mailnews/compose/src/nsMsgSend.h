@@ -225,6 +225,9 @@ public:
   nsresult    SaveInSentFolder();
   nsresult    SaveAsTemplate();
 
+  // Check to see if it's ok to save msgs to the configured folder.
+  PRBool CanSaveMessagesToFolder(const char *folderURL);
+
   //
   // FCC operations...
   //
