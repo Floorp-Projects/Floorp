@@ -697,7 +697,7 @@ class nsTAdoptingString_CharT : public nsTXPIDLString_CharT
 
     public:
 
-      explicit nsTAdoptingString_CharT(char_type* str, size_type length = (-1))
+      explicit nsTAdoptingString_CharT(char_type* str, size_type length = size_type(-1))
         {
           Adopt(str, length);
         }
