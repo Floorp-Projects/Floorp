@@ -574,12 +574,20 @@ NOFRAMES {
   background: inherit;
 }
 
+:TABLE-CELL {
+	display: table-cell;
+}
+
 :TABLE-COLUMN {
 	display: table-column;
 }
 
 :TABLE-COLUMN-GROUP {
 	display: table-column-group;
+}
+
+:TABLE-OUTER {
+  display: table;
 }
 
 :TABLE-ROW {
@@ -606,8 +614,14 @@ NOFRAMES {
   display: block;
 }
 
+
+<<<<<<< ua.css
+=======
 :MOZ-COMMENT {
   display: none;
+<<<<<<< ua.css
+}>>>>>>> 3.86
+=======
 }
 
 :DROPDOWN-VISIBLE {
@@ -634,3 +648,4 @@ NOFRAMES {
   color: white;
   border: 1px dotted white;
 }
+>>>>>>> 3.87

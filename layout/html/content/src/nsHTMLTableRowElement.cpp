@@ -104,8 +104,9 @@ protected:
   GenericElementCollection* mCells;
 };
 
+#ifdef XXX_debugging
 static
-void TempList(nsIDOMHTMLTableElement* aTable) {
+void DebugList(nsIDOMHTMLTableElement* aTable) {
   nsIHTMLContent* content = nsnull;
   nsresult result = aTable->QueryInterface(kIHTMLContentIID, (void**)&content);
   if (NS_SUCCEEDED(result) && (nsnull != content)) {
@@ -130,6 +131,7 @@ void TempList(nsIDOMHTMLTableElement* aTable) {
     NS_RELEASE(content);
   }
 }
+#endif 
 
 nsresult
 NS_NewHTMLTableRowElement(nsIHTMLContent** aInstancePtrResult, nsIAtom* aTag)

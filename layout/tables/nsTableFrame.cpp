@@ -63,6 +63,8 @@ static const PRBool gsDebugIR = PR_FALSE;
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
 
+static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
+
 static const PRInt32 kColumnWidthIncrement=100;
 
 /* ----------- CellData ---------- */
@@ -3248,6 +3250,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     {
       // Keep track of the first row group frame: we need this to correctly clear
       // the isTopOfPage flag and when pushing frames
+      // XXX what about header and footer groups?
       if (nsnull == firstRowGroupFrame) {
         if (NS_STYLE_DISPLAY_TABLE_ROW_GROUP == childDisplay->mDisplay) {
           firstRowGroupFrame = kidFrame;
@@ -3255,7 +3258,7 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       }
 
       nsMargin borderPadding;
-      GetTableBorderForRowGroup((nsTableRowGroupFrame *)kidFrame, borderPadding);
+      GetTableBorderForRowGroup(GetRowGroupFrameFor(kidFrame, childDisplay), borderPadding);
       const nsStyleSpacing* tableSpacing;
       GetStyleData(eStyleStruct_Spacing, ((const nsStyleStruct *&)tableSpacing));
       nsMargin padding;
@@ -4926,18 +4929,23 @@ nsTableFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Table", aResult);
 }
 
+// This assumes that aFrame is a scroll frame if  
 // XXX make this a macro if it becomes an issue
+// XXX it has the side effect of setting mHasScrollableRowGroup
 nsTableRowGroupFrame*
 nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDisplay) 
 {
-  if ((NS_STYLE_OVERFLOW_SCROLL == aDisplay->mOverflow) ||
-      (NS_STYLE_OVERFLOW_AUTO == aDisplay->mOverflow)) {
-    mHasScrollableRowGroup = PR_TRUE;
-    nsIFrame* child = nsnull;
-    aFrame->FirstChild(nsnull, child);
-    return (nsTableRowGroupFrame*)child;
-  } else {
-    return (nsTableRowGroupFrame*)aFrame;
+  nsIFrame* result = nsnull;
+  if (IsRowGroup(aDisplay->mDisplay)) {
+    nsresult rv = aFrame->QueryInterface(kITableRowGroupFrameIID, (void **)&result);
+    if (NS_SUCCEEDED(rv) && (nsnull != result)) {
+      ;
+    } else { // it is a scroll frame that contains the row group frame
+      aFrame->FirstChild(nsnull, result);
+      mHasScrollableRowGroup = PR_TRUE;
+    }
   }
+
+  return (nsTableRowGroupFrame*)result;
 }
 
