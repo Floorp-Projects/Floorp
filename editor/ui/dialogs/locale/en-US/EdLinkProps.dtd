@@ -1,5 +1,3 @@
-<?xml version="1.0"?>
-
 <!-- These strings are generic to all or most of the editor's dialogs. -->
 <!-- They should be moved into a "common" file -->
 <!ENTITY OKButton.label "OK">
