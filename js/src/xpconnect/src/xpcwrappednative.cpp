@@ -47,9 +47,7 @@ nsXPCWrappedNative::AddRef(void)
     XPCContext* xpcc;
     ++mRefCnt;
     NS_LOG_ADDREF(this, mRefCnt, "nsXPCWrappedNative", sizeof(*this));
-    if(1 == mRefCnt && mRoot != this)
-        NS_ADDREF(mRoot);
-    else if(2 == mRefCnt && nsnull != (xpcc = mClass->GetXPCContext()))
+    if(2 == mRefCnt && nsnull != (xpcc = mClass->GetXPCContext()))
         JS_AddNamedRoot(xpcc->GetJSContext(), &mJSObj,
                         "nsXPCWrappedNative::mJSObj");
     return mRefCnt;
@@ -137,6 +135,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
             NS_ADDREF(wrapper);
             goto return_wrapper;
         }
+
+        NS_ADDREF(root);
     }
 
     // do a QI to make sure the object passed in really supports the
@@ -232,6 +232,8 @@ nsXPCWrappedNative::GetNewOrUsedWrapper(XPCContext* xpcc,
     wrapper->mNext = root->mNext;
     root->mNext = wrapper;
 
+    NS_RELEASE(root);
+
 return_wrapper:
     if(rootObj)
         NS_RELEASE(rootObj);
@@ -283,6 +285,10 @@ nsXPCWrappedNative::nsXPCWrappedNative(nsISupports* aObj,
         {
             mDynamicScriptable = ds;
         }
+    }
+    else
+    {
+        NS_ADDREF(mRoot);
     }
 
     mJSObj = aClass->NewInstanceJSObject(this);
