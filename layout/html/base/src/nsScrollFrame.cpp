@@ -414,6 +414,8 @@ nsScrollFrame::Paint(nsIPresContext&      aPresContext,
     // Only paint the border and background if we're visible
     const nsStyleDisplay* display = (const nsStyleDisplay*)
       mStyleContext->GetStyleData(eStyleStruct_Display);
+	const nsStyleColor* color = (const nsStyleColor*)
+      mStyleContext->GetStyleData(eStyleStruct_Color);
 
     if (display->mVisible) {
       // Paint our border only (no background)
@@ -422,7 +424,7 @@ nsScrollFrame::Paint(nsIPresContext&      aPresContext,
 
       nsRect  rect(0, 0, mRect.width, mRect.height);
       nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                  aDirtyRect, rect, *spacing, 0);
+                                  aDirtyRect, rect, *spacing, mStyleContext, 0);
     }
   }
 
