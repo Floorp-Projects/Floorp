@@ -634,6 +634,7 @@ nsFolderCompactState::OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
           if (srcDB)
           {
             srcDB->SetSummaryValid(PR_FALSE);
+            srcDB->Commit(nsMsgDBCommitType::kLargeCommit);
             srcDB->ForceClosed();
           }
         }
