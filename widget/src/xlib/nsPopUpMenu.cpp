@@ -23,6 +23,7 @@ NS_IMPL_ISUPPORTS(nsPopUpMenu, kPopUpMenuIID)
 nsPopUpMenu::nsPopUpMenu() : nsIPopUpMenu()
 {
   NS_INIT_REFCNT();
+  mParent = nsnull;
 }
 
 nsPopUpMenu::~nsPopUpMenu()
@@ -31,6 +32,8 @@ nsPopUpMenu::~nsPopUpMenu()
 
 NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
 {
+  mParent = aParent;
+  NS_ADDREF(mParent);
   return NS_OK;
 }
 
@@ -101,5 +104,6 @@ NS_METHOD nsPopUpMenu::GetNativeData(void *& aData)
 
 NS_METHOD nsPopUpMenu::GetParent(nsIWidget *& aParent)
 {
+  aParent = mParent;
   return NS_OK;
 }

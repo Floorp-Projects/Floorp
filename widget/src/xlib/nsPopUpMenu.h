@@ -49,6 +49,9 @@ public:
   NS_IMETHOD GetNativeData(void*& aData);
   NS_IMETHOD GetParent(nsIWidget*& aParent);
 
+protected:
+  nsIWidget * mParent;
+
 };
 
 #endif // nsPopUpMenu_h__
