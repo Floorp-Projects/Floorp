@@ -252,7 +252,7 @@ pref("wallet.notified",                     false);
 pref("wallet.fetchPatches",                 false);
 pref("wallet.Server",                       "http://www.mozilla.org/wallet/tables/");
 pref("wallet.version",                      "1");
-pref("wallet.enabled",                      false);
+pref("wallet.enabled",                      true);
 pref("messages.new_window",                 true); // ML obsolete; use mailnews.message_in_thread_window
 pref("intl.accept_languages",               "en");
 pref("intl.mailcharset.cyrillic",           "koi8-r");
