@@ -209,7 +209,7 @@
             },
 
             onSecurityChange : function(aWebProgress, aRequest, aState) { 
-              if (!mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
+              if (!this.mBlank && this.mTabBrowser.mCurrentTab == this.mTab) {
                 for (var i = 0; i < this.mTabBrowser.mProgressListeners.length; i++) {
                   var p = this.mTabBrowser.mProgressListeners[i];
                   if (p)
