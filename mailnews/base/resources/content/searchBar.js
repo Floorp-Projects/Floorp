@@ -185,7 +185,7 @@ function initializeSearchBar()
 function onEnterInSearchBar()
 {
 //  dump ("onEnterInSearchBar gSearchInput.value = " + gSearchInput.value + " showing criteria = " + gSearchInput.showingSearchCriteria +"\n");
-   if (gSearchInput.value == "" || gSearchInput.showingSearchCriteria) 
+   if (gSearchInput.value == ""  /* || gSearchInput.showingSearchCriteria */) 
    {
      
      if (gDBView.viewType == nsMsgViewType.eShowQuickSearchResults 
@@ -209,7 +209,7 @@ function onEnterInSearchBar()
      else if (gPreQuickSearchView && !gDefaultSearchViewTerms)// maybe a quick search from a cross-folder virtual folder
       restorePreSearchView();
      
-     gSearchInput.showingSearchCriteria = true;
+//     gSearchInput.showingSearchCriteria = true;
      
      gQSViewIsDirty = false;
      return;
@@ -515,8 +515,6 @@ function ClearQSIfNecessary()
 function Search(str)
 {
 //  dump("in Search str = " + str + "gSearchInput.showingSearchCriteria = " + gSearchInput.showingSearchCriteria + "\n");
-  if (gSearchInput.showingSearchCriteria && str != "")
-    return;
 
   GetSearchInput();
 
