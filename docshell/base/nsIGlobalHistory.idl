@@ -45,6 +45,9 @@ interface nsIGlobalHistory : nsISupports
 
     // Get the preferred completion for aURL
     string GetURLCompletion(in string aURL);
+
+    // get the last page visited
+    string GetLastPageVisted();
 };
 
 %{ C++

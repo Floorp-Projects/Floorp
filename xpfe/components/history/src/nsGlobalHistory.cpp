@@ -112,6 +112,7 @@ public:
   NS_IMETHOD RemovePage(const char *aURL);
   NS_IMETHOD GetLastVisitDate(const char *aURL, PRInt64 *_retval);
   NS_IMETHOD GetURLCompletion(const char *aURL, char **_retval);
+  NS_IMETHOD GetLastPageVisted(char **_retval);
 
   // nsIRDFDataSource
   NS_IMETHOD Init(const char* aURI);
@@ -505,6 +506,16 @@ nsGlobalHistory::GetURLCompletion(const char *aURL, char **_retval)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP
+nsGlobalHistory::GetLastPageVisted(char **_retval)
+{ 
+  NS_PRECONDITION(_retval != nsnull, "null ptr");
+  if (! _retval)
+    return NS_ERROR_NULL_POINTER;
+
+  *_retval = PR_smprintf("http://people.netscape.com/radha");
+  return NS_OK;
+}
 
 ////////////////////////////////////////////////////////////////////////
 // nsIRDFDataSource

@@ -294,7 +294,11 @@
   <broadcaster id="Browser:Status"/>
   <broadcaster id="Browser:Security" secure="false"/>
   <broadcaster id="Browser:Throbber" busy="false"/>
+<<<<<<< navigator.xul
+  <broadcaster id="args" value=""/>
+=======
   <broadcaster id="args" value="http://www.mozillazine.org"/>
+>>>>>>> 1.136
 
   <!-- Interim hack to transition from nsIXULWindowCallbacks/ShowWindowWithArgs -->
   <broadcaster id="dialog.start" ready="false"/>
