@@ -393,7 +393,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 		excludeHeader = PR_TRUE;
 		break;
 	case nsMsgSearchAttrib::OtherHeader:  // arbitrary header? if so create arbitrary header string
-		if (term->m_arbitraryHeader)
+		if (term->m_arbitraryHeader.Length() > 0)
 		{
 			arbitraryHeader = new char [nsCRT::strlen(term->m_arbitraryHeader) + 6];  // 6 bytes for SPACE \" .... \" SPACE
 			if (!arbitraryHeader)
@@ -494,7 +494,8 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 			// our UI presents Is, IsGreater and IsLessThan. For the IsGreater case (m_kImapSince)
 			// we need to adjust the date so we get greater than and not greater than or equal to which
 			// is what the IMAP server wants to search on
-			adjustedDate += 60 * 60 * 24; // bump up to the day after this one...
+      // won't work on Mac.
+//			adjustedDate += 60 * 60 * 24; // bump up to the day after this one...
 		}
 
    	PRExplodedTime exploded;
@@ -510,7 +511,7 @@ nsresult nsMsgSearchAdapter::EncodeImapTerm (nsMsgSearchTerm *term, PRBool reall
 			// okay, take the current date, subtract off the age in days, then do an appropriate Date search on 
 			// the resulting day.
 			PRTime now = PR_Now();
-			PRTime matchDay = now - term->m_value.u.age * 60 * 60 * 24;
+			PRTime matchDay = 0; // = now ;  - term->m_value.u.age * 60 * 60 * 24; won't work on the mac
    	PRExplodedTime exploded;
     PR_ExplodeTime(matchDay, PR_LocalTimeParameters, &exploded);
     PR_FormatTimeUSEnglish(dateBuf, sizeof(dateBuf), "%d-%b-%Y", &exploded);
@@ -692,7 +693,7 @@ nsresult nsMsgSearchAdapter::EncodeImap (char **ppOutEncoding, nsMsgSearchTermAr
 		delete expression;
 
 		// Set output parameter if we encoded the query successfully
-		if (encodingBuff && NS_SUCCEEDED(err))
+		if (NS_SUCCEEDED(err))
 			*ppOutEncoding = encodingBuff.ToNewCString();
 	}
 
