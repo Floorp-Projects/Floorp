@@ -118,6 +118,7 @@ PRLogModuleInfo* gSocketLog = nsnull;
 
 nsSocketTransport::nsSocketTransport()
 {
+  NS_ASSERTION(MAX_IO_TRANSFER_SIZE <= MAX_IO_BUFFER_SIZE, "bad MAX_IO_TRANSFER_SIZE");
   NS_INIT_REFCNT();
 
   PR_INIT_CLIST(&mListLink);
@@ -185,14 +186,24 @@ nsSocketTransport::~nsSocketTransport()
   // nsSocketTransport context is lost...
   //
   mReadListener = null_nsCOMPtr();
-  mReadStream   = null_nsCOMPtr();
   mReadContext  = null_nsCOMPtr();
+#ifndef NSPIPE2
+  mReadStream   = null_nsCOMPtr();
   mReadBuffer   = null_nsCOMPtr();
+#else
+  mReadPipeIn   = null_nsCOMPtr();
+  mReadPipeOut  = null_nsCOMPtr();
+#endif
 
   mWriteObserver = null_nsCOMPtr();
-  mWriteStream   = null_nsCOMPtr();
   mWriteContext  = null_nsCOMPtr();
+#ifndef NSPIPE2
+  mWriteStream   = null_nsCOMPtr();
   mWriteBuffer   = null_nsCOMPtr();
+#else
+  mWritePipeIn   = null_nsCOMPtr();
+  mWritePipeOut  = null_nsCOMPtr();
+#endif
     
   NS_IF_RELEASE(mService);
 
@@ -372,9 +383,14 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             mReadListener = null_nsCOMPtr();
             mReadContext  = null_nsCOMPtr();
           }
+#ifndef NSPIPE2
           mReadStream = null_nsCOMPtr();
           // XXX: The buffer should be reused...
           mReadBuffer = null_nsCOMPtr();
+#else
+          mReadPipeIn  = null_nsCOMPtr();
+          mReadPipeOut = null_nsCOMPtr();
+#endif
           SetReadType(eSocketRead_None);
           ClearFlag(eSocketRead_Done);
         }
@@ -386,8 +402,13 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
             mWriteObserver = null_nsCOMPtr();
             mWriteContext  = null_nsCOMPtr();
           }
+#ifndef NSPIPE2
           mWriteStream = null_nsCOMPtr();
           mWriteBuffer = null_nsCOMPtr();
+#else
+          mWritePipeIn  = null_nsCOMPtr();
+          mWritePipeOut = null_nsCOMPtr();
+#endif
           SetWriteType(eSocketWrite_None);
           ClearFlag(eSocketWrite_Done);
         }
@@ -823,8 +844,13 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
   // thread
   //
   PR_Unlock(mLock);
+#ifndef NSPIPE2
   rv = mReadBuffer->WriteSegments(nsReadFromSocket, (void*)mSocketFD, 
                                   MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
+#else
+  rv = mReadPipeOut->WriteSegments(nsReadFromSocket, (void*)mSocketFD, 
+                                   MAX_IO_TRANSFER_SIZE, &totalBytesWritten);
+#endif
   PR_Lock(mLock);
 
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
@@ -851,19 +877,28 @@ nsresult nsSocketTransport::doRead(PRInt16 aSelectFlags)
     if (mReadListener) {
       nsresult rv1;
 
+#ifndef NSPIPE2
       rv1 = mReadListener->OnDataAvailable(this, mReadContext, mReadStream, 
                                            mSourceOffset, 
                                            totalBytesWritten);
+#else
+      rv1 = mReadListener->OnDataAvailable(this, mReadContext, mReadPipeIn, 
+                                           mSourceOffset, 
+                                           totalBytesWritten);
+#endif
       //
       // If the consumer returns failure, then cancel the operation...
       //
       if (NS_FAILED(rv1)) {
         rv = rv1;
       }
-    } else if (GetReadType() == eSocketRead_Sync) {
+    }
+#ifndef NSPIPE2
+    else if (GetReadType() == eSocketRead_Sync) {
       nsAutoCMonitor mon(mReadBuffer);
       mon.Notify();
     }
+#endif
     mSourceOffset += totalBytesWritten;
   }
 
@@ -906,7 +941,12 @@ nsresult nsSocketTransport::doWrite(PRInt16 aSelectFlags)
 
   totalBytesRead = 0;
 
-  if (mWriteBuffer) {
+#ifndef NSPIPE2
+  if (mWriteBuffer)
+#else
+  if (mWritePipeIn)
+#endif
+  {
     rv = doWriteFromBuffer(&totalBytesRead);
   }
 
@@ -934,11 +974,18 @@ nsresult nsSocketTransport::doWriteFromBuffer(PRUint32 *aCount)
   // thread
   //
   PR_Unlock(mLock);
+#ifndef NSPIPE2
   rv = mWriteBuffer->ReadSegments(nsWriteToSocket, (void*)mSocketFD, 
                                   MAX_IO_TRANSFER_SIZE, aCount);
+#else
+  PRUint32 transferCount = mWriteCount >= 0 ? PR_MIN(mWriteCount, MAX_IO_TRANSFER_SIZE) : MAX_IO_TRANSFER_SIZE;
+  rv = mWritePipeIn->ReadSegments(nsWriteToSocket, (void*)mSocketFD, 
+                                  transferCount, aCount);
+#endif
   PR_Lock(mLock);
 
   if (mWriteCount > 0) {
+    NS_ASSERTION(mWriteCount >= (PRInt32)*aCount, "wrote more than humanly possible");
     mWriteCount -= *aCount;
   }
 
@@ -963,12 +1010,14 @@ nsresult nsSocketTransport::doWriteFromBuffer(PRUint32 *aCount)
       SetFlag(eSocketWrite_Wait);
       mSelectFlags &= (~PR_POLL_WRITE);
 
+#ifndef NSPIPE2
       PR_Unlock(mLock);
       {
         nsAutoCMonitor mon(mWriteBuffer);
         mon.Notify();
       }
       PR_Lock(mLock);
+#endif
     }
 
     // continue to return WOULD_BLOCK until we've completely finished 
@@ -997,7 +1046,11 @@ nsresult nsSocketTransport::doWriteFromStream(PRUint32 *aCount)
     }
 
     bytesRead = 0;
+#ifndef NSPIPE2
     rv = mWriteStream->Read(gIOBuffer, maxBytesToRead, &bytesRead);
+#else
+    rv = mWriteFromStream->Read(gIOBuffer, maxBytesToRead, &bytesRead);
+#endif
     if (NS_SUCCEEDED(rv) && bytesRead) {
       // Update the counters...
       *aCount += bytesRead;
@@ -1081,11 +1134,19 @@ nsSocketTransport::QueryInterface(const nsIID& aIID, void* *aInstancePtr)
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
+#ifndef NSPIPE2
   if (aIID.Equals(nsCOMTypeInfo<nsIBufferObserver>::GetIID())) {
     *aInstancePtr = NS_STATIC_CAST(nsIBufferObserver*, this); 
     NS_ADDREF_THIS(); 
     return NS_OK; 
   } 
+#else
+  if (aIID.Equals(nsCOMTypeInfo<nsIPipeObserver>::GetIID())) {
+    *aInstancePtr = NS_STATIC_CAST(nsIPipeObserver*, this); 
+    NS_ADDREF_THIS(); 
+    return NS_OK; 
+  }
+#endif
   return NS_NOINTERFACE; 
 }
 
@@ -1186,17 +1247,34 @@ nsSocketTransport::Resume(void)
 
 //
 // --------------------------------------------------------------------------
-// nsIBufferObserver implementation...
+// nsIPipeObserver implementation...
 // --------------------------------------------------------------------------
 //
 NS_IMETHODIMP
+#ifndef NSPIPE2
 nsSocketTransport::OnFull(nsIBuffer* aBuffer)
+#else
+nsSocketTransport::OnFull(nsIPipe* aPipe)
+#endif
 {
+#ifndef NSPIPE2
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("nsSocketTransport::OnFull() [this=%x] nsIBuffer=%x.\n", 
          this, aBuffer));
+#else
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnFull() [this=%x] nsIPipe=%x.\n", 
+         this, aPipe));
+#endif
 
-  if (aBuffer == mReadBuffer.get()) {
+#ifndef NSPIPE2
+  if (aBuffer == mReadBuffer.get())
+#else
+  nsCOMPtr<nsIBufferInputStream> in;
+  nsresult rv = aPipe->GetInputStream(getter_AddRefs(in));
+  if (NS_SUCCEEDED(rv) && in == mReadPipeIn)
+#endif
+  {
     NS_ASSERTION(!GetFlag(eSocketRead_Wait), "Already waiting!");
 
     SetFlag(eSocketRead_Wait);
@@ -1208,15 +1286,32 @@ nsSocketTransport::OnFull(nsIBuffer* aBuffer)
 
 
 NS_IMETHODIMP
+#ifndef NSPIPE2
 nsSocketTransport::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
+#else
+nsSocketTransport::OnWrite(nsIPipe* aPipe, PRUint32 aCount)
+#endif
 {
   nsresult rv = NS_OK;
 
+#ifndef NSPIPE2
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("nsSocketTransport::OnWrite() [this=%x]. nsIBuffer=%x Count=%d\n", 
          this, aBuffer, aCount));
+#else
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnWrite() [this=%x]. nsIPipe=%x Count=%d\n", 
+         this, aPipe, aCount));
+#endif
 
-  if (aBuffer == mWriteBuffer.get()) {
+#ifndef NSPIPE2
+  if (aBuffer == mWriteBuffer.get())
+#else
+  nsCOMPtr<nsIBufferOutputStream> out;
+  rv = aPipe->GetOutputStream(getter_AddRefs(out));
+  if (NS_SUCCEEDED(rv) && out == mWritePipeOut)
+#endif
+  {
     // Enter the socket transport lock...
     nsAutoLock aLock(mLock);
 
@@ -1238,15 +1333,32 @@ nsSocketTransport::OnWrite(nsIBuffer* aBuffer, PRUint32 aCount)
 
 
 NS_IMETHODIMP 
+#ifndef NSPIPE2
 nsSocketTransport::OnEmpty(nsIBuffer* aBuffer)
+#else
+nsSocketTransport::OnEmpty(nsIPipe* aPipe)
+#endif
 {
   nsresult rv = NS_OK;
 
+#ifndef NSPIPE2
   PR_LOG(gSocketLog, PR_LOG_DEBUG, 
          ("nsSocketTransport::OnEmpty() [this=%x] nsIBuffer=%x.\n", 
          this, aBuffer));
+#else
+  PR_LOG(gSocketLog, PR_LOG_DEBUG, 
+         ("nsSocketTransport::OnEmpty() [this=%x] nsIPipe=%x.\n", 
+         this, aPipe));
+#endif
 
-  if (aBuffer == mReadBuffer.get()) {
+#ifndef NSPIPE2
+  if (aBuffer == mReadBuffer.get())
+#else
+  nsCOMPtr<nsIBufferInputStream> in;
+  rv = aPipe->GetInputStream(getter_AddRefs(in));
+  if (NS_SUCCEEDED(rv) && in == mReadPipeIn)
+#endif
+  {
     // Enter the socket transport lock...
     nsAutoLock aLock(mLock);
 
@@ -1294,6 +1406,7 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
   }
 
   // Create a new non-blocking input stream for reading data into...
+#ifndef NSPIPE2
   if (NS_SUCCEEDED(rv) && !mReadStream) {
     rv = NS_NewBuffer(getter_AddRefs(mReadBuffer), MAX_IO_BUFFER_SIZE/2, 
                       2*MAX_IO_BUFFER_SIZE, this);
@@ -1306,6 +1419,21 @@ nsSocketTransport::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
       mReadStream = newStream;
     }
   }
+#else
+  if (NS_SUCCEEDED(rv) && !mReadPipeIn) {
+    rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
+                    getter_AddRefs(mReadPipeOut),
+                    this,       // nsIPipeObserver
+                    MAX_IO_BUFFER_SIZE/2, 
+                    2*MAX_IO_BUFFER_SIZE);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mReadPipeIn->SetNonBlocking(PR_TRUE);
+    }
+    if (NS_SUCCEEDED(rv)) {
+      rv = mReadPipeOut->SetNonBlocking(PR_TRUE);
+    }
+  }
+#endif
 
   // Create a marshalling stream listener to receive notifications...
   if (NS_SUCCEEDED(rv)) {
@@ -1364,7 +1492,19 @@ nsSocketTransport::AsyncWrite(nsIInputStream* aFromStream,
   }
 
   if (NS_SUCCEEDED(rv)) {
+#ifndef NSPIPE2
     mWriteStream  = aFromStream;
+#else
+    mWriteFromStream = aFromStream;
+#if 0
+    // Note that the following assignment can fail, but we'll deal with 
+    // it in doWrite:
+    mWritePipeIn = do_QueryInterface(aFromStream);
+    if (mWritePipeIn) {
+      rv = mWritePipeIn->SetNonBlocking(PR_TRUE);
+    }
+#endif
+#endif
     mWriteContext = aContext;
 
     // Create a marshalling stream observer to receive notifications...
@@ -1425,6 +1565,7 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
     mReadListener = null_nsCOMPtr();
     mReadContext  = null_nsCOMPtr();
 
+#ifndef NSPIPE2
     rv = NS_NewBuffer(getter_AddRefs(mReadBuffer), MAX_IO_BUFFER_SIZE/2, 
                       2*MAX_IO_BUFFER_SIZE, this);
 
@@ -1437,6 +1578,18 @@ nsSocketTransport::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
       *result = newStream;
       NS_IF_ADDREF(*result);
     }
+#else
+    rv = NS_NewPipe(getter_AddRefs(mReadPipeIn),
+                    getter_AddRefs(mReadPipeOut),
+                    this,       // nsIPipeObserver
+                    MAX_IO_BUFFER_SIZE/2, 
+                    2*MAX_IO_BUFFER_SIZE);
+    if (NS_SUCCEEDED(rv)) {
+      rv = mReadPipeOut->SetNonBlocking(PR_TRUE);
+      *result = mReadPipeIn;
+      NS_IF_ADDREF(*result);
+    }
+#endif
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -1486,15 +1639,32 @@ nsSocketTransport::OpenOutputStream(PRUint32 startPosition, nsIOutputStream* *re
 
     nsCOMPtr<nsIBufferOutputStream> out;
     nsCOMPtr<nsIBufferInputStream>  in;
+#ifndef NSPIPE2
     rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
                     MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE, PR_TRUE, this);
+#else
+    rv = NS_NewPipe(getter_AddRefs(in), getter_AddRefs(out),
+                    this,       // nsIPipeObserver
+                    MAX_IO_BUFFER_SIZE, MAX_IO_BUFFER_SIZE);
+    if (NS_SUCCEEDED(rv)) {
+      rv = in->SetNonBlocking(PR_TRUE);
+    }
+#endif
 
     if (NS_SUCCEEDED(rv)) {
+#ifndef NSPIPE2
       mWriteStream = in;
+#else
+      mWritePipeIn = in;
+#endif
       *result = out;
       NS_IF_ADDREF(*result);
 
+#ifndef NSPIPE2
       out->GetBuffer(getter_AddRefs(mWriteBuffer));
+#else
+      mWritePipeOut = out;
+#endif
     }
 
     SetWriteType(eSocketWrite_Sync);
