@@ -1,0 +1,30 @@
+<project name="Webclient Test Browser" default="main" basedir=".">
+
+  <property environment="myenv" />
+
+
+  <target name="main">
+
+    <condition property="PATH_SEP" value=";">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="PATH_SEP" value=":">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+    <java classname="org.mozilla.webclient.test.TestBrowser"
+          classpath="${basedir}/webclient.jar" fork="true">
+        <jvmarg value="-Djava.library.path=${basedir}${PATH_SEP}${basedir}/components"/>
+        <jvmarg value="-DNSPR_LOG_MODULES=${myenv.NSPR_LOG_MODULES}"/>
+        <jvmarg value="-DNSPR_LOG_FILE=${myenv.NSPR_LOG_FILE}"/>
+        <jvmarg value="-DBROWSER_BIN_DIR=${basedir}"/>
+    </java>
+
+  </target>
+
+</project>

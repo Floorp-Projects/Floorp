@@ -1,0 +1,154 @@
+<?xml version="1.0"?>
+
+<!--
+
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+
+ * Ed Burns &gt;edburns@acm.org&lt;
+
+
+-->
+
+<project name="webclient" default="dist" basedir=".">
+
+  <property name="Name" value="webclient"/>
+  <property name="name" value="webclient"/>
+  <property name="version" value="20040928"/>
+
+<!-- ************ Per user local properties ******************************* -->
+
+  <property file="${user.home}/build.properties"/>   <!-- User local        -->
+  <property file="build.properties"/>                <!-- Component local   -->
+  <property file="../build.properties"/>         <!-- java-supplement local -->
+  <property environment="myenv" />
+
+  <property name="dist.home" value="${basedir}/dist" />
+  <property name="moz.dist" value="${myenv.MOZ_SRC}/mozilla/dist" />
+
+  <target name="prepare">
+  
+    <mkdir dir="${dist.home}" />
+    <mkdir dir="${dist.home}/components" />
+
+    <condition property="so.prefix" value="">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="so.prefix" value="lib">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+    <condition property="so.extension" value="dll">
+      <and>
+        <os family="windows" />
+      </and>
+    </condition>
+
+    <condition property="so.extension" value="so">
+      <and>
+        <os family="unix" />
+      </and>
+    </condition>
+
+  </target>
+
+  <target name="dist" depends="prepare,compile.test">
+
+    <echo message="${build.home}" />
+
+    <jar jarfile="${dist.home}/${name}.jar" >
+       <manifest>
+        <attribute name="Specification-Title" value="${Name}"/>
+        <attribute name="Specification-Version" value="2.0"/>
+        <attribute name="Implementation-Title" value="'${name}': ${Name}"/>
+        <attribute name="Implementation-Version" value="${version}"/>
+        <attribute name="Implementation-Vendor" value="mozilla.org"/>
+        <attribute name="Implementation-Vendor-Id" value="org.mozilla"/>
+        <attribute name="Extension-Name" value="org.mozilla.webclient"/>
+       </manifest>
+
+       <fileset dir="${build.home}" 
+                excludes="**/test/**" />
+       <fileset dir="${build.home}/test/classes" 
+                includes="org/mozilla/webclient/test/**" /> 
+    </jar>
+
+    <copy todir="${dist.home}/components" 
+          file="${basedir}/../dom/src/${so.prefix}javadom.${so.extension}" />
+    <copy todir="${dist.home}" 
+         file="${basedir}/../dom/jni/${so.prefix}javadomjni.${so.extension}" />
+    <copy todir="${dist.home}" 
+          file="${basedir}/../webclient/src_moz/${so.prefix}${name}.${so.extension}" />
+
+    <copy tofile="${dist.home}/build.xml" file="webclient-dist.xml" />
+
+    <zip destfile="${name}_${version}.zip" basedir="${dist.home}" />
+    <copy todir="${dist.home}" file="${name}_${version}.zip" />
+    <delete file="${name}_${version}.zip" />
+
+  </target>
+
+  <target name="test.dist" depends="prepare,clean.dev.build">
+
+    <unzip dest="${moz.dist}/bin" src="${dist.home}/${name}_${version}.zip" />
+
+    <ant inheritAll="false" dir="${moz.dist}/bin"/>
+
+    <antcall target="clean.test.dist" />
+
+  </target>
+
+  <target name="clean.test.dist">
+
+    <delete file="${moz.dist}/bin/build.xml" />
+    <delete file="${moz.dist}/bin/components/${so.prefix}javadom.${so.extension}" />
+    <delete file="${moz.dist}/bin/${so.prefix}javadomjni.${so.extension}" />
+    <delete file="${moz.dist}/bin/${so.prefix}${name}.${so.extension}" />
+    <delete file="${moz.dist}/bin/${name}.jar" />
+
+  </target>
+
+  <target name="clean.dev.build" depends="prepare"
+          description="remove in-place binaries for development work">
+    <delete file="${basedir}/../dom/src/${so.prefix}javadom.${so.extension}" />
+    <delete file="${basedir}/../dom/jni/${so.prefix}javadomjni.${so.extension}" />
+    <delete file="${basedir}/../webclient/src_moz/${so.prefix}webclient.${so.extension}" />
+    <delete dir="${build.home}" />
+
+    <delete file="${moz.dist}/lib/components/${so.prefix}javadom.${so.extension}" />
+    <delete file="${moz.dist}/bin/components/${so.prefix}javadom.${so.extension}" />
+    <delete file="${moz.dist}/bin/${so.prefix}javadomjni.${so.extension}" />
+    <delete file="${moz.dist}/bin/${so.prefix}webclient.${so.extension}" />
+
+  </target>
+
+  <target name="compile.test">
+    <ant dir="${basedir}/../webclient" target="compile.test" />
+  </target>
+
+  <target name="clean">
+    <delete dir="${dist.home}" />
+  </target>
+
+</project>

@@ -28,9 +28,9 @@
 
 <project name="java.supplement" default="main" basedir=".">
 
-  <property name="Name" value="java.supplement"/>
-  <property name="name" value="java.supplement"/>
-  <property name="version" value="20020930"/>
+  <property name="Name" value="Webclient"/>
+  <property name="name" value="webclient"/>
+  <property name="version" value="20040929"/>
 
 <!-- ************ Per user local properties ******************************* -->
 
@@ -87,6 +87,8 @@
     <ant dir="${basedir}/dom" target="clean"/>
 
     <ant dir="${basedir}/webclient" target="clean"/>
+
+    <ant dir="${basedir}/dist" target="clean"/>
 
   </target>
 
