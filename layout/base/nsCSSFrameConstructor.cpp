@@ -324,7 +324,7 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
           }
   
         } else {
-          contentString = '"';
+          contentString = '\"';
         }
       }
       break;
@@ -5121,6 +5121,14 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
     
   } else if (nsHTMLAtoms::inlineFrame == frameType) {
     rv = NS_NewInlineFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
+  
+  } else if (nsHTMLAtoms::lineFrame == frameType) {
+    rv = NS_NewFirstLineFrame(&newFrame);
     if (NS_SUCCEEDED(rv)) {
       newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
       nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
