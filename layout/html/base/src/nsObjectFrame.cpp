@@ -4175,3 +4175,4 @@ void nsPluginInstanceOwner::FixUpPluginWindow()
 }
 
 #endif // XP_MAC
+ 
