@@ -800,7 +800,7 @@ struct StatefulData {
   PRBool          mStateful;
 }; 
 
-PRBool SheetHasStatefulStyle(nsISupports* aElement, void *aData)
+static PRBool SheetHasStatefulStyle(nsISupports* aElement, void *aData)
 {
   nsIStyleSheet* sheet = (nsIStyleSheet*)aElement;
   StatefulData* data = (StatefulData*)aData;
