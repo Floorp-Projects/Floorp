@@ -2310,14 +2310,9 @@ XULDocumentImpl::GetElementById(const nsString& aId, nsIDOMElement** aReturn)
         return rv;
     }
 
-    // Didn't find it in our hash table. Walk the tree looking for the node
-
-    // I'd like to make this an NS_ERROR(), but am sure someone would
-    // just comment it out :-/. This should've all been set up when
-    // nsRDFElement::SetDocument() got called. (Of course, somebody
-    // could've inserted a non-RDF element into this tree, so, I guess
-    // we'll leave it as a warning for now...)
-    NS_WARNING("unable to find hashed element; crawling the tree to find it");
+    // Didn't find it in our hash table. Walk the tree looking for the
+    // node. This happens for elements that aren't nsRDFElement
+    // objects (e.g., HTML content).
 
     *aReturn = nsnull;
     SearchForNodeByID(aId, mRootContent, aReturn);
