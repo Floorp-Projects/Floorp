@@ -385,7 +385,10 @@ nsXIEngine::Install(int aCustom, nsComponentList *aComps, char *aDestination)
                         compNum, mTotalComps, nsInstallDlg::ACT_INSTALL);
                     err = InstallXPI(currComp, &stub);
                     if (err != OK)
-                        ErrorHandler(err); // handle and continue
+                    if (err == E_INSTALL)
+                        ErrorHandler(err, currComp->GetArchive()); //handle E_INSTALL separately
+                    else
+                        ErrorHandler(err); //handle and continue 
                     compNum++;
                 }
             }
