@@ -44,7 +44,7 @@ static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kPluginHostIID, NS_IPLUGINHOST_IID);
 static NS_DEFINE_IID(kPluginManagerIID, NS_IPLUGINMANAGER_IID);
 
-static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 // FIXME -- need prototypes for these functions!!! XXX
