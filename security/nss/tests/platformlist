@@ -1,13 +1,10 @@
-AIX_3_64_bit
-HP-UX_B.11.00_64_bit
-OSF1_V5.0
-RH_Linux_6.2_(Zoot)
-RH_Linux_7.1_(Seawolf)
-SunOS_5.6
-SunOS_5.8_32_bit
-SunOS_5.8_64_bit
+Darwin_6.5
+HP-UX_B.11.00_32bit
+HP-UX_B.11.00_64bit
+RH_Linux_7.2
+RH_Linux_AdvSvr
+SunOS_5.8_32bit
+SunOS_5.8_64bit
 Windows-2000
-Windows-NT-4.0
-SunOS_5.8_i86pc
-SunOS_5.9_i86pc
+Windows-XP
 
