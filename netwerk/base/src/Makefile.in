@@ -33,6 +33,8 @@ REQUIRES	= xpcom \
 		  exthandler \
 		  mimetype \
 		  intl \
+		  uconv \
+		  locale \
 		  pref \
 		  $(NULL)
 

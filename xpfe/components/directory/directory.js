@@ -258,7 +258,7 @@ function OnClick(event, node)
     if( tree.selectedItems.length == 1 ) {
         var selectedItem = tree.selectedItems[0];
         var url = selectedItem.getAttribute("URL");
-        
+
         window._content.location.href = url;
         
         // set window title

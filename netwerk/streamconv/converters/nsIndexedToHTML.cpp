@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Bradley Baetz <bbaetz@cs.mcgill.ca>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -39,17 +39,38 @@
 #include "nsNetUtil.h"
 #include "nsIStringStream.h"
 #include "nsEscape.h"
+#include "nsIDirIndex.h"
+#include "prtime.h"
+#include "nsDateTimeFormatCID.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsIndexedToHTML,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsIndexedToHTML,
+                              nsIDirIndexListener,
                               nsIStreamConverter,
                               nsIRequestObserver,
-                              nsIStreamListener);
+                              nsIStreamListener)
 
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 NS_IMETHODIMP
-nsIndexedToHTML::Convert(nsIInputStream *aFromStream,
-                         const PRUnichar *aFromType, const PRUnichar *aToType,
-                         nsISupports *aCtxt, nsIInputStream * *_retval) {
+nsIndexedToHTML::Init(nsIStreamListener* aListener) {
+    nsresult rv = NS_OK;
+
+    mListener = aListener;
+
+    nsCOMPtr<nsILocaleService> localeServ = do_GetService(NS_LOCALESERVICE_CONTRACTID);
+    localeServ->GetApplicationLocale(getter_AddRefs(mLocale));
+
+    mDateTime = do_CreateInstance(kDateTimeFormatCID, &rv);
+
+    return rv;
+}
+
+NS_IMETHODIMP
+nsIndexedToHTML::Convert(nsIInputStream* aFromStream,
+                         const PRUnichar* aFromType,
+                         const PRUnichar* aToType,
+                         nsISupports* aCtxt,
+                         nsIInputStream** res) {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
@@ -58,48 +79,93 @@ nsIndexedToHTML::AsyncConvertData(const PRUnichar *aFromType,
                                   const PRUnichar *aToType,
                                   nsIStreamListener *aListener,
                                   nsISupports *aCtxt) {
-    NS_ASSERTION(aListener, "null pointer");
-    mListener = aListener;
-    return NS_OK;
+    return Init(aListener);
 }
 
 NS_IMETHODIMP
-nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) 
-{
+nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
+    nsresult rv;
+
     nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
     nsCOMPtr<nsIURI> uri;
-    channel->GetURI(getter_AddRefs(uri));
-    uri->GetPath(getter_Copies(mCurrentPath));
+    rv = channel->GetURI(getter_AddRefs(uri));
+    if (NS_FAILED(rv)) return rv;
 
-    nsString buffer;
-//    buffer.AssignWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">");    
-    buffer.AssignWithConversion("");
+    mParser = do_CreateInstance("@mozilla.org/dirIndexParser;1",&rv);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mParser->SetListener(this);
+    if (NS_FAILED(rv)) return rv;
     
-    buffer.AppendWithConversion("<html>\n<head><title> Index of "); //FIX i18n.
-    buffer.AppendWithConversion(mCurrentPath);
-    buffer.StripChar('/', buffer.Length() - 1);
-    buffer.AppendWithConversion("</title></head>\n<body><pre>\n");
+    rv = mParser->OnStartRequest(request, aContext);
+    if (NS_FAILED(rv)) return rv;
 
-    buffer.AppendWithConversion("<H1> Index of "); //FIX i18n.
-    buffer.AppendWithConversion(mCurrentPath);
-    buffer.AppendWithConversion("</H1>\n");
-    buffer.AppendWithConversion("<hr><table border=0>\n");
+    nsXPIDLCString tmp;
+    rv = uri->GetSpec(getter_Copies(tmp));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsAutoString baseUri;
+    baseUri.AssignWithConversion(tmp);
+    nsXPIDLCString scheme;
+    rv = uri->GetScheme(getter_Copies(scheme));
+    if (NS_FAILED(rv)) return rv;
+  
+    nsString buffer;
+    buffer.AssignWithConversion("<!DOCTYPE HTML PUBLIC \"-//W3C//DTD HTML 3.2 Final//EN\">\n");    
+    
+    // Anything but a gopher url needs to end in a /,
+    // otherwise we end up linking to file:///foo/dirfile
+    const char gopherProt[] = "gopher";
+    if (nsCRT::strncmp(scheme.get(),gopherProt,sizeof(gopherProt)-1)) {
+        PRUnichar sep;
+        const char fileProt[] = "file";
+        if (!nsCRT::strncmp(scheme.get(),fileProt,sizeof(fileProt)-1)) {
+            // How do I do this in an XP way???
+#ifdef XP_MAC
+            sep = ':';
+#else
+            sep = '/';
+#endif
+        } else {
+            sep = '/';
+        }
+        if (baseUri[baseUri.Length()-1] != sep) {
+            baseUri.Append(sep);
+        }
+    }
+
+    char* spec = nsCRT::strdup(tmp.get());
+    nsUnescape(spec);
+    
+    buffer.Append(NS_LITERAL_STRING("<html>\n<head><title>Index of ")); //FIX i18n.
+    buffer.AppendWithConversion(spec);
+    buffer.Append(NS_LITERAL_STRING("</title><base href=\""));
+    buffer.Append(baseUri);
+    buffer.Append(NS_LITERAL_STRING("\">\n"));
+    
+    nsXPIDLCString encoding;
+    rv = mParser->GetEncoding(getter_Copies(encoding));
+    if (NS_SUCCEEDED(rv)) {
+        buffer.Append(NS_LITERAL_STRING("<meta http-equiv=\"Content-Type\" content=\"text/html; charset="));
+        buffer.AppendWithConversion(encoding);
+        buffer.Append(NS_LITERAL_STRING("\">\n"));
+    }
+    
+    buffer.Append(NS_LITERAL_STRING("</head>\n<body><pre>\n"));
+
+    buffer.Append(NS_LITERAL_STRING("<H1> Index of ")); //FIX i18n.
+    char* escaped = nsEscapeHTML(spec);
+    buffer.AppendWithConversion(escaped);
+    nsMemory::Free(escaped);
+    buffer.Append(NS_LITERAL_STRING("</H1>\n"));
+    buffer.Append(NS_LITERAL_STRING("<hr><table border=0>\n"));
 
 //    buffer.AppendWithConversion("<tr><th>Name</th><th>Size</th><th>Last modified</th><th>Description</th></tr>\n"); //FIX i18n.
-
-    const char * path = mCurrentPath.get();
-    if (path && *path && path[1] != '\0') 
-    {
-        buffer.AppendWithConversion("<tr>\n <td><a HREF=\"");
-        buffer.AppendWithConversion(mCurrentPath);
-        buffer.StripChar('/', buffer.Length() - 1);
-        buffer.AppendWithConversion("/../\"> ..</a></td>\n");
-    }
 
     // Push buffer to the listener now, so the initial HTML will not
     // be parsed in OnDataAvailable().
 
-    nsresult rv = mListener->OnStartRequest(request, aContext);
+    rv = mListener->OnStartRequest(request, aContext);
     if (NS_FAILED(rv)) return rv;
 
     nsCOMPtr<nsIInputStream> inputData;
@@ -108,10 +174,9 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext)
     if (NS_FAILED(rv)) return rv;
 
     inputData = do_QueryInterface(inputDataSup);
+
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, buffer.Length());
-    if (NS_FAILED(rv)) return rv;
-    buffer.AssignWithConversion("");
     return rv;
 }
 
@@ -120,170 +185,130 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                nsresult aStatus) {
     nsresult rv = NS_OK;
     nsString buffer;
-    buffer.AssignWithConversion("</table><hr></pre></body></html>\n");    
+    buffer.Assign(NS_LITERAL_STRING("</table><hr></pre></body></html>\n"));
     
     nsCOMPtr<nsIInputStream> inputData;
     nsCOMPtr<nsISupports>    inputDataSup;
-
+    
     rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), buffer);
     if (NS_FAILED(rv)) return rv;
-
+    
     inputData = do_QueryInterface(inputDataSup);
-
+    
     rv = mListener->OnDataAvailable(request, aContext,
                                     inputData, 0, buffer.Length());
     if (NS_FAILED(rv)) return rv;
 
+    rv = mParser->OnStopRequest(request, aContext, aStatus);
+    if (NS_FAILED(rv)) return rv;
+
+    mParser = 0;
+    
     return mListener->OnStopRequest(request, aContext, aStatus);
 }
 
-nsresult 
-nsIndexedToHTML::Handle201(char* buffer, nsString &pushBuffer)
-{
-    // buffer should be in the format:
-    // filename content-length last-modified file-type
-
-    if (buffer == nsnull)
-        return NS_ERROR_NULL_POINTER;
-
-    char* bufferOffset = nsnull;
-
-    if (*buffer == '\"') {
-        buffer++;
-        bufferOffset = PL_strchr((const char*)buffer, '\"');
-    } else {
-        bufferOffset = PL_strchr((const char*)buffer, ' ');
-    }
-
-    if (bufferOffset == nsnull)
-        return NS_ERROR_FAILURE;   
-
-    *bufferOffset = '\0';
-    nsCString filename(buffer);
-    ++bufferOffset;
-   
-    pushBuffer.AppendWithConversion("<tr>\n <td>");
-    pushBuffer.AppendWithConversion("<a HREF=\"");
-    
-    const char * path = mCurrentPath.get();
-    
-    if (path && *path && path[1] != '\0') { 
-        pushBuffer.AppendWithConversion(mCurrentPath);
-        pushBuffer.StripChar('/', pushBuffer.Length() - 1);
-    }
-
-    pushBuffer.AppendWithConversion("/");
-    pushBuffer.AppendWithConversion(filename);
-    pushBuffer.AppendWithConversion("\"> ");
-
-    nsUnescape(NS_CONST_CAST(char*, filename.get()));
-    pushBuffer.AppendWithConversion(filename);
-    pushBuffer.AppendWithConversion("</a>");
-    pushBuffer.AppendWithConversion("</td>\n");
-
-    while (*bufferOffset)
-    {
-        char* bufferStart =  bufferOffset;
-
-        if (*bufferStart == '\"') {
-            bufferStart++;
-            bufferOffset = PL_strchr((const char*)bufferStart, '\"');
-        } else {
-            bufferOffset = PL_strchr((const char*)bufferStart, ' ');
-        }
-        
-        if (bufferOffset == nsnull)
-            return NS_ERROR_FAILURE;   
-        
-        *bufferOffset = '\0';
-        ++bufferOffset;
-        nsUnescape(bufferStart);
-        nsCString cstring(bufferStart);
-        cstring.ToLowerCase();
-
-        pushBuffer.AppendWithConversion(" <td>");
-        pushBuffer.AppendWithConversion(cstring);
-        pushBuffer.AppendWithConversion("</td>\n");
-    }
-
-    pushBuffer.AppendWithConversion("</tr>");
-    pushBuffer.AppendWithConversion(CRLF);
-
-//    nsCString x; x.AssignWithConversion(pushBuffer);
-//    printf("/n/n%s/n/n", (const char*)x);
-
-    return NS_OK;
+NS_IMETHODIMP
+nsIndexedToHTML::OnDataAvailable(nsIRequest *aRequest,
+                                 nsISupports *aCtxt,
+                                 nsIInputStream* aInput,
+                                 PRUint32 aOffset,
+                                 PRUint32 aCount) {
+    return mParser->OnDataAvailable(aRequest, aCtxt, aInput, aOffset, aCount);
 }
 
-#define NSINDEXTOHTML_BUFFER_SIZE 4096
-
 NS_IMETHODIMP
-nsIndexedToHTML::OnDataAvailable(nsIRequest* request, nsISupports *aContext,
-                                 nsIInputStream *aInStream,
-                                 PRUint32 aOffset, PRUint32 aCount) 
-{
-    nsresult rv = NS_OK;
+nsIndexedToHTML::OnIndexAvailable(nsIRequest *aRequest,
+                                  nsISupports *aCtxt,
+                                  nsIDirIndex *aIndex) {
+    if (!aIndex)
+        return NS_ERROR_NULL_POINTER;
+
     nsString pushBuffer;
+   
+    pushBuffer.Append(NS_LITERAL_STRING("<tr>\n <td>"));
+    pushBuffer.Append(NS_LITERAL_STRING("<a HREF=\""));
 
-    char buffer[NSINDEXTOHTML_BUFFER_SIZE+1];
-    char* startOffset = nsnull;
-    char* endOffset = nsnull;
+    nsXPIDLCString loc;
+    aIndex->GetLocation(getter_Copies(loc));
+    
+    pushBuffer.AppendWithConversion(loc);
 
-    while (aCount)
-    {
-        PRUint32 read = 0;
-        rv = aInStream->Read(buffer, NSINDEXTOHTML_BUFFER_SIZE, &read);
-        if (NS_FAILED(rv)) return rv;
+    pushBuffer.Append(NS_LITERAL_STRING("\"> <img border=\"0\" align=\"absbottom\" src=\""));
 
-        buffer[read] = '\0';
-        aCount -= read;
-        startOffset = (char*)&buffer;
+    PRUint32 type;
+    aIndex->GetType(&type);
+    switch (type) {
+    case nsIDirIndex::TYPE_DIRECTORY:
+    case nsIDirIndex::TYPE_SYMLINK:
+        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-menu"));
+        break;
+    case nsIDirIndex::TYPE_FILE:
+    case nsIDirIndex::TYPE_UNKNOWN:
+        pushBuffer.Append(NS_LITERAL_STRING("internal-gopher-unknown"));
+        break;
+    }
+    pushBuffer.Append(NS_LITERAL_STRING("\"> "));
 
-        while (startOffset)
-        {
-            // TODO: we should handle the 200 line.  For now,
-            // we assume that it contains:
-            //
-            // 200: filename content-length last-modified file-type\n
+    nsXPIDLString tmp;
+    aIndex->GetDescription(getter_Copies(tmp));
+    PRUnichar* escaped = nsEscapeHTML2(tmp.get(), tmp.Length());
+    pushBuffer.Append(escaped);
+    nsMemory::Free(escaped);
+    pushBuffer.Append(NS_LITERAL_STRING("</a>"));
+    pushBuffer.Append(NS_LITERAL_STRING("</td>\n"));
 
-            // Look for a line begining with "201: " 
-            startOffset = PL_strstr((const char*)startOffset, "201: ");
-            if (startOffset == nsnull)
-                break;
+    pushBuffer.Append(NS_LITERAL_STRING(" <td>"));
 
-            endOffset = PL_strchr((const char*)startOffset, '\n');
-            if (endOffset == nsnull)
-                break;   
-            
-            *endOffset = '\0';
-            
-            rv = Handle201(startOffset + 5, pushBuffer);
-            if (NS_FAILED(rv)) return rv;
-            
-            startOffset = ++endOffset;
-        }
+    PRUint32 size;
+    aIndex->GetSize(&size);
+    
+    if (size != PRUint32(-1)) {
+        pushBuffer.AppendInt(size);
+    } else {
+        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));
     }
 
-    if (!pushBuffer.IsEmpty()) {
-        nsCOMPtr<nsIInputStream> inputData;
-        nsCOMPtr<nsISupports>    inputDataSup;
-        rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup), pushBuffer);
+    pushBuffer.Append(NS_LITERAL_STRING("</td>\n"));
 
-        if (NS_FAILED(rv))
-            return rv;
+    pushBuffer.Append(NS_LITERAL_STRING(" <td>"));
+    
 
-        inputData = do_QueryInterface(inputDataSup);
-        
-        rv = mListener->OnDataAvailable(request, 
-                                        aContext,
-                                        inputData, 
-                                        0, 
-                                        pushBuffer.Length());
+    PRTime t;
+    aIndex->GetLastModified(&t);
+
+    if (t == -1) {
+        pushBuffer.Append(NS_LITERAL_STRING("&nbsp;"));
+    } else {
+        nsAutoString formatted;
+        mDateTime->FormatPRTime(mLocale,
+                                kDateFormatShort,
+                                kTimeFormatSeconds,
+                                t,
+                                formatted);
+        pushBuffer.Append(formatted);
     }
+
+    pushBuffer.Append(NS_LITERAL_STRING("</td>\n"));
+    pushBuffer.Append(NS_LITERAL_STRING("</tr>\n"));
+    
+    nsCOMPtr<nsIInputStream> inputData;
+    nsCOMPtr<nsISupports>    inputDataSup;
+    nsresult rv = NS_NewStringInputStream(getter_AddRefs(inputDataSup),
+                                          pushBuffer);
+    
+    if (NS_FAILED(rv))
+        return rv;
+    
+    inputData = do_QueryInterface(inputDataSup);
+    
+    rv = mListener->OnDataAvailable(aRequest, 
+                                    aCtxt,
+                                    inputData, 
+                                    0, 
+                                    pushBuffer.Length());
 
     return rv; 
-} 
-
+}
 
 nsIndexedToHTML::nsIndexedToHTML() {
     NS_INIT_REFCNT();

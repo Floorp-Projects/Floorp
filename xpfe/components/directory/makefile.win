@@ -51,6 +51,7 @@ REQUIRES	= xpcom \
 		  dom \
 		  webshell \
 		  uconv \
+		  pref \
 		  uriloader \
 		  windowwatcher \
 		  content \

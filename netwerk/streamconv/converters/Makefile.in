@@ -34,6 +34,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  util \
 		  pref \
+		  uconv \
 		  exthandler \
 		  $(ZLIB_REQUIRES) \
 		  $(NULL)
@@ -51,6 +52,8 @@ CPPSRCS		= \
 		nsHTTPChunkConv.cpp \
 		nsHTTPCompressConv.cpp \
 		nsTXTToHTMLConv.cpp \
+		nsDirIndex.cpp \
+		nsDirIndexParser.cpp \
 		nsIndexedToHTML.cpp \
 		nsBinHexDecoder.cpp \
 		$(NULL)

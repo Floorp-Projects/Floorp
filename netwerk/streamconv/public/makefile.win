@@ -30,6 +30,8 @@ XPIDLSRCS =                        \
         .\nsIStreamConverterService.idl \
         .\mozITXTToHTMLConv.idl \
         .\nsITXTToHTMLConv.idl \
+        .\nsIDirIndex.idl \
+        .\nsIDirIndexListener.idl \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

@@ -52,7 +52,8 @@
 #include "nsISupportsArray.h"
 #include "nsIRDFLiteral.h"
 #include "nsXPIDLString.h"
-
+#include "nsIDirIndexListener.h"
+#include "nsIFTPChannel.h"
 
 class nsDirectoryViewerFactory : public nsIDocumentLoaderFactory
 {
@@ -67,7 +68,7 @@ public:
     NS_IMETHOD CreateInstance(const char *aCommand,
                               nsIChannel* aChannel,
                               nsILoadGroup* aLoadGroup,
-                              const char* aContentType, 
+                              const char* aContentType,
                               nsISupports* aContainer,
                               nsISupports* aExtraInfo,
                               nsIStreamListener** aDocListenerResult,
@@ -80,21 +81,32 @@ public:
 };
 
 
-class nsHTTPIndex : public nsIHTTPIndex, public nsIRDFDataSource
+class nsHTTPIndex : public nsIHTTPIndex,
+                    public nsIRDFDataSource,
+                    public nsIStreamListener,
+                    public nsIDirIndexListener,
+                    public nsIInterfaceRequestor,
+                    public nsIFTPEventSink
 {
 private:
 
 	// note: these are NOT statics due to the native of nsHTTPIndex
 	// where it may or may not be treated as a singleton
 
-	nsIRDFResource		*kNC_Child;
-	nsIRDFResource		*kNC_loading;
-	nsIRDFResource		*kNC_URL;
-	nsIRDFResource		*kNC_IsContainer;
-	nsIRDFLiteral		*kTrueLiteral;
-	nsIRDFLiteral		*kFalseLiteral;
+    nsCOMPtr<nsIRDFResource>     kNC_Child;
+    nsCOMPtr<nsIRDFResource>     kNC_Comment;
+    nsCOMPtr<nsIRDFResource>     kNC_Loading;
+    nsCOMPtr<nsIRDFResource>     kNC_URL;
+    nsCOMPtr<nsIRDFResource>     kNC_Description;
+    nsCOMPtr<nsIRDFResource>     kNC_ContentLength;
+    nsCOMPtr<nsIRDFResource>     kNC_LastModified;
+    nsCOMPtr<nsIRDFResource>     kNC_ContentType;
+    nsCOMPtr<nsIRDFResource>     kNC_FileType;
+    nsCOMPtr<nsIRDFResource>     kNC_IsContainer;
+    nsCOMPtr<nsIRDFLiteral>      kTrueLiteral;
+    nsCOMPtr<nsIRDFLiteral>      kFalseLiteral;
 
-	nsCOMPtr<nsIRDFService> mDirRDF;
+	nsCOMPtr<nsIRDFService>      mDirRDF;
 
 protected:
 	// We grab a reference to the content viewer container (which
@@ -103,21 +115,25 @@ protected:
 	// content viewer. We'll know that this has happened once we receive
 	// an OnStartRequest() notification
 
-	nsCOMPtr<nsIRDFDataSource>	mInner;
-	nsCOMPtr<nsISupportsArray>	mConnectionList;
-	nsCOMPtr<nsISupportsArray>  mNodeList;
-	nsCOMPtr<nsITimer>		    mTimer;
-	nsISupports			        *mContainer;	// [WEAK]
-	nsCString			        mBaseURL;
-	nsCString                   mEncoding;
+	nsCOMPtr<nsIRDFDataSource>	 mInner;
+	nsCOMPtr<nsISupportsArray>	 mConnectionList;
+	nsCOMPtr<nsISupportsArray>   mNodeList;
+	nsCOMPtr<nsITimer>		     mTimer;
+    nsCOMPtr<nsIDirIndexParser>  mParser;
+	nsCString			         mBaseURL;
+	nsCString                    mEncoding;
+    PRBool                       mBindToGlobalObject;
+    nsIInterfaceRequestor*       mRequestor; // WEAK
+    nsCOMPtr<nsIRDFResource>     mDirectory;
 
-    nsHTTPIndex(nsISupports* aContainer);
+    nsHTTPIndex(nsIInterfaceRequestor* aRequestor);
 	nsresult	CommonInit(void);
 	nsresult 	Init(nsIURI* aBaseURL);
+    void        GetDestination(nsIRDFResource* r, nsXPIDLCString& dest);
 	PRBool		isWellknownContainerURI(nsIRDFResource *r);
-    
-    // Get the destination of the nsIRDFResource
-    void GetDestination(nsIRDFResource *r, nsXPIDLCString& dest);
+    nsresult    AddElement(nsIRDFResource *parent, nsIRDFResource *prop,
+                           nsIRDFNode *child);
+
     static void FireTimer(nsITimer* aTimer, void* aClosure);
 
 public:
@@ -125,13 +141,21 @@ public:
 	virtual		~nsHTTPIndex();
 	nsresult	Init(void);
 
-    static	nsresult	Create(nsIURI* aBaseURI, nsISupports* aContainer, nsIHTTPIndex** aResult);
+    static	nsresult	Create(nsIURI* aBaseURI, nsIInterfaceRequestor* aContainer,
+                               nsIHTTPIndex** aResult);
 
 	// nsIHTTPIndex interface
 	NS_DECL_NSIHTTPINDEX
 
 	// NSIRDFDataSource interface
 	NS_DECL_NSIRDFDATASOURCE
+
+    NS_DECL_NSIREQUESTOBSERVER
+    NS_DECL_NSISTREAMLISTENER
+    
+    NS_DECL_NSIDIRINDEXLISTENER
+    NS_DECL_NSIINTERFACEREQUESTOR
+    NS_DECL_NSIFTPEVENTSINK
 
 	// nsISupports interface
 	NS_DECL_ISUPPORTS
