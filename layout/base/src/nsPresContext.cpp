@@ -244,22 +244,25 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
   // Initialize our state from the user preferences
   GetUserPreferences();
 
-  // Have the root frame's style context remap its style based on the
-  // user preferences
-  nsIFrame*         rootFrame;
-  nsIStyleContext*  rootStyleContext;
+  if (mShell) {
+    // Have the root frame's style context remap its style based on the
+    // user preferences
+    nsIFrame* rootFrame;
 
-  mShell->GetRootFrame(&rootFrame);
-  if (nsnull != rootFrame) {
-    rootFrame->GetStyleContext(&rootStyleContext);
-    rootStyleContext->RemapStyle(this);
-    NS_RELEASE(rootStyleContext);
-  
-    // Force a reflow of the root frame
-    // XXX We really should only do a reflow if a preference that affects
-    // formatting changed, e.g., a font change. If it's just a color change
-    // then we only need to repaint...
-    mShell->StyleChangeReflow();
+    mShell->GetRootFrame(&rootFrame);
+    if (rootFrame) {
+      nsIStyleContext*  rootStyleContext;
+
+      rootFrame->GetStyleContext(&rootStyleContext);
+      rootStyleContext->RemapStyle(this);
+      NS_RELEASE(rootStyleContext);
+    
+      // Force a reflow of the root frame
+      // XXX We really should only do a reflow if a preference that affects
+      // formatting changed, e.g., a font change. If it's just a color change
+      // then we only need to repaint...
+      mShell->StyleChangeReflow();
+    }
   }
 }
 
