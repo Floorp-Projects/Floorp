@@ -454,6 +454,21 @@ function analyze(aMsgHdr, aNextFunction)
         }
     };
 
+    // if we are whitelisting, check if the email address is in the whitelist addressbook.
+    var spamSettings = aMsgHdr.folder.server.spamSettings;
+    if (spamSettings.useWhiteList && spamSettings.whiteListAbURI)
+    {
+      var whiteListDirectory = RDF.GetResource(spamSettings.whiteListAbURI).QueryInterface(Components.interfaces.nsIAbMDBDirectory);
+      var headerParser = Components.classes["@mozilla.org/messenger/headerparser;1"].getService(Components.interfaces.nsIMsgHeaderParser);
+      var authorEmailAddress = new Object;
+      headerParser.extractHeaderAddressMailboxes(null, aMsgHdr.author, authorEmailAddress);
+      if (whiteListDirectory.hasCardForEmailAddress(authorEmailAddress.value))
+      {
+        listener.onMessageClassified(aMsgHdr.folder.generateMessageURI(aMsgHdr.messageKey), nsIJunkMailPlugin.GOOD);
+        return;
+      }
+    }
+
     var messageURI = aMsgHdr.folder.generateMessageURI(aMsgHdr.messageKey)
         + "?fetchCompleteMessage=true";
     gJunkmailComponent.classifyMessage(messageURI, msgWindow, listener);
