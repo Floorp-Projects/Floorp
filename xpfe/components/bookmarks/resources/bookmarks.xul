@@ -96,11 +96,6 @@
          <treerow>
            <treecell indent="true" value="rdf:http://home.netscape.com/NC-rdf#Name"/>
            <treecell value="rdf:http://home.netscape.com/NC-rdf#URL"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#ShortcutURL"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#Description"/>
-           <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-           <treecell value="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
-           <treecell value="rdf:http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
          </treerow>
        </treeitem>
       </treechildren>
@@ -109,21 +104,11 @@
 
   <treecol persist="width" id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
   <treecol persist="width" id="URLColumn" rdf:resource="http://home.netscape.com/NC-rdf#URL"/>
-  <treecol persist="width" id="ShortcutURLColumn" rdf:resource="http://home.netscape.com/NC-rdf#ShortcutURL"/>
-  <treecol persist="width" id="DescriptionColumn" rdf:resource="http://home.netscape.com/NC-rdf#Description"/>
-  <treecol persist="width" id="LastVisitColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastVisitDate"/>
-  <treecol persist="width" id="AddedOnColumn" rdf:resource="http://home.netscape.com/NC-rdf#BookmarkAddDate"/>
-  <treecol persist="width" id="LastModColumn" rdf:resource="http://home.netscape.com/WEB-rdf#LastModifiedDate"/>
 
   <treehead>
     <treerow>
       <treecell value="&tree.header.name.label;" onclick="return doSort('NameColumn');" observes="NameColumn" />
       <treecell value="&tree.header.url.label;" onclick="return doSort('URLColumn');" observes="URLColumn" />
-      <treecell value="&tree.header.shortcut.label;" onclick="return doSort('ShortcutURLColumn');" observes="ShortcutURLColumn" />
-      <treecell value="&tree.header.description.label;" onclick="return doSort('DescriptionColumn');" observes="DescriptionColumn" />
-      <treecell value="&tree.header.lastvisit.label;" onclick="return doSort('LastVisitColumn');" observes="LastVisitColumn" />
-      <treecell value="&tree.header.addedon.label;" onclick="return doSort('AddedOnColumn');" observes="AddedOnColumn" />
-      <treecell value="&tree.header.lastmod.label;" onclick="return doSort('LastModColumn');" observes="LastModColumn" />
     </treerow>
   </treehead>
 </tree>
