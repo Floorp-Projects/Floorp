@@ -76,6 +76,7 @@ else
 CSRCS = \
 	ldvector.c \
 	prng_fips1861.c \
+	sysrand.c \
 	sha_fast.c \
 	md2.c \
 	md5.c \

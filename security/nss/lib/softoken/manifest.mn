@@ -73,5 +73,4 @@ CSRCS = \
 	pkcs11u.c  \
 	rawhash.c \
 	rsawrapr.c  \
-	sysrand.c \
 	$(NULL)
