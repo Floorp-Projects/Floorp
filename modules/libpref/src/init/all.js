@@ -156,10 +156,12 @@ pref("browser.frames.enabled", true);
 pref("browser.forms.submit.backwards_compatible", true);
 
 // Tab browser preferences.
+pref("browser.tabs.autoHide", true);
+pref("browser.tabs.loadInBackground", false);
 pref("browser.tabs.opentabfor.middleclick", false);
 pref("browser.tabs.opentabfor.urlbar", false);
+pref("browser.tabs.opentabfor.windowopen", false);
 pref("browser.tabs.opentabfor.bookmarks", false);
-pref("browser.tabs.opentabfor.personaltoolbar", false);
 
 // view source
 pref("view_source.syntax_highlight", true);
