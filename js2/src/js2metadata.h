@@ -613,11 +613,11 @@ public:
     float64     mValue;
 };
 
-// Boolean instances are Callable instances created by the Boolean class, they have an extra field 
+// Boolean instances are PrototypeInstance created by the Boolean class, they have an extra field 
 // that contains the bool data
-class BooleanInstance : public CallableInstance {
+class BooleanInstance : public PrototypeInstance {
 public:
-    BooleanInstance(JS2Class *type) : CallableInstance(type), mValue(false) { }
+    BooleanInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type), mValue(false) { }
 
     bool     mValue;
 };
