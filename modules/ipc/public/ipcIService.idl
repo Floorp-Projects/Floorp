@@ -42,6 +42,8 @@ interface ipcIClientObserver;
 interface ipcIClientQueryHandler;
 
 /**
+ * ipcIService
+ *
  * the IPC service provides the means to communicate with an external IPC
  * daemon and/or other mozilla-based applications on the same physical system.
  * the IPC daemon hosts modules (some builtin and others dynamically loaded)
@@ -98,8 +100,10 @@ interface ipcIService : nsISupports
      * or if there is no client matching the given name, the observer's
      * onClientDown method will be called instead.
      *
-     * @param aName     name of the client being queried.
-     * @param aHandler  handler to be notified asynchronously of result.
+     * @param aName
+     *        the name of the client being queried.
+     * @param aHandler
+     *        the handler to be notified asynchronously of result.
      *
      * @return integer value identifying this query.
      */
@@ -112,8 +116,10 @@ interface ipcIService : nsISupports
      * is no client matching the given name, the observer's onClientDown method
      * will be called instead.
      *
-     * @param aClientID  ID of the client being queried.
-     * @param aHandler   handler to be notified asynchronously of result.
+     * @param aClientID
+     *        the ID of the client being queried.
+     * @param aHandler
+     *        the handler to be notified asynchronously of result.
      *
      * @return integer value identifying this query.
      */
@@ -123,7 +129,8 @@ interface ipcIService : nsISupports
     /**
      * called to cancel a pending query.
      *
-     * @param aQueryID  return value from one of the "query" methods.
+     * @param aQueryID
+     *        the return value from one of the "query" methods.
      */
     void cancelQuery(in unsigned long aQueryID);
 
@@ -132,18 +139,20 @@ interface ipcIService : nsISupports
      * a new client comes online, and the observer's onClientDown method is
      * called whenever a client goes offline.
      *
-     * @param aObserver  the client observer.
+     * @param aObserver
+     *        the client observer.
      */
     void setClientObserver(in ipcIClientObserver aObserver);
 
     /**
      * set a message observer for a particular message target.
      *
-     * @param aTarget    the message target being observed.  any existing
-     *                   observer will be replaced.
-     * @param aObserver  the message observer to receive incoming messages
-     *                   for the specified target.  pass null to remove the
-     *                   existing observer.
+     * @param aTarget
+     *        the message target being observed.  any existing observer will
+     *        be replaced.
+     * @param aObserver
+     *        the message observer to receive incoming messages for the
+     *        specified target.  pass null to remove the existing observer.
      */
     void setMessageObserver(in nsIDRef aTarget, in ipcIMessageObserver aObserver);
 
@@ -151,14 +160,16 @@ interface ipcIService : nsISupports
      * send message asynchronously to a client or a module in the IPC daemon.
      * there is no guarantee that the message will be delivered.
      *
-     * @param aClientID  the client ID of the foreign application that should
-     *                   receive this message.  pass 0 to send a message to a
-     *                   module in the IPC daemon.
-     * @param aTarget    the target of the message.  if aClientID is 0, then
-     *                   this is the ID of the daemon module that should
-     *                   receive this message.
-     * @param aData      the message data.
-     * @param aDataLen   the message length.
+     * @param aClientID
+     *        the client ID of the foreign application that should receive this
+     *        message.  pass 0 to send a message to a module in the IPC daemon.
+     * @param aTarget
+     *        the target of the message.  if aClientID is 0, then this is the
+     *        ID of the daemon module that should receive this message.
+     * @param aData
+     *        the message data.
+     * @param aDataLen
+     *        the message length.
      */
     void sendMessage(in unsigned long aClientID,
                      in nsIDRef       aTarget,
@@ -167,16 +178,21 @@ interface ipcIService : nsISupports
                      in unsigned long aDataLen);
 };
 
+/**
+ * ipcIMessageObserver
+ */
 [scriptable, uuid(e40a4a3c-2dc1-470e-ab7f-5675fe1f1384)]
 interface ipcIMessageObserver : nsISupports
 {
     /**
-     * @param aTarget   the target of the message, corresponding to the target
-     *                  this observer was registered under.  this parameter is
-     *                  passed to allow an observer instance to receive
-     *                  messages for more than one target.
-     * @param aData     the data of the message.
-     * @param aDataLen  the data length of the message.
+     * @param aTarget
+     *        the target of the message, corresponding to the target this
+     *        observer was registered under.  this parameter is passed to allow
+     *        an observer instance to receive messages for more than one target.
+     * @param aData
+     *        the data of the message.
+     * @param aDataLen
+     *        the data length of the message.
      */
     void onMessageAvailable(in nsIDRef       aTarget,
                            [array, const, size_is(aDataLen)]
@@ -184,6 +200,9 @@ interface ipcIMessageObserver : nsISupports
                             in unsigned long aDataLen);
 };
 
+/**
+ * ipcIClientObserver
+ */
 [scriptable, uuid(42283079-030c-4b13-b069-a08b7ad5eab2)]
 interface ipcIClientObserver : nsISupports
 {
@@ -194,9 +213,24 @@ interface ipcIClientObserver : nsISupports
                         in unsigned long aClientStatus);
 };
 
+/**
+ * ipcIClientQueryHandler
+ *
+ * the methods on this interface are called when the result of a client query
+ * becomes available.
+ */
 [scriptable, uuid(6fefea5c-f747-4bb0-972f-2a7b363a01db)]
 interface ipcIClientQueryHandler : nsISupports
 {
+    /**
+     * called on successful completion of a client query.
+     *
+     * @param aQueryID
+     *        the return value from one of the "query" methods.
+     * @param aClientID
+     *
+     *     ...
+     */
     void onQueryComplete(in unsigned long aQueryID,
                          in unsigned long aClientID,
                         [array, size_is(aNameCount)]
