@@ -522,9 +522,12 @@ NS_IMETHODIMP nsLDAPSyncQuery::GetQueryResults(nsILDAPURL *aServerURL,
 
     // Return results
     //
-    if (!mResults.IsEmpty())
+    if (!mResults.IsEmpty()) {
         *_retval = ToNewUnicode(mResults);
-    return NS_OK;
+        if (!_retval)
+          rv = NS_ERROR_OUT_OF_MEMORY;
+    }
+    return rv;
 
 }
 #endif
