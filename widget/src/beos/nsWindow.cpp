@@ -609,7 +609,8 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
         window_feel feel = (is_subset) ? B_FLOATING_SUBSET_WINDOW_FEEL : B_FLOATING_APP_WINDOW_FEEL;
         
         w = new nsWindowBeOS(this, winrect, "", B_NO_BORDER_WINDOW_LOOK, feel,
-                             B_NOT_CLOSABLE | B_AVOID_FOCUS | B_ASYNCHRONOUS_CONTROLS);
+                             B_NOT_CLOSABLE | B_AVOID_FOCUS | B_ASYNCHRONOUS_CONTROLS
+                             | B_NO_WORKSPACE_ACTIVATION);
         if (w)
         {
           // popup window : no border
@@ -1047,19 +1048,19 @@ NS_METHOD nsWindow::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 #endif
 
 		if(mView->Parent() || ! havewindow)
-                       mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
+			mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
 		else
-                       ((nsWindowBeOS *)mView->Window())->ResizeToWithoutEvent(aWidth-1, GetHeight(aHeight)-1);
+			((nsWindowBeOS *)mView->Window())->ResizeToWithoutEvent(aWidth-1, GetHeight(aHeight)-1);
 
 		if(mustunlock)
 			mView->UnlockLooper();
 
                //inform the xp layer of the change in size
-               OnResize(mBounds);
+		OnResize(mBounds);
 
-       } else {
-               OnResize(mBounds);
 	}
+	else
+		OnResize(mBounds);
 
 	return NS_OK;
 }
@@ -1103,23 +1104,22 @@ NS_METHOD nsWindow::Resize(PRInt32 aX,
 		if(mView->Parent() || ! havewindow)
 		{
 			mView->MoveTo(aX, aY);
-                       mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
+			mView->ResizeTo(aWidth-1, GetHeight(aHeight)-1);
 		}
 		else
 		{
 			mView->Window()->MoveTo(aX, aY);
-                       ((nsWindowBeOS *)mView->Window())->ResizeToWithoutEvent(aWidth-1, GetHeight(aHeight)-1);
+			((nsWindowBeOS *)mView->Window())->ResizeToWithoutEvent(aWidth-1, GetHeight(aHeight)-1);
 		}
 
 		if(mustunlock)
 			mView->UnlockLooper();
 
-               //inform the xp layer of the change in size
-               OnResize(mBounds);
+		//inform the xp layer of the change in size
+		OnResize(mBounds);
 
-       } else {
-               OnResize(mBounds);
-	}
+	} else
+		OnResize(mBounds);
 
 	return NS_OK;
 }
