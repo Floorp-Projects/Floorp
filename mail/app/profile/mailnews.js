@@ -70,6 +70,9 @@ pref("mailnews.auto_unzip_saved_attachments", false);
 // is displayed in the message pane or not...
 pref("mailnews.headers.showUserAgent",       false);
 
+// hidden pref for changing how we present attachments in the message pane
+pref("mailnews.attachments.display.largeView", false);
+
 // hidden pref for controlling if the organization string
 // is displayed in the message pane or not...
 pref("mailnews.headers.showOrganization",    false);

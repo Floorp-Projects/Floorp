@@ -29,28 +29,84 @@
 
 /* ::::: msg header toolbars ::::: */
 
+#attachmentView,
 #collapsedHeaderView,
 #expandedHeaderView {
   min-width: 1px;
 }
 
 /* ::::: msg header buttons ::::: */
-
-#expandedAttachmentBox {
-  height: 0;
-  list-style-image: url("chrome://messenger/skin/icons/attach.gif");
-}
-
-/* XXX I should really have a selector rule here to select just .listcell-icon objects underneath the attachmentList listbox */
-
-.listcell-icon
+.headerContainer
 {
-  margin-left: 2px;
-  margin-top: 2px;
+  border-bottom: 1px solid ThreeDDarkShadow;
+  min-width: 1px;
+  background-color: transparent;
 }
 
-#attachmentText {
-  font-weight: bold;
+/* ::::: attachment view ::::: */
+
+#attachmentList
+{
+  -moz-appearance: listbox; 
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+  margin: 5px 30px 5px 15px;
+}
+
+/* XXX: Move all of the description attributes to the toolkit */
+
+description[selectable="true"]
+{
+  margin              : 1px 5px 4px 5px;
+}
+
+descriptionitem
+{
+  border: 1px solid transparent;
+  margin: 1px 1px 1px 1px;
+}
+
+description[selectable="true"]:focus > descriptionitem[selected="true"][current="true"] 
+{
+  border: 1px dotted #F5DB95;
+}
+
+descriptionitem[selected="true"] 
+{
+  background-color: -moz-Dialog;
+  color: -moz-DialogText;
+}
+
+description[selectable="true"]:focus > descriptionitem[selected="true"] 
+{
+  background-color: Highlight;
+  color: HighlightText;
+}
+
+.attachmentBox 
+{
+  width: 15em;
+  max-width: 10em;
+  text-align: left;
+}
+
+.attachmentBox[largeView="true"]
+{
+  -moz-box-align: center;
+  -moz-box-pack: center;
+}
+
+#attachmentView
+{
+  border-right: 1px solid ThreeDShadow;
+  border-left: 1px solid ThreeDShadow;
+  border-top: 1px solid ThreeDShadow;
+  background-color: -moz-Dialog;
 }
 
 /* ::::: msg header captions ::::: */
@@ -60,13 +116,6 @@
   border-left: 1px solid ThreeDShadow;
   -moz-appearance: toolbox;
   background-color: -moz-Dialog;
-}
-
-#collapsedHeaderView,
-#expandedHeaderView {
-  border-bottom: 1px solid ThreeDDarkShadow;
-  min-width: 1px;
-  background-color: transparent;
 }
 
 .headerNameBox {
@@ -141,10 +190,6 @@
 
 /* ::::: collapsed view styles ::::: */
 
-#collapsedAttachmentBox {
-  -moz-box-pack: center;
-}
-
 #collapseddateValue {
   margin: 0 .5em;
   text-align: right;
@@ -171,9 +216,4 @@
 .collapsedHeaderValue {
   margin: 0;
   background-color: transparent;
-}
-
-.collapsedAttachmentButton {
-  list-style-image: url("chrome://messenger/skin/icons/message-mail-attach.gif");
-  margin-right: .5em;
 }

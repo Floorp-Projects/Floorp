@@ -246,81 +246,82 @@
       <box orient="vertical" id="messagesBox" flex="1">
         <hbox id="messengerBox" flex="1" minheight="100" height="100" persist="height">
           <vbox id="threadPaneBox" flex="1">          
-        <tree id="threadTree" flex="2" enableColumnDrag="true" _selectDelay="500" class="plain focusring"
-                     disableKeyNavigation="true"
-                     context="threadPaneContext"
-                     onkeypress="ThreadPaneKeyPress(event);"
-                     onselect="ThreadPaneSelectionChanged();">
-          <treecols pickertooltiptext="&columnChooser.tooltip;">
-            <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true"
-                     class="treecol-image threadColumnHeader" currentView="unthreaded"
-                    display="&threadColumn.label;" tooltiptext="&threadColumn.tooltip;"/>
-            <splitter class="tree-splitter"/>
-            <treecol id="subjectCol" persist="hidden ordinal width" flex="7" ignoreincolumnpicker="true"
-                     label="&subjectColumn.label;" tooltiptext="&subjectColumn.tooltip;"/>
-            <splitter class="tree-splitter"/>
-            <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true"
-                     class="treecol-image junkStatusHeader"
-                     display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="senderOrRecipientCol" persist="hidden ordinal width" flex="4"
-                    label="&senderColumn.label;" tooltiptext="&senderColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="unreadButtonColHeader" persist="hidden ordinal" fixed="true" cycler="true"
-                    class="treecol-image readColumnHeader"
-                    display="&readColumn.label;" tooltiptext="&readColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="dateCol" persist="hidden ordinal width" flex="2"
-                    label="&dateColumn.label;" tooltiptext="&dateColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="statusCol" persist="hidden ordinal width" flex="1" hidden="true"
-                    label="&statusColumn.label;" tooltiptext="&statusColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="sizeCol" persist="hidden ordinal width" flex="1" hidden="true"
-                    label="&sizeColumn.label;" tooltiptext="&sizeColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="flaggedCol" persist="hidden ordinal" fixed="true" cycler="true" hidden="true"
-                    class="treecol-image flagColumnHeader"
-                    display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="labelCol" persist="hidden ordinal width" flex="1" hidden="true"
-                    label="&labelColumn.label;" tooltiptext="&labelColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="priorityCol" persist="hidden ordinal width" flex="1"
-                    label="&priorityColumn.label;" tooltiptext="&priorityColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="unreadCol" persist="hidden ordinal width" flex="1" hidden="true"
-                    label="&unreadColumn.label;" tooltiptext="&unreadColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="totalCol" persist="hidden ordinal width" flex="1" hidden="true"
-                    label="&totalColumn.label;" tooltiptext="&totalColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="locationCol" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true"
-                    label="&locationColumn.label;" tooltiptext="&locationColumn.tooltip;"/>
-           <splitter class="tree-splitter"/>
-           <treecol id="idCol" persist="hidden ordinal width" flex="1" hidden="true"
-                    label="&idColumn.label;" tooltiptext="&idColumn.tooltip;"/>
-          </treecols>
-        <treechildren ondraggesture="BeginDragThreadPane(event);"/>
-      </tree>
-            <vbox id="accountCentralBox" flex="1" collapsed="true">
-              <iframe name="accountCentralPane" width="150" flex="1" src="about:blank"/>
-            </vbox>
+            <tree id="threadTree" flex="2" enableColumnDrag="true" _selectDelay="500" class="plain focusring"
+                         disableKeyNavigation="true"
+                         context="threadPaneContext"
+                         onkeypress="ThreadPaneKeyPress(event);"
+                         onselect="ThreadPaneSelectionChanged();">
+              <treecols pickertooltiptext="&columnChooser.tooltip;">
+                <treecol id="threadCol" persist="hidden ordinal" fixed="true" cycler="true"
+                         class="treecol-image threadColumnHeader" currentView="unthreaded"
+                        display="&threadColumn.label;" tooltiptext="&threadColumn.tooltip;"/>
+                <splitter class="tree-splitter"/>
+                <treecol id="subjectCol" persist="hidden ordinal width" flex="7" ignoreincolumnpicker="true"
+                         label="&subjectColumn.label;" tooltiptext="&subjectColumn.tooltip;"/>
+                <splitter class="tree-splitter"/>
+                <treecol id="junkStatusCol" persist="hidden ordinal width" fixed="true" cycler="true"
+                         class="treecol-image junkStatusHeader"
+                         display="&junkStatusColumn.label;" tooltiptext="&junkStatusColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="senderOrRecipientCol" persist="hidden ordinal width" flex="4"
+                        label="&senderColumn.label;" tooltiptext="&senderColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="unreadButtonColHeader" persist="hidden ordinal" fixed="true" cycler="true"
+                        class="treecol-image readColumnHeader"
+                        display="&readColumn.label;" tooltiptext="&readColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="dateCol" persist="hidden ordinal width" flex="2"
+                        label="&dateColumn.label;" tooltiptext="&dateColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="statusCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&statusColumn.label;" tooltiptext="&statusColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="sizeCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&sizeColumn.label;" tooltiptext="&sizeColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="flaggedCol" persist="hidden ordinal" fixed="true" cycler="true" hidden="true"
+                        class="treecol-image flagColumnHeader"
+                        display="&flagColumn.label;" tooltiptext="&flagColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="labelCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&labelColumn.label;" tooltiptext="&labelColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="priorityCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&priorityColumn.label;" tooltiptext="&priorityColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="unreadCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&unreadColumn.label;" tooltiptext="&unreadColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="totalCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&totalColumn.label;" tooltiptext="&totalColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="locationCol" persist="width" flex="1" hidden="true" ignoreincolumnpicker="true"
+                        label="&locationColumn.label;" tooltiptext="&locationColumn.tooltip;"/>
+               <splitter class="tree-splitter"/>
+               <treecol id="idCol" persist="hidden ordinal width" flex="1" hidden="true"
+                        label="&idColumn.label;" tooltiptext="&idColumn.tooltip;"/>
+              </treecols>
+            <treechildren ondraggesture="BeginDragThreadPane(event);"/>
+          </tree>
+          <vbox id="accountCentralBox" flex="1" collapsed="true">
+            <iframe name="accountCentralPane" width="150" flex="1" src="about:blank"/>
           </vbox>
-        </hbox>
+        </vbox>
+      </hbox>
 
       <!-- if you change this id, please change GetThreadAndMessagePaneSplitter() and MsgToggleMessagePane() -->
         <splitter id="threadpane-splitter" collapse="after" persist="state"
                   onmouseup="OnMouseUpThreadAndMessagePaneSplitter()"/>
 
-        <vbox id="messagepanebox" flex="2" minheight="100" height="200" persist="collapsed height width">
-        <hbox id="junkBar"/>
-        <hbox id="msgHeaderView"/>
+        <vbox id="messagepanebox" height="200" persist="collapsed height width">
+          <hbox id="junkBar"/>
+          <hbox id="msgHeaderView"/>
           <browser id="messagepane" context="messagePaneContext" autofind="false"
                    minheight="1" height="0" flex="1" name="messagepane"
-                 disablehistory="true" type="content-primary" src="about:blank"
+                  disablehistory="true" type="content-primary" src="about:blank"
                    disablesecurity="true" onclick="contentAreaClick(event);"/>
-      </vbox>  
+          <hbox id="attachmentView"/>
+        </vbox>  
       </box>
     </vbox>             
   </hbox>

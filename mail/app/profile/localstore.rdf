@@ -42,40 +42,4 @@
     <height>565</height>
   </RDF:Description>
   <RDF:Description about="chrome://messenger/content/messenger.xul#threadOutliner" height="94" />
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul">
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#threadOutliner"/>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#threadOutliner" height="94" />
-
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#flaggedCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#unreadCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#totalCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#OrderReceivedColumn">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#statusCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#sizeCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  </RDF:Description>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul#folderSizeCol">
-    <hidden>true</hidden>
-  </RDF:Description>
-  <RDF:Description about="chrome://messenger/content/mail3PaneWindowVertLayout.xul">
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#statusCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#sizeCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#unreadCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#totalCol"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#OrderReceivedColumn"/>
-    <NC:persist resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul#flaggedCol"/>
-  </RDF:Description>
 </RDF:RDF>

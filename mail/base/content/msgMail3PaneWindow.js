@@ -655,7 +655,6 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
   // now for each config, handle any extra clean up to create that view (such as changing a box orientation)
   if (paneConfig == kStandardPaneConfig) // standard 3-Pane Layout
   {     
-    messagePaneBox.removeAttribute("minwidth");
     threadPaneSplitter.setAttribute("orient", "vertical");
 
     // finally, make sure mailContentWrapper has the correct orientation
@@ -664,8 +663,7 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
   }
 
   else if (paneConfig == kWidePaneConfig)  // "Wide" Window Pane Layout
-  {  
-    messagePaneBox.removeAttribute("minwidth");   
+  {     
     threadPaneSplitter.setAttribute("orient", "vertical");
 
     // finally, make sure mailContentWrapper has the correct orientation
@@ -677,8 +675,6 @@ function UpdateMailPaneConfig(aMsgWindowInitialized) {
   {
     messagesBox.setAttribute("orient", "horizontal");
     threadPaneSplitter.removeAttribute("orient");
-    messagePaneBox.setAttribute("minwidth", "400"); // 400 is a made up number since I can't seem to force the thread pane and msg pane
-                                                    // to split the available space in half (why is flex not working here???)
     // finally, make sure mailContentWrapper has the correct orientation
     mailContentWrapper.setAttribute("orient", "horizontal");
   }

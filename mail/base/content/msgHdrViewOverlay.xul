@@ -55,102 +55,99 @@
          onpopupshowing="return FillInAttachmentTooltip(document.tooltipNode);"/> 
 
 <hbox id="msgHeaderView" keywordrelated="true" originalclass="none" persist="state">
-
-<vbox flex="1">
-<!-- the message pane consists of 3 'boxes'. Box #1 is a grid, showing a brief view of the headers --> 
-<grid id="collapsedHeaderView" class="header-part1 headerContainer" keywordrelated="true" originalclass="header-part1 headerContainer" flex="1" collapsed="true">
-  <rows>
-    <row flex="1"/>
-  </rows>
-  <columns>
-    <column class="collapsedToggleHdrBox">
-      <hbox align="start">
-        <image id="toggleHeaderView" class="collapsedHeaderViewButton"
-          onclick="ToggleHeaderView();"/>
-      </hbox>
-    </column>
+  <vbox flex="1">
+  <!-- the message pane consists of 3 'boxes'. Box #1 is a grid, showing a brief view of the headers --> 
+    <grid id="collapsedHeaderView" class="header-part1 headerContainer" keywordrelated="true" originalclass="header-part1 headerContainer" flex="1" collapsed="true">
+      <rows>
+        <row flex="1"/>
+      </rows>
+      <columns>
+        <column class="collapsedToggleHdrBox">
+          <hbox align="start">
+            <image id="toggleHeaderView" class="collapsedHeaderViewButton"
+              onclick="ToggleHeaderView();"/>
+          </hbox>
+        </column>
       
-    <column id="collapsedsubjectBox" collapsed="true" flex="1">
-      <hbox>
-        <label class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
-        <textbox id="collapsedsubjectValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" readonly="true" crop="right" appendoriginalclass="true" flex="1"/>
-      </hbox>
-    </column>
+        <column id="collapsedsubjectBox" collapsed="true" flex="1">
+          <hbox>
+            <label class="collapsedHeaderDisplayName" value="&subjectField.label;"/>
+            <textbox id="collapsedsubjectValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" readonly="true" crop="right" appendoriginalclass="true" flex="1"/>
+          </hbox>
+        </column>
 
-    <column id="collapsedfromBox" collapsed="true">
-      <hbox align="start">
-        <label class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
-        <mail-emailaddress id="collapsedfromValue" flex="1"/>
-      </hbox>
-    </column>
+        <column id="collapsedfromBox" collapsed="true">
+          <hbox align="start">
+            <label class="collapsedHeaderDisplayName" value="&fromField.label;"/>          
+            <mail-emailaddress id="collapsedfromValue" flex="1"/>
+          </hbox>
+        </column>
 
-    <column id = "collapseddateBox" collapsed="true">
-      <hbox align="start">
-        <textbox id="collapseddateValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" appendoriginalclass="true" readonly="true"/>
-      </hbox>
-    </column>
+        <column id = "collapseddateBox" collapsed="true">
+          <hbox align="start">
+            <textbox id="collapseddateValue" keywordrelated="true" class="collapsedHeaderValue plain" originalclass="collapsedHeaderValue plain" appendoriginalclass="true" readonly="true"/>
+          </hbox>
+        </column>
 
-    <column id="collapsedKeywordBox">
-      <hbox align="start">
-      <image id="collapsedKeywordImage" keywordrelated="true" originalclass="none"/>  
-      </hbox>
-    </column>
-  </columns>
-</grid>
+        <column id="collapsedKeywordBox">
+          <hbox align="start">
+          <image id="collapsedKeywordImage" keywordrelated="true" originalclass="none"/>  
+          </hbox>
+        </column>
+      </columns>
+    </grid>
 
-<!-- the message pane consists of 3 'boxes'. Box #2 is the expanded headers view (the default view) --> 
+    <!-- the message pane consists of 3 'boxes'. Box #2 is the expanded headers view (the default view) --> 
 
-<hbox id="expandedHeaderView" flex="1" collapsed="true" class="header-part1 headerContainer" keywordrelated="true" originalclass="header-part1">
+    <hbox id="expandedHeaderView" flex="1" collapsed="true" class="header-part1 headerContainer" keywordrelated="true" originalclass="header-part1">
 
-  <vbox id="expandedHeaders" flex="1">
-    <mail-toggle-headerfield keywordrelated="true" id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
+      <vbox id="expandedHeaders" flex="1">
+        <mail-toggle-headerfield keywordrelated="true" id="expandedsubjectBox" class="subjectvalue" label="&subjectField.label;" ontwistyclick="ToggleHeaderView();" collapsed="true"/>
  
-    <mail-emailheaderfield id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
-    <mail-headerfield id="expandedorganizationBox" label="&organizationField.label;" collapsed="true"/>
-    <mail-emailheaderfield id="expandedreply-toBox" label="&replyToField.label;" collapsed="true"/>
+        <mail-emailheaderfield id="expandedfromBox" label="&fromField.label;" collapsed="true"/>
+        <mail-headerfield id="expandedorganizationBox" label="&organizationField.label;" collapsed="true"/>
+        <mail-emailheaderfield id="expandedreply-toBox" label="&replyToField.label;" collapsed="true"/>
 
-    <mail-headerfield keywordrelated="true" id="expandeddateBox" label="&dateField.label;" collapsed="true"/>
+        <mail-headerfield keywordrelated="true" id="expandeddateBox" label="&dateField.label;" collapsed="true"/>
 
-    <mail-multi-emailHeaderField id="expandedtoBox"  label="&toField.label;"  collapsed="true"/>
-    <mail-multi-emailHeaderField id="expandedccBox"  label="&ccField.label;"  collapsed="true"/>
-    <mail-multi-emailHeaderField id="expandedbccBox" label="&bccField.label;" collapsed="true"/>
+        <mail-multi-emailHeaderField id="expandedtoBox"  label="&toField.label;"  collapsed="true"/>
+        <mail-multi-emailHeaderField id="expandedccBox"  label="&ccField.label;"  collapsed="true"/>
+        <mail-multi-emailHeaderField id="expandedbccBox" label="&bccField.label;" collapsed="true"/>
 
-    <mail-headerfield keywordrelated="true" id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
-    <mail-headerfield keywordrelated="true" id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
-    <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/> 
-  </vbox>
+        <mail-headerfield keywordrelated="true" id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
+        <mail-headerfield keywordrelated="true" id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
+        <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/> 
+      </vbox>
 
-  <vbox id="expandedKeywordBox">
-    <spacer flex="1"/>
-    <image id="expandedKeywordImage" keywordrelated="true" originalclass="none" />
-    <spacer flex="1"/>  
-  </vbox>
+      <vbox id="expandedKeywordBox">
+        <spacer flex="1"/>
+        <image id="expandedKeywordImage" keywordrelated="true" originalclass="none" />
+        <spacer flex="1"/>  
+      </vbox>
  
-  <vbox id="editMessageBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
-    <spacer flex="1"/>
-    <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
-    <spacer flex="1"/>
-  </vbox> 
+      <vbox id="editMessageBox" class="header-part1" keywordrelated="true" originalclass="header-part1" collapsed="true">
+        <spacer flex="1"/>
+        <button id="editMessageButton" label="&editMessage.label;" oncommand="MsgComposeDraftMessage()"/>
+        <spacer flex="1"/>
+      </vbox> 
 
-  <vbox autostretch="never">
-    <spacer flex="1"/>
-    <image style="padding: 5px" id="fromBuddyIcon"/>
-    <spacer flex="1"/>
+      <vbox autostretch="never">
+        <spacer flex="1"/>
+        <image style="padding: 5px" id="fromBuddyIcon"/>
+        <spacer flex="1"/>
+      </vbox>
+    </hbox>
+
   </vbox>
 </hbox>
 
 <!-- the message pane consists of 3 'boxes'. Box #3 is the attachment box which can be toggled into a slim or an expanded view -->   
-<vbox id="attachmentView" class="headerContainer" collapsed="true">
-  <hbox id="attachmentLabelContainer" autostretch="never" align="start">
-    <image id="toggleAttachmentView" open="true" persist="state" class="addresstwisty" onclick="ToggleAttachmentView();"/>
-    <label id="attachmentText" class="collapsedHeaderDisplayName" value="&attachmentsTree.label;"/>
-    <label id="numAttachmentsText" collapsed="true"/>
-  </hbox>
-  <description flex="1" id="attachmentList" selectable="true" seltype="multiple" onclick="attachmentListClick(event);">
+<hbox id="attachmentView" class="headerContainer" collapsed="true">
+  <label id="attachmentLabel" class="subjectvalue" value="&attachmentsTree.label;"/>
+  <description flex="1" id="attachmentList" selectable="true" seltype="multiple" onclick="attachmentListClick(event);" ondraggesture="nsDragAndDrop.startDrag(event,attachmentAreaDNDObserver);" ondragover="nsDragAndDrop.dragOver(event, attachmentAreaDNDObserver);" context="attachmentListContext">
   </description>
-</vbox>
-
-</vbox>
 </hbox>
+
 </overlay>
+
 

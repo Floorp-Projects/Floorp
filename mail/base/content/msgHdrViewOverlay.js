@@ -34,9 +34,13 @@
 var msgHeaderParserContractID		   = "@mozilla.org/messenger/headerparser;1";
 var abAddressCollectorContractID	 = "@mozilla.org/addressbook/services/addressCollecter;1";
 
+const kLargeIcon = 32;
+const kSmallIcon = 16;
+
 var gViewAllHeaders = false;
 var gNumAddressesToShow = 3;
 var gShowOrganization = false;
+var gShowLargeAttachmentView = false;
 var gShowUserAgent = false;
 var gCollectIncoming = false;
 var gCollectOutgoing = false;
@@ -212,17 +216,13 @@ function OnLoadMsgHeaderPane()
   gCollectOutgoing = pref.getBoolPref("mail.collect_email_address_outgoing");
   gShowUserAgent = pref.getBoolPref("mailnews.headers.showUserAgent");
   gShowOrganization = pref.getBoolPref("mailnews.headers.showOrganization");
+  gShowLargeAttachmentView = pref.getBoolPref("mailnews.attachments.display.largeView");
   initializeHeaderViewTables();
 
   var toggleHeaderView = document.getElementById("msgHeaderView");
   var initialCollapsedSetting = toggleHeaderView.getAttribute("state");
   if (initialCollapsedSetting == "true")
     gCollapsedHeaderViewMode = true;   
-
-  // when we start up, attachment view defaults to open...if we aren't supposed to be open
-  // toggle to the slim view
-  if (document.getElementById('toggleAttachmentView').getAttribute("state") == "true")
-    ToggleAttachmentView(); // gSlimAttachmentView is false by default, toggle to true
 
   // dispatch an event letting any listeners know that we have loaded the message pane
   var event = document.createEvent('Events');
@@ -313,6 +313,11 @@ var messageHeaderSink = {
         // for consistancy sake, let's force all header names to be lower case so
         // we don't have to worry about looking for: Cc and CC, etc.
         var lowerCaseHeaderName = headerNames[index].toLowerCase();
+
+        // if we have an x-mailer string, put it in the user-agent slot which we know how to handle
+        // already. 
+        if (lowerCaseHeaderName == "x-mailer")
+          lowerCaseHeaderName = "user-agent";   
         
         var foo = new Object;        
         foo.headerValue = headerValues[index];
@@ -382,10 +387,7 @@ var messageHeaderSink = {
     
     onEndAllAttachments: function()
     {
-      if (gSlimAttachmentView)
-        displayAttachmentsForSlimView();
-      else
-        displayAttachmentsForExpandedView();
+      displayAttachmentsForExpandedView();
     },
 
     onEndMsgDownload: function(url)
@@ -473,39 +475,7 @@ function updateHeaderViews()
   else
     showHeaderView(gExpandedHeaderView);
 
-  if (gSlimAttachmentView)
-    displayAttachmentsForSlimView();
-  else
-    displayAttachmentsForExpandedView();
-}
-
-function ToggleAttachmentView()
-{
-  // change the toggle icon....
-  var attachmentToggle = document.getElementById('toggleAttachmentView');
-  
-  if (attachmentToggle.hasAttribute("open"))
-    attachmentToggle.removeAttribute("open");
-  else
-    attachmentToggle.setAttribute("open", "true");
-
-  // hide or show the attachment list
-  var attachmentList = document.getElementById('attachmentList');
-  attachmentList.collapsed = !attachmentList.collapsed;
-
-  // if the attachmentlist is collapsed then show the # of attachments
-
-  var numAttachmentsLabel = document.getElementById('numAttachmentsText');
-  numAttachmentsLabel.collapsed = !numAttachmentsLabel.collapsed ;  
-
-  gSlimAttachmentView = !gSlimAttachmentView;
-
-  attachmentToggle.setAttribute("state", gSlimAttachmentView);
-
-  if (gSlimAttachmentView)
-    displayAttachmentsForSlimView();
-  else
-    displayAttachmentsForExpandedView();
+  displayAttachmentsForExpandedView();
 }
 
 function ToggleHeaderView ()
@@ -983,6 +953,14 @@ function cloneAttachment(aAttachment)
 function displayAttachmentsForExpandedView()
 {
   var numAttachments = currentAttachments.length;
+  
+  // IMPORTANT: make sure we uncollapse the attachment box BEFORE we start adding
+  // our attachments to the view. Otherwise, layout doesn't calculate the correct height for
+  // the attachment view and we end up with a box that is too tall.
+
+  var expandedAttachmentBox = document.getElementById('attachmentView');
+  expandedAttachmentBox.collapsed = numAttachments <= 0;
+
   if (numAttachments > 0 && !gBuildAttachmentsForCurrentMsg)
   {
     var attachmentList = document.getElementById('attachmentList');
@@ -992,11 +970,18 @@ function displayAttachmentsForExpandedView()
 
       // create a new attachment widget. set the label, set the 
       // moz-icon img src
+      var attachmentView = attachmentList.appendItem(attachment.displayName);
+      attachmentView.setAttribute("class", "descriptionitem-iconic"); 
 
-      var attachmentView = document.createElement("mail-attachment");
-      attachmentView.setAttribute("label", attachment.displayName);
-      setApplicationIconForAttachment(attachment, attachmentView);
+      if (gShowLargeAttachmentView)
+      {
+        attachmentView.setAttribute("largeView", "true");
+        attachmentView.setAttribute("orient", "vertical");
+      }
+
+      setApplicationIconForAttachment(attachment, attachmentView, gShowLargeAttachmentView);
       attachmentView.setAttribute("tooltip", "attachmentListTooltip");
+      attachmentView.setAttribute("context", "attachmentListContext");      
 
       attachmentView.attachment = cloneAttachment(attachment);
       attachmentView.setAttribute("attachmentUrl", attachment.url);
@@ -1007,30 +992,15 @@ function displayAttachmentsForExpandedView()
     } // for each attachment
     gBuildAttachmentsForCurrentMsg = true;
   }
-
-  var expandedAttachmentBox = document.getElementById('attachmentView');
-  expandedAttachmentBox.collapsed = numAttachments <= 0;
 }
 
 // attachment --> the attachment struct containing all the information on the attachment
 // listitem --> the listitem currently showing the attachment.
-function setApplicationIconForAttachment(attachment, listitem)
+function setApplicationIconForAttachment(attachment, listitem, largeView)
 {
-   // generate a moz-icon url for the attachment so we'll show a nice icon next to it.
-   listitem.setAttribute('image', "moz-icon:" + "//" + attachment.displayName + "?size=16&contentType=" + attachment.contentType);
-}
-
-function displayAttachmentsForSlimView()
-{
-  var numAttachments = currentAttachments.length;
-  if (numAttachments)
-  {
-    var numAttachmentsLabel = document.getElementById('numAttachmentsText');
-    numAttachmentsLabel.value = numAttachments;   
-  }
-
-  // show/hide the attachment view
-  document.getElementById('attachmentView').collapsed = !numAttachments;
+  var iconSize = largeView ? kLargeIcon : kSmallIcon;
+  // generate a moz-icon url for the attachment so we'll show a nice icon next to it.
+  listitem.setAttribute('image', "moz-icon:" + "//" + attachment.displayName + "?size=" + iconSize + "&contentType=" + attachment.contentType);
 }
 
 // Public method called to generate a tooltip over an attachment
@@ -1095,7 +1065,7 @@ function addAttachmentToPopup(popup, attachment, attachmentIndex)
 
       // insert the item just before the separator...the separator is the 2nd to last element in the popup.
       item.setAttribute('class', 'menu-iconic');
-      setApplicationIconForAttachment(attachment,item);
+      setApplicationIconForAttachment(attachment,item, false);
       var numItemsInPopup = popup.childNodes.length;
       item = popup.insertBefore(item, popup.childNodes[numItemsInPopup-2]);
 
@@ -1198,7 +1168,7 @@ var attachmentAreaDNDObserver = {
   onDragStart: function (aEvent, aAttachmentData, aDragAction)
   {
     var target = aEvent.target;
-    if (target.localName == "listitem")
+    if (target.localName == "descriptionitem")
     {
       var attachmentUrl = target.getAttribute("attachmentUrl");
       var attachmentDisplayName = target.getAttribute("label");
