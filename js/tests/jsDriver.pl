@@ -333,9 +333,10 @@ sub write_results {
            $html .
            "</dl>\n[ <a href='#tippy_top'>Top of Page</a> | " .
            "<a href='#fail_detail'>Top of Failures</a> ]<br>\n" .
-           "<hr>\n<pre>\n" .
+           "<hr>\n" .
            "<a name='retest_list'></a>\n" .
            "<h2>Retest List</h2><br>\n" .
+           "<pre>\n" .
            "# Retest List, $opt_engine_type, " .
            "generated $completion_date.\n" .
            "# Original test base was: $list_name.\n" .
