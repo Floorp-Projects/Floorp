@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.28 2002/07/16 16:44:21 relyea%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.29 2002/08/21 00:09:22 relyea%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -250,7 +250,7 @@ certdb_Get(DB *db, DBT *key, DBT *data, unsigned int flags)
     
     PORT_Assert(dbLock != NULL);
     PZ_Lock(dbLock);
-    
+
     ret = (* db->get)(db, key, data, flags);
 
     prstat = PZ_Unlock(dbLock);
@@ -262,7 +262,7 @@ static int
 certdb_Put(DB *db, DBT *key, DBT *data, unsigned int flags)
 {
     PRStatus prstat;
-    int ret;
+    int ret = 0;
 
     PORT_Assert(dbLock != NULL);
     PZ_Lock(dbLock);
@@ -1368,7 +1368,7 @@ ReadDBCrlEntry(NSSLOWCERTCertDBHandle *handle, SECItem *certKey,
 	goto loser;
     }
     
-    rv = ReadDBEntry(handle, &entry->common, &dbkey, &dbentry, tmparena);
+    rv = ReadDBEntry(handle, &entry->common, &dbkey, &dbentry, NULL);
     if ( rv == SECFailure ) {
 	goto loser;
     }
@@ -4784,9 +4784,9 @@ nsslowcert_DestroyCertificateNoLocking(NSSLOWCERTCertificate *cert)
  * Lookup a CRL in the databases. We mirror the same fast caching data base
  *  caching stuff used by certificates....?
  */
-SECItem *
-nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle, SECItem *crlKey, 
-		char **url, PRBool isKRL)
+certDBEntryRevocation *
+nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle, 
+						SECItem *crlKey, PRBool isKRL)
 {
     SECItem keyitem;
     DBT key;
@@ -4817,20 +4817,12 @@ nsslowcert_FindCrlByKey(NSSLOWCERTCertDBHandle *handle, SECItem *crlKey,
 	goto loser;
     }
 
-    if (url && entry->url) {
-	*url = PORT_Strdup(entry->url);
-    }
-    crl = SECITEM_DupItem(&entry->derCrl);
-
 loser:
     if ( arena ) {
 	PORT_FreeArena(arena, PR_FALSE);
     }
-    if (entry) {
-	DestroyDBEntry((certDBEntry *)entry);
-    }
     
-    return(crl);
+    return entry;
 }
 
 /*

@@ -3602,12 +3602,13 @@ pk11_searchCrls(PK11Slot *slot, SECItem *derSubject, PRBool isKrl,
 	return;
     }
     if (derSubject->data != NULL)  {
-	SECItem *crl = 
-	    nsslowcert_FindCrlByKey(certHandle,derSubject,NULL,isKrl);
+	certDBEntryRevocation *crl = 
+	    nsslowcert_FindCrlByKey(certHandle, derSubject, isKrl);
 
 	if (crl != NULL) {
-	    pk11_addHandle(search, pk11_mkHandle(slot,derSubject,
+	    pk11_addHandle(search, pk11_mkHandle(slot, derSubject,
 		isKrl ? PK11_TOKEN_KRL_HANDLE : PK11_TOKEN_TYPE_CRL));
+	    nsslowcert_DestroyDBEntry((certDBEntry *)crl);
 	}
     } else {
 	pk11CrlData crlData;
