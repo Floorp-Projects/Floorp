@@ -100,6 +100,7 @@ extensions/pics/public/Makefile
 extensions/pics/src/Makefile
 extensions/pics/tests/Makefile
 gfx/Makefile
+gfx/idl/Makefile
 gfx/public/Makefile
 gfx/src/Makefile
 gfx/src/beos/Makefile
