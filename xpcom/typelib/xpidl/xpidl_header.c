@@ -66,11 +66,12 @@ static gboolean
 pass_1(TreeState *state)
 {
     if (state->tree) {
+        char *define = g_basename(state->basename);
         fprintf(state->file, "/*\n * DO NOT EDIT.  THIS FILE IS GENERATED FROM"
                 " %s.idl\n */\n", state->basename);
         fprintf(state->file, "\n#ifndef __gen_%s_h__\n"
                 "#define __gen_%s_h__\n\n",
-                state->basename, state->basename);
+                define, define);
         if (g_hash_table_size(state->includes)) {
             g_hash_table_foreach(state->includes, write_header, state);
             fputc('\n', state->file);
