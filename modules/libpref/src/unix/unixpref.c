@@ -108,8 +108,10 @@ PREF_GetUrl(char* name, char** url)
 XP_Bool
 FE_GetLabelAndMnemonic(char* name, char** str, void* v_xm_str, void* v_mnemonic)
 {
+  return 0;
 }
 
 char *fe_GetConfigDirFilename(char *filename)
 {
+  return "/tmp";
 }
