@@ -150,8 +150,8 @@ static void DoHighLevelEvent(EventRecord * theEventRecPtr)
 
 static OSErr IncreaseBOAStack(Size additionalStackSize)
 {
-	OSErr err;
-
+	OSErr err = noErr;
+#if !TARGET_CARBON
 	// Check that we aren't running with a corrupt heap. If we are,
 	// fix the problem.  This was a bug with FBA's before System 7.5.5.
 	// With System Software later than 7.5.5, this "fix" is harmless.
@@ -163,7 +163,7 @@ static OSErr IncreaseBOAStack(Size additionalStackSize)
 	SetApplLimit((Ptr) ((unsigned long) GetApplLimit() - additionalStackSize));
 	err = MemError();
 	if (err == noErr) MaxApplZone();
-
+#endif
 	return err;
 }
    
