@@ -2258,6 +2258,10 @@ todo need to handle namespace prefix not found in XML look for namespace type in
 
         XmlCursor curs = newCursor();
 
+        if (curs.isAttr() || curs.isText()) {
+            return true;
+        }
+
         if (curs.isStartdoc())
         {
             curs.toFirstContentToken();
