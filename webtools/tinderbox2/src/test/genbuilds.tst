@@ -6,9 +6,9 @@
 # URL.
 
 
-# $Revision: 1.12 $ 
-# $Date: 2001/01/04 00:20:26 $ 
-# $Author: kestes%staff.mail.com $ 
+# $Revision: 1.13 $ 
+# $Date: 2001/12/03 19:53:30 $ 
+# $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/genbuilds.tst,v $ 
 # $Name:  $ 
 #
@@ -229,6 +229,7 @@ sub write_update_record {
 # an idea of what the real link will look like and acts as a comment to make debugging easier.
 
 	      'brieflog' => "http://www.mozilla.org/tree=$tree/buildname=$build/starttime=$starttime/status=$status",
+	      'fulllog' => "http://www.mozilla.org/tree=$tree/buildname=$build/starttime=$starttime/status=$status",
               'errorparser' => "unix",
 	  );
 
