@@ -536,8 +536,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   static const PRUnichar theTerminalsChars[] = 
     { PRUnichar('\n'), PRUnichar('\r'), PRUnichar('&'), PRUnichar('<'),
       PRUnichar(0) };
-  const nsDependentString theTerminals(theTerminalsChars,
-    sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
+  static const nsReadEndCondition theEndCondition(theTerminalsChars);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
   nsReadingIterator<PRUnichar> origin, start, end;
@@ -550,7 +549,7 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
   aScanner.SetPosition(start);
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(start, end, theTerminals,PR_FALSE);
+    result=aScanner.ReadUntil(start, end, theEndCondition, PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
 
@@ -792,12 +791,14 @@ PRInt32 CCDATASectionToken::GetTokenType(void) {
  *  @return  error result
  */
 nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag) {
-  static const char* theTerminals="\r]";
+  static const PRUnichar theTerminalsChars[] = 
+  { PRUnichar('\r'), PRUnichar(']'), PRUnichar(0) };
+  static const nsReadEndCondition theEndCondition(theTerminalsChars);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
 
   while((NS_OK==result) && (!done)) {
-    result=aScanner.ReadUntil(mTextValue,theTerminals,PR_FALSE);
+    result=aScanner.ReadUntil(mTextValue,theEndCondition,PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
       if((kCR==aChar) && (NS_OK==result)) {
@@ -898,8 +899,7 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
     { PRUnichar('\n'), PRUnichar('\r'), PRUnichar('\''), PRUnichar('"'),
       PRUnichar('>'),
       PRUnichar(0) };
-  const nsDependentString theTerminals(theTerminalsChars,
-    sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
+  static const nsReadEndCondition theEndCondition(theTerminalsChars);
   nsresult  result=NS_OK;
   PRBool    done=PR_FALSE;
   PRUnichar quote=0;
@@ -910,7 +910,7 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
 
   while((NS_OK==result) && (!done)) {
     aScanner.SetPosition(start);
-    result=aScanner.ReadUntil(start, end, theTerminals,PR_FALSE);
+    result=aScanner.ReadUntil(start, end, theEndCondition, PR_FALSE);
     if(NS_OK==result) {
       result=aScanner.Peek(aChar);
 
@@ -1017,6 +1017,9 @@ CCommentToken::CCommentToken(const nsAReadableString& aName) : CHTMLToken(eHTMLT
 static
 nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aString) {
   nsresult  result=NS_OK;
+  static const PRUnichar theTerminalsChars[] = 
+    { PRUnichar('-'), PRUnichar('>'), PRUnichar(0) };
+  static const nsReadEndCondition endCommentCondition(theTerminalsChars);
  
   /*********************************************************
     NOTE: This algorithm does a fine job of handling comments
@@ -1049,8 +1052,8 @@ nsresult ConsumeStrictComment(PRUnichar aChar, nsScanner& aScanner,nsString& aSt
               aString+=temp;
               if(NS_OK==result) {
                 if(NS_OK==result) {
-                  temp.AssignWithConversion("->");
-                  result=aScanner.ReadUntil(aString,temp,PR_FALSE);
+                  // Read until "-" or ">"
+                  result=aScanner.ReadUntil(aString,endCommentCondition,PR_FALSE);
                 }
               } 
             }
@@ -1540,13 +1543,10 @@ nsresult ConsumeAttributeEntity(nsString& aString,
 static
 nsresult ConsumeAttributeValueText(nsString& aString,
                                    nsScanner& aScanner,
-                                   const PRUnichar *aTerminalChars,
+                                   const nsReadEndCondition& aEndCondition,
                                    PRInt32 aFlag)
 {
-  const nsDependentString theTerminals(aTerminalChars,
-    sizeof(aTerminalChars)/sizeof(aTerminalChars[0]) - 1);
-
-  nsresult result=aScanner.ReadUntil(aString,theTerminals,PR_FALSE);
+  nsresult result=aScanner.ReadUntil(aString,aEndCondition,PR_FALSE);
  
   if(NS_SUCCEEDED(result)) {
     PRUnichar ch;
@@ -1554,7 +1554,7 @@ nsresult ConsumeAttributeValueText(nsString& aString,
     if(ch==kAmpersand) {
       result=ConsumeAttributeEntity(aString,aScanner,aFlag);
       if (NS_SUCCEEDED(result)) {
-        result=ConsumeAttributeValueText(aString,aScanner,aTerminalChars,aFlag);
+        result=ConsumeAttributeValueText(aString,aScanner,aEndCondition,aFlag);
       }
     }
   }
@@ -1579,16 +1579,25 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
 {
   NS_ASSERTION(aChar==kQuote || aChar==kApostrophe,"char is neither quote nor apostrophe");
 
-  const PRUnichar theTerminalChars[] = { 
-    aChar, PRUnichar('&'),
-    PRUnichar(0) 
-  };
+  static const PRUnichar theTerminalCharsQuote[] = { 
+    PRUnichar(kQuote), PRUnichar('&'),  PRUnichar(0) };
+  static const PRUnichar theTerminalCharsApostrophe[] = { 
+    PRUnichar(kApostrophe), PRUnichar('&'), PRUnichar(0) };
+  static const nsReadEndCondition
+    theTerminateConditionQuote(theTerminalCharsQuote);
+  static const nsReadEndCondition
+    theTerminateConditionApostrophe(theTerminalCharsApostrophe);
 
+  // Assume Quote to init to something
+  const nsReadEndCondition *terminateCondition = &theTerminateConditionQuote;
+  if (aChar==kApostrophe)
+    terminateCondition = &theTerminateConditionApostrophe;
+  
   nsresult result=NS_OK;
   nsReadingIterator<PRUnichar> theOffset;
   aScanner.CurrentPosition(theOffset);
 
-  result=ConsumeAttributeValueText(aString,aScanner,theTerminalChars,aFlag);
+  result=ConsumeAttributeValueText(aString,aScanner,*terminateCondition,aFlag);
 
   if(NS_SUCCEEDED(result)) {
     result = aScanner.SkipOver(aChar); // aChar should be " or '
@@ -1599,9 +1608,11 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
   // Ex <table> <tr d="><td>hello</td></tr></table>
   if(!aString.IsEmpty() && aString.Last()!=aChar &&
      !aScanner.IsIncremental() && result==kEOF) {
+    static const nsReadEndCondition
+      theAttributeTerminator(kAttributeTerminalChars);
     aString.Truncate();
     aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
-    result=ConsumeAttributeValueText(aString,aScanner,kAttributeTerminalChars,aFlag);
+    result=ConsumeAttributeValueText(aString,aScanner,theAttributeTerminator,aFlag);
   }
   return result;
 }
@@ -1638,11 +1649,10 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
       PRUnichar('\r'), PRUnichar('\t'), 
       PRUnichar('>'), PRUnichar('\b'),
       PRUnichar(0) };
+    static const nsReadEndCondition theEndCondition(theTerminalsChars);
 
     nsReadingIterator<PRUnichar> start, end;
-    const nsDependentString theTerminals(theTerminalsChars,
-    sizeof(theTerminalsChars)/sizeof(theTerminalsChars[0]) - 1);
-    result=aScanner.ReadUntil(start,end,theTerminals,PR_FALSE);
+    result=aScanner.ReadUntil(start,end,theEndCondition,PR_FALSE);
 
     if (!(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       aScanner.BindSubstring(mTextKey, start, end);
@@ -1694,9 +1704,11 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                     mHasEqualWithoutValue=PR_TRUE;
                   }
                   else {
+                    static const nsReadEndCondition
+                      theAttributeTerminator(kAttributeTerminalChars);
                     result=ConsumeAttributeValueText(mTextValue,
                                                      aScanner,
-                                                     kAttributeTerminalChars,
+                                                     theAttributeTerminator,
                                                      aFlag);
                   } 
                 }//if
@@ -2342,16 +2354,14 @@ nsresult CDoctypeDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32
   { PRUnichar('>'), PRUnichar('<'),
     PRUnichar(0) 
   };
-
-  const nsDependentString terminals(terminalChars,
-    sizeof(terminalChars)/sizeof(terminalChars[0]) - 1);
+  static const nsReadEndCondition theEndCondition(terminalChars);
 
   nsReadingIterator<PRUnichar> start, end;
   
   aScanner.CurrentPosition(start);
   aScanner.EndReading(end);
 
-  nsresult result=aScanner.ReadUntil(start, end, terminals,PR_FALSE);
+  nsresult result=aScanner.ReadUntil(start, end, theEndCondition, PR_FALSE);
 
   if (NS_SUCCEEDED(result)) {
     PRUnichar ch;

@@ -54,6 +54,16 @@ class nsScannerString : public nsSlidingString {
                                   PRUnichar aChar);
 };
 
+class nsReadEndCondition {
+public:
+  const PRUnichar *mChars;
+  PRUnichar mFilter;
+  explicit nsReadEndCondition(const PRUnichar* aTerminateChars);
+private:
+  nsReadEndCondition(const nsReadEndCondition& aOther); // No copying
+  void operator=(const nsReadEndCondition& aOther); // No assigning
+};
+
 class nsScanner {
   public:
 
@@ -216,25 +226,12 @@ class nsScanner {
        *  @return  error code
        */
       nsresult ReadUntil(nsAWritableString& aString,
-                         const nsAFlatString& aTermSet,
+                         const nsReadEndCondition& aEndCondition, 
                          PRBool addTerminal);
-
-      nsresult ReadUntil(nsAWritableString& aString,
-                         const nsAFlatCString& aTermSet,
-                         PRBool addTerminal);
-
-      nsresult ReadUntil(nsAWritableString& aString,
-                         const char* aTerminalSet,
-                         PRBool addTerminal)
-      {
-        return ReadUntil(aString,
-                         nsDependentCString(aTerminalSet),
-                         addTerminal);
-      }
 
       nsresult ReadUntil(nsReadingIterator<PRUnichar>& aStart,
                          nsReadingIterator<PRUnichar>& aEnd,
-                         const nsAFlatString& aTerminalSet,
+                         const nsReadEndCondition& aEndCondition, 
                          PRBool addTerminal);
 
 
