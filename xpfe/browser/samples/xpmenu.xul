@@ -39,8 +39,8 @@ Contributor(s): ______________________________________. -->
 	      <html:div>Ctrl+N</html:div>
 		  <titledbutton class="menu-right"/> 
 		  <xpmenuchildren>
-		    <xpmenuitem><html:div>Nested Item One</html:div></xpmenuitem>
-			<xpmenuitem><html:div>Nested Item Two</html:div></xpmenuitem>
+		    <xpmenuitem value="Lambda" accesskey="a" onaction="dump('Lambda lambda lambda!\n')"/>
+			<xpmenuitem value="Phi" accesskey="p"/>
 		  </xpmenuchildren>
 	    </xpmenu>
 	    <xpmenuitem>
