@@ -38,6 +38,14 @@ function filterEditorOnLoad()
                 setScope(getScopeFromFilterList(args.filterList));
         }
     }
+
+    doSetOKCancel(onOk, null);
+}
+
+function onOk()
+{
+    saveFilter();
+
 }
 
 // set scope on all visible searhattribute tags
@@ -82,7 +90,6 @@ function initializeDialog(filter)
 
     
     // now test by initializing the psuedo <searchterm>
-    var searchTerm = document.getElementById("searchTerm");
     var scope = getScope(filter);
     var filterRowContainer = document.getElementById("filterTermList");
     var numTerms = filter.numTerms;
@@ -182,3 +189,17 @@ function constructRow(treeCellChildren)
     return treeitem;
 }
 
+function saveFilter() {
+    // first save each row
+    var searchTermElements =
+        document.getElementById("searchterms").childNodes;
+    
+    var searchTerms = gFilter.searchTerms;
+    
+    for (var i = 0; i<searchTermElements.length; i++) {
+        dump("Saving filter " + i + "\n");
+        searchTermElements[i].save();
+    }
+    
+
+}

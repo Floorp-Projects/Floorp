@@ -60,13 +60,13 @@ Rights Reserved.
                 searchvalue="searchValue"/>
     </searchterms>
     <tree class="inset" flex="1" id="searchTermTree">
-      <treecol id="preSearchAttr" width="1*"/>
-      <treecol id="searchAttr" width="4*"/>
-      <treecol id="preSearchOp" width="0*"/>
-      <treecol id="searchOp" width="4*"/>
-      <treecol id="preSearchValue" width="0*"/>
-      <treecol id="searchValue" width="4*"/>
-      <treecol id="postSearchValue" width="0*"/>
+      <treecol width="1*"/>
+      <treecol width="4*"/>
+      <treecol width="0*"/>
+      <treecol width="4*"/>
+      <treecol width="0*"/>
+      <treecol width="4*"/>
+      <treecol width="0*"/>
         
       <treechildren id="filterTermList">
 
