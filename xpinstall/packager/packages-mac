@@ -108,6 +108,8 @@ viewer:Components:history.xpt
 viewer:Components:htmlparser.shlb 
 viewer:Components:JSLoader.shlb 
 viewer:Components:jsconsole-clhandler.js
+viewer:Components:jsdService.shlb
+viewer:Components:jsdservice.xpt
 viewer:Components:jsurl.shlb 
 viewer:Components:jsurl.xpt
 viewer:Components:layout.shlb 
@@ -312,6 +314,10 @@ viewer:Essential Files:LDAPClient.shlb
 [chatzilla]
 viewer:Components:chatzilla-service.js
 viewer:chrome:chatzilla.jar
+
+[venkman]
+viewer:Components:venkman-service.js
+viewer:chrome:venkman.jar
 
 [FullCircle]
 ; Dummy FullCircle.xpi must be generated with the mozilla 

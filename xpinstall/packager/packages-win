@@ -95,6 +95,8 @@ bin\components\cookie.xpt
 bin\components\docshell.dll
 bin\components\docshell_base.xpt
 bin\components\jsdom.dll
+bin\components\jsd3250.dll
+bin\components\jsdservice.xpt
 bin\components\dom.xpt
 bin\components\dom_base.xpt
 bin\components\dom_core.xpt
@@ -345,6 +347,10 @@ bin\chrome\messenger\*
 bin\components\chatzilla-service.js
 bin\chrome\chatzilla.jar
 bin\chrome\chatzilla\*
+
+[venkman]
+bin\components\venkman-service.js
+bin\chrome\venkman.jar
 
 [psm]
 bin\nssckbi.dll
