@@ -807,19 +807,23 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 
 nsresult nsMsgCompose::CloseWindow()
 {
+    nsresult rv = NS_OK;
     if (m_baseWindow) {
         m_editor = nsnull;	      /* m_editor will be destroyed during the Close Window. Set it to null to */
 							      /* be sure we wont use it anymore. */
-        return m_baseWindow->Destroy();
+
+        nsIBaseWindow * aWindow = m_baseWindow;
+        m_baseWindow = nsnull;
+        rv = aWindow->Destroy();
     }
 
-	return NS_OK;
+	return rv;
 }
 
 nsresult nsMsgCompose::ShowWindow(PRBool show)
 {
 	if (m_baseWindow) {
-        return m_baseWindow->SetVisibility(PR_TRUE);
+        return m_baseWindow->SetVisibility(show);
     }
 	return NS_OK;
 }
