@@ -967,6 +967,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
   nsTableFrame::DebugReflow(this, (nsHTMLReflowState&)aReflowState);
 #endif
   nsresult rv=NS_OK;
+  aStatus = NS_FRAME_COMPLETE;
 
   nsTableFrame* tableFrame = nsnull;
   rv = nsTableFrame::GetTableFrame(this, tableFrame);
@@ -978,9 +979,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
   if (eReflowReason_Incremental == aReflowState.reason) {
     rv = IncrementalReflow(aPresContext, aDesiredSize, state, aStatus);
   } 
-  else {
-    aStatus = NS_FRAME_COMPLETE;
-  
+  else { 
     // Check for an overflow list
     MoveOverflowToChildList(aPresContext);
   
