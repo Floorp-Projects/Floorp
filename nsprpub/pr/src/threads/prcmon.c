@@ -303,6 +303,8 @@ PR_IMPLEMENT(PRMonitor*) PR_CEnterMonitor(void *address)
 {
     PRMonitor *mon;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
     _PR_LOCK_MCACHE();
     mon = CreateMonitor(address);
     _PR_UNLOCK_MCACHE();
