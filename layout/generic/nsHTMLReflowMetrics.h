@@ -194,7 +194,7 @@ struct nsHTMLReflowMetrics {
   * so we need to report 0 otherwise the incr. reflow will fail
   * @param aWidthUnit - the width unit from the corresponding reflowstate
   */
-  void nsHTMLReflowMetrics::SetMEWToActualWidth(nsStyleUnit aWidthUnit) {
+  void SetMEWToActualWidth(nsStyleUnit aWidthUnit) {
     if (aWidthUnit != eStyleUnit_Percent) {
       mMaxElementWidth = width;
     } else {
