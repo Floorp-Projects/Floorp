@@ -52,7 +52,9 @@ CPPSRCS          = nsReadConfig.cpp    \
                    nsAutoConfig.cpp    \
                    nsConfigFactory.cpp \
                    nsJSConfigTriggers.cpp \
-                   nsLDAPSyncQuery.cpp
+ifdef MOZ_LDAP_XPCOM
+                   nsLDAPSyncQuery.cpp \
+endif
                    $(NULL)
 
 ifdef MOZ_LDAP_XPCOM
