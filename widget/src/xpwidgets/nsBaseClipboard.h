@@ -41,15 +41,9 @@ public:
   //nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIBaseClipboard  
-  NS_IMETHOD SetData(nsITransferable * aTransferable, nsIClipboardOwner * anOwner);
-  NS_IMETHOD GetData(nsITransferable * aTransferable);
-
-  NS_IMETHOD EmptyClipboard();
-  NS_IMETHOD ForceDataToClipboard();
-
-  NS_IMETHOD HasDataMatchingFlavors ( nsISupportsArray* aFlavorList, PRBool * outResult ) ;
-
+  // nsIClipboard  
+  NS_DECL_NSICLIPBOARD
+  
 protected:
 
   NS_IMETHOD SetNativeClipboardData() = 0;
