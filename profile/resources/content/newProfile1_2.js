@@ -30,11 +30,11 @@ function GetFields()
 {
   var profName = document.getElementById("ProfileName").value;
   var profDir  = document.getElementById("ProfileDir");
-  var profDirContent = profDir.getAttribute("value");
+  var profDirContent = profDir.hasChildNodes() ? profDir.firstChild.nodeValue : "";
   var profDirRootFolder = profDir.getAttribute("rootFolder");
   var rv = { 
     ProfileName: { id: "ProfileName", value: profName },
-    ProfileDir:  { id: "ProfileDir",  value: profDirContent, rootFolder: profDirRootFolder }
+    ProfileDir:  { id: "ProfileDir",  value: profDirRootFolder }
   }
   return rv; 
 }
@@ -45,8 +45,7 @@ function SetFields( aElement, aValue, aDataObject )
 {
   element = document.getElementById( aElement );
   if(element.id == "ProfileDir" && aValue != "") {
-    element.setAttribute( "rootFolder", aDataObject.rootFolder );
-    chooseProfileFolder( aValue, false );
+    chooseProfileFolder( aValue );
   }
   else if(element.id == "ProfileName")
     element.value = aValue;
@@ -63,40 +62,38 @@ function initFields()
 
 // function createProfileWizard.js::chooseProfileFolder();
 // invoke a folder selection dialog for choosing the directory of profile storage.
-function chooseProfileFolder(folder, showPopup)
+function chooseProfileFolder( aRootFolder )
 {
-  if(showPopup) {
+  if( !aRootFolder ) {
 	  try {
       var fileSpec = Components.classes["component://netscape/filespecwithui"].createInstance();
       if(fileSpec) {
         fileSpec = fileSpec.QueryInterface(Components.interfaces.nsIFileSpecWithUI);
-        folder = fileSpec.chooseDirectory( bundle.GetStringFromName("chooseFolder"));    
+        fileSpec.URLString = fileSpec.chooseDirectory( bundle.GetStringFromName("chooseFolder"));    
+        aRootFolder = fileSpec.nativePath;
       } 
-      else folder = null;
+      else
+        aRootFolder = null;
     }
     catch(e) {
-      folder = null;
+      aRootFolder = null;
     }
   }
-  if( folder != undefined && folder ) {
+  if( aRootFolder ) {
     var folderText = document.getElementById("ProfileDir");
-    if (showPopup) {
-	    try {
-    		var spec = Components.classes["component://netscape/filespec"].createInstance();
-		    spec = spec.QueryInterface(Components.interfaces.nsIFileSpec);
-    		spec.URLString = folder;
-		    folder = spec.nativePath;
-	    }
-	    catch (ex) {
-    		dump("failed to convert URL to native path\n");
-	    }
-    }
-    folderText.setAttribute( "value",folder );
-    if( showPopup )
-      folderText.setAttribute( "rootFolder", folder );
-    // show the 'use default' button
-    document.getElementById( "useDefault" ).setAttribute( "style", "display: inherit" );
+    folderText.setAttribute( "rootFolder", aRootFolder );
+    if ( aRootFolder != top.profile.defaultProfileParentDir.nativePath )
+      document.getElementById( "useDefault" ).removeAttribute("disabled");
     updateProfileName();
+  }
+}
+
+function clearFolderDisplay()
+{
+  var folderText = document.getElementById("ProfileDir");
+  if ( folderText.hasChildNodes() ) {
+    while ( folderText.hasChildNodes() )
+      folderText.removeChild( folderText.firstChild );
   }
 }
 
@@ -112,7 +109,10 @@ function updateProfileName()
     if ( fileSpec )
       fileSpec.nativePath = rootFolder;
     fileSpec.appendRelativeUnixPath( profileName.value );
-    folderDisplayElement.setAttribute( "value", fileSpec.nativePath );
+    
+    clearFolderDisplay();
+    var value = document.createTextNode( fileSpec.nativePath );
+    folderDisplayElement.appendChild( value );
   }
   catch(e) {
   }
@@ -134,7 +134,7 @@ function setDisplayToDefaultFolder()
   catch(e) {
   }
   
-  document.getElementById("useDefault").setAttribute("style","display:none");
+  document.getElementById("useDefault").setAttribute("disabled", "true");
   
   // reset the display field
   updateProfileName();
