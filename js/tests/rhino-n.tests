@@ -88,3 +88,6 @@ ecma/String/15.5.4.11-5.js
 ecma/String/15.5.4.12-1.js
 ecma/String/15.5.4.12-4.js
 ecma/String/15.5.4.12-5.js
+#Rhino doesn't implement the (non-ECMA) f.caller property
+js1_5/Function/regress-222029-001.js
+js1_5/Function/regress-222029-002.js
