@@ -41,7 +41,7 @@
 #include "prlong.h"
 #include "nsGenericFactory.h"
 
-NS_IMPL_ISUPPORTS1(nsBinaryOutputStream, nsIBinaryOutputStream)
+NS_IMPL_ISUPPORTS3(nsBinaryOutputStream, nsIObjectOutputStream, nsIBinaryOutputStream, nsIOutputStream)
 
 NS_IMETHODIMP
 nsBinaryOutputStream::Flush() { return mOutputStream->Flush(); }
