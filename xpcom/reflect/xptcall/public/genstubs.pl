@@ -15,8 +15,10 @@
 # more dependencies???
 #
 
-$entry_count    = 128;
-$sentinel_count = 10;
+# 3 entries are already 'used' by the 3 methods of nsISupports.
+# 3+247+5=255 This should get us in under the Linux ARM limitation
+$entry_count    = 247;
+$sentinel_count = 5;
 
 $decl_name = "xptcstubsdecl.inc";
 $def_name  = "xptcstubsdef.inc";
