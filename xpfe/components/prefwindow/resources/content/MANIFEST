@@ -10,6 +10,7 @@ pref-charset.js
 pref-charset.xul
 pref-cache.js
 pref-cache.xul
+pref-calibrate-screen.xul
 pref-colors.js
 pref-colors.xul
 pref-themes.xul

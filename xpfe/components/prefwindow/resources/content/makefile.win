@@ -48,6 +48,7 @@ CHROME_CONTENT = \
 	.\pref-debug2.xul \
 	.\pref-download.xul \
 	.\pref-fonts.xul \
+	.\pref-calibrate-screen.xul \
 	.\pref-fonts.js \
 	.\pref-history.xul \
 	.\pref-languages.xul \
