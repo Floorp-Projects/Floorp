@@ -1247,6 +1247,9 @@ invalid_arg:
 
 PR_IMPLEMENT(PRWaitGroup*) PR_CreateWaitGroup(PRInt32 size /* ignored */)
 {
+#ifdef XP_MAC
+#pragma unused (size)
+#endif
     PRWaitGroup *wg;
 
     if (NULL == (wg = PR_NEWZAP(PRWaitGroup)))

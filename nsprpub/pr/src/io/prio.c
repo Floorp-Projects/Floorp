@@ -136,6 +136,9 @@ PR_IMPLEMENT(PRStatus) PR_SetFDInheritable(
     }
     return PR_SUCCESS;
 #else
+#ifdef XP_MAC
+#pragma unused (fd, inheritable)
+#endif
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return PR_FAILURE;
 #endif

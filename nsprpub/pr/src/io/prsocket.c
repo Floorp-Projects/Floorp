@@ -983,6 +983,9 @@ static PRStatus PR_CALLBACK SocketSetSockOpt(
 static PRInt16 PR_CALLBACK SocketPoll(
     PRFileDesc *fd, PRInt16 in_flags, PRInt16 *out_flags)
 {
+#ifdef XP_MAC
+#pragma unused( fd, in_flags )
+#endif
     *out_flags = 0;
     return in_flags;
 }  /* SocketPoll */
