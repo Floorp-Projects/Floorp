@@ -253,4 +253,6 @@ bin\components\importOE.dll
 bin\components\impOutlk.dll
 bin\components\impEudra.dll
 bin\components\impText.dll
+bin\components\absyncsv.dll
+bin\components\absync.xpt
 bin\help\mailhelp\*
