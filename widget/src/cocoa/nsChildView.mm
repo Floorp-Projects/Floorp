@@ -1108,7 +1108,7 @@ NS_IMETHODIMP nsChildView::EndResizingChildren(void)
 // 
 //
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin)
+NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOrigin, PRBool& outWidgetVisible)
 {
   NS_ASSERTION(mPluginPort, "GetPluginClipRect must only be called on a plugin widget");
   if (!mPluginPort) return NS_ERROR_FAILURE;
@@ -1134,11 +1134,13 @@ NS_IMETHODIMP nsChildView::GetPluginClipRect(nsRect& outClipRect, nsPoint& outOr
   {
     outClipRect.width  = (nscoord)visibleBounds.size.width;
     outClipRect.height = (nscoord)visibleBounds.size.height;
+    outWidgetVisible = PR_TRUE;
   }
   else
   {
     outClipRect.width = 0;
     outClipRect.height = 0;
+    outWidgetVisible = PR_FALSE;
   }
 
   // need to convert view's origin to window coordinates.
@@ -1184,8 +1186,10 @@ NS_IMETHODIMP nsChildView::StartDrawPlugin()
 
       nsRect  clipRect;   // this is in native window coordinates
       nsPoint origin;
-      GetPluginClipRect(clipRect, origin);
+      PRBool visible;
+      GetPluginClipRect(clipRect, origin, visible);
       
+      // XXX if we're not visible, set an empty clip region?
       Rect pluginRect;
       ConvertGeckoRectToMacRect(clipRect, pluginRect);
       
