@@ -67,6 +67,11 @@ EXPORT_RESOURCE_SAMPLES = \
 		aw-accname.js \
 		aw-done.xul \
 		aw-done.js	\
+		SmtpServerList.xul \
+		SmtpServerList.js \
+		smtpEditOverlay.xul \
+		SmtpServerEdit.xul \
+		SmtpServerEdit.js \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

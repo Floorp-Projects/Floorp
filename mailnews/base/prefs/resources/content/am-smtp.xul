@@ -60,4 +60,8 @@
   </html:tr>
   </html:table>    
 
+  <box align="horizontal">
+    <spring flex="100%"/>
+    <button value="&advanced.label;" onclick="window.openDialog('chrome://messenger/content/SmtpServerList.xul', 'smtp', 'modal,chrome');"/>
+  </box>
 </window>
