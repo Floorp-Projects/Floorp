@@ -830,35 +830,6 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 	PRBool entityConversionDone = PR_FALSE;
   nsCOMPtr<nsIPrompt> prompt;
 
-  // Let's open the progress dialog
-  if (progress)
-  {
-    mProgress = progress;
-    nsXPIDLString msgSubject;
-    m_compFields->GetSubject(getter_Copies(msgSubject));
-
-    PRBool showProgress = PR_FALSE;
-	  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
-    if (prefs)
-    {
-		  prefs->GetBoolPref("mailnews.show_send_progress", &showProgress);
-      if (showProgress)
-      {
-        nsCOMPtr<nsIMsgComposeProgressParams> params = do_CreateInstance(NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID, &rv);
-        if (NS_FAILED(rv) || !params)
-          return NS_ERROR_FAILURE;
-
-        params->SetSubject((const PRUnichar*) msgSubject);
-        params->SetDeliveryMode(deliverMode);
-        
-        mProgress->OpenProgressDialog(m_window, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
-        mProgress->GetPrompter(getter_AddRefs(prompt));
-      }
-    }
-
-    mProgress->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
-  }
-
   // i'm assuming the compose window is still up at this point...
   if (!prompt && m_window)
      m_window->GetPrompter(getter_AddRefs(prompt));
@@ -909,6 +880,35 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 		    m_compFields->SetBody(msgbodyC);
       }
     }
+  }
+
+  // Let's open the progress dialog
+  if (progress)
+  {
+    mProgress = progress;
+    nsXPIDLString msgSubject;
+    m_compFields->GetSubject(getter_Copies(msgSubject));
+
+    PRBool showProgress = PR_FALSE;
+	  nsCOMPtr<nsIPref> prefs (do_GetService(NS_PREF_CONTRACTID));
+    if (prefs)
+    {
+		  prefs->GetBoolPref("mailnews.show_send_progress", &showProgress);
+      if (showProgress)
+      {
+        nsCOMPtr<nsIMsgComposeProgressParams> params = do_CreateInstance(NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID, &rv);
+        if (NS_FAILED(rv) || !params)
+          return NS_ERROR_FAILURE;
+
+        params->SetSubject((const PRUnichar*) msgSubject);
+        params->SetDeliveryMode(deliverMode);
+        
+        mProgress->OpenProgressDialog(m_window, "chrome://messenger/content/messengercompose/sendProgress.xul", params);
+        mProgress->GetPrompter(getter_AddRefs(prompt));
+      }
+    }
+
+    mProgress->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_START, 0);
   }
 
   rv = _SendMsg(deliverMode, identity, entityConversionDone);
