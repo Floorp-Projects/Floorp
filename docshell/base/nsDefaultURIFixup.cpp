@@ -208,6 +208,17 @@ nsDefaultURIFixup::CreateFixupURI(const PRUnichar *aStringURI, PRUint32 aFixupFl
 
 PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
 {
+    PRBool makeAlternate = PR_TRUE;
+    if (!mPrefs)
+    {
+        return PR_FALSE;
+    }
+    mPrefs->GetBoolPref("browser.fixup.alternate.enabled", &makeAlternate);
+    if (!makeAlternate)
+    {
+        return PR_FALSE;
+    }
+
     // Code only works for http. Not for any other protocol including https!
     PRBool isHttp = PR_FALSE;
     aURI->SchemeIs("http", &isHttp);
@@ -222,7 +233,8 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
         return PR_FALSE;
     }
 
-    nsCAutoString oldHost, newHost;
+    nsCAutoString oldHost;
+    nsCAutoString newHost;
     aURI->GetHost(oldHost);
 
     // Count the dots
@@ -237,13 +249,28 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
         ++iter;
     }
 
-    // TODO: Defaulting to www.foo.com is a bit nasty. It should be a pref
-    //       somewhere for people who'd prefer it to default to www.foo.org,
-    //       www.foo.co.uk or whatever.
-    const char *prefix = "www.";
-    const char *suffix = ".com";
 
-    // Hardcoded to .com for the time being
+    nsresult rv;
+
+    // Get the prefix and suffix to stick onto the new hostname. By default these
+    // are www. & .com but they could be any other value, e.g. www. & .org
+
+    nsCAutoString prefix("www.");
+    nsXPIDLCString prefPrefix;
+    rv = mPrefs->GetCharPref("browser.fixup.alternate.prefix", getter_Copies(prefPrefix));
+    if (NS_SUCCEEDED(rv))
+    {
+        prefix.Assign(prefPrefix);
+    }
+
+    nsCAutoString suffix(".com");
+    nsXPIDLCString prefSuffix;
+    rv = mPrefs->GetCharPref("browser.fixup.alternate.suffix", getter_Copies(prefSuffix));
+    if (NS_SUCCEEDED(rv))
+    {
+        suffix.Assign(prefSuffix);
+    }
+    
     if (numDots == 0)
     {
         newHost.Assign(prefix);
@@ -252,13 +279,19 @@ PRBool nsDefaultURIFixup::MakeAlternateURI(nsIURI *aURI)
     }
     else if (numDots == 1)
     {
-        if (oldHost.EqualsIgnoreCase(prefix, strlen(prefix))) {
+        if (prefix.Length() > 0 &&
+                oldHost.EqualsIgnoreCase(prefix.get(), prefix.Length())) {
             newHost.Assign(oldHost);
             newHost.Append(suffix);
         }
-        else {
+        else if (suffix.Length() > 0) {
             newHost.Assign(prefix);
             newHost.Append(oldHost);
+        }
+        else
+        {
+            // Do nothing
+            return PR_FALSE;
         }
     }
     else
