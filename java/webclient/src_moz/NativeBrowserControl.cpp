@@ -29,8 +29,10 @@
 #include "nsIEventQueueService.h" // for PLEventQueue
 #include "nsIServiceManager.h" // for do_GetService
 #include "nsEmbedAPI.h" // for NS_HandleEmbeddingEvent
+#include <nsIWindowWatcher.h> // for initializing our window watcher service
 
 #include "EmbedWindow.h"
+#include "WindowCreator.h"
 #include "EmbedProgress.h"
 #include "NativeBrowserControl.h"
 #include "ns_util.h"
@@ -91,9 +93,15 @@ NativeBrowserControl::Init()
     
     //
     // create the WindowCreator: see
-    // NativeEventThread->InitializeWindowCreator
-    //
+    WindowCreator *creator = new WindowCreator(this);
+    nsCOMPtr<nsIWindowCreator> windowCreator;
+    windowCreator = NS_STATIC_CAST(nsIWindowCreator *, creator);
 
+    // Attach it via the watcher service
+    nsCOMPtr<nsIWindowWatcher> watcher = do_GetService(NS_WINDOWWATCHER_CONTRACTID);
+    if (watcher) {
+        watcher->SetWindowCreator(windowCreator);
+    }
 
     return NS_OK;
 }

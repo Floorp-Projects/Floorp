@@ -94,9 +94,9 @@ REQUIRES	= xpcom \
 #	ISupportsPeer.cpp \
 #	NativeEventThreadActionEvents.cpp \
 #	WindowControlActionEvents.cpp \
-#	WindowCreator.cpp \
 
 CPPSRCS = \
+	WindowCreator.cpp \
 	nsActions.cpp \
 	NavigationActionEvents.cpp \
 	InputStreamShim.cpp \

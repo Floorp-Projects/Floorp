@@ -1,5 +1,5 @@
 /*
- * $Id: THTTPD.java,v 1.1 2004/06/18 13:53:13 edburns%acm.org Exp $
+ * $Id: THTTPD.java,v 1.2 2004/06/22 19:23:23 edburns%acm.org Exp $
  */
 
 /* 
@@ -92,8 +92,10 @@ public class THTTPD extends Object {
 	    V();
 	    
 	    while (keepRunning) {
-		if ((-1 != maxRequests) && numRequests < maxRequests) {
-		    break;
+		if (numRequests >= maxRequests) {
+		    if (-1 != maxRequests) {
+			break;
+		    }
 		}
 		numRequests++;
 		try {

@@ -31,6 +31,8 @@
 #include "ns_util.h"
 #include "nsCRT.h" // for nsCRT::strcmp
 
+#include <nsIIOService.h> // PENDING(edburns): remove when the offline issue is resolved
+
 #include <nsWidgetsCID.h> // for NS_APPSHELL_CID
 #include <nsIComponentManager.h> // for do_CreateInstance
 #include <nsILocalFile.h> 
@@ -51,7 +53,10 @@
 
 #include "NativeBrowserControl.h"
 
+#include "nsNetCID.h" // for NS_IOSERVICE_CID
+
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 //
 // global data
@@ -234,6 +239,18 @@ Java_org_mozilla_webclient_impl_wrapper_1native_WrapperFactoryImpl_nativeAppSetu
     if (NS_FAILED(rv)) {
         ::util_ThrowExceptionToJava(env, 
                                     "Failed to Spinup AppShell");
+        return;
+    }
+
+    nsCOMPtr<nsIIOService> ioService = do_GetService(kIOServiceCID, &rv);
+    
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Can't get IOService.");
+        return;
+    }
+    rv = ioService->SetOffline(PR_FALSE);
+    if (NS_FAILED(rv)) {
+        ::util_ThrowExceptionToJava(env, "Can't get IOService.");
         return;
     }
 

@@ -23,13 +23,13 @@
 #ifndef __WindowCreator_h_
 #define __WindowCreator_h_
 
-#include "nsIWindowCreator.h"
+#include "nsIWindowCreator2.h"
 #include "ns_util.h"
 
-class WindowCreator : public nsIWindowCreator
+class WindowCreator : public nsIWindowCreator2
 {
 private:
-    NativeBrowserControl *mInitContext;
+    NativeBrowserControl *mNativeBCPtr;
     jobject mTarget;
 
 public:
@@ -40,6 +40,7 @@ public:
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSIWINDOWCREATOR
+    NS_DECL_NSIWINDOWCREATOR2
 };
 
 #endif

@@ -23,21 +23,19 @@
 #include "nsIWebBrowserChrome.h"
 #include "WindowCreator.h"
 
-int processEventLoop(NativeBrowserControl * initContext);
+NativeBrowserControl* gNewWindowNativeBCPtr;
 
-NativeBrowserControl* gNewWindowInitContext;
+NS_IMPL_ISUPPORTS2(WindowCreator, nsIWindowCreator, nsIWindowCreator2)
 
-WindowCreator::WindowCreator(NativeBrowserControl *yourInitContext)
+WindowCreator::WindowCreator(NativeBrowserControl *yourNativeBCPtr)
 {
-    mInitContext = yourInitContext;
+    mNativeBCPtr = yourNativeBCPtr;
     mTarget = 0;
 }
 
 WindowCreator::~WindowCreator()
 {
 }
-
-NS_IMPL_ISUPPORTS1(WindowCreator, nsIWindowCreator)
 
 NS_IMETHODIMP WindowCreator::AddNewWindowListener(jobject target)
 {
@@ -55,24 +53,37 @@ WindowCreator::CreateChromeWindow(nsIWebBrowserChrome *parent,
     if (!mTarget)
         return NS_OK;
 
-    gNewWindowInitContext = nsnull;
+    gNewWindowNativeBCPtr = nsnull;
+
+    /********
         
-    util_SendEventToJava(mInitContext->env,
-                         mInitContext->nativeEventThread,
+    util_SendEventToJava(mNativeBCPtr->env,
+                         mNativeBCPtr->nativeEventThread,
                          mTarget,
                          NEW_WINDOW_LISTENER_CLASSNAME,
                          chromeFlags,
                          0);
 
-    // check gNewWindowInitContext to see if the initialization had completed
-    while (!gNewWindowInitContext) {
-        processEventLoop(mInitContext);
+    // check gNewWindowNativeBCPtr to see if the initialization had completed
+    while (!gNewWindowNativeBCPtr) {
+        processEventLoop(mNativeBCPtr);
         ::PR_Sleep(PR_INTERVAL_NO_WAIT);
     }
 
-    nsCOMPtr<nsIWebBrowserChrome> webChrome(do_QueryInterface(gNewWindowInitContext->browserContainer));
+    nsCOMPtr<nsIWebBrowserChrome> webChrome(do_QueryInterface(gNewWindowNativeBCPtr->browserContainer));
     *_retval = webChrome;
     NS_IF_ADDREF(*_retval);
     printf ("RET=%x\n", *_retval);
+    *************/
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+WindowCreator::CreateChromeWindow2(nsIWebBrowserChrome *parent, 
+                                   PRUint32 chromeFlags, 
+                                   PRUint32 contextFlags, 
+                                   nsIURI *uri, PRBool *cancel, 
+                                   nsIWebBrowserChrome **_retval)
+{
     return NS_OK;
 }
