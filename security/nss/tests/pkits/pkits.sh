@@ -91,11 +91,12 @@ pkits_init()
   PKITSdb=${PKITSDIR}/PKITSdb
 
   PKITS_LOG=${PKITSDIR}/pkits.log #getting its own logfile
+  pkits_log "Start of logfile $PKITS_LOG"
 
   if [ ! -d "${PKITSdb}" ]; then
       mkdir -p ${PKITSdb}
   else
-      echo "$SCRIPTNAME: WARNING - ${PKITSdb} exists"
+      pkits_log "$SCRIPTNAME: WARNING - ${PKITSdb} exists"
   fi
 
   echo "HOSTDIR" $HOSTDIR
@@ -110,7 +111,12 @@ pkits_init()
 
   certutil -A -n TrustAnchorRootCertificate -t "C,C,C" -i \
       $certs/TrustAnchorRootCertificate.crt -d $PKITSdb
-  crlutil -I -i $crls/TrustAnchorRootCRL.crl -d ${PKITSdb}
+  if [ "$NSS_NO_PKITS_CRLS" -ne 1 ]; then
+    crlutil -I -i $crls/TrustAnchorRootCRL.crl -d ${PKITSdb}
+  else
+    html  "<H3>NO CRLs are being used.</H3>"
+    pkits_log "NO CRLs are being used."
+  fi
 }
 
 ############################### pkits_log ##############################
@@ -130,15 +136,20 @@ log_banner()
   echo ""
 }
 
-break_table()
+start_table()
 {
-  html "</TABLE><P>"
   html "<TABLE BORDER=1><TR><TH COLSPAN=3>$*</TH></TR>"
   html "<TR><TH width=500>Test Case</TH><TH width=50>Result</TH></TR>" 
   echo ""
   echo "***************************************************************"
   echo "$*"
   echo "***************************************************************"
+}
+
+break_table()
+{
+  html "</TABLE><P>"
+  start_table "$@"
 }
 
 ################################ pkits #################################
@@ -194,14 +205,16 @@ pkitsn()
 ########################################################################
 crlImport()
 {
-  echo "crlutil -d PKITSdb -I -i $*"
-  crlutil -d ${PKITSdb} -I -i $* > ${PKITSDIR}/cmdout.txt 2>&1
-  RET=$?
-  cat ${PKITSDIR}/cmdout.txt
+  if [ "$NSS_NO_PKITS_CRLS" -ne 1 ]; then
+    echo "crlutil -d PKITSdb -I -i $*"
+    crlutil -d ${PKITSdb} -I -i $* > ${PKITSDIR}/cmdout.txt 2>&1
+    RET=$?
+    cat ${PKITSDIR}/cmdout.txt
 
-  if [ "$RET" -ne 0 ]; then
-      html_failed "<TR><TD>${VFY_ACTION} ($RET) "
-      pkits_log "ERROR: ${VFY_ACTION} failed $RET"
+    if [ "$RET" -ne 0 ]; then
+	html_failed "<TR><TD>${VFY_ACTION} ($RET) "
+	pkits_log "ERROR: ${VFY_ACTION} failed $RET"
+    fi
   fi
 }
 
@@ -211,17 +224,20 @@ crlImport()
 ########################################################################
 crlImportn()
 {
-  echo "crlutil -d PKITSdb -I -i $*"
-  crlutil -d ${PKITSdb} -I -i $* > ${PKITSDIR}/cmdout.txt 2>&1
-  RET=$?
-  cat ${PKITSDIR}/cmdout.txt
+  RET=0
+  if [ "$NSS_NO_PKITS_CRLS" -ne 1 ]; then
+    echo "crlutil -d PKITSdb -I -i $*"
+    crlutil -d ${PKITSdb} -I -i $* > ${PKITSDIR}/cmdout.txt 2>&1
+    RET=$?
+    cat ${PKITSDIR}/cmdout.txt
 
-  if [ "$RET" -eq 0 ]; then
-      html_failed "<TR><TD>${VFY_ACTION} ($RET) "
-      pkits_log "ERROR: ${VFY_ACTION} failed $RET"
-  else
-      html_passed "<TR><TD>${VFY_ACTION} ($RET) "
-      pkits_log "SUCCESS: ${VFY_ACTION} returned as expected $RET"
+    if [ "$RET" -eq 0 ]; then
+	html_failed "<TR><TD>${VFY_ACTION} ($RET) "
+	pkits_log "ERROR: ${VFY_ACTION} failed $RET"
+    else
+	html_passed "<TR><TD>${VFY_ACTION} ($RET) "
+	pkits_log "SUCCESS: ${VFY_ACTION} returned as expected $RET"
+    fi
   fi
   return $RET
 }
@@ -234,14 +250,16 @@ crlImportn()
 ########################################################################
 delete()
 {
-  echo "crlutil -d PKITSdb -D -n $*"
-  crlutil -d ${PKITSdb} -D -n $* > ${PKITSDIR}/cmdout.txt 2>&1
-  RET=$?
-  cat ${PKITSDIR}/cmdout.txt
+  if [ "$NSS_NO_PKITS_CRLS" -ne 1 ]; then
+      echo "crlutil -d PKITSdb -D -n $*"
+      crlutil -d ${PKITSdb} -D -n $* > ${PKITSDIR}/cmdout.txt 2>&1
+      RET=$?
+      cat ${PKITSDIR}/cmdout.txt
 
-  if [ "$RET" -ne 0 ]; then
-      html_failed "<TR><TD>${VFY_ACTION} ($RET) "
-      pkits_log "ERROR: ${VFY_ACTION} failed $RET"
+      if [ "$RET" -ne 0 ]; then
+	  html_failed "<TR><TD>${VFY_ACTION} ($RET) "
+	  pkits_log "ERROR: ${VFY_ACTION} failed $RET"
+      fi
   fi
 
   echo "certutil -d PKITSdb -D -n $*"
@@ -277,7 +295,7 @@ certImport()
 ########################################################################
 pkits_SignatureVerification()
 {
-  break_table "NIST PKITS Section 4.1: Signature Verification"
+  start_table "NIST PKITS Section 4.1: Signature Verification"
 
   VFY_ACTION="Valid Signatures Test1"; log_banner
   certImport GoodCACert
@@ -322,9 +340,11 @@ pkits_ValidityPeriods()
 
   VFY_ACTION="Invalid CA notBefore Date Test1"; log_banner
   certImport BadnotBeforeDateCACert
-  crlImport $crls/BadnotBeforeDateCACRL.crl
-  pkitsn $certs/InvalidCAnotBeforeDateTest1EE.crt \
-      $certs/BadnotBeforeDateCACert.crt
+  crlImportn $crls/BadnotBeforeDateCACRL.crl
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidCAnotBeforeDateTest1EE.crt \
+	  $certs/BadnotBeforeDateCACert.crt
+  fi
   delete BadnotBeforeDateCACert
 
   VFY_ACTION="Invalid EE notBefore Date Test2"; log_banner
@@ -344,9 +364,11 @@ pkits_ValidityPeriods()
 
   VFY_ACTION="Invalid CA notAfter Date Test5"; log_banner
   certImport BadnotAfterDateCACert
-  crlImport $crls/BadnotAfterDateCACRL.crl
-  pkitsn $certs/InvalidCAnotAfterDateTest5EE.crt \
-      $certs/BadnotAfterDateCACert.crt
+  crlImportn $crls/BadnotAfterDateCACRL.crl
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidCAnotAfterDateTest5EE.crt \
+	  $certs/BadnotAfterDateCACert.crt
+  fi
   delete BadnotAfterDateCACert
 
   VFY_ACTION="Invalid EE notAfter Date Test6"; log_banner
@@ -465,22 +487,28 @@ pkits_BasicCertRevocation()
   VFY_ACTION="Invalid Bad CRL Signature Test4"; log_banner
   certImport BadCRLSignatureCACert
   crlImportn $crls/BadCRLSignatureCACRL.crl
-  pkitsn $certs/InvalidBadCRLSignatureTest4EE.crt \
-     $certs/BadCRLSignatureCACert.crt
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidBadCRLSignatureTest4EE.crt \
+	 $certs/BadCRLSignatureCACert.crt
+  fi
   delete BadCRLSignatureCACert
 
   VFY_ACTION="Invalid Bad CRL Issuer Name Test5"; log_banner
   certImport BadCRLIssuerNameCACert
   crlImportn $crls/BadCRLIssuerNameCACRL.crl
-  pkitsn $certs/InvalidBadCRLIssuerNameTest5EE.crt \
-     $certs/BadCRLIssuerNameCACert.crt
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidBadCRLIssuerNameTest5EE.crt \
+	 $certs/BadCRLIssuerNameCACert.crt
+  fi
   delete BadCRLIssuerNameCACert
 
   VFY_ACTION="Invalid Wrong CRL Test6"; log_banner
   certImport WrongCRLCACert
   crlImportn $crls/WrongCRLCACRL.crl
-  pkitsn $certs/InvalidWrongCRLTest6EE.crt \
-     $certs/WrongCRLCACert.crt
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidWrongCRLTest6EE.crt \
+	 $certs/WrongCRLCACert.crt
+  fi
   delete WrongCRLCACert
 
   VFY_ACTION="Valid Two CRLs Test7"; log_banner
@@ -494,20 +522,26 @@ pkits_BasicCertRevocation()
   VFY_ACTION="Invalid Unknown CRL Entry Extension Test8"; log_banner
   certImport UnknownCRLEntryExtensionCACert
   crlImportn $crls/UnknownCRLEntryExtensionCACRL.crl
-  pkitsn $certs/InvalidUnknownCRLEntryExtensionTest8EE.crt \
-     $certs/UnknownCRLEntryExtensionCACert.crt
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidUnknownCRLEntryExtensionTest8EE.crt \
+	 $certs/UnknownCRLEntryExtensionCACert.crt
+  fi
   delete UnknownCRLEntryExtensionCACert
 
   VFY_ACTION="Invalid Unknown CRL Extension Test9"; log_banner
   certImport UnknownCRLExtensionCACert
   crlImportn $crls/UnknownCRLExtensionCACRL.crl
-  pkitsn $certs/InvalidUnknownCRLExtensionTest9EE.crt \
-     $certs/UnknownCRLExtensionCACert.crt
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidUnknownCRLExtensionTest9EE.crt \
+	 $certs/UnknownCRLExtensionCACert.crt
+  fi
 
   VFY_ACTION="Invalid Unknown CRL Extension Test10"; log_banner
   crlImportn $crls/UnknownCRLExtensionCACRL.crl
-  pkitsn $certs/InvalidUnknownCRLExtensionTest10EE.crt \
-     $certs/UnknownCRLExtensionCACert.crt
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidUnknownCRLExtensionTest10EE.crt \
+	 $certs/UnknownCRLExtensionCACert.crt
+  fi
   delete UnknownCRLExtensionCACert
 
   VFY_ACTION="Invalid Old CRL nextUpdate Test11"; log_banner
@@ -560,7 +594,7 @@ pkits_BasicCertRevocation()
 
 pkits_PathVerificWithSelfIssuedCerts()
 {
-  break_table "NIST PKITS Section 4.5: Verifying Paths with Self-Issued Certificates"
+  break_table "NIST PKITS Section 4.5: Self-Issued Certificates"
 
   VFY_ACTION="Valid Basic Self-Issued Old With New Test1"; log_banner
   certImport BasicSelfIssuedNewKeyCACert
@@ -792,15 +826,19 @@ pkits_KeyUsage()
 
   VFY_ACTION="Invalid keyUsage Critical cRLSign False Test4"; log_banner
   certImport keyUsageCriticalcRLSignFalseCACert
-  crlImport $crls/keyUsageCriticalcRLSignFalseCACRL.crl
-  pkitsn $certs/InvalidkeyUsageCriticalcRLSignFalseTest4EE.crt \
-      $certs/keyUsageCriticalcRLSignFalseCACert.crt
+  crlImportn $crls/keyUsageCriticalcRLSignFalseCACRL.crl
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidkeyUsageCriticalcRLSignFalseTest4EE.crt \
+	  $certs/keyUsageCriticalcRLSignFalseCACert.crt
+  fi
 
   VFY_ACTION="Invalid keyUsage Not Critical cRLSign False Test5"; log_banner
   certImport keyUsageNotCriticalcRLSignFalseCACert
-  crlImport $crls/keyUsageNotCriticalcRLSignFalseCACRL.crl
-  pkitsn $certs/InvalidkeyUsageNotCriticalcRLSignFalseTest5EE.crt \
-      $certs/keyUsageNotCriticalcRLSignFalseCACert.crt
+  crlImportn $crls/keyUsageNotCriticalcRLSignFalseCACRL.crl
+  if [ $RET -eq 0 ] ; then 
+      pkitsn $certs/InvalidkeyUsageNotCriticalcRLSignFalseTest5EE.crt \
+	  $certs/keyUsageNotCriticalcRLSignFalseCACert.crt
+  fi
 }
 
 pkits_NameConstraints()
@@ -1060,8 +1098,8 @@ pkits_cleanup()
 
 
 ################################## main ################################
-pkits_init
-pkits_SignatureVerification | tee $PKITS_LOG
+pkits_init 
+pkits_SignatureVerification | tee -a $PKITS_LOG
 pkits_ValidityPeriods | tee -a $PKITS_LOG
 pkits_NameChaining | tee -a $PKITS_LOG
 pkits_BasicCertRevocation | tee -a $PKITS_LOG
