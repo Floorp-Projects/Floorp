@@ -725,7 +725,8 @@ nsLocalFile::InitWithNativePath(const nsACString &filePath)
 
     // kill any trailing '\' provided it isn't the second char of DBCS
     PRInt32 len = pathLen - 1;
-    if (path[len] == '\\' && !::IsDBCSLeadByte(path[len-1]))
+    if (path[len] == '\\' && (!::IsDBCSLeadByte(path[len-1]) || 
+                _mbsrchr((const unsigned char *)path, '\\') == (const unsigned char *)path+len))
     {
         path[len] = '\0';
         pathLen = len;
