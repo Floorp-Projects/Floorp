@@ -612,14 +612,12 @@ nsresult nsImapMailFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
     nsresult rv = GetPath(getter_AddRefs(pathSpec));
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-
-    rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
-    if (NS_SUCCEEDED(rv) && mailDBFactory)
-      folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
+    nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+    if (msgDBService)
+      folderOpen = msgDBService->OpenFolderDB(this, PR_TRUE, PR_FALSE, getter_AddRefs(mDatabase));
 
     if(folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING || folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
-      folderOpen = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
+      folderOpen = msgDBService->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
 
     if(mDatabase)
     {
@@ -878,8 +876,8 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
   nsCOMPtr<nsIMsgDatabase> mailDBFactory;
   nsCOMPtr<nsIMsgFolder> child;
 
-  rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
-  if (NS_SUCCEEDED(rv) && mailDBFactory)
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+  if (msgDBService)
   {
     nsCOMPtr<nsIMsgDatabase> unusedDB;
     nsCOMPtr <nsIFileSpec> dbFileSpec;
@@ -891,7 +889,7 @@ NS_IMETHODIMP nsImapMailFolder::CreateClientSubfolderInfo(const char *folderName
     //Now let's create the actual new folder
     rv = AddSubfolderWithPath(folderNameStr, dbFileSpec, getter_AddRefs(child));
     NS_ENSURE_SUCCESS(rv, rv);
-    rv = mailDBFactory->OpenFolderDB(child, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
+    rv = msgDBService->OpenFolderDB(child, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
     if (NS_SUCCEEDED(rv) && unusedDB)
     {
@@ -2531,9 +2529,6 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
     if ((imapUIDValidity != folderValidity) /* && // if UIDVALIDITY Changed 
       !NET_IsOffline() */)
     {
-      
-      nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-      
       nsCOMPtr<nsIFileSpec> pathSpec;
       rv = GetPath(getter_AddRefs(pathSpec));
       if (NS_FAILED(rv)) return rv;
@@ -2542,10 +2537,8 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       rv = pathSpec->GetFileSpec(&dbName);
       if (NS_FAILED(rv)) return rv;
       
-      rv = nsComponentManager::CreateInstance(kCImapDB, nsnull,
-        NS_GET_IID(nsIMsgDatabase),
-        (void **) getter_AddRefs(mailDBFactory));
-      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+      NS_ENSURE_SUCCESS(rv, rv);
       
       nsCOMPtr <nsIDBFolderInfo> transferInfo;
       if (dbFolderInfo)
@@ -2563,7 +2556,7 @@ NS_IMETHODIMP nsImapMailFolder::UpdateImapMailboxInfo(
       
       // Create a new summary file, update the folder message counts, and
       // Close the summary file db.
-      rv = mailDBFactory->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
+      rv = msgDBService->OpenFolderDB(this, PR_TRUE, PR_TRUE, getter_AddRefs(mDatabase));
       
       // ********** Important *************
       // David, help me here I don't know this is right or wrong
@@ -7227,8 +7220,8 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
     nsCOMPtr<nsIMsgFolder> child;
     nsCOMPtr <nsIMsgImapMailFolder> imapFolder;
 
-    rv = nsComponentManager::CreateInstance(kCImapDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDBFactory));
-    if (NS_SUCCEEDED(rv) && mailDBFactory)
+    nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID);
+    if (msgDBService)
     {
       nsCOMPtr<nsIMsgDatabase> unusedDB;
       nsCOMPtr <nsIFileSpec> dbFileSpec;
@@ -7240,8 +7233,8 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
       rv = CreateFileSpecForDB(proposedDBName.get(), path, getter_AddRefs(dbFileSpec));
       NS_ENSURE_SUCCESS(rv,rv);
 
-      // it's OK to use Open and not OpenFolderDB here, since we don't use the DB.
-      rv = mailDBFactory->Open(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
+      // it's OK to use openMailDBFromFileSpec and not OpenFolderDB here, since we don't use the DB.
+      rv = msgDBService->OpenMailDBFromFileSpec(dbFileSpec, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(unusedDB));
 
       if (NS_SUCCEEDED(rv) && unusedDB)
       {
@@ -7286,7 +7279,7 @@ NS_IMETHODIMP nsImapMailFolder::RenameClient(nsIMsgWindow *msgWindow, nsIMsgFold
         unusedDB->Commit(nsMsgDBCommitType::kLargeCommit);
         unusedDB->Close(PR_TRUE);
 
-	      child->RenameSubFolders(msgWindow, msgFolder);
+        child->RenameSubFolders(msgWindow, msgFolder);
        
         nsCOMPtr<nsIMsgFolder> msgParent;
         msgFolder->GetParentMsgFolder(getter_AddRefs(msgParent));

@@ -39,7 +39,6 @@
 
 #include "msgCore.h"
 #include "nsNewsDatabase.h"
-#include "nsNewsSummarySpec.h"
 #include "nsMsgKeySet.h"
 #include "nsCOMPtr.h"
 #include "prlog.h"
@@ -78,108 +77,6 @@ NS_IMETHODIMP nsNewsDatabase::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }     
   
   return nsMsgDatabase::QueryInterface(aIID, aInstancePtr);
-}
-
-NS_IMETHODIMP nsNewsDatabase::Open(nsIFileSpec *aNewsgroupName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
-{
-  nsNewsDatabase *newsDB;
-  
-  if (!aNewsgroupName)
-    return NS_ERROR_NULL_POINTER;
-  
-  nsFileSpec  newsgroupName;
-  aNewsgroupName->GetFileSpec(&newsgroupName);
-  
-  nsNewsSummarySpec summarySpec(newsgroupName);
-  nsresult  err = NS_OK;
-  PRBool    newFile = PR_FALSE;
-  
-#ifdef DEBUG_NEWS_DATABASE
-  printf("nsNewsDatabase::Open(%s, %s, %p, %s) -> %s\n",
-    (const char*)newsgroupName, create ? "TRUE":"FALSE",
-    pMessageDB, upgrading ? "TRUE":"FALSE", (const char *)summarySpec);
-#endif
-  
-  nsFileSpec dbPath(summarySpec);
-  
-  *pMessageDB = nsnull;
-  
-  newsDB = (nsNewsDatabase *) FindInCache(dbPath);
-  if (newsDB)
-  {
-    *pMessageDB = newsDB;
-    //FindInCache does the AddRef'ing
-    //newsDB->AddRef();
-    return(NS_OK);
-  }
-  
-  newsDB = new nsNewsDatabase();
-  newsDB->m_folder = m_folder;
-  
-  if (!newsDB) {
-#ifdef DEBUG_NEWS_DATABASE
-    printf("NS_ERROR_OUT_OF_MEMORY\n");
-#endif
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  
-  newsDB->AddRef();
-  
-  nsIDBFolderInfo	*folderInfo = nsnull;
-  err = newsDB->OpenMDB((const char *) summarySpec, create);
-  if (err == NS_OK)
-  {
-    newsDB->GetDBFolderInfo(&folderInfo);
-    if (folderInfo == nsnull)
-    {
-      err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-    }
-    else
-    {
-      // compare current version of db versus filed out version info.
-      PRUint32 version;
-      folderInfo->GetVersion(&version);
-      if (newsDB->GetCurVersion() != version)
-        err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-      NS_RELEASE(folderInfo);
-    }
-    if (err != NS_OK)
-    {
-      // this will make the db folder info release its ref to the mail db...
-      NS_IF_RELEASE(newsDB->m_dbFolderInfo);
-      newsDB->ForceClosed();
-      if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
-        summarySpec.Delete(PR_FALSE);
-      
-      newsDB = nsnull;
-    }
-  }
-  if (err != NS_OK || newFile)
-  {
-    // if we couldn't open file, or we have a blank one, and we're supposed 
-    // to upgrade, updgrade it.
-    if (newFile && !upgrading)	// caller is upgrading, and we have empty summary file,
-    {					// leave db around and open so caller can upgrade it.
-      err = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
-    }
-    else if (err != NS_OK)
-    {
-      *pMessageDB = nsnull;
-      if (newsDB)
-        newsDB->ForceClosed();
-      delete newsDB;
-      summarySpec.Delete(PR_FALSE);  // blow away the db if it's corrupt.
-      newsDB = nsnull;
-    }
-  }
-  if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
-  {
-    *pMessageDB = newsDB;
-    if (newsDB)
-      GetDBCache()->AppendElement(newsDB);
-    
-  }
-  return err;
 }
 
 nsresult nsNewsDatabase::Close(PRBool forceCommit)

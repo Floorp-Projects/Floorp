@@ -130,15 +130,13 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
   nsCOMPtr<nsIMsgDatabase> mailDBFactory;
   nsCOMPtr<nsIFileSpec> newPathSpec;
 
-  db ->ListAllKeys(m_keyArray);
+  db->ListAllKeys(m_keyArray);
   nsresult rv = NS_NewFileSpecWithSpec(m_fileSpec, getter_AddRefs(newPathSpec));
 
-  rv = nsComponentManager::CreateInstance(kCMailDB, nsnull,
-                                          NS_GET_IID(nsIMsgDatabase),
-                                          getter_AddRefs(mailDBFactory));
-  if (NS_SUCCEEDED(rv)) 
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+  if (msgDBService) 
   {
-    nsresult folderOpen = mailDBFactory->Open(newPathSpec, PR_TRUE,
+    nsresult folderOpen = msgDBService->OpenMailDBFromFileSpec(newPathSpec, PR_TRUE,
                                      PR_FALSE,
                                      getter_AddRefs(m_db));
 
@@ -147,7 +145,7 @@ nsFolderCompactState::InitDB(nsIMsgDatabase *db)
        folderOpen == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING )
     {
       // if it's out of date then reopen with upgrade.
-      rv = mailDBFactory->Open(newPathSpec,
+      rv = msgDBService->OpenMailDBFromFileSpec(newPathSpec,
                                PR_TRUE, PR_TRUE,
                                getter_AddRefs(m_db));
     }
@@ -321,7 +319,7 @@ nsFolderCompactState::Init(nsIMsgFolder *folder, const char *baseMsgUri, nsIMsgD
 }
 
 void nsFolderCompactState::ShowCompactingStatusMsg()
-    {
+{
   nsXPIDLString statusString;
   nsresult rv = m_folder->GetStringWithFolderNameFromBundle("compactingFolder", getter_Copies(statusString));
   if (statusString && NS_SUCCEEDED(rv))

@@ -58,23 +58,23 @@ class nsMsgMailSession : public nsIMsgMailSession,
                          public nsIFolderListener
 {
 public:
-	nsMsgMailSession();
-	virtual ~nsMsgMailSession();
+  nsMsgMailSession();
+  virtual ~nsMsgMailSession();
 
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSIMSGMAILSESSION
-    NS_DECL_NSIFOLDERLISTENER
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGMAILSESSION
+  NS_DECL_NSIFOLDERLISTENER
 
-	nsresult Init();
-    nsresult GetSelectedLocaleDataDir(nsIFile *defaultsDir);
+  nsresult Init();
+  nsresult GetSelectedLocaleDataDir(nsIFile *defaultsDir);
 
 protected:
   nsCOMArray<nsIFolderListener> mListeners; 
   nsUInt32Array mListenerNotifyFlags;
 
-	nsCOMPtr<nsISupportsArray> mWindows;
-	// stick this here temporarily
-	nsCOMPtr <nsIMsgWindow> m_temporaryMsgWindow;
+  nsCOMPtr<nsISupportsArray> mWindows;
+  // stick this here temporarily
+  nsCOMPtr <nsIMsgWindow> m_temporaryMsgWindow;
 };
 
 

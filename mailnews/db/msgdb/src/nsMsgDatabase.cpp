@@ -21,6 +21,7 @@
  *
  * Contributor(s):
  *   Pierre Phaneuf <pp@ludusdesign.com>
+ *   David Bienvenu <bienvenu@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -64,12 +65,12 @@
 #include "nsTime.h"
 #include "nsIFileSpec.h"
 #include "nsLocalFolderSummarySpec.h"
-
+#include "nsMsgDBCID.h"
 #include "nsILocale.h"
 #include "nsLocaleCID.h"
 #include "nsMsgMimeCID.h"
 #include "nsILocaleService.h"
-
+#include "nsMsgFolderFlags.h"
 #include "nsIMsgAccountManager.h"
 #include "nsIMsgFolderCache.h"
 #include "nsIMsgFolderCacheElement.h"
@@ -103,6 +104,122 @@ static const nsMsgKey kAllThreadsTableKey = 0xfffffffd;
 static const nsMsgKey kFirstPseudoKey = 0xfffffff0;
 static const nsMsgKey kIdStartOfFake = 0xffffff80;
 
+NS_IMPL_ISUPPORTS1(nsMsgDBService, nsIMsgDBService)
+
+nsMsgDBService::nsMsgDBService()
+{
+}
+
+
+nsMsgDBService::~nsMsgDBService()
+{
+}
+
+NS_IMETHODIMP nsMsgDBService::OpenFolderDB(nsIMsgFolder *aFolder, PRBool aCreate, PRBool aUpgrading, nsIMsgDatabase **_retval)
+{
+  NS_ENSURE_ARG(aFolder);
+  *_retval = nsMsgDatabase::FindInCache(aFolder);
+  if (*_retval)
+    return NS_OK;
+
+  nsCOMPtr <nsIMsgIncomingServer> incomingServer;
+  nsresult rv = aFolder->GetServer(getter_AddRefs(incomingServer));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsXPIDLCString localStoreType;
+  incomingServer->GetLocalStoreType(getter_Copies(localStoreType));
+  nsCAutoString dbContractID(NS_MSGDB_CONTRACTID);
+  dbContractID.Append(localStoreType.get());
+  nsCOMPtr <nsIMsgDatabase> msgDB = do_CreateInstance(dbContractID.get(), &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIFileSpec> folderPath;
+  rv = aFolder->GetPath(getter_AddRefs(folderPath));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = msgDB->Open(folderPath, aCreate, aUpgrading);
+  if (NS_FAILED(rv) && (rv != NS_MSG_ERROR_FOLDER_SUMMARY_MISSING 
+    && rv != NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE || !aCreate))
+    return rv;
+  NS_IF_ADDREF(*_retval = msgDB);
+  nsMsgDatabase *msgDatabase = NS_STATIC_CAST(nsMsgDatabase *, *_retval);
+  msgDatabase->m_folder = aFolder;
+  PRUint32 folderFlags;
+  aFolder->GetFlags(&folderFlags);
+
+  if (NS_SUCCEEDED(rv) && ! (folderFlags & MSG_FOLDER_FLAG_VIRTUAL))
+  {
+    mdb_count numHdrsInTable = 0;
+
+    if (msgDatabase->m_mdbAllMsgHeadersTable)
+    {
+      PRInt32 numMessages;
+      msgDatabase->m_mdbAllMsgHeadersTable->GetCount(msgDatabase->GetEnv(), &numHdrsInTable);
+      msgDatabase->m_dbFolderInfo->GetNumMessages(&numMessages);
+      if (numMessages != numHdrsInTable)
+        msgDatabase->SyncCounts();
+    }
+  }
+  NS_ENSURE_SUCCESS(rv, rv);
+  for (PRInt32 listenerIndex = 0; listenerIndex < m_foldersPendingListeners.Count(); listenerIndex++)
+  {
+  //  check if we have a pending listener on this db, and if so, add it.
+    if (m_foldersPendingListeners[listenerIndex] == aFolder)
+      (*_retval)->AddListener(m_pendingListeners.ObjectAt(listenerIndex));
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgDBService::OpenMailDBFromFileSpec(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aUpgrading, nsIMsgDatabase** pMessageDB)
+{
+  nsFileSpec  folderName;
+  
+  if (!aFolderName)
+    return NS_ERROR_NULL_POINTER;
+  aFolderName->GetFileSpec(&folderName);
+  nsLocalFolderSummarySpec summarySpec(folderName);
+
+  nsFileSpec dbPath(summarySpec);
+  *pMessageDB = (nsMsgDatabase *) nsMsgDatabase::FindInCache(dbPath);
+  if (*pMessageDB)
+    return NS_OK;
+
+  nsresult rv;
+  nsCOMPtr <nsIMsgDatabase> msgDB = do_CreateInstance(NS_MAILBOXDB_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = msgDB->Open(aFolderName, aCreate, aUpgrading);
+  NS_IF_ADDREF(*pMessageDB = msgDB);
+  return rv;
+}
+
+/* void registerPendingListener (in nsIMsgFolder aFolder, in nsIDBChangeListener aListener); */
+NS_IMETHODIMP nsMsgDBService::RegisterPendingListener(nsIMsgFolder *aFolder, nsIDBChangeListener *aListener)
+{
+  // need to make sure we don't hold onto these forever. Maybe a shutdown listener?
+  // if there is a db open on this folder already, we should register the listener.
+  m_foldersPendingListeners.AppendObject(aFolder);
+  m_pendingListeners.AppendObject(aListener);
+  nsCOMPtr <nsIMsgDatabase> openDB;
+
+  openDB = getter_AddRefs((nsIMsgDatabase *) nsMsgDatabase::FindInCache(aFolder));
+  if (openDB)
+    openDB->AddListener(aListener);
+  return NS_OK;
+}
+
+/* void unregisterPendingListener (in nsIDBChangeListener aListener); */
+NS_IMETHODIMP nsMsgDBService::UnregisterPendingListener(nsIDBChangeListener *aListener)
+{
+  PRInt32 listenerIndex = m_pendingListeners.IndexOfObject(aListener);
+  if (listenerIndex != kNotFound)
+  {
+    nsCOMPtr <nsIMsgFolder> folder = m_foldersPendingListeners[listenerIndex];
+    nsCOMPtr <nsIMsgDatabase> msgDB = getter_AddRefs(nsMsgDatabase::FindInCache(folder));
+    if (msgDB)
+      msgDB->RemoveListener(aListener);
+    m_foldersPendingListeners.RemoveObjectAt(listenerIndex);
+    m_pendingListeners.RemoveObjectAt(listenerIndex);
+    return NS_OK;
+  }
+  return NS_ERROR_FAILURE;
+}
 
 // we never need to call this because we check the use cache first,
 // and any hdr in this cache will be in the use cache.
@@ -674,6 +791,22 @@ nsMsgDatabase* nsMsgDatabase::FindInCache(nsFileSpec &dbName)
 }
 
 //----------------------------------------------------------------------
+// FindInCache(nsIMsgFolder) - this addrefs the db it finds.
+//----------------------------------------------------------------------
+nsIMsgDatabase* nsMsgDatabase::FindInCache(nsIMsgFolder *folder)
+{
+  nsCOMPtr <nsIFileSpec> folderPath;
+  nsFileSpec  folderName;
+  nsresult rv = folder->GetPath(getter_AddRefs(folderPath));
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  folderPath->GetFileSpec(&folderName);
+  nsLocalFolderSummarySpec summarySpec(folderName);
+
+  nsFileSpec dbPath(summarySpec);
+  return (nsIMsgDatabase *) FindInCache(dbPath);
+}
+
+//----------------------------------------------------------------------
 // FindInCache
 //----------------------------------------------------------------------
 int nsMsgDatabase::FindInCache(nsMsgDatabase* pMessageDB)
@@ -797,6 +930,7 @@ nsMsgDatabase::~nsMsgDatabase()
     m_mdbEnv->Release(); //??? is this right?
     m_mdbEnv = nsnull;
   }
+  NotifyAnnouncerGoingAway();
   if (m_ChangeListeners) 
   {
     //better not be any listeners, because we're going away.
@@ -918,35 +1052,102 @@ void nsMsgDatabase::UnixToNative(char*& ioPath)
 
 #endif /* XP_MAC */
 
-NS_IMETHODIMP nsMsgDatabase::OpenFolderDB(nsIMsgFolder *folder, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
+
+// caller passes in upgrading==PR_TRUE if they want back a db even if the db is out of date.
+// If so, they'll extract out the interesting info from the db, close it, delete it, and
+// then try to open the db again, prior to reparsing.
+NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aUpgrading)
 {
-  NS_ENSURE_ARG(folder);
-  m_folder = folder;
-  nsCOMPtr <nsIFileSpec> folderPath;
-  nsresult rv = folder->GetPath(getter_AddRefs(folderPath));
-  NS_ENSURE_SUCCESS(rv, rv);
-  rv = Open(folderPath, create, upgrading, pMessageDB);
-
-  if (NS_SUCCEEDED(rv))
+  PRBool summaryFileExists;
+  PRBool newFile = PR_FALSE;
+  PRBool deleteInvalidDB = PR_FALSE;
+#ifdef DEBUG_bienvenu
+  NS_ASSERTION(m_folder, "folder should be set");
+#endif
+  if (!aFolderName)
+    return NS_ERROR_NULL_POINTER;
+  
+  nsFileSpec		folderName;
+  aFolderName->GetFileSpec(&folderName);
+  nsLocalFolderSummarySpec	summarySpec(folderName);
+  
+  nsIDBFolderInfo	*folderInfo = nsnull;
+  
+#if defined(DEBUG_bienvenu) || defined(DEBUG_jefft)
+  printf("really opening db in nsImapMailDatabase::Open(%s, %s, %p, %s) -> %s\n",
+    (const char*)folderName, aCreate ? "TRUE":"FALSE",
+    this, aUpgrading ? "TRUE":"FALSE", (const char*)folderName);
+#endif
+  // if the old summary doesn't exist, we're creating a new one.
+  if ((!summarySpec.Exists() || !summarySpec.GetFileSize()) && aCreate)
+    newFile = PR_TRUE;
+  
+  // stat file before we open the db, because if we've latered
+  // any messages, handling latered will change time stamp on
+  // folder file.
+  summaryFileExists = summarySpec.Exists()  && summarySpec.GetFileSize() > 0;
+  
+  nsresult err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+  
+  err = OpenMDB((const char *) summarySpec, aCreate);
+  
+  if (NS_SUCCEEDED(err))
   {
-    mdb_count numHdrsInTable = 0;
-
-    if (m_mdbAllMsgHeadersTable)
+    GetDBFolderInfo(&folderInfo);
+    if (folderInfo == NULL)
     {
-      PRInt32 numMessages;
-      m_mdbAllMsgHeadersTable->GetCount(GetEnv(), &numHdrsInTable);
-      m_dbFolderInfo->GetNumMessages(&numMessages);
-      if (numMessages != numHdrsInTable)
-        SyncCounts();
+      err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+    }
+    else
+    {
+      if (!newFile && summaryFileExists)
+      {
+        PRBool valid;
+        GetSummaryValid(&valid);
+        if (!valid)
+          err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+      }
+      // compare current version of db versus filed out version info.
+      PRUint32 version;
+      folderInfo->GetVersion(&version);
+      if (GetCurVersion() != version)
+        err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+      NS_RELEASE(folderInfo);
+    }
+    if (NS_FAILED(err) && !aUpgrading)
+      deleteInvalidDB = PR_TRUE;
+  }
+  else
+  {
+    err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
+    deleteInvalidDB = PR_TRUE;
+  }
+
+  if (deleteInvalidDB)
+  {
+    // this will make the db folder info release its ref to the mail db...
+    NS_IF_RELEASE(m_dbFolderInfo);
+    ForceClosed();
+    if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
+      summarySpec.Delete(PR_FALSE);
+  }
+  if (err != NS_OK || newFile)
+  {
+    // if we couldn't open file, or we have a blank one, and we're supposed 
+    // to upgrade, updgrade it.
+    if (newFile && !aUpgrading)	// caller is upgrading, and we have empty summary file,
+    {					// leave db around and open so caller can upgrade it.
+      err = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
+    }
+    else if (err != NS_OK)
+    {
+      Close(PR_FALSE);
+      summarySpec.Delete(PR_FALSE);  // blow away the db if it's corrupt.
     }
   }
-  return rv;
-}
-
-NS_IMETHODIMP nsMsgDatabase::Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
-{
-  NS_ASSERTION(PR_FALSE, "must override");
-  return NS_ERROR_NOT_IMPLEMENTED;
+  if (err == NS_OK || err == NS_MSG_ERROR_FOLDER_SUMMARY_MISSING)
+    GetDBCache()->AppendElement(this);
+  return (summaryFileExists) ? err : NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
 }
 
 // Open the MDB database synchronously. If successful, this routine

@@ -89,112 +89,16 @@ void nsMailDatabase::GetGlobalPrefs()
     gGotGlobalPrefs = PR_TRUE;
   }
 }
-
 // caller passes in upgrading==PR_TRUE if they want back a db even if the db is out of date.
 // If so, they'll extract out the interesting info from the db, close it, delete it, and
 // then try to open the db again, prior to reparsing.
-NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
+NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool aCreate, PRBool aUpgrading)
 {
-  nsMailDatabase	*mailDB;
-  PRBool		summaryFileExists;
-  PRBool		newFile = PR_FALSE;
-  PRBool                deleteInvalidDB = PR_FALSE;
-  nsFileSpec		folderName;
-  
-  if (!aFolderName)
-    return NS_ERROR_NULL_POINTER;
+  nsFileSpec  folderName;
   aFolderName->GetFileSpec(&folderName);
-  nsLocalFolderSummarySpec	summarySpec(folderName);
-  
-  nsIDBFolderInfo	*folderInfo = nsnull;
-  
-  *pMessageDB = nsnull;
-  
-  nsFileSpec dbPath(summarySpec);
-  
-  mailDB = (nsMailDatabase *) FindInCache(dbPath);
-  if (mailDB)
-  {
-    *pMessageDB = mailDB;
-    //FindInCache does the AddRef'ing
-    return(NS_OK);
-  }
-  
-  // if the old summary doesn't exist, we're creating a new one.
-  if ((!summarySpec.Exists() || !summarySpec.GetFileSize()) && create)
-    newFile = PR_TRUE;
-  
-  mailDB = new nsMailDatabase();
-  
-  if (!mailDB)
-    return NS_ERROR_OUT_OF_MEMORY;
-  mailDB->m_folderSpec = new nsFileSpec(folderName);
-  mailDB->m_folder = m_folder;
-  mailDB->AddRef();
-  // treat empty summary file as not existing...so we can create and parse it.
-  summaryFileExists = summarySpec.Exists() && summarySpec.GetFileSize() > 0;
-  
-  nsresult err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-  
-  err = mailDB->OpenMDB((const char *) summarySpec, create);
-  
-  if (NS_SUCCEEDED(err))
-  {
-    mailDB->GetDBFolderInfo(&folderInfo);
-    if (folderInfo == NULL)
-    {
-      err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-    }
-    else
-    {
-      // if opening existing file, make sure summary file is up to date.
-      if (!newFile && summaryFileExists)
-      {
-        PRBool valid;
-        mailDB->GetSummaryValid(&valid);
-        if (!valid)
-          err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-      }
-      NS_RELEASE(folderInfo);
-    }
-    if (NS_FAILED(err) && !upgrading)
-      deleteInvalidDB = PR_TRUE;
-  }
-  else
-  {
-    err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
-    deleteInvalidDB = PR_TRUE;
-  }
-
-  if (deleteInvalidDB)
-  {
-    // this will make the db folder info release its ref to the mail db...
-    NS_IF_RELEASE(mailDB->m_dbFolderInfo);
-    mailDB->ForceClosed();
-    NS_RELEASE(mailDB); // this sets mailDB to nsnull and makes ref count go to 0
-    if (err == NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE)
-      summarySpec.Delete(PR_FALSE);
-  }
-  if (err != NS_OK || newFile)
-  {
-    // if we couldn't open file, or we have a blank one, and we're supposed 
-    // to upgrade, updgrade it.
-    if (newFile && !upgrading)	// caller is upgrading, and we have empty summary file,
-    {					// leave db around and open so caller can upgrade it.
-      err = NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
-    }
-    else if (err != NS_OK && deleteInvalidDB)
-    {
-      NS_IF_RELEASE(mailDB);
-    }
-  }
-  if (err == NS_OK || !deleteInvalidDB)
-  {
-    *pMessageDB = mailDB;
-    if (mailDB)
-      GetDBCache()->AppendElement(mailDB);
-  }
-  return (summaryFileExists) ? err : NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
+  m_folderSpec = new nsFileSpec(folderName);
+  nsresult rv = nsMsgDatabase::Open(aFolderName, aCreate, aUpgrading);
+  return rv;
 }
 
 NS_IMETHODIMP nsMailDatabase::ForceClosed()

@@ -52,6 +52,7 @@
 #include "nsICollation.h"
 #include "nsIMimeConverter.h"
 #include "nsCOMPtr.h"
+#include "nsCOMArray.h"
 #include "nsHashtable.h"
 #include "pldhash.h"
 class ListContext;
@@ -64,12 +65,28 @@ class nsIMsgHeaderParser;
 
 const PRInt32 kMsgDBVersion = 1;
 
-class nsMsgDatabase : public nsIMsgDatabase 
+class nsMsgDBService : public nsIMsgDBService
 {
 public:
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGDBSERVICE
+
+  nsMsgDBService();
+  ~nsMsgDBService();
+protected:
+  nsCOMArray <nsIMsgFolder> m_foldersPendingListeners;
+  nsCOMArray <nsIDBChangeListener> m_pendingListeners;
+};
+
+class nsMsgDatabase : public nsIMsgDatabase 
+{
+public:
+  friend class nsMsgDBService;
+
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIDBCHANGEANNOUNCER
   NS_DECL_NSIMSGDATABASE
+
   virtual nsresult IsHeaderRead(nsIMsgDBHdr *hdr, PRBool *pRead);
   virtual nsresult MarkHdrReadInDB(nsIMsgDBHdr *msgHdr, PRBool bRead,
                                nsIDBChangeListener *instigator);
@@ -99,6 +116,7 @@ public:
                                    mdb_token &scopeToken, mdb_token &kindToken);
 
   static nsMsgDatabase* FindInCache(nsFileSpec &dbName);
+  static nsIMsgDatabase* FindInCache(nsIMsgFolder *folder);
 
   //helper function to fill in nsStrings from hdr row cell contents.
   nsresult RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsAString &resultStr);

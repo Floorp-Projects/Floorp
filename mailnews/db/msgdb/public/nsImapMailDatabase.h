@@ -48,10 +48,9 @@ public:
   nsImapMailDatabase();
   virtual ~nsImapMailDatabase();
   
-  NS_IMETHOD    Open(nsIFileSpec *folderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB);
-
   NS_IMETHOD    StartBatch();
   NS_IMETHOD    EndBatch();
+  NS_IMETHOD    GetSummaryValid(PRBool *aResult);
   NS_IMETHOD    SetSummaryValid(PRBool valid = PR_TRUE);
   NS_IMETHOD    DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChangeListener *instigator);
   virtual nsresult AdjustExpungedBytesOnDelete(nsIMsgDBHdr *msgHdr);

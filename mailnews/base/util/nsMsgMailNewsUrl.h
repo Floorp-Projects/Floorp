@@ -70,35 +70,35 @@
 class NS_MSG_BASE nsMsgMailNewsUrl : public nsIMsgMailNewsUrl
 {
 public:
-	nsMsgMailNewsUrl();
+    nsMsgMailNewsUrl();
 
-	NS_DECL_ISUPPORTS
+    NS_DECL_ISUPPORTS
     NS_DECL_NSIMSGMAILNEWSURL
     NS_DECL_NSIURI
     NS_DECL_NSIURL
 
 protected:
-	virtual ~nsMsgMailNewsUrl();
+  virtual ~nsMsgMailNewsUrl();
 
-	// a helper function I needed from derived urls...
-	virtual const char * GetUserName() = 0;
+  // a helper function I needed from derived urls...
+  virtual const char * GetUserName() = 0;
 
-	nsCOMPtr<nsIURL> m_baseURL;
-	nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
-	nsCOMPtr<nsIMsgWindow> m_msgWindow;
-	nsCOMPtr<nsILoadGroup> m_loadGroup;
+  nsCOMPtr<nsIURL> m_baseURL;
+  nsCOMPtr<nsIMsgStatusFeedback> m_statusFeedback;
+  nsCOMPtr<nsIMsgWindow> m_msgWindow;
+  nsCOMPtr<nsILoadGroup> m_loadGroup;
   nsCOMPtr<nsIMimeHeaders> mMimeHeaders;
   nsCOMPtr<nsIMsgSearchSession> m_searchSession;
   nsCOMPtr<nsICacheEntryDescriptor> m_memCacheEntry;
   nsCOMPtr<nsICacheSession> m_imageCacheSession;
   nsCOMPtr<nsISupportsArray> m_cachedMemCacheEntries;
   nsCOMPtr<nsIMsgHeaderSink> mMsgHeaderSink;
-	char		*m_errorMessage;
-	PRBool	m_runningUrl;
-	PRBool	m_updatingFolder;
-  PRBool  m_addContentToCache;
-  PRBool  m_msgIsInLocalCache;
-  PRBool  m_suppressErrorMsgs;
+  char *m_errorMessage;
+  PRBool m_runningUrl;
+  PRBool m_updatingFolder;
+  PRBool m_addContentToCache;
+  PRBool m_msgIsInLocalCache;
+  PRBool m_suppressErrorMsgs;
 
   // the following field is really a bit of a hack to make 
   // open attachments work. The external applications code sometimes trys to figure out the right
@@ -108,8 +108,8 @@ protected:
   // asks us for it, we'll return the right value.
   nsCString mAttachmentFileName;
 
-	// manager of all of current url listeners....
-	nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
+  // manager of all of current url listeners....
+  nsCOMPtr<nsIUrlListenerManager> m_urlListeners;
 };
 
 #undef  IMETHOD_VISIBILITY

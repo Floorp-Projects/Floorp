@@ -191,13 +191,13 @@ nsMsgSearchSession::AddScopeTerm(nsMsgSearchScopeValue scope,
                                  nsIMsgFolder *folder)
 {
   if (scope != nsMsgSearchScope::allSearchableGroups)
-	{
-		NS_ASSERTION(folder, "need folder if not searching all groups");
-		if (!folder)
-			return NS_ERROR_NULL_POINTER;
-	}
+  {
+    NS_ASSERTION(folder, "need folder if not searching all groups");
+    if (!folder)
+      return NS_ERROR_NULL_POINTER;
+  }
 
-	nsMsgSearchScopeTerm *pScopeTerm = new nsMsgSearchScopeTerm(this, scope, folder);
+  nsMsgSearchScopeTerm *pScopeTerm = new nsMsgSearchScopeTerm(this, scope, folder);
   if (!pScopeTerm)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -727,6 +727,8 @@ nsMsgSearchSession::MatchHdr(nsIMsgDBHdr *aMsgHdr, nsIMsgDatabase *aDatabase, PR
   nsMsgSearchScopeTerm *scope = (nsMsgSearchScopeTerm *)m_scopeList.SafeElementAt(0);
   if (scope)
   {
+    if (!scope->m_adapter)
+      scope->InitializeAdapter(m_termList);
     if (scope->m_adapter)
     {  
       nsXPIDLString nullCharset, folderCharset;

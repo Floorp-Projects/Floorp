@@ -23,6 +23,7 @@
  *   Alec Flett <alecf@netscape.com>
  *   Seth Spitzer <sspitzer@netscape.com>
  *   Bhuvan Racham <racham@netscape.com>
+ *   David Bienvenu <bienvenu@mozilla.org>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -48,6 +49,7 @@
 #include "nsMsgAccountManager.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgCompCID.h"
+#include "nsMsgDBCID.h"
 #include "prmem.h"
 #include "prcmon.h"
 #include "prthread.h"
@@ -60,6 +62,7 @@
 #include "prprf.h"
 #include "nsIMsgFolderCache.h"
 #include "nsFileStream.h"
+#include "nsIFileStreams.h"
 #include "nsMsgUtils.h"
 #include "nsIFileSpec.h" 
 #include "nsILocalFile.h"
@@ -83,7 +86,14 @@
 #include "nsIMessengerOSIntegration.h"
 #include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
-
+#include "nsMsgFilterService.h"
+#include "nsIMsgFilter.h"
+#include "nsIMsgSearchSession.h"
+#include "nsIDBChangeListener.h"
+#include "nsIDBFolderInfo.h"
+#include "nsIMsgHdr.h"
+#include "nsILineInputStream.h"
+#include "nsNetUtil.h"
 #define PREF_MAIL_ACCOUNTMANAGER_ACCOUNTS "mail.accountmanager.accounts"
 #define PREF_MAIL_ACCOUNTMANAGER_DEFAULTACCOUNT "mail.accountmanager.defaultaccount"
 #define PREF_MAIL_ACCOUNTMANAGER_LOCALFOLDERSSERVER "mail.accountmanager.localfoldersserver"
@@ -134,11 +144,12 @@ typedef struct _findAccountByKeyEntry {
 } findAccountByKeyEntry;
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS4(nsMsgAccountManager,
+NS_IMPL_THREADSAFE_ISUPPORTS5(nsMsgAccountManager,
                               nsIMsgAccountManager,
                               nsIObserver,
                               nsISupportsWeakReference,
-                              nsIUrlListener)
+                              nsIUrlListener,
+                              nsIFolderListener)
 
 nsMsgAccountManager::nsMsgAccountManager() :
   m_accountsLoaded(PR_FALSE),
@@ -157,12 +168,12 @@ nsMsgAccountManager::~nsMsgAccountManager()
   if(!m_haveShutdown)
   {
     Shutdown();
-	  //Don't remove from Observer service in Shutdown because Shutdown also gets called
-	  //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-	  nsCOMPtr<nsIObserverService> observerService = 
-	           do_GetService("@mozilla.org/observer-service;1", &rv);
-      if (NS_SUCCEEDED(rv))
-	  {    
+    //Don't remove from Observer service in Shutdown because Shutdown also gets called
+    //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
+    nsCOMPtr<nsIObserverService> observerService = 
+	     do_GetService("@mozilla.org/observer-service;1", &rv);
+    if (NS_SUCCEEDED(rv))
+    {    
       observerService->RemoveObserver(this, NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       observerService->RemoveObserver(this, ABOUT_TO_GO_OFFLINE_TOPIC);
     }
@@ -194,17 +205,22 @@ nsresult nsMsgAccountManager::Init()
 
 nsresult nsMsgAccountManager::Shutdown()
 {
-  if (m_haveShutdown) {
-    // do not shutdown twice
+  if (m_haveShutdown)     // do not shutdown twice
     return NS_OK;
-  }
 
   nsresult rv;
 
-  if(m_msgFolderCache)
+  SaveVirtualFolders();
+	
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+  if (msgDBService)
   {
-    WriteToFolderCache(m_msgFolderCache);
+    PRInt32 numVFListeners = m_virtualFolderListeners.Count();
+    for(PRInt32 i = 0; i < numVFListeners; i++)
+      msgDBService->UnregisterPendingListener(m_virtualFolderListeners[i]);
   }
+  if(m_msgFolderCache)
+    WriteToFolderCache(m_msgFolderCache);
 
   (void)ShutdownServers();
   (void)UnloadAccounts();
@@ -946,7 +962,7 @@ nsMsgAccountManager::hashLogoutOfServer(nsHashKey *aKey, void *aData,
     return PR_TRUE;
 }
 
-nsresult nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
+NS_IMETHODIMP nsMsgAccountManager::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
 {
   if (!aFolderCache) return NS_ERROR_NULL_POINTER;
 
@@ -1444,7 +1460,11 @@ nsMsgAccountManager::LoadAccounts()
     }
 
     
-       
+    LoadVirtualFolders();
+    nsCOMPtr<nsIMsgMailSession> mailSession = do_GetService(NS_MSGMAILSESSION_CONTRACTID, &rv); 
+
+    if (NS_SUCCEEDED(rv))
+      mailSession->AddFolderListener(this, nsIFolderListener::added | nsIFolderListener::removed);
     /* finished loading accounts */
     return NS_OK;
 }
@@ -2391,4 +2411,435 @@ nsMsgAccountManager::GetChromePackageName(const char *aExtensionName, char **aCh
   return NS_ERROR_UNEXPECTED;
 }
 
+class VirtualFolderChangeListener : public nsIDBChangeListener
+{
+public:
+  VirtualFolderChangeListener();
+  ~VirtualFolderChangeListener() {};
 
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIDBCHANGELISTENER
+
+  nsresult Init();
+
+  nsCOMPtr <nsIMsgFolder> m_virtualFolder; // folder we're listening to db changes on behalf of.
+  nsCOMPtr <nsIMsgFolder> m_folderWatching; // folder whose db we're listening to.
+  nsCOMPtr <nsISupportsArray> m_searchTerms;
+  nsCOMPtr <nsIMsgSearchSession> m_searchSession;
+  PRBool m_searchOnMsgStatus;
+};
+
+NS_IMPL_ISUPPORTS1(VirtualFolderChangeListener, nsIDBChangeListener)
+
+VirtualFolderChangeListener::VirtualFolderChangeListener() : m_searchOnMsgStatus(PR_FALSE)
+{
+}
+
+nsresult VirtualFolderChangeListener::Init()
+{
+  nsCOMPtr <nsIMsgDatabase> msgDB;
+  nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+
+  nsresult rv = m_virtualFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(msgDB));
+  if (NS_SUCCEEDED(rv) && msgDB)
+  {
+    nsXPIDLCString searchTermString;
+    dbFolderInfo->GetCharPtrProperty("searchStr", getter_Copies(searchTermString));
+    nsCOMPtr<nsIMsgFilterService> filterService = do_GetService(NS_MSGFILTERSERVICE_CONTRACTID, &rv);
+    nsCOMPtr<nsIMsgFilterList> filterList;
+    rv = filterService->GetTempFilterList(m_virtualFolder, getter_AddRefs(filterList));
+    NS_ENSURE_SUCCESS(rv, rv);
+    nsCOMPtr <nsIMsgFilter> tempFilter;
+    filterList->CreateFilter(NS_LITERAL_STRING("temp").get(), getter_AddRefs(tempFilter));
+    NS_ENSURE_SUCCESS(rv, rv);
+    filterList->ParseCondition(tempFilter, searchTermString);
+    NS_ENSURE_SUCCESS(rv, rv);
+    m_searchSession = do_CreateInstance(NS_MSGSEARCHSESSION_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsISupportsArray> searchTerms;
+    rv = tempFilter->GetSearchTerms(getter_AddRefs(searchTerms));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    m_searchSession->AddScopeTerm(nsMsgSearchScope::offlineMail, m_folderWatching);
+
+    // add each item in termsArray to the search session
+    PRUint32 numTerms;
+    searchTerms->Count(&numTerms);
+    for (PRUint32 i = 0; i < numTerms; i++)
+    {
+      nsCOMPtr <nsIMsgSearchTerm> searchTerm (do_QueryElementAt(searchTerms, i));
+      nsMsgSearchAttribValue attrib;
+      searchTerm->GetAttrib(&attrib);
+      if (attrib == nsMsgSearchAttrib::MsgStatus)
+        m_searchOnMsgStatus = true;
+      m_searchSession->AppendTerm(searchTerm);
+    }
+  }
+  return rv;
+}
+
+  /**
+   * nsIDBChangeListener
+   */
+NS_IMETHODIMP VirtualFolderChangeListener::OnKeyChange(nsMsgKey aKeyChanged, PRUint32 aOldFlags, PRUint32 aNewFlags, nsIDBChangeListener *aInstigator)
+{
+  nsCOMPtr <nsIMsgDatabase> msgDB;
+
+  nsresult rv = m_folderWatching->GetMsgDatabase(nsnull, getter_AddRefs(msgDB));
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  rv = msgDB->GetMsgHdrForKey(aKeyChanged, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool oldMatch = PR_FALSE, newMatch = PR_FALSE;
+  rv = m_searchSession->MatchHdr(msgHdr, msgDB, &newMatch);
+  NS_ENSURE_SUCCESS(rv, rv);
+  if (m_searchOnMsgStatus)
+  {
+    // if status is a search criteria, check if the header matched before
+    // it changed, in order to determine if we need to bump the counts. 
+    msgHdr->SetFlags(aOldFlags);
+    rv = m_searchSession->MatchHdr(msgHdr, msgDB, &oldMatch);
+    msgHdr->SetFlags(aNewFlags); // restore new flags even on match failure.
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  else
+    oldMatch = newMatch;
+  // we don't want to change the total counts if this virtual folder is open in a view,
+  // because we won't remove the header from view while its open.
+  if (oldMatch != newMatch || (oldMatch && (aOldFlags & MSG_FLAG_READ) != (aNewFlags & MSG_FLAG_READ)))
+  {
+    nsCOMPtr <nsIMsgDatabase> virtDatabase;
+    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+
+    rv = m_virtualFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
+    PRInt32 totalDelta = 0,  unreadDelta = 0;
+    if (oldMatch != newMatch)
+      totalDelta = (oldMatch) ? -1 : 1;
+    PRBool msgHdrIsRead;
+    msgHdr->GetIsRead(&msgHdrIsRead);
+    if (oldMatch == newMatch) // read flag changed state
+      unreadDelta = (msgHdrIsRead) ? -1 : 1; 
+    else if (oldMatch) // else header should removed
+      unreadDelta = (aOldFlags & MSG_FLAG_READ) ? 0 : -1;
+    else               // header should be added
+      unreadDelta = (aNewFlags & MSG_FLAG_READ) ? 0 : 1;
+    if (unreadDelta)
+      dbFolderInfo->ChangeNumUnreadMessages(unreadDelta);
+    if (totalDelta)
+      dbFolderInfo->ChangeNumMessages(totalDelta);
+    m_virtualFolder->UpdateSummaryTotals(PR_TRUE); // force update from db.
+    virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP VirtualFolderChangeListener::OnKeyDeleted(nsMsgKey aKeyDeleted, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+{
+  nsCOMPtr <nsIMsgDatabase> msgDB;
+
+  nsresult rv = m_folderWatching->GetMsgDatabase(nsnull, getter_AddRefs(msgDB));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  rv = msgDB->GetMsgHdrForKey(aKeyDeleted, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool match = PR_FALSE;
+  rv = m_searchSession->MatchHdr(msgHdr, msgDB, &match);
+  if (match)
+  {
+    nsCOMPtr <nsIMsgDatabase> virtDatabase;
+    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+
+    nsresult rv = m_virtualFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
+    PRBool msgHdrIsRead;
+    msgHdr->GetIsRead(&msgHdrIsRead);
+    if (!msgHdrIsRead)
+      dbFolderInfo->ChangeNumUnreadMessages(-1);
+    dbFolderInfo->ChangeNumMessages(-1);
+    m_virtualFolder->UpdateSummaryTotals(PR_TRUE); // force update from db.
+    virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP VirtualFolderChangeListener::OnKeyAdded(nsMsgKey aNewKey, nsMsgKey aParentKey, PRInt32 aFlags, nsIDBChangeListener *aInstigator)
+{
+  nsCOMPtr <nsIMsgDatabase> msgDB;
+
+  nsresult rv = m_folderWatching->GetMsgDatabase(nsnull, getter_AddRefs(msgDB));
+  NS_ENSURE_SUCCESS(rv, rv);
+  nsCOMPtr <nsIMsgDBHdr> msgHdr;
+  rv = msgDB->GetMsgHdrForKey(aNewKey, getter_AddRefs(msgHdr));
+  NS_ENSURE_SUCCESS(rv, rv);
+  PRBool match = PR_FALSE;
+  rv = m_searchSession->MatchHdr(msgHdr, msgDB, &match);
+  if (match)
+  {
+    nsCOMPtr <nsIMsgDatabase> virtDatabase;
+    nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+
+    rv = m_virtualFolder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
+    PRBool msgHdrIsRead;
+    msgHdr->GetIsRead(&msgHdrIsRead);
+    if (!msgHdrIsRead)
+      dbFolderInfo->ChangeNumUnreadMessages(1);
+    dbFolderInfo->ChangeNumMessages(1);
+    m_virtualFolder->UpdateSummaryTotals(true); // force update from db.
+    virtDatabase->Commit(nsMsgDBCommitType::kLargeCommit);
+  }
+  return rv;
+}
+
+NS_IMETHODIMP VirtualFolderChangeListener::OnParentChanged(nsMsgKey aKeyChanged, nsMsgKey oldParent, nsMsgKey newParent, nsIDBChangeListener *aInstigator)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP VirtualFolderChangeListener::OnAnnouncerGoingAway(nsIDBChangeAnnouncer *instigator)
+{
+  nsresult rv;
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+  if (msgDBService)
+    msgDBService->UnregisterPendingListener(this);
+  return rv;
+}
+
+NS_IMETHODIMP VirtualFolderChangeListener::OnReadChanged(nsIDBChangeListener *aInstigator)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP VirtualFolderChangeListener::OnJunkScoreChanged(nsIDBChangeListener *aInstigator)
+{
+  return NS_OK;
+}
+
+nsresult nsMsgAccountManager::GetVirtualFoldersFile(nsCOMPtr<nsILocalFile>& file)
+{
+  nsCOMPtr<nsIFile> profileDir;
+  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileDir));
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  rv = profileDir->AppendNative(nsDependentCString("virtualFolders.dat"));
+  if (NS_SUCCEEDED(rv))
+    file = do_QueryInterface(profileDir, &rv);
+  return rv;
+}
+
+nsresult nsMsgAccountManager::LoadVirtualFolders()
+{
+  nsCOMPtr <nsILocalFile> file;
+  GetVirtualFoldersFile(file);
+  if (!file)
+    return NS_ERROR_FAILURE;
+
+  nsresult rv;
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+  if (msgDBService) 
+  {
+     NS_ENSURE_SUCCESS(rv, rv);
+     nsCOMPtr<nsIFileInputStream> fileStream = do_CreateInstance(NS_LOCALFILEINPUTSTREAM_CONTRACTID, &rv);
+     NS_ENSURE_SUCCESS(rv, rv);
+
+     rv = fileStream->Init(file,  PR_RDONLY, 0664, PR_FALSE);  //just have to read the messages
+     nsCOMPtr <nsILineInputStream> lineInputStream(do_QueryInterface(fileStream));
+
+    PRBool isMore = PR_TRUE;
+    nsCAutoString buffer;
+
+    while (isMore &&
+           NS_SUCCEEDED(lineInputStream->ReadLine(buffer, &isMore)))
+    {
+      if (buffer.Length() > 0)
+      {
+        nsCOMPtr <nsIMsgFolder> folder;
+        nsCOMPtr<nsIRDFService> rdf(do_GetService("@mozilla.org/rdf/rdf-service;1", &rv));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        nsCOMPtr<nsIRDFResource> resource;
+        rv = rdf->GetResource(buffer, getter_AddRefs(resource));
+        NS_ENSURE_SUCCESS(rv, rv);
+
+        folder = do_QueryInterface(resource, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (folder)
+        {
+          // need to add the folder as a sub-folder of its parent.
+          PRInt32 lastSlash = buffer.RFindChar('/');
+          nsDependentCSubstring parentUri(buffer, 0, lastSlash);
+          rdf->GetResource(parentUri, getter_AddRefs(resource));
+          nsCOMPtr <nsIMsgFolder> parentFolder = do_QueryInterface(resource);
+          if (parentFolder)
+          {
+            nsCOMPtr <nsIMsgFolder> childFolder;
+            nsAutoString currentFolderNameStr;
+            CopyUTF8toUTF16(Substring(buffer,  lastSlash + 1, buffer.Length()), currentFolderNameStr);
+            rv =  parentFolder->AddSubfolder(currentFolderNameStr, getter_AddRefs(childFolder));
+            if (!childFolder)
+              childFolder = folder; // or just use folder?
+
+            nsCOMPtr <nsIMsgDatabase> db;
+            childFolder->GetMsgDatabase(nsnull, getter_AddRefs(db)); // force db to get created.
+            nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+            rv = db->GetDBFolderInfo(getter_AddRefs(dbFolderInfo));
+            childFolder->SetFlag(MSG_FOLDER_FLAG_VIRTUAL);
+            nsXPIDLCString realFolderUri;
+            dbFolderInfo->GetCharPtrProperty("searchFolderUri", getter_Copies(realFolderUri));
+            // if we supported cross folder virtual folders, we'd have a list of folders uris,
+            // and we'd have to add a pending listener for each of them.
+            if (realFolderUri.Length())
+            {
+              // we need to load the db for the actual folder so that many hdrs to download
+              // will return false...
+              rdf->GetResource(realFolderUri, getter_AddRefs(resource));
+              nsCOMPtr <nsIMsgFolder> realFolder = do_QueryInterface(resource);
+              VirtualFolderChangeListener *dbListener = new VirtualFolderChangeListener();
+              m_virtualFolderListeners.AppendObject(dbListener);
+              dbListener->m_virtualFolder = childFolder;
+              dbListener->m_folderWatching = realFolder;
+              dbListener->Init();
+              msgDBService->RegisterPendingListener(realFolder, dbListener);
+            }
+          }
+        }
+      }
+    }
+  }
+  return rv;
+}
+
+
+
+NS_IMETHODIMP nsMsgAccountManager::SaveVirtualFolders()
+{
+
+  nsCOMPtr<nsISupportsArray> allServers;
+  nsresult rv = GetAllServers(getter_AddRefs(allServers));
+  nsCOMPtr <nsILocalFile> file;
+  if (allServers)
+  {
+    PRUint32 count = 0;
+    allServers->Count(&count);
+    PRInt32 i;
+    nsCOMPtr <nsIOutputStream> outputStream;
+    for (i = 0; i < count; i++) 
+    {
+      nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(allServers, i);
+      if (server)
+      {
+        nsCOMPtr <nsIMsgFolder> rootFolder;
+        server->GetRootFolder(getter_AddRefs(rootFolder));
+        if (rootFolder)
+        {
+          nsCOMPtr <nsISupportsArray> virtualFolders;
+          rv = rootFolder->GetAllFoldersWithFlag(MSG_FOLDER_FLAG_VIRTUAL, getter_AddRefs(virtualFolders));
+          NS_ENSURE_SUCCESS(rv, rv);
+          PRUint32 vfCount;
+          virtualFolders->Count(&vfCount);
+          for (PRInt32 folderIndex = 0; folderIndex < vfCount; folderIndex++)
+          {
+            if (!outputStream)
+            {
+              GetVirtualFoldersFile(file);
+              rv = NS_NewLocalFileOutputStream(getter_AddRefs(outputStream),
+                                               file,
+                                               PR_CREATE_FILE | PR_WRONLY | PR_TRUNCATE,
+                                               0664);
+            }
+            nsCOMPtr <nsIRDFResource> folderRes (do_QueryElementAt(virtualFolders, folderIndex));
+            const char *uri;
+            folderRes->GetValueConst(&uri);
+            PRUint32 writeCount;
+            outputStream->Write(uri, strlen(uri), &writeCount);
+            outputStream->Write("\n", 1, &writeCount);
+          }
+        }
+      }
+   }
+   if (outputStream)
+    outputStream->Close();
+  }
+  return rv;
+}
+
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemAdded(nsIRDFResource *parentItem, nsISupports *item)
+{
+  nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
+  NS_ENSURE_TRUE(folder, NS_OK); // just kick out with a success code if the item in question is not a folder
+  PRUint32 folderFlags;
+  folder->GetFlags(&folderFlags);
+  nsresult rv = NS_OK;
+  // need to make sure this isn't happening during loading of virtualfolders.dat
+  if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL)
+  {
+    // When a new virtual folder is added, need to create a db Listener for it.
+    nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+    if (msgDBService)
+    {
+      VirtualFolderChangeListener *dbListener = new VirtualFolderChangeListener();
+      dbListener->m_virtualFolder = folder;
+      nsCOMPtr <nsIMsgDatabase> virtDatabase;
+      nsCOMPtr <nsIDBFolderInfo> dbFolderInfo;
+      m_virtualFolderListeners.AppendObject(dbListener);
+
+      rv = folder->GetDBFolderInfoAndDB(getter_AddRefs(dbFolderInfo), getter_AddRefs(virtDatabase));
+      NS_ENSURE_SUCCESS(rv, rv);
+      nsXPIDLCString srchFolderUri;
+      dbFolderInfo->GetCharPtrProperty("searchFolderUri", getter_Copies(srchFolderUri));
+      // if we supported cross folder virtual folders, we'd have a list of folders uris,
+      // and we'd have to add a pending listener for each of them.
+      rv = GetExistingFolder(srchFolderUri.get(), getter_AddRefs(dbListener->m_folderWatching));
+      if (dbListener->m_folderWatching)
+        msgDBService->RegisterPendingListener(dbListener->m_folderWatching, dbListener);
+    }
+    rv = SaveVirtualFolders();
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemRemoved(nsIRDFResource *parentItem, nsISupports *item)
+{
+  nsCOMPtr<nsIMsgFolder> folder = do_QueryInterface(item);
+  NS_ENSURE_TRUE(folder, NS_OK); // just kick out with a success code if the item in question is not a folder
+  nsresult rv = NS_OK;
+  PRUint32 folderFlags;
+  folder->GetFlags(&folderFlags);
+  if (folderFlags & MSG_FOLDER_FLAG_VIRTUAL) // if we removed a VF, flush VF list to disk.
+    rv = SaveVirtualFolders();
+
+  // need to check if the underlying folder for a VF was removed, in which case we need to
+  // remove the virtual folder.
+
+ return rv;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemPropertyChanged(nsIRDFResource *item, nsIAtom *property, const char *oldValue, const char *newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemIntPropertyChanged(nsIRDFResource *item, nsIAtom *property, PRInt32 oldValue, PRInt32 newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemBoolPropertyChanged(nsIRDFResource *item, nsIAtom *property, PRBool oldValue, PRBool newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemUnicharPropertyChanged(nsIRDFResource *item, nsIAtom *property, const PRUnichar *oldValue, const PRUnichar *newValue)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemPropertyFlagChanged(nsISupports *item, nsIAtom *property, PRUint32 oldFlag, PRUint32 newFlag)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgAccountManager::OnItemEvent(nsIMsgFolder *aFolder, nsIAtom *aEvent)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

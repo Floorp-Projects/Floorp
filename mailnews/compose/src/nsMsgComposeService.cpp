@@ -682,7 +682,7 @@ NS_IMETHODIMP nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
 #endif
 
   NS_IF_ADDREF(*_retval = msgCompose);
- 	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP

@@ -105,11 +105,21 @@ interface nsMsgDBCommitType
 [ref] native nsMsgKeyArrayRef(nsMsgKeyArray);
 [ptr] native nsMsgKeyArrayPtr(nsMsgKeyArray);
 
+[scriptable, uuid(03223c50-1e88-45e8-ba1a-7ce792dc3fc3)]
+interface nsIMsgDBService : nsISupports
+{
+    // want to remove this method from nsIMsgDatabase...
+    // if a db is opened on the folder, the listener will automatically be added
+    nsIMsgDatabase openFolderDB(in nsIMsgFolder aFolder, in boolean aCreate, in boolean aUpgrading);
+    nsIMsgDatabase openMailDBFromFileSpec(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aUpgrading);
+    void registerPendingListener(in nsIMsgFolder aFolder, in nsIDBChangeListener aListener);
+    void unregisterPendingListener(in nsIDBChangeListener aListener);
+};
+
 [scriptable, uuid(f667dcb8-5aae-4e71-8559-2a48d7e508cd)]
 
 interface  nsIMsgDatabase : nsIDBChangeAnnouncer {
-  nsIMsgDatabase Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aUpgrading);
-  nsIMsgDatabase OpenFolderDB(in nsIMsgFolder aFolder, in boolean aCreate, in boolean aUpgrading);
+  void Open(in nsIFileSpec aFolderName, in boolean aCreate, in boolean aUpgrading);
   void forceFolderDBClosed(in nsIMsgFolder aFolder);
   void Close(in boolean aForceCommit);
 

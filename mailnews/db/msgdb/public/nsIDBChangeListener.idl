@@ -43,16 +43,16 @@ interface nsIDBChangeAnnouncer;
 [scriptable, uuid(ad0f7f90-baff-11d2-8d67-00805f8a6617)]
 
 interface  nsIDBChangeListener : nsISupports {
-    void OnKeyChange(in nsMsgKey aKeyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
+    void onKeyChange(in nsMsgKey aKeyChanged, in unsigned long aOldFlags, in unsigned long aNewFlags, 
                            in nsIDBChangeListener aInstigator);
-    void OnKeyDeleted(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
+    void onKeyDeleted(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
                             in nsIDBChangeListener aInstigator);
-    void OnKeyAdded(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
+    void onKeyAdded(in nsMsgKey aKeyChanged, in nsMsgKey aParentKey, in long aFlags, 
                           in nsIDBChangeListener aInstigator);
-	void OnParentChanged (in nsMsgKey aKeyChanged, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener aInstigator);
-    void OnAnnouncerGoingAway(in nsIDBChangeAnnouncer instigator);
+	void onParentChanged (in nsMsgKey aKeyChanged, in nsMsgKey oldParent, in nsMsgKey newParent, in nsIDBChangeListener aInstigator);
+    void onAnnouncerGoingAway(in nsIDBChangeAnnouncer instigator);
     
-    void OnReadChanged(in nsIDBChangeListener aInstigator);
-	void OnJunkScoreChanged(in nsIDBChangeListener aInstigator);
+    void onReadChanged(in nsIDBChangeListener aInstigator);
+	void onJunkScoreChanged(in nsIDBChangeListener aInstigator);
 };
 

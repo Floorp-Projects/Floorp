@@ -132,12 +132,11 @@ NS_IMETHODIMP nsMsgMailboxParser::OnStartRequest(nsIRequest *request, nsISupport
             m_graph_progress_total = dbName.GetFileSize();
             UpdateStatusText(LOCAL_STATUS_SELECTING_MAILBOX);
 
-            nsCOMPtr<nsIMsgDatabase> mailDB;
-            rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
-            if (NS_SUCCEEDED(rv) && mailDB)
+            nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+            if (msgDBService)
             {
                 //Use OpenFolderDB to always open the db so that db's m_folder is set correctly.
-                rv = mailDB->OpenFolderDB(folder, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
+                rv = msgDBService->OpenFolderDB(folder, PR_TRUE, PR_TRUE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
                 if (m_mailDB)
                     m_mailDB->AddListener(this);
             }
@@ -1451,13 +1450,12 @@ nsParseNewMailState::Init(nsIMsgFolder *rootFolder, nsIMsgFolder *downloadFolder
 
   // the new mail parser isn't going to get the stream input, it seems, so we can't use
   // the OnStartRequest mechanism the mailbox parser uses. So, let's open the db right now.
-  nsCOMPtr<nsIMsgDatabase> mailDB;
-  rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), (void **) getter_AddRefs(mailDB));
-  if (NS_SUCCEEDED(rv) && mailDB)
+  nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+  if (msgDBService)
   {
     nsCOMPtr <nsIFileSpec> dbFileSpec;
     NS_NewFileSpecWithSpec(folder, getter_AddRefs(dbFileSpec));
-    rv = mailDB->OpenFolderDB(downloadFolder, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
+    rv = msgDBService->OpenFolderDB(downloadFolder, PR_TRUE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(m_mailDB));
   }
   //	rv = nsMailDatabase::Open(folder, PR_TRUE, &m_mailDB, PR_FALSE);
   if (NS_FAILED(rv)) 

@@ -20,6 +20,7 @@
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s):
+ *   David Bienvenu <bienvenu@nventure.com>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -171,7 +172,7 @@ const nsMsgBiffState nsMsgBiffState_Unknown = 2; // We dunno whether there is ne
    * @param name the new name of the folder
    */
   void rename(in wstring name, in nsIMsgWindow msgWindow);
-    void renameSubFolders( in nsIMsgWindow msgWindow, in nsIMsgFolder oldFolder);
+  void renameSubFolders( in nsIMsgWindow msgWindow, in nsIMsgFolder oldFolder);
   /**
    * looks in immediate children of this folder for the given name
    *

@@ -56,11 +56,11 @@
 #include "nsIUrlListener.h"
 #include "nsCOMArray.h"
 
-class nsMsgAccountManager
-	: public nsIMsgAccountManager,
-      public nsIObserver,
-      public nsSupportsWeakReference,
-    public nsIUrlListener
+class nsMsgAccountManager: public nsIMsgAccountManager,
+    public nsIObserver,
+    public nsSupportsWeakReference,
+    public nsIUrlListener,
+    public nsIFolderListener
 {
 public:
 
@@ -74,6 +74,7 @@ public:
   NS_DECL_NSIMSGACCOUNTMANAGER
   NS_DECL_NSIOBSERVER  
   NS_DECL_NSIURLLISTENER
+  NS_DECL_NSIFOLDERLISTENER
 
   nsresult Init();
   nsresult Shutdown();
@@ -89,6 +90,7 @@ private:
   nsHashtable m_incomingServers;
   nsCOMPtr<nsIMsgAccount> m_defaultAccount;
   nsCOMArray<nsIIncomingServerListener> m_incomingServerListeners;
+  nsCOMArray<nsIDBChangeListener> m_virtualFolderListeners;
   nsCOMPtr<nsIMsgFolder> m_folderDoingEmptyTrash;
   nsCOMPtr<nsIMsgFolder> m_folderDoingCleanupInbox;
   PRBool m_emptyTrashInProgress;
@@ -194,6 +196,10 @@ private:
   static PRBool PR_CALLBACK writeFolderCache(nsHashKey *aKey, void *aData, void *closure);
   static PRBool PR_CALLBACK shutdown(nsHashKey *aKey, void *aData, void *closure);
   static PRBool PR_CALLBACK closeCachedConnections(nsHashKey *aKey, void *aData, void *closure);
+
+  // handle virtual folders
+  nsresult GetVirtualFoldersFile(nsCOMPtr<nsILocalFile>& file);
+  nsresult LoadVirtualFolders();
 
   static void getUniqueKey(const char* prefix,
                            nsHashtable *hashTable,

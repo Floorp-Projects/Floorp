@@ -74,64 +74,64 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 
 static char *nsMailboxGetURI(const char *nativepath)
 {
-
-    nsresult rv;
-    char *uri = nsnull;
-
-    nsCOMPtr<nsIMsgAccountManager> accountManager = 
-             do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
-    if (NS_FAILED(rv)) return nsnull;
-
-    nsCOMPtr<nsISupportsArray> serverArray;
-    accountManager->GetAllServers(getter_AddRefs(serverArray));
-
-    // do a char*->fileSpec->char* conversion to normalize the path
-    nsFilePath filePath(nativepath);
+  
+  nsresult rv;
+  char *uri = nsnull;
+  
+  nsCOMPtr<nsIMsgAccountManager> accountManager = 
+    do_GetService(NS_MSGACCOUNTMANAGER_CONTRACTID, &rv);
+  if (NS_FAILED(rv)) return nsnull;
+  
+  nsCOMPtr<nsISupportsArray> serverArray;
+  accountManager->GetAllServers(getter_AddRefs(serverArray));
+  
+  // do a char*->fileSpec->char* conversion to normalize the path
+  nsFilePath filePath(nativepath);
+  
+  PRUint32 cnt;
+  rv = serverArray->Count(&cnt);
+  if (NS_FAILED(rv)) return nsnull;
+  PRInt32 count = cnt;
+  PRInt32 i;
+  for (i=0; i<count; i++) {
     
-    PRUint32 cnt;
-    rv = serverArray->Count(&cnt);
-    if (NS_FAILED(rv)) return nsnull;
-    PRInt32 count = cnt;
-    PRInt32 i;
-    for (i=0; i<count; i++) {
-
-        nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(serverArray, i);
-
-        if (!server) continue;
-
-        // get the path string, convert it to an nsFilePath
-        nsCOMPtr<nsIFileSpec> nativeServerPath;
-        rv = server->GetLocalPath(getter_AddRefs(nativeServerPath));
-        if (NS_FAILED(rv)) continue;
-        
-        nsFileSpec spec;
-        nativeServerPath->GetFileSpec(&spec);
-        nsFilePath serverPath(spec);
-        
-        // check if filepath begins with serverPath
-        PRInt32 len = PL_strlen(serverPath);
-        if (PL_strncasecmp(serverPath, filePath, len) == 0) {
-            nsXPIDLCString serverURI;
-            rv = server->GetServerURI(getter_Copies(serverURI));
-            if (NS_FAILED(rv)) continue;
-            
-            // the relpath is just past the serverpath
-            const char *relpath = nativepath + len;
-            // skip past leading / if any
-            while (*relpath == '/') relpath++;
-			nsCAutoString pathStr(relpath);
-			PRInt32 sbdIndex;
-			while((sbdIndex = pathStr.Find(".sbd", PR_TRUE)) != -1)
-			{
-				pathStr.Cut(sbdIndex, 4);
-			}
-
-            uri = PR_smprintf("%s/%s", (const char*)serverURI, pathStr.get());
-
-            break;
-        }
+    nsCOMPtr<nsIMsgIncomingServer> server = do_QueryElementAt(serverArray, i);
+    
+    if (!server) continue;
+    
+    // get the path string, convert it to an nsFilePath
+    nsCOMPtr<nsIFileSpec> nativeServerPath;
+    rv = server->GetLocalPath(getter_AddRefs(nativeServerPath));
+    if (NS_FAILED(rv)) continue;
+    
+    nsFileSpec spec;
+    nativeServerPath->GetFileSpec(&spec);
+    nsFilePath serverPath(spec);
+    
+    // check if filepath begins with serverPath
+    PRInt32 len = PL_strlen(serverPath);
+    if (PL_strncasecmp(serverPath, filePath, len) == 0) {
+      nsXPIDLCString serverURI;
+      rv = server->GetServerURI(getter_Copies(serverURI));
+      if (NS_FAILED(rv)) continue;
+      
+      // the relpath is just past the serverpath
+      const char *relpath = nativepath + len;
+      // skip past leading / if any
+      while (*relpath == '/') relpath++;
+      nsCAutoString pathStr(relpath);
+      PRInt32 sbdIndex;
+      while((sbdIndex = pathStr.Find(".sbd", PR_TRUE)) != -1)
+      {
+        pathStr.Cut(sbdIndex, 4);
+      }
+      
+      uri = PR_smprintf("%s/%s", (const char*)serverURI, pathStr.get());
+      
+      break;
     }
-    return uri;
+  }
+  return uri;
 }
 
 
@@ -140,12 +140,12 @@ char * extractAttributeValue(const char * searchString, const char * attributeNa
 
 nsMailboxUrl::nsMailboxUrl()
 {
-	m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
-	m_filePath = nsnull;
-	m_messageID = nsnull;
-	m_messageKey = nsMsgKey_None;
-	m_messageSize = 0;
-	m_messageFileSpec = nsnull;
+  m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
+  m_filePath = nsnull;
+  m_messageID = nsnull;
+  m_messageKey = nsMsgKey_None;
+  m_messageSize = 0;
+  m_messageFileSpec = nsnull;
   m_addDummyEnvelope = PR_FALSE;
   m_canonicalLineEnding = PR_FALSE;
   m_curMsgIndex = 0;
@@ -153,8 +153,8 @@ nsMailboxUrl::nsMailboxUrl()
  
 nsMailboxUrl::~nsMailboxUrl()
 {
-	if (m_filePath) delete m_filePath;
-	PR_FREEIF(m_messageID);
+    delete m_filePath;
+    PR_Free(m_messageID);
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMailboxUrl, nsMsgMailNewsUrl)
@@ -172,68 +172,67 @@ NS_INTERFACE_MAP_END_INHERITING(nsMsgMailNewsUrl)
 ////////////////////////////////////////////////////////////////////////////////////
 nsresult nsMailboxUrl::SetMailboxParser(nsIStreamListener * aMailboxParser)
 {
-	if (aMailboxParser)
-		m_mailboxParser = aMailboxParser;
-	return NS_OK;
+  if (aMailboxParser)
+    m_mailboxParser = aMailboxParser;
+  return NS_OK;
 }
 
 nsresult nsMailboxUrl::GetMailboxParser(nsIStreamListener ** aConsumer)
 {
   NS_ENSURE_ARG_POINTER(aConsumer);
   
-  *aConsumer = m_mailboxParser;
-	NS_IF_ADDREF(*aConsumer);
-	return  NS_OK;
+  NS_IF_ADDREF(*aConsumer = m_mailboxParser);
+  return  NS_OK;
 }
 
 nsresult nsMailboxUrl::SetMailboxCopyHandler(nsIStreamListener * aMailboxCopyHandler)
 {
-	if (aMailboxCopyHandler)
-		m_mailboxCopyHandler = aMailboxCopyHandler;
-	return NS_OK;
+  if (aMailboxCopyHandler)
+    m_mailboxCopyHandler = aMailboxCopyHandler;
+  return NS_OK;
 }
 
 nsresult nsMailboxUrl::GetMailboxCopyHandler(nsIStreamListener ** aMailboxCopyHandler)
 {
   NS_ENSURE_ARG_POINTER(aMailboxCopyHandler);
-
-	if (aMailboxCopyHandler)
-	{
-		*aMailboxCopyHandler = m_mailboxCopyHandler;
-		NS_IF_ADDREF(*aMailboxCopyHandler);
-	}
-
-	return  NS_OK;
+  
+  if (aMailboxCopyHandler)
+  {
+    *aMailboxCopyHandler = m_mailboxCopyHandler;
+    NS_IF_ADDREF(*aMailboxCopyHandler);
+  }
+  
+  return  NS_OK;
 }
 
 nsresult nsMailboxUrl::GetFileSpec(nsFileSpec ** aFilePath)
 {
-	if (aFilePath)
-		*aFilePath = m_filePath;
-	return NS_OK;
+  if (aFilePath)
+    *aFilePath = m_filePath;
+  return NS_OK;
 }
 
 nsresult nsMailboxUrl::GetMessageKey(nsMsgKey* aMessageKey)
 {
-	*aMessageKey = m_messageKey;
-	return NS_OK;
+  *aMessageKey = m_messageKey;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailboxUrl::GetMessageSize(PRUint32 * aMessageSize)
 {
-	if (aMessageSize)
-	{
-		*aMessageSize = m_messageSize;
-		return NS_OK;
-	}
-	else
-		return NS_ERROR_NULL_POINTER;
+  if (aMessageSize)
+  {
+    *aMessageSize = m_messageSize;
+    return NS_OK;
+  }
+  else
+    return NS_ERROR_NULL_POINTER;
 }
 
 nsresult nsMailboxUrl::SetMessageSize(PRUint32 aMessageSize)
 {
-	m_messageSize = aMessageSize;
-	return NS_OK;
+  m_messageSize = aMessageSize;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailboxUrl::SetUri(const char * aURI)
@@ -246,56 +245,55 @@ NS_IMETHODIMP nsMailboxUrl::GetUri(char ** aURI)
 {
   // if we have been given a uri to associate with this url, then use it
   // otherwise try to reconstruct a URI on the fly....
-
+  
   if (!mURI.IsEmpty())
     *aURI = ToNewCString(mURI);
   else
-	{
-		nsFileSpec * filePath = nsnull;
-		GetFileSpec(&filePath);
-		if (filePath)
-		{
+  {
+    nsFileSpec * filePath = nsnull;
+    GetFileSpec(&filePath);
+    if (filePath)
+    {
       char * baseuri = nsMailboxGetURI(m_file);
-			char * baseMessageURI;
-			nsCreateLocalBaseMessageURI(baseuri, &baseMessageURI);
-			char * uri = nsnull;
-			nsCAutoString uriStr;
-			nsFileSpec folder = *filePath;
-			nsBuildLocalMessageURI(baseMessageURI, m_messageKey, uriStr);
-            PL_strfree(baseuri);
-			nsCRT::free(baseMessageURI);
-			uri = ToNewCString(uriStr);
-			*aURI = uri;
-		}
-		else
-			*aURI = nsnull;
-	}
-
-	return NS_OK;
+      char * baseMessageURI;
+      nsCreateLocalBaseMessageURI(baseuri, &baseMessageURI);
+      char * uri = nsnull;
+      nsCAutoString uriStr;
+      nsFileSpec folder = *filePath;
+      nsBuildLocalMessageURI(baseMessageURI, m_messageKey, uriStr);
+      PL_strfree(baseuri);
+      nsCRT::free(baseMessageURI);
+      uri = ToNewCString(uriStr);
+      *aURI = uri;
+    }
+    else
+      *aURI = nsnull;
+  }
+  
+  return NS_OK;
 }
 
 nsresult nsMailboxUrl::GetMsgHdrForKey(nsMsgKey  msgKey, nsIMsgDBHdr ** aMsgHdr)
 {
-	nsresult rv = NS_OK;
-	if (aMsgHdr)
-	{
-		nsCOMPtr<nsIMsgDatabase> mailDBFactory;
-		nsCOMPtr<nsIMsgDatabase> mailDB;
-
-		rv = nsComponentManager::CreateInstance(kCMailDB, nsnull, NS_GET_IID(nsIMsgDatabase), 
-														 (void **) getter_AddRefs(mailDBFactory));
-		nsCOMPtr <nsIFileSpec> dbFileSpec;
-		NS_NewFileSpecWithSpec(*m_filePath, getter_AddRefs(dbFileSpec));
-
-		if (NS_SUCCEEDED(rv) && mailDBFactory)
-			rv = mailDBFactory->Open(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB));
-		if (NS_SUCCEEDED(rv) && mailDB) // did we get a db back?
-			rv = mailDB->GetMsgHdrForKey(msgKey, aMsgHdr);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
+  nsresult rv = NS_OK;
+  if (aMsgHdr)
+  {
+    nsCOMPtr<nsIMsgDatabase> mailDBFactory;
+    nsCOMPtr<nsIMsgDatabase> mailDB;
+    
+    nsCOMPtr<nsIMsgDBService> msgDBService = do_GetService(NS_MSGDB_SERVICE_CONTRACTID, &rv);
+    nsCOMPtr <nsIFileSpec> dbFileSpec;
+    NS_NewFileSpecWithSpec(*m_filePath, getter_AddRefs(dbFileSpec));
+    
+    if (msgDBService)
+      rv = msgDBService->OpenMailDBFromFileSpec(dbFileSpec, PR_FALSE, PR_FALSE, (nsIMsgDatabase **) getter_AddRefs(mailDB));
+    if (NS_SUCCEEDED(rv) && mailDB) // did we get a db back?
+      rv = mailDB->GetMsgHdrForKey(msgKey, aMsgHdr);
+  }
+  else
+    rv = NS_ERROR_NULL_POINTER;
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsMailboxUrl::GetMessageHeader(nsIMsgDBHdr ** aMsgHdr)
@@ -323,41 +321,41 @@ nsMailboxUrl::SetOriginalSpec(const char *aSpec)
 
 NS_IMETHODIMP nsMailboxUrl::SetMessageFile(nsIFileSpec * aFileSpec)
 {
-	m_messageFileSpec = aFileSpec;
-	return NS_OK;
+  m_messageFileSpec = aFileSpec;
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailboxUrl::GetMessageFile(nsIFileSpec ** aFileSpec)
 {
-	if (aFileSpec)
-	{
-		*aFileSpec = m_messageFileSpec;
-		NS_IF_ADDREF(*aFileSpec);
-	}
-	return NS_OK;
+  if (aFileSpec)
+  {
+    *aFileSpec = m_messageFileSpec;
+    NS_IF_ADDREF(*aFileSpec);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMailboxUrl::IsUrlType(PRUint32 type, PRBool *isType)
 {
-	NS_ENSURE_ARG(isType);
-
-	switch(type)
-	{
-		case nsIMsgMailNewsUrl::eCopy:
-			*isType = (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage);
-			break;
-		case nsIMsgMailNewsUrl::eMove:
-			*isType = (m_mailboxAction == nsIMailboxUrl::ActionMoveMessage);
-			break;
-		case nsIMsgMailNewsUrl::eDisplay:
-			*isType = (m_mailboxAction == nsIMailboxUrl::ActionFetchMessage);
-			break;
-		default:
-			*isType = PR_FALSE;
-	};				
-
-	return NS_OK;
-
+  NS_ENSURE_ARG(isType);
+  
+  switch(type)
+  {
+    case nsIMsgMailNewsUrl::eCopy:
+      *isType = (m_mailboxAction == nsIMailboxUrl::ActionCopyMessage);
+      break;
+    case nsIMsgMailNewsUrl::eMove:
+      *isType = (m_mailboxAction == nsIMailboxUrl::ActionMoveMessage);
+      break;
+    case nsIMsgMailNewsUrl::eDisplay:
+      *isType = (m_mailboxAction == nsIMailboxUrl::ActionFetchMessage);
+      break;
+    default:
+      *isType = PR_FALSE;
+  };				
+  
+  return NS_OK;
+  
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -369,46 +367,45 @@ NS_IMETHODIMP nsMailboxUrl::IsUrlType(PRUint32 type, PRBool *isType)
 
 nsresult nsMailboxUrl::ParseSearchPart()
 {
-	nsCAutoString searchPart;
-	nsresult rv = GetQuery(searchPart);
-	// add code to this function to decompose everything past the '?'.....
-	if (NS_SUCCEEDED(rv) && !searchPart.IsEmpty())
-	{
+  nsCAutoString searchPart;
+  nsresult rv = GetQuery(searchPart);
+  // add code to this function to decompose everything past the '?'.....
+  if (NS_SUCCEEDED(rv) && !searchPart.IsEmpty())
+  {
     // the action for this mailbox must be a display message...
     char * msgPart = extractAttributeValue(searchPart.get(), "part=");
     if (msgPart)  // if we have a part in the url then we must be fetching just the part.
       m_mailboxAction = nsIMailboxUrl::ActionFetchPart;
     else
-		  m_mailboxAction = nsIMailboxUrl::ActionFetchMessage;
-
-		char * messageKey = extractAttributeValue(searchPart.get(), "number=");
-		m_messageID = extractAttributeValue(searchPart.get(),"messageid=");
-		if (messageKey)
-			m_messageKey = atol(messageKey); // convert to a long...
-		
-    PR_FREEIF(msgPart);
-		PR_FREEIF(messageKey);
-	}
-	else
-		m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
-
-	return rv;
+      m_mailboxAction = nsIMailboxUrl::ActionFetchMessage;
+    
+    char * messageKey = extractAttributeValue(searchPart.get(), "number=");
+    m_messageID = extractAttributeValue(searchPart.get(),"messageid=");
+    if (messageKey)
+      m_messageKey = atol(messageKey); // convert to a long...
+    
+    PR_Free(msgPart);
+    PR_Free(messageKey);
+  }
+  else
+    m_mailboxAction = nsIMailboxUrl::ActionParseMailbox;
+  
+  return rv;
 }
 
 // warning: don't assume when parsing the url that the protocol part is "news"...
 nsresult nsMailboxUrl::ParseUrl()
 {
-	if (m_filePath)
-		delete m_filePath;
-	GetFilePath(m_file);
-	ParseSearchPart();
+  delete m_filePath;
+  GetFilePath(m_file);
+  ParseSearchPart();
   // ### fix me.
   // this hack is to avoid asserting on every local message loaded because the security manager
   // is creating an empty "mailbox://" uri for every message.
   if (strlen(m_file) < 2)
     m_filePath = nsnull;
   else
-	  m_filePath = new nsFileSpec(nsFilePath(nsUnescape((char *) (const char *)m_file)));
+    m_filePath = new nsFileSpec(nsFilePath(nsUnescape((char *) (const char *)m_file)));
   return NS_OK;
 }
 
@@ -436,33 +433,33 @@ NS_IMETHODIMP nsMailboxUrl::SetQuery(const nsACString &aQuery)
 // Assumption: attribute pairs in the string are separated by '&'.
 char * extractAttributeValue(const char * searchString, const char * attributeName)
 {
-	char * attributeValue = nsnull;
-
-	if (searchString && attributeName)
-	{
-		// search the string for attributeName
-		PRUint32 attributeNameSize = PL_strlen(attributeName);
-		char * startOfAttribute = PL_strcasestr(searchString, attributeName);
-		if (startOfAttribute)
-		{
-			startOfAttribute += attributeNameSize; // skip over the attributeName
-			if (startOfAttribute) // is there something after the attribute name
-			{
-				char * endofAttribute = startOfAttribute ? PL_strchr(startOfAttribute, '&') : nsnull;
-				if (startOfAttribute && endofAttribute) // is there text after attribute value
-					attributeValue = PL_strndup(startOfAttribute, endofAttribute - startOfAttribute);
-				else // there is nothing left so eat up rest of line.
-					attributeValue = PL_strdup(startOfAttribute);
-
-				// now unescape the string...
-				if (attributeValue)
-					attributeValue = nsUnescape(attributeValue); // unescape the string...
-			} // if we have a attribute value
-
-		} // if we have a attribute name
-	} // if we got non-null search string and attribute name values
-
-	return attributeValue;
+  char * attributeValue = nsnull;
+  
+  if (searchString && attributeName)
+  {
+    // search the string for attributeName
+    PRUint32 attributeNameSize = PL_strlen(attributeName);
+    char * startOfAttribute = PL_strcasestr(searchString, attributeName);
+    if (startOfAttribute)
+    {
+      startOfAttribute += attributeNameSize; // skip over the attributeName
+      if (startOfAttribute) // is there something after the attribute name
+      {
+        char * endofAttribute = startOfAttribute ? PL_strchr(startOfAttribute, '&') : nsnull;
+        if (startOfAttribute && endofAttribute) // is there text after attribute value
+          attributeValue = PL_strndup(startOfAttribute, endofAttribute - startOfAttribute);
+        else // there is nothing left so eat up rest of line.
+          attributeValue = PL_strdup(startOfAttribute);
+        
+        // now unescape the string...
+        if (attributeValue)
+          attributeValue = nsUnescape(attributeValue); // unescape the string...
+      } // if we have a attribute value
+      
+    } // if we have a attribute name
+  } // if we got non-null search string and attribute name values
+  
+  return attributeValue;
 }
 
 // nsIMsgI18NUrl support

@@ -201,38 +201,38 @@ nsMsgDBFolder::~nsMsgDBFolder(void)
 #endif
   }
 	//shutdown but don't shutdown children.
-	Shutdown(PR_FALSE);
+  Shutdown(PR_FALSE);
 }
 
 NS_IMETHODIMP nsMsgDBFolder::Shutdown(PRBool shutdownChildren)
 {
-	if(mDatabase)
-	{
-		mDatabase->RemoveListener(this);
-		mDatabase->Close(PR_TRUE);
-		mDatabase = nsnull;
-
+  if(mDatabase)
+  {
+    mDatabase->RemoveListener(this);
+    mDatabase->Close(PR_TRUE);
+    mDatabase = nsnull;
+    
   }
-
-	if(shutdownChildren)
-	{
-		PRUint32 count;
-	    nsresult rv = mSubFolders->Count(&count);
-	    if(NS_SUCCEEDED(rv))
-		{
-			for (PRUint32 i = 0; i < count; i++)
-			{
-				nsCOMPtr<nsIMsgFolder> childFolder = do_QueryElementAt(mSubFolders, i);
-				if(childFolder)
-					childFolder->Shutdown(PR_TRUE);
-			}
-		}
+  
+  if(shutdownChildren)
+  {
+    PRUint32 count;
+    nsresult rv = mSubFolders->Count(&count);
+    if(NS_SUCCEEDED(rv))
+    {
+      for (PRUint32 i = 0; i < count; i++)
+      {
+        nsCOMPtr<nsIMsgFolder> childFolder = do_QueryElementAt(mSubFolders, i);
+        if(childFolder)
+          childFolder->Shutdown(PR_TRUE);
+      }
+    }
     // Reset incoming server pointer and pathname.
     mServer = nsnull;
     mPath = nsnull;
     mSubFolders->Clear();
-	}
-	return NS_OK;
+  }
+  return NS_OK;
 }
 
 
@@ -2979,8 +2979,8 @@ NS_IMETHODIMP nsMsgDBFolder::RecursiveDelete(PRBool deleteStorage, nsIMsgWindow 
   }
 
   // now delete the disk storage for _this_
-    if (deleteStorage && (status == NS_OK))
-        status = Delete();
+  if (deleteStorage && (status == NS_OK))
+      status = Delete();
   return status;
 }
 
@@ -3237,8 +3237,13 @@ NS_IMETHODIMP nsMsgDBFolder::GetNumUnread(PRBool deep, PRInt32 *numUnread)
         if (NS_SUCCEEDED(rv))
         {
           PRInt32 num;
-          folder->GetNumUnread(deep, &num);
-          total += num;
+          PRUint32 folderFlags;
+          folder->GetFlags(&folderFlags);
+          if (!(folderFlags & MSG_FOLDER_FLAG_VIRTUAL))
+          {
+            folder->GetNumUnread(deep, &num);
+            total += num;
+          }
         }
       }
     }
@@ -3269,8 +3274,13 @@ NS_IMETHODIMP nsMsgDBFolder::GetTotalMessages(PRBool deep, PRInt32 *totalMessage
         if (NS_SUCCEEDED(rv))
         {
           PRInt32 num;
-          folder->GetTotalMessages (deep, &num);
-          total += num;
+          PRUint32 folderFlags;
+          folder->GetFlags(&folderFlags);
+          if (!(folderFlags & MSG_FOLDER_FLAG_VIRTUAL))
+          {
+            folder->GetTotalMessages (deep, &num);
+            total += num;
+          }
         }
       }
     }
