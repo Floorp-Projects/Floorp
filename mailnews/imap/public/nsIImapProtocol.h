@@ -64,9 +64,7 @@ public:
 	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue) = 0;
 
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue) = 0;
-    
-    NS_IMETHOD SetMessageDownloadOutputStream(nsIOutputStream *aOutputStream)
-        = 0;
+
     NS_IMETHOD NotifyFEEventCompletion() = 0;
 };
 
