@@ -40,7 +40,7 @@
 
 #include "nsISupports.idl"
 
-[scriptable, uuid(42d5215c-9bc7-11d3-bccc-0060b0fc76bd)]
+[scriptable, uuid(1691a02f-53b2-4cb8-8769-48e7efc908b8)]
 interface nsIContentViewerEdit : nsISupports
 {
 	void search();
@@ -55,8 +55,11 @@ interface nsIContentViewerEdit : nsISupports
 	void copyLinkLocation();
 	readonly attribute boolean inLink;
 
-	void copyImageLocation();
-	void copyImageContents();
+	const long COPY_IMAGE_TEXT = 0x0001;
+	const long COPY_IMAGE_HTML = 0x0002;
+	const long COPY_IMAGE_DATA = 0x0004;
+	const long COPY_IMAGE_ALL = -1;
+	void copyImage(in long aCopyFlags);
 	readonly attribute boolean inImage;
 
 	void cutSelection();
