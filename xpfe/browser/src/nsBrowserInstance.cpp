@@ -454,8 +454,11 @@ NS_IMETHODIMP
 nsBrowserInstance::Back()
 {
 #ifdef SH_IN_FRAMES
-	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  webNav = do_QueryInterface(mSessionHistory);
   webNav->GoBack();
 #else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
@@ -470,8 +473,11 @@ NS_IMETHODIMP
 nsBrowserInstance::Forward()
 {
 #ifdef SH_IN_FRAMES
-	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  webNav = do_QueryInterface(mSessionHistory);
   webNav->GoForward();
 #else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
@@ -486,8 +492,11 @@ NS_IMETHODIMP
 nsBrowserInstance::GetCanGoBack(PRBool* aCan)
 {
 #ifdef SH_IN_FRAMES
-	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  webNav = do_QueryInterface(mSessionHistory);
   webNav->GetCanGoBack(aCan);
 #else
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
@@ -502,8 +511,11 @@ NS_IMETHODIMP
 nsBrowserInstance::GetCanGoForward(PRBool* aCan)
 {
 #ifdef SH_IN_FRAMES
-	  NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
-  nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mSessionHistory));
+	nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(GetContentAreaDocShell()));
+  NS_ENSURE_TRUE(webNav, NS_ERROR_FAILURE);
+
+	NS_ENSURE_TRUE(mSessionHistory, NS_ERROR_UNEXPECTED);
+  webNav = do_QueryInterface(mSessionHistory);
   webNav->GetCanGoForward(aCan);
 #else
 
