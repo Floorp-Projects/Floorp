@@ -380,6 +380,8 @@ ifdef MOZ_LDAP
 BASIC_LIBS	+= $(DIST)/lib/libldap.a $(DIST)/lib/liblber.a 
 endif
 
+BASIC_LIBS += $(DIST)/lib/libxpcom.a
+
 LOCALES		= $(LOCALE_MAP) $(MAIL_IM_HACK) $(NEWS_IM_HACK)
 
 ALL_EXPORT_LIBS	= $(BASIC_LIBS) $(EXPORT_LIB) $(BASIC_LIBS_2) $(NSPR_LIB)
