@@ -58,7 +58,8 @@ public:
   NS_IMETHOD  GetFontHandle(nsFontHandle& aHandle);
 
   static void SetFont(const nsFont& aFont, nsIDeviceContext* aContext);
-
+protected:
+	void	RealizeFont();
 protected:
 	short							mFontNum;
   nscoord           mHeight;

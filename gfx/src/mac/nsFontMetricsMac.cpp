@@ -50,6 +50,7 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
 
   mFont = new nsFont(aFont);
   mContext = aCX;
+  RealizeFont();
   if (mFont != nsnull)
     nsFontMetricsMac::SetFont(*mFont, mContext);
 
@@ -69,6 +70,73 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
 
   return NS_OK;
 }
+
+
+static void MapGenericFamilyToFont(const nsString& aGenericFamily, nsString& aFontFace)
+{
+  // the CSS generic names (conversions from the old Mac Mozilla code for now)
+
+  if (aGenericFamily.EqualsIgnoreCase("serif"))
+  {
+    aFontFace = "Times";
+  }
+  else if (aGenericFamily.EqualsIgnoreCase("sans-serif"))
+  {
+    aFontFace="Helvetica";
+  }
+  else if (aGenericFamily.EqualsIgnoreCase("cursive"))
+  {
+     aFontFace="Zapf Chancery";
+  }
+  else if (aGenericFamily.EqualsIgnoreCase("fantasy"))
+  {
+    aFontFace ="New Century Schlbk";
+  }
+  else if (aGenericFamily.EqualsIgnoreCase("monospace"))
+  {
+    aFontFace = "Courier";
+  }
+}
+
+struct FontEnumData {
+  FontEnumData(nsIDeviceContext* aDC, nsString& aFaceName)
+    : mContext(aDC), mFaceName(aFaceName)
+  {}
+  nsIDeviceContext* mContext;
+  nsString&         mFaceName;
+};
+
+static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *aData)
+{
+  FontEnumData* data = (FontEnumData*)aData;
+  if (aGeneric)
+  {
+    nsAutoString realFace;
+    MapGenericFamilyToFont(aFamily, realFace);
+    data->mFaceName=realFace;
+    return PR_FALSE;  // stop
+  }
+  else
+  {
+    nsAutoString realFace;
+    PRBool  aliased;
+    data->mContext->GetLocalFontName(aFamily, realFace, aliased);
+    if (aliased || (NS_OK == data->mContext->CheckFontExistence(realFace)))
+    {
+    	data->mFaceName=realFace;
+      	return PR_FALSE;  // stop
+    }
+  }
+  return PR_TRUE;
+}
+
+void nsFontMetricsMac::RealizeFont()
+{
+  nsString faceName;
+  FontEnumData  data(mContext,  mFont->name);
+  mFont->EnumerateFamilies(FontEnumCallback, &data);
+}
+
 
 NS_IMETHODIMP
 nsFontMetricsMac :: Destroy()
