@@ -51,7 +51,7 @@
 
 #include "nsIComponentManager.h"
 
-#include "nsISound.h"
+#include "nsSound.h"
 
 // NOTE the following does not match MAC_STATIC actually used below in this file!
 #define MACSTATIC

@@ -16,23 +16,27 @@
  * Reserved.
  */
 
-#include "nsISupports.idl"
+#ifndef __nsSound_h__
+#define __nsSound_h__
 
-[scriptable, uuid(B148EED1-236D-11d3-B35C-00A0CC3C1CDE)]
-interface nsISound : nsISupports
-{
-  void Init();
+#include "nsISound.h"
 
-  void Play(in string filename);
-  //  void Stop();
+#include <gtk/gtk.h>
 
-  void Beep();
+class nsSound : public nsISound {
+ public: 
+
+  nsSound();
+  virtual ~nsSound();
+
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD Init(void);
+
+  NS_IMETHOD Play(const char *filename);
+
+  NS_IMETHOD Beep(void);
+
 };
 
-
-%{ C++
-
-extern nsresult
-NS_NewSound(nsISound** aSound);
-
-%}
+#endif /* __nsSound_h__ */
