@@ -29,7 +29,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/xul.css \
 	$(srcdir)/lessCols.gif \
 	$(srcdir)/lessCols_mo.gif \
-	$(srcdir)/lessCols_dis.gif \
+	$(srcdir)/lessCOls_dis.gif \
 	$(srcdir)/moreCols.gif \
 	$(srcdir)/moreCols_mo.gif \
 	$(srcdir)/moreCols_dis.gif \
