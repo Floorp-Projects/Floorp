@@ -210,8 +210,15 @@ ErrorExit:
 
 static void My_CloseDir(MyPRDir *mdDir)
 {
+	if (!mdDir)
+		return;		// Not much we can do with a null mdDir
+	
+	// If we'd allocated an entry name then delete it
 	if (mdDir->currentEntryName)
 		PR_DELETE(mdDir->currentEntryName);
+	
+	// delete the directory info struct as well
+	PR_DELETE(mdDir);
 }
 
 // The R**co FSSpec resolver -
