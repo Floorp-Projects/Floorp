@@ -129,10 +129,6 @@ mozXMLTermStream::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   if ( aIID.Equals(NS_GET_IID(nsISupports))) {
     *aInstancePtr = NS_STATIC_CAST(nsISupports*,
                                    NS_STATIC_CAST(mozIXMLTermStream*,this));
-
-  } else if(aIID.Equals(NS_GET_IID(nsIBaseStream))) {
-    *aInstancePtr = NS_STATIC_CAST(nsIBaseStream*,this);
-
   } else if(aIID.Equals(NS_GET_IID(nsIInputStream))) {
     *aInstancePtr = NS_STATIC_CAST(nsIInputStream*,this);
 
