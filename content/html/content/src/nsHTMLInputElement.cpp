@@ -1364,19 +1364,10 @@ nsHTMLInputElement::HandleDOMEvent(nsIPresContext* aPresContext,
   PRInt32 oldType = mType;
 
   // Try script event handlers first if its not a focus/blur event
-  // we dont want the doc to get these
+  //we dont want the doc to get these
   rv = nsGenericHTMLFormElement::HandleDOMEvent(aPresContext, aEvent,
                                                 aDOMEvent, aFlags,
                                                 aEventStatus);
-
-  if (aEvent->message == NS_FORM_INPUT &&
-      !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
-    if (mForm) {
-      mForm->FireFormInputEvent();
-    }
-
-    return NS_OK;
-  }
 
   // Ideally we would make the default action for click and space just dispatch
   // DOMActivate, and the default action for DOMActivate flip the checkbox/

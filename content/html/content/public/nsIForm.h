@@ -184,16 +184,6 @@ public:
    */
   NS_IMETHOD GetActionURL(nsIURI** aActionURL) = 0;
 
-  /**
-   * Fire the Web Forms 2 formchange event on all form controls.
-   */
-  virtual void FireFormChangeEvent() = 0;
-
-  /**
-   * Fire the Web Forms 2 forminput event on all form controls.
-   */
-  virtual void FireFormInputEvent() = 0;
-
 };
 
 #endif /* nsIForm_h___ */

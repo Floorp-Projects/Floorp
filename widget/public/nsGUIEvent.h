@@ -231,8 +231,6 @@ class nsIURI;
 #define NS_FORM_CHANGE                  (NS_FORM_EVENT_START + 2)
 #define NS_FORM_SELECTED                (NS_FORM_EVENT_START + 3)
 #define NS_FORM_INPUT                   (NS_FORM_EVENT_START + 4)
-#define NS_FORM_FORMCHANGE              (NS_FORM_EVENT_START + 5)
-#define NS_FORM_FORMINPUT               (NS_FORM_EVENT_START + 6)
 
 //Need separate focus/blur notifications for non-native widgets
 #define NS_FOCUS_EVENT_START            1300
