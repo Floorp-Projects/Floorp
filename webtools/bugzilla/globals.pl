@@ -673,11 +673,6 @@ sub quoteUrls {
     my ($knownattachments, $text) = (@_);
     return $text unless $text;
     
-    # make sure that any unfetched data from a currently running query 
-    # is saved off rather than overwritten
-    #
-    PushGlobalSQLState();
-
     my $base = Param('urlbase');
 
     my $protocol = join '|',
@@ -716,23 +711,15 @@ sub quoteUrls {
     while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
         my $item = $&;
         my $num = $2;
-        SendSQL("select bugs.bug_status, short_desc
-        from bugs where bugs.bug_id = $num");
-        my ($stat, $dep_desc) = (FetchSQLData());
-        $item = value_quote($item); # Not really necessary, since we know
-                                    # there's no special chars in it.
-        $dep_desc = value_quote($dep_desc);
-        $item = qq{<A HREF="show_bug.cgi?id=$num" title="$stat - $dep_desc">$item</A>};
+        $item = GetBugLink($num, $item);
         $things[$count++] = $item;
     }
     while ($text =~ s/\*\*\* This bug has been marked as a duplicate of (\d+) \*\*\*/"##$count##"/ei) {
         my $item = $&;
         my $num = $1;
-        SendSQL("select bugs.bug_status, short_desc
-        from bugs where bugs.bug_id = $num");
-        my ($stat, $dep_desc) = (FetchSQLData());
-        $dep_desc = value_quote($dep_desc);
-        $item =~ s@\d+@<A HREF="show_bug.cgi?id=$num" title="$stat - $dep_desc">$num</A>@;
+        my $bug_link;
+        $bug_link = GetBugLink($num, $num);
+        $item =~ s@\d+@$bug_link@;
         $things[$count++] = $item;
     }
     while ($text =~ s/Created an attachment \(id=(\d+)\)/"##$count##"/e) {
@@ -755,10 +742,49 @@ sub quoteUrls {
     # And undo the quoting of "#" characters.
     $text =~ s/%#/#/g;
 
-    # put back any query info in progress
+    return $text;
+}
+
+# This is a new subroutine written 12/20/00 for the purpose of processing a
+# link to a bug.  It can be called using "GetBugLink (<BugNumber>, <LinkText>);"
+# Where <BugNumber> is the number of the bug and <LinkText> is what apprears
+# between '<a>' and '</a>'.
+
+sub GetBugLink {
+    my ($bug_num, $link_text) = (@_);
+    my ($link_return) = "";
+
+    # TODO - Add caching capabilites... possibly use a global variable in the form
+    # of $buglink{$bug_num} that contains the text returned by this sub.  If that
+    # variable is defined, simply return it's value rather than running the SQL
+    # query.  This would cut down on the number of SQL calls when the same bug is
+    # referenced multiple times.
+    
+    # Make sure any unfetched data from a currently running query
+    # is saved off rather than overwritten
+    PushGlobalSQLState();
+    
+    # Get this bug's info from the SQL Database
+    SendSQL("select bugs.bug_status, resolution, short_desc
+             from bugs where bugs.bug_id = $bug_num");
+    my ($bug_stat, $bug_res, $bug_desc) = (FetchSQLData());
+    
+    # Format the retrieved information into a link
+    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "<i>" }
+    if ($bug_res ne "") { $link_return .= "<strike>" }
+    $bug_desc = value_quote($bug_desc);
+    $link_text = value_quote($link_text);
+    $link_return .= qq{<a href="show_bug.cgi?id=$bug_num" title="$bug_stat};
+    if ($bug_res ne "") {$link_return .= " $bug_res"}
+    $link_return .= qq{ - $bug_desc">$link_text</a>};
+    if ($bug_res ne "") { $link_return .= "</strike>" }
+    if ($bug_stat eq "UNCONFIRMED") { $link_return .= "</i>"}
+    
+    # Put back any query in progress
     PopGlobalSQLState();
 
-    return $text;
+    return $link_return; 
+
 }
 
 sub GetLongDescriptionAsText {
