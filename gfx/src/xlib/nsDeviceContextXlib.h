@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- * David Smith <david@igelaus.com.au>
+ *   David Smith <david@igelaus.com.au>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsDeviceContextXlib_h__
@@ -64,11 +65,13 @@ public:
   NS_IMETHOD BeginPage(void);
   NS_IMETHOD EndPage(void);
 
-  Display * GetDisplay() { return mDisplay; }
-  Screen * GetScreen() { return mScreen; }
-  Visual * GetVisual() { return mVisual; }
-  int      GetDepth() { return mDepth; }
-	NS_IMETHOD GetDepth( PRUint32 &depth ) { depth=(PRUint32)mDepth;return NS_OK; }
+  NS_IMETHOD CreateFontCache();
+
+  Display   *GetDisplay() { return mDisplay; }
+  Screen    *GetScreen() { return mScreen; }
+  Visual    *GetVisual() { return mVisual; }
+  int        GetDepth() { return mDepth; }
+  NS_IMETHOD GetDepth( PRUint32 &depth ) { depth=(PRUint32)mDepth;return NS_OK; }
 
 protected:
 
@@ -91,4 +94,5 @@ private:
   PRInt32              mHeight;
 };
 
-#endif
+#endif /* !nsDeviceContextXlib_h__ */
+

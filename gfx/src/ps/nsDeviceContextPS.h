@@ -18,6 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsDeviceContextPS_h___
@@ -40,7 +41,7 @@ class nsDeviceContextPS : public DeviceContextImpl,
 public:
   nsDeviceContextPS();
 
-	NS_DECL_ISUPPORTS_INHERITED
+  NS_DECL_ISUPPORTS_INHERITED
 
   /**
    * This method does nothing since a postscript devicecontext will never be created
@@ -58,39 +59,36 @@ public:
 
   NS_IMETHOD  GetScrollBarDimensions(float &aWidth, float &aHeight) const;
 
-	void 				SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
+  void        SetDrawingSurface(nsDrawingSurface  aSurface) { mSurface = aSurface; }
   NS_IMETHOD  GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface);
 
 
-  NS_IMETHOD 	  CheckFontExistence(const nsString& aFontName);
+  NS_IMETHOD  CheckFontExistence(const nsString& aFontName);
   NS_IMETHODIMP GetILColorSpace(IL_ColorSpace*& aColorSpace);
-  NS_IMETHOD 	  GetDepth(PRUint32& aDepth);
-  NS_IMETHOD 	  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
+  NS_IMETHOD  GetDepth(PRUint32& aDepth);
+  NS_IMETHOD  ConvertPixel(nscolor aColor, PRUint32 & aPixel);
 
-  NS_IMETHOD 	GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
-  NS_IMETHOD    GetClientRect(nsRect &aRect);
-  NS_IMETHOD    GetRect(nsRect &aRect);
+  NS_IMETHOD  GetDeviceSurfaceDimensions(PRInt32 &aWidth, PRInt32 &aHeight);
+  NS_IMETHOD  GetClientRect(nsRect &aRect);
+  NS_IMETHOD  GetRect(nsRect &aRect);
 
-  NS_IMETHOD 	GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext);
+  NS_IMETHOD  GetDeviceContextFor(nsIDeviceContextSpec *aDevice,nsIDeviceContext *&aContext);
   NS_IMETHOD  GetSystemAttribute(nsSystemAttrID anID, SystemAttrStruct * aInfo) const;
-  NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
-  NS_IMETHOD	GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup, nsIFontMetrics*& aMetrics);
-  NS_IMETHOD 	BeginDocument(PRUnichar * aTitle);
-  NS_IMETHOD 	EndDocument(void);
-  NS_IMETHOD 	BeginPage(void);
-  NS_IMETHOD 	EndPage(void);
-
+  NS_IMETHOD  BeginDocument(PRUnichar * aTitle);
+  NS_IMETHOD  EndDocument(void);
+  NS_IMETHOD  BeginPage(void);
+  NS_IMETHOD  EndPage(void);
+  NS_IMETHOD  CreateFontCache();
   
   NS_IMETHOD  SetSpec(nsIDeviceContextSpec *aSpec);
 
 protected:
-  virtual 	~nsDeviceContextPS();
+  virtual     ~nsDeviceContextPS();
   
-  nsDrawingSurface 			mSurface;
-  PRUint32 							mDepth;
+  nsDrawingSurface       mSurface;
+  PRUint32               mDepth;
   nsIDeviceContextSpec  *mSpec;
   nsIDeviceContext      *mParentDeviceContext;
-  nsVoidArray           mFontMetrics;  // we are not using the normal font cache, this is special for PostScript.
   nsPostScriptObj       *mPSObj;
 
 public:

@@ -18,7 +18,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
+ *   Roland Mainz <roland.mainz@informatik.med.uni-giessen.de>
  */
 
 #ifndef nsDeviceContextXp_h___
@@ -82,9 +82,7 @@ public:
   Display           *GetDisplay();
   NS_IMETHOD         GetPrintContext(nsXPrintContext*& aContext);
 
-  NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIFontMetrics*& aMetrics);
-  NS_IMETHOD    GetMetricsFor(const nsFont& aFont, nsIAtom* aLangGroup,
-                              nsIFontMetrics*& aMetrics);
+  NS_IMETHOD         CreateFontCache();
 
 protected:
   virtual         ~nsDeviceContextXp();
@@ -93,7 +91,6 @@ protected:
   Display              *mDisplay;
   Screen               *mScreen;
   nsCOMPtr<nsIDeviceContextSpec> mSpec;
-  nsCOMPtr<nsISupportsArray> mFontMetrics;  // we are not using the normal font cache
   nsIDeviceContext     *mParentDeviceContext;
 };
 
