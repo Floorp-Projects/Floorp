@@ -303,6 +303,10 @@ nsresult
 NS_NewWBRFrame(nsIContent* aContent, nsIFrame* aParentFrame,
                nsIFrame*& aResult);
 
+extern nsresult
+NS_NewScrollFrame(nsIContent* aContent, nsIFrame* aParentFrame,
+                  nsIFrame*& aResult);
+
 // forms
 extern nsresult
 NS_NewFormFrame(nsIContent* aContent, nsIFrame* aParentFrame,

@@ -35,7 +35,6 @@
 #include "nsPlaceholderFrame.h"
 #include "nsIHTMLContent.h"
 #include "nsHTMLParts.h"
-#include "nsScrollFrame.h"
 #include "nsIView.h"
 #include "nsIViewManager.h"
 #include "nsViewsCID.h"
