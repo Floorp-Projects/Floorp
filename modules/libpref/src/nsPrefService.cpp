@@ -484,7 +484,7 @@ nsresult nsPrefService::WritePrefFile(nsIFile* aFile)
     NS_LINEBREAK
     " * If you make changes to this file while the browser is running,"
     NS_LINEBREAK
-    " * the changes will be overridden when the browser exits."
+    " * the changes will be overwritten when the browser exits."
     NS_LINEBREAK
     " *"
     NS_LINEBREAK
