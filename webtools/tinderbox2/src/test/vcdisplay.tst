@@ -1,11 +1,14 @@
 #!#perl# -w --
+# -*- Mode: perl; indent-tabs-mode: nil -*-
+#
 
 # generate static html pages for use in testing the popup libraries.
-# Output is written to standard out to be examined by a programmer.
+# Output is written to the file 
+# $TinderConfig::TINDERBOX_HTML_DIR/vcdisplay.htmlo
+# to be examined by a programmer.
 
-
-# $Revision: 1.2 $ 
-# $Date: 2003/01/19 17:18:56 $ 
+# $Revision: 1.3 $ 
+# $Date: 2003/02/11 00:25:04 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcdisplay.tst,v $ 
 # $Name:  $ 
@@ -46,40 +49,64 @@ use TinderConfig;
 use VCDisplay;
 use HTMLPopUp;
 use Utils;
+use TreeData;
 
 sub print_hash {
     my (%args) = @_;
+    my $out;
 
     foreach $arg ( sort keys %args) {
-	print "$arg=$args{$arg}\n";
+	$out .= "$arg=$args{$arg}\n";
     }
 
-    print "\n";
+    $out .= "\n";
 
-    return ;
+    return $out;
 }
 
 
 sub print_url {
     my ($string) = @_;
+    my $out;
 
-    $string =~ s/" *>(.*)</\&linktxt=$1\&/;
+    $string =~ s/\" *>(.*)</\&linktxt=$1\&/;
 
-    @args = split('[&><"]', $string);
+   my @args = split('[&><"]', $string);
     foreach $arg (@args) {
-	print HTMLPopUp::unescapeURL($arg);
-	print "\n";
+	$out .= HTMLPopUp::unescapeURL($arg);
+	$out .= "\n";
     }
 
-    print "\n";
+    $out .= "\n";
 
-    return ;
+    return $out;
+}
+
+
+sub print_test {
+    my ($url, %args) = @_;
+    my $out;
+
+    $out .= print_hash(%args);
+    $out .= print_url($url);
+    $out .= $url."\n\n";
+    $out .= "\n\n\n";
+
+    return $out;
 }
 
 
 sub print_tests {
 
-    # simulation of processmail_build call
+    my %args;
+    my $url;
+    my $out;
+
+    my $seperator = ("-" x 30)."\n\n\n";
+
+
+    $out .= "Simulation of processmail_build call\n";
+    $out .=  $seperator;
 
     %args = (
 	     'tree' => 'Project_A',
@@ -89,13 +116,10 @@ sub print_tests {
 	     'alt_linktxt' =>  "Compiler error! Some error message here.", 
 	     );
 
-    $line = VCDisplay::guess(%args);
-    print_hash(%args);
-    print_url($line);
-    print $line."\n\n";
-    print "\n\n\n";
+    $url = VCDisplay::guess(%args);
+    $out .= print_test($url, %args);
     
-    # simulation of Build column call    
+    $out .= "Simulation of Build column call";
 
     %args = (
 	     'tree' => 'Project_A',
@@ -106,29 +130,25 @@ sub print_tests {
 	     'windowtxt' => 'endtime: 12/09&nbsp;15:20<br>starttime: 12/09&nbsp;15:13<br>',
 	     );
     
-    $line = VCDisplay::query(%args);
-    print_hash(%args);
-    print_url($line);
-    print $line."\n\n";
-    print "\n\n\n";
-    
+    $url = VCDisplay::query(%args);
+    $out .= print_test($url, %args);
 
-    # simulation of VC column call    
+
+    $out .= "Simulation of VC column call\n";
+    $out .=  $seperator;
     
     %args = (
 	     'tree' => 'Project_A',
-	     'mindate' => 1039467540  - $main::SECONDS_PER_DAY,
+	     'mindate' => 1039467540 - $main::SECONDS_PER_DAY,
 	     'maxdate' => 1039467540,
 	     'who' => 'fred',
 	     );
     
-    $line = VCDisplay::query(%args);
-    print_hash(%args);
-    print_url($line);
-    print $line."\n\n";
-    print "\n\n\n";
+    $url = VCDisplay::query(%args);
+    $out .= print_test($url, %args);
  
-    # simulation of time column call
+    $out .= "Simulation of time column call\n";
+    $out .=  $seperator;
 
     %args = (
 	     'tree' => 'Project_A',
@@ -136,29 +156,36 @@ sub print_tests {
 	     'linktxt' => '12/09&nbsp;15:59',
 	     );
     
-    $line = VCDisplay::query(%args);
-    print_hash(%args);
-    print_url($line);
-    print $line."\n\n";
-    print "\n\n\n";
+    $url = VCDisplay::query(%args);
+    $out .= print_test($url, %args);
  
-    return ;   
+    return $out;
 }
 
+sub main {
 
-my @libs = glob "./build/lib/VCDisplay/*";
-foreach $lib (@libs) {
+    my $outfile ="$TinderConfig::TINDERBOX_HTML_DIR/vcdisplay.html";
+    my @libs = glob "./build/lib/VCDisplay/*";
 
-    $lib = basename($lib);
-    $lib =~ s/\..*//;
-    $libname= 'VCDisplay::'.$lib;
-    @VCDisplay::ISA = ($libname);
-    eval " use $libname ";
+    foreach $lib (@libs) {
+	$lib = basename($lib);
+	$lib =~ s/\..*//;
+	my $libname= 'VCDisplay::'.$lib;
+	@VCDisplay::ISA = ($libname);
+	eval " use $libname ";
+	
+	my $out = "<pre>";
+	$out .= " ------ $libname -----\n\n";
+	$out .= print_tests();
+	
+	overwrite_file($outfile, $out);
+    }
 
-    print " ------ $libname -----\n\n";
-    print_tests();
+    return ;
 }
 
+main();
+exit 0;
 
 1;
 
