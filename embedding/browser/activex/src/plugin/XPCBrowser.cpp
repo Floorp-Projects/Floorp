@@ -44,12 +44,12 @@
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIServiceManagerUtils.h"
 #include "nsString.h"
-#include "nsIPref.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefService.h"
 
 
 #include "XPCBrowser.h"
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 IEBrowser::IEBrowser()
 {
@@ -90,15 +90,10 @@ nsresult IEBrowser::GetDOMWindow(nsIDOMWindow **aDOMWindow)
     return (*aDOMWindow) ? NS_OK : NS_ERROR_FAILURE;
 }
 
-// Return the nsIPref object
-nsresult IEBrowser::GetPrefs(nsIPref **aPrefs)
+// Return the nsIPrefBranch object
+nsresult IEBrowser::GetPrefs(nsIPrefBranch **aPrefBranch)
 {
-    NS_ENSURE_ARG_POINTER(aPrefs);
-    nsresult rv;
-    nsCOMPtr<nsIPref> prefs = do_GetService(kPrefCID, &rv);
-    *aPrefs = prefs;
-    NS_IF_ADDREF(*aPrefs);
-    return rv;
+    return CallGetService(NS_PREFSERVICE_CONTRACTID, aPrefBranch);
 }
 
 // Return the valid state of the browser
