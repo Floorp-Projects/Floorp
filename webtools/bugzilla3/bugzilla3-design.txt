@@ -3,18 +3,17 @@ Design and Architecture
 Bugzilla 3 is being designed from the ground up using a Perl based
 technology that has been developed explicitly for the purpose of
 developing UI agnostic applications. This technology is called PLIF
-and will soon be available as an open source resource from
-mozilla.org. PLIF has been developed over the course of the last
-couple of months by 1 (talented?) developer. PLIF provides the
-structure necessary to facilitate the development of web, IRC, command
-line and other applications by combining not only a large collection
-of useful code, but a model in which to develop these applications. In
-addition to using PLIF, we will also be using COSES as the template
-language for providing an environment where the HTML/XUL/text/whatever
-is completely abstracted from the business logic of the
-application. We are aware that people often claim that their
-applications provide this, so we have worked hard to insure that this
-is a reality.
+and is available as an open source resource from mozilla.org. PLIF has
+been developed over the course of the last couple of months by 1
+(talented?) developer. PLIF provides the structure necessary to
+facilitate the development of web, IRC, command line and other
+applications by combining not only a large collection of useful code,
+but a model in which to develop these applications. In addition to
+using PLIF, we will also be using COSES as the template language for
+providing an environment where the HTML/XUL/text/whatever is
+completely abstracted from the business logic of the application. We
+are aware that people often claim that their applications provide
+this, so we have worked hard to insure that this is a reality.
 
 We choose Perl for a few reasons. The first is that the current
 Bugzilla 2.x developers are primarily interested in Perl for
