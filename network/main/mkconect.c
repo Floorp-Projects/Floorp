@@ -32,7 +32,7 @@
 #include "prefapi.h"
 #include "mkpadpac.h"
 
-#if defined(XP_WIN) && !defined(MODULAR_NETLIB)
+#if defined(XP_WIN)
 #define ASYNC_DNS
 #endif
 
@@ -490,6 +490,12 @@ PRIVATE int net_bad_ports_table[] = {
  *   it again).
  * 
  * On success hostEnt is not null. */
+#if defined(XP_WIN) && defined(MODULAR_NETLIB)
+extern int NET_AsyncDNSLookup(void* aContext,
+                              const char* aHostPort,
+                              PRHostEnt** aHoststructPtrPtr,
+                              PRFileDesc* aSocket);
+#endif
 
 PRIVATE int
 #ifndef ASYNC_DNS
@@ -532,7 +538,11 @@ net_dns_lookup(MWContext *windowID,
 	 * if it's not done yet.
 	 *
 	 * dbbuf and hpbuf are not needed in ASYNC_DNS case. */
+#ifdef MODULAR_NETLIB
+	status = NET_AsyncDNSLookup(windowID, host, hostEnt, socket);
+#else
 	status = FE_AsyncDNSLookup(windowID, host, hostEnt, socket);
+#endif
 
 	if(status == MK_WAITING_FOR_LOOKUP)	{
 		/* Always get here after first call to FE_Async.. for a
