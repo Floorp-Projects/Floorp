@@ -103,6 +103,7 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 #undef NOISY_WEBSHELL_LEAKS
 #endif
 
+#define NOISY_WEBSHELL_LEAKS
 #ifdef NOISY_WEBSHELL_LEAKS
 #undef DETECT_WEBSHELL_LEAKS
 #define DETECT_WEBSHELL_LEAKS
@@ -4167,11 +4168,12 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(dummyChannel), uri, nsnull), NS_ERROR_FAILURE);
 
   // (4) fire start document load notification
-  nsIStreamListener* outStreamListener=nsnull;  // a valid pointer is required for the returned stream listener
-  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view", dummyChannel, nsnull, NS_STATIC_CAST(nsIContentViewerContainer*, this),
-   &outStreamListener), 
+  nsCOMPtr<nsIStreamListener> outStreamListener;  // a valid pointer is required for the returned stream listener
+    // XXX: warning: magic cookie!  should get string "view delayedContentLoad"
+    //      from somewhere, maybe nsIHTMLDocument?
+  NS_ENSURE_SUCCESS(doc->StartDocumentLoad("view delayedContentLoad", dummyChannel, nsnull, NS_STATIC_CAST(nsIContentViewerContainer*, this),
+                                           getter_AddRefs(outStreamListener)), 
                     NS_ERROR_FAILURE);
-  NS_IF_RELEASE(outStreamListener);
   NS_ENSURE_SUCCESS(OnStartDocumentLoad(mDocLoader, uri, "load"), NS_ERROR_FAILURE);
 
   // (5) hook up the document and its content
