@@ -28,17 +28,27 @@ using std::ptrdiff_t;
 #endif
 
 namespace JavaScript {
-	extern "C" {
-		void* GC_malloc(size_t bytes);
-		void* GC_malloc_atomic(size_t bytes);
-		void GC_free(void* ptr);
-		void GC_gcollect(void);
+    extern "C" {
+        void* GC_malloc(size_t bytes);
+        void* GC_malloc_atomic(size_t bytes);
+        void GC_free(void* ptr);
+        void GC_gcollect(void);
 
-		typedef void (*GC_finalization_proc) (void* obj, void* client_data);
-		void GC_register_finalizer(void* obj, GC_finalization_proc proc, void* client_data,
-											  GC_finalization_proc *old_proc, void* *old_client_data);
-	}
+        typedef void (*GC_finalization_proc) (void* obj, void* client_data);
+        void GC_register_finalizer(void* obj, GC_finalization_proc proc, void* client_data,
+                                   GC_finalization_proc *old_proc, void* *old_client_data);
+    }
 
+    #ifndef XP_MAC
+    // for platforms where GC doesn't exist yet.
+    inline void* GC_malloc(size_t bytes) { return ::operator new(bytes); }
+    inline void* GC_malloc_atomic(size_t bytes) { return ::operator new(bytes); }
+    inline void GC_free(void* ptr) { return ::operator delete(ptr); }
+    inline void GC_gcollect() {}
+    inline void GC_register_finalizer(void* obj, GC_finalization_proc proc, void* client_data,
+                                      GC_finalization_proc *old_proc, void* *old_client_data) {}
+    #endif
+    
 	/**
 	 * General case:  memory for type must be allocated as a conservatively
 	 * scanned block of memory.
@@ -109,13 +119,13 @@ namespace JavaScript {
 		typedef T &reference;
 		typedef const T &const_reference;
 		
-		static pointer address(reference r) { return &r; }
-		static const_pointer address(const_reference r) { return &r; }
-		
 		gc_allocator() {}
 		template<class U> gc_allocator(const gc_allocator<U>&) {}
 		// ~gc_allocator() {}
 		
+		static pointer address(reference r) { return &r; }
+		static const_pointer address(const_reference r) { return &r; }
+				
 		static pointer allocate(size_type n, const void* /* hint */ = 0) { return traits::allocate(n); }
 		static void deallocate(pointer, size_type) {}
 		
