@@ -204,6 +204,7 @@ struct nsArgCallbacks : public nsIXULWindowCallbacks {
     // Specifics...
     nsArgCallbacks( const nsString& aArgs ) : mArgs( aArgs ) { NS_INIT_REFCNT(); }
     nsArgCallbacks() { NS_INIT_REFCNT(); }
+    virtual ~nsArgCallbacks() {}
 private:
     nsString mArgs;
 }; // nsArgCallbacks
