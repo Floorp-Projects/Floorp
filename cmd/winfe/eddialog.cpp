@@ -1465,5 +1465,5 @@ void CGetColumnsDlg::DoDataExchange(CDataExchange* pDX)
 ED_CharsetEncode FE_EncodingDialog(MWContext* pMWContext)
 {
     // TODO: Implement this!
-    return ED_ENCODE_CANCEL;
+    return ED_ENDCODE_CANCEL;
 }

@@ -1617,7 +1617,6 @@
 #define IDC_STATIC_MAIL_SERVER          1563
 #define IDC_RADIO_SEARCH_LOCAL          1570
 #define IDC_RADIO_SEARCH_SERVER         1571
-#define IDC_COPY_STYLE                  1580
 #define IDC_TABLE_COPY                  1581
 #define IDC_TABLE_MOVE                  1582
 #define IDD_NETPROFILE_LOGIN            1599
@@ -2735,8 +2734,6 @@
 #define ID_WEB_PAGE_STARTER             42177
 #define IDS_UNLINK_WARNING              42178
 #define IDS_CLEAR_CHAR_STYLES_CAPTION   42179
-#define ID_UNUM_LIST                    42180
-#define ID_NUM_LIST                     42181
 #define ID_INSERT_NONBREAK_SPACE        42182
 #define IDS_EDIT_TOOLBAR_CAPTION        42183
 #define IDS_CHAR_TOOLBAR_CAPTION        42185
@@ -2807,6 +2804,8 @@
 #define IDS_REMOVE_LINKS                42268
 #define IDS_REMOVE_ALL_LINKS            42269
 #define ID_REMOVE_LINKS                 42270
+#define ID_PASTE_CHARACTER_STYLE        42271
+#define IDS_PASTE_CHARACTER_SYLE_POPUP  42272
 #define IDS_UNABLE_TO_LAUNCH_EDITOR     42273
 #define IDS_IMAGE_IS_REMOTE             42274
 #define IDS_EDIT_IMAGE_CAPTION          42275
@@ -2925,7 +2924,6 @@
 #define IDS_FONTSIZE_4                  42407
 #define ID_EDIT_BACKGROUND_IMAGE        42408
 #define ID_EDIT_PAGE_TITLE              42409
-#define ID_BLOCK_QUOTE                  42410
 #define ID_NAVIGATE_MSG_BACK            42411
 #define ID_NAVIGATE_MSG_FORWARD         42412
 #define ID_MESSAGE_UNFLAGMESSAGE        42413

@@ -1001,6 +1001,8 @@ private:
     // This is used to change resource hInstance back to EXE
     CEditorResourceSwitcher * m_pResourceSwitcher;
 
+    void ChangeParagraphStyle();
+
 // Overrides
 	// ClassWizard generated virtual function overrides
 	//{{AFX_VIRTUAL(CParagraphPage)

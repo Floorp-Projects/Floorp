@@ -583,7 +583,7 @@ BEGIN
     LTEXT           "pixels",IDC_STATIC,112,68,31,8
     LTEXT           "&Spacing:",IDC_STATIC,16,88,41,8
     EDITTEXT        IDC_CELL_SPACING,58,86,24,13
-    LTEXT           "pixels between cells",IDC_STATIC,84,88,82,8
+    LTEXT           "pixels between cells",IDC_STATIC,84,88,81,8
     LTEXT           "&Padding:",IDC_STATIC,16,104,41,8
     EDITTEXT        IDC_CELL_PADDING,58,102,24,13
     LTEXT           "pixels between border and cell contents",IDC_STATIC,84,

@@ -429,21 +429,31 @@ void CComboToolBar::SetComboBox( UINT nID, CComboBox * pComboBox,
 		for ( ; i < m_nCount; i++, pInfo++ ) {
             if ( pInfo->bComboBox && pInfo->pComboBox == 0 )
             {
+                // Need extra amount: 10 pixels above and below edit box?
+                int iEditHeight = pComboBox->GetItemHeight(-1) + 10;
+                int iItemHeight = pComboBox->GetItemHeight(0);   
+
                 // Calculate full height from number of items,
-                if ( nListHeight == 0 ) {
-                    // Need extra amount: 10 pixels above and below edit box?
-                    int iEditHeight = pComboBox->GetItemHeight(-1) + 10;
-                    int iItemHeight = pComboBox->GetItemHeight(0);   
-                    //  but limit size to less than half the screen height
-                    //  else single click in combo will immediately select because
-                    //  list is drawn on top of closed combobbox
-                    nListHeight = min( sysInfo.m_iScreenHeight / 2,
-                                       iEditHeight + (pComboBox->GetCount() * iItemHeight) ); 
+                if ( nListHeight == 0 )
+                    nListHeight = iEditHeight + (pComboBox->GetCount() * iItemHeight); 
+
+                if( nListWidth == 0 )
+                    nListWidth = nWidth;
+
+                //  Limit the height to less than half the screen height
+                //  else single click in combo might immediately select because
+                //  list is drawn on top of closed combobbox
+                //  (happens only when combobox is at vertical center,
+                //   but we need to set the height for all cases)
+                UINT nMaxHeight = (::GetSystemMetrics(SM_CYSCREEN) / 2);
+                if( nListHeight > nMaxHeight )
+                {
+                    nListHeight = nMaxHeight;
+                    nListWidth += sysInfo.m_iScrollWidth;
                 }
+
                 // Save the pointer for resizing box when controls are hidden
                 pInfo->pComboBox = pComboBox;
-                
-                // Save command ID and width
                 pInfo->nID = nID;
 
                 // Add extra space (built-in separator) after right edge,

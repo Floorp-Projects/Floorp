@@ -248,6 +248,8 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_COMMAND(ID_PROPS_CHARACTER, OnCharacterProperties)
     ON_COMMAND(ID_PROPS_DOCUMENT, OnDocumentProperties)
     ON_COMMAND(ID_PROPS_DOC_COLOR, OnDocColorProperties)
+    ON_COMMAND(ID_PASTE_CHARACTER_STYLE, OnPasteCharacterStyle)
+    ON_UPDATE_COMMAND_UI(ID_PASTE_CHARACTER_STYLE, OnUpdatePasteCharacterStyle)
     ON_UPDATE_COMMAND_UI(ID_PROPS_DOCUMENT, HaveEditContext)
     ON_COMMAND(ID_FORMAT_CHAR_NO_TEXT_STYLES, OnCharacterNoTextStyles)
     ON_COMMAND(ID_FORMAT_CHAR_NONE, OnCharacterNone)
@@ -265,9 +267,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_COMMAND(ID_INSERT_BREAK_BOTH,OnInsertBreakBoth)
     ON_COMMAND(ID_INSERT_NONBREAK_SPACE,OnInsertNonbreakingSpace)
     ON_COMMAND(ID_REMOVE_LIST, OnRemoveList)
-    ON_COMMAND(ID_UNUM_LIST, OnUnumList)
-    ON_COMMAND(ID_NUM_LIST, OnNumList)
-    ON_COMMAND(ID_BLOCK_QUOTE, OnBlockQuote)
     ON_COMMAND(ID_EDIT_SELECTALL, OnSelectAll)
     ON_COMMAND(ID_EDIT_UNDO, OnUndo)
 	ON_COMMAND(	ID_FILE_PUBLISH, OnPublish)
@@ -363,8 +362,6 @@ BEGIN_MESSAGE_MAP(CNetscapeEditView, CNetscapeView)
     ON_UPDATE_COMMAND_UI(ID_INSERT_BREAK_RIGHT, OnUpdateInsertBreak)
     ON_UPDATE_COMMAND_UI(ID_INSERT_BREAK_BOTH, OnUpdateInsertBreak)
     ON_UPDATE_COMMAND_UI(ID_REMOVE_LIST, OnUpdateRemoveList)
-    ON_UPDATE_COMMAND_UI(ID_UNUM_LIST, OnUpdateUnumList)
-    ON_UPDATE_COMMAND_UI(ID_NUM_LIST, OnUpdateNumList)
     ON_UPDATE_COMMAND_UI(ID_EDIT_SELECTALL, HaveEditContext)
     ON_UPDATE_COMMAND_UI(ID_EDIT_UNDO, OnUpdateUndo)
 	ON_UPDATE_COMMAND_UI(ID_FILE_PUBLISH, HaveEditContext)
@@ -908,7 +905,7 @@ void CNetscapeEditView::OnSetFocus(CWnd *pOldWin)
     if (GetEmbedded())
     {
         CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CComboToolBar *pControler = pFrame->getComposeToolBar();
+        CEnderBar *pControler = pFrame->getComposeToolBar();
         if (pControler)
         {
             //must calculate position for toolbar
@@ -939,7 +936,7 @@ void CNetscapeEditView::OnKillFocus(CWnd *pOldWin)
     if (GetEmbedded())
     {
         CMainFrame * pFrame = (CMainFrame*)GetParentFrame();
-        CComboToolBar *pControler = pFrame->getComposeToolBar();
+        CEnderBar *pControler = pFrame->getComposeToolBar();
         CWnd *pWnd=NULL;
         CWnd *pCPparent=NULL;
         BOOL keepToolbar=FALSE;
@@ -1077,8 +1074,8 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
             //       and remove separate message handlers, but not 
             //       done now (7/23/97) to avoid changing the ID 
             //       associated with these in res\editor.rc2
-	        if( t == P_DIRECTORY ||
-                t == P_MENU ||
+	        if( t == P_UNUM_LIST || //P_DIRECTORY ||
+                t == P_NUM_LIST || //P_MENU ||
                 t == P_DESC_LIST ){
                 EDT_ToggleList(GET_MWCONTEXT, t);
                 return TRUE;
@@ -1153,8 +1150,8 @@ BOOL CNetscapeEditView::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDL
         {
             TagType t = TagType(nID - ID_FORMAT_PARAGRAPH_BASE);
 	        if( t == P_BLOCKQUOTE ||
-                t == P_DIRECTORY ||
-                t == P_MENU ||
+                t == P_UNUM_LIST || //P_DIRECTORY ||
+                t == P_NUM_LIST ||  //P_MENU ||
                 t == P_DESC_LIST)
             {
                 UpdateListMenuItem(pCmdUI, t);
@@ -1260,12 +1257,6 @@ void CNetscapeEditView::OnKeyDown(UINT nChar, UINT nRepCnt, UINT nFlags)
                 if( EDT_IsSizing(pMWContext) )
                     GetContext()->CancelSizing();
 
-                // Cancel copy style action
-                if( EDT_CanPasteStyle(pMWContext) )
-                {
-                    EDT_PasteStyle(pMWContext, FALSE);
-                    UpdateCursor();
-                }
                 // Call the CGenericView's interrupt function
                 OnNavigateInterrupt();
 

@@ -383,9 +383,6 @@ protected:
     afx_msg void OnInsertBreakBoth();
     afx_msg void OnUpdateInsertBreak(CCmdUI* pCmdUI);
     afx_msg void OnRemoveList();
-    afx_msg void OnUnumList();
-    afx_msg void OnNumList();
-    afx_msg void OnBlockQuote();
     afx_msg void OnUpdateRemoveList(CCmdUI* pCmdUI);
     afx_msg void OnUpdateUnumList(CCmdUI* pCmdUI);
     afx_msg void OnUpdateNumList(CCmdUI* pCmdUI);
@@ -468,9 +465,10 @@ protected:
     afx_msg void OnSelectEndOfDocument();
     afx_msg void OnSelectNextWord();
     afx_msg void OnSelectPreviousWord();
-    // We trap these messages to do editor's copy/cut/paste
-    // CAbstractCX::CopySelection() will be called if
-    // view is not an Editor
+    // We trap normal Cut/Copy/Paste messages to do editor's copy/cut/paste
+    // CAbstractCX::CopySelection() will be called if view is not an Editor
+    afx_msg void OnPasteCharacterStyle();
+    afx_msg void OnUpdatePasteCharacterStyle(CCmdUI* pCmdUI);
     afx_msg void OnGoToDefaultPublishLocation();
     afx_msg	void OnEditCopy();
     afx_msg void OnCopyStyle();

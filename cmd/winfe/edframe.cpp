@@ -114,8 +114,8 @@ static UINT BASED_CODE nIDCharButtonBarArray[] =
     ID_FORMAT_CHAR_ITALIC,
     ID_FORMAT_CHAR_UNDERLINE,
     ID_FORMAT_CHAR_NONE,
-    ID_UNUM_LIST,
-    ID_NUM_LIST,
+    ID_FORMAT_UNUM_LIST,
+    ID_FORMAT_NUM_LIST,
     ID_FORMAT_OUTDENT,
     ID_FORMAT_INDENT,
     ID_ALIGN_POPUP,
@@ -132,8 +132,8 @@ static UINT BASED_CODE nIDCharFloatButtonBarArray[] =
     ID_FORMAT_CHAR_UNDERLINE,
     ID_CHECK_SPELLING,
     ID_SEPARATOR,
-    ID_UNUM_LIST,
-    ID_NUM_LIST,
+    ID_FORMAT_UNUM_LIST,
+    ID_FORMAT_NUM_LIST,
     ID_FORMAT_OUTDENT,
     ID_FORMAT_INDENT,
     ID_SEPARATOR,
@@ -463,8 +463,9 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloat
 								       CSize(8, ED_TB_BUTTON_HEIGHT),
 								       CSize(1,ED_TB_BITMAP_HEIGHT) ) )
                 return FALSE;
-    		m_pCharacterToolbar = CreateCharacterToolbar((ett & DISPLAY_EDIT_TOOLBAR) ?  CHARBUTTONBAR_ID_COUNT-1 : CHARBUTTONBAR_ID_COUNT);
-    		m_wndCharacterBar.SetCNSToolbar(m_pCharacterToolbar);
+		    m_pCharacterToolbar = CreateCharacterToolbar((ett & DISPLAY_EDIT_TOOLBAR) ?  CHARBUTTONBAR_ID_COUNT-1 : CHARBUTTONBAR_ID_COUNT);
+
+		    m_wndCharacterBar.SetCNSToolbar(m_pCharacterToolbar);
         }
         else
         {
@@ -475,9 +476,6 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloat
 								       CSize(20, 16) ) )
                 return FALSE;
         }
-
-
-
 
 	    // Paragraph styles Combo
 	    CRect rect;
@@ -532,10 +530,6 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloat
     		    }
 	        }
 	    }
-        // Add some list-type items to the combobox:
-        csTemp = "_Blockquote";
-        m_ParagraphCombo.AddString((LPCTSTR)csTemp);
-
         // String used to get width of FontSize combobox
         csTemp = "55";
         cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
@@ -547,6 +541,12 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloat
         // Trim 1 pixel off height to fit more items in the list
         wfe_iListItemHeight = wfe_iFontHeight - 1;
         int iFontSizeWidth = cSize.cx + sysInfo.m_iScrollWidth + 6;
+
+        // This is longest string when combobox is dropped down:
+        csTemp = "8 pts";
+        cSize = CIntlWin::GetTextExtent(wincsid, pDC->GetSafeHdc(), csTemp, csTemp.GetLength());
+        pDC->LPtoDP(&cSize);
+        int iMaxSizeWidth = cSize.cx; // + sysInfo.m_iScrollWidth;
 
         m_ParagraphCombo.ReleaseDC(pDC);
 
@@ -604,7 +604,7 @@ BOOL CEditToolBarController::CreateEditBars(MWContext *pMWContext, BOOL bIsFloat
 
 
         m_wndCharacterBar.SetComboBox( ID_COMBO_FONTSIZE, &m_FontSizeCombo, 
-									   iFontSizeWidth /*sysInfo.m_iScrollWidth+20*/, 0, 0 );
+									   iFontSizeWidth, iMaxSizeWidth, 0 );
         m_FontSizeCombo.SetCurSel(2); // Initialize with the "default" size - 3rd in list
 
         // Set the color combobox data
@@ -2230,7 +2230,6 @@ void CGenericFrame::OnMenuSelectComposer(UINT nItemID, UINT nFlags, HMENU hSysMe
         HMENU hFontMenu = NULL;
         HMENU hSizeMenu = NULL;
 		HMENU hSubMenu = NULL;
-        HMENU hSubSubMenu;
         int i;
 
 	    for( i = 0; i < nCount; i++)

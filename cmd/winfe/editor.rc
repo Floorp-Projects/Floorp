@@ -192,9 +192,10 @@ BEGIN
     VK_RETURN,      IDM_SEND,               VIRTKEY, CONTROL, NOINVERT
     VK_RETURN,      ID_PROPS_LOCAL,         VIRTKEY, ALT, NOINVERT
     VK_TAB,         ID_NEXT_WINDOW,         VIRTKEY, CONTROL, NOINVERT
+    "V",            ID_PASTE_CHARACTER_STYLE, VIRTKEY, SHIFT, CONTROL, NOINVERT
     "W",            ID_FILE_CLOSE,          VIRTKEY, CONTROL, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
-    "Y",            ID_COPY_STYLE,          VIRTKEY, CONTROL, NOINVERT
+    "Y",            ID_PASTE_CHARACTER_STYLE, VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
 END
 
@@ -263,9 +264,10 @@ BEGIN
     VK_PRIOR,       ID_EDITOR_PAGEUP,       VIRTKEY, NOINVERT
     VK_PRIOR,       ID_EDITOR_SELECTPAGEUP, VIRTKEY, SHIFT, NOINVERT
     VK_RETURN,      ID_PROPS_LOCAL,         VIRTKEY, ALT, NOINVERT
+    "V",            ID_PASTE_CHARACTER_STYLE, VIRTKEY, SHIFT, CONTROL, NOINVERT
     "W",            ID_FILE_CLOSE,          VIRTKEY, CONTROL, NOINVERT
     "X",            ID_EDIT_CUT,            VIRTKEY, CONTROL, NOINVERT
-    "Y",            ID_COPY_STYLE,          VIRTKEY, CONTROL, NOINVERT
+    "Y",            ID_PASTE_CHARACTER_STYLE, VIRTKEY, CONTROL, NOINVERT
     "Z",            ID_EDIT_UNDO,           VIRTKEY, CONTROL, NOINVERT
 END
 
@@ -307,7 +309,6 @@ IDC_DROP_COLOR          CURSOR  DISCARDABLE     "res\\eddrpclr.cur"
 IDC_DRAG_ARROW          CURSOR  DISCARDABLE     "res\\dragarro.cur"
 IDC_NO_DROP             CURSOR  DISCARDABLE     "res\\ednodrop.cur"
 IDC_ALL_CELLS_SEL       CURSOR  DISCARDABLE     "res\\edselall.cur"
-IDC_COPY_STYLE          CURSOR  DISCARDABLE     "res\\edstyle.cur"
 IDC_TABLE_COPY          CURSOR  DISCARDABLE     "res\\edtblcpy.cur"
 IDC_TABLE_MOVE          CURSOR  DISCARDABLE     "res\\edtblmov.cur"
 IDC_TABLE_VSIZE         CURSOR  DISCARDABLE     "res\\edtavsiz.cur"
@@ -384,6 +385,7 @@ BEGIN
     ID_PROPS_TEXT           "Change character, paragraph, and font properties"
     ID_PROPS_TARGET         "Change target properties"
     ID_PROPS_TAG            "Change HTML tag properties"
+    ID_PROPS_DOC_COLOR      "Change text and background colors, and background image"
 END
 
 STRINGTABLE PRELOAD DISCARDABLE 
@@ -421,9 +423,7 @@ BEGIN
     IDS_UNUM_LIST           "Bullet (Unnumbered) List"
     IDS_NUM_LIST            "Numbered List"
     IDS_BLOCK_QUOTE         "Block Quote"
-    IDS_DIRECTORY_LIST      "Directory List"
-    IDS_MENU_LIST           "Menu List"
-    IDS_DESCRIPTION_LIST    "Description List"
+    IDS_DESCRIPTION_LIST    "Definition List"
     IDS_DEFAULT             "Default"
     IDS_LIST                "List"
     IDS_DIGIT               "1, 2, 3..."
@@ -627,8 +627,6 @@ STRINGTABLE DISCARDABLE
 BEGIN
     IDS_UNLINK_WARNING      "The selection contains links.\nRemove all links from this selection?"
     IDS_CLEAR_CHAR_STYLES_CAPTION "Remove All Character Styles"
-    ID_UNUM_LIST            "Start, change to, or clear an unnumbered (bulleted) list\nBullet List"
-    ID_NUM_LIST             "Start, change to, or clear a numbered list\nNumbered List"
     ID_INSERT_NONBREAK_SPACE 
                             "Insert a non-breaking space at the insertion location"
     IDS_EDIT_TOOLBAR_CAPTION "Composition Toolbar"
@@ -654,10 +652,9 @@ BEGIN
     IDS_REMOVE_LINKS        "&Remove Links"
     IDS_REMOVE_ALL_LINKS    "&Remove all links in selection"
     ID_REMOVE_LINKS         "Remove link at the insertion point or all links within the selection\nRemove Links"
-END
-
-STRINGTABLE DISCARDABLE 
-BEGIN
+    ID_PASTE_CHARACTER_STYLE "Use the character styles of the last text copied to the clipboard"
+    IDS_PASTE_CHARACTER_SYLE_POPUP 
+                             "Apply Last-Copied St&yle\tCtrl+Y"
     IDS_UNABLE_TO_LAUNCH_EDITOR 
                             "Unable to launch external editor! Error code=%d"
     IDS_IMAGE_IS_REMOTE     "Image is at a remote location.\nSave image to disk before editing."

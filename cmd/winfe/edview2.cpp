@@ -221,6 +221,7 @@ void CNetscapeEditView::OnUpdateTagProperties(CCmdUI* pCmdUI)
     pCmdUI->Enable( CAN_INTERACT && 
                     ED_ELEMENT_UNKNOWN_TAG == EDT_GetCurrentElementType(GET_MWCONTEXT) );
 }
+
 ///////////////////////////////////////////////////////////////
 // Edit menu
 // Find is shared with Navigator - uses common dialog
@@ -230,6 +231,19 @@ void CNetscapeEditView::OnUpdateTagProperties(CCmdUI* pCmdUI)
 void CNetscapeEditView::OnEditFindReplace()
 {
     // TODO: something like:  CMainFrame::OnFindReplace();
+}
+
+void CNetscapeEditView::OnPasteCharacterStyle()
+{
+  	MWContext *pMWContext = GET_MWCONTEXT;
+    if( pMWContext && EDT_CanPasteStyle(pMWContext) )
+        //Actually paste. FALSE would clear stored styles
+        EDT_PasteStyle(pMWContext, TRUE); 
+}
+
+void CNetscapeEditView::OnUpdatePasteCharacterStyle(CCmdUI* pCmdUI)
+{
+    pCmdUI->Enable( CAN_INTERACT && EDT_CanPasteStyle(GET_MWCONTEXT) );
 }
 
 ///////////////////////////////////////////////////////////////
@@ -1603,12 +1617,15 @@ void CNetscapeEditView::OnRButtonDown(UINT uFlags, CPoint cpPoint)
                 cmPopup.AppendMenu(MF_POPUP, (UINT)hPasteMenu, szLoadString(IDS_EDIT_PASTE));
         }
     }
-    else if( !bCanPasteTableInTable ) // All table items we can paste are covered above
+    else if( bCanPaste && !bCanPasteTableInTable ) // All table items we can paste are covered above
     {
         nID = bHaveLink ? IDS_EDIT_PASTE_LINK : IDS_EDIT_PASTE;
 	    cmPopup.AppendMenu(MF_ENABLED, ID_EDIT_PASTE, szLoadString(nID));
     }
-
+    if( EDT_CanPasteStyle(pMWContext) )
+    {
+	    cmPopup.AppendMenu(MF_ENABLED, ID_PASTE_CHARACTER_STYLE, szLoadString(IDS_PASTE_CHARACTER_SYLE_POPUP));
+    }
     // Remove last item if its a separator
     int iLastItem = cmPopup.GetMenuItemCount() - 1;
     if( iLastItem > 0 && 0 == cmPopup.GetMenuItemID(iLastItem) )
@@ -1818,7 +1835,6 @@ void FE_ClearBackgroundImage( MWContext *pMWContext ){
 PUBLIC Bool FE_EditorPrefConvertFileCaseOnWrite( ){
     return TRUE;
 }
-
 
 void CNetscapeEditView::OnTimer(UINT nIDEvent)
 {
@@ -2474,22 +2490,6 @@ void CNetscapeEditView::OnFormatOutdent()
     }
 }
 
-void CNetscapeEditView::OnUnumList()
-{
-    if ( !CAN_INTERACT ){
-        return;
-    }
-    EDT_ToggleList(GET_MWCONTEXT, P_UNUM_LIST);
-}
-
-void CNetscapeEditView::OnNumList()
-{
-    if ( !CAN_INTERACT ){
-        return;
-    }
-    EDT_ToggleList(GET_MWCONTEXT, P_NUM_LIST);
-}
-
 void CNetscapeEditView::OnRemoveList()
 {
     // Repeat removing indent until last Unnumbered list is gone
@@ -2503,7 +2503,7 @@ void CNetscapeEditView::OnRemoveList()
 void CNetscapeEditView::OnUpdateRemoveList(CCmdUI* pCmdUI)
 {
     EDT_ListData * pListData = EDT_GetListData(GET_MWCONTEXT);
-    pCmdUI->Enable(CAN_INTERACT && pListData);
+    pCmdUI->Enable(CAN_INTERACT);
     if( pCmdUI->m_pMenu) {
         pCmdUI->SetCheck(!pListData);
     }
@@ -2526,21 +2526,6 @@ void CNetscapeEditView::UpdateListMenuItem(CCmdUI* pCmdUI, TagType t)
 	if (pController && CAN_INTERACT && !pCmdUI->m_pMenu && pController->GetCharacterBar() ) {
 			(pController->GetCharacterBar())->SetCheck( pCmdUI->m_nID, bIsList );
     }
-}
-
-void CNetscapeEditView::OnUpdateUnumList(CCmdUI* pCmdUI)
-{
-    UpdateListMenuItem(pCmdUI, P_UNUM_LIST);
-}
-
-void CNetscapeEditView::OnUpdateNumList(CCmdUI* pCmdUI)
-{
-    UpdateListMenuItem(pCmdUI, P_NUM_LIST);
-}
-
-void CNetscapeEditView::OnBlockQuote()
-{
-    OnFormatParagraph(ID_FORMAT_PARAGRAPH_BASE+P_BLOCKQUOTE);
 }
 
 void CNetscapeEditView::OnAlignPopup()

@@ -5068,8 +5068,7 @@ typedef enum {
 
 
 struct _EDT_ListData {
-    intn iTagType;         P_UNUM_LIST, P_NUM_LIST, P_BLOCKQUOTE
-                           P_DIRECTORY, P_MENU, P_DESC_LIST
+    intn iTagType;         P_UNUM_LIST, P_NUM_LIST, P_BLOCKQUOTE, P_DESC_LIST
     Bool bCompact;
     ED_ListType eType;
     int iStart;            automatically maps, start is 1
@@ -5088,8 +5087,6 @@ enum {
 enum {
     ED_UNUM_LIST,
     ED_NUM_LIST,
-    ED_DIR_LIST,
-    ED_MENU_LIST,
     ED_DESC_LIST
 };
 
@@ -5267,12 +5264,6 @@ BOOL CParagraphPage::OnSetActive()
                 m_iContainerStyle = ED_BLOCKQUOTE;
                 m_iListStyle = ED_DEFAULT;
                 break;
-            case P_DIRECTORY:
-                m_iListStyle = ED_DIR_LIST;
-                break;
-            case P_MENU:
-                m_iListStyle = ED_MENU_LIST;
-                break;
             case P_DESC_LIST:
                 m_iListStyle = ED_DESC_LIST;
                 break;
@@ -5323,8 +5314,6 @@ BOOL CParagraphPage::OnSetActive()
     // Fill the List styles list
     pListStyles->AddString(szLoadString(IDS_UNUM_LIST));
     pListStyles->AddString(szLoadString(IDS_NUM_LIST));
-    pListStyles->AddString(szLoadString(IDS_DIRECTORY_LIST));
-    pListStyles->AddString(szLoadString(IDS_MENU_LIST));
     pListStyles->AddString(szLoadString(IDS_DESCRIPTION_LIST));
 
     // Remove/rebuild item styles depending on current state
@@ -5373,12 +5362,6 @@ void CParagraphPage::OnOK()
         switch( m_iListStyle ){
             case ED_NUM_LIST:
                 iTagType = P_NUM_LIST;
-                break;
-            case ED_DIR_LIST:
-                iTagType = P_DIRECTORY;
-                break;
-            case ED_MENU_LIST:
-                iTagType = P_MENU;
                 break;
             case ED_DESC_LIST:
                 iTagType = P_DESC_LIST;
@@ -5523,23 +5506,24 @@ void CParagraphPage::UpdateLists()
 
 }
 
-void CParagraphPage::OnSelchangeParagraphStyles() 
+void CParagraphPage::ChangeParagraphStyle()
 {
-    SetModified(TRUE);
-    m_iParagraphStyle = ((CComboBox*)GetDlgItem(IDC_PARAGRAPH_STYLES))->GetCurSel();
-
-    // Selecting a list item will force
-    // List container and default type: Unnumbered List
-    if( m_iParagraphStyle == ED_PARA_LIST ){
+    // Selecting one of the list item will force a list container
+    if( m_iParagraphStyle == ED_PARA_LIST )
+    {
         m_iContainerStyle = ED_LIST;
-        if( m_iListStyle == ED_DEFAULT ){
+        // Either numbered or unnumbered list style is OK
+        if( m_iListStyle != ED_NUM_LIST )
             m_iListStyle = ED_UNUM_LIST;
-        }
-    } else if( m_iParagraphStyle == ED_PARA_DESC_TITLE || m_iParagraphStyle == ED_PARA_DESC_TEXT){
+        else if( m_iListStyle != ED_UNUM_LIST )
+            m_iListStyle = ED_NUM_LIST;
+    } 
+    else if( m_iParagraphStyle == ED_PARA_DESC_TITLE || m_iParagraphStyle == ED_PARA_DESC_TEXT)
+    {
         m_iContainerStyle = ED_LIST;
-        if( m_iListStyle == ED_DEFAULT ){
-            m_iListStyle = ED_DESC_LIST;
-        }
+        //if( m_iListStyle == ED_DEFAULT )
+        m_iListStyle = ED_DESC_LIST;
+
     } else if( m_iContainerStyle == ED_LIST ){
         // Remove List container
         // Note that it is left as is for BLOCK QUOTE
@@ -5548,29 +5532,52 @@ void CParagraphPage::OnSelchangeParagraphStyles()
     UpdateLists();
 }
 
+void CParagraphPage::OnSelchangeParagraphStyles() 
+{
+    SetModified(TRUE);
+    m_iParagraphStyle = ((CComboBox*)GetDlgItem(IDC_PARAGRAPH_STYLES))->GetCurSel();
+    ChangeParagraphStyle();
+}
+
 void CParagraphPage::OnSelchangeContainerStyle() 
 {
     SetModified(TRUE);
     m_iContainerStyle = ((CComboBox*)GetDlgItem(IDC_CONTAINER_STYLES))->GetCurSel();
 
     // Force List paragraph style
-    if( m_iContainerStyle == ED_LIST ){
-        m_iParagraphStyle = ED_PARA_LIST;
-
-        if( m_iListStyle == ED_DEFAULT ){
-            m_iListStyle = ED_UNUM_LIST;
-        }
+    if( m_iContainerStyle == ED_LIST )
+    {
+        // If not already a list item, set it now
+        if( m_iParagraphStyle < ED_PARA_LIST )
+            m_iParagraphStyle = ED_PARA_LIST;
+            
     }
-    UpdateLists();
+    else if( m_iParagraphStyle >= ED_PARA_LIST )
+    {
+        // For no container or BLOCKQUOTE,
+        //  any list item must be converted to normal
+        m_iParagraphStyle = ED_PARA_NORMAL;
+    }
+    ChangeParagraphStyle();
 }
 
 void CParagraphPage::OnSelchangeListStyles() 
 {
     SetModified(TRUE);
     m_iListStyle = ((CComboBox*)GetDlgItem(IDC_LIST_STYLES))->GetCurSel();
-    // Reset Bullet/Numbering styles 
-    //  depending on new List Style
-    UpdateLists();
+
+    if( m_iListStyle == ED_DESC_LIST )
+    {
+        // Set appropriate paragraph style for definition list
+        if( m_iParagraphStyle < ED_PARA_DESC_TITLE )
+            m_iParagraphStyle = ED_PARA_DESC_TITLE;
+    }
+    else
+    {
+        // Changing to either numbered or bulleted list
+        m_iParagraphStyle = ED_PARA_LIST;
+    }
+    ChangeParagraphStyle();
 }
 
 void CParagraphPage::OnSelchangeListItemStyle() 

@@ -2573,11 +2573,6 @@ CWinCX::OnLButtonUpForLayerCX(UINT uFlags, CPoint& cpPoint, XY& Point,
     }
     if( EDT_IS_EDITOR(pMWContext) )
     {
-        if( EDT_CanPasteStyle(pMWContext) )
-        {
-            // Apply style if available
-            EDT_PasteStyle(pMWContext, TRUE);
-        }
         // Cancel any attempt to drag a table or cell
         EDT_StopDragTable(pMWContext);
     }
@@ -6310,12 +6305,7 @@ mouse_over_callback(MWContext * context, LO_Element * lo_element, int32 event,
         if( EDT_IS_EDITOR(context) )
         {
 #ifdef EDITOR
-            if( EDT_CanPasteStyle(context) )
-            {
-                SetCursor(theApp.LoadCursor(IDC_COPY_STYLE));
-                bCursorSet = TRUE;
-            }
-            else if( bMouseInSelection )
+            if( bMouseInSelection )
             {
                 // Indicate that user can drag selected text with special cursor
                 SetCursor(theApp.LoadCursor(IDC_IBEAM_HAND));
