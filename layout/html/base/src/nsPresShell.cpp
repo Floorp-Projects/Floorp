@@ -1650,25 +1650,6 @@ PresShell::Destroy()
     mPaintSuppressionTimer = nsnull;
   }
 
-#ifdef DEBUG
-  {
-    nsCOMPtr<nsISupports> container;
-    mPresContext->GetContainer(getter_AddRefs(container));
-    if (container) {
-      nsCOMPtr<nsIDocShell> cvc(do_QueryInterface(container));
-      if (cvc) {
-        nsCOMPtr<nsIContentViewer> cv;
-        cvc->GetContentViewer(getter_AddRefs(cv));
-        if (cv) {
-          nsCOMPtr<nsIContentViewer> prevViewer;
-          cv->GetPreviousViewer(getter_AddRefs(prevViewer));
-          NS_ASSERTION(!prevViewer, "still have a previous viewer!");
-        }
-      }
-    }
-  }
-#endif
-
   // release our pref style sheet, if we have one still
   ClearPreferenceStyleRules();
 
