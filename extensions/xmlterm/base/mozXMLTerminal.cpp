@@ -743,8 +743,8 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
 
   if (!selCon) {
-    return NS_ERROR_FAILURE;
     XMLT_WARNING("mozXMLTerminal::ShowCaret: Warning - Failed to get SelectionController\n");
+    return NS_ERROR_FAILURE;
   }
 
   PRInt32 pixelWidth;
@@ -762,7 +762,7 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
   selCon->SetCaretReadOnly(PR_FALSE);
 
   nsCOMPtr<nsICaret> caret;
-  if (NS_SUCCEEDED(presShell->GetCaret(getter_AddRefs(caret)))) {
+  if (NS_SUCCEEDED(presShell->GetCaret(getter_AddRefs(caret))) && caret) {
 
     caret->SetCaretVisible(PR_TRUE);
     caret->SetCaretReadOnly(PR_FALSE);
@@ -772,6 +772,8 @@ NS_IMETHODIMP mozXMLTerminal::ShowCaret(void)
     if (NS_SUCCEEDED(selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(sel))) && sel) {
       caret->SetCaretDOMSelection(sel);
     }
+  } else {
+    XMLT_WARNING("mozXMLTerminal::ShowCaret: Warning - Failed to get caret\n");
   }
 
   return NS_OK;
