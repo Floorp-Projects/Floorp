@@ -92,7 +92,7 @@ ifneq (,$(findstring pref,$(MOZ_EXTENSIONS)))
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(PREF) -o $(_PLATFORM) -v
 endif
 	$(NSINSTALL) -t $(DIST)/bin/$(APP_NAME)$(BIN_SUFFIX) $(DIST)/$(APP_NAME)/
-	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) installed-chrome.txt > $(DIST)/$(APP_NAME)/chrome/installed-chrome.txt
+	$(PERL) $(topsrcdir)/config/preprocessor.pl $(DEFINES) $(ACDEFINES) $(MOZILLA_DIR)/mail/config/installed-chrome.txt > $(DIST)/$(APP_NAME)/chrome/installed-chrome.txt
 
 libs::
 	$(MAKE) mail_chrome
