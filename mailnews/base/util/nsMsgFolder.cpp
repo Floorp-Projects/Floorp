@@ -1410,19 +1410,20 @@ NS_IMETHODIMP nsMsgFolder::GetHostName(char **hostName)
 #include "prprf.h"
 #include "prsystem.h"
 
-/* sspitzer:  this is all temporary, don't panic */
-static char *gMailboxRoot = "/tmp/mozillanews";
+static const char kMsgRootFolderPref[] = "mail.rootFolder";
+static char *gMailboxRoot = nsnull;
+
+/* sspitzer:  don't panic, this is all temporary */
+static const char kNewsRootFolderPref[] = "news.rootFolder";
 static char *gNewsRoot = nsnull;
 
 nsresult
 nsGetNewsRoot(nsFileSpec &result)
 {
   nsresult rv = NS_OK;
-    
-  printf("gMailboxRoot = %s\n", gMailboxRoot);
 
+  printf("gNewsRoot = %s\n", gNewsRoot);
   result = gNewsRoot;
-
   return rv;
 }
 
