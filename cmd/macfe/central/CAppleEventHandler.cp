@@ -764,7 +764,7 @@ void CAppleEventHandler::HandleSpyGetWindowInfo(const AppleEvent	&inAppleEvent, 
 	OSType realType;
 	CBrowserWindow * win = NULL;			// Window
 	OSErr err;
-	AEDescList volatile propertyList;
+	AEDescList propertyList;
 	propertyList.descriptorType = typeNull;
 	
 	try
