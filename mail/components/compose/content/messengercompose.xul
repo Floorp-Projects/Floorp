@@ -426,7 +426,6 @@
     <toolbarbutton class="toolbarbutton-1"
                id="spellingButton" label="&spellingButton.label;" 
                command="cmd_spelling"/>
-    <toolbarseparator id="saveSeparator" class="toolbarseparator-primary"/>
     <toolbarbutton class="toolbarbutton-1" type="menu-button"
                id="button-save" label="&saveButton.label;" 
                tooltiptext="&saveButton.tooltip;" 
