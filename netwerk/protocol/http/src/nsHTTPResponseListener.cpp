@@ -366,34 +366,6 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
 					    trans -> SetBytesExpected (0);
 				}
 
-                if (!mChunkHeaderChecked)
-                {
-                    mChunkHeaderChecked = PR_TRUE;
-                    
-                    nsXPIDLCString chunkHeader;
-                    rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
-                    
-                    if (NS_SUCCEEDED (rv) && chunkHeader)
-                    {
-    					NS_WITH_SERVICE (nsIStreamConverterService, 
-                                StreamConvService, kStreamConverterServiceCID, &rv);
-		    			if (NS_FAILED(rv)) return rv;
-
-			    		nsString2 fromStr ( chunkHeader);
-				    	nsString2 toStr   ("unchunked" );
-				    
-                        nsCOMPtr<nsIStreamListener> converterListener;
-					    rv = StreamConvService->AsyncConvertData(
-                                fromStr.GetUnicode(), 
-                                toStr.GetUnicode(), 
-                                mResponseDataListener, 
-                                channel, 
-                                getter_AddRefs (converterListener));
-					    if (NS_FAILED(rv)) return rv;
-					    mResponseDataListener = converterListener;
-                    }
-				}
-
                 if (!mCompressHeaderChecked)
                 {
                     nsXPIDLCString compressHeader;
@@ -421,6 +393,33 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                     }
                 }
 
+                if (!mChunkHeaderChecked)
+                {
+                    mChunkHeaderChecked = PR_TRUE;
+                    
+                    nsXPIDLCString chunkHeader;
+                    rv = mResponse -> GetHeader (nsHTTPAtoms::Transfer_Encoding, getter_Copies (chunkHeader));
+                    
+                    if (NS_SUCCEEDED (rv) && chunkHeader)
+                    {
+    					NS_WITH_SERVICE (nsIStreamConverterService, 
+                                StreamConvService, kStreamConverterServiceCID, &rv);
+		    			if (NS_FAILED(rv)) return rv;
+
+			    		nsString2 fromStr ( chunkHeader);
+				    	nsString2 toStr   ("unchunked" );
+				    
+                        nsCOMPtr<nsIStreamListener> converterListener;
+					    rv = StreamConvService->AsyncConvertData(
+                                fromStr.GetUnicode(), 
+                                toStr.GetUnicode(), 
+                                mResponseDataListener, 
+                                channel, 
+                                getter_AddRefs (converterListener));
+					    if (NS_FAILED(rv)) return rv;
+					    mResponseDataListener = converterListener;
+                    }
+				}
 
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                        ("\tOnDataAvailable [this=%x]. Calling consumer "
