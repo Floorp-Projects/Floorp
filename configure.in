@@ -2064,12 +2064,8 @@ if test "$result" = "yes"; then
 fi
 
 dnl Check for usable wchar_t (2 bytes, unsigned)
+dnl (we really don't need the unsignedness check anymore)
 dnl ========================================================
-
-TEST_SHORT_WCHAR=1
-MOZ_ARG_DISABLE_BOOL(short-wchar,
-[  --disable-short-wchar   Disable compiler short-wchar option],
-  TEST_SHORT_WCHAR= )
 
 AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
     ac_cv_have_usable_wchar,
@@ -2081,20 +2077,13 @@ AC_CACHE_CHECK(for usable wchar_t (2 bytes, unsigned),
                 ac_cv_have_usable_wchar="no",
                 ac_cv_have_usable_wchar="maybe")])
 if test "$ac_cv_have_usable_wchar" = "yes"; then
-	case $target in
-	*-aix4.3*)
-		;;
-	*)
-		AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
-		HAVE_CPP_2BYTE_WCHAR_T=1
-		;;
-	esac
+    AC_DEFINE(HAVE_CPP_2BYTE_WCHAR_T)
+    HAVE_CPP_2BYTE_WCHAR_T=1
 else
 dnl This is really gcc-only
 dnl Do this test using CXX instead of CC since some versions of gcc
 dnl 2.96-2.97 have a signed wchar_t in c++ only.
 
-  if test "$TEST_SHORT_WCHAR"; then
     _SAVE_CFLAGS=$CFLAGS
     _SAVE_CC=$CC
     CC=$CXX
@@ -2119,7 +2108,6 @@ dnl Since this is gcc-only, CC and CXX should take the same arguments.
         CFLAGS=$_SAVE_CFLAGS
     fi
     CC=$_SAVE_CC
-  fi
 fi
 
 dnl Checks for header files.
