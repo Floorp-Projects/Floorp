@@ -59,15 +59,17 @@
           <tree id="signonstree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,0)">
-            <treecol width="45%"/>
-            <treecol width="55%"/>
+            <treecolgroup>
+              <treecol width="0" flex="45"/>
+              <treecol width="0" flex="55"/>
+            </treecolgroup>
             <treehead>
               <treerow>
                 <treecell class="treecell-header" value="&treehead.site.label;"/>
                 <treecell class="treecell-header" value="&treehead.username.label;"/>
               </treerow>          
             </treehead>
-            <treechildren id="savesignonlist"/>
+            <treechildren id="savesignonlist" flex="1"/>
           </tree>
           <spring style="height: 5px;"/>
           <box align="horizontal">
@@ -88,13 +90,15 @@
           <tree id="ignoretree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,1)">
-            <treecol width="100%"/>
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
             <treehead>
               <treerow>
                 <treecell class="treecell-header" value="&treehead.site.label;"/>
               </treerow>          
             </treehead>
-            <treechildren id="ignoredlist"/>
+            <treechildren flex="1" id="ignoredlist"/>
           </tree>
           <spring style="height: 5px;"/>
           <box align="horizontal">
@@ -115,13 +119,16 @@
           <tree id="nopreviewtree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,2)">
-            <treecol width="100%"/>
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
+            
             <treehead>
               <treerow>
                 <treecell class="treecell-header" value="&treehead.site.label;"/>
               </treerow>          
             </treehead>
-            <treechildren id="nopreviewlist"/>
+            <treechildren flex="1" id="nopreviewlist"/>
           </tree>
           <spring style="height: 5px;"/>
           <box align="horizontal">
@@ -142,13 +149,15 @@
           <tree id="nocapturetree" class="inset" style="height: 30em; width: 440px;" align="vertical"
                 onclick="HandleEvent(event);"
                 multiple="true" onkeypress="HandleEvent(event,3)">
-            <treecol width="100%"/>
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
             <treehead>
               <treerow>
                 <treecell class="treecell-header" value="&treehead.site.label;"/>
               </treerow>          
             </treehead>
-            <treechildren id="nocapturelist"/>
+            <treechildren flex="1" id="nocapturelist"/>
           </tree>
           <spring style="height: 5px;"/>
           <box align="horizontal">

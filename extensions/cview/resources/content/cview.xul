@@ -143,7 +143,7 @@
   "true", the following content will be created.
 -->
         <rule xpcom:show="true">
-        <treechildren>
+        <treechildren flex="1">
           <treeitem uri="...">
             <treerow onclick="onComponentClick(event);"
               progid="rdf:http://www.mozilla.org/NC-xpcom#progid">
@@ -166,9 +166,9 @@
       </template>
 
       <treecolgroup>
-        <treecol
+        <treecol flex="1"
           rdf:resource="http://www.mozilla.org/NC-xpcom#progid"/>
-        <treecol
+        <treecol flex="1"
           rdf:resource="http://www.mozilla.org/NC-xpcom#clsid"/>
       </treecolgroup>
 
@@ -197,7 +197,7 @@
       <template>
         <rule xpcom:show="false"/>
         <rule xpcom:show="true">
-        <treechildren>
+        <treechildren flex="1">
           <treeitem uri="...">
             <treerow onclick="onInterfaceClick(event);"
               iname="rdf:http://www.mozilla.org/NC-xpcom#iname"
@@ -215,9 +215,9 @@
       </template>
 
       <treecolgroup>
-        <treecol
+        <treecol flex="1"
           rdf:resource="http://www.mozilla.org/NC-xpcom#iname"/>
-        <treecol
+        <treecol flex="1"
           rdf:resource="http://www.mozilla.org/NC-xpcom#iid"/>
       </treecolgroup>
 

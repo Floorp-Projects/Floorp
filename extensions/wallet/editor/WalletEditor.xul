@@ -52,8 +52,10 @@
           <text class="label" value="&treehead.schemaname.label;"/>
           <tree multiple="true" id="schematree" class="inset"
              style="height: 250px; width: 195px;" align="vertical" onclick="ViewEntries();">
-            <treecol width="100%"/>
-            <treechildren id="schemalist"/>
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
+            <treechildren id="schemalist" flex="1"/>
           </tree>
           <spring flex="5%"/>
           <spring style="height: 7px;"/>
@@ -67,15 +69,19 @@
           <text class="label" id="entrytext" value2="&treehead.entries.label;"/>
           <tree multiple="true" id="entrytree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="ViewSynonyms();">
-            <treecol width="100%"/>
-            <treechildren id="entrieslist"/>
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
+            <treechildren flex="1" id="entrieslist"/>
           </tree>
           <spring style="height: 7px;"/>
           <text class="label" id="synonymtext" value2="&treehead.synonyms.label;" value3="&treehead.synonymsoff.label;"/>
           <tree multiple="true" id="synonymtree" class="inset"
             style="height: 113px; width: 195px;" align="vertical" onclick="SynonymSelected();">
-            <treecol width="100%"/>
-            <treechildren id="synonymslist"/>
+            <treecolgroup>
+              <treecol flex="1"/>
+            </treecolgroup>
+            <treechildren flex="1" id="synonymslist"/>
           </tree>
         </div>
         <spring style="width: 7px;"/>

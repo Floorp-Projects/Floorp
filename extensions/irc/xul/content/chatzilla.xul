@@ -139,13 +139,13 @@
 <box id="outer-box" align="vertical" flex="1">
   <box id="inner-box" align="horizontal" flex="1">
     <box id="user-list-box" flex="30%">
-    <tree id="user-list" container="true" datasources="rdf:null" flex="1"
+    <tree id="user-list" container="true" datasources="rdf:null" style="width:0px" flex="1"
      containment="http://home.netscape.com/NC-irc#chanuser"
      multiple="true"
      context="userlistPopup">
 
       <template>
-        <treechildren>
+        <treechildren flex="1">
           <treeitem uri="...">
             <treerow>
                 <treecell>
@@ -167,10 +167,10 @@
       <treecolgroup>
        <treecol
         rdf:resource="http://home.netscape.com/NC-irc#op"
-        width="15px"/>
+        width="15"/>
       <treecol
        rdf:resource="http://home.netscape.com/NC-irc#voice"
-       width="15px"/>
+       width="15"/>
       <treecol
         rdf:resource="http://home.netscape.com/NC-irc#nick"/>
       </treecolgroup>
