@@ -396,12 +396,15 @@ BOOL BrowseForDirectory(HWND hDlg, char *szCurrDir)
   NS_LoadString(hSetupRscInst, IDS_DLGBROWSETITLE, szDlgBrowseTitle, MAX_BUF);
 
   lstrcpy(szSearchPathBuf, szCurrDir);
-  RemoveBackSlash(szSearchPathBuf);
-  while(FileExists(szSearchPathBuf) == FALSE)
+  if((*szSearchPathBuf != '\0') && ((lstrlen(szSearchPathBuf) != 1) || (*szSearchPathBuf != '\\')))
   {
     RemoveBackSlash(szSearchPathBuf);
-    ParsePath(szSearchPathBuf, szBuf, sizeof(szBuf), PP_PATH_ONLY);
-    lstrcpy(szSearchPathBuf, szBuf);
+    while(FileExists(szSearchPathBuf) == FALSE)
+    {
+      RemoveBackSlash(szSearchPathBuf);
+      ParsePath(szSearchPathBuf, szBuf, sizeof(szBuf), PP_PATH_ONLY);
+      lstrcpy(szSearchPathBuf, szBuf);
+    }
   }
 
   ZeroMemory(ftitle, sizeof(ftitle));
