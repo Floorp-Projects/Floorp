@@ -344,6 +344,11 @@ protected:
   void ReleaseChildren();
   void DestroyChildren();
   nsresult CreateScriptEnvironment();
+  nsresult DoLoadURL(const nsString& aUrlSpec,
+                     const char* aCommand,
+                     nsIPostData* aPostData,
+                     nsURLReloadType aType,
+                     const PRUint32 aLocalIP);
 
   static nsIPluginHost    *mPluginHost;
   static nsIPluginManager *mPluginManager;
@@ -1247,6 +1252,71 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   return LoadURL(aURLSpec,"view",aPostData,aModifyHistory,aType, aLocalIP);
 }
 
+nsresult
+nsWebShell::DoLoadURL(const nsString& aUrlSpec,
+                      const char* aCommand,
+                      nsIPostData* aPostData,
+                      nsURLReloadType aType,
+                      const PRUint32 aLocalIP)
+
+
+{
+  // If it's a normal reload that uses the cache, look at the destination anchor
+  // and see if it's an element within the current document
+  if ((aType == nsURLReload) && (nsnull != mContentViewer)) {
+    nsCOMPtr<nsIDocumentViewer> docViewer;
+    if (NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID,
+                                                    getter_AddRefs(docViewer)))) {
+      // Get the document object
+      nsCOMPtr<nsIDocument> doc;
+      docViewer->GetDocument(*getter_AddRefs(doc));
+
+      // Get the URL for the document
+      nsCOMPtr<nsIURL>  docURL = nsDontAddRef<nsIURL>(doc->GetDocumentURL());
+
+      // See if they're the same
+      nsCOMPtr<nsIURL>  url;
+      NS_NewURL(getter_AddRefs(url), aUrlSpec);
+
+      if ((PRBool)docURL->Equals(url)) {
+        // See if there's a destination anchor
+        const char* ref;
+        url->GetRef(&ref);
+
+        if (nsnull != ref) {
+          // Get the pres shell object
+          nsCOMPtr<nsIPresShell> presShell;
+          docViewer->GetPresShell(*getter_AddRefs(presShell));
+
+          presShell->GoToAnchor(nsAutoString(ref));
+          return NS_OK;
+        }
+      }
+    }
+  }
+
+  // Stop loading the current document (if any...).  This call may result in
+  // firing an EndLoadURL notification for the old document...
+  Stop();
+
+  // Tell web-shell-container we are loading a new url
+  if (nsnull != mContainer) {
+    nsresult rv = mContainer->BeginLoadURL(this, aUrlSpec);
+    if (NS_FAILED(rv)) {
+      return rv;
+    }
+  }
+
+  return mDocLoader->LoadDocument(aUrlSpec,       // URL string
+                                  aCommand,       // Command
+                                  this,           // Container
+                                  aPostData,      // Post Data
+                                  nsnull,         // Extra Info...
+                                  this,           // Observer
+                                  aType,          // reload type
+                                  aLocalIP);      // load attributes.
+}
+
 NS_IMETHODIMP
 nsWebShell::LoadURL(const PRUnichar *aURLSpec,
                     const char* aCommand,
@@ -1326,63 +1396,7 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
   }
   ShowHistory();
 
-  // If it's a normal reload that uses the cache, look at the destination anchor
-  // and see if it's an element within the current document
-  if ((aType == nsURLReload) && (nsnull != mContentViewer)) {
-    nsCOMPtr<nsIDocumentViewer> docViewer;
-    if (NS_SUCCEEDED(mContentViewer->QueryInterface(kIDocumentViewerIID,
-                                                    getter_AddRefs(docViewer)))) {
-      // Get the document object
-      nsCOMPtr<nsIDocument> doc;
-      docViewer->GetDocument(*getter_AddRefs(doc));
-
-      // Get the URL for the document
-      nsCOMPtr<nsIURL>  docURL = nsDontAddRef<nsIURL>(doc->GetDocumentURL());
-
-      // See if they're the same
-      nsCOMPtr<nsIURL>  url;
-      NS_NewURL(getter_AddRefs(url), urlSpec);
-
-      if ((PRBool)docURL->Equals(url)) {
-        // See if there's a destination anchor
-        const char* ref;
-        url->GetRef(&ref);
-
-        if (nsnull != ref) {
-          // Get the pres shell object
-          nsCOMPtr<nsIPresShell> presShell;
-          docViewer->GetPresShell(*getter_AddRefs(presShell));
-
-          presShell->GoToAnchor(nsAutoString(ref));
-          return NS_OK;
-        }
-      }
-    }
-  }
-
-  // Stop loading the current document (if any...).  This call may result in
-  // firing an EndLoadURL notification for the old document...
-  Stop();
-
-  // Tell web-shell-container we are loading a new url
-  if (nsnull != mContainer) {
-    rv = mContainer->BeginLoadURL(this, urlSpec);
-    if (NS_FAILED(rv)) {
-      return rv;
-    }
-  }
-
-  rv = mDocLoader->LoadDocument(urlSpec,       // URL string
-                                aCommand,         // Command
-                                this,           // Container
-                                aPostData,      // Post Data
-                                nsnull,         // Extra Info...
-                                this,           // Observer
-                                aType,          // reload type
-                                aLocalIP);      // load attributes.
-
-
-  return rv;
+  return DoLoadURL(urlSpec, aCommand, aPostData, aType, aLocalIP);
 }
 
 NS_IMETHODIMP nsWebShell::Stop(void)
@@ -1468,25 +1482,11 @@ nsWebShell::GoTo(PRInt32 aHistoryIndex)
     mHistoryIndex = aHistoryIndex;
     ShowHistory();
 
-    // Stop loading the current document (if any...).  This call may result in
-    // firing an EndLoadURL notification for the old document...
-    Stop();
-
-    // Tell web-shell-container we are loading a new url
-    if (nsnull != mContainer) {
-      rv = mContainer->BeginLoadURL(this, urlSpec);
-      if (NS_FAILED(rv)) {
-        return rv;
-      }
-    }
-
-    rv = mDocLoader->LoadDocument(urlSpec,        // URL string
-                                  "View",         // Command
-                                  this,           // Container
-                                  nsnull,         // Post Data
-                                  nsnull,         // Extra Info...
-                                  this,           // Observer
-                                  nsURLReload);   // the reload type
+    rv = DoLoadURL(urlSpec,       // URL string
+                   "view",        // Command
+                   nsnull,        // Post Data
+                   nsURLReload,   // the reload type
+                   0);            // load attributes
   }
   return rv;
 }
