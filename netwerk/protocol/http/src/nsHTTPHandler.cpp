@@ -723,7 +723,9 @@ nsHTTPHandler::InitUserAgentComponents()
                 mAppOSCPU = "WinNT";
             }
         } else if (info.dwPlatformId == VER_PLATFORM_WIN32_WINDOWS) {
-            if (info.dwMinorVersion > 0)
+            if (info.dwMinorVersion == 90)
+                mAppOSCPU = "Win 9x 4.90";
+            else if (info.dwMinorVersion > 0)
                 mAppOSCPU = "Win98";
             else
                 mAppOSCPU = "Win95";
