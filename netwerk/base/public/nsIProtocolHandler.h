@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -16,36 +16,73 @@
  * Reserved.
  */
 
-#ifndef nsIProtocolHandler_h___
-#define nsIProtocolHandler_h___
+#ifndef _nsIProtocolHandler_h_
+#define _nsIProtocolHandler_h_
 
 #include "nsISupports.h"
+#include "nsIURL.h"
 
-class nsIConnectionGroup;
+class nsIConnectionGroup; // This should really be nsIURLGroup. TODO change
 
-#define NS_IPROTOCOLHANDLER_IID                      \
-{ /* 5da8b1b0-ea35-11d2-931b-00104ba0fd40 */         \
-    0x5da8b1b0,                                      \
-    0xea35,                                          \
-    0x11d2,                                          \
-    {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
+/* 
+    The nsIProtocolHandler class is a common interface to all protocols 
+	being loaded dynamically. This base interface is required to be 
+	derived from, for all protocols that expect to be loaded dynamically.
+
+    Currently this just has functions to identify itself and return a 
+	ProtocolInstance for the specified URL. I will add more things after 
+	I find out more "common" elements for our two extreme cases HTTP and 
+	IMAP/SMTP
+
+    -Gagan Saksena
+
+*/
 
 class nsIProtocolHandler : public nsISupports
 {
+
 public:
-    NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROTOCOLHANDLER_IID);
 
-    NS_IMETHOD GetScheme(const char* *o_Scheme) = 0;
+    /*
+        GetDefaultPort returns the default port associated with this 
+        protocol. 
+    */
+    NS_IMETHOD_(PRInt32)    GetDefaultPort(void) const = 0;    
 
-    NS_IMETHOD GetDefaultPort(PRInt32 *result) = 0;    
+    /* 
+        The GetProtocolInstance function. This function returns a per-URL 
+		instance of a dummy class nsIProtocolInstance which could be used 
+		for querying and setting per-URL properties of the connection. A 
+		protocol implementor may decide to reuse the same connection and
+        hence supply the same protocol instance to handle the specified URL.
+    */
+    NS_IMETHOD              GetProtocolInstance(nsIURL* i_URL, 
+						    	nsIProtocolInstance* *o_Instance,
+                                nsIConnectionGroup* i_Group = 0) = 0;
 
-    NS_IMETHOD Open(nsIUrl* url, nsISupports* eventSink,
-                    nsIConnectionGroup* group,
-                    nsIProtocolConnection* *result) = 0;
+    /* 
+        The GetScheme function uniquely identifies the scheme this handler 
+		is associated with. 
+    */
+    NS_IMETHOD              GetScheme(const char* *o_Scheme) const = 0;
+
+    /*
+        The Open function directly assumes that the information in the 
+        URL and the default header information with this handler is
+        sufficient to make a connection and process the request. So
+        This is the same as getting the protocol instance and right away
+        calling Load on it. 
+    */
+    static const nsIID& GetIID() { 
+        // {63E10A11-CD1F-11d2-B013-006097BFC036}
+        static const nsIID NS_IProtocolHandler_IID = 
+            { 0x63e10a11, 0xcd1f, 0x11d2, { 0xb0, 0x13, 0x0, 0x60, 0x97, 0xbf, 0xc0, 0x36 } };
+		return NS_IProtocolHandler_IID; 
+	};
+
 };
 
-#define NS_NETWORK_PROTOCOL_PROGID              "component://netscape/network/protocol?name="
-#define NS_NETWORK_PROTOCOL_PROGID_PREFIX       NS_NETWORK_PROTOCOL_PROGID "?name="
+// Base Prog ID! Looks like a url but don't be fooled by its looks... it can kreate ya.
+#define NS_COMPONENT_NETSCAPE_NETWORK_PROTOCOLS "component://netscape/network/protocols?name="
 
-#endif /* nsIIProtocolHandler_h___ */
+#endif /* _nsIProtocolHandler_h_ */

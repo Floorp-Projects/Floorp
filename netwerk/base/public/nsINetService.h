@@ -21,8 +21,8 @@
 
 #include "nsISupports.h"
 
-class nsIUrl;
-class nsIProtocolConnection;
+class nsIURL;
+class nsIProtocolInstance;
 class nsIConnectionGroup;
 class nsIProtocolHandler;
 
@@ -47,18 +47,18 @@ class nsINetService : public nsISupports
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_INETSERVICE_IID);
 
-    NS_IMETHOD GetProtocolHandler(nsIUrl* url, nsIProtocolHandler* *result) = 0;
+    NS_IMETHOD GetProtocolHandler(nsIURL* url, nsIProtocolHandler* *result) = 0;
 
     NS_IMETHOD NewConnectionGroup(nsIConnectionGroup* *result) = 0;
 
-    NS_IMETHOD NewURL(nsIUrl* *result, 
+    NS_IMETHOD NewURL(nsIURL* *result, 
                       const char* aSpec,
-                      const nsIUrl* aBaseURL,
+                      const nsIURL* aBaseURL,
                       nsISupports* aContainer) = 0;
 
-    NS_IMETHOD Open(nsIUrl* url, nsISupports* eventSink,
+    NS_IMETHOD Open(nsIURL* url, nsISupports* eventSink,
                     nsIConnectionGroup* group,
-                    nsIProtocolConnection* *result) = 0;
+                    nsIProtocolInstance* *result) = 0;
 
     /**
      * @return NS_OK if there are active connections
