@@ -39,6 +39,7 @@ INCLUDES = -I$(DIST)/include -I$(topsrcdir)/pr/include
 
 CSRCS = \
 	plarena.c \
+	plevent.c \
 	plhash.c \
 	plvrsion.c \
 	$(NULL)
@@ -46,6 +47,7 @@ CSRCS = \
 HEADERS = \
 	plarenas.h \
 	plarena.h \
+	plevent.h \
 	plhash.h \
 	$(NULL)
 
