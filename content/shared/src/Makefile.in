@@ -36,6 +36,7 @@ REQUIRES	= xpcom \
 		  locale \
 		  dom \
 		  webshell \
+      docshell \
 		  pref \
 		  necko \
 		  htmlparser \
