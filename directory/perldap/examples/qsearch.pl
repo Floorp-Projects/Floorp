@@ -1,6 +1,6 @@
 #!/usr/bin/perl5
 #############################################################################
-# $Id: qsearch.pl,v 1.5 1998/08/12 20:56:38 leif Exp $
+# $Id: qsearch.pl,v 1.6 1998/08/13 09:11:37 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -12,7 +12,7 @@
 # License for the specific language governing rights and limitations
 # under the License.
 #
-# The Original Code is PerlDAP. The Initial Developer of the Original
+# The Original Code is PerLDAP. The Initial Developer of the Original
 # Code is Netscape Communications Corp. and Clayton Donley. Portions
 # created by Netscape are Copyright (C) Netscape Communications
 # Corp., portions created by Clayton Donley are Copyright (C) Clayton
