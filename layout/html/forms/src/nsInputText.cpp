@@ -311,9 +311,6 @@ nsInputText::nsInputText(nsIAtom* aTag, nsIFormManager* aManager, nsInputTextTyp
 
 nsInputText::~nsInputText()
 {
-  if (nsnull != mValue) {
-    delete mValue;
-  }
 }
 
 nsInputTextType
