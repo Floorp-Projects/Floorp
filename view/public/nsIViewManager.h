@@ -173,7 +173,7 @@ public:
    * @param rect rect to mark as damaged
    * @param aUpdateFlags see bottom of nsIViewManager.h for description
    */
-  virtual void UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdateFlags) = 0;
+  virtual void UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags) = 0;
 
   /**
    * Called to dispatch an event to the appropriate view. Often called

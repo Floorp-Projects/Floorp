@@ -361,7 +361,7 @@ void nsViewManager :: UpdateView(nsIView *aView, nsIRegion *aRegion, PRUint32 aU
   }
 }
 
-void nsViewManager :: UpdateView(nsIView *aView, nsRect &aRect, PRUint32 aUpdateFlags)
+void nsViewManager :: UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
 {
   nsRect  trect = aRect;
   nsIView *par = aView;
