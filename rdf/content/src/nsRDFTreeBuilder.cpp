@@ -538,7 +538,9 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 
 			// first, remove any nodes that are stale
 		        nsCOMPtr<nsIContent>	child;
-			if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindChildByTag(container, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(child))))
+			if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindChildByTag(container,
+					kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(child)))
+					&& (rv != NS_RDF_NO_VALUE) && (child))
 			{
 			        // note: enumerate backwards so that indexing is easy
 				PRInt32		numGrandChildren;
@@ -581,7 +583,9 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 			for (loop=0; loop<numElements; loop+=2)
 			{
 				nsIRDFResource	*theRes = flatArray[loop];
-				if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindChildByTag(container, kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(child))))
+				if (NS_SUCCEEDED(rv = nsRDFContentUtils::FindChildByTag(container,
+						kNameSpaceID_XUL, kTreeChildrenAtom, getter_AddRefs(child)))
+						&& (rv != NS_RDF_NO_VALUE) && (child))
 				{
 					PRBool		nodeFound = PR_FALSE;
 					PRInt32		numGrandChildren;
