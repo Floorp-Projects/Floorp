@@ -595,6 +595,10 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
       // Update the progress status state - the document is done
       mProgressStateFlags = nsIWebProgressListener::STATE_STOP;
 
+
+      nsresult loadGroupStatus = NS_OK; 
+      mLoadGroup->GetStatus(&loadGroupStatus);
+
       // 
       // New code to break the circular reference between 
       // the load group and the docloader... 
@@ -606,11 +610,11 @@ void nsDocLoaderImpl::DocLoaderIsEmpty(nsresult aStatus)
       // loader may be loading a *new* document - if LoadDocument()
       // was called from a handler!
       //
-      doStopDocumentLoad(docChannel, aStatus);
-      FireOnEndDocumentLoad(this, docChannel, aStatus);
+      doStopDocumentLoad(docChannel, loadGroupStatus);
+      FireOnEndDocumentLoad(this, docChannel, loadGroupStatus);
 
       if (mParent) {
-        mParent->DocLoaderIsEmpty(aStatus);
+        mParent->DocLoaderIsEmpty(loadGroupStatus);
       }
     }
   }
