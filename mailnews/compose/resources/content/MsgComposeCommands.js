@@ -1685,7 +1685,7 @@ var attachmentBucketObserver = {
   onDrop: function (aEvent, aData, aDragSession)
     {
       aData = aData.length ? aData[0] : aData;
-      if (aData.flavour == "text/x-moz-url") {
+      if (aData.flavour == "text/x-moz-url" || aData.flavour == "text/nsmessage") {
           aData = aData.data.data.toString();
           // pull out the URL / title
           
@@ -1715,6 +1715,7 @@ var attachmentBucketObserver = {
     {
       var flavourList = { };
       flavourList["text/x-moz-url"] = { width: 2, iid: "nsISupportsWString" };
+      flavourList["text/nsmessage"] = { width: 2, iid: "nsISupportsWString" };
       flavourList["application/x-moz-file"] = { width: 2, iid: "nsIFile" };
       return flavourList;
     }  
