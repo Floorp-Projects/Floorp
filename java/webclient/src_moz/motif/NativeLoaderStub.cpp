@@ -115,9 +115,9 @@ void (* nativeFindInPage) (JNIEnv *, jobject, jint, jstring, jboolean, jboolean)
 void (* nativeFindNextInPage) (JNIEnv *, jobject, jint, jboolean);
 jstring (* nativeGetCurrentURL) (JNIEnv *, jobject, jint);
 jstring (* nativeGetSource) (JNIEnv *, jobject);
-jbyteArray (* nativeGetSourceBytes) (JNIEnv *, jobject);
+jbyteArray (* nativeGetSourceBytes) (JNIEnv *, jobject, jint, jboolean);
 void (* nativeResetFind) (JNIEnv *, jobject, jint);
-void (* nativeSelectAll) (JNIEnv *, jobject);
+void (* nativeSelectAll) (JNIEnv *, jobject, jint);
 // from HistoryImpl.h
 void (* nativeBack) (JNIEnv *, jobject, jint);
 jboolean (* nativeCanBack) (JNIEnv *, jobject, jint);
@@ -350,7 +350,7 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeGetSource) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeGetSourceBytes = (jbyteArray (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes");
+  nativeGetSourceBytes = (jbyteArray (*) (JNIEnv *, jobject, jint, jboolean)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes");
   if (!nativeGetSourceBytes) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -358,7 +358,7 @@ void locateBrowserControlStubFunctions(void * dll) {
   if (!nativeResetFind) {
     printf("got dlsym error %s\n", dlerror());
   }
-  nativeSelectAll = (void (*) (JNIEnv *, jobject)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll");
+  nativeSelectAll = (void (*) (JNIEnv *, jobject, jint)) dlsym(dll, "Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll");
   if (!nativeSelectAll) {
     printf("got dlsym error %s\n", dlerror());
   }
@@ -513,8 +513,8 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPage
  * Signature: ()[B
  */
 JNIEXPORT jbyteArray JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeGetSourceBytes
-(JNIEnv * env, jobject obj) {
-  return (* nativeGetSourceBytes) (env, obj);
+(JNIEnv * env, jobject obj, jint webShellPtr, jboolean mode) {
+  return (* nativeGetSourceBytes) (env, obj, webShellPtr, mode);
 }
 
 /*
@@ -533,8 +533,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImp
  * Signature: ()V
  */
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_wrapper_1native_CurrentPageImpl_nativeSelectAll
-(JNIEnv * env, jobject obj) {
-  (* nativeSelectAll) (env, obj);
+(JNIEnv * env, jobject obj, jint webShellPtr) {
+  (* nativeSelectAll) (env, obj, webShellPtr);
 }
 
 
