@@ -171,12 +171,9 @@ viewer:chrome:skins:*
 -viewer:chrome:packages:core:editor:content:sb-FileWidgetFileHandler.js
 -viewer:chrome:packages:core:communicator:content:domviewer
 
-viewer:defaults:pref:all.js 
-viewer:defaults:pref:config.js 
-viewer:defaults:Pref:editor.js
-viewer:defaults:pref:initpref.js 
-viewer:defaults:pref:macprefs.js 
-viewer:defaults:pref:xpinstall.js
+; all the pref files must be part of base
+; to prevent migration bugs
+viewer:defaults:pref:*
 viewer:defaults:profile:*
 viewer:res:arrow.gif
 viewer:res:charsetalias.properties 
@@ -233,7 +230,6 @@ viewer:res:ua.css
 
 [mail] 
 viewer:chrome:packages:messenger:*
-viewer:defaults:pref:mailnews.js
 viewer:Components:MsgAddrbook.shlb 
 viewer:Components:MsgAddrbook.xpt 
 viewer:Components:mimeEmitter.shlb 

@@ -190,13 +190,9 @@ bin\chrome\skins\modern\*
 -bin\chrome\packages\core\editor\content\viewsource.xul
 -bin\chrome\packages\core\communicator\content\domviewer
 
-bin\defaults\pref\all.js
-bin\defaults\pref\config.js
-bin\defaults\pref\initpref.js
-bin\defaults\pref\psm-glue.js
-bin\defaults\pref\winpref.js
-bin\defaults\pref\xpinstall.js
-bin\defaults\pref\editor.js
+; all the pref files must be part of base
+; to prevent migration bugs
+bin\defaults\pref\*
 bin\defaults\profile\*
 bin\searchplugins\*
 bin\res\html.css
@@ -257,7 +253,6 @@ bin\components\impText.dll
 bin\components\absyncsv.dll
 bin\components\absync.xpt
 bin\chrome\packages\messenger\*
-bin\defaults\pref\mailnews.js
 
 [chatzilla]
 bin\components\chatzilla-service.js
