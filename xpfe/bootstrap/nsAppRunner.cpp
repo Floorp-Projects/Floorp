@@ -382,7 +382,7 @@ PRBool NS_CanRun()
 //       nsISplashScreen will be removed.
 //
 
-#if !defined( XP_PC ) && !defined(MOZ_WIDGET_GTK) && !defined(XP_MAC) && !defined(XP_MACOSX)
+#if !defined( XP_PC ) && !defined(MOZ_WIDGET_GTK) && !defined(XP_MAC) && (!defined(XP_MACOSX) || defined(MOZ_WIDGET_COCOA))
 
 nsresult NS_CreateNativeAppSupport(nsINativeAppSupport **aResult)
 {
