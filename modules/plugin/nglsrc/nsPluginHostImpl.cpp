@@ -21,10 +21,14 @@
 #include "prio.h"
 #include "prmem.h"
 #include "ns4xPlugin.h"
+#include "nsMalloc.h"     //this is evil...
+#include "nsPluginInstancePeer.h"
 
 #ifdef XP_PC
 #include "windows.h"
 #endif
+
+static NS_DEFINE_IID(kIPluginInstanceIID, NS_IPLUGININSTANCE_IID); 
 
 nsPluginTag :: nsPluginTag()
 {
@@ -104,6 +108,7 @@ nsPluginTag :: ~nsPluginTag()
 
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
 static NS_DEFINE_IID(kIPluginHostIID, NS_IPLUGINHOST_IID);
+static NS_DEFINE_IID(kIMallocIID, NS_IMALLOC_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsPluginHostImpl :: nsPluginHostImpl()
@@ -124,6 +129,8 @@ nsPluginHostImpl :: ~nsPluginHostImpl()
     delete mPlugins;
     mPlugins = temp;
   }
+
+  NS_IF_RELEASE(mMalloc);
 }
 
 NS_IMPL_ADDREF(nsPluginHostImpl)
@@ -148,6 +155,13 @@ nsresult nsPluginHostImpl :: QueryInterface(const nsIID& aIID,
   {
     *aInstancePtrResult = (void *)((nsIPluginHost *)this);
     AddRef();
+    return NS_OK;
+  }
+
+  if (aIID.Equals(kIMallocIID))
+  {
+    *aInstancePtrResult = mMalloc;
+    NS_IF_ADDREF(mMalloc);
     return NS_OK;
   }
 
@@ -183,14 +197,32 @@ nsresult nsPluginHostImpl :: SetValue(nsPluginManagerVariable variable, void *va
   return NS_OK;
 }
 
-//nsresult nsPluginHostImpl :: FetchURL(nsISupports* peer, nsURLInfo* urlInfo)
-//{
-//  return NS_OK;
-//}
+NS_IMETHODIMP nsPluginHostImpl :: GetURL(nsISupports* peer, const char* url,
+                                         const char* target,
+                                         void* notifyData, const char* altHost,
+                                         const char* referrer, PRBool forceJSEnabled)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsPluginHostImpl :: PostURL(nsISupports* peer,
+                                          const char* url, const char* target,
+                                          PRUint32 postDataLen, const char* postData,
+                                          PRBool isFile, void* notifyData,
+                                          const char* altHost, const char* referrer,
+                                          PRBool forceJSEnabled,
+                                          PRUint32 postHeadersLength, const char* postHeaders)
+{
+  return NS_OK;
+}
 
 nsresult nsPluginHostImpl :: Init(void)
 {
-  return NS_OK;
+  nsresult  rv;
+
+  rv = nsMalloc::Create(nsnull, kIMallocIID, (void **)&mMalloc);
+
+  return rv;
 }
 
 nsresult nsPluginHostImpl :: LoadPlugins(void)
@@ -520,7 +552,7 @@ printf("plugin %s added to list %s\n", plugintag->mName, (plugintag->mFlags & NS
   return NS_OK;
 }
 
-nsresult nsPluginHostImpl :: InstantiatePlugin(char *aMimeType, nsISupports ** aPluginInst)
+nsresult nsPluginHostImpl :: InstantiatePlugin(char *aMimeType, nsIPluginInstance ** aPluginInst)
 {
   nsPluginTag *plugins = mPlugins;
   PRInt32     variants, cnt;
@@ -558,10 +590,32 @@ printf("loaded plugin %s for mime type %s\n", plugins->mName, aMimeType);
     {
       if (nsnull == plugins->mEntryPoint)
       {
+        //create the plugin object
+
         if (plugins->mFlags & NS_PLUGIN_FLAG_OLDSCHOOL)
-          plugins->mEntryPoint = PR_FindSymbol(plugins->mLibrary, "NP_Initialize");
+        {
+          nsresult rv = ns4xPlugin::CreatePlugin(plugins->mLibrary, (nsIPlugin **)&plugins->mEntryPoint);
+printf("result of creating plugin adapter: %d\n", rv);
+        }
         else
-          plugins->mEntryPoint = PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
+          plugins->mEntryPoint = (nsIPlugin *)PR_FindSymbol(plugins->mLibrary, "NSGetFactory");
+
+        if (nsnull != plugins->mEntryPoint)
+          plugins->mEntryPoint->Initialize((nsISupports *)(nsIPluginManager *)this);
+      }
+
+      if (nsnull != plugins->mEntryPoint)
+      {
+        //create an instance
+
+        if (NS_OK == plugins->mEntryPoint->CreateInstance(nsnull, kIPluginInstanceIID, (void **)aPluginInst))
+        {
+printf("successfully created plugin instance\n");
+
+          nsIPluginInstancePeer *peer = new nsPluginInstancePeerImpl();
+
+          (*aPluginInst)->Initialize(peer);
+        }
       }
     }
     else

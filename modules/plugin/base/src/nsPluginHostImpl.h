@@ -22,8 +22,10 @@
 #include "xp_core.h"
 #include "nsIPluginManager.h"
 #include "nsIPluginHost.h"
+#include "nsINetworkManager.h"
 #include "nsCRT.h"
 #include "prlink.h"
+#include "nsIMalloc.h"
 
 class ns4xPlugin;
 
@@ -44,7 +46,7 @@ public:
   char          **mMimeDescriptionArray;
   char          **mExtensionsArray;
   PRLibrary     *mLibrary;
-  void          *mEntryPoint;
+  nsIPlugin     *mEntryPoint;
   ns4xPlugin    *mAdapter;
   PRUint32      mFlags;
 };
@@ -52,7 +54,8 @@ public:
 #define NS_PLUGIN_FLAG_ENABLED    0x0001    //is this plugin enabled?
 #define NS_PLUGIN_FLAG_OLDSCHOOL  0x0002    //is this a pre-xpcom plugin?
 
-class nsPluginHostImpl : public nsIPluginManager, public nsIPluginHost
+class nsPluginHostImpl : public nsIPluginManager, public nsIPluginHost,
+                         public nsINetworkManager
 {
 public:
   nsPluginHostImpl();
@@ -80,8 +83,20 @@ public:
   NS_IMETHOD
   SetValue(nsPluginManagerVariable variable, void *value);
 
-//  NS_IMETHOD
-//  FetchURL(nsISupports* peer, nsURLInfo* urlInfo);
+  //nsINetworkManager interface
+
+  NS_IMETHOD
+  GetURL(nsISupports* peer, const char* url, const char* target,
+         void* notifyData = NULL, const char* altHost = NULL,
+         const char* referrer = NULL, PRBool forceJSEnabled = PR_FALSE);
+
+  NS_IMETHOD
+  PostURL(nsISupports* peer, const char* url, const char* target,
+          PRUint32 postDataLen, const char* postData,
+          PRBool isFile = PR_FALSE, void* notifyData = NULL,
+          const char* altHost = NULL, const char* referrer = NULL,
+          PRBool forceJSEnabled = PR_FALSE,
+          PRUint32 postHeadersLength = 0, const char* postHeaders = NULL);
 
   //nsIPluginHost interface
 
@@ -92,11 +107,12 @@ public:
   LoadPlugins(void);
 
   NS_IMETHOD
-  InstantiatePlugin(char *aMimeType, nsISupports ** aPluginInst);
+  InstantiatePlugin(char *aMimeType, nsIPluginInstance ** aPluginInst);
 
 private:
   char        *mPluginPath;
   nsPluginTag *mPlugins;
+  nsIMalloc   *mMalloc;
 };
 
 #endif
