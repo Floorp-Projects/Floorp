@@ -28,6 +28,7 @@ class nsIContent;
 class nsIDocument;
 class nsITimer;
 class nsIURL;
+class nsIPresShell;
 class nsViewerApp;
 class AtomHashTable;
 
@@ -88,6 +89,12 @@ public:
     mMaxPages = aMax;
   }
 
+  /** set the web crawler filter, used for automatical output of frames */
+  void SetFilter(const nsString& aFilter);
+
+  /** set the web crawler filter, used for automatical output of frames */
+  void SetOutputDir(const nsString& aOutputDir);
+
   void LoadNextURL();
 
 protected:
@@ -101,6 +108,11 @@ protected:
 
   void RecordLoadedURL(const nsString& aURLSpec);
 
+  /** generate an output name from a URL */
+  FILE * GetOutputFile(nsIURL *aURL);
+
+  nsIPresShell* GetPresShell();
+
   nsIBrowserWindow* mBrowser;
   nsViewerApp* mViewer;
   nsITimer* mTimer;
@@ -109,6 +121,8 @@ protected:
   nsIAtom* mFrameTag;
   nsIAtom* mIFrameTag;
   AtomHashTable* mVisited;
+  nsString* mFilter;
+  nsString* mOutputDir;
 
   PRBool mCrawl;
   PRBool mJiggleLayout;
