@@ -55,6 +55,7 @@
 #include "nsNetUtil.h"
 #include "nsMPFileLocProvider.h"
 #include "nsIFocusController.h"
+#include "PromptService.h"
 
 
 #include "nsIViewManager.h"
@@ -76,7 +77,6 @@
 #define NS_TO_PH_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 #define PH_TO_NS_RGB(ns) (ns & 0xff) << 16 | (ns & 0xff00) | ((ns >> 16) & 0xff)
 
-
 #define NS_EXTERN_IID(_name) \
         extern const nsIID _name;
 
@@ -84,13 +84,16 @@
         NS_EXTERN_IID(kHTMLEditorCID);
         NS_EXTERN_IID(kCookieServiceCID);
         NS_EXTERN_IID(kWindowCID);
-
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kAppShellCID, NS_APPSHELL_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kSimpleURICID,            NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kPrintOptionsCID, NS_PRINTOPTIONS_CID);
+
+#define NS_PROMPTSERVICE_CID \
+ {0xa2112d6a, 0x0e28, 0x421f, {0xb4, 0x6a, 0x25, 0xc0, 0xb3, 0x8, 0xcb, 0xd0}}
+static NS_DEFINE_CID(kPromptServiceCID, NS_PROMPTSERVICE_CID);
 
 static void mozilla_set_pref( PtWidget_t *widget, char *option, char *value );
 static void mozilla_get_pref( PtWidget_t *widget, char *option, char *value );
@@ -114,9 +117,19 @@ static void MozCreateWindow(PtMozillaWidget_t *moz)
 		exit(-1);
 	}
 
-//moz->MyBrowser->WebBrowser->SetContainerWindow(NS_STATIC_CAST(nsIWebBrowserChrome*, this));
-//nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(moz->MyBrowser->WebBrowser);
-//dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
+
+		// Create the container object
+		moz->MyBrowser->WebBrowserContainer = new CWebBrowserContainer((PtWidget_t *)moz);
+		if (moz->MyBrowser->WebBrowserContainer == NULL) {
+			printf("Could not create webbrowsercontainer\n");
+			exit(-1);
+			}
+		moz->MyBrowser->WebBrowserContainer->AddRef();
+
+
+		moz->MyBrowser->WebBrowser->SetContainerWindow( NS_STATIC_CAST( nsIWebBrowserChrome*, moz->MyBrowser->WebBrowserContainer ) );
+		//nsCOMPtr<nsIDocShellTreeItem> dsti = do_QueryInterface(moz->MyBrowser->WebBrowser);
+		//dsti->SetItemType(nsIDocShellTreeItem::typeContentWrapper);
 
     // Create the webbrowser window
 		moz->MyBrowser->WebBrowserAsWin = do_QueryInterface(moz->MyBrowser->WebBrowser);
@@ -128,29 +141,21 @@ static void MozCreateWindow(PtMozillaWidget_t *moz)
 		// webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
 		// webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_CONTAINS_CHROME, PR_TRUE);
 
-	// Create the container object
-	moz->MyBrowser->WebBrowserContainer = new CWebBrowserContainer((PtWidget_t *)moz);
-    if (moz->MyBrowser->WebBrowserContainer == NULL)
-    {
-		printf("Could not create webbrowsercontainer\n");
-		exit(-1);
-    }
-	moz->MyBrowser->WebBrowserContainer->AddRef();
 
-	// Set up the web shell
-	moz->MyBrowser->WebBrowser->SetParentURIContentListener(moz->MyBrowser->WebBrowserContainer);
 
-    // XXX delete when tree owner is not necessary (to receive context menu events)
-    nsCOMPtr<nsIDocShellTreeItem> browserAsItem = do_QueryInterface(moz->MyBrowser->WebBrowser);
-	browserAsItem->SetTreeOwner(NS_STATIC_CAST(nsIDocShellTreeOwner *, moz->MyBrowser->WebBrowserContainer));
+		// Set up the web shell
+// ATENTIE		moz->MyBrowser->WebBrowser->SetParentURIContentListener( (nsIURIContentListener*) moz );
+
+		// XXX delete when tree owner is not necessary (to receive context menu events)
+		nsCOMPtr<nsIDocShellTreeItem> browserAsItem = do_QueryInterface(moz->MyBrowser->WebBrowser);
+		browserAsItem->SetTreeOwner(NS_STATIC_CAST(nsIDocShellTreeOwner *, moz->MyBrowser->WebBrowserContainer));
 
     // XXX delete when docshell becomes inaccessible
     moz->MyBrowser->rootDocShell = do_GetInterface(moz->MyBrowser->WebBrowser);
-    if (moz->MyBrowser->rootDocShell == nsnull)
-    {
-		printf("Could not get root docshell object\n");
-		exit(-1);
-    }
+    if (moz->MyBrowser->rootDocShell == nsnull) {
+			printf("Could not get root docshell object\n");
+			exit(-1);
+    	}
 
 	nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports **)&(moz->MyBrowser->mPrefs));
 
@@ -523,18 +528,18 @@ static void mozilla_modify( PtWidget_t *widget, PtArg_t const *argt ) {
 			nsCOMPtr<nsIDOMWindow> window;
 			moz->MyBrowser->WebBrowser->GetContentDOMWindow(getter_AddRefs(window));
 			nsCOMPtr<nsIWebBrowserPrint> print( do_GetInterface( moz->MyBrowser->WebBrowser ) );
-
-
+			
+			
 			WWWRequest *pPageInfo = ( WWWRequest * ) argt->value;
 			PpPrintContext_t *pc = moz_construct_print_context( pPageInfo );
 
 			nsresult rv;
-			nsCOMPtr<nsIPrintOptions> printService = 
-			         do_GetService(kPrintOptionsCID, &rv);
+			nsCOMPtr<nsIPrintOptions> printService =
+			             do_GetService(kPrintOptionsCID, &rv);
 			printService->SetEndPageRange( (PRInt32) pc ); /* use SetEndPageRange/GetEndPageRange to convey the print context */
 			print->Print( window, printService, moz->MyBrowser->WebBrowserContainer );
-			}
-			break;
+		    }
+		    break;
 
 		case Pt_ARG_MOZ_OPTION:
 			mozilla_set_pref( widget, (char*)argt->len, (char*)argt->value );
@@ -739,6 +744,34 @@ static int mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 			const char *s=NS_ConvertUCS2toUTF8(str).get();
 
 			strcpy( (char*)argt->value, s );
+			}
+			break;
+
+		case Pt_ARG_MOZ_GET_HISTORY: {
+			WWWRequest *req = ( WWWRequest * ) argt->len;
+			PtWebClientHistoryData_t *HistoryReplyBuf = (PtWebClientHistoryData_t *) argt->value;
+			int i, j;
+			PRInt32 total;
+			moz->MyBrowser->mSessionHistory->GetCount( &total );
+
+			for( i=total-2, j=0; i>=0 && j<req->History.num; i--, j++) {
+				nsIHistoryEntry *entry;
+				moz->MyBrowser->mSessionHistory->GetEntryAtIndex( i, PR_FALSE, &entry );
+			
+				PRUnichar *title;
+				nsIURI *url;
+				entry->GetTitle( &title );
+				entry->GetURI( &url );
+
+				nsString stitle( title );
+			  strncpy( HistoryReplyBuf[j].title, stitle.ToNewCString(), 127 );
+			  HistoryReplyBuf[j].title[127] = '\0';
+
+				char *urlspec;
+				url->GetSpec( &urlspec );
+			  strcpy( HistoryReplyBuf[j].url, urlspec );
+			  }
+
 			}
 			break;
 	}
@@ -1180,6 +1213,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 		{ Pt_ARG_MOZ_COMMAND,           mozilla_modify, Pt_QUERY_PREVENT },
 		{ Pt_ARG_MOZ_OPTION,           	mozilla_modify, mozilla_get_info },
 		{ Pt_ARG_MOZ_GET_CONTEXT,      	NULL,						mozilla_get_info },
+		{ Pt_ARG_MOZ_GET_HISTORY,      	NULL,						mozilla_get_info },
 		{ Pt_ARG_MOZ_ENCODING,         	mozilla_modify, mozilla_get_info },
 		{ Pt_ARG_MOZ_WEB_DATA_URL,     	mozilla_modify, Pt_QUERY_PREVENT },
 		{ Pt_ARG_MOZ_WEB_DATA,         	mozilla_modify, Pt_QUERY_PREVENT },
@@ -1255,6 +1289,16 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 
 	InitProfiles( getenv( "HOME" ), ".mozilla" );
 	Init_nsUnknownContentTypeHandler_Factory( );
+
+	nsCOMPtr<nsIFactory> promptFactory;
+	NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));
+	nsComponentManager::RegisterFactory(kPromptServiceCID,
+                                    	"Prompt Service",
+                                    	"@mozilla.org/embedcomp/prompt-service;1",
+                                    	promptFactory,
+                                    	PR_TRUE); // replace existing
+
+	InitializeWindowCreator( );
 
 	return (PtMozilla->wclass);
 }

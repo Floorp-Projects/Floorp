@@ -45,7 +45,7 @@ nsUnknownContentTypeHandler::~nsUnknownContentTypeHandler( ) { }
 NS_IMETHODIMP nsUnknownContentTypeHandler::ShowProgressDialog(nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
 	nsresult rv = NS_OK;
 
-	printf("ShowProgressDialog!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ printf("ShowProgressDialog!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 
 	/* we need a dummy listener because the nsExternalAppHandler class verifies that a progress window has been displayed */
 	nsCOMPtr<nsIWebProgressListener> dummy = new nsWebProgressListener;
@@ -56,20 +56,16 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::ShowProgressDialog(nsIHelperAppLaunch
 
 NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports *aContext ) {
 	nsresult rv = NS_OK;
-	printf("Show!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ printf("Show!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 
 	/* try to get the PtMozillawidget_t* pointer form the aContext - use the fact the the WebBrowserContainer is
 		registering itself as nsIDocumentLoaderObserver ( SetDocLoaderObserver ) */
 
-	/* aContext is a nsDocShell* */
-	nsCOMPtr<nsIDocShell> docShell( do_GetInterface( aContext ) );
-	nsIURIContentListener *dl;
-	rv = docShell->GetParentURIContentListener( &dl );
-
-	CWebBrowserContainer *webc = NS_STATIC_CAST( CWebBrowserContainer*, dl );
-printf("webc=%p\n", webc );
-	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) webc->m_pOwner;
-
+	nsCOMPtr<nsIDOMWindow> domw( do_GetInterface( aContext ) );
+	nsIDOMWindow *parent;
+	domw->GetParent( &parent );
+	CWebBrowserContainer *w = GetWebBrowser( parent );
+	PtMozillaWidget_t *moz = ( PtMozillaWidget_t * ) w->m_pOwner;
 
 	/* go ahead and start the downloading process */
 	nsCOMPtr<nsIWebProgressListener> listener = NS_STATIC_CAST(nsIWebProgressListener*, moz->MyBrowser->WebBrowserContainer );
@@ -110,16 +106,43 @@ printf("webc=%p\n", webc );
 
 /* only Show() method is used - remove this code */
 NS_IMETHODIMP nsUnknownContentTypeHandler::PromptForSaveToFile( nsISupports * aWindowContext, const PRUnichar * aDefaultFile, const PRUnichar * aSuggestedFileExtension, nsILocalFile ** aNewFile ) {
-	printf("PromptForSaveToFile!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ printf("PromptForSaveToFile!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 	return NS_OK;
 	}
+
+
+CWebBrowserContainer *nsUnknownContentTypeHandler::GetWebBrowser(nsIDOMWindow *aWindow)
+{
+  nsCOMPtr<nsIWebBrowserChrome> chrome;
+  CWebBrowserContainer *val = 0;
+
+  nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService("@mozilla.org/embedcomp/window-watcher;1"));
+  if (!wwatch) return nsnull;
+
+  if( wwatch ) {
+    nsCOMPtr<nsIDOMWindow> fosterParent;
+    if (!aWindow) { // it will be a dependent window. try to find a foster parent.
+      wwatch->GetActiveWindow(getter_AddRefs(fosterParent));
+      aWindow = fosterParent;
+    }
+    wwatch->GetChromeForWindow(aWindow, getter_AddRefs(chrome));
+  }
+
+  if (chrome) {
+    nsCOMPtr<nsIEmbeddingSiteWindow> site(do_QueryInterface(chrome));
+    if (site) {
+      site->GetSiteWindow(reinterpret_cast<void **>(&val));
+    }
+  }
+
+  return val;
+}
 
 
 //###########################################################################
 NS_IMPL_ISUPPORTS2(nsWebProgressListener, nsIWebProgressListener, nsISupportsWeakReference);
 
 nsWebProgressListener::nsWebProgressListener() {
-printf("11111111111111\n");
   NS_INIT_ISUPPORTS();
 	}
 
@@ -130,25 +153,21 @@ nsWebProgressListener::~nsWebProgressListener() { }
 /* void onProgressChange (in nsIWebProgress aProgress, in nsIRequest aRequest, in long curSelfProgress, in long maxSelfProgress, in long curTotalProgress, in long maxTotalProgress); */
 NS_IMETHODIMP nsWebProgressListener::OnProgressChange(nsIWebProgress *aProgress, nsIRequest *aRequest, PRInt32 curSelfProgress, PRInt32 maxSelfProgress, PRInt32 curTotalProgress, PRInt32 maxTotalProgress) {
 
-printf("OnProgressChange curSelfProgress=%d maxSelfProgress=%d curTotalProgress=%d maxTotalProgress=%d\n",
+/* ATENTIE */ printf("OnProgressChange curSelfProgress=%d maxSelfProgress=%d curTotalProgress=%d maxTotalProgress=%d\n",
 curSelfProgress, maxSelfProgress, curTotalProgress, maxTotalProgress );
 
 	return NS_OK;
 	}
 NS_IMETHODIMP nsWebProgressListener::OnStateChange(nsIWebProgress* aWebProgress, nsIRequest *aRequest, PRInt32 progressStateFlags, nsresult aStatus) {
-printf("222\n");
 	return NS_OK;
 	}
 NS_IMETHODIMP nsWebProgressListener::OnLocationChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsIURI *location) {
-printf("333\n");
 	return NS_OK;
 	}
 NS_IMETHODIMP nsWebProgressListener::OnStatusChange(nsIWebProgress* aWebProgress, nsIRequest* aRequest, nsresult aStatus, const PRUnichar* aMessage) {
-printf("OnStatusChange aStatus=%d\n", aStatus );
 	return NS_OK;
 	}
 NS_IMETHODIMP nsWebProgressListener::OnSecurityChange(nsIWebProgress *aWebProgress, nsIRequest *aRequest, PRInt32 state) {
-printf("555\n");
 	return NS_OK;
 	}
 
@@ -177,7 +196,7 @@ NS_IMPL_RELEASE( className );
 /* QueryInterface implementation for this class. */
 NS_IMETHODIMP className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) { 
 	nsresult rv = NS_OK; 
-	printf("QueryInterface!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
+/* ATENTIE */ printf("QueryInterface!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!\n\n\n");
 
 	/* Check for place to return result. */
 	if( !anInstancePtr ) rv = NS_ERROR_NULL_POINTER;

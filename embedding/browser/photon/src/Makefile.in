@@ -33,6 +33,7 @@ CPPSRCS		= \
 		PhMozEmbedStream.cpp \
 		PtMozilla.cpp \
 		WebBrowserContainer.cpp \
+		PromptService.cpp \
 		nsUnknownContentTypeHandler.cpp
 
 SHARED_LIBRARY_LIBS= \
