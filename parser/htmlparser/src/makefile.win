@@ -27,6 +27,7 @@ CPPSRCS=					\
 	nsDTDUtils.cpp				\
 	nsHTMLTokenizer.cpp \
 	nsXMLTokenizer.cpp \
+	nsExpatTokenizer.cpp \
   nsElementTable.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
@@ -49,6 +50,7 @@ CPPSRCS=					\
 	nsWellFormedDTD.cpp			\
 	nsViewSourceHTML.cpp \
   nsXIFDTD.cpp				\
+    nsExpatDTD.cpp			\
 	prstrm.cpp				\
 	$(NULL)
 
@@ -56,6 +58,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsDTDUtils.obj			\
 	.\$(OBJDIR)\nsHTMLTokenizer.obj \
 	.\$(OBJDIR)\nsXMLTokenizer.obj \
+	.\$(OBJDIR)\nsExpatTokenizer.obj \
 	.\$(OBJDIR)\nsElementTable.obj \
 	.\$(OBJDIR)\CNavDTD.obj			\
 	.\$(OBJDIR)\COtherDTD.obj		\
@@ -78,12 +81,14 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsWellFormedDTD.obj		\
 	.\$(OBJDIR)\nsViewSourceHTML.obj		\
 	.\$(OBJDIR)\nsXIFDTD.obj		\
+	.\$(OBJDIR)\nsExpatDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
 	$(NULL)
 
 EXPORTS=					\
 	nshtmlpars.h				\
 	nsITokenizer.h \
+	nsIExpatTokenizer.h			\
 	nsIContentSink.h			\
 	nsIHTMLContentSink.h			\
 	nsILoggingSink.h			\
@@ -103,6 +108,7 @@ EXPORTS=					\
 	COtherDTD.h				\
 	nsIDTD.h				\
 	nsXIFDTD.h				\
+	nsExpatDTD.h			\
     nsParserCIID.h \
 	$(NULL)
 
@@ -110,7 +116,7 @@ EXTRA_EXPORTS=					\
 	nsHTMLTags.h				\
 	$(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\uconv
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\uconv -I$(PUBLIC)\expat
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = raptorhtmlpars
@@ -126,6 +132,7 @@ LLIBS=        \
  $(DIST)\lib\xpcom32.lib  \
  $(DIST)\lib\raptorbase.lib \
  $(DIST)\lib\libplc21.lib       \
+ $(DIST)\lib\expat.lib			\
  $(LIBNSPR)  
 
 !ifdef MOZ_NO_DEBUG_RTL
