@@ -20,7 +20,7 @@
 #include <qwidget.h>
 
 #include "nsBrowserWindow.h"
-#include "nsQTMenu.h"
+#include "nsQtMenu.h"
 #include "resources.h"
 #include "nscore.h"
 

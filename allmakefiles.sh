@@ -346,6 +346,11 @@ webshell/src/Makefile
 webshell/tests/Makefile
 webshell/tests/viewer/Makefile
 webshell/tests/viewer/public/Makefile
+webshell/tests/viewer/unix/Makefile
+webshell/tests/viewer/unix/gtk/Makefile
+webshell/tests/viewer/unix/motif/Makefile
+webshell/tests/viewer/unix/qt/Makefile
+webshell/tests/viewer/unix/xlib/Makefile
 webshell/embed/Makefile
 widget/Makefile
 widget/public/Makefile

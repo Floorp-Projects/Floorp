@@ -19,6 +19,11 @@
 #include "nsBrowserWindow.h"
 #include "nsViewerApp.h"
 
+#include "nsIUnixToolkitService.h"
+#include "nsIComponentManager.h"
+
+static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
+
 nsNativeViewerApp::nsNativeViewerApp()
 {
 }
@@ -27,7 +32,7 @@ nsNativeViewerApp::~nsNativeViewerApp()
 {
 }
 
-
+int
 nsNativeViewerApp::Run()
 {
   OpenWindow();
@@ -65,6 +70,38 @@ int main (int argc, char **argv)
 {
   nsViewerApp *app = new nsNativeViewerApp();
   NS_ADDREF(app);
+
+  //////////////////////////////////////////////////////////////////////
+  //
+  // Toolkit Service setup
+  // 
+  // Note: This must happend before NS_SetupRegistry() is called so
+  //       that the toolkit specific xpcom components can be registered
+  //       as needed.
+  //
+  //////////////////////////////////////////////////////////////////////
+  nsIUnixToolkitService * unixToolkitService = nsnull;
+    
+  nsresult rv = 
+    nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
+                                       nsnull,
+                                       nsIUnixToolkitService::GetIID(),
+                                       (void **) &unixToolkitService);
+  
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");
+
+  if (NS_SUCCEEDED(rv) && (nsnull != unixToolkitService))
+  {
+    // Force the toolkit into "xlib" mode
+    unixToolkitService->SetToolkitName("xlib");
+    
+    NS_RELEASE(unixToolkitService);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // End toolkit service setup
+  //////////////////////////////////////////////////////////////////////
+
   app->Initialize(argc, argv);
   app->Run();
   NS_RELEASE(app);

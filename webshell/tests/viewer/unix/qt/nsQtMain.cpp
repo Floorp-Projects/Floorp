@@ -21,9 +21,14 @@
 #include "nsViewerApp.h"
 #include "nsBrowserWindow.h"
 #include "nsIImageManager.h"
-#include "nsQTMenu.h"
+#include "nsQtMenu.h"
 #include <stdlib.h>
 #include "plevent.h"
+
+#include "nsIUnixToolkitService.h"
+#include "nsIComponentManager.h"
+
+static NS_DEFINE_CID(kCUnixToolkitServiceCID, NS_UNIX_TOOLKIT_SERVICE_CID);
 
 static nsNativeViewerApp* gTheApp;
 
@@ -92,6 +97,38 @@ int main(int argc, char **argv)
     NS_NewImageManager(&manager);
 
     gTheApp = new nsNativeViewerApp();
+
+  //////////////////////////////////////////////////////////////////////
+  //
+  // Toolkit Service setup
+  // 
+  // Note: This must happend before NS_SetupRegistry() is called so
+  //       that the toolkit specific xpcom components can be registered
+  //       as needed.
+  //
+  //////////////////////////////////////////////////////////////////////
+  nsIUnixToolkitService * unixToolkitService = nsnull;
+    
+  nsresult rv = 
+    nsComponentManager::CreateInstance(kCUnixToolkitServiceCID,
+                                       nsnull,
+                                       nsIUnixToolkitService::GetIID(),
+                                       (void **) &unixToolkitService);
+  
+  NS_ASSERTION(NS_SUCCEEDED(rv),"Cannot obtain unix toolkit service.");
+
+  if (NS_SUCCEEDED(rv) && (nsnull != unixToolkitService))
+  {
+    // Force the toolkit into "qt" mode regardless of MOZ_TOOLKIT
+    unixToolkitService->SetToolkitName("qt");
+    
+    NS_RELEASE(unixToolkitService);
+  }
+
+  //////////////////////////////////////////////////////////////////////
+  // End toolkit service setup
+  //////////////////////////////////////////////////////////////////////
+
     gTheApp->Initialize(argc, argv);
     gTheApp->Run();
 
