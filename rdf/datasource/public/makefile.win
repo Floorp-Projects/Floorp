@@ -23,9 +23,7 @@ DEPTH=..\..\..
 EXPORTS	= \
         nsILocalStore.h         \
         nsIRDFFileSystem.h      \
-        nsIRDFFind.h		\
         nsIRDFFTP.h		\
-        nsIRDFSearch.h		\
         nsIXULContentSink.h     \
 	$(NULL)
 

@@ -23,10 +23,8 @@ LCFLAGS=-DMOZ_BRPROF
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsFileSystemDataSource.obj  \
-        .\$(OBJDIR)\nsFindDataSource.obj        \
         .\$(OBJDIR)\nsFTPDataSource.obj         \
         .\$(OBJDIR)\nsLocalStore.obj            \
-        .\$(OBJDIR)\nsSearchDataSource.obj      \
         .\$(OBJDIR)\nsXULContentSink.obj        \
 	$(NULL)
 

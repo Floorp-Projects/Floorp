@@ -29,9 +29,7 @@ LIBRARY_NAME = rdfdatasource_s
 CPPSRCS =				\
 	nsLocalStore.cpp		\
 	nsFileSystemDataSource.cpp	\
-	nsFindDataSource.cpp		\
 	nsFTPDataSource.cpp		\
-	nsSearchDataSource.cpp		\
 	nsXULContentSink.cpp		\
 	$(NULL)
 
