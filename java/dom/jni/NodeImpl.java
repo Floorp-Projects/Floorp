@@ -30,6 +30,7 @@ import org.w3c.dom.events.Event;
 import org.w3c.dom.events.EventTarget;
 import org.w3c.dom.events.EventListener;
 import java.util.Vector;
+import java.util.Hashtable;
 
 class NodeEventListener {
 	EventListener listener = null;
@@ -69,8 +70,9 @@ public class NodeImpl implements Node, EventTarget {
 
     private long p_nsIDOMNode = 0;
 
-    // associated DOMEventListeners
-    private Vector listeners = null;
+    // this map stores association of java DOM listeners 
+    // with corresponding native Nodes
+    static private Hashtable javaDOMlisteners = new Hashtable();
 
     // instantiated from JNI only
     protected NodeImpl() {}
@@ -162,9 +164,22 @@ public class NodeImpl implements Node, EventTarget {
 
         long nativeListener = addNativeEventListener(type, listener, useCapture);
 
+	Long lnode = new Long(p_nsIDOMNode);
+
+        Vector listeners;
+        
+        //in conjunction with internal synchronization of Hashtable and Vector
+        // this should be enough for safe concurrent access
+        synchronized (javaDOMlisteners) {
+            listeners = (Vector) javaDOMlisteners.get(lnode);
+        
+            if (listeners == null) {
+              listeners = new Vector();
+                javaDOMlisteners.put(lnode, listeners);
+            }
+        }
+        
         if (nativeListener != 0) {
-	    if (listeners == null) 
-                listeners = new Vector();
 
             NodeEventListener l = new NodeEventListener(type, 
                                                         listener, 
@@ -177,6 +192,9 @@ public class NodeImpl implements Node, EventTarget {
     public void removeEventListener(String type, 
                                     EventListener listener, 
                                     boolean useCapture) {
+
+        Vector listeners = (Vector) javaDOMlisteners.get(new Long(p_nsIDOMNode));
+
         if (listeners == null) 
             return;
 
