@@ -197,7 +197,7 @@ nsDownloadManager::GetRetentionBehavior()
   PRInt32 val = 0;
   nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
   if (pref) {
-    nsresult rv = pref->GetIntPref("browser.download.retention", &val);
+    nsresult rv = pref->GetIntPref("browser.download.manager.retention", &val);
     if (NS_FAILED(rv))
       val = 0; // Use 0 as the default ("remove when done")
   }
@@ -1013,17 +1013,7 @@ nsDownloadManager::GetDatasource(nsIRDFDataSource** aDatasource)
 NS_IMETHODIMP
 nsDownloadManager::Open(nsIDOMWindow* aParent, const PRUnichar* aPath)
 {
-  // 1). First check to see if we should open at all, based on the user's
-  //     preferences. 
-  PRBool showDM = PR_TRUE;
-  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
-  if (pref)
-    pref->GetBoolPref("browser.download.showWhenStarting", &showDM);
-
-  if (!showDM)
-    return NS_OK;
-
-  // 2). Retrieve the download object for the supplied path. 
+  // 1). Retrieve the download object for the supplied path. 
   nsStringKey key(aPath);
   if (!mCurrDownloads.Exists(&key))
     return NS_ERROR_FAILURE;
@@ -1034,25 +1024,32 @@ nsDownloadManager::Open(nsIDOMWindow* aParent, const PRUnichar* aPath)
   if (!download)
     return NS_ERROR_FAILURE;
 
-  // 3). Update the DataSource. 
+  // 2). Update the DataSource. 
   AssertProgressInfoFor(aPath);
 
   nsVoidArray* params = new nsVoidArray();
   if (!params)
     return NS_ERROR_OUT_OF_MEMORY;
 
+  NS_IF_ADDREF(aParent);
+  NS_ADDREF(internalDownload);
+
   params->AppendElement((void*)aParent);
   params->AppendElement((void*)internalDownload);
 
-  // 4). Look for an existing Download Manager window, if we find one we just 
+  PRInt32 delay = 0;
+  nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
+  if (pref)
+    pref->GetIntPref("browser.download.manager.openDelay", &delay);
+
+  // 3). Look for an existing Download Manager window, if we find one we just 
   //     tell it that a new download has begun (we don't focus, that's 
   //     annoying), otherwise we need to open the window. We do this on a timer 
   //     so that we can see if the download has already completed, if so, don't 
   //     bother opening the window. 
   mDMOpenTimer = do_CreateInstance("@mozilla.org/timer;1");
   return mDMOpenTimer->InitWithFuncCallback(OpenTimerCallback, 
-                                       (void*)params, 
-                                       kDownloadWindowCacheDelay, 
+                                       (void*)params, delay, 
                                        nsITimer::TYPE_ONE_SHOT);
 }
 
@@ -1072,10 +1069,13 @@ nsDownloadManager::OpenTimerCallback(nsITimer* aTimer, void* aClosure)
     PRBool focusDM = PR_FALSE;
     nsCOMPtr<nsIPrefBranch> pref(do_GetService(NS_PREFSERVICE_CONTRACTID));
     if (pref)
-      pref->GetBoolPref("browser.download.focusWhenStarting", &focusDM);
+      pref->GetBoolPref("browser.download.manager.focusWhenStarting", &focusDM);
 
     nsDownloadManager::OpenDownloadManager(focusDM, download, parent);
   }
+
+  NS_RELEASE(download);
+  NS_IF_RELEASE(parent);
 
   delete params;
 }

@@ -116,13 +116,6 @@ private:
   PRInt32 mBatches;
   nsHashtable mCurrDownloads;
   
-  enum { 
-    kDownloadWindowCacheDelay = 2000  // The delay before the Download Manager 
-                                      // window pops up after a link, to prevent
-                                      // the window from showing if the download
-                                      // is instantaneous (e.g. from cache)
-  };
-
   friend class nsDownload;
 };
 

@@ -45,7 +45,7 @@
 #include "nsIPrefService.h"
 #include "nsIMIMEInfo.h"
 
-#define USE_PROGRESS_DIALOGS_PREF "browser.download.useProgressDialogs"
+#define SHOW_DLMGR_PREF "browser.download.manager.showWhenStarting"
 
 class nsDownloadProxy : public nsIDownload,
                         public nsIWebProgressListener
@@ -74,9 +74,9 @@ public:
     if (NS_FAILED(rv)) return rv;
     nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(prefs);
 
-    PRBool useProgressDialogs = PR_TRUE;
-    branch->GetBoolPref(USE_PROGRESS_DIALOGS_PREF, &useProgressDialogs);
-    if (useProgressDialogs) {
+    PRBool showDM = PR_TRUE;
+    branch->GetBoolPref(SHOW_DLMGR_PREF, &showDM);
+    if (showDM) {
       nsAutoString path;
       rv = aTarget->GetPath(path);
       if (NS_FAILED(rv)) return rv;
