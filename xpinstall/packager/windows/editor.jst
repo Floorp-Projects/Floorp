@@ -1,8 +1,8 @@
 var err = startInstall("Mozilla Editor", "Seamonkey", "$Version$"); 
-LogComment("StartInstall: " + err);
+logComment("startInstall: " + err);
 
 var communicatorFolder = getFolder("Communicator");
-LogComment("communicatorFolder: " + communicatorFolder);
+logComment("communicatorFolder: " + communicatorFolder);
 
 err = addDirectory("Program",
                    "$Version$",
@@ -11,8 +11,8 @@ err = addDirectory("Program",
                    "",                 // fileName in jar, 
                    true);              // Force Flag 
 
-LogComment("addDirectory() returned: " + err);
+logComment("addDirectory() returned: " + err);
 
 err = finalizeInstall(); 
-LogComment("FinalizeInstall() returned: " + err);
+logComment("FinalizeInstall() returned: " + err);
 
