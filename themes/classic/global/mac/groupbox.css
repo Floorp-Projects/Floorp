@@ -44,6 +44,7 @@ groupbox {
 }
 
 caption {
+  -moz-appearance: dialog;
   margin: 0px 6px 2px 6px;
   padding: 0px 3px;
   background-color: -moz-Dialog; 
