@@ -41,13 +41,19 @@
 #define _DEBUG_STRING ""
 #endif
 
+#if defined(MOZ_CLIENT)
+#define _CLIENT_STRING " for Clients"
+#else
+#define _CLIENT_STRING ""
+#endif
+
 /*
  * Version information for the 'ident' and 'what commands
  *
  * NOTE: the first component of the concatenated rcsid string
  * must not end in a '$' to prevent rcs keyword substitution.
  */
-const char __nss_softokn_rcsid[] = "$Header: NSS " NSS_VERSION _DEBUG_STRING
+const char __nss_softokn_rcsid[] = "$Header: NSS " NSS_VERSION _CLIENT_STRING _DEBUG_STRING
         "  " __DATE__ " " __TIME__ " $";
-const char __nss_softokn_sccsid[] = "@(#)NSS " NSS_VERSION _DEBUG_STRING
+const char __nss_softokn_sccsid[] = "@(#)NSS " NSS_VERSION _CLIENT_STRING _DEBUG_STRING
         "  " __DATE__ " " __TIME__;
