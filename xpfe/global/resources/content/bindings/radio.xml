@@ -114,6 +114,10 @@
         <body>
         <![CDATA[
           var currentElement = this.focusedItem;
+          // If focused item isn't a radio button, do nothing!
+          // (This allows textbox to work inside a radiogroup)
+          if (!currentElement)
+            return;
           var index, i;
           var children = this._getRadioChildren();
           for (i = 0; i < children.length; ++i ) {
