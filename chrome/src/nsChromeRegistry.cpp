@@ -510,7 +510,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, char** aResult)
   if (finalURL.IsEmpty()) {
     // hard-coded fallback
     if (provider.Equals("skin")) {
-      finalURL = "resource:/chrome/skins/modern/";
+      finalURL = "resource:/chrome/skins/classic/";
     }
     else if (provider.Equals("locale")) {
       finalURL = "resource:/chrome/locales/en-US/";
