@@ -250,15 +250,37 @@ verify_attribute_declaration(IDL_tree attr_tree)
      */
     attr_type = IDL_ATTR_DCL(attr_tree).param_type_spec;
 
-    if (attr_type != NULL && UP_IS_NATIVE(attr_type) &&
-        IDL_tree_property_get(attr_type, "nsid") == NULL &&
-        IDL_tree_property_get(attr_type, "domstring") == NULL)
+    if (attr_type != NULL)
     {
-        IDL_tree_error(attr_tree,
-                       "attributes in [scriptable] interfaces that are "
-                       "non-scriptable because they refer to native "
-                       "types must be marked [noscript]\n");
-        return FALSE;
+        if (UP_IS_NATIVE(attr_type) &&
+            IDL_tree_property_get(attr_type, "nsid") == NULL &&
+            IDL_tree_property_get(attr_type, "domstring") == NULL)
+        {
+            IDL_tree_error(attr_tree,
+                           "attributes in [scriptable] interfaces that are "
+                           "non-scriptable because they refer to native "
+                           "types must be marked [noscript]\n");
+            return FALSE;
+        }
+        /*
+         * We currently don't support properties of type nsid that aren't 
+         * pointers or references, unless they are marked [notxpcom} and 
+         * must be read-only 
+         */
+         
+        if ((IDL_tree_property_get(ident, "notxpcom") == NULL || !(IDL_ATTR_DCL(attr_tree).f_readonly)) &&
+            IDL_tree_property_get(attr_type,"nsid") != NULL &&
+            IDL_tree_property_get(attr_type,"ptr") == NULL &&
+            IDL_tree_property_get(attr_type,"ref") == NULL)
+        {
+            IDL_tree_error(attr_tree,
+                           "Feature not currently supported: "
+                           "attributes with a type of nsid must be marked "
+                           "either [ptr] or [ref], or "
+                           "else must be marked [notxpcom] "
+                           "and must be read-only\n");
+            return FALSE;
+        }
     }
 
     if (IDL_LIST(IDL_ATTR_DCL(attr_tree).simple_declarations).next != NULL)
@@ -412,6 +434,7 @@ verify_method_declaration(IDL_tree method_tree)
     struct _IDL_OP_DCL *op = &IDL_OP_DCL(method_tree);
     IDL_tree iface;
     IDL_tree iter;
+    gboolean notxpcom;
     gboolean scriptable_interface;
     gboolean scriptable_method;
     gboolean seen_retval = FALSE;
@@ -448,8 +471,10 @@ verify_method_declaration(IDL_tree method_tree)
      * Also check that iid_is points to nsid, and length_is, size_is points
      * to unsigned long.
      */
+    notxpcom = IDL_tree_property_get(op->ident, "notxpcom") != NULL;
+
     scriptable_method = scriptable_interface &&
-        IDL_tree_property_get(op->ident, "notxpcom") == NULL &&
+        !notxpcom &&
         IDL_tree_property_get(op->ident, "noscript") == NULL;
 
     /* Loop through the parameters and check. */
@@ -479,6 +504,26 @@ verify_method_declaration(IDL_tree method_tree)
             return FALSE;
         }
 
+        /* 
+         * nsid's parameters that aren't ptr's or ref's are not currently 
+         * supported in xpcom or non-xpcom (marked with [notxpcom]) methods 
+         * as input parameters
+         */
+        if (!(notxpcom && IDL_PARAM_DCL(param).attr != IDL_PARAM_IN)) &&
+            IDL_tree_property_get(param_type, "nsid") != NULL &&
+            IDL_tree_property_get(param_type, "ptr") == NULL &&
+            IDL_tree_property_get(param_type, "ref") == NULL) 
+        {
+            IDL_tree_error(method_tree,
+                           "Feature currently not supported: "
+                           "parameter \"%s\" is of type nsid and "
+                           "must be marked either [ptr] or [ref] "
+                           "or method \"%s\" must be marked [notxpcom] "
+                           "and must not be an input parameter",
+                           param_name,
+                           method_name);
+            return FALSE;
+        }
         /*
          * Sanity checks on return values.
          */
@@ -574,6 +619,25 @@ verify_method_declaration(IDL_tree method_tree)
                        "methods in [scriptable] interfaces that are "
                        "non-scriptable because they return native "
                        "types must be marked [noscript]");
+        return FALSE;
+    }
+
+    /* 
+     * nsid's parameters that aren't ptr's or ref's are not currently 
+     * supported in xpcom
+     */
+    if (!notxpcom &&
+        op->op_type_spec != NULL &&
+        IDL_tree_property_get(op->op_type_spec, "nsid") != NULL &&
+        IDL_tree_property_get(op->op_type_spec, "ptr") == NULL &&
+        IDL_tree_property_get(op->op_type_spec, "ref") == NULL) 
+    {
+        IDL_tree_error(method_tree,
+                       "Feature currently not supported: "
+                       "return value is of type nsid and "
+                       "must be marked either [ptr] or [ref], "
+                       "or else method \"%s\" must be marked [notxpcom] ",
+                       method_name);
         return FALSE;
     }
 

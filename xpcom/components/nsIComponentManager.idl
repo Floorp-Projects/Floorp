@@ -55,7 +55,7 @@ interface nsIComponentManager : nsISupports
      * @param aContractID : Contractid for which ClassID is requested
      * @return aClass : ClassID return
      */
-    [noscript] void contractIDToClassID(in string aContractID, out nsCID aClass);
+    [notxpcom] nsresult contractIDToClassID(in string aContractID, out nsCID aClass);
 
     /**
      * classIDToContractid
