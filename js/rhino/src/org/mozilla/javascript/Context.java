@@ -595,7 +595,9 @@ public class Context {
      * as a global object as in ECMA 15.1.<p>
      *
      * This method must be called to initialize a scope before scripts
-     * can be evaluated in that scope.
+     * can be evaluated in that scope.<p>
+     *
+     * This method does not affect the Context it is called upon.
      *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
@@ -614,6 +616,8 @@ public class Context {
      *
      * This method must be called to initialize a scope before scripts
      * can be evaluated in that scope.<p>
+     *
+     * This method does not affect the Context it is called upon.<p>
      * 
      * This form of the method also allows for creating "sealed" standard
      * objects. An object that is sealed cannot have properties added or
