@@ -75,7 +75,7 @@ void              SiCDepNodeDelete(siCD *siCDepTemp);
 void              SiCDepNodeInsert(siCD **siCDepHead, siCD *siCDepTemp);
 HRESULT           SiCNodeGetAttributes(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
 void              SiCNodeSetAttributes(DWORD dwIndex, DWORD dwAttributes, BOOL bSet, BOOL bIncludeInvisible, DWORD dwACFlag);
-void              SiCNodeSetItemsSelected(DWORD dwItems, DWORD *dwItemsSelected);
+void              SiCNodeSetItemsSelected(DWORD dwSetupType, DWORD dwItems, DWORD *dwItemsSelected);
 char              *SiCNodeGetDescriptionShort(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
 char              *SiCNodeGetDescriptionLong(DWORD dwIndex, BOOL bIncludeInvisible, DWORD dwACFlag);
 siC               *SiCNodeGetObject(DWORD dwIndex, BOOL bIncludeInvisibleObjs, DWORD dwACFlag);
