@@ -1013,7 +1013,26 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoor
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawPolyline(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
-	NS_NOTYETIMPLEMENTED("nsRenderingContextMac::DrawPolyline");	//¥TODO
+
+	StartDraw();
+
+  PRUint32   i;
+  PRInt32    x,y;
+	
+  x = aPoints[0].x;
+  y = aPoints[0].y;
+  mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+  ::MoveTo(x,y);
+
+  for (i = 1; i < aNumPoints; i++){
+    x = aPoints[i].x;
+    y = aPoints[i].y;
+		
+		mGS->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+		::LineTo(x,y);
+	}
+
+	EndDraw();
   return NS_OK;
 }
 
