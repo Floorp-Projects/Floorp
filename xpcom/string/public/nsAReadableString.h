@@ -1184,6 +1184,15 @@ class nsPromiseSubstring
           // nothing else to do here
         }
 
+      nsPromiseSubstring( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
+          : mString(*aStart.mOwningString)
+        {
+          nsReadingIterator<CharT> zeroPoint;
+          mOwningString.BeginReading(zeroPoint);
+          mStartPos = Distance(zeroPoint, aStart);
+          mLength = Distance(aStart, aEnd);
+        }
+
       // nsPromiseSubstring( const nsPromiseSubstring<CharT>& ); // auto-generated copy-constructor should be OK
       // ~nsPromiseSubstring();                                  // auto-generated destructor OK
 
@@ -1276,6 +1285,13 @@ nsPromiseSubstring<CharT>
 Substring( const basic_nsAReadableString<CharT>& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
   {
     return nsPromiseSubstring<CharT>(aString, aStartPos, aSubstringLength);
+  }
+
+template <class CharT>
+nsPromiseSubstring<CharT>
+Substring( const nsReadingIterator<CharT>& aStart, const nsReadingIterator<CharT>& aEnd )
+  {
+    return nsPromiseSubstring<Chart>(aStart, aEnd);
   }
 
 template <class CharT>
