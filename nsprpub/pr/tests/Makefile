@@ -281,6 +281,12 @@ ifeq ($(OS_ARCH), NCR)
     export LD_RUN_PATH = $(PWD)/$(DIST)/lib
 endif
 
+ifeq ($(OS_ARCH), NEXTSTEP)
+# balazs.pataki@sztaki.hu: linkage is done in a different pass in the `tests'
+# modeul, so we have to pass the `-posix' flag by "hand" to `ld'
+LDOPTS += -posix
+endif
+
 ifeq ($(OS_ARCH), NEWS-OS)
 # This hardcodes in the executable programs the directory to find
 # libnspr.so etc. at program startup.  Equivalent to the -R or -rpath 

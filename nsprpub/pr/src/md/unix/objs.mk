@@ -86,6 +86,10 @@ RHAPSODY_CSRCS = \
 	rhapsody.c \
 	$(NULL)
 
+NEXTSTEP_CSRCS = \
+	nextstep.c \
+	$(NULL)
+
 NEC_CSRCS = \
 	nec.c \
 	$(NULL)
@@ -155,6 +159,9 @@ CSRCS += $(RELIANTUNIX_CSRCS)
 endif
 ifeq ($(OS_ARCH),Rhapsody)
 CSRCS += $(RHAPSODY_CSRCS)
+endif
+ifeq ($(OS_ARCH),NEXTSTEP)
+CSRCS += $(NEXTSTEP_CSRCS)
 endif
 ifeq ($(OS_ARCH),NEC)
 CSRCS += $(NEC_CSRCS)

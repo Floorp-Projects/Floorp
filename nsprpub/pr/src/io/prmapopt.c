@@ -36,6 +36,11 @@
 
 #include "primpl.h"
 
+#if defined(NEXTSTEP)
+/* NEXTSTEP is special: this must come before netinet/tcp.h. */
+#include <netinet/in_systm.h>  /* n_short, n_long, n_time */
+#endif
+
 #if defined(XP_UNIX) || defined(OS2)
 #include <netinet/tcp.h>  /* TCP_NODELAY, TCP_MAXSEG */
 #endif

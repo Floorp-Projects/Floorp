@@ -80,6 +80,9 @@ PR_BEGIN_EXTERN_C
 #elif defined(RHAPSODY)
 #include "md/_rhapsody.h"
 
+#elif defined(NEXTSTEP)
+#include "md/_nextstep.h"
+
 #elif defined(SOLARIS)
 #include "md/_solaris.h"
 

@@ -265,7 +265,7 @@ PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
 
 PRInt32 PR_GetSysfdTableMax(void)
 {
-#if defined(XP_UNIX) && !defined(AIX)
+#if defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP)
     struct rlimit rlim;
 
     if ( getrlimit(RLIMIT_NOFILE, &rlim) < 0) {
@@ -274,7 +274,7 @@ PRInt32 PR_GetSysfdTableMax(void)
     }
 
     return rlim.rlim_max;
-#elif defined(AIX)
+#elif defined(AIX) || defined(NEXTSTEP)
     return sysconf(_SC_OPEN_MAX);
 #elif defined(WIN32) || defined(OS2)
     /*
@@ -294,7 +294,7 @@ PRInt32 PR_GetSysfdTableMax(void)
 
 PRInt32 PR_SetSysfdTableSize(int table_size)
 {
-#if defined(XP_UNIX) && !defined(AIX)
+#if defined(XP_UNIX) && !defined(AIX) && !defined(NEXTSTEP)
     struct rlimit rlim;
     PRInt32 tableMax = PR_GetSysfdTableMax();
 
@@ -318,7 +318,8 @@ PRInt32 PR_SetSysfdTableSize(int table_size)
     }
 
     return rlim.rlim_cur;
-#elif defined(AIX) || defined(WIN32) || defined(WIN16) || defined(OS2)
+#elif defined(AIX) || defined(WIN32) || defined(WIN16) || defined(OS2) \
+        || defined(NEXTSTEP)
     PR_SetError(PR_NOT_IMPLEMENTED_ERROR, 0);
     return -1;
 #elif defined (XP_MAC)

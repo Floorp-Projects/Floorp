@@ -39,11 +39,11 @@
  * The lock contention should be acceptable.
  */
 
-static PRLock *monitor = NULL;
+static PRLock *lock = NULL;
 void _PR_MD_INIT_ATOMIC()
 {
-    if (monitor == NULL) {
-        monitor = PR_NewLock();
+    if (lock == NULL) {
+        lock = PR_NewLock();
     }
 }
 
@@ -55,9 +55,9 @@ _PR_MD_ATOMIC_INCREMENT(PRInt32 *val)
     if (!_pr_initialized) {
         _PR_ImplicitInitialization();
     }
-    PR_Lock(monitor);
+    PR_Lock(lock);
     rv = ++(*val);
-    PR_Unlock(monitor);
+    PR_Unlock(lock);
     return rv;
 }
 
@@ -69,9 +69,9 @@ _PR_MD_ATOMIC_ADD(PRInt32 *ptr, PRInt32 val)
     if (!_pr_initialized) {
         _PR_ImplicitInitialization();
     }
-    PR_Lock(monitor);
+    PR_Lock(lock);
     rv = ((*ptr) += val);
-    PR_Unlock(monitor);
+    PR_Unlock(lock);
     return rv;
 }
 
@@ -83,9 +83,9 @@ _PR_MD_ATOMIC_DECREMENT(PRInt32 *val)
     if (!_pr_initialized) {
         _PR_ImplicitInitialization();
     }
-    PR_Lock(monitor);
+    PR_Lock(lock);
     rv = --(*val);
-    PR_Unlock(monitor);
+    PR_Unlock(lock);
     return rv;
 }
 
@@ -97,10 +97,10 @@ _PR_MD_ATOMIC_SET(PRInt32 *val, PRInt32 newval)
     if (!_pr_initialized) {
         _PR_ImplicitInitialization();
     }
-    PR_Lock(monitor);
+    PR_Lock(lock);
     rv = *val;
     *val = newval;
-    PR_Unlock(monitor);
+    PR_Unlock(lock);
     return rv;
 }
 
