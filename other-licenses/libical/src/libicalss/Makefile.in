@@ -51,10 +51,11 @@ CSRCS		= $(ICALSS_SRC_LCSRCS)
 
 EXPORTS = $(ICALSS_SRC_LEXPORTS)
 FORCE_STATIC_LIB=1
-LOCAL_INCLUDES = -I../libical
+LOCAL_INCLUDES = -I$(srcdir) -I$(srcdir)/../libical
 REQUIRES	= ical
 EXTRA_DSO_LIBS  = ical
 EXTRA_DSO_LDOPTS = \
+		   $(LIBS_DIR) \
 		   $(EXTRA_DSO_LIBS) \
                    $(NULL)
 

@@ -45,9 +45,10 @@ GARBAGE += ical.h $(BUILT_COMBINEDHEADERS) $(BUILT_SOURCES)
 ifeq ($(OS_ARCH),WINNT)
 GARBAGE	+= $(LIBRARY_NAME).ilk
 endif
+LOCAL_INCLUDES = -I. -I$(srcdir)
 
-DESIGNDATA = ../../design-data
-ICALSCRIPTS = ../../scripts
+DESIGNDATA = $(srcdir)/../../design-data
+ICALSCRIPTS = $(srcdir)/../../scripts
 
 #//------------------------------------------------------------------------
 #//
@@ -104,8 +105,10 @@ BUILT_SOURCES =			\
 
 include $(topsrcdir)/config/rules.mk
 
-ical.h: $(COMBINEDHEADERS) $(BUILT_SOURCES)
-	cat $(COMBINEDHEADERS)				\
+exports:: $(BUILT_SOURCES)
+
+ical.h: $(COMBINEDHEADERS) Makefile
+	cat $(filter-out Makefile,$^)	\
 	| egrep -v "#include.*ical"			\
 	| egrep -v "#include.*config"			\
         | egrep -v "#include.*pvl.h" > ical.h
@@ -115,30 +118,30 @@ ical.h: $(COMBINEDHEADERS) $(BUILT_SOURCES)
 PARAMETERDEPS =	\
         $(ICALSCRIPTS)/mkderivedparameters.pl \
         $(DESIGNDATA)/parameters.csv    \
-	icalderivedparameter.c.in \
-	icalderivedparameter.h.in
+	$(srcdir)/icalderivedparameter.c.in \
+	$(srcdir)/icalderivedparameter.h.in
 
-icalderivedparameter.h: $(PARAMETERDEPS)
-	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i icalderivedparameter.h.in -h $(DESIGNDATA)/parameters.csv > icalderivedparameter.h
+icalderivedparameter.h: $(PARAMETERDEPS) Makefile
+	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.h.in -h $(DESIGNDATA)/parameters.csv > icalderivedparameter.h
 
-icalderivedparameter.c: $(PARAMETERDEPS) $(BUILT_COMBINEDHEADERS)
-	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i icalderivedparameter.c.in -c $(DESIGNDATA)/parameters.csv > icalderivedparameter.c
+icalderivedparameter.c: $(PARAMETERDEPS) $(BUILT_COMBINEDHEADERS) Makefile
+	$(PERL) -I $(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedparameters.pl -i $(srcdir)/icalderivedparameter.c.in -c $(DESIGNDATA)/parameters.csv > icalderivedparameter.c
 
 # values
 
 VALUEDEPS =					\
         $(ICALSCRIPTS)/mkderivedvalues.pl       \
         $(DESIGNDATA)/value-types.csv           \
-	icalderivedvalue.c.in			\
-	icalderivedvalue.h.in
+	$(srcdir)/icalderivedvalue.c.in			\
+	$(srcdir)/icalderivedvalue.h.in
 
-icalderivedvalue.h: $(VALUEDEPS)
+icalderivedvalue.h: $(VALUEDEPS) Makefile
 	$(PERL) -I$(ICALSCRIPTS)  $(ICALSCRIPTS)/mkderivedvalues.pl \
-                 -i icalderivedvalue.h.in -h $(DESIGNDATA)/value-types.csv > icalderivedvalue.h
+                 -i $(srcdir)/icalderivedvalue.h.in -h $(DESIGNDATA)/value-types.csv > icalderivedvalue.h
 
-icalderivedvalue.c: $(VALUEDEPS) $(BUILT_COMBINEDHEADERS)
+icalderivedvalue.c: $(VALUEDEPS) $(BUILT_COMBINEDHEADERS) Makefile
 	$(PERL)  -I$(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedvalues.pl \
-                -i icalderivedvalue.c.in -c $(DESIGNDATA)/value-types.csv > icalderivedvalue.c
+                -i $(srcdir)/icalderivedvalue.c.in -c $(DESIGNDATA)/value-types.csv > icalderivedvalue.c
 
 # properties
 
@@ -146,18 +149,18 @@ PROPERTYDEPS =					\
         $(ICALSCRIPTS)/mkderivedproperties.pl   \
         $(DESIGNDATA)/properties.csv            \
         $(DESIGNDATA)/value-types.csv           \
-	icalderivedproperty.c.in		\
-	icalderivedproperty.h.in
+	$(srcdir)/icalderivedproperty.c.in		\
+	$(srcdir)/icalderivedproperty.h.in
 
-icalderivedproperty.h: $(PROPERTYDEPS)
+icalderivedproperty.h: $(PROPERTYDEPS) Makefile
 	$(PERL)  -I$(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedproperties.pl \
-                -i icalderivedproperty.h.in -h $(DESIGNDATA)/properties.csv \
+                -i $(srcdir)/icalderivedproperty.h.in -h $(DESIGNDATA)/properties.csv \
                 $(DESIGNDATA)/value-types.csv > icalderivedproperty.h 
 
 
-icalderivedproperty.c: $(PROPERTYDEPS) $(BUILT_COMBINEDHEADERS)
+icalderivedproperty.c: $(PROPERTYDEPS) $(BUILT_COMBINEDHEADERS) Makefile
 	$(PERL)  -I$(ICALSCRIPTS) $(ICALSCRIPTS)/mkderivedproperties.pl \
-                -i icalderivedproperty.c.in -c $(DESIGNDATA)/properties.csv \
+                -i $(srcdir)/icalderivedproperty.c.in -c $(DESIGNDATA)/properties.csv \
                 $(DESIGNDATA)/value-types.csv > icalderivedproperty.c
 
 # restrictions
@@ -165,9 +168,13 @@ icalderivedproperty.c: $(PROPERTYDEPS) $(BUILT_COMBINEDHEADERS)
 RESTRICTIONDEPS =				\
 	$(ICALSCRIPTS)/mkrestrictiontable.pl    \
         $(DESIGNDATA)/restrictions.csv          \
-	icalrestriction.c.in
+	$(srcdir)/icalrestriction.c.in
 
-icalrestriction.c: $(RESTRICTIONDEPS)
-	$(PERL) $(ICALSCRIPTS)/mkrestrictiontable.pl  -i icalrestriction.c.in \
+icalrestriction.c: $(RESTRICTIONDEPS) Makefile
+	$(PERL) $(ICALSCRIPTS)/mkrestrictiontable.pl  -i $(srcdir)/icalrestriction.c.in \
                 $(DESIGNDATA)/restrictions.csv > icalrestriction.c
+
+ifeq ($(OS_ARCH),BeOS)
+DEFINES	+= -D__USE_BSD=1
+endif
 
