@@ -156,8 +156,13 @@ alpha*-*-osf*)
     fi ;;
 
 *-bsdi*)
-    DSO_CFLAGS=''
-    DSO_LDOPTS='-r'
+    case `uname -r` in
+	4.*) ;;
+	*)
+	    DSO_CFLAGS=''
+	    DSO_LDOPTS='-r'
+	;;
+    esac
     ;;
 
 *-freebsd*)
