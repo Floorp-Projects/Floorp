@@ -901,7 +901,6 @@ StressClient_GetClientAuthData(void * arg,
         while (PR_TRUE) {
             if (Cert_And_Key && Cert_And_Key->lock) {
                 int timeout = 0;
-                SECStatus rv = SECSuccess;
                 PR_Lock(Cert_And_Key->lock);
 
                 if (Cert_And_Key->cert) {
@@ -928,9 +927,6 @@ StressClient_GetClientAuthData(void * arg,
                 /* now check if those objects are valid */
                 if ( PR_FALSE == LoggedIn(*pRetCert, *pRetKey) ) {
                     /* token is no longer logged in, it was removed */
-                    int timeout = 0;
-                    CERTCertificate* oldcert = NULL;
-                    SECKEYPrivateKey* oldkey = NULL;
 
                     /* first, delete and clear our invalid local objects */
                     CERT_DestroyCertificate(*pRetCert);
