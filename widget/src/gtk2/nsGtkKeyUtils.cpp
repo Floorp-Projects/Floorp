@@ -117,6 +117,10 @@ struct nsKeyConverter nsKeycodes[] = {
     { NS_VK_SEMICOLON, GDK_colon },
     { NS_VK_QUOTE, GDK_apostrophe },
 
+    // context menu key, keysym 0xff67, typically keycode 117 on 105-key (Microsoft) 
+    // x86 keyboards, located between right 'Windows' key and right Ctrl key
+    { NS_VK_CONTEXT_MENU, GDK_Menu },
+
     // NS doesn't have dash or equals distinct from the numeric keypad ones,
     // so we'll use those for now.  See bug 17008:
     { NS_VK_SUBTRACT, GDK_minus },

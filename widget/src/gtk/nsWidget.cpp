@@ -137,10 +137,12 @@ ConvertKeyEventToContextMenuEvent(const nsKeyEvent* inKeyEvent,
 static inline PRBool
 IsContextMenuKey(const nsKeyEvent& inKeyEvent)
 {
-   enum { kContextMenuKey = NS_VK_F10 };
+   enum { kContextMenuKey = NS_VK_F10, kDedicatedContextMenuKey = NS_VK_CONTEXT_MENU };
 
-   return (inKeyEvent.keyCode == kContextMenuKey && inKeyEvent.isShift &&
-            !inKeyEvent.isControl && !inKeyEvent.isMeta && !inKeyEvent.isAlt);
+   return ((inKeyEvent.keyCode == kContextMenuKey && inKeyEvent.isShift &&
+            !inKeyEvent.isControl && !inKeyEvent.isMeta && !inKeyEvent.isAlt) ||
+           (inKeyEvent.keyCode == kDedicatedContextMenuKey && !inKeyEvent.isShift &&
+            !inKeyEvent.isControl && !inKeyEvent.isMeta && !inKeyEvent.isAlt));
 }
 
 PRBool nsWidget::OnInput(nsInputEvent &aEvent)

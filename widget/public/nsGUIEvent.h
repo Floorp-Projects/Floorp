@@ -936,6 +936,8 @@ enum nsDragDropEventStatus {
 #define NS_VK_Y              nsIDOMKeyEvent::DOM_VK_Y
 #define NS_VK_Z              nsIDOMKeyEvent::DOM_VK_Z
 
+#define NS_VK_CONTEXT_MENU   nsIDOMKeyEvent::DOM_VK_CONTEXT_MENU
+
 #define NS_VK_NUMPAD0        nsIDOMKeyEvent::DOM_VK_NUMPAD0
 #define NS_VK_NUMPAD1        nsIDOMKeyEvent::DOM_VK_NUMPAD1
 #define NS_VK_NUMPAD2        nsIDOMKeyEvent::DOM_VK_NUMPAD2

@@ -112,6 +112,8 @@ interface nsIDOMKeyEvent : nsIDOMUIEvent
   const unsigned long DOM_VK_Y              = 0x59;
   const unsigned long DOM_VK_Z              = 0x5A;
 
+  const unsigned long DOM_VK_CONTEXT_MENU   = 0x5D;
+
   const unsigned long DOM_VK_NUMPAD0        = 0x60;
   const unsigned long DOM_VK_NUMPAD1        = 0x61;
   const unsigned long DOM_VK_NUMPAD2        = 0x62;
