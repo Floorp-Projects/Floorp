@@ -322,10 +322,10 @@ Rights Reserved.
 <menubar id="mailMenubar">
 	<menu id="menu_File">
 		<menupopup id="menu_FilePopup">
-			<menuitem value="&newMessage.label;"
-			 accesskey="&newMessage.accesskey;"
-			 key="key_newMessage"
-			 observes="cmd_newMessage"/>
+			<menuitem value="&newMsgCmd.label;"
+                  accesskey="&newMsgCmd.label;"
+	 	      key="key_newMessage"
+		      oncommand="MsgNewMessage(event);"/>
 			<menu id="menu_New">
 				<menupopup id="menu_NewPopup">
 					<menuitem value="&newFolderCmd.label;"
@@ -604,7 +604,10 @@ END of Deprecated -->
 	</menu>
 <menu value="&msgMenu.label;" accesskey="&msgMenu.accesskey;">
 	<menupopup>
-		<menuitem value="&newMsgCmd.label;" oncommand="MsgNewMessage(event);"/>
+		<menuitem value="&newMsgCmd.label;"
+                  accesskey="&newMsgCmd.label;"
+	 	      key="key_newMessage"
+		      oncommand="MsgNewMessage(event);"/>
 		<menuitem value="&replyMsgCmd.label;" 
 			accesskey="&replyMsgCmd.accesskey;"
 			key="key_reply"
