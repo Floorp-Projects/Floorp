@@ -400,8 +400,8 @@ textfield[multiline="true"] {
   -moz-binding: url(chrome://global/content/xulBindings.xml#textarea);
 }
 
-text {
-  -moz-binding: url(chrome://global/content/xulBindings.xml#text);
+text[for] {
+  -moz-binding: url(chrome://global/content/xulBindings.xml#text-label);
 }
 
 text[editable="true"] {

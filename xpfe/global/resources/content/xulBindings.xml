@@ -302,7 +302,7 @@
     </content>
   </binding>
 
-  <binding id="text">
+  <binding id="text-label">
     <handlers>
       <handler event="click" action="var forElementID = this.getAttribute('for'); if(forElementID) var forElement = document.getElementById(forElementID); if(forElement) forElement.focus();"/>
     </handlers>
