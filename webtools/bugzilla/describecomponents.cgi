@@ -104,6 +104,7 @@ print "
 <th align=left>Default owner</th>
 ";
 
+my $emailsuffix = Param("emailsuffix");
 my $useqacontact = Param("useqacontact");
 
 my $cols = 2;
@@ -131,11 +132,11 @@ foreach (@data) {
     print qq|
 <tr><td colspan=$cols><hr></td></tr>
 <tr><td rowspan=2>$component</td>
-<td><a href="mailto:$initialowner">$initialowner</a></td>
+<td><a href="mailto:$initialowner$emailsuffix">$initialowner</a></td>
 |;
     if ($useqacontact) {
         print qq|
-<td><a href="mailto:$initialqacontact">$initialqacontact</a></td>
+<td><a href="mailto:$initialqacontact$emailsuffix">$initialqacontact</a></td>
 |;
     }
     print "</tr><tr><td colspan=$colbut1>$description</td></tr>\n";
