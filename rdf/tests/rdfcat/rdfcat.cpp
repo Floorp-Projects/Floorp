@@ -121,8 +121,10 @@ SetupRegistry(void)
     nsComponentManager::RegisterComponent(kNameSpaceManagerCID,      NULL, NULL, LAYOUT_DLL, PR_FALSE, PR_FALSE);
 
     // xpcom
-    static NS_DEFINE_CID(kAllocatorCID, NS_ALLOCATOR_CID);
+    static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
+    static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
     nsComponentManager::RegisterComponent(kEventQueueServiceCID,     NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
+    nsComponentManager::RegisterComponent(kEventQueueCID,            NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kGenericFactoryCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponent(kAllocatorCID,             NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
 
@@ -188,9 +190,12 @@ main(int argc, char** argv)
     NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create thread event queue");
     if (NS_FAILED(rv)) return rv;
 
+    rv = NS_InitINetService();
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to initialize netlib");
+    if (NS_FAILED(rv)) return rv;
+
     // Create a stream data source and initialize it on argv[1], which
-    // is hopefully a "file:" URL. (Actually, we can do _any_ kind of
-    // URL, but only a "file:" URL will be written back to disk.)
+    // is hopefully a "file:" URL.
     nsCOMPtr<nsIRDFXMLDataSource> ds;
     rv = nsComponentManager::CreateInstance(kRDFXMLDataSourceCID,
                                             nsnull,
