@@ -521,7 +521,6 @@ BookmarksUIElement.prototype = {
   {
     const lastSelected = aSelection[aSelection.length-1];  
     if (lastSelected.getAttribute("container") == "true" &&
-        lastSelected.getAttribute("open") == "true" && 
         aSelection.length == 1)
       return lastSelected;
     return this.findRDFNode(lastSelected, false);
