@@ -128,7 +128,8 @@ extern "C"
 void         *mime_bridge_create_display_stream(nsIMimeEmitter      *newEmitter,
                                                 nsStreamConverter   *newPluginObj2,
                                                 nsIURI              *uri,
-                                                nsMimeOutputType    format_out);
+                                                nsMimeOutputType    format_out,
+						PRUint32	    whattodo);
 
 // To get the mime emitter...
 extern "C" nsIMimeEmitter   *GetMimeEmitter(MimeDisplayOptions *opt);

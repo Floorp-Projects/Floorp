@@ -56,12 +56,14 @@
 #include "nsIMsgSend.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsSpecialSystemDirectory.h"
+#include "mozITXTToHTMLConv.h"
 
 #include "nsIIOService.h"
 #include "nsIURI.h"
 
-// Define CIDs...
-static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #ifdef MOZ_SECURITY
 #include HG01944
@@ -72,10 +74,6 @@ static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 #ifdef HAVE_MIME_DATA_SLOT
 #define LOCK_LAST_CACHED_MESSAGE
 #endif
-
-// For the new pref API's
-static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 // Text Scanning...
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
@@ -139,7 +137,7 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
   char  *tmpURL = nsnull;
   char  *id = nsnull;
   char  *id_imap = nsnull;
-  PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
+  //PRBool all_headers_p = obj->options->headers == MimeHeadersAll;
 
   id = mime_part_address (obj);
   if (obj->options->missing_parts)
@@ -1073,7 +1071,8 @@ mime_bridge_create_display_stream(
                           nsIMimeEmitter      *newEmitter,
                           nsStreamConverter   *newPluginObj2,
                           nsIURI              *uri,
-                          nsMimeOutputType    format_out)
+                          nsMimeOutputType    format_out,
+                          PRUint32	      whattodo)
 {
   int                       status = 0;
   MimeObject                *obj;
@@ -1221,15 +1220,13 @@ mime_bridge_create_display_stream(
   msd->options->output_fn             = mime_output_fn;
   msd->options->set_html_state_fn     = mime_set_html_state_fn;
 
-  //
-  // For quoting, don't mess with citatation...
   if ( format_out == nsMimeOutput::nsMimeMessageQuoting || format_out == nsMimeOutput::nsMimeMessageBodyQuoting || 
        format_out == nsMimeOutput::nsMimeMessagePrintOutput )
   {
     msd->options->charset_conversion_fn = mime_insert_html_convert_charset;
-    msd->options->dont_touch_citations_p = PR_TRUE;
   }
-
+  
+  msd->options->whattodo 	      = whattodo;
   msd->options->charset_conversion_fn = mime_convert_charset;
   msd->options->rfc1522_conversion_fn = mime_convert_rfc1522;
   msd->options->reformat_date_fn      = mime_reformat_date;

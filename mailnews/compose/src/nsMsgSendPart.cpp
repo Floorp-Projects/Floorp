@@ -33,14 +33,19 @@
 #include "nsMsgCompUtils.h"
 #include "nsFileStream.h"
 #include "nsMsgMimeCID.h"
+#include "nsIPref.h"
 
 // defined in msgCompGlue.cpp
 static char *mime_mailto_stream_read_buffer = 0;
 
 PRInt32 nsMsgSendPart::M_counter = 0;
 
-static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
+#define PREF_MAIL_CONVERT_EMOTICONS "mail.convert_emoticons"
+#define PREF_MAIL_CONVERT_STRUCTS "mail.convert_structs"
+
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 
 int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
 {
@@ -517,7 +522,8 @@ nsMsgSendPart::Write()
 
     if (m_buffer) 
     {
-      const char* charset = GetCharsetName();
+      const char* charset;
+      charset = GetCharsetName();
       nsCOMPtr<mozITXTToHTMLConv> conv;
       nsresult rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
         NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
@@ -537,9 +543,18 @@ nsMsgSendPart::Write()
         goto FAIL;
       }
       
-      PRUnichar* wresult;
-      rv = conv->ScanHTML(wline, ~PRUint32(mozITXTToHTMLConv::kGlyphSubstitution)
-        /* XXX Ask Prefs what to do */, &wresult);
+      PRUnichar* wresult = nsnull;
+      PRUint32 whattodo = 0;
+      PRBool enable_emoticons = PR_TRUE;
+	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
+	if (NS_SUCCEEDED(rv) && prefs) {
+		rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_EMOTICONS,&enable_emoticons);
+		if (NS_FAILED(rv) || enable_emoticons) {
+			whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
+		}
+	}
+
+      rv = conv->ScanHTML(wline, whattodo, &wresult);
         Recycle(wline);
       if (NS_FAILED(rv))
       {

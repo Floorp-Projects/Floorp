@@ -32,6 +32,8 @@
 #include "nsIServiceManager.h"
 #include "mimemoz2.h"
 
+#define PREF_MAIL_FIXED_WIDTH_MESSAGES "mail.fixed_width_messages"
+
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 #define MIME_SUPERCLASS mimeInlineTextClass
@@ -85,11 +87,8 @@ MimeInlineTextPlainFlowed_parse_begin (MimeObject *obj)
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
   if (NS_SUCCEEDED(rv) && prefs) 
   {
-    rv=prefs->GetBoolPref("mail.fixed_width_messages", &(exdata->fixedwidthfont));
-    if(NS_SUCCEEDED(rv))
-      printf("hittade ett pref\n");
-    else 
-      printf("problem med att hitta pref\n");
+    rv=prefs->GetBoolPref(PREF_MAIL_FIXED_WIDTH_MESSAGES, &(exdata->fixedwidthfont));
+    NS_ASSERTION(NS_SUCCEEDED(rv),"failed to get the mail.fixed_width_messages pref");
   }
 
   // Link it up.
@@ -289,13 +288,11 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   {
     //XXX I18N Converting char* to PRUnichar*
     nsString strline(linep, (length - (linep - line)) );
+    PRUnichar* wresult = nsnull;
+    nsresult rv = NS_OK;
 
-    PRUnichar* wresult;
-    nsresult rv = conv->ScanTXT(strline.GetUnicode(),
-                 obj->options->dont_touch_citations_p /*XXX This is pref abuse.
-                      ScanTXT does nothing with citations. Add prefs.*/
-                 ? conv->kURLs : ~PRUint32(0),
-                 &wresult);
+    rv = conv->ScanTXT(strline.GetUnicode(),obj->options->whattodo, &wresult);
+
     if (NS_FAILED(rv))
       return -1;
 

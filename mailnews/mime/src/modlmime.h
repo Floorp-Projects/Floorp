@@ -191,10 +191,7 @@ struct MimeDisplayOptions
 								   can't generate nice stuff for some part,
 								   then don't say anything at all. */
 
-  PRBool dont_touch_citations_p; /* If PR_TRUE, then we should leave citations
-									 alone in plaintext parts.  If PR_FALSE, then
-									 go ahead and tweak the fonts according
-									 to preferences. */
+  PRUint32 whattodo ; 			/* from the prefs, we'll get if the user wants to do glyph or structure substitutions and set this member variable. */
 
   char *default_charset;	/* If this is non-NULL, then it is the charset to
 							   assume when no other one is specified via a

@@ -31,8 +31,11 @@
 #include "nsString.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
+#include "nsIServiceManager.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
+static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID);
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
@@ -162,13 +165,10 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   if (!skipScanning)
   {
     nsString strline(line, length);
-
-    PRUnichar* wresult;
-    nsresult rv = conv->ScanTXT(strline.GetUnicode(),
-                 obj->options->dont_touch_citations_p /*XXX This is pref abuse.
-                      ScanTXT does nothing with citations. Add prefs.*/
-                 ? conv->kURLs : ~PRUint32(0),
-                 &wresult);
+    nsresult rv = NS_OK;
+    PRUnichar* wresult = nsnull;
+    
+    rv = conv->ScanTXT(strline.GetUnicode(), obj->options->whattodo, &wresult);
     if (NS_FAILED(rv))
       return -1;
 

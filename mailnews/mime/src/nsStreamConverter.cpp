@@ -45,6 +45,11 @@
 #include "nsIMsgQuote.h"
 #include "nsIScriptSecurityManager.h"
 #include "nsNetUtil.h"
+#include "mozITXTToHTMLConv.h"
+
+#define PREF_MAIL_CONVERT_EMOTICONS "mail.convert_emoticons"
+#define PREF_MAIL_CONVERT_STRUCTS "mail.convert_structs"
+#define PREF_MAIL_MIME_XUL_OUTPUT "mail.mime_xul_output"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
@@ -63,13 +68,14 @@ extern "C" void  *
 bridge_create_stream(nsIMimeEmitter      *newEmitter,
                      nsStreamConverter   *newPluginObj2,
                      nsIURI              *uri,
-                     nsMimeOutputType    format_out)
+                     nsMimeOutputType    format_out,
+		     PRUint32		 whattodo)
 {
   if  ( (format_out == nsMimeOutput::nsMimeMessageDraftOrTemplate) ||
         (format_out == nsMimeOutput::nsMimeMessageEditorTemplate) )
     return mime_bridge_create_draft_stream(newEmitter, newPluginObj2, uri, format_out);
-  else
-    return mime_bridge_create_display_stream(newEmitter, newPluginObj2, uri, format_out);
+  else 
+    return mime_bridge_create_display_stream(newEmitter, newPluginObj2, uri, format_out, whattodo);
 }
 
 void
@@ -288,7 +294,7 @@ nsStreamConverter::DetermineOutputFormat(const char *url,  nsMimeOutputType *aNe
 
       NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
       if (NS_SUCCEEDED(rv) && prefs) 
-        rv = prefs->GetBoolPref("mail.mime_xul_output", &mimeXULOutput);
+        rv = prefs->GetBoolPref(PREF_MAIL_MIME_XUL_OUTPUT, &mimeXULOutput);
 
       if (mimeXULOutput)
       {
@@ -502,7 +508,22 @@ NS_IMETHODIMP nsStreamConverter::Init(nsIURI *aURI, nsIStreamListener * aOutList
 	  mEmitter->SetOutputListener(aOutListener);
 	}
   
-	mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType);
+    PRUint32 whattodo = mozITXTToHTMLConv::kURLs;
+    PRBool enable_emoticons = PR_TRUE;
+    PRBool enable_structs = PR_TRUE;
+
+    NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
+    if (NS_SUCCEEDED(rv) && prefs) {
+      rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_EMOTICONS,&enable_emoticons);
+      if (NS_FAILED(rv) || enable_emoticons) {
+	whattodo = whattodo | mozITXTToHTMLConv::kGlyphSubstitution;
+      }
+      rv = prefs->GetBoolPref(PREF_MAIL_CONVERT_STRUCTS,&enable_structs);
+      if (NS_FAILED(rv) || enable_structs) {
+      	whattodo = whattodo | mozITXTToHTMLConv::kStructPhrase;
+      }
+    }
+	mBridgeStream = bridge_create_stream(mEmitter, this, aURI, newType, whattodo);
 
 	if (!mBridgeStream)
 		return NS_ERROR_OUT_OF_MEMORY;
