@@ -224,6 +224,7 @@ nsJPGDecFactory::CreateInstance(nsISupports *aOuter,
     *ppv = NULL;
     delete jpgdec;
   }
+  delete ic; /* is a place holder */
 
   return res;
 }
