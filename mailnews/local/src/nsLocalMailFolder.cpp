@@ -172,7 +172,7 @@ NS_IMETHODIMP
 nsMsgLocalMailFolder::Init(const char* aURI)
 {
   nsresult rv;
-  rv = nsRDFResource::Init(aURI);
+  rv = nsMsgDBFolder::Init(aURI);
   if (NS_FAILED(rv)) return rv;
 
 
