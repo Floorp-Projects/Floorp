@@ -71,6 +71,13 @@ interface nsISmtpService : nsISupports {
   attribute nsISmtpServer defaultServer;
 
   /**
+   * The "session default" server - this is never saved, and only used
+   * for the current session. Always falls back to the default server
+   * unless explicitly set.
+   */
+  attribute nsISmtpServer sessionDefaultServer;
+
+  /**
    * create a new SMTP server.
    * Use this instead of createInstance(), so that the SMTP Service can
    * be aware of this server

@@ -34,12 +34,18 @@ static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 
 #define NC_RDF_SMTPSERVERS "NC:smtpservers"
+#define NC_RDF_ISDEFAULT        NC_NAMESPACE_URI "IsDefaultServer"
+#define NC_RDF_ISSESSIONDEFAULT NC_NAMESPACE_URI "IsSessionDefaultServer"
 
 nsrefcnt nsSmtpDataSource::gRefCount = 0;
 nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_Child;
 nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_Name;
 nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_Key;
 nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_SmtpServers;
+nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_IsDefaultServer;
+nsCOMPtr<nsIRDFResource> nsSmtpDataSource::kNC_IsSessionDefaultServer;
+
+nsCOMPtr<nsIRDFLiteral> nsSmtpDataSource::kTrueLiteral;
 
 nsCOMPtr<nsISupportsArray> nsSmtpDataSource::mServerArcsOut;
 nsCOMPtr<nsISupportsArray> nsSmtpDataSource::mServerRootArcsOut;
@@ -70,16 +76,24 @@ nsSmtpDataSource::initGlobalObjects()
     rdf->GetResource(NC_RDF_NAME, getter_AddRefs(kNC_Name));
     rdf->GetResource(NC_RDF_KEY, getter_AddRefs(kNC_Key));
     rdf->GetResource(NC_RDF_SMTPSERVERS, getter_AddRefs(kNC_SmtpServers));
+    rdf->GetResource(NC_RDF_ISDEFAULT, getter_AddRefs(kNC_IsDefaultServer));
+    rdf->GetResource(NC_RDF_ISSESSIONDEFAULT, getter_AddRefs(kNC_IsSessionDefaultServer));
 
+    nsAutoString trueStr; trueStr.AssignWithConversion("true");
+    rdf->GetLiteral(trueStr.GetUnicode(), getter_AddRefs(kTrueLiteral));
+
+    // now create cached arrays for each type we support
     rv = NS_NewISupportsArray(getter_AddRefs(mServerArcsOut));
     if (NS_FAILED(rv)) return rv;
     mServerArcsOut->AppendElement(kNC_Name);
     mServerArcsOut->AppendElement(kNC_Key);
+    mServerArcsOut->AppendElement(kNC_IsDefaultServer);
+    mServerArcsOut->AppendElement(kNC_IsSessionDefaultServer);
 
     rv = NS_NewISupportsArray(getter_AddRefs(mServerRootArcsOut));
-    mServerArcsOut->AppendElement(kNC_Child);
-    mServerArcsOut->AppendElement(kNC_SmtpServers);
-
+    mServerRootArcsOut->AppendElement(kNC_Child);
+    mServerRootArcsOut->AppendElement(kNC_SmtpServers);
+    
     return NS_OK;
 }
 
@@ -109,26 +123,96 @@ nsSmtpDataSource::GetTarget(nsIRDFResource *aSource,
                             PRBool aTruthValue, nsIRDFNode **aResult)
 {
     nsresult rv;
+    nsXPIDLCString str;
+        
+    *aResult = nsnull;
+    
     nsCOMPtr<nsISmtpServer> smtpServer;
     rv = aSource->GetDelegate("smtpserver", NS_GET_IID(nsISmtpServer),
                               (void **)getter_AddRefs(smtpServer));
-    if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString str;
+    
+    if (NS_FAILED(rv))
+        return NS_RDF_NO_VALUE;
+
+    if (aProperty == kNC_Name.get() ||
+        aProperty == kNC_Key.get()) {
+    
         if (aProperty == kNC_Name.get()) {
             smtpServer->GetHostname(getter_Copies(str));
         } else if (aProperty == kNC_Key.get()) {
             smtpServer->GetKey(getter_Copies(str));
         }
+        
+        nsCOMPtr<nsIRDFService> rdf =
+            do_GetService(kRDFServiceCID, &rv);
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        nsAutoString unicodeString;
+        unicodeString.AssignWithConversion((const char*)str);
+        
+        nsCOMPtr<nsIRDFLiteral> literalResult;
+        rv = rdf->GetLiteral(unicodeString.GetUnicode(), getter_AddRefs(literalResult));
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        *aResult = literalResult;
+        NS_ADDREF(*aResult);
     }
 
-    return rv;
+    else if (aProperty == kNC_IsDefaultServer.get() ||
+             aProperty == kNC_IsSessionDefaultServer.get()) {
+
+        nsCOMPtr<nsISmtpService> smtpService =
+            do_GetService(kSmtpServiceCID, &rv);
+
+        NS_ENSURE_SUCCESS(rv, rv);
+        
+        PRBool truthValue = PR_FALSE;
+        nsCOMPtr<nsISmtpServer> testServer;
+        
+        if (aProperty == kNC_IsDefaultServer.get()) {
+            printf("Checking for default..");
+            smtpService->GetDefaultServer(getter_AddRefs(testServer));
+        }
+
+        else if (aProperty == kNC_IsSessionDefaultServer.get()) {
+            printf("checking for session default..");
+            smtpService->GetSessionDefaultServer(getter_AddRefs(testServer));
+        }
+        
+        if (testServer.get() == smtpServer.get())
+            truthValue = PR_TRUE;
+
+        printf("%s\n",  truthValue ? "TRUE" : "FALSE");
+        if (truthValue) {
+            *aResult = kTrueLiteral;
+            NS_ADDREF(*aResult);
+        }
+    }
+
+    else {
+        printf("smtpDatasource: Unknown property\n");
+    }
+
+    return NS_OK;
 }
 
 /* nsISimpleEnumerator GetTargets (in nsIRDFResource aSource, in nsIRDFResource aProperty, in boolean aTruthValue); */
 NS_IMETHODIMP nsSmtpDataSource::GetTargets(nsIRDFResource *aSource, nsIRDFResource *aProperty, PRBool aTruthValue, nsISimpleEnumerator **aResult)
 {
-    if (aSource == kNC_SmtpServers.get()) {
+    nsresult rv = NS_OK;
+
+    
+    if (aSource == kNC_SmtpServers.get() &&
+        aProperty == kNC_Child.get()) {
+
+        nsCOMPtr<nsISupportsArray> arcs;
+        GetSmtpServerTargets(getter_AddRefs(arcs));
+        
         // enumerate the smtp servers
+        rv = NS_NewArrayEnumerator(aResult, arcs);
+        NS_ENSURE_SUCCESS(rv, rv);
+    } else {
+        rv = NS_NewEmptyEnumerator(aResult);
     }
 
     return NS_OK;
@@ -140,21 +224,21 @@ nsSmtpDataSource::GetSmtpServerTargets(nsISupportsArray **aResultArray)
     nsresult rv;
     nsCOMPtr<nsISmtpService> smtpService =
         do_GetService(kSmtpServiceCID, &rv);
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     nsCOMPtr<nsIRDFService> rdf =
         do_GetService(kRDFServiceCID, &rv);
     
     nsCOMPtr<nsISupportsArray> smtpServers;
     rv = smtpService->GetSmtpServers(getter_AddRefs(smtpServers));
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
     
     nsCOMPtr<nsISupportsArray> smtpServerResources;
     rv = NS_NewISupportsArray(getter_AddRefs(smtpServerResources));
     
     PRUint32 count;
     rv = smtpServers->Count(&count);
-    NS_ENSURE_TRUE(rv, rv);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     PRUint32 i;
     for (i=0; i<count; i++) {
@@ -173,7 +257,9 @@ nsSmtpDataSource::GetSmtpServerTargets(nsISupportsArray **aResultArray)
 
         rv = smtpServerResources->AppendElement(smtpServerResource);
     }
-    
+
+    *aResultArray = smtpServerResources;
+    NS_ADDREF(*aResultArray);
 
     return NS_OK;
 }
@@ -230,17 +316,21 @@ NS_IMETHODIMP nsSmtpDataSource::ArcLabelsIn(nsIRDFNode *aNode, nsISimpleEnumerat
 NS_IMETHODIMP nsSmtpDataSource::ArcLabelsOut(nsIRDFResource *aSource, nsISimpleEnumerator **aResult)
 {
     nsresult rv;
-    nsCOMPtr<nsISmtpServer> smtpServer;
-    rv = aSource->GetDelegate("smtpserver", NS_GET_IID(nsISmtpServer),
-                              (void **)getter_AddRefs(smtpServer));
-    if (NS_SUCCEEDED(rv)) {
-        NS_NewArrayEnumerator(aResult, mServerArcsOut);
+
+    if (aSource == kNC_SmtpServers.get()) {
+        rv = NS_NewArrayEnumerator(aResult, mServerRootArcsOut);
     } else {
-        // empty array
-        nsCOMPtr<nsISupportsArray> array;
-        NS_NewISupportsArray(getter_AddRefs(array));
-        rv = NS_NewArrayEnumerator(aResult, array);
+    
+        nsCOMPtr<nsISmtpServer> smtpServer;
+        rv = aSource->GetDelegate("smtpserver", NS_GET_IID(nsISmtpServer),
+                                  (void **)getter_AddRefs(smtpServer));
+        if (NS_SUCCEEDED(rv)) {
+            rv = NS_NewArrayEnumerator(aResult, mServerArcsOut);
+        } 
     }
+
+    if (!*aResult)
+        rv = NS_NewEmptyEnumerator(aResult);
     return rv;
 }
 

@@ -637,6 +637,26 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
 }
 
 NS_IMETHODIMP
+nsSmtpService::GetSessionDefaultServer(nsISmtpServer **aServer)
+{
+    NS_ENSURE_ARG_POINTER(aServer);
+    
+    if (!mSessionDefaultServer)
+        return GetDefaultServer(aServer);
+
+    *aServer = mSessionDefaultServer;
+    NS_ADDREF(*aServer);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSmtpService::SetSessionDefaultServer(nsISmtpServer *aServer)
+{
+    mSessionDefaultServer = aServer;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
 nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
 {
   NS_ENSURE_ARG_POINTER(aServer);
@@ -841,8 +861,8 @@ nsSmtpService::findServerByHostname(nsISupports *element, void *aData)
     rv = server->GetUsername(getter_Copies(username));
     if (NS_FAILED(rv)) return PR_TRUE;
 
-    PRBool checkHostname = PL_strcmp(entry->hostname, "");
-    PRBool checkUsername = PL_strcmp(entry->username, "");
+    PRBool checkHostname = entry->hostname && PL_strcmp(entry->hostname, "");
+    PRBool checkUsername = entry->username && PL_strcmp(entry->username, "");
     
     if ((!checkHostname || (PL_strcasecmp(entry->hostname, hostname)==0)) &&
         (!checkUsername || (PL_strcmp(entry->username, username)==0))) {

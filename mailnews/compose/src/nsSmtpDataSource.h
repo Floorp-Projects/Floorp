@@ -50,6 +50,11 @@ private:
   static nsCOMPtr<nsIRDFResource> kNC_Name;
   static nsCOMPtr<nsIRDFResource> kNC_Key;
   static nsCOMPtr<nsIRDFResource> kNC_SmtpServers;
+  static nsCOMPtr<nsIRDFResource> kNC_IsSessionDefaultServer;
+  static nsCOMPtr<nsIRDFResource> kNC_IsDefaultServer;
+
+  static nsCOMPtr<nsIRDFLiteral> kTrueLiteral;
+  
   static nsCOMPtr<nsISupportsArray> mServerArcsOut;
   static nsCOMPtr<nsISupportsArray> mServerRootArcsOut;
   

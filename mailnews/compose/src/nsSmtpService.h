@@ -70,6 +70,7 @@ private:
     
     nsCOMPtr<nsISupportsArray> mSmtpServers;
     nsCOMPtr<nsISmtpServer> mDefaultSmtpServer;
+    nsCOMPtr<nsISmtpServer> mSessionDefaultServer;
 
     nsCAutoString mServerKeyList;
 

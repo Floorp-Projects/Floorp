@@ -25,6 +25,10 @@
 
 class nsSmtpDelegateFactory : public nsIRDFDelegateFactory
 {
+public:
+    nsSmtpDelegateFactory();
+    virtual ~nsSmtpDelegateFactory();
+    
   NS_DECL_ISUPPORTS
   NS_DECL_NSIRDFDELEGATEFACTORY
 

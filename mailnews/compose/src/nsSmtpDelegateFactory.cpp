@@ -39,6 +39,15 @@ static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
 
 NS_IMPL_ISUPPORTS1(nsSmtpDelegateFactory, nsIRDFDelegateFactory)
 
+nsSmtpDelegateFactory::nsSmtpDelegateFactory()
+{
+    NS_INIT_REFCNT();
+}
+
+nsSmtpDelegateFactory::~nsSmtpDelegateFactory()
+{
+}
+    
 NS_IMETHODIMP
 nsSmtpDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
                                       const char *aKey,
@@ -62,13 +71,13 @@ nsSmtpDelegateFactory::CreateDelegate(nsIRDFResource *aOuter,
   nsXPIDLCString username;
 
   rv = url->GetPreHost(getter_Copies(username));
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
   
   url->GetHost(getter_Copies(hostname));
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISmtpService> smtpService = do_GetService(kSmtpServiceCID, &rv);
-  NS_ENSURE_TRUE(rv, rv);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   nsCOMPtr<nsISmtpServer> smtpServer;
   rv = smtpService->FindServer(username, hostname, getter_AddRefs(smtpServer));
