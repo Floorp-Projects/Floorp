@@ -22,7 +22,7 @@
 <!ENTITY biffEnd.label "minutes">
 <!ENTITY isSecure.label "Use secure connection (SSL)">
 <!ENTITY leaveOnServer.label "Leave messages on server">
-<!ENTITY deleteOnServer.label "Delete messages on server when they are deleted locally">
+<!ENTITY deleteOnServer.label "Delete messages on server when they are deleted or moved from Inbox">
 <!ENTITY downloadOnBiff.label "Automatically download any new messages">
 <!ENTITY hostname.label "Server Hostname">
 <!ENTITY username.label "Your Login Name">
