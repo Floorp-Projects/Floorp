@@ -95,12 +95,6 @@ NS_IMETHODIMP nsFileListTransferable::GetTransferDataFlavors(nsVoidArray ** aDat
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFileListTransferable::IsDataFlavorSupported(nsString * aDataFlavor)
-{
-  return (mFileListDataFlavor.Equals(*aDataFlavor)?NS_OK:NS_ERROR_FAILURE);
-}
-
-//-------------------------------------------------------------------------
 // The transferable owns the data (memory) and only gives the aData a copy of the pointer address to it.
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsFileListTransferable::GetTransferData(nsString * aDataFlavor, void ** aData, PRUint32 * aDataLen)
