@@ -773,6 +773,7 @@ class DrawSelectionIterator
   enum {SELECTION_TYPES_WE_CARE_ABOUT=SELECTION_NONE+SELECTION_NORMAL};
 public:
   DrawSelectionIterator(const SelectionDetails *aSelDetails, PRUnichar *aText,PRUint32 aTextLength, nsTextFrame::TextStyle &aTextStyle);
+  ~DrawSelectionIterator();
   PRBool      First();
   PRBool      Next();
   PRBool      IsDone();
@@ -843,6 +844,12 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
               mTypes[i]|=details->mType;//add this bit
           }
         }
+        if (!mInit && mTypes) //we have details but none that we
+        {
+          delete mTypes;
+          mTypes = nsnull;
+          mDone = true;
+        }
         details= details->mNext;
       }
     }
@@ -852,6 +859,12 @@ DrawSelectionIterator::DrawSelectionIterator(const SelectionDetails *aSelDetails
       return;
     }
     mInit = PR_TRUE;
+}
+
+DrawSelectionIterator::~DrawSelectionIterator()
+{
+  if (mTypes)
+    delete mTypes;
 }
 
 void
