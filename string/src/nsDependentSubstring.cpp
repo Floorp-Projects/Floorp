@@ -23,6 +23,23 @@
 
 #include "nsDependentSubstring.h"
 
+nsDependentSubstring::nsDependentSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
+    : mString(aString),
+      mStartPos( NS_MIN(aStartPos, aString.Length()) ),
+      mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
+  {
+    // nothing else to do here
+  }
+
+nsDependentSubstring::nsDependentSubstring( const const_iterator& aStart, const const_iterator& aEnd )
+    : mString(aStart.string())
+  {
+    const_iterator zeroPoint;
+    mString.BeginReading(zeroPoint);
+    mStartPos = Distance(zeroPoint, aStart);
+    mLength = Distance(aStart, aEnd);
+  }
+
 PRUint32
 nsDependentSubstring::Length() const
   {
@@ -71,8 +88,22 @@ nsDependentSubstring::GetReadableFragment( const_fragment_type& aFragment, nsFra
     return position_ptr;
   }
 
+nsDependentCSubstring::nsDependentCSubstring( const abstract_string_type& aString, PRUint32 aStartPos, PRUint32 aLength )
+    : mString(aString),
+      mStartPos( NS_MIN(aStartPos, aString.Length()) ),
+      mLength( NS_MIN(aLength, aString.Length()-mStartPos) )
+  {
+    // nothing else to do here
+  }
 
-
+nsDependentCSubstring::nsDependentCSubstring( const const_iterator& aStart, const const_iterator& aEnd )
+    : mString(aStart.string())
+  {
+    const_iterator zeroPoint;
+    mString.BeginReading(zeroPoint);
+    mStartPos = Distance(zeroPoint, aStart);
+    mLength = Distance(aStart, aEnd);
+  }
 
 PRUint32
 nsDependentCSubstring::Length() const
@@ -120,4 +151,36 @@ nsDependentCSubstring::GetReadableFragment( const_fragment_type& aFragment, nsFr
       }
 
     return position_ptr;
+  }
+
+void
+nsDependentSingleFragmentSubstring::Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
+  {
+    NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentSingleFragmentString must wrap a non-NULL buffer");
+    mHandle.DataStart(aStartPtr);
+    mHandle.DataEnd(aEndPtr);
+  }
+
+void
+nsDependentSingleFragmentSubstring::Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength )
+  {
+    const_char_iterator iter;
+    mHandle.DataStart(aString.BeginReading(iter) + NS_MIN(aStartPos, aString.Length()));
+    mHandle.DataEnd( NS_MIN(mHandle.DataStart() + aLength, aString.EndReading(iter)) );
+  }
+
+void
+nsDependentSingleFragmentCSubstring::Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
+  {
+    NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentSingleFragmentCString must wrap a non-NULL buffer");
+    mHandle.DataStart(aStartPtr);
+    mHandle.DataEnd(aEndPtr);
+  }
+
+void
+nsDependentSingleFragmentCSubstring::Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength )
+  {
+    const_char_iterator iter;
+    mHandle.DataStart(aString.BeginReading(iter) + NS_MIN(aStartPos, aString.Length()));
+    mHandle.DataEnd( NS_MIN(mHandle.DataStart() + aLength, aString.EndReading(iter)) );
   }
