@@ -1614,7 +1614,8 @@ nsExtensionManager.prototype = {
     var txn = new nsItemDownloadTransaction(this);
     for (var i = 0; i < aItemCount; ++i) {
       var currItem = aItems[i];
-      txn.addDownload(currItem.name, currItem.updateURL, currItem.iconURL, currItem.type);
+      txn.addDownload(currItem.name, currItem.updateURL, currItem.iconURL, 
+                      currItem.type, this._transactions.length);
       this._transactions.push(txn);
     }
 
@@ -1653,7 +1654,7 @@ nsExtensionManager.prototype = {
     const nsIXPIProgressDialog = Components.interfaces.nsIXPIProgressDialog;
     if (aState == nsIXPIProgressDialog.DIALOG_CLOSE) {
       for (var i = 0; i < this._transactions.length; ++i) {
-        if (this._transactions[i] == aTransaction) {
+        if (this._transactions[i].id == aTransaction.id) {
           this._transactions.splice(i, 1);
           delete aTransaction;
           break;
@@ -1782,16 +1783,19 @@ nsExtensionManager.prototype = {
 function nsItemDownloadTransaction(aManager)
 {
   this._manager = aManager;
+  this._downloads = [];
 }
 
 nsItemDownloadTransaction.prototype = {
   _manager    : null,
   _downloads  : [],
+  id          : -1,
   
-  addDownload: function (aName, aURL, aIconURL, aItemType)
+  addDownload: function (aName, aURL, aIconURL, aItemType, aID)
   {
     this._downloads.push({ url: aURL, type: aItemType, waiting: true });
     this._manager._ds.addDownload(aName, aURL, aIconURL, aItemType);
+    this.id = aID;
   },
   
   removeDownload: function (aURL, aItemType)
@@ -2462,7 +2466,7 @@ nsExtensionsDataSource.prototype = {
     var ctr = Components.classes["@mozilla.org/rdf/container;1"]
                         .createInstance(Components.interfaces.nsIRDFContainer);
     ctr.Init(this._profileExtensions, root);
-    if (ctr.IndexOf(res) == -1) 
+    if (ctr.IndexOf(res) == -1)
       ctr.InsertElementAt(res, 1, true);
     
     this._flush(true);
