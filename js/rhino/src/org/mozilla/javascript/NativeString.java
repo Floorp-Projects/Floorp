@@ -368,16 +368,13 @@ public class NativeString extends ScriptableObject implements Wrapper {
         }
 
         // Use the second argument as the split limit, if given.
-        boolean limited = (args.length > 1);
-        int limit = 0;  // Initialize to avoid warning.
+        boolean limited = (args.length > 1) && (args[1] != Undefined.instance);
+        long limit = 0;  // Initialize to avoid warning.
         if (limited) {
             /* Clamp limit between 0 and 1 + string length. */
-            double d = ScriptRuntime.toInteger(args[1]);
-            if (d < 0)
-                d = 0;
-            else if (d > target.length())
-                d = 1 + target.length();
-            limit = (int)d;
+            limit = ScriptRuntime.toUint32(args[1]);
+            if (limit > target.length())
+                limit = 1 + target.length();
         }
 
         String separator = null;
