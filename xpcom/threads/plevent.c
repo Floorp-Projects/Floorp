@@ -255,25 +255,22 @@ PL_PostEvent(PLEventQueue* self, PLEvent* event)
       PR_APPEND_LINK(&event->link, &self->queue);
     }
 
-    if ( !self->notified)
+    if ( self->type == EventQueueIsNative && !self->notified )
     {
-      if (self->type == EventQueueIsNative)
-        err = _pl_NativeNotify(self);
-      
+      err = _pl_NativeNotify(self);
+           
       if (err != PR_SUCCESS)
         goto error;
       
+      self->notified = PR_TRUE; 
+    }
+
       /*
        * This may fall on deaf ears if we're really notifying the native 
        * thread, and no one has called PL_WaitForEvent (or PL_EventLoop):
        */
       err = PR_Notify(mon);
       
-      if (err != PR_SUCCESS)
-        goto error;
-      
-      self->notified = PR_TRUE; 
-    }
 
 error:
     PR_ExitMonitor(mon);
