@@ -1,0 +1,40 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('smart_update')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Smart Update</SPAN>
+</DIV>
+
+
+<table>
+  <FORM>
+            <tr><td><input type="checkbox" id="pref:0:bool:autoupdate.enabled" checked>Enable SmartUpdate</td></tr>
+            <tr><td><input type="checkbox" id="pref:0:bool:autoupdate.enabled">Require manual confirmation of each install</td></tr>
+</table>
+<table>			
+			<tr><td>
+			To uninstall, select from the following list and click the uninstall button.
+			<br>
+			    <textarea name="textstyle" ROWS="5" COLS="30" id="pref:string:browser.related.disabledForDomains">
+			    
+			    </textarea>
+				<input value="Uninstall" type="button" id="pref:0:bool:smartupdate">
+			</td></tr>
+</table>
+  </FORM>
+
+
+
+</table>
+</body>
+</html>
