@@ -1292,7 +1292,7 @@ if ($::usergroupset ne '0' && $buggroupset =~ /^\d+$/) {
 <INPUT TYPE=radio NAME=knob VALUE=none CHECKED>
         Do nothing else<br>";
     $knum++;
-    if ($statushash{$::unconfirmedstate} && 1 == scaler(keys(%statushash))) {
+    if ($statushash{$::unconfirmedstate} && 1 == scalar(keys(%statushash))) {
         print "
 <INPUT TYPE=radio NAME=knob VALUE=confirm>
         Confirm bugs (change status to <b>NEW</b>)<br>";
