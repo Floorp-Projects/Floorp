@@ -45,6 +45,7 @@ nsUserInfo::GetFullname(PRUnichar **aFullname)
 	 {
 		 nsString fullName;
 		 fullName.AssignWithConversion( cName );
+		 nsAllocator::Free( cName );
      *aFullname = fullName.ToNewUnicode();
    }
    return result;
