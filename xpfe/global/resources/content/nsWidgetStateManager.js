@@ -147,8 +147,6 @@ nsWidgetStateManager.prototype =
                 if (!(aPageTag in this.dataManager.pageData) )
                     this.dataManager.pageData[aPageTag] = [];
                 this.dataManager.pageData[aPageTag][elementID] = [];
-                // persist element Type
-                this.dataManager.pageData[aPageTag][elementID].localName = elementType;
                 // persist attributes
                 var get_Func = (elementType in this.handlers) ?
                                 this.handlers[elementType].get :
@@ -192,7 +190,12 @@ nsWidgetStateManager.prototype =
             {
               for( var property in aDataObject )
                 {
-                  aElement.setAttribute( property, aDataObject[property] );
+                  if (property == "localname")
+                    continue;
+                  if ( !aDataObject[property] )
+                    aElement.removeAttribute( property );
+                  else
+                    aElement.setAttribute( property, aDataObject[property] );
                 }
               if ( !aElement.getAttribute("disabled","true") )
                 aElement.removeAttribute("disabled");
@@ -214,6 +217,7 @@ nsWidgetStateManager.prototype =
               for( var i = 0; i < attributes.length; i++ )
                 {
                   dataObject[attributes[i]] = aElement.getAttribute( attributes[i] );
+                  dataObject.localname = aElement.localName;
                 }
               return dataObject;
             }
@@ -313,7 +317,7 @@ nsWidgetStateManager.prototype =
           // Set generic properites. 
           wsm.generic_Set( element, aDataObject );
           // Handle reversed boolean values.
-          if ( "checked" in aDataObject && element.getAttribute( "reversed" ) == "true" )
+          if ( "checked" in aDataObject && element.hasAttribute( "reversed" ) )
             element.checked = !aDataObject.checked; 
         },
 
