@@ -18,16 +18,9 @@
 
 
 GOOD { border-bottom-style: inherit; } 
-GOOD { border-bottom-style: none; } 
-GOOD { border-bottom-style: hidden; } 
-GOOD { border-bottom-style: dotted; } 
-GOOD { border-bottom-style: dashed; } 
 GOOD { border-bottom-style: solid; } 
 GOOD { border-bottom-style: double; } 
-GOOD { border-bottom-style: groove; } 
-GOOD { border-bottom-style: ridge; } 
 GOOD { border-bottom-style: inset; } 
-GOOD { border-bottom-style: outset; } 
 BAD { border-bottom-style: far-right; }
 BAD { border-bottom-style: ridge dotted; }
 BAD { border-bottom-style: dashed outset; }

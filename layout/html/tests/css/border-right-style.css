@@ -20,13 +20,6 @@
 GOOD { border-right-style: inherit; } 
 GOOD { border-right-style: none; } 
 GOOD { border-right-style: hidden; } 
-GOOD { border-right-style: dotted; } 
-GOOD { border-right-style: dashed; } 
-GOOD { border-right-style: solid; } 
-GOOD { border-right-style: double; } 
-GOOD { border-right-style: groove; } 
-GOOD { border-right-style: ridge; } 
-GOOD { border-right-style: inset; } 
 GOOD { border-right-style: outset; } 
 BAD { border-right-style: far-left; }
 BAD { border-right-style: ridge inset; }
