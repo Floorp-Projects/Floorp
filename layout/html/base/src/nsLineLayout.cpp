@@ -1022,6 +1022,11 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
 
   mSpaceManager->Translate(-tx, -ty);
 
+  NS_ASSERTION(metrics.width>=0, "bad width");
+  NS_ASSERTION(metrics.height>=0,"bad height");
+  if (metrics.width<0) metrics.width=0;
+  if (metrics.height<0) metrics.height=0;
+
 #ifdef DEBUG
   // Note: break-before means ignore the reflow metrics since the
   // frame will be reflowed another time.
