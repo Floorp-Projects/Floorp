@@ -647,7 +647,7 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
                (type == eHTMLTag_pre) ||
                (type == eHTMLTag_blockquote)) {
       EnsureVerticalSpace(0);
-    } else {
+    } else if (type != eHTMLTag_script) {
       // All other blocks get 1 vertical space after them
       // in formatted mode, otherwise 0.
       // This is hard. Sometimes 0 is a better number, but
@@ -753,6 +753,11 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
   {
     // Don't output the contents of SELECT elements;
     // Might be nice, eventually, to output just the selected element.
+    return NS_OK;
+  }
+  else if (mTagStackIndex > 0 && mTagStack[mTagStackIndex-1] == eHTMLTag_script)
+  {
+    // Don't output the contents of <script> tags;
     return NS_OK;
   }
   else if (type == eHTMLTag_text)
