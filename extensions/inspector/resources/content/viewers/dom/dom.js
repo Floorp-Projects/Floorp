@@ -126,6 +126,7 @@ DOMViewer.prototype =
     aPane.notifyViewerReady(this);
 
     this._toggleAnonContent(true, PrefUtils.getPref("inspector.dom.showAnon"));
+    this.setWhitespaceNodes(PrefUtils.getPref("inspector.dom.showWhitespaceNodes"));
     this.setFlashSelected(PrefUtils.getPref("inspector.blink.on"));
   },
   
@@ -204,7 +205,24 @@ DOMViewer.prototype =
     this.mDOMView.showSubDocuments = val;
     this.mPanel.panelset.setCommandAttribute("cmd:toggleSubDocs", "checked", val);
   },
-  
+
+  setWhitespaceNodes: function(aValue)
+  {
+    if (this.mDOMView.showWhitespaceNodes == aValue) {
+      return;
+    }
+
+    this.mDOMView.showWhitespaceNodes = aValue;
+    this.mPanel.panelset.setCommandAttribute("cmd:toggleWhitespaceNodes", "checked", aValue);
+    PrefUtils.setPref("inspector.dom.showWhitespaceNodes", aValue);
+    this.rebuild();
+  },
+
+  toggleWhitespaceNodes: function()
+  {
+    this.setWhitespaceNodes(!this.mDOMView.showWhitespaceNodes);
+  },
+
   toggleAttributes: function(aExplicit, aValue)
   {
     alert("NOT YET IMPLEMENTED");

@@ -34,6 +34,13 @@
         accesskey="&cmdToggleAnonContent.accesskey;"
         observes="cmd:toggleAnon"/>
 
+      <menuitem id="item:toggleWhitespaceNodes"
+        class="menuitem-iconic"
+        type="checkbox"
+        label="&cmdToggleWhitespaceNodes.label;"
+        accesskey="&cmdToggleWhitespaceNodes.accesskey;"
+        observes="cmd:toggleWhitespaceNodes"/>
+
     </menupopup>
   </popupset>
 
@@ -71,6 +78,13 @@
               label="&cmdToggleAnonContent.label;"
               accesskey="&cmdToggleAnonContent.accesskey;"
               observes="cmd:toggleAnon"/>
+
+    <menuitem id="item:toggleWhitespaceNodes"
+              class="menuitem-iconic"
+              type="checkbox"
+              label="&cmdToggleWhitespaceNodes.label;"
+              accesskey="&cmdToggleWhitespaceNodes.accesskey;"
+              observes="cmd:toggleWhitespaceNodes"/>
   </menupopup>
 
 </overlay>
