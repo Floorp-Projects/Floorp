@@ -33,10 +33,9 @@
 <?xml-stylesheet href="chrome://global/content/customizeToolbar.css" type="text/css"?>
 <?xml-stylesheet href="chrome://global/skin/customizeToolbar.css" type="text/css"?>
 
-<dialog id="CustomizeToolbarWindow"
+<window id="CustomizeToolbarWindow"
+        title="&dialog.title;"
         onload="onLoad();"
-        ondialogaccept="onAccept();"
-        ondialogcancel="onCancel();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
@@ -45,31 +44,37 @@
 
 <stringbundle id="stringBundle" src="chrome://global/locale/customizeToolbar.properties"/>
 
-<description>
-&instructions.description;
-</description>
+<vbox id="main-box" flex="1" collapsed="true">
+  <description id="instructions">
+  &instructions.description;
+  </description>
 
-<vbox flex="1" id="palette-box"
-      ondraggesture="gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragStartObserver);"
-      ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
-      ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
+  <vbox flex="1" id="palette-box"
+        ondraggesture="gDraggingFromPalette = true; nsDragAndDrop.startDrag(event, dragStartObserver);"
+        ondragover="nsDragAndDrop.dragOver(event, paletteDNDObserver);"
+        ondragdrop="nsDragAndDrop.drop(event, paletteDNDObserver);"/>
 
-<box align="center">
-  <label value="&show.label;"/>
-  <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
-    <menupopup>
-       <menuitem value="full" label="&iconsAndText.label;"/>
-       <menuitem value="icons" label="&icons.label;"/>
-       <menuitem value="text" label="&text.label;"/>
-    </menupopup>
-  </menulist>
-  
-  <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
-  
-  <button label="&addNewToolbar.label;" oncommand="addNewToolbar();"/>
-  <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();"/>
-</box>
+  <box align="center">
+    <label value="&show.label;"/>
+    <menulist id="modelist" value="icons" oncommand="updateToolbarMode(this.value);">
+      <menupopup>
+        <menuitem value="full" label="&iconsAndText.label;"/>
+        <menuitem value="icons" label="&icons.label;"/>
+        <menuitem value="text" label="&text.label;"/>
+      </menupopup>
+    </menulist>
+    
+    <checkbox id="smallicons" oncommand="updateIconSize(this.checked);" label="&useSmallIcons.label;"/>
+    
+    <button label="&addNewToolbar.label;" oncommand="addNewToolbar();"/>
+    <button label="&restoreDefaultSet.label;" oncommand="restoreDefaultSet();"/>
+  </box>
 
-<separator class="groove"/>
+  <separator class="groove"/>
 
-</dialog>
+  <hbox align="center" pack="end">
+    <button label="&saveChanges.label;" oncommand="onAccept();"/>
+  </hbox>
+</vbox>
+
+</window>

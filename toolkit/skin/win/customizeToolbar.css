@@ -22,3 +22,12 @@
     Joe Hewitt (hewitt@netscape.com)
 */
 
+window {
+  border: 1px solid ThreeDDarkShadow;
+  padding: 6px;
+}
+
+#instructions {
+  font-weight: bold;
+  font-size: larger;
+}

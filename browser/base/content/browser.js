@@ -2531,24 +2531,28 @@ function BrowserToolbarChanged()
 
 function BrowserCustomizeToolbar()
 {
+  // Disable tlhe menubar and toolbar context menu items
+  var menubar = document.getElementById("main-menubar");
+  for (var i = 0; i < menubar.childNodes.length; ++i)
+    menubar.childNodes[i].setAttribute("disabled", true);
+    
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.setAttribute("disabled", "true");
   
-  var iframe = document.createElement("iframe");
-  iframe.flex = 1;
-  iframe.setAttribute("src", "chrome://global/content/customizeToolbar.xul");
-  gBrowser.parentNode.insertBefore(iframe, gBrowser);
-  gBrowser.collapsed = true;
+  window.openDialog("chrome://global/content/customizeToolbar.xul", "CustomizeToolbar",
+                    "chrome,all,dependent", gBrowser);
 }
 
 function onToolbarCustomizeComplete()
 {
+  var menubar = document.getElementById("main-menubar");
+  for (var i = 0; i < menubar.childNodes.length; ++i)
+    menubar.childNodes[i].setAttribute("disabled", false);
+
   var cmd = document.getElementById("cmd_CustomizeToolbars");
   cmd.removeAttribute("disabled");
 
-  var iframe = gBrowser.previousSibling;
-  iframe.parentNode.removeChild(iframe);
-  gBrowser.collapsed = false;
+  window.focus();
 }
 
 var FullScreen = 

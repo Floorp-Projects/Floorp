@@ -48,6 +48,7 @@
 /* ::::: bookmark buttons ::::: */
 
 toolbarbutton.bookmark-item {
+  margin: 0;
   min-width: 0;
   max-width: 13em;
   padding: 2px 3px;
@@ -88,7 +89,9 @@ toolbarbutton.bookmark-item[open="true"] {
   display: none;
 }
 
-toolbarpaletteitem[type="bookmarks"] {
+.toolbarpaletteitem-box[type="bookmarks-toolbar"][place="palette"] {
+  width: 32px;
+  height: 32px;
   background: url("chrome://browser/skin/bookmark-large.png") no-repeat center;
 }
 
@@ -529,6 +532,7 @@ toolbar[iconsize="small"] #print-button[disabled="true"] {
 #go-button,
 #go-container {
   -moz-appearance: none !important;
+  background-color: transparent;
   margin: 0px;
   border: none;
   padding: 0px;

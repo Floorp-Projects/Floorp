@@ -24,18 +24,18 @@
 */
 
 const kRowMax = 4;
+const kWindowWidth = 600;
+const kWindowHeight = 400;
+const kAnimateIncrement = 50;
 
 var gToolboxDocument = null;
 var gToolbox = null;
 var gCurrentDragOverItem = null;
 var gToolboxChanged = false;
-var gPreviousSets = {};
-var gPreviousMode = null;
-var gPreviousIconSize = null;
 
 function onLoad()
 {
-  gToolboxDocument = window.opener ? window.opener.document : window.parent.document;
+  gToolboxDocument = window.opener.document;
   gToolbox = gToolboxDocument.getElementsByTagName("toolbox")[0];
   
   gToolbox.addEventListener("draggesture", onToolbarDragGesture, false);
@@ -43,28 +43,29 @@ function onLoad()
   gToolbox.addEventListener("dragexit", onToolbarDragExit, false);
   gToolbox.addEventListener("dragdrop", onToolbarDragDrop, false);
 
+  document.documentElement.setAttribute("hidechrome", "true");
+
+  repositionDialog();
+  window.outerWidth = kWindowWidth;
+  window.outerHeight = 0;
+  slideOpen();
+}
+
+function onAccept(aEvent)
+{
+  document.getElementById("main-box").collapsed = true;
+  slideClosed();
+}
+
+function initDialog()
+{
+  document.getElementById("main-box").collapsed = false;
+  
   var mode = gToolbox.getAttribute("mode");
   document.getElementById("modelist").value = mode;
 
   var iconSize = gToolbox.getAttribute("iconsize");
   document.getElementById("smallicons").checked = iconSize == "small";
-
-  // The dialog version has the option to position/size itself.
-  if (window.opener) {
-    var cover = window.arguments ? window.arguments[0] : null;
-    if (cover) {
-      document.documentElement.setAttribute("hidechrome", "true");
-      window.screenX = cover.boxObject.screenX;
-      window.screenY = cover.boxObject.screenY;
-      window.outerWidth = cover.boxObject.width;
-      window.outerHeight = cover.boxObject.height;
-    } else {
-      // Position the dialog just after the toolbox.
-      window.screenY = gToolbox.boxObject.screenY + gToolbox.boxObject.height;
-    }
-  }
-
-  cacheCurrentState();
 
   // Build up the palette of other items.
   buildPalette();
@@ -73,20 +74,41 @@ function onLoad()
   wrapToolbarItems();
 }
 
-function onAccept(aEvent)
+function closeDialog()
 {
   removeToolboxListeners();
   unwrapToolbarItems();
   persistCurrentSets();
+
   notifyParentComplete();
+  window.close();
 }
 
-function onCancel(aEvent)
+function slideOpen()
 {
-  removeToolboxListeners();
-  reverToPreviousState();
-  unwrapToolbarItems();
-  notifyParentComplete();
+  if (window.outerHeight <= kWindowHeight) {
+    window.outerHeight += kAnimateIncrement;
+    setTimeout(slideOpen, 10);
+  } else {
+    initDialog();
+  }
+}
+
+function slideClosed()
+{
+  if (window.outerHeight >= 10) {
+    window.outerHeight -= kAnimateIncrement;
+    setTimeout(slideClosed, 10);
+  } else {
+    closeDialog();
+  }
+}
+
+function repositionDialog()
+{
+  // Position the dialog touching the bottom of the toolbox and centered with it
+  window.screenY = gToolbox.boxObject.screenY + gToolbox.boxObject.height;
+  window.screenX = gToolbox.boxObject.screenX + ((gToolbox.boxObject.width - kWindowWidth) / 2);
 }
 
 function removeToolboxListeners()
@@ -103,66 +125,8 @@ function removeToolboxListeners()
  */
 function notifyParentComplete()
 {
-  var parent = window.parent ? window.parent : window.opener;
-  if (parent && "onToolbarCustomizeComplete" in parent.top)
-    parent.top.onToolbarCustomizeComplete();
-}
-
-/**
- * Cache the current state of all customizable toolbars so
- * that we can undo changes.
- */
-function cacheCurrentState()
-{
-  gPreviousMode = gToolbox.getAttribute("mode");
-  gPreviousIconSize = gToolbox.getAttribute("iconsize");
-  
-  var currentIndex = 0;
-  for (var i = 0; i < gToolbox.childNodes.length; ++i) {
-    var toolbar = gToolbox.childNodes[i];
-    if (isCustomizableToolbar(toolbar)) {
-      var currentSet = toolbar.getAttribute("currentset");
-      if (!currentSet)
-        currentSet = toolbar.getAttribute("defaultset");
-        
-      gPreviousSets[toolbar.id] = currentSet;
-    }
-  }  
-}
-
-/**
- * Revert the currentset of each customizable toolbar to the value
- * that we cached when first opening the dialog and remove toolbars
- * that were added.
- */
-function reverToPreviousState()
-{
-  updateIconSize(gPreviousIconSize);
-  updateToolbarMode(gPreviousMode);
-  
-  if (!gToolboxChanged)
-    return;
-
-  var currentIndex = 0;
-  for (var i = 0; i < gToolbox.childNodes.length; ++i) {
-    var toolbar = gToolbox.childNodes[i];
-    if (isCustomizableToolbar(toolbar)) {
-      if (toolbar.id in gPreviousSets) {
-        // Restore the currentset of previously existing toolbars.
-        toolbar.currentSet = gPreviousSets[toolbar.id];
-      } else {
-        // Remove toolbars that have been added.
-        gToolbox.removeChild(toolbar);
-      }
-    }
-  }
-
-  // Add back toolbars that have been removed.
-  for (var toolbarId in gPreviousSets) {
-    var toolbar = gToolboxDocument.getElementById(toolbarId);
-    if (!toolbar)
-      gToolbox.appendCustomToolbar("", gPreviousSets[toolbarId]);
-  }
+  if ("onToolbarCustomizeComplete" in window.opener.top)
+    window.opener.top.onToolbarCustomizeComplete();
 }
 
 /**
@@ -206,7 +170,6 @@ function persistCurrentSets()
   
   // Remove toolbarX attributes for removed toolbars.
   while (gToolbox.toolbarset.hasAttribute("toolbar"+(++customCount))) {
-    dump(customCount + " gone\n");
     gToolbox.toolbarset.removeAttribute("toolbar"+customCount);
     gToolboxDocument.persist(gToolbox.toolbarset.id, "toolbar"+customCount);
   }
@@ -278,16 +241,9 @@ function createWrapper(aId)
 function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
 {
   var wrapper = createWrapper(aPaletteItem.id);
-  
-  if (aPaletteItem.localName == "toolbarseparator") {
-    wrapper.setAttribute("type", "separator");
-  } else if (aPaletteItem.localName == "spacer") {
-      wrapper.setAttribute("type", "spacer");
-  } else {
-    wrapper.setAttribute("align", "center");
-  }
-  
+
   wrapper.setAttribute("flex", 1);
+  wrapper.setAttribute("align", "center");
   wrapper.setAttribute("pack", "center");
   wrapper.setAttribute("minheight", "0");
   wrapper.setAttribute("minwidth", "0");
@@ -308,7 +264,8 @@ function wrapPaletteItem(aPaletteItem, aCurrentRow, aSpacer)
 
 /**
  * Wraps an item that is currently on a toolbar and replaces the item
- * with the wrapper.
+ * with the wrapper. This is not used when dropping items from the palette,
+ * only when first starting the dialog and wrapping everything on the toolbars.
  */
 function wrapToolbarItem(aToolbarItem)
 {
@@ -368,14 +325,21 @@ function buildPalette()
   templateNode.id = "separator";
   wrapPaletteItem(templateNode, currentRow, null);
 
+  // Add the toolbar spring item.
+  templateNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
+                                              "toolbarspring");
+  templateNode.id = "spring";
+  templateNode.flex = 1;
+  wrapPaletteItem(templateNode, currentRow, null);
+
   // Add the toolbar spacer item.
   templateNode = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
-                                              "spacer");
+                                              "toolbarspacer");
   templateNode.id = "spacer";
   templateNode.flex = 1;
   wrapPaletteItem(templateNode, currentRow, null);
 
-  var rowSlot = 2;
+  var rowSlot = 3;
 
   var currentItems = getCurrentItemIds();
   templateNode = gToolbox.palette.firstChild;
@@ -460,15 +424,17 @@ function fillRowWithFlex(aRow)
  */
 function cleanUpItemForPalette(aItem, aWrapper)
 {
-  // Mark special types of palette items so we can style them.
-  if (aItem.localName == "toolbarseparator") {
-    aWrapper.setAttribute("type", "separator");
-  } else if (aItem.localName == "spacer") {
-    aWrapper.setAttribute("type", "spacer");
-  } else if (aItem.firstChild && aItem.firstChild.localName == "bookmarks-toolbar") {
-    aWrapper.setAttribute("type", "bookmarks");
-  }
+  aWrapper.setAttribute("place", "palette");
+  setWrapperType(aItem, aWrapper);
 
+  if (aItem.hasAttribute("title"))
+    aWrapper.setAttribute("title", aItem.getAttribute("title"));
+  else if (isSpecialItem(aItem)) {
+    var stringBundle = document.getElementById("stringBundle");
+    var title = stringBundle.getString(aItem.id + "Title");
+    aWrapper.setAttribute("title", title);
+  }
+  
   // Remove attributes that screw up our appearance.
   aItem.removeAttribute("command");
   aItem.removeAttribute("observes");
@@ -492,11 +458,8 @@ function cleanUpItemForPalette(aItem, aWrapper)
  */
 function cleanupItemForToolbar(aItem, aWrapper)
 {
-  if (aItem.localName == "toolbarseparator") {
-    aWrapper.setAttribute("type", "separator");
-  } else if (aItem.localName == "spacer") {
-    aWrapper.setAttribute("type", "spacer");
-  }
+  setWrapperType(aItem, aWrapper);
+  aWrapper.setAttribute("place", "toolbar");
 
   if (aItem.hasAttribute("command")) {
     aWrapper.setAttribute("itemcommand", aItem.getAttribute("command"));
@@ -506,6 +469,19 @@ function cleanupItemForToolbar(aItem, aWrapper)
   if (aItem.disabled) {
     aWrapper.setAttribute("itemdisabled", "true");
     aItem.disabled = false;
+  }
+}
+
+function setWrapperType(aItem, aWrapper)
+{
+  if (aItem.localName == "toolbarseparator") {
+    aWrapper.setAttribute("type", "separator");
+  } else if (aItem.localName == "toolbarspring") {
+    aWrapper.setAttribute("type", "spring");
+  } else if (aItem.localName == "toolbarspacer") {
+    aWrapper.setAttribute("type", "spacer");
+  } else if (aItem.localName == "toolbaritem" && aItem.firstChild) {
+    aWrapper.setAttribute("type", aItem.firstChild.localName);
   }
 }
 
@@ -556,6 +532,8 @@ function addNewToolbar()
   }
     
   gToolbox.appendCustomToolbar(name.value, "");
+  
+  repositionDialog();
   gToolboxChanged = true;
 }
 
@@ -596,6 +574,7 @@ function restoreDefaultSet()
   // Now rebuild the palette.
   buildPalette();
   
+  repositionDialog();
   gToolboxChanged = true;
 }
 
@@ -613,6 +592,8 @@ function updateIconSize(aUseSmallIcons)
       gToolboxDocument.persist(toolbar.id, "iconsize");
     }
   }
+
+  repositionDialog();
 }
 
 function updateToolbarMode(aModeValue)
@@ -637,6 +618,8 @@ function updateToolbarMode(aModeValue)
   else {
     iconSizeCheckbox.disabled = false;
   }
+
+  repositionDialog();
 }
 
 
@@ -654,11 +637,20 @@ function isCustomizableToolbar(aElt)
          aElt.getAttribute("customizable") == "true";
 }
 
-function isToolbarItem(aElt) {
+function isSpecialItem(aElt)
+{
+  return aElt.localName == "toolbarseparator" ||
+         aElt.localName == "toolbarspring" ||
+         aElt.localName == "toolbarspacer";
+}
+
+function isToolbarItem(aElt)
+{
   return aElt.localName == "toolbarbutton" ||
          aElt.localName == "toolbaritem" ||
          aElt.localName == "toolbarseparator" ||
-         aElt.localName == "spacer";
+         aElt.localName == "toolbarspring" ||
+         aElt.localName == "toolbarspacer";
 }
 
 ///////////////////////////////////////////////////////////////////////////
@@ -800,6 +792,7 @@ var toolbarDNDObserver =
       // Remove the wrapper from the palette.
       var currentRow = draggedPaletteWrapper.parentNode;
       if (draggedItemId != "separator" &&
+          draggedItemId != "spring" &&
           draggedItemId != "spacer")
       {
         currentRow.removeChild(draggedPaletteWrapper);
@@ -841,8 +834,10 @@ var toolbarDNDObserver =
       }
     }
     
-    gToolboxChanged = true;
     gCurrentDragOverItem = null;
+
+    repositionDialog();
+    gToolboxChanged = true;
   },
   
   _flavourSet: null,
@@ -875,7 +870,7 @@ var paletteDNDObserver =
       wrapper.parentNode.removeChild(wrapper);
       
       var wrapperType = wrapper.getAttribute("type");
-      if (wrapperType != "separator" && wrapperType != "spacer") {
+      if (wrapperType != "separator" && wrapperType != "spacer" && wrapperType != "spring") {
         // Find the template node in the toolbox palette
         var templateNode = gToolbox.palette.firstChild;
         while (templateNode) {
@@ -892,6 +887,7 @@ var paletteDNDObserver =
       }
     }
     
+    repositionDialog();
     gToolboxChanged = true;
   },
   
