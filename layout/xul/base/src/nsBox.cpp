@@ -1269,7 +1269,8 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
-            aSize.width = val;
+            if (val > aSize.width)
+              aSize.width = val;
             widthSet = PR_TRUE;
         }
 
@@ -1281,7 +1282,8 @@ nsIBox::AddCSSMinSize(nsBoxLayoutState& aState, nsIBox* aBox, nsSize& aSize)
             value.Trim("%");
 
             nscoord val = NSIntPixelsToTwips(value.ToInteger(&error), p2t);
-            aSize.height = val;
+            if (val > aSize.height)
+              aSize.height = val;
 
             heightSet = PR_TRUE;
         }
