@@ -2116,9 +2116,19 @@ nsHTMLEditor::JoinTableCells(PRBool aMergeNonContiguousContents)
   PRInt32 firstRowIndex, firstColIndex;
   res = GetFirstSelectedCellInTable(getter_AddRefs(firstCell), &firstRowIndex, &firstColIndex);
   if (NS_FAILED(res)) return res;
-    
-
+  
+  PRBool joinSelectedCells = PR_FALSE;
   if (firstCell)
+  {
+    nsCOMPtr<nsIDOMElement> secondCell;
+    res = GetNextSelectedCell(getter_AddRefs(secondCell), nsnull);
+    if (NS_FAILED(res)) return res;
+
+    // If only one cell is selected, join with cell to the right
+    joinSelectedCells = (secondCell != nsnull);
+  }
+
+  if (joinSelectedCells)
   {
     // We have selected cells: Join just contiguous cells
     //  and just merge contents if not contiguous
@@ -3503,11 +3513,13 @@ nsHTMLEditor::IsEmptyCell(nsIDOMElement *aCell)
 
   // Check if target only contains empty text node or <br>
   nsresult res = aCell->GetFirstChild(getter_AddRefs(cellChild));
-  if (NS_FAILED(res)) return res;
+  if (NS_FAILED(res)) return PR_FALSE;
+
   if (cellChild)
   {
     nsCOMPtr<nsIDOMNode> nextChild;
     res = cellChild->GetNextSibling(getter_AddRefs(nextChild));
+    if (NS_FAILED(res)) return PR_FALSE;
     if (!nextChild)
     {
       // We insert a single break into a cell by default
@@ -3515,7 +3527,10 @@ nsHTMLEditor::IsEmptyCell(nsIDOMElement *aCell)
       PRBool isEmpty = nsTextEditUtils::IsBreak(cellChild);
       // Or check if no real content
       if (!isEmpty)
-        IsEmptyNode(cellChild, &isEmpty, PR_FALSE, PR_FALSE);
+      {
+        res = IsEmptyNode(cellChild, &isEmpty, PR_FALSE, PR_FALSE);
+        if (NS_FAILED(res)) return PR_FALSE;
+      }
 
       return isEmpty;
     }
