@@ -25,7 +25,6 @@ classic.jar:
   skin/classic/global/toolbarbutton.css
   skin/classic/global/tree.css
   skin/classic/global/wizard.css
-  skin/classic/global/wizardOverlay.css
   skin/classic/global/button.css
   skin/classic/global/menu.css
   skin/classic/global/toolbar.css

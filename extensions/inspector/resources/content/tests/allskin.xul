@@ -14,7 +14,6 @@
 <?xml-stylesheet href="chrome://communicator/skin/toolbar.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/bookmarks/bookmarks.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/directory/directory.css"?>
-<?xml-stylesheet href="chrome://communicator/skin/profile/newProfile1_2.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profile.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/profile/profileManager.css"?>
 <?xml-stylesheet href="chrome://communicator/skin/regviewer/regviewer.css"?>
@@ -55,7 +54,6 @@
 <?xml-stylesheet href="chrome://global/skin/textfield.css"?>
 <?xml-stylesheet href="chrome://global/skin/toolbar.css"?>
 <?xml-stylesheet href="chrome://global/skin/tree.css"?>
-<?xml-stylesheet href="chrome://global/skin/wizardOverlay.css"?>
 <?xml-stylesheet href="chrome://messenger/skin/AccountManager.css"?>
 <?xml-stylesheet href="chrome://messenger/skin/fieldMapImport.css"?>
 <?xml-stylesheet href="chrome://messenger/skin/folderPane.css"?>

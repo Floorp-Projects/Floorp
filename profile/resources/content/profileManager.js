@@ -33,8 +33,8 @@ var set = null;
 // invoke the createProfile Wizard
 function CreateProfileWizard()
 {
-  // Need to call CreateNewProfile xuls
-  window.openDialog('chrome://communicator/content/profile/createProfileWizard.xul', 'CPW', 'centerscreen,chrome,modal=yes,titlebar=yes');
+  window.openDialog('chrome://communicator/content/profile/createProfileWizard.xul',
+                    '', 'centerscreen,chrome,modal,titlebar');
 }
 
 // update the display to show the additional profile
@@ -74,7 +74,7 @@ function RenameProfile()
             var errorMessage = gProfileManagerBundle.getString("sourceProfileDirMissing");
             var profileDirMissingTitle = gProfileManagerBundle.getString("sourceProfileDirMissingTitle");
             promptService.alert(window, profileDirMissingTitle, errorMessage);
-              return false;          
+            return false;
           }
         }
       }      
@@ -93,18 +93,16 @@ function RenameProfile()
       var rv = promptService.prompt(window, dialogTitle, msg, newName, null, {value:0});
       if (rv) {
         newName = newName.value;
-        if (!newName) return false;
-        var invalidChars = ["/", "\\", "*", ":"];
-        for( var i = 0; i < invalidChars.length; i++ )
-        {
-          if( newName.indexOf( invalidChars[i] ) != -1 ) {
-            var aString = gProfileManagerBundle.getString("invalidCharA");
-            var bString = gProfileManagerBundle.getString("invalidCharB");
-            bString = bString.replace(/\s*<html:br\/>/g,"\n");
-            lString = aString + invalidChars[i] + bString;
-            alert( lString );
-            return false;
-          }
+
+        // User hasn't changed the profile name. Treat as if cancel was pressed.
+        if (newName == oldName)
+          return false;
+
+        var errorMessage = checkProfileName(newName);
+        if (errorMessage) {
+          var profileNameInvalidTitle = gProfileManagerBundle.getString("profileNameInvalidTitle");
+          promptService.alert(window, profileNameInvalidTitle, errorMessage);
+          return false;
         }
         
         var migrate = selected.getAttribute("rowMigrate");
