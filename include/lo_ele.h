@@ -645,7 +645,7 @@ struct lo_FormElementTextData_struct {
 	PA_Block name;
 	PA_Block default_text;
 	Bool disabled;
-	Bool readonly;
+	Bool read_only;
 	PA_Block current_text;
 	int32 size;
 	int32 max_size;
@@ -663,7 +663,7 @@ struct lo_FormElementTextareaData_struct {
 	PA_Block name;
 	PA_Block default_text;
 	Bool disabled;
-	Bool readonly;
+	Bool read_only;
 	PA_Block current_text;
 	int32 rows;
 	int32 cols;
