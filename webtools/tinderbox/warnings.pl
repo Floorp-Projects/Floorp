@@ -146,7 +146,7 @@ $source_root = 'mozilla';
 #   paths to files.
 #
 print STDERR "Building hash of file names...";
-#($file_bases, $file_fullpaths) = build_file_hash($cvs_root, $tree);
+($file_bases, $file_fullpaths) = build_file_hash($cvs_root, $tree);
 $file_bases = {};
 $file_fullpaths = {};
 print STDERR "done.\n";
