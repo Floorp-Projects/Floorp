@@ -43,7 +43,7 @@
 #include <windows.h>
 
 NS_IMETHODIMP
-nsIOService::GetURLFromFile(nsIFile *aFile, char * *aURL)
+nsIOService::GetURLSpecFromFile(nsIFile *aFile, char * *aURL)
 {
     NS_ENSURE_ARG_POINTER(aURL);
     *aURL = nsnull;
@@ -95,7 +95,7 @@ nsIOService::GetURLFromFile(nsIFile *aFile, char * *aURL)
 }
 
 NS_IMETHODIMP
-nsIOService::SetFileFromURL(nsIFile *aFile, const char * aURL)
+nsIOService::InitFileFromURLSpec(nsIFile *aFile, const char * aURL)
 {
     NS_ENSURE_ARG(aURL);
     nsresult rv;
