@@ -433,14 +433,6 @@ ifneq (,$(filter BeOS Darwin NetBSD,$(OS_ARCH)))
 LINK_DLL	= $(MKSHLIB) $(OBJS)
 endif
 
-ifeq ($(OS_ARCH),OpenVMS)
-AR_EXTRACT = ar x
-AR_LIST = ar t
-SUB_LOBJS = $(shell for lib in $(SHARED_LIBRARY_LIBS); do $(AR_LIST) $${lib}; done;)
-LINK_DLL        = $(MKSHLIB) $(DSO_LDOPTS) $(ALDFLAGS) $(DLL_LDFLAGS) \
-		  $(DLL_EXPORT_FLAGS) -o $@ $(OBJS) VMSuni.opt
-endif
-
 ifeq ($(OS_ARCH), HP-UX)
 # On HPUX, we need a couple of changes:
 # 1) Use the C++ compiler for linking, which will pass the +eh flag on down to the

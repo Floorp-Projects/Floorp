@@ -549,10 +549,6 @@ if test "$OS_ARCH" = "Linux"; then
     OS_RELEASE=`echo $OS_RELEASE | sed 's/-.*//'`
 fi
 
-if test "$OS_ARCH" = "POSIX_for_OpenVMS_AXP"; then
-    OS_ARCH=OpenVMS
-fi
-
 #######################################################################
 # Master "Core Components" macros for getting the OS target           #
 #######################################################################
@@ -1465,24 +1461,11 @@ mips-sony-newsos*)
 
 *-openvms*)
     AC_DEFINE(XP_UNIX)
-    AC_DEFINE(VMS)
-    AC_DEFINE(VMS_AS_IS)
-    AC_DEFINE(_SOCKADDR_LEN)
-    AC_DEFINE(GENERIC_PTHREAD_REDEFINES)
     RESOLVE_LINK_SYMBOLS=1
-    CROSS_COMPILE=1
-    _HAVE_PTHREADS=1
-    HOST_CC=c89
-    HOST_CXX=cxx
-    HOST_CFLAGS=-O
-    HOST_CXXFLAGS=-O
-    CC=ccc
-    CXX=ccc
-    CFLAGS="$CFLAGS -Wc,names=\(short,as\)"
-    CXXFLAGS="$CXXFLAGS -Wc,names=\(short,as\)"
     MDCPUCFG_H=_openvms.cfg
     PR_MD_CSRCS=openvms.c
-    MKSHLIB='vmsld $(OPTIMIZER)'
+    AR_FLAGS='c $@'
+    DSO_LDOPTS='-shared -auto_symvec $(LDFLAGS) $(OPTIMIZER)'
     ;;
 
 *-os2*)

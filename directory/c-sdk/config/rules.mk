@@ -374,21 +374,11 @@ else	# WIN16
 	$(LINK_DLL) -MAP $(DLLBASE) $(OS_LIBS) $(EXTRA_LIBS) $(OBJS)
 endif # WINNT
 else
-ifeq ($(OS_TARGET), OpenVMS)
-	@if test ! -f $(OBJDIR)/VMSuni.opt; then \
-	    echo "Creating universal symbol option file $(OBJDIR)/VMSuni.opt";\
-	    create_opt_uni $(OBJS); \
-	    mv VMSuni.opt $(OBJDIR); \
-	fi
-	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS) $(OBJDIR)/VMSuni.opt
-	@echo "`translate $@`" > $(@:.$(DLL_SUFFIX)=.vms)
-else	# OpenVMS
 ifeq ($(MOZ_OS2_TOOLS),VACPP)
 	$(LINK_DLL) $(DLLBASE) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 else	# !os2 vacpp
 	$(MKSHLIB) -o $@ $(OBJS) $(EXTRA_LIBS) $(OS_LIBS) $(DEF_FILE)
 endif   # OS2 vacpp
-endif	# OpenVMS
 endif	# WINNT
 endif	# AIX 4.1
 endif   # USE_AUTOCONF

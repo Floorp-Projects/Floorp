@@ -308,15 +308,6 @@ $(DLLLDAP): $(OBJS) $(LIBDIR) $(LDAP_EXPORT_DEFS)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
-ifeq ($(OS_ARCH), OpenVMS)
-	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
-	@if test ! -f VMSuni.opt; then \
-	    echo "Creating universal symbol option file VMSuni.opt"; \
-	    for lib in $(SHARED_LIBRARY_LIBS); do $(AR_EXTRACT) $${lib}; done; \
-	    create_opt_uni $(OBJS) $(SUB_LOBJS); \
-	fi
-	@touch no-such-file.vms; rm -f no-such-file.vms $(SUB_LOBJS)
-endif
 	$(LINK_DLL) $(LDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
 
 veryclean:: clean

@@ -41,23 +41,9 @@
 
 include $(MOD_DEPTH)/config/UNIX.mk
 
-ifdef INTERNAL_TOOLS
-CC			= c89
-CCC			= cxx
-OPTIMIZER		= -O
-else
-CC			= ccc
-CCC			= ccc
-endif
-
 RANLIB			= /bin/true
 
 CPU_ARCH_TAG		= _$(CPU_ARCH)
-
-OS_CFLAGS              = -DVMS -DVMS_AS_IS -Wc,names=\(short,as\) \
-                         -DGENERIC_PTHREAD_REDEFINES
-OS_CXXFLAGS            = -DVMS -DVMS_AS_IS -Wc,names=\(short,as\) \
-                         -DGENERIC_PTHREAD_REDEFINES
 
 #
 # XCFLAGS are the only CFLAGS that are used during a link operation. Defining
@@ -66,6 +52,3 @@ OS_CXXFLAGS            = -DVMS -DVMS_AS_IS -Wc,names=\(short,as\) \
 # operations; and OpenVMS needs it!
 #
 XCFLAGS                        += $(OPTIMIZER)
-
-# The command to build a shared library in POSIX on OpenVMS.
-MKSHLIB = vmsld $(OPTIMIZER)

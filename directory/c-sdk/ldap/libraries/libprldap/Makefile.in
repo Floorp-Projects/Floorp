@@ -224,12 +224,6 @@ $(DLLPRLDAP): $(OBJS) $(LIBDIR) $(PRLDAP_EXPORT_DEFS)
 ifdef SO_FILES_TO_REMOVE
 	-$(RM) $(SO_FILES_TO_REMOVE)
 endif
-ifeq ($(OS_ARCH), OpenVMS)
-	@if test ! -f VMSuni.opt; then \
-	    echo "Creating universal symbol option file VMSuni.opt"; \
-	    create_opt_uni $(OBJS); \
-	fi
-endif
 	$(LINK_DLL) $(PRLDAP_EXPORT_FLAGS) $(EXTRA_LIBS)
 
 veryclean:: clean

@@ -89,7 +89,7 @@ int				nsldapi_initialized = 0;
 */
 #undef pthread_self
 #define pthread_self PTHREAD_SELF
-extern pthread_t  _PTHREAD_CALL_  pthread_self (void);
+extern pthread_t pthread_self (void);
 #endif
 static pthread_key_t		nsldapi_key;
 
