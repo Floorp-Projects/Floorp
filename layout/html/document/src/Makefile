@@ -21,7 +21,7 @@ include $(DEPTH)/config/config.mk
 
 LIBRARY_NAME = raptorhtmldoc_s
 
-LCFLAGS = -D_IMPL_NS_HTML
+DEFINES += -D_IMPL_NS_HTML
 
 INCLUDES += \
 	-I../../base/src		\
@@ -36,6 +36,15 @@ CPPSRCS =				\
 	nsHTMLContentSink.cpp		\
 	nsHTMLDocument.cpp		\
 	$(NULL)
+
+EXPORTS = \
+	nsIHTMLDocument.h	\
+	$(NULL)
+
+INCLUDES += \
+	-I../../base/src -I../../forms/src \
+	-I../../style/src -I../../table/src \
+	-I../../../base/src
 
 MODULE = raptor
 

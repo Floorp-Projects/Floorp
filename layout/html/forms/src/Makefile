@@ -21,7 +21,7 @@ include $(DEPTH)/config/config.mk
 
 LIBRARY_NAME = raptorhtmlforms_s
 
-LCFLAGS += -D_IMPL_NS_HTML
+DEFINES += -D_IMPL_NS_HTML
 
 # Note the sophisticated alphabetical ordering :-|
 CPPSRCS =				\
@@ -40,7 +40,7 @@ CPPSRCS =				\
 
 MODULE = raptor
 
-INCLUDES +=  -I../../base/src -I../../style/src
+INCLUDES += -I../../../base/src -I../../base/src -I../../style/src
 
 REQUIRES = xpcom raptor dom
 
