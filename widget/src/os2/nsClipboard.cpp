@@ -256,6 +256,22 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
         if (DosAllocSharedMem( NS_REINTERPRET_CAST(PPVOID, &pByteMem), nsnull, NumOfBytes + 1, 
                                PAG_WRITE | PAG_COMMIT | OBJ_GIVEABLE ) == NO_ERROR) 
         {
+          PRUnichar* uchtemp = (PRUnichar*)pMozData;
+          for (int i=0;i<NumOfBytes;i++) {
+            switch (uchtemp[i]) {
+              case 0x2018:
+              case 0x2019:
+                uchtemp[i] = 0x0027;
+                break;
+              case 0x201C:
+              case 0x201D:
+                uchtemp[i] = 0x0022;
+                break;
+              case 0x2014:
+                uchtemp[i] = 0x002D;
+                break;
+            }
+          }
           WideCharToMultiByte(0, NS_STATIC_CAST(PRUnichar*, pMozData), NumOfBytes, pByteMem, NumOfBytes);
           pByteMem [NumOfBytes] = '\0';
 
@@ -288,6 +304,7 @@ void nsClipboard::SetClipboardData(const char *aFlavor)
 #endif
     }
   }
+  nsMemory::Free(pMozData);
 }
 
 // Go through the flavors in the transferable and either get or set them
