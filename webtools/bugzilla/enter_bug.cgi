@@ -51,10 +51,6 @@ use vars qw(
   %MFORM
 );
 
-# Use template variables
-my $template = $::template;
-my $vars = $::vars;
-
 # If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start. 
 confirm_login() if (Param("usebuggroupsentry"));

@@ -1578,9 +1578,6 @@ $::template = Template->new(
     # Colon-separated list of directories containing templates.
     INCLUDE_PATH => "template/custom:template/default" ,
 
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1 ,
-
     # Remove white-space before template directives (PRE_CHOMP) and at the
     # beginning and end of templates and template blocks (TRIM) for better 
     # looking, more compact content.  Use the plus sign at the beginning 
@@ -1593,6 +1590,17 @@ $::template = Template->new(
       {
         # Render text in strike-through style.
         strike => sub { return "<strike>" . $_[0] . "</strike>" } ,
+
+        # Returns the text with backslashes, single/double quotes,
+        # and newlines/carriage returns escaped for use in JS strings.
+        js => sub
+        {
+            my ($var) = @_;
+            $var =~ s/([\\\'\"])/\\$1/g; 
+            $var =~ s/\n/\\n/g; 
+            $var =~ s/\r/\\r/g; 
+            return $var;
+        }
       } ,
   }
 );
@@ -1652,6 +1660,9 @@ $::vars =
     # Function for processing global parameters that contain references
     # to other global parameters.
     'PerformSubsts' => \&PerformSubsts ,
+
+    # Generic linear search function
+    'lsearch' => \&lsearch ,
   };
 
 1;

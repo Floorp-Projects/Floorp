@@ -23,30 +23,16 @@
 
 use diagnostics;
 use strict;
-use vars ( %::FORM );
+
+use vars qw(
+  %FORM
+  $template
+  $vars
+);
 
 use lib qw(.);
 
 require "CGI.pl";
-
-# Use the template toolkit (http://www.template-toolkit.org/)
-use Template;
-
-# Create the global template object that processes templates
-my $template = Template->new(
-{
-    INCLUDE_PATH => "template/custom:template/default",
-    RELATIVE => 1,
-    PRE_CHOMP => 1,
-});
-
-# Define the global variables and functions that will be passed to the UI 
-# template.  
-my $vars = 
-{
-    'Param' => \&Param, 
-    'PerformSubsts' => \&PerformSubsts,
-};
 
 my $action = $::FORM{'action'} || "";
 

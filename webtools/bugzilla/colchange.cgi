@@ -25,44 +25,14 @@ use strict;
 
 use lib qw(.);
 
-sub sillyness { # shut up "used only once" warnings
-  my $zz = @::legal_keywords;
-  $zz = $::buffer;
-}
+use vars qw(
+  @legal_keywords
+  $buffer
+  $template
+  $vars
+);
 
 require "CGI.pl";
-
-# Use the template toolkit (http://www.template-toolkit.org/) to generate
-# the user interface (HTML pages and mail messages) using templates in the
-# "template/" subdirectory.
-use Template;
-
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to all templates processed in this script.
-my $template = Template->new(
-{
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/custom:template/default",
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1,
-    PRE_CHOMP => 1,
-});
-
-# Define the global variables and functions that will be passed to the UI 
-# template.  Individual functions add their own values to this hash before
-# sending them to the templates they process.
-my $vars = 
-{
-    # Function for retrieving global parameters.
-    'Param' => \&Param, 
-
-    # Function for processing global parameters that contain references
-    # to other global parameters.
-    'PerformSubsts' => \&PerformSubsts,
-
-    # Function to search an array for a value   
-    'lsearch' => \&lsearch,
-};
 
 print "Content-type: text/html\n";
 

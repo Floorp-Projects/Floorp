@@ -34,68 +34,26 @@ require "CGI.pl";
 # that no longer exist), since we don't want to die in the query page.
 $::CheckOptionValues = 0;
 
-use vars
-    @::CheckOptionValues,
-    @::legal_resolution,
-    @::legal_bug_status,
-    @::legal_components,
-    @::legal_keywords,
-    @::legal_opsys,
-    @::legal_platform,
-    @::legal_priority,
-    @::legal_product,
-    @::legal_severity,
-    @::legal_target_milestone,
-    @::legal_versions,
-    @::log_columns,
-    %::versions,
-    %::components,
-    %::FORM;
-
-# Use the template toolkit (http://www.template-toolkit.org/) to generate
-# the user interface (HTML pages and mail messages) using templates in the
-# "template/" subdirectory.
-use Template;
-
-# Create the global template object that processes templates and specify
-# configuration parameters that apply to all templates processed in this script.
-my $template = Template->new(
-{
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => "template/custom:template/default",
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1,
-    PRE_CHOMP => 1,
-    FILTERS =>
-    {
-         # Returns the text with backslashes, single/double quotes,
-         # and newlines/carriage returns escaped for use in JS strings.
-        'js' => sub
-        {
-            my ($var) = @_;
-            $var =~ s/([\\\'\"])/\\$1/g; 
-            $var =~ s/\n/\\n/g; 
-            $var =~ s/\r/\\r/g; 
-            return $var;
-        }
-    },
-});
-
-# Define the global variables and functions that will be passed to the UI 
-# template.  Individual functions add their own values to this hash before
-# sending them to the templates they process.
-my $vars = 
-{
-    # Function for retrieving global parameters.
-    'Param' => \&Param, 
-
-    # Function for processing global parameters that contain references
-    # to other global parameters.
-    'PerformSubsts' => \&PerformSubsts,
- 
-    # Function to search an array for a value   
-    'lsearch' => \&lsearch,
-};
+use vars qw(
+    @CheckOptionValues
+    @legal_resolution
+    @legal_bug_status
+    @legal_components
+    @legal_keywords
+    @legal_opsys
+    @legal_platform
+    @legal_priority
+    @legal_product
+    @legal_severity
+    @legal_target_milestone
+    @legal_versions
+    @log_columns
+    %versions
+    %components
+    %FORM
+    $template
+    $vars
+);
 
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better

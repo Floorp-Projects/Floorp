@@ -27,25 +27,15 @@
 use diagnostics;
 use strict;
 
+use vars qw(
+  $template
+  $vars
+);
+
 package Attachment;
 
-# Use the template toolkit (http://www.template-toolkit.org/) to generate
-# the user interface (HTML pages and mail messages) using templates in the
-# "templates/" subdirectory.
-use Template;
-
-# This is the global template object that gets used one or more times by
-# the script when it needs to process a template and return the results.
-# Configuration parameters can be specified here that apply to all templates
-# processed in this file.
-my $template = Template->new(
-  {
-    # Colon-separated list of directories containing templates.
-    INCLUDE_PATH => 'template/custom:template/default' ,
-    # Allow templates to be specified with relative paths.
-    RELATIVE => 1 
-  }
-);
+my $template = $::template;
+my $vars = $::vars;
 
 # This module requires that its caller have said "require CGI.pl" to import
 # relevant functions from that script and its companion globals.pl.
@@ -99,16 +89,13 @@ sub list
     push @attachments, \%a;
   }
 
-  my $vars = 
-    {
-      'bugid' => $bugid , 
-      'attachments' => \@attachments , 
-      'Param' => \&::Param , # for retrieving global parameters
-      'PerformSubsts' => \&::PerformSubsts # for processing global parameters
-    };
+  $vars->{'bugid'} = $bugid;
+  $vars->{'attachments'} = \@attachments;
 
   $template->process("attachment/list.atml", $vars)
     || &::DisplayError("Template process failed: " . $template->error())
     && exit;
 
 }
+
+1;
