@@ -524,6 +524,13 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
     aDesiredSize.descent = 0;
   }
 
+  // If this is a resize reflow or the initial reflow, then do a repaint
+  if ((eReflowReason_Initial == aReflowState.reason) ||
+      (eReflowReason_Resize == aReflowState.reason)) {
+    nsRect  damageRect(0, 0, aDesiredSize.width, aDesiredSize.height);
+    Invalidate(damageRect, PR_FALSE);
+  }
+
   NS_FRAME_TRACE_REFLOW_OUT("ViewportFrame::Reflow", aStatus);
   return NS_OK;
 }
