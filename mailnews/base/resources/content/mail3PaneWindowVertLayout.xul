@@ -170,14 +170,15 @@ Rights Reserved.
         <!-- message view -->
         <browser id="messagepane" context="messagePaneContext" style="height: 0px" flex="1" name="messagepane" type="content-primary" src="about:blank" onclick="contentAreaClick(event);" ondraggesture="nsDragAndDrop.startDrag(event, contentAreaDNDObserver);"/>
       </box>  
-      <statusbar id="status-bar" class="mailwindow-statusbar">
-        <statusbarpanel id="unreadMessageCount" style="min-width: 5px"/>
-        <statusbarpanel id="totalMessageCount" style="min-width: 5px"/>
-      </statusbar>
+
     </box>
 
   </box>
 
-  <box id="taskbar" class="toolbox-bottom"/>
-
+	<statusbar id="status-bar" class="mailwindow-statusbar">
+		<statusbarpanel id="unreadMessageCount" hidden="true" style="min-width: 5px"/>
+		<statusbarpanel id="totalMessageCount" hidden="true" style="min-width: 5px"/>
+	</statusbar>
+	
+	
 </window>

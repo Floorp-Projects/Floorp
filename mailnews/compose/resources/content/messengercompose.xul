@@ -506,12 +506,15 @@
   </box>
 
   <statusbar id="status-bar">
-    <statusbarpanel id="offline-status" onclick="setTimeout('UpdateOfflineState()', 0)"/> 
-    <progressmeter id ="progressmeter" class="progressmeter-statusbar" mode="normal" value="0"/>
+    <box id="component-bar" class="component-bar-box"/>
+    <statusbarpanel id="offline-status" class="statusbarpanel-icononly" onclick="setTimeout('UpdateOfflineState()', 0)"/> 
     <statusbarpanel id="statusText" flex="1" label="&defaultStatusText.label;"/>
+    <statusbarpanel id="statusbar-empty-spacer" flex="2" />
+
+    <progressmeter class="progressmeter-statusbar" mode="normal" value="0"/>
+    <resizer class="window-diagonal"/>
   </statusbar>
 
-  <box id="taskbar"/>
 
 </window>
 

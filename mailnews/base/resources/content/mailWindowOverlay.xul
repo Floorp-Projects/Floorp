@@ -1287,14 +1287,20 @@ Rights Reserved.
   </toolbar>
 </toolbox>
 
+
+
 <statusbar id="status-bar"> 
-  <box position="1" flex="1">
+  <box insertbefore="unreadMessageCount" flex="1">
+    <box id="component-bar" class="component-bar-box"/>
     <statusbarpanel id="offline-status" class="statusbarpanel-icononly"/> 
-    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" mode="normal" value="0" oncommand="dumpProgress()"/> 
     <statusbarpanel id="statusText" label="&statusText.label;" crop="right" flex="1"/> 
+    <progressmeter class="progressmeter-statusbar" statusbar="true" id="statusbar-icon" hidden="true" mode="normal" value="0" oncommand="dumpProgress()"/> 
   </box>
-  <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
+  <box insertafter="totalMessageCount">
+      <statusbarpanel id="security-button" class="statusbarpanel-icononly"/>
+	  <resizer class="window-diagonal"/>
+  </box>
 </statusbar> 
-<box id="taskbar" class="chromeclass-extrachrome toolbox-bottom"/>
+
 
 </overlay>
