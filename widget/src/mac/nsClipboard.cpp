@@ -171,9 +171,9 @@ nsClipboard :: SetNativeClipboardData()
       // so make sure not to delete it.
       void* data = nsnull;
       PRUint32 dataSize = 0;
-      mTransferable->GetTransferData ( currentFlavor, &data, &dataSize );
+      errCode = mTransferable->GetTransferData ( currentFlavor, &data, &dataSize );
       #ifdef NS_DEBUG
-        if ( errCode != NS_OK ) printf("nsClipboard:: Error getting data into transferable\n");
+        if ( errCode != NS_OK ) printf("nsClipboard:: Error getting data from transferable\n");
       #endif
       
       // stash on clipboard
