@@ -423,12 +423,6 @@ nsInputStreamPump::OnStateTransfer()
                         //
                         NS_ERROR("OnDataAvailable implementation consumed no data");
                         mStatus = NS_ERROR_UNEXPECTED;
-                        // 
-                        // pass this error on to the async stream (the listener
-                        // should have really called our Cancel method, so we
-                        // simulate a call to Cancel instead).
-                        //
-                        mAsyncStream->CloseEx(mStatus);
                     }
                 }
                 else
@@ -460,10 +454,13 @@ nsInputStreamPump::OnStateStop()
 {
     LOG(("  OnStateStop [this=%x status=%x]\n", this, mStatus));
 
-    // in most cases mAsyncStream is already closed (NOTE: Close is idempotent).
-    // however, mAsyncStream may still be open if mStreamLength was reached
-    // before EOF.
-    if (mCloseWhenDone)
+    // if an error occured, we must be sure to pass the error onto the async
+    // stream.  in some cases, this is redundant, but since close is idempotent,
+    // this is OK.  otherwise, be sure to honor the "close-when-done" option.
+
+    if (NS_FAILED(mStatus))
+        mAsyncStream->CloseEx(mStatus);
+    else if (mCloseWhenDone)
         mAsyncStream->Close();
 
     mAsyncStream = 0;
