@@ -55,7 +55,6 @@
 #include "nsIAbCard.h"
 #include "nsIWebProgressListener.h"
 #include "nsIAbDirectory.h"
-#include "nsIMimeConverter.h"
 
 // Forward declares
 class QuotingOutputStreamListener;
@@ -166,9 +165,7 @@ public:
     QuotingOutputStreamListener(const char *originalMsgURI,
                                 PRBool quoteHeaders,
                                 PRBool headersOnly,
-                                nsIMsgIdentity *identity,
-                                const char *charset,
-                                PRBool charetOverride);
+                                nsIMsgIdentity *identity);
     virtual ~QuotingOutputStreamListener(void);
 
     NS_DECL_ISUPPORTS
@@ -189,7 +186,6 @@ private:
     nsCOMPtr<nsIMimeHeaders>	mHeaders;
     nsCOMPtr<nsIMsgIdentity>  mIdentity;
     nsString                  mCiteReference;
-    nsCOMPtr<nsIMimeConverter> mMimeConverter;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////

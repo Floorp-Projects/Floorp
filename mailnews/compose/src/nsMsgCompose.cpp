@@ -1535,9 +1535,7 @@ QuotingOutputStreamListener::~QuotingOutputStreamListener()
 QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMsgURI,
                                                          PRBool quoteHeaders,
                                                          PRBool headersOnly,
-                                                         nsIMsgIdentity *identity,
-                                                         const char *charset,
-                                                         PRBool charetOverride) 
+                                                         nsIMsgIdentity *identity) 
 { 
   nsresult rv;
   mQuoteHeaders = quoteHeaders;
@@ -1662,29 +1660,23 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const char * originalMs
         }
 
 
-      nsXPIDLCString author;
-      rv = originalMsgHdr->GetAuthor(getter_Copies(author));
-
+      nsXPIDLString author;
+      rv = originalMsgHdr->GetMime2DecodedAuthor(getter_Copies(author));
       if (NS_SUCCEEDED(rv))
       {
-        nsXPIDLCString decodedString;
-        mMimeConverter = do_GetService(kCMimeConverterCID);
-        if (mMimeConverter)
-          mMimeConverter->DecodeMimeHeader(author.get(), getter_Copies(decodedString), charset, charetOverride);
-
         nsCOMPtr<nsIMsgHeaderParser> parser (do_GetService(NS_MAILNEWS_MIME_HEADER_PARSER_CONTRACTID));
 
         if (parser)
         {
           nsXPIDLCString authorName;
-          rv = parser->ExtractHeaderAddressName("UTF-8", decodedString.get(),
+          rv = parser->ExtractHeaderAddressName("UTF-8", NS_ConvertUCS2toUTF8(author).get(),
                                                 getter_Copies(authorName));
           // take care "%s wrote"
           PRUnichar *formatedString = nsnull;
           if (NS_SUCCEEDED(rv) && authorName)
             formatedString = nsTextFormatter::smprintf(replyHeaderAuthorwrote.get(), authorName.get());
           else
-            formatedString = nsTextFormatter::smprintf(replyHeaderAuthorwrote.get(), author.get());
+            formatedString = nsTextFormatter::smprintf(replyHeaderAuthorwrote.get(), NS_ConvertUCS2toUTF8(author).get());
           if (formatedString) 
           {
             citePrefixAuthor.Assign(formatedString);
@@ -1795,11 +1787,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         nsXPIDLCString outCString;
         PRUnichar emptyUnichar = 0;
         PRBool needToRemoveDup = PR_FALSE;
-        if (!mMimeConverter)
-        {
-          mMimeConverter = do_GetService(kCMimeConverterCID, &rv);
-          NS_ENSURE_SUCCESS(rv, rv);
-        }
+        nsCOMPtr<nsIMimeConverter> mimeConverter = do_GetService(kCMimeConverterCID);
         nsXPIDLCString charset;
         compFields->GetCharacterSet(getter_Copies(charset));
         
@@ -1808,13 +1796,13 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
           mHeaders->ExtractHeader(HEADER_TO, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
-            mMimeConverter->DecodeMimeHeader(outCString, recipient, charset);
+            mimeConverter->DecodeMimeHeader(outCString, recipient, charset);
           }
               
           mHeaders->ExtractHeader(HEADER_CC, PR_TRUE, getter_Copies(outCString));
           if (outCString)
           {
-            mMimeConverter->DecodeMimeHeader(outCString, cc, charset);
+            mimeConverter->DecodeMimeHeader(outCString, cc, charset);
           }
               
           if (recipient.Length() > 0 && cc.Length() > 0)
@@ -1828,31 +1816,31 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
         mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mMimeConverter->DecodeMimeHeader(outCString, replyTo, charset);
+          mimeConverter->DecodeMimeHeader(outCString, replyTo, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mMimeConverter->DecodeMimeHeader(outCString, newgroups, charset);
+          mimeConverter->DecodeMimeHeader(outCString, newgroups, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mMimeConverter->DecodeMimeHeader(outCString, followUpTo, charset);
+          mimeConverter->DecodeMimeHeader(outCString, followUpTo, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_MESSAGE_ID, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mMimeConverter->DecodeMimeHeader(outCString, messageId, charset);
+          mimeConverter->DecodeMimeHeader(outCString, messageId, charset);
         }
         
         mHeaders->ExtractHeader(HEADER_REFERENCES, PR_FALSE, getter_Copies(outCString));
         if (outCString)
         {
-          mMimeConverter->DecodeMimeHeader(outCString, references, charset);
+          mimeConverter->DecodeMimeHeader(outCString, references, charset);
         }
         
         if (! replyTo.IsEmpty())
@@ -1891,7 +1879,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIRequest *request, ns
               if (outCString)
               {
                 nsAutoString from;
-                mMimeConverter->DecodeMimeHeader(outCString, from, charset);
+                mimeConverter->DecodeMimeHeader(outCString, from, charset);
                 compFields->SetTo(from.get());
               }
             }
@@ -2065,8 +2053,7 @@ nsMsgCompose::QuoteOriginalMessage(const char *originalMsgURI, PRInt32 what) // 
 
   // Create the consumer output stream.. this will receive all the HTML from libmime
   mQuoteStreamListener =
-    new QuotingOutputStreamListener(originalMsgURI, what != 1, !bAutoQuote, m_identity,
-                                    m_compFields->GetCharacterSet(), mCharsetOverride);
+    new QuotingOutputStreamListener(originalMsgURI, what != 1, !bAutoQuote, m_identity);
   
   if (!mQuoteStreamListener)
   {
