@@ -168,6 +168,36 @@ $ops{"CALL"} =
    rem    => "result, target, args",
    params => [ ("Register" , "Register", "RegisterList") ]
   };
+$ops{"THROW"} =
+  {
+   super    => "Instruction_1",
+   rem      => "exception value",
+   params   => [ ("Register") ]
+  };
+$ops{"TRY"} =
+  {
+   super  => "Instruction_2",
+   rem    => "catch target, finally target",
+   params => [ ("Label*", "Label*") ]
+  };
+$ops{"ENDTRY"} = 
+  {
+   super  => "Instruction",
+   rem    => "mmm, there is no try, only do",
+   params => [ () ]
+  };
+$ops{"JSR"} =
+  {
+   super  => "GenericBranch",
+   rem    => "target",
+   params => [ ("Label*") ]
+  };
+$ops{"RTS"} =
+  {
+   super => "Instruction",
+   rem   => "Return to sender",
+   params => [ () ]
+  };
 
 #
 # nasty perl code, you probably don't need to muck around below this line
@@ -207,11 +237,18 @@ sub collect {
     my $cname = get_classname ($k);
     my $super = $c->{"super"};
     my $constructor = $super;
+	my @params;
+	
+	if ($c->{"params"}) {
+		@params = @{$c->{"params"}};
+	} else {
+		@params = ();
+	}
     
     my $rem = $c->{"rem"};
     my ($dec_list, $call_list, $template_list) =
-      &get_paramlists(@{$c->{"params"}});
-    my $params = $call_list ? $opname . ", " . $call_list : $opname;
+      &get_paramlists(@params);
+    my $constr_params = $call_list ? $opname . ", " . $call_list : $opname;
 
     if ($super =~ /Instruction_\d/) {
         $super .= "<" . $template_list . ">";
@@ -224,7 +261,7 @@ sub collect {
                     $init_tab . $tab . "/* $rem */\n" .
                     $init_tab . $tab . "$cname ($dec_list) :\n" .
                     $init_tab . $tab . $tab . "$super\n" .
-                    "$init_tab$tab$tab($params) " .
+                    "$init_tab$tab$tab($constr_params) " .
                     "{};\n");
     if (!$c->{"super_has_print"}) {
         my $printbody = &get_printbody(split (", ", $template_list));
@@ -323,7 +360,6 @@ sub get_printbody {
     my $in = $init_tab . $tab . $tab;
 
     for $type (@types) {
-        print "type $type\n";
 
         if ($type eq "Register") {
             push (@oplist, "\"R\" << mOp$op");
