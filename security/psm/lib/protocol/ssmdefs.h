@@ -35,19 +35,11 @@
 #define __SSMDEFS_H__
 
 /* Basic type definitions for both client and server. */
-#ifdef macintosh
-typedef unsigned long size_t;
-typedef long ptrdiff_t;
-#endif
 typedef long CMInt32;
 typedef unsigned long CMUint32;
 typedef long SSMResourceID;
-#ifdef XP_MAC
-/* in order to get around Mac compiler pedanticism */
-#define SSMStatus int
-#else
+
 typedef int SSMStatus;
-#endif
 
 #define PSM_PORT                        11111
 #define PSM_DATA_PORT                   11113 /* needs to be removed */

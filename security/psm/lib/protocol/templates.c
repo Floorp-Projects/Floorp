@@ -129,6 +129,7 @@ CMTMessageTemplate UIEventTemplate[] =
     { CMT_DT_INT, offsetof(UIEvent, resourceID) },
     { CMT_DT_INT, offsetof(UIEvent, width) },
     { CMT_DT_INT, offsetof(UIEvent, height) },
+    { CMT_DT_BOOL, offsetof(UIEvent, isModal) },
     { CMT_DT_STRING, offsetof(UIEvent, url) },
     { CMT_DT_ITEM, offsetof(UIEvent, clientContext) },
     { CMT_DT_END }
