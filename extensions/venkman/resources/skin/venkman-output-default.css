@@ -3,6 +3,18 @@ body.venkman-body {
     color: lightgrey;
 }
 
+/* links */
+a.venkman-link {
+    color: #7083ff;
+    text-decoration: none;
+}
+
+/* link hover effect */
+a.venkman-link:hover {
+    text-decoration: underline;
+}
+
+
 #output-table {
     margin-top: 100%;
     width: 100%;
@@ -11,20 +23,40 @@ body.venkman-body {
 .msg {                                      /* .msg = a single message in the */
     width: 100%;                            /* output window                  */
     font-size: 10pt;
-    font-family: sans-serif;
+    font-family: monospace;
     white-space: -moz-pre-wrap;
 }
 
 .msg-data:before {
-    content: "+";
-    color: yellow;
+    content: "-";
+    color: magenta;
     margin-right: 5px;
 }
 
+.msg-data[msg-type="ERROR"] {
+    background: red;
+    color: white;
+}
+
+.msg-data[msg-type="HELP"]:before {
+    content: "?";
+}
+
+.msg-data[msg-type="USAGE"]:before {
+    content: "/";
+}
+
+.msg-data[msg-type="USAGE"] {
+    font-weight: bold;
+    font-style: italic;
+}
+
 .msg-data[msg-type="EVAL-IN"]:before {
+    color: yellow;
     content: "<";
 }
 
 .msg-data[msg-type="EVAL-OUT"]:before {
+    color: yellow;
     content: ">";
 }
