@@ -29,51 +29,53 @@
 # file under either the NPL or the GPL.
 #
 # Contributers:
-#  Robert Ginda
+#  Robert Ginda <rginda@netscape.com>
 #
 # Second cut at runtests.pl script originally by
 # Christine Begle (cbegle@netscape.com)
 # Branched 11/01/99
 #
 
+use 5.004;
+use strict;
 use Getopt::Mixed "nextOption";
 
 # command line option defaults
-local $opt_classpath = "";
-local $opt_engine_type = "";
-local $opt_output_file = "";
-local @opt_test_list_files;
-local @opt_neg_list_files;
-local $opt_suite_path = "./";
-local $opt_shell_path = "";
-local $opt_java_path = "";
-local $opt_bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=";
-local $opt_trace = 0;
-local $opt_console_failures = 0;
-local $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
-local $opt_exit_munge = 1;
+my $opt_classpath = "";
+my $opt_engine_type = "";
+my $opt_output_file = "";
+my @opt_test_list_files;
+my @opt_neg_list_files;
+my $opt_suite_path = "./";
+my $opt_shell_path = "";
+my $opt_java_path = "";
+my $opt_bug_url = "http://bugzilla.mozilla.org/show_bug.cgi?id=";
+my $opt_trace = 0;
+my $opt_console_failures = 0;
+my $opt_lxr_url = "http://lxr.mozilla.org/mozilla/source/js/tests/";
+my $opt_exit_munge = 1;
 
 # command line option definition
-local $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
+my $options = "b=s bugurl>b c=s classpath>c e=s engine>e f=s file>f " .
   "h help>h i j=s javapath>j k confail>k l=s list>l L=s neglist>L " .
   "p=s testpath>p s=s shellpath>s t trace>t u=s lxrurl>u x noexitmunge>x";
 
 &parse_args;
 
-local $os_type = &get_os_type;
-local $engine_command = &get_engine_command;
-local @test_list = &get_test_list;
+my $os_type = &get_os_type;
+my $engine_command = &get_engine_command;
+my @test_list = &get_test_list;
 
-local $user_exit = 0;
-local $html = "";
-local @failed_tests;
-local $failures_reported = 0;
-local $tests_completed = 0;
-local $exec_time_string;
-local $start_time = time;
+my $user_exit = 0;
+my $html = "";
+my @failed_tests;
+my $failures_reported = 0;
+my $tests_completed = 0;
+my $exec_time_string;
+my $start_time = time;
 
 if ($os_type ne "WIN") {
-    # on unix, ^C pauses the tests, and gives the user a chance to quit, but 
+    # on unix, ^C pauses the tests, and gives the user a chance to quit but 
     # report on what has been done, to just quit, or to continue (the
     # interrupted test will still be skipped.)
     # windows doesn't handle the int handler they way we want it to,
@@ -87,10 +89,10 @@ if ($#test_list == -1) {
 
 &execute_tests (@test_list);
 
-local $exec_time = (time - $start_time);
-local $exec_hours = int($exec_time / 60 / 60);
-local $exec_mins = int($exec_time / 60);
-local $exec_secs = ($exec_time % 60);
+my $exec_time = (time - $start_time);
+my $exec_hours = int($exec_time / 60 / 60);
+my $exec_mins = int($exec_time / 60);
+my $exec_secs = ($exec_time % 60);
 
 if ($exec_hours > 0) {
     $exec_time_string = "$exec_hours hours, $exec_mins minutes, " .
@@ -106,20 +108,20 @@ if ($exec_hours > 0) {
 #End.
 
 sub execute_tests {
-    local (@test_list) = @_;
-    local $test, $shell_command, $line, @output;
-    local $file_param = " -f ";
-    local $last_suite, $last_test_dir;
-    local $failure_lines;
+    my (@test_list) = @_;
+    my ($test, $shell_command, $line, @output);
+    my $file_param = " -f ";
+    my ($last_suite, $last_test_dir);
+    my $failure_lines;
 
     &status ("Executing " . ($#test_list + 1) . " test(s).");
 
     foreach $test (@test_list) {
-        local ($suite, $test_dir, $test_file) = split("/", $test);
+        my ($suite, $test_dir, $test_file) = split("/", $test);
         # *-n.js is a negative test, expect exit code 3 (runtime error)
-        local $expected_exit = ($test =~ /\-n\.js$/) ? 3 : 0;
-        local $got_exit, $exit_signal;
-        local $bug_line;
+        my $expected_exit = ($test =~ /\-n\.js$/) ? 3 : 0;
+        my ($got_exit, $exit_signal);
+        my $bug_line;
 
         # user selected [Q]uit from ^C handler.
         if ($user_exit) {
@@ -172,7 +174,7 @@ sub execute_tests {
             # produce (0 by default)
             if ($line =~ /expect(ed)?\s*exit\s*code\s*\:?\s*(\n+)/i) {
                 $expected_exit = $1;
-                &dd ("Test case expects exit code $expect_exit");
+                &dd ("Test case expects exit code $expected_exit");
             }
 
             # watch for failures
@@ -215,9 +217,9 @@ sub execute_tests {
 }
 
 sub write_results {
-    local $list_name, $neglist_name;
-    local $completion_date = localtime;
-    local $failure_pct = int(($failures_reported / $tests_completed) * 10000) /
+    my ($list_name, $neglist_name);
+    my $completion_date = localtime;
+    my $failure_pct = int(($failures_reported / $tests_completed) * 10000) /
       100;
     &dd ("Writing output to $opt_output_file.");
 
@@ -257,7 +259,7 @@ sub write_results {
        "OS type: $os_type<br>\n");
 
     if ($opt_engine_type eq "rhino") {
-        open (JAVAOUTPUT, $opt_path_to_java . "java -fullversion 2>&1 |");
+        open (JAVAOUTPUT, $opt_java_path . "java -fullversion 2>&1 |");
         print OUTPUT <JAVAOUTPUT>;
         print OUTPUT "<BR>";
         close (JAVAOUTPUT);
@@ -309,7 +311,7 @@ sub write_results {
 }
  
 sub parse_args {
-    local $option, $value;
+    my ($option, $value, $lastopt);
     
     &dd ("checking command line options.");
     
@@ -345,7 +347,7 @@ sub parse_args {
                 $value .= "/";
             }
             &dd ("opt: setting java path to '$value'.");
-            $opt_java_url = $value;
+            $opt_java_path = $value;
             
         } elsif ($option eq "k") {
             &dd ("opt: displaying failures on console.");
@@ -446,7 +448,7 @@ sub usage {
 #
 sub get_engine_command {
     
-    local $retval;
+    my $retval;
     
     if ($opt_engine_type eq "rhino") {
         &dd ("getting rhino engine command.");
@@ -474,7 +476,7 @@ sub get_engine_command {
 # get the shell command used to run rhino
 #
 sub get_rhino_engine_command {    
-    local $retval = $opt_java_path . "java ";
+    my $retval = $opt_java_path . "java ";
     
     if ($opt_shell_path) {
         $opt_classpath = ($opt_classpath) ?
@@ -496,7 +498,7 @@ sub get_rhino_engine_command {
 # get the shell command used to run xpcshell
 #
 sub get_xpc_engine_command {    
-    local $m5_home = @ENV{"MOZILLA_FIVE_HOME"} ||
+    my $m5_home = @ENV{"MOZILLA_FIVE_HOME"} ||
       die ("You must set MOZILLA_FIVE_HOME to use the xpcshell" ,
            ($os_type eq "WIN") ? "." : ", also " .
            "setting LD_LIBRARY_PATH to the same directory may get rid of " .
@@ -519,7 +521,7 @@ sub get_xpc_engine_command {
 # get the shell command used to run spidermonkey
 #
 sub get_sm_engine_command {
-    local $retval;
+    my $retval;
     
     # Look for Makefile.ref style make first.
     # (On Windows, spidermonkey can be made by two makefiles, each putting the
@@ -533,11 +535,11 @@ sub get_sm_engine_command {
 
         $retval = $opt_suite_path . "../src/";
         opendir (SRC_DIR_FILES, $retval);
-        local @src_dir_files = readdir(SRC_DIR_FILES);
+        my @src_dir_files = readdir(SRC_DIR_FILES);
         closedir (SRC_DIR_FILES);
         
-        local $dir, $object_dir;
-        local $pattern = ($opt_engine_type eq "smdebug") ?
+        my ($dir, $object_dir);
+        my $pattern = ($opt_engine_type eq "smdebug") ?
           'DBG.OBJ' : 'OPT.OBJ';
         
         # scan for the first directory matching
@@ -545,7 +547,7 @@ sub get_sm_engine_command {
         foreach $dir (@src_dir_files) {
             if ($dir =~ $pattern) {
                 $object_dir = $dir;
-                break;
+                last;
             }
         }
         
@@ -596,24 +598,24 @@ sub get_sm_engine_command {
 # get the shell command used to run the liveconnect shell
 #
 sub get_lc_engine_command {
-    local $retval;    
+    my $retval;    
         
     if ($opt_shell_path) {
         $retval = $opt_shell_path;
     } else {
         $retval = $opt_suite_path . "../src/liveconnect/";
         opendir (SRC_DIR_FILES, $retval);
-        local @src_dir_files = readdir(SRC_DIR_FILES);
+        my @src_dir_files = readdir(SRC_DIR_FILES);
         closedir (SRC_DIR_FILES);
         
-        local $dir, $object_dir;
-        local $pattern = ($opt_engine_type eq "lcdebug") ?
+        my ($dir, $object_dir);
+        my $pattern = ($opt_engine_type eq "lcdebug") ?
           'DBG.OBJ' : 'OPT.OBJ';
         
         foreach $dir (@src_dir_files) {
             if ($dir =~ $pattern) {
                 $object_dir = $dir;
-                break;
+                last;
             }
         }
         
@@ -642,7 +644,7 @@ sub get_lc_engine_command {
 }
 
 sub get_os_type {    
-    local $uname = `uname -a`;
+    my $uname = `uname -a`;
     
     if ($uname =~ /WIN/) {
         $uname = "WIN";
@@ -656,11 +658,11 @@ sub get_os_type {
 }
 
 sub get_test_list {
-    local @test_list;
-    local @neg_list;
+    my @test_list;
+    my @neg_list;
 
     if ($#opt_test_list_files > -1) {
-        local $list_file;
+        my $list_file;
 
         &dd ("getting test list from user specified source.");
 
@@ -669,13 +671,14 @@ sub get_test_list {
         }
     } else {
         &dd ("no list file, groveling in '$opt_suite_path'.");
+
         @test_list = &get_default_test_list($opt_suite_path);
     }
 
     if ($#opt_neg_list_files > -1) {
-        local $list_file;
-        local $orig_size = $#test_list + 1;
-        local $actually_skipped;
+        my $list_file;
+        my $orig_size = $#test_list + 1;
+        my $actually_skipped;
 
         &dd ("getting negative list from user specified source.");
 
@@ -705,8 +708,8 @@ sub get_test_list {
 # to include all test files under the specified directory
 #
 sub expand_user_test_list {
-    local ($list_file) = @_;
-    local @retval = ();
+    my ($list_file) = @_;
+    my @retval = ();
 
     if ($list_file =~ /\.js$/ || -d $list_file) {
 
@@ -734,8 +737,8 @@ sub expand_user_test_list {
 }
 
 sub expand_test_list_entry {
-    local ($entry) = @_;
-    local @retval;
+    my ($entry) = @_;
+    my @retval;
 
     if ($entry =~ /\.js$/) {
         # it's a regular entry, add it to the list
@@ -747,10 +750,10 @@ sub expand_test_list_entry {
     } elsif ($entry =~ /(.*\/[^\*][^\/]*)\/?\*?$/) {
         # Entry is in the form suite_dir/test_dir[/*]
         # so iterate all tests under it
-        local $suite_and_test_dir = $1;
-        local @test_files = &get_js_files ($opt_suite_path . 
+        my $suite_and_test_dir = $1;
+        my @test_files = &get_js_files ($opt_suite_path . 
                                            $suite_and_test_dir);
-        local $i;
+        my $i;
         
         foreach $i (0 .. $#test_files) {
             $test_files[$i] = $suite_and_test_dir . "/" . 
@@ -762,14 +765,14 @@ sub expand_test_list_entry {
     } elsif ($entry =~ /([^\*][^\/]*)\/?\*?$/) {
         # Entry is in the form suite_dir[/*]
         # so iterate all test dirs and tests under it
-        local $suite = $1;
-        local @test_dirs = &get_subdirs ($opt_suite_path . $suite);
-        local $test_dir;
+        my $suite = $1;
+        my @test_dirs = &get_subdirs ($opt_suite_path . $suite);
+        my $test_dir;
         
         foreach $test_dir (@test_dirs) {
-            local @test_files = &get_js_files ($opt_suite_path . $suite . "/" .
+            my @test_files = &get_js_files ($opt_suite_path . $suite . "/" .
                                                $test_dir);
-            local $i;
+            my $i;
             
             foreach $i (0 .. $#test_files) {
                 $test_files[$i] = $suite . "/" . $test_dir . "/" . 
@@ -792,19 +795,19 @@ sub expand_test_list_entry {
 # user doesn't supply a test list.
 #
 sub get_default_test_list {
-    local ($suite_path) = @_;
-    local @suite_list = &get_subdirs($suite_path);
-    local $suite;
-    local @retval;
+    my ($suite_path) = @_;
+    my @suite_list = &get_subdirs($suite_path);
+    my $suite;
+    my @retval;
 
     foreach $suite (@suite_list) {
-        local @test_dir_list = get_subdirs ($suite_path . $suite);
-        local $test_dir;
+        my @test_dir_list = get_subdirs ($suite_path . $suite);
+        my $test_dir;
         
         foreach $test_dir (@test_dir_list) {
-            local @test_list = get_js_files ($suite_path . $suite . "/" .
+            my @test_list = get_js_files ($suite_path . $suite . "/" .
                                              $test_dir);
-            local $test;
+            my $test;
             
             foreach $test (@test_list) {
                 $retval[$#retval + 1] = $suite_path . $suite . "/" . $test_dir .
@@ -821,7 +824,7 @@ sub get_default_test_list {
 # generate an output file name based on the date
 #
 sub get_tempfile_id {
-    local ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) =
       &get_padded_time (localtime);
     
     return $year . "-" . $mon . "-" . $mday . "-" . $hour . $min . $sec;
@@ -829,11 +832,11 @@ sub get_tempfile_id {
 }
 
 sub get_padded_time {
-    local ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = @_;
+    my ($sec, $min, $hour, $mday, $mon, $year, $wday, $yday, $isdst) = @_;
     
     $mon++;
     $mon = &zero_pad($mon);
-    $year= ($year < 2000) ? "19" . $year : $year;
+    $year += 1900;
     $mday= &zero_pad($mday);
     $sec = &zero_pad($sec);
     $min = &zero_pad($min);
@@ -844,17 +847,17 @@ sub get_padded_time {
 }
 
 sub zero_pad {
-    local ($string) = @_;
+    my ($string) = @_;
     
     $string = ($string < 10) ? "0" . $string : $string;
     return $string;
 }
 
 sub subtract_arrays {
-    local ($whole_ref, $part_ref) = @_;
-    local @whole = @$whole_ref;
-    local @part = @$part_ref;
-    local $line;
+    my ($whole_ref, $part_ref) = @_;
+    my @whole = @$whole_ref;
+    my @part = @$part_ref;
+    my $line;
 
     foreach $line (@part) {
         @whole = grep (!/$line/, @whole); 
@@ -868,15 +871,15 @@ sub subtract_arrays {
 # given a directory, return an array of all subdirectories
 #
 sub get_subdirs {
-    local ($dir)  = @_;
-    local @subdirs;
+    my ($dir)  = @_;
+    my @subdirs;
     
     if (!($dir =~ /\/$/)) {
         $dir = $dir . "/";
     }
     
     opendir (DIR, $dir) || die ("couldn't open directory $dir: $!");
-    local @testdir_contents = readdir(DIR);
+    my @testdir_contents = readdir(DIR);
     closedir(DIR);
     
     foreach (@testdir_contents) {
@@ -892,8 +895,8 @@ sub get_subdirs {
 # given a directory, return an array of all the js files that are in it.
 #
 sub get_js_files {
-    local ($test_subdir) = @_;
-    local @js_file_array;
+    my ($test_subdir) = @_;
+    my (@js_file_array, @subdir_files);
     
     opendir (TEST_SUBDIR, $test_subdir) || die ("couldn't open directory " .
                                                 "$test_subdir: $!");
@@ -910,7 +913,7 @@ sub get_js_files {
 }
 
 sub report_failure {
-    local ($test, $message, $bug_line) = @_;
+    my ($test, $message, $bug_line) = @_;
 
     $failures_reported++;
 
@@ -964,7 +967,7 @@ sub status {
 }
 
 sub int_handler {
-    local $resp;
+    my $resp;
 
     do {
         print ("\n*** User Break: Just [Q]uit, Quit and [R]eport, [C]ontinue ?");
