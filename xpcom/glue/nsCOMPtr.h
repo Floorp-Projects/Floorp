@@ -57,33 +57,7 @@
 */
 
 
-  /*
-    Set up some |#define|s to turn off a couple of troublesome C++ features.
-    Interestingly, none of the compilers barf on template stuff.  These are set up automatically
-    by the autoconf system for all Unixes.  (Temporarily, I hope) I have to define them
-    myself for Mac and Windows.
-  */
-
-  // under Metrowerks (Mac), we don't have autoconf yet
-#ifdef __MWERKS__
-  #define HAVE_CPP_USING
-  #define HAVE_CPP_EXPLICIT
-  #define HAVE_CPP_BOOL
-#endif
-
-  // under VC++ (Windows), we don't have autoconf yet
 #ifdef _MSC_VER
-  #define HAVE_CPP_EXPLICIT
-  #define HAVE_CPP_USING
-
-  #if (_MSC_VER<1100)
-      // before 5.0, VC++ couldn't handle explicit
-    #undef HAVE_CPP_EXPLICIT
-  #elif (_MSC_VER==1100)
-      // VC++5.0 has an internal compiler error (sometimes) without this
-    #undef HAVE_CPP_USING
-  #endif
-
   #define NSCAP_FEATURE_INLINE_STARTASSIGNMENT
     // under VC++, we win by inlining StartAssignment
 
@@ -148,7 +122,7 @@
       in an order that satisfies:
     
         nsDerivedSafe < nsCOMPtr
-        nsDontAddRef < nsCOMPtr
+        already_AddRefed < nsCOMPtr
         nsCOMPtr < nsGetterAddRefs
 
       The other compilers probably won't complain, so please don't reorder these
@@ -207,6 +181,78 @@ nsDerivedSafe<T>::Release()
   }
 
 #endif
+
+
+
+template <class T>
+struct already_AddRefed
+    /*
+      ...cooperates with |nsCOMPtr| to allow you to assign in a pointer _without_
+      |AddRef|ing it.  You might want to use this as a return type from a function
+      that produces an already |AddRef|ed pointer as a result.
+
+      See also |getter_AddRefs()|, |dont_AddRef()|, and |class nsGetterAddRefs|.
+
+      This type should be a nested class inside |nsCOMPtr<T>|.
+
+      Yes, |already_AddRefed| could have been implemented as an |nsCOMPtr_helper| to
+      avoid adding specialized machinery to |nsCOMPtr| ... but this is the simplest
+      case, and perhaps worth the savings in time and space that its specific
+      implementation affords over the more general solution offered by
+      |nsCOMPtr_helper|.
+    */
+  {
+    already_AddRefed( T* aRawPtr )
+        : mRawPtr(aRawPtr)
+      {
+        // nothing else to do here
+      }
+
+    operator T*() const
+      {
+        return mRawPtr;
+      }
+
+    T* mRawPtr;
+  };
+
+template <class T>
+inline
+const already_AddRefed<T>
+getter_AddRefs( T* aRawPtr )
+    /*
+      ...makes typing easier, because it deduces the template type, e.g., 
+      you write |dont_AddRef(fooP)| instead of |already_AddRefed<IFoo>(fooP)|.
+    */
+  {
+    return already_AddRefed<T>(aRawPtr);
+  }
+
+template <class T>
+inline
+const already_AddRefed<T>
+getter_AddRefs( const already_AddRefed<T>& aAlreadyAddRefedPtr )
+  {
+    return aAlreadyAddRefedPtr;
+  }
+
+template <class T>
+inline
+const already_AddRefed<T>
+dont_AddRef( T* aRawPtr )
+  {
+    return already_AddRefed<T>(aRawPtr);
+  }
+
+template <class T>
+inline
+const already_AddRefed<T>
+dont_AddRef( const already_AddRefed<T> aAlreadyAddRefedPtr )
+  {
+    return aAlreadyAddRefedPtr;
+  }
+
+
 
 
   /*
@@ -272,6 +318,14 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
     return nsQueryInterface(aRawPtr, error);
   }
 
+template <class T>
+inline
+void
+do_QueryInterface( already_AddRefed<T>&, nsresult* = 0 )
+  {
+    // This signature exists soley to _stop_ you from doing the bad thing.
+  }
+
 
 
   /**
@@ -285,60 +339,6 @@ do_QueryInterface( nsISupports* aRawPtr, nsresult* error = 0 )
    *  |0|.
    */
 #define null_nsCOMPtr() (0)
-
-
-
-template <class T>
-struct nsDontAddRef
-    /*
-      ...cooperates with |nsCOMPtr| to allow you to assign in a pointer _without_
-      |AddRef|ing it.  You would rarely use this directly, but rather through the
-      machinery of |getter_AddRefs| in the argument list to functions that |AddRef|
-      their results before returning them to the caller.
-
-      DO NOT USE THIS TYPE DIRECTLY IN YOUR CODE.  Use |getter_AddRefs()| or
-      |dont_AddRef()| instead.
-
-      See also |getter_AddRefs()|, |dont_AddRef()|, and |class nsGetterAddRefs|.
-
-      This type should be a nested class inside |nsCOMPtr<T>|.
-
-      Yes, |nsDontAddRef| could have been implemented as an |nsCOMPtr_helper| to
-      avoid adding specialized machinery to |nsCOMPtr| ... but this is the simplest
-      case, and perhaps worth the savings in time and space that its specific
-      implementation affords over the more general solution offered by
-      |nsCOMPtr_helper|.
-    */
-  {
-    explicit
-    nsDontAddRef( T* aRawPtr )
-        : mRawPtr(aRawPtr)
-      {
-        // nothing else to do here
-      }
-
-    T* mRawPtr;
-  };
-
-template <class T>
-inline
-const nsDontAddRef<T>
-getter_AddRefs( T* aRawPtr )
-    /*
-      ...makes typing easier, because it deduces the template type, e.g., 
-      you write |dont_AddRef(fooP)| instead of |nsDontAddRef<IFoo>(fooP)|.
-    */
-  {
-    return nsDontAddRef<T>(aRawPtr);
-  }
-
-template <class T>
-inline
-const nsDontAddRef<T>
-dont_AddRef( T* aRawPtr )
-  {
-    return nsDontAddRef<T>(aRawPtr);
-  }
 
 
 
@@ -482,7 +482,7 @@ class nsCOMPtr
           NSCAP_ASSERT_NO_QUERY_NEEDED();
         }
 
-      nsCOMPtr( const nsDontAddRef<T>& aSmartPtr )
+      nsCOMPtr( const already_AddRefed<T>& aSmartPtr )
             : NSCAP_CTOR_BASE(aSmartPtr.mRawPtr)
           // construct from |dont_AddRef(expr)|
         {
@@ -529,7 +529,7 @@ class nsCOMPtr
         }
 
       nsCOMPtr<T>&
-      operator=( const nsDontAddRef<T>& rhs )
+      operator=( const already_AddRefed<T>& rhs )
           // assign from |dont_AddRef(expr)|
         {
           assign_assuming_AddRef(rhs.mRawPtr);
@@ -668,7 +668,7 @@ class nsCOMPtr<nsISupports>
             NSCAP_ADDREF(mRawPtr);
         }
 
-      nsCOMPtr( const nsDontAddRef<nsISupports>& aSmartPtr )
+      nsCOMPtr( const already_AddRefed<nsISupports>& aSmartPtr )
             : nsCOMPtr_base(aSmartPtr.mRawPtr)
           // construct from |dont_AddRef(expr)|
         {
@@ -703,7 +703,7 @@ class nsCOMPtr<nsISupports>
         }
 
       nsCOMPtr<nsISupports>&
-      operator=( const nsDontAddRef<nsISupports>& rhs )
+      operator=( const already_AddRefed<nsISupports>& rhs )
           // assign from |dont_AddRef(expr)|
         {
           assign_assuming_AddRef(rhs.mRawPtr);
