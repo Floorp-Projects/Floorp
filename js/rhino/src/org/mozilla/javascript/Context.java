@@ -754,7 +754,7 @@ public class Context
      */
      public final String getImplementationVersion()
      {
-        return "Rhino 1.6 release 1 0000 00 00";
+        return "Rhino 1.6 release 1 2004 08 11";
      }
 
     /**
