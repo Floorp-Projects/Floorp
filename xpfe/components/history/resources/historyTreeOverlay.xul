@@ -47,7 +47,7 @@
   <script type="application/x-javascript" src="chrome://communicator/content/bookmarks/bookmarksOverlay.js"/>
   
   <popupset id="historyContextMenu">
-    <popup id="historyMenu" oncreate="return updateItems();">
+    <popup id="historyMenu" onpopupshowing="return updateItems();">
       <menuitem id="miOpen" label="&openLinkInWindowCmd.label;" accesskey="&openLinkInWindowCmd.accesskey;" default="true"
                 oncommand="OpenURL(false);"/>
       <menuitem id="miOpenInNewWindow" label="&openLinkCmd.label;" accesskey="&openLinkCmd.accesskey;"
