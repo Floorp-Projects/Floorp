@@ -201,6 +201,13 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
 
   /* locale binding */
   nsString2  strFile2;
+
+#if 1
+   /* plan A: don't fallback; use aURLSpec: xxx.pro -> xxx.pro
+   */
+   strFile2 = aURLSpec;
+   ret = OpenInputStream(strFile2, in);
+#else
   nsString   lc_lang;
   nsString   lc_country;
 
@@ -253,6 +260,7 @@ nsStringBundle::GetInputStream(const char* aURLSpec, nsILocale* aLocale, nsIInpu
     strFile2 = aURLSpec;
     ret = OpenInputStream(strFile2, in);
   }
+#endif 
   return ret;
 }
 
