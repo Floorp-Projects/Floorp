@@ -160,6 +160,12 @@ public:
                                     nscoord aDX,
                                     nscoord aDY,
                                     PRBool aUsePrintSettings=PR_FALSE);
+  /**
+   * Called by the presShell when painting is finished, so we can clear our
+   * inline background data cache.
+   */
+  static void DidPaint();
+
 
   static void DrawDashedSides(PRIntn startSide,
                               nsIRenderingContext& aContext,

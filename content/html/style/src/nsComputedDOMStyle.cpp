@@ -763,6 +763,30 @@ nsComputedDOMStyle::GetBackgroundImage(nsIFrame *aFrame,
 }
 
 nsresult
+nsComputedDOMStyle::GetBackgroundInlinePolicy(nsIFrame *aFrame,
+                                              nsIDOMCSSValue** aValue)
+{
+  nsROCSSPrimitiveValue *val = GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleBackground *background = nsnull;
+  GetStyleData(eStyleStruct_Background, (const nsStyleStruct*&)background, aFrame);
+
+  PRUint8 policy = NS_STYLE_BG_INLINE_POLICY_CONTINUOUS;
+  if (background) {
+    policy = background->mBackgroundInlinePolicy;
+  }
+
+  const nsAFlatCString& backgroundPolicy =
+      nsCSSProps::SearchKeywordTable(policy,
+                                     nsCSSProps::kBackgroundInlinePolicyKTable);
+
+  val->SetIdent(backgroundPolicy);
+
+  return CallQueryInterface(val, aValue);  
+}
+
+nsresult
 nsComputedDOMStyle::GetBackgroundOrigin(nsIFrame *aFrame,
                                         nsIDOMCSSValue** aValue)
 {
@@ -3599,6 +3623,7 @@ nsComputedDOMStyle::GetQueryablePropertyMap(PRUint32* aLength)
 
     COMPUTED_STYLE_MAP_ENTRY(appearance,                    Appearance),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_clip,          BackgroundClip),
+    COMPUTED_STYLE_MAP_ENTRY(_moz_background_inline_policy, BackgroundInlinePolicy),
     COMPUTED_STYLE_MAP_ENTRY(_moz_background_origin,        BackgroundOrigin),
     COMPUTED_STYLE_MAP_ENTRY(binding,                       Binding),
     COMPUTED_STYLE_MAP_ENTRY(border_bottom_colors,          BorderBottomColors),

@@ -84,6 +84,120 @@ enum ePathTypes{
   eCalcRev
 };
 
+// To avoid storing this data on nsInlineFrame (bloat) and to avoid
+// recalculating this for each frame in a continuation (perf), hold
+// a cache of various coordinate information that we need in order
+// to paint inline backgrounds.
+struct InlineBackgroundData
+{
+  InlineBackgroundData()
+      : mFrame(nsnull)
+  {
+  }
+
+  ~InlineBackgroundData()
+  {
+  }
+
+  void Reset()
+  {
+    mBoundingBox.SetRect(0,0,0,0);
+    mContinuationPoint = mUnbrokenWidth = 0;
+    mFrame = nsnull;    
+  }
+
+  nsRect GetContinuousRect(nsIFrame* aFrame)
+  {
+    SetFrame(aFrame);
+
+    nsSize size;
+    mFrame->GetSize(size);
+
+    // Assume background-origin: border and return a rect with offsets
+    // relative to (0,0).  If we have a different background-origin,
+    // then our rect should be deflated appropriately by our caller.
+    return nsRect(-mContinuationPoint, 0, mUnbrokenWidth, size.height);
+  }
+
+  nsRect GetBoundingRect(nsIFrame* aFrame)
+  {
+    SetFrame(aFrame);
+
+    nsPoint point;
+    mFrame->GetOrigin(point);
+
+    // Move the offsets relative to (0,0) which puts the bounding box into
+    // our coordinate system rather than our parent's.  We do this by
+    // moving it the back distance from us to the bounding box.
+    // This also assumes background-origin: border, so our caller will
+    // need to deflate us if needed.
+    nsRect boundingBox(mBoundingBox);
+    boundingBox.MoveBy(-point.x, -point.y);
+
+    return boundingBox;
+  }
+
+protected:
+  nsIFrame*     mFrame;
+  nscoord       mContinuationPoint;
+  nscoord       mUnbrokenWidth;
+  nsRect        mBoundingBox;
+
+  void SetFrame(nsIFrame* aFrame)
+  {
+    NS_PRECONDITION(aFrame, "Need a frame");
+
+    nsIFrame *prevInFlow = nsnull;
+    aFrame->GetPrevInFlow(&prevInFlow);
+
+    if (!prevInFlow || mFrame != prevInFlow) {
+      // Ok, we've got the wrong frame.  We have to start from scratch.
+      Reset();
+      Init(aFrame);
+      return;
+    }
+
+    // Get our last frame's size and add its width to our continuation
+    // point before we cache the new frame.
+    nsSize size;
+    mFrame->GetSize(size);
+    mContinuationPoint += size.width;
+
+    mFrame = aFrame;
+  }
+
+  void Init(nsIFrame* aFrame)
+  {
+    nsIFrame* inlineFrame;
+    // Start with the previous flow frame as our continuation point
+    // is the total of the widths of the previous frames.
+    aFrame->GetPrevInFlow(&inlineFrame);
+
+    nsRect rect;
+    while (inlineFrame) {
+      inlineFrame->GetRect(rect);
+      mContinuationPoint += rect.width;
+      mUnbrokenWidth += rect.width;
+      mBoundingBox.UnionRect(mBoundingBox, rect);
+      inlineFrame->GetPrevInFlow(&inlineFrame);
+    }
+
+    // Next add this frame and subsequent frames to the bounding box and
+    // unbroken width.
+    inlineFrame = aFrame;
+    while (inlineFrame) {
+      inlineFrame->GetRect(rect);
+      mUnbrokenWidth += rect.width;
+      mBoundingBox.UnionRect(mBoundingBox, rect);
+      inlineFrame->GetNextInFlow(&inlineFrame);
+    }
+
+    mFrame = aFrame;
+  }
+};
+
+static InlineBackgroundData gInlineBGData;
+
 static void GetPath(nsFloatPoint aPoints[],nsPoint aPolyPath[],PRInt32 *aCurIndex,ePathTypes  aPathType,PRInt32 &aC1Index,float aFrac=0);
 static nsresult GetFrameForBackgroundUpdate(nsIPresContext *aPresContext,nsIFrame *aFrame, nsIFrame **aBGFrame);
 
@@ -2500,8 +2614,8 @@ FindCanvasBackground(nsIPresContext* aPresContext,
       while(firstChild){
         for (nsIFrame* kidFrame = firstChild; nsnull != kidFrame; ) {
           kidFrame->GetStyleContext(getter_AddRefs(parentContext));
-          result = (nsStyleBackground*)parentContext->GetStyleData(eStyleStruct_Background);
-          if (!result->BackgroundIsTransparent()){
+          ::GetStyleData(parentContext, &result);
+          if (!result->IsTransparent()) {
             GetStyleData(kidFrame, aBackground);
             return PR_TRUE;
           } else {
@@ -2514,7 +2628,7 @@ FindCanvasBackground(nsIPresContext* aPresContext,
     }
 
     // Check if we need to do propagation from BODY rather than HTML.
-    if (result->BackgroundIsTransparent()) {
+    if (result->IsTransparent()) {
       nsCOMPtr<nsIContent> content;
       aForFrame->GetContent(getter_AddRefs(content));
       if (content) {
@@ -2600,7 +2714,7 @@ FindElementBackground(nsIPresContext* aPresContext,
 
   const nsStyleBackground *htmlBG;
   ::GetStyleData(parentFrame, &htmlBG);
-  return !htmlBG->BackgroundIsTransparent();
+  return !htmlBG->IsTransparent();
 }
 
 PRBool
@@ -2614,6 +2728,12 @@ nsCSSRendering::FindBackground(nsIPresContext* aPresContext,
   return isCanvas
       ? FindCanvasBackground(aPresContext, aForFrame, aBackground)
       : FindElementBackground(aPresContext, aForFrame, aBackground);
+}
+
+void
+nsCSSRendering::DidPaint()
+{
+  gInlineBGData.Reset();
 }
 
 void
@@ -2808,9 +2928,32 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
 
   req = nsnull;
 
+  nsRect bgOriginArea;
+
+  nsCOMPtr<nsIAtom> frameType;
+  aForFrame->GetFrameType(getter_AddRefs(frameType));
+  if (frameType == nsLayoutAtoms::inlineFrame) {
+    switch (aColor.mBackgroundInlinePolicy) {
+    case NS_STYLE_BG_INLINE_POLICY_EACH_BOX:
+      bgOriginArea = aBorderArea;
+      break;
+    case NS_STYLE_BG_INLINE_POLICY_BOUNDING_BOX:
+      bgOriginArea = gInlineBGData.GetBoundingRect(aForFrame);
+      break;
+    default:
+      NS_ERROR("Unknown background-inline-policy value!  "
+               "Please, teach me what to do.");
+    case NS_STYLE_BG_INLINE_POLICY_CONTINUOUS:
+      bgOriginArea = gInlineBGData.GetContinuousRect(aForFrame);
+      break;
+    }
+  }
+  else {
+    bgOriginArea = aBorderArea;
+  }
+
   // Background images are tiled over the 'background-clip' area
   // but the origin of the tiling is based on the 'background-origin' area
-  nsRect bgOriginArea(aBorderArea);
   if (aColor.mBackgroundOrigin != NS_STYLE_BG_ORIGIN_BORDER) {
     nsMargin border;
     if (!aBorder.GetBorder(border)) {
@@ -2836,7 +2979,6 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
   PRBool  needBackgroundColor = PR_TRUE;
   PRIntn  repeat = aColor.mBackgroundRepeat;
   nscoord xDistance, yDistance;
-  PRBool needBackgroundOnContinuation = PR_FALSE; // set to true if repeat-y value is set
 
   switch (repeat) {
     case NS_STYLE_BG_REPEAT_X:
@@ -2846,12 +2988,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     case NS_STYLE_BG_REPEAT_Y:
       xDistance = tileWidth;
       yDistance = dirtyRect.height;
-      needBackgroundOnContinuation = PR_TRUE;
       break;
     case NS_STYLE_BG_REPEAT_XY:
       xDistance = dirtyRect.width;
       yDistance = dirtyRect.height;
-      needBackgroundOnContinuation = PR_TRUE;
       // We need to render the background color if the image is transparent
       //needBackgroundColor = image->GetHasAlphaMask();
       break;
@@ -2874,25 +3014,10 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
     return;
   }
 
-  // if the frame is a continuation frame, check if we need to draw the image for it
-  // (continuation with no repeat setting in the Y direction do not get background images)
-  if (aForFrame) {
-    nsIFrame *prevInFlowFrame = nsnull;
-    aForFrame->GetPrevInFlow(&prevInFlowFrame);
-    if (prevInFlowFrame) {
-      if (!needBackgroundOnContinuation) {
-        // the frame is a continuation, and we do not want the background image repeated
-        // in the Y direction (needBackgroundOnContinuation == PR_FALSE) so just bail
-        return;
-      }
-    }
-  }
-
-
   // Compute the anchor point.
   //
   // When tiling, the anchor coordinate values will be negative offsets
-  // from the padding area
+  // from the background-origin area.
 
   nsPoint anchor;
   if (NS_STYLE_BG_ATTACHMENT_FIXED == aColor.mBackgroundAttachment) {
@@ -2982,9 +3107,7 @@ nsCSSRendering::PaintBackgroundWithSC(nsIPresContext* aPresContext,
       view->GetParent(view);
     }
   } else {
-    nsCOMPtr<nsIAtom> frameType;
-    aForFrame->GetFrameType(getter_AddRefs(frameType));
-    if (frameType.get() == nsLayoutAtoms::canvasFrame) {
+    if (frameType == nsLayoutAtoms::canvasFrame) {
       // If the frame is the canvas, the image is placed relative to
       // the root element's (first) frame (see bug 46446)
       nsRect firstRootElementFrameArea;
