@@ -259,7 +259,8 @@ static void PR_CALLBACK Client(void *arg)
         {
             TEST_LOG(
                 cltsrv_log_file, TEST_LOG_ERROR,
-                ("\tClient(0x%p): conection failed\n", me));
+                ("\tClient(0x%p): conection failed (%d, %d)\n",
+                me, PR_GetError(), PR_GetOSError()));
             goto aborted;
         }
 
