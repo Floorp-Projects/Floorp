@@ -44,11 +44,9 @@ extern "C" {
 #include "prefapi.h"
 #include "proto.h"
 
-#ifdef MOCHA
 #include "libmocha.h"
 #include "libevent.h"
 #include "layout.h"         /* XXX From ../layout */
-#endif
 
 #ifdef LAYERS
 #include "layers.h"
