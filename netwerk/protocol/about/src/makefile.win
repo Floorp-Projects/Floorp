@@ -20,6 +20,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..\..
+include <$(DEPTH)/config/config.mak>
+
 MODULE=necko
 
 LIBRARY_NAME=nkabout_s
