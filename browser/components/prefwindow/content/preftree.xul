@@ -144,11 +144,6 @@
         </treeitem>
         <treeitem>
           <treerow>
-            <treecell url="chrome://browser/content/pref/pref-http.xul" label="&httpnetworking.label;"/> 
-          </treerow>
-        </treeitem>        
-        <treeitem>
-          <treerow>
             <treecell url="chrome://browser/content/pref/pref-smartupdate.xul" label="&smart.label;"/>
           </treerow>
         </treeitem>
