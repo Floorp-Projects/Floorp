@@ -796,8 +796,6 @@ typedef struct lm_lock_waiter {
 
 typedef struct ContextListStr ContextList;
 
-typedef struct WindowGroup LMWindowGroup;
-
 struct WindowGroup {
     LMWindowGroup     *next;
     LMWindowGroup     *prev;
