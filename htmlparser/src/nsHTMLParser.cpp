@@ -380,6 +380,10 @@ PRBool VerifyContextVector(PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
       result=aDTD->VerifyContextVector(aTags,count);
     }
     if(PR_FALSE==result){
+#ifdef NS_WIN32
+      // save file to directory indicated by bad context vector
+
+#endif
       //add debugging code here to record the fact that we just encountered
       //a context vector we don't know how to handle.
     }
@@ -397,7 +401,6 @@ PRBool VerifyContextVector(PRInt32 aTags[],PRInt32 count,nsIDTD* aDTD) {
  *  @return 
  */
 
-#if defined(NS_DEBUG)
 extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir)
 {
    if (verify_dir && PL_strlen(verify_dir))
@@ -406,7 +409,6 @@ extern "C" NS_EXPORT void SetVerificationDirectory(char * verify_dir)
       gVerificationOutputDir = NULL;
    
 }
-#endif /* NS_DEBUG */
 
 /**
  *  This is where we loop over the tokens created in the 
