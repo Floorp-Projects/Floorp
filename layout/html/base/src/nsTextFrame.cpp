@@ -1958,10 +1958,10 @@ TextFrame::PeekOffset(nsSelectionAmount aAmount, nsDirection aDirection, PRInt32
   if (NS_FAILED(result)){
     *aResultFrame = this;
     *aContentOffset = mContentOffset;
-    if (aDirection = eDirNext){
+    if (aDirection == eDirNext){
       *aFrameOffset = mContentLength;
     }
-    else if (aDirection = eDirPrevious){
+    else if (aDirection == eDirPrevious){
       *aFrameOffset = 0;
     }
     result = NS_OK;
@@ -2653,10 +2653,8 @@ TextFrame::GetFrameName(nsString& aResult) const
 NS_IMETHODIMP
 TextFrame::List(FILE* out, PRInt32 aIndent) const
 {
-  PRInt32 i;
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
-
   // Output the tag
+  IndentBy(out, aIndent);
   ListTag(out);
   nsIView* view;
   GetView(&view);
@@ -2681,7 +2679,7 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
   }
 
   // Output the rect and state
-  out << mRect;
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
@@ -2690,13 +2688,13 @@ TextFrame::List(FILE* out, PRInt32 aIndent) const
   fputs("<\n", out);
   aIndent++;
 
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  IndentBy(out, aIndent);
   fputs("\"", out);
   fputs(tmp, out);
   fputs("\"\n", out);
 
   aIndent--;
-  for (i = aIndent; --i >= 0; ) fputs("  ", out);
+  IndentBy(out, aIndent);
   fputs(">\n", out);
 
   return NS_OK;
