@@ -1656,7 +1656,8 @@ nsScriptSecurityManager::CanCreateWrapper(JSContext *aJSContext,
     if (checkedComponent)
         checkedComponent->CanCreateWrapper((nsIID *)&aIID, getter_Copies(objectSecurityLevel));
 
-    return CheckXPCPermissions(aJSContext, aObj, objectSecurityLevel, PR_FALSE,
+    // XXX Do we skip a frame here or not? Need to find out
+    return CheckXPCPermissions(aJSContext, aObj, objectSecurityLevel, PR_TRUE,
                                "Permission denied to create wrapper for object");
 }
 
