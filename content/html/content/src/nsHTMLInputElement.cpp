@@ -1911,6 +1911,9 @@ nsHTMLInputElement::StringToAttribute(nsIAtom* aAttribute,
       }
       table++;
     }
+    // Unknown type.  We treat this as "text", but we set it as a string, not
+    // as an HTMLValue.
+    mType = NS_FORM_INPUT_TEXT;
   }
   else if (aAttribute == nsHTMLAtoms::checked) {
     aResult.SetEmptyValue();
