@@ -61,7 +61,8 @@ public:
   virtual nsresult CompileMember(nsIScriptContext* aContext, const nsCString& aClassStr, void* aClassObject);
 
 protected:
-  nsString mFieldText;
+  PRUnichar* mFieldText;
+  PRUint32 mFieldTextLength;
   uintN mJSAttributes;
 };
 

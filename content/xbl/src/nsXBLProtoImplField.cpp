@@ -50,7 +50,9 @@
 MOZ_DECL_CTOR_COUNTER(nsXBLProtoImplField);
 
 nsXBLProtoImplField::nsXBLProtoImplField(const nsAReadableString* aName, const nsAReadableString* aReadOnly)
-:nsXBLProtoImplMember(aName)
+  : nsXBLProtoImplMember(aName),
+    mFieldText(nsnull),
+    mFieldTextLength(0)
 {
   MOZ_COUNT_CTOR(nsXBLProtoImplField);
   mJSAttributes = JSPROP_ENUMERATE;
@@ -64,6 +66,8 @@ nsXBLProtoImplField::nsXBLProtoImplField(const nsAReadableString* aName, const n
 nsXBLProtoImplField::~nsXBLProtoImplField()
 {
   MOZ_COUNT_DTOR(nsXBLProtoImplField);
+  if (mFieldText)
+    nsMemory::Free(mFieldText);
 }
 
 void
@@ -74,14 +78,25 @@ nsXBLProtoImplField::Destroy(PRBool aIsCompiled)
 void 
 nsXBLProtoImplField::AppendFieldText(const nsAReadableString& aText)
 {
-  mFieldText += aText;
+  if (mFieldText) {
+    nsDependentString fieldTextStr(mFieldText, mFieldTextLength);
+    const nsAString& newFieldText = fieldTextStr + aText;
+    PRUnichar* temp = mFieldText;
+    mFieldText = ToNewUnicode(newFieldText);
+    mFieldTextLength = newFieldText.Length();
+    nsMemory::Free(temp);
+  }
+  else {
+    mFieldText = ToNewUnicode(aText);
+    mFieldTextLength = aText.Length();
+  }
 }
 
 nsresult
 nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext, nsIContent* aBoundElement, 
                                    void* aScriptObject, void* aTargetClassObject)
 {
-  if (mFieldText.IsEmpty())
+  if (mFieldTextLength == 0)
     return NS_OK; // nothing to do.
 
   JSContext* cx = (JSContext*) aContext->GetNativeContext();
@@ -93,7 +108,8 @@ nsXBLProtoImplField::InstallMember(nsIScriptContext* aContext, nsIContent* aBoun
   // compile the literal string 
   jsval result = nsnull;
   PRBool undefined;
-  aContext->EvaluateStringWithValue(mFieldText, 
+  aContext->EvaluateStringWithValue(nsDependentString(mFieldText,
+                                                      mFieldTextLength), 
                                     scriptObject,
                                     nsnull, nsnull, 0, nsnull,
                                     (void*) &result, &undefined);
