@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -28,6 +28,11 @@
 
 #define PR_ASSERT(a) assert(a)
 
+/* create a XP_ACCESS call */
+#ifdef JXP_ACCESS
+#undef JXP_ACCESS
+#endif
+
 #ifdef LIBJULIAN
     #define NOT_NULL(X)	X
 #endif
@@ -35,6 +40,9 @@
 /* 
 ** DLL Import/Export control
 */
+#ifdef JULIAN_NODLL
+#define JULIAN_PUBLIC
+#else
 #ifdef XP_WIN32
 #ifdef LIBJULIAN
 #define JULIAN_PUBLIC	__declspec(dllexport)
@@ -44,19 +52,21 @@
 #else
 #define JULIAN_PUBLIC
 #endif
+#endif
 
 #define JBOOL XP_Bool
 
 #if defined(XP_WIN32)
 #define JSTRING CString
 #define JCOLOR  long
-
+#define JXP_ACCESS _access
 #elif defined(XP_UNIX)
 #define stricmp strcasecmp
-
+#define JXP_ACCESS access
 #elif defined(XP_MAC)
 #define JSTRING char[]
 #define JCOLOR  long
+#define JXP_ACCESS access
 #endif
 
 /* #define JRGB(r, g ,b)  ( (r & 0xfff) | ((g & 0xfff) << 12)) | ((b & 0xfff) << 24))) */
@@ -75,6 +85,12 @@ typedef struct
 {
     int iExternalLeading;
 } JTEXTMETRIC;
+
+/* Turn on capi only for jsun */
+/* #define CAPI_READY 1 */
+#if DEBUG_jsun
+/* #define CAPI_READY 1 */
+#endif
 
 #endif  /* _JULIAN_DEFINES_H */
 

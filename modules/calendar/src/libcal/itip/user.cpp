@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -29,21 +29,70 @@
 
 User::User()
 {
+#if CAPI_READY
+    m_Session = 0;
+#endif
+}
+
+//---------------------------------------------------------------------
+
+User::~User()
+{
+}
+
+//---------------------------------------------------------------------
+
+User::User(UnicodeString realName, UnicodeString imip)
+{
+    m_RealName = realName;
+    m_IMIPAddress = imip;
+    m_CAPIAddress = "";
+    m_IRIPAddress = "";
+    m_XItemID = -1;     
+#if CAPI_READY
+    m_Session = 0;
+#endif
 }
 
 //---------------------------------------------------------------------
 
 User::User(UnicodeString realName, UnicodeString imip, 
-        UnicodeString capi, t_int32 xItemID,
-        UnicodeString irip)
+        UnicodeString capi, UnicodeString irip, 
+        t_int32 xItemID)
 {
     m_RealName = realName;
     m_CAPIAddress = capi;
     m_IRIPAddress = irip;
     m_IMIPAddress = imip;
     m_XItemID = xItemID;
+#if CAPI_READY
+    m_Session = 0;
+#endif
 }
 
+//---------------------------------------------------------------------
+
+User::User(User & that)
+{
+    m_CAPIAddress = that.m_CAPIAddress;
+    m_IMIPAddress = that.m_IMIPAddress;
+    m_IRIPAddress = that.m_IRIPAddress;
+    m_RealName = that.m_RealName;
+    m_LoginName = that.m_LoginName ;  
+    m_Password = that.m_Password;
+    m_Hostname = that.m_Hostname;
+    m_Node = that.m_Node;
+#if CAPI_READY
+    m_Session = 0;  // can't copy session's
+#endif
+}
+//---------------------------------------------------------------------
+
+User *
+User::clone()
+{
+    return new User(*this);
+}
 
 //---------------------------------------------------------------------
 
@@ -69,10 +118,29 @@ User::toString()
 //---------------------------------------------------------------------
 
 UnicodeString
-User::getXString()
+User::getXString() 
 {
     UnicodeString out;
-    return MakeXString(m_RealName, out);
+    if (m_LoginName.size() > 0)
+    {
+        return MakeXString(m_LoginName, out);
+    }
+    else 
+        return MakeXString(m_RealName, out);
+}
+
+//---------------------------------------------------------------------
+
+UnicodeString
+User::getLogonString()
+{
+    UnicodeString out;
+    if (m_LoginName.size() > 0)
+    {
+        return MakeCAPILogonString(m_LoginName, m_Node, out);
+    }
+    else 
+        return MakeCAPILogonString(m_RealName, m_Node, out);
 }
 
 //---------------------------------------------------------------------
@@ -109,6 +177,21 @@ User::MakeXString(UnicodeString & realName, UnicodeString & out)
 
 //---------------------------------------------------------------------
 
+UnicodeString & 
+User::MakeCAPILogonString(UnicodeString & realName, 
+                          UnicodeString & node, 
+                          UnicodeString & out)
+{
+    MakeXString(realName, out);
+    out.insert(0, ":/");
+    out += "/ND=";
+    out += node;
+    out += "/";
+    return out;
+}
+
+//---------------------------------------------------------------------
+
 void
 User::deleteUserVector(JulianPtrArray * users)
 {
@@ -123,3 +206,26 @@ User::deleteUserVector(JulianPtrArray * users)
 }
 
 //---------------------------------------------------------------------
+
+void
+User::cloneUserVector(JulianPtrArray * toClone,
+                      JulianPtrArray * out)
+{
+    if (out != 0)
+    {
+        if (toClone != 0)
+        {
+            t_int32 i;
+            User * comp;
+            User * clone;
+            for (i = 0; i < toClone->GetSize(); i++)
+            {
+                comp = (User *) toClone->GetAt(i);
+                clone = comp->clone();
+                out->Add(clone);
+            }
+        }
+    }
+}
+//---------------------------------------------------------------------
+

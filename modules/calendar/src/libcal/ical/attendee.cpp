@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -56,7 +56,7 @@ const t_int32 Attendee::ms_cAttendeeDisplayName   = 'z';
 //---------------------------------------------------------------------
 
 t_bool Attendee::isValidStatus(ICalComponent::ICAL_COMPONENT compType,
-                               STATUS status)
+                               Attendee::STATUS status)
 {
     if (compType == ICalComponent::ICAL_COMPONENT_VEVENT)
     {
@@ -91,10 +91,9 @@ Attendee::Attendee()
 
 Attendee::Attendee(ICalComponent::ICAL_COMPONENT componentType, JLog * initLog) 
 : m_vsMember(0), m_vsDelegatedTo(0), m_vsDelegatedFrom(0),
-m_iRole(-1), m_iType(-1), m_iStatus(-1), m_iRSVP(-1),
-m_iExpect(-1), m_Log(initLog), m_ComponentType(componentType)
+  m_iRole(-1), m_iType(-1), m_iStatus(-1), m_iRSVP(-1),
+  m_iExpect(-1), m_Log(initLog), m_ComponentType(componentType)
 {
-    //PR_ASSERT(initLog != 0);
 }
 
 //---------------------------------------------------------------------
@@ -187,7 +186,6 @@ ICalProperty *
 Attendee::clone(JLog * initLog)
 {
     m_Log = initLog; 
-    //PR_ASSERT(m_Log != 0);
     return (ICalProperty *) new Attendee(*this);
 }
 
@@ -196,7 +194,6 @@ Attendee::clone(JLog * initLog)
 Attendee * Attendee::getDefault(ICalComponent::ICAL_COMPONENT compType,
                                 JLog * initLog)
 {
-    //PR_ASSERT(initLog != 0);
     Attendee * a = new Attendee(compType, initLog);   PR_ASSERT(a != 0);
     if (a != 0)
     {
@@ -236,18 +233,68 @@ void Attendee::parse(UnicodeString & propVal,
 }
 
 //---------------------------------------------------------------------
+void Attendee::addParamValList(UnicodeString & paramValList, t_int32 hashCode)
+{
+    UnicodeStringTokenizer * stMult = new UnicodeStringTokenizer(paramValList, 
+        JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
+    PR_ASSERT(stMult != 0);
+    if (stMult != 0)
+    {
+        UnicodeString u;
+        UnicodeString uNext;
+        ErrorCode status = ZERO_ERROR;
+        while (stMult->hasMoreTokens())
+        {
+            if (uNext.size() == 0)  
+                u = stMult->nextToken(u, status);
+            else 
+                u = uNext;
+            if ('\"' != u[(TextOffset) (u.size() - 1)])     
+            {
+                while (stMult->hasMoreTokens())
+                {
+                    uNext = stMult->nextToken(uNext, status);
+                    if ('\"' != uNext[(TextOffset) 0])
+                    {
+                        u += ',';
+                        u += uNext;
+                        uNext = "";
+                    }
+                    else
+                        break;
+                }
+            }
+            JulianUtility::stripDoubleQuotes(u);  // double quote property
+            
+            if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_TO == hashCode)
+            {
+                addDelegatedTo(u);
+            }
+            else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_FROM == hashCode)
+            {
+                addDelegatedFrom(u);
+            }
+            else
+            {
+                addMember(u);
+            }
+        }
+        delete stMult; stMult = 0;
+    }
+}
+
+//---------------------------------------------------------------------
 
 void Attendee::setParam(UnicodeString & paramName, 
                         UnicodeString & paramVal)
 {
-    ErrorCode status = ZERO_ERROR;    
     t_int32 i;
     
     //if (FALSE) TRACE("(%s, %s)\r\n", paramName.toCString(""), paramVal.toCString(""));
     if (paramName.size() == 0)
     {
-        if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sInvalidParameterName, 
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidParameterName, 
             JulianKeyword::Instance()->ms_sATTENDEE, paramName, 200);
     }
     else
@@ -259,8 +306,8 @@ void Attendee::setParam(UnicodeString & paramName,
             i = stringToRole(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue, 
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue, 
                     JulianKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
@@ -268,8 +315,8 @@ void Attendee::setParam(UnicodeString & paramName,
             {
                 if (getRole() >= 0)
                 {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter, 
+                    if (m_Log) m_Log->logError(
+                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter, 
                         JulianKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }   
@@ -281,8 +328,8 @@ void Attendee::setParam(UnicodeString & paramName,
             i = stringToType(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue,
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
                     JulianKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
@@ -290,8 +337,8 @@ void Attendee::setParam(UnicodeString & paramName,
             {
                 if (getType() >= 0)
                 {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                    if (m_Log) m_Log->logError(
+                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
@@ -301,10 +348,10 @@ void Attendee::setParam(UnicodeString & paramName,
         else if (JulianKeyword::Instance()->ms_ATOM_PARTSTAT == hashCode)
         {
             i = stringToStatus(paramVal);
-            if (i < 0 || !isValidStatus(m_ComponentType, (STATUS) i))
+            if (i < 0 || !isValidStatus(m_ComponentType, (Attendee::STATUS) i))
             {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue,
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
                     JulianKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
@@ -312,8 +359,8 @@ void Attendee::setParam(UnicodeString & paramName,
             {
                 if (getStatus() >= 0)
                 {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                    if (m_Log) m_Log->logError(
+                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
@@ -325,8 +372,8 @@ void Attendee::setParam(UnicodeString & paramName,
             i = stringToExpect(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue,
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
                     JulianKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
@@ -334,8 +381,8 @@ void Attendee::setParam(UnicodeString & paramName,
             {
                 if (getExpect() >= 0)
                 {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                    if (m_Log) m_Log->logError(
+                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
@@ -347,8 +394,8 @@ void Attendee::setParam(UnicodeString & paramName,
             i = stringToRSVP(paramVal);
             if (i < 0)
             {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidParameterValue,
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iInvalidParameterValue,
                     JulianKeyword::Instance()->ms_sATTENDEE, 
                     paramName, paramVal, 200);
             }
@@ -356,8 +403,8 @@ void Attendee::setParam(UnicodeString & paramName,
             {
                 if (getRSVP() >= 0)
                 {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                    if (m_Log) m_Log->logError(
+                        JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, 
                         paramName, 100);
                 }
@@ -366,54 +413,15 @@ void Attendee::setParam(UnicodeString & paramName,
         }
         else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_TO == hashCode)
         {
-            UnicodeStringTokenizer * stMult = new UnicodeStringTokenizer(paramVal, 
-                JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
-            PR_ASSERT(stMult != 0);
-            if (stMult != 0)
-            {
-                UnicodeString u;
-                while (stMult->hasMoreTokens())
-                {
-                    u = stMult->nextToken(u, status);
-                    JulianUtility::stripDoubleQuotes(u);  // double quote property
-                    addDelegatedTo(u);                
-                }
-                delete stMult; stMult = 0;
-            }
+            addParamValList(paramVal, hashCode);
         }
         else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED_FROM == hashCode)
         {
-            UnicodeStringTokenizer * stMult = new UnicodeStringTokenizer(paramVal, 
-                JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
-            PR_ASSERT(stMult != 0);
-            if (stMult != 0)
-            {
-                UnicodeString u;
-                while (stMult->hasMoreTokens())
-                {
-                    u = stMult->nextToken(u, status);
-                    JulianUtility::stripDoubleQuotes(u); // double quote property
-                    addDelegatedFrom(u);                
-                }
-                delete stMult; stMult = 0;
-            }
+            addParamValList(paramVal, hashCode);
         }
         else if (JulianKeyword::Instance()->ms_ATOM_MEMBER == hashCode)
         {
-            UnicodeStringTokenizer * stMult = new UnicodeStringTokenizer(paramVal, 
-                JulianKeyword::Instance()->ms_sCOMMA_SYMBOL);
-            PR_ASSERT(stMult != 0);
-            if (stMult != 0)
-            {
-                UnicodeString u;
-                while (stMult->hasMoreTokens())
-                {
-                    u = stMult->nextToken(u, status);
-                    JulianUtility::stripDoubleQuotes(u); // double quote property
-                    addMember(u);                
-                }
-                delete stMult; stMult = 0;
-            }
+            addParamValList(paramVal, hashCode);
         }
 
         // Newer properties 3-23-98 (cn, sent-by (double-quote), dir (double-quote))
@@ -421,7 +429,7 @@ void Attendee::setParam(UnicodeString & paramName,
         {
             if (getCN().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             setCN(paramVal);
@@ -430,7 +438,7 @@ void Attendee::setParam(UnicodeString & paramName,
         {
             if (getLanguage().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             setLanguage(paramVal);
@@ -439,7 +447,7 @@ void Attendee::setParam(UnicodeString & paramName,
         {
             if (getSentBy().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
@@ -449,38 +457,25 @@ void Attendee::setParam(UnicodeString & paramName,
         {
             if (getDir().size() != 0)
             {
-                 if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sDuplicatedParameter,
+                 if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iDuplicatedParameter,
                         JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
             }
             JulianUtility::stripDoubleQuotes(paramVal);  // double quote property
             setDir(paramVal);
         }
+        else if (ICalProperty::IsXToken(paramName))
+        {
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iXTokenParamIgnored,
+                        JulianKeyword::Instance()->ms_sATTENDEE, paramName, 100);
+        }
         else 
         {
-            if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidParameterName,
+            if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidParameterName,
                         JulianKeyword::Instance()->ms_sATTENDEE, paramName, 200);
         }
     }
 }
 
-//---------------------------------------------------------------------
-/*
-void 
-Attendee::stripDoubleQuotes(UnicodeString & u)
-{
-    if (u.size() > 0)
-    {
-        if (u[(TextOffset) 0] == '\"')
-        {
-            u.remove(0, 1);
-        }
-        if (u[(TextOffset) (u.size() - 1)] == '\"')
-        {
-            u.remove(u.size() - 1, 1);
-        }
-    }
-}
-*/
 //---------------------------------------------------------------------
 
 UnicodeString & Attendee::toICALString(UnicodeString & out) 
@@ -826,7 +821,7 @@ UnicodeString Attendee::formatDoneAction()
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 UnicodeString Attendee::formatDoneDelegateToOnly() 
 { 
     return format(JulianFormatString::Instance()->ms_sAttendeeDoneDelegateToOnly);
@@ -838,7 +833,7 @@ UnicodeString Attendee::formatDoneDelegateFromOnly()
 { 
     return format(JulianFormatString::Instance()->ms_sAttendeeDoneDelegateFromOnly); 
 }
-
+#endif
 //---------------------------------------------------------------------
 // BELOW METHODS ALL ARE NEEDS ACTION
 // no need for %S, assumed to be NEEDS-ACTION
@@ -848,7 +843,7 @@ UnicodeString Attendee::formatNeedsAction()
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 UnicodeString Attendee::formatDelegateToOnly() 
 { 
     return format(JulianFormatString::Instance()->ms_sAttendeeNeedsActionDelegateToOnly); 
@@ -860,7 +855,7 @@ UnicodeString Attendee::formatDelegateFromOnly()
 { 
     return format(JulianFormatString::Instance()->ms_sAttendeeNeedsActionDelegateFromOnly); 
 }  
-
+#endif
 //---------------------------------------------------------------------
 
 void Attendee::setParameters(JulianPtrArray * parameters)
@@ -964,7 +959,7 @@ Attendee::stringToRole(UnicodeString & sRole)
     else if (JulianKeyword::Instance()->ms_ATOM_REQ_PARTICIPANT == hashCode) return ROLE_REQ_PARTICIPANT;
     else if (JulianKeyword::Instance()->ms_ATOM_OPT_PARTICIPANT == hashCode) return ROLE_OPT_PARTICIPANT;
     else if (JulianKeyword::Instance()->ms_ATOM_NON_PARTICIPANT == hashCode) return ROLE_NON_PARTICIPANT;
-
+    else if (ICalProperty::IsXToken(sRole)) return ROLE_XPARAMVAL;
     else return ROLE_INVALID;
 }
 
@@ -981,6 +976,7 @@ Attendee::stringToType(UnicodeString & sType)
     else if (JulianKeyword::Instance()->ms_ATOM_RESOURCE == hashCode) return TYPE_RESOURCE;
     else if (JulianKeyword::Instance()->ms_ATOM_ROOM == hashCode) return TYPE_ROOM;
     else if (JulianKeyword::Instance()->ms_ATOM_UNKNOWN == hashCode) return TYPE_UNKNOWN;
+    else if (ICalProperty::IsXToken(sType)) return TYPE_XPARAMVAL;
     else return TYPE_INVALID;
 }
 
@@ -1001,6 +997,7 @@ Attendee::stringToStatus(UnicodeString & sStatus)
     else if (JulianKeyword::Instance()->ms_ATOM_COMPLETED == hashCode) return STATUS_COMPLETED;
     else if (JulianKeyword::Instance()->ms_ATOM_INPROCESS == hashCode) return STATUS_INPROCESS;
     else if (JulianKeyword::Instance()->ms_ATOM_DELEGATED == hashCode) return STATUS_DELEGATED;
+    else if (ICalProperty::IsXToken(sStatus)) return STATUS_XPARAMVAL;
     else return STATUS_INVALID;
 }
 
@@ -1051,6 +1048,7 @@ Attendee::roleToString(Attendee::ROLE role, UnicodeString & out)
     case ROLE_REQ_PARTICIPANT: out = JulianKeyword::Instance()->ms_sREQ_PARTICIPANT; break;
     case ROLE_OPT_PARTICIPANT: out = JulianKeyword::Instance()->ms_sOPT_PARTICIPANT; break;
     case ROLE_NON_PARTICIPANT: out = JulianKeyword::Instance()->ms_sNON_PARTICIPANT; break;
+    case ROLE_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break; 
     default:
         // default return req participant
         out = JulianKeyword::Instance()->ms_sREQ_PARTICIPANT;
@@ -1071,6 +1069,7 @@ Attendee::typeToString(Attendee::TYPE type, UnicodeString & out)
     case TYPE_RESOURCE: out = JulianKeyword::Instance()->ms_sRESOURCE; break;
     case TYPE_ROOM: out = JulianKeyword::Instance()->ms_sROOM; break;
     case TYPE_UNKNOWN: out = JulianKeyword::Instance()->ms_sUNKNOWN; break;
+    case TYPE_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break; 
     default:
         // default return individual
         out = JulianKeyword::Instance()->ms_sINDIVIDUAL;
@@ -1093,6 +1092,7 @@ Attendee::statusToString(Attendee::STATUS status, UnicodeString & out)
         case STATUS_COMPLETED: out = JulianKeyword::Instance()->ms_sCOMPLETED; break; 
         case STATUS_DELEGATED: out = JulianKeyword::Instance()->ms_sDELEGATED; break; 
         case STATUS_INPROCESS: out = JulianKeyword::Instance()->ms_sINPROCESS; break; 
+        case STATUS_XPARAMVAL: out = JulianKeyword::Instance()->ms_sXPARAMVAL; break; 
         default:
             // default return needs-action
             out = JulianKeyword::Instance()->ms_sNEEDSACTION;
@@ -1134,22 +1134,6 @@ Attendee::expectToString(Attendee::EXPECT expect, UnicodeString & out)
             break;
     }
     return out;
-}
-
-//---------------------------------------------------------------------
-
-void Attendee::deleteAttendeeVector(JulianPtrArray * attendees)
-{
-    Attendee * ip;
-    t_int32 i;
-    if (attendees != 0)
-    {
-        for (i = attendees->GetSize() - 1; i >= 0; i--)
-        {
-            ip = (Attendee *) attendees->GetAt(i);
-            delete ip; ip = 0;
-        }
-    }
 }
 
 //---------------------------------------------------------------------

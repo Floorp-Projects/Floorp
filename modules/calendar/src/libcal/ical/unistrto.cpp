@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * unistrto.cpp
  * John Sun
@@ -53,7 +52,7 @@ UnicodeStringTokenizer::UnicodeStringTokenizer(UnicodeString & str,
     m_StringDelimeters = delim;
 }
 //---------------------------------------------------------------------
-
+#if 0
 UnicodeStringTokenizer::UnicodeStringTokenizer(UnicodeString & str)
 : m_CurrentPosition (0)
 {
@@ -61,7 +60,7 @@ UnicodeStringTokenizer::UnicodeStringTokenizer(UnicodeString & str)
     m_MaxPosition = m_String.size();
     m_StringDelimeters = JulianKeyword::Instance()->ms_sDEFAULT_DELIMS;
 }
-
+#endif
 //---------------------------------------------------------------------
 
 t_bool 
@@ -96,7 +95,7 @@ UnicodeStringTokenizer::nextToken(UnicodeString & out,
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 UnicodeString & 
 UnicodeStringTokenizer::nextToken(UnicodeString & out, 
                                   UnicodeString & sDelim, 
@@ -106,5 +105,6 @@ UnicodeStringTokenizer::nextToken(UnicodeString & out,
     m_StringDelimeters = sDelim;
     return nextToken(out, status);
 }
+#endif
 //---------------------------------------------------------------------
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * detxnobj.h
  * John Sun
@@ -52,18 +51,19 @@ public:
     /*----------------------------- 
     ** ACCESSORS (GET AND SET) 
     **---------------------------*/ 
+    virtual ETxnType GetType() const { return TransactionObject::ETxnType_DELETE; } 
     /*----------------------------- 
     ** UTILITIES 
     **---------------------------*/ 
 #if CAPI_READY
     /* older CAPI, TODO: remove later */
-    virtual CAPIStatus handleCAPI(pCAPISession & pS, pCAPIHandle * pH, 
+    virtual CAPIStatus handleCAPI(CAPISession & pS, CAPIHandle * pH, 
         t_int32 iHandleCount, t_int32 lFlags, 
         JulianPtrArray * inComponents, NSCalendar * inCal,
         JulianPtrArray * modifiers, 
         JulianPtrArray * outCalendars, TransactionObject::EFetchType & out);
     /*
-    virtual CAPIStatus handleCAPI(pCAPISession & pS, pCAPIHandle * pH, 
+    virtual CAPIStatus handleCAPI(CAPISession & pS, CAPIHandle * pH, 
         t_int32 iHandleCount, t_int32 lFlags,
         JulianPtrArray * modifiers, JulianPtrArray * outCalendars, 
         TransactionObject::EFetchType & out);

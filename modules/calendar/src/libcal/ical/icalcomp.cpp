@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -115,7 +115,7 @@ ICalComponent::format(UnicodeString & sComponentName,
 
 
     t_int32 i,j;    
-    char * c = strFmt.toCString("");
+    //char * c = strFmt.toCString("");
     //if (FALSE) TRACE("%s sComponentName, %s strFmt, %s sFilterAttendee, %d delegateRequest\r\n", sComponentName.toCString(""), strFmt.toCString(""), sFilterAttendee.toCString(""), delegateRequest);
 
     for ( i = 0; i < strFmt.size(); )
@@ -165,53 +165,6 @@ ICalComponent::format(UnicodeString & sComponentName,
 
 //---------------------------------------------------------------------
 
-UnicodeString & 
-ICalComponent::propertyVToCalString(UnicodeString & sProp, 
-                                    JulianPtrArray * v,
-                                    UnicodeString & sResult) 
-{
-    UnicodeString * s_ptr;
-    //UnicodeString s;
-    //UnicodeString  sElement;
-    t_int32 i;
-    //UnicodeString & sPropTemp = sProp;
-    //char * c;
-
-    if (v != 0) {
-        for (i = 0; i < v->GetSize(); i++)
-        {
-            s_ptr = (UnicodeString *) v->GetAt(i);
-            
-            //UnicodeString & sElement = *s_ptr;
-            //if (FALSE) TRACE("size = %d", s_ptr->size());
-            //c = sElement.toCString("");
-            sResult += sProp;
-            sResult += ':'; //ms_sCOLON_SYMBOL;
-            sResult += (*s_ptr).toCString("");
-            sResult += JulianKeyword::Instance()->ms_sLINEBREAK;
-            //UnicodeString & s;
-
-            //if (FALSE) TRACE("sproptemp = %s", sPropTemp.toCString(""));
-            
-            //if (FALSE) TRACE("s = %s", s.toCString(""));
-            
-            //s += sPropTemp; 
-            
-            //s += ":"; 
-            
-            //s += sElement; 
-            //s += "\r\n";
-            ///////sResult += s;
-            //sResult += multiLineFormat(s);
-            //s.remove();
-        }
-        sResult = ICalProperty::multiLineFormat(sResult);
-    }
-    return sResult;
-    //return sResult.toString();
-}
-//---------------------------------------------------------------------
-
 UnicodeString 
 ICalComponent::componentToString(ICAL_COMPONENT ic)
 {
@@ -253,19 +206,103 @@ ICalComponent::stringToComponent(UnicodeString & s, t_bool & error)
 }
 
 //---------------------------------------------------------------------
-  
-void ICalComponent::deleteDateVector(JulianPtrArray * dateVector)
-{
-    t_int32 i;
-    if (dateVector != 0) 
-    {
-        for (i = dateVector->GetSize() - 1; i >= 0; i--)
-        {
-            delete ((DateTime *) dateVector->GetAt(i));
-        }
-    }
-}
 
+t_bool ICalComponent::propertyNameToKeyLetter(UnicodeString & propertyName,
+                                              t_int32 & outLetter)
+{
+    propertyName.toUpper();
+    t_int32 hashCode = propertyName.hashCode();
+    t_bool retStatus = TRUE;
+    outLetter = ' ';
+
+    if (JulianKeyword::Instance()->ms_ATOM_ATTENDEE == hashCode) outLetter = ms_cAttendees;    
+    else if (JulianKeyword::Instance()->ms_ATOM_ATTACH == hashCode) outLetter = ms_cAttach;
+    else if (JulianKeyword::Instance()->ms_ATOM_CATEGORIES == hashCode) outLetter = ms_cCategories;
+    else if (JulianKeyword::Instance()->ms_ATOM_CLASS == hashCode) outLetter = ms_cClass;
+    else if (JulianKeyword::Instance()->ms_ATOM_COMMENT == hashCode) outLetter = ms_cComment;
+    else if (JulianKeyword::Instance()->ms_ATOM_COMPLETED == hashCode) outLetter = ms_cCompleted;
+    else if (JulianKeyword::Instance()->ms_ATOM_CONTACT == hashCode) outLetter = ms_cContact;
+    else if (JulianKeyword::Instance()->ms_ATOM_CREATED == hashCode) outLetter = ms_cCreated;
+    else if (JulianKeyword::Instance()->ms_ATOM_DTEND == hashCode) outLetter = ms_cDTEnd;
+    else if (JulianKeyword::Instance()->ms_ATOM_DTSTART == hashCode) outLetter = ms_cDTStart;
+    else if (JulianKeyword::Instance()->ms_ATOM_DTSTAMP == hashCode) outLetter = ms_cDTStamp;
+    else if (JulianKeyword::Instance()->ms_ATOM_DESCRIPTION == hashCode) outLetter = ms_cDescription;
+    else if (JulianKeyword::Instance()->ms_ATOM_DUE == hashCode) outLetter = ms_cDue;
+    else if (JulianKeyword::Instance()->ms_ATOM_DURATION == hashCode) outLetter = ms_cDuration;
+    else if (JulianKeyword::Instance()->ms_ATOM_EXDATE == hashCode) outLetter = ms_cExDate;
+    else if (JulianKeyword::Instance()->ms_ATOM_EXRULE == hashCode) outLetter = ms_cExRule;
+    else if (JulianKeyword::Instance()->ms_ATOM_FREEBUSY == hashCode) outLetter = ms_cFreebusy;
+    else if (JulianKeyword::Instance()->ms_ATOM_GEO == hashCode) outLetter = ms_cGEO;
+    else if (JulianKeyword::Instance()->ms_ATOM_LASTMODIFIED == hashCode) outLetter = ms_cLastModified;
+    else if (JulianKeyword::Instance()->ms_ATOM_LOCATION == hashCode) outLetter = ms_cLocation;
+    else if (JulianKeyword::Instance()->ms_ATOM_ORGANIZER == hashCode) outLetter = ms_cOrganizer;
+    else if (JulianKeyword::Instance()->ms_ATOM_PERCENTCOMPLETE == hashCode) outLetter = ms_cPercentComplete;
+    else if (JulianKeyword::Instance()->ms_ATOM_PRIORITY == hashCode) outLetter = ms_cPriority;
+    else if (JulianKeyword::Instance()->ms_ATOM_RDATE == hashCode) outLetter = ms_cRDate;
+    else if (JulianKeyword::Instance()->ms_ATOM_RRULE == hashCode) outLetter = ms_cRRule;
+    else if (JulianKeyword::Instance()->ms_ATOM_RECURRENCEID == hashCode) outLetter = ms_cRecurrenceID;
+    else if (JulianKeyword::Instance()->ms_ATOM_RELATEDTO == hashCode) outLetter = ms_cRelatedTo;
+    else if (JulianKeyword::Instance()->ms_ATOM_REPEAT == hashCode) outLetter = ms_cRepeat;
+    else if (JulianKeyword::Instance()->ms_ATOM_REQUESTSTATUS == hashCode) outLetter = ms_cRequestStatus;
+    else if (JulianKeyword::Instance()->ms_ATOM_RESOURCES == hashCode) outLetter = ms_cResources;
+    else if (JulianKeyword::Instance()->ms_ATOM_SEQUENCE == hashCode) outLetter = ms_cSequence;
+    else if (JulianKeyword::Instance()->ms_ATOM_STATUS == hashCode) outLetter = ms_cStatus;
+    else if (JulianKeyword::Instance()->ms_ATOM_SUMMARY == hashCode) outLetter = ms_cSummary;
+    else if (JulianKeyword::Instance()->ms_ATOM_TRANSP == hashCode) outLetter = ms_cTransp;
+    //else if (JulianKeyword::Instance()->ms_ATOM_TRIGGER == hashCode) outLetter = ms_cTrigger;
+    else if (JulianKeyword::Instance()->ms_ATOM_UID == hashCode) outLetter = ms_cUID;
+    else if (JulianKeyword::Instance()->ms_ATOM_URL == hashCode) outLetter = ms_cURL;
+    //else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSET == hashCode) outLetter = ms_cTZOffset;
+    else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSETTO == hashCode) outLetter = ms_cTZOffsetTo;
+    else if (JulianKeyword::Instance()->ms_ATOM_TZOFFSETFROM == hashCode) outLetter = ms_cTZOffsetFrom;
+    else if (JulianKeyword::Instance()->ms_ATOM_TZNAME == hashCode) outLetter = ms_cTZName;
+    //else if (JulianKeyword::Instance()->ms_ATOM_DAYLIGHT == hashCode) outLetter = ms_cDayLight;
+    //else if (JulianKeyword::Instance()->ms_ATOM_STANDARD == hashCode) outLetter = ms_cStandard;
+    else if (JulianKeyword::Instance()->ms_ATOM_TZURL == hashCode) outLetter = ms_cTZURL;
+    else if (JulianKeyword::Instance()->ms_ATOM_TZID == hashCode) outLetter = ms_cTZID;
+    else 
+    {
+        retStatus = FALSE;
+    }
+    return retStatus;
+}
+//---------------------------------------------------------------------
+
+UnicodeString & 
+ICalComponent::makeFormatString(char ** ppsPropList, t_int32 iPropCount,
+                                UnicodeString & out)
+{
+    // TODO: figure out what to do if no properties?
+    t_int32 i = 0;
+    t_int32 keyLetter = ' ';
+    t_bool bFoundProperty = FALSE;
+    char *cProp = 0;
+    UnicodeString u;
+    UnicodeString usProp;
+
+    out = "";
+    if (iPropCount > 0 && ppsPropList != 0)
+    {
+        for (i = 0; i < iPropCount; i++)
+        {
+            cProp = ppsPropList[i];
+            usProp = cProp;
+            bFoundProperty = ICalComponent::propertyNameToKeyLetter(usProp, keyLetter);
+            if (bFoundProperty)
+            {
+                out += "%";
+                // TODO: dangerous
+                out += (char) (keyLetter);
+            }
+        }
+    } else
+    {
+        // given an empty propList or a zero propCount, 
+        // return all properties + alarms
+        out = "%v%a%k%c%K%G%H%t%e%B%C%i%F%D%X%E%Y%O%M%L%J%P%p%x%y%R%o%A%T%r%s%g%S%h%U%u%Z%d%f%n%Q%I%V%w";
+    }
+    return out;
+}   
 //---------------------------------------------------------------------
 
 void ICalComponent::deleteUnicodeStringVector(JulianPtrArray * stringVector)
@@ -295,4 +332,309 @@ ICalComponent::deleteICalComponentVector(JulianPtrArray * componentVector)
 }
 
 //---------------------------------------------------------------------
+
+void
+ICalComponent::cloneICalComponentVector(JulianPtrArray * out, 
+                                        JulianPtrArray * toClone)
+{
+    if (out != 0)
+    {
+        if (toClone != 0)
+        {
+            t_int32 i;
+            ICalComponent * comp;
+            ICalComponent * clone;
+            for (i = 0; i < toClone->GetSize(); i++)
+            {
+                comp = (ICalComponent *) toClone->GetAt(i);
+                clone = comp->clone(0);
+                out->Add(clone);
+            }
+        }
+    }
+}
+//---------------------------------------------------------------------
+
+#if 0
+void 
+ICalComponent::setDateTimeValue(ICalProperty ** dateTimePropertyPtr,
+                                DateTime inVal, 
+                                JulianPtrArray * inParameters)
+{ 
+    PR_ASSERT(dateTimePropertyPtr != 0);
+    if (dateTimePropertyPtr != 0)
+    {
+        if (((ICalProperty *) (*dateTimePropertyPtr)) == 0)
+        {
+            ((ICalProperty *) (*dateTimePropertyPtr)) =
+                ICalPropertyFactory::Make(ICalProperty::DATETIME,
+                    (void *) &inVal, inParameters);
+        }
+        else
+        {
+            ((ICalProperty *) (*dateTimePropertyPtr))->setValue((void *) &inVal);
+            ((ICalProperty *) (*dateTimePropertyPtr))->setParameters(inParameters);
+        }
+    }
+} 
+
+//---------------------------------------------------------------------
+
+void ICalComponent::getDateTimeValue(ICalProperty ** dateTimePropertyPtr,
+                                     DateTime & outVal) 
+{
+    PR_ASSERT(dateTimePropertyPtr != 0);
+    if (dateTimePropertyPtr != 0)
+    {
+        if ((ICalProperty *)(*dateTimePropertyPtr) == 0)
+            outVal.setTime(-1);
+        else
+            outVal = *((DateTime *) ((ICalProperty *)(*dateTimePropertyPtr))->getValue());
+    }
+    else
+    {
+        outVal.setTime(-1);
+    }
+}
+//---------------------------------------------------------------------
+
+void 
+ICalComponent::setStringValue(ICalProperty ** stringPropertyPtr,
+                              UnicodeString inVal, 
+                              JulianPtrArray * inParameters)
+{ 
+    PR_ASSERT(stringPropertyPtr != 0);
+    if (stringPropertyPtr != 0)
+    {
+        if (((ICalProperty *) (*stringPropertyPtr)) == 0)
+        {
+            ((ICalProperty *) (*stringPropertyPtr)) =
+                ICalPropertyFactory::Make(ICalProperty::TEXT,
+                    (void *) &inVal, inParameters);
+        }
+        else
+        {
+            ((ICalProperty *) (*stringPropertyPtr))->setValue((void *) &inVal);
+            ((ICalProperty *) (*stringPropertyPtr))->setParameters(inParameters);
+        }
+    }
+} 
+
+//---------------------------------------------------------------------
+
+void 
+ICalComponent::getStringValue(ICalProperty ** stringPropertyPtr,
+                              UnicodeString & outVal) 
+{
+    PR_ASSERT(stringPropertyPtr != 0);
+    if (stringPropertyPtr != 0)
+    {
+        if ((ICalProperty *)(*stringPropertyPtr) == 0)
+            outVal = "";
+        else
+            outVal = *((UnicodeString *) ((ICalProperty *)(*stringPropertyPtr))->getValue());
+    }
+    else
+    {
+        outVal = "";
+    }
+}
+
+//---------------------------------------------------------------------
+
+void 
+ICalComponent::setIntegerValue(ICalProperty ** integerPropertyPtr,
+                              t_int32 inVal, JulianPtrArray * inParameters)
+{ 
+    PR_ASSERT(integerPropertyPtr != 0);
+    if (integerPropertyPtr != 0)
+    {
+        if (((ICalProperty *) (*integerPropertyPtr)) == 0)
+        {
+            ((ICalProperty *) (*integerPropertyPtr)) =
+                ICalPropertyFactory::Make(ICalProperty::INTEGER,
+                    (void *) &inVal, inParameters);
+        }
+        else
+        {
+            ((ICalProperty *) (*integerPropertyPtr))->setValue((void *) &inVal);
+            ((ICalProperty *) (*integerPropertyPtr))->setParameters(inParameters);
+        }
+    }
+} 
+
+//---------------------------------------------------------------------
+
+void 
+ICalComponent::getIntegerValue(ICalProperty ** integerPropertyPtr,
+                              t_int32 & outVal) 
+{
+    PR_ASSERT(integerPropertyPtr != 0);
+    if (integerPropertyPtr != 0)
+    {
+        if ((ICalProperty *)(*integerPropertyPtr) == 0)
+            outVal = -1;
+        else
+            outVal = *((t_int32 *) ((ICalProperty *)(*integerPropertyPtr))->getValue());
+    }
+    else
+    {
+        outVal = -1;
+    }
+}
+#endif /* #if 0 */
+//---------------------------------------------------------------------
+
+void ICalComponent::internalSetProperty(ICalProperty ** propertyPtr,
+                                        ICalProperty * replaceProp,
+                                        t_bool bForceOverwriteOnEmpty)
+{
+    PR_ASSERT(propertyPtr != 0);
+    ICalProperty * prop = 0;
+    prop = (ICalProperty *) (*(propertyPtr));
+    t_bool bOverwrite = TRUE;
+    if (replaceProp == 0 && !bForceOverwriteOnEmpty)
+    {
+        bOverwrite = FALSE;
+    }
+    if (bOverwrite)
+    {
+        if (prop != 0)
+        {
+            delete prop;
+            prop = 0;
+            (*(propertyPtr)) = 0;
+        }
+        if (replaceProp != 0)
+        {
+            prop = replaceProp->clone(0);
+            (*(propertyPtr)) = prop;
+        }
+    }
+}
+
+//---------------------------------------------------------------------
+
+void ICalComponent::internalSetPropertyVctr(JulianPtrArray ** propertyVctrPtr,
+                                            JulianPtrArray * replaceVctr,
+                                            t_bool bAddInsteadOfOverwrite,
+                                            t_bool bForceOverwriteOnEmpty)
+{
+
+    // delete the contents of the old vector
+    // delete the old vector
+    // create a new vector if replaceVctr != 0
+    // clone contents of replaceVctr.
+
+    PR_ASSERT(propertyVctrPtr != 0);
+    JulianPtrArray * propVctr = 0;
+    propVctr = (JulianPtrArray *) (*(propertyVctrPtr));
+    t_bool bOverwrite = TRUE;
+
+    // don't overwrite if overwrite flag is false && replaceVctr is empty or null.
+    if (bAddInsteadOfOverwrite)
+    {
+        bOverwrite = FALSE;
+    }
+    else if ((replaceVctr == 0 || replaceVctr->GetSize() == 0) && !bForceOverwriteOnEmpty)
+    {
+        bOverwrite = FALSE;
+    }
+    if (bOverwrite)
+    {
+        if (propVctr != 0)
+        {
+            ICalProperty::deleteICalPropertyVector(propVctr);
+            delete propVctr;
+            propVctr = 0;
+            (*(propertyVctrPtr)) = 0;
+        }
+        if (replaceVctr != 0)
+        {
+            propVctr = new JulianPtrArray();
+            PR_ASSERT(propVctr != 0);
+            (*(propertyVctrPtr)) = propVctr;
+            ICalProperty::CloneICalPropertyVector(replaceVctr, propVctr, 0);
+        }
+    }
+    else if (bAddInsteadOfOverwrite)
+    {
+        t_int32 i;
+        if (replaceVctr != 0)
+        {
+            ICalProperty * ip = 0;
+            for (i = 0; i < replaceVctr->GetSize(); i++)
+            {
+                ip = ((ICalProperty *) replaceVctr->GetAt(i))->clone(0);
+                if (ip != 0)
+                {
+                    propVctr->Add(ip);
+                }
+            }
+        }
+    }
+}
+//---------------------------------------------------------------------
+
+void ICalComponent::internalSetXTokensVctr(JulianPtrArray ** xTokensVctrPtr,
+                                           JulianPtrArray * replaceVctr,
+                                           t_bool bAddInsteadOfOverwrite,
+                                           t_bool bForceOverwriteOnEmpty)
+{
+
+    // delete the contents of the old vector
+    // delete the old vector
+    // create a new vector if replaceVctr != 0
+    // clone contents of replaceVctr.
+
+    PR_ASSERT(xTokensVctrPtr != 0);
+    JulianPtrArray * xTokensVctr = 0;
+    xTokensVctr = (JulianPtrArray *) (*(xTokensVctrPtr));
+    t_bool bOverwrite = TRUE;
+
+    // don't overwrite if overwrite flag is false && replaceVctr is empty or null.
+    if (bAddInsteadOfOverwrite)
+    {
+        bOverwrite = FALSE;
+    }
+    else if ((replaceVctr == 0 || replaceVctr->GetSize() == 0) && !bForceOverwriteOnEmpty)
+    {
+        bOverwrite = FALSE;
+    }
+    if (bOverwrite)
+    {
+        if (xTokensVctr != 0)
+        {
+            ICalComponent::deleteUnicodeStringVector(xTokensVctr);
+            delete xTokensVctr;
+            xTokensVctr = 0;
+            (*(xTokensVctrPtr)) = 0;
+        }
+        if (replaceVctr != 0)
+        {
+            xTokensVctr = new JulianPtrArray();
+            PR_ASSERT(xTokensVctr != 0);
+            (*(xTokensVctrPtr)) = xTokensVctr;
+            ICalProperty::CloneUnicodeStringVector(replaceVctr, xTokensVctr);
+        }
+    }
+    else if (bAddInsteadOfOverwrite)
+    {
+        t_int32 i;
+        if (replaceVctr != 0)
+        {
+            UnicodeString * us = 0;
+            UnicodeString u;
+            for (i = 0; i < replaceVctr->GetSize(); i++)
+            {
+                u = *((UnicodeString *) replaceVctr->GetAt(i));
+                us = new UnicodeString(u);
+                if (us != 0)
+                {
+                    xTokensVctr->Add(us);
+                }
+            }
+        }
+    }
+}
 

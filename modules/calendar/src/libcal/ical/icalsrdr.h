@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * icalsrdr.h
  * John Sun
@@ -39,6 +38,9 @@
    m_pos and m_length variables are wrong.  Currently, I will assume that
    all const char * passed in will be us-ascii 8-bit chars
 */
+#if defined(XP_PC)
+#pragma warning ( disable : 4275 )
+#endif
 class JULIAN_PUBLIC ICalStringReader: public ICalReader
 {
 private:
@@ -120,5 +122,8 @@ public:
      */
     virtual UnicodeString & readFullLine(UnicodeString & aLine, ErrorCode & status, t_int32 i = 0);
 };
+#if defined(XP_PC)
+#pragma warning ( default : 4275 )
+#endif
 
 #endif /* __ICALSTRINGREADER_H_ */

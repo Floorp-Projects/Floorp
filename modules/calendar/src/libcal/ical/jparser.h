@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * jparser.h
  * John Sun
@@ -42,8 +41,7 @@ class JulianParser
 private:
     /*char * m_Buffer;*/
 
-    static JulianUtility::MimeEncoding 
-        JulianParser::stringToEncodingType(UnicodeString & propVal);
+    static JulianUtility::MimeEncoding stringToEncodingType(UnicodeString & propVal);
 
     JulianPtrArray * m_OutCalendars;
     ICalCAPIReader * m_Reader;

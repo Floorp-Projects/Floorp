@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * vevent.h
  * John Sun
@@ -121,7 +120,7 @@ public:
      * @return                          ICAL export format of that property
      */
     virtual UnicodeString formatChar(t_int32 c, 
-        UnicodeString sFilterAttendee = "", t_bool delegateRequest = FALSE);
+        UnicodeString sFilterAttendee, t_bool delegateRequest = FALSE);
 
     /**
      * convert a character to the content of a property in string 
@@ -152,7 +151,7 @@ public:
      * @return          output iCal formatted export string
      */
     virtual UnicodeString formatHelper(UnicodeString & strFmt,
-            UnicodeString sFilterAttendee = "", t_bool delegateRequest = FALSE);
+            UnicodeString sFilterAttendee, t_bool delegateRequest = FALSE);
 
     /**
      * Helper method.  Overriden virtual method.  Used by subclasses to
@@ -207,8 +206,8 @@ public:
     ICalProperty * getDTEndProperty() const { return m_DTEnd; }
 
     /* DURATION */
-    Duration getDuration() const;
-    void setDuration(Duration s, JulianPtrArray * parameters = 0);
+    Julian_Duration getDuration() const;
+    void setDuration(Julian_Duration s, JulianPtrArray * parameters = 0);
     /*ICalProperty * getDurationProperty() const { return m_Duration; }*/
 
     /* GEO */
@@ -234,16 +233,18 @@ public:
     /* RESOURCES */
     void addResources(UnicodeString s, JulianPtrArray * parameters = 0);
     void addResourcesProperty(ICalProperty * prop);
-    JulianPtrArray * getResources()            { return m_ResourcesVctr; }
+    JulianPtrArray * getResources() const { return m_ResourcesVctr; }
     void addResourcesPropertyVector(UnicodeString & propVal, JulianPtrArray * parameters);
 
     /* MYORIGEND */
     void setMyOrigEnd(DateTime d)		{ m_origMyDTEnd = d; }
-    DateTime getMyOrigEnd()                { return m_origMyDTEnd; }
+    DateTime getMyOrigEnd() { return m_origMyDTEnd; }
     
     /* ORIGEND */
     void setOrigEnd(DateTime d)		{ m_origDTEnd = d; }
-    DateTime getOrigEnd()                { return m_origDTEnd; }
+    DateTime getOrigEnd() { return m_origDTEnd; }
+
+    virtual void updateComponentHelper(TimeBasedEvent * updatedComponent);
 
 private:
     
@@ -262,6 +263,36 @@ private:
     t_bool storeData(UnicodeString & strLine, 
         UnicodeString & propName, UnicodeString & propVal,
         JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+public:
+
+    typedef void (VEvent::*SetOp) (UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+
+    /* Clients should NOT call below methods */
+    void storeDTEnd(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);     
+    void storeDuration(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);     
+    void storeGEO(UnicodeString & strLine, UnicodeString & propVal,
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);       
+    void storeLocation(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);  
+    void storePriority(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);  
+    void storeResources(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);
+    void storeTransp(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones);       
+
+    void ApplyStoreOp(void (VEvent::*op) (UnicodeString & strLine, 
+        UnicodeString & propVal, JulianPtrArray * parameters, JulianPtrArray * vTimeZones), 
+        UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+    {
+        (this->*op)(strLine, propVal, parameters, vTimeZones);
+    }
+
+private:
 
     /**
      * Sets default data.  Currently does following:
@@ -283,7 +314,7 @@ private:
     DateTime        m_origMyDTEnd;
 
     /** used for initial parse only to calculate first DTEnd, then discarded */
-    Duration *        m_TempDuration; 
+    Julian_Duration *        m_TempDuration; 
 
     /*-------------------------------------------------
      *  DATA MEMBER  (to augment TimeBasedEvent)

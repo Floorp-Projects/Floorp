@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * vjournal.cpp
  * John Sun
@@ -102,6 +101,25 @@ Date VJournal::difference()
 void VJournal::selfCheck()
 {
     TimeBasedEvent::selfCheck();   
+    if (getStatus().size() > 0)
+    {
+        // check if I got a valid status
+        UnicodeString u = getStatus();
+        u.toUpper();
+        ICalProperty::Trim(u);
+        JAtom ua(u);
+        if ((JulianKeyword::Instance()->ms_ATOM_DRAFT!= ua) && 
+            (JulianKeyword::Instance()->ms_ATOM_FINAL != ua) && 
+            (JulianKeyword::Instance()->ms_ATOM_CANCELLED != ua))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
+                JulianKeyword::Instance()->ms_sVJOURNAL, 
+                JulianKeyword::Instance()->ms_sSTATUS, u, 200);
+
+            setStatus("");
+        }
+    }
 }
 
 //---------------------------------------------------------------------
@@ -116,15 +134,15 @@ VJournal::storeData(UnicodeString & strLine, UnicodeString & propName,
         return TRUE;
     else
     {
-        if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sInvalidPropertyName, 
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
             JulianKeyword::Instance()->ms_sVJOURNAL, propName, 200);
         UnicodeString u;
         u = JulianLogErrorMessage::Instance()->ms_sRS202;
         u += '.'; u += ' ';
         u += strLine;
-        //setRequestStatus(JulianLogErrorMessage::Instance()->ms_sRS202); 
-        setRequestStatus(u);
+        //setRequestStatus(JulianLogErrorMessage::Instance()->ms_iRS202); 
+        addRequestStatus(u);
         return FALSE;
     }
 }
@@ -180,29 +198,57 @@ t_bool VJournal::isValid()
     {
         // must have dtstart
         if ((!getDTStart().isValid()))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
+        }
 
         // If due exists, make sure it is not before dtstart
         //if (getDTEnd().isValid() && getDTEnd() < getDTStart())
         //    return FALSE;
 
         // must have dtstamp, summary, uid
-        if ((!getDTStamp().isValid()) || (getSummary().size() == 0) || 
-            (getUID().size() == 0))
+        if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
-
+        }
+        if (getSummary().size() == 0) 
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSummary, 300);
+            return FALSE;
+        }
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+            return FALSE;
+        }
         // must have organizer
-        if (getOrganizer().size() <= 0)
+        if (getOrganizer().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
-    
+        }
         // must have sequence >= 0
         if (getSequence() < 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
             return FALSE;
-
+        }
         if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0)
         {
             if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
+            {
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
                 return FALSE;
+            }
         }
     }
     else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0) ||
@@ -210,39 +256,82 @@ t_bool VJournal::isValid()
              (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sDECLINECOUNTER) == 0))
     {
          // must have dtstamp, uid
-        if ((!getDTStamp().isValid()) || (getUID().size() == 0))
+        if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
-
+        }
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+            return FALSE;
+        }
         // must have organizer
-        if (getOrganizer().size() <= 0)
+        if (getOrganizer().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
-    
+        }
         // must have sequence >= 0
         if (getSequence() < 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
             return FALSE;
-        
+        }
         if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0)
         {
             if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
+            {
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
                 return FALSE;
+            }
         }
     }
     else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREFRESH) == 0))
     {
         // must have dtstamp, uid
-        if ((!getDTStamp().isValid()) || (getUID().size() == 0))
+        if (!getDTStamp().isValid())  
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
+        }
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+            return FALSE;
+        }
         // TODO: attendees required?
     }
     else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sCOUNTER) == 0))
     {
         // must have dtstamp, uid
-        if ((!getDTStamp().isValid()) || (getUID().size() == 0))
+        if (!getDTStamp().isValid()) 
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
+        }
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
+            return FALSE;
+        }
 
         // must have sequence >= 0
         if (getSequence() < 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
             return FALSE;
+        }
     }
             
     // check super class isValid method
@@ -255,42 +344,42 @@ UnicodeString VJournal::cancelMessage()
 {
     UnicodeString s = JulianKeyword::Instance()->ms_sCANCELLED;
     setStatus(s);
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalCancelMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalCancelMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VJournal::requestMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalRequestMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalRequestMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VJournal::requestRecurMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalRecurRequestMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalRecurRequestMessage, "");
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VJournal::counterMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalCounterMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalCounterMessage, "");
 }
 
 //---------------------------------------------------------------------
   
 UnicodeString VJournal::declineCounterMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalDeclineCounterMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalDeclineCounterMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VJournal::addMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalAddMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalAddMessage, "");
 }
 
 //---------------------------------------------------------------------
@@ -304,7 +393,7 @@ UnicodeString VJournal::refreshMessage(UnicodeString sAttendeeFilter)
  
 UnicodeString VJournal::allMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalAllPropertiesMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalAllPropertiesMessage, "");
 }
 
 //---------------------------------------------------------------------
@@ -318,14 +407,20 @@ UnicodeString VJournal::replyMessage(UnicodeString sAttendeeFilter)
  
 UnicodeString VJournal::publishMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalPublishMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalPublishMessage, "");
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VJournal::publishRecurMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVJournalRecurPublishMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVJournalRecurPublishMessage, "");
 }
 
 //---------------------------------------------------------------------
+
+void 
+VJournal::updateComponentHelper(TimeBasedEvent * updatedComponent)
+{
+    TimeBasedEvent::updateComponentHelper(updatedComponent);
+}

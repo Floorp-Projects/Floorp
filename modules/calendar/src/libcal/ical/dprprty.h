@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * dprprty.h
  * John Sun
@@ -119,6 +118,34 @@ public:
      * @return          the property in its ICAL string format
      */
     virtual UnicodeString & toExportString(UnicodeString & out);
+
+    /**
+     * Returns the property's ICAL format strings, 
+     * to output string of the form
+     * :value or ;param1;param2;param3(etc.):value
+     * ONLY: DateTimeProperty overrides this
+     *  (This is too handle NOT printing VALUE and TZID parameters)
+     *
+     * @param           out    output ICAL string
+     *
+     * @return          output ICAL string (out)
+     */
+    UnicodeString & toICALString(UnicodeString & out);
+
+    /**
+     * Returns the property's ICAL format strings, inserting
+     * sProp (property name) to output string of the form
+     * sProp:value or sProp;param1;param2;param3(etc.):value
+     * ONLY: DateTimeProperty overrides this
+     *  (This is too handle NOT printing VALUE and TZID parameters)
+     *
+     * @param           sProp  property name of property
+     * @param           out    output ICAL string
+     *
+     * @return          output ICAL string (out)
+     */
+    UnicodeString & toICALString(UnicodeString & sProp,
+        UnicodeString & out);
 };
 
 #endif /* __DATETIMEPROPERTY_H_ */

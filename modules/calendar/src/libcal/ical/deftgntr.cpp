@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -48,7 +48,7 @@ DefaultGenerator::generate(DateTime * start, JulianPtrArray & dateVector,
 {
     t_int32 i;
     DateTime * t;
-    Duration * d;
+    Julian_Duration * d;
 
     PR_ASSERT(start != 0);
     PR_ASSERT(m_aiParams != 0);
@@ -59,7 +59,7 @@ DefaultGenerator::generate(DateTime * start, JulianPtrArray & dateVector,
     }
 
     t = new DateTime(start->getTime()); PR_ASSERT(t != 0);
-    d = new Duration(m_aiParams[0], m_aiParams[1]); PR_ASSERT(d != 0);
+    d = new Julian_Duration(m_aiParams[0], m_aiParams[1]); PR_ASSERT(d != 0);
 
     dateVector.Add(new DateTime(t->getTime()));
 

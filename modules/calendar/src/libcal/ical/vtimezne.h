@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * vtimezne.h
  * John Sun
@@ -147,7 +146,7 @@ public:
      * @param       bDelegateRequest    TRUE if a delegate request, FALSE if not
      * @return                          ICAL export format of that property
      */
-    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee = "",
+    virtual UnicodeString formatChar(t_int32 c, UnicodeString sFilterAttendee,
         t_bool delegateRequest = FALSE);
 
     /**
@@ -167,6 +166,18 @@ public:
      * @return          ICAL_COMPONENT value of this component
      */
     virtual ICAL_COMPONENT GetType() const { return ICAL_COMPONENT_VTIMEZONE; }
+
+    /**
+     * Update the private property data-members with updatedComponent's 
+     * property data-members.
+     * Usually, overwriting data-members should only occur if updatedComponent
+     * is more recent than the current component.
+     * Return TRUE if component was changed, FALSE otherwise
+     * @param           ICalComponent * updatedComponent
+     *
+     * @return          virtual t_bool
+     */
+    virtual t_bool updateComponent(ICalComponent * updatedComponent);
 
     /*  -- End of ICALComponent interface -- */
 
@@ -192,7 +203,7 @@ public:
      *
      * @return          pointer to vector of TZParts.
      */
-    JulianPtrArray * getTZParts() { return m_TZPartVctr; };
+    JulianPtrArray * getTZParts() const { return m_TZPartVctr; };
 
     /* TZPART */
     void addTZPart(TZPart * part);
@@ -212,6 +223,10 @@ public:
     UnicodeString getTZURL() const;
     void setTZURL(UnicodeString s, JulianPtrArray * parameters = 0);
     ICalProperty * getTZURLProperty() const { return m_TZURL; }
+
+     /* XTOKENS: NOTE: a vector of strings, not a vector of ICalProperties */
+    void addXTokens(UnicodeString s);
+    JulianPtrArray * getXTokens() const { return m_XTokensVctr; }
 
     /**
      * Given vector of timezones, search for VTimeZone with TZID equal to id.
@@ -249,11 +264,16 @@ public:
 private:
 
     /**
-     * Creates NLS TimeZone from start month,day,week,time,until.  
-     * TODO: possible bug, may need to call everytime before calling getNLSTimeZone().
+     * selfcheck data-members, and calls createNLSTimeZone().
      */
     void selfCheck();
     
+    /**
+     * Creates NLS TimeZone from start month,day,week,time,until.  
+     * TODO: possible bug, may need to call everytime before calling getNLSTimeZone().
+     */
+    void createNLSTimeZone();
+
     /**
      * store the data, depending on property name, property value
      * parameter names, parameter values, and the current line.
@@ -265,6 +285,15 @@ private:
      */
     void storeData(UnicodeString & strLine, UnicodeString & propName,
         UnicodeString & propVal, JulianPtrArray * parameters);
+
+    /**
+     * Helper method called by updateComponent to actually replace
+     * the property data-members with updatedComponent's data-members.
+     * @param           VTimeZone * updatedComponent
+     *
+     * @return          virtual void 
+     */
+    void updateComponentHelper(VTimeZone * updatedComponent);
 
     /* whether VTimeZone has more that two parts, currently must
      * have exactly two parts (DAYLIGHT AND STANDARD)
@@ -279,6 +308,7 @@ private:
     ICalProperty *      m_TZID;
     ICalProperty *      m_LastModified;
     ICalProperty *      m_TZURL;
+    JulianPtrArray *    m_XTokensVctr;      /* TEXT */
     
     JLog * m_Log;
 };

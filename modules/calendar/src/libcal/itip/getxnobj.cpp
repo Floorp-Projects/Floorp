@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,14 +16,14 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * getxnobj.cpp
  * John Sun
  * 4/1/98 5:16:29 PM
  */
 
-#include "stdafx.h"
+#include "jdefines.h"
+#include "julnstr.h"
 #include "getxnobj.h"
 #include "nspr.h"
 
@@ -100,7 +100,7 @@ int writeToBufferDebug(void * pData, char * pBuf,
 
 //---------------------------------------------------------------------
 
-int getransactionobj_writeToCAPIReader(void * pData, char * pBuf, int iSize, int * piTransferred)
+int getransactionobj_writeToCAPIReader(void * pData, char * pBuf, size_t iSize, size_t * piTransferred)
 {
     //PR_EnterMonitor(GetTransactionObject::getMonitor());
 #if TESTING_ITIPRIG
@@ -195,14 +195,14 @@ int GetTransactionObject::writeToCAPIReader(void * pData, char * pBuf,
 //---------------------------------------------------------------------
 
 CAPIStatus 
-GetTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH, 
+GetTransactionObject::handleCAPI(CAPISession & pS, CAPIHandle * pH, 
         t_int32 iHandleCount, t_int32 lFlags, 
         JulianPtrArray * inComponents, NSCalendar * inCal,
         JulianPtrArray * modifiers, 
         JulianPtrArray * outCalendars, TransactionObject::EFetchType & out)
 {
     CAPIStatus capiStatus;
-    pCAPIStream outStream = NULL;
+    CAPIStream outStream = NULL;
     void * writeData = 0;
 
 #if TEST_STRINGREADER_PARSE
@@ -239,7 +239,7 @@ GetTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
     //JulianParser::ParseCalendars(capiReader, outCalendars);
 
     //capiStatus = CAPI_SetStreamCallbacks(&outStream, NULL, NULL, getransactionobj_writeToCAPIReader, capiReader, 0);
-    capiStatus = CAPI_SetStreamCallbacks(&outStream, NULL, NULL, getransactionobj_writeToCAPIReader, jp, 0);
+    capiStatus = CAPI_SetStreamCallbacks(pS, &outStream, NULL, NULL, getransactionobj_writeToCAPIReader, jp, 0);
 
     
 #endif
@@ -258,20 +258,23 @@ GetTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
                 modifiers->GetSize() <= 3 && iHandleCount == 1)
             {   
 
-                char * modifier;
-                char * uid;
-                char * rid = NULL;
+                char * modifier = 0;
+                char * uid = 0;
+                char * rid = 0;
                 t_int8 modifierInt = CAPI_THISINSTANCE;
                 modifierSize = modifiers->GetSize();
 
                 // Get the args (uid, rid, rangeModifier)
                 uid = ((UnicodeString *) modifiers->GetAt(0))->toCString("");
+                PR_ASSERT(uid != 0);
                 if (modifierSize > 1)
                 {
                     rid = ((UnicodeString *) modifiers->GetAt(1))->toCString("");
+                    PR_ASSERT(rid != 0);
                     if (modifierSize > 2)
                     {
                         modifier = ((UnicodeString *) modifiers->GetAt(2))->toCString("");
+                        PR_ASSERT(modifier != 0);
                         if (strcmp(modifier, "THISANDPRIOR") == 0)
                             modifierInt = CAPI_THISANDPRIOR;
                         else if (strcmp(modifier, "THISANDFUTURE") == 0)
@@ -281,10 +284,26 @@ GetTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
                     }
                 }
 
-                // TODO: set the property list to NULL for now, pass in later
+                // TODO: set the property list to NULL for now, pass in
+#ifdef TESTING_ITIPRIG
                 TRACE("--main thread: fetching by UID:, %s, RID %s, MODIFIER %d\r\n", uid, rid, modifierInt);
-                capiStatus = CAPI_FetchEventByID(pS, pH[0], 0, uid, rid, modifierInt,
+#endif
+#if 0
+                capiStatus = CAPI_FetchEventsByID(pS, *pH, 0, uid, rid, modifierInt,
                     NULL, 0, outStream);
+#endif
+                if (modifier != 0)
+                {
+                    delete [] modifier; modifier = 0;
+                }
+                if (rid != 0)
+                {
+                    delete [] rid; rid = 0;
+                }
+                if (uid != 0)
+                {
+                    delete [] uid; uid = 0;
+                }
             }
             break;
         case EFetchType_DateRange:
@@ -293,15 +312,25 @@ GetTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
             if (modifiers != 0 && modifiers->GetSize() == 2 &&
                 iHandleCount >= 1)
             {
-                char * start;
-                char * end;
+                char * start = 0;
+                char * end = 0;
                 start = ((UnicodeString *) modifiers->GetAt(0))->toCString("");
                 end = ((UnicodeString *) modifiers->GetAt(1))->toCString("");
-
+                PR_ASSERT(start != 0 && end != 0);
                 // TODO: set the property list to NULL for now, pass in later
+#ifdef TESTING_ITIPRIG                                                                
                 TRACE("--main thread: fetching by DateRange:, START %s, END %s\r\n", start, end);
+#endif
                 capiStatus = CAPI_FetchEventsByRange(pS, &pH[0], iHandleCount, 0, 
                     start, end, NULL, 0, outStream);
+                if (start != 0)
+                {
+                    delete [] start; start = 0;
+                }
+                if (end != 0)
+                {
+                    delete [] end; end = 0;
+                }
             }
             break;
         case EFetchType_AlarmRange:
@@ -310,15 +339,27 @@ GetTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
             if (modifiers != 0 && modifiers->GetSize() == 2 &&
                 iHandleCount >= 1)
             {
-                char * start;
-                char * end;
+                char * start = 0;
+                char * end = 0;
+                PR_ASSERT(start != 0 && end != 0);
                 start = ((UnicodeString *) modifiers->GetAt(0))->toCString("");
                 end = ((UnicodeString *) modifiers->GetAt(1))->toCString("");
 
+
                 // TODO: set the property list to NULL for now, pass in later
+#ifdef TESTING_ITIPRIG                                                                
                 TRACE("--main thread: fetching by AlarmRange:, START %s, END %s\r\n", start, end);
+#endif                
                 capiStatus = CAPI_FetchEventsByAlarmRange(pS, &pH[0], iHandleCount, 0, 
                     start, end, NULL, 0, outStream);
+                if (start != 0)
+                {
+                    delete [] start; start = 0;
+                }
+                if (end != 0)
+                {
+                    delete [] end; end = 0;
+                }
             }
             break;
         }

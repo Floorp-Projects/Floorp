@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * freebusy.h
  * John Sun
@@ -31,6 +30,7 @@
 #include "period.h"
 #include "prprty.h"
 #include "jlog.h"
+#include "julnstr.h"
 
 /**
  *  The Freebusy class encapsulates the data in the iCalendar
@@ -61,8 +61,9 @@ public:
 #else
     /** enumeration of TYPE parameters */
     enum FB_TYPE{FB_TYPE_BUSY = 0, FB_TYPE_FREE = 1, 
-        FB_TYPE_BUSY_UNAVAILABLE, FB_TYPE_BUSY_TENTATIVE,
-        FB_TYPE_LENGTH = 2, FB_TYPE_INVALID = -1};
+        FB_TYPE_BUSY_UNAVAILABLE = 2, FB_TYPE_BUSY_TENTATIVE = 3,
+        FB_TYPE_XPARAMVAL = 4,
+        FB_TYPE_LENGTH = 5, FB_TYPE_INVALID = -1};
 
     /** list acceptable keywords properties in a FREEBUSY */
     enum FB_PROPS{FB_PROPS_TYPE = 0};
@@ -130,6 +131,8 @@ private:
 
     /** ptr to log file to write errors to */
     JLog * m_Log;
+
+    JulianString m_sCurl;   /* cal url where this curl is stored, may be an empty string */
 
     /* characters for printing Freebusy parameters */
     static const t_int32 ms_cFreebusyType;/*   = 'T';*/
@@ -396,12 +399,6 @@ public:
     static int CompareFreebusy(const void * a, const void * b);
 
     /**
-     * Cleanup method.  Deletes each Freebusy object in vector
-     * @param           freebusy        vector of Freebusy objects
-     */
-    static void deleteFreebusyVector(JulianPtrArray * freebusy);
-
-    /**
      * Check if two freebusy objects have the same TYPE and BSTAT.  If they 
      * have the same TYPE and BSTAT, return TRUE, otherwise return FALSE.
      * @param           f1          first freebusy
@@ -410,7 +407,29 @@ public:
      * @return          TRUE if TYPE and BSTAT are same in both freebusy, FALSE otherwise
      */
     static t_bool HasSameParams(Freebusy * f1, Freebusy * f2);
-   
+
+    protected:
+    /**
+     * Returns the curl associated with this nsCalendar. The
+     * curl points to the calendar store where components in
+     * this nsCalendar are to be stored. It is required
+     * for an nsCalendar to have an associated curl if any
+     * of its components will be persisted in a calendar store.
+     *
+     * @return  a JulianString containing the curl 
+     */
+    JulianString getCurl() const {return m_sCurl;}
+
+    /**
+     * Set the default curl for this nsCalendar. 
+     */
+    void setCurl(const char* ps) {m_sCurl = ps;}
+
+    /**
+     * Set the default curl for this nsCalendar. 
+     */
+    void setCurl(const JulianString& s) {m_sCurl = s;}
+
 };
 
 #endif /* __FREEBUSY_H_ */

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * prprty.h
  * John Sun
@@ -38,7 +37,7 @@
  *  all iCal Calendar properties must implement.  Also defines some
  *  static helper methods.
  */
-class ICalProperty
+class JULIAN_PUBLIC ICalProperty
 {
 public:
     /** Enumeration defines ICalProperty types */ 
@@ -283,7 +282,8 @@ public:
      */
     static UnicodeString & propertyVectorToString(JulianPtrArray * properties,
         UnicodeString & dateFmt, UnicodeString & retVal);
-    
+
+#if 0
     /**
      * Given a property name, a parameter name and parameter value,
      * make sure that the parameter name is valid for the property.
@@ -297,6 +297,7 @@ public:
      */
     static t_bool checkParam(UnicodeString & propName, UnicodeString & paramName,
         UnicodeString & paramVal);
+#endif
 
     /**
      * Given a vector of ICalParameters, an array of valid parameter names,
@@ -313,6 +314,9 @@ public:
                                t_int32 validParamNameRangeSize);
 
     /**
+     * 7-23-98: TODO: eliminate passing in validValueRange and validValueRangeSize
+     * now checks for VALUE, ENCOIDNG, RELTYPE values.
+     * TODO: check RELATED
      * given a vector of ICalParameters, an array of valid parameter names,
      * and the size of array, an array of valid parameter values for the valueParamName 
      * type(usually VALUE, but can be RELTYPE),
@@ -326,7 +330,7 @@ public:
      *
      * @return          TRUE if all parameter name and value in range, FALSE otherwise
      */
-      static t_bool CheckParams(JulianPtrArray * parameters,
+      static t_bool CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
                               JAtom validParamNameRange[], 
                               t_int32 validParamNameRangeSize,
                               JAtom validValueRange[],

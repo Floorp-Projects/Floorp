@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 // rcrrence.cpp
 // John Sun
 // 10:45 AM Febuary 2 1997
@@ -37,7 +36,6 @@
 // 5) DON'T HANDLE TZID yet!
 // 7) FREQ tag that is lower than span value of BYxxx TAG fail
 //  (i.e FREQ=MINUTELY;INTERVAL=20;BYHOUR=9,10,11,12,13,14,15,16 FAILS)
-
 #include "stdafx.h"
 #include "jdefines.h"
 
@@ -79,6 +77,8 @@
  *  -terry (copying sman's hack)
  */
 #define TRACE printf
+
+#if JULIAN_DEBUGGING_RECURRENCE
 
 void Recurrence::TRACE_DATETIMEVECTOR(JulianPtrArray * x, char * name)
 {
@@ -123,6 +123,8 @@ void Recurrence::TRACE_DATETIMEVECTORVECTOR(JulianPtrArray * x, char * name)
         //if (FALSE) TRACE(" is NULL\r\n");
     }
 }
+
+#endif
 
 const t_int32 Recurrence::ms_iUNSET = -10000; // should be set to Integer.MIN
 
@@ -236,9 +238,9 @@ Recurrence::Recurrence()
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 Recurrence::Recurrence(DateTime startDate, DateTime stopDate, 
-                       Duration * duration, UnicodeString & ruleString)
+                       Julian_Duration * duration, UnicodeString & ruleString)
 {
     init();
     m_StartDate = startDate;
@@ -250,7 +252,7 @@ Recurrence::Recurrence(DateTime startDate, DateTime stopDate,
 }
 //---------------------------------------------------------------------
 
-Recurrence::Recurrence(DateTime startDate, Duration * duration, 
+Recurrence::Recurrence(DateTime startDate, Julian_Duration * duration, 
                        UnicodeString & ruleString)
 {
     init();
@@ -262,7 +264,7 @@ Recurrence::Recurrence(DateTime startDate, Duration * duration,
     
     m_bParseValid = parse(ruleString);
 }
-
+#endif
 //---------------------------------------------------------------------
 
 Recurrence::Recurrence(DateTime startDate, UnicodeString & ruleString)
@@ -341,7 +343,7 @@ Recurrence::parsePropertyLine(UnicodeString & strLine,
             u = st->nextToken(u, status);
             u.trim();        
 
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("u = %s\r\n", u.toCString(""));
 #endif
             iEq = u.indexOf('=');
@@ -355,7 +357,7 @@ Recurrence::parsePropertyLine(UnicodeString & strLine,
                 paramName = u.extractBetween(0, iEq, paramName).toUpper();
                 paramVal = u.extractBetween(iEq + 1, u.size(), paramVal);
             }
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("[paramName | paramVal] = [%s | %s]\r\n", paramName.toCString(""), paramVal.toCString(""));
 #endif
             parameters->Add(new ICalParameter(paramName, paramVal));
@@ -397,7 +399,7 @@ Recurrence::parse(UnicodeString & s)
     }
     Recurrence::parsePropertyLine(s, parameters);
 
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
     //if (FALSE) TRACE("\r\n----------------------------------------------------\r\n");
 #endif    
     
@@ -410,7 +412,7 @@ Recurrence::parse(UnicodeString & s)
         if (ip->getParameterName(u).compareIgnoreCase(JulianKeyword::Instance()->ms_sFREQ) == 0)
         {
             t = ip->getParameterValue(t);
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("FREQ = %s\r\n", t.toCString(""));
 #endif
             m_iType = stringToType(t, bParseError);
@@ -442,7 +444,7 @@ Recurrence::parse(UnicodeString & s)
         }
         else
         {
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("(key | value) = (%s | %s)\r\n", u.toCString(""), t.toCString(""));
 #endif
             //const char * tCharStar = t.toCString("");
@@ -457,12 +459,18 @@ Recurrence::parse(UnicodeString & s)
             }
             else if (JulianKeyword::Instance()->ms_ATOM_COUNT == atomParam)
             {
-                m_iCount = JulianUtility::atot_int32(t.toCString(""), bParseError, tSize);
+                char * tcc = t.toCString("");
+                PR_ASSERT(tcc != 0);
+                m_iCount = JulianUtility::atot_int32(tcc, bParseError, tSize);
+                delete [] tcc; tcc = 0;
             }
             else if (JulianKeyword::Instance()->ms_ATOM_INTERVAL == atomParam)
             {
                 // TODO: if duration allowed, parse duration, then it to interval
-                tempInterval = JulianUtility::atot_int32(t.toCString(""), bParseError, tSize);
+                char * tcc = t.toCString("");
+                PR_ASSERT(tcc != 0);
+                tempInterval = JulianUtility::atot_int32(tcc, bParseError, tSize);
+                delete [] tcc; tcc = 0;
             }
             else if (JulianKeyword::Instance()->ms_ATOM_WKST == atomParam)
             {
@@ -711,7 +719,7 @@ Recurrence::parse(UnicodeString & s)
     if (bParseError)
     {
         // PARSE ERROR ENCOUNTERED
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
         //if (FALSE) TRACE("ERROR: Parse error somewhere\r\n");
 #endif
         return FALSE;
@@ -725,27 +733,33 @@ Recurrence::parse(UnicodeString & s)
 
 void Recurrence::internalSetInterval(t_int32 i)
 {
-    m_Interval = new Duration();
+    m_Interval = new Julian_Duration();
 
     switch(m_iType)
     {
     case JulianUtility::RT_MINUTELY:
-        m_Interval->setMinute(i);
+        //m_Interval->setMinute(i);
+        m_Interval->set(0,0,0,0,i,0);
         break;
     case JulianUtility::RT_HOURLY:
-        m_Interval->setHour(i);
+        //m_Interval->setHour(i);
+        m_Interval->set(0,0,0,i,0,0);
         break;
     case JulianUtility::RT_DAILY:
-        m_Interval->setDay(i);
+        //m_Interval->setDay(i);
+        m_Interval->set(0,0,i,0,0,0);
         break;
     case JulianUtility::RT_WEEKLY:
-        m_Interval->setWeek(i);
+        //m_Interval->setWeek(i);
+        m_Interval->set(i);
         break;
     case JulianUtility::RT_MONTHLY:
-        m_Interval->setMonth(i);
+        //m_Interval->setMonth(i);
+        m_Interval->set(0,i,0,0,0,0);
         break;
     case JulianUtility::RT_YEARLY:
-        m_Interval->setYear(i);
+        //m_Interval->setYear(i);
+        m_Interval->set(i,0,0,0,0,0);
         break;
     default:
         break;
@@ -780,7 +794,7 @@ Recurrence::stringEnforce(DateTime startDate, JulianPtrArray * srr,
         for (i = 0; i < size; i++)
         {
             u = *((UnicodeString *) srr->GetAt(i));
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("u = -%s-\r\n", u.toCString(""));
 #endif
             rr->Add(new Recurrence(startDate, u));
@@ -793,7 +807,7 @@ Recurrence::stringEnforce(DateTime startDate, JulianPtrArray * srr,
         for (i = 0; i < size; i++)
         {
             u = *((UnicodeString *) ser->GetAt(i));
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("u = -%s-\r\n", u.toCString(""));
 #endif
             er->Add(new Recurrence(startDate, u));
@@ -806,7 +820,7 @@ Recurrence::stringEnforce(DateTime startDate, JulianPtrArray * srr,
         for (i = 0; i < size; i++)
         {
             u = * ((UnicodeString *) srd->GetAt(i));
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("u = -%s-\r\n", u.toCString(""));
 #endif   
             t = u;
@@ -829,24 +843,36 @@ Recurrence::stringEnforce(DateTime startDate, JulianPtrArray * srr,
             {
                 t += 'T';
                 t += startDate.toISO8601LocalTimeOnly();
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
                 //if (FALSE) TRACE("t = -%s-\r\n", t.toCString(""));
 #endif       
                 dt = new DateTime(t); PR_ASSERT(dt != 0);
                 if (!(dt->beforeDateTime(startDate)))
+                {
                     rd->Add(dt);
+                }
+                else 
+                {
+                    delete dt; dt = 0;
+                }
             }
             else if (DateTime::IsParseableDateTime(u))
             {
                 dt = new DateTime(t); PR_ASSERT(dt != 0);
                 if (!(dt->beforeDateTime(startDate)))
+                {
                     rd->Add(dt);
+                }
+                else
+                {
+                    delete dt; dt = 0;
+                }
             }
             else
             {
                 // log an invalid rdate
-                if (log != 0) log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidRDate, 200);
+                if (log != 0) log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iInvalidRDate, 200);
             }
         }
     }
@@ -856,7 +882,7 @@ Recurrence::stringEnforce(DateTime startDate, JulianPtrArray * srr,
         for (i = 0; i < size; i++)
         {
             u = * ((UnicodeString *) sed->GetAt(i));
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("u = -%s-\r\n", u.toCString(""));
 #endif   
             ed->Add(new DateTime(u));
@@ -897,9 +923,9 @@ Recurrence::enforce(JulianPtrArray * rr, JulianPtrArray * er,
     {
         dates = new JulianPtrArray(); PR_ASSERT(dates != 0);
         recur = (Recurrence *) rr->GetAt(i);
-        recur->unzip(bound, dates, log);
+        recur->unzip(bound, dates, log, TRUE);
         dr->Add(dates);
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
         TRACE_DATETIMEVECTOR(dates, "dates");
 #endif
     }
@@ -910,9 +936,9 @@ Recurrence::enforce(JulianPtrArray * rr, JulianPtrArray * er,
     {
         dates = new JulianPtrArray(); PR_ASSERT(dates != 0);
         recur = (Recurrence *) er->GetAt(i);
-        recur->unzip(bound, dates, log);
+        recur->unzip(bound, dates, log, FALSE);
         de->Add(dates);
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
         TRACE_DATETIMEVECTOR(dates, "dates");
 #endif
     }
@@ -964,7 +990,8 @@ t_int32 Recurrence::getGenOrderIndexLength(t_int32 genOrderIndex)
 //---------------------------------------------------------------------
 // TODO: make crash proof
 void
-Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
+Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log,
+                  t_bool bAddStartDate)
 {
     //PR_ASSERT(out != 0);
     //PR_ASSERT(isValid());
@@ -973,12 +1000,13 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
     {
         if (out != 0)
         {
-            out->Add(new DateTime(m_StartDate));
+            if (bAddStartDate)
+                out->Add(new DateTime(m_StartDate));
         }
         if (log != 0)
         {
-            log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidRecurrenceError, 200);
+            log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidRecurrenceError, 200);
         }
         return;
     }
@@ -1047,7 +1075,7 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
                         for (k = 0; k < x->GetSize(); k++)
                         {
                             done = done || dg->generate((DateTime *) x->GetAt(k), *genDates, &m_Until);
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
                             //if (FALSE) TRACE("1) i = %d, j = %d, done = %d, genDates = ", i, j, done);
                             //if (FALSE) TRACE_DATETIMEVECTOR(genDates, "genDates");
 #endif
@@ -1056,7 +1084,7 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
                     else
                     {
                         done = done || dg->generate(&t, *genDates, &m_Until);
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
                         //if (FALSE) TRACE("2) i = %d, j = %d, done = %d, genDates = ", i, j, done);
                         //if (FALSE) TRACE_DATETIMEVECTOR(genDates, "genDates");
 #endif
@@ -1073,7 +1101,7 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
             if (v->GetSize() > 0)
             {
                 //bPrevGenRan = TRUE;       
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
                 TRACE_DATETIMEVECTORVECTOR(v, "v");
                 TRACE_DATETIMEVECTOR(x, "x");
 #endif
@@ -1121,7 +1149,7 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
                         }
                     }
                 }
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
                 //if (FALSE) TRACE_DATETIMEVECTOR(vFlat, "vFlat");
                 //if (FALSE) TRACE("After concat: x = ");
                 //if (FALSE) TRACE_DATETIMEVECTOR(x, "x");
@@ -1179,7 +1207,7 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
         
     }
     while (!done && (returnDateVector == 0 || returnDateVector->GetSize() < bound));
-    cleanup(returnDateVector, bound, out);
+    cleanup(returnDateVector, bound, out, bAddStartDate);
     if (returnDateVector != 0)
     {
         deleteDateTimeVector(returnDateVector);
@@ -1192,19 +1220,22 @@ Recurrence::unzip(t_int32 bound, JulianPtrArray * out, JLog * log)
 
 void
 Recurrence::cleanup(JulianPtrArray * vDatesIn, t_int32 length, 
-                    JulianPtrArray * out)
+                    JulianPtrArray * out, t_bool bAddStartDate)
 {
     t_bool pushStart = FALSE;
     t_int32 i;
     t_int32 newLength = 0;
     DateTime * dt;
-    t_int32 size = vDatesIn->GetSize();
-    if (vDatesIn == 0 || size == 0)
+    t_int32 size = 0;
+    if (vDatesIn != 0)
+    {
+        size = vDatesIn->GetSize();
+    }
+    if ((vDatesIn == 0 || size == 0) && bAddStartDate)
     {
         out->Add(new DateTime(m_StartDate));
         return;
     }
-
     dt = (DateTime *) vDatesIn->GetAt(0);
     if (dt->afterDateTime(m_StartDate) || dt->beforeDateTime(m_StartDate))
         pushStart = TRUE;
@@ -1411,7 +1442,7 @@ Recurrence::parseDelimited(UnicodeString & us, UnicodeString & strDelim,
         while (st->hasMoreTokens())
         {
             u = st->nextToken(u, status);
-#if DEBUG
+#if JULIAN_DEBUGGING_RECURRENCE
             //if (FALSE) TRACE("u = %s", u.toCString(""));
 #endif
             vectorToFillIn->Add(new UnicodeString(u));
@@ -1607,10 +1638,12 @@ Recurrence::verifyIntList(JulianPtrArray * v, t_int32 lowerBound,
             bMinusOrPlus = 1;
             startIndex = 1;
         }
-        k = JulianUtility::atot_int32(s.extractBetween(startIndex, 
-            s.size(), into).toCString(""), 
+        char * kcc = s.extractBetween(startIndex, s.size(), into).toCString("");
+        PR_ASSERT(kcc != 0);
+        k = JulianUtility::atot_int32(kcc, 
             bParseError, (s.size() - startIndex));
-            
+        delete [] kcc; kcc = 0;    
+
         // if Minus sign, set to inverse
         if (bMinusOrPlus < 0)
         {
@@ -1702,11 +1735,14 @@ void Recurrence::createByDayListHelper(UnicodeString & in,
                 bMinusOrPlus = 1;
                 startIndex = 1;
             }
+
+            char * incc = in.extractBetween(startIndex, 
+                in.size() - 2, into).toCString("");
+            PR_ASSERT(incc != 0);
             modifier = 
-                JulianUtility::atot_int32(in.extractBetween(startIndex, 
-                in.size() - 2, into).toCString(""), 
+                JulianUtility::atot_int32(incc, 
                 bParseError, (in.size() - 2 - startIndex));
-            
+            delete [] incc; incc = 0;
             // if Minus sign, set to inverse
             if (bMinusOrPlus < 0)
             {

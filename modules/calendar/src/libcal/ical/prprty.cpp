@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -34,289 +34,6 @@
 #include "keyword.h"
 
 //---------------------------------------------------------------------
-//static UnicodeString s_sDelim = ",";
-//static UnicodeString s_sCommaSymbol = ",";
-//static UnicodeString s_sColonSymbol = ":";
-//static UnicodeString s_sSemiColonSymbol = ";";
-//static UnicodeString s_sEqualSymbol = "=";
-//static UnicodeString s_sQuoteSymbol = "\"";
-//static UnicodeString s_sLineBreak = "\r\n";
-//static UnicodeString s_sLineBreakSpace = "\r\n ";
-//static UnicodeString s_sLineFeedSpace = "\n ";
-//static UnicodeString s_sSmallXDash = "x-";
-//static UnicodeString s_sBigXDash= "X-";
-//static UnicodeString s_sAltRep = ";ALTREP=\"";
-//static UnicodeString s_sSendBy = ";SENT-BY=\"";
-
-// contact, comment, description, location
-/*
-JAtom ICalProperty::ms_asAltrepLanguageParamRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_ALTREP, JulianKeyword::Instance()->ms_ATOM_LANGUAGE
-};
-const t_int32 ICalProperty::ms_asAltrepLanguageParamRangeSize = 2;
-
-// exdate, rdate, dtend, due, dtstart
-JAtom ICalProperty::ms_asTZIDValueParamRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_VALUE, JulianKeyword::Instance()->ms_ATOM_TZID
-};
-const t_int32 ICalProperty::ms_asTZIDValueParamRangeSize = 2;
-
-// categories, request-status, resources, tzname
-JAtom ICalProperty::ms_asLanguageParamRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_LANGUAGE
-};
-const t_int32 ICalProperty::ms_asLanguageParamRangeSize = 1;
-
-// attach
-JAtom ICalProperty::ms_asEncodingValueParamRange[] = 
-{
-    JulianKeyword::Instance()->ms_ATOM_ENCODING, JulianKeyword::Instance()->ms_ATOM_VALUE
-};
-const t_int32 ICalProperty::ms_asEncodingValueParamRangeSize = 2;
-
-// organizer
-JAtom ICalProperty::ms_asSentByParamRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_SENTBY
-};
-const t_int32 ICalProperty::ms_asSentByParamRangeSize = 1;
-
-// related-to
-JAtom ICalProperty::ms_asReltypeParamRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_RELTYPE
-};
-const t_int32 ICalProperty::ms_asReltypeParamRangeSize = 1;
-
-// trigger
-JAtom ICalProperty::ms_asRelatedValueParamRange[] = 
-{
-    JulianKeyword::Instance()->ms_ATOM_VALUE, JulianKeyword::Instance()->ms_ATOM_RELATED
-};
-const t_int32 ICalProperty::ms_asRelatedValueParamRangeSize = 2;
-
-//---------------------------------------------------------------------
-///////// PARAMETER VALUE RANGES /////////////
-JAtom ICalProperty::ms_asBinaryURIValueRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_BINARY, JulianKeyword::Instance()->ms_ATOM_URI
-};
-const t_int32 ICalProperty::ms_asBinaryURIValueRangeSize = 2;
-
-
-JAtom ICalProperty::ms_asDateDateTimeValueRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_DATE, JulianKeyword::Instance()->ms_ATOM_DATETIME
-};
-const t_int32 ICalProperty::ms_asDateDateTimeValueRangeSize = 2;
-
-JAtom ICalProperty::ms_asDurationDateTimeValueRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_DURATION, JulianKeyword::Instance()->ms_ATOM_DATETIME
-};
-const t_int32 ICalProperty::ms_asDurationDateTimeValueRangeSize = 2;
-
-JAtom ICalProperty::ms_asDateDateTimePeriodValueRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_DATE, JulianKeyword::Instance()->ms_ATOM_DATETIME, JulianKeyword::Instance()->ms_ATOM_PERIOD
-};
-const t_int32 ICalProperty::ms_asDateDateTimePeriodValueRangeSize = 3;
-
-static JAtom s_asRelTypeRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_PARENT, JulianKeyword::Instance()->ms_ATOM_CHILD, JulianKeyword::Instance()->ms_ATOM_SIBLING
-};
-
-static JAtom s_asRelatedRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_START, JulianKeyword::Instance()->ms_ATOM_END
-};
-
-static JAtom s_asParameterRange[] = 
-{ 
-    JulianKeyword::Instance()->ms_ATOM_ALTREP, JulianKeyword::Instance()->ms_ATOM_ENCODING, JulianKeyword::Instance()->ms_ATOM_LANGUAGE, JulianKeyword::Instance()->ms_ATOM_TZID,
-        JulianKeyword::Instance()->ms_ATOM_VALUE        
-};
-static s_iParameterRangeSize = 5;
-
-static JAtom s_asIrregularProperties[] = 
-{
-    JulianKeyword::Instance()->ms_ATOM_ATTENDEE, JulianKeyword::Instance()->ms_ATOM_FREEBUSY, JulianKeyword::Instance()->ms_ATOM_RECURRENCEID
-};
-static s_iIrregularPropertiesSize = 3;
-
-static JAtom s_asValueRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_BINARY, JulianKeyword::Instance()->ms_ATOM_BOOLEAN, JulianKeyword::Instance()->ms_ATOM_CALADDRESS, JulianKeyword::Instance()->ms_ATOM_DATE,
-    JulianKeyword::Instance()->ms_ATOM_DATETIME, JulianKeyword::Instance()->ms_ATOM_DURATION, JulianKeyword::Instance()->ms_ATOM_FLOAT, JulianKeyword::Instance()->ms_ATOM_INTEGER,
-    JulianKeyword::Instance()->ms_ATOM_PERIOD, JulianKeyword::Instance()->ms_ATOM_RECUR, JulianKeyword::Instance()->ms_ATOM_TEXT, JulianKeyword::Instance()->ms_ATOM_TIME,
-    JulianKeyword::Instance()->ms_ATOM_URI, JulianKeyword::Instance()->ms_ATOM_UTCOFFSET
-};
-static s_iValueRangeSize = 14;
-
-static JAtom s_asEncodingRange[] =
-{
-    JulianKeyword::Instance()->ms_ATOM_8bit, JulianKeyword::Instance()->ms_ATOM_B
-};
-static s_iEncodingRangeSize = 2;
-*/
-//---------------------------------------------------------------------
-/*
-ICalProperty::ICalProperty()
-: m_vParameters(0)
-{
-}
-*/
-//---------------------------------------------------------------------
-/*
-ICalProperty::ICalProperty(JulianPtrArray * parameters)
-: m_vParameters(0)
-{
-    setParameters(parameters);
-
-   
-}
-*/
-//---------------------------------------------------------------------
-/*
-ICalProperty::~ICalProperty()
-{
-    if (m_vParameters != 0)
-    {
-        deleteICalParameterVector(m_vParameters);
-        delete m_vParameters; 
-        m_vParameters = 0;
-    }
-}
-*/
-//---------------------------------------------------------------------
-/*
-UnicodeString & 
-ICalProperty::getParameterValue(UnicodeString & paramName,
-                                UnicodeString & paramValue,
-                                ErrorCode & status)
-{
-    t_int32 i;
-    ICalParameter * param;
-    UnicodeString into;
-
-    if (m_vParameters == 0)
-    {
-        status = 1;
-        paramValue = "";
-        return paramValue;
-    }
-    else 
-    {
-        for (i = 0; i < m_vParameters->GetSize(); i++)
-        {
-            param = (ICalParameter *) m_vParameters->GetAt(i);
-            if (param->getParameterName(into).compareIgnoreCase(paramName) == 0)
-            {
-                // a match
-                paramValue = param->getParameterValue(into);
-                return paramValue;
-            }
-        }
-        status = 2;
-        paramValue = "";
-        return paramValue;
-    }
-}
-*/
-//---------------------------------------------------------------------
-/*
-void ICalProperty::addParameter(ICalParameter * aParameter)
-{
-    // TODO: check for duplicates?
-    m_vParameters->Add(aParameter);
-}
-*/
-//-------------------------------------------------
-/*
-void ICalProperty::parse(UnicodeString & in)
-{
-    UnicodeString name, value;
-
-    if (m_vParameters != 0) {
-        ICalProperty::deleteICalParameterVector(m_vParameters);
-        delete m_vParameters;
-    }
-    m_vParameters = 0;
-    
-    JulianPtrArray * parameters = new JulianPtrArray(); 
-    PR_ASSERT(parameters != 0);
-    
-    // parse in a a line, it will fill in vector
-    parsePropertyLine(in, name, value, parameters);
-    // TODO: fix
-    //PR_ASSERT(m_vParameters != 0 && m_vParameters.GetSize() == 2);
-
-    setValue((void *) m_vParameters->GetAt(1));
-    setParameters(parameters);
-
-    ICalProperty::deleteICalParameterVector(parameters);
-    delete parameters; parameters = 0;
-}
-*/
-//---------------------------------------------------------------------
-/*
-void ICalProperty::setParameters(JulianPtrArray * parameters)
-{
-    if (m_vParameters != 0)
-    {
-        ICalProperty::deleteICalParameterVector(m_vParameters);
-        delete m_vParameters; m_vParameters = 0;
-    }
-
-    // NOTE: I am making a copy of the parameters
-    // I am not storing the ptr.
-    if (parameters != 0)
-    {
-        t_int32 i;
-        ICalParameter * ip, * ip2;
-        m_vParameters = new JulianPtrArray();
-
-        for (i = 0; i < parameters->GetSize(); i++)
-        {
-            ip = (ICalParameter *) parameters->GetAt(i);
-            PR_ASSERT(ip != 0);
-            ip2 = ip->clone();
-            PR_ASSERT(ip2 != 0);
-            m_vParameters->Add(ip2);
-        }
-    }
-   
-    //m_vParameters = parameters; // OLD WAY: just storing ptr.
-}
-*/
-//---------------------------------------------------------------------
-/*
-UnicodeString & 
-ICalProperty::toICALString(UnicodeString & out) 
-{
-    UnicodeString u, name;
-    u = toExportString(u);
-    //if (FALSE) TRACE("u = --%s--\r\n", u.toCString(""));
-    return propertyToICALString(name, u, m_vParameters, out);
-}
-*/
-//---------------------------------------------------------------------
-/*
-UnicodeString & 
-ICalProperty::toICALString(UnicodeString & sProp,
-                           UnicodeString & out) 
-{
-    UnicodeString u;
-    u = toExportString(u);
-    //if (FALSE) TRACE("u = --%s--\r\n", u.toCString(""));
-    return propertyToICALString(sProp, u, m_vParameters, out);
-}
-*/
-//---------------------------------------------------------------------
 
 ICalProperty::ICalProperty() {}
 ICalProperty::ICalProperty(ICalProperty & that) { if (&that != 0) {} }
@@ -329,7 +46,6 @@ ICalProperty::propertyToICALString(UnicodeString & sProp,
                                    JulianPtrArray * parameters,
                                    UnicodeString & retVal)
 {
-    //UnicodeString sName, sVal;
     ICalParameter * aName;
     retVal = "";
     t_int32 size = 0;
@@ -375,8 +91,6 @@ t_bool ICalProperty::CheckParams(JulianPtrArray * parameters,
         ip = (ICalParameter *) parameters->GetAt(i);
         u = ip->getParameterName(u);
 
-        //if (FALSE) TRACE("u = %s\r\n", u.toCString(""));
-
         if (!JulianUtility::checkRange(u.hashCode(), validParamNameRange, 
             validParamNameRangeSize))
         {
@@ -387,7 +101,7 @@ t_bool ICalProperty::CheckParams(JulianPtrArray * parameters,
 }
 //---------------------------------------------------------------------
 // TRUE = in range, FALSE = out of range.
-t_bool ICalProperty::CheckParams(JulianPtrArray * parameters,
+t_bool ICalProperty::CheckParamsWithValueRangeCheck(JulianPtrArray * parameters,
                                  JAtom validParamNameRange[], 
                                  t_int32 validParamNameRangeSize,
                                  JAtom validValueRange[],
@@ -412,19 +126,53 @@ t_bool ICalProperty::CheckParams(JulianPtrArray * parameters,
         ip = (ICalParameter *) parameters->GetAt(i);
         u = ip->getParameterName(u);
 
-        //if (FALSE) TRACE("u = %s\r\n", u.toCString(""));
-
         if (!JulianUtility::checkRange(u.hashCode(), validParamNameRange, 
             validParamNameRangeSize))
         {
             return FALSE;
         }
 
-        if (JulianKeyword::Instance()->ms_ATOM_VALUE == u.hashCode()) // ONLY check if VALUE
+        if (JulianKeyword::Instance()->ms_ATOM_VALUE == u.hashCode())
         {
             u = ip->getParameterValue(u);
             if (!JulianUtility::checkRange(u.hashCode(), validValueRange,
                 validValueRangeSize))
+            {                
+                if (!ICalProperty::IsXToken(u))
+                    return FALSE; 
+            }
+        }
+
+        else if (JulianKeyword::Instance()->ms_ATOM_ENCODING == u.hashCode())
+        {
+            u = ip->getParameterValue(u);
+            if (!JulianUtility::checkRange(u.hashCode(), 
+                JulianAtomRange::Instance()->ms_asEncodingRange,
+                JulianAtomRange::Instance()->ms_iEncodingRangeSize))
+            {
+                if (!ICalProperty::IsXToken(u))
+                    return FALSE; 
+            }
+        }
+
+        else if (JulianKeyword::Instance()->ms_ATOM_RELTYPE == u.hashCode())
+        {
+            u = ip->getParameterValue(u);
+            if (!JulianUtility::checkRange(u.hashCode(), 
+                JulianAtomRange::Instance()->ms_asRelTypeRange,
+                JulianAtomRange::Instance()->ms_iRelTypeRangeSize))
+            {
+                if (!ICalProperty::IsXToken(u))
+                    return FALSE; 
+            }
+        }
+
+        else if (JulianKeyword::Instance()->ms_ATOM_RELATED == u.hashCode())
+        {
+            u = ip->getParameterValue(u);
+            if (!JulianUtility::checkRange(u.hashCode(), 
+                JulianAtomRange::Instance()->ms_asRelatedRange,
+                JulianAtomRange::Instance()->ms_iRelatedRangeSize))
             {
                 return FALSE;
             }
@@ -434,7 +182,7 @@ t_bool ICalProperty::CheckParams(JulianPtrArray * parameters,
 }
 
 //---------------------------------------------------------------------
-
+#if 0
 // return TRUE if error, FALSE otherwise
 t_bool ICalProperty::checkParam(UnicodeString & propName, 
                                 UnicodeString & paramName,
@@ -488,6 +236,7 @@ t_bool ICalProperty::checkParam(UnicodeString & propName,
         }
     }
 }
+#endif
 //---------------------------------------------------------------------
 // checks for parameters here.
 // If method encounters a bad parameter, 

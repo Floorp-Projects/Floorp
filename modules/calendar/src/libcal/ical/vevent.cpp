@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -34,79 +34,8 @@
 
 #include "period.h"
 #include "datetime.h"
-/*
-//---------------------------------------------------------------------
-// checked
-UnicodeString VEvent::ms_sAllPropertiesMessage = 
-"%v%a%k%c%K%H%t%i%D%B%e%C%X%E%O%M%L%J%p%x%y%R%o%T%r%s%g%S%h%U%u%w%Z";
 
-//---------------------------------------------------------------------
-// checked 
-UnicodeString VEvent::ms_sCancelMessage =
-"%K%R%U%s%J%C%g%Z"; 
-
-//---------------------------------------------------------------------
-// request, checked both
-// everything but duration, req-status
-UnicodeString VEvent::ms_sRequestMessage =
-"%v%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%J%p%x%y%R%o%r%s%g%S%h%U%u%w%Z";
-
-UnicodeString VEvent::ms_sRecurRequestMessage =
-"%v%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%J%p%x%y%o%r%s%g%S%h%U%u%w%Z";
-//---------------------------------------------------------------------
-// checked, counter, no organizer, duration, req-status    
-UnicodeString VEvent::ms_sCounterMessage =
-"%v%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%p%x%y%R%o%r%s%g%S%h%U%u%w%Z";
-
-//---------------------------------------------------------------------
-// checked
-UnicodeString VEvent::ms_sDeclineCounterMessage =
-"%K%R%U%s%J%T%C%Z";
-
-//---------------------------------------------------------------------
-UnicodeString VEvent::ms_sAddMessage =
-"%v%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%J%p%x%y%R%o%r%s%g%S%h%U%u%w%Z";
-
-//---------------------------------------------------------------------
-// checked
-UnicodeString VEvent::ms_sRefreshMessage =
-"%v%R%U%C%K%H%Z";
-    
-//---------------------------------------------------------------------
-// checked
-UnicodeString VEvent::ms_sReplyMessage =
-"%v%K%R%U%s%J%T%C%H%X%E";
-    
-//---------------------------------------------------------------------
-// checked, publish
-// everything but duration, req-status
-
-UnicodeString VEvent::ms_sPublishMessage =
-"%v%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%J%p%x%y%R%o%r%s%g%S%h%U%u%w%Z";
-    
-UnicodeString VEvent::ms_sRecurPublishMessage =
-"%v%a%k%c%K%H%t%i%B%e%C%X%E%O%M%L%J%p%x%y%o%r%s%g%S%h%U%u%w%Z";
-
-//---------------------------------------------------------------------
-    
-UnicodeString VEvent::ms_sDelegateRequestMessage =
-"%v%K%B%e%i%R%U%s%C";
-
-UnicodeString VEvent::ms_sRecurDelegateRequestMessage =
-"%v%K%B%e%i%U%s%C";
-
-*/
-
-// public
-//const UnicodeString VEvent::ms_aTRANSP[]    =
-//  { JulianKeyword::Instance()->ms_sOPAQUE, JulianKeyword::Instance()->ms_sTRANSPARENT };
-
-//private
-/*
-UnicodeString VEvent::m_strDefaultFmt =
-// "%(EEE MM/dd/yy hh:mm a)B - %(EEE MM/dd/yy hh:mm a)e\r\n\t UID: %U, SEQ: %s, SUM: %S, LastM: %(EEE MM/dd/yy hh:mm a)M %w";
- "[%(EEE MM/dd/yy hh:mm:ss z)B - %(EEE MM/dd/yy hh:mm:ss z)e]  UID: %U, SEQ: %s, SUM: %S, LastM: %(EEE MM/dd/yy hh:mm:ss z)M %(\r\n\t^N ^R,^S)v %w";
-*/
+#include "functbl.h"
 //---------------------------------------------------------------------
 void VEvent::setDefaultFmt(UnicodeString s)
 {
@@ -142,12 +71,27 @@ VEvent::VEvent(VEvent & that)
     m_origDTEnd = that.m_origDTEnd;
     m_origMyDTEnd = that.m_origMyDTEnd;
 
-    if (that.m_DTEnd != 0) { m_DTEnd = that.m_DTEnd->clone(m_Log); }
+    if (that.m_DTEnd != 0) 
+    { 
+        m_DTEnd = that.m_DTEnd->clone(m_Log); 
+    }
     //if (that.m_Duration != 0) { m_Duration = that.m_Duration->clone(m_Log); }
-    if (that.m_GEO != 0) { m_GEO = that.m_GEO->clone(m_Log); }
-    if (that.m_Location != 0) { m_Location = that.m_Location->clone(m_Log); }
-    if (that.m_Priority != 0) { m_Priority = that.m_Priority->clone(m_Log); }
-    if (that.m_Transp != 0) { m_Transp = that.m_Transp->clone(m_Log); }
+    if (that.m_GEO != 0) 
+    { 
+        m_GEO = that.m_GEO->clone(m_Log); 
+    }
+    if (that.m_Location != 0) 
+    { 
+        m_Location = that.m_Location->clone(m_Log); 
+    }
+    if (that.m_Priority != 0) 
+    { 
+        m_Priority = that.m_Priority->clone(m_Log); 
+    }
+    if (that.m_Transp != 0) 
+    { 
+        m_Transp = that.m_Transp->clone(m_Log); 
+    }
     if (that.m_ResourcesVctr != 0)
     {
         m_ResourcesVctr = new JulianPtrArray(); PR_ASSERT(m_ResourcesVctr != 0);
@@ -169,13 +113,32 @@ VEvent::clone(JLog * initLog)
 
 VEvent::~VEvent()
 {
+    if (m_TempDuration != 0)
+    {
+        delete m_TempDuration; m_TempDuration = 0;
+    }
     // properties
-    if (m_DTEnd != 0) { delete m_DTEnd; m_DTEnd = 0; }
+    if (m_DTEnd != 0) 
+    { 
+        delete m_DTEnd; m_DTEnd = 0; 
+    }
     //if (m_Duration != 0) { delete m_Duration; m_Duration = 0; }
-    if (m_GEO != 0) { delete m_GEO; m_GEO = 0; }
-    if (m_Location!= 0) { delete m_Location; m_Location = 0; }
-    if (m_Priority!= 0) { delete m_Priority; m_Priority = 0; }
-    if (m_Transp != 0) { delete m_Transp; m_Transp = 0; }
+    if (m_GEO != 0) 
+    { 
+        delete m_GEO; m_GEO = 0; 
+    }
+    if (m_Location!= 0) 
+    { 
+        delete m_Location; m_Location = 0; 
+    }
+    if (m_Priority!= 0) 
+    { 
+        delete m_Priority; m_Priority = 0; 
+    }
+    if (m_Transp != 0) 
+    { 
+        delete m_Transp; m_Transp = 0; 
+    }
     
     // vector of strings
     if (m_ResourcesVctr != 0) { 
@@ -268,8 +231,8 @@ void VEvent::selfCheck()
             d = getDTStart();
             setDTEnd(d);
 
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDTEndBeforeDTStart, 100);
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart, 100);
         }
     }
     else 
@@ -290,70 +253,231 @@ void VEvent::selfCheck()
             d = getDTStart();
             setDTEnd(d);
 
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDTEndBeforeDTStart, 100);
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iDTEndBeforeDTStart, 100);
+        }
+    }
+    if (getStatus().size() > 0)
+    {
+        // check if I got a valid status
+        UnicodeString u = getStatus();
+        u.toUpper();
+        ICalProperty::Trim(u);
+        JAtom ua(u);
+        if ((JulianKeyword::Instance()->ms_ATOM_CONFIRMED != ua) && 
+            (JulianKeyword::Instance()->ms_ATOM_TENTATIVE != ua) && 
+            (JulianKeyword::Instance()->ms_ATOM_CANCELLED != ua))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyValue, 
+                JulianKeyword::Instance()->ms_sVEVENT, 
+                JulianKeyword::Instance()->ms_sSTATUS, u, 200);
+
+            setStatus("");
         }
     }
 }
 
 //---------------------------------------------------------------------
-/**
-* return TRUE if the event falls on the given date
-* @param aDate	a perticular date
-*/
-/*
-t_bool VEvent::eventFallsOnTime(DateTime * aDate)
+void VEvent::storeDTEnd(UnicodeString & strLine, UnicodeString & propVal, 
+        JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
 {
-    DateTime dtS = getDTStart();
-    DateTime dtE = getDTEnd();
-    if (dtS != 0 && dtE != 0)
+    // check parameters
+    t_bool bParamValid = ICalProperty::CheckParamsWithValueRangeCheck(parameters, 
+        JulianAtomRange::Instance()->ms_asTZIDValueParamRange,
+        JulianAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
+        JulianAtomRange::Instance()->ms_asDateDateTimeValueRange,
+        JulianAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
+    if (!bParamValid)
     {
-        // DebugMsg.Instance().println(0,"DTStart: " + m_DTStart.toISO8601());
-        // DebugMsg.Instance().println(0,"DTEnd: " + m_DTEnd.toISO8601());
-        if ((dtS->before(aDate) && dtE->after(aDate))
-            || dtS->equals(aDate) || dtE->equals(aDate))
-    	  return TRUE;
-        else 
-          return FALSE;    
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+    }
+
+    if (getDTEndProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVEVENT, 
+            JulianKeyword::Instance()->ms_sDTEND, 100);
+    }  
+    UnicodeString u, out;
+
+    u = JulianKeyword::Instance()->ms_sVALUE;
+    out = ICalParameter::GetParameterFromVector(u, out, parameters);
+
+    t_bool bIsDate = DateTime::IsParseableDate(propVal);
+
+    if (bIsDate)
+    {
+        // if there is a VALUE=X parameter, make sure X is DATE
+        if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATE != out.hashCode()))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
+                JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+        }   
     }
     else
-    {	
-	// DebugMsg.Instance().println(0,"Warning: Either starting date or ending date missing.\n");
-      return FALSE;
-    }
-}
-*/
-//---------------------------------------------------------------------
-
-/**
-* return TRUE if the event falls on the given time period
-* @param StartTime	a starting time
-* @param EndTime	an ending time
-*/
-/*
-t_bool VEvent::eventMatchesTimePeriod(DateTime * SD, DateTime * ED)
-{
-    
-    DateTime * dtS = getDTStart();
-    DateTime * dtE = getDTEnd();
-    
-    if (dtS != 0 && dtE != 0)
     {
-      if (dtE->before(SD)|| dtS->after(ED)
-          || dtE->equals(SD)|| dtS->equals(ED))
-        return FALSE;
-      else 
-        return TRUE;
+        // if there is a VALUE=X parameter, make sure X is DATETIME
+        if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATETIME != out.hashCode()))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iPropertyValueTypeMismatch,
+                JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+        }
+    }
+
+    DateTime d;
+    d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
+    
+    setDTEnd(d, parameters);
+}     
+void VEvent::storeDuration(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+    }
+
+    if (m_TempDuration != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVEVENT, 
+            JulianKeyword::Instance()->ms_sDURATION, 100);
+    }
+    //Duration d(propVal);
+    if (m_TempDuration == 0)
+    {
+        m_TempDuration = new Julian_Duration(propVal);
+        PR_ASSERT(m_TempDuration != 0);
     }
     else
-    {	
-        // DebugMsg.Instance().println(0,"Warning: Either starting date or ending date missing.\n");
-    	return FALSE;
+        m_TempDuration->setDurationString(propVal);
+}     
+void VEvent::storeGEO(UnicodeString & strLine, UnicodeString & propVal,
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
     }
-}
-*/
-//---------------------------------------------------------------------
 
+    if (getGEOProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVEVENT, 
+            JulianKeyword::Instance()->ms_sGEO, 100);
+    }
+    setGEO(propVal, parameters);
+}       
+void VEvent::storeLocation(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
+        JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
+
+    if (!bParamValid)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+    }
+
+    if (getLocationProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVEVENT, 
+            JulianKeyword::Instance()->ms_sLOCATION, 100);
+    }
+    setLocation(propVal, parameters);
+}  
+void VEvent::storePriority(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    t_bool bParseError = FALSE;
+    t_int32 i;
+
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+    }
+    
+    char * pcc = propVal.toCString("");
+    PR_ASSERT(pcc != 0);
+    i = JulianUtility::atot_int32(pcc, bParseError, propVal.size());
+    delete [] pcc; pcc = 0;
+    if (getPriorityProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVEVENT, 
+            JulianKeyword::Instance()->ms_sPRIORITY, 100);
+    }
+    if (!bParseError)
+    {
+        setPriority(i, parameters);
+    }
+    else
+    {
+        if (m_Log) m_Log->logError(JulianLogErrorMessage::Instance()->ms_iInvalidNumberFormat, 
+            JulianKeyword::Instance()->ms_sVEVENT, 
+            JulianKeyword::Instance()->ms_sPRIORITY, propVal, 200);
+    }
+}  
+void VEvent::storeResources(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+// check parameters 
+    t_bool bParamValid = ICalProperty::CheckParams(parameters, 
+        JulianAtomRange::Instance()->ms_asLanguageParamRange,
+        JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
+    if (!bParamValid)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+    }
+
+    addResourcesPropertyVector(propVal, parameters);
+}
+void VEvent::storeTransp(UnicodeString & strLine, UnicodeString & propVal, 
+    JulianPtrArray * parameters, JulianPtrArray * vTimeZones)
+{
+    // no parameters
+    if (parameters->GetSize() > 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
+            JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+    }
+
+    if (getTranspProperty() != 0)
+    {
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
+            JulianKeyword::Instance()->ms_sVEVENT, 
+            JulianKeyword::Instance()->ms_sTRANSP, 100);
+    }
+    setTransp(propVal, parameters);
+}       
+//---------------------------------------------------------------------
 t_bool 
 VEvent::storeData(UnicodeString & strLine, UnicodeString & propName, 
                   UnicodeString & propVal, JulianPtrArray * parameters, 
@@ -364,212 +488,26 @@ VEvent::storeData(UnicodeString & strLine, UnicodeString & propName,
         return TRUE;
     else
     {
-        //if (propName.compareIgnoreCase(ms_sDTEND) == 0)
         t_int32 hashCode = propName.hashCode();
-
-        t_bool bParamValid;
-
-        if (JulianKeyword::Instance()->ms_ATOM_DTEND == hashCode)
+        t_int32 i;
+        for (i = 0; 0 != (JulianFunctionTable::Instance()->veStoreTable[i]).op; i++)
         {
-            // check parameters
-            bParamValid = ICalProperty::CheckParams(parameters, 
-                JulianAtomRange::Instance()->ms_asTZIDValueParamRange,
-                JulianAtomRange::Instance()->ms_asTZIDValueParamRangeSize,
-                JulianAtomRange::Instance()->ms_asDateDateTimeValueRange,
-                JulianAtomRange::Instance()->ms_asDateDateTimeValueRangeSize);
-            if (!bParamValid)
+            if ((JulianFunctionTable::Instance()->veStoreTable[i]).hashCode == hashCode)
             {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                    JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
+                ApplyStoreOp(((JulianFunctionTable::Instance())->veStoreTable[i]).op, 
+                    strLine, propVal, parameters, vTimeZones);
+                return TRUE;
             }
-
-            if (getDTEndProperty() != 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                    JulianKeyword::Instance()->ms_sVEVENT, propName, 100);
-            }  
-            UnicodeString u, out;
-        
-            u = JulianKeyword::Instance()->ms_sVALUE;
-            out = ICalParameter::GetParameterFromVector(u, out, parameters);
-
-            t_bool bIsDate = DateTime::IsParseableDate(propVal);
-
-            if (bIsDate)
-            {
-                // if there is a VALUE=X parameter, make sure X is DATE
-                if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATE != out.hashCode()))
-                {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sPropertyValueTypeMismatch,
-                        JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-                }   
-            }
-            else
-            {
-                // if there is a VALUE=X parameter, make sure X is DATETIME
-                if (out.size() != 0 && (JulianKeyword::Instance()->ms_ATOM_DATETIME != out.hashCode()))
-                {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sPropertyValueTypeMismatch,
-                        JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-                }
-            }
-
-            DateTime d;
-            d = VTimeZone::DateTimeApplyTimeZone(propVal, vTimeZones, parameters);
-            
-            setDTEnd(d, parameters);
-            return TRUE;
         }
-        else if (JulianKeyword::Instance()->ms_ATOM_DURATION == hashCode)
-        {
-            // no parameters
-            if (parameters->GetSize() > 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                    JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-            }
-
-            if (m_TempDuration != 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                    JulianKeyword::Instance()->ms_sVEVENT, propName, 100);
-            }
-            //Duration d(propVal);
-            if (m_TempDuration == 0)
-            {
-                m_TempDuration = new Duration(propVal);
-                PR_ASSERT(m_TempDuration != 0);
-            }
-            else
-                m_TempDuration->setDurationString(propVal);
-            return TRUE;
-        } 
-        else if (JulianKeyword::Instance()->ms_ATOM_LOCATION == hashCode)
-        {
-            bParamValid = ICalProperty::CheckParams(parameters, 
-                JulianAtomRange::Instance()->ms_asAltrepLanguageParamRange,
-                JulianAtomRange::Instance()->ms_asAltrepLanguageParamRangeSize);
-        
-            if (!bParamValid)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                    JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-            }
-
-            if (getLocationProperty() != 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                    JulianKeyword::Instance()->ms_sVEVENT, propName, 100);
-            }
-            setLocation(propVal, parameters);
-            return TRUE;
-        }
-        else if (JulianKeyword::Instance()->ms_ATOM_PRIORITY == hashCode)
-        {
-            t_bool bParseError = FALSE;
-            t_int32 i;
-
-            // no parameters
-            if (parameters->GetSize() > 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                    JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-            }
-
-            i = JulianUtility::atot_int32(propVal.toCString(""), bParseError, propVal.size());
-            if (getPriorityProperty() != 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                    JulianKeyword::Instance()->ms_sVEVENT, propName, 100);
-            }
-            if (!bParseError)
-            {
-                setPriority(i, parameters);
-            }
-            else
-            {
-                if (m_Log) m_Log->logString(JulianLogErrorMessage::Instance()->ms_sInvalidNumberFormat, 
-                    JulianKeyword::Instance()->ms_sVEVENT, propName, propVal, 200);
-            }
-            return TRUE;
-        } 
-        else if (JulianKeyword::Instance()->ms_ATOM_RESOURCES == hashCode)
-        {
-            // check parameters 
-            bParamValid = ICalProperty::CheckParams(parameters, 
-                JulianAtomRange::Instance()->ms_asLanguageParamRange,
-                JulianAtomRange::Instance()->ms_asLanguageParamRangeSize);
-            if (!bParamValid)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                    JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-            }
-
-            addResourcesPropertyVector(propVal, parameters);
-            return TRUE;
-        }
-        else if (JulianKeyword::Instance()->ms_ATOM_GEO == hashCode)
-        {
-            // no parameters
-            if (parameters->GetSize() > 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                    JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-            }
-
-            if (getGEOProperty() != 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                    JulianKeyword::Instance()->ms_sVEVENT, propName, 100);
-            }
-            setGEO(propVal, parameters);
-            return TRUE;
-        } 
-        else if (JulianKeyword::Instance()->ms_ATOM_TRANSP == hashCode)
-        {
-            // no parameters
-            if (parameters->GetSize() > 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
-                    JulianKeyword::Instance()->ms_sVEVENT, strLine, 100);
-            }
-
-            if (getTranspProperty() != 0)
-            {
-                if (m_Log) m_Log->logString(
-                    JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
-                    JulianKeyword::Instance()->ms_sVEVENT, propName, 100);
-            }
-            setTransp(propVal, parameters);
-            return TRUE;
-        }  
-        else
-        {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidPropertyName, 
+        if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
                 JulianKeyword::Instance()->ms_sVEVENT, propName, 200);
-            UnicodeString u;
-            u = JulianLogErrorMessage::Instance()->ms_sRS202;
-            u += '.'; u += ' ';
-            u += strLine;
-            //setRequestStatus(JulianLogErrorMessage::Instance()->ms_sRS202); 
-            setRequestStatus(u);
-            return FALSE;
-        }
+        UnicodeString u;
+        u = JulianLogErrorMessage::Instance()->ms_sRS202;
+        u += '.'; u += ' ';
+        u += strLine;
+        addRequestStatus(u);
+        return FALSE;
     }
 }
 
@@ -723,31 +661,62 @@ t_bool VEvent::isValid()
     {
         // must have dtstart
         if ((!getDTStart().isValid()))
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingStartingTime, 300);
             return FALSE;
-
+        }
         // If dtend exists, make sure it is not before dtstart
         if (getDTEnd().isValid() && getDTEnd() < getDTStart())
+        { 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iEndBeforeStartTime, 300);
             return FALSE;
-
+        }
         // must have dtstamp, summary, uid
-        if ((!getDTStamp().isValid()) || (getSummary().size() == 0) || 
-            (getUID().size() == 0))
+        if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
+        }
+        if (getSummary().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSummary, 300);
+            return FALSE;
+        }
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+            return FALSE;
+        }
 
         // TODO: must have organizer, comment out for now since CS&T doesn't have ORGANIZER
         /*
-        if (getOrganizer().size() <= 0)
+        if (getOrganizer().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
+        }
         */
-
         // must have sequence >= 0
         if (getSequence() < 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
             return FALSE;
-
+        }
         if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREQUEST) == 0)
         {
             if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
+            {
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
                 return FALSE;
+            }
         }
     }
     else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0) ||
@@ -755,43 +724,87 @@ t_bool VEvent::isValid()
              (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sDECLINECOUNTER) == 0))
     {
          // must have dtstamp, uid
-        if ((!getDTStamp().isValid()) || (getUID().size() == 0))
+        if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
+        }
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+            return FALSE;
+        }
 
         // must have organizer
-        if (getOrganizer().size() <= 0)
+        if (getOrganizer().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingOrganizer, 300);
             return FALSE;
-    
+        }
         // must have sequence >= 0
         if (getSequence() < 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);
             return FALSE;
-        
+        }
         if (getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREPLY) == 0)
         {
             // TODO: attendees are required, commenting out for now
             if (getAttendees() == 0 || getAttendees()->GetSize() == 0)
+            {
+                if (m_Log) m_Log->logError(
+                    JulianLogErrorMessage::Instance()->ms_iMissingAttendees, 300);
                 return FALSE;
+            }
         }
     }
     else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sREFRESH) == 0))
     {
         // must have dtstamp, uid
-        if ((!getDTStamp().isValid()) || (getUID().size() == 0))
+        if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
+        }
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+            return FALSE;
+        }
         // TODO: attendees required?
     }
     else if ((getMethod().compareIgnoreCase(JulianKeyword::Instance()->ms_sCOUNTER) == 0))
     {
         // must have dtstamp, uid
-        if ((!getDTStamp().isValid()) || (getUID().size() == 0))
+        if (!getDTStamp().isValid())
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingDTStamp, 300);
             return FALSE;
+        }
+
+        if (getUID().size() == 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingUID, 300);
+            return FALSE;
+        }
 
         // must have sequence >= 0
         if (getSequence() < 0)
+        {
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iMissingSeqNo, 300);   
             return FALSE;
+        }
     }
-            
-
+    
     // check super class isValid method
     return TimeBasedEvent::isValid();
 }
@@ -810,42 +823,42 @@ UnicodeString VEvent::cancelMessage()
 {
     UnicodeString s = JulianKeyword::Instance()->ms_sCANCELLED;
     setStatus(s);
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventCancelMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventCancelMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VEvent::requestMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventRequestMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventRequestMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VEvent::requestRecurMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventRecurRequestMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventRecurRequestMessage, "");
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VEvent::counterMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventCounterMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventCounterMessage, "");
 }
 
 //---------------------------------------------------------------------
   
 UnicodeString VEvent::declineCounterMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventDeclineCounterMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventDeclineCounterMessage, "");
 }
 
 //---------------------------------------------------------------------
 
 UnicodeString VEvent::addMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventAddMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventAddMessage, "");
 }
 
 //---------------------------------------------------------------------
@@ -859,7 +872,7 @@ UnicodeString VEvent::refreshMessage(UnicodeString sAttendeeFilter)
  
 UnicodeString VEvent::allMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventAllPropertiesMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventAllPropertiesMessage, "");
 }
 
 //---------------------------------------------------------------------
@@ -873,20 +886,37 @@ UnicodeString VEvent::replyMessage(UnicodeString sAttendeeFilter)
  
 UnicodeString VEvent::publishMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventPublishMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventPublishMessage, "");
 }
 
 //---------------------------------------------------------------------
  
 UnicodeString VEvent::publishRecurMessage() 
 {
-    return formatHelper(JulianFormatString::Instance()->ms_sVEventRecurPublishMessage);
+    return formatHelper(JulianFormatString::Instance()->ms_sVEventRecurPublishMessage, "");
 }
 
+//---------------------------------------------------------------------
+void 
+VEvent::updateComponentHelper(TimeBasedEvent * updatedComponent)
+{
+    //TODO: handle duration, origDTEnd, origMyDTEnd.
+    TimeBasedEvent::updateComponentHelper(updatedComponent);
+    if (updatedComponent->GetType() == GetType())
+    {
+        ICalComponent::internalSetPropertyVctr(&m_ResourcesVctr, ((VEvent *) updatedComponent)->getResources());
+        ICalComponent::internalSetProperty(&m_DTEnd, ((VEvent *) updatedComponent)->m_DTEnd);
+        ICalComponent::internalSetProperty(&m_GEO, ((VEvent *) updatedComponent)->m_GEO);
+        ICalComponent::internalSetProperty(&m_Location, ((VEvent *) updatedComponent)->m_Location);
+        ICalComponent::internalSetProperty(&m_Priority, ((VEvent *) updatedComponent)->m_Priority);
+        ICalComponent::internalSetProperty(&m_Transp, ((VEvent *) updatedComponent)->m_Transp);
+    }
+}
 //---------------------------------------------------------------------
 ///DTEnd
 void VEvent::setDTEnd(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_DTEnd == 0)
         m_DTEnd = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -896,9 +926,13 @@ void VEvent::setDTEnd(DateTime s, JulianPtrArray * parameters)
         m_DTEnd->setParameters(parameters);
     }
     //validateDTEnd();
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_DTEnd), s, parameters);
+#endif
 }
 DateTime VEvent::getDTEnd() const 
 {
+#if 1
     DateTime d(-1);
     if (m_DTEnd == 0)
         return d; //return 0;
@@ -907,10 +941,15 @@ DateTime VEvent::getDTEnd() const
         d = *((DateTime *) m_DTEnd->getValue());
         return d;
     }
+#else
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_DTEnd), d);
+    return d;
+#endif
 }
 //---------------------------------------------------------------------
 ///Duration
-void VEvent::setDuration(Duration s, JulianPtrArray * parameters)
+void VEvent::setDuration(Julian_Duration s, JulianPtrArray * parameters)
 { 
     /*
     if (m_Duration == 0)
@@ -934,7 +973,7 @@ void VEvent::setDuration(Duration s, JulianPtrArray * parameters)
     end.add(s);
     setDTEnd(end);
 }
-Duration VEvent::getDuration() const 
+Julian_Duration VEvent::getDuration() const 
 {
     /*
     Duration d; d.setMonth(-1);
@@ -946,7 +985,7 @@ Duration VEvent::getDuration() const
         return d;
     }
     */
-    Duration duration;
+    Julian_Duration duration;
     DateTime start, end;
     start = getDTStart();
     end = getDTEnd();
@@ -957,6 +996,7 @@ Duration VEvent::getDuration() const
 //GEO
 void VEvent::setGEO(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -968,19 +1008,30 @@ void VEvent::setGEO(UnicodeString s, JulianPtrArray * parameters)
         m_GEO->setValue((void *) &s);
         m_GEO->setParameters(parameters);
     }
+#else 
+    ICalComponent::setStringValue(((ICalProperty **) &m_GEO), s, parameters);
+#endif
 }
 UnicodeString VEvent::getGEO() const 
 {
+#if 1
     if (m_GEO == 0)
         return "";
     else
         return *((UnicodeString *) m_GEO->getValue());
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_GEO), us);
+    return us;
+#endif
+
 }
 
 //---------------------------------------------------------------------
 //Location
 void VEvent::setLocation(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -994,18 +1045,28 @@ void VEvent::setLocation(UnicodeString s, JulianPtrArray * parameters)
         m_Location->setValue((void *) &s);
         m_Location->setParameters(parameters);
     }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_Location), s, parameters);
+#endif
 }
 UnicodeString VEvent::getLocation() const  
 {
+#if 1
     if (m_Location == 0)
         return "";
     else
         return *((UnicodeString *) m_Location->getValue());
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_Location), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 //Priority
 void VEvent::setPriority(t_int32 i, JulianPtrArray * parameters)
 {
+#if 1
     if (m_Priority == 0)
         m_Priority = ICalPropertyFactory::Make(ICalProperty::INTEGER, 
                                             (void *) &i, parameters);
@@ -1014,18 +1075,28 @@ void VEvent::setPriority(t_int32 i, JulianPtrArray * parameters)
         m_Priority->setValue((void *) &i);
         m_Priority->setParameters(parameters);
     }
+#else
+    ICalComponent::setIntegerValue(((ICalProperty **) &m_Priority), i, parameters);
+#endif
 }
 t_int32 VEvent::getPriority() const 
 {
+#if 1
     if (m_Priority == 0)
         return -1;
     else
         return *((t_int32 *) m_Priority->getValue());
+#else
+    t_int32 i = -1;
+    ICalComponent::getIntegerValue(((ICalProperty **) &m_Priority), i);
+    return i;
+#endif
 }
 //---------------------------------------------------------------------
 //Transp
 void VEvent::setTransp(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -1037,13 +1108,22 @@ void VEvent::setTransp(UnicodeString s, JulianPtrArray * parameters)
         m_Transp->setValue((void *) &s);
         m_Transp->setParameters(parameters);
     }
+#else
+     ICalComponent::setStringValue(((ICalProperty **) &m_Transp), s, parameters);
+#endif
 }
 UnicodeString VEvent::getTransp() const  
 {
+#if 1
     if (m_Transp == 0)
         return "";
     else
         return *((UnicodeString *) m_Transp->getValue());
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_Transp), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 // RESOURCES

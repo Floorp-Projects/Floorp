@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * unistrto.h
  * John Sun
@@ -62,12 +61,14 @@ public:
      */
     UnicodeStringTokenizer(UnicodeString & str, UnicodeString & delim);
 
+#if 0
     /**
      * Constructor.  Sets default delimeters to whitespace characters.
      * Strongly recommend using other constructor.
      * @param           str     string to tokenize
      */
     UnicodeStringTokenizer(UnicodeString & str);
+#endif
 
     /**
      * Tests if there are more tokens available from this string
@@ -86,7 +87,8 @@ public:
      * @return          next available token (out)
      */
     UnicodeString & nextToken(UnicodeString & out, ErrorCode & status);
-    
+
+#if 0
     /**
      * Returns next token in out if available.  If no more tokens
      * status is set to 1.  Also sets delimeters to delim for further tokenizing.
@@ -97,6 +99,8 @@ public:
      * @return          next available token (out)
      */
     UnicodeString & nextToken(UnicodeString & out, UnicodeString & sDelim, ErrorCode & status);
+#endif
+
 };
 
 #endif /* __UNICODESTRINGTOKENIZER_H_ */

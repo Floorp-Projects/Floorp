@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -31,9 +31,6 @@
 #include "keyword.h"
 #include <simpletz.h>
 
-//UnicodeString VTimeZone::m_strDefaultFmt = "%I - Start: %(EEE MM/dd/yy hh:mm:ss z)M, %Q\t%V";
-//UnicodeString VTimeZone::ms_sAllMessage = "%I%M%Q%V";
-
 t_bool VTimeZone::ms_bMORE_THAN_TWO_TZPARTS = FALSE;
 //---------------------------------------------------------------------
 
@@ -49,24 +46,45 @@ VTimeZone::VTimeZone()
 
 VTimeZone::VTimeZone(JLog * initLog)
 : m_TZID(0), m_LastModified(0), m_TZURL(0),
-  m_TZPartVctr(0)
-  //,m_NLSTimeZone()
-  ,m_Log(initLog)
+  m_XTokensVctr(0),
+  m_TZPartVctr(0), m_NLSTimeZone(0),
+  m_Log(initLog)
 {
     //PR_ASSERT(initLog != 0);
 }
 //---------------------------------------------------------------------
 VTimeZone::VTimeZone(VTimeZone & that)
 : m_TZID(0), m_LastModified(0), m_TZURL(0),
-  m_TZPartVctr(0)
-  //,m_NLSTimeZone()
+  m_XTokensVctr(0), 
+  m_TZPartVctr(0), m_NLSTimeZone(0)
 {
-    m_NLSTimeZone = that.m_NLSTimeZone;
+    if (that.m_NLSTimeZone != 0)
+    {
+        // note: todo: this should be an OK cast,
+        // but technically it's a bad thing to do.
+        m_NLSTimeZone = (SimpleTimeZone *) (that.m_NLSTimeZone)->clone();
+    }
 
-    if (that.m_TZID != 0) { m_TZID = that.m_TZID->clone(m_Log); }
-    if (that.m_LastModified != 0) { m_LastModified = that.m_LastModified->clone(m_Log); }
-    if (that.m_TZURL != 0) { m_TZURL = that.m_TZURL->clone(m_Log); }
-
+    if (that.m_TZID != 0) 
+    { 
+        m_TZID = that.m_TZID->clone(m_Log); 
+    }
+    if (that.m_LastModified != 0) 
+    { 
+        m_LastModified = that.m_LastModified->clone(m_Log); 
+    }
+    if (that.m_TZURL != 0) 
+    {
+        m_TZURL = that.m_TZURL->clone(m_Log); 
+    }
+    if (that.m_XTokensVctr != 0)
+    {
+        m_XTokensVctr = new JulianPtrArray(); PR_ASSERT(m_XTokensVctr != 0);
+        if (m_XTokensVctr != 0)
+        {
+            ICalProperty::CloneUnicodeStringVector(that.m_XTokensVctr, m_XTokensVctr);
+        }
+    }
     if (that.m_TZPartVctr != 0)
     {
         t_int32 i;
@@ -102,13 +120,31 @@ VTimeZone::~VTimeZone()
 {
     if (m_TZPartVctr != 0)
     {
-        TZPart::deleteTZPartVector(m_TZPartVctr);
+        ICalComponent::deleteICalComponentVector(m_TZPartVctr); 
         delete m_TZPartVctr; m_TZPartVctr = 0;
     }
-    if (m_LastModified != 0) { delete m_LastModified; m_LastModified = 0; }
-    if (m_TZID != 0) { delete m_TZID; m_TZID = 0; }
-    if (m_TZURL != 0) { delete m_TZURL; m_TZURL = 0; }
-    //if (m_NLSTimeZone != 0) { delete m_NLSTimeZone; m_NLSTimeZone = 0;}
+    if (m_LastModified != 0) 
+    { 
+        delete m_LastModified; m_LastModified = 0; 
+    }
+    if (m_TZID != 0) 
+    { 
+        delete m_TZID; m_TZID = 0; 
+    }
+    if (m_TZURL != 0) 
+    { 
+        delete m_TZURL; m_TZURL = 0; 
+    }
+    if (m_XTokensVctr != 0) 
+    { 
+        ICalComponent::deleteUnicodeStringVector(m_XTokensVctr);
+        delete m_XTokensVctr; m_XTokensVctr = 0; 
+    }
+    // NOTE: verify this
+    if (m_NLSTimeZone != 0) 
+    { 
+        delete m_NLSTimeZone; m_NLSTimeZone = 0;
+    }
 }
 
 //---------------------------------------------------------------------
@@ -138,15 +174,12 @@ VTimeZone::parse(ICalReader * brFile, UnicodeString & sType,
     {
         PR_ASSERT(brFile != 0);
         brFile->readFullLine(strLine, status);
-        //strLine.trim();
         ICalProperty::Trim(strLine);
 
-        //if (FALSE) TRACE("line (size = %d) = ---%s---\r\n", strLine.size(), strLine.toCString(""));
-        if (FAILURE(status) && strLine.size() < 0)
+        if (FAILURE(status) && strLine.size() == 0)
             break;
         
         ICalProperty::parsePropertyLine(strLine, propName, propVal, parameters);
-        //if (FALSE) TRACE("propName = --%s--, propVal = --%s--, paramSize = %d\r\n", propName.toCString(""), propVal.toCString(""), parameters->GetSize());
        
         if (strLine.size() == 0)
         {
@@ -164,18 +197,33 @@ VTimeZone::parse(ICalReader * brFile, UnicodeString & sType,
              break;            
         }
         else if (((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sEND) == 0) &&
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0)) ||
+                   ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+                   (ICalProperty::IsXToken(propVal)))
+                   ) ||
                   ((propName.compareIgnoreCase(JulianKeyword::Instance()->ms_sBEGIN) == 0) &&
-                  (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) && 
-                  !bIgnoreBeginError))
+                   ((propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTIMEZONE) == 0) && !bIgnoreBeginError) || 
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVEVENT) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVTODO) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVJOURNAL) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVFREEBUSY) == 0) ||
+                   (propVal.compareIgnoreCase(JulianKeyword::Instance()->ms_sVCALENDAR) == 0) ||
+                   (ICalProperty::IsXToken(propVal))
+                  ))
         
         {
-            // Break on END:VCALENDAR || BEGIN:VTIMEZONE
+            // abrupt break of parsing
+            // Break on END:VCALENDAR, VEVENT, VTODO, VJOURNAL, VFREEBUSY, x-token, 
+            // break on BEGIN:VTIMEZONE (and not first BEGIN:VTIMEZONE)
+            // break on BEGIN:VEVENT, VTODO, VJOURNAL, VFREEBUSY, VCALENDAR, xtoken
             ICalProperty::deleteICalParameterVector(parameters);
             parameters->RemoveAll();
 
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sAbruptEndOfParsing, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iAbruptEndOfParsing, 
                 JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 300);
            
             parseStatus = strLine;
@@ -197,8 +245,8 @@ VTimeZone::parse(ICalReader * brFile, UnicodeString & sType,
                 
                 if (!tzpart->isValid())
                 {
-                    if (m_Log) m_Log->logString(
-                        JulianLogErrorMessage::Instance()->ms_sInvalidTZPart, 200);
+                    if (m_Log) m_Log->logError(
+                        JulianLogErrorMessage::Instance()->ms_iInvalidTZPart, 200);
                     delete tzpart; tzpart = 0;
                 }
                 else
@@ -238,15 +286,15 @@ void VTimeZone::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
         }
 
         if (getLastModifiedProperty() != 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
                 JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
         }
         DateTime d(propVal);
@@ -257,15 +305,15 @@ void VTimeZone::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
         }
 
         if (getTZIDProperty() != 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
                 JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
         }
         setTZID(propVal, parameters);
@@ -275,23 +323,27 @@ void VTimeZone::storeData(UnicodeString & strLine, UnicodeString & propName,
         // no parameters
         if (parameters->GetSize() > 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sInvalidOptionalParam, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iInvalidOptionalParam, 
                 JulianKeyword::Instance()->ms_sVTIMEZONE, strLine, 100);
         }
 
         if (getTZURLProperty() != 0)
         {
-            if (m_Log) m_Log->logString(
-                JulianLogErrorMessage::Instance()->ms_sDuplicatedProperty, 
+            if (m_Log) m_Log->logError(
+                JulianLogErrorMessage::Instance()->ms_iDuplicatedProperty, 
                 JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 100);
         }
         setTZURL(propVal, parameters);
     }
+    else if (ICalProperty::IsXToken(propName))
+    {
+        addXTokens(strLine);
+    }
     else 
     {
-        if (m_Log) m_Log->logString(
-            JulianLogErrorMessage::Instance()->ms_sInvalidPropertyName, 
+        if (m_Log) m_Log->logError(
+            JulianLogErrorMessage::Instance()->ms_iInvalidPropertyName, 
             JulianKeyword::Instance()->ms_sVTIMEZONE, propName, 200);
     }
 }
@@ -299,34 +351,76 @@ void VTimeZone::storeData(UnicodeString & strLine, UnicodeString & propName,
 
 void VTimeZone::selfCheck()
 {
-    // Make the NLS timezone part
     if (isValid())
     {
-        float f1, f2;
-        t_int32 toOffset;
-        UnicodeString u;
+        // Make the NLS timezone part
+        createNLSTimeZone();
+    }
+}
 
+//---------------------------------------------------------------------
+
+void VTimeZone::createNLSTimeZone()
+{
+    float f1, f2;
+    t_int32 toOffset;
+    UnicodeString u;
+
+    if ((0 != getStandardPart()) && 0 != getDaylightPart())
+    {
+        // create a NLSTimeZone with daylight and standard part
         u = getStandardPart()->getTZOffsetTo();
         f1 = TZPart::UTCOffsetToFloat(u);
         u = getDaylightPart()->getTZOffsetTo();
         f2 = TZPart::UTCOffsetToFloat(u);
 
         toOffset = (t_int32) ((f2 - f1) * kMillisPerHour);
-        
-        m_NLSTimeZone = new SimpleTimeZone(f1 * kMillisPerHour, getTZID(), 
-            getDaylightPart()->getMonth(), getDaylightPart()->getDayOfWeekInMonth(), 
-            getDaylightPart()->getDay(), getDaylightPart()->getStartTime(),
-            getStandardPart()->getMonth(), getStandardPart()->getDayOfWeekInMonth(),  
-            getStandardPart()->getDay(), getStandardPart()->getStartTime(), toOffset);
-        
-        m_NLSTimeZone->setRawOffset((t_int32) (f1 * kMillisPerHour));
-        m_NLSTimeZone->setID(getTZID());
 
-        m_NLSTimeZone->setStartRule(getDaylightPart()->getMonth(), getDaylightPart()->getDayOfWeekInMonth(), 
-            getDaylightPart()->getDay(), getDaylightPart()->getStartTime());
-           
-        m_NLSTimeZone->setEndRule(getStandardPart()->getMonth(), getStandardPart()->getDayOfWeekInMonth(),  
-            getStandardPart()->getDay(), getStandardPart()->getStartTime());
+        if (m_NLSTimeZone != 0)
+        {
+            delete m_NLSTimeZone; m_NLSTimeZone = 0;
+        }
+        m_NLSTimeZone = new SimpleTimeZone((t_int32) (f1 * kMillisPerHour), getTZID(), 
+            (t_int8) getDaylightPart()->getMonth(), 
+            (t_int8) getDaylightPart()->getDayOfWeekInMonth(), 
+            (t_int8) getDaylightPart()->getDay(), 
+            (t_int32) getDaylightPart()->getStartTime(),
+            (t_int8) getStandardPart()->getMonth(), 
+            (t_int8) getStandardPart()->getDayOfWeekInMonth(),  
+            (t_int8) getStandardPart()->getDay(), 
+            (t_int32) getStandardPart()->getStartTime(), 
+            (t_int32) toOffset);
+
+        PR_ASSERT(m_NLSTimeZone != 0);
+        if (m_NLSTimeZone != 0)
+        {
+            m_NLSTimeZone->setRawOffset((t_int32) (f1 * kMillisPerHour));
+            m_NLSTimeZone->setID(getTZID());
+
+            m_NLSTimeZone->setStartRule(getDaylightPart()->getMonth(), getDaylightPart()->getDayOfWeekInMonth(), 
+                getDaylightPart()->getDay(), getDaylightPart()->getStartTime());
+   
+            m_NLSTimeZone->setEndRule(getStandardPart()->getMonth(), getStandardPart()->getDayOfWeekInMonth(),  
+                getStandardPart()->getDay(), getStandardPart()->getStartTime());
+        }
+    }
+    else
+    {
+        PR_ASSERT(m_TZPartVctr != 0 && m_TZPartVctr->GetSize() > 0);
+        if (m_TZPartVctr != 0 && m_TZPartVctr->GetSize() > 0)
+        {
+            // use first tzpart to create a single part timezone,
+            TZPart * tz = (TZPart *) m_TZPartVctr->GetAt(0);
+            u = tz->getTZOffsetTo();
+            f1 = TZPart::UTCOffsetToFloat(u);
+            
+            if (m_NLSTimeZone != 0)
+            {
+                delete m_NLSTimeZone; m_NLSTimeZone = 0;
+            }
+            m_NLSTimeZone = new SimpleTimeZone((t_int32) (f1 * kMillisPerHour), getTZID());
+            PR_ASSERT(m_NLSTimeZone != 0);
+        }
     }
 }
 
@@ -334,17 +428,21 @@ void VTimeZone::selfCheck()
 
 t_bool VTimeZone::isValid()
 {
-    /* Must have tzid, standard & daylight part && only 2 parts. */
+    // TODO: log invalid ID, Daylight, Standard.
+    /* Must have tzid, standard || daylight part && at most 2 parts. */
 
-    if (getTZID().size() <= 0)
+    if (0 == getTZID().size())
         return FALSE;
-    if (getDaylightPart() == 0 || getStandardPart() == 0)
+
+    // if no parts, return FALSE
+    if ((0 == getDaylightPart()) && (0 == getStandardPart()))
         return FALSE;
+
     if (!ms_bMORE_THAN_TWO_TZPARTS)
     {
-        if (getTZParts() != 0)
+        if (0 != getTZParts())
         {
-            if (getTZParts()->GetSize() != 2)
+            if (getTZParts()->GetSize() > 2)
                 return FALSE;
         }
     }
@@ -355,7 +453,7 @@ t_bool VTimeZone::isValid()
 UnicodeString VTimeZone::toICALString()
 {
     UnicodeString u = JulianKeyword::Instance()->ms_sVTIMEZONE;
-    return ICalComponent::format(u, JulianFormatString::Instance()->ms_sVTimeZoneAllMessage);
+    return ICalComponent::format(u, JulianFormatString::Instance()->ms_sVTimeZoneAllMessage, "");
 }
 //---------------------------------------------------------------------
 UnicodeString VTimeZone::toICALString(UnicodeString method,
@@ -435,9 +533,70 @@ UnicodeString VTimeZone::formatChar(t_int32 c, UnicodeString sFilterAttendee,
     case ms_cTZURL:
         s = JulianKeyword::Instance()->ms_sTZURL;
         return ICalProperty::propertyToICALString(s, getTZURLProperty(), sResult);
+    case ms_cXTokens: 
+        return ICalProperty::vectorToICALString(getXTokens(), sResult);
     default:
         return "";
     }
+}
+//---------------------------------------------------------------------
+
+void 
+VTimeZone::updateComponentHelper(VTimeZone * updatedComponent)
+{
+    DateTime d;
+    // no need: last-modified, TZID
+    ICalComponent::internalSetXTokensVctr(&m_XTokensVctr, updatedComponent->m_XTokensVctr);
+
+    // call updateComponentHelper on TZPart's
+    ICalComponent::internalSetProperty(&m_TZURL, updatedComponent->m_TZURL);
+    setLastModified(d);
+    if (m_TZPartVctr != 0 && updatedComponent->getTZParts() != 0)
+    {
+        t_int32 i, j;
+        TZPart * tzp;
+        TZPart * uctzp;
+        for (i = 0; i < m_TZPartVctr->GetSize(); i++)
+        {
+            tzp = (TZPart *) m_TZPartVctr->GetAt(i);
+            for (j = 0; j < updatedComponent->getTZParts()->GetSize(); j++)
+            {
+                uctzp = (TZPart *) updatedComponent->getTZParts()->GetAt(j);
+                                
+                tzp->updateComponent(uctzp);
+            }
+        }   
+    }
+}
+//---------------------------------------------------------------------
+
+t_bool
+VTimeZone::updateComponent(ICalComponent * updatedComponent)
+{
+    if (updatedComponent != 0)
+    {
+        ICAL_COMPONENT ucType = updatedComponent->GetType();
+
+        // only call updateComponentHelper if it's a VTimeZone and
+        // it is an exact matching TZID
+        // basically always overwrite
+        if (ucType == ICAL_COMPONENT_VTIMEZONE)
+        {
+            // should be a safe cast with check above.
+            VTimeZone * ucvtz = (VTimeZone *) updatedComponent;
+
+            // only if TZID's match and are not empty
+            if (ucvtz->getTZID().size() > 0 && getTZID().size() > 0)
+            {
+                if (ucvtz->getTZID() == getTZID())
+                {
+                    updateComponentHelper(ucvtz);
+                    return TRUE;
+                }
+            }
+        }
+    }
+    return FALSE;
 }
 //---------------------------------------------------------------------
 void VTimeZone::addTZPart(TZPart * part)
@@ -505,6 +664,7 @@ VTimeZone * VTimeZone::getTimeZone(UnicodeString & id,
 //LAST-MODIFIED
 void VTimeZone::setLastModified(DateTime s, JulianPtrArray * parameters)
 { 
+#if 1
     if (m_LastModified == 0)
         m_LastModified = ICalPropertyFactory::Make(ICalProperty::DATETIME, 
                                             (void *) &s, parameters);
@@ -513,11 +673,14 @@ void VTimeZone::setLastModified(DateTime s, JulianPtrArray * parameters)
         m_LastModified->setValue((void *) &s);
         m_LastModified->setParameters(parameters);
     }
-    
+#else
+    ICalComponent::setDateTimeValue(((ICalProperty **) &m_LastModified), s, parameters);
+#endif
 }
 
 DateTime VTimeZone::getLastModified() const
 {
+#if 1
     DateTime d(-1);
     if (m_LastModified == 0)
         return d; // return 0;
@@ -526,11 +689,17 @@ DateTime VTimeZone::getLastModified() const
         d = *((DateTime *) m_LastModified->getValue());
         return d;
     }
+#else
+    DateTime d(-1);
+    ICalComponent::getDateTimeValue(((ICalProperty **) &m_LastModified), d);
+    return d;
+#endif
 }
 //---------------------------------------------------------------------
 //TZID
 void VTimeZone::setTZID(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -541,10 +710,14 @@ void VTimeZone::setTZID(UnicodeString s, JulianPtrArray * parameters)
     {
         m_TZID->setValue((void *) &s);
         m_TZID->setParameters(parameters);
-    }    
+    }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_TZID), s, parameters);
+#endif
 }
 UnicodeString VTimeZone::getTZID() const 
 {
+#if 1
     UnicodeString u;
     if (m_TZID == 0)
         return "";
@@ -553,11 +726,17 @@ UnicodeString VTimeZone::getTZID() const
         u = *((UnicodeString *) m_TZID->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_TZID), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 //TZURL
 void VTimeZone::setTZURL(UnicodeString s, JulianPtrArray * parameters)
 {
+#if 1
     //UnicodeString * s_ptr = new UnicodeString(s);
     //PR_ASSERT(s_ptr != 0);
 
@@ -568,10 +747,14 @@ void VTimeZone::setTZURL(UnicodeString s, JulianPtrArray * parameters)
     {
         m_TZURL->setValue((void *) &s);
         m_TZURL->setParameters(parameters);
-    }    
+    }
+#else
+    ICalComponent::setStringValue(((ICalProperty **) &m_TZURL), s, parameters);
+#endif
 }
 UnicodeString VTimeZone::getTZURL() const 
 {
+#if 1
     UnicodeString u;
     if (m_TZURL == 0)
         return "";
@@ -580,6 +763,11 @@ UnicodeString VTimeZone::getTZURL() const
         u = *((UnicodeString *) m_TZURL->getValue());
         return u;
     }
+#else
+    UnicodeString us;
+    ICalComponent::getStringValue(((ICalProperty **) &m_TZID), us);
+    return us;
+#endif
 }
 //---------------------------------------------------------------------
 DateTime 
@@ -609,4 +797,15 @@ VTimeZone::DateTimeApplyTimeZone(UnicodeString & time,
     return d;
 }
 //---------------------------------------------------------------------
-
+// XTOKENS
+void VTimeZone::addXTokens(UnicodeString s)         
+{
+    if (m_XTokensVctr == 0)
+        m_XTokensVctr = new JulianPtrArray(); 
+    PR_ASSERT(m_XTokensVctr != 0);
+    if (m_XTokensVctr != 0)
+    {
+        m_XTokensVctr->Add(new UnicodeString(s));
+    }
+}
+//---------------------------------------------------------------------

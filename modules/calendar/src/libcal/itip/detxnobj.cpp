@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,13 +16,13 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * detxnobj.cpp
  * John Sun
  * 4/13/98 11:07:45 AM
  */
-#include "stdafx.h"
+#include "jdefines.h"
+#include "julnstr.h"
 #include "detxnobj.h"
 #include "txnobj.h"
 
@@ -59,7 +59,7 @@ DeleteTransactionObject::DeleteTransactionObject(NSCalendar & cal,
 #if CAPI_READY
 
 CAPIStatus 
-DeleteTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH, 
+DeleteTransactionObject::handleCAPI(CAPISession & pS, CAPIHandle * pH, 
         t_int32 iHandleCount, t_int32 lFlags, 
         JulianPtrArray * inComponents, NSCalendar * inCal,
         JulianPtrArray * modifiers, 
@@ -78,20 +78,23 @@ DeleteTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
     if (modifiers != 0 && modifiers->GetSize() > 0 &&
         modifiers->GetSize() <= 3 && iHandleCount >= 1)    
     {
-        char * modifier;
-        char * uid;
-        char * rid = NULL;
+        char * modifier = 0;
+        char * uid = 0;
+        char * rid = 0;
         t_int8 modifierInt = CAPI_THISINSTANCE;
         modifierSize = modifiers->GetSize();
         // Get the args (uid, rid, rangeModifier)
                 
         uid = ((UnicodeString *) modifiers->GetAt(0))->toCString("");
+        PR_ASSERT(uid != 0);
         if (modifierSize > 1)
         {
             rid = ((UnicodeString *) modifiers->GetAt(1))->toCString("");
+            PR_ASSERT(rid != 0);
             if (modifierSize > 2)
             {
                 modifier = ((UnicodeString *) modifiers->GetAt(2))->toCString("");
+                PR_ASSERT(modifier != 0);
                 if (strcmp(modifier, "THISANDPRIOR") == 0)
                     modifierInt = CAPI_THISANDPRIOR;
                 else if (strcmp(modifier, "THISANDFUTURE") == 0)
@@ -101,6 +104,18 @@ DeleteTransactionObject::handleCAPI(pCAPISession & pS, pCAPIHandle * pH,
             }
         }
         status = CAPI_DeleteEvent(pS, pH, iHandleCount, 0, uid, rid, modifierInt);
+        if (modifier != 0)
+        {
+            delete [] modifier; modifier = 0;
+        }
+        if (rid != 0)
+        {
+            delete [] rid; rid = 0;
+        }
+        if (uid != 0)
+        {
+            delete [] uid; uid = 0;
+        }
     }
     //
     return status;

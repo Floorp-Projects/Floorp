@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * jparser.cpp
  * John Sun
@@ -118,10 +117,10 @@ void JulianParser::ParseCalendars(ICalReader * reader,
             ICalProperty::Trim(strLine);
 
 #if TESTING_ITIPRIG
-            if (TRUE) TRACE("\t--Parser: line (size = %d) = ---%s---\r\n", 
+            if (FALSE) TRACE("\t--Parser: line (size = %d) = ---%s---\r\n", 
                 strLine.size(), strLine.toCString(""));       
 #endif
-            if (FAILURE(status) && strLine.size() <= 0)
+            if (FAILURE(status) && strLine.size() == 0)
             {
                 //PR_Notify((PRMonitor *) cr->getMonitor());
                 if (cr->isFinished())
@@ -129,9 +128,11 @@ void JulianParser::ParseCalendars(ICalReader * reader,
                     break;
                 }
 #if TESTING_ITIPRIG
-                TRACE("\t--jParser: yielding\r\n");
+                if (FALSE) TRACE("\t--jParser: yielding\r\n");
 #endif
-#if CAPI_READY
+#ifdef NSPR20
+                PR_Sleep(PR_INTERVAL_NO_WAIT);
+#else
                 PR_Yield();
 #endif
                 //break;
@@ -182,7 +183,9 @@ void jparser_ParseCalendarsZero(void * jp, void * nPtr)
 #if TESTING_ITIPRIG
     TRACE("\t--killing parseThread\r\n");
 #endif
-#if CAPI_READY
+#ifdef NSPR20
+    PR_ProcessExit(0);
+#else
     PR_Exit();
 #endif
 }

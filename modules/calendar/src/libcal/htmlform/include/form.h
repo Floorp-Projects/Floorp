@@ -20,67 +20,7 @@
 #define _JULIAN_FORMS_H
 
 #include "julianform.h"
-
-typedef struct
-{
-	char*	type;
-	char*	data;
-} form_data_combo;
-
-class JULIAN_PUBLIC JulianForm
-{
-private:
-
-	UnicodeString					htmlForm;
-	char*							mimedata;
-	char							buttonLabel[2048];
-	NSCalendar*						imipCal;
-	pJulian_Form_Callback_Struct	JulianForm_CallBacks;
-	MWContext*						moredetails_context;
-
-public:
-			JulianForm();
-	virtual ~JulianForm();
-
-	int32							formDataCount; /* number of pointers in formData */
-	/* number of possible pointers in formData */
-	#define formDataIndex 10
-	form_data_combo					formData[formDataIndex]; /* a pointer to an array of pointers that point to a type/data string */
-
-	char*							contextName;
-
-	char*							getHTMLForm(XP_Bool Want_Detail);
-	void							setMimeData(char *mimedata);
-	void							setCallbacks(pJulian_Form_Callback_Struct callBacks) { JulianForm_CallBacks = callBacks; };
-	pJulian_Form_Callback_Struct	getCallbacks() { return JulianForm_CallBacks; };
-
-    /* John Sun added 4-29-98 */
-    NSCalendar * getCalendar()		{ return imipCal; }
-    JulianPtrArray * getEvents()	{ if (imipCal) { return imipCal->getEvents(); } else return 0; }
-
-	MWContext*		getContext()	{ return (*JulianForm_CallBacks->FindNamedContextInList)((*JulianForm_CallBacks->FindSomeContext)(), contextName); }
-	void			setContext(MWContext* new_context) { moredetails_context = new_context; } 
-
-	XP_Bool			hasComment()	{ return getComment() != nil; } 
-	char*			getComment();
-
-	char*			getLabel()		{ return buttonLabel; }
-	void			setLabel(char *newlabel) { if (newlabel) XP_STRCPY(buttonLabel, newlabel); (*getCallbacks()->PlusToSpace)(buttonLabel); }
-};
-
-
-#ifdef XP_CPLUSPLUS
-extern "C" {
-#endif
-
-JulianForm*	jform_CreateNewForm	(char *calendar_mime_data, pJulian_Form_Callback_Struct callbacks);
-void		jform_DeleteForm	(JulianForm *jf);
-char*		jform_GetForm		(JulianForm *jf);
-void		jform_CallBack		(JulianForm *jf, char *type);
-
-#ifdef XP_CPLUSPLUS
-    };
-#endif
+#include "julnstr.h"
 
 class JULIAN_PUBLIC JulianServerProxy 
 {
@@ -95,4 +35,76 @@ public:
 
 };
 
+#include "formFactory.h"
+
+typedef struct
+{
+	char*	type;
+	char*	data;
+} form_data_combo;
+
+class JULIAN_PUBLIC JulianForm
+{
+private:
+
+	JulianString					htmlForm;
+	char*							mimedata;
+	char							buttonLabel[2048];
+	NSCalendar*						imipCal;
+	pJulian_Form_Callback_Struct	JulianForm_CallBacks;
+    /* added 7-7-98 */
+    static XP_Bool                  ms_bFoundNLSDataDirectory;
+    JulianFormFactory*              jff;       
+
+public:
+			JulianForm();
+	virtual ~JulianForm();
+
+    int32                           refcount; /* Who's looking at this */
+	int32							formDataCount; /* number of pointers in formData */
+    PRMonitor *                     my_monitor;
+
+	/* number of possible pointers in formData */
+	#define formDataIndex 10
+	form_data_combo					formData[formDataIndex]; /* a pointer to an array of pointers that point to a type/data string */
+
+	char*							contextName;
+
+    XP_Bool                         StartHTML();
+	char*							getHTMLForm(XP_Bool Want_Detail, NET_StreamClass *this_stream = nil);
+	void							setMimeData(char *mimedata);
+	void							setCallbacks(pJulian_Form_Callback_Struct callBacks) { JulianForm_CallBacks = callBacks; };
+	pJulian_Form_Callback_Struct	getCallbacks() { return JulianForm_CallBacks; };
+
+    void setCalendar(NSCalendar* newCal)		{ imipCal = newCal; }
+    NSCalendar * getCalendar()		{ return imipCal; }
+    JulianPtrArray * getEvents()	{ if (imipCal) { return imipCal->getEvents(); } else return 0; }
+
+    /* added 7-7-98 */
+    static void setFoundNLSDataDirectory(XP_Bool bFound) { ms_bFoundNLSDataDirectory = bFound; }
+
+	MWContext*		getContext()	{ return (*JulianForm_CallBacks->FindNamedContextInList)((*JulianForm_CallBacks->FindSomeContext)(), contextName); }
+
+	XP_Bool			hasComment()	{ return getComment() != nil; } 
+	char*			getComment();
+	char*			getDelTo();
+
+	char*			getLabel()		{ return buttonLabel; }
+	void			setLabel(char *newlabel) { if (newlabel) XP_STRCPY(buttonLabel, newlabel); if (getCallbacks() && getCallbacks()->PlusToSpace) (*getCallbacks()->PlusToSpace)(buttonLabel); }
+};
+
+#ifdef XP_CPLUSPLUS
+extern "C" {
 #endif
+
+JulianForm*	jform_CreateNewForm	(char *calendar_mime_data, pJulian_Form_Callback_Struct callbacks, XP_Bool bFoundNLSDataDirectory);
+void		jform_DeleteForm	(JulianForm *jf);
+char*		jform_GetForm		(JulianForm *jf);
+void		jform_CallBack		(JulianForm *jf, char *type);
+
+#ifdef XP_CPLUSPLUS
+    };
+#endif
+
+#endif
+

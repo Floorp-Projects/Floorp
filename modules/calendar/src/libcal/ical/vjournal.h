@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * vjournal.h
  * John Sun
@@ -149,7 +148,7 @@ public:
      * @return                          ICAL export format of that property
      */
     virtual UnicodeString formatChar(t_int32 c, 
-        UnicodeString sFilterAttendee = "", t_bool delegateRequest = FALSE);
+        UnicodeString sFilterAttendee, t_bool delegateRequest = FALSE);
 
     /**
      * convert a character to the content of a property in string 
@@ -180,7 +179,7 @@ public:
      * @return          output iCal formatted export string
      */
     virtual UnicodeString formatHelper(UnicodeString & strFmt,
-            UnicodeString sFilterAttendee = "", t_bool delegateRequest = FALSE);
+            UnicodeString sFilterAttendee, t_bool delegateRequest = FALSE);
 
     /**
      * Helper method.  Overriden virtual method.  Used by subclasses to
@@ -229,6 +228,9 @@ public:
     /*----------------------------- 
     ** UTILITIES 
     **---------------------------*/ 
+
+    virtual void updateComponentHelper(TimeBasedEvent * updatedComponent);
+
     /*----------------------------- 
     ** STATIC METHODS 
     **---------------------------*/ 

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 // uidrgntr.cpp
 // John Sun
 // 3/19/98 5:41:26 PM
@@ -48,18 +47,22 @@ JulianUIDRandomGenerator::~JulianUIDRandomGenerator()
 UnicodeString 
 JulianUIDRandomGenerator::generate(UnicodeString us)
 {
+#if 0
+    char sBuf[10];
     UnicodeString u;
     DateTime d;
     u += d.toISO8601();
     u += '-';
     srand((unsigned) time(0));
-    char sBuf[10];
     sprintf(sBuf, "%.9x", rand());
     u += sBuf;
     // TODO: Append hostname or email
     u += '-';
     u += us;
     return u;
+#else
+    return "";
+#endif
 }
 
 //---------------------------------------------------------------------

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * rcrrence.h
  * John Sun
@@ -44,13 +43,15 @@
 #include "deftgntr.h"
 #include "jlog.h"
 
+//#define JULIAN_DEBUGGING_RECURRENCE 1
+
 class Recurrence
 {
     
 public:
    
     /* moved the Recurrence Type constants to JulianUtility. */
-    
+#if 0    
     /**
     * Creates a Recurrence object specified by the given string.
     *
@@ -59,7 +60,7 @@ public:
     * @param duration	       the time between start and stopdate
     * @param ruleString        the recurrence rule string to parse
     */
-    Recurrence(DateTime startDate, DateTime stopDate, Duration * duration, 
+    Recurrence(DateTime startDate, DateTime stopDate, Julian_Duration * duration, 
         UnicodeString & ruleString);
     
     /**
@@ -69,8 +70,8 @@ public:
      * @param duration	       the time between start and stopdate
      * @param ruleString       the recurrence rule string to parse
      */
-    Recurrence(DateTime startDate, Duration * duration, UnicodeString & ruleString);
-
+    Recurrence(DateTime startDate, Julian_Duration * duration, UnicodeString & ruleString);
+#endif
     /**
      * Creates a Recurrence object specified by the given string.
      *
@@ -132,10 +133,12 @@ public:
      * Unzips a recurrence rule (i.e., produces a set of dates which the recurrence represents) to a certain
      * number of dates inside of a given timezone.
      *
-     * @param   bound   the number of dates to produce
-     * @param   out     vector containing generated dates
+     * @param   bound           the number of dates to produce
+     * @param   out             vector containing generated dates
+     * @param   bAddStartDate   always adds first date to out vector
      */
-    void unzip(t_int32 bound, JulianPtrArray * out, JLog * log);
+    void unzip(t_int32 bound, JulianPtrArray * out, JLog * log, t_bool
+        bAddStartDate = TRUE);
    
 
     /**
@@ -197,7 +200,7 @@ private:
 
      /* Variables that correspond directly to properties defined in the spec */
     t_int32 m_iType;        /* init to JulianUtility::RT_NONE */
-    Duration * m_Interval;  /* init to NULL */
+    Julian_Duration * m_Interval;  /* init to NULL */
     t_int32 m_iCount;       /* init to ms_iUNSET */
     t_int32 m_iWkSt;        /* init to Calendar::MONDAY */
     DateTime m_Until;       /* init to Invalid DateTime */
@@ -241,7 +244,7 @@ private:
     /* Variables for storing DTSTART, DTEND and DURATION */
     DateTime m_StartDate;   
     DateTime m_StopDate;    
-    Duration * m_Duration;    /* init to NULL */
+    Julian_Duration * m_Duration;    /* init to NULL */
 
     /* cache validity */
     t_bool m_bParseValid; 
@@ -274,14 +277,17 @@ private:
 
     /**
      * Cleanup method takes vector of dates and make sure output number
-     * in less than length and start value is included.  
-     * @param           vDatesIn    input vector of dates
-     * @param           length      number of dates to be produced
-     * @param           out         output vector of dates
+     * in less than length and start value is included.
+     * If bAddStartDate = TRUE, always add the start date to the out 
+     * vector, otherwise don't add the start date to the out vector.
+     * @param   vDatesIn        input vector of dates
+     * @param   length          number of dates to be produced
+     * @param   out             output vector of dates
+     * @param   bAddStartDate   TRUE = adds first date to out vector
      *
      */
     void cleanup(JulianPtrArray * vDatesIn, t_int32 length,
-        JulianPtrArray * out);
+        JulianPtrArray * out, t_bool bAddStartDate);
 
     /**
      * Sets interval to i, depending on m_iType.  For example,
@@ -500,6 +506,7 @@ private:
      */
     static void eliminateDuplicates(JulianPtrArray * datetimes);
 
+#if JULIAN_DEBUGGING_RECURRENCE
     /**
      * DEBUGGING method to print out datetime elements in a vector
      * @param           x       datetime vector
@@ -515,7 +522,8 @@ private:
      *
      */
     static void TRACE_DATETIMEVECTORVECTOR(JulianPtrArray * x, char * name);
-    
+#endif
+
 };
 #endif /* __RECURRENCE_H_ */
 

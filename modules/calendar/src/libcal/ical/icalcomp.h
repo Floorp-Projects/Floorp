@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 /* 
  * icalcomp.h
  * John Sun
@@ -27,8 +26,9 @@
 #include "ptrarray.h"
 #include "icalredr.h"
 #include "prprty.h"
-#include "jlog.h"
 #include "jutility.h"
+#include "datetime.h"
+#include "jlog.h"
 
 #ifndef __ICALCOMPONENT_H_
 #define __ICALCOMPONENT_H_
@@ -185,7 +185,7 @@ public:
      * @return                          ICAL export format of that property
      */
     virtual UnicodeString formatChar(t_int32 c, 
-        UnicodeString sFilterAttendee = "", 
+        UnicodeString sFilterAttendee, 
         t_bool delegateRequest = FALSE) 
     {
         PR_ASSERT(FALSE);   
@@ -223,6 +223,22 @@ public:
      * @return          ICAL_COMPONENT value of this component
      */
     virtual ICAL_COMPONENT GetType() const { PR_ASSERT(FALSE); return ICAL_COMPONENT_VEVENT; }
+
+    /**
+     * Update the private property data-members with updatedComponent's 
+     * property data-members.
+     * Usually, overwriting data-members should only occur if updatedComponent
+     * is more recent than the current component.
+     * Return TRUE if component was changed, FALSE otherwise
+     * @param           ICalComponent * updatedComponent
+     *
+     * @return          virtual t_bool
+     */
+    virtual t_bool updateComponent(ICalComponent * updatedComponent)
+    {
+        PR_ASSERT(FALSE); 
+        return FALSE;
+    }
 
     /*  -- End of ICALComponent PURE VIRTUAL interface -- */
 
@@ -292,7 +308,7 @@ public:
      * @return          iCal export string of component
      */
     UnicodeString format(UnicodeString & sComponentName, UnicodeString & strFmt, 
-        UnicodeString sFilterAttendee = "", t_bool delegateRequest = FALSE);
+        UnicodeString sFilterAttendee, t_bool delegateRequest = FALSE);
 
     /**
      * Given a format string, prints the component to human-readable format
@@ -307,11 +323,34 @@ public:
     /* STATIC METHODS */
    
     /**
-     * Cleanup vector of DateTime objects.  Delete each DateTime in vector.
-     * @param           strings     vector of elements to delete from
+     * Returns the keyletter representing that property 
+     * For example, if propertyName = "DTSTART", outLetter would return 'B'
+     * and return boolean would be TRUE.
+     * return FALSE if property not found.
+     * @param           UnicodeString & propertyName
+     * @param           t_int32 & outLetter
+     *
+     * @return          static t_bool 
      */
-    static void deleteDateVector(JulianPtrArray * dateVector);
-    
+    static t_bool propertyNameToKeyLetter(UnicodeString & propertyName,
+        t_int32 & outLetter);
+
+
+    /**
+     * Given a ptr to an array of properties strings (char *) and the count
+     * create the iCal formatting string for those properties and return
+     * it in out.
+     * If ppsPropList is null or iPropCount is 0, then
+     * return the string of all properties and alarms.
+     * @param           char ** ppsPropList
+     * @param           t_int32 iPropCount
+     * @param           UnicodeString & out
+     *
+     * @return          static UnicodeString 
+     */
+    static UnicodeString & makeFormatString(char ** ppsPropList, t_int32 iPropCount,
+        UnicodeString & out);
+
     /**
      * Cleanup vector of UnicodeString objects.   Delete each UnicodeString
      * in vector.
@@ -327,16 +366,148 @@ public:
     static void deleteICalComponentVector(JulianPtrArray * componentVector);
 
     /**
-     * prints Vector of string properties to ICAL format for printing
-     * @param           sProp       property name
-     * @param           v           property value
-     * @param           sResult     output string
+     * Clones each ICalComponent element in the toClone vector and put clone in
+     * the out vector
+     * @param           JulianPtrArray * out
+     * @param           JulianPtrArray * toClone
      *
-     * @return          output string (sResult)
+     * @return          static void 
      */
-    static UnicodeString & propertyVToCalString(UnicodeString & sProp, 
-        JulianPtrArray * val, UnicodeString & sResult);
+    static void cloneICalComponentVector(JulianPtrArray * out, JulianPtrArray * toClone);
 
+#if 0
+    /**
+     * Sets the ICalProperty in dateTimePropertyPtr to have 
+     * a value on inVal and paramter value on inParameters
+     * @param           ICalProperty ** dateTimePropertyPtr
+     * @param           DateTime inVal
+     * @param           JulianPtrArray * inParameters
+     *
+     * @return          static void 
+     */
+    static void setDateTimeValue(ICalProperty ** dateTimePropertyPtr,
+        DateTime inVal, JulianPtrArray * inParameters);
+
+    /**
+     * Return the value of the dateTimePropertyPtr in outVal 
+     * @param           ICalProperty ** dateTimePropertyPtr
+     * @param           DateTime & outVal
+     *
+     * @return          static void 
+     */
+    static void getDateTimeValue(ICalProperty ** dateTimePropertyPtr, 
+        DateTime & outVal);
+
+     /**
+     * Sets the ICalProperty in stringPropertyPtr to have 
+     * a value on inVal and paramter value on inParameters
+     * @param           ICalProperty ** stringPropertyPtr
+     * @param           UnicodeString inVal
+     * @param           JulianPtrArray * inParameters
+     *
+     * @return          static void 
+     */
+    static void setStringValue(ICalProperty ** stringPropertyPtr,
+        UnicodeString inVal, JulianPtrArray * inParameters);
+
+    /**
+     * Return the value of the stringPropertyPtr in outVal 
+     * @param           ICalProperty ** stringPropertyPtr
+     * @param           UnicodeString & outVal
+     *
+     * @return          static void 
+     */
+    static void getStringValue(ICalProperty ** stringPropertyPtr, 
+        UnicodeString & outVal);
+
+     /**
+     * Sets the ICalProperty in integerPropertyPtr to have 
+     * a value on inVal and paramter value on inParameters
+     * @param           ICalProperty ** integerTimePropertyPtr
+     * @param           t_int32 inVal
+     * @param           JulianPtrArray * inParameters
+     *
+     * @return          static void 
+     */
+    static void setIntegerValue(ICalProperty ** integerPropertyPtr,
+        t_int32 inVal, JulianPtrArray * inParameters);
+
+    /**
+     * Return the value of the integerPropertyPtr in outVal 
+     * @param           ICalProperty ** integerPropertyPtr
+     * @param           t_int32 & outVal
+     *
+     * @return          static void 
+     */
+    static void getIntegerValue(ICalProperty ** integerPropertyPtr, 
+        t_int32 & outVal);
+
+#endif
+protected:
+    /* replace current vector with contents in replaceVctr */
+    /* don't overwrite if replaceVctr is empty and bForceOverwriteOnEmpty is FALSE */
+
+    /**
+     * Replace the ICalProperty contents of propertyVctrPtr with the ICalProperty 
+     * elements in replaceVctr.  This means delete all ICalProperty elements in
+     * (*propertyVctrPtr), then clone each element in replaceVctr and add to
+     * (*propertyVctrPtr).  If however replaceVctr is empty, don't delete current
+     * elements unless bForceOverwriteOnEmpty flag is ON. (see below)
+     * If bAddInsteadOfOverwrite is TRUE, don't delete all ICalProperty elements, 
+     * just add all elements in replaceVctr to propertyVctrPtr
+     * If bForceOverwriteOnEmpty is TRUE, delete all ICalProperty elements even if 
+     * replaceVctr is empty or NULL.
+     * @param           JulianPtrArray ** propertyVctrPtr
+     * @param           JulianPtrArray * replaceVctr
+     * @param           t_bool bAddInsteadOfOverwrite = FALSE
+     * @param           t_bool bForceOverwriteOnEmpty = FALSE
+     *
+     * @return          static void 
+     */
+    static void internalSetPropertyVctr(JulianPtrArray ** propertyVctrPtr,
+        JulianPtrArray * replaceVctr, t_bool bAddInsteadOfOverwrite = FALSE,
+        t_bool bForceOverwriteOnEmpty = FALSE);
+
+    /**
+     * Replace the XToken contents of xTokensVctrPtr with the XToken 
+     * elements in replaceVctr.  This means delete all XToken elements in
+     * (*xTokensVctrPtr), then clone each element in replaceVctr and add to
+     * (*xTokensVctrPtr).  If however replaceVctr is empty, don't delete current
+     * elements unless bForceOverwriteOnEmpty flag is ON. (see below)
+     * If bAddInsteadOfOverwrite is TRUE, don't delete all XToken elements, 
+     * just add all elements in replaceVctr to xTokensVctrPtr
+     * If bForceOverwriteOnEmpty is TRUE, delete all XToken elements even if 
+     * replaceVctr is empty or NULL.
+     * @param           JulianPtrArray ** xTokensVctrPtr
+     * @param           JulianPtrArray * replaceVctr
+     * @param           t_bool bAddInsteadOfOverwrite = FALSE
+     * @param           t_bool bForceOverwriteOnEmpty = FALSE
+     *
+     * @return          static void 
+     */
+    static void internalSetXTokensVctr(JulianPtrArray ** xTokensVctrPtr,
+        JulianPtrArray * replaceVctr, t_bool bAddInsteadOfOverwrite = FALSE,
+        t_bool bForceOverwriteOnEmpty = FALSE);
+
+
+    /**
+     * Replace the ICalProperty in (*propertyPtr) to with replaceProp.
+     * This means delete the current ICalProperty and cloning replaceProp
+     * and setting (*propertyPtr) to clone.
+     * If replaceProp == NULL, don't delete current ICalProperty.
+     * However, if bForceOverwriteOnEmpty is TRUE, delete current ICalProperty
+     * even if replaceProp is NULL.
+     * @param           ICalProperty ** propertyPtr
+     * @param           ICalProperty * replaceProp
+     * @param           t_bool bForceOverwriteOnEmpty = FALSE
+     *
+     * @return          static void 
+     */
+    static void internalSetProperty(ICalProperty ** propertyPtr,
+        ICalProperty * replaceProp, t_bool bForceOverwriteOnEmpty = FALSE);
+
+    
+      
 };
 
 #endif /* __ICALCOMPONENT_H_ */

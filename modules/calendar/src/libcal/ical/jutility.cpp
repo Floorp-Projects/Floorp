@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -53,6 +53,7 @@ t_int32 JulianUtility::atot_int32(char * nPtr,
     return i;
 }
 //---------------------------------------------------------------------
+#if 0
 t_int32 JulianUtility::atot_int32(const char * nPtr,
                                   t_bool & bParseError,
                                   t_int32 size)
@@ -71,6 +72,7 @@ t_int32 JulianUtility::atot_int32(const char * nPtr,
     }
     return atol(nPtr);
 }
+#endif
 //---------------------------------------------------------------------
 t_bool JulianUtility::checkRange(t_int32 hashCode, JAtom range[],
                                  t_int32 rangeSize)
@@ -91,13 +93,16 @@ JulianUtility::stripDoubleQuotes(UnicodeString & u)
 {
     if (u.size() > 0)
     {
-        if (u[(TextOffset) 0] == '\"')
+        if ('\"' == u[(TextOffset) (u.size() - 1)])
         {
-            u.remove(0, 1);
+            u.remove((TextOffset)(u.size() - 1), 1);
         }
-        if (u[(TextOffset) (u.size() - 1)] == '\"')
+        if (u.size() > 0)
         {
-            u.remove(u.size() - 1, 1);
+            if ('\"' == u[(TextOffset) 0])
+            {
+                u.remove(0, 1);
+            }
         }
     }
 }

@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -35,14 +35,21 @@ ICalFileReader::ICalFileReader() {}
 //---------------------------------------------------------------------
 
 ICalFileReader::ICalFileReader(char * filename, ErrorCode & status)
+: m_file(0), m_filename(0)
 {
     m_filename = filename;
     m_file = fopen(filename, "r");
 
     if (m_file == 0) 
     {
-        printf("Can't open %s\n", filename);
+#if 0
+        if (FALSE) TRACE("Can't open %s\n", filename);
+#endif
         status = 1;
+    }
+    else
+    {
+        status = ZERO_ERROR;
     }
 }
 //---------------------------------------------------------------------
@@ -71,8 +78,9 @@ ICalFileReader::readLine(UnicodeString & aLine, ErrorCode & status)
 {
     status = ZERO_ERROR;
     aLine = "";
-    
-	if ( NULL != fgets(m_pBuffer,1023,m_file) )
+    char * l = 0;
+
+	if ( 0 != (l = fgets(m_pBuffer,1023,m_file)) )
 	{
 		t_int32 iLen = strlen(m_pBuffer);
 		if (m_pBuffer[iLen-1] == '\n')
@@ -80,12 +88,10 @@ ICalFileReader::readLine(UnicodeString & aLine, ErrorCode & status)
         {
             aLine = m_pBuffer;
             return aLine;
-            //return 0;
         }
 	}
     status = 1;
     return aLine;
-	//return 1;
 }
 //---------------------------------------------------------------------
 // NOTE: TODO: make faster profiling?

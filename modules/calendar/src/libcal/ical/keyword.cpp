@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -16,7 +16,6 @@
  * Reserved. 
  */
 
-/* -*- Mode: C++; tab-width: 4; tabs-indent-mode: nil -*- */
 // keyword.cpp
 // John Sun
 // 3/19/98 9:49:32 AM
@@ -26,6 +25,11 @@
 
 #include "keyword.h"
 #include "jatom.h"
+
+
+#ifdef XP_MAC
+#pragma global_optimizer	off			// so that this damn file compiles
+#endif
 
 //---------------------------------------------------------------------
 
@@ -231,6 +235,10 @@ JulianKeyword::JulianKeyword()
     ms_ATOM_CONFIRMED.setString(ms_sCONFIRMED);
     ms_sCANCELLED     = "CANCELLED";
     ms_ATOM_CANCELLED.setString(ms_sCANCELLED);
+    ms_sDRAFT         = "DRAFT";
+    ms_ATOM_DRAFT.setString(ms_sDRAFT);
+    ms_sFINAL         = "FINAL";
+    ms_ATOM_FINAL.setString(ms_sFINAL);
 
     ms_sOPAQUE        = "OPAQUE";
     ms_ATOM_OPAQUE.setString(ms_sOPAQUE);
@@ -351,6 +359,9 @@ JulianKeyword::JulianKeyword()
     //ms_sTENTATIVE = "TENTATIVE";
     //ms_ATOM_TENTATIVE.setString(ms_sTENTATIVE);
 
+    ms_sACTION = "ACTION";
+    ms_ATOM_ACTION.setString(ms_sACTION);
+ 
     ms_sAUDIO = "AUDIO";
     ms_ATOM_AUDIO.setString(ms_sAUDIO);
     ms_sDISPLAY = "DISPLAY";
@@ -379,6 +390,8 @@ JulianKeyword::JulianKeyword()
     //ms_ATOM_SENTBY.setString(ms_sSENTBY);
     ms_sRELTYPE    = "RELTYPE";
     ms_ATOM_RELTYPE.setString(ms_sRELTYPE);
+    ms_sFMTTYPE    = "FMTTYPE";
+    ms_ATOM_FMTTYPE.setString(ms_sFMTTYPE);
     ms_sRELATED    = "RELATED";
     ms_ATOM_RELATED.setString(ms_sRELATED);
     //ms_sTZID             = "TZID";
@@ -464,12 +477,14 @@ JulianKeyword::JulianKeyword()
     ms_ATOM_COMMA_SYMBOL.setString(ms_sCOMMA_SYMBOL);
     ms_sCOLON_SYMBOL = ":";
     ms_ATOM_COLON_SYMBOL.setString(ms_sCOLON_SYMBOL);
+    ms_sDOUBLEQUOTE_SYMBOL = "\"";
     ms_sSEMICOLON_SYMBOL = ";";
     ms_sDEFAULT_DELIMS = "\t\n\r";
     ms_sLINEBREAKSPACE = "\r\n ";
     ms_sALTREPQUOTE = ";ALTREP=\"";
     ms_sLINEFEEDSPACE = "\n ";
-
+    ms_sXPARAMVAL = "X-PARAM_VALUE";
+    
     ms_sRRULE_WITH_SEMICOLON = "RRULE;";
 
     ms_sUNTIL = "UNTIL";
@@ -614,6 +629,11 @@ JulianAtomRange::JulianAtomRange()
     ms_asEncodingValueParamRange[1] = JulianKeyword::Instance()->ms_ATOM_VALUE;
     ms_asEncodingValueParamRangeSize = 2;
 
+    ms_asEncodingValueFMTTypeParamRange[0] = JulianKeyword::Instance()->ms_ATOM_ENCODING;
+    ms_asEncodingValueFMTTypeParamRange[1] = JulianKeyword::Instance()->ms_ATOM_VALUE;
+    ms_asEncodingValueFMTTypeParamRange[2] = JulianKeyword::Instance()->ms_ATOM_FMTTYPE;
+    ms_asEncodingValueFMTTypeParamRangeSize = 3;
+
     ms_asSentByParamRange[0] = JulianKeyword::Instance()->ms_ATOM_SENTBY;
     ms_asSentByParamRangeSize = 1;
 
@@ -644,9 +664,11 @@ JulianAtomRange::JulianAtomRange()
     ms_asRelTypeRange[0] = JulianKeyword::Instance()->ms_ATOM_PARENT;
     ms_asRelTypeRange[1] = JulianKeyword::Instance()->ms_ATOM_CHILD;
     ms_asRelTypeRange[2] = JulianKeyword::Instance()->ms_ATOM_SIBLING;
+    ms_iRelTypeRangeSize = 3;
 
     ms_asRelatedRange[0] = JulianKeyword::Instance()->ms_ATOM_START;
     ms_asRelatedRange[1] = JulianKeyword::Instance()->ms_ATOM_END;
+    ms_iRelatedRangeSize = 2;
     
     ms_asParameterRange[0] = JulianKeyword::Instance()->ms_ATOM_ALTREP; 
     ms_asParameterRange[1] = JulianKeyword::Instance()->ms_ATOM_ENCODING; 
@@ -658,7 +680,8 @@ JulianAtomRange::JulianAtomRange()
     ms_asIrregularProperties[0] = JulianKeyword::Instance()->ms_ATOM_ATTENDEE; 
     ms_asIrregularProperties[1] = JulianKeyword::Instance()->ms_ATOM_FREEBUSY;
     ms_asIrregularProperties[2] = JulianKeyword::Instance()->ms_ATOM_RECURRENCEID;
-    ms_iIrregularPropertiesSize = 3;
+    ms_asIrregularProperties[3] = JulianKeyword::Instance()->ms_ATOM_ORGANIZER;
+    ms_iIrregularPropertiesSize = 4;
     
     ms_asValueRange[0] = JulianKeyword::Instance()->ms_ATOM_BINARY;
     ms_asValueRange[1] = JulianKeyword::Instance()->ms_ATOM_BOOLEAN;
@@ -687,6 +710,7 @@ JulianAtomRange::JulianAtomRange()
 //---------------------------------------------------------------------
 
 JulianLogErrorMessage * JulianLogErrorMessage::m_Instance = 0;
+t_int32 JulianLogErrorMessage::ms_iStaticErrorNumber = 10000;
 
 //---------------------------------------------------------------------
 
@@ -715,7 +739,7 @@ JulianLogErrorMessage::~JulianLogErrorMessage()
 
 JulianLogErrorMessage::JulianLogErrorMessage()
 {
-    
+#if 0
     ms_sDTEndBeforeDTStart = "error: DTEnd before DTStart.  Setting DTEnd equal to DTStart.";
 
     ms_sExportError = "error: error writing to export file";
@@ -745,13 +769,16 @@ JulianLogErrorMessage::JulianLogErrorMessage()
     ms_sMissingStartingTime = "error: no starting time";
     ms_sMissingEndingTime = "error: no ending time";
     ms_sEndBeforeStartTime = "error: ending time occurs before starting time";
-    ms_sMissingSeqNo = "error:no sequence NO.";
+    ms_sMissingSeqNo = "error:invalid or missing sequence NO.";
     ms_sMissingReplySeq = "error:no reply sequence NO.";
     ms_sMissingURL = "error: no URL"; 
     ms_sMissingDTStamp = "error: no DTStamp";
     ms_sMissingUID = "error: no UID";
     ms_sMissingDescription = "error: no Description";
     ms_sMissingMethodProvided = "error: no method provided process as publish";
+    ms_sMissingOrganizer = "error: no Organizer";
+    ms_sMissingSummary = "error: no Summary";
+    ms_sMissingAttendees = "error: missing Attendees";
     ms_sInvalidVersionNumber = "error: version number is not 2.0";
     ms_sUnknownUID = "error: UID not related to any event in calendar, ask for resend";
     ms_sMissingUIDInReply = "error: missing UID in reply, abort addReply";
@@ -872,6 +899,178 @@ JulianLogErrorMessage::JulianLogErrorMessage()
     ms_sDefaultFreebusyStatus = "default: setting default status property in Freebusy to BUSY";
     ms_sDefaultFreebusyType = "default: setting default type property in Freebusy to BUSY";
     ms_sDefaultDuration = "default: setting duration to zero-length duration (PT0H)";    
+    ms_sDefaultAlarmDescriptionString = "Default Alarm Description";
+    ms_sDefaultAlarmSummaryString = "Default Alarm Summary";
+    ms_sXTokenParamIgnored = "ignoring x-token parameter";
+    ms_sXTokenComponentIgnored = "2.6;Success, invalid calendar x-component ignored.";
+#endif
+
+    ms_sRS202 = "2.02;Success, invalid property ignored.";
+    ms_sDefaultAlarmDescriptionString = "Default Alarm Description";
+    ms_sDefaultAlarmSummaryString = "Default Alarm Summary";
+
+
+    ms_iDTEndBeforeDTStart = ms_iStaticErrorNumber++;
+    ms_iExportError = ms_iStaticErrorNumber++;
+    ms_iNTimeParamError = ms_iStaticErrorNumber++;
+    ms_iInvalidPromptValue = ms_iStaticErrorNumber++;
+    ms_iSTimeParamError = ms_iStaticErrorNumber++;
+    ms_iISO8601ParamError = ms_iStaticErrorNumber++;
+    ms_iInvalidTimeStringError = ms_iStaticErrorNumber++;
+    ms_iTimeZoneParamError = ms_iStaticErrorNumber++;
+    ms_iLocaleParamError = ms_iStaticErrorNumber++;
+    ms_iLocaleNotFoundError = ms_iStaticErrorNumber++;
+    ms_iPatternParamError = ms_iStaticErrorNumber++;
+    ms_iInvalidPatternError = ms_iStaticErrorNumber++;
+    ms_iRRuleParamError = ms_iStaticErrorNumber++;
+    ms_iERuleParamError = ms_iStaticErrorNumber++;
+    ms_iBoundParamError = ms_iStaticErrorNumber++;
+    ms_iInvalidRecurrenceError = ms_iStaticErrorNumber++;
+    ms_iUnzipNullError = ms_iStaticErrorNumber++;
+    ms_iCommandNotFoundError = ms_iStaticErrorNumber++;
+    ms_iInvalidTimeZoneError = ms_iStaticErrorNumber++;
+    ms_iFileNotFound = ms_iStaticErrorNumber++;
+    ms_iInvalidPropertyName = ms_iStaticErrorNumber++;
+    ms_iInvalidPropertyValue = ms_iStaticErrorNumber++;
+    ms_iInvalidParameterName = ms_iStaticErrorNumber++;
+    ms_iInvalidParameterValue = ms_iStaticErrorNumber++;
+    ms_iMissingStartingTime = ms_iStaticErrorNumber++;
+    ms_iMissingEndingTime = ms_iStaticErrorNumber++;
+    ms_iEndBeforeStartTime = ms_iStaticErrorNumber++;
+    ms_iMissingSeqNo = ms_iStaticErrorNumber++;
+    ms_iMissingReplySeq = ms_iStaticErrorNumber++;
+    ms_iMissingURL = ms_iStaticErrorNumber++;
+    ms_iMissingDTStamp = ms_iStaticErrorNumber++;
+    ms_iMissingUID = ms_iStaticErrorNumber++;
+    ms_iMissingDescription = ms_iStaticErrorNumber++;
+    ms_iMissingMethodProvided = ms_iStaticErrorNumber++;
+    ms_iMissingOrganizer = ms_iStaticErrorNumber++;
+    ms_iMissingSummary = ms_iStaticErrorNumber++;
+    ms_iMissingAttendees = ms_iStaticErrorNumber++;
+    ms_iInvalidVersionNumber = ms_iStaticErrorNumber++;
+    ms_iUnknownUID = ms_iStaticErrorNumber++;
+    ms_iMissingUIDInReply = ms_iStaticErrorNumber++;
+    ms_iMissingValidDTStamp = ms_iStaticErrorNumber++;
+    ms_iDeclineCounterCalledByAttendee = ms_iStaticErrorNumber++;
+    ms_iPublishCalledByAttendee = ms_iStaticErrorNumber++;
+    ms_iRequestCalledByAttendee = ms_iStaticErrorNumber++;
+    ms_iCancelCalledByAttendee = ms_iStaticErrorNumber++;
+    ms_iCounterCalledByOrganizer = ms_iStaticErrorNumber++;
+    ms_iRefreshCalledByOrganizer = ms_iStaticErrorNumber++;
+    ms_iReplyCalledByOrganizer = ms_iStaticErrorNumber++;
+    ms_iAddReplySequenceOutOfRange = ms_iStaticErrorNumber++;
+    ms_iDuplicatedProperty = ms_iStaticErrorNumber++;
+    ms_iDuplicatedParameter = ms_iStaticErrorNumber++;
+    ms_iConflictMethodAndStatus = ms_iStaticErrorNumber++;
+    ms_iConflictCancelAndConfirmedTentative = ms_iStaticErrorNumber++;
+    ms_iMissingUIDToMatchEvent = ms_iStaticErrorNumber++;
+    ms_iInvalidNumberFormat = ms_iStaticErrorNumber++;
+    ms_iDelegateRequestError = ms_iStaticErrorNumber++;
+    ms_iInvalidRecurrenceIDRange = ms_iStaticErrorNumber++;
+    ms_iUnknownRecurrenceID = ms_iStaticErrorNumber++;
+    ms_iPropertyValueTypeMismatch = ms_iStaticErrorNumber++;
+    ms_iInvalidRRule = ms_iStaticErrorNumber++;
+    ms_iInvalidExRule = ms_iStaticErrorNumber++;
+    ms_iInvalidRDate = ms_iStaticErrorNumber++;
+    ms_iInvalidExDate = ms_iStaticErrorNumber++;
+    ms_iInvalidEvent = ms_iStaticErrorNumber++;
+    ms_iInvalidComponent = ms_iStaticErrorNumber++;
+    ms_iInvalidAlarm = ms_iStaticErrorNumber++;
+    ms_iInvalidTZPart = ms_iStaticErrorNumber++;
+    ms_iInvalidAlarmCategory = ms_iStaticErrorNumber++;
+    ms_iInvalidAttendee = ms_iStaticErrorNumber++;
+    ms_iInvalidFreebusy = ms_iStaticErrorNumber++;
+    ms_iDurationAssertionFailed = ms_iStaticErrorNumber++;
+    ms_iDurationParseFailed = ms_iStaticErrorNumber++;
+    ms_iPeriodParseFailed = ms_iStaticErrorNumber++;
+    ms_iPeriodStartInvalid = ms_iStaticErrorNumber++;
+    ms_iPeriodEndInvalid = ms_iStaticErrorNumber++;
+    ms_iPeriodEndBeforeStart = ms_iStaticErrorNumber++;
+    ms_iPeriodDurationZero = ms_iStaticErrorNumber++;
+    ms_iFreebusyPeriodInvalid = ms_iStaticErrorNumber++;
+    ms_iOptParamInvalidPropertyValue = ms_iStaticErrorNumber++;
+    ms_iOptParamInvalidPropertyName = ms_iStaticErrorNumber++;
+    ms_iInvalidOptionalParam = ms_iStaticErrorNumber++;
+    ms_iAbruptEndOfParsing = ms_iStaticErrorNumber++;
+    ms_iLastModifiedBeforeCreated = ms_iStaticErrorNumber++;
+    ms_iMultipleOwners = ms_iStaticErrorNumber++;
+    ms_iMultipleOrganizers = ms_iStaticErrorNumber++;
+    ms_iMissingOwner = ms_iStaticErrorNumber++;
+    ms_iMissingDueTime = ms_iStaticErrorNumber++;
+    ms_iCompletedPercentMismatch = ms_iStaticErrorNumber++;
+    ms_iMissingFreqTagRecurrence = ms_iStaticErrorNumber++;
+    ms_iFreqIntervalMismatchRecurrence = ms_iStaticErrorNumber++;
+    ms_iInvalidPercentCompleteValue = ms_iStaticErrorNumber++;
+    ms_iInvalidPriorityValue = ms_iStaticErrorNumber++;
+    ms_iInvalidByHourValue = ms_iStaticErrorNumber++;
+    ms_iInvalidByMinuteValue = ms_iStaticErrorNumber++;
+    ms_iByDayFreqIntervalMismatch = ms_iStaticErrorNumber++;
+    ms_iInvalidByMonthDayValue = ms_iStaticErrorNumber++;
+    ms_iInvalidByYearDayValue = ms_iStaticErrorNumber++;
+    ms_iInvalidBySetPosValue = ms_iStaticErrorNumber++;
+    ms_iInvalidByWeekNoValue = ms_iStaticErrorNumber++;
+    ms_iInvalidWeekStartValue = ms_iStaticErrorNumber++;
+    ms_iInvalidByMonthValue = ms_iStaticErrorNumber++;
+    ms_iInvalidByDayValue = ms_iStaticErrorNumber++;
+    ms_iInvalidFrequency = ms_iStaticErrorNumber++;
+    ms_iInvalidDayArg = ms_iStaticErrorNumber++;
+    ms_iVerifyZeroError = ms_iStaticErrorNumber++;
+    ms_iRoundedPercentCompleteTo100 = ms_iStaticErrorNumber++;
+    ms_iRS200 = ms_iStaticErrorNumber++;
+    ms_iRS201 = ms_iStaticErrorNumber++;
+    ms_iRS202 = ms_iStaticErrorNumber++;
+    ms_iRS203 = ms_iStaticErrorNumber++;
+    ms_iRS204 = ms_iStaticErrorNumber++;
+    ms_iRS205 = ms_iStaticErrorNumber++;
+    ms_iRS206 = ms_iStaticErrorNumber++;
+    ms_iRS207 = ms_iStaticErrorNumber++;
+    ms_iRS208 = ms_iStaticErrorNumber++;
+    ms_iRS209 = ms_iStaticErrorNumber++;
+    ms_iRS210 = ms_iStaticErrorNumber++;
+    ms_iRS300 = ms_iStaticErrorNumber++;
+    ms_iRS301 = ms_iStaticErrorNumber++;
+    ms_iRS302 = ms_iStaticErrorNumber++;
+    ms_iRS303 = ms_iStaticErrorNumber++;
+    ms_iRS304 = ms_iStaticErrorNumber++;
+    ms_iRS305 = ms_iStaticErrorNumber++;
+    ms_iRS306 = ms_iStaticErrorNumber++;
+    ms_iRS307 = ms_iStaticErrorNumber++;
+    ms_iRS308 = ms_iStaticErrorNumber++;
+    ms_iRS309 = ms_iStaticErrorNumber++;
+    ms_iRS310 = ms_iStaticErrorNumber++;
+    ms_iRS311 = ms_iStaticErrorNumber++;
+    ms_iRS312 = ms_iStaticErrorNumber++;
+    ms_iRS400 = ms_iStaticErrorNumber++;
+    ms_iRS500 = ms_iStaticErrorNumber++;
+    ms_iRS501 = ms_iStaticErrorNumber++;
+    ms_iRS502 = ms_iStaticErrorNumber++;
+    ms_iRS503 = ms_iStaticErrorNumber++;
+    ms_iMissingUIDGenerateDefault = ms_iStaticErrorNumber++;
+    ms_iMissingStartingTimeGenerateDefault = ms_iStaticErrorNumber++;
+    ms_iMissingEndingTimeGenerateDefault = ms_iStaticErrorNumber++;
+    ms_iNegativeSequenceNumberGenerateDefault = ms_iStaticErrorNumber++;
+    ms_iDefaultTBEDescription = ms_iStaticErrorNumber++;
+    ms_iDefaultTBEClass = ms_iStaticErrorNumber++;
+    ms_iDefaultTBEStatus = ms_iStaticErrorNumber++;
+    ms_iDefaultTBETransp = ms_iStaticErrorNumber++;
+    ms_iDefaultTBERequestStatus = ms_iStaticErrorNumber++;
+    ms_iDefaultTBESummary = ms_iStaticErrorNumber++;
+    ms_iDefaultRecIDRange = ms_iStaticErrorNumber++;
+    ms_iDefaultAttendeeRole = ms_iStaticErrorNumber++;
+    ms_iDefaultAttendeeType = ms_iStaticErrorNumber++;
+    ms_iDefaultAttendeeExpect = ms_iStaticErrorNumber++;
+    ms_iDefaultAttendeeStatus = ms_iStaticErrorNumber++;
+    ms_iDefaultAttendeeRSVP = ms_iStaticErrorNumber++;
+    ms_iDefaultAlarmRepeat = ms_iStaticErrorNumber++;
+    ms_iDefaultAlarmDuration = ms_iStaticErrorNumber++;
+    ms_iDefaultAlarmCategories = ms_iStaticErrorNumber++;
+    ms_iDefaultFreebusyStatus = ms_iStaticErrorNumber++;
+    ms_iDefaultFreebusyType = ms_iStaticErrorNumber++;
+    ms_iDefaultDuration = ms_iStaticErrorNumber++;                        
+    ms_iDefaultAlarmDescriptionString = ms_iStaticErrorNumber++;
+    ms_iDefaultAlarmSummaryString = ms_iStaticErrorNumber++;
+    ms_iXTokenParamIgnored = ms_iStaticErrorNumber++;
+    ms_iXTokenComponentIgnored = ms_iStaticErrorNumber++;
 }
 
 //---------------------------------------------------------------------
@@ -931,8 +1130,11 @@ JulianFormatString::JulianFormatString()
 
     ms_FreebusyStrDefaultFmt = "\tTYPE= ^T ^P\r\n";
 
-    ms_TZPartStrDefaultFmt = "\r\n\t%(EEE MM/dd/yy hh:mm:ss z)B,%x%(EEE MM/dd/yy hh:mm:ss z)y, NAME: %n, FROM: %f, TO: %d";
-    ms_sTZPartAllMessage = "%B%x%y%f%d%n%K";
+    ms_TZPartStrDefaultFmt = "\r\n\t\t%(EEE MM/dd/yy hh:mm:ss z)B,%x%(EEE MM/dd/yy hh:mm:ss z)y, NAME: %n, FROM: %f, TO: %d, comment: %K";
+    ms_sTZPartAllMessage = "%B%x%y%f%d%n%K%Z";
+
+    ms_VAlarmStrDefaultFmt = "\r\nACTION = %l:DURATION = %z,%D,REPEAT = %A,%i,%S";
+    ms_sVAlarmAllMessage = "%l%z%D%A%v%a%i%S%Z";
 
     ms_VEventStrDefaultFmt = "[%(EEE MM/dd/yy hh:mm:ss a z)B - %(EEE MM/dd/yy hh:mm:ss a z)e (%D)]  UID: %U, SEQ: %s, SUM: %S, LastM: %(EEE MM/dd/yy hh:mm:ss a z)M %(ORG:^z)J\r\n %(\r\n\t^N ^R, ^z ^S)v %w";
     ms_sVEventAllPropertiesMessage = "%J%v%a%k%c%K%H%t%i%D%B%e%C%X%E%O%M%L%p%x%y%R%o%T%r%s%g%S%h%U%u%w%Z";
@@ -1007,8 +1209,8 @@ JulianFormatString::JulianFormatString()
     ms_sVFreebusyAllMessage = "%J%v%Y%C%B%e%D%o%T%U%K%t%M%u%s%Z";
     ms_VFreebusyStrDefaultFmt = "%[(EEE MM/dd/yy hh:mm:ss z)B - %(EEE MM/dd/yy hh:mm:ss z)e (%D)], \r\n\t %U, %s, \r\n%Y\r\n %(ORG:^z)J\r\n %(\r\n\t^N ^R, ^z ^S)v %w";
 
-    ms_VTimeZoneStrDefaultFmt = "%I - Start: %(EEE MM/dd/yy hh:mm:ss z)M, %Q\t%V";
-    ms_sVTimeZoneAllMessage = "%I%M%Q%V";
+    ms_VTimeZoneStrDefaultFmt = "%I - %(EEE MM/dd/yy hh:mm:ss z)M %Q\t%V";
+    ms_sVTimeZoneAllMessage = "%I%M%Q%V%Z";
 
     /*
     ms_asDateTimePatterns = 
@@ -1049,3 +1251,5 @@ JulianFormatString::JulianFormatString()
         ms_asDateTimePatterns[14] = "MM/dd/yy hh:mm";
         ms_asDateTimePatterns[15] = "hh:mm MM/d/y z";
 }
+
+

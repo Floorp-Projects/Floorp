@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- 
  * 
  * The contents of this file are subject to the Netscape Public License 
  * Version 1.0 (the "NPL"); you may not use this file except in 
@@ -26,6 +26,7 @@
 #include "dprprty.h"
 #include "datetime.h"
 #include "prprty.h"
+#include "keyword.h"
 
 //---------------------------------------------------------------------
 // private never use
@@ -131,5 +132,52 @@ UnicodeString & DateTimeProperty::toExportString(UnicodeString & out)
     out = m_DateTime.toISO8601();
     return out;
 }
+//---------------------------------------------------------------------
+
+UnicodeString & 
+DateTimeProperty::toICALString(UnicodeString & out) 
+{
+    UnicodeString name;
+    return toICALString(name, out);
+}
+
+//---------------------------------------------------------------------
+
+UnicodeString & 
+DateTimeProperty::toICALString(UnicodeString & sProp,
+                               UnicodeString & out) 
+{
+    ICalParameter * aName;
+    UnicodeString sVal;
+    sVal = toExportString(sVal);
+     
+    out = "";
+    t_int32 size = 0;
+    t_int32 i;
+
+    if (m_vParameters != 0)
+        size = m_vParameters->GetSize();
+    if (sVal.size() > 0)
+    {
+        UnicodeString u;
+        out = sProp;
+        for (i = 0; i < size; i++)
+        {
+            aName = (ICalParameter *) m_vParameters->GetAt(i);
+            u = aName->getParameterName(u);
+
+            // don't print the TZID and VALUE parameters
+            // thus it will only print in Z time and VALUE assumed to be DATETIME
+            if ((u.compareIgnoreCase(JulianKeyword::Instance()->ms_sTZID) != 0) &&
+                (u.compareIgnoreCase(JulianKeyword::Instance()->ms_sVALUE) != 0))
+                out += aName->toICALString(u);
+
+        }
+        out += ':'; out += sVal; out += JulianKeyword::Instance()->ms_sLINEBREAK;
+    }
+    //if (FALSE) TRACE("out = %s\r\n", out.toCString(""));
+    return out;
+}
+
 //---------------------------------------------------------------------
 
