@@ -1890,17 +1890,17 @@ NS_IMETHODIMP
       return rv;
     if (enc) {
       nsAutoString oldstyle;
-      encoding->GetStyleURI(oldstyle);
+      rv = encoding->GetStyleURI(oldstyle);
       if (NS_FAILED(rv))
         return rv;
       nsAutoString style;
-      encoding->GetStyleURI(style);
+      rv = enc->GetNodeValue(style);
       if (NS_FAILED(rv))
         return rv;
       if (!style.Equals(oldstyle)) {
         nsCOMPtr < nsISOAPEncoding > newencoding;
-        encoding->GetAssociatedEncoding(style, PR_FALSE,
-                                        getter_AddRefs(newencoding));
+        rv = encoding->GetAssociatedEncoding(style, PR_FALSE,
+                                             getter_AddRefs(newencoding));
         if (NS_FAILED(rv))
           return rv;
         if (newencoding) {
@@ -1990,38 +1990,46 @@ NS_IMETHODIMP
       subsubType = subType;
   
     if (subsubType) {  //  Loop up the hierarchy, to check and look for decoders
-      nsCOMPtr < nsISchemaType > lookupType = subsubType;
-      do {
-        if (lookupType == subType) {  //  Tick off the located super classes
-          subType = nsnull;
-        }
-        if (lookupType == type) {  //  Tick off the located super classes
-          type = nsnull;
-        }
-        if (!decoder) {
-          nsAutoString schemaType;
-          nsAutoString schemaURI;
-          nsresult rc = lookupType->GetName(schemaType);
+      for(;;) {
+        nsCOMPtr < nsISchemaType > lookupType = subsubType;
+        do {
+          if (lookupType == subType) {  //  Tick off the located super classes
+            subType = nsnull;
+          }
+          if (lookupType == type) {  //  Tick off the located super classes
+            type = nsnull;
+          }
+          if (!decoder) {
+            nsAutoString schemaType;
+            nsAutoString schemaURI;
+            nsresult rc = lookupType->GetName(schemaType);
+            if (NS_FAILED(rc))
+              return rc;
+            rc = lookupType->GetTargetNamespace(schemaURI);
+            if (NS_FAILED(rc))
+              return rc;
+            nsAutoString encodingKey;
+            SOAPEncodingKey(schemaURI, schemaType, encodingKey);
+            rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
+            if (NS_FAILED(rc))
+              return rc;
+          }
+          nsCOMPtr<nsISchemaType> supertype;
+          rc = GetSupertype(aEncoding, lookupType, getter_AddRefs(supertype));
           if (NS_FAILED(rc))
             return rc;
-          rc = lookupType->GetTargetNamespace(schemaURI);
-          if (NS_FAILED(rc))
-            return rc;
-          nsAutoString encodingKey;
-          SOAPEncodingKey(schemaURI, schemaType, encodingKey);
-          rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
-          if (NS_FAILED(rc))
-            return rc;
+          lookupType = supertype;
+        } while (lookupType);
+        if (!type) {
+          type = subsubType;
+          break;
         }
-        nsCOMPtr<nsISchemaType> supertype;
-        rc = GetSupertype(aEncoding, lookupType, getter_AddRefs(supertype));
-        if (NS_FAILED(rc))
-          return rc;
-        lookupType = supertype;
-      } while (lookupType);
-      if (type || subType)  //  If the proper subclass relationships didn't exist, then error return.
-        return SOAP_EXCEPTION(NS_ERROR_ILLEGAL_VALUE,"SOAP_TYPE_SUBCLASS","The type of the element or xsi:type must be a subclass of the required type.");
-      type = subsubType;    //  If they did, then we now have a new, better type.
+        decoder = nsnull;
+        if (!subType) {
+          subType = type;
+        }
+        subsubType = subType;
+      }
     }
   }
   if (!decoder) {
