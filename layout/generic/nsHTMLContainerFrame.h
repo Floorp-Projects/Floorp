@@ -43,13 +43,21 @@ public:
   // aPlaceholderFrame's sibling pointer is set to what aFrame's
   // sibling pointer was. It's up to the caller to adjust any previous
   // sibling pointers.
+  // XXX bad api - need nsresult in case we attempt to move out of the
+  // flow and run out of memory
   PRBool MoveFrameOutOfFlow(nsIPresContext&        aPresContext,
                             nsIFrame*              aFrame,
                             const nsStyleDisplay*  aDisplay,
                             const nsStylePosition* aPosition,
                             nsIFrame*&             aPlaceholderFrame);
 
-  // Helper method to create next-in-flows if necessary
+  /**
+   * Helper method to create next-in-flows if necessary. If aFrame
+   * already has a next-in-flow then this method does
+   * nothing. Otherwise, a new continuation frame is created and
+   * linked into the flow. In addition, the new frame becomes the
+   * next-sibling of aFrame.
+   */
   static nsresult CreateNextInFlow(nsIPresContext& aPresContext,
                                    nsIFrame* aOuterFrame,
                                    nsIFrame* aFrame,
