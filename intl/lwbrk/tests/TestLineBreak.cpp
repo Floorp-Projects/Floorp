@@ -142,15 +142,19 @@ PRBool TestASCIIWB(nsIWordBreaker *lb,
                  const PRUint32* out, PRUint32 outlen)
 {
          nsAutoString eng1(in);
-         nsBreakState bk(eng1.GetUnicode(), eng1.Length());
+         // nsBreakState bk(eng1.GetUnicode(), eng1.Length());
+
          PRUint32 i,j;
          PRUint32 res[256];
          PRBool ok = PR_TRUE;
-         for(i = 0, lb->FirstForwardBreak(&bk);
-                    (! bk.IsDone()) && (i < 256);
-                    lb->NextForwardBreak(&bk), i++)
+         PRBool done;
+         PRUint32 curr =0;
+
+         for(i = 0, lb->Next(eng1.GetUnicode(), eng1.Length(), curr, &curr, &done);
+                    (! done ) && (i < 256);
+                    lb->Next(eng1.GetUnicode(), eng1.Length(), curr, &curr, &done), i++)
          {
-            res [i] = bk.Current();
+            res [i] = curr;
          }
          if (i != outlen)
          {
@@ -423,17 +427,20 @@ void SamplePrintWordWithBreak()
    for(PRUint32 i = 0; i < numOfFragment; i++)
    {
       nsAutoString fragText(wb[i]); 
-      nsBreakState bk(fragText.GetUnicode(), fragText.Length());
+      // nsBreakState bk(fragText.GetUnicode(), fragText.Length());
 
-      res = wbk->FirstForwardBreak(&bk);
+      PRUint32 cur = 0;
+      PRBool done;
+      res = wbk->Next(fragText.GetUnicode(), fragText.Length(), cur, &cur, &done);
       PRUint32 start = 0;
-      for(PRUint32 j = 0; (! bk.IsDone()) ; wbk->NextForwardBreak(&bk), j++)
+      for(PRUint32 j = 0; ! done ; j++)
       {
             nsAutoString tmp("");
-            fragText.Mid(tmp, start, bk.Current() - start);
+            fragText.Mid(tmp, start, cur - start);
             result.Append(tmp);
             result.Append("^");
-            start = bk.Current();
+            start = cur;
+            wbk->Next(fragText.GetUnicode(), fragText.Length(), cur, &cur, &done);
       }
 
       nsAutoString tmp("");

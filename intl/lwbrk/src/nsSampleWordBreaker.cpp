@@ -154,116 +154,9 @@ nsresult nsSampleWordBreaker::FindWord(
   return NS_OK;
 }
 
-nsresult nsSampleWordBreaker::FirstForwardBreak   (nsIBreakState* state)
-{
-  NS_PRECONDITION( nsnull != state, "null ptr");
-  if(nsnull == state ) 
-    return NS_ERROR_NULL_POINTER; 
-
-  nsresult res;
-
-  PRUint32 len;
-  res = state->Length(&len);
-
-  if(len < 2)
-  {
-    res = state->Set(len, PR_TRUE);
-    return NS_OK;
-  }
-
-  const PRUnichar* text;
-  res = state->GetText(&text);
-
-  PRUint32 next = Next(text, len, 0);
-  res = state->Set(next , (next == len) );
-
-  return NS_OK;
-}
-nsresult nsSampleWordBreaker::NextForwardBreak    (nsIBreakState* state)
-{
-  NS_PRECONDITION( nsnull != state, "null ptr");
-  if(nsnull == state ) 
-    return NS_ERROR_NULL_POINTER; 
-
-
-  PRBool done;
-  nsresult res;
-  res = state->IsDone(&done);
-  if(done)
-    return NS_OK;
-
-  const PRUnichar* text;
-  res = state->GetText(&text);
-
-  PRUint32 len;
-  res = state->Length(&len);
-
-  PRUint32 cur;
-  res = state->Current(&cur);
-
-
-  PRUint32 next = Next(text, len, cur);
-  res = state->Set(next , (next == len) );
-  return NS_OK;
-}
-
-nsresult nsSampleWordBreaker::FirstBackwardBreak   (nsIBreakState* state)
-{
-  NS_PRECONDITION( nsnull != state, "null ptr");
-  if(nsnull == state ) 
-    return NS_ERROR_NULL_POINTER; 
-
-  nsresult res;
-
-  PRUint32 len;
-  res = state->Length(&len);
-
-  if(len < 2)
-  {
-    res = state->Set(0, PR_TRUE);
-    return NS_OK;
-  }
-
-  const PRUnichar* text;
-  res = state->GetText(&text);
-
-  PRUint32 next = Prev(text, len, len-1);
-  res = state->Set(next , (next == 0) );
-
-  return NS_OK;
-}
-nsresult nsSampleWordBreaker::NextBackwardBreak    (nsIBreakState* state)
-{
-  NS_PRECONDITION( nsnull != state, "null ptr");
-  if(nsnull == state ) 
-    return NS_ERROR_NULL_POINTER; 
-
-
-  PRBool done;
-  nsresult res;
-  res = state->IsDone(&done);
-  if(done)
-    return NS_OK;
-
-  const PRUnichar* text;
-  res = state->GetText(&text);
-
-  PRUint32 len;
-  res = state->Length(&len);
-
-  PRUint32 cur;
-  res = state->Current(&cur);
-
-
-  PRUint32 next = Prev(text, len, cur);
-  res = state->Set(next , (next == 0) );
-  return NS_OK;
-}
-PRUint32 nsSampleWordBreaker::Next(
-  const PRUnichar* aText,
-  PRUint32 aLen,
-  PRUint32 aPos
-)
+nsresult nsSampleWordBreaker::Next( 
+  const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+  PRUint32* oNext, PRBool *oNeedMoreText) 
 {
   PRInt8 c1, c2;
   PRUint32 cur = aPos;
@@ -275,15 +168,13 @@ PRUint32 nsSampleWordBreaker::Next(
      if(c2 != c1) 
        break;
   }
-  return cur;
+  *oNext = cur;
+  *oNeedMoreText = (cur == aLen) ? PR_TRUE : PR_FALSE;
+  return NS_OK;
 }
 
-
-PRUint32 nsSampleWordBreaker::Prev(
-  const PRUnichar* aText,
-  PRUint32 aLen,
-  PRUint32 aPos
-)
+nsresult nsSampleWordBreaker::Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+  PRUint32* oPrev, PRBool *oNeedMoreText) 
 {
   PRInt8 c1, c2;
   PRUint32 cur = aPos;
@@ -295,6 +186,7 @@ PRUint32 nsSampleWordBreaker::Prev(
      if(c2 != c1) 
        break;
   }
-  return cur;
+  *oPrev = cur;
+  *oNeedMoreText = (cur == 0) ? PR_TRUE : PR_FALSE;
+  return NS_OK;
 }
-

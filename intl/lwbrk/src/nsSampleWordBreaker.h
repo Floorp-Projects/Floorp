@@ -37,18 +37,11 @@ public:
                                       PRUint32 *oWordBegin,
                                       PRUint32 *oWordEnd);
 
-  NS_IMETHOD FirstForwardBreak   (nsIBreakState* state) ; 
-  NS_IMETHOD NextForwardBreak    (nsIBreakState* state) ; 
+  NS_IMETHOD Next( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+                   PRUint32* oNext, PRBool *oNeedMoreText);
 
-  NS_IMETHOD FirstBackwardBreak  (nsIBreakState* state) ; 
-  NS_IMETHOD NextBackwardBreak   (nsIBreakState* state) ; 
-
-#ifdef AFTER_DOGFOOD 
-  NS_IMETHOD FirstForwardConnect (nsIBreakState* state) ; 
-  NS_IMETHOD NextForwardConnect  (nsIBreakState* state) ; 
-  NS_IMETHOD FirstBackwardConnect(nsIBreakState* state) ; 
-  NS_IMETHOD NextBackwardConnect (nsIBreakState* state) ; 
-#endif 
+  NS_IMETHOD Prev( const PRUnichar* aText, PRUint32 aLen, PRUint32 aPos,
+                   PRUint32* oPrev, PRBool *oNeedMoreText);
 
 protected:
   PRUint8  GetClass(PRUnichar aChar);
