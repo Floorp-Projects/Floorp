@@ -350,6 +350,7 @@ txStandaloneXSLTProcessor::parsePath(const String& aPath, ErrorObserver& aErr)
     // parse source
     XMLParser xmlParser;
     Document* xmlDoc = xmlParser.parse(xmlInput, aPath);
+    xmlInput.close();
     if (!xmlDoc) {
         String err("Parsing error in ");
         err.append(aPath);
