@@ -1390,6 +1390,8 @@ static PRBool HashStyleRule(nsISupports* aRule, void* aData)
   return PR_TRUE;
 }
 
+MOZ_DECL_CTOR_COUNTER(StyleContextImpl);
+
 StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
                                    nsIAtom* aPseudoTag,
                                    nsISupportsArray* aRules, 
@@ -1411,6 +1413,8 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
     mContent(),
     mUserInterface()
 {
+  MOZ_COUNT_CTOR(StyleContextImpl);
+
   NS_INIT_REFCNT();
   NS_IF_ADDREF(mPseudoTag);
   NS_IF_ADDREF(mRules);
@@ -1435,6 +1439,8 @@ StyleContextImpl::StyleContextImpl(nsIStyleContext* aParent,
 
 StyleContextImpl::~StyleContextImpl()
 {
+  MOZ_COUNT_DTOR(StyleContextImpl);
+
   NS_ASSERTION((nsnull == mChild) && (nsnull == mEmptyChild), "destructing context with children");
 
   if (mParent) {
