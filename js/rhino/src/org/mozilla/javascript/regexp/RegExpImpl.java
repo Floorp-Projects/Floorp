@@ -50,9 +50,10 @@ public class RegExpImpl implements RegExpProxy {
         return obj instanceof NativeRegExp;
     }
 
-    public Object newRegExp(Context cx, Scriptable scope, String source, String global)
+    public Object newRegExp(Context cx, Scriptable scope, String source, 
+                                                String global, boolean flat)
     {
-        return new NativeRegExp(cx, scope, source, global);
+        return new NativeRegExp(cx, scope, source, global, flat);
     }
     
     public Object executeRegExp(Object regExp, Scriptable scopeObj, 
@@ -73,7 +74,7 @@ public class RegExpImpl implements RegExpProxy {
         mdata.optarg = 1;
         mdata.mode = GlobData.GLOB_MATCH;
         mdata.parent = ScriptableObject.getTopLevelScope(funObj);
-        Object rval = matchOrReplace(cx, thisObj, args, funObj, mdata);
+        Object rval = matchOrReplace(cx, thisObj, args, funObj, mdata, false);
         return mdata.arrayobj == null ? rval : mdata.arrayobj;
     }
 
@@ -85,7 +86,7 @@ public class RegExpImpl implements RegExpProxy {
         mdata.optarg = 1;
         mdata.mode = GlobData.GLOB_SEARCH;
         mdata.parent = ScriptableObject.getTopLevelScope(funObj);
-        return matchOrReplace(cx, thisObj, args, funObj, mdata);
+        return matchOrReplace(cx, thisObj, args, funObj, mdata, false);
     }
 
     public Object replace(Context cx, Scriptable thisObj, Object[] args, 
@@ -111,7 +112,7 @@ public class RegExpImpl implements RegExpProxy {
         rdata.length = 0;
         rdata.index = 0;
         rdata.leftIndex = 0;
-        Object val = matchOrReplace(cx, thisObj, args, funObj, rdata);
+        Object val = matchOrReplace(cx, thisObj, args, funObj, rdata, true);
         char[] charArray;
 
         if (rdata.charArray == null) {
@@ -146,7 +147,7 @@ public class RegExpImpl implements RegExpProxy {
      */
     private static Object matchOrReplace(Context cx, Scriptable thisObj,
                                          Object[] args, Function funObj,
-                                         GlobData data)
+                                         GlobData data, boolean forceFlat)
         throws JavaScriptException
     {
         NativeRegExp re;
@@ -157,7 +158,7 @@ public class RegExpImpl implements RegExpProxy {
         Scriptable scope = ScriptableObject.getTopLevelScope(funObj);
         
         if (args.length == 0)
-            re = new NativeRegExp(cx, scope, "", "");
+            re = new NativeRegExp(cx, scope, "", "", false);
         else
             if (args[0] instanceof NativeRegExp) {
                 re = (NativeRegExp) args[0];
@@ -170,7 +171,7 @@ public class RegExpImpl implements RegExpProxy {
                 } else {
                     opt = null;
                 }                
-                re = new NativeRegExp(cx, scope, src, opt);
+                re = new NativeRegExp(cx, scope, src, opt, forceFlat);
             }
         data.regexp = re;
 
@@ -384,6 +385,7 @@ class ReplaceData extends GlobData {
         doReplace(reImpl, charArray, index);
     }
 
+    static SubString dollarStr = new SubString("$");
 
     static SubString interpretDollar(RegExpImpl res, char[] da, int dp,
                                      int bp, int[] skip)
@@ -401,21 +403,49 @@ class ReplaceData extends GlobData {
 
         /* Interpret all Perl match-induced dollar variables. */
         dc = da[dp+1];
-        if (NativeRegExp.isDigit(dc)) {
-            if (dc == '0')
-                return null;
-
-            /* Check for overflow to avoid gobbling arbitrary decimal digits. */
-            num = 0;
-            ca = da;
-            cp = dp;
-            while (++cp < ca.length && NativeRegExp.isDigit(dc = ca[cp])) {
-                tmp = 10 * num + NativeRegExp.unDigit(dc);
-                if (tmp < num)
-                    break;
-                num = tmp;
+        if (NativeRegExp.isDigit(dc)) {            
+            Context cx = Context.getCurrentContext();
+            if ((cx.getLanguageVersion() != Context.VERSION_DEFAULT)
+                     && (cx.getLanguageVersion() <= Context.VERSION_1_4)) {
+                if (dc == '0')
+                    return null;
+                /* Check for overflow to avoid gobbling arbitrary decimal digits. */
+                num = 0;
+                ca = da;
+                cp = dp;
+                while (++cp < ca.length && NativeRegExp.isDigit(dc = ca[cp])) {
+                    tmp = 10 * num + NativeRegExp.unDigit(dc);
+                    if (tmp < num)
+                        break;
+                    num = tmp;
+                }
             }
-
+            else {
+                if (dc == '0') {/* ECMA 3, 1-9 or 01-99 */
+                    if ((dp + 2) < da.length) {
+                        dc = da[dp + 2];
+                        if (NativeRegExp.isDigit(dc)) {
+                            num = NativeRegExp.unDigit(dc);
+                            cp = dp + 3;
+                        }
+                        else
+                            return null;
+                    }
+                    else
+                        return null; /* $0 is not valid */
+                }
+                else {
+                    num = NativeRegExp.unDigit(dc);
+                    cp = dp + 2;
+                    if ((dp + 2) < da.length) {
+                        dc = da[dp + 2];
+                        if (NativeRegExp.isDigit(dc)) {
+                            num = 10 * num + NativeRegExp.unDigit(dc);
+                            cp++;
+                        }
+                    }
+                }
+            }
             /* Adjust num from 1 $n-origin to 0 array-index-origin. */
             num--;
             skip[0] = cp - dp;
@@ -424,6 +454,8 @@ class ReplaceData extends GlobData {
 
         skip[0] = 2;
         switch (dc) {
+          case '$':
+            return dollarStr;
           case '&':
             return res.lastMatch;
           case '+':
@@ -482,15 +514,21 @@ class ReplaceData extends GlobData {
             return replen;
 
         int bp = 0;
-        for (int dp = dollar; dp < this.repstr.length ; dp++) {
+        for (int dp = dollar; dp < this.repstr.length ; ) {
             char c = this.repstr[dp];
-            if (c != '$')
+            if (c != '$') {
+                dp++;
                 continue;
+            }
             int[] skip = { 0 };
             SubString sub = interpretDollar(reImpl, this.repstr, dp,
                                             bp, skip);
-            if (sub != null)
+            if (sub != null) {
                 replen += sub.length - skip[0];
+                dp += skip[0];
+            }
+            else
+                dp++;
         }
         return replen;
     }
@@ -524,12 +562,15 @@ class ReplaceData extends GlobData {
                     }
                     arrayIndex += len;
                     cp += skip[0];
+                    dp += skip[0];
                 }
-                dp++;
-                do {
-                    if (dp >= charArray.length)
-                        break outer;
-                } while (charArray[dp++] != '$');
+                else
+                    dp++;
+                if (dp >= repstr.length) break;
+                while (repstr[dp] != '$') {
+                    dp++;
+                    if (dp >= repstr.length) break outer;
+                }
             }
         }
         if (repstr.length > cp) {
