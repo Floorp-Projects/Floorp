@@ -279,7 +279,7 @@ static const char sWatcherServiceContractID[] = "@mozilla.org/embedcomp/window-w
 /*********************************************/
 // Default implemenations for nativeAppSupport
 // If your platform implements these functions if def out this code.
-#if !defined (XP_MAC ) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
+#if !defined (XP_MAC) && !defined(MOZ_WIDGET_COCOA) && !defined(MOZ_WIDGET_PHOTON) && !defined( XP_PC ) && !defined( XP_BEOS ) && !defined(MOZ_WIDGET_GTK)
 
 nsresult NS_CreateSplashScreen( nsISplashScreen **aResult )
 {
