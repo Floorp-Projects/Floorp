@@ -40,17 +40,8 @@
 Allocating Structures
 -----------------------------------------------------------------------------*/
 
-#ifndef XP_MAC
-
 #define XP_NEW( x )       	(x*)malloc( sizeof( x ) )
 #define XP_DELETE( p )  	free( p )
-
-#else /* XP_MAC */
-
-#define XP_NEW( s ) 			((s*)Flush_Allocate( sizeof(s), FALSE ) )
-#define XP_DELETE( p )			Flush_Free( p )
-
-#endif /* XP_MAC */
 
 /*-----------------------------------------------------------------------------
 Mallocs
@@ -60,11 +51,11 @@ ok and safe to use XP_DELETE or XP_FREE interchangeably!
 
 #ifdef XP_MAC
 
-#define XP_ALLOC( s )			Flush_Allocate( s, FALSE )
-#define XP_FREE( p )			Flush_Free( p )
-#define XP_REALLOC( p , s )		Flush_Reallocate( p, s )
-#define XP_CALLOC( n, s )		Flush_Allocate( (n)*(s), TRUE )
-#define XP_NEW_ZAP( t )			((t*)Flush_Allocate( sizeof(t), TRUE ) )
+#define XP_ALLOC( s )			malloc( s )
+#define XP_FREE( p )			free( p )
+#define XP_REALLOC( p , s )		realloc( p, s )
+#define XP_CALLOC( n, s )		calloc( (n), (s) )
+#define XP_NEW_ZAP( t )			((t*)calloc( 1, sizeof(t) ) )
 
 #else /* !XP_MAC */
 /* normal win and unix */
@@ -203,9 +194,9 @@ typedef unsigned char * XP_Block;
 #ifdef XP_MAC
 
 typedef float*						XP_Block;
-#define XP_ALLOC_BLOCK( s )			((XP_Block)Flush_Allocate( s, FALSE ) )
-#define XP_FREE_BLOCK( b )			Flush_Free( b )
-#define	XP_REALLOC_BLOCK( b, s )	((XP_Block)Flush_Reallocate( b, s ) )
+#define XP_ALLOC_BLOCK( s )			((XP_Block)malloc( s ) )
+#define XP_FREE_BLOCK( b )			free( b )
+#define	XP_REALLOC_BLOCK( b, s )	((XP_Block)realloc( b, s ) )
 #define XP_LOCK_BLOCK( p, t, b )	(p = ( t )( b ))
 #define	XP_UNLOCK_BLOCK( b )
 
