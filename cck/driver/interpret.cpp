@@ -145,7 +145,7 @@ BOOL CInterpret::BrowseFile(WIDGET *curWidget)
 		if (tmpWidget && (CEdit*)tmpWidget->control)
 		{
 			tmpWidget->value = fullFileName;
-			if (tmpWidget->name == "BlobinstallerPath")
+			if (tmpWidget->type == "EditBox")
 				tmpWidget->display = fullFileName;
 			else
 				tmpWidget->display = GetTrimFile(fullFileName);
