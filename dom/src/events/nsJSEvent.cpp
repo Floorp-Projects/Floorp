@@ -766,337 +766,337 @@ nsresult NS_InitEventClass(nsIScriptContext *aContext, void **aPrototype)
     if ((PR_TRUE == JS_LookupProperty(jscontext, global, "Event", &vp)) &&
         JSVAL_IS_OBJECT(vp) &&
         ((constructor = JSVAL_TO_OBJECT(vp)) != nsnull)) {
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_CANCEL);
+      vp = INT_TO_JSVAL(VK_CANCEL);
       JS_SetProperty(jscontext, constructor, "VK_CANCEL", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_BACK);
+      vp = INT_TO_JSVAL(VK_BACK);
       JS_SetProperty(jscontext, constructor, "VK_BACK", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_TAB);
+      vp = INT_TO_JSVAL(VK_TAB);
       JS_SetProperty(jscontext, constructor, "VK_TAB", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_CLEAR);
+      vp = INT_TO_JSVAL(VK_CLEAR);
       JS_SetProperty(jscontext, constructor, "VK_CLEAR", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_RETURN);
+      vp = INT_TO_JSVAL(VK_RETURN);
       JS_SetProperty(jscontext, constructor, "VK_RETURN", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_SHIFT);
+      vp = INT_TO_JSVAL(VK_SHIFT);
       JS_SetProperty(jscontext, constructor, "VK_SHIFT", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_CONTROL);
+      vp = INT_TO_JSVAL(VK_CONTROL);
       JS_SetProperty(jscontext, constructor, "VK_CONTROL", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_ALT);
+      vp = INT_TO_JSVAL(VK_ALT);
       JS_SetProperty(jscontext, constructor, "VK_ALT", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_PAUSE);
+      vp = INT_TO_JSVAL(VK_PAUSE);
       JS_SetProperty(jscontext, constructor, "VK_PAUSE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_CAPS_LOCK);
+      vp = INT_TO_JSVAL(VK_CAPS_LOCK);
       JS_SetProperty(jscontext, constructor, "VK_CAPS_LOCK", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_ESCAPE);
+      vp = INT_TO_JSVAL(VK_ESCAPE);
       JS_SetProperty(jscontext, constructor, "VK_ESCAPE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_SPACE);
+      vp = INT_TO_JSVAL(VK_SPACE);
       JS_SetProperty(jscontext, constructor, "VK_SPACE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_PAGE_UP);
+      vp = INT_TO_JSVAL(VK_PAGE_UP);
       JS_SetProperty(jscontext, constructor, "VK_PAGE_UP", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_PAGE_DOWN);
+      vp = INT_TO_JSVAL(VK_PAGE_DOWN);
       JS_SetProperty(jscontext, constructor, "VK_PAGE_DOWN", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_END);
+      vp = INT_TO_JSVAL(VK_END);
       JS_SetProperty(jscontext, constructor, "VK_END", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_HOME);
+      vp = INT_TO_JSVAL(VK_HOME);
       JS_SetProperty(jscontext, constructor, "VK_HOME", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_LEFT);
+      vp = INT_TO_JSVAL(VK_LEFT);
       JS_SetProperty(jscontext, constructor, "VK_LEFT", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_UP);
+      vp = INT_TO_JSVAL(VK_UP);
       JS_SetProperty(jscontext, constructor, "VK_UP", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_RIGHT);
+      vp = INT_TO_JSVAL(VK_RIGHT);
       JS_SetProperty(jscontext, constructor, "VK_RIGHT", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_DOWN);
+      vp = INT_TO_JSVAL(VK_DOWN);
       JS_SetProperty(jscontext, constructor, "VK_DOWN", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_PRINTSCREEN);
+      vp = INT_TO_JSVAL(VK_PRINTSCREEN);
       JS_SetProperty(jscontext, constructor, "VK_PRINTSCREEN", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_INSERT);
+      vp = INT_TO_JSVAL(VK_INSERT);
       JS_SetProperty(jscontext, constructor, "VK_INSERT", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_DELETE);
+      vp = INT_TO_JSVAL(VK_DELETE);
       JS_SetProperty(jscontext, constructor, "VK_DELETE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_0);
+      vp = INT_TO_JSVAL(VK_0);
       JS_SetProperty(jscontext, constructor, "VK_0", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_1);
+      vp = INT_TO_JSVAL(VK_1);
       JS_SetProperty(jscontext, constructor, "VK_1", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_2);
+      vp = INT_TO_JSVAL(VK_2);
       JS_SetProperty(jscontext, constructor, "VK_2", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_3);
+      vp = INT_TO_JSVAL(VK_3);
       JS_SetProperty(jscontext, constructor, "VK_3", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_4);
+      vp = INT_TO_JSVAL(VK_4);
       JS_SetProperty(jscontext, constructor, "VK_4", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_5);
+      vp = INT_TO_JSVAL(VK_5);
       JS_SetProperty(jscontext, constructor, "VK_5", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_6);
+      vp = INT_TO_JSVAL(VK_6);
       JS_SetProperty(jscontext, constructor, "VK_6", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_7);
+      vp = INT_TO_JSVAL(VK_7);
       JS_SetProperty(jscontext, constructor, "VK_7", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_8);
+      vp = INT_TO_JSVAL(VK_8);
       JS_SetProperty(jscontext, constructor, "VK_8", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_9);
+      vp = INT_TO_JSVAL(VK_9);
       JS_SetProperty(jscontext, constructor, "VK_9", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_SEMICOLON);
+      vp = INT_TO_JSVAL(VK_SEMICOLON);
       JS_SetProperty(jscontext, constructor, "VK_SEMICOLON", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_EQUALS);
+      vp = INT_TO_JSVAL(VK_EQUALS);
       JS_SetProperty(jscontext, constructor, "VK_EQUALS", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_A);
+      vp = INT_TO_JSVAL(VK_A);
       JS_SetProperty(jscontext, constructor, "VK_A", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_B);
+      vp = INT_TO_JSVAL(VK_B);
       JS_SetProperty(jscontext, constructor, "VK_B", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_C);
+      vp = INT_TO_JSVAL(VK_C);
       JS_SetProperty(jscontext, constructor, "VK_C", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_D);
+      vp = INT_TO_JSVAL(VK_D);
       JS_SetProperty(jscontext, constructor, "VK_D", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_E);
+      vp = INT_TO_JSVAL(VK_E);
       JS_SetProperty(jscontext, constructor, "VK_E", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F);
+      vp = INT_TO_JSVAL(VK_F);
       JS_SetProperty(jscontext, constructor, "VK_F", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_G);
+      vp = INT_TO_JSVAL(VK_G);
       JS_SetProperty(jscontext, constructor, "VK_G", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_H);
+      vp = INT_TO_JSVAL(VK_H);
       JS_SetProperty(jscontext, constructor, "VK_H", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_I);
+      vp = INT_TO_JSVAL(VK_I);
       JS_SetProperty(jscontext, constructor, "VK_I", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_J);
+      vp = INT_TO_JSVAL(VK_J);
       JS_SetProperty(jscontext, constructor, "VK_J", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_K);
+      vp = INT_TO_JSVAL(VK_K);
       JS_SetProperty(jscontext, constructor, "VK_K", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_L);
+      vp = INT_TO_JSVAL(VK_L);
       JS_SetProperty(jscontext, constructor, "VK_L", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_M);
+      vp = INT_TO_JSVAL(VK_M);
       JS_SetProperty(jscontext, constructor, "VK_M", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_N);
+      vp = INT_TO_JSVAL(VK_N);
       JS_SetProperty(jscontext, constructor, "VK_N", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_O);
+      vp = INT_TO_JSVAL(VK_O);
       JS_SetProperty(jscontext, constructor, "VK_O", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_P);
+      vp = INT_TO_JSVAL(VK_P);
       JS_SetProperty(jscontext, constructor, "VK_P", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_Q);
+      vp = INT_TO_JSVAL(VK_Q);
       JS_SetProperty(jscontext, constructor, "VK_Q", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_R);
+      vp = INT_TO_JSVAL(VK_R);
       JS_SetProperty(jscontext, constructor, "VK_R", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_S);
+      vp = INT_TO_JSVAL(VK_S);
       JS_SetProperty(jscontext, constructor, "VK_S", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_T);
+      vp = INT_TO_JSVAL(VK_T);
       JS_SetProperty(jscontext, constructor, "VK_T", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_U);
+      vp = INT_TO_JSVAL(VK_U);
       JS_SetProperty(jscontext, constructor, "VK_U", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_V);
+      vp = INT_TO_JSVAL(VK_V);
       JS_SetProperty(jscontext, constructor, "VK_V", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_W);
+      vp = INT_TO_JSVAL(VK_W);
       JS_SetProperty(jscontext, constructor, "VK_W", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_X);
+      vp = INT_TO_JSVAL(VK_X);
       JS_SetProperty(jscontext, constructor, "VK_X", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_Y);
+      vp = INT_TO_JSVAL(VK_Y);
       JS_SetProperty(jscontext, constructor, "VK_Y", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_Z);
+      vp = INT_TO_JSVAL(VK_Z);
       JS_SetProperty(jscontext, constructor, "VK_Z", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD0);
+      vp = INT_TO_JSVAL(VK_NUMPAD0);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD0", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD1);
+      vp = INT_TO_JSVAL(VK_NUMPAD1);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD1", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD2);
+      vp = INT_TO_JSVAL(VK_NUMPAD2);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD2", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD3);
+      vp = INT_TO_JSVAL(VK_NUMPAD3);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD3", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD4);
+      vp = INT_TO_JSVAL(VK_NUMPAD4);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD4", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD5);
+      vp = INT_TO_JSVAL(VK_NUMPAD5);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD5", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD6);
+      vp = INT_TO_JSVAL(VK_NUMPAD6);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD6", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD7);
+      vp = INT_TO_JSVAL(VK_NUMPAD7);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD7", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD8);
+      vp = INT_TO_JSVAL(VK_NUMPAD8);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD8", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUMPAD9);
+      vp = INT_TO_JSVAL(VK_NUMPAD9);
       JS_SetProperty(jscontext, constructor, "VK_NUMPAD9", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_MULTIPLY);
+      vp = INT_TO_JSVAL(VK_MULTIPLY);
       JS_SetProperty(jscontext, constructor, "VK_MULTIPLY", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_ADD);
+      vp = INT_TO_JSVAL(VK_ADD);
       JS_SetProperty(jscontext, constructor, "VK_ADD", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_SEPARATOR);
+      vp = INT_TO_JSVAL(VK_SEPARATOR);
       JS_SetProperty(jscontext, constructor, "VK_SEPARATOR", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_SUBTRACT);
+      vp = INT_TO_JSVAL(VK_SUBTRACT);
       JS_SetProperty(jscontext, constructor, "VK_SUBTRACT", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_DECIMAL);
+      vp = INT_TO_JSVAL(VK_DECIMAL);
       JS_SetProperty(jscontext, constructor, "VK_DECIMAL", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_DIVIDE);
+      vp = INT_TO_JSVAL(VK_DIVIDE);
       JS_SetProperty(jscontext, constructor, "VK_DIVIDE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F1);
+      vp = INT_TO_JSVAL(VK_F1);
       JS_SetProperty(jscontext, constructor, "VK_F1", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F2);
+      vp = INT_TO_JSVAL(VK_F2);
       JS_SetProperty(jscontext, constructor, "VK_F2", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F3);
+      vp = INT_TO_JSVAL(VK_F3);
       JS_SetProperty(jscontext, constructor, "VK_F3", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F4);
+      vp = INT_TO_JSVAL(VK_F4);
       JS_SetProperty(jscontext, constructor, "VK_F4", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F5);
+      vp = INT_TO_JSVAL(VK_F5);
       JS_SetProperty(jscontext, constructor, "VK_F5", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F6);
+      vp = INT_TO_JSVAL(VK_F6);
       JS_SetProperty(jscontext, constructor, "VK_F6", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F7);
+      vp = INT_TO_JSVAL(VK_F7);
       JS_SetProperty(jscontext, constructor, "VK_F7", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F8);
+      vp = INT_TO_JSVAL(VK_F8);
       JS_SetProperty(jscontext, constructor, "VK_F8", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F9);
+      vp = INT_TO_JSVAL(VK_F9);
       JS_SetProperty(jscontext, constructor, "VK_F9", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F10);
+      vp = INT_TO_JSVAL(VK_F10);
       JS_SetProperty(jscontext, constructor, "VK_F10", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F11);
+      vp = INT_TO_JSVAL(VK_F11);
       JS_SetProperty(jscontext, constructor, "VK_F11", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F12);
+      vp = INT_TO_JSVAL(VK_F12);
       JS_SetProperty(jscontext, constructor, "VK_F12", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F13);
+      vp = INT_TO_JSVAL(VK_F13);
       JS_SetProperty(jscontext, constructor, "VK_F13", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F14);
+      vp = INT_TO_JSVAL(VK_F14);
       JS_SetProperty(jscontext, constructor, "VK_F14", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F15);
+      vp = INT_TO_JSVAL(VK_F15);
       JS_SetProperty(jscontext, constructor, "VK_F15", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F16);
+      vp = INT_TO_JSVAL(VK_F16);
       JS_SetProperty(jscontext, constructor, "VK_F16", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F17);
+      vp = INT_TO_JSVAL(VK_F17);
       JS_SetProperty(jscontext, constructor, "VK_F17", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F18);
+      vp = INT_TO_JSVAL(VK_F18);
       JS_SetProperty(jscontext, constructor, "VK_F18", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F19);
+      vp = INT_TO_JSVAL(VK_F19);
       JS_SetProperty(jscontext, constructor, "VK_F19", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F20);
+      vp = INT_TO_JSVAL(VK_F20);
       JS_SetProperty(jscontext, constructor, "VK_F20", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F21);
+      vp = INT_TO_JSVAL(VK_F21);
       JS_SetProperty(jscontext, constructor, "VK_F21", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F22);
+      vp = INT_TO_JSVAL(VK_F22);
       JS_SetProperty(jscontext, constructor, "VK_F22", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F23);
+      vp = INT_TO_JSVAL(VK_F23);
       JS_SetProperty(jscontext, constructor, "VK_F23", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_F24);
+      vp = INT_TO_JSVAL(VK_F24);
       JS_SetProperty(jscontext, constructor, "VK_F24", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_NUM_LOCK);
+      vp = INT_TO_JSVAL(VK_NUM_LOCK);
       JS_SetProperty(jscontext, constructor, "VK_NUM_LOCK", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_SCROLL_LOCK);
+      vp = INT_TO_JSVAL(VK_SCROLL_LOCK);
       JS_SetProperty(jscontext, constructor, "VK_SCROLL_LOCK", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_COMMA);
+      vp = INT_TO_JSVAL(VK_COMMA);
       JS_SetProperty(jscontext, constructor, "VK_COMMA", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_PERIOD);
+      vp = INT_TO_JSVAL(VK_PERIOD);
       JS_SetProperty(jscontext, constructor, "VK_PERIOD", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_SLASH);
+      vp = INT_TO_JSVAL(VK_SLASH);
       JS_SetProperty(jscontext, constructor, "VK_SLASH", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_BACK_QUOTE);
+      vp = INT_TO_JSVAL(VK_BACK_QUOTE);
       JS_SetProperty(jscontext, constructor, "VK_BACK_QUOTE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_OPEN_BRACKET);
+      vp = INT_TO_JSVAL(VK_OPEN_BRACKET);
       JS_SetProperty(jscontext, constructor, "VK_OPEN_BRACKET", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_BACK_SLASH);
+      vp = INT_TO_JSVAL(VK_BACK_SLASH);
       JS_SetProperty(jscontext, constructor, "VK_BACK_SLASH", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_CLOSE_BRACKET);
+      vp = INT_TO_JSVAL(VK_CLOSE_BRACKET);
       JS_SetProperty(jscontext, constructor, "VK_CLOSE_BRACKET", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMEvent::VK_QUOTE);
+      vp = INT_TO_JSVAL(VK_QUOTE);
       JS_SetProperty(jscontext, constructor, "VK_QUOTE", &vp);
 
     }
