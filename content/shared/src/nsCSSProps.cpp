@@ -352,6 +352,7 @@ const PRInt32 nsCSSProps::kColorKTable[] = {
   eCSSKeyword_window, nsILookAndFeel::eColor_window,
   eCSSKeyword_windowframe, nsILookAndFeel::eColor_windowframe,
   eCSSKeyword_windowtext, nsILookAndFeel::eColor_windowtext,
+  eCSSKeyword__moz_activehyperlinktext, NS_COLOR_MOZ_ACTIVEHYPERLINKTEXT,
   eCSSKeyword__moz_buttondefault, nsILookAndFeel::eColor__moz_buttondefault,
   eCSSKeyword__moz_field, nsILookAndFeel::eColor__moz_field,
   eCSSKeyword__moz_fieldtext, nsILookAndFeel::eColor__moz_fieldtext,

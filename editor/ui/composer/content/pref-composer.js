@@ -75,8 +75,7 @@ function Startup()
   // Use author's browser pref colors passed into dialog
   defaultTextColor = browserColors.TextColor;
   defaultLinkColor = browserColors.LinkColor;
-  // Note: Browser doesn't store a value for ActiveLinkColor
-  defaultActiveColor = defaultLinkColor;
+  defaultActiveColor = browserColors.ActiveLinkColor;
   defaultVisitedColor =  browserColors.VisitedLinkColor;
   defaultBackgroundColor=  browserColors.BackgroundColor;
 

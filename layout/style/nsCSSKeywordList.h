@@ -66,6 +66,7 @@
 // OUTPUT_CLASS=nsCSSKeywords
 // MACRO_NAME=CSS_KEY
 
+CSS_KEY(-moz-activehyperlinktext, _moz_activehyperlinktext)
 CSS_KEY(-moz-alias, _moz_alias)
 CSS_KEY(-moz-all, _moz_all)
 CSS_KEY(-moz-anchor-decoration, _moz_anchor_decoration)

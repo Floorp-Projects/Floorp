@@ -2352,114 +2352,87 @@ PresShell::SetPrefNoScriptRule()
 nsresult PresShell::SetPrefLinkRules(void)
 {
   NS_ASSERTION(mPresContext,"null prescontext not allowed");
-  if (mPresContext) {
-    nsresult result = NS_OK;
-
-    if (!mPrefStyleSheet) {
-      result = CreatePreferenceStyleSheet();
-    }
-    if (NS_SUCCEEDED(result)) {
-      NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
-
-      // get the DOM interface to the stylesheet
-      nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet,&result));
-      if (NS_SUCCEEDED(result)) {
-
-#ifdef DEBUG_attinasi
-        printf(" - Creating rules for link and visited colors\n");
-#endif
-
-        // support default link colors: 
-        //   this means the link colors need to be overridable, 
-        //   which they are if we put them in the agent stylesheet,
-        //   though if using an override sheet this will cause authors grief still
-        //   In the agent stylesheet, they are !important when we are ignoring document colors
-        //
-        // XXX: Do active links and visited links get another color?
-        //      They are red in the html.css rules, but there is no pref for their color.
-        
-        nscolor linkColor, visitedColor;
-        result = mPresContext->GetDefaultLinkColor(&linkColor);
-        if (NS_SUCCEEDED(result)) {
-          result = mPresContext->GetDefaultVisitedLinkColor(&visitedColor);
-        }
-        if (NS_SUCCEEDED(result)) {
-          // insert a rule to make links the preferred color
-          PRUint32 index = 0;
-          nsAutoString strColor;
-          PRBool useDocColors = PR_TRUE;
-
-          // see if we need to create the rules first
-          mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors);
-
-          ///////////////////////////////////////////////////////////////
-          // - links: '*|*:link {color: #RRGGBB [!important];}'
-          ColorToString(linkColor,strColor);
-          NS_NAMED_LITERAL_STRING(notImportantStr, "}");
-          NS_NAMED_LITERAL_STRING(importantStr, "!important}");
-          const nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
-          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:link{color:") +
-                                     strColor +
-                                     ruleClose,
-                                     sInsertPrefSheetRulesAt, &index);
-          NS_ENSURE_SUCCESS(result, result);
-            
-          ///////////////////////////////////////////////////////////////
-          // - visited links '*|*:visited {color: #RRGGBB [!important];}'
-          ColorToString(visitedColor,strColor);
-          // insert the rule
-          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:visited{color:") +
-                                     strColor +
-                                     ruleClose,
-                                     sInsertPrefSheetRulesAt, &index);
-            
-          ///////////////////////////////////////////////////////////////
-          // - active links '*|*:-moz-any-link {color: red [!important];}'
-          // This has to be here (i.e. we can't just rely on the rule in the UA stylesheet)
-          // because this entire stylesheet is at the user level (not UA level) and so
-          // the two rules above override the rule in the UA stylesheet regardless of the
-          // weights of the respective rules.
-          result = sheet->InsertRule(NS_LITERAL_STRING("*|*:-moz-any-link:active{color:red") +
-                                     ruleClose,
-                                     sInsertPrefSheetRulesAt, &index);
-        }
-
-        if (NS_SUCCEEDED(result)) {
-          PRBool underlineLinks = PR_TRUE;
-          result = mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks,underlineLinks);
-          if (NS_SUCCEEDED(result)) {
-            // create a rule for underline: on or off
-            PRUint32 index = 0;
-            nsAutoString strRule;
-            if (underlineLinks) {
-              // create a rule to make underlining happen
-              //  ':link, :visited {text-decoration:[underline|none];}'
-              // no need for important, we want these to be overridable
-              // NOTE: these must go in the agent stylesheet or they cannot be
-              //       overridden by authors
-  #ifdef DEBUG_attinasi
-              printf (" - Creating rules for enabling link underlines\n");
-  #endif
-              // make a rule to make text-decoration: underline happen for links
-              strRule.Append(NS_LITERAL_STRING("*|*:-moz-any-link{text-decoration:underline}"));
-            } else {
-  #ifdef DEBUG_attinasi
-              printf (" - Creating rules for disabling link underlines\n");
-  #endif
-              // make a rule to make text-decoration: none happen for links
-              strRule.Append(NS_LITERAL_STRING("*|*:-moz-any-link{text-decoration:none}"));
-            }
-
-            // ...now insert the rule
-            result = sheet->InsertRule(strRule, sInsertPrefSheetRulesAt, &index);          
-          }
-        }
-      }
-    }
-    return result;
-  } else {
+  if (!mPresContext) {
     return NS_ERROR_FAILURE;
   }
+
+  nsresult rv = NS_OK;
+  
+  if (!mPrefStyleSheet) {
+    rv = CreatePreferenceStyleSheet();
+    NS_ENSURE_SUCCESS(rv, rv);
+  }
+  
+  NS_ASSERTION(mPrefStyleSheet, "prefstylesheet should not be null");
+  
+  // get the DOM interface to the stylesheet
+  nsCOMPtr<nsIDOMCSSStyleSheet> sheet(do_QueryInterface(mPrefStyleSheet, &rv));
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  // support default link colors: 
+  //   this means the link colors need to be overridable, 
+  //   which they are if we put them in the agent stylesheet,
+  //   though if using an override sheet this will cause authors grief still
+  //   In the agent stylesheet, they are !important when we are ignoring document colors
+  
+  nscolor linkColor, activeColor, visitedColor;
+  
+  rv = mPresContext->GetDefaultLinkColor(&linkColor);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = mPresContext->GetDefaultActiveLinkColor(&activeColor);
+  NS_ENSURE_SUCCESS(rv, rv);
+  
+  rv = mPresContext->GetDefaultVisitedLinkColor(&visitedColor);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool useDocColors = PR_TRUE;
+  mPresContext->GetCachedBoolPref(kPresContext_UseDocumentColors, useDocColors);
+  NS_NAMED_LITERAL_STRING(notImportantStr, "}");
+  NS_NAMED_LITERAL_STRING(importantStr, "!important}");
+  const nsAString& ruleClose = useDocColors ? notImportantStr : importantStr;
+  PRUint32 index = 0;
+  nsAutoString strColor;
+
+  // insert a rule to color links: '*|*:link {color: #RRGGBB [!important];}'
+  ColorToString(linkColor, strColor);
+  rv = sheet->InsertRule(NS_LITERAL_STRING("*|*:link{color:") +
+                         strColor + ruleClose,
+                         sInsertPrefSheetRulesAt, &index);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // - visited links: '*|*:visited {color: #RRGGBB [!important];}'
+  ColorToString(visitedColor, strColor);
+  rv = sheet->InsertRule(NS_LITERAL_STRING("*|*:visited{color:") +
+                         strColor + ruleClose,
+                         sInsertPrefSheetRulesAt, &index);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  // - active links: '*|*:-moz-any-link:active {color: #RRGGBB [!important];}'
+  ColorToString(activeColor, strColor);
+  rv = sheet->InsertRule(NS_LITERAL_STRING("*|*:-moz-any-link:active{color:") +
+                         strColor + ruleClose,
+                         sInsertPrefSheetRulesAt, &index);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  PRBool underlineLinks = PR_TRUE;
+  rv = mPresContext->GetCachedBoolPref(kPresContext_UnderlineLinks, underlineLinks);
+  NS_ENSURE_SUCCESS(rv, rv);
+
+  if (underlineLinks) {
+    // create a rule to make underlining happen
+    //  '*|*:-moz-any-link {text-decoration:[underline|none];}'
+    // no need for important, we want these to be overridable
+    // NOTE: these must go in the agent stylesheet or they cannot be
+    //       overridden by authors
+    rv = sheet->InsertRule(NS_LITERAL_STRING("*|*:-moz-any-link{text-decoration:underline}"),
+                           sInsertPrefSheetRulesAt, &index);
+  } else {
+    rv = sheet->InsertRule(NS_LITERAL_STRING("*|*:-moz-any-link{text-decoration:none}"),
+                           sInsertPrefSheetRulesAt, &index);
+  }
+
+  return rv;          
 }
 
 nsresult PresShell::SetPrefFocusRules(void)

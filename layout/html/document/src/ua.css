@@ -116,10 +116,6 @@
   -moz-user-focus: normal;
 }
 
-*|*:-moz-any-link:active {
-  color: red;
-}
-
 *|*:-moz-any-link:focus {
   -moz-outline: 1px dotted invert;
 }

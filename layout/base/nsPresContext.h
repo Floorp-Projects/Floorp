@@ -298,6 +298,7 @@ public:
   NS_IMETHOD GetDefaultColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultBackgroundColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultLinkColor(nscolor* aColor) = 0;
+  NS_IMETHOD GetDefaultActiveLinkColor(nscolor* aColor) = 0;
   NS_IMETHOD GetDefaultVisitedLinkColor(nscolor* aColor) = 0;
   NS_IMETHOD GetFocusBackgroundColor(nscolor* aColor) = 0;
   NS_IMETHOD GetFocusTextColor(nscolor* aColor) = 0; 
@@ -309,6 +310,7 @@ public:
   NS_IMETHOD SetDefaultColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultBackgroundColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultLinkColor(nscolor aColor) = 0;
+  NS_IMETHOD SetDefaultActiveLinkColor(nscolor aColor) = 0;
   NS_IMETHOD SetDefaultVisitedLinkColor(nscolor aColor) = 0;
 
   /**
