@@ -108,7 +108,7 @@ public class RegExpImpl implements RegExpProxy {
                 /* Didn't match even once. */
                 return rdata.str;
             }
-        	SubString lc = this.leftContext;
+            SubString lc = this.leftContext;
             replace_glob(rdata, cx, scope, this, lc.index, lc.length);
         }
         rdata.charBuf.append(rc.charArray, rc.index, rc.length);
@@ -170,10 +170,10 @@ public class RegExpImpl implements RegExpProxy {
                     match_glob(data, cx, scope, count, reImpl);
                 } else {
                     if (data.mode != GlobData.GLOB_REPLACE) Kit.codeBug();
-        			SubString lastMatch = reImpl.lastMatch;
-        			int leftIndex = data.leftIndex;
-        			int leftlen = lastMatch.index - leftIndex;
-        			data.leftIndex = lastMatch.index + lastMatch.length;
+                    SubString lastMatch = reImpl.lastMatch;
+                    int leftIndex = data.leftIndex;
+                    int leftlen = lastMatch.index - leftIndex;
+                    data.leftIndex = lastMatch.index + lastMatch.length;
                     replace_glob(data, cx, scope, reImpl, leftIndex, leftlen);
                 }
                 if (reImpl.lastMatch.length == 0) {
@@ -301,62 +301,62 @@ public class RegExpImpl implements RegExpProxy {
      */
     private static void replace_glob(GlobData rdata, Context cx,
                                      Scriptable scope, RegExpImpl reImpl,
-									 int leftIndex, int leftlen)
+                                     int leftIndex, int leftlen)
         throws JavaScriptException
     {
         int replen;
         String lambdaStr;
         if (rdata.lambda != null) {
-    		// invoke lambda function with args lastMatch, $1, $2, ... $n,
-    		// leftContext.length, whole string.
-    		SubString[] parens = reImpl.parens;
-    		int parenCount = (parens == null) ? 0 : parens.length;
-    		Object[] args = new Object[parenCount + 3];
-    		args[0] = reImpl.lastMatch.toString();
-    		for (int i=0; i < parenCount; i++) {
-        		SubString sub = parens[i];
-        		if (sub != null) {
-            		args[i+1] = sub.toString();
-        		} else {
-            		args[i+1] = Undefined.instance;
-        		}
-    		}
-    		args[parenCount+1] = new Integer(reImpl.leftContext.length);
-    		args[parenCount+2] = rdata.str;
-    		Scriptable parent = ScriptableObject.getTopLevelScope(scope);
-    		Object result = rdata.lambda.call(cx, parent, parent, args);
-    		lambdaStr = ScriptRuntime.toString(result);
+            // invoke lambda function with args lastMatch, $1, $2, ... $n,
+            // leftContext.length, whole string.
+            SubString[] parens = reImpl.parens;
+            int parenCount = (parens == null) ? 0 : parens.length;
+            Object[] args = new Object[parenCount + 3];
+            args[0] = reImpl.lastMatch.toString();
+            for (int i=0; i < parenCount; i++) {
+                SubString sub = parens[i];
+                if (sub != null) {
+                    args[i+1] = sub.toString();
+                } else {
+                    args[i+1] = Undefined.instance;
+                }
+            }
+            args[parenCount+1] = new Integer(reImpl.leftContext.length);
+            args[parenCount+2] = rdata.str;
+            Scriptable parent = ScriptableObject.getTopLevelScope(scope);
+            Object result = rdata.lambda.call(cx, parent, parent, args);
+            lambdaStr = ScriptRuntime.toString(result);
             replen = lambdaStr.length();
         } else {
-			lambdaStr = null;
-        	replen = rdata.repstr.length();
-        	if (rdata.dollar >= 0) {
-        		int[] skip = new int[1];
-        		int dp = rdata.dollar;
-        		do {
-            		SubString sub = interpretDollar(cx, reImpl, rdata.repstr,
-					                                dp, skip);
-            		if (sub != null) {
-                		replen += sub.length - skip[0];
-                		dp += skip[0];
-            		} else {
-                		++dp;
-            		}
-            		dp = rdata.repstr.indexOf('$', dp);
-        		} while (dp >= 0);
-			}
+            lambdaStr = null;
+            replen = rdata.repstr.length();
+            if (rdata.dollar >= 0) {
+                int[] skip = new int[1];
+                int dp = rdata.dollar;
+                do {
+                    SubString sub = interpretDollar(cx, reImpl, rdata.repstr,
+                                                    dp, skip);
+                    if (sub != null) {
+                        replen += sub.length - skip[0];
+                        dp += skip[0];
+                    } else {
+                        ++dp;
+                    }
+                    dp = rdata.repstr.indexOf('$', dp);
+                } while (dp >= 0);
+            }
         }
-		
+
         int growth = leftlen + replen + reImpl.rightContext.length;
-		StringBuffer charBuf = rdata.charBuf;
-		if (charBuf == null) {
-        	charBuf = new StringBuffer(growth);
-			rdata.charBuf = charBuf;
-		} else {
-			charBuf.ensureCapacity(rdata.charBuf.length() + growth);
-		}
-       	
-		charBuf.append(reImpl.leftContext.charArray, leftIndex, leftlen);
+        StringBuffer charBuf = rdata.charBuf;
+        if (charBuf == null) {
+            charBuf = new StringBuffer(growth);
+            rdata.charBuf = charBuf;
+        } else {
+            charBuf.ensureCapacity(rdata.charBuf.length() + growth);
+        }
+
+        charBuf.append(reImpl.leftContext.charArray, leftIndex, leftlen);
         if (rdata.lambda != null) {
             charBuf.append(lambdaStr);
         } else {
