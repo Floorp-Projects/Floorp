@@ -33,10 +33,14 @@
 #undef NS_IMPL_IDS
 #include "nsFilePicker.h"
 #include "nsILocalFile.h"
+#include "nsIStringBundle.h"
 #include <windows.h>
 #include <SHLOBJ.H>
 
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
+#define FILEPICKER_PROPERTIES "chrome://global/locale/filepicker.properties"
 
 NS_IMPL_ISUPPORTS1(nsFilePicker, nsIFilePicker)
 
@@ -154,21 +158,66 @@ NS_IMETHODIMP nsFilePicker::Show(PRInt16 *retval)
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
-                                          const PRUnichar **aTitles,
-                                          const PRUnichar **aFilters)
+NS_IMETHODIMP nsFilePicker::SetFilters(PRInt32 aFilterMask)
 {
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> stringService = do_GetService(kStringBundleServiceCID);
+  nsCOMPtr<nsIStringBundle> stringBundle;
+  nsILocale   *locale = nsnull;
+
+  rv = stringService->CreateBundle(FILEPICKER_PROPERTIES, locale, getter_AddRefs(stringBundle));
+  if (NS_FAILED(rv))
+    return NS_ERROR_FAILURE;
+
+  PRUnichar *title;
+  PRUnichar *filter;
+
   mFilterList.SetLength(0);
-  for (PRUint32 i = 0; i < aNumberOfFilters; i++) {
-    mFilterList.Append(aTitles[i]);
-    mFilterList.Append('\0');
-    mFilterList.Append(aFilters[i]);
-    mFilterList.Append('\0');
+  if (aFilterMask & filterAll) {
+    stringBundle->GetStringFromName(nsAutoString("allTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(nsAutoString("allFilter").GetUnicode(), &filter);
+    AppendFilter(title,filter);
   }
-  mFilterList.Append('\0'); 
-  
+  if (aFilterMask & filterHTML) {
+    stringBundle->GetStringFromName(nsAutoString("htmlTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(nsAutoString("htmlFilter").GetUnicode(), &filter);
+    AppendFilter(title,filter);
+  }
+  if (aFilterMask & filterText) {
+    stringBundle->GetStringFromName(nsAutoString("textTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(nsAutoString("textFilter").GetUnicode(), &filter);
+    AppendFilter(title,filter);
+  }
+  if (aFilterMask & filterImages) {
+    stringBundle->GetStringFromName(nsAutoString("imageTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(nsAutoString("imageFilter").GetUnicode(), &filter);
+    AppendFilter(title,filter);
+  }
+  if (aFilterMask & filterXML) {
+    stringBundle->GetStringFromName(nsAutoString("xmlTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(nsAutoString("xmlFilter").GetUnicode(), &filter);
+    AppendFilter(title,filter);
+  }
+  if (aFilterMask & filterXUL) {
+    stringBundle->GetStringFromName(nsAutoString("xulTitle").GetUnicode(), &title);
+    stringBundle->GetStringFromName(nsAutoString("xulFilter").GetUnicode(), &filter);
+    AppendFilter(title, filter);
+  }
+
   return NS_OK;
 }
+
+NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
+                                         const PRUnichar *aFilter)
+{
+  mFilterList.Append(aTitle);
+  mFilterList.Append('\0');
+  mFilterList.Append(aFilter);
+  mFilterList.Append('\0');
+
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
@@ -182,16 +231,6 @@ NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 
   NS_ADDREF(*aFile = file);
 
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetSelectedFilter(PRInt32 *aType)
-{
-  NS_ENSURE_ARG_POINTER(aType);
-  *aType = mSelectedType;
   return NS_OK;
 }
 
