@@ -693,7 +693,7 @@ NS_IMETHODIMP nsURILoader::DispatchContent(const char * aContentType,
   nsCOMPtr<nsIURIContentListener> listenerToUse = aContentListener;
   
   // find a content handler that can and will handle the content
-  if (!aWindowTarget || nsCRT::strcasecmp(aWindowTarget, "_blank"))
+  if (!aWindowTarget || (nsCRT::strcasecmp(aWindowTarget, "_blank") && nsCRT::strcasecmp(aWindowTarget, "_new") ))
   {
     PRBool foundContentHandler = PR_FALSE;
     if (listenerToUse)
