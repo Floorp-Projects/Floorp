@@ -39,7 +39,10 @@
 #ifndef CALRECURRENCEINFO_H_
 #define CALRECURRENCEINFO_H_
 
+#include "nsCOMPtr.h"
+
 #include "calIRecurrenceInfo.h"
+#include "calIDateTime.h"
 
 struct icalrecurrencetype;
 
@@ -57,6 +60,7 @@ public:
 protected:
     PRBool mImmutable;
 
+    nsCOMPtr<calIDateTime> mRecurStart;
     struct icalrecurrencetype *mIcalRecur;
 };
 

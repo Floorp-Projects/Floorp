@@ -49,7 +49,9 @@ calItemBase.prototype = {
         this.mAttendees = [];
 
 
-        this.mRecurrenceInfo = null;
+        this.mRecurrenceInfo = Components.classes["@mozilla.org/calendar/recurrence-info;1"].
+                               createInstance(Components.interfaces.calIRecurrenceInfo);
+
         this.mAttachments = null;
     },
 
@@ -67,8 +69,8 @@ calItemBase.prototype = {
         m.mStatus = this.mStatus;
         m.mHasAlarm = this.mHasAlarm;
 
-        if (this.mRecurrenceInfo)
-            m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
+        m.mRecurrenceInfo = this.mRecurrenceInfo.clone();
+
         if (this.mCreationDate)
             m.mCreationDate = this.mCreationDate.clone();
         if (this.mAlarmTime)
