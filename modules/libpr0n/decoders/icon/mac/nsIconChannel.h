@@ -12,10 +12,6 @@
  *
  * The Original Code is mozilla.org code.
  *
- * The Initial Developer of the Original Code is Brian Ryner.
- * Portions created by Brian Ryner are Copyright (C) 2000 Brian Ryner.
- * All Rights Reserved.
- *
  * Contributor(s): 
  *  Scott MacGregor <mscott@netscape.com>
  */
@@ -29,6 +25,8 @@
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIURI.h"
+
+class nsIFile;
 
 class nsIconChannel : public nsIChannel
 {
@@ -51,6 +49,9 @@ protected:
   nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
   nsCOMPtr<nsISupports>  mOwner; 
   nsresult mStatus;
+  
+  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType, char ** aFileExtension);
+
 };
 
 #endif /* nsIconChannel_h___ */
