@@ -33,7 +33,7 @@ Rights Reserved.
 		  class="abResults" 
 		  flex="100%"
 		  datasources="rdf:addressdirectory rdf:addresscard"
-		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands();"
+		  onselect="top.ResultsPaneSelectionChange(); document.commandDispatcher.updateCommands('select');"
 		  ondblclick="top.AbEditCard()"
 		  containment="http://home.netscape.com/NC-rdf#CardChild">
 

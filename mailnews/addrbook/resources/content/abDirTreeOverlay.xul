@@ -35,7 +35,7 @@ Rights Reserved.
 		  ref="abdirectory://"
 		  open="true"
 		  datasources="rdf:addressdirectory"
-		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands();">
+		  onselect="DirPaneSelectionChange(); document.commandDispatcher.updateCommands('select');">
 		
 		<template>
 			<rule>

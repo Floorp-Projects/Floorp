@@ -44,7 +44,7 @@ Rights Reserved.
 <!--html:script language="JavaScript" src="resource:/res/samples/DumpDOM.js"/-->
 
 <commands id="commands">
-	<commandset id="CommandUpdate_AddressBook" onchange="CommandUpdate_AddressBook()"/>
+	<commandset id="CommandUpdate_AddressBook" commandupdater="true" onchange="CommandUpdate_AddressBook()"/>
 </commands>
 
 <broadcasterset id="broadcasterset">

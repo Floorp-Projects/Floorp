@@ -5,6 +5,7 @@ var ResultsPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
+                dump('ResultsPaneController::IsCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":
@@ -57,6 +58,7 @@ var DirPaneController =
 {
 	IsCommandEnabled: function(command)
 	{
+                dump('DirPaneController::IsCommandEnabled(' + command + ')\n');
 		switch ( command )
 		{
 			case "cmd_selectAll":

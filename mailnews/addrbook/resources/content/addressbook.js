@@ -19,9 +19,9 @@ function OnLoadAddressBook()
 	}
 
 	// FIX ME! - can remove these as soon as waterson enables auto-registration
-	document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
-	document.commandDispatcher.addCommand(document.getElementById('cmd_selectAll'));
-	document.commandDispatcher.addCommand(document.getElementById('cmd_delete'));
+	//document.commandDispatcher.addCommand(document.getElementById('CommandUpdate_AddressBook'));
+	//document.commandDispatcher.addCommand(document.getElementById('cmd_selectAll'));
+	//document.commandDispatcher.addCommand(document.getElementById('cmd_delete'));
 	
 	SetupCommandUpdateHandlers();
 	SelectFirstAddressBook();
