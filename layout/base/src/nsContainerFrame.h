@@ -222,28 +222,6 @@ protected:
                              nsReflowMetrics&     aDesiredSize,
                              const nsReflowState& aReflowState);
 
-  /**
-   * Reflow a child frame and return the status of the reflow. If the child
-   * is complete and it has next-in-flows, then delete the next-in-flows.
-   *
-   * Use this version if you have a space manager. Checks if the child frame
-   * supports interface nsIRunaround. If it does, interface nsIRunaround is
-   * used to reflow the child; otherwise interface nsIFrame is used. If the
-   * child is splittable then  runaround is done using continuing frames.
-   *
-   * XXX This function needs to account for left/right margins so the caller
-   * should not adjust the max size to account for left/right margins -or-
-   * translate the space manager coordinate space
-   *
-   * @see nsIRunaround
-   */
-  nsReflowStatus ReflowChild(nsIFrame*        aKidFrame,
-                             nsIPresContext*  aPresContext,
-                             nsISpaceManager* aSpaceManager,
-                             nsReflowMetrics& aDesiredSize,
-                             nsReflowState&   aReflowState,
-                             nsRect&          aDesiredRect);
-
  /**
   * Moves any frames on both the prev-in-flow's overflow list and the receiver's
   * overflow to the receiver's child list.
@@ -266,6 +244,11 @@ protected:
   * @return  PR_TRUE if successful and PR_FALSE otherwise
   */
   PRBool DeleteChildsNextInFlow(nsIFrame* aChild);
+
+  static PRBool DeleteNextInFlowsFor(nsContainerFrame* aParent, nsIFrame* aKid)
+  {
+    return aParent->DeleteChildsNextInFlow(aKid);
+  }
 
  /**
   * Push aFromChild and its next siblings to the next-in-flow. Change the
