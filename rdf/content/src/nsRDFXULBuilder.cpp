@@ -1112,64 +1112,62 @@ RDFXULBuilderImpl::CreateHTMLElement(nsIRDFResource* aResource,
         }
     }
 
-    // Now iterate through all the properties and add them as
-    // attributes on the element.  First, create a cursor that'll
-    // iterate through all the properties that lead out of this
-    // resource.
-    nsCOMPtr<nsIRDFArcsOutCursor> properties;
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties)))) {
-        NS_ERROR("unable to create arcs-out cursor");
-        return rv;
-    }
-
-    // Advance that cursor 'til it runs outta steam
-    while (NS_SUCCEEDED(rv = properties->Advance())) {
-        nsCOMPtr<nsIRDFResource> property;
-
-        if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property)))) {
-            NS_ERROR("unable to get property from cursor");
+    {
+        // Now iterate through all the properties and add them as
+        // attributes on the element.  First, create a cursor that'll
+        // iterate through all the properties that lead out of this
+        // resource.
+        nsCOMPtr<nsIRDFArcsOutCursor> properties;
+        if (NS_FAILED(rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(properties)))) {
+            NS_ERROR("unable to create arcs-out cursor");
             return rv;
         }
 
-        // These are special beacuse they're used to specify the tree
-        // structure of the XUL: ignore them b/c they're not attributes
-        if ((property.get() == kRDF_instanceOf) ||
-            (property.get() == kRDF_nextVal) ||
-            (property.get() == kRDF_type))
-            continue;
+        // Advance that cursor 'til it runs outta steam
+        while (NS_SUCCEEDED(rv = properties->Advance())) {
+            nsCOMPtr<nsIRDFResource> property;
 
-        // XXX TODO Move this out of this loop, and use a cursor
-        // coughed up by NS_NewContainerCursor(), so we're sure that
-        // these get created in the right order.
+            if (NS_FAILED(rv = properties->GetPredicate(getter_AddRefs(property)))) {
+                NS_ERROR("unable to get property from cursor");
+                return rv;
+            }
 
-        // Recursively generate child nodes NOW: we can't "dummy" up
-        // nsIHTMLContent.
-        if (rdf_IsOrdinalProperty(property)) {
-            CreateHTMLContents(element, aResource);
-            continue;
+            // These are special beacuse they're used to specify the tree
+            // structure of the XUL: ignore them b/c they're not attributes
+            if ((property.get() == kRDF_instanceOf) ||
+                (property.get() == kRDF_nextVal) ||
+                (property.get() == kRDF_type) ||
+                (rdf_IsOrdinalProperty(property)))
+                continue;
+
+            // For each property, get its value: this will be the value of
+            // the new attribute.
+            nsCOMPtr<nsIRDFNode> value;
+            if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
+                NS_ERROR("unable to get value for property");
+                return rv;
+            }
+
+            // Add the attribute to the newly constructed element
+            if (NS_FAILED(rv = AddAttribute(element, property, value))) {
+                NS_ERROR("unable to add attribute to element");
+                return rv;
+            }
         }
 
-        // For each property, get its value: this will be the value of
-        // the new attribute.
-        nsCOMPtr<nsIRDFNode> value;
-        if (NS_FAILED(rv = mDB->GetTarget(aResource, property, PR_TRUE, getter_AddRefs(value)))) {
-            NS_ERROR("unable to get value for property");
-            return rv;
+        if (rv == NS_ERROR_RDF_CURSOR_EMPTY) {
+            rv = NS_OK;
         }
-
-        // Add the attribute to the newly constructed element
-        if (NS_FAILED(rv = AddAttribute(element, property, value))) {
-            NS_ERROR("unable to add attribute to element");
+        else if (NS_FAILED(rv)) {
+            // uh oh...
+            NS_ERROR("problem iterating properties");
             return rv;
         }
     }
 
-    if (rv == NS_ERROR_RDF_CURSOR_EMPTY) {
-        rv = NS_OK;
-    }
-    else if (NS_FAILED(rv)) {
-        // uh oh...
-        NS_ERROR("problem iterating properties");
+    // Create the children NOW, because we can't do it lazily.
+    if (NS_FAILED(rv = CreateHTMLContents(element, aResource))) {
+        NS_ERROR("error creating child contents");
         return rv;
     }
 
