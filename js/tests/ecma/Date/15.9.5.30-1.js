@@ -47,7 +47,6 @@
     var SECTION = "15.9.5.30-1";
     var VERSION = "ECMA_1";
     startTest();
-    var TZ_DIFF = -8;
 
     writeHeaderToLog( SECTION + " Date.prototype.setHours( hour [, min, sec, ms] )");
 

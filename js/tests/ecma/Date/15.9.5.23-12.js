@@ -39,7 +39,6 @@
     startTest();
     var TITLE = "Date.prototype.setTime()";
 
-    var TZ_DIFF = -8;
 
     var testcases = new Array();
     getTestCases();

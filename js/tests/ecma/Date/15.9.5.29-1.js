@@ -46,7 +46,6 @@
     var SECTION = "15.9.5.29-1";
     var VERSION = "ECMA_1";
     startTest();
-    var TZ_DIFF = -8;
 
     writeHeaderToLog( SECTION + " Date.prototype.setUTCMinutes( min [, sec, ms] )");
 
