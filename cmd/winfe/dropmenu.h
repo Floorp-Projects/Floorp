@@ -313,6 +313,7 @@ protected:
 	void ShowSubmenu(CDropMenuItem * pItem);
 	int	FindMenuItemPosition(CDropMenuItem* pMenuItem);
 	void InvalidateMenuItemRect(CDropMenuItem *pMenuItem);
+	void InvalidateMenuItemIconRect(CDropMenuItem *pMenuItem);
 	void KeepMenuAroundIfClosing(void);
 	void SetSubmenuBitmaps(HBITMAP hSelectedBitmap, HBITMAP hUnselectedBitmap);
 	CWnd *GetTopLevelParent(void);

@@ -267,6 +267,9 @@ public:
 					BOOL hasFocus = FALSE);
 		// Used instead of the outliner DrawColumnText.  Same reason.
 
+	void InvalidateIconForResource(HT_Resource r);
+		// Invalidates only the icon for a given node.  The rest of the line is left alone.
+
 	CRect ConstructDragRect(const CPoint& pt1, const CPoint& pt2);
 		// Constructs a new rectangle with the two points specified as opposing corners.
 

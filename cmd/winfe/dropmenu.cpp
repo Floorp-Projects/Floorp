@@ -2519,6 +2519,23 @@ void CDropMenu::InvalidateMenuItemRect(CDropMenuItem *pMenuItem)
 	InvalidateRect(rect, TRUE);
 }
 
+void CDropMenu::InvalidateMenuItemIconRect(CDropMenuItem *pMenuItem)
+{
+
+	CRect rcClient;
+	CRect rect;
+
+	GetClientRect(&rcClient);
+
+	pMenuItem->GetMenuItemRect(rect);
+	int nColumn = pMenuItem->GetColumn();
+	CDropMenuColumn *pColumn= (CDropMenuColumn*)m_pColumnArray[nColumn];
+
+	rect.left += nIMG_SPACE;
+	rect.right = rect.left + 16;
+	
+	InvalidateRect(rect, TRUE);
+}
 
 void CDropMenu::KeepMenuAroundIfClosing(void)
 {
@@ -2578,5 +2595,15 @@ CWnd *CDropMenu::GetTopLevelParent(void)
 void CDropMenu::LoadComplete(HT_Resource r)
 {
 	// Need to invalidate the line that corresponds to this particular resource.
-	Invalidate();
+	HT_Resource parent = HT_GetParent(r);
+	if (parent)
+	{
+		// The offset of this node from its direct parent determines the line that should be
+		// invalidated.
+		int childIndex = HT_GetNodeIndex(HT_GetView(r), r);
+		int parentIndex = HT_GetNodeIndex(HT_GetView(parent), parent);
+		int actualIndex = childIndex - parentIndex - 1;
+		CDropMenuItem *item = (CDropMenuItem*)m_pMenuItemArray[actualIndex];
+		InvalidateMenuItemIconRect(item);
+	}
 }

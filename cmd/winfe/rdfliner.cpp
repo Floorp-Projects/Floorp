@@ -341,6 +341,22 @@ void CRDFOutliner::HandleEvent(HT_Notification ns, HT_Resource n, HT_Event whatH
 	}
 }
 
+void CRDFOutliner::InvalidateIconForResource(HT_Resource r)
+{
+	int iLineNo = HT_GetNodeIndex(m_View, r);
+
+	CRect rect, out;
+    GetClientRect ( &rect );
+    RectFromLine ( iLineNo - m_iTopLine, rect, out );
+	
+	int iImageWidth = GetIndentationWidth();
+	int indent = HT_GetItemIndentation(r);
+	out.left = indent*iImageWidth;
+	out.right = out.left + iImageWidth;
+
+    InvalidateRect ( &out );
+
+}
 
 LPCTSTR CRDFOutliner::GetColumnText ( UINT iColumn, void * pLineData )
 {
@@ -555,7 +571,7 @@ void CRDFOutliner::LoadComplete(HT_Resource pResource)
 {
 	if (pResource == NULL)	// Background image loaded.
 		Invalidate();
-	else InvalidateLine(HT_GetNodeIndex(m_View, pResource));  // Individual line had an image load.
+	else InvalidateIconForResource(pResource);  // Individual line had an image load.
 }
 
 // Functions used to draw custom images (either local file system icons or arbitrary image URLs)
