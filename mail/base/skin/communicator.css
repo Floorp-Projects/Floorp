@@ -41,7 +41,6 @@
 
 @import url("chrome://global/skin/");
 @import url("chrome://communicator/content/communicator.css");
-@import url("chrome://communicator/skin/brand.css");
 @import url("chrome://communicator/skin/button.css");
 @import url("chrome://communicator/skin/formatting.css");
 
@@ -49,6 +48,32 @@
 
 .toolbar-primary {
   -moz-binding: url("chrome://global/content/widgets/toolbar.xml#toolbar");
+}
+
+/* ::::: throbber ::::: */
+
+#navigator-throbber {
+  -moz-appearance: none;
+  -moz-user-focus: ignore;
+  margin: 0 !important;
+  border: none !important;
+  padding: 0px !important;
+  min-width: 0;
+  background-color: transparent;
+  list-style-image: url("chrome://messenger/skin/icons/throbber.png");
+}
+
+#navigator-throbber[busy="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/throbber.mng");
+}
+
+toolbar[iconsize="small"] #navigator-throbber,
+toolbar[mode="text"] #navigator-throbber {
+  list-style-image: url("chrome://messenger/skin/icons/throbber-small.png");
+}
+toolbar[iconsize="small"] #navigator-throbber[busy="true"],
+toolbar[mode="text"] #navigator-throbber[busy="true"] {
+  list-style-image: url("chrome://messenger/skin/icons/throbber-small.mng");
 }
 
 /* ::::: online/offline icons ::::: */

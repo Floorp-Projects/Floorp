@@ -27,6 +27,8 @@ classic.jar:
 +   skin/classic/messenger/icons/new-mail-alert.png (skin/icons/new-mail-alert.png)
     skin/classic/messenger/icons/mail-toolbar.png   (skin/icons/mail-toolbar.png)
 +   skin/classic/communicator/alerts/alert.css      (skin/alert.css)
+    skin/classic/messenger/icons/throbber.png       (skin/icons/throbber.png)
+    skin/classic/messenger/icons/throbber.mng       (skin/icons/throbber.mng)
 
 comm.jar:
 +   content/navigator/viewSource.xul                (content/viewSource.xul)
