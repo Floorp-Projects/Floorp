@@ -28,6 +28,11 @@
 #ifndef _BUFFERROUTINES_H
 #define _BUFFERROUTINES_H
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
+
+
 /******************************************************************************************
   MODULE NOTES:
 
@@ -155,6 +160,7 @@ inline PRUnichar GetCharAt(const char* aString,PRUint32 anIndex) {
  * @param   anOffset is the index into aDest where shifting shall begin
  * @param   aCount is the number of chars to be "cut"
  */
+void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
 void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   char*   dst = aDest+anOffset;
   char*   src = aDest+anOffset+aCount;
@@ -170,6 +176,7 @@ void ShiftCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCou
  * @param   anOffset is the index into aDest where shifting shall begin
  * @param   aCount is the number of chars to be "inserted"
  */
+void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
 void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   char* src = aDest+anOffset;
   char* dst = aDest+anOffset+aCount;
@@ -185,6 +192,7 @@ void ShiftCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCo
  * @param   anOffset is the index into aDest where shifting shall begin
  * @param   aCount is the number of chars to be "cut"
  */
+void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
 void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUnichar* root=(PRUnichar*)aDest;
   PRUnichar* dst = root+anOffset;
@@ -202,6 +210,7 @@ void ShiftDoubleCharsLeft(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint3
  * @param   anOffset is the index into aDest where shifting shall begin
  * @param   aCount is the number of chars to be "inserted"
  */
+void ShiftDoubleCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount);
 void ShiftDoubleCharsRight(char* aDest,PRUint32 aLength,PRUint32 anOffset,PRUint32 aCount) { 
   PRUnichar* root=(PRUnichar*)aDest;
   PRUnichar* src = root+anOffset;
@@ -236,6 +245,7 @@ ShiftChars gShiftChars[2][2]= {
  * @param anOffset is the offset to start copying from in the source buffer
  * @param aCount is the (max) number of chars to copy
  */
+void CopyChars1To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount);
 void CopyChars1To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount) { 
 
   char* dst = aDest+anDestOffset;
@@ -252,6 +262,7 @@ void CopyChars1To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
  * @param anOffset is the offset to start copying from in the source buffer
  * @param aCount is the (max) number of chars to copy
  */
+void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount);
 void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount) { 
 
   PRUnichar* theDest=(PRUnichar*)aDest;
@@ -288,6 +299,7 @@ void CopyChars1To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
  * @param anOffset is the offset to start copying from in the source buffer
  * @param aCount is the (max) number of chars to copy
  */
+void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount);
 void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount) { 
   char*             to   = aDest+anDestOffset;
   PRUnichar*        theSource=(PRUnichar*)aSource;
@@ -333,6 +345,7 @@ void CopyChars2To1(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32
  * @param anOffset is the offset to start copying from in the source buffer
  * @param aCount is the (max) number of chars to copy
  */
+void CopyChars2To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount);
 void CopyChars2To2(char* aDest,PRInt32 anDestOffset,const char* aSource,PRUint32 anOffset,PRUint32 aCount) { 
   PRUnichar* theDest=(PRUnichar*)aDest;
   PRUnichar* to   = theDest+anDestOffset;
@@ -490,7 +503,7 @@ inline PRInt32 RFindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
     anOffset=(PRInt32)aDestLength-1;
 
   if(aCount<0)
-    aCount = aDestLength;
+    aCount = PRInt32(aDestLength);
 
   if((aChar<256) && (0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
 
@@ -546,7 +559,7 @@ inline PRInt32 RFindChar2(const char* aDest,PRUint32 aDestLength,PRInt32 anOffse
     anOffset=(PRInt32)aDestLength-1;
 
   if(aCount<0)
-    aCount = aDestLength;
+    aCount = PRInt32(aDestLength);
 
   if((0<aDestLength) && ((PRUint32)anOffset<aDestLength)) {
  
@@ -602,6 +615,7 @@ FindChars gRFindChars[]={&RFindChar1,&RFindChar2};
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
+PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result=0;
   if(aIgnoreCase)
@@ -619,6 +633,7 @@ PRInt32 Compare1To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
+PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result=0;
   if(aIgnoreCase)
@@ -637,6 +652,7 @@ PRInt32 Compare2To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
+PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result;
   if(aIgnoreCase)
@@ -655,6 +671,7 @@ PRInt32 Compare2To1(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool a
  * @param   aIgnorecase tells us whether to use a case-sensitive comparison
  * @return  -1,0,1 depending on <,==,>
  */
+PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase);
 PRInt32 Compare1To2(const char* aStr1,const char* aStr2,PRUint32 aCount,PRBool aIgnoreCase){ 
   PRInt32 result;
   if(aIgnoreCase)
@@ -685,6 +702,7 @@ CompareChars gCompare[2][2]={
  * @param   aToUpper tells us whether to convert to upper or lower
  * @return  0
  */
+PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper);
 PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper){ 
   PRInt32 result=0;
 
@@ -695,12 +713,12 @@ PRInt32 ConvertCase1(char* aString,PRUint32 aCount,PRBool aToUpper){
     chartype ch = *cp;
     if(aToUpper) {
       if ((ch >= 'a') && (ch <= 'z')) {
-        *cp = 'A' + (ch - 'a');
+        *cp = chartype('A' + (ch - 'a'));
       }
     }
     else {
       if ((ch >= 'A') && (ch <= 'Z')) {
-        *cp = 'a' + (ch - 'A');
+        *cp = chartype('a' + (ch - 'A'));
       }
     }
     cp++;
@@ -762,6 +780,7 @@ public:
  * @param   aToUpper tells us whether to convert to upper or lower
  * @return  0
  */
+PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper);
 PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){ 
   PRUnichar* cp = (PRUnichar*)aString;
   PRUnichar* end = cp + aCount-1;
@@ -786,12 +805,12 @@ PRInt32 ConvertCase2(char* aString,PRUint32 aCount,PRBool aToUpper){
     PRUnichar ch = *cp;
     if(aToUpper) {
       if ((ch >= 'a') && (ch <= 'z')) {
-        *cp = 'A' + (ch - 'a');
+        *cp = PRUnichar('A' + (ch - 'a'));
       }
     }
     else {
       if ((ch >= 'A') && (ch <= 'Z')) {
-        *cp = 'a' + (ch - 'A');
+        *cp = PRUnichar('a' + (ch - 'A'));
       }
     }
     cp++;
@@ -822,6 +841,7 @@ CaseConverters gCaseConverters[]={&ConvertCase1,&ConvertCase2};
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
+PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet);
 PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
   char*  from = aString;
@@ -866,6 +886,7 @@ PRInt32 CompressChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
+PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet);
 PRInt32 CompressChars2(char* aString,PRUint32 aLength,const char* aSet){ 
 
   PRUnichar*  from = (PRUnichar*)aString;
@@ -911,6 +932,7 @@ CompressChars gCompressChars[]={&CompressChars1,&CompressChars2};
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
+PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet);
 PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){ 
 
   char*  to   = aString;
@@ -942,6 +964,7 @@ PRInt32 StripChars1(char* aString,PRUint32 aLength,const char* aSet){
  * @param   aEliminateTrailing tells us whether to strip chars from the start of the buffer
  * @return  the new length of the given buffer
  */
+PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet);
 PRInt32 StripChars2(char* aString,PRUint32 aLength,const char* aSet){ 
 
   PRUnichar*  to   = (PRUnichar*)aString;

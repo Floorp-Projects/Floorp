@@ -29,6 +29,11 @@
 #ifndef _nsStr
 #define _nsStr
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
+
+
 /***********************************************************************
   MODULE NOTES:
 

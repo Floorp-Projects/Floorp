@@ -66,7 +66,7 @@ class NS_COM nsSharableString
       void assign( const string_type& );
       virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
 
-    private:
+    protected:
       nsAutoBufferHandle<char_type> mBuffer;
   };
 
@@ -96,7 +96,7 @@ class NS_COM nsSharableCString
       void assign( const string_type& );
       virtual const nsSharedBufferHandle<char_type>*  GetSharedBufferHandle() const;
 
-    private:
+    protected:
       nsAutoBufferHandle<char_type> mBuffer;
   };
 

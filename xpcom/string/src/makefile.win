@@ -42,6 +42,7 @@ CPP_OBJS =                                        \
         .\$(OBJDIR)\nsSharableString.obj          \
         .\$(OBJDIR)\nsSharedBufferList.obj        \
         .\$(OBJDIR)\nsSlidingString.obj           \
+        .\$(OBJDIR)\nsXPIDLString.obj             \
         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>

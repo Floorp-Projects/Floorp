@@ -47,6 +47,7 @@ CPPSRCS		=				\
 		nsSharableString.cpp		\
 		nsSharedBufferList.cpp		\
 		nsSlidingString.cpp		\
+		nsXPIDLString.cpp		\
 		$(NULL)
 
 EXPORTS		:= $(addprefix $(srcdir)/, $(EXPORTS))

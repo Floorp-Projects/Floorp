@@ -24,6 +24,10 @@
 #ifndef nsCharTraits_h___
 #define nsCharTraits_h___
 
+#ifndef nsStringDefines_h___
+#include "nsStringDefines.h"
+#endif
+
 #include <ctype.h>
   // for |EOF|, |WEOF|
 
