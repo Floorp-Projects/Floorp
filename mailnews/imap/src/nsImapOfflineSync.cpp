@@ -471,23 +471,9 @@ void nsImapOfflineSync::ProcessCopyOperation(nsIMsgOfflineImapOperation *current
 
 void nsImapOfflineSync::ProcessEmptyTrash(nsIMsgOfflineImapOperation *currentOp)
 {
-#ifdef NOT_IMPL_YET
-	currentOp->unrefer();
-	MSG_IMAPFolderInfoMail *currentIMAPFolder = m_currentFolder->GetIMAPFolderInfoMail();
-	char *trashUrl = CreateImapDeleteAllMessagesUrl(currentIMAPFolder->GetHostName(), 
-		                                            currentIMAPFolder->GetOnlineName(),
-		                                            currentIMAPFolder->GetOnlineHierarchySeparator());
-	// we're not going to delete sub-folders, since that prompts the user, a no-no while synchronizing.
-	if (trashUrl)
-	{
-		queue->AddUrl(trashUrl, OfflineOpExitFunction);
-		if (!alreadyRunningQueue)
-			queue->GetNextUrl();	
-		m_currentDB->DeleteOfflineOp(currentOp->GetMessageKey());
-
-		m_currentDB = nsnull;	// empty trash deletes the database?
-	}
-#endif // NOT_IMPL_YET
+	m_currentFolder->EmptyTrash(m_window, this);
+	m_currentDB->RemoveOfflineOp(currentOp);
+	m_currentDB = nsnull;	// empty trash deletes the database?
 }
 
 // returns PR_TRUE if we found a folder to create, PR_FALSE if we're done creating folders.
