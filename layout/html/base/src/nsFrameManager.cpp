@@ -1846,17 +1846,17 @@ FrameManager::ReResolveStyleContext(nsIPresContext* aPresContext,
         pseudoTag = undisplayed->mStyle->GetPseudoType();
         if (pseudoTag == nsnull) {  // child content
           undisplayedContext = aPresContext->ResolveStyleContextFor(undisplayed->mContent,
-                                                                    newContext).get();
+                                                                    newContext);
         }
         else if (pseudoTag == nsCSSAnonBoxes::mozNonElement) {
-          undisplayedContext = aPresContext->ResolveStyleContextForNonElement(newContext).get();
+          undisplayedContext = aPresContext->ResolveStyleContextForNonElement(newContext);
         }
         else {  // pseudo element
           NS_NOTREACHED("no pseudo elements in undisplayed map");
           NS_ASSERTION(pseudoTag, "pseudo element without tag");
           undisplayedContext = aPresContext->ResolvePseudoStyleContextFor(localContent,
                                                                           pseudoTag,
-                                                                          newContext).get();
+                                                                          newContext);
         }
         if (undisplayedContext) {
           const nsStyleDisplay* display;
