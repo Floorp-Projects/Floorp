@@ -395,17 +395,17 @@ nsNoAuthURLParser::ParseAfterScheme(const char *spec, PRInt32 specLen,
             const char *p = nsnull;
             if (specLen > 2) {
                 // looks like there is an authority section
-                p = (const char *) memchr(spec + 2, '/', specLen - 2);
 #if defined(XP_PC)
                 // if the authority looks like a drive number then we
                 // really want to treat it as part of the path
-                if (((p && (p - (spec + 2) == 2)) || (specLen == 4)) &&
-                    (spec[3] == ':' || spec[3] == '|') &&
-                    (nsCRT::IsAsciiAlpha(spec[2]))) {
+                if ((specLen > 3) && (spec[3] == ':' || spec[3] == '|') &&
+                    nsCRT::IsAsciiAlpha(spec[2]) &&
+                    ((specLen == 4) || (spec[4] == '/') || (spec[4] == '\\'))) {
                     pos = 1;
-                    break;
-                }
+                    break;  
+                } 
 #endif
+                p = (const char *) memchr(spec + 2, '/', specLen - 2);
             }
             if (p) {
                 SET_RESULT(auth, 2, p - (spec + 2));
