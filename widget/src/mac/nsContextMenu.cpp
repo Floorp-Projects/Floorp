@@ -562,7 +562,7 @@ void nsContextMenu::LoadMenuItem(
     pnsMenuItem->SetDOMElement(domElement);
     pnsMenuItem->SetDOMNode(menuitemNode);
 
-	if(disabled == NS_STRING_TRUE )
+	if(disabled.Equals(NS_STRING_TRUE) )
 		::DisableMenuItem(mMacMenuHandle, menuitemIndex + 1);
     else
     	::EnableMenuItem(mMacMenuHandle, menuitemIndex + 1);
