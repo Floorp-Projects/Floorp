@@ -41,6 +41,8 @@
 
 #define NS_USING_PROFILES 1
 
+#define PREG_PREF	"netcenter.register"
+
 /*
  * Return values
  */
@@ -76,6 +78,11 @@ public:
 	NS_IMETHOD StartCommunicator(const char* aProfileName) = 0;
 	NS_IMETHOD GetCurrProfile(nsString& currProfile) = 0;
 	NS_IMETHOD MigrateProfile(const char* aProfileName) = 0;
+
+	// Cookie processing
+	NS_IMETHOD GetCookie(nsString& aCookie) = 0;
+	NS_IMETHOD ProcessPRegCookie() = 0;
+	NS_IMETHOD IsPregCookieSet(char **pregSet) = 0;
 };
 
 #endif /* nsIProfile_h__ */
