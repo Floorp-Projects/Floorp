@@ -908,6 +908,7 @@ nsEventStatus nsViewer::DispatchMenuItem(PRUint32 aId)
 nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
 {
   nsEventStatus result = nsEventStatus_eIgnore;
+printf("Id %d\n", aId);
   switch(aId) {
     case VIEWER_EXIT:
       ExitViewer();
@@ -918,7 +919,9 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
       return nsEventStatus_eConsumeNoDefault;
 
     case VIEWER_FILE_OPEN:
+      printf("Before OpenHTMLFile\n");
       OpenHTMLFile(wd);
+      printf("After OpenHTMLFile\n");
       break;
 
     case VIEWER_EDIT_CUT:
