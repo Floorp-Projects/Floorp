@@ -39,6 +39,7 @@
       var BREAK;
 
       function generateOutput(button) {
+        var i, j, k;
         var output = button + BREAK;
         for (i=0; !(i>=schemasLength); i++) {
           for (j=schemas[i]; !(j>=schemas[i+1]); j++) {
@@ -53,6 +54,7 @@
 
       function parseInput() {
         var input;
+        var i, j;
         input = get();
 
         /* check for user supplying invalid database key */
@@ -92,31 +94,37 @@
 
       function dumpStrings() {
         /* for debugging purposes */
+        var i, j, k;
         for (i=0; !(i>=schemasLength); i++) {
-          alert(i+" "+schemas[i]+" "+values[schemas[i]]+" "+strings[values[schemas[i]]]);
+          dump("<<"+i+" "+schemas[i]+" "+values[schemas[i]]+" "+strings[values[schemas[i]]] +">>\n");
           for (j=schemas[i]; !(j>=schemas[i+1]); j++) {
-            alert("     " + strings[values[j]+1]);
+            dump("<<     " + strings[values[j]+1] +">>\n");
             for (k=values[j]+2; !(k>=values[j+1]-1); k++) {
-              alert("....." + strings[k]);
+              dump("<<....." + strings[k] +">>\n");
             }
           }
         }
+        dump("\n");
       }
 
       function dumpRawStrings() {
         /* for debugging purposes */
-        alert("Schemas follow");
+        var i;
+        dump("Schemas follow\n");
         for (i=0; !(i>=schemasLength); i++) {
-          alert("{" + schemas[i] + "}");
+          dump("{" + schemas[i] + "}");
         }
-        alert("Values follow");
+        dump("[" + schemas[schemasLength] + "]");
+        dump("\nValues follow\n");
         for (i=0; !(i>=valuesLength); i++) {
-          alert("{" + values[i] + "}");
+          dump("{" + values[i] + "}");
         }
-        alert("Strings follow");
+        dump("[" + values[valuesLength] + "]");
+        dump("\nStrings follow\n");
         for (i=0; !(i>=stringsLength); i++) {
-          alert("{" + strings[i] + "}");
+          dump("{" + strings[i] + "}");
         }
+        dump("\n");
       }
 
       function lostFocus() {
@@ -177,6 +185,7 @@
       }
 
       function deleteSchema0() {
+        var i;
 
         if (schemasLength == 1) {
           flushTables();
@@ -191,14 +200,24 @@
 
         deleteString(values[schemas[currentSchema]]+1); /* delete blank line */
         deleteString(values[schemas[currentSchema]]); /* delete name of schema */
+        valuesLength--;
+        for (i=schemas[currentSchema]; !(i>valuesLength); i++) {
+          values[i] = values[i+1];
+        }
+        for (i=0; !(i>schemasLength); i++) {
+          if (schemas[i] > valueToDelete) {
+            schemas[i]--;
+          }
+        }
 
         schemasLength--;
-        for (i=currentSchema; !(i>=schemasLength); i++) {
+        for (i=currentSchema; !(i>schemasLength); i++) {
           schemas[i] = schemas[i+1];
         }
       }
 
       function deleteValue0() {
+        var i;
         valueToDelete = schemas[currentSchema]+currentValue;
         currentSynonym = 0;
         while (!(values[valueToDelete]+2 >= values[valueToDelete+1]-1)) {
@@ -218,9 +237,10 @@
         deleteString(values[valueToDelete]);
 
         valuesLength--;
-        for (i=valueToDelete; !(i>=valuesLength); i++) {
+        for (i=valueToDelete; !(i>valuesLength); i++) {
           values[i] = values[i+1];
         }
+
         for (i=0; !(i>schemasLength); i++) {
           if (schemas[i] > valueToDelete) {
             schemas[i]--;
@@ -234,6 +254,7 @@
       }
 
       function addSchema0() {
+        var i;
         text = top.frames[schema_frame].document.schema.newSchema;
         schemaIndex = 0;
         while (!(strings[values[schemas[schemaIndex]]] >= text.value)) {
@@ -263,6 +284,7 @@
       }
 
       function addValue0() {
+        var i;
         text = top.frames[value_frame].document.value.newValue;
         stringIndex = values[schemas[currentSchema]+currentValue];
         if(strings[values[schemas[currentSchema]+currentValue]+1]=="") {
@@ -291,6 +313,7 @@
       }
 
       function deleteString(stringToDelete) {
+        var i;
         stringsLength--;
         for (i=stringToDelete; !(i>=stringsLength); i++) {
           strings[i] = strings[i+1];
@@ -303,6 +326,7 @@
       }
 
       function addString(stringToAdd, text) {
+        var i;
         stringsLength++;
         for (i=stringsLength; i>stringToAdd; i--) {
           strings[i] = strings[i-1];
