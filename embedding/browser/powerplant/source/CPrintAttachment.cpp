@@ -164,7 +164,7 @@ void CPrintAttachment::DoPageSetup()
              do_GetService("@mozilla.org/embedcomp/printingprompt-service;1");
     ThrowIfNil_(printingPromptService);
 
-    nsresult rv = printingPromptService->ShowPageSetup(domWindow, settings);
+    nsresult rv = printingPromptService->ShowPageSetup(domWindow, settings, nsnull);
     if (rv != NS_ERROR_ABORT)
         ThrowIfError_(rv);
 }
