@@ -282,7 +282,6 @@ nsWebCrawler:: EndLoadURL(nsIWebShell* aShell,
       nsIFrame* root;
       shell->GetRootFrame(root);
       if (nsnull != root) {
-        nsIListFilter *filter = nsIFrame::GetFilter(mFilter);
         if (mOutputDir.Length() > 0)
         {
           nsIURL* url;
