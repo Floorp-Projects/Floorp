@@ -76,7 +76,8 @@ struct JSRuntime {
     uint32              gcMaxBytes;
     uint32              gcLevel;
     uint32              gcNumber;
-    JSBool              gcPoke;
+    JSPackedBool        gcPoke;
+    JSPackedBool        gcRunning;
     JSGCCallback        gcCallback;
     uint32              gcMallocBytes;
 #ifdef JS_GCMETER

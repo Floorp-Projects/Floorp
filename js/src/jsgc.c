@@ -373,8 +373,8 @@ js_AllocGCThing(JSContext *cx, uintN flags)
 
     rt = cx->runtime;
     JS_LOCK_GC(rt);
-    JS_ASSERT(rt->gcThread == 0);
-    if (rt->gcLevel != 0) {
+    JS_ASSERT(!rt->gcRunning);
+    if (rt->gcRunning) {
         METER(rt->gcStats.finalfail++);
         JS_UNLOCK_GC(rt);
         return NULL;
@@ -996,7 +996,7 @@ js_GC(JSContext *cx, uintN gcflags)
             requestDebit = 1;
     }
     if (requestDebit) {
-        JS_ASSERT(requestDebit >= rt->requestCount);
+        JS_ASSERT(requestDebit <= rt->requestCount);
         rt->requestCount -= requestDebit;
         if (rt->requestCount == 0)
             JS_NOTIFY_REQUEST_DONE(rt);
@@ -1018,15 +1018,13 @@ js_GC(JSContext *cx, uintN gcflags)
 	return;
     }
 
-    /* Increment gcLevel now to block requests that are about to run. */
+    /* No other thread is in GC, so indicate that we're now in GC. */
     rt->gcLevel = 1;
+    rt->gcThread = currentThread;
 
     /* Wait for all other requests to finish. */
     while (rt->requestCount > 0)
 	JS_AWAIT_REQUEST_DONE(rt);
-
-    /* No other thread is in GC, so indicate that we're now in GC. */
-    rt->gcThread = currentThread;
 
 #else  /* !JS_THREADSAFE */
 
@@ -1041,6 +1039,7 @@ js_GC(JSContext *cx, uintN gcflags)
 
     /* Reset malloc counter */
     rt->gcMallocBytes = 0;
+    rt->gcRunning = JS_TRUE;
 
     /* Drop atoms held by the property cache, and clear property weak links. */
     js_FlushPropertyCache(cx);
@@ -1221,6 +1220,7 @@ out:
     }
     rt->gcLevel = 0;
     rt->gcLastBytes = rt->gcBytes;
+    rt->gcRunning = JS_FALSE;
 
 #ifdef JS_THREADSAFE
     /* If we were invoked during a request, pay back the temporary debit. */
