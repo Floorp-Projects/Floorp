@@ -264,12 +264,12 @@ menupopup[menugenerated="true"],
 popup[menugenerated="true"],
 tooltip[menugenerated="true"] {
   display: -moz-popup;
-  margin-top: 21px;
 }
 
 tooltip {
   -moz-binding: url("chrome://global/content/bindings/popup.xml#tooltip");
   display: -moz-popup;
+  margin-top: 21px;
 }
 
 /********** floating popups **********/
