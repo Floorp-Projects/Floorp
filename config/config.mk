@@ -300,27 +300,14 @@ LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
 LIBMMEDIA	= $(DIST)/lib/libmmedia.$(LIB_SUFFIX)
 
-#
-# NSPR 2.0 is now the default, "setenv NSPR10 1" to go back to 1.0
-#
-ifndef NSPR10
 NSPR20		= 1
 ifndef USE_AUTOCONF
 NSPRDIR		= nsprpub
 endif
 DEFINES		+= -DNSPR20
 INCLUDES	+= -I$(DIST)/include
-LIBNSPR		= $(DIST)/lib/libplds21.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libmsgc21.$(LIB_SUFFIX) \
-		  $(DIST)/lib/libnspr21.$(LIB_SUFFIX)
-PURELIBNSPR	= $(DIST)/lib/purelibplds21.$(LIB_SUFFIX) \
-		  $(DIST)/lib/purelibmsgc21.$(LIB_SUFFIX) \
-		  $(DIST)/lib/purelibnspr21.$(LIB_SUFFIX)
-else
-NSPRDIR		= nspr
-LIBNSPR		= $(DIST)/lib/libnspr.$(LIB_SUFFIX)
-PURELIBNSPR	= $(DIST)/lib/libpurenspr.$(LIB_SUFFIX)
-endif
+LIBNSPR		= $(DIST)/lib/libplds21.$(LIB_SUFFIX) $(DIST)/lib/libnspr21.$(LIB_SUFFIX)
+PURELIBNSPR	= $(DIST)/lib/purelibplds21.$(LIB_SUFFIX) $(DIST)/lib/purelibnspr21.$(LIB_SUFFIX)
 
 ifdef DBMALLOC
 LIBNSPR		+= $(DIST)/lib/libdbmalloc.$(LIB_SUFFIX)
