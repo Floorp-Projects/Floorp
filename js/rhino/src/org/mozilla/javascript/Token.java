@@ -205,7 +205,7 @@ public class Token
         USE_STACK   = 121,
         SETPROP_OP  = 122, // x.y op= something
         SETELEM_OP  = 123, // x[y] op= something
-        INIT_LIST   = 124,
+// XXX removed unused INIT_LIST
         LOCAL_BLOCK = 125,
         SET_REF_OP  = 126, // *reference op= something
 
@@ -343,7 +343,6 @@ public class Token
           case USE_STACK:       return "USE_STACK";
           case SETPROP_OP:      return "SETPROP_OP";
           case SETELEM_OP:      return "SETELEM_OP";
-          case INIT_LIST:       return "INIT_LIST";
           case LOCAL_BLOCK:     return "LOCAL_BLOCK";
           case SET_REF_OP:      return "SET_REF_OP";
         }

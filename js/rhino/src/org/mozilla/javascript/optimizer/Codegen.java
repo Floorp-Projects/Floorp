@@ -1058,7 +1058,7 @@ class BodyCodegen
         } else {
             treeTop = scriptOrFn;
         }
-        generateCodeFromNode(treeTop, null);
+        generateStatement(treeTop, null);
 
         generateEpilogue();
 
@@ -1337,7 +1337,7 @@ class BodyCodegen
         cfw.add(ByteCode.ARETURN);
     }
 
-    private void generateCodeFromNode(Node node, Node parent)
+    private void generateStatement(Node node, Node parent)
     {
         // System.out.println("gen code for " + node.toString());
 
@@ -1348,7 +1348,7 @@ class BodyCodegen
               case Token.LABEL:
                 visitStatement(node);
                 while (child != null) {
-                    generateCodeFromNode(child, node);
+                    generateStatement(child, node);
                     child = child.getNext();
                 }
                 break;
@@ -1357,7 +1357,7 @@ class BodyCodegen
                 ++withNesting;
                 visitStatement(node);
                 while (child != null) {
-                    generateCodeFromNode(child, node);
+                    generateStatement(child, node);
                     child = child.getNext();
                 }
                 --withNesting;
@@ -1373,7 +1373,7 @@ class BodyCodegen
                 // no-ops.
                 visitStatement(node);
                 while (child != null) {
-                    generateCodeFromNode(child, node);
+                    generateStatement(child, node);
                     child = child.getNext();
                 }
                 break;
@@ -1383,7 +1383,7 @@ class BodyCodegen
                 int local = getNewWordLocal();
                 node.putIntProp(Node.LOCAL_PROP, local);
                 while (child != null) {
-                    generateCodeFromNode(child, node);
+                    generateStatement(child, node);
                     child = child.getNext();
                 }
                 releaseWordLocal((short)local);
@@ -1401,8 +1401,123 @@ class BodyCodegen
                                                              fnIndex);
                     int t = ofn.fnode.getFunctionType();
                     if (t != FunctionNode.FUNCTION_STATEMENT) {
-                        visitFunction(ofn, t);
+                        throw Codegen.badTree();
                     }
+                }
+                break;
+
+              case Token.TRY:
+                visitTryCatchFinally((Node.Jump)node, child);
+                break;
+
+              case Token.THROW:
+                visitThrow(node, child);
+                break;
+
+              case Token.RETURN_RESULT:
+              case Token.RETURN:
+                visitStatement(node);
+                if (child != null) {
+                    generateExpression(child, node);
+                } else if (type == Token.RETURN) {
+                    Codegen.pushUndefined(cfw);
+                } else {
+                    if (popvLocal < 0) throw Codegen.badTree();
+                    cfw.addALoad(popvLocal);
+                }
+                if (epilogueLabel == -1)
+                    epilogueLabel = cfw.acquireLabel();
+                cfw.add(ByteCode.GOTO, epilogueLabel);
+                break;
+
+              case Token.SWITCH:
+                visitSwitch((Node.Jump)node, child);
+                break;
+
+              case Token.ENTERWITH:
+                visitEnterWith(node, child);
+                break;
+
+              case Token.LEAVEWITH:
+                visitLeaveWith(node, child);
+                break;
+
+              case Token.ENUM_INIT: {
+                generateExpression(child, node);
+                cfw.addALoad(variableObjectLocal);
+                addScriptRuntimeInvoke("enumInit",
+                                       "(Ljava/lang/Object;"
+                                       +"Lorg/mozilla/javascript/Scriptable;"
+                                       +")Ljava/lang/Object;");
+                int local = getLocalBlockRegister(node);
+                cfw.addAStore(local);
+                break;
+              }
+
+              case Token.EXPR_VOID:
+                visitStatement(node);
+                if (child.getType() == Token.SETVAR) {
+                    /* special case this so as to avoid unnecessary
+                    load's & pop's */
+                    visitSetVar(child, child.getFirstChild(), false);
+                }
+                else {
+                    generateExpression(child, node);
+                    if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1)
+                        cfw.add(ByteCode.POP2);
+                    else
+                        cfw.add(ByteCode.POP);
+                }
+                break;
+
+              case Token.EXPR_RESULT:
+                visitStatement(node);
+                generateExpression(child, node);
+                if (popvLocal < 0) {
+                    popvLocal = getNewWordLocal();
+                }
+                cfw.addAStore(popvLocal);
+                break;
+
+              case Token.TARGET:
+                visitTarget((Node.Target)node);
+                break;
+
+              case Token.JSR:
+              case Token.GOTO:
+              case Token.IFEQ:
+              case Token.IFNE:
+                visitGOTO((Node.Jump)node, type, child);
+                break;
+
+              case Token.FINALLY:
+                visitFinally(node, child);
+                break;
+
+              default:
+                throw Codegen.badTree();
+        }
+
+    }
+
+    private void generateExpression(Node node, Node parent)
+    {
+        int type = node.getType();
+        Node child = node.getFirstChild();
+        switch (type) {
+              case Token.USE_STACK:
+                break;
+
+              case Token.FUNCTION:
+                if (fnCurrent != null || parent.getType() != Token.SCRIPT) {
+                    int fnIndex = node.getExistingIntProp(Node.FUNCTION_PROP);
+                    OptFunctionNode ofn = OptFunctionNode.get(scriptOrFn,
+                                                             fnIndex);
+                    int t = ofn.fnode.getFunctionType();
+                    if (t == FunctionNode.FUNCTION_STATEMENT) {
+                        throw Codegen.badTree();
+                    }
+                    visitFunction(ofn, t);
                 }
                 break;
 
@@ -1453,78 +1568,25 @@ class BodyCodegen
                 visitRegexp(node);
                 break;
 
-              case Token.TRY:
-                visitTryCatchFinally((Node.Jump)node, child);
-                break;
-
-              case Token.THROW:
-                visitThrow(node, child);
-                break;
-
-              case Token.RETURN_RESULT:
-                if (fnCurrent == null) throw Codegen.badTree();
-                // fallthrough
-              case Token.RETURN:
-                visitStatement(node);
-                if (child != null) {
-                    do {
-                        generateCodeFromNode(child, node);
-                        child = child.getNext();
-                    } while (child != null);
-                } else if (fnCurrent != null && type == Token.RETURN) {
-                    Codegen.pushUndefined(cfw);
-                } else {
-                    if (popvLocal < 0) throw Codegen.badTree();
-                    cfw.addALoad(popvLocal);
-                }
-                if (epilogueLabel == -1)
-                    epilogueLabel = cfw.acquireLabel();
-                cfw.add(ByteCode.GOTO, epilogueLabel);
-                break;
-
-              case Token.SWITCH:
-                visitSwitch((Node.Jump)node, child);
-                break;
-
               case Token.COMMA: {
                 Node next = child.getNext();
                 while (next != null) {
-                    generateCodeFromNode(child, node);
+                    generateExpression(child, node);
                     cfw.add(ByteCode.POP);
                     child = next;
                     next = next.getNext();
                 }
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 break;
               }
 
               case Token.CATCH_SCOPE:
                 cfw.addPush(node.getString());
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 addScriptRuntimeInvoke("newCatchScope",
                                        "(Ljava/lang/String;Ljava/lang/Object;"
                                        +")Lorg/mozilla/javascript/Scriptable;");
                 break;
-
-              case Token.ENTERWITH:
-                visitEnterWith(node, child);
-                break;
-
-              case Token.LEAVEWITH:
-                visitLeaveWith(node, child);
-                break;
-
-              case Token.ENUM_INIT: {
-                generateCodeFromNode(child, node);
-                cfw.addALoad(variableObjectLocal);
-                addScriptRuntimeInvoke("enumInit",
-                                       "(Ljava/lang/Object;"
-                                       +"Lorg/mozilla/javascript/Scriptable;"
-                                       +")Ljava/lang/Object;");
-                int local = getLocalBlockRegister(node);
-                cfw.addAStore(local);
-                break;
-              }
 
               case Token.ENUM_NEXT:
               case Token.ENUM_ID: {
@@ -1539,46 +1601,6 @@ class BodyCodegen
                 }
                 break;
               }
-
-              case Token.EXPR_VOID:
-                visitStatement(node);
-                if (child.getType() == Token.SETVAR) {
-                    /* special case this so as to avoid unnecessary
-                    load's & pop's */
-                    visitSetVar(child, child.getFirstChild(), false);
-                }
-                else {
-                    generateCodeFromNode(child, node);
-                    if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1)
-                        cfw.add(ByteCode.POP2);
-                    else
-                        cfw.add(ByteCode.POP);
-                }
-                break;
-
-              case Token.EXPR_RESULT:
-                visitStatement(node);
-                generateCodeFromNode(child, node);
-                if (popvLocal < 0) {
-                    popvLocal = getNewWordLocal();
-                }
-                cfw.addAStore(popvLocal);
-                break;
-
-              case Token.TARGET:
-                visitTarget((Node.Target)node);
-                break;
-
-              case Token.JSR:
-              case Token.GOTO:
-              case Token.IFEQ:
-              case Token.IFNE:
-                visitGOTO((Node.Jump)node, type, child);
-                break;
-
-              case Token.FINALLY:
-                visitFinally(node, child);
-                break;
 
               case Token.ARRAYLIT:
                 visitArrayLiteral(node, child);
@@ -1607,7 +1629,7 @@ class BodyCodegen
               }
 
               case Token.BITNOT:
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
                 cfw.addPush(-1);         // implement ~a as (a ^ -1)
                 cfw.add(ByteCode.IXOR);
@@ -1616,13 +1638,13 @@ class BodyCodegen
                 break;
 
               case Token.VOID:
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 cfw.add(ByteCode.POP);
                 Codegen.pushUndefined(cfw);
                 break;
 
               case Token.TYPEOF:
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 addScriptRuntimeInvoke("typeof",
                                        "(Ljava/lang/Object;"
                                        +")Ljava/lang/String;");
@@ -1639,7 +1661,7 @@ class BodyCodegen
 
               case Token.OR:
               case Token.AND: {
-                    generateCodeFromNode(child, node);
+                    generateExpression(child, node);
                     cfw.add(ByteCode.DUP);
                     addScriptRuntimeInvoke("toBoolean",
                                            "(Ljava/lang/Object;)Z");
@@ -1649,7 +1671,7 @@ class BodyCodegen
                     else
                         cfw.add(ByteCode.IFNE, falseTarget);
                     cfw.add(ByteCode.POP);
-                    generateCodeFromNode(child.getNext(), node);
+                    generateExpression(child.getNext(), node);
                     cfw.markLabel(falseTarget);
                 }
                 break;
@@ -1657,24 +1679,24 @@ class BodyCodegen
               case Token.HOOK : {
                     Node ifThen = child.getNext();
                     Node ifElse = ifThen.getNext();
-                    generateCodeFromNode(child, node);
+                    generateExpression(child, node);
                     addScriptRuntimeInvoke("toBoolean",
                                            "(Ljava/lang/Object;)Z");
                     int elseTarget = cfw.acquireLabel();
                     cfw.add(ByteCode.IFEQ, elseTarget);
                     short stack = cfw.getStackTop();
-                    generateCodeFromNode(ifThen, node);
+                    generateExpression(ifThen, node);
                     int afterHook = cfw.acquireLabel();
                     cfw.add(ByteCode.GOTO, afterHook);
                     cfw.markLabel(elseTarget, stack);
-                    generateCodeFromNode(ifElse, node);
+                    generateExpression(ifElse, node);
                     cfw.markLabel(afterHook);
                 }
                 break;
 
               case Token.ADD: {
-                    generateCodeFromNode(child, node);
-                    generateCodeFromNode(child.getNext(), node);
+                    generateExpression(child, node);
+                    generateExpression(child.getNext(), node);
                     switch (node.getIntProp(Node.ISNUMBER_PROP, -1)) {
                         case Node.BOTH:
                             cfw.add(ByteCode.DADD);
@@ -1722,7 +1744,7 @@ class BodyCodegen
 
               case Token.POS:
               case Token.NEG:
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 addObjectToDouble();
                 if (type == Token.NEG) {
                     cfw.add(ByteCode.DNEG);
@@ -1732,7 +1754,7 @@ class BodyCodegen
 
               case Optimizer.TO_DOUBLE:
                 // cnvt to double (not Double)
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 addObjectToDouble();
                 break;
 
@@ -1744,10 +1766,10 @@ class BodyCodegen
                 }
                 if (prop != -1) {
                     child.removeProp(Node.ISNUMBER_PROP);
-                    generateCodeFromNode(child, node);
+                    generateExpression(child, node);
                     child.putIntProp(Node.ISNUMBER_PROP, prop);
                 } else {
-                    generateCodeFromNode(child, node);
+                    generateExpression(child, node);
                     addDoubleWrap();
                 }
                 break;
@@ -1819,10 +1841,9 @@ class BodyCodegen
               case Token.DELPROP:
                 cfw.addALoad(contextLocal);
                 cfw.addALoad(variableObjectLocal);
-                while (child != null) {
-                    generateCodeFromNode(child, node);
-                    child = child.getNext();
-                }
+                generateExpression(child, node);
+                child = child.getNext();
+                generateExpression(child, node);
                 addScriptRuntimeInvoke("delete",
                                        "(Lorg/mozilla/javascript/Context;"
                                        +"Lorg/mozilla/javascript/Scriptable;"
@@ -1899,7 +1920,7 @@ class BodyCodegen
 
           default:
             // Generate generic code for non-optimized jump
-            generateCodeFromNode(node, parent);
+            generateExpression(node, parent);
             addScriptRuntimeInvoke("toBoolean", "(Ljava/lang/Object;)Z");
             cfw.add(ByteCode.IFNE, trueLabel);
             cfw.add(ByteCode.GOTO, falseLabel);
@@ -1997,10 +2018,6 @@ class BodyCodegen
             cfw.markLabel(fallThruLabel);
         }
         else {
-            while (child != null) {
-                generateCodeFromNode(child, node);
-                child = child.getNext();
-            }
             if (type == Token.JSR)
                 cfw.add(ByteCode.JSR, targetLabel);
             else
@@ -2014,7 +2031,7 @@ class BodyCodegen
         int finallyRegister = getNewWordLocal();
         cfw.addAStore(finallyRegister);
         while (child != null) {
-            generateCodeFromNode(child, node);
+            generateStatement(child, node);
             child = child.getNext();
         }
         cfw.add(ByteCode.RET, finallyRegister);
@@ -2023,10 +2040,7 @@ class BodyCodegen
 
     private void visitEnterWith(Node node, Node child)
     {
-        while (child != null) {
-            generateCodeFromNode(child, node);
-            child = child.getNext();
-        }
+        generateExpression(child, node);
         cfw.addALoad(variableObjectLocal);
         addScriptRuntimeInvoke("enterWith",
                                "(Ljava/lang/Object;"
@@ -2055,7 +2069,7 @@ class BodyCodegen
         for (int i = 0; i != count; ++i) {
             cfw.add(ByteCode.DUP);
             cfw.addPush(i);
-            generateCodeFromNode(child, node);
+            generateExpression(child, node);
             cfw.add(ByteCode.AASTORE);
             child = child.getNext();
         }
@@ -2102,7 +2116,7 @@ class BodyCodegen
         for (int i = 0; i != count; ++i) {
             cfw.add(ByteCode.DUP);
             cfw.addPush(i);
-            generateCodeFromNode(child, node);
+            generateExpression(child, node);
             cfw.add(ByteCode.AASTORE);
             child = child.getNext();
         }
@@ -2149,7 +2163,7 @@ class BodyCodegen
         }
 
         if (type == Token.NEW) {
-            generateCodeFromNode(child, node);
+            generateExpression(child, node);
             // stack: ... cx functionObj
         } else {
             generateFunctionAndThisObj(child, node);
@@ -2232,9 +2246,9 @@ class BodyCodegen
                             "java/lang/Void",
                             "TYPE",
                             "Ljava/lang/Class;");
-                    generateCodeFromNode(child, node);
+                    generateExpression(child, node);
                 } else {
-                    generateCodeFromNode(child, node);
+                    generateExpression(child, node);
                     cfw.addPush(0.0);
                 }
                 child = child.getNext();
@@ -2363,7 +2377,7 @@ class BodyCodegen
             cfw.add(ByteCode.DUP);
             cfw.addPush(i);
             if (!directCall) {
-                generateCodeFromNode(argChild, node);
+                generateExpression(argChild, node);
             } else {
                 // If this has also been a directCall sequence, the Number
                 // flag will have remained set for any parameter so that
@@ -2374,7 +2388,7 @@ class BodyCodegen
                 if (dcp_register >= 0) {
                     dcpLoadAsObject(dcp_register);
                 } else {
-                    generateCodeFromNode(argChild, node);
+                    generateExpression(argChild, node);
                     int childNumberFlag
                             = argChild.getIntProp(Node.ISNUMBER_PROP, -1);
                     if (childNumberFlag == Node.BOTH) {
@@ -2447,7 +2461,7 @@ class BodyCodegen
           default: // including GETVAR
             // something(...)
             //  -> tmp = something, (tmp, getParent(tmp))(...)
-            generateCodeFromNode(node, parent);
+            generateExpression(node, parent);
             cfw.add(ByteCode.DUP);
             addScriptRuntimeInvoke("getParent",
                                    "(Ljava/lang/Object;"
@@ -2496,7 +2510,7 @@ class BodyCodegen
 
         visitStatement(node);
         while (child != null) {
-            generateCodeFromNode(child, node);
+            generateStatement(child, node);
             child = child.getNext();
         }
 
@@ -2614,11 +2628,7 @@ class BodyCodegen
     private void visitThrow(Node node, Node child)
     {
         visitStatement(node);
-        while (child != null) {
-            generateCodeFromNode(child, node);
-            child = child.getNext();
-        }
-
+        generateExpression(child, node);
         cfw.add(ByteCode.NEW,
                       "org/mozilla/javascript/JavaScriptException");
         cfw.add(ByteCode.DUP_X1);
@@ -2636,11 +2646,7 @@ class BodyCodegen
     private void visitSwitch(Node.Jump node, Node child)
     {
         visitStatement(node);
-        while (child != null) {
-            generateCodeFromNode(child, node);
-            child = child.getNext();
-        }
-
+        generateExpression(child, node);
         // save selector value
         short selector = getNewWordLocal();
         cfw.addAStore(selector);
@@ -2649,7 +2655,7 @@ class BodyCodegen
         for (int i=0; i < cases.size(); i++) {
             Node thisCase = (Node) cases.get(i);
             Node first = thisCase.getFirstChild();
-            generateCodeFromNode(first, thisCase);
+            generateExpression(first, thisCase);
             cfw.addALoad(selector);
             addScriptRuntimeInvoke("shallowEq",
                                    "(Ljava/lang/Object;"
@@ -2778,8 +2784,8 @@ class BodyCodegen
             break;
           case Token.GETPROP: {
             Node getPropChild = child.getFirstChild();
-            generateCodeFromNode(getPropChild, node);
-            generateCodeFromNode(getPropChild.getNext(), node);
+            generateExpression(getPropChild, node);
+            generateExpression(getPropChild.getNext(), node);
             cfw.addALoad(variableObjectLocal);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("propIncrDecr",
@@ -2791,8 +2797,8 @@ class BodyCodegen
           }
           case Token.GETELEM: {
             Node getElemChild = child.getFirstChild();
-            generateCodeFromNode(getElemChild, node);
-            generateCodeFromNode(getElemChild.getNext(), node);
+            generateExpression(getElemChild, node);
+            generateExpression(getElemChild.getNext(), node);
             cfw.addALoad(variableObjectLocal);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke("elemIncrDecr",
@@ -2804,7 +2810,7 @@ class BodyCodegen
           }
           case Token.GET_REF: {
             Node refChild = child.getFirstChild();
-            generateCodeFromNode(refChild, node);
+            generateExpression(refChild, node);
             cfw.addPush(incrDecrMask);
             addScriptRuntimeInvoke(
                 "referenceIncrDecr", "(Ljava/lang/Object;I)Ljava/lang/Object;");
@@ -2829,16 +2835,16 @@ class BodyCodegen
     {
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
         if (childNumberFlag != -1) {
-            generateCodeFromNode(child, node);
-            generateCodeFromNode(child.getNext(), node);
+            generateExpression(child, node);
+            generateExpression(child.getNext(), node);
             cfw.add(opCode);
         }
         else {
             boolean childOfArithmetic = isArithmeticNode(parent);
-            generateCodeFromNode(child, node);
+            generateExpression(child, node);
             if (!isArithmeticNode(child))
                 addObjectToDouble();
-            generateCodeFromNode(child.getNext(), node);
+            generateExpression(child.getNext(), node);
             if (!isArithmeticNode(child.getNext()))
                   addObjectToDouble();
             cfw.add(opCode);
@@ -2851,14 +2857,14 @@ class BodyCodegen
     private void visitBitOp(Node node, int type, Node child)
     {
         int childNumberFlag = node.getIntProp(Node.ISNUMBER_PROP, -1);
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
 
         // special-case URSH; work with the target arg as a long, so
         // that we can return a 32-bit unsigned value, and call
         // toUint32 instead of toInt32.
         if (type == Token.URSH) {
             addScriptRuntimeInvoke("toUint32", "(Ljava/lang/Object;)J");
-            generateCodeFromNode(child.getNext(), node);
+            generateExpression(child.getNext(), node);
             addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
             // Looks like we need to explicitly mask the shift to 5 bits -
             // LUSHR takes 6 bits.
@@ -2871,12 +2877,12 @@ class BodyCodegen
         }
         if (childNumberFlag == -1) {
             addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
-            generateCodeFromNode(child.getNext(), node);
+            generateExpression(child.getNext(), node);
             addScriptRuntimeInvoke("toInt32", "(Ljava/lang/Object;)I");
         }
         else {
             addScriptRuntimeInvoke("toInt32", "(D)I");
-            generateCodeFromNode(child.getNext(), node);
+            generateExpression(child.getNext(), node);
             addScriptRuntimeInvoke("toInt32", "(D)I");
         }
         switch (type) {
@@ -2958,8 +2964,8 @@ class BodyCodegen
         int type = node.getType();
         Node rChild = child.getNext();
         if (type == Token.INSTANCEOF || type == Token.IN) {
-            generateCodeFromNode(child, node);
-            generateCodeFromNode(rChild, node);
+            generateExpression(child, node);
+            generateExpression(rChild, node);
             cfw.addALoad(variableObjectLocal);
             addScriptRuntimeInvoke(
                 (type == Token.INSTANCEOF) ? "instanceOf" : "in",
@@ -2980,21 +2986,21 @@ class BodyCodegen
 
             if (childNumberFlag != Node.RIGHT) {
                 // Left already has number content
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
             } else if (left_dcp_register != -1) {
                 dcpLoadAsNumber(left_dcp_register);
             } else {
-                generateCodeFromNode(child, node);
+                generateExpression(child, node);
                 addObjectToDouble();
             }
 
             if (childNumberFlag != Node.LEFT) {
                 // Right already has number content
-                generateCodeFromNode(rChild, node);
+                generateExpression(rChild, node);
             } else if (right_dcp_register != -1) {
                 dcpLoadAsNumber(right_dcp_register);
             } else {
-                generateCodeFromNode(rChild, node);
+                generateExpression(rChild, node);
                 addObjectToDouble();
             }
 
@@ -3037,8 +3043,8 @@ class BodyCodegen
                 cfw.addALoad(right_dcp_register);
 
             } else {
-                generateCodeFromNode(child, node);
-                generateCodeFromNode(rChild, node);
+                generateExpression(child, node);
+                generateExpression(rChild, node);
             }
 
             if (type == Token.GE || type == Token.GT) {
@@ -3070,7 +3076,7 @@ class BodyCodegen
             if (child.getType() == Token.NULL) {
                 child = rChild;
             }
-            generateCodeFromNode(child, node);
+            generateExpression(child, node);
             if (type == Token.SHEQ || type == Token.SHNE) {
                 byte testCode = (type == Token.SHEQ)
                                 ? ByteCode.IFNULL : ByteCode.IFNONNULL;
@@ -3121,8 +3127,8 @@ class BodyCodegen
                 }
             }
 
-            generateCodeFromNode(child, node);
-            generateCodeFromNode(rChild, node);
+            generateExpression(child, node);
+            generateExpression(rChild, node);
 
             String name;
             byte testCode;
@@ -3201,7 +3207,7 @@ class BodyCodegen
     {
         String name = node.getFirstChild().getString();
         while (child != null) {
-            generateCodeFromNode(child, node);
+            generateExpression(child, node);
             child = child.getNext();
         }
         cfw.addALoad(variableObjectLocal);
@@ -3258,7 +3264,7 @@ class BodyCodegen
             if (lVar == null) {
                 lVar = fnCurrent.getVar(child.getString());
             }
-            generateCodeFromNode(child.getNext(), node);
+            generateExpression(child.getNext(), node);
             boolean isNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
             short reg = lVar.getJRegister();
             if (varIsDirectCallParameter(lVar)) {
@@ -3307,12 +3313,12 @@ class BodyCodegen
 
     private void visitGetProp(Node node, Node child, boolean dupObject)
     {
-        generateCodeFromNode(child, node); //object
+        generateExpression(child, node); //object
         if (dupObject) {
             cfw.add(ByteCode.DUP);
         }
         Node nameChild = child.getNext();
-        generateCodeFromNode(nameChild, node);  // the name
+        generateExpression(nameChild, node);  // the name
         /*
             for 'this.foo' we call getPropScriptable which can skip some
             casting overhead.
@@ -3338,11 +3344,11 @@ class BodyCodegen
 
     private void visitGetElem(Node node, Node child, boolean dupObject)
     {
-        generateCodeFromNode(child, node); // object
+        generateExpression(child, node); // object
         if (dupObject) {
             cfw.add(ByteCode.DUP);
         }
-        generateCodeFromNode(child.getNext(), node);  // id
+        generateExpression(child.getNext(), node);  // id
         cfw.addALoad(variableObjectLocal);
         if (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1) {
             addOptRuntimeInvoke(
@@ -3363,7 +3369,7 @@ class BodyCodegen
 
     private void visitGetRef(Node node, Node child)
     {
-        generateCodeFromNode(child, node); // reference
+        generateExpression(child, node); // reference
         addScriptRuntimeInvoke(
             "getReference", "(Ljava/lang/Object;)Ljava/lang/Object;");
     }
@@ -3371,13 +3377,13 @@ class BodyCodegen
     private void visitSetProp(int type, Node node, Node child)
     {
         Node objectChild = child;
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         child = child.getNext();
         if (type == Token.SETPROP_OP) {
             cfw.add(ByteCode.DUP);
         }
         Node nameChild = child;
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         child = child.getNext();
         if (type == Token.SETPROP_OP) {
             // stack: ... object object name -> ... object name object name
@@ -3403,7 +3409,7 @@ class BodyCodegen
                     +")Ljava/lang/Object;");
             }
         }
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         cfw.addALoad(variableObjectLocal);
         addScriptRuntimeInvoke(
             "setProp",
@@ -3416,12 +3422,12 @@ class BodyCodegen
 
     private void visitSetElem(int type, Node node, Node child)
     {
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         child = child.getNext();
         if (type == Token.SETELEM_OP) {
             cfw.add(ByteCode.DUP);
         }
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         child = child.getNext();
         boolean indexIsNumber = (node.getIntProp(Node.ISNUMBER_PROP, -1) != -1);
         if (type == Token.SETELEM_OP) {
@@ -3448,7 +3454,7 @@ class BodyCodegen
                     +")Ljava/lang/Object;");
             }
         }
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         cfw.addALoad(variableObjectLocal);
         if (indexIsNumber) {
             addOptRuntimeInvoke(
@@ -3471,14 +3477,14 @@ class BodyCodegen
 
     private void visitSetRef(int type, Node node, Node child)
     {
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         child = child.getNext();
         if (type == Token.SET_REF_OP) {
             cfw.add(ByteCode.DUP);
             addScriptRuntimeInvoke(
                 "getReference", "(Ljava/lang/Object;)Ljava/lang/Object;");
         }
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         addScriptRuntimeInvoke(
             "setReference",
             "(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;");
@@ -3487,7 +3493,7 @@ class BodyCodegen
     private void visitBind(Node node, Node child)
     {
         while (child != null) {
-            generateCodeFromNode(child, node);
+            generateExpression(child, node);
             child = child.getNext();
         }
         // Generate code for "ScriptRuntime.bind(varObj, "s")"
@@ -3502,7 +3508,7 @@ class BodyCodegen
     private void visitSpecialRef(Node node, Node child)
     {
         String special = (String)node.getProp(Node.SPECIAL_PROP_PROP);
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         cfw.addPush(special);
         cfw.addALoad(contextLocal);
         cfw.addALoad(variableObjectLocal);
@@ -3516,7 +3522,7 @@ class BodyCodegen
 
     private void visitGenericRef(Node node, Node child)
     {
-        generateCodeFromNode(child, node);
+        generateExpression(child, node);
         cfw.addALoad(contextLocal);
         cfw.addALoad(variableObjectLocal);
         addScriptRuntimeInvoke("genericReference",
