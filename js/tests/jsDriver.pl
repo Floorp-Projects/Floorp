@@ -147,7 +147,7 @@ sub main {
 
 sub execute_tests {
     my (@test_list) = @_;
-    my ($test, $shell_command, $line, @output);
+    my ($test, $shell_command, $line, @output, $path);
     my $file_param = " -f ";
     my ($last_suite, $last_test_dir);
 
@@ -173,26 +173,26 @@ sub execute_tests {
         if ($last_suite ne $suite || $last_test_dir ne $test_dir) {
             $shell_command = &xp_path($engine_command);
 
-            if (-f &xp_path($opt_suite_path . $suite . "/shell.js")) {
-                $shell_command .= $file_param . &xp_path($opt_suite_path .
-                                                         $suite . "/shell.js");
+            $path = &xp_path($opt_suite_path . $suite . "/shell.js");
+            if (-f $path) {
+                $shell_command .= $file_param . $path;
             }
-            if (-f &xp_path($opt_suite_path . $suite . "/" . $test_dir .
-                            "/shell.js")) {
-                $shell_command .= $file_param .
-                  &xp_path($opt_suite_path . $suite . "/" . $test_dir .
-                           "/shell.js");
+
+            $path = &xp_path($opt_suite_path . $suite . "/" .
+                             $test_dir . "/shell.js");
+            if (-f $path) {
+                $shell_command .= $file_param . $path;
             }
 
             $last_suite = $suite;
             $last_test_dir = $test_dir;
         }
+         
+        $path = &xp_path($opt_suite_path . $test);
+        &dd ("executing: " . $shell_command . $file_param . $path);
 
-        &dd ("executing: " . $shell_command . $file_param .
-             &xp_path($opt_suite_path . $test));
-
-        open (OUTPUT, $shell_command . $file_param . 
-              &xp_path($opt_suite_path . $test) . $redirect_command . " |");
+        open (OUTPUT, $shell_command . $file_param . $path .
+              $redirect_command . " |");
         @output = <OUTPUT>;
         close (OUTPUT);
 
@@ -592,6 +592,7 @@ sub get_rhino_engine_command {
 # get the shell command used to run xpcshell
 #
 sub get_xpc_engine_command {
+    my $retval;
     my $m5_home = @ENV{"MOZILLA_FIVE_HOME"} ||
       die ("You must set MOZILLA_FIVE_HOME to use the xpcshell" ,
            (!$unixish) ? "." : ", also " .
@@ -607,7 +608,20 @@ sub get_xpc_engine_command {
         $m5_home .= "/";
     }
 
-    return &xp_path($m5_home . "xpcshell");
+    $retval = $m5_home . "xpcshell";
+
+    if ($os_type eq "WIN") {
+        $retval .= ".exe";
+    }
+
+    $retval = &xp_path($retval);
+
+    if (($os_type ne "MAC") && !(-x $retval)) {
+        # mac doesn't seem to deal with -x correctly
+        die ($retval . " is not a valid executable on this system.\n");
+    }
+
+    return $retval;
 
 }
 
@@ -682,14 +696,17 @@ sub get_sm_engine_command {
             }
         } # mac/ not mac
 
+        $retval = &xp_path($retval);
+
     } # (user provided a path)
 
-    if (($os_type ne "MAC") && !(-x &xp_path($retval))) {
+
+    if (($os_type ne "MAC") && !(-x $retval)) {
         # mac doesn't seem to deal with -x correctly
-        die (&xp_path($retval) . " is not a valid executable on this system.\n");
+        die ($retval . " is not a valid executable on this system.\n");
     }
 
-    return &xp_path($retval);
+    return $retval;
 
 }
 
@@ -734,19 +751,22 @@ sub get_dd_engine_command {
 
 
         if ($opt_engine_type eq "dddebug") {
-            $retval = &xp_path($dir . $os . $debug . $exe);
+            $retval = $dir . $os . $debug . $exe;
         } else {
-            $retval = &xp_path($dir . $os . $opt . $exe);
+            $retval = $dir . $os . $opt . $exe;
         }
 
+        $retval = &xp_path($retval);
 
-        if (($os_type ne "MAC") && !(-x &xp_path($retval))) {
-            # mac doesn't seem to deal with -x correctly
-            die ($retval . " is not a valid executable on this system.\n");
-        }
+    }# (user provided a path)
+
+
+    if (($os_type ne "MAC") && !(-x $retval)) {
+        # mac doesn't seem to deal with -x correctly
+        die ($retval . " is not a valid executable on this system.\n");
     }
 
-    return &xp_path($retval);
+    return $retval;
 }
 
 #
@@ -791,13 +811,18 @@ sub get_lc_engine_command {
                 $retval .= "lcshell";
             }
         } # mac/ not mac
-    }
 
-    if (!(-x &xp_path($retval))) {
+        $retval = &xp_path($retval);
+
+    } # (user provided a path)
+
+
+    if (($os_type ne "MAC") && !(-x $retval)) {
+        # mac doesn't seem to deal with -x correctly
         die ("$retval is not a valid executable on this system.\n");
     }
 
-    return &xp_path($retval);
+    return $retval;
 
 }
 
