@@ -1651,6 +1651,11 @@ void nsTableFrame::PlaceChild(nsIPresContext*    aPresContext,
     aState.availSize.height -= aKidRect.height;
   }
 
+  if (nsnull!=aMaxElementSize) {
+    aMaxElementSize->width = aKidMaxElementSize.width;
+    aMaxElementSize->height = aKidMaxElementSize.height;
+  }
+
   // If this is a footer row group, add it to the list of footer row groups
   const nsStyleDisplay *childDisplay;
   aKidFrame->GetStyleData(eStyleStruct_Display, ((nsStyleStruct *&)childDisplay));

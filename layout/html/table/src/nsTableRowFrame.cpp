@@ -576,8 +576,8 @@ nsTableRowFrame::InitialReflow(nsIPresContext&  aPresContext,
     if (gsDebug1) printf ("%p InitR: avail=%d\n", this, kidAvailSize.width);
     status = ReflowChild(kidFrame, &aPresContext, kidSize, kidReflowState);
     if (gsDebug1) 
-      printf ("%p Initial Reflow: desired=%d, MES=%d\n", 
-             this, kidSize.width, kidMaxElementSize.width);
+      printf ("TR %p for cell %p Initial Reflow: desired=%d, MES=%d\n", 
+             this, kidFrame, kidSize.width, kidMaxElementSize.width);
     ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(kidSize);
     ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);
     NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected child reflow status");
@@ -785,7 +785,9 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext&  aPresContext,
   kidReflowState.reflowCommand = nsnull;
   kidReflowState.maxSize.width = NS_UNCONSTRAINEDSIZE;
   status = ReflowChild(kidFrame, &aPresContext, desiredSize, kidReflowState);
-
+  if (gsDebug1) 
+      printf ("TR %p for cell %p Incremental Reflow: desired=%d, MES=%d\n", 
+             this, kidFrame, desiredSize.width, kidMaxElementSize.width);
   // Update the cell layout data.
   ((nsTableCellFrame *)kidFrame)->SetPass1DesiredSize(desiredSize);
   ((nsTableCellFrame *)kidFrame)->SetPass1MaxElementSize(kidMaxElementSize);

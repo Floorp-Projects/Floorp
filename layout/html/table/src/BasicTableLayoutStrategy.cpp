@@ -141,7 +141,20 @@ PRBool BasicTableLayoutStrategy::Initialize(nsSize* aMaxElementSize)
   if (nsnull!=aMaxElementSize)
   {
     aMaxElementSize->height = 0;
-    aMaxElementSize->width = mMinTableWidth;
+    
+    // begin REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    nsIFrame * parent = nsnull;
+    mTableFrame->GetGeometricParent(parent);
+    const nsStylePosition* tablePosition;
+    parent->GetStyleData(eStyleStruct_Position, ((nsStyleStruct *&)tablePosition));
+    // end REMOVE_ME_WHEN_TABLE_STYLE_IS_RESOLVED!
+    nsMargin borderPadding;
+    const nsStyleSpacing* spacing;
+    if (tablePosition->mWidth.GetUnit()==eStyleUnit_Coord)
+      aMaxElementSize->width = tablePosition->mWidth.GetCoordValue();
+    else
+      aMaxElementSize->width = mMinTableWidth;
+
     if (PR_TRUE==gsDebug) 
       printf("BTLS::Init setting aMaxElementSize->width = %d\n", aMaxElementSize->width);
   }
@@ -302,6 +315,7 @@ PRBool BasicTableLayoutStrategy::AssignPreliminaryColumnWidths()
       nsSize cellDesiredSize = cellFrame->GetPass1DesiredSize();
       nscoord cellDesiredWidth = cellDesiredSize.width;
       nscoord cellMinWidth = cellMinSize.width;
+
       if (1==colSpan)
       {
         if (0==minColContentWidth)

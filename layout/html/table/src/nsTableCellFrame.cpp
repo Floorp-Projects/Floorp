@@ -310,13 +310,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext& aPresContext,
   if (PR_TRUE==gsDebug || PR_TRUE==gsDebugNT)
   {
     if (nsnull!=pMaxElementSize)
-      printf("  %p cellFrame child returned desiredSize=%d,%d,\
-             and maxElementSize=%d,%d\n",
+      printf("  %p cellFrame child returned desiredSize=%d,%d, and maxElementSize=%d,%d\n",
              this, kidSize.width, kidSize.height,
              pMaxElementSize->width, pMaxElementSize->height);
     else
-      printf("  %p cellFrame child returned desiredSize=%d,%d,\
-             and maxElementSize=nsnull\n",
+      printf("  %p cellFrame child returned desiredSize=%d,%d, and maxElementSize=nsnull\n",
              this, kidSize.width, kidSize.height);
   }
 
