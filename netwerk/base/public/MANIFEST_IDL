@@ -8,3 +8,4 @@ nsIStreamObserver.idl
 nsIURI.idl
 nsIURL.idl
 nsIChannel.idl
+nsIRequest.idl
