@@ -83,7 +83,7 @@ nsMemCache::GetDescription(PRUnichar * *aDescription)
 NS_IMETHODIMP
 nsMemCache::Contains(const char *aKey, PRUint32 aKeyLength, PRBool *aFound)
 {
-    nsCStringKey *opaqueKey = new nsCStringKey(aKey, aKeyLength);
+    nsOpaqueKey *opaqueKey = new nsOpaqueKey(aKey, aKeyLength);
     if (!opaqueKey)
         return NS_ERROR_OUT_OF_MEMORY;
     *aFound = mHashTable->Exists(opaqueKey);
@@ -97,11 +97,11 @@ nsMemCache::GetCachedNetData(const char *aKey, PRUint32 aKeyLength,
 {
     nsresult rv;
     nsMemCacheRecord* record = 0;
-    nsCStringKey *opaqueKey2 = 0;
-    nsCStringKey *opaqueKey3 = 0;
-    nsCStringKey *opaqueKey;
+    nsOpaqueKey *opaqueKey2 = 0;
+    nsOpaqueKey *opaqueKey3 = 0;
+    nsOpaqueKey *opaqueKey;
 
-    opaqueKey = new nsCStringKey(aKey, aKeyLength);
+    opaqueKey = new nsOpaqueKey(aKey, aKeyLength);
     if (!opaqueKey)
         goto out_of_memory;
     record = (nsMemCacheRecord*)mHashTable->Get(opaqueKey);
@@ -119,13 +119,13 @@ nsMemCache::GetCachedNetData(const char *aKey, PRUint32 aKeyLength,
         if (NS_FAILED(rv)) goto out_of_memory;
 
         // Index the record by opaque key
-        opaqueKey2 = new nsCStringKey(record->mKey, record->mKeyLength);
+        opaqueKey2 = new nsOpaqueKey(record->mKey, record->mKeyLength);
         if (!opaqueKey2) goto out_of_memory;
         mHashTable->Put(opaqueKey2, record);
         
         // Index the record by it's record ID
         char *recordIDbytes = NS_REINTERPRET_CAST(char *, &record->mRecordID);
-        opaqueKey3 = new nsCStringKey(recordIDbytes,
+        opaqueKey3 = new nsOpaqueKey(recordIDbytes,
                                       sizeof record->mRecordID);
         if (!opaqueKey3) {
             // Clean up the first record from the hash table
@@ -157,7 +157,7 @@ NS_IMETHODIMP
 nsMemCache::GetCachedNetDataByID(PRInt32 RecordID,
                                  nsINetDataCacheRecord* *aRecord)
 {
-    nsCStringKey opaqueKey(NS_REINTERPRET_CAST(const char *, &RecordID),
+    nsOpaqueKey opaqueKey(NS_REINTERPRET_CAST(const char *, &RecordID),
                           sizeof RecordID);
     *aRecord = (nsINetDataCacheRecord*)mHashTable->Get(&opaqueKey);
     if (*aRecord) {
@@ -173,12 +173,12 @@ nsMemCache::Delete(nsMemCacheRecord* aRecord)
     nsMemCacheRecord *removedRecord;
 
     char *recordIDbytes = NS_REINTERPRET_CAST(char *, &aRecord->mRecordID);
-    nsCStringKey opaqueRecordIDKey(recordIDbytes,
+    nsOpaqueKey opaqueRecordIDKey(recordIDbytes,
                                   sizeof aRecord->mRecordID);
     removedRecord = (nsMemCacheRecord*)mHashTable->Remove(&opaqueRecordIDKey);
     NS_ASSERTION(removedRecord == aRecord, "memory cache database inconsistent");
 
-    nsCStringKey opaqueKey(aRecord->mKey, aRecord->mKeyLength);
+    nsOpaqueKey opaqueKey(aRecord->mKey, aRecord->mKeyLength);
     removedRecord = (nsMemCacheRecord*)mHashTable->Remove(&opaqueKey);
     NS_ASSERTION(removedRecord == aRecord, "memory cache database inconsistent");
 
@@ -234,19 +234,19 @@ HashEntryConverter(nsHashKey *aKey, void *aValue,
                    void *unused, nsISupports **retval)
 {
     nsMemCacheRecord *record;
-    nsCStringKey *opaqueKey;
+    nsOpaqueKey *opaqueKey;
 
     record = (nsMemCacheRecord*)aValue;
-    opaqueKey = (nsCStringKey*)aKey;
+    opaqueKey = (nsOpaqueKey*)aKey;
 
     // Hash table keys that index cache entries by their record ID
     // shouldn't be enumerated.
-    if ((opaqueKey->GetStringLength() == sizeof(PRInt32))) {
+    if ((opaqueKey->GetBufferLength() == sizeof(PRInt32))) {
 
 #ifdef DEBUG
         PRInt32 recordID;
         record->GetRecordID(&recordID);
-        NS_ASSERTION(*((PRInt32*)opaqueKey->GetString()) == recordID,
+        NS_ASSERTION(*((PRInt32*)opaqueKey->GetBuffer()) == recordID,
                      "Key has incorrect key length");
 #endif
         return NS_ERROR_FAILURE;
