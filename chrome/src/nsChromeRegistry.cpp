@@ -265,9 +265,6 @@ NS_IMETHODIMP
 nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 #ifdef NECKO
 {
-	nsXPIDLCString spec;
-	aChromeURL->GetSpec(getter_Copies(spec));
-
     nsresult rv = NS_OK;
     NS_ASSERTION(aChromeURL, "null url!");
     if (!aChromeURL)
@@ -383,8 +380,6 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         finalString += remaining;
 
     char* finalURI = finalString.ToNewCString();
-	printf("FROM:%s\n",(const char*) spec);
-	printf("TO:%s\n\n",finalURI);
     aChromeURL->SetSpec(finalURI);
 /*
 #ifndef NECKO
