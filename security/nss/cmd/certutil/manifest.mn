@@ -49,4 +49,4 @@ REQUIRES = dbm seccmd
 
 PROGRAM = certutil
 
-USE_STATIC_LIBS = 1
+#USE_STATIC_LIBS = 1
