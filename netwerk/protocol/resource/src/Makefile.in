@@ -1,5 +1,3 @@
-#!gmake
-#
 # The contents of this file are subject to the Netscape Public License
 # Version 1.0 (the "NPL"); you may not use this file except in
 # compliance with the NPL.  You may obtain a copy of the NPL at
@@ -15,15 +13,29 @@
 # Copyright (C) 1998 Netscape Communications Corporation.  All Rights
 # Reserved.
 
-DEPTH = ..\..
+DEPTH = ../../../..
+
+topsrcdir	= @top_srcdir@
+srcdir		= @srcdir@
+VPATH		= @srcdir@
 
 MODULE = netwerk
 
-DIRS=            \
-	file     \
-	resource \
-	ftp      \
-        http     \
-	$(NULL)
+LIBRARY_NAME = fileprotocol
 
-include <$(DEPTH)\config\rules.mak>
+IS_COMPONENT = 1
+
+include $(DEPTH)/config/autoconf.mk
+
+CPPSRCS =			      \
+        nsResourceProtocolHandler.cpp \
+        nsResourceProtocolFactory.cpp \
+        $(NULL)
+
+REQUIRES = xpcom netwerk 
+
+include $(topsrcdir)/config/config.mk
+
+TARGET = $(LIBARY)
+
+include $(DEPTH)/config/rules.mk

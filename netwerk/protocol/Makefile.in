@@ -25,10 +25,11 @@ MODULE		= netwerk
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS=		\
-	file 	\
-	ftp  	\
-	http 	\
+DIRS=		 \
+	file	 \
+	resource \
+	ftp	 \
+	http	 \
 	$(NULL)
 
 include $(topsrcdir)/config/rules.mk
