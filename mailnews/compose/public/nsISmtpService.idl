@@ -87,4 +87,5 @@ interface nsISmtpService : nsISupports {
    *   the hostname
    */
   void deleteSmtpServer(in nsISmtpServer server);
+
 };

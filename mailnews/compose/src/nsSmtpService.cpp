@@ -63,7 +63,8 @@ NS_MsgBuildSmtpUrl(nsIFileSpec * aFilePath,
 
 nsresult NS_MsgLoadSmtpUrl(nsIURI * aUrl, nsISupports * aConsumer);
 
-nsSmtpService::nsSmtpService()
+nsSmtpService::nsSmtpService() :
+    mSmtpServersLoaded(PR_FALSE)
 {
     NS_INIT_REFCNT();
     NS_NewISupportsArray(getter_AddRefs(mSmtpServers));
@@ -435,19 +436,19 @@ nsSmtpService::GetSmtpServers(nsISupportsArray ** aResult)
 nsresult
 nsSmtpService::loadSmtpServers()
 {
-
+    if (mSmtpServersLoaded) return NS_OK;
+    
     nsresult rv;
-    NS_WITH_SERVICE(nsIPref, prefs, "component://netscape/preferences", &rv);
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     if (NS_FAILED(rv)) return rv;
     
     nsXPIDLCString serverList;
     rv = prefs->CopyCharPref("mail.smtpservers", getter_Copies(serverList));
     if (NS_FAILED(rv)) return rv;
 
-    // this is such a hack
-    prefs->ClearUserPref("mail.smtpservers");
     char *newStr;
-    char *pref = nsCRT::strtok((char*)(const char*)serverList, ", ", &newStr);
+    char *pref = nsCRT::strtok(NS_CONST_CAST(char*,(const char*)serverList),
+                               ", ", &newStr);
     while (pref) {
 
         rv = createKeyedServer(pref);
@@ -455,7 +456,21 @@ nsSmtpService::loadSmtpServers()
         pref = nsCRT::strtok(newStr, ", ", &newStr);
     }
 
+    saveKeyList();
+
+    mSmtpServersLoaded = PR_TRUE;
     return NS_OK;
+}
+
+// save the list of keys
+nsresult
+nsSmtpService::saveKeyList()
+{
+    nsresult rv;
+    NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    return prefs->SetCharPref("mail.smtpservers", mServerKeyList);
 }
 
 nsresult
@@ -477,17 +492,12 @@ nsSmtpService::createKeyedServer(const char *key, nsISmtpServer** aResult)
 
     NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
     if (NS_SUCCEEDED(rv)) {
-        nsXPIDLCString serverList;
-        prefs->CopyCharPref("mail.smtpservers",getter_Copies(serverList));
-        if (serverList && *((const char*)serverList)) {
-            nsCAutoString newServerList(serverList);
-            newServerList += ',';
-            newServerList += key;
-            serverList = newServerList;
-        } else {
-            serverList = key;
+        if (mServerKeyList.IsEmpty())
+            mServerKeyList = key;
+        else {
+            mServerKeyList += ",";
+            mServerKeyList += key;
         }
-        prefs->SetCharPref("mail.smtpservers", serverList);
     }
 
     if (aResult) {
@@ -507,24 +517,49 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
   *aServer = nsnull;
   // always returns NS_OK, just leaving *aServer at nsnull
   if (!mDefaultSmtpServer) {
-      PRUint32 count=0;
-      nsCOMPtr<nsISupportsArray> smtpServers;
-      rv = GetSmtpServers(getter_AddRefs(smtpServers));
-      rv = smtpServers->Count(&count);
-      printf("There are %d smtp servers\n", count);
-      if (count == 0) {
-          rv = CreateSmtpServer(getter_AddRefs(mDefaultSmtpServer));
-          if (NS_FAILED(rv)) return rv;
+      NS_WITH_SERVICE(nsIPref, pref, NS_PREF_PROGID, &rv);
+      if (NS_FAILED(rv)) return rv;
+
+      // try to get it from the prefs
+      nsXPIDLCString defaultServerKey;
+      rv = pref->CopyCharPref("mail.smtp.defaultserver",
+                             getter_Copies(defaultServerKey));
+      if (NS_SUCCEEDED(rv) &&
+          nsCRT::strcmp(defaultServerKey, "")==0) {
+
+          nsCOMPtr<nsISmtpServer> server;
+          rv = getServerByKey(defaultServerKey,
+                              getter_AddRefs(mDefaultSmtpServer));
       } else {
-          nsCOMPtr<nsISupports> supports;
-          rv = mSmtpServers->GetElementAt(0, getter_AddRefs(supports));
+          // no pref set, so just return the first one, and set the pref
+      
+          PRUint32 count=0;
+          nsCOMPtr<nsISupportsArray> smtpServers;
+          rv = GetSmtpServers(getter_AddRefs(smtpServers));
+          rv = smtpServers->Count(&count);
+
+          // nothing in the array, we had better create a new server
+          // (which will add it to the array & prefs anyway)
+          if (count == 0)
+              rv = CreateSmtpServer(getter_AddRefs(mDefaultSmtpServer));
+          else
+              rv = mSmtpServers->QueryElementAt(0, NS_GET_IID(nsISmtpServer),
+                                                (void **)getter_AddRefs(mDefaultSmtpServer));
+
           if (NS_FAILED(rv)) return rv;
-          mDefaultSmtpServer = do_QueryInterface(supports);
+          NS_ENSURE_TRUE(mDefaultSmtpServer, NS_ERROR_UNEXPECTED);
+          
+          // now we have a default server, set the prefs correctly
+          nsXPIDLCString serverKey;
+          mDefaultSmtpServer->GetKey(getter_Copies(serverKey));
+          if (NS_SUCCEEDED(rv))
+              pref->SetCharPref("mail.smtp.defaultserver", serverKey);
       }
   }
 
-  // XXX still need to make sure the default SMTP server is
-  // in the server list!
+  // at this point:
+  // * mDefaultSmtpServer has a valid server
+  // * the key has been set in the prefs
     
   *aServer = mDefaultSmtpServer;
   NS_IF_ADDREF(*aServer);
@@ -535,9 +570,16 @@ nsSmtpService::GetDefaultServer(nsISmtpServer **aServer)
 NS_IMETHODIMP
 nsSmtpService::SetDefaultServer(nsISmtpServer *aServer)
 {
-  // XXX need to make sure the default SMTP server is in the array
-  mDefaultSmtpServer = aServer;
-  return NS_OK;
+    nsresult rv;
+    mDefaultSmtpServer = aServer;
+
+    nsXPIDLCString serverKey;
+    rv = aServer->GetKey(getter_Copies(serverKey));
+    if (NS_FAILED(rv)) return rv;
+    
+    NS_WITH_SERVICE(nsIPref, pref, NS_PREF_PROGID, &rv);
+    pref->SetCharPref("mail.smtp.defaultserver", serverKey);
+    return NS_OK;
 }
 
 PRBool
@@ -561,15 +603,15 @@ nsSmtpService::findServerByKey (nsISupports *element, void *aData)
     return PR_TRUE;
 }
 
-
 NS_IMETHODIMP
 nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
 {
     if (!aResult) return NS_ERROR_NULL_POINTER;
 
+    loadSmtpServers();
     nsresult rv;
     
-    PRInt32 i=1;
+    PRInt32 i=0;
     PRBool unique = PR_FALSE;
 
     findServerByKeyEntry entry;
@@ -577,19 +619,38 @@ nsSmtpService::CreateSmtpServer(nsISmtpServer **aResult)
     
     do {
         key = "smtp";
-        key.Append(i++);
+        key.Append(++i);
         
         entry.key = key;
         entry.server = nsnull;
-        
+
         mSmtpServers->EnumerateForwards(findServerByKey, (void *)&entry);
         if (!entry.server) unique=PR_TRUE;
         
     } while (!unique);
 
     rv = createKeyedServer(key, aResult);
-    
+    saveKeyList();
     return rv;
+}
+
+
+nsresult
+nsSmtpService::getServerByKey(const char* aKey, nsISmtpServer **aResult)
+{
+    findServerByKeyEntry entry;
+    entry.key = aKey;
+    entry.server = nsnull;
+    mSmtpServers->EnumerateForwards(findServerByKey, (void *)&entry);
+
+    if (entry.server) {
+        (*aResult) = entry.server;
+        NS_ADDREF(*aResult);
+        return NS_OK;
+    }
+
+    // not found in array, I guess we load it
+    return createKeyedServer(aKey, aResult);
 }
 
 NS_IMETHODIMP
@@ -604,10 +665,33 @@ nsSmtpService::DeleteSmtpServer(nsISmtpServer *aServer)
     if (NS_FAILED(rv) || idx==0)
         return NS_OK;
 
+    nsXPIDLCString serverKey;
+    aServer->GetKey(getter_Copies(serverKey));
+    
     rv = mSmtpServers->DeleteElementAt(idx);
 
-    return rv;
+    nsCAutoString newServerList;
+    char *newStr;
+    char *rest = mServerKeyList.ToNewCString();
+    
+    char *token = nsCRT::strtok(rest, ",", &newStr);
+    while (token) {
+        // only re-add the string if it's not the key
+        if (nsCRT::strcmp(token, serverKey) != 0) {
+            if (newServerList.IsEmpty())
+                newServerList = token;
+            else {
+                newServerList += ',';
+                newServerList += token;
+            }
+        }
 
+        token = nsCRT::strtok(newStr, ",", &newStr);
+    }
+
+    mServerKeyList = newServerList;
+    saveKeyList();
+    return rv;
 }
 
 PRBool

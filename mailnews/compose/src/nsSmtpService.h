@@ -66,8 +66,15 @@ private:
     
     nsresult createKeyedServer(const char* key,
                                nsISmtpServer **aResult = nsnull);
+    nsresult saveKeyList();
+    nsresult getServerByKey(const char *aKey, nsISmtpServer** aResult);
+    
     nsCOMPtr<nsISupportsArray> mSmtpServers;
     nsCOMPtr<nsISmtpServer> mDefaultSmtpServer;
+
+    nsCAutoString mServerKeyList;
+
+    PRBool mSmtpServersLoaded;
 };
 
 #endif /* nsSmtpService_h___ */
