@@ -123,7 +123,7 @@ class nsProxyObjectManager: public nsIProxyObjectManager
 {
 public:
 
-    NS_DECL_ISUPPORTS;
+    NS_DECL_ISUPPORTS
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_IPROXYEVENT_MANAGER_IID);
     
     NS_IMETHOD GetProxyObject(PLEventQueue *destQueue, 
