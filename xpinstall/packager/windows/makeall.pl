@@ -125,7 +125,8 @@ print "\n";
 
 $gDirPackager         = "$topsrcdir/xpinstall/packager";
 $gDirStageProduct     = "$inStagePath/mozilla";
-$gDirDistInstall      = "$inDistPath/install";
+$gDirDistInstall      = `cygpath -mai $inDistPath/install`;
+chomp $gDirDistInstall;
 $gDirDistInstGre      = "$inDistPath/inst_gre";
 
 # Build GRE installer package first before building Mozilla!  GRE installer is required by the mozilla installer.
