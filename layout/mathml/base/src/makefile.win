@@ -45,6 +45,7 @@ DEFINES= -DWIN32_LEAN_AND_MEAN
 CPP_OBJS= .\$(OBJDIR)\nsMathMLChar.obj		        \
           .\$(OBJDIR)\nsMathMLFrame.obj        \
           .\$(OBJDIR)\nsMathMLContainerFrame.obj        \
+          .\$(OBJDIR)\nsMathMLForeignFrameWrapper.obj		\
           .\$(OBJDIR)\nsMathMLmrowFrame.obj		\
           .\$(OBJDIR)\nsMathMLmphantomFrame.obj		\
           .\$(OBJDIR)\nsMathMLmfencedFrame.obj		\
