@@ -340,6 +340,7 @@ SWITCH: for ($::FORM{'knob'}) {
     };   
     /^reopen$/  && CheckonComment( "reopen" ) && do {
         ChangeStatus('REOPENED');
+        ChangeResolution('');
         last SWITCH;
     };
     /^verify$/ && CheckonComment( "verify" ) && do {
