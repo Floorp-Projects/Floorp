@@ -32,6 +32,8 @@ import org.mozilla.webclient.HistoryEntry;
 import org.mozilla.webclient.WindowControl;
 import org.mozilla.webclient.WrapperFactory;
 
+import org.mozilla.webclient.UnimplementedException; 
+
 public class HistoryImpl extends ImplObjectNative implements History
 {
 //
@@ -100,10 +102,13 @@ public HistoryEntry [] getBackList()
     Assert.assert(-1 != nativeWebShell);
     HistoryEntry [] result = null;
     
-    synchronized(myBrowserControl) {
+    /* synchronized(myBrowserControl) {
         result = nativeGetBackList(nativeWebShell);
     }
     return result;
+    */
+    
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function History::getBackList has not yet been implemented.\n");
 }
             
 public void clearHistory()
@@ -111,14 +116,15 @@ public void clearHistory()
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
-    synchronized(myBrowserControl) {
+    /* synchronized(myBrowserControl) {
         nativeClearHistory(nativeWebShell);
     }
+    */
+    
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function History::clearHistory has not yet been implemented.\n");
 }
             
-//    org.w3c.dom.Document getDOM();
 
-// webclient.PageInfo getPageInfo();
             
 public void forward()
 {
@@ -148,10 +154,13 @@ public HistoryEntry [] getForwardList()
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
-    synchronized(myBrowserControl) {
+    /* synchronized(myBrowserControl) {
         result = nativeGetForwardList(nativeWebShell);
     }
     return result;
+    */
+
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function History::getForwardList has not yet been implemented.\n");
 }
             
 public HistoryEntry [] getHistory()
@@ -160,10 +169,13 @@ public HistoryEntry [] getHistory()
     myFactory.throwExceptionIfNotInitialized();
     Assert.assert(-1 != nativeWebShell);
     
-    synchronized(myBrowserControl) {
+    /* synchronized(myBrowserControl) {
         result = nativeGetHistory(nativeWebShell);
     }
     return result;
+    */
+
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function History::getHistory has not yet been implemented.\n");
 }
             
 public HistoryEntry getHistoryEntry(int historyIndex)
@@ -172,10 +184,13 @@ public HistoryEntry getHistoryEntry(int historyIndex)
     Assert.assert(-1 != nativeWebShell);
     HistoryEntry result = null;
     
-    synchronized(myBrowserControl) {
+    /* synchronized(myBrowserControl) {
         result = nativeGetHistoryEntry(nativeWebShell, historyIndex);
     }
     return result;
+    */
+
+    throw new UnimplementedException("\nUnimplementedException -----\n API Function History::getHistoryEntry has not yet been implemented.\n");
 }
             
 public int getCurrentHistoryIndex()
@@ -265,7 +280,7 @@ public static void main(String [] args)
     Assert.setEnabled(true);
     Log.setApplicationName("HistoryImpl");
     Log.setApplicationVersion("0.0");
-    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.2 2000/03/09 23:22:51 edburns%acm.org Exp $");
+    Log.setApplicationVersionDate("$Id: HistoryImpl.java,v 1.3 2000/05/23 21:06:11 ashuk%eng.sun.com Exp $");
     
 }
 

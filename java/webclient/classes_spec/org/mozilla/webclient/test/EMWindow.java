@@ -50,7 +50,7 @@ import org.mozilla.util.Assert;
  * This is a test application for using the BrowserControl.
 
  *
- * @version $Id: EMWindow.java,v 1.5 2000/04/22 02:00:57 edburns%acm.org Exp $
+ * @version $Id: EMWindow.java,v 1.6 2000/05/23 21:06:41 ashuk%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlFactory
 
@@ -98,14 +98,18 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		Menu fileMenu = new Menu("File");
 		Menu viewMenu = new Menu("View");
 		Menu searchMenu = new Menu("Search");
+		Menu editMenu = new Menu("Edit");
 		MenuItem newItem = new MenuItem("New Window");
 		MenuItem closeItem = new MenuItem("Close");
 		MenuItem findItem = new MenuItem("Find");
 		MenuItem findNextItem = new MenuItem("Find Next");
 		MenuItem sourceItem = new MenuItem("View Page Source");
+		MenuItem pageInfoItem = new MenuItem("View Page Info");
+		MenuItem selectAllItem = new MenuItem("Select All");
 		menuBar.add(fileMenu);
 		menuBar.add(viewMenu);
 		menuBar.add(searchMenu);
+		menuBar.add(editMenu);
 		fileMenu.add(newItem);
 		newItem.addActionListener(this);
 		fileMenu.add(closeItem);
@@ -116,6 +120,10 @@ public class EMWindow extends Frame implements DialogClient, ActionListener, Doc
 		findNextItem.addActionListener(this);
 		viewMenu.add(sourceItem);
 		sourceItem.addActionListener(this);
+		viewMenu.add(pageInfoItem);
+		pageInfoItem.addActionListener(this);
+		editMenu.add(selectAllItem);
+		selectAllItem.addActionListener(this);
 
 		// Create the URL field
 		urlField = new TextField("", 30);
@@ -318,8 +326,14 @@ public void delete()
 		currentPage.findNextInPage(false);
 	      }
 	      else if (command.equals("View Page Source")) {
-		// currentPage.getSourceBytes(viewMode);
+		currentPage.getSourceBytes(viewMode);
 		viewMode = !viewMode;
+	      }
+	      else if (command.equals("View Page Info")) {
+		currentPage.getPageInfo();
+	      }
+	      else if (command.equals("Select All")) {
+		currentPage.selectAll();
 	      }
 	    }
 	
