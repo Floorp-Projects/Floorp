@@ -26,10 +26,11 @@
 #include "nsTableColGroupFrame.h"
 #include "nsTableRowFrame.h"
 #include "nsTableRowGroupFrame.h"
+#include "nsTableOuterFrame.h"
 #include "nsIHTMLContent.h"
 
 #include "BasicTableLayoutStrategy.h"
-// #include "FixedTableLayoutStrategy.h"
+#include "FixedTableLayoutStrategy.h"
 
 #include "nsIPresContext.h"
 #include "nsCSSRendering.h"
@@ -1584,7 +1585,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     // Constrain our reflow width to the computed table width
     nsReflowState    reflowState(aReflowState);
     reflowState.maxSize.width = mRect.width;
-    aStatus = ResizeReflowPass2(&aPresContext, aDesiredSize, reflowState, 0, 0);
+    aStatus = ResizeReflowPass2(&aPresContext, aDesiredSize, reflowState);
 
     mPass = kPASS_UNDEFINED;
   }
@@ -1721,9 +1722,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   */
 nsReflowStatus nsTableFrame::ResizeReflowPass2(nsIPresContext* aPresContext,
                                                nsReflowMetrics& aDesiredSize,
-                                               const nsReflowState& aReflowState,
-                                               PRInt32 aMinCaptionWidth,
-                                               PRInt32 mMaxCaptionWidth)
+                                               const nsReflowState& aReflowState)
 {
 	//DumpCellMap();
   NS_PRECONDITION(aReflowState.frame == this, "bad reflow state");
@@ -2249,28 +2248,11 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   // need to figure out the overall table width constraint
   // default case, get 100% of available space
 
-  PRInt32 maxWidth;
+  PRInt32 maxWidth = aMaxSize.width;
   const nsStylePosition* position =
     (const nsStylePosition*)mStyleContext->GetStyleData(eStyleStruct_Position);
-  switch (position->mWidth.GetUnit()) {
-  case eStyleUnit_Coord:
+  if (eStyleUnit_Coord==position->mWidth.GetUnit()) 
     maxWidth = position->mWidth.GetCoordValue();
-    break;
-
-  case eStyleUnit_Auto:
-    maxWidth = aMaxSize.width;
-    break;
-
-  case eStyleUnit_Percent:
-  case eStyleUnit_Proportional:
-  case eStyleUnit_Inherit:
-    // XXX for now these fall through
-
-  default:
-    maxWidth = aMaxSize.width;
-    break;
-  }
-
 
   if (0>maxWidth)  // nonsense style specification
     maxWidth = 0;
@@ -2284,11 +2266,9 @@ void nsTableFrame::BalanceColumnWidths(nsIPresContext* aPresContext,
   {
     nsStyleTable* tableStyle;
     GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
-#if XXX
     if (NS_STYLE_TABLE_LAYOUT_FIXED==tableStyle->mLayoutStrategy)
       mTableLayoutStrategy = new FixedTableLayoutStrategy(this, numCols);
     else
-#endif
       mTableLayoutStrategy = new BasicTableLayoutStrategy(this, numCols);
     mTableLayoutStrategy->Initialize(aMaxElementSize);
   }
@@ -3258,6 +3238,14 @@ PRBool nsTableFrame::TableIsAutoWidth(nsTableFrame *aTableFrame,
 
   return result; 
 }
+
+nscoord nsTableFrame::GetMinCaptionWidth()
+{
+  nsIFrame *outerTableFrame=nsnull;
+  GetContentParent(outerTableFrame);
+  return (((nsTableOuterFrame *)outerTableFrame)->GetMinCaptionWidth());
+}
+
 
 /* ----- debugging methods ----- */
 NS_METHOD nsTableFrame::List(FILE* out, PRInt32 aIndent, nsIListFilter *aFilter) const

@@ -1009,7 +1009,7 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
           nscoord spanCellMaxWidth;
           if (0!=spanInfo->effectiveMaxWidthOfSpannedCols)
           {
-            spanCellMaxWidth = (spanInfo->cellDesiredWidth * colFrame->GetEffectiveMinColWidth()) /
+            spanCellMaxWidth = (spanInfo->cellDesiredWidth * colFrame->GetEffectiveMaxColWidth()) /
                                (spanInfo->effectiveMaxWidthOfSpannedCols);
             if (gsDebug==PR_TRUE) 
               printf ("    spanlist max: %d of %d\n", spanCellMaxWidth, spanInfo->effectiveMaxWidthOfSpannedCols);
@@ -1502,26 +1502,36 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
     delete proportionalColumnsList;
   }
 
-  // next, if the specified width of the table is greater than the table's computed width, expand the
-  // table's computed width to match the specified width, giving the extra space to proportionately-sized
-  // columns if possible.
-  if ((PR_FALSE==aTableIsAutoWidth) && (aAvailWidth > (tableWidth-widthOfFixedTableColumns)) &&
-      (gBigSpace!=aAvailWidth))
+  // next, account for table width constraints
+  // if the caption min width is wider than than the table, expand the table
+  nscoord captionMinWidth=mTableFrame->GetMinCaptionWidth();
+  if (captionMinWidth>tableWidth)
   {
-    DistributeExcessSpace(aAvailWidth, tableWidth, widthOfFixedTableColumns);
+    DistributeExcessSpace(captionMinWidth, tableWidth, widthOfFixedTableColumns);
   }
-  // IFF the table is NOT (auto-width && all columns have fixed width)
-  PRInt32 numFixedColumns=0;
-  PRInt32 *fixedColumns=nsnull;
-  mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
-  if (!((PR_TRUE==aTableIsAutoWidth) && (numFixedColumns==mNumCols)))
-  {
-    nscoord computedWidth=0;
-    for (PRInt32 i=0; i<mNumCols; i++) {
-      computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
+  else
+  { // else, if the caption min width is not an issue...
+    /* if the specified width of the table is greater than the table's computed width, expand the
+     * table's computed width to match the specified width, giving the extra space to proportionately-sized
+     * columns if possible. */
+    if ((PR_FALSE==aTableIsAutoWidth) && (aAvailWidth > (tableWidth-widthOfFixedTableColumns)) &&
+        (gBigSpace!=aAvailWidth))
+    {
+      DistributeExcessSpace(aAvailWidth, tableWidth, widthOfFixedTableColumns);
     }
-    if (computedWidth>aMaxWidth) {
-      AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
+    // IFF the table is NOT (auto-width && all columns have fixed width)
+    PRInt32 numFixedColumns=0;
+    PRInt32 *fixedColumns=nsnull;
+    mTableFrame->GetColumnsByType(eStyleUnit_Coord, numFixedColumns, fixedColumns);
+    if (!((PR_TRUE==aTableIsAutoWidth) && (numFixedColumns==mNumCols)))
+    {
+      nscoord computedWidth=0;
+      for (PRInt32 i=0; i<mNumCols; i++) {
+        computedWidth += mTableFrame->GetColumnWidth(i) + colInset;
+      }
+      if (computedWidth>aMaxWidth) {
+        AdjustTableThatIsTooWide(computedWidth, aMaxWidth, PR_FALSE);
+      }
     }
   }
 
