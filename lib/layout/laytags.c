@@ -439,6 +439,40 @@ lo_pop_paragraph_from_style_stack(lo_DocState **state,
 }
 
 void
+lo_ProcessSuperElement(MWContext *context,
+                       lo_DocState *state,
+                       LO_SuperStruct *super)
+{
+  if (super->is_end == FALSE)
+    {
+      state->baseline -=
+        super->baseline_adj;
+    }
+  else
+    {
+      state->baseline +=
+        super->baseline_adj;
+    }
+}
+
+void
+lo_ProcessSubElement(MWContext *context,
+                     lo_DocState *state,
+                     LO_SubStruct *sub)
+{
+  if (sub->is_end == FALSE)
+    {
+      state->baseline +=
+        sub->baseline_adj;
+    }
+  else
+    {
+      state->baseline -=
+        sub->baseline_adj;
+    }
+}
+
+void
 lo_ProcessParagraphElement(MWContext *context,
 						   lo_DocState **state,
 						   LO_ParagraphStruct *paragraph,
@@ -5119,20 +5153,32 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				FE_GetTextInfo(context, &tmp_text, &text_info);
 				PA_FREE(buff);
 
-				if (tag->is_end == FALSE)
-				{
-					state->baseline +=
-						(text_info.ascent / 2);
-				}
-				else
-				{
-					LO_TextAttr *attr;
+                {
+                  LO_SubStruct *sub = (LO_SubStruct*)lo_NewElement(context, state, LO_SUB, NULL, 0);
+			  
+                  XP_ASSERT(sub);
+                  if (!sub)
+                    {
+                      LO_UnlockLayout();
+                      return;
+                    }
 
-					state->baseline -=
-						(text_info.ascent / 2);
+                  sub->lo_any.type = LO_SUB;
+                  sub->lo_any.ele_id = NEXT_ELEMENT;
 
-					attr = lo_PopFont(state, tag->type);
-				}
+                  sub->is_end = tag->is_end;
+                  sub->baseline_adj = text_info.ascent / 2;
+
+                  lo_AppendToLineList(context, state, (LO_Element*)sub, 0);
+
+                  lo_ProcessSubElement(context, state, sub);
+                }
+
+                if (tag->is_end == TRUE)
+                  {
+					LO_TextAttr *attr = lo_PopFont(state, tag->type);
+                  }
+
 			}
 			break;
 
@@ -5189,20 +5235,30 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				FE_GetTextInfo(context, &tmp_text, &text_info);
 				PA_FREE(buff);
 
-				if (tag->is_end == FALSE)
-				{
-					state->baseline -=
-						(text_info.ascent / 2);
-				}
-				else
-				{
-					LO_TextAttr *attr;
+                {
+                  LO_SuperStruct *super = (LO_SuperStruct*)lo_NewElement(context, state, LO_SUPER, NULL, 0);
+			  
+                  XP_ASSERT(super);
+                  if (!super)
+                    {
+                      LO_UnlockLayout();
+                      return;
+                    }
 
-					state->baseline +=
-						(text_info.ascent / 2);
+                  super->lo_any.type = LO_SUPER;
+                  super->lo_any.ele_id = NEXT_ELEMENT;
+                  super->is_end = tag->is_end;
+                  super->baseline_adj = text_info.ascent / 2;
 
-					attr = lo_PopFont(state, tag->type);
-				}
+                  lo_AppendToLineList(context, state, (LO_Element*)super, 0);
+
+                  lo_ProcessSuperElement(context, state, super);
+                }
+
+                if (tag->is_end == TRUE)
+                  {
+					LO_TextAttr *attr = lo_PopFont(state, tag->type);
+                  }
 			}
 			break;
 

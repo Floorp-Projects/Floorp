@@ -2052,6 +2052,12 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 		case LO_FLOAT:
 			size = sizeof(LO_FloatStruct);
                         break;
+		case LO_SUPER:
+			size = sizeof(LO_SuperStruct);
+                        break;
+		case LO_SUB:
+			size = sizeof(LO_SubStruct);
+                        break;
 		default:
 			size = sizeof(LO_Any);
 			break;

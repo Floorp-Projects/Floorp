@@ -825,6 +825,8 @@ lo_DisplayElement(MWContext *context, LO_Element *tptr,
     case LO_BLOCKQUOTE:
     case LO_HEADING:
 	case LO_SPAN:
+	case LO_SUB:
+	case LO_SUPER:
       /* all non-display, doc-state mutating elements. */
       break;
     case LO_TEXTBLOCK:

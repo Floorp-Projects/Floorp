@@ -99,6 +99,8 @@ static LO_Element * lo_rl_FitHeading( lo_RelayoutState *relay_state, LO_Element 
 static LO_Element * lo_rl_FitSpan( lo_RelayoutState *relay_state, LO_Element *lo_ele );
 static LO_Element * lo_rl_FitDiv( lo_RelayoutState *relay_state, LO_Element *lo_ele );
 static LO_Element * lo_rl_FitSpacer( lo_RelayoutState *relay_state, LO_Element *lo_ele );
+static LO_Element * lo_rl_FitSuper( lo_RelayoutState *relay_state, LO_Element *lo_ele );
+static LO_Element * lo_rl_FitSub( lo_RelayoutState *relay_state, LO_Element *lo_ele );
 
 /* The table of fitting functions for each layout element type... */
 static lo_FitFunction lo_rl_FitFunctionTable[] = {
@@ -119,19 +121,21 @@ static lo_FitFunction lo_rl_FitFunctionTable[] = {
 	lo_rl_FitObject,		/* LO_OBJECT */
 	lo_rl_FitParagraph,		/* LO_PARAGRAPH */
 	lo_rl_FitCenter,		/* LO_CENTER */
-	lo_rl_FitMulticolumn,	/* LO_MULTICOLUMN */
+	lo_rl_FitMulticolumn,		/* LO_MULTICOLUMN */
 	lo_rl_FitFloat,			/* LO_FLOAT */
 	lo_rl_FitTextBlock,		/* LO_TEXTBLOCK */
 	lo_rl_FitList,			/* LO_LIST */
 	lo_rl_FitDescTitle,		/* LO_DESCTITLE */
 	lo_rl_FitDescText,		/* LO_DESCTEXT */
-	lo_rl_FitBlockQuote,	/* LO_BLOCKQUOTE */
+	lo_rl_FitBlockQuote,		/* LO_BLOCKQUOTE */
 	lo_rl_FitLayer,			/* LO_LAYER */
 	lo_rl_FitHeading,		/* LO_HEADING */
 	lo_rl_FitSpan,			/* LO_SPAN */
 	lo_rl_FitDiv,			/* LO_DIV */
 	lo_rl_FitBuiltin,		/* LO_BUILTIN */
-	lo_rl_FitSpacer 		/* LO_SPACER */
+	lo_rl_FitSpacer, 		/* LO_SPACER */
+        lo_rl_FitSuper,			/* LO_SUPER */
+        lo_rl_FitSub			/* LO_SUB */
 };
 
 
@@ -1572,6 +1576,44 @@ lo_rl_FitSpacer( lo_RelayoutState *relay_state, LO_Element *lo_ele )
 	lo_LayoutSpacerElement(context, state, spacer, TRUE);
 
 	return next;
+}
+
+static LO_Element * lo_rl_FitSuper( lo_RelayoutState *relay_state, LO_Element *lo_ele )
+{
+  LO_Element *next = lo_tv_GetNextLayoutElement( relay_state->doc_state, lo_ele, TRUE);
+  LO_SuperStruct *super = (LO_SuperStruct *) lo_ele;
+  lo_DocState *state = relay_state->doc_state;
+  MWContext *context = relay_state->context;
+  
+  /* Put the LO_SUPER element back on the line list */
+  super->lo_any.x = state->x;
+  super->lo_any.y = state->y;
+  super->lo_any.ele_id = state->top_state->element_id++;
+  lo_AppendToLineList(context, state, lo_ele, 0);
+
+  /* Relayout the SUPER element */
+  lo_ProcessSuperElement(context, state, super);
+
+  return next;
+}
+
+static LO_Element * lo_rl_FitSub( lo_RelayoutState *relay_state, LO_Element *lo_ele )
+{
+  LO_Element *next = lo_tv_GetNextLayoutElement( relay_state->doc_state, lo_ele, TRUE);
+  LO_SubStruct *sub = (LO_SubStruct *) lo_ele;
+  lo_DocState *state = relay_state->doc_state;
+  MWContext *context = relay_state->context;
+  
+  /* Put the LO_SUB element back on the line list */
+  sub->lo_any.x = state->x;
+  sub->lo_any.y = state->y;
+  sub->lo_any.ele_id = state->top_state->element_id++;
+  lo_AppendToLineList(context, state, lo_ele, 0);
+
+  /* Relayout the SUB element */
+  lo_ProcessSubElement(context, state, sub);
+
+  return next;
 }
 
 static LO_Element * lo_rl_FitSpan( lo_RelayoutState *relay_state, LO_Element *lo_ele )

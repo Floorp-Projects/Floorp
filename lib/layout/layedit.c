@@ -1651,7 +1651,7 @@ lo_VerifyList( MWContext *pContext, lo_TopState* top_state,
         /*
          * Does this element have a valid type?
          */
-        if ( eptr->lo_any.type < 0 || eptr->lo_any.type > LO_SPACER ) {
+        if ( eptr->lo_any.type < 0 || eptr->lo_any.type > LO_SUB ) {
             XP_TRACE(("element %ld at address 0x%08x has an unknown type %d.",
                 index, eptr, eptr->lo_any.type));
             result = FALSE;
@@ -1748,10 +1748,12 @@ lo_PrintLayoutElement(MWContext *pContext, lo_TopState* top_state,
 		"LO_SPAN",
 		"LO_DIV",
 		"LO_BUILTIN",
-		"LO_SPACER"
+		"LO_SPACER",
+		"LO_SUPER",
+		"LO_SUB"
 	};
     type = eptr->lo_any.type;
-    if ( type < LO_UNKNOWN || type > LO_SPACER ) typeString  = "Illegal type";
+    if ( type < LO_UNKNOWN || type > LO_SUB ) typeString  = "Illegal type";
     else typeString = kTypeStrings[type + 1];
 
     XP_TRACE(("[%d] 0x%08x type %s(%d) ele_id %d",
