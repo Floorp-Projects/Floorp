@@ -38,10 +38,11 @@ WIN_WAIT_FOREVER=ON		# first we wait forever for a TESTDIR to appear, than
 
 is_running ${TMP}/nssqa	# checks if the file exists, if yes Exits, if not 
 						# creates to implement a primitive locking mechanism
-if [ $O_CRON = "OFF" ]	# if we are running from cron this has been done
-then
-	set_host			# sets the HOST and DOMSUF variables - carefull, 
-fi						# hardcoded to redplanet
+#if [ $O_CRON = "OFF" -a $O_WIN = "OFF" ]	# if we are running from cron 
+						# or on windows this has been done
+#then
+	#set_host			# sets the HOST and DOMSUF variables - carefull, 
+#fi						# hardcoded to redplanet
 
 KILL_SELFSERV=ON		# cleanup will also kill the leftover selfserv processes
 
@@ -97,13 +98,16 @@ run_all()
 			all.sh >/dev/null 2>/dev/null
 		fi
 	else
-		if [ $O_FILE = ON ]	#FIXME - write to tmp file and copy
-		then
-			all.sh 2>&1 | tee $TMP_ALL_SH_OUT
-			cat $TMP_ALL_SH_OUT >>$FILENAME
-		else
+		#if [ $O_FILE = ON ]	#FIXME - write to tmp file and copy
+		#then
+			#all.sh 2>&1 | tee $TMP_ALL_SH_OUT
+			#if [ -r $TMP_ALL_SH_OUT ]
+			#then
+				#cat $TMP_ALL_SH_OUT >>$FILENAME
+			#fi
+		#else
 			all.sh
-		fi
+		#fi
 	fi
 	Debug "Done with all.sh "
 	line
