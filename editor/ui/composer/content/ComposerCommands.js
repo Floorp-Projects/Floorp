@@ -1284,6 +1284,14 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
 
   var urlstring = GetDocumentUrl();
   var mustShowFileDialog = (aSaveAs || IsUrlAboutBlank(urlstring) || (urlstring == ""));
+
+  // If not doing "Save As" and editing a remote URL, do publishing instead
+  if (!mustShowFileDialog && GetScheme(urlstring) != "file")
+  {
+    goDoCommand("cmd_publish");
+    return true;
+  }
+
   var replacing = !aSaveAs;
   var titleChanged = false;
   var doUpdateURL = false;
@@ -1317,6 +1325,7 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   } // mustShowFileDialog
 
   var success = true;
+  var ioService;
   try {
     // if somehow we didn't get a local file but we did get a uri, 
     // attempt to create the localfile if it's a "file" url
@@ -1329,23 +1338,27 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
       if (docURI.schemeIs("file"))
       {
         tempLocalFile = Components.classes["@mozilla.org/file/local;1"].createInstance(Components.interfaces.nsILocalFile);
-        var ioService = GetIOService();
+        ioService = GetIOService();
         ioService.initFileFromURLSpec(tempLocalFile, urlstring);
       }
     }
 
     // this is the location where the related files will go
-    var parentDir;
+    var parentDir = null;
+    
+    // First check pref for saving associated files
+    var saveAssociatedFiles = false;
     try {
-      // First check pref for saving associated files
       var prefs = GetPrefs();
-      var saveAssociatedFiles = prefs.getBoolPref("editor.save_associated_files");
+      saveAssociatedFiles = prefs.getBoolPref("editor.save_associated_files");
+    } catch (e) {}
 
-      if (saveAssociatedFiles && tempLocalFile)
-      {
-        if (!aSaveAs)         // we are saving an existing local file
-          parentDir = null;   // don't change links or move files
-        else
+    // Only change links or move files if pref is set 
+    //  and we are saving to a new location
+    if (saveAssociatedFiles && aSaveAs)
+    {
+      try {
+        if (tempLocalFile)
         {
           // if we are saving to the same parent directory, don't set parentDir
           // grab old location, chop off file
@@ -1364,20 +1377,18 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
           else
             parentDir = tempLocalFile.parent;  // this is wrong if parent is the root!
         }
-      }
-      else
-      {
-        var lastSlash = urlstring.lastIndexOf("\/");
-        if (lastSlash != -1)
-        {
-          var parentDirString = urlstring.slice(0, lastSlash + 1);  // include last slash
-          parentDir = Components.classes["@mozilla.org/network/standard-url;1"].createInstance(Components.interfaces.nsIURI);
-          parentDir.spec = parentDirString;
-        }
         else
-          parentDir = null;
-      }
-    } catch(e) { parentDir = null; }
+        {
+          var lastSlash = urlstring.lastIndexOf("\/");
+          if (lastSlash != -1)
+          {
+            var parentDirString = urlstring.slice(0, lastSlash + 1);  // include last slash
+            ioService = GetIOService();
+            parentDir = ioService.newURI(parentDirString, window.editorShell.GetDocumentCharacterSet(), null);
+          }
+        }
+      } catch(e) { parentDir = null; }
+    }
 
     var destinationLocation;
     if (tempLocalFile)
@@ -1412,7 +1423,6 @@ function SaveDocument(aSaveAs, aSaveCopy, aMimeType)
   }
   return success;
 }
-
 
 //-------------------------------  Publishing
 var gPublishData;
