@@ -448,6 +448,8 @@ NS_IMETHODIMP nsParseMailMessageState::SetState(nsMailboxParseState aState)
 NS_IMETHODIMP nsParseMailMessageState::SetEnvelopePos(PRUint32 aEnvelopePos)
 {
 	m_envelope_pos = aEnvelopePos;
+    m_position = m_envelope_pos;
+    m_headerstartpos = m_position;
 	return NS_OK;
 }
 
