@@ -132,10 +132,6 @@ nsDownloadManager::~nsDownloadManager()
   NS_IF_RELEASE(gNC_DateStarted);
   NS_IF_RELEASE(gNC_DateEnded);
 
-  // Download Manager is shutting down! Tell the XPInstallManager to stop
-  // transferring any files that may have been being downloaded. 
-  gObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress", NS_LITERAL_STRING("cancel").get());
-
   NS_RELEASE(gRDFService);
   NS_RELEASE(gObserverService);
 }
@@ -1176,6 +1172,10 @@ nsDownloadManager::Observe(nsISupports* aSubject, const char* aTopic, const PRUn
     gEnumeratingDownloads = PR_TRUE;
     mCurrDownloads.Enumerate(CancelAllDownloads, this);
 
+    // Download Manager is shutting down! Tell the XPInstallManager to stop
+    // transferring any files that may have been being downloaded. 
+    gObserverService->NotifyObservers(mXPIProgress, "xpinstall-progress", NS_LITERAL_STRING("cancel").get());
+    
     // Now go and update the datasource so that we "cancel" all paused downloads. 
     SaveState();
 
