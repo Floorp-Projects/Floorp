@@ -307,15 +307,9 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
                                      nsHTMLReflowMetrics&     aDesiredLayoutSize,
                                      nsSize&                  aDesiredWidgetSize)
 {
-  nsIDOMHTMLSelectElement* select = GetSelect();
-  if (!select) {
+  nsIDOMHTMLCollection* options = GetOptions();
+  if (!options)
     return;
-  }
-  nsIDOMHTMLCollection* options = GetOptions(select);
-  if (!options) {
-    NS_RELEASE(select);
-    return;
-  }
 
   // get the css size 
   nsSize styleSize;
@@ -437,7 +431,6 @@ nsSelectControlFrame::GetDesiredSize(nsIPresContext*          aPresContext,
     }
   }
 
-  NS_RELEASE(select);
   NS_RELEASE(options);
 }
 
@@ -457,8 +450,10 @@ nsSelectControlFrame::GetWidgetInitData(nsIPresContext& aPresContext)
     nsListBoxInitData* initData = nsnull;
     if (multiple) {
       initData = new nsListBoxInitData();
-      initData->clipChildren = PR_TRUE;
-      initData->mMultiSelect = PR_TRUE;
+      if (initData) {
+        initData->clipChildren = PR_TRUE;
+        initData->mMultiSelect = PR_TRUE;
+      }
     }
     return initData;
   }
@@ -468,11 +463,11 @@ NS_IMETHODIMP
 nsSelectControlFrame::GetMultiple(PRBool* aMultiple, nsIDOMHTMLSelectElement* aSelect)
 {
   if (!aSelect) {
-    nsIDOMHTMLSelectElement* select = nsnull;
-    nsresult result = mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select);
-    if ((NS_OK == result) && select) {
-      result = select->GetMultiple(aMultiple);
-      NS_RELEASE(select);
+    nsIDOMHTMLSelectElement* thisSelect = nsnull;
+    nsresult result = mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&thisSelect);
+    if ((NS_OK == result) && thisSelect) {
+      result = thisSelect->GetMultiple(aMultiple);
+      NS_RELEASE(thisSelect);
     } 
     return result;
   } else {
@@ -483,10 +478,10 @@ nsSelectControlFrame::GetMultiple(PRBool* aMultiple, nsIDOMHTMLSelectElement* aS
 nsIDOMHTMLSelectElement* 
 nsSelectControlFrame::GetSelect()
 {
-  nsIDOMHTMLSelectElement* select = nsnull;
-  nsresult result = mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select);
-  if ((NS_OK == result) && select) {
-    return select;
+  nsIDOMHTMLSelectElement* thisSelect = nsnull;
+  nsresult result = mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&thisSelect);
+  if ((NS_OK == result) && thisSelect) {
+    return thisSelect;
   } else {
     return nsnull;
   }
@@ -495,13 +490,13 @@ nsSelectControlFrame::GetSelect()
 PRUint32
 nsSelectControlFrame::GetSelectedIndex()
 {
-  PRInt32 index = -1; // No selection
-  nsIDOMHTMLSelectElement* select = nsnull;
-  if (NS_SUCCEEDED(mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&select))) {
-    select->GetSelectedIndex(&index);
-    NS_RELEASE(select);
+  PRInt32 indx = -1; // No selection
+  nsIDOMHTMLSelectElement* thisSelect = nsnull;
+  if (NS_SUCCEEDED(mContent->QueryInterface(kIDOMHTMLSelectElementIID, (void**)&thisSelect))) {
+    thisSelect->GetSelectedIndex(&indx);
+    NS_RELEASE(thisSelect);
   }
-  return(index); 
+  return(indx); 
 }
 
 
@@ -510,10 +505,10 @@ nsSelectControlFrame::GetOptions(nsIDOMHTMLSelectElement* aSelect)
 {
   nsIDOMHTMLCollection* options = nsnull;
   if (!aSelect) {
-    nsIDOMHTMLSelectElement* select = GetSelect();
-    if (select) {
-      select->GetOptions(&options);
-      NS_RELEASE(select);
+    nsIDOMHTMLSelectElement* thisSelect = GetSelect();
+    if (thisSelect) {
+      thisSelect->GetOptions(&options);
+      NS_RELEASE(thisSelect);
       return options;
     } else {
       return nsnull;
@@ -651,11 +646,11 @@ nsSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     nsIListWidget* listWidget;
     result = mWidget->QueryInterface(kListWidgetIID, (void **) &listWidget);
     if ((NS_OK == result) && listWidget) {
-      PRInt32 index = listWidget->GetSelectedIndex();
+      PRInt32 indx = listWidget->GetSelectedIndex();
       NS_RELEASE(listWidget);
-      if (index >= 0) {
+      if (indx >= 0) {
         nsAutoString value;
-        GetOptionValue(*options, index, value);
+        GetOptionValue(*options, indx, value);
         aNumValues = 1;
         aNames[0]  = name;
         aValues[0] = value;
@@ -664,7 +659,7 @@ nsSelectControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
     } 
   } else {
     nsIListBox* listBox;
-    nsresult result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
+    result = mWidget->QueryInterface(kListBoxIID, (void **) &listBox);
     if ((NS_OK == result) && listBox) {
       PRInt32 numSelections = listBox->GetSelectedCount();
       NS_ASSERTION(aMaxNumValues >= numSelections, "invalid max num values");
@@ -916,7 +911,7 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
   }
 
     // Get Selected index out of Content model
-  PRUint32 selectedIndex = GetSelectedIndex();
+  PRInt32 selectedIndex = GetSelectedIndex();
   PRBool multiple = PR_FALSE;
   GetMultiple(&multiple);
 
@@ -937,11 +932,11 @@ nsSelectControlFrame::PaintSelectControl(nsIPresContext& aPresContext,
           if ((selectedIndex == -1) && (i == 0)) {
             PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
           }
-          else if (selectedIndex == i) {
+          else if ((PRUint32)selectedIndex == i) {
             PaintOption(PR_FALSE, aPresContext, aRenderingContext, text, x, y, inside, textHeight);
           }
 
-          if ((-1 == selectedIndex && (0 == i)) || (selectedIndex == i)) {
+          if ((-1 == selectedIndex && (0 == i)) || ((PRUint32)selectedIndex == i)) {
             i = numOptions;
           }
 
@@ -1118,11 +1113,11 @@ nsSelectControlFrame::ControlChanged(nsIPresContext* aPresContext)
 }
 
 // Get the selected state from the local cache (not widget)
-void nsSelectControlFrame::GetOptionSelected(PRUint32 index, PRBool* aValue)
+void nsSelectControlFrame::GetOptionSelected(PRUint32 indx, PRBool* aValue)
 {
   if (nsnull != mOptionSelected) {
-    if (mNumOptions >= index) {
-      *aValue = mOptionSelected[index];
+    if (mNumOptions >= indx) {
+      *aValue = mOptionSelected[indx];
       return;
     }
   }
@@ -1130,7 +1125,7 @@ void nsSelectControlFrame::GetOptionSelected(PRUint32 index, PRBool* aValue)
 }       
 
 // Get the selected state from the widget
-void nsSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 index, PRBool* aValue)
+void nsSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 indx, PRBool* aValue)
 {
   *aValue = PR_FALSE;
   nsresult result;
@@ -1145,7 +1140,7 @@ void nsSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 index, PRBool* aV
       PRInt32 selIndex = listWidget->GetSelectedIndex();
       NS_RELEASE(listWidget);
 
-      if (selIndex == index) {
+      if (selIndex == indx) {
         *aValue = PR_TRUE;
       }
     }
@@ -1162,7 +1157,7 @@ void nsSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 index, PRBool* aV
         listBox->GetSelectedIndices(selOptions, numSelected);
         PRUint32 i;
         for (i = 0; i < numSelected; i++) {
-          if (selOptions[i] == index) {
+          if (selOptions[i] == indx) {
             *aValue = PR_TRUE;
             break;
           }
@@ -1175,11 +1170,11 @@ void nsSelectControlFrame::GetOptionSelectedFromWidget(PRInt32 index, PRBool* aV
 }
 
 // Update the locally cached selection state (not widget)
-void nsSelectControlFrame::SetOptionSelected(PRUint32 index, PRBool aValue)
+void nsSelectControlFrame::SetOptionSelected(PRUint32 indx, PRBool aValue)
 {
   if (nsnull != mOptionSelected) {
-    if (mNumOptions >= index) {
-      mOptionSelected[index] = aValue;
+    if (mNumOptions >= indx) {
+      mOptionSelected[indx] = aValue;
     }
   }
 }         
@@ -1226,7 +1221,7 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
     nsString aValCopy(aValue);
     aValCopy.Trim("ar",PR_TRUE,PR_FALSE); // Chop off leading a or r
     PRInt32 error = 0;
-    PRInt32 actionIndex = aValCopy.ToInteger(&error, 10);
+    PRUint32 actionIndex = aValCopy.ToInteger(&error, 10);
     if (error) return NS_ERROR_INVALID_ARG; // Couldn't convert to integer
 
     // Grab the content model information (merge with postcreatewidget code?)
@@ -1260,7 +1255,7 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
           options->Item(i, &node);
           if (node) {
             nsIDOMHTMLOptionElement* option = nsnull;
-            nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+            result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
             if ((NS_OK == result) && option) {
               option->GetDefaultSelected(&selected);
               mOptionSelected[j]=selected;
@@ -1300,7 +1295,7 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
       if (actionIndex >= 0) {
         // Copy saved local cache into new local cache
         for (PRUint32 i=0, j=0; j < mNumOptions; i++,j++) {
-          if (i == actionIndex) i++; // At the point of insertion
+          if (i == (PRUint32)actionIndex) i++; // At the point of insertion
           mOptionSelected[j]=saveOptionSelected[i];
         }
 
@@ -1311,21 +1306,19 @@ NS_IMETHODIMP nsSelectControlFrame::SetProperty(nsIAtom* aName, const nsString& 
       // We also loose the status of what has been selected.
       } else {
         // Remove all stale options
-        PRInt32 i;
+        PRUint32 i;
         for (i=saveNumOptions; i>=0; i--) {
           listWidget->RemoveItemAt(i);
         }
 
         // Add all the options back in
-        PRBool selected = PR_FALSE;
-        nsString text(" ");
         for (i=0; i<mNumOptions; i++) {
           // Get the default (XXXincorrect) selected value and text of the option
           nsIDOMNode* node = nsnull;
           options->Item(i, &node);
           if (node) {
             nsIDOMHTMLOptionElement* option = nsnull;
-            nsresult result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
+            result = node->QueryInterface(kIDOMHTMLOptionElementIID, (void**)&option);
             if ((NS_OK == result) && option) {
               option->GetDefaultSelected(&selected); // Should be sel, not defsel :(
               mOptionSelected[i]=selected;
@@ -1381,9 +1374,9 @@ NS_IMETHODIMP nsSelectControlFrame::GetProperty(nsIAtom* aName, nsString& aValue
   if (nsHTMLAtoms::selected == aName) {
     PRInt32 error = 0;
     PRBool selected = PR_FALSE;
-    PRInt32 index = aValue.ToInteger(&error, 10); // Get index from aValue
+    PRInt32 indx = aValue.ToInteger(&error, 10); // Get index from aValue
     if (error == 0)
-      GetOptionSelectedFromWidget(index, &selected);
+      GetOptionSelectedFromWidget(indx, &selected);
     nsFormControlHelper::GetBoolString(selected, aValue);
     
   // For selectedIndex, get the value from the widget
