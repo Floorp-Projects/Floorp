@@ -37,50 +37,87 @@
 #include "nsplugindefs.h"
 #include "nsIFactory.h"
 
-////////////////////////////////////////////////////////////////////////////////
-// Plugin Interface
-// This is the minimum interface plugin developers need to support in order to
-// implement a plugin. The plugin manager may QueryInterface for more specific 
-// plugin types, e.g. nsILiveConnectPlugin.
-
+/**
+ * The nsIPlugin interface is the minimum interface plugin developers need to 
+ * support in order to implement a plugin. The plugin manager may QueryInterface 
+ * for more specific plugin types, e.g. nsILiveConnectPlugin.
+ *
+ * The old NPP_New plugin operation is now subsumed by two operations:
+ *
+ * CreateInstance -- called once, after the plugin instance is created. This 
+ * method is used to initialize the new plugin instance (although the actual
+ * plugin instance object will be created by the plugin manager).
+ *
+ * nsIPluginInstance::Start -- called when the plugin instance is to be
+ * started. This happens in two circumstances: (1) after the plugin instance
+ * is first initialized, and (2) after a plugin instance is returned to
+ * (e.g. by going back in the window history) after previously being stopped
+ * by the Stop method. 
+ */
 struct nsIPlugin : public nsIFactory {
 public:
 
-    // This call initializes the plugin and will be called before any new
-    // instances are created. It is passed browserInterfaces on which QueryInterface
-    // may be used to obtain an nsIPluginManager, and other interfaces.
-    NS_IMETHOD_(nsPluginError)
+    /**
+     * Initializes the plugin and will be called before any new instances are
+     * created. It is passed browserInterfaces on which QueryInterface
+     * may be used to obtain an nsIPluginManager, and other interfaces.
+     *
+     * @param browserInterfaces - an object that allows access to other browser
+     * interfaces via QueryInterface
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
     Initialize(nsISupports* browserInterfaces) = 0;
 
-    // (Corresponds to NPP_Shutdown.)
-    // Called when the browser is done with the plugin factory, or when
-    // the plugin is disabled by the user.
-    NS_IMETHOD_(nsPluginError)
+    /**
+     * Called when the browser is done with the plugin factory, or when
+     * the plugin is disabled by the user.
+     *
+     * (Corresponds to NPP_Shutdown.)
+     *
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
     Shutdown(void) = 0;
 
-    // (Corresponds to NPP_GetMIMEDescription.)
-    NS_IMETHOD_(const char*)
-    GetMIMEDescription(void) = 0;
+    /**
+     * Returns the MIME description for the plugin. The MIME description 
+     * is a colon-separated string containg the plugin MIME type, plugin
+     * data file extension, and plugin name, e.g.:
+     *
+     * "application/x-simple-plugin:smp:Simple LiveConnect Sample Plug-in"
+     *
+     * (Corresponds to NPP_GetMIMEDescription.)
+     *
+     * @param resultingDesc - the resulting MIME description 
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
+    GetMIMEDescription(const char* *resultingDesc) = 0;
 
-    // (Corresponds to NPP_GetValue.)
-    NS_IMETHOD_(nsPluginError)
+    /**
+     * Returns the value of a variable associated with the plugin.
+     *
+     * (Corresponds to NPP_GetValue.)
+     *
+     * @param variable - the plugin variable to get
+     * @param value - the address of where to store the resulting value
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
     GetValue(nsPluginVariable variable, void *value) = 0;
 
-    // (Corresponds to NPP_SetValue.)
-    NS_IMETHOD_(nsPluginError)
+    /**
+     * Sets the value of a variable associated with the plugin.
+     *
+     * (Corresponds to NPP_SetValue.)
+     *
+     * @param variable - the plugin variable to get
+     * @param value - the address of the value to store
+     * @result - NS_OK if this operation was successful
+     */
+    NS_IMETHOD
     SetValue(nsPluginVariable variable, void *value) = 0;
-
-    // The old NPP_New call has been factored into two plugin instance methods:
-    //
-    // CreateInstance -- called once, after the plugin instance is created. This 
-    // method is used to initialize the new plugin instance (although the actual
-    // plugin instance object will be created by the plugin manager).
-    //
-    // nsIPluginInstance::Start -- called when the plugin instance is to be
-    // started. This happens in two circumstances: (1) after the plugin instance
-    // is first initialized, and (2) after a plugin instance is returned to
-    // (e.g. by going back in the window history) after previously being stopped
-    // by the Stop method. 
 
 };
 

@@ -41,7 +41,6 @@ extern "C" {
 PR_PUBLIC_API(const char *)
 java_netscape_security_getPrincipals(const char *charSetName)
 {
-#ifdef DEBUG_raman
     nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
     const char *prins = nsPrivManager->getAllPrincipalsString();
     PRBool test_admin_api = PR_FALSE;
@@ -54,20 +53,13 @@ java_netscape_security_getPrincipals(const char *charSetName)
       java_netscape_security_removePrincipal(NULL, "raman tenneti");
     }
     return prins;
-#else
-    return NULL;
-#endif /* DEBUG_raman */
 }
 
 PR_PUBLIC_API(PRBool)
 java_netscape_security_removePrincipal(const char *charSetName, char *prinName)
 {
-#ifdef DEBUG_raman
     nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
     return nsPrivManager->removePrincipal(prinName);
-#else
-    return PR_FALSE;
-#endif /* DEBUG_raman */
 }
 
 PR_PUBLIC_API(void)
@@ -75,22 +67,16 @@ java_netscape_security_getPrivilegeDescs(const char *charSetName, char *prinName
                                          char** forever, char** session, 
                                          char **denied)
 {
-#ifdef DEBUG_raman
     nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
     nsPrivManager->getTargetsWithPrivileges(prinName, forever, session, denied);
-#endif /* DEBUG_raman */
 }
 
 PR_PUBLIC_API(PRBool)
 java_netscape_security_removePrivilege(const char *charSetName, char *prinName, 
                                        char *targetName)
 {
-#ifdef DEBUG_raman
     nsPrivilegeManager *nsPrivManager = nsPrivilegeManager::getPrivilegeManager();
     return nsPrivManager->removePrincipalsPrivilege(prinName, targetName);
-#else
-    return PR_FALSE;
-#endif /* DEBUG_raman */
 }
 
 

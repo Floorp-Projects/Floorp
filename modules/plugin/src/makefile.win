@@ -36,11 +36,16 @@ LINCS = -I$(DIST)\include  \
         -I$(PUBLIC)\lay    \
         -I$(PUBLIC)\style  \
         -I$(PUBLIC)\xpcom  \
+        -I$(PUBLIC)\raptor \
         -I$(PUBLIC)\oji    \
         -I$(PUBLIC)\ojiimpl
 
 OBJS =  .\$(OBJDIR)\npassoc.obj \
+        .\$(OBJDIR)\nsplugin.obj \
         .\$(OBJDIR)\npglue.obj
 
 include <$(DEPTH)/config/rules.mak>
+
+install:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
 

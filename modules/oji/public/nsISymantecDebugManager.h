@@ -38,7 +38,7 @@
 class nsISymantecDebugManager : public nsISupports {
 public:
 
-    NS_IMETHOD_(PRBool)
+    NS_IMETHOD
     SetDebugAgentPassword(PRInt32 pwd) = 0;
 
 };

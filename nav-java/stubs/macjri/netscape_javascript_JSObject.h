@@ -46,5 +46,4 @@ struct netscape_javascript_JSObject {
 } /* extern "C" */
 #endif /* __cplusplus */
 
-
 #endif /* Class netscape/javascript/JSObject */

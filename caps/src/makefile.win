@@ -63,6 +63,7 @@ OBJS=                                       \
     .\$(OBJDIR)\jpermission.obj             \
     .\$(OBJDIR)\nsUserTarget.obj            \
     .\$(OBJDIR)\admin.obj                   \
+    .\$(OBJDIR)\nsCaps.obj                  \
     $(NULL)
 
 

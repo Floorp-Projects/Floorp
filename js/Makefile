@@ -34,6 +34,13 @@ DEPTH = ..
 # See top-level makefile for details
 #
 
-DIRS = src jsj tests
+ifndef MOZ_OJI
+DIRS = src \
+       jsj \
+       tests
+else
+DIRS = src \
+       tests
+endif
 
 include $(DEPTH)/config/rules.mk

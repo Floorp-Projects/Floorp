@@ -29,6 +29,7 @@
 #ifndef nsjvm_h___
 #define nsjvm_h___
 
+#include "nsplugin.h"
 #include "nsIJRIPlugin.h"
 #include "nsIJVMConsole.h"
 #include "nsIJVMManager.h"

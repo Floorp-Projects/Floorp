@@ -25,7 +25,7 @@ ifndef NO_MOCHA
 DIRS_JS		= js
 endif
 
-DIRS		= config coreconf $(NSPRDIR) jpeg dbm xpcom network
+DIRS		= config coreconf $(NSPRDIR) jpeg dbm xpcom base network caps
 
 ifdef MOZ_NETCAST
 DIRS		+= netcast
@@ -53,7 +53,7 @@ endif
 
 include $(DEPTH)/config/rules.mk
 
-export:: $(OBJS)
+export:: envirocheck $(OBJS)
 
 # Running this rule assembles all the SDK source pieces into dist/sdk.
 # You'll need to run this rule on every platform to get all the

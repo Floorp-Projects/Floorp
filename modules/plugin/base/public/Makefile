@@ -19,26 +19,27 @@ DEPTH	= ../../..
 
 MODULE	= plugin
 
-EXPORTS	=				      \
-	nsIFileUtilities.h		      \
-	nsIJRILiveConnectPlugin.h	      \
-	nsIJRILiveConnectPluginInstancePeer.h \
-	nsILiveConnectPlugin.h		      \
-	nsILiveConnectPluginInstancePeer.h    \
-	nsIPlugin.h			      \
-	nsIPluginInstance.h		      \
-	nsIPluginInstancePeer.h		      \
-	nsIPluginInstancePeer2.h	      \
-	nsIPluginManager.h		      \
-	nsIPluginManager2.h		      \
-	nsIPluginStream.h		      \
-	nsIPluginStreamPeer.h		      \
-	nsIPluginStreamPeer2.h		      \
-	nsIPluginTagInfo.h		      \
-	nsIPluginTagInfo2.h		      \
-	nsISeekablePluginStreamPeer.h	      \
-	nsIWindowlessPluginInstancePeer.h     \
-	nsplugin.h			      \
+EXPORTS	=				\
+	nsIEventHandler.h		\
+	nsIFileUtilities.h		\
+	nsIJRILiveConnectPlugin.h	\
+	nsIJRILiveConnectPlugInstPeer.h	\
+	nsILiveConnectPlugin.h		\
+	nsILiveConnectPlugInstPeer.h	\
+	nsINetworkManager.h		\
+	nsIPlugin.h			\
+	nsIPluginInstance.h		\
+	nsIPluginInstancePeer.h		\
+	nsIPluginManager.h		\
+	nsIPluginManager2.h		\
+	nsIPluginStream.h		\
+	nsIPluginStreamPeer.h		\
+	nsIPluginStreamPeer2.h		\
+	nsIPluginTagInfo.h		\
+	nsIPluginTagInfo2.h		\
+	nsISeekablePluginStreamPeer.h	\
+	nsIWindowlessPlugInstPeer.h	\
+	nsplugin.h			\
 	nsplugindefs.h
 
 include $(DEPTH)/config/rules.mk

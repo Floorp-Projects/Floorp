@@ -44,7 +44,7 @@ enum nsSymantecDebugPort {
 class nsISymantecDebugger : public nsISupports {
 public:
 
-    NS_IMETHOD_(nsJVMError)
+    NS_IMETHOD
     StartDebugger(nsSymantecDebugPort port) = 0;
 
 };

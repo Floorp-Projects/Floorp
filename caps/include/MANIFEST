@@ -11,3 +11,5 @@ nsUserDialogHelper.h
 nsZip.h
 nsLoadZig.h
 admin.h
+nsCaps.h
+nsCapsEnums.h

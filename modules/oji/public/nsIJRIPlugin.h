@@ -43,8 +43,8 @@ public:
 
     // Find or create a JRIEnv for the current thread. 
     // Returns NULL if an error occurs.
-    NS_IMETHOD_(JRIEnv*)
-    GetJRIEnv(void) = 0;
+    NS_IMETHOD_(nsrefcnt)
+    GetJRIEnv(JRIEnv* *result) = 0;
 
     // This method must be called when the caller is done using the JRIEnv.
     // This decrements a refcount associated with it may free it.

@@ -55,7 +55,7 @@ public:
     }
     instance = NULL;
   }
-  ~FactoryEntry() {
+  ~FactoryEntry(void) {
     if (library != NULL) {
       free(library);
     }
@@ -295,7 +295,7 @@ nsresult NSRepository::FindFactory(const nsCID &aClass,
   return res;
 }
 
-nsresult NSRepository::checkInitialized() 
+nsresult NSRepository::checkInitialized(void) 
 {
   nsresult res = NS_OK;
   if (factories == NULL) {
@@ -304,7 +304,7 @@ nsresult NSRepository::checkInitialized()
   return res;
 }
 
-nsresult NSRepository::Initialize() 
+nsresult NSRepository::Initialize(void) 
 {
   if (factories == NULL) {
     factories = new nsHashtable();
@@ -586,7 +586,7 @@ static PRBool freeLibraryEnum(nsHashKey *aKey, void *aData)
   return PR_TRUE;
 }
 
-nsresult NSRepository::FreeLibraries() 
+nsresult NSRepository::FreeLibraries(void) 
 {
   PR_EnterMonitor(monitor);
 

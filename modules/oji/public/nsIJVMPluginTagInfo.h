@@ -39,20 +39,20 @@
 class nsIJVMPluginTagInfo : public nsISupports {
 public:
 
-    NS_IMETHOD_(const char *) 
-    GetCode(void) = 0;
+    NS_IMETHOD
+    GetCode(const char* *result) = 0;
 
-    NS_IMETHOD_(const char *) 
-    GetCodeBase(void) = 0;
+    NS_IMETHOD
+    GetCodeBase(const char* *result) = 0;
 
-    NS_IMETHOD_(const char *) 
-    GetArchive(void) = 0;
+    NS_IMETHOD
+    GetArchive(const char* *result) = 0;
 
-    NS_IMETHOD_(const char *) 
-    GetName(void) = 0;
+    NS_IMETHOD
+    GetName(const char* *result) = 0;
 
-    NS_IMETHOD_(PRBool) 
-    GetMayScript(void) = 0;
+    NS_IMETHOD
+    GetMayScript(PRBool *result) = 0;
 
 };
 

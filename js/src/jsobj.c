@@ -63,6 +63,10 @@ js_DropProperty(JSContext *cx, JSObject *obj, JSProperty *prop);
 #define NATIVE_DROP_PROPERTY NULL
 #endif
 
+#ifdef XP_MAC
+#pragma export on
+#endif
+
 JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_NewObjectMap,    js_DestroyObjectMap,
 #if defined JS_THREADSAFE && defined DEBUG
@@ -78,6 +82,10 @@ JS_FRIEND_DATA(JSObjectOps) js_ObjectOps = {
     js_Call,            js_Construct,
     NULL,               js_HasInstance
 };
+
+#ifdef XP_MAC
+#pragma export off
+#endif
 
 JSClass js_ObjectClass = {
     js_Object_str,

@@ -236,7 +236,7 @@ JavaClass_finalize(JSContext *cx, JSObject *obj)
     if (!jEnv)
         return;
 
-    printf("Finalizing %s\n", class_descriptor->name);
+    /* printf("Finalizing %s\n", class_descriptor->name); */
     jsj_ReleaseJavaClassDescriptor(cx, jEnv, class_descriptor);
 }
 

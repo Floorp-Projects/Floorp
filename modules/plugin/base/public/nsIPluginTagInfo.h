@@ -35,6 +35,7 @@
 #define nsIPluginTagInfo_h___
 
 #include "nsplugindefs.h"
+#include "nsISupports.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Tag Info Interface
@@ -51,13 +52,20 @@ public:
     // returns the length of the array.
     //
     // Each name or value is a null-terminated string.
-    NS_IMETHOD_(nsPluginError)
+    NS_IMETHOD
     GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values) = 0;
 
-    // Get the value for the named attribute.  Returns NULL
-    // if the attribute was not set.
-    NS_IMETHOD_(const char*)
-    GetAttribute(const char* name) = 0;
+    /**
+     * Gets the value for the named attribute.
+     *
+     * @param name - the name of the attribute to find
+     * @param result - the resulting attribute
+     * @result - NS_OK if this operation was successful, NS_ERROR_FAILURE if
+     * this operation failed. result is set to NULL if the attribute is not found
+     * else to the found value.
+     */
+    NS_IMETHOD
+    GetAttribute(const char* name, const char* *result) = 0;
 
 };
 

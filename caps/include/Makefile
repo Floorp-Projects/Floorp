@@ -18,7 +18,7 @@ MODULE = caps
 
 DEPTH = ../..
 
-EXPORTS	= nsZip.h nsZig.h nsLoadZig.h nsPrincipal.h nsPrivilege.h nsPrivilegeManager.h nsPrivilegeTable.h nsSystemPrivilegeTable.h nsTarget.h nsUserTarget.h jpermission.h nsUserDialogHelper.h admin.h
+EXPORTS	= nsZip.h nsZig.h nsLoadZig.h nsPrincipal.h nsPrivilege.h nsPrivilegeManager.h nsPrivilegeTable.h nsSystemPrivilegeTable.h nsTarget.h nsUserTarget.h jpermission.h nsUserDialogHelper.h admin.h nsCaps.h nsCapsEnums.h
 
 include $(DEPTH)/config/rules.mk
 

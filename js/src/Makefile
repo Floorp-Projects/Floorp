@@ -16,6 +16,8 @@
 
 DEPTH		= ../..
 
+DIRS = liveconnect
+
 LIBRARY_NAME	= js
 
 ifeq ($(subst /,_,$(shell uname -s)),OS2)
@@ -100,8 +102,6 @@ CSRCS += prarena.c
 endif
 
 include $(DEPTH)/config/rules.mk
-
-export:: install
 
 ifndef BUILD_OPT
 MOCHAFILE	= 1

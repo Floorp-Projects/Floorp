@@ -18,28 +18,6 @@
 #ifndef _JAVASEC_H_
 #define _JAVASEC_H_
 
-#include "jritypes.h"
-
-JRI_PUBLIC_API(const char *) java_netscape_security_getPrincipals(const char *charSetName);
-
-JRI_PUBLIC_API(void) java_netscape_security_getPrivilegeDescs(const char *charSetName,
-                                                              char *prinName, 
-                                                              char** forever, 
-                                                              char** session, 
-                                                              char **denied);
-
-JRI_PUBLIC_API(void) java_netscape_security_getTargetDetails(const char *charSetName,
-                                                             char* targetName, 
-                                                             char** details, 
-                                                             char **risk);
-
-JRI_PUBLIC_API(jint) java_netscape_security_removePrincipal(const char *charSetName, 
-                                                            char *prinName);
-
-JRI_PUBLIC_API(jint) java_netscape_security_removePrivilege(const char *charSetName, 
-                                                            char *prinName, 
-                                                            char *targetName);
-
-JRI_PUBLIC_API(void) java_netscape_security_savePrivilege(int privilege);
+/* bye */
 
 #endif /* _JAVASEC_H_ */

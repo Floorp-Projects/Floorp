@@ -23,11 +23,11 @@
 #include "prtypes.h"
 #include "plhash.h"
 
-#include "nsPrincipal.h"
-#include "nsPrivilege.h"
 #include "nsHashtable.h"
 #include "nsVector.h"
-#include "nsCom.h"
+#include "nsCaps.h"
+#include "nsPrincipal.h"
+#include "nsPrivilege.h"
 #include "nsUserDialogHelper.h"
 
 typedef nsVector nsTargetArray;
@@ -43,7 +43,7 @@ extern int CAPS_TARGET_RISK_COLOR_HIGH;
 
 extern PRBool CreateSystemTargets(nsPrincipal *sysPrin);
 
-class nsTarget {
+struct nsTarget {
 
 public:
 

@@ -2,6 +2,7 @@
 #
 
 jsapi.h
+jspubtd.h
 jsarray.h
 jsatom.h
 jsbool.h

@@ -20,7 +20,11 @@ DEPTH=../..
 #// DIRS          - There are subdirectories to process
 #//
 #//------------------------------------------------------------------------
+ifndef NGLAYOUT_PLUGINS
 DIRS= public src
+else
+DIRS= public nglsrc
+endif
 
 #//------------------------------------------------------------------------
 #//

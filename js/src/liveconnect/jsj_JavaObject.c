@@ -582,7 +582,7 @@ static JSBool
 JavaObject_defaultValue(JSContext *cx, JSObject *obj, JSType type, jsval *vp)
 {
     /* printf("In JavaObject_defaultValue()\n"); */
-    return JavaObject_convert(cx, obj, JSTYPE_STRING, vp);
+    return JavaObject_convert(cx, obj, type, vp);
 }
 
 static JSBool

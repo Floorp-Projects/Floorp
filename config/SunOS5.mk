@@ -171,6 +171,7 @@ FC_PLATFORM_DIR		= SunOS5_sparc
 endif
 
 MKSHLIB			= $(LD) $(DSO_LDOPTS)
+DSO_BIND_REFERENCES	= -Bsymbolic
 
 DSO_LDOPTS		= -G -L$(MOTIF)/lib -L/usr/openwin/lib
 DSO_LDFLAGS		=

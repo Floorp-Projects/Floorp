@@ -550,6 +550,7 @@ java_netscape_security_getPrivilegeDescs(const char *charSetName,
   return;
 }
 
+#if 0 /* now in caps */
 
 /* java_netscape_security_getTargetDetails                                          libsecnav.so */
 /* ns/nav-java/netscape/security/javasec.h */
@@ -562,6 +563,8 @@ java_netscape_security_getTargetDetails(const char *charSetName,
 {
   return;
 }
+
+#endif /* now in caps */
 
 /* java_netscape_security_removePrincipal                                           libsecnav.so */
 /* ns/nav-java/netscape/security/javasec.h */
@@ -584,6 +587,7 @@ java_netscape_security_removePrivilege(const char *charSetName,
   return 0;
 }
 
+#if 0 /* now in caps */
 
 /* java_netscape_security_savePrivilege                                             libsecnav.so */
 /* ns/nav-java/netscape/security/javasec.h */
@@ -593,6 +597,8 @@ java_netscape_security_savePrivilege(int privilege)
 {
   return;
 }
+
+#endif /* now in caps */
 
 /* makeJavaString                                                                   libmocha.so */
 /* sun-java */

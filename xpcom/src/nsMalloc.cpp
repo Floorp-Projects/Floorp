@@ -51,7 +51,7 @@ nsMalloc::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
     return NS_NOINTERFACE;
 }
 
-NS_METHOD
+NS_COM NS_METHOD
 nsMalloc::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 {
     if (outer && !aIID.Equals(kISupportsIID))

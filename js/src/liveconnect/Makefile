@@ -27,12 +27,13 @@ DIRS		= classes
 endif
 endif
 
+ifdef MOZ_OJI
+
 MODULE		= java
 LIBRARY_NAME	= jsj
 
 REQUIRES	= java js applet nspr img util layer
 
-ifdef MOZ_OJI
 CSRCS = jsj.c		  \
 	jsj_JSObject.c	  \
 	jsj_JavaArray.c	  \
@@ -46,11 +47,7 @@ CSRCS = jsj.c		  \
 	jsj_hash.c	  \
 	jsj_method.c	  \
 	jsj_utils.c
-else
-CSRCS = \
-	jsjava.c \
-	jsStubs.c \
-	$(NULL)
+
 endif
 
 ifdef MOZ_OJI
@@ -95,8 +92,6 @@ $(OBJDIR)/stubs.o:					 \
 else
 $(OBJDIR)/stubs.o:
 endif
-
-export:: install
 
 ifndef REGENERATE
 

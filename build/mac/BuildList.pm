@@ -102,6 +102,9 @@ sub BuildMozilla()
 		BuildProject(":mozilla:js:macbuild:JavaScriptPPC.mcp",								"JavaScript$D.shlb");
 		MakeAlias(":mozilla:js:macbuild:JavaScript$D.shlb", "$dist_dir");
 		
+		BuildProject(":mozilla:js:macbuild:LiveConnect.mcp",								"LiveConnect$D.shlb");
+		MakeAlias(":mozilla:js:macbuild:LiveConnect$D.shlb", "$dist_dir");
+		
 		BuildProject(":mozilla:nav-java:stubs:macbuild:NavJavaStubs.mcp",					"NavJava$D.shlb");
 		MakeAlias(":mozilla:nav-java:stubs:macbuild:NavJava$D.shlb", "$dist_dir");
 
@@ -119,6 +122,7 @@ sub BuildMozilla()
 		
 		BuildProject(":mozilla:modules:security:freenav:macbuild:NoSecurity.mcp",			"Security.o");
 		BuildProject(":mozilla:modules:libfont:macbuild:FontBroker.mcp",					"FontBroker$D.o");
+		BuildProject(":mozilla:modules:oji:macbuild:oji.mcp",								"oji$D.o");
 		BuildProject(":mozilla:lib:libmocha:macbuild:LibMocha.mcp",							"LibMocha$D.o");	
 
 		if ( $main::MOZ_DARK == 1 )
@@ -129,6 +133,7 @@ sub BuildMozilla()
 		{
 			BuildProject(":mozilla:network:macbuild:network.mcp",							"Network$D.o");
 		}
+		BuildProject(":mozilla:caps:macbuild:Caps.mcp",										"Caps$D.o");
 
 		BuildProject(":mozilla:modules:libimg:macbuild:png.mcp",						"png$D.o");
 		BuildProject(":mozilla:modules:libimg:macbuild:libimg.mcp",					"libimg$D.o");
@@ -227,6 +232,9 @@ sub DistMozilla()
 		#JS
 		InstallFromManifest(":mozilla:js:src:MANIFEST",									":mozilla:dist:js:");
 		
+		#LIVECONNECT
+		InstallFromManifest(":mozilla:js:src:liveconnect:MANIFEST",						":mozilla:dist:liveconnect:");
+		
 		#RDF
 		InstallFromManifest(":mozilla:modules:rdf:include:MANIFEST",					":mozilla:dist:rdf:");
 		
@@ -291,7 +299,8 @@ sub DistMozilla()
 		InstallFromManifest(":mozilla:lib:libstyle:MANIFEST",							":mozilla:dist:libstyle:");
 		
 		#PLUGIN
-		InstallFromManifest(":mozilla:lib:plugin:MANIFEST",								":mozilla:dist:plugin:");
+		InstallFromManifest(":mozilla:modules:plugin:public:MANIFEST",					":mozilla:dist:plugin:");
+		InstallFromManifest(":mozilla:modules:plugin:src:MANIFEST",						":mozilla:dist:plugin:");
 		
 		#LIBHOOK
 		InstallFromManifest(":mozilla:modules:libhook:public:MANIFEST",					":mozilla:dist:libhook:");
@@ -318,8 +327,18 @@ sub DistMozilla()
 		#SUN_JAVA
 		InstallFromManifest(":mozilla:sun-java:stubs:include:MANIFEST",					":mozilla:dist:sun-java:");
 		InstallFromManifest(":mozilla:sun-java:stubs:macjri:MANIFEST",					":mozilla:dist:sun-java:");
+
+		#OJI
+		InstallFromManifest(":mozilla:modules:oji:public:MANIFEST",						":mozilla:dist:oji:");
+		InstallFromManifest(":mozilla:modules:oji:src:MANIFEST",						":mozilla:dist:oji:");
+
+		#CAPS
+		InstallFromManifest(":mozilla:caps:include:MANIFEST",							":mozilla:dist:caps:");
+
+		#BASE
+		InstallFromManifest(":mozilla:base:public:MANIFEST",							":mozilla:dist:base:");
+		InstallFromManifest(":mozilla:base:src:MANIFEST",								":mozilla:dist:base:");
 	}
 
 1;
-
 

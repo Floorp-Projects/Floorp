@@ -41,19 +41,19 @@ public:
     
     // QueryInterface on nsIJVMPlugin to get this.
 
-    NS_IMETHOD_(void)
+    NS_IMETHOD
     ShowConsole(void) = 0;
 
-    NS_IMETHOD_(void)
+    NS_IMETHOD
     HideConsole(void) = 0;
 
-    NS_IMETHOD_(PRBool)
-    IsConsoleVisible(void) = 0;
+    NS_IMETHOD
+    IsConsoleVisible(PRBool *result) = 0;
 
     // Prints a message to the Java console. The encodingName specifies the
     // encoding of the message, and if NULL, specifies the default platform
     // encoding.
-    NS_IMETHOD_(void)
+    NS_IMETHOD
     Print(const char* msg, const char* encodingName = NULL) = 0;
     
 };

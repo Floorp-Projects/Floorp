@@ -16,8 +16,14 @@
  * Reserved.
  */
 
+#include "prtypes.h"
+
+PR_BEGIN_EXTERN_C
+
 #include "nsZig.h"
 #include "zig.h"
+
+PR_END_EXTERN_C
 
 //
 // 			PUBLIC METHODS 

@@ -35,6 +35,7 @@
 #define nsIPluginStreamPeer_h___
 
 #include "nsplugindefs.h"
+#include "nsISupports.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Plugin Stream Peer Interface
@@ -46,28 +47,28 @@ class nsIPluginStreamPeer : public nsISupports {
 public:
 
     // (Corresponds to NPStream's url field.)
-    NS_IMETHOD_(const char*)
-    GetURL(void) = 0;
+    NS_IMETHOD
+    GetURL(const char* *result) = 0;
 
     // (Corresponds to NPStream's end field.)
-    NS_IMETHOD_(PRUint32)
-    GetEnd(void) = 0;
+    NS_IMETHOD
+    GetEnd(PRUint32 *result) = 0;
 
     // (Corresponds to NPStream's lastmodified field.)
-    NS_IMETHOD_(PRUint32)
-    GetLastModified(void) = 0;
+    NS_IMETHOD
+    GetLastModified(PRUint32 *result) = 0;
 
     // (Corresponds to NPStream's notifyData field.)
-    NS_IMETHOD_(void*)
-    GetNotifyData(void) = 0;
+    NS_IMETHOD
+    GetNotifyData(void* *result) = 0;
 
     // (Corresponds to NPP_DestroyStream's reason argument.)
-    NS_IMETHOD_(nsPluginReason)
-    GetReason(void) = 0;
+    NS_IMETHOD
+    GetReason(nsPluginReason *result) = 0;
 
     // (Corresponds to NPP_NewStream's MIMEType argument.)
-    NS_IMETHOD_(nsMIMEType)
-    GetMIMEType(void) = 0;
+    NS_IMETHOD
+    GetMIMEType(nsMIMEType *result) = 0;
 
 };
 

@@ -658,7 +658,6 @@ typedef struct _mdata {
 #define APPLICATION_WWW_FORM_URLENCODED		"application/x-www-form-urlencoded"
 #define APPLICATION_OLEOBJECT				"application/oleobject"
 #define APPLICATION_OLEOBJECT2				"application/x-oleobject"
-#define APPLICATION_JAVAVM					"application/java-vm"
 #define APPLICATION_JAVAARCHIVE				"application/java-archive"
 #define APPLICATION_MARIMBA 				"application/marimba"
 #define APPLICATION_XMARIMBA 				"application/x-marimba"

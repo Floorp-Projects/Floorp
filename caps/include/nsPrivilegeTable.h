@@ -21,12 +21,11 @@
 
 #include "prtypes.h"
 #include "nsHashtable.h"
+#include "nsCaps.h"
 #include "nsTarget.h"
 #include "nsPrivilege.h"
-#include "nsCom.h"
 
-
-class nsPrivilegeTable {
+struct nsPrivilegeTable {
 
 public:
 

@@ -29,20 +29,18 @@
 #ifndef nsIJVMManager_h___
 #define nsIJVMManager_h___
 
-#include "nsplugin.h"
+#include "nsISupports.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
 #define NPJVM_MIME_TYPE         "application/x-java-vm" // XXX application/java
 
-enum nsJVMError {
-    nsJVMError_Ok                 = nsPluginError_NoError,
-    nsJVMError_Base               = 0x1000,
-    nsJVMError_InternalError      = nsJVMError_Base,
-    nsJVMError_NoClasses,
-    nsJVMError_WrongClasses,
-    nsJVMError_JavaError,
-    nsJVMError_NoDebugger
+enum {
+    NS_JVM_ERROR_BASE           = NS_ERROR_BASE + 0x10000,
+    NS_JVM_ERROR_NO_CLASSES,
+    NS_JVM_ERROR_WRONG_CLASSES,
+    NS_JVM_ERROR_JAVA_ERROR,
+    NS_JVM_ERROR_NO_DEBUGGER
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -54,12 +52,6 @@ class nsIJVMPlugin;
 
 class nsIJVMManager : public nsISupports {
 public:
-
-    // This method may be called by the JVM to indicate that an error has
-    // occurred, e.g. that the JVM has failed or is shutting down spontaneously.
-    // This allows the browser to clean up any JVM-specific state.
-    NS_IMETHOD_(void)
-    NotifyJVMStatusChange(nsJVMError error) = 0;
 
 };
 
