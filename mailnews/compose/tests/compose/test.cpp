@@ -332,20 +332,9 @@ int main(int argc, char *argv[])
 	nsComponentManager::RegisterComponent(kAppShellServiceCID,  NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
   SetupRegistry();
-  /*
-   * Create the Application Shell instance...
-   */
-  nsCOMPtr<nsIWebShellWindow> newWindow;
-  rv = nsServiceManager::GetService(kAppShellServiceCID,
-                                    kIAppShellServiceIID,
-                                   (nsISupports**)&appShell);
-	if (NS_SUCCEEDED(rv)) 
-    appShell->CreateTopLevelWindow(nsnull, nsnull, PR_TRUE, getter_AddRefs(newWindow),
-                nsnull, nsnull, 200, 200);
 
   // Create the Event Queue for this thread...
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 
-
 	if (NS_FAILED(rv)) 
   {
     printf("Failed to get event queue\n");
@@ -364,7 +353,8 @@ int main(int argc, char *argv[])
 	// has the ability to take nsnull as a parameter. Once that happens,
 	// prefs will do the work of figuring out which prefs file to load...
 	NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv); 
-  if (NS_FAILED(rv) || (prefs == nsnull)) {
+  if (NS_FAILED(rv) || (prefs == nsnull)) 
+  {
     exit(rv);
   }
 
@@ -433,7 +423,8 @@ int main(int argc, char *argv[])
       if (tagBuf)
         PL_strcpy(tagBuf, "Do that voodo, that you do, soooo weeeelllll!");
       
-      pMsgSend->CreateAndSendMessage(pMsgCompFields, 
+      pMsgSend->CreateAndSendMessage(nsnull, // identity
+                                     pMsgCompFields, 
 						    PR_FALSE,         // PRBool                            digest_p,
                 PR_FALSE,         // PRBool                            dont_deliver_p,
 						    nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
