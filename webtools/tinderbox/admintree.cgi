@@ -32,14 +32,14 @@ EmitHtmlHeader("administer tinderbox", "tree: $tree");
 &load_data;
 
 if (defined($tree)) {
-if( -r "$tree/mod.pl" ){
-    require "$tree/mod.pl";
-}
-else {
-    $message_of_day = "";
-}
+    if( -r "$tree/mod.pl" ){
+        require "$tree/mod.pl";
+    }
+    else {
+        $message_of_day = "";
+    }
 
-print "
+    print "
 <FORM method=post action=doadmin.cgi>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
@@ -53,7 +53,7 @@ print "
 ";
 
 
-print "
+    print "
 <FORM method=post action=doadmin.cgi>
 <B>Password:</B> <INPUT NAME=password TYPE=password>
 <INPUT TYPE=HIDDEN NAME=tree VALUE=$tree>
@@ -91,7 +91,7 @@ print "
 ";
 
 if (defined($tree)) {
-print "
+    print "
 <B><font size=+1>If builds are behaving badly you can turn them off.</font></b><br>  Uncheck
 the build that is misbehaving and click the button.  You can still see all the
 builds even if some are disabled by adding the parameter <b><tt>&noignore=1</tt></b> to
@@ -101,17 +101,17 @@ the tinderbox URL.<br>
 <INPUT TYPE=HIDDEN NAME=command VALUE=disable_builds>
 ";
 
-@names = sort (@$build_name_names, keys %$ignore_builds) ;
+    @names = sort (@$build_name_names, keys %$ignore_builds) ;
 
-for $i (@names){
-    if( $i ne "" ){
-        $checked = ($ignore_builds->{$i} != 0 ? "": "CHECKED" );
-        print "<INPUT TYPE=checkbox NAME='build_$i' $checked >";
-        print "$i<br>\n";
+    for $i (@names){
+        if( $i ne "" ){
+            $checked = ($ignore_builds->{$i} != 0 ? "": "CHECKED" );
+            print "<INPUT TYPE=checkbox NAME='build_$i' $checked >";
+            print "$i<br>\n";
+        }
     }
-}
 
-print "
+    print "
 <INPUT TYPE=SUBMIT VALUE='Show only checked builds'>
 </FORM>
 <hr>
