@@ -49,7 +49,6 @@ libgkgfx.so
 libgtksuperwin.so 
 libgtkembedmoz.so 
 libxlibrgb.so
-components/libtimer_gtk.so
 components/libgfx_gtk.so
 components/libgfxps.so
 components/libgfxxprint.so
@@ -107,7 +106,7 @@ components/libjar50.so
 components/jar.xpt
 
 ; prefs
-components/pref.xnpt                     
+components/pref.xpt                     
 components/libpref.so
 
 ; profile
@@ -226,7 +225,7 @@ res/unixcharset.properties
 ; res/strres.properties 
 
 ; required prefs files
-;defaults/pref/all.js
+defaults/pref/all.js
 defaults/pref/unix.js
 
 
