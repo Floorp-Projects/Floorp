@@ -77,6 +77,9 @@ attribute nsISupports cacheKey;
 /** attribute to indicate whether layoutHistoryState should be saved */
 attribute boolean saveHistoryStateFlag;
 
+/** attribute to indicate whether the page is already expired in cache */
+attribute boolean expirationStatus;
+
 /** Additional ways to create an entry */
 void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
 			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState,

@@ -80,6 +80,7 @@
 #include "nsPIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsICachingChannel.h"
+#include "nsICacheEntryDescriptor.h"
 
 // The following are for bug #13871: Prevent frameset spoofing
 #include "nsICodebasePrincipal.h"
@@ -1959,7 +1960,7 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
     NS_ENSURE_ARG_POINTER(aResult);
     *aResult = nsnull;
 
-    //
+    
     // A nsISHEntry for a child is *only* available when the parent is in
     // the progress of loading a document too...
     //
@@ -1968,11 +1969,26 @@ nsDocShell::GetChildSHEntry(PRInt32 aChildOffset, nsISHEntry ** aResult)
          * By default give a loadHistory value
          */
         PRUint32 loadType = nsIDocShellLoadInfo::loadHistory;
-        mLSHE->GetLoadType(&loadType);
+        mLSHE->GetLoadType(&loadType);    
+        // If the user did a shift-reload on this frameset page, 
+        // we don't want to load the subframes from history.         
+        if (loadType == nsIDocShellLoadInfo::loadReloadBypassCache ||
+            loadType == nsIDocShellLoadInfo::loadReloadBypassProxy ||
+            loadType == nsIDocShellLoadInfo::loadReloadBypassProxyAndCache)
+            return rv;
         nsCOMPtr<nsISHContainer> container(do_QueryInterface(mLSHE));
         if (container) {
             rv = container->GetChildAt(aChildOffset, aResult);
             if (*aResult) {
+              // Check the child SHEnty's expiration status.
+              // If the page has already expired, we don't want to 
+              // load the page from history.
+              PRBool expired = PR_FALSE;
+              (*aResult)->GetExpirationStatus(&expired);
+              if (expired) {
+                *aResult = nsnull;
+                return rv;
+              }
                 (*aResult)->SetLoadType(loadType);
             }
         }
@@ -4997,7 +5013,7 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
     UpdateCurrentGlobalHistory();
     PRBool updateHistory = PR_TRUE;
     PRBool equalUri = PR_FALSE;
-    PRBool shAvailable = PR_TRUE;
+    PRBool shAvailable = PR_TRUE;  
 
     // Get the post data from the channel
     nsCOMPtr<nsIInputStream> inputStream;
@@ -5029,14 +5045,13 @@ nsDocShell::OnNewURI(nsIURI * aURI, nsIChannel * aChannel,
         }
       }
     }  // mSessionHistory
-    // Determine if this type of load should update history.
-    // We do want to update SHEntry with the new cacheKey if 
-    // the user hit shift-relaod 
+
+    // Determine if this type of load should update history.    
     if (aLoadType == LOAD_BYPASS_HISTORY ||
          aLoadType & LOAD_CMD_HISTORY ||
          aLoadType & LOAD_CMD_RELOAD)         
         updateHistory = PR_FALSE;
-    
+
 
     /* If the url to be loaded is the same as the one already there,
      * and the original loadType is LOAD_NORMAL or LOAD_LINK,
@@ -5446,6 +5461,7 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     nsCOMPtr<nsIURI> referrerURI;
     nsCOMPtr<nsISupports> cacheKey;
     nsCOMPtr<nsISupports> cacheToken;
+    PRPackedBool expired = PR_FALSE;
     if (aChannel) {
         nsCOMPtr<nsICachingChannel>
             cacheChannel(do_QueryInterface(aChannel));
@@ -5478,11 +5494,26 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
      */
     if (!cacheToken)
       entry->SetSaveHistoryStateFlag(PR_FALSE);
-    
+    else {
+      // Check if the page has expired from cache 
+      nsCOMPtr<nsICacheEntryDescriptor> cacheEntryDesc(do_QueryInterface(cacheToken));
+      if (cacheEntryDesc) {        
+         PRUint32 expTime;
+         
+         cacheEntryDesc->GetExpirationTime(&expTime);         
+         PRUint32 now = PRTimeToSeconds(PR_Now());         
+         printf("Exptime = %d, Now = %d\n", expTime, now);
+         if (expTime <=  now)            
+           expired = PR_TRUE;         
+         
+      }
+    }
+    if (expired == PR_TRUE)
+      entry->SetExpirationStatus(PR_TRUE);
 
 
     // If no Session History component is available in the parent DocShell
-    // heirarchy, then AddChildSHEntry(...) will fail and the new entry
+    // hierarchy, then AddChildSHEntry(...) will fail and the new entry
     // will be deleted when it loses scope...
     //
     if (mLoadType != LOAD_NORMAL_REPLACE) {
