@@ -126,7 +126,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.6 $ )[1];
+$VERSION = ( qw $Revision: 1.7 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -173,7 +173,8 @@ sub apply_db_updates {
   my $last_data = 0;
   foreach $time (@times) {
 
-    # Purge duplicate 'treestate' entries to keep the DB size down.
+    # Purge duplicate 'treestate' entries to keep the DB size down.  
+    # Data::Dumper takes a long time and this really helps speed things up.
     
     ($DATABASE{$tree}{$time}{'treestate'}) &&
     ($DATABASE{$tree}{$time}{'treestate'} eq $tree_state) &&
@@ -429,7 +430,7 @@ sub status_table_row {
   my %authors = ();
   
   while (1) {
-    $time = $DB_TIMES[$NEXT_DB];
+   my ($time) = $DB_TIMES[$NEXT_DB];
 
     # find the DB entries which are needed for this cell
     ($time < $row_times->[$row_index]) && last;
@@ -445,7 +446,7 @@ sub status_table_row {
         $authors{$author}{$time}{$file} = 1;
       }
     }
-  }
+  } # while (1)
 
   # If there is no treestate, then the tree state has not changed
   # since an early time.  The earliest time was assigned a state in
@@ -471,9 +472,9 @@ sub status_table_row {
     }
     
     foreach $author (sort keys %authors) {
-      my $table = '';
-      my $num_rows = 0;
-      my $max_length = 0;
+      my ($table) = '';
+      my ($num_rows) = 0;
+      my ($max_length) = 0;
       
       # define a table, to show what was checked in
       $table .= (
@@ -514,7 +515,7 @@ sub status_table_row {
                           "linktxt" => "\t\t<tt>$author</tt>",
                           
                           "windowtxt" => $table,
-                          "windowtitle" => "VC Info",
+                          "windowtitle" => "VC Info Author: $author",
                           "windowheight" => ($num_rows * 50) + 100,
                           "windowwidth" => ($max_length * 10) + 100,
                          );
@@ -548,8 +549,18 @@ sub status_table_row {
                              );
       }
 
-      # put each link on its own line so we can debug the HTML
+	# put each link on its own line and add good comments so we
+	# can debug the HTML.
+
       $query_link = "\t\t".$query_link."\n";
+
+      $query_links .= (
+                       "\t\t<!-- VC: ".("Author: $author, ".
+                                        "Time: '".localtime($time)."', ".
+                                        "Tree: $tree, ".
+                                       "").
+                       "  -->\n".
+                       "");
 
       $query_links .= $query_link;
     }
@@ -561,11 +572,6 @@ sub status_table_row {
                "");
     
   } else {
-    
-    # If there are only spaces or there is nothing in the cell then
-    # Netscape 4.5 prints nothing, not even a color.  It prints a
-    # color if you use '<br>' as the cell contents. However a ' '
-    # inside <pre> should be more portable.
     
     @outrow = ("\t<!-- skipping: VC: tree: $tree -->".
                "<td align=center $color>$HTMLPopUp::EMPTY_TABLE_CELL</td>\n");
