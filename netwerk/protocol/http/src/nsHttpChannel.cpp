@@ -1881,7 +1881,7 @@ nsHttpChannel::GetReferrer(nsIURI **referrer)
     return NS_OK;
 }
 
-#define numInvalidReferrerSchemes 8
+#define numInvalidReferrerSchemes 9
 
 static char * invalidReferrerSchemes [numInvalidReferrerSchemes] = 
 {
@@ -1892,7 +1892,8 @@ static char * invalidReferrerSchemes [numInvalidReferrerSchemes] =
   "imap",
   "news",
   "snews",
-  "imaps"
+  "imaps",
+  "https"
 };
 
 NS_IMETHODIMP
