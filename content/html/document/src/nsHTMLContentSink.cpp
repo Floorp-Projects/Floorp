@@ -164,6 +164,7 @@ protected:
   nsresult ProcessMETATag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
+  nsresult ProcessLINKTag(const nsIParserNode& aNode);
 
   nsresult ProcessBRTag(nsIHTMLContent** aInstancePtrResult,
                         const nsIParserNode& aNode);
@@ -226,7 +227,8 @@ protected:
   nsIHTMLContent* GetBodyOrFrameset() { if (mBody) return mBody; else return mFrameset; }
 
   nsresult LoadStyleSheet(nsIURL* aURL,
-                          nsIUnicharInputStream* aUIN);
+                          nsIUnicharInputStream* aUIN,
+                          PRBool aInline);
 
   void ScrollToRef();
 
@@ -1244,6 +1246,10 @@ NS_IMETHODIMP HTMLContentSink::AddLeaf(const nsIParserNode& aNode)
   case eHTMLTag_base:
     ProcessBASETag(aNode);
     return NS_OK;
+
+  case eHTMLTag_link:
+    ProcessLINKTag(aNode);
+    return NS_OK;
   }
 
   eHTMLTags parentType;
@@ -1821,6 +1827,8 @@ nsresult HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
   PRInt32 i, ac = aNode.GetAttributeCount();
 
   nsString* src = nsnull;
+  PRBool    isInline;
+
   for (i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
@@ -1844,6 +1852,7 @@ nsresult HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
     // Use the document's url since the style data came from there
     url = mDocumentURL;
     NS_IF_ADDREF(url);
+    isInline = PR_TRUE;
   } else {
     // src with immediate style data doesn't add up
     // XXX what does nav do?
@@ -1871,25 +1880,96 @@ nsresult HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       NS_RELEASE(url);
       return rv;
     }
+    isInline = PR_FALSE;
   }
 
   // Now that we have a url and a unicode input stream, parse the
   // style sheet.
-  rv = LoadStyleSheet(url, uin);
+  rv = LoadStyleSheet(url, uin, isInline);
   NS_RELEASE(uin);
   NS_RELEASE(url);
 
   return rv;
 }
 
+nsresult HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
+{
+  nsresult  result = NS_OK;
+  PRInt32   index;
+  PRInt32   count = aNode.GetAttributeCount();
+
+  nsAutoString href;
+  nsAutoString rel; 
+  nsAutoString title; 
+  nsAutoString type; 
+
+  for (index = 0; index < count; index++) {
+    const nsString& key = aNode.GetKeyAt(index);
+    if (key.EqualsIgnoreCase("href")) {
+      GetAttributeValueAt(aNode, index, href);
+      href.StripWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("rel")) {
+      GetAttributeValueAt(aNode, index, rel);
+      rel.CompressWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("title")) {
+      GetAttributeValueAt(aNode, index, title);
+      title.CompressWhitespace();
+    }
+    else if (key.EqualsIgnoreCase("type")) {
+      GetAttributeValueAt(aNode, index, type);
+      type.StripWhitespace();
+    }
+  }
+
+  if (rel.EqualsIgnoreCase("stylesheet")) {
+    if (type.EqualsIgnoreCase("text/css")) {
+      nsIURL* url = nsnull;
+      nsIUnicharInputStream* uin = nsnull;
+      nsAutoString absURL;
+      nsIURL* docURL = mDocument->GetDocumentURL();
+      result = NS_MakeAbsoluteURL(docURL, mBaseHREF, href, absURL);
+      if (NS_OK != result) {
+        return result;
+      }
+      NS_RELEASE(docURL);
+      result = NS_NewURL(&url, nsnull, absURL);
+      if (NS_OK != result) {
+        return result;
+      }
+      PRInt32 ec;
+      nsIInputStream* iin = url->Open(&ec);
+      if (nsnull == iin) {
+        NS_RELEASE(url);
+        return (nsresult) ec;/* XXX fix url->Open */
+      }
+      result = NS_NewConverterStream(&uin, nsnull, iin);
+      NS_RELEASE(iin);
+      if (NS_OK != result) {
+        NS_RELEASE(url);
+        return result;
+      }
+
+      result = LoadStyleSheet(url, uin, PR_FALSE);
+      NS_RELEASE(uin);
+      NS_RELEASE(url);
+    }
+  }
+
+  return result;
+}
+
+
 nsresult HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
-                                         nsIUnicharInputStream* aUIN)
+                                         nsIUnicharInputStream* aUIN,
+                                         PRBool aInline)
 {
   /* XXX use repository */
   nsICSSParser* parser;
   nsresult rv = NS_NewCSSParser(&parser);
   if (NS_OK == rv) {
-    if (nsnull != mStyleSheet) {
+    if (aInline && (nsnull != mStyleSheet)) {
       parser->SetStyleSheet(mStyleSheet);
       // XXX we do probably need to trigger a style change reflow
       // when we are finished if this is adding data to the same sheet
@@ -1897,15 +1977,20 @@ nsresult HTMLContentSink::LoadStyleSheet(nsIURL* aURL,
     nsIStyleSheet* sheet = nsnull;
     // XXX note: we are ignoring rv until the error code stuff in the
     // input routines is converted to use nsresult's
-    parser->Parse(aUIN, mDocumentURL, sheet);
+    parser->Parse(aUIN, aURL, sheet);
     if (nsnull != sheet) {
-      if (nsnull == mStyleSheet) {
-        // Add in the sheet the first time; if we update the sheet
-        // with new data (mutliple style tags in the same document)
-        // then the sheet will be updated by the css parser and
-        // therefore we don't need to add it to the document)
+      if (aInline) {
+        if (nsnull == mStyleSheet) {
+          // Add in the sheet the first time; if we update the sheet
+          // with new data (mutliple style tags in the same document)
+          // then the sheet will be updated by the css parser and
+          // therefore we don't need to add it to the document)
+          mDocument->AddStyleSheet(sheet);
+          mStyleSheet = sheet;
+        }
+      }
+      else {
         mDocument->AddStyleSheet(sheet);
-        mStyleSheet = sheet;
       }
       rv = NS_OK;
     } else {
