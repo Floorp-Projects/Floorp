@@ -69,7 +69,9 @@ NS_IMETHODIMP nsCharsetObserver::GetTagName(nsString& oTag)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsCharsetObserver::Notify(const nsString& aTag, 
+NS_IMETHODIMP nsCharsetObserver::Notify(
+                     PRUint32 aDocumentID, 
+                     const nsString& aTag, 
                      PRUint32 numOfAttributes, 
                      const nsString* nameArray, 
                      const nsString* valueArray,
