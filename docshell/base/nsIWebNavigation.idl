@@ -182,7 +182,9 @@ interface nsIWebNavigation : nsISupports
   void stop(in unsigned long stopFlags);
 
  /**
-  * Retrieves the current DOM document for the WebBrowser.
+  * Retrieves the current DOM document for the frame, or lazily creates a
+  * blank document if there is none. This attribute never returns null except
+  * for unexpected error situations.
   */
   readonly attribute nsIDOMDocument document;
 
@@ -192,9 +194,9 @@ interface nsIWebNavigation : nsISupports
   readonly attribute nsIURI currentURI;
 
  /**
-  * The refering URI.
+  * The referring URI.
   */
-  readonly attribute nsIURI referingURI;
+  readonly attribute nsIURI referringURI;
 
  /**
   * The session history object used to store the session history for the

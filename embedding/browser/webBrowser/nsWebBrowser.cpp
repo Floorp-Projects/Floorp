@@ -604,7 +604,7 @@ NS_IMETHODIMP nsWebBrowser::GoForward()
 
 NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* aURI,
                                     PRUint32 aLoadFlags,
-                                    nsIURI* aReferingURI,
+                                    nsIURI* aReferringURI,
                                     nsIInputStream* aPostDataStream,
                                     nsIInputStream* aExtraHeaderStream)
 {
@@ -612,7 +612,7 @@ NS_IMETHODIMP nsWebBrowser::LoadURI(const PRUnichar* aURI,
 
    return mDocShellAsNav->LoadURI(aURI,
                                   aLoadFlags,
-                                  aReferingURI,
+                                  aReferringURI,
                                   aPostDataStream,
                                   aExtraHeaderStream);
 }
@@ -645,11 +645,11 @@ NS_IMETHODIMP nsWebBrowser::GetCurrentURI(nsIURI** aURI)
    return mDocShellAsNav->GetCurrentURI(aURI);
 }
 
-NS_IMETHODIMP nsWebBrowser::GetReferingURI(nsIURI** aURI)
+NS_IMETHODIMP nsWebBrowser::GetReferringURI(nsIURI** aURI)
 {
     NS_ENSURE_STATE(mDocShell);
 
-    return mDocShellAsNav->GetReferingURI(aURI);
+    return mDocShellAsNav->GetReferringURI(aURI);
 }
 
 NS_IMETHODIMP nsWebBrowser::SetSessionHistory(nsISHistory* aSessionHistory)
