@@ -10,11 +10,13 @@ toolkit.jar:
          content/global/customizeToolbar.js                 (content/customizeToolbar.js)
          content/global/customizeToolbar.css                (content/customizeToolbar.css)
 +        content/global/viewZoomOverlay.js                  (content/viewZoomOverlay.js)
-+        content/global/widgets/autocomplete.xml            (content/widgets/autocomplete.xml)
-+        content/global/widgets/browser.xml                 (content/widgets/browser.xml)
-+        content/global/widgets/tabbrowser.xml              (content/widgets/tabbrowser.xml)
-+        content/global/widgets/tabbox.xml                  (content/widgets/tabbox.xml)
-+        content/global/widgets/textbox.xml                 (content/widgets/textbox.xml)
+         content/global/widgets/autocomplete.xml            (content/widgets/autocomplete.xml)
+         content/global/widgets/browser.xml                 (content/widgets/browser.xml)
+         content/global/widgets/tabbrowser.xml              (content/widgets/tabbrowser.xml)
+         content/global/widgets/tabbox.xml                  (content/widgets/tabbox.xml)
+         content/global/widgets/textbox.xml                 (content/widgets/textbox.xml)
+         content/global/widgets/radio.xml                   (content/widgets/radio.xml)
+         content/global/widgets/checkbox.xml                (content/widgets/checkbox.xml)
 
 en-US.jar:
 +        locale/en-US/global/charset.dtd                    (locale/charset.dtd)

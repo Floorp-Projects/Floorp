@@ -49,7 +49,7 @@
   <groupbox flex="1">
     <caption label="&proxyTitle.label;"/>
 
-    <radiogroup id="networkProxyType" prefstring="network.proxy.type" align="stretch">
+    <radiogroup id="networkProxyType" prefstring="network.proxy.type">
         <radio value="0" label="&directTypeRadio.label;" accesskey="&directTypeRadio.accesskey;" oncommand="DoEnabling();"/>
         <radio value="1" label="&manualTypeRadio.label;" accesskey="&manualTypeRadio.accesskey;" oncommand="DoEnabling();"/>
       <grid class="indent" flex="1">

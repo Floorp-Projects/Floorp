@@ -13,9 +13,9 @@
           <xul:image class="radio-check" xbl:inherits="selected,checked,disabled"/>
         </xul:hbox>
       </xul:hbox>
-      <xul:hbox class="radio-label-box" flex="1">
+      <xul:hbox class="radio-label-box">
         <xul:image class="radio-icon" xbl:inherits="src"/>
-        <xul:label class="radio-label" xbl:inherits="xbl:text=label,accesskey,crop" flex="1"/>
+        <xul:label class="radio-label" xbl:inherits="xbl:text=label,accesskey,crop"/>
       </xul:hbox>
     </content>
   </binding>
@@ -28,4 +28,4 @@
     </content>
   </binding>
 
-</bindings>
+</bindings>   

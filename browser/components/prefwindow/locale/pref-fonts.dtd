@@ -91,4 +91,4 @@
 <!ENTITY  useMyColors.accesskey "C">
 <!ENTITY  useMyFonts.label                  "Fonts">
 <!ENTITY  useMyFonts.accesskey              "F">
-
+<!ENTITY  alwaysUseMy.label                 "Always use my: ">

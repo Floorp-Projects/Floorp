@@ -285,7 +285,7 @@
     </groupbox>
   </hbox>
   <hbox align="center">
-    <label value="Always use my: "/>
+    <label value="&alwaysUseMy.label;"/>
     <!-- Unchecking this removes the ability to select dynamic fonts -->
     <checkbox id="useMyFonts" 
               label="&useMyFonts.label;" 

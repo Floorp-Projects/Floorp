@@ -34,14 +34,49 @@
 
   <script type="application/x-javascript">
   <![CDATA[
-    var _elementIDs = ["advancedJavaAllow", "useProgressDialogs"];   
+    var _elementIDs = ["advancedJavaAllow", "advancedMailFTP", "advancedMailFTPAddress", "useProgressDialogs",
+                       "imageLooping"];   
+    
+    function Startup() {
+      ftpCheck();
+    }
+    function ftpCheck() {
+      var checked = document.getElementById("advancedMailFTP").checked;
+      var field = document.getElementById("advancedMailFTPAddress");
+      field.disabled = !checked;
+      if (checked)
+        field.focus();
+    }
   ]]>
   </script>
 
-  <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
-            prefstring="security.enable_java"/>
-  <checkbox id="useProgressDialogs" label="&useProgressDialogs.label;" accesskey="&useProgressDialogs.accesskey;"
-            prefstring="browser.downloads.useProgressDialogs"/>
+  <groupbox>
+    <caption label="&general.label;"/>
+    <checkbox id="advancedJavaAllow" label="&enbJavaCheck.label;" accesskey="&enbJavaCheck.accesskey;"
+              prefstring="security.enable_java"/>
+    <checkbox id="advancedMailFTP" label="&sendAddFtpCheck.label;" accesskey="&sendAddFtpCheck.accesskey;"
+              prefstring="advanced.mailftp"
+              oncommand="ftpCheck();"/>
+    <hbox class="indent" flex="1">
+      <textbox id="advancedMailFTPAddress"
+               preftype="string" prefstring="network.ftp.anonymous_password"
+               flex="2"/>
+    </hbox>
+    <checkbox id="useProgressDialogs" label="&useProgressDialogs.label;" accesskey="&useProgressDialogs.accesskey;"
+              prefstring="browser.downloads.useProgressDialogs"/>
+  </groupbox>
+  <groupbox>
+    <caption label="&animLoopingTitle.label;"/>
+    <radiogroup id="imageLooping"
+                preftype="string" prefstring="image.animation_mode">
+        <radio value="normal" label="&animLoopAsSpecified.label;"
+               accesskey="&animLoopAsSpecified.accesskey;"/>
+        <radio value="once" label="&animLoopOnce.label;"
+               accesskey="&animLoopOnce.accesskey;"/>
+        <radio value="none" label="&animLoopNever.label;"
+               accesskey="&animLoopNever.accesskey;"/>
+    </radiogroup>
+  </groupbox>
 </page>
 
 

@@ -64,7 +64,11 @@ function initDialog()
   var mode = gToolbox.getAttribute("mode");
   document.getElementById("modelist").value = mode;
   var iconSize = gToolbox.getAttribute("iconsize");
-  document.getElementById("smallicons").checked = iconSize == "small";
+  var smallIconsCheckbox = document.getElementById("smallicons");
+  if (mode == "text")
+    smallIconsCheckbox.disabled = true;
+  else
+    smallIconsCheckbox.checked = iconSize == "small"; 
 
   // Build up the palette of other items.
   buildPalette();
