@@ -95,7 +95,7 @@ function GetFields()
   }
 
 // manual data setting function for PrefWindow
-function SetFields( aDataObject )
+function SetFields(aDataObject)
   {
     languageData = "languageData" in aDataObject ? aDataObject.languageData : languageData ;
     currentLanguage = "currentLanguage" in aDataObject ? aDataObject.currentLanguage : null ;
@@ -479,7 +479,7 @@ function selectLanguage()
       }
 
     // and set the font sizes
-    var dataObject = gPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"];
+    var dataObject = gPrefWindow.wsm.dataManager.pageData["chrome://browser/content/pref/pref-fonts.xul"].userData;
     var langData = null;
     try
       {

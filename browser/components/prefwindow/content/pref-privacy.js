@@ -110,7 +110,7 @@ function unload()
 
 function cookieViewerOnPrefsOK()
 {
-  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/cookieviewer/CookieViewer.xul"];
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/cookieviewer/CookieViewer.xul"].userData;
   if ('deletedCookies' in dataObject) {
     var cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
     cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
@@ -326,7 +326,7 @@ function onPrefsOK()
   var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
   permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
 
-  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/cookieviewer/CookieExceptions.xul"];
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/cookieviewer/CookieExceptions.xul"].userData;
   if ('deletedPermissions' in dataObject) {
     for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
       permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);

@@ -65,9 +65,8 @@ function GetFields()
   return dataObject;
 }
 
-function SetFields()
+function SetFields(dataObject)
 {
-  var dataObject = window.opener.top.hPrefWindow.wsm.dataManager.pageData[window.location.href];
   if ('cookies' in dataObject)
     cookies = dataObject.cookies;
 
@@ -129,7 +128,7 @@ function loadCookies() {
   if (!cookiesTree)
     cookiesTree = document.getElementById("cookiesTree");
 
-  var dataObject = window.opener.top.hPrefWindow.wsm.dataManager.pageData[window.location.href];
+  var dataObject = window.opener.top.hPrefWindow.wsm.dataManager.pageData[window.location.href].userData;
   if (!('cookies' in dataObject)) {
     // load cookies into a table
     var enumerator = cookiemanager.enumerator;
