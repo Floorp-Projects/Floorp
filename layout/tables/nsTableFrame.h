@@ -187,7 +187,8 @@ public:
 
 
   static nscoord RoundToPixel(nscoord aValue,
-                              float   aPixelToTwips);
+                              float   aPixelToTwips,
+                              PRBool  aRoundUp = PR_FALSE);
 
   NS_IMETHOD IsPercentageBase(PRBool& aBase) const;
 
@@ -633,7 +634,7 @@ protected:
                              nsIFrame*                aRowGroupFrame, 
                              nscoord                  aSumOfRowHeights,
                              nscoord                  aExcess,
-                             nscoord&                 aExcessForRowGroup, 
+                             nscoord&                 aExcessAllocated,
                              nscoord&                 aRowGroupYPos);
 
   void PlaceChild(nsIPresContext*      aPresContext,
