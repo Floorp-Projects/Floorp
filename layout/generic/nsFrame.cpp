@@ -104,7 +104,9 @@ NS_LAYOUT PRBool nsIFrame::GetShowFrameBorders()
  */
 static PRLogModuleInfo* gLogModule;
 
+#ifdef NS_DEBUG
 static PRLogModuleInfo* gFrameVerifyTreeLogModuleInfo;
+#endif
 
 static PRBool gFrameVerifyTreeEnable = PRBool(0x55);
 

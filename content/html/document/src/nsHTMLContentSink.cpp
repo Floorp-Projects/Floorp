@@ -60,6 +60,7 @@
 
 #include "nsVoidArray.h"
 #include "nsIScriptContextOwner.h"
+#include "nsHTMLIIDs.h"
 
 // XXX Go through a factory for this one
 #include "nsICSSParser.h"
@@ -73,7 +74,6 @@ static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 #define XXX_ART_HACK 1
 
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
-static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 static NS_DEFINE_IID(kIDOMTextIID, NS_IDOMTEXT_IID);
 static NS_DEFINE_IID(kIDOMCommentIID, NS_IDOMCOMMENT_IID);
 static NS_DEFINE_IID(kIDOMHTMLFormElementIID, NS_IDOMHTMLFORMELEMENT_IID);
@@ -1337,7 +1337,6 @@ SinkContext::FlushText(PRBool* aDidFlush)
       content->SetDocument(mSink->mDocument, PR_FALSE);
 
       // Set the text in the text node
-      static NS_DEFINE_IID(kITextContentIID, NS_ITEXT_CONTENT_IID);
       nsITextContent* text = nsnull;
       content->QueryInterface(kITextContentIID, (void**) &text);
       text->SetText(mText, mTextLength, PR_FALSE);
@@ -2909,8 +2908,6 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
       }
     }
     else {
-      PRBool enabled = PR_TRUE;
-
       PreEvaluateScript();
 
       // Otherwise, get the text content of the script tag

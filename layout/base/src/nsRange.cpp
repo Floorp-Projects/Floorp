@@ -247,10 +247,10 @@ PRBool GetNodeBracketPoints(nsIContent* aNode,
  
 nsRange::nsRange() :
   mIsPositioned(PR_FALSE),
-  mStartParent(),
   mStartOffset(0),
-  mEndParent(),
   mEndOffset(0),
+  mStartParent(),
+  mEndParent(),
   mScriptObject(nsnull)
 {
   NS_INIT_REFCNT();

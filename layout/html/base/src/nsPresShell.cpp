@@ -407,7 +407,9 @@ static PRLogModuleInfo* gLogModule;
 #endif
 
 static PRBool gVerifyReflow = PRBool(0x55);
+#ifdef NS_DEBUG
 static PRBool gVerifyReflowAll;
+#endif
 
 NS_LAYOUT PRBool
 nsIPresShell::GetVerifyReflowEnable()
