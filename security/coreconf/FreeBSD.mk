@@ -30,7 +30,36 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 #
-# Config stuff for FreeBSD2
+# Config stuff for FreeBSD
 #
 
-include $(CORE_DEPTH)/coreconf/FreeBSD.mk
+include $(CORE_DEPTH)/coreconf/UNIX.mk
+
+DEFAULT_COMPILER	= gcc
+CC			= gcc
+CCC			= g++
+RANLIB			= ranlib
+
+OS_REL_CFLAGS		= -Di386
+CPU_ARCH		= x86
+
+OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
+
+ifdef USE_PTHREADS
+	OS_LIBS		= -lc_r
+	DEFINES		+= -D_PR_NEED_FAKE_POLL
+else
+	OS_LIBS		= -lc
+endif
+
+ARCH			= freebsd
+
+DSO_CFLAGS		= -fPIC
+DSO_LDOPTS		= -Bshareable
+DSO_LDFLAGS		=
+
+MKSHLIB			= $(LD) $(DSO_LDOPTS)
+
+G++INCLUDES		= -I/usr/include/g++
+
+INCLUDES		+= -I/usr/X11R6/include
