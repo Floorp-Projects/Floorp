@@ -22,6 +22,7 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsIUrl.h"
+#include "nsIString.h"
 
 #include "nsString2.h"
 #include "plevent.h"
@@ -74,17 +75,17 @@ typedef enum _FTP_STATE {
     FTP_R_MKDIR,
     FTP_S_MODE,     // send ASCII or BINARY
     FTP_R_MODE,
-    FTP_S_CWD,
+    FTP_S_CWD,      // send change working directory
     FTP_R_CWD,
-    FTP_S_SIZE,
+    FTP_S_SIZE,     // send size
     FTP_R_SIZE,
-    FTP_S_PUT,
+    FTP_S_PUT,      // send STOR to upload the file
     FTP_R_PUT,
-    FTP_S_RETR,
+    FTP_S_RETR,     // send retrieve to download the file
     FTP_R_RETR,
-    FTP_S_MDTM,
+    FTP_S_MDTM,     // send MDTM to get time information
     FTP_R_MDTM,
-    FTP_S_LIST,
+    FTP_S_LIST,     // send LIST or NLST (server dependent) to get a dir listing
     FTP_R_LIST,
 
 ///////////////////////
@@ -126,6 +127,7 @@ private:
     void SetSystInternals(void);
     FTP_STATE FindActionState(void);
     FTP_STATE FindGetState(void);
+    nsresult MapResultCodeToString(nsresult aResultCode, nsIString* *aOutMsg);
 
     // Private members
 

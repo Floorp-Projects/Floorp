@@ -75,6 +75,7 @@ nsFtpConnectionThread::~nsFtpConnectionThread() {
 NS_IMETHODIMP
 nsFtpConnectionThread::Run() {
     nsresult rv;
+    PRBool processing = PR_TRUE;
     nsITransport* lCPipe = nsnull;
     nsITransport* lDPipe = nsnull;
 
@@ -115,11 +116,15 @@ nsFtpConnectionThread::Run() {
         return rv;
     }
 
-	while (1) {
+    PRUint32 bytes = 0;
+    PRUint32 prevBytes = 0;
+
+	while (processing) {
         nsresult rv;
         char *buffer = nsnull;      // the buffer to be sent to the server
+                                    // XXX the buffer symantics need to be established
+                                    // XXX and proper newing and deleting needs to occur.
         PRUint32 bufLen = 0;
-        PRUint32 bytes = 0;
 
         // each hunk of data that comes in is evaluated, appropriate action 
         // is taken and the state is incremented.
@@ -128,6 +133,10 @@ nsFtpConnectionThread::Run() {
 	    // XXX and replaced with static char or #defines.
         switch(mState) {
 
+//////////////////////////////
+//// INTERNAL STATES
+//////////////////////////////
+
             // Reading state. used after a write in order to retrieve
             // the response from the server.
             case FTP_READ_BUF:
@@ -135,11 +144,55 @@ nsFtpConnectionThread::Run() {
                 if (mState == mNextState)
                     NS_ASSERTION(0, "ftp read state mixup");
 
-                rv = Read();
-                mState = mNextState;
+                rv = Read();    // parse out the response code and load the repsonse buffer
+                if (NS_FAILED(rv))
+                    mState = FTP_ERROR;
+                else 
+                    mState = mNextState;
                 break;
                 }
                 // END: FTP_READ_BUF
+
+            case FTP_ERROR:
+                {
+                // We have error'd out. Stop binding and pass the error back to the user.
+                nsIString* errorMsg = nsnull;
+                nsFtpOnStopBindingEvent* event =
+                    new nsFtpOnStopBindingEvent(mListener, nsnull);
+                if (!event)
+                    return NS_ERROR_OUT_OF_MEMORY;
+
+                rv = MapResultCodeToString(rv, &errorMsg);
+                if (NS_FAILED(rv)) {
+                    delete event;
+                    return rv;
+                }
+
+                rv = event->Init(rv, errorMsg);
+                if (NS_FAILED(rv)) {
+                    delete event;
+                    return rv;
+                }
+
+                rv = event->Fire(mEventQueue);
+                if (NS_FAILED(rv)) {
+                    delete event;
+                    return rv;
+                }
+
+                // after notifying the user of the error, stop processing.
+                processing = PR_FALSE;
+                break;
+                }
+                // END: FTP_ERROR
+
+            case FTP_COMPLETE:
+                {
+                
+                break;
+                }
+                // END: FTP_COMPLETE
+
 
 //////////////////////////////
 //// CONNECTION SETUP STATES
@@ -152,14 +205,16 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-                if (NS_FAILED(rv)) return rv;
-
-                if (bytes < bufLen) {
-                    // didn't write everything, try again
-                    // XXX remember how much data was written and send the amount left
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
+
                 mState = FTP_READ_BUF;
                 mNextState = FTP_R_USER;
                 break;
@@ -190,12 +245,16 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
                 // PR_smprintf(buffer, "PASS %.256s\r\n", mPassword);
             
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-                if (NS_FAILED(rv)) return rv;
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
+
                 mState = FTP_READ_BUF;
                 mNextState = FTP_R_PASS;
                 break;
@@ -223,12 +282,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
 			    // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-                if (NS_FAILED(rv)) return rv;
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_SYST;
@@ -266,12 +328,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
 			    // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-                if (NS_FAILED(rv)) return rv;
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_ACCT;			
@@ -285,8 +350,9 @@ nsFtpConnectionThread::Run() {
 				    mState = FTP_S_SYST;
 			    } else {
 				    // failure. couldn't login
-				    // XXX use a more descriptive error code.
-				    return NS_ERROR_NOT_IMPLEMENTED;
+                    rv = NS_ERROR_FTP_LOGIN;
+                    mState = FTP_ERROR;
+                    break;
 			    }
 			    break;
                 }
@@ -298,11 +364,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_MACB;
@@ -332,11 +402,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_PWD;
@@ -406,7 +480,10 @@ nsFtpConnectionThread::Run() {
 
 					    const char *initialPath = nsnull;
 					    rv = mUrl->GetPath(&initialPath);
-					    if (NS_FAILED(rv)) return rv;
+					    if (NS_FAILED(rv)) {
+                            mState = FTP_ERROR;
+                            break;
+                        }
 					    
 					    if (initialPath && *initialPath) {
 						    if (newPath.Last() == '/')
@@ -442,11 +519,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_MODE;
@@ -458,6 +539,7 @@ nsFtpConnectionThread::Run() {
                 {
                 if (mResponseCode != 2) {
                     // indicate error.
+                    rv = NS_ERROR_FTP_MODE;
                     mState = FTP_ERROR;
                     break;
                 }
@@ -474,7 +556,10 @@ nsFtpConnectionThread::Run() {
                 {
                 const char * path = nsnull;
                 rv = mUrl->GetPath(&path);
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
 
                 if (mServerType == FTP_VMS_TYPE) {
                     char *slash = nsnull;
@@ -497,11 +582,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+                
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_CWD;
@@ -532,6 +621,7 @@ nsFtpConnectionThread::Run() {
                     // we're not VMS, and we've already failed a RETR.
                     mState = FTP_S_LIST;
                 } else {
+                    rv = NS_ERROR_FTP_CWD;
                     mState = FTP_ERROR;
                 }
                 break;
@@ -542,7 +632,10 @@ nsFtpConnectionThread::Run() {
                 {
                 const char *path = nsnull;
                 rv = mUrl->GetPath(&path);
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
 
                 if (mServerType == FTP_VMS_TYPE) {
                     mState = FindGetState();
@@ -553,11 +646,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_SIZE;
@@ -580,7 +677,10 @@ nsFtpConnectionThread::Run() {
                 {
                 const char *path = nsnull;
                 rv = mUrl->GetPath(&path);
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
 
                 if (mServerType == FTP_VMS_TYPE) {
                     mState = FindGetState();
@@ -591,11 +691,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_MDTM;
@@ -623,7 +727,11 @@ nsFtpConnectionThread::Run() {
                     time_t tt;
                     char *timeStr = nsnull;
                     timeStr = mResponseMsg.ToNewCString();
-                    if (!timeStr) return NS_ERROR_OUT_OF_MEMORY;
+                    if (!timeStr) {
+                        rv = NS_ERROR_OUT_OF_MEMORY;
+                        mState = FTP_ERROR;
+                        break;
+                    }
 
                     ts.tm_year =
                      (timeStr[0] - '0') * 1000 +
@@ -661,11 +769,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_LIST;
@@ -684,7 +796,10 @@ nsFtpConnectionThread::Run() {
                     nsIByteBufferInputStream* in;
 
                     rv = NS_NewByteBufferInputStream(&in);
-                    if (NS_FAILED(rv)) return rv;
+                    if (NS_FAILED(rv)) {
+                        mState = FTP_ERROR;
+                        break;
+                    }
                     
 #define LIST_BUF_LEN 4096
                     char listBuf[LIST_BUF_LEN]; // XXX tune this mem.
@@ -694,30 +809,45 @@ nsFtpConnectionThread::Run() {
                         PRUint32 writeCnt = 0;
 
                         rv = in->Fill(listBuf, bytes, &writeCnt);
-                        if (NS_FAILED(rv)) return rv;
+                        if (NS_FAILED(rv)) {
+                            mState = FTP_ERROR;
+                            break;
+                        }
 
                         // tell the user about the data.
                         nsFtpOnDataAvailableEvent* event =
                             new nsFtpOnDataAvailableEvent(mListener, nsnull); // XXX the destroy event method
                                                                               // XXX needs to clean up this new.
-                        if (event == nsnull)
-                            return NS_ERROR_OUT_OF_MEMORY;
+                        if (!event) {
+                            rv = NS_ERROR_OUT_OF_MEMORY;
+                            mState = FTP_ERROR;
+                            break;
+                        }
 
-                        event->Init(in, 0, writeCnt);
+                        rv = event->Init(in, 0, writeCnt);
+                        if (NS_FAILED(rv)) {
+                            mState = FTP_ERROR;
+                            break;
+                        }
 
                         rv = event->Fire(mEventQueue);
                         if (NS_FAILED(rv)) {
                             delete event;
-                            return rv;
+                            mState = FTP_ERROR;
+                            break;
                         }                        
 
                         rv = mDInStream->Read(listBuf, LIST_BUF_LEN, &bytes);
+                        if (NS_FAILED(rv)) {
+                            mState = FTP_ERROR;
+                            break;
+                        }
                     }
 
                     if (bytes == 1) {
                         // XXX we're done
                     } else if (bytes < 0) {
-                        // XXX indicate errror
+                        // XXX indicate error
                     }
 
 
@@ -732,7 +862,10 @@ nsFtpConnectionThread::Run() {
                 {
                 const char *path = nsnull;
                 rv = mUrl->GetPath(&path);
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
 
                 NS_ASSERTION(mFilename.Length() > 0, "ftp filename not present");
 
@@ -743,11 +876,15 @@ nsFtpConnectionThread::Run() {
                 bufLen = PL_strlen(buffer);
 
                 // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_RETR;
@@ -771,7 +908,10 @@ nsFtpConnectionThread::Run() {
                     nsIByteBufferInputStream* in;
 
                     rv = NS_NewByteBufferInputStream(&in);
-                    if (NS_FAILED(rv)) return rv;
+                    if (NS_FAILED(rv)) {
+                        mState = FTP_ERROR;
+                        break;
+                    }
                     
 #define FILE_BUF_LEN 4096
                     char listBuf[FILE_BUF_LEN]; // XXX tune this mem alloc.
@@ -781,24 +921,39 @@ nsFtpConnectionThread::Run() {
                         PRUint32 writeCnt = 0;
 
                         rv = in->Fill(listBuf, bytes, &writeCnt);
-                        if (NS_FAILED(rv)) return rv;
+                        if (NS_FAILED(rv)) {
+                            mState = FTP_ERROR;
+                            break;
+                        }
 
                         // tell the user about the data.
                         nsFtpOnDataAvailableEvent* event =
                             new nsFtpOnDataAvailableEvent(mListener, nsnull); // XXX the destroy event method
                                                                               // XXX needs to clean up this new.
-                        if (event == nsnull)
-                            return NS_ERROR_OUT_OF_MEMORY;
+                        if (!event) {
+                            rv = NS_ERROR_OUT_OF_MEMORY;
+                            mState = FTP_ERROR;
+                            break;
+                        }
 
-                        event->Init(in, 0, writeCnt);
+                        rv = event->Init(in, 0, writeCnt);
+                        if (NS_FAILED(rv)) {
+                            mState = FTP_ERROR;
+                            break;
+                        }
 
                         rv = event->Fire(mEventQueue);
                         if (NS_FAILED(rv)) {
                             delete event;
-                            return rv;
+                            mState = FTP_ERROR;
+                            break;
                         }                        
 
                         rv = mDInStream->Read(listBuf, LIST_BUF_LEN, &bytes);
+                        if (NS_FAILED(rv)) {
+                            mState = FTP_ERROR;
+                            break;
+                        }
                     }
 
                     if (bytes == 1) {
@@ -829,11 +984,16 @@ nsFtpConnectionThread::Run() {
                 buffer = "PASV\r\n";
                 bufLen = PL_strlen(buffer);
 
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;                
+
                 mState = FTP_READ_BUF;
                 mNextState = FTP_R_PASV;
                 break;
@@ -851,6 +1011,7 @@ nsFtpConnectionThread::Run() {
 
                     mUsePasv = PR_FALSE;
                     // until we have PORT support, we'll just fail.
+                    rv = NS_ERROR_FTP_PASV;
                     mState = FTP_ERROR;
                     break;
                 }
@@ -859,8 +1020,11 @@ nsFtpConnectionThread::Run() {
 
                 char *ptr = nsnull;
                 char *response = mResponseMsg.ToNewCString();
-                if (!response)
-                    return NS_ERROR_OUT_OF_MEMORY;
+                if (!response) {
+                     rv = NS_ERROR_OUT_OF_MEMORY;
+                     mState = FTP_ERROR;
+                     break;
+                }
 
                 // The returned address string can be of the form
                 // (xxx,xxx,xxx,xxx,ppp,ppp) or
@@ -896,6 +1060,7 @@ nsFtpConnectionThread::Run() {
                     mUsePasv = PR_FALSE;
                     // until we have port support, we'll just fail
                     //mState = FTP_S_PORT;
+                    rv = NS_ERROR_FTP_PASV;
                     mState = FTP_ERROR;
                     break;
                 }
@@ -906,16 +1071,25 @@ nsFtpConnectionThread::Run() {
 
                 // now we know where to connect our data channel
                 rv = sts->CreateTransport(host, port, &lDPipe); // the command channel
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
 
                 if (mAction == GET) {
                     // get the input stream so we can read data from the server.
                     rv = lDPipe->OpenInputStream(&mDInStream);
-                    if (NS_FAILED(rv)) return rv;
+                    if (NS_FAILED(rv)) {
+                        mState = FTP_ERROR;
+                        break;
+                    }
                 } else {
                     // get the output stream so we can write to the server
                     rv = lDPipe->OpenOutputStream(&mDOutStream);
-                    if (NS_FAILED(rv)) return rv;
+                    if (NS_FAILED(rv)) {
+                        mState = FTP_ERROR;
+                        break;
+                    }
                 }
 
                 // we're connected figure out what type of transfer we're doing (ascii or binary)
@@ -933,16 +1107,23 @@ nsFtpConnectionThread::Run() {
                 nsresult rv;
                 rv = mUrl->GetPath(&filename); // XXX we should probably check to 
                                                // XXX make sure we have an actual filename.
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
                 PR_smprintf(buffer, "DELE %s\r\n", filename);
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_DEL_FILE;
@@ -968,16 +1149,23 @@ nsFtpConnectionThread::Run() {
                 const char *dir = nsnull;
                 nsresult rv;
                 rv = mUrl->GetPath(&dir);
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
                 PR_smprintf(buffer, "RMD %s\r\n", dir);
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_DEL_DIR;
@@ -990,7 +1178,9 @@ nsFtpConnectionThread::Run() {
                 {
                 if (mResponseCode != 2) {
                     // failed.
-                    // XXX indicate failure
+                    rv = NS_ERROR_FTP_DEL_DIR;
+                    mState = FTP_ERROR;
+                    break;
                 }
                 mState = FTP_COMPLETE;
                 break;
@@ -1002,16 +1192,23 @@ nsFtpConnectionThread::Run() {
                 const char *dir = nsnull;
                 nsresult rv;
                 rv = mUrl->GetPath(&dir);
-                if (NS_FAILED(rv)) return rv;
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
+                    break;
+                }
                 PR_smprintf(buffer, "MKD %s\r\n", dir);
                 bufLen = PL_strlen(buffer);
 
     		    // send off the command
-                rv = mCOutStream->Write(buffer, bufLen, &bytes);
-
-                if (bytes < bufLen) {
+                rv = mCOutStream->Write(buffer+prevBytes, bufLen-prevBytes, &bytes);
+                if (NS_FAILED(rv)) {
+                    mState = FTP_ERROR;
                     break;
                 }
+
+                prevBytes += bytes;
+                if (prevBytes < bufLen) break;      // not done writing. kick back into this state.
+                prevBytes = 0;
                 
                 mState = FTP_READ_BUF;
 			    mNextState = FTP_R_MKDIR;
@@ -1021,7 +1218,9 @@ nsFtpConnectionThread::Run() {
 
             case FTP_R_MKDIR:
                 if (mResponseCode != 2) {
-                    // XXX indicate failure
+                    rv = NS_ERROR_FTP_MKDIR;
+                    mState = FTP_ERROR;
+                    break;
                 }
                 mState = FTP_COMPLETE;
                 break;
@@ -1038,6 +1237,8 @@ nsFtpConnectionThread::Run() {
 
     // Close the command channel
     NS_RELEASE(lCPipe);
+
+    return NS_OK;
 }
 
 nsresult
@@ -1081,7 +1282,7 @@ nsFtpConnectionThread::Read(void) {
     rv = mCInStream->GetLength(&len);
     if (NS_FAILED(rv)) return rv;
     buffer = new char[len+1];
-    if (!buffer) return 0; // XXX need a better return code
+    if (!buffer) return NS_ERROR_OUT_OF_MEMORY; 
     rv = mCInStream->Read(buffer, len, &read);
     if (NS_FAILED(rv)) {
         delete [] buffer;
@@ -1193,4 +1394,95 @@ nsFtpConnectionThread::FindGetState(void) {
     }
 
     return FTP_ERROR;
+}
+
+nsresult
+nsFtpConnectionThread::MapResultCodeToString(nsresult aResultCode, nsIString* *aOutMsg) {
+#if 0  // XXX waiting on NS_NewString() to make it's way into the builds (raptorbase.dll)
+    nsresult rv;
+    nsStr* string = nsnull;
+
+    rv = NS_NewString(aOutMsg);
+    if (NS_FAILED(rv)) return rv;
+
+    string = new nsStr;
+    if (!string) return NS_ERROR_OUT_OF_MEMORY;
+
+    switch (aResultCode) {
+    case NS_ERROR_FTP_LOGIN:
+        {
+            string->mStr = "FTP: Login failed.";
+            rv = (*aOutMsg)->SetStr(string);
+            if (NS_FAILED(rv)) {
+                delete string;
+                return rv;
+            }
+            break;
+        }
+    case NS_ERROR_FTP_MODE:
+        {
+            string->mStr = "FTP: MODE command failed.";
+            rv = (*aOutMsg)->SetStr(string);
+            if (NS_FAILED(rv)) {
+                delete string;
+                return rv;
+            }
+            break;
+        }
+    case NS_ERROR_FTP_CWD:
+        {
+            string->mStr = "FTP: CWD command failed.";
+            rv = (*aOutMsg)->SetStr(string);
+            if (NS_FAILED(rv)) {
+                delete string;
+                return rv;
+            }
+            break;
+        }
+    case NS_ERROR_FTP_PASV:
+        {
+            string->mStr = "FTP: PASV command failed.";
+            rv = (*aOutMsg)->SetStr(string);
+            if (NS_FAILED(rv)) {
+                delete string;
+                return rv;
+            }
+            break;
+        }
+    case NS_ERROR_FTP_DEL_DIR:
+        {
+            string->mStr = "FTP: DEL directory command failed.";
+            rv = (*aOutMsg)->SetStr(string);
+            if (NS_FAILED(rv)) {
+                delete string;
+                return rv;
+            }
+            break;
+        }
+    case NS_ERROR_FTP_MKDIR:
+        {
+            string->mStr = "FTP: MKDIR command failed";
+            rv = (*aOutMsg)->SetStr(string);
+            if (NS_FAILED(rv)) {
+                delete string;
+                return rv;
+            }
+            break;
+        }
+    default:
+        {
+            string->mStr = "Unknown FTP error.";
+            rv = (*aOutMsg)->SetStr(string);
+            if (NS_FAILED(rv)) {
+                delete string;
+                return rv;
+            }
+            break;
+        }
+    } // END: switch
+
+    delete string;
+
+#endif // if 0
+    return NS_OK;
 }
