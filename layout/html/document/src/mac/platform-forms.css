@@ -51,7 +51,7 @@ textarea[disabled] {
 select {
   -moz-appearance: menulist;
   margin: 1px 1px 1px 1px;
-  background-color: -moz-field !important;
+  background-color: transparent !important;
   color: -moz-FieldText !important;
   font-size: 11px;
 }
@@ -63,7 +63,7 @@ select[multiple],
 select[size][multiple] {
   -moz-appearance: listbox;
   margin: 1px 1px 1px 1px;
-  background-color: -moz-Field !important;
+  background-color: transparent !important;
 }
 
 select[size="0"],
