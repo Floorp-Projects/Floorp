@@ -307,6 +307,12 @@ FeedItem.prototype.writeToFolder = function() {
   if (this.author && this.author.indexOf('@') == -1)
     this.author = '<' + this.author + '>';
 
+  // the subject may contain HTML entities.
+  // Convert these to their unencoded state. i.e. &amp; becomes '&'
+  this.title = this.title.replace(/&lt;/g, '<');
+  this.title = this.title.replace(/&gt;/g, '>');
+  this.title = this.title.replace(/&amp;/g, '&');
+  
   // Compress white space in the subject to make it look better.
   this.title = this.title.replace(/[\t\r\n]+/g, " ");
   this.title = mimeEncodeSubject(this.title, this.characterSet);

@@ -1,7 +1,7 @@
 // XXX Rename this to global.js
 
 // Whether or not to dump debugging messages to the console.
-const DEBUG = true;
+const DEBUG = false;
 var debug;
 if (DEBUG)
   debug = function(msg) { dump(' -- FZ -- : ' + msg + '\n'); }
