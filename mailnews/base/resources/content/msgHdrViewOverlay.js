@@ -43,6 +43,8 @@ var gCollectNewsgroup = false;
 var gCollapsedHeaderViewMode = false;
 var gBuildAttachmentsForCurrentMsg = false;
 var gBuildAttachmentPopupForCurrentMsg = true;
+var gBuiltExpandedView = false;
+var gBuiltCollapsedView = false;
 var gOpenLabel;
 var gSaveLabel;
 
@@ -221,6 +223,8 @@ var messageHeaderSink = {
       }
 
       ClearCurrentHeaders();
+      gBuiltExpandedView = false;
+      gBuiltCollapsedView = false;
       gBuildAttachmentsForCurrentMsg = false;
       gBuildAttachmentPopupForCurrentMsg = true;
       ClearAttachmentTreeList();
@@ -399,7 +403,7 @@ function ToggleHeaderView ()
     // hide the current view
     hideHeaderView(gCollapsedHeaderView);
     // update the current view
-    updateHeaderViews();
+    UpdateMessageHeaders();
     
     // now uncollapse / collapse the right views
     expandedNode.removeAttribute("collapsed");
@@ -411,7 +415,7 @@ function ToggleHeaderView ()
     // hide the current view
     hideHeaderView(gExpandedHeaderView);
     // update the current view
-    updateHeaderViews();
+    UpdateMessageHeaders();
     
     // now uncollapse / collapse the right views
     collapsedNode.removeAttribute("collapsed");
@@ -467,28 +471,40 @@ function UpdateMessageHeaders()
   for (headerName in currentHeaderData)
   {
     var headerField = currentHeaderData[headerName];
-    var headerEntry = gExpandedHeaderView[headerName];
-    if (headerEntry == undefined && gViewAllHeaders)
+    var headerEntry;
+
+    if (gCollapsedHeaderViewMode && !gBuiltCollapsedView)
+    { 
+      headerEntry = gCollapsedHeaderView[headerName];
+      if (headerEntry != undefined && headerEntry)
+      {  
+        headerEntry.outputFunction(headerEntry, headerField.headerValue);
+        headerEntry.valid = true;    
+      }
+    }
+    else if (!gCollapsedHeaderViewMode && !gBuiltExpandedView)
     {
-      // for view all headers, if we don't have a header field for this value....cheat and create one....then
-      // fill in a headerEntry
-      gExpandedHeaderView[headerName] = new createNewHeaderView(headerName);
       headerEntry = gExpandedHeaderView[headerName];
-    }
+      if (headerEntry == undefined && gViewAllHeaders)
+      {
+        // for view all headers, if we don't have a header field for this value....cheat and create one....then
+        // fill in a headerEntry
+        gExpandedHeaderView[headerName] = new createNewHeaderView(headerName);
+        headerEntry = gExpandedHeaderView[headerName];
+      }
 
-    if (headerEntry != undefined && headerEntry)
-    {
-      headerEntry.outputFunction(headerEntry, headerField.headerValue);
-      headerEntry.valid = true;
-    }
-
-    headerEntry = gCollapsedHeaderView[headerName];
-    if (headerEntry != undefined && headerEntry)
-    {
-      headerEntry.outputFunction(headerEntry, headerField.headerValue);
-      headerEntry.valid = true;    
-    }
+      if (headerEntry != undefined && headerEntry)
+      {
+        headerEntry.outputFunction(headerEntry, headerField.headerValue);
+        headerEntry.valid = true;
+      }
+    } // if we are in expanded view....
   }
+
+  if (gCollapsedHeaderViewMode)
+   gBuiltCollapsedView = true;
+  else
+   gBuiltExpandedView = true;
 
   // now update the view to make sure the right elements are visible
   updateHeaderViews();
