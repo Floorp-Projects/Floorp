@@ -1328,17 +1328,15 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
             aKeyEvent->GetCharCode(&theChar);
         }
         //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
-
-        nsAutoString code; // either keycode or charcode
         PRBool   gotCharCode = PR_FALSE;
         PRBool   gotKeyCode  = PR_FALSE;
         
         if ( keyName.IsEmpty() )
         {
-	        keyElement->GetAttribute(nsAutoString("charcode"), code);
-	        if(code.IsEmpty()) {
-	          keyElement->GetAttribute(nsAutoString("keycode"), code);
-	          if(code.IsEmpty()) {
+	        keyElement->GetAttribute(nsAutoString("charcode"), keyName);
+	        if(keyName.IsEmpty()) {
+	          keyElement->GetAttribute(nsAutoString("keycode"), keyName);
+	          if(keyName.IsEmpty()) {
 	            // HACK for temporary compatibility
 	            if(aEventType == eKeyPress)
 	              aKeyEvent->GetCharCode(&theChar);
@@ -1357,6 +1355,9 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 	        }
         }
 
+		if(keyName.IsEmpty())
+			break;
+
         char tempChar[2];
         tempChar[0] = theChar;
         tempChar[1] = 0;
@@ -1368,9 +1369,9 @@ nsXULKeyListenerImpl::HandleEventUsingKeyset(nsIDOMElement* aKeysetElement, nsID
 
         PRBool isMatching;
         if(gotCharCode){
-            isMatching = IsMatchingCharCode(tempChar2, code);
+            isMatching = IsMatchingCharCode(tempChar2, keyName);
         } else if(gotKeyCode){
-          isMatching = IsMatchingKeyCode(theChar, code);
+          isMatching = IsMatchingKeyCode(theChar, keyName);
         }
 
         // HACK for backward compatibility
