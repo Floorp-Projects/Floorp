@@ -4663,7 +4663,7 @@ nsElementSH::PostCreate(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
   nsCOMPtr<nsIURI> bindingURL;
   pctx->GetXBLBindingURL(content, getter_AddRefs(bindingURL));
-  if (!binding) {
+  if (!bindingURL) {
     // No binding, nothing left to do here.
     return NS_OK;
   }
