@@ -328,7 +328,6 @@
   'bug.votes', 
   'group.bit', 
   'group.description', 
-  'knum', 
   'dep.title', 
   'dep.fieldname', 
   'accesskey', 
@@ -336,6 +335,11 @@
   'selname',
   'depbug FILTER bug_link(depbug)',
   '"${bug.dup_id}" FILTER bug_link(bug.dup_id)',
+],
+
+'bug/knob.html.tmpl' => [
+  'bug.bug_id', 
+  'knum', 
 ],
 
 'bug/navigate.html.tmpl' => [
