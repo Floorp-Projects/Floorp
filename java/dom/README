@@ -13,6 +13,13 @@ Subdirectories
 contain Java sources, Java native methods implementation, 
 native c++ code and Java DOM API tests respectively.
 
+Note: 
+   Sources that work with mozilla PR1 and earlier
+   versions should be checked out using DOM_PR1 tag.
+
+   No tags are needed for the sources that work with
+   the latest mozilla tree.
+
 Building
 ========
 
@@ -24,9 +31,10 @@ Building
      JDKHOME environment variable set to your JDK dir
      CLASSPATH environment cvariable set to contain 
 	org.w3c.dom classes. The sources can be found at	
+        http://www.w3.org/TR/2000/CR-DOM-Level-2-20000307/java-binding.html
+	(for mozilla PR1 and earlie versions)
         http://www.w3.org/TR/2000/CR-DOM-Level-2-20000510/java-binding.html
-        The binaries can be found at
-        http://www.mozilla.org/projects/blackwood/webclient/bin/m4/files.html
+	(for the latest mozilla)
 
      Solaris specific
      ----------------
