@@ -54,6 +54,9 @@
 #ifdef NS_BUILD_REFCNT_LOGGING
 #include "plhash.h"
 #include <math.h>
+#include "nsIPref.h"
+#include "nsIServiceManager.h"
+
 
 #if defined(NS_MT_SUPPORTED)
 #include "prlock.h"
@@ -76,6 +79,9 @@ static PRInt32 gNextSerialNumber;
 static PRBool gLogging;
 static PRBool gLogToLeaky;
 static PRBool gLogLeaksOnly;
+static PRBool gEnableViaPref;
+static PRBool gRefcountPrefEnabled = PR_FALSE;
+static const char* kRefcountPref = "nglayout.debug.enable_xpcom_refcnt_log";
 
 static void (*leakyLogAddRef)(void* p, int oldrc, int newrc);
 static void (*leakyLogRelease)(void* p, int oldrc, int newrc);
@@ -85,6 +91,8 @@ static FILE *gBloatLog = nsnull;
 static FILE *gRefcntsLog = nsnull;
 static FILE *gAllocLog = nsnull;
 static FILE *gLeakyLog = nsnull;
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 #define XPCOM_REFCNT_TRACK_BLOAT  0x1
 #define XPCOM_REFCNT_LOG_ALL      0x2
@@ -572,6 +580,8 @@ static void InitTraceLog(void)
                                      PL_CompareValues,
                                      PL_CompareValues,
                                      NULL, NULL);
+
+
   }
 
   const char* objects = getenv("XPCOM_MEM_LOG_OBJECTS");
@@ -612,15 +622,27 @@ static void InitTraceLog(void)
     }
   }
 
+
   if (gBloatLog || gRefcntsLog || gAllocLog || gLeakyLog) {
     gLogging = PR_TRUE;
   }
+
+  const char* s = getenv("XPCOM_REFCNT_LOG_ENABLE_VIA_PREF");
+  if (s && strchr(s, '1') >= 0) {
+    gEnableViaPref = PR_TRUE;
+    if (gLogging)
+      printf("### XPCOM_REFCNT_LOG_ENABLE_VIA_PREF defined: Logging will be enabled based on the pref selected in the Debug pane\n");
+  }
+  else
+    gEnableViaPref = PR_FALSE;  
+
 
 #if defined(NS_MT_SUPPORTED)
   gTraceLock = PR_NewLock();
 #endif /* NS_MT_SUPPORTED */
 
 }
+
 #endif
 
 #if defined(_WIN32) && defined(_M_IX86) // WIN32 x86 stack walking code
@@ -659,11 +681,13 @@ static SYMGETMODULEBASEPROC _SymGetModuleBase;
 typedef BOOL (__stdcall *SYMGETSYMFROMADDRPROC)(HANDLE, DWORD, PDWORD, PIMAGEHLP_SYMBOL);
 static SYMGETSYMFROMADDRPROC _SymGetSymFromAddr;
 
+typedef DWORD ( __stdcall *SYMLOADMODULE)(HANDLE, HANDLE, PSTR, PSTR, DWORD, DWORD);
+static SYMLOADMODULE _SymLoadModule;
 
 static PRBool
-EnsureSymInitialized()
+EnsureImageHlpInitialized()
 {
-  PRBool gInitialized = PR_FALSE;
+  static PRBool gInitialized = PR_FALSE;
 
   if (! gInitialized) {
     HMODULE module = ::LoadLibrary("IMAGEHLP.DLL");
@@ -687,12 +711,27 @@ EnsureSymInitialized()
     _SymGetSymFromAddr = (SYMGETSYMFROMADDRPROC)GetProcAddress(module, "SymGetSymFromAddr");
     if (!_SymGetSymFromAddr) return PR_FALSE;
 
-    gInitialized = _SymInitialize(GetCurrentProcess(), 0, TRUE);
+    _SymLoadModule = (SYMLOADMODULE)GetProcAddress(module, "SymLoadModule");
+    if (!_SymLoadModule) return PR_FALSE;
+
+    gInitialized = PR_TRUE;
   }
 
   return gInitialized;
-}
+} 
 
+static PRBool
+EnsureSymInitialized()
+{  
+  static PRBool gInitialized = PR_FALSE;
+
+  if (! gInitialized) {
+    if (! EnsureImageHlpInitialized())
+      return PR_FALSE;
+    gInitialized = _SymInitialize(GetCurrentProcess(), 0, TRUE);
+  }
+  return gInitialized;
+}
 /**
  * Walk the stack, translating PC's found into strings and recording the
  * chain in aBuffer. For this to work properly, the dll's must be rebased
@@ -710,7 +749,6 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
 {
   HANDLE myProcess = ::GetCurrentProcess();
   HANDLE myThread = ::GetCurrentThread();
-
   BOOL ok;
 
   ok = EnsureSymInitialized();
@@ -762,8 +800,8 @@ nsTraceRefcnt::WalkTheStack(FILE* aStream)
         0,
         NULL 
         );
-      fprintf(stdout, "### ERROR: WalkStack: %s", lpMsgBuf);
-      fflush(stdout);
+      fprintf(aStream, "### ERROR: WalkStack: %s", lpMsgBuf);
+      fflush(aStream);
       LocalFree( lpMsgBuf );
     }
     if (!ok || frame.AddrPC.Offset == 0)
@@ -981,6 +1019,30 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
 
 //----------------------------------------------------------------------
 
+
+static int PR_CALLBACK
+refcountPrefChanged(const char * newpref, void * data) {
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs) {
+    rv = prefs->GetBoolPref(kRefcountPref, &gRefcountPrefEnabled);
+  }
+  return rv;
+}
+
+NS_COM void 
+nsTraceRefcnt::SetPrefServiceAvailability(PRBool avail)
+{
+#ifdef NS_BUILD_REFCNT_LOGGING  
+  nsresult rv = NS_OK;
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs) {
+    prefs->GetBoolPref(kRefcountPref, &gRefcountPrefEnabled);
+    prefs->RegisterCallback(kRefcountPref, refcountPrefChanged, NULL);
+  }  
+#endif
+}
+
 NS_COM void
 nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
                                   void* aLibrayHandle)
@@ -994,9 +1056,8 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
     fprintf(stdout, "### Loading symbols for %s\n", aLibraryName);
     fflush(stdout);
 
-    HANDLE myProcess = ::GetCurrentProcess();
-
-    BOOL ok = SymInitialize(myProcess, ".;..\\lib", FALSE);
+    HANDLE myProcess = ::GetCurrentProcess();    
+    BOOL ok = EnsureSymInitialized();
     if (ok) {
       const char* baseName = aLibraryName;
       // just get the base name of the library if a full path was given:
@@ -1007,7 +1068,7 @@ nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
           break;
         }
       }
-      DWORD baseAddr = SymLoadModule(myProcess,
+      DWORD baseAddr = _SymLoadModule(myProcess,
                                      NULL,
                                      (char*)baseName,
                                      (char*)baseName,
@@ -1089,11 +1150,14 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
       if (gLogToLeaky) {
         (*leakyLogAddRef)(aPtr, aRefCnt - 1, aRefCnt);
       }
-      else {
-        // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(gRefcntsLog,
-                "\n<%s> 0x%08X %d AddRef %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);
-        WalkTheStack(gRefcntsLog);
+      else {        
+        if (!gEnableViaPref || (gEnableViaPref && gRefcountPrefEnabled)) {
+          // Can't use PR_LOG(), b/c it truncates the line
+          fprintf(gRefcntsLog,
+                  "\n<%s> 0x%08X %d AddRef %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);       
+          WalkTheStack(gRefcntsLog);
+          fflush(gRefcntsLog);
+        }
       }
     }
 #endif
@@ -1137,10 +1201,13 @@ nsTraceRefcnt::LogRelease(void* aPtr,
         (*leakyLogRelease)(aPtr, aRefCnt + 1, aRefCnt);
       }
       else {
-        // Can't use PR_LOG(), b/c it truncates the line
-        fprintf(gRefcntsLog,
-                "\n<%s> 0x%08X %d Release %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);
-        WalkTheStack(gRefcntsLog);
+        if (!gEnableViaPref || (gEnableViaPref && gRefcountPrefEnabled)) {
+          // Can't use PR_LOG(), b/c it truncates the line
+          fprintf(gRefcntsLog,
+                  "\n<%s> 0x%08X %d Release %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);
+          WalkTheStack(gRefcntsLog);
+          fflush(gRefcntsLog);
+        }
       }
     }
 

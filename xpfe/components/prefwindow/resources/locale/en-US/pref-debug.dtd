@@ -23,5 +23,6 @@
 <!ENTITY debugCrossingEventDumping.label "Crossing Event Dumping">
 
 <!-- Miscelleneous -->
-<!ENTITY debugMiscellaneous.label   "Miscelleneous">
+<!ENTITY debugMiscellaneous.label   "Miscellaneous">
 <!ENTITY debugDisableXULCache.label "Disable XUL Cache">
+<!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">

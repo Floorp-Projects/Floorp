@@ -198,6 +198,8 @@ public:
                                     int aBufLen);
 
   static NS_COM void WalkTheStack(FILE* aStream);
+  
+  static NS_COM void SetPrefServiceAvailability(PRBool avail);
 };
 
 #endif /* nsTraceRefcnt_h___ */
