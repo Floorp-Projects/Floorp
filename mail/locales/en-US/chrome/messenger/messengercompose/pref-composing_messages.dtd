@@ -11,6 +11,8 @@
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "c">
+<!ENTITY spellCheckInline.label               "Enable spell as you type">
+<!ENTITY spellCheckInline.accesskey           "n">
 <!ENTITY useMIME.label                        "For messages that contain 8-bit characters, use 'quoted printable' MIME encoding. Leave unchecked to send the messages as is.">
 <!ENTITY useMIME.accesskey                    "o">
 <!ENTITY warnOnSendAccelKey.label             "Confirm when using keyboard shortcut to send message">

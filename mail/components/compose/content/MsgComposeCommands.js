@@ -571,7 +571,6 @@ function GetSelectedMessages()
 
 function SetupCommandUpdateHandlers()
 {
-//  dump("SetupCommandUpdateHandlers\n");
   top.controllers.insertControllerAt(0, defaultController);
 }
 
@@ -592,37 +591,57 @@ function CommandUpdate_MsgCompose()
   updateComposeItems();
 }
 
-function updateComposeItems() {
-  try {
-
-  //Edit Menu
-  goUpdateCommand("cmd_rewrap");
-
-  //Insert Menu
-  if (gMsgCompose && gMsgCompose.composeHTML)
+function updateComposeItems() 
+{
+  try 
   {
-    goUpdateCommand("cmd_renderedHTMLEnabler");
-    goUpdateCommand("cmd_decreaseFont");
-    goUpdateCommand("cmd_increaseFont");
-    goUpdateCommand("cmd_bold");
-    goUpdateCommand("cmd_italic");
-    goUpdateCommand("cmd_underline");
-    goUpdateCommand("cmd_ul");
-    goUpdateCommand("cmd_ol");
-    goUpdateCommand("cmd_indent");
-    goUpdateCommand("cmd_outdent");
-    goUpdateCommand("cmd_align");
-    goUpdateCommand("cmd_smiley");
-  }
+    //Edit Menu
+    goUpdateCommand("cmd_rewrap");
 
-  //Options Menu
-  goUpdateCommand("cmd_spelling");
-  goUpdateCommand("cmd_quoteMessage");
+    //Insert Menu
+    if (gMsgCompose && gMsgCompose.composeHTML)
+    {
+      goUpdateCommand("cmd_renderedHTMLEnabler");
+      goUpdateCommand("cmd_decreaseFont");
+      goUpdateCommand("cmd_increaseFont");
+      goUpdateCommand("cmd_bold");
+      goUpdateCommand("cmd_italic");
+      goUpdateCommand("cmd_underline");
+      goUpdateCommand("cmd_ul");
+      goUpdateCommand("cmd_ol");
+      goUpdateCommand("cmd_indent");
+      goUpdateCommand("cmd_outdent");
+      goUpdateCommand("cmd_align");
+      goUpdateCommand("cmd_smiley");
+    }
+
+    //Options Menu
+    goUpdateCommand("cmd_spelling");
+    goUpdateCommand("cmd_quoteMessage");
 
   } catch(e) {}
 }
 
-function updateEditItems() {
+function openEditorContextMenu() 
+{
+  // if we have a mispelled word, do one thing, otherwise show the usual context menu
+  var spellCheckNoSuggestionsItem = document.getElementById('spellCheckNoSuggestions');
+  var word;
+  var misspelledWordStatus = InlineSpellChecker.updateSuggestionsMenu(document.getElementById('msgComposeContext'), spellCheckNoSuggestionsItem,
+                              word);
+  
+  var hideSpellingItems = (misspelledWordStatus == kSpellNoMispelling);
+  spellCheckNoSuggestionsItem.hidden = hideSpellingItems || misspelledWordStatus != kSpellNoSuggestionsFound;
+  document.getElementById('spellCheckAddToDictionary').hidden = hideSpellingItems;
+  document.getElementById('spellCheckIgnoreWord').hidden = hideSpellingItems;
+  document.getElementById('spellCheckAddSep').hidden = hideSpellingItems;
+  document.getElementById('spellCheckSuggestionsSeparator').hidden = hideSpellingItems;
+
+  updateEditItems();
+}
+
+function updateEditItems() 
+{
   goUpdateCommand("cmd_pasteNoFormatting");
   goUpdateCommand("cmd_pasteQuote");
   goUpdateCommand("cmd_delete");
@@ -633,8 +652,10 @@ function updateEditItems() {
   goUpdateCommand("cmd_findPrev");
 }
 
-var messageComposeOfflineObserver = {
-  observe: function(subject, topic, state) {
+var messageComposeOfflineObserver = 
+{
+  observe: function(subject, topic, state) 
+  {
     // sanity checks
     if (topic != "network:offline-status-changed") return;
     if (state == "offline")
@@ -1289,6 +1310,7 @@ function ComposeStartup(recycled, aParams)
                                          gMsgCompose.compFields.returnReceipt);
       document.getElementById("cmd_attachVCard").setAttribute('checked', 
                                          gMsgCompose.compFields.attachVCard);
+      document.getElementById("menu_inlineSpellCheck").setAttribute('checked', sPrefs.getBoolPref("mail.spellcheck.inline"));
 
       // If recycle, editor is already created
       if (!recycled) 
@@ -1357,8 +1379,7 @@ function ComposeStartup(recycled, aParams)
 
       if (recycled)
       {
-        // This sets charset and does reply quote insertion
-        gMsgCompose.initEditor(GetCurrentEditor(), window.content);
+        InitEditor();
 
         if (gMsgCompose.composeHTML)
         {
@@ -1419,7 +1440,7 @@ var gMsgEditorCreationObserver =
       {
         var editorStyle = editor.QueryInterface(Components.interfaces.nsIEditorStyleSheets);
         editorStyle.addStyleSheet("chrome://messenger/skin/messageQuotes.css");
-        gMsgCompose.initEditor(editor, window.content);
+        InitEditor();
       }
     }
   }
@@ -2020,7 +2041,6 @@ function SelectAddress()
   var ccAddress = msgCompFields.cc;
   var bccAddress = msgCompFields.bcc;
 
-  dump("toAddress: " + toAddress + "\n");
   window.openDialog("chrome://messenger/content/addressbook/abSelectAddressesDialog.xul",
             "",
             "chrome,resizable,titlebar,modal",
@@ -2032,6 +2052,18 @@ function SelectAddress()
   // We have to set focus to the addressingwidget because we seem to loose focus often 
   // after opening the SelectAddresses Dialog- bug # 89950
   AdjustFocus();
+}
+
+function ToggleInlineSpellChecker(target)
+{
+  if (InlineSpellChecker.inlineSpellChecker)
+  {
+    InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell = !InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell;
+    target.setAttribute('checked', InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell);
+
+    if (InlineSpellChecker.inlineSpellChecker.enableRealTimeSpell)
+      InlineSpellChecker.checkDocument(window.content.document);
+  }
 }
 
 function ToggleReturnReceipt(target)
@@ -2047,13 +2079,13 @@ function ToggleReturnReceipt(target)
 
 function ToggleAttachVCard(target)
 {
-    var msgCompFields = gMsgCompose.compFields;
-    if (msgCompFields)
-    {
-        msgCompFields.attachVCard = ! msgCompFields.attachVCard;
-        target.setAttribute('checked', msgCompFields.attachVCard);
-        gAttachVCardOptionChanged = true;
-    }
+  var msgCompFields = gMsgCompose.compFields;
+  if (msgCompFields)
+  {
+    msgCompFields.attachVCard = ! msgCompFields.attachVCard;
+    target.setAttribute('checked', msgCompFields.attachVCard);
+    gAttachVCardOptionChanged = true;
+  }
 }
 
 function queryISupportsArray(supportsArray, iid) {
@@ -3302,3 +3334,10 @@ function AutoSave()
   gAutoSaveTimeout = setTimeout("AutoSave()", gAutoSaveInterval);
 }
 
+function InitEditor()
+{
+  var editor = GetCurrentEditor();
+  gMsgCompose.initEditor(editor, window.content);
+  InlineSpellChecker.Init(editor, sPrefs.getBoolPref("mail.spellcheck.inline"));
+  InlineSpellChecker.checkDocument(window.content.document);
+}
