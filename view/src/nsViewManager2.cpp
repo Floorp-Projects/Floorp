@@ -122,6 +122,8 @@ nsDrawingSurface nsViewManager2::gRed = nsnull;
 nsDrawingSurface nsViewManager2::gBlue = nsnull;
 nsSize nsViewManager2::gBlendSize = nsSize(0, 0);
 nsSize nsViewManager2::gOffScreenSize = nsSize(0, 0);
+nsSize nsViewManager2::gLargestRequestedSize = nsSize(0, 0);
+
 
 // Weakly held references to all of the view managers
 nsVoidArray* nsViewManager2::gViewManagers = nsnull;
@@ -861,7 +863,7 @@ void nsViewManager2::RenderDisplayListElement(DisplayListElement2* element, nsIR
 			if (damageRect.width > 0 && damageRect.height > 0) {
     			mBlender->Blend(damageRect.x, damageRect.y, damageRect.width, damageRect.height,
     							mRedCX, mOffScreenCX,
-    							viewX * mTwipsToPixels, viewY * mTwipsToPixels,
+    							(PRInt32)(viewX * mTwipsToPixels),(PRInt32)(viewY * mTwipsToPixels),
     							opacity, mBlueCX,
     							NS_RGB(255, 0, 0), NS_RGB(0, 0, 255));
     		}
@@ -1848,9 +1850,6 @@ void nsViewManager2::GetMaxWidgetBounds(nsRect& aMaxWidgetBounds) const
       aMaxWidgetBounds.width = max(aMaxWidgetBounds.width, widgetBounds.width);
       aMaxWidgetBounds.height = max(aMaxWidgetBounds.height, widgetBounds.height);
     }
-    else
-      NS_ASSERTION(0, "failure to get rootWidget");
-
   }
 
 //   printf("WIDGET BOUNDS %d %d\n", aMaxWidgetBounds.width, aMaxWidgetBounds.height);
@@ -1884,7 +1883,7 @@ PRBool nsViewManager2::BothRectsFitInside(nsRect& aRect1, nsRect& aRect2, PRInt3
 }
 
 
-PRBool nsViewManager2::CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSurfaceSize) const
+void nsViewManager2::CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRect& aSurfaceSize) const
 {
   nsRect aMaxWidgetSize;
   GetMaxWidgetBounds(aMaxWidgetSize);
@@ -1904,47 +1903,49 @@ PRBool nsViewManager2::CalculateDiscreteSurfaceSize(nsRect& aRequestedSize, nsRe
 
   // 1/8 screen
   if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth / 8, screenHeight / 8, aSurfaceSize)) {
-    return PR_TRUE;
+    return;
   }
 
   // 1/4 screen
   if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth / 4, screenHeight / 4, aSurfaceSize)) {
-    return PR_TRUE;
+    return;
   }
 
   // 1/2 screen
   if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth / 2, screenHeight / 2, aSurfaceSize)) {
-    return PR_TRUE;
+    return;
   }
 
   // 3/4 screen
   if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, (screenWidth * 3) / 4, (screenHeight * 3) / 4, aSurfaceSize)) {
-    return PR_TRUE;
+    return;
   }
 
   // 3/4 screen width full screen height
   if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, (screenWidth * 3) / 4, screenHeight, aSurfaceSize)) {
-    return PR_TRUE;
+    return;
   }
 
   // Full screen
   if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, screenWidth, screenHeight, aSurfaceSize)) {
-    return PR_TRUE;
+    return;
   }
 
-  return PR_FALSE;
+   // Bigger than Full Screen use the largest request every made.
+  if (BothRectsFitInside(aRequestedSize, aMaxWidgetSize, gLargestRequestedSize.width, gLargestRequestedSize.height, aSurfaceSize)) {
+    return;
+  } else {
+     gLargestRequestedSize.width = PR_MAX(aRequestedSize.width, aMaxWidgetSize.width);
+     gLargestRequestedSize.height = PR_MAX(aRequestedSize.height, aMaxWidgetSize.height);
+     aSurfaceSize.width = gLargestRequestedSize.width;
+     aSurfaceSize.height = gLargestRequestedSize.height;
+  //   printf("Expanding the largested requested size to %d %d\n", gLargestRequestedSize.width, gLargestRequestedSize.height);
+  }
 }
 
 void nsViewManager2::GetDrawingSurfaceSize(nsRect& aRequestedSize, nsRect& aNewSize) const
 { 
-  if (PR_FALSE == CalculateDiscreteSurfaceSize(aRequestedSize, aNewSize)) {
-    NS_ASSERTION(PR_FALSE, "CalculateDiscreteSize failed");
-     // Wasn't able to find any fixed size to render inside of 
-     // so just expand the size of the offscreen using the requested size.
-	  aNewSize.width = max(aRequestedSize.width, mDSBounds.width);
-	  aNewSize.height = max(aRequestedSize.height, mDSBounds.height);
-  }
-
+  CalculateDiscreteSurfaceSize(aRequestedSize, aNewSize);
   aNewSize.MoveTo(aRequestedSize.x, aRequestedSize.y);
 }
 
@@ -1965,7 +1966,7 @@ nsDrawingSurface nsViewManager2::GetDrawingSurface(nsIRenderingContext &aContext
 			}
 
 			nsresult rv = aContext.CreateDrawingSurface(&newBounds, 0, mDrawingSurface);
-//      printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
+   //   printf("Allocating a new drawing surface %d %d\n", newBounds.width, newBounds.height);
 			if (NS_SUCCEEDED(rv)) {
 				mDSBounds = newBounds;
 				aContext.SelectOffScreenDrawingSurface(mDrawingSurface);
