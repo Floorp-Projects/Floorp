@@ -42,11 +42,8 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS = bookmarks help history prefwindow security sidebar cookieviewer
+DIRS = bookmarks help migration history prefwindow security sidebar cookieviewer
 
-ifdef MIGRATION_ENABLED
-DIRS += migration
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 DIRS    += winhooks 

@@ -27,12 +27,9 @@ REQUIRES = \
 	nkcache \
 	txmgr \
 	bookmarks \
-  winhooks \
+	migration \
+	winhooks \
 	$(NULL)
-	
-ifdef MIGRATION_ENABLED
-REQUIRES += migration
-endif	
 
 EXPORTS = nsBrowserCompsCID.h
 
@@ -40,20 +37,15 @@ CPPSRCS = nsModule.cpp \
           $(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
-ifdef MIGRATION_ENABLED
 DEFINES += -DPSTOREC_DLL=\"$(WINDIR)\\system32\\pstorec.dll\"
-endif
 
 OS_LIBS	+= $(call EXPAND_LIBNAME,ole32 shell32)
 endif
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../bookmarks/src \
+	-I$(srcdir)/../migration/src \
 	$(NULL)
-
-ifdef MIGRATION_ENABLED
-LOCAL_INCLUDES +=  -I$(srcdir)/../migration/src
-endif
 
 ifeq ($(OS_ARCH),WINNT)
 OS_LIBS += $(call EXPAND_LIBNAME,version)
@@ -61,20 +53,18 @@ endif
 
 SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)bookmarks_s.$(LIB_SUFFIX) \
+	$(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
 	$(NULL)
 
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY_LIBS += \
   $(DIST)/lib/$(LIB_PREFIX)winhooks_s.$(LIB_SUFFIX) \
+  $(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX) \
   $(NULL)
 
 LOCAL_INCLUDES  += \
   -I$(srcdir)/../winhooks \
   $(NULL)
-endif
-
-ifdef MIGRATION_ENABLED
-SHARED_LIBRARY_LIBS += 	$(DIST)/lib/$(LIB_PREFIX)migration_s.$(LIB_SUFFIX)
 endif
 
 EXTRA_DSO_LDOPTS += \
