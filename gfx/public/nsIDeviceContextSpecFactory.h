@@ -26,6 +26,7 @@
 #include "nsISupports.h"
 
 class nsIDeviceContextSpec;
+class nsIWidget;
 
 #define NS_IDEVICE_CONTEXT_SPEC_FACTORY_IID   \
 { 0xf6669570, 0x7b3d, 0x11d2, \
@@ -50,9 +51,7 @@ public:
    * get the device context spec without user intervention, any
    * dialog boxes can be supressed by passing in PR_TRUE for the
    * aQuiet parameter.
-   * @param aOldSpec a previously obtained devince context spec which
-   *        can be used to initialize parameters of the new context to
-   *        be returned.
+   * @param aWidget.. this is a widget a dialog can be hosted in
    * @param aNewSpec out parameter for device context spec returned. the
    *        aOldSpec may be returned if the object is recyclable.
    * @param aQuiet if PR_TRUE, prevent the need for user intervention
@@ -62,7 +61,7 @@ public:
    *        printer).
    * @return error status
    */
-  NS_IMETHOD CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+  NS_IMETHOD CreateDeviceContextSpec(nsIWidget *aWidget,
                                      nsIDeviceContextSpec *&aNewSpec,
                                      PRBool aQuiet) = 0;
 };

@@ -63,7 +63,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: Init(void)
  *  Get a device context specification
  *  @update   dc 2/16/98
  */
-NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+NS_IMETHODIMP nsDeviceContextSpecFactoryGTK :: CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                        nsIDeviceContextSpec *&aNewSpec,
                                                                        PRBool aQuiet)
 {

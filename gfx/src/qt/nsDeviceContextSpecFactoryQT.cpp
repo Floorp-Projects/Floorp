@@ -76,7 +76,7 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryQT::Init(void)
  *  Get a device context specification
  *  @update   dc 2/16/98
  */
-NS_IMETHODIMP nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIDeviceContextSpec *aOldSpec,
+NS_IMETHODIMP nsDeviceContextSpecFactoryQT::CreateDeviceContextSpec(nsIWidget *aWidget,
                                                                     nsIDeviceContextSpec *&aNewSpec,
                                                                     PRBool aQuiet)
 {
