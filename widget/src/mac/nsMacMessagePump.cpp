@@ -674,17 +674,17 @@ void  nsMacMessagePump::DoMouseMove(EventRecord &anEvent)
 void  nsMacMessagePump::DoKey(EventRecord &anEvent)
 {
 	char theChar = (char)(anEvent.message & charCodeMask);
-	if ((anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0))
-	{
+	//if ((anEvent.what == keyDown) && ((anEvent.modifiers & cmdKey) != 0))
+	//{
 		// do a menu key command
-		long menuResult = ::MenuKey(theChar);
-		if (HiWord(menuResult) != 0)
-		{
-	    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
-			DoMenu(anEvent, menuResult);
-		}
-	}
-	else
+	//	long menuResult = ::MenuKey(theChar);
+	//	if (HiWord(menuResult) != 0)
+	//	{
+	//    menuResult = ConvertOSMenuResultToPPMenuResult(menuResult);
+	//		DoMenu(anEvent, menuResult);
+	//	}
+	//}
+	//else
 	{
 		DispatchOSEventToRaptor(anEvent, ::FrontWindow());
 	}

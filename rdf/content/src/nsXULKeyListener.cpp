@@ -237,6 +237,7 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 		    nsString keyName;
 		    nsString disabled;
 		    nsString modCommand;
+		    nsString modControl;
 		    nsString modShift;
 		    nsString modAlt;
 		    nsString cmdToExecute;
@@ -244,57 +245,65 @@ nsresult nsXULKeyListenerImpl::KeyPress(nsIDOMEvent* aKeyEvent)
 		    //printf("keyNodeType [%s] \n", keyNodeType.ToNewCString()); // this leaks
 		    if (keyNodeType.Equals("key")) {
 		      keyElement->GetAttribute(nsAutoString("key"), keyName);
-		      printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
+		      //printf("Found key [%s] \n", keyName.ToNewCString()); // this leaks
 		      keyElement->GetAttribute(nsAutoString("disabled"),        disabled);
 		      if (disabled == "false") {
 	            PRUint32 theChar;
-		        //theEvent->GetCharCode(&theChar);
+	          #ifdef XP_PC
+		        theEvent->GetCharCode(&theChar);
+		      #else
 		        theEvent->GetKeyCode(&theChar);
-		        printf("event key [%c] \n", theChar); // this leaks
+		      #endif
+		        //printf("event key [%c] \n", theChar); // this leaks
 		        
 		        char tempChar[2];
 		        tempChar[0] = theChar;
 		        tempChar[1] = 0;
 		        nsString tempChar2 = tempChar;
-		        printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
+		        //printf("compare key [%s] \n", tempChar2.ToNewCString()); // this leaks
 		         // NOTE - convert theChar and keyName to upper
+		         keyName.ToUpperCase();
+		         tempChar2.ToUpperCase();
 		        if (tempChar2 == keyName) {
 			      keyElement->GetAttribute(nsAutoString("modifiercommand"), modCommand);
+			      keyElement->GetAttribute(nsAutoString("modifiercontrol"), modControl);
 			      keyElement->GetAttribute(nsAutoString("modifiershift"),   modShift);
 			      keyElement->GetAttribute(nsAutoString("modifieralt"),     modAlt);
 			      keyElement->GetAttribute(nsAutoString("onkeypress"),      cmdToExecute);
-			      printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
+			      //printf("onkeypress [%s] \n", cmdToExecute.ToNewCString()); // this leaks
 		          do {
 		            // Test Command attribute
-		            /*
-		            #ifdef XP_MAC
-		              if (theEvent.isCommand && (modCommand != "true"))
-		                break;
-		            #else
-		              if (theEvent.isControl && (modCommand != "true"))
-		                break;
-		            #endif // XP_MAC
-		            */
+		            PRBool isCommand = PR_FALSE;
+		            theEvent->GetMetaKey(&isCommand);
+		            if ((isCommand && (modCommand != "true")) ||
+		                (!isCommand && (modCommand == "true")))
+		              break;
+                    //printf("Passed command test \n"); // this leaks
+                     
 		            PRBool isControl = PR_FALSE;
 		            theEvent->GetCtrlKey(&isControl);
-		            if (isControl && (modCommand != "true"))
+		            if ((isControl && (modControl != "true")) ||
+		                (!isControl && (modControl == "true")))
 		                break;
+		            //printf("Passed control test \n"); // this leaks    
 		                
 		            // Test Shift attribute
 		            PRBool isShift = PR_FALSE;
 		            theEvent->GetShiftKey(&isShift);
-		            if (isShift && (modShift != "true"))
+		            if ((isShift && (modShift != "true")) ||
+		                (!isShift && (modShift == "true")))
 		                break;
 		            
 		            // Test Alt attribute
 		            PRBool isAlt = PR_FALSE;
 		            theEvent->GetAltKey(&isAlt);
-		              if (isAlt && (modAlt != "true"))
+		              if ((isAlt && (modAlt != "true")) ||
+		                  (!isAlt && (modAlt == "true")))
 		                break;
 		            
 		            // Modifier tests passed so execute onclick command
 		            
-					  nsresult rv = NS_ERROR_FAILURE;
+					nsresult rv = NS_ERROR_FAILURE;
 
 				    // This code executes in every presentation context in which this
 				    // document is appearing.
