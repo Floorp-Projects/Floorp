@@ -22,7 +22,11 @@ include $(DEPTH)/config/config.mk
 ifeq ($(OS_TARGET),Rhapsody)
 DIRS = rhapsody
 else
+ifeq ($(USE_NGLAYOUT_GTK),1)
+DIRS = gtk
+else
 DIRS = motif
+endif
 endif
 
 LIBRARY_NAME = raptorgfx

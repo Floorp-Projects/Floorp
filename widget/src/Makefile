@@ -20,7 +20,12 @@ DEPTH=../..
 ifeq ($(OS_TARGET),Rhapsody)
 DIRS = rhapsody
 else
-DIRS = xpwidgets motif build
+ifeq ($(USE_NGLAYOUT_GTK),1)
+DIRS = gtk
+else
+DIRS = motif
+endif
+DIRS += xpwidgets build
 endif
 
 include $(DEPTH)/config/config.mk
