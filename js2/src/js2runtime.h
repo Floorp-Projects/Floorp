@@ -238,7 +238,7 @@ static const double two31 = 2147483648.0;
 
         void* operator new(size_t n, Collector& gc)
         {
-            static Collector::Owner<JSValue> owner;
+            static Collector::InstanceOwner<JSValue> owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -629,6 +629,9 @@ XXX ...couldn't get this to work...
             }
         }
 
+    protected:
+        typedef Collector::InstanceOwner<JSObject> JSObjectOwner;
+        friend class JSObjectOwner;
         /**
         * Scans through the object, and copies all references.
         */
@@ -645,7 +648,7 @@ XXX ...couldn't get this to work...
     public:
         void* operator new(size_t n, Collector& gc)
         {
-            static Collector::Owner<JSObject> owner;
+            static JSObjectOwner owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -700,6 +703,9 @@ XXX ...couldn't get this to work...
 
         JSValue         *mInstanceValues;
 
+    protected:
+        typedef Collector::InstanceOwner<JSInstance> JSInstanceOwner;
+        friend class JSInstanceOwner;
         /**
         * Scans through the object, and copies all references.
         */
@@ -712,10 +718,11 @@ XXX ...couldn't get this to work...
             mInstanceValues = (JSValue*) collector->copy(mInstanceValues);
             return sizeof(JSInstance);
         }
-        
+    
+    public:
         void* operator new(size_t n, Collector& gc)
         {
-            static Collector::Owner<JSInstance> owner;
+            static JSInstanceOwner owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -747,12 +754,6 @@ XXX ...couldn't get this to work...
         JSType(JSType *xClass);     // used for constructing the static component type
 
         virtual ~JSType() { }       // keeping gcc happy
-
-#ifdef DEBUG
-        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSType", s, t); return t; }
-        void operator delete(void* t)   { trace_release("JSType", t); STD::free(t); }
-#endif
-
 
         void setSuperType(JSType *super);
 
@@ -853,6 +854,41 @@ XXX ...couldn't get this to work...
 
         void printSlotsNStuff(Formatter& f) const;
 
+    protected:
+        typedef Collector::InstanceOwner<JSType> JSTypeOwner;
+        friend class JSTypeOwner;
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            JSObject::scan(collector);
+            mSuperType = (JSType*) collector->copy(mSuperType);
+            mInstanceInitializer = (JSFunction*) collector->copy(mInstanceInitializer);
+            mDefaultConstructor = (JSFunction*) collector->copy(mDefaultConstructor);
+            mTypeCast = (JSFunction*) collector->copy(mTypeCast);
+            // scan mMethods.
+            // scan mClassName.
+            // scan mPrivateNamespace.
+            uint32 i;
+            for (i = 0; i < OperatorCount; ++i)
+                mUnaryOperators[i] = (JSFunction*) collector->copy(mUnaryOperators[i]);
+            // scan mUninitializedValue.
+            mPrototypeObject = (JSObject*) collector->copy(mPrototypeObject);
+            return sizeof(JSType);
+        }
+
+    public:
+        void* operator new(size_t n, Collector& gc)
+        {
+            static JSTypeOwner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("JSType", s, t); return t; }
+        void operator delete(void* t)   { trace_release("JSType", t); STD::free(t); }
+#endif
     };
 
     Formatter& operator<<(Formatter& f, const JSType& obj);
@@ -1365,7 +1401,9 @@ XXX ...couldn't get this to work...
         JSType *mClass;                         // pointer to owning class if this function is a method
         FunctionName *mFunctionName;
 
-    public:
+    protected:
+        typedef Collector::InstanceOwner<JSFunction> JSFunctionOwner;
+        friend class JSFunctionOwner;
         /**
         * Scans through the object, and copies all references.
         */
@@ -1379,9 +1417,10 @@ XXX ...couldn't get this to work...
             return sizeof(JSFunction);
         }
 
+    public:
         void* operator new(size_t n, Collector& gc)
         {
-            static Collector::Owner<JSFunction> owner;
+            static JSFunctionOwner owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -1454,6 +1493,9 @@ XXX ...couldn't get this to work...
 
         JSFunction *getFunction()       { return mFunction; }
 
+    protected:
+        typedef Collector::InstanceOwner<JSBoundFunction> JBoundFunctionOwner;
+        friend class JBoundFunctionOwner;
         /**
         * Scans through the object, and copies all references.
         */
@@ -1461,12 +1503,14 @@ XXX ...couldn't get this to work...
         {
             JSFunction::scan(collector);
             // copy the appropriate members.
+            mFunction = (JSFunction*) collector->copy(mFunction);
             return sizeof(JSBoundFunction);
         }
 
+    public:
         void* operator new(size_t n, Collector& gc)
         {
-            static Collector::Owner<JSBoundFunction> owner;
+            static JBoundFunctionOwner owner;
             return gc.allocateObject(n, &owner);
         }
 
@@ -1845,6 +1889,31 @@ XXX ...couldn't get this to work...
 
         JSValue mValue;
         const String *mName;
+
+    protected:
+        typedef Collector::InstanceOwner<NamedArgument> NamedArgumentOwner;
+        friend class NamedArgumentOwner;
+        /**
+        * Scans through the object, and copies all references.
+        */
+        Collector::size_type scan(Collector* collector)
+        {
+            JSObject::scan(collector);
+            mValue.scan(collector);
+            return sizeof(NamedArgument);
+        }
+
+    public:
+        void* operator new(size_t n, Collector& gc)
+        {
+            static NamedArgumentOwner owner;
+            return gc.allocateObject(n, &owner);
+        }
+
+#ifdef DEBUG
+        void* operator new(size_t s)    { void *t = STD::malloc(s); trace_alloc("NamedArgument", s, t); return t; }
+        void operator delete(void* t)   { trace_release("NamedArgument", t); STD::free(t); }
+#endif
     };
     
     
@@ -1859,6 +1928,9 @@ XXX ...couldn't get this to work...
         JSType *mExtendArgument;
         NamespaceList *mNamespaceList;
 
+    protected:
+        typedef Collector::InstanceOwner<Attribute> AttributeOwner;
+        friend class AttributeOwner;
         /**
         * Scans through the object, and copies all references.
         */
@@ -1868,10 +1940,11 @@ XXX ...couldn't get this to work...
             mExtendArgument = (JSType*) collector->copy(mExtendArgument);
             return sizeof(Attribute);
         }
-        
+
+    public:
         void* operator new(size_t n, Collector& gc)
         {
-            static Collector::Owner<Attribute> owner;
+            static AttributeOwner owner;
             return gc.allocateObject(n, &owner);
         }
 
