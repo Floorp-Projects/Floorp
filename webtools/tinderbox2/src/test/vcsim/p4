@@ -19,8 +19,8 @@
 # date/time pairs.
 
 
-# $Revision: 1.7 $ 
-# $Date: 2004/06/08 03:41:05 $ 
+# $Revision: 1.8 $ 
+# $Date: 2004/07/18 18:36:28 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/test/vcsim/p4,v $ 
 # $Name:  $ 
@@ -436,12 +436,13 @@ sub simulate_files {
     # In the simulation we usually have one single checkin but
     # sometimes we get a bunch of files at the same time.
 
-    my $num = rand 10;
+    my $num = rand 40;
     $num =~ s/\..*//;
     # do not allow zero files to be modified
     $num ++;
 
-    if ($num >= 5) {
+    # Most changes are to a single file.
+    if ($num >= 20) {
 	$num = 1;
     }
     
@@ -449,16 +450,30 @@ sub simulate_files {
 	print "Affected files ...\n\n";
 	my $elipsis= '...';
 	
-	foreach $i (1 .. $num) {
-	    
-	    my $dirname = pickone(@DIRNAMES);
-	    my $basename = pickone(@BASENAMES);
-	    my $version = simulate_perforce_version();
-	    my $actiontype = pickone(@ACTIONTYPES);
-	    
-	    print "$elipsis $dirname$basename\#$version $actiontype\n";
-	    
-	}
+        if ($num == 19) {
+
+            # sometimes we get lots of checkins to one directory.
+
+            foreach $i (1 .. $num) {
+                my $dirname = '//mozilla/webtools/tinderbox2/src/gifs';
+                my $basename = 'pic$i.gif';
+                my $version = simulate_perforce_version();
+                my $actiontype = pickone(@ACTIONTYPES);
+                
+                print "$elipsis $dirname/$basename\#$version $actiontype\n";
+            }
+	} else {
+
+            foreach $i (1 .. $num) {
+                my $dirname = pickone(@DIRNAMES);
+                my $basename = pickone(@BASENAMES);
+                my $version = simulate_perforce_version();
+                my $actiontype = pickone(@ACTIONTYPES);
+                
+                print "$elipsis $dirname/$basename\#$version $actiontype\n";
+	    }
+
+        }
 	print "\n";
     }
 
