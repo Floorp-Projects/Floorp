@@ -30,7 +30,7 @@
 static float STRIPE_SKEW  = 1.0;      // pixels
 static int   STRIPE_WIDTH = 20;       // pixels
 static int   ANIMATION_INCREMENT = 4; // pixels
-static int   ANIMATION_SPEED = 50;    // miliseconds
+static int   ANIMATION_SPEED = 250;    // miliseconds
 
 #include "nsINameSpaceManager.h"
 #include "nsProgressMeterFrame.h"
