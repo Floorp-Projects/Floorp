@@ -374,7 +374,7 @@ for $p (@::product_list) {
 }
 
 $i = 0;
-$jscript .= q{
+$jscript .= << 'ENDSCRIPT';
 
 // Only display versions/components valid for selected product(s)
 
@@ -468,7 +468,10 @@ function selectProduct(f) {
         }
     }
 
-    if (f.target_milestone) {
+ENDSCRIPT
+if (Param("usetargetmilestone")) {
+    $jscript .= q{
+      if (f.target_milestone) {
         var tmsel = new Array();
         for (i=0 ; i<f.target_milestone.length ; i++) {
             if (f.target_milestone[i].selected) {
@@ -502,12 +505,17 @@ function selectProduct(f) {
                 }
             }
         }
-    }
+      }
+    };
+
+}
+
+$jscript .= << 'ENDSCRIPT';
 }
 // -->
 </script>
 
-};
+ENDSCRIPT
 
 
 
