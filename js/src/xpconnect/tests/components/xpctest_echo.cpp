@@ -342,7 +342,7 @@ xpctestEcho::PrintArgTypes(void)
     if(NS_FAILED(cc->GetArgv(&argv)))
         return NS_ERROR_FAILURE;
 
-    printf("argv types = [", (int)argc);
+    printf("argv types = [");
 
     for(PRUint32 i = 0; i < argc; i++)
     {
