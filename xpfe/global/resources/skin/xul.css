@@ -1076,37 +1076,35 @@ grippy:hover {
    background-color: rgb(220, 210, 210);
 }
 
-
-/*
-window splitter grippy {
+window > splitter > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
-window splitter[collapse="after"] grippy {
+window > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
 
-window[align="vertical"] splitter grippy {
+window[align="vertical"] > splitter > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-before.gif);
 }
 
-window[align="vertical"] splitter[collapse="after"] grippy {
+window[align="vertical"] > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
 }
-*/
-box splitter grippy {
+
+box > splitter > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-before.gif);
 }
 
-box splitter[collapse="after"] grippy {
+box > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-horizontal-after.gif);
 }
 
-box[align="vertical"] splitter grippy {
+box[align="vertical"] > splitter > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-before.gif);
 }
 
-box[align="vertical"] splitter[collapse="after"] grippy {
+box[align="vertical"] > splitter[collapse="after"] > grippy {
    list-style-image: url(resource:/res/toolbar/grippy-vertical-after.gif);
 
 
