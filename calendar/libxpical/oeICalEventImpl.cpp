@@ -2458,12 +2458,31 @@ NS_IMETHODIMP oeICalEventDisplayImpl::SetDisplayDate( PRTime aNewVal )
     return NS_OK;
 }
 
+NS_IMETHODIMP oeICalEventDisplayImpl::GetDisplayDateEnd( PRTime *aRetVal )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventDisplayImpl::GetDisplayDateEnd()\n" );
+#endif
+    *aRetVal = ConvertToPrtime( m_displaydateend );
+    return NS_OK;
+}
+    
+
+NS_IMETHODIMP oeICalEventDisplayImpl::SetDisplayDateEnd( PRTime aNewVal )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventDisplayImpl::SetDisplayDateEnd()\n" );
+#endif
+    m_displaydateend = ConvertFromPrtime( aNewVal );
+    return NS_OK;
+}
+
 NS_IMETHODIMP oeICalEventDisplayImpl::GetEvent( oeIICalEvent **ev )
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "oeICalEventDisplayImpl::GetEvent()\n" );
 #endif
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "WARNING: .event is no longer needed to access event fields\n" );
 #endif
     *ev = mEvent;

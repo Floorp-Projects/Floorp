@@ -1337,6 +1337,53 @@ oeICalImpl::GetEventsForDay( PRTime datems, nsISimpleEnumerator **datelist, nsIS
     return GetEventsForRange(checkdateinms ,checkenddateinms ,datelist ,eventlist );
 }
 
+void oeICalImpl::ChopAndAddEventToEnum( struct icaltimetype initialdisplaydate,
+                                        struct icaltimetype checkenddate,
+                                        nsISimpleEnumerator **eventlist, oeICalEventImpl* event ) {
+
+    nsCOMPtr<oeEventEnumerator> eventEnum;
+    eventEnum = (oeEventEnumerator *)*eventlist;
+
+    oeIDateTime *start;
+    oeIDateTime *end;
+    event->GetStart( &start );
+    event->GetEnd( &end );
+
+    struct icaltimetype startdate = initialdisplaydate;
+    struct icaldurationtype eventlength = icaltime_subtract( ((oeDateTimeImpl *)end)->m_datetime, ((oeDateTimeImpl *)start)->m_datetime );
+    struct icaltimetype eventenddate = icaltime_add( startdate, eventlength );
+
+    do {
+        struct icaltimetype endofday = startdate;
+        endofday.hour = 23; endofday.minute = 59; endofday.second = 59;
+        oeIICalEventDisplay* eventDisplay;
+        nsresult rv = NS_NewICalEventDisplay( event, &eventDisplay );
+        if( NS_FAILED( rv ) ) {
+        #ifdef ICAL_DEBUG
+            printf( "oeICalImpl::ChopAndAddEventToEnum() : WARNING Cannot create oeIICalEventDisplay instance: %x\n", rv );
+        #endif
+            return;
+        }
+        eventEnum->AddEvent( eventDisplay );
+        PRTime startdateinms = ConvertToPrtime( startdate );
+        eventDisplay->SetDisplayDate( startdateinms );
+        PRTime enddateinms;
+        
+        if( icaltime_compare( endofday, eventenddate ) < 0 ) {
+            enddateinms = ConvertToPrtime( endofday );
+            eventDisplay->SetDisplayDateEnd( enddateinms );
+            startdate = endofday;
+            icaltime_adjust( &startdate, 0, 0, 0, 1 );
+            if( icaltime_compare( startdate, checkenddate ) >= 0 )
+                break;
+        } else {
+            enddateinms = ConvertToPrtime( eventenddate );
+            eventDisplay->SetDisplayDateEnd( enddateinms );
+            break;
+        }
+    } while ( 1 );
+}
+
 NS_IMETHODIMP
 oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, nsISimpleEnumerator **datelist, nsISimpleEnumerator **eventlist ) {
 #ifdef ICAL_DEBUG_ALL
@@ -1378,7 +1425,7 @@ oeICalImpl::GetEventsForRange( PRTime checkdateinms, PRTime checkenddateinms, ns
                     oeIICalEvent* tmpevent = tmplistptr->event;
                     icaltimetype next = ((oeICalEventImpl *)tmpevent)->GetNextRecurrence( checkdate );
                     if( !icaltime_is_null_time( next ) && (icaltime_compare( nextcheckdate, next ) == 0) ) {
-                        eventEnum->AddEvent( tmpevent );
+                        ChopAndAddEventToEnum( nextcheckdate, checkenddate, eventlist, (oeICalEventImpl *)tmpevent );
                         PRTime nextdateinms = ConvertToPrtime( nextcheckdate );
                         dateEnum->AddDate( nextdateinms );
                     }
@@ -1540,7 +1587,7 @@ oeICalImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleEnumerator
 NS_IMETHODIMP 
 oeICalImpl::AddObserver(oeIICalObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalImpl::AddObserver()\n" );
 #endif
     if( observer ) {
@@ -1554,7 +1601,7 @@ oeICalImpl::AddObserver(oeIICalObserver *observer)
 NS_IMETHODIMP 
 oeICalImpl::RemoveObserver(oeIICalObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalImpl::RemoveObserver()\n" );
 #endif
     if( observer ) {
@@ -1572,7 +1619,7 @@ oeICalImpl::RemoveObserver(oeIICalObserver *observer)
 NS_IMETHODIMP 
 oeICalImpl::AddTodoObserver(oeIICalTodoObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalImpl::AddTodoObserver()\n" );
 #endif
     if( observer ) {
@@ -1586,7 +1633,7 @@ oeICalImpl::AddTodoObserver(oeIICalTodoObserver *observer)
 NS_IMETHODIMP 
 oeICalImpl::RemoveTodoObserver(oeIICalTodoObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalImpl::RemoveTodoObserver()\n" );
 #endif
     if( observer ) {

@@ -654,7 +654,7 @@ oeICalContainerImpl::GetNextNEvents( PRTime datems, PRInt32 maxcount, nsISimpleE
 NS_IMETHODIMP 
 oeICalContainerImpl::AddObserver(oeIICalObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalContainerImpl::AddObserver()\n" );
 #endif
     if( observer ) {
@@ -678,7 +678,7 @@ oeICalContainerImpl::AddObserver(oeIICalObserver *observer)
 NS_IMETHODIMP 
 oeICalContainerImpl::RemoveObserver(oeIICalObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalContainerImpl::RemoveObserver()\n" );
 #endif
     if( observer ) {
@@ -700,7 +700,7 @@ oeICalContainerImpl::RemoveObserver(oeIICalObserver *observer)
 NS_IMETHODIMP 
 oeICalContainerImpl::AddTodoObserver(oeIICalTodoObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalContainerImpl::AddTodoObserver()\n" );
 #endif
     if( observer ) {
@@ -724,7 +724,7 @@ oeICalContainerImpl::AddTodoObserver(oeIICalTodoObserver *observer)
 NS_IMETHODIMP 
 oeICalContainerImpl::RemoveTodoObserver(oeIICalTodoObserver *observer)
 {
-#ifdef ICAL_DEBUG
+#ifdef ICAL_DEBUG_ALL
     printf( "oeICalContainerImpl::RemoveTodoObserver()\n" );
 #endif
     if( observer ) {

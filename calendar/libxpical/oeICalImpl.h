@@ -251,6 +251,9 @@ private:
     char serveraddr[200];
     oeICalFilter *m_filter;
     bool SatisfiesFilter( oeIICalTodo *comp );
+    void ChopAndAddEventToEnum( struct icaltimetype initialdisplaydate,
+                                        struct icaltimetype checkenddate,
+                                        nsISimpleEnumerator **eventlist, oeICalEventImpl* event );
 };
 
 #endif

@@ -169,6 +169,7 @@ public:
     virtual ~oeICalEventDisplayImpl();
 private:
     icaltimetype m_displaydate;
+    icaltimetype m_displaydateend;
     nsCOMPtr<oeIICalEvent> mEvent;
 };
 
