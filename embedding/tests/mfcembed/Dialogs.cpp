@@ -121,3 +121,41 @@ BOOL CFindDialog::SearchBackwards()
 
     return pChk ? pChk->GetCheck() : FALSE;
 }
+
+/////////////////////////////////////////////////////////////////////////////
+// CLinkPropertiesDlg dialog
+CLinkPropertiesDlg::CLinkPropertiesDlg(CWnd* pParent /*=NULL*/)
+	: CDialog(CLinkPropertiesDlg::IDD, pParent)
+{
+	m_LinkText = _T("");
+	m_LinkLocation = _T("");
+}
+
+void CLinkPropertiesDlg::DoDataExchange(CDataExchange* pDX)
+{
+	CDialog::DoDataExchange(pDX);
+	DDX_Text(pDX, IDC_EDIT_LINK_TEXT, m_LinkText);
+	DDX_Text(pDX, IDC_EDIT_LINK_LOCATION, m_LinkLocation);
+}
+
+
+BEGIN_MESSAGE_MAP(CLinkPropertiesDlg, CDialog)
+END_MESSAGE_MAP()
+
+void CLinkPropertiesDlg::OnOK() 
+{
+	UpdateData(TRUE);
+
+	if (m_LinkLocation.IsEmpty() || (m_LinkText.IsEmpty() && m_LinkLocation.IsEmpty()))
+	{
+		MessageBox("Please enter a Link Location");
+		return;
+	}
+
+	if (m_LinkText.IsEmpty())
+	{
+		m_LinkText = m_LinkLocation;
+	}
+
+	EndDialog(IDOK);
+}

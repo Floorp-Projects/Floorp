@@ -61,6 +61,7 @@ REQUIRES = \
 	commandhandler \
 	imglib2 \
 	webbrwsr \
+	editor \
 	$(NULL)
 
 ifdef NS_TRACE_MALLOC
