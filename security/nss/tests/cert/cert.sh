@@ -170,7 +170,7 @@ hw_acc()
         echo | modutil -add rainbow -libfile /usr/lib/libcryptoki22.so \
             -dbdir . 2>&1 
         if [ "$?" -ne 0 ]; then
-	    echo "modutil -add rainbow failed in `pwd`"
+            echo "modutil -add rainbow failed in `pwd`"
             HW_ACC_RET=1
             HW_ACC_ERR="modutil -add rainbow"
         fi
@@ -182,7 +182,7 @@ hw_acc()
             -libfile /opt/nfast/toolkits/pkcs11/libcknfast.so \
             -dbdir . 2>&1 
         if [ "$?" -ne 0 ]; then
-	    echo "modutil -add ncipher failed in `pwd`"
+            echo "modutil -add ncipher failed in `pwd`"
             HW_ACC_RET=`expr $HW_ACC_RET + 2`
             HW_ACC_ERR="$HW_ACC_ERR,modutil -add ncipher"
         fi
@@ -270,21 +270,22 @@ cert_all_CA()
     cert_CA $CADIR TestCA -x "CTu,CTu,CTu"
 
     ALL_CU_SUBJECT="CN=NSS Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR serverCA -x "CTu,CTu,CTu"
+    cert_CA $SERVER_CADIR serverCA -x "Cu,Cu,Cu"
     ALL_CU_SUBJECT="CN=NSS Chain1 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR chain-1-serverCA "-c serverCA" "Cu,Cu,Cu"
+    cert_CA $SERVER_CADIR chain-1-serverCA "-c serverCA" "u,u,u"
     ALL_CU_SUBJECT="CN=NSS Chain2 Server Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $SERVER_CADIR chain-2-serverCA "-c chain-1-serverCA" "Cu,Cu,Cu"
+    cert_CA $SERVER_CADIR chain-2-serverCA "-c chain-1-serverCA" "u,u,u"
 
 
 
     ALL_CU_SUBJECT="CN=NSS Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR clientCA -x "CTu,CTu,CTu"
+    cert_CA $CLIENT_CADIR clientCA -x "Tu,Cu,Cu"
     ALL_CU_SUBJECT="CN=NSS Chain1 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR chain-1-clientCA "-c clientCA" "Cu,Cu,Cu"
+    cert_CA $CLIENT_CADIR chain-1-clientCA "-c clientCA" "u,u,u"
     ALL_CU_SUBJECT="CN=NSS Chain2 Client Test CA, O=BOGUS NSS, L=Santa Clara, ST=California, C=US"
-    cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "Cu,Cu,Cu"
+    cert_CA $CLIENT_CADIR chain-2-clientCA "-c chain-1-clientCA" "u,u,u"
 
+    rm $CLIENT_CADIR/root.cert $SERVER_CADIR/root.cert
     # root.cert in $CLIENT_CADIR and in $SERVER_CADIR is the one of the last 
     # in the chain
 }
@@ -349,7 +350,7 @@ CERTSCRIPT
   if [ "$RET" -ne 0 ]; then
       Exit 7 "Fatal - failed to export root cert"
   fi
-  cp root.cert ${NICKNAME}.root.cert
+  cp root.cert ${NICKNAME}.ca.cert
 }
 
 ############################## cert_smime_client #############################
@@ -426,9 +427,6 @@ cert_extended_ssl()
   CU_ACTION="Generate Cert Request for $CERTNAME (ext)"
   CU_SUBJECT="CN=$CERTNAME, E=${CERTNAME}@bogus.com, O=BOGUS NSS, L=Mountain View, ST=California, C=US"
   certu -R -d "${CERTDIR}" -f "${R_PWFILE}" -z "${R_NOISE_FILE}" -o req 2>&1
-    #if [ "$RET" -ne 0 ]; then
-        #return $RET
-    #fi
 
   CU_ACTION="Sign ${CERTNAME}'s Request (ext)"
   cp ${CERTDIR}/req ${SERVER_CADIR}
@@ -438,15 +436,21 @@ cert_extended_ssl()
   CU_ACTION="Import $CERTNAME's Cert (ext)"
   certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
         -i "${CERTNAME}.cert" 2>&1
+
   CU_ACTION="Import Client Root CA for $CERTNAME (ext.)"
-  certu -A -n "clientCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
-          -i "${CLIENT_CADIR}/clientCA.root.cert" 2>&1
+  certu -A -n "clientCA" -t "T,," -f "${R_PWFILE}" -d "${CERTDIR}" \
+          -i "${CLIENT_CADIR}/clientCA.ca.cert" 2>&1
   echo "Importing all the server's own CA chain into the servers DB"
-  for CA in `find ${SERVER_CADIR} -name "?*.root.cert"` ;
+  for CA in `find ${SERVER_CADIR} -name "?*.ca.cert"` ;
   do
-      N=`basename $CA | sed -e "s/.root.cert//"`
-      CU_ACTION="Import $N  CA for $CERTNAME (ext.)"
-      certu -A -n $N  -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
+      N=`basename $CA | sed -e "s/.ca.cert//"`
+      if [ $N = "serverCA" ] ; then
+          T="-t C,C,C"
+      else
+          T="-t u,u,u"
+      fi
+      CU_ACTION="Import $N  CA $T for $CERTNAME (ext.) "
+      certu -A -n $N  $T -f "${R_PWFILE}" -d "${CERTDIR}" \
           -i "${CA}" 2>&1
   done
 #============
@@ -469,14 +473,19 @@ cert_extended_ssl()
   certu -A -n "$CERTNAME" -t "u,u,u" -d "${CERTDIR}" -f "${R_PWFILE}" \
         -i "${CERTNAME}.cert" 2>&1
   CU_ACTION="Import Server Root CA for $CERTNAME (ext.)"
-  certu -A -n "serverCA" -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
-          -i "${SERVER_CADIR}/serverCA.root.cert" 2>&1
+  certu -A -n "serverCA" -t "C,C,C" -f "${R_PWFILE}" -d "${CERTDIR}" \
+          -i "${SERVER_CADIR}/serverCA.ca.cert" 2>&1
   echo "Importing all the client's own CA chain into the servers DB"
-  for CA in `find ${CLIENT_CADIR} -name "?*.root.cert"` ;
+  for CA in `find ${CLIENT_CADIR} -name "?*.ca.cert"` ;
   do
-      N=`basename $CA | sed -e "s/.root.cert//"`
+      N=`basename $CA | sed -e "s/.ca.cert//"`
+      if [ $N = "clientCA" ] ; then
+          T="-t T,C,C"
+      else
+          T="-t u,u,u"
+      fi
       CU_ACTION="Import $N  CA for $CERTNAME (ext.)"
-      certu -A -n $N  -t "TC,TC,TC" -f "${R_PWFILE}" -d "${CERTDIR}" \
+      certu -A -n $N  $T -f "${R_PWFILE}" -d "${CERTDIR}" \
           -i "${CA}" 2>&1
   done
   if [ "$CERTFAILED" != 0 ] ; then
