@@ -1135,12 +1135,17 @@ nsEventStateManager::SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLock
   case NS_STYLE_CURSOR_E_RESIZE:
     c = eCursor_sizeWE;
     break;
-  //We don't have cursors defined for these in nsIWidget.  Need them to fix this.
-  case NS_STYLE_CURSOR_NE_RESIZE:
   case NS_STYLE_CURSOR_NW_RESIZE:
+    c = eCursor_sizeNW;
+    break;
   case NS_STYLE_CURSOR_SE_RESIZE:
+    c = eCursor_sizeSE;
+    break;
+  case NS_STYLE_CURSOR_NE_RESIZE:
+    c = eCursor_sizeNE;
+    break;
   case NS_STYLE_CURSOR_SW_RESIZE:
-    c = eCursor_select;
+    c = eCursor_sizeSW;
     break;
   }
 
