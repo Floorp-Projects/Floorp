@@ -33,7 +33,7 @@ LIBRARY=$(OBJDIR)\jar_s.lib
 
 OBJS=.\$(OBJDIR)\nsZipArchive.obj
 
-LCFLAGS=-DSTANDALONE
+LCFLAGS=-DSTANDALONE -UMOZILLA_CLIENT
 
 LINCS=                        \
     -I$(XPDIST)\public\nspr   \
