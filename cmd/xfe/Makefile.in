@@ -67,6 +67,7 @@ MICROLINE_LIB	= $(DIST)/lib/libXmL.a
 #
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/cmd/unixfe/config/unixfe.mk
 
 DIRS		= \
 		  $(XFE2_DIR) \
@@ -357,17 +358,9 @@ BASIC_LIBS_2	= \
 		  $(DIST)/lib/lib$(LITE_PREFIX)rdf.a \
 		  $(NULL)
 
-ifdef MOZ_NATIVE_JPEG
-BASIC_LIBS	+= -ljpeg
-else
-BASIC_LIBS	+= $(DIST)/lib/libjpeg.a
-endif
+BASIC_LIBS	+= $(XFE_JPEG_LDFLAGS)
 
-ifdef MOZ_NATIVE_PNG
-BASIC_LIBS	+= -lpng
-else
-BASIC_LIBS	+= $(DIST)/lib/libpng.a
-endif
+BASIC_LIBS	+= $(XFE_PNG_LDFLAGS)
 
 # jwz: link in libmime all the time.
 # but it needs to be before libnetutil, and I don't know how to do that,
@@ -549,16 +542,13 @@ BASIC_LIBS	+= \
 endif  # !MOZ_OJI
 endif  # !MOZ_JAVA
 
-ifdef MOZ_NATIVE_ZLIB
-BASIC_LIBS	+= -lz
-else
-# XXX To a DSO...
-ifdef FULL_STATIC_BUILD
-BASIC_LIBS	+= $(DIST)/lib/libzlib.a
-else
-BASIC_DSOS      += -lzlib
-endif
-endif
+##
+## Only one of XFE_ZLIB_LDFLAGS and XFE_ZLIB_DSO_LDFLAGS will be defined.
+##
+## See unixfe.mk
+##
+BASIC_LIBS	+= $(XFE_ZLIB_LDFLAGS)
+BASIC_DSOS	+= $(XFE_ZLIB_DSO_LDFLAGS)
 
 ifndef NO_MOCHA
 # XXX To a DSO...

@@ -18,6 +18,7 @@
 DEPTH		= ../../..
 
 include $(DEPTH)/config/config.mk
+include $(DEPTH)/cmd/unixfe/config/unixfe.mk
 
 MODULE		= xfeicons
 LIBRARY_NAME	= xfeicons
@@ -139,29 +140,17 @@ else
 JAVA_JMC = $(DIST)/lib/libstubsj.a
 endif
 
-ifndef NSPR20
 MKICONS_LIB	=  \
 		  $(DIST)/lib/libimg.a \
 		  $(JAVA_JMC) \
-		  $(DIST)/lib/libpng.a \
-		  $(DIST)/lib/libzlib.a \
-		  $(DIST)/lib/libnspr.a \
-		  $(DIST)/lib/libjpeg.a \
-		  $(DIST)/lib/libutil.a \
-		  $(DIST)/lib/libxp.a
-else
-MKICONS_LIB	=  \
-		  $(DIST)/lib/libimg.a \
-		  $(JAVA_JMC) \
-		  $(DIST)/lib/libpng.a \
-		  $(DIST)/lib/libzlib.a \
+		  $(XFE_PNG_LDFLAGS) \
+		  $(XFE_ZLIB_MKICONS_LDFLAGS) \
 		  $(DIST)/lib/libnspr21.a \
-		  $(DIST)/lib/libjpeg.a \
+		  $(XFE_JPEG_LDFLAGS) \
 		  $(DIST)/lib/libutil.a \
 		  $(DIST)/lib/libxp.a \
 		  $(DIST)/lib/libplc21.a \
 		  $(DIST)/lib/libxpcom.a
-endif
 
 GARBAGE		+= $(MKICONS_EXE) \
 		  $(ICONS_GEN_HDR) \
@@ -206,3 +195,6 @@ $(ICONS_GEN_SRC): icondata.h $(ICONANIMLIST) $(MKICONS_EXE) $(ICONS_GEN_HDR)
 	$(MKICONS_EXE) -no-xfe-define - < $(ICONANIMLIST) > $@.$$$$ && mv $@.$$$$ $@
 
 $(LIBRARY): $(OBJS)
+
+caca:
+	@echo $(XFE_ZLIB_MKICONS_LDFLAGS)

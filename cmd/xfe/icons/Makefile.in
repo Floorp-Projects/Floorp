@@ -23,6 +23,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
+include $(topsrcdir)/cmd/unixfe/config/unixfe.mk
 
 MODULE		= xfeicons
 LIBRARY_NAME	= xfeicons
@@ -105,7 +106,7 @@ MAIL_OR_COMPOSE_ICONS = $(wildcard $(srcdir)/images/MNC*.gif \
 ifdef MOZ_MAIL_NEWS
 ICONS += $(MAIL_OR_COMPOSE_ICONS) \
 	$(wildcard $(srcdir)/images/MNTB*.gif $(srcdir)/images/MNAB*.gif) \
-    	$(addprefix $(srcdir)/, images/threadoff.gif \
+	$(addprefix $(srcdir)/, images/threadoff.gif \
 	images/threadon.gif
 	images/Desk_Address.gif \
 	images/Desk_Collabra.gif \
@@ -146,38 +147,15 @@ else
 JAVA_JMC = $(DIST)/lib/libstubsj.a
 endif
 
-ifndef NSPR20
-MKICONS_LIB	=  \
-		  $(DIST)/lib/libimg.a \
-		  $(JAVA_JMC) \
-		  $(DIST)/lib/libutil.a \
-		  $(DIST)/lib/libxp.a
-else
-MKICONS_LIB	=  \
-		  $(DIST)/lib/libimg.a \
-		  $(JAVA_JMC) \
-		  $(DIST)/lib/libutil.a \
-		  $(DIST)/lib/libxp.a \
-		  $(DIST)/lib/libxpcom.a
-endif
-
-ifdef MOZ_NATIVE_JPEG
-MKICONS_LIB	+= -ljpeg
-else
-MKICONS_LIB	+= $(DIST)/lib/libjpeg.a
-endif
-
-ifdef MOZ_NATIVE_PNG
-MKICONS_LIB	+= -lpng
-else
-MKICONS_LIB	+= $(DIST)/lib/libpng.a
-endif
-
-ifdef MOZ_NATIVE_ZLIB
-MKICONS_LIB	+= -lz
-else
-MKICONS_LIB	+= $(DIST)/lib/libzlib.a
-endif
+MKICONS_LIB	= \
+			$(DIST)/lib/libimg.a \
+			$(JAVA_JMC) \
+			$(DIST)/lib/libutil.a \
+			$(DIST)/lib/libxp.a \
+			$(DIST)/lib/libxpcom.a \
+			$(XFE_JPEG_LDFLAGS) \
+			$(XFE_PNG_LDFLAGS) \
+			$(XFE_ZLIB_MKICONS_LDFLAGS)
 
 MKICONS_EXTRA	= $(NSPR_LDFLAGS) $(NSPR_LIBS) $(OS_LIBS) -lm
 
