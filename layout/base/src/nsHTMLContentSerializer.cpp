@@ -374,7 +374,13 @@ nsHTMLContentSerializer::AppendToStringWrapped(const nsAReadableString& aStr,
       if (start < 0)
         start = 0;
       
-      indx = aStr.FindChar(PRUnichar(' '), strOffset + start);
+      if ((strOffset + start) < length) {
+        indx = aStr.FindChar(PRUnichar(' '), strOffset + start);
+      }
+      else {
+        indx = kNotFound;
+      }
+
       // if there is no break than just add the entire string
       if (indx == kNotFound)
       {
