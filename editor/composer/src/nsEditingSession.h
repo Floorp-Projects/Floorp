@@ -93,7 +93,7 @@ protected:
 
   nsresult        GetDocShellFromWindow(nsIDOMWindow *inWindow, nsIDocShell** outDocShell);  
   nsresult        GetEditorDocShellFromWindow(nsIDOMWindow *inWindow, nsIEditorDocShell** outDocShell);
-  nsresult        SetupFrameControllers(nsIDOMWindow *inWindow);
+  nsresult        SetupFrameControllers(nsIDOMWindow *inWindow, PRBool aSetupComposerController);
   
   nsresult        SetEditorOnControllers(nsIDOMWindow *inWindow, nsIEditor* inEditor);
 
@@ -113,7 +113,8 @@ protected:
   PRBool          mDoneSetup;         // have we prepared for editing yet?
 
   nsComposerCommandsUpdater    *mStateMaintainer;      // we hold the owning ref to this.
-  
+  const char *    mEditorClassString; //we need this to hold onto the type for invoking editor after loading uri  
+  PRUint32        mEditorFlags;
 };
 
 

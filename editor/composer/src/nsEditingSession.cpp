@@ -65,6 +65,7 @@
 
 #include "nsIContentViewer.h"
 #include "nsISelectionController.h"
+#include "nsIPlaintextEditor.h"
 
 
 #if DEBUG
@@ -77,7 +78,7 @@
 
 ----------------------------------------------------------------------------*/
 nsEditingSession::nsEditingSession()
-: mDoneSetup(PR_FALSE)
+: mDoneSetup(PR_FALSE), mEditorClassString(nsnull)
 {
   NS_INIT_ISUPPORTS();
 }
@@ -118,11 +119,39 @@ nsEditingSession::Init(nsIDOMWindow *aWindow)
 
   MakeWindowEditable
 
-  void makeWindowEditable (in nsIDOMWindow aWindow, in boolean inDoAfterUriLoad);
+  aEditorType string, "html" "htmlsimple" "text" "textsimple"
+  void makeWindowEditable(in nsIDOMWindow aWindow, in string aEditorType, in boolean inDoAfterUriLoad);
 ----------------------------------------------------------------------------*/
 NS_IMETHODIMP
-nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow, PRBool inDoAfterUriLoad)
+nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow, const char *aEditorType, PRBool inDoAfterUriLoad)
 {
+  PRBool htmlController = PR_FALSE;
+  mEditorClassString = nsnull;
+  mEditorFlags = 0;
+
+  //temporary to set editor type here. we will need different classes soon.
+  mEditorClassString = "@mozilla.org/editor/htmleditor;1";
+  
+  if (!strcmp(aEditorType, "textmail"))
+  {
+    mEditorFlags = nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask | nsIPlaintextEditor::eEditorMailMask;
+  }
+  else if (!strcmp(aEditorType, "text"))
+  {
+    mEditorFlags = nsIPlaintextEditor::eEditorPlaintextMask | nsIPlaintextEditor::eEditorEnableWrapHackMask;
+  }
+  else if (!strcmp(aEditorType, "htmlmail"))
+  {
+    htmlController = PR_TRUE;
+    mEditorFlags = nsIPlaintextEditor::eEditorMailMask;
+  }
+  else //if (!strcmp(aEditorType, "html")) or null is defaulted to html
+  {
+    htmlController = PR_TRUE;
+  }
+  if (!mEditorClassString)
+    return NS_ERROR_INVALID_ARG;
+
   nsresult rv = PrepareForEditing();
   if (NS_FAILED(rv)) return rv;  
   
@@ -134,16 +163,14 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow, PRBool inDoAfterUriL
   rv = editorDocShell->MakeEditable(inDoAfterUriLoad);
   if (NS_FAILED(rv)) return rv;  
   
-  rv = SetupFrameControllers(aWindow);
+  rv = SetupFrameControllers(aWindow, htmlController);
   if (NS_FAILED(rv)) return rv;
 
-  // make an editor immediately
   if (!inDoAfterUriLoad)
   {
     rv = SetupEditorOnWindow(aWindow);
     if (NS_FAILED(rv)) return rv;  
   }
-  
   return NS_OK;
 }
 
@@ -181,9 +208,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   nsCOMPtr<nsIEditorDocShell>   editorDocShell(do_QueryInterface(docShell, &rv));
   if (NS_FAILED(rv)) return rv;
   
-  nsCOMPtr<nsIEditor> editor(do_CreateInstance("@mozilla.org/editor/htmleditor;1", &rv));
+  nsCOMPtr<nsIEditor> editor(do_CreateInstance(mEditorClassString, &rv));
   if (NS_FAILED(rv)) return rv;
-
   // set the editor on the docShell. The docShell now owns it.
   rv = editorDocShell->SetEditor(editor);
   if (NS_FAILED(rv)) return rv;
@@ -205,7 +231,7 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
   
   nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
 
-  rv = editor->Init(domDoc, presShell, nsnull /* root content */, selCon, 0);
+  rv = editor->Init(domDoc, presShell, nsnull /* root content */, selCon, mEditorFlags);
   if (NS_FAILED(rv)) return rv;
   
   rv = editor->PostCreate();
@@ -608,7 +634,7 @@ nsEditingSession::PrepareForEditing()
   Set up the controller for this frame.
 ----------------------------------------------------------------------------*/
 nsresult
-nsEditingSession::SetupFrameControllers(nsIDOMWindow *inWindow)
+nsEditingSession::SetupFrameControllers(nsIDOMWindow *inWindow, PRBool aSetupComposerController)
 {
   nsresult rv;
   
@@ -630,17 +656,19 @@ nsEditingSession::SetupFrameControllers(nsIDOMWindow *inWindow)
   rv = controllers->InsertControllerAt(0, controller);
   if (NS_FAILED(rv)) return rv;  
 
-  // the second is an composer controller, and also takes an nsIEditor as the refCon
-  controller = do_CreateInstance("@mozilla.org/editor/composercontroller;1", &rv);
-  if (NS_FAILED(rv)) return rv;  
+  if (aSetupComposerController)
+  {
+    // the second is an composer controller, and also takes an nsIEditor as the refCon
+    controller = do_CreateInstance("@mozilla.org/editor/composercontroller;1", &rv);
+    if (NS_FAILED(rv)) return rv;  
 
-  nsCOMPtr<nsIEditorController> composerController(do_QueryInterface(controller));
-  rv = composerController->Init(nsnull);    // we set the editor later when we have one
-  if (NS_FAILED(rv)) return rv;
+    nsCOMPtr<nsIEditorController> composerController(do_QueryInterface(controller));
+    rv = composerController->Init(nsnull);    // we set the editor later when we have one
+    if (NS_FAILED(rv)) return rv;
 
-  rv = controllers->InsertControllerAt(1, controller);
-  if (NS_FAILED(rv)) return rv;  
-
+    rv = controllers->InsertControllerAt(1, controller);
+    if (NS_FAILED(rv)) return rv;  
+  }
   return NS_OK;
 }
 
