@@ -43,7 +43,7 @@
         onunload="EditorShutdown()"
         onclose="return EditorCanClose()"
         onfocus="EditorOnFocus()"
-        contenttitlesettting="true"
+        contenttitlesetting="true"
         titlemodifier="&editorWindow.titlemodifier;"
         titlemenuseparator="&editorWindow.titlemodifiermenuseparator;"
         windowtype="composer:html"

@@ -637,7 +637,7 @@ void nsContentTreeOwner::XULWindow(nsXULWindow* aXULWindow)
 
       if(docShellElement)  
          {
-         docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("contenttitlesettting"), contentTitleSetting);
+         docShellElement->GetAttribute(NS_ConvertASCIItoUCS2("contenttitlesetting"), contentTitleSetting);
          if(contentTitleSetting.EqualsWithConversion("true"))
             {
             mContentTitleSetting = PR_TRUE;
