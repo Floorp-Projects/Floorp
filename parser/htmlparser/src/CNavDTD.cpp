@@ -1389,8 +1389,10 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
           STOP_TIMER();
           MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::HandleStartToken(), this=%p\n", this));
           
-          if (mHasOpenMap && mSink)
+          if (mHasOpenMap && mSink) {
             result=mSink->AddLeaf(*theNode);
+            isTokenHandled=PR_TRUE;
+          }
           
           MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::HandleStartToken(), this=%p\n", this));
           START_TIMER();

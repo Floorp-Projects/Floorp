@@ -1491,9 +1491,7 @@ void nsParser::DebugDumpSource(nsOutputStream& aStream) {
   PRInt32 theIndex=-1;
 
   nsITokenizer* theTokenizer=0;
-  nsresult result=mParserContext->mDTD->GetTokenizer(theTokenizer);
-
-  if(theTokenizer){
+  if(NS_SUCCEEDED(mParserContext->mDTD->GetTokenizer(theTokenizer))){
     CToken* theToken;
     while(nsnull != (theToken=theTokenizer->GetTokenAt(++theIndex))) {
       // theToken->DebugDumpToken(out);

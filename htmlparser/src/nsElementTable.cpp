@@ -1992,7 +1992,7 @@ void nsHTMLElement::DebugDumpMembership(const char* aFilename){
 }
 
 void nsHTMLElement::DebugDumpContainType(const char* aFilename){
-#define RICKG_DEBUG
+//#define RICKG_DEBUG
 #ifdef RICKG_DEBUG
 
   const char* prefix="             ";
