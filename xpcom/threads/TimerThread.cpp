@@ -63,6 +63,12 @@ TimerThread::~TimerThread()
     PR_DestroyLock(mLock);
 
   mThread = nsnull;
+
+  PRInt32 n = mTimers.Count();
+  while (--n >= 0) {
+    nsTimerImpl *timer = NS_STATIC_CAST(nsTimerImpl *, mTimers[n]);
+    NS_RELEASE(timer);
+  }
 }
 
 nsresult TimerThread::Init()
@@ -189,8 +195,14 @@ NS_IMETHODIMP TimerThread::Run()
 
       if (now >= timer->mTimeout + mTimeoutAdjustment) {
   next:
-        RemoveTimerInternal(timer);
+        // NB: AddRef before the Release under RemoveTimerInternal to avoid
+        // mRefCnt passing through zero, in case all other refs than the one
+        // from mTimers have gone away (the last non-mTimers[i]-ref's Release
+        // must be racing with us, blocked in gThread->RemoveTimer waiting
+        // for TimerThread::mLock, under nsTimerImpl::Release.
+
         NS_ADDREF(timer);
+        RemoveTimerInternal(timer);
 
         // We release mLock around the Fire call, of course, to avoid deadlock.
         lock.unlock();
@@ -261,6 +273,8 @@ nsresult TimerThread::AddTimer(nsTimerImpl *aTimer)
 
   /* add the timer from our list */
   PRInt32 i = AddTimerInternal(aTimer);
+  if (i < 0)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   if (mCondVar && mWaiting && i == 0)
     PR_NotifyCondVar(mCondVar);
@@ -272,8 +286,12 @@ nsresult TimerThread::TimerDelayChanged(nsTimerImpl *aTimer)
 {
   nsAutoLock lock(mLock);
 
+  // Our caller has a strong ref to aTimer, so it can't go away here under
+  // ReleaseTimerInternal.
+
   RemoveTimerInternal(aTimer);
-  AddTimerInternal(aTimer);
+  if (AddTimerInternal(aTimer) < 0)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   return NS_OK;
 }
@@ -282,8 +300,15 @@ nsresult TimerThread::RemoveTimer(nsTimerImpl *aTimer)
 {
   nsAutoLock lock(mLock);
 
-  /* remove the timer from our list */
-  RemoveTimerInternal(aTimer);
+  // Remove the timer from our array.  Tell callers that aTimer was not found
+  // by returning NS_ERROR_NOT_AVAILABLE.  Unlike the TimerDelayChanged case
+  // immediately above, our caller may be passing a (now-)weak ref in via the
+  // aTimer param, specifically when nsTimerImpl::Release loses a race with
+  // TimerThread::Run, must wait for the mLock auto-lock here, and during the
+  // wait Run drops the only remaining ref to aTimer via RemoveTimerInternal.
+
+  if (!RemoveTimerInternal(aTimer))
+    return NS_ERROR_NOT_AVAILABLE;
 
   return NS_OK;
 }
@@ -300,7 +325,22 @@ PRInt32 TimerThread::AddTimerInternal(nsTimerImpl *aTimer)
       break;
     }
   }
-  mTimers.InsertElementAt(aTimer, i);
 
+  if (!mTimers.InsertElementAt(aTimer, i))
+    return -1;
+
+  aTimer->mArmed = PR_TRUE;
+  NS_ADDREF(aTimer);
   return i;
+}
+
+PRBool TimerThread::RemoveTimerInternal(nsTimerImpl *aTimer)
+{
+  if (!mTimers.RemoveElement(aTimer))
+    return PR_FALSE;
+
+  // Order is crucial here -- see nsTimerImpl::Release.
+  aTimer->mArmed = PR_FALSE;
+  NS_RELEASE(aTimer);
+  return PR_TRUE;
 }

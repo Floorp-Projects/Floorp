@@ -48,7 +48,7 @@
  */
 
 [scriptable,uuid(84271f22-c023-4b01-8050-d71c0c6a6235)]
-interface nsITimerScriptable : nsISupports
+interface nsIScriptableTimer : nsISupports
 {
   /* Timer priorities */
   const short PRIORITY_HIGHEST        = 10;
@@ -71,7 +71,7 @@ interface nsITimerScriptable : nsISupports
    *                    ``timer-callback'' topic with the subject being
    *                    the timer itself when the timer fires:
    *
-   *                      observe(nsISupports aSubject, => nsITimerScriptable
+   *                      observe(nsISupports aSubject, => nsIScriptableTimer
    *                              string aTopic,        => ``timer-callback''
    *                              wstring data          =>  null
    *

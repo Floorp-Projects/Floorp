@@ -76,10 +76,8 @@ public:
 
 private:
   // These two internal functions must be called from within a lock
-  inline PRInt32 AddTimerInternal(nsTimerImpl *aTimer);
-  inline void    RemoveTimerInternal(nsTimerImpl *aTimer) {
-    mTimers.RemoveElement(aTimer);
-  }
+  PRInt32 AddTimerInternal(nsTimerImpl *aTimer);
+  PRBool  RemoveTimerInternal(nsTimerImpl *aTimer);
 
   nsCOMPtr<nsIThread> mThread;
   PRLock *mLock;
