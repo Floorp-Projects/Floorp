@@ -112,7 +112,9 @@
   <binding id="input-box">
     <content context="_child">
       <children/>
-      <xul:menupopup onpopupshowing="this.parentNode.firstChild.focus(); this.parentNode.doPopupItemEnabling(this);"
+      <xul:menupopup onpopupshowing="if (document.commandDispatcher.focusedElement != this.parentNode.firstChild) 
+                                       this.parentNode.firstChild.focus();
+                                     this.parentNode.doPopupItemEnabling(this);"
                      oncommand="this.parentNode.doCommand(event.originalTarget.getAttribute('cmd'));">
         <xul:menuitem label="&undoCmd.label;" accesskey="&undoCmd.accesskey;" cmd="cmd_undo"/>
         <xul:menuitem label="&redoCmd.label;" accesskey="&redoCmd.accesskey;" cmd="cmd_redo"/>
