@@ -656,7 +656,7 @@ class basic_nsLiteralString
           if ( aLength == PRUint32(-1) )
             {
 //            NS_WARNING("Tell scc: Caller constructing a string doesn't know the real length.  Please use the other constructor.");
-              mEnd = mStart + nsCharTraits<CharT>::length(mStart);
+              mEnd = mStart ? (mStart + nsCharTraits<CharT>::length(mStart)) : mStart;
             }
         }
 
@@ -1093,7 +1093,7 @@ copy_string_backward( InputIterator first, InputIterator last, OutputIterator re
 
         NS_ASSERTION(lengthToCopy, "|copy_string_backward| will never terminate");
 
-        nsCharTraits<OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
+        nsCharTraits<typename OutputIterator::value_type>::move(result.operator->()-lengthToCopy, last.operator->()-lengthToCopy, lengthToCopy);
 
         last -= PRInt32(lengthToCopy);
         result -= PRInt32(lengthToCopy);

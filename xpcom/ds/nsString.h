@@ -815,7 +815,8 @@ public:
 
     nsCAutoString();
     nsCAutoString(const nsCString& );
-    nsCAutoString(const char* aString,PRInt32 aLength=-1);
+    nsCAutoString(const char* aString);
+    nsCAutoString(const char* aString,PRInt32 aLength);
     nsCAutoString(const CBufDescriptor& aBuffer);
 
 #ifndef NEW_STRING_APIS

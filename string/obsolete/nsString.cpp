@@ -1881,6 +1881,12 @@ nsCAutoString::nsCAutoString( const nsCString& aString ) : nsCString(){
 }
 
 
+nsCAutoString::nsCAutoString(const char* aCString) : nsCString() {
+  Initialize(*this,mBuffer,sizeof(mBuffer)-1,0,eOneByte,PR_FALSE);
+  AddNullTerminator(*this);
+  Append(aCString);
+}
+
 /**
  * Copy construct from ascii c-string
  * @param   aCString is a ptr to a 1-byte cstr
