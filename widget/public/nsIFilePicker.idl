@@ -65,7 +65,8 @@ interface nsIFilePicker : nsISupports
   const long filterApps       = 0x40;           // Applications (per-platform implementation)
 
  /**
-  * Initialize the file widget.
+  * Initialize the file picker widget.  The file picker is not valid until this
+  * method is called.
   *
   * @param      parent   nsIDOMWindow parent.  This dialog will be dependent
   *                      on this parent. parent must be non-null.

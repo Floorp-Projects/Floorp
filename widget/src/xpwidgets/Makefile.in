@@ -78,7 +78,7 @@ ifneq (,$(filter beos os2 mac cocoa windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseClipboard.cpp
 endif
 
-ifneq (,$(filter beos os2 mac cocoa photon windows,$(MOZ_WIDGET_TOOLKIT)))
+ifneq (,$(filter beos gtk2 os2 mac cocoa photon windows,$(MOZ_WIDGET_TOOLKIT)))
 CPPSRCS += nsBaseFilePicker.cpp
 REQUIRES += docshell view intl
 endif
