@@ -34,9 +34,12 @@
  */
 #include "stdafx.h"
 
+#include <process.h>
+
 #include "Pluginhostctrl.h"
 #include "nsPluginHostCtrl.h"
 #include "nsURLDataCallback.h"
+
 
 /////////////////////////////////////////////////////////////////////////////
 // nsURLDataCallback
@@ -55,12 +58,9 @@ nsURLDataCallback::nsURLDataCallback() :
 
 nsURLDataCallback::~nsURLDataCallback()
 {
-    if (m_hPostData)
-        GlobalFree(m_hPostData);
-    if (m_szURL)
-        free(m_szURL);
-    if (m_szContentType)
-        free(m_szContentType);
+    SetPostData(NULL, 0);
+    SetURL(NULL);
+    SetContentType(NULL);
 }
 
 void nsURLDataCallback::SetPostData(const void *pData, unsigned long nSize)
@@ -70,6 +70,7 @@ void nsURLDataCallback::SetPostData(const void *pData, unsigned long nSize)
     if (m_hPostData)
     {
         GlobalFree(m_hPostData);
+        m_hPostData = NULL;
     }
     if (pData)
     {
@@ -82,6 +83,174 @@ void nsURLDataCallback::SetPostData(const void *pData, unsigned long nSize)
             GlobalUnlock(m_hPostData);
         }
     }
+}
+
+HRESULT nsURLDataCallback::OpenURL(nsPluginHostCtrl *pOwner, const TCHAR *szURL, void *pNotifyData, const void *pPostData, unsigned long nPostDataSize)
+{
+    // Create the callback object
+    CComObject<nsURLDataCallback> *pCallback = NULL;
+    CComObject<nsURLDataCallback>::CreateInstance(&pCallback);
+    if (!pCallback)
+    {
+        return E_OUTOFMEMORY;
+    }
+    pCallback->AddRef();
+
+    // Initialise it
+    pCallback->SetOwner(pOwner);
+    pCallback->SetNotifyData(pNotifyData);
+    if (pPostData && nPostDataSize > 0)
+    {
+        pCallback->SetPostData(pPostData, nPostDataSize);
+    }
+
+    USES_CONVERSION;
+    pCallback->SetURL(T2CA(szURL));
+    
+    // Create an object window on this thread that will be sent messages when
+    // something happens on the worker thread.
+    RECT rcPos = {0, 0, 10, 10};
+    pCallback->Create(HWND_DESKTOP, rcPos);    
+
+    // Start the worker thread
+    _beginthread(StreamThread, 0, pCallback);
+
+    return S_OK;
+}
+
+void __cdecl nsURLDataCallback::StreamThread(void *pData)
+{
+    HRESULT hr = CoInitialize(NULL);
+    ATLASSERT(SUCCEEDED(hr));
+
+    CComObject<nsURLDataCallback> *pThis = (CComObject<nsURLDataCallback> *) pData;
+
+    // Open the URL
+    hr = URLOpenStream(NULL, pThis->m_szURL, 0, static_cast<IBindStatusCallback*>(pThis));
+    ATLASSERT(SUCCEEDED(hr));
+
+    // Pump messages until WM_QUIT arrives
+    BOOL bQuit = FALSE;
+    while (!bQuit)
+    {
+        MSG msg;
+        if (PeekMessage(&msg, NULL, 0, 0, PM_NOREMOVE))
+        {
+            if (GetMessage(&msg, NULL, 0, 0))
+            {
+                DispatchMessage(&msg);
+            }
+            else
+            {
+                bQuit = TRUE;
+            }
+        }
+    }
+
+    CoUninitialize();
+    _endthread();
+}
+
+///////////////////////////////////////////////////////////////////////////////
+// Windows message handlers
+
+LRESULT nsURLDataCallback::OnNPPNewStream(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    _NewStreamData *pNewStreamData = (_NewStreamData *) lParam;
+
+    // Notify the plugin that a new stream has been created
+    if (m_pOwner->m_NPPFuncs.newstream)
+    {
+        NPError npres = m_pOwner->m_NPPFuncs.newstream(
+            pNewStreamData->npp,
+            pNewStreamData->contenttype,
+            pNewStreamData->stream,
+            pNewStreamData->seekable,
+            pNewStreamData->stype);
+    }
+    return 0;
+}
+
+LRESULT nsURLDataCallback::OnNPPDestroyStream(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    _DestroyStreamData *pDestroyStreamData = (_DestroyStreamData *) lParam;
+
+    // Notify the plugin that the stream has been closed
+    if (m_pOwner->m_NPPFuncs.destroystream)
+    {
+        m_pOwner->m_NPPFuncs.destroystream(
+            pDestroyStreamData->npp,
+            pDestroyStreamData->stream,
+            pDestroyStreamData->reason);
+    }
+    return 0;
+}
+
+LRESULT nsURLDataCallback::OnNPPURLNotify(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    _UrlNotifyData *pUrlNotifyData = (_UrlNotifyData *) lParam;
+
+    // Notify the plugin that the url has loaded
+    if (m_pNotifyData && m_pOwner->m_NPPFuncs.urlnotify)
+    {
+        m_pOwner->m_NPPFuncs.urlnotify(
+            pUrlNotifyData->npp,
+            pUrlNotifyData->url,
+            pUrlNotifyData->reason,
+            pUrlNotifyData->notifydata);
+    }
+    return 0;
+}
+
+LRESULT nsURLDataCallback::OnNPPWriteReady(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    _WriteReadyData *pWriteReadyData = (_WriteReadyData *) lParam;
+    if (m_pOwner->m_NPPFuncs.writeready)
+    {
+        pWriteReadyData->result = m_pOwner->m_NPPFuncs.writeready(
+            pWriteReadyData->npp,
+            pWriteReadyData->stream);
+    }
+
+    return 0;
+}
+
+LRESULT nsURLDataCallback::OnNPPWrite(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    _WriteData *pWriteData = (_WriteData *) lParam;
+    if (m_pOwner->m_NPPFuncs.write)
+    {
+        m_pOwner->m_NPPFuncs.write(
+            pWriteData->npp,
+            pWriteData->stream,
+            pWriteData->offset,
+            pWriteData->len,
+            pWriteData->buffer);
+    }
+    return 0;
+}
+
+LRESULT nsURLDataCallback::OnClassCreatePluginInstance(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    // Test whether the plugin for this content type exists or not and if not,
+    // create it right now.
+    if (!m_pOwner->m_bPluginIsAlive &&
+        m_pOwner->m_bCreatePluginFromStreamData)
+    {
+        if (FAILED(m_pOwner->LoadPluginByContentType(A2CT(m_szContentType))) ||
+            FAILED(m_pOwner->CreatePluginInstance()))
+        {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+LRESULT nsURLDataCallback::OnClassCleanup(UINT uMsg, WPARAM wParam, LPARAM lParam, BOOL& bHandled)
+{
+    DestroyWindow();
+    Release();
+    return 0;
 }
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -119,18 +288,14 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnProgress(
     case BINDSTATUS_REDIRECTING:
         {
             USES_CONVERSION;
-            if (m_szURL)
-                free(m_szURL);
-            m_szURL = strdup(W2A(szStatusText));
+            SetURL(W2A(szStatusText));
         }
         break;
 
     case BINDSTATUS_MIMETYPEAVAILABLE:
         {
             USES_CONVERSION;
-            if (m_szContentType)
-                free(m_szContentType);
-            m_szContentType = strdup(W2A(szStatusText));
+            SetContentType(W2A(szStatusText));
         }
         break;
     }
@@ -147,26 +312,25 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
         NPReason reason = SUCCEEDED(hresult) ? NPRES_DONE : NPRES_NETWORK_ERR;
 
         // Notify the plugin that the stream has been closed
-        if (m_pOwner->m_NPPFuncs.destroystream)
-        {
-            m_pOwner->m_NPPFuncs.destroystream(
-                &m_pOwner->m_NPP,
-                &m_NPStream,
-                reason);
-        }
+        _DestroyStreamData destroyStreamData;
+        destroyStreamData.npp = &m_pOwner->m_NPP;
+        destroyStreamData.stream = &m_NPStream;
+        destroyStreamData.reason = reason;
+        SendMessage(WM_NPP_DESTROYSTREAM, 0, (LPARAM) &destroyStreamData);
 
-        if (m_pNotifyData && m_pOwner->m_NPPFuncs.urlnotify)
-        {
-            // Notify the plugin that the url has loaded
-            m_pOwner->m_NPPFuncs.urlnotify(
-                &m_pOwner->m_NPP,
-                m_szURL,
-                reason,
-                m_pNotifyData);
-        }
+        // Notify the plugin that the url has loaded
+        _UrlNotifyData urlNotifyData;
+        urlNotifyData.npp = &m_pOwner->m_NPP;
+        urlNotifyData.url = m_szURL;
+        urlNotifyData.reason = reason;
+        urlNotifyData.notifydata = m_pNotifyData;
+        SendMessage(WM_NPP_URLNOTIFY, 0, (LPARAM) &urlNotifyData);
     }
 
     m_cpBinding.Release();
+
+    SendMessage(WM_CLASS_CLEANUP);
+    PostQuitMessage(0);
 
     return S_OK;
 }
@@ -175,13 +339,23 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
     /* [out] */ DWORD __RPC_FAR *grfBINDF,
     /* [unique][out][in] */ BINDINFO __RPC_FAR *pbindinfo)
 {
-    *grfBINDF = BINDF_ASYNCHRONOUS;
+    *grfBINDF = BINDF_ASYNCHRONOUS |  BINDF_ASYNCSTORAGE |
+        BINDF_GETNEWESTVERSION;
+    
+    ULONG cbSize = pbindinfo->cbSize;
+    memset(pbindinfo, 0, cbSize); // zero out structure
+    pbindinfo->cbSize = cbSize;
     if (m_hPostData)
     {
         pbindinfo->dwBindVerb = BINDVERB_POST;
         pbindinfo->stgmedData.tymed = TYMED_HGLOBAL;
         pbindinfo->stgmedData.hGlobal = m_hPostData;
     }
+    else
+    {
+		pbindinfo->dwBindVerb = BINDVERB_GET;
+    }
+
     return S_OK ;
 }
 
@@ -208,15 +382,10 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
 
         // Test if there is a plugin yet. If not try and create one for this
         // kind of content.
-        if (!m_pOwner->m_bPluginIsAlive &&
-            m_pOwner->m_bCreatePluginFromStreamData)
+        if (SendMessage(WM_CLASS_CREATEPLUGININSTANCE))
         {
-            if (FAILED(m_pOwner->LoadPluginByContentType(A2CT(m_szContentType))) ||
-                FAILED(m_pOwner->CreatePluginInstance()))
-            {
-                m_cpBinding->Abort();
-                return S_OK;
-            }
+            m_cpBinding->Abort();
+            return S_OK;
         }
 
         // Tell the plugin that there is a new stream of data
@@ -225,27 +394,25 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
         m_NPStream.lastmodified = 0;
         m_NPStream.notifyData = m_pNotifyData;
 
-        if (m_pOwner->m_NPPFuncs.newstream)
-        {
-            uint16 stype = NP_NORMAL;
-            NPError npres = m_pOwner->m_NPPFuncs.newstream(
-                &m_pOwner->m_NPP,
-                m_szContentType,
-                &m_NPStream,
-                FALSE,
-                &stype);
-        }
+        uint16 stype = NP_NORMAL;
+        _NewStreamData newStreamData;
+        newStreamData.npp = &m_pOwner->m_NPP;
+        newStreamData.contenttype = m_szContentType;
+        newStreamData.stream = &m_NPStream;
+        newStreamData.seekable = FALSE;
+        newStreamData.stype = &stype;
+        SendMessage(WM_NPP_NEWSTREAM, 0, (LPARAM) &newStreamData);
     }
     if (!m_pOwner->m_bPluginIsAlive)
     {
         return S_OK;
     }
 
-    ATLTRACE(_T("Data for stream %s (%d bytes)\n"), m_szURL, dwSize);
+    ATLTRACE(_T("Data for stream %s (%d bytes available)\n"), m_szURL, dwSize);
 
     // Feed the stream data into the plugin
     HRESULT hr;
-    char bData[8192];
+    char bData[16384];
     while (m_nDataPos < dwSize)
     {
         ULONG nBytesToRead = dwSize - m_nDataPos;
@@ -257,28 +424,27 @@ HRESULT STDMETHODCALLTYPE nsURLDataCallback::OnStopBinding(
         }
 
         // How many bytes can the plugin cope with?
-        if (m_pOwner->m_NPPFuncs.writeready)
+        _WriteReadyData writeReadyData;
+        writeReadyData.npp = &m_pOwner->m_NPP;
+        writeReadyData.stream = &m_NPStream;
+        writeReadyData.result = nBytesToRead;
+        SendMessage(WM_NPP_WRITEREADY, 0, (LPARAM) &writeReadyData);
+        if (nBytesToRead > writeReadyData.result)
         {
-            int32 nPluginMaxBytes = m_pOwner->m_NPPFuncs.writeready(
-                &m_pOwner->m_NPP,
-                &m_NPStream);
-            if (nBytesToRead > nPluginMaxBytes)
-            {
-                nBytesToRead = nPluginMaxBytes;
-            }
+            nBytesToRead = writeReadyData.result;
         }
 
         // Read 'n' feed
+        ATLTRACE(_T("  Reading %d bytes\n"), (int) nBytesToRead);
         hr = pstgmed->pstm->Read(&bData, nBytesToRead, &nBytesRead);
-        if (m_pOwner->m_NPPFuncs.write)
-        {
-            m_pOwner->m_NPPFuncs.write(
-                &m_pOwner->m_NPP,
-                &m_NPStream,
-                m_nDataPos,
-                nBytesRead,
-                bData);
-        }
+
+        _WriteData writeData;
+        writeData.npp = &m_pOwner->m_NPP;
+        writeData.stream = &m_NPStream;
+        writeData.offset = m_nDataPos;
+        writeData.len = nBytesRead;
+        writeData.buffer = bData;
+        SendMessage(WM_NPP_WRITE, 0, (LPARAM) &writeData);
 
         m_nDataPos += nBytesRead;
     }

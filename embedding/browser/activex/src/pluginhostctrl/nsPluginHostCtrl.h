@@ -213,7 +213,6 @@ protected:
 
     LoadedPluginInfo *m_pLoadedPlugin;
 
-    nsPluginWnd m_wndPlugin;
     NPWindow m_NPWindow;
 
     static NPNetscapeFuncs g_NPNFuncs;
@@ -227,6 +226,7 @@ public:
     NPP_t m_NPP;
     BOOL  m_bPluginIsAlive;
     BOOL  m_bCreatePluginFromStreamData;
+    nsPluginWnd m_wndPlugin;
 
     // Struct holding pointers to the functions within the plugin
     NPPluginFuncs m_NPPFuncs;

@@ -43,8 +43,10 @@
 static NPError
 _OpenURL(NPP npp, const char *szURL, const char *szTarget, void *pNotifyData, const char *pPostData, uint32 len, NPBool isFile)
 {
-    if(!npp)
+    if (!npp)
+    {
         return NPERR_INVALID_INSTANCE_ERROR;
+    }
 
     nsPluginHostCtrl *pCtrl = (nsPluginHostCtrl *) npp->ndata;
     ATLASSERT(pCtrl);
@@ -134,8 +136,10 @@ NPN_PostURL(NPP npp,
 NPError NP_EXPORT
 NPN_NewStream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
 {
-    if(!npp)
+    if (!npp)
+    {
         return NPERR_INVALID_INSTANCE_ERROR;
+    }
 
     return NPERR_GENERIC_ERROR;
 }
@@ -145,8 +149,10 @@ NPN_NewStream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
 int32 NP_EXPORT
 NPN_Write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 {
-    if(!npp)
+    if (!npp)
+    {
         return NPERR_INVALID_INSTANCE_ERROR;
+    }
 
     return NPERR_GENERIC_ERROR;
 }
@@ -156,8 +162,10 @@ NPN_Write(NPP npp, NPStream *pstream, int32 len, void *buffer)
 NPError NP_EXPORT
 NPN_DestroyStream(NPP npp, NPStream *pstream, NPError reason)
 {
-    if(!npp)
+    if (!npp)
+    {
         return NPERR_INVALID_INSTANCE_ERROR;
+    }
 
     return NPERR_GENERIC_ERROR;
 }
@@ -167,8 +175,11 @@ NPN_DestroyStream(NPP npp, NPStream *pstream, NPError reason)
 void NP_EXPORT
 NPN_Status(NPP npp, const char *message)
 {
-    if(!npp)
+    if (!npp)
+    {
         return;
+    }
+    // TODO status message
 }
 
 
@@ -184,8 +195,10 @@ NPN_MemAlloc (uint32 size)
 void NP_EXPORT
 NPN_MemFree (void *ptr)
 {
-    if(ptr)
+    if (ptr)
+    {
         free(ptr);
+    }
 }
 
 
@@ -208,8 +221,12 @@ NPN_ReloadPlugins(NPBool reloadPages)
 void NP_EXPORT
 NPN_InvalidateRect(NPP npp, NPRect *invalidRect)
 {
-    if(!npp)
+    if (!npp)
+    {
         return;
+    }
+
+    // TODO - windowless plugins
 }
 
 
@@ -217,8 +234,11 @@ NPN_InvalidateRect(NPP npp, NPRect *invalidRect)
 void NP_EXPORT
 NPN_InvalidateRegion(NPP npp, NPRegion invalidRegion)
 {
-    if(!npp)
+    if (!npp)
+    {
         return;
+    }
+    // TODO - windowless plugins
 }
 
 
@@ -226,18 +246,67 @@ NPN_InvalidateRegion(NPP npp, NPRegion invalidRegion)
 void NP_EXPORT
 NPN_ForceRedraw(NPP npp)
 {
-    if(!npp)
+    if (!npp)
+    {
         return;
+    }
+    // TODO - windowless plugins
 }
 
 ////////////////////////////////////////////////////////////////////////
 NPError NP_EXPORT
 NPN_GetValue(NPP npp, NPNVariable variable, void *result)
 {
-    if(!npp)
+    if (!npp)
+    {
         return NPERR_INVALID_INSTANCE_ERROR;
+    }
 
-    return NPERR_GENERIC_ERROR;
+    if (!result)
+    {
+        return NPERR_INVALID_PARAM;
+    }
+
+    nsPluginHostCtrl *pCtrl = (nsPluginHostCtrl *) npp->ndata;
+    ATLASSERT(pCtrl);
+
+    CComPtr<IWebBrowserApp> cpBrowser;
+    pCtrl->GetWebBrowserApp(&cpBrowser);
+
+    // Test the variable
+    if (variable == NPNVnetscapeWindow)
+    {
+        *((HWND *) result) = pCtrl->m_wndPlugin.m_hWnd;
+    }
+    else if (variable == NPNVjavascriptEnabledBool)
+    {
+        // TODO
+        *((NPBool *) result) = TRUE;
+    }
+    else if (variable == NPNVasdEnabledBool) // Smart update
+    {
+        *((NPBool *) result) = FALSE;
+    }
+    else if (variable == NPNVisOfflineBool)
+    {
+        *((NPBool *) result) = FALSE;
+        if (cpBrowser)
+        {
+            CComQIPtr<IWebBrowser2> cpBrowser2 = cpBrowser;
+            if (cpBrowser2)
+            {
+                VARIANT_BOOL bOffline = VARIANT_FALSE;
+                cpBrowser2->get_Offline(&bOffline);
+                *((NPBool *) result) = (bOffline == VARIANT_TRUE) ? TRUE : FALSE;
+            }
+        }
+    }
+    else
+    {
+        return NPERR_GENERIC_ERROR;
+    }
+
+    return NPERR_NO_ERROR;
 }
 
 
@@ -245,8 +314,14 @@ NPN_GetValue(NPP npp, NPNVariable variable, void *result)
 NPError NP_EXPORT
 NPN_SetValue(NPP npp, NPPVariable variable, void *result)
 {
-    if(!npp)
+    if (!npp)
+    {
         return NPERR_INVALID_INSTANCE_ERROR;
+    }
+
+    // TODO windowless
+    // NPPVpluginWindowBool
+    // NPPVpluginTransparentBool
 
     return NPERR_GENERIC_ERROR;
 }
@@ -256,8 +331,10 @@ NPN_SetValue(NPP npp, NPPVariable variable, void *result)
 NPError NP_EXPORT
 NPN_RequestRead(NPStream *pstream, NPByteRange *rangeList)
 {
-    if(!pstream || !rangeList || !pstream->ndata)
+    if (!pstream || !rangeList || !pstream->ndata)
+    {
         return NPERR_INVALID_PARAM;
+    }
 
     return NPERR_GENERIC_ERROR;
 }
