@@ -50,19 +50,22 @@ MOZ_DECL_CTOR_COUNTER(nsCellMap);
 // nsTableCellMap
 
 nsTableCellMap::nsTableCellMap(nsIPresContext* aPresContext, nsTableFrame& aTableFrame)
+:mFirstMap(nsnull)
 {
   MOZ_COUNT_CTOR(nsTableCellMap);
-  mFirstMap = nsnull;
-  nsTableRowGroupFrame* prior = nsnull;
-  nsIFrame* child;
-  aTableFrame.FirstChild(aPresContext, nsnull, &child);
-  while(child) {
-    nsTableRowGroupFrame* groupFrame = aTableFrame.GetRowGroupFrame(child);
-    if (groupFrame) {
-      InsertGroupCellMap(prior, *groupFrame);
-      prior = groupFrame;
+
+  nsVoidArray orderedRowGroups;
+  PRUint32 numRowGroups;
+  aTableFrame.OrderRowGroups(orderedRowGroups, numRowGroups);
+
+  for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
+    nsTableRowGroupFrame* rgFrame = 
+      aTableFrame.GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX));
+    if (rgFrame) {
+      nsTableRowGroupFrame* prior = (0 == rgX) 
+        ? nsnull : aTableFrame.GetRowGroupFrame((nsIFrame*)orderedRowGroups.ElementAt(rgX - 1));
+      InsertGroupCellMap(*rgFrame, prior);
     }
-    child->GetNextSibling(&child);
   }
 }
 
@@ -101,8 +104,8 @@ nsTableCellMap::InsertGroupCellMap(nsCellMap* aPrevMap,
   aNewMap.SetNextSibling(next);
 }
 
-void nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame* aPrevGroup,
-                                        nsTableRowGroupFrame& aNewGroup)
+void nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame&  aNewGroup,
+                                        nsTableRowGroupFrame*& aPrevGroup)
 {
   nsCellMap* newMap = new nsCellMap(aNewGroup);
   if (newMap) {
@@ -117,24 +120,8 @@ void nsTableCellMap::InsertGroupCellMap(nsTableRowGroupFrame* aPrevGroup,
         map = map->GetNextSibling();
       }
     }
-    InsertGroupCellMap(prevMap, *newMap);
-  }
-}
-
-void nsTableCellMap::InsertGroupCellMap(PRInt32               aRowIndex,
-                                        nsTableRowGroupFrame& aNewGroup)
-{
-  nsCellMap* newMap = new nsCellMap(aNewGroup);
-  if (newMap) {
-    PRInt32 rowIndex = aRowIndex;
-    nsCellMap* prevMap = nsnull;
-    nsCellMap* map = mFirstMap;
-    while (map) {
-      if (map->GetRowCount() > rowIndex) {
-        break;
-      }
-      prevMap = map;
-      map = map->GetNextSibling();
+    if (!prevMap) {
+      aPrevGroup = nsnull;
     }
     InsertGroupCellMap(prevMap, *newMap);
   }

@@ -224,16 +224,9 @@ public:
                     const nsHTMLReflowState& aReflowState,
                     nsReflowStatus&          aStatus);
 
-
   NS_IMETHOD GetParentStyleContextProvider(nsIPresContext* aPresContext,
                                            nsIFrame** aProviderFrame, 
                                            nsContextProviderRelationship& aRelationship);
-
-  /** the COLS attribute can be modified by any cell's width attribute.
-    * deal with it here.  Must be called before any call to 
-    * ColumnInfoCache::AddColumnInfo
-    */
-  virtual void AdjustColumnsForCOLSAttribute();
 
   /** return the column frame corresponding to the given column index
     * there are two ways to do this, depending on whether we have cached
@@ -373,6 +366,7 @@ public:
 
   void AppendRows(nsIPresContext&       aPresContext,
                   nsTableRowGroupFrame& aRowGroupFrame,
+                  PRInt32               aRowIndex,
                   nsVoidArray&          aRowFrames);
 
   PRInt32 InsertRow(nsIPresContext&       aPresContext,
@@ -397,7 +391,7 @@ public:
 
   void InsertRowGroups(nsIPresContext& aPresContext,
                        nsIFrame*       aFirstRowGroupFrame,
-                       PRInt32         aRowIndex);
+                       nsIFrame*       aLastRowGroupFrame);
 
   void InsertColGroups(nsIPresContext& aPresContext,
                        PRInt32         aColIndex,
@@ -479,7 +473,6 @@ public:
                                nsHTMLReflowMetrics&     aDesiredSize,
                                const nsHTMLReflowState& aReflowState,
                                nsReflowStatus&          aStatus,
-                               nsTableRowGroupFrame *   aStartingFrame,
                                nsReflowReason           aReason,
                                PRBool                   aDoSiblings);
 
@@ -655,12 +648,13 @@ protected:
                     nsIFrame*       aFromChild,
                     nsIFrame*       aPrevSibling);
 
-  void GetSectionInfo(nsFrameList& aKidFrames,
-                      PRBool&      aHaveTHead,
-                      PRBool&      aHaveTBody,
-                      PRBool&      aHaveTFoot,
-                      PRBool&      aTHeadBeforeTFoot);
 public:
+  // put the children frames in the display order (e.g. thead before tbody before tfoot)
+  // and put the non row group frames at the end. Also return the number of row group frames.
+  void OrderRowGroups(nsVoidArray& aChildren,
+                      PRUint32&    aNumRowGroups,
+                      nsIFrame**   aFirstBody = nsnull);
+
   // Returns PR_TRUE if there are any cells above the row at
   // aRowIndex and spanning into the row at aRowIndex     
   PRBool RowIsSpannedInto(PRInt32 aRowIndex);
@@ -743,9 +737,6 @@ public:
 	/** 
 	  * Return aFrame's child if aFrame is an nsScrollFrame, otherwise return aFrame
 	  */
-  nsTableRowGroupFrame* GetRowGroupFrameFor(nsIFrame*             aFrame, 
-                                            const nsStyleDisplay* aDisplay);
-
   nsTableRowGroupFrame* GetRowGroupFrame(nsIFrame* aFrame,
                                          nsIAtom*  aFrameTypeIn = nsnull);
 
@@ -774,6 +765,8 @@ protected:
                       nsVoidArray&    aCollection);
 
 public: /* ----- Cell Map public methods ----- */
+
+  PRInt32 GetStartRowIndex(nsTableRowGroupFrame& aRowGroupFrame);
 
   /** returns the number of rows in this table.
     * if mCellMap has been created, it is asked for the number of rows.<br>
