@@ -62,6 +62,8 @@ Rights Reserved.
 				oncommandupdate="CommandUpdate_Mail()"/>
 
 	<commandset id="globalEditMenuItems"/>
+	<commandset id="selectEditMenuItems"/>
+	<commandset id="undoEditMenuItems"/>
 </commands>
 
 <broadcasterset id="broadcasterset">
