@@ -106,8 +106,7 @@
                 label="&bookmarkLinkCmd.label;"
                 accesskey="&bookmarkLinkCmd.accesskey;"
                 oncommand="BookmarksUtils.addBookmark(gContextMenu.linkURL(),
-                                                      gContextMenu.linkText(), 
-                                                      undefined, true);"/>
+                                                      gContextMenu.linkText());"/>
       <menuitem id="context-savelink"
                 label="&saveLinkCmd.label;"
                 accesskey="&saveLinkCmd.accesskey;"
