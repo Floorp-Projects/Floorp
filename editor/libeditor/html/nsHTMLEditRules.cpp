@@ -1679,7 +1679,7 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
   // hand off to table editor.
   {
     nsCOMPtr<nsIDOMElement> cell;
-    res = mHTMLEditor->GetFirstSelectedCell(getter_AddRefs(cell), nsnull);
+    res = mHTMLEditor->GetFirstSelectedCell(nsnull, getter_AddRefs(cell));
     if (NS_SUCCEEDED(res) && cell)
     {
       res = mHTMLEditor->DeleteTableCellContents();
