@@ -48,11 +48,6 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-// we need this because of an egcs 1.0 (and possibly gcc) compiler bug
-// that doesn't allow you to call ::nsISupports::GetIID() inside of a class
-// that multiply inherits from nsISupports
-static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-
 /* the following macros actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS_INHERITED(nsMsgMailboxParser, nsParseMailMessageState, nsIStreamListener);
 
@@ -404,15 +399,6 @@ PRInt32 nsMsgMailboxParser::HandleLine(char *line, PRUint32 lineLength)
 
 	return 0;
 
-}
-
-nsresult NS_NewParseMailMessageState(const nsIID& iid,
-                                  void **result)
-{
-    if (!result) return NS_ERROR_NULL_POINTER;
-	nsParseMailMessageState *parser = nsnull;
-	parser = new nsParseMailMessageState();
-    return parser->QueryInterface(iid, result);
 }
 
 NS_IMPL_ISUPPORTS(nsParseMailMessageState, nsIMsgParseMailMsgState::GetIID());
@@ -1791,7 +1777,7 @@ nsresult nsParseNewMailState::MoveIncorporatedMessage(nsIMsgDBHdr *mailHdr,
 	lockedFolder = do_QueryInterface(destIFolder);
 	nsISupports *myThis;
 
-	QueryInterface(kISupportsIID, (void **) &myThis);
+	QueryInterface(NS_GET_IID(nsISupports), (void **) &myThis);
 
 	nsCOMPtr <nsISupports> myISupports = dont_QueryInterface(myThis);
 

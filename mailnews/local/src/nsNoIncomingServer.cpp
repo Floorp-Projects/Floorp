@@ -16,34 +16,18 @@
  * Reserved.
  */
 
-#include "nsINoIncomingServer.h"
+#include "msgCore.h" // pre-compiled headers
 #include "nsNoIncomingServer.h"
-#include "nsMsgIncomingServer.h"
+
 #include "nsMsgLocalCID.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIFileSpec.h"
-
 #include "nsIPref.h"
-
 #include "prmem.h"
 #include "plstr.h"
 #include "prprf.h"
 #include "nsXPIDLString.h"
 
-/* get some implementation from nsMsgIncomingServer */
-class nsNoIncomingServer : public nsMsgIncomingServer,
-                             public nsINoIncomingServer
-                             
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSINOINCOMINGSERVER
-
-    nsNoIncomingServer();
-    virtual ~nsNoIncomingServer();
-    
-    NS_IMETHOD GetServerURI(char * *uri);
-};
 
 NS_IMPL_ISUPPORTS_INHERITED(nsNoIncomingServer,
                             nsMsgIncomingServer,
@@ -135,13 +119,4 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
         return rv;
 }
 
-nsresult NS_NewNoIncomingServer(const nsIID& iid,
-                                  void **result)
-{
-    nsNoIncomingServer *server;
-    if (!result) return NS_ERROR_NULL_POINTER;
-    server = new nsNoIncomingServer();
-
-    return server->QueryInterface(iid, result);
-}
 

@@ -27,22 +27,6 @@
 #include "prprf.h"
 #include "nsCRT.h"
 
-nsresult NS_NewPopUrl(const nsIID &aIID, void ** aInstancePtrResult)
-{
-	/* note this new macro for assertions...they can take a string describing the assertion */
-	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
-	if (aInstancePtrResult)
-	{
-		nsPop3URL * popUrl = new nsPop3URL(); 
-		if (popUrl)
-			return popUrl->QueryInterface(nsIPop3URL::GetIID(), aInstancePtrResult);
-		else
-			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
-	}
-	else
-		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
-}
-
 nsPop3URL::nsPop3URL(): nsMsgMailNewsUrl()
 {
 }
@@ -60,22 +44,18 @@ NS_IMPL_ISUPPORTS_INHERITED(nsPop3URL, nsMsgMailNewsUrl, nsIPop3URL)
 
 nsresult nsPop3URL::SetPop3Sink(nsIPop3Sink* aPop3Sink)
 {
-    NS_LOCK_INSTANCE();
     if (aPop3Sink)
         m_pop3Sink = dont_QueryInterface(aPop3Sink);
-    NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
 
 nsresult nsPop3URL::GetPop3Sink(nsIPop3Sink** aPop3Sink)
 {
-    NS_LOCK_INSTANCE();
     if (aPop3Sink)
 	{
         *aPop3Sink = m_pop3Sink;
 		NS_IF_ADDREF(*aPop3Sink);
 	}
-    NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
 

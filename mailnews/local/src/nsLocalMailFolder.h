@@ -176,5 +176,4 @@ protected:
   nsCOMPtr<nsITransactionManager> mTxnMgr;
 };
 
-
 #endif // nsMsgLocalMailFolder_h__

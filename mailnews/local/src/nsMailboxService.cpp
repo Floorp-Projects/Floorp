@@ -44,53 +44,15 @@ nsMailboxService::nsMailboxService()
 nsMailboxService::~nsMailboxService()
 {}
 
-NS_IMPL_THREADSAFE_ADDREF(nsMailboxService);
-NS_IMPL_THREADSAFE_RELEASE(nsMailboxService);
-
-nsresult nsMailboxService::QueryInterface(const nsIID &aIID, void** aInstancePtr)
-{
-    if (nsnull == aInstancePtr)
-        return NS_ERROR_NULL_POINTER;
- 
-    if (aIID.Equals(NS_GET_IID(nsIMailboxService)) || aIID.Equals(NS_GET_IID(nsISupports))) 
-	{
-        *aInstancePtr = (void*) ((nsIMailboxService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-    if (aIID.Equals(NS_GET_IID(nsIMsgMessageService))) 
-	{
-        *aInstancePtr = (void*) ((nsIMsgMessageService*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-    }
-	if (aIID.Equals(NS_GET_IID(nsIProtocolHandler)))
-	{
-        *aInstancePtr = (void*) ((nsIProtocolHandler*)this);
-        NS_ADDREF_THIS();
-        return NS_OK;
-	}
-
-#if defined(NS_DEBUG)
-    /*
-     * Check for the debug-only interface indicating thread-safety
-     */
-    static NS_DEFINE_IID(kIsThreadsafeIID, NS_ISTHREADSAFE_IID);
-    if (aIID.Equals(kIsThreadsafeIID))
-        return NS_OK;
-#endif
- 
-    return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS3(nsMailboxService, nsIMailboxService, nsIMsgMessageService, nsIProtocolHandler);
 
 nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListener *aMailboxParser, 
 										nsIUrlListener * aUrlListener, nsIURI ** aURL)
 {
 	nsCOMPtr<nsIMailboxUrl> mailboxurl;
 	nsresult rv = NS_OK;
-	NS_LOCK_INSTANCE();
 
-	rv = nsComponentManager::CreateInstance(kCMailboxUrl,
+    rv = nsComponentManager::CreateInstance(kCMailboxUrl,
                                             nsnull,
                                             nsIMailboxUrl::GetIID(),
                                             (void **) getter_AddRefs(mailboxurl));
@@ -115,8 +77,6 @@ nsresult nsMailboxService::ParseMailbox(nsFileSpec& aMailboxPath, nsIStreamListe
 			NS_IF_ADDREF(*aURL);
 		}
 	}
-
-	NS_UNLOCK_INSTANCE();
 
 	return rv;
 }
@@ -342,3 +302,4 @@ NS_IMETHODIMP nsMailboxService::NewChannel(const char *verb, nsIURI *aURI, nsILo
 
 	return rv;
 }
+

@@ -44,7 +44,4 @@ protected:
     nsCOMPtr<nsIPop3Sink> m_pop3Sink;
 };
 
-// factory method
-extern nsresult NS_NewPopUrl(const nsIID &aIID, void ** aInstancePtrResult);
-
 #endif // nsPop3URL_h__

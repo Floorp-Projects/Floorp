@@ -397,3 +397,5 @@ char * extractAttributeValue(const char * searchString, const char * attributeNa
 
 	return attributeValue;
 }
+
+

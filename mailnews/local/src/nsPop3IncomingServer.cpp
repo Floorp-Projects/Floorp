@@ -27,7 +27,6 @@
 
 #include "nsIPop3IncomingServer.h"
 #include "nsPop3IncomingServer.h"
-#include "nsMsgIncomingServer.h"
 #include "nsIPop3Service.h"
 #include "nsMsgBaseCID.h"
 #include "nsMsgLocalCID.h"
@@ -36,26 +35,6 @@
 
 static NS_DEFINE_CID(kCPop3ServiceCID, NS_POP3SERVICE_CID);
 
-/* get some implementation from nsMsgIncomingServer */
-class nsPop3IncomingServer : public nsMsgIncomingServer,
-                             public nsIPop3IncomingServer
-                             
-{
-public:
-    NS_DECL_ISUPPORTS_INHERITED
-    NS_DECL_NSIPOP3INCOMINGSERVER
-
-    nsPop3IncomingServer();
-    virtual ~nsPop3IncomingServer();
-
-    NS_IMETHOD GetServerURI(char **);
-    NS_IMETHOD PerformBiff();
-    
-private:
-    PRBool m_leaveOnServer;
-    PRBool m_deleteMailLeftOnServer;
-
-};
 
 NS_IMPL_ISUPPORTS_INHERITED(nsPop3IncomingServer,nsMsgIncomingServer,
                             nsIPop3IncomingServer)
@@ -188,15 +167,6 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 	}
         return rv;
 }
-    
-nsresult NS_NewPop3IncomingServer(const nsIID& iid,
-                                  void **result)
-{
-    nsPop3IncomingServer *server;
-    if (!result) return NS_ERROR_NULL_POINTER;
-    server = new nsPop3IncomingServer();
 
-    return server->QueryInterface(iid, result);
-}
 
 

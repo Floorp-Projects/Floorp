@@ -55,9 +55,7 @@ nsPop3Service::nsPop3Service()
 nsPop3Service::~nsPop3Service()
 {}
 
-NS_IMPL_THREADSAFE_ADDREF(nsPop3Service);
-NS_IMPL_THREADSAFE_RELEASE(nsPop3Service);
-NS_IMPL_QUERY_INTERFACE3(nsPop3Service,
+NS_IMPL_ISUPPORTS3(nsPop3Service,
                          nsIPop3Service,
                          nsIProtocolHandler,
                          nsIMsgProtocolInfo)
@@ -67,7 +65,6 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
                                nsIPop3IncomingServer *popServer,
                                nsIURI ** aURL)
 {
-	NS_LOCK_INSTANCE();
 	nsresult rv = NS_OK;
 	char * hostname = nsnull;
 
@@ -97,7 +94,6 @@ NS_IMETHODIMP nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 		NS_IF_ADDREF(*aURL);
 	}
 	
-	NS_UNLOCK_INSTANCE();
 	return rv;
 }
 
@@ -106,7 +102,6 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
                                    nsIPop3IncomingServer *popServer,
                                    nsIURI ** aURL)
 {
-	NS_LOCK_INSTANCE();
 	nsresult rv = NS_OK;
 	char * popHost = nsnull;
 	nsCOMPtr<nsIURI> url;
@@ -136,8 +131,6 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 		*aURL = url; // transfer ref count to the caller...
 		NS_IF_ADDREF(*aURL);
 	}
-	
-	NS_UNLOCK_INSTANCE();
 	return rv;
 }
 

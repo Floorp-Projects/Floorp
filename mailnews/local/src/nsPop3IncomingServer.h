@@ -19,14 +19,29 @@
 #ifndef __nsPop3IncomingServer_h
 #define __nsPop3IncomingServer_h
 
+#include "msgCore.h"
 #include "nsIPop3IncomingServer.h"
-#include "nscore.h"
+#include "nsMsgIncomingServer.h"
 
-NS_BEGIN_EXTERN_C
+/* get some implementation from nsMsgIncomingServer */
+class nsPop3IncomingServer : public nsMsgIncomingServer,
+                             public nsIPop3IncomingServer
+                             
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSIPOP3INCOMINGSERVER
 
-nsresult
-NS_NewPop3IncomingServer(const nsIID& iid, void **result);
+    nsPop3IncomingServer();
+    virtual ~nsPop3IncomingServer();
 
-NS_END_EXTERN_C
+    NS_IMETHOD GetServerURI(char **);
+    NS_IMETHOD PerformBiff();
+    
+private:
+    PRBool m_leaveOnServer;
+    PRBool m_deleteMailLeftOnServer;
+
+};
 
 #endif

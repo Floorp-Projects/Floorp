@@ -19,14 +19,24 @@
 #ifndef __nsNoIncomingServer_h
 #define __nsNoIncomingServer_h
 
+#include "msgCore.h"
 #include "nsINoIncomingServer.h"
-#include "nscore.h"
+#include "nsMsgIncomingServer.h"
 
-NS_BEGIN_EXTERN_C
+/* get some implementation from nsMsgIncomingServer */
+class nsNoIncomingServer : public nsMsgIncomingServer,
+                             public nsINoIncomingServer
+                             
+{
+public:
+    NS_DECL_ISUPPORTS_INHERITED
+    NS_DECL_NSINOINCOMINGSERVER
 
-nsresult
-NS_NewNoIncomingServer(const nsIID& iid, void **result);
+    nsNoIncomingServer();
+    virtual ~nsNoIncomingServer();
+    
+    NS_IMETHOD GetServerURI(char * *uri);
+};
 
-NS_END_EXTERN_C
 
 #endif

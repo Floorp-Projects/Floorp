@@ -47,12 +47,6 @@ class MSG_FolderInfoMail;
 class nsIMsgFilterList;
 class nsIFolder;
 
-NS_BEGIN_EXTERN_C
-
-nsresult NS_NewParseMailMessageState(const nsIID& iid, void **result);
-
-NS_END_EXTERN_C
-
 /* Used for the various things that parse RFC822 headers...
  */
 typedef struct message_header
