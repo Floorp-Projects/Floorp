@@ -2883,6 +2883,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    isFixedPositioned = PR_FALSE;
   PRBool    isReplaced = PR_FALSE;
+  PRBool    frameHasBeenInitialized = PR_FALSE;
 
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
@@ -3053,6 +3054,29 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewMenuPopupFrame(&newFrame);
+      
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Menus can scroll.
+      if (IsScrollable(aPresContext, display)) {        
+        // See if it's absolute positioned or fixed positioned
+        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+          isAbsolutelyPositioned = PR_TRUE;
+        } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+          isFixedPositioned = PR_TRUE;
+        }
+
+        // Create a scroll frame
+        nsIFrame* scrollFrame;
+        NS_NewScrollFrame(&scrollFrame);
+
+        // Initialize it (note we don't honor absolute or fixed, since this is
+        // going to behave a lot like the GFX combo box).
+        InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
+                              aStyleContext, newFrame, PR_FALSE, PR_FALSE, PR_TRUE);
+        frameHasBeenInitialized = PR_TRUE;
+      }
     }
 
     // BOX CONSTRUCTION
@@ -3061,6 +3085,30 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       processChildren = PR_TRUE;
       isReplaced = PR_TRUE;
       rv = NS_NewBoxFrame(&newFrame);
+
+      const nsStyleDisplay* display = (const nsStyleDisplay*)
+           aStyleContext->GetStyleData(eStyleStruct_Display);
+
+      // Boxes can scroll.
+      if (IsScrollable(aPresContext, display)) {
+
+        // See if it's absolute positioned or fixed positioned
+        if (NS_STYLE_POSITION_ABSOLUTE == position->mPosition) {
+          isAbsolutelyPositioned = PR_TRUE;
+        } else if (NS_STYLE_POSITION_FIXED == position->mPosition) {
+          isFixedPositioned = PR_TRUE;
+        }
+
+        // Create a scroll frame
+        nsIFrame* scrollFrame;
+        NS_NewScrollFrame(&scrollFrame);
+
+        // Initialize it
+        InitializeScrollFrame(aPresContext, aState, scrollFrame, aContent, aParentFrame,
+                              aStyleContext, newFrame, isAbsolutelyPositioned, isFixedPositioned,
+                              PR_FALSE);
+        frameHasBeenInitialized = PR_TRUE;
+      }
     }
     // End of BOX CONSTRUCTION logic
 
@@ -3148,33 +3196,36 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresContext*          aPresContext,
       newFrame->SetFrameState(state | NS_FRAME_REPLACED_ELEMENT);
     }
 
-    nsIFrame* geometricParent = isAbsolutelyPositioned
-      ? aState.mAbsoluteItems.containingBlock
-      : aParentFrame;
-    newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
-                   nsnull);
+    if (!frameHasBeenInitialized) {
+      nsIFrame* geometricParent = isAbsolutelyPositioned
+        ? aState.mAbsoluteItems.containingBlock
+        : aParentFrame;
+      newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext,
+                     nsnull);
 
-    // See if we need to create a view, e.g. the frame is absolutely positioned
-    nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
-                                             aStyleContext, PR_FALSE);
+      // See if we need to create a view, e.g. the frame is absolutely positioned
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               aStyleContext, PR_FALSE);
+
+      // Process the child content if requested
+      nsFrameItems childItems;
+      if (processChildren) {
+        rv = ProcessChildren(aPresContext, aState, aContent, newFrame, PR_FALSE,
+                             childItems);
+      }
+
+      // if there are any anonymous children create frames for them
+      CreateAnonymousFrames(aPresContext, aTag, aState, aContent, newFrame,
+                            childItems);
+
+      // Set the frame's initial child list
+      newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+  
+    }
 
     // Add the new frame to our list of frame items.
     aFrameItems.AddChild(newFrame);
 
-    // Process the child content if requested
-    nsFrameItems childItems;
-    if (processChildren) {
-      rv = ProcessChildren(aPresContext, aState, aContent, newFrame, PR_FALSE,
-                           childItems);
-    }
-
-    // if there are any anonymous children create frames for them
-    CreateAnonymousFrames(aPresContext, aTag, aState, aContent, newFrame,
-                          childItems);
-
-    // Set the frame's initial child list
-    newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
-  
     // If the frame is absolutely positioned, then create a placeholder frame
     if (isAbsolutelyPositioned || isFixedPositioned) {
       nsIFrame* placeholderFrame;
