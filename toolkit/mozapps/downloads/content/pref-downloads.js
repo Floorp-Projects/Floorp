@@ -191,7 +191,7 @@ function updateSaveToFolder()
   var defaultFolderPref = "browser.download.defaultFolder";
   var downloadDirPref = "browser.download.dir";
 
-  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://mozapps/content/downloads/pref-downloads.xul"];
+  var data = parent.hPrefWindow.wsm.dataManager.pageData["chrome://mozapps/content/downloads/pref-downloads.xul"].elementIDs;
   // Don't let the variable names here fool you. This code executes if the 
   // user chooses to have all files auto-download to a specific folder.
   if (data.askOnSave.value == "true") {
