@@ -304,3 +304,19 @@ void nsTreeCellFrame::Hover(nsIPresContext& aPresContext, PRBool isHover, PRBool
 
   NS_IF_RELEASE(pParentContent);
 }
+
+// XXX This method will go away.
+NS_IMETHODIMP
+nsTreeCellFrame::AttributeChanged(nsIPresContext* aPresContext,
+                                  nsIContent* aChild,
+                                  nsIAtom* aAttribute,
+                                  PRInt32 aHint)
+{
+  // redraw
+  nsRect frameRect;
+  GetRect(frameRect);
+  nsRect rect(0, 0, frameRect.width, frameRect.height);
+  Invalidate(rect, PR_TRUE);
+
+  return NS_OK;
+}

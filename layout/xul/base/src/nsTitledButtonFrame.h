@@ -56,6 +56,11 @@ public:
                    nsIStyleContext* aContext,
                    nsIFrame*        asPrevInFlow);
 
+      NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
+
   NS_IMETHOD  ReResolveStyleContext ( nsIPresContext* aPresContext, 
                                       nsIStyleContext* aParentContext) ;
 

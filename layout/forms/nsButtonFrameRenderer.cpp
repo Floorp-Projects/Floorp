@@ -362,7 +362,7 @@ nsButtonFrameRenderer::PaintOutlineAndFocusBorders(nsIPresContext& aPresContext,
 
     if (eFramePaintLayer_Overlay == aWhichLayer) 
 	{
-		if (mOutlineStyle) {
+		if /*(mOutlineStyle) */ (PR_FALSE) {
 
 			 GetButtonOutlineRect(aRect, rect);
  

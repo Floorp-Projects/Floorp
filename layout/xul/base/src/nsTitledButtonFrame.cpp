@@ -184,6 +184,23 @@ NS_NewTitledButtonFrame ( nsIFrame*& aNewFrame )
   
 } // NS_NewTitledButtonFrame
 
+NS_IMETHODIMP
+nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent* aChild,
+                               nsIAtom* aAttribute,
+                               PRInt32 aHint)
+{
+  mNeedsLayout = PR_TRUE;
+  UpdateAttributes(*aPresContext);
+
+  // redraw
+  nsRect frameRect;
+  GetRect(frameRect);
+  nsRect rect(0,0,frameRect.width, frameRect.height);
+  Invalidate(rect, PR_TRUE);
+  return NS_OK;
+}
+
 nsTitledButtonFrame::nsTitledButtonFrame()
 {
 	mTitle = "";
@@ -688,8 +705,6 @@ nsTitledButtonFrame::Reflow(nsIPresContext&   aPresContext,
                      const nsHTMLReflowState& aReflowState,
                      nsReflowStatus&          aStatus)
 {
-  UpdateAttributes(aPresContext);
-
   mNeedsLayout = PR_TRUE;
   nsresult result = nsLeafFrame::Reflow(aPresContext, aMetrics, aReflowState, aStatus);
   mRenderer.AddFocusBordersAndPadding(aPresContext, aReflowState, aMetrics, mBorderPadding);
