@@ -669,8 +669,10 @@ sub do_directory {
 
         print "<TR><TD NOWRAP><B>";
         print "<A HREF=\"$lxr_link\">$file</A><BR>";
-        print "<A HREF=\"cvslog.cgi?file=$opt_subdir/$file\">Change Log</A>\n";
-        print "</B></TD>\n";
+        print "<A HREF=\"cvslog.cgi?file=$opt_subdir/$file\">Change Log";
+        print "&rev=$opt_branch" if $opt_branch;
+        print "&root=$opt_root" if defined($opt_root);
+        print "p</A></B></TD>\n";
         
         if ($opt_branch) {
             $first_rev = &map_tag_to_revision($opt_branch);
@@ -703,7 +705,10 @@ sub do_directory {
                 $href_close = "</A>";
             }
             print "<TD>$href_open$rev$href_close<BR>";
-            print "$revision_author{$rev}</TD>";
+            my $email = $revision_author{$rev};
+            $email =~ s/%netscape.com$//;
+            print "$email</TD>";
+            #print "<A HREF='mailto:$revision_author{$rev}'>$email</A></TD>";
         }
 
         print "</TR>\n";
