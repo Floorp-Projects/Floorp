@@ -3,7 +3,6 @@
 
 #include "stdafx.h"
 #include "IEPatcher.h"
-#include "IEPatcherDlg.h"
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -27,8 +26,7 @@ END_MESSAGE_MAP()
 
 CIEPatcherApp::CIEPatcherApp()
 {
-	// TODO: add construction code here,
-	// Place all significant initialization in InitInstance
+	m_pIEPatcherDlg = NULL;
 }
 
 /////////////////////////////////////////////////////////////////////////////
@@ -73,9 +71,10 @@ BOOL CIEPatcherApp::InitInstance()
 		COleObjectFactory::UpdateRegistryAll();
 	}
 
-	CIEPatcherDlg dlg;
-	m_pMainWnd = &dlg;
-	int nResponse = dlg.DoModal();
+	// Now the scanner window
+	m_pIEPatcherDlg = new CIEPatcherDlg;
+	m_pMainWnd = m_pIEPatcherDlg;
+	int nResponse = m_pIEPatcherDlg->DoModal();
 	if (nResponse == IDOK)
 	{
 		// TODO: Place code here to handle when the dialog is
@@ -86,6 +85,7 @@ BOOL CIEPatcherApp::InitInstance()
 		// TODO: Place code here to handle when the dialog is
 		//  dismissed with Cancel
 	}
+	delete m_pIEPatcherDlg;
 
 	// Since the dialog has been closed, return FALSE so that we exit the
 	//  application, rather than start the application's message pump.

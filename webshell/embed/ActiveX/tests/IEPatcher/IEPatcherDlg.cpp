@@ -4,6 +4,8 @@
 #include "stdafx.h"
 #include "IEPatcher.h"
 #include "IEPatcherDlg.h"
+#include "ScanForFilesDlg.h"
+#include "ScannerThread.h"
 #include "DlgProxy.h"
 
 #include <sys/types.h> 
@@ -23,6 +25,14 @@ const IID IID_IWebBrowser = { 0xEAB22AC1, 0x30C1, 0x11CF, { 0xA7, 0xEB, 0x00, 0x
 const IID IID_IWebBrowser2 = { 0xD30C1661, 0xCDAF, 0x11d0, { 0x8A, 0x3E, 0x00, 0xC0, 0x4F, 0xC9, 0xE2, 0x6E } };
 const IID IID_IWebBrowserApp = { 0x0002DF05, 0x0000, 0x0000, { 0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46 } };
 
+
+#define ITEM_PATCHSTATUS 1
+
+#define IMG_DOESNTCONTAINIE	0
+#define IMG_CONTAINSIE		1
+#define IMG_CONTAINSMOZILLA	2
+#define IMG_UNKNOWNSTATUS	3
+
 /////////////////////////////////////////////////////////////////////////////
 // CIEPatcherDlg dialog
 
@@ -32,14 +42,12 @@ CIEPatcherDlg::CIEPatcherDlg(CWnd* pParent /*=NULL*/)
 	: CDialog(CIEPatcherDlg::IDD, pParent)
 {
 	//{{AFX_DATA_INIT(CIEPatcherDlg)
-	m_sFile = _T("");
-	m_sDestinationFile = _T("");
-	m_bPatchFile = FALSE;
 	//}}AFX_DATA_INIT
 	// Note that LoadIcon does not require a subsequent DestroyIcon in Win32
 	m_hIcon = AfxGetApp()->LoadIcon(IDR_MAINFRAME);
 	m_pAutoProxy = NULL;
 }
+
 
 CIEPatcherDlg::~CIEPatcherDlg()
 {
@@ -50,19 +58,16 @@ CIEPatcherDlg::~CIEPatcherDlg()
 		m_pAutoProxy->m_pDialog = NULL;
 }
 
+
 void CIEPatcherDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialog::DoDataExchange(pDX);
 	//{{AFX_DATA_MAP(CIEPatcherDlg)
-	DDX_Control(pDX, IDC_PICKDESTINATION, m_btnPickDestination);
-	DDX_Control(pDX, IDC_SCAN, m_btnScan);
-	DDX_Control(pDX, IDC_DESTINATION_FILENAME, m_edtDestinationFile);
-	DDX_Control(pDX, IDC_PROGRESS, m_lstProgress);
-	DDX_Text(pDX, IDC_FILENAME, m_sFile);
-	DDX_Text(pDX, IDC_DESTINATION_FILENAME, m_sDestinationFile);
-	DDX_Check(pDX, IDC_PATCHFILE, m_bPatchFile);
+	DDX_Control(pDX, IDC_PATCH, m_btnPatch);
+	DDX_Control(pDX, IDC_FILELIST, m_cFileList);
 	//}}AFX_DATA_MAP
 }
+
 
 BEGIN_MESSAGE_MAP(CIEPatcherDlg, CDialog)
 	//{{AFX_MSG_MAP(CIEPatcherDlg)
@@ -70,11 +75,12 @@ BEGIN_MESSAGE_MAP(CIEPatcherDlg, CDialog)
 	ON_WM_QUERYDRAGICON()
 	ON_WM_CLOSE()
 	ON_BN_CLICKED(IDC_SCAN, OnScan)
-	ON_BN_CLICKED(IDC_PATCHFILE, OnPatchFile)
-	ON_BN_CLICKED(IDC_PICKSOURCE, OnPicksource)
-	ON_BN_CLICKED(IDC_PICKDESTINATION, OnPickdestination)
+	ON_NOTIFY(NM_CLICK, IDC_FILELIST, OnClickFilelist)
+	ON_BN_CLICKED(IDC_PATCH, OnPatch)
 	//}}AFX_MSG_MAP
+	ON_MESSAGE(WM_UPDATEFILESTATUS, OnUpdateFileStatus)
 END_MESSAGE_MAP()
+
 
 /////////////////////////////////////////////////////////////////////////////
 // CIEPatcherDlg message handlers
@@ -83,15 +89,72 @@ BOOL CIEPatcherDlg::OnInitDialog()
 {
 	CDialog::OnInitDialog();
 
+	// Start the scanner thread
+	AfxBeginThread(RUNTIME_CLASS(CScannerThread), 0);
+
 	// Set the icon for this dialog.  The framework does this automatically
 	//  when the application's main window is not a dialog
 	SetIcon(m_hIcon, TRUE);			// Set big icon
 	SetIcon(m_hIcon, FALSE);		// Set small icon
+
+	// Add icons to image list
+	m_cImageList.Create(16, 16, ILC_MASK, 0, 5);
+	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_DOESNTCONTAINIE));
+	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_CONTAINSIE));
+	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_CONTAINSMOZILLA));
+	m_cImageList.Add(AfxGetApp()->LoadIcon(IDI_UNKNOWNSTATUS));
+
+	// Associate image list with file list
+	m_cFileList.SetImageList(&m_cImageList, LVSIL_SMALL);
+
+	struct ColumnData
+	{
+		TCHAR *sColumnTitle;
+		int nPercentageWidth;
+		int nFormat;
+	};
+
+	ColumnData aColData[] =
+	{
+		{ _T("File"),			70, LVCFMT_LEFT },
+		{ _T("Patch Status"),	30, LVCFMT_LEFT }
+	};
+
+	// Get the size of the file list control and neatly
+	// divide it into columns
+
+	CRect rcFileList;
+	m_cFileList.GetClientRect(&rcFileList);
+
+	int nColTotal = sizeof(aColData) / sizeof(aColData[0]);
+	int nWidthRemaining = rcFileList.Width();
 	
-	// TODO: Add extra initialization here
-	
+	for (int nCol = 0; nCol < nColTotal; nCol++)
+	{
+		ColumnData *pData = &aColData[nCol];
+
+		int nColWidth = (rcFileList.Width() * pData->nPercentageWidth) / 100;
+		if (nCol == nColTotal - 1)
+		{
+			nColWidth = nWidthRemaining;
+		}
+		else if (nColWidth > nWidthRemaining)
+		{
+			nColWidth = nWidthRemaining;
+		}
+
+		m_cFileList.InsertColumn(nCol, pData->sColumnTitle, pData->nFormat, nColWidth);
+
+		nWidthRemaining -= nColWidth;
+		if (nColWidth <= 0)
+		{
+			break;
+		}
+	}
+
 	return TRUE;  // return TRUE  unless you set the focus to a control
 }
+
 
 // If you add a minimize button to your dialog, you will need the code below
 //  to draw the icon.  For MFC applications using the document/view model,
@@ -122,12 +185,14 @@ void CIEPatcherDlg::OnPaint()
 	}
 }
 
+
 // The system calls this to obtain the cursor to display while the user drags
 //  the minimized window.
 HCURSOR CIEPatcherDlg::OnQueryDragIcon()
 {
 	return (HCURSOR) m_hIcon;
 }
+
 
 // Automation servers should not exit when a user closes the UI
 //  if a controller still holds on to one of its objects.  These
@@ -141,17 +206,64 @@ void CIEPatcherDlg::OnClose()
 		CDialog::OnClose();
 }
 
-void CIEPatcherDlg::OnOK() 
+
+LONG CIEPatcherDlg::OnUpdateFileStatus(WPARAM wParam, LPARAM lParam)
 {
-	if (CanExit())
-		CDialog::OnOK();
+	PatchStatus ps = (PatchStatus) wParam;
+	TCHAR *pszFile = (TCHAR *) lParam;
+	UpdateFileStatus(pszFile, ps);
+	return 0;
 }
 
-void CIEPatcherDlg::OnCancel() 
+
+void CIEPatcherDlg::OnScan() 
 {
-	if (CanExit())
-		CDialog::OnCancel();
+	CScanForFilesDlg dlg;
+	
+	if (dlg.DoModal() == IDOK)
+	{
+		CWaitCursor wc;
+
+		CFileFind op;
+		if (op.FindFile(dlg.m_sFilePattern))
+		{
+			op.FindNextFile();
+			do {
+				if (!op.IsDirectory())
+				{
+					AddFileToList(op.GetFilePath());
+				}
+			} while (op.FindNextFile());
+			op.Close();
+		}
+	}
 }
+
+
+void CIEPatcherDlg::OnPatch() 
+{
+	int nItem = -1;
+	do {
+		nItem = m_cFileList.GetNextItem(nItem, LVNI_ALL | LVNI_SELECTED);
+		if (nItem != -1)
+		{
+			m_cQueuedFileDataList[nItem]->ps = psPatchPending;
+			UpdateFileStatus(nItem, m_cQueuedFileDataList[nItem]->sFileName, m_cQueuedFileDataList[nItem]->ps);
+		}
+	} while (nItem != -1);
+}
+
+
+void CIEPatcherDlg::OnClickFilelist(NMHDR* pNMHDR, LRESULT* pResult) 
+{
+	// Check if files are selected	
+
+	*pResult = 0;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 
 BOOL CIEPatcherDlg::CanExit()
 {
@@ -167,219 +279,343 @@ BOOL CIEPatcherDlg::CanExit()
 	return TRUE;
 }
 
-void CIEPatcherDlg::OnScan() 
+
+PatchStatus CIEPatcherDlg::ScanFile(const CString &sFileName)
 {
-	UpdateData();
-
-	m_lstProgress.ResetContent();
-
-	// Search file for files matching the file name
-	// in case it is a pattern
-
-	CStringList sFileList;
-	CFileFind cFileFind;
-
-	if (cFileFind.FindFile(m_sFile))
+	char *pszBuffer = NULL;
+	long nBufferSize = 0;
+	if (!ReadFileToBuffer(sFileName, &pszBuffer, &nBufferSize))
 	{
-		while (cFileFind.FindNextFile())
-		{
-			sFileList.AddTail(cFileFind.GetFilePath());
-		}
-		cFileFind.Close();
+		return psFileError;
 	}
 
-	if (sFileList.IsEmpty())
-	{
-		m_lstProgress.AddString("No matching files were found");
-		return;
-	}
-	else if (sFileList.GetCount() > 1)
-	{
-		m_lstProgress.AddString("More than 1 matching file was found");
-		POSITION pos = sFileList.GetHeadPosition();
-		while (pos)
-		{
-			CString sFile = sFileList.GetNext(pos);
-			PatchFile(sFile);
-		}
-	}
-	else
-	{
-		CString sFile = sFileList.GetAt(0);
-		if (!m_bPatchFile || m_sDestinationFile.IsEmpty())
-		{
-			PatchFile(m_sFile);
-		}
-		else
-		{
-			PatchFile(m_sFile, m_sDestinationFile);
-		}
-	}
-
-	m_lstProgress.AddString("Processing completed");
+	PatchStatus ps = ScanBuffer(pszBuffer, nBufferSize, FALSE);
+	delete []pszBuffer;
+	return ps;
 }
 
 
-BOOL CIEPatcherDlg::PatchFile(const CString & sFileFrom, const CString & sFileTo)
+BOOL CIEPatcherDlg::WriteBufferToFile(const CString &sFileName, char *pszBuffer, long nBufferSize)
 {
-	// Turn on patching if possible
-	BOOL bPatchOnly = TRUE;
-	if (!sFileTo.IsEmpty())
+	CString sMessage;
+	sMessage.Format("Saving patched file \"%s\"", sFileName);
+	TraceProgress(sMessage);
+
+	FILE *fDest = fopen(sFileName, "wb");
+	if (fDest == NULL)
 	{
-		if (sFileTo == sFileFrom)
-		{
-			m_lstProgress.AddString("Warning: Patching disabled for safety reasons, source and destination names must differ");
-		}
-		else
-		{
-			bPatchOnly = FALSE;
-		}
+		TraceProgress("Error: Could not open destination file");
+		return FALSE;
 	}
 
+	fwrite(pszBuffer, 1, nBufferSize, fDest);
+	fclose(fDest);
+	TraceProgress("File saved");
 
+	return TRUE;
+}
+
+
+BOOL CIEPatcherDlg::ReadFileToBuffer(const CString &sFileName, char **ppszBuffer, long *pnBufferSize)
+{
 	CString sProcessing;
-	sProcessing.Format("Processing file \"%s\"", sFileFrom);
-	m_lstProgress.AddString(sProcessing);
+	sProcessing.Format("Processing file \"%s\"", sFileName);
+	TraceProgress(sProcessing);
 
 	// Allocate a memory buffer to slurp up the whole file
 	struct _stat srcStat;
-	_stat(sFileFrom, &srcStat);
+	_stat(sFileName, &srcStat);
 
-	char *pszFile = new char[srcStat.st_size / sizeof(char)];
-	if (pszFile == NULL)
+	char *pszBuffer = new char[srcStat.st_size / sizeof(char)];
+	if (pszBuffer == NULL)
 	{
-		m_lstProgress.AddString("Error: Could not allocate buffer for file");
+		TraceProgress("Error: Could not allocate buffer for file");
+		return FALSE;
+	}
+	FILE *fSrc = fopen(sFileName, "rb");
+	if (fSrc == NULL)
+	{
+		TraceProgress("Error: Could not open file");
+		delete []pszBuffer;
+		return FALSE;
+	}
+	size_t sizeSrc = srcStat.st_size;
+	size_t sizeRead = 0;
+
+	// Dumb but effective
+	sizeRead = fread(pszBuffer, 1, sizeSrc, fSrc);
+	fclose(fSrc);
+
+	if (sizeRead != sizeSrc)
+	{
+		TraceProgress("Error: Could not read all of file");
+		delete []pszBuffer;
+		return FALSE;
+	}
+
+	*ppszBuffer = pszBuffer;
+	*pnBufferSize = sizeRead;
+
+	return TRUE;
+}
+
+
+PatchStatus CIEPatcherDlg::ScanBuffer(char *pszBuffer, long nBufferSize, BOOL bApplyPatch)
+{
+	if (nBufferSize < sizeof(CLSID))
+	{
+		return psNotPatchable;
+	}
+		
+	TraceProgress("Scanning for IE...");
+
+	BOOL bPatchApplied = FALSE;
+	PatchStatus ps = psUnknownStatus;
+
+	// Scan through buffer, one byte at a time doing a memcmp
+	for (size_t i = 0; i < nBufferSize - sizeof(CLSID); i++)
+	{
+		if (memcmp(&pszBuffer[i], &CLSID_MozillaBrowser, sizeof(CLSID)) == 0)
+		{
+			TraceProgress("Found CLSID_MozillaBrowser");
+			if (ps == psUnknownStatus)
+			{
+				ps = psAlreadyPatched;
+			}
+		}
+		else if (memcmp(&pszBuffer[i], &CLSID_WebBrowser_V1, sizeof(CLSID)) == 0)
+		{
+			TraceProgress("Found CLSID_WebBrowser_V1");
+			if (ps == psUnknownStatus)
+			{
+				ps = psPatchable;
+			}
+			if (bApplyPatch)
+			{
+				TraceProgress("Patching with CLSID_MozillaBrowser");
+				memcpy(&pszBuffer[i], &CLSID_MozillaBrowser, sizeof(CLSID));
+				bPatchApplied = TRUE;
+			}
+		}
+		else if (memcmp(&pszBuffer[i], &CLSID_WebBrowser, sizeof(CLSID)) == 0)
+		{
+			TraceProgress("Found CLSID_WebBrowser");
+			if (ps == psUnknownStatus)
+			{
+				ps = psPatchable;
+			}
+			if (bApplyPatch)
+			{
+				TraceProgress("Patching with CLSID_MozillaBrowser");
+				memcpy(&pszBuffer[i], &CLSID_MozillaBrowser, sizeof(CLSID));
+				TraceProgress("Patching with CLSID_MozillaBrowser");
+			}
+		}
+		else if (memcmp(&pszBuffer[i], &IID_IWebBrowser, sizeof(CLSID)) == 0)
+		{
+			TraceProgress("Found IID_IWebBrowser");
+			if (ps == psUnknownStatus)
+			{
+				ps = psPatchable;
+			}
+		}
+		else if (memcmp(&pszBuffer[i], &CLSID_InternetExplorer, sizeof(CLSID)) == 0)
+		{
+			TraceProgress("Warning: Found CLSID_InternetExplorer, patching might not work");
+			if (ps == psUnknownStatus)
+			{
+				ps = psMayBePatchable;
+			}
+		}
+		else if (memcmp(&pszBuffer[i], &IID_IWebBrowser2, sizeof(CLSID)) == 0)
+		{
+			TraceProgress("Found IID_IWebBrowser2");
+			if (ps == psUnknownStatus)
+			{
+				ps = psPatchable;
+			}
+		}
+		else if (memcmp(&pszBuffer[i], &IID_IWebBrowserApp, sizeof(CLSID)) == 0)
+		{
+			TraceProgress("Found IID_IWebBrowserApp");
+			if (ps == psUnknownStatus)
+			{
+				ps = psPatchable;
+			}
+		}
+	}
+
+	if (ps == psUnknownStatus)
+	{
+		ps = psNotPatchable;
+	}
+	if (bApplyPatch)
+	{
+		ps = (bPatchApplied) ? psAlreadyPatched : psNotPatchable;
+	}
+
+	TraceProgress("Scan completed");
+
+	return ps;
+}
+
+
+BOOL CIEPatcherDlg::PatchFile(const CString & sFileFrom, const CString & sFileTo, PatchStatus *pPatchStatus)
+{
+	if (sFileTo.IsEmpty())
+	{
+		return FALSE;
+	}
+	if (sFileTo == sFileFrom)
+	{
+		TraceProgress("Warning: Patching disabled for safety reasons, source and destination names must differ");
+		return FALSE;
+	}
+	
+	char *pszBuffer = NULL;
+	long nBufferSize = 0;
+
+	if (!ReadFileToBuffer(sFileFrom, &pszBuffer, &nBufferSize))
+	{
+		return FALSE;
+	}
+
+	// Scan and patch the buffer
+	*pPatchStatus = ScanBuffer(pszBuffer, nBufferSize, TRUE);
+	if (*pPatchStatus == psNotPatchable)
+	{
+		TraceProgress("Error: Nothing was found to patch");
 	}
 	else
 	{
-		FILE *fSrc = fopen(sFileFrom, "rb");
-		if (fSrc == NULL)
-		{
-			m_lstProgress.AddString("Error: Could not open file");
-		}
-		else
-		{
-			size_t sizeSrc = srcStat.st_size;
-			size_t sizeRead = 0;
-
-			// Dumb but effective
-			sizeRead = fread(pszFile, 1, sizeSrc, fSrc);
-			fclose(fSrc);
-
-			if (sizeRead != sizeSrc)
-			{
-				m_lstProgress.AddString("Error: Could not read all of file");
-			}
-			else
-			{
-				BOOL bPatchApplied = FALSE;
-
-				m_lstProgress.AddString("Scanning for IE...");
-
-				// Scan through buffer, one byte at a time doing a memcmp
-				for (size_t i = 0; i < sizeSrc - sizeof(CLSID); i++)
-				{
-					if (memcmp(&pszFile[i], &CLSID_WebBrowser_V1, sizeof(CLSID)) == 0)
-					{
-						m_lstProgress.AddString("Found CLSID_WebBrowser_V1");
-						if (!bPatchOnly)
-						{
-							m_lstProgress.AddString("Patching with CLSID_MozillaBrowser");
-							memcpy(&pszFile[i], &CLSID_MozillaBrowser, sizeof(CLSID));
-							bPatchApplied = TRUE;
-						}
-					}
-					else if (memcmp(&pszFile[i], &CLSID_WebBrowser, sizeof(CLSID)) == 0)
-					{
-						m_lstProgress.AddString("Found CLSID_WebBrowser");
-						if (!bPatchOnly)
-						{
-							m_lstProgress.AddString("Patching with CLSID_MozillaBrowser");
-							memcpy(&pszFile[i], &CLSID_MozillaBrowser, sizeof(CLSID));
-							m_lstProgress.AddString("Patching with CLSID_MozillaBrowser");
-						}
-					}
-					else if (memcmp(&pszFile[i], &IID_IWebBrowser, sizeof(CLSID)) == 0)
-					{
-						m_lstProgress.AddString("Found IID_IWebBrowser");
-					}
-					else if (memcmp(&pszFile[i], &CLSID_InternetExplorer, sizeof(CLSID)) == 0)
-					{
-						m_lstProgress.AddString("Warning: Found CLSID_InternetExplorer, patching might not work");
-					}
-					else if (memcmp(&pszFile[i], &IID_IWebBrowser2, sizeof(CLSID)) == 0)
-					{
-						m_lstProgress.AddString("Warning: Found IID_IWebBrowser2, patching might not work");
-					}
-					else if (memcmp(&pszFile[i], &IID_IWebBrowserApp, sizeof(CLSID)) == 0)
-					{
-						m_lstProgress.AddString("Warning: Found IID_IWebBrowserApp, patching might not work");
-					}
-				}
-
-				m_lstProgress.AddString("Scan completed");
-
-				// Write out the patch file
-				if (!bPatchOnly)
-				{
-					if (!bPatchApplied)
-					{
-						m_lstProgress.AddString("Error: Nothing was found to patch");
-					}
-					else
-					{
-						CString sMessage;
-						sMessage.Format("Saving patched file \"%s\"", sFileTo);
-						m_lstProgress.AddString(sMessage);
-						FILE *fDest = fopen(sFileTo, "wb");
-						if (fDest == NULL)
-						{
-							m_lstProgress.AddString("Error: Could not open destination file");
-						}
-						else
-						{
-							fwrite(pszFile, 1, sizeSrc, fDest);
-							fclose(fDest);
-
-							m_lstProgress.AddString("File saved");
-						}
-					}
-				}
-			}
-		}
-
-		delete []pszFile;
+		// Write out the patch file
+		WriteBufferToFile(sFileTo, pszBuffer, nBufferSize);
 	}
 
+	delete []pszBuffer;
 	return FALSE;
 }
 
-void CIEPatcherDlg::OnPatchFile() 
+
+void CIEPatcherDlg::TraceProgress(const CString &sProgress)
 {
-	UpdateData();
-	m_edtDestinationFile.EnableWindow(m_bPatchFile);
-	m_btnPickDestination.EnableWindow(m_bPatchFile);
-	m_btnScan.SetWindowText(m_bPatchFile ? "&Patch" : "&Scan");
+	// TODO
 }
 
-void CIEPatcherDlg::OnPicksource() 
-{
-	CFileDialog	dlgChooser(TRUE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Application Files (*.exe;*.dll)|*.exe; *.dll|All Files (*.*)|*.*||"));
 
-	if (dlgChooser.DoModal() == IDOK)
+void CIEPatcherDlg::AddFileToList(const CString & sFile)
+{
+	CSingleLock sl(&m_csQueuedFileDataList, TRUE);
+
+	int nIndex = m_cFileList.GetItemCount();
+	m_cFileList.InsertItem(nIndex, sFile, IMG_UNKNOWNSTATUS);
+
+	QueuedFileData *pData = new QueuedFileData;
+	pData->ps = psUnknownStatus;
+	pData->sFileName = sFile;
+	pData->sPatchedFileName = sFile;
+	m_cQueuedFileDataList.Add(pData);
+
+	UpdateFileStatus(nIndex, pData->ps);
+}
+
+
+void CIEPatcherDlg::UpdateFileStatus(int nFileIndex, const CString &sFile, PatchStatus ps)
+{
+	CString sStatus;
+	int nIconStatus = -1;
+
+	switch (ps)
 	{
-		m_sFile = dlgChooser.GetPathName();
-		UpdateData(FALSE);
+	case psFileError:
+		sStatus = _T("File error");
+		break;
+
+	case psNotPatchable:
+		sStatus = _T("Nothing to patch");
+		nIconStatus = IMG_DOESNTCONTAINIE;
+		break;
+
+	case psPatchable:
+		sStatus = _T("Patchable");
+		nIconStatus = IMG_CONTAINSIE;
+		break;
+
+	case psMayBePatchable:
+		sStatus = _T("Maybe patchable");
+		nIconStatus = IMG_CONTAINSIE;
+		break;
+
+	case psAlreadyPatched:
+		sStatus = _T("Already patched");
+		nIconStatus = IMG_CONTAINSMOZILLA;
+		break;
+
+	case psUnknownStatus:
+		sStatus = _T("Status pending");
+		nIconStatus = IMG_UNKNOWNSTATUS;
+		break;
+
+	case psPatchPending:
+		sStatus = _T("Patch pending");
+		break;
+
+	default:
+		sStatus = _T("*** ERROR ***");
+		break;
+	}
+
+	if (nIconStatus != -1)
+	{
+		m_cFileList.SetItem(nFileIndex, -1, LVIF_IMAGE, NULL, nIconStatus, 0, 0, 0);
+	}
+	m_cFileList.SetItemText(nFileIndex, ITEM_PATCHSTATUS, sStatus);
+}
+
+
+void CIEPatcherDlg::UpdateFileStatus(const CString &sFile, PatchStatus ps)
+{
+	CSingleLock sl(&m_csQueuedFileDataList, TRUE);
+
+	for (int n = 0; n < m_cQueuedFileDataList.GetSize(); n++)
+	{
+		if (m_cQueuedFileDataList[n]->sFileName == sFile)
+		{
+			UpdateFileStatus(n, sFile, ps);
+			m_cQueuedFileDataList[n]->ps = ps;
+			return;
+		}
 	}
 }
 
-void CIEPatcherDlg::OnPickdestination() 
-{
-	CFileDialog	dlgChooser(FALSE, NULL, NULL, OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT, _T("Application Files (*.exe;*.dll)|*.exe; *.dll|All Files (*.*)|*.*||"));
 
-	if (dlgChooser.DoModal() == IDOK)
+BOOL CIEPatcherDlg::GetPendingFileToScan(CString & sFileToScan)
+{
+	CSingleLock sl(&m_csQueuedFileDataList, TRUE);
+
+	for (int n = 0; n < m_cQueuedFileDataList.GetSize(); n++)
 	{
-		m_sDestinationFile = dlgChooser.GetPathName();
-		UpdateData(FALSE);
+		if (m_cQueuedFileDataList[n]->ps == psUnknownStatus)
+		{
+			sFileToScan = m_cQueuedFileDataList[n]->sFileName;
+			return TRUE;
+		}
 	}
+	return FALSE;
+}
+
+
+BOOL CIEPatcherDlg::GetPendingFileToPatch(CString & sFileToPatch)
+{
+	CSingleLock sl(&m_csQueuedFileDataList, TRUE);
+
+	for (int n = 0; n < m_cQueuedFileDataList.GetSize(); n++)
+	{
+		if (m_cQueuedFileDataList[n]->ps == psPatchPending)
+		{
+			sFileToPatch = m_cQueuedFileDataList[n]->sFileName;
+			return TRUE;
+		}
+	}
+	return FALSE;
 }
