@@ -298,10 +298,6 @@ treeitem[container="true"] > treerow > .treecell-indent {
   behavior: url("chrome://global/content/treeBindings.xml#treecell-align-right");
 }
 
-.tree-header-image {
-  list-style-image: inherit;
-}
-
 treeitem > treechildren {
   display: none;
 }
