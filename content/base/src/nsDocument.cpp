@@ -2932,6 +2932,10 @@ nsDocument::GetBoxObjectFor(nsIDOMElement* aElement, nsIBoxObject** aResult)
       contractID += "-listbox";
     else if (tag == nsXULAtoms::scrollbox)
       contractID += "-scrollbox";
+#ifndef MOZ_ENABLE_CAIRO
+    else if (tag == nsXULAtoms::canvas)
+      contractID += "-canvas";
+#endif
   }
   contractID += ";1";
 

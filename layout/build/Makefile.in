@@ -200,6 +200,14 @@ EXTRA_DSO_LDOPTS += $(MOZ_GTK2_LIBS) \
 		    $(NULL)
 endif
 
+ifdef MOZ_ENABLE_CAIRO
+# don't add twice
+ifndef MOZ_SVG_RENDERER_CAIRO
+EXTRA_DSO_LDOPTS += $(MOZ_CAIRO_LIBS) \
+		    $(NULL)
+endif
+endif
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 EXTRA_DSO_LDOPTS += \
 	$(TK_LIBS) \

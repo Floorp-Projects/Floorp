@@ -583,8 +583,9 @@ USE_DEPENDENT_LIBS=1
 USE_GSSAPI=1
 
 _PLATFORM_DEFAULT_TOOLKIT=gtk
+MOZ_GFX_TOOLKIT='$(MOZ_WIDGET_TOOLKIT)'
 MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwidget_$(MOZ_WIDGET_TOOLKIT)'
-MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT) $(MOZ_XLIBRGB_LDFLAGS)'
+MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_GFX_TOOLKIT) $(MOZ_XLIBRGB_LDFLAGS)'
 WIDGET_DLL='\"libwidget_$(MOZ_WIDGET_TOOLKIT)$(DLL_SUFFIX)\"'
 GFXWIN_DLL='\"libgfx_$(MOZ_GFX_TOOLKIT)$(DLL_SUFFIX)\"'
 
@@ -1421,7 +1422,7 @@ case "$target" in
         MOZ_OPTIMIZE_FLAGS="-O2 -s"
         MOZ_OPTIMIZE_LDFLAGS="-Zlinker /EXEPACK:2 -Zlinker /PACKCODE -Zlinker /PACKDATA"
         MOZ_WIDGET_TOOLKIT_LDFLAGS='-lwdgt$(MOZ_WIDGET_TOOLKIT)'
-        MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_WIDGET_TOOLKIT)'
+        MOZ_GFX_TOOLKIT_LDFLAGS='-lgfx_$(MOZ_GFX_TOOLKIT)'
         MOZ_XPCOM_OBSOLETE_LIBS='-L$(DIST)/lib $(DIST)/lib/xpcomct.lib'
 
         # GCC for OS/2 currently predefines these, but we don't want them
@@ -1471,7 +1472,7 @@ case "$target" in
         MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.$(LIB_SUFFIX)'
         MOZ_PNG_LIBS='$(DIST)/lib/mozpng.$(LIB_SUFFIX)'
         MOZ_WIDGET_TOOLKIT_LDFLAGS='$(DIST)/lib/wdgt$(MOZ_WIDGET_TOOLKIT)'
-        MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_WIDGET_TOOLKIT)'
+        MOZ_GFX_TOOLKIT_LDFLAGS='$(DIST)/lib/gfx_$(MOZ_GFX_TOOLKIT)'
     fi
     ;;
 
@@ -3134,6 +3135,13 @@ if test "${PNG_DIR}" -a -d "${PNG_DIR}" -a "$SYSTEM_PNG" = 1; then
     PNG_LIBS="-L${PNG_DIR}/lib ${PNG_LIBS}"
 fi
 
+dnl check whether to enable cairo
+dnl ========================================================
+MOZ_ARG_ENABLE_BOOL(cairo,
+[  --enable-cairo          Enable Cairo-specific features (Canvas)]
+    MOZ_ENABLE_CAIRO=1,
+    MOZ_ENABLE_CAIRO= )
+
 fi # SKIP_LIBRARY_CHECKS
 
 dnl ========================================================
@@ -3167,7 +3175,9 @@ MOZ_ARG_HEADER(Toolkit Options)
         -o "$_DEFAULT_TOOLKIT" = "photon" \
         -o "$_DEFAULT_TOOLKIT" = "mac" \
         -o "$_DEFAULT_TOOLKIT" = "windows" \
-        -o "$_DEFAULT_TOOLKIT" = "cocoa"
+        -o "$_DEFAULT_TOOLKIT" = "cocoa" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-gtk2" \
+        -o "$_DEFAULT_TOOLKIT" = "cairo-xlib"
     then
         dnl nglayout only supports building with one toolkit,
         dnl so ignore everything after the first comma (",").
@@ -3228,6 +3238,28 @@ mac|cocoa)
         AC_DEFINE(MOZ_WIDGET_COCOA)
     fi
     ;;
+
+cairo-gtk2)
+    MOZ_WIDGET_TOOLKIT=gtk2
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_CAIRO_GFX=1
+    MOZ_ENABLE_CAIRO=1
+    MOZ_ENABLE_GTK2=1
+    MOZ_ENABLE_XREMOTE=1
+    TK_CFLAGS='$(MOZ_GTK2_CFLAGS) $(MOZ_CAIRO_CFLAGS)'
+    TK_LIBS='$(MOZ_GTK2_LIBS) $(MOZ_CAIRO_LIBS)'
+    AC_DEFINE(MOZ_WIDGET_GTK2)
+    ;;
+cairo-xlib)
+    MOZ_WIDGET_TOOLKIT=xlib
+    MOZ_GFX_TOOLKIT=cairo
+    MOZ_ENABLE_CAIRO_GFX=1
+    MOZ_ENABLE_CAIRO=1
+	MOZ_ENABLE_XLIB=1
+	TK_CFLAGS='$(MOZ_XLIB_CFLAGS) $(MOZ_CAIRO_FLAGS)'
+	TK_LIBS='$(MOZ_XLIB_LDFLAGS) $(MOZ_CAIRO_LIBS)'
+	AC_DEFINE(MOZ_WIDGET_XLIB)
+    ;;
 esac
 
 if test "$MOZ_ENABLE_XREMOTE"; then
@@ -3261,11 +3293,14 @@ AC_SUBST(GTK_CONFIG)
 AC_SUBST(TK_CFLAGS)
 AC_SUBST(TK_LIBS)
 
+AC_SUBST(MOZ_ENABLE_CAIRO)
+
 AC_SUBST(MOZ_ENABLE_GTK)
 AC_SUBST(MOZ_ENABLE_XLIB)
 AC_SUBST(MOZ_ENABLE_GTK2)
 AC_SUBST(MOZ_ENABLE_PHOTON)
 AC_SUBST(MOZ_ENABLE_COCOA)
+AC_SUBST(MOZ_ENABLE_CAIRO_GFX)
 AC_SUBST(MOZ_ENABLE_XREMOTE)
 AC_SUBST(MOZ_GTK_CFLAGS)
 AC_SUBST(MOZ_GTK_LDFLAGS)
@@ -5302,7 +5337,7 @@ dnl ========================================================
 MOZ_CAIRO_CFLAGS=
 MOZ_CAIRO_LIBS=
 
-if test "$MOZ_SVG_RENDERER_CAIRO"; then
+if test "$MOZ_SVG_RENDERER_CAIRO" -o "$MOZ_ENABLE_CAIRO" ; then
    PKG_CHECK_MODULES(CAIRO, cairo >= $CAIRO_VERSION)
    MOZ_CAIRO_CFLAGS=$CAIRO_CFLAGS
    MOZ_CAIRO_LIBS=$CAIRO_LIBS
