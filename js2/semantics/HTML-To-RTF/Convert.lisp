@@ -110,9 +110,10 @@
 
 
 (defparameter *special-char-code-map*
-  '((#x0097 . endash)
-    (#x00AB . :left-angle-quote)
+  '((#x00AB . :left-angle-quote)
     (#x00BB . :right-angle-quote)
+    (#x2013 . endash)
+    (#x2014 . emdash)
     (#x2018 . :left-single-quote)
     (#x2019 . :right-single-quote)
     (#x201C . :left-double-quote)
@@ -139,12 +140,13 @@
     ("type-expression" . :type-expression)
     ("type-name" . :type-name)
     ("field-name" . :field-name)
+    ("tag-name" . :tag-name)
     ("id-name" . :id-name)
     ("global-variable" . :global-variable)
-    ("local-variable" . :local-variable)
     ("action-name" . :action-name)
     ("sub" . sub)
-    ("sub-num" . :plain-subscript)))
+    ("sub-num" . :plain-subscript)
+    ("small-caps" . scaps)))
 
 
 (defun class-to-character-style (element)
@@ -163,8 +165,10 @@
     ("U_le" . :less-or-equal)
     ("U_ge" . :greater-or-equal)
     ("U_infin" . :infinity)
+    ("U_forall" . :for-all-10)
+    ("U_exist" . :exists-10)
     ("U_perp" . :bottom-10)
-    ("U_larr" . :vector-assign-10)
+    ("U_larr" . :assign-10)
     ("U_uarr" . :up-arrow-10)
     ("U_rarr" . :function-arrow-10)
     ("U_times" . :cartesian-product-10)
@@ -173,11 +177,18 @@
     ("U_empty" . :empty-10)
     ("U_cap" . :intersection-10)
     ("U_cup" . :union-10)
+    ("U_sub" . :subset-10)
+    ("U_sube" . :subset-eq-10)
     ("U_isin" . :member-10)
     ("U_notin" . :not-member-10)
+    ("U_lArr" . :label-assign-10)
     ("U_rArr" . :derives-10)
     ("U_lang" . :left-triangle-bracket-10)
+    ("U_lceil" . :left-ceiling-10)
+    ("U_lfloor" . :left-floor-10)
     ("U_rang" . :right-triangle-bracket-10)
+    ("U_rceil" . :right-ceiling-10)
+    ("U_rfloor" . :right-floor-10)
     
     ("U_alpha" . :alpha)
     ("U_beta" . :beta)
@@ -206,6 +217,14 @@
     
     ("U_Omega" . :capital-omega)))
 
+; s is a sequence of elements, some of which may be eql to item.  Return a list of
+; runs of s's elements between the occurrences of item.
+(defun split-sequence (s item)
+  (let ((pos (position item s)))
+    (if pos
+      (cons (subseq s 0 pos) (split-sequence (subseq s (1+ pos)) item))
+      (list s))))
+
 (defun emit-script-element (markup-stream element)
   (let* ((children (parts element))
          (child (first children)))
@@ -215,13 +234,13 @@
          (> (length child) 16)
          (equal (subseq child 0 15) "document.write(")
          (eql (char child (1- (length child))) #\)))
-      (let* ((u-name (subseq child 15 (1- (length child))))
-             (u-style (cdr (assoc u-name *u-styles* :test #'equal))))
-        (if u-style
-          (depict markup-stream u-style)
-          (progn
-            (depict markup-stream *missing-marker*)
-            (format *terminal-io* "Ignoring SCRIPT element ~S ~S~%" element child))))
+      (dolist (u-name (split-sequence (subseq child 15 (1- (length child))) #\+))
+        (let ((u-style (cdr (assoc u-name *u-styles* :test #'equal))))
+          (if u-style
+            (depict markup-stream u-style)
+            (progn
+              (depict markup-stream *missing-marker*)
+              (format *terminal-io* "Ignoring SCRIPT document.write entry ~S in ~S~%" u-name child)))))
       (progn
         (depict markup-stream *missing-marker*)
         (format *terminal-io* "Ignoring SCRIPT element ~S ~S~%" element children)))))
