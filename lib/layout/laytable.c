@@ -140,6 +140,7 @@ static void lo_FreeTableCaption( MWContext *context, lo_DocState *state, lo_Tabl
 extern char *element_names[];
 #endif
 
+#ifdef DOM
 void LO_SetTableCellAttributes(MWContext *context, void *cell_v,
                                const char *name, const char *value)
 {
@@ -177,6 +178,7 @@ void LO_SetTableCellAttributes(MWContext *context, void *cell_v,
   /* XXX LO_JustRedrawNothingChangedThatsImportant */
   LO_RelayoutFromElement(context, start);
 }
+#endif
 
 static int32
 lo_ComputeCellEmptySpace(MWContext *context, lo_TableRec *table,
