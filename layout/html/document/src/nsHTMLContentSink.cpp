@@ -4435,13 +4435,14 @@ HTMLContentSink::OnStreamComplete(nsIStreamLoader* aLoader,
       //-- Merge the principal of the script file with that of the document
       nsCOMPtr<nsISupports> owner;
       aLoader->GetOwner(getter_AddRefs(owner));
+      nsCOMPtr<nsIPrincipal> prin;
       if (owner)
       {
-        nsCOMPtr<nsIPrincipal> prin = do_QueryInterface(owner, &rv);
-        if (NS_FAILED(rv)) return rv;
-        rv = mDocument->AddPrincipal(prin);
+        prin = do_QueryInterface(owner, &rv);
         if (NS_FAILED(rv)) return rv;
       }
+      rv = mDocument->AddPrincipal(prin);
+      if (NS_FAILED(rv)) return rv;
 
       rv = EvaluateScript(jsUnicodeBuffer, mScriptURI, 1, mScriptLanguageVersion);
       if (NS_FAILED(rv)) return rv;

@@ -49,9 +49,9 @@
 #include "nsIZipReader.h"
 #include "nsZipArchive.h"
 #include "zipfile.h"
+#include "nsIPrincipal.h"
 
 class nsIInputStream;
-class nsIPrincipal;
 
 /*-------------------------------------------------------------------------
  * Class nsJAR declaration. 
@@ -79,20 +79,22 @@ class nsJAR : public nsIZipReader
   
   protected:
     //-- Private data members
-    nsCOMPtr<nsIFile>        mZipFile;      // The zip/jar file on disk
-    nsZipArchive             mZip;          // The underlying zip archive
-    nsObjectHashtable        mManifestData; // Stores metadata for each entry
+    nsCOMPtr<nsIFile>        mZipFile;        // The zip/jar file on disk
+    nsZipArchive             mZip;            // The underlying zip archive
+    nsObjectHashtable        mManifestData;   // Stores metadata for each entry
     PRBool                   mParsedManifest; // True if manifest has been parsed
+    nsCOMPtr<nsIPrincipal>   mPrincipal;      // The entity which signed this file
+    PRInt16                  mGlobalStatus;   // Global signature verification status
 
     //-- Private functions
     nsresult ParseManifest();
+    void     ReportError(const char* aFilename, PRInt16 errorCode);
     nsresult CreateInputStream(const char* aFilename, PRBool verify,
                                nsIInputStream** result);
     nsresult LoadEntry(const char* aFilename, char** aBuf, 
                        PRUint32* aBufLen = nsnull);
     PRInt32  ReadLine(const char** src); 
-    nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType,
-                          nsIPrincipal* aPrincipal, PRInt16 aPreStatus);
+    nsresult ParseOneFile(const char* filebuf, PRInt16 aFileType);
     nsresult VerifyEntry(const char* aEntryName, char* aEntryData, 
                          PRUint32 aLen);
     nsresult RestoreModTime(nsZipItem *aItem, nsIFile *aExtractedFile);
