@@ -22,7 +22,6 @@ SUBDIRS=		\
 	composition	\
 	dnd		\
 	filters		\
-#	integrator	\
 	mime		\
 	prefs		\
 	search		\
