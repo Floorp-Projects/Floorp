@@ -26,6 +26,7 @@
 #include "nsIDOMScriptObjectFactory.h"
 #include "nsITextContent.h"
 #include "nsINameSpaceManager.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIDOMAttrIID, NS_IDOMATTR_IID);
 static NS_DEFINE_IID(kIDOMAttributePrivateIID, NS_IDOMATTRIBUTEPRIVATE_IID);
@@ -380,25 +381,25 @@ nsDOMAttribute::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
 NS_IMETHODIMP
 nsDOMAttribute::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 NS_IMETHODIMP
 nsDOMAttribute::AppendChild(nsIDOMNode* aNewChild, nsIDOMNode** aReturn)
 {
-  return NS_ERROR_FAILURE;
+  return NS_ERROR_DOM_NO_MODIFICATION_ALLOWED_ERR;
 }
 
 NS_IMETHODIMP
