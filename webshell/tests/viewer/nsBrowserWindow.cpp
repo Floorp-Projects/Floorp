@@ -2733,6 +2733,7 @@ void
 nsBrowserWindow::ShowFrameSize(FILE* out)
 {
   nsCOMPtr<nsISizeOfHandler> handler;
+#if 0
   nsresult rv = NS_NewSizeOfHandler(getter_AddRefs(handler));
   if (NS_SUCCEEDED(rv) && handler) {
     GatherFrameDataSizes(handler, mWebShell);
@@ -2748,6 +2749,7 @@ nsBrowserWindow::ShowFrameSize(FILE* out)
     fprintf(out, "%-20s %5d %9d\n",
             "*** Total ***", totalCount, totalSize);
   }
+#endif
 }
 
 //----------------------------------------------------------------------
