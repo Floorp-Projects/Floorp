@@ -479,16 +479,8 @@ function handleColumnClick(columnID) {
 function onKeypress(e) {
   if (e.keyCode == 8) /* backspace */
     goUp();
-  else if (e.keyCode == 13) { /* enter */
-    var fileList = treeView.selectedFiles;
-    if (fileList.length > 0) {
-      var file = fileList.queryElementAt(0, nsIFile);
-      if (file.isDirectory()) {
-        gotoDirectory(file);
-        e.preventDefault();
-      }
-    }
-  }
+
+  /* enter is handled by the ondialogaccept handler */
 }
 
 function doEnabling() {
