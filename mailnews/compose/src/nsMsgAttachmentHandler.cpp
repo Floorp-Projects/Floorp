@@ -47,13 +47,13 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 ////////////////////////////////////////////////////////////////////////////
 // GET RID OF THIS STUFF!!!!
 ////////////////////////////////////////////////////////////////////////////
-PRBool nsMsgIsMacFile(char *filename) { return PR_FALSE; }
+PRBool nsMsgIsMacFile(char    *aUrlString) { return PR_FALSE; }
 void   MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding) { *useDefault = PR_TRUE;}
 ////////////////////////////////////////////////////////////////////////////
 ////////////////////////////////////////////////////////////////////////////
 
 /**********
-extern PRBool       nsMsgIsMacFile(char *filename);
+extern PRBool       nsMsgIsMacFile(char       *aUrlString);
 extern void         MacGetFileType(nsFileSpec *fs, PRBool *useDefault, char **type, char **encoding);
 **********/
 
@@ -541,8 +541,10 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
     if (!src_filename)
       return NS_ERROR_OUT_OF_MEMORY;
 
+    PRBool      isAMacFile = nsMsgIsMacFile(url_string);
+
 		// Only use appledouble if we aren't uuencoding.
-	  if( nsMsgIsMacFile(src_filename) && (! UseUUEncode_p()) )
+	  if( isAMacFile && (! UseUUEncode_p()) )
 		{
 		  char	*separator;
 
@@ -627,7 +629,7 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 		}
 	  else
 		{
-      if (nsMsgIsMacFile(src_filename))
+      if ( isAMacFile )
 			{
 				// The only time we want to send just the data fork of a two-fork
 				// Mac file is if uuencoding has been requested.

@@ -41,12 +41,12 @@
 #include "m_cvstrm.h"
 
 #pragma cplusplus on
-//RICHIERM #include "InternetConfig.h"
-//RICHIERM #include "ufilemgr.h"
-//RICHIERM #include "BufferStream.h"
-//RICHIERM #include "Umimemap.h"
-//RICHIERM #include "uprefd.h"
-//RICHIERM #include "ulaunch.h"
+//RICHIEDELETE #include "InternetConfig.h"
+//RICHIEDELETE #include "ufilemgr.h"
+//RICHIEDELETE #include "BufferStream.h"
+//RICHIEDELETE #include "Umimemap.h"
+//RICHIEDELETE #include "uprefd.h"
+//RICHIEDELETE #include "ulaunch.h"
 void DecodingDone( appledouble_decode_object* p_ap_decode_obj );
 
 OSErr my_FSSpecFromPathname(char* src_filename, FSSpec* fspec)
@@ -60,50 +60,37 @@ char* my_PathnameFromFSSpec(FSSpec* fspec)
 	return CFileMgr::GetURLFromFileSpec(*fspec);
 }
 
-/* returns true if the resource fork should be sent */
+//
+// Returns true if the resource fork should be sent!
+//
+// RICHIEHACK: for now, this is a temporary solution that should be
+// replaced by calls to the MIME service! We look for files that typically
+// don't have resource forks and if it is one of these types, we go with
+// it, but otherwise, we are going to do the fancy encoding!
+//
 PRBool	
-nsMsgIsMacFile(nsFileSpec *fs)
+nsMsgIsMacFile(char *aUrlString)
 {
-	Boolean returnValue = FALSE;
-	
-	FSSpec fspec = fs->GetFSSpec();
+	Boolean returnValue = PR_FALSE;
 
-	returnValue = CFileMgr::FileHasResourceFork(fspec);
-	/* always use IC even if the pref isn't checked since we have no
-	 other way to determine if the resource is significant */
-	if ( returnValue  )
-	{
-		
-		CMimeMapper * mapper = CPrefs::sMimeTypes.FindMimeType(fspec);
-		if ( mapper )
-		{
-			returnValue =  mapper->GetFileFlags()& ICmap_resource_fork_mask;
-			return returnValue;
-		}
-		
-		// Get the Internet Config file mapping for this type
-		// and see if the existing resources are significant.
-		
-		// First, get the type/creator of the file.
-		FInfo fileInfo;
-		OSErr err = ::FSpGetFInfo(&fspec, &fileInfo);
-		if (err == noErr)
-		{
-			if ( fileInfo.fdType == 'APPL' )
-				return TRUE;
-			ICMapEntry ent;
-			err = CInternetConfigInterface::GetInternetConfigFileMapping(fileInfo.fdType,
-																		fileInfo.fdCreator,
-																		fspec.name, &ent);
-			if (err == noErr)
-			{
-				// resource fork is significant if the resource fork mask bit is set
-				returnValue = (ent.flags & ICmap_resource_fork_mask) != 0;
-			}
-		}
-	}
+  char  *ext = nsMsgGetExtensionFromFileURL(nsString(aUrlString));
+  if ( (!ext) || (!*ext) )
+    return PR_TRUE;
 
-	return (PRBool) returnValue;
+  if (
+       (!PL_strncasecmp(ext, "JPG")) ||
+       (!PL_strncasecmp(ext, "GIF")) ||
+       (!PL_strncasecmp(ext, "TIF")) ||
+       (!PL_strncasecmp(ext, "HTM")) ||
+       (!PL_strncasecmp(ext, "HTML")) ||
+       (!PL_strncasecmp(ext, "ART")) ||
+       (!PL_strncasecmp(ext, "XUL")) ||
+       (!PL_strncasecmp(ext, "XML")) ||
+       (!PL_strncasecmp(ext, "XUL"))
+     )
+     return PR_FALSE;
+  else
+    return PR_TRUE;
 }
 
 /* Netlib utility routine, should be ripped out */
