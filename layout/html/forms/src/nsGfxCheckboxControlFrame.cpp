@@ -60,30 +60,33 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
   float p2t;
   aPresContext.GetScaledPixelsToTwips(&p2t);
 
+  const nsStyleSpacing* spacing =
+    (const nsStyleSpacing*)mStyleContext->GetStyleData(eStyleStruct_Spacing);
+
+  nsRect checkRect(0,0, mRect.width, mRect.height);
+
+  nsMargin borderPadding;
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+  checkRect.Deflate(borderPadding);
+
+  const nsStyleColor* color = (const nsStyleColor*)
+                                  mStyleContext->GetStyleData(eStyleStruct_Color);
+  aRenderingContext.SetColor(color->mColor);
+
   if ( IsTristateCheckbox() ) {
     // Get current checked state through content model.
     // XXX this won't work under printing. does that matter???
     CheckState checked = GetCheckboxState();
     switch ( checked ) {   
       case eOn:
-      {
-        const nsStyleColor* color = (const nsStyleColor*)
-                                        mStyleContext->GetStyleData(eStyleStruct_Color);
-        aRenderingContext.SetColor(color->mColor);
-        nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, mRect.width, mRect.height);
+        nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, checkRect);
         break;
-      }    
+
       case eMixed:
-      {
-        const nsStyleColor* color = (const nsStyleColor*)
-                                      mStyleContext->GetStyleData(eStyleStruct_Color);
-        aRenderingContext.SetColor(color->mColor);
-        PaintMixedMark(aRenderingContext, p2t, mRect.width, mRect.height);
+        PaintMixedMark(aRenderingContext, p2t, checkRect);
         break;
-      }  
     } // case of value of checkbox
-  }
-  else {
+  } else {
     // Get current checked state through content model.
     // XXX: This is very inefficient, but it is necessary in the case of printing.
     // During printing the Paint is called but the actual state of the checkbox
@@ -91,10 +94,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
     PRBool checked = PR_FALSE;
     GetCurrentCheckState(&checked);
     if ( checked ) {
-      const nsStyleColor* color = (const nsStyleColor*)
-        mStyleContext->GetStyleData(eStyleStruct_Color);
-      aRenderingContext.SetColor(color->mColor);
-      nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, mRect.width, mRect.height);
+      nsFormControlHelper::PaintCheckMark(aRenderingContext, p2t, checkRect);
     }
   }
   
@@ -111,7 +111,7 @@ nsGfxCheckboxControlFrame::PaintCheckBox(nsIPresContext& aPresContext,
 //
 void
 nsGfxCheckboxControlFrame::PaintMixedMark ( nsIRenderingContext& aRenderingContext,
-                                             float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight)
+                                             float aPixelsToTwips, const nsRect& aRect)
 {
   const PRUint32 checkpoints = 4;
   const PRUint32 checksize   = 6; //This is value is determined by added 2 units to the end
@@ -130,15 +130,15 @@ nsGfxCheckboxControlFrame::PaintMixedMark ( nsIRenderingContext& aRenderingConte
   PRUint32 polyIndex = 0;
 
   // Scale the checkmark based on the smallest dimension
-  PRUint32 size = aWidth / checksize;
-  if (aHeight < aWidth)
-   size = aHeight / checksize;
+  PRUint32 size = aRect.width / checksize;
+  if (aRect.height < aRect.width)
+   size = aRect.height / checksize;
   
   // Center and offset each point in the polygon definition.
   for (defIndex = 0; defIndex < (checkpoints * 2); defIndex++) {
-    checkedPolygon[polyIndex].x = nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aWidth / 2));
+    checkedPolygon[polyIndex].x = nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aRect.width / 2) + aRect.x);
     defIndex++;
-    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aHeight / 2));
+    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aRect.height / 2) + aRect.y);
     polyIndex++;
   }
   
