@@ -59,6 +59,13 @@ extern int NET_SaveCookies(char * filename);
  */
 extern int NET_ReadCookies(char * filename);
 
+
+/* This sets the module local cookie pref variables
+ *  and registers the callbacks 
+ */
+extern void COOKIE_RegisterCookiePrefCallbacks(void);
+
+
 /* wrapper of NET_SetCookieString for netlib use. We need outformat and url_struct to determine
  * whether we're dealing with inline cookies 
  */
