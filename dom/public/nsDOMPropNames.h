@@ -942,6 +942,7 @@
     "xulbrowserelement.webbrowser", \
     "xuleditorelement.editorshell", \
     "xulelement.addbroadcastlistener", \
+    "xulelement.anonymouscontent", \
     "xulelement.blur", \
     "xulelement.click", \
     "xulelement.classname", \
