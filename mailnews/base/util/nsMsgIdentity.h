@@ -39,58 +39,7 @@ public:
   virtual ~nsMsgIdentity();
   
   NS_DECL_ISUPPORTS
-  
-  /* attribute string key; */
-  NS_IMETHOD GetKey(char * *aKey);
-  NS_IMETHOD SetKey(char * aKey);
-
-   /* attribute string identityName; */
-  NS_IMETHOD GetIdentityName(char * *aIdentityName);
-  NS_IMETHOD SetIdentityName(char * aIdentityName);
-
-  /* attribute string fullName; */
-  NS_IMETHOD GetFullName(char * *aFullName);
-  NS_IMETHOD SetFullName(char * aFullName);
-
-  /* attribute string email; */
-  NS_IMETHOD GetEmail(char * *aEmail);
-  NS_IMETHOD SetEmail(char * aEmail);
-
-  /* attribute string replyTo; */
-  NS_IMETHOD GetReplyTo(char * *aReplyTo);
-  NS_IMETHOD SetReplyTo(char * aReplyTo);
-
-  /* attribute string organization; */
-  NS_IMETHOD GetOrganization(char * *aOrganization);
-  NS_IMETHOD SetOrganization(char * aOrganization);
-
-  /* attribute boolean useHtml; */
-  NS_IMETHOD GetComposeHtml(PRBool *aComposeHtml);
-  NS_IMETHOD SetComposeHtml(PRBool aComposeHtml);
-
-  /* attribute boolean attachSignature */
-  NS_IMETHOD GetAttachSignature(PRBool *aAttachSignature);
-  NS_IMETHOD SetAttachSignature(PRBool aAttachSignature);
-
-  /* attribute attachVCard; */
-  NS_IMETHOD GetAttachVCard(PRBool *attachVCard);
-  NS_IMETHOD SetAttachVCard(PRBool attachVCard);
-
-  /* attribute nsIMsgSignature signature; */
-  NS_IMETHOD GetSignature(nsIMsgSignature * *aSignature);
-  NS_IMETHOD SetSignature(nsIMsgSignature * aSignature);
-
-  /* attribute nsIMsgVCard vCard; */
-  NS_IMETHOD GetVCard(nsIMsgVCard * *aVCard);
-  NS_IMETHOD SetVCard(nsIMsgVCard * aVCard);
-  
-  /* attribute string smtpHostname; */
-  NS_IMETHOD GetSmtpHostname(char * *aSmtpHostname);
-  NS_IMETHOD SetSmtpHostname(char * aSmtpHostname);
-
-  /* attribute string smtpUsername; */
-  NS_IMETHOD GetSmtpUsername(char * *aSmtpUsername);
-  NS_IMETHOD SetSmtpUsername(char * aSmtpUsername);
+  NS_DECL_NSIMSGIDENTITY
 
   // nsIShutdownListener
   

@@ -301,6 +301,17 @@ nsresult nsMsgIdentity::SetIdentityName(char *idName) {
   return setCharPref("identityName", idName);
 }
 
+NS_IMETHODIMP
+nsMsgIdentity::ToString(PRUnichar **aResult)
+{
+  nsString idname("[nsIMsgIdentity: ");
+  idname += m_identityKey;
+  idname += "]";
+
+  *aResult = idname.ToNewUnicode();
+  return NS_OK;
+}
+
 /* Identity attribute accessors */
 
 // XXX - these are a COM objects, use NS_ADDREF

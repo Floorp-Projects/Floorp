@@ -72,4 +72,6 @@ interface nsIMsgIdentity : nsISupports {
   /* eventually these will be removed from the identity */
   attribute string smtpHostname;
   attribute string smtpUsername;
+
+  wstring toString();
 };
