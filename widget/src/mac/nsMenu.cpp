@@ -1294,7 +1294,7 @@ nsMenu::OnDestroy()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_DESTROY;
+  event.message = NS_XUL_POPUP_HIDING;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
@@ -1332,7 +1332,7 @@ nsMenu::OnDestroyed()
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
   event.eventStructType = NS_EVENT;
-  event.message = NS_MENU_DESTROY;
+  event.message = NS_XUL_POPUP_HIDDEN;
   event.isShift = PR_FALSE;
   event.isControl = PR_FALSE;
   event.isAlt = PR_FALSE;
