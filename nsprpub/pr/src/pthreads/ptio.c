@@ -2639,6 +2639,7 @@ static PRStatus pt_GetSocketOption(PRFileDesc *fd, PRSocketOptionData *data)
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
+            case PR_SockOpt_Broadcast:
             {
                 PRIntn value;
                 length = sizeof(PRIntn);
@@ -2757,6 +2758,7 @@ static PRStatus pt_SetSocketOption(PRFileDesc *fd, const PRSocketOptionData *dat
             case PR_SockOpt_Reuseaddr:
             case PR_SockOpt_Keepalive:
             case PR_SockOpt_NoDelay:
+            case PR_SockOpt_Broadcast:
             {
                 PRIntn value = (data->value.reuse_addr) ? 1 : 0;
                 rv = setsockopt(
@@ -2844,6 +2846,39 @@ static PRIOMethods _pr_file_methods = {
     pt_Seek64,
     pt_FileInfo,
     pt_FileInfo64,
+    (PRWritevFN)_PR_InvalidInt,        
+    (PRConnectFN)_PR_InvalidStatus,        
+    (PRAcceptFN)_PR_InvalidDesc,        
+    (PRBindFN)_PR_InvalidStatus,        
+    (PRListenFN)_PR_InvalidStatus,        
+    (PRShutdownFN)_PR_InvalidStatus,    
+    (PRRecvFN)_PR_InvalidInt,        
+    (PRSendFN)_PR_InvalidInt,        
+    (PRRecvfromFN)_PR_InvalidInt,    
+    (PRSendtoFN)_PR_InvalidInt,        
+    pt_Poll,
+    (PRAcceptreadFN)_PR_InvalidInt,   
+    (PRTransmitfileFN)_PR_InvalidInt, 
+    (PRGetsocknameFN)_PR_InvalidStatus,    
+    (PRGetpeernameFN)_PR_InvalidStatus,    
+    (PRGetsockoptFN)_PR_InvalidStatus,    
+    (PRSetsockoptFN)_PR_InvalidStatus,    
+    (PRGetsocketoptionFN)_PR_InvalidStatus,
+    (PRSetsocketoptionFN)_PR_InvalidStatus
+};
+
+static PRIOMethods _pr_pipe_methods = {
+    PR_DESC_PIPE,
+    pt_Close,
+    pt_Read,
+    pt_Write,
+    pt_Available_s,
+    pt_Available64_s,
+    pt_Fsync,
+    (PRSeekFN)_PR_InvalidInt,
+    (PRSeek64FN)_PR_InvalidInt64,
+    (PRFileInfoFN)_PR_InvalidStatus,
+    (PRFileInfo64FN)_PR_InvalidStatus,
     (PRWritevFN)_PR_InvalidInt,        
     (PRConnectFN)_PR_InvalidStatus,        
     (PRAcceptFN)_PR_InvalidDesc,        
@@ -3017,6 +3052,9 @@ static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
                 flags |= _PR_FCNTL_FLAGS;
                 (void)fcntl(osfd, F_SETFL, flags);
                 break;
+            case PR_DESC_PIPE:
+                fd->methods = PR_GetPipeMethods();
+                break;
             default:
                 break;
         }
@@ -3027,6 +3065,11 @@ static PRFileDesc *pt_SetMethods(PRIntn osfd, PRDescType type)
 PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods()
 {
     return &_pr_file_methods;
+}  /* PR_GetFileMethods */
+
+PR_IMPLEMENT(const PRIOMethods*) PR_GetPipeMethods()
+{
+    return &_pr_pipe_methods;
 }  /* PR_GetFileMethods */
 
 PR_IMPLEMENT(const PRIOMethods*) PR_GetTCPMethods()
@@ -3658,7 +3701,7 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
         PR_SetError(PR_UNKNOWN_ERROR, errno);
         return PR_FAILURE;
     }
-    *readPipe = pt_SetMethods(pipefd[0], PR_DESC_FILE);
+    *readPipe = pt_SetMethods(pipefd[0], PR_DESC_PIPE);
     if (NULL == *readPipe)
     {
         close(pipefd[0]);
@@ -3668,7 +3711,7 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
     flags = fcntl(pipefd[0], F_GETFL, 0);
     flags |= _PR_FCNTL_FLAGS;
     (void)fcntl(pipefd[0], F_SETFL, flags);
-    *writePipe = pt_SetMethods(pipefd[1], PR_DESC_FILE);
+    *writePipe = pt_SetMethods(pipefd[1], PR_DESC_PIPE);
     if (NULL == *writePipe)
     {
         PR_Close(*readPipe);

@@ -105,6 +105,7 @@ int main(int argc, char **argv)
 	if (!debug_mode)  failed_already=1;
 	goto exit_now;
     }
+    memset(&addr, 0, sizeof(addr));
     addr.inet.family = PR_AF_INET;
     addr.inet.ip = PR_htonl(PR_INADDR_ANY);
     addr.inet.port = PR_htons(0);

@@ -84,6 +84,7 @@ PRIntn main(PRIntn argc, char *argv)
 
         "PR_SockOpt_NoDelay",         /* don't delay send to coalesce packets */
         "PR_SockOpt_MaxSegment",      /* maximum segment size */
+        "PR_SockOpt_Broadcast",       /* Enable broadcast */
         "PR_SockOpt_Last"
     };
 
@@ -142,6 +143,10 @@ PRIntn main(PRIntn argc, char *argv)
             case PR_SockOpt_IpTimeToLive:    /* time to live */
                 value = &ttl;
                 size = &ttlsize;
+                break;
+            case PR_SockOpt_Broadcast:
+                value = &boolean;
+                size = &booleansize;
                 break;
             case PR_SockOpt_IpTypeOfService: /* type of service and precedence */
             case PR_SockOpt_AddMember:       /* add an IP group membership */
@@ -218,6 +223,10 @@ PRIntn main(PRIntn argc, char *argv)
                     data.value.max_segment = segment;      
                     break;    
 #endif
+                case PR_SockOpt_Broadcast:
+                    fd = udp; 
+                    data.value.broadcast = PR_TRUE;         
+                    break;    
                 default: continue;
             }
 
@@ -239,6 +248,8 @@ PRIntn main(PRIntn argc, char *argv)
             rv = PR_GetSocketOption(fd, &data);
             if (PR_FAILURE == rv) Failed("PR_GetSocketOption()", tag[option]);
         }
+        PR_Close(udp);
+        PR_Close(tcp);
     }
 #ifndef XP_MAC
     PR_fprintf(err, "%s\n", (failed) ? "FAILED" : "PASSED");

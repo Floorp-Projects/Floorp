@@ -219,6 +219,7 @@ typedef enum PRSockOption
 
     PR_SockOpt_NoDelay,         /* don't delay send to coalesce packets */
     PR_SockOpt_MaxSegment,      /* maximum segment size */
+    PR_SockOpt_Broadcast,       /* enable broadcast */
     PR_SockOpt_Last
 } PRSockOption;
 
@@ -245,6 +246,7 @@ typedef struct PRSocketOptionData
         PRBool keep_alive;          /* Keep connections alive */
         PRBool mcast_loopback;      /* IP multicast loopback */
         PRBool no_delay;            /* Don't delay send to coalesce packets */
+        PRBool broadcast;           /* Enable broadcast */
         PRSize max_segment;         /* Maximum segment size */
         PRSize recv_buffer_size;    /* Receive buffer size */
         PRSize send_buffer_size;    /* Send buffer size */
@@ -278,7 +280,8 @@ typedef enum PRDescType
     PR_DESC_FILE = 1,
     PR_DESC_SOCKET_TCP = 2,
     PR_DESC_SOCKET_UDP = 3,
-    PR_DESC_LAYERED = 4
+    PR_DESC_LAYERED = 4,
+    PR_DESC_PIPE = 5
 } PRDescType;
 
 typedef enum PRSeekWhence {

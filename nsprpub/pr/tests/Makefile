@@ -57,6 +57,7 @@ CSRCS =             \
 	dtoa.c			\
 	errcodes.c		\
 	exit.c  		\
+	fdcach.c		\
 	fileio.c		\
 	foreign.c	    \
 	forktest.c	    \
@@ -267,7 +268,8 @@ endif
 ifeq ($(OS_ARCH), HP-UX)
     LDOPTS += -z -Wl,+s,+b,$(ABSOLUTE_LIB_DIR)
     ifeq ($(USE_64),1)
-        LDOPTS += -L/usr/lib/pa20_64 -lpthread +DD64
+        LDOPTS += +DA2.0W
+        EXTRA_LIBS = -lpthread
     endif
 endif
 

@@ -18,8 +18,7 @@
 
 #if defined(_PR_PTHREADS)
 
-/* Some compilers don't like an empty source file. */
-static int dummy = 0;
+#error "This file should not be compiled"
 
 #else  /* defined(_PR_PTHREADS) */
 
@@ -681,5 +680,5 @@ PRInt32 _MD_pr_poll(PRPollDesc *pds, PRIntn npds, PRIntervalTime timeout)
 
 #endif  /* defined(_PR_PTHREADS) */               
 
-/* pruxpoll.c */
+/* uxpoll.c */
 

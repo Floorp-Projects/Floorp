@@ -17,7 +17,6 @@
  */
 
 #include "primpl.h"
-#include "pratom.h"
 
 #include <string.h>
 
@@ -182,6 +181,8 @@ PR_IMPLEMENT(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high)
     ** turn the caches off, or turn them on. It is not dependent
     ** on the compilation setting of DEBUG.
     */
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
     if (low > high) low = high;  /* sanity check the params */
     
     PR_Lock(_pr_fd_cache.ml);
@@ -201,8 +202,7 @@ PR_IMPLEMENT(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high)
             {
                 PRFileDesc *fd = _pr_fd_cache.head;
                 _pr_fd_cache.head = fd->higher;
-                fd->identity = PR_NSPR_IO_LAYER;
-                _PR_Putfd(fd);
+                PR_StackPush(_pr_fd_cache.stack, (PRStackElem*)(&fd->higher));
             }
             _pr_fd_cache.limit_low = 0;
             _pr_fd_cache.tail = NULL;
@@ -211,18 +211,20 @@ PR_IMPLEMENT(PRStatus) PR_SetFDCacheSize(PRIntn low, PRIntn high)
     }
     else  /* starting up or just adjusting parameters */
     {
-        PRBool was_using_cache = (0 != _pr_fd_cache.limit_high);
+        PRBool was_using_stack = (0 == _pr_fd_cache.limit_high);
         _pr_fd_cache.limit_low = low;
         _pr_fd_cache.limit_high = high;
-        if (was_using_cache)  /* was using stack - feed into cache */
+        if (was_using_stack)  /* was using stack - feed into cache */
         {
             PRStackElem *pop;
             while (NULL != (pop = PR_StackPop(_pr_fd_cache.stack)))
             {
                 PRFileDesc *fd = (PRFileDesc*)
                     ((PRPtrdiff)pop - (PRPtrdiff)stack2fd);
-                fd->identity = PR_NSPR_IO_LAYER;
-                _PR_Putfd(fd);
+                if (NULL == _pr_fd_cache.tail) _pr_fd_cache.tail = fd;
+                fd->higher = _pr_fd_cache.head;
+                _pr_fd_cache.head = fd;
+                _pr_fd_cache.count += 1;
             }
         }
     }
@@ -241,19 +243,20 @@ void _PR_InitFdCache()
     const char *low = PR_GetEnv("NSPR_FD_CACHE_SIZE_LOW");
     const char *high = PR_GetEnv("NSPR_FD_CACHE_SIZE_HIGH");
 
-    _pr_fd_cache.limit_low = _pr_fd_cache.limit_high = 0;
-    if (NULL != low) _pr_fd_cache.limit_low = atoi(low);
-    if (NULL != high) _pr_fd_cache.limit_high = atoi(high);
-
     /* 
     ** _low is allowed to be zero, _high is not.
     ** If _high is zero, we're not doing the caching.
     */
 
+    _pr_fd_cache.limit_low = 0;
 #if defined(DEBUG)
-    if (0 == _pr_fd_cache.limit_high)
-        _pr_fd_cache.limit_high = FD_SETSIZE;
+    _pr_fd_cache.limit_high = FD_SETSIZE;
+#else
+    _pr_fd_cache.limit_high = 0;
 #endif  /* defined(DEBUG) */
+
+    if (NULL != low) _pr_fd_cache.limit_low = atoi(low);
+    if (NULL != high) _pr_fd_cache.limit_high = atoi(high);
 
     if (_pr_fd_cache.limit_high < _pr_fd_cache.limit_low)
         _pr_fd_cache.limit_high = _pr_fd_cache.limit_low;

@@ -1165,6 +1165,9 @@ extern PRInt32 _PR_MD_SOCKET(int af, int type, int flags);
 extern PRInt32 _PR_MD_SOCKETAVAILABLE(PRFileDesc *fd);
 #define    _PR_MD_SOCKETAVAILABLE _MD_SOCKETAVAILABLE
 
+extern PRInt32 _PR_MD_PIPEAVAILABLE(PRFileDesc *fd);
+#define    _PR_MD_PIPEAVAILABLE _MD_PIPEAVAILABLE
+
 extern PRInt32 _PR_MD_PR_POLL(PRPollDesc *pds, PRIntn npds,
                                                                                         PRIntervalTime timeout);
 #define    _PR_MD_PR_POLL _MD_PR_POLL
@@ -1502,6 +1505,22 @@ struct PRFileMap {
 };
 
 /************************************************************************/
+
+/*
+** File descriptors of the NSPR layer can be in one of the
+** following states (stored in the 'state' field of struct
+** PRFilePrivate):
+** - _PR_FILEDESC_OPEN: The OS fd is open.
+** - _PR_FILEDESC_CLOSED: The OS fd is closed.  The PRFileDesc
+**   is still open but is unusable.  The only operation allowed
+**   on the PRFileDesc is PR_Close().
+** - _PR_FILEDESC_FREED: The OS fd is closed and the PRFileDesc
+**   structure is freed.
+*/
+
+#define _PR_FILEDESC_OPEN       0xaaaaaaaa    /* 1010101... */
+#define _PR_FILEDESC_CLOSED     0x55555555    /* 0101010... */
+#define _PR_FILEDESC_FREED      0x11111111
 
 struct PRFilePrivate {
     PRInt32 state;
@@ -1875,6 +1894,9 @@ PR_EXTERN(PRInt32) _PR_MD_GET_SOCKET_ERROR(void);
 /* Get name of current host */
 extern PRStatus _PR_MD_GETHOSTNAME(char *name, PRUint32 namelen);
 #define    _PR_MD_GETHOSTNAME _MD_GETHOSTNAME
+
+extern PRStatus _PR_MD_GETSYSINFO(PRSysInfo cmd, char *name, PRUint32 namelen);
+#define    _PR_MD_GETSYSINFO _MD_GETSYSINFO
 
 #ifdef XP_BEOS
 

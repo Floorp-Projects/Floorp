@@ -155,6 +155,20 @@ static PRInt64 PR_CALLBACK FileAvailable64(PRFileDesc *fd)
     return result;
 }
 
+static PRInt32 PR_CALLBACK PipeAvailable(PRFileDesc *fd)
+{
+	PRInt32 rv;
+	rv =  _PR_MD_PIPEAVAILABLE(fd);
+	return rv;		
+}
+
+static PRInt64 PR_CALLBACK PipeAvailable64(PRFileDesc *fd)
+{
+    PRInt64 rv;
+    LL_I2L(rv, _PR_MD_PIPEAVAILABLE(fd));
+	return rv;		
+}
+
 static PRStatus PR_CALLBACK FileInfo(PRFileDesc *fd, PRFileInfo *info)
 {
 	PRInt32 rv;
@@ -255,6 +269,44 @@ PR_IMPLEMENT(const PRIOMethods*) PR_GetFileMethods(void)
 {
     return &_pr_fileMethods;
 }
+
+static PRIOMethods _pr_pipeMethods = {
+    PR_DESC_PIPE,
+    FileClose,
+    FileRead,
+    FileWrite,
+#ifdef WIN32
+    FileAvailable,
+    FileAvailable64,
+#else
+    PipeAvailable,
+    PipeAvailable64,
+#endif
+    FileSync,
+    (PRSeekFN)_PR_InvalidInt,
+    (PRSeek64FN)_PR_InvalidInt64,
+    (PRFileInfoFN)_PR_InvalidStatus,
+    (PRFileInfo64FN)_PR_InvalidStatus,
+    (PRWritevFN)_PR_InvalidInt,		
+    (PRConnectFN)_PR_InvalidStatus,		
+    (PRAcceptFN)_PR_InvalidDesc,		
+    (PRBindFN)_PR_InvalidStatus,		
+    (PRListenFN)_PR_InvalidStatus,		
+    (PRShutdownFN)_PR_InvalidStatus,	
+    (PRRecvFN)_PR_InvalidInt,		
+    (PRSendFN)_PR_InvalidInt,		
+    (PRRecvfromFN)_PR_InvalidInt,	
+    (PRSendtoFN)_PR_InvalidInt,		
+    FilePoll,         
+    (PRAcceptreadFN)_PR_InvalidInt,   
+    (PRTransmitfileFN)_PR_InvalidInt, 
+    (PRGetsocknameFN)_PR_InvalidStatus,	
+    (PRGetpeernameFN)_PR_InvalidStatus,	
+    (PRGetsockoptFN)_PR_InvalidStatus,	
+    (PRSetsockoptFN)_PR_InvalidStatus,	
+    (PRGetsocketoptionFN)_PR_InvalidStatus,	
+    (PRSetsocketoptionFN)_PR_InvalidStatus
+};
 
 PR_IMPLEMENT(PRFileDesc*) PR_Open(const char *name, PRIntn flags, PRIntn mode)
 {
@@ -553,13 +605,13 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
         PR_SetError(PR_UNKNOWN_ERROR, GetLastError());
         return PR_FAILURE;
     }
-    *readPipe = PR_AllocFileDesc((PRInt32)readEnd, &_pr_fileMethods);
+    *readPipe = PR_AllocFileDesc((PRInt32)readEnd, &_pr_pipeMethods);
     if (NULL == *readPipe) {
         CloseHandle(readEnd);
         CloseHandle(writeEnd);
         return PR_FAILURE;
     }
-    *writePipe = PR_AllocFileDesc((PRInt32)writeEnd, &_pr_fileMethods);
+    *writePipe = PR_AllocFileDesc((PRInt32)writeEnd, &_pr_pipeMethods);
     if (NULL == *writePipe) {
         PR_Close(*readPipe);
         CloseHandle(writeEnd);
@@ -582,13 +634,13 @@ PR_IMPLEMENT(PRStatus) PR_CreatePipe(
         PR_SetError(PR_UNKNOWN_ERROR, errno);
         return PR_FAILURE;
     }
-    *readPipe = PR_AllocFileDesc(pipefd[0], &_pr_fileMethods);
+    *readPipe = PR_AllocFileDesc(pipefd[0], &_pr_pipeMethods);
     if (NULL == *readPipe) {
         close(pipefd[0]);
         close(pipefd[1]);
         return PR_FAILURE;
     }
-    *writePipe = PR_AllocFileDesc(pipefd[1], &_pr_fileMethods);
+    *writePipe = PR_AllocFileDesc(pipefd[1], &_pr_pipeMethods);
     if (NULL == *writePipe) {
         PR_Close(*readPipe);
         close(pipefd[1]);

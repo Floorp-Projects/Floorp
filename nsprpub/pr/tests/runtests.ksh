@@ -83,6 +83,7 @@ dlltest
 dtoa
 errcodes
 exit
+fdcach
 fileio
 foreign
 fsync
@@ -162,6 +163,8 @@ version
 writev
 xnotify"
 
+rval=0
+
 OBJDIR=`basename $PWD`
 echo "\nNSPR Test Results - $OBJDIR\n"
 echo "BEGIN\t\t\t`date`"
@@ -176,7 +179,10 @@ if [ 0 = $? ] ; then
 	echo "\t\t\tPassed";
 else
 	echo "\t\t\tFAILED";
+	rval=1
 fi;
 echo "\nEND TEST: $prog\n" >> ${LOGFILE} 2>&1
 done
 echo "END\t\t\t`date`"
+
+exit $rval

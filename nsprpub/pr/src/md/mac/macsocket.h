@@ -80,6 +80,7 @@ struct	hostent {
 #define INADDR_ANY		kOTAnyInetAddress
 #define SOL_SOCKET		XTI_GENERIC		// Any type of socket
 #define SO_REUSEADDR	IP_REUSEADDR
+#define SO_BROADCAST	IP_BROADCAST
 #define MSG_PEEK		0x2				// Just look at a message waiting, don’t actually read it.
 
 typedef unsigned long u_long;

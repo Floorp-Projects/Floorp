@@ -43,17 +43,20 @@ void PR_CALLBACK pl_FDDestructor(PRFileDesc *fd)
 */
 static PRStatus PR_CALLBACK pl_TopClose (PRFileDesc *fd)
 {
-    PRStatus status;
+    PRFileDesc *top;
     PR_ASSERT(fd != NULL);
     PR_ASSERT(fd->lower != NULL);
     PR_ASSERT(fd->secret == NULL);
     PR_ASSERT(fd->methods->file_type == PR_DESC_LAYERED);
 
-    status = (fd->lower->methods->close)(fd->lower);
-    fd->lower = fd->higher = NULL;
-
-    fd->dtor(fd);
-    return status;
+    if (fd->higher != NULL)
+    {
+        PR_SetError(PR_BAD_DESCRIPTOR_ERROR, 0);
+        return PR_FAILURE;
+    }
+    top = PR_PopIOLayer(fd, PR_TOP_IO_LAYER);
+    top->dtor(top);
+    return (fd->methods->close)(fd);
 }
 
 static PRInt32 PR_CALLBACK pl_DefRead (PRFileDesc *fd, void *buf, PRInt32 amount)

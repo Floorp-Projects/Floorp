@@ -69,8 +69,11 @@ static PRVersionDescription prVersionDescription_libplds3 =
 
 /*
  * Version information for the 'ident' and 'what commands
+ *
+ * NOTE: the first component of the concatenated rcsid string
+ * must not end in a '$' to prevent rcs keyword substitution.
  */
-static char rcsid[] = "$Version: NSPR " PR_VERSION _DEBUG_STRING
+static char rcsid[] = "$Header: NSPR " PR_VERSION _DEBUG_STRING
         "  " _BUILD_STRING " $";
 static char sccsid[] = "@(#)NSPR " PR_VERSION _DEBUG_STRING
         "  " _BUILD_STRING;
