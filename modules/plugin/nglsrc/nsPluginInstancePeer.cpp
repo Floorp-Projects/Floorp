@@ -16,14 +16,18 @@
  * Reserved.
  */
 
+#include "nscore.h"
 #include "nsPluginInstancePeer.h"
+#include "nsIPluginInstance.h"
 
 nsPluginInstancePeerImpl :: nsPluginInstancePeerImpl()
 {
+  mInstance = nsnull;
 }
 
 nsPluginInstancePeerImpl :: ~nsPluginInstancePeerImpl()
 {
+  mInstance = nsnull;
 }
 
 NS_IMPL_ADDREF(nsPluginInstancePeerImpl);
@@ -64,7 +68,7 @@ nsresult nsPluginInstancePeerImpl :: QueryInterface(const nsIID& iid, void** ins
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetValue(nsPluginInstancePeerVariable variable, void *value)
 {
-  return NS_OK;
+  return NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: SetValue(nsPluginInstancePeerVariable variable, void *value)
@@ -94,10 +98,20 @@ NS_IMETHODIMP nsPluginInstancePeerImpl :: ShowStatus(const char* message)
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttributes(PRUint16& n, const char*const*& names, const char*const*& values)
 {
+  n = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP nsPluginInstancePeerImpl :: GetAttribute(const char* name, const char* *result)
 {
+  *result = 0;
+  return NS_OK;
+}
+
+nsresult nsPluginInstancePeerImpl :: Initialize(nsIPluginInstance *aInstance)
+{
+  //don't add a ref to precent circular references... MMP
+  mInstance = aInstance;
+
   return NS_OK;
 }

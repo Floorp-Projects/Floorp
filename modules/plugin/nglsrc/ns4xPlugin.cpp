@@ -303,30 +303,30 @@ ns4xPlugin::GetJavaClass(jclass *resultingClass)
 nsresult NP_EXPORT
 ns4xPlugin::_geturl(NPP npp, const char* relativeURL, const char* target)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
     NS_ASSERTION(mNetworkManager != NULL, "null manager");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->GetURL(peer, relativeURL, target);
+    return mNetworkManager->GetURL(inst, relativeURL, target);
 }
 
 nsresult NP_EXPORT
 ns4xPlugin::_geturlnotify(NPP npp, const char* relativeURL, const char* target,
                           void* notifyData)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
     NS_ASSERTION(mNetworkManager != NULL, "null manager");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->GetURL(peer, relativeURL, target,
+    return mNetworkManager->GetURL(inst, relativeURL, target,
                                    notifyData);
 }
 
@@ -336,15 +336,15 @@ ns4xPlugin::_posturlnotify(NPP npp, const char* relativeURL, const char *target,
                            uint32 len, const char *buf, NPBool file,
                            void* notifyData)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
     NS_ASSERTION(mNetworkManager != NULL, "null manager");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->PostURL(peer, relativeURL, target,
+    return mNetworkManager->PostURL(inst, relativeURL, target,
                                     len, buf, file, notifyData);
 }
 
@@ -353,15 +353,15 @@ nsresult NP_EXPORT
 ns4xPlugin::_posturl(NPP npp, const char* relativeURL, const char *target, uint32 len,
                      const char *buf, NPBool file)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
     NS_ASSERTION(mNetworkManager != NULL, "null manager");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
-    return mNetworkManager->PostURL(peer, relativeURL, target,
+    return mNetworkManager->PostURL(inst, relativeURL, target,
                                     len, buf, file);
 }
 
@@ -420,29 +420,42 @@ ns4xStreamWrapper::GetStream(void)
 nsresult NP_EXPORT
 ns4xPlugin::_newstream(NPP npp, NPMIMEType type, const char* window, NPStream* *result)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return NS_ERROR_UNEXPECTED; // XXX
 
     nsresult error;
     nsIOutputStream* stream;
-    if ((error = peer->NewStream((const char*) type, window, &stream))
-        != NS_OK)
-      return error;
+    nsIPluginInstancePeer *peer;
 
-    ns4xStreamWrapper* wrapper = new ns4xStreamWrapper(stream);
-
-    if (wrapper == NULL)
+    if (NS_OK == inst->GetPeer(&peer))
     {
+      if ((error = peer->NewStream((const char*) type, window, &stream)) != NS_OK)
+      {
+        NS_RELEASE(peer);
+        return error;
+      }
+
+      ns4xStreamWrapper* wrapper = new ns4xStreamWrapper(stream);
+
+      if (wrapper == NULL)
+      {
+        NS_RELEASE(peer);
         NS_RELEASE(stream);
         return NS_ERROR_OUT_OF_MEMORY;
-    }
+      }
 
-    (*result) = wrapper->GetNPStream();
-    return NS_OK;
+      (*result) = wrapper->GetNPStream();
+
+      NS_RELEASE(peer);
+
+      return error;
+    }
+    else
+      return NS_ERROR_UNEXPECTED;
 }
 
 int32 NP_EXPORT
@@ -484,14 +497,20 @@ ns4xPlugin::_destroystream(NPP npp, NPStream *pstream, NPError reason)
 void NP_EXPORT
 ns4xPlugin::_status(NPP npp, const char *message)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return;
 
-    peer->ShowStatus(message);
+    nsIPluginInstancePeer *peer;
+
+    if (NS_OK == inst->GetPeer(&peer))
+    {
+      peer->ShowStatus(message);
+      NS_RELEASE(peer);
+    }
 }
 
 void NP_EXPORT
@@ -517,90 +536,130 @@ ns4xPlugin::_reloadplugins(NPBool reloadPages)
 void NP_EXPORT
 ns4xPlugin::_invalidaterect(NPP npp, NPRect *invalidRect)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return;
 
+    nsIPluginInstancePeer *peer;
     nsIWindowlessPluginInstancePeer *wpeer;
 
-    if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer))
+    if (NS_OK == inst->GetPeer(&peer))
     {
-      // XXX nsRect & NPRect are structurally equivalent
-      wpeer->InvalidateRect((nsPluginRect *)invalidRect);
-      NS_RELEASE(wpeer);
+      if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer))
+      {
+        // XXX nsRect & NPRect are structurally equivalent
+        wpeer->InvalidateRect((nsPluginRect *)invalidRect);
+        NS_RELEASE(wpeer);
+      }
+
+      NS_RELEASE(peer);
     }
 }
 
 void NP_EXPORT
 ns4xPlugin::_invalidateregion(NPP npp, NPRegion invalidRegion)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return;
 
+    nsIPluginInstancePeer *peer;
     nsIWindowlessPluginInstancePeer *wpeer;
 
-    if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer))
+    if (NS_OK == inst->GetPeer(&peer))
     {
-      // XXX nsRegion & NPRegion are typedef'd to the same thing
-      wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
-      NS_RELEASE(wpeer);
+      if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer))
+      {
+        // XXX nsRegion & NPRegion are typedef'd to the same thing
+        wpeer->InvalidateRegion((nsPluginRegion)invalidRegion);
+        NS_RELEASE(wpeer);
+      }
+
+      NS_RELEASE(peer);
     }
 }
 
 void NP_EXPORT
 ns4xPlugin::_forceredraw(NPP npp)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return;
 
+    nsIPluginInstancePeer *peer;
     nsIWindowlessPluginInstancePeer *wpeer;
 
-    if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer))
+    if (NS_OK == inst->GetPeer(&peer))
     {
-      wpeer->ForceRedraw();
-      NS_RELEASE(wpeer);
+      if (NS_OK == peer->QueryInterface(kIWindowlessPluginInstancePeerIID, (void **)&wpeer))
+      {
+        wpeer->ForceRedraw();
+        NS_RELEASE(wpeer);
+      }
+
+      NS_RELEASE(peer);
     }
 }
 
 nsresult NP_EXPORT
 ns4xPlugin::_getvalue(NPP npp, NPNVariable variable, void *result)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return NS_ERROR_FAILURE; // XXX
 
-    // XXX Note that for backwards compatibility, the old NPNVariables
-    // map correctly to NPPluginManagerVariables.
-    return peer->GetValue((nsPluginInstancePeerVariable)variable, result);
+    nsIPluginInstancePeer *peer;
+
+    if (NS_OK == inst->GetPeer(&peer))
+    {
+      nsresult rv;
+
+      // XXX Note that for backwards compatibility, the old NPNVariables
+      // map correctly to NPPluginManagerVariables.
+      rv = peer->GetValue((nsPluginInstancePeerVariable)variable, result);
+      NS_RELEASE(peer);
+      return rv;
+    }
+    else
+      return NS_ERROR_UNEXPECTED;
 }
 
 nsresult NP_EXPORT
 ns4xPlugin::_setvalue(NPP npp, NPPVariable variable, void *result)
 {
-    nsIPluginInstancePeer* peer = (nsIPluginInstancePeer*) npp->ndata;
+    nsIPluginInstance *inst = (nsIPluginInstance *) npp->ndata;
 
-    NS_ASSERTION(peer != NULL, "null peer");
+    NS_ASSERTION(inst != NULL, "null instance");
 
-    if (peer == NULL)
+    if (inst == NULL)
         return NS_ERROR_FAILURE; // XXX
 
-    // XXX Note that for backwards compatibility, the old NPPVariables
-    // map correctly to NPPluginVariables.
-    return peer->SetValue((nsPluginInstancePeerVariable)variable, result);
+    nsIPluginInstancePeer *peer;
+
+    if (NS_OK == inst->GetPeer(&peer))
+    {
+      nsresult rv;
+
+      // XXX Note that for backwards compatibility, the old NPPVariables
+      // map correctly to NPPluginVariables.
+      rv = peer->SetValue((nsPluginInstancePeerVariable)variable, result);
+      NS_RELEASE(peer);
+      return rv;
+    }
+    else
+      return NS_ERROR_UNEXPECTED;
 }
 
 nsresult NP_EXPORT

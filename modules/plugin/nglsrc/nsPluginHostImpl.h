@@ -107,7 +107,17 @@ public:
   LoadPlugins(void);
 
   NS_IMETHOD
-  InstantiatePlugin(char *aMimeType, nsIPluginInstance ** aPluginInst);
+  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst);
+
+  NS_IMETHOD
+  InstantiatePlugin(const char *aMimeType, nsIPluginInstance ** aPluginInst,
+                    nsPluginWindow *aWindow, nsString& aURL);
+
+  NS_IMETHOD
+  NewPluginStream(const nsString& aURL, nsIPluginInstance *aInstance, void *aNotifyData);
+
+  NS_IMETHOD
+  NewPluginStream(const nsString& aURL, nsIPluginInstance **aInstance, nsPluginWindow *aWindow);
 
   //nsIFactory interface
 

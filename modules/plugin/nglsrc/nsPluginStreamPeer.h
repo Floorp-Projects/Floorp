@@ -19,7 +19,10 @@
 #ifndef nsPluginStreamPeer_h___
 #define nsPluginStreamPeer_h___
 
+#include "nscore.h"
 #include "nsIPluginStreamPeer.h"
+
+class nsIURL;
 
 class nsPluginStreamPeer : public nsIPluginStreamPeer
 {
@@ -47,8 +50,19 @@ public:
   NS_IMETHOD
   GetMIMEType(nsMIMEType *result);
 
-  NS_IMETHOD
-  Initialize(void);
+  //locals
+
+  nsresult Initialize(nsIURL *aURL, PRUint32 aLength,
+                      PRUint32 aLastMod, nsMIMEType aMIMEType,
+                      void *aNotifyData);
+
+private:
+  nsIURL      *mURL;
+  PRUint32    mLength;
+  PRUint32    mLastMod;
+  void        *mNotifyData;
+  nsMIMEType  mMIMEType;
+  char        *mURLSpec;
 };
 
 #endif
