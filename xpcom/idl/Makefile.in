@@ -33,6 +33,7 @@ IDLSRCS = \
 	nsIEnumerator.idl \
 	nsID.idl	\
 	nsrootidl.idl	\
+	nsISimpleEnumerator.idl	\
 	$(NULL)
 
 # for testing purposes
