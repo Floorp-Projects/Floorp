@@ -48,8 +48,6 @@ class nsIRDFContainerUtils;
 class nsIDOMWindowInternal;
 class nsIDocument;
 
-#include "nsIChromeRegistry.h"
-#include "nsIXULOverlayProvider.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsICSSStyleSheet.h"
 #include "nsIObserver.h"
@@ -57,7 +55,6 @@ class nsIDocument;
 #include "nsString.h"
 #include "nsIZipReader.h"
 #include "nsICSSLoader.h"
-#include "nsCOMArray.h"
      
 // for component registration
 // {D8C7D8A2-E84C-11d2-BF87-00105A1B0627}
@@ -65,7 +62,6 @@ class nsIDocument;
 { 0xd8c7d8a2, 0xe84c, 0x11d2, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
 
 class nsChromeRegistry : public nsIXULChromeRegistry,
-                         public nsIXULOverlayProvider,
                          public nsIObserver,
                          public nsSupportsWeakReference
 {
@@ -75,7 +71,6 @@ public:
   // nsIChromeRegistry methods:
   NS_DECL_NSICHROMEREGISTRY
   NS_DECL_NSIXULCHROMEREGISTRY
-  NS_DECL_NSIXULOVERLAYPROVIDER
 
   NS_DECL_NSIOBSERVER
 
@@ -96,10 +91,7 @@ public:
 
 protected:
   nsresult GetDynamicDataSource(nsIURI *aChromeURL, PRBool aIsOverlay, PRBool aUseProfile, PRBool aCreateDS, nsIRDFDataSource **aResult);
-  nsresult GetURIList(nsIRDFDataSource *aDS, nsIRDFResource *aResource, nsCOMArray<nsIURI>& aArray);
   nsresult GetDynamicInfo(nsIURI *aChromeURL, PRBool aIsOverlay, nsISimpleEnumerator **aResult);
-
-  PRBool   IsOverlayAllowed(nsIURI *aChromeURI);
 
   nsresult GetResource(const nsACString& aChromeType, nsIRDFResource** aResult);
   

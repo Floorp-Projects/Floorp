@@ -68,13 +68,13 @@
 #include "nsDOMError.h"
 #include "nsIBoxObject.h"
 #include "nsIChromeRegistry.h"
+#include "nsIPrincipal.h"
 #include "nsIContentSink.h" // for NS_CONTENT_ID_COUNTER_BASE
 #include "nsIScrollableView.h"
 #include "nsIContentViewer.h"
 #include "nsGUIEvent.h"
 #include "nsIDOMXULElement.h"
 #include "nsIElementFactory.h"
-#include "nsIPrincipal.h"
 #include "nsIPrivateDOMEvent.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFRemoteDataSource.h"
@@ -87,7 +87,6 @@
 #include "nsIXULContent.h"
 #include "nsIXULContentSink.h"
 #include "nsXULContentUtils.h"
-#include "nsIXULOverlayProvider.h"
 #include "nsIXULPrototypeCache.h"
 #include "nsNetUtil.h"
 #include "nsParserCIID.h"
@@ -698,8 +697,6 @@ nsXULDocument::EndLoad()
     rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
     if (NS_FAILED(rv)) return;
 
-    PRBool isChrome = IsChromeURI(uri);
-
     // Remember if the XUL cache is on
     PRBool useXULCache;
     gXULCache->GetEnabled(&useXULCache);
@@ -709,51 +706,49 @@ nsXULDocument::EndLoad()
     // loading it, and write the prototype.
     if (useXULCache && mIsWritingFastLoad &&
         mMasterPrototype != mCurrentPrototype &&
-        isChrome)
+        IsChromeURI(uri))
         gXULCache->WritePrototype(mCurrentPrototype);
 
-    if (isChrome) {
-        nsCOMPtr<nsIXULChromeRegistry> reg =
-            do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return;
+    nsCOMPtr<nsIXULChromeRegistry> reg =
+        do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return;
 
-        nsCOMPtr<nsISupportsArray> sheets;
-        reg->GetStyleSheets(uri, getter_AddRefs(sheets));
+    nsCOMPtr<nsISupportsArray> sheets;
+    reg->GetStyleSheets(uri, getter_AddRefs(sheets));
 
-        // Walk the sheets and add them to the prototype. Also put them
-        // into the document.
-        if (sheets) {
-            nsCOMPtr<nsICSSStyleSheet> sheet;
-            PRUint32 count;
-            sheets->Count(&count);
-            for (PRUint32 i = 0; i < count; ++i) {
-                sheet = do_QueryElementAt(sheets, i);
-                if (sheet) {
-                    nsCOMPtr<nsIURI> sheetURL;
-                    sheet->GetURL(*getter_AddRefs(sheetURL));
+    // Walk the sheets and add them to the prototype. Also put them
+    // into the document.
+    if (sheets) {
+        nsCOMPtr<nsICSSStyleSheet> sheet;
+        PRUint32 count;
+        sheets->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            sheet = do_QueryElementAt(sheets, i);
+            if (sheet) {
+                nsCOMPtr<nsIURI> sheetURL;
+                sheet->GetURL(*getter_AddRefs(sheetURL));
 
-                    if (useXULCache && IsChromeURI(sheetURL)) {
-                        mCurrentPrototype->AddStyleSheetReference(sheetURL);
-                    }
-                    AddStyleSheet(sheet, 0);
+                if (useXULCache && IsChromeURI(sheetURL)) {
+                    mCurrentPrototype->AddStyleSheetReference(sheetURL);
                 }
+                AddStyleSheet(sheet, 0);
             }
         }
-
-        if (useXULCache) {
-            // If it's a 'chrome:' prototype document, then notify any
-            // documents that raced to load the prototype, and awaited
-            // its load completion via proto->AwaitLoadDone().
-            rv = mCurrentPrototype->NotifyLoadDone();
-            if (NS_FAILED(rv)) return;
-        }
-
-        // Now walk the prototype to build content.
-        rv = PrepareToWalk();
-        if (NS_FAILED(rv)) return;
-
-        ResumeWalk();
     }
+
+    if (useXULCache && IsChromeURI(uri)) {
+        // If it's a 'chrome:' prototype document, then notify any
+        // documents that raced to load the prototype, and awaited
+        // its load completion via proto->AwaitLoadDone().
+        rv = mCurrentPrototype->NotifyLoadDone();
+        if (NS_FAILED(rv)) return;
+    }
+
+    // Now walk the prototype to build content.
+    rv = PrepareToWalk();
+    if (NS_FAILED(rv)) return;
+
+    ResumeWalk();
 }
 
 // Called back from nsXULPrototypeDocument::NotifyLoadDone for each XUL
@@ -2785,40 +2780,47 @@ nsresult
 nsXULDocument::AddChromeOverlays()
 {
     nsresult rv;
+    nsCOMPtr<nsIXULChromeRegistry> reg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID, &rv));
 
-    nsCOMPtr<nsIURI> docUri;
-    rv = mCurrentPrototype->GetURI(getter_AddRefs(docUri));
-    NS_ENSURE_SUCCESS(rv, rv);
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
 
-    /* overlays only apply to chrome, skip all content URIs */
-    if (!IsChromeURI(docUri)) return NS_OK;
+    nsCOMPtr<nsISimpleEnumerator> oe;
 
-    nsCOMPtr<nsIXULOverlayProvider> chromeReg(do_GetService(NS_CHROMEREGISTRY_CONTRACTID));
-    // In embedding situations, the chrome registry may not provide overlays,
-    // or even exist at all; that's OK.
-    NS_ENSURE_TRUE(chromeReg, NS_OK);
+    {
+        nsCOMPtr<nsIURI> uri;
+        rv = mCurrentPrototype->GetURI(getter_AddRefs(uri));
+        if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsISimpleEnumerator> overlays;
-    rv = chromeReg->GetOverlaysForURI(docUri, getter_AddRefs(overlays));
-    NS_ENSURE_SUCCESS(rv, rv);
+        reg->GetOverlays(uri, getter_AddRefs(oe));
+    }
 
-    PRBool moreOverlays;
-    nsCOMPtr<nsISupports> next;
-    nsCOMPtr<nsIURI> uri;
+    if (!oe)
+        return NS_OK;
 
-    while (NS_SUCCEEDED(rv = overlays->HasMoreElements(&moreOverlays)) &&
-           moreOverlays) {
-        rv = overlays->GetNext(getter_AddRefs(next));
-        if (NS_FAILED(rv) || !next) continue;
+    PRBool moreElements;
+    oe->HasMoreElements(&moreElements);
 
-        uri = do_QueryInterface(next);
-        if (!uri) {
-            NS_ERROR("Chrome registry handed me a non-nsIURI object!");
-            continue;
-        }
+    while (moreElements) {
+        nsCOMPtr<nsISupports> next;
+        oe->GetNext(getter_AddRefs(next));
+        if (!next)
+            return NS_OK;
 
-        mUnloadedOverlays->AppendElement(uri);
-    }          
+        nsCOMPtr<nsIURI> uri = do_QueryInterface(next);
+        if (!uri)
+            return NS_OK;
+
+        // See if this package is enabled/disabled.  If it
+        // is disabled, we shouldn't append this element to
+        // the unloaded overlay list.
+        PRBool allowed = PR_TRUE;
+        reg->IsOverlayAllowed(uri, &allowed);
+        if (allowed)
+          mUnloadedOverlays->AppendElement(uri);
+
+        oe->HasMoreElements(&moreElements);
+    }
 
     return NS_OK;
 }
