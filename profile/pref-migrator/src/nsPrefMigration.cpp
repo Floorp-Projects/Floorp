@@ -167,12 +167,6 @@ static NS_DEFINE_CID(kCommonDialogsCID, NS_CommonDialog_CID);
 static NS_DEFINE_CID(kDialogParamBlockCID, NS_DialogParamBlock_CID);
 static NS_DEFINE_CID(kFileLocatorCID,       NS_FILELOCATOR_CID);
 
-static PRInt32 gInstanceCnt = 0;
-static PRInt32 gLockCnt     = 0;
-
-
-
-
 nsPrefMigration* nsPrefMigration::mInstance = nsnull;
 
 nsPrefMigration *
