@@ -418,48 +418,60 @@ NS_IMETHODIMP
 nsHTMLSelectElement::GetSelectedIndex(PRInt32* aValue)
 {
   nsIFormControlFrame* formControlFrame = nsnull;
-  if (NS_OK == nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame)) {
+  nsresult rv = nsGenericHTMLElement::GetPrimaryFrame(this, formControlFrame);
+  if (NS_SUCCEEDED(rv)) {
     nsString value;
-    formControlFrame->GetProperty(nsHTMLAtoms::selectedindex, value);
-    if (value.Length() > 0) {
+    rv = formControlFrame->GetProperty(nsHTMLAtoms::selectedindex, value);
+    if (NS_SUCCEEDED(rv) && (value.Length() > 0)) {
       PRInt32 retval = 0;
       PRInt32 error = 0;
       retval = value.ToInteger(&error, 10); // Convert to integer, base 10
       if (!error) {
         *aValue = retval;
-        return NS_OK;
+      } else {
+        rv = NS_ERROR_UNEXPECTED;
       }
     }
   } else { // The frame hasn't been created yet.  Use the options array
     *aValue = -1;
-    nsIDOMHTMLCollection* options;
-    if (NS_OK == GetOptions(&options)) {
+    // If we are a combo box, our default selectedIndex is 0, not -1;
+    // XXX The logic here is duplicated in
+    // nsCSSFrameConstructor::ConstructSelectFrame and
+    // nsSelectControlFrame::GetDesiredSize
+    PRBool isMultiple;
+    rv = GetMultiple(&isMultiple);         // Must not be multiple
+    if (NS_SUCCEEDED(rv) && !isMultiple) {
+      PRInt32 size = 1;
+      rv = GetSize(&size);                 // Size 1 or not set
+      if (NS_SUCCEEDED(rv) && ((1 >= size) || (NS_CONTENT_ATTR_NOT_THERE == size))) {
+	*aValue = 0;
+      }
+    }
+    nsCOMPtr<nsIDOMHTMLCollection> options;
+    rv = GetOptions(getter_AddRefs(options));
+    if (NS_SUCCEEDED(rv) && options) {
       PRUint32 numOptions;
-      options->GetLength(&numOptions);
-
-      for (PRUint32 i = 0; i < numOptions; i++) {
-        nsIDOMNode* node = nsnull;
-        if ((NS_OK == options->Item(i, &node)) && node) {
-          nsIDOMHTMLOptionElement* option = nsnull;
-          if (NS_OK == node->QueryInterface(kIDOMHTMLOptionElementIID, (void**
-)&option)) {
-            PRBool selected;
-            option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
-            NS_RELEASE(option);
-            if (selected) {
-              *aValue = i;
-              NS_RELEASE(node); // Have to release this as the call below is skipped.
-              break;
+      rv = options->GetLength(&numOptions);
+      if (NS_SUCCEEDED(rv)) {
+        for (PRUint32 i = 0; i < numOptions; i++) {
+          nsCOMPtr<nsIDOMNode> node;
+          rv = options->Item(i, getter_AddRefs(node));
+          if (NS_SUCCEEDED(rv) && node) {
+            nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
+            if (NS_SUCCEEDED(rv) && option) {
+              PRBool selected;
+	      rv = option->GetDefaultSelected(&selected); // DefaultSelected == HTML Selected
+              if (NS_SUCCEEDED(rv) && selected) {
+                *aValue = i;
+                break;
+	      }
             }
           }
-          NS_RELEASE(node);
         }
       }
-      NS_RELEASE(options);
     }
   }
-
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -480,7 +492,7 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
 {
   nsresult result = NS_OK;
   PRInt32 selectedIndex;
-  
+
   result = GetSelectedIndex(&selectedIndex);
   if (NS_SUCCEEDED(result)) {
     nsCOMPtr<nsIDOMHTMLCollection> options;
