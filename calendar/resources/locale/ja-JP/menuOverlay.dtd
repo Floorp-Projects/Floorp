@@ -49,7 +49,7 @@
 <!ENTITY event.new.todo     "新しい ToDo">
 <!ENTITY event.new.todo.accesskey "T">
 
-<!ENTITY calendar.new.server.label "New Calendar">
+<!ENTITY calendar.new.server.label "新しいカレンダー">
 <!ENTITY calendar.new.server.accesskey "l">
 
 <!ENTITY event.edit.event   "編集">
@@ -64,7 +64,7 @@
 <!ENTITY event.mail.event   "選択イベントを送信">
 <!ENTITY event.mail.event.accesskey "M">
 
-<!ENTITY calendar.print.label   "アクティブなカレンダを印刷...">
+<!ENTITY calendar.print.label   "アクティブなカレンダーを印刷...">
 <!ENTITY calendar.print.accesskey   "P">
 
 <!ENTITY calendar.printpreview.label    "印刷プレビュー">
@@ -118,13 +118,13 @@
 <!ENTITY goNextCmd.label                "次へ">
 <!ENTITY goNextCmd.accesskey            "N">
 
-<!ENTITY taskMenu.label                "Tasks">
+<!ENTITY taskMenu.label                "タスク">
 <!ENTITY taskMenu.accesskey            "T">
 
 <!ENTITY toolsMenu.label                "ツール">
 <!ENTITY toolsMenu.accesskey            "o">
 
-<!ENTITY javaScriptConsoleCmd.label     "JavaScript Console">
+<!ENTITY javaScriptConsoleCmd.label     "JavaScript コンソール">
 <!ENTITY javaScriptConsoleCmd.accesskey "S">
 
 <!ENTITY navigatorCmd.label     "Browser">
@@ -133,7 +133,7 @@
 <!ENTITY messengerCmd.label     "Mail">
 <!ENTITY messengerCmd.accesskey "M">
 
-<!ENTITY addressBookCmd.label     "Address Book">
+<!ENTITY addressBookCmd.label     "アドレス帳">
 <!ENTITY addressBookCmd.accesskey "A">
 
 <!ENTITY helpMenu.accesskey            "H">
