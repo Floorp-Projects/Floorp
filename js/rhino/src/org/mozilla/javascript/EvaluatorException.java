@@ -41,7 +41,7 @@ package org.mozilla.javascript;
  */
 public class EvaluatorException extends RhinoException
 {
-    EvaluatorException(String detail)
+    public EvaluatorException(String detail)
     {
         super(detail);
     }
