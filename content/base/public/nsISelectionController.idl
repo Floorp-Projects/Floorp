@@ -57,6 +57,7 @@ interface nsISelectionController : nsISelectionDisplay
    const short SELECTION_HIDDEN =1;//>HIDDEN displays selection
    const short SELECTION_ON = 2;
    const short SELECTION_DISABLED = 3;
+   const short SELECTION_ATTENTION = 4;
 
    /**
    * SetDisplaySelection will set the display mode for the selection. OFF,ON,DISABLED

@@ -66,7 +66,7 @@ class nsCaret : public nsICaret,
 		NS_IMETHOD 		EraseCaret();
 
     NS_IMETHOD    SetCaretWidth(nscoord aPixels);
-    void    SetVisibilityDuringSelection(PRBool aVisibility);
+    NS_IMETHOD    SetVisibilityDuringSelection(PRBool aVisibility);
 
     //nsISelectionListener interface
     NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument *aDoc, nsISelection *aSel, short aReason);
