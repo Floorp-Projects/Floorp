@@ -79,7 +79,9 @@ public:
                     nsReflowStatus&          aStatus);
 
   NS_IMETHOD GetFrameName(nsString& aResult) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aSizer, PRUint32* aResult) const;
+#endif
 
   /** returns the number of columns represented by this group.
     * if there are col children, count them (taking into account the span of each)

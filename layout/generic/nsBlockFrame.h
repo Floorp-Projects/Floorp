@@ -101,7 +101,9 @@ public:
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+#ifdef DEBUG
   NS_IMETHOD SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const;
+#endif
   NS_IMETHOD VerifyTree() const;
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, nsIFrame** aFrame);
   NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 

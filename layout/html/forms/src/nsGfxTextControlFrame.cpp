@@ -1444,6 +1444,59 @@ void nsGfxTextControlFrame::RemoveNewlines(nsString &aString)
   aString.StripChars(badChars);
 }
 
+NS_IMETHODIMP
+nsGfxTextControlFrame::List(FILE* out, PRInt32 aIndent) const
+{
+  IndentBy(out, aIndent);
+  ListTag(out);
+  nsIView* view;
+  GetView(&view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+  }
+  fprintf(out, " {%d,%d,%d,%d}", mRect.x, mRect.y, mRect.width, mRect.height);
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+  fputs("<\n", out);
+
+  // Dump out frames contained in interior web-shell
+  if (mWebShell) {
+    nsCOMPtr<nsIContentViewer> viewer;
+    mWebShell->GetContentViewer(getter_AddRefs(viewer));
+    if (viewer) {
+      nsCOMPtr<nsIDocumentViewer> docv(do_QueryInterface(viewer));
+      if (docv) {
+        nsCOMPtr<nsIPresContext> cx;
+        docv->GetPresContext(*getter_AddRefs(cx));
+        if (cx) {
+          nsCOMPtr<nsIPresShell> shell;
+          cx->GetShell(getter_AddRefs(shell));
+          if (shell) {
+            nsIFrame* rootFrame;
+            shell->GetRootFrame(&rootFrame);
+            if (rootFrame) {
+              rootFrame->List(out, aIndent + 1);
+              nsCOMPtr<nsIDocument> doc;
+              docv->GetDocument(*getter_AddRefs(doc));
+              if (doc) {
+                nsCOMPtr<nsIContent> rootContent(getter_AddRefs(doc->GetRootContent()));
+                if (rootContent) {
+                  rootContent->List(out, aIndent + 1);
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  IndentBy(out, aIndent);
+  fputs(">\n", out);
+
+  return NS_OK;
+}
 
 /*******************************************************************************
  * EnderFrameLoadingInfo

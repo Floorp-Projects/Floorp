@@ -1562,14 +1562,16 @@ nsTableRowGroupFrame::GetFrameName(nsString& aResult) const
 }
 
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsTableRowGroupFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
-  if (aResult) {
-    PRUint32 sum = sizeof(*this);
-    // XXX write me
-    *aResult = sum;
-    return NS_OK;
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
-  return NS_ERROR_NULL_POINTER;
+  PRUint32 sum = sizeof(*this);
+  // XXX write me
+  *aResult = sum;
+  return NS_OK;
 }
+#endif

@@ -2180,13 +2180,15 @@ nsFirstLineFrame::Reflow(nsIPresContext& aPresContext,
   return rv;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsPositionedInlineFrame::SizeOf(nsISizeOfHandler* aHandler,
                                 PRUint32* aResult) const
 {
-  if (aResult) {
-    *aResult = sizeof(*this);
-    return NS_OK;
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
-  return NS_ERROR_NULL_POINTER;
+  *aResult = sizeof(*this);
+  return NS_OK;
 }
+#endif

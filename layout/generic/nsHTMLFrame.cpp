@@ -452,6 +452,7 @@ RootFrame::GetFrameName(nsString& aResult) const
   return MakeFrameName("Root", aResult);
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 RootFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -461,3 +462,4 @@ RootFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sizeof(*this);
   return NS_OK;
 }
+#endif

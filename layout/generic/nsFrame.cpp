@@ -93,8 +93,8 @@ PRInt32      fTrackerAddListMax = 0;
 void ForceDrawFrame(nsFrame * aFrame);
 //non Hack prototypes
 static void GetLastLeaf(nsIFrame **aFrame);
-static void GetFirstLeaf(nsIFrame **aFrame);
 #if 0
+static void GetFirstLeaf(nsIFrame **aFrame);
 static void RefreshContentFrames(nsIPresContext& aPresContext, nsIContent * aStartContent, nsIContent * aEndContent);
 #endif
 
@@ -682,7 +682,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     SelectionDetails *details;
     PRInt32 offset;
     if (NS_SUCCEEDED(result) && newContent){
-      nsresult result = newContent->IndexOf(mContent, offset);
+      result = newContent->IndexOf(mContent, offset);
       if (NS_FAILED(result)) 
       {
         return result;
@@ -709,7 +709,7 @@ nsFrame::Paint(nsIPresContext&      aPresContext,
     nsRect drawrect(1, 1, rect.width, rect.height);
     aRenderingContext.DrawRect(drawrect );
     SelectionDetails *deletingDetails = details;
-    while(deletingDetails = details->mNext){
+    while((deletingDetails = details->mNext)){
       delete details;
       details = deletingDetails;
     }
@@ -1589,11 +1589,15 @@ nsFrame::DumpBaseRegressionData(FILE* out, PRInt32 aIndent)
 NS_IMETHODIMP
 nsFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
-  if (aResult) {
-    *aResult = sizeof(*this);
-    return NS_OK;
+  if (!aResult) {
+    return NS_ERROR_NULL_POINTER;
   }
-  return NS_ERROR_NULL_POINTER;
+#ifdef DEBUG
+  *aResult = sizeof(*this);
+#else
+  *aResult = 0;
+#endif
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1682,7 +1686,13 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
   //magic numbers aLineStart will be -1 for end of block 0 will be start of block
   if (!aBlockFrame)
     return NS_ERROR_NULL_POINTER;
-  PRInt32 thisLine = 0;
+  if (aResultFrame) {
+    *aResultFrame = nsnull;
+  }
+  if (aResultContent) {
+    *aResultContent = nsnull;
+  }
+
   nsresult result;
   nsCOMPtr<nsILineIterator> it; 
   result = aBlockFrame->QueryInterface(nsILineIterator::GetIID(),getter_AddRefs(it));
@@ -1788,7 +1798,6 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
 
         result = resultFrame->GetPosition(*(context.get()),aDesiredX,
           aResultContent,*aContentOffset, *aContentOffset);
-        PRBool breakOut = PR_FALSE;
         if (NS_SUCCEEDED(result))
           found = PR_TRUE;
         else {
@@ -1818,7 +1827,6 @@ nsFrame::GetNextPrevLineFromeBlockFrame(nsIFocusTracker *aTracker,
 
         result = resultFrame->GetPosition(*(context.get()),aDesiredX,
           aResultContent,*aContentOffset, *aContentOffset);
-        PRBool breakOut = PR_FALSE;
         if (NS_SUCCEEDED(result))
           found = PR_TRUE;
         else {
@@ -1873,7 +1881,6 @@ nsFrame::PeekOffset(nsIFocusTracker *aTracker,
       if (!aTracker)
         return NS_ERROR_NULL_POINTER;
 
-      nscoord coord = aDesiredX;
       nsCOMPtr<nsILineIterator> it; 
       nsIFrame *blockFrame = this;
       nsIFrame *thisBlock = this;
@@ -2039,7 +2046,7 @@ void ForceDrawFrame(nsFrame * aFrame)//, PRBool)
 
 }
 
-void
+static void
 GetLastLeaf(nsIFrame **aFrame)
 {
   if (!aFrame || !*aFrame)
@@ -2059,6 +2066,7 @@ GetLastLeaf(nsIFrame **aFrame)
   *aFrame = child;
 }
 
+#if 0
 void
 GetFirstLeaf(nsIFrame **aFrame)
 {
@@ -2075,6 +2083,7 @@ GetFirstLeaf(nsIFrame **aFrame)
     *aFrame = child;
   }
 }
+#endif
 
 #ifdef NS_DEBUG
 static void

@@ -1054,7 +1054,21 @@ nsBlockFrame::List(FILE* out, PRInt32 aIndent) const
   if (0 != mFlags) {
     fprintf(out, " [flags=%x]", mFlags);
   }
-  fprintf(out, " sc=%p<\n", mStyleContext);
+  PRInt32 numInlineLines = 0;
+  PRInt32 numBlockLines = 0;
+  if (nsnull != mLines) {
+    nsLineBox* line = mLines;
+    while (nsnull != line) {
+      if (line->IsBlock()) {
+        numBlockLines++;
+      }
+      else {
+        numInlineLines++;
+      }
+      line = line->mNext;
+    }
+  }
+  fprintf(out, " sc=%p(i=%d,b=%d)<\n", mStyleContext, numInlineLines, numBlockLines);
   aIndent++;
 
   // Output the lines
@@ -5490,6 +5504,7 @@ nsBlockFrame::VerifyTree() const
   return NS_OK;
 }
 
+#ifdef DEBUG
 NS_IMETHODIMP
 nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 {
@@ -5523,6 +5538,7 @@ nsBlockFrame::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
   *aResult = sum;
   return NS_OK;
 }
+#endif
 
 //----------------------------------------------------------------------
 
