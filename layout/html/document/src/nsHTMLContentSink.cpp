@@ -1636,18 +1636,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
                       nsIURI* aURL,
                       nsIWebShell* aContainer)
 {  
-#ifdef RAPTOR_PERF_METRICS
-  {
-     char* url;
-     nsresult rv = NS_OK;
-     rv = aURL->GetSpec(&url);
-     if (NS_SUCCEEDED(rv)) {
-       printf("*** Timing layout processes on url: '%s'\n", url);
-       delete [] url;
-     }
-  }
-#endif
-
   NS_RESET_AND_START_STOPWATCH(mWatch)
 
   NS_PRECONDITION(nsnull != aDoc, "null ptr");
