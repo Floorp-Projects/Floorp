@@ -311,7 +311,7 @@ nsMenuFrame::HandleEvent(nsIPresContext* aPresContext,
     // Execute the execute event handler.
     Execute();
   }
-  else if (aEvent->message == NS_MOUSE_EXIT) {
+  else if (aEvent->message == NS_MOUSE_EXIT_SYNTH) {
     // Kill our timer if one is active.
     if (mOpenTimer) {
       mOpenTimer->Cancel();

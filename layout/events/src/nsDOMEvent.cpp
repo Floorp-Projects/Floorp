@@ -807,9 +807,9 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_MOUSE_MIDDLE_DOUBLECLICK:
   case NS_MOUSE_RIGHT_DOUBLECLICK:
     return mEventNames[eDOMEvents_dblclick];
-  case NS_MOUSE_ENTER:
+  case NS_MOUSE_ENTER_SYNTH:
     return mEventNames[eDOMEvents_mouseover];
-  case NS_MOUSE_EXIT:
+  case NS_MOUSE_EXIT_SYNTH:
     return mEventNames[eDOMEvents_mouseout];
   case NS_MOUSE_MOVE:
     return mEventNames[eDOMEvents_mousemove];
@@ -833,6 +833,7 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
   case NS_IMAGE_ABORT:
     return mEventNames[eDOMEvents_abort];
   case NS_IMAGE_ERROR:
+  case NS_SCRIPT_ERROR:
     return mEventNames[eDOMEvents_error];
   case NS_FORM_SUBMIT:
     return mEventNames[eDOMEvents_submit];
@@ -860,9 +861,9 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_commandupdate];
   case NS_DRAGDROP_ENTER:
     return mEventNames[eDOMEvents_dragenter];
-  case NS_DRAGDROP_OVER:
+  case NS_DRAGDROP_OVER_SYNTH:
     return mEventNames[eDOMEvents_dragover];
-  case NS_DRAGDROP_EXIT:
+  case NS_DRAGDROP_EXIT_SYNTH:
     return mEventNames[eDOMEvents_dragexit];
   case NS_DRAGDROP_DROP:
     return mEventNames[eDOMEvents_dragdrop];

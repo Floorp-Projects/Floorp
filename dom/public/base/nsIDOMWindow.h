@@ -186,6 +186,8 @@ public:
 
   NS_IMETHOD    DisableExternalCapture()=0;
 
+  NS_IMETHOD    SetCursor(const nsString& aCursor)=0;
+
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
 
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn)=0;
@@ -278,6 +280,7 @@ public:
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt);  \
   NS_IMETHOD    EnableExternalCapture();  \
   NS_IMETHOD    DisableExternalCapture();  \
+  NS_IMETHOD    SetCursor(const nsString& aCursor);  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn);  \
   NS_IMETHOD    Close();  \
@@ -364,6 +367,7 @@ public:
   NS_IMETHOD    RouteEvent(nsIDOMEvent* aEvt) { return _to RouteEvent(aEvt); }  \
   NS_IMETHOD    EnableExternalCapture() { return _to EnableExternalCapture(); }  \
   NS_IMETHOD    DisableExternalCapture() { return _to DisableExternalCapture(); }  \
+  NS_IMETHOD    SetCursor(const nsString& aCursor) { return _to SetCursor(aCursor); }  \
   NS_IMETHOD    Open(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to Open(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    OpenDialog(JSContext* cx, jsval* argv, PRUint32 argc, nsIDOMWindow** aReturn) { return _to OpenDialog(cx, argv, argc, aReturn); }  \
   NS_IMETHOD    Close() { return _to Close(); }  \

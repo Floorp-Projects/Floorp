@@ -295,7 +295,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       // XXX Bring up a contextual menu provided by the application
       break;
 
-    case NS_MOUSE_ENTER:
+    case NS_MOUSE_ENTER_SYNTH:
       {
         nsAutoString href, target;
         nsIURI* baseURL = nsnull;
@@ -315,7 +315,7 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
       break;
 
       // XXX this doesn't seem to do anything yet
-    case NS_MOUSE_EXIT:
+    case NS_MOUSE_EXIT_SYNTH:
       {
         nsAutoString empty;
         ret = mInner.TriggerLink(aPresContext, eLinkVerb_Replace, nsnull, empty, empty, PR_FALSE);

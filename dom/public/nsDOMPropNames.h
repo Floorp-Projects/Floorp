@@ -922,6 +922,7 @@
     "window.scrollx", \
     "window.scrolly", \
     "window.self", \
+    "window.setcursor", \
     "window.setinterval", \
     "window.settimeout", \
     "window.sidebar", \

@@ -641,7 +641,9 @@ nsGfxButtonControlFrame::HandleEvent(nsIPresContext* aPresContext,
    // lets see if the button was clicked
   switch (aEvent->message) {
      case NS_MOUSE_LEFT_CLICK:
-        MouseClicked(aPresContext);
+       if (nsEventStatus_eConsumeNoDefault != *aEventStatus) { 
+         MouseClicked(aPresContext);
+       }
      break;
   }
 

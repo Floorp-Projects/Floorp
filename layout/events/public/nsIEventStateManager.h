@@ -32,6 +32,7 @@ class nsIPresContext;
 class nsIDOMEvent;
 class nsIFrame;
 class nsIView;
+class nsIWidget;
 
 /*
  * Event listener manager interface.
@@ -49,13 +50,13 @@ public:
   NS_IMETHOD Init() = 0;
 
   NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext, 
-                         nsGUIEvent *aEvent, 
+                         nsEvent *aEvent, 
                          nsIFrame* aTargetFrame,
                          nsEventStatus* aStatus,
                          nsIView* aView) = 0;
 
   NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext, 
-                         nsGUIEvent *aEvent, 
+                         nsEvent *aEvent, 
                          nsIFrame* aTargetFrame,
                          nsEventStatus* aStatus,
                          nsIView* aView) = 0;
@@ -79,6 +80,8 @@ public:
   // Access Key Registration
   NS_IMETHOD RegisterAccessKey(nsIFrame * aFrame, PRUint32 aKey) = 0;
   NS_IMETHOD UnregisterAccessKey(nsIFrame * aFrame) = 0;
+
+  NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor) = 0;
 
 };
 

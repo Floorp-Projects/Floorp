@@ -925,7 +925,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
         // XXX Bring up a contextual menu provided by the application
         break;
 
-      case NS_MOUSE_ENTER:
+      case NS_MOUSE_ENTER_SYNTH:
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {
@@ -947,7 +947,7 @@ nsGenericHTMLElement::HandleDOMEventForAnchors(nsIPresContext* aPresContext,
       }
       break;
 
-      case NS_MOUSE_EXIT:
+      case NS_MOUSE_EXIT_SYNTH:
       {
         nsIEventStateManager *stateManager;
         if (NS_OK == aPresContext->GetEventStateManager(&stateManager)) {

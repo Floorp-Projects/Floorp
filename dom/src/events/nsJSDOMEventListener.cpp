@@ -91,7 +91,7 @@ nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
   PRBool jsBoolResult;
-  if (NS_FAILED(scriptCX->CallEventHandler(mTarget, mHandler, 1, argv, &jsBoolResult))) {
+  if (NS_FAILED(scriptCX->CallEventHandler(mTarget, mHandler, 1, argv, &jsBoolResult, PR_FALSE))) {
     return NS_ERROR_FAILURE;
   }
   return jsBoolResult ? NS_OK : NS_ERROR_FAILURE;

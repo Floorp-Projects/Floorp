@@ -90,7 +90,7 @@ public:
                                        void** aHandler);
   NS_IMETHOD       CallEventHandler(void *aTarget, void *aHandler, 
                                     PRUint32 argc, void *argv, 
-                                    PRBool *aBoolResult);
+                                    PRBool *aBoolResult, PRBool aReverseReturnResult);
   NS_IMETHOD       BindCompiledEventHandler(void *aTarget,
                                             nsIAtom *aName,
                                             void *aHandler);

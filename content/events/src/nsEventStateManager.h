@@ -62,7 +62,7 @@ public:
    * DOM or frame event handling should occur here as well.
    */
   NS_IMETHOD PreHandleEvent(nsIPresContext* aPresContext,
-                         nsGUIEvent *aEvent,
+                         nsEvent *aEvent,
                          nsIFrame* aTargetFrame,
                          nsEventStatus* aStatus,
                          nsIView* aView);
@@ -73,7 +73,7 @@ public:
    * DOM and frame processing.
    */
   NS_IMETHOD PostHandleEvent(nsIPresContext* aPresContext,
-                         nsGUIEvent *aEvent,
+                         nsEvent *aEvent,
                          nsIFrame* aTargetFrame,
                          nsEventStatus* aStatus,
                          nsIView* aView);
@@ -96,6 +96,8 @@ public:
   // Access Key Registration
   NS_IMETHOD RegisterAccessKey(nsIFrame * aFrame, PRUint32 aKey);
   NS_IMETHOD UnregisterAccessKey(nsIFrame * aFrame);
+
+  NS_IMETHOD SetCursor(PRInt32 aCursor, nsIWidget* aWidget, PRBool aLockCursor);
 
 protected:
   void UpdateCursor(nsIPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
@@ -171,6 +173,7 @@ protected:
   PRInt32 mCurrentTabIndex;
   nsIWidget * mLastWindowToHaveFocus; // last native window to get focus via the evs
   PRBool      mConsumeFocusEvents;
+  PRInt32     mLockCursor;
 
   //Anti-recursive stack controls
   nsIContent* mFirstBlurEvent;

@@ -27,6 +27,7 @@
 #include "nsCoord.h"
 #include "nsIDOMSelection.h"
 #include "nsIReflowCommand.h"
+#include "nsGUIEvent.h"
 
 class nsIContent;
 class nsIContentIterator;
@@ -388,9 +389,14 @@ public:
     */
   NS_IMETHOD GetDisplayNonTextSelection(PRBool *aOutEnabled) = 0;
 
-  // XXX events
-  // XXX selection
-  
+  /**
+    * Interface to dispatch events via the presshell
+    */
+  NS_IMETHOD HandleEventWithTarget(nsEvent* aEvent, 
+                                   nsIFrame* aFrame, 
+                                   nsIContent* aContent, 
+                                   nsEventStatus* aStatus) = 0;
+
   /**
    * Get and set the history state for the current document 
    */

@@ -45,6 +45,7 @@ nsJSEventListener::nsJSEventListener(nsIScriptContext *aContext,
   // or the owner goes away.
   mContext = aContext;
   mOwner = aOwner;
+  mReturnResult = nsReturnResult_eNotSet;
 }
 
 nsJSEventListener::~nsJSEventListener() 
@@ -105,7 +106,14 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
       //JS can't handle this event yet or can't handle it at all
       return NS_OK;
     }
-
+    if (mReturnResult == nsReturnResult_eNotSet) {
+      if (eventString == "error" || eventString == "mouseover") {
+        mReturnResult = nsReturnResult_eReverseReturnResult;
+      }
+      else {
+        mReturnResult = nsReturnResult_eDoNotReverseReturnResult;
+      }
+    }
     eventString.InsertWithConversion("on", 0, 2);
   }
   else {
@@ -137,7 +145,13 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 
   argv[0] = OBJECT_TO_JSVAL(eventObj);
   PRBool jsBoolResult;
-  result = mContext->CallEventHandler(obj, (void*) JSVAL_TO_OBJECT(funval), 1, argv, &jsBoolResult);
+  PRBool returnResult = mReturnResult == nsReturnResult_eReverseReturnResult ? PR_TRUE : PR_FALSE;
+  result = mContext->CallEventHandler(obj, 
+                                      (void*) JSVAL_TO_OBJECT(funval), 
+                                      1, 
+                                      argv, 
+                                      &jsBoolResult, 
+                                      returnResult);
   if (NS_FAILED(result)) {
     return result;
   }

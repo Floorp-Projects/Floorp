@@ -47,6 +47,8 @@
 #include "nsIPref.h"
 #include "nsCOMPtr.h"
 #include "nsJSUtils.h"
+#include "nsIDocShell.h"
+#include "nsIPresContext.h"
 
 // Force PR_LOGGING so we can get JS strict warnings even in release builds
 #define FORCE_PR_LOG 1
@@ -72,6 +74,7 @@ NS_ScriptErrorReporter(JSContext *cx,
                        JSErrorReport *report)
 {
   nsCOMPtr<nsIScriptContext> context;
+  nsEventStatus status = nsEventStatus_eIgnore;
 
   // XXX this means we are not going to get error reports on non DOM contexts
   nsJSUtils::nsGetDynamicScriptContext(cx, getter_AddRefs(context));
@@ -86,37 +89,55 @@ NS_ScriptErrorReporter(JSContext *cx,
         return;
       }
 
-      // Make an nsIScriptError and populate it with information from
-      // this error.
-      nsCOMPtr<nsIScriptError>
-        errorObject(do_CreateInstance("mozilla.scripterror.1"));
+      //send error event first, then proceed
+      nsCOMPtr<nsIDocShell> docShell;
+      globalObject->GetDocShell(getter_AddRefs(docShell));
+      if (docShell) {
+        nsCOMPtr<nsIPresContext> presContext;
+        docShell->GetPresContext(getter_AddRefs(presContext));
+        if(presContext) {
+          nsEvent errorevent;
+          errorevent.eventStructType = NS_EVENT;
+          errorevent.message = NS_SCRIPT_ERROR;
 
-      // XXX possible here to distinguish between XUL and content js?
-      // or could just expose setCategory and twiddle it later.
-      const char *category = "XUL/Content JavaScript";
-
-      if (errorObject != nsnull) {
-        nsresult rv = NS_ERROR_FAILURE;
-        if (report) {
-          nsAutoString fileUni;
-          fileUni.AssignWithConversion(report->filename);
-          const PRUnichar *newFileUni = fileUni.ToNewUnicode();
-          PRUint32 column = report->uctokenptr - report->uclinebuf;
-          rv = errorObject->Init(report->ucmessage, newFileUni,
-                                 report->uclinebuf, report->lineno,
-                                 column, report->flags, category);
-          nsAllocator::Free((void *)newFileUni);
-        } else if (message) {
-          nsAutoString messageUni;
-          messageUni.AssignWithConversion(message);
-          const PRUnichar *newMessageUni = messageUni.ToNewUnicode();
-          rv = errorObject->Init(newMessageUni, nsnull, nsnull,
-                                 0, 0, 0, category);
-          nsAllocator::Free((void *)newMessageUni);
+          globalObject->HandleDOMEvent(presContext, &errorevent, nsnull, NS_EVENT_FLAG_INIT, &status);
         }
-        
-        if (NS_SUCCEEDED(rv))
-          owner->ReportScriptError(errorObject);
+      }
+
+      if (status != nsEventStatus_eConsumeNoDefault) {
+
+        // Make an nsIScriptError and populate it with information from
+        // this error.
+        nsCOMPtr<nsIScriptError>
+          errorObject(do_CreateInstance("mozilla.scripterror.1"));
+
+        // XXX possible here to distinguish between XUL and content js?
+        // or could just expose setCategory and twiddle it later.
+        const char *category = "XUL/Content JavaScript";
+
+        if (errorObject != nsnull) {
+          nsresult rv = NS_ERROR_FAILURE;
+          if (report) {
+            nsAutoString fileUni;
+            fileUni.AssignWithConversion(report->filename);
+            const PRUnichar *newFileUni = fileUni.ToNewUnicode();
+            PRUint32 column = report->uctokenptr - report->uclinebuf;
+            rv = errorObject->Init(report->ucmessage, newFileUni,
+                                   report->uclinebuf, report->lineno,
+                                   column, report->flags, category);
+            nsAllocator::Free((void *)newFileUni);
+          } else if (message) {
+            nsAutoString messageUni;
+            messageUni.AssignWithConversion(message);
+            const PRUnichar *newMessageUni = messageUni.ToNewUnicode();
+            rv = errorObject->Init(newMessageUni, nsnull, nsnull,
+                                   0, 0, 0, category);
+            nsAllocator::Free((void *)newMessageUni);
+          }
+      
+          if (NS_SUCCEEDED(rv))
+            owner->ReportScriptError(errorObject);
+        }
       }
     }
   }
@@ -133,6 +154,8 @@ NS_ScriptErrorReporter(JSContext *cx,
   error.AppendWithConversion(": ");
   error.Append(report->ucmessage);
   error.AppendWithConversion("\n");
+  if (status != nsEventStatus_eIgnore)
+    error.AppendWithConversion("Error was suppressed by event handler\n");
   
   char *errorStr = error.ToNewCString();
   if (errorStr) {
@@ -729,7 +752,7 @@ nsJSContext::CompileFunction(void* aTarget,
 
 NS_IMETHODIMP
 nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
-                              void *argv, PRBool *aBoolResult)
+                              void *argv, PRBool *aBoolResult, PRBool aReverseReturnResult)
 {
   // This one's a lot easier than EvaluateString because we don't have to
   // hassle with principals: they're already compiled into the JS function.
@@ -764,7 +787,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
                                 argc, (jsval *)argv, &val);
   }
   *aBoolResult = ok
-                 ? !JSVAL_IS_BOOLEAN(val) || JSVAL_TO_BOOLEAN(val)
+                 ? !JSVAL_IS_BOOLEAN(val) || (aReverseReturnResult ? !JSVAL_TO_BOOLEAN(val) : JSVAL_TO_BOOLEAN(val))
                  : JS_TRUE;
 
   ScriptEvaluated();
