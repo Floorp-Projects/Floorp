@@ -62,6 +62,7 @@ LIBS = \
 	-lsecfree \
 	-ljs \
 	-lxpcom \
+	-lreg \
 	-lxp \
 	$(ZLIB_LIBS) \
 	$(NSPR_LIBS) \

@@ -71,6 +71,7 @@ LIBS		= \
 	-lraptorbase  \
 	-lxp	      \
 	-lxpcom       \
+	-lreg       \
 	-ljsurl	      \
 	-lmozdbm      \
 	-lpwcac	      \

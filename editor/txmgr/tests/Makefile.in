@@ -28,6 +28,7 @@ INCLUDES	+= -I$(DIST)/include
 LIBS		= \
 		  -lraptorbase \
 		  -lxpcom \
+		  -lreg \
 		  $(NSPR_LIBS) \
 		  $(NULL)
 

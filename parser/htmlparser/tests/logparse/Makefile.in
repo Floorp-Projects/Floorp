@@ -34,6 +34,7 @@ LIBS = \
 	-lraptorhtmlpars \
 	-lraptorbase \
 	-lxpcom \
+	-lreg \
 	$(NSPR_LIBS) \
 	$(NULL)
 

@@ -64,6 +64,7 @@ LIBS := \
 	$(JPEG_LIBS) \
 	-lraptorbase \
 	-lxpcom \
+	-lreg \
 	-ljs \
 	-lwidget$(MOZ_TOOLKIT) \
 	-lxp \
