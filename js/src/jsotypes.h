@@ -98,12 +98,10 @@ typedef JSInt64 int64;
 #ifdef HPUX
 #include <model.h>
 #else
-#if !defined(WIN32) || !defined(_WINSOCK2API_)  /* defines its own "int32" */
 #if !defined(XP_MAC) && !defined(_WIN32) && !defined(XP_OS2)
 typedef JSInt32 int32;
 #else
 typedef long int32;
-#endif
 #endif
 typedef JSInt16 int16;
 typedef JSInt8 int8;
