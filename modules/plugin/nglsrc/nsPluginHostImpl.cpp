@@ -48,6 +48,7 @@
 
 #include "nsIServiceManager.h"
 #include "nsICookieStorage.h"
+#include "nsICookieService.h"
 #include "nsIDOMPlugin.h"
 #include "nsIDOMMimeType.h"
 #include "prprf.h"
@@ -80,6 +81,7 @@ static NS_DEFINE_IID(kIPluginInstancePeerIID, NS_IPLUGININSTANCEPEER_IID);
 static NS_DEFINE_IID(kIPluginStreamInfoIID, NS_IPLUGINSTREAMINFO_IID);
 static NS_DEFINE_CID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 static NS_DEFINE_IID(kIStreamObserverIID, NS_ISTREAMOBSERVER_IID);
@@ -2565,53 +2567,83 @@ NS_IMETHODIMP nsPluginHostImpl::NewTempFileName(const char* prefix, PRUint32 buf
 
 NS_IMETHODIMP nsPluginHostImpl::GetCookie(const char* inCookieURL, void* inOutCookieBuffer, PRUint32& inOutCookieSize)
 {
-#ifndef NECKO
-	nsresult rv = NS_OK;
-	nsINetService* netService = NULL;
-	const nsCID kNetServiceCID = NS_NETSERVICE_CID;
-	rv = mServiceMgr->GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports**)&netService);
-	if (rv == NS_OK) {
-		nsIURI* cookieURL = NULL;
-		rv = NS_NewURL(&cookieURL, nsString(inCookieURL));
-		if (rv == NS_OK) {
-			nsString cookieValue;
-			rv = netService->GetCookieString(cookieURL, cookieValue);
-			PRInt32 cookieLength = cookieValue.Length();
-			if (cookieLength < inOutCookieSize)
-				inOutCookieSize = cookieLength;
-			cookieValue.ToCString((char*)inOutCookieBuffer, inOutCookieSize);
-			cookieURL->Release();
-		}
-		mServiceMgr->ReleaseService(kNetServiceCID, netService);
-	}
-	return rv;
-#else
-    // XXX NECKO cookie module needs to be used for this info.
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif // NECKO
+  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+  nsString cookieString;
+  nsCOMPtr<nsIURI> uriIn;
+  char *bufPtr;
+  
+  if ((nsnull == inCookieURL) || (0 >= inOutCookieSize)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+  
+  if (NS_FAILED(rv) || (nsnull == ioService)) {
+    return rv;
+  }
+
+  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  
+  if (NS_FAILED(rv) || (nsnull == cookieService)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+
+  // make an nsURI from the argument url
+  rv = ioService->NewURI(inCookieURL, nsnull, getter_AddRefs(uriIn));
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
+
+  rv = cookieService->GetCookieString(uriIn, cookieString);
+  
+  if (NS_FAILED(rv) || 
+      (((PRInt32) inOutCookieSize) < cookieString.Length())) {
+    return NS_ERROR_FAILURE;
+  }
+  bufPtr = cookieString.ToCString((char *) inOutCookieBuffer, 
+                                  inOutCookieSize);
+  if (nsnull == bufPtr) {
+    return NS_ERROR_FAILURE;
+  }
+  inOutCookieSize = cookieString.Length();
+  rv = NS_OK;
+  
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginHostImpl::SetCookie(const char* inCookieURL, const void* inCookieBuffer, PRUint32 inCookieSize)
 {
-#ifndef NECKO
-	nsresult rv = NS_OK;
-	nsINetService* netService = NULL;
-	const nsCID kNetServiceCID = NS_NETSERVICE_CID;
-	rv = mServiceMgr->GetService(kNetServiceCID, nsINetService::GetIID(), (nsISupports**)&netService);
-	if (rv == NS_OK) {
-		nsIURI* cookieURL = NULL;
-		rv = NS_NewURL(&cookieURL, nsString(inCookieURL));
-		if (rv == NS_OK) {
-			nsString cookieValue;
-			cookieValue.SetString((const char*)inCookieBuffer, inCookieSize);
-			rv = netService->SetCookieString(cookieURL, cookieValue);
-			cookieURL->Release();
-		}
-		mServiceMgr->ReleaseService(kNetServiceCID, netService);
-	}
-	return rv;
-#else
-    // XXX NECKO cookie module needs to be used for this info.
-    return NS_ERROR_NOT_IMPLEMENTED;
-#endif // NECKO
+  nsresult rv = NS_ERROR_NOT_IMPLEMENTED;
+  nsString cookieString;
+  nsCOMPtr<nsIURI> uriIn;
+  
+  if ((nsnull == inCookieURL) || (nsnull == inCookieBuffer) || 
+      (0 >= inCookieSize)) {
+    return NS_ERROR_INVALID_ARG;
+  }
+  
+  NS_WITH_SERVICE(nsIIOService, ioService, kIOServiceCID, &rv);
+  
+  if (NS_FAILED(rv) || (nsnull == ioService)) {
+    return rv;
+  }
+  
+  NS_WITH_SERVICE(nsICookieService, cookieService, kCookieServiceCID, &rv);
+  
+  if (NS_FAILED(rv) || (nsnull == cookieService)) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  // make an nsURI from the argument url
+  rv = ioService->NewURI(inCookieURL, nsnull, getter_AddRefs(uriIn));
+  if (NS_FAILED(rv)) {
+    return NS_ERROR_FAILURE;
+  }
+  
+  cookieString.SetString((const char *) inCookieBuffer, 
+                         (PRInt32) inCookieSize);
+  
+  rv = cookieService->SetCookieString(uriIn, cookieString);
+  
+  return rv;
 }
