@@ -42,7 +42,8 @@ public:
     NO_REASON = 0,
     DRAG_REASON = 1,
     MOUSEDOWN_REASON = 2,
-    MOUSEUP_REASON = 4
+    MOUSEUP_REASON = 4,
+    KEYPRESS_REASON = 8
   };
 
   NS_IMETHOD    NotifySelectionChanged(nsIDOMDocument* aDoc, nsIDOMSelection* aSel, PRInt16 aReason)=0;

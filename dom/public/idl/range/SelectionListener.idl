@@ -5,6 +5,7 @@
   const short DRAG_REASON=1;
   const short MOUSEDOWN_REASON=2;/*bitflags*/
   const short MOUSEUP_REASON=4;/*bitflags*/
+  const short KEYPRESS_REASON=8;/*bitflags*/
 
 	void			notifySelectionChanged(in Document doc, in Selection sel, in short reason);
 };
