@@ -19,7 +19,8 @@
 # the Initial Developer. All Rights Reserved.
 #
 # Contributor(s):
-#  Brian Ryner <bryner@brianryner.com>
+#   Brian Ryner <bryner@brianryner.com>
+#   Daniel Glazman (daniel@glazman.org), on behalf of Lindows.com
 #
 # Alternatively, the contents of this file may be used under the terms of
 # either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -60,7 +61,7 @@ REQUIRES = \
 	xpcom \
 	xulapp \
 	xpinstall \
-      appshell \
+	appshell \
 	$(NULL)
 
 CPPSRCS = nsComposerApp.cpp
@@ -109,7 +110,8 @@ include $(topsrcdir)/config/rules.mk
 $(PROGRAM): $(DIST)/lib/$(LIB_PREFIX)xulapp_s.$(LIB_SUFFIX)
 
 DESKTOP_ICONS := \
-	editorWindow.ico \
+	editorWindow.xpm \
+	editorWindow16.xpm \
 	$(NULL) 
 
 libs:: $(DESKTOP_ICONS)
@@ -132,6 +134,19 @@ install:: composer
 	$(SYSINSTALL) $< $(DESTDIR)$(bindir)
 
 GARBAGE += composer
+endif
+
+ifneq (,$(filter gtk gtk2,$(MOZ_WIDGET_TOOLKIT)))
+ICON_FILES	= \
+		$(srcdir)/mozicon50.xpm \
+		$(srcdir)/mozicon16.xpm \
+		$(NULL)
+
+libs::
+	$(INSTALL) $(ICON_FILES) $(DIST)/bin/icons
+
+install::
+	$(SYSINSTALL) $(IFLAGS1) $(ICON_FILES) $(DESTDIR)$(mozappdir)/icons
 endif
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))

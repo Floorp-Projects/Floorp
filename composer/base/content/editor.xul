@@ -1,42 +1,57 @@
 <?xml version="1.0"?> 
 
-<!--
-   - The contents of this file are subject to the Netscape Public
-   - License Version 1.1 (the "License"); you may not use this file
-   - except in compliance with the License. You may obtain a copy of
-   - the License at http://www.mozilla.org/NPL/
-   -  
-   - Software distributed under the License is distributed on an "AS
-   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-   - implied. See the License for the specific language governing
-   - rights and limitations under the License.
-   -  
-   - The Original Code is Mozilla Communicator client code, released
-   - March 31, 1998.
-   - 
-   - The Initial Developer of the Original Code is Netscape
-   - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1999-2000 Netscape Communications Corporation. All
-   - Rights Reserved.
-   - 
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla.org.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1999-2000
+   - the Initial Developer. All Rights Reserved.
+   -
    - Contributor(s):
    -    Ben Goodger
    -    Michael Lowe
    -    Sammy Ford
-  -->
+   -    Daniel Glazman (daniel@glazman.org), on behalf of Lindows.com
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
 
-<?xml-stylesheet href="chrome://editor/skin/" type="text/css"?> 
+<?xml-stylesheet href="chrome://editor/skin/editor.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://communicator/skin/brand.css" type="text/css"?>
 
-<?xml-stylesheet href="chrome://editor/skin/editorPrimaryToolbar.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://editor/skin/editorFormatToolbar.css" type="text/css"?> 
-<?xml-stylesheet href="chrome://editor/skin/editorModeToolbar.css" type="text/css"?> 
+<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
+<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
+
 <?xul-overlay href="chrome://editor/content/editorOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/composerOverlay.xul"?>
 <?xul-overlay href="chrome://editor/content/EditorContextMenuOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/globalOverlay.xul"?>
-<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
-<?xul-overlay href="chrome://communicator/content/utilityOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/tasksOverlay.xul"?>
+<?xul-overlay href="chrome://global/content/charsetOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/contentAreaContextOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/sidebar/sidebarOverlay.xul"?>
 <?xul-overlay href="chrome://communicator/content/communicatorOverlay.xul"?>
@@ -120,7 +135,7 @@
     <key keycode="VK_TAB" modifiers="control,shift" oncommand="return true;"/>
   </keyset>
 
-  <toolbox class="toolbox-top" id="EditorToolbox">
+  <toolbox class="toolbox-top" id="EditorToolbox" mode="icons">
   <menubar id="main-menubar" class="chromeclass-menubar" persist="collapsed" grippytooltiptext="&menuBar.tooltip;">
     <menu id="fileMenu"/>
     <menu id="editMenu"/>
@@ -164,43 +179,44 @@
     <!--menu id="windowMenu"/-->
 
     <!-- DEBUG only -->
-    <menu id="debugMenu" /> 
+    <!--menu id="debugMenu" /--> 
     <!-- end DEBUG only -->
   
     <!-- help menu filled from globalOverlay -->
-    <menu id="menu_Help"/>
+    <menu id="helpMenu"/>
 
     <spacer flex="1"/>
   </menubar>
 
-  <!-- toolbar filled out from editorOverlay -->
-  <!-- add  class="standard" for dark blue background (icons need rework first) -->
-  <toolbar class="chromeclass-toolbar toolbar-primary" id="EditToolbar" persist="collapsed" 
-           tbalign="stretch" grippytooltiptext="&compositionToolbar.tooltip;">
-    <toolbarbutton id="newButton"/>
-    <toolbarbutton id="openButton"/>
-    <toolbarbutton id="saveButton"/>
-    <toolbarbutton id="publishButton"/>
-    <toolbarbutton id="previewButton"/>
-    <toolbarbutton id="cutButton"/>
-    <toolbarbutton id="copyButton"/>
-    <toolbarbutton id="pasteButton"/>
-    <toolbarbutton id="printButton"/>
-    <toolbarbutton id="findButton"/>
-    <toolbarseparator class="toolbarseparator-primary"/>
-    <toolbarbutton id="linkButton"/>
-    <toolbarbutton id="namedAnchorButton"/>
-    <toolbarbutton id="imageButton"/>
-    <toolbarbutton id="hlineButton"/>
-    <toolbarbutton id="tableButton"/>
-    <toolbarbutton id="spellingButton"/>
-    <spacer flex="1"/>
-    <hbox id="throbber-box" align="center">
-      <button id="navigator-throbber" oncommand="goClickThrobber('editor.throbber.url')" tooltiptext="&throbber.tooltip;">
-        <observes element="Editor:Throbber" attribute="busy"/>
-      </button>
-    </hbox> 
+    <toolbarpalette id="MainToolbarPalette">
+      <toolbarbutton id="newButton"/>
+      <toolbarbutton id="openButton"/>
+      <toolbarbutton id="saveButton"/>
+      <toolbarbutton id="publishButton"/>
+      <toolbarbutton id="previewButton"/>
+      <toolbarbutton id="cutButton"/>
+      <toolbarbutton id="copyButton"/>
+      <toolbarbutton id="pasteButton"/>
+      <toolbarbutton id="printButton"/>
+      <toolbarbutton id="findButton"/>
+      <toolbarbutton id="linkButton"/>
+      <toolbarbutton id="namedAnchorButton"/>
+      <toolbarbutton id="imageButton"/>
+      <toolbarbutton id="hlineButton"/>
+      <toolbarbutton id="tableButton"/>
+      <toolbarbutton id="formButton"/>
+      <toolbarbutton id="spellingButton"/>
+      <toolbaritem id="throbber-box"  align="center" pack="center">
+        <button id="navigator-throbber" tooltiptext="&throbber.tooltip;" />
+      </toolbaritem> 
+  </toolbarpalette>
+  <toolbar id="EditToolbar" class="toolbar-primary chromeclass-toolbar"
+           toolbarname="Main" 
+           fullscreentoolbar="true" mode="icons"
+           customizable="true"
+           defaultset="newButton,spacer,openButton,saveButton,publishButton,previewButton,spacer,namedAnchorButton,linkButton,imageButton,tableButton,formButton,spacer,spellingButton,spacer,printButton,spring,throbber-box,spacer">
   </toolbar>
+
   <toolbar class="chromeclass-toolbar" id="FormatToolbar" persist="collapsed" tbalign="center" grippytooltiptext="&formatToolbar.tooltip;">
     <!-- from editorOverlay -->
     <menulist id="ParagraphSelect"/>
@@ -245,6 +261,7 @@
 
     <spacer flex="1"/>
   </toolbar>
+  <toolbarset id="customToolbars" context="toolbar-context-menu"/>
 </toolbox>
 
 <!-- sidebar/toolbar/content/status -->

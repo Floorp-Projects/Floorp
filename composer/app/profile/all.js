@@ -48,8 +48,8 @@ pref("keyword.URL", "http://keyword.netscape.com/keyword/");
 pref("keyword.enabled", false);
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
-pref("general.useragent.vendor", "Thunderbird");
-pref("general.useragent.vendorSub", "0.1a");
+pref("general.useragent.vendor", "Mozilla (standalone) Composer");
+pref("general.useragent.vendorSub", "0.0.1");
 
 pref("general.startup.browser",             false);
 pref("general.startup.mail",                false);
@@ -92,6 +92,7 @@ pref("browser.display.force_inline_alttext", false); // true = force ALT text fo
 pref("browser.display.normal_lineheight_calc_control", 2);
 pref("browser.display.show_image_placeholders", true); // true = show image placeholders while image is loaded and when image is broken
 pref("browser.anchor_color",                "#0000EE");
+pref("browser.active_color",                "#EE0000");
 pref("browser.visited_color",               "#551A8B");
 pref("browser.underline_anchors",           true);
 pref("browser.blink_allowed",               true);

@@ -1,29 +1,45 @@
 <?xml version="1.0"?> 
-<!--
-   - The contents of this file are subject to the Netscape Public
-   - License Version 1.1 (the "License"); you may not use this file
-   - except in compliance with the License. You may obtain a copy of
-   - the License at http://www.mozilla.org/NPL/
-   -  
-   - Software distributed under the License is distributed on an "AS
-   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
-   - implied. See the License for the specific language governing
-   - rights and limitations under the License.
-   -  
-   - The Original Code is Mozilla Communicator client code, released
-   - March 31, 1998.
-   - 
-   - The Initial Developer of the Original Code is Netscape
-   - Communications Corporation. Portions created by Netscape are
-   - Copyright (C) 1999 Netscape Communications Corporation. All
-   - Rights Reserved.
-   - 
+
+<!-- ***** BEGIN LICENSE BLOCK *****
+   - Version: MPL 1.1/GPL 2.0/LGPL 2.1
+   -
+   - The contents of this file are subject to the Mozilla Public License Version
+   - 1.1 (the "License"); you may not use this file except in compliance with
+   - the License. You may obtain a copy of the License at
+   - http://www.mozilla.org/MPL/
+   -
+   - Software distributed under the License is distributed on an "AS IS" basis,
+   - WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+   - for the specific language governing rights and limitations under the
+   - License.
+   -
+   - The Original Code is Mozilla.org.
+   -
+   - The Initial Developer of the Original Code is
+   - Netscape Communications Corporation.
+   - Portions created by the Initial Developer are Copyright (C) 1999
+   - the Initial Developer. All Rights Reserved.
+   -
    - Contributor(s):
-   -   Ryan Cassin (rcassin@supernova.org)
-   -   Daniel Glazman (glazman@netscape.com)
-   -   Aaron Kaluszka (ask@swva.net)
-   -   Stephen Donner (technutz@netscape.net)
--->
+   -    Ryan Cassin (rcassin@supernova.org)
+   -    Daniel Glazman (glazman@netscape.com)
+   -    Aaron Kaluszka (ask@swva.net)
+   -    Stephen Donner (technutz@netscape.net)
+   -    Daniel Glazman (daniel@glazman.org), on behalf of Lindows.com
+   -
+   - Alternatively, the contents of this file may be used under the terms of
+   - either the GNU General Public License Version 2 or later (the "GPL"), or
+   - the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+   - in which case the provisions of the GPL or the LGPL are applicable instead
+   - of those above. If you wish to allow use of your version of this file only
+   - under the terms of either the GPL or the LGPL, and not to allow others to
+   - use your version of this file under the terms of the MPL, indicate your
+   - decision by deleting the provisions above and replace them with the notice
+   - and other provisions required by the LGPL or the GPL. If you do not delete
+   - the provisions above, a recipient may use your version of this file under
+   - the terms of any one of the MPL, the GPL or the LGPL.
+   -
+   - ***** END LICENSE BLOCK ***** -->
 
 <!DOCTYPE overlay SYSTEM "chrome://editor/locale/editorOverlay.dtd">
 
@@ -33,6 +49,7 @@
 <script type="application/x-javascript" src="chrome://editor/content/editorUtilities.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/ComposerCommands.js"/>
 <script type="application/x-javascript" src="chrome://editor/content/calendarSmartWidgetOverlay.js"/>
+<script type="application/x-javascript" src="chrome://editor/content/mainCore.js"/>
 
   <keyset id="editorKeys">
     <!-- defined in globalOverlay -->
@@ -308,16 +325,15 @@
    -->
   <menu id="fileMenu" label="&fileMenu.label;" accesskey="&filemenu.accesskey;">
     <menupopup id="menu_FilePopup" onpopupshowing="EditorInitFileMenu();">
-      <menu id="menu_New">
+      <menuitem id="menu_newBlankPage" label="&newBlankPageCmd.label;" 
+                accesskey="&newBlankPage.accesskey;" key="key_newBlankPage"
+                command="cmd_newEditor"/>
+      <!--menu id="menu_New">
         <menupopup id="menu_NewPopup">
-          <menuitem id="menu_newBlankPage" label="&newBlankPageCmd.label;" 
-                    accesskey="&newBlankPage.accesskey;" key="key_newBlankPage"
-                    command="cmd_newEditor"/>
           <menuseparator id="composerBeginGlobalNewItems"/>
-          <!-- From globalOverlay.xul -->
           <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
         </menupopup>
-      </menu>
+      </menu-->
       <menuitem accesskey="&fileopenremote.accesskey;"      key="openremoteeditorkb" observes="cmd_openRemote"/>
       <menuitem accesskey="&fileopen.accesskey;"            key="openeditorkb"       observes="cmd_open" label="&openFileCmd.label;"/>
       <menu id="menu_RecentFiles" accesskey="&filerecentmenu.accesskey;" label="&fileRecentMenu.label;"
@@ -393,6 +409,9 @@
       <menuitem id="viewFormatToolbar"   label="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
       <menuitem id="viewEditModeToolbar" label="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />
       <menuitem id="viewTaskBar"         label="&taskbarCmd.label;"            type="checkbox" accesskey="&taskbarCmd.accesskey;"    observes="cmd_viewtaskbar" />
+      <menuseparator />
+      <menuitem id="menu_customizeToolbar" oncommand="CustomizeMainToolbar('EditorToolbox');"
+                label="Customize toolbar" />
     </menupopup>
   </menu>
 
@@ -408,6 +427,21 @@
     <menupopup id="insertMenuPopup">
       <menuitem id="insertImage" accesskey="&insertimage.accesskey;"      observes="cmd_image"       label="&insertImageCmd.label;"/>
       <menuitem id="insertTable" accesskey="&inserttable.accesskey;"      observes="cmd_InsertTable" label="&insertTableCmd.label;"/>
+      <menu     accesskey="&insertformmenu.accesskey;"   id="insertFormMenu"        label="&insertFormMenu.label;">
+        <menupopup>
+          <menuitem accesskey="&insertform.accesskey;"        command="cmd_form"        label="&insertFormCmd.label;"/>
+          <menuseparator/>
+          <menuitem accesskey="&insertinputtag.accesskey;"    command="cmd_inputtag"    label="&insertInputTagCmd.label;"/>
+          <menuitem accesskey="&insertinputimage.accesskey;"  command="cmd_inputimage"  label="&insertInputImageCmd.label;"/>
+          <menuitem accesskey="&inserttextarea.accesskey;"    command="cmd_textarea"    label="&insertTextAreaCmd.label;"/>
+          <menuitem accesskey="&insertselect.accesskey;"      command="cmd_select"      label="&insertSelectCmd.label;"/>
+          <menuitem accesskey="&insertbutton.accesskey;"      command="cmd_button"      label="&insertButtonCmd.label;"/>
+          <menuitem accesskey="&insertlabel.accesskey;"       command="cmd_label"       label="&insertLabelCmd.label;"/>
+          <menuitem accesskey="&insertfieldset.accesskey;"    command="cmd_fieldset"    label="&insertFieldSetCmd.label;"/>
+          <menuseparator/>
+          <menuitem accesskey="&insertisindex.accesskey;"     command="cmd_isindex"     label="&insertIsIndexCmd.label;"/>
+        </menupopup>
+      </menu>
       <menuitem id="insertLink" accesskey="&insertlink.accesskey;"       observes="cmd_link"        label="&insertLinkCmd.label;"   key="insertlinkkb"/>
       <menuitem id="insertAnchor" accesskey="&insertanchor.accesskey;"     observes="cmd_anchor"      label="&insertAnchorCmd.label;"/>
       <menuitem id="insertHline" accesskey="&inserthline.accesskey;"      observes="cmd_hline"       label="&insertHLineCmd.label;"/>
@@ -738,6 +772,27 @@
   <toolbarbutton id="tableButton" class="toolbarbutton-1"
                  label="&tableToolbarCmd.label;" observes="cmd_table"
                  tooltiptext="&tableToolbarCmd.tooltip;"/>
+
+  <toolbarbutton id="formButton" class="toolbarbutton-1"
+                 label="&formToolbarCmd.label;" type="menu-button" observes="cmd_form"
+                 tooltiptext="&formToolbarCmd.tooltip;"
+                 buttonaction="goDoCommand('cmd_form');">
+    <menupopup id="formMenu">
+      <menuitem accesskey="&insertform.accesskey;"        command="cmd_form"        label="&insertFormCmd.label;"
+                default="true"/>
+      <menuseparator/>
+      <menuitem accesskey="&insertinputtag.accesskey;"    command="cmd_inputtag"    label="&insertInputTagCmd.label;"/>
+      <menuitem accesskey="&insertinputimage.accesskey;"  command="cmd_inputimage"  label="&insertInputImageCmd.label;"/>
+      <menuitem accesskey="&inserttextarea.accesskey;"    command="cmd_textarea"    label="&insertTextAreaCmd.label;"/>
+      <menuitem accesskey="&insertselect.accesskey;"      command="cmd_select"      label="&insertSelectCmd.label;"/>
+      <menuitem accesskey="&insertbutton.accesskey;"      command="cmd_button"      label="&insertButtonCmd.label;"/>
+      <menuitem accesskey="&insertlabel.accesskey;"       command="cmd_label"       label="&insertLabelCmd.label;"/>
+      <menuitem accesskey="&insertfieldset.accesskey;"    command="cmd_fieldset"    label="&insertFieldSetCmd.label;"/>
+      <menuseparator/>
+      <menuitem accesskey="&insertisindex.accesskey;"     command="cmd_isindex"     label="&insertIsIndexCmd.label;"/>
+    </menupopup>
+  </toolbarbutton>
+
   <toolbarbutton id="linkButton" class="toolbarbutton-1"
                  label="&linkToolbarCmd.label;" observes="cmd_link"
                  tooltiptext="&linkToolbarCmd.tooltip;"/>
@@ -890,6 +945,20 @@
    -->
   <menuitem id="menu_pasteQuote" accesskey="&editpastequotation.accesskey;" observes="cmd_pasteQuote"/>
 
+  <menu label="Help" accesskey="H" id="helpMenu">
+    <menupopup id="menu_HelpPopup">
+      <menuitem accesskey="R" label="ReleaseNotes"
+                oncommand="loadThrobberUrl('mailnews.release_notes.url');"/>
+      <menuitem accesskey="H" label="Hint and Tips"
+                oncommand="loadThrobberUrl('mailnews.hints_and_tips.url');"/>
+      <menuseparator id="menu_HelpAboutSeparator"/>
+      <menuitem id="aboutName" accesskey="A"
+                label="About Composer"
+                oncommand="window.openDialog('chrome://editor/content/aboutDialog.xul', 'About', 'modal,centerscreen,chrome,resizable=no');"/>
+    </menupopup>
+  </menu>
+
+
   <!-- DEBUG only -->
   <menu id="debugMenu" label="&debugMenu.label;">
   <menupopup>
@@ -912,21 +981,6 @@
     <menuitem id="menu_checkLinks" observes="cmd_checkLinks"
      label="&checkLinksCmd.label;"/>
     <menuseparator />
-      <menu     accesskey="&insertformmenu.accesskey;"   id="insertFormMenu"        label="&insertFormMenu.label;">
-        <menupopup>
-          <menuitem accesskey="&insertform.accesskey;"        command="cmd_form"        label="&insertFormCmd.label;"/>
-          <menuseparator/>
-          <menuitem accesskey="&insertinputtag.accesskey;"    command="cmd_inputtag"    label="&insertInputTagCmd.label;"/>
-          <menuitem accesskey="&insertinputimage.accesskey;"  command="cmd_inputimage"  label="&insertInputImageCmd.label;"/>
-          <menuitem accesskey="&inserttextarea.accesskey;"    command="cmd_textarea"    label="&insertTextAreaCmd.label;"/>
-          <menuitem accesskey="&insertselect.accesskey;"      command="cmd_select"      label="&insertSelectCmd.label;"/>
-          <menuitem accesskey="&insertbutton.accesskey;"      command="cmd_button"      label="&insertButtonCmd.label;"/>
-          <menuitem accesskey="&insertlabel.accesskey;"       command="cmd_label"       label="&insertLabelCmd.label;"/>
-          <menuitem accesskey="&insertfieldset.accesskey;"    command="cmd_fieldset"    label="&insertFieldSetCmd.label;"/>
-          <menuseparator/>
-          <menuitem accesskey="&insertisindex.accesskey;"     command="cmd_isindex"     label="&insertIsIndexCmd.label;"/>
-        </menupopup>
-      </menu>
     <menuitem label="&testSelectionCmd.label;"
            oncommand="EditorTestSelection()"/>
     <menuitem label="&testTableLayoutCmd.label;"

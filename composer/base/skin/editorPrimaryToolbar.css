@@ -1,0 +1,356 @@
+/* ***** BEGIN LICENSE BLOCK *****
+ * Version: NPL 1.1/GPL 2.0/LGPL 2.1
+ *
+ * The contents of this file are subject to the Netscape Public License
+ * Version 1.1 (the "License"); you may not use this file except in
+ * compliance with the License. You may obtain a copy of the License at
+ * http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS IS" basis,
+ * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the License
+ * for the specific language governing rights and limitations under the
+ * License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is 
+ * Netscape Communications Corporation.
+ * Portions created by the Initial Developer are Copyright (C) 1998
+ * the Initial Developer. All Rights Reserved.
+ *
+ * Contributor(s):
+ *   Joe Hewitt <hewitt@netscape.com>
+ *   Daniel Glazman <daniel@glazman.org>, on behalf of Lindows.com
+ *
+ * Alternatively, the contents of this file may be used under the terms of
+ * either the GNU General Public License Version 2 or later (the "GPL"), or 
+ * the GNU Lesser General Public License Version 2.1 or later (the "LGPL"),
+ * in which case the provisions of the GPL or the LGPL are applicable instead
+ * of those above. If you wish to allow use of your version of this file only
+ * under the terms of either the GPL or the LGPL, and not to allow others to
+ * use your version of this file under the terms of the NPL, indicate your
+ * decision by deleting the provisions above and replace them with the notice
+ * and other provisions required by the GPL or the LGPL. If you do not delete
+ * the provisions above, a recipient may use your version of this file under
+ * the terms of any one of the NPL, the GPL or the LGPL.
+ *
+ * ***** END LICENSE BLOCK ***** */
+
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
+
+/* ::::: primary toolbar masthead ::::: */
+
+#EditToolbar > .toolbar-holder > .toolbar-primary-icon {
+  background-image: url("chrome://editor/skin/icons/mast-editor.gif");
+  width: 57px;
+}
+
+.toolbar-primary-icon {
+  width: 57px;
+}
+
+/* ::::: primary toolbar buttons ::::: */
+
+.toolbarbutton-1 {
+  -moz-box-orient: vertical;
+}
+
+.toolbarbutton-1[type="menu"] > .toolbarbutton-menu-dropmarker {
+  display: none;
+}
+
+toolbar[mode="icons"] .toolbarbutton-text {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-menubutton-dropmarker,
+toolbar[mode="text"] .toolbarbutton-icon {
+  display: none;
+}
+
+toolbar[mode="text"] .toolbarbutton-text {
+  padding: 0 !important;
+  margin: 3px 5px !important;
+}
+
+/* ::::: primary toolbar buttons ::::: */
+
+.toolbarseparator-primary {
+  width: 9px !important;
+}
+
+#newButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-newmsg.png");
+}
+
+#newButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-newmsg-hover.png");
+}
+
+#newButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-newmsg-active.png");
+}
+
+#newButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-newmsg-disabled.png");
+}
+
+#openButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-open.png");
+}
+
+#openButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-open-hover.png");
+}
+
+#openButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-open-active.png");
+}
+
+#openButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-open-disabled.png");
+}
+
+#saveButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-save.png");
+}
+
+#saveButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-save-hover.png");
+}
+
+#saveButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-save-active.png");
+}
+
+#saveButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-save-disabled.png");
+}
+
+#publishButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-publish.png");
+}
+
+#publishButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-publish-hover.png");
+}
+
+#publishButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-publish-active.png");
+}
+
+#publishButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-publish-disabled.png");
+}
+
+#previewButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-preview.png");
+}
+
+#previewButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-preview-hover.png");
+}
+
+#previewButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-preview-active.png");
+}
+
+#previewButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-preview-disabled.png");
+}
+
+#copyButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-ed-imap.png");
+  -moz-image-region: rect(0 32px 32px 0);
+}
+
+#copyButton:hover {
+  -moz-image-region: rect(32px 32px 64px 0);
+}
+
+#copyButton:hover:active {
+  -moz-image-region: rect(64px 32px 96px 0);
+}
+
+#copyButton[disabled="true"] {
+  -moz-image-region: rect(96px 32px 128px 0);
+}
+
+#cutButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-ed-imap.png");
+  -moz-image-region: rect(0 64px 32px 32px);
+}
+
+#cutButton:hover {
+  -moz-image-region: rect(32px 64px 64px 32px);
+}
+
+#cutButton:hover:active {
+  -moz-image-region: rect(64px 64px 96px 32px);
+}
+
+#cutButton[disabled="true"] {
+  -moz-image-region: rect(96px 64px 128px 32px);
+}
+
+#findButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-ed-imap.png");
+  -moz-image-region: rect(0 128px 32px 96px);
+}
+
+#findButton:hover {
+  -moz-image-region: rect(32px 128px 64px 96px);
+}
+
+#findButton:hover:active {
+  -moz-image-region: rect(64px 128px 96px 96px);
+}
+
+#findButton[disabled="true"] {
+  -moz-image-region: rect(96px 128px 128px 96px);
+}
+
+#pasteButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-ed-imap.png");
+  -moz-image-region: rect(0 96px 32px 64px);
+}
+
+#pasteButton:hover {
+  -moz-image-region: rect(32px 96px 64px 64px);
+}
+
+#pasteButton:hover:active {
+  -moz-image-region: rect(64px 96px 96px 64px);
+}
+
+#pasteButton[disabled="true"] {
+  -moz-image-region: rect(96px 96px 128px 64px);
+}
+
+#printButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-print.png");
+}
+
+#printButton[buttonover="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-print-hover.png");
+}
+
+#printButton[buttondown="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-print-active.png");
+}
+
+#printButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-print-disabled.png");
+}
+
+#linkButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-link.png");
+}
+
+#linkButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-link-hover.png");
+}
+
+#linkButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-link-active.png");
+}
+
+#linkButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-link-disabled.png");
+}
+
+#imageButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-image.png");
+}
+
+#imageButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-image-hover.png");
+}
+
+#imageButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-image-active.png");
+}
+
+#imageButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-image-disabled.png");
+}
+
+#namedAnchorButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-anchor.png");
+}
+
+#namedAnchorButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-anchor-hover.png");
+}
+
+#namedAnchorButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-anchor-active.png");
+}
+
+#namedAnchorButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-anchor-disabled.png");
+}
+
+#hlineButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-hline.png");
+}
+
+#hlineButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-hline-hover.png");
+}
+
+#hlineButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-hline-active.png");
+}
+
+#hlineButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-hline-disabled.png");
+}
+
+#tableButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-table.png");
+}
+
+#tableButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-table-hover.png");
+}
+
+#tableButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-table-active.png");
+}
+
+#tableButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-table-disabled.png");
+}
+
+#spellingButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-spell.png");
+}
+
+#spellingButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-spell-hover.png");
+}
+
+#spellingButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-spell-active.png");
+}
+
+#spellingButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-spell-disabled.png");
+}
+
+#formButton {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-form.png");
+}
+
+#formButton:hover {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-form-hover.png");
+}
+
+#formButton:hover:active {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-form-active.png");
+}
+
+#formButton[disabled="true"] {
+  list-style-image: url("chrome://editor/skin/icons/orbit-button2-form-disabled.png");
+}
