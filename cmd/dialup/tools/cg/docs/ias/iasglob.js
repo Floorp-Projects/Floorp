@@ -410,7 +410,7 @@ function askIASFileNameAndSave()
 			if ((sgName == null) || (sgName == "") || (sgName == "_new_"))
 				sgName = suggestIASFileName(null);
 			
-			var fName = prompt("Enter the file name for this configuration (must end with .IAS)", sgName);
+			var fName = prompt("Enter the file name for this configuration (must end with .IAS). Do not specify a path name. Account Setup Editor saves the file to " + top.globals.getConfigFolder(top.globals), sgName);
 			
 			//if they entered an improper suffix or path, prompt again, and again
 			//IAS files are to be saved only in the config folder. 

@@ -436,7 +436,7 @@ function askNCIFileNameAndSave()
 			if ((sgName == null) || (sgName == "") || (sgName == "_new_"))
 				sgName = suggestNCIFileName(null);
 
-			var fName = prompt("Enter the file name for this configuration (must end with .NCI)", sgName);
+			var fName = prompt("Enter the file name for this configuration (must end with .NCI). Do not specify a path name. Account Setup Editor saves the file to " + top.globals.getConfigFolder(top.globals), sgName);
 
 			//if they entered an improper suffix or path, prompt again, and again
 			//NCI files are to be saved only in the config folder. 
