@@ -36,6 +36,7 @@
 #include "nsIDTD.h"
 #include <fstream.h>
 #include "nsITokenizer.h"
+#include "nsString.h"
 
 /***************************************************************
   Before digging into the NavDTD, we'll define a helper 
