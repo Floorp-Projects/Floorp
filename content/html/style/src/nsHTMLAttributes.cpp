@@ -423,7 +423,7 @@ nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsString& aValue)
       // add new attribute
       // keep these arbitrarily sorted so they'll equal regardless of set order
       if (aAttrName < mFirst.mAttribute) {  // before first, move first down one
-        HTMLAttribute*  attr = new HTMLAttribute(mFirst);
+        attr = new HTMLAttribute(mFirst);
         if (attr) {
           attr->mNext = mFirst.mNext;
           mFirst.mNext = attr;
@@ -434,7 +434,7 @@ nsHTMLMappedAttributes::SetAttribute(nsIAtom* aAttrName, const nsString& aValue)
         }
       }
       else {
-        HTMLAttribute* attr = new HTMLAttribute(aAttrName, aValue);
+        attr = new HTMLAttribute(aAttrName, aValue);
         if (attr) {
           HTMLAttribute* prev = &mFirst;
           while (prev->mNext && (prev->mNext->mAttribute < aAttrName)) {
@@ -1411,7 +1411,7 @@ HTMLAttributesImpl::Clone(nsIHTMLAttributes** aInstancePtrResult) const
 NS_IMETHODIMP
 HTMLAttributesImpl::SetStyleSheet(nsIHTMLStyleSheet* aSheet)
 {
-  if (mMapped) {
+  if (mMapped && (aSheet != mMapped->mSheet)) {
     mMapped->SetStyleSheet(aSheet);
     return UniqueMapped(aSheet);
   }
