@@ -45,11 +45,11 @@ $saved_cwd        = cwd();
 $component        = "";		# current component being copied
 $PD               = "";		# file Path Delimiter ( /, \, or :)
 $altdest          = "";		# alternate file destination
-$file             = "";		# file being copied
+$line             = "";		# line being processed
 $srcdir           = "";		# directory being copied from
 $destdir          = "";		# destination being copied to
 $package          = "";		# file listing files to copy
-$os               = "NULL";	# os type (MacOS, MSDOS, "" == Unix)
+$os               = "";  	# os type (MacOS, MSDOS, Unix)
 $verbose          = 0;		# shorthand for --debug 1
 $lineno           = 0;		# line # of package file for error text
 $debug            = 0;		# controls amount of debug output
@@ -58,8 +58,8 @@ $help             = 0;		# flag: if set, print usage
 
 
 # get command line options
-$return = GetOptions(	"source|src|s=s",       \$srcdir,
-			"destination|dest|d=s", \$destdir,
+$return = GetOptions(	"source|s=s",           \$srcdir,
+			"destination|d=s",      \$destdir,
 			"file|f=s",             \$package,
 			"os|o=s",               \$os,
 			"help|h",               \$help,
@@ -93,7 +93,7 @@ open (MANIFEST,"<$package") ||
 	die "Error: couldn't open file $package for reading: $!.  Exiting...\n";
 
 LINE: while (<MANIFEST>) {
-	$file =    "";
+	$line =    "";
 	$altdest = "";
 	$lineno++;
 
@@ -125,7 +125,7 @@ LINE: while (<MANIFEST>) {
 	# delete the file or directory following the '-'
 	/^-/	&& do {
 			s/^-//;		# strip leading '-'
-			($debug >= 10) && print "delete.\n";
+			($debug >= 10) && print "delete: $destdir$PD$component$PD$_\n";
 			do_delete ("$destdir$PD$component$PD$_");
 			next LINE;
 	};
@@ -134,39 +134,40 @@ LINE: while (<MANIFEST>) {
 	/\,/	&& do {
 			/.*\,.*\,.*/ &&
 				die "Error: multiple commas not allowed ($package, $lineno): $_.\n";
-			($file, $altdest) = split (/\s*\,\s*/, $_, 2);
-			$file =~ s/$PD*$//;	# strip any trailing delimiter
+			($line, $altdest) = split (/\s*\,\s*/, $_, 2);
+			$line =~ s/$PD*$//;	# strip any trailing delimiter
 			$altdest =~ s/$PD*$//;	# strip any trailing delimiter
-			($debug >= 10) && print "relocate: $file, $altdest.\n";
+			($debug >= 10) && print "relocate: $line, $altdest.\n";
 		};
 
-	($file eq "") && ($file = $_);	# if $file not set, set it.
+	if ($line eq "") {
+		$line = $_;	# if $line not set, set it.
+	}
 
 	# if it has wildcards, do recursive copy.
 	/(?:\*|\?)/	&& do {
 		($debug >= 10) && print "wildcard copy.\n";
-		do_batchcopy ("$srcdir$PD$file");
-		next LINE;
-	};
-
-	# if it's a directory, do recursive copy.
- 	(-d "$srcdir$PD$file") && do {
-		($debug >= 10) && print "directory copy.\n";
-		do_batchcopy ("$srcdir$PD$file");
+		do_batchcopy ("$srcdir$PD$line");
 		next LINE;
 	};
 
 	# if it's a single file, copy it.
-	( -f "$srcdir$PD$file" ) && do {
+	( -f "$srcdir$PD$line" ) && do {
 		($debug >= 10) && print "file copy.\n";
 		do_copyfile ();
-		$file = "";
 		next LINE;
 	};
 
-	# if we hit this, dunno what it is.  abort! abort!
-	die "Error: $_ unrecognized ($package, $lineno).  Exiting...\n";
-# cyeh	print "Error: $_ unrecognized ($package, $lineno).  Exiting...\n";
+	# if it's a directory, do recursive copy.
+ 	(-d "$srcdir$PD$line") && do {
+		($debug >= 10) && print "directory copy.\n";
+		do_batchcopy ("$srcdir$PD$line");
+		next LINE;
+	};
+
+	# if we hit this, it's either a file in the package file that is
+	# not in the src directory, or it is not a valid entry.
+	warn "Warning: package error or possible missing file: $_ ($package, $lineno).\n";
 
 } # LINE
 
@@ -223,7 +224,7 @@ sub do_copyfile
 	if ($batch) {
 		$srcfile = $File::Find::name;
 	} else {
-		$srcfile = "$srcdir$PD$file";
+		$srcfile = "$srcdir$PD$line";
 	}
 	# check that source file is readable
 	(!( -r $srcfile )) &&
@@ -233,7 +234,7 @@ sub do_copyfile
 	if ($altdest ne "") {
 		if ($batch) {
 			$path = "$destdir$PD$component$PD$altdest$PD$File::Find::dir";
-			$path =~ s/$srcdir$PD$file$PD//;	# rm info added by find
+			$path =~ s/$srcdir$PD$line$PD//;	# rm info added by find
 			$basefile = basename ($File::Find::name);
 			($debug >= 5) &&
 				print "recursive find w/altdest: $path $basefile\n";
@@ -265,8 +266,8 @@ sub do_copyfile
 			($debug >= 5) &&
 				print "recursive find w/o altdest: $path $basefile\n";
 		} else {
-			$path = dirname ("$destdir$PD$component$PD$file");
-			$basefile = basename ($file);
+			$path = dirname ("$destdir$PD$component$PD$line");
+			$basefile = basename ($line);
 			($debug >= 5) &&
 				print "recursive find w/o altdest: $path $basefile\n";
 		}
@@ -283,14 +284,14 @@ sub do_copyfile
 			if ($batch) {
 				print "$basefile\n";	# from unglob
 			} else {
-				print "$file\n";	# from single file
+				print "$line\n";	# from single file
 			}
 			if ($debug >= 3) {
 				print "copy\t$srcfile =>\n\t\t$path$PD$basefile\n";
 			}
 		}
 		copy ("$srcfile", "$path$PD$basefile") ||
-			die "Error: copy of file $srcdir$PD$file failed ($package, $component, $lineno): $!.  Exiting...\n";
+			die "Error: copy of file $srcdir$PD$line failed ($package, $component, $lineno): $!.  Exiting...\n";
 
 		# if this is unix, set the dest file permissions
 		if ($os eq "") {
@@ -346,6 +347,7 @@ sub do_component
 	if ( -d "$destdir$PD$component" ) {
 		warn "Warning: component directory \"$component\" already exists in \"$destdir\".\n";
 	} else {
+		($debug >= 4) && print "mkdir $destdir$PD$component\n";
 		mkdir ("$destdir$PD$component", 0755) ||
 			die "Error: couldn't create component directory \"$component\": $!.  Exiting...\n";
 	}
@@ -411,8 +413,8 @@ sub check_arguments
 		fileparse_set_fstype ($os);
 		($debug >= 4) && print "OS: $os\n";
 		warn "Warning: MSDOS not fully implemented/tested.\n";
-	} elsif ( $os =~ /unix/i ) {	# null because Unix is default for
-		$os = "";		# fileparse_set_fstype()
+	} elsif ( $os =~ /unix/i ) {
+		$os = "Unix";       # can be anything but MacOS, MSDOS, or VMS
 		$PD = "/";
 		fileparse_set_fstype ($os);
 		($debug >= 4) && print "OS: Unix\n";
@@ -422,7 +424,7 @@ sub check_arguments
 	}
 
 	if ($exitval) {
-		print "\See '$0 --help\' for more information.\n";
+		print "See \'$0 --help\' for more information.\n";
 		print "Exiting...\n";
 		exit ($exitval);
 	}
@@ -453,33 +455,33 @@ $0
 	in the destination directory as specified by the package file.
 
 Options:
-	--source <source directory>
+	-s, --source <source directory>
 		Specifies the directory from which to copy the files
-		specified in the file passed via --file.  Can also be
-		abbreviated to: --src, --s.
+		specified in the file passed via --file.
 		Required.
 
-	--destination <destination directory>
+	-d, --destination <destination directory>
 		Specifies the directory in which to create the component
 		directories and copy the files specified in the file passed
-		via --file.  Can also be abbreviated to: --dest, --d.
+		via --file.
+		NOTE:	This MUST be an absolute path, relative paths
+			will not work!
 		Required.
 
-	--file <package file>
+	-f, --file <package file>
 		Specifies the file listing the components to be created in
 		the destination directory and the files to copy from the
 		source directory to each component directory in the
-		destination directory.  Can also be abbreviated to: --f.
+		destination directory.
 		Required.
 
-	--os [dos|mac|unix]
-		Specifies which type of system this is.  Used for parsing file
-		specifications from the package file.  Can also be abbreviated
-		to: --o.
+	-o, --os [dos|mac|unix]
+		Specifies which type of system this is.  Used for parsing
+		file specifications from the package file.
 		Required.
 
-	--help
-		Prints this information.  Can also be abbreviated to: --h
+	-h, --help
+		Prints this information.
 		Optional.
 
 	--debug [1-10]
@@ -489,9 +491,8 @@ Options:
 			3 : includes source and destination for each copy.
 		Optional.
 
-	--verbose
-		Print component names and files copied/deleted.  Can also
-		be abbreviated to: --v.
+	-v, --verbose
+		Print component names and files copied/deleted.
 		Optional. 
 
 
