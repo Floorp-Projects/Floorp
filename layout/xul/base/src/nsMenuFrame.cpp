@@ -205,7 +205,7 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
   else if (aEvent->message == NS_MOUSE_ENTER) {
     // Let the menu parent know we're the new item.
     if (mMenuParent)
-      mMenuParent->SetCurrentMenuItem(mContent);
+      mMenuParent->SetCurrentMenuItem(this);
   }
   return NS_OK;
 }

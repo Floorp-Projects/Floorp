@@ -217,123 +217,106 @@ nsMenuPopupFrame::DidReflow(nsIPresContext& aPresContext,
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::GetNextMenuItem(nsIContent* aStart, nsIContent** aResult)
+nsMenuPopupFrame::GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 {
-  PRInt32 index = 0;
-  if (aStart) {
-    // Determine the index of start.
-    mContent->IndexOf(aStart, index);
-    index++;
-  }
-
-  PRInt32 count;
-  mContent->ChildCount(count);
-
-  // Begin the search from index.
-  PRInt32 i;
-  for (i = index; i < count; i++) {
+  nsIFrame* currFrame = aStart ? aStart : mFrames.FirstChild();
+  currFrame->GetNextSibling(&currFrame);
+  while (currFrame) {
     nsCOMPtr<nsIContent> current;
-    mContent->ChildAt(i, *getter_AddRefs(current));
-    
+    currFrame->GetContent(getter_AddRefs(current));
+
     // See if it's a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::xpmenu) {
-      *aResult = current;
-      NS_IF_ADDREF(*aResult);
+      *aResult = currFrame;
       return NS_OK;
     }
+    currFrame->GetNextSibling(&currFrame);
   }
+
+  currFrame = mFrames.FirstChild();
 
   // Still don't have anything. Try cycling from the beginning.
-  for (i = 0; i <= index; i++) {
+  while (currFrame && currFrame != aStart) {
     nsCOMPtr<nsIContent> current;
-    mContent->ChildAt(i, *getter_AddRefs(current));
+    currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::xpmenu) {
-      *aResult = current;
-      NS_IF_ADDREF(*aResult);
+      *aResult = currFrame;
       return NS_OK;
     }
+
+    currFrame->GetNextSibling(&currFrame);
   }
 
   // No luck. Just return our start value.
   *aResult = aStart;
-  NS_IF_ADDREF(aStart);
-
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMenuPopupFrame::GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult)
+nsMenuPopupFrame::GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult)
 {
-  PRInt32 count;
-  mContent->ChildCount(count);
+  nsIFrame* currFrame = aStart ? aStart : mFrames.LastChild();
+  currFrame = mFrames.GetPrevSiblingFor(currFrame);
+  while (currFrame) {
+    nsCOMPtr<nsIContent> current;
+    currFrame->GetContent(getter_AddRefs(current));
 
-  PRInt32 index = count-1;
-  if (aStart) {
-    // Determine the index of start.
-    mContent->IndexOf(aStart, index);
-    index--;
+    // See if it's a menu item.
+    nsCOMPtr<nsIAtom> tag;
+    current->GetTag(*getter_AddRefs(tag));
+    if (tag.get() == nsXULAtoms::xpmenu) {
+      *aResult = currFrame;
+      return NS_OK;
+    }
+    currFrame = mFrames.GetPrevSiblingFor(currFrame);
   }
 
-  
-  // Begin the search from index.
-  PRInt32 i;
-  for (i = index; i >= 0; i--) {
+  currFrame = mFrames.LastChild();
+
+  // Still don't have anything. Try cycling from the end.
+  while (currFrame && currFrame != aStart) {
     nsCOMPtr<nsIContent> current;
-    mContent->ChildAt(i, *getter_AddRefs(current));
+    currFrame->GetContent(getter_AddRefs(current));
     
     // See if it's a menu item.
     nsCOMPtr<nsIAtom> tag;
     current->GetTag(*getter_AddRefs(tag));
     if (tag.get() == nsXULAtoms::xpmenu) {
-      *aResult = current;
-      NS_IF_ADDREF(*aResult);
+      *aResult = currFrame;
       return NS_OK;
     }
-  }
 
-  // Still don't have anything. Try cycling from the beginning.
-  for (i = count-1; i >= index; i--) {
-    nsCOMPtr<nsIContent> current;
-    mContent->ChildAt(i, *getter_AddRefs(current));
-    
-    // See if it's a menu item.
-    nsCOMPtr<nsIAtom> tag;
-    current->GetTag(*getter_AddRefs(tag));
-    if (tag.get() == nsXULAtoms::xpmenu) {
-      *aResult = current;
-      NS_IF_ADDREF(*aResult);
-      return NS_OK;
-    }
+    currFrame = mFrames.GetPrevSiblingFor(currFrame);
   }
 
   // No luck. Just return our start value.
   *aResult = aStart;
-  NS_IF_ADDREF(aStart);
-
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
+NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIFrame* aMenuItem)
 {
   if (mCurrentMenu == aMenuItem)
     return NS_OK;
 
-  // Unset the current child.
+ // Unset the current child.
   if (mCurrentMenu) {
-    //printf("Unsetting current child.\n");
-    mCurrentMenu->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+    nsCOMPtr<nsIContent> content;
+    mCurrentMenu->GetContent(getter_AddRefs(content));
+    content->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
   }
 
   // Set the new child.
   if (aMenuItem) {
-    //printf("Setting new child.\n");
-    aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    nsCOMPtr<nsIContent> content;
+    aMenuItem->GetContent(getter_AddRefs(content));
+    content->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
   }
   mCurrentMenu = aMenuItem;
 

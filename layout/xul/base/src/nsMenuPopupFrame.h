@@ -43,9 +43,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMenuParentInterface
-  NS_IMETHOD SetCurrentMenuItem(nsIContent* aMenuItem);
-  NS_IMETHOD GetNextMenuItem(nsIContent* aStart, nsIContent** aResult);
-  NS_IMETHOD GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult);
+  NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
+  NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
+  NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
 
   // Overridden methods
   NS_IMETHOD Init(nsIPresContext&  aPresContext,
@@ -63,7 +63,7 @@ public:
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
 
 protected:
-  nsIContent* mCurrentMenu; // The current menu that is active.
+  nsIFrame* mCurrentMenu; // The current menu that is active.
   PRBool mIsCapturingMouseEvents; // Whether or not we're grabbing the mouse events.
 }; // class nsMenuPopupFrame
 

@@ -42,9 +42,9 @@ public:
   NS_DECL_ISUPPORTS
 
   // nsIMenuParentInterface
-  NS_IMETHOD SetCurrentMenuItem(nsIContent* aMenuItem);
-  NS_IMETHOD GetNextMenuItem(nsIContent* aStart, nsIContent** aResult);
-  NS_IMETHOD GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult);
+  NS_IMETHOD SetCurrentMenuItem(nsIFrame* aMenuItem);
+  NS_IMETHOD GetNextMenuItem(nsIFrame* aStart, nsIFrame** aResult);
+  NS_IMETHOD GetPreviousMenuItem(nsIFrame* aStart, nsIFrame** aResult);
   
   NS_IMETHOD IsActive() { return mIsActive; };
 
@@ -61,7 +61,7 @@ public:
 protected:
   nsMenuBarListener* mMenuBarListener; // The listener that tells us about key and mouse events.
   PRBool mIsActive; // Whether or not the menu bar is active (a menu item is highlighted or shown).
-  nsIContent* mCurrentMenu; // The current menu that is active.
+  nsIFrame* mCurrentMenu; // The current menu that is active.
 }; // class nsMenuBarFrame
 
 #endif
