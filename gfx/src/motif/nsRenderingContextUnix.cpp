@@ -18,6 +18,7 @@
 
 #include "nsRenderingContextUnix.h"
 #include <math.h>
+#include "nspr.h"
 
 typedef unsigned char BYTE;
 
@@ -34,6 +35,7 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mContext = nsnull ;
   mRenderingSurface = nsnull ;
   mOffscreenSurface = nsnull ;
+  mCurrentColor = 0;
 }
 
 nsRenderingContextUnix :: ~nsRenderingContextUnix()
@@ -130,7 +132,10 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
 {
   XGCValues values ;
 
-  mCurrentColor = aColor ;
+  //mCurrentColor = aColor ;
+
+  // XXX
+  mCurrentColor++;
 
   values.foreground = mCurrentColor;
   values.background = mCurrentColor;
@@ -220,7 +225,7 @@ void nsRenderingContextUnix :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, n
   ::XDrawLine(mRenderingSurface->display, 
 	      mRenderingSurface->drawable,
 	      mRenderingSurface->gc,
-	      aX0, aX1, aY0, aY1);
+	      aX0, aY0, aX1, aY1);
 }
 
 void nsRenderingContextUnix :: DrawRect(const nsRect& aRect)
@@ -243,20 +248,58 @@ void nsRenderingContextUnix :: FillRect(const nsRect& aRect)
 
 void nsRenderingContextUnix :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+
   ::XFillRectangle(mRenderingSurface->display, 
 		   mRenderingSurface->drawable,
 		   mRenderingSurface->gc,
 		   aX, aY,
 		   aWidth, aHeight);
+
 }
 
 
 void nsRenderingContextUnix::DrawPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  PRUint32 i ;
+  XPoint * xpoints;
+  XPoint * thispoint;
+  
+  xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
+
+  for (i = 0; i < aNumPoints; i++){
+    thispoint = (xpoints+i);
+    thispoint->x = aPoints[i].x;
+    thispoint->y = aPoints[i].y;
+  }
+
+  ::XDrawLines(mRenderingSurface->display,
+	       mRenderingSurface->drawable,
+	       mRenderingSurface->gc,
+	       xpoints, aNumPoints, CoordModeOrigin);
+
+  PR_Free((void *)xpoints);
 }
 
 void nsRenderingContextUnix::FillPolygon(nsPoint aPoints[], PRInt32 aNumPoints)
 {
+  PRUint32 i ;
+  XPoint * xpoints;
+  XPoint * thispoint;
+  
+  xpoints = (XPoint *) PR_Malloc(sizeof(XPoint) * aNumPoints);
+
+  for (i = 0; i < aNumPoints; i++){
+    thispoint = (xpoints+i);
+    thispoint->x = aPoints[i].x;
+    thispoint->y = aPoints[i].y;
+  }
+
+  ::XFillPolygon(mRenderingSurface->display,
+		 mRenderingSurface->drawable,
+		 mRenderingSurface->gc,
+		 xpoints, aNumPoints, Convex, CoordModeOrigin);
+
+  PR_Free((void *)xpoints);
 }
 
 void nsRenderingContextUnix :: DrawEllipse(const nsRect& aRect)
@@ -317,7 +360,7 @@ void nsRenderingContextUnix :: DrawString(const char *aString, PRUint32 aLength,
   ::XDrawString(mRenderingSurface->display, 
 		mRenderingSurface->drawable,
 		mRenderingSurface->gc,
-		aX, aY, aString, aWidth);
+		aX, aY, aString, aLength);
 }
 
 void nsRenderingContextUnix :: DrawString(const PRUnichar *aString, PRUint32 aLength,
