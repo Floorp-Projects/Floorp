@@ -2335,7 +2335,15 @@ NavigatorImpl::JavaEnabled(PRBool* aReturn)
   nsresult rv = NS_OK;
   *aReturn = PR_FALSE;
 
-#if defined(OJI)
+  // determine whether user has enabled java.
+  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
+  if (NS_FAILED(rv) || (prefs == nsnull)) {
+      return rv;
+  }
+  
+  rv = prefs->GetBoolPref("security.enable_java", aReturn);
+
+#if 0
   nsIJVMManager* manager = NULL;
   rv = nsServiceManager::GetService(nsIJVMManager::GetCID(),
                                              nsIJVMManager::GetIID(),
