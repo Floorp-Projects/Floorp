@@ -135,13 +135,16 @@ nsresult
 nsContentUtils::GetDynamicScriptContext(JSContext *aContext,
                                        nsIScriptContext** aScriptContext)
 {
+  *aScriptContext = nsnull;
+
   // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
   // private set then that private *must* be a pointer to an nsISupports.
-  nsISupports *supports = (nsIScriptContext*) JS_GetContextPrivate(aContext);
-  if (!supports)
-      return nsnull;
-  return supports->QueryInterface(NS_GET_IID(nsIScriptContext),
-                                  (void**)aScriptContext);
+  nsISupports *supports = (nsIScriptContext*)JS_GetContextPrivate(aContext);
+  if (!supports) {
+      return NS_OK;
+  }
+
+  return CallQueryInterface(supports, aScriptContext);
 }
 
 template <class OutputIterator> 
