@@ -1,7 +1,7 @@
 <html>
 <head>
 <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-<title>Certificate Information and Decisions Help</title>
+<title>Certificate Information and Decisions</title>
 
 <link rel="stylesheet" href="chrome://help/locale/content_style.css" type="text/css">
 
@@ -33,8 +33,9 @@
 
 
 <p>&nbsp;</p>
+<a NAME="view_certificateSDX"></a>
 <a NAME="Certificate_Details"></a>
-<h2>Certificate Viewer</h2>
+<hr><h2>Certificate Viewer</h2>
 
 
 <p>The Certificate Viewer displays information about a certificate you selected in one of the Certificate Manager tabs. For most people, the General tab provides sufficient information. The Details tab provides complete details on the certificate's contents&mdash;information normally of interest to IS professionals only.</p>
@@ -120,7 +121,7 @@
 
 <p>&nbsp;</p>
 <a NAME="Choose_Security_Device"></a>
-<h2>Choose Security Device</h2>
+<hr><h2>Choose Security Device</h2>
 
 <p>A security device (sometimes called a token) is a hardware or software device that provides cryptographic services such as encryption and decryption and stores certificates and keys. The Choose Security Device window appears when Certificate Manager needs help deciding which security device to use when importing a certificate or performing a cryptographic operation, such as generating keys for a new certificate. This window allows you to select one of two or more security devices that Certificate Manager has detected on your machine.
 
@@ -131,7 +132,7 @@
 
 <p>&nbsp;</p>
 <a NAME="Encryption_Key_Copy"></a>
-<h2>Encryption Key Copy</h2>
+<hr><h2>Encryption Key Copy</h2>
 
 
 <p><a href="glossary.html#certificate_authority_(CA)">Certificate authorities (CAs)</a> that issue separate signing and encryption email certificates typically make backup copies of your private <a href="glossary.html#encryption_key">encryption key</a> during the certificate enrollment process. 
@@ -157,7 +158,7 @@
 
 <p>&nbsp;</p>
 <a NAME="Certificate_Backup"></a>
-<h2>Certificate Backup</h2>
+<hr><h2>Certificate Backup</h2>
 
 <p>When you receive a certificate, make a backup copy of the certificate and its private key, then store the copy in a safe place. For example, you can put the copy on a floppy disk and store it with other valuable items under lock and key. That way, even if you have hard disk or file corruption problems, you can easily restore the certificate.</P>
 
@@ -173,7 +174,7 @@
 
 <p>&nbsp;</p>
 <a NAME="User_Identification_Request"></a>
-<h2>User Identification Request</h2>
+<hr><h2>User Identification Request</h2>
 
 
 <P>Some web sites require that you identify yourself with a certificate rather than a name and password, because certificates provide a more reliable form of identification. This method of identifying yourself over the Internet is sometimes called <a href="glossary.html#client_authentication">client authentication</a>.
@@ -199,7 +200,7 @@
 
 <p>&nbsp;</p>
 <a NAME="New_Certificate_Authority"></a>
-<h2>New Certificate Authority</h2>
+<hr><h2>New Certificate Authority</h2>
 
 <p>The certificates that the Certificate Manager has on file, whether stored on your computer or on an external security device such as a smart card, include certificates that identify <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. To be able to recognize any other certificates it has on file, Certificate Manager must have certificates for the CAs that issued or authorized issuance of those certificates. 
 
@@ -224,7 +225,7 @@
 
 <p>&nbsp;</p>
 <a NAME="old_next_update_crl"></a>
-<h2>Browser Won&apos;t Accept CRL</h2>
+<hr><h2>Browser Won&apos;t Accept CRL</h2>
 
 <p>A certificate revocation list (CRL) is list of revoked certificates. The browser uses the CRLs it has available to check the validity of certificates issued by the corresponding <a href="glossary.html#certificate_authority_(CA)">certificate authorities (CAs)</a>. If a certificate is listed as revoked, the browser won&quot;t accept it as evidence of identity.
 
@@ -239,7 +240,7 @@
 
 <p>&nbsp;</p>
 <a NAME="Web_Site_Certificates"></a>
-<h2>Web Site Certificates</h2>
+<hr><h2>Web Site Certificates</h2>
 
 
 <p>One of the windows listed here may appear when you attempt to go to a web site that supports the use of <a href="glossary.html#Secure_Sockets_Layer_(SSL)">SSL</a> for <a href="glossary.html#authentication">authentication</a> and <a href="glossary.html#encryption">encryption</a>.</P>
@@ -249,10 +250,10 @@
 <tr>
 <td class="inthissection">
 <p>In this section:</p>
-<p><a href="#New_Web_Site_Certificate">New Web Site Certificate</a>
-<p><a href="#Expired_Web_Site_Certificate">Expired Web Site Certificate</a>
-<p><a href="#Web_Site_Certificate_Not_Yet_Valid">Web Site Certificate Not Yet Valid</a></LI>
-<p><a href="#Unexpected_Certificate_Name">Unexpected Certificate Name</a>
+<p><a href="#New_Web_Site_Certificate">Web Site Certified by an Unknown Authority</a>
+<p><a href="#Expired_Web_Site_Certificate">Server Certificate Expired</a>
+<p><a href="#Web_Site_Certificate_Not_Yet_Valid">Server Certificate Not Yet Valid</a></LI>
+<p><a href="#Unexpected_Certificate_Name">Domain Name Mismatch</a>
 </td>
 </tr>
 </table>
@@ -260,7 +261,7 @@
 
 <p>&nbsp;</p>
 <a NAME="New_Web_Site_Certificate"></a>
-<h3>Web Site Certified by an Unknown Authority</h3>
+<hr><h3>Web Site Certified by an Unknown Authority</h3>
 
 
 <p>Many web sites use certificates to identify themselves when you visit the site. If Certificate Manager doesn't recognize the <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a> that issued a web site's certificate, it displays an alert that allows you to examine the new web site certificate and decide what to do:
@@ -299,46 +300,60 @@
 
 <p>&nbsp;</p>
 <a NAME="Expired_Web_Site_Certificate"></a>
-<h3>Expired Web Site Certificate</h3>
+<hr><h3>Server Certificate Expired</h3>
 
 <p>Like a credit card, a driver's license, and many other forms of identification, a <a href="glossary.html#certificate">certificate</a> is valid for a specified period of time. When a certificate expires, the owner of the certificate needs to get a new one.</P>
 
-<p>Certificate Manager displays the Expired Web Site Certificate window when you attempt to visit a web site whose certificate has expired. As the window explains, the first thing you should do is make sure the time and date displayed by your computer is correct. If your computer's clock is set to a date that is after the expiration date, Certificate Manager treats the web site's certificate as expired. </P>
+<p>Certificate Manager warns you when you attempt to visit a web site whose server certificate has expired. The first thing you should do is make sure the time and date displayed by your computer is correct. If your computer's clock is set to a date that is after the expiration date, Certificate Manager treats the web site's certificate as expired. </P>
 
-<p>You can examine information about the certificate, including its validity period, by clicking the View button.</P>
+<p>If your computer's clock is set correctly, you need to make a decision about whether to trust the site. This decision depends on what you intend to do at the site and what else you know about it. Most commercial sites will make sure that they replace their certificates before they expire. </P>
 
-<p>The decision whether to trust the site anyway depends on what you intend to do at the site and what else you know about it. Most commercial sites will make sure that they replace their certificates before they expire. </P>
+<p>You can take these actions from the Expired Server Certificate dialog box:
 
-<p>If you believe the certificate's expiration is an inadvertent error, you may want to accept the certificate anyway for this session and let the webmaster for the site know about the problem. </P>
+<ul><li><b>View Certificate:</b> To examine information about the certificate, including its validity period, click View Certificate.</P>
+	<li><b>OK:</b> If you believe the certificate's expiration is an inadvertent error, click OK to accept the certificate anyway for this session, and let the webmaster for the site know about the problem. 
+	<p>If you suspect that there is a more significant problem, be cautious about any actions you take while you are visiting the site.
+	<li><b>Cancel:</b> If you suspect that there may be a significant problem and you don't want to risk visiting the site at all, click Cancel (in which case Certificate Manager will not connect you to the site).
+</ul>
 
-<p>If you suspect that there may be a more significant problem, either accept the certificate and be cautious about any actions you take while you are visiting the site, or do not accept the certificate (in which case the browser will not connect you to the site).</P>
 
 
 <p>&nbsp;</p>
 <a NAME="Web_Site_Certificate_Not_Yet_Valid"></a>
-<h3>Web Site Certificate Not Yet Valid</h3>
+<hr><h3>Server Certificate Not Yet Valid</h3>
 
 
 <p>Like a credit card, a driver's license, and many other forms of identification, a <a href="glossary.html#certificate">certificate</a> is valid for a specified period of time.</P>
 
-<p>Certificate Manager displays the Web Site Certificate Not Yet Valid window when you attempt to visit a web site whose certificate's validity period has not yet started. The first thing you should do is make sure the time and date displayed by your own computer is correct. If your computer's clock is set to the wrong date, Certificate Manager may treat the web site's certificate as not yet valid even if this is not the case. </P>
+<p>Certificate Manager warns you when you attempt to visit a web site whose server certificate's validity period has not yet started. The first thing you should do is make sure the time and date displayed by your own computer is correct. If your computer's clock is set to the wrong date, Certificate Manager may treat the server certificate as not yet valid even if this is not the case. </P>
 
-<p>You can examine information about the certificate, including its validity period, by clicking the View button.</P>
+<p>If your computer's clock is set correctly, you need to make a decision about whether to trust the site. This decision depends on what you intend to do at the site and what else you know about it. Most commercial sites will make sure that the validity period for their certificates has begun before beginning to use them. </P>
 
-<p>The decision whether to trust the site anyway depends on what you intend to do at the site and what else you know about it. Most commercial sites will make sure that the validity period for their certificates has begun before beginning to use them. </P>
+<p>You can take these actions from the Server Certificate Not Yet Valid dialog box:
 
-<p>If you believe the certificate's expiration is an inadvertent error, you may want to accept the certificate anyway for this session and let the webmaster for the site know about the problem. </P>
-
-<p>If you suspect that there may be a more significant problem, either accept the certificate and be cautious about any actions you take while you are visiting the site, or do not accept the certificate (in which case Certificate Manager will not connect you to the site).</P>
+<ul><li><b>View Certificate:</b> To examine information about the certificate, including its validity period, click View Certificate.</P>
+	<li><b>OK:</b> If you believe the problem is an inadvertent error, click OK to accept the certificate anyway for this session, and let the webmaster for the site know about the problem. 
+	<p>If you suspect that there is a more significant problem, be cautious about any actions you take while you are visiting the site.
+	<li><b>Cancel:</b> If you suspect that there may be a significant problem and you don't want to risk visiting the site at all, click Cancel (in which case Certificate Manager will not connect you to the site).
+</ul>
 
 <p>&nbsp;</p>
 <a NAME="Unexpected_Certificate_Name"></a>
-<h3>Unexpected Certificate Name</h3>
+<hr><h3>Domain Name Mismatch</h3>
 
 
-<p>A web site <a href="glossary.html#certificate">certificate</a> specifies the name of the web site in the form of the site's host name. For example, the host name for the Netscape web site is <tt>home.netscape.com</tt>. If the host name in a web site's certificate doesn't match the actual host name of the web site, it may be a sign that someone is attempting to intercept your communication with the web site.</P>
+<p>A server <a href="glossary.html#certificate">certificate</a> specifies the name of the server in the form of the site's domain name. For example, the domain name for the Netscape web site is <tt>home.netscape.com</tt>. If the domain name in a server's certificate doesn't match the actual domain name of the web site, it may be a sign that someone is attempting to intercept your communication with the web site.</P>
 
 <p>The decision whether to trust the site anyway depends on what you intend to do at the site and what else you know about it. Most commercial sites will make sure that the host name for a web site certificate matches the web site's actual host name.</P>
+
+<p>You can take these actions from the Domain Name Mismatch dialog box:
+
+<ul><li><b>View Certificate:</b> To examine information about the certificate, click View Certificate.</P>
+	<li><b>OK:</b> If you believe the problem is an inadvertent error, click OK to accept the certificate anyway for this session, and let the webmaster for the site know about the problem. 
+	<p>If you suspect that there is a more significant problem, be cautious about any actions you take while you are visiting the site, and treat any information you find there as potentially suspect.
+	<li><b>Cancel:</b> If you suspect that there may be a significant problem and you don't want to risk visiting the site at all, click Cancel (in which case Certificate Manager will not connect you to the site).
+</ul>
+
 
 <p>If you decide to accept the certificate anyway for this session, you should be cautious about what you do on the web site, and you should treat any information you find there as potentially suspect.</P>
 
@@ -346,7 +361,7 @@
 
 
 <hr>
-<p><i>25 April 2002</i></p>
+<p><i>30 April 2002</i></p>
 <p>Copyright &copy; 1994-2002 Netscape Communications Corporation.</p>
 
 </body>
