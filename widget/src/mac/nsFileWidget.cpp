@@ -37,7 +37,7 @@ nsFileWidget::nsFileWidget()
   mNumberOfFilters = 0;
 }
 
-void nsFileWidget::Create(nsIWidget        *aParent,
+NS_IMETHODIMP nsFileWidget::Create(nsIWidget        *aParent,
                           const nsRect     &aRect,
                           EVENT_CALLBACK   aHandleEventFunction,
                           nsIDeviceContext *aContext,
@@ -47,11 +47,12 @@ void nsFileWidget::Create(nsIWidget        *aParent,
 {
   nsString title("Open");
   Create(aParent, title, eMode_load, aContext, aAppShell, aToolkit, aInitData);
+  return NS_OK;
 }
 
 
 //-------------------------------------------------------------------------
-void   nsFileWidget:: Create(nsIWidget  *aParent,
+NS_IMETHODIMP   nsFileWidget:: Create(nsIWidget  *aParent,
                              nsString&   aTitle,
                              nsMode      aMode,
                              nsIDeviceContext *aContext,
@@ -73,6 +74,7 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
 
   InitToolkit(aToolkit, aParent);
   InitDeviceContext(aContext, (nsNativeWidget)mWindowPtr);
+  return NS_OK;
 
 }
 
@@ -101,7 +103,7 @@ nsresult nsFileWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 
 
 
-void nsFileWidget::Create(nsNativeWidget aParent,
+NS_IMETHODIMP nsFileWidget::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -109,6 +111,7 @@ void nsFileWidget::Create(nsNativeWidget aParent,
                       nsIToolkit *aToolkit,
                       nsWidgetInitData *aInitData)
 {
+	return NS_OK;
 }
 
 
@@ -117,10 +120,11 @@ void nsFileWidget::Create(nsNativeWidget aParent,
 // Ok's the dialog
 //
 //-------------------------------------------------------------------------
-void nsFileWidget::OnOk()
+NS_IMETHODIMP nsFileWidget::OnOk()
 {
   mWasCancelled  = PR_FALSE;
   mIOwnEventLoop = PR_FALSE;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -128,10 +132,11 @@ void nsFileWidget::OnOk()
 // Cancel the dialog
 //
 //-------------------------------------------------------------------------
-void nsFileWidget::OnCancel()
+NS_IMETHODIMP nsFileWidget::OnCancel()
 {
   mWasCancelled  = PR_TRUE;
   mIOwnEventLoop = PR_FALSE;
+  return NS_OK;
 }
 
 
@@ -200,11 +205,12 @@ void nsFileWidget::GetFilterListArray(nsString& aFilterList)
 //
 //-------------------------------------------------------------------------
 
-void nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
+NS_IMETHODIMP nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitles[],const nsString aFilters[])
 {
   mNumberOfFilters  = aNumberOfFilters;
   mTitles           = aTitles;
   mFilters          = aFilters;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -213,10 +219,11 @@ void nsFileWidget::SetFilterList(PRUint32 aNumberOfFilters,const nsString aTitle
 //
 //-------------------------------------------------------------------------
 
-void  nsFileWidget::GetFile(nsString& aFile)
+NS_IMETHODIMP  nsFileWidget::GetFile(nsString& aFile)
 {
   aFile.SetLength(0);
   aFile.Append(mFile);
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -225,9 +232,10 @@ void  nsFileWidget::GetFile(nsString& aFile)
 //
 //-------------------------------------------------------------------------
 
-void  nsFileWidget::SetDefaultString(nsString& aString)
+NS_IMETHODIMP  nsFileWidget::SetDefaultString(nsString& aString)
 {
   mDefault = aString;
+  return NS_OK;
 }
 
 

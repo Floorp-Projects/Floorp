@@ -32,9 +32,10 @@
 NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
 NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 
-void nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
+NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 {
   mDispatchListener = aDispatchListener;
+  return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -43,9 +44,10 @@ void nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
 //
 //-------------------------------------------------------------------------
 
-void nsAppShell::Create(int* argc, char ** argv)
+NS_IMETHODIMP nsAppShell::Create(int* argc, char ** argv)
 {
-		mToolKit = new nsToolkit();
+	mToolKit = new nsToolkit();
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------
@@ -72,10 +74,11 @@ nsresult nsAppShell::Run()
 // nsAppShell constructor
 //
 //-------------------------------------------------------------------------
-void nsAppShell::Exit()
+NS_IMETHODIMP nsAppShell::Exit()
 {
 	if (mMacPump)
 		mMacPump->StopRunning();
+	return NS_OK;
 }
 
 //-------------------------------------------------------------------------

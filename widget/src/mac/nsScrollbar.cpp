@@ -49,7 +49,7 @@ nsScrollbar::nsScrollbar(PRBool aIsVertical)
  *	@param	aInitData -- 
  *  @return nothing
  */
-void nsScrollbar::Create(nsIWidget *aParent,
+NS_IMETHODIMP nsScrollbar::Create(nsIWidget *aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -102,7 +102,7 @@ void nsScrollbar::Create(nsIWidget *aParent,
 	  //InitCallbacks("nsButton");
 	  InitDeviceContext(mContext, (nsNativeWidget)mWindowPtr);
 		}
-
+		return NS_OK;
 }
 
 //=================================================================
@@ -115,7 +115,7 @@ void nsScrollbar::Create(nsIWidget *aParent,
  *	@param	aInitData -- 
  *  @return nothing
  */
-void nsScrollbar::Create(nsNativeWidget aParent,
+NS_IMETHODIMP nsScrollbar::Create(nsNativeWidget aParent,
                       const nsRect &aRect,
                       EVENT_CALLBACK aHandleEventFunction,
                       nsIDeviceContext *aContext,
@@ -136,6 +136,7 @@ nsRefData		*theRefData;
 		Create(theNsWindow, aRect,aHandleEventFunction, aContext, aAppShell, aToolkit, aInitData);
 
 	//NS_ERROR("This Widget must not use this Create method");
+	return NS_OK;
 
 }
 
