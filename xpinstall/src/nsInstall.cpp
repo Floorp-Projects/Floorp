@@ -81,7 +81,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 
 static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
-static NS_DEFINE_IID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_IID(kIStringBundleServiceIID, NS_ISTRINGBUNDLESERVICE_IID);
 	
 #define XPINSTALL_BUNDLE_URL "chrome://xpinstall/locale/xpinstall.properties"
@@ -176,16 +176,17 @@ nsInstall::nsInstall(nsIZipReader * theJARFile)
 
     // get the resourced xpinstall string bundle
     mStringBundle = nsnull;
-    nsIStringBundleService *service;
-    rv = nsServiceManager::GetService( kStringBundleServiceCID, 
-                                       NS_GET_IID(nsIStringBundleService),
-                                       (nsISupports**) &service );
+    NS_WITH_PROXIED_SERVICE( nsIStringBundleService, 
+                             service, 
+                             kStringBundleServiceCID, 
+                             NS_UI_THREAD_EVENTQ, 
+                             &rv );
+
     if (NS_SUCCEEDED(rv) && service)
     {
         nsILocale* locale = nsnull;
         rv = service->CreateBundle( XPINSTALL_BUNDLE_URL, locale,
                                     getter_AddRefs(mStringBundle) );
-        nsServiceManager::ReleaseService( kStringBundleServiceCID, service );
     }
 }
 
