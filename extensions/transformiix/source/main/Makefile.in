@@ -26,104 +26,25 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-LIBRARY_NAME = tx
-FORCE_STATIC_LIB = 1
-
-SIMPLE_PROGRAMS = transformiix$(BIN_SUFFIX)
+SIMPLE_PROGRAMS = transformiix$(BIN_SUFFIX) testXalan$(BIN_SUFFIX)
 ifdef MARK_INC
 SIMPLE_PROGRAMS += txXSLTMarkDriver$(BIN_SUFFIX)
 endif
-EXTRA_DEPS = $(LIBRARY)
 
 REQUIRES = string \
 	   xpcom \
 	   expat \
            $(NULL)
 
-OBJS = ../base/Double.$(OBJ_SUFFIX) \
-  ../base/List.$(OBJ_SUFFIX) \
-  ../base/Map.$(OBJ_SUFFIX) \
-  ../base/NamedMap.$(OBJ_SUFFIX) \
-  ../base/SimpleErrorObserver.$(OBJ_SUFFIX) \
-  ../base/Stack.$(OBJ_SUFFIX) \
-  ../base/Tokenizer.$(OBJ_SUFFIX) \
-  ../base/txAtoms.$(OBJ_SUFFIX) \
-  ../base/txExpandedNameMap.$(OBJ_SUFFIX) \
-  ../base/txStringUtils.$(OBJ_SUFFIX) \
-  ../base/txURIUtils.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/Attr.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/NodeListDefinition.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/NodeDefinition.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/Element.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/NamedNodeMap.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/Document.$(OBJ_SUFFIX) \
-  ../xml/dom/standalone/ProcessingInstruction.$(OBJ_SUFFIX) \
-  ../xpath/AdditiveExpr.$(OBJ_SUFFIX) \
-  ../xpath/AttributeValueTemplate.$(OBJ_SUFFIX) \
-  ../xpath/BooleanExpr.$(OBJ_SUFFIX) \
-  ../xpath/BooleanFunctionCall.$(OBJ_SUFFIX) \
-  ../xpath/BooleanResult.$(OBJ_SUFFIX) \
-  ../xpath/ExprLexer.$(OBJ_SUFFIX) \
-  ../xpath/ExprParser.$(OBJ_SUFFIX) \
-  ../xpath/FilterExpr.$(OBJ_SUFFIX) \
-  ../xpath/FunctionCall.$(OBJ_SUFFIX) \
-  ../xpath/LocationStep.$(OBJ_SUFFIX) \
-  ../xpath/MultiplicativeExpr.$(OBJ_SUFFIX) \
-  ../xpath/NodeSet.$(OBJ_SUFFIX) \
-  ../xpath/NodeSetFunctionCall.$(OBJ_SUFFIX) \
-  ../xpath/NumberExpr.$(OBJ_SUFFIX) \
-  ../xpath/NumberFunctionCall.$(OBJ_SUFFIX) \
-  ../xpath/NumberResult.$(OBJ_SUFFIX) \
-  ../xpath/PathExpr.$(OBJ_SUFFIX) \
-  ../xpath/PredicateList.$(OBJ_SUFFIX) \
-  ../xpath/RelationalExpr.$(OBJ_SUFFIX) \
-  ../xpath/RootExpr.$(OBJ_SUFFIX) \
-  ../xpath/StringExpr.$(OBJ_SUFFIX) \
-  ../xpath/StringFunctionCall.$(OBJ_SUFFIX) \
-  ../xpath/StringResult.$(OBJ_SUFFIX) \
-  ../xpath/txNameTest.$(OBJ_SUFFIX) \
-  ../xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
-  ../xpath/txForwardContext.$(OBJ_SUFFIX) \
-  ../xpath/txNodeSetContext.$(OBJ_SUFFIX) \
-  ../xpath/UnionExpr.$(OBJ_SUFFIX) \
-  ../xpath/UnaryExpr.$(OBJ_SUFFIX) \
-  ../xpath/VariableRefExpr.$(OBJ_SUFFIX) \
-  ../xml/XMLUtils.$(OBJ_SUFFIX) \
-  ../xml/XMLDOMUtils.$(OBJ_SUFFIX) \
-  ../xml/parser/XMLParser.$(OBJ_SUFFIX) \
-  ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
-  ../xslt/ProcessorState.$(OBJ_SUFFIX) \
-  ../xslt/txHTMLOutput.$(OBJ_SUFFIX) \
-  ../xslt/txRtfHandler.$(OBJ_SUFFIX) \
-  ../xslt/txTextHandler.$(OBJ_SUFFIX) \
-  ../xslt/txTextOutput.$(OBJ_SUFFIX) \
-  ../xslt/txUnknownHandler.$(OBJ_SUFFIX) \
-  ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
-  ../xslt/txXSLTNumber.$(OBJ_SUFFIX) \
-  ../xslt/txXSLTNumberCounters.$(OBJ_SUFFIX) \
-  ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
-  ../xslt/txPatternParser.$(OBJ_SUFFIX) \
-  ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \
-  ../xslt/txStandaloneXSLTProcessor.$(OBJ_SUFFIX) \
-  ../xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/DocumentFunctionCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/ElementAvailableFnCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/FunctionAvailableFnCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/GenerateIdFunctionCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/SystemPropertyFunctionCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/txFormatNumberFunctionCall.$(OBJ_SUFFIX) \
-  ../xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
-  ../xslt/util/txNodeSorter.$(OBJ_SUFFIX) \
-  ../xslt/util/txXPathResultComparator.$(OBJ_SUFFIX)
-CPP_PROG_LINK		= 1
+CPP_PROG_LINK          = 1
+
+EXTRA_DEPS = \
+             $(DIST)/lib/$(LIB_PREFIX)tx.$(LIB_SUFFIX) \
+             $(NULL)
 
 EXTRA_LIBS = \
-             $(LIB_PREFIX)tx.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)tx.$(LIB_SUFFIX) \
              $(MOZ_COMPONENT_LIBS) \
-             $(NULL)
-SHARED_LIBRARY_LIBS = \
-             $(DIST)/lib/$(LIB_PREFIX)expat_s.$(LIB_SUFFIX) \
-             $(DIST)/lib/$(LIB_PREFIX)xmltok_s.$(LIB_SUFFIX) \
              $(NULL)
 
 include $(topsrcdir)/config/rules.mk

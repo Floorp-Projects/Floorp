@@ -1,0 +1,125 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+# 
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+# 
+# The Original Code is Transformiix XSLT Processor.
+# 
+# The Initial Developer of the Original Code is Axel Hecht.
+# Portions created by Axel Hecht are  Copyright (C) Axel Hecht.
+# All Rights Reserved.
+# 
+# Contributor(s):
+#	Axel Hecht <axel@pike.org>
+# 
+
+DEPTH           = ../../../..
+topsrcdir       = @top_srcdir@
+srcdir          = @srcdir@
+VPATH           = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+LIBRARY_NAME = tx
+FORCE_STATIC_LIB = 1
+
+REQUIRES = string \
+	   xpcom \
+	   expat \
+           $(NULL)
+
+OBJS = ../base/Double.$(OBJ_SUFFIX) \
+  ../base/List.$(OBJ_SUFFIX) \
+  ../base/Map.$(OBJ_SUFFIX) \
+  ../base/NamedMap.$(OBJ_SUFFIX) \
+  ../base/SimpleErrorObserver.$(OBJ_SUFFIX) \
+  ../base/Stack.$(OBJ_SUFFIX) \
+  ../base/Tokenizer.$(OBJ_SUFFIX) \
+  ../base/txAtoms.$(OBJ_SUFFIX) \
+  ../base/txExpandedNameMap.$(OBJ_SUFFIX) \
+  ../base/txStringUtils.$(OBJ_SUFFIX) \
+  ../base/txURIUtils.$(OBJ_SUFFIX) \
+  ../xml/dom/standalone/Attr.$(OBJ_SUFFIX) \
+  ../xml/dom/standalone/NodeListDefinition.$(OBJ_SUFFIX) \
+  ../xml/dom/standalone/NodeDefinition.$(OBJ_SUFFIX) \
+  ../xml/dom/standalone/Element.$(OBJ_SUFFIX) \
+  ../xml/dom/standalone/NamedNodeMap.$(OBJ_SUFFIX) \
+  ../xml/dom/standalone/Document.$(OBJ_SUFFIX) \
+  ../xml/dom/standalone/ProcessingInstruction.$(OBJ_SUFFIX) \
+  ../xpath/AdditiveExpr.$(OBJ_SUFFIX) \
+  ../xpath/AttributeValueTemplate.$(OBJ_SUFFIX) \
+  ../xpath/BooleanExpr.$(OBJ_SUFFIX) \
+  ../xpath/BooleanFunctionCall.$(OBJ_SUFFIX) \
+  ../xpath/BooleanResult.$(OBJ_SUFFIX) \
+  ../xpath/ExprLexer.$(OBJ_SUFFIX) \
+  ../xpath/ExprParser.$(OBJ_SUFFIX) \
+  ../xpath/FilterExpr.$(OBJ_SUFFIX) \
+  ../xpath/FunctionCall.$(OBJ_SUFFIX) \
+  ../xpath/LocationStep.$(OBJ_SUFFIX) \
+  ../xpath/MultiplicativeExpr.$(OBJ_SUFFIX) \
+  ../xpath/NodeSet.$(OBJ_SUFFIX) \
+  ../xpath/NodeSetFunctionCall.$(OBJ_SUFFIX) \
+  ../xpath/NumberExpr.$(OBJ_SUFFIX) \
+  ../xpath/NumberFunctionCall.$(OBJ_SUFFIX) \
+  ../xpath/NumberResult.$(OBJ_SUFFIX) \
+  ../xpath/PathExpr.$(OBJ_SUFFIX) \
+  ../xpath/PredicateList.$(OBJ_SUFFIX) \
+  ../xpath/RelationalExpr.$(OBJ_SUFFIX) \
+  ../xpath/RootExpr.$(OBJ_SUFFIX) \
+  ../xpath/StringExpr.$(OBJ_SUFFIX) \
+  ../xpath/StringFunctionCall.$(OBJ_SUFFIX) \
+  ../xpath/StringResult.$(OBJ_SUFFIX) \
+  ../xpath/txNameTest.$(OBJ_SUFFIX) \
+  ../xpath/txNodeTypeTest.$(OBJ_SUFFIX) \
+  ../xpath/txForwardContext.$(OBJ_SUFFIX) \
+  ../xpath/txNodeSetContext.$(OBJ_SUFFIX) \
+  ../xpath/UnionExpr.$(OBJ_SUFFIX) \
+  ../xpath/UnaryExpr.$(OBJ_SUFFIX) \
+  ../xpath/VariableRefExpr.$(OBJ_SUFFIX) \
+  ../xml/XMLUtils.$(OBJ_SUFFIX) \
+  ../xml/XMLDOMUtils.$(OBJ_SUFFIX) \
+  ../xml/parser/XMLParser.$(OBJ_SUFFIX) \
+  ../xslt/txOutputFormat.$(OBJ_SUFFIX) \
+  ../xslt/ProcessorState.$(OBJ_SUFFIX) \
+  ../xslt/txHTMLOutput.$(OBJ_SUFFIX) \
+  ../xslt/txRtfHandler.$(OBJ_SUFFIX) \
+  ../xslt/txTextHandler.$(OBJ_SUFFIX) \
+  ../xslt/txTextOutput.$(OBJ_SUFFIX) \
+  ../xslt/txUnknownHandler.$(OBJ_SUFFIX) \
+  ../xslt/txXMLOutput.$(OBJ_SUFFIX) \
+  ../xslt/txXSLTNumber.$(OBJ_SUFFIX) \
+  ../xslt/txXSLTNumberCounters.$(OBJ_SUFFIX) \
+  ../xslt/txXSLTPatterns.$(OBJ_SUFFIX) \
+  ../xslt/txPatternParser.$(OBJ_SUFFIX) \
+  ../xslt/XSLTProcessor.$(OBJ_SUFFIX) \
+  ../xslt/txStandaloneXSLTProcessor.$(OBJ_SUFFIX) \
+  ../xslt/functions/CurrentFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/DocumentFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/ElementAvailableFnCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/FunctionAvailableFnCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/GenerateIdFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/SystemPropertyFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/txFormatNumberFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/functions/txKeyFunctionCall.$(OBJ_SUFFIX) \
+  ../xslt/util/txNodeSorter.$(OBJ_SUFFIX) \
+  ../xslt/util/txXPathResultComparator.$(OBJ_SUFFIX)
+CPP_PROG_LINK		= 1
+
+SHARED_LIBRARY_LIBS = \
+             $(DIST)/lib/$(LIB_PREFIX)expat_s.$(LIB_SUFFIX) \
+             $(DIST)/lib/$(LIB_PREFIX)xmltok_s.$(LIB_SUFFIX) \
+             $(NULL)
+
+include $(topsrcdir)/config/rules.mk
+
+INCLUDES += -I$(srcdir)/../xslt -I$(srcdir)/../base -I$(srcdir)/../net \
+  -I$(srcdir)/../xml -I$(srcdir)/../xml/dom \
+  -I$(srcdir)/../xml/parser \
+  -I$(srcdir)/../xpath -I$(srcdir)/../xslt/util \
+  -I$(srcdir)/../xslt/functions $(MARK_INC)
