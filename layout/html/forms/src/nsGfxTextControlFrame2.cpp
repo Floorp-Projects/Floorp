@@ -970,7 +970,25 @@ nsTextInputSelectionImpl::CompleteMove(PRBool aForward, PRBool aExtend)
   // make the caret be either at the very beginning (0) or the very end
   PRInt32 offset = 0;
   if (aForward)
+  {
     parentDIV->ChildCount(offset);
+
+    // Prevent the caret from being placed after the last
+    // BR node in the content tree!
+
+    if (offset > 0)
+    {
+      nsCOMPtr<nsIContent> child;
+      result = parentDIV->ChildAt(offset - 1, *getter_AddRefs(child));
+      if (NS_SUCCEEDED(result) && child)
+      {
+        nsCOMPtr<nsIAtom> tagName;
+        result = child->GetTag(*getter_AddRefs(tagName));
+        if (NS_SUCCEEDED(result) && tagName.get() == nsHTMLAtoms::br)
+          --offset;
+      }
+    }
+  }
 
   result = mFrameSelection->HandleClick(parentDIV, offset, offset, aExtend, PR_FALSE, aExtend);
 
