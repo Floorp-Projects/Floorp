@@ -22,6 +22,7 @@
 #include "nsStyleConsts.h"
 #include "nsRect.h"
 class nsISpaceManager;
+class nsBlockFrame;
 class nsLineLayout;
 
 // IID for the nsIHTMLFrame interface 
@@ -161,6 +162,9 @@ struct nsHTMLReflowState : nsReflowState {
   nsHTMLFrameConstraint heightConstraint;
   nscoord               minHeight;
 
+  // Run-in frame made available for reflow
+  nsBlockFrame*         mRunInFrame;
+
   // Constructs an initial reflow state (no parent reflow state) for a
   // non-incremental reflow command. Sets reflowType to eReflowType_Block
   nsHTMLReflowState(nsIPresContext&      aPresContext,
@@ -222,6 +226,7 @@ protected:
   // value as well. This method is automatically called by the various
   // constructors.
   void Init(nsIPresContext& aPresContext) {
+    mRunInFrame = nsnull;
     DetermineFrameType(aPresContext);
     InitConstraints(aPresContext);
   }
