@@ -1387,8 +1387,17 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     // Store secure data in memory only
     nsCOMPtr<nsISupports> securityInfo;
     rv = GetSecurityInfo(getter_AddRefs(securityInfo));
-    if (NS_SUCCEEDED(rv) && securityInfo)
-        mCacheEntry->SetSecurityInfo(securityInfo);
+    if (NS_SUCCEEDED(rv) && securityInfo) {
+        rv = mCacheEntry->SetSecurityInfo(securityInfo);
+        if (NS_FAILED(rv)) return rv;
+    }
+
+    // For HTTPS connections, the storage policy will already be IN_MEMORY.
+    // We are concerned instead about load attributes which may have changed.
+    if (mLoadAttributes & nsIChannel::INHIBIT_PERSISTENT_CACHING) {
+        rv = mCacheEntry->SetStoragePolicy(nsICache::STORE_IN_MEMORY);
+        if (NS_FAILED(rv)) return rv;
+    }
 
     // Set the expiration time for this cache entry
     rv = UpdateExpirationTime();
@@ -2414,6 +2423,10 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
                  "OnStopRequest to consumer failed! Status:%x\n", this, rv));
     }
 
+#ifdef MOZ_NEW_CACHE
+    mResponseDataListener = 0;
+#endif
+
     // Release the cache entry as soon as we are done. This helps as it can
     // flush any cache records and do maintenance. But do this only after
     // stopRequest has been fired as the stopListeners could want to use
@@ -2438,7 +2451,9 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
     // it needs to be valid for the life of the channel
     //  mResponseContext = 0;
 
+#ifndef MOZ_NEW_CACHE
     mResponseDataListener = 0;
+#endif
     NS_IF_RELEASE(mCachedResponse);
 
     return rv;
