@@ -452,6 +452,7 @@
 				F6BD651901B3184301A962F7,
 				F5A70925036DB55501202892,
 				F6BD651F01B3184301A962F7,
+				A74F0E4A05BC97BB00A8011A,
 				F507BA520213C22C01D93544,
 				F6BD652301B3184301A962F7,
 				F5247C420228B9D7013DD99A,
@@ -2732,6 +2733,27 @@
 			isa = PBXBuildFile;
 			settings = {
 			};
+		};
+		A74F0E4A05BC97BB00A8011A = {
+			buildActionMask = 2147483647;
+			dstPath = greprefs;
+			dstSubfolderSpec = 6;
+			files = (
+				F6BD652001B3184301A962F7,
+				F55A9BC70228CCE201DAE4DB,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		A74F0E4B05BC97FD00A8011A = {
+			buildActionMask = 2147483647;
+			dstPath = defaults/pref;
+			dstSubfolderSpec = 6;
+			files = (
+				F59A0E360307639801A967F3,
+			);
+			isa = PBXCopyFilesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 		A7A744730427017500A967DF = {
 			fileRef = 0FA8EF970423B1A500A80166;
@@ -5941,7 +5963,7 @@
 		F55A9BC60228CCE101DAE4DB = {
 			isa = PBXFileReference;
 			name = "security-prefs.js";
-			path = "../dist/Embed/defaults/pref/security-prefs.js";
+			path = "../dist/Embed/greprefs/security-prefs.js";
 			refType = 2;
 		};
 		F55A9BC70228CCE201DAE4DB = {
@@ -8254,6 +8276,7 @@
 				F5949A4C030D595B014E8430,
 				F5BAAC1902AC69DA01A967F3,
 				F5A70930036DB66E01202892,
+				A74F0E4B05BC97FD00A8011A,
 				F5BAAC1F02AC69DA01A967F3,
 				F5BAAC2202AC69DA01A967F3,
 				F5BAAC2402AC6AA201A967F3,
@@ -9905,12 +9928,10 @@
 		};
 		F5BAAC1F02AC69DA01A967F3 = {
 			buildActionMask = 2147483647;
-			dstPath = defaults/pref;
+			dstPath = greprefs;
 			dstSubfolderSpec = 6;
 			files = (
 				F5BAAC2002AC69DA01A967F3,
-				F59A0E360307639801A967F3,
-				F5C2793B02C515F2010000E1,
 				F5BAAC2102AC69DA01A967F3,
 			);
 			isa = PBXCopyFilesBuildPhase;
@@ -10138,24 +10159,6 @@
 		};
 		F5BF71520231DC5D010001CA = {
 			fileRef = F5BF71460231B8BC010001CA;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C2793202C514FF010000E1 = {
-			isa = PBXFileReference;
-			name = macprefs.js;
-			path = ../dist/Embed/defaults/pref/macprefs.js;
-			refType = 2;
-		};
-		F5C2793802C5158B010000E1 = {
-			fileRef = F5C2793202C514FF010000E1;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F5C2793B02C515F2010000E1 = {
-			fileRef = F5C2793202C514FF010000E1;
 			isa = PBXBuildFile;
 			settings = {
 			};
@@ -12350,7 +12353,6 @@
 		F6BD64FB01B3184301A962F7 = {
 			children = (
 				F6BD64FC01B3184301A962F7,
-				F5C2793202C514FF010000E1,
 				F55A9BC60228CCE101DAE4DB,
 				F59A0E320307635401A967F3,
 			);
@@ -12362,7 +12364,7 @@
 		F6BD64FC01B3184301A962F7 = {
 			isa = PBXFileReference;
 			name = all.js;
-			path = ../dist/Embed/defaults/pref/all.js;
+			path = ../dist/Embed/greprefs/all.js;
 			refType = 2;
 		};
 		F6BD64FF01B3184301A962F7 = {
@@ -12441,10 +12443,7 @@
 			dstPath = defaults/pref;
 			dstSubfolderSpec = 6;
 			files = (
-				F6BD652001B3184301A962F7,
 				F59A0E350307639801A967F3,
-				F5C2793802C5158B010000E1,
-				F55A9BC70228CCE201DAE4DB,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
