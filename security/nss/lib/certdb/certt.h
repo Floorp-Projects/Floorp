@@ -33,7 +33,7 @@
 /*
  * certt.h - public data structures for the certificate library
  *
- * $Id: certt.h,v 1.22 2002/10/03 03:34:36 jpierre%netscape.com Exp $
+ * $Id: certt.h,v 1.23 2002/10/03 03:48:52 wtc%netscape.com Exp $
  */
 #ifndef _CERTT_H_
 #define _CERTT_H_
@@ -495,7 +495,7 @@ typedef PRInt64 SECCertificateUsage;
 #define certificateUsageStatusResponder        (0x0400)
 #define certificateUsageAnyCA                  (0x0800)
 
-#define highestUsage certificateUsageAnyCA
+#define certificateUsageHighest certificateUsageAnyCA
 
 /*
  * Does the cert belong to the user, a peer, or a CA.

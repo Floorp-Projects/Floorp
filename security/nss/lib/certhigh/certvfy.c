@@ -1232,7 +1232,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
     CERT_GetCertType(cert);
     certType = cert->nsCertType;
 
-    for (i=1;i<=highestUsage && !(SECFailure == valid && !returnedUsages) ;) {
+    for (i=1;i<=certificateUsageHighest && !(SECFailure == valid && !returnedUsages) ;) {
         PRBool requiredUsage = (i & requiredUsages) ? PR_TRUE : PR_FALSE;
         if (PR_FALSE == requiredUsage && PR_FALSE == checkAllUsages) {
             NEXT_ITERATION();
