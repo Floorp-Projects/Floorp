@@ -75,7 +75,7 @@
     </treerow>
   </treehead>
 
-  <treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" open="true">
+  <treechildren rdf:containment="http://home.netscape.com/NC-rdf#child" >
 
 	<treeitem ref="msgaccounts:/" open="true">
 		<treerow>
