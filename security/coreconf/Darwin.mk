@@ -59,6 +59,10 @@ endif
 
 OS_CFLAGS	= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -Wmost -fpascal-strings -traditional-cpp -fno-common -pipe -DDARWIN -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
+ifdef BUILD_OPT
+OPTIMIZER	= -O2
+endif
+
 ARCH		= darwin
 
 # May override this with -bundle to create a loadable module.
