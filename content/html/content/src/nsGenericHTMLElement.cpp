@@ -522,10 +522,15 @@ nsGenericHTMLElement::GetStyle(nsIDOMCSSStyleDeclaration** aStyle)
 
 
 static inline PRBool
+IsBodyTag(nsIAtom *aAtom)
+{
+  return aAtom == nsHTMLAtoms::body;
+}
+
+static inline PRBool
 IsOffsetParentTag(nsIAtom *aAtom)
 {
-  return (aAtom == nsHTMLAtoms::body ||
-          aAtom == nsHTMLAtoms::td ||
+  return (aAtom == nsHTMLAtoms::td ||
           aAtom == nsHTMLAtoms::table ||
           aAtom == nsHTMLAtoms::th);
 }
@@ -599,7 +604,7 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
   if (content) {
     content->GetTag(*getter_AddRefs(tag));
 
-    if (tag == nsHTMLAtoms::body || content == docElement) {
+    if (IsBodyTag(tag) || content == docElement) {
       done = PR_TRUE;
 
       parent = frame;
@@ -611,17 +616,23 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
   if (!done) {
     PRBool is_absolutely_positioned = PR_FALSE;
+    PRBool is_positioned = PR_FALSE;
 
     frame->GetOrigin(origin);
 
     frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
 
-    if (display && display->IsAbsolutelyPositioned()) {
-      // If the primary frame or a parent is absolutely positioned
-      // (fixed or absolute) we stop walking up the frame parent
-      // chain
+    if (display && display->IsPositioned()) {
+      if (display->IsAbsolutelyPositioned()) {
+        // If the primary frame or a parent is absolutely positioned
+        // (fixed or absolute) we stop walking up the frame parent
+        // chain
 
-      is_absolutely_positioned = PR_TRUE;
+        is_absolutely_positioned = PR_TRUE;
+      }
+
+      // We need to know if the primary frame is positioned later on.
+      is_positioned = PR_TRUE;
     }
 
     frame->GetParent(&parent);
@@ -660,12 +671,12 @@ nsGenericHTMLElement::GetOffsetRect(nsRect& aRect,
 
         content->GetTag(*getter_AddRefs(tag));
 
-        // If the tag of this frame is a offset parent tag, break here
-        if (IsOffsetParentTag(tag)) {
-          if (parent != frame) {
-            *aOffsetParent = content;
-            NS_ADDREF(*aOffsetParent);
-          }
+        // If the tag of this frame is a offset parent tag and this
+        // element is *not* positioned, break here. Also break if we
+        // hit the body element.
+        if ((!is_positioned && IsOffsetParentTag(tag)) || IsBodyTag(tag)) {
+          *aOffsetParent = content;
+          NS_ADDREF(*aOffsetParent);
 
           break;
         }
@@ -4644,7 +4655,8 @@ nsGenericHTMLElement::GetHostnameFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  aHostname.Assign(NS_ConvertASCIItoUCS2(host));
+  CopyASCIItoUCS2(host, aHostname);
+
   return NS_OK;
 }
 
@@ -4670,7 +4682,7 @@ nsGenericHTMLElement::GetPathnameFromHrefString(const nsAReadableString& aHref,
     return rv;
 
   // XXX is filepath really ASCII and not UTF8?
-  aPathname.Assign(NS_ConvertASCIItoUCS2(file));
+  CopyASCIItoUCS2(file, aPathname);
 
   return NS_OK;
 }
@@ -4696,9 +4708,8 @@ nsGenericHTMLElement::GetSearchFromHrefString(const nsAReadableString& aHref,
   if (NS_FAILED(rv))
     return rv;
 
-  aSearch.Assign(PRUnichar('?'));
   // XXX is escapedQuery really ASCII or UTF8
-  aSearch.Append(NS_ConvertASCIItoUCS2(search));
+  CopyASCIItoUCS2(NS_LITERAL_CSTRING("?") + search, aSearch);
 
   return NS_OK;
 
