@@ -42,7 +42,6 @@
 
 
 #include "xp_core.h"
-#include "xp_file.h"
 #ifdef __cplusplus
 #include "nsColor.h"
 #include "nsCoord.h"
@@ -182,7 +181,7 @@ struct PrintSetup_ {
   char* bullet;                 /* What char to use for bullets */
 
   struct URL_Struct_ *url;      /* url of doc being translated */
-  XP_File out;                  /* Where to send the output */
+  FILE *out;                  /* Where to send the output */
   char *filename;               /* output file name, if any */
   XL_CompletionRoutine completion; /* Called when translation finished */
   void* carg;                   /* Data saved for completion routine */
@@ -415,7 +414,7 @@ public:
    */
   void preshow(const PRUnichar* aText, int aLen);
 
-  XP_File GetPrintFile();
+  FILE * GetPrintFile();
   PRBool  InitUnixPrinterProps();
   PRBool  GetUnixPrinterSetting(const nsCAutoString&, char**);
 private:
