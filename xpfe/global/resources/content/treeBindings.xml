@@ -168,6 +168,11 @@
           return this.treeBoxObject.getIndexOfFirstVisibleRow();
         </body>
       </method>
+      <method name="getRowCount">
+        <body>
+          return this.treeBoxObject.getRowCount();
+        </body>
+      </method>
     </interface>
     <handlers>
       <handler type="keypress" keycode="vk_enter">
@@ -231,47 +236,58 @@
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
-	 var i = this.getIndexOfFirstVisibleRow();
+         var i = this.getIndexOfFirstVisibleRow();
          var v = this.getNumberOfVisibleRows() - 1;
-	 dump("IndexOfFirstVisibleRow: "+i+" NumberOfVisibleRows: "+v+"\n");
          var n = this.getPreviousItem(this.selectedItems[0], v);
          if (n) {
-	   this.scrollToIndex(i-v);
+           var newIndex = this.getIndexOfItem(n);
+           i = i - v;
+           if (newIndex < v) // within first v rows
+             this.scrollToIndex(0);
+           else
+             if (newIndex < i || i+v < newIndex) // selected outside new view
+               this.scrollToIndex(newIndex);
+             else
+               this.scrollToIndex(i);
            this.selectItem(n);
-	 }
-	 else {
-	   this.scrollToIndex(0);
-	   if ( i==0 )
-             this.selectItem(this.getItemAtIndex(0));
-	   else 
-             this.selectItem(this.getItemAtIndex(this.getIndexOfItem(this.selectedItems[0]) - i));
-	 }
+         }
+         else {
+           this.scrollToIndex(0);
+           this.selectItem(this.getItemAtIndex(0));
+         }
         ]]>
       </handler>
       <handler type="keypress" keycode="vk_page_down">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
-	   return;
-	 var i = this.getIndexOfFirstVisibleRow();
+           return;
+         var i = this.getIndexOfFirstVisibleRow();
          var v = this.getNumberOfVisibleRows() - 1;
-	 dump("IndexOfFirstVisibleRow: "+i+" NumberOfVisibleRows: "+v+"\n");
+         var count = this.getRowCount();
          var n = this.getNextItem(this.selectedItems[0], v);
          if (n) {
-           this.scrollToIndex(i+v);
+           var newIndex = this.getIndexOfItem(n);
+           i = i + v;
+           if (newIndex > count-1-v) // within last v rows
+             this.scrollToIndex(count-1-v);
+           else
+             if (newIndex < i || i+v < newIndex) // selected outside new view
+               this.scrollToIndex(newIndex);
+             else
+               this.scrollToIndex(i);
            this.selectItem(n);
          }
-	 else {
-	   var e = this.getElementsByTagName("treechildren");
-	   var e = e[0].lastChild;
-	   this.selectItem(e);
-	 }
+         else {
+           this.scrollToIndex(count-1-v);
+           this.selectItem(this.getItemAtIndex(count-1));
+         }
         ]]>
       </handler>
       <handler type="keypress" keycode="vk_home">
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
-	 this.scrollToIndex(0);
+         this.scrollToIndex(0);
          this.selectItem(this.getItemAtIndex(0));
         ]]>
       </handler>
@@ -279,14 +295,9 @@
         <![CDATA[
          if (event.target != this || this.selectedItems.length != 1)
            return;
-	 var e = this.getElementsByTagName("treechildren");
-	 var e = e[0].lastChild;
-         var v = this.getNumberOfVisibleRows();
-	 var i = this.getIndexOfItem(e)-v;
-	 if ( i < 0 )
-	   i=0;
-	 this.scrollToIndex(i);
-	 this.selectItem(e);
+         var count = this.getRowCount();
+         this.ensureIndexIsVisible(count-1);
+         this.selectItem(this.getItemAtIndex(count-1));
         ]]>
       </handler>
     </handlers>    
