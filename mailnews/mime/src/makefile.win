@@ -14,34 +14,15 @@
 # Reserved.
 #
 
-#
-# MIME.DLL 
-# ========
-# This is a modular version of the old libmime component of 
-# the Communicator world.
-#
-# Notes:
-# ======
-# There have been several #ifdef's added to the source for various
-# reasons. These include:
-# 
-# RICHIE  - General "commenting out" of code to get into a building state
-# RICHIE_<module> - Removal of specific features. The feature is contained
-#                   in the <module> part of the ifdef
-# 
-#
-
-#//------------------------------------------------------------------------
-#//
-#// Specify the depth of the current directory relative to the
-#// root of NS
-#//
-#//------------------------------------------------------------------------
 DEPTH=..\..\..
+MODULE= mime
 
-MODULE  = mime
-REQUIRES= 
-EXPORTS =\
+include <$(DEPTH)\config\config.mak>
+
+################################################################################
+## exports
+
+EXPORTS =								\
 		nsMimeObjectClassAccess.h		\
 		nsMimeConverter.h				\
 		mimetext.h						\
@@ -62,119 +43,85 @@ EXPORTS =\
         $(NULL)
 
 
-#DEFINES= -DEBUG_rhp -DHAVE_MIME_DATA_SLOT -D_IMPL_NS_HTML 
-DEFINES= -DEBUG_rhp -D_IMPL_NS_HTML 
+################################################################################
+## library
 
-#//------------------------------------------------------------------------
-#// 
-#// Define the files necessary to build the target (ie. OBJS)
-#//
-#//------------------------------------------------------------------------
-OBJS=							\
-#
-# Code for XP-COM Factory creation and interfaces...
-#
-			.\$(OBJDIR)\nsMimeFactory.obj	\
-			.\$(OBJDIR)\nsMimeObjectClassAccess.obj		\
-			.\$(OBJDIR)\nsMimeConverter.obj		\
+
+LIBNAME = .\$(OBJDIR)\mime
+DLL = $(LIBNAME).dll
+
+DEFINES= -DEBUG_rhp
+
+LCFLAGS =		   \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
+OBJS=											\
+		.\$(OBJDIR)\nsMimeFactory.obj			\
+		.\$(OBJDIR)\nsMimeObjectClassAccess.obj	\
+		.\$(OBJDIR)\nsMimeConverter.obj			\
 #
 # Code for stream converter interface to netlib...
 #
-			.\$(OBJDIR)\nsMimeAddress.obj \
-			.\$(OBJDIR)\plugin_inst.obj	\
-			.\$(OBJDIR)\mimecont.obj	\
-			.\$(OBJDIR)\mimeebod.obj	\
-			.\$(OBJDIR)\mimeenc.obj		\
-			.\$(OBJDIR)\mimeeobj.obj	\
-			.\$(OBJDIR)\mimehdrs.obj	\
-			.\$(OBJDIR)\mimei.obj		\
-			.\$(OBJDIR)\mimeiimg.obj	\
-			.\$(OBJDIR)\mimeleaf.obj	\
-			.\$(OBJDIR)\mimemalt.obj	\
-			.\$(OBJDIR)\mimemapl.obj	\
-			.\$(OBJDIR)\mimemdig.obj	\
-			.\$(OBJDIR)\mimemmix.obj	\
-			.\$(OBJDIR)\mimempar.obj	\
-			.\$(OBJDIR)\mimemrel.obj	\
-			.\$(OBJDIR)\mimemsg.obj		\
-			.\$(OBJDIR)\mimemsig.obj	\
-			.\$(OBJDIR)\mimemult.obj	\
-			.\$(OBJDIR)\mimeobj.obj		\
-			.\$(OBJDIR)\mimepbuf.obj	\
-			.\$(OBJDIR)\mimesun.obj		\
-			.\$(OBJDIR)\mimetenr.obj	\
-			.\$(OBJDIR)\mimetext.obj	\
-			.\$(OBJDIR)\mimethtm.obj	\
-			.\$(OBJDIR)\mimetpla.obj	\
-			.\$(OBJDIR)\mimetric.obj	\
-			.\$(OBJDIR)\mimeunty.obj	\
-			.\$(OBJDIR)\mimecth.obj		\
-			.\$(OBJDIR)\mimebuf.obj		\
-			.\$(OBJDIR)\mimecom.obj		\
-			.\$(OBJDIR)\mimemoz2.obj	\
-			.\$(OBJDIR)\nsMsgHeaderParser.obj \
-      .\$(OBJDIR)\nsMimeURLUtils.obj \
+		.\$(OBJDIR)\nsMimeAddress.obj		\
+		.\$(OBJDIR)\plugin_inst.obj			\
+		.\$(OBJDIR)\mimecont.obj			\
+		.\$(OBJDIR)\mimeebod.obj			\
+		.\$(OBJDIR)\mimeenc.obj				\
+		.\$(OBJDIR)\mimeeobj.obj			\
+		.\$(OBJDIR)\mimehdrs.obj			\
+		.\$(OBJDIR)\mimei.obj				\
+		.\$(OBJDIR)\mimeiimg.obj			\
+		.\$(OBJDIR)\mimeleaf.obj			\
+		.\$(OBJDIR)\mimemalt.obj			\
+		.\$(OBJDIR)\mimemapl.obj			\
+		.\$(OBJDIR)\mimemdig.obj			\
+		.\$(OBJDIR)\mimemmix.obj			\
+		.\$(OBJDIR)\mimempar.obj			\
+		.\$(OBJDIR)\mimemrel.obj			\
+		.\$(OBJDIR)\mimemsg.obj				\
+		.\$(OBJDIR)\mimemsig.obj			\
+		.\$(OBJDIR)\mimemult.obj			\
+		.\$(OBJDIR)\mimeobj.obj				\
+		.\$(OBJDIR)\mimepbuf.obj			\
+		.\$(OBJDIR)\mimesun.obj				\
+		.\$(OBJDIR)\mimetenr.obj			\
+		.\$(OBJDIR)\mimetext.obj			\
+		.\$(OBJDIR)\mimethtm.obj			\
+		.\$(OBJDIR)\mimetpla.obj			\
+		.\$(OBJDIR)\mimetric.obj			\
+		.\$(OBJDIR)\mimeunty.obj			\
+		.\$(OBJDIR)\mimecth.obj				\
+		.\$(OBJDIR)\mimebuf.obj				\
+		.\$(OBJDIR)\mimecom.obj				\
+		.\$(OBJDIR)\mimemoz2.obj			\
+		.\$(OBJDIR)\nsMsgHeaderParser.obj	\
+		.\$(OBJDIR)\nsMimeURLUtils.obj		\
 #
 # THIS WILL NEED WORK AFTER WE GET A LIBMSG MORE XP-COM-afied
-#			.\$(OBJDIR)\mimedrft.obj	\
+#			.\$(OBJDIR)\mimedrft.obj		\
 # XP-COM BRIDGES
-			.\$(OBJDIR)\comi18n.obj		\
+		.\$(OBJDIR)\comi18n.obj				\
 # EXTERNAL (OLD) DEPENDENCIES - SHOULD EVENTUALLY BE REMOVED 
 # WHEN NEW WORLD FUNCTIONS ARE FOUND 
-			.\$(OBJDIR)\nsMimeTransition.obj \
-			.\$(OBJDIR)\oldi18n.obj		\
-			$(NULL)
-
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Make Variables here: (ie. PDFFILE, MAPFILE, ...)
-#//
-#//------------------------------------------------------------------------
-DLLNAME=$(MODULE)
-LIBNAME=$(MODULE)
-MAPFILE=$(MODULE).map
-DEFFILE=$(MODULE).def
-
-#//------------------------------------------------------------------------
-#//
-#// Define any Public Targets here (ie. PROGRAM, LIBRARY, DLL, ...)
-#// (these must be defined before the common makefiles are included)
-#//
-#//------------------------------------------------------------------------
-#
-DLL=.\$(OBJDIR)\$(DLLNAME).dll
-
-#//------------------------------------------------------------------------
-#//
-#// Define any local options for the make tools 
-#//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
-#//
-#//------------------------------------------------------------------------
-LCFLAGS=-DNETSCAPE
-
-MSGLIBS=				\
+		.\$(OBJDIR)\nsMimeTransition.obj	\
+		.\$(OBJDIR)\oldi18n.obj				\
 		$(NULL)
 
-# These are the libraries we need to link with to create the dll
-LLIBS=							\
-			$(LLIBS)			\
-			$(LIBNSPR)			\
-			$(DIST)\lib\plc3.lib	\
+
+LLIBS=										\
+			$(LLIBS)						\
+			$(LIBNSPR)						\
+			$(DIST)\lib\plc3.lib			\
 			$(DIST)\lib\js32$(VERSION_NUMBER).lib	\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)
 
-#//------------------------------------------------------------------------
-#//
-#// Include the common makefile rules
-#//
-#//------------------------------------------------------------------------
+MISCDEP=$(LLIBS)
+
 include <$(DEPTH)/config/rules.mak>
 
-install:: $(DLL)
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
-	$(MAKE_INSTALL) .\$(OBJDIR)\$(LIBNAME).lib $(DIST)\lib
-
-clobber::
-	rm -f $(DIST)\bin\$(DLLNAME)
-	rm -f $(DIST)\lib\$(LIBNAME)
+libs:: $(DLL)
+	$(MAKE_INSTALL)  $(LIBNAME).$(DLL_SUFFIX) $(DIST)\bin\components
+	$(MAKE_INSTALL)  $(LIBNAME).$(LIB_SUFFIX) $(DIST)\lib
