@@ -2,12 +2,6 @@ There has not been a Bugzilla release for a while, but
 development has continued, and the Bugzilla team is proud
 to announce release of Bugzilla 2.12.
 
-If you have to make special code changes to Bugzilla each
-version, you should be aware that Bugzilla 2.14 is intended
-to be released soon, to improve security.  Therefore, you
-may wish to wait, so you do not have to make the changes
-twice.
-
 Recommended Practice For The Upgrade
 ------------------------------------
 
