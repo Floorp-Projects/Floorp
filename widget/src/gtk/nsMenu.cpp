@@ -104,6 +104,8 @@ nsMenu::~nsMenu()
   NS_IF_RELEASE(mListener);
   // Free our menu items
   RemoveAll();
+  gtk_widget_destroy(mMenu);
+  mMenu = nsnull;
 }
 
 //-------------------------------------------------------------------------
@@ -353,7 +355,6 @@ NS_METHOD nsMenu::RemoveAll()
 #if 0
   // this doesn't work quite right, but this is about all that should really be needed
   int i=0;
-  nsresult rv = -1;
   nsIMenu *menu = nsnull;
   nsIMenuItem *menuitem = nsnull;
   nsISupports *item = nsnull;
@@ -364,28 +365,22 @@ NS_METHOD nsMenu::RemoveAll()
 
     if(nsnull != item)
     {
-      rv = item->QueryInterface(kIMenuItemIID, (void**)&menuitem);
-      if (NS_SUCCEEDED(rv)) {
+      if (NS_OK == item->QueryInterface(kIMenuItemIID, (void**)&menuitem)) {
         // we do this twice because we have to do it once for QueryInterface,
         // then we want to get rid of it.
         NS_RELEASE(menuitem);
-        NS_RELEASE(menuitem);
+        NS_RELEASE(item);
         menuitem = nsnull;
-      } else {
-        rv = item->QueryInterface(kIMenuIID, (void**)&menu);
-        if (NS_SUCCEEDED(rv)) {
-          NS_RELEASE(menu);
-          NS_RELEASE(menu);
-          menu = nsnull;
-        }
+      } else if (NS_OK == item->QueryInterface(kIMenuIID, (void**)&menu)) {
+        NS_RELEASE(menu);
+        NS_RELEASE(item);
+        menu = nsnull;
       }
-
-      //      mMenuItemVoidArray.RemoveElementAt(i-1);
+      // mMenuItemVoidArray.RemoveElementAt(i-1);
     }
   }
   mMenuItemVoidArray.Clear();
-#endif
-
+#else
   for (int i = mMenuItemVoidArray.Count(); i > 0; i--) {
     if(nsnull != mMenuItemVoidArray[i-1]) {
       nsIMenuItem * menuitem = nsnull;
@@ -420,7 +415,7 @@ NS_METHOD nsMenu::RemoveAll()
       }
     }
   }
-
+#endif
   return NS_OK;
 }
 
