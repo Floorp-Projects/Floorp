@@ -153,6 +153,8 @@ TK_LIBS		= @TK_LIBS@
 
 MOZ_NATIVE_MAKEDEPEND	= @SYSTEM_MAKEDEPEND@
 
+COMPILER_DEPEND = @COMPILER_DEPEND@
+
 # XXX - these need to be cleaned up and have real checks added -cls
 NGLAYOUT_PLUGINS=1 
 CM_BLDTYPE=dbg 

@@ -97,42 +97,44 @@ endif
 ifndef LIBRARY
 ifdef LIBRARY_NAME
 LIBRARY			:= lib$(LIBRARY_NAME).$(LIB_SUFFIX)
-endif
-endif
+endif # LIBRARY_NAME
+endif # LIBRARY
 
 ifdef LIBRARY
 ifeq ($(OS_ARCH),OS2)
 ifndef DEF_FILE
 DEF_FILE		:= $(LIBRARY:.lib=.def)
-endif
-endif
+endif # DEF_FILE
+endif # LIBRARY
+
 LIBRARY			:= $(addprefix $(OBJDIR)/, $(LIBRARY))
+
 ifndef NO_SHARED_LIB
 ifdef MKSHLIB
 ifeq ($(OS_ARCH),OS2)
 SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
 MAPS			:= $(LIBRARY:.lib=.map)
-else
+else  # OS2
 ifeq ($(OS_ARCH),WINNT)
 SHARED_LIBRARY		:= $(LIBRARY:.lib=.dll)
-else
+else  # WINNT
 ifeq ($(OS_ARCH),HP-UX)
 SHARED_LIBRARY		:= $(LIBRARY:.a=.sl)
-else
+else  # HPUX
 ifeq ($(OS_ARCH)$(OS_RELEASE),SunOS4.1)
 SHARED_LIBRARY		:= $(LIBRARY:.a=.so.1.0)
-else
+else  # SunOS4
 ifeq ($(OS_ARCH)$(OS_RELEASE),AIX4.1)
 SHARED_LIBRARY		:= $(LIBRARY:.a=)_shr.a
-else
+else  # AIX
 SHARED_LIBRARY		:= $(LIBRARY:.a=.$(DLL_SUFFIX))
-endif
-endif
-endif
-endif
-endif
-endif
-endif
+endif # AIX
+endif # SunOS4
+endif # HPUX
+endif # WINNT
+endif # OS2
+endif # MKSHLIB
+endif # !NO_SHARED_LIB
 endif
 
 ifdef NO_STATIC_LIB
@@ -158,14 +160,19 @@ ifdef DLL
 DLL			:= $(addprefix $(OBJDIR)/, $(DLL))
 ifeq ($(OS_ARCH),WINNT)
 LIB			:= $(addprefix $(OBJDIR)/, $(LIB))
-endif
-endif
+endif # WINNT
+endif # DLL
 MAKE_OBJDIR		= mkdir $(OBJDIR)
-else
+MAKE_DEPDIR		= mkdir $(OBJDIR)/.deps
+else  # OS2, WINNT
 define MAKE_OBJDIR
 if test ! -d $(@D); then rm -rf $(@D); $(NSINSTALL) -D $(@D); else true; fi
 endef
-endif
+ifdef COMPILER_DEPEND
+define MAKE_DEPDIR
+if test ! -d $(@D)/.deps; then rm -rf $(@D)/.deps; mkdir $(@D)/.deps; else true; fi
+endef
+endif # OS2, WINNT
 
 ifndef OS2_IMPLIB
 LIBOBJS			:= $(addprefix \", $(OBJS))
@@ -389,6 +396,7 @@ endif
 #
 $(PROGRAM): $(PROGOBJS)
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 ifeq ($(OS_ARCH),OS2)
 	$(LINK) -FREE -OUT:$@ $(LDFLAGS) $(OS_LFLAGS) $(PROGOBJS)  $(EXTRA_LIBS) -MAP:$(@:.exe=.map) $(OS_LIBS) $(DEF_FILE)
 else
@@ -414,6 +422,7 @@ endif
 #
 $(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o 
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(CFLAGS) $(WRAP_MALLOC_CFLAGS) -o $@ $^ $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
@@ -436,6 +445,7 @@ endif
 ifneq ($(OS_ARCH),OS2)
 $(LIBRARY): $(OBJS) $(LOBJS)
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	rm -f $@
 	$(AR) $(OBJS) $(LOBJS)
 	$(RANLIB) $@
@@ -443,12 +453,14 @@ else
 ifdef OS2_IMPLIB
 $(LIBRARY): $(OBJS) $(DEF_FILE) 
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	rm -f $@
 	$(IMPLIB) $@ $(DEF_FILE)
 	$(RANLIB) $@
 else
 $(LIBRARY): $(OBJS)
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	rm -f $@
 	$(AR) $(LIBOBJS),,
 	$(RANLIB) $@
@@ -458,12 +470,14 @@ endif
 ifneq ($(OS_ARCH),OS2)
 $(SHARED_LIBRARY): $(OBJS) $(LOBJS)
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	rm -f $@
 	$(MKSHLIB) -o $@ $(OBJS) $(LOBJS) $(EXTRA_DSO_LDOPTS)
 	chmod +x $@
 else
 $(SHARED_LIBRARY): $(OBJS) $(DEF_FILE)
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	rm -f $@
 	$(LINK_DLL) $(OBJS) $(OS_LIBS) $(EXTRA_LIBS) $(DEF_FILE)
 	chmod +x $@
@@ -472,6 +486,7 @@ endif
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 $(DLL): $(OBJS) $(EXTRA_LIBS)
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	rm -f $@
 ifeq ($(OS_ARCH),OS2)
 	$(LINK_DLL) $(OBJS) $(EXTRA_LIBS) $(OS_LIBS)
@@ -482,6 +497,7 @@ endif
 
 $(OBJDIR)/%: %.c
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
@@ -490,6 +506,7 @@ endif
 
 $(OBJDIR)/%.o: %.c
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 ifneq (,$(filter OS2 WINNT,$(OS_ARCH)))
 	$(CC) -Fo$@ -c $(CFLAGS) $<
 else
@@ -498,14 +515,17 @@ endif
 
 $(OBJDIR)/%.o: %.s
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
 $(OBJDIR)/%.o: %.S
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	$(AS) -o $@ $(ASFLAGS) -c $<
 
 $(OBJDIR)/%: %.cpp
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 	$(CCC) -o $@ $(CFLAGS) $< $(LDFLAGS)
 
 #
@@ -517,6 +537,7 @@ $(OBJDIR)/%.o: %.cc
 
 $(OBJDIR)/%.o: %.cpp
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 ifdef STRICT_CPLUSPLUS_SUFFIX
 	echo "#line 1 \"$*.cpp\"" | cat - $*.cpp > $(OBJDIR)/t_$*.cc
 	$(CCC) -o $@ -c $(CFLAGS) $(OBJDIR)/t_$*.cc
@@ -788,6 +809,7 @@ $(JMC_GEN_DIR)/M%.c: $(JMCSRCDIR)/%.class
 
 $(OBJDIR)/M%.o: $(JMC_GEN_DIR)/M%.h $(JMC_GEN_DIR)/M%.c
 	@$(MAKE_OBJDIR)
+	@$(MAKE_DEPDIR)
 ifeq ($(OS_ARCH),OS2)
 	$(CC) -Fo$@ -c $(CFLAGS) $(JMC_GEN_DIR)/M$*.c
 else
@@ -872,8 +894,6 @@ endif
 # X dependency system
 #############################################################################
 
-ifneq (,$(filter-out OS2 WINNT,$(OS_ARCH)))
-
 $(MKDEPENDENCIES)::
 	@$(MAKE_OBJDIR)
 	touch $(MKDEPENDENCIES)
@@ -925,7 +945,8 @@ endif
 #############################################################################
 # Yet another depend system: -MD
 
-MDDEPENDENCIES		:= $(OBJS:.o=.d)
+
+MDDEPENDENCIES		:= $(addprefix $(OBJDIR)/.deps/,$(OBJS:.o=.pp))
 
 ifdef MDDEPENDENCIES
 -include $(MDDEPENDENCIES)
