@@ -207,20 +207,20 @@ nsEditorKeyListener::ProcessShortCutKeys(nsIDOMEvent* aKeyEvent, PRBool& aProces
       case nsIDOMEvent::VK_Z:
         if (PR_TRUE==ctrlKey)
         {
+          aProcessed=PR_TRUE;
           if (nsnull!=mEditor)
             mEditor->Undo(1);
         }
-        aProcessed=PR_TRUE;
         break;
 
       // XXX: hard-coded redo
       case nsIDOMEvent::VK_Y:
         if (PR_TRUE==ctrlKey)
         {
+          aProcessed=PR_TRUE;
           if (nsnull!=mEditor)
             mEditor->Redo(1);
         }
-        aProcessed=PR_TRUE;
         break;
 
       // hard-coded split node test:  works on first <P> in the document
