@@ -125,7 +125,7 @@ nsRenderingContextMac :: nsRenderingContextMac()
   
   mCurStatePtr->mFontMetrics = nsnull ;
 
-  mCurStatePtr->mRenderingSurface = nsnull ; 
+  mCurrentBuffer = mCurStatePtr->mRenderingSurface = nsnull ; 
        
   mCurStatePtr->mColor = NS_RGB(255,255,255);
   mCurStatePtr->mTMatrix = new nsTransform2D();
@@ -227,7 +227,7 @@ PRInt32	offx,offy;
   mCurStatePtr->mMacPortRelativeX = offx = (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETX);
   mCurStatePtr->mMacPortRelativeY = offy = (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETY);
 
-  mCurStatePtr->mRenderingSurface = (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
+  mCurrentBuffer = mCurStatePtr->mRenderingSurface = (nsDrawingSurfaceMac)aWindow->GetNativeData(NS_NATIVE_DISPLAY);
   mFrontBuffer = mCurStatePtr->mRenderingSurface;
   
   if(!mFrontBuffer)
@@ -267,6 +267,11 @@ PRInt32	offx,offy;
   mCurStatePtr->mOffx = -offx;
   mCurStatePtr->mOffy = -offy;
 
+	::SetClip(mCurStatePtr->mMainRegion);
+
+	::PenNormal();
+	::TextMode(srcOr);
+
   return (CommonInit());
 }
 
@@ -281,7 +286,7 @@ NS_IMETHODIMP nsRenderingContextMac :: Init(nsIDeviceContext* aContext,
   mContext = aContext;
   NS_IF_ADDREF(mContext);
 
-  mCurStatePtr->mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
+  mCurrentBuffer = mCurStatePtr->mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
   
   return (CommonInit());
 }
@@ -311,7 +316,7 @@ NS_IMETHODIMP nsRenderingContextMac :: CommonInit()
 NS_IMETHODIMP nsRenderingContextMac :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface)
 {  
   if (nsnull == aSurface)
-    mCurStatePtr->mRenderingSurface = mFrontBuffer; // Set to screen port
+    mCurrentBuffer = mCurStatePtr->mRenderingSurface = mFrontBuffer; // Set to screen port
   else
   { 
   	// cps - This isn't as simple as just setting the surface... all the 
@@ -326,7 +331,7 @@ NS_IMETHODIMP nsRenderingContextMac :: SelectOffScreenDrawingSurface(nsDrawingSu
   	// This push is balaced by a pop in CopyOffScreenBits. This is a hack.
   	PushState();
   	
-  	mCurStatePtr->mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
+  	mCurrentBuffer = mCurStatePtr->mRenderingSurface = (nsDrawingSurfaceMac) aSurface;
   	
 	::SetOrigin(0,0);
 	
@@ -620,25 +625,20 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRectInPixels(const nsRect& aRect, 
     ::SetPort( oldPort );
   }
   */
+
+	StartDraw();
   if (nsnull == mCurStatePtr->mMacOriginRelativeClipRgn) 
   {
     bEmpty = PR_TRUE;
     // clip to the size of the window
-    GrafPtr oldPort = NULL;
- 	::GetPort( & oldPort );
-    ::SetPort(mCurStatePtr->mRenderingSurface);
     ::ClipRect(&mCurStatePtr->mRenderingSurface->portRect);
-    ::SetPort( oldPort );
   } 
   else 
   {
     // set the clipping area of this windowptr
- 	GrafPtr oldPort = NULL;
- 	::GetPort( & oldPort );
-    ::SetPort(mCurStatePtr->mRenderingSurface);
     ::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
-    ::SetPort( oldPort );
-  	}
+	}
+	EndDraw();
 
   aClipEmpty = bEmpty;
 
@@ -734,20 +734,18 @@ NS_IMETHODIMP nsRenderingContextMac :: GetClipRegion(nsIRegion **aRegion)
 
 NS_IMETHODIMP nsRenderingContextMac :: SetColor(nscolor aColor)
 {
+	StartDraw();
+
+	#define COLOR8TOCOLOR16(color8)	 ((color8 << 8) | color8)
+
   RGBColor	thecolor;
-  GrafPtr	curport;
-
-	#define COLOR8TOCOLOR16(color8)	 (color8 == 0xFF ? 0xFFFF : (color8 << 8))
-
-	::GetPort(&curport);
-	::SetPort(mCurStatePtr->mRenderingSurface);
 	thecolor.red = COLOR8TOCOLOR16(NS_GET_R(aColor));
 	thecolor.green = COLOR8TOCOLOR16(NS_GET_G(aColor));
 	thecolor.blue = COLOR8TOCOLOR16(NS_GET_B(aColor));
 	::RGBForeColor(&thecolor);
   mCurStatePtr->mColor = aColor ;
-  ::SetPort(curport);
  
+	EndDraw();
   return NS_OK;
 }
 
@@ -888,7 +886,7 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aD
 	}
 	
 	theoff = nsnull;
-	mCurStatePtr->mRenderingSurface = mFrontBuffer;		// point back at the front surface
+	mCurrentBuffer = mCurStatePtr->mRenderingSurface = mFrontBuffer;		// point back at the front surface
 		
   //if (mRenderingSurface == (GrafPtr)theoff)
     //mRenderingSurface = nsnull;
@@ -903,24 +901,14 @@ NS_IMETHODIMP nsRenderingContextMac :: DestroyDrawingSurface(nsDrawingSurface aD
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawLine(nscoord aX0, nscoord aY0, nscoord aX1, nscoord aY1)
 {
+	StartDraw();
+
   mCurStatePtr->mTMatrix->TransformCoord(&aX0,&aY0);
   mCurStatePtr->mTMatrix->TransformCoord(&aX1,&aY1);
-
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-	::SetPort(mCurStatePtr->mRenderingSurface);
-	//::SetClip(mMainRegion);
-	//::SetOrigin( 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-    ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );
-    	
-	::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
 	::MoveTo(aX0, aY0);
 	::LineTo(aX1, aY1);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -942,6 +930,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+	StartDraw();
+	
   nscoord x,y,w,h;
   Rect		therect;
 
@@ -950,22 +940,11 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawRect(nscoord aX, nscoord aY, nscoord 
   w = aWidth;
   h = aHeight;
 
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-	::SetPort(mCurStatePtr->mRenderingSurface);
-	//::SetClip(mMainRegion);
-	//::SetOrigin( 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-    ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );
-    	
-	::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
-	
-    mCurStatePtr->mTMatrix->TransformCoord(&x,&y,&w,&h);
+  mCurStatePtr->mTMatrix->TransformCoord(&x,&y,&w,&h);
 	::SetRect(&therect,x,y,x+w,y+h);
 	::FrameRect(&therect);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -980,6 +959,8 @@ NS_IMETHODIMP nsRenderingContextMac :: FillRect(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac :: FillRect(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+	StartDraw();
+
   nscoord  x,y,w,h;
   Rect     therect;
 
@@ -991,19 +972,10 @@ NS_IMETHODIMP nsRenderingContextMac :: FillRect(nscoord aX, nscoord aY, nscoord 
   // TODO - cps - must debug and fix this 
   mCurStatePtr->mTMatrix->TransformCoord(&x,&y,&w,&h);
 
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-	::SetPort(mCurStatePtr->mRenderingSurface);
-	//::SetClip(mMainRegion);
-	//::SetOrigin( 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-    ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );
-    	
-	::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
 	::SetRect(&therect,x,y,x+w,y+h);
 	::PaintRect(&therect);
-  ::SetPort(oldPort);
+
+	EndDraw();
   return NS_OK;
 }
 
@@ -1011,14 +983,12 @@ NS_IMETHODIMP nsRenderingContextMac :: FillRect(nscoord aX, nscoord aY, nscoord 
 
 NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+	StartDraw();
+
   PRUint32   i;
   PolyHandle thepoly;
   PRInt32    x,y;
 
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-  ::SetPort(mCurStatePtr->mRenderingSurface); 
   thepoly = ::OpenPoly();
 	
   x = aPoints[0].x;
@@ -1031,7 +1001,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
     x = aPoints[i].x;
     y = aPoints[i].y;
 		
-	mCurStatePtr->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+		mCurStatePtr->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
@@ -1039,7 +1009,7 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 	
 	::FramePoly(thepoly);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -1047,21 +1017,12 @@ NS_IMETHODIMP nsRenderingContextMac::DrawPolygon(const nsPoint aPoints[], PRInt3
 
 NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt32 aNumPoints)
 {
+	StartDraw();
+
   PRUint32   i;
   PolyHandle thepoly;
   PRInt32    x,y;
 
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-  ::SetPort(mCurStatePtr->mRenderingSurface);
-  //::SetClip(mMainRegion);
-  //::SetOrigin( 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-  ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );  
-    	
-  ::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
   thepoly = ::OpenPoly();
 	
   x = aPoints[0].x;
@@ -1073,7 +1034,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
   {
     x = aPoints[i].x;
     y = aPoints[i].y;
-	mCurStatePtr->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
+		mCurStatePtr->mTMatrix->TransformCoord((PRInt32*)&x,(PRInt32*)&y);
 		::LineTo(x,y);
 	}
 
@@ -1081,7 +1042,7 @@ NS_IMETHODIMP nsRenderingContextMac::FillPolygon(const nsPoint aPoints[], PRInt3
 	
 	::PaintPoly(thepoly);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -1096,6 +1057,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
+	StartDraw();
+
   nscoord x,y,w,h;
   Rect    therect;
 
@@ -1104,22 +1067,11 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawEllipse(nscoord aX, nscoord aY, nscoo
   w = aWidth;
   h = aHeight;
 
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-  ::SetPort(mCurStatePtr->mRenderingSurface);
-  //::SetClip(mMainRegion);
-  //::SetOrigin( 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-  ::SetOrigin ( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );  
-    	
-  ::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
   mCurStatePtr->mTMatrix->TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,x+h);
   ::FrameOval(&therect);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -1134,7 +1086,9 @@ NS_IMETHODIMP nsRenderingContextMac :: FillEllipse(const nsRect& aRect)
 
 NS_IMETHODIMP nsRenderingContextMac :: FillEllipse(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight)
 {
-nscoord x,y,w,h;
+	StartDraw();
+
+	nscoord x,y,w,h;
   Rect    therect;
 
   x = aX;
@@ -1142,22 +1096,11 @@ nscoord x,y,w,h;
   w = aWidth;
   h = aHeight;
 
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-  ::SetPort(mCurStatePtr->mRenderingSurface);
-  //::SetClip(mMainRegion);
-  //::SetOrigin( 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-  ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );  
-    	
-  ::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
   mCurStatePtr->mTMatrix->TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,x+h);
   ::PaintOval(&therect);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -1174,6 +1117,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawArc(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextMac :: DrawArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+	StartDraw();
+
   nscoord x,y,w,h;
   Rect    therect;
 
@@ -1181,24 +1126,12 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawArc(nscoord aX, nscoord aY, nscoord a
   y = aY;
   w = aWidth;
   h = aHeight;
-
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-  ::SetPort(mCurStatePtr->mRenderingSurface);
-  //::SetClip(mMainRegion);
-  //::SetOrigin( 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-  ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );  
-    	
-  ::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
   
   mCurStatePtr->mTMatrix->TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,x+h);
   ::FrameArc(&therect,aStartAngle,aEndAngle);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -1215,6 +1148,8 @@ NS_IMETHODIMP nsRenderingContextMac :: FillArc(const nsRect& aRect,
 NS_IMETHODIMP nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord aWidth, nscoord aHeight,
                                  float aStartAngle, float aEndAngle)
 {
+	StartDraw();
+
   nscoord x,y,w,h;
   Rect		therect;
 
@@ -1222,24 +1157,12 @@ NS_IMETHODIMP nsRenderingContextMac :: FillArc(nscoord aX, nscoord aY, nscoord a
   y = aY;
   w = aWidth;
   h = aHeight;
-
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-  ::SetPort(mCurStatePtr->mRenderingSurface);
-  //::SetClip(mMainRegion);
-  //::SetOrigin( 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-  ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );  
-    	
-  ::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
   
   mCurStatePtr->mTMatrix->TransformCoord(&x,&y,&w,&h);
   ::SetRect(&therect,x,y,x+w,x+h);
   ::PaintArc(&therect,aStartAngle,aEndAngle);
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -1280,12 +1203,9 @@ NS_IMETHODIMP nsRenderingContextMac :: GetWidth(const char *aString, nscoord &aW
 NS_IMETHODIMP
 nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord& aWidth)
 {
+	StartDraw();
+
 	// set native font and attributes
-  
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  ::SetPort(mCurStatePtr->mRenderingSurface);
-  
   nsFont *font;
   mCurStatePtr->mFontMetrics->GetFont(font);
 	nsFontMetricsMac::SetFont(*font, mContext);
@@ -1305,8 +1225,7 @@ nsRenderingContextMac :: GetWidth(const char* aString, PRUint32 aLength, nscoord
 			break;
 	}
 
-  ::SetPort(oldPort);
-
+	EndDraw();
 	return NS_OK;
 }
 
@@ -1329,31 +1248,21 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
                                          nscoord aWidth,
                                          const nscoord* aSpacing)
 {
+	StartDraw();
+
 	PRInt32 x = aX;
 	PRInt32 y = aY;
 
-  GrafPtr oldPort;
-  ::GetPort(&oldPort);
-  
-  ::SetPort(mCurStatePtr->mRenderingSurface);
-  //::SetClip(mMainRegion);
-  //::SetOrigin( 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-  //  	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-  ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );  
-    	
-  ::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
-
   if (mCurStatePtr->mFontMetrics)
   {
-	// set native font and attributes
+		// set native font and attributes
     nsFont *font;
     mCurStatePtr->mFontMetrics->GetFont(font);
 		nsFontMetricsMac::SetFont(*font, mContext);
 
 		// substract ascent since drawing specifies baseline
 		nscoord ascent = 0;
-	mCurStatePtr->mFontMetrics->GetMaxAscent(ascent);
+		mCurStatePtr->mFontMetrics->GetMaxAscent(ascent);
 		y += ascent;
 	}
 
@@ -1375,8 +1284,8 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		{
 			nscoord ascent = 0;
 			nscoord descent = 0;
-	  mCurStatePtr->mFontMetrics->GetMaxAscent(ascent);
-	  mCurStatePtr->mFontMetrics->GetMaxDescent(descent);
+	  	mCurStatePtr->mFontMetrics->GetMaxAscent(ascent);
+	  	mCurStatePtr->mFontMetrics->GetMaxDescent(descent);
 
 			DrawLine(aX, aY + ascent + (descent >> 1),
 						aX + aWidth, aY + ascent + (descent >> 1));
@@ -1385,13 +1294,13 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawString(const char *aString, PRUint32 
 		if (deco & NS_FONT_DECORATION_LINE_THROUGH)
 		{
 			nscoord height = 0;
-	  mCurStatePtr->mFontMetrics->GetHeight(height);
+	 		mCurStatePtr->mFontMetrics->GetHeight(height);
 
 			DrawLine(aX, aY + (height >> 1), aX + aWidth, aY + (height >> 1));
 		}
 	}
 
-  ::SetPort(oldPort);
+	EndDraw();
   return NS_OK;
 }
 
@@ -1457,49 +1366,33 @@ NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, nscoord aX, n
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect& aSRect, const nsRect& aDRect)
 {
-  nsRect	sr,dr;
-  
-  sr = aSRect;
-  mCurStatePtr->mTMatrix ->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
+	StartDraw();
 
-  dr = aDRect;
+  nsRect sr = aSRect;
+  nsRect dr = aDRect;
+  mCurStatePtr->mTMatrix->TransformCoord(&sr.x,&sr.y,&sr.width,&sr.height);
   mCurStatePtr->mTMatrix->TransformCoord(&dr.x,&dr.y,&dr.width,&dr.height);
   
-  return aImage->Draw(*this,mCurStatePtr->mRenderingSurface,sr.x,sr.y,sr.width,sr.height,
+  nsresult result =  aImage->Draw(*this,mCurStatePtr->mRenderingSurface,sr.x,sr.y,sr.width,sr.height,
                       dr.x,dr.y,dr.width,dr.height);
+
+	EndDraw();
+	return result;
 }
 
 //------------------------------------------------------------------------
 
 NS_IMETHODIMP nsRenderingContextMac :: DrawImage(nsIImage *aImage, const nsRect& aRect)
 {
-  nsRect	tr;
+	StartDraw();
 
-  tr = aRect;
+  nsRect tr = aRect;
   mCurStatePtr->mTMatrix->TransformCoord(&tr.x,&tr.y,&tr.width,&tr.height);
   
-  if (aImage != nsnull) 
-	{
-    GrafPtr oldPort;
-    ::GetPort(&oldPort);
-    
-	::SetPort(mCurStatePtr->mRenderingSurface);
-	//::SetClip(mMainRegion);
-	//::SetOrigin( 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.left, 
-    //	-(**mMacPortRelativeClipRgn).rgnBBox.top );
-    ::SetOrigin( -mCurStatePtr->mMacPortRelativeX, -mCurStatePtr->mMacPortRelativeY );
-    	
-	::SetClip(mCurStatePtr->mMacOriginRelativeClipRgn);
-    nsresult result = aImage->Draw(*this,mCurStatePtr->mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
-    ::SetPort(oldPort);
-    return result;
- 	} 
-  else 
- 	{
-    printf("Image is NULL!\n");
-    return NS_ERROR_FAILURE;
- 	}
+	nsresult result = aImage->Draw(*this,mCurStatePtr->mRenderingSurface,tr.x,tr.y,tr.width,tr.height);
+
+	EndDraw();
+	return result;
 }
 
 //------------------------------------------------------------------------
