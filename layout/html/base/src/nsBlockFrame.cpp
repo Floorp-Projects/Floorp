@@ -885,7 +885,7 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
                                     PRInt32* aLocalChange)
 {
   // NOTE: using nsFrame's ReResolveStyleContext method to avoid
-  // useless version in base classes.
+  //       version in container frame that will do our children
   PRInt32 ourChange = aParentChange;
   nsresult rv = nsFrame::ReResolveStyleContext(aPresContext, aParentContext, 
                                                ourChange, aChangeList,
@@ -895,21 +895,6 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
   }
 
   if (NS_COMFALSE != rv) {
-    if (HaveOutsideBullet() && mBullet) {
-      nsIStyleContext* newBulletSC;
-      nsIStyleContext* oldBulletSC = nsnull;
-      mBullet->GetStyleContext(&oldBulletSC);
-      aPresContext->ResolvePseudoStyleContextFor(mContent,
-                                              nsHTMLAtoms::mozListBulletPseudo,
-                                              mStyleContext,
-                                              PR_FALSE, &newBulletSC);
-      rv = mBullet->SetStyleContext(aPresContext, newBulletSC);
-      CaptureStyleChangeFor(this, oldBulletSC, newBulletSC, 
-                            ourChange, aChangeList, &ourChange);
-      NS_RELEASE(oldBulletSC);
-      NS_RELEASE(newBulletSC);
-    }
-
     if (aLocalChange) {
       *aLocalChange = ourChange;
     }
@@ -925,12 +910,31 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
     }
 
     // Just in case, we update the prev-in-flow's overflow lines too
+    // XXX try to make this go away....
     if (NS_SUCCEEDED(rv) && (nsnull != mPrevInFlow)) {
       nsLineBox* lines = ((nsBlockFrame*)mPrevInFlow)->mOverflowLines;
       if (nsnull != lines) {
         rv = ReResolveLineList(aPresContext, lines, mStyleContext, 
                                ourChange, aChangeList);
       }
+    }
+
+    // Update other child lists, but not the primary list, this gets bullets, floaters and subclass lists
+    PRInt32 listIndex = 0;
+    nsIAtom* childList = nsnull;
+    PRInt32 childChange;
+    GetAdditionalChildListName(listIndex++, &childList);
+    while (childList) {
+      nsIFrame* child = nsnull;
+      rv = FirstChild(childList, &child);
+      while ((NS_SUCCEEDED(rv)) && (child)) {
+        rv = child->ReResolveStyleContext(aPresContext, mStyleContext, 
+                                          ourChange, aChangeList, &childChange);
+        child->GetNextSibling(&child);
+      }
+
+      NS_IF_RELEASE(childList);
+      GetAdditionalChildListName(listIndex++, &childList);
     }
   }
 
@@ -942,7 +946,7 @@ nsBlockFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
       // Now we do have first-line style. Therefore we need to wrap up
       // the inline-frames in a first-line frame.
       mState |= NS_BLOCK_HAS_FIRST_LINE_STYLE;
-      rv = WrapFramesInFirstLineFrame(aPresContext);
+      WrapFramesInFirstLineFrame(aPresContext); // XXX this needs to collect change info from style context changes
 
       // Force a reflow so that the first-line is reflowed properly
       aChangeList->AppendChange(this, NS_STYLE_HINT_REFLOW);
