@@ -566,6 +566,12 @@ endif
 
 ################################################################################
 
+# The root makefile doesn't want to do a plain export/libs, because
+# of the tiers and because of libxul. Suppress the default rules in favor
+# of something else. Makefiles which use this var *must* provide a sensible
+# default rule before including rules.mk
+ifndef SUPPRESS_DEFAULT_RULES
+
 all:: 
 	$(MAKE) export
 	$(MAKE) libs
@@ -575,6 +581,8 @@ alldep::
 	$(MAKE) export
 	$(MAKE) depend
 	$(MAKE) libs
+
+endif # SUPPRESS_DEFAULT_RULES
 
 # Do everything from scratch
 everything::
