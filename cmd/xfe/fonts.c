@@ -529,6 +529,7 @@ fe_CharSetInfo fe_CharSetInfoArray[] =
     { CS_VIET_VPS     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_VIET_TCVN    , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
     { CS_VIET_VNI     , FE_FONT_TYPE_X8    , FE_FONT_INFO_X8       },
+    { CS_T61          , FE_FONT_TYPE_NONE  , FE_FONT_INFO_NONE     },
 };
 
 static unsigned char *fe_LocaleCharSets = NULL;
