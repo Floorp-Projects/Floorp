@@ -19,4 +19,10 @@
       </RDF:Seq>
     </chrome:packages>
   </RDF:Description>
+
+  <!-- Version Information.  State that we work only with major version of this
+       package. -->
+  <RDF:Description about="urn:mozilla:locale:en-US:chatzilla"
+       chrome:localeVersion="1.2b"/>
+
 </RDF:RDF>
