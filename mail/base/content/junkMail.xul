@@ -75,7 +75,9 @@
     <tabs id="junkMailTabs">
       <tab label="&settingsTab.label;"/>
       <tab label="&adaptiveTab.label;"/>
+#if 0
       <tab label="&blackListsTab.label;"/>
+#endif
     </tabs>
 
     <tabpanels id="junkMailTabsPanels" flex="1">
@@ -204,11 +206,12 @@
           </hbox>
         </vbox>
 
+#if 0
         <!-- Real Time Black Lists Tab -->        
         <vbox index="blackLists" flex="1">
           <description width="1">This hasn't been implemented yet</description>
         </vbox>
-
+#endif
       </tabpanels> 
     </tabbox>
   </vbox>
