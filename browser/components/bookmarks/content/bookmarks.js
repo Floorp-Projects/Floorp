@@ -513,7 +513,7 @@ var BookmarksCommand = {
    
     var selection = {item: items, parent:Array(items.length), length: items.length};
     BookmarksUtils.checkSelection(selection);
-    BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget, -1);
+    BookmarksUtils.insertAndCheckSelection("paste", selection, aTarget);
   },
   
   deleteBookmark: function (aSelection)
@@ -684,7 +684,7 @@ var BookmarksCommand = {
   createNewResource: function(aResource, aTarget, aTxnType)
   {
     var selection = BookmarksUtils.getSelectionFromResource(aResource, aTarget.parent);
-    var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget, -1);
+    var ok        = BookmarksUtils.insertAndCheckSelection(aTxnType, selection, aTarget);
     if (ok && aTxnType != "newseparator") {
       ok = this.openBookmarkProperties(selection);
       if (!ok)
@@ -1248,34 +1248,33 @@ var BookmarksUtils = {
     return true;
   },
         
-  insertAndCheckSelection: function (aAction, aSelection, aTarget, aTargetIndex)
+  insertAndCheckSelection: function (aAction, aSelection, aTarget)
   {
     isValid = BookmarksUtils.isSelectionValidForInsertion(aSelection, aTarget);
     if (!isValid) {
       SOUND.beep();
       return false;
     }
-    this.insertSelection(aAction, aSelection, aTarget, aTargetIndex);
+    this.insertSelection(aAction, aSelection, aTarget);
     BookmarksUtils.flushDataSource();
     return true;
   },
 
-  insertSelection: function (aAction, aSelection, aTarget, aTargetIndex)
+  insertSelection: function (aAction, aSelection, aTarget)
   {
     var transaction    = new BookmarkInsertTransaction(aAction);
     transaction.item   = new Array(aSelection.length);
     transaction.parent = new Array(aSelection.length);
     transaction.index  = new Array(aSelection.length);
-    // the -1 business is a hack for 252133; it should go away once we can
-    // consistently add things after a given element.
-    var index = aTargetIndex ? aTargetIndex : aTarget.index;
+
+    var index = aTarget.index;
     for (var i=0; i<aSelection.length; ++i) {
       var rSource = aSelection.item[i];
       if (BMSVC.isBookmarkedResource(rSource))
         rSource = BMSVC.cloneResource(rSource);
       transaction.item  [i] = rSource;
       transaction.parent[i] = aTarget.parent;
-      transaction.index [i] = ((index == -1) ? -1 : index++);
+      transaction.index [i] = index++;
     }
     BMSVC.transactionManager.doTransaction(transaction);
   },
@@ -1519,14 +1518,7 @@ BookmarkInsertTransaction.prototype =
     this.beginUpdateBatch();
     for (var i=0; i<this.item.length; ++i) {
       this.RDFC.Init(this.BMDS, this.parent[i]);
-      // if the index is -1, we use appendElement, and then update the
-      // index so that undoTransaction can still function
-      if (this.index[i] == -1) {
-        this.RDFC.AppendElement(this.item[i]);
-        this.index[i] = this.RDFC.GetCount();
-      } else {
-        this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
-      }
+      this.RDFC.InsertElementAt(this.item[i], this.index[i], true);
     }
     this.endUpdateBatch();
   },
