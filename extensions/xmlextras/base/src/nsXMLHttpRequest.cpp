@@ -949,6 +949,11 @@ nsXMLHttpRequest::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult
     // the only active network connection on the page the throbber nor the STOP
     // button are active.
     Abort();
+    // By nulling out channel here we make it so that Send() can test for that
+    // and throw. Also calling the various status methods/members will not throw.
+    // This matches what IE does.
+    mChannel = nsnull;
+    ChangeState(XML_HTTP_REQUEST_COMPLETED, PR_FALSE); // IE also seems to set this
   } else if (parser && parser->IsParserEnabled()) {
     // The parser needs to be enabled for us to safely call RequestCompleted().
     // If the parser is not enabled, it means it was blocked, by xml-stylesheet PI
@@ -1272,6 +1277,10 @@ nsXMLHttpRequest::Send(nsIVariant *aBody)
     mEventQService->PopThreadEventQueue(modalEventQueue);
   }
   
+  if (!mChannel) {
+    return NS_ERROR_FAILURE;
+  }
+
   return NS_OK;
 }
 
