@@ -228,32 +228,6 @@ function HandleBookmarkIcon(iconURL, addFlag)
   }
 }
 
-function UpdateInternetSearchResults(event)
-{
-  var url = getWebNavigation().currentURI.spec;
-  if (url) {
-    try {
-      var autoOpenSearchPanel = 
-        pref.getBoolPref("browser.search.opensidebarsearchpanel");
-
-      if (autoOpenSearchPanel || isSearchPanelOpen())
-      {
-        if (!gSearchService)
-          gSearchService = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                         .getService(Components.interfaces.nsIInternetSearchService);
-
-        var searchInProgressFlag = gSearchService.FindInternetSearchResults(url);
-
-        if (searchInProgressFlag) {
-          if (autoOpenSearchPanel)
-            RevealSearchPanel();
-        }
-      }
-    } catch (ex) {
-    }
-  }
-}
-
 function getBrowser()
 {
   if (!gBrowser)
@@ -827,114 +801,6 @@ function QualifySearchTerm()
   if (window.XULBrowserWindow.userTyped.value)
     return document.getElementById("urlbar").value;
   return "";
-}
-
-function OpenSearch(tabName, forceDialogFlag, searchStr, newWindowFlag)
-{
-  //This function needs to be split up someday.
-
-  var autoOpenSearchPanel = false;
-  var defaultSearchURL = null;
-  var fallbackDefaultSearchURL = gNavigatorRegionBundle.getString("fallbackDefaultSearchURL");
-  ensureSearchPref()
-  //Check to see if search string contains "://" or "ftp." or white space.
-  //If it does treat as url and match for pattern
-  
-  var urlmatch= /(:\/\/|^ftp\.)[^ \S]+$/ 
-  var forceAsURL = urlmatch.test(searchStr);
-
-  try {
-    autoOpenSearchPanel = pref.getBoolPref("browser.search.opensidebarsearchpanel");
-    defaultSearchURL = pref.getComplexValue("browser.search.defaulturl",
-                                            Components.interfaces.nsIPrefLocalizedString).data;
-  } catch (ex) {
-  }
-
-  // Fallback to a default url (one that we can get sidebar search results for)
-  if (!defaultSearchURL)
-    defaultSearchURL = fallbackDefaultSearchURL;
-
-  if (!searchStr) {
-    BrowserSearchInternet();
-  } else {
-
-    //Check to see if location bar field is a url
-    //If it is a url go to URL.  A Url is "://" or "." as commented above
-    //Otherwise search on entry
-    if (forceAsURL) {
-       BrowserLoadURL()
-    } else {
-      var searchMode = 0;
-      try {
-        searchMode = pref.getIntPref("browser.search.powermode");
-      } catch(ex) {
-      }
-
-      if (forceDialogFlag || searchMode == 1) {
-        // Use a single search dialog
-        var windowManager = Components.classes["@mozilla.org/appshell/window-mediator;1"]
-                                      .getService(Components.interfaces.nsIWindowMediator);
-
-        var searchWindow = windowManager.getMostRecentWindow("search:window");
-        if (!searchWindow) {
-          openDialog("chrome://communicator/content/search/search.xul", "SearchWindow", "dialog=no,close,chrome,resizable", tabName, searchStr);
-        } else {
-          // Already had one, focus it and load the page
-          searchWindow.focus();
-
-          if ("loadPage" in searchWindow)
-            searchWindow.loadPage(tabName, searchStr);
-        }
-      } else {
-        if (searchStr) {
-          var escapedSearchStr = escape(searchStr);
-          defaultSearchURL += escapedSearchStr;
-          var searchDS = Components.classes["@mozilla.org/rdf/datasource;1?name=internetsearch"]
-                                   .getService(Components.interfaces.nsIInternetSearchService);
-
-          searchDS.RememberLastSearchText(escapedSearchStr);
-          try {
-            var searchEngineURI = pref.getCharPref("browser.search.defaultengine");
-            if (searchEngineURI) {          
-              var searchURL = getSearchUrl("actionButton");
-              if (searchURL) {
-                defaultSearchURL = searchURL + escapedSearchStr; 
-              } else {
-                searchURL = searchDS.GetInternetSearchURL(searchEngineURI, escapedSearchStr, 0, 0, {value:0});
-                if (searchURL)
-                  defaultSearchURL = searchURL;
-              }
-            }
-          } catch (ex) {
-          }
-
-          if (!newWindowFlag)
-            loadURI(defaultSearchURL);
-          else
-            window.open(defaultSearchURL, "_blank");
-        }
-      }
-    }
-  }
-
-  // should we try and open up the sidebar to show the "Search Results" panel?
-  if (autoOpenSearchPanel)
-    RevealSearchPanel();
-}
-
-function RevealSearchPanel()
-{
-  var searchPanel = document.getElementById("urn:sidebar:panel:search");
-  if (searchPanel)
-    SidebarSelectPanel(searchPanel, true, true); // lives in sidebarOverlay.js
-}
-
-function isSearchPanelOpen()
-{
-  return ( !sidebar_is_hidden()    && 
-           !sidebar_is_collapsed() && 
-           SidebarGetLastSelectedPanel() == "urn:sidebar:panel:search"
-         );
 }
 
 function BrowserSearchInternet()
@@ -1590,13 +1456,6 @@ function checkForDefaultBrowser()
                       .checkSettings(window);
     } catch(e) {
     }
-
-    if (dialogShown)  
-    {
-      // Force the sidebar to build since the windows 
-      // integration dialog may have come up.
-      SidebarRebuild();
-    }
   }
 }
 
@@ -1859,7 +1718,6 @@ function toggleAffectedChrome(aHide)
   //   (*) navigation bar
   //   (*) personal toolbar
   //   (*) tab browser ``strip''
-  //   (*) sidebar
 
   if (!gChromeState)
     gChromeState = new Object;
@@ -1867,25 +1725,9 @@ function toggleAffectedChrome(aHide)
   navToolbox.hidden = aHide;
   var theTabbrowser = document.getElementById("content"); 
 
-  // sidebar states map as follows:
-  //   was-hidden    => hide/show nothing
-  //   was-collapsed => hide/show only the splitter
-  //   was-shown     => hide/show the splitter and the box
   if (aHide)
   {
     // going into print preview mode
-    if (sidebar_is_collapsed())
-    {
-      gChromeState.sidebar = "was-collapsed";
-    }
-    else if (sidebar_is_hidden())
-      gChromeState.sidebar = "was-hidden";
-    else 
-    {
-      gChromeState.sidebar = "was-visible";
-    }
-    document.getElementById("sidebar-box").hidden = true;
-    document.getElementById("sidebar-splitter").hidden = true;
     //deal with tab browser
     gChromeState.hadTabStrip = theTabbrowser.getStripVisibility();
     theTabbrowser.setStripVisibilityTo(false);
@@ -1895,16 +1737,7 @@ function toggleAffectedChrome(aHide)
     // restoring normal mode (i.e., leaving print preview mode)
     //restore tab browser
     theTabbrowser.setStripVisibilityTo(gChromeState.hadTabStrip);
-    if (gChromeState.sidebar == "was-collapsed" ||
-        gChromeState.sidebar == "was-visible")
-      document.getElementById("sidebar-splitter").hidden = false;
-    if (gChromeState.sidebar == "was-visible")
-      document.getElementById("sidebar-box").hidden = false;
   }
-
-  // if we are unhiding and sidebar used to be there rebuild it
-  if (!aHide && gChromeState.sidebar == "was-visible")
-    SidebarRebuild();
 }
 
 function showPrintPreviewToolbar()

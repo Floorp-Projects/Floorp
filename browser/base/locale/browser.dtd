@@ -11,7 +11,7 @@
 
 <!ENTITY nothingAvailable.label "(Nothing Available)">
 
-<!ENTITY tabCmd.label "New Navigator Tab">
+<!ENTITY tabCmd.label "New Tab">
 <!ENTITY tabCmd.accesskey "T">
 <!ENTITY tabCmd.commandkey "t">
 <!ENTITY openFileCmd.label "Open File...">
@@ -130,7 +130,7 @@
 <!ENTITY fileMenu.accesskey       "F">
 <!ENTITY newMenu.label            "New">
 <!ENTITY newMenu.accesskey          "N">
-<!ENTITY newNavigatorCmd.label        "New Navigator Window">
+<!ENTITY newNavigatorCmd.label        "New Window">
 <!ENTITY newNavigatorCmd.key        "N">
 <!ENTITY newNavigatorCmd.accesskey      "N">
 
