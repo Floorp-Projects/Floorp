@@ -104,7 +104,7 @@ int main(int argc, char** argv)
   }
 
   // Now make sure we don't find some garbage
-  for (int i = 0; i < int(sizeof(kJunkNames) / sizeof(const char*)); i++) {
+  for (int i = 0; i < (int) (sizeof(kJunkNames) / sizeof(const char*)); i++) {
     const char* tag = kJunkNames[i];
     id = nsColorNames::LookupName(tag);
     if (id >= 0) {
