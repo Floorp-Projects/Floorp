@@ -128,17 +128,23 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 #include "nsIDOMFocusListener.h"
 #include "nsISelectionController.h"
 
+#include "nsISound.h"
+
 #include "nsITransformMediator.h"
 
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"
 #endif
 
+static NS_DEFINE_IID(kSoundCID,NS_SOUND_CID);
+
 static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kPresShellCID, NS_PRESSHELL_CID);
 static NS_DEFINE_CID(kGalleyContextCID,  NS_GALLEYCONTEXT_CID);
 static NS_DEFINE_CID(kPrintContextCID,  NS_PRINTCONTEXT_CID);
 static NS_DEFINE_CID(kStyleSetCID,  NS_STYLESET_CID);
+
+PRBool  gCurrentlyPrinting = PR_FALSE;
 
 #ifdef NS_DEBUG
 
@@ -165,6 +171,7 @@ const char * gFrameTypesStr[]       = {"eDoc", "eFrame", "eIFrame", "eFrameSet"}
 const char * gPrintFrameTypeStr[]   = {"kNoFrames", "kFramesAsIs", "kSelectedFrame", "kEachFrameSep"};
 const char * gFrameHowToEnableStr[] = {"kFrameEnableNone", "kFrameEnableAll", "kFrameEnableAsIsAndEach"};
 const char * gPrintRangeStr[]       = {"kRangeAllPages", "kRangeSpecifiedPageRange", "kRangeSelection", "kRangeFocusFrame"};
+
 
 
 #define PRINT_DEBUG_MSG1(_msg1) fprintf(mPrt->mDebugFD, (_msg1)); 
@@ -578,6 +585,7 @@ public:
     if (mTimer) {
       mTimer->Cancel();
     }
+    gCurrentlyPrinting = PR_FALSE;
   }
 
 
@@ -616,6 +624,7 @@ public:
         nsresult result = StartTimer();
         if (NS_FAILED(result)) {
           donePrinting = PR_TRUE;     // had a failure.. we are finished..
+          gCurrentlyPrinting = PR_FALSE;
         }
       }
     }
@@ -2088,6 +2097,7 @@ DocumentViewerImpl::DonePrintingPages(PrintObject* aPO)
   DoProgressForAsIsFrames();
   DoProgressForSeparateFrames();
 
+  gCurrentlyPrinting = PR_FALSE;
   delete mPrt;
   mPrt = nsnull;
 
@@ -3428,6 +3438,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
             if (startPageNum == endPageNum) {
               nsIFrame * seqFrame;
               if (NS_FAILED(pageSequence->QueryInterface(NS_GET_IID(nsIFrame), (void **)&seqFrame))) {
+                gCurrentlyPrinting = PR_FALSE;
                 return NS_ERROR_FAILURE;
               }
               nsRect rect(0,0,0,0);
@@ -3444,6 +3455,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
 
         nsIFrame * seqFrame;
         if (NS_FAILED(pageSequence->QueryInterface(NS_GET_IID(nsIFrame), (void **)&seqFrame))) {
+          gCurrentlyPrinting = PR_FALSE;
           return NS_ERROR_FAILURE;
         }
 
@@ -3480,6 +3492,7 @@ DocumentViewerImpl::DoPrint(PrintObject * aPO, PRBool aDoSyncPrinting, PRBool& a
         }
       } else {
         // not sure what to do here!
+        gCurrentlyPrinting = PR_FALSE;
         return NS_ERROR_FAILURE;
       }
     }
@@ -4231,8 +4244,29 @@ DocumentViewerImpl::IsThereARangeSelection(nsIDOMWindowInternal * aDOMWin)
 NS_IMETHODIMP
 DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintListener)
 {
+nsresult rv;
+
+  // if we are printing another URL, then exit
+  // the reason we check here is because this method can be called while 
+  // another is still in here (the printing dialog is a good example).
+  if(gCurrentlyPrinting) {
+    // Beep at the user, let them know we are not ready to print.
+    nsCOMPtr<nsISound>  soundInterface;
+    rv = nsComponentManager::CreateInstance(kSoundCID,
+    nsnull, NS_GET_IID(nsISound),
+    getter_AddRefs(soundInterface));
+    if (NS_SUCCEEDED(rv) && (soundInterface != nsnull)){
+      soundInterface->Beep();
+    }
+    return NS_ERROR_FAILURE;
+  } else {
+    gCurrentlyPrinting = PR_TRUE;
+  }
+
+
   mPrt = new PrintData();
   if (mPrt == nsnull) {
+    gCurrentlyPrinting = PR_FALSE;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
@@ -4252,6 +4286,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
   if (mPrt->mPrintDocList == nsnull) {
     mPrt->mPrintDocList = new nsVoidArray();
     if (mPrt->mPrintDocList == nsnull) {
+      gCurrentlyPrinting = PR_FALSE;
       return NS_ERROR_FAILURE;
     }
   } else {
@@ -4286,7 +4321,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
   DUMP_DOC_LIST("\nAfter Mapping------------------------------------------");
 
   // Setup print options for UI
-  nsresult  rv = NS_ERROR_FAILURE;
+  rv = NS_ERROR_FAILURE;
   NS_WITH_SERVICE(nsIPrintOptions, printService, kPrintOptionsCID, &rv);
   if (NS_SUCCEEDED(rv) && printService) {
     if (mPrt->mIsParentAFrameSet) {
@@ -4349,10 +4384,12 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
           // load the document and do the initial reflow on the entire document
           nsCOMPtr<nsIPrintContext> printcon(do_CreateInstance(kPrintContextCID,&rv));
           if (NS_FAILED(rv)) {
+            gCurrentlyPrinting = PR_FALSE;
             return rv;
           } else {
             rv = printcon->QueryInterface(NS_GET_IID(nsIPresContext), (void**)&mPrt->mPrintPC);
             if (NS_FAILED(rv)) {
+              gCurrentlyPrinting = PR_FALSE;
               return rv;
             }
           }
@@ -4375,27 +4412,32 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
 
           rv = nsComponentManager::CreateInstance(kPresShellCID, nsnull, NS_GET_IID(nsIPresShell),(void**)&mPrt->mPrintPS);
           if(NS_FAILED(rv)){
+            gCurrentlyPrinting = PR_FALSE;
             return rv;
           }
 
           rv = nsComponentManager::CreateInstance(kViewManagerCID, nsnull, NS_GET_IID(nsIViewManager),(void**)&mPrt->mPrintVM);
           if(NS_FAILED(rv)) {
+            gCurrentlyPrinting = PR_FALSE;
             return rv;
           }
 
           rv = mPrt->mPrintVM->Init(mPrt->mPrintDC);
           if(NS_FAILED(rv)) {
+            gCurrentlyPrinting = PR_FALSE;
             return rv;
           }
 
           rv = nsComponentManager::CreateInstance(kViewCID, nsnull, NS_GET_IID(nsIView),(void**)&mPrt->mPrintView);
           if(NS_FAILED(rv)) {
+            gCurrentlyPrinting = PR_FALSE;
             return rv;
           }
 
           nsRect  tbounds = nsRect(0,0,width,height);
           rv = mPrt->mPrintView->Init(mPrt->mPrintVM,tbounds,nsnull);
           if(NS_FAILED(rv)) {
+            gCurrentlyPrinting = PR_FALSE;
             return rv;
           }
 
@@ -4491,7 +4533,7 @@ DocumentViewerImpl::Print(PRBool aSilent,FILE *aFile, nsIPrintListener *aPrintLi
       mPrt->OnEndPrinting(NS_ERROR_FAILURE);
       delete mPrt;
       mPrt = nsnull;
-
+      gCurrentlyPrinting = PR_FALSE;
       rv = NS_ERROR_FAILURE;
     }
 
