@@ -51,7 +51,7 @@
         }
         var ioService = Components.classes["@mozilla.org/network/io-service;1"]
                                   .getService(Components.interfaces.nsIIOService);
-        uri = ioService.newURI(gContextMenu.imageURL, null, null);
+        var uri = ioService.newURI(gContextMenu.imageURL, null, null);
         return permissionmanager.testPermission(uri, "image") != nsIPermissionManager.DENY_ACTION;
       },
 
