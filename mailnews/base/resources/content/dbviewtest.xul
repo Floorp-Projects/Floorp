@@ -5,6 +5,12 @@
         
 <script language="JavaScript" src="chrome://messenger/content/dbviewtest.js"/>
 
-<button value="Hit Me" onclick="doit()"/>
+<box orient="vertical">
+  <button class="dialog" value="create view" onclick="createView()"/>
+  <button class="dialog" value="sort date ascending" onclick="sortDateAscending()"/>
+  <button class="dialog" value="sort date decending" onclick="sortDateDescending()"/>
+  <button class="dialog" value="sort thread ascending" onclick="sortThreadedAscending()"/>
+  <button class="dialog" value="sort thread descending" onclick="sortThreadedDescending()"/>
+</box>
 
 </window>
