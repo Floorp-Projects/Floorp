@@ -366,6 +366,7 @@
                         SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                         BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                         IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                        IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                         ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                     <menupopup>
                       <menuitem label="&fileHereMenu.label;"
@@ -382,6 +383,7 @@
                         SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                         BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                         IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                        IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                         ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                     <menupopup/>
                   </menu>
@@ -394,6 +396,7 @@
                             SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                             BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                             IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                            IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                             ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
                 </menupopup>
               </rule>

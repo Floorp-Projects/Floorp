@@ -131,12 +131,14 @@ Rights Reserved.
                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                     IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                       <menupopup>
                         <menuitem uri="..." label="&fileHereMenu.label;"
                          SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                          BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                          IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                         IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                          ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
                         <menuseparator/>
                       </menupopup>
@@ -151,6 +153,7 @@ Rights Reserved.
                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                     IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                       <menupopup/>
                     </menu>
@@ -162,6 +165,7 @@ Rights Reserved.
                      SpecialFolder="rdf:http://home.netscape.com/NC-rdf#SpecialFolder"
                      BiffState="rdf:http://home.netscape.com/NC-rdf#BiffState"
                      IsServer="rdf:http://home.netscape.com/NC-rdf#IsServer"
+                     IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"
                      ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
                   </menupopup>
                 </rule>
