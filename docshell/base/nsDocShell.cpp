@@ -108,6 +108,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
    NS_INTERFACE_MAP_ENTRY(nsIScrollable)
    NS_INTERFACE_MAP_ENTRY(nsITextScroll)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
+   NS_INTERFACE_MAP_ENTRY(nsIScriptContextOwner)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -1429,6 +1430,84 @@ NS_IMETHODIMP nsDocShell::GetInterface(const nsIID& aIID, void** aSink)
 }
 
 //*****************************************************************************
+// nsDocShell::nsIScriptContextOwner
+//*****************************************************************************   
+
+NS_IMETHODIMP nsDocShell::GetScriptContext(nsIScriptContext** aContext)
+{
+   NS_ENSURE_ARG_POINTER(aContext);
+   NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
+
+   *aContext = mScriptContext;
+   NS_IF_ADDREF(*aContext);
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
+{
+   NS_ENSURE_ARG_POINTER(aGlobal);
+   NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
+
+   *aGlobal = mScriptContext->GetGlobalObject();
+   NS_IF_ADDREF(*aGlobal);
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::ReleaseScriptContext(nsIScriptContext *aContext)
+{
+   NS_IF_RELEASE(aContext);
+   mScriptContext = nsnull;
+   return NS_OK;
+}
+
+NS_IMETHODIMP nsDocShell::ReportScriptError(const char* aErrorString, 
+   const char* aFileName, PRInt32 aLineNo, const char* aLineBuf)
+{
+   //XXX Needs some international work.
+   nsAutoString error;
+   error.SetString("JavaScript Error: ");
+   error.Append(aErrorString);
+   error += "\n";
+
+   if(aFileName)
+      {
+      error += "URL: ";
+      error += aFileName;
+      error += "\n";
+      }
+
+   if(aLineNo)
+      {
+      error += "LineNo: ";
+      error.Append(aLineNo, 10);
+      error += "\n";
+      }
+
+   if(aLineBuf)
+      {
+      error += "Line text: '";
+      error += aLineBuf;
+      error += "'\n";
+      }
+
+   // XXX Should not do a printf
+   char* errorStr = error.ToNewCString();
+   if(errorStr)
+      {
+      printf("%s\n", errorStr);
+      nsCRT::free(errorStr);
+      }
+
+   //XXXEMBEDDING Call embedding app with the error.
+
+   // XXX Turn it off for now...there should be an Error method too
+   //Alert(error.GetUnicode());
+
+   return NS_OK;
+}
+
+//*****************************************************************************
 // nsDocShell::nsIContentViewerContainer
 //*****************************************************************************   
 
@@ -1580,6 +1659,27 @@ nsresult nsDocShell::EnsureContentListener()
 
    mContentListener->AddRef();
    mContentListener->DocShell(this);
+
+   return NS_OK;
+}
+
+nsresult nsDocShell::EnsureScriptEnvironment()
+{
+   if(mScriptContext)
+      return NS_OK;
+
+   nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+
+   NS_ENSURE_SUCCESS(NS_NewScriptGlobalObject(getter_AddRefs(scriptGlobalObject)), 
+      NS_ERROR_FAILURE);
+
+   //XXXWEBSHELL
+   //mScriptGlobal->SetDocShell(NS_STATIC_CAST(nsIDocShell*, this));
+
+   NS_ENSURE_SUCCESS(NS_CreateScriptContext(scriptGlobalObject, 
+      getter_AddRefs(mScriptContext)), NS_ERROR_FAILURE);
+
+   mScriptContext->SetOwner(NS_STATIC_CAST(nsIScriptContextOwner*, this));
 
    return NS_OK;
 }
