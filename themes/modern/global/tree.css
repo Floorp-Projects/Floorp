@@ -114,7 +114,7 @@ tree:focus > treechildren treeitem[selected="true"][current="true"] > treerow > 
 }
 
 .treecell-indent > .tree-cell-primary-icon {
-  padding-left: 14px;
+  padding-left: 12px;
 }
 
 treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon {

@@ -204,7 +204,7 @@ treecell.propertylist
 
 .treecell-indent > .tree-cell-primary-icon 
   {
-    padding-left          : 14px;
+    padding-left          : 11px;
   }
 
 treeitem[container="true"] > treerow > .treecell-indent > .tree-cell-primary-icon 
