@@ -1030,6 +1030,10 @@ nsresult nsOutlookCompose::WriteHeaders( nsIFileSpec *pDst, SimpleBufferTonyRCop
 			if ((specialHeader = IsSpecialHeader( header.get())) != -1) {
 				header.Append( ':');
 				GetHeaderValue( newHeaders.m_pBuffer, newHeaders.m_writeOffset - 1, header.get(), val, PR_FALSE);
+        // Bug 145150 - Turn "Content-Type: application/ms-tnef" into "Content-Type: text/plain"
+        //              so the body text can be displayed normally (instead of in an attachment).
+        if (!PL_strcasecmp(header.get(), "Content-Type:") && !PL_strcasecmp(val.get(), "application/ms-tnef"))
+          val.Assign("text/plain");
 				header.Truncate( header.Length() - 1);
 				specials[specialHeader] = PR_TRUE;
 			}
