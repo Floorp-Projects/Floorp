@@ -2265,7 +2265,6 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
 
   nsCOMPtr<nsIPresShell> shell;
   nsresult rv = aPresContext.GetShell(getter_AddRefs(shell));
-  nsInputEvent *inputEvent = (nsInputEvent *)aEvent;
   if (NS_SUCCEEDED(rv) && shell) {
     nsCOMPtr<nsIRenderingContext> acx;      
     nsCOMPtr<nsIFocusTracker> tracker;
@@ -2275,7 +2274,6 @@ nsTextFrame::HandleMultiplePress(nsIPresContext& aPresContext,
     rv = shell->CreateRenderingContext(this, getter_AddRefs(acx));
     if (NS_SUCCEEDED(rv)){
       PRInt32 startPos = 0;
-      PRUint32 contentOffset = 0;
       PRInt32 contentOffsetEnd = 0;
       nsCOMPtr<nsIContent> newContent;
       if (NS_SUCCEEDED(GetPosition(aPresContext, aEvent->point.x,
