@@ -31,6 +31,7 @@ Rights Reserved.
 <!ENTITY asAttachment.accesskey               "a">
 <!ENTITY autoQuote.label                      "Automatically quote the original message when replying">
 <!ENTITY autoQuote.accesskey                  "u">
+<!-- LOCALIZATION NOTE (then.label): This will concatenate with the 4 strings that follow. -->
 <!ENTITY then.label                           "then,">
 <!ENTITY then.accesskey                       "h">
 <!ENTITY aboveQuote.label                     "start my reply above the quoted text">
@@ -52,6 +53,7 @@ Rights Reserved.
 <!ENTITY sendingMessagesHeader.label          "Composing Messages">
 <!ENTITY spellCheck.label                     "Check spelling before sending">
 <!ENTITY spellCheck.accesskey                 "p">
+<!-- LOCALIZATION NOTE (wrapOutMsg.label): This will concatenate with "xxx characters", using a number and (char.label). -->
 <!ENTITY wrapOutMsg.label                     "Wrap plain text messages at">
 <!ENTITY wrapOutMsg.accesskey                 "l">
 <!ENTITY char.label                           "characters">
