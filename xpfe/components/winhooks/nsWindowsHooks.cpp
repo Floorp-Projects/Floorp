@@ -77,7 +77,7 @@ const char *bmpExts[] = { ".bmp", 0 };
 const char *icoExts[] = { ".ico", 0 };
 const char *xmlExts[] = { ".xml", 0 };
 const char *xulExts[] = { ".xul", 0 };
-const char *htmExts[] = { ".htm", ".html", 0 };
+const char *htmExts[] = { ".htm", ".html", ".shtml", 0 };
 
 static FileTypeRegistryEntry
     jpg( jpgExts, "MozillaJPEG", "Mozilla Joint Photographic Experts Group Image File" ),
