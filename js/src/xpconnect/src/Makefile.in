@@ -92,6 +92,13 @@ IS_COMPONENT	= 1
 endif
 endif
 
+# HPUX
+ifeq ($(OS_ARCH),HP-UX)
+ifneq ($(CC),gcc)
+IS_COMPONENT	= 1
+endif
+endif
+
 # AIX
 ifeq ($(OS_ARCH),AIX)
 IS_COMPONENT	= 1
