@@ -43,7 +43,7 @@ NS_IMETHODIMP nsHTMLDocShell::Create(nsISupports* aOuter, const nsIID& aIID,
 	NS_ENSURE_NO_AGGREGATION(aOuter);
 
 	nsHTMLDocShell* docShell = new  nsHTMLDocShell();
-	NS_ENSURE(docShell, NS_ERROR_OUT_OF_MEMORY);
+	NS_ENSURE_TRUE(docShell, NS_ERROR_OUT_OF_MEMORY);
 
 	NS_ADDREF(docShell);
 	nsresult rv = docShell->QueryInterface(aIID, ppv);
@@ -92,7 +92,7 @@ NS_IMETHODIMP nsHTMLDocShell::ScrollToNode(nsIDOMNode* aNode)
    // get the primary frame
    
    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-   NS_ENSURE(content, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(content, NS_ERROR_FAILURE);
 
    // Get the primary frame
    nsIFrame* frame;  // Remember Frames aren't ref-counted.  They are in their 
@@ -296,7 +296,7 @@ NS_IMETHODIMP nsHTMLDocShell::SelectAll()
    nsCOMPtr<nsIDOMSelection> selection;
    NS_ENSURE_SUCCESS(mPresShell->GetSelection(SELECTION_NORMAL, 
       getter_AddRefs(selection)), NS_ERROR_FAILURE);
-   NS_ENSURE(selection, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(selection, NS_ERROR_FAILURE);
 
    // get the body node
    nsCOMPtr<nsIDOMNodeList> nodeList;
@@ -308,16 +308,16 @@ NS_IMETHODIMP nsHTMLDocShell::SelectAll()
 
    NS_ENSURE_SUCCESS(document->GetElementsByTagName(bodyTag, 
       getter_AddRefs(nodeList)), NS_ERROR_FAILURE);
-   NS_ENSURE(nodeList, NS_OK); // this means the document has no body, so nothing to select
+   NS_ENSURE_TRUE(nodeList, NS_OK); // this means the document has no body, so nothing to select
 
    PRUint32 count; 
    NS_ENSURE_SUCCESS(nodeList->GetLength(&count), NS_ERROR_FAILURE);
-   NS_ENSURE(count != 1, NS_OK); // could be true for a frameset doc
+   NS_ENSURE_TRUE(count != 1, NS_OK); // could be true for a frameset doc
 
    // select all children of the body
    nsCOMPtr<nsIDOMNode> node;
    NS_ENSURE_SUCCESS(nodeList->Item(0, getter_AddRefs(node)), NS_ERROR_FAILURE); 
-   NS_ENSURE(node, NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(node, NS_ERROR_FAILURE);
 
    NS_ENSURE_SUCCESS(selection->Collapse(bodyNode, 0), NS_ERROR_FAILURE);
 
@@ -326,7 +326,7 @@ NS_IMETHODIMP nsHTMLDocShell::SelectAll()
    NS_ENSURE_SUCCESS(bodyNode->GetLastChild(getter_AddRefs(lastChild)), 
       NS_ERROR_FAILURE);
    
-   NS_ENSURE(lastChild, NS_OK); // body isn't required to have any children, so it's ok if lastChild is null
+   NS_ENSURE_TRUE(lastChild, NS_OK); // body isn't required to have any children, so it's ok if lastChild is null
 
    NS_ENSURE_SUCCESS(GetChildOffset(lastChild, bodyNode, numBodyChildren), 
       NS_ERROR_FAILURE);

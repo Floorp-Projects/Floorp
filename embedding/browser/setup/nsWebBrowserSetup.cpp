@@ -44,7 +44,7 @@ NS_IMETHODIMP nsWebBrowserSetup::Create(nsISupports* aOuter, const nsIID& aIID,
 	NS_ENSURE_NO_AGGREGATION(aOuter);
 
 	nsWebBrowserSetup* setup = new  nsWebBrowserSetup();
-	NS_ENSURE(setup, NS_ERROR_OUT_OF_MEMORY);
+	NS_ENSURE_TRUE(setup, NS_ERROR_OUT_OF_MEMORY);
 
 	NS_ADDREF(setup);
 	nsresult rv = setup->QueryInterface(aIID, ppv);
