@@ -77,6 +77,18 @@ public class VariableTable {
         return ((LocalVariable)(itsVariables.elementAt(index))).getName();
     }
 
+    public String[] getAllNames() {    
+        int N = size();
+        String[] result = null;
+        if (N != 0) {
+            result = new String[N];
+            for (int i = 0; i != N; i++) {
+                result[i] = getName(i);
+            }
+        }
+        return result;
+    }
+
     public void establishIndices() {
         for (int i = 0; i < itsVariables.size(); i++) {
             LocalVariable lVar = (LocalVariable)(itsVariables.elementAt(i));

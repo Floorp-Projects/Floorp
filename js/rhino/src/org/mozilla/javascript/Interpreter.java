@@ -84,7 +84,7 @@ public class Interpreter extends LabelTable {
                                        Object securityDomain)
     {
         int theICodeTop = 0;
-        itsData.itsVariableTable = varTable;
+        itsVariableTable = varTable;
         itsData.itsNeedsActivation = needsActivation;
         theICodeTop = generateICode(tree, theICodeTop);
         itsData.itsICodeTop = theICodeTop;
@@ -136,7 +136,10 @@ public class Interpreter extends LabelTable {
         itsData.itsRegExpLiterals = regExpLiterals;
         if (printICode) dumpICode(itsData);
                                                                
-        InterpretedScript result = new InterpretedScript(itsData, cx);
+        String[] argNames = itsVariableTable.getAllNames();
+        short argCount = (short)itsVariableTable.getParameterCount();
+        InterpretedScript
+            result = new InterpretedScript(cx, itsData, argNames, argCount);
         if (cx.debugger != null) {
             cx.debugger.handleCompilationDone(cx, result, debugSource);
         }
@@ -192,7 +195,10 @@ public class Interpreter extends LabelTable {
         itsData.itsRegExpLiterals = regExpLiterals;
         if (printICode) dumpICode(itsData);            
             
-        InterpretedFunction result = new InterpretedFunction(itsData, cx);
+        String[] argNames = itsVariableTable.getAllNames();
+        short argCount = (short)itsVariableTable.getParameterCount();
+        InterpretedFunction 
+            result = new InterpretedFunction(cx, itsData, argNames, argCount); 
         if (cx.debugger != null) {
             cx.debugger.handleCompilationDone(cx, result, debugSource);
         }
@@ -203,6 +209,7 @@ public class Interpreter extends LabelTable {
     Vector itsFunctionList;
     
     InterpreterData itsData;
+    VariableTable itsVariableTable;
     int itsTryDepth = 0;
     int itsStackDepth = 0;
     int itsEpilogLabel = -1;
@@ -221,11 +228,10 @@ public class Interpreter extends LabelTable {
             if (itsData.itsLineNumberTable == null && 
                 Context.getCurrentContext().isGeneratingDebug())
             {
-                itsData.itsLineNumberTable = new java.util.Hashtable();
+                itsData.itsLineNumberTable = new UintMap();
             }
             if (itsData.itsLineNumberTable != null) {
-                itsData.itsLineNumberTable.put(new Integer(lineNumber), 
-                                               new Integer(iCodeTop));
+                itsData.itsLineNumberTable.put(lineNumber, iCodeTop);
             }
             iCodeTop = addByte((byte) TokenStream.LINE, iCodeTop);
             iCodeTop = addByte((byte)(lineNumber >> 8), iCodeTop);
@@ -673,7 +679,7 @@ public class Interpreter extends LabelTable {
                     // use typeofname if an activation frame exists
                     // since the vars all exist there instead of in jregs
                     if (itsInFunctionFlag && !itsData.itsNeedsActivation)
-                        index = itsData.itsVariableTable.getOrdinal(name);
+                        index = itsVariableTable.getOrdinal(name);
                     if (index == -1) {                    
                         iCodeTop = addByte((byte) TokenStream.TYPEOFNAME, iCodeTop);
                         iCodeTop = addString(name, iCodeTop);
@@ -731,8 +737,7 @@ public class Interpreter extends LabelTable {
                                                     ? TokenStream.VARINC
                                                     : TokenStream.VARDEC),
                                                 iCodeTop);
-                                    int i = itsData.itsVariableTable.
-                                                            getOrdinal(name);
+                                    int i = itsVariableTable.getOrdinal(name);
                                     iCodeTop = addByte((byte)i, iCodeTop);
                                     itsStackDepth++;
                                     if (itsStackDepth > itsData.itsMaxStack)
@@ -946,7 +951,7 @@ public class Interpreter extends LabelTable {
                         itsStackDepth--;
                     }
                     else {
-                        int index = itsData.itsVariableTable.getOrdinal(name);
+                        int index = itsVariableTable.getOrdinal(name);
                         iCodeTop = addByte((byte) TokenStream.GETVAR, iCodeTop);
                         iCodeTop = addByte((byte)index, iCodeTop);
                         itsStackDepth++;
@@ -966,7 +971,7 @@ public class Interpreter extends LabelTable {
                         String name = child.getString();
                         child = child.getNextSibling();
                         iCodeTop = generateICode(child, iCodeTop);
-                        int index = itsData.itsVariableTable.getOrdinal(name);
+                        int index = itsVariableTable.getOrdinal(name);
                         iCodeTop = addByte((byte) TokenStream.SETVAR, iCodeTop);
                         iCodeTop = addByte((byte)index, iCodeTop);
                     }
@@ -1350,7 +1355,7 @@ public class Interpreter extends LabelTable {
     
     public static Object interpret(Context cx, Scriptable scope, 
                                    Scriptable thisObj, Object[] args, 
-                                   Scriptable fnOrScript,
+                                   NativeFunction fnOrScript,
                                    InterpreterData theData)
         throws JavaScriptException
     {
@@ -1358,7 +1363,8 @@ public class Interpreter extends LabelTable {
         Object lhs;
 
         final int maxStack = theData.itsMaxStack;
-        final int maxVars = theData.itsVariableTable.size();
+        final int maxVars = (fnOrScript.argNames == null) 
+                            ? 0 : fnOrScript.argNames.length;
         final int maxLocals = theData.itsMaxLocals;
         final int maxTryDepth = theData.itsMaxTryDepth;
         
@@ -1384,7 +1390,7 @@ public class Interpreter extends LabelTable {
         
         final Scriptable undefined = Undefined.instance;
         if (maxVars != 0) {
-            int definedArgs = theData.itsVariableTable.getParameterCount();
+            int definedArgs = fnOrScript.argCount;
             if (definedArgs != 0) {
                 if (definedArgs > args.length) { definedArgs = args.length;    }
                 for (i = 0; i != definedArgs; ++i) {
@@ -2190,7 +2196,7 @@ public class Interpreter extends LabelTable {
                 }
                 pc++;
             }
-            catch (Exception ex) {
+            catch (Throwable ex) {
                 cx.interpreterSecurityDomain = null;
             
                 if (instructionThreshold != 0) {
@@ -2203,9 +2209,9 @@ public class Interpreter extends LabelTable {
                         instructionCount += pc - pcPrevBranch;
                         cx.instructionCount = instructionCount;
                     }
-                    }
+                }
 
-                final int SCRIPT_THROW = 0, ECMA = 1, OTHER = 2;
+                final int SCRIPT_THROW = 0, ECMA = 1, RUNTIME = 2, OTHER = 3;
 
                 int exType;
                 Object errObj; // Object seen by catch
@@ -2219,20 +2225,25 @@ public class Interpreter extends LabelTable {
                     errObj = ((EcmaError)ex).getErrorObject();
                     exType = ECMA;
                 }
-                else {
+                else if (ex instanceof RuntimeException) {
                     errObj = ex;
+                    exType = RUNTIME;
+                }
+                else {
+                    errObj = ex; // Error instance
                     exType = OTHER;
                 }
 
-                if (cx.debugger != null) {
+                if (exType != OTHER && cx.debugger != null) {
                     cx.debugger.handleExceptionThrown(cx, errObj);
                 }
 
                 boolean rethrow = true;
-                if (tryStackTop > 0) {
+                if (exType != OTHER && tryStackTop > 0) {
                     --tryStackTop;
-                    scope = (Scriptable)stack[TRY_SCOPE_SHFT + tryStackTop];
                     if (exType == SCRIPT_THROW || exType == ECMA) {
+                        // Check for catch only for 
+                        // JavaScriptException and EcmaError
                         pc = catchStack[tryStackTop * 2];
                         if (pc != 0) {
                             // Has catch block
@@ -2241,34 +2252,40 @@ public class Interpreter extends LabelTable {
                     }
                     if (rethrow) {
                         pc = catchStack[tryStackTop * 2 + 1];
-                    if (pc != 0) {
+                        if (pc != 0) {
                             // has finally block
-                        rethrow = false;
+                            rethrow = false;
                             errObj = ex;
+                        }
                     }
-                }
                 }
 
                 if (rethrow) {
                     if (frame != null)
                         cx.popFrame();
-                    if (exType == SCRIPT_THROW) throw (JavaScriptException)ex;
-                    else throw (RuntimeException)ex;
+                    
+                    if (exType == SCRIPT_THROW)
+                        throw (JavaScriptException)ex;
+                    if (exType == ECMA || exType == RUNTIME) 
+                        throw (RuntimeException)ex;
+                    throw (Error)ex;
                 }
             
-                // We caught an exception, 
+                // We caught an exception,
 
                 // Notify instruction observer if necessary
                 // and point pcPrevBranch to start of catch/finally block
                 if (instructionThreshold != 0) {
                     if (instructionCount > instructionThreshold) {
+                        // Note: this can throw Error 
                         cx.observeInstructionCount(instructionCount);
                         instructionCount = 0;
                     }
                 }
-                   pcPrevBranch = pc;
+                pcPrevBranch = pc;
 
                 // prepare stack and restore this function's security domain.
+                scope = (Scriptable)stack[TRY_SCOPE_SHFT + tryStackTop];
                 stackTop = 0;
                 stack[0] = errObj;
                 cx.interpreterSecurityDomain = theData.securityDomain;

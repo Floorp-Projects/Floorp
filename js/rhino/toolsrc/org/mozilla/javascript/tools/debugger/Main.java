@@ -631,14 +631,13 @@ class FindFunction extends JDialog implements ActionListener {
 	    DebuggableScript script = sourceEntry.fnOrScript;
 	    if(script != null) {
 		String sourceName = script.getSourceName();
-		Enumeration ee = script.getLineNumbers();
+		int[] lns = script.getLineNumbers();
 		int lineNumber = -1;
-		while(ee.hasMoreElements()) {
-		    Integer ival = (Integer)ee.nextElement();
+		for (int i = 0; i != lns.length; ++i) {
 		    if(lineNumber == -1) {
-			lineNumber = ival.intValue();
-		    } else if(ival.intValue() < lineNumber) {
-			lineNumber = ival.intValue();
+			lineNumber = lns[i];
+		    } else if(lns[i] < lineNumber) {
+			lineNumber = lns[i];
 		    }
 		}
 

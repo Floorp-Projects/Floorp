@@ -90,18 +90,12 @@ class InterpreterData {
     }
     
     private int getOffset(int line) {
-        Object offset = itsLineNumberTable.get(new Integer(line));
-        if (offset != null && offset instanceof Integer) {
-            int i = ((Integer)offset).intValue();
-            if (i >= 0 && i < itsICode.length)
-            {
-                return i;
-            }
+        int offset = itsLineNumberTable.getInt(line, -1);
+        if (0 <= offset && offset <= itsICode.length) {
+            return offset;
         }
         return -1;
     }    
-    
-    VariableTable itsVariableTable;
     
     String itsName;
     String itsSource;
@@ -130,7 +124,7 @@ class InterpreterData {
     int itsMaxStack;
     int itsMaxTryDepth;
     
-    java.util.Hashtable itsLineNumberTable;
+    UintMap itsLineNumberTable;
 
     Object securityDomain;
 }

@@ -40,25 +40,19 @@ import org.mozilla.javascript.debug.DebuggableScript;
 
 class InterpretedFunction extends NativeFunction implements DebuggableScript {
     
-    InterpretedFunction(InterpreterData theData, Context cx) {
+    InterpretedFunction(Context cx,
+                        InterpreterData theData, 
+                        String[] argNames, short argCount)
+    {
         itsData = theData;
+        this.argNames = argNames;
+        this.argCount = argCount;
         init(cx);
     }
     
     void init(Context cx)
     {
-// probably too much copying going on from theData to the InterpretedFunction object
-// should pass them as parameters - unless we need them in the data block anyway?
-
         functionName = itsData.itsName;
-        int N = itsData.itsVariableTable.size();
-        if (N != 0) {
-            argNames = new String[N];
-            for (int i = 0; i != N; i++) {
-                argNames[i] = itsData.itsVariableTable.getName(i);
-            }
-        }
-        argCount = (short)itsData.itsVariableTable.getParameterCount();
         source = itsData.itsSource;
         nestedFunctions = itsData.itsNestedFunctions;
         if (cx != null)
@@ -69,6 +63,8 @@ class InterpretedFunction extends NativeFunction implements DebuggableScript {
                         Scriptable theScope, Context cx)
     {
         itsData = theOther.itsData;
+        this.argNames = theOther.argNames;
+        this.argCount = theOther.argCount;
         itsClosure = theScope;
         init(cx);
     }
@@ -111,8 +107,8 @@ class InterpretedFunction extends NativeFunction implements DebuggableScript {
         return itsData.itsSourceFile;
     }
     
-    public Enumeration getLineNumbers() { 
-        return itsData.itsLineNumberTable.keys();
+    public int[] getLineNumbers() { 
+        return itsData.itsLineNumberTable.getKeys();
     }
     
     public boolean placeBreakpoint(int line) { // XXX throw exn?
