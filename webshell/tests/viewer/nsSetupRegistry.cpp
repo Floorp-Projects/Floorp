@@ -35,9 +35,11 @@
 #include "nsDOMCID.h"
 #include "nsLayoutCID.h"
 #include "nsINetService.h"
+#ifdef OJI
 #include "nsICapsManager.h"
 #include "nsILiveconnect.h"
 #include "nsIJVMManager.h"
+#endif
 #include "nsIPluginManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharsetAlias.h"
@@ -254,9 +256,11 @@ static NS_DEFINE_CID(kFrameUtilCID,             NS_FRAME_UTIL_CID);
 static NS_DEFINE_CID(kCEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 static NS_DEFINE_CID(kCPluginManagerCID,          NS_PLUGINMANAGER_CID);
+#ifdef OJI
 static NS_DEFINE_CID(kCapsManagerCID,             NS_CCAPSMANAGER_CID);
 static NS_DEFINE_CID(kLiveconnectCID,             NS_CLIVECONNECT_CID);
 static NS_DEFINE_CID(kJVMManagerCID,              NS_JVMMANAGER_CID);
+#endif
 
 static NS_DEFINE_IID(kCMenuBarCID,                NS_MENUBAR_CID);
 static NS_DEFINE_IID(kCMenuCID,                   NS_MENU_CID);
@@ -426,9 +430,11 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponent(kLWBrkCID,        NULL, NULL, LWBRK_DLL, PR_FALSE, PR_FALSE);
 
   nsComponentManager::RegisterComponent(kCPluginManagerCID, NULL, NULL, PLUGIN_DLL,      PR_FALSE, PR_FALSE);
+#ifdef OJI
   nsComponentManager::RegisterComponent(kCapsManagerCID, NULL, NULL, CAPS_DLL,          PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kLiveconnectCID, NULL, NULL, LIVECONNECT_DLL,   PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kJVMManagerCID,  NULL, NULL, OJI_DLL,           PR_FALSE, PR_FALSE);
+#endif
 
   nsComponentManager::RegisterComponent(kCMenuBarCID,       NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kCMenuCID,          NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
