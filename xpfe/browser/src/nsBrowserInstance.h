@@ -38,6 +38,7 @@
 #include "nsISessionHistory.h"
 #include "nsIURIContentListener.h"
 #include "nsICmdLineHandler.h"
+#include "nsIXULBrowserWindow.h"
 
 #ifdef DEBUG_radha
 #include "nsISHistory.h"
@@ -87,8 +88,11 @@ class nsBrowserInstance : public nsIBrowserInstance,
     NS_IMETHOD CreateMenuItem(nsIDOMNode * , PRInt32,const PRUnichar * );
 	  NS_IMETHOD UpdateGoMenu();
 	  NS_IMETHOD ClearHistoryPopup(nsIDOMNode * );
+     NS_IMETHOD EnsureXULBrowserWindow();
 
     PRBool              mIsClosed;
+
+    nsCOMPtr<nsIXULBrowserWindow> mXULBrowserWindow;
 
     nsIScriptContext   *mToolbarScriptContext;			// weak reference
     nsIScriptContext   *mContentScriptContext;			// weak reference

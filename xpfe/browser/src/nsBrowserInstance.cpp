@@ -329,7 +329,17 @@ nsBrowserAppCore::Forward()
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserAppCore::GetCanGoBack(PRBool* aCan)
+{
+   return CanGoBack(aCan);
+}
 
+NS_IMETHODIMP
+nsBrowserAppCore::GetCanGoForward(PRBool* aCan)
+{
+   return CanGoForward(aCan);
+}
 
 NS_IMETHODIMP    
 nsBrowserAppCore::Stop()
@@ -341,10 +351,12 @@ nsBrowserAppCore::Stop()
   if (mIsLoadingHistory) {
     SetLoadingFlag(PR_FALSE);
   }
-  nsAutoString v( "false" );
+
+  EnsureXULBrowserWindow();
+  if(mXULBrowserWindow)
+    mXULBrowserWindow->SetNetworkActive(PR_FALSE);
   // XXX: The throbber should be turned off when the OnStopDocumentLoad 
   //      notification is received 
-  setAttribute( mDocShell, "Browser:Throbber", "busy", v );
   return NS_OK;
 }
 
@@ -787,6 +799,25 @@ nsBrowserAppCore::ClearHistoryPopup(nsIDOMNode * aParent)
    return NS_OK;
 }
 
+NS_IMETHODIMP
+nsBrowserAppCore::EnsureXULBrowserWindow()
+{
+   if(mXULBrowserWindow)
+      return NS_OK;
+   
+   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(mDOMWindow));
+   NS_ENSURE_TRUE(piDOMWindow, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsISupports> xpConnectObj;
+   nsAutoString xulBrowserWinId("XULBrowserWindow");
+   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
+   mXULBrowserWindow = do_QueryInterface(xpConnectObj);
+
+   if(mXULBrowserWindow)
+      return NS_OK;
+
+   return NS_ERROR_FAILURE;
+}
 
 NS_IMETHODIMP    
 nsBrowserAppCore::WalletPreview(nsIDOMWindow* aWin, nsIDOMWindow* aForm)
@@ -1467,6 +1498,8 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
      }
   }
 
+  EnsureXULBrowserWindow();
+
   if (!isFrame) {
     nsAutoString kStartDocumentLoad("StartDocumentLoad");
     rv = observer->Notify(mContentWindow,
@@ -1476,31 +1509,24 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* aURL, 
     // XXX Ignore rv for now. They are using nsIEnumerator instead of
     // nsISimpleEnumerator.
     // set the url string in the urlbar only for toplevel pages, not for frames
-  setAttribute( mDocShell, "urlbar", "value", url);
+  if(mXULBrowserWindow)
+    {
+    nsAutoString uriString(url);
+    mXULBrowserWindow->OnLocationChange(uriString.GetUnicode());
+    }
   }
 
+  if(mXULBrowserWindow)
+    {
+    mXULBrowserWindow->SetNetworkActive(PR_TRUE);
+    mXULBrowserWindow->SetWindowActive(PR_TRUE);
+    }
 
   // Kick start the throbber
   nsAutoString trueStr("true");
   nsAutoString emptyStr;
-  setAttribute( mDocShell, "Browser:Throbber", "busy", trueStr );
-
-  // Enable the Stop buton
-  setAttribute( mDocShell, "canStop", "disabled", emptyStr );
-
-  //Disable the reload button
-  setAttribute(mDocShell, "canReload", "disabled", trueStr);
 
   PRBool result=PR_TRUE;
-  // Check with sessionHistory if you can go forward
-  CanGoForward(&result);
-  setAttribute(mDocShell, "canGoForward", "disabled", (result == PR_TRUE) ? "" : "true");
-
-
-    // Check with sessionHistory if you can go back
-  CanGoBack(&result);
-  setAttribute(mDocShell, "canGoBack", "disabled", (result == PR_TRUE) ? "" : "true");
-
 
   nsCRT::free(url);
 
@@ -1620,13 +1646,13 @@ nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel* chan
   nsCRT::free(urls);
 #endif
 
-  setAttribute( mDocShell, "Browser:Throbber", "busy", "false" );
+  EnsureXULBrowserWindow();
 
-    //Disable the Stop button
-  setAttribute( mDocShell, "canStop", "disabled", "true" );
-
-  //Enable the reload button
-  setAttribute(mDocShell, "canReload", "disabled", "");
+  if(mXULBrowserWindow)
+   {
+   mXULBrowserWindow->SetNetworkActive(PR_FALSE);
+   mXULBrowserWindow->SetWindowActive(PR_FALSE);
+   }            
 
   return NS_OK;
 }
@@ -1658,17 +1684,11 @@ NS_IMETHODIMP
 nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
                                   nsIChannel* channel, nsString& aMsg)
 {
-   nsCOMPtr<nsPIDOMWindow> piDOMWindow(do_QueryInterface(mDOMWindow));
-   if(!piDOMWindow)
+   EnsureXULBrowserWindow();
+   if(!mXULBrowserWindow)
       return NS_OK;
 
-   nsCOMPtr<nsISupports> xpConnectObj;
-   nsAutoString xulBrowserWinId("XULBrowserWindow");
-   piDOMWindow->GetObjectProperty(xulBrowserWinId.GetUnicode(), getter_AddRefs(xpConnectObj));
-   nsCOMPtr<nsIXULBrowserWindow> xulBrowserWindow(do_QueryInterface(xpConnectObj));
-
-   if(xulBrowserWindow)
-      xulBrowserWindow->SetDefaultStatus(aMsg.GetUnicode());
+   mXULBrowserWindow->SetDefaultStatus(aMsg.GetUnicode());
 
    return NS_OK;
 }
