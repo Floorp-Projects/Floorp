@@ -89,3 +89,12 @@ PRBool nsImageGTK::SetAlphaMask(nsIImage *aTheMask)
   return(PR_FALSE);
 }
 
+nsresult nsImageGTK::Optimize(nsIDeviceContext* aContext)
+{
+  return NS_OK;
+}
+
+nsIImage* nsImageGTK::DuplicateImage()
+{
+  return NULL;
+}
