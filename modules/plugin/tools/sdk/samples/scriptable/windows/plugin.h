@@ -59,13 +59,13 @@ public:
   void showVersion();
   void clear();
 
-  nsIScriptablePlugin* getScriptablePeer();
+  nsScriptablePeer* getScriptablePeer();
 
 private:
   NPP mInstance;
   NPBool mInitialized;
   HWND mhWnd;
-  nsIScriptablePlugin * mScriptablePeer;
+  nsScriptablePeer * mScriptablePeer;
 
 public:
   char mString[128];

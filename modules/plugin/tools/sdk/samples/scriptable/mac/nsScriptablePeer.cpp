@@ -107,6 +107,11 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
   return NS_NOINTERFACE; 
 }
 
+void nsScriptablePeer::SetInstance(nsPluginInstance* plugin)
+{
+  mPlugin = plugin;
+}
+
 //
 // the following methods will be callable from JavaScript
 //

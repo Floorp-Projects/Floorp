@@ -56,7 +56,7 @@ public:
 
   void showVersion();
   void clear();
-  nsIScriptablePlugin* getScriptablePeer();  
+  nsScriptablePeer* getScriptablePeer();  
 
   char mString[128];
 
@@ -67,7 +67,7 @@ private:
   void EndDraw(NPWindow* window);
   void DrawString(const unsigned char* text, short width, short height, short centerX, Rect drawRect);
 
-  nsIScriptablePlugin * mScriptablePeer;
+  nsScriptablePeer * mScriptablePeer;
   
   NPWindow * mWindow;
   NPP mInstance;

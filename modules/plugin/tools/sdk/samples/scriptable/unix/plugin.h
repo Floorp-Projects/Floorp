@@ -58,7 +58,7 @@ public:
   void clear();
   void draw();
 
-  nsIScriptablePlugin* getScriptablePeer();
+  nsScriptablePeer* getScriptablePeer();
 
 private:
   NPP mInstance;
@@ -73,7 +73,7 @@ private:
   XFontStruct *mFontInfo;
   GC mGC;
 
-  nsIScriptablePlugin * mScriptablePeer;
+  nsScriptablePeer* mScriptablePeer;
 
 public:
   char mString[128];
