@@ -57,7 +57,6 @@ public:
 
     virtual int       SetFile(nsFileSpec *filename);
     const nsFileSpec  *GetFileSpec() {return m_filespec;}
-	  XP_FileType       GetFiletype() {return m_filetype;}
 
     virtual int       SetBuffer(const char* buffer);
     const char        *GetBuffer() {return m_buffer;}
@@ -105,7 +104,6 @@ protected:
 	nsCOMPtr<nsIMsgSend> m_state;
 	nsMsgSendPart       *m_parent;
   nsFileSpec          *m_filespec;
-	XP_FileType         m_filetype;
 	char                *m_buffer;
   char                *m_type;
   char                *m_other;

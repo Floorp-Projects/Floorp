@@ -83,7 +83,6 @@ nsMsgSendPart::nsMsgSendPart(nsIMsgSend* state, const char *part_charset)
 
   m_parent = nsnull;
   m_filespec = nsnull;
-  m_filetype = (XP_FileType)0;
   m_buffer = nsnull;
   m_type = nsnull;
   m_other = nsnull;
