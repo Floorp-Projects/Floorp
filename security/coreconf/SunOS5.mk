@@ -112,7 +112,7 @@ else
 	ifndef BUILD_OPT
 		OS_CFLAGS  += -xs
 	else
-		OPTIMIZER = -xO3
+		OPTIMIZER = -xO4
 	endif
 
 endif
