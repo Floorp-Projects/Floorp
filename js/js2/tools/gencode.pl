@@ -61,7 +61,6 @@ $ops{"NOP"} =
   {
    super  => "Instruction",
    rem    => "do nothing and like it",
-   params => [ () ]
   };
 $ops{"MOVE"} =
   {
@@ -184,7 +183,6 @@ $ops{"ENDTRY"} =
   {
    super  => "Instruction",
    rem    => "mmm, there is no try, only do",
-   params => [ () ]
   };
 $ops{"JSR"} =
   {
@@ -196,7 +194,6 @@ $ops{"RTS"} =
   {
    super => "Instruction",
    rem   => "Return to sender",
-   params => [ () ]
   };
 
 #
@@ -248,6 +245,8 @@ sub collect {
     my $rem = $c->{"rem"};
     my ($dec_list, $call_list, $template_list) =
       &get_paramlists(@params);
+    my @types = split (", ", $template_list);
+
     my $constr_params = $call_list ? $opname . ", " . $call_list : $opname;
 
     if ($super =~ /Instruction_\d/) {
@@ -264,18 +263,24 @@ sub collect {
                     "$init_tab$tab$tab($constr_params) " .
                     "{};\n");
     if (!$c->{"super_has_print"}) {
-        my $printbody = &get_printbody(split (", ", $template_list));
+        my $print_body = &get_print_body(@types);
 
         $class_decs .= ($init_tab . $tab . 
                          "virtual Formatter& print (Formatter& f) {\n" .
                          $init_tab . $tab . $tab . "f << opcodeNames[$opname]" .
-                         $printbody . ";\n" .
+                         $print_body . ";\n" .
                          $init_tab . $tab . $tab . "return f;\n" .
                          $init_tab . $tab . "}\n");
     } else {
         $class_decs .= $init_tab . $tab . 
           "/* print() inherited from $super */\n";
     }
+
+    $class_decs .= ($init_tab . $tab . "virtual Formatter& print_args " .
+                    "(Formatter &f, JSValues &registers) {\n" .
+                    $init_tab . $tab . $tab . &get_printargs_body(@types) .
+                    "\n" .
+                    $init_tab . $tab . "}\n");
 
     $class_decs .= $init_tab . "};\n\n";
 }
@@ -351,7 +356,7 @@ sub get_paramlists {
     return (join (", ", @dec), join (", ", @call), join (", ", @template));
 }
 
-sub get_printbody {
+sub get_print_body {
     # generate the body of the print() function
     my (@types) = @_;
     my $type;
@@ -379,4 +384,10 @@ sub get_printbody {
         $rv = " << \"\\t\" << " . $rv;
     }
             
+}
+
+sub get_printargs_body {
+    my (@type) = @_;
+
+    return "return f;";
 }
