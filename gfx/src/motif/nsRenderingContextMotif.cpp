@@ -591,6 +591,14 @@ NS_IMETHODIMP nsRenderingContextMotif :: GetClipRegion(nsIRegion **aRegion)
   return rv;
 }
 
+/**
+ * Fills in |aRegion| with a copy of the current clip region.
+ */
+NS_IMETHODIMP nsRenderingContextMotif::CopyClipRegion(nsIRegion &aRegion)
+{
+  return NS_ERROR_FAILURE;
+}
+
 NS_IMETHODIMP nsRenderingContextMotif :: SetColor(nscolor aColor)
 {
   if (nsnull == mContext) 
