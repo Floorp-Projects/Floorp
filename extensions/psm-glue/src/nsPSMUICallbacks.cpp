@@ -175,6 +175,19 @@ extern "C" void CARTMAN_UIEventLoop(void *data)
    CMT_EventLoop((PCMT_CONTROL)data);
 }
 
+PRStatus InitPSMEventLoop(PCMT_CONTROL control)
+{
+    PR_CreateThread(PR_USER_THREAD,
+                    CARTMAN_UIEventLoop,
+                    control, 
+                    PR_PRIORITY_NORMAL, 
+                    PR_GLOBAL_THREAD, 
+                    PR_UNJOINABLE_THREAD,
+                    0);  
+
+    return PR_SUCCESS;
+}
+
 PRStatus InitPSMUICallbacks(PCMT_CONTROL control)
 {
     if (!control)
@@ -186,14 +199,6 @@ PRStatus InitPSMUICallbacks(PCMT_CONTROL control)
 
     if (CMT_SetUIHandlerCallback(control, (uiHandlerCallback_fn) CartmanUIHandler, NULL) != CMTSuccess) 
             return PR_FAILURE;
-
-    PR_CreateThread(PR_USER_THREAD,
-                    CARTMAN_UIEventLoop,
-                    control, 
-                    PR_PRIORITY_NORMAL, 
-                    PR_GLOBAL_THREAD, 
-                    PR_UNJOINABLE_THREAD,
-                    0);  
 
     return PR_SUCCESS;
 }
