@@ -407,7 +407,7 @@ nsProfile::LoadDefaultProfileDir(nsCString & profileURLStr)
     }
     
     if (confirmAutomigration) {
-        if (profileURLStr == (const char*)CONFIRM_AUTOMIGRATE_URL) {
+        if (profileURLStr.Equals(CONFIRM_AUTOMIGRATE_URL)) {
             PRBool automigrate = PR_FALSE;
             rv = GetAutomigrate(&automigrate);
             if (NS_SUCCEEDED(rv) && automigrate) {
