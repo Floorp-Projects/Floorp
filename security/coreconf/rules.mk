@@ -364,6 +364,11 @@ endif
 ifeq ($(OS_TARGET),OpenVMS)
 	@echo "`translate $@`" > $(@:$(DLL_SUFFIX)=vms)
 endif
+ifeq ($(OS_TARGET),Darwin)
+ifdef MAPFILE
+	nmedit -s $(MAPFILE) $@
+endif
+endif
 endif
 endif
 
