@@ -1142,16 +1142,17 @@ BookmarkParser::ParseBookmarkHeader(const nsString& aLine,
 		return rv;
 	}
 
-	rv = aContainer->AppendElement(folder);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add folder to container");
-	if (NS_FAILED(rv)) return rv;
-
 	// And now recursively parse the rest of the file...
 
 	if (NS_FAILED(rv = Parse(folder, nodeType))) {
 		NS_WARNING("recursive parse of bookmarks file failed");
 		return rv;
 	}
+
+	// rjc: always do this last
+	rv = aContainer->AppendElement(folder);
+	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add folder to container");
+	if (NS_FAILED(rv)) return rv;
 
 	return NS_OK;
 }
@@ -1273,6 +1274,8 @@ class nsBookmarksService : public nsIBookmarksService,
 {
 protected:
 	nsCOMPtr<nsIRDFDataSource>	mInner;
+	PRBool				mBookmarksAvailable;
+	PRBool				mDirty;
 	nsCOMPtr<nsITimer>		mTimer;
 	PRBool				busySchedule;
 	nsCOMPtr<nsIRDFResource>	busyResource;
@@ -1426,6 +1429,7 @@ public:
 
 
 nsBookmarksService::nsBookmarksService()
+	: mBookmarksAvailable(PR_FALSE), mDirty(PR_FALSE)
 {
 	NS_INIT_REFCNT();
 }
@@ -1445,10 +1449,6 @@ nsBookmarksService::Init()
 {
 	nsresult rv;
 	rv = bm_AddRefGlobals();
-	if (NS_FAILED(rv)) return rv;
-
-	rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
-		nsnull, nsIRDFDataSource::GetIID(), (void**) &mInner);
 	if (NS_FAILED(rv)) return rv;
 
 	rv = ReadBookmarks();
@@ -1707,6 +1707,11 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 
 	bmks->mTimer = nsnull;
 
+	if ((bmks->mBookmarksAvailable == PR_TRUE) && (bmks->mDirty == PR_TRUE))
+	{
+		bmks->Flush();
+	}
+
 	if (bmks->busySchedule == PR_FALSE)
 	{
 		nsresult			rv;
@@ -1736,8 +1741,8 @@ nsBookmarksService::FireTimer(nsITimer* aTimer, void* aClosure)
 						bmks->busySchedule = PR_TRUE;
 						bmks->htmlSize = 0;
 
-//						httpChannel->SetRequestMethod(HM_HEAD);
-						httpChannel->SetRequestMethod(HM_GET);
+//						httpChannel->SetRequestMethod(HM_GET);
+						httpChannel->SetRequestMethod(HM_HEAD);
 						rv = channel->AsyncRead(0, -1, nsnull, bmks);
 					}
 				}
@@ -2009,12 +2014,7 @@ nsBookmarksService::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 			}
 			NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to assert new time");
 
-			// XXX For the moment, do an immediate flush.
-			if (NS_SUCCEEDED(rv))
-			{
-				Flush();
-			}
-
+			mDirty = PR_TRUE;
 		}
 		else
 		{
@@ -2311,10 +2311,9 @@ nsBookmarksService::AddBookmark(const char *aURI, const PRUnichar *aOptionalTitl
 
 	if (NS_FAILED(rv)) return rv;
 
-	rv = Flush();
-	if (NS_FAILED(rv)) return rv;
+	mDirty = PR_TRUE;
 
-	return NS_OK;
+	return(NS_OK);
 }
 
 
@@ -2359,12 +2358,8 @@ nsBookmarksService::UpdateBookmarkLastVisitedDate(const char *aURL)
 					rv = mInner->Unassert(bookmark, kWEB_Status, currentStatusNode);
 					NS_ASSERTION(rv == NS_RDF_ASSERTION_ACCEPTED, "unable to Unassert changed status");
 				}
-				
-				// XXX For the moment, do an immediate flush.
-				if (NS_SUCCEEDED(rv))
-				{
-					Flush();
-				}
+
+				mDirty = PR_TRUE;
 			}
 		}
 	}
@@ -3047,7 +3042,7 @@ nsBookmarksService::DoCommand(nsISupportsArray *aSources, nsIRDFResource *aComma
 		}
 	}
 
-	Flush();
+	mDirty = PR_TRUE;
 
 	return(NS_OK);
 }
@@ -3077,7 +3072,13 @@ nsBookmarksService::Refresh(PRBool aBlocking)
 NS_IMETHODIMP
 nsBookmarksService::Flush()
 {
-	return WriteBookmarks(mInner, kNC_BookmarksRoot);
+	nsresult	rv = NS_OK;
+
+	if (mBookmarksAvailable == PR_TRUE)
+	{
+		rv = WriteBookmarks(mInner, kNC_BookmarksRoot);
+	}
+	return(rv);
 }
 
 
@@ -3141,7 +3142,14 @@ nsBookmarksService::GetBookmarksFile(nsFileSpec* aResult)
 NS_IMETHODIMP
 nsBookmarksService::ReadBookmarks()
 {
-	nsresult rv;
+	nsresult	rv;
+
+	// the profile manager might call Readbookmarks() in certain circumstances
+	// so we need to forget about any previous bookmarks
+	mInner = nsnull;
+	if (NS_FAILED(rv = nsComponentManager::CreateInstance(kRDFInMemoryDataSourceCID,
+				nsnull, nsIRDFDataSource::GetIID(), (void**) &mInner)))
+		return(rv);
 
 	nsFileSpec	bookmarksFile;
 	rv = GetBookmarksFile(&bookmarksFile);
@@ -3156,6 +3164,11 @@ nsBookmarksService::ReadBookmarks()
 	if (NS_FAILED(rv)) return rv;
 
 	PRBool	foundIERoot = PR_FALSE;
+
+#ifdef	DEBUG
+	PRTime		now = PR_Now();
+	printf("Start reading in bookmarks.html\n");
+#endif
 
 #ifdef	XP_WIN
 	nsCOMPtr<nsIRDFResource>	ieFolder;
@@ -3210,6 +3223,7 @@ nsBookmarksService::ReadBookmarks()
 #endif
 
 		parser.Parse(kNC_BookmarksRoot, kNC_Bookmark);
+		mBookmarksAvailable = PR_TRUE;
 
 		parser.ParserFoundIEFavoritesRoot(&foundIERoot);
 	} // <-- scope the stream to get the open/close automatically.
@@ -3331,6 +3345,14 @@ nsBookmarksService::ReadBookmarks()
 	}
 #endif
 
+#ifdef	DEBUG
+	PRTime		now2 = PR_Now();
+	PRUint64	loadTime64;
+	LL_SUB(loadTime64, now2, now);
+	PRUint32	loadTime32;
+	LL_L2UI(loadTime32, loadTime64);
+	printf("Finished reading in bookmarks.html  (%lu microseconds)\n", loadTime32);
+#endif
 
 	return NS_OK;	
 }
@@ -3366,6 +3388,7 @@ nsBookmarksService::WriteBookmarks(nsIRDFDataSource *ds, nsIRDFResource *root)
 		strm << "<H1>Bookmarks</H1>\n\n";
 		
 		rv = WriteBookmarksContainer(ds, strm, root, 0);
+		mDirty = PR_FALSE;
 	}
 	return(rv);
 }
