@@ -2360,9 +2360,15 @@ NS_IMETHODIMP nsViewManager::GrabKeyEvents(nsIView *aView, PRBool &aResult)
 nsView* nsViewManager::GetMouseEventGrabber() const {
   nsView* root = mRootView;
   while (root && root->GetParent()) {
-    root = root->GetParent()->GetViewManager()->mRootView;
+    nsViewManager* viewManager = root->GetParent()->GetViewManager();
+    if (!viewManager)
+      return nsnull;
+    root = viewManager->mRootView;
   }
-  return root ? root->GetViewManager()->mMouseGrabber : nsnull;
+  if (!root)
+    return nsnull;
+  nsViewManager* viewManager = root->GetViewManager();
+  return viewManager ? viewManager->mMouseGrabber : nsnull;
 }
 
 NS_IMETHODIMP nsViewManager::GetMouseEventGrabber(nsIView *&aView)
