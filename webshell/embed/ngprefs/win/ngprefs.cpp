@@ -947,7 +947,7 @@ RegisterCLSIDForDll(char * dllName)
 	return bRetval;
 }
 
-#ifdef MOZ_MAIL_NEWS
+#ifdef OLD_MOZ_MAIL_NEWS
 static BOOL
 CreateMailNewsCategory(MWContext *pContext, LPSPECIFYPROPERTYPAGEOBJECTS *pCategory)
 {
@@ -986,7 +986,7 @@ CreateMailNewsCategory(MWContext *pContext, LPSPECIFYPROPERTYPAGEOBJECTS *pCateg
 	pMailNews->Release();
 	return bResult;
 }
-#endif /* MOZ_MAIL_NEWS */
+#endif /* OLD_MOZ_MAIL_NEWS */
 
 #ifdef MOZ_LOC_INDEP
 /////////////////////////////////////////////////////////////////////////////
