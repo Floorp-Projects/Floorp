@@ -37,6 +37,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsString.h"
+#include "nsReadableUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIDocument.h"
 #include "nsIHTMLDocument.h"
