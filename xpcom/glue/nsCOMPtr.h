@@ -195,9 +195,23 @@ class nsDerivedSafe : public T
       void operator delete( void*, size_t );                  // NOT TO BE IMPLEMENTED
         // declaring |operator delete| private makes calling delete on an interface pointer a compile error
 
-      nsDerivedSafe<T>& operator=( const nsDerivedSafe<T>& ); // NOT TO BE IMPLEMENTED
-//    nsDerivedSafe<T>& operator=( const T& );                // NOT TO BE IMPLEMENTED
+				/*
+					The new way (not commented-out, below) didn't work until I chopped |operator=()| out of
+					|nsISupportsArray|.  I have tested this on as many platforms as I can, I'm switching it on now.
+					I'm leaving the old way commented out, but visible so we can switch back if there is any
+					problem.
+				*/
+
+//    nsDerivedSafe<T>& operator=( const nsDerivedSafe<T>& ); // NOT TO BE IMPLEMENTED
+    	nsDerivedSafe<T>& operator=( const T& );                // NOT TO BE IMPLEMENTED
         // you may not call |operator=()| through a dereferenced |nsCOMPtr|, because you'd get the wrong one
+
+				/*
+					Compiler warnings and errors: nsDerivedSafe operator=() hides inherited operator=().
+					If you see that, that means somebody checked in a (XP)COM interface class that declares an
+					|operator=()|, and that's _bad_.  So bad, in fact, that this declaration exists explicitly
+					to stop people from doing it.
+				*/
   };
 
 #if !defined(HAVE_CPP_USING) && defined(NEED_CPP_UNUSED_IMPLEMENTATIONS)
