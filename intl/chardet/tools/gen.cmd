@@ -9,6 +9,6 @@ perl genbig5.pl      > ..\src\nsBIG5Verifier.h
 perl geneuctw.pl     > ..\src\nsEUCTWVerifier.h
 perl genucs2be.pl    > ..\src\nsUCS2BEVerifier.h
 perl genucs2le.pl    > ..\src\nsUCS2LEVerifier.h
-# perl genhz.pl        > ..\src\nsHZVerifier.h
-# perl geniso2022kr.pl > ..\src\nsISO2022KRVerifier.h
-# perl geniso2022cn.pl > ..\src\nsISO2022CNVerifier.h
+perl genhz.pl        > ..\src\nsHZVerifier.h
+perl geniso2022kr.pl > ..\src\nsISO2022KRVerifier.h
+perl geniso2022cn.pl > ..\src\nsISO2022CNVerifier.h
