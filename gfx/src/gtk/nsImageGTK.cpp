@@ -24,6 +24,12 @@
 #include <gtk/gtk.h>
 #include <gdk/gdkx.h>
 
+#ifdef HAVE_GDK_PIXBUF
+#include <gdk-pixbuf/gdk-pixbuf.h>
+#else
+#include "drawers.h"
+#endif
+
 #include "nsImageGTK.h"
 #include "nsRenderingContextGTK.h"
 
@@ -341,6 +347,128 @@ void nsImageGTK::ImageUpdated(nsIDeviceContext *aContext,
 static PRTime gConvertTime, gAlphaTime, gCopyStart, gCopyEnd, gStartTime, gPixmapTime, gEndTime;
 #endif
 
+
+NS_IMETHODIMP
+nsImageGTK::DrawScaled(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                       PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                       PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
+{
+  if (aSX < mDecodedX1) {
+    aSWidth -= mDecodedX1 - aSX;
+    aDX += mDecodedX1 - aSX;
+    aSX += mDecodedX1 - aSX;
+  }
+  if (aSX + aSWidth > mDecodedX2) {
+    aSWidth -= aSX + aSWidth - mDecodedX2;
+  }
+  if (aSY < mDecodedY1) {
+    aSHeight -= mDecodedY1 - aSY;
+    aDY += mDecodedY1 - aSY;
+    aSY += mDecodedY1 - aSY;
+  }
+  if (aSY + aSHeight > mDecodedY2) {
+    aSHeight -= (aSY + aSHeight) - mDecodedY2;
+  }
+
+  nsDrawingSurfaceGTK *drawing = (nsDrawingSurfaceGTK*)aSurface;
+
+  if (mAlphaDepth == 1) {
+    CreateAlphaBitmap(mWidth, mHeight);
+  }
+
+#ifdef HAVE_GDK_PIXBUF
+
+  GdkGC *copyGC;
+  if (mAlphaPixmap) {
+    NS_WARNING("alpha bitmask not scaled!\n");
+    if (mGC) {
+      copyGC = gdk_gc_ref(mGC);
+    } else {
+      mGC = gdk_gc_new(drawing->GetDrawable());
+      GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+      gdk_gc_copy(mGC, gc);
+      gdk_gc_unref(gc); // unref the one we got
+      copyGC = gdk_gc_ref(mGC);
+
+      SetupGCForAlpha(copyGC, aDX-aSX, aDY-aSY);
+    }
+  } else {
+    // don't make a copy... we promise not to change it
+    copyGC = ((nsRenderingContextGTK&)aContext).GetGC();
+  }
+#endif
+
+  if ((mAlphaDepth==8) && mAlphaValid) {
+    NS_WARNING("can't do 8bit alpha stretched images currently\n");
+    //    DrawComposited(aContext, aSurface, aSX, aSY, aDX, aDY, aSWidth, aSHeight);
+    return NS_OK;
+  }
+
+#if defined(HAVE_GDK_PIXBUF)
+  // Draw with GdkPixbuf
+  GdkPixbuf *tmpPb =
+    gdk_pixbuf_new_from_data(mImageBits,
+                             GDK_COLORSPACE_RGB, PR_FALSE, 8,
+                             mWidth, mHeight,
+                             mRowBytes, nsnull, nsnull);
+
+  GdkPixbuf *newPb = gdk_pixbuf_new(GDK_COLORSPACE_RGB, PR_FALSE,
+                                    8,
+                                    aDWidth, aDHeight);
+
+  gdk_pixbuf_scale(tmpPb, newPb, 0, 0, aDWidth, aDHeight,
+                   0, 0,
+                   (double)aDWidth / (double)aSWidth,
+                   (double)aDWidth / (double)aSHeight,
+                   GDK_INTERP_NEAREST);
+
+  gdk_pixbuf_render_to_drawable(newPb,
+                                drawing->GetDrawable(),
+                                copyGC,
+                                aSX, aSY,
+                                aDX + aSX, aDY + aSY,
+                                aDWidth, aDHeight,
+                                GDK_RGB_DITHER_MAX, 0, 0);
+
+  gdk_gc_unref(copyGC);
+  gdk_pixbuf_unref(tmpPb);
+  gdk_pixbuf_unref(newPb);
+
+#elif defined(HAVE_XIE)
+
+  // Draw with XIE
+
+  // don't make a copy... we promise not to change it
+  GdkGC *gc = ((nsRenderingContextGTK&)aContext).GetGC();
+
+  // DrawScaledImageXIE will copy the GC if it needs to change it.
+
+  PRBool succeeded = DrawScaledImageXIE(GDK_DISPLAY(),
+                                        drawing->GetDrawable(),
+                                        gc,
+                                        mImagePixmap,
+                                        mAlphaPixmap,
+                                        mWidth, mHeight,
+                                        aSX, aSY,
+                                        aSWidth, aSHeight,
+                                        aDX, aDY,
+                                        aDWidth, aDHeight);
+
+  gdk_gc_unref(gc);
+
+  if (!succeeded) {
+    NS_WARNING("unable to draw scaled image :(");
+  }
+#else
+  printf("no way to scale images :(\n");
+#endif
+
+  mFlags = 0;
+
+  return NS_OK;
+}
+
+
 // Draw the bitmap, this method has a source and destination coordinates
 NS_IMETHODIMP
 nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
@@ -351,11 +479,16 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
 
 #ifdef TRACE_IMAGE_ALLOCATION
-    printf("nsImageGTK::Draw(this=%p) (%d, %d, %d, %d), (%d, %d, %d, %d)\n",
-           this,
-           aSX, aSY, aSWidth, aSHeight,
-           aDX, aDY, aDWidth, aDHeight);
+  printf("nsImageGTK::Draw(this=%p) (%d, %d, %d, %d), (%d, %d, %d, %d)\n",
+         this,
+         aSX, aSY, aSWidth, aSHeight,
+         aDX, aDY, aDWidth, aDHeight);
 #endif
+
+  if (aSWidth != aDWidth || aSHeight != aDHeight) {
+    return DrawScaled(aContext, aSurface, aSX, aSY, aSWidth, aSHeight,
+                      aDX, aDY, aDWidth, aDHeight);
+  }
 
   if (aSX < mDecodedX1) {
     aSWidth -= mDecodedX1 - aSX;

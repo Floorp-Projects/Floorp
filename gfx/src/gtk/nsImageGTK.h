@@ -126,6 +126,11 @@ private:
   void ComputePaletteSize(PRIntn nBitCount);
 
 private:
+
+  NS_IMETHOD DrawScaled(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
+                        PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
+                        PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight);
+
   static unsigned scaled6[1<<6];
   static unsigned scaled5[1<<5];
 

@@ -33,6 +33,12 @@ REQUIRES	= xpcom string img widget view util dom pref js uconv appshell necko un
 
 CSRCS		= nsPrintdGTK.c
 
+ifndef HAVE_GDK_PIXBUF
+ifdef HAVE_XIE
+CSRCS		+= XIE.c
+endif
+endif
+
 CPPSRCS		= \
 		nsDeviceContextGTK.cpp \
 		nsDeviceContextSpecFactoryG.cpp \
@@ -54,7 +60,7 @@ include $(topsrcdir)/config/rules.mk
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
 EXTRA_DSO_LDOPTS += $(MOZ_GTK_LDFLAGS)
-CXXFLAGS	+= $(MOZ_GTK_CFLAGS)
+CXXFLAGS	+= $(MOZ_GTK_CFLAGS) 
 CFLAGS		+= $(MOZ_GTK_CFLAGS)
 else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
@@ -66,9 +72,23 @@ ifdef MOZ_ENABLE_XINERAMA
 GFX_XINERAMA_LIBS += $(MOZ_XINERAMA_LIBS)
 endif
 
+ifdef HAVE_GDK_PIXBUF
+DEFINES		+= -DHAVE_GDK_PIXBUF
+GFX_PIXBUF_LIBS += $(MOZ_GDK_PIXBUF_LIBS)
+CXXFLAGS	+= $(MOZ_GDK_PIXBUF_CFLAGS)
+CFLAGS		+= $(MOZ_GDK_PIXBUF_CFLAGS)
+else
+ifdef HAVE_XIE
+DEFINES		+= -DHAVE_XIE
+GFX_XIE_LIBS	+= $(MOZ_XIE_LIBS)
+endif
+endif
+
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS) \
 		-lgkgfx \
 		$(GFX_XINERAMA_LIBS) \
+		$(GFX_PIXBUF_LIBS) \
+		$(GFX_XIE_LIBS) \
 		-lgtksuperwin \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
