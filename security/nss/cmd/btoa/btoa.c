@@ -157,7 +157,7 @@ int main(int argc, char **argv)
 	    break;
 
 	  case 'o':
-	    outFile = fopen(optstate->value, "w");
+	    outFile = fopen(optstate->value, "wb");
 	    if (!outFile) {
 		fprintf(stderr, "%s: unable to open \"%s\" for writing\n",
 			progName, optstate->value);
@@ -184,8 +184,22 @@ int main(int argc, char **argv)
 #endif
     	inFile = stdin;
     }
-    if (!outFile) 
+    if (!outFile) {
+#if defined(WIN32)
+	/* We're going to write binary data to stdout. We must put stdout
+	** into O_BINARY mode or else outgoing \r\n's will become \r\r\n's.
+	*/
+
+	int smrv = _setmode(_fileno(stdout), _O_BINARY);
+	if (smrv == -1) {
+	    fprintf(stderr,
+	    "%s: Cannot change stdout to binary mode. Use -o option instead.\n",
+	            progName);
+	    return smrv;
+	}
+#endif
     	outFile = stdout;
+    }
     rv = encode_file(outFile, inFile);
     if (rv != SECSuccess) {
 	fprintf(stderr, "%s: lossage: error=%d errno=%d\n",
