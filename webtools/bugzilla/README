@@ -272,6 +272,7 @@ fine:
 	./makeproducttable.sh
 	./makeprofilestable.sh
 	./makeversiontable.sh
+	./makegroupstable.sh
 
    After running those you've got a nearly empty copy of the mozilla bug
 tracking setup.
