@@ -38,6 +38,8 @@
 
 #include "prtypes.h"
 #include "prio.h"
+#include "prenv.h"
+#include "nsCRT.h"
 #include "prthread.h"
 
 #include <stdlib.h>
@@ -137,6 +139,17 @@ NS_IMETHODIMP nsProcess::InitWithPid(PRUint32 pid)
 {
     return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+
+NS_IMETHODIMP
+nsProcess::GetEnvironment(const char *aName, char **aValue)
+{
+    NS_ENSURE_ARG_POINTER(aName);
+    *aValue = nsCRT::strdup(PR_GetEnv(aName));
+    if (!*aValue)
+        return NS_ERROR_OUT_OF_MEMORY;
+    return NS_OK;
+} 
 
 NS_IMETHODIMP
 nsProcess::GetLocation(nsIFile** aLocation)
