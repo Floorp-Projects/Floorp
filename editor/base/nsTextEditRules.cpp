@@ -18,6 +18,8 @@
 
 #include "nsTextEditRules.h"
 #include "nsTextEditor.h"
+#include "PlaceholderTxn.h"
+#include "InsertTextTxn.h"
 #include "nsCOMPtr.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -30,6 +32,8 @@
 
 const static char* kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
 const static char* kMOZEditorBogusNodeValue="TRUE";
+
+static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 
 static PRBool NodeIsType(nsIDOMNode *aNode, nsIAtom *aTag)
 {
@@ -115,45 +119,12 @@ nsTextEditRules::WillInsert(nsIDOMSelection *aSelection, PRBool *aCancel)
   *aCancel = PR_FALSE;
   
   // check for the magic content node and delete it if it exists
-  nsCOMPtr<nsIDOMDocument>doc;
-  mEditor->GetDocument(getter_AddRefs(doc));  
-  nsCOMPtr<nsIDOMNodeList>nodeList;
-  nsAutoString bodyTag = "body";
-  nsresult result = doc->GetElementsByTagName(bodyTag, getter_AddRefs(nodeList));
-  if ((NS_SUCCEEDED(result)) && nodeList)
+  if (mBogusNode)
   {
-    PRUint32 count;
-    nodeList->GetLength(&count);
-    NS_ASSERTION(1==count, "there is not exactly 1 body in the document!");
-    nsCOMPtr<nsIDOMNode>bodyNode;
-    result = nodeList->Item(0, getter_AddRefs(bodyNode));
-    if ((NS_SUCCEEDED(result)) && bodyNode)
-    { // now we've got the body tag.
-      // iterate the body tag, looking for editable content
-      // if the magic node is found, delete it
-      PRBool foundBogusContent=PR_TRUE;
-      nsCOMPtr<nsIDOMNode>bodyChild;  // a child of the body, for iteration
-      nsCOMPtr<nsIDOMNode>bogusNode;  // this will be the magic node
-      result = bodyNode->GetFirstChild(getter_AddRefs(bodyChild));        
-      while ((NS_SUCCEEDED(result)) && bodyChild)
-      {
-        bogusNode = do_QueryInterface(bodyChild);
-        if (PR_TRUE==IsEditable(bodyChild))
-        {
-          foundBogusContent = PR_FALSE;
-          break;
-        }
-        nsCOMPtr<nsIDOMNode>temp;
-        bodyChild->GetNextSibling(getter_AddRefs(temp));
-        bodyChild = do_QueryInterface(temp);
-      }
-      if (PR_TRUE==foundBogusContent)
-      {
-        mEditor->DeleteNode(bogusNode);
-        // there is no longer any legit selection, so clear it.
-        aSelection->ClearSelection();
-      }
-    }
+    mEditor->DeleteNode(mBogusNode);
+    mBogusNode = do_QueryInterface(nsnull);
+    // there is no longer any legit selection, so clear it.
+    aSelection->ClearSelection();
   }
 
   return NS_OK;
@@ -169,13 +140,22 @@ NS_IMETHODIMP
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
                                 const nsString& aInputString,
                                 PRBool *aCancel,
-                                nsString& aOutputString)
+                                nsString& aOutputString,
+                                PlaceholderTxn **aTxn)
 {
   if (!aSelection || !aCancel) { return NS_ERROR_NULL_POINTER; }
   // initialize out param
   *aCancel = PR_FALSE;
   // by default, we insert what we're told to insert
   aOutputString = aInputString;
+  if (mBogusNode)
+  {
+    nsresult result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);
+    if (NS_FAILED(result)) { return result; }
+    if (!*aTxn) { return NS_ERROR_NULL_POINTER; }
+    (*aTxn)->SetName(InsertTextTxn::gInsertTextTxnName);
+    mEditor->Do(*aTxn);
+  }
   return WillInsert(aSelection, aCancel);
 }
 
@@ -315,31 +295,9 @@ nsTextEditRules::WillDeleteSelection(nsIDOMSelection *aSelection, PRBool *aCance
   *aCancel = PR_FALSE;
   
   // if there is only bogus content, cancel the operation
-  nsCOMPtr<nsIDOMNode>node;
-  PRInt32 offset;
-  nsresult result = aSelection->GetAnchorNodeAndOffset(getter_AddRefs(node), &offset);
-  if ((NS_SUCCEEDED(result)) && node)
-  {
-    nsCOMPtr<nsIDOMNode>parent;
-    parent = do_QueryInterface(node);
-    while (node)
-    { //if we find the bogus node, cancel the operation
-      nsCOMPtr<nsIDOMElement>element;
-      element = do_QueryInterface(parent);
-      if (element)
-      {
-        nsAutoString att(kMOZEditorBogusNodeAttr);
-        nsAutoString val;
-        nsresult result = element->GetAttribute(att, val);
-        if (val.Equals(kMOZEditorBogusNodeValue)) {
-          *aCancel = PR_TRUE;
-          return NS_OK;
-        }
-      }
-      // walk up the content hierarchy
-      parent->GetParentNode(getter_AddRefs(node));
-      parent = do_QueryInterface(node);
-    }
+  if (mBogusNode) {
+    *aCancel = PR_TRUE;
+    return NS_OK;
   }
   return NS_OK;
 }
@@ -389,13 +347,13 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
         }
         if (PR_TRUE==needsBogusContent)
         {
-          nsCOMPtr<nsIDOMNode>newPNode;
+          // set mBogusNode to be the newly created <P>
           result = mEditor->CreateNode(nsAutoString("P"), bodyNode, 0, 
-                                       getter_AddRefs(newPNode));
-          if ((NS_SUCCEEDED(result)) && newPNode)
+                                       getter_AddRefs(mBogusNode));
+          if ((NS_SUCCEEDED(result)) && mBogusNode)
           {
             nsCOMPtr<nsIDOMNode>newTNode;
-            result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), newPNode, 0, 
+            result = mEditor->CreateNode(nsIEditor::GetTextNodeTag(), mBogusNode, 0, 
                                          getter_AddRefs(newTNode));
             if ((NS_SUCCEEDED(result)) && newTNode)
             {
@@ -411,7 +369,7 @@ nsTextEditRules::DidDeleteSelection(nsIDOMSelection *aSelection, nsresult aResul
             }
             // make sure we know the PNode is bogus
             nsCOMPtr<nsIDOMElement>newPElement;
-            newPElement = do_QueryInterface(newPNode);
+            newPElement = do_QueryInterface(mBogusNode);
             if (newPElement)
             {
               nsAutoString att(kMOZEditorBogusNodeAttr);

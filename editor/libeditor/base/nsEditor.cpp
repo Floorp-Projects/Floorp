@@ -1184,10 +1184,18 @@ NS_IMETHODIMP nsEditor::DeleteSelectionAndCreateNode(const nsString& aTag, nsIDO
         return result;
       }
 #ifdef NS_DEBUG
-      PRBool testCollapsed;
-      nsresult debugResult = selection->IsCollapsed(&testCollapsed);
-      NS_ASSERTION((NS_SUCCEEDED(result)), "couldn't get a selection after deletion");
-      NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");;
+      nsCOMPtr<nsIDOMNode>testSelectedNode;
+      PRInt32 testOffset;
+      nsresult debugResult = selection->GetAnchorNodeAndOffset(getter_AddRefs(testSelectedNode), &testOffset);
+      // no selection is ok.
+      // if there is a selection, it must be collapsed
+      if (testSelectedNode)
+      {
+        PRBool testCollapsed;
+        debugResult = selection->IsCollapsed(&testCollapsed);
+        NS_ASSERTION((NS_SUCCEEDED(result)), "couldn't get a selection after deletion");
+        NS_ASSERTION(PR_TRUE==testCollapsed, "selection not reset after deletion");
+      }
 #endif
     }
     // split the text node

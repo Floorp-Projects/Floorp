@@ -119,19 +119,23 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
         otherTxn->GetName(getter_AddRefs(txnName));
         if (txnName.get()==gInsertTextTxnName)
         { // yep, it's one of ours.  By definition, it must contain only
-          // a single InsertTextTxn
+          // another aggregate with a single child,
+          // or a single InsertTextTxn
           nsCOMPtr<EditTxn> childTxn;
           otherTxn->GetTxnAt(0, getter_AddRefs(childTxn));
-          nsCOMPtr<InsertTextTxn> otherInsertTxn;
-          otherInsertTxn = do_QueryInterface(childTxn, &result);
-          if (otherInsertTxn)
+          if (childTxn)
           {
-            if (PR_TRUE==IsSequentialInsert(otherInsertTxn))
+            nsCOMPtr<InsertTextTxn> otherInsertTxn;
+            otherInsertTxn = do_QueryInterface(childTxn, &result);
+            if (otherInsertTxn)
             {
-              nsAutoString otherData;
-              otherInsertTxn->GetData(otherData);
-              mStringToInsert += otherData;
-              *aDidMerge = PR_TRUE;
+              if (PR_TRUE==IsSequentialInsert(otherInsertTxn))
+              {
+                nsAutoString otherData;
+                otherInsertTxn->GetData(otherData);
+                mStringToInsert += otherData;
+                *aDidMerge = PR_TRUE;
+              }
             }
           }
         }

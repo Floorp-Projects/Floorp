@@ -49,6 +49,11 @@
 #include "nsIPresShell.h"
 #include "nsIStyleContext.h"
 
+// transactions the text editor knows how to build itself
+#include "TransactionFactory.h"
+#include "PlaceholderTxn.h"
+#include "InsertTextTxn.h"
+
 
 class nsIFrame;
 
@@ -430,22 +435,20 @@ NS_IMETHODIMP nsTextEditor::InsertText(const nsString& aStringToInsert)
   nsCOMPtr<nsIDOMSelection> selection;
   PRBool cancel= PR_FALSE;
 
-  nsresult result = nsEditor::BeginTransaction();
-  if (NS_FAILED(result)) { return result; }
-
   // pre-process
   nsEditor::GetSelection(getter_AddRefs(selection));
-  nsString stringToInsert;
-  result = mRules->WillInsertText(selection, aStringToInsert, &cancel, stringToInsert);
+  nsAutoString stringToInsert;
+  PlaceholderTxn *placeholderTxn=nsnull;
+  nsresult result = mRules->WillInsertText(selection, aStringToInsert, &cancel, stringToInsert,
+                                  &placeholderTxn);
   if ((PR_FALSE==cancel) && (NS_SUCCEEDED(result)))
   {
     result = nsEditor::InsertText(stringToInsert);
     // post-process 
     result = mRules->DidInsertText(selection, stringToInsert, result);
   }
-
-  nsresult endTxnResult = nsEditor::EndTransaction();  // don't return this result!
-  NS_ASSERTION ((NS_SUCCEEDED(endTxnResult)), "bad end transaction result");
+  if (placeholderTxn)
+    placeholderTxn->SetAbsorb(PR_FALSE);  // this ends the merging of txns into placeholderTxn
 
   // BEGIN HACK!!!
   HACKForceRedraw();

@@ -49,6 +49,7 @@ CPPSRCS =                       \
     DeleteTableRowTxn.cpp       \
     JoinTableCellsTxn.cpp       \
     InsertTextTxn.cpp           \
+    PlaceholderTxn.cpp          \
     DeleteTextTxn.cpp           \
     CreateElementTxn.cpp        \
     InsertElementTxn.cpp        \
