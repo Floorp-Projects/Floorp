@@ -133,30 +133,133 @@ var view =
             alert("Unable do load DataSource: "+baseSpec);
             return;
         }
-        view.database.AddDataSource(ds);
         view.memoryDataSource = doCreate(kRDFInMemContractID,
                                          nsIRDFDataSource);
         if (!view.memoryDataSource) {
             alert("Unable to create write-protect InMemDatasource,"+
                   " not adding "+ baseSpec);
-            this.database.RemoveDataSource(ds);
         }
-        view.database.AddDataSource(view.memoryDataSource);
+        else {
+            view.database.AddObserver(new regressionStats());
+            view.database.AddDataSource(ds);
+            view.database.AddDataSource(view.memoryDataSource);
+        }
         view.builder.rebuild();
         document.getElementById("xalan_rdf").value = baseSpec;
         runItem.prototype.kXalan.init(runItem.prototype.kXalan.URLTYPE_STANDARD,
                                       0, baseSpec, null, null);
+    },
+    fillItemContext : function()
+    {
+        enablePrivilege('UniversalXPConnect');
+        var index = view.boxObject.selection.currentIndex;
+        var res = view.builder.getResourceAtIndex(index);
+        var purp = view.database.GetTarget(res, krTypePurp, true);
+        return (purp != null);
+    }
+}
+
+function state()
+{
+}
+state.prototype =
+{
+    mSucceeded: 0,
+    mFailed: 0,
+    mMixed: 0
+}
+function regressionStats()
+{
+}
+regressionStats.prototype =
+{
+    QueryInterface: function(iid) {
+        if (!iid.equals(Components.interfaces.nsISupports) &&
+            !iid.equals(Components.interfaces.nsIRDFObserver))
+            throw Components.results.NS_ERROR_NO_INTERFACE;
+
+        return this;
+    },
+    assertNewCount: function(aSource, aArc, aIncrement)
+    {
+        var count = 0;
+        var parent = view.database.GetTarget(aSource, krTypeParent, true);
+        while (parent) {
+            var countRes = view.database.GetTarget(parent, aArc, true);
+            if (countRes) {
+                count = countRes.QueryInterface(nsIRDFInt).Value;
+            }
+    
+            var newCountRes = kRDFSvc.GetIntLiteral(count + aIncrement);
+            if (!newCountRes) {
+                return;
+            }
+    
+            if (countRes) {
+                view.database.Change(parent, aArc, countRes, newCountRes);
+            }
+            else {
+                view.database.Assert(parent, aArc, newCountRes, true);
+            }
+            parent = view.database.GetTarget(parent, krTypeParent, true);
+        }
+    },
+    onAssert: function(aDataSource, aSource, aProperty, aTarget)
+    {
+        if (aProperty.EqualsNode(krTypeOrigSucc)) {
+            var arc = (aTarget.EqualsNode(kGood)) ? krTypeOrigSuccCount : krTypeOrigFailCount;
+            this.assertNewCount(aSource, arc, 1);
+        }
+        else if (aProperty.Value.substr(0, 44) == "http://www.w3.org/1999/02/22-rdf-syntax-ns#_") {
+            view.database.Assert(aTarget, krTypeParent, aSource, true);
+        }
+    },
+    onUnassert: function(aDataSource, aSource, aProperty, aTarget)
+    {
+        if (aProperty.EqualsNode(krTypeSucc)) {
+            var arc = (aTarget.EqualsNode(kGood)) ? krTypeSuccCount : krTypeFailCount;
+            this.assertNewCount(aSource, arc, -1);
+        }
+    },
+    onChange: function(aDataSource, aSource, aProperty, aOldTarget, aNewTarget)
+    {
+    },
+    onMove: function(aDataSource, aOldSource, aNewSource, aProperty, aTarget)
+    {
+    },
+    beginUpdateBatch: function(aDataSource)
+    {
+    },
+    endUpdateBatch: function(aDataSource)
+    {
     }
 }
 
 function rdfObserve(aSubject, aTopic, aData)
 {
     if (aTopic == "success") {
-        if (aData == "true") {
-            view.database.Assert(aSubject, krTypeSucc, kGood, true);
-        }
-        else {
-            view.database.Assert(aSubject, krTypeSucc, kBad, true);
+        var target = (aData == "true") ? kGood : kBad;
+        view.database.Assert(aSubject, krTypeSucc, target, true);
+
+        var parent = view.database.GetTarget(aSubject, krTypeParent, true);
+        while (parent) {
+            var count = 0;
+            var arc = (aData == "true") ? krTypeSuccCount : krTypeFailCount;
+            var countRes = view.database.GetTarget(parent, arc, true);
+            if (countRes) {
+                count = countRes.QueryInterface(nsIRDFInt).Value;
+            }
+    
+            var newCountRes = kRDFSvc.GetIntLiteral(++count);
+            if (newCountRes) {
+                if (countRes) {
+                    view.database.Change(parent, arc, countRes, newCountRes);
+                }
+                else {
+                    view.database.Assert(parent, arc, newCountRes, true);
+                }
+            }
+             parent = view.database.GetTarget(parent, krTypeParent, true);
         }
     }
 }
