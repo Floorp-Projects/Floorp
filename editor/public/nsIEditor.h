@@ -25,6 +25,7 @@ class nsIAtom;
 class nsIDOMElement;
 class nsIDOMNode;
 class nsITransaction;
+class nsIEditActionListener;
 
 /*
 Editor interface to outside world
@@ -325,6 +326,14 @@ public:
     * the selected text (if any)
    */
   NS_IMETHOD Paste()=0;
+
+  /** add an EditActionListener to the editors list of listeners.
+   */
+  NS_IMETHOD AddEditActionListener(nsIEditActionListener *aListener)=0;
+
+  /** Remove an EditActionListener from the editor's list of listeners.
+   */
+  NS_IMETHOD RemoveEditActionListener(nsIEditActionListener *aListener)=0;
 
   NS_IMETHOD DebugDumpContent() const =0;
 
