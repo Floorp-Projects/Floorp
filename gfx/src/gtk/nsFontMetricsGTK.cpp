@@ -213,6 +213,7 @@ static nsHashtable* gCachedFFRESearches = nsnull;
 static nsHashtable* gSpecialCharSets = nsnull;
 static nsHashtable* gStretches = nsnull;
 static nsHashtable* gWeights = nsnull;
+nsISaveAsCharset* gFontSubConverter = nsnull;
 
 static nsFontNodeArray* gGlobalList = nsnull;
 
@@ -744,6 +745,7 @@ FreeGlobals(void)
   NS_IF_RELEASE(gUserDefinedConverter);
   NS_IF_RELEASE(gUsersLocale);
   NS_IF_RELEASE(gWesternLocale);
+  NS_IF_RELEASE(gFontSubConverter);
   if (gWeights) {
     delete gWeights;
     gWeights = nsnull;
@@ -2087,25 +2089,15 @@ public:
                            PRUnichar* aDest, PRUint32 aDestLen);
 
   nsFontGTK* mSubstituteFont;
-
-  static int gCount;
-  static nsISaveAsCharset* gConverter;
 };
-
-int nsFontGTKSubstitute::gCount = 0;
-nsISaveAsCharset* nsFontGTKSubstitute::gConverter = nsnull;
 
 nsFontGTKSubstitute::nsFontGTKSubstitute(nsFontGTK* aFont)
 {
-  gCount++;
   mSubstituteFont = aFont;
 }
 
 nsFontGTKSubstitute::~nsFontGTKSubstitute()
 {
-  if (!--gCount) {
-    NS_IF_RELEASE(gConverter);
-  }
   // Do not free mSubstituteFont here. It is owned by somebody else.
 }
 
@@ -2114,24 +2106,24 @@ nsFontGTKSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
   PRUnichar* aDest, PRUint32 aDestLen)
 {
   nsresult res;
-  if (!gConverter) {
+  if (!gFontSubConverter) {
     nsComponentManager::CreateInstance(kSaveAsCharsetCID, nsnull,
-      NS_GET_IID(nsISaveAsCharset), (void**) &gConverter);
-    if (gConverter) {
-      res = gConverter->Init("ISO-8859-1",
+      NS_GET_IID(nsISaveAsCharset), (void**) &gFontSubConverter);
+    if (gFontSubConverter) {
+      res = gFontSubConverter->Init("ISO-8859-1",
                              nsISaveAsCharset::attr_FallbackQuestionMark +
                                nsISaveAsCharset::attr_EntityBeforeCharsetConv,
                              nsIEntityConverter::transliterate);
       if (NS_FAILED(res)) {
-        NS_RELEASE(gConverter);
+        NS_RELEASE(gFontSubConverter);
       }
     }
   }
 
-  if (gConverter) {
+  if (gFontSubConverter) {
     nsAutoString tmp(aSrc, aSrcLen);
     char* conv = nsnull;
-    res = gConverter->Convert(tmp.GetUnicode(), &conv);
+    res = gFontSubConverter->Convert(tmp.GetUnicode(), &conv);
     if (NS_SUCCEEDED(res) && conv) {
       char* p = conv;
       PRUint32 i;
