@@ -132,7 +132,6 @@ EXPORT_RESOURCE_SAMPLES = \
 	toolbargrippy-twisty.gif \
 	toolbargrippy-texture.gif \
 	loading.gif \
-	smallheader-bg.gif \
 	splitter-drag-bg.gif \
 	menubuttonBindings.xml \
 	$(NULL)

@@ -38,6 +38,7 @@ EXPORT_RESOURCE = \
 		$(srcdir)/menubuttonBindings.xml \
 		$(srcdir)/offline.gif \
 		$(srcdir)/online.gif \
+		$(srcdir)/smallheader-bg.gif \
 		$(srcdir)/securityOverlay.css \
 		$(NULL)
 

@@ -1,4 +1,3 @@
-
 toolbox
   {
     background-color      : appworkspace;
@@ -35,6 +34,7 @@ toolbargrippy
     border-right          : 1px solid threedshadow;
     border-bottom         : 1px solid threedshadow;
     width                 : 12px;
+    padding-bottom        : 1px;
   }
 
 .toolbargrippy-twisty
@@ -64,4 +64,6 @@ toolbar[collapsed="true"] > toolbargrippy
 toolbarseparator 
   { 
     width                 : 2em; 
-  } 
+  }
+  
+   
