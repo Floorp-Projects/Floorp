@@ -404,6 +404,7 @@ nsMsgDocLoaderListener::OnStartDocumentLoad(nsIDocumentLoader* aLoader, nsIURI* 
 			  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "true" );
 		  else	// because of a bug, we're not stopping the meteors, so lets just stop them here.
 			  setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
+		  setAttribute( rootWebshell, "Messenger:Status", "value", "Loading Message..." );
 		  m_meteorsSpinning = PR_TRUE;
 
 		  // Enable the Stop buton
@@ -441,6 +442,11 @@ nsMsgDocLoaderListener::OnEndDocumentLoad(nsIDocumentLoader* aLoader, nsIChannel
 		{
 		  // stop the throbber
 			setAttribute( rootWebshell, "Messenger:Throbber", "busy", "false" );
+			static PRInt32 i = 0;
+			if (i++ % 2 != 0)
+				setAttribute( rootWebshell, "Messenger:Status", "value", "Message loaded" );
+			else
+				setAttribute(rootWebshell, "Messenger:Status", "value", "Hello kitty Message loaded" );
 			m_meteorsSpinning = PR_FALSE;
 		  // Disable the Stop buton
 //		  setAttribute( rootWebshell, "canStop", "disabled", "true" );

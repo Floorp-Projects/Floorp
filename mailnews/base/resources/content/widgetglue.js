@@ -379,6 +379,23 @@ function MsgMarkAsFlagged() {}
 function MsgIgnoreThread() {}
 function MsgWatchThread() {}
 
+        var bindCount = 0;
+        function onStatus() {
+            var status = document.getElementById("Messenger:Status");
+            if ( status ) {
+                var text = status.getAttribute("value");
+                if ( text == "" ) {
+                    text = defaultStatus;
+                }
+                var statusText = document.getElementById("statusText");
+                if ( statusText ) {
+                    statusText.setAttribute( "value", text );
+                }
+            } else {
+                dump("Can't find status broadcaster!\n");
+            }
+        }
+
 		var startTime = 0;
         function onProgress() {
             var throbber = document.getElementById("Messenger:Throbber");
