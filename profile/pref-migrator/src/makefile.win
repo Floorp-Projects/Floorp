@@ -51,7 +51,6 @@ LINCS= \
 
 LLIBS =                      \
     $(DIST)\lib\xpcom.lib    \
-    $(DIST)\lib\xppref32.lib \
 !ifndef NECKO
     $(DIST)\lib\netlib.lib  \
 !else
@@ -61,8 +60,8 @@ LLIBS =                      \
     $(NULL)
 
 OBJS = \
-    .\$(OBJDIR)\nsprefmigration.obj        \
-    .\$(OBJDIR)\nsprefmigrationfactory.obj \
+    .\$(OBJDIR)\nsPrefMigration.obj        \
+    .\$(OBJDIR)\nsPrefMigrationFactory.obj \
       .\$(OBJDIR)\nsPMProgressDlg.obj \
     $(NULL)
 
