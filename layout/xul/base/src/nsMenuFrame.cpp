@@ -1007,18 +1007,23 @@ nsMenuFrame::DoLayout(nsBoxLayoutState& aState)
     ibox->GetBounds(bounds);
 
     nsCOMPtr<nsIScrollableFrame> scrollframe(do_QueryInterface(child));
-    if (scrollframe &&
-        scrollframe->GetScrollbarStyles().mVertical == NS_STYLE_OVERFLOW_AUTO) {
-      if (bounds.height < prefSize.height) {
-        // layout the child
-        ibox->Layout(aState);
+    if (scrollframe) {
+      nsIScrollableFrame::nsScrollPref pref;
+      scrollframe->GetScrollPreference(aState.PresContext(), &pref);
 
-        nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
-        if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
-        {
-          bounds.width += scrollbars.left + scrollbars.right;
-          //printf("Width=%d\n",width);
-          ibox->SetBounds(aState, bounds);
+      if (pref == nsIScrollableFrame::Auto)  
+      {
+        if (bounds.height < prefSize.height) {
+           // layout the child
+           ibox->Layout(aState);
+
+           nsMargin scrollbars = scrollframe->GetActualScrollbarSizes();
+           if (bounds.width < prefSize.width + scrollbars.left + scrollbars.right)
+           {
+             bounds.width += scrollbars.left + scrollbars.right;
+             //printf("Width=%d\n",width);
+             ibox->SetBounds(aState, bounds);
+           }
         }
       }
     }

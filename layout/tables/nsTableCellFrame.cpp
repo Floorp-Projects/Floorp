@@ -432,9 +432,10 @@ nsTableCellFrame::Paint(nsPresContext*      aPresContext,
                                     nsClipCombine_kIntersect);
     }
     else {
-      // XXXldb HIDDEN should really create a scrollframe,
-      // but use |IsTableClip| here since it doesn't.
-      if (disp->IsTableClip() ||
+      if (NS_STYLE_OVERFLOW_CLIP == disp->mOverflow ||
+          // XXXldb HIDDEN should really create a scrollframe,
+          // but test here since it doesn't.
+          NS_STYLE_OVERFLOW_HIDDEN == disp->mOverflow ||
           HasPctOverHeight()) {
         aRenderingContext.PushState();
         pushed = PR_TRUE;

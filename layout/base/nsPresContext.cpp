@@ -140,7 +140,6 @@ static NS_DEFINE_CID(kSelectionImageService, NS_SELECTIONIMAGESERVICE_CID);
 
 nsPresContext::nsPresContext(nsPresContextType aType)
   : mType(aType),
-    mViewportStyleOverflow(NS_STYLE_OVERFLOW_AUTO),
     mCompatibilityMode(eCompatibility_FullStandards),
     mImageAnimationModePref(imgIContainer::kNormalAnimMode),
     mDefaultVariableFont("serif", NS_FONT_STYLE_NORMAL, NS_FONT_VARIANT_NORMAL,
@@ -165,6 +164,8 @@ nsPresContext::nsPresContext(nsPresContextType aType)
 
   SetBackgroundImageDraw(PR_TRUE);		// always draw the background
   SetBackgroundColorDraw(PR_TRUE);
+
+  mViewportStyleOverflow = NS_STYLE_OVERFLOW_AUTO;
 
   mBackgroundColor = NS_RGB(0xFF, 0xFF, 0xFF);
   

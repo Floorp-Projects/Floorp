@@ -617,20 +617,6 @@ nsSubDocumentFrame::GetDocShell(nsIDocShell **aDocShell)
   return mFrameLoader->GetDocShell(aDocShell);
 }
 
-inline PRInt32 ConvertOverflow(PRUint8 aOverflow)
-{
-  switch (aOverflow) {
-    case NS_STYLE_OVERFLOW_VISIBLE:
-    case NS_STYLE_OVERFLOW_AUTO:
-      return nsIScrollable::Scrollbar_Auto;
-    case NS_STYLE_OVERFLOW_HIDDEN:
-    case NS_STYLE_OVERFLOW_CLIP:
-      return nsIScrollable::Scrollbar_Never;
-    case NS_STYLE_OVERFLOW_SCROLL:
-      return nsIScrollable::Scrollbar_Always;
-  }
-}
-
 nsresult
 nsSubDocumentFrame::ShowDocShell()
 {
@@ -659,25 +645,33 @@ nsSubDocumentFrame::ShowDocShell()
   nsCOMPtr<nsIScrollable> sc(do_QueryInterface(docShell));
 
   if (sc) {
-    nsPresContext::ScrollbarStyles pref;
-    PRUint8 overflow = GetStyleDisplay()->mOverflow;
-    switch (overflow) {
-      case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
-        pref.mHorizontal = NS_STYLE_OVERFLOW_HIDDEN;
-        pref.mVertical = NS_STYLE_OVERFLOW_SCROLL;
+    PRInt32 scrolling = GetStyleDisplay()->mOverflow;
+    PRInt32 scrollX, scrollY;
+    switch (scrolling) {
+      case NS_STYLE_OVERFLOW_CLIP:
+        scrollX = NS_STYLE_OVERFLOW_HIDDEN;
+        scrollY = NS_STYLE_OVERFLOW_HIDDEN;
         break;
       case NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL:
-        pref.mHorizontal = NS_STYLE_OVERFLOW_SCROLL;
-        pref.mVertical = NS_STYLE_OVERFLOW_HIDDEN;
+        scrollX = NS_STYLE_OVERFLOW_SCROLL;
+        scrollY = NS_STYLE_OVERFLOW_HIDDEN;
+        break;
+      case NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL:
+        scrollX = NS_STYLE_OVERFLOW_HIDDEN;
+        scrollY = NS_STYLE_OVERFLOW_SCROLL;
+        break;
+      case NS_STYLE_OVERFLOW_VISIBLE:
+        scrollX = scrollY = NS_STYLE_OVERFLOW_AUTO;
         break;
       default:
-        pref.mHorizontal = overflow;
-        pref.mVertical = overflow;
+        scrollX = scrollY = scrolling;
+        break;
     }
-    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
-                                       ConvertOverflow(pref.mHorizontal));
+
     sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_Y,
-                                       ConvertOverflow(pref.mVertical));
+                                       scrollX);
+    sc->SetDefaultScrollbarPreferences(nsIScrollable::ScrollOrientation_X,
+                                       scrollY);
   }
 
   PRInt32 itemType = nsIDocShellTreeItem::typeContent;

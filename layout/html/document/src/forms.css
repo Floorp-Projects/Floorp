@@ -98,6 +98,10 @@ input {
   text-indent: 0;
 }
 
+input > .anonymous-div {
+  white-space : nowrap;
+}
+
 textarea {
   margin: 1px 0 1px 0;
   border: 2px inset ThreeDFace;
@@ -114,7 +118,6 @@ textarea {
   -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield;
   text-indent: 0;
-  overflow: auto;
 }
 
 textarea > scrollbar {
@@ -131,11 +134,6 @@ input > .anonymous-div {
   /* XXXldb I'm not sure if we really want the 'text-decoration: inherit',
      but it's needed to make 'text-decoration' "work" on text inputs. */
   text-decoration: inherit;
-}
-
-input > .anonymous-div {
-  white-space : nowrap;
-  overflow: hidden ! important;
 }
 
 select {

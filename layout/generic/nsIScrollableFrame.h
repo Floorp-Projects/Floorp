@@ -42,10 +42,10 @@
 #include "nsCoord.h"
 #include "nsIViewManager.h"
 #include "nsIScrollableViewProvider.h"
-#include "nsPresContext.h"
 
 class nsIFrame;
 class nsIBox;
+class nsPresContext;
 class nsBoxLayoutState;
 
 // IID for the nsIScrollableFrame interface
@@ -56,6 +56,14 @@ class nsBoxLayoutState;
 class nsIScrollableFrame : public nsIScrollableViewProvider {
 public:
 
+  enum nsScrollPref {
+    Auto = 0,
+    NeverScroll,
+    AlwaysScroll,
+    AlwaysScrollVertical,
+    AlwaysScrollHorizontal
+  };
+
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISCROLLABLE_FRAME_IID)
 
   /**
@@ -65,7 +73,13 @@ public:
   NS_IMETHOD GetScrolledFrame(nsPresContext* aPresContext,
                               nsIFrame *&aScrolledFrame) const = 0;
 
-  typedef nsPresContext::ScrollbarStyles ScrollbarStyles;
+  struct ScrollbarStyles {
+    // one of NS_STYLE_OVERFLOW_SCROLL, NS_STYLE_OVERFLOW_HIDDEN,
+    // NS_STYLE_OVERFLOW_VISIBLE, NS_STYLE_OVERFLOW_AUTO
+    PRInt32 mHorizontal;
+    PRInt32 mVertical;
+    ScrollbarStyles(PRInt32 h, PRInt32 v) : mHorizontal(h), mVertical(v) {}
+  };
 
   virtual ScrollbarStyles GetScrollbarStyles() const = 0;
 
@@ -80,6 +94,13 @@ public:
    * be visible due to overflowing content, are.
    */
   virtual nsMargin GetDesiredScrollbarSizes(nsBoxLayoutState* aState) = 0;
+
+  /**
+   * Query whether scroll bars should be displayed all the time, never or
+   * only when necessary.
+   * @return current scrollbar selection
+   */
+  NS_IMETHOD  GetScrollPreference(nsPresContext* aPresContext, nsScrollPref* aScrollPreference) const = 0;
 
   /**
    * Get the position of the scrolled view.
@@ -98,6 +119,15 @@ public:
   NS_IMETHOD ScrollTo(nsPresContext* aContext, nscoord aX, nscoord aY, PRUint32 aFlags = NS_VMREFRESH_NO_SYNC)=0;
 
   NS_IMETHOD GetScrollableView(nsPresContext* aContext, nsIScrollableView** aResult)=0;
+
+
+  /**
+   * Set information about whether the vertical and horizontal scrollbars
+   * are currently visible
+   */
+  NS_IMETHOD SetScrollbarVisibility(nsPresContext* aPresContext,
+                                    PRBool aVerticalVisible,
+                                    PRBool aHorizontalVisible) = 0;
 
   NS_IMETHOD GetScrollbarBox(PRBool aVertical, nsIBox** aResult) = 0;
 
