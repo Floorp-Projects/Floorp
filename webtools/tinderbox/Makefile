@@ -61,7 +61,6 @@ examples/mozilla-windows.pl
 
 PICS = \
 1afi003r.gif	\
-reledanim.gif	\
 star.gif
 
 install:
