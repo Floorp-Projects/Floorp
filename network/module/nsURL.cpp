@@ -107,7 +107,8 @@ void URLImpl::Init(nsISupports* aContainer, nsIURLGroup* aGroup)
   mSearch = nsnull;
   mPort = -1;
   mSpec = nsnull;
-  mLoadAttribs = nsnull;
+
+  NS_NewLoadAttribs(&mLoadAttribs);
 
   mURLGroup = aGroup;
   NS_IF_ADDREF(mURLGroup);
