@@ -230,7 +230,7 @@ public:
     const String *undefined_StringAtom;
     const String *public_StringAtom;
     const String *private_StringAtom;
-    const String *function_StringAtom;
+    const String *Function_StringAtom;
     const String *object_StringAtom;
     const String *Empty_StringAtom;
     const String *Dollar_StringAtom;

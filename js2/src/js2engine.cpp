@@ -106,7 +106,7 @@ namespace MetaData {
                 default:
                     NOT_REACHED("Bad opcode, no biscuit");
                 }
-                JS2Object::gc(meta);        // XXX temporarily, for testing
+//                JS2Object::gc(meta);        // XXX temporarily, for testing
             }
             catch (Exception &jsx) {
                 if (mTryStack.size() > 0) {
@@ -364,7 +364,7 @@ namespace MetaData {
                   INIT_STRINGATOM(undefined),
                   INIT_STRINGATOM(public),
                   INIT_STRINGATOM(private),
-                  INIT_STRINGATOM(function),
+                  INIT_STRINGATOM(Function),
                   INIT_STRINGATOM(object),
                   Empty_StringAtom(&world.identifiers[""]),
                   Dollar_StringAtom(&world.identifiers["$"]),
@@ -816,7 +816,7 @@ namespace MetaData {
         JS2Object::mark(undefined_StringAtom);
         JS2Object::mark(public_StringAtom);
         JS2Object::mark(private_StringAtom);
-        JS2Object::mark(function_StringAtom);
+        JS2Object::mark(Function_StringAtom);
         JS2Object::mark(object_StringAtom);
         JS2Object::mark(Empty_StringAtom);
         JS2Object::mark(Dollar_StringAtom);

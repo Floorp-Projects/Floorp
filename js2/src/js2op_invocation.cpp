@@ -254,7 +254,7 @@
                     break;
                 case ClassKind:
                 case MethodClosureKind:
-                    a = STRING_TO_JS2VAL(function_StringAtom); 
+                    a = STRING_TO_JS2VAL(Function_StringAtom); 
                     break;
                 case PrototypeInstanceKind:
                 case PackageKind:

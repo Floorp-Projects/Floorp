@@ -855,6 +855,7 @@ namespace MetaData {
                 if (f->expr3) {
                     Reference *r = EvalExprNode(env, phase, f->expr3, &exprType);
                     if (r) r->emitReadBytecode(bCon, p->pos);
+                    bCon->emitOp(ePop, p->pos);
                 }
                 bCon->setLabel(testLocation);
                 if (f->expr2) {
@@ -2227,8 +2228,8 @@ doUnary:
                     if (e->value) {
                         Reference *rVal = EvalExprNode(env, phase, e->value, exprType);
                         if (rVal) rVal->emitReadBytecode(bCon, p->pos);
+                        argCount++;
                     }
-                    argCount++;
                     e = e->next;
                 }
                 bCon->emitOp(eNewArray, p->pos, -argCount + 1);    // pop argCount args and push a new array
@@ -2291,6 +2292,7 @@ doUnary:
             break;
         case ExprNode::New: 
             {
+                // XXX why not?--> if (phase == CompilePhase) reportError(Exception::compileExpressionError, "Inappropriate compile time expression", p->pos);
                 InvokeExprNode *i = checked_cast<InvokeExprNode *>(p);
                 Reference *rVal = EvalExprNode(env, phase, i->op, exprType);
                 if (rVal) rVal->emitReadBytecode(bCon, p->pos);
@@ -2868,17 +2870,17 @@ doUnary:
         MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->object_StringAtom);
         MAKEBUILTINCLASS(undefinedClass, objectClass, false, false, true, engine->undefined_StringAtom);
         MAKEBUILTINCLASS(nullClass, objectClass, false, true, true, engine->null_StringAtom);
-        MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, &world.identifiers["boolean"]);
+        MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, &world.identifiers["Boolean"]);
         MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, false, &world.identifiers["general number"]);
-        MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, &world.identifiers["number"]);
-        MAKEBUILTINCLASS(characterClass, objectClass, false, false, true, &world.identifiers["character"]);
-        MAKEBUILTINCLASS(stringClass, objectClass, false, false, true, &world.identifiers["string"]);
+        MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, &world.identifiers["Number"]);
+        MAKEBUILTINCLASS(characterClass, objectClass, false, false, true, &world.identifiers["Character"]);
+        MAKEBUILTINCLASS(stringClass, objectClass, false, false, true, &world.identifiers["String"]);
         MAKEBUILTINCLASS(namespaceClass, objectClass, false, true, true, &world.identifiers["namespace"]);
         MAKEBUILTINCLASS(attributeClass, objectClass, false, true, true, &world.identifiers["attribute"]);
-        MAKEBUILTINCLASS(classClass, objectClass, false, true, true, &world.identifiers["class"]);
-        MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->function_StringAtom);
+        MAKEBUILTINCLASS(classClass, objectClass, false, true, true, &world.identifiers["Class"]);
+        MAKEBUILTINCLASS(functionClass, objectClass, false, true, true, engine->Function_StringAtom);
         MAKEBUILTINCLASS(prototypeClass, objectClass, true, true, true, &world.identifiers["prototype"]);
-        MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, &world.identifiers["package"]);
+        MAKEBUILTINCLASS(packageClass, objectClass, true, true, true, &world.identifiers["Package"]);
         
         // A 'forbidden' member, used to mark hidden bindings
         forbiddenMember = new StaticMember(Member::Forbidden);
@@ -2943,6 +2945,10 @@ doUnary:
         defineStaticMember(&env, &world.identifiers["Array"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
         initArrayObject(this);
 
+/*** ECMA 3  Function Class ***/
+        v = new Variable(classClass, OBJECT_TO_JS2VAL(functionClass), true);
+        defineStaticMember(&env, &world.identifiers["Function"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        // XXX more here!
 
     }
 
