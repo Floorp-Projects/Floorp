@@ -59,6 +59,8 @@ private:
    nsString utf8;
    nsString xmacroman;
    nsString unknown;
+   nsString iso88597;
+   nsString windows1253;
 };
 
 NS_IMPL_ISUPPORTS(nsCharsetAlias, kICharsetAliasIID);
@@ -76,6 +78,8 @@ nsCharsetAlias::nsCharsetAlias()
   xmacroman = "x-mac-roman";
   utf8      = "UTF8";
   unknown   = "";
+  iso88597 =  "ISO-8859-7";
+  windows1253 =  "Windows-1253";
 }
 
 nsCharsetAlias::~nsCharsetAlias()
@@ -122,6 +126,21 @@ const nsString& nsCharsetAlias::GetPreferred(
    } else if(aKey.Equals("x-mac-roman") )
    {
       return xmacroman;
+   } else if(aKey.Equals("iso-8859-7") ||
+             aKey.Equals("iso-ir-126") ||
+             aKey.Equals("iso_8859-7") ||
+             aKey.Equals("iso_8859-7:1987") ||
+             aKey.Equals("elot_928") ||
+             aKey.Equals("ecma-118") ||
+             aKey.Equals("greek") ||
+             aKey.Equals("greek8") ||
+             aKey.Equals("csisolatingreek") )
+   {
+      return iso88597;
+   } else if(aKey.Equals("windows-1253") ||
+             aKey.Equals("x-cp1253") )
+   {
+      return windows1253;
    } else if(aKey.Equals("utf-8") ||
              aKey.Equals("unicode-1-1-utf-8") )
    {
