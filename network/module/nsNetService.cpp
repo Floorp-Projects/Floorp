@@ -106,7 +106,7 @@ nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURL* aURL);
 
 char *mangleResourceIntoFileURL(const char* aResourceFileName);
 
-extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener, PLEventQueue* aEventQ);
+extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener, nsIEventQueue* aEventQ);
 
 extern "C" {
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -356,7 +356,7 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     nsINetlibURL *netlibURL;
     nsresult result;
     nsIStreamListener* consumer;
-    PLEventQueue* evQueue = nsnull;
+    nsIEventQueue* evQueue = nsnull;
 
     if ((NULL == aConsumer) || (NULL == aUrl)) {
         return NS_FALSE;
@@ -446,7 +446,11 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
      * Currently, this information is needed to marshall the call to the URL
      * exit_routine(...) on the correct thread...
      */
+    
     URL_s->owner_data = evQueue;
+		
+		/* Done with the event queue pointer at this point. Release it. */
+		NS_IF_RELEASE(evQueue);
 
     /*
      * Give the protocol a chance to initialize any URL_Struct fields...
@@ -495,7 +499,7 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
     nsNetlibStream *pBlockingStream;
     nsINetlibURL *netlibURL;
     nsIStreamListener* consumer = nsnull;
-    PLEventQueue* evQueue = nsnull;
+    nsIEventQueue* evQueue = nsnull;
     nsresult result;
 
     if (NULL == aNewStream) {
@@ -619,6 +623,9 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
          * exit_routine(...) on the correct thread...
          */
         URL_s->owner_data = evQueue;
+				
+				/* Done with the event queue pointer at this point. Release it. */
+				NS_IF_RELEASE(evQueue);
 
         /*
          * Give the protocol a chance to initialize any URL_Struct fields...
