@@ -181,7 +181,7 @@ class TextHTMLConverter {
           !sendmailFuckage(text, i, in_length)) {
         text.insert(i, "<CITE>");
         in_length += 6;
-        text.insert(in_length, "</CITE>");
+        text.insert(in_length, "</CITE><br>");
       }
     }
   }
