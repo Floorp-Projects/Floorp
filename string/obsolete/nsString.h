@@ -37,47 +37,22 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* nsString.h --- rickg's original strings of 1-byte chars, |nsCString| and |nsCAutoString|;
-    these classes will be replaced by the new shared-buffer string (see bug #53065)
+/*
+ * nsString.h --- rickg's original strings of 1-byte chars, |nsCString|
+ * and |nsCAutoString|; these classes will be replaced by the new
+ * shared-buffer string (see bug #53065)
+ *
+ * This file will one day be _only_ a compatibility header for clients
+ * using the names |ns[C]String| et al ... which we probably want to
+ * support forever.
  */
 
+#ifndef nsString_h__
+#define nsString_h__
 
-#ifndef _nsCString_
-#define _nsCString_
-
-/***********************************************************************
-  MODULE NOTES:
-
-  See nsStr.h for a more general description of string classes.
-
-  This version of the nsString class offers many improvements over the
-  original version:
-    1. Wide and narrow chars
-    2. Allocators
-    3. Much smarter autostrings
-    4. Subsumable strings
- ***********************************************************************/
-
+#ifndef nsString2_h__
 #include "nsString2.h"
-#include "prtypes.h"
-#include "nscore.h"
-#include <stdio.h>
-#include "nsStr.h"
-#include "nsIAtom.h"
-
-#include "nsAString.h"
-#include "nsXPIDLString.h"
-
-/* this file will one day be _only_ a compatibility header for clients using the names
-     |ns[C]String| et al ... which we probably want to support forever.
-   In the mean time, people are used to getting the names |nsAReadable[C]String| and friends
-     from here as well; so we must continue to include the other compatibility headers
-     even though we don't use them ourself.
- */
-
-#include "nsAWritableString.h"
-  // for compatibility
-
+#endif
 
 class NS_COM nsCString :
   public nsAFlatCString,
@@ -485,6 +460,5 @@ class NS_COM NS_LossyConvertUCS2toASCII
         // NOT TO BE IMPLEMENTED
       NS_LossyConvertUCS2toASCII( char );
   };
-#endif
 
-
+#endif /* !defined(nsString_h__) */

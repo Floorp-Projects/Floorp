@@ -777,7 +777,7 @@ nsStringArray::SizeOf(nsISizeOfHandler* aHandler, PRUint32* aResult) const
 #endif
 
 void 
-nsStringArray::StringAt(PRInt32 aIndex, nsAWritableString& aString) const
+nsStringArray::StringAt(PRInt32 aIndex, nsAString& aString) const
 {
   nsString* string = NS_STATIC_CAST(nsString*, nsVoidArray::ElementAt(aIndex));
   if (nsnull != string)
@@ -797,7 +797,7 @@ nsStringArray::StringAt(PRInt32 aIndex) const
 }
 
 PRInt32 
-nsStringArray::IndexOf(const nsAReadableString& aPossibleString) const
+nsStringArray::IndexOf(const nsAString& aPossibleString) const
 {
   if (mImpl)
   {
@@ -817,7 +817,7 @@ nsStringArray::IndexOf(const nsAReadableString& aPossibleString) const
 }
 
 PRBool 
-nsStringArray::InsertStringAt(const nsAReadableString& aString, PRInt32 aIndex)
+nsStringArray::InsertStringAt(const nsAString& aString, PRInt32 aIndex)
 {
   nsString* string = new nsString(aString);
   if (nsVoidArray::InsertElementAt(string, aIndex))
@@ -829,7 +829,7 @@ nsStringArray::InsertStringAt(const nsAReadableString& aString, PRInt32 aIndex)
 }
 
 PRBool
-nsStringArray::ReplaceStringAt(const nsAReadableString& aString,
+nsStringArray::ReplaceStringAt(const nsAString& aString,
                                PRInt32 aIndex)
 {
   nsString* string = NS_STATIC_CAST(nsString*, nsVoidArray::ElementAt(aIndex));
@@ -842,7 +842,7 @@ nsStringArray::ReplaceStringAt(const nsAReadableString& aString,
 }
 
 PRBool 
-nsStringArray::RemoveString(const nsAReadableString& aString)
+nsStringArray::RemoveString(const nsAString& aString)
 {
   PRInt32 index = IndexOf(aString);
   if (-1 < index)

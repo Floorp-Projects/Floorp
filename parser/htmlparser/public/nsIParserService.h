@@ -76,13 +76,13 @@ class nsIParserService : public nsISupports {
   NS_IMETHOD HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom,
                                           PRInt32* aId) const = 0;
 
-  NS_IMETHOD HTMLStringTagToId(const nsAReadableString &aTagName,
+  NS_IMETHOD HTMLStringTagToId(const nsAString &aTagName,
                                PRInt32* aId) const = 0;
 
   NS_IMETHOD HTMLIdToStringTag(PRInt32 aId,
                                const PRUnichar **aTagName) const = 0;
   
-  NS_IMETHOD HTMLConvertEntityToUnicode(const nsAReadableString& aEntity, 
+  NS_IMETHOD HTMLConvertEntityToUnicode(const nsAString& aEntity, 
                                         PRInt32* aUnicode) const = 0;
 
   NS_IMETHOD HTMLConvertUnicodeToEntity(PRInt32 aUnicode,

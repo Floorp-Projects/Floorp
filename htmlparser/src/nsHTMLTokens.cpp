@@ -97,7 +97,7 @@ CStartToken::CStartToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 #endif
 }
 
-CStartToken::CStartToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+CStartToken::CStartToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mEmpty=PR_FALSE;
   mContainerInfo=eFormUnknown;
   mTextValue.Assign(aName);
@@ -106,7 +106,7 @@ CStartToken::CStartToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_u
 #endif
 }
 
-CStartToken::CStartToken(const nsAReadableString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
+CStartToken::CStartToken(const nsAString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
   mEmpty=PR_FALSE;
   mContainerInfo=eFormUnknown;
   mTextValue.Assign(aName);
@@ -246,7 +246,7 @@ void CStartToken::DebugDumpSource(nsOutputStream& out) {
 }
 #endif
 
-const nsAReadableString& CStartToken::GetStringValue()
+const nsAString& CStartToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
@@ -312,11 +312,11 @@ void CStartToken::AppendSource(nsString& anOutputString){
 CEndToken::CEndToken(eHTMLTags aTag) : CHTMLToken(aTag) {
 }
 
-CEndToken::CEndToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+CEndToken::CEndToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.Assign(aName);
 }
 
-CEndToken::CEndToken(const nsAReadableString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
+CEndToken::CEndToken(const nsAString& aName,eHTMLTags aTag) : CHTMLToken(aTag) {
   mTextValue.Assign(aName);
 }
 
@@ -433,7 +433,7 @@ void CEndToken::DebugDumpSource(nsOutputStream& out) {
 }
 #endif
 
-const nsAReadableString& CEndToken::GetStringValue()
+const nsAString& CEndToken::GetStringValue()
 {
   if((eHTMLTag_unknown<mTypeID) && (mTypeID<eHTMLTag_text)) {
     if(!mTextValue.Length()) {
@@ -493,7 +493,7 @@ CTextToken::CTextToken() : CHTMLToken(eHTMLTag_text) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CTextToken::CTextToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_text) {
+CTextToken::CTextToken(const nsAString& aName) : CHTMLToken(eHTMLTag_text) {
   mTextValue.Rebind(aName);
 }
 
@@ -719,12 +719,12 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
   return result;
 }
 
-void CTextToken::CopyTo(nsAWritableString& aStr)
+void CTextToken::CopyTo(nsAString& aStr)
 {
   aStr.Assign(mTextValue);
 }
 
-const nsAReadableString& CTextToken::GetStringValue(void)
+const nsAString& CTextToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -734,7 +734,7 @@ void CTextToken::Bind(nsScanner* aScanner, nsReadingIterator<PRUnichar>& aStart,
   aScanner->BindSubstring(mTextValue, aStart, aEnd);
 }
 
-void CTextToken::Bind(const nsAReadableString& aStr)
+void CTextToken::Bind(const nsAString& aStr)
 {
   mTextValue.Rebind(aStr);
 }
@@ -757,7 +757,7 @@ CCDATASectionToken::CCDATASectionToken() : CHTMLToken(eHTMLTag_unknown) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CCDATASectionToken::CCDATASectionToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+CCDATASectionToken::CCDATASectionToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.Assign(aName);
 }
 
@@ -841,7 +841,7 @@ nsresult CCDATASectionToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt3
   return result;
 }
 
-const nsAReadableString& CCDATASectionToken::GetStringValue(void)
+const nsAString& CCDATASectionToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -863,7 +863,7 @@ CMarkupDeclToken::CMarkupDeclToken() : CHTMLToken(eHTMLTag_markupDecl) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CMarkupDeclToken::CMarkupDeclToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_markupDecl) {
+CMarkupDeclToken::CMarkupDeclToken(const nsAString& aName) : CHTMLToken(eHTMLTag_markupDecl) {
   mTextValue.Rebind(aName);
 }
 
@@ -978,7 +978,7 @@ nsresult CMarkupDeclToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   return result;
 }
 
-const nsAReadableString& CMarkupDeclToken::GetStringValue(void)
+const nsAString& CMarkupDeclToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -1002,7 +1002,7 @@ CCommentToken::CCommentToken() : CHTMLToken(eHTMLTag_comment) {
  *  @param   
  *  @return  
  */
-CCommentToken::CCommentToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_comment) {
+CCommentToken::CCommentToken(const nsAString& aName) : CHTMLToken(eHTMLTag_comment) {
   mTextValue.Assign(aName);
 }
 
@@ -1270,7 +1270,7 @@ nsresult CCommentToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFl
   return result;
 }
 
-const nsAReadableString& CCommentToken::GetStringValue(void)
+const nsAString& CCommentToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -1351,7 +1351,7 @@ void CNewlineToken::FreeNewline()
  *  @update gess 3/25/98
  *  @return nsString reference to internal string value
  */
-const nsAReadableString& CNewlineToken::GetStringValue(void) {
+const nsAString& CNewlineToken::GetStringValue(void) {
   return *gNewlineStr;
 }
 
@@ -1419,7 +1419,7 @@ CAttributeToken::CAttributeToken() : CHTMLToken(eHTMLTag_unknown) {
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CAttributeToken::CAttributeToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+CAttributeToken::CAttributeToken(const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.Assign(aName);
   mHasEqualWithoutValue=PR_FALSE;
 #ifdef DEBUG
@@ -1435,7 +1435,7 @@ CAttributeToken::CAttributeToken(const nsAReadableString& aName) : CHTMLToken(eH
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CAttributeToken::CAttributeToken(const nsAReadableString& aKey, const nsAReadableString& aName) : CHTMLToken(eHTMLTag_unknown) {
+CAttributeToken::CAttributeToken(const nsAString& aKey, const nsAString& aName) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.Assign(aName);
   mTextKey.Rebind(aKey);
   mHasEqualWithoutValue=PR_FALSE;
@@ -1517,7 +1517,7 @@ void CAttributeToken::DebugDumpToken(nsOutputStream& out) {
 }
 #endif
 
-const nsAReadableString& CAttributeToken::GetStringValue(void)
+const nsAString& CAttributeToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -1859,7 +1859,7 @@ void CAttributeToken::DebugDumpSource(nsOutputStream& out) {
 }
 #endif
 
-void CAttributeToken::SetKey(const nsAReadableString& aKey)
+void CAttributeToken::SetKey(const nsAString& aKey)
 {
   mTextKey.Rebind(aKey);
 }
@@ -1889,7 +1889,7 @@ CWhitespaceToken::CWhitespaceToken() : CHTMLToken(eHTMLTag_whitespace) {
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CWhitespaceToken::CWhitespaceToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_whitespace) {
+CWhitespaceToken::CWhitespaceToken(const nsAString& aName) : CHTMLToken(eHTMLTag_whitespace) {
   mTextValue.Assign(aName);
 }
 
@@ -1933,7 +1933,7 @@ nsresult CWhitespaceToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 
   return result;
 }
 
-const nsAReadableString& CWhitespaceToken::GetStringValue(void)
+const nsAString& CWhitespaceToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -1955,7 +1955,7 @@ CEntityToken::CEntityToken() : CHTMLToken(eHTMLTag_entity) {
  *  @param   aName -- string value to init token name with
  *  @return  
  */
-CEntityToken::CEntityToken(const nsAReadableString& aName) : CHTMLToken(eHTMLTag_entity) {
+CEntityToken::CEntityToken(const nsAString& aName) : CHTMLToken(eHTMLTag_entity) {
   mTextValue.Assign(aName);
 #ifdef VERBOSE_DEBUG
   if(!VerifyEntityTable())  {
@@ -2212,7 +2212,7 @@ void CEntityToken::DebugDumpSource(nsOutputStream& out) {
 }
 #endif
 
-const nsAReadableString& CEntityToken::GetStringValue(void)
+const nsAString& CEntityToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2260,7 +2260,7 @@ CScriptToken::CScriptToken() : CHTMLToken(eHTMLTag_script) {
  *  @param   aName -- string to init token name with
  *  @return  
  */
-CScriptToken::CScriptToken(const nsAReadableString& aString) : CHTMLToken(eHTMLTag_script) {
+CScriptToken::CScriptToken(const nsAString& aString) : CHTMLToken(eHTMLTag_script) {
   mTextValue.Assign(aString);
 }
                         
@@ -2287,7 +2287,7 @@ PRInt32 CScriptToken::GetTokenType(void) {
   return eToken_script;
 }
 
-const nsAReadableString& CScriptToken::GetStringValue(void)
+const nsAString& CScriptToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2302,7 +2302,7 @@ const nsAReadableString& CScriptToken::GetStringValue(void)
 CStyleToken::CStyleToken() : CHTMLToken(eHTMLTag_style) {
 }
 
-CStyleToken::CStyleToken(const nsAReadableString& aString) : CHTMLToken(eHTMLTag_style) {
+CStyleToken::CStyleToken(const nsAString& aString) : CHTMLToken(eHTMLTag_style) {
   mTextValue.Assign(aString);
 }
 
@@ -2328,7 +2328,7 @@ PRInt32 CStyleToken::GetTokenType(void) {
   return eToken_style;
 }
 
-const nsAReadableString& CStyleToken::GetStringValue(void)
+const nsAString& CStyleToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2372,7 +2372,7 @@ CInstructionToken::CInstructionToken() : CHTMLToken(eHTMLTag_instruction) {
  *  @param   
  *  @return  
  */
-CInstructionToken::CInstructionToken(const nsAReadableString& aString) : CHTMLToken(eHTMLTag_unknown) {
+CInstructionToken::CInstructionToken(const nsAString& aString) : CHTMLToken(eHTMLTag_unknown) {
   mTextValue.Assign(aString);
 }
 
@@ -2411,7 +2411,7 @@ PRInt32 CInstructionToken::GetTokenType(void){
   return eToken_instruction;
 }
 
-const nsAReadableString& CInstructionToken::GetStringValue(void)
+const nsAString& CInstructionToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2444,7 +2444,7 @@ const nsParserError * CErrorToken::GetError(void)
   return mError; 
 }
 
-const nsAReadableString& CErrorToken::GetStringValue(void)
+const nsAString& CErrorToken::GetStringValue(void)
 {
   return mTextValue;
 }
@@ -2455,7 +2455,7 @@ CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag)
   : CHTMLToken(aTag) {
 }
 
-CDoctypeDeclToken::CDoctypeDeclToken(const nsAReadableString& aString,eHTMLTags aTag)
+CDoctypeDeclToken::CDoctypeDeclToken(const nsAString& aString,eHTMLTags aTag)
   : CHTMLToken(aTag), mTextValue(aString) {
 }
 
@@ -2515,12 +2515,12 @@ PRInt32 CDoctypeDeclToken::GetTokenType(void) {
   return eToken_doctypeDecl;
 }
 
-const nsAReadableString& CDoctypeDeclToken::GetStringValue(void)
+const nsAString& CDoctypeDeclToken::GetStringValue(void)
 {
   return mTextValue;
 }
 
-void CDoctypeDeclToken::SetStringValue(const nsAReadableString& aStr)
+void CDoctypeDeclToken::SetStringValue(const nsAString& aStr)
 {
   mTextValue.Assign(aStr);
 }

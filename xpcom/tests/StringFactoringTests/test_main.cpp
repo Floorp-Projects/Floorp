@@ -67,7 +67,7 @@ struct string_class_traits<char>
 
 static
 void
-CallCMid( nsAWritableCString& aResult, const nsAReadableCString& aSource, PRUint32 aStartPos, PRUint32 aLengthToCopy )
+CallCMid( nsACString& aResult, const nsACString& aSource, PRUint32 aStartPos, PRUint32 aLengthToCopy )
   {
     aSource.Mid(aResult, aStartPos, aLengthToCopy);
   }
@@ -76,7 +76,7 @@ CallCMid( nsAWritableCString& aResult, const nsAReadableCString& aSource, PRUint
 
 template <class CharT>
 int
-test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
+test_multifragment_iterators( const basic_nsAString<CharT>& aString )
     /*
       ...this tests a problem that was present in |nsPromiseConcatenation| where,
       because it originally stored some iteration state in the object itself, rather than
@@ -86,7 +86,7 @@ test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
       does not have the same bug.  Make sure the first fragment is only one character long.
     */
   {
-    typedef typename basic_nsAReadableString<CharT>::const_iterator ConstIterator;
+    typedef typename basic_nsAString<CharT>::const_iterator ConstIterator;
 
     int tests_failed = 0;
 
@@ -108,7 +108,7 @@ test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
 
 template <class CharT>
 int
-test_Vidur_functions( const basic_nsAReadableString<CharT>& aString )
+test_Vidur_functions( const basic_nsAString<CharT>& aString )
   {
     char* char_copy = ToNewCString(aString);
     PRUnichar* PRUnichar_copy = ToNewUnicode(aString);
@@ -121,7 +121,7 @@ test_Vidur_functions( const basic_nsAReadableString<CharT>& aString )
 
 template <class CharT>
 int
-test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
+test_readable_hello( const basic_nsAString<CharT>& aReadable )
   {
     int tests_failed = 0;
 
@@ -155,7 +155,7 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::const_iterator iter = aReadable.BeginReading();
+    basic_nsAString<CharT>::const_iterator iter = aReadable.BeginReading();
     if ( *iter != CharT('H') )
       {
         cout << "FAILED |test_readable_hello|: didn't start out pointing to the right thing, or else couldn't be dereferenced. --> '" << *iter << "'" << endl;
@@ -178,14 +178,14 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::const_iterator iter1 = aReadable.BeginReading().advance(3);
+    basic_nsAString<CharT>::const_iterator iter1 = aReadable.BeginReading().advance(3);
     if ( *iter1 != CharT('l') )
       {
         cout << "FAILED |test_readable_hello|: iterator couldn't be set to |BeginReading()+=n|, or else couldn't be dereferenced. --> '" << *iter1 << "'" << endl;
         ++tests_failed;
       }
 
-    basic_nsAReadableString<CharT>::const_iterator iter2 = aReadable.EndReading().advance(-2);
+    basic_nsAString<CharT>::const_iterator iter2 = aReadable.EndReading().advance(-2);
     if ( *iter2 != CharT('l') )
       {
         cout << "FAILED |test_readable_hello|: iterator couldn't be set to |EndReading()-=n|, or else couldn't be dereferenced. --> '" << *iter2 << "'" << endl;
@@ -222,7 +222,7 @@ test_readable_hello( const basic_nsAReadableString<CharT>& aReadable )
 
 template <class CharT>
 int
-test_SetLength( basic_nsAWritableString<CharT>& aWritable )
+test_SetLength( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
 
@@ -271,7 +271,7 @@ test_SetLength( basic_nsAWritableString<CharT>& aWritable )
 
 template <class CharT>
 int
-test_insert( basic_nsAWritableString<CharT>& aWritable )
+test_insert( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
 
@@ -302,7 +302,7 @@ test_insert( basic_nsAWritableString<CharT>& aWritable )
 
 template <class CharT>
 int
-test_cut( basic_nsAWritableString<CharT>& aWritable )
+test_cut( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
 
@@ -313,7 +313,7 @@ test_cut( basic_nsAWritableString<CharT>& aWritable )
 
 template <class CharT>
 int
-test_self_assign( basic_nsAWritableString<CharT>& aWritable )
+test_self_assign( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
     string_class_traits<CharT>::implementation_t oldValue(aWritable);
@@ -331,7 +331,7 @@ test_self_assign( basic_nsAWritableString<CharT>& aWritable )
 
 template <class CharT>
 int
-test_self_append( basic_nsAWritableString<CharT>& aWritable )
+test_self_append( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
     string_class_traits<CharT>::implementation_t oldValue(aWritable);
@@ -349,7 +349,7 @@ test_self_append( basic_nsAWritableString<CharT>& aWritable )
 
 template <class CharT>
 int
-test_self_insert( basic_nsAWritableString<CharT>& aWritable )
+test_self_insert( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
     string_class_traits<CharT>::implementation_t oldValue(aWritable);
@@ -367,7 +367,7 @@ test_self_insert( basic_nsAWritableString<CharT>& aWritable )
 
 template <class CharT>
 int
-test_self_replace( basic_nsAWritableString<CharT>& aWritable )
+test_self_replace( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
     string_class_traits<CharT>::implementation_t oldValue(aWritable);
@@ -387,7 +387,7 @@ test_self_replace( basic_nsAWritableString<CharT>& aWritable )
 
 template <class CharT>
 int
-test_writable( basic_nsAWritableString<CharT>& aWritable )
+test_writable( basic_nsAString<CharT>& aWritable )
   {
     int tests_failed = 0;
     // ...
@@ -632,7 +632,7 @@ main()
 
     nsStdCString leftString;
     source.Left(leftString, 9);
-    // cout << static_cast<nsAReadableCString>(leftString) << endl;
+    // cout << static_cast<const nsACString>(leftString) << endl;
 
 
 

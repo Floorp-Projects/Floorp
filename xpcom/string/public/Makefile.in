@@ -34,11 +34,9 @@ EXPORTS		=				\
 		nsAFlatString.h			\
 		nsAlgorithm.h			\
 		nsAPromiseString.h		\
-		nsAReadableString.h		\
 		nsASingleFragmentString.h	\
 		nsAString.h			\
 		nsAStringGenerator.h		\
-		nsAWritableString.h		\
 		nsBufferHandle.h		\
 		nsBufferHandleUtils.h		\
 		nsCharTraits.h			\

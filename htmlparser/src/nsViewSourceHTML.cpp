@@ -180,15 +180,15 @@ public:
     mIndirectString=0;
   }
   
-  void SetIndirectString(const nsAReadableString& aString) {
+  void SetIndirectString(const nsAString& aString) {
     mIndirectString=&aString;
   }
 
-  virtual const nsAReadableString& GetStringValue(void){
-    return (nsAReadableString&)*mIndirectString;
+  virtual const nsAString& GetStringValue(void){
+    return (const nsAString&)*mIndirectString;
   }
 
-  const nsAReadableString* mIndirectString;
+  const nsAString* mIndirectString;
 };
 
 
@@ -830,7 +830,7 @@ PRBool CViewSourceHTML::CanContain(PRInt32 aParent,PRInt32 aChild) const{
  * become useful.
  */
 NS_IMETHODIMP
-CViewSourceHTML::StringTagToIntTag(const nsAReadableString &aTag,
+CViewSourceHTML::StringTagToIntTag(const nsAString &aTag,
                                    PRInt32* aIntTag) const
 {
   *aIntTag = nsHTMLTags::LookupTag(aTag);
@@ -850,7 +850,7 @@ CViewSourceHTML::IntTagToStringTag(PRInt32 aIntTag) const
 }
 
 NS_IMETHODIMP
-CViewSourceHTML::ConvertEntityToUnicode(const nsAReadableString& aEntity,
+CViewSourceHTML::ConvertEntityToUnicode(const nsAString& aEntity,
                                         PRInt32* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);
@@ -906,7 +906,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
           theContext.mTokenNode.AddAttribute(theToken);  //and add it to the node.
 
           CAttributeToken* theAttrToken=(CAttributeToken*)theToken;
-          const nsAReadableString& theKey=theAttrToken->GetKey();
+          const nsAString& theKey=theAttrToken->GetKey();
 
           result=WriteTag(mKey,theKey,0,PR_FALSE);
           const nsAString& theValue=theAttrToken->GetValue();
@@ -930,7 +930,7 @@ nsresult CViewSourceHTML::WriteAttributes(PRInt32 attrCount) {
  *  @param   
  *  @return  result status
  */
-nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAReadableString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
+nsresult CViewSourceHTML::WriteTag(PRInt32 aTagType,const nsAString & aText,PRInt32 attrCount,PRBool aNewlineRequired) {
   static nsString       theString;
 
   nsresult result=NS_OK;
@@ -1044,7 +1044,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
       {
         mTagCount++;
 
-        const nsAReadableString& startValue = aToken->GetStringValue();
+        const nsAString& startValue = aToken->GetStringValue();
         result=WriteTag(mStartTag,startValue,aToken->GetAttributeCount(),PR_TRUE);
 
         if((ePlainText!=mDocType) && mParser && (NS_OK==result)) {
@@ -1058,7 +1058,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
         if(theParent==theChild) {
           mTags.Truncate(mTags.Length()-1);
         }
-        const nsAReadableString& endValue = aToken->GetStringValue();
+        const nsAString& endValue = aToken->GetStringValue();
         result=WriteTag(mEndTag,endValue,0,PR_TRUE);
       }
       break;
@@ -1095,14 +1095,14 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_doctypeDecl:
       {
-        const nsAReadableString& doctypeValue = aToken->GetStringValue();
+        const nsAString& doctypeValue = aToken->GetStringValue();
         result=WriteTag(mDocTypeTag,doctypeValue,0,PR_TRUE);
       }
       break;
 
     case eToken_newline:
       {
-        const nsAReadableString& newlineValue = aToken->GetStringValue();
+        const nsAString& newlineValue = aToken->GetStringValue();
         mLineNumber++; 
         result=WriteTag(mText,newlineValue,0,PR_FALSE);
         mTokenCount++;
@@ -1114,7 +1114,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_whitespace:
       {
-        const nsAReadableString& wsValue = aToken->GetStringValue();
+        const nsAString& wsValue = aToken->GetStringValue();
         result=WriteTag(mText,wsValue,0,PR_FALSE);
         mTokenCount++;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&
@@ -1129,7 +1129,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
 
     case eToken_text:
       {
-        const nsAReadableString& str = aToken->GetStringValue();         
+        const nsAString& str = aToken->GetStringValue();         
         result=WriteTag(mText,str,aToken->GetAttributeCount(),PR_TRUE);
         mTokenCount++;
         if (NS_VIEWSOURCE_TOKENS_PER_BLOCK > 0 &&

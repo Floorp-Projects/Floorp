@@ -463,7 +463,7 @@ NS_IMPL_RELEASE(nsJSContext)
 
 
 NS_IMETHODIMP
-nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
+nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      void *aScopeObject,
                                      nsIPrincipal *aPrincipal,
                                      const char *aURL,
@@ -582,13 +582,13 @@ nsJSContext::EvaluateStringWithValue(const nsAReadableString& aScript,
 }
 
 NS_IMETHODIMP
-nsJSContext::EvaluateString(const nsAReadableString& aScript,
+nsJSContext::EvaluateString(const nsAString& aScript,
                             void *aScopeObject,
                             nsIPrincipal *aPrincipal,
                             const char *aURL,
                             PRUint32 aLineNo,
                             const char* aVersion,
-                            nsAWritableString& aRetValue,
+                            nsAString& aRetValue,
                             PRBool* aIsUndefined)
 {
   if (!mScriptsEnabled) {
@@ -782,7 +782,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
 NS_IMETHODIMP
 nsJSContext::ExecuteScript(void* aScriptObject,
                            void *aScopeObject,
-                           nsAWritableString* aRetValue,
+                           nsAString* aRetValue,
                            PRBool* aIsUndefined)
 {
   if (!mScriptsEnabled) {
@@ -878,7 +878,7 @@ AtomToEventHandlerName(nsIAtom *aName, char *charName, PRUint32 charNameSize)
 
 NS_IMETHODIMP
 nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
-                                 const nsAReadableString& aBody,
+                                 const nsAString& aBody,
                                  PRBool aShared, void** aHandler)
 {
   JSPrincipals *jsprin = nsnull;
@@ -929,7 +929,7 @@ nsJSContext::CompileFunction(void* aTarget,
                              const nsCString& aName,
                              PRUint32 aArgCount,
                              const char** aArgArray,
-                             const nsAReadableString& aBody,
+                             const nsAString& aBody,
                              const char* aURL,
                              PRUint32 aLineNo,
                              PRBool aShared,

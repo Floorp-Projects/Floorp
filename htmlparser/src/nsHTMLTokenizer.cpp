@@ -626,8 +626,8 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,CStartToken* aToken,
       //start token it was empty.
       if(NS_SUCCEEDED(result)) {
         PRBool isUsableAttr = PR_TRUE;
-        const nsAReadableString& key=theToken->GetKey();
-        const nsAReadableString& text=theToken->GetValue();
+        const nsAString& key=theToken->GetKey();
+        const nsAString& text=theToken->GetValue();
          // support XML like syntax to fix bugs like 44186
         if(!key.IsEmpty() && kForwardSlash==key.First() && text.IsEmpty()) {
           isUsableAttr = PRBool(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE); // Fix bug 103095

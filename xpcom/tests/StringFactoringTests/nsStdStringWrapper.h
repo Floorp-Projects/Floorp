@@ -41,8 +41,8 @@
 
 #include <string>
 
-#ifndef nsAWritableString_h___
-#include "nsAWritableString.h"
+#ifndef nsAString_h___
+#include "nsAString.h"
 #endif
 
 
@@ -56,7 +56,7 @@ class nsStringAllocator
 
 template < class CharT, class TraitsT = nsCharTraits<CharT>, class AllocatorT = nsStringAllocator<CharT> >
 class basic_nsStdStringWrapper
-      : public basic_nsAWritableString<CharT>
+      : public basic_nsAString<CharT>
     /*
       ...
     */
@@ -100,7 +100,7 @@ class basic_nsStdStringWrapper
 #endif
 
       explicit
-      basic_nsStdStringWrapper( const basic_nsAReadableString<CharT>& str )
+      basic_nsStdStringWrapper( const basic_nsAString<CharT>& str )
         {
           Assign(str);
         }
@@ -158,7 +158,7 @@ class basic_nsStdStringWrapper
         }
 
     protected:
-      virtual void do_AssignFromReadable( const basic_nsAReadableString<CharT>& );
+      virtual void do_AssignFromReadable( const basic_nsAString<CharT>& );
 
     // ...
   };
@@ -216,14 +216,14 @@ basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::GetWritableFragment( nsWri
 
 template <class CharT, class TraitsT, class AllocatorT>
 void
-basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::do_AssignFromReadable( const basic_nsAReadableString<CharT>& rhs )
+basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT>::do_AssignFromReadable( const basic_nsAString<CharT>& rhs )
   {
     typedef basic_nsStdStringWrapper<CharT, TraitsT, AllocatorT> this_t;
 
     if ( SameImplementation(*this, rhs) )
       mRawString = NS_STATIC_CAST(this_t, rhs).mRawString;
     else
-      basic_nsAWritableString<CharT>::do_AssignFromReadable(rhs);
+      basic_nsAString<CharT>::do_AssignFromReadable(rhs);
   }
 
 

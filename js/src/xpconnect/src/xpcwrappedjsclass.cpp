@@ -397,7 +397,7 @@ xpcProperty::xpcProperty(const PRUnichar* aName, PRUint32 aNameLen,
 }
 
 /* readonly attribute AString name; */
-NS_IMETHODIMP xpcProperty::GetName(nsAWritableString & aName)
+NS_IMETHODIMP xpcProperty::GetName(nsAString & aName)
 {
     aName.Assign(mName);
     return NS_OK;

@@ -66,7 +66,7 @@ nsParserService::HTMLCaseSensitiveAtomTagToId(nsIAtom* aAtom,
 }
 
 NS_IMETHODIMP
-nsParserService::HTMLStringTagToId(const nsAReadableString &aTagName,
+nsParserService::HTMLStringTagToId(const nsAString &aTagName,
                                    PRInt32* aId) const
 {
   *aId = nsHTMLTags::LookupTag(aTagName);
@@ -84,7 +84,7 @@ nsParserService::HTMLIdToStringTag(PRInt32 aId,
 }
 
 NS_IMETHODIMP
-nsParserService::HTMLConvertEntityToUnicode(const nsAReadableString& aEntity,
+nsParserService::HTMLConvertEntityToUnicode(const nsAString& aEntity,
                                             PRInt32* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);

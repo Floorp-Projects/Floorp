@@ -216,12 +216,12 @@ public:
      * Give rest of world access to our tag enums, so that CanContain(), etc,
      * become useful.
      */
-    NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag,
+    NS_IMETHOD StringTagToIntTag(const nsAString &aTag,
                                  PRInt32* aIntTag) const = 0;
    
     NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const = 0;
     
-    NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity,
+    NS_IMETHOD ConvertEntityToUnicode(const nsAString& aEntity,
                                       PRInt32* aUnicode) const = 0;
     
     NS_IMETHOD_(PRBool) IsBlockElement(PRInt32 aTagID,
@@ -245,9 +245,9 @@ public:
     NS_IMETHOD_(PRBool) CanContain(PRInt32 aParent,PRInt32 aChild) const;\
     NS_IMETHOD_(PRBool) IsContainer(PRInt32 aTag) const;\
     NS_IMETHOD_(void)  Terminate();\
-    NS_IMETHOD StringTagToIntTag(const nsAReadableString &aTag, PRInt32* aIntTag) const ;\
+    NS_IMETHOD StringTagToIntTag(const nsAString &aTag, PRInt32* aIntTag) const ;\
     NS_IMETHOD_(const PRUnichar *) IntTagToStringTag(PRInt32 aIntTag) const ;\
-    NS_IMETHOD ConvertEntityToUnicode(const nsAReadableString& aEntity, PRInt32* aUnicode) const ;\
+    NS_IMETHOD ConvertEntityToUnicode(const nsAString& aEntity, PRInt32* aUnicode) const ;\
     NS_IMETHOD_(PRBool)  IsBlockElement(PRInt32 aTagID,PRInt32 aParentID) const;\
     NS_IMETHOD_(PRBool)  IsInlineElement(PRInt32 aTagID,PRInt32 aParentID) const;
 #endif /* nsIDTD_h___ */

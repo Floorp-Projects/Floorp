@@ -36,14 +36,14 @@
 /*
  * Infrastructure for sharing DOMString data with JSStrings.
  *
- * Importing an nsAReadableString into JS:
+ * Importing an nsAString into JS:
  * If possible (GetSharedBufferHandle works) use the external string support in
  * JS to create a JSString that points to the readable's buffer.  We keep a
  * reference to the buffer handle until the JSString is finalized.
  *
  * Exporting a JSString as an nsAReadable:
  * Wrap the JSString with a root-holding XPCJSReadableStringWrapper, which roots
- * the string and exposes its buffer via the nsAReadableString interface, as
+ * the string and exposes its buffer via the nsAString interface, as
  * well as providing refcounting support.
  */
 
@@ -258,7 +258,7 @@ XPCStringConvert::ShutdownDOMStringFinalizer()
 // static
 JSString *
 XPCStringConvert::ReadableToJSString(JSContext *cx,
-                                     const nsAReadableString &readable)
+                                     const nsAString &readable)
 {
     const nsSharedBufferHandle<PRUnichar> *handle;
     handle = readable.GetSharedBufferHandle();

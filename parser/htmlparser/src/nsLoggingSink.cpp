@@ -575,7 +575,7 @@ nsLoggingSink::WriteAttributes(const nsIParserNode& aNode) {
   for (PRInt32 i = 0; i < ac; i++) {
     char* key=nsnull;
     char* value=nsnull;
-    const nsAReadableString& k = aNode.GetKeyAt(i);
+    const nsAString& k = aNode.GetKeyAt(i);
     const nsAString& v = aNode.GetValueAt(i);
 
     GetNewCString(k, &key);
@@ -697,7 +697,7 @@ nsLoggingSink::LeafNode(const nsIParserNode& aNode)
 }
 
 nsresult 
-nsLoggingSink::QuoteText(const nsAReadableString& aValue, nsString& aResult) {
+nsLoggingSink::QuoteText(const nsAString& aValue, nsString& aResult) {
   aResult.Truncate();
     /*
       if you're stepping through the string anyway, why not use iterators instead of forcing the string to copy?
@@ -734,7 +734,7 @@ nsLoggingSink::QuoteText(const nsAReadableString& aValue, nsString& aResult) {
  * @param aResult - String coverted to char*.
  */
 nsresult
-nsLoggingSink::GetNewCString(const nsAReadableString& aValue, char** aResult)
+nsLoggingSink::GetNewCString(const nsAString& aValue, char** aResult)
 {
   nsresult result=NS_OK;
   nsAutoString temp;

@@ -477,7 +477,7 @@ nsXPCWrappedJS::GetEnumerator(nsISimpleEnumerator * *aEnumerate)
 
 /* nsIVariant getProperty (in AString name); */
 NS_IMETHODIMP 
-nsXPCWrappedJS::GetProperty(const nsAReadableString & name, nsIVariant **_retval)
+nsXPCWrappedJS::GetProperty(const nsAString & name, nsIVariant **_retval)
 {
     XPCCallContext ccx(NATIVE_CALLER);
     if(!ccx.IsValid())

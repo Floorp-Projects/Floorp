@@ -1761,7 +1761,7 @@ jsdStackFrame::GetThisValue(jsdIValue **_rval)
 
 
 NS_IMETHODIMP
-jsdStackFrame::Eval (const nsAReadableString &bytes, const char *fileName,
+jsdStackFrame::Eval (const nsAString &bytes, const char *fileName,
                      PRUint32 line, jsdIValue **result, PRBool *_rval)
 {
     ASSERT_VALID_EPHEMERAL;

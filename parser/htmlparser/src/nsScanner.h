@@ -65,7 +65,7 @@ class nsScannerString : public nsSlidingString {
                     PRUnichar* aDataEnd, 
                     PRUnichar* aStorageEnd);
 
-    virtual void UngetReadable(const nsAReadableString& aReadable, const nsReadingIterator<PRUnichar>& aCurrentPosition) { InsertReadable(aReadable,aCurrentPosition); }
+    virtual void UngetReadable(const nsAString& aReadable, const nsReadingIterator<PRUnichar>& aCurrentPosition) { InsertReadable(aReadable,aCurrentPosition); }
     virtual void ReplaceCharacter(nsReadingIterator<PRUnichar>& aPosition,
                                   PRUnichar aChar);
 };
@@ -141,7 +141,7 @@ class nsScanner {
        */
       nsresult Peek(PRUnichar& ch, PRUint32 aOffset=0);
 
-      nsresult Peek(nsAWritableString& aStr, PRInt32 aNumChars);
+      nsresult Peek(nsAString& aStr, PRInt32 aNumChars);
 
       /**
        *  Skip over chars as long as they're in aSkipSet
@@ -227,7 +227,7 @@ class nsScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult ReadUntil(nsAWritableString& aString,
+      nsresult ReadUntil(nsAString& aString,
                          PRUnichar aTerminal,
                          PRBool addTerminal);
 
@@ -241,7 +241,7 @@ class nsScanner {
        *  @param   addTerminal tells us whether to append terminal to aString
        *  @return  error code
        */
-      nsresult ReadUntil(nsAWritableString& aString,
+      nsresult ReadUntil(nsAString& aString,
                          const nsReadEndCondition& aEndCondition, 
                          PRBool addTerminal);
 
@@ -293,7 +293,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      PRBool UngetReadable(const nsAReadableString& aBuffer);
+      PRBool UngetReadable(const nsAString& aBuffer);
 
       /**
        *  
@@ -302,7 +302,7 @@ class nsScanner {
        *  @param   
        *  @return  
        */
-      nsresult Append(const nsAReadableString& aBuffer);
+      nsresult Append(const nsAString& aBuffer);
 
       /**
        *  

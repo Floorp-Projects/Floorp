@@ -97,7 +97,7 @@ HistoryImpl::GetLength(PRInt32* aLength)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
+HistoryImpl::GetCurrent(nsAString& aCurrent)
 {
   PRInt32 curIndex=0;
   nsCAutoString curURL;
@@ -126,7 +126,7 @@ HistoryImpl::GetCurrent(nsAWritableString& aCurrent)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
+HistoryImpl::GetPrevious(nsAString& aPrevious)
 {
   PRInt32 curIndex;
   nsCAutoString prevURL;
@@ -155,7 +155,7 @@ HistoryImpl::GetPrevious(nsAWritableString& aPrevious)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GetNext(nsAWritableString& aNext)
+HistoryImpl::GetNext(nsAString& aNext)
 {
   PRInt32 curIndex;
   nsCAutoString nextURL;
@@ -242,7 +242,7 @@ HistoryImpl::GoIndex(PRInt32 aDelta)
 }
 
 NS_IMETHODIMP
-HistoryImpl::GoUri(const nsAReadableString& aUriSubstring)
+HistoryImpl::GoUri(const nsAString& aUriSubstring)
 {
   nsCOMPtr<nsISHistory> session_history;
 
@@ -339,7 +339,7 @@ HistoryImpl::Go()
 }
 
 NS_IMETHODIMP
-HistoryImpl::Item(PRUint32 aIndex, nsAWritableString& aReturn)
+HistoryImpl::Item(PRUint32 aIndex, nsAString& aReturn)
 {
   aReturn.Truncate();
 

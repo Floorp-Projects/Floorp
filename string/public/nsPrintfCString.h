@@ -44,7 +44,7 @@
 
 
   /**
-   * |nsPrintfCString| lets you use a formated |printf| string as an |nsAReadableCString|.
+   * |nsPrintfCString| lets you use a formated |printf| string as an |const nsACString|.
    *
    *   myCStr += nsPrintfCString("%f", 13.917);
    *     // ...a general purpose substitute for |AppendFloat|

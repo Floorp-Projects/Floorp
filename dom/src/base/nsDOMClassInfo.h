@@ -418,7 +418,7 @@ protected:
   {
   }
 
-  virtual nsresult GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult) = 0;
 
 public:
@@ -446,7 +446,7 @@ protected:
                              nsISupports **aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
-  virtual nsresult GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult);
 
 public:
@@ -476,7 +476,7 @@ protected:
                              nsISupports **aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
-  virtual nsresult GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult);
 
 public:
@@ -502,7 +502,7 @@ protected:
 
   // Override nsNamedArraySH::GetNamedItem() since our NamedItem() can
   // return either a nsIDOMNode or a nsIHTMLCollection
-  virtual nsresult GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult);
 
 public:
@@ -796,7 +796,7 @@ protected:
                              nsISupports **aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
-  virtual nsresult GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult);
 
 public:
@@ -826,7 +826,7 @@ protected:
                              nsISupports **aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
-  virtual nsresult GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult);
 
 public:
@@ -856,7 +856,7 @@ protected:
                              nsISupports **aResult);
 
   // Override nsNamedArraySH::GetNamedItem()
-  virtual nsresult GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+  virtual nsresult GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult);
 
 public:
@@ -881,7 +881,7 @@ protected:
   }
 
   virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
-                               nsAWritableString& aResult) = 0;
+                               nsAString& aResult) = 0;
 
 public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -903,7 +903,7 @@ protected:
   }
 
   virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
-                               nsAWritableString& aResult);
+                               nsAString& aResult);
 
 public:
   NS_IMETHOD GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
@@ -930,7 +930,7 @@ protected:
   }
 
   virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
-                               nsAWritableString& aResult);
+                               nsAString& aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)
@@ -980,7 +980,7 @@ protected:
   }
 
   virtual nsresult GetStringAt(nsISupports *aNative, PRInt32 aIndex,
-                               nsAWritableString& aResult);
+                               nsAString& aResult);
 
 public:
   static nsIClassInfo *doCreate(nsDOMClassInfoData* aData)

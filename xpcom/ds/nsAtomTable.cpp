@@ -202,7 +202,7 @@ PermanentAtomImpl::IsPermanent()
   return PR_TRUE;
 }
 
-void* AtomImpl::operator new ( size_t size, const nsAReadableString& aString )
+void* AtomImpl::operator new ( size_t size, const nsAString& aString )
 {
     /*
       Note: since the |size| will initially also include the |PRUnichar| member
@@ -231,7 +231,7 @@ void* PermanentAtomImpl::operator new ( size_t size, AtomImpl* aAtom ) {
 }
 
 NS_IMETHODIMP 
-AtomImpl::ToString(nsAWritableString& aBuf) /*FIX: const */
+AtomImpl::ToString(nsAString& aBuf) /*FIX: const */
 {
   aBuf.Assign(mString);
   return NS_OK;

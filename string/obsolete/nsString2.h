@@ -37,40 +37,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* nsString2.h --- rickg's original strings of 2-byte chars, |nsString| and |nsAutoString|;
-    these classes will be replaced by the new shared-buffer string (see bug #53065)
+/*
+ * nsString2.h --- rickg's original strings of 2-byte chars, |nsString|
+ * and |nsAutoString|; these classes will be replaced by the new
+ * shared-buffer string (see bug #53065)
  */
 
-
-
-#ifndef _nsString_
-#define _nsString_
-
-/***********************************************************************
-  MODULE NOTES:
-
-  See nsStr.h for a more general description of string classes.
-
-  This version of the nsString class offers many improvements over the
-  original version:
-    1. Wide and narrow chars
-    2. Allocators
-    3. Much smarter autostrings
-    4. Subsumable strings
- ***********************************************************************/
+#ifndef nsString2_h__
+#define nsString2_h__
 
 #include "prtypes.h"
 #include "nscore.h"
 #include <stdio.h>
-#include "nsString.h"
-#include "nsIAtom.h"
-#include "nsStr.h"
-#include "nsCRT.h"
+
+#ifndef nsAString_h__
+#include "nsAString.h"
+#endif
 
 #ifndef nsAFlatString_h___
 #include "nsAFlatString.h"
 #endif
+
+#ifndef nsLiteralString_h__
+#include "nsLiteralString.h"
+#endif
+
+#ifndef nsDependentSubstring_h__
+#include "nsDependentSubstring.h"
+#endif
+
+#ifndef nsPromiseFlatString_h__
+#include "nsPromiseFlatString.h"
+#endif
+
+#ifndef nsXPIDLString_h__
 #include "nsXPIDLString.h"
+#endif
+
+#include "nsIAtom.h"
+#include "nsStr.h"
+#include "nsCRT.h"
+
 
 class UTF8traits
   {
@@ -652,6 +659,4 @@ class ConvertUTF8toUCS2
       buffer_type* mBuffer;
   };
 
-#endif
-
-
+#endif /* !defined(nsString2_h__) */

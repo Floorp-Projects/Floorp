@@ -307,7 +307,7 @@ NS_IMETHODIMP nsTestVariant::CopyVariantAsTypeTwice(nsIVariant *value, PRUint16 
 }
 
 /* nsIVariant getNamedProperty (in nsISupports aBag, in AString aName); */
-NS_IMETHODIMP nsTestVariant::GetNamedProperty(nsISupports *aObj, const nsAReadableString & aName, nsIVariant **_retval)
+NS_IMETHODIMP nsTestVariant::GetNamedProperty(nsISupports *aObj, const nsAString & aName, nsIVariant **_retval)
 {
     nsresult rv;
     nsCOMPtr<nsIPropertyBag> bag = do_QueryInterface(aObj, &rv);

@@ -199,7 +199,7 @@ nsHTMLEntities::EntityToUnicode(const nsCString& aEntity)
 
 
 PRInt32 
-nsHTMLEntities::EntityToUnicode(const nsAReadableString& aEntity) {
+nsHTMLEntities::EntityToUnicode(const nsAString& aEntity) {
   nsCAutoString theEntity; theEntity.AssignWithConversion(aEntity);
   if(';'==theEntity.Last()) {
     theEntity.Truncate(theEntity.Length()-1);

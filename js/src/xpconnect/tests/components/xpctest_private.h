@@ -47,7 +47,7 @@
 #include "nsIGenericFactory.h"
 #include "nscore.h"
 #include "nsCOMPtr.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 #include "nsVariant.h"
 #include <stdio.h>
 

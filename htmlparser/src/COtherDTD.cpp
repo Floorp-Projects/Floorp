@@ -903,7 +903,7 @@ PRBool COtherDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  * become useful.
  */ 
 NS_IMETHODIMP
-COtherDTD::StringTagToIntTag(const nsAReadableString &aTag,
+COtherDTD::StringTagToIntTag(const nsAString &aTag,
                              PRInt32* aIntTag) const
 {
   *aIntTag = nsHTMLTags::LookupTag(aTag);
@@ -923,7 +923,7 @@ COtherDTD::IntTagToStringTag(PRInt32 aIntTag) const
 }  
 
 NS_IMETHODIMP
-COtherDTD::ConvertEntityToUnicode(const nsAReadableString& aEntity,
+COtherDTD::ConvertEntityToUnicode(const nsAString& aEntity,
                                   PRInt32* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);

@@ -40,7 +40,7 @@
 //#define DEBUG_VOIDARRAY 1
 
 #include "nscore.h"
-#include "nsAWritableString.h"
+#include "nsAString.h"
 
 class nsISizeOfHandler;
 
@@ -220,21 +220,21 @@ public:
     return nsVoidArray::Count();
   }
 
-  void StringAt(PRInt32 aIndex, nsAWritableString& aString) const;
+  void StringAt(PRInt32 aIndex, nsAString& aString) const;
   nsString* StringAt(PRInt32 aIndex) const;
   nsString* operator[](PRInt32 aIndex) const { return StringAt(aIndex); }
 
-  PRInt32 IndexOf(const nsAReadableString& aPossibleString) const;
+  PRInt32 IndexOf(const nsAString& aPossibleString) const;
 
-  PRBool InsertStringAt(const nsAReadableString& aString, PRInt32 aIndex);
+  PRBool InsertStringAt(const nsAString& aString, PRInt32 aIndex);
 
-  PRBool ReplaceStringAt(const nsAReadableString& aString, PRInt32 aIndex);
+  PRBool ReplaceStringAt(const nsAString& aString, PRInt32 aIndex);
 
-  PRBool AppendString(const nsAReadableString& aString) {
+  PRBool AppendString(const nsAString& aString) {
     return InsertStringAt(aString, Count());
   }
 
-  PRBool RemoveString(const nsAReadableString& aString);
+  PRBool RemoveString(const nsAString& aString);
   PRBool RemoveStringAt(PRInt32 aIndex);
   void   Clear(void);
 

@@ -1800,7 +1800,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
                 case nsXPTType::T_DOMSTRING:
                     if(paramInfo.IsDipper())
                     {
-                        // Is an 'out' DOMString. Make a new nsAWritableString
+                        // Is an 'out' DOMString. Make a new nsAString
                         // now and then continue in order to skip the call to
                         // JSData2Native
 
@@ -1827,7 +1827,7 @@ XPCWrappedNative::CallMethod(XPCCallContext& ccx,
 
                     // Is an 'in' DOMString. Set 'useAllocator' to indicate
                     // that JSData2Native should allocate a new
-                    // nsAReadableString.
+                    // nsAString.
                     dp->SetValIsDOMString();
                     useAllocator = JS_TRUE;
                     break;

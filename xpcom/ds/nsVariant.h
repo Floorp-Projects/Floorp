@@ -121,7 +121,7 @@ public:
     static nsresult ConvertToChar(const nsDiscriminatedUnion& data, char *_retval);
     static nsresult ConvertToWChar(const nsDiscriminatedUnion& data, PRUnichar *_retval);
     static nsresult ConvertToID(const nsDiscriminatedUnion& data, nsID * _retval);
-    static nsresult ConvertToAString(const nsDiscriminatedUnion& data, nsAWritableString & _retval);
+    static nsresult ConvertToAString(const nsDiscriminatedUnion& data, nsAString & _retval);
     static nsresult ConvertToAUTF8String(const nsDiscriminatedUnion& data, nsAUTF8String & _retval);
     static nsresult ConvertToACString(const nsDiscriminatedUnion& data, nsACString & _retval);
     static nsresult ConvertToString(const nsDiscriminatedUnion& data, char **_retval);
@@ -148,7 +148,7 @@ public:
     static nsresult SetFromChar(nsDiscriminatedUnion* data, char aValue);
     static nsresult SetFromWChar(nsDiscriminatedUnion* data, PRUnichar aValue);
     static nsresult SetFromID(nsDiscriminatedUnion* data, const nsID & aValue);
-    static nsresult SetFromAString(nsDiscriminatedUnion* data, const nsAReadableString & aValue);
+    static nsresult SetFromAString(nsDiscriminatedUnion* data, const nsAString & aValue);
     static nsresult SetFromAUTF8String(nsDiscriminatedUnion* data, const nsAUTF8String & aValue);
     static nsresult SetFromACString(nsDiscriminatedUnion* data, const nsACString & aValue);
     static nsresult SetFromString(nsDiscriminatedUnion* data, const char *aValue);

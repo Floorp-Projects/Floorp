@@ -697,8 +697,8 @@ PRBool DoesRequireBody(CToken* aToken,nsITokenizer* aTokenizer) {
         PRInt32 ac=aToken->GetAttributeCount();
         for(PRInt32 i=0; i<ac; i++) {
           CAttributeToken* attr=NS_STATIC_CAST(CAttributeToken*,aTokenizer->GetTokenAt(i));
-          const nsAReadableString& name=attr->GetKey();
-          const nsAReadableString& value=attr->GetValue();
+          const nsAString& name=attr->GetKey();
+          const nsAString& value=attr->GetValue();
 
           if((name.Equals(NS_LITERAL_STRING("type")) || 
               name.Equals(NS_LITERAL_STRING("TYPE")))    
@@ -2188,7 +2188,7 @@ nsresult CNavDTD::HandleCommentToken(CToken* aToken) {
   nsresult  result=NS_OK;
 
   CCommentToken* theToken = NS_STATIC_CAST(CCommentToken*,aToken);
-  const nsAReadableString& theComment = theToken->GetStringValue();
+  const nsAString& theComment = theToken->GetStringValue();
   mLineNumber += CountCharInReadable(theComment, PRUnichar(kNewLine));
 
   nsCParserNode* theNode=mNodeAllocator.CreateNode(aToken,mLineNumber,mTokenAllocator);
@@ -2533,7 +2533,7 @@ PRBool CNavDTD::CanContain(PRInt32 aParent,PRInt32 aChild) const {
  * Give rest of world access to our tag enums, so that CanContain(), etc,
  * become useful.
  */
-NS_IMETHODIMP CNavDTD::StringTagToIntTag(const nsAReadableString &aTag,
+NS_IMETHODIMP CNavDTD::StringTagToIntTag(const nsAString &aTag,
                                          PRInt32* aIntTag) const
 {
   *aIntTag = nsHTMLTags::LookupTag(aTag);
@@ -2553,7 +2553,7 @@ CNavDTD::IntTagToStringTag(PRInt32 aIntTag) const
 }
 
 NS_IMETHODIMP
-CNavDTD::ConvertEntityToUnicode(const nsAReadableString& aEntity,
+CNavDTD::ConvertEntityToUnicode(const nsAString& aEntity,
                                 PRInt32* aUnicode) const
 {
   *aUnicode = nsHTMLEntities::EntityToUnicode(aEntity);

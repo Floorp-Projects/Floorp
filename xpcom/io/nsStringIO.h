@@ -39,7 +39,7 @@
 #ifndef nsStringIO_h___
 #define nsStringIO_h___
 
-#include "nsAReadableString.h"
+#include "nsAString.h"
 #include <stdio.h>
 
 
@@ -66,7 +66,7 @@ class nsFileCharSink
 template <class CharT>
 inline
 void
-fprint_string( FILE* aFile, const basic_nsAReadableString<CharT>& aString )
+fprint_string( FILE* aFile, const basic_nsAString<CharT>& aString )
   {
     nsReadingIterator<CharT> fromBegin, fromEnd;
     nsFileCharSink<CharT> toBegin(aFile);
@@ -77,7 +77,7 @@ fprint_string( FILE* aFile, const basic_nsAReadableString<CharT>& aString )
 template <class CharT>
 inline
 void
-print_string( const basic_nsAReadableString<CharT>& aString )
+print_string( const basic_nsAString<CharT>& aString )
   {
     fprint_string(stdout, aString);
   }

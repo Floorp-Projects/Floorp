@@ -4220,7 +4220,7 @@ nsNamedNodeMapSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 }
 
 nsresult
-nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+nsNamedNodeMapSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                nsISupports **aResult)
 {
   nsCOMPtr<nsIDOMNamedNodeMap> map(do_QueryInterface(aNative));
@@ -4254,7 +4254,7 @@ nsHTMLCollectionSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsresult
 nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative,
-                                 nsAReadableString& aName,
+                                 const nsAString& aName,
                                  nsISupports **aResult)
 {
   nsCOMPtr<nsIDOMHTMLCollection> collection(do_QueryInterface(aNative));
@@ -4273,7 +4273,7 @@ nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative,
 
 nsresult
 nsFormControlListSH::GetNamedItem(nsISupports *aNative,
-                                  nsAReadableString& aName,
+                                  const nsAString& aName,
                                   nsISupports **aResult)
 {
   nsCOMPtr<nsIDOMNSHTMLFormControlList> list(do_QueryInterface(aNative));
@@ -5271,7 +5271,7 @@ nsPluginSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 }
 
 nsresult
-nsPluginSH::GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+nsPluginSH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
                          nsISupports **aResult)
 {
   nsCOMPtr<nsIDOMPlugin> plugin(do_QueryInterface(aNative));
@@ -5305,7 +5305,7 @@ nsPluginArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 }
 
 nsresult
-nsPluginArraySH::GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+nsPluginArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
                               nsISupports **aResult)
 {
   nsCOMPtr<nsIDOMPluginArray> array(do_QueryInterface(aNative));
@@ -5339,7 +5339,7 @@ nsMimeTypeArraySH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 }
 
 nsresult
-nsMimeTypeArraySH::GetNamedItem(nsISupports *aNative, nsAReadableString& aName,
+nsMimeTypeArraySH::GetNamedItem(nsISupports *aNative, const nsAString& aName,
                                 nsISupports **aResult)
 {
   nsCOMPtr<nsIDOMMimeTypeArray> array(do_QueryInterface(aNative));
@@ -5422,7 +5422,7 @@ nsHistorySH::GetProperty(nsIXPConnectWrappedNative *wrapper, JSContext *cx,
 
 nsresult
 nsHistorySH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
-                         nsAWritableString& aResult)
+                         nsAString& aResult)
 {
   if (aIndex < 0) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -5438,7 +5438,7 @@ nsHistorySH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
 
 nsresult
 nsMediaListSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
-                           nsAWritableString& aResult)
+                           nsAString& aResult)
 {
   if (aIndex < 0) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;
@@ -5472,7 +5472,7 @@ nsStyleSheetListSH::GetItemAt(nsISupports *aNative, PRUint32 aIndex,
 
 nsresult
 nsCSSStyleDeclSH::GetStringAt(nsISupports *aNative, PRInt32 aIndex,
-                              nsAWritableString& aResult)
+                              nsAString& aResult)
 {
   if (aIndex < 0) {
     return NS_ERROR_DOM_INDEX_SIZE_ERR;

@@ -58,7 +58,7 @@ nsWindowRoot::~nsWindowRoot()
 NS_IMPL_ISUPPORTS4(nsWindowRoot, nsIDOMEventReceiver, nsIChromeEventHandler, nsPIWindowRoot, nsIDOMEventTarget)
 
 NS_IMETHODIMP
-nsWindowRoot::AddEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
+nsWindowRoot::AddEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
   GetListenerManager(getter_AddRefs(manager));
@@ -71,7 +71,7 @@ nsWindowRoot::AddEventListener(const nsAReadableString& aType, nsIDOMEventListen
 }
 
 NS_IMETHODIMP
-nsWindowRoot::RemoveEventListener(const nsAReadableString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
+nsWindowRoot::RemoveEventListener(const nsAString& aType, nsIDOMEventListener* aListener, PRBool aUseCapture)
 {
   nsCOMPtr<nsIEventListenerManager> manager;
   GetListenerManager(getter_AddRefs(manager));

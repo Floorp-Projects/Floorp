@@ -66,7 +66,7 @@ public:
   static PRBool ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
                                         JSContext* aContext, jsval aValue);
 
-  static void ConvertJSValToString(nsAWritableString& aString,
+  static void ConvertJSValToString(nsAString& aString,
                                    JSContext* aContext, jsval aValue);
 
   static PRBool ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,

@@ -212,9 +212,9 @@ class nsParser : public nsIParser,
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(const nsAReadableString& aSourceBuffer,void* aKey,const nsACString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,nsDTDMode aMode=eDTDMode_autodetect);
+    virtual nsresult Parse(const nsAString& aSourceBuffer,void* aKey,const nsACString& aContentType,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE,nsDTDMode aMode=eDTDMode_autodetect);
 
-    virtual nsresult  ParseFragment(const nsAReadableString& aSourceBuffer,
+    virtual nsresult  ParseFragment(const nsAString& aSourceBuffer,
                                     void* aKey,
                                     nsVoidArray& aTagStack,
                                     PRUint32 anInsertPos,
@@ -324,7 +324,7 @@ class nsParser : public nsIParser,
                          nsString& oCharset, 
                          PRInt32& oCharsetSource);
 
-    void SetSinkCharset(nsAWritableString& aCharset);
+    void SetSinkCharset(nsAString& aCharset);
 
     /**
      *  Removes continue parsing events

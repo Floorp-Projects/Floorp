@@ -292,7 +292,7 @@ void nsScanner::Mark() {
  * @update  harishd 01/12/99
  * @return  error code 
  */
-PRBool nsScanner::UngetReadable(const nsAReadableString& aBuffer) {
+PRBool nsScanner::UngetReadable(const nsAString& aBuffer) {
 
   mSlidingBuffer->UngetReadable(aBuffer,mCurrentPosition);
   mSlidingBuffer->BeginReading(mCurrentPosition); // Insertion invalidated our iterators
@@ -309,7 +309,7 @@ PRBool nsScanner::UngetReadable(const nsAReadableString& aBuffer) {
  * @update  gess4/3/98
  * @return  error code 
  */
-nsresult nsScanner::Append(const nsAReadableString& aBuffer) {
+nsresult nsScanner::Append(const nsAString& aBuffer) {
   
   PRUnichar* buffer = ToNewUnicode(aBuffer);
   PRUint32 bufLen = aBuffer.Length();
@@ -527,7 +527,7 @@ nsresult nsScanner::Peek(PRUnichar& aChar, PRUint32 aOffset) {
   return result;
 }
 
-nsresult nsScanner::Peek(nsAWritableString& aStr, PRInt32 aNumChars)
+nsresult nsScanner::Peek(nsAString& aStr, PRInt32 aNumChars)
 {
   if (!mSlidingBuffer) {
     return kEOF;
@@ -1193,7 +1193,7 @@ nsresult nsScanner::ReadWhile(nsString& aString,
  *           the set of INVALID characters
  *  @return  error code
  */
-nsresult nsScanner::ReadUntil(nsAWritableString& aString,
+nsresult nsScanner::ReadUntil(nsAString& aString,
                               const nsReadEndCondition& aEndCondition,
                               PRBool addTerminal)
 {  
@@ -1317,7 +1317,7 @@ nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart,
  *  @param   
  *  @return  error code
  */
-nsresult nsScanner::ReadUntil(nsAWritableString& aString,
+nsresult nsScanner::ReadUntil(nsAString& aString,
                               PRUnichar aTerminalChar,
                               PRBool addTerminal)
 {

@@ -324,7 +324,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
 
         case nsXPTType::T_DOMSTRING:
             {
-                const nsAReadableString* p = *((const nsAReadableString**)s);
+                const nsAString* p = *((const nsAString**)s);
                 if(!p)
                     break;
 
@@ -378,7 +378,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
             }
         case nsXPTType::T_UTF8STRING:
             {                          
-                const nsAReadableCString* cString = *((const nsAReadableCString**)s);
+                const nsACString* cString = *((const nsACString**)s);
 
                 if(!cString)
                     break;
@@ -407,7 +407,7 @@ XPCConvert::NativeData2JS(XPCCallContext& ccx, jsval* d, const void* s,
             }
         case nsXPTType::T_CSTRING:
             {                          
-                const nsAReadableCString* cString = *((const nsAReadableCString**)s);
+                const nsACString* cString = *((const nsACString**)s);
 
                 if(!cString)
                     break;
@@ -716,7 +716,7 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     if(isNewString && ! wrapper->GetSharedBufferHandle())
                         return JS_FALSE;
 
-                    *((nsAReadableString**)d) = wrapper;
+                    *((const nsAString**)d) = wrapper;
                 }
                 else if(JSVAL_IS_NULL(s))
                 {
@@ -725,19 +725,19 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
                     if(!wrapper)
                         return JS_FALSE;
 
-                    *((nsAReadableString**)d) = wrapper;
+                    *((const nsAString**)d) = wrapper;
                 }
                 else
                 {
-                    nsAReadableString *rs = new nsAutoString(chars, length);
+                    const nsAString *rs = new nsAutoString(chars, length);
                     if(!rs)
                         return JS_FALSE;
-                    *((nsAReadableString**)d) = rs;
+                    *((const nsAString**)d) = rs;
                 }
             }
             else
             {
-                nsAWritableString* ws = *((nsAWritableString**)d);
+                nsAString* ws = *((nsAString**)d);
 
                 if(JSVAL_IS_NULL(s) || (!isDOMString && JSVAL_IS_VOID(s)))
                 {
@@ -880,11 +880,11 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(useAllocator)
             {                
-                nsAReadableCString *rs = new NS_ConvertUCS2toUTF8((const PRUnichar*)chars, length);
+                const nsACString *rs = new NS_ConvertUCS2toUTF8((const PRUnichar*)chars, length);
                 if(!rs)
                     return JS_FALSE;
 
-                *((nsAReadableCString**)d) = rs;
+                *((const nsACString**)d) = rs;
             }
             else
             {
@@ -936,12 +936,12 @@ XPCConvert::JSData2Native(XPCCallContext& ccx, void* d, jsval s,
 
             if(useAllocator)
             {
-                nsAReadableCString *rs = new nsCString(chars, length);
+                const nsACString *rs = new nsCString(chars, length);
 
                 if(!rs)
                     return JS_FALSE;
 
-                *((nsAReadableCString**)d) = rs;
+                *((const nsACString**)d) = rs;
             }
             else
             {

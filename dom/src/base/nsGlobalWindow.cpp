@@ -1252,14 +1252,14 @@ GlobalWindowImpl::SetOpener(nsIDOMWindowInternal* aOpener)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetStatus(nsAWritableString& aStatus)
+GlobalWindowImpl::GetStatus(nsAString& aStatus)
 {
   aStatus = mStatus;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
+GlobalWindowImpl::SetStatus(const nsAString& aStatus)
 {
   mStatus = aStatus;
 
@@ -1274,14 +1274,14 @@ GlobalWindowImpl::SetStatus(const nsAReadableString& aStatus)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetDefaultStatus(nsAWritableString& aDefaultStatus)
+GlobalWindowImpl::GetDefaultStatus(nsAString& aDefaultStatus)
 {
   aDefaultStatus = mDefaultStatus;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::SetDefaultStatus(const nsAReadableString& aDefaultStatus)
+GlobalWindowImpl::SetDefaultStatus(const nsAString& aDefaultStatus)
 {
   mDefaultStatus = aDefaultStatus;
 
@@ -1295,7 +1295,7 @@ GlobalWindowImpl::SetDefaultStatus(const nsAReadableString& aDefaultStatus)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::GetName(nsAWritableString& aName)
+GlobalWindowImpl::GetName(nsAString& aName)
 {
   nsXPIDLString name;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -1307,7 +1307,7 @@ GlobalWindowImpl::GetName(nsAWritableString& aName)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::SetName(const nsAReadableString& aName)
+GlobalWindowImpl::SetName(const nsAString& aName)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
@@ -1820,7 +1820,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetFullScreen(PRBool* aFullScreen)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Dump(const nsAReadableString& aStr)
+GlobalWindowImpl::Dump(const nsAString& aStr)
 {
 #if !(defined(NS_DEBUG) || defined(MOZ_ENABLE_JS_DUMP))
   {
@@ -1976,7 +1976,7 @@ GlobalWindowImpl::MakeScriptDialogTitle(nsAReadableString &aInTitle, nsAWritable
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Alert(const nsAReadableString& aString)
+GlobalWindowImpl::Alert(const nsAString& aString)
 {
   NS_ENSURE_STATE(mDocShell);
 
@@ -2008,7 +2008,7 @@ GlobalWindowImpl::Alert(const nsAReadableString& aString)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Confirm(const nsAReadableString& aString, PRBool* aReturn)
+GlobalWindowImpl::Confirm(const nsAString& aString, PRBool* aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
 
@@ -2042,11 +2042,11 @@ GlobalWindowImpl::Confirm(const nsAReadableString& aString, PRBool* aReturn)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Prompt(const nsAReadableString& aMessage,
-                         const nsAReadableString& aInitial,
-                         const nsAReadableString& aTitle,
+GlobalWindowImpl::Prompt(const nsAString& aMessage,
+                         const nsAString& aInitial,
+                         const nsAString& aTitle,
                          PRUint32 aSavePassword,
-                         nsAWritableString& aReturn)
+                         nsAString& aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
 
@@ -2115,7 +2115,7 @@ GlobalWindowImpl::Prompt(const nsAReadableString& aMessage,
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Prompt(nsAWritableString& aReturn)
+GlobalWindowImpl::Prompt(nsAString& aReturn)
 {
   NS_ENSURE_STATE(mDocShell);
   NS_ENSURE_STATE(sXPConnect);
@@ -2624,9 +2624,9 @@ GlobalWindowImpl::CheckForAbusePoint ()
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Open(const nsAReadableString& aUrl,
-                       const nsAReadableString& aName,
-                       const nsAReadableString& aOptions,
+GlobalWindowImpl::Open(const nsAString& aUrl,
+                       const nsAString& aName,
+                       const nsAString& aOptions,
                        nsIDOMWindow **_retval)
 {
   return OpenInternal(aUrl, aName, aOptions, PR_FALSE, nsnull, 0, nsnull,
@@ -2690,9 +2690,9 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
 // like Open, but attaches to the new window any extra parameters past
 // [features] as a JS property named "arguments"
 NS_IMETHODIMP
-GlobalWindowImpl::OpenDialog(const nsAReadableString& aUrl,
-                             const nsAReadableString& aName,
-                             const nsAReadableString& aOptions,
+GlobalWindowImpl::OpenDialog(const nsAString& aUrl,
+                             const nsAString& aName,
+                             const nsAString& aOptions,
                              nsISupports* aExtraArgument,
                              nsIDOMWindow** _retval)
 {
@@ -2814,7 +2814,7 @@ GlobalWindowImpl::ReallyCloseWindow()
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::UpdateCommands(const nsAReadableString& anAction)
+GlobalWindowImpl::UpdateCommands(const nsAString& anAction)
 {
   nsCOMPtr<nsIDOMWindowInternal> rootWindow;
   GetPrivateRoot(getter_AddRefs(rootWindow));
@@ -2839,8 +2839,8 @@ GlobalWindowImpl::UpdateCommands(const nsAReadableString& anAction)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Escape(const nsAReadableString& aStr,
-                         nsAWritableString& aReturn)
+GlobalWindowImpl::Escape(const nsAString& aStr,
+                         nsAString& aReturn)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIUnicodeEncoder> encoder;
@@ -2911,8 +2911,8 @@ GlobalWindowImpl::Escape(const nsAReadableString& aStr,
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Unescape(const nsAReadableString& aStr,
-                           nsAWritableString& aReturn)
+GlobalWindowImpl::Unescape(const nsAString& aStr,
+                           nsAString& aReturn)
 {
   nsresult result = NS_OK;
   nsCOMPtr<nsIUnicodeDecoder> decoder;
@@ -3011,7 +3011,7 @@ GlobalWindowImpl::GetSelection(nsISelection** aSelection)
 
 // Non-scriptable version of window.find(), part of nsIDOMWindowInternal
 NS_IMETHODIMP
-GlobalWindowImpl::Find(const nsAReadableString& aStr,
+GlobalWindowImpl::Find(const nsAString& aStr,
                        PRBool aCaseSensitive,
                        PRBool aBackwards,
                        PRBool aWrapAround,
@@ -3105,7 +3105,7 @@ GlobalWindowImpl::Find(PRBool *aDidFind)
 }
 
 nsresult
-GlobalWindowImpl::FindInternal(nsAReadableString& aStr,
+GlobalWindowImpl::FindInternal(const nsAString& aStr,
                                PRBool caseSensitive,
                                PRBool backwards,
                                PRBool wrapAround,
@@ -3271,7 +3271,7 @@ GlobalWindowImpl::Btoa(const nsAString& aBinaryData,
 //*****************************************************************************
 
 NS_IMETHODIMP
-GlobalWindowImpl::AddEventListener(const nsAReadableString& aType,
+GlobalWindowImpl::AddEventListener(const nsAString& aType,
                                    nsIDOMEventListener* aListener,
                                    PRBool aUseCapture)
 {
@@ -3287,7 +3287,7 @@ GlobalWindowImpl::AddEventListener(const nsAReadableString& aType,
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::RemoveEventListener(const nsAReadableString& aType,
+GlobalWindowImpl::RemoveEventListener(const nsAString& aType,
                                       nsIDOMEventListener* aListener,
                                       PRBool aUseCapture)
 {
@@ -3676,7 +3676,7 @@ GlobalWindowImpl::SetMutationListeners(PRUint32 aType)
 
 NS_IMETHODIMP
 GlobalWindowImpl::GetComputedStyle(nsIDOMElement* aElt,
-                                   const nsAReadableString& aPseudoElt,
+                                   const nsAString& aPseudoElt,
                                    nsIDOMCSSStyleDeclaration** aReturn)
 {
   NS_ENSURE_ARG_POINTER(aReturn);
@@ -3785,9 +3785,9 @@ GlobalWindowImpl::GetParentInternal(nsIDOMWindowInternal **aParent)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::OpenInternal(const nsAReadableString& aUrl,
-                               const nsAReadableString& aName,
-                               const nsAReadableString& aOptions,
+GlobalWindowImpl::OpenInternal(const nsAString& aUrl,
+                               const nsAString& aName,
+                               const nsAString& aOptions,
                                PRBool aDialog, jsval *argv, PRUint32 argc,
                                nsISupports *aExtraArgument,
                                nsIDOMWindow **aReturn)
@@ -4693,14 +4693,14 @@ NS_IMPL_RELEASE_INHERITED(nsGlobalChromeWindow, GlobalWindowImpl)
 // nsGlobalChromeWindow implementation
 
 NS_IMETHODIMP
-nsGlobalChromeWindow::GetTitle(nsAWritableString& aTitle)
+nsGlobalChromeWindow::GetTitle(nsAString& aTitle)
 {
   aTitle = mTitle;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGlobalChromeWindow::SetTitle(const nsAReadableString& aTitle)
+nsGlobalChromeWindow::SetTitle(const nsAString& aTitle)
 {
   mTitle = aTitle;
   if(mDocShell) {
@@ -4807,7 +4807,7 @@ nsGlobalChromeWindow::GetAttention()
 //Note: This call will lock the cursor, it will not change as it moves.
 //To unlock, the cursor must be set back to CURSOR_AUTO.
 NS_IMETHODIMP
-nsGlobalChromeWindow::SetCursor(const nsAReadableString& aCursor)
+nsGlobalChromeWindow::SetCursor(const nsAString& aCursor)
 {
   nsresult rv = NS_OK;
   PRInt32 cursor;
@@ -4983,7 +4983,7 @@ void NavigatorImpl::SetDocShell(nsIDocShell *aDocShell)
 //*****************************************************************************
 
 NS_IMETHODIMP
-NavigatorImpl::GetUserAgent(nsAWritableString& aUserAgent)
+NavigatorImpl::GetUserAgent(nsAString& aUserAgent)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -4998,7 +4998,7 @@ NavigatorImpl::GetUserAgent(nsAWritableString& aUserAgent)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetAppCodeName(nsAWritableString& aAppCodeName)
+NavigatorImpl::GetAppCodeName(nsAString& aAppCodeName)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5013,7 +5013,7 @@ NavigatorImpl::GetAppCodeName(nsAWritableString& aAppCodeName)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetAppVersion(nsAWritableString& aAppVersion)
+NavigatorImpl::GetAppVersion(nsAString& aAppVersion)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5044,14 +5044,14 @@ NavigatorImpl::GetAppVersion(nsAWritableString& aAppVersion)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetAppName(nsAWritableString& aAppName)
+NavigatorImpl::GetAppName(nsAString& aAppName)
 {
   aAppName.Assign(NS_LITERAL_STRING("Netscape"));
   return NS_OK;
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetLanguage(nsAWritableString& aLanguage)
+NavigatorImpl::GetLanguage(nsAString& aLanguage)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5066,7 +5066,7 @@ NavigatorImpl::GetLanguage(nsAWritableString& aLanguage)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetPlatform(nsAWritableString& aPlatform)
+NavigatorImpl::GetPlatform(nsAString& aPlatform)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5095,7 +5095,7 @@ NavigatorImpl::GetPlatform(nsAWritableString& aPlatform)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetOscpu(nsAWritableString& aOSCPU)
+NavigatorImpl::GetOscpu(nsAString& aOSCPU)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5110,7 +5110,7 @@ NavigatorImpl::GetOscpu(nsAWritableString& aOSCPU)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetVendor(nsAWritableString& aVendor)
+NavigatorImpl::GetVendor(nsAString& aVendor)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5126,7 +5126,7 @@ NavigatorImpl::GetVendor(nsAWritableString& aVendor)
 
 
 NS_IMETHODIMP
-NavigatorImpl::GetVendorSub(nsAWritableString& aVendorSub)
+NavigatorImpl::GetVendorSub(nsAString& aVendorSub)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5141,7 +5141,7 @@ NavigatorImpl::GetVendorSub(nsAWritableString& aVendorSub)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetProduct(nsAWritableString& aProduct)
+NavigatorImpl::GetProduct(nsAString& aProduct)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5156,7 +5156,7 @@ NavigatorImpl::GetProduct(nsAWritableString& aProduct)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetProductSub(nsAWritableString& aProductSub)
+NavigatorImpl::GetProductSub(nsAString& aProductSub)
 {
   nsresult res;
   nsCOMPtr<nsIHttpProtocolHandler>
@@ -5171,7 +5171,7 @@ NavigatorImpl::GetProductSub(nsAWritableString& aProductSub)
 }
 
 NS_IMETHODIMP
-NavigatorImpl::GetSecurityPolicy(nsAWritableString& aSecurityPolicy)
+NavigatorImpl::GetSecurityPolicy(nsAString& aSecurityPolicy)
 {
   return NS_OK;
 }
@@ -5590,7 +5590,7 @@ nsDOMWindowController::GetSelectionController(nsISelectionController **aSelCon)
 
 
 NS_IMETHODIMP
-nsDOMWindowController::IsCommandEnabled(const nsAReadableString& aCommand,
+nsDOMWindowController::IsCommandEnabled(const nsAString& aCommand,
                                         PRBool *aResult)
 {
   NS_ENSURE_ARG_POINTER(aResult);
@@ -5637,7 +5637,7 @@ nsDOMWindowController::IsCommandEnabled(const nsAReadableString& aCommand,
 }
 
 NS_IMETHODIMP
-nsDOMWindowController::SupportsCommand(const nsAReadableString& aCommand,
+nsDOMWindowController::SupportsCommand(const nsAString& aCommand,
                                        PRBool *outSupported)
 {
   NS_ENSURE_ARG_POINTER(outSupported);
@@ -5687,7 +5687,7 @@ nsDOMWindowController::SupportsCommand(const nsAReadableString& aCommand,
 }
 
 NS_IMETHODIMP
-nsDOMWindowController::DoCommand(const nsAReadableString & aCommand)
+nsDOMWindowController::DoCommand(const nsAString & aCommand)
 {
   nsresult rv = NS_ERROR_FAILURE;
   nsCAutoString commandName;
@@ -5839,7 +5839,7 @@ nsDOMWindowController::DoCommandWithSelectionController(const nsCString& aComman
 }
 
 NS_IMETHODIMP
-nsDOMWindowController::OnEvent(const nsAReadableString & aEventName)
+nsDOMWindowController::OnEvent(const nsAString & aEventName)
 {
   return NS_OK;
 }

@@ -72,7 +72,7 @@ public:
   NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
   NS_IMETHOD AddDocTypeDecl(const nsIParserNode& aNode, PRInt32 aMode=0);
   NS_IMETHOD FlushPendingNotifications() { return NS_OK; }
-  NS_IMETHOD SetDocumentCharset(nsAWritableString& aCharset) { return NS_OK; }
+  NS_IMETHOD SetDocumentCharset(nsAString& aCharset) { return NS_OK; }
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode) { return NS_OK; }
 
   // nsIHTMLContentSink
@@ -105,8 +105,8 @@ public:
   nsresult CloseNode(const char* aKind);
   nsresult LeafNode(const nsIParserNode& aNode);
   nsresult WriteAttributes(const nsIParserNode& aNode);
-  nsresult QuoteText(const nsAReadableString& aValue, nsString& aResult);
-  nsresult GetNewCString(const nsAReadableString& aValue, char** aResult);
+  nsresult QuoteText(const nsAString& aValue, nsString& aResult);
+  nsresult GetNewCString(const nsAString& aValue, char** aResult);
   PRBool WillWriteAttributes(const nsIParserNode& aNode);
 
 protected:
