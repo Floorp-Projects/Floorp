@@ -240,14 +240,6 @@ outlinerbody:-moz-outliner-image(script-name,has-bp){
     list-style-image: url("chrome://venkman/skin/images/file-function-bp.png");
 }
 
-outlinerbody:-moz-outliner-image(script-name,fn-guessed){
-    list-style-image: url("chrome://venkman/skin/images/file-function-guess.png");
-}
-
-outlinerbody:-moz-outliner-image(script-name,fn-guessed,has-bp){
-    list-style-image: url("chrome://venkman/skin/images/file-function-guess-bp.png");
-}
-
 outlinerbody:-moz-outliner-image(script-name,ft-unk){
     list-style-image: url("chrome://venkman/skin/images/file-unknown.png");
 }
