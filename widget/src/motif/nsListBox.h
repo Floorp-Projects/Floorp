@@ -36,12 +36,25 @@ public:
     // nsISupports. Forward to the nsObject base class
     NS_IMETHOD QueryObject(const nsIID& aIID, void** aInstancePtr);
 
+    void Create(nsIWidget *aParent,
+              const nsRect &aRect,
+              EVENT_CALLBACK aHandleEventFunction,
+              nsIDeviceContext *aContext = nsnull,
+              nsIToolkit *aToolkit = nsnull,
+              nsWidgetInitData *aInitData = nsnull);
+
+    void Create(nsNativeWindow aParent,
+              const nsRect &aRect, 
+              EVENT_CALLBACK aHandleEventFunction,
+              nsIDeviceContext *aContext = nsnull,
+              nsIToolkit *aToolkit = nsnull,
+              nsWidgetInitData *aInitData = nsnull);
+
 
     virtual PRBool    OnMove(PRInt32 aX, PRInt32 aY);
     virtual PRBool OnPaint(nsPaintEvent & aEvent);
     virtual PRBool OnResize(nsSizeEvent &aEvent);
 
-    // nsIWidget interface
 
     // nsIListBox interface
     void      SetMultipleSelection(PRBool aMultipleSelections);
@@ -71,7 +84,7 @@ private:
   // Aggregator class and instance variable used to aggregate in the
   // nsIListBox interface to nsListBox w/o using multiple
   // inheritance.
-  class AggListBox : public nsIListBox {
+  class AggListBox : public nsIListWidget {
   public:
     AggListBox();
     virtual ~AggListBox();
