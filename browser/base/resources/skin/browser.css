@@ -145,10 +145,6 @@
   display: none;
 }
 
-#search-button[toolbarmode="small"] > .button-box > .button-text {
-  display: none;
-}
-
 #nav-bar[toolbarmode="small"] > #nav-bar-inner {
   margin: 0;
   border: none;
@@ -271,33 +267,29 @@
 
 /* ::::: go and searchbuttons ::::: */
 
-#search-button, 
 #go-button {
   margin: 0px 4px 0px 0px;
   min-height: 25px;
-  font: message-box;
-  font-weight: bold;
+  -moz-border-top-colors: transparent transparent !important;
+  -moz-border-right-colors: transparent transparent !important;
+  -moz-border-bottom-colors: transparent transparent !important;
+  -moz-border-left-colors: transparent transparent !important;
+
 }
 
-#search-button {
-  list-style-image: url("chrome://communicator/skin/icons/search.gif");
-  font-weight: bold;
+#go-button:hover {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDHighlight !important;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDHighlight !important;
+  font-color: blue;
 }
 
-#search-button:hover {
-  list-style-image: url("chrome://communicator/skin/icons/search-hov.gif");
-}
-
-#search-button:hover:active {
-  list-style-image: url("chrome://communicator/skin/icons/search-act.gif");
-}
-
-/* ::::: sidebar splitter ::::: */
-
-#sidebar-splitter {
-  border-left: none;
-  border-right: none;
-  min-width: 5px;
+#go-button:hover:active {
+  -moz-border-top-colors: ThreeDDarkShadow ThreeDShadow !important;
+  -moz-border-right-colors: ThreeDDarkShadow ThreeDHighlight !important;
+  -moz-border-bottom-colors: ThreeDDarkShadow ThreeDHighlight !important;
+  -moz-border-left-colors: ThreeDDarkShadow ThreeDShadow !important;
 }
 
 /* ::::: content area ::::: */
