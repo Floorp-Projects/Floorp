@@ -124,7 +124,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = 16;
         break;
     case eMetric_TextFieldBorder:
-        aMetric = 4;
+        aMetric = 2;
         break;
     case eMetric_ButtonHorizontalInsidePaddingNavQuirks:
         aMetric = 20;
@@ -166,7 +166,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
         aMetric = ::GetCaretTime() * 1000 / 60;
         break;
     case eMetric_CaretWidthTwips:
-        aMetric = 20;
+        aMetric = 30;
         break;
     default:
         aMetric = 0;
