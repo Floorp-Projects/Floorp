@@ -1,6 +1,6 @@
 /*
  *******************************************************************************
- * $Id: constant.h,v 1.3 1998/07/23 11:05:57 leif Exp $
+ * $Id: constant.h,v 1.4 1998/07/24 22:31:03 clayton Exp $
  *
  * The contents of this file are subject to the Mozilla Public License
  * Version 1.0 (the "License"); you may not use this file except in
@@ -45,41 +45,13 @@ char *s;
     return -1;
 }
 
-static double
+double
 constant(name, arg)
 char *name;
 int arg;
 {
     errno = 0;
     switch (*name) {
-    case 'A':
-	break;
-    case 'B':
-	break;
-    case 'C':
-	break;
-    case 'D':
-	break;
-    case 'E':
-	break;
-    case 'F':
-	if (strEQ(name, "FD_SETSIZE"))
-#ifdef FD_SETSIZE
-	    return FD_SETSIZE;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'G':
-	break;
-    case 'H':
-	break;
-    case 'I':
-	break;
-    case 'J':
-	break;
-    case 'K':
-	break;
     case 'L':
 	if (strEQ(name, "LDAPS_PORT"))
 #ifdef LDAPS_PORT
@@ -108,12 +80,6 @@ int arg;
 	if (strEQ(name, "LDAP_ALIAS_PROBLEM"))
 #ifdef LDAP_ALIAS_PROBLEM
 	    return LDAP_ALIAS_PROBLEM;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_ALL_USER_ATTRS"))
-#ifdef LDAP_ALL_USER_ATTRS_CHAR
-	    return LDAP_ALL_USER_ATTRS;
 #else
 	    goto not_there;
 #endif
@@ -240,72 +206,6 @@ int arg;
 	if (strEQ(name, "LDAP_CONSTRAINT_VIOLATION"))
 #ifdef LDAP_CONSTRAINT_VIOLATION
 	    return LDAP_CONSTRAINT_VIOLATION;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_ENTRYCHANGE"))
-#ifdef LDAP_CONTROL_ENTRYCHANGE_CHAR
-	    return LDAP_CONTROL_ENTRYCHANGE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_MANAGEDSAIT"))
-#ifdef LDAP_CONTROL_MANAGEDSAIT_CHAR
-	    return LDAP_CONTROL_MANAGEDSAIT;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_NOT_FOUND"))
-#ifdef LDAP_CONTROL_NOT_FOUND
-	    return LDAP_CONTROL_NOT_FOUND;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_PERSISTENTSEARCH"))
-#ifdef LDAP_CONTROL_PERSISTENTSEARCH_CHAR
-	    return LDAP_CONTROL_PERSISTENTSEARCH;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_PWEXPIRED"))
-#ifdef LDAP_CONTROL_PWEXPIRED_CHAR
-	    return LDAP_CONTROL_PWEXPIRED;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_PWEXPIRING"))
-#ifdef LDAP_CONTROL_PWEXPIRING_CHAR
-	    return LDAP_CONTROL_PWEXPIRING;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_REFERRALS"))
-#ifdef LDAP_CONTROL_REFERRALS_CHAR
-	    return LDAP_CONTROL_REFERRALS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_SORTREQUEST"))
-#ifdef LDAP_CONTROL_SORTREQUEST_CHAR
-	    return LDAP_CONTROL_SORTREQUEST;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_SORTRESPONSE"))
-#ifdef LDAP_CONTROL_SORTRESPONSE_CHAR
-	    return LDAP_CONTROL_SORTRESPONSE;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_VLVREQUEST"))
-#ifdef LDAP_CONTROL_VLVREQUEST_CHAR
-	    return LDAP_CONTROL_VLVREQUEST;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_CONTROL_VLVRESPONSE"))
-#ifdef LDAP_CONTROL_VLVRESPONSE_CHAR
-	    return LDAP_CONTROL_VLVRESPONSE;
 #else
 	    goto not_there;
 #endif
@@ -483,12 +383,6 @@ int arg;
 #else
 	    goto not_there;
 #endif
-	if (strEQ(name, "LDAP_NO_ATTRS"))
-#ifdef LDAP_NO_ATTRS_CHAR
-	    return LDAP_NO_ATTRS;
-#else
-	    goto not_there;
-#endif
 	if (strEQ(name, "LDAP_NO_LIMIT"))
 #ifdef LDAP_NO_LIMIT
 	    return LDAP_NO_LIMIT;
@@ -612,18 +506,6 @@ int arg;
 	if (strEQ(name, "LDAP_OPT_MEMALLOC_FN_PTRS"))
 #ifdef LDAP_OPT_MEMALLOC_FN_PTRS
 	    return LDAP_OPT_MEMALLOC_FN_PTRS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_OPT_OFF"))
-#ifdef LDAP_OPT_OFF_CHAR
-	    return LDAP_OPT_OFF;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_OPT_ON"))
-#ifdef LDAP_OPT_ON_CHAR
-	    return LDAP_OPT_ON;
 #else
 	    goto not_there;
 #endif
@@ -837,21 +719,9 @@ int arg;
 #else
 	    goto not_there;
 #endif
-	if (strEQ(name, "LDAP_ROOT_DSE"))
-#ifdef LDAP_ROOT_DSE_CHAR
-	    return LDAP_ROOT_DSE;
-#else
-	    goto not_there;
-#endif
 	if (strEQ(name, "LDAP_SASL_BIND_IN_PROGRESS"))
 #ifdef LDAP_SASL_BIND_IN_PROGRESS
 	    return LDAP_SASL_BIND_IN_PROGRESS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "LDAP_SASL_EXTERNAL"))
-#ifdef LDAP_SASL_EXTERNAL_CHAR
-	    return LDAP_SASL_EXTERNAL;
 #else
 	    goto not_there;
 #endif
@@ -1035,110 +905,6 @@ int arg;
 #else
 	    goto not_there;
 #endif
-	break;
-    case 'M':
-	break;
-    case 'N':
-	if (strEQ(name, "NBBY"))
-#ifdef NBBY
-	    return NBBY;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "NFDBITS"))
-#ifdef NFDBITS
-	    return NFDBITS;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "NULLLDAPURLDESC"))
-#ifdef NULLLDAPURLDESC_CHAR
-	    return NULLLDAPURLDESC;
-#else
-	    goto not_there;
-#endif
-	if (strEQ(name, "NULLMSG"))
-#ifdef NULLMSG_CHAR
-	    return NULLMSG;
-#else
-	    goto not_there;
-#endif
-	break;
-    case 'O':
-	break;
-    case 'P':
-	break;
-    case 'Q':
-	break;
-    case 'R':
-	break;
-    case 'S':
-	break;
-    case 'T':
-	break;
-    case 'U':
-	break;
-    case 'V':
-	break;
-    case 'W':
-	break;
-    case 'X':
-	break;
-    case 'Y':
-	break;
-    case 'Z':
-	break;
-    case 'a':
-	break;
-    case 'b':
-	break;
-    case 'c':
-	break;
-    case 'd':
-	break;
-    case 'e':
-	break;
-    case 'f':
-	break;
-    case 'g':
-	break;
-    case 'h':
-	break;
-    case 'i':
-	break;
-    case 'j':
-	break;
-    case 'k':
-	break;
-    case 'l':
-	break;
-    case 'm':
-	break;
-    case 'n':
-	break;
-    case 'o':
-	break;
-    case 'p':
-	break;
-    case 'q':
-	break;
-    case 'r':
-	break;
-    case 's':
-	break;
-    case 't':
-	break;
-    case 'u':
-	break;
-    case 'v':
-	break;
-    case 'w':
-	break;
-    case 'x':
-	break;
-    case 'y':
-	break;
-    case 'z':
 	break;
     }
     errno = EINVAL;

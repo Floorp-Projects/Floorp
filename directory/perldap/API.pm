@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: API.pm,v 1.4 1998/07/24 19:01:47 clayton Exp $
+# $Id: API.pm,v 1.5 1998/07/24 22:31:02 clayton Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -254,6 +254,27 @@ foreach my $EXP (keys %EXPORT_TAGS)
 
 $VERSION = '0.90';
 
+# The XS 'constant' routine returns an integer.  There are all constants
+# we want to return something else.
+my %OVERRIDE_CONST = (
+   "LDAP_ALL_USER_ATTRS","*",
+   "LDAP_CONTROL_ENTRYCHANGE","2.16.840.1.113730.3.4.7",
+   "LDAP_CONTROL_MANAGEDSAIT","2.16.840.1.113730.3.4.2",
+   "LDAP_CONTROL_PERSISTENTSEARCH","2.16.840.1.113730.3.4.3",
+   "LDAP_CONTROL_PWEXPIRED","2.16.840.1.113730.3.4.4",
+   "LDAP_CONTROL_PWEXPIRING","2.16.840.1.113730.3.4.5",
+   "LDAP_CONTROL_REFERRALS","1.2.840.113556.1.4.616",
+   "LDAP_CONTROL_SORTREQUEST","1.2.840.113556.1.4.473",
+   "LDAP_CONTROL_SORTRESPONSE","1.2.840.113556.1.4.474",
+   "LDAP_CONTROL_VLVREQUEST","2.16.840.1.113730.3.4.9",
+   "LDAP_CONTROL_VLVRESPONSE","2.16.840.1.113730.3.4.10",
+   "LDAP_NO_ATTRS","1.1",
+   "LDAP_OPT_OFF",0,
+   "LDAP_OPT_ON",1,
+   "LDAP_ROOT_DSE","",
+   "LDAP_SASL_EXTERNAL","EXTERNAL",
+);
+
 sub AUTOLOAD {
     # This AUTOLOAD is used to 'autoload' constants from the constant()
     # XS function.  If a constant is not found then control is passed
@@ -261,14 +282,20 @@ sub AUTOLOAD {
 
     my $constname;
     ($constname = $AUTOLOAD) =~ s/.*:://;
-    my $val = constant($constname, @_ ? $_[0] : 0);
+    my $val;
+    if (($val = $OVERRIDE_CONST{$constname}))
+    {
+        eval "sub $AUTOLOAD { $val }";
+        goto &$AUTOLOAD;
+    }
+    $val = constant($constname, @_ ? $_[0] : 0);
     if ($! != 0) {
 	if ($! =~ /Invalid/) {
 	    $AutoLoader::AUTOLOAD = $AUTOLOAD;
 	    goto &AutoLoader::AUTOLOAD;
 	}
 	else {
-		croak "Your vendor has not defined Ldap macro $constname";
+		croak "Your vendor has not defined Mozilla::LDAP macro $constname";
 	}
     }
     eval "sub $AUTOLOAD { $val }";
@@ -296,21 +323,10 @@ Mozilla::LDAP::API - Perl extension for blah blah blah
 
 =head1 DESCRIPTION
 
-Stub documentation for Ldap was created by h2xs. It looks like the
-author of the extension was negligent enough to leave the stub
-unedited.
-
-Blah blah blah.
-
-=head1 Exported constants
-
 
 =head1 AUTHOR
 
-A. U. Thor, a.u.thor@a.galaxy.far.far.away
-
 =head1 SEE ALSO
 
-perl(1).
 
 =cut
