@@ -174,8 +174,8 @@ resource 'STR#' ( 300, "Pref file names", purgeable ) {{
 	ESSENTIALS_FOLDER;						// 34 Essential files (where java stuff is, and other required stuff)
 	"archive";								// 35
 	"archive.fat";							// 36
-	IBM3270_FOLDER;							// 37 IBM 3270 folder
-	IBM3270_FILE;							// 38 IBM 3270 file
+	"";										// 37 IBM 3270 folder (unused)
+	"";										// 38 IBM 3270 file (unused)
 	"addressbook.html";						// 39
 	".vcf";									// 40 Extension for vcard files.
 	".ldi";									// 41 Extension for LDIF files.
