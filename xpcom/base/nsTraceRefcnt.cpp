@@ -51,13 +51,6 @@
 #include <dlfcn.h>
 #endif
 
-// Pref for reference counting.
-#include "nsIPref.h"
-#include "nsIServiceManager.h"
-static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
-static const char* kRefcountPref = "nglayout.debug.enable_xpcom_refcnt_log";
-static PRBool gRefcountPrefEnabled = PR_FALSE;
-
 ////////////////////////////////////////////////////////////////////////////////
 
 NS_COM void 
@@ -105,7 +98,6 @@ static PRInt32 gNextSerialNumber;
 static PRBool gLogging;
 static PRBool gLogToLeaky;
 static PRBool gLogLeaksOnly;
-static PRBool gEnableViaPref;
 
 static void (*leakyLogAddRef)(void* p, int oldrc, int newrc);
 static void (*leakyLogRelease)(void* p, int oldrc, int newrc);
@@ -666,16 +658,6 @@ static void InitTraceLog(void)
     gLogging = PR_TRUE;
   }
 
-  const char* s = getenv("XPCOM_REFCNT_LOG_ENABLE_VIA_PREF");
-  if (s && strchr(s, '1')) {
-    gEnableViaPref = PR_TRUE;
-    if (gLogging)
-      printf("### XPCOM_REFCNT_LOG_ENABLE_VIA_PREF defined: Logging will be enabled based on the pref selected in the Debug pane\n");
-  }
-  else
-    gEnableViaPref = PR_FALSE;  
-
-
 #if defined(NS_MT_SUPPORTED)
   gTraceLock = PR_NewLock();
 #endif /* NS_MT_SUPPORTED */
@@ -1062,30 +1044,6 @@ nsTraceRefcnt::DemangleSymbol(const char * aSymbol,
 
 //----------------------------------------------------------------------
 
-
-static int PR_CALLBACK
-refcountPrefChanged(const char * newpref, void * data) {
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && prefs) {
-    rv = prefs->GetBoolPref(kRefcountPref, &gRefcountPrefEnabled);
-  }
-  return rv;
-}
-
-NS_COM void 
-nsTraceRefcnt::SetPrefServiceAvailability(PRBool avail)
-{
-#ifdef NS_BUILD_REFCNT_LOGGING  
-  nsresult rv = NS_OK;
-  NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-  if (NS_SUCCEEDED(rv) && prefs) {
-    prefs->GetBoolPref(kRefcountPref, &gRefcountPrefEnabled);
-    prefs->RegisterCallback(kRefcountPref, refcountPrefChanged, NULL);
-  }  
-#endif
-}
-
 NS_COM void
 nsTraceRefcnt::LoadLibrarySymbols(const char* aLibraryName,
                                   void* aLibrayHandle)
@@ -1194,13 +1152,11 @@ nsTraceRefcnt::LogAddRef(void* aPtr,
         (*leakyLogAddRef)(aPtr, aRefCnt - 1, aRefCnt);
       }
       else {        
-        if (!gEnableViaPref || (gEnableViaPref && gRefcountPrefEnabled)) {
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
                   "\n<%s> 0x%08X %d AddRef %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);       
           WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
-        }
       }
     }
 #endif
@@ -1244,13 +1200,11 @@ nsTraceRefcnt::LogRelease(void* aPtr,
         (*leakyLogRelease)(aPtr, aRefCnt + 1, aRefCnt);
       }
       else {
-        if (!gEnableViaPref || (gEnableViaPref && gRefcountPrefEnabled)) {
           // Can't use PR_LOG(), b/c it truncates the line
           fprintf(gRefcntsLog,
                   "\n<%s> 0x%08X %d Release %d\n", aClazz, PRInt32(aPtr), serialno, aRefCnt);
           WalkTheStack(gRefcntsLog);
           fflush(gRefcntsLog);
-        }
       }
     }
 
