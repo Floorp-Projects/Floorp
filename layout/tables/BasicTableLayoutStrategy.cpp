@@ -1174,7 +1174,8 @@ PRBool BasicTableLayoutStrategy::BalanceColumnsTableFits(const nsReflowState& aR
           printf ("  3 min: col %d set to min width = %d because style set proportionalWidth=0\n", 
                   colIndex, mTableFrame->GetColumnWidth(colIndex));
       }
-      else if ((PR_TRUE==isAutoWidth) || (PR_TRUE==aTableIsAutoWidth))
+      else if ((PR_TRUE==isAutoWidth) || 
+               ((PR_TRUE==aTableIsAutoWidth) && (-1==specifiedProportionColumnWidth)))
       {  // col width is determined by the cells' content,
          // so give each remaining column it's desired width (because we know we fit.)
          // if there is width left over, we'll factor that in after this loop is complete
