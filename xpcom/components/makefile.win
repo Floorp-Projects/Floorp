@@ -53,6 +53,7 @@ XPIDLSRCS =               \
         .\nsIComponentLoader.idl \
 	.\nsIComponentManager.idl \
         .\nsIComponentManagerObsolete.idl \
+        .\nsIComponentRegistrar.idl \
 	.\nsIFactory.idl	\
         .\nsIModule.idl	  \
 	.\nsIRegistry.idl \
