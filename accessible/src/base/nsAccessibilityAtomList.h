@@ -63,6 +63,7 @@ ACCESSIBILITY_ATOM(textFrame, "TextFrame")
 
   // Alphabetical list of tag names
 ACCESSIBILITY_ATOM(a, "a")
+ACCESSIBILITY_ATOM(area, "area")
 ACCESSIBILITY_ATOM(blockquote, "blockquote")
 ACCESSIBILITY_ATOM(form, "form")
 ACCESSIBILITY_ATOM(h1, "h1")
@@ -84,6 +85,7 @@ ACCESSIBILITY_ATOM(accesskey, "accesskey")
 ACCESSIBILITY_ATOM(control, "control")
 ACCESSIBILITY_ATOM(_for, "for")
 ACCESSIBILITY_ATOM(id, "id")
+ACCESSIBILITY_ATOM(name, "name")
 ACCESSIBILITY_ATOM(tabindex, "tabindex")
 
   // DHTML accessibility attributes
