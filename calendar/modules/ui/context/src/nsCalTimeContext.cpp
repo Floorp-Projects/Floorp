@@ -124,7 +124,7 @@ nsresult nsCalTimeContext::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;                                                        
   }                                                                      
 
-  return (NS_OK);
+  return (NS_NOINTERFACE);
 
 }
 

@@ -22,10 +22,21 @@
 #include "nsCoreCIID.h"
 #include "nsxpfcCIID.h"
 #include "nsICalendarUser.h"
+#include "nsxpfcCIID.h"
+#include "nsIXPFCCommand.h"
+#include "nsIXPFCObserverManager.h"
+#include "nsIServiceManager.h"
 
 static NS_DEFINE_IID(kICalendarModelIID, NS_ICALENDAR_MODEL_IID);
 static NS_DEFINE_IID(kIModelIID,         NS_IMODEL_IID);
 static NS_DEFINE_IID(kISupportsIID,      NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kXPFCSubjectIID, NS_IXPFC_SUBJECT_IID);
+static NS_DEFINE_IID(kXPFCCommandIID, NS_IXPFC_COMMAND_IID);
+static NS_DEFINE_IID(kXPFCCommandCID, NS_XPFC_COMMAND_CID);
+static NS_DEFINE_IID(kCXPFCObserverManagerCID, NS_XPFC_OBSERVERMANAGER_CID);
+static NS_DEFINE_IID(kIXPFCObserverManagerIID, NS_IXPFC_OBSERVERMANAGER_IID);
+static NS_DEFINE_IID(kXPFCObserverIID, NS_IXPFC_OBSERVER_IID);
+static NS_DEFINE_IID(kXPFCCommandReceiverIID, NS_IXPFC_COMMANDRECEIVER_IID);
 
 nsCalendarModel::nsCalendarModel(nsISupports* outer)
 {
@@ -53,6 +64,21 @@ nsresult nsCalendarModel::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }                                                                      
   if (aIID.Equals(kIModelIID)) {                                      
     *aInstancePtr = (void*)(nsIModel*) (this);                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kXPFCObserverIID)) {                                          
+    *aInstancePtr = (void*)(nsIXPFCObserver *) this;   
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kXPFCSubjectIID)) {                                          
+    *aInstancePtr = (void*) (nsIXPFCSubject *)this;                                        
+    AddRef();                                                            
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kXPFCCommandReceiverIID)) {                                          
+    *aInstancePtr = (void*)(nsIXPFCCommandReceiver *) this;   
     AddRef();                                                            
     return NS_OK;                                                        
   }                                                                      
@@ -88,3 +114,56 @@ NS_IMETHODIMP nsCalendarModel :: SetCalendarUser(nsICalendarUser* aCalendarUser)
   return NS_OK;
 }
 
+
+nsEventStatus nsCalendarModel::Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand)
+{
+
+  /*
+   * Update our internal structure based on this update
+   */
+
+  Action(aCommand);
+
+  /*
+   * Tell others we are updated
+   */
+
+  Notify(aCommand);
+
+  return (nsEventStatus_eIgnore);
+}
+
+nsEventStatus nsCalendarModel::Action(nsIXPFCCommand * aCommand)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsresult nsCalendarModel :: Attach(nsIXPFCObserver * aObserver)
+{
+  return NS_OK;
+}
+
+nsresult nsCalendarModel :: Detach(nsIXPFCObserver * aObserver)
+{
+  return NS_OK;
+}
+
+nsresult nsCalendarModel :: Notify(nsIXPFCCommand * aCommand)
+{
+  nsIXPFCSubject * subject;
+
+  nsresult res = QueryInterface(kXPFCSubjectIID,(void **)&subject);
+
+  if (res != NS_OK)
+    return res;
+
+  nsIXPFCObserverManager* om;
+
+  nsServiceManager::GetService(kCXPFCObserverManagerCID, kIXPFCObserverManagerIID, (nsISupports**)&om);
+
+  res = om->Notify(subject,aCommand);
+
+  nsServiceManager::ReleaseService(kCXPFCObserverManagerCID, om);
+
+  return(res);
+}

@@ -23,9 +23,15 @@
 #include "nsIModel.h"
 #include "nsICalendarModel.h"
 #include "nsICalendarUser.h"
+#include "nsIXPFCObserver.h"
+#include "nsIXPFCCommandReceiver.h"
+#include "nsIXPFCSubject.h"
 
 class nsCalendarModel : public nsICalendarModel,
-                        public nsIModel
+                        public nsIModel,
+                        public nsIXPFCObserver,
+                        public nsIXPFCSubject,
+                        public nsIXPFCCommandReceiver
 {
 
 public:
@@ -38,6 +44,17 @@ public:
 
   NS_IMETHOD GetCalendarUser(nsICalendarUser *& aCalendarUser);
   NS_IMETHOD SetCalendarUser(nsICalendarUser* aCalendarUser);
+
+  // nsIXPFCObserver methods
+  NS_IMETHOD_(nsEventStatus) Update(nsIXPFCSubject * aSubject, nsIXPFCCommand * aCommand);
+
+  // nsIXPFCCommandReceiver methods
+  NS_IMETHOD_(nsEventStatus) Action(nsIXPFCCommand * aCommand);
+
+  // nsIXPFCSubject methods
+  NS_IMETHOD Attach(nsIXPFCObserver * aObserver);
+  NS_IMETHOD Detach(nsIXPFCObserver * aObserver);
+  NS_IMETHOD Notify(nsIXPFCCommand * aCommand);
 
 protected:
   nsICalendarUser    * mCalendarUser;
