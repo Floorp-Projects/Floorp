@@ -285,20 +285,44 @@ nsNativeScrollbarFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 void
 nsNativeScrollbarFrame::Hookup()
 {
-  if ( mScrollbarNeedsContent ) {
-    nsCOMPtr<nsIContent> scrollbarContent;
-    nsIFrame* scrollbarFrame = nsnull;
-    FindScrollbar(this, &scrollbarFrame, getter_AddRefs(scrollbarContent));
-    nsCOMPtr<nsIScrollbarMediator> mediator;
-    nsCOMPtr<nsIScrollbarFrame> sb(do_QueryInterface(scrollbarFrame));
-    if (sb) {
-      sb->GetScrollbarMediator(getter_AddRefs(mediator));
-      nsCOMPtr<nsINativeScrollbar> scrollbar(do_QueryInterface(mScrollbar));
-      if ( scrollbar ) {
-        scrollbar->SetContent(scrollbarContent, mediator);
-        mScrollbarNeedsContent = PR_FALSE;
-      }
-    }     
+  if (!mScrollbarNeedsContent)
+    return;
+
+  nsCOMPtr<nsIContent> scrollbarContent;
+  nsIFrame* scrollbarFrame = nsnull;
+  FindScrollbar(this, &scrollbarFrame, getter_AddRefs(scrollbarContent));
+
+  nsCOMPtr<nsIScrollbarMediator> mediator;
+  nsCOMPtr<nsIScrollbarFrame> sb(do_QueryInterface(scrollbarFrame));
+  if (!sb) {
+    NS_WARNING("ScrollbarFrame doesn't implement nsIScrollbarFrame");
+    return;
   }
+
+  sb->GetScrollbarMediator(getter_AddRefs(mediator));
+  nsCOMPtr<nsINativeScrollbar> scrollbar(do_QueryInterface(mScrollbar));
+  if (!mScrollbar) {
+    NS_WARNING("Native scrollbar widget doesn't implement nsINativeScrollbar");
+    return;
+  }
+
+  scrollbar->SetContent(scrollbarContent, mediator);
+  mScrollbarNeedsContent = PR_FALSE;
+
+  if (!scrollbarContent)
+    return;
+
+  // Check to see if the curpos attribute is already present on the content
+  // node. If so, notify the scrollbar.
+
+  nsAutoString value;
+  scrollbarContent->GetAttr(kNameSpaceID_None, nsXULAtoms::curpos, value);
+
+  PRInt32 error;
+  PRUint32 curpos = value.ToInteger(&error);
+  if (!curpos || error)
+    return;
+
+  scrollbar->SetPosition(curpos);
 }
 
