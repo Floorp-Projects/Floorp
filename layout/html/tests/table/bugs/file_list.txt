@@ -105,6 +105,7 @@ file:///s:/mozilla/layout/html/tests/table/bugs/bug4803.html
 REMfile:///s:/mozilla/layout/html/tests/table/bugs/bug5188.html
 REMfile:///s:/mozilla/layout/html/tests/table/bugs/bug5797.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug5798.html
+file:///s:/mozilla/layout/html/tests/table/bugs/bug5799.html
 REMfile:///s:/mozilla/layout/html/tests/table/bugs/bug5835.html
 file:///s:/mozilla/layout/html/tests/table/bugs/bug5838.html
 REMfile:///s:/mozilla/layout/html/tests/table/bugs/bug625.html
