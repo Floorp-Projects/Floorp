@@ -176,7 +176,9 @@ AS=
 AS_DASH_C_FLAG='-c'
 NS_USE_NATIVE=
 DLL_SUFFIX="so"
-OS_TARGET=
+OS_TARGET=`uname -s`
+CROSS_COMPILE=
+
 _COMPILER_PREFIX=
 
 dnl GNU specific defaults
@@ -413,6 +415,11 @@ alpha*-*-linux*)
 
 *-openvms*) 
     DLL_SUFFIX="exe"
+    if test "$OS_TARGET" = "POSIX_for_OpenVMS_AXP"; then
+	dnl Hack...
+	CROSS_COMPILE=1
+	NSPR_LIBS="-lnspr3 -lplc3 -lplds3"
+    fi
     ;;
 
 alpha*-*-osf*)
@@ -1086,6 +1093,9 @@ AC_ARG_WITH(nsprlib,
 [  --with-nsprlib=\$dir        location of nspr libraries],
 	NSPR_LIBDIR=$withval)
 
+dnl Skip this if cross-compiling, since the checks will fail.
+if test "$CROSS_COMPILE"x = x; then
+
 _SAVE_CFLAGS=$CFLAGS
 _SAVE_LDFLAGS=$LDFLAGS
 _SAVE_LIBS=$LIBS
@@ -1142,6 +1152,9 @@ AC_CHECK_LIB(plds3, PL_GetEvent, NSPR_LIBS="-lplds$NSPR_VERSION $NSPR_LIBS",
 CFLAGS=$_SAVE_CFLAGS
 LDFLAGS=$_SAVE_LDFLAGS
 LIBS=$_SAVE_LIBS
+
+fi
+
 if test "${NSPR_DIR}" -a -d "${NSPR_DIR}"; then
     NSPR_INCLUDE_DIR="${NSPR_DIR}/include"
     NSPR_CFLAGS="-I${NSPR_INCLUDE_DIR}"
@@ -2267,12 +2280,7 @@ AC_DEFINE(STANDALONE_IMAGE_LIB)
 STANDALONE_IMAGE_LIB=1
 AC_SUBST(STANDALONE_IMAGE_LIB)
 
-if test -z "$OS_TARGET"
-then
-  OS_TARGET=`uname -s`
-fi
 AC_SUBST(OS_TARGET)
-
 if test "$OS_TARGET" = "OS2"; then
   AC_DEFINE(XP_PC)
 elif test "$OS_TARGET" = "WINNT"; then
