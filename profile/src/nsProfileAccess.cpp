@@ -1119,7 +1119,7 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
         }
 
         PRBool exists = PR_FALSE;;
-        exists = ProfileExists(nsAutoString(unixProfileName).GetUnicode());
+        exists = ProfileExists(NS_ConvertASCIItoUCS2(unixProfileName).GetUnicode());
         if (exists)
         {		
             return NS_OK;
@@ -1149,9 +1149,9 @@ nsProfileAccess::Get4xProfileInfo(const char *registryName)
 
                 profileItem->updateProfileEntry = PR_TRUE;
 
-                profileItem->profileName = nsAutoString(nsUnescape(unixProfileName)).ToNewUnicode();
-                profileItem->profileLocation = nsAutoString(profileLocation).ToNewUnicode();
-                profileItem->isMigrated = nsAutoString(REGISTRY_NO_STRING).ToNewUnicode();
+                profileItem->profileName = NS_ConvertASCIItoUCS2(nsUnescape(unixProfileName)).ToNewUnicode();
+                profileItem->profileLocation = NS_ConvertASCIItoUCS2(profileLocation).ToNewUnicode();
+                profileItem->isMigrated = NS_ConvertASCIItoUCS2(REGISTRY_NO_STRING).ToNewUnicode();
 
                 if (!m4xProfiles)
                     m4xProfiles = new nsVoidArray();

@@ -1416,7 +1416,7 @@ nsPrefMigration::CopyAndRenameNewsrcFiles(nsIFileSpec * newPathSpec)
   {
     nsFileSpec fileOrDirName = (nsFileSpec&)dir; //set first file or dir to a nsFileSpec
     folderName = fileOrDirName.GetLeafName();    //get the filename without the full path
-    fileOrDirNameStr = folderName;
+    fileOrDirNameStr.AssignWithConversion(folderName);
 
     if (nsStringStartsWith(fileOrDirNameStr, NEWSRC_PREFIX_IN_4x) || nsStringStartsWith(fileOrDirNameStr, SNEWSRC_PREFIX_IN_4x)) {
 #ifdef DEBUG_seth
