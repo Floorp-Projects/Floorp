@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  shistory \
 		  webshell \
 		  windowwatcher \
-		  wallet \
 		  gfx \
 		  content \
 		  history \
@@ -67,7 +66,6 @@ CPP_OBJS=                            \
     .\$(OBJDIR)\nsDocShellTreeOwner.obj     \
     .\$(OBJDIR)\nsWebBrowser.obj            \
     .\$(OBJDIR)\nsCommandHandler.obj        \
-    .\$(OBJDIR)\nsNonPersistAuthPrompt.obj  \
     .\$(OBJDIR)\nsWebBrowserContentPolicy.obj \
     $(NULL)
 

@@ -33,7 +33,6 @@ REQUIRES	= xpcom \
 		  docshell \
 		  webBrowser_core \
 		  embed_base \
-		  wallet \
 		  intl \
 		  $(NULL)
 

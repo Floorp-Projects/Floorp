@@ -26,7 +26,6 @@
 // Local Includes
 #include "nsDocShellTreeOwner.h"
 #include "nsWebBrowser.h"
-#include "nsNonPersistAuthPrompt.h"
 
 // Helper Classes
 #include "nsIGenericFactory.h"
@@ -37,6 +36,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsUnicharUtils.h"
+#include "nsISimpleEnumerator.h"
 
 // Interfaces needed to be included
 #include "nsIContextMenuListener.h"
@@ -61,7 +61,6 @@
 #include "nsIWindowWatcher.h"
 #include "nsPIWindowWatcher.h"
 #include "nsIPrompt.h"
-#include "nsIWalletService.h"
 #include "nsRect.h"
 #include "nsIWebBrowserChromeFocus.h"
 
