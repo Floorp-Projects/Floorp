@@ -4096,7 +4096,7 @@ EOF
     PR_MD_CSRCS=qnx.c
     ;;
 
-*-rhapsody*)
+*-darwin*)
     cat >> confdefs.h <<\EOF
 #define XP_UNIX 1
 EOF
