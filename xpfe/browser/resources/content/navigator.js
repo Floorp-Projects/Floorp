@@ -192,6 +192,10 @@ function UpdateBookmarksLastVisitiedDate(event)
     document.getElementById('urlbar').value = window.content.location.href;
   }
 
+  function gotoHistoryIndex(index)
+  {
+     appCore.gotoHistoryIndex(index);
+  }
 
   function BrowserBack()
   {
