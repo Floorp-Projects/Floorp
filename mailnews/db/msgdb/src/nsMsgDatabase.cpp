@@ -932,7 +932,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 
         PRUint32 size;
         (void)msg->GetMessageSize(&size);
-		m_dbFolderInfo->m_expungedBytes += size;
+		m_dbFolderInfo->ChangeExpungedBytes (size);
 
 	}	
 
@@ -1971,6 +1971,7 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 			struct mdbYarn yarn;
 			hdrCell->AliasYarn(GetEnv(), &yarn);
 			YarnTonsString(&yarn, &resultStr);
+			hdrCell->CutStrongRef(GetEnv()); // always release ref
 		}
 	}
 	return err;
@@ -2091,6 +2092,7 @@ nsresult nsMsgDatabase::RowCellColumnToUInt32(nsIMdbRow *hdrRow, mdb_token colum
 			struct mdbYarn yarn;
 			hdrCell->AliasYarn(GetEnv(), &yarn);
 			YarnToUInt32(&yarn, uint32Result);
+			hdrCell->CutStrongRef(GetEnv()); // always release ref
 		}
 	}
 	return err;
@@ -2219,7 +2221,7 @@ nsMsgThread *	nsMsgDatabase::GetThreadForSubject(const char * subject)
 nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 {
 	nsresult result=NS_ERROR_UNEXPECTED;
-	nsMsgThread *thread = nsnull;
+	nsCOMPtr<nsMsgThread> thread;
 	nsMsgKey threadId = nsMsgKey_None;
 
 	if (!newHdr)
@@ -2244,7 +2246,8 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 		if (reference.Length() == 0)
 			break;
 
-		if ((thread = GetThreadForReference(reference)) != NULL)
+		thread = getter_AddRefs(GetThreadForReference(reference)) ;
+		if (thread)
 		{
 			thread->GetThreadKey(&threadId);
 			newHdr->SetThreadId(threadId);
@@ -2257,14 +2260,18 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	nsString subject;
 
 	newHdr->GetSubject(subject);
-	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && thread == NULL && (thread = GetThreadForSubject(nsAutoCString(subject))) != NULL)
+	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && !thread == NULL)
 	{
-		thread->GetThreadKey(&threadId);
-		newHdr->SetThreadId(threadId);
-		//TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
-		// if we move this and do subject threading after, ref threading, 
-		// don't thread within children, since we know it won't work. But for now, pass TRUE.
-		result = AddToThread(newHdr, thread, TRUE);	
+		thread = getter_AddRefs(GetThreadForSubject(nsAutoCString(subject)));
+		if(thread)
+		{
+			thread->GetThreadKey(&threadId);
+			newHdr->SetThreadId(threadId);
+			//TRACE("threading based on subject %s\n", (const char *) msgHdr->m_subject);
+			// if we move this and do subject threading after, ref threading, 
+			// don't thread within children, since we know it won't work. But for now, pass TRUE.
+			result = AddToThread(newHdr, thread, TRUE);     
+		}
 	}
 #endif // SUBJ_THREADING
 

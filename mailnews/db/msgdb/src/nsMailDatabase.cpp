@@ -42,7 +42,6 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 {
 	nsMailDatabase	*mailDB;
 	PRBool			summaryFileExists;
-	struct stat		st;
 	PRBool			newFile = PR_FALSE;
 	nsLocalFolderSummarySpec	summarySpec(folderName);
 
@@ -76,14 +75,6 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 	// folder file.
 	summaryFileExists = summarySpec.Exists();
 
-	char	*nativeFolderName = nsCRT::strdup((const char *) folderName);
-
-#if defined(XP_PC) || defined(XP_MAC)
-	UnixToNative(nativeFolderName);
-#endif
-	stat (nativeFolderName, &st);
-	PR_FREEIF(nativeFolderName);
-
 	nsresult err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 	
 	err = mailDB->OpenMDB((const char *) summarySpec, create);
@@ -105,12 +96,16 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 				PRInt32 numNewMessages;
                 PRUint32 folderSize;
                 time_t  folderDate;
+				nsFileSpec::TimeStamp actualFolderTimeStamp;
+
+				mailDB->m_folderSpec->GetModDate(actualFolderTimeStamp) ;
+
 
 				folderInfo->GetNumNewMessages(&numNewMessages);
                 folderInfo->GetFolderSize(&folderSize);
                 folderInfo->GetFolderDate(&folderDate);
-				if (folderSize != st.st_size ||
-                    folderDate != st.st_mtime ||
+				if (folderSize != mailDB->m_folderSpec->GetFileSize()||
+                    folderDate != actualFolderTimeStamp ||
                     numNewMessages < 0)
 					err = NS_MSG_ERROR_FOLDER_SUMMARY_OUT_OF_DATE;
 			}
@@ -348,21 +343,20 @@ void nsMailDatabase::UpdateFolderFlag(nsIMsgDBHdr *mailHdr, PRBool bSet,
 /* static */  nsresult nsMailDatabase::SetSummaryValid(PRBool valid)
 {
 	nsresult ret = NS_OK;
-	struct stat st;
-	char	*nativeFileName = nsCRT::strdup(*m_folderSpec);
-#if defined(XP_PC) || defined(XP_MAC)
-	UnixToNative(nativeFileName);
-#endif
 
-	if (stat(nativeFileName, &st)) 
+	if (!m_folderSpec->Exists()) 
 		return NS_MSG_ERROR_FOLDER_MISSING;
 
 	if (m_dbFolderInfo)
 	{
 		if (valid)
 		{
-			m_dbFolderInfo->SetFolderSize(st.st_size);
-			m_dbFolderInfo->SetFolderDate(st.st_mtime);
+			nsFileSpec::TimeStamp actualFolderTimeStamp;
+			m_folderSpec->GetModDate(actualFolderTimeStamp) ;
+
+
+			m_dbFolderInfo->SetFolderSize(m_folderSpec->GetFileSize());
+			m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
 		}
 		else
 		{
@@ -440,22 +434,12 @@ nsresult nsMailDatabase::GetIdsWithNoBodies (nsMsgKeyArray &bodylessIds)
 /* static */
 nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int numunread)
 {
-	struct stat st;
 	nsLocalFolderSummarySpec	summarySpec(*folderName);
 	nsFileSpec					summaryPath(summarySpec);
 	nsresult		err;
 
-	char	*nativeFileName = nsCRT::strdup(*folderName);
-#if defined(XP_PC) || defined(XP_MAC)
-	UnixToNative(nativeFileName);
-#endif
-
 	if (!folderName->Exists())
 		return NS_MSG_ERROR_FOLDER_SUMMARY_MISSING;
-
-	stat(nativeFileName, &st);
-
-	PR_FREEIF(nativeFileName);	// ### use file spec method for size and time stamp when they're written.
 
 	// should we have type safe downcast methods again?
 	nsMailDatabase *pMessageDB = (nsMailDatabase *) nsMailDatabase::FindInCache(summaryPath);
@@ -492,8 +476,11 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 	}
 	
 	{
-		pMessageDB->m_dbFolderInfo->m_folderSize = st.st_size;
-		pMessageDB->m_dbFolderInfo->m_folderDate = st.st_mtime;
+		nsFileSpec::TimeStamp actualFolderTimeStamp;
+		folderName->GetModDate(actualFolderTimeStamp) ;
+
+		pMessageDB->m_dbFolderInfo->SetFolderSize(folderName->GetFileSize());
+		pMessageDB->m_dbFolderInfo->SetFolderDate(actualFolderTimeStamp);
 		pMessageDB->m_dbFolderInfo->ChangeNumVisibleMessages(num);
 		pMessageDB->m_dbFolderInfo->ChangeNumNewMessages(numunread);
 		pMessageDB->m_dbFolderInfo->ChangeNumMessages(num);

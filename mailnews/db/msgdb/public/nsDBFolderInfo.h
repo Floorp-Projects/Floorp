@@ -40,7 +40,7 @@ class nsMsgDatabase;
 class nsDBFolderInfo : public nsIDBFolderInfo
 {
 public:
-	friend class nsMsgDatabase;
+//	friend class nsMsgDatabase;
 
 	nsDBFolderInfo(nsMsgDatabase *mdb);
 	virtual ~nsDBFolderInfo();
@@ -115,6 +115,7 @@ public:
 	void				ChangeImapTotalPendingMessages(PRInt32 delta);
 	void				ChangeImapUnreadPendingMessages(PRInt32 delta) ;
 	
+	nsresult			InitFromExistingDB();
 	// get and set arbitrary property, aka row cell value.
 	nsresult	SetPropertyWithToken(mdb_token aProperty, nsString &propertyStr);
 	nsresult	SetUint32PropertyWithToken(mdb_token aProperty, PRUint32 propertyValue);
@@ -123,16 +124,33 @@ public:
 	nsresult	GetUint32PropertyWithToken(mdb_token aProperty, PRUint32 &propertyValue);
 	nsresult	GetInt32PropertyWithToken(mdb_token aProperty, PRInt32 &propertyValue);
 
+
+	nsMsgKeyArray m_lateredKeys;		// list of latered messages
+
+protected:
+	
+	// initialize from appropriate table and row in existing db.
+	nsresult			InitMDBInfo();
+	nsresult			LoadMemberVariables();
+
+	PRInt32		m_folderSize;
+	PRInt32		m_expungedBytes;	// sum of size of deleted messages in folder
+	time_t		m_folderDate;
+	nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
+
+	PRInt32		m_numVisibleMessages;	// doesn't include expunged or ignored messages (but does include collapsed).
+	PRInt32		m_numNewMessages;
+	PRInt32		m_numMessages;		// includes expunged and ignored messages
+	PRInt32		m_flags;			// folder specific flags. This holds things like re-use thread pane,
+									// configured for off-line use, use default retrieval, purge article/header options
+	nsMsgKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message
+
 	PRUint16	m_version;			// for upgrading...
 	PRInt32		m_sortType;			// the last sort type open on this db.
 	PRInt16		m_csid;				// default csid for these messages
 	PRInt16		m_IMAPHierarchySeparator;	// imap path separator
 	PRInt8		m_sortOrder;		// the last sort order (up or down
 	// mail only (for now)
-	PRInt32		m_folderSize;
-	PRInt32		m_expungedBytes;	// sum of size of deleted messages in folder
-	time_t		m_folderDate;
-	nsMsgKey  m_highWaterMessageKey;	// largest news article number or imap uid whose header we've seen
 	
 	// IMAP only
 	PRInt32		m_ImapUidValidity;
@@ -142,23 +160,6 @@ public:
 	// news only (for now)
 	nsMsgKey	m_expiredMark;		// Highest invalid article number in group - for expiring
 	PRInt32		m_viewType;			// for news, the last view type open on this db.	
-
-	nsMsgKeyArray m_lateredKeys;		// list of latered messages
-
-protected:
-	
-	// initialize from appropriate table and row in existing db.
-	nsresult			InitFromExistingDB();
-	nsresult			InitMDBInfo();
-	nsresult			LoadMemberVariables();
-
-	PRInt32		m_numVisibleMessages;	// doesn't include expunged or ignored messages (but does include collapsed).
-	PRInt32		m_numNewMessages;
-	PRInt32		m_numMessages;		// includes expunged and ignored messages
-	PRInt32		m_flags;			// folder specific flags. This holds things like re-use thread pane,
-									// configured for off-line use, use default retrieval, purge article/header options
-	nsMsgKey	m_lastMessageLoaded; // set by the FE's to remember the last loaded message
-
 // the db folder info will have to know what db and row it belongs to, since it is really
 // just a wrapper around the singleton folder info row in the mdb. 
 	nsMsgDatabase		*m_mdb;
