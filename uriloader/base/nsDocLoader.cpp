@@ -917,6 +917,14 @@ nsDocLoaderImpl::GetDOMWindow(nsIDOMWindow **aResult)
   return rv;
 }
 
+NS_IMETHODIMP
+nsDocLoaderImpl::GetIsLoadingDocument(PRBool *aIsLoadingDocument)
+{
+  *aIsLoadingDocument = mIsLoadingDocument;
+
+  return NS_OK;
+}
+
 nsresult nsDocLoaderImpl::GetMaxTotalProgress(PRInt32 *aMaxTotalProgress)
 {
   PRUint32 count = 0;

@@ -217,11 +217,19 @@ nsBrowserStatusHandler.prototype =
     const nsIChannel = Components.interfaces.nsIChannel;
     var ctype;
     if (aStateFlags & nsIWebProgressListener.STATE_START) {
-      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
+      // If this is a network start or the first stray request (the first
+      // request outside of the document load), initialize the throbber and his
+      // friends.
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK ||
+          (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST &&
+           !aWebProgress.isLoadingDocument &&
+           this.totalRequests == this.finishedRequests)) {
         // Remember when loading commenced.
-        this.startTime = (new Date()).getTime();
+        this.startTime = Date.now();
 
-        if (aRequest && aWebProgress.DOMWindow == content)
+        // Call start document load listeners (only if this is a network load)
+        if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK &&
+            aRequest && aWebProgress.DOMWindow == content)
           this.startDocumentLoad(aRequest);
 
         // Turn the throbber on.
@@ -248,40 +256,65 @@ nsBrowserStatusHandler.prototype =
         if (!this.useRealProgressFlag)
           this.onProgressChange(null, null, 0, 0, this.finishedRequests, this.totalRequests);
       }
+
       if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK) {
         if (aRequest) {
           if (aWebProgress.DOMWindow == content)
             this.endDocumentLoad(aRequest, aStatus);
+        }
+      }
 
-          var location = aRequest.QueryInterface(nsIChannel).URI.spec;
+      // If this is a network stop or the last request stop outside of loading
+      // the document, stop throbbers and progress bars and such
+      if (aStateFlags & nsIWebProgressListener.STATE_IS_NETWORK ||
+          (aStateFlags & nsIWebProgressListener.STATE_IS_REQUEST &&
+           !aWebProgress.isLoadingDocument &&
+           this.totalRequests == this.finishedRequests)) {
+
+        if (aRequest) {
           var msg = "";
-          if (location != "about:blank") {
-            const kErrorBindingAborted = 2152398850;
-            const kErrorNetTimeout = 2152398862;
-            switch (aStatus) {
-              case kErrorBindingAborted:
-                msg = gNavigatorBundle.getString("nv_stopped");
-                break;
-              case kErrorNetTimeout:
-                msg = gNavigatorBundle.getString("nv_timeout");
-                break;
-              default:
-                // Record page loading time.
-                var elapsed = ((new Date()).getTime() - this.startTime) / 1000;
-                msg = gNavigatorBundle.getString("nv_done");
-                msg = msg.replace(/%elapsed%/, elapsed);
+          // Get the channel if the request is a channel
+          var channel;
+          try {
+            channel = aRequest.QueryInterface(nsIChannel);
+          }
+          catch(e) { };
+
+          if (channel) {
+            var location = channel.URI.spec;
+            if (location != "about:blank") {
+              const kErrorBindingAborted = 2152398850;
+              const kErrorNetTimeout = 2152398862;
+              switch (aStatus) {
+                case kErrorBindingAborted:
+                  msg = gNavigatorBundle.getString("nv_stopped");
+                  break;
+                case kErrorNetTimeout:
+                  msg = gNavigatorBundle.getString("nv_timeout");
+                  break;
+              }
             }
+          }
+          // If msg is false then we did not have an error (channel may have
+          // been null, in the case of a stray image load).
+          if (!msg) {
+            // Record page loading time.
+            var elapsed = (Date.now() - this.startTime) / 1000;
+            msg = gNavigatorBundle.getString("nv_done");
+            msg = msg.replace(/%elapsed%/, elapsed);
           }
           this.status = "";
           this.setDefaultStatus(msg);
-          try {
-            ctype = aRequest.QueryInterface(nsIChannel).contentType;
-            if (this.mimeTypeIsTextBased(ctype)) 
-              this.isImage.removeAttribute('disabled');
-            else
-              this.isImage.setAttribute('disabled', 'true');
+          if (channel) {
+            try {
+              ctype = channel.contentType;
+              if (this.mimeTypeIsTextBased(ctype))
+                this.isImage.removeAttribute('disabled');
+              else
+                this.isImage.setAttribute('disabled', 'true');
+            }
+            catch (e) {}
           }
-          catch (e) {}
         }
 
         // Turn the progress meter and throbber off.
