@@ -277,6 +277,7 @@ void nsHTMLValue::SetEmptyValue(void)
   mUnit = eHTMLUnit_Empty;
 }
 
+#ifdef DEBUG
 void nsHTMLValue::AppendToString(nsAWritableString& aBuffer) const
 {
   if (eHTMLUnit_Null == mUnit) {
@@ -305,7 +306,6 @@ void nsHTMLValue::AppendToString(nsAWritableString& aBuffer) const
     nsAutoString intStr;
     intStr.Append(NS_LITERAL_STRING("(0x"));
     intStr.AppendInt(NS_GET_R(mValue.mColor), 16);
-    intStr.Append(intStr);
     intStr.Append(NS_LITERAL_STRING(" 0x"));
     intStr.AppendInt(NS_GET_G(mValue.mColor), 16);
     intStr.Append(NS_LITERAL_STRING(" 0x"));
@@ -346,9 +346,4 @@ void nsHTMLValue::AppendToString(nsAWritableString& aBuffer) const
   }
   aBuffer.Append(PRUnichar(' '));
 }
-
-void nsHTMLValue::ToString(nsAWritableString& aBuffer) const
-{
-  aBuffer.Truncate();
-  AppendToString(aBuffer);
-}
+#endif // DEBUG
