@@ -30,7 +30,7 @@ LINCS = \
 	-I$(PUBLIC)\libxpt	\
 	$(NULL)
 
-LLIBS	=	$(LIBNSPR)	\
+LLIBS	=	\
 		$(NULL)
 
 CSRCS	=	\
