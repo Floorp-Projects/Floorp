@@ -16,7 +16,7 @@
 <!ENTITY newBlankPageCmd.label ".Blank Page">  
 <!ENTITY newPageFromTemplate.label ".Page from Template">  
 <!ENTITY newPageFromWizard.label ".Page from Wizard">  
-<!ENTITY newCardCmd.label ".New Card...">  
+<!ENTITY newCardCmd.label "New Card...">  
 <!ENTITY newListCmd.label ".New List...">  
 <!ENTITY newAddressBookCmd.label ".New Address Book...">  
 <!ENTITY newDirectoryCmd.label ".New Directory...">  

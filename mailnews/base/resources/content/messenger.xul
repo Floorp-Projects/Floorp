@@ -181,10 +181,10 @@ Rights Reserved.
 <!ENTITY replyMsgCmd.label "Reply">  
 <!ENTITY replyToAllMsgCmd.label "Reply to All">  
 <!ENTITY forwardMsgCmd.label "Forward">  
-<!ENTITY forwardAsMenu.label ".Forward As">  
-<!ENTITY forwardAsInline.label ".Inline">  
-<!ENTITY forwardAsQuoted.label ".Quoted">  
-<!ENTITY forwardAsAttachmentCmd.label ".Attachment">  
+<!ENTITY forwardAsMenu.label "Forward As">  
+<!ENTITY forwardAsInline.label "Inline">  
+<!ENTITY forwardAsQuoted.label "Quoted">  
+<!ENTITY forwardAsAttachmentCmd.label "Attachment">  
 <!ENTITY editMsgAsNewCmd.label ".Edit Message As New">  
 <!ENTITY moveMsgMenu.label "Move Message">  
 <!ENTITY copyMsgMenu.label "Copy Message">  
