@@ -165,23 +165,23 @@ void nsClipboard::SetTopLevelWidget(GtkWidget* w)
 {
   // Don't set up any more event handlers if we're being called twice
   // for the same toplevel widget
-  if (mWidget == w)
+  if (sWidget == w)
     return;
 
-  mWidget = w;
+  sWidget = w;
 
   // Respond to requests for the selection:
-  gtk_signal_connect(GTK_OBJECT(mWidget), "selection_get",
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_get",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionRequestCB),
                      0);
 
   // When someone else takes the selection away:
-  gtk_signal_connect(GTK_OBJECT(mWidget), "selection_clear_event",
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_clear_event",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionClearCB),
                      0);
 
   // Set up the paste handler:
-  gtk_signal_connect(GTK_OBJECT(mWidget), "selection_received",
+  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_received",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionReceivedCB),
                      0);
 
