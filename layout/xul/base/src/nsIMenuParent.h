@@ -151,6 +151,8 @@ public:
   
   NS_IMETHOD IsMenuBar(PRBool& isMenuBar) = 0;
   NS_IMETHOD ConsumeOutsideClicks(PRBool& aConsumeOutsideClicks) = 0;
+  NS_IMETHOD ClearRecentlyRolledUp() = 0;
+  NS_IMETHOD RecentlyRolledUp(nsIMenuFrame *aMenuFrame, PRBool *aJustRolledUp) = 0;
 
   NS_IMETHOD DismissChain() = 0;
   NS_IMETHOD HideChain() = 0;

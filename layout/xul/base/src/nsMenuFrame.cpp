@@ -536,7 +536,33 @@ nsMenuFrame::ToggleMenuState()
     OpenMenu(PR_FALSE);
   }
   else {
-    OpenMenu(PR_TRUE);
+    PRBool justRolledUp = PR_FALSE;
+    if (mMenuParent) {
+      mMenuParent->RecentlyRolledUp(this, &justRolledUp);
+    }
+    if (justRolledUp) {
+      // Don't let a click reopen a menu that was just rolled up
+      // from the same click. Otherwise, the user can't click on
+      // a menubar item to toggle its submenu closed.
+      OpenMenu(PR_FALSE);
+      SelectMenu(PR_TRUE);
+    }
+    else {
+      OpenMenu(PR_TRUE);
+    }
+  }
+
+  if (mMenuParent) {
+    // Make sure the current menu which is being toggled on
+    // the menubar is highlighted
+    mMenuParent->SetActive(PR_FALSE);
+    mMenuParent->SetActive(PR_TRUE);
+    mMenuParent->SetCurrentMenuItem(this);
+    // We've successfully prevented the same click from both
+    // dismissing and reopening this menu. 
+    // Clear the recent rollup state so we don't prevent
+    // this menu from being opened by the next click.
+    mMenuParent->ClearRecentlyRolledUp();
   }
 
   return NS_OK;
@@ -1231,6 +1257,9 @@ nsMenuFrame::KeyboardNavigation(PRUint32 aKeyCode, PRBool& aHandledFlag)
 NS_IMETHODIMP
 nsMenuFrame::Escape(PRBool& aHandledFlag)
 {
+  if (mMenuParent) {
+    mMenuParent->ClearRecentlyRolledUp();
+  }
   nsIFrame* frame = mPopupFrames.FirstChild();
   if (frame) {
     nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
@@ -1641,8 +1670,16 @@ nsMenuFrame::Execute(nsGUIEvent *aEvent)
   SelectMenu(PR_FALSE);
 
   // Now hide all of the open menus.
-  if (mMenuParent)
+  if (mMenuParent) {
     mMenuParent->HideChain();
+
+    // Since menu was not dismissed via click outside menu
+    // we don't want to keep track of this rollup.
+    // Otherwise, we keep track so that the same click 
+    // won't both dismiss and then reopen a menu.
+    mMenuParent->ClearRecentlyRolledUp();
+  }
+
 
   nsEventStatus status = nsEventStatus_eIgnore;
   nsMouseEvent event;
