@@ -14,4 +14,3 @@ else
   print "<html xmlns=\"http://www.w3.org/1999/xhtml\">\n";
   print "<body><p>Expected a POST</p></body></html>\n";	
 }
-close LOGFILE;
