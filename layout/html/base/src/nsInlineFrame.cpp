@@ -456,7 +456,7 @@ nsInlineFrame::CalculateMargins(nsInlineReflowState& aState,
     // its carried out top margin.
     nscoord childsTopMargin = aInlineReflow.GetTopMargin();
     nscoord collapsedTopMargin =
-      PR_MAX(childsCarriedOutTopMargin, childsTopMargin);
+      nsInlineReflow::MaxMargin(childsCarriedOutTopMargin, childsTopMargin);
 
     // If this frame is a root for margins then we will apply the
     // collapsed top margin value ourselves. Otherwise, we pass it out
@@ -476,7 +476,8 @@ nsInlineFrame::CalculateMargins(nsInlineReflowState& aState,
     // up being placed in this block frame.
     nscoord childsBottomMargin = aInlineReflow.GetBottomMargin();
     nscoord collapsedBottomMargin =
-      PR_MAX(childsCarriedOutBottomMargin, childsBottomMargin);
+      nsInlineReflow::MaxMargin(childsCarriedOutBottomMargin,
+                                childsBottomMargin);
     aBottomMarginResult = collapsedBottomMargin;
     haveCarriedMargins = PR_TRUE;
   }

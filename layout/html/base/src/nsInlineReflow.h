@@ -81,6 +81,8 @@ public:
                                        const nsStyleSpacing* aSpacing,
                                        nsMargin& aMargin);
 
+  static nscoord MaxMargin(nscoord a, nscoord b);
+
 protected:
   void SetFrame(nsIFrame* aFrame);
 
@@ -172,5 +174,22 @@ protected:
   nscoord mY;
   nscoord mBottomEdge;
 };
+
+inline nscoord
+nsInlineReflow::MaxMargin(nscoord a, nscoord b)
+{
+  if (a < 0) {
+    if (b < 0) {
+      if (a < b) return a;
+      return b;
+    }
+    return b + a;
+  }
+  else if (b < 0) {
+    return a + b;
+  }
+  if (a > b) return a;
+  return b;
+}
 
 #endif /* nsInlineReflow_h___ */

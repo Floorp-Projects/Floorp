@@ -2145,9 +2145,9 @@ nsBlockFrame::RecoverLineMargins(nsBlockReflowState& aState,
 
   // Collapse the carried-out-margins with the childs margins
   aBottomMarginResult =
-    PR_MAX(childsCarriedOutBottomMargin, childsBottomMargin);
+    nsInlineReflow::MaxMargin(childsCarriedOutBottomMargin, childsBottomMargin);
   aTopMarginResult =
-    PR_MAX(childsCarriedOutTopMargin, childsTopMargin);
+    nsInlineReflow::MaxMargin(childsCarriedOutTopMargin, childsTopMargin);
 }
 
 nsresult
@@ -2189,8 +2189,9 @@ nsBlockFrame::FrameAppendedReflow(nsBlockReflowState& aState)
     if (0 == firstDirtyLine->mBounds.height) {
       // For zero height lines, collapse the lines top and bottom
       // margins together to produce the effective bottomMargin value.
-      bottomMargin = PR_MAX(topMargin, bottomMargin);
-      bottomMargin = PR_MAX(aState.mPrevBottomMargin, bottomMargin);
+      bottomMargin = nsInlineReflow::MaxMargin(topMargin, bottomMargin);
+      bottomMargin = nsInlineReflow::MaxMargin(aState.mPrevBottomMargin,
+                                               bottomMargin);
     }
     aState.mPrevBottomMargin = bottomMargin;
 
@@ -2809,7 +2810,7 @@ nsBlockFrame::CalculateMargins(nsBlockReflowState& aState,
     // its carried out top margin.
     nscoord childsTopMargin = aInlineContext ? 0 : ir.GetTopMargin();
     nscoord collapsedTopMargin =
-      PR_MAX(childsCarriedOutTopMargin, childsTopMargin);
+      nsInlineReflow::MaxMargin(childsCarriedOutBottomMargin, childsTopMargin);
     if (isFirstNonEmptyLine) {
       // If this block is a root for margins then we will apply the
       // collapsed top margin value ourselves. Otherwise, we pass it out
@@ -2827,7 +2828,8 @@ nsBlockFrame::CalculateMargins(nsBlockReflowState& aState,
       // For secondary lines we also collpase the sibling margins. The
       // previous lines bottom margin is collapsed with the current
       // lines collapsed top margin.
-      collapsedTopMargin = PR_MAX(aState.mPrevBottomMargin, collapsedTopMargin);
+      collapsedTopMargin = nsInlineReflow::MaxMargin(aState.mPrevBottomMargin,
+                                                     collapsedTopMargin);
     }
     aTopMarginResult = collapsedTopMargin;
 
@@ -2836,7 +2838,8 @@ nsBlockFrame::CalculateMargins(nsBlockReflowState& aState,
     // up being placed in this block frame.
     nscoord childsBottomMargin = aInlineContext ? 0 : ir.GetBottomMargin();
     nscoord collapsedBottomMargin =
-      PR_MAX(childsCarriedOutBottomMargin, childsBottomMargin);
+      nsInlineReflow::MaxMargin(childsCarriedOutBottomMargin,
+                                childsBottomMargin);
     aBottomMarginResult = collapsedBottomMargin;
   }
 //ListTag(stdout); printf(": line=%p topMargin=%d bottomMargin=%d [%s,%s]\n", aLine, aTopMarginResult, aBottomMarginResult, isFirstNonEmptyLine ? "first" : "!first", aState.mIsMarginRoot ? "root" : "!root");
@@ -2924,7 +2927,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     // height then collapse the carried margins down into a single
     // (bottom margin) value.
     if (0 == aLine->mBounds.height) {
-      bottomMargin = PR_MAX(topMargin, bottomMargin);
+      bottomMargin = nsInlineReflow::MaxMargin(topMargin, bottomMargin);
       topMargin = 0;
     }
   }
@@ -3300,7 +3303,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
     // height then collapse the carried margins down into a single
     // (bottom margin) value.
     if (0 == aLine->mBounds.height) {
-      bottomMargin = PR_MAX(topMargin, bottomMargin);
+      bottomMargin = nsInlineReflow::MaxMargin(topMargin, bottomMargin);
       topMargin = 0;
     }
   }

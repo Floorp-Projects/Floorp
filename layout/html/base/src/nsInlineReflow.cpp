@@ -539,11 +539,6 @@ nsInlineReflow::PlaceFrame(nsHTMLReflowMetrics& aMetrics, nsRect& aBounds)
   // Compute collapsed margin information
   mCarriedOutTopMargin = aMetrics.mCarriedOutTopMargin;
   mCarriedOutBottomMargin = aMetrics.mCarriedOutBottomMargin;
-#if 0
-  //XXX
-    mCarriedOutTopMargin = PR_MAX(mCarriedOutTopMargin, mMargin.top);
-    mCarriedOutBottomMargin = PR_MAX(mCarriedOutBottomMargin, mMargin.bottom);
-#endif
 
   // Advance to next X coordinate
   mX = aBounds.XMost() + mRightMargin;
