@@ -1322,8 +1322,8 @@ alpha*-*-osf*)
 	DSO_LDOPTS='-shared -Wl,-soname -Wl,$@'
     else
 	MOZ_DEBUG_FLAGS='-g3'
-	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g -std1'
-	CFLAGS="$CFLAGS -std1 -ieee"
+	ASFLAGS='-I$(topsrcdir)/xpcom/reflect/xptcall/public -g'
+	CFLAGS="$CFLAGS -ieee"
 	CXXFLAGS="$CXXFLAGS "'-noexceptions -ieee  -ptr $(DIST)/cxx_repository'
 	DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $@ -update_registry $(DIST)/so_locations'
 	DSO_CFLAGS=
