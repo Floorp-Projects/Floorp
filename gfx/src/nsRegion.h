@@ -30,79 +30,76 @@
 #include "nsRect.h"
 
 
+// Special version of nsRect structure for speed optimizations in nsRegion code.
+// Most important functions could be made inline and be sure that passed rectangles
+// will always be non-empty. 
+
+struct nsRectFast : public nsRect
+{
+  nsRectFast () {}      // No need to call parent constructor to set default values
+  nsRectFast (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
+  nsRectFast (const nsRect& aRect) : nsRect (aRect) {}
+  operator nsRect () { return *NS_STATIC_CAST (nsRect*, this); }
+
+
+#if 1   // Override nsRect methods to make them inline. Do not check for emptiness.
+  PRBool Contains (const nsRectFast &aRect) const
+  {
+    return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
+                     (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
+  }
+
+  PRBool Intersects (const nsRectFast &aRect) const
+  {
+    return (PRBool) ((x < aRect.XMost()) && (y < aRect.YMost()) &&
+                     (aRect.x < XMost()) && (aRect.y < YMost()));
+  }
+
+  PRBool IntersectRect (const nsRectFast &aRect1, const nsRectFast &aRect2)
+  {
+    const nscoord xmost = PR_MIN (aRect1.XMost(), aRect2.XMost());
+    x = PR_MAX (aRect1.x, aRect2.x);
+    width = xmost - x;
+    if (width <= 0) return PR_FALSE;
+
+    const nscoord ymost = PR_MIN (aRect1.YMost(), aRect2.YMost());
+    y = PR_MAX (aRect1.y, aRect2.y);
+    height = ymost - y;
+    if (height <= 0) return PR_FALSE;
+
+    return PR_TRUE;
+  }
+
+  void UnionRect (const nsRectFast &aRect1, const nsRectFast &aRect2)
+  {
+    const nscoord xmost = PR_MAX (aRect1.XMost(), aRect2.XMost());
+    const nscoord ymost = PR_MAX (aRect1.YMost(), aRect2.YMost());
+    x = PR_MIN (aRect1.x, aRect2.x);
+    y = PR_MIN (aRect1.y, aRect2.y);
+    width  = xmost - x;
+    height = ymost - y;
+  }
+#endif
+};
+
+
+
 class nsRegion
 {
   friend class nsRegionRectIterator;
   friend class RgnRectMemoryAllocator;
 
-  struct RgnRect : public nsRect
+  struct RgnRect : public nsRectFast
   {
     RgnRect* prev;
     RgnRect* next;
 
     RgnRect () {}                           // No need to call parent constructor to set default values
-    RgnRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRect (aX, aY, aWidth, aHeight) {}
-    RgnRect (const nsRect& aRect) : nsRect (aRect) {}
+    RgnRect (PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight) : nsRectFast (aX, aY, aWidth, aHeight) {}
+    RgnRect (const nsRectFast& aRect) : nsRectFast (aRect) {}
 
-#if 1   // Override nsRect methods to make them inline. These are very important to nsRegion
-    #ifdef MIN
-    #undef MIN
-    #endif
-
-    #ifdef MAX
-    #undef MAX
-    #endif
-
-    #define MIN(a,b)\
-      ((a) < (b) ? (a) : (b))
-    #define MAX(a,b)\
-      ((a) > (b) ? (a) : (b))
-
-    PRBool Contains (const nsRect &aRect) const
-    {
-      return (PRBool) ((aRect.x >= x) && (aRect.y >= y) &&
-                       (aRect.XMost() <= XMost()) && (aRect.YMost() <= YMost()));
-    }
-
-    PRBool Intersects (const nsRect &aRect) const
-    {
-      return (PRBool) ((x < aRect.XMost()) && (y < aRect.YMost()) &&
-                       (aRect.x < XMost()) && (aRect.y < YMost()));
-    }
-
-    PRBool IntersectRect (const nsRect &aRect1, const nsRect &aRect2)
-    {
-      x = MAX (aRect1.x, aRect2.x);
-
-      // Compute the destination width
-      const nscoord tmpX = MIN (aRect1.XMost(), aRect2.XMost());
-      if (tmpX <= x)
-        return PR_FALSE;
-
-      y = MAX (aRect1.y, aRect2.y);
-
-      // Compute the destination height
-      const nscoord tmpY = MIN (aRect1.YMost(), aRect2.YMost());
-      if (tmpY <= y)
-        return PR_FALSE;
-
-      width  = tmpX - x;
-      height = tmpY - y;
-
-      return PR_TRUE;
-    }
-
-    void UnionRect (const nsRect &aRect1, const nsRect &aRect2)
-    {
-      x = MIN (aRect1.x, aRect2.x);
-      y = MIN (aRect1.y, aRect2.y);
-      width  = MAX (aRect1.XMost(), aRect2.XMost()) - x;
-      height = MAX (aRect1.YMost(), aRect2.YMost()) - y;
-    }
-#endif
-
-    void* operator new (size_t);
-    void  operator delete (void* aRect, size_t);
+    inline void* operator new (size_t);
+    inline void  operator delete (void* aRect, size_t);
     operator = (const RgnRect& aRect)       // Do not overwrite prev/next pointers
     { 
        x = aRect.x;
@@ -115,59 +112,61 @@ class nsRegion
 
 public:
   nsRegion ();
-  ~nsRegion () { SetToElements (0); }
+ ~nsRegion () { SetToElements (0); }
 
   nsRegion& Copy (const nsRegion& aRegion);
-  nsRegion& Copy (const nsRect& aRect);
+  nsRegion& Copy (const nsRectFast& aRect);
 
-  nsRegion& And  (const nsRegion& aRgn1, const nsRegion& aRgn2);
-  nsRegion& And  (const nsRegion& aRegion, const nsRect& aRect);
-  nsRegion& And  (const nsRect& aRect, const nsRegion& aRegion)
+  nsRegion& And  (const nsRegion& aRgn1,   const nsRegion& aRgn2);
+  nsRegion& And  (const nsRegion& aRegion, const nsRectFast& aRect);
+  nsRegion& And  (const nsRectFast& aRect, const nsRegion& aRegion)
   {
     return  And  (aRegion, aRect);
   }
-  nsRegion& And  (const nsRect& aRect1, const nsRect& aRect2)
+  nsRegion& And  (const nsRectFast& aRect1, const nsRectFast& aRect2)
   {
-    nsRect TmpRect;
-    TmpRect.IntersectRect (aRect1, aRect2);
+    nsRectFast TmpRect;
+    
+    // Force generic nsRect::IntersectRect to handle empty rectangles!
+    TmpRect.nsRect::IntersectRect (aRect1, aRect2);
     return Copy (TmpRect);
   }
     
-  nsRegion& Or   (const nsRegion& aRgn1, const nsRegion& aRgn2);
-  nsRegion& Or   (const nsRegion& aRegion, const nsRect& aRect);
-  nsRegion& Or   (const nsRect& aRect, const nsRegion& aRegion)
+  nsRegion& Or   (const nsRegion& aRgn1,   const nsRegion& aRgn2);
+  nsRegion& Or   (const nsRegion& aRegion, const nsRectFast& aRect);
+  nsRegion& Or   (const nsRectFast& aRect, const nsRegion& aRegion)
   {  
     return  Or   (aRegion, aRect);
   }
-  nsRegion& Or   (const nsRect& aRect1, const nsRect& aRect2)
+  nsRegion& Or   (const nsRectFast& aRect1, const nsRectFast& aRect2)
   {
     nsRegion TmpRegion;
     TmpRegion.Copy (aRect1);
     return Or (TmpRegion, aRect2);
   }
 
-  nsRegion& Xor  (const nsRegion& aRgn1, const nsRegion& aRgn2);
-  nsRegion& Xor  (const nsRegion& aRegion, const nsRect& aRect);
-  nsRegion& Xor  (const nsRect& aRect, const nsRegion& aRegion)
+  nsRegion& Xor  (const nsRegion& aRgn1,   const nsRegion& aRgn2);
+  nsRegion& Xor  (const nsRegion& aRegion, const nsRectFast& aRect);
+  nsRegion& Xor  (const nsRectFast& aRect, const nsRegion& aRegion)
   {
     return  Xor  (aRegion, aRect);
   }
-  nsRegion& Xor  (const nsRect& aRect1, const nsRect& aRect2)
+  nsRegion& Xor  (const nsRectFast& aRect1, const nsRectFast& aRect2)
   {
     nsRegion TmpRegion;
     TmpRegion.Copy (aRect1);
     return Xor (TmpRegion, aRect2);
   }
 
-  nsRegion& Sub  (const nsRegion& aRgn1, const nsRegion& aRgn2);
-  nsRegion& Sub  (const nsRegion& aRegion, const nsRect& aRect);
-  nsRegion& Sub  (const nsRect& aRect, const nsRegion& aRegion)
+  nsRegion& Sub  (const nsRegion& aRgn1,   const nsRegion& aRgn2);
+  nsRegion& Sub  (const nsRegion& aRegion, const nsRectFast& aRect);
+  nsRegion& Sub  (const nsRectFast& aRect, const nsRegion& aRegion)
   {
     nsRegion TmpRegion;
     TmpRegion.Copy (aRect);
     return Sub (TmpRegion, aRegion);
   }
-  nsRegion& Sub  (const nsRect& aRect1, const nsRect& aRect2)
+  nsRegion& Sub  (const nsRectFast& aRect1, const nsRectFast& aRect2)
   {
     nsRegion TmpRegion;
     TmpRegion.Copy (aRect1);
@@ -175,9 +174,9 @@ public:
   }
 
 
-  PRBool GetBoundRect (nsRect* aBound) const
+  PRBool GetBoundRect (nsRect& aBound) const
   {
-    *aBound = mBoundRect;
+    aBound = mBoundRect;
     return !mBoundRect.IsEmpty ();
   }
 
@@ -197,7 +196,7 @@ private:
   PRUint32    mRectCount;
   RgnRect*    mCurRect;
   RgnRect     mRectListHead;
-  nsRect      mBoundRect;
+  nsRectFast  mBoundRect;
 
   void InsertBefore (RgnRect* aNewRect, RgnRect* aRelativeRect)
   {
@@ -222,11 +221,18 @@ private:
   void SetToElements (PRUint32 aCount);
   RgnRect* Remove (RgnRect* aRect);
   void InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly = PR_FALSE);
+  void SaveLinkChain ();
+  void RestoreLinkChain ();
   void Optimize ();
-  void SubRectFromRegion (const nsRegion& aRegion, const nsRect& aRect);
-  void SubRegionFromRegion (const nsRegion& aRgn1, const nsRegion& aRgn2);
+  void SubRegion (const nsRegion& aRegion, nsRegion& aResult) const;
+  void SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aCompleted) const;
+  void SubRect (const nsRectFast& aRect, nsRegion& aResult) const
+  {    SubRect (aRect, aResult, aResult);  }
   void Merge (const nsRegion& aRgn1, const nsRegion& aRgn2);
-  
+  void MoveInto (nsRegion& aDestRegion, const RgnRect* aStartRect);
+  void MoveInto (nsRegion& aDestRegion)
+  {    MoveInto (aDestRegion, mRectListHead.next);  }
+
   nsRegion (const nsRegion& aRegion);       // Prevent copying of regions
   operator = (const nsRegion& aRegion);
 };
@@ -247,13 +253,13 @@ public:
     mCurPtr = &aRegion.mRectListHead; 
   }
 
-  const nsRect* Next () 
+  const nsRectFast* Next () 
   { 
     mCurPtr = mCurPtr->next; 
     return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nsnull;
   }
 
-  const nsRect* Prev ()
+  const nsRectFast* Prev ()
   { 
     mCurPtr = mCurPtr->prev; 
     return (mCurPtr != &mRegion->mRectListHead) ? mCurPtr : nsnull;
@@ -267,4 +273,3 @@ public:
 
 
 #endif
-

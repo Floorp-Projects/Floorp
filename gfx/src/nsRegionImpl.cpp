@@ -86,7 +86,7 @@ PRBool nsRegionImpl::IsEqual (const nsIRegion &aRegion)
 void nsRegionImpl::GetBoundingBox (PRInt32 *aX, PRInt32 *aY, PRInt32 *aWidth, PRInt32 *aHeight)
 {
   nsRect BoundRect;
-  mRegion.GetBoundRect (&BoundRect);
+  mRegion.GetBoundRect (BoundRect);
   *aX = BoundRect.x;
   *aY = BoundRect.y;
   *aWidth  = BoundRect.width;

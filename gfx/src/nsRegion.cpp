@@ -22,6 +22,10 @@
 #include "nsRegion.h"
 
 
+#define MIN_INT32 (-PR_INT32 (0x7FFFFFFF) - 1)
+#define MAX_INT32 (PR_INT32 (0x7FFFFFFF))
+
+
 // Custom memory allocator for nsRegion::RgnRect structures.
 // Entries are allocated from global memory pool.
 // Memory pool can grow in size, but it can't shrink.
@@ -64,8 +68,8 @@ public:
   RgnRectMemoryAllocator (PRUint32 aNumOfEntries);
  ~RgnRectMemoryAllocator ();
 
-  inline nsRegion::RgnRect* Alloc ();
-  inline void Free (nsRegion::RgnRect* aRect);
+  nsRegion::RgnRect* Alloc ();
+  void Free (nsRegion::RgnRect* aRect);
 };
 
 
@@ -89,7 +93,7 @@ RgnRectMemoryAllocator::~RgnRectMemoryAllocator ()
   PR_DestroyLock (mLock);
 }
 
-inline nsRegion::RgnRect* RgnRectMemoryAllocator::Alloc ()
+nsRegion::RgnRect* RgnRectMemoryAllocator::Alloc ()
 {
   Lock ();
 
@@ -108,7 +112,7 @@ inline nsRegion::RgnRect* RgnRectMemoryAllocator::Alloc ()
   return tmp;
 }
 
-inline void RgnRectMemoryAllocator::Free (nsRegion::RgnRect* aRect)
+void RgnRectMemoryAllocator::Free (nsRegion::RgnRect* aRect)
 {
   Lock ();
   mFreeEntries++;
@@ -122,12 +126,12 @@ inline void RgnRectMemoryAllocator::Free (nsRegion::RgnRect* aRect)
 static RgnRectMemoryAllocator gRectPool (INIT_MEM_CHUNK_ENTRIES);
 
 
-void* nsRegion::RgnRect::operator new (size_t) 
+inline void* nsRegion::RgnRect::operator new (size_t) 
 { 
   return gRectPool.Alloc ();
 }
 
-void nsRegion::RgnRect::operator delete (void* aRect, size_t) 
+inline void nsRegion::RgnRect::operator delete (void* aRect, size_t) 
 { 
   gRectPool.Free (NS_STATIC_CAST (RgnRect*, aRect)); 
 }
@@ -138,7 +142,6 @@ void nsRegion::RgnRect::operator delete (void* aRect, size_t)
 nsRegion::nsRegion ()
 {
   mRectListHead.prev = mRectListHead.next = &mRectListHead;
-  mRectListHead.width = mRectListHead.height = -100;    // This is dummy marker node
   mCurRect = &mRectListHead;
   mRectCount = 0;
   mBoundRect.SetRect (0, 0, 0, 0);
@@ -187,6 +190,40 @@ void nsRegion::SetToElements (PRUint32 aCount)
 }
 
 
+// Save the entire chain of linked elements in 'prev' field of the RgnRect structure.
+// After that forward-only iterations using 'next' field could still be used.
+// Some elements from forward-only chain could be temporarily removed to optimize inner loops.
+// The original double linked state could be restored by call to RestoreLinkChain ().
+
+void nsRegion::SaveLinkChain ()
+{
+  RgnRect* pRect = &mRectListHead;
+
+  do 
+  {
+    pRect->prev = pRect->next;
+    pRect = pRect->next;
+  } while (pRect != &mRectListHead);
+}
+
+
+void nsRegion::RestoreLinkChain ()
+{
+  RgnRect* pPrev = &mRectListHead;
+  RgnRect* pRect = mRectListHead.next = mRectListHead.prev;
+
+  while (pRect != &mRectListHead)
+  {
+    pRect->next = pRect->prev;
+    pRect->prev = pPrev;
+    pPrev = pRect;
+    pRect = pRect->next;
+  }
+
+  mRectListHead.prev = pPrev;
+}
+
+
 // Insert node in right place of sorted list
 // If necessary then bounding rectangle could be updated and rectangle combined
 // with neighbour rectangles. This is usually done in Optimize ()
@@ -199,7 +236,7 @@ void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
   {
     if (aRect->y > mCurRect->y)
     {
-      mRectListHead.y = 2147483647;
+      mRectListHead.y = MAX_INT32;
 
       while (aRect->y > mCurRect->next->y)
         mCurRect = mCurRect->next;
@@ -211,7 +248,7 @@ void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
     } else
     if (aRect->y < mCurRect->y)
     {
-      mRectListHead.y = -2147483647;
+      mRectListHead.y = MIN_INT32;
 
       while (aRect->y < mCurRect->prev->y)
         mCurRect = mCurRect->prev;
@@ -224,7 +261,7 @@ void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
     {
       if (aRect->x > mCurRect->x)
       {
-        mRectListHead.y = 2147483647;
+        mRectListHead.y = MAX_INT32;
 
         while (aRect->y == mCurRect->next->y && aRect->x > mCurRect->next->x)
           mCurRect = mCurRect->next;
@@ -232,7 +269,7 @@ void nsRegion::InsertInPlace (RgnRect* aRect, PRBool aOptimizeOnFly)
         InsertAfter (aRect, mCurRect);
       } else
       {
-        mRectListHead.y = -2147483647;
+        mRectListHead.y = MIN_INT32;
 
         while (aRect->y == mCurRect->prev->y && aRect->x < mCurRect->prev->x)
           mCurRect = mCurRect->prev;
@@ -297,30 +334,69 @@ nsRegion::RgnRect* nsRegion::Remove (RgnRect* aRect)
 
 void nsRegion::Optimize ()
 {
-  mBoundRect.SetRect (0, 0, 0, 0);
-  RgnRect* pRect = mRectListHead.next;
+  if (mRectCount == 0)
+    mBoundRect.SetRect (0, 0, 0, 0);
+  else
+  {
+    RgnRect* pRect = mRectListHead.next;
+    PRInt32 xmost = mRectListHead.prev->XMost ();
+    PRInt32 ymost = mRectListHead.prev->YMost ();
+    mBoundRect.x = mRectListHead.next->x;
+    mBoundRect.y = mRectListHead.next->y;
+
+    while (pRect != &mRectListHead)
+    {
+      // Try to combine with rectangle on right side
+      while (pRect->y == pRect->next->y && pRect->height == pRect->next->height &&
+             pRect->XMost () == pRect->next->x)
+      {
+        pRect->width += pRect->next->width;
+        delete Remove (pRect->next);
+      }
+
+      // Try to combine with rectangle under this one
+      while (pRect->x == pRect->next->x && pRect->width == pRect->next->width &&
+             pRect->YMost () == pRect->next->y)
+      {
+        pRect->height += pRect->next->height;
+        delete Remove (pRect->next);
+      }
+      
+      // Determine bound rectangle. Use fact that rectangles are sorted.
+      if (pRect->x < mBoundRect.x) mBoundRect.x = pRect->x;
+      if (pRect->XMost () > xmost) xmost = pRect->XMost ();
+      if (pRect->YMost () > ymost) ymost = pRect->YMost ();
+
+      pRect = pRect->next;
+    }
+
+    mBoundRect.width  = xmost - mBoundRect.x;
+    mBoundRect.height = ymost - mBoundRect.y;
+  }
+}
+
+
+// Move rectangles starting from 'aStartRect' till end of the list to the destionation region.
+// Important for temporary objects - instead of copying rectangles with Merge () and then 
+// emptying region in destructor they could be moved to destination region in one step.
+
+void nsRegion::MoveInto (nsRegion& aDestRegion, const RgnRect* aStartRect)
+{
+  RgnRect* pRect = NS_STATIC_CAST (RgnRect*, aStartRect);
+  RgnRect* pPrev = pRect->prev;
 
   while (pRect != &mRectListHead)
   {
-    // Try to combine with rectangle on right side
-    while (pRect->y == pRect->next->y && pRect->height == pRect->next->height &&
-           pRect->XMost () == pRect->next->x)
-    {
-      pRect->width += pRect->next->width;
-      delete Remove (pRect->next);
-    }
+    RgnRect* next = pRect->next;
+    aDestRegion.InsertInPlace (pRect);
 
-    // Try to combine with rectangle under this one
-    while (pRect->x == pRect->next->x && pRect->width == pRect->next->width &&
-           pRect->YMost () == pRect->next->y)
-    {
-      pRect->height += pRect->next->height;
-      delete Remove (pRect->next);
-    }
-
-    mBoundRect.UnionRect (mBoundRect, *pRect);
-    pRect = pRect->next;
+    mRectCount--;
+    pRect = next;
   }
+
+  pPrev->next = &mRectListHead;
+  mRectListHead.prev = pPrev;
+  mCurRect = mRectListHead.next;
 }
 
 
@@ -409,7 +485,7 @@ nsRegion& nsRegion::Copy (const nsRegion& aRegion)
 }
 
 
-nsRegion& nsRegion::Copy (const nsRect& aRect)
+nsRegion& nsRegion::Copy (const nsRectFast& aRect)
 {
   if (aRect.IsEmpty ())
     Empty ();
@@ -433,7 +509,7 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
     Empty ();
   else
   {
-    nsRect TmpRect;
+    nsRectFast TmpRect;
 
     if (aRgn1.mRectCount == 1 && aRgn2.mRectCount == 1)       // Intersect rectangle with rectangle
     {
@@ -455,8 +531,8 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
         else
         {
           nsRegion TmpRegion;
-          const nsRegion* pSrcRgn1 = &aRgn1;
-          const nsRegion* pSrcRgn2 = &aRgn2;
+          nsRegion* pSrcRgn1 = NS_CONST_CAST (nsRegion*, &aRgn1);
+          nsRegion* pSrcRgn2 = NS_CONST_CAST (nsRegion*, &aRgn2);
 
           if (&aRgn1 == this)     // Copy region if it is both source and result
           {
@@ -470,31 +546,54 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
             pSrcRgn2 = &TmpRegion;
           }
           
+          // For outer loop prefer region for which at least one rectangle is below other's bound rectangle 
+          if (pSrcRgn2->mRectListHead.prev->y >= pSrcRgn1->mBoundRect.YMost ())
+          {
+            nsRegion* Tmp = pSrcRgn1;
+            pSrcRgn1 = pSrcRgn2;
+            pSrcRgn2 = Tmp;
+          }
+          
+          
           SetToElements (0);
-          const RgnRect* pSrcRect1 = pSrcRgn1->mRectListHead.next;
+          pSrcRgn2->SaveLinkChain ();
+          
+          pSrcRgn1->mRectListHead.y = MAX_INT32;
+          pSrcRgn2->mRectListHead.y = MAX_INT32;
 
-          while (pSrcRect1 != &pSrcRgn1->mRectListHead)
+          for (RgnRect* pSrcRect1 = pSrcRgn1->mRectListHead.next ;
+               pSrcRect1->y < pSrcRgn2->mBoundRect.YMost () ; pSrcRect1 = pSrcRect1->next)
           {
             if (pSrcRect1->Intersects (pSrcRgn2->mBoundRect))   // Rectangle intersects region. Process each rectangle
             {
-              const RgnRect* pSrcRect2 = pSrcRgn2->mRectListHead.next;
+              RgnRect* pPrev2 = &pSrcRgn2->mRectListHead;
           
-              while (pSrcRect2 != &pSrcRgn2->mRectListHead)
+              for (RgnRect* pSrcRect2 = pSrcRgn2->mRectListHead.next ; 
+                   pSrcRect2->y < pSrcRect1->YMost () ; pSrcRect2 = pSrcRect2->next)
               {
-                // Vertically sorted rectangles in SrcRgn2 are below the SrcRect1 - won't intersect
-                if (pSrcRect2->y >= pSrcRect1->YMost ()) 
-                  break;
+                if (pSrcRect2->YMost () <= pSrcRect1->y)        // Rect2's bottom is above the top of Rect1.
+                {                                               // No successive rectangles in Rgn1 can intersect it.
+                  pPrev2->next = pSrcRect2->next;               // Remove Rect2 from Rgn2's checklist
+                  continue;
+                }
+
+                if (pSrcRect1->Contains (*pSrcRect2))           // Rect1 fully overlays Rect2.
+                {                                               // No any other rectangle in Rgn1 can intersect it.
+                  pPrev2->next = pSrcRect2->next;               // Remove Rect2 from Rgn2's checklist
+                  InsertInPlace (new RgnRect (*pSrcRect2));
+                  continue;
+                }
+             
 
                 if (TmpRect.IntersectRect (*pSrcRect1, *pSrcRect2))
                   InsertInPlace (new RgnRect (TmpRect));
 
-                pSrcRect2 = pSrcRect2->next;
+                pPrev2 = pSrcRect2;
               }
             }        
-
-            pSrcRect1 = pSrcRect1->next;
           }
 
+          pSrcRgn2->RestoreLinkChain ();
           Optimize ();
         }
       }
@@ -505,14 +604,14 @@ nsRegion& nsRegion::And (const nsRegion& aRgn1, const nsRegion& aRgn2)
 }
 
 
-nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRect& aRect)
+nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRectFast& aRect)
 {
   // If either region or rectangle is empty then result is empty
   if (aRegion.mRectCount == 0 || aRect.IsEmpty ())      
     Empty ();
   else                            // Intersect region with rectangle
   {
-    nsRect TmpRect;
+    nsRectFast TmpRect;
 
     if (aRegion.mRectCount == 1)  // Intersect rectangle with rectangle
     {
@@ -529,7 +628,7 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRect& aRect)
         else
         {
           nsRegion TmpRegion;
-          const nsRegion* pSrcRegion = &aRegion;
+          nsRegion* pSrcRegion = NS_CONST_CAST (nsRegion*, &aRegion);
 
           if (&aRegion == this)   // Copy region if it is both source and result
           {
@@ -538,18 +637,13 @@ nsRegion& nsRegion::And (const nsRegion& aRegion, const nsRect& aRect)
           }
 
           SetToElements (0);
-          const RgnRect* pSrcRect = pSrcRegion->mRectListHead.next;
+          pSrcRegion->mRectListHead.y = MAX_INT32;
 
-          while (pSrcRect != &pSrcRegion->mRectListHead)
+          for (const RgnRect* pSrcRect = pSrcRegion->mRectListHead.next ;
+               pSrcRect->y < aRect.YMost () ; pSrcRect = pSrcRect->next)
           {
-            // Vertically sorted rectangles in SrcRegion are below the aRect - won't intersect
-            if (pSrcRect->y >= aRect.YMost ()) 
-              break;
-
             if (TmpRect.IntersectRect (*pSrcRect, aRect))
               InsertInPlace (new RgnRect (TmpRect));
-
-            pSrcRect = pSrcRect->next;
           }
 
           Optimize ();
@@ -588,8 +682,10 @@ nsRegion& nsRegion::Or (const nsRegion& aRgn1, const nsRegion& aRgn2)
       else
       {
         nsRegion TmpRegion;
-        TmpRegion.SubRegionFromRegion (aRgn1, aRgn2);     // Get only parts of region which not overlap the other region
-        Merge (TmpRegion, aRgn2);
+        aRgn1.SubRegion (aRgn2, TmpRegion);               // Get only parts of region which not overlap the other region
+        Copy (aRgn2);
+        TmpRegion.MoveInto (*this);
+        Optimize ();
       }
     }
   }
@@ -598,7 +694,7 @@ nsRegion& nsRegion::Or (const nsRegion& aRgn1, const nsRegion& aRgn2)
 }
 
 
-nsRegion& nsRegion::Or (const nsRegion& aRegion, const nsRect& aRect)
+nsRegion& nsRegion::Or (const nsRegion& aRegion, const nsRectFast& aRect)
 {
   if (aRegion.mRectCount == 0)          // Region empty. Result is equal to rectangle
     Copy (aRect);
@@ -621,7 +717,7 @@ nsRegion& nsRegion::Or (const nsRegion& aRegion, const nsRect& aRect)
         Copy (aRect);
       else
       {
-        SubRectFromRegion (aRegion, aRect);       // Exclude from region parts that overlap the rectangle
+        aRegion.SubRect (aRect, *this);           // Exclude from region parts that overlap the rectangle
         InsertInPlace (new RgnRect (aRect));
         Optimize ();
       }
@@ -651,21 +747,21 @@ nsRegion& nsRegion::Xor (const nsRegion& aRgn1, const nsRegion& aRgn2)
       // Region is simple rectangle and it fully overlays other region
       if (aRgn1.mRectCount == 1 && aRgn1.mBoundRect.Contains (aRgn2.mBoundRect))
       {
-        SubRegionFromRegion (aRgn1, aRgn2);
+        aRgn1.SubRegion (aRgn2, *this);
         Optimize ();
       } else
       // Region is simple rectangle and it fully overlays other region
       if (aRgn2.mRectCount == 1 && aRgn2.mBoundRect.Contains (aRgn1.mBoundRect))
       {
-        SubRegionFromRegion (aRgn2, aRgn1);
+        aRgn2.SubRegion (aRgn1, *this);
         Optimize ();
       } else
       {
-        nsRegion TmpRegion1, TmpRegion2;
-        TmpRegion2.And (aRgn1, aRgn2);                        // Overlay
-        TmpRegion1.SubRegionFromRegion (aRgn1, TmpRegion2);   // aRgn1 - Overlay
-        TmpRegion2.SubRegionFromRegion (aRgn2, TmpRegion2);   // aRgn2 - Overlay
-        Merge (TmpRegion1, TmpRegion2);
+        nsRegion TmpRegion;
+        aRgn1.SubRegion (aRgn2, TmpRegion);
+        aRgn2.SubRegion (aRgn1, *this);
+        TmpRegion.MoveInto (*this);
+        Optimize ();
       }
     }
   }
@@ -674,7 +770,7 @@ nsRegion& nsRegion::Xor (const nsRegion& aRgn1, const nsRegion& aRgn2)
 }
 
 
-nsRegion& nsRegion::Xor (const nsRegion& aRegion, const nsRect& aRect)
+nsRegion& nsRegion::Xor (const nsRegion& aRegion, const nsRectFast& aRect)
 {
   if (aRegion.mRectCount == 0)          // Region empty. Result is equal to rectangle
     Copy (aRect);
@@ -692,23 +788,23 @@ nsRegion& nsRegion::Xor (const nsRegion& aRegion, const nsRect& aRect)
       // Region is simple rectangle and it fully overlays rectangle
       if (aRegion.mRectCount == 1 && aRegion.mBoundRect.Contains (aRect))
       {
-        SubRectFromRegion (aRegion, aRect);
+        aRegion.SubRect (aRect, *this);
         Optimize ();
       } else
       if (aRect.Contains (aRegion.mBoundRect))      // Rectangle fully overlays region
       {
         nsRegion TmpRegion;
         TmpRegion.Copy (aRect);
-        SubRegionFromRegion (TmpRegion, aRegion);
+        TmpRegion.SubRegion (aRegion, *this);
         Optimize ();
       } else
       {
-        nsRegion TmpRegion1, TmpRegion2, TmpRegion3;
-        TmpRegion3.Copy (aRect);
-        TmpRegion2.And (aRegion, aRect);                          // Overlay
-        TmpRegion1.SubRegionFromRegion (aRegion, TmpRegion2);     // aRegion - Overlay
-        TmpRegion2.SubRegionFromRegion (TmpRegion3, TmpRegion2);  // aRect - Overlay
-        Merge (TmpRegion1, TmpRegion2);
+        nsRegion TmpRegion;
+        TmpRegion.Copy (aRect);
+        TmpRegion.SubRegion (aRegion, TmpRegion);
+        aRegion.SubRect (aRect, *this);
+        TmpRegion.MoveInto (*this);        
+        Optimize ();
       }
     }
   }
@@ -733,7 +829,7 @@ nsRegion& nsRegion::Sub (const nsRegion& aRgn1, const nsRegion& aRgn2)
       Copy (aRgn1);
     else
     {
-      SubRegionFromRegion (aRgn1, aRgn2);
+      aRgn1.SubRegion (aRgn2, *this);
       Optimize ();
     }
   }
@@ -742,7 +838,7 @@ nsRegion& nsRegion::Sub (const nsRegion& aRgn1, const nsRegion& aRgn2)
 }
 
 
-nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRect& aRect)
+nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRectFast& aRect)
 {
   if (aRegion.mRectCount == 0)    // If source is empty then result is empty, too
     Empty ();
@@ -759,7 +855,7 @@ nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRect& aRect)
         Empty ();
       else
       {
-        SubRectFromRegion (aRegion, aRect);
+        aRegion.SubRect (aRect, *this);
         Optimize ();
       }
     }
@@ -769,186 +865,221 @@ nsRegion& nsRegion::Sub (const nsRegion& aRegion, const nsRect& aRect)
 }
 
 
-// Subtract one region from another. 
+// Subtract region from current region. 
 // Both regions are non-empty and they intersect each other.
-// Result could be empty if aRgn2 is rectangle that fully overlays aRgn1.
-// Optimize () is not called (bound rectangle is not updated).
+// Result could be empty region if aRgn2 is rectangle that fully overlays aRgn1.
+// Optimize () is not called on exit (bound rectangle is not updated).
 
-void nsRegion::SubRegionFromRegion (const nsRegion& aRgn1, const nsRegion& aRgn2)
+void nsRegion::SubRegion (const nsRegion& aRegion, nsRegion& aResult) const
 {
-  if (aRgn2.mRectCount == 1)      // Subtract simple rectangle
-    SubRectFromRegion (aRgn1, *aRgn2.mRectListHead.next);
-  else
+  if (aRegion.mRectCount == 1)    // Subtract simple rectangle
   {
-    nsRegion TmpRegion;
-    const nsRegion* pSrcRgn2 = &aRgn2;
+    if (aRegion.mBoundRect.Contains (mBoundRect))
+      aResult.Empty ();
+    else
+      SubRect (*aRegion.mRectListHead.next, aResult);
+  } else
+  {
+    nsRegion TmpRegion, CompletedRegion;
+    const nsRegion* pSubRgn = &aRegion;
 
-    if (&aRgn2 == this)           // Copy region if it is both source and result
+    if (&aResult == &aRegion)     // Copy region if it is both source and result
     {
-      TmpRegion.Copy (aRgn2);
-      pSrcRgn2 = &TmpRegion;
+      TmpRegion.Copy (aRegion);
+      pSubRgn = &TmpRegion;
     }
 
-    const RgnRect* pRect = pSrcRgn2->mRectListHead.next;
+    const RgnRect* pSubRect = pSubRgn->mRectListHead.next;
 
-    SubRectFromRegion (aRgn1, *pRect);
-    pRect = pRect->next;
+    SubRect (*pSubRect, aResult, CompletedRegion);
+    pSubRect = pSubRect->next;
 
-    while (pRect != &pSrcRgn2->mRectListHead)
+    while (pSubRect != &pSubRgn->mRectListHead)
     {
-      SubRectFromRegion (*this, *pRect);
-      pRect = pRect->next;
+      aResult.SubRect (*pSubRect, aResult, CompletedRegion);
+      pSubRect = pSubRect->next;
     }
+
+    CompletedRegion.MoveInto (aResult);
   }
 }
 
 
-// Subtract rectangle from region. 
+// Subtract rectangle from current region. 
 // Both region and rectangle are non-empty and they intersect each other.
-// Result could be empty if aRect fully overlays aRegion.
-// Optimize () is not called (bound rectangle is not updated).
+// Result could be empty region if aRect fully overlays aRegion.
+// Could be called repeatedly with 'this' as input and result - bound rectangle is not known.
+// Optimize () is not called on exit (bound rectangle is not updated).
+//
+// aCompleted is filled with rectangles which are already checked and could be safely
+// removed from further examination in case aRect rectangles come from ordered list. 
+// aCompleted is not automatically emptied. aCompleted and aResult could be the same region.
 
-void nsRegion::SubRectFromRegion (const nsRegion& aRegion, const nsRect& aRect)
+void nsRegion::SubRect (const nsRectFast& aRect, nsRegion& aResult, nsRegion& aCompleted) const
 {
-  if (aRect.Contains (aRegion.mBoundRect))
-    Empty ();
-  else
+  nsRegion TmpRegion;
+  const nsRegion* pSrcRegion = this;
+
+  if (&aResult == this)           // Copy region if it is both source and result
   {
-    nsRegion TmpRegion;
-    const nsRegion* pSrcRegion = &aRegion;
+    TmpRegion.Copy (*this);
+    pSrcRegion = &TmpRegion;
+  }
+    
+  aResult.SetToElements (0);
+  
+  (NS_CONST_CAST (nsRegion*, pSrcRegion))->mRectListHead.y = MAX_INT32;
+  const RgnRect* pSrcRect = pSrcRegion->mRectListHead.next;
 
-    if (&aRegion == this)         // Copy region if it is both source and result
+  for ( ; pSrcRect->y < aRect.YMost () ; pSrcRect = pSrcRect->next)
+  {
+    nsRectFast TmpRect;
+
+    // If bottom of current rectangle is above the top of aRect then this rectangle 
+    // could be moved to aCompleted region. Successive aRect rectangles from ordered
+    // list do not have to check this rectangle again.
+    if (pSrcRect->YMost () <= aRect.y)
     {
-      TmpRegion.Copy (aRegion);
-      pSrcRegion = &TmpRegion;
+      aCompleted.InsertInPlace (new RgnRect (*pSrcRect));
+      continue;
     }
-      
-    SetToElements (0);
-    const RgnRect* pSrcRect = pSrcRegion->mRectListHead.next;
-
-    while (pSrcRect != &pSrcRegion->mRectListHead)
+    
+    if (!TmpRect.IntersectRect (*pSrcRect, aRect))
+      aResult.InsertInPlace (new RgnRect (*pSrcRect));
+    else
     {
-      nsRect TmpRect;
+      // Rectangle A. Subtract from this rectangle B
+      const nscoord ax  = pSrcRect->x;
+      const nscoord axm = pSrcRect->XMost ();
+      const nscoord aw  = pSrcRect->width;
+      const nscoord ay  = pSrcRect->y;
+      const nscoord aym = pSrcRect->YMost ();
+      const nscoord ah  = pSrcRect->height;
+      // Rectangle B. Subtract this from rectangle A
+      const nscoord bx  = aRect.x;
+      const nscoord bxm = aRect.XMost ();
+      const nscoord bw  = aRect.width;
+      const nscoord by  = aRect.y;
+      const nscoord bym = aRect.YMost ();
+      const nscoord bh  = aRect.height;
+      // Rectangle I. Area where rectangles A and B intersect
+      const nscoord ix  = TmpRect.x;
+      const nscoord ixm = TmpRect.XMost ();
+      const nscoord iw  = TmpRect.width;
+      const nscoord iy  = TmpRect.y;
+      const nscoord iym = TmpRect.YMost ();
+      const nscoord ih  = TmpRect.height;
 
-      if (!TmpRect.IntersectRect (*pSrcRect, aRect))
-        InsertInPlace (new RgnRect (*pSrcRect));
-      else
+      // There are 16 combinations how rectangles could intersect
+
+      if (bx <= ax && by <= ay)
       {
-        // Rectangle A. Subtract from this rectangle B
-        const nscoord ax  = pSrcRect->x;
-        const nscoord axm = pSrcRect->XMost ();
-        const nscoord aw  = pSrcRect->width;
-        const nscoord ay  = pSrcRect->y;
-        const nscoord aym = pSrcRect->YMost ();
-        const nscoord ah  = pSrcRect->height;
-        // Rectangle B. Subtract this from rectangle A
-        const nscoord bx  = aRect.x;
-        const nscoord bxm = aRect.XMost ();
-        const nscoord bw  = aRect.width;
-        const nscoord by  = aRect.y;
-        const nscoord bym = aRect.YMost ();
-        const nscoord bh  = aRect.height;
-        // Rectangle I. Area where rectangles A and B intersect
-        const nscoord ix  = TmpRect.x;
-        const nscoord ixm = TmpRect.XMost ();
-        const nscoord iw  = TmpRect.width;
-        const nscoord iy  = TmpRect.y;
-        const nscoord iym = TmpRect.YMost ();
-        const nscoord ih  = TmpRect.height;
+        if (bxm < axm && bym < aym)     // 1.
+        {
+          aResult.InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ih));
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
+        } else
+        if (bxm >= axm && bym < aym)    // 2.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
+        } else
+        if (bxm < axm && bym >= aym)    // 3.
+        {
+          aResult.InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ah));
+        } else
+        if (*pSrcRect == aRect)         // 4. subset
+        {                               // Current rectangle is equal to aRect 
+          break;                        // No any other rectangle in region can intersect it
+        }
+      } else
+      if (bx > ax && by <= ay)
+      {
+        if (bxm < axm && bym < aym)     // 5.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, ix - ax, ih));
+          aResult.InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ih));
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
+        } else
+        if (bxm >= axm && bym < aym)    // 6.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, ix - ax, ih));
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
+        } else
+        if (bxm < axm && bym >= aym)    // 7.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, ix - ax, ah));
+          aResult.InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ah));
+        } else
+        if (bxm >= axm && bym >= aym)   // 8.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, ix - ax, ah));
+        }
+      } else
+      if (bx <= ax && by > ay)
+      {
+        if (bxm < axm && bym < aym)     // 9.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+          aResult.InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
+        } else
+        if (bxm >= axm && bym < aym)    // 10.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
+        } else
+        if (bxm < axm && bym >= aym)    // 11.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+          aResult.InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
+        } else
+        if (bxm >= axm && bym >= aym)   // 12.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+        }
+      } else
+      if (bx > ax && by > ay)
+      {
+        if (bxm < axm && bym < aym)     // 13.
+        {
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+          aResult.InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
+          aResult.InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
 
-        // There are 16 combinations how rectangles could intersect
-
-        if (bx <= ax && by <= ay)
-        {
-          if (bxm < axm && bym < aym)     // 1.
-          {
-            InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ih));
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm >= axm && bym < aym)    // 2.
-          {
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm < axm && bym >= aym)    // 3.
-          {
-            InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ah));
-          }
+          // Current rectangle fully overlays aRect. No any other rectangle can intersect it.
+          break;
         } else
-        if (bx > ax && by <= ay)
+        if (bxm >= axm && bym < aym)    // 14.
         {
-          if (bxm < axm && bym < aym)     // 5.
-          {
-            InsertInPlace (new RgnRect (ax, ay, ix - ax, ih));
-            InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ih));
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm >= axm && bym < aym)    // 6.
-          {
-            InsertInPlace (new RgnRect (ax, ay, ix - ax, ih));
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm < axm && bym >= aym)    // 7.
-          {
-            InsertInPlace (new RgnRect (ax, ay, ix - ax, ah));
-            InsertInPlace (new RgnRect (ixm, ay, axm - ixm, ah));
-          } else
-          if (bxm >= axm && bym >= aym)   // 8.
-          {
-            InsertInPlace (new RgnRect (ax, ay, ix - ax, ah));
-          }
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+          aResult.InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
+          aResult.InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
         } else
-        if (bx <= ax && by > ay)
+        if (bxm < axm && bym >= aym)    // 15.
         {
-          if (bxm < axm && bym < aym)     // 9.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-            InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm >= axm && bym < aym)    // 10.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm < axm && bym >= aym)    // 11.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-            InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
-          } else
-          if (bxm >= axm && bym >= aym)   // 12.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-          }
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+          aResult.InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
+          aResult.InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
         } else
-        if (bx > ax && by > ay)
+        if (bxm >= axm && bym >= aym)   // 16.
         {
-          if (bxm < axm && bym < aym)     // 13.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-            InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
-            InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm >= axm && bym < aym)    // 14.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-            InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
-            InsertInPlace (new RgnRect (ax, iym, aw, aym - iym));
-          } else
-          if (bxm < axm && bym >= aym)    // 15.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-            InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
-            InsertInPlace (new RgnRect (ixm, iy, axm - ixm, ih));
-          } else
-          if (bxm >= axm && bym >= aym)   // 16.
-          {
-            InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
-            InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
-          }
+          aResult.InsertInPlace (new RgnRect (ax, ay, aw, iy - ay));
+          aResult.InsertInPlace (new RgnRect (ax, iy, ix - ax, ih));
         }
       }
+    }
+  }
 
+  // Just copy remaining rectangles in region which are below aRect and can't intersect it.
+  // If rectangles are in temporary region then they could be moved.
+  if (pSrcRegion == &TmpRegion)
+    TmpRegion.MoveInto (aResult, pSrcRect);
+  else
+  {
+    while (pSrcRect != &pSrcRegion->mRectListHead)
+    {
+      aResult.InsertInPlace (new RgnRect (*pSrcRect));
       pSrcRect = pSrcRect->next;
     }
   }
