@@ -1552,54 +1552,82 @@ function BrowserEditBookmarks()
     }
   }
 
-  function enclosingLink(node)
+  function findParentNode(node, parentNode)
   {
-    while (node)
-    {
+    while (node) {
       var nodeName = node.localName;
       if (nodeName == "")
         return null;
       nodeName = nodeName.toLowerCase();
-      if (nodeName == "" || nodeName == "body"
-          || nodeName == "html" || nodeName == "#document")
+      if (nodeName == "" || nodeName == "body" ||
+          nodeName == "html" || nodeName == "#document") {
         return null;
-      if (nodeName == "a")
+      }
+      if (nodeName == parentNode)
         return node;
       node = node.parentNode;
     }
     return null;
   }
 
-  function isScrollbar(node)
+  // Called whenever the user clicks in the content area,
+  // except when left-clicking on links (special case)
+  // should always return true for click to go through
+  function contentAreaClick(event) 
   {
-     while (node) {
-       var nodeName = node.localName;
-       if (nodeName == "")
-         return false;
-       if (nodeName == "scrollbar")
-         return true;
-       node = node.parentNode;
-     }
-     return false;
-  }
+    var target = event.originalTarget;
+    var linkNode;
+    switch (target.localName.toLowerCase()) {
+      case "a":
+        linkNode = event.target;
+        break;
+      case "area":
+        if (event.target.href) 
+          linkNode = event.target;
+        break;
+      default:
+        linkNode = findParentNode(target, "a");
+        break;
+    }
+    if (linkNode)
+      return handleLinkClick(event, linkNode);
 
-  function browserHandleMiddleClick(event, linkURL)
-  {
-    if (pref.GetBoolPref("middlemouse.openNewWindow")) {
-      openNewWindowWith(linkURL);
-      event.preventBubble();
-      return true;
+    if (event.button == 2 &&
+        !findParentNode(target, "scrollbar") &&
+        pref.GetBoolPref("middlemouse.paste")) {
+      return middleMousePaste(event);
     }
 
-    if (pref.GetBoolPref("middlemouse.paste")) {
-      if (isScrollbar(target))
-         return false;
-      var tagName = target.tagName;
-      if (tagName)
-        tagName = tagName.toLowerCase();
-      var type = target.type;
-      if (type) type = type.toLowerCase();
+    return false;
+  }
 
+  function handleLinkClick(event, node)
+  {  
+    switch (event.button) {                                   
+      case 1:                                                 // if left button clicked
+        if (event.metaKey || event.ctrlKey) {                 // and meta or ctrl are down
+          openNewWindowWith(node.href);                       // open link in new window
+          event.preventBubble();
+          return true;
+        } 
+        if (event.shiftKey)                                   // if shift is down
+          return savePage(node.href);                         // save the link
+        if (event.altKey)                                     // if alt is down
+          ;                                                   // select text within link (not implemented)
+        break;
+      case 2:                                                 // if middle button clicked
+        if (pref.GetBoolPref("middlemouse.openNewWindow")) {  // and the pref is on
+          openNewWindowWith(node.href);                       // open link in new window
+          event.preventBubble();
+          return true;
+        }
+        break;
+    }
+    return true;
+  }
+
+  function middleMousePaste(event)
+  {
       var url = readFromClipboard();
       //dump ("Loading URL on clipboard: '" + url + "'; length = " + url.length + "\n");
       if (url) {
@@ -1608,29 +1636,10 @@ function BrowserEditBookmarks()
         BrowserLoadURL();
         event.preventBubble();
         return true;
-      }
     }
     return false;
   }
-
-  function linkClick(event) 
-  {
-    var node = enclosingLink(event.originalTarget);
-    if (node) {
-      if (event.button == 1) {
-        if (event.metaKey || event.ctrlKey) {               // if meta+ or ctrl+click
-          openNewWindowWith(node.href);                     // open link in new window
-          event.preventBubble();
-          return true;
-        } 
-        if (event.altKey)                                   // if alt+click
-          return savePage(node.href);                       // save the link    
-      } else if (event.button == 2)                         // if middle button clicked
-        return browserHandleMiddleClick(event, node.href);  // handle it separately
-    }
-    return true; // already handled in nsGenericHTMLElement::HandleDOMEventForAnchors
-  }
-
+    
   function OpenMessenger()
   {
 	window.open("chrome://messenger/content/messenger.xul", "_blank", "chrome,menubar,toolbar,resizable");
