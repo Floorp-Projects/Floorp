@@ -86,7 +86,7 @@ function onLoad() {
     // Start in the user's home directory
     var dirServiceProvider = Components.classes[nsIDirectoryServiceProvider_PROGID].getService().QueryInterface(nsIDirectoryServiceProvider);
     var persistent = new Object();
-    var homeDir = dirServiceProvider.getFile("system.HomeDirectory", persistent);
+    var homeDir = dirServiceProvider.getFile("Home", persistent);
     sfile.initWithPath(homeDir.path);
   }
 
