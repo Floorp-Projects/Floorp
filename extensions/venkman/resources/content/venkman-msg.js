@@ -71,6 +71,8 @@ const MT_ERROR     = "ERROR";
 const MT_HELLO     = "HELLO";
 const MT_HELP      = "HELP";
 const MT_INFO      = "INFO";
+const MT_SOURCE    = "SOURCE";
+const MT_STEP      = "STEP";
 const MT_STOP      = "STOP";
 const MT_USAGE     = "USAGE";
 const MT_EVAL_IN   = "EVAL-IN";
@@ -84,10 +86,12 @@ const exceptionMsgNames = ["err.notimplemented",
                            "err.required.param",
                            "err.invalid.param",
                            "err.subscript.load",
-                           "err.no.debugger"];
+                           "err.no.debugger",
+                           "err.failure"];
 
 /* message values for non-parameterized messages */
 const MSG_ERR_NO_STACK    = getMsg("msg.err.nostack");
+const MSG_ERR_NO_SOURCE   = getMsg("msg.err.nosource");
 
 const MSG_TYPE_NATIVE     = getMsg("msg.type.native");
 const MSG_TYPE_PRIMITIVE  = getMsg("msg.type.primitive");
@@ -111,19 +115,22 @@ const MSG_WORD_DEBUGGER    = getMsg("msg.val.debugger");
 const MSG_WORD_THROW       = getMsg("msg.val.throw");
 const MSG_WORD_SCOPE       = getMsg("msg.val.scope");
 
-const MSG_VAL_CONSOLE     = getMsg("msg.val.console");
-const MSG_VAL_UNKNOWN     = getMsg("msg.val.unknown");
-const MSG_VAL_OBJECT      = getMsg("msg.val.object");
-const MSG_VAL_EXPR        = getMsg("msg.val.expression");
+const MSG_VAL_CONSOLE      = getMsg("msg.val.console");
+const MSG_VAL_UNKNOWN      = getMsg("msg.val.unknown");
+const MSG_VAL_OBJECT       = getMsg("msg.val.object");
+const MSG_VAL_EXPR         = getMsg("msg.val.expression");
 
-const MSG_HELLO1          = getMsg("msg.hello.1");
-const MSG_HELLO2          = getMsg("msg.hello.2");
+const MSG_HELLO            = getMsg("msg.hello");
 
 const MSG_TIP_HELP        = getMsg("msg.tip.help");
+const MSG_NO_BREAKPOINTS_SET = getMsg("msg.no.breakpoints.set");
 
 const CMD_BREAK           = getMsg("cmd.break");
 const CMD_BREAK_PARAMS    = getMsg("cmd.break.params");
 const CMD_BREAK_HELP      = getMsg("cmd.break.help");
+const CMD_CLEAR           = getMsg("cmd.clear");
+const CMD_CLEAR_PARAMS    = getMsg("cmd.clear.params");
+const CMD_CLEAR_HELP      = getMsg("cmd.clear.help");
 const CMD_CMDS            = getMsg("cmd.commands");
 const CMD_CMDS_PARAMS     = getMsg("cmd.commands.params");
 const CMD_CMDS_HELP       = getMsg("cmd.commands.help");
@@ -167,8 +174,11 @@ const MSN_ERR_NOTIMPLEMENTED = "msg.err.notimplemented";
 const MSN_ERR_AMBIGCOMMAND   = "msg.err.ambigcommand";
 const MSN_ERR_BP_NOSCRIPT    = "msg.err.bp.noscript";
 const MSN_ERR_BP_NOLINE      = "msg.err.bp.noline";
+const MSN_ERR_BP_NODICE      = "msg.err.bp.nodice";
+const MSN_ERR_BP_NOINDEX     = "msg.err.bp.noindex";
 const MSN_ERR_REQUIRED_PARAM = "err.required.param"; /* also used as exception */
 const MSN_ERR_INVALID_PARAM  = "err.invalid.param";  /* also used as exception */
+const MSN_ERR_SOURCE_LOAD_FAILED = "msg.err.source.load.failed";
 
 const MSN_NO_PROPERTIES      = "msg.noproperties";
 const MSN_NO_CMDMATCH        = "msg.no-commandmatch";
@@ -176,7 +186,12 @@ const MSN_CMDMATCH           = "msg.commandmatch";
 const MSN_CMDMATCH_ALL       = "msg.commandmatch.all";
 const MSN_PROPS_HEADER       = "msg.props.header";
 const MSN_PROPSD_HEADER      = "msg.propsd.header";
+const MSN_BP_HEADER          = "msg.bp.header";
+const MSN_BP_LINE            = "msg.bp.line";
 const MSN_BP_CREATED         = "msg.bp.created";
+const MSN_BP_DISABLED        = "msg.bp.disabled";
+const MSN_BP_EXISTS          = "msg.bp.exists";
+const MSN_SOURCE_LINE        = "msg.source.line";
 
 const MSN_CONT             = "msg.cont";
 const MSN_EVAL_ERROR       = "msg.eval.error";
