@@ -495,7 +495,8 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
         theToken = (CStartToken*)mTokenizer->GetTokenAt(0);
         if (theToken) {
           eHTMLTags theTag = (eHTMLTags)theToken->GetTypeID();
-          if (theTag != eHTMLTag_html) {
+          eHTMLTokenTypes theType = eHTMLTokenTypes(theToken->GetTokenType());
+          if (theTag != eHTMLTag_html || theType != eToken_start) {
             theToken = NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_html,NS_LITERAL_STRING("html")));          	
             if (theToken) {
               mTokenizer->PushTokenFront(theToken); //this token should get pushed on the context stack.
