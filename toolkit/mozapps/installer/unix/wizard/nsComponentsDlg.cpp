@@ -353,7 +353,7 @@ nsComponentsDlg::RowSelected(GtkWidget *aWidget, gint aRow, gint aColumn,
                        (aColumn == 0 && aEvent->button == 1));
 }
 
-void
+gboolean
 nsComponentsDlg::KeyPressed(GtkWidget *aWidget, GdkEventKey *aEvent, 
                             gpointer aData)
 {
@@ -361,6 +361,8 @@ nsComponentsDlg::KeyPressed(GtkWidget *aWidget, GdkEventKey *aEvent,
 
   if (aEvent->keyval == GDK_space)
       ToggleRowSelection(aWidget, sCurrRowSelected, TRUE);
+
+  return FALSE;
 }
 
 void
