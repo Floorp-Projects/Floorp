@@ -1,0 +1,49 @@
+// activexml.idl : IDL source for activexml.dll
+//
+
+// This file will be processed by the MIDL tool to
+// produce the type library (activexml.tlb) and marshalling code.
+
+import "oaidl.idl";
+import "ocidl.idl";
+import "msxml.idl";
+
+[
+	uuid(45E5B410-2805-11D3-9425-000000000000),
+	version(1.0),
+	helpstring("Mozilla XML 1.0 Type Library")
+]
+library MozActiveXMLLib
+{
+	importlib("stdole32.tlb");
+	importlib("stdole2.tlb");
+
+
+	[
+		uuid(45E5B41D-2805-11D3-9425-000000000000),
+		helpstring("MozXMLDocument Class")
+	]
+	coclass MozXMLDocument
+	{
+		[default] interface IDispatch;
+//		[default] interface IXMLDocument;
+	};
+	[
+		uuid(45E5B420-2805-11D3-9425-000000000000),
+		helpstring("MozXMLElement Class")
+	]
+	coclass MozXMLElement
+	{
+		[default] interface IDispatch;
+//		[default] interface IXMLElement;
+	};
+	[
+		uuid(45E5B422-2805-11D3-9425-000000000000),
+		helpstring("MozXMLElementCollection Class")
+	]
+	coclass MozXMLElementCollection
+	{
+		[default] interface IDispatch;
+//		[default] interface IXMLElementCollection;
+	};
+};
