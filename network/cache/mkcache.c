@@ -49,6 +49,10 @@
 #include "mkmemcac.h"
 #include "merrors.h"
 
+#ifdef NU_CACHE
+#include "CacheStubs.h"
+#endif
+
 #ifdef PROFILE
 #pragma profile on
 #endif
@@ -117,7 +121,11 @@ typedef struct _CacheDataObject {
     XP_File          fp;
     NET_StreamClass *next_stream;
 	URL_Struct      *URL_s;
+#ifdef NU_CACHE
+    	void* 	cache_object;
+#else
     net_CacheObject *cache_object;
+#endif
 } CacheDataObject;
 
 PRIVATE void net_RemoveAllDiskCacheObjects(void);
@@ -127,7 +135,11 @@ HG87325
 PUBLIC PRBool
 NET_IsCacheTraceOn(void)
 {
+#ifdef NU_CACHE
+	return CacheTrace_IsEnabled();
+#else
     return NET_CacheTraceOn;
+#endif
 }
 
 /* return the size of the file on
@@ -460,6 +472,28 @@ net_CacheStore(net_CacheObject * obj,
 			   URL_Struct      * URL_s, 
 			   XP_Bool		         accept_partial_files,
 			   store_type_enum 	 store_type)
+#ifdef NU_CACHE
+{
+    /* Shouldn't be getting called */
+    PR_ASSERT(0);
+    if (!obj || !URL_s || !URL_s->address)
+     return FALSE;
+
+    if (URL_s->server_date 
+     && URL_s->server_date < obj->last_modified)
+    {
+     /* the last modified date is after the current date
+      * as given by the server.  We shoudn't cache this
+      * object
+      */
+     obj->last_modified = 0;
+     URL_s->last_modified = 0;
+
+     /* URL_s is now updated from META tags etc. so re-read this information */
+    }
+    
+}
+#else
 {
 	DBT *data, *key;
 	int status;
@@ -818,6 +852,7 @@ net_CacheStore(net_CacheObject * obj,
 	return TRUE;
 
 }
+#endif /* NU_CACHE */
 
 /* Public accesor function for Netcaster */
 PUBLIC PRBool
@@ -1250,6 +1285,9 @@ NET_SetDiskCacheSize(int32 new_size)
 {
 	if(new_size < 0)
 		new_size = 0;
+#ifdef NU_CACHE
+    DiskModule_SetSize(new_size);
+#else
 
     net_MaxDiskCacheSize = new_size;
 
@@ -1263,9 +1301,7 @@ NET_SetDiskCacheSize(int32 new_size)
 	  {
 		net_RemoveAllDiskCacheObjects();
 	  }
-
-
-    return;
+#endif /* NU_CACHE */
 }
 
 /* remove the last disk cache object if one exists
@@ -1280,6 +1316,11 @@ NET_RemoveLastDiskCacheObject(void)
 
 PRIVATE void
 net_RemoveAllDiskCacheObjects(void)
+#ifdef NU_CACHE
+{
+    PR_ASSERT(0); /* Should not be called */
+}
+#else
 {
 	char * filename;
 	DBT data;
@@ -1325,6 +1366,7 @@ net_RemoveAllDiskCacheObjects(void)
 	/* remove the database */
 	NET_XP_FileRemove("", xpCacheFAT);
 }
+#endif /* NU_CACHE */
 
 /* returns the number of bytes currently in use by the Disk cache
  */
@@ -1353,6 +1395,34 @@ PRIVATE unsigned int net_CacheWriteReady (NET_StreamClass *stream)
 /*  stream write function
  */
 PRIVATE int net_CacheWrite (NET_StreamClass *stream, CONST char* buffer, int32 len)
+#ifdef NU_CACHE
+{
+    CacheDataObject* obj = stream->data_object;
+    if (obj && obj->cache_object)
+    {
+     if (!CacheObject_Write(obj->cache_object, buffer, len))
+     {
+         if (obj->URL_s)
+          obj->URL_s->dont_cache = TRUE;
+
+         /* CacheObject_MarkForDeletion(); TODO*/
+     }
+     /* Write for next stream */
+     if (obj->next_stream)
+     {
+         int status = 0;
+         PR_ASSERT(buffer && (len >= 0));
+         status = (*obj->next_stream->put_block)
+          (obj->next_stream, buffer, len);
+
+         /* abort */
+         if(status < 0)
+          return(status);
+     }
+    }
+    return(1);
+}
+#else
 {
 	CacheDataObject *obj=stream->data_object;	
 	TRACEMSG(("net_CacheWrite called with %ld buffer size", len));
@@ -1393,10 +1463,39 @@ PRIVATE int net_CacheWrite (NET_StreamClass *stream, CONST char* buffer, int32 l
 
     return(1);
 }
+#endif /* NU_CACHE */
 
 /*  complete the stream
 */
 PRIVATE void net_CacheComplete (NET_StreamClass *stream)
+#ifdef NU_CACHE
+{
+    CacheDataObject* obj = stream->data_object;
+    PR_ASSERT(obj && obj->cache_object);
+
+    /*Write it out to the module */
+    CacheObject_Synch(obj->cache_object);
+
+    (obj->cache_object);
+    /* Plugins can use this file */
+    /* If object is in memory GetFilename will return null so this is ok */
+    if (obj->URL_s && CacheObject_GetFilename(obj->cache_object))
+    {
+     StrAllocCopy(obj->URL_s->cache_file, CacheObject_GetFilename(obj->cache_object));
+    }
+
+    /* Complete the next stream */
+    if (obj->next_stream)
+    {
+     (*obj->next_stream->complete)(obj->next_stream);
+     PR_Free(obj->next_stream);
+    }
+    CacheObject_Destroy(obj->cache_object);
+    /* Do the things I don't as yet understand or have time to */
+    PR_REMOVE_LINK(&obj->links);
+    PR_Free(obj);
+}
+#else
 {
 	CacheDataObject *obj=stream->data_object;	
 	/* close the cache file 
@@ -1433,11 +1532,34 @@ PRIVATE void net_CacheComplete (NET_StreamClass *stream)
 
     return;
 }
+#endif /* NU_CACHE */
 
 /* Abort the stream 
  * 
  */
 PRIVATE void net_CacheAbort (NET_StreamClass *stream, int status)
+#ifdef NU_CACHE
+{
+    CacheDataObject* obj = stream->data_object;
+    PR_ASSERT(obj);
+    PR_ASSERT(obj->cache_object);
+    
+    /* abort the next stream */
+    if(obj->next_stream)
+    {
+     (*obj->next_stream->abort)(obj->next_stream, status);
+     PR_Free(obj->next_stream);
+    }
+
+    /* This will take care of open files and other cleanup activity
+    plus will also mark the object as partial. TODO - Gagan */
+    /* CacheObject_Abort(obj->cache_object); */
+    /* Call CacheObject_Synch() if something was written */
+    CacheObject_Destroy(obj->cache_object);
+    PR_REMOVE_LINK(&obj->links);
+    PR_Free(obj);
+}
+#else
 {
 
 	CacheDataObject *obj=stream->data_object;	
@@ -1511,6 +1633,7 @@ PRIVATE void net_CacheAbort (NET_StreamClass *stream, int status)
 
     return;
 }
+#endif
 
 
 #ifdef XP_UNIX
@@ -1526,7 +1649,11 @@ NET_CacheConverter (FO_Present_Types format_out,
                     MWContext  *window_id)
 {
     CacheDataObject * data_object=0;
+#ifdef NU_CACHE
+    void*  cache_object=0;
+#else
     net_CacheObject * cache_object=0;
+#endif /* NU_CACHE */
     NET_StreamClass * stream=0;
     char *filename=0, *new_filename=0;
 	char *org_content_type = 0;
@@ -1594,7 +1721,18 @@ NET_CacheConverter (FO_Present_Types format_out,
 		/* set a flag to say that we want to cache */
 		want_to_cache = TRUE;
 	  }
-		
+    else
+    {
+     /* bypass the whole cache mechanism
+      */
+     if(format_out != FO_CACHE_ONLY)
+     {
+         format_out = CLEAR_CACHE_BIT(format_out);
+         return(next_stream);
+     }
+     return NULL; 
+    }
+	
 	/* set a flag if we should disk cache it based
  	 * on whether the cache setting is non-zero and
 	 * the cache database is open
@@ -1607,8 +1745,12 @@ NET_CacheConverter (FO_Present_Types format_out,
 	   && (HG73896 
 			PL_strncasecmp(URL_s->address, "https:", 6))
 	   && !URL_s->dont_cache
+#ifdef NU_CACHE
+    && (DiskModule_GetSize() > 0 || URL_s->must_cache)
+#else
 	   && (net_MaxDiskCacheSize > 0 || URL_s->must_cache)
 	   && net_OpenCacheFatDB() /* make sure database is open */
+#endif /* NU_CACHE */
   	   && PL_strncasecmp(URL_s->address, "news:", 5)   /* not news: */
 	   HG73684
 	   && PL_strncasecmp(URL_s->address, "mailbox://", 10))  /* not IMAP */
@@ -1621,6 +1763,229 @@ NET_CacheConverter (FO_Present_Types format_out,
 		|| !PL_strncasecmp(URL_s->address, "mailbox://", 10))) /* is imap */
 		do_disk_cache = TRUE;
 
+#ifdef NU_CACHE    
+    cache_object = CacheObject_Create(URL_s->address);
+    if (!cache_object)
+     return 0;
+    
+    CacheObject_SetModule(cache_object, (PRInt16) (do_disk_cache ? DISK_MODULE_ID : MEM_MODULE_ID));
+    CacheObject_SetExpires(cache_object, URL_s->expires);
+    CacheObject_SetEtag(cache_object, URL_s->etag);
+    CacheObject_SetLastModified(cache_object, URL_s->last_modified);
+    CacheObject_SetContentLength(cache_object, URL_s->content_length);
+    CacheObject_SetContentType(cache_object, URL_s->content_type);
+    CacheObject_SetCharset(cache_object, URL_s->charset);
+    CacheObject_SetContentEncoding(cache_object, URL_s->content_encoding);
+    CacheObject_SetPageServicesURL(cache_object, URL_s->page_services_url);
+    /* This filename discovery thing takes place every time! So optimize this in nu code */
+    /* BEGIN BAD CODE */
+       filename = WH_TempName(xpCache, "cache");
+     
+     if (filename)  
+       {
+         /* Put an appropriate suffix on the tmp cache file */
+         if (URL_s->address) /* Why are we doing this? */
+        {
+          
+          char *tail;
+          char *suffix;
+          char *allocSuffix; /* in case we have to allocate a suffix */
+          char *end;
+          char *junk;
+          char old_char;
+
+          suffix = allocSuffix = NULL;
+
+          if (URL_s->content_name){
+              suffix = (URL_s->content_name ? PL_strrchr (URL_s->content_name, '.') : 0);
+          }
+          else if ((URL_s->address) && 
+               (!PL_strncasecmp(URL_s->address, "mailbox:", 8)
+               || !PL_strncasecmp(URL_s->address, "news:", 5)
+               HG65294)
+                && (URL_s->content_type) && (*(URL_s->content_type)))
+          {
+              /*
+               Gag. If we're a mailbox URL and can't figure out the content name,
+               but have a content type, ask the type registry for a suitable suffix. 
+               (This allows us to set up Java and audio cache files so that those
+               subsystems will actually work with the cache files. Ick.)
+              */
+              char *regSuffix = NET_cinfo_find_ext(URL_s->content_type);
+              if (regSuffix)
+              {
+               suffix = PR_smprintf(".%s", regSuffix);
+               allocSuffix = suffix; /* we allocated it here, we delete it below */
+              }
+          }
+          
+          if (!suffix)
+          {
+              tail = PL_strrchr (URL_s->address, '/');
+              suffix = (tail ? PL_strrchr (tail, '.') : 0);
+          }
+          end = suffix + (suffix ? PL_strlen (suffix) : 0);
+          junk=0;         
+         
+#ifdef XP_UNIX
+          /* Gag.  foo.html.gz --> cacheXXXXX.html, not cacheXXXXX.gz. */
+          if (suffix && fe_encoding_extensions)
+            {
+              int i = 0;
+              while (fe_encoding_extensions [i])
+             {
+               if (!PL_strcmp (suffix, fe_encoding_extensions [i]))
+                 {
+                end = suffix;
+                suffix--;
+                while (suffix > tail && *suffix != '.')
+                  suffix--;
+                if (*suffix != '.')
+                  suffix = 0;
+                break;
+                 }
+               i++;
+             }
+            }
+#endif
+
+          /* Avoid "cache2F1F6AD102169F0.sources&maxhits=10" */
+          if (suffix)
+            {
+              junk = suffix + 1;
+              while (isalnum (*junk))
+             junk++;
+              old_char = *junk;
+              *junk = 0;
+            }
+
+
+#ifdef XP_PC
+          /* Remove any suffix that the temp filename currently has
+           */
+          strtok(filename, ".");
+#endif
+
+          if (suffix && (end - suffix) < 20)
+            {
+              /* make sure it is terminated... */
+              if(!junk)
+              {
+               junk = end;
+               old_char = *junk;
+               *junk = 0;
+              }
+              StrAllocCopy(new_filename, filename);
+#ifdef XP_PC
+                            /*        the comment */
+                            /*        say 16 bit  */
+                            /*        32 bit Win  */
+                            /*        goes thru   */
+                            /*        here, so do */
+                            /*        the same for*/
+                            /*        OS2      */
+              /* make all suffixes be UPPERCASE for win16
+            * since the operating system will make 
+            * them so and we need to know the exact
+            * name for hashing and comparison purposes
+            */
+              if(1)
+             {
+               char *new_suffix = PL_strdup(suffix);
+               if(new_suffix)
+                 {
+                char *cp = new_suffix;
+                int i;
+                /* limit it to 4 chars.
+                 * a dot and three letters
+                 */
+                for(i=0; *cp && i < 4; i++)
+                  {
+                    *cp = NET_TO_UPPER(*cp);
+                    cp++;
+                  }
+                *cp = '\0'; /* make sure it's terminated */
+                StrAllocCat(new_filename, new_suffix);
+                PR_Free(new_suffix);
+                 }
+             }
+#else
+              StrAllocCat(new_filename, suffix);
+#endif
+            }
+          else 
+            {
+              StrAllocCopy(new_filename, filename);
+            }
+
+
+          if(junk)
+              *junk = old_char;
+
+          if (allocSuffix)
+              PR_Free(allocSuffix);
+        }
+         PR_Free(filename);
+       }
+    /* END BAD CODE */
+    CacheObject_SetFilename(cache_object, new_filename);
+    /* TODO check for return from SetFilename */
+
+    /*  I am still not convinced that PostData should be 
+     persistent but here it is for keeping it sake. Once 
+     FE/History takes this, this should be ripped off.*/
+    if (URL_s->post_data)
+    {
+     CacheObject_SetPostData(cache_object, URL_s->post_data, URL_s->post_data_size);
+    }
+
+    data_object = PR_NEW(CacheDataObject);
+    if (!data_object)
+    {
+     CacheObject_Destroy(cache_object);
+     return NULL;
+    }
+
+    /* init the object */
+    memset(data_object, 0, sizeof(CacheDataObject));
+
+    /* assign the cache object to the stream data object
+     */
+    data_object->cache_object = cache_object;
+
+    /* save the URL struct since we will
+     * need to use some data from it later
+     * XXX if converter_obj is non-null it is a flag telling us not
+     * XXX to hold a pointer to the URL struct.
+     */
+    if (dont_hold_URL_s == FALSE)
+     data_object->URL_s = URL_s;
+    data_object->fp = 0 /* fp */; /* TODO -Gagan */
+
+    stream = PR_NEW(NET_StreamClass);
+    if (!stream)
+    {
+     CacheObject_Destroy(cache_object);
+     PR_Free(data_object);
+     return NULL;
+    }
+
+    stream->name         = "Nu Cache Stream";
+    stream->complete     = (MKStreamCompleteFunc) net_CacheComplete;
+    stream->abort        = (MKStreamAbortFunc) net_CacheAbort;
+    stream->put_block    = (MKStreamWriteFunc) net_CacheWrite;
+    stream->is_write_ready  = (MKStreamWriteReadyFunc) net_CacheWriteReady;
+    stream->data_object     = data_object;  /* document info object */
+    stream->window_id    = window_id;
+    
+    if (format_out != FO_CACHE_ONLY)
+     data_object->next_stream = next_stream;
+
+    PR_APPEND_LINK(&data_object->links, &active_cache_data_objects); /* verify */
+    
+    return stream;
+    
+#else /* NU_CACHE */
 	/* malloc and init all the necessary structs
 	 * do_disk_cache will be set false on error
 	 */
@@ -1951,9 +2316,8 @@ NET_CacheConverter (FO_Present_Types format_out,
 		  }
 
 	  }
-
+#endif /* NU_CACHE */
 	return(NULL);
-
 }
 
 /***************************************************************************
@@ -1966,6 +2330,12 @@ NET_CacheConverter (FO_Present_Types format_out,
  */
 PUBLIC XP_Bool
 NET_ChangeCacheFileLock(URL_Struct *URL_s, XP_Bool set)
+#ifdef NU_CACHE
+{
+    PR_ASSERT(0); /* Shouldn't be getting called */
+    return FALSE;
+}
+#else
 {
 	int   status;
 	DBT   data;
@@ -2013,8 +2383,30 @@ NET_ChangeCacheFileLock(URL_Struct *URL_s, XP_Bool set)
 
 	return(status == 0);
 }
+#endif
 
 MODULE_PRIVATE void NET_RefreshCacheFileExpiration(URL_Struct * URL_s)
+#ifdef NU_CACHE
+{
+    void* cache_object;
+
+    /* only update if the server status is 304 
+     * The other cases involve a new cache object
+     * and all the info will automatically get updated
+     */
+    if (URL_s->server_status != 304)
+    {
+     return;
+    }
+
+    cache_object = CacheManager_GetObject(URL_s->address);
+    if (cache_object)
+    {
+     CacheObject_SetLastModified(cache_object, URL_s->last_modified);
+     CacheObject_SetExpires(cache_object, URL_s->expires);
+    }
+}
+#else
 {
     net_CacheObject *found_cache_obj;
     int  status;
@@ -2074,69 +2466,8 @@ MODULE_PRIVATE void NET_RefreshCacheFileExpiration(URL_Struct * URL_s)
 
 	return;
 
-#if 0
-	/* this is the really old version of RefreshURL */
-
-	/* this isn't really needed because we can do it all
-	 * in the Complete step by keeping a copy if the URL struct.
-	 */
-	int   status;
-	DBT   data;
-    DBT * key;
-	DBT * new_data=0;
-
-	if(!cache_database)
-		return;
-
-    key = net_GenCacheDBKey(URL_s->address,
-                            URL_s->post_data,
-                            URL_s->post_data_size);
-
-    status = (*cache_database->get)(cache_database, key, &data, 0);
-
-    if(status != 0)
-      {
-        TRACEMSG(("Key not found in database"));
-        net_FreeCacheDBTdata(key);
-        return;
-      }
-
-	new_data = net_CacheDBTDup(&data);
-
-	if(!new_data)
-	  {
-    	net_FreeCacheDBTdata(key);
-		return;
-	  }
-
-	net_SetTimeInCacheDBT(new_data, 
-						  EXPIRES_BYTE_POSITION, 
-						  URL_s->expires);
-	net_SetTimeInCacheDBT(new_data, 
-						  LAST_MODIFIED_BYTE_POSITION, 
-						  URL_s->last_modified);
-	net_SetTimeInCacheDBT(new_data, 
-						  LAST_ACCESSED_BYTE_POSITION, 
-						  time(NULL)); /* current time */
-
-    TRACEMSG(("Refreshing the cache expires date: %d  last_mod: %d\n",
-									URL_s->expires, URL_s->last_modified));
-
-	
-	status = (*cache_database->put)(cache_database, key, new_data, 0);
-
-#ifdef DEBUG
-	if(status != 0)
-		TRACEMSG(("Error updateing cache info in database"));
-#endif /* DEBUG */
-
-    net_FreeCacheDBTdata(key);
-
-    net_FreeCacheDBTdata(new_data);
-
-	return;
-#endif
 }
+#endif /* NU_CACHE */
 
 /* returns TRUE if the url is in the disk cache
  */
@@ -2146,6 +2477,10 @@ NET_IsURLInDiskCache(URL_Struct *URL_s)
 	DBT *key;
 	DBT data;
 	int status;
+#ifdef NU_CACHE
+    PR_ASSERT(0); /* Don't call this! Use DiskModule_Contains(URL_s->address);*/ 
+    return FALSE; 
+#endif
 
 	if(!cache_database)
 	  {
@@ -2171,6 +2506,14 @@ NET_IsURLInDiskCache(URL_Struct *URL_s)
  */
 MODULE_PRIVATE void
 NET_RemoveURLFromCache(URL_Struct *URL_s)
+#ifdef NU_CACHE
+{
+    if (!URL_s || !URL_s->address)
+     return;
+
+    CacheManager_Remove(URL_s->address);
+}
+#else
 {
 
 	int status;
@@ -2247,12 +2590,25 @@ NET_RemoveURLFromCache(URL_Struct *URL_s)
 
 	net_FreeCacheDBTdata(key);
 }
+#endif /* NU_CACHE */
 
 /* return TRUE if the URL is in the cache and
  * is a partial cache file
  */
 MODULE_PRIVATE PRBool
 NET_IsPartialCacheFile(URL_Struct *URL_s)
+#ifdef NU_CACHE 
+{
+    if (!URL_s || !URL_s->address)
+     return PR_FALSE;
+    /* Todo change this to just getObject, if null then... - Gagan */    
+    if (CacheManager_Contains(URL_s->address))
+    {
+     return CacheObject_IsPartial(CacheManager_GetObject(URL_s->address));
+    }
+    return PR_FALSE;
+}
+#else
 {
 	net_CacheObject *found_cache_obj;
 	int  status;
@@ -2283,9 +2639,45 @@ NET_IsPartialCacheFile(URL_Struct *URL_s)
 	else
 		return(0);
 }
+#endif /* NU_CACHE */
 
 PUBLIC int
 NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
+#ifdef NU_CACHE
+{
+
+    if (!URL_s || !URL_s->address)
+     return 0;
+    
+    /* zero the last modified date so that we don't
+     * screw up the If-modified-since header by
+     * having it in even when the document isn't
+     * cached.
+     */
+    URL_s->last_modified = 0;
+
+    if (!CacheManager_Contains(URL_s->address))
+     return 0;
+    else
+    {
+     /* mkabout.c relies on updating the URL_struct with the found info */
+     void* pObject = CacheManager_GetObject(URL_s->address);
+     /* Copy all the stuff from CacheObject to URL_struct */
+     if (pObject)
+     {
+         /* TODO */
+         URL_s->expires = CacheObject_GetExpires(pObject);
+         URL_s->last_modified = CacheObject_GetLastModified(pObject);
+         /* TODO */
+         URL_s->cache_object = pObject;
+
+         return NU_CACHE_TYPE_URL;
+     }
+     else 
+         return 0;
+    }
+}
+#else
 {
 	net_CacheObject *found_cache_obj;
     XP_StatStruct    stat_entry;
@@ -2629,6 +3021,7 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 
 	return(FILE_CACHE_TYPE_URL);
 }
+#endif
 
 
 /* read the Cache File allocation table.
@@ -2636,6 +3029,9 @@ NET_FindURLInCache(URL_Struct * URL_s, MWContext *ctxt)
 PUBLIC void
 NET_ReadCacheFAT(char * cachefatfile, XP_Bool stat_files)
 {
+#ifdef NU_CACHE
+    PR_ASSERT(0); /* Shouldn't be getting called */
+#endif
     if(net_MaxDiskCacheSize > 0)
     	net_OpenCacheFatDB();
 
@@ -2645,7 +3041,11 @@ NET_ReadCacheFAT(char * cachefatfile, XP_Bool stat_files)
 PUBLIC void
 NET_CacheInit(void)
 {
+#ifdef NU_CACHE
+    Cache_Init();
+#else
 	 NET_ReadCacheFAT("", TRUE);
+#endif /* NU_CACHE */
 }
 
 /* unload the disk cache FAT list to disk
@@ -2660,6 +3060,9 @@ NET_CacheInit(void)
 PUBLIC void
 NET_WriteCacheFAT(char *filename, XP_Bool final_call)
 {
+#ifdef NU_CACHE
+    PR_ASSERT(0);
+#endif;
 	net_StoreDiskCacheSize();
 
 	if(!cache_database)
@@ -2679,6 +3082,9 @@ NET_WriteCacheFAT(char *filename, XP_Bool final_call)
 MODULE_PRIVATE void
 NET_CleanupCache (char * filename)
 {
+#ifdef NU_CACHE
+    Cache_Shutdown();
+#else
 	net_StoreDiskCacheSize();
 
 	if(!cache_database)
@@ -2692,8 +3098,7 @@ NET_CleanupCache (char * filename)
 	cache_database = 0;
 
 	CACHE_CloseAllOpenSARCache();
-
-	return;
+#endif
 }
 
 /* returns the number of files currently in the
@@ -2702,7 +3107,11 @@ NET_CleanupCache (char * filename)
 PUBLIC uint32
 NET_NumberOfFilesInDiskCache()
 {
+#ifdef NU_CACHE
+     return DiskModule_Entries();
+#else
 	return(net_NumberInDiskCache);
+#endif
 }
 
 static int
@@ -2854,6 +3263,9 @@ NET_CleanupCacheDirectory(char * dir_name, const char * prefix)
 	uint32 num_files;
 	int i;
 	int number_in_remove_list=0;
+#ifdef NU_CACHE 
+    PR_ASSERT(0); /* Shouldn't be getting called */
+#endif 
 #ifdef XP_MAC
 
 	/* make sure the size of the cache is as we want it
@@ -3030,6 +3442,9 @@ NET_CleanupCacheDirectory(char * dir_name, const char * prefix)
 PUBLIC int
 NET_DestroyCacheDirectory(char * dir_name, char * prefix)
 {
+#ifdef NU_CACHE
+    PR_ASSERT(0); /* Shouldn't be getting called */
+#endif
 	net_RemoveAllDiskCacheObjects();
 	NET_CleanupCacheDirectory(dir_name, prefix);
 
@@ -3047,6 +3462,37 @@ NET_DestroyCacheDirectory(char * dir_name, char * prefix)
  */
 MODULE_PRIVATE void 
 NET_DisplayCacheInfoAsHTML(ActiveEntry * cur_entry)
+#ifdef NU_CACHE
+{
+    NET_StreamClass *stream;
+
+    if (cur_entry)
+    {
+     cur_entry->status = MK_UNABLE_TO_CONVERT;
+     return;
+    }
+
+    StrAllocCopy(cur_entry->URL_s->content_type, TEXT_HTML);
+
+    cur_entry->format_out = CLEAR_CACHE_BIT(cur_entry->format_out);
+    stream = NET_StreamBuilder(cur_entry->format_out, 
+                   cur_entry->URL_s, 
+                   cur_entry->window_id);
+
+    if(!stream)
+    {
+     cur_entry->status = MK_UNABLE_TO_CONVERT;
+     return;
+    }
+    
+    cur_entry->status = (*stream->put_block)(stream, "Just hang in there... ",23);
+
+    if(cur_entry->status < 0)
+     (*stream->abort)(stream, cur_entry->status);
+    else
+     (*stream->complete)(stream);
+}
+#else
 {
 	char *buffer = (char*)PR_Malloc(2048);
 	char *address;
@@ -3325,6 +3771,7 @@ END:
 
 	return;
 }
+#endif /* NU_CACHE */
 
 #define SANE_BUFLEN	1024
 
@@ -3334,6 +3781,12 @@ NET_StreamClass *
 NET_CloneWysiwygCacheFile(MWContext *window_id, URL_Struct *URL_s,
 			  uint32 nbytes, const char * wysiwyg_url, 
 			  const char * base_href)
+#ifdef NU_CACHE
+{
+    /*PR_ASSERT(0);*/ /* I hate GOTOs == Lou's programming */
+    return NULL;
+}
+#else
 {
 	char *filename;
 	PRCList *link;
@@ -3431,5 +3884,6 @@ found:
 	  }
 	return stream;
 }
+#endif
 
 #endif /* MOZILLA_CLIENT */

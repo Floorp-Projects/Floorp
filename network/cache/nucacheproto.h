@@ -16,25 +16,11 @@
  * Reserved.
  */
 
-#ifndef MKCACHE_H
-#define MKCACHE_H
+#ifndef NU_CACHE_PROTO_H
+#define NU_CACHE_PROTO_H
 
-#include "xp.h"
+#include "mkgeturl.h"
 
-#ifndef EXT_CACHE_H
-#include "extcache.h"
-#endif
 
-#ifndef NU_CACHE
-/* trace variable for cache testing */
-extern PRBool NET_CacheTraceOn;
-#endif /* This is handled by CacheTrace_Enable() and CacheTrace_IsEnabled() in the NU world */
 
-PR_BEGIN_EXTERN_C
-#ifndef NU_CACHE
-/* public accessor function for netcaster */
-extern PRBool NET_CacheStore(net_CacheObject *cacheObject, URL_Struct *url_s, PRBool accept_partial_files);
-#endif /* NU_CACHE */
-PR_END_EXTERN_C
-
-#endif /* MKCACHE_H */
+#endif /* NU_CACHE_PROTO_H */

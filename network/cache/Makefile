@@ -28,9 +28,21 @@ CSRCS		= \
 	mkmemcac.c	\
 	$(NULL)
 
+ifdef NU_CACHE
+CSRCS += \
+	nucacheproto.c	\
+	$(NULL)
+endif
+
 EXPORTS= netcache.h mkcache.h mkmemcac.h extcache.h
 
-REQUIRES	= network nspr2 dbm util pref js java fileurl security layer img jtools
+REQUIRES	= network nspr2 dbm util pref js java fileurl security layer img jtools cachelib
+
+ifdef NU_CACHE
+REQUIRES += \
+	cachelib \
+	$(NULL)
+endif
 
 include $(DEPTH)/config/rules.mk
 
