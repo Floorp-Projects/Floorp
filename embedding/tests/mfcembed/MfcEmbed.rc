@@ -437,10 +437,10 @@ END
 
 IDD_HEADERFOOTER_TAB DIALOG DISCARDABLE  0, 0, 319, 106
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Margins & Headers/Footers"
+CAPTION "Margins && Headers/Footers"
 FONT 8, "MS Sans Serif"
 BEGIN
-    GROUPBOX        "Headers and Footers",IDC_STATIC,7,38,229,56
+    GROUPBOX        "Headers && Footers",IDC_STATIC,7,38,229,56
     RTEXT           "Left",IDC_STATIC,30,65,13,8
     RTEXT           "Center",IDC_STATIC,104,65,22,8
     RTEXT           "Right",IDC_STATIC,187,65,18,8
@@ -469,7 +469,7 @@ END
 
 IDD_FORMAT_OPTIONS_TAB DIALOG DISCARDABLE  0, 0, 321, 126
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-CAPTION "Format & Options"
+CAPTION "Format && Options"
 FONT 8, "MS Sans Serif"
 BEGIN
     CONTROL         "&Portait",IDC_PRT_PORTRAIT_RD,"Button",
