@@ -23,7 +23,6 @@
 #include <windows.h>
 #include "nsRepository.h"
 #include "nsShellInstance.h"
-#include "nsApplicationShell.h"
 #include "nsApplicationManager.h"
 
 #define WEB_DLL "raptorweb.dll"
