@@ -49,16 +49,35 @@ enum
 	menu_Last = menu_Tools,
 
 	submenu_Print = 16,
-
-	cmd_Sample0			= 1000,
-	cmd_PrintOneColumn	= 2000,
-	cmd_Find			= 3000,
+	submenu_CompatibilityMode = 32,
 	
-	cmd_DebugMode		= 4000,
+	cmd_Sample0					= 1000,
+	cmd_PrintOneColumn	= 2000,
+	cmd_Find						= 3000,
+	
+	cmd_DebugMode				= 4000,
+	cmd_ReflowTest,
+	cmd_DumpContents,
+	cmd_DumpFrames,
+	cmd_DumpViews,
+	cmd_DumpStyleSheets,
+	cmd_DumpStyleContexts,
+	cmd_ShowContentSize,
+	cmd_ShowFrameSize,
+	cmd_ShowStyleSize,
+	cmd_DebugSave,
+	cmd_DebugToggleSelection,
 	cmd_DebugRobot,
-	cmd_JSConsole,
+	cmd_ShowContentQuality,
+	
+	cmd_Compatibility_NavQuirks	= 4200,
+	cmd_Compatibility_Standard,
+	
+	cmd_JSConsole				= 5000,
 	cmd_EditorMode,
-	cmd_Top100
+	cmd_Top100,
+	cmd_TableInspector,
+	cmd_ImageInspector
 };
 
 
@@ -172,6 +191,7 @@ nsNativeBrowserWindow::CreateMenuBar(PRInt32 aWidth)
 		InsertMenu(GetMenu(i), 0);
 	}
 	InsertMenu(GetMenu(submenu_Print), -1);
+	InsertMenu(GetMenu(submenu_CompatibilityMode), -1);
 	AppendResMenu(GetMenuHandle(menu_Apple), 'DRVR');
 	DrawMenuBar();
 	return NS_OK;
@@ -245,22 +265,48 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 		case menu_Debug:
 			switch (menuItem)
 			{
-				case cmd_DebugMode:		xpID = VIEWER_VISUAL_DEBUGGING;	break;
-				case cmd_DebugRobot:	xpID = VIEWER_DEBUGROBOT;		break;
+				case cmd_DebugMode:					xpID = VIEWER_VISUAL_DEBUGGING;			break;
+				case cmd_ReflowTest:				xpID = VIEWER_REFLOW_TEST;					break;
+
+				case cmd_DumpContents:			xpID = VIEWER_DUMP_CONTENT;					break;
+				case cmd_DumpFrames:				xpID = VIEWER_DUMP_FRAMES;					break;
+				case cmd_DumpViews:					xpID = VIEWER_DUMP_VIEWS;						break;
+
+				case cmd_DumpStyleSheets:		xpID = VIEWER_DUMP_STYLE_SHEETS;		break;
+				case cmd_DumpStyleContexts:	xpID = VIEWER_DUMP_STYLE_CONTEXTS;	break;
+
+				case cmd_ShowContentSize:		xpID = VIEWER_SHOW_CONTENT_SIZE;		break;
+				case cmd_ShowFrameSize:			xpID = VIEWER_SHOW_FRAME_SIZE;			break;
+				case cmd_ShowStyleSize:			xpID = VIEWER_SHOW_STYLE_SIZE;			break;
+				
+				case cmd_DebugSave:							xpID = VIEWER_DEBUGSAVE;						break;
+				case cmd_DebugToggleSelection:	xpID = VIEWER_TOGGLE_SELECTION;			break;
+				case cmd_DebugRobot:						xpID = VIEWER_DEBUGROBOT;						break;
+				case cmd_ShowContentQuality:		xpID =VIEWER_SHOW_CONTENT_QUALITY;	break;
 			}
 			break;
 			
 		case menu_Tools:
 			switch (menuItem)
 			{
-				case cmd_JSConsole:		xpID = JS_CONSOLE;				break;
-				case cmd_EditorMode:	xpID = EDITOR_MODE;				break;
-				case cmd_Top100:		xpID = VIEWER_TOP100;			break;
+				case cmd_JSConsole:					xpID = JS_CONSOLE;								break;
+				case cmd_EditorMode:				xpID = EDITOR_MODE;								break;
+				case cmd_Top100:						xpID = VIEWER_TOP100;							break;
+				case cmd_TableInspector:		xpID = VIEWER_TABLE_INSPECTOR;		break;
+				case cmd_ImageInspector:		xpID = VIEWER_IMAGE_INSPECTOR;		break;
 			}
 			break;
 			
 		case submenu_Print:
 			xpID = VIEWER_ONE_COLUMN + menuItem - cmd_PrintOneColumn;
+			break;
+			
+		case submenu_CompatibilityMode:
+			switch (menuItem)
+			{
+				case cmd_Compatibility_NavQuirks:		xpID = VIEWER_NAV_QUIRKS_MODE;	break;
+				case cmd_Compatibility_Standard:		xpID = VIEWER_STANDARD_MODE;		break;
+			}
 			break;
 	}
 
