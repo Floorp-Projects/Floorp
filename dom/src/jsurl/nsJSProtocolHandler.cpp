@@ -195,8 +195,10 @@ public:
     }
 
     NS_IMETHOD Close() {
-        if (mResult)
+        if (mResult) {
             nsCRT::free(mResult);
+            mResult = nsnull;
+        }
         mLength = 0;
         mReadCursor = 0;
         mChannel = nsnull;
@@ -211,8 +213,6 @@ public:
             NS_ASSERTION(mResult, "Eval didn't set mResult");
         }
         PRUint32 rest = mLength - mReadCursor;
-        if (!rest)
-            return NS_ERROR_FAILURE;
         *result = rest;
         return NS_OK;
     }
@@ -224,8 +224,10 @@ public:
         if (rv != NS_OK)
             return rv;
         PRUint32 amt = PR_MIN(count, rest);
-        nsCRT::memcpy(buf, &mResult[mReadCursor], amt);
-        mReadCursor += amt;
+        if (amt > 0) {
+            nsCRT::memcpy(buf, &mResult[mReadCursor], amt);
+            mReadCursor += amt;
+        }
         *result = amt;
         return NS_OK;
     }
@@ -404,11 +406,14 @@ nsJSProtocolHandler::NewChannel(nsIURI* uri, nsIChannel* *result)
     nsCOMPtr<nsIChannel> channel;
     rv = NS_NewInputStreamChannel(getter_AddRefs(channel),
                                   uri, in, "text/html", -1);
-    if (NS_FAILED(rv)) return rv;
-    rv = in->Init(uri, channel);
+    if (NS_SUCCEEDED(rv)) {
+        rv = in->Init(uri, channel);
+    }
+    NS_RELEASE(in);
     if (NS_FAILED(rv)) return rv;
 
     *result = channel;
+    NS_ADDREF(*result);
     return NS_OK;
 }
 
