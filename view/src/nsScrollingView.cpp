@@ -139,6 +139,7 @@ void CornerView :: SetQuality(nsContentQuality aQuality)
   if (mQuality != aQuality)
   {
     mQuality = aQuality;
+  mQuality = nsContentQuality_kPoor;
 
     if (mVis == nsViewVisibility_kShow)
       mViewManager->UpdateView(this, nsnull, NS_VMREFRESH_IMMEDIATE);
@@ -165,6 +166,10 @@ void CornerView :: Show(PRBool aShow)
   }
 }
 
+#ifndef min
+#define min(a, b) ((a) < (b) ? (a) : (b))
+#endif
+
 PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
                            PRUint32 aPaintFlags, nsIView *aBackstop)
 {
@@ -188,6 +193,8 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
 
       if (PR_TRUE == mShowQuality)
       {
+        nscolor tcolor, bcolor;
+
         //display quality indicator
 
         rc.Translate(mBounds.x, mBounds.y);
@@ -206,10 +213,40 @@ PRBool CornerView :: Paint(nsIRenderingContext& rc, const nsRect& rect,
         else
           rc.SetColor(NS_RGB(255, 0, 0));
 
+        //hey, notice that these numbers don't add up... that's because
+        //something funny happens on windows when the *right* numbers are
+        //used. MMP
+
         rc.FillEllipse(NS_TO_INT_ROUND(mBounds.width * 0.23f),
                        NS_TO_INT_ROUND(mBounds.height * 0.23f),
                        nscoord(mBounds.width * 0.46f),
                        nscoord(mBounds.height * 0.46f));
+
+        bcolor = tcolor = rc.GetColor();
+
+        //this is inefficient, but compact...
+
+        tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 40, 255), 
+                        (int)min(NS_GET_G(bcolor) + 40, 255),
+                        (int)min(NS_GET_B(bcolor) + 40, 255));
+
+        rc.SetColor(tcolor);
+
+        rc.FillEllipse(NS_TO_INT_ROUND(mBounds.width * 0.34f),
+                       NS_TO_INT_ROUND(mBounds.height * 0.34f),
+                       nscoord(mBounds.width * 0.28f),
+                       nscoord(mBounds.height * 0.28f));
+
+        tcolor = NS_RGB((int)min(NS_GET_R(bcolor) + 120, 255), 
+                        (int)min(NS_GET_G(bcolor) + 120, 255),
+                        (int)min(NS_GET_B(bcolor) + 120, 255));
+
+        rc.SetColor(tcolor);
+
+        rc.FillEllipse(NS_TO_INT_ROUND(mBounds.width * 0.32f),
+                       NS_TO_INT_ROUND(mBounds.height * 0.32f),
+                       nscoord(mBounds.width * 0.17f),
+                       nscoord(mBounds.height * 0.17f));
       }
     }
 
