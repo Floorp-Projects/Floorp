@@ -71,7 +71,7 @@ num_isNaN(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsdouble x;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = BOOLEAN_TO_JSVAL(JSDOUBLE_IS_NaN(x));
     return JS_TRUE;
 }
@@ -82,7 +82,7 @@ num_isFinite(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsdouble x;
 
     if (!js_ValueToNumber(cx, argv[0], &x))
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = BOOLEAN_TO_JSVAL(JSDOUBLE_IS_FINITE(x));
     return JS_TRUE;
 }
@@ -96,16 +96,16 @@ num_parseFloat(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rva
 
     str = js_ValueToString(cx, argv[0]);
     if (!str)
-	return JS_FALSE;
+        return JS_FALSE;
     /* XXXbe js_strtod shouldn't require NUL termination */
     bp = js_UndependString(cx, str);
     if (!bp)
-	return JS_FALSE;
+        return JS_FALSE;
     if (!js_strtod(cx, bp, &ep, &d))
-	return JS_FALSE;
+        return JS_FALSE;
     if (ep == bp) {
-	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-	return JS_TRUE;
+        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
     }
     return js_NewNumberValue(cx, d, rval);
 }
@@ -121,27 +121,27 @@ num_parseInt(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
     str = js_ValueToString(cx, argv[0]);
     if (!str)
-	return JS_FALSE;
+        return JS_FALSE;
 
     if (argc > 1) {
-	if (!js_ValueToECMAInt32(cx, argv[1], &radix))
-	    return JS_FALSE;
+        if (!js_ValueToECMAInt32(cx, argv[1], &radix))
+            return JS_FALSE;
     } else
-	radix = 0;
+        radix = 0;
 
     if (radix != 0 && (radix < 2 || radix > 36)) {
-	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-	return JS_TRUE;
+        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
     }
     /* XXXbe js_strtointeger shouldn't require NUL termination */
     bp = js_UndependString(cx, str);
     if (!bp)
-	return JS_FALSE;
+        return JS_FALSE;
     if (!js_strtointeger(cx, bp, &ep, radix, &d))
-	return JS_FALSE;
+        return JS_FALSE;
     if (ep == bp) {
-	*rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
-	return JS_TRUE;
+        *rval = DOUBLE_TO_JSVAL(cx->runtime->jsNaN);
+        return JS_TRUE;
     }
     return js_NewNumberValue(cx, d, rval);
 }
@@ -176,16 +176,16 @@ Number(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     jsval v;
 
     if (argc != 0) {
-	if (!js_ValueToNumber(cx, argv[0], &d))
-	    return JS_FALSE;
+        if (!js_ValueToNumber(cx, argv[0], &d))
+            return JS_FALSE;
     } else {
-	d = 0.0;
+        d = 0.0;
     }
     if (!js_NewNumberValue(cx, d, &v))
-	return JS_FALSE;
+        return JS_FALSE;
     if (!(cx->fp->flags & JSFRAME_CONSTRUCTING)) {
-	*rval = v;
-	return JS_TRUE;
+        *rval = v;
+        return JS_TRUE;
     }
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, v);
     return JS_TRUE;
@@ -202,19 +202,19 @@ num_toSource(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
 
     if (!JS_InstanceOf(cx, obj, &number_class, argv))
-	return JS_FALSE;
+        return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_NUMBER(v));
     d = JSVAL_IS_INT(v) ? (jsdouble)JSVAL_TO_INT(v) : *JSVAL_TO_DOUBLE(v);
     numStr = JS_dtostr(numBuf, sizeof numBuf, DTOSTR_STANDARD, 0, d);
     if (!numStr) {
-	JS_ReportOutOfMemory(cx);
-	return JS_FALSE;
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
     }
     JS_snprintf(buf, sizeof buf, "(new %s(%s))", number_class.name, numStr);
     str = JS_NewStringCopyZ(cx, buf);
     if (!str)
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -226,12 +226,12 @@ IntToString(jsint i, char *buf, size_t bufSize)
 {
     char *cp;
     jsuint u;
-    
+
     u = (i < 0) ? -i : i;
 
     cp = buf + bufSize; /* one past last buffer cell */
     *--cp = '\0';       /* null terminate the string to be */
-    
+
     /*
      * Build the string from behind. We use multiply and subtraction
      * instead of modulus because that's much faster.
@@ -241,7 +241,7 @@ IntToString(jsint i, char *buf, size_t bufSize)
         *--cp = (char)(u - newu * 10) + '0';
         u = newu;
     } while (u != 0);
-    
+
     if (i < 0)
         *--cp = '-';
 
@@ -257,35 +257,35 @@ num_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     JSString *str;
 
     if (!JS_InstanceOf(cx, obj, &number_class, argv))
-	return JS_FALSE;
+        return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_NUMBER(v));
     d = JSVAL_IS_INT(v) ? (jsdouble)JSVAL_TO_INT(v) : *JSVAL_TO_DOUBLE(v);
     base = 10;
     if (argc != 0) {
-	if (!js_ValueToECMAInt32(cx, argv[0], &base))
-	    return JS_FALSE;
-	if (base < 2 || base > 36) {
-	    char numBuf[12];
-	    char *numStr = IntToString(base, numBuf, sizeof numBuf);
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
-	    			 numStr);
-	    return JS_FALSE;
-	}
+        if (!js_ValueToECMAInt32(cx, argv[0], &base))
+            return JS_FALSE;
+        if (base < 2 || base > 36) {
+            char numBuf[12];
+            char *numStr = IntToString(base, numBuf, sizeof numBuf);
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_BAD_RADIX,
+                                 numStr);
+            return JS_FALSE;
+        }
     }
     if (base == 10)
-	str = js_NumberToString(cx, d);
+        str = js_NumberToString(cx, d);
     else {
-	char *dStr = JS_dtobasestr(base, d);
-	if (!dStr) {
-	    JS_ReportOutOfMemory(cx);
-	    return JS_FALSE;
-	}
-	str = JS_NewStringCopyZ(cx, dStr);
-	free(dStr);
+        char *dStr = JS_dtobasestr(base, d);
+        if (!dStr) {
+            JS_ReportOutOfMemory(cx);
+            return JS_FALSE;
+        }
+        str = JS_NewStringCopyZ(cx, dStr);
+        free(dStr);
     }
     if (!str)
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -322,7 +322,7 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
 
     /* Figure out how long resulting string will be. */
     size = digits + (dec ? decimalLength + strlen(dec + 1) : 0);
-    
+
     tmpGroup = rt->numGrouping;
     remainder = digits;
     if (*num == '-')
@@ -362,7 +362,7 @@ num_toLocaleString(JSContext *cx, JSObject *obj, uintN argc,
         if (--nrepeat < 0)
             tmpGroup--;
     }
-    
+
     if (dec) {
         strcpy(tmpDest, rt->decimalSeparator);
         tmpDest += decimalLength;
@@ -386,7 +386,7 @@ static JSBool
 num_valueOf(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
     if (!JS_InstanceOf(cx, obj, &number_class, argv))
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     return JS_TRUE;
 }
@@ -405,18 +405,18 @@ num_to(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval, JSDTo
     char buf[DTOSTR_VARIABLE_BUFFER_SIZE(MAX_PRECISION+1)], *numStr; /* Use MAX_PRECISION+1 because precisionOffset can be 1 */
 
     if (!JS_InstanceOf(cx, obj, &number_class, argv))
-	return JS_FALSE;
+        return JS_FALSE;
     v = OBJ_GET_SLOT(cx, obj, JSSLOT_PRIVATE);
     JS_ASSERT(JSVAL_IS_NUMBER(v));
     d = JSVAL_IS_INT(v) ? (jsdouble)JSVAL_TO_INT(v) : *JSVAL_TO_DOUBLE(v);
 
     if (JSVAL_IS_VOID(argv[0])) {
-	precision = 0.0;
-	oneArgMode = zeroArgMode;
+        precision = 0.0;
+        oneArgMode = zeroArgMode;
     } else {
-	if (!js_ValueToNumber(cx, argv[0], &precision))
-	    return JS_FALSE;
-	precision = js_DoubleToInteger(precision);
+        if (!js_ValueToNumber(cx, argv[0], &precision))
+            return JS_FALSE;
+        precision = js_DoubleToInteger(precision);
         if (precision < precisionMin || precision > precisionMax) {
             numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, precision);
             if (!numStr)
@@ -429,12 +429,12 @@ num_to(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval, JSDTo
 
     numStr = JS_dtostr(buf, sizeof buf, oneArgMode, (jsint)precision + precisionOffset, d);
     if (!numStr) {
-	JS_ReportOutOfMemory(cx);
-	return JS_FALSE;
+        JS_ReportOutOfMemory(cx);
+        return JS_FALSE;
     }
     str = JS_NewStringCopyZ(cx, numStr);
     if (!str)
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = STRING_TO_JSVAL(str);
     return JS_TRUE;
 }
@@ -466,9 +466,9 @@ static JSFunctionSpec number_methods[] = {
 #if JS_HAS_TOSOURCE
     {js_toSource_str,       num_toSource,       0,0,0},
 #endif
-    {js_toString_str,	    num_toString,       0,0,0},
+    {js_toString_str,       num_toString,       0,0,0},
     {js_toLocaleString_str, num_toLocaleString, 0,0,0},
-    {js_valueOf_str,	    num_valueOf,        0,0,0},
+    {js_valueOf_str,        num_valueOf,        0,0,0},
 #if JS_HAS_NUMBER_FORMATS
     {"toFixed",             num_toFixed,        1,0,0},
     {"toExponential",       num_toExponential,  1,0,0},
@@ -564,7 +564,7 @@ js_InitRuntimeNumberState(JSContext *cx)
     number_constants[NC_MIN_VALUE].dval = u.d;
 
     locale = localeconv();
-    rt->thousandsSeparator = 
+    rt->thousandsSeparator =
         JS_strdup(cx, locale->thousands_sep ? locale->thousands_sep : "'");
     rt->decimalSeparator =
         JS_strdup(cx, locale->decimal_point ? locale->decimal_point : ".");
@@ -603,28 +603,28 @@ js_InitNumberClass(JSContext *cx, JSObject *obj)
     FIX_FPU();
 
     if (!JS_DefineFunctions(cx, obj, number_functions))
-	return NULL;
+        return NULL;
 
     proto = JS_InitClass(cx, obj, NULL, &number_class, Number, 1,
-			 NULL, number_methods, NULL, NULL);
+                         NULL, number_methods, NULL, NULL);
     if (!proto || !(ctor = JS_GetConstructor(cx, proto)))
-	return NULL;
+        return NULL;
     OBJ_SET_SLOT(cx, proto, JSSLOT_PRIVATE, JSVAL_ZERO);
     if (!JS_DefineConstDoubles(cx, ctor, number_constants))
-	return NULL;
+        return NULL;
 
     /* ECMA 15.1.1.1 */
     rt = cx->runtime;
     if (!JS_DefineProperty(cx, obj, js_NaN_str, DOUBLE_TO_JSVAL(rt->jsNaN),
-			   NULL, NULL, JSPROP_PERMANENT)) {
-	return NULL;
+                           NULL, NULL, JSPROP_PERMANENT)) {
+        return NULL;
     }
 
     /* ECMA 15.1.1.2 */
     if (!JS_DefineProperty(cx, obj, js_Infinity_str,
-			   DOUBLE_TO_JSVAL(rt->jsPositiveInfinity),
-			   NULL, NULL, JSPROP_PERMANENT)) {
-	return NULL;
+                           DOUBLE_TO_JSVAL(rt->jsPositiveInfinity),
+                           NULL, NULL, JSPROP_PERMANENT)) {
+        return NULL;
     }
     return proto;
 }
@@ -636,7 +636,7 @@ js_NewDouble(JSContext *cx, jsdouble d)
 
     dp = (jsdouble *) js_AllocGCThing(cx, GCX_DOUBLE);
     if (!dp)
-	return NULL;
+        return NULL;
     *dp = d;
     return dp;
 }
@@ -654,7 +654,7 @@ js_NewDoubleValue(JSContext *cx, jsdouble d, jsval *rval)
 
     dp = js_NewDouble(cx, d);
     if (!dp)
-	return JS_FALSE;
+        return JS_FALSE;
     *rval = DOUBLE_TO_JSVAL(dp);
     return JS_TRUE;
 }
@@ -665,10 +665,10 @@ js_NewNumberValue(JSContext *cx, jsdouble d, jsval *rval)
     jsint i;
 
     if (JSDOUBLE_IS_INT(d, i) && INT_FITS_IN_JSVAL(i)) {
-	*rval = INT_TO_JSVAL(i);
+        *rval = INT_TO_JSVAL(i);
     } else {
-	if (!js_NewDoubleValue(cx, d, rval))
-	    return JS_FALSE;
+        if (!js_NewDoubleValue(cx, d, rval))
+            return JS_FALSE;
     }
     return JS_TRUE;
 }
@@ -681,10 +681,10 @@ js_NumberToObject(JSContext *cx, jsdouble d)
 
     obj = js_NewObject(cx, &number_class, NULL, NULL);
     if (!obj)
-	return NULL;
+        return NULL;
     if (!js_NewNumberValue(cx, d, &v)) {
-	cx->newborn[GCX_OBJECT] = NULL;
-	return NULL;
+        cx->newborn[GCX_OBJECT] = NULL;
+        return NULL;
     }
     OBJ_SET_SLOT(cx, obj, JSSLOT_PRIVATE, v);
     return obj;
@@ -698,13 +698,13 @@ js_NumberToString(JSContext *cx, jsdouble d)
     char *numStr;
 
     if (JSDOUBLE_IS_INT(d, i))
-	numStr = IntToString(i, buf, sizeof buf);
+        numStr = IntToString(i, buf, sizeof buf);
     else {
-	numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, d);
-	if (!numStr) {
-	    JS_ReportOutOfMemory(cx);
-	    return NULL;
-	}
+        numStr = JS_dtostr(buf, sizeof buf, DTOSTR_STANDARD, 0, d);
+        if (!numStr) {
+            JS_ReportOutOfMemory(cx);
+            return NULL;
+        }
     }
     return JS_NewStringCopyZ(cx, numStr);
 }
@@ -717,21 +717,21 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
     const jschar *bp, *ep;
 
     if (JSVAL_IS_OBJECT(v)) {
-	obj = JSVAL_TO_OBJECT(v);
-	if (!obj) {
-	    *dp = 0;
-	    return JS_TRUE;
-	}
-	if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_NUMBER, &v))
-	    return JS_FALSE;
+        obj = JSVAL_TO_OBJECT(v);
+        if (!obj) {
+            *dp = 0;
+            return JS_TRUE;
+        }
+        if (!OBJ_DEFAULT_VALUE(cx, obj, JSTYPE_NUMBER, &v))
+            return JS_FALSE;
     }
     if (JSVAL_IS_INT(v)) {
-	*dp = (jsdouble)JSVAL_TO_INT(v);
+        *dp = (jsdouble)JSVAL_TO_INT(v);
     } else if (JSVAL_IS_DOUBLE(v)) {
-	*dp = *JSVAL_TO_DOUBLE(v);
+        *dp = *JSVAL_TO_DOUBLE(v);
     } else if (JSVAL_IS_STRING(v)) {
-	str = JSVAL_TO_STRING(v);
-	/*
+        str = JSVAL_TO_STRING(v);
+        /*
          * Note that ECMA doesn't treat a string beginning with a '0' as an
          * octal number here.  This works because all such numbers will be
          * interpreted as decimal by js_strtod and will never get passed to
@@ -743,25 +743,25 @@ js_ValueToNumber(JSContext *cx, jsval v, jsdouble *dp)
             return JS_FALSE;
         if ((!js_strtod(cx, bp, &ep, dp) ||
              js_SkipWhiteSpace(ep) != bp + str->length) &&
-	    (!js_strtointeger(cx, bp, &ep, 0, dp) ||
+            (!js_strtointeger(cx, bp, &ep, 0, dp) ||
              js_SkipWhiteSpace(ep) != bp + str->length)) {
-	    goto badstr;
-	}
+            goto badstr;
+        }
     } else if (JSVAL_IS_BOOLEAN(v)) {
-	*dp = JSVAL_TO_BOOLEAN(v) ? 1 : 0;
+        *dp = JSVAL_TO_BOOLEAN(v) ? 1 : 0;
     } else {
 #if JS_BUG_FALLIBLE_TONUM
-	str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
 badstr:
-	if (str) {
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NAN,
-				 JS_GetStringBytes(str));
+        if (str) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL, JSMSG_NAN,
+                                 JS_GetStringBytes(str));
 
-	}
-	return JS_FALSE;
+        }
+        return JS_FALSE;
 #else
 badstr:
-	*dp = *cx->runtime->jsNaN;
+        *dp = *cx->runtime->jsNaN;
 #endif
     }
     return JS_TRUE;
@@ -773,7 +773,7 @@ js_ValueToECMAInt32(JSContext *cx, jsval v, int32 *ip)
     jsdouble d;
 
     if (!js_ValueToNumber(cx, v, &d))
-	return JS_FALSE;
+        return JS_FALSE;
     return js_DoubleToECMAInt32(cx, d, ip);
 }
 
@@ -802,7 +802,7 @@ js_ValueToECMAUint32(JSContext *cx, jsval v, uint32 *ip)
     jsdouble d;
 
     if (!js_ValueToNumber(cx, v, &d))
-	return JS_FALSE;
+        return JS_FALSE;
     return js_DoubleToECMAUint32(cx, d, ip);
 }
 
@@ -813,8 +813,8 @@ js_DoubleToECMAUint32(JSContext *cx, jsdouble d, uint32 *ip)
     jsdouble two32 = 4294967296.0;
 
     if (!JSDOUBLE_IS_FINITE(d) || d == 0) {
-	*ip = 0;
-	return JS_TRUE;
+        *ip = 0;
+        return JS_TRUE;
     }
 
     neg = (d < 0);
@@ -839,15 +839,15 @@ js_ValueToInt32(JSContext *cx, jsval v, int32 *ip)
         return JS_TRUE;
     }
     if (!js_ValueToNumber(cx, v, &d))
-	return JS_FALSE;
+        return JS_FALSE;
     if (JSDOUBLE_IS_NaN(d) || d <= -2147483649.0 || 2147483648.0 <= d) {
-	str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
-	if (str) {
-	    JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-				 JSMSG_CANT_CONVERT, JS_GetStringBytes(str));
+        str = js_DecompileValueGenerator(cx, JSDVG_SEARCH_STACK, v, NULL);
+        if (str) {
+            JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                                 JSMSG_CANT_CONVERT, JS_GetStringBytes(str));
 
-	}
-	return JS_FALSE;
+        }
+        return JS_FALSE;
     }
     *ip = (int32)floor(d + 0.5);     /* Round to nearest */
     return JS_TRUE;
@@ -861,15 +861,15 @@ js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
     JSBool neg;
 
     if (!js_ValueToNumber(cx, v, &d))
-	return JS_FALSE;
+        return JS_FALSE;
     if (d == 0 || !JSDOUBLE_IS_FINITE(d)) {
-	*ip = 0;
-	return JS_TRUE;
+        *ip = 0;
+        return JS_TRUE;
     }
     i = (jsuint)d;
     if ((jsdouble)i == d) {
-	*ip = (uint16)i;
-	return JS_TRUE;
+        *ip = (uint16)i;
+        return JS_TRUE;
     }
     neg = (d < 0);
     d = floor(neg ? -d : d);
@@ -877,7 +877,7 @@ js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip)
     m = JS_BIT(16);
     d = fmod(d, (double)m);
     if (d < 0)
-	d += m;
+        d += m;
     *ip = (uint16) d;
     return JS_TRUE;
 }
@@ -888,11 +888,11 @@ js_DoubleToInteger(jsdouble d)
     JSBool neg;
 
     if (d == 0)
-	return d;
+        return d;
     if (!JSDOUBLE_IS_FINITE(d)) {
-	if (JSDOUBLE_IS_NaN(d))
-	    return 0;
-	return d;
+        if (JSDOUBLE_IS_NaN(d))
+            return 0;
+        return d;
     }
     neg = (d < 0);
     d = floor(neg ? -d : d);
@@ -919,7 +919,7 @@ js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp)
     } else {
         cstr = cbuf;
     }
-   
+
     for (i = 0; i <= length; i++) {
         if (s1[i] >> 8) {
             cstr[i] = 0;
