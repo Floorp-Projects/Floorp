@@ -10,6 +10,7 @@ my $TESTNAME  = lc($req->param('testname'));
 my $UNITS     = lc($req->param('units'));
 my $TBOX      = lc($req->param('tbox'));
 my $AUTOSCALE = lc($req->param('autoscale'));
+my $SIZE      = lc($req->param('size'));
 my $DAYS      = lc($req->param('days'));
 my $LTYPE     = lc($req->param('ltype'));
 my $POINTS    = lc($req->param('points'));
@@ -57,7 +58,7 @@ sub print_testnames {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&days=$days&units=$units&ltype=$ltype&points=$points>$_</a>\n";
+	print "<li><a href=query.cgi?&testname=$_$testname&tbox=$tbox&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -81,7 +82,7 @@ sub print_machines {
   my $machines_string = join(" ", @machines);
 
   foreach (@machines) {
-	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&days=$days&units=$units&ltype=$ltype&points=$points>$_</a>\n";
+	print "<li><a href=query.cgi?tbox=$_&testname=$testname&autoscale=$autoscale&size=$SIZE&days=$days&units=$units&ltype=$ltype&points=$points>$_</a>\n";
   }
   print "</ul></td></tr></table></td></tr></table>";
 
@@ -95,35 +96,39 @@ sub show_graph {
 
   print "<body>\n";
 
-  print "<table cellspacing=10>\n";
+  print "<table cellspacing=8>\n";
   print "<tr>\n";
 
   # Scale Y-axis
-  print "<td>\n";
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
   if($AUTOSCALE) {
 	print "Y-axis: (<b>zoom</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">100%</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=0&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">100%</a>";
 	print ") \n";
   } else {
 	print "Y-axis: (";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">zoom</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=1&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">zoom</a>";
 	print "|<b>100%</b>) \n";
   }
+  print "</font>\n";
   print "</td>\n";
 
   # Days, Time-axis
-  print "<td>\n";
-  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&units=$UNITS&ltype=$LTYPE&points=$POINTS\">\n";
+  print "<td valign=bottom>\n";
+  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&units=$UNITS&ltype=$LTYPE&points=$POINTS\">\n";
+  print "<font size=\"-1\">\n";
   print "<input type=hidden name=\"tbox\" value=\"$TBOX\">";
   print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
   print "<input type=hidden name=\"autoscale\" value=\"$AUTOSCALE\">";
+  print "<input type=hidden name=\"size\" value=\"$SIZE\">";
   print "<input type=hidden name=\"units\" value=\"$UNITS\">";
   print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
   print "<input type=hidden name=\"points\" value=\"$POINTS\">";
 
   print "Days:";
   if($DAYS) {
-	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS\">all data</a>|";
+	print "(<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=0&units=$UNITS&ltype=$LTYPE&points=$POINTS\">all data</a>|";
     print "<input type=text value=$DAYS name=\"days\" size=3 maxlength=10>";
 	print ")\n";
   } else {
@@ -131,36 +136,41 @@ sub show_graph {
     print "<input type=text value=\"\" name=\"days\" size=3 maxlength=10>";
 	print ")\n";
   }
+  print "</font>\n";
   print "</form>\n";
   print "</td>\n";
 
   # Line style (lines|steps)
-  print "<td>\n";
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
   print "Style:";
   if($LTYPE eq "steps") {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS\">lines</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=lines&points=$POINTS\">lines</a>";
 	print "|<b>steps</b>";
 	print ")";
   } else {
 	print "(<b>lines</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS\">steps</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=steps&points=$POINTS\">steps</a>";
 	print ")";
   }
+  print "</font>\n";
   print "</td>\n";
 
   # Points (on|off)
-  print "<td>\n";
+  print "<td valign=bottom>\n";
+  print "<font size=\"-1\">\n";
   print "Points:";
   if($POINTS) {
 	print "(<b>on</b>|";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=0\">off</a>";
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=0\">off</a>";
 	print ")\n";
   } else {
 	print "(";
-	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=1\">on</a>";	
+	print "<a href=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=1\">on</a>";	
     print "|<b>off</b>)\n";
   }
+  print "</font>\n";
   print "</td>\n";
 
   print "</tr>\n";
@@ -168,19 +178,25 @@ sub show_graph {
   print "<br>\n";
 
   # graph
-  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\" alt=\"$TBOX $TESTNAME graph\">";
+  print "<img src=\"graph.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\" alt=\"$TBOX $TESTNAME graph\">";
 
   print "<br>\n";
   print "<br>\n";
+
+
+  print "<table cellspacing=8>\n";
+  print "<tr>\n";
+
+  print "<td>\n";
 
   # Other machines
   print "<font size=\"-1\">";
   print "<li>\n";
-  print "<a href=\"query.cgi?tbox=&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">Other machines running the $TESTNAME test</a>";
+  print "<a href=\"query.cgi?tbox=&testname=$TESTNAME&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">Other machines running the $TESTNAME test</a>";
   print "</li>\n";
 
   print "<li>\n";
-  print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">Other tests that $TBOX is running</a>";
+  print "<a href=\"query.cgi?tbox=$TBOX&testname=&autoscale=$AUTOSCALE&size=$SIZE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">Other tests that $TBOX is running</a>";
   print "</li>\n";
 
   print "<li>\n";
@@ -189,6 +205,37 @@ sub show_graph {
 
   print "</font>";
   
+  print "</td>\n";
+
+  print "<td>\n";
+
+  # Graph size
+  print "<td valign=\"top\">\n";
+  print "<form method=\"get\" action=\"query.cgi?tbox=$TBOX&testname=$TESTNAME&autoscale=$AUTOSCALE&days=$DAYS&units=$UNITS&ltype=$LTYPE&points=$POINTS\">\n";
+  print "<font size=\"-1\">\n";
+  print "<input type=hidden name=\"tbox\" value=\"$TBOX\">";
+  print "<input type=hidden name=\"testname\" value=\"$TESTNAME\">";
+  print "<input type=hidden name=\"autoscale\" value=\"$AUTOSCALE\">";
+  print "<input type=hidden name=\"days\" value=\"$DAYS\">";
+  print "<input type=hidden name=\"units\" value=\"$UNITS\">";
+  print "<input type=hidden name=\"ltype\" value=\"$LTYPE\">";
+  print "<input type=hidden name=\"points\" value=\"$POINTS\">";
+
+  print "Graph size:";
+  if($SIZE) {
+    print "<input type=text value=$SIZE name=\"size\" size=3 maxlength=10>\n";
+  } else {
+    print "<input type=text value=1.0 name=\"size\" size=3 maxlength=10>\n";
+  }
+
+  print "</font>\n";
+  print "</form>\n";
+  print "</td>\n";
+
+  print "</td>\n";
+
+  print "</tr>\n";
+  print "</table>\n";
 
   print "</body>\n";
 }
