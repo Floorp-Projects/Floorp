@@ -267,10 +267,9 @@ public:
   NS_IMETHOD ResizeReflow(nsIView *aView, nscoord aWidth, nscoord aHeight);
 
   //nsIFocusTracker interface
-  virtual nsresult SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame){mFocusEventFrame = aFrame; mAnchorEventFrame = aAnchorFrame; return NS_OK;}
+  NS_IMETHOD SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame);
 
-  virtual nsresult GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){if (!aFrame || !aAnchorFrame) return NS_ERROR_NULL_POINTER;*aFrame = mFocusEventFrame;
-      *aAnchorFrame = mAnchorEventFrame; return NS_OK;}
+  NS_IMETHOD GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame);
 protected:
   ~PresShell();
 
@@ -780,7 +779,7 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
     NS_FRAME_LOG(NS_FRAME_TRACE_CALLS, ("exit nsPresShell::ResizeReflow"));
 
     if (mSelection)
-      mSelection->ResetSelection(mRootFrame);
+      mSelection->ResetSelection(this, mRootFrame);
 
     // XXX if debugging then we should assert that the cache is empty
   } else {
@@ -793,6 +792,27 @@ PresShell::ResizeReflow(nscoord aWidth, nscoord aHeight)
   return NS_OK; //XXX this needs to be real. MMP
 }
 
+//it is ok to pass null, it will simply ignore that parameter.
+//if necessary we can add a clear focus, but I dont think it is a big
+//deal.
+NS_IMETHODIMP
+PresShell::SetFocus(nsIFrame *aFrame, nsIFrame *aAnchorFrame){
+  if (aFrame)
+    mFocusEventFrame = aFrame;
+  if (aAnchorFrame)
+    mAnchorEventFrame = aAnchorFrame;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PresShell::GetFocus(nsIFrame **aFrame, nsIFrame **aAnchorFrame){
+  if (!aFrame || !aAnchorFrame) 
+    return NS_ERROR_NULL_POINTER;
+  *aFrame = mFocusEventFrame;
+  *aAnchorFrame = mAnchorEventFrame; 
+  return NS_OK;
+}
+  
 NS_IMETHODIMP
 PresShell::StyleChangeReflow()
 {
