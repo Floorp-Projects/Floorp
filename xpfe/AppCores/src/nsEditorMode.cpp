@@ -65,15 +65,15 @@ nsresult NS_InitEditorMode(nsIDOMDocument *aDOMDocument, nsIPresShell* aPresShel
   if (PR_TRUE==needsInit)
   {
     needsInit=PR_FALSE;
-    result = nsRepository::RegisterFactory(kTextEditorCID, EDITOR_DLL, 
-                                           PR_FALSE, PR_FALSE);
+    result = nsRepository::RegisterComponent(kTextEditorCID, NULL, NULL,
+                                           EDITOR_DLL, PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
     {
       if (NS_FAILED(result))
         return result;
     }
-    result = nsRepository::RegisterFactory(kEditorCID, EDITOR_DLL, 
-                                           PR_FALSE, PR_FALSE);
+    result = nsRepository::RegisterComponent(kEditorCID, NULL, NULL,
+                                           EDITOR_DLL, PR_FALSE, PR_FALSE);
     if (NS_ERROR_FACTORY_EXISTS!=result)
     {
       if (NS_FAILED(result))
