@@ -51,10 +51,7 @@
 #endif
 
 
-#if defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
 
-#include <setjmp.h>
-//
 // This thing is exported by libiberty.a (-liberty)
 // Yes, this is a gcc only hack
 #if defined(MOZ_DEMANGLE_SYMBOLS)
@@ -62,6 +59,7 @@ extern "C" char * cplus_demangle(const char *,int);
 #include <stdlib.h> // for free()
 #endif // MOZ_DEMANGLE_SYMBOLS
 
+#if (defined(__linux__) || defined(__sun)) && defined(__GNUC__)
 void DemangleSymbol(const char * aSymbol, 
                     char * aBuffer,
                     int aBufLen)
@@ -79,6 +77,23 @@ void DemangleSymbol(const char * aSymbol,
     }
 #endif // MOZ_DEMANGLE_SYMBOLS
 }
+
+#elif
+void DemangleSymbol(const char * aSymbol, 
+                    char * aBuffer,
+                    int aBufLen)
+{
+  // lose
+  aBuffer[0] = '\0';
+}
+#endif
+
+
+
+#if defined(linux) && defined(__GLIBC__) && (defined(__i386) || defined(PPC)) // i386 or PPC Linux stackwalking code
+
+#include <setjmp.h>
+//
 
 void DumpStackToFile(FILE* aStream)
 {
