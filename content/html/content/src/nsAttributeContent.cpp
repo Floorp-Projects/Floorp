@@ -119,7 +119,8 @@ public:
   NS_IMETHOD SetFocus(nsIPresContext* aPresContext) { return NS_OK; }
   NS_IMETHOD RemoveFocus(nsIPresContext* aPresContext) { return NS_OK; }
 
-  NS_IMETHOD GetBindingParent(nsIContent** aContent) {
+  NS_IMETHOD GetBindingParent(nsIContent** aContent) const {
+    *aContent = nsnull;
     return NS_OK;
   }
 
