@@ -40,7 +40,7 @@ public:
    *  @param aGuiEvent is the event that should be dealt with by aFocusFrame
    *  @param aFrame is the frame that MAY handle the event
    */
-  virtual nsresult HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame) = 0;
+  NS_IMETHOD HandleKeyEvent(nsGUIEvent *aGuiEvent, nsIFrame *aFrame) = 0;
 
   /** TakeFocus will take the focus to the new frame at the new offset and 
    *  will either extend the selection from the old anchor, or replace the old anchor.
@@ -51,12 +51,11 @@ public:
    *  @param aContentOffset is the offset in the node of the aFrame that is reflected be aOffset
    *  @param aContinueSelection is the flag that tells the selection to keep the old anchor point or not.
    */
-  virtual nsresult TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection) = 0;
+  NS_IMETHOD TakeFocus(nsIFocusTracker *aTracker, nsIFrame *aFrame, PRInt32 aOffset, PRInt32 aContentOffset, PRBool aContinueSelection) = 0;
 
   /** ResetSelection will top down search for frames that need selection
    */
-  virtual nsresult ResetSelection(nsIFrame *aStartFrame) = 0;
-
+  NS_IMETHOD ResetSelection(nsIFocusTracker *aTracker, nsIFrame *aStartFrame) = 0;
 
 };
 
