@@ -221,12 +221,7 @@ void MakeMenus(void)
 	}
 	else
 		ErrorHandler(); 
-		
-	if ( (menuHdl = GetMenuHandle(mFile)) != nil)
-		DisableItem(menuHdl, 0);
-	else
-		ErrorHandler();
-		
+
 	if ( (menuHdl = GetMenuHandle(mEdit)) != nil)
 		DisableItem(menuHdl, 0);
 	else

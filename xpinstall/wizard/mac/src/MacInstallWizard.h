@@ -30,10 +30,12 @@
 #include <Navigation.h>
 #include <MacTypes.h>
 #include <PLStringFuncs.h>
+#include <Icons.h>
 
 #include "FullPath.h"
 #include "MoreFilesExtras.h"
 #include "Threads.h"
+
 
 
 /*-----------------------------------------------------------*
@@ -150,7 +152,8 @@ if (err) 								\
 #define rCheckboxLDEF	128
 
 #define rStartMsgBox	160
-#define rInstProgBar	161
+#define rAllProgBar		161
+#define rPerXPIProgBar	162
 
 	
 #define rMBar			128		/* menu rsrc ids */	
@@ -191,7 +194,8 @@ if (err) 								\
 #define sExtracting		23		
 #define sInstalling		24
 #define	sFileSp			25
-#define sSpOfSp			26			
+#define sSpOfSp			26	
+#define sProcessing		27		
 
 #define rTitleStrList	170
 #define sNSInstTitle	1		/* end i18n strings */
@@ -369,8 +373,9 @@ typedef struct CompWin {
 typedef struct TermWin {
 	TEHandle		startMsg;		
 	Rect			startMsgBox;
-	ControlHandle	progressBar;
-	TEHandle 		progressMsg;
+	ControlHandle	allProgressBar;
+	TEHandle 		allProgressMsg;
+	ControlHandle	xpiProgressBar;
 	TEHandle		xpiProgressMsg;
 } TermWin;
 

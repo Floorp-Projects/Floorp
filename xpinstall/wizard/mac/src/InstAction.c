@@ -522,39 +522,51 @@ InitProgressBar(void)
 	{
 		SetPort(gWPtr);
 		
-		gControls->tw->progressBar = NULL;
-		gControls->tw->progressBar = GetNewControl(rInstProgBar, gWPtr);
-		if (gControls->tw->progressBar)
+		gControls->tw->allProgressBar = NULL;
+		gControls->tw->allProgressBar = GetNewControl(rAllProgBar, gWPtr);
+		
+		gControls->tw->xpiProgressBar = NULL;
+		gControls->tw->xpiProgressBar = GetNewControl(rPerXPIProgBar, gWPtr);
+		
+		if (gControls->tw->allProgressBar && gControls->tw->xpiProgressBar)
 		{
-			SetControlData(gControls->tw->progressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+			/* init overall prog indicator */
+			SetControlData(gControls->tw->allProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
 							sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
-			Draw1Control(gControls->tw->progressBar);
+			Draw1Control(gControls->tw->allProgressBar);
 			
-			gControls->tw->progressMsg = NULL;
-			HLock((Handle)gControls->tw->progressBar);
-			SetRect(&r, (*gControls->tw->progressBar)->contrlRect.left,
-						(*gControls->tw->progressBar)->contrlRect.top - 42,
-						(*gControls->tw->progressBar)->contrlRect.right,
-						(*gControls->tw->progressBar)->contrlRect.top - 26 );
-			HUnlock((Handle)gControls->tw->progressBar);
-			gControls->tw->progressMsg = TENew(&r, &r);
-			if (gControls->tw->progressMsg)
+			/* init xpi package name display */
+			gControls->tw->allProgressMsg = NULL;
+			HLock((Handle)gControls->tw->allProgressBar);
+			SetRect(&r, (*gControls->tw->allProgressBar)->contrlRect.left,
+						(*gControls->tw->allProgressBar)->contrlRect.top - 21,
+						(*gControls->tw->allProgressBar)->contrlRect.right,
+						(*gControls->tw->allProgressBar)->contrlRect.top - 5 );
+			HUnlock((Handle)gControls->tw->allProgressBar);
+			gControls->tw->allProgressMsg = TENew(&r, &r);
+			if (gControls->tw->allProgressMsg)
 			{
 				GetIndString(extractingStr, rStringList, sExtracting);
-				TEInsert(&extractingStr[1], extractingStr[0], gControls->tw->progressMsg);	
+				TEInsert(&extractingStr[1], extractingStr[0], gControls->tw->allProgressMsg);	
 			}
+			
+			/* init per xpi prog indicator */
+			SetControlData(gControls->tw->xpiProgressBar, kControlNoPart, kControlProgressBarIndeterminateTag,
+							sizeof(indeterminateFlag), (Ptr) &indeterminateFlag);
+			HideControl(gControls->tw->xpiProgressBar);
+			
 			
 			TextFace(normal);
 			TextSize(9);
 			TextFont(applFont);	
 			
 			gControls->tw->xpiProgressMsg = NULL;	/* used by XPInstall progress callback */
-			HLock((Handle)gControls->tw->progressBar);
-			SetRect(&r, (*gControls->tw->progressBar)->contrlRect.left,
-						(*gControls->tw->progressBar)->contrlRect.top - 42,
-						(*gControls->tw->progressBar)->contrlRect.right,
-						(*gControls->tw->progressBar)->contrlRect.top - 5 );
-			HUnlock((Handle)gControls->tw->progressBar);
+			HLock((Handle)gControls->tw->xpiProgressBar);
+			SetRect(&r, (*gControls->tw->xpiProgressBar)->contrlRect.left,
+						(*gControls->tw->xpiProgressBar)->contrlRect.top - 21,
+						(*gControls->tw->xpiProgressBar)->contrlRect.right,
+						(*gControls->tw->xpiProgressBar)->contrlRect.top - 5 );
+			HUnlock((Handle)gControls->tw->xpiProgressBar);
 			gControls->tw->xpiProgressMsg = TENew(&r, &r);
 			
 			TextFont(systemFont);	/* restore systemFont */

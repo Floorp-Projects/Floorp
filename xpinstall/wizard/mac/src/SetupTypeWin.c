@@ -272,9 +272,9 @@ InSetupTypeContent(EventRecord* evt, WindowPtr wCurrPtr)
 				** Whilst, the -folder- string is used by DrawDiskNFolder() in repainting.
 				*/
 				pstrcpy(gControls->opt->folder, folderSpec.name);
-				DrawDiskNFolder(folderSpec.vRefNum, folderSpec.name);
 				gControls->opt->vRefNum = tmp.vRefNum;
 				gControls->opt->dirID = tmp.parID;
+				DrawDiskNFolder(folderSpec.vRefNum, folderSpec.name);
 			}
             
 			AEDisposeDesc(&resultDesc);
@@ -325,10 +325,13 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 {
 	Str255			inFolderMsg, onDiskMsg, volName;
 	char			*cstr;
-	Rect			viewRect, dlb;
+	Rect			viewRect, dlb, iconRect;
 	TEHandle		pathInfo;
 	short			bCmp;
 	OSErr			err = noErr;
+	FSSpec			fsTarget;
+	IconRef			icon;
+	SInt16			label;
 	
 	/* get vol and folder name */
 	if ((err = GetVol(volName, &vRefNum)) == noErr)
@@ -375,6 +378,17 @@ DrawDiskNFolder(short vRefNum, unsigned char *folder)
 		TextFont(systemFont);
 		TextSize(12);
 	}
+	
+	/* draw folder/volume icon */
+	FSMakeFSSpec(gControls->opt->vRefNum, gControls->opt->dirID, "\p", &fsTarget);
+	err = GetIconRefFromFile(&fsTarget, &icon, &label);
+	if (err==noErr)
+	{
+#define ICON_DIM 32
+		SetRect(&iconRect, viewRect.left+70, viewRect.top+10, viewRect.left+70+ICON_DIM, viewRect.top+10+ICON_DIM);
+		PlotIconRef(&iconRect, kAlignNone, kTransformNone, kIconServicesNormalUsageFlag, icon);
+	}
+	ReleaseIconRef(icon);
 	
 	/* free mem blocks */
 	TEDispose(pathInfo);

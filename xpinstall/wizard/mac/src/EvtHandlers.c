@@ -108,42 +108,61 @@ void HandleKeyDown(EventRecord* evt)
 	if ( (keyPressed == 'z') || (keyPressed == 'Z'))
 		gDone = true;	// backdoor exit
 #endif
-	if (keyPressed == '\r')                   //dougt: what about tab, esc, arrows, doublebyte?
+	switch(keyPressed)                   //dougt: what about tab, esc, arrows, doublebyte?
 	{		
-		switch(gCurrWin)
-		{
-			case kLicenseID:
-				KillControls(gWPtr);
-				ShowWelcomeWin();
-				return;
-			case kWelcomeID:				
-				KillControls(gWPtr);
-				ShowSetupTypeWin();
-				return;
-			case kSetupTypeID:
-				KillControls(gWPtr);
-				
-				/* treat last setup type selection as custom */
-				if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
-					ShowComponentsWin();
-				else
-				{
+		case '\r':
+			switch(gCurrWin)
+			{
+				case kLicenseID:
+					KillControls(gWPtr);
+					ShowWelcomeWin();
+					return;
+				case kWelcomeID:				
+					KillControls(gWPtr);
+					ShowSetupTypeWin();
+					return;
+				case kSetupTypeID:
+					KillControls(gWPtr);
+					
+					/* treat last setup type selection as custom */
+					if (gControls->opt->instChoice == gControls->cfg->numSetupTypes)
+						ShowComponentsWin();
+					else
+					{
+						ClearDiskSpaceMsgs();
+						ShowTerminalWin();
+					}
+					return;				
+				case kComponentsID:
+					KillControls(gWPtr);
+					gControls->cw->compListBox.top = 0;
+					EraseRect(&gControls->cw->compListBox);
 					ClearDiskSpaceMsgs();
 					ShowTerminalWin();
-				}
-				return;				
-			case kComponentsID:
-				KillControls(gWPtr);
-				gControls->cw->compListBox.top = 0;
-				EraseRect(&gControls->cw->compListBox);
-				ClearDiskSpaceMsgs();
-				ShowTerminalWin();
-				return;
-			case kTerminalID:
-				SpawnSDThread(Install, &tid);
-				return;
+					return;
+				case kTerminalID:
+					SpawnSDThread(Install, &tid);
+					return;
+				default:
+					break; // never reached
+			}
+		break;
+		
+		default:
+			break; 
+	}
+	
+	if ( (evt->modifiers & cmdKey) != 0 )
+	{
+		switch(keyPressed)
+		{
+			case 'Q':
+			case 'q':
+				gDone = true;
+				break;
+				
 			default:
-				break; // never reached
+				break;
 		}
 	}
 }
@@ -161,7 +180,12 @@ void HandleMenuChoice(SInt32 aChoice)
 				Alert(rAboutBox, nil);
 			}
 			break;
-			
+		
+		case mFile:
+			if (menuItem == iQuit)
+				gDone = true;		
+			break;
+				
 		default:
 			break;
 	}
