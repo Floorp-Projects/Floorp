@@ -93,18 +93,13 @@ CPPSRCS = \
         nsNameValuePairDB.cpp \
         nsRenderingContextImpl.cpp \
         nsRect.cpp \
+        nsTransform2D.cpp \
         nsScriptableRegion.cpp \
         nsGraphicsImpl.cpp \
         nsPrintOptionsImpl.cpp \
         nsPrintSettingsImpl.cpp \
         nsPrintSession.cpp \
         $(NULL)
-
-ifeq ($(OS_ARCH),OS2)
-CPPSRCS += nsTransform2DOS2.cpp
-else
-CPPSRCS += nsTransform2D.cpp
-endif
 
 ifeq (,$(filter windows,$(MOZ_WIDGET_TOOLKIT)))
 REQUIRES += uconv
