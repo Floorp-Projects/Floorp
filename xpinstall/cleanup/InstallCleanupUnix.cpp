@@ -98,6 +98,7 @@ int main(int argc,char* argv[])
             } while (status == TRY_LATER);
             NR_RegClose(&reg);
         }
+        NR_ShutdownRegistry();
         unlink(regFilePath);
     }
     return(0);
