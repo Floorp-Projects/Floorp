@@ -150,6 +150,8 @@ case "$target" in
         cl -o dummy dummy.c >/dev/null 2>&1
         if test $? = 0; then
             _WIN32_MSVC=1
+        else
+            AC_MSG_WARN([cl.exe test failed.  Using normal feature tests])
         fi
         rm -f dummy dummy.o dummy.obj dummy.exe dummy.c
     fi
