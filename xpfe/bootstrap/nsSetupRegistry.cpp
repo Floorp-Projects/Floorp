@@ -38,6 +38,8 @@
 #include "nsISessionHistory.h"
 #include "rdf.h"
 #include "nsIWindowMediator.h"
+#include "nsICommonDialogs.h"
+#include "nsIDialogParamBlock.h"
 
 static NS_DEFINE_CID(kAppCoresManagerCID,  NS_APPCORESMANAGER_CID);
 static NS_DEFINE_CID(kToolkitCoreCID,      NS_TOOLKITCORE_CID);
@@ -46,7 +48,7 @@ static NS_DEFINE_CID(kProfileCoreCID,      NS_PROFILECORE_CID);
 static NS_DEFINE_CID(kBrowserAppCoreCID,   NS_BROWSERAPPCORE_CID);
 static NS_DEFINE_CID(kRDFCoreCID,          NS_RDFCORE_CID);
 static NS_DEFINE_CID(kSessionHistoryCID,   NS_SESSION_HISTORY_CID);
-
+static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
 #ifdef XP_PC
 
 #define APPSHELL_DLL "nsappshell.dll"
@@ -81,7 +83,7 @@ static NS_DEFINE_CID(kXPConnectFactoryCID, NS_XPCONNECTFACTORY_CID);
 static NS_DEFINE_CID(kNetSupportDialogCID,    NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kProtocolHelperCID,  NS_PROTOCOL_HELPER_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,  NS_WINDOWMEDIATOR_CID);
-
+static NS_DEFINE_CID( kDialogParamBlockCID, NS_DialogParamBlock_CID );
 nsresult NS_AutoregisterComponents()
 {
   nsresult rv = nsComponentManager::AutoRegister(nsIComponentManager::NS_Startup,
@@ -123,6 +125,8 @@ NS_SetupRegistry_1()
                                          "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
                                          APPSHELL_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kSessionHistoryCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
+   nsComponentManager::RegisterComponentLib(kCommonDialogsCID,   NULL, "component://netscape/appshell/commonDialogs", APPSHELL_DLL, PR_FALSE, PR_FALSE);
+ nsComponentManager::RegisterComponentLib(kDialogParamBlockCID,   NULL, NULL, APPSHELL_DLL, PR_FALSE, PR_FALSE);
 
   // APPCORES_DLL
   nsComponentManager::RegisterComponentLib(kAppCoresManagerCID, NULL, NULL, APPCORES_DLL, PR_FALSE, PR_FALSE);

@@ -27,7 +27,8 @@
 #include "nsIWindowMediator.h"
 #include "nsISessionHistory.h"
 #include "rdf.h"
-
+#include "nsICommonDialogs.h"
+#include "nsIDialogParamBlock.h"
 /* extern the factory entry points for each component... */
 nsresult NS_NewAppShellServiceFactory(nsIFactory** aFactory);
 nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult);
@@ -45,6 +46,8 @@ static NS_DEFINE_IID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kWindowMediatorCID,				  NS_WINDOWMEDIATOR_CID);
 static NS_DEFINE_CID(kSessionHistoryCID,				  NS_SESSION_HISTORY_CID);
 
+static NS_DEFINE_CID(	kCommonDialogsCID, NS_CommonDialog_CID );
+static NS_DEFINE_CID( kDialogParamBlockCID, NS_DialogParamBlock_CID );
 /*
  * Global entry point to register all components in the registry...
  */
@@ -63,6 +66,8 @@ NSRegisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::RegisterComponent(kWindowMediatorCID,
                                          "window-mediator", NS_RDF_DATASOURCE_PROGID_PREFIX "window-mediator",
                                          path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kCommonDialogsCID, NULL, "component://netscape/appshell/commonDialogs", path, PR_TRUE, PR_TRUE);
+    nsComponentManager::RegisterComponent(kDialogParamBlockCID, NULL, NULL, path, PR_TRUE, PR_TRUE);
    return NS_OK;
 }
 
@@ -80,6 +85,8 @@ NSUnregisterSelf(nsISupports* serviceMgr, const char *path)
     nsComponentManager::UnregisterComponent(kNetSupportDialogCID, path);
     nsComponentManager::UnregisterComponent(kWindowMediatorCID, path);
     nsComponentManager::UnregisterComponent(kSessionHistoryCID, path);
+    nsComponentManager::UnregisterComponent(kCommonDialogsCID, path);
+    nsComponentManager::UnregisterComponent(kDialogParamBlockCID, path);
       
     return NS_OK;
 }
@@ -138,7 +145,14 @@ NSGetFactory(nsISupports* serviceMgr,
   {
   	rv = NS_NewSessionHistoryFactory( aFactory );
   }
-
+  else if ( aClass.Equals( kCommonDialogsCID ) )
+  {
+  	rv = NS_NewCommonDialogsFactory( aFactory );
+  }
+  else  if ( aClass.Equals( kDialogParamBlockCID ) )
+  {
+  	rv = NS_NewDialogParamBlockFactory( aFactory );
+  }
   return rv;
 }
 
