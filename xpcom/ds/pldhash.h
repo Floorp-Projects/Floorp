@@ -523,8 +523,8 @@ PL_DHashTableRawRemove(PLDHashTable *table, PLDHashEntryHdr *entry);
  * that were enumerated so far.  Return the total number of live entries when
  * enumeration completes normally.
  *
- * If etor calls PL_DHashTableOperate on table, it must return PL_DHASH_STOP;
- * otherwise undefined behavior results.
+ * If etor calls PL_DHashTableOperate on table with op != PL_DHASH_LOOKUP, it
+ * must return PL_DHASH_STOP; otherwise undefined behavior results.
  *
  * If any enumerator returns PL_DHASH_REMOVE, table->entryStore may be shrunk
  * or compressed after enumeration, but before PL_DHashTableEnumerate returns.
