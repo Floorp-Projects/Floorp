@@ -78,12 +78,12 @@ nsresult nsExternalHelperAppService::Init()
   nsCOMPtr<nsIFileLocator> locator = do_GetService(NS_FILELOCATOR_PROGID, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIFileSpec> dataFilesDir;
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UserProfileDirectory50,
-                                getter_AddRefs(dataFilesDir));
-  dataFilesDir->AppendRelativeUnixPath("test.rdf");
+  nsCOMPtr<nsIFileSpec> mimeTypesFile;
+  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UsersMimeTypes50,
+                                getter_AddRefs(mimeTypesFile));
   nsXPIDLCString url;
-  dataFilesDir->GetURLString(getter_Copies(url));
+  rv = mimeTypesFile->GetURLString(getter_Copies(url));
+  NS_ENSURE_SUCCESS(rv, rv);
 
   rv = remoteDS->Init(url);
   NS_ENSURE_SUCCESS(rv, rv);
