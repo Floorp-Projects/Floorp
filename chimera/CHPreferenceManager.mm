@@ -12,7 +12,7 @@
 
 extern const char *prefContractID;
 
-@implementation PreferenceManager
+@implementation CHPreferenceManager
 
 - (id) init
 {
