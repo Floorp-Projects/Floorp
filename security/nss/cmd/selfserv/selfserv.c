@@ -847,7 +847,6 @@ handle_connection(
 
     pBuf   = buf;
     bufRem = sizeof buf;
-    memset(buf, 0, sizeof buf);
 
     VLOG(("selfserv: handle_connection: starting"));
     opt.option             = PR_SockOpt_Nonblocking;
@@ -887,7 +886,7 @@ handle_connection(
     while (1) {
 	newln = 0;
 	reqLen     = 0;
-	rv = PR_Read(ssl_sock, pBuf, bufRem);
+	rv = PR_Read(ssl_sock, pBuf, bufRem - 1);
 	if (rv == 0 || 
 	    (rv < 0 && PR_END_OF_FILE_ERROR == PR_GetError())) {
 	    if (verbose)
@@ -898,6 +897,8 @@ handle_connection(
 	    errWarn("HDX PR_Read");
 	    goto cleanup;
 	}
+	/* NULL termination */
+	pBuf[rv] = 0;
 	if (firstTime) {
 	    firstTime = 0;
 	    printSecurityInfo(ssl_sock);
