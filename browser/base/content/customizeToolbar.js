@@ -171,11 +171,6 @@ function buildPalette(paletteBox, toolbar, currentSet)
       var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "spacer");
       spring.setAttribute("flex", remainingFlex);
-      try {
-        spring.setAttribute("height", currentRow.boxObject.height);
-      }
-      catch(ex) {
-      }
       currentRow.appendChild(spring);
     }
 
@@ -309,11 +304,6 @@ var toolbarDNDObserver = {
           var spring = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul",
                                             "spacer");
           spring.setAttribute("flex", "1");
-          try {
-            spring.setAttribute("height", currentRow.boxObject.height);
-          }
-          catch(ex) {
-          }
           currentRow.appendChild(spring);
         }
         return;
