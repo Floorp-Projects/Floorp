@@ -56,7 +56,7 @@ nsFileProtocolHandler::~nsFileProtocolHandler()
 {
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsFileProtocolHandler, nsIProtocolHandler);
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsFileProtocolHandler, nsIProtocolHandler, nsISupportsWeakReference);
 
 NS_METHOD
 nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)

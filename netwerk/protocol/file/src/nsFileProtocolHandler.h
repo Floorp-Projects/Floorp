@@ -24,6 +24,7 @@
 #define nsFileProtocolHandler_h___
 
 #include "nsIProtocolHandler.h"
+#include "nsWeakReference.h"
 
 class nsISupportsArray;
 class nsIRunnable;
@@ -41,7 +42,7 @@ class nsIThreadPool;
     {0x93, 0x44, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-class nsFileProtocolHandler : public nsIProtocolHandler
+class nsFileProtocolHandler : public nsIProtocolHandler, public nsSupportsWeakReference
 {
 public:
     NS_DECL_ISUPPORTS
