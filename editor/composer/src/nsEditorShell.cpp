@@ -1582,7 +1582,7 @@ nsEditorShell::LoadUrl(const PRUnichar *url)
   
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mContentAreaDocShell));
   rv = webNav->LoadURI(url,                               // uri string
-                       nsIWebNavigation::LOAD_FLAGS_NONE, // load flags
+                       nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE, // load flags
                        nsnull,                            // referrer
                        nsnull,                            // post-data stream
                        nsnull);                           // headers stream
