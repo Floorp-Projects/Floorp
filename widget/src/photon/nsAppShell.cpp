@@ -17,27 +17,20 @@
  */
 
 #include "prmon.h"
+#include "nsCOMPtr.h"
 #include "nsAppShell.h"
 #include "nsIAppShell.h"
 #include "nsIServiceManager.h"
 #include "nsIEventQueueService.h"
 #include "nsICmdLineService.h"
+#include "nsIObserverService.h"
 #include <stdlib.h>
-
-#ifdef MOZ_GLE
-#include <gle/gle.h>
-#endif
 
 #include "nsIWidget.h"
 #include "nsIPref.h"
-#include "nsIWidget.h"
 
 #include <Pt.h>
 #include <errno.h>
-
-
-//NS_DEFINE_IID(kIAppShellIID, NS_IAPPSHELL_IID);
-//NS_IMPL_ISUPPORTS(nsAppShell,kIAppShellIID);
 
 PRBool            nsAppShell::mPtInited = PR_FALSE;
 nsIEventQueue     *kedlEQueue = nsnull;
@@ -58,6 +51,10 @@ PRLogModuleInfo  *PhWidLog =  PR_NewLogModule("PhWidLog");
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
+// copied from nsEventQueue.cpp
+static char *gEQActivatedNotification = "nsIEventQueueActivated";
+static char *gEQDestroyedNotification = "nsIEventQueueDestroyed";
 
 // a linked, ordered list of event queues and their tokens
 class EventQueueToken {
@@ -109,10 +106,12 @@ void EventQueueTokenQueue::PushToken(nsIEventQueue *aQueue, gint aToken)
 
   EventQueueToken *newToken = new EventQueueToken(aQueue, aToken);
   NS_ASSERTION(newToken, "couldn't allocate token queue element");
-  if (newToken) {
-    newToken->next = mHead;
-    mHead = newToken;
-  }
+  if (!newToken)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  newToken->next = mHead;
+  mHead = newToken;
+  return NS_OK;
 }
 
 PRBool EventQueueTokenQueue::PopToken(nsIEventQueue *aQueue, gint *aToken)
@@ -155,15 +154,17 @@ nsAppShell::nsAppShell()
 
   NS_INIT_REFCNT();
   mDispatchListener = nsnull;
-  mLock = PR_NewLock();
+//  mLock = PR_NewLock();
   mEventQueueTokens = new EventQueueTokenQueue();
-  mEventBufferSz = sizeof( PhEvent_t ) + 1000;
-  mEvent = (PhEvent_t*) PR_Malloc( mEventBufferSz );
+//  mEventBufferSz = sizeof( PhEvent_t ) + 1000;
+//  mEvent = (PhEvent_t*) PR_Malloc( mEventBufferSz );
 
   // throw on error would really be civilized here
-  NS_ASSERTION(mLock, "couldn't obtain lock in appshell");
+//  NS_ASSERTION(mLock, "couldn't obtain lock in appshell");
   NS_ASSERTION(mEventQueueTokens, "couldn't allocate event queue token queue");
-  NS_ASSERTION( mEvent, "Out of memory" );
+//  NS_ASSERTION( mEvent, "Out of memory" );
+
+  RegisterObserver(PR_TRUE);
 
   /* Run this only once per application startup */
   if( !mPtInited )
@@ -183,11 +184,13 @@ nsAppShell::~nsAppShell()
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::~nsAppShell\n"));
 
-  PR_DestroyLock(mLock);
+//  PR_DestroyLock(mLock);
   delete mEventQueueTokens;
   
-  if (mEvent)
-    PR_Free(mEvent);
+//  if (mEvent)
+//    PR_Free(mEvent);
+
+  RegisterObserver(PR_FALSE);
 }
 
 
@@ -196,8 +199,7 @@ nsAppShell::~nsAppShell()
 // nsISupports implementation macro
 //
 //-------------------------------------------------------------------------
-NS_IMPL_ISUPPORTS1(nsAppShell, nsIAppShell)
-
+NS_IMPL_ISUPPORTS2(nsAppShell, nsIAppShell, nsIObserver)
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsAppShell::SetDispatchListener(nsDispatchListener* aDispatchListener)
@@ -278,6 +280,8 @@ NS_METHOD nsAppShell::Spindown()
   return NS_OK;
 }
 
+
+#if 0
 //-------------------------------------------------------------------------
 //
 // PushThreadEventQueue
@@ -352,6 +356,7 @@ PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::PopThreadEventQueue\n"));
     NS_ERROR("Appshell unable to obtain eventqueue service.");
   return rv;
 }
+#endif
 
 
 int done_damn_it = 0;
@@ -422,7 +427,8 @@ done:
 		printf("nsAppShell::Run Error calling PtAppAddFd\n");
 		exit(1);
 	}
-	MyMainLoop();
+
+	MyMainLoop();		/* PtMainLoop() */
 
 #ifdef DEBUG
   printf("Calling PtAppRemoveFd with event queue\n");
@@ -454,6 +460,7 @@ NS_METHOD nsAppShell::Exit()
   return NS_OK;
 }
 
+#if 0
 //-------------------------------------------------------------------------
 //
 // GetNativeData
@@ -470,6 +477,7 @@ void* nsAppShell::GetNativeData(PRUint32 aDataType)
   }
   return nsnull;
 }
+#endif
 
 
 NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
@@ -588,3 +596,97 @@ NS_METHOD nsAppShell::EventIsForModalWindow(PRBool aRealEvent, void *aEvent, nsI
   return NS_OK;
 #endif
 }
+
+
+//-------------------------------------------------------------------------
+// nsIObserver interface
+//-------------------------------------------------------------------------
+
+//-------------------------------------------------------------------------
+//
+// Observe
+//
+//-------------------------------------------------------------------------
+
+NS_IMETHODIMP nsAppShell::Observe(nsISupports *aSubject,
+                                  const PRUnichar *aTopic,
+                                  const PRUnichar *)
+{
+  // tell gdk to listen to the event queue or not. what happens
+  // if multiple appshells (horrors, but it happens) repeat the same
+  // instruction, one wonders.
+
+  gint         queueToken;
+  int err;
+
+  nsAutoString topic(aTopic);
+
+  if (topic.Equals(gEQActivatedNotification)) {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq) {
+#if 0
+      queueToken = gdk_input_add(eq->GetEventQueueSelectFD(),
+                                 GDK_INPUT_READ,
+                                 event_processor_callback,
+                                 eq);
+#else
+	err = PtAppAddFd(NULL,eq->GetEventQueueSelectFD(),Pt_FD_READ,event_processor_callback,eq);
+    if (err == -1)
+	{
+		printf("nsAppShell::PushThreadEventQueue Error calling PtAppAddFd\n");
+		exit(1);
+	}
+#endif
+      mEventQueueTokens->PushToken(eq, queueToken);
+    }
+  } else if (topic.Equals(gEQDestroyedNotification)) {
+    nsCOMPtr<nsIEventQueue> eq(do_QueryInterface(aSubject));
+    if (eq) {
+      if (mEventQueueTokens->PopToken(eq, &queueToken))
+#if 0
+        gdk_input_remove(queueToken);
+#else
+        err=PtAppRemoveFd(NULL,eq->GetEventQueueSelectFD());
+		if ( err == -1)
+		{
+		  printf("nsAppShell::PopThreadEventQueue Error calling  PtAppRemoveFd\n");
+		  exit(1);
+		}
+#endif
+    }
+  }
+  return NS_OK;
+}
+
+//-------------------------------------------------------------------------
+//
+// Observe
+//
+//-------------------------------------------------------------------------
+void nsAppShell::RegisterObserver(PRBool aRegister)
+{
+  nsresult rv;
+  nsAutoString topicA(gEQActivatedNotification);
+  nsAutoString topicB(gEQDestroyedNotification);
+
+  NS_WITH_SERVICE(nsIObserverService, os, NS_OBSERVERSERVICE_PROGID, &rv);
+  if (NS_SUCCEEDED(rv)) {
+#if 0
+    nsCOMPtr<nsIObserver> us(do_QueryInterface(this));
+    if (us) {
+#else
+    nsIObserver *us;
+    if (NS_SUCCEEDED(QueryInterface(nsIObserver::GetIID(), (void **) &us)) && us) {
+#endif
+      if (aRegister) {
+        os->AddObserver(us, topicA.GetUnicode());
+        os->AddObserver(us, topicB.GetUnicode());
+      } else {
+        os->RemoveObserver(us, topicA.GetUnicode());
+        os->RemoveObserver(us, topicB.GetUnicode());
+      }
+      NS_RELEASE(us);
+    }
+  }
+}
+
