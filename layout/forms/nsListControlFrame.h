@@ -99,7 +99,6 @@ public:
     // nsIListControlFrame
   NS_IMETHOD SetComboboxFrame(nsIFrame* aComboboxFrame);
   NS_IMETHOD GetSelectedItem(nsString & aStr);
-  NS_IMETHOD AboutToDropDown();
   NS_IMETHOD CaptureMouseEvents(PRBool aGrabMouseEvents);
   NS_IMETHOD GetMaximumSize(nsSize &aSize);
   NS_IMETHOD SetSuggestedSize(nscoord aWidth, nscoord aHeight);
@@ -184,6 +183,9 @@ protected:
   nscoord      mMaxWidth;
   nscoord      mMaxHeight;
   PRBool       mIsCapturingMouseEvents;
+
+  // XXX temprary only until full system mouse capture works
+  PRBool mIsScrollbarVisible;
 };
 
 #endif /* nsListControlFrame_h___ */
