@@ -60,6 +60,7 @@ interface nsIPlaintextEditor : nsISupports
   const short eEditorDisableForcedReflowsBit = 8;       /* prevent immediate reflows */
   const short eEditorEnableWrapHackBit = 9;             /* allow the editor to set font: monospace on the root node */
   const short eEditorWidgetBit = 10;                    /* bit for widgets */
+  const short eEditorNoCSSBit = 11;                     /* this HTML editor should not create css styles */
 
   const long eEditorPlaintextMask            = 1;
   const long eEditorSingleLineMask           = 2;
@@ -72,7 +73,8 @@ interface nsIPlaintextEditor : nsISupports
   const long eEditorDisableForcedReflowsMask = 256;
   const long eEditorEnableWrapHackMask       = 512;
   const long eEditorWidgetMask               = 1024;
-  
+  const long eEditorNoCSSMask                = 2048;
+
   /**
     * The length of the contents in characters.
     */

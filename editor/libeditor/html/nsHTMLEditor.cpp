@@ -445,6 +445,8 @@ NS_IMETHODIMP
 nsHTMLEditor::SetFlags(PRUint32 aFlags)
 {
   if (!mRules) { return NS_ERROR_NULL_POINTER; }
+  mCSSAware = !PRBool(aFlags | nsIPlaintextEditor::eEditorNoCSSMask);
+
   return mRules->SetFlags(aFlags);
 }
 
