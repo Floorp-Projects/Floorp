@@ -59,6 +59,7 @@
 #include "nsArray.h"
 #include "nsArrayEnumerator.h"
 #include "nsProxyEventPrivate.h"
+#include "nsProxyRelease.h"
 #include "xpt_xdr.h"
 #include "xptcall.h"
 #include "nsILocalFile.h"
@@ -126,6 +127,7 @@ void XXXNeverCalled()
     NS_QuickSort(nsnull, 0, 0, nsnull, nsnull);
     nsString();
     nsProxyObject(nsnull, 0, nsnull);
+    NS_ProxyRelease(nsnull, nsnull, PR_FALSE);
     XPT_DoString(nsnull, nsnull, nsnull);
     XPT_DoHeader(nsnull, nsnull, nsnull);
 #ifdef DEBUG
