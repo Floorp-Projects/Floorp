@@ -29,7 +29,7 @@ libs::
 		$(MAKE_INSTALL) *.py $(DIST)\bin\python\xpcom 
 		$(MAKE_INSTALL) client\*.py $(DIST)\bin\python\xpcom\client
 		$(MAKE_INSTALL) server\*.py $(DIST)\bin\python\xpcom\server
-		$(MAKE_INSTALL) tools\*.py $(DIST)\bin\python\xpcom\server
+		$(MAKE_INSTALL) tools\*.py $(DIST)\bin\python\xpcom\tools
 
 clobber::
 	rm -rf $(DIST)\bin\python\xpcom
