@@ -409,7 +409,8 @@ nsListCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTagNam
   nsresult rv = aEditorShell->GetListState(&bMixed, &tagStr);
   if (NS_FAILED(rv)) return rv;
 
-  outInList = (0 == nsCRT::strcmp(tagStr, aTagName));
+  // Need to use mTagName????
+  outInList = (0 == nsCRT::strcmp(tagStr, mTagName));
 
   if (tagStr) nsCRT::free(tagStr);
 
@@ -421,10 +422,10 @@ nsresult
 nsListCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagName)
 {
   PRBool inList;
-  nsresult rv = GetCurrentState(aEditorShell, aTagName, inList);
+  // Need to use mTagName????
+  nsresult rv = GetCurrentState(aEditorShell, mTagName, inList);
   if (NS_FAILED(rv)) return rv;
-
-  nsAutoString listType; listType.AssignWithConversion(aTagName);
+  nsAutoString listType; listType.AssignWithConversion(mTagName);
 
   if (inList)
     rv = aEditorShell->RemoveList(listType.GetUnicode());    
@@ -454,7 +455,7 @@ nsListItemCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTa
   nsresult rv = aEditorShell->GetListItemState(&bMixed, &tagStr);
   if (NS_FAILED(rv)) return rv;
 
-  outInList = (0 == nsCRT::strcmp(tagStr, aTagName));
+  outInList = (0 == nsCRT::strcmp(tagStr, mTagName));
 
   if (tagStr) nsCRT::free(tagStr);
 
@@ -472,7 +473,8 @@ nsListItemCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagNam
   if (!htmlEditor) return NS_ERROR_NOT_INITIALIZED;
 
   PRBool inList;
-  nsresult rv = GetCurrentState(aEditorShell, aTagName, inList);
+  // Need to use mTagName????
+  nsresult rv = GetCurrentState(aEditorShell, mTagName, inList);
   if (NS_FAILED(rv)) return rv;
   
   if (inList)
@@ -494,7 +496,7 @@ nsListItemCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagNam
   }
   else
   {
-    nsAutoString itemType; itemType.AssignWithConversion(aTagName);
+    nsAutoString itemType; itemType.AssignWithConversion(mTagName);
     // Set to the requested paragraph type
     //XXX Note: This actually doesn't work for "LI",
     //    but we currently don't use this for non DL lists anyway.
@@ -503,6 +505,43 @@ nsListItemCommand::ToggleState(nsIEditorShell *aEditorShell, const char* aTagNam
   }
     
   return rv;
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+NS_IMETHODIMP
+nsRemoveListCommand::IsCommandEnabled(const PRUnichar *aCommand, nsISupports * refCon, PRBool *outCmdEnabled)
+{
+  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
+  *outCmdEnabled = PR_FALSE;
+  if (editorShell)
+  {
+    // It is enabled if we are in any list type
+    PRBool bMixed;
+    PRUnichar *tagStr;
+    nsresult rv = editorShell->GetListState(&bMixed, &tagStr);
+    if (NS_FAILED(rv)) return rv;
+    
+    *outCmdEnabled = (*tagStr != nsnull);
+  }
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsRemoveListCommand::DoCommand(const PRUnichar *aCommand, nsISupports * refCon)
+{
+  nsCOMPtr<nsIEditorShell> editorShell = do_QueryInterface(refCon);
+
+  nsresult rv = NS_OK;
+  if (editorShell)
+    // This removes any list type
+    rv = editorShell->RemoveList(nsnull);
+
+  return rv;  
 }
 
 

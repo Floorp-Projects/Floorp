@@ -223,6 +223,7 @@ NS_DECL_COMPOSER_COMMAND(nsIndentCommand)
 NS_DECL_COMPOSER_COMMAND(nsOutdentCommand)
 
 NS_DECL_COMPOSER_COMMAND(nsAlignCommand)
+NS_DECL_COMPOSER_COMMAND(nsRemoveListCommand)
 NS_DECL_COMPOSER_COMMAND(nsRemoveStylesCommand)
 NS_DECL_COMPOSER_COMMAND(nsIncreaseFontSizeCommand)
 NS_DECL_COMPOSER_COMMAND(nsDecreaseFontSizeCommand)
