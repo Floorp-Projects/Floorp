@@ -1466,39 +1466,48 @@ static void calcBMSize(MatchState *state, RENode *ren)
     uintN maxc = 0;
     jschar c, c2;
     while (cp < cp2) {
-	c = *cp++;
-	if (c == '\\') {
-	    if (cp + 5 <= cp2 && *cp == 'u' &&
-		JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
-		JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4])) {
-		c = (((((JS7_UNHEX(cp[1]) << 4)
-			+ JS7_UNHEX(cp[2])) << 4)
-		      + JS7_UNHEX(cp[3])) << 4)
-		    + JS7_UNHEX(cp[4]);
-		cp += 5;
-	    } else {
+        c = *cp++;
+        if (c == '\\') {
+            if (cp + 5 <= cp2 && *cp == 'u' &&
+                JS7_ISHEX(cp[1]) && JS7_ISHEX(cp[2]) &&
+                JS7_ISHEX(cp[3]) && JS7_ISHEX(cp[4])) {
+                c = (((((JS7_UNHEX(cp[1]) << 4)
+                        + JS7_UNHEX(cp[2])) << 4)
+                      + JS7_UNHEX(cp[3])) << 4)
+                    + JS7_UNHEX(cp[4]);
+                cp += 5;
+            } 
+            else {
+                /* 
+                 * For the not whitespace, not word or not digit cases
+                 * we widen the range to the complete unicode range.
+                 */
+                if ((*cp == 'S') || (*cp == 'W') || (*cp == 'D')) {
+                    maxc = 65535;
+                    break;  /* leave now, it can't get worse */
+                }
                 if (maxc < 255) maxc = 255;
-        	/*
-		 * Octal and hex escapes can't be > 255.  Skip this
-		 * backslash and let the loop pass over the remaining
-		 * escape sequence as if it were text to match.
-		 */
-		continue;
-	    }
-	}
-	if (state->flags & JSREG_FOLD) {
-	    /*
-	     * Don't assume that lowercase are above uppercase, or
-	     * that c is either even when c has upper and lowercase
-	     * versions.
-	     */
-	    if ((c2 = JS_TOUPPER(c)) > maxc)
-		maxc = c2;
-	    if ((c2 = JS_TOLOWER(c2)) > maxc)
-		maxc = c2;
-	}
-	if (c > maxc)
-	    maxc = c;
+                /*
+                 * Octal and hex escapes can't be > 255.  Skip this
+                 * backslash and let the loop pass over the remaining
+                 * escape sequence as if it were text to match.
+                 */
+                continue;
+            }
+        }
+        if (state->flags & JSREG_FOLD) {
+            /*
+             * Don't assume that lowercase are above uppercase, or
+             * that c is either even when c has upper and lowercase
+             * versions.
+             */
+            if ((c2 = JS_TOUPPER(c)) > maxc)
+                maxc = c2;
+            if ((c2 = JS_TOLOWER(c2)) > maxc)
+                maxc = c2;
+        }
+        if (c > maxc)
+            maxc = c;
     }
     ren->u.ucclass.bmsize = (uint16)((size_t)(maxc + JS_BITS_PER_BYTE) 
                                                     / JS_BITS_PER_BYTE);
