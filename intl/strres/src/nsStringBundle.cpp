@@ -276,7 +276,14 @@ nsStringBundle::GetStringFromName(const PRUnichar *aName, PRUnichar **aResult)
   *aResult = nsnull;
   nsAutoString tmpstr;
   rv = GetStringFromName(nsDependentString(aName), tmpstr);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv))
+  {
+    NS_WARNING("String missing from string bundle");
+#if DEBUG
+    printf("  '%s' missing from bundle %s\n", NS_ConvertUCS2toUTF8(aName).get(), mPropertiesURL.get());
+#endif
+    return rv;
+  }
 
   *aResult = ToNewUnicode(tmpstr);
   NS_ENSURE_TRUE(*aResult, NS_ERROR_OUT_OF_MEMORY);
