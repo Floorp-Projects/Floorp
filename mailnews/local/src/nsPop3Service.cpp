@@ -81,7 +81,7 @@ nsPop3Service::CheckForNewMail(nsIUrlListener * aUrlListener,
 		{
 			protocol->SetUsername(userName);
 			protocol->SetPassword(popPassword);
-			protocol->Load(pop3Url);
+			protocol->LoadUrl(pop3Url);
 		} // if pop server 
 	}
 
@@ -140,7 +140,7 @@ nsresult nsPop3Service::GetNewMail(nsIUrlListener * aUrlListener,
 		{
 			protocol->SetUsername(userName);
 			protocol->SetPassword(popPassword);
-			protocol->Load(pop3Url);
+			protocol->LoadUrl(pop3Url);
 		} // if pop server 
 	}
 
