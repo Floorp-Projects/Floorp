@@ -1,0 +1,12 @@
+nsIRDFCompositeDataSource.idl
+nsIRDFContainer.idl
+nsIRDFContainerUtils.idl
+nsIRDFDataSource.idl
+nsIRDFLiteral.idl
+nsIRDFNode.idl
+nsIRDFObserver.idl
+nsIRDFPurgeableDataSource.idl
+nsIRDFResource.idl
+nsIRDFService.idl
+nsIRDFXMLDataSource.idl
+nsIRDFXMLSource.idl
