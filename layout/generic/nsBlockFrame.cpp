@@ -6273,6 +6273,13 @@ nsBlockFrame::HandleEvent(nsPresContext* aPresContext,
 
     if (resultFrame)
     {
+      // Translate aEvent->point to resultFrame's closest view (bug 180015).
+      nsIView* closestView = GetClosestView();
+      nsIView* resultFrameView = resultFrame->GetClosestView();
+      if (closestView != resultFrameView && resultFrameView) {
+        aEvent->point -= resultFrameView->GetOffsetTo(closestView);
+      }
+
       if (NS_POSITION_BEFORE_TABLE == result)
       {
         nsCOMPtr<nsISelectionController> selCon;
