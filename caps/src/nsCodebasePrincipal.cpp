@@ -74,25 +74,7 @@ nsCodebasePrincipal::HashValue(PRUint32 *result)
     nsXPIDLCString origin;
     if (NS_FAILED(GetOrigin(getter_Copies(origin))))
         return NS_ERROR_FAILURE;
-    *result = nsCRT::HashCode(origin);
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
-{
-    *result = PR_FALSE;
-    if (this == other) {
-        *result = PR_TRUE;
-        return NS_OK;
-    }
-    if (!other) {
-        *result = PR_FALSE;
-        return NS_OK;
-    }
-    if (NS_FAILED(SameOrigin(other, result))) {
-        return NS_ERROR_FAILURE;
-    }
+    *result = nsCRT::HashCode(origin, nsnull);
     return NS_OK;
 }
 
@@ -143,16 +125,15 @@ nsCodebasePrincipal::GetOrigin(char **origin)
     if (NS_FAILED(mURI->GetScheme(getter_Copies(s))))
         return NS_ERROR_FAILURE;
 
-      // STRING USE WARNING: perhaps |str| should be an |nsCAutoString|? -- scc
-    nsAutoString t;
-    t.AssignWithConversion(s);
-    t.AppendWithConversion("://");
+    nsCAutoString t;
+    t.Assign(s);
+    t.Append("://");
     if (NS_SUCCEEDED(mURI->GetHost(getter_Copies(s)))) {
-        t.AppendWithConversion(s);
+        t.Append(s);
     } else if (NS_SUCCEEDED(mURI->GetSpec(getter_Copies(s)))) {
         // Some URIs (e.g., nsSimpleURI) don't support host. Just
         // get the full spec.
-        t.AssignWithConversion(s);
+        t.Assign(s);
     } else {
         return NS_ERROR_FAILURE;
     }
@@ -161,8 +142,10 @@ nsCodebasePrincipal::GetOrigin(char **origin)
 }
 
 NS_IMETHODIMP
-nsCodebasePrincipal::SameOrigin(nsIPrincipal *other, PRBool *result)
+nsCodebasePrincipal::Equals(nsIPrincipal *other, PRBool *result)
 {
+
+    //-- Equals is defined as object equality or same origin
     *result = PR_FALSE;
     if (this == other) {
         *result = PR_TRUE;

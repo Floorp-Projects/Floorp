@@ -18,7 +18,6 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
 /*
@@ -713,17 +712,24 @@ nsChromeProtocolHandler::NewChannel(nsIURI* aURI,
         rv = result->SetOriginalURI(aURI);
         if (NS_FAILED(rv)) return rv;
 
-        // Get a system principal for chrome and set the owner
+        // Get a system principal for xul files and set the owner
         // property of the result
-        NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsIPrincipal> principal;
-        rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal));
-        if (NS_FAILED(rv)) return rv;
-
-        nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
-        result->SetOwner(owner);
+        nsCOMPtr<nsIURL> url = do_QueryInterface(aURI);
+        nsXPIDLCString fileExtension;
+        rv = url->GetFileExtension(getter_Copies(fileExtension));
+        if (PL_strcmp(fileExtension, "xul") == 0)
+        {
+            NS_WITH_SERVICE(nsIScriptSecurityManager, securityManager, 
+                            NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
+            if (NS_FAILED(rv)) return rv;
+            
+            nsCOMPtr<nsIPrincipal> principal;
+            rv = securityManager->GetSystemPrincipal(getter_AddRefs(principal));
+            if (NS_FAILED(rv)) return rv;
+            
+            nsCOMPtr<nsISupports> owner = do_QueryInterface(principal);
+            result->SetOwner(owner);
+        }
     }
 
     *aResult = result;

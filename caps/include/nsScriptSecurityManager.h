@@ -147,9 +147,6 @@ private:
     NS_IMETHOD
     InitPrefs();
 
-    NS_IMETHOD
-    EnsurePrefsLoaded();
-
     static nsresult 
     PrincipalPrefNames(const char* pref, char** grantedPref, char** deniedPref);
 
@@ -174,7 +171,6 @@ private:
     PRBool mIsJavaScriptEnabled;
     PRBool mIsMailJavaScriptEnabled;
     PRBool mIsWritingPrefs;
-    PRBool mPrefsInitialized;
     unsigned char hasDomainPolicyVector[(NS_DOM_PROP_MAX >> 3) + 1];
 };
 

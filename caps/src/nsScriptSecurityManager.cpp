@@ -384,7 +384,6 @@ nsScriptSecurityManager::CheckScriptAccess(JSContext *cx,
                                            void *aObj, PRInt32 domPropInt, 
                                            PRBool isWrite)
 {
-    EnsurePrefsLoaded();
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
         return NS_ERROR_FAILURE;
@@ -427,7 +426,6 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckLoadURIFromScript(JSContext *cx, 
                                                 nsIURI *aURI)
 {
-    EnsurePrefsLoaded();
     // Get principal of currently executing script.
     nsCOMPtr<nsIPrincipal> principal;
     if (NS_FAILED(GetSubjectPrincipal(cx, getter_AddRefs(principal)))) {
@@ -518,23 +516,23 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
         return NS_OK;
     }
 
-    enum Action { AllowProtocol, DenyProtocol, LocalProtocol, PrefAccess };
+    enum Action { AllowProtocol, DenyProtocol, PrefControlled };
     struct { 
         const char *name;
         Action action;
     } protocolList[] = {
         { "about",           AllowProtocol },
         { "data",            AllowProtocol },
-        { "file",            PrefAccess    },
+        { "file",            PrefControlled   },
         { "ftp",             AllowProtocol },
         { "http",            AllowProtocol },
         { "https",           AllowProtocol },
         { "keyword",         DenyProtocol  },
         { "res",             DenyProtocol  },
-        { "resource",        LocalProtocol },
+        { "resource",        DenyProtocol  },
         { "datetime",        DenyProtocol  },
         { "finger",          AllowProtocol },
-        { "chrome",          LocalProtocol },
+        { "chrome",          AllowProtocol },
         { "javascript",      AllowProtocol },
         { "mailto",          AllowProtocol },
         { "imap",            DenyProtocol  },
@@ -551,27 +549,13 @@ nsScriptSecurityManager::CheckLoadURI(nsIURI *aFromURI, nsIURI *aURI,
             case AllowProtocol:
                 // everyone can access these schemes.
                 return NS_OK;
-            case PrefAccess:
-                // Allow access if pref is set
-                NS_ASSERTION(mPrefs,"nsScriptSecurityManager::mPrefs not initialized");
+            case PrefControlled:
+                // Allow access if pref is false
                 mPrefs->GetBoolPref("security.checkloaduri", &doCheck);
-                if (!doCheck)
-                    return NS_OK;
-                // Otherwise fall through to Deny.
+                return doCheck ? NS_ERROR_DOM_BAD_URI : NS_OK;
             case DenyProtocol:
                 // Deny access
                 return NS_ERROR_DOM_BAD_URI;
-            case LocalProtocol:
-                // TEMPORARY: file:// can access chrome://. See bug 42076.
-                if (nsCRT::strcasecmp(fromScheme, "file") == 0)
-                    return NS_OK;
-                // Other local protocols can access these schemes
-                for (unsigned j=0; j < sizeof(protocolList)/sizeof(protocolList[0]); j++)
-                    if (nsCRT::strcasecmp(fromScheme, protocolList[j].name) == 0)
-                        if (protocolList[j].action == LocalProtocol)
-                            return NS_OK;
-                        else
-                            return NS_ERROR_DOM_BAD_URI;
             }
         }
     }
@@ -588,21 +572,20 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj, 
                                              void *aTargetObj)
 {
-    EnsurePrefsLoaded();
-    nsCOMPtr<nsIPrincipal> principal;
+    nsCOMPtr<nsIPrincipal> subject;
     nsresult rv = GetFunctionObjectPrincipal(aCx, (JSObject *)aFunObj, 
-                                           getter_AddRefs(principal));
+                                           getter_AddRefs(subject));
     if (NS_FAILED(rv))
         return rv;
 
     // First check if the principal the function was compiled under is
     // allowed to execute scripts.
-    if (!principal) {
+    if (!subject) {
       return NS_ERROR_DOM_SECURITY_ERR;
     }
 
     PRBool result;
-    rv = CanExecuteScripts(principal, &result);
+    rv = CanExecuteScripts(subject, &result);
     if (NS_FAILED(rv)) {
       return rv;
     }
@@ -618,19 +601,16 @@ nsScriptSecurityManager::CheckFunctionAccess(JSContext *aCx, void *aFunObj,
     nsCOMPtr<nsIPrincipal> object;
     if (NS_FAILED(GetObjectPrincipal(aCx, obj, getter_AddRefs(object))))
         return NS_ERROR_FAILURE;
-    if (principal == object) {
+    if (subject == object) {
         return NS_OK;
     }
 
-    nsCOMPtr<nsICodebasePrincipal> subjectCodebase = do_QueryInterface(principal);
-    if (subjectCodebase) {
-        PRBool isSameOrigin = PR_FALSE;
-        if (NS_FAILED(subjectCodebase->SameOrigin(object, &isSameOrigin)))
-            return NS_ERROR_FAILURE;
+    PRBool isSameOrigin = PR_FALSE;
+    if (NS_FAILED(subject->Equals(object, &isSameOrigin)))
+        return NS_ERROR_FAILURE;
 
-        if (isSameOrigin)
-            return NS_OK;
-    }
+    if (isSameOrigin)
+        return NS_OK;
 
     // Allow access to about:blank
     nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(object);
@@ -678,7 +658,6 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetCertificatePrincipal(const char* aCertID,
                                                  nsIPrincipal **result)
 {
-    EnsurePrefsLoaded();
     nsresult rv;
     //-- Create a certificate principal
     nsCertificatePrincipal *certificate = new nsCertificatePrincipal();
@@ -719,7 +698,6 @@ NS_IMETHODIMP
 nsScriptSecurityManager::GetCodebasePrincipal(nsIURI *aURI, 
                                               nsIPrincipal **result)
 {
-    EnsurePrefsLoaded();
     nsresult rv;
     nsCodebasePrincipal *codebase = new nsCodebasePrincipal();
     if (!codebase)
@@ -856,7 +834,6 @@ NS_IMETHODIMP
 nsScriptSecurityManager::IsCapabilityEnabled(const char *capability,
                                              PRBool *result)
 {
-    EnsurePrefsLoaded();
     nsresult rv;
     JSStackFrame *fp = nsnull;
     JSContext *cx = GetCurrentContext();
@@ -1027,7 +1004,6 @@ NS_IMETHODIMP
 nsScriptSecurityManager::RequestCapability(nsIPrincipal* aPrincipal, 
                                            const char *capability, PRInt16* canEnable)
 {
-    EnsurePrefsLoaded();
     if (NS_FAILED(aPrincipal->CanEnableCapability(capability, canEnable)))
         return NS_ERROR_FAILURE;
     if (*canEnable == nsIPrincipal::ENABLE_WITH_USER_PERMISSION) {
@@ -1082,7 +1058,6 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
 NS_IMETHODIMP
 nsScriptSecurityManager::EnableCapability(const char *capability)
 {
-    EnsurePrefsLoaded();
     JSContext *cx = GetCurrentContext();
     JSStackFrame *fp;
 
@@ -1127,7 +1102,6 @@ nsScriptSecurityManager::EnableCapability(const char *capability)
 NS_IMETHODIMP
 nsScriptSecurityManager::RevertCapability(const char *capability)
 {
-    EnsurePrefsLoaded();
     JSContext *cx = GetCurrentContext();
     JSStackFrame *fp;
     nsCOMPtr<nsIPrincipal> principal;
@@ -1145,7 +1119,6 @@ nsScriptSecurityManager::RevertCapability(const char *capability)
 NS_IMETHODIMP
 nsScriptSecurityManager::DisableCapability(const char *capability)
 {
-    EnsurePrefsLoaded();
     JSContext *cx = GetCurrentContext();
     JSStackFrame *fp;
     nsCOMPtr<nsIPrincipal> principal;
@@ -1165,7 +1138,6 @@ nsScriptSecurityManager::SetCanEnableCapability(const char* certificateID,
                                                 const char* capability,
                                                 PRInt16 canEnable)
 {
-    EnsurePrefsLoaded();
     nsresult rv;
     nsCOMPtr<nsIPrincipal> subjectPrincipal;
     rv = GetSubjectPrincipal(getter_AddRefs(subjectPrincipal));
@@ -1418,8 +1390,7 @@ nsScriptSecurityManager::nsScriptSecurityManager(void)
       mSystemPrincipal(nsnull), mPrincipals(nsnull), 
       mIsJavaScriptEnabled(PR_FALSE),
       mIsMailJavaScriptEnabled(PR_FALSE),
-      mIsWritingPrefs(PR_FALSE),
-      mPrefsInitialized(PR_FALSE)
+      mIsWritingPrefs(PR_FALSE)
 {
     NS_INIT_REFCNT();
     memset(hasDomainPolicyVector, 0, sizeof(hasDomainPolicyVector));
@@ -1532,15 +1503,13 @@ nsScriptSecurityManager::CheckPermissions(JSContext *aCx, JSObject *aObj,
     if (subject == object) {
         return NS_OK;
     }
-    nsCOMPtr<nsICodebasePrincipal> subjectCodebase = do_QueryInterface(subject);
-    if (subjectCodebase) {
-        PRBool isSameOrigin = PR_FALSE;
-        if (NS_FAILED(subjectCodebase->SameOrigin(object, &isSameOrigin)))
-            return NS_ERROR_FAILURE;
 
-        if (isSameOrigin)
-            return NS_OK;
-    }
+    PRBool isSameOrigin = PR_FALSE;
+    if (NS_FAILED(subject->Equals(object, &isSameOrigin)))
+        return NS_ERROR_FAILURE;
+    
+    if (isSameOrigin)
+        return NS_OK;
 
     // Allow access to about:blank
     nsCOMPtr<nsICodebasePrincipal> objectCodebase = do_QueryInterface(object);
@@ -1617,7 +1586,6 @@ NS_IMETHODIMP
 nsScriptSecurityManager::CheckXPCPermissions(JSContext *aJSContext,
                                              nsISupports* aObj)
 {
-    EnsurePrefsLoaded();
     NS_ASSERTION(mPrefs,"nsScriptSecurityManager::mPrefs not initialized");
     PRBool ok = PR_FALSE;
     if (NS_FAILED(IsCapabilityEnabled("UniversalXPConnect", &ok)))
@@ -2121,34 +2089,25 @@ nsScriptSecurityManager::InitPrefs()
     // set callbacks in case the value of the pref changes
     prefs->RegisterCallback(jsEnabledPrefName, JSEnabledPrefChanged, this);
     prefs->RegisterCallback(jsMailEnabledPrefName, JSEnabledPrefChanged, this);
-    return NS_OK;
-}
 
-NS_IMETHODIMP
-nsScriptSecurityManager::EnsurePrefsLoaded()
-{
-    if (!mPrefsInitialized)
-    {
-        mPrefs->EnumerateChildren("capability.policy",
-                                  nsScriptSecurityManager::EnumeratePolicyCallback,
-                                  (void *) this);
-        
-        if (!mPrincipals) {
-            mPrincipals = new nsSupportsHashtable(31);
-            if (!mPrincipals)
-                return NS_ERROR_OUT_OF_MEMORY;
-        }
-        EnumeratePrincipalsInfo info;
-        info.ht = mPrincipals;
-        info.prefs = mSecurityPrefs;
-        
-        mPrefs->EnumerateChildren("capability.principal", 
-                                  nsScriptSecurityManager::EnumeratePrincipalsCallback,
-                                  (void *) &info);
-        
-        mPrefs->RegisterCallback("capability.principal", PrincipalPrefChanged, this);
-        mPrefsInitialized = PR_TRUE;
+    mPrefs->EnumerateChildren("capability.policy",
+                              nsScriptSecurityManager::EnumeratePolicyCallback,
+                              (void *) this);
+    
+    if (!mPrincipals) {
+        mPrincipals = new nsSupportsHashtable(31);
+        if (!mPrincipals)
+            return NS_ERROR_OUT_OF_MEMORY;
     }
+    EnumeratePrincipalsInfo info;
+    info.ht = mPrincipals;
+    info.prefs = mSecurityPrefs;
+    
+    mPrefs->EnumerateChildren("capability.principal", 
+                              nsScriptSecurityManager::EnumeratePrincipalsCallback,
+                              (void *) &info);
+    
+    mPrefs->RegisterCallback("capability.principal", PrincipalPrefChanged, this);
 
     return NS_OK;
 }

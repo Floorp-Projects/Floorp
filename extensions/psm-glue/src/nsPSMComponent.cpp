@@ -1075,21 +1075,12 @@ nsPSMComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
                                   SSM_FID_CERT_COMMON_NAME, &common);
   if (result != CMTSuccess) return NS_ERROR_FAILURE;
 
-  //-- Unique cert ID for caps module is common name + fingerprint
-  nsCAutoString uniqueID;
-  uniqueID = (char*)common.data;
-  uniqueID.Append('/');
-  uniqueID.Append((char*)fingerprint.data);
-  nsXPIDLCString uniqueIDChar;
-  uniqueIDChar = uniqueID.GetBuffer();
-  if (!uniqueIDChar) return NS_ERROR_OUT_OF_MEMORY;
-
   //-- Get a principal
   nsresult rv;
   NS_WITH_SERVICE(nsIScriptSecurityManager, secMan,
                   NS_SCRIPTSECURITYMANAGER_PROGID, &rv)
     if (NS_FAILED(rv)) return NS_ERROR_FAILURE;
-  rv = secMan->GetCertificatePrincipal(uniqueIDChar,
+  rv = secMan->GetCertificatePrincipal((const char*)fingerprint.data,
                                        aPrincipal);
   if (NS_FAILED(rv)) return rv;
 

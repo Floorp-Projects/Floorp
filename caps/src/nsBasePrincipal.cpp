@@ -264,12 +264,12 @@ AppendCapability(nsHashKey *aKey, void *aData, void *capListPtr)
     if (value == nsIPrincipal::ENABLE_GRANTED)
     {
         capList->granted->Append(key->GetString(), key->GetStringLength());
-        capList->granted += ' ';
+        capList->granted->Append(' ');
     }
     else if (value == nsIPrincipal::ENABLE_DENIED)
     {
         capList->denied->Append(key->GetString(), key->GetStringLength());
-        capList->denied += ' ';
+        capList->denied->Append(' ');
     }
     return PR_TRUE;
 }
