@@ -4031,6 +4031,8 @@ nsresult nsImapMailFolder::NotifyMessageFlagsFromHdr(nsIMsgDBHdr *dbHdr, nsMsgKe
     // make some people very unhappy.
     if (flags & kImapMsgLabelFlags)
       mDatabase->SetLabel(msgKey, (flags & kImapMsgLabelFlags) >> 9);
+    if (flags & kImapMsgMDNSentFlag)
+      mDatabase->MarkMDNSent(msgKey, PR_TRUE, nsnull);
   
     return NS_OK;
 }

@@ -5076,6 +5076,19 @@ void nsImapProtocol::OnAppendMsgFromFile()
     }
 }
 
+void nsImapProtocol::CheckAndSetMDNSentFlag(nsImapAction imapAction, nsMsgKey key)
+{
+  // If we're appending msg to folder and we support
+  // MDNSent flag then flag the msg with "MDNSent".
+  if ((imapAction == nsIImapUrl::nsImapAppendMsgFromFile) &&
+      (GetServerStateParser().SupportsUserFlags() & kImapMsgSupportMDNSentFlag))
+  {
+    nsCAutoString newMsgId;
+    newMsgId.AppendInt(key);
+    Store(newMsgId.get(), "+FLAGS ($MDNSent)", PR_TRUE);
+  }
+}
+
 void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                                             const char* mailboxName,
                                             imapMessageFlagsType flags)
@@ -5156,6 +5169,8 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
         {
           nsMsgKey newKey =
             GetServerStateParser().CurrentResponseUID();
+          // See if we have to mark "MDN sent" flag on the msg.
+          CheckAndSetMDNSentFlag(imapAction, newKey);
           if (m_imapExtensionSink)
           {
             m_imapExtensionSink->SetAppendMsgUid(this, newKey,
@@ -5214,6 +5229,8 @@ void nsImapProtocol::UploadMessageFromFile (nsIFileSpec* fileSpec,
                 delete searchResult;
                 if (newkey != nsMsgKey_None)
                 {
+                  // See if we have to mark "MDN sent" flag on the msg.
+                  CheckAndSetMDNSentFlag(imapAction, newkey);
                   m_imapExtensionSink->SetAppendMsgUid
                     (this, newkey, m_runningUrl);
                   WaitForFEEventCompletion();

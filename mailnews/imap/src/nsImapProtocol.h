@@ -470,6 +470,7 @@ private:
 	void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
 	void WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
 	void HeaderFetchCompleted();
+  void CheckAndSetMDNSentFlag(nsImapAction imapAction, nsMsgKey key);
   void UploadMessageFromFile(nsIFileSpec* fileSpec, const char* mailboxName,
                                imapMessageFlagsType flags);
 
