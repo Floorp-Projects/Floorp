@@ -7,19 +7,9 @@
 # The copyright notice(s) in this Source Code does not indicate actual or
 # intended publication of this Source Code.
 #
-GDEPTH = ..
-DEPTH  = ..
+GDEPTH = ../..
+DEPTH  = ../..
 
-DIRS =  core msg canvas command dialog layout network observer util parser chrome shell toolkit widget user model
+#DIRS_EXPORT = public inc 
+#DIRS_LIBS = src
 
-LIBRARY_NAME = xpfc
-
-EXPORTS = \
-	$(NULL)
-
-PRIVATE_EXPORTS = \
-	$(NULL)
-
-MODULE = xpfc
-
-REQUIRES = xpcom raptor
