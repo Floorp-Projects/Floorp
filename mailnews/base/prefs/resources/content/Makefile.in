@@ -47,6 +47,13 @@ EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/pref-receipts.html \
 	$(srcdir)/custreceipt.html \
 	$(srcdir)/pref-diskspace.html \
+	$(srcdir)/AccountWizard.xul		\
+	$(srcdir)/AccountWizard.js		\
+	$(srcdir)/aw-intro.xul			\
+	$(srcdir)/aw-identity.xul		\
+	$(srcdir)/aw-server.xul			\
+	$(srcdir)/aw-smtp.xul			\
+	$(srcdir)/aw-done.xul			\
 	$(NULL)
 
 EXPORT_RESOURCE_SAMPLES_TO_REMOVE := $(addprefix $(SAMPLES_DIR)/, $(EXPORT_RESOURCE_SAMPLES))
