@@ -2614,7 +2614,6 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
         attrs = sprop->attrs;
         if ((attrs & JSPROP_READONLY) || SCOPE_IS_SEALED(scope)) {
-            /* XXXbe ECMA violation: readonly proto-property stops set cold. */
             OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
             if ((attrs & JSPROP_READONLY) && JSVERSION_IS_ECMA(cx->version))
                 return JS_TRUE;
@@ -2622,27 +2621,37 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
         }
 
         if (pobj != obj) {
-            /* Don't clone a shared prototype property. */
-            if (attrs & JSPROP_SHARED) {
-                JS_UNLOCK_SCOPE(cx, scope);
-
-                return SPROP_SET(cx, sprop, obj, pobj, vp);
-            }
-
-            /* XXXbe ECMA violation: inherit attrs, getter, setter. */
-            flags = sprop->flags;
-            shortid = sprop->shortid;
-            getter = sprop->getter;
-            setter = sprop->setter;
+            /*
+             * We found id in a prototype object: prepare to share or shadow.
+             * NB: Thanks to the garbage-collected property tree maintained
+             * by jsscope.c in rt, we need not worry about sprop going away
+             * behind our back after we've unlocked scope.
+             */
             JS_UNLOCK_SCOPE(cx, scope);
 
-            /* Recover watched setter *after* releasing scope's lock. */
-            if ((attrs & JSPROP_SETTER)
-                ? ((JSFunction *)JS_GetPrivate(cx, (JSObject *)setter))->native
-                  == js_watch_set_wrapper
-                : setter == js_watch_set) {
-                setter = js_GetWatchedSetter(rt, scope, sprop);
+            /* Don't clone a shared prototype property. */
+            if (attrs & JSPROP_SHARED)
+                return SPROP_SET(cx, sprop, obj, pobj, vp);
+
+            /* Restore attrs to the ECMA default for new properties. */
+            attrs = JSPROP_ENUMERATE;
+
+            /*
+             * Preserve the shortid when shadowing a property that uses the
+             * class getter and setter.  Those functions must see the shortid
+             * for id, not id, when they're called on the shadow we are about
+             * to create in obj's scope.
+             */
+            if ((sprop->flags & SPROP_HAS_SHORTID) &&
+                sprop->getter == getter && sprop->setter == setter) {
+                flags = sprop->flags;
+                shortid = sprop->shortid;
             }
+
+            /*
+             * Forget we found the proto-property now that we've copied any
+             * needed member values.
+             */
             sprop = NULL;
         }
 #ifdef __GNUC__         /* suppress bogus gcc warnings */
@@ -2653,18 +2662,7 @@ js_SetProperty(JSContext *cx, JSObject *obj, jsid id, jsval *vp)
 
     if (!sprop) {
         if (SCOPE_IS_SEALED(OBJ_SCOPE(obj)))
-read_only_error: {
-            JSString *str = js_DecompileValueGenerator(cx,
-                                                       JSDVG_IGNORE_STACK,
-                                                       ID_TO_VALUE(id),
-                                                       NULL);
-            if (str) {
-                JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
-                                     JSMSG_READ_ONLY,
-                                     JS_GetStringBytes(str));
-            }
-            return JS_FALSE;
-        }
+            goto read_only_error;
 
         /* Find or make a property descriptor with the right heritage. */
         JS_LOCK_OBJ(cx, obj);
@@ -2733,6 +2731,19 @@ read_only_error: {
     }
     JS_UNLOCK_SCOPE(cx, scope);
     return JS_TRUE;
+
+  read_only_error: {
+    JSString *str = js_DecompileValueGenerator(cx,
+                                               JSDVG_IGNORE_STACK,
+                                               ID_TO_VALUE(id),
+                                               NULL);
+    if (str) {
+        JS_ReportErrorNumber(cx, js_GetErrorMessage, NULL,
+                             JSMSG_READ_ONLY,
+                             JS_GetStringBytes(str));
+    }
+    return JS_FALSE;
+  }
 }
 
 JSBool
