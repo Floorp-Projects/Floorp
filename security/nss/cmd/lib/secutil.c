@@ -2017,13 +2017,15 @@ secu_PrintCertNickname(CERTCertificate *cert, SECItem *k, void *data)
     return (SECSuccess);
 }
 
-#if 0
+#if 1
+typedef struct {
+    char *		name;
+    CERTCertTrust	trust;
+} certNameAndTrustEntry;
+
 typedef struct {
     int numCerts;
-    struct {
-	char *names;
-	CERTCertTrust trusts;
-    } *nameAndTrustEntry;
+    certNameAndTrustEntry *nameAndTrustEntries;
 } certNameAndTrustList;
 
 SECStatus
@@ -2036,53 +2038,121 @@ sec_CountCerts(CERTCertificate *cert, SECItem *unknown, void *arg)
 SECStatus
 sec_CollectCertNamesAndTrust(CERTCertificate *cert, SECItem *unknown, void *arg)
 {
-    certNameAndTrustList *certNames = (certNameAndTrustList*)arg;
+    certNameAndTrustList *pCertNames = (certNameAndTrustList*)arg;
     char *name;
-    int i = certNames->numCerts;
+    int i;
 
-    name = cert->dbEntry->nickname;
-    if ( name == NULL ) {
-	name = cert->emailAddr;
-    }
+    i = pCertNames->numCerts;
+    name = cert->dbEntry->nickname ? cert->dbEntry->nickname : cert->emailAddr;
 
-    certNames->names[i] = PORT_Strdup(name);
+    if (name)
+	pCertNames->nameAndTrustEntries[i].name = PORT_Strdup(name);
+    else
+	pCertNames->nameAndTrustEntries[i].name = PORT_Strdup("<unknown>");
 
-    PORT_Memcpy(&certNames->trusts[i], cert->trust, sizeof(*cert->trust));
+    PORT_Memcpy(&pCertNames->nameAndTrustEntries[i].trust, cert->trust, sizeof(*cert->trust));
 
-    certNames->numCerts++;
+    pCertNames->numCerts++;
 
     return SECSuccess;
 }
 
+static int
+sec_name_and_trust_compare_by_name(const void *p1, const void *p2)
+{
+    certNameAndTrustEntry *e1 = (certNameAndTrustEntry *)p1;
+    certNameAndTrustEntry *e2 = (certNameAndTrustEntry *)p2;
+    return PORT_Strcmp(e1->name, e2->name);
+}
+
+static int
+sec_combine_trust_flags(CERTCertTrust *trust)
+{
+    if (trust == NULL)
+	return NULL;
+    return trust->sslFlags | trust->emailFlags | trust->objectSigningFlags;
+}
+
+static int
+sec_name_and_trust_compare_by_trust(const void *p1, const void *p2)
+{
+    certNameAndTrustEntry *e1 = (certNameAndTrustEntry *)p1;
+    certNameAndTrustEntry *e2 = (certNameAndTrustEntry *)p2;
+    int e1_is_ca, e2_is_ca;
+    int e1_is_user, e2_is_user;
+    int rv;
+
+    e1_is_ca = (sec_combine_trust_flags(&e1->trust) & CERTDB_VALID_CA) != 0;
+    e2_is_ca = (sec_combine_trust_flags(&e2->trust) & CERTDB_VALID_CA) != 0;
+    e1_is_user = (sec_combine_trust_flags(&e1->trust) & CERTDB_USER) != 0;
+    e2_is_user = (sec_combine_trust_flags(&e2->trust) & CERTDB_USER) != 0;
+
+    /* first, sort by user status, then CA status, */
+    /*  then by actual comparison of CA flags, then by name */
+    if ((rv = (e2_is_user - e1_is_user)) == 0 && (rv = (e1_is_ca - e2_is_ca)) == 0)
+	if (e1_is_ca || (rv = memcmp(&e1->trust, &e2->trust, sizeof(CERTCertTrust))) == 0)
+	    return PORT_Strcmp(e1->name, e2->name);
+	else
+	    return rv;
+    else
+	return rv;
+}
+
 SECStatus
-SECU_PrintCertificateNames_(PRFileDesc* out, PRBool sortByName, 
+SECU_PrintCertificateNames_(CERTCertDBHandle *handle, FILE *out, PRBool sortByName, 
                             PRBool sortByTrust)
 {
-    int numCerts;
-    certNameAndTrustList certNames = { 0, 0, 0 };
+    certNameAndTrustList certNames = { 0, NULL };
+    int numCerts, i;
     SECStatus rv;
-
-    CERTCertDBHandle *handle = CERT_GetDefaultCertDB();
+    int (*comparefn)(const void *, const void *);
+    char trusts[30];
 
     numCerts = 0;
 
     rv = SEC_TraversePermCerts(handle, sec_CountCerts, &numCerts);
-    certNames.names = (char**)PORT_Alloc(numCerts*sizeof(char*));
-    certNames.trusts = 
-       (CERTCertTrust*)PORT_Alloc(numCerts*sizeof(CERTCertTrust));
-    rv = SEC_TraversePermCerts(handle, 
-                               sec_CollectCertNamesAndTrust, &certNames);
+    if (rv != SECSuccess)
+	return SECFailure;
 
-    /*
+    certNames.nameAndTrustEntries = 
+		(certNameAndTrustEntry *)PORT_Alloc(numCerts * sizeof(certNameAndTrustEntry));
+    if (certNames.nameAndTrustEntries == NULL)
+	return SECFailure;
+
+    rv = SEC_TraversePermCerts(handle, sec_CollectCertNamesAndTrust, &certNames);
+    if (rv != SECSuccess)
+	return SECFailure;
+
+#if 0
     rv = PK11_TraverseSlotCerts(sec_CountCerts, &numCerts, NULL);
     certs = (CERTCertificate**)PORT_Alloc(numCerts*sizeof(CERTCertificate*));
     rv = PK11_TraverseSlotCerts(sec_CollectCerts, certs, NULL);
-    */
+#endif
 
-    qsort();
+    if (sortByName)
+	comparefn = sec_name_and_trust_compare_by_name;
+    else if (sortByTrust)
+	comparefn = sec_name_and_trust_compare_by_trust;
+    else
+	comparefn = NULL;
 
-    PORT_Free(certNames.names);
-    PORT_Free(certNames.trusts);
+    if (comparefn)
+	qsort(certNames.nameAndTrustEntries, certNames.numCerts, 
+			    sizeof(certNameAndTrustEntry), comparefn);
+
+    for (i = 0; i < certNames.numCerts; i++) {
+	PORT_Memset (trusts, 0, sizeof(trusts));
+	printflags(trusts, certNames.nameAndTrustEntries[i].trust.sslFlags);
+	PORT_Strcat(trusts, ",");
+	printflags(trusts, certNames.nameAndTrustEntries[i].trust.emailFlags);
+	PORT_Strcat(trusts, ",");
+	printflags(trusts, certNames.nameAndTrustEntries[i].trust.objectSigningFlags);
+	fprintf(out, "%-60s %-5s\n", certNames.nameAndTrustEntries[i].name, trusts);
+    }
+
+    for (i = 0; i < certNames.numCerts; i++)
+	PORT_Free(certNames.nameAndTrustEntries[i].name);
+    PORT_Free(certNames.nameAndTrustEntries);
 
     return rv;
 }
