@@ -70,6 +70,8 @@ public:
   virtual PRBool	GetClipRect(nsRect &aRect);
   virtual PRBool	SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
   virtual void 		GetClipRegion(nsIRegion **aRegion);
+  NS_IMETHOD      SetLineStyle(nsLineStyle aLineStyle);
+  NS_IMETHOD      GetLineStyle(nsLineStyle &aLineStyle);
   virtual void 		SetColor(nscolor aColor);
   virtual nscolor GetColor() const;
   virtual void 		SetFont(const nsFont& aFont);

@@ -53,6 +53,7 @@ public:
   nsRect          mLocalClip;
   Region          mClipRegion;
   nscolor         mColor;
+  nsLineStyle     mLineStyle;
   nsIFontMetrics  *mFontMetrics;
   Font            mFont;
 };
@@ -63,6 +64,7 @@ GraphicsState :: GraphicsState()
   mLocalClip.x = mLocalClip.y = mLocalClip.width = mLocalClip.height = 0;
   mClipRegion = nsnull;
   mColor = NS_RGB(0, 0, 0);
+  mLineStyle = nsLineStyle_kSolid;
   mFontMetrics = nsnull;
   mFont = nsnull;
 }
@@ -83,6 +85,7 @@ nsRenderingContextUnix :: nsRenderingContextUnix()
   mFrontBuffer = nsnull ;
   mRenderingSurface = nsnull ;
   mCurrentColor = 0;
+  mCurrentLineStyle = nsLineStyle_kSolid;
   mTMatrix = nsnull;
   mP2T = 1.0f;
   mStateCache = new nsVoidArray();
@@ -302,6 +305,7 @@ void nsRenderingContextUnix :: PushState(void)
   }
 
   state->mColor = mCurrentColor;
+  state->mLineStyle = mCurrentLineStyle;
 
 }
 
@@ -343,6 +347,9 @@ PRBool nsRenderingContextUnix :: PopState(void)
 
     if (state->mColor != mCurrentColor)
       SetColor(state->mColor);
+
+    if (state->mLineStyle != mCurrentLineStyle)
+      SetLineStyle(state->mLineStyle);
     
 
     // Delete this graphics state object
@@ -533,9 +540,9 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
   values.background = mCurrentColor;
 
   ::XChangeGC(mRenderingSurface->display,
-	      mRenderingSurface->gc,
-	      GCForeground | GCBackground,
-	      &values);
+	            mRenderingSurface->gc,
+	            GCForeground | GCBackground,
+	            &values);
 
   mCurrentColor = aColor ;
   
@@ -544,6 +551,56 @@ void nsRenderingContextUnix :: SetColor(nscolor aColor)
 nscolor nsRenderingContextUnix :: GetColor() const
 {
   return mCurrentColor;
+}
+
+nsresult nsRenderingContextUnix :: SetLineStyle(nsLineStyle aLineStyle)
+{
+
+  if (aLineStyle != mCurrentLineStyle)
+  {
+    XGCValues values ;
+
+    switch(aLineStyle)
+    {
+      case nsLineStyle_kSolid:
+        values.line_style = LineSolid;
+        ::XChangeGC(mRenderingSurface->display,
+	                  mRenderingSurface->gc,
+	                  GCLineStyle,
+	                  &values);
+        break;
+
+      case nsLineStyle_kDashed:
+        static char dashed[2] = {4,4};
+
+        ::XSetDashes(mRenderingSurface->display,
+                     mRenderingSurface->gc,
+                     0, dashed, 2);
+        break;
+
+      case nsLineStyle_kDotted:
+        static char dotted[2] = {3,1};
+
+        ::XSetDashes(mRenderingSurface->display,
+                     mRenderingSurface->gc,
+                     0, dotted, 2);
+        break;
+
+      default:
+        break;
+
+    }
+
+    mCurrentLineStyle = aLineStyle ;
+  }
+
+  return NS_OK;
+}
+
+nsresult nsRenderingContextUnix :: GetLineStyle(nsLineStyle &aLineStyle)
+{
+  aLineStyle = mCurrentLineStyle;
+  return NS_OK;
 }
 
 void nsRenderingContextUnix :: SetFont(const nsFont& aFont)

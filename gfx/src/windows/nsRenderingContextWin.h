@@ -75,6 +75,9 @@ public:
   virtual PRBool SetClipRegion(const nsIRegion& aRegion, nsClipCombine aCombine);
   virtual void GetClipRegion(nsIRegion **aRegion);
 
+  NS_IMETHOD SetLineStyle(nsLineStyle aLineStyle);
+  NS_IMETHOD GetLineStyle(nsLineStyle &aLineStyle);
+
   virtual void SetColor(nscolor aColor);
   virtual nscolor GetColor() const;
 
@@ -135,7 +138,10 @@ private:
   nsresult CommonInit(void);
   nsresult SetupDC(HDC aOldDC, HDC aNewDC);
   HBRUSH SetupSolidBrush(void);
+  HPEN SetupPen(void);
   HPEN SetupSolidPen(void);
+  HPEN SetupDashedPen(void);
+  HPEN SetupDottedPen(void);
   void SetupFontAndColor(void);
   void PushClipState(void);
   nsresult CreateDDraw(void);
@@ -174,6 +180,7 @@ protected:
   HPEN              mNullPen;
   PRUint8           *mGammaTable;
   COLORREF          mCurrTextColor;
+  nsLineStyle       mCurrLineStyle;
 
 #ifdef NS_DEBUG
   PRBool            mInitialized;
@@ -184,6 +191,8 @@ protected:
   static IDirectDraw2 *mDDraw2;
   static nsresult     mDDrawResult;
 #endif
+
+
 };
 
 class nsDrawingSurfaceWin : public nsISupports
