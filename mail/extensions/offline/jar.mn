@@ -1,13 +1,13 @@
 offline.jar:
 *   content/messenger-offline/msgOfflineOverlay.xul                (content/msgOfflineOverlay.xul)
 *   content/messenger-offline/mail-offline.js                      (content/mail-offline.js)
-    content/messenger-offline/contents.rdf                         (content/contents.rdf)
+*   content/messenger-offline/contents.rdf                         (content/contents.rdf)
 *   content/messenger-offline/pref-offline.xul                     (content/pref-offline.xul)
 
 offline.jar:
     locale/en-US/messenger-offline/offline.properties              (locale/offline.properties)
     locale/en-US/messenger-offline/offline.dtd                     (locale/offline.dtd)
     locale/en-US/messenger-offline/pref-offline.dtd                (locale/pref-offline.dtd)
-    locale/en-US/messenger-offline/contents.rdf                    (locale/contents.rdf)
+*   locale/en-US/messenger-offline/contents.rdf                    (locale/contents.rdf)
 
 

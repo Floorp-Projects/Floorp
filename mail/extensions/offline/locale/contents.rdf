@@ -19,5 +19,5 @@
   <!-- Version Information.  State that we work only with major version of this
        package. -->
   <RDF:Description about="urn:mozilla:locale:en-US:messenger-offline"
-	chrome:localeVersion="@MOZILLA_LOCALE_VERSION@"/>
+#expand chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"/>
 </RDF:RDF>

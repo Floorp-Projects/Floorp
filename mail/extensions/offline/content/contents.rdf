@@ -17,7 +17,7 @@
         chrome:description="This extension adds offline support to Mozilla Thunderbird." 
         chrome:extension="true"
         chrome:settingsURL="chrome://messenger-offline/content/pref-offline.xul"
-        chrome:localeVersion="@MOZILLA_LOCALE_VERSION@"
+#expand chrome:localeVersion="__MOZILLA_LOCALE_VERSION__"
         chrome:skinVersion="1.5">
   </RDF:Description>
 

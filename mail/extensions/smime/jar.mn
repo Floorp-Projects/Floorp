@@ -5,7 +5,7 @@ messenger.jar:
 *+  content/messenger-smime/pref-smime-advanced.xul                  (content/pref-smime-advanced.xul)
 *+  content/messenger/am-smime.xul                                   (content/am-smime.xul)
 *+  content/messenger/am-smime.js                                    (content/am-smime.js)
-+   content/messenger-smime/contents.rdf                             (content/contents.rdf)
+*+  content/messenger-smime/contents.rdf                             (content/contents.rdf)
 
 classic.jar:
 +   skin/classic/messenger/smime/msgCompSMIMEOverlay.css             (skin/msgCompSMIMEOverlay.css)
