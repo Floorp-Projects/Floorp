@@ -49,10 +49,9 @@ function initDialog(){
     window.close();
 
   //find parent inputs
-  srcInput = window.opener.document.getElementById("srcInput");
-  widthInput = window.opener.document.getElementById("widthInput");
-  heightInput = window.opener.document.getElementById("heightInput");
-  borderInput = window.opener.document.getElementById("border");
+  var srcInput = window.opener.document.getElementById("srcInput");
+  var widthInput = window.opener.document.getElementById("widthInput");
+  var heightInput = window.opener.document.getElementById("heightInput");
 
   //check for relative url
   if (!((srcInput.value.indexOf("http://") != -1) || (srcInput.value.indexOf("file://") != -1))){
@@ -62,11 +61,11 @@ function initDialog(){
       //TODO: add option to save document now
     }
     else{
-      edDoc = new String(editorShell.editorDocument.location);
-      imgDoc = new String(srcInput.value);
+      var edDoc = new String(editorShell.editorDocument.location);
+      var imgDoc = new String(srcInput.value);
       imgDoc = imgDoc.split("../");
-      len = imgDoc.length;
-      for (i=0; i<len; i++){
+      var len = imgDoc.length;
+      for (var i=0; i<len; i++){
         if (edDoc.length > (String(editorShell.editorDocument.location.protocol).length+2))
           edDoc = edDoc.substring(0, edDoc.lastIndexOf("/"));
       }
@@ -171,9 +170,9 @@ function highContrast(){
 }
 
 function recreateMap(){
-  areaCollection = imageMap.childNodes;
-  areaColLen = areaCollection.length;
-  for(j=0; j<areaColLen; j++){
+  var areaCollection = imageMap.childNodes;
+  var areaColLen = areaCollection.length;
+  for(var j=0; j<areaColLen; j++){
       area = areaCollection[j];
       shape = area.getAttribute("shape");
       shape = shape.toLowerCase();
