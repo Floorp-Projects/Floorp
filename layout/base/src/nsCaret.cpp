@@ -427,40 +427,41 @@ PRBool nsCaret::SetupDrawingFrameAndOffset()
       
 			if (contentNode)
 			{
-			  PRBool  canContainChildren;
+				PRBool  canContainChildren;
 			  
-	      // see if we have an offset between child nodes, or an offset into a text
-	      // node.
-			  if (NS_SUCCEEDED(contentNode->CanContainChildren(canContainChildren)) && canContainChildren)
-			  {
-			    // point the caret to the start of the child node
-			    nsCOMPtr<nsIContent> childNode;
-			    contentNode->ChildAt(contentOffset, *getter_AddRefs(childNode));
-			    if (childNode)
-			    {
-			      contentNode = childNode;
-			      contentOffset = 0;
-			    }
-			  }
-			  else
-			  {
-			    //nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
-          //NS_ASSERTION(nodeAsText, "Should have a text node here");
-          
-          // we can be in a text node, or a BR node here.
-			  }
+		      // see if we have an offset between child nodes, or an offset into a text
+		      // node.
+				if (NS_SUCCEEDED(contentNode->CanContainChildren(canContainChildren)) && canContainChildren)
+				{
+					// point the caret to the start of the child node
+					nsCOMPtr<nsIContent> childNode;
+					contentNode->ChildAt(contentOffset, *getter_AddRefs(childNode));
+					if (childNode)
+					{
+						contentNode = childNode;
+						contentOffset = 0;
+					}
+				}
+				else
+				{
+				//nsCOMPtr<nsIDOMCharacterData>	nodeAsText = do_QueryInterface(focusNode);
+				//NS_ASSERTION(nodeAsText, "Should have a text node here");
+
+				// we can be in a text node, or a BR node here.
+				}
 			
 				nsIFrame*	theFrame = nsnull;
+
+				//get frame selection and find out what frame to use...
+				nsCOMPtr<nsIFrameSelection> frameSelection;
+				err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
+				if (NS_FAILED(err) || !frameSelection)
+					return PR_FALSE;
 				
-        //get frame selection and find out what frame to use...
-        nsCOMPtr<nsIFrameSelection> frameSelection;
-        err = mPresShell->GetFrameSelection(getter_AddRefs(frameSelection));
-	      if (NS_FAILED(err) || !frameSelection)
-		      return err;
-        err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, &theFrame);
-	      if (NS_FAILED(err))
-		      return err;
-        else
+				err = frameSelection->GetFrameForNodeOffset(contentNode, contentOffset, &theFrame);
+				if (NS_FAILED(err))
+					return PR_FALSE;
+				else
 				{
 
 					// mark the frame, so we get notified on deletion.
@@ -489,6 +490,7 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 	outView = nsnull;
 	
 	nsIView* theView = nsnull;
+	NS_ASSERTION(caretFrame, "Should have frame here");
 	caretFrame->GetOffsetFromView(viewOffset, &theView);
 	if (theView == nsnull) return;
 	
@@ -508,10 +510,10 @@ void nsCaret::GetViewForRendering(nsIFrame *caretFrame, EViewCoordinates coordTy
 			
 			if (viewWidget)
 			{
-		  	returnView = theView;
+				returnView = theView;
 			
-        if (coordType == eViewCoordinates)
-          break;
+				if (coordType == eViewCoordinates)
+					break;
 			}
 		}		
 		
