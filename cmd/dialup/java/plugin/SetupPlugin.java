@@ -378,6 +378,14 @@ public class SetupPlugin extends Plugin
 			return null;
 	}
 	
+	final public String GetISPSupportPhoneNumber( String ispName )
+	{
+		if ( privilegeCheck() == true )
+			return CPGenerator.getISPSupportPhoneNumber( ispName );
+		else
+			return null;
+	}
+	
 	final public String GetISPModemNumber( String isp, int popIndex )
 	{
 		if ( privilegeCheck() == true )
