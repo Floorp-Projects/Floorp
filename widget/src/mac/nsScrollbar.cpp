@@ -209,7 +209,8 @@ PRBool 	result;
 			if( mMouseDownInScroll )
 				{
 				DrawWidget();
-				mWidgetArmed = PR_TRUE;
+				//mWidgetArmed = PR_TRUE;
+				mWidgetArmed = PR_FALSE;
 				}
 			result = nsWindow::DispatchMouseEvent(aEvent);
 			break;
@@ -255,16 +256,17 @@ RgnHandle						thergn;
 	::ClipRect(&macRect);
 	::PenNormal();
 	::RGBForeColor(&blackcolor);
-	
 	// Frame the general scrollbar
 	::FrameRect(&macRect);
-	DrawThumb(PR_FALSE);
-			
+
 	::RGBForeColor(&blackcolor);
 	::PenSize(1,1);
 	::SetClip(thergn);
 	::SetOrigin(0,0);
 	::SetPort(theport);
+
+	DrawThumb(PR_FALSE);
+			
 }
 
 //-------------------------------------------------------------------------
@@ -320,7 +322,7 @@ RgnHandle						thergn;
 		::EraseRect(&macThumbRect);
 	else
 		{
-		::RGBForeColor(&redcolor);
+		::RGBForeColor(&blackcolor);
 		::PaintRect(&macThumbRect);
 		}
 	
