@@ -1425,8 +1425,10 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
         
         if (NS_SUCCEEDED(rv = mURI->GetPreHost(getter_Copies(prehost))))
         {
-            if (!(newUserPass = nsCRT::strdup(prehost)))
-                return NS_ERROR_OUT_OF_MEMORY;
+            if ((const char*)prehost) {
+                if (!(newUserPass = nsCRT::strdup(prehost)))
+                    return NS_ERROR_OUT_OF_MEMORY;
+            }
         }
     }
 
@@ -1489,8 +1491,10 @@ nsHTTPChannel::Authenticate(const char *iChallenge,
         if (retval)
         {
             nsAutoString temp(user);
-            temp += ':';
-            temp += passwd;
+            if (passwd) {
+                temp += ':';
+                temp += passwd;
+            }
             CRTFREEIF(newUserPass);
             newUserPass = temp.ToNewCString();
         }

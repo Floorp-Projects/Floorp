@@ -241,7 +241,8 @@ PRBool nsHTTPHeaderArray::IsHeaderMultiple(nsIAtom* aHeader)
       (nsHTTPAtoms::If_Unmodified_Since == aHeader) ||
       (nsHTTPAtoms::Max_Forwards        == aHeader) ||
       (nsHTTPAtoms::Referer             == aHeader) ||
-      (nsHTTPAtoms::User_Agent          == aHeader)) {
+      (nsHTTPAtoms::User_Agent          == aHeader) ||
+      (nsHTTPAtoms::Authorization       == aHeader)) {
     bIsMultiple = PR_FALSE;
   } else {
     bIsMultiple = PR_TRUE;
