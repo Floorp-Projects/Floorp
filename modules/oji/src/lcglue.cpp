@@ -199,7 +199,6 @@ static JSObject* PR_CALLBACK
 map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *errp)
 {
 	JSObject        *window = NULL;
-	MochaDecoder    *decoder; 
 	PRBool           mayscript = PR_FALSE;
 	PRBool           jvmMochaPrefsEnabled = PR_TRUE;
 	nsresult         err = NS_OK;
@@ -223,17 +222,15 @@ map_java_object_to_js_object_impl(JNIEnv *env, void *pluginInstancePtr, char* *e
 	 * Check for the mayscript tag.
 	 */
 	nsIPluginInstance* pluginInstance = (nsIPluginInstance*)pluginInstancePtr;
-	if ( (err == NS_OK) && (pluginInstance != NULL) ) {
-		nsIPluginInstancePeer* pluginPeer;
-		if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
-			nsIJVMPluginTagInfo* tagInfo;
-			if (pluginPeer->QueryInterface(kIJVMPluginTagInfoIID, &tagInfo) == NS_OK) {
-				err = tagInfo->GetMayScript(&mayscript);
-				PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
-				NS_RELEASE(tagInfo);
-			}
-			NS_RELEASE(pluginPeer);
+	nsIPluginInstancePeer* pluginPeer;
+	if (pluginInstance->GetPeer(&pluginPeer) == NS_OK) {
+		nsIJVMPluginTagInfo* tagInfo;
+		if (pluginPeer->QueryInterface(kIJVMPluginTagInfoIID, (void**) &tagInfo) == NS_OK) {
+			err = tagInfo->GetMayScript(&mayscript);
+			PR_ASSERT(err != NS_OK ? mayscript == PR_FALSE : PR_TRUE);
+			NS_RELEASE(tagInfo);
 		}
+		NS_RELEASE(pluginPeer);
 	}
 
 	if ( !mayscript ) {
