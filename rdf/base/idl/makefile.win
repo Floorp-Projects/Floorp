@@ -29,15 +29,34 @@ XPIDL=$(DIST)\bin\xpidl.exe
 XPIDL_INCLUDES= -I $(DEPTH)\xpcom\idl    \
                 $(NULL)
 
-nsRDFInterfaces.h: nsRDFInterfaces.idl
+XPIDLSRCS=      nsIRDFNode.idl                  \
+                nsIRDFResource.idl              \
+                nsIRDFLiteral.idl               \
+                nsIRDFObserver.idl              \
+                nsIRDFDataSource.idl            \
+                nsIRDFCompositeDataSource.idl   \
+                nsIRDFService.idl               \
+                nsIRDFContainer.idl             \
+                nsIRDFContainerUtils.idl        \
+                nsIRDFPurgeableDataSource.idl   \
+                nsIRDFXMLDataSource.idl         \
+                nsIRDFXMLSource.idl             \
+                $(NULL)
+
+XPIDL_HEADERS=$(XPIDLSRCS:.idl=.h)
+XPIDL_TYPELIBS=$(XPIDLSRCS:.idl=.xpt)
+
+.SUFFIXES: .idl .xpt
+
+.idl.h:
         @echo +++ make: generating XPIDL headers
         $(XPIDL) -m header $(XPIDL_INCLUDES) $**
 
-nsRDFInterfaces.xpt: nsRDFInterfaces.idl
+.idl.xpt:
         @echo +++ make: generating XPIDL typelib
         $(XPIDL) -m typelib $(XPIDL_INCLUDES) $**
 
-export:: nsRDFInterfaces.h nsRDFInterfaces.xpt
-        $(MAKE_INSTALL) nsRDFInterfaces.h   $(DEPTH)\rdf\base\public
-        $(MAKE_INSTALL) nsRDFInterfaces.xpt $(DEPTH)\rdf\build
+export:: $(XPIDL_HEADERS) $(XPIDL_TYPELIBS)
+        -for %i in ($(XPIDL_HEADERS:/=\)) do @$(MAKE_INSTALL) %i $(DEPTH)\rdf\base\public
+        -for %i in ($(XPIDL_TYPELIBS:/=\)) do @$(MAKE_INSTALL) %i $(DEPTH)\rdf\build
 
