@@ -21,6 +21,11 @@ include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=raptorhtmlpars 
 DEFINES=-D_IMPL_NS_HTMLPARS -DWIN32_LEAN_AND_MEAN -DXML_DTD
+
+!if defined(MOZ_PERF)
+DEFINES = $(DEFINES) -DRAPTOR_PERF_METRICS
+!endif
+
 MODULE=raptor 
 REQUIRES=xpcom raptor netlib 
 
@@ -148,6 +153,9 @@ LLIBS=        \
  $(DIST)\lib\expat.lib			\
 !ifdef NECKO
  $(DIST)\lib\neckoutil_s.lib			\
+!endif
+!ifdef MOZ_PERF
+ $(DIST)\lib\util.lib			\
 !endif
  $(LIBNSPR)  
 
