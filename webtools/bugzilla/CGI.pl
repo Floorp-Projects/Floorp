@@ -244,6 +244,7 @@ sub PutFooter {
 
 sub CheckIfVotedConfirmed {
     my ($id, $who) = (@_);
+    PushGlobalSQLState();
     SendSQL("SELECT bugs.votes, bugs.bug_status, products.votestoconfirm, " .
             "       bugs.everconfirmed " .
             "FROM bugs, products " .
@@ -273,6 +274,7 @@ sub CheckIfVotedConfirmed {
         $template->process("bug/process/results.html.tmpl", $vars)
           || ThrowTemplateError($template->error());
     }
+    PopGlobalSQLState();
 
 }
 sub LogActivityEntry {
