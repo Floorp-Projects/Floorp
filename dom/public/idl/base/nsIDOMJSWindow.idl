@@ -1,0 +1,58 @@
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+ *
+ * The contents of this file are subject to the Mozilla Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/MPL/
+ * 
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ * 
+ * The Original Code is the Mozilla browser.
+ * 
+ * The Initial Developer of the Original Code is Netscape
+ * Communications, Inc.  Portions created by Netscape are
+ * Copyright (C) 1999, Mozilla.  All Rights Reserved.
+ * 
+ * Contributor(s):
+ */
+
+#include "domstubs.idl"
+
+[scriptable, uuid(c8188620-1dd1-11b2-bc88-df8440498add)]
+interface nsIDOMJSWindow : nsISupports
+{
+  void                      dump(in DOMString str);
+
+  /**
+   * These methods take typeless arguments and optional arguments, the
+   * first argument is either a function or a string, the second
+   * argument must be a number (ms) and the rest of the arguments (2
+   * ... n) are passed to the callback function
+   */
+  long                      setTimeout();
+  long                      setInterval();
+
+  // This method is here for backwards compatibility with 4.x only,
+  // it's implementation is a no-op
+  void                      setResizable(in boolean resizable);
+
+  // These are 4.x event related methods.
+  void                      captureEvents(in long eventFlags);
+  void                      releaseEvents(in long eventFlags);
+  void                      routeEvent(in nsIDOMEvent evt);
+  void                      enableExternalCapture();
+  void                      disableExternalCapture();
+
+  /**
+   * The prompt method takes up to four arguments, the arguments are
+   * message, initial prompt value, title and a save password flag
+   */
+  DOMString                 prompt();
+
+  // This is the script version of nsIDOMWindowInternal::open() that
+  // takes 3 optional arguments
+  nsIDOMWindow              open();
+};
