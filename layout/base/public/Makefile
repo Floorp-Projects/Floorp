@@ -41,6 +41,7 @@ EXPORTS =			\
 	nsIStyleSheet.h		\
 	nsITextContent.h	\
 	nsIStyleFrameConstruction.h \
+	nsStyleConsts.h \
         $(NULL)
 
 include $(DEPTH)/config/config.mk

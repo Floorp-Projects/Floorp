@@ -26,6 +26,7 @@
 #include "nsFont.h"
 #include "nsStyleCoord.h"
 #include "nsStyleStruct.h"
+#include "nsStyleConsts.h"
 
 class nsIFrame;
 class nsIPresContext;
@@ -147,6 +148,10 @@ struct nsStyleDisplay : public nsStyleStruct {
 
   PRUint8   mClipFlags;         // [reset] see nsStyleConsts.h
   nsMargin  mClip;              // [reset] offsets from respective edge
+
+  PRBool IsBlockLevel() const {return (NS_STYLE_DISPLAY_BLOCK == mDisplay) ||
+                                      (NS_STYLE_DISPLAY_LIST_ITEM == mDisplay) ||
+                                      (NS_STYLE_DISPLAY_TABLE == mDisplay);}
 
 protected:
   nsStyleDisplay(void);
