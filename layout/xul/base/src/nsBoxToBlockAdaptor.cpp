@@ -146,7 +146,6 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
   mPresShell = aPresShell;
   NeedsRecalc();
 
-#ifdef DEBUG
   // If we're wrapping a block (we may not be!), be sure the block
   // gets a space manager.
   static const nsIID kBlockFrameCID = NS_BLOCK_FRAME_CID;
@@ -155,7 +154,8 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
   if (block) {
     nsFrameState state;
     mFrame->GetFrameState(&state);
-    NS_ASSERTION(state & NS_BLOCK_SPACE_MGR, "block has no space manager");
+    state |= NS_BLOCK_SPACE_MGR;
+    mFrame->SetFrameState(state);
   }
 #ifdef DEBUG_waterson
   else {
@@ -164,7 +164,6 @@ nsBoxToBlockAdaptor::nsBoxToBlockAdaptor(nsIPresShell* aPresShell, nsIFrame* aFr
     printf("\n");
   }
 #endif /* DEBUG_waterson */
-#endif /* DEBUG */
 }
 
 NS_IMETHODIMP
