@@ -710,11 +710,7 @@ void CTests::OnToolsTestYourMethod2()
 		QAOutput("We got web progress object.", 2);
 
 		// addWebProgListener
-	nsCOMPtr<nsISupports> aListener(do_QueryInterface(qaWebBrowser));
-	if (!aListener)
-		QAOutput("We didn't get nsISupports object.", 2);
-	nsCOMPtr<nsIWebProgressListener> listener = do_QueryInterface(aListener, &rv);
-
+	nsCOMPtr<nsIWebProgressListener> listener(NS_STATIC_CAST(nsIWebProgressListener*, qaBrowserImpl));
 	rv = qaWebProgress->AddProgressListener(listener);
 	RvTestResult(rv, "nsIWebProgress::AddProgressListener() test", 2);
 
