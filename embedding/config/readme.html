@@ -1,0 +1,74 @@
+<html>
+  <head>
+    <title>Embedding distribution information</title>
+  </head>
+  <body>
+    <h2>Introduction</h2>
+    <p>This is the Embedding distribution of <a href="http://www.mozilla.org/">Mozilla</a>. It
+    serves as a reference and smoketest distribution to demonstrate a typical
+    subset of Mozilla needed to embed it into another application. The
+    distribution contains sample applications for testing and development purposes.</p>
+    <p>Please note the phrase<i> typical subset</i>! Your application may need more or less functionality than is found in this
+    distribution. If this is the case, then take a look at the
+    build scripts in <a href="http://lxr.mozilla.org/seamonkey/source/embedding/config/">mozilla/embedding/config</a>
+    to see how this distribution was constructed. </p>
+    <h2>Where can I find more information about embedding? </h2>
+    <p>Mozilla.org - <a href="http://www.mozilla.org/">http://www.mozilla.org/</a>.</p>
+    <p>The Embedding project page - <a href="http://www.mozilla.org/projects/embedding/">http://www.mozilla.org/projects/embedding/</a>.
+    This page should serve as your main point of information for learning how to
+    embed Mozilla in your own applications.</p>
+    <p>The Embedding Frequently Asked Questions (FAQ) page - <a href="http://www.mozilla.org/projects/embedding/faq.html">http://www.mozilla.org/projects/embedding/faq.html</a>.&nbsp;</p>
+    <p>The Embedding newsgroup - <a href="news:netscape.public.mozilla.embedding">news:netscape.public.mozilla.embedding</a>.</p>
+    <p>The Embedding QA page - <a href="http://www.mozilla.org/quality/embed/">http://www.mozilla.org/quality/embed/</a>.</p>
+    <p>Instructions for building Mozilla (including Embedding) - <a href="http://www.mozilla.org/build/">http://www.mozilla.org/build/</a>.</p>
+    <p>Instructions for fetching Mozilla source code (including Embedding) - <a href="http://www.mozilla.org/source.html">http://www.mozilla.org/source.html</a>.</p>
+    <h2>Contents </h2>
+    <p>The distribution contains, libraries, resources and chrome. All of this
+    is a subset of Mozilla, repackaged for embedding. The layout follows the
+    usual Mozilla directory, i.e. </p>
+    <ul>
+      <li>./ - Test applications, launch scripts and core libraries (xpcom, nspr
+        etc.)</li>
+      <li>./components/ - XPCOM components (network, graphics, layout, content,
+        etc.).</li>
+      <li>./chrome/ - chrome files. In embedding most of the chrome has been
+        re-packaged into a single embed.jar file to make it more manageable.</li>
+      <li>./res/ - miscellaneous rendering and parser files.</li>
+      <li>./defaults/ - default preference settings</li>
+    </ul>
+    <h3>Unix</h3>
+    <h4>TestGtkEmbed</h4>
+    <p>A simple browser application built using the GTK+ Browser Widget.</p>
+    <h4>GTK+ Browser Widget</h4>
+    <p>A GTK+ widget for embedding Mozilla into GTK+/GNOME applications such as <a href="http://galeon.sourceforge.net/">Galeon</a>.
+    More information about the widget may be found here <a href="http://www.mozilla.org/unix/gtk-embedding.html">http://www.mozilla.org/unix/gtk-embedding.html</a>. </p>
+    <h3>Windows</h3>
+    <h4>MFCEmbed</h4>
+    <p>A complete browser application written in MFC and the Gecko embedding APIs.
+    This application demonstrates and exercises the functionality necessary to
+    put together a fully featured browser using Gecko.</p>
+    <h4>Mozilla ActiveX Control</h4>
+    <p>An ActiveX browser control built with the embedding APIs. You may use the
+    control to embed a browser inside applications
+    written in VB, Delphi etc. More information about the control including
+    installation instructions may be found at <a href="http://www.iol.ie/~locka/mozilla/mozilla.htm">http://www.iol.ie/~locka/mozilla/mozilla.htm</a>.
+    </p>
+    <h3>Macintosh </h3>
+    <p>There is no Macintosh distribution at present, though an embedding test application PPEmbed is built as part of a standard Mac build. Work on <a href="http://www.mozilla.org/ports/fizzilla/Mach.html">Fizilla
+    Mach</a> may also yield a Mac embedding distribution in the future. </p>
+    <h2>Installation and Usage </h2>
+    <h3>Unix</h3>
+    <ol>
+      <li>Untar the embedding distribution into an empty directory of your
+        choice.</li>
+      <li>From the command-line, cd into the directory and type
+        './run-mozilla.sh ./TestGtkEmbed'</li>
+    </ol>
+    <h3>Windows </h3>
+    <ol>
+      <li>Unzip the embedding distribution into an empty directory of your
+        choice.</li>
+      <li>Double-click on mfcembed.exe</li>
+    </ol>
+  </body>
+</html>
