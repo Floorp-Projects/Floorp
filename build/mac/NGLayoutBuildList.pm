@@ -512,6 +512,10 @@ sub BuildClientDist()
    # history
    InstallFromManifest(":mozilla:xpfe:components:history:public:MANIFEST_IDL",		"$distdirectory:idl:");
    BuildIDLProject(":mozilla:xpfe:components:history:macbuild:historyIDL.mcp",		"history");
+   
+   # related
+   InstallFromManifest(":mozilla:xpfe:components:related:public:MANIFEST_IDL",		"$distdirectory:idl:");
+   BuildIDLProject(":mozilla:xpfe:components:related:macbuild:RelatedIDL.mcp",		"related");
 
    # prefwindow
 #   InstallFromManifest(":mozilla:xpfe:components:prefwindow:public:MANIFEST",		"$distdirectory:idl:");
@@ -989,6 +993,7 @@ sub MakeResourceAliases()
 	# Install XPFE component resources
 	InstallResources(":mozilla:xpfe:components:find:resources:MANIFEST",					"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:history:resources:MANIFEST",					"$samples_dir");
+	InstallResources(":mozilla:xpfe:components:related:resources:MANIFEST",					"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:ucth:resources:MANIFEST",					"$samples_dir");
 	InstallResources(":mozilla:xpfe:components:xfer:resources:MANIFEST",					"$samples_dir");
 
@@ -1138,6 +1143,7 @@ sub BuildXPAppProjects()
 	# Components
 	BuildOneProject(":mozilla:xpfe:components:find:macbuild:FindComponent.mcp",	"FindComponent$D.shlb", "FindComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	BuildOneProject(":mozilla:xpfe:components:history:macbuild:history.mcp", "history$D.shlb", "historyComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
+	BuildOneProject(":mozilla:xpfe:components:related:macbuild:Related.mcp", "Related$D.shlb", "RelatedComponent.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	
 	# Applications
 	BuildOneProject(":mozilla:xpfe:appshell:macbuild:AppShell.mcp",				"AppShell$D.shlb", "AppShell.toc", 1, $main::ALIAS_SYM_FILES, 0);
