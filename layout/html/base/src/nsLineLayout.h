@@ -353,14 +353,15 @@ protected:
 #define PFD_ISLETTERFRAME               0x00000010
 #define PFD_ISSTICKY                    0x00000020
 #define PFD_ISBULLET                    0x00000040
-#define PFD_ISPLACEHOLDERFRAME          0x00000080
-#define PFD_LASTFLAG                    PFD_ISPLACEHOLDERFRAME
+#define PFD_SKIPWHENTRIMMINGWHITESPACE  0x00000080
+#define PFD_LASTFLAG                    PFD_SKIPWHENTRIMMINGWHITESPACE
 
-    PRPackedBool mFlags;
+    PRUint8 mFlags;
 
     void SetFlag(PRUint32 aFlag, PRBool aValue)
     {
       NS_ASSERTION(aFlag<=PFD_LASTFLAG, "bad flag");
+      NS_ASSERTION(aFlag<=PR_UINT8_MAX, "bad flag");
       NS_ASSERTION(aValue==PR_FALSE || aValue==PR_TRUE, "bad value");
       if (aValue) { // set flag
         mFlags |= aFlag;
