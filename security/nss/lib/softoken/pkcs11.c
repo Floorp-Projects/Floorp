@@ -2076,11 +2076,15 @@ PK11Slot * pk11_NewSlotFromID(CK_SLOT_ID slotID)
 	}
     }
     if (nscSlotCount >= nscSlotListSize) {
+	CK_SLOT_ID* oldNscSlotList = nscSlotList;
+	CK_ULONG oldNscSlotListSize = nscSlotListSize;
 	nscSlotListSize += NSC_SLOT_LIST_BLOCK_SIZE;
-	nscSlotList = (CK_SLOT_ID *) PORT_Realloc(nscSlotList,
+	nscSlotList = (CK_SLOT_ID *) PORT_Realloc(oldNscSlotList,
 					nscSlotListSize*sizeof(CK_SLOT_ID));
 	if (nscSlotList == NULL) {
-	    return NULL;
+            nscSlotList = oldNscSlotList;
+            nscSlotListSize = oldNscSlotListSize;
+            return NULL;
 	}
     }
 
@@ -2291,6 +2295,37 @@ NSC_ModuleDBFunc(unsigned long function,char *parameters, void *args)
     return rvstr;
 }
 
+static void nscFreeAllSlots()
+{
+    /* free all the slots */
+    PK11Slot *slot = NULL;
+    CK_SLOT_ID slotID;
+    int i;
+
+    if (nscSlotList) {
+	CK_ULONG tmpSlotCount = nscSlotCount;
+	CK_SLOT_ID_PTR tmpSlotList = nscSlotList;
+	PLHashTable *tmpSlotHashTable = nscSlotHashTable;
+
+	/* now clear out the statics */
+	nscSlotList = NULL;
+	nscSlotCount = 0;
+	nscSlotHashTable = NULL;
+	nscSlotListSize = 0;
+
+	for (i=0; i < tmpSlotCount; i++) {
+	    slotID = tmpSlotList[i];
+	    slot = (PK11Slot *)
+			PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
+	    PORT_Assert(slot);
+	    if (!slot) continue;
+	    pk11_DestroySlotData(slot);
+	    PL_HashTableRemove(tmpSlotHashTable, (void *)slotID);
+	}
+	PORT_Free(tmpSlotList);
+	PL_HashTableDestroy(tmpSlotHashTable);
+    }
+}
 
 static PRBool nsc_init = PR_FALSE;
 /* NSC_Initialize initializes the Cryptoki library. */
@@ -2339,7 +2374,10 @@ CK_RV nsc_CommonInitialize(CK_VOID_PTR pReserved, PRBool isFIPS)
 	for (i=0; i < paramStrings.token_count; i++) {
 	    crv = 
 		PK11_SlotInit(paramStrings.configdir, &paramStrings.tokens[i]);
-	    if (crv != CKR_OK) break;
+	    if (crv != CKR_OK) {
+                nscFreeAllSlots();
+                break;
+            }
 	}
 loser:
 	secmod_freeParams(&paramStrings);
@@ -2358,38 +2396,11 @@ CK_RV NSC_Initialize(CK_VOID_PTR pReserved)
  * Cryptoki library.*/
 CK_RV NSC_Finalize (CK_VOID_PTR pReserved)
 {
-    PK11Slot *slot = NULL;
-    CK_SLOT_ID slotID;
-    int i;
-
     if (!nsc_init) {
 	return CKR_OK;
     }
 
-    /* free all the slots */
-    if (nscSlotList) {
-	CK_ULONG tmpSlotCount = nscSlotCount;
-	CK_SLOT_ID_PTR tmpSlotList = nscSlotList;
-	PLHashTable *tmpSlotHashTable = nscSlotHashTable;
-
-	/* now clear out the statics */
-	nscSlotList = NULL;
-	nscSlotCount = 0;
-	nscSlotHashTable = NULL;
-	nscSlotListSize = 0;
-
-	for (i=0; i < tmpSlotCount; i++) {
-	    slotID = tmpSlotList[i];
-	    slot = (PK11Slot *)
-			PL_HashTableLookup(tmpSlotHashTable, (void *)slotID);
-	    PORT_Assert(slot);
-	    if (!slot) continue;
-	    pk11_DestroySlotData(slot);
-	    PL_HashTableRemove(tmpSlotHashTable, (void *)slotID);
-	}
-	PORT_Free(tmpSlotList);
-	PL_HashTableDestroy(tmpSlotHashTable);
-    }
+    nscFreeAllSlots();
 
     nsslowcert_DestroyGlobalLocks();
 
