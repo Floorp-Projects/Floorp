@@ -156,12 +156,7 @@
                                          if (v == 'true') return true; return false;"/>
     </implementation>
     <handlers>
-      <handler event="click">
-      <![CDATA[
-        if (!this.disabled) this.checked = !this.checked; 
-      ]]>
-      </handler>
-      <handler event="keypress" key=" " action="if (!this.disabled) this.checked = !this.checked;"/>
+      <handler event="command" action="this.checked = !this.checked;"/>
     </handlers>
   </binding>
 
