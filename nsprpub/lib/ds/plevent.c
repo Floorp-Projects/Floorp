@@ -101,6 +101,7 @@ struct PLEventQueue {
 	int          notifyCount;
 #elif defined(_WIN32) || defined(WIN16)
     HWND         eventReceiverWindow;
+    PRBool       removeMsg;
 #elif defined(XP_OS2)
     HWND         eventReceiverWindow;
 #elif defined(XP_BEOS)
@@ -163,6 +164,9 @@ static PLEventQueue *
     self->handlerThread = handlerThread;
     self->processingEvents = PR_FALSE;
     self->type = qtype;
+#if defined(_WIN32) || defined(WIN16)
+    self->removeMsg = PR_TRUE;
+#endif
     PR_INIT_CLIST(&self->queue);
     if ( qtype == EventQueueIsNative )
     {
@@ -717,6 +721,8 @@ _pl_CleanupNativeNotifier(PLEventQueue* self)
 #elif defined(XP_UNIX)
     close(self->eventPipe[0]);
     close(self->eventPipe[1]);
+#elif defined(_WIN32) || defined(WIN16)
+    DestroyWindow(self->eventReceiverWindow);
 #endif
 }
 
@@ -809,7 +815,22 @@ _pl_NativeNotify(PLEventQueue* self)
 static PRStatus
 _pl_AcknowledgeNativeNotify(PLEventQueue* self)
 {
-#if defined(VMS)
+#if defined(_WIN32) || defined(WIN16)
+    MSG aMsg;
+    /*
+     * only remove msg when we've been called directly by
+     * PL_ProcessPendingEvents, not when we've been called by
+     * the window proc because the window proc will remove the
+     * msg for us.
+     */
+    if (self->removeMsg) {
+        PR_LOG(event_lm, PR_LOG_DEBUG,
+                ("_pl_AcknowledgeNativeNotify: self=%p", self));
+        PeekMessage(&aMsg, self->eventReceiverWindow,
+                _pr_PostEventMsgId, _pr_PostEventMsgId, PM_REMOVE);
+    }
+    return PR_SUCCESS;
+#elif defined(VMS)
     PR_LOG(event_lm, PR_LOG_DEBUG,
             ("_pl_AcknowledgeNativeNotify: self=%p notifyCount=%d efn=%d",
              self, self->notifyCount, self->efn));
@@ -948,7 +969,13 @@ _md_EventReceiverProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam)
     {
 		PREventQueue *queue = (PREventQueue *)lParam;
     
-    	PR_ProcessPendingEvents(queue);
+#if defined(_WIN32) || defined(WIN16)
+        queue->removeMsg = PR_FALSE;
+#endif
+    	PL_ProcessPendingEvents(queue);
+#if defined(_WIN32) || defined(WIN16)
+        queue->removeMsg = PR_TRUE;
+#endif
 #ifdef XP_OS2
             return MRFROMLONG(TRUE);
 #else
