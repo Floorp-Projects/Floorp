@@ -85,6 +85,7 @@ var view = ({
     getParentIndex: function(rowIndex) { return -1 },
     hasNextSibling: function(rowIndex, afterIndex) { return false },
     getLevel: function(index) { return 1},
+    getImageSrc: function(row, colID) { return ""},
     toggleOpenState : function(index) {},
     cycleHeader: function(colID, elt) {},
     selectionChanged : function() {},
