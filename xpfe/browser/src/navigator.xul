@@ -637,7 +637,6 @@
 	      <menuitem name="German To Spanish" onclick="BrowserReload();"/>
     </menu>
       <menu name="Default Character Set">
-              <menu name="Latin">
 	         <menuitem name="ISO Latin 1 (ISO-8859-1)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-1');"/>
 	         <menuitem name="ISO Latin 2 (ISO-8859-2)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-2');"/>
 	         <menuitem name="ISO Latin 3 (ISO-8859-3)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-3');"/>
@@ -655,40 +654,38 @@
 	         <menuitem name="Macintosh Croatian" onclick="BrowserSetDefaultCharacterSet('x-mac-croatian');"/>
 	         <menuitem name="Macintosh Romanian" onclick="BrowserSetDefaultCharacterSet('x-mac-romanian');"/>
 	         <menuitem name="Macintosh Icelandic" onclick="BrowserSetDefaultCharacterSet('x-mac-icelandic');"/>
-              </menu>
-              <menu name="Japanese">
+                 <separator />
 	         <menuitem name="Japanese JIS (ISO-2022-JP)" onclick="BrowserSetDefaultCharacterSet('ISO-2022-JP');"/>
 	         <menuitem name="Japanese (Shift_JIS)" onclick="BrowserSetDefaultCharacterSet('Shift_JIS');"/>
 	         <menuitem name="Japanese (EUC-JP)" onclick="BrowserSetDefaultCharacterSet('EUC-JP');"/>
-              </menu>
-              <menu name="Chinese">
+                 <separator />
 	         <menuitem name="Traditional Chinese (Big5)" onclick="BrowserSetDefaultCharacterSet('Big5');"/>
 	         <menuitem name="Traditional Chinese (EUC-TW)" onclick="BrowserSetDefaultCharacterSet('EUC-TW');"/>
 	         <menuitem name="Simplified Chinese (GB2312)" onclick="BrowserSetDefaultCharacterSet('GB2312');"/>
-              </menu>
-	      <menuitem name="Korean (EUC-KR)" onclick="BrowserSetDefaultCharacterSet('EUC-KR');"/>
-	      <menuitem name="UTF-8" onclick="BrowserSetDefaultCharacterSet('UTF-8');"/>
-              <menu name="Cyrillic">
+                 <separator />
+ 	         <menuitem name="Korean (EUC-KR)" onclick="BrowserSetDefaultCharacterSet('EUC-KR');"/>
+                 <separator />
+	         <menuitem name="UTF-8" onclick="BrowserSetDefaultCharacterSet('UTF-8');"/>
+                 <separator />
 	         <menuitem name="ISO Cyrillic (ISO-8859-5)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-5');"/>
 	         <menuitem name="Windows Cyrillic (windows-1251)" onclick="BrowserSetDefaultCharacterSet('windows-1251');"/>
 	         <menuitem name="Macintosh Cyrillic" onclick="BrowserSetDefaultCharacterSet('x-mac-cyrillic');"/>
 	         <menuitem name="Macintosh Ukrainian" onclick="BrowserSetDefaultCharacterSet('x-mac-ukrainian');"/>
 	         <menuitem name="Russian (KOI8-R)" onclick="BrowserSetDefaultCharacterSet('KOI8-R');"/>
 	         <menuitem name="Ukrainian (KOI8-U)" onclick="BrowserSetDefaultCharacterSet('KOI8-U');"/>
-              </menu>
-              <menu name="Greek">
+                 <separator />
 	         <menuitem name="ISO Greek (ISO-8859-7)" onclick="BrowserSetDefaultCharacterSet('ISO-8859-7');"/>
 	         <menuitem name="Windows Greek (windows-1253)" onclick="BrowserSetDefaultCharacterSet('windows-1253');"/>
 	         <menuitem name="Macintosh Greek" onclick="BrowserSetDefaultCharacterSet('x-mac-greek');"/>
-              </menu>
-              <menu name="Vietnamese">
+                 <separator />
 	         <menuitem name="Windows Vietnamese (windows-1258)" onclick="BrowserSetDefaultCharacterSet('windows-1258');"/>
 	         <menuitem name="Vietnamese (TCVN5712)" onclick="BrowserSetDefaultCharacterSet('x-viet-tcvn5712');"/>
 	         <menuitem name="Vietnamese (VISCII)" onclick="BrowserSetDefaultCharacterSet('VISCII');"/>
 	         <menuitem name="Vietnamese (VPS)" onclick="BrowserSetDefaultCharacterSet('x-viet-vps');"/>
-              </menu>
-	      <menuitem name="Thai (TIS-620)" onclick="BrowserSetDefaultCharacterSet('TIS-620');"/>
-	      <menuitem name="Armenian (ARMSCII-8)" onclick="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
+                 <separator />
+	         <menuitem name="Thai (TIS-620)" onclick="BrowserSetDefaultCharacterSet('TIS-620');"/>
+                 <separator />
+	         <menuitem name="Armenian (ARMSCII-8)" onclick="BrowserSetDefaultCharacterSet('ARMSCII-8');"/>
 	   </menu>
     </menu>
     <menu name="Search">
