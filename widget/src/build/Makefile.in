@@ -30,7 +30,7 @@ else
 LIBRARY_NAME = widgetmotif
 endif
 
-MODULE=raptor 
+MODULE=raptor
 
 REQUIRES=util img xpcom raptor netlib
 
@@ -60,10 +60,8 @@ EXTRA_DSO_LDOPTS+=\
 	-lxpcom \
 	-lraptorbase \
 	-lreg \
-	$(LIBNSPR)\
-	$(DIST)/lib/libplc21.a
+	$(NSPR_LIBS)
 
 EXTRA_DSO_LDOPTS += $(FE_X_LIBS) $(XLDFLAGS) $(XLIBS)
 
 include $(topsrcdir)/config/rules.mk
-
