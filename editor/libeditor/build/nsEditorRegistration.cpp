@@ -46,9 +46,6 @@
 
 #include "nsEditorController.h" //CID
 
-#include "nsTextServicesDocument.h"
-#include "nsTextServicesCID.h"
-
 ////////////////////////////////////////////////////////////////////////
 // Define the contructor function for the objects
 //
@@ -58,7 +55,6 @@
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorService)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsPlaintextEditor)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsEditorController)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsTextServicesDocument)
 
 #ifdef ENABLE_EDITOR_API_LOG
 #include "nsHTMLEditorLog.h"
@@ -95,9 +91,6 @@ static const nsModuleComponentInfo components[] = {
     { "Editor Controller", NS_EDITORCONTROLLER_CID,
       "@mozilla.org/editor/editorcontroller;1",
       nsEditorControllerConstructor, },
-    { NULL, NS_TEXTSERVICESDOCUMENT_CID,
-      "@mozilla.org/textservices/textservicesdocument;1",
-      nsTextServicesDocumentConstructor },
 };
 
 ////////////////////////////////////////////////////////////////////////
