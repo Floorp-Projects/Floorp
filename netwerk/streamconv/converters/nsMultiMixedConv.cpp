@@ -164,7 +164,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     if (boundary) *boundary = '\0';
                 }
 
-                if (*cursor == '\r') {
+                if ( (*cursor == '\r') || (*cursor == '\n') ) {
                     if (cursor[1] == '\n')
                         cursor++; // if it's a CRLF, move two places.
                     cursor++;
@@ -178,20 +178,18 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
             break; // XXX do more here.
         }
         if (mNewPart) {
+            mLineFeedIncrement = 1;
             // check for a newline char, then figure out if
             // we're dealing w/ CRLFs as line delimiters.
             // unfortunately we can see both :(
-            char *newLine = PL_strstr(cursor, "\r\n");
-            if (!newLine) {
-                // try straight newline char
-                newLine = PL_strchr(cursor, '\n');
-            } else {
-                // we're dealing w/ CRLFs char combos
-                mLineFeedIncrement = 2;
+            char *newLine = PL_strchr(cursor, '\n');
+            if (newLine) {
+                if ( (newLine > cursor) && (newLine[-1] == '\r') ) {
+                     // CRLF
+                     mLineFeedIncrement = 2;
+                     newLine--;
+                }
             }
-            //if ( (newLine > cursor) && (newLine[-1] == '\r') ) {
-            //    mLineFeedIncrement = 2;
-            //}
             char *headerStart = cursor;
             while (newLine) {
                 *newLine = '\0';
@@ -241,6 +239,9 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     // this is no longer a mNewPart
                     mNewPart = PR_FALSE;
 
+                    // move the newLine beyond the double linefeed marker
+                    newLine += mLineFeedIncrement;
+
                     // First build up a dummy uri.
                     nsCOMPtr<nsIURI> partURI;
                     rv = BuildURI(channel, getter_AddRefs(partURI));
@@ -274,9 +275,14 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     break;
                 }
                 headerStart = newLine + mLineFeedIncrement;
-                newLine = PL_strstr(headerStart, "\r\n");
-                if (!newLine)
-                    newLine = PL_strchr(headerStart, '\r');
+                newLine = PL_strchr(headerStart, '\n');
+                if (newLine) {
+                    // we're catching LF, LFLF, and CRLF
+                    if ( (newLine > cursor) && (newLine[-1] == '\r') ) {
+                         mLineFeedIncrement = 2;
+                         newLine--;
+                    }
+                }
             } // end while (newLine)
 
             if (mNewPart) {
@@ -294,7 +300,7 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
                     // all we got was a newline in this read. kick out
                     break;
                 } else {
-                    cursor = newLine + mLineFeedIncrement + 1;
+                    cursor = newLine + mLineFeedIncrement;
                 }
             }
         } // end mNewPart
@@ -329,8 +335,8 @@ nsMultiMixedConv::OnDataAvailable(nsIChannel *channel, nsISupports *context,
             } else {
                 cursor = boundary + mBoundaryStrLen;
             }
-            if (*cursor == '\r') {
-                if (*cursor == '\n')
+            if ( (*cursor == '\r') || (*cursor == '\n') ){
+                if (cursor[1] == '\n')
                     cursor++; // if it's a CRLF move two places.
                 cursor++;
             }
