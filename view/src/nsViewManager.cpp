@@ -1875,7 +1875,10 @@ NS_IMETHODIMP nsViewManager::DispatchEvent(nsGUIEvent *aEvent, nsEventStatus *aS
 
     default:
       {
-        if (NS_IS_MOUSE_EVENT(aEvent) || NS_IS_KEY_EVENT(aEvent) ||
+        if ((NS_IS_MOUSE_EVENT(aEvent) &&
+             NS_STATIC_CAST(nsMouseEvent*,aEvent)->reason ==
+               nsMouseEvent::eReal) ||
+            NS_IS_KEY_EVENT(aEvent) ||
             NS_IS_IME_EVENT(aEvent)) {
           gLastUserEventTime = PR_IntervalToMicroseconds(PR_IntervalNow());
         }
