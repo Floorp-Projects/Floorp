@@ -55,6 +55,7 @@ public:
   void DrawVerticalSpring( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord size, nscoord springSize);
   void DrawKnob( nsIPresContext& aPresContext, nsIRenderingContext& aRenderingContext, nscoord x, nscoord y, nscoord springSize);
   void AddInDebugInset( nsIPresContext& aPresContext, PRBool aIsHorizontal, nsMargin& inset);
+  void CollapseChild(nsIFrame* frame);
 
     // XXX for the moment we can only handle 100 children.
     // Should use a dynamic array.
@@ -190,6 +191,20 @@ nsBoxFrame::GetRedefinedMinPrefMax(nsIFrame* aFrame, nsCalculatedBoxInfo& aSize)
         value.Trim("%");
         // convert to a percent.
         aSize.flex = value.ToFloat(&error)/float(100.0);
+    }
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, value))
+    {
+        value.Trim("%");
+        // convert to a percent.
+        aSize.prefSize.width = value.ToInteger(&error);
+    }
+
+    if (NS_CONTENT_ATTR_HAS_VALUE == content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::height, value))
+    {
+        value.Trim("%");
+        // convert to a percent.
+        aSize.prefSize.height = value.ToInteger(&error);
     }
 }
 
@@ -705,29 +720,38 @@ nsBoxFrame::ChildResized(nsHTMLReflowMetrics& aDesiredSize, nsRect& aRect, nsCal
 }
 
 
-/*
 void 
-nsBoxFrameImpl::CollapseChildren(nsIFrame* frame)
+nsBoxFrameImpl::CollapseChild(nsIFrame* frame)
 {
-  nscoord count = 0;
-  while (nsnull != frame) 
-  {
     nsRect rect(0,0,0,0);
-    childFrame->SetRect(nsRect(0,0,0,0));
-    // make the view really small as well
-    nsIView* view = nsnull;
-    childFrame->GetView(&view);
+    frame->GetRect(rect);
+    if (rect.width > 0 || rect.height > 0) {
+      // shrink the frame
+      frame->SizeTo(0,0);
 
-    if (view) {
-      view->SetDimensions(0,0,PR_FALSE);
+      // shrink the view
+      nsIView* view = nsnull;
+      frame->GetView(&view);
+
+      // if we find a view stop right here. All views under it
+      // will be clipped.
+      if (view) {
+        view->SetDimensions(0,0,PR_FALSE);
+        return;
+      }
+    
+      // collapse the child
+      nsIFrame* child = nsnull;
+      frame->FirstChild(nsnull, &child);
+
+      while (nsnull != child) 
+      {
+         CollapseChild(child);
+         nsresult rv = child->GetNextSibling(&child);
+         NS_ASSERTION(rv == NS_OK,"failed to get next child");
+      }
     }
- 
-    CollapseChildren(childFrame);
-    rv = childFrame->GetNextSibling(&childFrame);
-    NS_ASSERTION(rv == NS_OK,"failed to get next child");
-  }
 }
-*/
 
 
 /**
@@ -749,17 +773,7 @@ nsBoxFrame::PlaceChildren(nsRect& boxRect)
 
     // make collapsed children not show up
     if (mSprings[count].collapsed) {
-      childFrame->SetRect(nsRect(0,0,0,0));
-
-      // make the view really small as well
-      nsIView* view = nsnull;
-      childFrame->GetView(&view);
-
-      if (view) {
-        nsCOMPtr<nsIViewManager> vm;
-        view->GetViewManager(*getter_AddRefs(vm));
-        vm->ResizeView(view, 0,0);
-      }
+      mImpl->CollapseChild(childFrame);
     } else {
       const nsStyleSpacing* spacing;
       rv = childFrame->GetStyleData(eStyleStruct_Spacing,
@@ -1227,6 +1241,56 @@ nsBoxFrame::LayoutChildrenInRect(nsRect& size)
 
             s += calculated;
         }
+}
+
+/**
+ * Ok if we want to resize a child we will know the actual size in pixels we want it to be.
+ * This is not the preferred size. But they only way we can change a child is my manipulating its
+ * preferred size. So give the actual pixel size this return method will return figure out the preferred
+ * size and set it.
+ */
+void
+nsBoxFrame::ResizeChildTo(nscoord aChildIndex, nscoord aNewSize)
+{
+  // get all the variables we need
+  nscoord min         = GET_WIDTH(mSprings[aChildIndex].minSize);
+  nscoord max         = GET_WIDTH(mSprings[aChildIndex].maxSize);
+  nscoord c           = GET_WIDTH(mSprings[aChildIndex].calculatedSize);
+  nscoord pref        = GET_WIDTH(mSprings[aChildIndex].prefSize);
+  float flex          = mSprings[aChildIndex].flex;
+  float stretchFactor = float(c-pref)/flex;
+
+  // check bounds
+  if (aNewSize < min)
+     aNewSize = min;
+  else if (aNewSize > max)
+     aNewSize = max;
+
+  // determine the new pref size
+  pref = aNewSize - NSToIntFloor(flex/stretchFactor);
+
+  // find the child at the index
+  nsIFrame* childFrame = mFrames.FirstChild(); 
+  nscoord count = 0;
+  while (nsnull != childFrame) 
+  {
+    if (count == aChildIndex)
+      break;
+
+    nsresult rv;
+    rv = childFrame->GetNextSibling(&childFrame);
+    NS_ASSERTION(rv == NS_OK,"failed to get next child");
+    count++;
+  }
+
+  nsCOMPtr<nsIContent> content;
+  childFrame->GetContent(getter_AddRefs(content));
+
+
+  // set its preferred size.
+  char ch[50];
+  sprintf(ch,"%d",pref);
+  content->SetAttribute(kNameSpaceID_None, nsHTMLAtoms::width, ch, PR_TRUE);
 }
 
 // Marks the frame as dirty and generates an incremental reflow
