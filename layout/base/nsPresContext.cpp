@@ -377,19 +377,7 @@ nsPresContext::GetImageGroup(nsIImageGroup*& aGroupResult)
     }
 
     // Initialize the image group
-    nsIWidget* window;
-    nsIFrame* rootFrame;
-    rootFrame = mShell->GetRootFrame();
-    rootFrame->GetWindow(window);
-    nsIRenderingContext* drawCtx = window->GetRenderingContext();
-    float app2dev;
-    mDeviceContext->GetAppUnitsToDevUnits(app2dev);
-    drawCtx->Scale(app2dev, app2dev);
-    NS_RELEASE(drawCtx);
-    nsIDeviceContext* deviceCtx = window->GetDeviceContext();
-    rv = mImageGroup->Init(deviceCtx);
-    NS_RELEASE(deviceCtx);
-    NS_RELEASE(window);
+    rv = mImageGroup->Init(mDeviceContext);
     if (NS_OK != rv) {
       return rv;
     }
