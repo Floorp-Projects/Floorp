@@ -18,6 +18,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Dawn Endico <endico@mozilla.org>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 
 
 # Keep a record of all cvs updates made from a given directory.

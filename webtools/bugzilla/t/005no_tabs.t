@@ -17,7 +17,7 @@
 # Copyright (C) 2001 Jacob Steenhagen. All
 # Rights Reserved.
 #
-# Contributor(s): Jacob Steenhagen <jake@acutex.net>
+# Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
 #                 David D. Kilzer <ddkilzer@kilzer.net>
 #
 

@@ -18,7 +18,7 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): Jacob Steenhagen <jake@acutex.net>
+# Contributor(s): Jacob Steenhagen <jake@bugzilla.org>
 #
 
 # Suppress silly "used only once" warnings

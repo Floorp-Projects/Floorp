@@ -21,7 +21,7 @@
 #                 Dawn Endico <endico@mozilla.org>
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Joe Robins <jmrobins@tgix.com>
-#                 Jake <jake@acutex.net>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 #                 J. Paul Reed <preed@sigkill.com>
 #
 

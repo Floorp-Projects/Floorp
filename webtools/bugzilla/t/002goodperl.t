@@ -18,7 +18,7 @@
 # Rights Reserved.
 # 
 # Contributor(s): Zach Lipton <zach@zachlipton.com>
-#                 Jacob Steenhagen <jake@acutex.net>
+#                 Jacob Steenhagen <jake@bugzilla.org>
 #                 David D. Kilzer <ddkilzer@theracingworld.com>
 # 
 # Alternatively, the contents of this file may be used under the
