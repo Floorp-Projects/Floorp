@@ -179,6 +179,10 @@ protected:
                         nsWidgetInitData *aInitData,
                         nsNativeWidget aNativeParent = nsnull);
 
+#if defined(DEBUG)
+  static nsAutoString GuiEventToString(nsGUIEvent * aGuiEvent);
+  static nsAutoString PhotonEventToString(PhEvent_t * aPhEvent);
+#endif
 
   PRBool DispatchWindowEvent(nsGUIEvent* event);
 
@@ -256,14 +260,19 @@ protected:
   PRUint32 mPreferredWidth, mPreferredHeight;
   PRBool       mListenForResizes;
    
-  // this is the rollup listener variables
+  /* this is the rollup listener variables */
+  /* These variables help us close the Menu when the clicks outside the application */
   static nsIRollupListener *gRollupListener;
   static nsIWidget         *gRollupWidget;
   static PRBool             gRollupConsumeRollupEvent;
-  
+  static PtWidget_t        *gRollupScreenRegion; 
+
   static nsILookAndFeel *sLookAndFeel;
   static PRUint32 sWidgetCount;
 
+  static PhRid_t          gLastUnrealizedRegion;
+  static PhRid_t          gLastUnrealizedRegionsParent;
+    
   //
   // Keep track of the last widget being "dragged"
   //

@@ -115,7 +115,8 @@ protected:
   // grab in progress
   PRBool GrabInProgress(void);
   
-  static int            MenuRegionCallback(PtWidget_t *widget, ApInfo_t *apinfo, PtCallbackInfo_t *cbinfo);  
+  static int            MenuRegionCallback(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo);  
+  static int            PopupMenuRegionCallback(PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo);  
 
   NS_IMETHOD            CreateNative(PtWidget_t *parentWidget);
 
@@ -145,7 +146,6 @@ protected:
   PRBool                mClipChildren;
   PRBool                mClipSiblings;
   static PRBool         mResizeQueueInited;
-  static int            mModalCount;
   PRBool                mIsResizing;
   nsFont                *mFont;
   nsIMenuBar            *mMenuBar;
