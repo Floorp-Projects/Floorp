@@ -499,8 +499,8 @@ doc_setProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 	if (str)
 	    str = strdup(str);
 
-        NET_SetCookieString(context, he ? he->address : "", str);
         LO_UnlockLayout();
+        NET_SetCookieString(context, he ? he->address : "", str);
         break;
 
       case DOC_DOMAIN:
