@@ -31,4 +31,4 @@ DIRS		= unix
 include $(topsrcdir)/config/rules.mk
 
 install:: $(TARGETS)
-	$(INSTALL) $(srcdir)/htmlbindings.xml $(srcdir)/ $(DIST)/bin/res/builtin
+	$(INSTALL) $(srcdir)/htmlBindings.xml $(DIST)/bin/res/builtin
