@@ -357,15 +357,8 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
 {
   nsresult rv;
 
-  if ( (!aURL) || (!fOut) )
-  {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  if (!fOut->is_open())
-  {
-    return NS_ERROR_FAILURE;
-  }
+  rv = Initialize(fOut, cb, tagData);
+  NS_ENSURE_SUCCESS(rv, rv);
 
   // we're about to fire a new url request so make sure the on stop request flag is cleared...
   mOnStopRequestProcessed = PR_FALSE;
@@ -381,10 +374,6 @@ nsURLFetcher::FireURLRequest(nsIURI *aURL, nsOutputFileStream *fOut,
   NS_ENSURE_SUCCESS(NS_OpenURI(getter_AddRefs(channel), aURL, nsnull, loadGroup, this), NS_ERROR_FAILURE);
  
   rv = pURILoader->OpenURI(channel, nsIURILoader::viewNormal, cntListener);
-
-  mOutStream = fOut;
-  mCallback = cb;
-  mTagData = tagData;
 
   return NS_OK;
 }
