@@ -38,9 +38,12 @@
 #include "EmbedWindow.h"
 
 #include "nsIWebBrowser.h"
+#include "nsIWebBrowserFind.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 #include "nsIHistoryEntry.h"
+#include "nsIInterfaceRequestor.h"
+#include "nsIInterfaceRequestorUtils.h"
 #include "nsIURI.h"
 
 #include "nsCRT.h"
@@ -106,7 +109,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     ::util_PostSynchronousEvent(nativeBrowserControl, event);
 }
 
-
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeClearAllSelections
 (JNIEnv *env, jobject obj, jint nativeBCPtr)
 {
@@ -125,6 +127,8 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
     ::util_PostSynchronousEvent(nativeBrowserControl, event);
 }
 
+#endif
+
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeFindInPage
@@ -133,28 +137,57 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPageImpl_nativeFindInPage
 (JNIEnv *env, jobject obj, jint nativeBCPtr, jstring searchString, jboolean forward, jboolean matchCase)
 {
-
-  NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-
-
-  jstring searchStringGlobalRef = (jstring) ::util_NewGlobalRef(env, searchString);
-  if (!searchStringGlobalRef) {
-      nativeBrowserControl->initFailCode = kFindComponentError;
-      ::util_ThrowExceptionToJava(env, "Exception: Can't create global ref for search string");
-      return;
-  }
-
-  if (nativeBrowserControl->initComplete) {
-     wsFindEvent * actionEvent = new wsFindEvent(nativeBrowserControl, searchStringGlobalRef,
-                                                 forward, matchCase);
-      PLEvent           * event       = (PLEvent*) *actionEvent;
-      ::util_PostEvent(nativeBrowserControl, event);
+    
+    NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
+    
+    
+    jstring searchStringGlobalRef = (jstring) ::util_NewGlobalRef(env, searchString);
+    if (!searchStringGlobalRef) {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't create global ref for search string");
+        return;
+    }
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    
+    // get the web browser
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    nsCOMPtr<nsIWebBrowserFind> findComponent;
+    nsCOMPtr<nsIInterfaceRequestor>
+        findRequestor(do_GetInterface(webBrowser));
+    
+    rv = findRequestor->GetInterface(NS_GET_IID(nsIWebBrowserFind),
+                                     getter_AddRefs(findComponent));
+    
+    if (NS_FAILED(rv) || nsnull == findComponent)  {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get find component");
+        return;
+    }
+  
+    PRUnichar * srchString = nsnull;
+    
+    srchString = (PRUnichar *) ::util_GetStringChars(env,
+                                                     searchStringGlobalRef);
+    // Check if String is NULL
+    if (nsnull == srchString) {
+        ::util_DeleteGlobalRef(env, searchStringGlobalRef);
+        
+        return;
     }
 
+    rv = findComponent->SetSearchString(srchString);
+    if (NS_FAILED(rv))  {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't set search string.");
+        return;
+    }
+    findComponent->SetFindBackwards((PRBool) forward == JNI_FALSE);
+    findComponent->SetMatchCase((PRBool) matchCase == JNI_TRUE);
+    PRBool found = PR_TRUE;
+    rv = findComponent->FindNext(&found);
 
+    ::util_ReleaseStringChars(env, searchStringGlobalRef, srchString);
+    ::util_DeleteGlobalRef(env, searchStringGlobalRef);
+    
 }
-
-
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
@@ -166,19 +199,27 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
 {
 
   NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
-  //First get the FindComponent object
-
-  PRBool found = PR_TRUE;
-
-  if (nativeBrowserControl->initComplete) {
-      wsFindEvent * actionEvent = new wsFindEvent(nativeBrowserControl);
-      PLEvent           * event       = (PLEvent*) *actionEvent;
-      ::util_PostEvent(nativeBrowserControl, event);
-  }
+    nsresult rv = NS_ERROR_NULL_POINTER;
+    
+    // get the web browser
+    nsCOMPtr<nsIWebBrowser> webBrowser;
+    nativeBrowserControl->mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+    nsCOMPtr<nsIWebBrowserFind> findComponent;
+    nsCOMPtr<nsIInterfaceRequestor>
+        findRequestor(do_GetInterface(webBrowser));
+    
+    rv = findRequestor->GetInterface(NS_GET_IID(nsIWebBrowserFind),
+                                     getter_AddRefs(findComponent));
+    
+    if (NS_FAILED(rv) || nsnull == findComponent)  {
+        ::util_ThrowExceptionToJava(env, "Exception: Can't get find component");
+        return;
+    }
+  
+    PRBool found = PR_TRUE;
+    rv = findComponent->FindNext(&found);
 
 }
-
-#endif
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
@@ -299,7 +340,6 @@ JNIEXPORT jobject JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_Curren
     return result;
 }
 
-#if 0 // convenience
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
  * Method:    nativeGetSource
@@ -356,9 +396,6 @@ JNIEXPORT void JNICALL Java_org_mozilla_webclient_impl_wrapper_1native_CurrentPa
   NativeBrowserControl* nativeBrowserControl = (NativeBrowserControl *) nativeBCPtr;
 
 }
-
-
-#endif // if 0
 
 /*
  * Class:     org_mozilla_webclient_impl_wrapper_0005fnative_CurrentPageImpl
