@@ -148,7 +148,7 @@ sub packit {
     if (is_windows()) {
       TinderUtils::run_shell_command "cp $package_location/../*.zip $stagedir/";
     } elsif (is_mac()) {
-      die "WRITE ME!";
+      TinderUtils::run_shell_command "cp $package_location/../dist/*.dmg.gz $stagedir/";
     } else {
       TinderUtils::run_shell_command "cp $package_location/../dist/*.tar.gz $stagedir/";
     }
