@@ -23,7 +23,7 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/config.mk
 
-CFLAGS		+= -DEXPORT_XPTC_API
+DEFINES		+= -DEXPORT_XPTC_API
 
 LIBRARY_NAME	= xptcmd
 MODULE		= xpcom
