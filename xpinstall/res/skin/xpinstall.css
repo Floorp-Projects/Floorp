@@ -65,6 +65,7 @@ div#interiorTitle {
 tree#modulesTree {
   background-color          : transparent ! important;
   height                    : 16ex;
+  width                     : 32em;
 }
 
 treecell#moduleName {
