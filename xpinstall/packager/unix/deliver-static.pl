@@ -20,6 +20,10 @@
 # Contributor(s): 
 #     Samir Gehani <sgehani@netscape.com>
 #
+#
+# Borrowed from deliver.pl
+#
+
 #==============================================================================
 # usage: perl deliver.pl version URLPath stubName blobName buildWizard
 # e.g.   perl deliver.pl 5.0.0.1 ftp://foo/ mozilla-installer mozilla-installer
@@ -118,8 +122,8 @@ spew("Completed delivering wizard");
 #-------------------------------------------------------------------------
 #// call pkgcp.pl
 chdir("$TREETOP/xpinstall/packager");
-system("perl pkgcp.pl -o unix -s $TREETOP/dist -d $STAGE -f $TREETOP/xpinstall/packager/packages-unix -v");
-spew("Completed copying build files");
+system("perl pkgcp.pl -o unix -s $TREETOP/dist -d $STAGE -f $TREETOP/xpinstall/packager/packages-static-unix -v");
+spew("Completed copying build files for STATIC BUILD");
 
 #// call xptlink.pl to make big .xpt files/component
 system("perl xptlink.pl -o unix -s $TREETOP/dist -d $STAGE -v");
