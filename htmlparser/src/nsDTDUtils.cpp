@@ -1105,24 +1105,25 @@ nsCParserNode* nsDTDContext::PopStyle(eHTMLTags aTag){
  *
  * @update  gess 01/26/00
  */
-nsCParserNode* nsDTDContext::RemoveStyle(eHTMLTags aTag){
-
-  PRInt32 theLevel=0;
-  nsCParserNode* result=0;
-
-  for(theLevel=mStack.mCount-1;theLevel>0;theLevel--) {
-    nsEntryStack *theStack=mStack.mEntries[theLevel].mStyles;
-    if(theStack) {
-      if(aTag==theStack->Last()) {
-        result=theStack->Pop();
-        mResidualStyleCount--;
-      } else {
-        // NS_ERROR("bad residual style entry");
+void nsDTDContext::RemoveStyle(eHTMLTags aTag){
+  
+  PRInt32 theLevel=mStack.mCount;
+  
+  while (theLevel) {
+    nsEntryStack *theStack=GetStylesAt(--theLevel);
+    if (theStack) {
+      PRInt32 index=theStack->mCount;
+      while (index){
+        nsTagEntry *theEntry=theStack->EntryAt(--index);
+        if (aTag==(eHTMLTags)theEntry->mNode->GetNodeType()) {
+          mResidualStyleCount--;
+          nsCParserNode* result=theStack->Remove(index,aTag);
+          IF_FREE(result, mNodeAllocator);  
+          return;
+        } 
       }
     } 
   }
-
-  return result;
 }
 
 /**

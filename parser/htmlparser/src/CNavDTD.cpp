@@ -431,6 +431,8 @@ nsresult CNavDTD::WillBuildModel(  const CParserContext& aParserContext,nsIConte
   mParserCommand=aParserContext.mParserCommand;
   mMimeType=aParserContext.mMimeType;
     
+  mBodyContext->SetNodeAllocator(&mNodeAllocator);
+
   if((!aParserContext.mPrevContext) && (aSink)) {
 
     STOP_TIMER();
@@ -1978,7 +1980,9 @@ nsresult CNavDTD::HandleEndToken(CToken* aToken) {
             static eHTMLTags gBarriers[]={eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_table};
 
             if(!FindTagInSet(theParentTag,gBarriers,sizeof(gBarriers)/sizeof(theParentTag))) {
-              PopStyle(theChildTag);
+              if(nsHTMLElement::IsResidualStyleTag(theChildTag)) {
+                mBodyContext->RemoveStyle(theChildTag); // fix bug 77746
+              }
             }
 
             // If the bit kHandleStrayTag is set then we automatically open up a matching

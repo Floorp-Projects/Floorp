@@ -303,7 +303,7 @@ public:
   void            PushStyles(nsEntryStack *theStyles);
   nsCParserNode*  PopStyle(void);
   nsCParserNode*  PopStyle(eHTMLTags aTag);
-  nsCParserNode*  RemoveStyle(eHTMLTags aTag);
+  void            RemoveStyle(eHTMLTags aTag);
 
   static  void    ReleaseGlobalObjects(void);
 

@@ -174,7 +174,8 @@ private:
 
   // Text Properties
   nsresult GetTextAlign(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
-  
+  nsresult GetTextDecoration(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);  
+
   nsresult GetBehavior(nsIFrame *aFrame, nsIDOMCSSPrimitiveValue*& aValue);
 
   nsROCSSPrimitiveValue* GetROCSSPrimitiveValue();
@@ -440,8 +441,15 @@ nsComputedDOMStyle::GetPropertyCSSValue(const nsAReadableString& aPropertyName,
     case eCSSProperty_outline_color:
       rv = GetOutlineColor(frame, *getter_AddRefs(val)); break;
 
+	  // Text properties
     case eCSSProperty_text_align:
       rv = GetTextAlign(frame, *getter_AddRefs(val)); break;
+	case eCSSProperty_text_decoration:
+      rv = GetTextDecoration(frame, *getter_AddRefs(val)); break;
+
+	  // List properties
+	case eCSSProperty_list_style_image:
+      rv = GetListStyleImage(frame, *getter_AddRefs(val)); break; 
 
       // Z-Index property
     case eCSSProperty_z_index:
@@ -1279,6 +1287,30 @@ nsComputedDOMStyle::GetTextAlign(nsIFrame *aFrame,
   
   return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
                              (void **)&aValue);
+}
+
+nsresult
+nsComputedDOMStyle::GetTextDecoration(nsIFrame *aFrame,
+                                      nsIDOMCSSPrimitiveValue*& aValue)
+{
+  nsROCSSPrimitiveValue* val=GetROCSSPrimitiveValue();
+  NS_ENSURE_TRUE(val, NS_ERROR_OUT_OF_MEMORY);
+
+  const nsStyleText* text=nsnull;
+  GetStyleData(eStyleStruct_Text,(const nsStyleStruct*&)text,aFrame);
+  
+  if(text) {
+    const nsCString& decoration=
+      nsCSSProps::SearchKeywordTable(text->mTextDecoration,
+	                                 nsCSSProps::kTextDecorationKTable);
+    val->SetString(decoration);
+  }
+  else {
+    val->SetString("");
+  }
+  
+  return val->QueryInterface(NS_GET_IID(nsIDOMCSSPrimitiveValue),
+	                         (void **)&aValue);
 }
 
 #if 0
