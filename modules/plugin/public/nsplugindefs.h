@@ -264,8 +264,8 @@ struct nsPluginWindow {
     nsPluginPort* window;       /* Platform specific window handle */
                                 /* OS/2: x - Position of bottom left corner  */
                                 /* OS/2: y - relative to visible netscape window */
-    PRUint32      x;            /* Position of top left corner relative */
-    PRUint32      y;            /*	to a netscape page.					*/
+    PRInt32       x;            /* Position of top left corner relative */
+    PRInt32       y;            /*	to a netscape page.					*/
     PRUint32      width;        /* Maximum window size */
     PRUint32      height;
     nsPluginRect  clipRect;     /* Clipping rectangle in port coordinates */
