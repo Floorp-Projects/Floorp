@@ -196,20 +196,109 @@ NS_COM
 void
 AppendUTF16toUTF8( const nsAString& aSource, nsACString& aDest )
   {
-    // This isn't the fastest possible implementation of this method,
-    // but it works, and that's better than nothing!
+    nsAString::const_iterator source_start, source_end;
+    CalculateUTF8Size calculator;
+    copy_string(aSource.BeginReading(source_start),
+                aSource.EndReading(source_end), calculator);
 
-    aDest.Append(NS_ConvertUCS2toUTF8(aSource));
+    PRUint32 count = calculator.Size();
+
+    if (count)
+      {
+        PRUint32 old_dest_length = aDest.Length();
+
+        // Grow the buffer if we need to.
+        aDest.SetLength(old_dest_length + count);
+
+        nsACString::iterator dest;
+        aDest.BeginWriting(dest);
+
+        dest.advance(old_dest_length);
+
+        if (count <= (PRUint32)dest.size_forward())
+          {
+            // aDest has enough room in the fragment just past the end
+            // of its old data that it can hold what we're about to
+            // append. Append using copy_string().
+
+            // All ready? Time to convert
+
+            ConvertUCS2toUTF8 converter(dest.get());
+            copy_string(aSource.BeginReading(source_start),
+                        aSource.EndReading(source_end), converter);
+
+            if (converter.Size() != count)
+              {
+                NS_ERROR("Input invalid or incorrect length was calculated");
+
+                aDest.SetLength(old_dest_length);
+              }
+          }
+        else
+          {
+            // This isn't the fastest way to do this, but it gets
+            // complicated to convert UTF16 into a fragmented UTF8
+            // string, so we'll take the easy way out here in this
+            // rare situation.
+
+            aDest.Replace(old_dest_length, count,
+                          NS_ConvertUCS2toUTF8(aSource));
+          }
+      }
   }
 
 NS_COM
 void
 AppendUTF8toUTF16( const nsACString& aSource, nsAString& aDest )
   {
-    // This isn't the fastest possible implementation of this method,
-    // but it works, and that's better than nothing!
+    nsACString::const_iterator source_start, source_end;
+    CalculateUTF8Length calculator;
+    copy_string(aSource.BeginReading(source_start),
+                aSource.EndReading(source_end), calculator);
 
-    aDest.Append(NS_ConvertUTF8toUCS2(aSource));
+    PRUint32 count = calculator.Length();
+
+    if (count)
+      {
+        PRUint32 old_dest_length = aDest.Length();
+
+        // Grow the buffer if we need to.
+        aDest.SetLength(old_dest_length + count);
+
+        nsAString::iterator dest;
+        aDest.BeginWriting(dest);
+
+        dest.advance(old_dest_length);
+
+        if (count <= (PRUint32)dest.size_forward())
+          {
+            // aDest has enough room in the fragment just past the end
+            // of its old data that it can hold what we're about to
+            // append. Append using copy_string().
+
+            // All ready? Time to convert
+
+            ConvertUTF8toUCS2 converter(dest.get());
+            copy_string(aSource.BeginReading(source_start),
+                        aSource.EndReading(source_end), converter);
+
+            if (converter.Length() != count)
+              {
+                NS_ERROR("Input wasn't UTF8 or incorrect length was calculated");
+                aDest.SetLength(old_dest_length);
+              }
+          }
+        else
+          {
+            // This isn't the fastest way to do this, but it gets
+            // complicated to convert parts of a UTF8 string into a
+            // UTF16 string, so we'll take the easy way out here in
+            // this rare situation.
+
+            aDest.Replace(old_dest_length, count,
+                          NS_ConvertUTF8toUCS2(aSource));
+          }
+      }
   }
 
 
