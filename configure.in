@@ -307,7 +307,7 @@ AC_PATH_PROG(AUTOCONF, autoconf, :)
 AC_PATH_PROG(UNZIP, unzip, :)
 AC_PATH_PROGS(ZIP, zip)
 if test -z "$ZIP"; then
-    AC_MSG_ERROR([zip not found in \$PATH. Disabling jar packaging])
+    AC_MSG_WARN([zip not found in \$PATH. Disabling jar packaging])
     MOZ_DISABLE_JAR_PACKAGING=1
 fi
 AC_PATH_PROG(SYSTEM_MAKEDEPEND, makedepend)
