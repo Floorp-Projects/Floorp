@@ -549,6 +549,11 @@ nsJVMManager::StartupJVM(void)
 	}
  */
 
+#ifdef MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+    PRUintn uStatus=0;
+    EnterMonitor(&uStatus);
+#endif // MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+
     PR_ASSERT(fJVM == NULL);
     /*
     **TODO: amusil. Load the plugin by getting into Service manager.
@@ -563,20 +568,35 @@ nsJVMManager::StartupJVM(void)
 	// beard:  Now uses the nsIPluginHost to load the plugin factory for NS_JVM_MIME_TYPE.
     nsresult err;
     NS_WITH_SERVICE(nsIPluginHost, pluginHost, kPluginManagerCID, &err);
-	if (NS_FAILED(err)) {
+    if (NS_FAILED(err)) {
         fStatus = nsJVMStatus_Failed;
+
+#ifdef MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+        ExitMonitor(&uStatus);
+#endif // MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+
         return fStatus;
     }
 
     if (!pluginHost) {
         fStatus = nsJVMStatus_Failed;
+
+#ifdef MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+        ExitMonitor(&uStatus);
+#endif // MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+
         return fStatus;
     }
 
-	nsIPlugin* pluginFactory = NULL;
-	err = pluginHost->GetPluginFactory(NS_JVM_MIME_TYPE, &pluginFactory);
-	if (pluginFactory == NULL) {
+    nsIPlugin* pluginFactory = NULL;
+    err = pluginHost->GetPluginFactory(NS_JVM_MIME_TYPE, &pluginFactory);
+    if (pluginFactory == NULL) {
         fStatus = nsJVMStatus_Failed;
+
+#ifdef MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+        ExitMonitor(&uStatus);
+#endif // MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+
         return fStatus;
     }
 
@@ -584,11 +604,16 @@ nsJVMManager::StartupJVM(void)
     if (rslt != NS_OK) {
         PR_ASSERT(fJVM == NULL);
         fStatus = nsJVMStatus_Failed;
+
+#ifdef MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+        ExitMonitor(&uStatus);
+#endif // MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+
         return fStatus;
     }
 
-	// beard: do we really need an explicit startup mechanim for the JVM?
-	// since we obtained a working JVM plugin, assume it is running.
+    // beard: do we really need an explicit startup mechanim for the JVM?
+    // since we obtained a working JVM plugin, assume it is running.
     fStatus = nsJVMStatus_Running;
 
 #if 0
@@ -605,11 +630,16 @@ nsJVMManager::StartupJVM(void)
            ("Starting java...%s (%ld ms)",
             (fStatus == nsJVMStatus_Running ? "done" : "failed"), d));
 #endif
+
+#ifdef MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+        ExitMonitor(&uStatus);
+#endif // MOZ_OJI_REQUIRE_THREAD_SAFE_ON_STARTUP    
+
  /* TODO:
 
-	if (someRandomContext) {
-		FE_Progress(someRandomContext, XP_GetString(XP_PROGRESS_STARTING_JAVA_DONE));
-	}
+    if (someRandomContext) {
+        FE_Progress(someRandomContext, XP_GetString(XP_PROGRESS_STARTING_JAVA_DONE));
+    }
  */
     return fStatus;
 }
