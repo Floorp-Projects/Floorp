@@ -191,12 +191,9 @@ protected:
   nsTransform2D		  *mTMatrix;		// transform that all the graphics drawn here will obey
   nsIFontMetrics	  *mFontMetrics;
   HDC               mDC;
-  HDC               mMainDC;
   nsDrawingSurfaceWin *mSurface;
-  nsDrawingSurfaceWin *mMainSurface;
   COLORREF          mColor;
   nsIWidget         *mDCOwner;
-//  int               mOldMapMode;
   nsIDeviceContext  *mContext;
   float             mP2T;
   HRGN              mClipRegion;

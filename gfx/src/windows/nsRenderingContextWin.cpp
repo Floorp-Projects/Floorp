@@ -179,7 +179,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
   }
 
   mDC = NULL;
-  mMainDC = NULL;
   mDCOwner = nsnull;
   mFontMetrics = nsnull;
   mOrigSolidBrush = NULL;
@@ -200,7 +199,6 @@ nsRenderingContextWin :: nsRenderingContextWin()
   mInitialized = PR_FALSE;
 #endif
   mSurface = nsnull;
-  mMainSurface = nsnull;
 
   mStateCache = new nsVoidArray();
 
@@ -300,21 +298,14 @@ nsRenderingContextWin :: ~nsRenderingContextWin()
     NS_RELEASE(mSurface);
   }
 
-  if (nsnull != mMainSurface)
-  {
-    mMainSurface->ReleaseDC();
-    NS_RELEASE(mMainSurface);
-  }
-
   if (nsnull != mDCOwner)
   {
-    ::ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mMainDC);
+    ::ReleaseDC((HWND)mDCOwner->GetNativeData(NS_NATIVE_WINDOW), mDC);
     NS_RELEASE(mDCOwner);
   }
 
   mTMatrix = nsnull;
   mDC = NULL;
-  mMainDC = NULL;
 }
 
 nsresult
@@ -390,10 +381,6 @@ nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
     NS_ADDREF(mSurface);
     mSurface->Init(tdc);
     mDC = tdc;
-
-    mMainDC = mDC;
-    mMainSurface = mSurface;
-    NS_ADDREF(mMainSurface);
   }
 
   mDCOwner = aWindow;
@@ -418,10 +405,6 @@ nsRenderingContextWin :: Init(nsIDeviceContext* aContext,
   {
     NS_ADDREF(mSurface);
     mSurface->GetDC(&mDC);
-
-    mMainDC = mDC;
-    mMainSurface = mSurface;
-    NS_ADDREF(mMainSurface);
   }
 
   mDCOwner = nsnull;
@@ -626,23 +609,17 @@ nsRenderingContextWin :: SelectOffScreenDrawingSurface(nsDrawingSurface aSurface
     }
     else
     {
-      if (NULL != mDC)
-      {
-        rv = SetupDC(mDC, mMainDC);
-
-        //kill the DC
-        mSurface->ReleaseDC();
-
-        NS_IF_RELEASE(mSurface);
-        mSurface = mMainSurface;
-      }
+        // nsnull passed for the surface.
+      NS_ASSERTION(PR_FALSE, "Setting up a nsnull drawing surface for the rendering context");
     }
 
     NS_ADDREF(mSurface);
     mSurface->GetDC(&mDC);
   }
-  else
+  else {
+     // Setting surface to the existing surface so do nothing.
     rv = NS_OK;
+  }
 
   return rv;
 }
@@ -1044,10 +1021,12 @@ NS_IMETHODIMP nsRenderingContextWin :: CreateDrawingSurface(nsRect *aBounds, PRU
   {
     NS_ADDREF(surf);
 
-    if (nsnull != aBounds)
-      surf->Init(mMainDC, aBounds->width, aBounds->height, aSurfFlags);
-    else
-      surf->Init(mMainDC, 0, 0, aSurfFlags);
+    if (nsnull != aBounds) {
+      surf->Init(mDC, aBounds->width, aBounds->height, aSurfFlags);
+    }
+    else {
+      surf->Init(mDC, 0, 0, aSurfFlags);
+    }
   }
 
   aSurface = (nsDrawingSurface)surf;
@@ -1059,21 +1038,18 @@ NS_IMETHODIMP nsRenderingContextWin :: DestroyDrawingSurface(nsDrawingSurface aD
 {
   nsDrawingSurfaceWin *surf = (nsDrawingSurfaceWin *)aDS;
 
-  //are we using the surface that we want to kill?
+   //are we using the surface that we want to kill?
   if (surf == mSurface)
   {
-    //remove our local ref to the surface
+    // Remove our local ref to the surface
     NS_IF_RELEASE(mSurface);
-
-    mDC = mMainDC;
-    mSurface = mMainSurface;
-
-    //two pointers: two refs
-    NS_IF_ADDREF(mSurface);
-  }
-
-  //release it...
+    // Stop using the drawing surface. 
+    mSurface = nsnull;
+    mDC = NULL;
+  } else {
+    // Release a drawing surface we are currently not using.
   NS_IF_RELEASE(surf);
+  }
 
   return NS_OK;
 }
@@ -1740,7 +1716,7 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
                                                          PRUint32 aCopyFlags)
 {
 
-  if ((nsnull != aSrcSurf) && (nsnull != mMainDC))
+  if ((nsnull != aSrcSurf) && (nsnull != mDC))
   {
     PRInt32 x = aSrcX;
     PRInt32 y = aSrcY;
@@ -1753,13 +1729,7 @@ NS_IMETHODIMP nsRenderingContextWin :: CopyOffScreenBits(nsDrawingSurface aSrcSu
 
     if (nsnull != srcdc)
     {
-      if (aCopyFlags & NS_COPYBITS_TO_BACK_BUFFER)
-      {
-        NS_ASSERTION(!(nsnull == mDC), "no back buffer");
-        destdc = mDC;
-      }
-      else
-        destdc = mMainDC;
+      destdc = mDC; 
 
       if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
       {
