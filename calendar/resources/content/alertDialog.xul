@@ -56,7 +56,7 @@
 
 <window
    id="calendar-new-eventwindow"
-   title="&brandShortName; - Calendar Alarm"
+   title="&brandShortName; - Calendar Alarm - &event.title.alarm;"
    orient="vertical"
    onload="onLoad()"
    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"> 
@@ -78,21 +78,6 @@
     
     <vbox id="dialog-box">  
    
-      <!-- standard-dialog-title: from dialogOverlay.xul -->
-      
-      <box id="standard-dialog-title">
-			<image id="standard-dialog-title-icon"/>
-			<box id="standard-dialog-title-text-box">
-				<label id="standard-dialog-title-text" value="&event.title.alarm;"/>
-			</box>
-		</box>
-               
-      <!-- standard-dialog-tips: from dialogOverlay.xul  Proper tip is shown in on load code-->
-        
-      <box id="standard-dialog-tips">
-         <description id="tip-new">&event.tip.alert;</description>
-      </box>
-        
       <!-- standard-dialog-content: from dialogOverlay.xul  -->
         
       <vbox id="standard-dialog-content">

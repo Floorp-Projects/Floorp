@@ -35,18 +35,6 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-
-
-/*--------------------------------------------------------------------
- *   C A L E N D A R
- *-------------------------------------------------------------------*/
-
-#calendar-window
-{
-}
-
-
 /*--------------------------------------------------------------------
  *   Box for the WHOLE calendar
  *-------------------------------------------------------------------*/
@@ -54,51 +42,6 @@
 #calendar-top-box
 {
    background-color     : #E7EEEC;
-	/*border					: 2px solid yellow;*/
-}
-
-#calendar-content-box
-{
-	/*border					: 1px solid green;*/
-}
-
-#calendar-unifinder-overlay
-{
-}
-
-
-/*--------------------------------------------------------------------
- *   Top bar, with name, image and buttons
- *-------------------------------------------------------------------*/
-
-#calendar-controls-box
-{
-   background-image        : url("chrome://calendar/skin/calendar_topbar.png");
-   background-repeat       : no-repeat;
-   min-height              : 33px;
-   max-height              : 33px;
-}
-
-
-/*--------------------------------------------------------------------
- *   Button bar vertical divider line
- *-------------------------------------------------------------------*/
-
-.calendar-control-divider
-{
-    list-style-image        : url("chrome://calendar/skin/divider.png");
-}
-
-
-button.calendar-management-button,
-button.calendar-management-button:hover,
-button.calendar-management-button:hover:active
-{
-	margin				  		: 0px;
-	border						: 0px; 
-	 -moz-binding				: url("chrome://calendar/content/penBindings.xml#penButton");
-	-moz-user-focus			: ignore !important;
-	max-height					: 36px;
 }
 
 /*--------------------------------------------------------------------
@@ -289,8 +232,6 @@ button.calendar-management-button:hover:active
 
 #month-view-box
 {
-   
-   /*border             : 1px solid blue;*/
    padding-top        : 20px;
    max-width          : 660px; /* this is needed for some reason.*/
    
@@ -302,7 +243,6 @@ button.calendar-management-button:hover:active
 
 #month-controls-box
 {
-   /* border            : 1px solid blue; */
    -moz-box-align    : center;
 }
 
@@ -318,7 +258,6 @@ button.calendar-management-button:hover:active
    font-family          : Arial, Helvetica;
    color                : #3f7d91;
 }
-
 
 /*--------------------------------------------------------------------
  * Next and Previous buttons. :TODO: Should they have hover?
@@ -746,7 +685,6 @@ button.calendar-management-button:hover:active
 
 .month-allday-busy-ind-class
 {
-   list-style-image     :"";
 }
 
 .month-allday-busy-ind-class[busy="true"]
@@ -784,7 +722,6 @@ button.calendar-management-button:hover:active
 #day-view-box
 {
    padding-top             :20px;
-   /* border            :1px solid red; */
 }
 
 /*--------------------------------------------------------------------
@@ -809,7 +746,6 @@ button.calendar-management-button:hover:active
 #day-title-box
 {
    width               : 400px;
-
 }
 
 
@@ -964,7 +900,6 @@ button.calendar-management-button:hover:active
 
 #week-view-content-board
 {
-	/*height						: 1200px;*/
 }
 
 #week-view-day-gradient
@@ -1161,7 +1096,6 @@ button.calendar-management-button:hover:active
 {
   	width				: 78px;
    -moz-box-align : start;
-   /*border					: 1px solid red;*/
 }
 
 #all-day-content-box-week-1
@@ -1181,8 +1115,6 @@ button.calendar-management-button:hover:active
 
 .calendar-unifinder-event-text
 {
-
-   /*border				: 1px solid red;*/
 }
 
 .calendar-unifinder-event-indent

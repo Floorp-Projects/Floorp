@@ -34,34 +34,9 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-/*********************************************
-*
-* Dialog Overlay Cascading Style Sheet
-* Defines the default look for all dialogs
-*
-**********************************************/
-
-/* box surrounding the dialog */
-#dialog-box
-{
-	border					:1px #003399 solid;
-	background-color		:#c7d0d9;
-}
-
 /* the main content of the dialog */
 #standard-dialog-content
 {
-	backround-color				:#c7d0d9;
 	padding					:10px;
 }
 
-/* center the buttons vertically instead of stretching them,
-   allows buttons to be different sizes
-*/
-
-.standard-dialog-commands-button-box-class
-{
-   -moz-box-align : center;
-}
- 
