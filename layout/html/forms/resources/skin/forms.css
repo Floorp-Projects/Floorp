@@ -40,3 +40,6 @@
 /* xbl-forms.css contains the XBL bindings common to all skins */
 @import url("chrome://forms/content/xbl-forms.css");
 
+@import url("chrome://forms/skin/select.css");
+@import url("chrome://forms/skin/select-dropdown.css");
+

@@ -35,11 +35,47 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-/* This file contains skin-specific rules for HTML form controls */
+@namespace url(http://www.w3.org/1999/xhtml); /* set default namespace to HTML */
+@namespace xul url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-/* xbl-forms.css contains the XBL bindings common to all skins */
-@import url("chrome://forms/content/xbl-forms.css");
+/**
+ <select size=1/> Widget
+ **/
 
-@import url("chrome://forms/skin/select.css");
-@import url("chrome://forms/skin/select-dropdown.css");
+select, select[size="1"] {
+  -moz-appearance: menulist;
+  margin: 2px 4px;
+  border: 2px solid;
+  -moz-border-top-colors: ThreeDShadow ThreeDDarkShadow;
+  -moz-border-right-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-bottom-colors: ThreeDHighlight ThreeDLightShadow;
+  -moz-border-left-colors: ThreeDShadow ThreeDDarkShadow;
+  background-color: -moz-Field;
+  color: -moz-FieldText;
+}
 
+xul|*.select-label-box {
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  margin: 1px;
+}
+
+xul|*.select-dropmarker {
+  -moz-appearance: menulist-button;
+  min-width: 17px;
+  -moz-box-align: center;
+  -moz-box-pack: center;
+  border: 2px solid;
+  background-color: -moz-Dialog;
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+option:hover {
+  background-color: #424F63;
+  color: #FFFFFF;
+}
+
+option {
+  padding-right: 17px;
+  padding-left: 11px;
+}
