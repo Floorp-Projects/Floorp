@@ -110,9 +110,6 @@ ifdef LIBRARY
 endif
 ifdef SHARED_LIBRARY
 	$(INSTALL) -m 775 $(SHARED_LIBRARY) $(SOURCE_LIB_DIR)
-ifeq ($(OS_TARGET),OpenVMS)
-	$(INSTALL) -m 775 $(SHARED_LIBRARY:$(DLL_SUFFIX)=vms) $(SOURCE_LIB_DIR)
-endif
 endif
 ifdef IMPORT_LIBRARY
 	$(INSTALL) -m 775 $(IMPORT_LIBRARY) $(SOURCE_LIB_DIR)
@@ -365,9 +362,6 @@ else
 	$(MKSHLIB) -o $@ $(OBJS) $(SUB_SHLOBJS) $(LD_LIBS) $(EXTRA_LIBS) $(EXTRA_SHARED_LIBS)
 endif
 	chmod +x $@
-ifeq ($(OS_TARGET),OpenVMS)
-	@echo "`translate $@`" > $(@:$(DLL_SUFFIX)=vms)
-endif
 ifeq ($(OS_TARGET),Darwin)
 ifdef MAPFILE
 	nmedit -s $(MAPFILE) $@
@@ -855,7 +849,7 @@ endif
 
 -include $(DEPENDENCIES)
 
-ifneq (,$(filter-out OS2 WIN%,$(OS_TARGET)))
+ifneq (,$(filter-out OpenVMS OS2 WIN%,$(OS_TARGET)))
 # Can't use sed because of its 4000-char line length limit, so resort to perl
 .DEFAULT:
 	@perl -e '                                                            \

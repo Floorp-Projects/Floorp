@@ -21,23 +21,15 @@
 
 include $(CORE_DEPTH)/coreconf/UNIX.mk
 
-ifdef INTERNAL_TOOLS
-CC			= c89
+CC			= cc
 CCC			= cxx
-OPTIMIZER		= -O
-else
-CC			= ccc
-CCC			= ccc
-endif
 
-RANLIB			= /bin/true
+RANLIB			= /gnu/bin/true
 
 CPU_ARCH		:= $(shell uname -Wh)
 
-OS_CFLAGS              = -DVMS -DVMS_AS_IS -Wc,names=\(short,as\) \
-                         -DGENERIC_PTHREAD_REDEFINES -DNO_UDSOCK
-OS_CXXFLAGS            = -DVMS -DVMS_AS_IS -Wc,names=\(short,as\) \
-                         -DGENERIC_PTHREAD_REDEFINES -DNO_UDSOCK
+OS_CFLAGS		= -DVMS
+OS_CXXFLAGS		= -DVMS
 
 # Maybe this should go into rules.mk or something?
 ifdef NSPR_INCLUDE_DIR
@@ -52,13 +44,14 @@ endif
 #
 XCFLAGS                        += $(OPTIMIZER)
 
-# The command to build a shared library in POSIX on OpenVMS.
-MKSHLIB = vmsld_psm OBJDIR=$(OBJDIR) $(OPTIMIZER)
+DSO_LDOPTS	= -shared -auto_symvec
+MKSHLIB		= $(CC) $(OPTIMIZER) $(LDFLAGS) $(DSO_LDOPTS)
+
 ifdef MAPFILE
 # Add LD options to restrict exported symbols to those in the map file
 endif
 # Change PROCESS to put the mapfile in the correct format for this platform
-PROCESS_MAP_FILE = copy $(LIBRARY_NAME).def $@
+PROCESS_MAP_FILE = cp $(LIBRARY_NAME).def $@
 
 
 #
