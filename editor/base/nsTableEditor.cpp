@@ -1321,38 +1321,58 @@ NS_IMETHODIMP
 nsHTMLEditor::SplitTableCell()
 {
   nsCOMPtr<nsIDOMElement> table;
-  nsCOMPtr<nsIDOMElement> targetCell;
+  nsCOMPtr<nsIDOMElement> cell;
   PRInt32 startRowIndex, startColIndex, actualRowSpan, actualColSpan;
-  nsCOMPtr<nsIDOMElement> cell2;
-//  PRInt32 startRowIndex2, startColIndex2, rowSpan2, colSpan2, actualRowSpan2, actualColSpan2;
-//  PRBool  isSelected2;
-  nsAutoString tagName;
-  PRInt32 selCount;
-  nsresult res = GetSelectedOrParentTableElement(*getter_AddRefs(targetCell), tagName, selCount);
-  if (NS_FAILED(res)) return res;
-  // We're not in a cell, or there's > 1 selected
-  if(!targetCell || selCount > 1) return NS_EDITOR_ELEMENT_NOT_FOUND;
-
-  nsAutoEditBatch beginBatching(this);
-
-  //Don't let Rules System change the selection
-  nsAutoTxnsConserveSelection dontChangeSelection(this);
-
-//////////////////////////////////////////////////// IN PROGRESS!
-
   // Get cell, table, etc. at selection anchor node
-  res = GetCellContext(nsnull,
-                       getter_AddRefs(table), 
-                       getter_AddRefs(targetCell),
-                       nsnull, nsnull,
-                       &startRowIndex, &startColIndex);
+  nsresult res = GetCellContext(nsnull,
+                                getter_AddRefs(table), 
+                                getter_AddRefs(cell),
+                                nsnull, nsnull,
+                                &startRowIndex, &startColIndex);
   if (NS_FAILED(res)) return res;
-  if(!table || !targetCell) return NS_EDITOR_ELEMENT_NOT_FOUND;
+  if(!table || !cell) return NS_EDITOR_ELEMENT_NOT_FOUND;
 
   // We need rowspan and colspan data
   res = GetCellSpansAt(table, startRowIndex, startColIndex, actualRowSpan, actualColSpan);
+  if (NS_FAILED(res)) return res;
 
-  //TODO: FINISH THIS!
+  // Must have some span to split
+  if (actualRowSpan <= 1 && actualColSpan <= 1)
+    return NS_OK;
+  
+  nsAutoEditBatch beginBatching(this);
+
+  // We reset selection  
+  nsSetSelectionAfterTableEdit setCaret(this, table, startRowIndex, startColIndex, ePreviousColumn, PR_FALSE);
+  //...so suppress Rules System selection munging
+  nsAutoTxnsConserveSelection dontChangeSelection(this);
+
+  nsCOMPtr<nsIDOMElement> newCellInRow;
+  nsCOMPtr<nsIDOMElement> newCellInCol;
+  PRInt32 rowIndex = startRowIndex;
+  PRInt32 colIndex = startColIndex;
+  PRInt32 rowSpanBelow, colSpanAfter;
+
+  // Split up cell row-wise first into rowspan=1 above, and the rest below,
+  //  whittling away at the cell below until no more extra span
+  for (rowSpanBelow = actualRowSpan-1; rowSpanBelow >= 0; rowSpanBelow--)
+  {
+    // We really split row-wise only if we had rowspan > 1
+    if (rowSpanBelow > 0)
+    {
+      res = SplitCellIntoRows(table, rowIndex, startColIndex, 1, rowSpanBelow, nsnull);
+      if (NS_FAILED(res)) return res;
+    }
+    // Now split the cell with rowspan = 1 into cells if it has colSpan > 1
+    for (colSpanAfter = actualColSpan-1; colSpanAfter > 0; colSpanAfter--)
+    {
+      res = SplitCellIntoColumns(table, rowIndex, colIndex, 1, colSpanAfter, nsnull);
+      if (NS_FAILED(res)) return res;
+      colIndex++;
+    }
+    // Point to the new cell and repeat
+    rowIndex++;
+  }
   return res;
 }
 
@@ -1409,12 +1429,14 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
   PRBool  isSelected2;
   PRInt32 colIndex = startColIndex;
   PRBool insertAfter = (startColIndex > 0);
-
+  // This is the row we will insert new cell into
+  PRInt32 rowBelowIndex = startRowIndex+aRowSpanAbove;
+  
   // Find a cell to insert before or after
   do 
   {
     // Search for a cell to insert before
-    res = GetCellDataAt(aTable, startRowIndex+aRowSpanAbove, 
+    res = GetCellDataAt(aTable, rowBelowIndex, 
                         colIndex, *getter_AddRefs(cell2),
                         startRowIndex2, startColIndex2, rowSpan2, colSpan2, 
                         actualRowSpan2, actualColSpan2, isSelected2);
@@ -1424,7 +1446,9 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
 
     // 0 value results in infinite loop!
     NS_ASSERTION(actualColSpan2 > 0, "ColSpan=0 in SplitCellIntoRows");
-    if (startRowIndex2 == startRowIndex)
+
+    // Skip over cells spanned from above (like the one we are splitting!)
+    if (startRowIndex2 == rowBelowIndex)
     {
       if (insertAfter)
       {
