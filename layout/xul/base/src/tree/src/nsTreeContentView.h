@@ -167,6 +167,8 @@ class nsTreeContentView : public nsITreeView,
 
     void RemoveSubtree(PRInt32 aIndex, PRInt32* aCount);
 
+    void InsertRowFor(nsIContent* aParent, nsIContent* aContainer, nsIContent* aChild);
+
     void InsertRow(PRInt32 aParentIndex, PRInt32 aIndex, nsIContent* aContent, PRInt32* aCount);
 
     void RemoveRow(PRInt32 aIndex, PRInt32* aCount);
