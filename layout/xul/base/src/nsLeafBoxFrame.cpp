@@ -132,19 +132,42 @@ nsLeafBoxFrame::Init(nsIPresContext*  aPresContext,
   
   mMouseThrough = unset;
 
+  UpdateMouseThrough();
+
+  return rv;
+}
+
+NS_IMETHODIMP
+nsLeafBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
+                               nsIContent* aChild,
+                               PRInt32 aNameSpaceID,
+                               nsIAtom* aAttribute,
+                               PRInt32 aModType, 
+                               PRInt32 aHint)
+{
+    nsresult rv = nsLeafFrame::AttributeChanged(aPresContext, aChild,
+                                              aNameSpaceID, aAttribute, aModType, aHint);
+
+    if (aAttribute == nsXULAtoms::mousethrough) 
+       UpdateMouseThrough();
+
+  return rv;
+}
+
+void nsLeafBoxFrame::UpdateMouseThrough()
+{
   if (mContent) {
     nsAutoString value;
     if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
         if (value.EqualsIgnoreCase("never")) 
-            mMouseThrough = never;
+          mMouseThrough = never;
         else if (value.EqualsIgnoreCase("always")) 
-            mMouseThrough = always;
+          mMouseThrough = always;
       
     }
   }
-
-  return rv;
 }
+
 
 NS_IMETHODIMP  
 nsLeafBoxFrame::GetFrameForPoint(nsIPresContext* aPresContext,

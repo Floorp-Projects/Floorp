@@ -513,6 +513,10 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
         possibleRedraw = PR_TRUE;
       }
 
+      // if something moved then we might need to redraw
+      if (oldRect.x != childRect.x || oldRect.y != childRect.y)
+          possibleRedraw = PR_TRUE;
+
       // If we already determined that layout was required or if our size has changed, then
       // we make sure to call layout on the child, since its children may need to be shifted
       // around as a result of the size change.
@@ -585,10 +589,6 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
           childRect.Deflate(margin);
             
         child->SetBounds(aState, newChildRect);
-
-        // Don't redraw if the child didn't really change size.
-        if (oldRect.width == newChildRect.width || oldRect.height == newChildRect.height)
-          possibleRedraw = PR_FALSE;
 
         // If we are the first box that changed size, then we don't need to do a second pass
         if (count == 0)
@@ -795,7 +795,7 @@ nsSprocketLayout::PopulateBoxSizes(nsIBox* aBox, nsBoxLayoutState& aState, nsBox
       child->GetAscent(aState, ascent);
       nsMargin margin;
       child->GetMargin(margin);
-      ascent += margin.top + margin.bottom;
+      ascent += margin.top;
     //}
 
       nsBox::BoundsCheck(min, pref, max);
@@ -1519,7 +1519,7 @@ nsSprocketLayout::GetAscent(nsIBox* aBox, nsBoxLayoutState& aState, nscoord& aAs
 
         nsMargin margin;
         child->GetMargin(margin);
-        ascent += margin.top + margin.bottom;
+        ascent += margin.top;
 
         if (isHorizontal)
         {

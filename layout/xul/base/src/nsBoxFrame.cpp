@@ -182,6 +182,7 @@ public:
     void DrawSpacer(nsIPresContext* aPresContext, nsIRenderingContext& aRenderingContext, PRBool aHorizontal, PRInt32 flex, nscoord x, nscoord y, nscoord size, nscoord spacerSize);
     void DrawLine(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x1, nscoord y1, nscoord x2, nscoord y2);
     void FillRect(nsIRenderingContext& aRenderingContext,  PRBool aHorizontal, nscoord x, nscoord y, nscoord width, nscoord height);
+    void UpdateMouseThrough();
 
     void CacheAttributes();
 
@@ -383,18 +384,23 @@ nsBoxFrame::Init(nsIPresContext*  aPresContext,
 
   mMouseThrough = unset;
 
-  if (mContent) {
+  mInner->UpdateMouseThrough();
+
+  return rv;
+}
+
+void nsBoxFrameInner::UpdateMouseThrough()
+{
+  if (mOuter->mContent) {
     nsAutoString value;
-    if (NS_CONTENT_ATTR_HAS_VALUE == mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
+    if (NS_CONTENT_ATTR_HAS_VALUE == mOuter->mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::mousethrough, value)) {
         if (value.EqualsIgnoreCase("never")) 
-            mMouseThrough = never;
+          mOuter->mMouseThrough = mOuter->never;
         else if (value.EqualsIgnoreCase("always")) 
-            mMouseThrough = always;
+          mOuter->mMouseThrough = mOuter->always;
       
     }
   }
-
-  return rv;
 }
 
 void
@@ -783,10 +789,29 @@ nsBoxFrame::GetInitialAutoStretch(PRBool& aStretch)
 NS_IMETHODIMP
 nsBoxFrame::ReflowDirtyChild(nsIPresShell* aPresShell, nsIFrame* aChild)
 {
+   // if we receive a ReflowDirtyChild it is because there is an HTML frame 
+   // just inside us. So must find the adaptor that contains the child and
+   // tell it that things are dirty.
    nsCOMPtr<nsIPresContext> context;
    aPresShell->GetPresContext(getter_AddRefs(context));
    nsBoxLayoutState state(context);
-   return RelayoutDirtyChild(state, this);
+
+   nsIBox* box = nsnull;
+   GetChildBox(&box);
+   while (box)
+   {
+     nsIFrame* frame = nsnull;
+     box->GetFrame(&frame);
+     if (frame == aChild) {
+       box->MarkDirty(state);
+       return RelayoutDirtyChild(state, box);
+     }
+
+     box->GetNextBox(&box);
+   }
+
+   NS_ERROR("Could not find an adaptor!");
+   return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1291,6 +1316,10 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
     nsresult rv = nsContainerFrame::AttributeChanged(aPresContext, aChild,
                                               aNameSpaceID, aAttribute, aModType, aHint);
 
+    if (aAttribute == nsXULAtoms::mousethrough) {
+       mInner->UpdateMouseThrough();
+    }
+
     if (aAttribute == nsXULAtoms::ordinal) {
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
@@ -1366,16 +1395,20 @@ nsBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                 mState |= NS_STATE_AUTO_STRETCH;
              else
                 mState &= ~NS_STATE_AUTO_STRETCH;
-        }
+       } 
 
-        if (aAttribute == nsHTMLAtoms::left || aAttribute == nsHTMLAtoms::top)
-          mState &= ~NS_STATE_STACK_NOT_POSITIONED;
-      
-        nsCOMPtr<nsIPresShell> shell;
-        aPresContext->GetShell(getter_AddRefs(shell));
-        nsBoxLayoutState state(aPresContext);
-        MarkDirty(state);
+       if (aAttribute == nsHTMLAtoms::left || aAttribute == nsHTMLAtoms::top)
+         mState &= ~NS_STATE_STACK_NOT_POSITIONED;
+
     }
+          
+          
+  
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
+    nsBoxLayoutState state(aPresContext);
+    MarkDirty(state);
+
   
   return rv;
 }

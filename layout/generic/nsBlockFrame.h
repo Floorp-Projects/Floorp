@@ -203,6 +203,8 @@ public:
 
   static void CombineRects(const nsRect& r1, nsRect& r2);
 
+  inline nscoord GetAscent() { return mAscent; }
+
 protected:
   nsBlockFrame();
   virtual ~nsBlockFrame();

@@ -268,6 +268,8 @@ nsImageBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
                                PRInt32 aModType, 
                                PRInt32 aHint)
 {
+  nsresult rv = nsLeafBoxFrame::AttributeChanged(aPresContext, aChild, aNameSpaceID, aAttribute, aModType, aHint);
+
   PRBool aResize;
   PRBool aRedraw;
   UpdateAttributes(aPresContext, aAttribute, aResize, aRedraw);
@@ -279,6 +281,7 @@ nsImageBoxFrame::AttributeChanged(nsIPresContext* aPresContext,
   } else if (aRedraw) {
     Redraw(state);
   }
+
 
   return NS_OK;
 }
