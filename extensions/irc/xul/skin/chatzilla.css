@@ -24,14 +24,16 @@
  */
 
 @import url(chrome://communicator/skin/);
-/*@import url(chrome://global/skin/global.css);*/
-
 
 window {
 
     width: 640px;
     height: 480px;
 
+}
+
+#menu-view-none {
+    display: none;
 }
 
 #tabpanels-contents-box {
@@ -47,8 +49,17 @@ window {
     border: thin silver inset;
 }
 
+.highlight-menu-item:hover {
+    color: white !important;
+    background: darkslategrey !important;
+}
+
 .view-button {
     color: black;
+}
+
+.view-button[state="current"] {
+    font-weight: bold;
 }
 
 .view-button[state="activity"] {
@@ -57,6 +68,13 @@ window {
 
 .view-button[state="attention"] {
     color: red;
+}
+
+/* spaces after the 4th and 8th tab, so you can line them up with your Fn
+ * keys */
+.view-button-spacer[index="4"],
+.view-button-spacer[index="8"] {
+    margin-left: 5px;
 }
 
 .status-box {
