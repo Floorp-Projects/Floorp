@@ -282,6 +282,8 @@
 			files = (
 				080E96DCFE201CFB7F000001,
 				089C165EFE840E0CC02AAC07,
+				F51D673F02ABFDB701A968F5,
+				F51D674002ABFDB701A968F5,
 			);
 			isa = PBXResourcesBuildPhase;
 			name = "Bundle Resources";
@@ -350,6 +352,40 @@
 //4A2
 //4A3
 //4A4
+//F50
+//F51
+//F52
+//F53
+//F54
+		F51D673D02ABFDB601A968F5 = {
+			isa = PBXFileReference;
+			name = macprefs.js;
+			path = ../../../modules/libpref/src/mac/macprefs.js;
+			refType = 2;
+		};
+		F51D673E02ABFDB601A968F5 = {
+			isa = PBXFileReference;
+			name = macxprefs.js;
+			path = ../../../modules/libpref/src/mac/macxprefs.js;
+			refType = 2;
+		};
+		F51D673F02ABFDB701A968F5 = {
+			fileRef = F51D673D02ABFDB601A968F5;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		F51D674002ABFDB701A968F5 = {
+			fileRef = F51D673E02ABFDB601A968F5;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+//F50
+//F51
+//F52
+//F53
+//F54
 //F60
 //F61
 //F62
@@ -2083,8 +2119,8 @@
 		F6BD64FB01B3184301A962F7 = {
 			children = (
 				F6BD64FC01B3184301A962F7,
-				F6BD64FD01B3184301A962F7,
-				F6BD64FE01B3184301A962F7,
+				F51D673D02ABFDB601A968F5,
+				F51D673E02ABFDB601A968F5,
 			);
 			isa = PBXGroup;
 			name = "Gecko Defaults";
@@ -2095,18 +2131,6 @@
 			isa = PBXFileReference;
 			name = all.js;
 			path = ../../../modules/libpref/src/init/all.js;
-			refType = 2;
-		};
-		F6BD64FD01B3184301A962F7 = {
-			isa = PBXFileReference;
-			name = initpref.js;
-			path = ../../../modules/libpref/src/initpref.js;
-			refType = 2;
-		};
-		F6BD64FE01B3184301A962F7 = {
-			isa = PBXFileReference;
-			name = unix.js;
-			path = ../../../modules/libpref/src/unix/unix.js;
 			refType = 2;
 		};
 		F6BD64FF01B3184301A962F7 = {
@@ -2233,26 +2257,12 @@
 			dstSubfolderSpec = 6;
 			files = (
 				F6BD652001B3184301A962F7,
-				F6BD652101B3184301A962F7,
-				F6BD652201B3184301A962F7,
 			);
 			isa = PBXCopyFilesBuildPhase;
 			name = "Copy Files";
 		};
 		F6BD652001B3184301A962F7 = {
 			fileRef = F6BD64FC01B3184301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD652101B3184301A962F7 = {
-			fileRef = F6BD64FD01B3184301A962F7;
-			isa = PBXBuildFile;
-			settings = {
-			};
-		};
-		F6BD652201B3184301A962F7 = {
-			fileRef = F6BD64FE01B3184301A962F7;
 			isa = PBXBuildFile;
 			settings = {
 			};
