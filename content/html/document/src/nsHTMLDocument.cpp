@@ -825,68 +825,75 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
   nsCAutoString urlSpec;
   uri->GetSpec(urlSpec);
 
-  PRInt32 charsetSource = kCharsetUninitialized;
+  PRInt32 charsetSource;
   nsCAutoString charset;
 
-  // The following charset resolving calls has implied knowledge about
-  // charset source priority order. Each try will return true if the
-  // source is higher or equal to the source as its name describes. Some
-  // try call might change charset source to multiple values, like
-  // TryHintCharset and TryParentCharset. It should be always safe to try more
-  // sources.
-  if (!TryUserForcedCharset(muCV, dcInfo, charsetSource, charset)) {
-    TryHintCharset(muCV, charsetSource, charset);
-    TryParentCharset(dcInfo, charsetSource, charset);
-    if (TryChannelCharset(aChannel, charsetSource, charset)) {
-      // Use the channel's charset (e.g., charset from HTTP
-      // "Content-Type" header).
-    }
-    else if (!scheme.Equals(NS_LITERAL_CSTRING("about")) &&          // don't try to access bookmarks for about:blank
-             TryBookmarkCharset(docShell, aChannel, charsetSource, charset)) {
-      // Use the bookmark's charset.
-    }
-    else if (cacheDescriptor && !urlSpec.IsEmpty() &&
-             TryCacheCharset(cacheDescriptor, charsetSource, charset)) {
-      // Use the cache's charset.
-    }
-    else if (TryDefaultCharset(muCV, charsetSource, charset)) {
-      // Use the default charset.
-      // previous document charset might be inherited as default charset.
-    }
-    else {
-      // Use the weak doc type default charset
-      UseWeakDocTypeDefault(charsetSource, charset);
-    }
-  }
+  if (IsXHTML()) {
+    charsetSource = kCharsetFromDocTypeDefault;
+    charset = NS_LITERAL_CSTRING("UTF-8");
+  } else {
+    charsetSource = kCharsetUninitialized;
 
-  PRBool isPostPage = PR_FALSE;
-  // check if current doc is from POST command
-  nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
-  if (httpChannel) {
-    nsCAutoString methodStr;
-    rv = httpChannel->GetRequestMethod(methodStr);
-    isPostPage = (NS_SUCCEEDED(rv) &&
-                  methodStr.Equals(NS_LITERAL_CSTRING("POST")));
-  }
-
-  if (isPostPage && muCV && kCharsetFromHintPrevDoc > charsetSource) {
-    nsCAutoString requestCharset;
-    muCV->GetPrevDocCharacterSet(requestCharset);
-    if (!requestCharset.IsEmpty()) {
-      charsetSource = kCharsetFromHintPrevDoc;
-      charset = requestCharset;
+    // The following charset resolving calls has implied knowledge
+    // about charset source priority order. Each try will return true
+    // if the source is higher or equal to the source as its name
+    // describes. Some try call might change charset source to
+    // multiple values, like TryHintCharset and TryParentCharset. It
+    // should be always safe to try more sources.
+    if (!TryUserForcedCharset(muCV, dcInfo, charsetSource, charset)) {
+      TryHintCharset(muCV, charsetSource, charset);
+      TryParentCharset(dcInfo, charsetSource, charset);
+      if (TryChannelCharset(aChannel, charsetSource, charset)) {
+        // Use the channel's charset (e.g., charset from HTTP
+        // "Content-Type" header).
+      }
+      else if (!scheme.Equals(NS_LITERAL_CSTRING("about")) &&          // don't try to access bookmarks for about:blank
+               TryBookmarkCharset(docShell, aChannel, charsetSource, charset)) {
+        // Use the bookmark's charset.
+      }
+      else if (cacheDescriptor && !urlSpec.IsEmpty() &&
+               TryCacheCharset(cacheDescriptor, charsetSource, charset)) {
+        // Use the cache's charset.
+      }
+      else if (TryDefaultCharset(muCV, charsetSource, charset)) {
+        // Use the default charset.
+        // previous document charset might be inherited as default charset.
+      }
+      else {
+        // Use the weak doc type default charset
+        UseWeakDocTypeDefault(charsetSource, charset);
+      }
     }
-  }
 
-  if(kCharsetFromAutoDetection > charsetSource && !isPostPage) {
-    StartAutodetection(docShell, charset, aCommand);
-  }
+    PRBool isPostPage = PR_FALSE;
+    // check if current doc is from POST command
+    nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(aChannel));
+    if (httpChannel) {
+      nsCAutoString methodStr;
+      rv = httpChannel->GetRequestMethod(methodStr);
+      isPostPage = (NS_SUCCEEDED(rv) &&
+                    methodStr.Equals(NS_LITERAL_CSTRING("POST")));
+    }
 
-  // ahmed
-  // Check if 864 but in Implicit mode !
-  if ((mTexttype == IBMBIDI_TEXTTYPE_LOGICAL) &&
-      (charset.EqualsIgnoreCase("ibm864"))) {
-    charset = NS_LITERAL_CSTRING("IBM864i");
+    if (isPostPage && muCV && kCharsetFromHintPrevDoc > charsetSource) {
+      nsCAutoString requestCharset;
+      muCV->GetPrevDocCharacterSet(requestCharset);
+      if (!requestCharset.IsEmpty()) {
+        charsetSource = kCharsetFromHintPrevDoc;
+        charset = requestCharset;
+      }
+    }
+
+    if(kCharsetFromAutoDetection > charsetSource && !isPostPage) {
+      StartAutodetection(docShell, charset, aCommand);
+    }
+
+    // ahmed
+    // Check if 864 but in Implicit mode !
+    if ((mTexttype == IBMBIDI_TEXTTYPE_LOGICAL) &&
+        (charset.EqualsIgnoreCase("ibm864"))) {
+      charset = NS_LITERAL_CSTRING("IBM864i");
+    }
   }
 
   SetDocumentCharacterSet(charset);
@@ -915,7 +922,7 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
           cCharset, charsetSource);
           Recycle(cCharset);
 #endif
-    mParser->SetDocumentCharset( charset, charsetSource);
+    mParser->SetDocumentCharset(charset, charsetSource);
     mParser->SetCommand(aCommand);
 
     // create the content sink
