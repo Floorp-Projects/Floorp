@@ -2586,13 +2586,13 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
             }
             csHeader = header.ToNewCString();
             if (!csHeader) {
-                delete value;
+                delete[] value;
                 NS_RELEASE(it);
                 return NS_ERROR_OUT_OF_MEMORY;
             }
             httpUrl->AddMimeHeader(csHeader, value);
-            delete csHeader;
-            delete value;
+            delete[] csHeader;
+            delete[] value;
           }
 
           header.ToLowerCase();
