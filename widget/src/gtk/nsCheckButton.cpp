@@ -114,8 +114,12 @@ nsresult nsCheckButton::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::SetState(const PRBool aState)
 {
-  //  printf("nsCheckButton::SetState(%p,%d)\n",this,aState);
-  gtk_toggle_button_set_active(GTK_TOGGLE_BUTTON(mCheckButton), aState);
+	GtkToggleButton * item = GTK_TOGGLE_BUTTON(mCheckButton);
+
+  item->active = (gboolean) aState;
+
+  gtk_widget_queue_draw(GTK_WIDGET(item));
+  
   return NS_OK;
 }
 
@@ -126,8 +130,12 @@ NS_METHOD nsCheckButton::SetState(const PRBool aState)
 //-------------------------------------------------------------------------
 NS_METHOD nsCheckButton::GetState(PRBool& aState)
 {
-  gint state = GTK_TOGGLE_BUTTON(mCheckButton)->active;
-  aState = state;
+  aState = (PRBool) GTK_TOGGLE_BUTTON(mCheckButton)->active;
+
+  // The check button will have been toggled twice (cough) -
+  // once by GTK and once by gecko.  This is obviously messed up.
+  aState = !aState;
+
   return NS_OK;
 }
 
