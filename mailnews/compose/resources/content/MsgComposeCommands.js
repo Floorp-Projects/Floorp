@@ -1898,7 +1898,20 @@ function LoadIdentity(startup)
             }
 
             session2.filterTemplate = "cn=";
-            session2.sizeLimit = 10;
+
+            // override default maxHits (currently 100)
+            //
+            try { 
+                // XXXdmose should really use .autocomplete.maxHits,
+                // but there's no UI for that yet
+                // 
+                session2.maxHits = 
+                    prefs.GetIntPref(autocompleteDirectory + 
+                                     ".maxHits");
+            } catch (ex) {
+                // if this pref isn't there, or is out of range, no big deal. 
+                // just let nsLDAPAutoCompleteSession use its default.
+            }
         }
       }
     }
