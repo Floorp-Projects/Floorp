@@ -22,8 +22,14 @@
 #include "nsTableContent.h"
 
 /**
- * nsTableCaption
- * data structure to maintain information about a single table caption
+ * nsTableCaption is the content object that represents table captions 
+ * (HTML tag CAPTION). This class cannot be reused
+ * outside of an nsTablePart.  It assumes that its parent is an nsTablePart, and 
+ * it has a single nsBodyPart child.
+ * 
+ * @see nsTablePart
+ * @see nsTableRow
+ * @see nsBodyPart
  *
  * @author  sclark
  */
@@ -31,18 +37,28 @@ class nsTableCaption : public nsTableContent
 {
 public:
 
+  /** constructor
+    * @param aImplicit  PR_TRUE if there is no actual input tag corresponding to
+    *                   this caption.
+    */
   nsTableCaption (PRBool aImplicit);
 
+  /** constructor
+    * @param aTag  the HTML tag causing this caption to get constructed.
+    */
   nsTableCaption (nsIAtom* aTag);
 
+  /** destructor, not responsible for any memory destruction itself */
   virtual ~nsTableCaption();
 
     // For debugging purposes only
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
+  /** returns nsITableContent::kTableCaptionType */
   virtual int GetType();
 
+  /** @see nsIHTMLContent::CreateFrame */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);

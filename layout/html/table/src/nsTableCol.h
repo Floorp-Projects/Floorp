@@ -25,58 +25,81 @@
 class nsTablePart;
 
 /**
- * nsTableCol
- * data structure to maintain information about a single table column
+ * nsTableCol is the content object that represents table cols 
+ * (HTML tag COL). This class cannot be reused
+ * outside of an nsTableColGroup.  It assumes that its parent is an nsTableColGroup, and 
+ * it has no children.
+ * 
+ * @see nsTablePart
+ * @see nsTableColGroup
  *
  * @author  sclark
  */
 class nsTableCol : public nsTableContent
 {
 
-  //NS_DECL_ISUPPORTS
-
 private:
 
+  /** parent pointer, the column group to which this column belongs */
   nsTableColGroup *  mColGroup;
+
+  /** the starting index of the column (starting at 0) that this col object represents */
   PRInt32            mColIndex;
+
+  /** the number of columns that the attributes of this column extend to */
   PRInt32            mRepeat;
 
 public:
 
+  /** default constructor */
   nsTableCol ();
 
+  /** constructor
+    * @param aImplicit  PR_TRUE if there is no actual input tag corresponding to
+    *                   this col.
+    */
   nsTableCol (PRBool aImplicit);
 
+  /** constructor
+    * @param aTag  the HTML tag causing this col to get constructed.
+    */
   nsTableCol (nsIAtom* aTag);
 
+  /** destructor, not responsible for any memory destruction itself */
   virtual ~nsTableCol();
 
   // For debugging purposes only
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
+  /** returns nsITableContent::kTableCellType */
   virtual int GetType();
 
+  /** @see nsIHTMLContent::CreateFrame */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
+  /** return the number of columns this content object represents.  always >= 1*/
   virtual int GetRepeat ();
 
+  /** set the number of columns this content object represents.  must be >= 1*/
   void SetRepeat (int aRepeat);
 
   virtual nsTableColGroup *GetColGroup ();
 
-  /** 
-  * Since mColGroup is the parent of the table column,
-  * reference counting should NOT be done on 
-  * this variable when setting the row.
-  * see /ns/raptor/doc/MemoryModel.html
-  **/
+  /** set the parent col group.<br>
+    * NOTE: Since mColGroup is the parent of the table column,
+    * reference counting should NOT be done on 
+    * this variable when setting the row.
+    * see /ns/raptor/doc/MemoryModel.html
+    **/
   virtual void SetColGroup (nsTableColGroup * aColGroup);
 
+  /** return the index of the column this content object represents.  always >= 0 */
   virtual int GetColumnIndex ();
 
+  /** set the index of the column this content object represents.  must be >= 0 */
   virtual void SetColumnIndex (int aColIndex);
 
   virtual void ResetColumns ();
@@ -86,18 +109,19 @@ public:
 
 protected:
 
+  /** obsolete */
   PRBool SetInternalAttribute (nsString *aName, nsString *aValue);  
-
+  /** obsolete */
   nsString *GetInternalAttribute (nsString *aName);
-
+  /** obsolete */
   PRBool UnsetInternalAttribute (nsString *aName);
-
+  /** obsolete */
   int GetInternalAttributeState (nsString *aName);
-
+  /** obsolete */
   PRBool IsInternalAttribute (nsString *aName);
-
+  /** obsolete */
   static nsString * kInternalAttributeNames;
-
+  /** obsolete */
   nsString * GetAllInternalAttributeNames ();
 
 

@@ -29,31 +29,54 @@ class nsTableFrame;
 
 
 /** Simple data class that represents in-process reflow information about a cell.
+  * Each cell is represented by a nsTableCellFrame together with the results 
+  * of the "first pass" layout results (where "first pass" means the cell was told
+  * to lay itself out with unrestricted height and width.)
+  * There is one nsCellLayoutData object per nsTableFrame for each cell.
+  * 
   * TODO: All methods will be inline.
   */
 class nsCellLayoutData
 {
 public:
 
+  /** public constructor.  Does not allocate any of its own data.
+    * @param aCellFrame      the frame representing the cell
+    * @param aDesiredSize    the max size of the cell if given infinite height and width
+    * @param aMaxElementSize the min size of the largest indivisible element within the cell
+    */
   nsCellLayoutData(nsTableCellFrame *aCellFrame,
                    nsReflowMetrics * aDesiredSize, nsSize * aMaxElementSize);
 
+  /** destructor, not responsible for destroying any of the stored data */
   virtual ~nsCellLayoutData();
 
+  /** return the frame mapping the cell */
   nsTableCellFrame * GetCellFrame();
 
+  /** set the frame mapping the cell */
   void SetCellFrame(nsTableCellFrame * aCellFrame);
 
+  /** return the max size of the cell if given infinite height and width */
   nsReflowMetrics * GetDesiredSize();
 
+  /** set the max size of the cell if given infinite height and width.
+    * called after pass 1 of table reflow is complete.
+    */
   void SetDesiredSize(nsReflowMetrics * aDesiredSize);
 
+  /** get the min size of the largest indivisible element within the cell */
   nsSize * GetMaxElementSize();
 
+  /** set the min size of the largest indivisible element within the cell.
+    * called after pass 1 of table reflow is complete.
+    */
   void SetMaxElementSize(nsSize * aMaxElementSize);
 
+  /** debug method outputs data about this cell to FILE *out */
   void List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
+  /** returns the style molecule associated with this cell */
   nsStyleMolecule* GetStyleMolecule();
   
 private:  

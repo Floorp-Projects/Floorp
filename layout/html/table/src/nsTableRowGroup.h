@@ -24,57 +24,88 @@
 class nsIPresContext;
 
 /**
- * TableRowGroup
+ * nsTableRowGroup is the content object that represents table row groups 
+ * (HTML tags THEAD, TFOOT, and TBODY). This class cannot be reused
+ * outside of an nsTablePart.  It assumes that its parent is an nsTableParte, and 
+ * its children are nsTableRows.
+ * 
+ * @see nsTablePart
+ * @see nsTableRow
  *
- * @author  sec   11-20-97 6:12pm
- * @version $Revision: 3.1 $
- * @see
+ * @author  sclark
+ * TODO: make getter/setters inline
  */
 class nsTableRowGroup : public nsTableContent
 {
 
 public:
 
+  /** constructor
+    * @param aTag  the HTML tag causing this row group to get constructed.
+    */
   nsTableRowGroup (nsIAtom* aTag);
 
+  /** constructor
+    * @param aTag  the HTML tag causing this row group to get constructed.
+    * @param aImplicit  PR_TRUE if there is no actual input tag corresponding to
+    *                   this row group.
+    */
   nsTableRowGroup (nsIAtom* aTag, PRBool aImplicit);
 
+  /** destructor, not responsible for any memory destruction itself */
   virtual ~nsTableRowGroup();
 
+  /** return the max of the number of columns represented by the contained rows */
   virtual PRInt32 GetMaxColumns();
 
     // For debugging purposes only
   NS_IMETHOD_(nsrefcnt) AddRef();
   NS_IMETHOD_(nsrefcnt) Release();
 
+  /** @see nsIHTMLContent::CreateFrame */
   virtual nsIFrame* CreateFrame(nsIPresContext* aPresContext,
                                 PRInt32 aIndexInParent,
                                 nsIFrame* aParentFrame);
 
+  /** return the number of contained rows */
   virtual int GetRowCount ()
   {
     return ChildCount ();
   };
 
+  /** returns nsITableContent::kTableRowGroupType */
   virtual int GetType()
   {
     return nsITableContent::kTableRowGroupType;
   };
 
+  /** notify the containing nsTablePart that cell information has changed */
   virtual void ResetCellMap ();
 
   /* ----------- overrides from nsTableContent ---------- */
 
+  /** can only append objects that are rows (implement nsITableContent and are .
+    * of type nsITableContent::kTableRowType.)
+    * @see nsIContent::AppendChild
+    */
   virtual PRBool AppendChild (nsIContent * aContent);
 
+  /** can only insert objects that are rows (implement nsITableContent and are .
+    * of type nsITableContent::kTableRowType.)
+    * @see nsIContent::InsertChildAt
+    */  
   virtual PRBool InsertChildAt (nsIContent * aContent, int aIndex);
 
+  /** can only replace child objects with objects that are rows
+    * (implement nsITableContent and are * of type nsITableContent::kTableRowe.)
+    * @param aContent the object to insert, must be a row
+    * @param aIndex   the index of the object to replace.  Must be in the range
+    *                 0<=aIndex<ChildCount().
+    * @see nsIContent::ReplaceChildAt
+    */
   virtual PRBool ReplaceChildAt (nsIContent * aContent, int aIndex);
 
-  /**
-   * Remove a child at the given position. The method is ignored if
-   * the index is invalid (too small or too large).
-   */
+  /** @see nsIContent::InsertChildAt */
   virtual PRBool RemoveChildAt (int aIndex);
 
 protected:

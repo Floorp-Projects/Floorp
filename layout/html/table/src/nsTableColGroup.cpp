@@ -97,7 +97,7 @@ int nsTableColGroup::GetStartColumnIndex ()
 void nsTableColGroup::SetStartColumnIndex (int aIndex)
 {
   if (aIndex != mStartColIndex)
-    mColCount = 0;  // our index is beign changed, trigger reset of col indicies, don't propogate back to table
+    mColCount = 0;  // our index is being changed, trigger reset of col indicies, don't propogate back to table
   mStartColIndex = aIndex;
 }
 
@@ -116,6 +116,10 @@ void nsTableColGroup::ResetColumns ()
     mTable->ResetColumns ();
 }
 
+/** returns the number of columns represented by this group.
+  * if there are col children, count them (taking into account the span of each)
+  * else, check my own span attribute.
+  */
 int nsTableColGroup::GetColumnCount ()
 {
   if (0 == mColCount)

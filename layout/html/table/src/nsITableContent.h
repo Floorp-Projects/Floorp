@@ -29,11 +29,11 @@ class nsTablePart;
     {0x8f, 0x2f, 0x00, 0x60, 0x08, 0x15, 0x9b, 0x0c} }
 
 /**
- * nsITableContent is a concrete subclass for all content nodes contained directly within a table.
+ * nsITableContent is a concrete subclass for all content nodes contained directly 
+ * within a table.
  *
  * @author  sclark
- * @version $Revision: 3.1 $
- * @see
+ * @see nsTablePart
  */
 class nsITableContent : public nsISupports
 {
@@ -49,33 +49,35 @@ public:
   static const int kTableCellType;
 
 protected:
+  /** protected constructor.  Never create an object of type nsITableContent directly.*/
   nsITableContent ();
 
 public:
-  /** 
-    * returns the TablePart that contains this content node.
+  /** returns the TablePart that contains this content node.
+    * every table content has one and only one parent, 
+    * and may not be replicated within different hierarchies.
     */
   virtual nsTablePart *GetTable ()=0;
   
-  /**
-    *
+  /** set the parent of this table content object.
+    * @param aTable the new parent.  May be null to disconnect this object from
+    *               the hierarchy it is in.  Note that we don't have formalized
+    *               relationship objects, so the caller must also remove this 
+    *               from it's prarent's child list.
     */
   virtual void SetTable (nsTablePart *aTable)=0;
 
-  /**
-    *
+  /** returns PR_TRUE if there is an actual input tag corresponding to
+    * this content object.
     */
   virtual PRBool IsImplicit () const =0;
 
-  /**
-    * Don't want to put out implicit tags when saving.
+  /** returns PR_TRUE if this content object should NOT be written to the output stream.
+    * for example, we don't generally want to output implicit tags when saving.
     */
   virtual PRBool SkipSelfForSaving ()=0; 
 
-  /**
-    * return the type of TableContent this object represents.
-    * implementing interfaces for all these objects seemed like overkill.
-    */
+  /** return the type of TableContent this object represents. */
   virtual int GetType()=0;
 
 };
