@@ -42,6 +42,12 @@
 #include "nsIMenuListener.h"
 #include "nsMenuItem.h"
 
+//#define DRAG_DROP 1
+
+#ifdef DRAG_DROP
+#include "nsDropTarget.h"
+#endif
+
 BOOL nsWindow::sIsRegistered = FALSE;
 
 nsWindow* nsWindow::gCurrentWindow = nsnull;
@@ -87,10 +93,14 @@ nsWindow::nsWindow() : nsBaseWidget()
     mHas3DBorder        = PR_FALSE;
     mMenuBar            = nsnull;
     mMenuCmdId          = 0;
-
+   
     mHitMenu            = nsnull;
     mHitSubMenus        = new nsVoidArray();
     mVScrollbar         = nsnull;
+
+#ifdef DRAG_DROP
+    mDropTarget         = nsnull;
+#endif
 }
 
 
@@ -118,6 +128,9 @@ nsWindow::~nsWindow()
   }
 
   NS_IF_RELEASE(mHitMenu); // this should always have already been freed by the deselect
+#ifdef DRAG_DROP
+  NS_IF_RELEASE(mDropTarget); 
+#endif
 
   //XXX Temporary: Should not be caching the font
   delete mFont;
@@ -449,12 +462,15 @@ LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM
 }
 
 
-
+//WINOLEAPI oleStatus;
 //-------------------------------------------------------------------------
 //
 // Utility method for implementing both Create(nsIWidget ...) and
 // Create(nsNativeWidget...)
 //-------------------------------------------------------------------------
+#ifdef DRAG_DROP
+BOOL gOLEInited = FALSE;
+#endif
 
 nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                       const nsRect &aRect,
@@ -546,6 +562,26 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
                             NULL);
    
     VERIFY(mWnd);
+
+    // Initial Drag & Drop Work
+#ifdef DRAG_DROP
+   if (!gOLEInited) {
+     DWORD dwVer = ::OleBuildVersion();
+
+     if (FAILED(::OleInitialize(NULL))){
+       printf("***** OLE has been initialized!\n");
+     }
+     gOLEInited = TRUE;
+   }
+
+   mDropTarget = new nsDropTarget(this);
+   mDropTarget->AddRef();
+   if (S_OK == ::CoLockObjectExternal((LPUNKNOWN)mDropTarget,TRUE,FALSE)) {
+     if (S_OK == ::RegisterDragDrop(mWnd, (LPDROPTARGET)mDropTarget)) {
+
+     }
+   }
+#endif
 
     // call the event callback to notify about creation
 
@@ -1576,6 +1612,12 @@ nsresult nsWindow::MenuHasBeenSelected(HMENU aNativeMenu, UINT aItemNum, UINT aF
   }  
   return NS_OK;
 }
+//---------------------------------------------------------
+NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
+{
+  ::DragAcceptFiles(mWnd, (aEnable?TRUE:FALSE));
+  return NS_OK;
+}
 
 //-------------------------------------------------------------------------
 //
@@ -1944,6 +1986,26 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             }
             result = PR_TRUE;
             break;
+
+        case WM_DROPFILES: {
+          HDROP hDropInfo = (HANDLE) wParam;
+	        UINT nFiles = ::DragQueryFile(hDropInfo, (UINT)-1, NULL, 0);
+
+	        for (UINT iFile = 0; iFile < nFiles; iFile++) {
+		        TCHAR szFileName[_MAX_PATH];
+		        ::DragQueryFile(hDropInfo, iFile, szFileName, _MAX_PATH);
+            printf("szFileName [%s]\n", szFileName);
+            nsAutoString fileStr(szFileName);
+            nsEventStatus status;
+            nsDragDropEvent event;
+            InitEvent(event, NS_DRAGDROP_EVENT);
+            event.mType      = nsDragDropEventStatus_eDrop;
+            event.mIsFileURL = PR_FALSE;
+            event.mURL       = (PRUnichar *)fileStr.GetUnicode();
+            DispatchEvent(&event, status);
+	        }
+        } break;
+
     }
 
     return result;

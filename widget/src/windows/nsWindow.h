@@ -35,6 +35,7 @@
 
 #include "nsVoidArray.h"
 
+class nsDropTarget;
 
 #define NSRGB_2_COLOREF(color) \
             RGB(NS_GET_R(color),NS_GET_G(color),NS_GET_B(color))
@@ -120,6 +121,7 @@ public:
     NS_IMETHOD              GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);
     NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
     NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
+    NS_IMETHOD              EnableFileDrop(PRBool aEnable);
 
     virtual void            SetUpForPaint(HDC aHDC);
    	virtual void            ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) {}
@@ -136,6 +138,8 @@ public:
     nsPoint*                GetLastPoint() { return &mLastPoint; }
 
     PRInt32                 GetNewCmdMenuId() { mMenuCmdId++; return mMenuCmdId;}
+
+    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
 
 protected:
 
@@ -172,7 +176,6 @@ protected:
     static PRBool ConvertStatus(nsEventStatus aStatus);
     DWORD  GetBorderStyle(nsBorderStyle aBorderStyle);
 
-    void InitEvent(nsGUIEvent& event, PRUint32 aEventType, nsPoint* aPoint = nsnull);
     PRBool DispatchStandardEvent(PRUint32 aMsg);
     void AddTooltip(HWND hwndOwner, nsRect* aRect, int aId);
     void RelayMouseEvent(UINT aMsg, WPARAM wParam, LPARAM lParam);
@@ -206,6 +209,8 @@ protected:
     nsIMenu     * mHitMenu;
     nsVoidArray * mHitSubMenus;
 
+    // Drag & Drop
+    nsDropTarget * mDropTarget;
 
     // Enumeration of the methods which are accessable on the "main GUI thread"
     // via the CallMethod(...) mechanism...
