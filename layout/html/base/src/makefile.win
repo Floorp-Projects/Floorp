@@ -23,15 +23,14 @@ REQUIRES=xpcom raptor js
 DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
 
 CPPSRCS=			\
- nsAbsoluteFrame.cpp \
+ nsAbsoluteFrame.cpp		\
  nsBRPart.cpp			\
- nsBlockFrame.cpp		\
  nsBodyFrame.cpp		\
  nsBodyPart.cpp			\
  nsGlobalVariables.cpp		\
  nsHRPart.cpp			\
  nsHTMLAtoms.cpp		\
- nsHTMLBase.cpp		\
+ nsHTMLBase.cpp			\
  nsHTMLBullet.cpp		\
  nsHTMLContainer.cpp		\
  nsHTMLContainerFrame.cpp	\
@@ -39,12 +38,10 @@ CPPSRCS=			\
  nsHTMLHead.cpp			\
  nsHTMLIIDs.cpp			\
  nsHTMLImage.cpp		\
- nsHTMLReflowCommand.cpp \
+ nsHTMLReflowCommand.cpp	\
  nsHTMLTagContent.cpp		\
  nsImageMap.cpp			\
- nsInlineFrame.cpp		\
  nsLeafFrame.cpp		\
- nsLineLayout.cpp		\
  nsPageFrame.cpp		\
  nsPlaceholderFrame.cpp		\
  nsRootPart.cpp			\
@@ -57,9 +54,8 @@ CPPSRCS=			\
  $(NULL)
 
 CPP_OBJS=				\
- .\$(OBJDIR)\nsAbsoluteFrame.obj \
+ .\$(OBJDIR)\nsAbsoluteFrame.obj	\
  .\$(OBJDIR)\nsBRPart.obj		\
- .\$(OBJDIR)\nsBlockFrame.obj		\
  .\$(OBJDIR)\nsBodyFrame.obj		\
  .\$(OBJDIR)\nsBodyPart.obj		\
  .\$(OBJDIR)\nsGlobalVariables.obj	\
@@ -73,13 +69,11 @@ CPP_OBJS=				\
  .\$(OBJDIR)\nsHTMLHead.obj		\
  .\$(OBJDIR)\nsHTMLIIDs.obj		\
  .\$(OBJDIR)\nsHTMLImage.obj		\
- .\$(OBJDIR)\nsHTMLReflowCommand.obj \
+ .\$(OBJDIR)\nsHTMLReflowCommand.obj	\
  .\$(OBJDIR)\nsHTMLTagContent.obj	\
  .\$(OBJDIR)\nsHTMLTags.obj		\
  .\$(OBJDIR)\nsImageMap.obj		\
- .\$(OBJDIR)\nsInlineFrame.obj		\
  .\$(OBJDIR)\nsLeafFrame.obj		\
- .\$(OBJDIR)\nsLineLayout.obj		\
  .\$(OBJDIR)\nsPageFrame.obj		\
  .\$(OBJDIR)\nsPlaceholderFrame.obj	\
  .\$(OBJDIR)\nsRootPart.obj		\
@@ -93,8 +87,9 @@ CPP_OBJS=				\
 
 EXPORTS=nsGlobalVariables.h
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
- -I..\..\style\src -I$(PUBLIC)\dom -I$(PUBLIC)\netlib \
+LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js	\
+ -I$(PUBLIC)\dom -I$(PUBLIC)\netlib				\
+ -I..\..\style\src -I..\..\..\css\layout\src			\
  -I..\..\..\base\src
 
 LCFLAGS = \

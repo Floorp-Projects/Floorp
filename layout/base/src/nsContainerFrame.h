@@ -190,7 +190,7 @@ public:
    *
    * It's a precondition that this frame must be a pseudo-frame.
    */
-  void PropagateContentOffsets();
+  virtual void PropagateContentOffsets();
 
 protected:
   // Constructor. Takes as arguments the content object, the index in parent,
@@ -237,22 +237,16 @@ protected:
   */
   PRBool MoveOverflowToChildList();
 
- /**
-  * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow
-  * pointers
-  *
-  * Updates the child count and content offsets of all containers that are
-  * affected
-  *
-  * @param   aChild child this child's next-in-flow
-  * @return  PR_TRUE if successful and PR_FALSE otherwise
-  */
-  PRBool DeleteChildsNextInFlow(nsIFrame* aChild);
-
-  static PRBool DeleteNextInFlowsFor(nsContainerFrame* aParent, nsIFrame* aKid)
-  {
-    return aParent->DeleteChildsNextInFlow(aKid);
-  }
+  /**
+   * Remove and delete aChild's next-in-flow(s). Updates the sibling and flow
+   * pointers.
+   *
+   * Updates the child count and content offsets of all containers that are
+   * affected.
+   *
+   * @param   aChild child this child's next-in-flow
+   */
+  PRBool  DeleteChildsNextInFlow(nsIFrame* aChild);
 
  /**
   * Push aFromChild and its next siblings to the next-in-flow. Change the
@@ -273,27 +267,6 @@ protected:
   */
   void PushChildren(nsIFrame* aFromChild, nsIFrame* aPrevSibling,
                     PRBool aNextInFlowsLastChildIsComplete);
-
-  /**
-   * Attempt to pull one child from the next-in-flow, if any.  This
-   * does everything necessary for the receiving frame and the
-   * next-in-flow frame to ensure that the content offsets and
-   * mLastContentIsComplete flags are correct, and it makes sure that
-   * the parent offsets if this frame or the next is a pseudo-frame
-   * are correct. If there are no children to pull from the next
-   * in flow, nsnull is returned.
-   *
-   * If the caller decides that it doesn't want the child from the
-   * next in flow, it can call PushChildren to push it back.
-   *
-   * @param aNextInFlow the next-in-flow frame to attempt to pull a child
-   *          from
-   * @param aLastChild the current last child for this frame. If a child
-   *          is pullable then the child will become aLastChild's next
-   *          sibling
-   */
-  nsIFrame* PullUpOneChild(nsContainerFrame* aNextInFlow,
-                           nsIFrame* aLastChild);
 
   /**
    * Called after pulling-up children from the next-in-flow. Adjusts the first

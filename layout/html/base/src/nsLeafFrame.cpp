@@ -60,6 +60,7 @@ NS_METHOD nsLeafFrame::Reflow(nsIPresContext*      aPresContext,
   // XXX add in code to check for width/height being set via css
   // and if set use them instead of calling GetDesiredSize.
 
+
   GetDesiredSize(aPresContext, aReflowState, aDesiredSize);
   AddBordersAndPadding(aPresContext, aDesiredSize);
   if (nsnull != aDesiredSize.maxElementSize) {

@@ -38,7 +38,8 @@ CPPSRCS =				\
 
 MODULE = raptor
 
-INCLUDES += -I../../../base/src -I../../base/src -I../../style/src
+INCLUDES += -I../../../base/src -I../../base/src -I../../style/src \
+ -I../../linelayout/src
 
 REQUIRES = xpcom raptor dom netlib js
 

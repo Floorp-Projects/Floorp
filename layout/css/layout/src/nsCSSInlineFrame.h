@@ -33,7 +33,7 @@ struct nsCSSInlineReflowState : public nsReflowState {
                          nsCSSInlineFrame* aInlineFrame,
                          nsIStyleContext* aInlineSC,
                          const nsReflowState& aReflowState,
-                         nsSize* aMaxElementSize);
+                         PRBool aComputeMaxElementSize);
   ~nsCSSInlineReflowState();
 
   nsIPresContext* mPresContext;
@@ -79,6 +79,9 @@ public:
                           nsReflowMetrics&     aDesiredSize,
                           const nsReflowState& aReflowState);
 
+  // nsCSSContainerFrame
+  virtual PRBool DeleteNextInFlowsFor(nsIFrame* aChild);
+
 protected:
   nsCSSInlineFrame(nsIContent* aContent, nsIFrame* aParent);
 
@@ -95,14 +98,16 @@ protected:
   void ComputeFinalSize(nsCSSInlineReflowState& aState,
                         nsReflowMetrics& aMetrics);
 
-  nsInlineReflowStatus ReflowMapped(nsCSSInlineReflowState& aState);
+  PRBool ReflowMapped(nsCSSInlineReflowState& aState,
+                      nsInlineReflowStatus&   aReflowStatus);
 
-  nsInlineReflowStatus ReflowUnmapped(nsCSSInlineReflowState& aState);
-
-  nsInlineReflowStatus PullUpChildren(nsCSSInlineReflowState& aState);
+  PRBool PullUpChildren(nsCSSInlineReflowState& aState,
+                        nsInlineReflowStatus&   aReflowStatus);
 
   nsIFrame* PullOneChild(nsCSSInlineFrame* aNextInFlow,
                          nsIFrame*         aLastChild);
+
+  nsInlineReflowStatus ReflowUnmapped(nsCSSInlineReflowState& aState);
 
   nsresult MaybeCreateNextInFlow(nsCSSInlineReflowState& aState,
                                  nsIFrame*               aFrame);

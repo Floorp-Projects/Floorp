@@ -18,6 +18,8 @@
 #include "nsHTMLParts.h"
 #include "nsCRT.h"
 #include "nsSplittableFrame.h"
+#include "nsIInlineReflow.h"
+#include "nsCSSLineLayout.h"
 #include "nsHTMLContent.h"
 #include "nsString.h"
 #include "nsIPresContext.h"
@@ -32,7 +34,6 @@
 #include "nsIViewManager.h"
 #include "nsITimerCallback.h"
 #include "nsITimer.h"
-#include "nsBlockFrame.h"
 #include "prtime.h"
 #include "nsVoidArray.h"
 #include "prprf.h"
@@ -57,13 +58,16 @@ PRBool IsInRange(nsIContent * aStart, nsIContent * aEnd, nsIContent * aContent);
 #endif
 
 // XXX TODO:
-// 0. tune justified text
+// 0. re-implement justified text
 // 1. add in a rendering method that can render justified text
 // 2. text renderer should negotiate with rendering context/font
 //    metrics to see what it can handle; for example, if the renderer can
 //    automatically deal with underlining, strikethrough, justification,
 //    etc, then the text renderer should let the rc do the work;
 //    otherwise there should be XP fallback code here.
+
+// XXX TODO:
+// implement nsIFrame::Reflow
 
 // XXX Speedup ideas
 // 1. justified text can use word width information during resize reflows
@@ -113,37 +117,35 @@ public:
   nsVoidArray mFrames;
 };
 
-class TextFrame : public nsSplittableFrame {
+class TextFrame : public nsSplittableFrame, nsIInlineReflow {
 public:
   TextFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
+  // nsISupports
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIFrame
   NS_IMETHOD Paint(nsIPresContext& aPresContext,
                    nsIRenderingContext& aRenderingContext,
                    const nsRect& aDirtyRect);
-
-  NS_IMETHOD Reflow(nsIPresContext* aCX,
-                    nsReflowMetrics& aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus& aStatus);
-
-  NS_IMETHOD GetReflowMetrics(nsIPresContext*  aPresContext,
-                              nsReflowMetrics& aMetrics);
-
-  NS_IMETHOD JustifyReflow(nsIPresContext* aCX,
-                           nscoord aAvailableSpace);
-
   NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
                          const nsPoint& aPoint,
                          nsIFrame** aFrame,
                          PRInt32& aCursor);
-
   NS_IMETHOD ContentChanged(nsIPresShell*   aShell,
                             nsIPresContext* aPresContext,
                             nsIContent*     aChild,
                             nsISupports*    aSubContent);
-
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
+  NS_IMETHOD ListTag(FILE* out) const;
 
+  // nsIInlineReflow
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+                          nsReflowMetrics&     aMetrics,
+                          const nsReflowState& aReflowState);
+
+  // TextFrame methods
   PRInt32 GetPosition(nsIPresContext& aCX,
                       nsGUIEvent*     aEvent,
                       nsIFrame *      aNewFrame);
@@ -172,26 +174,18 @@ protected:
                         const nsRect& aDirtyRect,
                         nscoord dx, nscoord dy);
 
-  void PaintJustifiedText(nsIRenderingContext& aRenderingContext,
-                          const nsRect& aDirtyRect,
-                          nscoord dx, nscoord dy);
+  nsInlineReflowStatus ReflowPre(nsCSSLineLayout& aLineLayout,
+                                 nsReflowMetrics& aMetrics,
+                                 const nsReflowState& aReflowState,
+                                 const nsStyleFont& aFont,
+                                 PRInt32 aStartingOffset);
 
-  nsReflowStatus ReflowPre(nsIPresContext* aCX,
-                           nsReflowMetrics& aDesiredSize,
-                           const nsSize& aMaxSize,
-                           nsSize* aMaxElementSize,
-                           const nsStyleFont& aFont,
-                           PRInt32 aStartingOffset,
-                           nsLineLayout* aLineState);
-
-  nsReflowStatus ReflowNormal(nsIPresContext* aCX,
-                              nsReflowMetrics& aDesiredSize,
-                              const nsSize& aMaxSize,
-                              nsSize* aMaxElementSize,
-                              const nsStyleFont& aFont,
-                              const nsStyleText& aTextStyle,
-                              PRInt32 aStartingOffset,
-                              nsLineLayout* aLineState);
+  nsInlineReflowStatus ReflowNormal(nsCSSLineLayout& aLineLayout,
+                                    nsReflowMetrics& aMetrics,
+                                    const nsReflowState& aReflowState,
+                                    const nsStyleFont& aFontStyle,
+                                    const nsStyleText& aTextStyle,
+                                    PRInt32 aStartingOffset);
 
 public:
   PRInt32 mContentOffset;
@@ -200,13 +194,6 @@ public:
   // XXX need a better packing
   PRUint32 mFlags;
   PRUint32 mColumn;
-
-  // When this text frame is justified, this pointer is not null
-  // and points to data about each word/space in the text
-  PRUint32* mWords;
-#ifdef DEBUG_JUSTIFY
-  PRInt32 mNumWords;
-#endif
 };
 
 // Flag information used by rendering code. This information is
@@ -221,6 +208,7 @@ public:
 #define TEXT_GET_TAB_COUNT(_mf) ((_mf) >> 5)
 #define TEXT_SET_TAB_COUNT(_mf,_tabs) (_mf) = (_mf) | ((_tabs)<< 5)
 
+#if XXX
 // mWords bit definitions
 #define WORD_IS_WORD                    0x80000000L
 #define WORD_IS_SPACE                   0x00000000L
@@ -235,6 +223,7 @@ public:
   ((PRIntn) (((_wi) & WORD_LENGTH_MASK)/* >> WORD_LENGTH_SHIFT*/))
 #define GET_WORD_WIDTH(_wi) \
   ((nscoord) ((PRUint32(_wi) & WORD_WIDTH_MASK) >> WORD_WIDTH_SHIFT))
+#endif
 
 class Text : public nsHTMLContent, public nsIDOMText {
 public:
@@ -411,9 +400,20 @@ TextFrame::~TextFrame()
     // Release text timer when the last text frame is gone
     gTextBlinker = nsnull;
   }
-  if (nsnull != mWords) {
-    delete[] mWords;
+}
+
+NS_IMETHODIMP
+TextFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
+{
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
   }
+  if (aIID.Equals(kIInlineReflowIID)) {
+    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
+    return NS_OK;
+  }
+  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
 }
 
 NS_METHOD TextFrame::GetCursorAt(nsIPresContext& aPresContext,
@@ -467,32 +467,25 @@ NS_METHOD TextFrame::Paint(nsIPresContext& aPresContext,
     // Set font and color
     aRenderingContext.SetColor(color->mColor);
     aRenderingContext.SetFont(font->mFont);
-
-    if (nsnull != mWords) {
-      PaintJustifiedText(aRenderingContext, aDirtyRect, 0, 0);
-      if (font->mThreeD) {
-        nscoord onePixel = nscoord(1.0f * aPresContext.GetPixelsToTwips());
-        aRenderingContext.SetColor(color->mBackgroundColor);
-        PaintJustifiedText(aRenderingContext, aDirtyRect, onePixel, onePixel);
-      }
-      return NS_OK;
-    }
     PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, 0, 0);
-    //nsFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
+
+#if XXX
     if (font->mThreeD) {
       nscoord onePixel = nscoord(1.0f * aPresContext.GetPixelsToTwips());
       aRenderingContext.SetColor(color->mBackgroundColor);
       PaintRegularText(aPresContext, aRenderingContext, aDirtyRect, onePixel, onePixel);
     }
+#endif
   }
 
   return NS_OK;
 }
 
-void TextFrame::PaintRegularText(nsIPresContext& aPresContext,
-                                 nsIRenderingContext& aRenderingContext,
-                                 const nsRect& aDirtyRect,
-                                 nscoord dx, nscoord dy)
+void
+TextFrame::PaintRegularText(nsIPresContext& aPresContext,
+                            nsIRenderingContext& aRenderingContext,
+                            const nsRect& aDirtyRect,
+                            nscoord dx, nscoord dy)
 {
   // Skip leading space if necessary
   Text* txt = (Text*) mContent;
@@ -660,139 +653,29 @@ void TextFrame::PaintRegularText(nsIPresContext& aPresContext,
   }
 }
 
-void TextFrame::PaintJustifiedText(nsIRenderingContext& aRenderingContext,
-                                   const nsRect& aDirtyRect,
-                                   nscoord dx, nscoord dy)
+NS_IMETHODIMP
+TextFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
 {
-  Text* txt = (Text*) mContent;
-  const PRUnichar* cp = txt->mText + mContentOffset;
-  const PRUnichar* end = cp + mContentLength;
-
-  // Get a word buffer that's big enough to hold all of the text in
-  // case all of the text happens to be a word (not possible given how
-  // the justification workds, but it's the fastest check that gets us
-  // a big enough buffer). We only do this if we aren't going to use
-  // multibyte rendering.
-  char buf[100];
-  char* s0 = buf;
-  if ((mFlags & TEXT_HAS_MULTIBYTE) == 0) {
-    PRInt32 maxLen = end - cp;
-    if (maxLen > sizeof(buf)) {
-      s0 = new char[maxLen];
-    }
+  if (nsnull == mPrevInFlow) {
+    aLineLayout.AddText(this);
   }
-
-  // XXX justified text doesn't render underlines (etc) over spaces
-  // while regular text does...fix this?
-  PRUint32* wp = mWords;
-  PRInt32 total = mContentLength;
-  nscoord x = dx;
-#ifdef DEBUG_JUSTIFY
-  PRIntn numWords = mNumWords;
-#endif
-  while (total != 0) {
-#ifdef DEBUG_JUSTIFY
-    NS_ASSERTION(numWords > 0, "bad word data");
-#endif
-    PRUint32 wordInfo = *wp++;
-    nscoord wordWidth = GET_WORD_WIDTH(wordInfo);
-    PRIntn wordLen = GET_WORD_LENGTH(wordInfo);
-    if (wordInfo & WORD_IS_WORD) {
-      if (mFlags & TEXT_HAS_MULTIBYTE) {
-        aRenderingContext.DrawString(cp, wordLen, x, dy, mRect.width);
-        cp += wordLen;
-      } else {
-        char* s = s0;
-        char* es = s + wordLen;
-        while (s < es) {
-          PRUint8 ch = (PRUint8) *cp++;
-          *s++ = ch;
-        }
-        aRenderingContext.DrawString(s0, s - s0, x, dy, mRect.width);
-      }
-    } else {
-      // skip over space characters in text array
-      cp += wordLen;
-    }
-    x += wordWidth;
-    total -= wordLen;
-#ifdef DEBUG_JUSTIFY
-    --numWords;
-    NS_ASSERTION(total >= 0, "bad word data");
-#endif
-  }
-
-  if (s0 != buf) {
-    delete[] s0;
-  }
-}
-
-NS_METHOD TextFrame::GetReflowMetrics(nsIPresContext* aCX,
-                                      nsReflowMetrics& aMetrics)
-{
-  // Get cached state for containing block frame
-  nsLineLayout* lineLayoutState = nsnull;
-  nsBlockReflowState* state = nsBlockFrame::FindBlockReflowState(aCX, this);
-  if (nsnull != state) {
-    lineLayoutState = state->mCurrentLine;
-    if (nsnull != lineLayoutState) {
-      lineLayoutState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
-    }
-
-    if (0 == (mFlags & TEXT_IS_PRE)) {
-      if (mRect.width != 0) {
-        lineLayoutState->SetSkipLeadingWhiteSpace(
-          (0 != (mFlags & TEXT_ENDS_IN_WHITESPACE)));
-      }
-    }
-  }
-
-  aMetrics.width = mRect.width;
-  aMetrics.height = mRect.height;
-
-  const nsStyleFont* font =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  nsIFontMetrics* fm = aCX->GetMetricsFor(font->mFont);
-  aMetrics.ascent = fm->GetMaxAscent();
-  aMetrics.descent = fm->GetMaxDescent();
-  NS_RELEASE(fm);
-
   return NS_OK;
 }
 
-NS_METHOD TextFrame::Reflow(nsIPresContext* aCX,
-                            nsReflowMetrics& aDesiredSize,
-                            const nsReflowState& aReflowState,
-                            nsReflowStatus& aStatus)
+NS_IMETHODIMP
+TextFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
+                        nsReflowMetrics&     aMetrics,
+                        const nsReflowState& aReflowState)
 {
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter TextFrame::Reflow: aMaxSize=%d,%d",
       aReflowState.maxSize.width, aReflowState.maxSize.height));
-
-  // Wipe out old justification information since it's going to change
-  if (nsnull != mWords) {
-    delete[] mWords;
-    mWords = nsnull;
-  }
-#ifdef DEBUG_JUSTIFY
-  mNumWords = 0;
-#endif
 
   // Get starting offset into the content
   PRInt32 startingOffset = 0;
   if (nsnull != mPrevInFlow) {
     TextFrame* prev = (TextFrame*) mPrevInFlow;
     startingOffset = prev->mContentOffset + prev->mContentLength;
-  }
-
-  // Get cached state for containing block frame
-  nsLineLayout* lineLayoutState = nsnull;
-  nsBlockReflowState* state = nsBlockFrame::FindBlockReflowState(aCX, this);
-  if (nsnull != state) {
-    lineLayoutState = state->mCurrentLine;
-    if (nsnull != lineLayoutState) {
-      lineLayoutState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
-    }
   }
 
   const nsStyleFont* font =
@@ -811,38 +694,34 @@ NS_METHOD TextFrame::Reflow(nsIPresContext* aCX,
   const nsStyleText* text =
     (const nsStyleText*)mStyleContext->GetStyleData(eStyleStruct_Text);
 
+  nsInlineReflowStatus rs;
   if (NS_STYLE_WHITESPACE_PRE == text->mWhiteSpace) {
     // Use a specialized routine for pre-formatted text
-    aStatus = ReflowPre(aCX, aDesiredSize, aReflowState.maxSize,
-                        aDesiredSize.maxElementSize, *font, startingOffset,
-                        lineLayoutState);
+    rs = ReflowPre(aLineLayout, aMetrics, aReflowState,
+                   *font, startingOffset);
   } else {
     // Use normal wrapping routine for non-pre text (this includes
     // text that is not wrapping)
-    aStatus = ReflowNormal(aCX, aDesiredSize, aReflowState.maxSize,
-                           aDesiredSize.maxElementSize, *font, *text,
-                           startingOffset, lineLayoutState);
+    rs = ReflowNormal(aLineLayout, aMetrics, aReflowState,
+                      *font, *text, startingOffset);
   }
 
-  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-               ("exit TextFrame::Reflow: %scomplete width=%d",
-                (NS_FRAME_IS_COMPLETE(aStatus) ? "" : "not "),
-                aDesiredSize.width));
-  return NS_OK;
+  NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+     ("exit TextFrame::Reflow: rv=%x width=%d",
+      rs, aMetrics.width));
+  return rs;
 }
 
 // Reflow normal text (stuff that doesn't have to deal with horizontal
 // tabs). Normal text reflow may or may not wrap depending on the
 // "whiteSpace" style property.
-nsReflowStatus
-TextFrame::ReflowNormal(nsIPresContext* aCX,
-                        nsReflowMetrics& aDesiredSize,
-                        const nsSize& aMaxSize,
-                        nsSize* aMaxElementSize,
+nsInlineReflowStatus
+TextFrame::ReflowNormal(nsCSSLineLayout& aLineLayout,
+                        nsReflowMetrics& aMetrics,
+                        const nsReflowState& aReflowState,
                         const nsStyleFont& aFont,
                         const nsStyleText& aTextStyle,
-                        PRInt32 aStartingOffset,
-                        nsLineLayout* aLineState)
+                        PRInt32 aStartingOffset)
 {
   Text* txt = (Text*) mContent;
   const PRUnichar* cp = txt->mText + aStartingOffset;
@@ -850,7 +729,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   const PRUnichar* cpStart = cp;
   mContentOffset = aStartingOffset;
 
-  nsIFontMetrics* fm = aCX->GetMetricsFor(aFont.mFont);
+  nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(aFont.mFont);
   PRInt32 spaceWidth = fm->GetWidth(' ');
   PRBool wrapping = PR_TRUE;
   if (NS_STYLE_WHITESPACE_NORMAL != aTextStyle.mWhiteSpace) {
@@ -859,11 +738,9 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
-  if (nsnull != aLineState) {
-    if (aLineState->mState.mSkipLeadingWhiteSpace) {
-      skipWhitespace = PR_TRUE;
-      mFlags |= TEXT_SKIP_LEADING_WS;
-    }
+  if (aLineLayout.GetSkipLeadingWhiteSpace()) {
+    skipWhitespace = PR_TRUE;
+    mFlags |= TEXT_SKIP_LEADING_WS;
   }
 
   // Try to fit as much of the text as possible. Note that if we are
@@ -876,7 +753,7 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   // XXX XP_IS_SPACE must not return true for the unicode &nbsp character
   // XXX what about &zwj and it's cousins?
   nscoord x = 0;
-  nscoord maxWidth = aMaxSize.width;
+  nscoord maxWidth = aReflowState.maxSize.width;
   nscoord maxWordWidth = 0;
   const PRUnichar* lastWordEnd = cpStart;
   const PRUnichar* lastWordStart = cpStart;
@@ -898,7 +775,9 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
         break;
       }
       if (skipWhitespace) {
-        aLineState->AtSpace();
+#if XXX_fix_me
+        aLineLayout->AtSpace();
+#endif
         skipWhitespace = PR_FALSE;
         continue;
       }
@@ -936,14 +815,16 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
       break;
     }
 
+#if XXX_fix_me
     // Update break state in line reflow state
     // XXX move this out of the loop!
     if (isWhitespace) {
-      aLineState->AtSpace();
+      aLineLayout.AtSpace();
     }
     else {
-      aLineState->AtWordStart(this, x);
+      aLineLayout.AtWordStart(this, x);
     }
+#endif
 
     // The word fits. Add it to the run of text.
     x += width;
@@ -961,15 +842,13 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
     mFlags |= TEXT_ENDS_IN_WHITESPACE;
   }
 
-  if (nsnull != aLineState) {
-    if (0 == x) {
-      // Since we collapsed into nothingness (all our whitespace
-      // is ignored) leave the aState->mSkipLeadingWhiteSpace
-      // flag alone since it doesn't want leading whitespace
-    }
-    else {
-      aLineState->mState.mSkipLeadingWhiteSpace = endsInWhitespace;
-    }
+  if (0 == x) {
+    // Since we collapsed into nothingness (all our whitespace
+    // is ignored) leave the aState->mSkipLeadingWhiteSpace
+    // flag alone since it doesn't want leading whitespace
+  }
+  else {
+    aLineLayout.SetSkipLeadingWhiteSpace(endsInWhitespace);
   }
 
   // XXX too much code here: some of it isn't needed
@@ -978,68 +857,64 @@ TextFrame::ReflowNormal(nsIPresContext* aCX,
   if (0 == mContentLength) {
     if (cp == end) {
       // The entire chunk of text was whitespace that we skipped over.
-      aDesiredSize.width = 0;
-      aDesiredSize.height = 0;
-      aDesiredSize.ascent = 0;
-      aDesiredSize.descent = 0;
+      aMetrics.width = 0;
+      aMetrics.height = 0;
+      aMetrics.ascent = 0;
+      aMetrics.descent = 0;
       mContentLength = end - cpStart;
-      if (nsnull != aMaxElementSize) {
-        aMaxElementSize->width = 0;
-        aMaxElementSize->height = 0;
+      if (nsnull != aMetrics.maxElementSize) {
+        aMetrics.maxElementSize->width = 0;
+        aMetrics.maxElementSize->height = 0;
       }
       NS_RELEASE(fm);
-      return NS_FRAME_COMPLETE;
+      return NS_INLINE_REFLOW_COMPLETE;
     }
   }
 
   // Set desired size to the computed size
-  aDesiredSize.width = x;
-  aDesiredSize.height = fm->GetHeight();
-  aDesiredSize.ascent = fm->GetMaxAscent();
-  aDesiredSize.descent = fm->GetMaxDescent();
+  aMetrics.width = x;
+  aMetrics.height = fm->GetHeight();
+  aMetrics.ascent = fm->GetMaxAscent();
+  aMetrics.descent = fm->GetMaxDescent();
   if (!wrapping) {
     maxWordWidth = x;
   }
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = maxWordWidth;
-    aMaxElementSize->height = fm->GetHeight();
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = maxWordWidth;
+    aMetrics.maxElementSize->height = fm->GetHeight();
   }
   NS_RELEASE(fm);
-  return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
+  return (cp == end) ? NS_INLINE_REFLOW_COMPLETE : NS_INLINE_REFLOW_NOT_COMPLETE;
 }
 
-nsReflowStatus
-TextFrame::ReflowPre(nsIPresContext* aCX,
-                     nsReflowMetrics& aDesiredSize,
-                     const nsSize& aMaxSize,
-                     nsSize* aMaxElementSize,
+nsInlineReflowStatus
+TextFrame::ReflowPre(nsCSSLineLayout& aLineLayout,
+                     nsReflowMetrics& aMetrics,
+                     const nsReflowState& aReflowState,
                      const nsStyleFont& aFont,
-                     PRInt32 aStartingOffset,
-                     nsLineLayout* aLineState)
+                     PRInt32 aStartingOffset)
 {
+  nsInlineReflowStatus rs = NS_INLINE_REFLOW_COMPLETE;
+
   Text* txt = (Text*) mContent;
   const PRUnichar* cp = txt->mText + aStartingOffset;
   const PRUnichar* cpStart = cp;
   const PRUnichar* end = cp + txt->mLength - aStartingOffset;
 
   mFlags |= TEXT_IS_PRE;
-  nsIFontMetrics* fm = aCX->GetMetricsFor(aFont.mFont);
+  nsIFontMetrics* fm = aLineLayout.mPresContext->GetMetricsFor(aFont.mFont);
   const PRInt32* widths = fm->GetWidths();
   PRInt32 width = 0;
   PRBool hasMultibyte = PR_FALSE;
   PRUint16 tabs = 0;
-  PRIntn col = 0;
-  if (nsnull != aLineState) {
-    col = aLineState->GetColumn();
-  }
-  mColumn = (PRUint16) col;
+  PRUint16 col = aLineLayout.GetColumn();
+  mColumn = col;
   nscoord spaceWidth = widths[' '];
+
   while (cp < end) {
     PRUnichar ch = *cp++;
     if (ch == '\n') {
-      if (nsnull != aLineState) {
-        aLineState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
-      }
+      rs = NS_INLINE_REFLOW_LINE_BREAK_AFTER;
       break;
     }
     if (ch == '\t') {
@@ -1063,9 +938,7 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
     }
     col++;
   }
-  if (nsnull != aLineState) {
-    aLineState->SetColumn(col);
-  }
+  aLineLayout.SetColumn(col);
   if (hasMultibyte) {
     mFlags |= TEXT_HAS_MULTIBYTE;
   }
@@ -1073,207 +946,18 @@ TextFrame::ReflowPre(nsIPresContext* aCX,
 
   mContentOffset = aStartingOffset;
   mContentLength = cp - cpStart;
-  aDesiredSize.width = width;
-  aDesiredSize.height = fm->GetHeight();
-  aDesiredSize.ascent = fm->GetMaxAscent();
-  aDesiredSize.descent = fm->GetMaxDescent();
-  if (nsnull != aMaxElementSize) {
-    aMaxElementSize->width = aDesiredSize.width;
-    aMaxElementSize->height = aDesiredSize.height;
+  aMetrics.width = width;
+  aMetrics.height = fm->GetHeight();
+  aMetrics.ascent = fm->GetMaxAscent();
+  aMetrics.descent = fm->GetMaxDescent();
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
   }
   NS_RELEASE(fm);
-  return (cp == end) ? NS_FRAME_COMPLETE : NS_FRAME_NOT_COMPLETE;
+
+  return rs;
 }
-
-#define NUM_WORDS 20
-
-NS_METHOD TextFrame::JustifyReflow(nsIPresContext* aCX, nscoord aAvailableSpace)
-{
-  if (mFlags & TEXT_IS_PRE) {
-    // no way
-    return NS_OK;
-  }
-
-  const nsStyleFont* font =
-    (const nsStyleFont*)mStyleContext->GetStyleData(eStyleStruct_Font);
-  nsIFontMetrics* fm = aCX->GetMetricsFor(font->mFont);
-  PRInt32 spaceWidth = fm->GetWidth(' ');
-
-  PRUint32 words[NUM_WORDS];
-  PRUint32* wp0 = words;
-  PRIntn maxWords = NUM_WORDS;
-
-  PRBool skipWhitespace = PRBool((mFlags & TEXT_SKIP_LEADING_WS) != 0);
-
-  // Count the number of spaces and words in the text we are going to
-  // justify. Also measure each word in the text and skip over leading
-  // space and compress down whitespace.
-  Text* txt = (Text*) mContent;
-  const PRUnichar* cp = txt->mText + mContentOffset;
-  const PRUnichar* end = cp + mContentLength;
-  PRUint32* wp = wp0;
-  PRUint32* wpend = wp0 + maxWords;
-  PRIntn spaceCount = 0;
-  PRIntn total = 0;
-  while (cp < end) {
-    if (wp == wpend) {
-      // Make space for more words
-      PRUint32 numWords = wp - wp0;
-      maxWords = maxWords * 2;
-      PRUint32* newwp0 = new PRUint32[maxWords];
-      if (nsnull == newwp0) {
-        goto bail;
-      }
-      nsCRT::memcpy(newwp0, wp0, sizeof(PRUint32) * numWords);
-      if (wp0 != words) {
-        delete[] wp0;
-      }
-      wp0 = newwp0;
-      wp = wp0 + numWords;
-      wpend = wp0 + maxWords;
-    }
-
-    PRUint32 wordInfo;
-    PRUint32 wordLen;
-    nscoord wordWidth;
-    const PRUnichar* wordStart = cp;
-    PRUnichar ch = *cp++;
-    if (XP_IS_SPACE(ch)) {
-      // Compress whitespace down to a single whitespace
-      while (cp < end) {
-        ch = *cp;
-        if (XP_IS_SPACE(ch)) {
-          cp++;
-          continue;
-        }
-        break;
-      }
-      // Use wordWidth as a flag for spaces to indicate which spaces
-      // we give zero space to and which we don't.
-      if (skipWhitespace) {
-        wordWidth = 0;
-      } else {
-        wordWidth = spaceWidth;
-        spaceCount++;
-      }
-      wordInfo = WORD_IS_SPACE;
-      wordLen = cp - wordStart;
-    } else {
-      while (cp < end) {
-        ch = *cp;
-        if (!XP_IS_SPACE(ch)) {
-          cp++;
-          continue;
-        }
-        break;
-      }
-      wordLen = cp - wordStart;
-      wordWidth = fm->GetWidth(wordStart, wordLen);
-      skipWhitespace = PR_FALSE;
-      wordInfo = WORD_IS_WORD;
-    }
-    if ((wordWidth > MAX_WORD_WIDTH) || (wordLen > MAX_WORD_LENGTH)) {
-      // We can't fit the information about this word into our
-      // bitfield. Bail.
-      goto bail;
-    }
-    wordInfo = wordInfo |
-      (wordLen << WORD_LENGTH_SHIFT) |
-      (wordWidth << WORD_WIDTH_SHIFT);
-    *wp++ = wordInfo;
-    total += wordLen;
-  }
-  NS_ASSERTION(total == mContentLength, "bad total");
-
-  // Now that we know where all the words and spaces are, and we have
-  // measured the words, divy up the aAvailableSpace to each of the
-  // spaces.
-  if (spaceCount != 0) {
-    /*
-     * See if the last word is a space. If it is, don't count it as a space
-     * and give it's space to the available space.
-     */
-    PRUint32 wordInfo = wp[-1];
-    if ((wordInfo & WORD_IS_WORD) == 0) {
-      if (--spaceCount == 0) {
-        // Never mind: the one and only space was at the end. Harumph.
-        goto bail;
-      }
-      aAvailableSpace += spaceWidth;
-      // Update wordInfo to have a zero width for the trailing space
-      wp[-1] = WORD_IS_SPACE | (wordInfo & WORD_LENGTH_MASK);
-    }
-    nscoord add = aAvailableSpace / spaceCount;
-    if (add == 0) {
-      add = 1;
-    }
-    PRIntn numWords = wp - wp0;
-    mWords = new PRUint32[numWords];
-    if (nsnull == mWords) {
-      goto bail;
-    }
-    wp = wp0;
-    PRUint32* tp = mWords;
-    PRUint32* tpend = tp + numWords;
-    total = 0;
-#ifdef DEBUG_JUSTIFY
-    mNumWords = numWords;
-#endif
-    while (--numWords >= 0) {
-      wordInfo = *wp++;
-      if (wordInfo & WORD_IS_WORD) {
-        // We already know about the word
-        *tp++ = wordInfo;
-        total += GET_WORD_LENGTH(wordInfo);
-        continue;
-      } else {
-        nscoord spaceWidth = GET_WORD_WIDTH(wordInfo);
-        if (spaceWidth == 0) {
-          // This is leading space that doesn't count
-          *tp++ = wordInfo;
-          total += GET_WORD_LENGTH(wordInfo);
-          continue;
-        }
-        // This is a space that gets some of the available space
-        if (add > aAvailableSpace) {
-          add = aAvailableSpace;
-        }
-        spaceWidth += add;
-        aAvailableSpace -= add;
-        if (aAvailableSpace == 0) {
-          // We used it all up already so stop adding
-          add = 0;
-        }
-        if (--spaceCount == 0) {
-          // Give the last space the remaining available space
-          spaceWidth += aAvailableSpace;
-          aAvailableSpace = 0;
-        }
-        if (spaceWidth > MAX_WORD_WIDTH) {
-          // Sad but true; leave it be. Maybe the next word can use it
-          *tp++ = wordInfo;
-          total += GET_WORD_LENGTH(wordInfo);
-          continue;
-        }
-        wordInfo = (wordInfo & ~WORD_WIDTH_MASK) |
-          (spaceWidth << WORD_WIDTH_SHIFT);
-        *tp++ = wordInfo;
-        total += GET_WORD_LENGTH(wordInfo);
-      }
-    }
-    NS_ASSERTION(aAvailableSpace == 0, "bad divy up");
-    NS_ASSERTION(tp == tpend, "bad tp");
-    NS_ASSERTION(total == mContentLength, "bad total");
- }
-
-bail:
-  if (wp0 != words) {
-    delete[] wp0;
-  }
-  NS_RELEASE(fm);
-  return NS_OK;
-}
-#undef NUM_WORDS
 
 //--------------------------------------------------------------------------
 // CalcActualPosition
@@ -1337,16 +1021,10 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
     startingOffset = prev->GetContentOffset() + prev->GetContentLength();
   }
 
-  // Get cached state for containing block frame
-  nsLineLayout* lineLayoutState = nsnull;
-  nsBlockReflowState* state = nsBlockFrame::FindBlockReflowState(&aCX, this);
-  if (nsnull != state) {
-    lineLayoutState = state->mCurrentLine;
-    if (nsnull != lineLayoutState) {
-      lineLayoutState->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
-    }
-  }
-
+//XXX  // Get cached state for containing block frame
+//  if (nsnull != aLineLayout) {
+//    aLineLayout->mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_AWARE;
+//  }
 
   nsIContent * content;
   GetContent(content);
@@ -1375,12 +1053,14 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
   // Set whitespace skip flag
   PRBool skipWhitespace = PR_FALSE;
-  if (nsnull != lineLayoutState) {
-    if (lineLayoutState->SkipLeadingWhiteSpace()) {
+#if XXX_wont_work
+  if (nsnull != aLineLayout) {
+    if (aLineLayout->SkipLeadingWhiteSpace()) {
       skipWhitespace = PR_TRUE;
       mFlags |= TEXT_SKIP_LEADING_WS;
     }
   }
+#endif
 
   // Try to fit as much of the text as possible. Note that if we are
   // at the left margin then the first word always fits. In addition,
@@ -1563,20 +1243,50 @@ void TextFrame::CalcCursorPosition(nsIPresContext& aCX,
 
 }
 
+NS_IMETHODIMP
+TextFrame::ListTag(FILE* out) const
+{
+  PRInt32 contentIndex;
+  GetContentIndex(contentIndex);
+  fprintf(out, "Text(%d)@%p", contentIndex, this);
+  return NS_OK;
+}
 
-NS_METHOD TextFrame::List(FILE* out, PRInt32 aIndent) const
+NS_IMETHODIMP
+TextFrame::List(FILE* out, PRInt32 aIndent) const
 {
   PRInt32 i;
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
-  PRInt32 contentIndex;
-  GetContentIndex(contentIndex);
-  fprintf(out, "Text(%d)@%p[%d,%d] ", 
-          contentIndex, this,
-          mContentOffset, mContentOffset+mContentLength-1);
+
+  // Output the tag
+  ListTag(out);
+  nsIView* view;
+  GetView(view);
+  if (nsnull != view) {
+    fprintf(out, " [view=%p]", view);
+    NS_RELEASE(view);
+  }
+
+  // Output the first/last content offset and prev/next in flow info
+  PRBool isComplete =
+    mContentOffset + mContentLength == ((Text*)mContent)->mLength;
+  fprintf(out, "[%d,%d,%c] ", 
+          mContentOffset, mContentOffset+mContentLength-1,
+          isComplete ? 'T':'F');
+  if (nsnull != mPrevInFlow) {
+    fprintf(out, "prev-in-flow=%p ", mPrevInFlow);
+  }
+  if (nsnull != mNextInFlow) {
+    fprintf(out, "next-in-flow=%p ", mNextInFlow);
+  }
+
+  // Output the rect and state
   out << mRect;
   if (0 != mState) {
     fprintf(out, " [state=%08x]", mState);
   }
+
+  // Output the text
   fputs("<\n", out);
   aIndent++;
 

@@ -20,8 +20,12 @@
 
 #include "nsISupports.h"
 
+extern const nsIID kBlockFrameCID;              // XXX temporary
+
+extern const nsIID kIAnchoredItemsIID;
+extern const nsIID kIFloaterContainerIID;
 extern const nsIID kIHTMLContentIID;
-extern const nsIID kBlockFrameCID;
-extern const nsIID kIInlineFrameIID;
+extern const nsIID kIInlineReflowIID;
+extern const nsIID kIRunaroundIID;
 
 #endif /* nsHTMLIIDs_h___ */

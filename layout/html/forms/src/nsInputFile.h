@@ -20,7 +20,7 @@
 #define nsInputFile_h___
 
 #include "nsInput.h"
-#include "nsInlineFrame.h"
+#include "nsCSSInlineFrame.h"
 #include "nsInputFrame.h"
 
 class nsIAtom;
@@ -28,7 +28,7 @@ class nsString;
 
 // this class definition will move to nsInputFile.cpp
 
-class nsInputFileFrame : public nsInlineFrame {
+class nsInputFileFrame : public nsCSSInlineFrame {
 public:
   nsInputFileFrame(nsIContent* aContent, nsIFrame* aParentFrame);
   NS_IMETHOD Reflow(nsIPresContext*      aCX,

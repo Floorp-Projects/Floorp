@@ -72,6 +72,7 @@ public:
   void Prepare(nscoord aLeftEdge) {
     mLeftEdge = aLeftEdge;
     mColumn = 0;
+    mSkipLeadingWS = PR_TRUE;
   }
 
   PRInt32 GetColumn() {
@@ -80,6 +81,10 @@ public:
 
   void SetColumn(PRInt32 aNewColumn) {
     mColumn = aNewColumn;
+  }
+
+  void NextLine() {
+    mLineNumber++;
   }
 
   nsIPresContext* mPresContext;
@@ -93,6 +98,15 @@ public:
   nsCSSTextRun* mTextRuns;
   nsCSSTextRun** mTextRunP;
   nsCSSTextRun* mCurrentTextRun;
+
+  //XXX temporary?
+
+  void SetSkipLeadingWhiteSpace(PRBool aNewSetting) {
+    mSkipLeadingWS = aNewSetting;
+  }
+  PRBool GetSkipLeadingWhiteSpace() { return mSkipLeadingWS; }
+
+  PRBool mSkipLeadingWS;
 };
 
 #endif /* nsCSSLineLayout_h___ */

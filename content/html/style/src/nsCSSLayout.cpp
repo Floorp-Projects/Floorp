@@ -24,7 +24,6 @@
 #include "nsIPresContext.h"
 #include "nsRect.h"
 #include "nsIPtr.h"
-#include "nsBlockFrame.h"
 #include "nsHTMLIIDs.h"
 
 NS_DEF_PTR(nsIStyleContext);
@@ -309,6 +308,7 @@ GetStyleDimension(nsIPresContext* aPresContext,
         rv = PR_TRUE;
         break;
       }
+      aResult = 0;
       rs = rs->parentReflowState;
     }
   }
@@ -338,10 +338,12 @@ nsCSSLayout::GetStyleSize(nsIPresContext* aPresContext,
   if (NS_OK == result) {
     if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mWidth,
                           aStyleSize.width)) {
+NS_ASSERTION(aStyleSize.width < 100000, "bad % result");
       rv |= NS_SIZE_HAS_WIDTH;
     }
     if (GetStyleDimension(aPresContext, aReflowState, pos, pos->mHeight,
                           aStyleSize.height)) {
+NS_ASSERTION(aStyleSize.height < 100000, "bad % result");
       rv |= NS_SIZE_HAS_HEIGHT;
     }
   }

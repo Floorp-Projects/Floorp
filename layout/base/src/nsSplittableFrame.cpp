@@ -87,6 +87,8 @@ nsSplittableFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
   // Append the continuing frame to the flow
   aContinuingFrame->AppendToFlow(this);
 
+  // XXX remove this!
+
   // Resolve style for the continuing frame and set its style context.
   nsIStyleContext* styleContext =
     aPresContext->ResolveStyleContextFor(mContent, aParent);

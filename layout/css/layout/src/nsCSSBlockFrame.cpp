@@ -93,7 +93,7 @@ struct LineData;
 #define DTPF 1
 
 // XXX temporary until PropagateContentOffsets can be written genericly
-#define nsCSSBlockFrameSuper nsContainerFrame
+#define nsCSSBlockFrameSuper nsCSSContainerFrame
 
 class nsCSSBlockFrame : public nsCSSBlockFrameSuper,
                         public nsIRunaround,
@@ -113,7 +113,6 @@ public:
   NS_IMETHOD NextChild(const nsIFrame* aChild, nsIFrame*& aNextChild) const;
   NS_IMETHOD PrevChild(const nsIFrame* aChild, nsIFrame*& aPrevChild) const;
   NS_IMETHOD LastChild(nsIFrame*& aLastChild) const;
-  NS_IMETHOD DeleteChildsNextInFlow(nsIFrame* aNextInFlow);
   NS_IMETHOD IsSplittable(nsSplittableType& aIsSplittable) const;
   NS_IMETHOD CreateContinuingFrame(nsIPresContext*  aPresContext,
                                    nsIFrame*        aParent,
@@ -127,6 +126,13 @@ public:
                              nsIContent*     aContainer);
   NS_IMETHOD DidReflow(nsIPresContext& aPresContext,
                        nsDidReflowStatus aStatus);
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext, 
+                         nsGUIEvent*     aEvent,
+                         nsEventStatus&  aEventStatus);
+  NS_IMETHOD GetCursorAt(nsIPresContext& aPresContext,
+                         const nsPoint&  aPoint,
+                         nsIFrame**      aFrame,
+                         PRInt32&        aCursor);
   NS_IMETHOD List(FILE* out, PRInt32 aIndent) const;
   NS_IMETHOD ListTag(FILE* out) const;
   NS_IMETHOD VerifyTree() const;
@@ -156,6 +162,7 @@ protected:
 
   PRBool GetLastContentIsComplete() const;
 #endif
+  virtual PRBool DeleteNextInFlowsFor(nsIFrame* aNextInFlow);
 
   nsresult DrainOverflowLines();
 
@@ -164,8 +171,6 @@ protected:
   nsresult ProcessInitialReflow(nsIPresContext* aPresContext);
 
   //XXX void PropagateContentOffsets();
-
-  //XXX virtual void WillDeleteNextInFlowFrame(nsIFrame* aNextInFlow);
 
   PRIntn GetSkipSides() const;
 
@@ -322,6 +327,16 @@ LineData::~LineData()
   }
 }
 
+static void
+ListFloaters(FILE* out, PRInt32 aIndent, nsVoidArray* aFloaters)
+{
+  PRInt32 i, n = aFloaters->Count();
+  for (i = 0; i < n; i++) {
+    nsIFrame* frame = (nsIFrame*) aFloaters->ElementAt(i);
+    frame->List(out, aIndent);
+  }
+}
+
 void
 LineData::List(FILE* out, PRInt32 aIndent) const
 {
@@ -341,12 +356,8 @@ LineData::List(FILE* out, PRInt32 aIndent) const
   for (i = aIndent; --i >= 0; ) fputs("  ", out);
 
   if (nsnull != mFloaters) {
-    PRInt32 j, n = mFloaters->Count();
-    fprintf(out, "> #floaters=%d<\n", n);
-    for (j = 0; j < n; j++) {
-      nsIFrame* frame = (nsIFrame*) mFloaters->ElementAt(j);
-      frame->List(out, aIndent + 1);
-    }
+    fputs("> bcl-floaters=<\n", out);
+    ListFloaters(out, aIndent + 1, mFloaters);
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
   }
   fputs(">\n", out);
@@ -445,10 +456,22 @@ VerifyChildCount(LineData* aLines, PRBool aEmptyOK = PR_FALSE)
 static void
 DeleteLineList(LineData* aLine)
 {
-  while (nsnull != aLine) {
-    LineData* next = aLine->mNext;
-    delete aLine;
-    aLine = next;
+  if (nsnull != aLine) {
+    // Delete our child frames before doing anything else. In particular
+    // we do all of this before our base class releases it's hold on the
+    // view.
+    for (nsIFrame* child = aLine->mFirstChild; child; ) {
+      nsIFrame* nextChild;
+      child->GetNextSibling(nextChild);
+      child->DeleteFrame();
+      child = nextChild;
+    }
+
+    while (nsnull != aLine) {
+      LineData* next = aLine->mNext;
+      delete aLine;
+      aLine = next;
+    }
   }
 }
 
@@ -532,7 +555,7 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
                                              nsCSSBlockFrame* aBlock,
                                              nsIStyleContext* aBlockSC,
                                              const nsReflowState& aReflowState,
-                                             nsSize* aMaxElementSize)
+                                             PRBool aComputeMaxElementSize)
   : nsReflowState(aBlock, *aReflowState.parentReflowState,
                   aReflowState.maxSize),
     mLineLayout(aPresContext, aSpaceManager),
@@ -553,12 +576,10 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
   mY = 0;
   mUnconstrainedWidth = aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE;
   mUnconstrainedHeight = aReflowState.maxSize.height == NS_UNCONSTRAINEDSIZE;
-  mMaxElementSize = aMaxElementSize;
-  if (nsnull != aMaxElementSize) {
-    // XXX CAN'T pass our's to an inline child frame because it will
-    // do the same thing...
-    aMaxElementSize->width = 0;
-    aMaxElementSize->height = 0;
+  mComputeMaxElementSize = aComputeMaxElementSize;
+  if (mComputeMaxElementSize) {
+    mMaxElementSize.width = 0;
+    mMaxElementSize.height = 0;
   }
 
   // Set mNoWrap flag
@@ -578,9 +599,18 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
     aBlockSC->GetStyleData(eStyleStruct_Display);
   mDirection = styleDisplay->mDirection;
 
+  if (NS_STYLE_DISPLAY_LIST_ITEM == styleDisplay->mDisplay) {
+    const nsStyleList* sl = (const nsStyleList*)
+      aBlockSC->GetStyleData(eStyleStruct_List);
+    if (NS_STYLE_LIST_STYLE_POSITION_OUTSIDE == sl->mListStylePosition) {
+      mLineLayout.mListPositionOutside = PR_TRUE;
+    }
+  }
+
   // Apply border and padding adjustments for regular frames only
   nsRect blockRect;
   mBlock->GetRect(blockRect);
+  mStyleSizeFlags = 0;
   if (!mBlockIsPseudo) {
     const nsStyleSpacing* blockSpacing = (const nsStyleSpacing*)
       aBlockSC->GetStyleData(eStyleStruct_Spacing);
@@ -665,9 +695,17 @@ nsCSSBlockReflowState::nsCSSBlockReflowState(nsIPresContext* aPresContext,
 
 nsCSSBlockReflowState::~nsCSSBlockReflowState()
 {
-  // XXX release free list
+  LineData* line = mFreeList;
+  while (nsnull != line) {
+    NS_ASSERTION((0 == line->mChildCount) && (nsnull == line->mFirstChild),
+                 "bad free line");
+    LineData* next = line->mNext;
+    delete line;
+    line = next;
+  }
 }
 
+// XXX I think the handling of mBorderPadding.left is weird here.
 void
 nsCSSBlockReflowState::GetAvailableSpace()
 {
@@ -675,15 +713,18 @@ nsCSSBlockReflowState::GetAvailableSpace()
 
   nsISpaceManager* sm = mSpaceManager;
 
-  // Fill in band data for the specific Y coordinate
-  sm->Translate(mBorderPadding.left, mY);
-  sm->GetBandData(0, mInnerSize, mCurrentBand);
-  sm->Translate(-mBorderPadding.left, -mY);
+  // Fill in band data for the specific Y coordinate. Note: We don't
+  // translate by Y so that the band will be absolute (at least in y);
+  // this makes the implementation of ClearFloaters simpler.
+  sm->Translate(mBorderPadding.left, 0);
+  sm->GetBandData(mY, mInnerSize, mCurrentBand);
+  sm->Translate(-mBorderPadding.left, 0);
 
   // Compute the bounding rect of the available space, i.e. space
-  // between any left and right floaters
+  // between any left and right floaters. The availSpace is translated
+  // after it's computed to be fully absolute.
   mCurrentBand.ComputeAvailSpaceRect();
-  mCurrentBand.availSpace.MoveBy(mBorderPadding.left, mY);
+  mCurrentBand.availSpace.MoveBy(mBorderPadding.left, 0);
 
   NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
      ("nsCSSBlockReflowState::GetAvailableSpace: band={%d,%d,%d,%d}",
@@ -731,12 +772,11 @@ nsCSSBlockFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-#if 0
+  // XXX temporary
   if (aIID.Equals(kBlockFrameCID)) {
     *aInstancePtr = (void*) (this);
     return NS_OK;
   }
-#endif
   if (aIID.Equals(kIRunaroundIID)) {
     *aInstancePtr = (void*) ((nsIRunaround*) this);
     return NS_OK;
@@ -839,16 +879,23 @@ nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
     fprintf(out, "next-in-flow=%p ", mNextInFlow);
   }
 
-  // Output the rect
+  // Output the rect and state
   out << mRect;
+  if (0 != mState) {
+    fprintf(out, " [state=%08x]", mState);
+  }
+
+  // Dump run-in floaters
+  if (nsnull != mRunInFloaters) {
+    fputs(" run-in-floaters=<\n", out);
+    ListFloaters(out, aIndent + 1, mRunInFloaters);
+    for (i = aIndent; --i >= 0; ) fputs("  ", out);
+    fputs(">", out);
+  }
 
   // Output the children, one line at a time
   if (nsnull != mLines) {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
     fputs("<\n", out);
-
     aIndent++;
     LineData* line = mLines;
     while (nsnull != line) {
@@ -856,13 +903,10 @@ nsCSSBlockFrame::List(FILE* out, PRInt32 aIndent) const
       line = line->mNext;
     }
     aIndent--;
-
     for (i = aIndent; --i >= 0; ) fputs("  ", out);
     fputs(">\n", out);
-  } else {
-    if (0 != mState) {
-      fprintf(out, " [state=%08x]", mState);
-    }
+  }
+  else {
     fputs("<>\n", out);
   }
 
@@ -1053,7 +1097,8 @@ nsCSSBlockFrame::Reflow(nsIPresContext*      aPresContext,
   // more extensive version.
   nsCSSBlockReflowState state(aPresContext, aSpaceManager,
                               this, mStyleContext,
-                              aReflowState, aMetrics.maxElementSize);
+                              aReflowState,
+                              PRBool(nsnull != aMetrics.maxElementSize));
 
   nsresult rv = NS_OK;
   if (eReflowReason_Initial == state.reason) {
@@ -1264,6 +1309,10 @@ nsCSSBlockFrame::ComputeFinalSize(nsCSSBlockReflowState& aState,
   aMetrics.height = aDesiredRect.height;
   aMetrics.ascent = aMetrics.height;
   aMetrics.descent = 0;
+  if (aState.mComputeMaxElementSize) {
+    *aMetrics.maxElementSize = aState.mMaxElementSize;
+  }
+  NS_ASSERTION(aDesiredRect.width < 1000000, "whoops");
 }
 
 // XXX move this somewhere else!!!
@@ -1492,6 +1541,10 @@ nsCSSBlockFrame::ResizeReflow(nsCSSBlockReflowState& aState)
 nsresult
 nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
 {
+  if (nsnull != mRunInFloaters) {
+    aState.PlaceBelowCurrentLineFloaters(mRunInFloaters);
+  }
+
   // Reflow the lines that are already ours
   while (nsnull != aLine) {
     nsInlineReflowStatus rs;
@@ -1501,6 +1554,7 @@ nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
       }
       return NS_FRAME_NOT_COMPLETE;
     }
+    aState.mLineLayout.NextLine();
     aState.mPrevLine = aLine;
     aLine = aLine->mNext;
   }
@@ -1573,6 +1627,7 @@ nsCSSBlockFrame::ReflowLinesAt(nsCSSBlockReflowState& aState, LineData* aLine)
         }
         return NS_FRAME_NOT_COMPLETE;
       }
+      aState.mLineLayout.NextLine();
       aState.mPrevLine = aLine;
       aLine = aLine->mNext;
     }
@@ -1733,16 +1788,22 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
   if (NS_FRAME_FIRST_REFLOW & state) {
     reason = eReflowReason_Initial;
   }
-#if XXX_fix_me
-  else if (nsnull != aState.reflowCommand) {
-    reason = eReflowReason_Incremental;
+  else
+  if (nsnull != aState.reflowCommand) {
+    nsIFrame* target;
+    aState.reflowCommand->GetTarget(target);
+    if (this != target) {
+      reason = eReflowReason_Incremental;
+    }
   }
-#endif
 
   // Reflow the block frame. Use the run-around API if possible;
   // otherwise treat it as a rectangular lump and place it.
   nsresult rv;
-  nsReflowMetrics metrics(aState.mMaxElementSize);/* XXX mMaxElementSize*/
+  nsSize kidMaxElementSize;
+  nsReflowMetrics metrics(aState.mComputeMaxElementSize
+                          ? &kidMaxElementSize
+                          : nsnull);
   nsReflowStatus reflowStatus;
   nsIRunaround* runAround;
   if ((nsnull != aState.mSpaceManager) &&
@@ -1752,8 +1813,10 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     nsReflowState reflowState(aFrame, aState, availSize);
     reflowState.reason = reason;
     nsRect r;
+    aState.mSpaceManager->Translate(x, y);
     rv = runAround->Reflow(aState.mPresContext, aState.mSpaceManager,
                            metrics, reflowState, r, reflowStatus);
+    aState.mSpaceManager->Translate(-x, -y);
     metrics.width = r.width;
     metrics.height = r.height;
     metrics.ascent = r.height;
@@ -1779,7 +1842,7 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
       // parent is not this because we are executing pullup code)
       nsIFrame* parent;
       aFrame->GetGeometricParent(parent);
-      parent->DeleteChildsNextInFlow(aFrame);
+      ((nsCSSBlockFrame*)parent)->DeleteNextInFlowsFor(aFrame);
     }
     aLine->SetLastContentIsComplete();
     aReflowResult = NS_INLINE_REFLOW_COMPLETE;
@@ -1799,6 +1862,16 @@ nsCSSBlockFrame::ReflowBlockFrame(nsCSSBlockReflowState& aState,
     PushLines(aState);
     aReflowResult = NS_INLINE_REFLOW_LINE_BREAK_BEFORE;
     return PR_FALSE;
+  }
+
+  // Update max-element-size
+  if (aState.mComputeMaxElementSize) {
+    if (kidMaxElementSize.width > aState.mMaxElementSize.width) {
+      aState.mMaxElementSize.width = kidMaxElementSize.width;
+    }
+    if (kidMaxElementSize.height > aState.mMaxElementSize.height) {
+      aState.mMaxElementSize.height = kidMaxElementSize.height;
+    }
   }
 
   // Save away bounds before other adjustments
@@ -1867,8 +1940,9 @@ nsCSSBlockFrame::ReflowInlineFrame(nsCSSBlockReflowState& aState,
                                    nsInlineReflowStatus&  aReflowResult)
 {
   if (!aState.mInlineLayoutPrepared) {
+    aState.mLineLayout.Prepare(aState.mX);
     aState.mInlineLayout.Prepare(aState.mUnconstrainedWidth, aState.mNoWrap,
-                                 aState.mMaxElementSize);
+                                 aState.mComputeMaxElementSize);
     aState.mInlineLayout.SetReflowSpace(aState.mCurrentBand.availSpace.x,
                                         aState.mY,
                                         aState.mCurrentBand.availSpace.width,
@@ -2075,6 +2149,17 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
     return PR_FALSE;
   }
 
+  // Update max-element-size
+  if (aState.mComputeMaxElementSize) {
+    nsSize& lineMaxElementSize = aState.mInlineLayout.mMaxElementSize;
+    if (lineMaxElementSize.width > aState.mMaxElementSize.width) {
+      aState.mMaxElementSize.width = lineMaxElementSize.width;
+    }
+    if (lineMaxElementSize.height > aState.mMaxElementSize.height) {
+      aState.mMaxElementSize.height = lineMaxElementSize.height;
+    }
+  }
+
   nscoord xmost = aLine->mBounds.XMost();
   if (xmost > aState.mKidXMost) {
     aState.mKidXMost = xmost;
@@ -2083,7 +2168,7 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
 
   // Based on the last child we reflowed reflow status, we may need to
   // clear past any floaters.
-  PRBool updateReflowSpace = PR_FALSE;
+//XXX  PRBool updateReflowSpace = PR_FALSE;
   if (NS_INLINE_REFLOW_BREAK_AFTER ==
       (aReflowStatus & NS_INLINE_REFLOW_REFLOW_MASK)) {
     // Apply break to the line
@@ -2094,8 +2179,11 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
     case NS_STYLE_CLEAR_LEFT:
     case NS_STYLE_CLEAR_RIGHT:
     case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
+      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+         ("nsCSSBlockFrame::PlaceLine: clearing floaters=%d",
+          breakType));
       aState.ClearFloaters(breakType);
-      updateReflowSpace = PR_TRUE;
+//XXX      updateReflowSpace = PR_TRUE;
       break;
     }
     // XXX page breaks, etc, need to be passed upwards too!
@@ -2125,15 +2213,17 @@ nsCSSBlockFrame::PlaceLine(nsCSSBlockReflowState& aState,
     // The current y coordinate is now past our available space
     // rectangle. Get a new band of space.
     aState.GetAvailableSpace();
-    updateReflowSpace = PR_TRUE;
+//XXX    updateReflowSpace = PR_TRUE;
   }
 
+#if XXX
   if (updateReflowSpace) {
     aState.mInlineLayout.SetReflowSpace(aState.mCurrentBand.availSpace.x,
                                         aState.mY,
                                         aState.mCurrentBand.availSpace.width,
                                         aState.mCurrentBand.availSpace.height);
   }
+#endif
   return PR_TRUE;
 }
 
@@ -2280,8 +2370,8 @@ nsCSSBlockFrame::ContentAppended(nsIPresShell*   aShell,
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsCSSBlockFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
+PRBool
+nsCSSBlockFrame::DeleteNextInFlowsFor(nsIFrame* aChild)
 {
   NS_PRECONDITION(IsChild(aChild), "bad geometric parent");
 
@@ -2297,7 +2387,7 @@ nsCSSBlockFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
   nsIFrame* nextNextInFlow;
   nextInFlow->GetNextInFlow(nextNextInFlow);
   if (nsnull != nextNextInFlow) {
-    parent->DeleteChildsNextInFlow(nextInFlow);
+    parent->DeleteNextInFlowsFor(nextInFlow);
   }
 
 #ifdef NS_DEBUG
@@ -2351,7 +2441,7 @@ nsCSSBlockFrame::DeleteChildsNextInFlow(nsIFrame* aChild)
   aChild->GetNextInFlow(nextInFlow);
   NS_POSTCONDITION(nsnull == nextInFlow, "non null next-in-flow");
 #endif
-  return NS_OK;
+  return PR_TRUE;
 }
 
 PRBool
@@ -2605,7 +2695,7 @@ nsCSSBlockReflowState::PlaceBelowCurrentLineFloaters(nsVoidArray* aFloaterList)
 
   nsISpaceManager* sm = mSpaceManager;
 
-  // XXX Factor this code with PlaceFloater()...
+  // XXX Factor this code with PlaceCurrentLineFloater()...
   nsRect region;
   PRInt32 numFloaters = aFloaterList->Count();
   for (PRInt32 i = 0; i < numFloaters; i++) {
@@ -2677,21 +2767,33 @@ nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
       break;
     }
 
-    // Find the Y coordinate to clear to
+    // Find the Y coordinate to clear to. Note that the band trapezoid
+    // coordinates are relative to the last translation. Since we
+    // never translate by Y before getting a band, we can use absolute
+    // comparisons against mY.
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+       ("nsCSSBlockReflowState::ClearFloaters: mY=%d trapCount=%d",
+        mY, mCurrentBand.count));
     nscoord clearYMost = mY;
     nsRect tmp;
     PRInt32 i;
     for (i = 0; i < mCurrentBand.count; i++) {
       const nsStyleDisplay* display;
       nsBandTrapezoid* trapezoid = &mCurrentBand.data[i];
-      if (trapezoid->state != nsBandTrapezoid::Available) {
+      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+         ("nsCSSBlockReflowState::ClearFloaters: trap=%d state=%d",
+          i, trapezoid->state));
+      if (nsBandTrapezoid::Available != trapezoid->state) {
         if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
           PRInt32 fn, numFrames = trapezoid->frames->Count();
           NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
           for (fn = 0; fn < numFrames; fn++) {
-            nsIFrame* f = (nsIFrame*) trapezoid->frames->ElementAt(fn);
-            f->GetStyleData(eStyleStruct_Display,
-                            (const nsStyleStruct*&)display);
+            nsIFrame* frame = (nsIFrame*) trapezoid->frames->ElementAt(fn);
+            frame->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&)display);
+            NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsCSSBlockReflowState::ClearFloaters: frame[%d]=%p floats=%d",
+                fn, frame, display->mFloats));
             switch (display->mFloats) {
             case NS_STYLE_FLOAT_LEFT:
               if ((NS_STYLE_CLEAR_LEFT == aBreakType) ||
@@ -2700,6 +2802,9 @@ nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
                 nscoord ym = tmp.YMost();
                 if (ym > clearYMost) {
                   clearYMost = ym;
+                  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                   ("nsCSSBlockReflowState::ClearFloaters: left clearYMost=%d",
+                    clearYMost));
                 }
               }
               break;
@@ -2710,6 +2815,9 @@ nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
                 nscoord ym = tmp.YMost();
                 if (ym > clearYMost) {
                   clearYMost = ym;
+                  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                  ("nsCSSBlockReflowState::ClearFloaters: right clearYMost=%d",
+                   clearYMost));
                 }
               }
               break;
@@ -2719,14 +2827,23 @@ nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
         else {
           trapezoid->frame->GetStyleData(eStyleStruct_Display,
                                          (const nsStyleStruct*&)display);
+          NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+             ("nsCSSBlockReflowState::ClearFloaters: frame=%p floats=%d",
+              trapezoid->frame, display->mFloats));
           switch (display->mFloats) {
           case NS_STYLE_FLOAT_LEFT:
             if ((NS_STYLE_CLEAR_LEFT == aBreakType) ||
                 (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aBreakType)) {
               trapezoid->GetRect(tmp);
               nscoord ym = tmp.YMost();
+NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+   ("nsCSSBlockReflowState::ClearFloaters: left? ym=%d clearYMost=%d",
+    ym, clearYMost));
               if (ym > clearYMost) {
                 clearYMost = ym;
+                NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                  ("nsCSSBlockReflowState::ClearFloaters: left clearYMost=%d",
+                   clearYMost));
               }
             }
             break;
@@ -2737,6 +2854,9 @@ nsCSSBlockReflowState::ClearFloaters(PRUint8 aBreakType)
               nscoord ym = tmp.YMost();
               if (ym > clearYMost) {
                 clearYMost = ym;
+                NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                  ("nsCSSBlockReflowState::ClearFloaters: right clearYMost=%d",
+                   clearYMost));
               }
             }
             break;
@@ -2882,6 +3002,54 @@ nsCSSBlockFrame::PaintChildren(nsIPresContext&      aPresContext,
   if (hidden) {
     aRenderingContext.PopState();
   }
+}
+
+// XXX move into nsFrame
+NS_IMETHODIMP
+nsCSSBlockFrame::HandleEvent(nsIPresContext& aPresContext, 
+                             nsGUIEvent*     aEvent,
+                             nsEventStatus&  aEventStatus)
+{
+  aEventStatus = nsEventStatus_eIgnore;
+
+  nsIFrame* kid = (nsnull == mLines) ? nsnull : mLines->mFirstChild;
+  while (nsnull != kid) {
+    nsRect kidRect;
+    kid->GetRect(kidRect);
+    if (kidRect.Contains(aEvent->point)) {
+      aEvent->point.MoveBy(-kidRect.x, -kidRect.y);
+      kid->HandleEvent(aPresContext, aEvent, aEventStatus);
+      aEvent->point.MoveBy(kidRect.x, kidRect.y);
+      break;
+    }
+    kid->GetNextSibling(kid);
+  }
+
+  return NS_OK;
+}
+
+// XXX move into nsFrame
+NS_IMETHODIMP
+nsCSSBlockFrame::GetCursorAt(nsIPresContext& aPresContext,
+                             const nsPoint&  aPoint,
+                             nsIFrame**      aFrame,
+                             PRInt32&        aCursor)
+{
+  aCursor = NS_STYLE_CURSOR_INHERIT;
+
+  nsIFrame* kid = (nsnull == mLines) ? nsnull : mLines->mFirstChild;
+  nsPoint tmp;
+  while (nsnull != kid) {
+    nsRect kidRect;
+    kid->GetRect(kidRect);
+    if (kidRect.Contains(aPoint)) {
+      tmp.MoveTo(aPoint.x - kidRect.x, aPoint.y - kidRect.y);
+      kid->GetCursorAt(aPresContext, tmp, aFrame, aCursor);
+      break;
+    }
+    kid->GetNextSibling(kid);
+  }
+  return NS_OK;
 }
 
 //////////////////////////////////////////////////////////////////////

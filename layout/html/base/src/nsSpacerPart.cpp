@@ -17,7 +17,9 @@
  */
 #include "nsHTMLParts.h"
 #include "nsHTMLTagContent.h"
-#include "nsBlockFrame.h"
+#include "nsFrame.h"
+#include "nsIInlineReflow.h"
+#include "nsCSSLineLayout.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
@@ -31,15 +33,19 @@
 #define TYPE_LINE  1            // line-break + vertical space
 #define TYPE_IMAGE 2            // acts like a sized image with nothing to see
 
-class SpacerFrame : public nsFrame
-{
+class SpacerFrame : public nsFrame, nsIInlineReflow {
 public:
   SpacerFrame(nsIContent* aContent, nsIFrame* aParentFrame);
 
-  NS_IMETHOD Reflow(nsIPresContext*      aPresContext,
-                    nsReflowMetrics&     aDesiredSize,
-                    const nsReflowState& aReflowState,
-                    nsReflowStatus&      aStatus);
+  // nsISupports
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr);
+
+  // nsIInlineReflow
+  NS_IMETHOD FindTextRuns(nsCSSLineLayout& aLineLayout);
+  NS_IMETHOD InlineReflow(nsCSSLineLayout&     aLineLayout,
+                          nsReflowMetrics&     aDesiredSize,
+                          const nsReflowState& aReflowState);
+
 protected:
   virtual ~SpacerFrame();
 };
@@ -76,34 +82,36 @@ SpacerFrame::~SpacerFrame()
 {
 }
 
-NS_METHOD SpacerFrame::Reflow(nsIPresContext*      aPresContext,
-                              nsReflowMetrics&     aDesiredSize,
-                              const nsReflowState& aReflowState,
-                              nsReflowStatus&      aStatus)
+NS_IMETHODIMP
+SpacerFrame::QueryInterface(REFNSIID aIID, void** aInstancePtrResult)
 {
-  // Get cached state for containing block frame
-  nsLineLayout* lineLayoutState = nsnull;
-  nsBlockReflowState* state =
-    nsBlockFrame::FindBlockReflowState(aPresContext, this);
-  if (nsnull != state) {
-    lineLayoutState = state->mCurrentLine;
+  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
+  if (nsnull == aInstancePtrResult) {
+    return NS_ERROR_NULL_POINTER;
   }
-
-  // By default, we have no area
-  aDesiredSize.width = 0;
-  aDesiredSize.height = 0;
-  aDesiredSize.ascent = 0;
-  aDesiredSize.descent = 0;
-
-  if (nsnull == state) {
-    // We don't do anything unless we are in a block container somewhere
-    aStatus = NS_FRAME_COMPLETE;
+  if (aIID.Equals(kIInlineReflowIID)) {
+    *aInstancePtrResult = (void*) ((nsIInlineReflow*)this);
     return NS_OK;
   }
+  return nsFrame::QueryInterface(aIID, aInstancePtrResult);
+}
+
+NS_IMETHODIMP
+SpacerFrame::InlineReflow(nsCSSLineLayout&     aLineLayout,
+                          nsReflowMetrics&     aMetrics,
+                          const nsReflowState& aReflowState)
+{
+  nsresult rv = NS_INLINE_REFLOW_COMPLETE;
+
+  // By default, we have no area
+  aMetrics.width = 0;
+  aMetrics.height = 0;
+  aMetrics.ascent = 0;
+  aMetrics.descent = 0;
 
   nscoord width = 0;
   nscoord height = 0;
-  SpacerPart* part = (SpacerPart*) mContent;
+  SpacerPart* part = (SpacerPart*) mContent;/* XXX decouple */
   PRUint8 type = part->GetType();
   nsContentAttr ca;
   if (type != TYPE_IMAGE) {
@@ -128,34 +136,41 @@ NS_METHOD SpacerFrame::Reflow(nsIPresContext*      aPresContext,
     }
   }
 
-  float p2t = aPresContext->GetPixelsToTwips();
+  float p2t = aLineLayout.mPresContext->GetPixelsToTwips();
   switch (type) {
   case TYPE_WORD:
     if (0 != width) {
-      aDesiredSize.width = nscoord(width * p2t);
+      aMetrics.width = nscoord(width * p2t);
     }
     break;
 
   case TYPE_LINE:
     if (0 != width) {
-      if (nsnull != lineLayoutState) {
-        lineLayoutState->mReflowResult =
-          NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER;
-        lineLayoutState->mPendingBreak = NS_STYLE_CLEAR_LINE;
-      }
-      aDesiredSize.height = nscoord(width * p2t);
-      aDesiredSize.ascent = aDesiredSize.height;
+      rv = NS_INLINE_REFLOW_LINE_BREAK_AFTER;
+      aMetrics.height = nscoord(width * p2t);
+      aMetrics.ascent = aMetrics.height;
     }
     break;
 
   case TYPE_IMAGE:
-    aDesiredSize.width = nscoord(width * p2t);
-    aDesiredSize.height = nscoord(height * p2t);
-    aDesiredSize.ascent = aDesiredSize.height;
+    aMetrics.width = nscoord(width * p2t);
+    aMetrics.height = nscoord(height * p2t);
+    aMetrics.ascent = aMetrics.height;
     break;
   }
 
-  aStatus = NS_FRAME_COMPLETE;
+  if (nsnull != aMetrics.maxElementSize) {
+    aMetrics.maxElementSize->width = aMetrics.width;
+    aMetrics.maxElementSize->height = aMetrics.height;
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP
+SpacerFrame::FindTextRuns(nsCSSLineLayout& aLineLayout)
+{
+  aLineLayout.EndTextRun();
   return NS_OK;
 }
 

@@ -383,6 +383,7 @@ nsHTMLIFrame::CreateFrame(nsIPresContext*  aPresContext,
     return NS_ERROR_OUT_OF_MEMORY;
   }
   aResult = frame;
+  frame->SetStyleContext(aPresContext, aStyleContext);
   return NS_OK;
 }
 

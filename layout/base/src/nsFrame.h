@@ -34,6 +34,7 @@
 #define NS_FRAME_TRACE_CALLS        0x1
 #define NS_FRAME_TRACE_PUSH_PULL    0x2
 #define NS_FRAME_TRACE_CHILD_REFLOW 0x4
+#define NS_FRAME_TRACE_NEW_FRAMES   0x8
 
 #define NS_FRAME_LOG_TEST(_lm,_bit) (PRIntn((_lm)->level) & (_bit))
 
@@ -48,17 +49,36 @@
 #define NS_FRAME_LOG(_bit,_args)
 #endif
 
+// XXX Need to rework this so that logging is free when it's off
 #ifdef NS_DEBUG
 #define NS_FRAME_TRACE_IN(_method) Trace(_method, PR_TRUE)
+
 #define NS_FRAME_TRACE_OUT(_method) Trace(_method, PR_FALSE)
-#define NS_FRAME_TRACE_MSG(_args) TraceMsg _args
+
+// XXX remove me
+#define NS_FRAME_TRACE_MSG(_bit,_args)                          \
+  PR_BEGIN_MACRO                                                \
+    if (NS_FRAME_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
+      TraceMsg _args;                                           \
+    }                                                           \
+  PR_END_MACRO
+
+#define NS_FRAME_TRACE(_bit,_args)                              \
+  PR_BEGIN_MACRO                                                \
+    if (NS_FRAME_LOG_TEST(nsIFrame::GetLogModuleInfo(),_bit)) { \
+      TraceMsg _args;                                           \
+    }                                                           \
+  PR_END_MACRO
+
 #define NS_FRAME_TRACE_REFLOW_IN(_method) Trace(_method, PR_TRUE)
+
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status) \
   Trace(_method, PR_FALSE, _status)
+
 #else
 #define NS_FRAME_TRACE_IN(_method)
 #define NS_FRAME_TRACE_OUT(_method)
-#define NS_FRAME_TRACE_MSG(_args)
+#define NS_FRAME_TRACE_MSG(_bits,_args)
 #define NS_FRAME_TRACE_REFLOW_IN(_method)
 #define NS_FRAME_TRACE_REFLOW_OUT(_method, _status)
 #endif
