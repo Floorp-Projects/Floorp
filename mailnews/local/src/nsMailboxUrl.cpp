@@ -48,6 +48,7 @@ static NS_DEFINE_CID(kCMailDB, NS_MAILDB_CID);
 // then grab it and use it on the other side
 #include "nsIMsgMailSession.h"
 #include "nsCOMPtr.h"
+#include "nsMsgBaseCID.h"
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 

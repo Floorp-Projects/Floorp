@@ -26,6 +26,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIncomingServer.h"
 #include "nsIPop3IncomingServer.h"
+#include "nsMsgBaseCID.h"
 
 
 static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);

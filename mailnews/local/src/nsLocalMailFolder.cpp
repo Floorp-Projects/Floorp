@@ -43,6 +43,8 @@
 #include "nsIPop3IncomingServer.h"
 #include "nsIPop3Service.h"
 #include "nsIMsgIncomingServer.h"
+#include "nsMsgBaseCID.h"
+#include "nsMsgLocalCID.h"
 #include "nsString2.h"
 #include "nsLocalFolderSummarySpec.h"
 
