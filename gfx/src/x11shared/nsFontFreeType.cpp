@@ -467,7 +467,7 @@ nsFreeTypeFont::descent()
   NS_ASSERTION(face, "failed to get face/size");
   if (!face)
     return 0;
-  return FT_DESIGN_UNITS_TO_PIXELS(face->descender, face->size->metrics.y_scale);
+  return FT_DESIGN_UNITS_TO_PIXELS(-face->descender, face->size->metrics.y_scale);
 }
 
 int
@@ -501,10 +501,10 @@ nsFreeTypeFont::max_descent()
   mFt2->GetSfntTable(face, ft_sfnt_os2, (void**)&tt_os2);
   NS_ASSERTION(tt_os2, "unable to get OS2 table");
   if (tt_os2)
-     return FT_DESIGN_UNITS_TO_PIXELS(tt_os2->sTypoDescender,
+     return FT_DESIGN_UNITS_TO_PIXELS(-tt_os2->sTypoDescender,
                                       face->size->metrics.y_scale);
   else
-     return FT_DESIGN_UNITS_TO_PIXELS(face->bbox.yMin,
+     return FT_DESIGN_UNITS_TO_PIXELS(-face->bbox.yMin,
                                       face->size->metrics.y_scale);
 }
 
