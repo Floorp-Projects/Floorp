@@ -42,6 +42,7 @@ use Getopt::Mixed "nextOption";
 my $os_type = &get_os_type;
 my $unixish = (($os_type ne "WIN") && ($os_type ne "MAC"));
 my $path_sep = ($os_type eq "MAC") ? ":" : "/";
+my $win_sep  = ($os_type eq "WIN")? &get_win_sep : "";
 my $redirect_command = ($os_type ne "MAC") ? " 2>&1" : "";
 
 # command line option defaults
@@ -1091,8 +1092,11 @@ sub unix_to_mac {
 #
 sub unix_to_win {
   my ($path) = @_;
-  my $win_sep = &get_win_sep;
-  $path =~ s/$path_sep/$win_sep/g;
+
+  if ($path_sep ne $win_sep) {
+      $path =~ s/$path_sep/$win_sep/g;
+  }
+
   return $path;
 }
 
