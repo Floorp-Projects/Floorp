@@ -122,6 +122,7 @@
 #include "nsTimer.h"
 #include "nsWeakPtr.h"
 #include "plarena.h"
+#include "pldhash.h"
 #include "nsIObserverService.h" // for reflow observation
 #include "nsIDocShell.h"        // for reflow observation
 #include "nsLayoutErrors.h"
@@ -1011,6 +1012,52 @@ IncrementalReflow::Dump(nsIPresContext *aPresContext) const
 
 // ----------------------------------------------------------------------------
 
+struct ReflowCommandEntry : public PLDHashEntryHdr
+{
+  nsHTMLReflowCommand* mCommand;
+};
+
+PR_STATIC_CALLBACK(const void *)
+ReflowCommandHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+  ReflowCommandEntry *e = NS_STATIC_CAST(ReflowCommandEntry *, entry);
+  
+  return e->mCommand;
+}
+
+PR_STATIC_CALLBACK(PLDHashNumber)
+ReflowCommandHashHashKey(PLDHashTable *table, const void *key)
+{
+  const nsHTMLReflowCommand* command =
+    NS_STATIC_CAST(const nsHTMLReflowCommand*, key);
+  
+  // The target is going to be reasonbly unique, the type comes from an enum
+  // and we just don't have that many types, and the child list name is either
+  // null or has the same high-order bits as all the other child list names.
+  return
+    NS_PTR_TO_INT32(command->GetTarget()) ^
+    (command->GetType() << 17) ^
+    (NS_PTR_TO_INT32(command->GetChildListName()) << 20);
+}
+
+PR_STATIC_CALLBACK(PRBool)
+ReflowCommandHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
+                            const void *key)
+{
+   const ReflowCommandEntry *e =
+     NS_STATIC_CAST(const ReflowCommandEntry *, entry);
+   const nsHTMLReflowCommand *command = e->mCommand;
+   const nsHTMLReflowCommand *command2 =
+     NS_STATIC_CAST(const nsHTMLReflowCommand *, key);
+
+   return
+     command->GetTarget() == command2->GetTarget() &&
+     command->GetType() == command2->GetType() &&
+     command->GetChildListName() == command2->GetChildListName();
+}
+
+// ----------------------------------------------------------------------------
+
 class PresShell : public nsIPresShell, public nsIViewObserver,
                   public nsStubDocumentObserver, public nsIFocusTracker,
                   public nsISelectionController,
@@ -1304,8 +1351,11 @@ protected:
   nsresult ProcessReflowCommands(PRBool aInterruptible);
   nsresult ClearReflowEventStatus();  
   void     PostReflowEvent();
-  PRBool   AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand,
-                          nsVoidArray&         aQueue);
+
+  // Note: when PR_FALSE is returned, AlreadyInQueue assumes the command will
+  // in fact be added to the queue.  If it's not, it needs to be removed from
+  // mReflowCommandTable (AlreadyInQueue will insert it in that table).
+  PRBool   AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand);
   
   friend struct ReflowEvent;
 
@@ -1341,7 +1391,8 @@ protected:
   PRUint32                  mUpdateCount;
 #endif
   // normal reflow commands
-  nsVoidArray               mReflowCommands; 
+  nsVoidArray               mReflowCommands;
+  PLDHashTable              mReflowCommandTable;
 
   PRPackedBool mEnablePrefStyleSheet;
   PRPackedBool mDocumentLoading;
@@ -1701,6 +1752,25 @@ PresShell::Init(nsIDocument* aDocument,
   NS_ADDREF(mPresContext);
   aPresContext->SetShell(this);
 
+  // Create our reflow command hashtable
+  static PLDHashTableOps reflowCommandOps =
+    {
+      PL_DHashAllocTable,
+      PL_DHashFreeTable,
+      ReflowCommandHashGetKey,
+      ReflowCommandHashHashKey,
+      ReflowCommandHashMatchEntry,
+      PL_DHashMoveEntryStub,
+      PL_DHashClearEntryStub,
+      PL_DHashFinalizeStub
+    };
+
+  if (!PL_DHashTableInit(&mReflowCommandTable, &reflowCommandOps,
+                         nsnull, sizeof(ReflowCommandEntry), 16)) {
+    mReflowCommandTable.ops = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
   // Now we can initialize the style set.
   nsresult result = aStyleSet->Init(aPresContext);
   NS_ENSURE_SUCCESS(result, result);
@@ -1831,6 +1901,10 @@ PresShell::Destroy()
   if (mHaveShutDown)
     return NS_OK;
 
+  if (mReflowCommandTable.ops) {
+    PL_DHashTableFinish(&mReflowCommandTable);
+  }
+  
   // If our paint suppression timer is still active, kill it.
   if (mPaintSuppressionTimer) {
     mPaintSuppressionTimer->Cancel();
@@ -3643,46 +3717,37 @@ PresShell::EndLoad(nsIDocument *aDocument)
 // frame it targets is targeted by a pre-existing reflow command in
 // the queue.
 PRBool
-PresShell::AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand,
-                          nsVoidArray&         aQueue)
+PresShell::AlreadyInQueue(nsHTMLReflowCommand* aReflowCommand)
 {
-  PRInt32 i, n = aQueue.Count();
-  nsIFrame* targetFrame;
-  PRBool inQueue = PR_FALSE;    
-
-  if (NS_SUCCEEDED(aReflowCommand->GetTarget(targetFrame))) {
-    // Iterate over the reflow commands and compare the targeted frames.
-    for (i = 0; i < n; i++) {
-      nsHTMLReflowCommand* rc = (nsHTMLReflowCommand*) aQueue.ElementAt(i);
-      if (rc) {
-        nsIFrame* targetOfQueuedRC;
-        if (NS_SUCCEEDED(rc->GetTarget(targetOfQueuedRC))) {
-          nsReflowType RCType;
-          nsReflowType queuedRCType;
-          aReflowCommand->GetType(RCType);
-          rc->GetType(queuedRCType);
-          if (targetFrame == targetOfQueuedRC &&
-            RCType == queuedRCType) {
-            nsCOMPtr<nsIAtom> CLName, queuedCLName;
-            aReflowCommand->GetChildListName(*getter_AddRefs(CLName));
-            rc->GetChildListName(*getter_AddRefs(queuedCLName));
-            if (CLName == queuedCLName) {
-#ifdef DEBUG
-              if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-                printf("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", (void*)this);
-                aReflowCommand->List(stdout);
-              }
-#endif
-              inQueue = PR_TRUE;
-              break;
-            }
-          } 
-        }
-      }
-    }
+  if (!mReflowCommandTable.ops) {
+    // We're already destroyed
+    NS_ERROR("We really shouldn't be posting reflow commands here");
   }
 
-  return inQueue;
+  ReflowCommandEntry* e =
+    NS_STATIC_CAST(ReflowCommandEntry*,
+                   PL_DHashTableOperate(&mReflowCommandTable, aReflowCommand,
+                                        PL_DHASH_ADD));
+
+  if (!e) {
+    // We lie no matter what we say here
+    return PR_FALSE;
+  }
+
+  // We're using the stub ClearEntry, which zeros out entries, so a
+  // non-null mCommand means we're in the queue already.
+  if (e->mCommand) {
+#ifdef DEBUG
+    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+      printf("*** PresShell::AlreadyInQueue(): Discarding reflow command: this=%p\n", (void*)this);
+      aReflowCommand->List(stdout);
+    }
+#endif
+    return PR_TRUE;
+  }
+
+  e->mCommand = aReflowCommand;
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
@@ -3713,9 +3778,16 @@ PresShell::AppendReflowCommand(nsHTMLReflowCommand* aReflowCommand)
 
   // Add the reflow command to the queue
   nsresult rv = NS_OK;
-  if (!AlreadyInQueue(aReflowCommand, mReflowCommands)) {
-    rv = (mReflowCommands.AppendElement(aReflowCommand) ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
-    ReflowCommandAdded(aReflowCommand);
+  if (!AlreadyInQueue(aReflowCommand)) {
+    if (mReflowCommands.AppendElement(aReflowCommand)) {
+      ReflowCommandAdded(aReflowCommand);
+    } else {
+      // Drop this command.... we're out of memory
+      PL_DHashTableOperate(&mReflowCommandTable, aReflowCommand,
+                           PL_DHASH_REMOVE);
+      delete aReflowCommand;
+      rv = NS_ERROR_OUT_OF_MEMORY;
+    }
   }
   else {
     // We're not going to process this reflow command.
@@ -3766,34 +3838,20 @@ PresShell::CancelReflowCommandInternal(nsIFrame*     aTargetFrame,
   PRInt32 i, n = mReflowCommands.Count();
   for (i = 0; i < n; i++) {
     nsHTMLReflowCommand* rc = (nsHTMLReflowCommand*) mReflowCommands.ElementAt(i);
-    if (rc) {
-      nsIFrame* target;      
-      if (NS_SUCCEEDED(rc->GetTarget(target))) {
-        if (target == aTargetFrame) {
-          if (aCmdType != NULL) {
-            // If aCmdType is specified, only remove reflow commands
-            // of that type
-            nsReflowType type;
-            if (NS_SUCCEEDED(rc->GetType(type))) {
-              if (type != *aCmdType)
-                continue;
-            }
-          }
+    if (rc && rc->GetTarget() == aTargetFrame &&
+        (!aCmdType || rc->GetType() == *aCmdType)) {
 #ifdef DEBUG
-          if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-            printf("PresShell: removing rc=%p for frame ", (void*)rc);
-            nsFrame::ListTag(stdout, aTargetFrame);
-            printf("\n");
-          }
-#endif
-          mReflowCommands.RemoveElementAt(i);
-          ReflowCommandRemoved(rc);
-          delete rc;
-          n--;
-          i--;
-          continue;
-        }
+      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+        printf("PresShell: removing rc=%p for frame ", (void*)rc);
+        nsFrame::ListTag(stdout, aTargetFrame);
+        printf("\n");
       }
+#endif
+      mReflowCommands.RemoveElementAt(i);
+      ReflowCommandRemoved(rc);
+      delete rc;
+      n--;
+      i--;
     }
   }
 
@@ -6463,6 +6521,10 @@ PresShell::ReflowCommandAdded(nsHTMLReflowCommand* aRC)
 nsresult
 PresShell::ReflowCommandRemoved(nsHTMLReflowCommand* aRC)
 {
+  NS_PRECONDITION(mReflowCommandTable.ops, "How did that happen?");
+  
+  PL_DHashTableOperate(&mReflowCommandTable, aRC, PL_DHASH_REMOVE);
+  
   if (gAsyncReflowDuringDocLoad) {
     NS_PRECONDITION(mRCCreatedDuringLoad >= 0, "PresShell's reflow command queue is in a bad state.");  
     PRInt32 flags;
