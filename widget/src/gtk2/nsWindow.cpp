@@ -457,6 +457,9 @@ nsWindow::Invalidate(PRBool aIsSynchronous)
   rect.width = mBounds.width;
   rect.height = mBounds.height;
 
+  LOG(("Invalidate (all) [%p]: %d %d %d %d\n", (void *)this,
+       rect.x, rect.y, rect.width, rect.height));
+
   gdk_window_invalidate_rect(mDrawingarea->inner_window,
 			     &rect, TRUE);
   if (aIsSynchronous)
@@ -476,6 +479,9 @@ nsWindow::Invalidate(const nsRect &aRect,
   rect.width = aRect.width;
   rect.height = aRect.height;
 
+  LOG(("Invalidate (rect) [%p]: %d %d %d %d\n", (void *)this,
+       rect.x, rect.y, rect.width, rect.height));
+
   gdk_window_invalidate_rect(mDrawingarea->inner_window,
 			     &rect, TRUE);
   if (aIsSynchronous)
@@ -491,9 +497,20 @@ nsWindow::InvalidateRegion(const nsIRegion* aRegion,
   GdkRegion *region = nsnull;
   aRegion->GetNativeRegion((void *)region);
 
-  if (region)
+  if (region) {
+    GdkRectangle rect;
+    gdk_region_get_clipbox(region, &rect);
+    
+    LOG(("Invalidate (region) [%p]: %d %d %d %d\n", (void *)this,
+	 rect.x, rect.y, rect.width, rect.height));
+
     gdk_window_invalidate_region(mDrawingarea->inner_window,
 				 region, TRUE);
+  }
+  else {
+    LOG(("Invalidate (region) [%p] with empty region\n",
+	 (void *)this));
+  }
   
   return NS_OK;
 }
@@ -871,6 +888,8 @@ nsWindow::OnEnterNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
   event.point.x = nscoord(aEvent->x);
   event.point.y = nscoord(aEvent->y);
 
+  LOG(("OnEnterNotify: %p\n", (void *)this));
+
   nsEventStatus status;
   DispatchEvent(&event, status);
 }
@@ -883,6 +902,8 @@ nsWindow::OnLeaveNotifyEvent(GtkWidget *aWidget, GdkEventCrossing *aEvent)
 
   event.point.x = nscoord(aEvent->x);
   event.point.y = nscoord(aEvent->y);
+
+  LOG(("OnLeaveNotify: %p\n", (void *)this));
 
   nsEventStatus status;
   DispatchEvent(&event, status);
