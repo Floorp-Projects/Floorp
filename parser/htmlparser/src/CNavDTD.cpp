@@ -116,12 +116,10 @@ static char gShowCRC;
 #define NS_DTD_FLAG_HAD_BODY               0x00000010
 #define NS_DTD_FLAG_HAD_FRAMESET           0x00000020
 #define NS_DTD_FLAG_ENABLE_RESIDUAL_STYLE  0x00000040
-#define NS_DTD_FLAG_SCRIPT_ENABLED         0x00000100
-#define NS_DTD_FLAG_FRAMES_ENABLED         0x00000200
-#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000400 // NOFRAMES, NOSCRIPT 
-#define NS_DTD_FLAG_MISPLACED_CONTENT      0x00000800
-#define NS_DTD_FLAG_IN_MISPLACED_CONTENT   0x00001000
-#define NS_DTD_FLAG_STOP_PARSING           0x00002000
+#define NS_DTD_FLAG_ALTERNATE_CONTENT      0x00000080 // NOFRAMES, NOSCRIPT 
+#define NS_DTD_FLAG_MISPLACED_CONTENT      0x00000100
+#define NS_DTD_FLAG_IN_MISPLACED_CONTENT   0x00000200
+#define NS_DTD_FLAG_STOP_PARSING           0x00000400
 
 /**
  *  This method gets called as part of our COM-like interfaces.
@@ -384,15 +382,15 @@ nsresult CNavDTD::WillBuildModel(const CParserContext& aParserContext,
 #endif    
 
    if(mSink) {
-      PRBool enabled;
+      PRBool enabled = PR_TRUE;
       mSink->IsEnabled(eHTMLTag_frameset, &enabled);
       if(enabled) {
-        mFlags |= NS_DTD_FLAG_FRAMES_ENABLED;
+        mFlags |= NS_IPARSER_FLAG_FRAMES_ENABLED;
       }
       
       mSink->IsEnabled(eHTMLTag_script, &enabled);
       if(enabled) {
-        mFlags |= NS_DTD_FLAG_SCRIPT_ENABLED;
+        mFlags |= NS_IPARSER_FLAG_SCRIPT_ENABLED;
       }
     }
     
@@ -439,7 +437,7 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsIToke
         }
 
         // always open a body if frames are disabled....
-        if(!(mFlags & NS_DTD_FLAG_FRAMES_ENABLED)) {
+        if(!(mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) {
           theToken=NS_STATIC_CAST(CStartToken*,mTokenAllocator->CreateTokenOfType(eToken_start,eHTMLTag_body,NS_LITERAL_STRING("body")));
           mTokenizer->PushTokenFront(theToken);
         }
@@ -522,37 +520,6 @@ CNavDTD::BuildNeglectedTarget(eHTMLTags aTarget,
   NS_ASSERTION(mTokenAllocator, "unable to create tokens without an allocator.");
   if (!mTokenizer || !mTokenAllocator)
     return NS_OK;
-  if (eHTMLTag_unknown != mSkipTarget && eHTMLTag_title == aTarget) {
-    PRInt32 size = mSkippedContent.GetSize();
-    // Note: The first location of the skipped content 
-    // deque contains the opened-skip-target. Do not include
-    // that when guessing title contents. The term "guessing" 
-    // is used because the document did not contain an end title
-    // and hence it's almost impossible to know what markup
-    // should belong in the title. The assumption used here is that
-    // if the markup is anything other than "text", or "entity" or,
-    // "whitespace" then it's least likely to belong in the title.
-    PRInt32 index;
-    for (index = 1; index < size; index++) {
-      CHTMLToken* token = 
-        NS_REINTERPRET_CAST(CHTMLToken*, mSkippedContent.ObjectAt(index));
-      NS_ASSERTION(token, "there is a null token in the skipped content list!");
-      eHTMLTokenTypes type = eHTMLTokenTypes(token->GetTokenType());
-      if (eToken_whitespace != type && 
-          eToken_newline != type    && 
-          eToken_text != type       && 
-          eToken_entity != type     &&
-          eToken_attribute != type) {
-        // Now pop the tokens that do not belong ( just a guess work )
-        // in the title and push them into the tokens queue.
-        while (size != index++) {
-          token = NS_REINTERPRET_CAST(CHTMLToken*, mSkippedContent.Pop()); 
-          mTokenizer->PushTokenFront(token);
-        }
-        break;
-      }
-    }
-  }
   CHTMLToken* target = 
       NS_STATIC_CAST(CHTMLToken*, mTokenAllocator->CreateTokenOfType(aType, aTarget));
   mTokenizer->PushTokenFront(target);
@@ -846,30 +813,6 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
         return result;
       }
     }
-    else if(mFlags & NS_DTD_FLAG_ALTERNATE_CONTENT) {
-      if(theTag != mBodyContext->Last() || theType!=eToken_end) {
-        // attribute source is a part of start token.
-        if(theType!=eToken_attribute) {
-          aToken->AppendSourceTo(mScratch);
-        }
-        IF_FREE(aToken, mTokenAllocator);
-        return result;
-      }
-      else {
-        // If you're here then we have either seen a /noscript,
-        // or /noframes, or /iframe. After handling the text token 
-        // intentionally fall thro' to handle the current end token.
-        CTextToken theTextToken(mScratch);        
-        result=HandleStartToken(&theTextToken);
-        
-        if(NS_FAILED(result)) {
-          return result;
-        }
-
-        mScratch.Truncate();
-        mScratch.SetCapacity(0);
-      }
-    }
     else if(mFlags & NS_DTD_FLAG_MISPLACED_CONTENT) {
       // Included TD & TH to fix Bug# 20797
       static eHTMLTags gLegalElements[]={eHTMLTag_table,eHTMLTag_thead,eHTMLTag_tbody,
@@ -949,7 +892,9 @@ nsresult CNavDTD::HandleToken(CToken* aToken,nsIParser* aParser){
           }
         default:
           if(!gHTMLElements[eHTMLTag_html].SectionContains(theTag,PR_FALSE)) {
-            if(!(mFlags & (NS_DTD_FLAG_HAD_BODY | NS_DTD_FLAG_HAD_FRAMESET))) {
+            if(!(mFlags & (NS_DTD_FLAG_HAD_BODY |
+                           NS_DTD_FLAG_HAD_FRAMESET |
+                           NS_DTD_FLAG_ALTERNATE_CONTENT))) {
 
               //For bug examples from this code, see bugs: 18928, 20989.
 
@@ -1075,28 +1020,6 @@ nsresult CNavDTD::DidHandleStartTag(nsIParserNode& aNode,eHTMLTags aChildTag){
         }//if
       }
       break;
-
-    case eHTMLTag_xmp:
-      //grab the skipped content and dump it out as text...
-      {        
-        STOP_TIMER()
-        MOZ_TIMER_DEBUGLOG(("Stop: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
-        nsAutoString theString;
-        PRInt32 lineNo = 0;
-        
-        result = CollectSkippedContent(aChildTag, theString, lineNo);
-        NS_ENSURE_SUCCESS(result, result);
-
-        if(0<theString.Length()) {
-          CTextToken *theToken=NS_STATIC_CAST(CTextToken*,mTokenAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text,theString));
-          nsCParserNode theNode(theToken, mTokenAllocator);
-          result=mSink->AddLeaf(theNode); //when the node get's destructed, so does the new token
-        }
-        MOZ_TIMER_DEBUGLOG(("Start: Parse Time: CNavDTD::DidHandleStartTag(), this=%p\n", this));
-        START_TIMER()
-      }
-      break;
-
 #ifdef DEBUG
     case eHTMLTag_counter:
       {
@@ -2485,30 +2408,10 @@ CNavDTD::CollectSkippedContent(PRInt32 aTag, nsAString& aContent, PRInt32 &aLine
   PRInt32 tagCount = mSkippedContent.GetSize();
   for (i = 0; i< tagCount; ++i){
     CHTMLToken* theNextToken = (CHTMLToken*)mSkippedContent.PopFront();
-      
     if (theNextToken) {
-      eHTMLTokenTypes theTokenType = (eHTMLTokenTypes)theNextToken->GetTokenType();
-
-      // Dont worry about attributes here because it's already stored in 
-      // the start token as mTrailing content and will get appended in 
-      // start token's GetSource();
-      if (eToken_attribute!=theTokenType) {
-        if ((eToken_entity==theTokenType) &&
-           ((eHTMLTag_textarea == aTag) || (eHTMLTag_title == aTag))) {
-            mScratch.Truncate();
-            ((CEntityToken*)theNextToken)->TranslateToUnicodeStr(mScratch);
-            if (!mScratch.IsEmpty()){
-              aContent.Append(mScratch);
-            }
-            else {
-              // We thought it was an entity but it is not! - bug 79492
-              aContent.Append(PRUnichar('&'));
-              aContent.Append(theNextToken->GetStringValue());
-            }
-          }
-        else theNextToken->AppendSourceTo(aContent);
-      }
+      theNextToken->AppendSourceTo(aContent);
     }
+
     IF_FREE(theNextToken, mTokenAllocator);
   }
   
@@ -3433,8 +3336,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
       // If the script is disabled noscript should not be
       // in the content model until the layout can somehow
       // turn noscript's display property to block <-- bug 67899
-      if(mFlags & NS_DTD_FLAG_SCRIPT_ENABLED) {
-        mScratch.Truncate();
+      if(mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED) {
         mFlags |= NS_DTD_FLAG_ALTERNATE_CONTENT;
       }
       break;
@@ -3442,8 +3344,7 @@ CNavDTD::OpenContainer(const nsCParserNode *aNode,
     case eHTMLTag_iframe: // Bug 84491 
     case eHTMLTag_noframes:
       done=PR_FALSE;
-      if(mFlags & NS_DTD_FLAG_FRAMES_ENABLED) {
-        mScratch.Truncate();
+      if(mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED) {
         mFlags |= NS_DTD_FLAG_ALTERNATE_CONTENT;
       }
       break;

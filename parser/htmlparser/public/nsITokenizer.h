@@ -86,7 +86,6 @@ public:
   NS_IMETHOD_(PRInt32)           GetCount(void)=0;
   NS_IMETHOD_(nsTokenAllocator*) GetTokenAllocator(void)=0;
   NS_IMETHOD_(void)              PrependTokens(nsDeque& aDeque)=0;
-  NS_IMETHOD                     CopyState(nsITokenizer* aTokenizer) = 0;
   
 };
 
@@ -101,8 +100,7 @@ public:
   NS_IMETHOD_(CToken*)           GetTokenAt(PRInt32 anIndex);\
   NS_IMETHOD_(PRInt32)           GetCount(void);\
   NS_IMETHOD_(nsTokenAllocator*) GetTokenAllocator(void);\
-  NS_IMETHOD_(void)              PrependTokens(nsDeque& aDeque);\
-  NS_IMETHOD                     CopyState(nsITokenizer* aTokenizer);
+  NS_IMETHOD_(void)              PrependTokens(nsDeque& aDeque);
 
 
 #endif

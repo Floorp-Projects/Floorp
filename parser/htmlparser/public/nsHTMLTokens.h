@@ -153,7 +153,6 @@ public:
   }
 
   nsString mTextValue;
-  nsString mTrailingContent;
 protected:
   eContainerInfo mContainerInfo;
   PRPackedBool mEmpty;
@@ -282,9 +281,6 @@ public:
   CTextToken();
   CTextToken(const nsAString& aString);
   virtual nsresult Consume(PRUnichar aChar,nsScanner& aScanner,PRInt32 aMode);
-  nsresult ConsumeUntil(PRUnichar aChar, PRBool aIgnoreComments,
-                        nsScanner& aScanner, const nsAString& aEndTagName,
-                        PRInt32 aFlag, PRBool& aFlushTokens);
   virtual PRInt32 GetTokenType(void);
   virtual PRInt32 GetTextLength(void);
   virtual void CopyTo(nsAString& aStr);
@@ -292,6 +288,21 @@ public:
   virtual void Bind(nsScanner* aScanner, nsScannerIterator& aStart,
                     nsScannerIterator& aEnd);
   virtual void Bind(const nsAString& aStr);
+
+  nsresult ConsumeCharacterData(PRUnichar aChar,
+                                PRBool aConservativeConsume,
+                                PRBool aIgnoreComments,
+                                nsScanner& aScanner,
+                                const nsAString& aEndTagName,
+                                PRInt32 aFlag,
+                                PRBool& aFlushTokens);
+
+  nsresult ConsumeParsedCharacterData(PRUnichar aChar,
+                                      PRBool aConservativeConsume,
+                                      nsScanner& aScanner,
+                                      const nsAString& aEndTagName,
+                                      PRInt32 aFlag,
+                                      PRBool& aFound);
 
 protected:
   nsScannerSubstring mTextValue;

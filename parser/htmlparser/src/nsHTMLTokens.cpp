@@ -61,7 +61,139 @@ static const PRUnichar kAttributeTerminalChars[] = {
   PRUnichar('>'),  
   PRUnichar(0) 
 };
-                   
+
+static void AppendNCR(nsSubstring& aString, PRInt32 aNCRValue);
+/*
+ *  @param   aScanner -- controller of underlying input source
+ *  @param   aFlag -- If NS_IPARSER_FLAG_VIEW_SOURCE do not reduce entities...
+ *  @return  error result
+ *
+ */
+static
+nsresult ConsumeEntity(nsScannerSharedSubstring& aString,
+                       nsScanner& aScanner,
+                       PRInt32 aFlag) 
+{
+  nsresult result=NS_OK;
+
+  PRUnichar ch;
+  result=aScanner.Peek(ch, 1);
+
+  if (NS_SUCCEEDED(result)) {
+    PRUnichar amp=0;
+    PRInt32 theNCRValue=0;
+    nsAutoString entity;
+
+    if (nsCRT::IsAsciiAlpha(ch) && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+      result=CEntityToken::ConsumeEntity(ch,entity,aScanner);
+      if (NS_SUCCEEDED(result)) {
+        theNCRValue = nsHTMLEntities::EntityToUnicode(entity);
+        PRUnichar theTermChar=entity.Last();
+        // If an entity value is greater than 255 then:
+        // Nav 4.x does not treat it as an entity,
+        // IE treats it as an entity if terminated with a semicolon.
+        // Resembling IE!!
+
+        nsSubstring &writable = aString.writable();
+        if(theNCRValue < 0 || (theNCRValue > 255 && theTermChar != ';')) {
+          // Looks like we're not dealing with an entity
+          writable.Append(kAmpersand);
+          writable.Append(entity);
+        }
+        else {
+          // A valid entity so reduce it.
+          writable.Append(PRUnichar(theNCRValue));
+        }
+      }
+    }
+    else if (ch==kHashsign && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+      result=CEntityToken::ConsumeEntity(ch,entity,aScanner);
+      if (NS_SUCCEEDED(result)) {
+        nsSubstring &writable = aString.writable();
+        if (result == NS_HTMLTOKENS_NOT_AN_ENTITY) {
+          // Looked like an entity but it's not
+          aScanner.GetChar(amp);
+          writable.Append(amp);
+          result = NS_OK; // just being safe..
+        }
+        else {
+          PRInt32 err;
+          theNCRValue=entity.ToInteger(&err,kAutoDetect);
+          AppendNCR(writable, theNCRValue);
+        }
+      }
+    }
+    else {
+      // What we thought as entity is not really an entity...
+      aScanner.GetChar(amp);
+      aString.writable().Append(amp);
+    }//if
+  }
+
+  return result;
+}
+
+/*
+ *  This general purpose method is used when you want to
+ *  consume attributed text value. 
+ *  Note: It also reduces entities.
+ *
+ *  @param   aNewlineCount -- the newline count to increment when hitting newlines
+ *  @param   aScanner -- controller of underlying input source
+ *  @param   aTerminalChars -- characters that stop consuming attribute.
+ *  @param   aAllowNewlines -- whether to allow newlines in the value.
+ *                             XXX it would be nice to roll this info into
+ *                             aTerminalChars somehow....
+ *  @param   aFlag - contains information such as |dtd mode|view mode|doctype|etc...
+ *  @return  error result
+ */
+static
+nsresult ConsumeUntil(nsScannerSharedSubstring& aString,
+                      PRInt32& aNewlineCount,
+                      nsScanner& aScanner,
+                      const nsReadEndCondition& aEndCondition,
+                      PRBool aAllowNewlines,
+                      PRInt32 aFlag)
+{
+  nsresult result = NS_OK;
+  PRBool   done = PR_FALSE;
+  
+  do {
+    result = aScanner.ReadUntil(aString,aEndCondition,PR_FALSE);
+    if(NS_SUCCEEDED(result)) {
+      PRUnichar ch;
+      aScanner.Peek(ch);
+      if(ch == kAmpersand) {
+        result = ConsumeEntity(aString,aScanner,aFlag);
+      }
+      else if(ch == kCR && aAllowNewlines) {
+        aScanner.GetChar(ch);
+        result = aScanner.Peek(ch);
+        if (NS_SUCCEEDED(result)) {
+          nsSubstring &writable = aString.writable();
+          if(ch == kNewLine) {
+            writable.AppendLiteral("\r\n");
+            aScanner.GetChar(ch);
+          }
+          else {
+            writable.Append(PRUnichar('\r'));
+          }
+          ++aNewlineCount;
+        }
+      }
+      else if(ch == kNewLine && aAllowNewlines) {
+        aScanner.GetChar(ch);
+        aString.writable().Append(PRUnichar('\n'));
+        ++aNewlineCount;
+      }
+      else {
+        done = PR_TRUE;
+      }
+    }
+  } while (NS_SUCCEEDED(result) && !done);
+
+  return result;
+}
 
 /**************************************************************
   And now for the token classes...
@@ -244,15 +376,12 @@ void CStartToken::AppendSourceTo(nsAString& anOutputString){
   /*
    * Watch out for Bug 15204 
    */
-  if(!mTrailingContent.IsEmpty())
-    anOutputString.Append(mTrailingContent);
-  else {
-    if(!mTextValue.IsEmpty())
-      anOutputString.Append(mTextValue);
-    else
-     anOutputString.Append(GetTagName(mTypeID));
-    anOutputString.Append(PRUnichar('>'));
-  }
+  if(!mTextValue.IsEmpty())
+    anOutputString.Append(mTextValue);
+  else
+    anOutputString.Append(GetTagName(mTypeID));
+
+  anOutputString.Append(PRUnichar('>'));
 }
 
 /*
@@ -293,8 +422,8 @@ nsresult CEndToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
     mTypeID = (PRInt32)nsHTMLTags::LookupTag(tagIdent.str());
     // Save the original tag string if this is user-defined or if we
     // are viewing source
-    if(eHTMLTag_userdefined==mTypeID ||
-       (aFlag & (NS_IPARSER_FLAG_VIEW_SOURCE | NS_IPARSER_FLAG_PRESERVE_CONTENT))) {
+    if(eHTMLTag_userdefined==mTypeID || 
+       (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       mTextValue = tagIdent.str();
     }
   }
@@ -388,6 +517,7 @@ void CEndToken::AppendSourceTo(nsAString& anOutputString){
     anOutputString.Append(mTextValue);
   else
     anOutputString.Append(GetTagName(mTypeID));
+
   anOutputString.Append(PRUnichar('>'));
 }
 
@@ -498,14 +628,24 @@ nsresult CTextToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 aFlag)
  *  Consume as much clear text from scanner as possible.
  *  The scanner is left on the < of the perceived end tag.
  *
- *  @update  gess 3/25/98
  *  @param   aChar -- last char consumed from stream
+ *  @param   aConservativeConsume -- controls our handling of content with no
+ *                                   terminating string.
+ *  @param   aIgnoreComments -- whether or not we should take comments into
+ *                              account in looking for the end tag.
  *  @param   aScanner -- controller of underlying input source
+ *  @param   aEndTagname -- the terminal tag name.
+ *  @param   aFlag -- dtd modes and such.
+ *  @param   aFlushTokens -- PR_TRUE if we found the terminal tag.
  *  @return  error result
  */
-nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScanner& aScanner,
-                                  const nsAString& aEndTagName,PRInt32 aFlag,
-                                  PRBool& aFlushTokens){
+nsresult CTextToken::ConsumeCharacterData(PRUnichar aChar,
+                                          PRBool aConservativeConsume,
+                                          PRBool aIgnoreComments,
+                                          nsScanner& aScanner,
+                                          const nsAString& aEndTagName,
+                                          PRInt32 aFlag,
+                                          PRBool& aFlushTokens) {
   nsresult      result=NS_OK;
   nsScannerIterator theStartOffset, theCurrOffset, theTermStrPos, theStartCommentPos, theAltTermStrPos, endPos;
   PRBool        done=PR_FALSE;
@@ -532,7 +672,9 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
   // 4. Amen...If you found a terminal string and '-->'. Otherwise goto step 1.
   // 5. If the end of the document is reached and if we still don't have the condition in step 4. then
   //    assume that the prematured terminal string is the actual terminal string and goto step 1. This
-  //    will be our last iteration.
+  //    will be our last iteration. If there is no premature terminal string and we're being
+  //    conservative in our consumption (aConservativeConsume), then don't consume anything
+  //    from the scanner. Otherwise, we consume all the way until the end (for <xmp>).
 
   NS_NAMED_LITERAL_STRING(ltslash, "</");
   const nsString theTerminalString = ltslash + aEndTagName;
@@ -609,20 +751,171 @@ nsresult CTextToken::ConsumeUntil(PRUnichar aChar,PRBool aIgnoreComments,nsScann
       // a) when the buffer runs out ot data.
       // b) when the terminal string is not found.
       if(!aScanner.IsIncremental()) {
-        if(theAltTermStrPos != endPos) {
+        if(theAltTermStrPos != endPos && aConservativeConsume) {
           // If you're here it means..we hit the rock bottom and therefore switch to plan B.
           theCurrOffset = theAltTermStrPos;
           theLastIteration = PR_TRUE;
         }
-        else {
+        else if (!aConservativeConsume) {
           done = PR_TRUE; // Do this to fix Bug. 35456
+          result = kFakeEndTag;
+          aScanner.BindSubstring(mTextValue, theStartOffset, endPos.advance(-1));
+          aScanner.SetPosition(endPos.advance(1));
+        }
+        else {
+          done = PR_TRUE;
+          result = kFakeEndTag;
+          // We need to bind our value to a non-empty string.
+          aScanner.BindSubstring(mTextValue, theStartOffset, theStartOffset);
         }
       }
       else {
-       result=kEOF;
+        result=kEOF;
       }
     }
   }
+
+  return result;
+}
+
+/*
+ *  Consume as much clear text from scanner as possible. Reducing entities.
+ *  The scanner is left on the < of the perceived end tag.
+ *
+ *  @param   aChar -- last char consumed from stream
+ *  @param   aConservativeConsume -- controls our handling of content with no
+ *                                   terminating string.
+ *  @param   aScanner -- controller of underlying input source
+ *  @param   aEndTagname -- the terminal tag name.
+ *  @param   aFlag -- dtd modes and such.
+ *  @param   aFlushTokens -- PR_TRUE if we found the terminal tag.
+ *  @return  error result
+ */
+nsresult CTextToken::ConsumeParsedCharacterData(PRUnichar aChar,
+                                                PRBool aConservativeConsume,
+                                                nsScanner& aScanner,
+                                                const nsAString& aEndTagName,
+                                                PRInt32 aFlag,
+                                                PRBool& aFound)
+{
+  // This function is fairly straightforward except if there is no terminating
+  // string. If there is, we simply loop through all of the entities, reducing
+  // them as necessary and skipping over non-terminal strings starting with <.
+  // If there is *no* terminal string, then we examine aConservativeConsume.
+  // If we want to be conservative, we backtrack to the first place in the
+  // document that looked like the end of PCDATA (i.e., the first tag). This
+  // is for compatibility and so we don't regress bug 42945. If we are not
+  // conservative, then we consume everything, all the way up to the end of
+  // the document.
+
+  static const PRUnichar terminalChars[] = {
+    PRUnichar('&'), PRUnichar('<'),
+    PRUnichar(0)
+  };
+  static const nsReadEndCondition theEndCondition(terminalChars);
+
+  nsScannerIterator currPos,endPos,altEndPos;
+  PRUint32 truncPos = 0;
+  aScanner.CurrentPosition(currPos);
+  aScanner.EndReading(endPos);
+
+  altEndPos = endPos;
+
+  nsScannerSharedSubstring theContent;
+  PRUnichar ch = 0;
+
+  NS_NAMED_LITERAL_STRING(commentStart, "<!--");
+  NS_NAMED_LITERAL_STRING(ltslash, "</");
+  const nsString theTerminalString = ltslash + aEndTagName;
+  PRUint32 termStrLen = theTerminalString.Length();
+  PRUint32 commentStartLen = commentStart.Length();
+
+  nsresult result = NS_OK;
+
+  while (currPos != endPos) {
+    result = ConsumeUntil(theContent, mNewlineCount, aScanner, 
+                          theEndCondition, PR_TRUE, aFlag);
+
+    if (NS_FAILED(result)) {
+      if (kEOF == result && !aScanner.IsIncremental()) {
+        aFound = PR_TRUE; // this is as good as it gets.
+        result = kFakeEndTag;
+
+        if (aConservativeConsume && altEndPos != endPos) {
+          // We ran out of room looking for a </title>. Go back to the first
+          // place that looked like a tag and use that as our stopping point.
+          theContent.writable().Truncate(truncPos);
+          aScanner.SetPosition(altEndPos);
+        }
+        // else we take everything we consumed.
+        mTextValue.Rebind(theContent.str());
+      }
+      else {
+        aFound = PR_FALSE;
+      }
+
+      return result;
+    }
+
+    aScanner.CurrentPosition(currPos);
+    aScanner.GetChar(ch); // this character must be '&' or '<'
+
+    if (ch == kLessThan && altEndPos == endPos) {
+      // Keep this position in case we need it for later.
+      altEndPos = currPos;
+      truncPos = theContent.str().Length();
+    }
+
+    if (Distance(currPos, endPos) >= termStrLen) {
+      nsScannerIterator start(currPos), end(currPos);
+      end.advance(termStrLen);
+
+      if (CaseInsensitiveFindInReadable(theTerminalString,start,end)) {
+        if (end != endPos && (*end == '>'  || *end == ' '  || 
+                              *end == '\t' || *end == '\n' || 
+                              *end == '\r' || *end == '\b')) {
+          aFound = PR_TRUE;
+          mTextValue.Rebind(theContent.str());
+          aScanner.SetPosition(currPos);
+          break;
+        }
+      }
+    }
+    // IE only consumes <!-- --> as comments in PCDATA. We'll accept a bit
+    // more in quirks mode, but lets ensure that this really is a comment
+    // start to maintain the illusion of compatability.
+    if (Distance(currPos, endPos) >= commentStartLen) {
+      nsScannerIterator start(currPos), end(currPos);
+      end.advance(commentStartLen);
+
+      if (CaseInsensitiveFindInReadable(commentStart,start,end)) {
+        CCommentToken consumer; // stack allocated.
+
+        // CCommentToken expects us to be on the '-'
+        aScanner.SetPosition(currPos.advance(2));
+        result = consumer.Consume(*currPos, aScanner, aFlag);
+        if (kEOF == result) {
+          return kEOF; // this can only happen if we're really out of space.
+        }
+        else if (kNotAComment == result) {
+          // Fall through and consume this as text.
+          aScanner.CurrentPosition(currPos);
+          aScanner.SetPosition(currPos.advance(1));
+        }
+        else {
+          consumer.AppendSourceTo(theContent.writable());
+          mNewlineCount += consumer.GetNewlineCount();
+          continue;
+        }
+      }
+    }
+
+    result = kEOF;
+    // We did not find the terminal string yet so
+    // include the character that stopped consumption.
+    theContent.writable().Append(ch);
+  }
+
   return result;
 }
 
@@ -1036,10 +1329,9 @@ nsresult CCommentToken::ConsumeStrictComment(nsScanner& aScanner)
     return kEOF; // not really an nsresult, but...
   }
 
-  // XXX We should return kNotAComment, parse comment open as text, and parse
-  //     the rest of the document normally. Now we ALMOST do that: <! is
-  //     missing from the content model.
-  return NS_OK;
+  // There was no terminating string, parse this comment as text.
+  aScanner.SetPosition(lt);
+  return kNotAComment;
 }
 
 nsresult CCommentToken::ConsumeQuirksComment(nsScanner& aScanner) 
@@ -1435,140 +1727,6 @@ void CAttributeToken::AppendSourceTo(nsAString& anOutputString){
   // anOutputString.AppendLiteral(";");
 }
 
-static void AppendNCR(nsSubstring& aString, PRInt32 aNCRValue);
-/*
- *  @param   aScanner -- controller of underlying input source
- *  @param   aFlag -- If NS_IPARSER_FLAG_VIEW_SOURCE do not reduce entities...
- *  @return  error result
- *
- */
-static
-nsresult ConsumeAttributeEntity(nsScannerSharedSubstring& aString,
-                                nsScanner& aScanner,
-                                PRInt32 aFlag) 
-{
- 
-  nsresult result=NS_OK;
-
-  PRUnichar ch;
-  result=aScanner.Peek(ch, 1);
-
-  if (NS_SUCCEEDED(result)) {
-    PRUnichar amp=0;
-    PRInt32 theNCRValue=0;
-    nsAutoString entity;
-
-    if (nsCRT::IsAsciiAlpha(ch) && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-      result=CEntityToken::ConsumeEntity(ch,entity,aScanner);
-      if (NS_SUCCEEDED(result)) {
-        theNCRValue = nsHTMLEntities::EntityToUnicode(entity);
-        PRUnichar theTermChar=entity.Last();
-        // If an entity value is greater than 255 then:
-        // Nav 4.x does not treat it as an entity,
-        // IE treats it as an entity if terminated with a semicolon.
-        // Resembling IE!!
-
-        nsSubstring &writable = aString.writable();
-        if(theNCRValue < 0 || (theNCRValue > 255 && theTermChar != ';')) {
-          // Looks like we're not dealing with an entity
-          writable.Append(kAmpersand);
-          writable.Append(entity);
-        }
-        else {
-          // A valid entity so reduce it.
-          writable.Append(PRUnichar(theNCRValue));
-        }
-      }
-    }
-    else if (ch==kHashsign && !(aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
-      result=CEntityToken::ConsumeEntity(ch,entity,aScanner);
-      if (NS_SUCCEEDED(result)) {
-        nsSubstring &writable = aString.writable();
-        if (result == NS_HTMLTOKENS_NOT_AN_ENTITY) {
-          // Looked like an entity but it's not
-          aScanner.GetChar(amp);
-          writable.Append(amp);
-          result = NS_OK; // just being safe..
-        }
-        else {
-          PRInt32 err;
-          theNCRValue=entity.ToInteger(&err,kAutoDetect);
-          AppendNCR(writable, theNCRValue);
-        }
-      }
-    }
-    else {
-      // What we thought as entity is not really an entity...
-      aScanner.GetChar(amp);
-      aString.writable().Append(amp);
-    }//if
-  }
-
-  return result;
-}
-
-/*
- *  This general purpose method is used when you want to
- *  consume attributed text value. 
- *  Note: It also reduces entities within attributes.
- *
- *  @param   aNewlineCount -- the newline count to increment when hitting newlines
- *  @param   aScanner -- controller of underlying input source
- *  @param   aTerminalChars -- characters that stop consuming attribute.
- *  @param   aAllowNewlines -- whether to allow newlines in the value.
- *                             XXX it would be nice to roll this info into
- *                             aTerminalChars somehow....
- *  @param   aFlag - contains information such as |dtd mode|view mode|doctype|etc...
- *  @return  error result
- */
-static
-nsresult ConsumeAttributeValueText(nsScannerSharedSubstring& aString,
-                                   PRInt32& aNewlineCount,
-                                   nsScanner& aScanner,
-                                   const nsReadEndCondition& aEndCondition,
-                                   PRBool aAllowNewlines,
-                                   PRInt32 aFlag)
-{
-  nsresult result = NS_OK;
-  PRBool   done = PR_FALSE;
-  
-  do {
-    result = aScanner.ReadUntil(aString,aEndCondition,PR_FALSE);
-    if(NS_SUCCEEDED(result)) {
-      PRUnichar ch;
-      aScanner.Peek(ch);
-      if(ch == kAmpersand) {
-        result = ConsumeAttributeEntity(aString,aScanner,aFlag);
-      }
-      else if(ch == kCR && aAllowNewlines) {
-        aScanner.GetChar(ch);
-        result = aScanner.Peek(ch);
-        if (NS_SUCCEEDED(result)) {
-          nsSubstring &writable = aString.writable();
-          if(ch == kNewLine) {
-            writable.AppendLiteral("\r\n");
-            aScanner.GetChar(ch);
-          }
-          else {
-            writable.Append(PRUnichar('\r'));
-          }
-          ++aNewlineCount;
-        }
-      }
-      else if(ch == kNewLine && aAllowNewlines) {
-        aScanner.GetChar(ch);
-        aString.writable().Append(PRUnichar('\n'));
-        ++aNewlineCount;
-      }
-      else {
-        done = PR_TRUE;
-      }
-    }
-  } while (NS_SUCCEEDED(result) && !done);
-
-  return result;
-}
-
 /*
  *  This general purpose method is used when you want to
  *  consume a known quoted string. 
@@ -1609,8 +1767,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
   nsScannerIterator theOffset;
   aScanner.CurrentPosition(theOffset);
 
-  result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
-                                   *terminateCondition,PR_TRUE,aFlag);
+  result=ConsumeUntil(aString,aNewlineCount,aScanner,
+                      *terminateCondition,PR_TRUE,aFlag);
 
   if(NS_SUCCEEDED(result)) {
     result = aScanner.GetChar(aChar); // aChar should be " or '
@@ -1625,8 +1783,8 @@ nsresult ConsumeQuotedString(PRUnichar aChar,
       theAttributeTerminator(kAttributeTerminalChars);
     aString.writable().Truncate(origLen);
     aScanner.SetPosition(theOffset, PR_FALSE, PR_TRUE);
-    result=ConsumeAttributeValueText(aString,aNewlineCount,aScanner,
-                                     theAttributeTerminator,PR_FALSE,aFlag);
+    result=ConsumeUntil(aString,aNewlineCount,aScanner,
+                        theAttributeTerminator,PR_FALSE,aFlag);
     if (NS_SUCCEEDED(result) && (aFlag & NS_IPARSER_FLAG_VIEW_SOURCE)) {
       // Remember that this string literal was unterminated.
       result = NS_ERROR_HTMLPARSER_UNTERMINATEDSTRINGLITERAL;
@@ -1770,12 +1928,12 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner,PRInt32 a
                   else {
                     static const nsReadEndCondition
                       theAttributeTerminator(kAttributeTerminalChars);
-                    result=ConsumeAttributeValueText(mTextValue,
-                                                     mNewlineCount,
-                                                     aScanner,
-                                                     theAttributeTerminator,
-                                                     PR_FALSE,
-                                                     aFlag);
+                    result=ConsumeUntil(mTextValue,
+                                        mNewlineCount,
+                                        aScanner,
+                                        theAttributeTerminator,
+                                        PR_FALSE,
+                                        aFlag);
                   } 
                 }//if
                 if (NS_OK==result) {

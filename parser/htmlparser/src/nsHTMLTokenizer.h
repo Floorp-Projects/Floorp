@@ -58,7 +58,6 @@
   {0xe4238ddd, 0x9eb6, 0x11d2, \
   {0xba, 0xa5, 0x0,     0x10, 0x4b, 0x98, 0x3f, 0xd4 }}
 
-
 /***************************************************************
   Notes: 
  ***************************************************************/
@@ -74,7 +73,8 @@ public:
   NS_DECL_NSITOKENIZER
   nsHTMLTokenizer(PRInt32 aParseMode = eDTDMode_quirks,
                   eParserDocType aDocType = eHTML3_Quirks,
-                  eParserCommands aCommand = eViewNormal);
+                  eParserCommands aCommand = eViewNormal,
+                  PRUint16 aPrefs = 0);
   virtual ~nsHTMLTokenizer();
 
 protected:
@@ -93,8 +93,6 @@ protected:
 
   nsresult ScanDocStructure(PRBool aIsFinalChunk);
 
-  virtual void PreserveToken(CStartToken* aStartToken, nsScanner& aScanner, nsScannerIterator aOrigin);
-
   static void AddToken(CToken*& aToken,nsresult aResult,nsDeque* aDeque,nsTokenAllocator* aTokenAllocator);
 
   nsDeque            mTokenDeque;
@@ -102,12 +100,11 @@ protected:
   nsTokenAllocator*  mTokenAllocator;
   PRInt32            mTokenScanPos;
   PRUint32           mFlags;
-  eHTMLTags          mPreserveTarget; // Tag whose content is preserved
 };
 
 extern nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
                                     PRInt32 aMode,eParserDocType aDocType,
-                                    eParserCommands aCommand);
+                                    eParserCommands aCommand, PRInt32 aFlags);
 
 #endif
 

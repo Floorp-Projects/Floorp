@@ -40,6 +40,7 @@
 #include "CParserContext.h"
 #include "nsToken.h"
 #include "prenv.h"  
+#include "nsIHTMLContentSink.h"
 #include "nsHTMLTokenizer.h"
 #include "nsExpatDriver.h"
 
@@ -169,16 +170,33 @@ void CParserContext::SetMimeType(const nsACString& aMimeType){
 }
 
 nsresult
-CParserContext::GetTokenizer(PRInt32 aType, nsITokenizer*& aTokenizer) {
+CParserContext::GetTokenizer(PRInt32 aType,
+                             nsIContentSink* aSink,
+                             nsITokenizer*& aTokenizer) {
   nsresult result = NS_OK;
   
   if(!mTokenizer) {
     if (aType == NS_IPARSER_FLAG_HTML || mParserCommand == eViewSource) {
-      result = NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,mParserCommand);
-      // Propagate tokenizer state so that information is preserved
-      // between document.write. This fixes bug 99467
-      if (mTokenizer && mPrevContext)
-        mTokenizer->CopyState(mPrevContext->mTokenizer);
+      nsCOMPtr<nsIHTMLContentSink> theSink = do_QueryInterface(aSink);
+      PRUint16 theFlags = 0;
+
+      if (theSink) {
+        // XXX This code is repeated both here and in CNavDTD. Can the two
+        // callsites be combined?
+        PRBool enabled;
+        theSink->IsEnabled(eHTMLTag_frameset, &enabled);
+        if(enabled) {
+          theFlags |= NS_IPARSER_FLAG_FRAMES_ENABLED;
+        }
+        
+        theSink->IsEnabled(eHTMLTag_script, &enabled);
+        if(enabled) {
+          theFlags |= NS_IPARSER_FLAG_SCRIPT_ENABLED;
+        }
+      }
+
+      result = NS_NewHTMLTokenizer(&mTokenizer,mDTDMode,mDocType,
+                                   mParserCommand,theFlags);
     }
     else if (aType == NS_IPARSER_FLAG_XML)
     {

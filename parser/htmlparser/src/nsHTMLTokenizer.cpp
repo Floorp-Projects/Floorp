@@ -103,13 +103,14 @@ nsresult nsHTMLTokenizer::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 nsresult NS_NewHTMLTokenizer(nsITokenizer** aInstancePtrResult,
                                          PRInt32 aFlag,
                                          eParserDocType aDocType, 
-                                         eParserCommands aCommand) 
+                                         eParserCommands aCommand,
+                                         PRInt32 aFlags) 
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLTokenizer* it = new nsHTMLTokenizer(aFlag,aDocType,aCommand);
+  nsHTMLTokenizer* it = new nsHTMLTokenizer(aFlag,aDocType,aCommand,aFlags);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -128,23 +129,24 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
  *  @param   
  *  @return  
  */
- nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
-                                  eParserDocType aDocType,
-                                  eParserCommands aCommand) :
-  nsITokenizer(), mTokenDeque(0)
+nsHTMLTokenizer::nsHTMLTokenizer(PRInt32 aParseMode,
+                                 eParserDocType aDocType,
+                                 eParserCommands aCommand,
+                                 PRUint16 aFlags) :
+  nsITokenizer(), mTokenDeque(0), mFlags(aFlags)
 {
   if (aParseMode==eDTDMode_full_standards ||
       aParseMode==eDTDMode_almost_standards) {
-    mFlags = NS_IPARSER_FLAG_STRICT_MODE;
+    mFlags |= NS_IPARSER_FLAG_STRICT_MODE;
   }
   else if (aParseMode==eDTDMode_quirks)  {
-    mFlags = NS_IPARSER_FLAG_QUIRKS_MODE;
+    mFlags |= NS_IPARSER_FLAG_QUIRKS_MODE;
   }
   else if (aParseMode==eDTDMode_autodetect) {
-    mFlags = NS_IPARSER_FLAG_AUTO_DETECT_MODE;
+    mFlags |= NS_IPARSER_FLAG_AUTO_DETECT_MODE;
   }
   else {
-    mFlags = NS_IPARSER_FLAG_UNKNOWN_MODE;
+    mFlags |= NS_IPARSER_FLAG_UNKNOWN_MODE;
   }
 
   if (aDocType==ePlainText) {
@@ -167,7 +169,6 @@ NS_IMPL_RELEASE(nsHTMLTokenizer)
 
   mTokenAllocator = nsnull;
   mTokenScanPos = 0;
-  mPreserveTarget = eHTMLTag_unknown;
 }
 
 
@@ -309,19 +310,6 @@ void nsHTMLTokenizer::PrependTokens(nsDeque& aDeque){
     PushTokenFront(theToken);
   }
 
-}
-
-NS_IMETHODIMP
-nsHTMLTokenizer::CopyState(nsITokenizer* aTokenizer)
-{
-  if (aTokenizer) {
-    mFlags &= ~NS_IPARSER_FLAG_PRESERVE_CONTENT;
-    mPreserveTarget =
-      NS_STATIC_CAST(nsHTMLTokenizer*, aTokenizer)->mPreserveTarget;
-    if (mPreserveTarget != eHTMLTag_unknown)
-      mFlags |= NS_IPARSER_FLAG_PRESERVE_CONTENT;
-  }
-  return NS_OK;
 }
 
 /**
@@ -649,10 +637,11 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
         const nsSubstring& key=theToken->GetKey();
         const nsAString& text=theToken->GetValue();
 
-         // support XML like syntax to fix bugs like 44186
         if(!key.IsEmpty() && kForwardSlash==key.First() && text.IsEmpty()) {
-          isUsableAttr = PRBool(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE); // Fix bug 103095
-          aToken->SetEmpty(isUsableAttr);
+          if(!(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+            // We only care about these in view-source.
+            isUsableAttr = PR_FALSE;
+          }
         }
         if(isUsableAttr) {
           ++theAttrCount;
@@ -721,10 +710,6 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
   aToken=theAllocator->CreateTokenOfType(eToken_start,eHTMLTag_unknown);
   
   if(aToken) {
-    // Save the position after '<' for use in recording traling contents. Ref: Bug. 15204.
-    nsScannerIterator origin;
-    aScanner.CurrentPosition(origin);
-
     result= aToken->Consume(aChar,aScanner,mFlags);     //tell new token to finish consuming text...    
 
     if(NS_SUCCEEDED(result)) {
@@ -757,68 +742,81 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
        */
       if(NS_SUCCEEDED(result) && !(mFlags & NS_IPARSER_FLAG_XML)) {
         CStartToken* theStartToken = NS_STATIC_CAST(CStartToken*,aToken);
-        //XXX - Find a better soution to record content
-        if(!(mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) &&
-           (theTag == eHTMLTag_textarea  ||
-            theTag == eHTMLTag_xmp       || 
-            theTag == eHTMLTag_noscript  ||
-            theTag == eHTMLTag_noframes)) {
-          NS_ASSERTION(mPreserveTarget == eHTMLTag_unknown,
-                       "mPreserveTarget set but not preserving content?");
-          mPreserveTarget = theTag;
-          mFlags |= NS_IPARSER_FLAG_PRESERVE_CONTENT;
+
+        PRBool isCDATA = gHTMLElements[theTag].CanContainType(kCDATA);
+        PRBool isPCDATA = eHTMLTag_textarea == theTag ||
+                          eHTMLTag_title    == theTag;
+
+        if ((eHTMLTag_iframe == theTag   && (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
+            (eHTMLTag_noframes == theTag && (mFlags & NS_IPARSER_FLAG_FRAMES_ENABLED)) ||
+            (eHTMLTag_noscript == theTag && (mFlags & NS_IPARSER_FLAG_SCRIPT_ENABLED))) {
+          isCDATA = PR_TRUE;
         }
-          
-        if (mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) 
-          PreserveToken(theStartToken, aScanner, origin);
-        
-        //if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
-        if(gHTMLElements[theTag].CanContainType(kCDATA)) {
+
+
+        if (isCDATA || isPCDATA) {
+          PRBool done = PR_FALSE;
           nsDependentString endTagName(nsHTMLTags::GetStringValue(theTag)); 
 
-          CToken*     text=theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
-          CTextToken* textToken=NS_STATIC_CAST(CTextToken*,text);
+          CToken* text =
+              theAllocator->CreateTokenOfType(eToken_text,eHTMLTag_text);
+          CTextToken* textToken = NS_STATIC_CAST(CTextToken*,text);
 
-          //tell new token to finish consuming text...    
-          result=textToken->ConsumeUntil(0,theTag!=eHTMLTag_script,
-                                         aScanner,
-                                         endTagName,
-                                         mFlags,
-                                         aFlushTokens);
-          
-          // Fix bug 44186
-          // Support XML like syntax, i.e., <script src="external.js"/> == <script src="external.js"></script>
-          // Note: if aFlushTokens is TRUE then we have seen an </script>
-          // We do NOT want to output the end token if we didn't see a
-          // </script> and have a preserve target.  If that happens, then we'd
-          // be messing up the text inside the <textarea> or <xmp> or whatever
-          // it is.
-          if((!(mFlags & NS_IPARSER_FLAG_PRESERVE_CONTENT) &&
-              !theStartToken->IsEmpty()) || aFlushTokens) {
-            // Setting this would make cases like <script/>d.w("text");</script> work.
-            theStartToken->SetEmpty(PR_FALSE);
-            // do this up here so we can just add the end token later on
-            AddToken(text,result,&mTokenDeque,theAllocator);
+          if (isCDATA) {
+            // The only tags that consume conservatively are <script> and
+            // <style>, the rest all consume until the end of the document.
+            result = textToken->ConsumeCharacterData(0,
+                                                     theTag==eHTMLTag_script ||
+                                                     theTag==eHTMLTag_style,
+                                                     theTag!=eHTMLTag_script,
+                                                     aScanner,
+                                                     endTagName,
+                                                     mFlags,
+                                                     done);
+            aFlushTokens = done;
+          }
+          else if (isPCDATA) {
+            // Title is consumed conservatively in order to not regress
+            // bug 42945
+            result = textToken->ConsumeParsedCharacterData(0,
+                                                           theTag==eHTMLTag_title,
+                                                           aScanner,
+                                                           endTagName,
+                                                           mFlags,
+                                                           done);
 
-            CToken* endToken=nsnull;
+            // Note: we *don't* set aFlushTokens here.
+          }
+
+          // We want to do this unless result is kEOF, in which case we will
+          // simply unwind our stack and wait for more data anyway.
+          if (kEOF != result) {
+            AddToken(text,NS_OK,&mTokenDeque,theAllocator);
+            CToken* endToken = nsnull;
             
-            if (NS_SUCCEEDED(result) && aFlushTokens) {
+            if (NS_SUCCEEDED(result) && done) {
               PRUnichar theChar;
               // Get the <
               result = aScanner.GetChar(theChar);
               NS_ASSERTION(NS_SUCCEEDED(result) && theChar == kLessThan,
-                           "CTextToken::ConsumeUntil is broken!");
+                           "CTextToken::Consume*Data is broken!");
 #ifdef DEBUG
               // Ensure we have a /
               PRUnichar tempChar;  // Don't change non-debug vars in debug-only code
               result = aScanner.Peek(tempChar);
               NS_ASSERTION(NS_SUCCEEDED(result) && tempChar == kForwardSlash,
-                           "CTextToken::ConsumeUntil is broken!");
+                           "CTextToken::Consume*Data is broken!");
 #endif
               result = ConsumeEndTag(PRUnichar('/'),endToken,aScanner);
-            } else if (!(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+            } else if (result == kFakeEndTag && 
+                      !(mFlags & NS_IPARSER_FLAG_VIEW_SOURCE)) {
+              result = NS_OK;
               endToken=theAllocator->CreateTokenOfType(eToken_end,theTag,endTagName);
               AddToken(endToken,result,&mTokenDeque,theAllocator);
+            } else if (result == kFakeEndTag) {
+              // If we are here, we are both faking having seen the end tag
+              // and are in view-source.
+              result = NS_OK;
             }
           }
           else {
@@ -826,7 +824,7 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
           }
         }
       }
- 
+
       //EEEEECCCCKKKK!!! 
       //This code is confusing, so pay attention.
       //If you're here, it's because we were in the midst of consuming a start
@@ -878,15 +876,6 @@ nsresult nsHTMLTokenizer::ConsumeEndTag(PRUnichar aChar,CToken*& aToken,nsScanne
     else {
       aScanner.GetChar(aChar);
     }        
-
-    if (NS_SUCCEEDED(result)) {
-      eHTMLTags theTag = (eHTMLTags)aToken->GetTypeID();
-      if (mPreserveTarget == theTag) {
-        // Target reached. Stop preserving content.
-        mPreserveTarget = eHTMLTag_unknown;
-        mFlags &= ~NS_IPARSER_FLAG_PRESERVE_CONTENT;
-      }
-    }
 
     // Do the same thing as we do in ConsumeStartTag. Basically, if we've run
     // out of room in this *section* of the document, pop all of the tokens
@@ -984,6 +973,12 @@ nsresult nsHTMLTokenizer::ConsumeComment(PRUnichar aChar,CToken*& aToken,nsScann
     result=aToken->Consume(aChar,aScanner,mFlags);
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
+
+  if (kNotAComment == result) {
+    // AddToken has IF_FREE()'d our token, so...
+    return ConsumeText(aToken, aScanner);
+  }
+
   return result;
 }
 
@@ -1108,34 +1103,4 @@ nsresult nsHTMLTokenizer::ConsumeProcessingInstruction(PRUnichar aChar,CToken*& 
     AddToken(aToken,result,&mTokenDeque,theAllocator);
   }
   return result;
-}
-
-/**
- *  This method keeps a copy of contents within the start token.
- *  The stored content could later be used in displaying TEXTAREA, 
- *  and also in view source.
- *  
- *  @update harishd 11/09/99
- *  @param  aStartToken: The token whose trailing contents are to be recorded
- *  @param  aScanner: see nsScanner.h
- *  
- */
-
-void nsHTMLTokenizer::PreserveToken(CStartToken* aStartToken, 
-                                    nsScanner& aScanner, 
-                                    nsScannerIterator aOrigin) {
-  if(aStartToken) {
-    nsScannerIterator theCurrentPosition;
-    aScanner.CurrentPosition(theCurrentPosition);
-
-    nsString& trailingContent = aStartToken->mTrailingContent;
-    PRUint32 oldLength = trailingContent.Length();
-    trailingContent.SetLength(oldLength + Distance(aOrigin, theCurrentPosition));
-
-    nsWritingIterator<PRUnichar> beginWriting;
-    trailingContent.BeginWriting(beginWriting);
-    beginWriting.advance(oldLength);
-
-    copy_string( aOrigin, theCurrentPosition, beginWriting );
-  }
 }

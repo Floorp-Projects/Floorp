@@ -1294,7 +1294,7 @@ nsParser::WillBuildModel(nsString& aFilename)
     return rv;
 
   nsITokenizer* tokenizer;
-  mParserContext->GetTokenizer(mParserContext->mDTD->GetType(), tokenizer);
+  mParserContext->GetTokenizer(mParserContext->mDTD->GetType(), mSink, tokenizer);
   return mParserContext->mDTD->WillBuildModel(*mParserContext, tokenizer, mSink);
 }
 
@@ -1355,10 +1355,6 @@ CParserContext* nsParser::PopContext()
       if (mParserContext->mStreamListenerState != eOnStop) {
         mParserContext->mStreamListenerState = oldContext->mStreamListenerState;
       }
-      // Preserve tokenizer state so that information is not lost
-      // between document.write. This fixes bug 99467
-      if (mParserContext->mTokenizer)
-        mParserContext->mTokenizer->CopyState(oldContext->mTokenizer);
     }
   }
   return oldContext;
@@ -1644,7 +1640,6 @@ nsParser::Parse(nsIInputStream* aStream,
   return result;
 }
 
-
 /**
  * Call this method if all you want to do is parse 1 string full of HTML text.
  * In particular, this method should be called by the DOM when it has an HTML
@@ -1718,7 +1713,8 @@ nsParser::Parse(const nsAString& aSourceBuffer,
         }
       } 
 
-      pc = new CParserContext(theScanner, aKey, mCommand, 0, theDTD, theStatus, aLastCall);
+      pc = new CParserContext(theScanner, aKey, mCommand,
+                              0, theDTD, theStatus, aLastCall);
       NS_ENSURE_TRUE(pc, NS_ERROR_OUT_OF_MEMORY);
 
       PushContext(*pc); 
@@ -2010,7 +2006,7 @@ nsresult nsParser::BuildModel() {
   nsresult result = NS_OK;
   if (mParserContext) {
     PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, theTokenizer);
+    mParserContext->GetTokenizer(type, mSink, theTokenizer);
   }
 
   if (theTokenizer) {
@@ -2047,7 +2043,7 @@ nsresult nsParser::GetTokenizer(nsITokenizer*& aTokenizer) {
   aTokenizer = nsnull;
   if(mParserContext) {
     PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    result = mParserContext->GetTokenizer(type, aTokenizer);
+    result = mParserContext->GetTokenizer(type, mSink, aTokenizer);
   }
   return result;
 }
@@ -2658,7 +2654,7 @@ PRBool nsParser::WillTokenize(PRBool aIsFinalChunk){
   nsresult result = NS_OK;
   if (mParserContext) {
     PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, theTokenizer);
+    mParserContext->GetTokenizer(type, mSink, theTokenizer);
   }
 
   if (theTokenizer) {
@@ -2684,7 +2680,7 @@ nsresult nsParser::Tokenize(PRBool aIsFinalChunk){
 
   if (mParserContext) {
     PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, theTokenizer);
+    mParserContext->GetTokenizer(type, mSink, theTokenizer);
   }
 
   if (theTokenizer) { 
@@ -2755,7 +2751,7 @@ PRBool nsParser::DidTokenize(PRBool aIsFinalChunk){
   nsresult rv = NS_OK;
   if (mParserContext) {
     PRInt32 type = mParserContext->mDTD ? mParserContext->mDTD->GetType() : NS_IPARSER_FLAG_HTML;
-    mParserContext->GetTokenizer(type, theTokenizer);
+    mParserContext->GetTokenizer(type, mSink, theTokenizer);
   }
 
   if (NS_SUCCEEDED(rv) && theTokenizer) {
