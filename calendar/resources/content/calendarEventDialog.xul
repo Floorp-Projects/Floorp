@@ -217,7 +217,7 @@
                     
             
                     <!-- Private -->    
-                    <row collapsed="true" align="center">
+                    <row align="center">
                         <spacer />
                         <checkbox id="private-checkbox" checked="false" label="&newevent.private.label;"/>
                     </row>
@@ -356,7 +356,10 @@
                    ondragover="nsDragAndDrop.dragOver(event, attachmentBucketObserver);"
                    ondragdrop="nsDragAndDrop.drop(event, attachmentBucketObserver);"
                    ondragexit="nsDragAndDrop.dragExit(event, attachmentBucketObserver);"/>
-               <button onclick="AttachFile()" label="Choose File"/>
+               <vbox>
+                  <button onclick="AttachFile()" label="Choose File"/>
+                  <spacer flex="1"/>
+               </vbox>
             </tabpanel>
          </tabpanels>
          </tabbox>

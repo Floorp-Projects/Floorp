@@ -80,7 +80,7 @@
    width="830px"
    persist="screenX screenY width height sizemode"> 
  
-<commandset>
+<commandset id="calendar_commands">
    <command id="new_command" oncommand="newEventCommand()"/>
    <command id="new_todo_command" oncommand="newToDoCommand()"/>
    <command id="delete_command" oncommand="unifinderDeleteCommand( true )" disabled="true"/>

@@ -200,7 +200,9 @@ function onOKCommand()
       //get the time for the completed event
       var completedDate = getDateTimeFieldValue( "completed-date-text" );
 
-      gToDo.completed = completedDate;
+      gToDo.completed.year = completedDate.getYear() + 1900;
+      gToDo.completed.month = completedDate.getMonth();
+      gToDo.completed.day = completedDate.getDate();
    }
    else
       gToDo.completed.clear();

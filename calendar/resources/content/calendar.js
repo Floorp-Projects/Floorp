@@ -188,7 +188,7 @@ function calendarFinish()
    finishCalendarUnifinder( );
    
    finishCalendarToDoUnifinder( );
-   
+
    gCalendarWindow.close( );
 }
 
@@ -456,17 +456,17 @@ function newToDoCommand()
 
 function createEvent ()
 {
-   var iCalToDoComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
-   var iCalToDo = iCalToDoComponent.QueryInterface(Components.interfaces.oeIICalEvent);
-   return iCalToDo;
+   var iCalEventComponent = Components.classes["@mozilla.org/icalevent;1"].createInstance();
+   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalEvent);
+   return iCalEvent;
 }
 
 
 function createToDo ()
 {
-   var iCalEventComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
-   var iCalEvent = iCalEventComponent.QueryInterface(Components.interfaces.oeIICalTodo);
-   return iCalEvent;
+   var iCalToDoComponent = Components.classes["@mozilla.org/icaltodo;1"].createInstance();
+   var iCalToDo = iCalToDoComponent.QueryInterface(Components.interfaces.oeIICalTodo);
+   return iCalToDo;
 }
 
 

@@ -347,14 +347,13 @@ function unifinderSearchKeyPress( searchTextItem, event )
       eventTable = gEventSource.search( searchText, FieldsToSearch );
    }
    
-   if( document.getElementById( "unifinder-clear-results-button" ) )
+   if( document.getElementById( "erase_command" ) )
    {
       if( searchText.length <= 0 )
-         document.getElementById( "unifinder-clear-results-button" ).setAttribute( "disabled", "true" );
+         document.getElementById( "erase_command" ).setAttribute( "disabled", "true" );
       else
-         document.getElementById( "unifinder-clear-results-button" ).removeAttribute( "disabled" );
+         document.getElementById( "erase_command" ).removeAttribute( "disabled" );
    }
-   
    refreshEventTree( eventTable );
 }
 

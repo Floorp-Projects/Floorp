@@ -1079,7 +1079,7 @@ function updateAddExceptionButton()
    //get the date from the picker
    var datePickerValue = getDateTimeFieldValue( "exception-dates-text" );
    
-   if( isAlreadyException( datePickerValue ) )
+   if( isAlreadyException( datePickerValue ) || document.getElementById( "repeat-checkbox" ).getAttribute( "checked" ) != "true" )
    {
       document.getElementById( "exception-add-button" ).setAttribute( "disabled", "true" );
    }
@@ -1179,11 +1179,9 @@ function getWeekNumberOfMonth()
    
    var oldStartTime = startTime;
 
-   var dayNumber = startTime.getDay();
-   
    var thisMonth = startTime.getMonth();
    
-   var monthToCompare = startTime.getMonth();
+   var monthToCompare = thisMonth;
 
    var weekNumber = 0;
 
@@ -1422,4 +1420,11 @@ function formatTime( time )
 {
    var timeString = opener.gCalendarWindow.dateFormater.getFormatedTime( time );
    return timeString;
+}
+
+
+function debug( Text )
+{
+   dump( "\n"+ Text + "\n");
+
 }
