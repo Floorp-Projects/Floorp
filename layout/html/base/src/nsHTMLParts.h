@@ -40,6 +40,9 @@ extern nsresult NS_NewHTMLContentSink(nsIHTMLContentSink** aInstancePtrResult,
 extern nsresult
   NS_NewRootPart(nsIHTMLContent** aInstancePtrResult,
                  nsIDocument* aDocument);
+extern nsresult
+  NS_NewHTMLHead(nsIHTMLContent** aInstancePtrResult,
+                 nsIAtom* aTag);
 
 // Create an html body part
 extern nsresult

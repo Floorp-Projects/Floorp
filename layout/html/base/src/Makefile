@@ -34,6 +34,7 @@ CPPSRCS =				\
 	nsHTMLContainerFrame.cpp	\
 	nsHTMLContent.cpp		\
 	nsHTMLFrame.cpp			\
+	nsHTMLHead.cpp			\
 	nsHTMLIIDs.cpp			\
 	nsHTMLImage.cpp			\
 	nsHTMLTagContent.cpp		\
