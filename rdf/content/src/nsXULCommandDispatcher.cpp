@@ -44,6 +44,7 @@
 #include "nsIDOMUIEvent.h"
 
 #include "nsIDOMXULElement.h"
+#include "nsIDOMNSHTMLTextAreaElement.h"
 #include "nsIControllers.h"
 
 #include "nsIPresContext.h"
@@ -369,11 +370,15 @@ XULCommandDispatcherImpl::GetControllers(nsIControllers** aResult)
     nsCOMPtr<nsIDOMXULElement> xulElement = do_QueryInterface(mCurrentNode);
     if (xulElement)
       return xulElement->GetControllers(aResult);
-    else {
-      nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(mCurrentNode);
-      if (domWindow)
-        return domWindow->GetControllers(aResult);
-    }
+
+    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> htmlTextArea = do_QueryInterface(mCurrentNode);
+    if (htmlTextArea)
+      return htmlTextArea->GetControllers(aResult);
+
+
+    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(mCurrentNode);
+    if (domWindow)
+      return domWindow->GetControllers(aResult);
   }
 
   *aResult = nsnull;
