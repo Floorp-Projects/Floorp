@@ -538,7 +538,7 @@ COOKIE_RemoveExpiredCookies(nsInt64 aCurrentTime,
   aOldestPosition = -1;
 
   cookie_CookieStruct *cookieInList;
-  nsInt64 oldestTime = LL_MININT;
+  nsInt64 oldestTime = LL_MAXINT;
 
   for (PRInt32 i = sCookieList->Count() - 1; i >= 0; --i) {
     cookieInList = NS_STATIC_CAST(cookie_CookieStruct*, sCookieList->ElementAt(i));
@@ -623,7 +623,7 @@ cookie_FindPosition(cookie_CookieStruct *aCookie,
   COOKIE_RemoveExpiredCookies(aCurrentTime, oldestPosition);
 
   cookie_CookieStruct *cookieInList;
-  nsInt64 oldestTimeFromHost = LL_MININT;
+  nsInt64 oldestTimeFromHost = LL_MAXINT;
   PRInt32 oldestPositionFromHost;
   PRInt32 countFromHost = 0;
   const nsAFlatCString &host = aCookie->host;
