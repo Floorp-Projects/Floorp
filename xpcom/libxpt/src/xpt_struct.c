@@ -72,13 +72,8 @@ XPT_DoHeader(XPTCursor *cursor, XPTHeader **headerp)
     }
     
     return PR_TRUE;
-    
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(header);
-        *headerp = 0;
-    }    
-    return PR_FALSE;
+
+    XPT_ERROR_HANDLE(header);    
 }   
 
 /* InterfaceDirectoryEntry records go in the header */
@@ -146,12 +141,7 @@ XPT_DoInterfaceDirectoryEntry(XPTCursor *cursor,
     
     return PR_TRUE;
 
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(ide);
-        *idep = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(ide);    
 }
 
 PRBool
@@ -192,12 +182,7 @@ XPT_DoInterfaceDescriptor(XPTCursor *cursor, XPTInterfaceDescriptor **idp)
 
     return PR_TRUE;
 
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(id);
-        *idp = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(id);    
 }
 
 PRBool
@@ -218,37 +203,37 @@ XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
     }
 
     switch(cd->type.prefix->tag) {
-    case '0':
+    case TD_INT8:
         XPT_Do8(cursor, &cd->value.i8);
         break;
-    case 1:
+    case TD_INT16:
         XPT_Do16(cursor, &cd->value.i16);
         break;
-    case 2:
+    case TD_INT32:
         XPT_Do32(cursor, &cd->value.i32);
         break;
-    case 3:
+    case TD_INT64:
         XPT_Do64(cursor, &cd->value.i64);
         break;
-    case 4:
+    case TD_UINT8:
         XPT_Do8(cursor, &cd->value.ui8);
         break;
-    case 5:
+    case TD_UINT16:
         XPT_Do16(cursor, &cd->value.ui16);
         break;
-    case 6:
+    case TD_UINT32:
         XPT_Do32(cursor, &cd->value.ui32);
         break;
-    case 7:
+    case TD_UINT64:
         XPT_Do64(cursor, &cd->value.ui64);
         break;
-    case 11:
+    case TD_CHAR:
         XPT_Do8(cursor, &cd->value.ch);
         break;
-    case 12:
+    case TD_WCHAR:
         XPT_Do16(cursor, &cd->value.wch);
         break;
-    case 15:
+    case TD_PBSTR:
         if (cd->type.prefix->is_pointer == 1) {
             XPT_DoString(cursor, &cd->value.string);
             break;
@@ -260,12 +245,7 @@ XPT_DoConstDescriptor(XPTCursor *cursor, XPTConstDescriptor **cdp)
 
     return PR_TRUE;
 
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(cd);
-        *cdp = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(cd);    
 }
 
 PRBool
@@ -296,12 +276,7 @@ XPT_DoMethodDescriptor(XPTCursor *cursor, XPTMethodDescriptor **mdp)
 
     return PR_TRUE;
     
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(md);
-        *mdp = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(md);    
 }
 
 PRBool
@@ -327,12 +302,7 @@ XPT_DoParamDescriptor(XPTCursor *cursor, XPTParamDescriptor **pdp)
         
     return PR_TRUE;
 
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(pd);
-        *pdp = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(pd);    
 }
 
 PRBool
@@ -357,12 +327,7 @@ XPT_DoTypeDescriptorPrefix(XPTCursor *cursor, XPTTypeDescriptorPrefix **tdpp)
     
     return PR_TRUE;
 
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(tdp);
-        *tdpp = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(tdp);    
 }
 
 PRBool
@@ -392,12 +357,7 @@ XPT_DoTypeDescriptor(XPTCursor *cursor, XPTTypeDescriptor **tdp)
    
     return PR_TRUE;
     
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(td);
-        *tdp = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(td);    
 }
 
 PRBool
@@ -420,12 +380,7 @@ XPT_DoAnnotationPrefix(XPTCursor *cursor, XPTAnnotationPrefix **app)
 
     return PR_TRUE;
     
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(ap);
-        *app = 0;
-    }
-    return PR_FALSE;    
+    XPT_ERROR_HANDLE(ap);
 }
 
 PRBool
@@ -447,12 +402,7 @@ XPT_DoPrivateAnnotation(XPTCursor *cursor, XPTPrivateAnnotation **pap)
     
     return PR_TRUE;
 
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(pa);
-        *pap = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(pa);
 }
 
 PRBool
@@ -478,12 +428,7 @@ XPT_DoAnnotation(XPTCursor *cursor, XPTAnnotation **ap)
     
     return PR_TRUE;
 
- error:
-    if (mode == XPT_DECODE) {
-        PR_FREE(a);
-        *ap = 0;
-    }
-    return PR_FALSE;
+    XPT_ERROR_HANDLE(a);
 }
 
 
