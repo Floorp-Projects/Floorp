@@ -29,11 +29,12 @@ class nsINameSpace;
 
 #define kNameSpaceID_Unknown -1
 #define kNameSpaceID_None     0
-#define kNameSpaceID_HTML     1
+#define kNameSpaceID_XMLNS    1 // not really a namespace, but it needs to play the game
 #define kNameSpaceID_XML      2
+#define kNameSpaceID_HTML     3
 
 // 'html' is by definition bound to the namespace name "urn:w3-org-ns:HTML" XXX ???
-// 'xml' is by definition bound to the namespace name "urn:Connolly:input:required"
+// 'xml' is by definition bound to the namespace name "urn:Connolly:input:required" XXX
 
 #define NS_INAMESPACEMANAGER_IID \
   { 0xa6cf90d5, 0x15b3, 0x11d2, \

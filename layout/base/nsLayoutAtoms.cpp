@@ -34,6 +34,7 @@ nsIAtom* nsLayoutAtoms::tv;
 // name space atoms
 nsIAtom* nsLayoutAtoms::htmlNameSpace;
 nsIAtom* nsLayoutAtoms::xmlNameSpace;
+nsIAtom* nsLayoutAtoms::xmlnsNameSpace;
 
 // frame additional child lists
 nsIAtom* nsLayoutAtoms::absoluteList;
@@ -60,6 +61,7 @@ void nsLayoutAtoms::AddrefAtoms()
 
     htmlNameSpace = NS_NewAtom("html");
     xmlNameSpace = NS_NewAtom("xml");
+    xmlnsNameSpace = NS_NewAtom("xmlns");
 
     absoluteList = NS_NewAtom("Absolute-list");
     bulletList = NS_NewAtom("Bullet-list");
@@ -86,6 +88,7 @@ void nsLayoutAtoms::ReleaseAtoms()
     
     NS_RELEASE(htmlNameSpace);
     NS_RELEASE(xmlNameSpace);
+    NS_RELEASE(xmlnsNameSpace);
 
     NS_RELEASE(absoluteList);
     NS_RELEASE(bulletList);

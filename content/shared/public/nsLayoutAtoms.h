@@ -48,6 +48,7 @@ public:
   // Alphabetical list of standard name space prefixes
   static nsIAtom* htmlNameSpace;
   static nsIAtom* xmlNameSpace;
+  static nsIAtom* xmlnsNameSpace;
 
   // Alphabetical list of frame additional child list names
   static nsIAtom* absoluteList;
