@@ -827,10 +827,18 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
   // or request; for example, if it's to a named anchor within the same page
   // the submit will not really do anything.
   if (docShell) {
-    nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
-    NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
-    rv = webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
-    NS_ENSURE_SUBMIT_SUCCESS(rv);
+    // If the channel is pending, we have to listen for web progress.
+    PRBool pending = PR_FALSE;
+    mSubmittingRequest->IsPending(&pending);
+    if (pending) {
+      nsCOMPtr<nsIWebProgress> webProgress = do_GetInterface(docShell);
+      NS_ASSERTION(webProgress, "nsIDocShell not converted to nsIWebProgress!");
+      rv = webProgress->AddProgressListener(this, nsIWebProgress::NOTIFY_STATE_ALL);
+      NS_ENSURE_SUBMIT_SUCCESS(rv);
+    } else {
+      mSubmittingRequest = nsnull;
+      mIsSubmitting = PR_FALSE;
+    }
   }
   else {
     // in case we didn't do anything, reset mIsSubmitting
