@@ -917,7 +917,7 @@ HRESULT CMozillaBrowser::CreateBrowser()
     // Configure what the web browser can and cannot do
     nsCOMPtr<nsIWebBrowserSetup> webBrowserAsSetup(do_QueryInterface(mWebBrowser));
     webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_ALLOW_PLUGINS, aAllowPlugins);
-    webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_CONTAINS_CHROME, PR_TRUE);
+    // webBrowserAsSetup->SetProperty(nsIWebBrowserSetup::SETUP_CONTAINS_CHROME, PR_TRUE);
 
     // Create the webbrowser window
     mWebBrowserAsWin = do_QueryInterface(mWebBrowser);
