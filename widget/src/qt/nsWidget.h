@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *		John C. Griggs <johng@corel.com>
+ *		John C. Griggs <jcgriggs@sympatico.ca>
+ *      	Wes Morgan <wmorga13@calvin.edu> 
  *
  */
 #ifndef nsWidget_h__
@@ -137,6 +138,7 @@ public:
     PRBool ConvertStatus(nsEventStatus aStatus);
     PRBool DispatchMouseEvent(nsMouseEvent& aEvent);
     PRBool DispatchStandardEvent(PRUint32 aMsg);
+    PRBool DispatchMouseScrollEvent(nsMouseScrollEvent& aEvent);
 
     virtual PRBool IsPopup() const { return PR_FALSE; };
     virtual PRBool IsDialog() const { return PR_FALSE; };

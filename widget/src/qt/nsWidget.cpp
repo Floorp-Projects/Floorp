@@ -18,7 +18,8 @@
  * Rights Reserved.
  *
  * Contributor(s): 
- *		John C. Griggs <johng@corel.com>
+ *		John C. Griggs <jcgriggs@sympatico.ca>
+ *      	Wes Morgan <wmorga13@calvin.edu> 
  *
  */
 
@@ -741,6 +742,14 @@ NS_IMETHODIMP nsWidget::DispatchEvent(nsGUIEvent *event,
   }
   NS_IF_RELEASE(event->widget);
   return NS_OK;
+}
+
+PRBool nsWidget::DispatchMouseScrollEvent(nsMouseScrollEvent& aEvent)
+{
+  if (nsnull != mEventCallback) {
+    return DispatchWindowEvent(&aEvent);
+  }
+  return PR_FALSE;
 }
 
 //-------------------------------------------------------------------------

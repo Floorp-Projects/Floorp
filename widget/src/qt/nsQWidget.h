@@ -18,8 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s):
- *		John C. Griggs <johng@corel.com>
+ *		John C. Griggs <jcgriggs@sympatico.ca>
  *      	Denis Issoupov <denis@macadamian.com> 
+ *      	Wes Morgan <wmorga13@calvin.edu> 
  *
  */
 #ifndef nsQWidget_h__
@@ -147,6 +148,7 @@ public:
   virtual PRBool MouseMovedEvent(QMouseEvent *aEvent);
   virtual PRBool MouseEnterEvent(QEvent *aEvent);
   virtual PRBool MouseExitEvent(QEvent *aEvent);
+  virtual PRBool MouseWheelEvent(QWheelEvent *aEvent);
   virtual PRBool DestroyEvent();
   virtual PRBool ResizeEvent(QResizeEvent *aEvent);
   virtual PRBool MoveEvent(QMoveEvent *aEvent);
