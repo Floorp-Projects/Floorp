@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.7 $ $Date: 2001/11/16 19:41:49 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: object.c,v $ $Revision: 1.8 $ $Date: 2002/03/29 07:34:20 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -598,7 +598,7 @@ nssCKFWObject_GetAttribute
 )
 {
   NSSItem *rv = (NSSItem *)NULL;
-  const NSSItem *mdItem;
+  NSSCKFWItem mdItem;
 
 #ifdef NSSDEBUG
   if( (CK_RV *)NULL == pError ) {
@@ -626,7 +626,7 @@ nssCKFWObject_GetAttribute
     fwObject->fwToken, fwObject->mdInstance, fwObject->fwInstance,
     attribute, pError);
 
-  if( (NSSItem *)NULL == mdItem ) {
+  if( (NSSItem *)NULL == mdItem.item ) {
     if( CKR_OK == *pError ) {
       *pError = CKR_GENERAL_ERROR;
     }
@@ -645,7 +645,7 @@ nssCKFWObject_GetAttribute
   }
 
   if( (void *)NULL == rv->data ) {
-    rv->size = mdItem->size;
+    rv->size = mdItem.item->size;
     rv->data = nss_ZAlloc(arenaOpt, rv->size);
     if( (void *)NULL == rv->data ) {
       *pError = CKR_HOST_MEMORY;
@@ -656,8 +656,8 @@ nssCKFWObject_GetAttribute
       goto done;
     }
   } else {
-    if( rv->size >= mdItem->size ) {
-      rv->size = mdItem->size;
+    if( rv->size >= mdItem.item->size ) {
+      rv->size = mdItem.item->size;
     } else {
       *pError = CKR_BUFFER_TOO_SMALL;
       /* Should we set rv->size to mdItem->size? */
@@ -667,7 +667,25 @@ nssCKFWObject_GetAttribute
     }
   }
 
-  (void)nsslibc_memcpy(rv->data, mdItem->data, rv->size);
+  (void)nsslibc_memcpy(rv->data, mdItem.item->data, rv->size);
+
+  if (PR_TRUE == mdItem.needsFreeing) {
+    PR_ASSERT(fwObject->mdObject->FreeAttribute);
+    if (fwObject->mdObject->FreeAttribute) {
+      *pError = fwObject->mdObject->FreeAttribute(&mdItem);
+    } else {
+      /* bad, bad module : it allocated an attribute
+      but does not know how to free it. a memory leak will result
+      There is no way to prevent the leak, though . But report an
+      error so it doesn't go unnoticed on opt builds. On dbg we
+      assert above for the FreeAttribute function */
+      if (rv) {
+        nss_ZFreeIf(rv);
+      }
+      *pError = CKR_HOST_MEMORY;
+    }
+
+  }
 
  done:
   (void)nssCKFWMutex_Unlock(fwObject->mutex);

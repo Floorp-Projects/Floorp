@@ -35,7 +35,7 @@
 #define NSSCKMDT_H
 
 #ifdef DEBUG
-static const char NSSCKMDT_CVS_ID[] = "@(#) $RCSfile: nssckmdt.h,v $ $Revision: 1.2 $ $Date: 2001/01/05 01:38:04 $ $Name:  $";
+static const char NSSCKMDT_CVS_ID[] = "@(#) $RCSfile: nssckmdt.h,v $ $Revision: 1.3 $ $Date: 2002/03/29 07:34:20 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -64,6 +64,21 @@ typedef struct NSSCKMDSessionStr NSSCKMDSession;
 typedef struct NSSCKMDFindObjectsStr NSSCKMDFindObjects;
 typedef struct NSSCKMDMechanismStr NSSCKMDMechanism;
 typedef struct NSSCKMDObjectStr NSSCKMDObject;
+
+/*
+ * NSSCKFWItem
+ *
+ * This is a structure used by modules to return object attributes.
+ * The needsFreeing bit indicates whether the object needs to be freed.
+ * If so, the framework will call the FreeAttribute function on the item
+ * after it is done using it.
+ *
+ */
+
+typedef struct {
+  PRBool needsFreeing;
+  NSSItem* item;
+} NSSCKFWItem ;
 
 /*
  * NSSCKMDInstance
@@ -1943,13 +1958,13 @@ struct NSSCKMDObjectStr {
   );
 
   /*
-   * This routine returns the specified attribute.  It can return
-   * NULL upon error.  The pointer in the item will not be freed;
-   * any host memory required should come from the object's arena
-   * (which is likely the Framework's token or session arena).
-   * It may return NULL on error.
+   * This routine returns an NSSCKFWItem structure.
+   * The item pointer points to an NSSItem containing the attribute value.
+   * The needsFreeing bit tells the framework whether to call the
+   * FreeAttribute function . Upon error, an NSSCKFWItem structure
+   * with a NULL NSSItem item pointer will be returned
    */
-  const NSSItem *(PR_CALLBACK *GetAttribute)(
+  NSSCKFWItem (PR_CALLBACK *GetAttribute)(
     NSSCKMDObject *mdObject,
     NSSCKFWObject *fwObject,
     NSSCKMDSession *mdSession,
@@ -1960,6 +1975,13 @@ struct NSSCKMDObjectStr {
     NSSCKFWInstance *fwInstance,
     CK_ATTRIBUTE_TYPE attribute,
     CK_RV *pError
+  );
+
+  /*
+   * This routine returns CKR_OK if the attribute could be freed.
+   */
+  CK_RV (PR_CALLBACK *FreeAttribute)(
+    NSSCKFWItem * item
   );
 
   /*
