@@ -25,3 +25,5 @@ nsITabWidget.h
 nsITooltipWidget.h
 nsIAppShell.h
 nsStringUtil.h
+nsIDialog.h
+nsILabel.h
