@@ -104,6 +104,7 @@ bin/components/chrome.xpt
 bin/components/cookie.dll
 bin/components/cookie.xpt
 bin/components/composer.dll
+bin/components/composer.xpt
 bin/components/docshell.dll
 ;bin/components/docshell_base.xpt
 bin/components/docshell.xpt
@@ -441,7 +442,6 @@ bin/res/inspector/search-registry.rdf
 ;Things that aren't packaged and why (or not why)
 ;accproxy.dll - I don't know
 ;accessproxy.xpt - I don't know
-;composer.xpt - I don't know
 ;content.xpt - I don't know
 ;htmlparser.xpt - I don't know
 ;iiextras.dll - I don't know
