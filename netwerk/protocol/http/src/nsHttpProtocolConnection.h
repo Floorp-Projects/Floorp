@@ -35,7 +35,6 @@ public:
     NS_IMETHOD Resume(void);
 
     // nsIProtocolConnection methods:
-    NS_IMETHOD Open(nsIUrl* url, nsISupports* eventSink);
     NS_IMETHOD GetContentType(char* *contentType);
     NS_IMETHOD GetInputStream(nsIInputStream* *result);
     NS_IMETHOD GetOutputStream(nsIOutputStream* *result);
@@ -58,6 +57,7 @@ public:
 protected:
     nsIUrl*             mUrl;
     nsIHttpEventSink*   mEventSink;
+    PRBool              mConnected;
 };
 
 #endif /* nsHttpProtocolConnection_h___ */

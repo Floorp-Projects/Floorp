@@ -31,6 +31,7 @@ EXPORTS =                        \
 CPP_OBJS =                                         \
         .\$(OBJDIR)\nsConnectionGroup.obj          \
         .\$(OBJDIR)\nsMarshalingStreamListener.obj \
+        .\$(OBJDIR)\nsSyncStreamListener.obj       \
         .\$(OBJDIR)\nsFileTransport.obj            \
         .\$(OBJDIR)\nsFileTransportService.obj     \
         .\$(OBJDIR)\nsNetService.obj               \

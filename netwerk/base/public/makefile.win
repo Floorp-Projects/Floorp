@@ -27,6 +27,7 @@ EXPORTS =                         \
         nsIProtocolConnection.h   \
         nsIProtocolHandler.h      \
         nsIStreamListener.h       \
+        nsIStreamObserver.h       \
         nsITransport.h            \
         nsIUrl.h                  \
         $(NULL)

@@ -306,9 +306,9 @@ nsMarshalingStreamListener::OnStopBinding(nsISupports* context,
 ////////////////////////////////////////////////////////////////////////////////
 
 nsresult
-NS_NewMarshalingStreamListener(PLEventQueue* eventQueue,
-                               nsIStreamListener* receiver,
-                               nsIStreamListener* *result)
+NS_NewAsyncStreamListener(nsIStreamListener* *result,
+                          PLEventQueue* eventQueue,
+                          nsIStreamListener* receiver)
 {
     nsMarshalingStreamListener* l =
         new nsMarshalingStreamListener(eventQueue, receiver);

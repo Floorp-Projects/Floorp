@@ -182,7 +182,7 @@ Simulated_nsFileTransport_Run(nsReader* reader, const char* path)
     NS_RELEASE(fs);
     if (NS_FAILED(rv)) goto done;
 
-    rv = NS_NewByteBufferInputStream(NS_FILE_TRANSPORT_BUFFER_SIZE, &bufStr);
+    rv = NS_NewByteBufferInputStream(&bufStr, PR_FALSE, NS_FILE_TRANSPORT_BUFFER_SIZE);
     if (NS_FAILED(rv)) goto done;
 
     while (PR_TRUE) {
@@ -301,8 +301,8 @@ ParallelReadTest(char* dirName, nsIFileTransportService* fts)
         NS_ASSERTION(listener, "QI failed");
     
         nsITransport* trans;
-        rv = fts->AsyncRead(reader->GetEventQueue(), 
-                            nsnull, listener, spec, &trans);
+        rv = fts->AsyncRead(spec, nsnull, reader->GetEventQueue(), 
+                            listener, &trans);
         NS_ASSERTION(NS_SUCCEEDED(rv), "AsyncRead failed");
 
         // the reader thread will hang on to these objects until it quits
@@ -348,7 +348,7 @@ main(int argc, char* argv[])
     SerialReadTest(dirName);
     ParallelReadTest(dirName, fts);
 
-    fts->Shutdown();
+    fts->ProcessPendingRequests();
 
     printf("duration %d ms, volume %d\n",
            PR_IntervalToMilliseconds(gDuration),

@@ -19,14 +19,10 @@
 #ifndef nsIStreamListener_h___
 #define nsIStreamListener_h___
 
-#include "nsISupports.h"
-#include "nscore.h"
+#include "nsIStreamObserver.h"
 #include "plevent.h"
 
-class nsIUrl;
 class nsIInputStream;
-class nsIProtocolConnection;
-class nsIString;
 
 #define NS_ISTREAMLISTENER_IID                       \
 { /* 68d9d640-ea35-11d2-931b-00104ba0fd40 */         \
@@ -36,19 +32,10 @@ class nsIString;
     {0x93, 0x1b, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
 }
 
-class nsIStreamListener : public nsISupports
+class nsIStreamListener : public nsIStreamObserver
 {
 public:
     NS_DEFINE_STATIC_IID_ACCESSOR(NS_ISTREAMLISTENER_IID);
-
-    /**
-     * Notify the listener that the URL has started to load.  This method is
-     * called only once, at the beginning of a URL load.<BR><BR>
-     *
-     * @return The return value is currently ignored.  In the future it may be
-     * used to cancel the URL load..
-     */
-    NS_IMETHOD OnStartBinding(nsISupports* context) = 0;
 
     /**
      * Notify the client that data is available in the input stream.  This
@@ -64,34 +51,20 @@ public:
                                nsIInputStream *aIStream, 
                                PRUint32 aLength) = 0;
 
-    /**
-     * Notify the listener that the URL has finished loading.  This method is 
-     * called once when the networking library has finished processing the 
-     * URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
-     * 
-     * This method is called regardless of whether the URL loaded successfully.<BR><BR>
-     * 
-     * @param status    Status code for the URL load.
-     * @param msg   A text string describing the error.
-     * @return The return value is currently ignored.
-     */
-    NS_IMETHOD OnStopBinding(nsISupports* context,
-                             nsresult aStatus,
-                             nsIString* aMsg) = 0;
-
 };
 
-// Generic status codes for OnStopBinding:
-#define NS_BINDING_SUCCEEDED    NS_OK
-#define NS_BINDING_FAILED       NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 1)
-#define NS_BINDING_ABORTED      NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 2)
-
-// A marshaling stream listener is used to ship data over to another thread specified
+// An asynchronous stream listener is used to ship data over to another thread specified
 // by the thread's event queue. The receiver stream listener is then used to receive
 // the data on the other thread.
 extern nsresult
-NS_NewMarshalingStreamListener(PLEventQueue* eventQueue,
-                               nsIStreamListener* receiver,
-                               nsIStreamListener* *result);
+NS_NewAsyncStreamListener(nsIStreamListener* *result,
+                          PLEventQueue* eventQueue,
+                          nsIStreamListener* receiver);
+
+// A synchronous stream listener pushes data through a pipe that ends up
+// in an input stream to be read by another thread.
+extern nsresult
+NS_NewSyncStreamListener(nsIStreamListener* *listener,
+                         nsIInputStream* *inStream);
 
 #endif /* nsIIStreamListener_h___ */
