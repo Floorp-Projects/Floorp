@@ -45,7 +45,6 @@ classic.jar:
         skin/classic/browser/lock-mixed.gif           (skin/lock-mixed.gif)
 	skin/classic/browser/web-panels-drop-page.css         (skin/web-panels-drop-page.css)
         skin/classic/browser/web-panels-bg.png        (skin/web-panels-bg.png)
-        skin/classic/browser/web-panels.css           (skin/web-panels.css)
 
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)

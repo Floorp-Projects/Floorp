@@ -1,6 +1,5 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?> 
-<?xml-stylesheet href="chrome://browser/skin/web-panels.css" type="text/css"?>
 
 <!DOCTYPE window [
 <!ENTITY % webPanelsDTD SYSTEM "chrome://browser/locale/page-drawer.dtd" >
