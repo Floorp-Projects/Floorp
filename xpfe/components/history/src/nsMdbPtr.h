@@ -34,10 +34,10 @@ template <class T>
 class nsMdbDerivedSafe : public T
 {
 private:
-    virtual mdb_err AddStrongRef(nsIMdbEnv* aEnv);    // NOT TO BE IMPLEMENTED
-    virtual mdb_err CutStrongRef(nsIMdbEnv* aEnv);    // NOT TO BE IMPLEMENTED
-    virtual nsMdbDerivedSafe<T>& operator=(const T&); // NOT TO BE IMPLEMENTED
-    void operator delete(void*, size_t);              // NOT TO BE IMPLEMENTED
+    virtual mdb_err AddStrongRef(nsIMdbEnv* aEnv) {};    // NOT TO BE IMPLEMENTED
+    virtual mdb_err CutStrongRef(nsIMdbEnv* aEnv) {};    // NOT TO BE IMPLEMENTED
+    virtual nsMdbDerivedSafe<T>& operator=(const T&) {}; // NOT TO BE IMPLEMENTED
+    void operator delete(void*, size_t) {};              // NOT TO BE IMPLEMENTED
 };
 
 
