@@ -190,8 +190,11 @@ NS_IMETHODIMP nsCaretAccessible::NotifySelectionChanged(nsIDOMDocument *aDoc, ns
   nsCOMPtr<nsIAccessibilityService> accService(do_GetService("@mozilla.org/accessibilityService;1"));
   accService->GetAccessibleFor(focusNode, getter_AddRefs(accessible));
   if (accessible) {
-    if (isCollapsed)
+    if (isCollapsed) {
+      PRInt32 caretOffset;
+      domSel->GetFocusOffset(&caretOffset);
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_CARET_MOVE, accessible, (AccessibleEventData*)&caretOffset);
+    }
     else
       mListener->HandleEvent(nsIAccessibleEventListener::EVENT_ATK_TEXT_SELECTION_CHANGE, accessible, nsnull);
   }
