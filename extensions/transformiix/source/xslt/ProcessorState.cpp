@@ -15,20 +15,23 @@
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
  * Portions created by Keith Visco as a Non MITRE employee,
- * (C) 1999 Keith Visco. All Rights Reserved.
+ * (C) 1999-2000 Keith Visco. All Rights Reserved.
  *
  * Contributor(s):
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.cpp,v 1.2 2000/04/19 10:41:13 kvisco%ziplink.net Exp $
+ * Olivier Gerardin, ogerardin@vo.lu
+ *   -- added code in ::resolveFunctionCall to support the
+ *      document() function.
+ *
+ * $Id: ProcessorState.cpp,v 1.3 2000/05/24 03:45:41 kvisco%ziplink.net Exp $
  */
 
 /**
  * Implementation of ProcessorState
- * This code was ported from XSL:P
- * @author <a href="kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2000/04/19 10:41:13 $
+ * Much of this code was ported from XSL:P
+ * @version $Revision: 1.3 $ $Date: 2000/05/24 03:45:41 $
 **/
 
 #include "ProcessorState.h"
@@ -587,6 +590,9 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
    if (GENERATE_ID_FN.isEqual(name)) {
        return new GenerateIdFunctionCall(&domHelper);
    }
+    else if (DOCUMENT_FN.isEqual(name)) {
+       return new DocumentFunctionCall(xslDocument);
+   }
 
    String err("invalid function call: ");
    err.append(name);
@@ -597,7 +603,7 @@ FunctionCall* ProcessorState::resolveFunctionCall(const String& name) {
 
 
 /**
- * Sorts the given NodeSet by DocumentOrder. 
+ * Sorts the given NodeSet by DocumentOrder.
  * @param nodes the NodeSet to sort
  * <BR />
  * <B>Note:</B> I will be moving this functionality elsewhere soon
@@ -625,7 +631,7 @@ void ProcessorState::sortByDocumentOrder(NodeSet* nodes) {
     }
 
     nodes->clear();
-    for (i = 0; i < sorted.size(); i++) 
+    for (i = 0; i < sorted.size(); i++)
 	  nodes->add(sorted.get(i));
 
     sorted.clear();

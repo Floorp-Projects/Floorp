@@ -27,7 +27,7 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
 
- * $Id: Names.h,v 1.5 2000/05/23 08:13:03 kvisco%ziplink.net Exp $
+ * $Id: Names.h,v 1.6 2000/05/24 03:45:41 kvisco%ziplink.net Exp $
  */
 
 #include "TxString.h"
@@ -144,11 +144,13 @@ extern const String NODE_FNAME;
 extern const String IDENTITY_OP;
 extern const String PARENT_OP;
 
-//-- XSLT extension functions
+//-- XSLT additional functions
 extern const String CURRENT_FN;
 extern const String FORMAT_NUMBER_FN;
 extern const String GENERATE_ID_FN;
 extern const String SYSTEM_PROPERTY_FN;
+extern const String DOCUMENT_FN;
+
 
 //-- MISC
 extern const String WILD_CARD;
