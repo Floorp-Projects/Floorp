@@ -1360,9 +1360,9 @@ NS_METHOD nsTableFrame::Paint(nsIPresContext& aPresContext,
     nsRect  rect(0, 0, mRect.width, mRect.height);
     nsCSSRendering::PaintBackground(aPresContext, aRenderingContext, this,
                                     aDirtyRect, rect, *color, 0, 0);
-    // XXX: use GetSkipSides?
+    PRIntn skipSides = GetSkipSides();
     nsCSSRendering::PaintBorder(aPresContext, aRenderingContext, this,
-                                aDirtyRect, rect, *spacing, 0);
+                                aDirtyRect, rect, *spacing, skipSides);
   }
 
   // for debug...
@@ -1379,6 +1379,8 @@ PRIntn
 nsTableFrame::GetSkipSides() const
 {
   PRIntn skip = 0;
+  // frame attribute was accounted for in nsHTMLTableElement::MapTableBorderInto
+  // account for pagination
   if (nsnull != mPrevInFlow) {
     skip |= 1 << NS_SIDE_TOP;
   }
@@ -3777,7 +3779,7 @@ nscoord nsTableFrame::GetMinTableWidth()
   return result;
 }
 
-/** return the maximum width of the table caption.  Return 0 if the max width is unknown. */
+/** return the maximum width of the table.  Return 0 if the max width is unknown. */
 nscoord nsTableFrame::GetMaxTableWidth()
 {
   nscoord result = 0;

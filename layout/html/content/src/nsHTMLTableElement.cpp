@@ -423,8 +423,79 @@ nsHTMLTableElement::AttributeToString(nsIAtom* aAttribute,
   return mInner.AttributeToString(aAttribute, aValue, aResult);
 }
 
-// XXX: this is only sufficient for Nav4/HTML3.2
-// XXX: needs to be filled in for HTML4
+static void 
+MapTableFrameInto(nsIHTMLAttributes* aAttributes,
+                  nsIStyleContext* aContext,
+                  nsIPresContext* aPresContext, 
+                  nsStyleSpacing* aSpacing)
+{
+  // set up defaults
+  if (aSpacing->mBorderStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_OUTSET;
+  }
+  if (aSpacing->mBorderStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_OUTSET;
+  }
+  if (aSpacing->mBorderStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_OUTSET;
+  }
+  if (aSpacing->mBorderStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
+    aSpacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_OUTSET;
+  }
+
+  nsHTMLValue frameValue;
+  // 0 out the sides that we want to hide based on the frame attribute
+  aAttributes->GetAttribute(nsHTMLAtoms::frame, frameValue);
+  if (frameValue.GetUnit() == eHTMLUnit_Enumerated)
+  {
+    // store the value of frame
+    nsStyleTable *tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+    tableStyle->mFrame = frameValue.GetIntValue();
+    tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // most values of frame imply default rules=all
+    // adjust the border style based on the value of frame
+    switch (frameValue.GetIntValue())
+    {
+    case NS_STYLE_TABLE_FRAME_NONE:
+      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      tableStyle->mRules=NS_STYLE_TABLE_RULES_NONE;
+      break;
+    case NS_STYLE_TABLE_FRAME_ABOVE:
+      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      break;
+    case NS_STYLE_TABLE_FRAME_BELOW:
+      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      break;
+    case NS_STYLE_TABLE_FRAME_HSIDES:
+      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      break;
+    case NS_STYLE_TABLE_FRAME_LEFT:
+      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+      break;
+    case NS_STYLE_TABLE_FRAME_RIGHT:
+      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+      break;
+    case NS_STYLE_TABLE_FRAME_VSIDES:
+      aSpacing->mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+      aSpacing->mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+      break;
+    // BOX and BORDER are ignored, the caller has already set all the border sides
+    // any illegal value is also ignored
+    }
+  }
+}
+
 static void 
 MapTableBorderInto(nsIHTMLAttributes* aAttributes,
                    nsIStyleContext* aContext,
@@ -433,45 +504,50 @@ MapTableBorderInto(nsIHTMLAttributes* aAttributes,
   NS_PRECONDITION(nsnull!=aContext, "bad style context arg");
   NS_PRECONDITION(nsnull!=aPresContext, "bad presentation context arg");
 
-  nsHTMLValue value;
+  nsHTMLValue borderValue;
 
-  aAttributes->GetAttribute(nsHTMLAtoms::border, value);
-  if (value.GetUnit() == eHTMLUnit_String)
+  aAttributes->GetAttribute(nsHTMLAtoms::border, borderValue);
+  if (borderValue.GetUnit() == eHTMLUnit_String)
   {
     nsAutoString borderAsString;
-    value.GetStringValue(borderAsString);
-    nsGenericHTMLElement::ParseValue(borderAsString, 0, value, eHTMLUnit_Pixel);
+    borderValue.GetStringValue(borderAsString);
+    nsGenericHTMLElement::ParseValue(borderAsString, 0, borderValue, eHTMLUnit_Pixel);
   }
-  if ((value.GetUnit() == eHTMLUnit_Pixel) || 
-      (value.GetUnit() == eHTMLUnit_Empty)) {
+  else if (borderValue.GetUnit() == eHTMLUnit_Null)
+  { // the absence of "border" with the presence of "frame" implies border = 1 pixel
+    nsHTMLValue frameValue;
+    aAttributes->GetAttribute(nsHTMLAtoms::frame, frameValue);
+    if (frameValue.GetUnit() != eHTMLUnit_Null)
+      borderValue.SetPixelValue(1);
+  }
+  if ((borderValue.GetUnit() == eHTMLUnit_Pixel) || 
+      (borderValue.GetUnit() == eHTMLUnit_Empty)) {
     nsStyleSpacing* spacing = (nsStyleSpacing*)
       aContext->GetMutableStyleData(eStyleStruct_Spacing);
+    nsStyleTable *tableStyle = (nsStyleTable*)
+      aContext->GetMutableStyleData(eStyleStruct_Table);
     float p2t = aPresContext->GetPixelsToTwips();
     nsStyleCoord twips;
-    if (value.GetUnit() == eHTMLUnit_Empty) {
+    if (borderValue.GetUnit() == eHTMLUnit_Empty) {
+      tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // non-0 values of border imply default rules=all
       twips.SetCoordValue(NSIntPixelsToTwips(1, p2t));
     }
     else {
-      twips.SetCoordValue(NSIntPixelsToTwips(value.GetPixelValue(), p2t));
+      PRInt32 borderThickness = borderValue.GetPixelValue();
+      twips.SetCoordValue(NSIntPixelsToTwips(borderThickness, p2t));
+      if (0!=borderThickness)
+        tableStyle->mRules=NS_STYLE_TABLE_RULES_ALL;  // non-0 values of border imply default rules=all
+      else
+        tableStyle->mRules=NS_STYLE_TABLE_RULES_NONE; // 0 value of border imply default rules=none
     }
 
+    // by default, set all border sides to the specified width
     spacing->mBorder.SetTop(twips);
     spacing->mBorder.SetRight(twips);
     spacing->mBorder.SetBottom(twips);
     spacing->mBorder.SetLeft(twips);
-
-    if (spacing->mBorderStyle[0] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[0] = NS_STYLE_BORDER_STYLE_OUTSET;
-    }
-    if (spacing->mBorderStyle[1] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[1] = NS_STYLE_BORDER_STYLE_OUTSET;
-    }
-    if (spacing->mBorderStyle[2] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[2] = NS_STYLE_BORDER_STYLE_OUTSET;
-    }
-    if (spacing->mBorderStyle[3] == NS_STYLE_BORDER_STYLE_NONE) {
-      spacing->mBorderStyle[3] = NS_STYLE_BORDER_STYLE_OUTSET;
-    }
+    // then account for the frame attribute
+    MapTableFrameInto(aAttributes, aContext, aPresContext, spacing);
   }
 }
 
@@ -503,7 +579,7 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         break;
       }
     }
-    // border
+    // border and frame
     MapTableBorderInto(aAttributes, aContext, aPresContext);
 
     // align
@@ -560,6 +636,14 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
         tableStyle->mCols = value.GetIntValue();
       else // COLS had no value, so it refers to all columns
         tableStyle->mCols = NS_STYLE_TABLE_COLS_ALL;
+    }
+
+    // rules, must come after handling of border which set the default
+    aAttributes->GetAttribute(nsHTMLAtoms::rules, value);
+    if (value.GetUnit() == eHTMLUnit_Enumerated) {
+      if (nsnull==tableStyle)
+        tableStyle = (nsStyleTable*)aContext->GetMutableStyleData(eStyleStruct_Table);
+      tableStyle->mRules = value.GetIntValue();
     }
 
     //background: color

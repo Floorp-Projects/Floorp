@@ -17,6 +17,7 @@
  */
 #include "nsTableRowGroupFrame.h"
 #include "nsTableRowFrame.h"
+#include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 #include "nsIRenderingContext.h"
 #include "nsIPresContext.h"

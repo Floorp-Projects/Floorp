@@ -20,11 +20,11 @@
 
 #include "nscore.h"
 #include "nsHTMLContainerFrame.h"
-#include "nsTableFrame.h"
 #include "nsTableRowFrame.h"  // need to actually include this here to inline GetRowIndex
 
 struct nsStyleSpacing;
-
+class nsTableFrame;
+class nsHTMLValue;
 
 /**
  * nsTableCellFrame
@@ -192,8 +192,14 @@ protected:
 
   // Subclass hook for style post processing
   NS_IMETHOD DidSetStyleContext(nsIPresContext* aPresContext);
+
   void      MapBorderMarginPadding(nsIPresContext* aPresContext);
-  void      MapHTMLBorderStyle(nsIPresContext* aPresContext,nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth);
+
+  void      MapHTMLBorderStyle(nsIPresContext* aPresContext,
+                               nsStyleSpacing& aSpacingStyle, 
+                               nscoord aBorderWidth,
+                               nsTableFrame *aTableFrame);
+
   PRBool    ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult);
 
   NS_IMETHOD IR_StyleChanged(nsIPresContext&          aPresContext,

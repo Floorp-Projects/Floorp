@@ -16,6 +16,7 @@
  * Reserved.
  */
 #include "nsTableCellFrame.h"
+#include "nsTableFrame.h"
 #include "nsIReflowCommand.h"
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
@@ -115,6 +116,7 @@ NS_METHOD nsTableCellFrame::Paint(nsIPresContext& aPresContext,
     
     //XXX: this could be calculated once and remembered
     // get border padding values
+    //XXX: also check style for rule on rendering empty cells
     nsMargin borderPadding;
     const nsStyleSpacing* cellSpacing;
     GetStyleData(eStyleStruct_Spacing , ((nsStyleStruct *&)cellSpacing));
@@ -500,7 +502,10 @@ nsTableCellFrame::CreateContinuingFrame(nsIPresContext&  aPresContext,
   * Update the border style to map to the HTML border style
   *
   */
-void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleSpacing& aSpacingStyle, nscoord aBorderWidth)
+void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, 
+                                          nsStyleSpacing& aSpacingStyle, 
+                                          nscoord aBorderWidth,
+                                          nsTableFrame *aTableFrame)
 {
   nsStyleCoord  width;
   width.SetCoordValue(aBorderWidth);
@@ -538,11 +543,44 @@ void nsTableCellFrame::MapHTMLBorderStyle(nsIPresContext* aPresContext, nsStyleS
   if (borderColor == 0xFFFFFFFF)
     borderColor = 0xFFC0C0C0;
 
-
   aSpacingStyle.mBorderColor[NS_SIDE_TOP] = 
   aSpacingStyle.mBorderColor[NS_SIDE_LEFT] = 
   aSpacingStyle.mBorderColor[NS_SIDE_BOTTOM] = 
   aSpacingStyle.mBorderColor[NS_SIDE_RIGHT] = borderColor;
+
+  //adjust the border style based on the table rules attribute
+  const nsStyleTable* tableStyle;
+  tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
+
+  switch (tableStyle->mRules)
+  {
+  case NS_STYLE_TABLE_RULES_NONE:
+    aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+    break;
+  case NS_STYLE_TABLE_RULES_GROUPS:
+    // XXX: it depends on which cell this is!
+    /*
+    aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+    */
+    break;
+  case NS_STYLE_TABLE_RULES_COLS:
+    aSpacingStyle.mBorderStyle[NS_SIDE_TOP] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_BOTTOM] = NS_STYLE_BORDER_STYLE_NONE;
+    break;
+
+  case NS_STYLE_TABLE_RULES_ROWS:
+    aSpacingStyle.mBorderStyle[NS_SIDE_RIGHT] = NS_STYLE_BORDER_STYLE_NONE;
+    aSpacingStyle.mBorderStyle[NS_SIDE_LEFT] = NS_STYLE_BORDER_STYLE_NONE;
+    break;
+
+  // do nothing for "ALL" or for any illegal value
+  }
 }
 
 
@@ -582,8 +620,8 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
     return;
 
   // get the table frame style context, and from it get cellpadding, cellspacing, and border info
-  nsStyleTable* tableStyle;
-  tableFrame->GetStyleData(eStyleStruct_Table, (nsStyleStruct *&)tableStyle);
+  const nsStyleTable* tableStyle;
+  tableFrame->GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   nsStyleSpacing* tableSpacingStyle;
   tableFrame->GetStyleData(eStyleStruct_Spacing,(nsStyleStruct *&)tableSpacingStyle);
   nsStyleSpacing* spacingData = (nsStyleSpacing*)mStyleContext->GetMutableStyleData(eStyleStruct_Spacing);
@@ -603,16 +641,12 @@ void nsTableCellFrame::MapBorderMarginPadding(nsIPresContext* aPresContext)
   }
 
   // get border information from the table
-  if (tableSpacingStyle->mBorder.GetTopUnit() == eStyleUnit_Coord)
+  if (tableStyle->mRules!= NS_STYLE_TABLE_RULES_NONE)
   {
-    nsStyleCoord borderWidth;
-    tableSpacingStyle->mBorder.GetTop(borderWidth);
-    if (0!=borderWidth.GetCoordValue())
-    {
-      // in HTML, cell borders are always 1 pixel by default
-      border = NSIntPixelsToTwips(1, aPresContext->GetPixelsToTwips());
-      MapHTMLBorderStyle(aPresContext, *spacingData, border);
-    }
+    // XXX: need to get border width here
+    // in HTML, cell borders are always 1 pixel by default
+    border = NSIntPixelsToTwips(1, aPresContext->GetPixelsToTwips());
+    MapHTMLBorderStyle(aPresContext, *spacingData, border, tableFrame);
   }
   
 }
