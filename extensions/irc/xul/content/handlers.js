@@ -3454,7 +3454,7 @@ function my_unick (e)
     if (userIsMe(e.user))
     {
         updateNetwork();
-        updateTitle (e.channel);
+        updateTitle();
     }
     
 }
