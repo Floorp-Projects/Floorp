@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslerr.h,v 1.3 2004/04/27 23:04:39 gerv%gerv.net Exp $ */
+/* $Id: sslerr.h,v 1.4 2005/03/09 05:20:44 nelsonb%netscape.com Exp $ */
 #ifndef __SSL_ERR_H_
 #define __SSL_ERR_H_
 
@@ -183,6 +183,8 @@ SSL_ERROR_INSUFFICIENT_SECURITY_ALERT	= (SSL_ERROR_BASE + 99),
 SSL_ERROR_INTERNAL_ERROR_ALERT		= (SSL_ERROR_BASE + 100),
 SSL_ERROR_USER_CANCELED_ALERT		= (SSL_ERROR_BASE + 101),
 SSL_ERROR_NO_RENEGOTIATION_ALERT	= (SSL_ERROR_BASE + 102),
+
+SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED	= (SSL_ERROR_BASE + 103),
 
 SSL_ERROR_END_OF_LIST	/* let the c compiler determine the value of this. */
 } SSLErrorCodes;

@@ -367,3 +367,6 @@ ER3(SSL_ERROR_USER_CANCELED_ALERT         , (SSL_ERROR_BASE + 101),
 ER3(SSL_ERROR_NO_RENEGOTIATION_ALERT      , (SSL_ERROR_BASE + 102),
 "Peer does not permit renegotiation of SSL security parameters.")
 
+ER3(SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED , (SSL_ERROR_BASE + 103),
+"SSL server cache not configured and not disabled for this socket.")
+

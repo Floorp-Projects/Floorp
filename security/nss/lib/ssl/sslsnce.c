@@ -36,7 +36,7 @@
  * the terms of any one of the MPL, the GPL or the LGPL.
  *
  * ***** END LICENSE BLOCK ***** */
-/* $Id: sslsnce.c,v 1.30 2004/06/19 03:21:39 jpierre%netscape.com Exp $ */
+/* $Id: sslsnce.c,v 1.31 2005/03/09 05:20:44 nelsonb%netscape.com Exp $ */
 
 /* Note: ssl_FreeSID() in sslnonce.c gets used for both client and server 
  * cache sids!
@@ -1529,6 +1529,10 @@ getSvrWrappingKey(PRInt32                symWrapMechIndex,
     PRUint32  now = 0;
     PRBool    rv  = PR_FALSE;
 
+    if (!cache->cacheMem) { /* cache is uninitialized */
+	PORT_SetError(SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED);
+	return rv;
+    }
     if (!lockTime) {
 	lockTime = now = LockSidCacheLock(cache->keyCacheLock, now);
 	if (!lockTime) {
@@ -1587,6 +1591,11 @@ ssl_SetWrappingKey(SSLWrappedSymWrappingKey *wswk)
     PRUint32      ndx;
     PRUint32      now = 0;
     SSLWrappedSymWrappingKey myWswk;
+
+    if (!cache->cacheMem) { /* cache is uninitialized */
+	PORT_SetError(SSL_ERROR_SERVER_CACHE_NOT_CONFIGURED);
+	return 0;
+    }
 
     PORT_Assert( (unsigned)exchKeyType < kt_kea_size);
     if ((unsigned)exchKeyType >= kt_kea_size)
