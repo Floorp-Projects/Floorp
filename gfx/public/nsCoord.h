@@ -150,7 +150,7 @@ inline float NSCoordToFloat(nscoord aCoord) {
 #ifdef NS_COORD_IS_FLOAT
   NS_ASSERTION(!NS_IEEEIsNan(aCoord), "NaN encountered in float conversion");
 #endif
-  return aCoord;
+  return (float)aCoord;
 }
 
 #endif /* NSCOORD_H */
