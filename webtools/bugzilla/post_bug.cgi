@@ -198,6 +198,9 @@ my $comment = $::FORM{'comment'};
 $comment =~ s/\r\n/\n/g;     # Get rid of windows-style line endings.
 $comment =~ s/\r/\n/g;       # Get rid of mac-style line endings.
 $comment = trim($comment);
+# If comment is all whitespace, it'll be null at this point.  That's
+# OK except for the fact that it causes e-mail to be suppressed.
+$comment = $comment ? $comment : " ";
 
 $query .= "now(), 0";
 
