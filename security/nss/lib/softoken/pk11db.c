@@ -723,7 +723,7 @@ secmod_addEscape(const char *string, char quote)
 }
 
 #define SECMOD_STEP 10
-#define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical trustOrder=0 cipherOrder=100 slotParams=(1={%s askpw=any timeout=30})\""
+#define PK11_DEFAULT_INTERNAL_INIT "library= name=\"NSS Internal PKCS #11 Module\" parameters=\"%s\" NSS=\"Flags=internal,critical trustOrder=50 cipherOrder=100 slotParams=(1={%s askpw=any timeout=30})\""
 /*
  * Read all the existing modules in
  */
