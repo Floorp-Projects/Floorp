@@ -272,6 +272,13 @@ char* nsInstallFileOpItem::toString()
       result.Append(mTarget->GetNativePathCString());
       resultCString = result.ToNewCString();
       break;
+    case NS_FOP_FILE_EXECUTE:
+      result = "Execute File: ";
+      result.Append(mTarget->GetNativePathCString());
+      result.Append(" ");
+      result.Append(*mParams);
+      resultCString = result.ToNewCString();
+      break;
     case NS_FOP_FILE_MOVE:
       result = "Move File: ";
       result.Append(mSrc->GetNativePathCString());

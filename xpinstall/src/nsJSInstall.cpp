@@ -1689,9 +1689,25 @@ InstallFileOpFileExecute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, 
 
     *rval = INT_TO_JSVAL(nativeRet);
   }
+  else if(argc == 1)
+  {
+    //  public int FileExecute (String aSourceFolder,
+    //                          String aParameters);
+
+    ConvertJSValToStr(b0, cx, argv[0]);
+    b1 = "";
+    nsFileSpec fsB0(b0);
+
+    if(NS_OK != nativeThis->FileOpFileExecute(fsB0, b1, &nativeRet))
+    {
+      return JS_FALSE;
+    }
+
+    *rval = INT_TO_JSVAL(nativeRet);
+  }
   else
   {
-    JS_ReportError(cx, "Function FileExecute requires 2 parameters");
+    JS_ReportError(cx, "Function FileExecute requires 1 or 2 parameters");
     return JS_FALSE;
   }
 
