@@ -100,6 +100,8 @@ void create(in nsIURI aURI, in wstring aTitle, in nsIDOMDocument aDocument,
 			         in nsIInputStream aInputStream, in nsILayoutHistoryState aHistoryLayoutState,
                in nsISupports aCacheKey);
 
+nsISHEntry clone();
+
 /** Attribute that indicates if this entry is for a subframe navigation */
 void SetIsSubFrame(in boolean aFlag);
 

@@ -88,7 +88,7 @@
       <menuitem id="context-viewsource"
                 label="&viewPageSourceCmd.label;"
                 accesskey="&viewPageSourceCmd.accesskey;"
-                oncommand="BrowserViewSource();"/>
+                oncommand="BrowserViewSourceOfDocument(_content.document);"/>
       <menuitem id="context-viewframesource"
                 label="&viewFrameSourceCmd.label;"
                 accesskey="&viewFrameSourceCmd.accesskey;"

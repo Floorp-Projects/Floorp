@@ -35,3 +35,4 @@ nsIContentViewerEdit.idl
 nsIContentViewerFile.idl
 nsIURIFixup.idl
 nsIEditorDocShell.idl
+nsIWebPageDescriptor.idl

@@ -271,6 +271,7 @@ NS_INTERFACE_MAP_BEGIN(nsDocShell)
     NS_INTERFACE_MAP_ENTRY(nsISupportsWeakReference)
     NS_INTERFACE_MAP_ENTRY(nsIContentViewerContainer)
     NS_INTERFACE_MAP_ENTRY(nsIEditorDocShell)
+    NS_INTERFACE_MAP_ENTRY(nsIWebPageDescriptor)
 NS_INTERFACE_MAP_END_THREADSAFE
 
 ///*****************************************************************************
@@ -2551,6 +2552,83 @@ nsDocShell::GetSessionHistory(nsISHistory ** aSessionHistory)
     return NS_ERROR_FAILURE;
 
 }
+
+//*****************************************************************************
+// nsDocShell::nsIWebPageDescriptor
+//*****************************************************************************   
+NS_IMETHODIMP
+nsDocShell::LoadPage(nsISupports *aPageDescriptor, PRUint32 aDisplayType)
+{
+    nsresult rv;
+    nsCOMPtr<nsISHEntry> shEntry(do_QueryInterface(aPageDescriptor));
+
+    // Currently, the opaque 'page descriptor' is an nsISHEntry...
+    if (!shEntry) {
+        return NS_ERROR_INVALID_POINTER;
+    }
+
+    //
+    // load the page as view-source
+    //
+    if (nsIWebPageDescriptor::DISPLAY_AS_SOURCE == aDisplayType) {
+        nsCOMPtr<nsIHistoryEntry> srcHE(do_QueryInterface(shEntry));
+        nsCOMPtr<nsIURI> oldUri, newUri;
+        nsCString spec, newSpec;
+
+        // Create a new view-source URI and replace the original.
+        rv = srcHE->GetURI(getter_AddRefs(oldUri));
+        if (NS_FAILED(rv))
+              return rv;
+
+        oldUri->GetSpec(spec);
+        newSpec.Append(NS_LITERAL_CSTRING("view-source:"));
+        newSpec.Append(spec);
+
+        rv = NS_NewURI(getter_AddRefs(newUri), newSpec);
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+        shEntry->SetURI(newUri);
+
+        // NULL out inappropriate cloned attributes...
+        shEntry->SetParent(nsnull);
+        shEntry->SetIsSubFrame(PR_FALSE);
+    }
+
+    rv = LoadHistoryEntry(shEntry, LOAD_HISTORY);
+    return rv;
+}
+
+NS_IMETHODIMP
+nsDocShell::GetCurrentDescriptor(nsISupports **aPageDescriptor)
+{
+    nsresult rv;
+    nsCOMPtr<nsISHEntry> src;
+
+    if (!aPageDescriptor) {
+        return NS_ERROR_NULL_POINTER;
+    }
+    *aPageDescriptor = nsnull;
+
+    src = mOSHE ? mOSHE : mLSHE;
+    if (src) {
+        nsCOMPtr<nsISupports> sup;;
+        nsCOMPtr<nsISHEntry> dest;
+
+        rv = src->Clone(getter_AddRefs(dest));
+        if (NS_FAILED(rv)) {
+            return rv;
+        }
+
+        sup = do_QueryInterface(dest);
+        *aPageDescriptor = sup;
+
+        NS_ADDREF(*aPageDescriptor);
+    }
+
+    return (*aPageDescriptor) ? NS_OK : NS_ERROR_FAILURE;
+}
+
 
 //*****************************************************************************
 // nsDocShell::nsIBaseWindow
@@ -5600,46 +5678,16 @@ nsDocShell::CloneAndReplace(nsISHEntry * src, PRUint32 aCloneID,
         NS_IF_ADDREF(*resultEntry);
     }
     else {
-        nsCOMPtr<nsIURI> uri;
-        nsCOMPtr<nsIInputStream> postdata;
-        nsCOMPtr<nsILayoutHistoryState> LHS;
-        nsCOMPtr<nsIURI> referrerURI;
-        PRUnichar *title = nsnull;
-        nsCOMPtr<nsISHEntry> parent;
-        PRBool expirationStatus;
-        PRBool layoutStatus;
-        nsCOMPtr<nsISupports> cacheKey;
-        PRUint32 id;
-        result = nsComponentManager::CreateInstance(NS_SHENTRY_CONTRACTID, NULL,
-                                                    NS_GET_IID(nsISHEntry),
-                                                    (void **) &dest);
+        // Clone the SHEntry...
+        result = src->Clone(&dest);
         if (NS_FAILED(result))
             return result;
 
-        srcHE->GetURI(getter_AddRefs(uri));
-        src->GetReferrerURI(getter_AddRefs(referrerURI));
-        src->GetPostData(getter_AddRefs(postdata));
-        srcHE->GetTitle(&title);
-        src->GetLayoutHistoryState(getter_AddRefs(LHS));
-        //XXX Is this correct? parent is a weak ref in nsISHEntry
-        src->GetParent(getter_AddRefs(parent));
-        src->GetID(&id);
-        src->GetExpirationStatus(&expirationStatus);
-        src->GetSaveLayoutStateFlag(&layoutStatus);
-        src->GetCacheKey(getter_AddRefs(cacheKey));
-
-        // XXX do we care much about valid values for these uri, title etc....
-        dest->SetURI(uri);
-        dest->SetReferrerURI(referrerURI);
-        dest->SetPostData(postdata);
-        dest->SetLayoutHistoryState(LHS);
-        dest->SetTitle(title);
-        dest->SetParent(parent);
-        dest->SetID(id);
+        // This entry is for a frame...
         dest->SetIsSubFrame(PR_TRUE);
-        dest->SetExpirationStatus(expirationStatus);
-        dest->SetSaveLayoutStateFlag(layoutStatus);
-        dest->SetCacheKey(cacheKey);
+
+        // Transfer the owning reference to 'resultEntry'.  From this point on
+        // 'dest' is *not* an owning reference...
         *resultEntry = dest;
 
         PRInt32 childCount = 0;

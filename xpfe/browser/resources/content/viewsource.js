@@ -61,22 +61,69 @@ function viewSource(url)
     return false;
   }
 
-  try {
-    if ("arguments" in window && window.arguments.length >= 2) {
-      if (window.arguments[1].indexOf('charset=') != -1) {
-        var arrayArgComponents = window.arguments[1].split('=');
-        if (arrayArgComponents) {
-          //we should "inherit" the charset menu setting in a new window
-          getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
-        } 
+  var loadFromURL = true;
+  //
+  // Parse the 'arguments' supplied with the dialog.
+  //    arg[0] - URL string.
+  //    arg[1] - Charset value in the form 'charset=xxx'.
+  //    arg[2] - Page descriptor used to load content from the cache.
+  //
+  if ("arguments" in window) {
+    var arg;
+    //
+    // Set the charset of the viewsource window...
+    //
+    if (window.arguments.length >= 2) {
+      arg = window.arguments[1];
+
+      try {
+        if (typeof(arg) == "string" && arg.indexOf('charset=') != -1) {
+          var arrayArgComponents = arg.split('=');
+          if (arrayArgComponents) {
+            //we should "inherit" the charset menu setting in a new window
+            getMarkupDocumentViewer().defaultCharacterSet = arrayArgComponents[1];
+          } 
+        }
+      } catch (ex) {
+        // Ignore the failure and keep processing arguments...
       }
     }
-  } catch(ex) {
+    //
+    // Use the page descriptor to load the content from the cache (if
+    // available).
+    //
+    if (window.arguments.length >= 3) {
+      arg = window.arguments[2];
+
+      try {
+        if (typeof(arg) == "object" && arg != null) {
+          var pageLoaderIface = Components.interfaces.nsIWebPageDescriptor;
+          var PageLoader = getBrowser().webNavigation.QueryInterface(pageLoaderIface);
+
+          //
+          // Load the page using the page descriptor rather than the URL.
+          // This allows the content to be fetched from the cache (if
+          // possible) rather than the network...
+          //
+          PageLoader.LoadPage(arg, pageLoaderIface.DISPLAY_AS_SOURCE);
+          // The content was successfully loaded from the page cookie.
+          loadFromURL = false;
+        }
+      } catch(ex) {
+        // Ignore the failure.  The content will be loaded via the URL
+        // that was supplied in arg[0].
+      }
+    }
   }
 
-  var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
-  var viewSrcUrl = "view-source:" + url;
-  getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
+  if (loadFromURL) {
+    //
+    // Currently, an exception is thrown if the URL load fails...
+    //
+    var loadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
+    var viewSrcUrl = "view-source:" + url;
+    getBrowser().webNavigation.loadURI(viewSrcUrl, loadFlags, null, null, null);
+  }
 
   //check the view_source.wrap_long_lines pref and set the menuitem's checked attribute accordingly
   if (gPrefs) {
