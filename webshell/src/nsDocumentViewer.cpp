@@ -296,8 +296,8 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         if (nsnull != owner) {
             mDocument->SetScriptContextOwner(owner);
             nsIScriptGlobalObject* global;
-            owner->GetScriptGlobalObject(&global);
-            if (nsnull != global) {
+            rv = owner->GetScriptGlobalObject(&global);
+            if (NS_SUCCEEDED(rv) && (nsnull != global)) {
                 nsIDOMDocument *domdoc = nsnull;
                 mDocument->QueryInterface(kIDOMDocumentIID,
                                           (void**) &domdoc);
