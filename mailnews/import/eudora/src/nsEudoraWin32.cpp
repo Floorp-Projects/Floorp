@@ -872,7 +872,7 @@ void nsEudoraWin32::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *a
 		IMPORT_LOG1( "\temail: %s\n", email.get());
 	}
 
-	SetSmtpServer( accMgr, acc, server.get(), nsnull);
+	SetSmtpServer( accMgr, acc, server.get(), userName);
 		
 }
 

@@ -540,7 +540,14 @@ void OESettings::SetIdentities( nsIMsgAccountManager *pMgr, nsIMsgAccount *pAcc,
 			IMPORT_LOG1( "\temail: %s\n", pEmail);
 		}
 	}
-	
+  if (!pUserName) {
+    nsCOMPtr <nsIMsgIncomingServer>	incomingServer;
+    rv = pAcc->GetIncomingServer(getter_AddRefs( incomingServer));
+    if (NS_SUCCEEDED(rv) && incomingServer) 
+      rv = incomingServer->GetUsername(&pUserName);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "Unable to get UserName from incomingServer");
+  }
+
 	SetSmtpServer( pMgr, pAcc, pServer, pUserName);
 
 	nsOERegUtil::FreeValueBytes( (BYTE *)pName);

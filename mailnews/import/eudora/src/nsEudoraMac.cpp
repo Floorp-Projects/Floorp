@@ -824,7 +824,7 @@ void nsEudoraMac::SetIdentities(nsIMsgAccountManager *accMgr, nsIMsgAccount *acc
 		IMPORT_LOG1( "\temail: %s\n", pStrs[kReturnAddressStr]->get());
 	}
 
-	SetSmtpServer( accMgr, acc, pStrs[kSmtpServerStr]->get(), nsnull);
+	SetSmtpServer( accMgr, acc, pStrs[kSmtpServerStr]->get(), userName);
 		
 }
 
