@@ -22,7 +22,7 @@ MODULE=msgbase
 LIBRARY_NAME=msgbase
 META_COMPONENT=mail
 MODULE_NAME=nsMsgBaseModule
-REQUIRES	= xpcom string necko intl locale timer rdf dom docshell widget layout webshell mime uriloader mailnews mork txmgr pref msgcompose msgbaseutil appcomps msgdb editor appshell msgnews msgimap
+REQUIRES	= xpcom string necko intl locale timer rdf dom docshell widget layout webshell mime uriloader mailnews mork txmgr pref msgcompo msgbaseutil appcomps msgdb msgsearch editor appshell msgnews msgimap raptor gfx layout_xul
 
 ################################################################################
 ## exports

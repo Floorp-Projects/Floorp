@@ -24,7 +24,7 @@ MODULE          = msgimap
 LIBRARY_NAME    = msgimap
 META_COMPONENT  = mail
 MODULE_NAME  = IMAP_factory
-REQUIRES	= xpcom string mailnews msgimap msgbase msgbaseutil rdf rdfutil necko msgdb txmgr mime pref intl msglocal nkcache
+REQUIRES	= xpcom string mailnews msgbase msgsearch msgbaseutil rdf rdfutil necko msgdb txmgr mime pref intl msglocal nkcache
 
 ################################################################################
 ## exports

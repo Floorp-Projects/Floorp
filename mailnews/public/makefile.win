@@ -20,7 +20,7 @@
 # Contributor(s): 
 
 DEPTH=..\..
-MODULE=mailnewspublic
+MODULE=mailnews
 
 XPIDLSRCS =				\
 		.\MailNewsTypes2.idl	\

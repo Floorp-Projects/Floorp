@@ -21,6 +21,7 @@
 
 DEPTH=..\..\..\..
 MODULE=mimeemitter
+REQUIRES	= xpcom string mime msgbase msgbaseutil pref necko intl locale mailnews msgdb addrbook mimetype msgnews
 
 include <$(DEPTH)\config\config.mak>
 
@@ -28,7 +29,7 @@ include <$(DEPTH)\config\config.mak>
 ## exports
 
 EXPORTS=	nsEmitterUtils.h	\
-    		nsMimeRebuffer.h	\
+			nsMimeRebuffer.h	\
 			nsMimeHtmlEmitter.h	\
 			nsMimeRawEmitter.h	\
 			nsMimeXmlEmitter.h	\

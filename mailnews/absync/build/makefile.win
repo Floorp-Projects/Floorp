@@ -18,7 +18,8 @@
 # Contributor(s): 
 
 DEPTH=..\..\..
-MODULE=absyncsv 
+MODULE=absync
+REQUIRES	= xpcom string necko docshell uriloader msgbase intl addrbook dom mork
 LIBRARY_NAME=absyncsv
 IS_COMPONENT=1
 META_COMPONENT=mail

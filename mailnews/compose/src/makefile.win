@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 MODULE= msgcompo
-REQUIRES	= xpcom string dom editor uriloader msgbase mailnews necko mime pref intl locale layout msgbaseutil msgdb rdf appshell msgimap msgnews uconv docshell webshell addrbook widget htmlparser txmgr exthandler mork wallet nkcache mimetype windowwatcher
+REQUIRES	= xpcom string dom editor uriloader msgbase msgsearch mailnews necko mime pref intl locale layout msgbaseutil msgdb rdf appshell msgimap msgnews uconv docshell webshell addrbook widget htmlparser txmgr exthandler mork wallet nkcache mimetype windowwatcher content raptor
 
 include <$(DEPTH)\config\config.mak>
 

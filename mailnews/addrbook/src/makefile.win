@@ -21,7 +21,7 @@
 
 DEPTH=..\..\..
 MODULE= addrbook
-REQUIRES	= xpcom string rdf rdfutil appshell dom layout widget mork docshell pref necko locale webshell uconv msgbase msgbaseutil mime msgcompose appcomps
+REQUIRES	= xpcom string rdf rdfutil appshell dom layout widget mork docshell pref necko locale webshell uconv msgbase msgbaseutil mime msgcompo appcomps raptor gfx content mozldap
 
 include <$(DEPTH)\config\config.mak>
 
@@ -31,7 +31,7 @@ include <$(DEPTH)\config\config.mak>
 EXPORTS=								\
 			nsAddressBook.h				\
 			nsAddrBookSession.h			\
- 			nsAbRDFDataSource.h			\
+			nsAbRDFDataSource.h			\
 			nsAbMDBRDFResource.h			\
 			nsCardDataSource.h			\
 			nsDirectoryDataSource.h		\

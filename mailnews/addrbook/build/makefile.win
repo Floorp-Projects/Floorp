@@ -24,7 +24,7 @@ MODULE=addrbook
 LIBRARY_NAME=addrbook
 META_COMPONENT=mail
 MODULE_NAME=nsAbModule
-REQUIRES	= xpcom string addrbook necko msgcompose mime msgbase rdf rdfutil docshell appshell dom widget locale mork appcomps
+REQUIRES	= xpcom string addrbook necko msgcompo mime msgbase rdf rdfutil docshell appshell dom widget locale mork appcomps raptor mozldap
 
 ################################################################################
 ## exports

@@ -22,7 +22,7 @@ MODULE          = msgcompo
 LIBRARY_NAME    = msgcompo
 META_COMPONENT  = mail
 MODULE_NAME  = nsMsgComposeModule
-REQUIRES	= xpcom string msgbase msgbaseutil editor necko dom uriloader mime addrbook rdf intl mailnews widget msgdb appshell nkcache
+REQUIRES	= xpcom string msgbase msgsearch msgbaseutil editor necko dom uriloader mime addrbook rdf intl mailnews widget msgdb appshell nkcache raptor
 
 ################################################################################
 ## exports

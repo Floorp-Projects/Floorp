@@ -18,6 +18,7 @@
 DEPTH=..\..\..\..
 
 MODULE          = impEudra
+REQUIRES=xpcom string import intl necko addrbook mork msgcompo msgbase editor dom uriloader mailnews msgdb msgbaseutil msglocal mimetype
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail
 MODULE_NAME  = nsEudoraImportModule

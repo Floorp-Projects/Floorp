@@ -22,7 +22,7 @@
 DEPTH=..\..\..\..
 
 MODULE=msgsearch
-REQUIRES	= xpcom string mailnews msgdb msgbaseutil necko mime msgimap rdf msglocal intl pref timer msgnews txmgr
+REQUIRES	= xpcom string mailnews msgdb msgbaseutil necko mime msgimap rdf msglocal intl pref timer msgnews txmgr msgbase
 include <$(DEPTH)\config\config.mak>
 
 LIBRARY_NAME=msgsearch_s
@@ -51,15 +51,6 @@ EXPORTS=	nsMsgFilterService.h \
 			nsMsgFilterDelegateFactory.h \
 			$(NULL)
 
-
-LINCS=-I$(PUBLIC)\xpcom \
-	 -I$(PUBLIC)\mailnews \
-	 -I$(PUBLIC)\raptor \
-	 -I$(PUBLIC)\mime \
-	 -I$(PUBLIC)\locale \
-	 -I$(PUBLIC)\pref \
-	 -I$(PUBLIC)\js \
-	 -I$(PUBLIC)\netlib 
 
 
 LCFLAGS = \

@@ -22,7 +22,7 @@ MODULE          = msgnews
 LIBRARY_NAME    = msgnews
 META_COMPONENT  = mail
 MODULE_NAME  = nsMsgNewsModule
-REQUIRES	= xpcom string mailnews msgbase msgbaseutil msgdb appshell timer mime necko rdf rdfutil pref uriloader nkcache layout dom intl
+REQUIRES	= xpcom string mailnews msgbase msgsearch msgbaseutil msgdb appshell timer mime necko rdf rdfutil pref uriloader nkcache layout dom intl raptor layout_xul
 
 ################################################################################
 ## exports

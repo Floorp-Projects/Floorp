@@ -18,6 +18,7 @@
 DEPTH=..\..\..\..
 
 MODULE          = impText
+REQUIRES	= xpcom string import intl necko addrbook pref mork
 LIBRARY_NAME    = $(MODULE)
 META_COMPONENT  = mail
 MODULE_NAME  = nsTextImportModule
