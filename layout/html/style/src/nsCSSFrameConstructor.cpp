@@ -803,8 +803,8 @@ nsMathMLmtableCreator::CreateTableOuterFrame(nsIFrame** aNewFrame)
 nsresult
 nsMathMLmtableCreator::CreateTableCellInnerFrame(nsIFrame** aNewFrame)
 {
-  // only works if aNewFrame is an AreaFrame (to take care of the lineLayout logic)
-  return NS_NewMathMLmtdFrame(mPresShell, aNewFrame);
+  // only works if aNewFrame can take care of the lineLayout logic
+  return NS_NewMathMLmtdInnerFrame(mPresShell, aNewFrame);
 }
 #endif // MOZ_MATHML
 
@@ -1701,9 +1701,11 @@ nsCSSFrameConstructor::CreateInputFrame(nsIPresShell    *aPresShell,
 PRBool IsOnlyWhiteSpace(nsIContent* aContent)
 {
   PRBool onlyWhiteSpace = PR_FALSE;
-  nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aContent);
-  if (textContent) {
-    textContent->IsOnlyWhitespace(&onlyWhiteSpace);
+  if (aContent->IsContentOfType(nsIContent::eTEXT)) {
+    nsCOMPtr<nsITextContent> textContent = do_QueryInterface(aContent);
+    if (textContent) {
+      textContent->IsOnlyWhitespace(&onlyWhiteSpace);
+    }
   }
   return onlyWhiteSpace;
 }
@@ -6879,7 +6881,6 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
 
   // Initialize the new frame
   nsIFrame* newFrame = nsnull;
-  nsMathMLmtableCreator mathTableCreator(aPresShell); // Used to make table views.
 
   // See if the element is absolute or fixed positioned
   const nsStylePosition* position = (const nsStylePosition*)
@@ -6939,44 +6940,66 @@ nsCSSFrameConstructor::ConstructMathMLFrame(nsIPresShell*            aPresShell,
      rv = NS_NewMathMLmrowFrame(aPresShell, &newFrame);
   // CONSTRUCTION of MTABLE elements
   else if (aTag == nsMathMLAtoms::mtable_)  {
-  // <mtable> is an inline-table, for the moment, we just do what  
-  // <table> does, and wait until nsLineLayout::TreatFrameAsBlock
-  // can handle NS_STYLE_DISPLAY_INLINE_TABLE.
-      nsIFrame* geometricParent = aParentFrame;
-      if (isAbsolutelyPositioned) {
-        aParentFrame = aState.mAbsoluteItems.containingBlock;
-      }
-      else if (isFixedPositioned) {
-        aParentFrame = aState.mFixedItems.containingBlock;
-      }
+      // <mtable> is an inline-table -- but this isn't yet supported.
+      // What we do here is to wrap the table in an anonymous containing
+      // block so that it can mix better with other surrounding MathML markups
+
+      nsCOMPtr<nsIStyleContext> parentContext;
+      aParentFrame->GetStyleContext(getter_AddRefs(parentContext));
+
+      // first, create a MathML mrow frame that will wrap the block frame
+      rv = NS_NewMathMLmrowFrame(aPresShell, &newFrame);
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIStyleContext> mrowContext;
+      aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                 nsMathMLAtoms::mozMathInline,
+                                                 parentContext, PR_FALSE,
+                                                 getter_AddRefs(mrowContext));
+      InitAndRestoreFrame(aPresContext, aState, aContent, aParentFrame,
+                          mrowContext, nsnull, newFrame);
+      // add it to the flow
+      aFrameItems.AddChild(newFrame);
+
+      // then, create a block frame that will wrap the table frame
+      nsIFrame* blockFrame;
+      rv = NS_NewBlockFrame(aPresShell, &blockFrame);
+      if (NS_FAILED(rv)) return rv;
+      nsCOMPtr<nsIStyleContext> blockContext;
+      aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                 nsHTMLAtoms::mozAnonymousBlock,
+                                                 mrowContext, PR_FALSE,
+                                                 getter_AddRefs(blockContext));
+      InitAndRestoreFrame(aPresContext, aState, aContent, newFrame,
+                          blockContext, nsnull, blockFrame);
+      // set the block frame as the initial child of the mrow frame
+      newFrame->SetInitialChildList(aPresContext, nsnull, blockFrame);
+
+      // then, create the table frame itself
+      nsCOMPtr<nsIStyleContext> tableContext;
+      aPresContext->ResolvePseudoStyleContextFor(aContent,
+                                                 nsMathMLAtoms::mozMathTable,
+                                                 blockContext, PR_FALSE,
+                                                 getter_AddRefs(tableContext));
+      nsFrameItems tempItems;
+      nsIFrame* outerTable;
       nsIFrame* innerTable;
       PRBool pseudoParent;
+      nsMathMLmtableCreator mathTableCreator(aPresShell);
       rv = ConstructTableFrame(aPresShell, aPresContext, aState, aContent, 
-                               geometricParent, aStyleContext, mathTableCreator,
-                               PR_FALSE, aFrameItems, newFrame, innerTable, pseudoParent);
+                               blockFrame, tableContext, mathTableCreator,
+                               PR_FALSE, tempItems, outerTable, innerTable, pseudoParent);
       // Note: table construction function takes care of initializing the frame,
       // processing children, and setting the initial child list
-      if (isAbsolutelyPositioned || isFixedPositioned) {
-        nsIFrame* placeholderFrame;
-        CreatePlaceholderFrameFor(aPresShell, aPresContext, aState.mFrameManager, aContent, newFrame,
-                                  aStyleContext, aParentFrame, &placeholderFrame);
-        // Add the positioned frame to its containing block's list of child frames
-        if (isAbsolutelyPositioned) {
-          aState.mAbsoluteItems.AddChild(newFrame);
-        } else {
-          aState.mFixedItems.AddChild(newFrame);
-        }
-        // Add the placeholder frame to the flow
-        aFrameItems.AddChild(placeholderFrame);
-      } else if (!pseudoParent) {
-        // Add the table frame to the flow
-        aFrameItems.AddChild(newFrame);
-      }
+
+      // set the outerTable as the initial child of the anonymous block
+      blockFrame->SetInitialChildList(aPresContext, nsnull, outerTable);
+
       return rv; 
   }
   else if (aTag == nsMathMLAtoms::mtd_) {
     nsIFrame* innerCell;
     PRBool pseudoParent;
+    nsMathMLmtableCreator mathTableCreator(aPresShell);
     rv = ConstructTableCellFrame(aPresShell, aPresContext, aState, aContent, 
                                  aParentFrame, aStyleContext, mathTableCreator,
                                  PR_FALSE, aFrameItems, newFrame, innerCell, pseudoParent);
