@@ -114,25 +114,6 @@ static const char* const gRDFTypes[] = {
   0
 };
 
-static const char* const gImageTypes[] = {
-  "image/gif",
-  "image/jpeg",
-  "image/jpg",
-  "image/pjpeg",
-  "image/png",
-  "image/x-png",
-  "image/x-art",
-  "image/x-jg",
-  "image/bmp",
-  "image/x-icon",
-  "video/x-mng",
-  "image/x-jng",
-  "image/x-xbitmap",
-  "image/x-xbm",
-  "image/xbm",
-  0
-};
-
 nsICSSStyleSheet* nsContentDLF::gUAStyleSheet;
 
 nsresult
@@ -575,47 +556,39 @@ nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
 static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
 
 static nsresult
-RegisterTypes(nsIComponentManager* aCompMgr,
-              nsICategoryManager* aCatMgr,
-              const char* aCommand,
-              nsIFile* aPath,
-              const char *aLocation,
-              const char *aType,
+RegisterTypes(nsICategoryManager* aCatMgr,
               const char* const* aTypes)
 {
   nsresult rv = NS_OK;
   while (*aTypes) {
-    char contractid[500];
     const char* contentType = *aTypes++;
-    PR_snprintf(contractid, sizeof(contractid),
-                NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
-                aCommand, contentType);
 #ifdef NOISY_REGISTRY
     printf("Register %s => %s\n", contractid, aPath);
 #endif
-    nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(aCompMgr, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-
-    rv = registrar->RegisterFactoryLocation(kDocumentFactoryImplCID, 
-                                            "Layout",
-                                            contractid, 
-                                            aPath, 
-                                            aLocation,
-                                            aType);
-    if (NS_FAILED(rv)) break;
-
-    // add the MIME types layotu can handle to the handlers category.
+    // add the MIME types layout can handle to the handlers category.
     // this allows users of layout's viewers (the docshell for example)
     // to query the types of viewers layout can create.
-    nsXPIDLCString previous;
     rv = aCatMgr->AddCategoryEntry("Gecko-Content-Viewers", contentType,
-			                    contractid,
-                                PR_TRUE, PR_TRUE, getter_Copies(previous));
+                                   "@mozilla.org/content/document-loader-factory;1",
+                                   PR_TRUE, PR_TRUE, nsnull);
     if (NS_FAILED(rv)) break;
   }
   return rv;
 }
+
+static nsresult UnregisterTypes(nsICategoryManager* aCatMgr,
+                                const char* const* aTypes)
+{
+  nsresult rv = NS_OK;
+  while (*aTypes) {
+    const char* contentType = *aTypes++;
+    rv = aCatMgr->DeleteCategoryEntry("Gecko-Content-Viewers", contentType, PR_TRUE);
+    if (NS_FAILED(rv)) break;
+  }
+  return rv;
+
+}
+
 
 NS_IMETHODIMP
 nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
@@ -630,33 +603,18 @@ nsContentDLF::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
   if (NS_FAILED(rv)) return rv;
 
   do {
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gHTMLTypes);
+    rv = RegisterTypes(catmgr, gHTMLTypes);
     if (NS_FAILED(rv))
       break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gHTMLTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gXMLTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gXMLTypes);
+    rv = RegisterTypes(catmgr, gXMLTypes);
     if (NS_FAILED(rv))
       break;
 #ifdef MOZ_SVG
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gSVGTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gSVGTypes);
+    rv = RegisterTypes(catmgr, gSVGTypes);
     if (NS_FAILED(rv))
       break;
 #endif
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gImageTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view", aPath, aLocation, aType, gRDFTypes);
-    if (NS_FAILED(rv))
-      break;
-    rv = RegisterTypes(aCompMgr, catmgr, "view-source", aPath, aLocation, aType, gRDFTypes);
+    rv = RegisterTypes(catmgr, gRDFTypes);
     if (NS_FAILED(rv))
       break;
   } while (PR_FALSE);
@@ -669,13 +627,28 @@ nsContentDLF::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
                                           const char* aRegistryLocation,
                                           const nsModuleComponentInfo* aInfo)
 {
-  // XXXwaterson seems like this leaves the registry pretty dirty.
   nsresult rv;
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(aCompMgr, &rv);
-  if (NS_FAILED(rv))
-    return rv;
+  nsCOMPtr<nsICategoryManager> catmgr(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
+  if (NS_FAILED(rv)) return rv;
 
-  return registrar->UnregisterFactoryLocation(kDocumentFactoryImplCID, aPath);
+  do {
+    rv = UnregisterTypes(catmgr, gHTMLTypes);
+    if (NS_FAILED(rv))
+      break;
+    rv = UnregisterTypes(catmgr, gXMLTypes);
+    if (NS_FAILED(rv))
+      break;
+#ifdef MOZ_SVG
+    rv = UnregisterTypes(catmgr, gSVGTypes);
+    if (NS_FAILED(rv))
+      break;
+#endif
+    rv = UnregisterTypes(catmgr, gRDFTypes);
+    if (NS_FAILED(rv))
+      break;
+  } while (PR_FALSE);
+
+  return rv;
 }
 
 /* static */ nsresult

@@ -58,7 +58,6 @@
 #include "nsIDirectoryService.h"
 #include "nsWeakPtr.h"
 #include "nsIPrompt.h"
-#include "nsIGenericFactory.h"
 #include "nsISupportsArray.h"
 #include "nsPluginNativeWindow.h"
 
@@ -99,6 +98,13 @@ public:
   void TryUnloadPlugin(PRBool aForceShutdown = PR_FALSE);
   void Mark(PRUint32 mask) { mFlags |= mask; }
   PRBool Equals(nsPluginTag* aPluginTag);
+
+  enum nsRegisterType {
+    ePluginRegister,
+    ePluginUnregister
+  };
+  void RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
+                                   nsRegisterType aType = ePluginRegister);
 
   nsPluginTag   *mNext;
   nsPluginHostImpl *mPluginHost;
@@ -425,9 +431,6 @@ private:
                           nsIURI* aURL, PRBool aDefaultPlugin,
                           nsIPluginInstancePeer *peer);
 
-  nsresult 
-  RegisterPluginMimeTypesWithLayout(nsPluginTag *pluginTag, nsIComponentManager * compManager);
-
   nsresult
   FindPlugins(PRBool aCreatePluginList, PRBool * aPluginsChanged);
 
@@ -492,8 +495,6 @@ private:
   nsCOMPtr<nsIFile> mPluginsDir;
   nsCOMPtr<nsIDirectoryServiceProvider> mPrivateDirServiceProvider;  
   nsWeakPtr mCurrentDocument; // weak reference, we use it to id document only
-
-  nsCOMPtr<nsIGenericFactory> mFactory;
 };
 
 #endif

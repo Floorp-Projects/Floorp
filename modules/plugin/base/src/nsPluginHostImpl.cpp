@@ -91,6 +91,8 @@
 //#include "nsIRegistry.h"
 #include "nsEnumeratorUtils.h"
 #include "nsXPCOM.h"
+#include "nsXPCOMCID.h"
+#include "nsICategoryManager.h"
 #include "nsISupportsPrimitives.h"
 // for the dialog
 #include "nsIStringBundle.h"
@@ -123,7 +125,6 @@
 #include "nsFileSpec.h"
 
 #include "nsPluginDocLoaderFactory.h"
-#include "nsIDocumentLoaderFactory.h"
 
 #include "nsIMIMEService.h"
 #include "nsCExternalHandlerService.h"
@@ -948,6 +949,12 @@ nsPluginTag::nsPluginTag(const char* aName,
 nsPluginTag::~nsPluginTag()
 {
   TryUnloadPlugin(PR_TRUE);
+
+  // Remove mime types added to the catagory manager
+  // only if we were made 'active' by setting the host
+  if (mPluginHost) {
+    RegisterWithCategoryManager(PR_FALSE, nsPluginTag::ePluginUnregister);
+  }
 
   if (nsnull != mName) {
     delete[] (mName);
@@ -3630,69 +3637,47 @@ nsresult nsPluginHostImpl::AddInstanceToActiveList(nsCOMPtr<nsIPlugin> aPlugin,
 
 
 ////////////////////////////////////////////////////////////////////////
-nsresult nsPluginHostImpl::RegisterPluginMimeTypesWithLayout(nsPluginTag * pluginTag, 
-                                                             nsIComponentManager * compManager)
+void
+nsPluginTag::RegisterWithCategoryManager(PRBool aOverrideInternalTypes,
+                                         nsPluginTag::nsRegisterType aType)
 {
-  NS_ENSURE_ARG_POINTER(pluginTag);
-  NS_ENSURE_ARG_POINTER(pluginTag->mMimeTypeArray);
-  NS_ENSURE_ARG_POINTER(compManager);
+  if (!mMimeTypeArray)
+    return;
 
   PLUGIN_LOG(PLUGIN_LOG_NORMAL,
-  ("nsPluginHostImpl::RegisterPluginMimeTypesWithLayout plugin=%s\n",
-  pluginTag->mFileName));
+  ("nsPluginTag::RegisterWithCategoryManager plugin=%s, removing = %s\n",
+  mFileName, aType == ePluginUnregister ? "yes" : "no"));
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(compManager, &rv);
-  if (!registrar)
-    return rv;
+  nsCOMPtr<nsICategoryManager> catMan = do_GetService(NS_CATEGORYMANAGER_CONTRACTID);
+  if (!catMan)
+    return;
 
-  nsCOMPtr<imgILoader> loader;
-  if (!mOverrideInternalTypes) {
-    loader = do_GetService("@mozilla.org/image/loader;1");
-    if (!loader) {
-      NS_WARNING("get loader failed, falling back to mOverrideInternalTypes");
-      mOverrideInternalTypes=PR_TRUE;
-    }
-  }
-
-  for(int i = 0; i < pluginTag->mVariants; i++) {
-
-    // Do not register any doc loader factory content viewers for mime types we do internally
-    // Note: This excludes plugins of these mime types from running in full-page mode.
-    // This gets around Quicktime's default handling of PNG's
-    PRBool bIsSupportedImage = PR_FALSE;
-    if (!mOverrideInternalTypes && 
-        NS_SUCCEEDED(loader->SupportImageWithMimeType(pluginTag->mMimeTypeArray[i], &bIsSupportedImage)) && 
-        bIsSupportedImage)
-      continue;
-    
-    static NS_DEFINE_CID(kPluginDocLoaderFactoryCID, NS_PLUGINDOCLOADERFACTORY_CID);
-
-    nsCAutoString contractid(NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=");
-    contractid += pluginTag->mMimeTypeArray[i];
-
-    static nsModuleComponentInfo compInfo[] = {
-      { "Plugin Doc Loader Factory",
-        NS_PLUGINDOCLOADERFACTORY_CID,
-        "@mozilla.org/plugin/doc-loader/factory;1",
-        nsPluginDocLoaderFactory::Create
+  for(int i = 0; i < mVariants; i++) {
+    if (aType == ePluginUnregister) {
+      nsXPIDLCString value;
+      if (NS_SUCCEEDED(catMan->GetCategoryEntry("Gecko-Content-Viewers",
+                                                mMimeTypeArray[i],
+                                                getter_Copies(value)))) {
+        // Only delete the entry if a plugin registered for it
+        if (strcmp(value, "@mozilla.org/plugin/doc-loader/factory;1") == 0) {
+          catMan->DeleteCategoryEntry("Gecko-Content-Viewers",
+                                      mMimeTypeArray[i],
+                                      PR_TRUE);
+        }
       }
-    };
-
-    if (!mFactory)
-      NS_NewGenericFactory(getter_AddRefs(mFactory), compInfo);
-
-    rv = registrar->RegisterFactory(kPluginDocLoaderFactoryCID,
-                                    "Plugin Loader Stub",
-                                    contractid.get(),
-                                    mFactory);
+    } else {
+      catMan->AddCategoryEntry("Gecko-Content-Viewers",
+                               mMimeTypeArray[i],
+                               "@mozilla.org/plugin/doc-loader/factory;1",
+                               PR_FALSE, /* persist: broken by bug 193031 */
+                               aOverrideInternalTypes, /* replace if we're told to */
+                               nsnull);
+    }
 
     PLUGIN_LOG(PLUGIN_LOG_NOISY,
-    ("nsPluginHostImpl::RegisterPluginMimeTypesWithLayout mime=%s, plugin=%s\n",
-    pluginTag->mMimeTypeArray[i], pluginTag->mFileName));
+    ("nsPluginTag::RegisterWithCategoryManager mime=%s, plugin=%s\n",
+    mMimeTypeArray[i], mFileName));
   }
-
-  return rv;
 }
 
 
@@ -4939,7 +4924,7 @@ nsresult nsPluginHostImpl::ScanPluginsDirectory(nsIFile * pluginsDir,
       pluginTag->mNext = mPlugins;
       mPlugins = pluginTag;
 
-      RegisterPluginMimeTypesWithLayout(pluginTag, compManager);
+      pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
     }
     else if (!(pluginTag->mFlags & NS_PLUGIN_FLAG_UNWANTED)) {
       // we don't need it, delete it;
@@ -6459,7 +6444,7 @@ nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManag
       mPlugins = pluginTag;
       
       // last thing we need is to register this plugin with layout so it can be used in full-page mode
-      RegisterPluginMimeTypesWithLayout(pluginTag, aCompManager);
+      pluginTag->RegisterWithCategoryManager(mOverrideInternalTypes);
     }
   }
           

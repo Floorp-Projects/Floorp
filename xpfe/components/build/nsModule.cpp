@@ -115,22 +115,11 @@ RegisterProc(nsIComponentManager *aCompMgr,
     // add the MIME types layotu can handle to the handlers category.
     // this allows users of layout's viewers (the docshell for example)
     // to query the types of viewers layout can create.
-    nsXPIDLCString previous;
-    rv = catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format",
-                                   NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format",
-                                   PR_TRUE,
-                                   PR_TRUE,
-                                   getter_Copies(previous));
-    if (NS_FAILED(rv)) return rv;
-
-    rv = catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format; x-view-type=view-source",
-                                  NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format; x-view-type=view-source",
-                                  PR_TRUE,
-                                  PR_TRUE,
-                                  getter_Copies(previous));
-
-    return rv;
+    return catman->AddCategoryEntry("Gecko-Content-Viewers", "application/http-index-format",
+                                    "@mozilla.org/xpfe/http-index-format-factory-constructor",
+                                    PR_TRUE, PR_TRUE, nsnull);
 }
+
 static NS_METHOD
 UnregisterProc(nsIComponentManager *aCompMgr,
                nsIFile *aPath,
@@ -141,14 +130,8 @@ UnregisterProc(nsIComponentManager *aCompMgr,
     nsCOMPtr<nsICategoryManager> catman = do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers",
-                                     "application/http-index-format", PR_TRUE);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = catman->DeleteCategoryEntry("Gecko-Content-Viewers",
-                                     "application/http-index-format; x-view-type=view-source", PR_TRUE);
-
-    return rv;
+    return catman->DeleteCategoryEntry("Gecko-Content-Viewers",
+                                       "application/http-index-format", PR_TRUE);
 }
 
 static const nsModuleComponentInfo components[] = {
@@ -157,11 +140,8 @@ static const nsModuleComponentInfo components[] = {
     { "Bookmarks", NS_BOOKMARKS_SERVICE_CID, NS_BOOKMARKS_DATASOURCE_CONTRACTID,
       nsBookmarksServiceConstructor },
     { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
-      NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format",
+      "@mozilla.org/xpfe/http-index-format-factory-constructor",
       nsDirectoryViewerFactoryConstructor, RegisterProc, UnregisterProc  },
-    { "Directory Viewer", NS_DIRECTORYVIEWERFACTORY_CID,
-      NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "view;1?type=application/http-index-format; x-view-type=view-source",
-      nsDirectoryViewerFactoryConstructor }, // Let the standard type do the registration
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_SERVICE_CONTRACTID,
       nsHTTPIndexConstructor },
     { "Directory Viewer", NS_HTTPINDEX_SERVICE_CID, NS_HTTPINDEX_DATASOURCE_CONTRACTID,

@@ -52,7 +52,6 @@ typedef unsigned long HMTX;
 #include "nsIInterfaceRequestorUtils.h"
 #include "nsIWebProgress.h"
 #include "nsIDocumentLoader.h"
-#include "nsIDocumentLoaderFactory.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
 #include "nsIMarkupDocumentViewer.h"

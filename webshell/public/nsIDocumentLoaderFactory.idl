@@ -22,26 +22,18 @@
 #include "nsISupports.idl"
 
 interface nsIChannel;
-interface nsIURI;
-interface nsIFactory;
 interface nsIContentViewer;
 interface nsIStreamListener;
 interface nsIDocument;
 interface nsILoadGroup;
 
-%{C++
-// Registered components that can instantiate a
-// nsIDocumentLoaderFactory for a given mimetype must be prefixed with
-// this prefix to be found. The format is <prefix>/%s/%s where the
-// first %s is replaced with the command and the second %s is replaced
-// with the mimetype. For example, to view a image/gif file you would
-// create this contractid:
-//
-//  "@mozilla.org/content-viewer-factory/view;1?type=image/gif"
-//
-#define NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX \
-  "@mozilla.org/content-viewer-factory/"
-%}
+/**
+ * To get a component that implements nsIDocumentLoaderFactory
+ * for a given mimetype, use nsICategoryManager to find an entry
+ * with the mimetype as its name in the category "Gecko-Content-Viewers".
+ * The value of the entry is the contractid of the component.
+ * The component is a service, so use GetService, not CreateInstance to get it.
+ */
 
 [scriptable, uuid(df15f850-5d98-11d4-9f4d-0010a4053fd0)]
 interface nsIDocumentLoaderFactory : nsISupports {
