@@ -45,6 +45,7 @@
 #include "nsIXULBrowserWindow.h"
 #include "nsIWebProgressListener.h"
 #include "nsIWebShell.h"
+#include "nsIUrlbarHistory.h"
 
 class nsIDocShell;
 class nsIScriptContext;
@@ -53,6 +54,7 @@ class nsIDOMNode;
 class nsIURI;
 class nsIWebShellWindow;
 class nsIFindComponent;
+
 
 
 #define SHISTORY_POPUP_LIST 10
@@ -107,7 +109,7 @@ class nsBrowserInstance : public nsIBrowserInstance,
     nsIDOMWindow*       mDOMWindow;                         // weak reference
     nsIDocShell *       mContentAreaDocShell;				// weak reference
     nsIDocumentLoader * mContentAreaDocLoader;          // weak reference
-
+    nsCOMPtr<nsIUrlbarHistory> mUrlbarHistory;                  //We own this
     nsCOMPtr<nsISupports>  mSearchContext;				// at last, something we really own
     nsInstanceCounter   mInstanceCounter;
 #ifdef DEBUG_warren

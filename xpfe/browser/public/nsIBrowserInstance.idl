@@ -26,6 +26,7 @@
 #include "domstubs.idl"
 
 interface nsIDocShell;
+interface nsIUrlbarHistory;
 
 [scriptable, uuid(8AF0FA40-598D-11d3-806A-00600811A9C3)]
 interface nsIBrowserInstance : nsISupports {
@@ -60,6 +61,7 @@ interface nsIBrowserInstance : nsISupports {
     void setWebShellWindow( in nsIDOMWindow aWindow );
     void setTextZoom( in float aTextZoom );
     void SetDocumentCharset(in wstring charset);
+      attribute nsIUrlbarHistory urlbarHistory;
     
     // File.
 

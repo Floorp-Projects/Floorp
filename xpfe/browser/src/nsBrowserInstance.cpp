@@ -79,6 +79,7 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsICmdLineService.h"
 #include "nsIGlobalHistory.h"
+#include "nsIUrlbarHistory.h"
 
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
@@ -911,6 +912,7 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
   nsCOMPtr<nsISHistory> sessionHistory(do_CreateInstance(NS_SHISTORY_PROGID));
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(docShell));
   webNav->SetSessionHistory(sessionHistory);
+ 
 
     // Cache the Document Loader for the content area webshell.  This is a 
     // weak reference that is *not* reference counted...
@@ -928,6 +930,10 @@ nsBrowserInstance::SetContentWindow(nsIDOMWindow* aWin)
     if (APP_DEBUG) {
       printf("Attaching to Content WebShell [%s]\n", (const char *)str);
     }
+    nsCOMPtr<nsIUrlbarHistory>  ubHistory(do_CreateInstance(NS_URLBARHISTORY_PROGID));
+	NS_ENSURE_TRUE(ubHistory, NS_ERROR_FAILURE);
+	mUrlbarHistory = ubHistory;
+
   }
 
   return NS_OK;
@@ -939,6 +945,25 @@ nsBrowserInstance::GetContentDocShell(nsIDocShell** aDocShell)
    NS_ENSURE_ARG_POINTER(aDocShell);
 
    *aDocShell = mContentAreaDocShell;
+	return NS_OK;
+}
+
+
+NS_IMETHODIMP
+nsBrowserInstance::SetUrlbarHistory(nsIUrlbarHistory* aUBHistory)
+{
+   mUrlbarHistory = aUBHistory;
+   return NS_OK;
+}
+	
+
+NS_IMETHODIMP
+nsBrowserInstance::GetUrlbarHistory(nsIUrlbarHistory** aUrlbarHistory)
+{
+   NS_ENSURE_ARG_POINTER(aUrlbarHistory);
+
+   *aUrlbarHistory = mUrlbarHistory;
+   NS_IF_ADDREF(*aUrlbarHistory);
    return NS_OK;
 }
 
@@ -1075,6 +1100,9 @@ nsBrowserInstance::Close()
 
   // Release search context.
   mSearchContext = null_nsCOMPtr();;
+
+  //Release Urlbar History
+  mUrlbarHistory = null_nsCOMPtr();
 
   // unregister ourselves with the uri loader because
   // we can no longer accept new content!
