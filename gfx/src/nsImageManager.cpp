@@ -27,7 +27,7 @@ static NS_DEFINE_IID(kIImageManagerIID, NS_IIMAGEMANAGER_IID);
 class ImageManagerImpl : public nsIImageManager {
 public:
   ImageManagerImpl();
-  ~ImageManagerImpl();
+  virtual ~ImageManagerImpl();
 
   nsresult Init();
 
@@ -44,6 +44,10 @@ private:
   ilISystemServices *mSS;
 };
 
+// The singleton image manager
+// XXX make this a service
+static ImageManagerImpl*   gImageManager;
+
 ImageManagerImpl::ImageManagerImpl()
 {
   NS_NewImageSystemServices(&mSS);
@@ -56,9 +60,20 @@ ImageManagerImpl::~ImageManagerImpl()
 {
   IL_Shutdown();
   NS_RELEASE(mSS);
+//  gImageManager = nsnull;
 }
 
-NS_IMPL_ISUPPORTS(ImageManagerImpl, kIImageManagerIID)
+NS_IMPL_ADDREF(ImageManagerImpl)
+NS_IMPL_QUERY_INTERFACE(ImageManagerImpl, kIImageManagerIID)
+
+nsrefcnt ImageManagerImpl::Release(void)                        
+{
+  if (--mRefCnt == 0) {
+    NS_DELETEXPCOM(this);
+    return 0;
+  }
+  return mRefCnt;
+}
 
 nsresult 
 ImageManagerImpl::Init()
@@ -108,10 +123,6 @@ ImageManagerImpl::GetImageType(const char *buf, PRInt32 length)
   }
 }
 
-// The singleton image manager
-// XXX make this a service
-static ImageManagerImpl*   gImageManager;
-
 extern "C" NS_GFX_(nsresult)
 NS_NewImageManager(nsIImageManager **aInstancePtrResult)
 {
@@ -121,6 +132,7 @@ NS_NewImageManager(nsIImageManager **aInstancePtrResult)
   }
   if (nsnull == gImageManager) {
     gImageManager = new ImageManagerImpl();
+    NS_IF_ADDREF(gImageManager);
   }
   if (nsnull == gImageManager) {
     return NS_ERROR_OUT_OF_MEMORY;
