@@ -59,5 +59,27 @@ interface nsIWindowsShellService : nsIShellService
      * @return The number of unread (new) mail messages for the current user.
      */
     readonly attribute unsigned long unreadMailCount;
+
+
+    /**
+     * Valid starting keys for the Windows Registry.
+     */
+    const long HKCR = 0; // HKEY_CLASSES_ROOT
+    const long HKCC = 1; // HKEY_CURRENT_CONFIG
+    const long HKCU = 2; // HKEY_CURRENT_USER
+    const long HKLM = 3; // HKEY_LOCAL_MACHINE
+    const long HKU  = 4; // HKEY_USERS
+
+    /** 
+     * Retrieves a Windows Registry entry value.
+     * 
+     * @param aHKeyConstant The starting key, using the constants defined above.
+     * @param aSubKeyName   The sub key to locate
+     * @param aValueName    The value to locate in the sub key. The empty string
+     *                      returns the default value of the sub key.
+     * @return The value of the specified sub key/value, truncated to 4096 bytes.
+     */
+    string getRegistryEntry(in long aHKeyConstant, in string aSubKeyName, in string aValueName);
+
 };
 
