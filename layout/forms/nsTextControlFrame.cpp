@@ -303,7 +303,7 @@ nsTextControlFrame::GetDesiredSize(nsIPresContext* aPresContext,
 
   if (aDesiredLayoutSize.maxElementSize) {
     aDesiredLayoutSize.maxElementSize->width  = minSize.width;
-    aDesiredLayoutSize.maxElementSize->height = minSize.width;
+    aDesiredLayoutSize.maxElementSize->height = minSize.height;
   }
 
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
