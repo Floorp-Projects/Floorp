@@ -91,6 +91,9 @@ public:
     NS_IMETHOD GetStatusOffset(PRUint32 *result) = 0; 
 	NS_IMETHOD GetCharSet(nsString &result) = 0;
 	NS_IMETHOD GetPriority(nsMsgPriority *msgPriority) = 0;
+    NS_IMETHOD GetThreadParent(nsMsgKey *result) = 0;
+    NS_IMETHOD SetThreadParent(nsMsgKey inKey) = 0;
+
 };
 
 #define NS_IDBMSGHDR_IID                              \

@@ -432,6 +432,22 @@ NS_IMETHODIMP nsMessage::GetCharSet(nsString &result)
 		return NS_ERROR_FAILURE;
 }
 
+NS_IMETHODIMP nsMessage::GetThreadParent(nsMsgKey *result)
+{
+	if(mMsgHdr)
+		return mMsgHdr->GetThreadParent(result);
+	else
+		return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP nsMessage::SetThreadParent(nsMsgKey inKey)
+{
+	if(mMsgHdr)
+		return mMsgHdr->SetThreadParent(inKey);
+	else
+		return NS_ERROR_FAILURE;
+}
+
 
 NS_IMETHODIMP nsMessage::GetMsgFolder(nsIMsgFolder **folder)
 {

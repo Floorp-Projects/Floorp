@@ -95,6 +95,8 @@ public:
     NS_IMETHOD GetStatusOffset(PRUint32 *result); 
 	NS_IMETHOD GetCharSet(nsString &result);
     NS_IMETHOD GetPriority(nsMsgPriority *result);
+    NS_IMETHOD GetThreadParent(nsMsgKey *result);
+    NS_IMETHOD SetThreadParent(nsMsgKey inKey);
 
 	//nsIMessage
 	NS_IMETHOD GetMsgFolder(nsIMsgFolder **folder);
