@@ -84,8 +84,6 @@ SRCS_IN_OBJDIR	= 1
 
 include $(topsrcdir)/config/rules.mk
 
-CXXFLAGS	+=  -DMOZILLA_VERSION=\"$(MOZILLA_VERSION)\"
-
 export:: $(XPCOM_GLUE_SRC_CSRCS) 
 	$(INSTALL) $^ .
 
