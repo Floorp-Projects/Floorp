@@ -23,7 +23,7 @@
 #include "nsIAtom.h"
 #include "nsISupportsArray.h"
 
-nsDOMAttribute::nsDOMAttribute(nsString &aName, nsString &aValue)
+nsDOMAttribute::nsDOMAttribute(const nsString &aName, const nsString &aValue)
 {
   mName = new nsString(aName);
   mValue = new nsString(aValue);
@@ -100,13 +100,6 @@ nsresult nsDOMAttribute::GetValue(nsString &aValue)
   return NS_OK;
 }
 
-nsresult nsDOMAttribute::SetValue(nsString &aValue)
-{
-  delete mValue;
-  mValue = new nsString(aValue);
-  return NS_OK;
-}
-
 nsresult nsDOMAttribute::GetSpecified(PRBool *aSpecified)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
@@ -117,42 +110,153 @@ nsresult nsDOMAttribute::SetSpecified(PRBool specified)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
-nsresult nsDOMAttribute::ToString(nsString &aString)
+// nsIDOMNode interface
+NS_IMETHODIMP    
+nsDOMAttribute::GetNodeName(nsString& aNodeName)
 {
-  aString = *mName;
-  aString += " = ";
-  aString += *mValue;
+  return GetName(aNodeName);
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetNodeValue(nsString& aNodeValue)
+{
+  return GetValue(aNodeValue);
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::SetNodeValue(const nsString& aNodeValue)
+{
+  // You can't actually do this, but we'll fail silently
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsDOMAttribute::GetNodeType(PRInt32* aNodeType)
+{
+  *aNodeType = (PRInt32)nsIDOMNode::ATTRIBUTE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetParentNode(nsIDOMNode** aParentNode)
+{
+  *aParentNode = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetChildNodes(nsIDOMNodeList** aChildNodes)
+{
+  *aChildNodes = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetHasChildNodes(PRBool* aHasChildNodes)
+{
+  *aHasChildNodes = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetFirstChild(nsIDOMNode** aFirstChild)
+{
+  *aFirstChild = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetLastChild(nsIDOMNode** aLastChild)
+{
+  *aLastChild = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetPreviousSibling(nsIDOMNode** aPreviousSibling)
+{
+  *aPreviousSibling = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetNextSibling(nsIDOMNode** aNextSibling)
+{
+  *aNextSibling = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+{
+  *aAttributes = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
+{
+  return NS_ERROR_FAILURE;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::CloneNode(nsIDOMNode** aReturn)
+{
+  nsDOMAttribute *newAttr = new nsDOMAttribute(*mName, *mValue);
+  if (nsnull == newAttr) {
+    return NS_ERROR_OUT_OF_MEMORY;
+  }
+  
+  *aReturn = newAttr;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsDOMAttribute::Equals(nsIDOMNode* aNode, PRBool aDeep, PRBool* aReturn)
+{
+  // XXX TBI
+  return NS_OK;
+}
 
 
 //
 // nsDOMAttributeList interface
 //
-nsDOMAttributeList::nsDOMAttributeList(nsIHTMLContent &aContent) :
-                                          mContent(aContent)
+nsDOMAttributeMap::nsDOMAttributeMap(nsIHTMLContent &aContent) :
+  mContent(aContent)
 {
   mRefCnt = 1;
   mContent.AddRef();
   mScriptObject = nsnull;
 }
 
-nsDOMAttributeList::~nsDOMAttributeList()
+nsDOMAttributeMap::~nsDOMAttributeMap()
 {
   mContent.Release();
 }
 
-nsresult nsDOMAttributeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
+nsresult nsDOMAttributeMap::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  static NS_DEFINE_IID(kIDOMAttributeListIID, NS_IDOMATTRIBUTELIST_IID);
+  static NS_DEFINE_IID(kIDOMNamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
   static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
-  if (aIID.Equals(kIDOMAttributeListIID)) {
-    *aInstancePtr = (void*)(nsIDOMAttributeList*)this;
+  if (aIID.Equals(kIDOMNamedNodeMapIID)) {
+    *aInstancePtr = (void*)(nsIDOMNamedNodeMap*)this;
     AddRef();
     return NS_OK;
   }
@@ -162,61 +266,75 @@ nsresult nsDOMAttributeList::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     return NS_OK;
   }
   if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = (void*)(nsISupports*)(nsIDOMAttributeList*)this;
+    *aInstancePtr = (void*)(nsISupports*)(nsIDOMNamedNodeMap*)this;
     AddRef();
     return NS_OK;
   }
   return NS_NOINTERFACE;
 }
 
-NS_IMPL_ADDREF(nsDOMAttributeList)
+NS_IMPL_ADDREF(nsDOMAttributeMap)
 
-NS_IMPL_RELEASE(nsDOMAttributeList)
+NS_IMPL_RELEASE(nsDOMAttributeMap)
 
-nsresult nsDOMAttributeList::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
+nsresult nsDOMAttributeMap::GetScriptObject(nsIScriptContext *aContext, void** aScriptObject)
 {
   nsresult res = NS_OK;
   if (nsnull == mScriptObject) {
-    res = NS_NewScriptAttributeList(aContext, this, nsnull, (void**)&mScriptObject);
+    res = NS_NewScriptNamedNodeMap(aContext, this, nsnull, (void**)&mScriptObject);
   }
   *aScriptObject = mScriptObject;
   return res;
 }
 
-nsresult nsDOMAttributeList::ResetScriptObject()
+nsresult nsDOMAttributeMap::ResetScriptObject()
 {
   mScriptObject = nsnull;
   return NS_OK;
 }
 
-nsresult nsDOMAttributeList::GetAttribute(nsString &aAttrName, nsIDOMAttribute** aAttribute)
+nsresult nsDOMAttributeMap::GetNamedItem(const nsString &aAttrName, nsIDOMNode** aAttribute)
 {
   nsAutoString value;
   mContent.GetAttribute(aAttrName, value);
-  *aAttribute  = new nsDOMAttribute(aAttrName, value); 
+  *aAttribute  = (nsIDOMNode *)new nsDOMAttribute(aAttrName, value); 
   return NS_OK;
 }
 
-nsresult nsDOMAttributeList::SetAttribute(nsIDOMAttribute *aAttribute)
+nsresult nsDOMAttributeMap::SetNamedItem(nsIDOMNode *aNode)
 {
+  nsIDOMAttribute *attribute;
   nsAutoString name, value;
-  aAttribute->GetName(name);
-  aAttribute->GetValue(value);
+  nsresult err;
+  static NS_DEFINE_IID(kIDOMAttributeIID, NS_IDOMATTRIBUTE_IID);
+
+  if (NS_OK != (err = aNode->QueryInterface(kIDOMAttributeIID, (void **)&attribute))) {
+    return err;
+  }
+
+  attribute->GetName(name);
+  attribute->GetValue(value);
+  NS_RELEASE(attribute);
+
   mContent.SetAttribute(name, value);
   return NS_OK;
 }
 
-nsresult nsDOMAttributeList::Remove(nsString &attrName, nsIDOMAttribute** aAttribute)
+NS_IMETHODIMP
+nsDOMAttributeMap::RemoveNamedItem(const nsString& aName, nsIDOMNode** aReturn)
 {
-  nsAutoString name, upper;
-  (*aAttribute)->GetName(name);
-  name.ToUpperCase(upper);
-  nsIAtom* attr = NS_NewAtom(upper);
-  mContent.UnsetAttribute(attr);
-  return NS_OK;
+  nsresult res = GetNamedItem(aName, aReturn);
+  if (NS_OK == res) {
+    nsAutoString upper;
+    aName.ToUpperCase(upper);
+    nsIAtom* attr = NS_NewAtom(upper);
+    mContent.UnsetAttribute(attr);
+  }
+
+  return res;
 }
 
-nsresult nsDOMAttributeList::Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute)
+nsresult nsDOMAttributeMap::Item(PRUint32 aIndex, nsIDOMNode** aReturn)
 {
   nsresult res = NS_ERROR_FAILURE;
   nsAutoString name, value;
@@ -231,7 +349,7 @@ nsresult nsDOMAttributeList::Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute)
         if (nsnull != att && NS_OK == att->QueryInterface(kIAtom, (void**)&atName)) {
           atName->ToString(name);
           if (eContentAttr_NotThere != mContent.GetAttribute(name, value)) {
-            *aAttribute = new nsDOMAttribute(name, value);
+            *aReturn = (nsIDOMNode *)new nsDOMAttribute(name, value);
             res = NS_OK;
           }
           NS_RELEASE(atName);
@@ -244,7 +362,7 @@ nsresult nsDOMAttributeList::Item(PRUint32 aIndex, nsIDOMAttribute** aAttribute)
   return res;
 }
 
-nsresult nsDOMAttributeList::GetLength(PRUint32 *aLength)
+nsresult nsDOMAttributeMap::GetLength(PRUint32 *aLength)
 {
   *aLength = mContent.GetAttributeCount();
   return NS_OK;

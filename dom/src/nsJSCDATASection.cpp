@@ -25,33 +25,25 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMAttribute.h"
+#include "nsIDOMCDATASection.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIAttributeIID, NS_IDOMATTRIBUTE_IID);
+static NS_DEFINE_IID(kICDATASectionIID, NS_IDOMCDATASECTION_IID);
 
-NS_DEF_PTR(nsIDOMAttribute);
+NS_DEF_PTR(nsIDOMCDATASection);
 
-//
-// Attribute property ids
-//
-enum Attribute_slots {
-  ATTRIBUTE_NAME = -11,
-  ATTRIBUTE_SPECIFIED = -12,
-  ATTRIBUTE_VALUE = -13
-};
 
 /***********************************************************************/
 //
-// Attribute Properties Getter
+// CDATASection Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetAttributeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetCDATASectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAttribute *a = (nsIDOMAttribute*)JS_GetPrivate(cx, obj);
+  nsIDOMCDATASection *a = (nsIDOMCDATASection*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -60,43 +52,7 @@ GetAttributeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case ATTRIBUTE_NAME:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetName(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case ATTRIBUTE_SPECIFIED:
-      {
-        PRBool prop;
-        if (NS_OK == a->GetSpecified(&prop)) {
-          *vp = BOOLEAN_TO_JSVAL(prop);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
-      case ATTRIBUTE_VALUE:
-      {
-        nsAutoString prop;
-        if (NS_OK == a->GetValue(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -115,12 +71,12 @@ GetAttributeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// Attribute Properties Setter
+// CDATASection Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetAttributeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetCDATASectionProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMAttribute *a = (nsIDOMAttribute*)JS_GetPrivate(cx, obj);
+  nsIDOMCDATASection *a = (nsIDOMCDATASection*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -129,22 +85,7 @@ SetAttributeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case ATTRIBUTE_SPECIFIED:
-      {
-        PRBool prop;
-        JSBool temp;
-        if (JSVAL_IS_BOOLEAN(*vp) && JS_ValueToBoolean(cx, *vp, &temp)) {
-          prop = (PRBool)temp;
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be a boolean");
-          return JS_FALSE;
-        }
-      
-        a->SetSpecified(prop);
-        
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -163,12 +104,12 @@ SetAttributeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// Attribute finalizer
+// CDATASection finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeAttribute(JSContext *cx, JSObject *obj)
+FinalizeCDATASection(JSContext *cx, JSObject *obj)
 {
-  nsIDOMAttribute *a = (nsIDOMAttribute*)JS_GetPrivate(cx, obj);
+  nsIDOMCDATASection *a = (nsIDOMCDATASection*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -184,12 +125,12 @@ FinalizeAttribute(JSContext *cx, JSObject *obj)
 
 
 //
-// Attribute enumerate
+// CDATASection enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateAttribute(JSContext *cx, JSObject *obj)
+EnumerateCDATASection(JSContext *cx, JSObject *obj)
 {
-  nsIDOMAttribute *a = (nsIDOMAttribute*)JS_GetPrivate(cx, obj);
+  nsIDOMCDATASection *a = (nsIDOMCDATASection*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -204,12 +145,12 @@ EnumerateAttribute(JSContext *cx, JSObject *obj)
 
 
 //
-// Attribute resolve
+// CDATASection resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveAttribute(JSContext *cx, JSObject *obj, jsval id)
+ResolveCDATASection(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMAttribute *a = (nsIDOMAttribute*)JS_GetPrivate(cx, obj);
+  nsIDOMCDATASection *a = (nsIDOMCDATASection*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -225,57 +166,54 @@ ResolveAttribute(JSContext *cx, JSObject *obj, jsval id)
 
 /***********************************************************************/
 //
-// class for Attribute
+// class for CDATASection
 //
-JSClass AttributeClass = {
-  "Attribute", 
+JSClass CDATASectionClass = {
+  "CDATASection", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetAttributeProperty,
-  SetAttributeProperty,
-  EnumerateAttribute,
-  ResolveAttribute,
+  GetCDATASectionProperty,
+  SetCDATASectionProperty,
+  EnumerateCDATASection,
+  ResolveCDATASection,
   JS_ConvertStub,
-  FinalizeAttribute
+  FinalizeCDATASection
 };
 
 
 //
-// Attribute class properties
+// CDATASection class properties
 //
-static JSPropertySpec AttributeProperties[] =
-{
-  {"name",    ATTRIBUTE_NAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"specified",    ATTRIBUTE_SPECIFIED,    JSPROP_ENUMERATE},
-  {"value",    ATTRIBUTE_VALUE,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {0}
-};
-
-
-//
-// Attribute class methods
-//
-static JSFunctionSpec AttributeMethods[] = 
+static JSPropertySpec CDATASectionProperties[] =
 {
   {0}
 };
 
 
 //
-// Attribute constructor
+// CDATASection class methods
+//
+static JSFunctionSpec CDATASectionMethods[] = 
+{
+  {0}
+};
+
+
+//
+// CDATASection constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-Attribute(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+CDATASection(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_TRUE;
 }
 
 
 //
-// Attribute class initialization
+// CDATASection class initialization
 //
-nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitCDATASectionClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -284,23 +222,23 @@ nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype)
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "Attribute", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "CDATASection", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
+    if (NS_OK != NS_InitTextClass(aContext, (void **)&parent_proto)) {
       return NS_ERROR_FAILURE;
     }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &AttributeClass,      // JSClass
-                         Attribute,            // JSNative ctor
+                         &CDATASectionClass,      // JSClass
+                         CDATASection,            // JSNative ctor
                          0,             // ctor args
-                         AttributeProperties,  // proto props
-                         AttributeMethods,     // proto funcs
+                         CDATASectionProperties,  // proto props
+                         CDATASectionMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -323,11 +261,11 @@ nsresult NS_InitAttributeClass(nsIScriptContext *aContext, void **aPrototype)
 
 
 //
-// Method for creating a new Attribute JavaScript object
+// Method for creating a new CDATASection JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptAttribute(nsIScriptContext *aContext, nsIDOMAttribute *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptCDATASection(nsIScriptContext *aContext, nsIDOMCDATASection *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptAttribute");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptCDATASection");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
@@ -347,12 +285,12 @@ extern "C" NS_DOM nsresult NS_NewScriptAttribute(nsIScriptContext *aContext, nsI
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitAttributeClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitCDATASectionClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &AttributeClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &CDATASectionClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
     JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);

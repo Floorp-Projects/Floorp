@@ -1,0 +1,4 @@
+   interface DocumentType {
+     attribute wstring         name;
+     attribute NamedNodeMap    entities;
+   };

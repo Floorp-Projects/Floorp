@@ -25,32 +25,35 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMPI.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMDocumentType.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIPIIID, NS_IDOMPI_IID);
+static NS_DEFINE_IID(kINamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
+static NS_DEFINE_IID(kIDocumentTypeIID, NS_IDOMDOCUMENTTYPE_IID);
 
-NS_DEF_PTR(nsIDOMPI);
+NS_DEF_PTR(nsIDOMNamedNodeMap);
+NS_DEF_PTR(nsIDOMDocumentType);
 
 //
-// PI property ids
+// DocumentType property ids
 //
-enum PI_slots {
-  PI_NAME = -11,
-  PI_DATA = -12
+enum DocumentType_slots {
+  DOCUMENTTYPE_NAME = -11,
+  DOCUMENTTYPE_ENTITIES = -12
 };
 
 /***********************************************************************/
 //
-// PI Properties Getter
+// DocumentType Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMPI *a = (nsIDOMPI*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentType *a = (nsIDOMDocumentType*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -59,7 +62,7 @@ GetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case PI_NAME:
+      case DOCUMENTTYPE_NAME:
       {
         nsAutoString prop;
         if (NS_OK == a->GetName(prop)) {
@@ -72,13 +75,27 @@ GetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         }
         break;
       }
-      case PI_DATA:
+      case DOCUMENTTYPE_ENTITIES:
       {
-        nsAutoString prop;
-        if (NS_OK == a->GetData(prop)) {
-          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
-          // set the return value
-          *vp = STRING_TO_JSVAL(jsstring);
+        nsIDOMNamedNodeMap* prop;
+        if (NS_OK == a->GetEntities(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
         }
         else {
           return JS_FALSE;
@@ -103,12 +120,12 @@ GetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// PI Properties Setter
+// DocumentType Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetDocumentTypeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMPI *a = (nsIDOMPI*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentType *a = (nsIDOMDocumentType*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -117,7 +134,7 @@ SetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case PI_NAME:
+      case DOCUMENTTYPE_NAME:
       {
         nsAutoString prop;
         JSString *jsstring;
@@ -132,19 +149,27 @@ SetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         
         break;
       }
-      case PI_DATA:
+      case DOCUMENTTYPE_ENTITIES:
       {
-        nsAutoString prop;
-        JSString *jsstring;
-        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
-          prop.SetString(JS_GetStringChars(jsstring));
+        nsIDOMNamedNodeMap* prop;
+        if (JSVAL_IS_NULL(*vp)) {
+          prop = nsnull;
+        }
+        else if (JSVAL_IS_OBJECT(*vp)) {
+          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
+          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
+          if (NS_OK != supports->QueryInterface(kINamedNodeMapIID, (void **)&prop)) {
+            JS_ReportError(cx, "Parameter must be of type NamedNodeMap");
+            return JS_FALSE;
+          }
         }
         else {
-          prop.SetString((const char *)nsnull);
+          JS_ReportError(cx, "Parameter must be an object");
+          return JS_FALSE;
         }
       
-        a->SetData(prop);
-        
+        a->SetEntities(prop);
+        if (prop) NS_RELEASE(prop);
         break;
       }
       default:
@@ -165,12 +190,12 @@ SetPIProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// PI finalizer
+// DocumentType finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizePI(JSContext *cx, JSObject *obj)
+FinalizeDocumentType(JSContext *cx, JSObject *obj)
 {
-  nsIDOMPI *a = (nsIDOMPI*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentType *a = (nsIDOMDocumentType*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -186,12 +211,12 @@ FinalizePI(JSContext *cx, JSObject *obj)
 
 
 //
-// PI enumerate
+// DocumentType enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumeratePI(JSContext *cx, JSObject *obj)
+EnumerateDocumentType(JSContext *cx, JSObject *obj)
 {
-  nsIDOMPI *a = (nsIDOMPI*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentType *a = (nsIDOMDocumentType*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -206,12 +231,12 @@ EnumeratePI(JSContext *cx, JSObject *obj)
 
 
 //
-// PI resolve
+// DocumentType resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolvePI(JSContext *cx, JSObject *obj, jsval id)
+ResolveDocumentType(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMPI *a = (nsIDOMPI*)JS_GetPrivate(cx, obj);
+  nsIDOMDocumentType *a = (nsIDOMDocumentType*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -227,56 +252,56 @@ ResolvePI(JSContext *cx, JSObject *obj, jsval id)
 
 /***********************************************************************/
 //
-// class for PI
+// class for DocumentType
 //
-JSClass PIClass = {
-  "PI", 
+JSClass DocumentTypeClass = {
+  "DocumentType", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetPIProperty,
-  SetPIProperty,
-  EnumeratePI,
-  ResolvePI,
+  GetDocumentTypeProperty,
+  SetDocumentTypeProperty,
+  EnumerateDocumentType,
+  ResolveDocumentType,
   JS_ConvertStub,
-  FinalizePI
+  FinalizeDocumentType
 };
 
 
 //
-// PI class properties
+// DocumentType class properties
 //
-static JSPropertySpec PIProperties[] =
+static JSPropertySpec DocumentTypeProperties[] =
 {
-  {"name",    PI_NAME,    JSPROP_ENUMERATE},
-  {"data",    PI_DATA,    JSPROP_ENUMERATE},
+  {"name",    DOCUMENTTYPE_NAME,    JSPROP_ENUMERATE},
+  {"entities",    DOCUMENTTYPE_ENTITIES,    JSPROP_ENUMERATE},
   {0}
 };
 
 
 //
-// PI class methods
+// DocumentType class methods
 //
-static JSFunctionSpec PIMethods[] = 
+static JSFunctionSpec DocumentTypeMethods[] = 
 {
   {0}
 };
 
 
 //
-// PI constructor
+// DocumentType constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-PI(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+DocumentType(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_TRUE;
 }
 
 
 //
-// PI class initialization
+// DocumentType class initialization
 //
-nsresult NS_InitPIClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitDocumentTypeClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -285,23 +310,20 @@ nsresult NS_InitPIClass(nsIScriptContext *aContext, void **aPrototype)
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "PI", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "DocumentType", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitNodeClass(aContext, (void **)&parent_proto)) {
-      return NS_ERROR_FAILURE;
-    }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &PIClass,      // JSClass
-                         PI,            // JSNative ctor
+                         &DocumentTypeClass,      // JSClass
+                         DocumentType,            // JSNative ctor
                          0,             // ctor args
-                         PIProperties,  // proto props
-                         PIMethods,     // proto funcs
+                         DocumentTypeProperties,  // proto props
+                         DocumentTypeMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -324,11 +346,11 @@ nsresult NS_InitPIClass(nsIScriptContext *aContext, void **aPrototype)
 
 
 //
-// Method for creating a new PI JavaScript object
+// Method for creating a new DocumentType JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptPI(nsIScriptContext *aContext, nsIDOMPI *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptDocumentType(nsIScriptContext *aContext, nsIDOMDocumentType *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptPI");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptDocumentType");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
@@ -348,12 +370,12 @@ extern "C" NS_DOM NS_NewScriptPI(nsIScriptContext *aContext, nsIDOMPI *aSupports
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitPIClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitDocumentTypeClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &PIClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &DocumentTypeClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
     JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);

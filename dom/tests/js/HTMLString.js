@@ -25,17 +25,17 @@ function htmlString(node, indent)
     var html = ""
     indent += "  "
 
-    var type = node.getNodeType()
+    var type = node.nodeType
     if (type == Node.ELEMENT) {
 
         // open tag
-        html += "\n" + indent + "<" + node.getTagName()
+        html += "\n" + indent + "<" + node.tagName
 
         // dump the attributes if any
-        attributes = node.getAttributes()
+        attributes = node.attributes
         if (null != attributes) {
             html += " "
-            var countAttrs = attributes.getLength()
+            var countAttrs = attributes.length
             var index = 0
             while(index < countAttrs) {
                 att = attributes.item(index)
@@ -50,21 +50,20 @@ function htmlString(node, indent)
         html += ">"
 
         // recursively dump the children
-        if (node.hasChildNodes()) {
+        if (node.hasChildNodes) {
             // get the children
-            var children = node.getChildNodes()
-            var length = children.getLength()
-            var child = children.getNextNode()
+            var children = node.childNodes
+            var length = children.length
             var count = 0;
             while(count < length) {
+                child = children.item(count)
                 html += htmlString(child, indent)
-                child = children.getNextNode()
                 count++
             }
         }
 
         // close tag
-        html += "\n" + indent + "</" + node.getTagName() + ">"
+        html += "\n" + indent + "</" + node.tagName + ">"
     }
     // if it's a piece of text just dump the text
     else if (type == Node.TEXT) {

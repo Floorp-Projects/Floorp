@@ -41,6 +41,7 @@ class nsIScriptContextOwner;
 class nsIWebWidget;
 class nsIDOMEvent;
 class nsIDeviceContext;
+class nsIParser;
 
 // IID for the nsIDocument interface
 #define NS_IDOCUMENT_IID      \
@@ -134,6 +135,14 @@ public:
    */
   virtual nsIScriptContextOwner *GetScriptContextOwner() = 0;
   virtual void SetScriptContextOwner(nsIScriptContextOwner *aScriptContextOwner) = 0;
+
+  /**
+   * Pass the document a reference to its parser. The assumption is 
+   * that the parser will only be set while document loading is 
+   * being carried out.
+   */
+  virtual nsIParser *GetParser() = 0;
+  virtual void SetParser(nsIParser *aParser) = 0;
 
   //----------------------------------------------------------------------
 

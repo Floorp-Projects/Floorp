@@ -1,9 +1,0 @@
-      interface NodeIterator {
-        unsigned long       getLength();
-        Node                getCurrentNode();
-        Node                getNextNode();
-        Node                getPreviousNode();
-        Node                toFirst();
-        Node                toLast();
-        Node                moveTo(in int n);
-      };

@@ -757,31 +757,46 @@ IdlFunction* IdlParser::ParseFunction(IdlSpecification &aSpecification, Token &a
       if (RAISES_TOKEN == token->id) {
         mScanner->NextToken(); // eat "raises"
         TrimComments();
-        token = mScanner->NextToken(); // must be '('
-        while (FUNC_PARAMS_SPEC_BEGIN_TOKEN == token->id || 
-                SEPARATOR_TOKEN == token->id) {
-          TrimComments();
-          token = mScanner->NextToken(); // must be the exception name
-          if (IDENTIFIER_TOKEN == token->id) {
+        token = mScanner->PeekToken(); 
+        if (IDENTIFIER_TOKEN == token->id) {
+          while (IDENTIFIER_TOKEN == token->id) {
+            mScanner->NextToken(); // eat exception name
             funcObj->AddException(token->stringID);
             TrimComments();
-            token = mScanner->NextToken(); // must be ',' or ')'
+            token = mScanner->PeekToken();
+            if (SEPARATOR_TOKEN == token->id) {
+              mScanner->NextToken(); // eat ','
+              TrimComments();
+              token = mScanner->PeekToken(); // should be next exception
+            }
           }
-          else {
+        }
+        else {
+          mScanner->NextToken(); // Must be '('
+          while (FUNC_PARAMS_SPEC_BEGIN_TOKEN == token->id || 
+                 SEPARATOR_TOKEN == token->id) {
+            TrimComments();
+            token = mScanner->NextToken(); // must be the exception name
+            if (IDENTIFIER_TOKEN == token->id) {
+              funcObj->AddException(token->stringID);
+              TrimComments();
+              token = mScanner->NextToken(); // must be ',' or ')'
+            }
+            else {
+              delete funcObj;
+              throw FunctionParsingException("Undeclared exception name.");
+            }
+          }
+
+          if (FUNC_PARAMS_SPEC_END_TOKEN != token->id) {
             delete funcObj;
-            throw FunctionParsingException("Undeclared exception name.");
+            throw FunctionParsingException("Missing ')'. Exceptions declaration non terminated.");
           }
-        }
 
-        if (FUNC_PARAMS_SPEC_END_TOKEN != token->id) {
-          delete funcObj;
-          throw FunctionParsingException("Missing ')'. Exceptions declaration non terminated.");
+          TrimComments();
+          token = mScanner->PeekToken();
         }
-
-        TrimComments();
-        token = mScanner->PeekToken();
       }
-
     }
     else {
       delete funcObj;

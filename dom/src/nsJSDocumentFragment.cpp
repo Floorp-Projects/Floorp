@@ -120,29 +120,7 @@ SetDocumentFragmentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case DOCUMENTFRAGMENT_MASTERDOC:
-      {
-        nsIDOMDocument* prop;
-        if (JSVAL_IS_NULL(*vp)) {
-          prop = nsnull;
-        }
-        else if (JSVAL_IS_OBJECT(*vp)) {
-          JSObject *jsobj = JSVAL_TO_OBJECT(*vp); 
-          nsISupports *supports = (nsISupports *)JS_GetPrivate(cx, jsobj);
-          if (NS_OK != supports->QueryInterface(kIDocumentIID, (void **)&prop)) {
-            JS_ReportError(cx, "Parameter must be of type Document");
-            return JS_FALSE;
-          }
-        }
-        else {
-          JS_ReportError(cx, "Parameter must be an object");
-          return JS_FALSE;
-        }
-      
-        a->SetMasterDoc(prop);
-        if (prop) NS_RELEASE(prop);
-        break;
-      }
+      case 0:
       default:
       {
         nsIJSScriptObject *object;
@@ -244,7 +222,7 @@ JSClass DocumentFragmentClass = {
 //
 static JSPropertySpec DocumentFragmentProperties[] =
 {
-  {"masterDoc",    DOCUMENTFRAGMENT_MASTERDOC,    JSPROP_ENUMERATE},
+  {"masterDoc",    DOCUMENTFRAGMENT_MASTERDOC,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -321,7 +299,7 @@ nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aProtot
 //
 // Method for creating a new DocumentFragment JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptDocumentFragment(nsIScriptContext *aContext, nsIDOMDocumentFragment *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptDocumentFragment(nsIScriptContext *aContext, nsIDOMDocumentFragment *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptDocumentFragment");
   JSObject *proto;

@@ -1,4 +1,5 @@
-interface DOM {
-        Document            createDocument(in wstring type);
-        boolean             hasFeature(in wstring feature);
-      };
+   interface DOM {
+     Document                  createDocument(in wstring type)
+                                              raises DOMException;
+     boolean                   hasFeature(in wstring feature);
+   };

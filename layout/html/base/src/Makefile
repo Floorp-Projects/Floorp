@@ -46,7 +46,7 @@ CPPSRCS =				\
 	nsSpacerPart.cpp		\
 	nsTextContent.cpp		\
 	nsWBRPart.cpp			\
-	nsDOMIterator.cpp		\
+	nsDOMNodeList.cpp		\
 	nsDOMAttributes.cpp		\
 	$(NULL)
 EXPORTS =				\

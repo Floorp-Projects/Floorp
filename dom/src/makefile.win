@@ -26,13 +26,14 @@ DEFINES=-D_IMPL_NS_DOM -DWIN32_LEAN_AND_MEAN
 CPPSRCS =				\
 	nsJSEnvironment.cpp		\
 	nsJSNode.cpp		\
+	nsJSData.cpp		\
 	nsJSDocument.cpp	\
 	nsJSDocumentFragment.cpp\
 	nsJSElement.cpp		\
+	nsJSNamedNodeMap.cpp	\
+	nsJSNodeList.cpp	\
 	nsJSText.cpp		\
-	nsJSNodeIterator.cpp    \
 	nsJSAttribute.cpp	\
-	nsJSAttributeList.cpp   \
 	nsJSWindow.cpp          \
 	nsJSNavigator.cpp       \
 	nsGlobalWindow.cpp      \
@@ -44,10 +45,10 @@ REQUIRES=xpcom raptor js netlib
 
 CPP_OBJS=	.\$(OBJDIR)\nsJSEnvironment.obj	.\$(OBJDIR)\nsJSNode.obj .\$(OBJDIR)\nsJSDocument.obj \
     .\$(OBJDIR)\nsJSElement.obj .\$(OBJDIR)\nsJSText.obj \
-    .\$(OBJDIR)\nsJSNodeIterator.obj .\$(OBJDIR)\nsJSAttribute.obj \
-    .\$(OBJDIR)\nsJSAttributeList.obj .\$(OBJDIR)\nsJSWindow.obj \
+    .\$(OBJDIR)\nsJSNodeList.obj .\$(OBJDIR)\nsJSAttribute.obj \
+    .\$(OBJDIR)\nsJSNamedNodeMap.obj .\$(OBJDIR)\nsJSWindow.obj \
     .\$(OBJDIR)\nsGlobalWindow.obj .\$(OBJDIR)\nsJSDocumentFragment.obj \
-    .\$(OBJDIR)\nsJSNavigator.obj
+    .\$(OBJDIR)\nsJSNavigator.obj .\$(OBJDIR)\nsJSData.obj
 
 LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I$(PUBLIC)\netlib
 

@@ -404,7 +404,7 @@ nsresult NS_InitNavigatorClass(nsIScriptContext *aContext, void **aPrototype)
 //
 // Method for creating a new Navigator JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptNavigator(nsIScriptContext *aContext, nsIDOMNavigator *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptNavigator(nsIScriptContext *aContext, nsIDOMNavigator *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptNavigator");
   JSObject *proto;

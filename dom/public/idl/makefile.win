@@ -56,8 +56,8 @@ export:: $(GENXDIR) $(GENJSDIR) $(IDLSRCS)
   	$(PERL) $(GENIID) $(IIDDIRS) 
 	
 install::
-	for %g in ($(DIRS)) do $(MAKE_INSTALL:/=\) %g\$(GENXDIR)\*.h $(XPCOM_DESTDIR)\%g
-	$(MAKE_INSTALL:/=\) $(GENXDIR)\*.h $(XPCOM_DESTDIR)
+	for %g in ($(IDLSRCS:.idl=.h)) do $(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM%g $(XPCOM_DESTDIR)
+	$(MAKE_INSTALL:/=\) $(GENXDIR)\nsIDOM$(GLOBAL_IDLSRC:.idl=.h) $(XPCOM_DESTDIR)
 	for %g in ($(IDLSRCS:.idl=.cpp)) do $(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS%g $(JSSTUB_DESTDIR)
 	$(MAKE_INSTALL:/=\) $(GENJSDIR)\nsJS$(GLOBAL_IDLSRC:.idl=.cpp) $(JSSTUB_DESTDIR)
 

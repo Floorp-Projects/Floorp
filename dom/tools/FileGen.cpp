@@ -225,6 +225,15 @@ FileGen::GetParameterType(char *aBuffer, IdlParameter &aParameter)
   GetVariableTypeForParameter(aBuffer, aParameter);
   
   switch (aParameter.GetAttribute()) {
+    case IdlParameter::INPUT:
+      if (aParameter.GetType() == TYPE_STRING) {
+        char buf[256];
+        
+        strcpy(buf, "const ");
+        strcat(buf, aBuffer);
+        strcpy(aBuffer, buf);
+      }
+      break;
     case IdlParameter::OUTPUT:
     case IdlParameter::INOUT:
       if (aParameter.GetType() != TYPE_STRING) {

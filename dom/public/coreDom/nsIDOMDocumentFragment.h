@@ -36,11 +36,10 @@ class nsIDOMDocumentFragment : public nsIDOMNode {
 public:
 
   NS_IMETHOD    GetMasterDoc(nsIDOMDocument** aMasterDoc)=0;
-  NS_IMETHOD    SetMasterDoc(nsIDOMDocument* aMasterDoc)=0;
 };
 
 extern nsresult NS_InitDocumentFragmentClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptDocumentFragment(nsIScriptContext *aContext, nsIDOMDocumentFragment *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptDocumentFragment(nsIScriptContext *aContext, nsIDOMDocumentFragment *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMDocumentFragment_h__

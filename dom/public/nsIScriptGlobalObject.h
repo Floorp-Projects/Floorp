@@ -40,6 +40,6 @@ public:
   NS_IMETHOD_(void)       SetNewDocument(nsIDOMDocument *aDocument)=0;
 };
 
-extern "C" NS_DOM NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
+extern "C" NS_DOM nsresult NS_NewScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
 
 #endif

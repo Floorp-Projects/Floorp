@@ -54,7 +54,7 @@ static const char *kEnumDeclBeginStr = "  enum {\n";
 static const char *kEnumEntryStr = "    %s = %d%s\n";
 static const char *kEnumDeclEndStr = "  };\n";
 static const char *kGetterMethodDeclStr = "\n  NS_IMETHOD    Get%s(%s%s a%s)=0;\n";
-static const char *kSetterMethodDeclStr = "  NS_IMETHOD    Set%s(%s a%s)=0;\n";
+static const char *kSetterMethodDeclStr = "  NS_IMETHOD    Set%s(%s%s a%s)=0;\n";
 static const char *kMethodDeclStr = "\n  NS_IMETHOD    %s(%s)=0;\n";
 static const char *kParamStr = "%s a%s";
 static const char *kDelimiterStr = ", ";
@@ -63,7 +63,7 @@ static const char *kReturnStr = "%s%s aReturn";
 static const char *kClassEpilogStr = "};\n\n";
 static const char *kGlobalInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);\n\n";
 static const char *kInitClassStr = "extern nsresult NS_Init%sClass(nsIScriptContext *aContext, void **aPrototype);\n\n";
-static const char *kNewObjStr = "extern \"C\" NS_DOM NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn);\n\n";
+static const char *kNewObjStr = "extern \"C\" NS_DOM nsresult NS_NewScript%s(nsIScriptContext *aContext, nsIDOM%s *aSupports, nsISupports *aParent, void **aReturn);\n\n";
 static const char *kEndifStr = "#endif // nsIDOM%s_h__\n";
 
 
@@ -260,7 +260,8 @@ XPCOMGen::GenerateMethods(IdlInterface &aInterface)
     *file << buf;
 
     if (!attr->GetReadOnly()) {
-      sprintf(buf, kSetterMethodDeclStr, name_buf, type_buf, 
+      sprintf(buf, kSetterMethodDeclStr, name_buf, 
+              attr->GetType() == TYPE_STRING ? "const " : "", type_buf, 
               name_buf);
       *file << buf;
     }

@@ -62,8 +62,8 @@ public:
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
-  NS_IMETHOD    Dump(nsString& aStr);
-  NS_IMETHOD    Alert(nsString& aStr);
+  NS_IMETHOD    Dump(const nsString& aStr);
+  NS_IMETHOD    Alert(const nsString& aStr);
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID);
   NS_IMETHOD    ClearInterval(PRInt32 aTimerID);
   NS_IMETHOD    SetTimeout(JSContext *cx, jsval *argv, PRUint32 argc, 
@@ -319,7 +319,7 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Dump(nsString& aStr)
+GlobalWindowImpl::Dump(const nsString& aStr)
 {
   char *cstr = aStr.ToNewCString();
   
@@ -332,7 +332,7 @@ GlobalWindowImpl::Dump(nsString& aStr)
 }
 
 NS_IMETHODIMP
-GlobalWindowImpl::Alert(nsString& aStr)
+GlobalWindowImpl::Alert(const nsString& aStr)
 {
   // XXX Temporary
   return Dump(aStr);
@@ -760,7 +760,7 @@ GlobalWindowImpl::SetInterval(JSContext *cx,
   return SetTimeoutOrInterval(cx, argv, argc, aReturn, PR_TRUE);
 }
 
-extern "C" NS_DOM 
+extern "C" NS_DOM nsresult
 NS_NewScriptGlobalObject(nsIScriptGlobalObject **aResult)
 {
   if (nsnull == aResult) {  

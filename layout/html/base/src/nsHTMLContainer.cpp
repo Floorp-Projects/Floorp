@@ -27,7 +27,7 @@
 #include "nsHTMLIIDs.h"
 #include "nsHTMLAtoms.h"
 #include "nsIHTMLAttributes.h"
-#include "nsDOMIterator.h"
+#include "nsDOMNodeList.h"
 #include "nsUnitConversion.h"
 #include "nsIURL.h"
 #include "prprf.h"
@@ -842,14 +842,16 @@ nsHTMLContainer::MapBackgroundAttributesInto(nsIStyleContext* aContext,
 static NS_DEFINE_IID(kIDOMNodeIID, NS_IDOMNODE_IID);
 static NS_DEFINE_IID(kIContentIID, NS_ICONTENT_IID);
 
-nsresult nsHTMLContainer::GetChildNodes(nsIDOMNodeIterator **aIterator)
+NS_IMETHODIMP    
+nsHTMLContainer::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  NS_PRECONDITION(nsnull != aIterator, "null pointer");
-  *aIterator = new nsDOMIterator(*this);
+  NS_PRECONDITION(nsnull != aChildNodes, "null pointer");
+  *aChildNodes = new nsDOMNodeList(*this);
   return NS_OK;
 }
 
-nsresult nsHTMLContainer::HasChildNodes(PRBool *aReturn)
+NS_IMETHODIMP    
+nsHTMLContainer::GetHasChildNodes(PRBool* aReturn)
 {
   if (0 != mChildren.Count()) {
     *aReturn = PR_TRUE;
@@ -860,9 +862,26 @@ nsresult nsHTMLContainer::HasChildNodes(PRBool *aReturn)
   return NS_OK;
 }
 
-nsresult nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+nsHTMLContainer::GetFirstChild(nsIDOMNode **aNode)
 {
   nsIContent *child = (nsIContent*) mChildren.ElementAt(0);
+  if (nsnull != child) {
+    nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
+
+    return res;
+  }
+  else {
+    aNode = nsnull;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP    
+nsHTMLContainer::GetLastChild(nsIDOMNode** aNode)
+{
+  nsIContent *child = (nsIContent*) mChildren.ElementAt(mChildren.Count()-1);
   if (nsnull != child) {
     nsresult res = child->QueryInterface(kIDOMNodeIID, (void**)aNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node"); // must be a DOM Node
@@ -893,19 +912,22 @@ SetDocumentInChildrenOf(nsIContent* aContent, nsIDocument* aDocument)
 // tree; if this is the case then we need to remove it from where it
 // was before placing it in it's new home
 
-nsresult
-nsHTMLContainer::InsertBefore(nsIDOMNode* newChild, nsIDOMNode* refChild)
+NS_IMETHODIMP    
+nsHTMLContainer::InsertBefore(nsIDOMNode* aNewChild, 
+                              nsIDOMNode* aRefChild, 
+                              nsIDOMNode** aReturn)
 {
-  if (nsnull == newChild) {
+  if (nsnull == aNewChild) {
+    *aReturn = nsnull;
     return NS_OK;/* XXX wrong error value */
   }
 
   // Get the nsIContent interface for the new content
   nsIContent* newContent = nsnull;
-  nsresult res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
+  nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
   NS_ASSERTION(NS_OK == res, "New child must be an nsIContent");
   if (NS_OK == res) {
-    if (nsnull == refChild) {
+    if (nsnull == aRefChild) {
       // Append the new child to the end
       SetDocumentInChildrenOf(newContent, mDocument);
       res = AppendChild(newContent, PR_TRUE);
@@ -913,7 +935,7 @@ nsHTMLContainer::InsertBefore(nsIDOMNode* newChild, nsIDOMNode* refChild)
     else {
       // Get the index of where to insert the new child
       nsIContent* refContent = nsnull;
-      res = refChild->QueryInterface(kIContentIID, (void**)&refContent);
+      res = aRefChild->QueryInterface(kIContentIID, (void**)&refContent);
       NS_ASSERTION(NS_OK == res, "Ref child must be an nsIContent");
       if (NS_OK == res) {
         PRInt32 pos = IndexOf(refContent);
@@ -925,44 +947,59 @@ nsHTMLContainer::InsertBefore(nsIDOMNode* newChild, nsIDOMNode* refChild)
       }
     }
     NS_RELEASE(newContent);
+
+    *aReturn = aNewChild;
+    NS_ADDREF(aNewChild);
+  }
+  else {
+    *aReturn = nsnull;
   }
 
   return res;
 }
 
-nsresult
-nsHTMLContainer::ReplaceChild(nsIDOMNode *newChild, nsIDOMNode *oldChild)
+NS_IMETHODIMP    
+nsHTMLContainer::ReplaceChild(nsIDOMNode* aNewChild, 
+                              nsIDOMNode* aOldChild, 
+                              nsIDOMNode** aReturn)
 {
   nsIContent* content = nsnull;
-  nsresult res = oldChild->QueryInterface(kIContentIID, (void**)&content);
+  *aReturn = nsnull;
+  nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
     PRInt32 pos = IndexOf(content);
     if (pos >= 0) {
       nsIContent* newContent = nsnull;
-      nsresult res = newChild->QueryInterface(kIContentIID, (void**)&newContent);
+      nsresult res = aNewChild->QueryInterface(kIContentIID, (void**)&newContent);
       NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
       if (NS_OK == res) {
         res = ReplaceChildAt(newContent, pos, PR_TRUE);
         NS_RELEASE(newContent);
       }
+      *aReturn = aOldChild;
+      NS_ADDREF(aOldChild);
     }
     NS_RELEASE(content);
   }
-
+  
   return res;
 }
 
-nsresult
-nsHTMLContainer::RemoveChild(nsIDOMNode *oldChild)
+NS_IMETHODIMP    
+nsHTMLContainer::RemoveChild(nsIDOMNode* aOldChild, 
+                             nsIDOMNode** aReturn)
 {
   nsIContent* content = nsnull;
-  nsresult res = oldChild->QueryInterface(kIContentIID, (void**)&content);
+  *aReturn = nsnull;
+  nsresult res = aOldChild->QueryInterface(kIContentIID, (void**)&content);
   NS_ASSERTION(NS_OK == res, "Must be an nsIContent");
   if (NS_OK == res) {
     PRInt32 pos = IndexOf(content);
     if (pos >= 0) {
       res = RemoveChildAt(pos, PR_TRUE);
+      *aReturn = aOldChild;
+      NS_ADDREF(aOldChild);
     }
     NS_RELEASE(content);
   }

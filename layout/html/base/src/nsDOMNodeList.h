@@ -15,32 +15,34 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
-/* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMText_h__
-#define nsIDOMText_h__
+#ifndef nsDOMNodeList_h__
+#define nsDOMNodeList_h__
 
-#include "nsISupports.h"
-#include "nsString.h"
-#include "nsIScriptContext.h"
-#include "nsIDOMData.h"
+#include "nsIDOMNodeList.h"
+#include "nsIContent.h"
+#include "nsIScriptObjectOwner.h"
 
-class nsIDOMText;
-
-#define NS_IDOMTEXT_IID \
-{ 0x6f7652ed,  0xee43, 0x11d1, \
- { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
-
-class nsIDOMText : public nsIDOMData {
+class nsDOMNodeList : public nsIDOMNodeList, public nsIScriptObjectOwner {
 public:
+  nsDOMNodeList(nsIContent &aContent);
+  virtual ~nsDOMNodeList();
 
-  NS_IMETHOD    SplitText(PRUint32 aOffset, nsIDOMText** aReturn)=0;
+  NS_DECL_ISUPPORTS
 
-  NS_IMETHOD    JoinText(nsIDOMText* aNode1, nsIDOMText* aNode2, nsIDOMText** aReturn)=0;
+  NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  NS_IMETHOD ResetScriptObject();
+
+  // nsIDOMNodeList interface
+  NS_IMETHOD    GetLength(PRUint32* aLength);
+
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn);
+
+private:
+  nsIContent &mContent;
+  void *mScriptObject;
 };
 
-extern nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM nsresult NS_NewScriptText(nsIScriptContext *aContext, nsIDOMText *aSupports, nsISupports *aParent, void **aReturn);
+#endif
 
-#endif // nsIDOMText_h__

@@ -30,7 +30,7 @@ class nsIDOMDocument;
 class nsIDOMWindow;
 
 #define NS_IDOMWINDOW_IID \
-{ 0x6f7652ee,  0xee43, 0x11d1, \
+{ 0x6f7652ef,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
 class nsIDOMWindow : public nsISupports {
@@ -44,9 +44,9 @@ public:
 
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator)=0;
 
-  NS_IMETHOD    Dump(nsString& aStr)=0;
+  NS_IMETHOD    Dump(const nsString& aStr)=0;
 
-  NS_IMETHOD    Alert(nsString& aStr)=0;
+  NS_IMETHOD    Alert(const nsString& aStr)=0;
 
   NS_IMETHOD    ClearTimeout(PRInt32 aTimerID)=0;
 
@@ -59,6 +59,6 @@ public:
 
 extern nsresult NS_InitWindowClass(nsIScriptContext *aContext, nsIScriptGlobalObject *aGlobal);
 
-extern "C" NS_DOM NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOMWindow *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptWindow(nsIScriptContext *aContext, nsIDOMWindow *aSupports, nsISupports *aParent, void **aReturn);
 
 #endif // nsIDOMWindow_h__

@@ -21,18 +21,19 @@ DEFINES = -D_IMPL_NS_DOM
 
 EXPORTS =               \
 	nsIDOMAttribute.h \
-	nsIDOMAttributeList.h \
+	nsIDOMCDATASection.h \
 	nsIDOMComment.h \
+	nsIDOMData.h \
 	nsIDOMDOM.h \
 	nsIDOMDocument.h \
-	nsIDOMDocumentContext.h \
+	nsIDOMDocumentType.h \
 	nsIDOMDocumentFragment.h \
 	nsIDOMElement.h \
 	nsIDOMNode.h \
-	nsIDOMNodeIterator.h \
-	nsIDOMPI.h \
+	nsIDOMNamedNodeMap.h \
+	nsIDOMNodeList.h \
+	nsIDOMProcessingInstruction.h \
 	nsIDOMText.h \
-	nsIDOMTreeIterator.h \
         $(NULL)
 
 MODULE = dom

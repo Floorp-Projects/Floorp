@@ -462,40 +462,54 @@ nsresult nsHTMLContent::ResetScriptObject()
   return NS_OK;
 }
 
-// nsIDOMNode interface
-nsresult nsHTMLContent::GetParentNode(nsIDOMNode **aNode)
+//
+// Implementation of nsIDOMNode interface
+//
+NS_IMETHODIMP    
+nsHTMLContent::GetParentNode(nsIDOMNode** aParentNode)
 {
   if (nsnull != mParent) {
-    nsresult res = mParent->QueryInterface(kIDOMNodeIID, (void**)aNode);
+    nsresult res = mParent->QueryInterface(kIDOMNodeIID, (void**)aParentNode);
     NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
     return res;
   }
   else {
-    *aNode = nsnull;
+    *aParentNode = nsnull;
   }
 
   return NS_OK;
 }
 
-nsresult nsHTMLContent::GetChildNodes(nsIDOMNodeIterator **aIterator)
+NS_IMETHODIMP    
+nsHTMLContent::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
-  *aIterator = nsnull;
+  *aChildNodes = nsnull;
   return NS_OK;
 }
 
-nsresult nsHTMLContent::HasChildNodes(PRBool *aReturn)
+NS_IMETHODIMP    
+nsHTMLContent::GetHasChildNodes(PRBool* aHasChildNodes)
 {
-  *aReturn = PR_FALSE;
+  *aHasChildNodes = PR_FALSE;
   return NS_OK;
 }
 
-nsresult nsHTMLContent::GetFirstChild(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+nsHTMLContent::GetFirstChild(nsIDOMNode** aFirstChild)
 {
-  *aNode = nsnull;
+  *aFirstChild = nsnull;
   return NS_OK;
 }
 
-nsresult nsHTMLContent::GetPreviousSibling(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+nsHTMLContent::GetLastChild(nsIDOMNode** aLastChild)
+{
+  *aLastChild = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLContent::GetPreviousSibling(nsIDOMNode** aNode)
 {
   if (nsnull != mParent) {
     PRInt32 pos = mParent->IndexOf(this);
@@ -515,14 +529,15 @@ nsresult nsHTMLContent::GetPreviousSibling(nsIDOMNode **aNode)
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsHTMLContent::GetNextSibling(nsIDOMNode **aNode)
+NS_IMETHODIMP    
+nsHTMLContent::GetNextSibling(nsIDOMNode** aNextSibling)
 {
   if (nsnull != mParent) {
     PRInt32 pos = mParent->IndexOf(this);
     if (pos > -1 ) {
       nsIContent* prev = mParent->ChildAt(++pos);
       if (nsnull != prev) {
-        nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNode);
+        nsresult res = prev->QueryInterface(kIDOMNodeIID, (void**)aNextSibling);
         NS_ASSERTION(NS_OK == res, "Must be a DOM Node");
         NS_RELEASE(prev); // balance the AddRef in ChildAt()
 
@@ -534,18 +549,27 @@ nsresult nsHTMLContent::GetNextSibling(nsIDOMNode **aNode)
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsHTMLContent::InsertBefore(nsIDOMNode *newChild, nsIDOMNode *refChild)
+NS_IMETHODIMP    
+nsHTMLContent::GetAttributes(nsIDOMNamedNodeMap** aAttributes)
+{
+  aAttributes = nsnull;
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsHTMLContent::InsertBefore(nsIDOMNode* aNewChild, nsIDOMNode* aRefChild, nsIDOMNode** aReturn)
 {
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsHTMLContent::ReplaceChild(nsIDOMNode *newChild, 
-                                      nsIDOMNode *oldChild)
+NS_IMETHODIMP    
+nsHTMLContent::ReplaceChild(nsIDOMNode* aNewChild, nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
   return NS_ERROR_FAILURE;
 }
 
-nsresult nsHTMLContent::RemoveChild(nsIDOMNode *oldChild)
+NS_IMETHODIMP    
+nsHTMLContent::RemoveChild(nsIDOMNode* aOldChild, nsIDOMNode** aReturn)
 {
   return NS_ERROR_FAILURE;
 }

@@ -17,32 +17,30 @@
  */
 /* AUTO-GENERATED. DO NOT EDIT!!! */
 
-#ifndef nsIDOMPI_h__
-#define nsIDOMPI_h__
+#ifndef nsIDOMNodeList_h__
+#define nsIDOMNodeList_h__
 
 #include "nsISupports.h"
 #include "nsString.h"
 #include "nsIScriptContext.h"
-#include "nsIDOMNode.h"
 
-class nsIDOMPI;
+class nsIDOMNode;
+class nsIDOMNodeList;
 
-#define NS_IDOMPI_IID \
-{ 0x6f7652ea,  0xee43, 0x11d1, \
+#define NS_IDOMNODELIST_IID \
+{ 0x6f7652eb,  0xee43, 0x11d1, \
  { 0x9b, 0xc3, 0x00, 0x60, 0x08, 0x8c, 0xa6, 0xb3 } } 
 
-class nsIDOMPI : public nsIDOMNode {
+class nsIDOMNodeList : public nsISupports {
 public:
 
-  NS_IMETHOD    GetName(nsString& aName)=0;
-  NS_IMETHOD    SetName(nsString& aName)=0;
+  NS_IMETHOD    GetLength(PRUint32* aLength)=0;
 
-  NS_IMETHOD    GetData(nsString& aData)=0;
-  NS_IMETHOD    SetData(nsString& aData)=0;
+  NS_IMETHOD    Item(PRUint32 aIndex, nsIDOMNode** aReturn)=0;
 };
 
-extern nsresult NS_InitPIClass(nsIScriptContext *aContext, void **aPrototype);
+extern nsresult NS_InitNodeListClass(nsIScriptContext *aContext, void **aPrototype);
 
-extern "C" NS_DOM NS_NewScriptPI(nsIScriptContext *aContext, nsIDOMPI *aSupports, nsISupports *aParent, void **aReturn);
+extern "C" NS_DOM nsresult NS_NewScriptNodeList(nsIScriptContext *aContext, nsIDOMNodeList *aSupports, nsISupports *aParent, void **aReturn);
 
-#endif // nsIDOMPI_h__
+#endif // nsIDOMNodeList_h__

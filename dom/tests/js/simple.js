@@ -18,39 +18,35 @@
 
 var node = document.documentElement
 
-node.getNodeType()
+node.nodeType
 
-node.getTagName()
+node.tagName
 
-var attrList = node.getAttributes()
+var attrList = node.attributes
 
-attrList.getLength()
+attrList.length
 
 var attr = attrList.item(0)
 
-attr.getName()
+attr.name
 
 attr.value
 
-attr.toString()
+node.hasChildNodes
 
-node.hasChildNodes()
+var children = node.childNodes
 
-var children = node.getChildNodes()
+children.length
 
-children.getLength()
+node = children.item(1);
+node.nodeType
 
-node = children.getNextNode()
-node.getNodeType()
+node.tagName
 
-node.getTagName()
+node = node.firstChild
 
-children.toFirst()
+node = node.nextSibling
 
-node = node.getFirstChild()
-
-node = node.getNextSiblings()
-
-node = node.getParentNode()
+node = node.parentNode
 
  

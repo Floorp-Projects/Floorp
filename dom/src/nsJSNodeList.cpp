@@ -25,25 +25,34 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMText.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kITextIID, NS_IDOMTEXT_IID);
+static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
-NS_DEF_PTR(nsIDOMText);
+NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMNodeList);
 
+//
+// NodeList property ids
+//
+enum NodeList_slots {
+  NODELIST_LENGTH = -11
+};
 
 /***********************************************************************/
 //
-// Text Properties Getter
+// NodeList Properties Getter
 //
 PR_STATIC_CALLBACK(JSBool)
-GetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+GetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *a = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -52,7 +61,17 @@ GetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case NODELIST_LENGTH:
+      {
+        PRUint32 prop;
+        if (NS_OK == a->GetLength(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -71,12 +90,12 @@ GetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
-// Text Properties Setter
+// NodeList Properties Setter
 //
 PR_STATIC_CALLBACK(JSBool)
-SetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+SetNodeListProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 {
-  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *a = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
 
   // If there's no private data, this must be the prototype, so ignore
   if (nsnull == a) {
@@ -104,12 +123,12 @@ SetTextProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 
 //
-// Text finalizer
+// NodeList finalizer
 //
 PR_STATIC_CALLBACK(void)
-FinalizeText(JSContext *cx, JSObject *obj)
+FinalizeNodeList(JSContext *cx, JSObject *obj)
 {
-  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *a = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -125,12 +144,12 @@ FinalizeText(JSContext *cx, JSObject *obj)
 
 
 //
-// Text enumerate
+// NodeList enumerate
 //
 PR_STATIC_CALLBACK(JSBool)
-EnumerateText(JSContext *cx, JSObject *obj)
+EnumerateNodeList(JSContext *cx, JSObject *obj)
 {
-  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *a = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -145,12 +164,12 @@ EnumerateText(JSContext *cx, JSObject *obj)
 
 
 //
-// Text resolve
+// NodeList resolve
 //
 PR_STATIC_CALLBACK(JSBool)
-ResolveText(JSContext *cx, JSObject *obj, jsval id)
+ResolveNodeList(JSContext *cx, JSObject *obj, jsval id)
 {
-  nsIDOMText *a = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *a = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
   
   if (nsnull != a) {
     // get the js object
@@ -165,14 +184,14 @@ ResolveText(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method SplitText
+// Native method Item
 //
 PR_STATIC_CALLBACK(JSBool)
-TextSplitText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+NodeListItem(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
-  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
+  nsIDOMNodeList *nativeThis = (nsIDOMNodeList*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
-  nsIDOMText* nativeRet;
+  nsIDOMNode* nativeRet;
   PRUint32 b0;
 
   *rval = JSVAL_NULL;
@@ -189,7 +208,7 @@ TextSplitText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->SplitText(b0, &nativeRet)) {
+    if (NS_OK != nativeThis->Item(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
@@ -211,94 +230,7 @@ TextSplitText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval
     }
   }
   else {
-    JS_ReportError(cx, "Function splitText requires 1 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method JoinText
-//
-PR_STATIC_CALLBACK(JSBool)
-TextJoinText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMText *nativeThis = (nsIDOMText*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMText* nativeRet;
-  nsIDOMTextPtr b0;
-  nsIDOMTextPtr b1;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 2) {
-
-    if (JSVAL_IS_NULL(argv[0])){
-      b0 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[0])) {
-      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
-      NS_ASSERTION(nsnull != supports0, "null pointer");
-
-      if ((nsnull == supports0) ||
-          (NS_OK != supports0->QueryInterface(kITextIID, (void **)(b0.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Text");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
-      return JS_FALSE;
-    }
-
-    if (JSVAL_IS_NULL(argv[1])){
-      b1 = nsnull;
-    }
-    else if (JSVAL_IS_OBJECT(argv[1])) {
-      nsISupports *supports1 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[1]));
-      NS_ASSERTION(nsnull != supports1, "null pointer");
-
-      if ((nsnull == supports1) ||
-          (NS_OK != supports1->QueryInterface(kITextIID, (void **)(b1.Query())))) {
-        JS_ReportError(cx, "Parameter must be of type Text");
-        return JS_FALSE;
-      }
-    }
-    else {
-      JS_ReportError(cx, "Parameter must be an object");
-      return JS_FALSE;
-    }
-
-    if (NS_OK != nativeThis->JoinText(b0, b1, &nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function joinText requires 2 parameters");
+    JS_ReportError(cx, "Function item requires 1 parameters");
     return JS_FALSE;
   }
 
@@ -308,56 +240,56 @@ TextJoinText(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 /***********************************************************************/
 //
-// class for Text
+// class for NodeList
 //
-JSClass TextClass = {
-  "Text", 
+JSClass NodeListClass = {
+  "NodeList", 
   JSCLASS_HAS_PRIVATE,
   JS_PropertyStub,
   JS_PropertyStub,
-  GetTextProperty,
-  SetTextProperty,
-  EnumerateText,
-  ResolveText,
+  GetNodeListProperty,
+  SetNodeListProperty,
+  EnumerateNodeList,
+  ResolveNodeList,
   JS_ConvertStub,
-  FinalizeText
+  FinalizeNodeList
 };
 
 
 //
-// Text class properties
+// NodeList class properties
 //
-static JSPropertySpec TextProperties[] =
+static JSPropertySpec NodeListProperties[] =
 {
+  {"length",    NODELIST_LENGTH,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
 
 //
-// Text class methods
+// NodeList class methods
 //
-static JSFunctionSpec TextMethods[] = 
+static JSFunctionSpec NodeListMethods[] = 
 {
-  {"splitText",          TextSplitText,     1},
-  {"joinText",          TextJoinText,     2},
+  {"item",          NodeListItem,     1},
   {0}
 };
 
 
 //
-// Text constructor
+// NodeList constructor
 //
 PR_STATIC_CALLBACK(JSBool)
-Text(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+NodeList(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_TRUE;
 }
 
 
 //
-// Text class initialization
+// NodeList class initialization
 //
-nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype)
+nsresult NS_InitNodeListClass(nsIScriptContext *aContext, void **aPrototype)
 {
   JSContext *jscontext = (JSContext *)aContext->GetNativeContext();
   JSObject *proto = nsnull;
@@ -366,23 +298,20 @@ nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype)
   JSObject *global = JS_GetGlobalObject(jscontext);
   jsval vp;
 
-  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "Text", &vp)) ||
+  if ((PR_TRUE != JS_LookupProperty(jscontext, global, "NodeList", &vp)) ||
       !JSVAL_IS_OBJECT(vp) ||
       ((constructor = JSVAL_TO_OBJECT(vp)) == nsnull) ||
       (PR_TRUE != JS_LookupProperty(jscontext, JSVAL_TO_OBJECT(vp), "prototype", &vp)) || 
       !JSVAL_IS_OBJECT(vp)) {
 
-    if (NS_OK != NS_InitDataClass(aContext, (void **)&parent_proto)) {
-      return NS_ERROR_FAILURE;
-    }
     proto = JS_InitClass(jscontext,     // context
                          global,        // global object
                          parent_proto,  // parent proto 
-                         &TextClass,      // JSClass
-                         Text,            // JSNative ctor
+                         &NodeListClass,      // JSClass
+                         NodeList,            // JSNative ctor
                          0,             // ctor args
-                         TextProperties,  // proto props
-                         TextMethods,     // proto funcs
+                         NodeListProperties,  // proto props
+                         NodeListMethods,     // proto funcs
                          nsnull,        // ctor props (static)
                          nsnull);       // ctor funcs (static)
     if (nsnull == proto) {
@@ -405,11 +334,11 @@ nsresult NS_InitTextClass(nsIScriptContext *aContext, void **aPrototype)
 
 
 //
-// Method for creating a new Text JavaScript object
+// Method for creating a new NodeList JavaScript object
 //
-extern "C" NS_DOM nsresult NS_NewScriptText(nsIScriptContext *aContext, nsIDOMText *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptNodeList(nsIScriptContext *aContext, nsIDOMNodeList *aSupports, nsISupports *aParent, void **aReturn)
 {
-  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptText");
+  NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptNodeList");
   JSObject *proto;
   JSObject *parent;
   nsIScriptObjectOwner *owner;
@@ -429,12 +358,12 @@ extern "C" NS_DOM nsresult NS_NewScriptText(nsIScriptContext *aContext, nsIDOMTe
     return NS_ERROR_FAILURE;
   }
 
-  if (NS_OK != NS_InitTextClass(aContext, (void **)&proto)) {
+  if (NS_OK != NS_InitNodeListClass(aContext, (void **)&proto)) {
     return NS_ERROR_FAILURE;
   }
 
   // create a js object for this class
-  *aReturn = JS_NewObject(jscontext, &TextClass, proto, parent);
+  *aReturn = JS_NewObject(jscontext, &NodeListClass, proto, parent);
   if (nsnull != *aReturn) {
     // connect the native object to the js object
     JS_SetPrivate(jscontext, (JSObject *)*aReturn, aSupports);

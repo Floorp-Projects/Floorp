@@ -24,22 +24,21 @@ function traverse(node, indent)
 {
     dump("\n")
     indent += "  "
-    var type = node.getNodeType()
+    var type = node.nodeType;
 
     // if it's an element dump the tag and recurse the children
     if (type == Node.ELEMENT) {
 
-        dump(indent + node.getTagName())
+        dump(indent + node.tagName)
 
         // go through the children
-        if (node.hasChildNodes()) {
-            var children = node.getChildNodes()
-            var length = children.getLength()
-            var child = children.getNextNode()
+        if (node.hasChildNodes) {
+            var children = node.childNodes;
+            var length = children.length;
             var count = 0;
             while(count < length) {
+                child = children.item(count)
                 traverse(child, indent)
-                child = children.getNextNode()
                 count++
             }
         }

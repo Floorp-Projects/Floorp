@@ -46,10 +46,10 @@ public:
     return offsetof(nsHTMLDocument,mIHTMLDocument);
   }
 
-  NS_IMETHOD CreateElement(nsString &aTagName, 
-                           nsIDOMAttributeList *aAttributes, 
-                           nsIDOMElement **aElement);
-  NS_IMETHOD CreateTextNode(nsString &aData, nsIDOMText** aTextNode);
+  NS_IMETHOD    CreateElement(const nsString& aTagName, 
+                              nsIDOMNamedNodeMap* aAttributes, 
+                              nsIDOMElement** aReturn);
+  NS_IMETHOD    CreateTextNode(const nsString& aData, nsIDOMText** aReturn);
 
 protected:
   virtual void AddStyleSheetToSet(nsIStyleSheet* aSheet, nsIStyleSet* aSet);

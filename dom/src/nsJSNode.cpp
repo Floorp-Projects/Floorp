@@ -25,19 +25,38 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIDOMNodeIterator.h"
+#include "nsIDOMNamedNodeMap.h"
 #include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kINodeIteratorIID, NS_IDOMNODEITERATOR_IID);
+static NS_DEFINE_IID(kINamedNodeMapIID, NS_IDOMNAMEDNODEMAP_IID);
 static NS_DEFINE_IID(kINodeIID, NS_IDOMNODE_IID);
+static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
-NS_DEF_PTR(nsIDOMNodeIterator);
+NS_DEF_PTR(nsIDOMNamedNodeMap);
 NS_DEF_PTR(nsIDOMNode);
+NS_DEF_PTR(nsIDOMNodeList);
 
+//
+// Node property ids
+//
+enum Node_slots {
+  NODE_NODENAME = -11,
+  NODE_NODEVALUE = -12,
+  NODE_NODETYPE = -13,
+  NODE_PARENTNODE = -14,
+  NODE_CHILDNODES = -15,
+  NODE_HASCHILDNODES = -16,
+  NODE_FIRSTCHILD = -17,
+  NODE_LASTCHILD = -18,
+  NODE_PREVIOUSSIBLING = -19,
+  NODE_NEXTSIBLING = -110,
+  NODE_ATTRIBUTES = -111
+};
 
 /***********************************************************************/
 //
@@ -55,7 +74,243 @@ GetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case NODE_NODENAME:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetNodeName(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_NODEVALUE:
+      {
+        nsAutoString prop;
+        if (NS_OK == a->GetNodeValue(prop)) {
+          JSString *jsstring = JS_NewUCStringCopyN(cx, prop, prop.Length());
+          // set the return value
+          *vp = STRING_TO_JSVAL(jsstring);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_NODETYPE:
+      {
+        PRInt32 prop;
+        if (NS_OK == a->GetNodeType(&prop)) {
+          *vp = INT_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_PARENTNODE:
+      {
+        nsIDOMNode* prop;
+        if (NS_OK == a->GetParentNode(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_CHILDNODES:
+      {
+        nsIDOMNodeList* prop;
+        if (NS_OK == a->GetChildNodes(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_HASCHILDNODES:
+      {
+        PRBool prop;
+        if (NS_OK == a->GetHasChildNodes(&prop)) {
+          *vp = BOOLEAN_TO_JSVAL(prop);
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_FIRSTCHILD:
+      {
+        nsIDOMNode* prop;
+        if (NS_OK == a->GetFirstChild(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_LASTCHILD:
+      {
+        nsIDOMNode* prop;
+        if (NS_OK == a->GetLastChild(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_PREVIOUSSIBLING:
+      {
+        nsIDOMNode* prop;
+        if (NS_OK == a->GetPreviousSibling(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_NEXTSIBLING:
+      {
+        nsIDOMNode* prop;
+        if (NS_OK == a->GetNextSibling(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
+      case NODE_ATTRIBUTES:
+      {
+        nsIDOMNamedNodeMap* prop;
+        if (NS_OK == a->GetAttributes(&prop)) {
+          // get the js object
+          if (prop != nsnull) {
+            nsIScriptObjectOwner *owner = nsnull;
+            if (NS_OK == prop->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+              JSObject *object = nsnull;
+              nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+              if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+                // set the return value
+                *vp = OBJECT_TO_JSVAL(object);
+              }
+              NS_RELEASE(owner);
+            }
+            NS_RELEASE(prop);
+          }
+          else {
+            *vp = JSVAL_NULL;
+          }
+        }
+        else {
+          return JS_FALSE;
+        }
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -88,7 +343,21 @@ SetNodeProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case 0:
+      case NODE_NODEVALUE:
+      {
+        nsAutoString prop;
+        JSString *jsstring;
+        if ((jsstring = JS_ValueToString(cx, *vp)) != nsnull) {
+          prop.SetString(JS_GetStringChars(jsstring));
+        }
+        else {
+          prop.SetString((const char *)nsnull);
+        }
+      
+        a->SetNodeValue(prop);
+        
+        break;
+      }
       default:
       {
         nsIJSScriptObject *object;
@@ -168,319 +437,6 @@ ResolveNode(JSContext *cx, JSObject *obj, jsval id)
 
 
 //
-// Native method GetNodeType
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeGetNodeType(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRInt32 nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetNodeType(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    *rval = INT_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function getNodeType requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetParentNode
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeGetParentNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMNode* nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetParentNode(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function getParentNode requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetChildNodes
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeGetChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMNodeIterator* nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetChildNodes(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function getChildNodes requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method HasChildNodes
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeHasChildNodes(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  PRBool nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->HasChildNodes(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    *rval = BOOLEAN_TO_JSVAL(nativeRet);
-  }
-  else {
-    JS_ReportError(cx, "Function hasChildNodes requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetFirstChild
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeGetFirstChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMNode* nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetFirstChild(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function getFirstChild requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetPreviousSibling
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeGetPreviousSibling(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMNode* nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetPreviousSibling(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function getPreviousSibling requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
-// Native method GetNextSibling
-//
-PR_STATIC_CALLBACK(JSBool)
-NodeGetNextSibling(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
-{
-  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
-  JSBool rBool = JS_FALSE;
-  nsIDOMNode* nativeRet;
-
-  *rval = JSVAL_NULL;
-
-  // If there's no private data, this must be the prototype, so ignore
-  if (nsnull == nativeThis) {
-    return JS_TRUE;
-  }
-
-  if (argc >= 0) {
-
-    if (NS_OK != nativeThis->GetNextSibling(&nativeRet)) {
-      return JS_FALSE;
-    }
-
-    if (nativeRet != nsnull) {
-      nsIScriptObjectOwner *owner = nsnull;
-      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
-        JSObject *object = nsnull;
-        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
-        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
-          // set the return value
-          *rval = OBJECT_TO_JSVAL(object);
-        }
-        NS_RELEASE(owner);
-      }
-      NS_RELEASE(nativeRet);
-    }
-    else {
-      *rval = JSVAL_NULL;
-    }
-  }
-  else {
-    JS_ReportError(cx, "Function getNextSibling requires 0 parameters");
-    return JS_FALSE;
-  }
-
-  return JS_TRUE;
-}
-
-
-//
 // Native method InsertBefore
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -488,6 +444,7 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
 
@@ -536,11 +493,26 @@ NodeInsertBefore(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->InsertBefore(b0, b1)) {
+    if (NS_OK != nativeThis->InsertBefore(b0, b1, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
   }
   else {
     JS_ReportError(cx, "Function insertBefore requires 2 parameters");
@@ -559,6 +531,7 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
   nsIDOMNodePtr b1;
 
@@ -607,11 +580,26 @@ NodeReplaceChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *r
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->ReplaceChild(b0, b1)) {
+    if (NS_OK != nativeThis->ReplaceChild(b0, b1, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
   }
   else {
     JS_ReportError(cx, "Function replaceChild requires 2 parameters");
@@ -630,6 +618,7 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
 {
   nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
   nsIDOMNodePtr b0;
 
   *rval = JSVAL_NULL;
@@ -659,14 +648,137 @@ NodeRemoveChild(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rv
       return JS_FALSE;
     }
 
-    if (NS_OK != nativeThis->RemoveChild(b0)) {
+    if (NS_OK != nativeThis->RemoveChild(b0, &nativeRet)) {
       return JS_FALSE;
     }
 
-    *rval = JSVAL_VOID;
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
   }
   else {
     JS_ReportError(cx, "Function removeChild requires 1 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method CloneNode
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeCloneNode(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  nsIDOMNode* nativeRet;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->CloneNode(&nativeRet)) {
+      return JS_FALSE;
+    }
+
+    if (nativeRet != nsnull) {
+      nsIScriptObjectOwner *owner = nsnull;
+      if (NS_OK == nativeRet->QueryInterface(kIScriptObjectOwnerIID, (void**)&owner)) {
+        JSObject *object = nsnull;
+        nsIScriptContext *script_cx = (nsIScriptContext *)JS_GetContextPrivate(cx);
+        if (NS_OK == owner->GetScriptObject(script_cx, (void**)&object)) {
+          // set the return value
+          *rval = OBJECT_TO_JSVAL(object);
+        }
+        NS_RELEASE(owner);
+      }
+      NS_RELEASE(nativeRet);
+    }
+    else {
+      *rval = JSVAL_NULL;
+    }
+  }
+  else {
+    JS_ReportError(cx, "Function cloneNode requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
+// Native method Equals
+//
+PR_STATIC_CALLBACK(JSBool)
+NodeEquals(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMNode *nativeThis = (nsIDOMNode*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+  PRBool nativeRet;
+  nsIDOMNodePtr b0;
+  PRBool b1;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 2) {
+
+    if (JSVAL_IS_NULL(argv[0])){
+      b0 = nsnull;
+    }
+    else if (JSVAL_IS_OBJECT(argv[0])) {
+      nsISupports *supports0 = (nsISupports *)JS_GetPrivate(cx, JSVAL_TO_OBJECT(argv[0]));
+      NS_ASSERTION(nsnull != supports0, "null pointer");
+
+      if ((nsnull == supports0) ||
+          (NS_OK != supports0->QueryInterface(kINodeIID, (void **)(b0.Query())))) {
+        JS_ReportError(cx, "Parameter must be of type Node");
+        return JS_FALSE;
+      }
+    }
+    else {
+      JS_ReportError(cx, "Parameter must be an object");
+      return JS_FALSE;
+    }
+
+    if (!JS_ValueToBoolean(cx, argv[1], &b1)) {
+      JS_ReportError(cx, "Parameter must be a boolean");
+      return JS_FALSE;
+    }
+
+    if (NS_OK != nativeThis->Equals(b0, b1, &nativeRet)) {
+      return JS_FALSE;
+    }
+
+    *rval = BOOLEAN_TO_JSVAL(nativeRet);
+  }
+  else {
+    JS_ReportError(cx, "Function equals requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -697,6 +809,17 @@ JSClass NodeClass = {
 //
 static JSPropertySpec NodeProperties[] =
 {
+  {"nodeName",    NODE_NODENAME,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"nodeValue",    NODE_NODEVALUE,    JSPROP_ENUMERATE},
+  {"nodeType",    NODE_NODETYPE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"parentNode",    NODE_PARENTNODE,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"childNodes",    NODE_CHILDNODES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"hasChildNodes",    NODE_HASCHILDNODES,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"firstChild",    NODE_FIRSTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"lastChild",    NODE_LASTCHILD,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"previousSibling",    NODE_PREVIOUSSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"nextSibling",    NODE_NEXTSIBLING,    JSPROP_ENUMERATE | JSPROP_READONLY},
+  {"attributes",    NODE_ATTRIBUTES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 
@@ -706,16 +829,11 @@ static JSPropertySpec NodeProperties[] =
 //
 static JSFunctionSpec NodeMethods[] = 
 {
-  {"getNodeType",          NodeGetNodeType,     0},
-  {"getParentNode",          NodeGetParentNode,     0},
-  {"getChildNodes",          NodeGetChildNodes,     0},
-  {"hasChildNodes",          NodeHasChildNodes,     0},
-  {"getFirstChild",          NodeGetFirstChild,     0},
-  {"getPreviousSibling",          NodeGetPreviousSibling,     0},
-  {"getNextSibling",          NodeGetNextSibling,     0},
   {"insertBefore",          NodeInsertBefore,     2},
   {"replaceChild",          NodeReplaceChild,     2},
   {"removeChild",          NodeRemoveChild,     1},
+  {"cloneNode",          NodeCloneNode,     0},
+  {"equals",          NodeEquals,     2},
   {0}
 };
 
@@ -774,14 +892,26 @@ nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype)
       vp = INT_TO_JSVAL(nsIDOMNode::ATTRIBUTE);
       JS_SetProperty(jscontext, constructor, "ATTRIBUTE", &vp);
 
-      vp = INT_TO_JSVAL(nsIDOMNode::PI);
-      JS_SetProperty(jscontext, constructor, "PI", &vp);
+      vp = INT_TO_JSVAL(nsIDOMNode::PROCESSING_INSTRUCTION);
+      JS_SetProperty(jscontext, constructor, "PROCESSING_INSTRUCTION", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMNode::COMMENT);
       JS_SetProperty(jscontext, constructor, "COMMENT", &vp);
 
       vp = INT_TO_JSVAL(nsIDOMNode::TEXT);
       JS_SetProperty(jscontext, constructor, "TEXT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMNode::CDATA_SECTION);
+      JS_SetProperty(jscontext, constructor, "CDATA_SECTION", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMNode::DOCUMENT_FRAGMENT);
+      JS_SetProperty(jscontext, constructor, "DOCUMENT_FRAGMENT", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMNode::ENTITY_DECLARATION);
+      JS_SetProperty(jscontext, constructor, "ENTITY_DECLARATION", &vp);
+
+      vp = INT_TO_JSVAL(nsIDOMNode::ENTITY_REFERENCE);
+      JS_SetProperty(jscontext, constructor, "ENTITY_REFERENCE", &vp);
 
     }
 
@@ -803,7 +933,7 @@ nsresult NS_InitNodeClass(nsIScriptContext *aContext, void **aPrototype)
 //
 // Method for creating a new Node JavaScript object
 //
-extern "C" NS_DOM NS_NewScriptNode(nsIScriptContext *aContext, nsIDOMNode *aSupports, nsISupports *aParent, void **aReturn)
+extern "C" NS_DOM nsresult NS_NewScriptNode(nsIScriptContext *aContext, nsIDOMNode *aSupports, nsISupports *aParent, void **aReturn)
 {
   NS_PRECONDITION(nsnull != aContext && nsnull != aSupports && nsnull != aReturn, "null argument to NS_NewScriptNode");
   JSObject *proto;
