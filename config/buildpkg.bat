@@ -20,8 +20,8 @@ rem Contributor(s):
 @echo on
 
 @echo off
-if not exist %2 echo Warning: %2 does not exist! (you may need to check it out)
-if not exist %2 exit 1
+if not exist %2\NUL echo Warning: %2 does not exist! (you may need to check it out)
+if not exist %2\NUL exit 1
 
 pushd %2
 
@@ -37,7 +37,7 @@ goto END
 
 perl.exe %MOZ_SRC%\mozilla\config\outofdate.pl -d %MOZ_SRC%\mozilla\dist\classes\%2 -cfg %1 *.java > doit.bat
 call doit.bat
-del /F /A:A doit.bat
+del doit.bat
 
 :END
 
