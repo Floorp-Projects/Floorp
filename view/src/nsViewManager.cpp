@@ -1678,22 +1678,19 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
     if (!overlap) {
         return PR_FALSE;
     }
+
+    PRBool noCropping = bounds == aDamagedRect;
     
-	PRBool hasWidget = PR_FALSE;
+    PRBool hasWidget = PR_FALSE;
     aView->HasWidget(&hasWidget);
-    PRBool covering = PR_FALSE;
     PRUint32 flags = 0;
     aView->GetViewFlags(&flags);
     PRBool isBlittable = (flags & NS_VIEW_PUBLIC_FLAG_DONT_BITBLT) == 0;
     
-    if (hasWidget && bounds == aDamagedRect) {
-        covering = PR_TRUE;
-    }
-     
-	nsIView* childView = nsnull;
-	aView->GetChild(0, childView);
+    nsIView* childView = nsnull;
+    aView->GetChild(0, childView);
     PRBool childCovers = PR_FALSE;
-	while (nsnull != childView)	{
+    while (nsnull != childView) {
         nsRect childRect = bounds;
         nsRect childBounds;
         childView->GetBounds(childBounds);
@@ -1727,7 +1724,7 @@ PRBool nsViewManager::UpdateAllCoveringWidgets(nsIView *aView, nsIView *aTarget,
         }
     }
 
-    return covering || childCovers;
+    return noCropping && (hasWidget || childCovers);
 }
 
 NS_IMETHODIMP nsViewManager::UpdateView(nsIView *aView, const nsRect &aRect, PRUint32 aUpdateFlags)
