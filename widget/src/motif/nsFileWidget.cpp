@@ -21,6 +21,8 @@
 #include "nsXtEventHandler.h"
 
 #define DBG 0
+extern XtAppContext gAppContext;
+
 //-------------------------------------------------------------------------
 //
 // nsFileWidget constructor
@@ -70,7 +72,7 @@ void   nsFileWidget:: Create(nsIWidget  *aParent,
   if (DBG) fprintf(stderr, "Parent 0x%x\n", parentWidget);
 
   mWidget = XmCreateFileSelectionDialog(parentWidget, "filesb", NULL, 0);
-  XtVaSetValues(mWidget, XmNdialogType, XmDIALOG_FULL_APPLICATION_MODAL, nsnull);
+  //XtVaSetValues(mWidget, XmNdialogType, XmDIALOG_FULL_APPLICATION_MODAL, nsnull);
 
   XtAddCallback(mWidget, XmNcancelCallback, nsXtWidget_FSBCancel_Callback, this);
   XtAddCallback(mWidget, XmNokCallback, nsXtWidget_FSBOk_Callback, this);
@@ -135,6 +137,13 @@ void nsFileWidget::Show(PRBool bState)
 {
   nsresult result = nsEventStatus_eIgnore;
   XtManageChild(mWidget);
+
+  XEvent event;
+  for (;;) {
+    XtAppNextEvent(gAppContext, &event);
+    XtDispatchEvent(&event);
+    printf("%d\n", event.type);
+  }
 
   /*char fileBuffer[MAX_PATH];
   fileBuffer[0] = '\0';
@@ -250,9 +259,9 @@ BASE_IWIDGET_IMPL_NO_SHOW(nsFileWidget, AggFileWidget);
 void nsFileWidget::AggFileWidget::Create( nsIWidget *aParent,
                                       nsString& aTitle,
                                       nsMode aMode,
-                                      nsIDeviceContext *aContext = nsnull,
-                                      nsIToolkit *aToolkit = nsnull,
-                                      void *aInitData = nsnull)
+                                      nsIDeviceContext *aContext,
+                                      nsIToolkit *aToolkit,
+                                      void *aInitData)
 {
   GET_OUTER()->Create(aParent, aTitle, aMode, aContext, aToolkit, aInitData);
 }
