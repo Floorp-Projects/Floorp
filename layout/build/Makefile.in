@@ -26,6 +26,11 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+# Solaris' sh blows
+ifeq ($(OS_ARCH),SunOS)
+SHELL := ksh
+endif
+
 BUILD_DATE = gbdate.h
 BUILD_DATE_TS = gbdate.tstamp
 
