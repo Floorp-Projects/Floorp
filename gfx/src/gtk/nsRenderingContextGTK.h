@@ -185,32 +185,31 @@ public:
 
   void CreateClipRegion() {
     static NS_DEFINE_CID(kRegionCID, NS_REGION_CID);
-    if (!mClipRegion) {
-      PRUint32 w, h;
-      mSurface->GetSize(&w, &h);
+    if (mClipRegion)
+      return;
+
+    PRUint32 w, h;
+    mSurface->GetSize(&w, &h);
     
-      if ( NS_SUCCEEDED(nsComponentManager::CreateInstance(kRegionCID, 0, NS_GET_IID(nsIRegion), (void**)&mClipRegion)) ) {
-        mClipRegion->Init();
-        mClipRegion->SetTo(0,0,w,h);
-      }
+    mClipRegion = do_CreateInstance(kRegionCID);
+    if (mClipRegion) {
+      mClipRegion->Init();
+      mClipRegion->SetTo(0,0,w,h);
     }
   }
 
   GdkGC *GetGC() { return mGC; }
 
 private:
-  nsDrawingSurfaceGTK   *mOffscreenSurface;  
+  nsDrawingSurfaceGTK   *mOffscreenSurface;
   nsDrawingSurfaceGTK   *mSurface;
   nsIDeviceContext      *mContext;
   nsIFontMetrics        *mFontMetrics;
-  nsIRegion             *mClipRegion;
+  nsCOMPtr<nsIRegion>    mClipRegion;
   nsTransform2D         *mTMatrix;
   float                  mP2T;
   GdkWChar*              mDrawStringBuf;
   PRUint32               mDrawStringSize;
-  PRBool                 mClipIsSet;
-  PRBool                 mFontIsSet;
-  PRBool                 mColorIsSet;
 
  // graphic state stack (GraphicsState)
   nsVoidArray           *mStateCache;
