@@ -14,10 +14,7 @@
  * The Initial Developer of the Original Code is The MITRE Corporation.
  * Portions created by MITRE are Copyright (C) 1999 The MITRE Corporation.
  *
- * Portions created by Keith Visco as a Non MITRE employee,
- * (C) 1999 Keith Visco. All Rights Reserved.
- * 
- * Contributor(s): 
+ * Contributor(s):
  * Peter Van der Beken, peter.vanderbeken@pandora.be
  *    -- original author.
  *
