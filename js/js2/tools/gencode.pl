@@ -276,8 +276,8 @@ $ops{"CALL"} =
 $ops{"STATIC_CALL"} =
   {
    super  => "Instruction_4",
-   rem    => "result, target class, name, args",
-   params => [ ("TypedRegister" , "JSClass*", "const StringAtom*", "RegisterList") ]
+   rem    => "result, target class, index, args",
+   params => [ ("TypedRegister" , "JSClass*", "uint32", "RegisterList") ]
   };
 $ops{"METHOD_CALL"} =
   {
@@ -426,9 +426,18 @@ sub collect {
 sub spew {
     # print the info in $enum_decs, @name_aray, and $class_decs to stdout.
     my $opname;
+    
+    print "// THIS FILE IS MACHINE GENERATED! DO NOT EDIT BY HAND!\n\n";
+    
+    print "#if !defined(OPCODE_NAMES)\n\n";
 
-    print $tab . "enum ICodeOp {\n$enum_decs$tab};\n\n";
-    print $tab . "static char *opcodeNames[] = {\n";
+    print $tab . "enum {\n$enum_decs$tab};\n\n";
+    
+    print $class_decs;
+    
+    print "#else\n\n";
+
+    print $tab . "char *opcodeNames[] = {\n";
 
     for $opname (@name_array) {
         print "$tab$tab\"$opname";
@@ -438,7 +447,8 @@ sub spew {
         print "\",\n"
     }
     print "$tab};\n\n";
-    print $class_decs;
+
+    print "#endif\n\n"
 }
 
 sub get_classname {
