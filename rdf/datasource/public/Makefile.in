@@ -25,7 +25,6 @@ include $(DEPTH)/config/autoconf.mk
 MODULE = rdf
 
 EXPORTS =				\
-	nsIRDFMail.h			\
 	nsIXULContentSink.h		\
         $(NULL)
 
