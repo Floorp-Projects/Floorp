@@ -25,9 +25,13 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsMimeTransition.h"
-#include "nsMimeURLUtils.h"
-#include "nsCRT.h"
+#include "mozITXTToHTMLConv.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
+#include "nsString.h"
 #include "nsMimeStringResources.h"
+
+static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlain, MimeInlineTextPlainClass,
@@ -124,7 +128,20 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
   NS_ASSERTION(length > 0, "zero length");
   if (length <= 0) return 0;
 
-  status = MimeObject_grow_obuffer (obj, (length * 2) + 40);
+  PRInt32 buffersizeneeded = (length * 2);
+
+  // Ok, there is always the issue of guessing how much space we will need for emoticons.
+  // So what we will do is count the total number of "special" chars and multiply by 82 
+  // (max len for a smiley line) and add one for good measure
+  PRInt32   specialCharCount = 0;
+  for (PRInt32 z=0; z<length; z++)
+  {
+    if ( (line[z] == ')') || (line[z] == '(') || (line[z] == ':') || (line[z] == ';') )
+      ++specialCharCount;
+  }
+  buffersizeneeded += 82 * (specialCharCount + 1); 
+
+  status = MimeObject_grow_obuffer (obj, buffersizeneeded);
   if (status < 0) return status;
 
   /* Copy `line' to `out', quoting HTML along the way.
@@ -133,17 +150,51 @@ MimeInlineTextPlain_parse_line (char *line, PRInt32 length, MimeObject *obj)
    */
   *obj->obuffer = 0;
 
-  nsMimeURLUtils myUtil;
-
   // If we have been told not to mess with this text, then don't do this search!
   PRBool skipScanning = (obj->options && obj->options->force_user_charset) || 
                         (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageQuoting)) ||
                         (obj->options && (obj->options->format_out == nsMimeOutput::nsMimeMessageBodyQuoting));
     
   if (!skipScanning)
-    status = myUtil.ScanForURLs(line, length, obj->obuffer, obj->obuffer_size - 10,
-							                (obj->options ?
-							                obj->options->dont_touch_citations_p : PR_FALSE));
+  {
+    nsCOMPtr<mozITXTToHTMLConv> conv;
+    nsresult rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+                              NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+                              (void **) getter_AddRefs(conv));
+    if (NS_FAILED(rv))
+      return -1;
+
+    //XXX I18N Converting char* to PRUnichar*
+    nsAutoString strline(line, length);
+    PRUnichar* wline = strline.ToNewUnicode();
+    if (!wline)
+      return -1;
+
+    PRUnichar* wresult;
+    rv = conv->ScanTXT(wline,
+              obj->options->dont_touch_citations_p /* XXX This is pref abuse.
+              ScanTXT does nothing with citations. Add real prefs.*/
+              ? conv->kURLs : ~PRUint32(0),
+              &wresult);
+    Recycle(wline);
+    if (NS_FAILED(rv))
+      return -1;
+
+    //XXX I18N Converting PRUnichar* to char*
+    nsAutoString strresult(wresult);
+    char* cresult = strresult.ToNewCString();
+    Recycle(wresult);
+    if (!cresult)
+      return -1;
+
+    PRInt32   copyLen = strresult.Length();
+    if (copyLen > (obj->obuffer_size - 10))
+      copyLen = obj->obuffer_size - 10;
+
+    nsCRT::memcpy(obj->obuffer, cresult, copyLen);
+    obj->obuffer[copyLen] = '\0';
+    Recycle(cresult);
+  }
   else
   {
     nsCRT::memcpy(obj->obuffer, line, length);

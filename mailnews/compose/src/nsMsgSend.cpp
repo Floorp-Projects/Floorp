@@ -38,13 +38,11 @@
 #include "nsIPref.h"
 #include "nsIMsgMailNewsUrl.h"
 #include "nsMsgDeliveryListener.h"
-#include "nsIMimeURLUtils.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsMsgEncoders.h"
 #include "nsMsgCompUtils.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgSendListener.h"
-#include "nsIMimeURLUtils.h"
 #include "nsIMsgCopyServiceListener.h"
 #include "nsIFileSpec.h"
 #include "nsMsgCopy.h"
@@ -70,7 +68,6 @@
 static NS_DEFINE_CID(kSmtpServiceCID, NS_SMTPSERVICE_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 static NS_DEFINE_CID(kMimeServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_CID(kCAddressCollecter, NS_ABADDRESSCOLLECTER_CID);
 
@@ -3496,7 +3493,7 @@ nsMsgComposeAndSend::MimeDoFCC(nsFileSpec       *input_file,
 	     mode == nsMsgSaveAsTemplate) && news_url && *news_url)
 	{
 	  PRBool secure_p = (news_url[0] == 's' || news_url[0] == 'S');
-	  char *orig_hap = nsMsgParseURL (news_url, GET_HOST_PART);
+	  char *orig_hap = nsMsgParseURLHost (news_url);
 	  char *host_and_port = orig_hap;
 	  if (host_and_port)
 		{

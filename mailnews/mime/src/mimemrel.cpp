@@ -116,11 +116,11 @@
 #include "nsIURL.h"
 #include "nsCRT.h"
 #include "msgCore.h"
-#include "nsMimeURLUtils.h"
 #include "nsMimeStringResources.h"
 #include "nsMimeTypes.h"
 #include "nsFileStream.h"
 #include "nsFileSpec.h"
+#include "mimebuf.h"
 
 //
 // External Defines...
@@ -370,15 +370,41 @@ MimeThisIsStartPart(MimeObject *obj, MimeObject* child)
 /* rhp - gotta support the "start" parameter */
 
 char *
-MakeAbsoluteURL(char * absolute_url, char * relative_url)
+MakeAbsoluteURL(char *base_url, char *relative_url)
 {
-  nsMimeURLUtils myUtil;
-  char           *retString;
+  char            *retString = nsnull;
+  nsIURI          *base = nsnull;
 
-  if (NS_SUCCEEDED(myUtil.MakeAbsoluteURL(absolute_url, relative_url, &retString)))
+  // if either is NULL, just return the relative if safe...
+  if (!base_url || !relative_url)
+  {
+    if (!relative_url)
+      return nsnull;
+
+    mime_SACopy(&retString, relative_url);
     return retString;
-  else
-    return NULL;
+  }
+
+  nsresult err = nsMimeNewURI(&base, base_url, nsnull);
+  if (err != NS_OK) 
+    return nsnull;
+  
+  nsIURI    *url = nsnull;
+  err = nsMimeNewURI(&url, relative_url, base);
+  if (err != NS_OK) 
+    goto done;
+  
+  err = url->GetSpec(&retString);
+  if (err)
+  {
+    retString = nsnull;
+    goto done;
+  }
+  
+done:
+  NS_IF_RELEASE(url);
+  NS_IF_RELEASE(base);
+  return retString;
 }
 
 static PRBool

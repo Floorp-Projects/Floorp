@@ -26,9 +26,11 @@
 
 #include "nsFTPDirListingConv.h"
 #include "nsMultiMixedConv.h"
+#include "mozTXTToHTMLConv.h"
 
 nsresult NS_NewFTPDirListingConv(nsFTPDirListingConv** result);
 nsresult NS_NewMultiMixedConv(nsMultiMixedConv** result);
+nsresult MOZ_NewTXTToHTMLConv(mozTXTToHTMLConv** result);
 
 // Module implementation
 class nsConvModule : public nsIModule
@@ -49,6 +51,7 @@ protected:
     PRBool mInitialized;
     nsCOMPtr<nsIGenericFactory> mFTPDirListingConvFactory;
     nsCOMPtr<nsIGenericFactory> mMultiMixedConvFactory;
+    nsCOMPtr<nsIGenericFactory> mTXTToHTMLConvFactory;
 };
 
 //----------------------------------------------------------------------
@@ -104,6 +107,30 @@ CreateNewMultiMixedConvFactory(nsISupports* aOuter, REFNSIID aIID, void **aResul
     return rv;              
 }
 
+static NS_IMETHODIMP                 
+CreateNewTXTToHTMLConvFactory(nsISupports* aOuter, REFNSIID aIID, void **aResult) 
+{
+    if (!aResult) {                                                  
+        return NS_ERROR_INVALID_POINTER;                             
+    }
+    if (aOuter) {                                                    
+        *aResult = nsnull;                                           
+        return NS_ERROR_NO_AGGREGATION;                              
+    }   
+    mozTXTToHTMLConv* inst = nsnull;
+    nsresult rv = MOZ_NewTXTToHTMLConv(&inst);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+        return rv;                                                   
+    } 
+    rv = inst->QueryInterface(aIID, aResult);
+    if (NS_FAILED(rv)) {                                             
+        *aResult = nsnull;                                           
+    }                                                                
+    NS_RELEASE(inst);             /* get rid of extra refcnt */      
+    return rv;              
+}
+
 
 //----------------------------------------------------------------------
 
@@ -138,6 +165,7 @@ nsConvModule::Shutdown()
     // Release the factory objects
     mFTPDirListingConvFactory = nsnull;
     mMultiMixedConvFactory = nsnull;
+    mTXTToHTMLConvFactory = nsnull;
 }
 
 // Create a factory object for creating instances of aClass.
@@ -189,6 +217,17 @@ nsConvModule::GetClassObject(nsIComponentManager *aCompMgr,
         }
         fact = mMultiMixedConvFactory;
     }
+    else if (aClass.Equals(kTXTToHTMLConvCID)) {
+        if (!mTXTToHTMLConvFactory) {
+            // Create and save away the factory object for creating
+            // new instances of MultiMixedConv. This way if we are called
+            // again for the factory, we won't need to create a new
+            // one.
+            rv = NS_NewGenericFactory(getter_AddRefs(mTXTToHTMLConvFactory),
+                                      CreateNewTXTToHTMLConvFactory);
+        }
+        fact = mTXTToHTMLConvFactory;
+    }
     else {
         rv = NS_ERROR_FACTORY_NOT_REGISTERED;
 #ifdef DEBUG
@@ -221,6 +260,8 @@ static Components gComponents[] = {
       NS_ISTREAMCONVERTER_KEY "?from=text/ftp-dir-nt?to=application/http-index-format", },
     { "MultiMixedConverter", &kMultiMixedConverterCID,
       NS_ISTREAMCONVERTER_KEY "?from=multipart/x-mixed-replace?to=text/html", },
+    { "TXTToHTMLConverter", &kTXTToHTMLConvCID,
+    NS_ISTREAMCONVERTER_KEY "?from=text/plain?to=text/html", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

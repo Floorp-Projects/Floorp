@@ -81,22 +81,6 @@ static NS_DEFINE_CID(kIOServiceCID,           NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kMsgCompFieldsCID,       NS_MSGCOMPFIELDS_CID); 
 static NS_DEFINE_CID(kPrefCID,                NS_PREF_CID);
 
-// Utility to create a nsIURI object...
-extern "C" nsresult 
-nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec)
-{  
-  nsresult  res;
-
-  if (nsnull == aInstancePtrResult) 
-    return NS_ERROR_NULL_POINTER;
-  
-  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
-  if (NS_FAILED(res)) 
-    return NS_ERROR_FACTORY_NOT_REGISTERED;
-
-  return pService->NewURI(aSpec, nsnull, aInstancePtrResult);
-}
-
 //
 // Hopefully, someone will write and XP call like this eventually!
 //
@@ -462,7 +446,7 @@ mime_draft_process_attachments(mime_draft_data *mdd)
         goto FAIL;
       }
 
-      if (NS_FAILED(nsMimeNewURI(&(tmp->url), tmpSpec)))
+      if (NS_FAILED(nsMimeNewURI(&(tmp->url), tmpSpec, nsnull)))
       {
         PR_FREEIF(tmpSpec);
         cleanupCount = i;
@@ -1650,7 +1634,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 
         slashPtr++;
       }
-      nsMimeNewURI(&(newAttachment->orig_url), tmpSpecStr);
+      nsMimeNewURI(&(newAttachment->orig_url), tmpSpecStr, nsnull);
       NS_IF_ADDREF(newAttachment->orig_url);
       PR_FREEIF(tmpSpecStr);
     }

@@ -29,7 +29,6 @@
 #include "nsMailHeaders.h"
 #include "nsMsgI18N.h"
 #include "nsIMsgHeaderParser.h"
-#include "nsIMimeURLUtils.h"
 #include "nsINntpService.h"
 #include "nsMsgNewsCID.h"
 #include "nsMimeTypes.h"
@@ -37,6 +36,7 @@
 #include "nsXPIDLString.h"
 #include "nsSpecialSystemDirectory.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
+#include "nsIURI.h"
 
 /* for GET_xxx_PART */
 #include "net.h"
@@ -45,7 +45,6 @@
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgHeaderParserCID, NS_MSGHEADERPARSER_CID); 
-static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 static NS_DEFINE_CID(kNntpServiceCID, NS_NNTPSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -1431,251 +1430,6 @@ mime_type_needs_charset (const char *type)
 			return PR_FALSE;
 }
 
-//
-// Generate headers for a form post to a mailto: URL.
-// This lets the URL specify additional headers, but is careful to
-// ignore headers which would be dangerous.  It may modify the URL
-// (because of CC) so a new URL to actually post to is returned.
-//
-int 
-nsMsgMIMEGenerateMailtoFormPostHeaders (const char *from,
-                                        const char *old_post_url,
-									                      const char * /*referer*/,
-									                      char **new_post_url_return,
-									                      char **headers_return)
-{
-  char *to = 0, *cc = 0, *body = 0, *search = 0;
-  char *extra_headers = 0;
-  char *s;
-  PRBool subject_p = PR_FALSE;
-  PRBool sign_p = PR_FALSE, encrypt_p = PR_FALSE;
-  char *rest;
-  int status = 0;
-  nsMsgCompFields *fields = NULL;
-  static const char *forbidden_headers[] = {
-	"Apparently-To",
-	"BCC",
-	"Content-Encoding",
-	HEADER_CONTENT_LENGTH,
-	"Content-Transfer-Encoding",
-	"Content-Type",
-	"Date",
-	"Distribution",
-	"FCC",
-	"Followup-To",
-	"From",
-	"Lines",
-	"MIME-Version",
-	"Message-ID",
-	"Newsgroups",
-	"Organization",
-	"Reply-To",
-	"Sender",
-	HEADER_X_MOZILLA_STATUS,
-	HEADER_X_MOZILLA_STATUS2,
-	HEADER_X_MOZILLA_NEWSHOST,
-	HEADER_X_UIDL,
-	"XRef",
-	0 };
-
-  to = nsMsgParseURL (old_post_url, GET_PATH_PART);
-  if (!to) {
-	status = NS_ERROR_OUT_OF_MEMORY;
-	goto FAIL;
-  }
-
-  if (!*to)
-	{
-	  status = NS_MSG_NO_RECIPIENTS; /* rb -1; */
-	  goto FAIL;
-	}
-
-  search = nsMsgParseURL (old_post_url, GET_SEARCH_PART);
-
-  rest = search;
-  if (rest && *rest == '?')
-	{
-	  /* start past the '?' */
-	  rest++;
-
-    nsCRT::strtok(rest, "&", &rest);
-	  while (rest && *rest)
-		{
-		  char *token = rest;
-		  char *value = 0;
-		  char *eq;
-
-      nsCRT::strtok(0, "&", &rest);
-
-		  eq = PL_strchr (token, '=');
-		  if (eq)
-			{
-			  value = eq+1;
-			  *eq = 0;
-			}
-
-		  if (!PL_strcasecmp (token, "subject"))
-			subject_p = PR_TRUE;
-
-		  if (value)
-			/* Don't allow newlines or control characters in the value. */
-			for (s = value; *s; s++)
-			  if (*s < ' ' && *s != '\t')
-				*s = ' ';
-
-		  if (!PL_strcasecmp (token, "to"))
-			{
-			  if (to && *to)
-				{
-				  StrAllocCat (to, ", ");
-				  StrAllocCat (to, value);
-				}
-			  else
-				{
-				  PR_FREEIF(to);
-				  to = PL_strdup(value);
-				}
-			}
-		  else if (!PL_strcasecmp (token, "cc"))
-			{
-			  if (cc && *cc)
-				{
-				  StrAllocCat (cc, ", ");
-				  StrAllocCat (cc, value);
-				}
-			  else
-				{
-				  PR_FREEIF(cc);
-				  cc = PL_strdup (value);
-				}
-			}
-		  else if (!PL_strcasecmp (token, "body"))
-			{
-			  if (body && *body)
-				{
-				  StrAllocCat (body, "\n");
-				  StrAllocCat (body, value);
-				}
-			  else
-				{
-				  PR_FREEIF(body);
-				  body = PL_strdup (value);
-				}
-			}
-		  else if (!PL_strcasecmp (token, "encrypt") ||
-				   !PL_strcasecmp (token, "encrypted"))
-			{
-			  encrypt_p = (!PL_strcasecmp(value, "true") ||
-						   !PL_strcasecmp(value, "yes"));
-			}
-		  else if (!PL_strcasecmp (token, "sign") ||
-				   !PL_strcasecmp (token, "signed"))
-			{
-			  sign_p = (!PL_strcasecmp(value, "true") ||
-						!PL_strcasecmp(value, "yes"));
-			}
-		  else
-			{
-			  const char **fh = forbidden_headers;
-			  PRBool ok = PR_TRUE;
-			  while (*fh)
-				if (!PL_strcasecmp (token, *fh++))
-				  {
-					ok = PR_FALSE;
-					break;
-				  }
-			  if (ok)
-				{
-				  PRBool upper_p = PR_FALSE;
-				  char *s2;
-				  for (s2 = token; *s2; s2++)
-					{
-					  if (*s2 >= 'A' && *s2 <= 'Z')
-						upper_p = PR_TRUE;
-					  else if (*s2 <= ' ' || *s2 >= '~' || *s2 == ':')
-						goto NOT_OK;  /* bad character in header! */
-					}
-				  if (!upper_p && *token >= 'a' && *token <= 'z')
-					*token -= ('a' - 'A');
-
-				  StrAllocCat (extra_headers, token);
-				  StrAllocCat (extra_headers, ": ");
-				  if (value)
-					StrAllocCat (extra_headers, value);
-				  StrAllocCat (extra_headers, CRLF);
-				NOT_OK: ;
-				}
-			}
-		}
-	}
-
-  if (!subject_p)
-	{
-		nsresult rv = NS_OK;
-	
-		PRUnichar * sAppName = nsnull;
-		NS_WITH_SERVICE(nsIIOService, pNetService, kIOServiceCID, &rv); 
-		if (NS_SUCCEEDED(rv) && pNetService)
-			pNetService->GetAppCodeName(&sAppName);
-
-		nsCAutoString cstr(sAppName);
-
-		/* If the URL didn't provide a subject, we will. */
-		StrAllocCat (extra_headers, "Subject: Form posted from ");
-		NS_ASSERTION (!cstr.IsEmpty(), "null AppCodeName");
-		StrAllocCat (extra_headers, cstr);
-		StrAllocCat (extra_headers, CRLF);
-		nsCRT::free(sAppName);
-	}
-
-  /* Note: the `encrypt', `sign', and `body' parameters are currently
-	 ignored in mailto form submissions. */
-
-  *new_post_url_return = 0;
-
- /*JFD
-	fields = MSG_CreateCompositionFields(from, 0, to, cc, 0, 0, 0, 0,
-									   (char *)pCompPrefs.GetOrganization(), 0, 0,
-									   extra_headers, 0, 0, 0,
-									   encrypt_p, sign_p);
- */
-  if (!fields)
-  {
-	  status = NS_ERROR_OUT_OF_MEMORY;
-	  goto FAIL;
-  }
-
-  fields->SetDefaultBody(body);
-
-  *headers_return = mime_generate_headers (fields, 0, nsMsgDeliverNow);
-  if (*headers_return == 0)
-	{
-	  status = NS_ERROR_OUT_OF_MEMORY;
-	  goto FAIL;
-	}
-
-  StrAllocCat ((*new_post_url_return), "mailto:");
-  if (to)
-	StrAllocCat ((*new_post_url_return), to);
-  if (to && cc)
-	StrAllocCat ((*new_post_url_return), ",");
-  if (cc)
-	StrAllocCat ((*new_post_url_return), cc);
-
- FAIL:
-  PR_FREEIF (to);
-  PR_FREEIF (cc);
-  PR_FREEIF (body);
-  PR_FREEIF (search);
-  PR_FREEIF (extra_headers);
- /*JFD
- if (fields)
-	  MSG_DestroyCompositionFields(fields);
-*/
-
-  return status;
-}
-
 /* Given a string, convert it to 'qtext' (quoted text) for RFC822 header purposes. */
 char *
 msg_make_filename_qtext(const char *srcText, PRBool stripCRLFs)
@@ -1909,19 +1663,19 @@ nsMsgPlatformFileToURL (nsFileSpec  aFileSpec)
 }
 
 char * 
-nsMsgParseURL(const char *url, int part)
+nsMsgParseURLHost(const char *url)
 {
-  nsCOMPtr<nsIMimeURLUtils>   utilPtr;
-  char                        *retVal = nsnull;
-  
-  nsresult res = nsComponentManager::CreateInstance(kMimeURLUtilsCID, 
-                                                    nsnull, nsCOMTypeInfo<nsIMimeURLUtils>::GetIID(), 
-                                                    (void **) getter_AddRefs(utilPtr)); 
-  if (NS_FAILED(res) || !utilPtr)
+  nsIURI        *workURI = nsnull;
+  char          *retVal = nsnull;
+  nsresult      rv;
+
+  rv = nsMsgNewURL(&workURI, url);
+  if (NS_FAILED(rv) || !workURI)
     return nsnull;
   
-  res = utilPtr->ParseURL(url, part, &retVal);
-  if (NS_FAILED(res))
+  rv = workURI->GetHost(&retVal);
+  delete workURI;
+  if (NS_FAILED(rv))
     return nsnull;
   else
     return retVal;
@@ -1984,7 +1738,7 @@ GenerateFileNameFromURI(nsIURI *aURL)
     if ((cp3 = PL_strchr(cp2, '"')))
       *cp3 = 0;
 
-    char *hostStr = nsMsgParseURL(cp2, GET_HOST_PART);
+    char *hostStr = nsMsgParseURLHost(cp2);
     if (!hostStr)
       hostStr = cp2;
 

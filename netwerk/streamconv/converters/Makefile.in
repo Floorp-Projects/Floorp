@@ -36,6 +36,7 @@ CPPSRCS		= \
 		nsMultiMixedConv.cpp \
 		nsFTPDirListingConv.cpp \
 		nsConvFactories.cpp \
+		mozTXTToHTMLConv.cpp \
 		$(NULL)
 
 EXPORTS		= \

@@ -40,7 +40,6 @@
 #include "comi18n.h"
 #include "nsMailHeaders.h"
 #include "msgCore.h"
-#include "nsMimeURLUtils.h"
 #include "nsMimeStringResources.h"
 #include "mimemoz2.h"
 

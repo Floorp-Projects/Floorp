@@ -48,7 +48,6 @@
 #include "nsIFileLocator.h"
 #include "nsCRT.h"
 #include "prmem.h"
-#include "nsIMimeURLUtils.h"
 #include "nsFileStream.h"
 
 #ifdef XP_PC
@@ -88,7 +87,6 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID); 
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-static NS_DEFINE_CID(kMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
 static char *
 GetTheTempDirectoryOnTheSystem(void)
@@ -356,7 +354,6 @@ int main(int argc, char *argv[])
   nsComponentManager::RegisterComponent(kEventQueueCID, NULL, NULL, XPCOM_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kPrefCID, nsnull, nsnull, PREF_DLL, PR_TRUE, PR_TRUE);
   nsComponentManager::RegisterComponent(kFileLocatorCID,  NULL, NS_FILELOCATOR_PROGID, APPSHELL_DLL, PR_FALSE, PR_FALSE);
-  nsComponentManager::RegisterComponent(kMimeURLUtilsCID,  NULL, NULL, MIME_DLL, PR_FALSE, PR_FALSE);
 
   // Create the Event Queue for this thread...
 	NS_WITH_SERVICE(nsIEventQueueService, pEventQService, kEventQueueServiceCID, &rv); 

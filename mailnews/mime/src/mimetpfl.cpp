@@ -25,14 +25,14 @@
 #include "prmem.h"
 #include "plstr.h"
 #include "nsMimeTransition.h"
-#include "nsMimeURLUtils.h"
-#include "nsCRT.h"
+#include "mozITXTToHTMLConv.h"
+#include "nsString.h"
 #include "nsMimeStringResources.h"
 #include "nsIPref.h"
 #include "nsIServiceManager.h"
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
-
+static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
 #define MIME_SUPERCLASS mimeInlineTextClass
 MimeDefClass(MimeInlineTextPlainFlowed, MimeInlineTextPlainFlowedClass,
@@ -235,8 +235,7 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
     default: break; // Nothing
     }
   }
-
-  buffersizeneeded += 30;                         // For possible <nobr> ... </nobr>
+  buffersizeneeded += 30; // For possible <nobr> ... </nobr>
 
   // Ok, there is always the issue of guessing how much space we will need for emoticons.
   // So what we will do is count the total number of "special" chars and multiply by 82 
@@ -263,8 +262,6 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
   templine[0] = '\0';
   //  *obj->obuffer = 0;
 
-  nsMimeURLUtils myUtil;
-
   uint32 linequotelevel = 0;
   char *linep = line;
   // Space stuffed?
@@ -289,12 +286,44 @@ MimeInlineTextPlainFlowed_parse_line (char *line, PRInt32 length, MimeObject *ob
 
   if (!skipScanning)
   {
-    // Convert mail addresses and web addresses to links. Strip out the part
-    // with the quotes in the beginning.
-    status = myUtil.ScanForURLs(linep, length-linequotelevel, templine, buffersizeneeded,
-                  (obj->options ?
-					      obj->options->dont_touch_citations_p : PR_FALSE));
-  }  
+    nsCOMPtr<mozITXTToHTMLConv> conv;
+    nsresult rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+                              NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+                              (void **) getter_AddRefs(conv));
+    if (NS_FAILED(rv))
+      return -1;
+
+    //XXX I18N Converting char* to PRUnichar*
+    nsAutoString strline(linep, length-linequotelevel);
+    PRUnichar* wline = strline.ToNewUnicode();
+    if (!wline)
+      return -1;
+
+    PRUnichar* wresult;
+    rv = conv->ScanTXT(wline,
+                 obj->options->dont_touch_citations_p /*XXX This is pref abuse.
+                      ScanTXT does nothing with citations. Add prefs.*/
+                 ? conv->kURLs : ~PRUint32(0),
+                 &wresult);
+    Recycle(wline);
+    if (NS_FAILED(rv))
+      return -1;
+
+    //XXX I18N Converting PRUnichar* to char*
+    nsAutoString strresult(wresult);
+    char* cresult = strresult.ToNewCString();
+    Recycle(wresult);
+    if (!cresult)
+      return -1;
+
+    PRInt32   copyLen = strresult.Length();
+    if (copyLen > (obj->obuffer_size - 10))
+      copyLen = obj->obuffer_size - 10;
+
+    nsCRT::memcpy(templine, cresult, copyLen);
+    obj->obuffer[copyLen] = '\0';
+    Recycle(cresult);
+  }
   else
   {
     nsCRT::memcpy(templine, line, length);

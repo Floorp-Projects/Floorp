@@ -1003,6 +1003,7 @@ nsHTMLContentSinkStream::AddLeaf(const nsIParserNode& aNode){
   else if (type == eHTMLTag_text)
   {
     const nsString& text = aNode.GetText();
+    printf("Leaf text node: '%s'\n", text.ToNewCString());
     if (!mDoFormat || preformatted)
     {
       Write(text);

@@ -30,14 +30,12 @@
 #include "nsMimeObjectClassAccess.h"
 #include "nsMimeConverter.h"
 #include "nsMsgHeaderParser.h"
-#include "nsMimeURLUtils.h"
 #include "nsMimeHeaders.h"
 
 static NS_DEFINE_CID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID);
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 static NS_DEFINE_CID(kCStreamConverterCID, NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
 static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
-static NS_DEFINE_CID(kCIMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 static NS_DEFINE_CID(kCIMimeHeadersCID, NS_IMIMEHEADERS_CID);
 
 // private factory declarations for each component we know how to produce
@@ -46,7 +44,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeObjectClassAccess)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsStreamConverter)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgHeaderParser)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeURLUtils)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMimeHeaders)
 
 // Module implementation for the sample library
@@ -70,7 +67,6 @@ protected:
     nsCOMPtr<nsIGenericFactory> mMimeConverterFactory;
     nsCOMPtr<nsIGenericFactory> mStreamConverterFactory;
     nsCOMPtr<nsIGenericFactory> mMsgHeaderParserFactory;
-    nsCOMPtr<nsIGenericFactory> mMimeURLUtilsFactory;
     nsCOMPtr<nsIGenericFactory> mMimeHeadersFactory;
 };
 
@@ -106,7 +102,6 @@ void nsMimeModule::Shutdown()
     mMimeConverterFactory = null_nsCOMPtr();
     mStreamConverterFactory = null_nsCOMPtr();
     mMsgHeaderParserFactory = null_nsCOMPtr();
-    mMimeURLUtilsFactory = null_nsCOMPtr();
     mMimeHeadersFactory = null_nsCOMPtr();
 }
 
@@ -160,12 +155,6 @@ NS_IMETHODIMP nsMimeModule::GetClassObject(nsIComponentManager *aCompMgr,
             rv = NS_NewGenericFactory(getter_AddRefs(mMsgHeaderParserFactory), &nsMsgHeaderParserConstructor);
         fact = mMsgHeaderParserFactory;
     }
-    else if (aClass.Equals(kCIMimeURLUtilsCID)) 
-    {
-        if (!mMimeURLUtilsFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mMimeURLUtilsFactory), &nsMimeURLUtilsConstructor);
-        fact = mMimeURLUtilsFactory;
-    }
     else if (aClass.Equals(kCIMimeHeadersCID)) 
     {
         if (!mMimeHeadersFactory)
@@ -192,8 +181,6 @@ static Components gComponents[] = {
     { "Mime Converter", &kCMimeConverterCID,
       nsnull},
     { "Msg Header Parser", &kCMsgHeaderParserCID,
-      nsnull },
-    { "Mime URL Utils", &kCIMimeURLUtilsCID,
       nsnull },
     { "Mailnews Mime Stream Converter", &kCStreamConverterCID,
       NS_MAILNEWS_MIME_STREAM_CONVERTER_PROGID },

@@ -28,7 +28,6 @@ include <$(DEPTH)\config\config.mak>
 
 EXPORTS =								\
         nsMsgHeaderParser.h             \
-        nsMimeURLUtils.h                \
         nsStreamConverter.h             \
 		nsMimeTypes.h		            \
 		nsMimeStringResources.h		    \
@@ -104,7 +103,6 @@ OBJS=											\
 		.\$(OBJDIR)\mimecom.obj				\
 		.\$(OBJDIR)\mimemoz2.obj			\
 		.\$(OBJDIR)\nsMsgHeaderParser.obj	\
-		.\$(OBJDIR)\nsMimeURLUtils.obj		\
 		.\$(OBJDIR)\nsStreamConverter.obj	\
 		.\$(OBJDIR)\mimedrft.obj			\
 		.\$(OBJDIR)\nsMimeHeaders.obj		\

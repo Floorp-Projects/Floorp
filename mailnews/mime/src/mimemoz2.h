@@ -147,11 +147,11 @@ extern "C" nsresult     mimeEmitterStartHeader(MimeDisplayOptions *opt, PRBool r
 /* To Get the connnection to prefs service manager */
 extern "C" nsIPref          *GetPrefServiceManager(MimeDisplayOptions *opt);
 
-extern "C" char             *GetOSTempFile(const char *name);
-
 /* This is the next generation string retrieval call */
 extern "C" char             *MimeGetStringByID(PRInt32 stringID);
 
+// Utility to create a nsIURI object...
+extern "C" nsresult         nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase);
 
 #ifdef __cplusplus
 }

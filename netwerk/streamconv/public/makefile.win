@@ -26,6 +26,7 @@ DEPTH = ..\..\..
 XPIDLSRCS =                        \
         .\nsIStreamConverter.idl   \
         .\nsIStreamConverterService.idl \
+        .\mozITXTToHTMLConv.idl \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

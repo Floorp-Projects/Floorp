@@ -25,7 +25,9 @@
 #include "nsMsgSendPart.h"
 #include "nsIMimeConverter.h"
 #include "nsFileStream.h"
-#include "nsIMimeURLUtils.h"
+#include "mozITXTToHTMLConv.h"
+#include "nsCOMPtr.h"
+#include "nsIComponentManager.h"
 #include "nsMsgEncoders.h"
 #include "nsMsgI18N.h"
 #include "nsMsgCompUtils.h"
@@ -38,7 +40,7 @@ static char *mime_mailto_stream_read_buffer = 0;
 PRInt32 nsMsgSendPart::M_counter = 0;
 
 static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
-static NS_DEFINE_CID(kCMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
+static NS_DEFINE_CID(kTXTToHTMLConvCID, MOZITXTTOHTMLCONV_CID);
 
 int MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 size) 
 {
@@ -515,24 +517,53 @@ nsMsgSendPart::Write()
 
     if (m_buffer) 
     {
-      nsCOMPtr<nsIMimeURLUtils> myURLUtil;
-      char                      *tmp = NULL;
-      
-      nsresult res = nsComponentManager::CreateInstance(kCMimeURLUtilsCID, 
-                                NULL, nsCOMTypeInfo<nsIMimeURLUtils>::GetIID(), 
-                                (void **) getter_AddRefs(myURLUtil)); 
-      if (!NS_SUCCEEDED(res))
-        goto FAIL;
-      
       const char* charset = GetCharsetName();
-      if (!nsCRT::strcasecmp("us-ascii", charset) ||
+      if (!nsCRT::strcasecmp("us-ascii", charset) ||  //XXX I18N use Unicode string
           !nsCRT::strcasecmp("ISO-8859-1", charset))
       {
-        myURLUtil->ScanHTMLForURLs(m_buffer, &tmp);
-        if (tmp) 
+        nsCOMPtr<mozITXTToHTMLConv> conv;
+        nsresult rv = nsComponentManager::CreateInstance(kTXTToHTMLConvCID,
+                              NULL, nsCOMTypeInfo<mozITXTToHTMLConv>::GetIID(),
+                              (void **) getter_AddRefs(conv));
+        if (NS_FAILED(rv))
         {
-          SetBuffer(tmp);
-          PR_Free(tmp);
+          status = -1;
+          goto FAIL;
+        }
+
+        //XXX I18N
+        nsAutoString strline(m_buffer);
+        PRUnichar* wline = strline.ToNewUnicode();
+        if (!wline)
+        {
+          status = -1;
+          goto FAIL;
+        }
+
+        PRUnichar* wresult;
+        rv = conv->ScanHTML(wline, ~PRUint32(mozITXTToHTMLConv::kGlyphSubstitution)
+                            /* XXX Ask Prefs what to do */, &wresult);
+        Recycle(wline);
+        if (NS_FAILED(rv))
+        {
+          status = -1;
+          goto FAIL;
+        }
+
+        //XXX I18N Converting PRUnichar* to char*
+        nsAutoString strresult(wresult);
+        char* cresult = strresult.ToNewCString();
+
+        Recycle(wresult);
+        if (cresult)
+        {
+          SetBuffer(cresult);
+          Recycle(cresult);
+        }
+        else
+        {
+          status = -1;
+          goto FAIL;
         }
       }
     }

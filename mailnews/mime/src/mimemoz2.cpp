@@ -78,7 +78,6 @@ static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 extern "C" char     *MIME_DecodeMimePartIIStr(const char *header, char *charset);
-extern "C" nsresult nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec);
 
 static MimeHeadersState MIME_HeaderType;
 static PRBool MIME_NoInlineAttachments;
@@ -157,13 +156,13 @@ ProcessBodyAsAttachment(MimeObject *obj, nsMsgAttachmentData **data)
     {
       // if this is an IMAP part. 
       tmpURL = mime_set_url_imap_part(url, id_imap, id);
-      rv = nsMimeNewURI(&(tmp->url), tmpURL);
+      rv = nsMimeNewURI(&(tmp->url), tmpURL, nsnull);
     }
     else
     {
       // This is just a normal MIME part as usual. 
       tmpURL = mime_set_url_part(url, id, PR_TRUE);
-      rv = nsMimeNewURI(&(tmp->url), tmpURL);
+      rv = nsMimeNewURI(&(tmp->url), tmpURL, nsnull);
     }
 
     if ( (!tmp->url) || (NS_FAILED(rv)) )
@@ -257,7 +256,7 @@ MimeGetAttachmentList(MimeObject *tobj, const char *aMessageURL, nsMsgAttachment
     if (!urlSpec)
       return NS_ERROR_OUT_OF_MEMORY;
 
-    nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec);
+    nsresult rv = nsMimeNewURI(&(tmp->url), urlSpec, nsnull);
 
 	  PR_FREEIF(urlSpec);
 
@@ -393,28 +392,22 @@ NotifyEmittersOfAttachmentList(MimeDisplayOptions     *opt,
   }
 }
 
-//
-// Create a file spec for the a unique temp file
-// on the local machine. Caller must free memory
-// returned
-//
-extern char * 
-GetOSTempFile(const char *tFileName)
-{
-  if ((!tFileName) || (!*tFileName))
-    tFileName = "nsmail.tmp";
+// Utility to create a nsIURI object...
+extern "C" nsresult 
+nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
+{  
+  nsresult  res;
 
-  nsFileSpec tmpSpec = nsSpecialSystemDirectory(nsSpecialSystemDirectory::OS_TemporaryDirectory); 
-  tmpSpec += tFileName;
-  tmpSpec.MakeUnique();
-
-  char *tString = (char *)PL_strdup(tmpSpec.GetNativePathCString());
-  if (!tString)
-    return PL_strdup("mozmail.tmp");  // No need to I18N
-  else
-    return tString;
-}
+  if (nsnull == aInstancePtrResult) 
+    return NS_ERROR_NULL_POINTER;
   
+  NS_WITH_SERVICE(nsIIOService, pService, kIOServiceCID, &res);
+  if (NS_FAILED(res)) 
+    return NS_ERROR_FACTORY_NOT_REGISTERED;
+
+  return pService->NewURI(aSpec, aBase, aInstancePtrResult);
+}
+
 static char *
 mime_reformat_date(const char *date, void *stream_closure)
 {

@@ -32,7 +32,6 @@ LIBRARY_NAME	= mime_s
 CSRCS		= oldi18n.c
 
 CPPSRCS		= \
-		nsMimeURLUtils.cpp \
 		nsMimeObjectClassAccess.cpp \
 		nsMimeConverter.cpp \
 		nsMimeAddress.cpp \
@@ -82,7 +81,6 @@ EXPORTS		= \
 		nsMimeConverter.h \
 		nsMimeHeaders.h \
 		nsStreamConverter.h \
-		nsMimeURLUtils.h	\
 		nsMsgHeaderParser.h \
 		mimetext.h \
 		mimeleaf.h \

@@ -32,6 +32,7 @@ XPIDL_MODULE	= necko_stream_converter
 XPIDLSRCS	= \
 		nsIStreamConverter.idl \
 		nsIStreamConverterService.idl \
+		mozITXTToHTMLConv.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

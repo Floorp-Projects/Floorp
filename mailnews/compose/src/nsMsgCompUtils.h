@@ -94,12 +94,6 @@ char        *mime_fix_news_header (const char *string);
 PRBool      mime_type_requires_b64_p (const char *type);
 PRBool      mime_type_needs_charset (const char *type);
 
-int         nsMsgMIMEGenerateMailtoFormPostHeaders (const char *from,
-                                                    const char *old_post_url,
-									                                  const char * /*referer*/,
-									                                  char **new_post_url_return,
-									                                  char **headers_return);
-
 char        *msg_make_filename_qtext(const char *srcText, PRBool stripCRLFs);
 
 // Rip apart the URL and extract a reasonable value for the `real_name' slot.
@@ -119,7 +113,7 @@ PRBool      nsMsgIsLocalFile(const char *url);
 char        *nsMsgGetLocalFileFromURL(char *url);
 char        *nsMsgPlatformFileToURL (nsFileSpec aFileSpec);
 
-char        *nsMsgParseURL(const char *url, int part);
+char        *nsMsgParseURLHost(const char *url);
 
 char        *GenerateFileNameFromURI(nsIURI *aURL);
 
