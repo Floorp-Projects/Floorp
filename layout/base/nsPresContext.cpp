@@ -835,7 +835,7 @@ nsPresContext::SetImageAnimationMode(PRUint16 aMode)
 
   // This hash table contains a list of background images
   // so iterate over it and set the mode
-  mImageLoaders.Enumerate(set_animation_mode, (void*)aMode);
+  mImageLoaders.Enumerate(set_animation_mode, NS_INT32_TO_PTR(aMode));
 
   // Now walk the content tree and set the animation mode 
   // on all the images
