@@ -48,7 +48,6 @@
 
 */
 
-#define MOZ_NGLAYOUT 
 #define STANDALONE_IMAGE_LIB /* libimg */
 #define MODULAR_NETLIB /* network */
 #define MOZILLA_CLIENT
