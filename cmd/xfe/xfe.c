@@ -2898,6 +2898,9 @@ FE_GetCharSetID(INTL_CharSetID_Selector selector)
         case INTL_DefaultTextWidgetCsidSel:
                 charsetID = (INTLCharSetID) fe_LocaleCharSetID;
                 break;
+        case INTL_OldBookmarkCsidSel:
+                charsetID = (INTLCharSetID) INTL_DocToWinCharSetID(fe_LocaleCharSetID);
+                break;
         default:
                 break;
         }

@@ -101,7 +101,8 @@ INTLCharSetID FE_GetCharSetID(INTL_CharSetID_Selector selector)
     {                                                                           
     case INTL_FileNameCsidSel:                                                  
         charsetID = (INTLCharSetID) ScriptToEncoding(GetScriptManagerVariable(smSysScript));
-        break;                                                                  
+        break;
+    case INTL_OldBookmarkCsidSel:                                                                  
     case INTL_DefaultTextWidgetCsidSel:                                         
         charsetID = (INTLCharSetID) ScriptToEncoding(FontToScript(applFont));   
         break;                                                                  
