@@ -137,7 +137,6 @@ JavaXPCOMInstance* CreateJavaXPCOMInstance(nsISupports* aXPCOMObject,
  **************************************/
 void          AddJavaXPCOMBinding(JNIEnv* env, jobject aJavaStub,
                                   void* aXPCOMObject);
-nsISupports*  RemoveXPCOMBinding(JNIEnv* env, jobject aJavaObject);
 void          RemoveJavaXPCOMBinding(JNIEnv* env, jobject aJavaObject,
                                      void* aXPCOMObject);
 void*         GetMatchingXPCOMObject(JNIEnv* env, jobject aJavaObject);
