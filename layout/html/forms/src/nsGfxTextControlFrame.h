@@ -35,6 +35,7 @@
 #include "nsIDOMDragListener.h"
 #include "nsIDOMFocusListener.h"
 #include "nsIDOMSelectionListener.h"
+#include "nsITransactionListener.h"
 #include "nsIDOMDocument.h"
 #include "nsIPresContext.h"
 #include "nsIContent.h"
@@ -221,7 +222,8 @@ class nsEnderEventListener : public nsIEnderEventListener,
                              public nsIDOMKeyListener, 
                              public nsIDOMMouseListener,
                              public nsIDOMFocusListener,
-                             public nsIDOMSelectionListener
+                             public nsIDOMSelectionListener,
+                             public nsITransactionListener
 {
 public:
 
@@ -274,6 +276,25 @@ public:
   NS_IMETHOD TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset);
   /*END interfaces from nsIDOMSelectionListener*/
  
+  /** nsITransactionListener interfaces
+    */
+  
+  NS_IMETHOD WillDo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidDo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aDoResult);
+  NS_IMETHOD WillUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidUndo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aUndoResult);
+  NS_IMETHOD WillRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, PRBool *aInterrupt);
+  NS_IMETHOD DidRedo(nsITransactionManager *aManager, nsITransaction *aTransaction, nsresult aRedoResult);
+  NS_IMETHOD WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD DidBeginBatch(nsITransactionManager *aManager, nsresult aResult);
+  NS_IMETHOD WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt);
+  NS_IMETHOD DidEndBatch(nsITransactionManager *aManager, nsresult aResult);
+  NS_IMETHOD WillMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
+                       nsITransaction *aTransactionToMerge, PRBool *aInterrupt);
+  NS_IMETHOD DidMerge(nsITransactionManager *aManager, nsITransaction *aTopTransaction,
+                      nsITransaction *aTransactionToMerge,
+                      PRBool aDidMerge, nsresult aMergeResult);
+   
   friend nsresult NS_NewEnderEventListener(nsIEnderEventListener ** aInstancePtrResult);
 
 protected:
@@ -300,6 +321,9 @@ protected:
                             // of event processing.  See the KeyUp handler
                             // for places where this is a problem, and see
                             // nsCWeakReference.h for notes on use.
+                            
+  PRPackedBool              mFirstDoOfFirstUndo;
+  
 };
 
 
@@ -521,6 +545,9 @@ public:
   //      nsEnderEventListener::Focus
   PRBool DidSetFocus() { return mDidSetFocus; }
 
+  /** Call the controller for this control to update commands */
+  nsresult UpdateTextControlCommands(const nsString& aCommand);
+
   /* ============= nsIGfxTextControlFrame ================= */
   NS_IMETHOD GetEditor(nsIEditor **aEditor);
   NS_IMETHOD GetWebShell(nsIWebShell **aWebShell);
@@ -632,9 +659,6 @@ protected:
                                         nsIAtom** aListName) const;
   NS_IMETHOD Destroy(nsIPresContext *aPresContext);
 
-  /** Call the controller for this control to update commands */
-  nsresult UpdateTextControlCommands(const nsString& aCommand);
-
 public:
   void SetShouldSetFocus() { mDidSetFocus = PR_FALSE; };
   void SetFrameConstructor(nsCSSFrameConstructor *aConstructor)
@@ -642,33 +666,38 @@ public:
   nsresult GetFirstFrameWithIID(nsIPresContext *aPresContext, const nsIID& aIID, nsIFrame *aRootFrame, void **aResultFrame);
 
 protected:
-  nsCOMPtr<nsIWebShell> mWebShell;
-  PRBool mCreatingViewer;
-  EnderTempObserver* mTempObserver;
-  nsEnderDocumentObserver *mDocObserver;
-  PRBool mNotifyOnInput;  // init false, 
+  nsCOMPtr<nsIWebShell>     mWebShell;
+  EnderTempObserver*        mTempObserver;
+  nsEnderDocumentObserver*  mDocObserver;
+
+  PRPackedBool              mCreatingViewer;
+  PRPackedBool              mNotifyOnInput;  // init false, 
     // when true this frame propogates notifications whenever the edited content is changed
-  PRBool mIsProcessing;
-  PRBool mNeedsStyleInit;
-  nsIPresContext *mFramePresContext; // not ref counted
-  nsString* mCachedState; // this is used for caching changed between frame creation
+  PRPackedBool              mIsProcessing;
+  PRPackedBool              mNeedsStyleInit;
+  PRPackedBool              mDidSetFocus;  // init false, 
+
+  PRPackedBool              mGotSelectionState;
+  PRPackedBool              mSelectionWasCollapsed;
+  
+  nsIPresContext*           mFramePresContext; // not ref counted
+  nsString*                 mCachedState; // this is used for caching changed between frame creation
                           // and full initialization
-  nsCWeakReferent mWeakReferent; // so this obj can be used as a weak ptr
+  nsCWeakReferent           mWeakReferent; // so this obj can be used as a weak ptr
 
   // listeners
   nsCOMPtr<nsIEnderEventListener> mEventListener;           // ref counted
   nsEnderFocusListenerForDisplayContent *mFocusListenerForDisplayContent; // ref counted
-  nsEnderListenerForContent *mListenerForContent;  // ref counted
+  nsEnderListenerForContent*  mListenerForContent;  // ref counted
 
-  nsCSSFrameConstructor *mFrameConstructor;
-  nsIFrame *mDisplayFrame;
-  nsCOMPtr<nsITextContent> mDisplayContent;
+  nsCSSFrameConstructor*      mFrameConstructor;
+  nsIFrame*                   mDisplayFrame;
+  nsCOMPtr<nsITextContent>    mDisplayContent;
  
   // editing state
-  nsCOMPtr<nsIEditor>       mEditor;  // ref counted
-  nsCOMPtr<nsIDOMDocument>  mDoc;     // ref counted
+  nsCOMPtr<nsIEditor>         mEditor;  // ref counted
+  nsCOMPtr<nsIDOMDocument>    mDoc;     // ref counted
 
-  PRBool mDidSetFocus;  // init false, 
 
   // the PassThroughState is used to manage a tiny state machine so 
   // only the proper messages get passed through

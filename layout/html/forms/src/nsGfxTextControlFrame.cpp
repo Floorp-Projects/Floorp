@@ -43,8 +43,10 @@
 #include "nsIFrameManager.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMHTMLTextAreaElement.h"
+#include "nsIDOMWindow.h"
 #include "nsIScrollbar.h"
 #include "nsIScrollableFrame.h"
+#include "nsIScriptGlobalObject.h"
 
 #include "nsCSSRendering.h"
 #include "nsIDeviceContext.h"
@@ -68,6 +70,7 @@
 #include "nsIEditorIMESupport.h"
 #include "nsIDocumentEncoder.h"
 #include "nsIEditorMailSupport.h"
+#include "nsITransactionManager.h"
 #include "nsEditorCID.h"
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
@@ -330,6 +333,8 @@ nsGfxTextControlFrame::nsGfxTextControlFrame()
   mFrameConstructor(nsnull),
   mDisplayFrame(nsnull),
   mDidSetFocus(PR_FALSE),
+  mGotSelectionState(PR_FALSE),
+  mSelectionWasCollapsed(PR_FALSE),
   mPassThroughMouseEvents(eUninitialized)
 {
 #ifdef DEBUG
@@ -404,16 +409,25 @@ nsGfxTextControlFrame::~nsGfxTextControlFrame()
     if (mEditor)
     {
       // remove selection listener
-      nsCOMPtr<nsIDOMSelection>selection;
+      nsCOMPtr<nsIDOMSelection> selection;
       result = mEditor->GetSelection(getter_AddRefs(selection));
       if (NS_SUCCEEDED(result) && selection) 
       {
-        nsCOMPtr<nsIDOMSelectionListener>selListener;
-        selListener = do_QueryInterface(mEventListener);
-        if (selListener) {
+        nsCOMPtr<nsIDOMSelectionListener> selListener = do_QueryInterface(mEventListener);
+        if (selListener)
           selection->RemoveSelectionListener(selListener); 
-        }
       }
+      
+      // remove the txnListener
+      nsCOMPtr<nsITransactionManager> txnMgr;
+      result = mEditor->GetTransactionManager(getter_AddRefs(txnMgr));
+      if (NS_SUCCEEDED(result) && txnMgr) 
+      {
+        nsCOMPtr<nsITransactionListener> txnListener = do_QueryInterface(mEventListener);
+        if (txnListener)
+          txnMgr->RemoveListener(txnListener); 
+      }
+      
       // remove all other listeners from embedded document
       nsCOMPtr<nsIDOMDocument>domDoc;
       result = mEditor->GetDocument(getter_AddRefs(domDoc));
@@ -616,8 +630,7 @@ NS_METHOD nsGfxTextControlFrame::HandleEvent(nsIPresContext* aPresContext,
     break;
     
     case NS_FORM_SELECTED:
-      nsAutoString commandString("selection-changed");
-      return UpdateTextControlCommands(commandString);
+      return UpdateTextControlCommands(nsAutoString("select"));
       break;
   }
   return NS_OK;
@@ -2744,18 +2757,32 @@ nsGfxTextControlFrame::InstallEventListeners()
   if (NS_FAILED(result)) { return result; }
 
   // add the selection listener
-  nsCOMPtr<nsIDOMSelection>selection;
   if (mEditor && mEventListener)
   {
+    nsCOMPtr<nsIDOMSelection>selection;
     result = mEditor->GetSelection(getter_AddRefs(selection));
     if (NS_FAILED(result)) { return result; }
     if (!selection) { return NS_ERROR_NULL_POINTER; }
     nsCOMPtr<nsIDOMSelectionListener> selectionListener = do_QueryInterface(mEventListener);
     if (!selectionListener) { return NS_ERROR_NO_INTERFACE; }
-    selection->AddSelectionListener(selectionListener);
+    result = selection->AddSelectionListener(selectionListener);
     if (NS_FAILED(result)) { return result; }
   }
+  
+  // add the transation listener
+  if (mEditor && mEventListener)
+  {
+    nsCOMPtr<nsITransactionManager> txMgr;
+    result = mEditor->GetTransactionManager(getter_AddRefs(txMgr));
+    if (NS_FAILED(result)) return result;
+    if (!txMgr) { return NS_ERROR_NULL_POINTER; }
 
+    nsCOMPtr<nsITransactionListener> txnListener = do_QueryInterface(mEventListener);
+    if (!txnListener) { return NS_ERROR_NO_INTERFACE; }
+    result = txMgr->AddListener(txnListener);
+    if (NS_FAILED(result)) { return result; }
+  }  
+  
   return result;
 }
 
@@ -3073,51 +3100,62 @@ nsGfxTextControlFrame::InternalContentChanged()
 
   // Dispatch the change event
   nsEventStatus status = nsEventStatus_eIgnore;
-  nsGUIEvent event;
-  event.eventStructType = NS_GUI_EVENT;
-  event.widget = nsnull;
-  event.message = NS_FORM_INPUT;
-  event.flags = NS_EVENT_FLAG_INIT;
+  nsGUIEvent theEvent;
+  theEvent.eventStructType = NS_GUI_EVENT;
+  theEvent.widget = nsnull;
+  theEvent.message = NS_FORM_INPUT;
+  theEvent.flags = NS_EVENT_FLAG_INIT;
 
   // Have the content handle the event, propogating it according to normal DOM rules.
-  nsresult result = mContent->HandleDOMEvent(mFramePresContext, &event, nsnull, NS_EVENT_FLAG_INIT, &status); 
-
-  // update commands via controllers interface, if present
-  nsAutoString commandString("furby");
-  result = UpdateTextControlCommands(commandString);
-  
-  return result;
+  return mContent->HandleDOMEvent(mFramePresContext, &theEvent, nsnull, NS_EVENT_FLAG_INIT, &status); 
 }
 
 nsresult nsGfxTextControlFrame::UpdateTextControlCommands(const nsString& aCommand)
 {
-  nsresult result;
+  nsresult rv = NS_OK;
   
-  nsCOMPtr<nsIControllers> controllers;
-  nsCOMPtr<nsIDOMNSHTMLInputElement> textInputDOMElement = do_QueryInterface(mContent);
-  if (textInputDOMElement) {
-    result = textInputDOMElement->GetControllers(getter_AddRefs(controllers));
-  }
-  else 
-  {
-    nsCOMPtr<nsIDOMNSHTMLTextAreaElement> textAreaDOMElement = do_QueryInterface(mContent);
-    if (textAreaDOMElement) {
-      result = textAreaDOMElement->GetControllers(getter_AddRefs(controllers));
-    }
-  }
-  if (NS_FAILED(result)) { return result; }
-  if (controllers)
-  {
-    nsCOMPtr<nsIDOMXULCommandDispatcher> commandDispatcher;
-    result = controllers->GetCommandDispatcher(getter_AddRefs(commandDispatcher));
-    if (NS_FAILED(result)) { return result; }
-    if (commandDispatcher)
+  if (mEditor)
+  {  
+    if (aCommand == nsAutoString("select"))   // optimize select updates
     {
-      result = commandDispatcher->UpdateCommands(aCommand);
+      nsCOMPtr<nsIDOMSelection> domSelection;
+      rv = mEditor->GetSelection(getter_AddRefs(domSelection));
+      if (NS_FAILED(rv)) return rv;
+      if (!domSelection) return NS_ERROR_UNEXPECTED;
+    
+      PRBool selectionCollapsed;
+      domSelection->GetIsCollapsed(&selectionCollapsed);
+      if (mGotSelectionState && mSelectionWasCollapsed == selectionCollapsed)
+      {
+        return NS_OK;   // no update necessary
+      }
+      else
+      {
+        mGotSelectionState = PR_TRUE;
+        mSelectionWasCollapsed = selectionCollapsed;
+      }
     }
   }
 
-  return result;
+  nsCOMPtr<nsIContent> content;
+  rv = GetContent(getter_AddRefs(content));
+  if (NS_FAILED(rv)) return rv;
+  if (!content) return NS_ERROR_FAILURE;
+  
+  nsCOMPtr<nsIDocument> doc;
+  rv = content->GetDocument(*getter_AddRefs(doc));
+  if (NS_FAILED(rv)) return rv;
+  if (!doc) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+  rv = doc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+  if (NS_FAILED(rv)) return rv;
+  if (!scriptGlobalObject) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
+  if (!domWindow) return NS_ERROR_FAILURE;
+
+  return domWindow->UpdateCommands(aCommand);
 }
 
 
@@ -3321,6 +3359,10 @@ EnderFrameLoadingInfo::EnderFrameLoadingInfo(const nsSize& aSize)
 NS_IMPL_ISUPPORTS(EnderFrameLoadingInfo,kISupportsIID);
 
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
 /*******************************************************************************
  * nsEnderDocumentObserver
  ******************************************************************************/
@@ -3494,6 +3536,9 @@ NS_IMETHODIMP nsEnderDocumentObserver::DocumentWillBeDestroyed(nsIDocument *aDoc
   return NS_OK; 
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 
 /*******************************************************************************
@@ -3516,14 +3561,11 @@ NS_IMPL_RELEASE(nsEnderEventListener)
 
 
 nsEnderEventListener::nsEnderEventListener()
+: mView(nsnull)
+, mSkipFocusDispatch(PR_FALSE)    // needed for when mouse down set focus on native widgets
+, mFirstDoOfFirstUndo(PR_TRUE)
 {
   NS_INIT_REFCNT();
-  mView = nsnull;
-
-  // needed for when mouse down set focus on native widgets
-  mSkipFocusDispatch = PR_FALSE;
-
-  // other fields are objects that initialize themselves
 }
 
 nsEnderEventListener::~nsEnderEventListener()
@@ -3582,6 +3624,11 @@ nsEnderEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener))) {
     *aInstancePtr = (void*)(nsIDOMSelectionListener*)this;
+    NS_ADDREF_THIS();
+    return NS_OK;
+  }
+  if (aIID.Equals(NS_GET_IID(nsITransactionListener))) {
+    *aInstancePtr = (void*)(nsITransactionListener*)this;
     NS_ADDREF_THIS();
     return NS_OK;
   }
@@ -4235,7 +4282,118 @@ nsEnderEventListener::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsEnderEventListener::WillDo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
 
+NS_IMETHODIMP nsEnderEventListener::DidDo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, nsresult aDoResult)
+{
+  // we only need to update if the undo count is now 1
+  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
+  PRBool mustUpdate = PR_FALSE;
+  
+  if (gfxFrame)
+  {
+    PRInt32 undoCount;
+    aManager->GetNumberOfUndoItems(&undoCount);
+    if (undoCount == 1)
+    {
+      if (mFirstDoOfFirstUndo)
+        gfxFrame->UpdateTextControlCommands(nsAutoString("undo"));
+ 
+      mFirstDoOfFirstUndo = PR_FALSE;
+    }
+  }   
+    
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::WillUndo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::DidUndo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, nsresult aUndoResult)
+{
+  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame)
+  {
+    PRInt32 undoCount;
+    aManager->GetNumberOfUndoItems(&undoCount);
+    if (undoCount == 0)
+      mFirstDoOfFirstUndo = PR_TRUE;    // reset the state for the next do
+
+    gfxFrame->UpdateTextControlCommands(nsAutoString("undo"));
+  }
+  
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::WillRedo(nsITransactionManager *aManager,
+  nsITransaction *aTransaction, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::DidRedo(nsITransactionManager *aManager,  
+  nsITransaction *aTransaction, nsresult aRedoResult)
+{
+  nsGfxTextControlFrame *gfxFrame = mFrame.Reference();
+  if (gfxFrame)
+  {
+    gfxFrame->UpdateTextControlCommands(nsAutoString("undo"));
+  }
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::WillBeginBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::DidBeginBatch(nsITransactionManager *aManager, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::WillEndBatch(nsITransactionManager *aManager, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::DidEndBatch(nsITransactionManager *aManager, nsresult aResult)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::WillMerge(nsITransactionManager *aManager,
+        nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge, PRBool *aInterrupt)
+{
+  *aInterrupt = PR_FALSE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsEnderEventListener::DidMerge(nsITransactionManager *aManager,
+  nsITransaction *aTopTransaction, nsITransaction *aTransactionToMerge,
+                    PRBool aDidMerge, nsresult aMergeResult)
+{
+  return NS_OK;
+}
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 /*******************************************************************************
  * nsEnderFocusListenerForDisplayContent
@@ -4306,6 +4464,9 @@ nsEnderFocusListenerForDisplayContent::SetFrame(nsGfxTextControlFrame *aFrame)
   return NS_OK;
 }
 
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 /*******************************************************************************
  * EnderTempObserver
@@ -4421,8 +4582,9 @@ EnderTempObserver::SetFrame(nsGfxTextControlFrame *aFrame)
 }
 
 
-
-
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 /*******************************************************************************
  * nsEnderListenerForContent
