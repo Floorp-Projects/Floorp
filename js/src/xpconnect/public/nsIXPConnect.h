@@ -1,4 +1,4 @@
-/* -*- Mode: C; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -129,6 +129,11 @@ public:
 #define NS_IXPCONNECT_IID    \
 { 0xefae37b0, 0x946d, 0x11d2, \
   {0xba, 0x58, 0x0, 0x80, 0x5f, 0x8a, 0x5d, 0xd7} }
+
+// For use with the service manager
+// {CB6593E0-F9B2-11d2-BDD6-000064657374}
+#define NS_XPCONNECT_CID \
+{ 0xcb6593e0, 0xf9b2, 0x11d2, { 0xbd, 0xd6, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74 } }
 
 class nsIXPConnect : public nsISupports
 {
