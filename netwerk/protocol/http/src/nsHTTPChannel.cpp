@@ -1490,10 +1490,13 @@ nsresult nsHTTPChannel::Redirect(const char *aNewLocation,
     rv = serv->NewURI(aNewLocation, mURI, getter_AddRefs(newURI));
     if (NS_FAILED(rv)) return rv;
 
-    PRBool eq = PR_FALSE;
-    rv = mURI->Equals(newURI, &eq);
+    nsXPIDLCString spec1;
+    nsXPIDLCString spec2;
 
-    if (eq)
+    mURI   -> GetSpec (getter_Copies (spec1));
+    newURI -> GetSpec (getter_Copies (spec2));
+
+    if (!PL_strcmp (spec1, spec2))
     {
         // loop detected
         // ruslan/24884
