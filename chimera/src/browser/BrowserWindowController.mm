@@ -652,20 +652,18 @@ static NSString *SearchToolbarItemIdentifier = @"Search Toolbar Item";
 
 - (NSArray*)throbberImages
 {
-  const int kNumThrobberImages = 6;
   // Simply load an array of NSImage objects from the files "throbber-NN.tif". I used "Quicktime Player" to
   // save all of the frames of the animated gif as individual .tif files for simplicity of implementation.
   if (mThrobberImages == nil) {
-    NSImage* images[kNumThrobberImages];
-    for (int i = 0; i < kNumThrobberImages; ++i) {
+    NSImage* images[64];
+    int i;
+    for (i = 0;; ++i) {
       NSString* imageName = [NSString stringWithFormat: @"throbber-%02d", i + 1];
       images[i] = [NSImage imageNamed: imageName];
-      if (images[i] == nil) {
-        NSLog(@"throbber image %@ failed to load", imageName);
-        abort();
-      }
+      if (images[i] == nil)
+        break;
     }
-    mThrobberImages = [[NSArray alloc] initWithObjects: images count: kNumThrobberImages];
+    mThrobberImages = [[NSArray alloc] initWithObjects: images count: i];
   }
   return mThrobberImages;
 }
