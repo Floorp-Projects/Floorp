@@ -137,6 +137,7 @@ public:
 
   // nsIScriptContextOwner
   NS_IMETHOD GetScriptContext(nsIScriptContext **aContext);
+  NS_IMETHOD GetScriptGlobalObject(nsIScriptGlobalObject **aGlobal);
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
   // nsWebShell
@@ -1047,6 +1048,23 @@ nsWebShell::GetScriptContext(nsIScriptContext** aContext)
 
   *aContext = mScriptContext;
   NS_ADDREF(mScriptContext);
+
+  return res;
+}
+
+nsresult 
+nsWebShell::GetScriptGlobalObject(nsIScriptGlobalObject** aGlobal)
+{
+  NS_PRECONDITION(nsnull != aGlobal, "null arg");
+  nsresult res = NS_OK;
+
+  if (nsnull == mScriptGlobal) {
+    res = NS_NewScriptGlobalObject(&mScriptGlobal);
+    if (NS_OK != res) {
+      return res;
+    }
+  }
+  *aGlobal = mScriptGlobal;
 
   return res;
 }
