@@ -693,7 +693,7 @@ nsTableRowFrame::CalculateCellActualSize(nsIFrame* aCellFrame,
   if (specifiedHeight > aDesiredHeight)
     aDesiredHeight = specifiedHeight;
  
-  if (0 == aDesiredWidth) { // special Nav4 compatibility code for the width
+  if ((0 == aDesiredWidth) && (NS_UNCONSTRAINEDSIZE != aAvailWidth)) { // special Nav4 compatibility code for the width
     aDesiredWidth = aAvailWidth;
   } 
 

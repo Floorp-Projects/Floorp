@@ -238,6 +238,7 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   maxWidth -= horBorderPadding;
   maxWidth = PR_MAX(0, maxWidth);
 
+  PRInt32 numNonZeroWidthCols = 0;
   // set the table's columns to the min width
   nscoord minTableWidth = 0;
   PRInt32 colX;
@@ -247,6 +248,10 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
     nscoord colMinWidth = colFrame->GetMinWidth();
     mTableFrame->SetColumnWidth(colX, colMinWidth);
     minTableWidth += colMinWidth;
+    if ((colFrame->GetMinWidth() > 0) || (colFrame->GetFixWidth() > 0) ||
+        (colFrame->GetPctWidth() > 0) || (colFrame->GetWidth(MIN_PRO) > 0)) {
+      numNonZeroWidthCols++;
+    }
   }
   minTableWidth += mCellSpacingTotal;
 
@@ -338,9 +343,9 @@ BasicTableLayoutStrategy::BalanceColumnWidths(nsIPresContext*          aPresCont
   // allocate the rest to auto columns, with some exceptions
   if ( (tableIsAutoWidth && (perAdjTableWidth - totalAllocated > 0)) ||
        (!tableIsAutoWidth && (totalAllocated < maxWidth)) ) {
-    PRInt32 numEffCols = mTableFrame->GetEffectiveColCount();
-    PRBool excludePct  = (totalCounts[PCT] != numEffCols);
-    PRBool excludeFix  = (totalCounts[PCT] + totalCounts[FIX] + totalCounts[FIX_ADJ] < numEffCols);
+    // determine how many cols have width either because of a min, fixed, des, or pct value
+    PRBool excludePct  = (totalCounts[PCT] != numNonZeroWidthCols);
+    PRBool excludeFix  = (totalCounts[PCT] + totalCounts[FIX] + totalCounts[FIX_ADJ] < numNonZeroWidthCols);
     PRBool excludePro  = (totalCounts[DES_CON] > 0);
     PRBool exclude0Pro = (totalCounts[MIN_PRO] != num0Proportional);
     if (tableIsAutoWidth) {
