@@ -379,7 +379,7 @@ protected:
 
   // Fetch an image from the image cache.
   nsresult GetImage(PRInt32 aRowIndex, const PRUnichar* aColID, PRBool aUseContext,
-                    nsIStyleContext* aStyleContext, imgIContainer** aResult);
+                    nsIStyleContext* aStyleContext, PRBool& aAllowImageRegions, imgIContainer** aResult);
 
   // Returns the size of a given image.   This size *includes* border and
   // padding.  It does not include margins.
