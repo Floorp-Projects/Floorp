@@ -828,6 +828,9 @@ IL_StreamFirstWrite(il_container *ic, const unsigned char *str, int32 len)
     file name in the cache unless you update ic->url_address.
     ic->fetch_url keeps the actual url for you.
      */	
+
+    FREE_IF_NOT_NULL(ic->fetch_url);
+
     if((ic->url)&& ic->url->GetAddress()){
 	    ic->fetch_url = PL_strdup(ic->url->GetAddress());
     }
