@@ -48,6 +48,7 @@ public class UIPrefs {
     setDisplayManager (prefs.getString ("ui.displaymanager","unified"));
     setTooltips       (prefs.getBoolean("ui.tooltips",true));
     setMultiPaneLayout(prefs.getString ("ui.multipanelayout",UnifiedMessageDisplayManager.SPLIT_RIGHT));
+    setLookAndFeel    (prefs.getString ("ui.lookandfeel","The Java(tm) Look and Feel"));
     writePrefs();
   }
   
@@ -55,11 +56,13 @@ public class UIPrefs {
     prefs.putString ("ui.displaymanager" ,getDisplayManager());
     prefs.putBoolean("ui.tooltips"       ,getTooltips());
     prefs.putString ("ui.multipanelayout",getMultiPaneLayout());
+    prefs.putString ("ui.lookandfeel"    ,getLookAndFeel());
  }
   
   String myDisplayManager;
   boolean myTooltips;
   String myMultiPaneLayout;
+  String myLookAndFeel;
   
   public String getDisplayManager() {
     return myDisplayManager;
@@ -73,6 +76,10 @@ public class UIPrefs {
     return myMultiPaneLayout;
   }
   
+  public String getLookAndFeel() {
+    return myLookAndFeel;
+  }
+  
   public void setDisplayManager(String aDisplayManager) {
     myDisplayManager = aDisplayManager;
   }
@@ -83,6 +90,10 @@ public class UIPrefs {
   
   public void setMultiPaneLayout(String aMultiPaneLayout) {
     myMultiPaneLayout = aMultiPaneLayout;
+  }
+  
+  public void setLookAndFeel(String aLookAndFeel) {
+    myLookAndFeel = aLookAndFeel;
   }
   
 }

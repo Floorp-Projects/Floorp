@@ -36,13 +36,18 @@ import java.net.URL;
 
 import javax.swing.JButton;
 import javax.swing.JCheckBox;
+import javax.swing.JComboBox;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JRadioButton;
 import javax.swing.JTextField;
 
+import javax.swing.AbstractListModel;
 import javax.swing.ButtonGroup;
+import javax.swing.ComboBoxModel;
 import javax.swing.ImageIcon;
+import javax.swing.LookAndFeel;
+import javax.swing.UIManager;
 
 import grendel.prefs.base.UIPrefs;
 
@@ -55,6 +60,7 @@ public class UI extends JFrame {
 
   JRadioButton rb1, rb2, rb3, rb4, rb5;
   JCheckBox    cbTooltips;
+  JComboBox    cbLandF;
   
   public static void main(String argv[]) {
     
@@ -73,6 +79,12 @@ public class UI extends JFrame {
 
     JLabel label = new JLabel("Choose your window layout:");
     label.setBounds(12,12,label.getPreferredSize().width,label.getPreferredSize().height);
+    getContentPane().add(label);
+    label = new JLabel("Look and Feel");
+    label.setBounds(12,148,label.getPreferredSize().width,label.getPreferredSize().height);
+    getContentPane().add(label);
+    label = new JLabel("Note: Grendel must be restarted to see any changes");
+    label.setBounds(12,294,label.getPreferredSize().width,label.getPreferredSize().height);
     getContentPane().add(label);
 
     JLabel icon; URL iconUrl;
@@ -120,6 +132,10 @@ public class UI extends JFrame {
     cbTooltips = new JCheckBox("Show tooltips");
     cbTooltips.setBounds(12,100,cbTooltips.getPreferredSize().width, cbTooltips.getPreferredSize().height);
     getContentPane().add(cbTooltips);
+
+    cbLandF = new JComboBox(new LAFListModel());
+    cbLandF.setBounds(100,144,300,cbLandF.getPreferredSize().height);
+    getContentPane().add(cbLandF);
 
     JButton button = new JButton("Cancel");
     button.setBounds(334,290,68,button.getPreferredSize().height);
@@ -182,6 +198,7 @@ public class UI extends JFrame {
     } else {
       prefs.setTooltips(false);
     }
+    prefs.setLookAndFeel((String)cbLandF.getSelectedItem());
   }
   
   class FinishActionListener implements ActionListener {
@@ -206,6 +223,52 @@ public class UI extends JFrame {
     	
     }
   
+  }
+
+  class LAFListModel extends AbstractListModel implements ComboBoxModel {
+    LookAndFeel fLAFs[] = null;
+    Object selection = null;
+
+    LAFListModel() {
+      UIManager.LookAndFeelInfo[] info = 
+        UIManager.getInstalledLookAndFeels();
+      fLAFs = new LookAndFeel[info.length];
+      for (int i = 0; i < info.length; i++) {
+        try {
+          String name = info[i].getClassName();
+          Class c = Class.forName(name);
+          fLAFs[i] = (LookAndFeel)c.newInstance();
+          if (fLAFs[i].getDescription().equals(prefs.getLookAndFeel())) {
+            selection = fLAFs[i].getDescription();
+          }
+        } catch (Exception e){
+        }
+      }
+    }
+
+    public int getSize() {
+      if (fLAFs != null) {
+        return fLAFs.length;
+      }
+      return 0;
+    }
+
+    public Object getElementAt(int index) {
+      if (fLAFs != null && index < fLAFs.length) {
+        // this is a hack. the toString() returns a string which is
+        // best described as "unwieldly"
+        return fLAFs[index].getDescription();
+      }
+      return null;
+    }
+
+    public void setSelectedItem(Object anItem) {
+      selection = anItem;
+    }
+    
+    public Object getSelectedItem() {
+      return selection;
+    }
   }
   
 }
