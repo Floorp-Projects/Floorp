@@ -673,7 +673,7 @@ nsMimeNewURI(nsIURI** aInstancePtrResult, const char *aSpec, nsIURI *aBase)
 }
 
 extern "C" nsresult 
-SetMailCharacterSetToMsgWindow(MimeObject *obj, const PRUnichar *aCharacterSet)
+SetMailCharacterSetToMsgWindow(MimeObject *obj, const char *aCharacterSet)
 {
   nsresult rv = NS_OK;
 
@@ -695,7 +695,9 @@ SetMailCharacterSetToMsgWindow(MimeObject *obj, const PRUnichar *aCharacterSet)
             nsCOMPtr<nsIMsgWindow> msgWindow;
             msgurl->GetMsgWindow(getter_AddRefs(msgWindow));
             if (msgWindow)
-              rv = msgWindow->SetMailCharacterSet(aCharacterSet);
+              rv = msgWindow->SetMailCharacterSet(!nsCRT::strcasecmp(aCharacterSet, "us-ascii") ?
+                                                  NS_LITERAL_STRING("ISO-8859-1").get() :
+                                                  NS_ConvertASCIItoUCS2(aCharacterSet).get());
           }
         }
       }

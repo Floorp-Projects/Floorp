@@ -500,12 +500,7 @@ MimeMessage_close_headers (MimeObject *obj)
     {
       MimeInlineText  *text = (MimeInlineText *) body;
       if (text && text->charset && *text->charset)
-      {
-        if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
-          SetMailCharacterSetToMsgWindow(body, NS_LITERAL_STRING("ISO-8859-1").get());
-        else
-          SetMailCharacterSetToMsgWindow(body, NS_ConvertASCIItoUCS2(text->charset).get());
-      }
+        SetMailCharacterSetToMsgWindow(body, text->charset);
     }
 
     char  *msgID = MimeHeaders_get (msg->hdrs, HEADER_MESSAGE_ID,

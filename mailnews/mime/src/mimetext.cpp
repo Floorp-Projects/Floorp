@@ -360,12 +360,8 @@ MimeInlineText_convert_and_parse_line(char *line, PRInt32 length, MimeObject *ob
         text->charset = nsCRT::strdup(textHTML->charset);
 
         //update MsgWindow charset if we are instructed to do so
-        if (text->needUpdateMsgWinCharset && *text->charset) {
-          if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
-            SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
-          else
-            SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
-        }
+        if (text->needUpdateMsgWinCharset && *text->charset)
+          SetMailCharacterSetToMsgWindow(obj, text->charset);
       }
     }
   }
@@ -442,12 +438,8 @@ MimeInlineText_open_dam(char *line, PRInt32 length, MimeObject *obj)
     text->charset = nsCRT::strdup(detectedCharset);
 
     //update MsgWindow charset if we are instructed to do so
-    if (text->needUpdateMsgWinCharset && *text->charset) {
-      if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
-        SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
-      else
-        SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
-    }
+    if (text->needUpdateMsgWinCharset && *text->charset)
+      SetMailCharacterSetToMsgWindow(obj, text->charset);
   }
 
   //process dam and line using the charset
@@ -516,12 +508,8 @@ MimeInlineText_rotate_convert_and_parse_line(char *line, PRInt32 length,
     {
       MimeInlineText_initializeCharset(obj);
       //update MsgWindow charset if we are instructed to do so
-      if (text->needUpdateMsgWinCharset && *text->charset) {
-        if (!nsCRT::strcasecmp(text->charset, "us-ascii"))
-          SetMailCharacterSetToMsgWindow(obj, NS_LITERAL_STRING("ISO-8859-1").get());
-        else
-          SetMailCharacterSetToMsgWindow(obj, NS_ConvertASCIItoUCS2(text->charset).get());
-      }
+      if (text->needUpdateMsgWinCharset && *text->charset)
+        SetMailCharacterSetToMsgWindow(obj, text->charset);
     }
 
     //if autodetect is on, push line to dam
