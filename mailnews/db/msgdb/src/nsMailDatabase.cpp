@@ -240,13 +240,11 @@ nsresult nsMailDatabase::OnNewPath (nsFileSpec &newPath)
 NS_IMETHODIMP nsMailDatabase::StartBatch()
 {
 #ifndef XP_MAC
-  if (!m_folderStream)
+  if (!m_folderStream)  //only if we create a stream, set m_ownFolderStream to true.
   {
     m_folderStream = new nsIOFileStream(nsFileSpec(*m_folderSpec));
     m_ownFolderStream = PR_TRUE;
   }
-  else 
-    m_ownFolderStream = PR_FALSE; //better to set it, if EndBatch was not called last time
 #endif  
 return NS_OK;
 }
