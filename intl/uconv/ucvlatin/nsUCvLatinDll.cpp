@@ -21,30 +21,33 @@
 
 #include "pratom.h"
 #include "nsIComponentManager.h"
+#include "nsIServiceManager.h"
 #include "nsIFactory.h"
+#include "nsCOMPtr.h"
 #include "nsICharsetConverterInfo.h"
 #include "nsUCvLatinCID.h"
+#include "nsUCvLatinDll.h"
 #include "nsLatin1ToUnicode.h"
 #include "nsISO88597ToUnicode.h"
 #include "nsCP1253ToUnicode.h"
 #include "nsUnicodeToLatin1.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-
-static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 // just for NS_IMPL_IDS; this is a good, central place to implement GUIDs
-#include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeDecoder.h"
 #include "nsIUnicodeDecodeUtil.h"
-#include "nsICharsetConverterManager.h"
+#include "nsIUnicodeEncoder.h"
 #include "nsIUnicodeEncodeHelper.h"
+#include "nsICharsetConverterManager.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-extern "C" PRInt32 g_InstanceCount = 0;
-extern "C" PRInt32 g_LockCount = 0;
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
+static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
+
+PRInt32 g_InstanceCount = 0;
+PRInt32 g_LockCount = 0;
 
 typedef nsresult (* fpCreateInstance) (nsISupports **);
 
@@ -134,8 +137,6 @@ public:
 
 //----------------------------------------------------------------------
 // Global functions and data [implementation]
-
-NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr)
 {
@@ -248,28 +249,19 @@ nsresult nsConverterFactory::QueryInterface(REFNSIID aIID,
   }                                                                      
                                                                          
   *aInstancePtr = NULL;                                                  
-                                                                         
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);                 
-  static NS_DEFINE_IID(kClassIID, kICharsetConverterInfoIID);                         
-  static NS_DEFINE_IID(kIFactoryIID, NS_IFACTORY_IID);
 
-  if (aIID.Equals(kClassIID)) {                                          
-    *aInstancePtr = (void*) ((nsICharsetConverterInfo*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kIFactoryIID)) {                                          
-    *aInstancePtr = (void*) ((nsIFactory*)this); 
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
-  if (aIID.Equals(kISupportsIID)) {                                      
+  if (aIID.Equals(kICharsetConverterInfoIID)) {
+    *aInstancePtr = (void*) ((nsICharsetConverterInfo*)this);
+  } else if (aIID.Equals(kIFactoryIID)) {
+    *aInstancePtr = (void*) ((nsIFactory*)this);
+  } else if (aIID.Equals(kISupportsIID)) {
     *aInstancePtr = (void*) ((nsISupports*)(nsIFactory*)this);
-    NS_ADDREF_THIS();                                                    
-    return NS_OK;                                                        
-  }                                                                      
+  } else {
+    return NS_NOINTERFACE;
+  }
 
-  return NS_NOINTERFACE;                                                 
+  NS_ADDREF_THIS();                                                    
+  return NS_OK;                                                        
 }
 
 //----------------------------------------------------------------------
