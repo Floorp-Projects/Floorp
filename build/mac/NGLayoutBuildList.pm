@@ -197,7 +197,7 @@ sub Checkout()
 	# activate MacCVS
 	ActivateApplication('Mcvs');
 
-	my($nsprpub_tag) = "NSPRPUB_RELEASE_4_0_20000223";
+	my($nsprpub_tag) = "NSPRPUB_CLIENT_BRANCH";
 	
 	#//
 	#// Checkout commands
@@ -389,6 +389,8 @@ sub MakeResourceAliases()
 	_InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",				"$navigator_chrome_dir:content:default");
 	_InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",					"$navigator_chrome_dir:skin:default");
 	_InstallResources(":mozilla:xpfe:browser:resources:locale:en-US:MANIFEST",		"$navigator_chrome_dir:locale:en-US:", 0);
+	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_CONTENT",	"$navigator_chrome_dir:content:default");
+	_InstallResources(":mozilla:netwerk:security:browser:MANIFEST_SKIN",	 "$navigator_chrome_dir:skin:default");
 
 	 my($global_chrome_dir) = "$chrome_dir" . "Global";
 	_InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",			"$global_chrome_dir:content:default");
