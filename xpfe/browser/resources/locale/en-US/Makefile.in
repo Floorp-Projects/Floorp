@@ -28,13 +28,14 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= unix
 
-GARBAGE	+= navigator.dtd.out 
+GARBAGE	+= navigator.dtd.out
 
 navigator.dtd.out: navigator.dtd $(DEPTH)/config/build_number Makefile Makefile.in
 	cp $(srcdir)/navigator.dtd $@
 	$(PERL) $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number
 
-chrome:: navigator.dtd.out 
+chrome:: navigator.dtd.out unix-jar.mn
 
 include $(topsrcdir)/config/rules.mk
 
+JAR_MANIFEST = $(srcdir)/unix-jar.mn

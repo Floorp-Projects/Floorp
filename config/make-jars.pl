@@ -124,7 +124,9 @@ sub EnsureFileInDir
 
     my $src = $srcFile;
     if (defined($src)) {
-        $src = "$srcPath/$srcFile";
+	if (! -e $src ) {
+        	$src = "$srcPath/$srcFile";
+	}
     }
     else {
         $src = "$srcPath/$destFile";
