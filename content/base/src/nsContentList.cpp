@@ -449,7 +449,7 @@ nsContentList::~nsContentList()
 NS_INTERFACE_MAP_BEGIN(nsContentList)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLCollection)
   NS_INTERFACE_MAP_ENTRY(nsIContentList)
-  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(HTMLCollection)
+  NS_INTERFACE_MAP_ENTRY_CONTENT_CLASSINFO(ContentList)
 NS_INTERFACE_MAP_END_INHERITING(nsBaseContentList)
 
 
@@ -457,6 +457,19 @@ NS_IMPL_ADDREF_INHERITED(nsContentList, nsBaseContentList)
 NS_IMPL_RELEASE_INHERITED(nsContentList, nsBaseContentList)
 
 
+NS_IMETHODIMP
+nsContentList::GetParentObject(nsISupports** aParentObject)
+{
+  if (mRootContent) {
+    *aParentObject = mRootContent;
+  } else {
+    *aParentObject = mDocument;
+  }
+
+  NS_IF_ADDREF(*aParentObject);
+  return NS_OK;
+}
+  
 NS_IMETHODIMP 
 nsContentList::GetLength(PRUint32* aLength, PRBool aDoFlush)
 {

@@ -254,8 +254,13 @@ enum nsDOMClassInfoID {
 
   eDOMClassInfo_RangeException_id,
 
+  // CSSValueList object that represents an nsIDOMCSSValueList, used
+  // by DOM CSS
   eDOMClassInfo_CSSValueList_id,
 
+  // ContentList object used for various live NodeLists
+  eDOMClassInfo_ContentList_id,
+  
   // This one better be the last one in this list
   eDOMClassInfoIDCount
 };

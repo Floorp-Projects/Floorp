@@ -134,6 +134,9 @@
 #include "nsIDOMHTMLOptionElement.h"
 #include "nsIDOMNSHTMLOptionCollectn.h"
 
+// ContentList includes
+#include "nsIContentList.h"
+
 // Event related includes
 #include "nsIEventListenerManager.h"
 #include "nsIDOMEventReceiver.h"
@@ -792,6 +795,10 @@ static nsDOMClassInfoData sClassInfoData[] = {
   NS_DEFINE_CLASSINFO_DATA(CSSValueList, nsCSSValueListSH,
                            ARRAY_SCRIPTABLE_FLAGS)
 
+  NS_DEFINE_CLASSINFO_DATA_WITH_NAME(ContentList, HTMLCollection,
+                                     nsContentListSH,
+                                     ARRAY_SCRIPTABLE_FLAGS |
+                                     nsIXPCScriptable::WANT_PRECREATE)
 };
 
 nsIXPConnect *nsDOMClassInfo::sXPConnect = nsnull;
@@ -2091,6 +2098,11 @@ nsDOMClassInfo::Init()
   DOM_CLASSINFO_MAP_BEGIN(RangeException, nsIDOMRangeException)
     DOM_CLASSINFO_MAP_ENTRY(nsIDOMRangeException)
     DOM_CLASSINFO_MAP_ENTRY(nsIException)
+  DOM_CLASSINFO_MAP_END
+
+  DOM_CLASSINFO_MAP_BEGIN(ContentList, nsIDOMHTMLCollection)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMNodeList)
+    DOM_CLASSINFO_MAP_ENTRY(nsIDOMHTMLCollection)
   DOM_CLASSINFO_MAP_END
 
 #ifdef NS_DEBUG
@@ -4468,7 +4480,32 @@ nsHTMLCollectionSH::GetNamedItem(nsISupports *aNative,
 }
 
 
-// FomrControlList helper
+// ContentList helper
+nsresult
+nsContentListSH::PreCreate(nsISupports *nativeObj, JSContext *cx,
+                           JSObject *globalObj, JSObject **parentObj)
+{
+  nsCOMPtr<nsIContentList> contentList(do_QueryInterface(nativeObj));
+  NS_ASSERTION(contentList, "Why does something not implementing nsIContentList use nsContentListSH??");
+
+  nsCOMPtr<nsISupports> native_parent;
+  contentList->GetParentObject(getter_AddRefs(native_parent));
+
+  if (!native_parent) {
+    *parentObj = globalObj;
+    return NS_OK;
+  }
+
+  jsval v;
+  nsresult rv = WrapNative(cx, ::JS_GetGlobalObject(cx), native_parent,
+                           NS_GET_IID(nsISupports), &v);
+
+  *parentObj = JSVAL_TO_OBJECT(v);
+    
+  return rv;
+}
+
+// FormControlList helper
 
 nsresult
 nsFormControlListSH::GetNamedItem(nsISupports *aNative,

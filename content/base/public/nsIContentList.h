@@ -56,6 +56,11 @@ public:
 
   NS_DEFINE_STATIC_IID_ACCESSOR(NS_ICONTENTLIST_IID)
 
+  /**
+   * Returns the object that the content list should be parented to.
+   */
+  NS_IMETHOD GetParentObject(nsISupports** aParentObject) = 0;
+    
   // Callers will want to pass in PR_TRUE for aDoFlush unless they
   // are explicitly avoiding an FlushPendingNotifications.  The
   // flush guarantees that the list will be up to date.
