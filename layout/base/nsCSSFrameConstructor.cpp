@@ -2886,20 +2886,12 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
   // If we have a null parent, then this must be the document element
   // being inserted
   if (nsnull == aContainer) {
-
     NS_PRECONDITION(nsnull == mInitialContainingBlock, "initial containing block already created");
-    nsCOMPtr<nsIStyleContext> rootPseudoStyle;
-    nsIContent* docElement = nsnull;
+    nsIContent* docElement = mDocument->GetRootContent();
 
-    docElement = mDocument->GetRootContent();
-
-    // Create a pseudo element style context
+    // Get the style context of the containing block frame
     nsCOMPtr<nsIStyleContext> containerStyle;
     mDocElementContainingBlock->GetStyleContext(getter_AddRefs(containerStyle));
-    // XXX Use a different pseudo style context...
-    aPresContext->ResolvePseudoStyleContextFor(nsnull, nsHTMLAtoms::rootPseudo,
-                                               containerStyle, PR_FALSE,
-                                               getter_AddRefs(rootPseudoStyle));
     
     // Create frames for the document element and its child elements
     nsIFrame*       docElementFrame;
@@ -2907,7 +2899,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
     ConstructDocElementFrame(aPresContext, 
                              docElement, 
                              mDocElementContainingBlock,
-                             rootPseudoStyle, 
+                             containerStyle, 
                              docElementFrame, 
                              fixedItems);
     NS_IF_RELEASE(docElement);
