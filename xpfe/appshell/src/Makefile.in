@@ -33,14 +33,14 @@ CPPSRCS= \
 	nsWebShellWindow.cpp	\
 	nsAppShellFactory.cpp	\
 	nsCommandLineService.cpp \
-  nsXPConnectFactory.cpp \
-  nsJSXPConnectFactory.cpp \
-  nsAppShellNameSet.cpp \
+	nsXPConnectFactory.cpp \
+	nsJSXPConnectFactory.cpp \
+	nsAppShellNameSet.cpp \
 	nsFileLocations.cpp     \
 	nsDefaultHelper.cpp \
 	nsNetSupportDialog.cpp \
 	nsWindowMediator.cpp \
-  nsSessionHistory.cpp \
+	nsSessionHistory.cpp \
 	$(NULL)
 
 include $(topsrcdir)/config/config.mk
