@@ -24,7 +24,6 @@ void				FE_UpdateCompToolbar(MSG_Pane*) {return;}
 void				FE_SetWindowLoading(MWContext *, URL_Struct *,Net_GetUrlExitFunc **) {return;}
 XP_Bool			NET_AreThereActiveConnectionsForWindow(MWContext *) {return PR_FALSE;}
 int					NET_SilentInterruptWindow(MWContext * window_id) {return 0;}
-int					NET_ScanForURLs(MSG_Pane*, const char *, PRInt32,char *, int, PRBool) {return nsnull;}
 void				NET_FreeURLStruct (URL_Struct *) {return;}
 URL_Struct  *NET_CreateURLStruct (const char *, NET_ReloadMethod) {return NULL;}
 char *			NET_ParseURL (const char *, int ) {return NULL;}
@@ -32,7 +31,6 @@ int					NET_URL_Type (const char *) {return nsnull;}
 XP_Bool			NET_IsLocalFileURL(char *address) {return PR_TRUE;}
 int					NET_InterruptWindow(MWContext * window_id) {return 0;}
 XP_Bool			NET_IsOffline() {return PR_FALSE;}
-char*				NET_ScanHTMLForURLs(const char* input) {return NULL;}
 
 XP_FILE_URL_PATH	XP_PlatformFileToURL (const XP_FILE_NATIVE_PATH ) {return NULL;}
 MWContext   *XP_FindContextOfType(MWContext *, MWContextType) {return NULL;}

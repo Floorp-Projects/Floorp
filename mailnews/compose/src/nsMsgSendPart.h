@@ -19,10 +19,6 @@
 #ifndef _MsgSendPart_H_
 #define _MsgSendPart_H_
 
-/*JFD
-#include "msgzap.h"
-#include "mimeenc.h"
-*/
 #include "msgCore.h"
 #include "prprf.h" /* should be defined into msgCore.h? */
 #include "net.h" /* should be defined into msgCore.h? */
@@ -35,7 +31,6 @@ class nsMsgSendMimeDeliveryState;
 
 typedef int (*MSG_SendPartWriteFunc)(const char* line, PRInt32 size,
 									 PRBool isheader, void* closure);
-
 
 class nsMsgSendPart : public MSG_ZapIt {
 public:

@@ -346,7 +346,7 @@ ComposeAppCoreSendMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
     nsJSUtils::nsConvertJSValToString(b4, cx, argv[4]);
     nsJSUtils::nsConvertJSValToString(b5, cx, argv[5]);
 
-    if (NS_OK != nativeThis->SendMessage(b0, b1, b2, b3, b4, b5)) {
+    if (NS_OK != nativeThis->SendMsg(b0, b1, b2, b3, b4, b5)) {
       return JS_FALSE;
     }
 

@@ -264,18 +264,6 @@ public:
 
 #define FE_Alert(a, b)				printf("ALERT: %s", b)
 
-/* The three ways to deliver a message.
- */
-typedef enum
-{
-  MSG_DeliverNow,
-  MSG_QueueForLater,
-  MSG_Save,
-  MSG_SaveAs,
-  MSG_SaveAsDraft,
-  MSG_SaveAsTemplate
-} MSG_Deliver_Mode;
-
 #define msg_InterruptContext(a, b)		/*NYI*/
 #define msg_GetDummyEnvelope()	NULL
 #define msg_IsSummaryValid(a, b)		PR_FALSE

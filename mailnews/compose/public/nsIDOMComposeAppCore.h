@@ -47,8 +47,8 @@ class nsIDOMComposeAppCore : public nsIDOMBaseAppCore {
   /* void NewMessage (in nsAutoString url, in nsAutoString args, in nsIDOMXULTreeElement tree, in nsIDOMNodeList node, in nsIDOMMsgAppCore msgAppCore, in long messageType); */
   NS_IMETHOD NewMessage(nsAutoString& url, nsAutoString& args, nsIDOMXULTreeElement *tree, nsIDOMNodeList *node, nsIDOMMsgAppCore *msgAppCore, PRInt32 messageType) = 0;
 
-  /* void SendMessage (in nsAutoString addrTo, in nsAutoString addrCc, in nsAutoString addrBcc, in nsAutoString newsgroup, in nsAutoString subject, in nsAutoString msg); */
-  NS_IMETHOD SendMessage(nsAutoString& addrTo, nsAutoString& addrCc, nsAutoString& addrBcc, nsAutoString& newsgroup, nsAutoString& subject, nsAutoString& msg) = 0;
+  /* void SendMsg (in nsAutoString addrTo, in nsAutoString addrCc, in nsAutoString addrBcc, in nsAutoString newsgroup, in nsAutoString subject, in nsAutoString msg); */
+  NS_IMETHOD SendMsg(nsAutoString& addrTo, nsAutoString& addrCc, nsAutoString& addrBcc, nsAutoString& newsgroup, nsAutoString& subject, nsAutoString& msg) = 0;
 
   /* long SendMessage2 (); */
   NS_IMETHOD SendMessage2(PRInt32 *_retval) = 0;

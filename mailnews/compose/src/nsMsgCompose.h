@@ -35,6 +35,7 @@
 
 #include "nsMsgCompFields.h"
 #include "nsIMsgCompose.h"
+#include "nsMsgSend.h"
 
 /*JFD 
 #include "msg.h"
@@ -107,7 +108,7 @@ public:
 	
 
 	MSG_HEADER_SET GetInterestingHeaders();
-	int SetAttachmentList(struct MSG_AttachmentData*);
+	int SetAttachmentList(struct nsMsgAttachmentData*);
 	PRBool NoPendingAttachments() const;
 	char* GetAttachmentString();
 	PRBool ShouldAutoQuote();
@@ -125,7 +126,7 @@ public:
 	nsresult QuoteMessage(int (*func)(void* closure, const char* data),
 						void* closure);
 	int PastePlaintextQuotation(const char* str);
-	const struct MSG_AttachmentData *GetAttachmentList();
+	const struct nsMsgAttachmentData *GetAttachmentList();
 	int DownloadAttachments();
 	char* UpdateHeaderContents(MSG_HEADER_SET which_header, const char* value);
 	const char* GetWindowTitle();
@@ -157,8 +158,8 @@ public:
 
     /* draft */
     int SetPreloadedAttachments ( MWContext *context, 
-								  struct MSG_AttachmentData *attachmentData,
-								  struct MSG_AttachedFile *attachments,
+								  struct nsMsgAttachmentData *attachmentData,
+								  struct nsMsgAttachedFile *attachments,
 								  int attachments_count );
 
 	virtual void SetIMAPMessageUID (nsMsgKey key);
@@ -203,13 +204,13 @@ protected:
 										  void *fe_data,
 										  int status,
 										  const char *error_message,
-										  struct MSG_AttachedFile *attachmnts);
+										  struct nsMsgAttachedFile *attachmnts);
 
 	void DownloadAttachmentsDone(MWContext* context, int status,
 								 const char* error_message,
-								 struct MSG_AttachedFile *attachments);
+								 struct nsMsgAttachedFile *attachments);
 
-    int DoneComposeMessage(MSG_Deliver_Mode deliver_mode);
+  int DoneComposeMessage(nsMsgDeliverMode deliver_mode);
 
 	static void DeliveryDoneCB_s(MWContext *context, void *fe_data, int status,
 								 const char *error_message);
@@ -242,10 +243,10 @@ protected:
 										   whose first part is text/html rather
 										   than text/plain. */
 
-	MSG_AttachmentData *m_attachData;	/* null-terminated list of the URLs and
+	nsMsgAttachmentData *m_attachData;	/* null-terminated list of the URLs and
 										   desired types currently scheduled
 										   for attachment.  */
-	MSG_AttachedFile *m_attachedFiles;	/* The attachments which have already
+	nsMsgAttachedFile *m_attachedFiles;	/* The attachments which have already
 										   been downloaded, and some info about
 										   them. */
 
@@ -275,9 +276,9 @@ protected:
 										  saved. */
 	int m_pendingAttachmentsCount;
 
-	MSG_Deliver_Mode m_deliver_mode;  /* MSG_DelverNow, MSG_QueueForLater,
-									   * MSG_SaveAs,
-									   * MSG_SaveAsDraft, MSG_SaveAsTemplate
+	nsMsgDeliverMode m_deliver_mode;  /* nsMsgDelverNow, nsMsgQueueForLater,
+									   * nsMsgSaveAs,
+									   * nsMsgSaveAsDraft, nsMsgSaveAsTemplate
 									   */
 
     HJ21695

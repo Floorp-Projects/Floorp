@@ -54,11 +54,11 @@ msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 										 nsMsgCompFields *fields,
 										 PRBool digest_p,
 										 PRBool dont_deliver_p,
-										 MSG_Deliver_Mode mode,
+										 nsMsgDeliverMode mode,
 										 const char *attachment1_type,
 										 const char *attachment1_body,
 										 PRUint32 attachment1_body_length,
-										 const struct MSG_AttachedFile *attachments,
+										 const struct nsMsgAttachedFile *attachments,
 //#ifdef MSG_SEND_MULTIPART_RELATED
 										 void *relatedPart,
 //#endif
@@ -80,20 +80,18 @@ public:
 	/* this macro defines QueryInterface, AddRef and Release for this class */
 	NS_DECL_ISUPPORTS
 
-	NS_IMETHOD SendMessage(nsIMsgCompFields *fields, const char *smtp);
-
-    void	StartMessageDelivery(MSG_Pane *pane,
+  void	StartMessageDelivery(MSG_Pane *pane,
 									 void      *fe_data,
 									 nsMsgCompFields *fields,
 									 PRBool digest_p,
 									 PRBool dont_deliver_p,
-									 MSG_Deliver_Mode mode,
+									 nsMsgDeliverMode mode,
 									 const char *attachment1_type,
 									 const char *attachment1_body,
 									 PRUint32 attachment1_body_length,
-									 const struct MSG_AttachmentData
+									 const struct nsMsgAttachmentData
 									   *attachments,
-									 const struct MSG_AttachedFile
+									 const struct nsMsgAttachedFile
 									   *preloaded_attachments,
 //#ifdef MSG_SEND_MULTIPART_RELATED
 									 nsMsgSendPart *relatedPart,
@@ -104,17 +102,32 @@ public:
 										   int status,
 										   const char *error_message));
 
+  NS_IMETHOD SendMessage(
+ 						  nsIMsgCompFields                  *fields,
+              const char                        *smtp,
+						  PRBool                            digest_p,
+						  PRBool                            dont_deliver_p,
+						  PRInt32                           mode,
+						  const char                        *attachment1_type,
+						  const char                        *attachment1_body,
+						  PRUint32                          attachment1_body_length,
+						  const struct nsMsgAttachmentData  *attachments,
+						  const struct nsMsgAttachedFile    *preloaded_attachments,
+						  void                              *relatedPart,
+						  void                              (*message_delivery_done_callback)(void *context, void *fe_data,
+								                                                                  int status, const char *error_message));
+
   int	Init(MSG_Pane *pane,
 			 void      *fe_data,
 			 nsMsgCompFields *fields,
 			 PRBool digest_p,
 			 PRBool dont_deliver_p,
-			 MSG_Deliver_Mode mode,
+			 nsMsgDeliverMode mode,
 			 const char *attachment1_type,
 			 const char *attachment1_body,
 			 PRUint32 attachment1_body_length,
-			 const struct MSG_AttachmentData *attachments,
-			 const struct MSG_AttachedFile *preloaded_attachments,
+			 const struct nsMsgAttachmentData *attachments,
+			 const struct nsMsgAttachedFile *preloaded_attachments,
 //#ifdef MSG_SEND_MULTIPART_RELATED
 			 nsMsgSendPart *relatedPart,
 //#endif
@@ -159,8 +172,8 @@ public:
 
   int DoFcc();
 
-  int HackAttachments(const struct MSG_AttachmentData *attachments,
-					  const struct MSG_AttachedFile *preloaded_attachments);
+  int HackAttachments(const struct nsMsgAttachmentData *attachments,
+					  const struct nsMsgAttachedFile *preloaded_attachments);
 
   void	DeliverFileAsMail();
   void	DeliverFileAsNews();
@@ -183,15 +196,15 @@ public:
 							   we created, instead of actually delivering
 							   this message. */
 
-  MSG_Deliver_Mode m_deliver_mode; /* MSG_DeliverNow, MSG_QueueForLater,
-									  MSG_SaveAsDraft, MSG_SaveAsTemplate
+  nsMsgDeliverMode m_deliver_mode; /* nsMsgDeliverNow, nsMsgQueueForLater,
+									  nsMsgSaveAsDraft, nsMsgSaveAsTemplate
 									*/
 
   PRBool m_attachments_only_p;	/* If set, then we don't construct a complete
 								   MIME message; instead, we just retrieve the
 								   attachments from the network, store them in
 								   tmp files, and return a list of
-								   MSG_AttachedFile structs which describe
+								   nsMsgAttachedFile structs which describe
 								   them. */
 
   PRBool m_pre_snarfed_attachments_p;	/* If true, then the attachments were
@@ -251,7 +264,7 @@ public:
   void (*m_attachments_done_callback) (MWContext *context,
 									   void * fe_data, int status,
 									   const char * error_msg,
-									   struct MSG_AttachedFile *attachments);
+									   struct nsMsgAttachedFile *attachments);
 
   char *m_msg_file_name;				/* Our temporary file */
   nsOutputFileStream * m_msg_file;

@@ -27,6 +27,7 @@
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
 #include "nsIScriptContextOwner.h"
+#include "nsMsgSend.h"
 
 /* rhp - for access to webshell */
 #include "prmem.h"
@@ -137,7 +138,7 @@ public:
 							nsIDOMNodeList *nodeList,
 							nsIDOMMsgAppCore * msgAppCore,
 							PRInt32 messageType);
-	NS_IMETHOD SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
+	NS_IMETHOD SendMsg(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
                            nsAutoString& aAddrBcc, 
                            nsAutoString& aAddrNewsgroup,
                            nsAutoString& aSubject,
@@ -767,12 +768,12 @@ done:
 }
 
 
-NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
-                                            nsAutoString& aAddrCc,
-                                            nsAutoString& aAddrBcc,
-                                            nsAutoString& aAddrNewsgroup,
-                                            nsAutoString& aSubject,
-                                            nsAutoString& aMsg)
+NS_IMETHODIMP nsComposeAppCore::SendMsg(nsAutoString& aAddrTo,
+                                        nsAutoString& aAddrCc,
+                                        nsAutoString& aAddrBcc,
+                                        nsAutoString& aAddrNewsgroup,
+                                        nsAutoString& aSubject,
+                                        nsAutoString& aMsg)
 {
 	nsMsgCompPrefs pCompPrefs;
 	char* pUserEmail = nsnull;
@@ -855,7 +856,21 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
 			mMsgCompFields->SetBody(nsAutoCString(aMsg), NULL);
 
 		if (mMsgSend)
-			mMsgSend->SendMessage(mMsgCompFields, NULL);
+    {
+        mMsgSend->SendMessage(mMsgCompFields, 
+            "",               // const char *smtp,
+						PR_FALSE,         // PRBool                            digest_p,
+						PR_FALSE,         // PRBool                            dont_deliver_p,
+						nsMsgDeliverNow,   // nsMsgDeliverMode                  mode,
+						TEXT_HTML,        // const char                        *attachment1_type,
+						nsAutoCString(aMsg),            // const char                        *attachment1_body,
+            PL_strlen(nsAutoCString(aMsg)), // PRUint32                          attachment1_body_length,
+						NULL,             // const struct nsMsgAttachmentData   *attachments,
+						NULL,             // const struct nsMsgAttachedFile     *preloaded_attachments,
+						NULL,             // nsMsgSendPart                     *relatedPart,
+						NULL);            // void  (*message_delivery_done_callback)(MWContext *context, void *fe_data,
+								              //                                         int status, const char *error_message))
+    }
 	}
 	if (nsnull != mScriptContext) {
 		const char* url = "";
@@ -928,7 +943,7 @@ NS_IMETHODIMP nsComposeAppCore::SendMessage2(PRInt32 * _retval)
 				if (mEditor)
 				{
 					mEditor->GetContentsAsText(msgBody);
-					SendMessage(msgTo, msgCc, msgBcc, msgNewsgroup, msgSubject, msgBody);          
+					SendMsg(msgTo, msgCc, msgBcc, msgNewsgroup, msgSubject, msgBody);          
 				}
 			}
 		}

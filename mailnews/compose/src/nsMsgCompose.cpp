@@ -18,48 +18,17 @@
 
 #include "rosetta_mailnews.h"
 #include "nsMsgSend.h"
+#include "nsMsgSendPart.h"
 #include "nsMsgComposeFact.h"
 #include "nsMsgCompPrefs.h"
 #include "nsMsgCompose.h"
 #include "nsEscape.h"
 #include "nsIMsgHeaderParser.h" 
+#include "nsIMimeURLUtils.h" 
+#include "nsQuickSort.h"
 
 static NS_DEFINE_CID(kCMsgHeaderParserCID, NS_MSGHEADERPARSER_CID);
-
-/*JFD
-#include "msg.h"
-#include "errcode.h"
-#include "dberror.h"
-
-#include "mime.h"
-#include "shist.h"
-#include "xlate.h"
-#include "bkmks.h"
-#include "libi18n.h"
-#include "xpgetstr.h"
-
-#include "msgsec.h"
-#include "msgcpane.h"
-#include "msgprefs.h"
-#include "msgsec.h"
-#include "msgcflds.h"
-#include "msgimap.h"
-#include "msgurlq.h"
-#include "maildb.h"
-#include "abcom.h"
-#include "dirprefs.h"
-
-#include "edt.h" // to invoke save on the html compose pane
-#include "mhtmlstm.h"
-
-#include "prefapi.h"
-#include "htmldlgs.h"
-#include "hosttbl.h"
-#include "newshost.h"
-#include "intl_csi.h"
-*/
-
-#include "nsQuickSort.h"
+static NS_DEFINE_CID(kCMimeURLUtilsCID, NS_IMIME_URLUTILS_CID);
 
 #ifdef UNREADY_CODE
 HJ04305
@@ -322,13 +291,13 @@ MSG_HTMLRecipients::FreeChangedList(char** list)
 }
 
 
-static void msg_free_attachment_list(struct MSG_AttachmentData *list);
+static void msg_free_attachment_list(struct nsMsgAttachmentData *list);
 
 /*JFD
 static void
-msg_delete_attached_files(struct MSG_AttachedFile *attachments)
+msg_delete_attached_files(struct nsMsgAttachedFile *attachments)
 {
-	struct MSG_AttachedFile *tmp;
+	struct nsMsgAttachedFile *tmp;
 	if (!attachments) return;
 	for (tmp = attachments; tmp->orig_url; tmp++) {
 		PR_FREEIF(tmp->orig_url);
@@ -371,7 +340,7 @@ nsMsgCompose::nsMsgCompose()
 	m_deliveryInProgress = PR_FALSE;
 	m_attachmentInProgress = PR_FALSE;
 	m_pendingAttachmentsCount = 0;
-	m_deliver_mode = MSG_DeliverNow;
+	m_deliver_mode = nsMsgDeliverNow;
 	m_cited = PR_FALSE;
 	m_duplicatePost = PR_FALSE;
 	m_htmlaction = MSG_HTMLAskUser;
@@ -443,7 +412,7 @@ nsresult nsMsgCompose::Initialize(/*MWContext**/PRInt32 old_context, nsIMsgCompF
 
 	InitializeHeaders((MWContext*)old_context, fields);
 	m_visible_headers = GetInterestingHeaders();
-	m_deliver_mode = MSG_DeliverNow;
+	m_deliver_mode = nsMsgDeliverNow;
 	m_haveAttachedVcard = PR_FALSE;
 
 	m_fields->SetForcePlainText(PR_FALSE);	// Coming into us, this field meant
@@ -588,43 +557,43 @@ int nsMsgCompose::CreateVcardAttachment ()
 
 			char * origurl = XP_PlatformFileToURL (vCardFileName);
 			int datacount = 0, filecount = 0;
-			for (MSG_AttachmentData *tmp1 = m_attachData; tmp1 && tmp1->url; tmp1++) datacount++;
-			for (MSG_AttachedFile *tmp = m_attachedFiles; tmp && tmp->orig_url; tmp++) filecount++;
+			for (nsMsgAttachmentData *tmp1 = m_attachData; tmp1 && tmp1->url; tmp1++) datacount++;
+			for (nsMsgAttachedFile *tmp = m_attachedFiles; tmp && tmp->orig_url; tmp++) filecount++;
 
-			MSG_AttachmentData *alist;
+			nsMsgAttachmentData *alist;
 			if (datacount) {
-				alist = (MSG_AttachmentData *)
-				PR_REALLOC(m_attachData, (datacount + 2) * sizeof(MSG_AttachmentData));
+				alist = (nsMsgAttachmentData *)
+				PR_REALLOC(m_attachData, (datacount + 2) * sizeof(nsMsgAttachmentData));
 			}
 			else {
-				alist = (MSG_AttachmentData *)
-					PR_Malloc((datacount + 2) * sizeof(MSG_AttachmentData));
+				alist = (nsMsgAttachmentData *)
+					PR_Malloc((datacount + 2) * sizeof(nsMsgAttachmentData));
 			}
 			if (!alist)
 				return MK_OUT_OF_MEMORY;
 			m_attachData = alist;
-			memset (m_attachData + datacount, 0, 2 * sizeof (MSG_AttachmentData));
+			memset (m_attachData + datacount, 0, 2 * sizeof (nsMsgAttachmentData));
 			m_attachData[datacount].url = fileurl;
 			m_attachData[datacount].real_type = PL_strdup(vCardMimeFormat);
 			m_attachData[datacount].description = PL_strdup (buf);
 			m_attachData[datacount].real_name = PL_strdup (vCardFileName);
 			m_attachData[datacount + 1].url = NULL;
 			
-			MSG_AttachedFile *aflist;
+			nsMsgAttachedFile *aflist;
 			if (filecount) {
-				aflist = (struct MSG_AttachedFile *)
-				PR_REALLOC(m_attachedFiles, (filecount + 2) * sizeof(MSG_AttachedFile));
+				aflist = (struct nsMsgAttachedFile *)
+				PR_REALLOC(m_attachedFiles, (filecount + 2) * sizeof(nsMsgAttachedFile));
 			}
 			else {
-				aflist = (struct MSG_AttachedFile *)
-					PR_Malloc((filecount + 2) * sizeof(MSG_AttachedFile));
+				aflist = (struct nsMsgAttachedFile *)
+					PR_Malloc((filecount + 2) * sizeof(nsMsgAttachedFile));
 			}
 
 			if (!aflist)
 				return MK_OUT_OF_MEMORY;
 
 			m_attachedFiles = aflist;
-			memset (m_attachedFiles + filecount, 0, 2 * sizeof (MSG_AttachedFile));
+			memset (m_attachedFiles + filecount, 0, 2 * sizeof (nsMsgAttachedFile));
 			m_attachedFiles[filecount].orig_url = origurl;
 			m_attachedFiles[filecount].file_name = filename;
 			m_attachedFiles[filecount].type = PL_strdup(vCardMimeFormat);
@@ -742,7 +711,7 @@ nsMsgCompose::GetCommandStatus(MSG_CommandType command,
         if (m_attachmentInProgress || m_deliveryInProgress)
             selectable_p = PR_FALSE;
 		break;
-	case MSG_Save:
+	case nsMsgSave:
 	case MSG_SaveDraft:
 	case MSG_SaveDraftThenClose:
 #ifdef UNREADY_CODE
@@ -879,7 +848,7 @@ nsMsgCompose::DoCommand(MSG_CommandType command, nsMsgViewIndex* indices,
 	case MSG_SendMessageLater:
 		status = QueueMessageForLater();/* ###tw Error-return-type mismatch! */
 		break;
-	case MSG_Save:
+	case nsMsgSave:
 		status = SaveMessage();
 		break;
     case MSG_SaveDraft:
@@ -1029,8 +998,8 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* 
 	if (count > 0) {
 		// if forwarding one or more messages
 		PR_ASSERT(*attachment == '\0');
-		MSG_AttachmentData *alist = (struct MSG_AttachmentData *)
-			PR_Malloc((count + 1) * sizeof(MSG_AttachmentData));
+		nsMsgAttachmentData *alist = (struct nsMsgAttachmentData *)
+			PR_Malloc((count + 1) * sizeof(nsMsgAttachmentData));
 		if (alist) {
 			memset(alist, 0, (count + 1) * sizeof(*alist));
 			for (count--; count >= 0; count--) {
@@ -1045,10 +1014,10 @@ nsMsgCompose::InitializeHeaders(MWContext* old_context, const nsIMsgCompFields* 
 	} else if (*attachment) {
 		// forwarding a single url
 		// typically a web page
-		MSG_AttachmentData *alist;
+		nsMsgAttachmentData *alist;
 		count = 1;
-		alist = (struct MSG_AttachmentData *)
-			PR_Malloc((count + 1) * sizeof(MSG_AttachmentData));
+		alist = (struct nsMsgAttachmentData *)
+			PR_Malloc((count + 1) * sizeof(nsMsgAttachmentData));
 		if (alist) {
 			memset(alist, 0, (count + 1) * sizeof(*alist));
 			alist[0].url = (char *)attachment;
@@ -1620,9 +1589,17 @@ QuotePlainIntoHTML::QuoteLine(char* line, PRUint32 length)
 		delete [] m_outbuf;
 		m_outbuf = new char [m_outbufsize];
 	}
-	if (m_outbuf) {
+	if (m_outbuf) 
+  {
+	  nsCOMPtr<nsIMimeURLUtils> myURLUtil;
+    int res = nsComponentManager::CreateInstance(kCMimeURLUtilsCID, 
+                                                 NULL, nsIMimeURLUtils::GetIID(), 
+                                                 (void **) getter_AddRefs(myURLUtil)); 
+    if (!NS_SUCCEEDED(res))
+      return 0;
+
 		*m_outbuf = '\0';
-//JFD		NET_ScanForURLs(NULL, line, length, m_outbuf, m_outbufsize, PR_TRUE);
+    myURLUtil->ScanForURLs(line, length, m_outbuf, m_outbufsize, PR_TRUE);
 		EDT_PasteQuote(m_context, m_outbuf);
 	}
 	return 0;
@@ -1879,11 +1856,11 @@ nsMsgCompose::PastePlaintextQuotation(const char* str)
 
 
 int 
-nsMsgCompose::SetAttachmentList(struct MSG_AttachmentData* list)
+nsMsgCompose::SetAttachmentList(struct nsMsgAttachmentData* list)
 {
 	int count = 0;
-	MSG_AttachmentData *tmp;
-	MSG_AttachmentData *tmp2;
+	nsMsgAttachmentData *tmp;
+	nsMsgAttachmentData *tmp2;
 	int status = 0;
 
 	ClearCompositionMessageID();	/* Since the attachment list has changed,
@@ -1897,8 +1874,8 @@ nsMsgCompose::SetAttachmentList(struct MSG_AttachmentData* list)
 	for (tmp = list; tmp && tmp->url; tmp++) count++;
 
 	if (count > 0) {
-		m_attachData = (MSG_AttachmentData*)
-			PR_Malloc((count + 1) * sizeof(MSG_AttachmentData));
+		m_attachData = (nsMsgAttachmentData*)
+			PR_Malloc((count + 1) * sizeof(nsMsgAttachmentData));
 		if (!m_attachData) {
 #ifdef UNREADY_CODE
 			FE_Alert(m_context, XP_GetString(MK_OUT_OF_MEMORY));
@@ -1906,7 +1883,7 @@ nsMsgCompose::SetAttachmentList(struct MSG_AttachmentData* list)
 			return MK_OUT_OF_MEMORY;
 		}
 
-		memset(m_attachData, 0, (count + 1) * sizeof(MSG_AttachmentData));
+		memset(m_attachData, 0, (count + 1) * sizeof(nsMsgAttachmentData));
 	}
 
 	if (count > 0) {
@@ -1945,7 +1922,7 @@ nsMsgCompose::NoPendingAttachments() const
 	return (m_pendingAttachmentsCount == 0);
 }
 
-const struct MSG_AttachmentData *
+const struct nsMsgAttachmentData *
 nsMsgCompose::GetAttachmentList()
 {
   if (m_attachData && m_attachData[0].url != NULL) return m_attachData;
@@ -1954,9 +1931,9 @@ nsMsgCompose::GetAttachmentList()
 
 
 static void
-msg_free_attachment_list(struct MSG_AttachmentData *list)
+msg_free_attachment_list(struct nsMsgAttachmentData *list)
 {
-	MSG_AttachmentData* tmp;
+	nsMsgAttachmentData* tmp;
 	if (!list) return;
 	for (tmp = list ; tmp->url ; tmp++) {
 		PR_Free((char*) tmp->url);
@@ -1977,8 +1954,8 @@ msg_free_attachment_list(struct MSG_AttachmentData *list)
    URL (in source and type-conversion.)
  */
 static PRBool
-msg_attachments_match (MSG_AttachmentData *attachment,
-					   MSG_AttachedFile *file)
+msg_attachments_match (nsMsgAttachmentData *attachment,
+					   nsMsgAttachedFile *file)
 {
 	const char *dt;
 	PR_ASSERT(attachment && file);
@@ -2015,9 +1992,9 @@ nsMsgCompose::DownloadAttachments()
 	int attachment_count = 0;
 	int new_download_count = 0;
 	int download_overlap_count = 0;
-	MSG_AttachmentData *tmp;
-	MSG_AttachmentData *downloads = 0;
-	MSG_AttachedFile *tmp2;
+	nsMsgAttachmentData *tmp;
+	nsMsgAttachmentData *downloads = 0;
+	nsMsgAttachedFile *tmp2;
 	int returnValue = 0;
 
 	// *** Relax the rule a little bit to enable resume downloading at
@@ -2081,11 +2058,11 @@ nsMsgCompose::DownloadAttachments()
 	/* Now download any new files that are in the list.
 	 */
 	if (download_overlap_count != attachment_count) {
-		MSG_AttachmentData *dfp;
+		nsMsgAttachmentData *dfp;
 		new_download_count = attachment_count - download_overlap_count;
 		m_pendingAttachmentsCount = new_download_count;
-		downloads = (MSG_AttachmentData *)
-			PR_Malloc(sizeof(MSG_AttachmentData) * (new_download_count + 1));
+		downloads = (nsMsgAttachmentData *)
+			PR_Malloc(sizeof(nsMsgAttachmentData) * (new_download_count + 1));
 		if (!downloads) {
 #ifdef UNREADY_CODE
 			FE_Alert(m_context, XP_GetString(MK_OUT_OF_MEMORY));
@@ -2119,7 +2096,7 @@ nsMsgCompose::DownloadAttachments()
 /*JFD
 		returnValue = msg_DownloadAttachments(this, this, downloads,
 #ifdef XP_OS2
-							(void (_Optlink*) (MWContext*,void*,int,const char*,MSG_AttachedFile*))
+							(void (_Optlink*) (MWContext*,void*,int,const char*,nsMsgAttachedFile*))
 #endif
 							   nsMsgCompose::DownloadAttachmentsDone_S);
 */
@@ -2133,7 +2110,7 @@ nsMsgCompose::DownloadAttachmentsDone_S(MWContext *context,
 											   void *fe_data,
 											   int status,
 											   const char *error_message,
-											   struct MSG_AttachedFile *attachments)
+											   struct nsMsgAttachedFile *attachments)
 {
 	((nsMsgCompose*) fe_data)->DownloadAttachmentsDone(context, status,
 															  error_message,
@@ -2143,14 +2120,14 @@ nsMsgCompose::DownloadAttachmentsDone_S(MWContext *context,
 void
 nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 											 const char* error_message,
-											 struct MSG_AttachedFile *attachments)
+											 struct nsMsgAttachedFile *attachments)
 {
 	PR_ASSERT(context == m_context);
 
 	int i, old_count = 0;
 	int new_count = 0;
-	struct MSG_AttachedFile *tmp;
-	MSG_AttachedFile *newd;
+	struct nsMsgAttachedFile *tmp;
+	nsMsgAttachedFile *newd;
 
 	// *** Relax the rule a little bit to enable resume downloading at
 	// *** send time.
@@ -2174,10 +2151,10 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 	}
 
 	if (old_count + new_count == 0) goto FAIL;
-	newd = (MSG_AttachedFile *)
+	newd = (nsMsgAttachedFile *)
 		PR_REALLOC(m_attachedFiles,
 				   ((old_count + new_count + 1)
-					* sizeof(MSG_AttachedFile)));
+					* sizeof(nsMsgAttachedFile)));
 
 	if (!newd) {
 		status = MK_OUT_OF_MEMORY;
@@ -2190,7 +2167,7 @@ nsMsgCompose::DownloadAttachmentsDone(MWContext* context, int status,
 
 	memcpy(newd + old_count,
 			  attachments,
-			  sizeof(MSG_AttachedFile) * (new_count + 1));
+			  sizeof(nsMsgAttachedFile) * (new_count + 1));
 
 	// memcpy doesn't allocate string, so do it
 	for(i=0; i<new_count; i++)
@@ -2272,7 +2249,7 @@ nsMsgCompose::GetAttachmentString()
 {
 	/* #### bug 8688 */
 
-	MSG_AttachmentData *tmp;
+	nsMsgAttachmentData *tmp;
 	int count;
 	int chars_per_attachment;
 	int default_field_width = 63; /* 72 - some space for the word
@@ -2738,10 +2715,10 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 	// *** We don't want to set m_status to status. The default value
 	// of m_status (-1) prevents the composition pane from closing down
 	// once we done with saving draft. The composition pane should remain up.
-	if ((m_deliver_mode != MSG_SaveAsDraft && 
-		 m_deliver_mode != MSG_SaveAsTemplate && 
-		 m_deliver_mode != MSG_SaveAs) || 
-		(m_deliver_mode == MSG_SaveAsDraft && m_closeAfterSave))
+	if ((m_deliver_mode != nsMsgSaveAsDraft && 
+		 m_deliver_mode != nsMsgSaveAsTemplate && 
+		 m_deliver_mode != nsMsgSaveAs) || 
+		(m_deliver_mode == nsMsgSaveAsDraft && m_closeAfterSave))
 	  m_status = status;
 
 	PR_ASSERT(!m_attachmentInProgress);
@@ -2883,7 +2860,7 @@ nsMsgCompose::DeliveryDoneCB(MWContext* context, int status,
 			m_actionInfo->m_folderInfo->SummaryChanged();
 
 JFD*/
-		if (m_deliver_mode == MSG_DeliverNow)
+		if (m_deliver_mode == nsMsgDeliverNow)
 		{
 			// If we're delivering the mail right now, tell the FE 
 			// the Sent folder has new counts
@@ -2898,7 +2875,7 @@ JFD*/
 				folder->SummaryChanged();
 */
 		}
-		else if (m_deliver_mode == MSG_QueueForLater)
+		else if (m_deliver_mode == nsMsgQueueForLater)
 		{
 			// If we're delivering the mail into the Outbox/queue folder, 
 			// tell the FE the Outbox folder has new counts
@@ -2962,7 +2939,7 @@ nsMsgCompose::GetHTMLMarkup(void)
 }
 
 int
-nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
+nsMsgCompose::DoneComposeMessage( nsMsgDeliverMode deliver_mode )
 {
 	int attachment_count = 0;
 	PRBool digest_p = PR_FALSE;
@@ -2978,9 +2955,9 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 	if (groups && *groups && !m_host)
 		m_host = InferNewsHost (groups);
 
-	if (m_markup && (deliver_mode != MSG_SaveAs &&
-					 deliver_mode != MSG_SaveAsDraft &&
-					 deliver_mode != MSG_SaveAsTemplate)) {
+	if (m_markup && (deliver_mode != nsMsgSaveAs &&
+					 deliver_mode != nsMsgSaveAsDraft &&
+					 deliver_mode != nsMsgSaveAsTemplate)) {
 		MSG_HTMLComposeAction action = DetermineHTMLAction();
 		if (action == MSG_HTMLAskUser)
 		{
@@ -3059,7 +3036,7 @@ nsMsgCompose::DoneComposeMessage( MSG_Deliver_Mode deliver_mode )
 		;
 
 	if (m_attachData && m_attachData[0].url && m_attachData[1].url ) {
-		MSG_AttachmentData* s;
+		nsMsgAttachmentData* s;
 		digest_p = PR_TRUE;
 		for (s = m_attachData ; s->url ; s++) {
 			/* When there are attachments, start out assuming it is a digest,
@@ -3143,23 +3120,23 @@ nsMsgCompose::SendMessageNow()
 {
 	PREF_SetBoolPref("network.online", PR_TRUE);	// make sure we're online.
 		// remember if we're queued so we know which folder
-	m_deliver_mode = MSG_DeliverNow;		
+	m_deliver_mode = nsMsgDeliverNow;		
 							
 	if (m_fields->GetAttachVCard())
 		CreateVcardAttachment();
 	// counts we need to update.
-	return DoneComposeMessage(MSG_DeliverNow);
+	return DoneComposeMessage(nsMsgDeliverNow);
 }
 
 int
 nsMsgCompose::QueueMessageForLater()
 {
 		// remember if we're queued so we know which folder
-	m_deliver_mode = MSG_QueueForLater;
+	m_deliver_mode = nsMsgQueueForLater;
 	if (m_fields->GetAttachVCard())
 		CreateVcardAttachment();
 	// counts we need to update.
-	return DoneComposeMessage(MSG_QueueForLater);
+	return DoneComposeMessage(nsMsgQueueForLater);
 }
 
 int
@@ -3177,7 +3154,7 @@ nsMsgCompose::SaveMessage()
 	else
 */
 	{
-		m_deliver_mode = MSG_SaveAsDraft;
+		m_deliver_mode = nsMsgSaveAsDraft;
 	}
 
 	return DoneComposeMessage(m_deliver_mode);
@@ -3186,7 +3163,7 @@ nsMsgCompose::SaveMessage()
 MSG_CommandType
 nsMsgCompose::PreviousSaveCommand()
 {
-	if (m_deliver_mode == MSG_SaveAsTemplate)
+	if (m_deliver_mode == nsMsgSaveAsTemplate)
 		return MSG_SaveTemplate;
 	else
 		return MSG_SaveDraft;
@@ -3211,8 +3188,8 @@ nsMsgCompose::SaveMessageAsDraft()
 			  (MSG_FOLDER_FLAG_DRAFTS, PR_FALSE);
   }
 */
-  m_deliver_mode = MSG_SaveAsDraft;
-  return DoneComposeMessage(MSG_SaveAsDraft);
+  m_deliver_mode = nsMsgSaveAsDraft;
+  return DoneComposeMessage(nsMsgSaveAsDraft);
 }
 
 int
@@ -3231,7 +3208,7 @@ nsMsgCompose::SaveMessageAsTemplate()
 			  (MSG_FOLDER_FLAG_TEMPLATES, PR_FALSE);
   }
 */
-  m_deliver_mode = MSG_SaveAsTemplate;
+  m_deliver_mode = nsMsgSaveAsTemplate;
 
 #ifdef SUPPORT_X_TEMPLATE_NAME
   char *defaultName = NULL;
@@ -3248,7 +3225,7 @@ nsMsgCompose::SaveMessageAsTemplate()
   }
 #endif /* SUPPORT_X_TEMPLATE_NAME */
 
-  return DoneComposeMessage(MSG_SaveAsTemplate);
+  return DoneComposeMessage(nsMsgSaveAsTemplate);
 }
 
 static int
@@ -3487,8 +3464,8 @@ HJ53211
 
 int 
 nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
-											   struct MSG_AttachmentData *attachmentData,
-											   struct MSG_AttachedFile *attachments,
+											   struct nsMsgAttachmentData *attachmentData,
+											   struct nsMsgAttachedFile *attachments,
 											   int attachments_count )
 {
   PR_ASSERT ( context == m_context );
@@ -3500,8 +3477,8 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
   
   PR_ASSERT ( m_attachData == NULL );
 
-  m_attachData = (MSG_AttachmentData *) PR_Malloc ( (attachments_count+1) *
-												   sizeof (MSG_AttachmentData) );
+  m_attachData = (nsMsgAttachmentData *) PR_Malloc ( (attachments_count+1) *
+												   sizeof (nsMsgAttachmentData) );
   if ( !m_attachData ) {
 #ifdef UNREADY_CODE
 	FE_Alert ( m_context, XP_GetString ( MK_OUT_OF_MEMORY ) );
@@ -3509,10 +3486,10 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
 	return MK_OUT_OF_MEMORY;
   }
 
-  memset (m_attachData, 0, (attachments_count +1) * sizeof (MSG_AttachmentData));
+  memset (m_attachData, 0, (attachments_count +1) * sizeof (nsMsgAttachmentData));
 
   memcpy ( m_attachData, attachmentData, 
-			  sizeof (MSG_AttachmentData) * attachments_count );
+			  sizeof (nsMsgAttachmentData) * attachments_count );
 	
   m_pendingAttachmentsCount = attachments_count;
   m_attachmentInProgress = PR_TRUE;
@@ -3525,9 +3502,9 @@ nsMsgCompose::SetPreloadedAttachments ( MWContext *context,
 void 
 nsMsgCompose::SetIMAPMessageUID ( nsMsgKey key )
 {
-	PR_ASSERT (m_deliver_mode == MSG_SaveAsDraft || 
-			   m_deliver_mode == MSG_SaveAs ||
-			   m_deliver_mode == MSG_SaveAsTemplate);
+	PR_ASSERT (m_deliver_mode == nsMsgSaveAsDraft || 
+			   m_deliver_mode == nsMsgSaveAs ||
+			   m_deliver_mode == nsMsgSaveAsTemplate);
 	PR_ASSERT(key != nsMsgKey_None);
 
 	if (key == nsMsgKey_None)

@@ -104,6 +104,7 @@ LINCS=$(LINCS) -I,							\
 			   -I$(PUBLIC)\dom				\
 			   -I$(PUBLIC)\appcores			\
 			   -I$(PUBLIC)\mime             \
+			   -I$(PUBLIC)\security             \
  			     $(NULL)
 
 #//------------------------------------------------------------------------

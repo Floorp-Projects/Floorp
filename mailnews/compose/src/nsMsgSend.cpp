@@ -72,7 +72,6 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 #include "prefapi.h"
 #include "abdefn.h"
 #include "prsembst.h"
-#include "secrng.h"	/* for RNG_GenerateGlobalRandomBytes() */
 #include "addrbook.h"
 #include "imaphost.h"
 #include "imapoff.h"
@@ -394,7 +393,7 @@ nsMsgSendMimeDeliveryState::nsMsgSendMimeDeliveryState()
 	m_fields = NULL;			/* Where to send the message once it's done */
 
 	m_dont_deliver_p = PR_FALSE;
-	m_deliver_mode = MSG_DeliverNow;
+	m_deliver_mode = nsMsgDeliverNow;
 
 	m_attachments_only_p = PR_FALSE;
 	m_pre_snarfed_attachments_p = PR_FALSE;
@@ -433,45 +432,35 @@ nsMsgSendMimeDeliveryState::~nsMsgSendMimeDeliveryState()
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgSendMimeDeliveryState, nsIMsgSend::GetIID());
 
-nsresult nsMsgSendMimeDeliveryState::SendMessage(nsIMsgCompFields *fields, const char *smtp)
+nsresult nsMsgSendMimeDeliveryState::SendMessage(
+ 						  nsIMsgCompFields                  *fields,
+              const char                        *smtp,
+						  PRBool                            digest_p,
+						  PRBool                            dont_deliver_p,
+						  PRInt32                           mode,
+						  const char                        *attachment1_type,
+						  const char                        *attachment1_body,
+						  PRUint32                          attachment1_body_length,
+						  const struct nsMsgAttachmentData  *attachments,
+						  const struct nsMsgAttachedFile    *preloaded_attachments,
+						  void                              *relatedPart,
+						  void                              (*message_delivery_done_callback)(void *context, void *fe_data,
+								                                                                  int status, const char *error_message))
 {
-	const char* pBody;
-	PRInt32 nBodyLength;
-
 	pSmtpServer = smtp;
 
-	if (fields) {
-		pBody = ((nsMsgCompFields *)fields)->GetBody();
-		if (pBody)
-			nBodyLength = PL_strlen(pBody);
-		else
-			nBodyLength = 0;
-
-		StartMessageDelivery(NULL, NULL, (nsMsgCompFields *)fields, PR_FALSE, PR_FALSE,
-			MSG_DeliverNow, TEXT_PLAIN, pBody, nBodyLength, 0, NULL, NULL, NULL);
-
-/**********
-void nsMsgSendMimeDeliveryState::StartMessageDelivery(
-						  MSG_Pane   *pane,
-						  void       *fe_data,
-						  nsMsgCompFields *fields,
-						  PRBool digest_p,
-						  PRBool dont_deliver_p,
-						  MSG_Deliver_Mode mode,
-						  const char *attachment1_type,
-						  const char *attachment1_body,
-						  PRUint32 attachment1_body_length,
-						  const struct MSG_AttachmentData *attachments,
-						  const struct MSG_AttachedFile *preloaded_attachments,
-						  nsMsgSendPart *relatedPart,
-						  void (*message_delivery_done_callback)
-						       (MWContext *context,
-								void *fe_data,
-								int status,
-								const char *error_message))
-**********/
-
-	}
+  StartMessageDelivery(NULL, NULL, 
+                          (nsMsgCompFields *)fields, 
+                          digest_p, 
+                          dont_deliver_p,
+						              (nsMsgDeliverMode) mode,
+						              attachment1_type,
+						              attachment1_body,
+						              attachment1_body_length,
+						              attachments,
+						              preloaded_attachments,
+						              (nsMsgSendPart *)relatedPart,
+						              NULL /*message_delivery_done_callback*/);    
 	return NS_OK;
 }
 
@@ -495,7 +484,7 @@ static int mime_sanity_check_fields (const char *from,
 									 const char *other_random_headers);
 static char *mime_generate_headers (nsMsgCompFields *fields,
 									const char *charset, 
-									MSG_Deliver_Mode deliver_mode);
+									nsMsgDeliverMode deliver_mode);
 static char *mime_generate_attachment_headers (const char *type,
 											   const char *encoding,
 											   const char *description,
@@ -2315,7 +2304,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		/* If we get here, we shouldn't have the "generating a message" cb. */
 		NS_ASSERTION(!m_dont_deliver_p && !m_message_delivery_done_callback, "Shouldn't be here");
 		if (m_attachments_done_callback) {
-			struct MSG_AttachedFile *attachments;
+			struct nsMsgAttachedFile *attachments;
 
 			NS_ASSERTION(m_attachment_count > 0, "not more attachment");
 			if (m_attachment_count <= 0) {
@@ -2325,7 +2314,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 				goto FAIL;
 			}
 
-			attachments = (struct MSG_AttachedFile *)PR_Malloc((m_attachment_count + 1) * sizeof(*attachments));
+			attachments = (struct nsMsgAttachedFile *)PR_Malloc((m_attachment_count + 1) * sizeof(*attachments));
 
 			if (!attachments)
 				goto FAILMEM;
@@ -2474,7 +2463,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	}
 
 	if (NET_IsOffline() && IsSaveMode()) {
-		status = InitImapOfflineDB( m_deliver_mode == MSG_SaveAsTemplate ?
+		status = InitImapOfflineDB( m_deliver_mode == nsMsgSaveAsTemplate ?
 								  MSG_FOLDER_FLAG_TEMPLATES :
 								  MSG_FOLDER_FLAG_DRAFTS );
 		if (status < 0) {
@@ -2673,9 +2662,12 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 			goto FAIL;
 		if (!m_crypto_closure) {
 #ifdef UNREADY_CODE
-			status = toppart->SetBuffer(XP_GetString (MK_MIME_MULTIPART_BLURB));
+      status = toppart->SetBuffer(XP_GetString (MK_MIME_MULTIPART_BLURB));
 #else
-			status = toppart->SetBuffer("string not implemented yet");
+// RICHIE
+#define MIME_MULTIPART_BLURB     "This is a multi-part message in MIME format."
+
+      status = toppart->SetBuffer(MIME_MULTIPART_BLURB);
 #endif
 
 			if (status < 0)
@@ -2993,10 +2985,7 @@ char * msg_generate_message_id (void)
 	const char *host = 0;
 	const char *from = pCompPrefs.GetUserEmail();
 
-#ifdef UNREADY_CODE
-	RNG_GenerateGlobalRandomBytes((void *) &salt, sizeof(salt));
-#endif
-
+	GenerateGlobalRandomBytes((unsigned char *) &salt, sizeof(salt));
 	if (from) {
 		host = PL_strchr (from, '@');
 		if (host) {
@@ -3021,13 +3010,13 @@ char * msg_generate_message_id (void)
 
 static char * mime_generate_headers (nsMsgCompFields *fields,
 									const char *charset,
-									MSG_Deliver_Mode deliver_mode)
+									nsMsgDeliverMode deliver_mode)
 {
 	int size = 0;
 	char *buffer = 0, *buffer_tail = 0;
-	PRBool isDraft = deliver_mode == MSG_SaveAsDraft ||
-					deliver_mode == MSG_SaveAsTemplate ||
-					deliver_mode == MSG_QueueForLater;
+	PRBool isDraft = deliver_mode == nsMsgSaveAsDraft ||
+					deliver_mode == nsMsgSaveAsTemplate ||
+					deliver_mode == nsMsgQueueForLater;
 
 	const char* pFrom;
 	const char* pTo;
@@ -3086,8 +3075,8 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 		if (fields->GetReturnReceipt() && 
 			(fields->GetReturnReceiptType() == 2 ||
 			fields->GetReturnReceiptType() == 3) && 
-			(deliver_mode != MSG_SaveAsDraft &&
-			deliver_mode != MSG_SaveAsTemplate))
+			(deliver_mode != nsMsgSaveAsDraft &&
+			deliver_mode != nsMsgSaveAsTemplate))
 		{
 			PRInt32 receipt_header_type = 0;
 
@@ -3778,7 +3767,7 @@ int MIME_GenerateMailtoFormPostHeaders (const char *old_post_url,
 
   fields->SetDefaultBody(body, NULL);
 
-  *headers_return = mime_generate_headers (fields, 0, MSG_DeliverNow);
+  *headers_return = mime_generate_headers (fields, 0, nsMsgDeliverNow);
   if (*headers_return == 0)
 	{
 	  status = MK_OUT_OF_MEMORY;
@@ -4283,8 +4272,8 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, const char *charset)
 
 
 int nsMsgSendMimeDeliveryState::HackAttachments(
-						  const struct MSG_AttachmentData *attachments,
-						  const struct MSG_AttachedFile *preloaded_attachments)
+						  const struct nsMsgAttachmentData *attachments,
+						  const struct nsMsgAttachedFile *preloaded_attachments)
 {
 	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(GetContext());
 	if (preloaded_attachments)
@@ -4464,12 +4453,12 @@ void nsMsgSendMimeDeliveryState::StartMessageDelivery(
 						  nsMsgCompFields *fields,
 						  PRBool digest_p,
 						  PRBool dont_deliver_p,
-						  MSG_Deliver_Mode mode,
+						  nsMsgDeliverMode mode,
 						  const char *attachment1_type,
 						  const char *attachment1_body,
 						  PRUint32 attachment1_body_length,
-						  const struct MSG_AttachmentData *attachments,
-						  const struct MSG_AttachedFile *preloaded_attachments,
+						  const struct nsMsgAttachmentData *attachments,
+						  const struct nsMsgAttachedFile *preloaded_attachments,
 //#ifdef MSG_SEND_MULTIPART_RELATED
 						  nsMsgSendPart *relatedPart,
 //#endif
@@ -4535,13 +4524,13 @@ nsMsgSendMimeDeliveryState::Init(
 						  nsMsgCompFields *fields,
 						  PRBool digest_p,
 						  PRBool dont_deliver_p,
-						  MSG_Deliver_Mode mode,
+						  nsMsgDeliverMode mode,
 
 						  const char *attachment1_type,
 						  const char *attachment1_body,
 						  PRUint32 attachment1_body_length,
-						  const struct MSG_AttachmentData *attachments,
-						  const struct MSG_AttachedFile *preloaded_attachments,
+						  const struct nsMsgAttachmentData *attachments,
+						  const struct nsMsgAttachedFile *preloaded_attachments,
 //#ifdef MSG_SEND_MULTIPART_RELATED
 						  nsMsgSendPart *relatedPart,
 //#endif
@@ -4675,7 +4664,7 @@ nsMsgSendMimeDeliveryState::Init(
 
 	/* Check the fields for legitimacy, and run the callback if they're not
 	   ok.  */
-	if (mode != MSG_SaveAsDraft && mode != MSG_SaveAsTemplate ) {
+	if (mode != nsMsgSaveAsDraft && mode != nsMsgSaveAsTemplate ) {
 		failure = mime_sanity_check_fields (m_fields->GetFrom(), m_fields->GetReplyTo(),
 										m_fields->GetTo(), m_fields->GetCc(),
 										m_fields->GetBcc(), m_fields->GetFcc(),
@@ -4718,7 +4707,7 @@ nsMsgSendMimeDeliveryState::Init(
    if all attachments are provided externally.
 
    Subsequent attachments are provided as URLs to load, described in the
-   MSG_AttachmentData structures.
+   nsMsgAttachmentData structures.
 
    If `dont_deliver_p' is false, then we actually deliver the message to the
    SMTP and/or NNTP server, and the message_delivery_done_callback will be
@@ -4744,7 +4733,7 @@ MSG_StartMessageDelivery (MSG_Pane *pane,
 						  const char *attachment1_type,
 						  const char *attachment1_body,
 						  PRUint32 attachment1_body_length,
-						  const struct MSG_AttachmentData *attachments,
+						  const struct nsMsgAttachmentData *attachments,
 						  void *relatedPart,
 						  void (*message_delivery_done_callback)
 						       (MWContext *context,
@@ -4776,11 +4765,11 @@ msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 										 nsMsgCompFields *fields,
 										 PRBool digest_p,
 										 PRBool dont_deliver_p,
-										 MSG_Deliver_Mode mode,
+										 nsMsgDeliverMode mode,
 										 const char *attachment1_type,
 										 const char *attachment1_body,
 										 PRUint32 attachment1_body_length,
-										 const struct MSG_AttachedFile *attachments,
+										 const struct nsMsgAttachedFile *attachments,
 //#ifdef MSG_SEND_MULTIPART_RELATED
 										 void *relatedPart,
 //#endif
@@ -4808,12 +4797,12 @@ msg_StartMessageDeliveryWithAttachments (MSG_Pane *pane,
 extern "C" int
 msg_DownloadAttachments (MSG_Pane *pane,
 						 void *fe_data,
-						 const struct MSG_AttachmentData *attachments,
+						 const struct nsMsgAttachmentData *attachments,
 						 void (*attachments_done_callback)
 						      (MWContext *context,
 							   void *fe_data,
 							   int status, const char *error_message,
-							   struct MSG_AttachedFile *attachments))
+							   struct nsMsgAttachedFile *attachments))
 {
   nsMsgSendMimeDeliveryState *state = 0;
   int failure = 0;
@@ -4838,7 +4827,7 @@ msg_DownloadAttachments (MSG_Pane *pane,
   state->m_attachments_done_callback =
 #ifdef XP_OS2
 //DSR040297 - see comment above about 'Casting away extern "C"'
-					(void(*)(MWContext*,void*,int,const char*,MSG_AttachedFile*))
+					(void(*)(MWContext*,void*,int,const char*,nsMsgAttachedFile*))
 #endif
 					attachments_done_callback;
 
@@ -4979,19 +4968,19 @@ void nsMsgSendMimeDeliveryState::DeliverMessage ()
 	PRBool news_p = (m_fields->GetNewsgroups() && 
 				    *(m_fields->GetNewsgroups()) ? PR_TRUE : PR_FALSE);
 
-	if ( m_deliver_mode != MSG_SaveAsDraft &&
-			m_deliver_mode != MSG_SaveAsTemplate )
+	if ( m_deliver_mode != nsMsgSaveAsDraft &&
+			m_deliver_mode != nsMsgSaveAsTemplate )
 		NS_ASSERTION(mail_p || news_p, "message without destination");
 
-	if (m_deliver_mode == MSG_QueueForLater) {
+	if (m_deliver_mode == nsMsgQueueForLater) {
 		QueueForLater();
 		return;
 	}
-	else if (m_deliver_mode == MSG_SaveAsDraft) {
+	else if (m_deliver_mode == nsMsgSaveAsDraft) {
 		SaveAsDraft();
 		return;
 	}
-	else if (m_deliver_mode == MSG_SaveAsTemplate) {
+	else if (m_deliver_mode == nsMsgSaveAsTemplate) {
 		SaveAsTemplate();
 		return;
 	}
@@ -5277,7 +5266,7 @@ static int
 mime_do_fcc_1 (MSG_Pane *pane,
 			   const char *input_file_name,  XP_FileType input_file_type,
 			   const char *output_name, XP_FileType output_file_type,
-			   MSG_Deliver_Mode mode,
+			   nsMsgDeliverMode mode,
 			   const char *bcc_header,
 			   const char *fcc_header,
 			   const char *news_url)
@@ -5370,13 +5359,13 @@ mime_do_fcc_1 (MSG_Pane *pane,
        MK_MSG_COULDNT_OPEN_FCC_FILE */
     switch (mode)
 		{
-		case MSG_SaveAsDraft:
+		case nsMsgSaveAsDraft:
 			status = MK_MSG_UNABLE_TO_SAVE_DRAFT;
 			break;
-		case MSG_SaveAsTemplate:
+		case nsMsgSaveAsTemplate:
 			status = MK_MSG_UNABLE_TO_SAVE_TEMPLATE;
 			break;
-		case MSG_DeliverNow:
+		case nsMsgDeliverNow:
 		default:
 			status = MK_MSG_COULDNT_OPEN_FCC_FILE;
 			break;
@@ -5445,9 +5434,9 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	 For FCC files, we don't necessarily need one, but we might as well put
 	 one in so that it's marked as read already.
    */
-  if (mode == MSG_QueueForLater ||
-	  mode == MSG_SaveAsDraft ||
-	  mode == MSG_SaveAsTemplate ||
+  if (mode == nsMsgQueueForLater ||
+	  mode == nsMsgSaveAsDraft ||
+	  mode == nsMsgSaveAsTemplate ||
 	  mark_as_read)
 	{
 	  char *buf = 0;
@@ -5455,7 +5444,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 
 	  mark_as_read = PR_TRUE;
 	  flags |= MSG_FLAG_READ;
-	  if (mode == MSG_QueueForLater )
+	  if (mode == nsMsgQueueForLater )
 		flags |= MSG_FLAG_QUEUED;
 	  buf = PR_smprintf(X_MOZILLA_STATUS_FORMAT MSG_LINEBREAK, flags);
 	  if (buf)
@@ -5467,7 +5456,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	  }
 	  
 	  PRUint32 flags2 = 0;
-	  if (mode == MSG_SaveAsTemplate)
+	  if (mode == nsMsgSaveAsTemplate)
 		  flags2 |= MSG_FLAG_TEMPLATE;
 	  buf = PR_smprintf(X_MOZILLA_STATUS2_FORMAT MSG_LINEBREAK, flags2);
 	  if (buf)
@@ -5506,9 +5495,9 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	 folder, and that message is forwarded to someone, then the attachment
 	 code will strip out the BCC header before forwarding it.)
    */
-  if ((mode == MSG_QueueForLater ||
-	   mode == MSG_SaveAsDraft ||
-	   mode == MSG_SaveAsTemplate) &&
+  if ((mode == nsMsgQueueForLater ||
+	   mode == nsMsgSaveAsDraft ||
+	   mode == nsMsgSaveAsTemplate) &&
 	  fcc_header && *fcc_header)
 	{
 	  PRInt32 L = PL_strlen(fcc_header) + 20;
@@ -5553,9 +5542,9 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	 Convert a URL like "snews://host:123/" to the form "host:123/secure"
 	 or "news://user@host:222" to simply "host:222".
    */
-  if ((mode == MSG_QueueForLater ||
-	   mode == MSG_SaveAsDraft ||
-	   mode == MSG_SaveAsTemplate) && news_url && *news_url)
+  if ((mode == nsMsgQueueForLater ||
+	   mode == nsMsgSaveAsDraft ||
+	   mode == nsMsgSaveAsTemplate) && news_url && *news_url)
 	{
 	  PRBool secure_p = (news_url[0] == 's' || news_url[0] == 'S');
 	  char *orig_hap = NET_ParseURL (news_url, GET_HOST_PART);
@@ -5685,7 +5674,7 @@ mime_do_fcc_1 (MSG_Pane *pane,
 	}
 
   if (mail_db != NULL && status >= 0) {
-	if ( mode == MSG_SaveAsDraft || mode == MSG_SaveAsTemplate )
+	if ( mode == nsMsgSaveAsDraft || mode == nsMsgSaveAsTemplate )
 	{
 		MSG_PostDeliveryActionInfo *actionInfo =
 		  pane->GetPostDeliveryActionInfo();
@@ -5795,7 +5784,7 @@ msg_DoFCC (MSG_Pane *pane,
   return mime_do_fcc_1 (pane,
 						input_file, input_file_type,
 						output_file, output_file_type,
-						MSG_DeliverNow, bcc_header_value,
+						nsMsgDeliverNow, bcc_header_value,
 						fcc_header_value,
 						0);
 }
@@ -5863,9 +5852,9 @@ nsMsgSendMimeDeliveryState::GetOnlineFolderName(PRUint32 flag, const char
 PRBool
 nsMsgSendMimeDeliveryState::IsSaveMode()
 {
-	return (m_deliver_mode == MSG_SaveAsDraft ||
-			m_deliver_mode == MSG_SaveAsTemplate ||
-			m_deliver_mode == MSG_SaveAs);
+	return (m_deliver_mode == nsMsgSaveAsDraft ||
+			m_deliver_mode == nsMsgSaveAsTemplate ||
+			m_deliver_mode == nsMsgSaveAs);
 }
 
 
@@ -6406,15 +6395,15 @@ PRUint32 nsMsgSendMimeDeliveryState::GetFolderFlagAndDefaultName(
 
 	switch (m_deliver_mode)
 	{
-	case MSG_SaveAsDraft:
+	case nsMsgSaveAsDraft:
 		*defaultName = DRAFTS_FOLDER_NAME;
 		flag = MSG_FOLDER_FLAG_DRAFTS;
 		break;
-	case MSG_SaveAsTemplate:
+	case nsMsgSaveAsTemplate:
 		*defaultName = TEMPLATES_FOLDER_NAME;
 		flag = MSG_FOLDER_FLAG_TEMPLATES;
 		break;
-	case MSG_DeliverNow:
+	case nsMsgDeliverNow:
 		*defaultName = SENT_FOLDER_NAME;
 		flag = MSG_FOLDER_FLAG_SENTMAIL;
 		break;
@@ -6478,7 +6467,7 @@ nsMsgSendMimeDeliveryState::PostListImapMailboxFolder (	URL_Struct *url,
 	{
 		/* rhp- This is to handle failed copy operation BUT only if we are trying to send the
 		   message. If not, then this was not a Send operation and this prompt doesn't make sense. */
-		if (state->m_deliver_mode == MSG_DeliverNow)
+		if (state->m_deliver_mode == nsMsgDeliverNow)
 		{
 #ifdef UNREADY_CODE
 			if (FE_Confirm(state->GetContext(), XP_GetString(MK_MSG_FAILED_COPY_OPERATION)))
