@@ -3148,6 +3148,14 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
 }
 // end NSTextInput
 
+//
+// keyDown:
+//
+// Handle matching cocoa IME with gecko key events. Sends a key down and key press
+// event to gecko.
+//
+// NOTE: diacriticals (opt-e, e) aren't fully handled.
+//
 - (void)keyDown:(NSEvent*)theEvent;
 {
   PRBool isKeyDownEventHandled = PR_TRUE;
@@ -3219,6 +3227,9 @@ static void ConvertCocoaKeyEventToMacEvent(NSEvent* cocoaEvent, EventRecord& mac
       
       // do we need to end composition if we got here by arrow key press or other?
       isKeyEventHandled = mGeckoChild->DispatchWindowEvent(geckoEvent);
+      
+      // only force this through cocoa if this special-key was not handled by gecko
+      mLastKeyEventWasSentToCocoa = !isKeyEventHandled;
     }
   }
 
