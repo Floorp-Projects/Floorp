@@ -75,14 +75,6 @@ public:
   nsresult GetValue(nsCSSProperty aProperty, nsAString& aValue) const;
   nsresult GetValue(const nsAString& aProperty, nsAString& aValue) const;
 
-  /**
-   * May be called only for properties whose type is eCSSType_Value.
-   *
-   * XXX It would be good to make this protected, which means not using
-   * it from inspector via CSSStyleRuleImpl.
-   */
-  nsresult GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue) const;
-
   PRBool HasImportantData() const { return mImportantData != nsnull; }
   PRBool GetValueIsImportant(nsCSSProperty aProperty) const;
   PRBool GetValueIsImportant(const nsAString& aProperty) const;
@@ -161,6 +153,9 @@ private:
   PRBool   AppendValueToString(nsCSSProperty aProperty, nsAString& aResult) const;
   // return whether there was a value in |aValue| (i.e., it had a non-null unit)
   PRBool   AppendCSSValueToString(nsCSSProperty aProperty, const nsCSSValue& aValue, nsAString& aResult) const;
+
+  // May be called only for properties whose type is eCSSType_Value.
+  nsresult GetValueOrImportantValue(nsCSSProperty aProperty, nsCSSValue& aValue) const;
 
   void   PropertyIsSet(PRInt32 & aPropertyIndex, PRInt32 aIndex, PRUint32 & aSet, PRUint32 aValue) const;
   PRBool TryBorderShorthand(nsAString & aString, PRUint32 aPropertiesSet,

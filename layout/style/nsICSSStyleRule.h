@@ -215,9 +215,6 @@ public:
 
   virtual already_AddRefed<nsIStyleRule> GetImportantRule(void) = 0;
 
-  // Hook for inspector.
-  virtual nsresult GetValue(nsCSSProperty aProperty, nsCSSValue& aValue) = 0;
-
   // hooks for DOM rule
   virtual nsresult GetCssText(nsAString& aCssText) = 0;
   virtual nsresult SetCssText(const nsAString& aCssText) = 0;
