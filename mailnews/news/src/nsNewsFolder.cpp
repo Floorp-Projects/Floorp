@@ -120,7 +120,7 @@ nsMsgNewsFolder::nsMsgNewsFolder(void) : nsMsgLineBuffer(nsnull, PR_FALSE),
 nsMsgNewsFolder::~nsMsgNewsFolder(void)
 {
   MOZ_COUNT_DTOR(nsNewsFolder);
-  PR_FREEIF(mCachedNewsrcLine);
+  CRTFREEIF(mCachedNewsrcLine);
   PR_FREEIF(mGroupUsername);
   PR_FREEIF(mGroupPassword);
   PR_FREEIF(mAsciiName);
@@ -1551,7 +1551,7 @@ nsMsgNewsFolder::SetCachedNewsrcLine(const char *newsrcLine)
 {
     if (!newsrcLine) return NS_ERROR_NULL_POINTER;
 
-    nsCRT::free(mCachedNewsrcLine);
+    CRTFREEIF(mCachedNewsrcLine);
 
     mCachedNewsrcLine = nsCRT::strdup(newsrcLine);
     
