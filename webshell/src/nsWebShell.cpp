@@ -20,6 +20,7 @@
  * Contributor(s): 
  */
 #include "nsIWebShell.h"
+#include "nsIInterfaceRequestor.h"
 #include "nsIDocumentLoader.h"
 #include "nsIContentViewer.h"
 #include "nsIDocumentViewer.h"
@@ -156,7 +157,9 @@ class nsWebShell : public nsIWebShell,
                    public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
                    public nsIPrompt,
                    public nsIRefreshURI,
-                   public nsIClipboardCommands
+                   public nsIClipboardCommands,
+                   public nsIInterfaceRequestor
+                   
 {
 public:
   nsWebShell();
@@ -166,6 +169,9 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
+
+  // nsIInterfaceRequestor
+  NS_DECL_NSIINTERFACEREQUESTOR
 
   // nsIContentViewerContainer
   NS_IMETHOD QueryCapability(const nsIID &aIID, void** aResult);
@@ -766,9 +772,8 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
   nsresult rv = NS_NOINTERFACE;
 
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_ENSURE_ARG_POINTER(aInstancePtr);
+
   if (aIID.Equals(kIWebShellServicesIID)) {
     *aInstancePtr = (void*)(nsIWebShellServices*)this;
     NS_ADDREF_THIS();
@@ -811,7 +816,7 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
     NS_ADDREF_THIS();
     return NS_OK;
   }
-  if (aIID.Equals(nsIPrompt::GetIID())) {
+  if (aIID.Equals(NS_GET_IID(nsIPrompt))) {
     *aInstancePtr = (void*) ((nsIPrompt*)this);
     NS_ADDREF_THIS();
     return NS_OK;
@@ -846,28 +851,32 @@ nsWebShell::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
+nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
+{
+   NS_ENSURE_ARG_POINTER(aInstancePtr);
+
+   if(aIID.Equals(NS_GET_IID(nsILinkHandler)))
+      {
+      *aInstancePtr = NS_STATIC_CAST(nsILinkHandler*, this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+      }
+   else if(aIID.Equals(NS_GET_IID(nsIScriptContextOwner)))
+      {
+      *aInstancePtr = NS_STATIC_CAST(nsIScriptContextOwner*, this);
+      NS_ADDREF_THIS();
+      return NS_OK;
+      }
+   else if(mPluginManager) //XXX this seems a little wrong. MMP
+      return mPluginManager->QueryInterface(aIID, aInstancePtr);
+
+   return NS_NOINTERFACE;
+}
+
+NS_IMETHODIMP
 nsWebShell::QueryCapability(const nsIID &aIID, void** aInstancePtr)
 {
-  if (nsnull == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-
-  if (aIID.Equals(kILinkHandlerIID)) {
-    *aInstancePtr = (void*) ((nsILinkHandler*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kIScriptContextOwnerIID)) {
-    *aInstancePtr = (void*) ((nsIScriptContextOwner*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-
-  //XXX this seems a little wrong. MMP
-  if (nsnull != mPluginManager)
-    return mPluginManager->QueryInterface(aIID, aInstancePtr);
-
-  return NS_NOINTERFACE;
+   return GetInterface(aIID, aInstancePtr);
 }
 
 NS_IMETHODIMP
