@@ -1414,10 +1414,12 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
       if (NS_FAILED(rv)) return rv;
 
       PRInt64 age;
-      PRInt64 now = GetNow();
-      LL_SUB(age, now, lastVisitDate);
+      LL_SUB(age, GetNow(), lastVisitDate);
 
       // now need to convert msec -> days
+      PRInt64 msecsPerDay;
+      LL_I2L(msecsPerDay, MSECS_PER_DAY);
+      
       PRInt64 ageInDays;
       LL_DIV(ageInDays, age, MSECS_PER_DAY);
 
