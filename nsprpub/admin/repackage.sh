@@ -34,7 +34,7 @@
 #
 # syntax: repackage.sh
 #
-#
+# Description:
 # repackage.sh creates NSPR binary distributions for mozilla.org from
 # the internal binary distributions in /share/builds/components/nspr20.
 # There are reasons why we can't just push the internal binary distributions
@@ -49,6 +49,12 @@
 # and bin.  The header files, with the correct line endings for the
 # platform, are in nspr-4.1.1/include.  The libraries are in nspr-4.1.1/lib.
 # The executable programs are in nspr-4.1.1/bin.
+# 
+# Note! Files written with Gnu tar are not readable by some non-Gnu
+# versions. Sun, in particular.
+# 
+# 
+# 
 # 
 # ------------------------------------------------------------------
 #
