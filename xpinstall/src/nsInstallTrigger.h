@@ -20,7 +20,7 @@
 #define CHROME_LOCALE       2
 #define CHROME_SAFEMAX      CHROME_LOCALE
 #define CHROME_CONTENT      4
-#define CHROME_ALL          7
+#define CHROME_ALL          (CHROME_SKIN | CHROME_LOCALE | CHROME_CONTENT)
 #define CHROME_PROFILE      8
 #define CHROME_DELAYED      0x10
 #define CHROME_SELECT       0x20

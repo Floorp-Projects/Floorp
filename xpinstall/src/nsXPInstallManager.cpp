@@ -482,6 +482,10 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                 mItem = (nsXPITriggerItem*)mTriggers->Get(i);
                 if ( mItem && mItem->mFile )
                 {
+                    // We've got one to install; increment count first so we
+                    // don't have to worry about thread timing.
+                    PR_AtomicIncrement(&mNumJars);
+
                     if ( mChromeType == 0 ) {
                         rv = softupdate->InstallJar(mItem->mFile,
                                                 mItem->mURL.GetUnicode(),
@@ -498,11 +502,14 @@ NS_IMETHODIMP nsXPInstallManager::DownloadNext()
                                                 this );
                     }
 
-                    if (NS_SUCCEEDED(rv))
-                        PR_AtomicIncrement(&mNumJars);
-                    else
+                    if (NS_FAILED(rv))
+                    {
+                        // it failed so remove it from the count
+                        PR_AtomicDecrement(&mNumJars);
+                        // send the error status to any trigger callback
                         mTriggers->SendStatus( mItem->mURL.GetUnicode(),
                                                nsInstall::UNEXPECTED_ERROR );
+                    }
                 }
             }
         }
@@ -773,7 +780,6 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
                                     PRUint32 length)
 {
     PRUint32 amt;
-    //PRInt32  result;
     nsresult err;
     char buffer[8*1024];
     PRUint32 writeCount;
@@ -795,11 +801,8 @@ nsXPInstallManager::OnDataAvailable(nsIChannel* channel, nsISupports *ctxt,
             return err;
         }
         err = mItem->mOutStream->Write( buffer, amt, &writeCount);
-        //err = mItem->mFile->Write( buffer, amt, &result);
-        //printf("mItem->mFile->Write err:%d   amt:%d    result:%d\n", err, amt, result);
         if (NS_FAILED(err) || writeCount != amt) 
         {
-            //printf("mItem->mFile->Write Failed!  err:%d   amt:%d    result:%d\n", err, amt, result);
             return NS_ERROR_FAILURE;
         }
         length -= amt;

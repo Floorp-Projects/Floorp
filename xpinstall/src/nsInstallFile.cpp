@@ -162,7 +162,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         mFinalFile->IsFile(&flagIsFile);
         if ( flagIsFile) 
         {
-            *error = nsInstall::FILENAME_ALREADY_USED;
+            *error = nsInstall::ACCESS_DENIED;
             return;
         }
         // else this directory already exists, so do nothing
