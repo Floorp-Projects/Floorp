@@ -104,7 +104,7 @@ Can't yet put script tags in XBL (hyatt has the bug)
       <handler event="keypress" keycode="VK_DOWN" command="cmd_selectLineNext" modifiers="shift"/>
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
       <handler event="keypress" key="y" command="cmd_redo" modifiers="accel"/>
-      <handler event="keypress" key="x" command="cmd_cut" modifiers="control"/>
+      <handler event="keypress" key="x" command="cmd_cut" modifiers="accel"/>
       <handler event="keypress" key="c" command="cmd_copy" modifiers="accel"/>
       <handler event="keypress" key="v" command="cmd_paste" modifiers="accel"/>
       <handler event="keypress" key="z" command="cmd_undo" modifiers="accel"/>
