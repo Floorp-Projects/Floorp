@@ -46,7 +46,7 @@
                 dialog.wrap.removeAttribute( "checked" );
             }
 
-            if ( data.wearchBackwards ) {
+            if ( data.searchBackwards ) {
                 dialog.searchBackwards.setAttribute( "checked", "" );
             } else {
                 dialog.searchBackwards.removeAttribute( "checked" );
@@ -56,6 +56,7 @@
             if (dialog.findKey.getAttribute("value") == "") {
 	            dialog.find.setAttribute("disabled", "true");
 	       	}
+	    dialog.findKey.focus();
         }
 
         function loadData()
