@@ -1,0 +1,218 @@
+# 
+# The contents of this file are subject to the Mozilla Public
+# License Version 1.1 (the "License"); you may not use this file
+# except in compliance with the License. You may obtain a copy of
+# the License at http://www.mozilla.org/MPL/
+#
+# Software distributed under the License is distributed on an "AS
+# IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+# implied. See the License for the specific language governing
+# rights and limitations under the License.
+#
+# The Original Code is mozilla.org code.
+#
+# The Initial Developer of the Original Code is Sun Microsystems,
+# Inc. Portions created by Sun are
+# Copyright (C) 1999 Sun Microsystems, Inc. All
+# Rights Reserved.
+#
+# Contributor(s): 
+TOP_DIR = ../../..
+OBJ_DIR = ../obj
+CPP = \
+	CallBooleanMethod_1.cpp \
+	CallBooleanMethod_2.cpp \
+	CallBooleanMethod_3.cpp \
+	CallBooleanMethod_4.cpp \
+	CallByteMethod_1.cpp \
+	CallByteMethod_2.cpp \
+	CallByteMethod_3.cpp \
+	CallByteMethod_4.cpp \
+	CallCharMethod_1.cpp \
+	CallCharMethod_2.cpp \
+	CallCharMethod_3.cpp \
+	CallCharMethod_4.cpp \
+	CallDoubleMethod_1.cpp \
+	CallDoubleMethod_2.cpp \
+	CallDoubleMethod_3.cpp \
+	CallDoubleMethod_4.cpp \
+	CallFloatMethod_1.cpp \
+	CallFloatMethod_2.cpp \
+	CallFloatMethod_3.cpp \
+	CallFloatMethod_4.cpp \
+	CallIntMethod_1.cpp \
+	CallIntMethod_10.cpp \
+	CallIntMethod_11.cpp \
+	CallIntMethod_12.cpp \
+	CallIntMethod_13.cpp \
+	CallIntMethod_14.cpp \
+	CallIntMethod_15.cpp \
+	CallIntMethod_16.cpp \
+	CallIntMethod_17.cpp \
+	CallIntMethod_18.cpp \
+	CallIntMethod_19.cpp \
+	CallIntMethod_2.cpp \
+	CallIntMethod_3.cpp \
+	CallIntMethod_4.cpp \
+	CallIntMethod_5.cpp \
+	CallIntMethod_6.cpp \
+	CallIntMethod_7.cpp \
+	CallIntMethod_8.cpp \
+	CallIntMethod_9.cpp \
+	CallLongMethod_1.cpp \
+	CallLongMethod_2.cpp \
+	CallLongMethod_3.cpp \
+	CallLongMethod_4.cpp \
+	CallObjectMethod_1.cpp \
+	CallObjectMethod_2.cpp \
+	CallObjectMethod_3.cpp \
+	CallObjectMethod_4.cpp \
+	CallObjectMethod_5.cpp \
+	CallObjectMethod_6.cpp \
+	CallObjectMethod_7.cpp \
+	CallShortMethod_1.cpp \
+	CallShortMethod_2.cpp \
+	CallShortMethod_3.cpp \
+	CallShortMethod_4.cpp \
+	CallVoidMethod_1.cpp \
+	CallVoidMethod_2.cpp \
+	GetMethodID_1.cpp \
+	GetMethodID_10.cpp \
+	GetMethodID_11.cpp \
+	GetMethodID_12.cpp \
+	GetMethodID_13.cpp \
+	GetMethodID_14.cpp \
+	GetMethodID_15.cpp \
+	GetMethodID_16.cpp \
+	GetMethodID_17.cpp \
+	GetMethodID_18.cpp \
+	GetMethodID_19.cpp \
+	GetMethodID_2.cpp \
+	GetMethodID_20.cpp \
+	GetMethodID_21.cpp \
+	GetMethodID_22.cpp \
+	GetMethodID_23.cpp \
+	GetMethodID_24.cpp \
+	GetMethodID_25.cpp \
+	GetMethodID_26.cpp \
+	GetMethodID_27.cpp \
+	GetMethodID_28.cpp \
+	GetMethodID_29.cpp \
+	GetMethodID_3.cpp \
+	GetMethodID_30.cpp \
+	GetMethodID_31.cpp \
+	GetMethodID_32.cpp \
+	GetMethodID_33.cpp \
+	GetMethodID_34.cpp \
+	GetMethodID_35.cpp \
+	GetMethodID_36.cpp \
+	GetMethodID_37.cpp \
+	GetMethodID_38.cpp \
+	GetMethodID_39.cpp \
+	GetMethodID_4.cpp \
+	GetMethodID_5.cpp \
+	GetMethodID_6.cpp \
+	GetMethodID_7.cpp \
+	GetMethodID_8.cpp \
+	GetMethodID_9.cpp
+
+OBJS = \
+	$(OBJ_DIR)/CallBooleanMethod_1.o \
+	$(OBJ_DIR)/CallBooleanMethod_2.o \
+	$(OBJ_DIR)/CallBooleanMethod_3.o \
+	$(OBJ_DIR)/CallBooleanMethod_4.o \
+	$(OBJ_DIR)/CallByteMethod_1.o \
+	$(OBJ_DIR)/CallByteMethod_2.o \
+	$(OBJ_DIR)/CallByteMethod_3.o \
+	$(OBJ_DIR)/CallByteMethod_4.o \
+	$(OBJ_DIR)/CallCharMethod_1.o \
+	$(OBJ_DIR)/CallCharMethod_2.o \
+	$(OBJ_DIR)/CallCharMethod_3.o \
+	$(OBJ_DIR)/CallCharMethod_4.o \
+	$(OBJ_DIR)/CallDoubleMethod_1.o \
+	$(OBJ_DIR)/CallDoubleMethod_2.o \
+	$(OBJ_DIR)/CallDoubleMethod_3.o \
+	$(OBJ_DIR)/CallDoubleMethod_4.o \
+	$(OBJ_DIR)/CallFloatMethod_1.o \
+	$(OBJ_DIR)/CallFloatMethod_2.o \
+	$(OBJ_DIR)/CallFloatMethod_3.o \
+	$(OBJ_DIR)/CallFloatMethod_4.o \
+	$(OBJ_DIR)/CallIntMethod_1.o \
+	$(OBJ_DIR)/CallIntMethod_10.o \
+	$(OBJ_DIR)/CallIntMethod_11.o \
+	$(OBJ_DIR)/CallIntMethod_12.o \
+	$(OBJ_DIR)/CallIntMethod_13.o \
+	$(OBJ_DIR)/CallIntMethod_14.o \
+	$(OBJ_DIR)/CallIntMethod_15.o \
+	$(OBJ_DIR)/CallIntMethod_16.o \
+	$(OBJ_DIR)/CallIntMethod_17.o \
+	$(OBJ_DIR)/CallIntMethod_18.o \
+	$(OBJ_DIR)/CallIntMethod_19.o \
+	$(OBJ_DIR)/CallIntMethod_2.o \
+	$(OBJ_DIR)/CallIntMethod_3.o \
+	$(OBJ_DIR)/CallIntMethod_4.o \
+	$(OBJ_DIR)/CallIntMethod_5.o \
+	$(OBJ_DIR)/CallIntMethod_6.o \
+	$(OBJ_DIR)/CallIntMethod_7.o \
+	$(OBJ_DIR)/CallIntMethod_8.o \
+	$(OBJ_DIR)/CallIntMethod_9.o \
+	$(OBJ_DIR)/CallLongMethod_1.o \
+	$(OBJ_DIR)/CallLongMethod_2.o \
+	$(OBJ_DIR)/CallLongMethod_3.o \
+	$(OBJ_DIR)/CallLongMethod_4.o \
+	$(OBJ_DIR)/CallObjectMethod_1.o \
+	$(OBJ_DIR)/CallObjectMethod_2.o \
+	$(OBJ_DIR)/CallObjectMethod_3.o \
+	$(OBJ_DIR)/CallObjectMethod_4.o \
+	$(OBJ_DIR)/CallObjectMethod_5.o \
+	$(OBJ_DIR)/CallObjectMethod_6.o \
+	$(OBJ_DIR)/CallObjectMethod_7.o \
+	$(OBJ_DIR)/CallShortMethod_1.o \
+	$(OBJ_DIR)/CallShortMethod_2.o \
+	$(OBJ_DIR)/CallShortMethod_3.o \
+	$(OBJ_DIR)/CallShortMethod_4.o \
+	$(OBJ_DIR)/CallVoidMethod_1.o \
+	$(OBJ_DIR)/CallVoidMethod_2.o \
+	$(OBJ_DIR)/GetMethodID_1.o \
+	$(OBJ_DIR)/GetMethodID_10.o \
+	$(OBJ_DIR)/GetMethodID_11.o \
+	$(OBJ_DIR)/GetMethodID_12.o \
+	$(OBJ_DIR)/GetMethodID_13.o \
+	$(OBJ_DIR)/GetMethodID_14.o \
+	$(OBJ_DIR)/GetMethodID_15.o \
+	$(OBJ_DIR)/GetMethodID_16.o \
+	$(OBJ_DIR)/GetMethodID_17.o \
+	$(OBJ_DIR)/GetMethodID_18.o \
+	$(OBJ_DIR)/GetMethodID_19.o \
+	$(OBJ_DIR)/GetMethodID_2.o \
+	$(OBJ_DIR)/GetMethodID_20.o \
+	$(OBJ_DIR)/GetMethodID_21.o \
+	$(OBJ_DIR)/GetMethodID_22.o \
+	$(OBJ_DIR)/GetMethodID_23.o \
+	$(OBJ_DIR)/GetMethodID_24.o \
+	$(OBJ_DIR)/GetMethodID_25.o \
+	$(OBJ_DIR)/GetMethodID_26.o \
+	$(OBJ_DIR)/GetMethodID_27.o \
+	$(OBJ_DIR)/GetMethodID_28.o \
+	$(OBJ_DIR)/GetMethodID_29.o \
+	$(OBJ_DIR)/GetMethodID_3.o \
+	$(OBJ_DIR)/GetMethodID_30.o \
+	$(OBJ_DIR)/GetMethodID_31.o \
+	$(OBJ_DIR)/GetMethodID_32.o \
+	$(OBJ_DIR)/GetMethodID_33.o \
+	$(OBJ_DIR)/GetMethodID_34.o \
+	$(OBJ_DIR)/GetMethodID_35.o \
+	$(OBJ_DIR)/GetMethodID_36.o \
+	$(OBJ_DIR)/GetMethodID_37.o \
+	$(OBJ_DIR)/GetMethodID_38.o \
+	$(OBJ_DIR)/GetMethodID_39.o \
+	$(OBJ_DIR)/GetMethodID_4.o \
+	$(OBJ_DIR)/GetMethodID_5.o \
+	$(OBJ_DIR)/GetMethodID_6.o \
+	$(OBJ_DIR)/GetMethodID_7.o \
+	$(OBJ_DIR)/GetMethodID_8.o \
+	$(OBJ_DIR)/GetMethodID_9.o
+
+INCLUDES = -I../include 
+include ../../../build/rules.mk 
+all: compile
