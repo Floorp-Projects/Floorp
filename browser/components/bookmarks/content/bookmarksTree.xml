@@ -773,9 +773,9 @@ dump("ONSELECTION CHANGED\n")
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#URL" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#ShortcutURL" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#Description" />
-                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#BookmarkAddDate" />
                     <treecell label="rdf:http://home.netscape.com/NC-rdf#LastModifiedDate" />
+                    <treecell label="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate"/>
                   </treerow>
                 </treeitem>
               </treechildren>
@@ -815,7 +815,7 @@ dump("ONSELECTION CHANGED\n")
             <splitter class="tree-splitter" />
             <treecol id="LastVisitDate" label="&treecol.lastvisit.label;" 
                          hidden="true" flex="1" class="sortDirectionIndicator" 
-                         sort="rdf:http://home.netscape.com/NC-rdf#LastVisitDate" 
+                         sort="rdf:http://home.netscape.com/WEB-rdf#LastVisitDate" 
                          persist="width hidden ordinal" />
           </treecols>
         </tree>
