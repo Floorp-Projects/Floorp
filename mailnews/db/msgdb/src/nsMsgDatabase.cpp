@@ -984,7 +984,12 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 NS_IMETHODIMP
 nsMsgDatabase::UndoDelete(nsIMsgDBHdr *msgHdr)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    if (msgHdr)
+    {
+        SetHdrFlag(msgHdr, FALSE, MSG_FLAG_EXPUNGED);
+        // ** do we need to update folder info regarding the message size
+    }
+    return NS_OK;
 }
 
 
