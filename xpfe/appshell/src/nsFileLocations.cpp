@@ -55,7 +55,7 @@
 static NS_DEFINE_IID(kIFileLocatorIID, NS_IFILELOCATOR_IID);
 
 // for profile manager
-#if defined(NS_USING_PROFILES)
+#if defined(NS_USING_PROFILES) \
     static NS_DEFINE_CID(kProfileCID,           NS_PROFILE_CID);
 #endif // XP_PC
 
@@ -71,7 +71,7 @@ static void CreateDefaultProfileDirectorySpec(nsFileSpec& outSpec)
 // to these. For now I am using these until the profile stuff picks up and
 // we know how to get the absolute fallback for all platforms
 // UNIX    : ~/.mozilla
-// WIN    : Program Files\Netscape\Users50\
+// WIN    : Program Files\Netscape\Users50\  
 // Mac    : :Documents:Mozilla:Users50:
 //----------------------------------------------------------------------------------------
 {
