@@ -151,7 +151,10 @@ namespace JavaScript {
 	// code bloat and separates the concepts of a fixed, read-only string from a mutable buffer that
 	// is expanding.  For now, though, we use the standard basic_string.
 	typedef std::basic_string<char16> String;
-
+    typedef String string16;
+    typedef string16::const_iterator string16_citer;    
+    typedef string string8;
+    typedef string8::const_iterator string8_citer;
 
 	typedef uint32 char16orEOF;		// A type that can hold any char16 plus one special value: ueof.
 	const char16orEOF char16eof = static_cast<char16orEOF>(-1);

@@ -36,16 +36,16 @@
 
 #include "utilities.h"
 #include "icodegenerator.h"
+#include "lexutils.h"
 #include "icodeasm.h"
 
 using namespace JavaScript;
 
 void
-testAlpha (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-           const string &expect)
+testAlpha (const string8 &str, const string &expect)
 {
     string *result;
-    icp.ParseAlpha (str.begin(), str.end(), &result);
+    LexUtils::lexAlpha (str.begin(), str.end(), &result);
     if (*result == expect)
         fprintf (stderr, "PASS: ");
     else
@@ -55,11 +55,10 @@ testAlpha (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
 }
 
 void
-testBool (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-          bool expect)
+testBool (const string8 &str, bool expect)
 {
     bool b;
-    icp.ParseBool (str.begin(), str.end(), &b);
+    LexUtils::lexBool (str.begin(), str.end(), &b);
     if (b == expect)
         fprintf (stderr, "PASS: ");
     else
@@ -68,11 +67,10 @@ testBool (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
 }
 
 void
-testDouble (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-            double expect)
+testDouble (const string8 &str, double expect)
 {
     double result;
-    icp.ParseDouble (str.begin(), str.end(), &result);
+    LexUtils::lexDouble (str.begin(), str.end(), &result);
     if (result == expect)
         fprintf (stderr, "PASS: ");
     else
@@ -82,11 +80,10 @@ testDouble (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
 }
 
 void
-testString (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-            const string &expect)
+testString (const string8 &str, const string &expect)
 {
     string *result;
-    icp.ParseString (str.begin(), str.end(), &result);
+    LexUtils::lexString8 (str.begin(), str.end(), &result);
     if (*result == expect)
         fprintf (stderr, "PASS: ");
     else
@@ -96,11 +93,10 @@ testString (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
 }
 
 void
-testUInt32 (JavaScript::ICodeASM::ICodeParser &icp, const string &str,
-            uint32 expect)
+testUInt32 (const string8 &str, uint32 expect)
 {
     uint32 result;
-    icp.ParseUInt32 (str.begin(), str.end(), &result);
+    LexUtils::lexUInt32 (str.begin(), str.end(), &result);
     if (result == expect)
         fprintf (stderr, "PASS: ");
     else
@@ -116,11 +112,12 @@ testParse (JavaScript::ICodeASM::ICodeParser &icp,
 {
     using namespace JavaScript;
     
-    icp.ParseSourceFromString (str);
+    icp.parseSourceFromString (str);
     ICG::ICodeModule icm = ICG::ICodeModule (icp.mInstructions,
                                              new ICG::VariableList(),
-                                             icp.mMaxRegister, 0, 0, false,
-                                             false, &JSTypes::Any_Type);
+                                             new ICG::ParameterList(),
+                                             icp.mMaxRegister, 0,
+                                             &JSTypes::Any_Type);
 
     stdOut << icm;
 
@@ -153,36 +150,36 @@ main (int , char **)
     Interpreter::Context cx (world, &global);
     ICodeASM::ICodeParser icp(&cx);
 
-    testAlpha (icp, "False", "False");
-    testAlpha (icp, "fe fi fo fum", "fe");
-    testAlpha (icp, "   bla", "");
+    testAlpha ("False", "False");
+    testAlpha ("fe fi fo fum", "fe");
+    testAlpha ("   bla", "");
 
-    testBool (icp, "true", true);
-    testBool (icp, "True", true);
-    testBool (icp, "tRue", true);
-    testBool (icp, "TRUE", true);
-    testBool (icp, "True", true);
-    testBool (icp, "false", false);
-    testBool (icp, "False", false); 
-    testBool (icp, "fAlSe", false);
-    testBool (icp, "FALSE", false);
-    testBool (icp, "False", false);
+    testBool ("true", true);
+    testBool ("True", true);
+    testBool ("tRue", true);
+    testBool ("TRUE", true);
+    testBool ("True", true);
+    testBool ("false", false);
+    testBool ("False", false); 
+    testBool ("fAlSe", false);
+    testBool ("FALSE", false);
+    testBool ("False", false);
 
-    testDouble (icp, "123", 123);
-    testDouble (icp, "12.3", 12.3);
-    testDouble (icp, "-123", -123);
-    testDouble (icp, "-12.3", -12.3);
+    testDouble ("123", 123);
+    testDouble ("12.3", 12.3);
+    testDouble ("-123", -123);
+    testDouble ("-12.3", -12.3);
 
-    testString (icp, "\"fe fi fo fum\"", "fe fi fo fum");
-    testString (icp, "'the tab is ->\\t<- here'", "the tab is ->\t<- here");
-    testString (icp, "'the newline is ->\\n<- here'", "the newline is ->\n<- here");
-    testString (icp, "'the cr is ->\\r<- here'", "the cr is ->\r<- here");
-    testString (icp, "\"an \\\"escaped\\\" string\"", "an \"escaped\" string");
+    testString ("\"fe fi fo fum\"", "fe fi fo fum");
+    testString ("'the tab is ->\\t<- here'", "the tab is ->\t<- here");
+    testString ("'the newline is ->\\n<- here'", "the newline is ->\n<- here");
+    testString ("'the cr is ->\\r<- here'", "the cr is ->\r<- here");
+    testString ("\"an \\\"escaped\\\" string\"", "an \"escaped\" string");
 
-    testUInt32 (icp, "123", 123);
-    testUInt32 (icp, "12.3", 12);
-    testUInt32 (icp, "-123", 0);
-    testUInt32 (icp, "-12.3", 0);
+    testUInt32 ("123", 123);
+    testUInt32 ("12.3", 12);
+    testUInt32 ("-123", 0);
+    testUInt32 ("-12.3", 0);
     /* XXX what to do with the overflow? */
     //testUInt32 (icp, "12123687213612873621873438754387934657834", 0);
 

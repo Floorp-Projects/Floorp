@@ -2499,7 +2499,7 @@ void ICodeGenerator::readICode(const char *fileName)
 
                         stdOut << "Calling ICodeParser with :\n" << str << "\n";
 
-                        icp.ParseSourceFromString(str);
+                        icp.parseSourceFromString(str);
 
                         ICodeModule *icm = new ICodeModule(icp.mInstructions, 
                                                             NULL,                   /* VariableList *variables */
