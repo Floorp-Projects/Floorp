@@ -2,10 +2,6 @@
 // Microsoft Developer Studio generated include file.
 // Used by setuprsc.rc
 //
-#ifndef WINVER
-#define WINVER 0x0400
-#endif
-#include "winresrc.h"
 #define IDS_ERROR_FILE_NOT_FOUND        3
 #define IDRESUME                        3
 #define IDPAUSE                         4
@@ -42,6 +38,10 @@
 #define IDC_CHECK2                      1023
 #define IDC_LIST2                       1023
 #define IDC_LIST                        1023
+#ifndef WINVER
+#define WINVER 0x0400
+#endif
+#include "winresrc.h"
 #define IDC_CHECK3                      1024
 #define IDC_EDIT_LICENSE                1024
 #define IDC_CHECK0                      1025
@@ -92,6 +92,7 @@
 #define IDC_USE_HTTP                    1073
 #define IDC_USE_FTP                     1074
 #define IDC_DESTINATION                 1074
+#define IDC_CHECK_TURBO_MODE            1075
 #define DLG_WELCOME                     2001
 #define DLG_LICENSE                     2002
 #define DLG_SETUP_TYPE                  2003
@@ -134,7 +135,7 @@
 #define _APS_NO_MFC                     1
 #define _APS_NEXT_RESOURCE_VALUE        115
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1075
+#define _APS_NEXT_CONTROL_VALUE         1076
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

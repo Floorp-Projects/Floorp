@@ -2149,10 +2149,17 @@ LPSTR GetStartInstallMessage()
   return(szMessageBuf);
 }
 
+// XXX also defined in extra.c, need to factor out
+
+#define SETUP_STATE_REG_KEY "Software\\%s\\%s\\%s\\Setup"
+
 LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   RECT  rDlg;
   LPSTR szMessage = NULL;
+  char  szBuf[MAX_BUF];
+  char  szKey[MAX_BUF];
+  char  szData[MAX_BUF];
 
   switch(msg)
   {
@@ -2160,6 +2167,8 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       DisableSystemMenuItems(hDlg, FALSE);
       SetWindowText(hDlg, diStartInstall.szTitle);
 
+      GetPrivateProfileString("Strings", "IDC Turbo Mode", "", szBuf, sizeof(szBuf), szFileIniConfig);
+      SetDlgItemText(hDlg, IDC_CHECK_TURBO_MODE, szBuf);
       SetDlgItemText(hDlg, IDC_STATIC, sgInstallGui.szCurrentSettings);
       SetDlgItemText(hDlg, IDWIZBACK, sgInstallGui.szBack_);
       SetDlgItemText(hDlg, IDWIZNEXT, sgInstallGui.szInstall_);
@@ -2202,6 +2211,19 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       switch(LOWORD(wParam))
       {
         case IDWIZNEXT:
+          wsprintf(szKey, SETUP_STATE_REG_KEY, sgProduct.szCompanyName, sgProduct.szProductName,
+            sgProduct.szUserAgent);
+           
+          if(IsDlgButtonChecked(hDlg, IDC_CHECK_TURBO_MODE) == BST_CHECKED) {
+            strcpy( szData, "turbo=yes" );
+            diStartInstall.bTurboMode = TRUE;
+          }
+          else {
+            strcpy( szData, "turbo=no" );
+            diStartInstall.bTurboMode = FALSE;
+          }
+ 
+          AppendWinReg(HKEY_CURRENT_USER, szKey, "browserargs", REG_SZ, szData, 0, strlen( szData ) + 1, FALSE, FALSE );
           DestroyWindow(hDlg);
           DlgSequenceNext();
           break;
@@ -2461,7 +2483,7 @@ void DlgSequenceNext()
 {
   HRESULT hrValue;
   HRESULT hrErr;
-  char    szDestPath[MAX_PATH];
+  char    szDestPath[MAX_BUF];
   char    szInstallLogFile[MAX_BUF];
 
   BOOL    bDone = FALSE;
@@ -2726,6 +2748,7 @@ void DlgSequenceNext()
             if(!gbIgnoreProgramFolderX)
               ProcessProgramFolderShowCmd();
 
+            CleanupArgsRegistry();
             CleanupPreviousVersionRegKeys();
             if(NeedReboot())
             {
@@ -2748,6 +2771,7 @@ void DlgSequenceNext()
         {
           bSDUserCanceled = TRUE;
           CleanupXpcomFile();
+          CleanupArgsRegistry();
           PostQuitMessage(0);
         }
         gbProcessingXpnstallFiles = FALSE;

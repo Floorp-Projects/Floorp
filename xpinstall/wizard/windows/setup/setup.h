@@ -333,6 +333,7 @@ typedef struct dlgStartInstall
   LPSTR szTitle;
   LPSTR szMessageInstall;
   LPSTR szMessageDownload;
+  BOOL  bTurboMode;
 } diSI;
 
 typedef struct dlgDownload
