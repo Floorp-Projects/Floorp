@@ -2745,13 +2745,13 @@ redo_load_switch:   /* come here on file/ftp retry */
 				&& !PL_strncasecmp(URL_s->address, "snews:", 6)
 				)
 			)
-		&& (this_entry->proxy_conf =
-		     pacf_find_proxies_for_url(window_id, URL_s)) != NULL
-		&& (pacf_status = pacf_get_proxy_addr(window_id,
+		&& ((this_entry->proxy_conf =
+		     pacf_find_proxies_for_url(window_id, URL_s)) != NULL)
+		&& ((pacf_status = pacf_get_proxy_addr(window_id,
 							 this_entry->proxy_conf,
 							 &this_entry->proxy_addr,
 							 &this_entry->socks_host,
-							 &this_entry->socks_port))
+							 &this_entry->socks_port)) != NULL)
 		&& this_entry->proxy_addr
 		)
 	  {
