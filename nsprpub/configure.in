@@ -745,6 +745,7 @@ case "$target" in
         _OPTIMIZE_FLAGS=-O2
         _DEBUG_FLAGS='-gdwarf-2 -O0'
         MKSHLIB='$(CCC) $(DSO_LDOPTS) -o $@'
+        AC_CHECK_LIB(bind, gethostbyaddr, [OS_LIBS="$OS_LIBS -lbind -lsocket"])
         ;;
     powerpc)
         CC=mwcc
