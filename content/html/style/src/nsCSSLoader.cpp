@@ -598,13 +598,13 @@ SheetLoadData::OnStreamComplete(nsIStreamLoader* aLoader,
 
   if (string && stringLen>0) {
 
-    // First determine the charset (if one is indicated) and set the data member
+    // First determine the charset (if one is indicated) and set the data member.
     // XXX use the HTTP header data too
     nsString strStyleDataUndecoded;
     nsString strHTTPHeaderData;
     strStyleDataUndecoded.AssignWithConversion(string,stringLen);
-    result = mLoader->SetCharset(strHTTPHeaderData, strStyleDataUndecoded);
-    if (NS_SUCCEEDED(result)) {
+    (void)mLoader->SetCharset(strHTTPHeaderData, strStyleDataUndecoded); // bug 66190: ignore errors
+    {
       // now get the decoder
       NS_WITH_SERVICE(nsICharsetConverterManager,ccm,kCharsetConverterManagerCID,&result);
       if (NS_SUCCEEDED(result) && ccm) {
@@ -1618,18 +1618,18 @@ nsresult CSSLoaderImpl::SetCharset(/*in*/ const nsString &aHTTPHeader,
 
   if (aHTTPHeader.Length() > 0) {
     // check if it has the charset= parameter
-    if (aHTTPHeader.Find("charset=",PR_TRUE) > 0) {
-      // XXX use it
-      
-      NS_ASSERTION(PR_FALSE,"Needs to be implemented!!!");
-
+    PRInt32 charsetOffset;
+    static const char* charsetStr = "charset=";
+    if ((charsetOffset = aHTTPHeader.Find(charsetStr,PR_TRUE)) > 0) {
+      aHTTPHeader.Mid(str, charsetOffset + sizeof(charsetStr), -1);
       setCharset = PR_TRUE;
     }
   } else if (aStyleSheetData.Length() > 0) {
-    if (aStyleSheetData.Find("@charset") > -1) {
+    static const char* atCharsetStr = "@charset";
+    if (aStyleSheetData.Find(atCharsetStr) > -1) {
       nsString strValue;
       // skip past the ident
-      aStyleSheetData.Mid(str,8,-1);
+      aStyleSheetData.Mid(str,sizeof(atCharsetStr),-1);
       // strip any whitespace
       str.StripWhitespace();
       // truncate everything past the delimiter (semicolon)
