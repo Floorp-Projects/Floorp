@@ -475,6 +475,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
     nsIFrame * firstChildFrame = nsnull;
     FirstChild(aPresContext, nsnull, &firstChildFrame);
 
+    /*
     // XXX So this may do it too often
     // the side effect of this is if the user has scrolled to some other place in the list and
     // an incremental reflow comes through the list gets scrolled to the first selected item
@@ -592,6 +593,42 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
         }
       }
     }
+    */
+
+  if (aReflowState.reason == eReflowReason_Incremental)
+  {
+    if (aReflowState.reflowCommand) {
+      nsIFrame* incrementalChild = nsnull;
+      aReflowState.reflowCommand->GetNext(incrementalChild);
+
+      NS_ASSERTION(incrementalChild == firstChildFrame || !incrementalChild, "Child is not in our list!!");
+
+      if (!incrementalChild) {
+        nsIFrame* target;
+        aReflowState.reflowCommand->GetTarget(target);
+        NS_ASSERTION(target == this, "Not our target!");
+
+        nsIReflowCommand::ReflowType  type;
+        aReflowState.reflowCommand->GetType(type);
+        switch (type) {
+        case nsIReflowCommand::StyleChanged: {
+            nsHTMLReflowState newState(aReflowState);
+            newState.reason = eReflowReason_StyleChange;
+            newState.reflowCommand = nsnull;
+            return Reflow(aPresContext, aDesiredSize, newState, aStatus);
+                                             }
+        case nsIReflowCommand::ReflowDirty: {
+            nsHTMLReflowState newState(aReflowState);
+            newState.reason = eReflowReason_Dirty;
+            newState.reflowCommand = nsnull;
+            return Reflow(aPresContext, aDesiredSize, newState, aStatus);
+                                            }
+          default:
+            NS_ERROR("Unknown incremental reflow type");
+        }
+      }
+    }
+  }
 
    // Strategy: Let the inherited reflow happen as though the width and height of the
    // ScrollFrame are big enough to allow the listbox to
@@ -657,19 +694,20 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   printf("After1st DW: %d DH: %d\n", scrolledAreaDesiredSize.width, scrolledAreaDesiredSize.height);
 
   nsIScrollableFrame * scrollableFrame = nsnull;
-  nsRect scrolledRect;
+  
+  /*
+  nscoord scrollbarWidth = 0;
+  nscoord scrollbarHeight = 0;
   if (NS_SUCCEEDED(firstChildFrame->QueryInterface(NS_GET_IID(nsIScrollableFrame), (void**)&scrollableFrame))) {
-    nsIFrame * scrolledFrame;
-    scrollableFrame->GetScrolledFrame(aPresContext, scrolledFrame);
-    NS_ASSERTION(scrolledFrame != nsnull, "Must have scrollable frame");
-    scrolledFrame->GetRect(scrolledRect);
+      scrollableFrame->GetScrollbarSizes(aPresContext, &scrollbarWidth, &scrollbarHeight);
   } else {
     NS_ASSERTION(scrollableFrame != nsnull, "Must have scrollableFrame frame");
   }
+  */
   
   // The nsScrollFrame::REflow adds in the scrollbar width and border dimensions
   // to the maxElementSize, so these need to be subtracted
-  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.maxElementSize->width;
+  nscoord scrolledAreaWidth  = scrolledAreaDesiredSize.width; //maxElementSize->width;
   nscoord scrolledAreaHeight = scrolledAreaDesiredSize.height;
 
   // Keep the oringal values
@@ -679,6 +717,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   // The first reflow produces a box with the scrollbar width and borders
   // added in so we need to subtract them out.
 
+  /*
   // Retrieve the scrollbar's width and height
   float sbWidth  = 0.0;
   float sbHeight = 0.0;;
@@ -689,6 +728,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   nscoord scrollbarWidth  = NSToCoordRound(sbWidth);
   
   //nscoord scrollbarHeight = NSToCoordRound(sbHeight);
+*/
 
   // Subtract out the borders
   nsMargin border;
@@ -712,8 +752,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
 
   mMaxWidth  -= (scrollBorderPadding.left + scrollBorderPadding.right);
   mMaxHeight -= (scrollBorderPadding.top + scrollBorderPadding.bottom);
-
-  // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
+    // Now the scrolledAreaWidth and scrolledAreaHeight are exactly 
   // wide and high enough to enclose their contents
 
   scrolledAreaWidth  -= (scrollBorderPadding.left + scrollBorderPadding.right);
@@ -723,7 +762,7 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   if (isInDropDownMode) {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
-      visibleWidth += scrollbarWidth;
+      //visibleWidth += scrollbarWidth;
     } else {
       visibleWidth = aReflowState.mComputedWidth;
       visibleWidth -= (scrollBorderPadding.left + scrollBorderPadding.right);
@@ -731,7 +770,6 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   } else {
     if (NS_UNCONSTRAINEDSIZE == aReflowState.mComputedWidth) {
       visibleWidth = scrolledAreaWidth;
-      //visibleWidth += scrollbarWidth;
     } else {
       visibleWidth = aReflowState.mComputedWidth;
     }
@@ -899,14 +937,19 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   mCachedScrollFrameSize.width  = visibleWidth;
   mCachedScrollFrameSize.height = visibleHeight;
   // Reflow 
+  
   firstChildFrame->WillReflow(aPresContext);
   firstChildFrame->MoveTo(aPresContext, aReflowState.mComputedBorderPadding.left, aReflowState.mComputedBorderPadding.top);
+
+  /*
   nsIView*  view;
   firstChildFrame->GetView(aPresContext, &view);
   NS_ASSERTION(view == nsnull, "Hmmmm, fix this!");
   if (view) {
     nsContainerFrame::PositionFrameView(aPresContext, firstChildFrame, view);
   }
+  */
+
   firstChildFrame->Reflow(aPresContext, 
                           scrolledAreaDesiredSize,
                           secondPassState, 
@@ -918,6 +961,8 @@ nsGfxListControlFrame::Reflow(nsIPresContext*          aPresContext,
   //mCachedScrollFrameSize.width  = scrolledAreaDesiredSize.width;
   //mCachedScrollFrameSize.height = scrolledAreaDesiredSize.height;
 
+  // if we had no scrollbar before and now we have one
+  // then reflow again with the new scrollbar.
   nsMargin b = aReflowState.mComputedBorderPadding - aReflowState.mComputedPadding;
 
   

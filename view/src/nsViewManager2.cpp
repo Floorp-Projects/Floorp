@@ -2814,6 +2814,7 @@ nsViewManager2::CacheWidgetChanges(PRBool aCache)
 nsresult
 nsViewManager2::ProcessWidgetChanges(nsIView* aView)
 {
+  //printf("---------Begin Sync----------\n");
   nsresult rv = aView->SynchWidgetSizePosition();
   if (NS_FAILED(rv))
       return rv;
@@ -2827,6 +2828,8 @@ nsViewManager2::ProcessWidgetChanges(nsIView* aView)
 
 		child->GetNextSibling(child);
 	}
+
+  //printf("---------End Sync----------\n");
 
   return NS_OK;
 }

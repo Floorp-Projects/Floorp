@@ -33,7 +33,9 @@ class nsIScrollPositionListener;
 typedef enum {
   nsScrollPreference_kAuto = 0,
   nsScrollPreference_kNeverScroll,
-  nsScrollPreference_kAlwaysScroll
+  nsScrollPreference_kAlwaysScroll,
+  nsScrollPreference_kAlwaysScrollHorizontal,
+  nsScrollPreference_kAlwaysScrollVertical
 } nsScrollPreference;
 
 // IID for the nsIScrollableView interface

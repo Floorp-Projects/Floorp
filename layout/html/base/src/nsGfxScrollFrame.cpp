@@ -610,6 +610,8 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_VERTICAL) {
+     // make sure they are visible.
+     mInner->SetScrollbarVisibility(mInner->mVScrollbarBox, PR_TRUE);
      nsSize vSize(0,0);
      mInner->mVScrollbarBox->GetPrefSize(aState, vSize);
      nsBox::AddMargin(mInner->mVScrollbarBox, vSize);
@@ -620,6 +622,7 @@ nsGfxScrollFrame::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
   if (styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLL || 
       styleDisplay->mOverflow == NS_STYLE_OVERFLOW_SCROLLBARS_HORIZONTAL) {
      nsSize hSize(0,0);
+     mInner->SetScrollbarVisibility(mInner->mHScrollbarBox, PR_TRUE);
      mInner->mHScrollbarBox->GetPrefSize(aState, hSize);
      nsBox::AddMargin(mInner->mHScrollbarBox, hSize);
 

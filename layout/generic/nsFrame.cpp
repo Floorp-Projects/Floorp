@@ -949,12 +949,12 @@ nsFrame::HandlePress(nsIPresContext* aPresContext,
 {
   // check whether style allows selection
   // if not dont tell selection the mouse event even occured.
+  
+  if (!IsSelectable(this))
+    return NS_OK;
 
   if (!IsMouseCaptured(aPresContext))
     CaptureMouse(aPresContext, PR_TRUE);
-
-  if (!IsSelectable(this))
-    return NS_OK;
 
   PRInt16 displayresult = nsISelectionController::SELECTION_OFF;
   nsresult rv;

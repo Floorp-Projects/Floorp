@@ -59,6 +59,9 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 #include "nsIScrollableFrame.h"
+#include "nsIScrollableView.h"
+
+static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 #include "nsIXULDocument.h" // Temporary fix for Bug 36558
 
@@ -505,6 +508,7 @@ nsComboboxControlFrame::ScrollIntoView(nsIPresContext* aPresContext)
 void
 nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
 {
+  /*
   //XXX: This is temporary. It simulates a psuedo dropdown states by using a attribute selector 
   // This will not be need if the event state supports active states for use with the dropdown list
   // Currently, the event state manager will reset the active state to the content which has focus
@@ -516,6 +520,26 @@ nsComboboxControlFrame::ShowPopup(PRBool aShowPopup)
     mContent->SetAttribute(kNameSpaceID_None, activeAtom, nsAutoString(), PR_TRUE);
   } else {
     mContent->UnsetAttribute(kNameSpaceID_None, activeAtom, PR_TRUE);
+  }
+  */
+
+  nsIView* view = nsnull;
+  mDropdownFrame->GetView(mPresContext, &view);
+  nsCOMPtr<nsIViewManager> viewManager;
+  view->GetViewManager(*getter_AddRefs(viewManager));
+
+  if (aShowPopup) {
+    nsRect rect;
+    mDropdownFrame->GetRect(rect);
+    viewManager->ResizeView(view, rect.width, rect.height);
+    nsIScrollableView* scrollingView;
+    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+      scrollingView->ComputeScrollOffsets(PR_TRUE);
+    }
+    viewManager->SetViewVisibility(view, nsViewVisibility_kShow);
+  } else {
+    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+    viewManager->ResizeView(view, 0, 0);
   }
 }
 
@@ -586,15 +610,25 @@ nsComboboxControlFrame::ReflowComboChildFrame(nsIFrame* aFrame,
                                    availSize);
   kidReflowState.mComputedWidth = aAvailableWidth;
   kidReflowState.mComputedHeight = aAvailableHeight;
-      
+
+  // ensure we start off hidden
+  if (aReflowState.reason == eReflowReason_Initial) {
+    nsIView* view = nsnull;
+    mDropdownFrame->GetView(mPresContext, &view);
+    nsCOMPtr<nsIViewManager> viewManager;
+    view->GetViewManager(*getter_AddRefs(viewManager));
+    viewManager->SetViewVisibility(view, nsViewVisibility_kHide);
+    viewManager->ResizeView(view, 0, 0);
+  }
+  
    // Reflow child
   nsRect rect;
   aFrame->GetRect(rect);
   nsresult rv = ReflowChild(aFrame, aPresContext, aDesiredSize, kidReflowState,
-                            rect.x, rect.y, 0, aStatus);
+                            rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW |NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY, aStatus);
  
    // Set the child's width and height to it's desired size
-  FinishReflowChild(aFrame, aPresContext, aDesiredSize, rect.x, rect.y, 0);
+  FinishReflowChild(aFrame, aPresContext, aDesiredSize, rect.x, rect.y, NS_FRAME_NO_MOVE_VIEW |NS_FRAME_NO_SIZE_VIEW | NS_FRAME_NO_VISIBILITY);
   return rv;
 }
 

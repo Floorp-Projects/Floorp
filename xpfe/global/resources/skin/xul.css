@@ -12,6 +12,7 @@
 
 * {
   display: block;
+  user-select: none;
 }
 
 *[collapsed="true"] {

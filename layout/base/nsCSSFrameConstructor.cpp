@@ -4064,21 +4064,42 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
 #endif   
             }
 
+            nsCOMPtr<nsIStyleContext> gfxScrolledStyle;
+            aPresContext->ResolvePseudoStyleContextFor(aContent, 
+                                              nsLayoutAtoms::selectScrolledContentPseudo,
+                                              gfxListStyle, PR_FALSE, 
+                                              getter_AddRefs(gfxScrolledStyle)); 
+
+            
             // create the area frame we are scrolling 
             flags = NS_BLOCK_SHRINK_WRAP | (aIsAbsolutelyPositioned?NS_BLOCK_SPACE_MGR:0);
             nsIFrame* scrolledFrame = nsnull;
             NS_NewSelectsAreaFrame(aPresShell, &scrolledFrame, flags);
 
+            nsIFrame* newScrollFrame = nsnull; 
+            
+
+            /* scroll frame */
+#ifdef NEWGFX_LIST_SCROLLFRAME
+            nsIStyleContext* newStyle = nsnull;
+
+            // ok take the style context, the Select area frame to scroll,the listFrame, and its parent 
+            // and build the scrollframe. 
+            BuildScrollFrame(aPresShell, aPresContext, aState, aContent, gfxScrolledStyle, scrolledFrame, 
+                             listFrame, newScrollFrame, newStyle); 
+
+            gfxScrolledStyle = newStyle;
+
+#else
+            newScrollFrame = scrolledFrame;
+#endif
+
+            /*
             // resolve a style for our gfx scrollframe based on the list frames style 
-            // resolve a style for our gfx scrollframe based on the list frames style 
-            nsCOMPtr<nsIStyleContext> scrollFrameStyle;
-            aPresContext->ResolvePseudoStyleContextFor(aContent, 
-                                              nsLayoutAtoms::selectScrolledContentPseudo,
-                                              gfxListStyle, PR_FALSE, 
-                                              getter_AddRefs(scrollFrameStyle)); 
-        
+            
            InitAndRestoreFrame(aPresContext, aState, aContent, 
-                                listFrame, scrollFrameStyle, nsnull, scrolledFrame);
+                                parentFrame, gfxScrolledStyle, nsnull, scrolledFrame);
+           */
 
             // XXX Temporary for Bug 19416
             {
@@ -4093,8 +4114,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
             // scrolledFrameStyleContext - The resolved style context of the scrolledframe you passed in. 
             // this is not the style of the scrollFrame. 
 
-            nsIFrame* newScrollFrame = nsnull; 
-
             nsFrameItems anonChildItems; 
               // Create display and button frames from the combobox'es anonymous content
             CreateAnonymousFrames(aPresShell, aPresContext, nsHTMLAtoms::combobox, aState, aContent, comboboxFrame,
@@ -4102,21 +4121,6 @@ nsCSSFrameConstructor::ConstructSelectFrame(nsIPresShell*        aPresShell,
         
             comboboxFrame->SetInitialChildList(aPresContext, nsnull,
                                    anonChildItems.childList);
-
-
-            /* scroll frame */
-
-#ifdef NEWGFX_LIST_SCROLLFRAME
-            nsIStyleContext * scrolledFrameStyleContext = nsnull; 
-
-            // ok take the style context, the Select area frame to scroll,the listFrame, and its parent 
-            // and build the scrollframe. 
-            BuildScrollFrame(aPresShell, aPresContext, aState, aContent, scrollFrameStyle, scrolledFrame, 
-                             listFrame, newScrollFrame, scrolledFrameStyleContext); 
-#else
-            newScrollFrame = scrolledFrame;
-#endif
-
 
 
             // The area frame is a floater container 
