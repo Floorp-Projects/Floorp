@@ -57,6 +57,20 @@
 #undef PR_PUBLIC_API
 #include "zipstub.h"
 
+#ifdef XP_MAC
+#include <string.h>
+#include <stdlib.h>
+
+char * strdup(const char *src);
+char * strdup(const char *src)
+{
+	long len = strlen(src);
+	char *dup = (char *)malloc(len+1 * sizeof(char));
+	memcpy(dup, src, len+1);
+	return dup;
+}
+#endif
+
 #endif /* STANDALONE */
 
 #ifdef XP_UNIX
