@@ -306,7 +306,7 @@ void CNsIWebNav::LoadUriTest(char *theUrl, const unsigned long theFlag)
                           nsnull,
                           nsnull);
    sprintf(theTotalString, "%s%s%s%s%s", "LoadURI(): ", theUrl, " w/ ", theFlagName, " test");
-   RvTestResult(rv, theTotalString, 1);
+   RvTestResult(rv, theTotalString, 2);
 }
 
 void CNsIWebNav::ReloadTest(const unsigned long theFlag)

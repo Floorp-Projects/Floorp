@@ -80,76 +80,48 @@ CNsIRequest::~CNsIRequest()
 //  table columns corrsp to: pending, status, suspend, resume, cancel,
 //  setLoadGroup & getLoadGroup tests respectively.
 
-Element UrlTable_Temp[] = {
+Element ReqTable[] = {
 	{"http://www.netscape.com", 1, 1, 0, 0, 0, 1, 1},
 	{"http://www.yahoo.com",    0, 0, 1, 1, 0, 0, 0},
 	{"http://www.cisco.com",    0, 0, 0, 0, 1, 0, 0},
 	{"http://www.sun.com",      0, 0, 0, 0, 0, 1, 1},
 	{"http://www.intel.com",    1, 1, 1, 0, 0, 0, 0},
-	{"http://www.aol.com",      0, 1, 0, 0, 0, 1, 1}
+	{"http://www.aol.com",      0, 1, 0, 0, 0, 1, 1},
+	{"https://www.yahoo.com",   1, 1, 1, 1, 0, 1, 1},
+	{"file://C|/Program Files", 1, 1, 1, 1, 0, 1, 1},
+	{"ftp://ftp.netscape.com",  1, 1, 1, 1, 0, 1, 1},
+	{"ftp://ftp.mozilla.org",   0, 0, 0, 0, 1, 0, 0},
 }; 
 
 void CNsIRequest::OnStartTests(UINT nMenuID)
 {
 	if (nMenuID == ID_INTERFACES_NSIREQUEST_RUNALLTESTS)
-		RunAllTests();
+		RunAllTests(8);
 	else
-		RunIndividualTests(nMenuID) ;
+		RunIndividualTests(nMenuID, 8);
 }
-
-void CNsIRequest::RunIndividualTests(UINT nMenuID)
+ 
+void CNsIRequest::RunIndividualTests(UINT nMenuID, int reqTotal)
 {
-	nsCString theSpec;
-	nsCOMPtr<nsIURI> theURI;
 	nsCOMPtr<nsIChannel> theChannel;
 	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
-
+	nsCOMPtr<nsIURI> theURI;
+	if (!theLoadGroup)
+	{
+		QAOutput("We didn't get the Load Group. Test failed.", 2);
+		return;
+	}
 	int i=0;
 
-    QAOutput("Start nsIRequest tests.", 2);	
+    QAOutput("Start selected nsIRequest test.", 2);	
 
-//	theSpec = "http://www.netscape.com";
-	for (i=0; i<6; i++)
+	for (i=0; i<reqTotal; i++)
 	{
-		theSpec = UrlTable_Temp[i].theUrl;
-		FormatAndPrintOutput("the uri spec = ", theSpec.get(), 2);
-
-		rv = NS_NewURI(getter_AddRefs(theURI), theSpec.get());
-
-		if (!theURI)
-		{
-		   QAOutput("We didn't get the URI. Test failed.", 1);
-		   return;
-		}
-		else
-		   RvTestResult(rv, "NS_NewURI", 1);
-
-		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
-		if (!theChannel)
-		{
-		   QAOutput("We didn't get the Channel. Test failed.", 1);
-		   return;
-		}
-		else if (!theLoadGroup)
-		{
-		   QAOutput("We didn't get the Load Group. Test failed.", 2);
-		   return;
-		}
-		else
-		   RvTestResult(rv, "NS_OpenURI", 1);
-
-		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
-		nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
-		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
-
-		// this calls nsIStreamListener::OnDataAvailable()
-		rv = theChannel->AsyncOpen(listener, nsnull);
-		RvTestResult(rv, "AsyncOpen()", 1);
-
 		// nsIRequest individual tests
 
 		QAOutput("***** Individual nsIRequest test begins. *****");
 
+		theChannel = GetTheChannel(i, theLoadGroup);
 		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
 
 		switch(nMenuID)
@@ -185,93 +157,102 @@ void CNsIRequest::RunIndividualTests(UINT nMenuID)
 		}
 
 	} // end for loop
-    QAOutput("End nsIRequest tests.", 2);
 }
 
 
-void CNsIRequest::RunAllTests() 
+void CNsIRequest::RunAllTests(int reqTotal) 
 {
 	// note: nsIRequest tests are called:
 	// 1) in BrowserImpl.cpp, nsIStreamListener::OnDataAvailable()
 	// 2) as individual tests below
 
-	nsCString theSpec;
-	nsCOMPtr<nsIURI> theURI;
 	nsCOMPtr<nsIChannel> theChannel;
 	nsCOMPtr<nsILoadGroup> theLoadGroup(do_CreateInstance(NS_LOADGROUP_CONTRACTID));
+	if (!theLoadGroup)
+	{
+		QAOutput("We didn't get the Load Group. Test failed.", 2);
+		return;
+	}
 
 	int i=0;
 
     QAOutput("Start nsIRequest tests.", 2);	
 
-//	theSpec = "http://www.netscape.com";
-	for (i=0; i<6; i++)
+	for (i=0; i<reqTotal; i++)
 	{
-		theSpec = UrlTable_Temp[i].theUrl;
-		FormatAndPrintOutput("the uri spec = ", theSpec.get(), 2);
-
-		rv = NS_NewURI(getter_AddRefs(theURI), theSpec.get());
-		if (!theURI)
-		{
-		   QAOutput("We didn't get the URI. Test failed.", 1);
-		   return;
-		}
-		else
-		   RvTestResult(rv, "NS_NewURI", 1);
-
-		rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
-		if (!theChannel)
-		{
-		   QAOutput("We didn't get the Channel. Test failed.", 1);
-		   return;
-		}
-		else if (!theLoadGroup)
-		{
-		   QAOutput("We didn't get the Load Group. Test failed.", 2);
-		   return;
-		}
-		else
-		   RvTestResult(rv, "NS_OpenURI", 1);
-
-		nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
-		nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
-		qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
-
-		// this calls nsIStreamListener::OnDataAvailable()
-		rv = theChannel->AsyncOpen(listener, nsnull);
-		RvTestResult(rv, "AsyncOpen()", 1);
-
 		// nsIRequest individual tests
 
 		QAOutput("***** Individual nsIRequest test begins. *****");
 
+		theChannel = GetTheChannel(i, theLoadGroup);
 		nsCOMPtr<nsIRequest> theRequest = do_QueryInterface(theChannel);
 
-		if (UrlTable_Temp[i].reqPend == TRUE)
+		if (ReqTable[i].reqPend == TRUE)
 			IsPendingReqTest(theRequest);
 
-		if (UrlTable_Temp[i].reqStatus == TRUE)
+		if (ReqTable[i].reqStatus == TRUE)
 			GetStatusReqTest(theRequest);
 
-		if (UrlTable_Temp[i].reqSuspend == TRUE)
+		if (ReqTable[i].reqSuspend == TRUE)
 			SuspendReqTest(theRequest);	
 
-		if (UrlTable_Temp[i].reqResume == TRUE)
+		if (ReqTable[i].reqResume == TRUE)
 			ResumeReqTest(theRequest);	
 
-		if (UrlTable_Temp[i].reqCancel == TRUE)
+		if (ReqTable[i].reqCancel == TRUE)
 			CancelReqTest(theRequest);	
 
-		if (UrlTable_Temp[i].reqSetLoadGroup == TRUE)
+		if (ReqTable[i].reqSetLoadGroup == TRUE)
 			SetLoadGroupTest(theRequest, theLoadGroup);	
 
-		if (UrlTable_Temp[i].reqGetLoadGroup == TRUE)
+		if (ReqTable[i].reqGetLoadGroup == TRUE)
 			GetLoadGroupTest(theRequest);
 
 		QAOutput("- - - - - - - - - - - - - - - - - - - - -", 1);
 	} // end for loop
     QAOutput("End nsIRequest tests.", 2);
 }
+
+
+nsIChannel * CNsIRequest::GetTheChannel(int i, nsILoadGroup *theLoadGroup)
+{
+	nsCAutoString theSpec;
+	nsCOMPtr<nsIURI> theURI;
+	nsCOMPtr<nsIChannel> theChannel;
+
+	theSpec = ReqTable[i].theUrl;
+	FormatAndPrintOutput("the uri spec = ", theSpec, 2);
+
+	rv = NS_NewURI(getter_AddRefs(theURI), theSpec);
+
+	if (!theURI)
+	{
+	   QAOutput("We didn't get the URI. Test failed.", 1);
+	   return NULL;
+	}
+	else
+	   RvTestResult(rv, "NS_NewURI", 1);
+
+	rv = NS_NewChannel(getter_AddRefs(theChannel), theURI, nsnull, theLoadGroup);
+	if (!theChannel)
+	{
+	   QAOutput("We didn't get the Channel. Test failed.", 1);
+	   return NULL;
+	}
+	else
+	   RvTestResult(rv, "NS_OpenURI", 1);
+
+	nsCOMPtr<nsIStreamListener> listener(NS_STATIC_CAST(nsIStreamListener*, qaBrowserImpl));
+	nsCOMPtr<nsIWeakReference> thisListener(dont_AddRef(NS_GetWeakReference(listener)));
+	qaWebBrowser->AddWebBrowserListener(thisListener, NS_GET_IID(nsIStreamListener));
+
+	// this calls nsIStreamListener::OnDataAvailable()
+	rv = theChannel->AsyncOpen(listener, nsnull);
+	RvTestResult(rv, "AsyncOpen()", 1);
+
+	return theChannel;
+}
+
 
 void CNsIRequest::IsPendingReqTest(nsIRequest *request)
 {
