@@ -594,16 +594,16 @@
   int count = [toDrag count];
   if (count > 0) {
     // Create Pasteboard Data
-    NSMutableArray *draggedID = [NSMutableArray arrayWithCapacity: count];
+    NSMutableArray *draggedIDs = [NSMutableArray arrayWithCapacity: count];
     
     for (int i = 0; i < count; i++)
-      [draggedID addObject: [[toDrag objectAtIndex: i] contentID]];
+      [draggedIDs addObject: [[toDrag objectAtIndex: i] contentID]];
     
     if (count == 1) {
       // if we have just one item, we add some more flavours
       [pboard declareTypes: [NSArray arrayWithObjects:
           @"MozBookmarkType", NSURLPboardType, NSStringPboardType, nil] owner: self];
-      [pboard setPropertyList: draggedID forType: @"MozBookmarkType"];
+      [pboard setPropertyList: draggedIDs forType: @"MozBookmarkType"];
 
       NSString* itemURL = [[toDrag objectAtIndex: 0] url];
       [pboard setString:itemURL forType: NSStringPboardType];
@@ -611,10 +611,10 @@
       // maybe construct the @"MozURLType" type here also
     }
     else {
-      // multiple bookmarks. Array sof strings or NSURLs seem to
+      // multiple bookmarks. Arrays of strings or NSURLs seem to
       // confuse receivers. Not sure what the correct way is.
       [pboard declareTypes: [NSArray arrayWithObject: @"MozBookmarkType"] owner: self];
-      [pboard setPropertyList: draggedID 		forType: @"MozBookmarkType"];
+      [pboard setPropertyList: draggedIDs    forType: @"MozBookmarkType"];
     }
 
     return YES;
