@@ -790,6 +790,7 @@ static NSArray* sToolbarDefaults = nil;
                                         ReloadToolbarItemIdentifier,
                                         StopToolbarItemIdentifier,
                                         LocationToolbarItemIdentifier,
+                                        SearchToolbarItemIdentifier,
                                         SidebarToolbarItemIdentifier,
                                         nil] );
 }
@@ -866,7 +867,7 @@ static NSArray* sToolbarDefaults = nil;
     [toolbarItem setMinSize:NSMakeSize(128, NSHeight([mSearchBar frame]))];
     [toolbarItem setMaxSize:NSMakeSize(150, NSHeight([mSearchBar frame]))];
     [toolbarItem setTarget:self];
-    [toolbarItem setAction:@selector(performSearch:)];
+    [toolbarItem setAction:@selector(performAppropriateSearchAction:)];
 
     [menuFormRep setTarget:self];
     [menuFormRep setAction:@selector(beginSearchSheet)];
