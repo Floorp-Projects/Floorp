@@ -14,6 +14,9 @@ Memory leaks fixing effort
 <hr WIDTH="100%"></h1></center>
 
 <h2>
+</h2>
+
+<h2>
 Viewer</h2>
 
 <ul>
@@ -33,7 +36,7 @@ Quit</li>
 
 <th>Leaks fixing by...</th>
 
-<th>Status</th>
+<th>Status (<a href="#Stage 1: nsIModule conversion">nsIModule conversion</a>)</th>
 </tr>
 
 <tr BGCOLOR="#FFFF99">
@@ -43,7 +46,7 @@ Quit</li>
 <tr>
 <td>caps.dll</td>
 
-<td></td>
+<td>rjc</td>
 
 <td></td>
 </tr>
@@ -51,9 +54,9 @@ Quit</li>
 <tr>
 <td>chardet.dll</td>
 
-<td></td>
+<td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
@@ -61,37 +64,37 @@ Quit</li>
 
 <td>dp</td>
 
-<td>working...</td>
+<td></td>
 </tr>
 
 <tr>
 <td>jsloader.dll</td>
 
-<td></td>
+<td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
 <td>lwbrk.dll</td>
 
-<td></td>
+<td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
 <td>necko.dll</td>
 
-<td></td>
+<td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
 <td>necko_resource.dll</td>
 
-<td></td>
+<td>kipp</td>
 
 <td></td>
 </tr>
@@ -99,7 +102,7 @@ Quit</li>
 <tr>
 <td>necko_file.dll</td>
 
-<td></td>
+<td>kipp</td>
 
 <td></td>
 </tr>
@@ -109,7 +112,7 @@ Quit</li>
 
 <td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
@@ -123,7 +126,7 @@ Quit</li>
 <tr>
 <td>mimetype.dll</td>
 
-<td></td>
+<td>rjc</td>
 
 <td></td>
 </tr>
@@ -131,7 +134,7 @@ Quit</li>
 <tr>
 <td>oji.dll</td>
 
-<td></td>
+<td>rjc</td>
 
 <td></td>
 </tr>
@@ -139,7 +142,7 @@ Quit</li>
 <tr>
 <td>profile.dll</td>
 
-<td></td>
+<td>rjc</td>
 
 <td></td>
 </tr>
@@ -149,15 +152,15 @@ Quit</li>
 
 <td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
 <td>raptorview.dll</td>
 
-<td>kipp</td>
+<td>dp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
@@ -165,7 +168,7 @@ Quit</li>
 
 <td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
@@ -195,15 +198,15 @@ Quit</li>
 <tr>
 <td>xpc3250.dll</td>
 
-<td></td>
+<td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
 <td>xppref32.dll</td>
 
-<td>neeti</td>
+<td>dp</td>
 
 <td></td>
 </tr>
@@ -262,9 +265,6 @@ Quit</li>
 </table>
 
 <h2>
-</h2>
-
-<h2>
 Apprunner only</h2>
 &nbsp;
 <table BORDER COLS=3 WIDTH="100%" >
@@ -273,7 +273,7 @@ Apprunner only</h2>
 
 <th>Leaks fixing by...</th>
 
-<th>Status</th>
+<th>Status (<a href="#Stage 1: nsIModule conversion">nsIModule conversion</a>)</th>
 </tr>
 
 <tr>
@@ -487,7 +487,7 @@ Apprunner only</h2>
 <tr>
 <td>necko_about.dll</td>
 
-<td></td>
+<td>kipp</td>
 
 <td></td>
 </tr>
@@ -495,7 +495,7 @@ Apprunner only</h2>
 <tr>
 <td>necko_data.dll</td>
 
-<td></td>
+<td>kipp</td>
 
 <td></td>
 </tr>
@@ -503,7 +503,7 @@ Apprunner only</h2>
 <tr>
 <td>necko_ftp.dll</td>
 
-<td></td>
+<td>kipp</td>
 
 <td></td>
 </tr>
@@ -511,7 +511,7 @@ Apprunner only</h2>
 <tr>
 <td>necko_http.dll</td>
 
-<td></td>
+<td>kipp</td>
 
 <td></td>
 </tr>
@@ -519,17 +519,17 @@ Apprunner only</h2>
 <tr>
 <td>nsjpg.dll</td>
 
-<td></td>
+<td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
 <td>nspng.dll</td>
 
-<td></td>
+<td>kipp</td>
 
-<td></td>
+<td>DONE</td>
 </tr>
 
 <tr>
@@ -721,10 +721,18 @@ Apprunner only</h2>
 <h2>
 How to fix leaks in a dll</h2>
 
+<h3>
+<a NAME="Stage 1: nsIModule conversion"></a>Stage 1: nsIModule conversion</h3>
+
 <ol>
 <li>
 Convert dll to use nsIModule. Sample code is in&nbsp; <a href="http://lxr.mozilla.org/seamonkey/source/xpcom/sample/nsSampleModule.cpp">mozilla/xpcom/sample/nsSampleModule.cpp</a></li>
+</ol>
 
+<h3>
+<a NAME="Stage 2: Leak fixing"></a>Stage 2: Leak fixing</h3>
+
+<ol>
 <li>
 While in purify run <a href="http://lxr.mozilla.org/seamonkey/source/xpcom/tests/TestShutdown.cpp">bin/TestShutdown</a>
 on the dll. For this you will need to find a CID that the module implements.
