@@ -175,8 +175,9 @@ GlobalWindowImpl::GlobalWindowImpl() :
   mScrollbars(nsnull), mTimeouts(nsnull), mTimeoutInsertionPoint(&mTimeouts),
   mRunningTimeout(nsnull), mTimeoutPublicIdCounter(1), mTimeoutFiringDepth(0),
   mTimeoutsWereCleared(PR_FALSE), mFirstDocumentLoad(PR_TRUE),
-  mIsScopeClear(PR_TRUE), mIsDocumentLoaded(PR_FALSE), 
-  mFullScreen(PR_FALSE), mOriginalPos(nsnull), mOriginalSize(nsnull),
+  mIsScopeClear(PR_TRUE), mIsDocumentLoaded(PR_FALSE),
+  mLastMouseButtonAction(LL_ZERO), mFullScreen(PR_FALSE),
+  mOriginalPos(nsnull), mOriginalSize(nsnull),
   mGlobalObjectOwner(nsnull),
   mDocShell(nsnull), mMutationBits(0), mChromeEventHandler(nsnull)
 {
@@ -662,6 +663,11 @@ GlobalWindowImpl::HandleDOMEvent(nsIPresContext* aPresContext,
 
   if (aEvent->message == NS_PAGE_UNLOAD) {
     mIsDocumentLoaded = PR_FALSE;
+  } else if ((aEvent->message >= NS_MOUSE_LEFT_BUTTON_UP &&
+              aEvent->message <= NS_MOUSE_RIGHT_BUTTON_DOWN) ||
+             (aEvent->message >= NS_MOUSE_LEFT_DOUBLECLICK &&
+              aEvent->message <= NS_MOUSE_RIGHT_CLICK)) {
+    mLastMouseButtonAction = PR_Now();
   }
 
   // Capturing stage
@@ -2467,18 +2473,47 @@ GlobalWindowImpl::DisableExternalCapture()
 PRBool
 GlobalWindowImpl::CheckForAbusePoint ()
 {
+  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mDocShell));
+
+  if (item) {
+    PRInt32 type = nsIDocShellTreeItem::typeChrome;
+        
+    item->GetItemType(&type);
+
+    if (type != nsIDocShellTreeItem::typeContent)
+      return PR_FALSE;
+  }
+  
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (!prefs)
+    return PR_FALSE;
+  
   if (!mIsDocumentLoaded || mRunningTimeout) {
-    nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(mDocShell));
-
-    if (item) {
-      PRInt32 type = nsIDocShellTreeItem::typeChrome;
-
-      item->GetItemType(&type);
-
-      if (type == nsIDocShellTreeItem::typeContent) {
+    PRBool blockOpenOnLoad = PR_FALSE;
+    prefs->GetBoolPref("dom.disable_open_during_load", &blockOpenOnLoad);
+    if (blockOpenOnLoad) {        
 #ifdef DEBUG
-        printf ("*** Scripts executed during (un)load or as a result of "
-                "setTimeout() are potential javascript abuse points.\n");
+      printf ("*** Scripts executed during (un)load or as a result of "
+              "setTimeout() are potential javascript abuse points.\n");
+#endif
+      return PR_TRUE;
+    }
+  } else {
+    PRInt32 clickDelay = 0;
+    prefs->GetIntPref("dom.disable_open_click_delay", &clickDelay);
+    if (clickDelay) {
+      PRTime now, ll_delta;
+      PRInt32 delta;
+      now = PR_Now();
+      LL_SUB(ll_delta, now, mLastMouseButtonAction);
+      LL_L2I(delta, ll_delta);
+      delta /= 1000;
+      if (delta > clickDelay)
+      {
+#ifdef DEBUG
+        printf ("*** Scripts executed more than %ims after a mouse button "
+                "action are potential javascript abuse points (%i.)\n",
+                clickDelay, delta);
 #endif
         return PR_TRUE;
       }
@@ -2508,20 +2543,11 @@ GlobalWindowImpl::Open(nsIDOMWindow **_retval)
    * or onload/onunload), and the preference is enabled, block the window.open().
    */
   if (CheckForAbusePoint()) {
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
-
-    if (prefs) {
-      PRBool blockOpenOnLoad = PR_FALSE;
-      prefs->GetBoolPref("dom.disable_open_during_load", &blockOpenOnLoad);
-
-      if (blockOpenOnLoad) {
 #ifdef DEBUG
-        printf ("*** Blocking window.open.\n");
+    printf ("*** Blocking window.open.\n");
 #endif
-        *_retval = nsnull;
-        return NS_OK;
-      }
-    }
+    *_retval = nsnull;
+    return NS_OK;
   }
 
   nsCOMPtr<nsIXPCNativeCallContext> ncc;
