@@ -43,7 +43,6 @@ Rights Reserved.
 
 <html:script src="chrome://global/content/strres.js"/>
 <html:script src="chrome://messenger/content/msgPrintEngine.js"/>
-<html:script src="chrome://messenger/content/msgMail3PaneWindow.js"/>
 
   <!-- The main display frame -->
   <html:iframe id="printengine" style="height: 0px" flex="1" name="printengine" type="content" src="about:blank" />
