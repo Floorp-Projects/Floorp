@@ -118,6 +118,7 @@ protected:
 	afx_msg void OnTestsAddUriContentListenerByOpenUri();
 	afx_msg void OnTestsNSNewChannelAndAsyncOpen();
 	afx_msg void OnTestsIOServiceNewURI();
+	afx_msg void OnTestsProtocolHandlerNewURI();
 	afx_msg void OnInterfacesNsifile();
 	afx_msg void OnToolsRemoveGHPage();
 	afx_msg void OnToolsRemoveAllGH();
