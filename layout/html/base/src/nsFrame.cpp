@@ -786,7 +786,7 @@ nsFrame::HandleEvent(nsIPresContext* aPresContext,
 
 NS_IMETHODIMP
 nsFrame::GetDataForTableSelection(nsIFrameSelection *aFrameSelection, nsMouseEvent *aMouseEvent, 
-                                  nsIContent **aParentContent, PRInt32 *aContentOffset, PRInt16 *aTarget)
+                                  nsIContent **aParentContent, PRInt32 *aContentOffset, PRInt32 *aTarget)
 {
   if (!aFrameSelection || !aMouseEvent || !aParentContent || !aContentOffset || !aTarget)
     return NS_ERROR_NULL_POINTER;
