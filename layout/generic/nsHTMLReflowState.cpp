@@ -1319,9 +1319,15 @@ GetVerticalMarginBorderPadding(const nsHTMLReflowState* aReflowState)
  * This will walk up the chain of containing blocks looking for a computed height
  * until it finds the canvas frame, or it encounters a frame that is not a block
  * or and area frame. This handles compatibility with IE (see bug 85016)
+ *
+ *  When the argument aRestrictToFirstLevel is TRUE, we stop looking after the first parent 
+ *  block or area frame. When FALSE, we look all the way up the frame tree, through nested 
+ *  blocks and area frames, and always find a real height. This is needed for percentage-height
+ *  images in unconstrained blocks, like DIVs (see bugzilla bug 85016)
  */
 nscoord
-CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
+CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState,
+                               PRBool aRestrictToFirstLevel)
 {
   nsHTMLReflowState* firstBlockRS = nsnull; // a candidate for body frame
   nsHTMLReflowState* firstAreaRS  = nsnull; // a candidate for html frame
@@ -1339,12 +1345,18 @@ CalcQuirkContainingBlockHeight(const nsHTMLReflowState& aReflowState)
       if (NS_OK == rs->frame->QueryInterface(NS_GET_IID(nsIFormManager), (void **)&formFrame)) {
         continue;
       }
+      if (aRestrictToFirstLevel && firstBlockRS) {
+        break;
+      }
       firstBlockRS = (nsHTMLReflowState*)rs;
       if (NS_AUTOHEIGHT == rs->mComputedHeight) {
         continue;
       }
     }
     else if (nsLayoutAtoms::areaFrame == frameType.get()) {
+      if (aRestrictToFirstLevel && firstAreaRS) {
+        break;
+      }
       firstAreaRS = (nsHTMLReflowState*)rs;
       if (NS_AUTOHEIGHT == rs->mComputedHeight) {
         continue;
@@ -1497,7 +1509,13 @@ nsHTMLReflowState::ComputeContainingBlockRectangle(nsIPresContext*          aPre
       nsCompatibility mode;
       aPresContext->GetCompatibilityMode(&mode);
       if (eCompatibility_NavQuirks == mode) {
-        aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS);
+        aContainingBlockHeight = CalcQuirkContainingBlockHeight(*aContainingBlockRS, PR_TRUE);
+        // NOTE: passing PR_TRUE for the aRestrictToFirstLevel argument, to restrict the search
+        //       for the containing block height to only the immediate parent block or area
+        //       frame. In the case that we need to go further, we would need to pass PR_TRUE
+        //       and take the performance hit. This is generally only needed if the frame being reflowed
+        //       has percentage height and is in a shrink-wrapping container 
+        //       (see the special-case call in InitConstraints)
       }
     }
   }
@@ -1608,7 +1626,13 @@ nsHTMLReflowState::InitConstraints(nsIPresContext* aPresContext,
           aPresContext->GetCompatibilityMode(&mode);
           // in quirks mode, get the cb height using the special quirk method
           if (eCompatibility_NavQuirks == mode) {
-            aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs);
+            aContainingBlockHeight = CalcQuirkContainingBlockHeight(*cbrs, PR_FALSE);
+            // NOTE: since here we really do NEED the computed height of the containing block,
+            //       we pass PR_FALSE for the aRestrictToFirstLevel argument, allowing the method
+            //       to walk up the frame tree arbitrarily far to find a real height. This is NOT
+            //       default behavior, since it is an additional performance hit and is not usually 
+            //       necessary (see other call in ComputeContainingBlockRectangle). 
+            //       This is an IE emulation for %-height images - see bug 85016
           }
           // in standard mode, use the cb height.  if it's "auto", as will be the case
           // by default in BODY, use auto height as per CSS2 spec.
