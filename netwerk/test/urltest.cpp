@@ -74,18 +74,22 @@ int writeout(const char* i_pURL, PRBool bUseStd =PR_TRUE)
         }
         if (NS_SUCCEEDED(result))
         {
+            nsCOMPtr<nsIURL> tURL = do_QueryInterface(pURL);
             nsXPIDLCString temp;
             PRInt32 port;
-            pURL->GetScheme(getter_Copies(temp));
+            tURL->GetScheme(getter_Copies(temp));
             cout << "Got    " << (temp ? (const char*)temp : "") << ',';
-            pURL->GetPreHost(getter_Copies(temp));
+            tURL->GetPreHost(getter_Copies(temp));
             cout << (temp ? (const char*)temp : "") << ',';
-            pURL->GetHost(getter_Copies(temp));
+            tURL->GetHost(getter_Copies(temp));
             cout << (temp ? (const char*)temp : "") << ',';
-            pURL->GetPort(&port);
+            tURL->GetPort(&port);
             cout << port << ',';
-            pURL->GetPath(getter_Copies(temp));
+            tURL->GetQuery(getter_Copies(temp));
+            cout << (temp ? (const char*)temp : "") << ',';
+            tURL->GetPath(getter_Copies(temp));
             cout << (temp ? (const char*)temp : "") << endl;
+
         } else {
             cout << "Can not create URL" << endl; 
         }
@@ -106,7 +110,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
         result in the resultset as well. 
     */
 
-    const int tests = 12;
+    const int tests = 13;
     const char* url[tests] = 
     {
         "http://username:password@hostname.com:80/pathname/./more/stuff/../path",
@@ -120,23 +124,25 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
         "resource:/pathname",
         "ftp://uname%here.com:pwd@there.com/aPath/a.html",
         "http://www.inf.bme.hu?foo=bar",
-        "http://test.com/aPath/a.html#/1/2"
+        "http://test.com/aPath/a.html#/1/2",
+        "http://user:pass@ipaddres:2/get?foo/something"
     };
 
     const char* resultset[tests] =
     {
-        "http,username:password,hostname.com,80,/pathname/more/path",
-        ",username,host,8080,/path",
-        "http,,gagan,-1,/",
-        "scheme,,host,-1,/netlib",
-        ",,,-1,/",
-        "mailbox,,,-1,/foo",
-        "scheme,user,hostname.edu,80,/pathname",
-        "http,username:password,hostname,80,/pathname",
-        "resource,,,-1,/pathname",
-        "ftp,uname%here.com:pwd,there.com,-1,/aPath/a.html",
-        "http,,www.inf.bme.hu,-1,/?foo=bar",
-        "http,,test.com,-1,/aPath/a.html#/1/2"
+        "http,username:password,hostname.com,80,,/pathname/more/path",
+        ",username,host,8080,,/path",
+        "http,,gagan,-1,,/",
+        "scheme,,host,-1,,/netlib",
+        ",,,-1,,/",
+        "mailbox,,,-1,,/foo",
+        "scheme,user,hostname.edu,80,,/pathname",
+        "http,username:password,hostname,80,,/pathname",
+        "resource,,,-1,,/pathname",
+        "ftp,uname%here.com:pwd,there.com,-1,,/aPath/a.html",
+        "http,,www.inf.bme.hu,-1,,/?foo=bar",
+        "http,,test.com,-1,,/aPath/a.html#/1/2",
+        "http,user:pass,ipaddres,2,foo/something,/get?foo/something"
     };
 
     // These tests will fail to create a URI from NS_NewURI calls...
@@ -152,6 +158,7 @@ nsresult testURL(const char* i_pURL, PRBool bUseStd=PR_TRUE)
         PR_TRUE,
         PR_FALSE, // we now have mailbox: 
         PR_TRUE,
+        PR_FALSE,
         PR_FALSE,
         PR_FALSE,
         PR_FALSE,
@@ -178,10 +185,10 @@ int makeAbsTest(const char* i_BaseURI, const char* relativePortion)
     if (!i_BaseURI)
         return -1;
     
-    nsIURI* baseURL;
-
+    // build up the base URL
+    nsCOMPtr<nsIURI> baseURL;
     nsresult status = nsComponentManager::CreateInstance(kStdURLCID, nsnull, 
-        nsCOMTypeInfo<nsIURI>::GetIID(), (void**)&baseURL);
+        nsCOMTypeInfo<nsIURI>::GetIID(), getter_AddRefs(baseURL));
     if (NS_FAILED(status))
     {
         cout << "CreateInstance failed" << endl;
@@ -190,12 +197,11 @@ int makeAbsTest(const char* i_BaseURI, const char* relativePortion)
     status = baseURL->SetSpec((char*)i_BaseURI);
     if (NS_FAILED(status)) return status;
 
-    nsCOMPtr<nsIURI> url;
-    nsresult rv = baseURL->Clone(getter_AddRefs(url));
-    if (NS_FAILED(rv) || !url) return -1;
-    
-    rv = url->SetRelativePath(relativePortion);
-    if (NS_FAILED(rv)) return -1;
+
+    // get the new spec
+    nsXPIDLCString newURL;
+    status = baseURL->Resolve(relativePortion, getter_Copies(newURL));
+    if (NS_FAILED(status)) return status;
 
     nsXPIDLCString temp;
     baseURL->GetSpec(getter_Copies(temp));
@@ -203,8 +209,7 @@ int makeAbsTest(const char* i_BaseURI, const char* relativePortion)
     cout << "Analyzing " << temp << endl;
     cout << "With " << relativePortion << endl;
     
-    url->GetSpec(getter_Copies(temp));
-    cout << "Got    " <<  temp << endl;
+    cout << "Got    " <<  newURL << endl;
     return 0;
 }
 
@@ -282,6 +287,7 @@ int doMakeAbsTest(const char* i_URL = 0, const char* i_relativePortion=0)
 
         // Our additional tests...
         { "#my::anchor",        "http://a/b/c/d;p?q#my::anchor" },
+        { "get?baseRef=viewcert.jpg", "http://a/b/c/get?baseRef=viewcert.jpg" },
 
         // Make sure relative query's work right even if the query
         // string contains absolute urls or other junk.
