@@ -69,7 +69,7 @@ sub SqlQuote {
     my ($str) = @_;
 
     # Backwards compat code
-    return '' if not defined $str;
+    return "''" if not defined $str;
 
     require Bugzilla;
 
