@@ -720,9 +720,20 @@ nsXMLContentSink::AddLeaf(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-nsXMLContentSink::NotifyError(nsresult aErrorResult)
-{
-  printf("nsXMLContentSink::NotifyError\n");
+nsXMLContentSink::NotifyError(const nsParserError* aError)
+{  
+  nsString errorText("XML Parser Error: '");
+
+  if (aError) {
+    errorText.Append(aError->description);
+    errorText.Append("', Line: ");
+    errorText.Append(aError->lineNumber, 10);
+    errorText.Append(", Column: ");
+    errorText.Append(aError->colNumber, 10);
+  }
+
+  AddText(errorText);
+  FlushText();
   return NS_OK;
 }
 

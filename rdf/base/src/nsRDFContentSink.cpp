@@ -157,7 +157,7 @@ public:
     NS_IMETHOD AddLeaf(const nsIParserNode& aNode);
     NS_IMETHOD AddComment(const nsIParserNode& aNode);
     NS_IMETHOD AddProcessingInstruction(const nsIParserNode& aNode);
-    NS_IMETHOD NotifyError(nsresult aErrorResult);
+    NS_IMETHOD NotifyError(const nsParserError* aError);
 
     // nsIXMLContentSink
     NS_IMETHOD AddXMLDecl(const nsIParserNode& aNode);
@@ -439,7 +439,7 @@ RDFContentSinkImpl::AddLeaf(const nsIParserNode& aNode)
 }
 
 NS_IMETHODIMP
-RDFContentSinkImpl::NotifyError(nsresult aErrorResult)
+RDFContentSinkImpl::NotifyError(const nsParserError* aError)
 {
     printf("RDFContentSinkImpl::NotifyError\n");
     return NS_OK;
