@@ -39,6 +39,7 @@
 #define PL_strcmp         strcmp
 #define PL_strdup         strdup
 #define PL_strcpy         strcpy
+#define PL_strlen         strlen
 
 #define PR_Open(a,b,c)    fopen((a),(b))
 #define PR_Read(f,d,n)    fread((d),1,(n),(f))
@@ -76,6 +77,7 @@ typedef short               PRInt16;
 typedef unsigned short      PRUint16;
 typedef char                PRBool;
 typedef unsigned char       PRUint8;
+typedef PRUint8             PRPackedBool;
 
 #define PR_TRUE             1
 #define PR_FALSE            0

@@ -41,6 +41,9 @@
 #define ZIP_Seek(fd,p,m) (PR_Seek((fd),(p),(m))==(p))
 #endif
 
+#define ZIFLAG_SYMLINK      0x01  /* zip item is a symlink */
+#define ZIFLAG_DATAOFFSET   0x02  /* zip item offset points to file data */
+
 class nsZipFind;
 class nsZipRead;
 class nsZipItemMetadata;
@@ -54,21 +57,27 @@ class nsZipItemMetadata;
 class nsZipItem
 {
 public:
-  char*       name;
-  PRUint32    namelen;
+  char*       name; /* '\0' terminated */
 
   PRUint32    offset;
-  PRUint32    headerloc;
-  PRUint16    compression;
   PRUint32    size;
   PRUint32    realsize;
   PRUint32    crc32;
+
+  nsZipItem*  next;
+
+  /*
+   * Keep small items together, to avoid overhead.
+   */
   PRUint16    mode;
   PRUint16    time;
   PRUint16    date;
-  PRBool      isSymlink;
 
-  nsZipItem*  next;
+  /*
+   * Keep small items together, to avoid overhead.
+   */
+  PRUint8      compression;
+  PRUint8      flags;
 
   /**
    * GetModTime

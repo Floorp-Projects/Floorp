@@ -277,7 +277,9 @@ PR_PUBLIC_API(PRInt32) ZIP_FindNext( void* hFind, char * outbuf, PRUint16 bufsiz
   status = find->GetArchive()->FindNext( find, &item );
   if ( status == ZIP_OK )
   {
-    if ( bufsize > item->namelen ) 
+    PRUint16 namelen = (PRUint16)PL_strlen(item->name);
+
+    if ( bufsize > namelen ) 
     {
         PL_strcpy( outbuf, item->name );
     }
@@ -571,7 +573,7 @@ PRInt32 nsZipArchive::ExtractFile(const char* zipEntry, const char* aOutname)
 #if defined(XP_UNIX)
   else 
   {
-    if (item->isSymlink) 
+    if (ZIFLAG_SYMLINK & item-flags)
     {
        status = ResolveSymlink(aOutname,item);
     }
@@ -731,7 +733,7 @@ PRInt32 nsZipArchive::FindFree( nsZipFind* aFind )
 PRInt32 nsZipArchive::ResolveSymlink(const char *path, nsZipItem *item) 
 {
   PRInt32    status = ZIP_OK;
-  if (item->isSymlink) 
+  if (item->flags & ZIFLAG_SYMLINK)
   {
     char buf[PATH_MAX+1];
     PRFileDesc * fIn = PR_Open(path, PR_RDONLY, 0644);
@@ -891,15 +893,23 @@ PRInt32 nsZipArchive::BuildFileList()
       break;
     }
 
-    item->namelen = namelen;
-    item->headerloc = xtolong( central->localhdr_offset );
-    item->compression = xtoint( central->method );
+    item->offset = xtolong( central->localhdr_offset );
+    item->compression = (PRUint8)xtoint( central->method );
+#if defined(DEBUG)
+    /*
+     * Make sure our space optimization is non lossy.
+     */
+    PR_ASSERT(xtoint(central->method) == (PRUint16)item->compression);
+#endif
     item->size = xtolong( central->size );
     item->realsize = xtolong( central->orglen );
     item->crc32 = xtolong( central->crc32 );
     PRUint32 external_attributes = xtolong( central->external_attributes );
     item->mode = ExtractMode( external_attributes );
-    item->isSymlink = IsSymlink( external_attributes );
+    if ( IsSymlink( external_attributes ) )
+    {
+      item->flags |= ZIFLAG_SYMLINK;
+    }
     item->time = xtoint( central->time );
     item->date = xtoint( central->date );
 
@@ -1021,26 +1031,30 @@ PRInt32  nsZipArchive::SeekToItem(const nsZipItem* aItem)
   PR_ASSERT (aItem);
 
   //-- the first time an item is used we need to calculate its offset
-  if ( aItem->offset == 0 )
+  if ( !(aItem->flags & ZIFLAG_DATAOFFSET) )
   {
-    //-- read local header to extract local extralen
+    //-- aItem->offset contains the header offset, not the data offset.
+    //-- read local header to get variable length values and calculate
+    //-- the real data offset
+    //--
     //-- NOTE: extralen is different in central header and local header
     //--       for archives created using the Unix "zip" utility. To set 
-    //--       the offset accurately we need the local extralen.
-    if ( !ZIP_Seek( mFd, aItem->headerloc, PR_SEEK_SET ) )
+    //--       the offset accurately we need the _local_ extralen.
+    if ( !ZIP_Seek( mFd, aItem->offset, PR_SEEK_SET ) )
       return ZIP_ERR_CORRUPT;
-    
+
     ZipLocal   Local;
     if ( PR_Read(mFd, (char*)&Local, sizeof(ZipLocal)) != (READTYPE)sizeof(ZipLocal)
          || xtolong( Local.signature ) != LOCALSIG )
-    { 
+    {
       //-- read error or local header not found
       return ZIP_ERR_CORRUPT;
     }
 
-    ((nsZipItem*)aItem)->offset = aItem->headerloc + sizeof(Local) +
-                                  xtoint( Local.filename_len ) +
-                                  xtoint( Local.extrafield_len );
+    ((nsZipItem*)aItem)->offset += sizeof(Local) +
+                                   xtoint( Local.filename_len ) +
+                                   xtoint( Local.extrafield_len );
+    ((nsZipItem*)aItem)->flags |= ZIFLAG_DATAOFFSET;
   }
 
   //-- move to start of file in archive
@@ -1497,7 +1511,7 @@ nsZipArchive::~nsZipArchive()
 
 MOZ_DECL_CTOR_COUNTER(nsZipItem)
 
-nsZipItem::nsZipItem() : name(0), offset(0), next(0) 
+nsZipItem::nsZipItem() : name(0), offset(0), next(0), flags(0)
 {
   MOZ_COUNT_CTOR(nsZipItem);
 }
