@@ -638,7 +638,7 @@ long CMozABConduitSync::CopyHHtoPC()
     // Log the start time.
     time_t ltime;
     time( &ltime );
-    CONDUIT_LOG1(gFD, "------------ xxx START OF PALM SYNC Palm -> Destkop ------------ at %s", ctime(&ltime));
+    CONDUIT_LOG1(gFD, "------------ yyy START OF PALM SYNC Palm -> Destkop ------------ at %s", ctime(&ltime));
 
     if(!m_dbHH)
         return retval;
@@ -791,14 +791,14 @@ long CMozABConduitSync::CopyHHtoPC()
         {
             CONDUIT_LOG2(gFD, "Category index = %d, name = '%s' is new on palm and needs to be added to moz\n", catID, catName.GetBuffer(0));
             retval = m_dbHH->LoadAllRecordsInCategory(catIndex, &recordListHH, &recordCountHH);
-            CONDUIT_LOG1(gFD, "  Creating new moz AB with %d Palm record(s) ... ", recordCountHH);
+            CONDUIT_LOG2(gFD, "  Creating new moz AB %s with %d Palm record(s) ... ", catName.GetBuffer(0), recordCountHH);
             if(!retval)
             {
               CPString mozABName;
 
-              retval = m_dbPC->AddRecords(FALSE, catIndex, mozABName, recordCountHH, recordListHH);
+              retval = m_dbPC->AddRecords(FALSE, catIndex, catName, recordCountHH, recordListHH);
             }
-            CONDUIT_LOG1(gFD, "Done creating new moz AB. retval=%d.\n", retval);
+            CONDUIT_LOG2(gFD, "Done creating new moz AB %s - retval=%d.\n", catName.GetBuffer(0), retval);
         }
 
         // delete and free HH records and recordList once synced
