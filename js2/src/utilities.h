@@ -34,6 +34,11 @@
 #ifndef utilities_h___
 #define utilities_h___
 
+#ifdef MSC_VER
+     // diasble long identifier warnings
+#    pragma warning(disable: 4786)
+#endif
+
 #include "systemtypes.h"
 
 namespace JavaScript

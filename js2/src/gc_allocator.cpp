@@ -22,6 +22,7 @@
 #include <vector>
 #include <algorithm>
 
+#include "stlcfg.h"
 #include "gc_allocator.h"
 #include "gc_container.h"
 

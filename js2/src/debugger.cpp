@@ -32,6 +32,7 @@
  */
 
 #include "world.h"
+#include "utilities.h"
 #include "debugger.h"
 
 #include <string>

@@ -484,7 +484,7 @@ namespace JavaScript
 // be at the beginning of a line. Call end before destroying the Formatter;
 // otherwise the last line may not be output to f.
     PrettyPrinter::PrettyPrinter(Formatter &f, uint32 lineWidth):
-            lineWidth(min(lineWidth, unlimitedLineWidth)),
+            lineWidth(min(lineWidth, static_cast<uint32>(unlimitedLineWidth))),
             outputFormatter(f),
             outputPos(0),
             lineNum(0),
