@@ -1009,6 +1009,7 @@ nsDragService::SourceDataGet(GtkWidget        *aWidget,
   // check to make sure that we have data items to return.
   if (!mSourceDataItems) {
     PR_LOG(sDragLm, PR_LOG_DEBUG, ("Failed to get our data items\n"));
+    return;
   }
 
   if (strcmp(mimeFlavor, gTextUriListType) == 0) {
