@@ -655,7 +655,7 @@ sub GetLongDescriptionAsText {
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
-        # not emit a leading "Addition Comments" line in that case.)
+        # not emit a leading "Additional Comments" line in that case.)
         $query .= "AND longdescs.bug_when > '$start'";
         $count = 1;
     }
@@ -697,7 +697,7 @@ sub GetLongDescriptionAsHTML {
 
     if ($start && $start =~ /[1-9]/) {
         # If the start is all zeros, then don't do this (because we want to
-        # not emit a leading "Addition Comments" line in that case.)
+        # not emit a leading "Additional Comments" line in that case.)
         $query .= "AND longdescs.bug_when > '$start'";
         $count = 1;
     }
@@ -711,7 +711,7 @@ sub GetLongDescriptionAsHTML {
         my ($who, $when, $text) = (FetchSQLData());
         if ($count) {
             $result .= "<BR><BR><I>------- Additional Comments From " .
-                qq{<A HREF="$who">$who</A> } .
+                qq{<A HREF="mailto:$who">$who</A> } .
                     time2str("%Y-%m-%d %H:%M", str2time($when)) .
                         " -------</I><BR>\n";
         }
