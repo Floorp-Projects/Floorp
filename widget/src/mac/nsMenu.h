@@ -62,6 +62,13 @@ public:
   NS_IMETHOD RemoveAll();
   NS_IMETHOD GetNativeData(void*& aData);
 
+  // MacSpecific
+  static PRInt16	GetUniqueMenuID() {
+  						if (mMacMenuIDCount == 32767)
+  							mMacMenuIDCount = 256;
+  						return mMacMenuIDCount++;
+  						}
+
 protected:
   //void   Create(Widget aParent, const nsString &aLabel);
  //Widget GetNativeParent();
@@ -74,9 +81,11 @@ protected:
   nsIMenuBar * mMenuBarParent;
 
   // MacSpecific
-  static PRInt16      mMacMenuIDCount;
   PRInt16			  mMacMenuID;
   MenuHandle          mMacMenuHandle;
+
+private:
+  static PRInt16      mMacMenuIDCount;		// use GetUniqueMenuID()
 };
 
 
