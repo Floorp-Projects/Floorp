@@ -18,9 +18,6 @@ ecma_3/String/regress-104375.js
 js1_5/Regress/regress-96526.js
 # Unfixable bugs:
 #
-# fails due to bad java implementation of number formatting on 
-# pretty much all platforms
-ecma/LexicalConventions/7.7.3.js
 # JSObject not used for Rhino LiveConnect
 lc3/ConvertJSObject/ToBoolean-001.js
 lc3/ConvertJSObject/ToByte-001.js
