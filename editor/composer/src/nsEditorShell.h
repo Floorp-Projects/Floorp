@@ -168,8 +168,9 @@ class nsEditorShell :   public nsIEditorShell,
 
     PRBool mMailCompose;
 
-    // this is a holding pen for doc state listeners. They will be registered with
-    // the editor when that gets created.
+    // These doc listeners are registered with the editor when that gets
+    // created. We also keep them in this list so we can register if we have
+    // to blow away the editor (e.g. URL reload)
     nsCOMPtr<nsISupportsArray>  mDocStateListeners;		// contents are nsISupports
 
     // Pointer to localized strings used for UI

@@ -1434,18 +1434,8 @@ nsEditorShell::RegisterDocumentStateListener(nsIDocumentStateListener *docListen
   
   if (!docListener)
     return NS_ERROR_NULL_POINTER;
-  
-  // if we have an editor already, just pass this baby through.
-  if (mEditor)
-  {
-    nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor, &rv);
-    if (NS_FAILED(rv))
-      return rv;
-  
-    return editor->AddDocumentStateListener(docListener);
-  }
-  
-  // otherwise, keep it until we create an editor.
+    
+  // Make the array
   if (!mDocStateListeners)
   {
     rv = NS_NewISupportsArray(getter_AddRefs(mDocStateListeners));
@@ -1454,9 +1444,20 @@ nsEditorShell::RegisterDocumentStateListener(nsIDocumentStateListener *docListen
   nsCOMPtr<nsISupports> iSupports = do_QueryInterface(docListener, &rv);
   if (NS_FAILED(rv)) return rv;
 
-  // note that this return value is really a PRBool, so be sure to use
-  // NS_SUCCEEDED or NS_FAILED to check it.
-  return mDocStateListeners->AppendElement(iSupports);
+  PRBool appended = mDocStateListeners->AppendElement(iSupports);
+  NS_ASSERTION(appended, "Append failed");
+  
+  // if we have an editor already, register this right now.
+  if (mEditor)
+  {
+    nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor, &rv);
+    if (NS_FAILED(rv)) return rv;
+  
+    // this checks for duplicates
+    rv = editor->AddDocumentStateListener(docListener);
+  }
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP    
@@ -1467,27 +1468,25 @@ nsEditorShell::UnregisterDocumentStateListener(nsIDocumentStateListener *docList
 
   nsresult rv = NS_OK;
   
-  // if we have an editor already, just pass this baby through.
+  // remove it from our list
+  if (mDocStateListeners)
+  {
+    nsCOMPtr<nsISupports> iSupports = do_QueryInterface(docListener, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool removed = mDocStateListeners->RemoveElement(iSupports);
+  }
+    
+  // if we have an editor already, remove it from there too
   if (mEditor)
   {
     nsCOMPtr<nsIEditor>  editor = do_QueryInterface(mEditor, &rv);
-    if (NS_FAILED(rv))
-      return rv;
+    if (NS_FAILED(rv)) return rv;
   
     return editor->RemoveDocumentStateListener(docListener);
   }
 
-  // otherwise, see if it exists in our list
-  if (!mDocStateListeners)
-    return (nsresult)PR_FALSE;      // yeah, this sucks, but I'm emulating the behaviour of
-                                    // nsISupportsArray::RemoveElement()
-
-  nsCOMPtr<nsISupports> iSupports = do_QueryInterface(docListener, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // note that this return value is really a PRBool, so be sure to use
-  // NS_SUCCEEDED or NS_FAILED to check it.
-  return mDocStateListeners->RemoveElement(iSupports);
+  return NS_OK;
 }
 
 // called after making an editor. Transfer the nsIDOcumentStateListeners
@@ -1506,21 +1505,20 @@ nsEditorShell::TransferDocumentStateListeners()
   if (NS_FAILED(rv)) return rv;
     
   PRUint32 numListeners;  
-  while (NS_SUCCEEDED(mDocStateListeners->Count(&numListeners)) && numListeners > 0)
+  mDocStateListeners->Count(&numListeners);
+
+  for (PRUint32 i = 0; i <  numListeners; i ++)
   {
-    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(0));
+    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mDocStateListeners->ElementAt(i));
     nsCOMPtr<nsIDocumentStateListener> docStateListener = do_QueryInterface(iSupports);
     if (docStateListener)
     {
       // this checks for duplicates
       rv = editor->AddDocumentStateListener(docStateListener);
+      if (NS_FAILED(rv)) break;
     }
-    
-    mDocStateListeners->RemoveElementAt(0);
   }
   
-  // free the array
-  mDocStateListeners = 0;
   return NS_OK;
 }
 
@@ -4198,7 +4196,7 @@ nsEditorShell::GetCellAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 
 }
 
 // Note that the return param in the IDL must be the LAST out param here,
-//   so order of params is different from nsIHTMLEditor
+//   so order of params is different from nsITableEditor
 NS_IMETHODIMP    
 nsEditorShell::GetCellDataAt(nsIDOMElement *tableElement, PRInt32 rowIndex, PRInt32 colIndex,
                              PRInt32 *aStartRowIndex, PRInt32 *aStartColIndex, 
