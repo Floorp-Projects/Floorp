@@ -484,13 +484,7 @@ nsComboboxControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
 {
   if (aOn) {
     nsListControlFrame::ComboboxFocusSet();
-    if (mFocused != this) {
-      mFocused = this;
-
-      // Store up the selected index so when we lose focus we can see if it's
-      // really changed
-      mListControlFrame->GetSelectedIndex(&mRecentSelectedIndex);
-    }
+    mFocused = this;
   } else {
     mFocused = nsnull;
     if (mDroppedDown) {
@@ -2254,16 +2248,13 @@ nsComboboxControlFrame::RollupFromList(nsIPresContext* aPresContext)
   return NS_OK;
 }
 
-NS_IMETHODIMP_(PRBool)
-nsComboboxControlFrame::NeededToFireOnChange()
+NS_IMETHODIMP_(PRInt32)
+nsComboboxControlFrame::UpdateRecentIndex(PRInt32 aIndex)
 {
-  PRInt32 index;
-  mListControlFrame->GetSelectedIndex(&index);
-  if (index == mRecentSelectedIndex)
-    return PR_FALSE;
-
-  mRecentSelectedIndex = index;
-  return PR_TRUE;
+  PRInt32 index = mRecentSelectedIndex;
+  if (mRecentSelectedIndex == -1 || aIndex == -1)
+    mRecentSelectedIndex = aIndex;
+  return index;
 }
 
 NS_METHOD 

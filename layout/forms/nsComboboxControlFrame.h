@@ -174,7 +174,7 @@ public:
   NS_IMETHOD GetAbsoluteRect(nsRect* aRect);
   NS_IMETHOD GetIndexOfDisplayArea(PRInt32* aSelectedIndex);
   NS_IMETHOD RedisplaySelectedText();
-  NS_IMETHOD_(PRBool) NeededToFireOnChange();
+  NS_IMETHOD_(PRInt32) UpdateRecentIndex(PRInt32 aIndex);
 
   // nsISelectControlFrame
   NS_IMETHOD AddOption(nsIPresContext* aPresContext, PRInt32 index);

@@ -1488,6 +1488,12 @@ nsListControlFrame::ExtendedSelection(PRInt32 aStartIndex,
 PRBool
 nsListControlFrame::SingleSelection(PRInt32 aClickedIndex, PRBool aDoToggle)
 {
+  if (mComboboxFrame) {
+    PRInt32 selectedIndex;
+    GetSelectedIndex(&selectedIndex);
+    mComboboxFrame->UpdateRecentIndex(selectedIndex);
+  }
+
   PRBool wasChanged = PR_FALSE;
   // Get Current selection
   if (aDoToggle) {
@@ -2425,7 +2431,15 @@ nsListControlFrame::FireOnChange()
   nsresult rv = NS_OK;
   
   if (mComboboxFrame) {
-    if (!mComboboxFrame->NeededToFireOnChange())
+    // Return hit without changing anything
+    PRInt32 index = mComboboxFrame->UpdateRecentIndex(-1);
+    if (index == -1)
+      return NS_OK;
+
+    // See if the selection actually changed
+    PRInt32 selectedIndex;
+    GetSelectedIndex(&selectedIndex);
+    if (index == selectedIndex)
       return NS_OK;
   }
 
