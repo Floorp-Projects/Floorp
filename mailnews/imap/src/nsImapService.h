@@ -45,7 +45,7 @@
 #include "nsIFileSpec.h"
 #include "nsIProtocolHandler.h"
 #include "nsIMsgProtocolInfo.h"
-
+#include "nsIContentHandler.h"
 #include "nsICacheSession.h"
 
 class nsIImapHostSessionList; 
@@ -53,38 +53,40 @@ class nsCString;
 class nsIImapUrl;
 class nsIMsgFolder;
 class nsIMsgStatusFeedback;
+class nsIMsgIncomingServer;
 
 class nsImapService : public nsIImapService,
                       public nsIMsgMessageService,
                       public nsIMsgMessageFetchPartService,
                       public nsIProtocolHandler,
-                      public nsIMsgProtocolInfo
+                      public nsIMsgProtocolInfo,
+                      public nsIContentHandler
 {
 public:
 
-	nsImapService();
-	virtual ~nsImapService();
+  nsImapService();
+  virtual ~nsImapService();
 	
-	NS_DECL_ISUPPORTS
+  NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGPROTOCOLINFO
 
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIImapService interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // we suppport the nsIImapService interface 
+  ////////////////////////////////////////////////////////////////////////////////////////
   NS_DECL_NSIIMAPSERVICE
 
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIMsgMessageService Interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // we suppport the nsIMsgMessageService Interface 
+  ////////////////////////////////////////////////////////////////////////////////////////
   NS_DECL_NSIMSGMESSAGESERVICE
 
-	////////////////////////////////////////////////////////////////////////////////////////
-	// we suppport the nsIProtocolHandler interface 
-	////////////////////////////////////////////////////////////////////////////////////////
+  ////////////////////////////////////////////////////////////////////////////////////////
+  // we suppport the nsIProtocolHandler interface 
+  ////////////////////////////////////////////////////////////////////////////////////////
   NS_DECL_NSIPROTOCOLHANDLER
 
   NS_DECL_NSIMSGMESSAGEFETCHPARTSERVICE
-
+  NS_DECL_NSICONTENTHANDLER
 protected:
 
     PRUnichar GetHierarchyDelimiter(nsIMsgFolder* aMsgFolder);
@@ -128,6 +130,9 @@ protected:
                                      nsIUrlListener* aListener,
                                      nsIURI** aURL,
                                      nsISupports* aCopyState);
+  nsresult CreateSubscribeURI(nsIMsgIncomingServer *server, char *folderName, nsIURI **imapUrl);
+  nsresult GetServerFromUrl(nsIImapUrl *aImapUrl, nsIMsgIncomingServer **aServer);
+
     // just a little helper method...maybe it should be a macro? which helps break down a imap message uri
     // into the folder and message key equivalents
     nsresult DecomposeImapURI(const char * aMessageURI, nsIMsgFolder ** aFolder,  char ** msgKey);

@@ -245,12 +245,12 @@ void nsIMAPNamespaceList::ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBo
 
 nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceNumber(int nodeIndex)
 {
-	int total = GetNumberOfNamespaces();
-	NS_ASSERTION(nodeIndex >= 0 && nodeIndex < total, "invalid IMAP namespace node index");
-	if (nodeIndex < 0) nodeIndex = 0;
+  int total = GetNumberOfNamespaces();
+  NS_ASSERTION(nodeIndex >= 0 && nodeIndex < total, "invalid IMAP namespace node index");
+  if (nodeIndex < 0) nodeIndex = 0;
 
-    // XXX really could be just ElementAt; that's why we have the assertion
-	return 	(nsIMAPNamespace *) m_NamespaceList.SafeElementAt(nodeIndex);
+  // XXX really could be just ElementAt; that's why we have the assertion
+  return 	(nsIMAPNamespace *) m_NamespaceList.SafeElementAt(nodeIndex);
 }
 
 nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceNumber(int nodeIndex, EIMAPNamespaceType type)
@@ -614,3 +614,69 @@ void nsIMAPNamespaceList::SuggestHierarchySeparatorForNamespace(nsIMAPNamespace 
   if (namespaceForFolder && !namespaceForFolder->GetIsDelimiterFilledIn())
     namespaceForFolder->SetDelimiter(delimiterFromFolder, PR_FALSE);
 }
+
+
+/*
+ GenerateFullFolderNameWithDefaultNamespace takes a folder name in canonical form,
+  converts it to online form, allocates a string to contain the full online server name
+  including the namespace prefix of the default namespace of the given type, in the form:
+  PR_smprintf("%s%s", prefix, onlineServerName) if there is a NULL owner
+  PR_smprintf("%s%s%c%s", prefix, owner, delimiter, onlineServerName) if there is an owner
+  It then converts this back to canonical form and returns it (allocated) to libmsg.
+  It returns NULL if there is no namespace of the given type.
+  If nsUsed is not passed in as NULL, then *nsUsed is filled in and returned;  it is the
+  namespace used for generating the folder name.
+*/
+char *nsIMAPNamespaceList::GenerateFullFolderNameWithDefaultNamespace(const char *hostName,
+                                                                                const char *canonicalFolderName,
+                                                                                const char *owner,
+                                                                                EIMAPNamespaceType nsType,
+                                                                                nsIMAPNamespace **nsUsed)
+{
+  nsresult rv = NS_OK;
+
+  nsCOMPtr<nsIImapHostSessionList> hostSession = 
+           do_GetService(kCImapHostSessionListCID, &rv);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  nsIMAPNamespace *ns;
+  char *fullFolderName = nsnull;
+  rv = hostSession->GetDefaultNamespaceOfTypeForHost(hostName, nsType, ns);
+  NS_ENSURE_SUCCESS(rv, nsnull);
+  if (ns)
+  {
+    if (nsUsed)
+      *nsUsed = ns;
+    const char *prefix = ns->GetPrefix();
+    char *convertedFolderName = AllocateServerFolderName(canonicalFolderName, ns->GetDelimiter());
+    if (convertedFolderName)
+    {
+      char *convertedReturnName = nsnull;
+      if (owner)
+      {
+        convertedReturnName = PR_smprintf("%s%s%c%s", prefix, owner, ns->GetDelimiter(), convertedFolderName);
+      }
+      else
+      {
+        convertedReturnName = PR_smprintf("%s%s", prefix, convertedFolderName);
+      }
+      
+      if (convertedReturnName)
+      {
+        fullFolderName = AllocateCanonicalFolderName(convertedReturnName, ns->GetDelimiter());
+        PR_Free(convertedReturnName);
+      }
+      PR_Free(convertedFolderName);
+    }
+    else
+    {
+      NS_ASSERTION(PR_FALSE, "couldn't allocate server folder name");
+    }
+  }
+  else
+  {
+    // Could not find a namespace on the given host
+    NS_ASSERTION(PR_FALSE, "couldn't find namespace for given host");
+  }
+  return (fullFolderName);
+}
+

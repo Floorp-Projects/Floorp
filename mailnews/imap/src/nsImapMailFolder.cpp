@@ -69,6 +69,7 @@
 #include "nsIPref.h"
 #include "nsMsgUtf7Utils.h"
 #include "nsICacheSession.h"
+#include "nsEscape.h"
 
 #include "nsIMsgFilter.h"
 #include "nsImapMoveCoalescer.h"
@@ -1428,12 +1429,6 @@ NS_IMETHODIMP nsImapMailFolder::GetPrettyName(PRUnichar ** prettyName)
   return GetName(prettyName);
 }
     
-NS_IMETHODIMP nsImapMailFolder::GetFolderURL(char **url)
-{
-    nsresult rv = NS_ERROR_FAILURE;
-    return rv;
-}
-    
 NS_IMETHODIMP nsImapMailFolder::UpdateSummaryTotals(PRBool force) 
 {
   if (!mNotifyCountChanges || mIsServer)
@@ -1908,6 +1903,10 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     imapServer->GetDeleteModel(&deleteModel);
     if (deleteModel != nsMsgImapDeleteModels::MoveToTrash || deleteStorage)
       deleteImmediatelyNoTrash = PR_TRUE;
+    // if we're deleting a message, we should pseudo-interrupt the msg
+    //load of the current message.
+    PRBool interrupted = PR_FALSE;
+    imapServer->PseudoInterruptMsgLoad(this, &interrupted);
   }
   
   rv = BuildIdsAndKeyArray(messages, messageIds, srcKeyArray);
@@ -4121,12 +4120,12 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
   nsCOMPtr <nsIMsgCopyServiceListener> listener;
   if (aUrl)
   {
-    nsCOMPtr<nsIMsgWindow> aWindow;
+    nsCOMPtr<nsIMsgWindow> msgWindow;
     nsCOMPtr<nsIMsgMailNewsUrl> mailUrl = do_QueryInterface(aUrl);
     nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(aUrl);
     PRBool folderOpen = PR_FALSE;
     if (mailUrl)
-      mailUrl->GetMsgWindow(getter_AddRefs(aWindow));
+      mailUrl->GetMsgWindow(getter_AddRefs(msgWindow));
     if (session)
       session->IsFolderOpenInWindow(this, &folderOpen);
 #ifdef DEBUG_bienvenu1
@@ -4147,7 +4146,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
           if (NS_SUCCEEDED(aExitCode))
           {
               if (folderOpen)
-                UpdateFolder(aWindow);
+                UpdateFolder(msgWindow);
               else
                 UpdatePendingCounts(PR_TRUE, PR_FALSE);
           }
@@ -4160,7 +4159,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               {
                 nsCOMPtr<nsIMsgDatabase> srcDB;
                 if (srcFolder)
-                    rv = srcFolder->GetMsgDatabase(aWindow,
+                    rv = srcFolder->GetMsgDatabase(msgWindow,
                         getter_AddRefs(srcDB));
                 if (NS_SUCCEEDED(rv) && srcDB)
                 {
@@ -4269,7 +4268,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
               if (NS_SUCCEEDED(aExitCode))
               {
                 if (folderOpen)
-                  UpdateFolder(aWindow);
+                  UpdateFolder(msgWindow);
                 else
                   UpdatePendingCounts(PR_TRUE, PR_FALSE);
 
@@ -4311,7 +4310,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             if (NS_SUCCEEDED(aExitCode))
             {
               if (folderOpen)
-                UpdateFolder(aWindow);
+                UpdateFolder(msgWindow);
               else
               {
                 ChangeNumPendingTotalMessages(-mNumPendingTotalMessages);
@@ -4323,7 +4322,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
         case nsIImapUrl::nsImapRefreshFolderUrls:
           // we finished getting an admin url for the folder.
             if (!m_adminUrl.IsEmpty())
-              FolderPrivileges(aWindow);
+              FolderPrivileges(msgWindow);
             break;
         case nsIImapUrl::nsImapCreateFolder:
           if (NS_FAILED(aExitCode))  //if success notification already done
@@ -4331,6 +4330,39 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
             nsCOMPtr <nsIAtom> folderCreateAtom;
             folderCreateAtom = getter_AddRefs(NS_NewAtom("FolderCreateFailed"));
             NotifyFolderEvent(folderCreateAtom);
+          }
+          break;
+        case nsIImapUrl::nsImapSubscribe:
+          if (NS_SUCCEEDED(aExitCode) && msgWindow)
+          {
+#ifdef DEBUG_bienvenu
+            nsXPIDLCString urlSpec;
+            nsXPIDLCString canonicalFolderName;
+            aUrl->GetSpec(getter_Copies(urlSpec));
+            imapUrl->CreateCanonicalSourceFolderPathString(getter_Copies(canonicalFolderName));
+            printf("stop running subscribe folderName %s\n", (const char *) canonicalFolderName);
+#endif
+            nsCOMPtr <nsIMsgFolder> rootFolder;
+            nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+            if(NS_SUCCEEDED(rv) && rootFolder)
+            {
+              nsCOMPtr <nsIMsgImapMailFolder> imapRoot = do_QueryInterface(rootFolder);
+              if (imapRoot)
+              {
+                nsCOMPtr <nsIMsgImapMailFolder> foundFolder;
+                rv = imapRoot->FindOnlineSubFolder(canonicalFolderName, getter_AddRefs(foundFolder));
+                if (NS_SUCCEEDED(rv) && foundFolder)
+                {
+                  nsXPIDLCString uri;
+                  nsCOMPtr <nsIMsgFolder> msgFolder = do_QueryInterface(foundFolder);
+                  if (msgFolder)
+                  {
+                    msgFolder->GetURI(getter_Copies(uri));
+                    msgWindow->SelectFolder(uri.get());
+                  }
+                }
+              }
+            }
           }
           break;
         default:
@@ -4343,7 +4375,7 @@ nsImapMailFolder::OnStopRunningUrl(nsIURI *aUrl, nsresult aExitCode)
     if (mailUrl)
       rv = mailUrl->UnRegisterListener(this);
 
-    if (!aWindow) // if we don't have a window then we are proably running a biff url
+    if (!msgWindow) // if we don't have a window then we are probably running a biff url
     {
       nsCOMPtr<nsIMsgIncomingServer> server;
       GetServer(getter_AddRefs(server));
@@ -6334,6 +6366,30 @@ nsresult nsImapMailFolder::CreateBaseMessageURI(const char *aURI)
   rv = nsCreateImapBaseMessageURI(aURI, &mBaseMessageURI);
   return rv;
 }
+
+NS_IMETHODIMP nsImapMailFolder::GetFolderURL(char **aFolderURL)
+{
+  NS_ENSURE_ARG_POINTER(aFolderURL);
+  nsCOMPtr<nsIMsgFolder> rootFolder;
+  nsresult rv = GetRootFolder(getter_AddRefs(rootFolder));
+  nsXPIDLCString rootURI;
+  rootFolder->GetURI(getter_Copies(rootURI));
+
+  nsCAutoString namePart(mURI + rootURI.Length());
+  char *escapedName = nsEscape(namePart.get(), url_Path);
+
+  char *folderURL = (char *) PR_Malloc(rootURI.Length() + strlen(escapedName) + 1);
+  if (!folderURL)
+    return NS_ERROR_OUT_OF_MEMORY;
+  strcpy(folderURL, rootURI.get());
+  strcpy(folderURL + rootURI.Length(), escapedName);
+  PR_Free(escapedName);
+  // imap uri's aren't escaped, so we need to escape the folder name
+  // part of the uri and return that.
+  *aFolderURL = folderURL;
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsImapMailFolder::GetFolderNeedsSubscribing(PRBool *bVal)
 {

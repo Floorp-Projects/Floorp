@@ -2401,7 +2401,7 @@ NS_IMETHODIMP  nsImapIncomingServer::CommitNamespaces()
 
 }
 
-NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted)
+NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool *interrupted)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIImapProtocol> connection;
@@ -2420,7 +2420,7 @@ NS_IMETHODIMP nsImapIncomingServer::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl,
     aSupport = getter_AddRefs(m_connectionCache->ElementAt(i));
     connection = do_QueryInterface(aSupport);
     if (connection)
-      rv = connection->PseudoInterruptMsgLoad(aImapUrl, interrupted);
+      rv = connection->PseudoInterruptMsgLoad(aImapFolder, interrupted);
   }
   
   PR_CExitMonitor(this);
@@ -2956,17 +2956,17 @@ nsImapIncomingServer::GetSubscribeListener(nsISubscribeListener **aListener)
 NS_IMETHODIMP
 nsImapIncomingServer::Subscribe(const PRUnichar *aName)
 {
-  return SubscribeToFolder(aName, PR_TRUE);
+  return SubscribeToFolder(aName, PR_TRUE, nsnull);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::Unsubscribe(const PRUnichar *aName)
 {
-  return SubscribeToFolder(aName, PR_FALSE);
+  return SubscribeToFolder(aName, PR_FALSE, nsnull);
 }
 
-nsresult
-nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe)
+NS_IMETHODIMP
+nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe, nsIURI **aUri)
 {
   nsresult rv;
   nsCOMPtr<nsIImapService> imapService = do_GetService(kImapServiceCID, &rv);
@@ -3009,7 +3009,7 @@ nsImapIncomingServer::SubscribeToFolder(const PRUnichar *aName, PRBool subscribe
   CreateUnicodeStringFromUtf7(folderCName.get(), getter_Copies(unicodeName));
   // we need to convert aName, which is utf-7 encoded, to unicode
   if (subscribe)
-    rv = imapService->SubscribeFolder(queue, msgFolder, unicodeName.get(), nsnull, nsnull);
+    rv = imapService->SubscribeFolder(queue, msgFolder, unicodeName.get(), nsnull, aUri);
   else 
     rv = imapService->UnsubscribeFolder(queue, msgFolder, unicodeName.get(), nsnull, nsnull);
   

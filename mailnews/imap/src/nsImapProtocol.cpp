@@ -80,7 +80,12 @@
 // for the memory cache...
 #include "nsICacheEntryDescriptor.h"
 #include "nsICacheSession.h"
-
+#include "nsIPrompt.h"
+#include "nsIDocShellLoadInfo.h"
+#include "nsIDOMWindowInternal.h"
+#include "nsIMessengerWindowService.h"
+#include "nsIWindowMediator.h"
+#include "nsIWindowWatcher.h"
 #include "nsCOMPtr.h"
 PRLogModuleInfo *IMAP;
 
@@ -890,7 +895,7 @@ nsImapProtocol::TellThreadToDie(PRBool isSaveToClose)
   }
 
   if (mAsyncReadRequest)
-    mAsyncReadRequest->Cancel(NS_BINDING_ABORTED);
+    mAsyncReadRequest->Cancel(NS_OK);
   PR_EnterMonitor(m_threadDeathMonitor);
   m_threadShouldDie = PR_TRUE;
   PR_ExitMonitor(m_threadDeathMonitor);
@@ -921,7 +926,7 @@ nsImapProtocol::GetLastActiveTimeStamp(PRTime* aTimeStamp)
 }
 
 NS_IMETHODIMP
-nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted)
+nsImapProtocol::PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool *interrupted)
 {
   NS_ENSURE_ARG (interrupted);
 
@@ -942,12 +947,9 @@ nsImapProtocol::PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool *interrupted
       rv = GetRunningImapURL(getter_AddRefs(runningImapURL));
       if (NS_SUCCEEDED(rv) && runningImapURL)
       {
-        nsXPIDLCString runningImapUrlSourceFolder;
-        nsXPIDLCString newImapUrlSourceFolder;
-
-        runningImapURL->CreateServerSourceFolderPathString(getter_Copies(runningImapUrlSourceFolder));
-        aImapUrl->CreateServerSourceFolderPathString(getter_Copies(newImapUrlSourceFolder));
-        if (!nsCRT::strcmp(runningImapUrlSourceFolder, newImapUrlSourceFolder))
+        nsCOMPtr <nsIMsgFolder> runningImapFolder;
+        runningImapURL->GetImapFolder(getter_AddRefs(runningImapFolder));
+        if (aImapFolder == runningImapFolder)
         {
           PseudoInterrupt(PR_TRUE);
           *interrupted = PR_TRUE;
@@ -996,7 +998,9 @@ nsImapProtocol::ImapThreadMainLoop()
       break;
     }
 
-  //    m_eventQueue->ProcessPendingEvents();
+    // in the case of the server dropping the connection, this call is reputed
+    // to make it so that we process the :OnStop notification.
+      m_eventQueue->ProcessPendingEvents();
   //    m_sinkEventQueue->ProcessPendingEvents();
 
     if (m_nextUrlReadyToRun && m_runningUrl)
@@ -1058,6 +1062,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
   PRBool  logonFailed = PR_FALSE;
   PRBool anotherUrlRun = PR_FALSE;
 
+  PRBool isExternalUrl;
 
   PseudoInterrupt(PR_FALSE);  // clear this if left over from previous url.
 
@@ -1067,6 +1072,28 @@ PRBool nsImapProtocol::ProcessCurrentURL()
                          getter_AddRefs(mAsyncReadRequest));
     SetFlag(IMAP_CONNECTION_IS_OPEN);
   }
+  if (m_runningUrl)
+  {
+    m_runningUrl->GetExternalLinkUrl(&isExternalUrl);
+    if (isExternalUrl)
+    {
+      m_runningUrl->GetImapAction(&m_imapAction);
+      if (m_imapAction == nsIImapUrl::nsImapSelectFolder)
+      {
+        // we need to send a start request so that the doc loader
+        // will call HandleContent on the imap service so we
+        // can abort this url, and run a new url in a new msg window
+        // to run the folder load url and get off this crazy merry-go-round.
+        if (m_channelListener) 
+        {
+          nsCOMPtr<nsIRequest> request = do_QueryInterface(m_mockChannel);
+          m_channelListener->OnStartRequest(request, m_channelContext);
+        }
+        return PR_FALSE;
+      }
+    }
+  }
+
 #ifdef DEBUG_bienvenu   
   NS_ASSERTION(m_imapMiscellaneousSink, "null sink");
 #endif
@@ -1432,9 +1459,9 @@ nsresult nsImapProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
     m_urlInProgress = PR_TRUE;
     rv = SetupWithUrl(aURL, aConsumer); 
     NS_ASSERTION(NS_SUCCEEDED(rv), "error setting up imap url");
-        if (NS_FAILED(rv)) return rv;
+    if (NS_FAILED(rv)) return rv;
       SetupSinkProxy(); // generate proxies for all of the event sinks in the url
-        m_lastActiveTime = PR_Now();
+    m_lastActiveTime = PR_Now();
     if (m_channel && m_runningUrl)
     {
       nsImapAction imapAction;
@@ -4222,7 +4249,7 @@ nsImapProtocol::PercentProgressUpdateEvent(PRUnichar *message, PRInt32 currentPr
 }
 
 
-PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceString)
+/* static */PRUnichar * nsImapProtocol::CreatePRUnicharStringFromUTF7(const char * aSourceString)
 {
   PRUnichar *convertedString = NULL;
   nsresult res;
@@ -6406,35 +6433,45 @@ void nsImapProtocol::ProcessAuthenticatedStateURL()
       OnEnsureExistsFolder(sourceMailbox);
       break;
     case nsIImapUrl::nsImapDiscoverChildrenUrl:
-        {
-            char *canonicalParent = nsnull;
-            m_runningUrl->CreateServerSourceFolderPathString(&canonicalParent);
-            if (canonicalParent)
-            {
-        NthLevelChildList(canonicalParent, 2);
-                PR_Free(canonicalParent);
-            }
-      break;
-        }
-    case nsIImapUrl::nsImapDiscoverLevelChildrenUrl:
-        {
-            char *canonicalParent = nsnull;
-            m_runningUrl->CreateServerSourceFolderPathString(&canonicalParent);
-      PRInt32 depth = 0;
-            m_runningUrl->GetChildDiscoveryDepth(&depth);
-        if (canonicalParent)
       {
-        NthLevelChildList(canonicalParent, depth);
-        if (GetServerStateParser().LastCommandSuccessful() &&
-                    m_imapMailFolderSink)
-          m_imapMailFolderSink->ChildDiscoverySucceeded(this);
-        PR_Free(canonicalParent);
-      }
-      break;
+        char *canonicalParent = nsnull;
+        m_runningUrl->CreateServerSourceFolderPathString(&canonicalParent);
+        if (canonicalParent)
+        {
+          NthLevelChildList(canonicalParent, 2);
+          PR_Free(canonicalParent);
         }
+        break;
+      }
+    case nsIImapUrl::nsImapDiscoverLevelChildrenUrl:
+      {
+        char *canonicalParent = nsnull;
+        m_runningUrl->CreateServerSourceFolderPathString(&canonicalParent);
+        PRInt32 depth = 0;
+        m_runningUrl->GetChildDiscoveryDepth(&depth);
+        if (canonicalParent)
+        {
+          NthLevelChildList(canonicalParent, depth);
+          if (GetServerStateParser().LastCommandSuccessful() &&
+            m_imapMailFolderSink)
+            m_imapMailFolderSink->ChildDiscoverySucceeded(this);
+          PR_Free(canonicalParent);
+        }
+        break;
+      }
     case nsIImapUrl::nsImapSubscribe:
       sourceMailbox = OnCreateServerSourceFolderPathString();
       OnSubscribe(sourceMailbox); // used to be called subscribe
+
+      if (GetServerStateParser().LastCommandSuccessful())
+      {
+        PRBool shouldList;
+        // if url is an external click url, then we should list the folder
+        // after subscribing to it, so we can select it.
+        m_runningUrl->GetExternalLinkUrl(&shouldList);
+        if (shouldList)
+          OnListFolder(sourceMailbox, PR_TRUE);
+      }
       break;
     case nsIImapUrl::nsImapUnsubscribe: 
       sourceMailbox = OnCreateServerSourceFolderPathString();     
@@ -6592,6 +6629,11 @@ void nsImapProtocol::ProcessStoreFlags(const char * messageIdsString,
   if (flags & kImapMsgMDNSentFlag && kImapMsgSupportMDNSentFlag & userFlags)
         flagString .Append("$MDNSent ");  // if supported
 
+  // all this label stuff is predicated on us using the flags to get and set
+  // labels, which limits us to 5 labels. If we ever want more labels, we'll
+  // need to rip this label stuff out of here, and write a new method to
+  // get and set labels, and we'll need a new way of communicating label
+  // values back to the core mail/news code.
   if (userFlags & kImapMsgSupportUserFlag)
   {
     if ((flags & kImapMsgLabelFlags))
@@ -7496,7 +7538,21 @@ NS_IMETHODIMP nsImapMockChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 NS_IMETHODIMP nsImapMockChannel::GetContentType(char * *aContentType)
 {
   if (m_ContentType.IsEmpty())
-    *aContentType = nsCRT::strdup("message/rfc822");
+  {
+    nsImapAction imapAction = 0;
+    if (m_url)
+    {
+      nsCOMPtr<nsIImapUrl> imapUrl = do_QueryInterface(m_url);
+      if (imapUrl)
+      {
+        imapUrl->GetImapAction(&imapAction);
+      }
+    } 
+    if (imapAction == nsIImapUrl::nsImapSelectFolder)
+      *aContentType = nsCRT::strdup("x-application-imapfolder");
+    else
+      *aContentType = nsCRT::strdup("message/rfc822");
+  }
   else
     *aContentType = ToNewCString(m_ContentType);
   return NS_OK;

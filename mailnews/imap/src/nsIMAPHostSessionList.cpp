@@ -804,4 +804,3 @@ NS_IMETHODIMP nsIMAPHostSessionList::FindShellInCacheForHost(const char *serverK
 	PR_ExitMonitor(gCachedHostInfoMonitor);
 	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
-

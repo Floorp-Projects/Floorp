@@ -37,7 +37,9 @@ REQUIRES	= xpcom \
 		  msgbaseutil \
 		  rdfutil \
 		  necko \
+		  appshell \
 		  msgdb \
+      dom \
 		  uconv \
 		  unicharutil \
 		  mime \
@@ -49,6 +51,7 @@ REQUIRES	= xpcom \
 		  msglocal \
 		  msgnews \
 		  mimetype \
+      uriloader \
 		  windowwatcher \
 		  $(NULL)
 

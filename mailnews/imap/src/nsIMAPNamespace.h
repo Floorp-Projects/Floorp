@@ -100,6 +100,11 @@ public:
   static char *GetFolderOwnerNameFromPath(nsIMAPNamespace *namespaceForFolder, const char *canonicalFolderName);
   static char *AllocateCanonicalFolderName(const char *onlineFolderName, char delimiter);
   static void  SuggestHierarchySeparatorForNamespace(nsIMAPNamespace *namespaceForFolder, char delimiterFromFolder);
+  static char *GenerateFullFolderNameWithDefaultNamespace(const char *hostName,
+                                                                                const char *canonicalFolderName,
+                                                                                const char *owner,
+                                                                                EIMAPNamespaceType nsType,
+                                                                                nsIMAPNamespace **nsUsed);
 
 protected:
   nsIMAPNamespaceList();	// use CreatensIMAPNamespaceList to create one

@@ -152,7 +152,7 @@ public:
   // Get last active time stamp
   NS_IMETHOD GetLastActiveTimeStamp(PRTime *aTimeStamp);
 
-	NS_IMETHOD PseudoInterruptMsgLoad(nsIImapUrl *aImapUrl, PRBool
+	NS_IMETHOD PseudoInterruptMsgLoad(nsIMsgFolder *aImapFolder, PRBool
                                       *interrupted);
   NS_IMETHOD GetSelectedMailboxName(char ** folderName);
   NS_IMETHOD ResetToAuthenticatedState();
@@ -252,7 +252,7 @@ public:
 
 	// utility function calls made by the server
 
-	PRUnichar * CreatePRUnicharStringFromUTF7(const char * aSourceString);
+	static PRUnichar * CreatePRUnicharStringFromUTF7(const char * aSourceString);
 
 	void Copy(const char * messageList, const char *destinationMailbox, 
                                     PRBool idsAreUid);

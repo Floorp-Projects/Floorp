@@ -26,11 +26,13 @@ REQUIRES	= xpcom \
 		  mailnews \
 		  rdf \
 		  msgbase \
+      dom \
 		  msgsearch \
 		  msgbaseutil \
 		  rdfutil \
 		  necko \
 		  msgdb \
+		  appshell \
 		  uconv \
 		  unicharutil \
 		  mime \
@@ -43,6 +45,7 @@ REQUIRES	= xpcom \
 		  msgnews \
 		  mimetype \
 		  windowwatcher \
+      uriloader \
 		  $(NULL)
 
 include <$(DEPTH)\config\config.mak>
