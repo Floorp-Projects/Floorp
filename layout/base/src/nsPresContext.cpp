@@ -80,10 +80,10 @@ nsPresContext::~nsPresContext()
     NS_RELEASE(loader);
   }
 
-  // XXX Tell the image library we are done with the cached images?
-
   if (nsnull != mImageGroup) {
-    /*XXX mImageGroup->Interrupt(); required? */
+    // Interrupt any loading images. This also stops all looping
+    // image animations.
+    mImageGroup->Interrupt();
     NS_RELEASE(mImageGroup);
   }
 
@@ -423,16 +423,16 @@ nsPresContext::StartLoadImage(const nsString& aURL,
   if (NS_OK != rv) {
     return rv;
   }
-  mImageLoaders.AppendElement(loader);
-
-  // Return new loader
-  NS_ADDREF(loader);
 
   rv = loader->Init(this, mImageGroup, aURL, aBackgroundColor, aTargetFrame,
                     aNeedSizeUpdate);
   if (NS_OK != rv) {
+    NS_RELEASE(loader);
     return rv;
   }
+  // Return the loader
+  mImageLoaders.AppendElement(loader);
+  NS_ADDREF(loader);
   aLoaderResult = loader;
   return NS_OK;
 }
