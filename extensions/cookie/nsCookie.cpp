@@ -1380,18 +1380,18 @@ cookie_SetCookieString(char * curURL, char * setCookieHeader, time_t timeToExpir
       PR_FREEIF(new_string);
       PR_FREEIF(remember_string);
       if (cookie_rememberChecked) {
-        cookie_PermissionStruct * cookie_permission;
-        cookie_permission = PR_NEW(cookie_PermissionStruct);
-        if (cookie_permission) {
+        cookie_PermissionStruct * cookie_permission2;
+        cookie_permission2 = PR_NEW(cookie_PermissionStruct);
+        if (cookie_permission2) {
           cookie_LockPermissionList();
           StrAllocCopy(host_from_header2, host_from_header);
           /* ignore leading periods in host name */
           while (host_from_header2 && (*host_from_header2 == '.')) {
             host_from_header2++;
           }
-          cookie_permission->host = host_from_header2; /* set host string */
-          cookie_permission->permission = userHasAccepted;
-          cookie_AddPermission(cookie_permission, PR_TRUE);
+          cookie_permission2->host = host_from_header2; /* set host string */
+          cookie_permission2->permission = userHasAccepted;
+          cookie_AddPermission(cookie_permission2, PR_TRUE);
           cookie_UnlockPermissionListst();
         }
       }
