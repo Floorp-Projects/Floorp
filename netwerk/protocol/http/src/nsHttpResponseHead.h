@@ -81,10 +81,6 @@ public:
     // reset the response head to it's initial state
     void     Reset();
 
-private:
-    void     ParseVersion(const char *);
-    nsresult ParseContentType(char *);
-
     // these return failure if the header does not exist.
     nsresult ParseDateHeader(nsHttpAtom header, PRUint32 *result);
     nsresult GetAgeValue(PRUint32 *result);
@@ -92,6 +88,10 @@ private:
     nsresult GetDateValue(PRUint32 *result)         { return ParseDateHeader(nsHttp::Date, result); }
     nsresult GetExpiresValue(PRUint32 *result)      { return ParseDateHeader(nsHttp::Expires, result); }
     nsresult GetLastModifiedValue(PRUint32 *result) { return ParseDateHeader(nsHttp::Last_Modified, result); }
+
+private:
+    void     ParseVersion(const char *);
+    nsresult ParseContentType(char *);
 
 private:
     nsHttpHeaderArray mHeaders;

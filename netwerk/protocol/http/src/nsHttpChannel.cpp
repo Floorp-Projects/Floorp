@@ -746,6 +746,20 @@ nsHttpChannel::CheckCache()
         goto end;
     }
 
+    // Compare the Expires header to the Date header.  If the server sent an
+    // Expires header with a timestamp in the past, then we must validate this
+    // cached response before reusing.
+    {
+        PRUint32 expiresVal, dateVal;
+        if (NS_SUCCEEDED(mCachedResponseHead->GetExpiresValue(&expiresVal)) &&
+            NS_SUCCEEDED(mCachedResponseHead->GetDateValue(&dateVal)) &&
+            expiresVal < dateVal) {
+            LOG(("Validating since Expires < Date\n"));
+            doValidation = PR_TRUE;
+            goto end;
+        }
+    }
+
     // Check the Vary header.  Per comments on bug 37609, most of the request
     // headers that we generate do not vary with the exception of Accept-Charset
     // and Accept-Language, so we force validation only if these headers or "*"
