@@ -80,7 +80,7 @@ jsj_WrapJavaObject(JSContext *cx,
                    jobject java_obj,
                    jclass java_class)
 {
-    prhashcode hash_code;
+    JSJHashNumber hash_code;
     JSClass *js_class;
     JSObject *js_wrapper_obj;
     JavaObjectWrapper *java_wrapper;
@@ -89,7 +89,7 @@ jsj_WrapJavaObject(JSContext *cx,
 
     js_wrapper_obj = NULL;
 
-    hash_code = jsj_HashJavaObject((void*)java_obj, jEnv);
+    hash_code = jsj_HashJavaObject((void*)java_obj, (void*)jEnv);
 
 #ifdef JS_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
@@ -162,10 +162,10 @@ out_of_memory:
 static void
 remove_java_obj_reflection_from_hashtable(jobject java_obj, JNIEnv *jEnv)
 {
-    prhashcode hash_code;
+    JSJHashNumber hash_code;
     JSJHashEntry *he, **hep;
 
-    hash_code = jsj_HashJavaObject((void*)java_obj, jEnv);
+    hash_code = jsj_HashJavaObject((void*)java_obj, (void*)jEnv);
 
 #ifdef JS_THREADSAFE
     PR_EnterMonitor(java_obj_reflections_monitor);
