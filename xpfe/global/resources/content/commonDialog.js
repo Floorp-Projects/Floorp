@@ -34,8 +34,9 @@ function commonDialogOnLoad()
   var messageText = gCommonDialogParam.GetString(0);
   var messageParent = document.getElementById("info.box");
   var messageParagraphs = messageText.split("\n");
+  var i;
   
-  for (var i = 0; i < messageParagraphs.length; i++) {
+  for (i = 0; i < messageParagraphs.length; i++) {
     var htmlNode = document.createElement("html");
     //htmlNode.setAttribute("style", "max-width: 45em;");
     var text = document.createTextNode(messageParagraphs[i]);
@@ -148,7 +149,7 @@ function commonDialogOnLoad()
   var focusList      = ["dialog.loginname", "dialog.password1", "dialog.password2", "ok",
                          "cancel", "Button2", "Button3"]
 
-  for (var i = 0; i < visibilityList.length; i++) {
+  for (i = 0; i < visibilityList.length; i++) {
     if (isVisible(visibilityList[i])) {
       document.getElementById(focusList[i]).focus();
       break;
