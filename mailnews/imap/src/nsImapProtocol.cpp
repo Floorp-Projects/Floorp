@@ -1124,6 +1124,7 @@ PRBool nsImapProtocol::ProcessCurrentURL()
 
     // release the url as we are done with it...
   ReleaseUrlState();
+  ResetProgressInfo();
   // now try queued urls, now that we've released this connection.
   if (m_imapServerSink && GetConnectionStatus() >= 0)
   {
@@ -1525,7 +1526,6 @@ void nsImapProtocol::ProcessSelectedStateURL()
             else
             {
               // get new message counts, if any, from server
-              ProgressEventFunctionUsingId (IMAP_STATUS_SELECTING_MAILBOX);
         if (m_needNoop)
         {
           m_noopCount++;
