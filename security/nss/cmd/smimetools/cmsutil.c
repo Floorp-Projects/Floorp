@@ -34,7 +34,7 @@
 /*
  * cmsutil -- A command to work with CMS data
  *
- * $Id: cmsutil.c,v 1.17 2000/12/06 22:35:52 mcgreer%netscape.com Exp $
+ * $Id: cmsutil.c,v 1.18 2000/12/07 18:38:27 mcgreer%netscape.com Exp $
  */
 
 #include "nspr.h"
@@ -392,10 +392,19 @@ signed_data(struct signOptionsStr signOptions)
 
 #ifdef DEBUG
     fprintf(stderr, "Input to signed_data:\n");
-    fprintf(stderr, "password [%s]\n", signOptions.options->password);
+    if (signOptions.options->password)
+	fprintf(stderr, "password [%s]\n", signOptions.options->password);
+    else
+	fprintf(stderr, "password [NULL]\n");
     fprintf(stderr, "certUsage [%d]\n", signOptions.options->certUsage);
-    fprintf(stderr, "certdb [%x]\n", signOptions.options->certHandle);
-    fprintf(stderr, "nickname [%s]\n", signOptions.nickname);
+    if (signOptions.options->certHandle)
+	fprintf(stderr, "certdb [%x]\n", signOptions.options->certHandle);
+    else
+	fprintf(stderr, "certdb [NULL]\n");
+    if (signOptions.nickname)
+	fprintf(stderr, "nickname [%s]\n", signOptions.nickname);
+    else
+	fprintf(stderr, "nickname [NULL]\n");
 #endif
     if (signOptions.nickname == NULL) {
 	fprintf(stderr, 
@@ -1276,7 +1285,10 @@ main(int argc, char **argv)
 #ifdef DEBUG
 	fprintf(stderr, "cmsg [%x]\n", cmsg);
 	fprintf(stderr, "arena [%x]\n", arena);
-	fprintf(stderr, "password [%s]\n", (char *)pwcb_arg);
+	if (pwcb_arg)
+	    fprintf(stderr, "password [%s]\n", (char *)pwcb_arg);
+	else
+	    fprintf(stderr, "password [NULL]\n");
 #endif
 	ecx = NSS_CMSEncoder_Start(cmsg, 
                                    NULL, NULL,     /* DER output callback  */
