@@ -25,15 +25,15 @@
 #include "nsVerifier.h"
 static PRUint32 ISO2022JP_cls [ 256 / 8 ] = {
 PCK4BITS(2,0,0,0,0,0,0,0),  // 00 - 07 
-PCK4BITS(0,0,0,0,0,0,0,0),  // 08 - 0f 
+PCK4BITS(0,0,0,0,0,0,2,2),  // 08 - 0f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 10 - 17 
 PCK4BITS(0,0,0,1,0,0,0,0),  // 18 - 1f 
-PCK4BITS(0,0,0,0,0,0,0,0),  // 20 - 27 
-PCK4BITS(0,0,0,0,0,0,0,0),  // 28 - 2f 
+PCK4BITS(0,0,0,0,7,0,0,0),  // 20 - 27 
+PCK4BITS(3,0,0,0,0,0,0,0),  // 28 - 2f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 30 - 37 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 38 - 3f 
-PCK4BITS(0,0,0,0,0,0,0,0),  // 40 - 47 
-PCK4BITS(0,0,0,0,0,0,0,0),  // 48 - 4f 
+PCK4BITS(6,0,4,0,0,0,0,0),  // 40 - 47 
+PCK4BITS(0,0,5,0,0,0,0,0),  // 48 - 4f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 50 - 57 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 58 - 5f 
 PCK4BITS(0,0,0,0,0,0,0,0),  // 60 - 67 
@@ -59,9 +59,13 @@ PCK4BITS(2,2,2,2,2,2,2,2)   // f8 - ff
 };
 
 
-static PRUint32 ISO2022JP_st [ 2] = {
-PCK4BITS(eStart,eItsMe,eError,eError,eError,eError,eItsMe,eItsMe),//00-07 
-PCK4BITS(eItsMe,eStart,eStart,eStart,eStart,eStart,eStart,eStart) //08-0f 
+static PRUint32 ISO2022JP_st [ 6] = {
+PCK4BITS(eStart,     3,eError,eStart,eStart,eStart,eStart,eStart),//00-07 
+PCK4BITS(eError,eError,eError,eError,eError,eError,eError,eError),//08-0f 
+PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe),//10-17 
+PCK4BITS(eError,eError,eError,     5,eError,eError,eError,     4),//18-1f 
+PCK4BITS(eError,eError,eError,eError,eItsMe,eError,eItsMe,eError),//20-27 
+PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eError,eError) //28-2f 
 };
 
 
@@ -74,7 +78,7 @@ static nsVerifier nsISO2022JPVerifier = {
        eUnitMsk4bits, 
        ISO2022JP_cls 
     },
-    3,
+    8,
     {
        eIdxSft4bits, 
        eSftMsk4bits, 

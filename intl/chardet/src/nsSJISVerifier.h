@@ -25,7 +25,7 @@
 #include "nsVerifier.h"
 static PRUint32 SJIS_cls [ 256 / 8 ] = {
 PCK4BITS(0,1,1,1,1,1,1,1),  // 00 - 07 
-PCK4BITS(1,1,1,1,1,1,1,1),  // 08 - 0f 
+PCK4BITS(1,1,1,1,1,1,0,0),  // 08 - 0f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 10 - 17 
 PCK4BITS(1,1,1,0,1,1,1,1),  // 18 - 1f 
 PCK4BITS(1,1,1,1,1,1,1,1),  // 20 - 27 
@@ -52,17 +52,17 @@ PCK4BITS(2,2,2,2,2,2,2,2),  // c0 - c7
 PCK4BITS(2,2,2,2,2,2,2,2),  // c8 - cf 
 PCK4BITS(2,2,2,2,2,2,2,2),  // d0 - d7 
 PCK4BITS(2,2,2,2,2,2,2,2),  // d8 - df 
-PCK4BITS(5,5,5,5,5,5,5,5),  // e0 - e7 
-PCK4BITS(5,5,5,5,5,5,5,5),  // e8 - ef 
-PCK4BITS(5,5,5,5,5,5,5,5),  // f0 - f7 
-PCK4BITS(5,5,5,5,5,0,0,0)   // f8 - ff 
+PCK4BITS(3,3,3,3,3,3,3,3),  // e0 - e7 
+PCK4BITS(3,3,3,3,3,3,3,3),  // e8 - ef 
+PCK4BITS(3,3,3,3,3,3,3,3),  // f0 - f7 
+PCK4BITS(3,3,3,3,3,0,0,0)   // f8 - ff 
 };
 
 
 static PRUint32 SJIS_st [ 3] = {
-PCK4BITS(eError,eStart,eStart,     3,eError,     3,eError,eError),//00-07 
-PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eItsMe,eItsMe),//08-0f 
-PCK4BITS(eItsMe,eItsMe,eError,eError,eStart,eStart,eError,eStart) //10-17 
+PCK4BITS(eError,eStart,eStart,     3,eError,eError,eError,eError),//00-07 
+PCK4BITS(eError,eError,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eError),//08-0f 
+PCK4BITS(eError,eStart,eStart,eStart,eStart,eStart,eStart,eStart) //10-17 
 };
 
 
@@ -75,7 +75,7 @@ static nsVerifier nsSJISVerifier = {
        eUnitMsk4bits, 
        SJIS_cls 
     },
-    6,
+    5,
     {
        eIdxSft4bits, 
        eSftMsk4bits, 

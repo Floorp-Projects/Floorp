@@ -24,51 +24,49 @@
  */
 #include "nsVerifier.h"
 static PRUint32 UCS2LE_cls [ 256 / 8 ] = {
-PCK4BITS(1,7,7,7,7,7,7,7),  // 00 - 07 
-PCK4BITS(7,7,4,7,7,3,7,7),  // 08 - 0f 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 10 - 17 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 18 - 1f 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 20 - 27 
-PCK4BITS(0,0,0,0,0,0,0,0),  // 28 - 2f 
-PCK4BITS(7,7,7,7,0,0,0,0),  // 30 - 37 
-PCK4BITS(0,0,7,7,7,7,7,7),  // 38 - 3f 
-PCK4BITS(7,0,0,0,0,0,0,0),  // 40 - 47 
-PCK4BITS(0,0,0,0,0,0,7,7),  // 48 - 4f 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 50 - 57 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 58 - 5f 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 60 - 67 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 68 - 6f 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 70 - 77 
-PCK4BITS(7,7,7,7,7,7,7,7),  // 78 - 7f 
-PCK4BITS(2,2,2,2,2,2,2,2),  // 80 - 87 
-PCK4BITS(2,2,2,2,2,2,2,2),  // 88 - 8f 
-PCK4BITS(2,2,2,2,2,2,2,2),  // 90 - 97 
-PCK4BITS(2,2,2,2,2,2,2,2),  // 98 - 9f 
-PCK4BITS(7,7,7,7,7,7,7,7),  // a0 - a7 
-PCK4BITS(7,7,7,7,7,7,7,7),  // a8 - af 
-PCK4BITS(7,7,7,7,7,7,7,7),  // b0 - b7 
-PCK4BITS(7,7,7,7,7,7,7,7),  // b8 - bf 
-PCK4BITS(7,7,7,7,7,7,7,7),  // c0 - c7 
-PCK4BITS(7,7,7,7,7,7,7,7),  // c8 - cf 
-PCK4BITS(7,7,7,7,7,7,7,7),  // d0 - d7 
-PCK4BITS(7,7,7,7,7,7,7,7),  // d8 - df 
-PCK4BITS(7,7,7,7,7,7,7,7),  // e0 - e7 
-PCK4BITS(7,7,7,7,7,7,7,7),  // e8 - ef 
-PCK4BITS(7,7,7,7,7,7,7,7),  // f0 - f7 
-PCK4BITS(7,7,7,7,7,7,5,6)   // f8 - ff 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 00 - 07 
+PCK4BITS(0,0,1,0,0,2,0,0),  // 08 - 0f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 10 - 17 
+PCK4BITS(0,0,0,3,0,0,0,0),  // 18 - 1f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 20 - 27 
+PCK4BITS(0,3,3,3,3,3,0,0),  // 28 - 2f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 30 - 37 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 38 - 3f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 40 - 47 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 48 - 4f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 50 - 57 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 58 - 5f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 60 - 67 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 68 - 6f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 70 - 77 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 78 - 7f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 80 - 87 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 88 - 8f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 90 - 97 
+PCK4BITS(0,0,0,0,0,0,0,0),  // 98 - 9f 
+PCK4BITS(0,0,0,0,0,0,0,0),  // a0 - a7 
+PCK4BITS(0,0,0,0,0,0,0,0),  // a8 - af 
+PCK4BITS(0,0,0,0,0,0,0,0),  // b0 - b7 
+PCK4BITS(0,0,0,0,0,0,0,0),  // b8 - bf 
+PCK4BITS(0,0,0,0,0,0,0,0),  // c0 - c7 
+PCK4BITS(0,0,0,0,0,0,0,0),  // c8 - cf 
+PCK4BITS(0,0,0,0,0,0,0,0),  // d0 - d7 
+PCK4BITS(0,0,0,0,0,0,0,0),  // d8 - df 
+PCK4BITS(0,0,0,0,0,0,0,0),  // e0 - e7 
+PCK4BITS(0,0,0,0,0,0,0,0),  // e8 - ef 
+PCK4BITS(0,0,0,0,0,0,0,0),  // f0 - f7 
+PCK4BITS(0,0,0,0,0,0,4,5)   // f8 - ff 
 };
 
 
-static PRUint32 UCS2LE_st [ 9] = {
-PCK4BITS(     3,     3,     5,     6,     3,     8,     7,     3),//00-07 
-PCK4BITS(eError,eError,eError,eError,eError,eError,eError,eError),//08-0f 
-PCK4BITS(eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe,eItsMe),//10-17 
-PCK4BITS(eError,     4,     4,     4,     4,     4,     4,     4),//18-1f 
-PCK4BITS(     3,     3,     5,     6,     3,     3,     3,     3),//20-27 
-PCK4BITS(     4,eError,     4,     4,     4,     4,     4,     4),//28-2f 
-PCK4BITS(     4,     4,     4,eError,eError,     4,     4,     4),//30-37 
-PCK4BITS(eError,     4,     4,     4,     4,eItsMe,     4,     4),//38-3f 
-PCK4BITS(eError,     4,     4,     4,     4,     4,eError,     4) //40-47 
+static PRUint32 UCS2LE_st [ 7] = {
+PCK4BITS(     6,     6,     7,     6,     4,     3,eError,eError),//00-07 
+PCK4BITS(eError,eError,eError,eError,eItsMe,eItsMe,eItsMe,eItsMe),//08-0f 
+PCK4BITS(eItsMe,eItsMe,     5,     5,     5,eError,eItsMe,eError),//10-17 
+PCK4BITS(     5,     5,     5,eError,     5,eError,     6,     6),//18-1f 
+PCK4BITS(     7,     6,     8,     8,     5,     5,     5,eError),//20-27 
+PCK4BITS(     5,     5,     5,eError,eError,eError,     5,     5),//28-2f 
+PCK4BITS(     5,     5,     5,eError,     5,eError,eStart,eStart) //30-37 
 };
 
 
@@ -81,7 +79,7 @@ static nsVerifier nsUCS2LEVerifier = {
        eUnitMsk4bits, 
        UCS2LE_cls 
     },
-    8,
+    6,
     {
        eIdxSft4bits, 
        eSftMsk4bits, 

@@ -25,7 +25,7 @@
 #include "nsVerifier.h"
 static PRUint32 EUCJP_cls [ 256 / 8 ] = {
 PCK4BITS(5,4,4,4,4,4,4,4),  // 00 - 07 
-PCK4BITS(4,4,4,4,4,4,4,4),  // 08 - 0f 
+PCK4BITS(4,4,4,4,4,4,5,5),  // 08 - 0f 
 PCK4BITS(4,4,4,4,4,4,4,4),  // 10 - 17 
 PCK4BITS(4,4,4,5,4,4,4,4),  // 18 - 1f 
 PCK4BITS(4,4,4,4,4,4,4,4),  // 20 - 27 
