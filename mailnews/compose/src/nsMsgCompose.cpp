@@ -827,7 +827,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
 	      	nsString replyTo;
           nsString newgroups;
           nsString followUpTo;
-          char *outCString;
+          char *outCString = nsnull;
           PRUnichar emptyUnichar = 0;
           
           mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
@@ -835,7 +835,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
           {
             // Convert fields to UTF-8
             ConvertToUnicode(aCharset, outCString, replyTo);
-            PR_Free(outCString);
+            PR_FREEIF(outCString);
           }
           
           mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, &outCString);
@@ -843,7 +843,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
           {
             // Convert fields to UTF-8
             ConvertToUnicode(aCharset, outCString, newgroups);
-            PR_Free(outCString);
+            PR_FREEIF(outCString);
           }
           
           mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, &outCString);
@@ -851,7 +851,7 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
           {
             // Convert fields to UTF-8
             ConvertToUnicode(aCharset, outCString, followUpTo);
-            PR_Free(outCString);
+            PR_FREEIF(outCString);
           }
           
           if (! replyTo.IsEmpty())
