@@ -701,7 +701,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetControllers(nsIControllers** aResult)
       {
       mControllers = do_CreateInstance(kXULControllersCID);
       NS_ENSURE_TRUE(mControllers, NS_ERROR_FAILURE);
-      #ifdef DOM_CONTROLLER
+#ifdef DOM_CONTROLLER
       // Add in the default controller
     	nsDOMWindowController* domController = new nsDOMWindowController(this);
     	if(domController)
@@ -709,7 +709,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetControllers(nsIControllers** aResult)
 			nsCOMPtr<nsIController> controller(domController);
 			mControllers->AppendController(controller);
 		   }
-      #endif // DOM_CONTROLLER
+#endif // DOM_CONTROLLER
       }
    *aResult = mControllers;
    NS_ADDREF(*aResult);
@@ -1550,7 +1550,8 @@ GlobalWindowImpl::UpdateCommands(const nsString& anAction)
     }
 
   }
-  else {
+  else
+  {
     // See if we contain a XUL document.
     nsCOMPtr<nsIDOMDocument> domDoc;
     GetDocument(getter_AddRefs(domDoc));
@@ -1565,6 +1566,10 @@ GlobalWindowImpl::UpdateCommands(const nsString& anAction)
     // Now call UpdateCommands on our parent window.
     nsCOMPtr<nsIDOMWindow> parent;
     GetParent(getter_AddRefs(parent));
+    // GetParent returns self at the top
+    if (NS_STATIC_CAST(nsIDOMWindow*, this) == parent.get())
+      return NS_OK;
+    
     return parent->UpdateCommands(anAction);
   }
 
@@ -3771,6 +3776,10 @@ NS_IMETHODIMP NavigatorImpl::Preference(JSContext* cx, jsval* argv,
 
    return result;
 }
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
 
 //*****************************************************************************
 //***  DOM Controller Stuff
