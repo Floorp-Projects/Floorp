@@ -160,12 +160,6 @@ install:: $(TARGETS)
 	$(INSTALL) throbber/anims11.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims12.gif $(DIST)/bin/res/throbber
 	$(INSTALL) throbber/anims13.gif $(DIST)/bin/res/throbber
-	$(INSTALL) throbber/anims14.gif $(DIST)/bin/res/throbber
-	$(INSTALL) throbber/anims15.gif $(DIST)/bin/res/throbber
-	$(INSTALL) throbber/anims16.gif $(DIST)/bin/res/throbber
-	$(INSTALL) throbber/anims17.gif $(DIST)/bin/res/throbber
-	$(INSTALL) throbber/anims18.gif $(DIST)/bin/res/throbber
-	$(INSTALL) throbber/anims19.gif $(DIST)/bin/res/throbber
 
 clobber::
 	rm -f $(DIST)/bin/viewer.exe
@@ -202,11 +196,5 @@ clobber::
 	rm -f $(DIST)/bin/res/throbber/anims11.gif
 	rm -f $(DIST)/bin/res/throbber/anims12.gif
 	rm -f $(DIST)/bin/res/throbber/anims13.gif
-	rm -f $(DIST)/bin/res/throbber/anims14.gif
-	rm -f $(DIST)/bin/res/throbber/anims15.gif
-	rm -f $(DIST)/bin/res/throbber/anims16.gif
-	rm -f $(DIST)/bin/res/throbber/anims17.gif
-	rm -f $(DIST)/bin/res/throbber/anims18.gif
-	rm -f $(DIST)/bin/res/throbber/anims19.gif
 
 
