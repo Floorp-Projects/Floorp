@@ -6,9 +6,10 @@
 [Embed]
 
 ; 
-; Sample App:
+; Sample App + launch script
 ; 
 gtkEmbed
+run-mozilla.sh
 
 ; 
 ; NSPR:
@@ -85,6 +86,10 @@ components/webBrowser_setup.xpt
 components/libtimer_gtk.so
 components/libgfx_gtk.so                     
 components/gfx.xpt 
+
+; jar
+components/libjar50.so
+components/jar.xpt
 
 ; layout
 components/libgklayout.so                   
@@ -186,10 +191,7 @@ components/xpcom_xpti.xpt
 ;
 ; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
 ; 
-chrome/toolkit/content/global/*
-chrome/classic/skin/classic/global/*
-chrome/en-US/locale/en-US/global/*
-chrome/en-US/locale/en-US/necko/*
+chrome/embed.jar
 ; 
 ; res:
 ; 

@@ -111,6 +111,10 @@ components\necko_strconv.xpt
 components\nsgif.dll                    
 components\nsjpg.dll                    
 
+; jar
+components\jar50.dll
+components\jar.xpt
+
 ; prefs
 components\pref.xpt                     
 components\xppref32.dll
@@ -186,10 +190,7 @@ components\xpcom_xpti.xpt
 ; 
 ; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
 ; 
-chrome\toolkit\content\global\*
-chrome\classic\skin\classic\global\*
-chrome\en-US\locale\en-US\global\*
-chrome\en-US\locale\en-US\necko\*
+chrome\embed.jar
 
 ; 
 ; res:

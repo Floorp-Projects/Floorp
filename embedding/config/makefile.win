@@ -24,8 +24,10 @@ MODULE=embed_base
 include <$(DEPTH)\config\rules.mak>
 include <$(DEPTH)\config\config.mak>
 
+embed_chrome: embed-jar.mn
+        $(PERL) $(DEPTH)\config\make-jars.pl -v $(_NO_FLOCK) -s $(DIST)\bin\chrome -d $(DIST)\bin\chrome < embed-jar.mn
 
-install:: 
+install:: embed_chrome
  $(PERL) $(DEPTH)\xpinstall\packager\pkgcp.pl -s $(DIST)\bin -d $(DIST) --f basebrowser-win -o dos -v
  $(MAKE_INSTALL) installed-chrome.txt $(DIST)\Embed\chrome
 
