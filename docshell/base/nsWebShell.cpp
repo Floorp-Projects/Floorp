@@ -139,9 +139,6 @@ public:
                    const char* aCommand,
                    nsISupports* aExtraInfo);
   NS_IMETHOD GetContentViewer(nsIContentViewer** aResult);
-  NS_IMETHOD HandleUnknownContentType( nsIURL* aURL,
-                                       const char *aContentType,
-                                       const char *aCommand );
 
   // nsIWebShell
   NS_IMETHOD Init(nsNativeWidget aNativeParent,
@@ -266,14 +263,26 @@ public:
   NS_IMETHOD ReleaseScriptContext(nsIScriptContext *aContext);
 
   // nsIDocumentLoaderObserver
-  NS_IMETHOD OnStartDocumentLoad(nsIURL* aURL, const char* aCommand);
-  NS_IMETHOD OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus);
-  NS_IMETHOD OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+  NS_IMETHOD OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                 nsIURL* aURL, 
+                                 const char* aCommand);
+  NS_IMETHOD OnEndDocumentLoad(nsIDocumentLoader* loader, 
+                               nsIURL* aURL, 
+                               PRInt32 aStatus);
+  NS_IMETHOD OnStartURLLoad(nsIDocumentLoader* loader, 
+                            nsIURL* aURL, const char* aContentType, 
                             nsIContentViewer* aViewer);
-  NS_IMETHOD OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+  NS_IMETHOD OnProgressURLLoad(nsIDocumentLoader* loader, 
+                               nsIURL* aURL, PRUint32 aProgress, 
                                PRUint32 aProgressMax);
-  NS_IMETHOD OnStatusURLLoad(nsIURL* aURL, nsString& aMsg);
-  NS_IMETHOD OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus);
+  NS_IMETHOD OnStatusURLLoad(nsIDocumentLoader* loader, 
+                             nsIURL* aURL, nsString& aMsg);
+  NS_IMETHOD OnEndURLLoad(nsIDocumentLoader* loader, 
+                          nsIURL* aURL, PRInt32 aStatus);
+  NS_IMETHOD HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                      nsIURL* aURL,
+                                      const char *aContentType,
+                                      const char *aCommand );
 //  NS_IMETHOD OnConnectionsComplete();
 
   // nsIRefreshURL interface methods...
@@ -747,11 +756,12 @@ nsWebShell::GetContentViewer(nsIContentViewer** aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::HandleUnknownContentType( nsIURL* aURL,
-                                      const char *aContentType,
-                                      const char *aCommand ) {
+nsWebShell::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                     nsIURL* aURL,
+                                     const char *aContentType,
+                                     const char *aCommand ) {
     // If we have a doc loader observer, let it respond to this.
-    return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( aURL, aContentType, aCommand )
+    return mDocLoaderObserver ? mDocLoaderObserver->HandleUnknownContentType( mDocLoader, aURL, aContentType, aCommand )
                               : NS_ERROR_FAILURE;
 }
 
@@ -2231,7 +2241,9 @@ nsWebShell::ReleaseScriptContext(nsIScriptContext *aContext)
 
 
 NS_IMETHODIMP
-nsWebShell::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
+nsWebShell::OnStartDocumentLoad(nsIDocumentLoader* loader, 
+                                nsIURL* aURL, 
+                                const char* aCommand)
 {
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
@@ -2258,7 +2270,7 @@ nsWebShell::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-     mDocLoaderObserver->OnStartDocumentLoad(aURL, aCommand);
+     mDocLoaderObserver->OnStartDocumentLoad(mDocLoader, aURL, aCommand);
   }
 
   
@@ -2268,7 +2280,9 @@ nsWebShell::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
 
 
 NS_IMETHODIMP
-nsWebShell::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
+nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader, 
+                              nsIURL* aURL, 
+                              PRInt32 aStatus)
 {
   nsIDocumentViewer* docViewer;
   nsresult rv = NS_ERROR_FAILURE;
@@ -2309,7 +2323,7 @@ nsWebShell::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
    *Fire the OnEndDocumentLoad of the DocLoaderobserver
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver) && (nsnull != aURL)){
-     mDocLoaderObserver->OnEndDocumentLoad(aURL, aStatus);
+     mDocLoaderObserver->OnEndDocumentLoad(mDocLoader, aURL, aStatus);
   }
   
   return rv;
@@ -2317,7 +2331,9 @@ nsWebShell::OnEndDocumentLoad(nsIURL* aURL, PRInt32 aStatus)
 }
 
 NS_IMETHODIMP
-nsWebShell::OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
+nsWebShell::OnStartURLLoad(nsIDocumentLoader* loader, 
+                           nsIURL* aURL, 
+                           const char* aContentType, 
                            nsIContentViewer* aViewer)
 {
 
@@ -2332,13 +2348,15 @@ nsWebShell::OnStartURLLoad(nsIURL* aURL, const char* aContentType,
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-    mDocLoaderObserver->OnStartURLLoad(aURL, aContentType, aViewer);
+    mDocLoaderObserver->OnStartURLLoad(mDocLoader, aURL, aContentType, aViewer);
   }
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
+nsWebShell::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                              nsIURL* aURL, 
+                              PRUint32 aProgress, 
                               PRUint32 aProgressMax)
 {
   /*
@@ -2346,35 +2364,39 @@ nsWebShell::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-     mDocLoaderObserver->OnProgressURLLoad(aURL, aProgress, aProgressMax);
+     mDocLoaderObserver->OnProgressURLLoad(mDocLoader, aURL, aProgress, aProgressMax);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+nsWebShell::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                            nsIURL* aURL, 
+                            nsString& aMsg)
 {
   /*
    *Fire the OnStartDocumentLoad of the webshell observer and container...
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-     mDocLoaderObserver->OnStatusURLLoad(aURL, aMsg);
+     mDocLoaderObserver->OnStatusURLLoad(mDocLoader, aURL, aMsg);
   }
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader, 
+                         nsIURL* aURL, 
+                         PRInt32 aStatus)
 {
   /*
    *Fire the OnStartDocumentLoad of the webshell observer
    */
   if ((nsnull != mContainer) && (nsnull != mDocLoaderObserver))
   {
-      mDocLoaderObserver->OnEndURLLoad(aURL, aStatus);
+      mDocLoaderObserver->OnEndURLLoad(mDocLoader, aURL, aStatus);
   }
 
   return NS_OK;

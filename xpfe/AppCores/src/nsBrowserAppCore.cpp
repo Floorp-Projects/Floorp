@@ -805,7 +805,7 @@ static nsresult setAttribute( nsIWebShell *shell,
 // nsIDocumentLoaderObserver methods
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
+nsBrowserAppCore::OnStartDocumentLoad(nsIDocumentLoader* loader, nsIURL* aURL, const char* aCommand)
 {
   // Kick start the throbber
    setAttribute( mWebShell, "Browser:Throbber", "busy", "true" );
@@ -814,7 +814,7 @@ nsBrowserAppCore::OnStartDocumentLoad(nsIURL* aURL, const char* aCommand)
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnEndDocumentLoad(nsIURL *aUrl, PRInt32 aStatus)
+nsBrowserAppCore::OnEndDocumentLoad(nsIDocumentLoader* loader, nsIURL *aUrl, PRInt32 aStatus)
 {
 
     const char* spec =nsnull;
@@ -1312,9 +1312,10 @@ nsFileDownloadDialog::SetWindow( nsIWebShellWindow *aWindow ) {
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::HandleUnknownContentType( nsIURL *aURL,
-                                            const char *aContentType,
-                                            const char *aCommand ) {
+nsBrowserAppCore::HandleUnknownContentType(nsIDocumentLoader* loader, 
+                                           nsIURL *aURL,
+                                           const char *aContentType,
+                                           const char *aCommand ) {
     nsresult rv = NS_OK;
 
     // Note: The following code is broken.  It should rightfully be loading
@@ -1364,16 +1365,18 @@ nsBrowserAppCore::HandleUnknownContentType( nsIURL *aURL,
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnStartURLLoad(nsIURL* aURL, const char* aContentType, 
-                            nsIContentViewer* aViewer)
+nsBrowserAppCore::OnStartURLLoad(nsIDocumentLoader* loader, 
+                                 nsIURL* aURL, const char* aContentType,
+                                 nsIContentViewer* aViewer)
 {
 
    return NS_OK;
 }
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress, 
-                              PRUint32 aProgressMax)
+nsBrowserAppCore::OnProgressURLLoad(nsIDocumentLoader* loader, 
+                                    nsIURL* aURL, PRUint32 aProgress, 
+                                    PRUint32 aProgressMax)
 {
   nsresult rv = NS_OK;
   PRUint32 progress = aProgressMax ? ( aProgress * 100 ) / aProgressMax : 0;
@@ -1385,7 +1388,8 @@ nsBrowserAppCore::OnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
+nsBrowserAppCore::OnStatusURLLoad(nsIDocumentLoader* loader, 
+                                  nsIURL* aURL, nsString& aMsg)
 {
   nsresult rv = setAttribute( mWebShell, "Browser:Status", "text", aMsg );
    return rv;
@@ -1393,7 +1397,8 @@ nsBrowserAppCore::OnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
 
 
 NS_IMETHODIMP
-nsBrowserAppCore::OnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
+nsBrowserAppCore::OnEndURLLoad(nsIDocumentLoader* loader, 
+                               nsIURL* aURL, PRInt32 aStatus)
 {
 
    return NS_OK;

@@ -1395,7 +1395,7 @@ void nsDocLoaderImpl::FireOnStartDocumentLoad(nsIURL* aURL,
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStartDocumentLoad(aURL, aCommand);
+    observer->OnStartDocumentLoad((nsIDocumentLoader*) this, aURL, aCommand);
   }
 
   /*
@@ -1416,7 +1416,7 @@ void nsDocLoaderImpl::FireOnEndDocumentLoad(PRInt32 aStatus)
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnEndDocumentLoad(mDocumentUrl, aStatus);
+    observer->OnEndDocumentLoad((nsIDocumentLoader*) this, mDocumentUrl, aStatus);
   }
 
   /*
@@ -1438,7 +1438,7 @@ void nsDocLoaderImpl::FireOnStartURLLoad(nsIURL* aURL, const char* aContentType,
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStartURLLoad(aURL, aContentType, aViewer);
+    observer->OnStartURLLoad((nsIDocumentLoader*) this, aURL, aContentType, aViewer);
   }
 
   /*
@@ -1460,7 +1460,7 @@ void nsDocLoaderImpl::FireOnProgressURLLoad(nsIURL* aURL, PRUint32 aProgress,
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnProgressURLLoad(aURL, aProgress, aProgressMax);
+    observer->OnProgressURLLoad((nsIDocumentLoader*) this, aURL, aProgress, aProgressMax);
   }
 
   /*
@@ -1481,7 +1481,7 @@ void nsDocLoaderImpl::FireOnStatusURLLoad(nsIURL* aURL, nsString& aMsg)
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnStatusURLLoad(aURL, aMsg);
+    observer->OnStatusURLLoad((nsIDocumentLoader*) this, aURL, aMsg);
   }
 
   /*
@@ -1502,7 +1502,7 @@ void nsDocLoaderImpl::FireOnEndURLLoad(nsIURL* aURL, PRInt32 aStatus)
    */
   for (index = 0; index < count; index++) {
     nsIDocumentLoaderObserver* observer = (nsIDocumentLoaderObserver*)mDocObservers.ElementAt(index);
-    observer->OnEndURLLoad(aURL, aStatus);
+    observer->OnEndURLLoad((nsIDocumentLoader*) this, aURL, aStatus);
   }
 
   /*
@@ -2016,7 +2016,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
             printf("DocLoaderFactory: Unable to create ContentViewer for content-type: %s\n", aContentType);
             if ( m_Container ) {
                 // Give content container a chance to do something with this URL.
-                rv = m_Container->HandleUnknownContentType( aURL, aContentType, m_Command );
+                rv = m_Container->HandleUnknownContentType( (nsIDocumentLoader*) m_DocLoader, aURL, aContentType, m_Command );
             }
             // Stop the binding.
             // This crashes on Unix/Mac... Stop();
