@@ -4,40 +4,40 @@
 Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
 Requires Ant version 1.2
 -->
-<project name="toolsrc" default="compile" basedir=".">
+<project name="toolsrc" default="compile" basedir="..">
 
   <target name="properties">
-    <property name="nest" value=".."/>
-    <property name="build.dir" value="./build"/>
-    <property name="classes" value="${build.dir}/classes"/>
+    <property file="build.properties"/>
     <property name="debugger"
               value="org/mozilla/javascript/tools/debugger"/>
   </target>
 
   <target name="compile" depends="properties">
-    <ant dir="${debugger}" target="download"/>
-    <javac srcdir="."
-           destdir="${nest}/${classes}"
+    <ant dir="toolsrc/${debugger}" target="download"/>
+    <javac srcdir="toolsrc"
+           destdir="${classes}"
            includes="org/**/*.java"
            deprecation="on"
-           debug="${debug}">
+           debug="${debug}"
+	   target="${target-jvm}">
     </javac>
-    <copy todir="${nest}/${classes}">
-      <fileset dir="." includes="org/**/*.properties" />
+    <copy todir="${classes}">
+      <fileset dir="toolsrc" includes="org/**/*.properties" />
     </copy>
   </target>
 
   <target name="copy-source" depends="properties">
-    <copy todir="${nest}/${dist.toolsrc}">
-      <fileset dir="."
-               includes="org/**/*.java,org/**/*.properties,build.xml"
+    <mkdir dir="${dist.dir}/toolsrc"/>
+    <copy todir="${dist.dir}/toolsrc">
+      <fileset dir="toolsrc"
+               includes="**/*.java,**/*.properties,**/*.xml"
                excludes="${debugger}/downloaded/**" />
     </copy>
   </target>
 
   <target name="clean" depends="properties">
     <delete includeEmptyDirs="true">
-      <fileset dir="${nest}/${classes}"
+      <fileset dir="${classes}"
                includes="org/mozilla/javascript/tools/**"/>
     </delete>
   </target>

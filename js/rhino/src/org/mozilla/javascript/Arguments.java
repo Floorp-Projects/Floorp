@@ -46,7 +46,8 @@ package org.mozilla.javascript;
  */
 class Arguments extends IdScriptable {
 
-    public Arguments(NativeCall activation) {
+    public Arguments(NativeCall activation)
+    {
         this.activation = activation;
 
         Scriptable parent = activation.getParentScope();
@@ -56,23 +57,25 @@ class Arguments extends IdScriptable {
         args = activation.getOriginalArguments();
         lengthObj = new Integer(args.length);
 
-        NativeFunction funObj = activation.funObj;
-        calleeObj = funObj;
+        NativeFunction f = activation.getFunctionObject();
+        calleeObj = f;
 
-        if (funObj.version <= Context.VERSION_1_3
-            && funObj.version != Context.VERSION_DEFAULT)
+        if (f.version <= Context.VERSION_1_3
+            && f.version != Context.VERSION_DEFAULT)
         {
             callerObj = null;
-        }else {
+        } else {
             callerObj = NOT_FOUND;
         }
     }
 
-    public String getClassName() {
+    public String getClassName()
+    {
         return "Arguments";
     }
 
-    public boolean has(int index, Scriptable start) {
+    public boolean has(int index, Scriptable start)
+    {
         if (0 <= index && index < args.length) {
             if (args[index] != NOT_FOUND) {
                 return true;
@@ -81,12 +84,14 @@ class Arguments extends IdScriptable {
         return super.has(index, start);
     }
 
-    public Object get(int index, Scriptable start) {
+    public Object get(int index, Scriptable start)
+    {
         if (0 <= index && index < args.length) {
             Object value = args[index];
             if (value != NOT_FOUND) {
                 if (sharedWithActivation(index)) {
-                    String argName = activation.funObj.argNames[index];
+                    NativeFunction f = activation.getFunctionObject();
+                    String argName = f.argNames[index];
                     value = activation.get(argName, activation);
                     if (value == NOT_FOUND) Kit.codeBug();
                 }
@@ -96,8 +101,9 @@ class Arguments extends IdScriptable {
         return super.get(index, start);
     }
 
-    private boolean sharedWithActivation(int index) {
-        NativeFunction f = activation.funObj;
+    private boolean sharedWithActivation(int index)
+    {
+        NativeFunction f = activation.getFunctionObject();
         int definedCount = f.argCount;
         if (index < definedCount) {
             // Check if argument is not hidden by later argument with the same
@@ -115,11 +121,13 @@ class Arguments extends IdScriptable {
         return false;
     }
 
-    public void put(int index, Scriptable start, Object value) {
+    public void put(int index, Scriptable start, Object value)
+    {
         if (0 <= index && index < args.length) {
             if (args[index] != NOT_FOUND) {
                 if (sharedWithActivation(index)) {
-                    String argName = activation.funObj.argNames[index];
+                    NativeFunction f = activation.getFunctionObject();
+                    String argName = f.argNames[index];
                     activation.put(argName, activation, value);
                     return;
                 }
@@ -137,7 +145,8 @@ class Arguments extends IdScriptable {
         super.put(index, start, value);
     }
 
-    public void delete(int index) {
+    public void delete(int index)
+    {
         if (0 <= index && index < args.length) {
             synchronized (this) {
                 if (args[index] != NOT_FOUND) {
@@ -215,7 +224,7 @@ class Arguments extends IdScriptable {
                 Object value = callerObj;
                 if (value == UniqueTag.NULL_VALUE) { value = null; }
                 else if (value == null) {
-                    NativeCall caller = activation.caller;
+                    NativeCall caller = activation.parentActivationCall;
                     if (caller == null) {
                         value = null;
                     } else {

@@ -22,7 +22,10 @@
  * Patrick Beard
  * Norris Boyd
  * Igor Bukanov
+ * Ethan Hugg
+ * Terry Lucas
  * Roger Lawrence
+ * Milen Nankov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -41,6 +44,8 @@ package org.mozilla.javascript;
 import java.io.*;
 
 import org.mozilla.javascript.debug.*;
+
+import org.mozilla.javascript.xml.XMLObject;
 
 public class Interpreter
 {
@@ -141,8 +146,12 @@ public class Interpreter
         Icode_ZERO                      = -49,
         Icode_ONE                       = -50,
 
+    // entrance and exit from .()
+       Icode_ENTERDQ                    = -51,
+       Icode_LEAVEDQ                    = -52,
+
     // Last icode
-        MIN_ICODE                       = -50;
+        MIN_ICODE                       = -52;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -224,6 +233,8 @@ public class Interpreter
           case Icode_UNDEF:            return "UNDEF";
           case Icode_ZERO:             return "ZERO";
           case Icode_ONE:              return "ONE";
+          case Icode_ENTERDQ:          return "ENTERDQ";
+          case Icode_LEAVEDQ:          return "LEAVEDQ";
         }
 
         // icode without name
@@ -700,9 +711,10 @@ public class Interpreter
             iCodeTop = addToken(Token.RETURN_RESULT, iCodeTop);
             break;
 
-          case Token.ENUM_INIT:
+          case Token.ENUM_INIT_KEYS:
+          case Token.ENUM_INIT_VALUES :
             iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addIndexOp(Token.ENUM_INIT, getLocalBlockRef(node), iCodeTop);
+            iCodeTop = addIndexOp(type, getLocalBlockRef(node), iCodeTop);
             stackChange(-1);
             break;
 
@@ -891,6 +903,7 @@ public class Interpreter
           case Token.BITNOT:
           case Token.TYPEOF:
           case Token.VOID:
+          case Token.DEL_REF:
             iCodeTop = visitExpression(child, iCodeTop);
             if (type == Token.VOID) {
                 iCodeTop = addIcode(Icode_POP, iCodeTop);
@@ -1071,10 +1084,35 @@ public class Interpreter
             break;
           }
 
+          case Token.XML_REF:
           case Token.GENERIC_REF:
             iCodeTop = visitExpression(child, iCodeTop);
-            iCodeTop = addToken(Token.GENERIC_REF, iCodeTop);
+            iCodeTop = addToken(type, iCodeTop);
             break;
+
+          case Token.DOTQUERY:
+            iCodeTop = visitDotQery(node, child, iCodeTop);
+            break;
+
+          case Token.DEFAULTNAMESPACE :
+          case Token.ESCXMLATTR :
+          case Token.ESCXMLTEXT :
+          case Token.TOATTRNAME :
+          case Token.DESCENDANTS :
+            iCodeTop = visitExpression(child, iCodeTop);
+            iCodeTop = addToken(type, iCodeTop);
+            break;
+
+          case Token.COLONCOLON : {
+            if (child.getType() != Token.STRING)
+                throw badTree(child);
+            String namespace = child.getString();
+            child = child.getNext();
+            iCodeTop = visitExpression(child, iCodeTop);
+            iCodeTop = addStringOp(Token.COLONCOLON, namespace, iCodeTop);
+            break;
+          }
+
 
           default:
             throw badTree(node);
@@ -1291,6 +1329,21 @@ public class Interpreter
             itsLiteralIds.add(propertyIds);
             iCodeTop = addIndexOp(Token.OBJECTLIT, index, iCodeTop);
         }
+        return iCodeTop;
+    }
+
+    private int visitDotQery(Node node, Node child, int iCodeTop)
+    {
+        iCodeTop = updateLineNumber(node, iCodeTop);
+        iCodeTop = visitExpression(child, iCodeTop);
+        iCodeTop = addIcode(Icode_ENTERDQ, iCodeTop);
+        stackChange(-1);
+        int queryPC = iCodeTop;
+        iCodeTop = visitExpression(child.getNext(), iCodeTop);
+        int leavePC = iCodeTop;
+        iCodeTop = addIcode(Icode_LEAVEDQ, iCodeTop);
+        recordJump(leavePC, queryPC);
+        iCodeTop += 2;
         return iCodeTop;
     }
 
@@ -1655,7 +1708,8 @@ public class Interpreter
               case Token.GOTO :
               case Token.IFEQ :
               case Token.IFNE :
-              case Icode_IFEQ_POP : {
+              case Icode_IFEQ_POP :
+              case Icode_LEAVEDQ : {
                 int newPC = pc + getShort(iCode, pc) - 1;
                 out.println(tname + " " + newPC);
                 pc += 2;
@@ -1809,6 +1863,7 @@ public class Interpreter
             case Token.IFEQ :
             case Token.IFNE :
             case Icode_IFEQ_POP :
+            case Icode_LEAVEDQ :
                 // target pc offset
                 return 1 + 2;
 
@@ -2024,13 +2079,13 @@ public class Interpreter
                     argShift = 0;
                     argsDbl = null;
                 }
-                scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
-                                                 thisObj, args);
+                scope = ScriptRuntime.enterActivationFunction(cx, scope,
+                                                              fnOrScript,
+                                                              thisObj, args);
             }
 
         } else {
-            ScriptRuntime.initScript(cx, scope, fnOrScript, thisObj,
-                                     idata.itsFromEvalCode);
+            scope = ScriptRuntime.enterScript(cx, scope, fnOrScript, thisObj);
         }
 
         if (idata.itsNestedFunctions != null) {
@@ -2058,8 +2113,9 @@ public class Interpreter
             }
             if (idata.itsFunctionType != 0 && !idata.itsNeedsActivation) {
                 useActivationVars = true;
-                scope = ScriptRuntime.initVarObj(cx, scope, fnOrScript,
-                                                 thisObj, args);
+                scope = ScriptRuntime.enterActivationFunction(cx, scope,
+                                                              fnOrScript,
+                                                              thisObj, args);
             }
             debuggerFrame.onEnter(cx, scope, thisObj, args);
         }
@@ -2205,7 +2261,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.in(lhs, rhs, scope);
+        boolean valBln = ScriptRuntime.in(lhs, rhs, cx, scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         continue Loop;
     }
@@ -2215,7 +2271,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, scope);
+        boolean valBln = ScriptRuntime.instanceOf(lhs, rhs, cx, scope);
         stack[stackTop] = valBln ? Boolean.TRUE : Boolean.FALSE;
         continue Loop;
     }
@@ -2379,7 +2435,7 @@ switch (op) {
         continue Loop;
     }
     case Token.ADD :
-        stackTop = do_add(stack, sDbl, stackTop);
+        stackTop = do_add(stack, sDbl, stackTop, cx);
         continue Loop;
     case Token.SUB : {
         double rDbl = stack_double(stack, sDbl, stackTop);
@@ -2419,14 +2475,14 @@ switch (op) {
                           ? Boolean.FALSE : Boolean.TRUE;
         continue Loop;
     case Token.BINDNAME :
-        stack[++stackTop] = ScriptRuntime.bind(scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.bind(cx, scope, stringReg);
         continue Loop;
     case Token.SETNAME : {
         Object rhs = stack[stackTop];
         if (rhs == DBL_MRK) rhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         Scriptable lhs = (Scriptable)stack[stackTop];
-        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, scope, stringReg);
+        stack[stackTop] = ScriptRuntime.setName(lhs, rhs, cx, stringReg);
         continue Loop;
     }
     case Token.DELPROP : {
@@ -2441,7 +2497,8 @@ switch (op) {
     case Token.GETPROP : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.getProp(lhs, stringReg, scope);
+        stack[stackTop] = ScriptRuntime.getObjectProp(lhs, stringReg,
+                                                      cx, scope);
         continue Loop;
     }
     case Token.SETPROP : {
@@ -2450,7 +2507,8 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.setProp(lhs, stringReg, rhs, scope);
+        stack[stackTop] = ScriptRuntime.setObjectProp(lhs, stringReg, rhs,
+                                                      cx, scope);
         continue Loop;
     }
     case Icode_PROP_INC_DEC : {
@@ -2473,7 +2531,7 @@ switch (op) {
         --stackTop;
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, scope,
+        stack[stackTop] = ScriptRuntime.elemIncrDecr(lhs, rhs, cx, scope,
                                                      iCode[pc]);
         ++pc;
         continue Loop;
@@ -2491,6 +2549,12 @@ switch (op) {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.setReference(lhs, rhs);
+        continue Loop;
+    }
+    case Token.DEL_REF : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.deleteReference(lhs);
         continue Loop;
     }
     case Icode_REF_INC_DEC : {
@@ -2670,7 +2734,7 @@ switch (op) {
         sDbl[stackTop] = idata.itsDoubleTable[indexReg];
         continue Loop;
     case Token.NAME :
-        stack[++stackTop] = ScriptRuntime.name(scope, stringReg);
+        stack[++stackTop] = ScriptRuntime.name(cx, scope, stringReg);
         continue Loop;
     case Icode_NAME_INC_DEC :
         stack[++stackTop] = ScriptRuntime.nameIncrDecr(scope, stringReg,
@@ -2772,11 +2836,18 @@ switch (op) {
         stack[stackTop] = ScriptRuntime.newCatchScope(stringReg,
                                                       stack[stackTop]);
         continue Loop;
-    case Token.ENUM_INIT : {
+    case Token.ENUM_INIT_KEYS : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         --stackTop;
         stack[LOCAL_SHFT + indexReg] = ScriptRuntime.enumInit(lhs, scope);
+        continue Loop;
+    }
+    case Token.ENUM_INIT_VALUES : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        --stackTop;
+        stack[LOCAL_SHFT + indexReg] = ScriptRuntime.enumValuesInit(lhs, scope);
         continue Loop;
     }
     case Token.ENUM_NEXT :
@@ -2800,6 +2871,12 @@ switch (op) {
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
         stack[stackTop] = ScriptRuntime.specialReference(lhs, stringReg,
                                                          cx, scope);
+        continue Loop;
+    }
+    case Token.XML_REF : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.xmlReference(lhs, cx, scope);
         continue Loop;
     }
     case Token.GENERIC_REF : {
@@ -2866,6 +2943,68 @@ switch (op) {
             val = ScriptRuntime.newArrayLiteral(data, skipIndexces, cx, scope);
         }
         stack[stackTop] = val;
+        continue Loop;
+    }
+    case Icode_ENTERDQ : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        --stackTop;
+        scope = ScriptRuntime.enterDotQuery(lhs, scope);
+        ++withDepth;
+        continue Loop;
+    }
+    case Icode_LEAVEDQ : {
+        boolean valBln = stack_boolean(stack, sDbl, stackTop);
+        Object x = ScriptRuntime.updateDotQuery(valBln, scope);
+        if (x == null) {
+            // reset stack and PC to code after ENTERDQ
+            --stackTop;
+            break;
+        }
+        stack[stackTop] = x;
+        scope = ScriptRuntime.leaveDotQuery(scope);
+        --withDepth;
+        pc += 2;
+        continue Loop;
+    }
+    case Token.DEFAULTNAMESPACE : {
+        Object value = stack[stackTop];
+        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.setDefaultNamespace(value, cx);
+        continue Loop;
+    }
+    case Token.ESCXMLATTR : {
+        Object value = stack[stackTop];
+        if (value != DBL_MRK) {
+            stack[stackTop] = ScriptRuntime.escapeAttributeValue(value, cx);
+        }
+        continue Loop;
+    }
+    case Token.ESCXMLTEXT : {
+        Object value = stack[stackTop];
+        if (value != DBL_MRK) {
+            stack[stackTop] = ScriptRuntime.escapeTextValue(value, cx);
+        }
+        continue Loop;
+    }
+    case Token.TOATTRNAME : {
+        Object value = stack[stackTop];
+        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.toAttributeName(value, cx);
+        continue Loop;
+    }
+    case Token.DESCENDANTS : {
+        Object value = stack[stackTop];
+        if(value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.toDescendantsName(value, cx);
+        continue Loop;
+    }
+    case Token.COLONCOLON : {
+        Object value = stack[stackTop];
+        if (value == DBL_MRK) value = doubleWrap(sDbl[stackTop]);
+        // stringReg contains namespace
+        stack[stackTop] = ScriptRuntime.toQualifiedName(stringReg, value,
+                                                        cx, scope);
         continue Loop;
     }
     case Icode_LINE :
@@ -2973,8 +3112,13 @@ switch (op) {
                 debuggerFrame.onExit(cx, false, result);
             }
         }
-        if (idata.itsNeedsActivation || debuggerFrame != null) {
-            ScriptRuntime.popActivation(cx);
+
+        if (idata.itsFunctionType != 0) {
+            if (idata.itsNeedsActivation || debuggerFrame != null) {
+                ScriptRuntime.exitActivationFunction(cx);
+            }
+        } else {
+            ScriptRuntime.exitScript(cx);
         }
 
         if (javaException != null) {
@@ -3035,7 +3179,8 @@ switch (op) {
         }
     }
 
-    private static int do_add(Object[] stack, double[] sDbl, int stackTop)
+    private static int do_add(Object[] stack, double[] sDbl, int stackTop,
+                              Context cx)
     {
         --stackTop;
         Object rhs = stack[stackTop + 1];
@@ -3050,6 +3195,10 @@ switch (op) {
         } else if (lhs == DBL_MRK) {
             do_add(rhs, sDbl[stackTop], stack, sDbl, stackTop, false);
         } else {
+            if (lhs instanceof XMLObject || rhs instanceof XMLObject) {
+                stack[stackTop] = ScriptRuntime.add(lhs, rhs, cx);
+                return stackTop;
+            }
             if (lhs instanceof Scriptable)
                 lhs = ((Scriptable) lhs).getDefaultValue(null);
             if (rhs instanceof Scriptable)
@@ -3236,7 +3385,7 @@ switch (op) {
         Object result;
         Object id = stack[stackTop];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.getElem(lhs, id, scope);
+            result = ScriptRuntime.getObjectId(lhs, id, cx, scope);
         } else {
             double val = sDbl[stackTop];
             if (lhs == null || lhs == Undefined.instance) {
@@ -3248,10 +3397,10 @@ switch (op) {
                              : ScriptRuntime.toObject(cx, scope, lhs);
             int index = (int)val;
             if (index == val) {
-                result = ScriptRuntime.getElem(obj, index);
+                result = ScriptRuntime.getObjectIndex(obj, index, cx);
             } else {
                 String s = ScriptRuntime.toString(val);
-                result = ScriptRuntime.getProp(obj, s);
+                result = ScriptRuntime.getObjectProp(obj, s, cx);
             }
         }
         --stackTop;
@@ -3270,7 +3419,7 @@ switch (op) {
         Object result;
         Object id = stack[stackTop - 1];
         if (id != DBL_MRK) {
-            result = ScriptRuntime.setElem(lhs, id, rhs, scope);
+            result = ScriptRuntime.setObjectId(lhs, id, rhs, cx, scope);
         } else {
             double val = sDbl[stackTop - 1];
             if (lhs == null || lhs == Undefined.instance) {
@@ -3282,10 +3431,10 @@ switch (op) {
                              : ScriptRuntime.toObject(cx, scope, lhs);
             int index = (int)val;
             if (index == val) {
-                result = ScriptRuntime.setElem(obj, index, rhs);
+                result = ScriptRuntime.setObjectIndex(obj, index, rhs, cx);
             } else {
                 String s = ScriptRuntime.toString(val);
-                result = ScriptRuntime.setProp(obj, s, rhs);
+                result = ScriptRuntime.setObjectProp(obj, s, rhs, cx);
             }
         }
         stackTop -= 2;

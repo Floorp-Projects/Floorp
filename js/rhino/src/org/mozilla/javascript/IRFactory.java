@@ -21,6 +21,9 @@
  * Contributor(s):
  * Norris Boyd
  * Igor Bukanov
+ * Ethan Hugg
+ * Terry Lucas
+ * Milen Nankov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -107,6 +110,15 @@ final class IRFactory
         return new Node(Token.EXPR_VOID, expr, lineno);
     }
 
+    Node createDefaultNamespace(Node expr, int lineno)
+    {
+        // default xml namespace requires activation
+        setRequiresActivation();
+        Node n = createUnary(Token.DEFAULTNAMESPACE, expr);
+        Node result = createExprStatement(n, lineno);
+        return result;
+    }
+
     /**
      * Name
      */
@@ -130,6 +142,55 @@ final class IRFactory
     Node createNumber(double number)
     {
         return Node.newNumber(number);
+    }
+
+    /**
+     *  PropertySelector :: PropertySelector
+     */
+    Node createQualifiedName(String namespace, String name)
+    {
+        Node namespaceNode = createString(namespace);
+        Node nameNode = createString(name);
+        return new Node(Token.COLONCOLON, namespaceNode, nameNode);
+    }
+
+    /**
+     *  PropertySelector :: [Expression]
+     */
+    Node createQualifiedExpr(String namespace, Node expr)
+    {
+        Node namespaceNode = createString(namespace);
+        return new Node(Token.COLONCOLON, namespaceNode, expr);
+    }
+
+    /**
+     *  @PropertySelector or @QualifiedIdentifier
+     */
+    Node createAttributeName(Node nameNode)
+    {
+        int type = nameNode.getType();
+        if (type == Token.NAME) {
+            nameNode.setType(Token.STRING);
+        } else {
+            // If not name, then it should come from createQualifiedExpr
+            if (type != Token.COLONCOLON)
+                throw new IllegalArgumentException(String.valueOf(type));
+        }
+        return new Node(Token.TOATTRNAME, nameNode);
+    }
+
+    /**
+     *  @::[Expression]
+     */
+    Node createAttributeExpr(Node expr)
+    {
+        return new Node(Token.TOATTRNAME, expr);
+    }
+
+    Node createXMLPrimary(Node xmlName)
+    {
+        Node xmlRef = new Node(Token.XML_REF, xmlName);
+        return new Node(Token.GET_REF, xmlRef);
     }
 
     /**
@@ -362,7 +423,8 @@ final class IRFactory
      * For .. In
      *
      */
-    Node createForIn(Node lhs, Node obj, Node body, int lineno)
+    Node createForIn(Node lhs, Node obj, Node body, boolean isForEach,
+                     int lineno)
     {
         String name;
         int type = lhs.getType();
@@ -397,7 +459,9 @@ final class IRFactory
 
         Node localBlock = new Node(Token.LOCAL_BLOCK);
 
-        Node init = new Node(Token.ENUM_INIT, obj);
+        int initType = (isForEach) ? Token.ENUM_INIT_VALUES
+                                   : Token.ENUM_INIT_KEYS;
+        Node init = new Node(initType, obj);
         init.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
         Node cond = new Node(Token.ENUM_NEXT);
         cond.putProp(Node.LOCAL_BLOCK_PROP, localBlock);
@@ -593,12 +657,22 @@ final class IRFactory
      */
     Node createWith(Node obj, Node body, int lineno)
     {
-        parser.setRequiresActivation();
+        setRequiresActivation();
         Node result = new Node(Token.BLOCK, lineno);
         result.addChildToBack(new Node(Token.ENTERWITH, obj));
         Node bodyNode = new Node(Token.WITH, body, lineno);
         result.addChildrenToBack(bodyNode);
         result.addChildToBack(new Node(Token.LEAVEWITH));
+        return result;
+    }
+
+    /**
+     * DOTQUERY
+     */
+    public Node createDotQuery (Node obj, Node body, int lineno)
+    {
+        setRequiresActivation();
+        Node result = new Node(Token.DOTQUERY, obj, body, lineno);
         return result;
     }
 
@@ -718,25 +792,30 @@ final class IRFactory
         int childType = child.getType();
         switch (nodeType) {
           case Token.DELPROP: {
-            Node left;
-            Node right;
+            Node n;
             if (childType == Token.NAME) {
                 // Transform Delete(Name "a")
                 //  to Delete(Bind("a"), String("a"))
                 child.setType(Token.BINDNAME);
-                left = child;
-                right = Node.newString(child.getString());
+                Node left = child;
+                Node right = Node.newString(child.getString());
+                n = new Node(nodeType, left, right);
             } else if (childType == Token.GETPROP ||
                        childType == Token.GETELEM)
             {
-                left = child.getFirstChild();
-                right = child.getLastChild();
+                Node left = child.getFirstChild();
+                Node right = child.getLastChild();
                 child.removeChild(left);
                 child.removeChild(right);
+                n = new Node(nodeType, left, right);
+            } else if (childType == Token.GET_REF) {
+                Node ref = child.getFirstChild();
+                child.removeChild(ref);
+                n = new Node(Token.DELPROP, ref);
             } else {
-                return new Node(Token.TRUE);
+                n = new Node(Token.TRUE);
             }
-            return new Node(nodeType, left, right);
+            return n;
           }
           case Token.TYPEOF:
             if (childType == Token.NAME) {
@@ -797,7 +876,7 @@ final class IRFactory
         Node node = new Node(nodeType, child);
         if (type != Node.NON_SPECIALCALL) {
             // Calls to these functions require activation objects.
-            parser.setRequiresActivation();
+            setRequiresActivation();
             node.putIntProp(Node.SPECIALCALL_PROP, type);
         }
         return node;
@@ -847,15 +926,28 @@ final class IRFactory
         switch (nodeType) {
 
           case Token.DOT:
-            nodeType = Token.GETPROP;
-            right.setType(Token.STRING);
-            String id = right.getString();
-            if (ScriptRuntime.isSpecialProperty(id)) {
-                Node ref = new Node(Token.SPECIAL_REF, left);
-                ref.putProp(Node.SPECIAL_PROP_PROP, id);
-                return new Node(Token.GET_REF, ref);
+            if (right.getType() == Token.NAME) {
+                String id = right.getString();
+                if (ScriptRuntime.isSpecialProperty(id)) {
+                    Node ref = new Node(Token.SPECIAL_REF, left);
+                    ref.putProp(Node.SPECIAL_PROP_PROP, id);
+                    return new Node(Token.GET_REF, ref);
+                }
+                nodeType = Token.GETPROP;
+                right.setType(Token.STRING);
+                checkActivationName(id, Token.GETPROP);
+            } else {
+                // corresponds to name.@... or name.namespace::...
+                nodeType = Token.GETELEM;
             }
-            checkActivationName(id, Token.GETPROP);
+            break;
+
+          case Token.DOTDOT:
+            if (right.getType() == Token.NAME) {
+                right.setType(Token.STRING);
+            }
+            right = new Node(Token.DESCENDANTS, right);
+            nodeType = Token.GETELEM;
             break;
 
           case Token.LB:
@@ -1135,8 +1227,15 @@ final class IRFactory
                 }
             }
             if (activation) {
-                parser.setRequiresActivation();
+                setRequiresActivation();
             }
+        }
+    }
+
+    private void setRequiresActivation()
+    {
+        if (parser.insideFunction()) {
+            ((FunctionNode)parser.currentScriptOrFn).setRequiresActivation();
         }
     }
 

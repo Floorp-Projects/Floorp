@@ -4,36 +4,35 @@
 Build file for Rhino using Ant (see http://jakarta.apache.org/ant/index.html)
 Requires Ant version 1.2
 -->
-<project name="src" default="compile" basedir=".">
+<project name="src" default="compile" basedir="..">
 
-  <target name="properties">
-    <property name="nest" value=".."/>
-    <property name="build.dir" value="./build"/>
-    <property name="classes" value="${build.dir}/classes"/>
-  </target>
+  <property file="build.properties"/>
 
-  <target name="compile" depends="properties">
-    <javac srcdir="."
-           destdir="${nest}/${classes}"
+  <target name="compile">
+    <javac srcdir="src"
+           destdir="${classes}"
            includes="org/**/*.java"
            deprecation="on"
-           debug="${debug}">
+           debug="${debug}"
+	   target="${target-jvm}"
+	   >
     </javac>
-    <copy todir="${nest}/${classes}">
-      <fileset dir="." includes="org/**/*.properties" />
+    <copy todir="${classes}">
+      <fileset dir="src" includes="org/**/*.properties" />
     </copy>
   </target>
 
-  <target name="copy-source" depends="properties">
-    <copy todir="${nest}/${dist.src}">
-      <fileset dir="."
-               includes="org/**/*.java,org/**/*.properties,build.xml,manifest"/>
+  <target name="copy-source">
+    <mkdir dir="${dist.dir}/src"/>
+    <copy todir="${dist.dir}/src">
+      <fileset dir="src"
+               includes="**/*.java,**/*.properties,**/*.xml,manifest"/>
     </copy>
   </target>
 
-  <target name="clean" depends="properties">
+  <target name="clean">
     <delete includeEmptyDirs="true">
-      <fileset dir="${nest}/${classes}"
+      <fileset dir="${classes}"
                excludes="org/mozilla/javascript/tools/**"/>
     </delete>
   </target>

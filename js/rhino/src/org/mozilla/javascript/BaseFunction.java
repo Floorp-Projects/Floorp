@@ -428,21 +428,11 @@ public class BaseFunction extends IdScriptable implements Function {
           // means assigned or delete arguments
           return (value == UniqueTag.NULL_VALUE) ? null : value;
       }
-      NativeCall activation = getActivation(Context.getContext());
+      Context cx = Context.getContext();
+      NativeCall activation = ScriptRuntime.findFunctionActivation(cx, this);
       return (activation == null)
              ? null
              : activation.get("arguments", activation);
-    }
-
-    NativeCall getActivation(Context cx)
-    {
-        NativeCall activation = cx.currentActivation;
-        while (activation != null) {
-            if (activation.getFunctionObject() == this)
-                return activation;
-            activation = activation.caller;
-        }
-        return null;
     }
 
     private static Object jsConstructor(Context cx, Scriptable scope,

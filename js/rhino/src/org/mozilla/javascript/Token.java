@@ -22,6 +22,7 @@
  * Roger Lawrence
  * Mike McCabe
  * Igor Bukanov
+ * Milen Nankov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -128,82 +129,100 @@ public class Token
         GETVAR         = 54,
         SETVAR         = 55,
         CATCH_SCOPE    = 56,
-        ENUM_INIT      = 57,
-        ENUM_NEXT      = 58,
-        ENUM_ID        = 59,
-        THISFN         = 60,
-        RETURN_RESULT  = 61, // to return prevoisly stored return result
-        ARRAYLIT       = 62, // array literal
-        OBJECTLIT      = 63, // object literal
-        GET_REF        = 64, // *reference
-        SET_REF        = 65, // *reference    = something
-        REF_CALL       = 66, // f(args)    = something or f(args)++
-        SPECIAL_REF    = 67, // reference for special properties like __proto
-        GENERIC_REF    = 68, // generic reference to generate runtime ref errors
+        ENUM_INIT_KEYS = 57,
+        ENUM_INIT_VALUES = 58,
+        ENUM_NEXT      = 59,
+        ENUM_ID        = 60,
+        THISFN         = 61,
+        RETURN_RESULT  = 62, // to return prevoisly stored return result
+        ARRAYLIT       = 63, // array literal
+        OBJECTLIT      = 64, // object literal
+        GET_REF        = 65, // *reference
+        SET_REF        = 66, // *reference    = something
+        DEL_REF        = 67, // delete reference
+        REF_CALL       = 68, // f(args)    = something or f(args)++
+        SPECIAL_REF    = 69, // reference for special properties like __proto
+        GENERIC_REF    = 70, // generic reference to generate runtime ref errors
 
-        LAST_BYTECODE_TOKEN    = 68,
+        // For XML support:
+        DEFAULTNAMESPACE = 71, // default xml namespace =
+        COLONCOLON     = 72, // ::
+        ESCXMLATTR     = 73,
+        ESCXMLTEXT     = 74,
+        TOATTRNAME     = 75,
+        DESCENDANTS    = 76,
+        XML_REF        = 77,
+
+        LAST_BYTECODE_TOKEN    = 77,
         // End of interpreter bytecodes
 
-        TRY            = 69,
-        SEMI           = 70,  // semicolon
-        LB             = 71,  // left and right brackets
-        RB             = 72,
-        LC             = 73,  // left and right curlies (braces)
-        RC             = 74,
-        LP             = 75,  // left and right parentheses
-        RP             = 76,
-        COMMA          = 77,  // comma operator
-        ASSIGN         = 78, // simple assignment  (=)
-        ASSIGNOP       = 79, // assignment with operation (+= -= etc.)
-        HOOK           = 80, // conditional (?:)
-        COLON          = 81,
-        OR             = 82, // logical or (||)
-        AND            = 83, // logical and (&&)
-        INC            = 84, // increment/decrement (++ --)
-        DEC            = 85,
-        DOT            = 86, // member operator (.)
-        FUNCTION       = 87, // function keyword
-        EXPORT         = 88, // export keyword
-        IMPORT         = 89, // import keyword
-        IF             = 90, // if keyword
-        ELSE           = 91, // else keyword
-        SWITCH         = 92, // switch keyword
-        CASE           = 93, // case keyword
-        DEFAULT        = 94, // default keyword
-        WHILE          = 95, // while keyword
-        DO             = 96, // do keyword
-        FOR            = 97, // for keyword
-        BREAK          = 98, // break keyword
-        CONTINUE       = 99, // continue keyword
-        VAR            = 100, // var keyword
-        WITH           = 101, // with keyword
-        CATCH          = 102, // catch keyword
-        FINALLY        = 103, // finally keyword
-        VOID           = 104, // void keyword
-        RESERVED       = 105, // reserved keywords
+        TRY            = 78,
+        SEMI           = 79,  // semicolon
+        LB             = 80,  // left and right brackets
+        RB             = 81,
+        LC             = 82,  // left and right curlies (braces)
+        RC             = 83,
+        LP             = 84,  // left and right parentheses
+        RP             = 85,
+        COMMA          = 86,  // comma operator
+        ASSIGN         = 87, // simple assignment  (=)
+        ASSIGNOP       = 88, // assignment with operation (+= -= etc.)
+        HOOK           = 89, // conditional (?:)
+        COLON          = 90,
+        OR             = 91, // logical or (||)
+        AND            = 92, // logical and (&&)
+        INC            = 93, // increment/decrement (++ --)
+        DEC            = 94,
+        DOT            = 95, // member operator (.)
+        FUNCTION       = 96, // function keyword
+        EXPORT         = 97, // export keyword
+        IMPORT         = 98, // import keyword
+        IF             = 99, // if keyword
+        ELSE           = 100, // else keyword
+        SWITCH         = 101, // switch keyword
+        CASE           = 102, // case keyword
+        DEFAULT        = 103, // default keyword
+        WHILE          = 104, // while keyword
+        DO             = 105, // do keyword
+        FOR            = 106, // for keyword
+        BREAK          = 107, // break keyword
+        CONTINUE       = 108, // continue keyword
+        VAR            = 109, // var keyword
+        WITH           = 110, // with keyword
+        CATCH          = 111, // catch keyword
+        FINALLY        = 112, // finally keyword
+        VOID           = 113, // void keyword
+        RESERVED       = 114, // reserved keywords
 
-        EMPTY          = 106,
+        EMPTY          = 115,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        BLOCK          = 107, // statement block
-        LABEL          = 108, // label
-        TARGET         = 109,
-        LOOP           = 110,
-        EXPR_VOID      = 111, // expression statement in functions
-        EXPR_RESULT    = 112, // expression statement in scripts
-        JSR            = 113,
-        SCRIPT         = 114, // top-level node for entire script
-        TYPEOFNAME     = 115, // for typeof(simple-name)
-        USE_STACK      = 116,
-        SETPROP_OP     = 117, // x.y op= something
-        SETELEM_OP     = 118, // x[y] op= something
-        LOCAL_BLOCK    = 119,
-        SET_REF_OP     = 120, // *reference op= something
+        BLOCK          = 116, // statement block
+        LABEL          = 117, // label
+        TARGET         = 118,
+        LOOP           = 119,
+        EXPR_VOID      = 120, // expression statement in functions
+        EXPR_RESULT    = 121, // expression statement in scripts
+        JSR            = 122,
+        SCRIPT         = 123, // top-level node for entire script
+        TYPEOFNAME     = 124, // for typeof(simple-name)
+        USE_STACK      = 125,
+        SETPROP_OP     = 126, // x.y op= something
+        SETELEM_OP     = 127, // x[y] op= something
+        LOCAL_BLOCK    = 128,
+        SET_REF_OP     = 129, // *reference op= something
 
-        LAST_TOKEN     = 120;
+        // For XML support:
+        DOTDOT         = 130,  // member operator (..)
+        XML            = 131,  // XML type
+        DOTQUERY       = 132,  // .() -- e.g., x.emps.emp.(name == "terry")
+        XMLATTR        = 133,  // @
+        XMLEND         = 134,
+
+        LAST_TOKEN     = 134;
 
     public static String name(int token)
     {
@@ -274,7 +293,8 @@ public class Token
           case GETVAR:          return "GETVAR";
           case SETVAR:          return "SETVAR";
           case CATCH_SCOPE:     return "CATCH_SCOPE";
-          case ENUM_INIT:       return "ENUM_INIT";
+          case ENUM_INIT_KEYS:  return "ENUM_INIT_KEYS";
+          case ENUM_INIT_VALUES:  return "ENUM_INIT_VALUES";
           case ENUM_NEXT:       return "ENUM_NEXT";
           case ENUM_ID:         return "ENUM_ID";
           case THISFN:          return "THISFN";
@@ -283,9 +303,17 @@ public class Token
           case OBJECTLIT:       return "OBJECTLIT";
           case GET_REF:         return "GET_REF";
           case SET_REF:         return "SET_REF";
+          case DEL_REF:         return "DEL_REF";
           case REF_CALL:        return "REF_CALL";
           case SPECIAL_REF:     return "SPECIAL_REF";
           case GENERIC_REF:     return "GENERIC_REF";
+          case DEFAULTNAMESPACE:return "DEFAULTNAMESPACE";
+          case COLONCOLON:      return "COLONCOLON";
+          case ESCXMLTEXT:      return "ESCXMLTEXT";
+          case ESCXMLATTR:      return "ESCXMLATTR";
+          case TOATTRNAME:      return "TOATTRNAME";
+          case DESCENDANTS:     return "DESCENDANTS";
+          case XML_REF:         return "XML_REF";
           case TRY:             return "TRY";
           case SEMI:            return "SEMI";
           case LB:              return "LB";
@@ -337,6 +365,11 @@ public class Token
           case SETELEM_OP:      return "SETELEM_OP";
           case LOCAL_BLOCK:     return "LOCAL_BLOCK";
           case SET_REF_OP:      return "SET_REF_OP";
+          case DOTDOT:          return "DOTDOT";
+          case XML:             return "XML";
+          case DOTQUERY:        return "DOTQUERY";
+          case XMLATTR:         return "XMLATTR";
+          case XMLEND:          return "XMLEND";
         }
 
         // Token without name

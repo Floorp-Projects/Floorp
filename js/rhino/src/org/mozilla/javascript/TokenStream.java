@@ -22,6 +22,9 @@
  * Roger Lawrence
  * Mike McCabe
  * Igor Bukanov
+ * Ethan Hugg
+ * Terry Lucas
+ * Milen Nankov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -380,6 +383,8 @@ public class TokenStream
                 }
             }
 
+            if (c == '@') return Token.XMLATTR;
+
             // identifier/keyword/instanceof?
             // watch out for starting with a <backslash>
             boolean identifierStart;
@@ -686,8 +691,20 @@ public class TokenStream
             case ')': return Token.RP;
             case ',': return Token.COMMA;
             case '?': return Token.HOOK;
-            case ':': return Token.COLON;
-            case '.': return Token.DOT;
+            case ':':
+                if (matchChar(':')) {
+                    return Token.COLONCOLON;
+                } else {
+                    return Token.COLON;
+                }
+            case '.':
+                if (matchChar('.')) {
+                    return Token.DOTDOT;
+                } else if (matchChar('(')) {
+                    return Token.DOTQUERY;
+                } else {
+                    return Token.DOT;
+                }
 
             case '|':
                 if (matchChar('|')) {
@@ -969,6 +986,288 @@ public class TokenStream
         return c > 127 && Character.getType((char)c) == Character.FORMAT;
     }
 
+    boolean isXMLAttribute()
+    {
+        return xmlIsAttribute;
+    }
+
+    int getFirstXMLToken() throws IOException
+    {
+        xmlOpenTagsCount = 0;
+        xmlIsAttribute = false;
+        xmlIsTagContent = false;
+        ungetChar('<');
+        return getNextXMLToken();
+    }
+
+    int getNextXMLToken() throws IOException
+    {
+        stringBufferTop = 0; // remember the XML
+
+        for (int c = getChar(); c != EOF_CHAR; c = getChar()) {
+            if (xmlIsTagContent) {
+                switch (c) {
+                case '>':
+                    addToString(c);
+                    xmlIsTagContent = false;
+                    xmlIsAttribute = false;
+                    break;
+                case '/':
+                    addToString(c);
+                    if (peekChar() == '>') {
+                        c = getChar();
+                        addToString(c);
+                        xmlIsTagContent = false;
+                        xmlOpenTagsCount--;
+                    }
+                    break;
+                case '{':
+                    ungetChar(c);
+                    this.string = getStringFromBuffer();
+                    return Token.XML;
+                case '\'':
+                case '"':
+                    addToString(c);
+                    if (!readQuotedString(c)) return Token.ERROR;
+                    break;
+                case '=':
+                    addToString(c);
+                    xmlIsAttribute = true;
+                    break;
+                case ' ':
+                case '\t':
+                case '\r':
+                case '\n':
+                    addToString(c);
+                    break;
+                default:
+                    addToString(c);
+                    xmlIsAttribute = false;
+                    break;
+                }
+
+                if (!xmlIsTagContent && xmlOpenTagsCount == 0) {
+                    this.string = getStringFromBuffer();
+                    return Token.XMLEND;
+                }
+            } else {
+                switch (c) {
+                case '<':
+                    addToString(c);
+                    c = peekChar();
+                    switch (c) {
+                    case '!':
+                        c = getChar(); // Skip !
+                        addToString(c);
+                        c = peekChar();
+                        switch (c) {
+                        case '-':
+                            c = getChar(); // Skip -
+                            addToString(c);
+                            c = getChar();
+                            if (c == '-') {
+                                addToString(c);
+                                if(!readXmlComment()) return Token.ERROR;
+                            } else {
+                                // throw away the string in progress
+                                stringBufferTop = 0;
+                                this.string = null;
+                                reportCurrentLineError(Context.getMessage0(
+                                    "msg.XML.bad.form"));
+                                return Token.ERROR;
+                            }
+                            break;
+                        case '[':
+                            c = getChar(); // Skip [
+                            addToString(c);
+                            if (getChar() == 'C' &&
+                                getChar() == 'D' &&
+                                getChar() == 'A' &&
+                                getChar() == 'T' &&
+                                getChar() == 'A' &&
+                                getChar() == '[')
+                            {
+                                addToString('C');
+                                addToString('D');
+                                addToString('A');
+                                addToString('T');
+                                addToString('A');
+                                addToString('[');
+                                if (!readCDATA()) return Token.ERROR;
+
+                            } else {
+                                // throw away the string in progress
+                                stringBufferTop = 0;
+                                this.string = null;
+                                reportCurrentLineError(Context.getMessage0(
+                                    "msg.XML.bad.form"));
+                                return Token.ERROR;
+                            }
+                            break;
+                        default:
+                            if(!readEntity()) return Token.ERROR;
+                            break;
+                        }
+                        break;
+                    case '?':
+                        c = getChar(); // Skip ?
+                        addToString(c);
+                        if (!readPI()) return Token.ERROR;
+                        break;
+                    case '/':
+                        // End tag
+                        c = getChar(); // Skip /
+                        addToString(c);
+                        if (xmlOpenTagsCount == 0) {
+                            // throw away the string in progress
+                            stringBufferTop = 0;
+                            this.string = null;
+                            reportCurrentLineError(Context.getMessage0(
+                                "msg.XML.bad.form"));
+                            return Token.ERROR;
+                        }
+                        xmlIsTagContent = true;
+                        xmlOpenTagsCount--;
+                        break;
+                    default:
+                        // Start tag
+                        xmlIsTagContent = true;
+                        xmlOpenTagsCount++;
+                        break;
+                    }
+                    break;
+                case '{':
+                    ungetChar(c);
+                    this.string = getStringFromBuffer();
+                    return Token.XML;
+                default:
+                    addToString(c);
+                    break;
+                }
+            }
+        }
+
+        stringBufferTop = 0; // throw away the string in progress
+        this.string = null;
+        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        return Token.ERROR;
+    }
+
+    /**
+     *
+     */
+    private boolean readQuotedString(int quote) throws IOException
+    {
+        for (int c = getChar(); c != EOF_CHAR; c = getChar()) {
+            addToString(c);
+            if (c == quote) return true;
+        }
+
+        stringBufferTop = 0; // throw away the string in progress
+        this.string = null;
+        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        return false;
+    }
+
+    /**
+     *
+     */
+    private boolean readXmlComment() throws IOException
+    {
+        for (int c = getChar(); c != EOF_CHAR;) {
+            addToString(c);
+            if (c == '-' && peekChar() == '-') {
+                c = getChar();
+                addToString(c);
+                if (peekChar() == '>') {
+                    c = getChar(); // Skip >
+                    addToString(c);
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+            c = getChar();
+        }
+
+        stringBufferTop = 0; // throw away the string in progress
+        this.string = null;
+        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        return false;
+    }
+
+    /**
+     *
+     */
+    private boolean readCDATA() throws IOException
+    {
+        for (int c = getChar(); c != EOF_CHAR;) {
+            addToString(c);
+            if (c == ']' && peekChar() == ']') {
+                c = getChar();
+                addToString(c);
+                if(peekChar() == '>') {
+                    c = getChar(); // Skip >
+                    addToString(c);
+                    return true;
+                } else {
+                    continue;
+                }
+            }
+            c = getChar();
+        }
+
+        stringBufferTop = 0; // throw away the string in progress
+        this.string = null;
+        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        return false;
+    }
+
+    /**
+     *
+     */
+    private boolean readEntity() throws IOException
+    {
+        int declTags = 1;
+        for (int c = getChar(); c != EOF_CHAR; c = getChar()) {
+            addToString(c);
+            switch (c) {
+            case '<':
+                declTags++;
+                break;
+            case '>':
+                declTags--;
+                if (declTags == 0) return true;
+                break;
+            }
+        }
+
+        stringBufferTop = 0; // throw away the string in progress
+        this.string = null;
+        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        return false;
+    }
+
+    /**
+     *
+     */
+    private boolean readPI() throws IOException
+    {
+        for (int c = getChar(); c != EOF_CHAR; c = getChar()) {
+            addToString(c);
+            if (c == '?' && peekChar() == '>') {
+                c = getChar(); // Skip >
+                addToString(c);
+                return true;
+            }
+        }
+
+        stringBufferTop = 0; // throw away the string in progress
+        this.string = null;
+        reportCurrentLineError(Context.getMessage0("msg.XML.bad.form"));
+        return false;
+    }
+
     private String getStringFromBuffer() {
         return new String(stringBuffer, 0, stringBufferTop);
     }
@@ -1187,6 +1486,11 @@ public class TokenStream
     private char[] sourceBuffer;
     private int sourceEnd;
     private int sourceCursor;
+
+    // for xml tokenizer
+    private boolean xmlIsAttribute;
+    private boolean xmlIsTagContent;
+    private int xmlOpenTagsCount;
 
     CompilerEnvirons compilerEnv;
 }

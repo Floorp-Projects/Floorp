@@ -55,7 +55,7 @@ public final class NativeCall extends IdScriptable
 
     NativeCall() { }
 
-    NativeCall(Context cx, Scriptable scope, NativeFunction funObj,
+    NativeCall(Scriptable scope, NativeFunction funObj,
                Scriptable thisObj, Object[] args)
     {
         this.funObj = funObj;
@@ -63,10 +63,6 @@ public final class NativeCall extends IdScriptable
 
         setParentScope(scope);
         // leave prototype null
-
-        // save current activation
-        this.caller = cx.currentActivation;
-        cx.currentActivation = this;
 
         this.originalArgs = (args == null) ? ScriptRuntime.emptyArgs : args;
 
@@ -101,35 +97,24 @@ public final class NativeCall extends IdScriptable
         return "Call";
     }
 
-    NativeCall getActivation(Function f)
-    {
-        NativeCall x = this;
-        do {
-            if (x.funObj == f)
-                return x;
-            x = x.caller;
-        } while (x != null);
-        return null;
-    }
-
-    public Function getFunctionObject()
+    NativeFunction getFunctionObject()
     {
         return funObj;
     }
 
-    public Object[] getOriginalArguments()
+    Object[] getOriginalArguments()
     {
         return originalArgs;
     }
 
-    public NativeCall getCaller()
-    {
-        return caller;
-    }
-
-    public Scriptable getThisObj()
+    Scriptable getThisObj()
     {
         return thisObj;
+    }
+
+    protected int findPrototypeId(String s)
+    {
+        return s.equals("constructor") ? Id_constructor : 0;
     }
 
     protected void initPrototypeId(int id)
@@ -139,7 +124,7 @@ public final class NativeCall extends IdScriptable
         if (id == Id_constructor) {
             arity=1; s="constructor";
         } else {
-          throw new IllegalArgumentException(String.valueOf(id));
+            throw new IllegalArgumentException(String.valueOf(id));
         }
         initPrototypeMethod(CALL_TAG, id, s, arity);
     }
@@ -163,19 +148,15 @@ public final class NativeCall extends IdScriptable
         throw new IllegalArgumentException(String.valueOf(id));
     }
 
-    protected int findPrototypeId(String s)
-    {
-        return s.equals("constructor") ? Id_constructor : 0;
-    }
-
     private static final int
         Id_constructor   = 1,
         MAX_PROTOTYPE_ID = 1;
 
-
-    NativeCall caller;
-    NativeFunction funObj;
-    Scriptable thisObj;
+    private NativeFunction funObj;
+    private Scriptable thisObj;
     private Object[] originalArgs;
+
+    NativeCall parentActivationCall;
+    Scriptable parentActivationScope;
 }
 

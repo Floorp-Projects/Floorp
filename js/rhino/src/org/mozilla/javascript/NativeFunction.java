@@ -87,7 +87,8 @@ public class NativeFunction extends BaseFunction
     {
         if (version != Context.VERSION_1_2)
             return argCount;
-        NativeCall activation = getActivation(Context.getContext());
+        Context cx = Context.getContext();
+        NativeCall activation = ScriptRuntime.findFunctionActivation(cx, this);
         if (activation == null)
             return argCount;
         return activation.getOriginalArguments().length;

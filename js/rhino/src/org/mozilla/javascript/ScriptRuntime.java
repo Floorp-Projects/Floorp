@@ -22,8 +22,11 @@
  * Patrick Beard
  * Norris Boyd
  * Igor Bukanov
+ * Ethan Hugg
  * Roger Lawrence
+ * Terry Lucas
  * Frank Mitchell
+ * Milen Nankov
  * Andrew Wason
  *
  * Alternatively, the contents of this file may be used under the
@@ -41,6 +44,9 @@
 package org.mozilla.javascript;
 
 import java.lang.reflect.*;
+
+import org.mozilla.javascript.xml.XMLObject;
+import org.mozilla.javascript.xml.XMLLib;
 
 /**
  * This is the class that implements the runtime.
@@ -717,6 +723,9 @@ public class ScriptRuntime {
             }
             return (Scriptable) val;
         }
+        if (val == null) {
+            throw typeError0("msg.null.to.object");
+        }
 
         String className = val instanceof String ? "String" :
                            val instanceof Number ? "Number" :
@@ -732,9 +741,6 @@ public class ScriptRuntime {
         Object wrapped = cx.getWrapFactory().wrap(cx, scope, val, null);
         if (wrapped instanceof Scriptable)
             return (Scriptable) wrapped;
-        if (wrapped == null) {
-            throw typeError0("msg.null.to.object");
-        }
         throw errorWithClassName("msg.invalid.type", val);
     }
 
@@ -970,47 +976,55 @@ public class ScriptRuntime {
         return errorObject;
     }
 
-    public static Object getProp(Object obj, String id, Scriptable scope)
-    {
-        if (obj == null || obj == Undefined.instance) {
-            throw undefReadError(obj, id);
-        }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(scope, obj);
-        }
-        return getProp(sobj, id);
-    }
+    // XXX: this is until setDefaultNamespace will learn how to store NS
+    // properly and separates namespace form Scriptable.get etc.
+    private static final String DEFAULT_NS_TAG = "__default_namespace__";
 
-    public static Object setProp(Object obj, String id, Object value,
-                                 Scriptable scope)
+    public static Object setDefaultNamespace(Object namespace, Context cx)
     {
-        if (obj == null || obj == Undefined.instance) {
-            throw undefWriteError(obj, id, value);
-        }
-        Scriptable sobj;
-        if (obj instanceof Scriptable) {
-            sobj = (Scriptable)obj;
-        } else {
-            sobj = toObject(scope, obj);
-        }
-        return setProp(sobj, id, value);
-    }
+        Scriptable scope = cx.currentActivationScope;
+        if (scope == null)
+            throw new IllegalStateException();
 
-    static Object getProp(Scriptable obj, String id)
-    {
-        Object result = ScriptableObject.getProperty(obj, id);
-        if (result != Scriptable.NOT_FOUND)
-            return result;
+        XMLLib xmlLib = currentXMLLib(cx);
+        Object ns = xmlLib.toDefaultXmlNamespace(cx, namespace);
+
+        // XXX : this should be in separated namesapce from Scriptable.get/put
+        if (!scope.has(DEFAULT_NS_TAG, scope)) {
+            // XXX: this is racy of cause
+            ScriptableObject.defineProperty(scope, DEFAULT_NS_TAG, ns,
+                                            ScriptableObject.PERMANENT
+                                            | ScriptableObject.DONTENUM);
+        } else {
+            scope.put(DEFAULT_NS_TAG, scope, ns);
+        }
+
         return Undefined.instance;
     }
 
-    static Object setProp(Scriptable obj, String id, Object value)
+    public static Object searchDefaultNamespace(Context cx)
     {
-        ScriptableObject.putProperty(obj, id, value);
-        return value;
+        Scriptable scope = cx.currentActivationScope;
+        if (scope == null) {
+            return null;
+        }
+        Object nsObject;
+        for (;;) {
+            Scriptable parent = scope.getParentScope();
+            if (parent == null) {
+                nsObject = ScriptableObject.getProperty(scope, DEFAULT_NS_TAG);
+                if (nsObject == Scriptable.NOT_FOUND) {
+                    return null;
+                }
+                break;
+            }
+            nsObject = scope.get(DEFAULT_NS_TAG, scope);
+            if (nsObject != Scriptable.NOT_FOUND) {
+                break;
+            }
+            scope = parent;
+        }
+        return nsObject;
     }
 
     public static Object getTopLevelProp(Scriptable scope, String id) {
@@ -1123,6 +1137,57 @@ public class ScriptRuntime {
     }
 
     /**
+     * If str is a decimal presentation of Uint32 value, return it as long.
+     * Othewise return -1L;
+     */
+    public static long testUint32String(String str)
+    {
+        // The length of the decimal string representation of
+        //  UINT32_MAX_VALUE, 4294967296
+        final int MAX_VALUE_LENGTH = 10;
+
+        int len = str.length();
+        if (1 <= len && len <= MAX_VALUE_LENGTH) {
+            int c = str.charAt(0);
+            c -= '0';
+            if (c == 0) {
+                // Note that 00,01 etc. are not valid Uint32 presentations
+                return (len == 1) ? 0L : -1L;
+            }
+            if (1 <= c && c <= 9) {
+                long v = c;
+                for (int i = 1; i != len; ++i) {
+                    c = str.charAt(i) - '0';
+                    if (!(0 <= c && c <= 9)) {
+                        return -1;
+                    }
+                    v = 10 * v + c;
+                }
+                // Check for overflow
+                if ((v >>> 32) == 0) {
+                    return v;
+                }
+            }
+        }
+        return -1;
+    }
+
+    public static void storeUint32Result(Context cx, long value)
+    {
+        if ((value >>> 32) != 0)
+            throw new IllegalArgumentException();
+        cx.scratchLong = value;
+    }
+
+    public static long lastUint32Result(Context cx)
+    {
+        long value = cx.scratchLong;
+        if ((value >>> 32) != 0)
+            throw new IllegalStateException();
+        return value;
+    }
+
+    /**
      * If s represents index, then return index value wrapped as Integer
      * and othewise return s.
      */
@@ -1180,8 +1245,29 @@ public class ScriptRuntime {
         return 0;
     }
 
+    public static Object getObjectId(Object obj, Object id,
+                                     Context cx, Scriptable scope)
+    {
+        if (obj == null || obj == Undefined.instance) {
+            throw undefReadError(obj, id);
+        }
+        Scriptable sobj;
+        if (obj instanceof Scriptable) {
+            sobj = (Scriptable)obj;
+        } else {
+            sobj = toObject(cx, scope, obj);
+        }
+        return getObjectId(sobj, id, cx);
+    }
 
-    public static Object getElem(Object obj, Object id, Scriptable scope) {
+    public static Object getObjectId(Scriptable obj, Object id,
+                                     Context cx)
+    {
+        if (obj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)obj;
+            return xmlObject.ecmaGet(cx, id);
+        }
+
         int index;
         String s;
         if (id instanceof Number) {
@@ -1198,34 +1284,103 @@ public class ScriptRuntime {
                 index = 0;
             }
         }
+
+        Object result;
+        if (s != null) {
+            result = ScriptableObject.getProperty(obj, s);
+        } else {
+            result = ScriptableObject.getProperty(obj, index);
+        }
+
+        if (result == Scriptable.NOT_FOUND) {
+            result = Undefined.instance;
+        }
+
+        return result;
+    }
+
+    /**
+     * Version of getObjectId when id is string which is not decimal
+     * presentation of int32.
+     */
+    public static Object getObjectProp(Object obj, String property,
+                                       Context cx, Scriptable scope)
+    {
         if (obj == null || obj == Undefined.instance) {
-            String property = (s != null) ? s : Integer.toString(index);
             throw undefReadError(obj, property);
         }
-        Scriptable start = toObject(scope, obj);
-        if (s != null) {
-            return getProp(start, s);
+        Scriptable sobj;
+        if (obj instanceof Scriptable) {
+            sobj = (Scriptable)obj;
+        } else {
+            sobj = toObject(cx, scope, obj);
         }
-        else {
-            return getElem(start, index);
-        }
+        return getObjectProp(sobj, property, cx);
     }
 
+    public static Object getObjectProp(Scriptable obj, String property,
+                                       Context cx)
+    {
+        if (obj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)obj;
+            return xmlObject.ecmaGet(cx, property);
+        }
+
+        Object result = ScriptableObject.getProperty(obj, property);
+        if (result == Scriptable.NOT_FOUND) {
+            result = Undefined.instance;
+        }
+
+        return result;
+    }
 
     /*
      * A cheaper and less general version of the above for well-known argument
      * types.
      */
-    public static Object getElem(Scriptable obj, int index) {
+    public static Object getObjectIndex(Scriptable obj, int index,
+                                        Context cx)
+    {
+        if (obj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)obj;
+            return xmlObject.ecmaGet(cx, new Integer(index));
+        }
+
         Object result = ScriptableObject.getProperty(obj, index);
-        if (result != Scriptable.NOT_FOUND)
-            return result;
-        return Undefined.instance;
+        if (result == Scriptable.NOT_FOUND) {
+            result = Undefined.instance;
+        }
+
+        return result;
     }
 
-    public static Object setElem(Object obj, Object id, Object value,
-                                 Scriptable scope)
+    /*
+     * Generic assignment to member element.
+     */
+    public static Object setObjectId(Object obj, Object id, Object value,
+                                     Context cx, Scriptable scope)
     {
+        if (obj == null || obj == Undefined.instance) {
+            throw undefWriteError(obj, id, value);
+        }
+        Scriptable sobj;
+        if (obj instanceof Scriptable) {
+            sobj = (Scriptable)obj;
+        } else {
+            sobj = toObject(cx, scope, obj);
+        }
+        return setObjectId(sobj, id, value, cx);
+    }
+
+    public static Object setObjectId(Scriptable obj, Object id, Object value,
+                                     Context cx)
+    {
+        if (obj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)obj;
+            xmlObject.ecmaPut(cx, id, value);
+            return value;
+        }
+
         int index;
         String s;
         if (id instanceof Number) {
@@ -1242,52 +1397,79 @@ public class ScriptRuntime {
                 index = 0;
             }
         }
+        if (s != null) {
+            ScriptableObject.putProperty(obj, s, value);
+        } else {
+            ScriptableObject.putProperty(obj, index, value);
+        }
+        return value;
+    }
+
+    /**
+     * Version of setObjectId when id is string which is not decimal
+     * presentation of int32.
+     */
+    public static Object setObjectProp(Object obj, String property,
+                                       Object value,
+                                       Context cx, Scriptable scope)
+    {
         if (obj == null || obj == Undefined.instance) {
-            String property = (s != null) ? s : Integer.toString(index);
             throw undefWriteError(obj, property, value);
         }
-        Scriptable start;
+        Scriptable sobj;
         if (obj instanceof Scriptable) {
-            start = (Scriptable) obj;
+            sobj = (Scriptable)obj;
         } else {
-            start = toObject(scope, obj);
+            sobj = toObject(cx, scope, obj);
         }
-        if (s != null) {
-            return setProp(start, s, value, scope);
+        return setObjectProp(sobj, property, value, cx);
+    }
+
+    public static Object setObjectProp(Scriptable obj, String property,
+                                       Object value, Context cx)
+    {
+        if (obj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)obj;
+            xmlObject.ecmaPut(cx, property, value);
+        } else {
+            ScriptableObject.putProperty(obj, property, value);
         }
-        else {
-            return setElem(start, index, value);
-        }
+        return value;
     }
 
     /*
      * A cheaper and less general version of the above for well-known argument
      * types.
      */
-    public static Object setElem(Scriptable obj, int index, Object value) {
-        ScriptableObject.putProperty(obj, index, value);
+    public static Object setObjectIndex(Scriptable obj, int index, Object value,
+                                        Context cx)
+    {
+        if (obj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)obj;
+            xmlObject.ecmaPut(cx, new Integer(index), value);
+        } else {
+            ScriptableObject.putProperty(obj, index, value);
+        }
         return value;
     }
 
     public static Object getReference(Object obj)
     {
-        if (!(obj instanceof Reference)) {
-            String msg = getMessage1("msg.no.ref.to.get", toString(obj));
-            throw constructError("ReferenceError", msg);
-        }
         Reference ref = (Reference)obj;
         return ref.get();
     }
 
     public static Object setReference(Object obj, Object value)
     {
-        if (!(obj instanceof Reference)) {
-            String msg = getMessage2("msg.no.ref.to.set",
-                                     toString(obj), toString(value));
-            throw constructError("ReferenceError", msg);
-        }
         Reference ref = (Reference)obj;
         return ref.set(value);
+    }
+
+    public static Object deleteReference(Object obj)
+    {
+        Reference ref = (Reference)obj;
+        ref.delete();
+        return ref.has() ? Boolean.FALSE : Boolean.TRUE;
     }
 
     static boolean isSpecialProperty(String s)
@@ -1297,7 +1479,7 @@ public class ScriptRuntime {
 
     public static Object specialReference(final Object obj,
                                           final String specialProperty,
-                                          Context cx,
+                                          final Context cx,
                                           final Scriptable scope)
     {
         final int PROTO = 0;
@@ -1318,7 +1500,7 @@ public class ScriptRuntime {
             public Object get()
             {
                 if (!specials) {
-                    return getProp(sobj, specialProperty);
+                    return getObjectProp(sobj, specialProperty, cx);
                 }
                 if (id == PROTO) {
                     return getProto(sobj, scope);
@@ -1330,7 +1512,7 @@ public class ScriptRuntime {
             public Object set(Object value)
             {
                 if (!specials) {
-                    return setProp(sobj, specialProperty, value);
+                    return setObjectProp(sobj, specialProperty, value, cx);
                 }
                 Scriptable result;
                 if (value == null) {
@@ -1380,24 +1562,60 @@ public class ScriptRuntime {
     {
         Scriptable sobj = (obj instanceof Scriptable)
                           ? (Scriptable)obj : toObject(cx, scope, obj);
-        String s = getStringId(id);
-        boolean result = (s != null)
-            ? ScriptableObject.deleteProperty(sobj, s)
-            : ScriptableObject.deleteProperty(sobj, getIntId(id));
+        boolean result;
+        if (sobj instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)sobj;
+            result = xmlObject.ecmaDelete(cx, id);
+        } else {
+            String s = getStringId(id);
+            if (s != null) {
+                result = ScriptableObject.deleteProperty(sobj, s);
+            } else {
+                result = ScriptableObject.deleteProperty(sobj, getIntId(id));
+            }
+        }
         return result ? Boolean.TRUE : Boolean.FALSE;
     }
 
     /**
      * Looks up a name in the scope chain and returns its value.
      */
-    public static Object name(Scriptable scopeChain, String id) {
+    public static Object name(Context cx, Scriptable scopeChain, String id)
+    {
         Scriptable obj = scopeChain;
+        XMLObject firstXMLObject = null;
         while (obj != null) {
-            Object result = ScriptableObject.getProperty(obj, id);
-            if (result != Scriptable.NOT_FOUND)
-                return result;
+            if (obj instanceof NativeWith) {
+                Scriptable withObj = obj.getPrototype();
+                if (withObj instanceof XMLObject) {
+                    XMLObject xmlObj = (XMLObject)withObj;
+                    if (xmlObj.ecmaHas(cx, id)) {
+                        return xmlObj.ecmaGet(cx, id);
+                    }
+                    if (firstXMLObject == null) {
+                        firstXMLObject = xmlObj;
+                    }
+                } else {
+                    Object result = ScriptableObject.getProperty(withObj, id);
+                    if (result != Scriptable.NOT_FOUND) {
+                        return result;
+                    }
+                }
+            } else {
+                Object result = ScriptableObject.getProperty(obj, id);
+                if (result != Scriptable.NOT_FOUND) {
+                    return result;
+                }
+            }
             obj = obj.getParentScope();
         }
+
+        if (firstXMLObject != null) {
+            // The name was not found, but we did find an XML object in the
+            // scope chain. The result should be an empty XMLList
+            return firstXMLObject.ecmaGet(cx, id);
+        }
+
         throw notFoundError(scopeChain, id);
     }
 
@@ -1414,18 +1632,42 @@ public class ScriptRuntime {
      *
      * See ECMA 10.1.4
      */
-    public static Scriptable bind(Scriptable scope, String id) {
-        while (!ScriptableObject.hasProperty(scope, id)) {
-            scope = scope.getParentScope();
-            if (scope == null) {
-                break;
+    public static Scriptable bind(Context cx, Scriptable scope, String id)
+    {
+        Scriptable obj = scope;
+        Scriptable firstXMLObject = null;
+        for (;;) {
+            if (obj instanceof NativeWith) {
+                Scriptable withObj = obj.getPrototype();
+                if (withObj instanceof XMLObject) {
+                    XMLObject xmlObject = (XMLObject)withObj;
+                    if (xmlObject.ecmaHas(cx, id)) {
+                        return xmlObject;
+                    }
+                    if (firstXMLObject == null) {
+                        firstXMLObject = xmlObject;
+                    }
+                } else {
+                    if (ScriptableObject.hasProperty(withObj, id)) {
+                        return withObj;
+                    }
+                }
+            } else {
+                if (ScriptableObject.hasProperty(obj, id)) {
+                    return obj;
+                }
+            }
+            obj = obj.getParentScope();
+            if (obj == null) {
+                // XML objects always bind so return it if it was found
+                return firstXMLObject;
             }
         }
-        return scope;
     }
 
-    public static Scriptable getBase(Scriptable scope, String id) {
-        Scriptable base = bind(scope, id);
+    public static Scriptable getBase(Context cx, Scriptable scope, String id)
+    {
+        Scriptable base = bind(cx, scope, id);
         if (base != null) {
             return base;
         }
@@ -1441,15 +1683,21 @@ public class ScriptRuntime {
     }
 
     public static Object setName(Scriptable bound, Object value,
-                                 Scriptable scope, String id)
+                                 Context cx, String id)
     {
         if (bound != null) {
-            ScriptableObject.putProperty(bound, id, value);
-        }else {
+            if (bound instanceof XMLObject) {
+                XMLObject xmlObject = (XMLObject)bound;
+                xmlObject.ecmaPut(cx, id, value);
+            } else {
+                ScriptableObject.putProperty(bound, id, value);
+            }
+        } else {
             // "newname = 7;", where 'newname' has not yet
             // been defined, creates a new property in the
             // global object. Find the global object by
             // walking up the scope chain.
+            Scriptable scope = cx.currentActivationScope;
             bound = ScriptableObject.getTopLevelScope(scope);
             bound.put(id, bound, value);
             /*
@@ -1486,6 +1734,18 @@ public class ScriptRuntime {
         int index;
         ObjToIntMap used;
         String currentId;
+        boolean enumValues;
+    }
+
+    public static Object enumValuesInit(Object value, Scriptable scope)
+    {
+        IdEnumeration x = new IdEnumeration();
+        if (!(value == null || value == Undefined.instance)) {
+            x.obj = toObject(scope, value);
+            x.enumValues = true;
+            enumChangeObject(x);
+        }
+        return x;
     }
 
     public static Object enumInit(Object value, Scriptable scope)
@@ -1533,9 +1793,15 @@ public class ScriptRuntime {
         return Boolean.TRUE;
     }
 
-    public static String enumId(Object enumObj)
+    public static Object enumId(Object enumObj)
     {
-        return ((IdEnumeration)enumObj).currentId;
+        IdEnumeration x = (IdEnumeration)enumObj;
+        if (!x.enumValues) return x.currentId;
+
+        String s = getStringId(x.currentId);
+        return (s == null)
+            ? x.obj.get(getIntId(x.currentId), null)
+            : x.obj.get(s, null);
     }
 
     private static void enumChangeObject(IdEnumeration x)
@@ -1621,7 +1887,7 @@ public class ScriptRuntime {
         }
         // No runtime support for now
         String msg = getMessage1("msg.no.ref.from.function",
-                                 toString(getProp(fun, "name", scope)));
+                                 toString(fun));
         throw constructError("ReferenceError", msg);
     }
 
@@ -1733,30 +1999,38 @@ public class ScriptRuntime {
     /**
      * The typeof operator
      */
-    public static String typeof(Object value) {
+    public static String typeof(Object value)
+    {
         if (value == Undefined.instance)
             return "undefined";
         if (value == null)
             return "object";
         if (value instanceof Scriptable)
+        {
+            if (value instanceof XMLObject)
+                return "xml";
+
             return (value instanceof Function) ? "function" : "object";
+        }
         if (value instanceof String)
             return "string";
         if (value instanceof Number)
             return "number";
         if (value instanceof Boolean)
             return "boolean";
-        throw Kit.badTypeJS(value);
+        throw errorWithClassName("msg.invalid.type", value);
     }
 
     /**
      * The typeof operator that correctly handles the undefined case
      */
-    public static String typeofName(Scriptable scope, String id) {
-        Object val = bind(scope, id);
+    public static String typeofName(Scriptable scope, String id)
+    {
+        Context cx = Context.getContext();
+        Scriptable val = bind(cx, scope, id);
         if (val == null)
             return "undefined";
-        return typeof(getProp(val, id, scope));
+        return typeof(getObjectProp(val, id, cx));
     }
 
     // neg:
@@ -1771,11 +2045,26 @@ public class ScriptRuntime {
     // implement the '~' operator inline in the caller
     // as "~toInt32(val)"
 
-    public static Object add(Object val1, Object val2) {
+    public static Object add(Object val1, Object val2, Context cx)
+    {
         if(val1 instanceof Number && val2 instanceof Number) {
             return new Double(((Number)val1).doubleValue() +
                               ((Number)val2).doubleValue());
         }
+
+        if (val1 instanceof XMLObject && val2 instanceof XMLObject) {
+            XMLObject xml1 = (XMLObject)val1;
+            XMLObject xml2 = (XMLObject)val2;
+            XMLLib xmlLib = xml1.lib();
+            return xmlLib.addXMLObjects(cx, xml1, xml2);
+        } else if (val1 == Undefined.instance && val2 instanceof XMLObject) {
+            // Undefined added to any XML or XMLList the undefined needs
+            // to be "".
+            val1 = "";
+        } else if (val2 == Undefined.instance && val1 instanceof XMLObject) {
+            val2 = "";
+        }
+
         if (val1 instanceof Scriptable)
             val1 = ((Scriptable) val1).getDefaultValue(null);
         if (val2 instanceof Scriptable)
@@ -1865,9 +2154,10 @@ public class ScriptRuntime {
     }
 
     public static Object elemIncrDecr(Object obj, Object index,
-                                      Scriptable scope, int incrDecrMask)
+                                      Context cx, Scriptable scope,
+                                      int incrDecrMask)
     {
-        Object value = getElem(obj, index, scope);
+        Object value = getObjectId(obj, index, cx, scope);
         boolean post = ((incrDecrMask & Node.POST_FLAG) != 0);
         double number;
         if (value instanceof Number) {
@@ -1885,7 +2175,7 @@ public class ScriptRuntime {
             --number;
         }
         Number result = new Double(number);
-        setElem(obj, index, result, scope);
+        setObjectId(obj, index, result, cx, scope);
         if (post) {
             return value;
         } else {
@@ -1927,7 +2217,7 @@ public class ScriptRuntime {
         }
         Scriptable s = (Scriptable)val;
         Object result = s.getDefaultValue(null);
-        if (result != null && result instanceof Scriptable)
+        if (result instanceof Scriptable)
             throw typeError0("msg.bad.default.value");
         return result;
     }
@@ -1940,7 +2230,16 @@ public class ScriptRuntime {
     public static boolean eq(Object x, Object y)
     {
         if (x == null || x == Undefined.instance) {
-            return y == null || y == Undefined.instance;
+            if (y == null || y == Undefined.instance) {
+                return true;
+            }
+            if (y instanceof ScriptableObject) {
+                Boolean test = ((ScriptableObject)y).equivalentValues(x);
+                if (test != null) {
+                    return test.booleanValue();
+                }
+            }
+            return false;
         } else if (x instanceof Number) {
             return eqNumber(((Number)x).doubleValue(), y);
         } else if (x instanceof String) {
@@ -1950,17 +2249,42 @@ public class ScriptRuntime {
             if (y instanceof Boolean) {
                 return b == ((Boolean)y).booleanValue();
             }
+            if (y instanceof ScriptableObject) {
+                Boolean test = ((ScriptableObject)y).equivalentValues(x);
+                if (test != null) {
+                    return test.booleanValue();
+                }
+            }
             return eqNumber(b ? 1.0 : 0.0, y);
         } else if (x instanceof Scriptable) {
             if (y instanceof Scriptable) {
                 // Generic test also works for y == Undefined.instance
-                if (x == y)
+                if (x == y) {
                     return true;
+                }
+                if (x instanceof ScriptableObject) {
+                    Boolean test = ((ScriptableObject)x).equivalentValues(y);
+                    if (test != null) {
+                        return test.booleanValue();
+                    }
+                }
+                if (y instanceof ScriptableObject) {
+                    Boolean test = ((ScriptableObject)y).equivalentValues(x);
+                    if (test != null) {
+                        return test.booleanValue();
+                    }
+                }
                 if (x instanceof Wrapper && y instanceof Wrapper) {
                     return ((Wrapper)x).unwrap() == ((Wrapper)y).unwrap();
                 }
                 return false;
             } else if (y instanceof Boolean) {
+                if (x instanceof ScriptableObject) {
+                    Boolean test = ((ScriptableObject)x).equivalentValues(y);
+                    if (test != null) {
+                        return test.booleanValue();
+                    }
+                }
                 double d = ((Boolean)y).booleanValue() ? 1.0 : 0.0;
                 return eqNumber(d, x);
             } else if (y instanceof Number) {
@@ -1987,6 +2311,13 @@ public class ScriptRuntime {
                 return x == (((Boolean)y).booleanValue() ? 1.0 : +0.0);
             } else if (y instanceof Scriptable) {
                 if (y == Undefined.instance) { return false; }
+                if (y instanceof ScriptableObject) {
+                    Object xval = new Double(x);
+                    Boolean test = ((ScriptableObject)y).equivalentValues(xval);
+                    if (test != null) {
+                        return test.booleanValue();
+                    }
+                }
                 y = toPrimitive(y);
             } else {
                 throw Kit.badTypeJS(y);
@@ -2007,14 +2338,19 @@ public class ScriptRuntime {
                 return toNumber(x) == (((Boolean)y).booleanValue() ? 1.0 : 0.0);
             } else if (y instanceof Scriptable) {
                 if (y == Undefined.instance) { return false; }
+                if (y instanceof ScriptableObject) {
+                    Boolean test = ((ScriptableObject)y).equivalentValues(x);
+                    if (test != null) {
+                        return test.booleanValue();
+                    }
+                }
                 y = toPrimitive(y);
+                continue;
             } else {
                 throw Kit.badTypeJS(y);
             }
-            return false;
         }
     }
-
     public static boolean shallowEq(Object x, Object y)
     {
         if (x == y) {
@@ -2055,7 +2391,8 @@ public class ScriptRuntime {
      *
      * @return a instanceof b
      */
-    public static boolean instanceOf(Object a, Object b, Scriptable scope)
+    public static boolean instanceOf(Object a, Object b,
+                                     Context cx, Scriptable scope)
     {
         // Check RHS is an object
         if (! (b instanceof Scriptable)) {
@@ -2101,14 +2438,20 @@ public class ScriptRuntime {
      *
      * @return true if property name or element number a is a property of b
      */
-    public static boolean in(Object a, Object b, Scriptable scope) {
+    public static boolean in(Object a, Object b, Context cx, Scriptable scope)
+    {
         if (!(b instanceof Scriptable)) {
             throw typeError0("msg.instanceof.not.object");
         }
         String s = getStringId(a);
-        return s != null
-            ? ScriptableObject.hasProperty((Scriptable) b, s)
-            : ScriptableObject.hasProperty((Scriptable) b, getIntId(a));
+        if (s == null) {
+            return ScriptableObject.hasProperty((Scriptable) b, getIntId(a));
+        }
+        if (b instanceof XMLObject) {
+            XMLObject xmlObject = (XMLObject)b;
+            return xmlObject.ecmaHas(cx, a);
+        }
+        return ScriptableObject.hasProperty((Scriptable) b, s);
     }
 
     public static boolean cmp_LT(Object val1, Object val2)
@@ -2177,53 +2520,135 @@ public class ScriptRuntime {
         return new ImporterTopLevel(cx);
     }
 
-    public static void initScript(Context cx, final Scriptable scope,
-                                  NativeFunction funObj,
-                                  Scriptable thisObj,
-                                  boolean fromEvalCode)
+    public static Scriptable enterScript(Context cx, Scriptable scope,
+                                         NativeFunction funObj,
+                                         Scriptable thisObj)
     {
+        boolean topLevel = (cx.currentActivationDepth == 0);
+
+        Scriptable varScope = scope;
+        // Never define any variables from var statements inside with object.
+        // See bug 38590.
+        while (varScope instanceof NativeWith) {
+            varScope = varScope.getParentScope();
+        }
+
         String[] argNames = funObj.argNames;
         if (argNames != null) {
-            Scriptable varScope = scope;
-            if (fromEvalCode) {
-                // When executing an eval() inside a with statement,
-                // define any variables resulting from var statements
-                // in the first non-with scope. See bug 38590.
-                varScope = scope;
-                while (varScope instanceof NativeWith)
-                    varScope = varScope.getParentScope();
-            }
             for (int i = argNames.length; i-- != 0;) {
                 String name = argNames[i];
                 // Don't overwrite existing def if already defined in object
                 // or prototypes of object.
                 if (!hasProp(scope, name)) {
-                    if (!fromEvalCode) {
+                    if (topLevel) {
                         // Global var definitions are supposed to be DONTDELETE
-                        ScriptableObject.defineProperty
-                            (scope, name, Undefined.instance,
-                             ScriptableObject.PERMANENT);
+                        ScriptableObject.defineProperty(
+                            varScope, name, Undefined.instance,
+                            ScriptableObject.PERMANENT);
                     } else {
                         varScope.put(name, varScope, Undefined.instance);
                     }
                 }
             }
         }
-    }
 
-    public static Scriptable initVarObj(Context cx, Scriptable scope,
-                                        NativeFunction funObj,
-                                        Scriptable thisObj, Object[] args)
-    {
-        return new NativeCall(cx, scope, funObj, thisObj, args);
-    }
-
-    public static void popActivation(Context cx) {
-        NativeCall current = cx.currentActivation;
-        if (current != null) {
-            cx.currentActivation = current.caller;
-            current.caller = null;
+        if (topLevel) {
+            if (cx.currentActivationScope != null)
+                throw new IllegalStateException();
+            cx.currentActivationScope = varScope;
         }
+
+        increaseActivationDepth(cx);
+
+        return scope;
+    }
+
+    public static void exitScript(Context cx)
+    {
+        if (cx.currentActivationDepth == 0)
+            throw new IllegalStateException();
+        if (cx.currentActivationScope == null)
+            throw new IllegalStateException();
+
+        if (cx.currentActivationDepth == 1) {
+            cx.currentActivationScope = null;
+        }
+        decreaseActivationDepth(cx);
+    }
+
+    public static Scriptable enterActivationFunction(Context cx,
+                                                     Scriptable scope,
+                                                     NativeFunction funObj,
+                                                     Scriptable thisObj,
+                                                     Object[] args)
+    {
+        NativeCall call = new NativeCall(scope, funObj, thisObj, args);
+        call.parentActivationCall = cx.currentActivationCall;
+        call.parentActivationScope = cx.currentActivationScope;
+
+        cx.currentActivationCall = call;
+        cx.currentActivationScope = call;
+
+        increaseActivationDepth(cx);
+
+        return call;
+    }
+
+    public static void exitActivationFunction(Context cx)
+    {
+        if (cx.currentActivationDepth == 0)
+            throw new IllegalStateException();
+        if (cx.currentActivationScope == null)
+            throw new IllegalStateException();
+        if (cx.currentActivationCall != cx.currentActivationScope)
+            throw new IllegalStateException();
+
+        NativeCall call = cx.currentActivationCall;
+        cx.currentActivationCall = call.parentActivationCall;
+        cx.currentActivationScope = call.parentActivationScope;
+
+        call.parentActivationCall = null;
+        call.parentActivationScope = null;
+
+        decreaseActivationDepth(cx);
+    }
+
+    private static void increaseActivationDepth(Context cx)
+    {
+        // The caller should initialize this already
+        if (cx.currentActivationScope == null)
+            throw new IllegalStateException();
+
+        if (cx.currentActivationDepth == 0) {
+            cx.topActivationScope = cx.currentActivationScope;
+        }
+        ++cx.currentActivationDepth;
+    }
+
+    private static void decreaseActivationDepth(Context cx)
+    {
+        --cx.currentActivationDepth;
+
+        if (cx.currentActivationDepth == 0) {
+            // The caller should do proper cleanup
+            if (cx.currentActivationScope != null)
+                throw new IllegalStateException();
+            if (cx.currentActivationCall != null)
+                throw new IllegalStateException();
+            cx.topActivationScope = null;
+            cx.cachedXMLLib = null;
+        }
+    }
+
+    static NativeCall findFunctionActivation(Context cx, Function f)
+    {
+        NativeCall call = cx.currentActivationCall;
+        while (call != null) {
+            if (call.getFunctionObject() == f)
+                return call;
+            call = call.parentActivationCall;
+        }
+        return null;
     }
 
     public static Scriptable newCatchScope(String exceptionName,
@@ -2235,11 +2660,43 @@ public class ScriptRuntime {
     }
 
     public static Scriptable enterWith(Object value, Scriptable scope) {
+        if (value instanceof XMLObject) {
+            XMLObject object = (XMLObject)value;
+            XMLLib xmlLib = object.lib();
+            return xmlLib.enterXMLWith(object, scope);
+        }
         return new NativeWith(scope, toObject(scope, value));
     }
 
-    public static Scriptable leaveWith(Scriptable scope) {
-        return scope.getParentScope();
+    public static Scriptable leaveWith(Scriptable scope)
+    {
+        NativeWith nw = (NativeWith)scope;
+        return nw.getParentScope();
+    }
+
+    public static Scriptable enterDotQuery(Object value, Scriptable scope)
+    {
+        if (!(value instanceof XMLObject))
+        {
+            throw ScriptRuntime.typeError1("msg.isnt.xml.object",
+                                           ScriptRuntime.toString(value));
+        }
+        XMLObject object = (XMLObject)value;
+        XMLLib xmlLib = object.lib();
+        return xmlLib.enterDotQuery(object, scope);
+    }
+
+    public static Object updateDotQuery(boolean value, Scriptable scope)
+    {
+        // Return null to continue looping
+        NativeWith nw = (NativeWith)scope;
+        return nw.updateDotQuery(value);
+    }
+
+    public static Scriptable leaveDotQuery(Scriptable scope)
+    {
+        NativeWith nw = (NativeWith)scope;
+        return nw.getParentScope();
     }
 
     public static void setFunctionProtoAndParent(Scriptable scope,
@@ -2342,7 +2799,8 @@ public class ScriptRuntime {
 
     public static Object[] getArrayElements(Scriptable object)
     {
-        long longLen = NativeArray.getLengthProperty(object);
+        Context cx = Context.getContext();
+        long longLen = NativeArray.getLengthProperty(cx, object);
         if (longLen > Integer.MAX_VALUE) {
             // arrays beyond  MAX_INT is not in Java in any case
             throw new IllegalArgumentException();
@@ -2414,40 +2872,48 @@ public class ScriptRuntime {
                              lineNumber, lineSource, columnNumber);
     }
 
+    public static EcmaError typeError(String message)
+    {
+        return constructError("TypeError", message);
+    }
+
     public static EcmaError typeError0(String messageId)
     {
         String msg = getMessage0(messageId);
-        return constructError("TypeError", msg);
+        return typeError(msg);
     }
 
     public static EcmaError typeError1(String messageId, String arg1)
     {
         String msg = getMessage1(messageId, arg1);
-        return constructError("TypeError", msg);
+        return typeError(msg);
     }
 
     public static EcmaError typeError2(String messageId, String arg1,
                                        String arg2)
     {
         String msg = getMessage2(messageId, arg1, arg2);
-        return constructError("TypeError", msg);
+        return typeError(msg);
     }
 
-    public static RuntimeException undefReadError(Object object, String property)
+    public static RuntimeException undefReadError(Object object, Object id)
     {
         String messageId = (object == null) ? "msg.null.prop.read"
                                             : "msg.undef.prop.read";
-        return typeError1(messageId, property);
+        String idStr = (id == null) ? "null" : id.toString();
+        return typeError1(messageId, idStr);
     }
 
-    static RuntimeException undefWriteError(Object object, String property,
-                                            Object value)
+    public static RuntimeException undefWriteError(Object object,
+                                                   Object id,
+                                                   Object value)
     {
         String messageId = (object == null) ? "msg.null.prop.write"
                                             : "msg.undef.prop.write";
         String valueStr = (value instanceof Scriptable)
                           ? value.toString() : toString(value);
-        String msg = getMessage2(messageId, property, valueStr);
+        String idStr = (id == null) ? "null" : id.toString();
+        String msg = getMessage2(messageId, idStr, valueStr);
         return typeError2(messageId, valueStr, msg);
     }
 
@@ -2472,15 +2938,75 @@ public class ScriptRuntime {
         return result;
     }
 
-    public static NativeCall getCurrentActivation(Context cx) {
-        return cx.currentActivation;
+    private static XMLLib currentXMLLib(Context cx)
+    {
+        // Scripts should be running to access this
+        if (cx.topActivationScope == null)
+            throw new IllegalStateException();
+
+        XMLLib xmlLib = cx.cachedXMLLib;
+        if (xmlLib == null) {
+            xmlLib = XMLLib.extractFromScope(cx.topActivationScope);
+            if (xmlLib == null)
+                throw new IllegalStateException();
+            cx.cachedXMLLib = xmlLib;
+        }
+
+        return xmlLib;
     }
 
-    public static void setCurrentActivation(Context cx,
-                                            NativeCall activation)
+    /**
+     * Escapes the reserved characters in a value of an attribute
+     *
+     * @param value Unescaped text
+     * @return The escaped text
+     */
+    public static String escapeAttributeValue(Object value, Context cx)
     {
-        cx.currentActivation = activation;
+        XMLLib xmlLib = currentXMLLib(cx);
+        return xmlLib.escapeAttributeValue(value);
     }
+
+    /**
+     * Escapes the reserved characters in a value of a text node
+     *
+     * @param value Unescaped text
+     * @return The escaped text
+     */
+    public static String escapeTextValue(Object value, Context cx)
+    {
+        XMLLib xmlLib = currentXMLLib(cx);
+        return xmlLib.escapeTextValue(value);
+    }
+
+    public static Object toAttributeName(Object name, Context cx)
+    {
+        XMLLib xmlLib = currentXMLLib(cx);
+        return xmlLib.toAttributeName(cx, name);
+    }
+
+    public static Object toDescendantsName(Object name, Context cx)
+    {
+        XMLLib xmlLib = currentXMLLib(cx);
+        return xmlLib.toDescendantsName(cx, name);
+    }
+
+    public static Object toQualifiedName(String namespace,
+                                         Object name,
+                                         Context cx, Scriptable scope)
+    {
+        XMLLib xmlLib = currentXMLLib(cx);
+        return xmlLib.toQualifiedName(namespace, name, scope);
+    }
+
+    public static Object xmlReference(Object xmlName,
+                                      Context cx,
+                                      Scriptable scope)
+    {
+        XMLLib xmlLib = currentXMLLib(cx);
+        return xmlLib.xmlPrimaryReference(xmlName, scope);
+    }
+
 
     static boolean hasProp(Scriptable start, String name) {
         Scriptable m = start;

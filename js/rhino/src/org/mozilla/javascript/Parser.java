@@ -21,7 +21,10 @@
  * Contributor(s):
  * Mike Ang
  * Igor Bukanov
+ * Ethan Hugg
+ * Terry Lucas
  * Mike McCabe
+ * Milen Nankov
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -103,13 +106,18 @@ public class Parser
         return parse();
     }
 
+    private void mustHaveXML()
+    {
+        if (!compilerEnv.isXmlAvailable()) {
+            reportError("msg.XML.not.available");
+        }
+    }
+
     private void mustMatchToken(int toMatch, String messageId)
         throws IOException, ParserException
     {
-        int tt;
-        if ((tt = ts.getToken()) != toMatch) {
+        if (!ts.matchToken(toMatch)) {
             reportError(messageId);
-            ts.ungetToken(tt); // In case the parser decides to continue
         }
     }
 
@@ -208,13 +216,6 @@ public class Parser
     boolean insideFunction()
     {
         return nestingOfFunction != 0;
-    }
-
-    void setRequiresActivation()
-    {
-        if (insideFunction()) {
-            ((FunctionNode)currentScriptOrFn).setRequiresActivation();
-        }
     }
 
     /*
@@ -601,6 +602,7 @@ public class Parser
         }
 
         case Token.FOR: {
+            boolean isForEach = false;
             skipsemi = true;
 
             decompiler.addToken(Token.FOR);
@@ -610,6 +612,16 @@ public class Parser
             Node cond;  // Node cond is also object in 'foo in Object'
             Node incr = null; // to kill warning
             Node body;
+
+            // See if this is a for each () instead of just a for ()
+            if (ts.matchToken(Token.NAME)) {
+                decompiler.addName(ts.getString());
+                if (ts.getString().equals("each")) {
+                    isForEach = true;
+                } else {
+                    reportError("msg.no.paren.for");
+                }
+            }
 
             mustMatchToken(Token.LP, "msg.no.paren.for");
             decompiler.addToken(Token.LP);
@@ -658,7 +670,7 @@ public class Parser
 
             if (incr == null) {
                 // cond could be null if 'in obj' got eaten by the init node.
-                pn = nf.createForIn(init, cond, body, lineno);
+                pn = nf.createForIn(init, cond, body, isForEach, lineno);
             } else {
                 pn = nf.createFor(init, cond, incr, body, lineno);
             }
@@ -841,6 +853,33 @@ public class Parser
             pn = function(FunctionNode.FUNCTION_EXPRESSION_STATEMENT);
             break;
         }
+
+        case Token.DEFAULT :
+            mustHaveXML();
+            int nsLine = ts.getLineno();
+
+            if (!(ts.matchToken(Token.NAME)
+                  && ts.getString().equals("xml")))
+            {
+                reportError("msg.bad.namespace");
+            }
+            decompiler.addName(ts.getString());
+
+            if (!(ts.matchToken(Token.NAME)
+                  && ts.getString().equals("namespace")))
+            {
+                reportError("msg.bad.namespace");
+            }
+            decompiler.addName(ts.getString());
+
+            if (!ts.matchToken(Token.ASSIGN)) {
+                reportError("msg.bad.namespace");
+            }
+            decompiler.addToken(Token.ASSIGN);
+
+            Node expr = expr(false);
+            pn = nf.createDefaultNamespace(expr, nsLine);
+            break;
 
         default: {
                 int lastExprType = tt;
@@ -1203,6 +1242,14 @@ public class Parser
         case Token.ERROR:
             break;
 
+        // XML stream encountered in expression.
+        case Token.LT:
+            if (compilerEnv.isXmlAvailable()) {
+                Node pn = xmlInitializer();
+                return memberExprTail(true, pn);
+            }
+            // Fall thru to the default handling of RELOP
+
         default:
             ts.ungetToken(tt);
 
@@ -1230,6 +1277,74 @@ public class Parser
         }
         return nf.createName("err"); // Only reached on error.  Try to continue.
 
+    }
+
+    private Node xmlInitializer() throws IOException
+    {
+        int tt = ts.getFirstXMLToken();
+        if (tt != Token.XML && tt != Token.XMLEND) {
+            reportError("msg.syntax");
+            return null;
+        }
+
+        /* Make a NEW node to append to. */
+        Node pnXML = nf.createLeaf(Token.NEW);
+        decompiler.addToken(Token.NEW);
+        decompiler.addToken(Token.DOT);
+
+        String xml = ts.getString();
+        boolean fAnonymous = xml.trim().startsWith("<>");
+
+        decompiler.addName(fAnonymous ? "XMLList" : "XML");
+        Node pn = nf.createName(fAnonymous ? "XMLList" : "XML");
+        nf.addChildToBack(pnXML, pn);
+
+        pn = null;
+        Node expr;
+        for (;;tt = ts.getNextXMLToken()) {
+            switch (tt) {
+            case Token.XML:
+                xml = ts.getString();
+                decompiler.addString(xml);
+                mustMatchToken(Token.LC, "msg.syntax");
+                decompiler.addToken(Token.LC);
+                expr = (ts.peekToken() == Token.RC)
+                    ? nf.createString("")
+                    : expr(false);
+                mustMatchToken(Token.RC, "msg.syntax");
+                decompiler.addToken(Token.RC);
+                if (pn == null) {
+                    pn = nf.createString(xml);
+                } else {
+                    pn = nf.createBinary(Token.ADD, pn, nf.createString(xml));
+                }
+                if (ts.isXMLAttribute()) {
+                    pn = nf.createBinary(Token.ADD, pn, nf.createString("\""));
+                    expr = nf.createUnary(Token.ESCXMLATTR, expr);
+                    pn = nf.createBinary(Token.ADD, pn, expr);
+                    pn = nf.createBinary(Token.ADD, pn, nf.createString("\""));
+                } else {
+                    expr = nf.createUnary(Token.ESCXMLTEXT, expr);
+                    pn = nf.createBinary(Token.ADD, pn, expr);
+                }
+                break;
+            case Token.XMLEND:
+                xml = ts.getString();
+                decompiler.addString(xml);
+                if (pn == null) {
+                    pn = nf.createString(xml);
+                } else {
+                    pn = nf.createBinary(Token.ADD, pn, nf.createString(xml));
+                }
+
+                nf.addChildToBack(pnXML, pn);
+                return pnXML;
+            default:
+                ts.ungetToken(tt);
+                reportError("msg.syntax");
+                return null;
+            }
+        }
     }
 
     private void argumentList(Node listNode)
@@ -1302,33 +1417,191 @@ public class Parser
         throws IOException, ParserException
     {
         int tt;
-        while ((tt = ts.getToken()) > Token.EOF) {
-            if (tt == Token.DOT) {
+      tailLoop:
+        while ((tt = ts.getToken()) != Token.EOF) {
+            switch (tt) {
+              case Token.DOT: {
                 decompiler.addToken(Token.DOT);
-                mustMatchToken(Token.NAME, "msg.no.name.after.dot");
-                String s = ts.getString();
-                decompiler.addName(s);
-                pn = nf.createBinary(Token.DOT, pn, nf.createName(s));
-            } else if (tt == Token.LB) {
+                Node n;
+                if (compilerEnv.isXmlAvailable()) {
+                    n = nameOrPropertyIdentifier();
+                } else {
+                    mustMatchToken(Token.NAME, "msg.no.name.after.dot");
+                    String s = ts.getString();
+                    decompiler.addName(s);
+                    n = nf.createName(s);
+                }
+                pn = nf.createBinary(Token.DOT, pn, n);
+                break;
+              }
+
+              case Token.DOTDOT: {
+                mustHaveXML();
+                decompiler.addToken(Token.DOTDOT);
+                Node n = nameOrPropertyIdentifier();
+                pn = nf.createBinary(Token.DOTDOT, pn, n);
+                break;
+              }
+
+              case Token.DOTQUERY:
+                mustHaveXML();
+                decompiler.addToken(Token.DOTQUERY);
+                pn = nf.createDotQuery(pn, expr(false), ts.getLineno());
+                mustMatchToken(Token.RP, "msg.no.paren");
+                break;
+
+              case Token.LB:
                 decompiler.addToken(Token.LB);
                 pn = nf.createBinary(Token.LB, pn, expr(false));
-
                 mustMatchToken(Token.RB, "msg.no.bracket.index");
                 decompiler.addToken(Token.RB);
-            } else if (allowCallSyntax && tt == Token.LP) {
-                /* make a call node */
+                break;
+
+              case Token.LP:
+                if (!allowCallSyntax) {
+                    ts.ungetToken(tt);
+                    break tailLoop;
+                }
                 decompiler.addToken(Token.LP);
                 pn = nf.createCallOrNew(Token.CALL, pn);
-
                 /* Add the arguments to pn, if any are supplied. */
                 argumentList(pn);
-            } else {
-                ts.ungetToken(tt);
-
                 break;
+
+              default:
+                ts.ungetToken(tt);
+                break tailLoop;
             }
         }
         return pn;
+    }
+
+    private Node nameOrPropertyIdentifier()
+        throws IOException, ParserException
+    {
+        Node pn;
+        int tt = ts.getToken();
+
+        switch (tt) {
+          // handles: name, ns::name, ns::*, ns::[expr]
+          case Token.NAME: {
+            String s = ts.getString();
+            decompiler.addName(s);
+            pn = nameOrQualifiedName(s, false);
+            break;
+          }
+
+          // handles: *, *::name, *::*, *::[expr]
+          case Token.MUL:
+            decompiler.addName("*");
+            pn = nameOrQualifiedName("*", false);
+            break;
+
+          // handles: '@attr', '@ns::attr', '@ns::*', '@ns::*',
+          //          '@::attr', '@::*', '@*', '@*::attr', '@*::*'
+          case Token.XMLATTR:
+            decompiler.addToken(Token.XMLATTR);
+            pn = attributeIdentifier();
+            break;
+
+          default:
+            reportError("msg.no.name.after.dot");
+            pn = nf.createName("?");
+        }
+
+        return pn;
+    }
+
+    /*
+     * Xml attribute expression:
+     *   '@attr', '@ns::attr', '@ns::*', '@ns::*', '@*', '@*::attr', '@*::*'
+     */
+    private Node attributeIdentifier()
+        throws IOException
+    {
+        Node pn;
+        int tt = ts.getToken();
+
+        switch (tt) {
+          // handles: @name, @ns::name, @ns::*, @ns::[expr]
+          case Token.NAME: {
+            String s = ts.getString();
+            decompiler.addName(s);
+            pn = nf.createAttributeName(nameOrQualifiedName(s, false));
+            break;
+          }
+
+          // handles: @*, @*::name, @*::*, @*::[expr]
+          case Token.MUL:
+            decompiler.addName("*");
+            pn = nf.createAttributeName(nameOrQualifiedName("*", false));
+            break;
+
+          // handles @[expr]
+          case Token.LB:
+            decompiler.addToken(Token.LB);
+            pn = nf.createAttributeExpr(expr(false));
+            mustMatchToken(Token.RB, "msg.no.bracket.index");
+            decompiler.addToken(Token.RB);
+            break;
+
+          default:
+            reportError("msg.no.name.after.xmlAttr");
+            pn = nf.createAttributeExpr(nf.createString("?"));
+            break;
+        }
+
+        return pn;
+    }
+
+    /**
+     * Check if :: follows name in which case it becomes qualified name
+     */
+    private Node nameOrQualifiedName(String name, boolean primaryContext)
+        throws IOException, ParserException
+    {
+      colonColonCheck:
+        if (ts.matchToken(Token.COLONCOLON)) {
+            decompiler.addToken(Token.COLONCOLON);
+
+            Node pn;
+            int tt = ts.getToken();
+
+            switch (tt) {
+              // handles name::name
+              case Token.NAME: {
+                String s = ts.getString();
+                decompiler.addName(s);
+                pn = nf.createQualifiedName(name, s);
+                break;
+              }
+
+              // handles name::*
+              case Token.MUL:
+                decompiler.addName("*");
+                pn = nf.createQualifiedName(name, "*");
+                break;
+
+              // handles name::[expr]
+              case Token.LB:
+                decompiler.addToken(Token.LB);
+                pn = nf.createQualifiedExpr(name, expr(false));
+                mustMatchToken(Token.RB, "msg.no.bracket.index");
+                decompiler.addToken(Token.RB);
+                break;
+
+              default:
+                reportError("msg.no.name.after.coloncolon");
+                break colonColonCheck;
+            }
+
+            if (primaryContext) {
+                pn = nf.createXMLPrimary(pn);
+            }
+            return pn;
+        }
+
+        return nf.createName(name);
     }
 
     private Node primaryExpr()
@@ -1452,10 +1725,22 @@ public class Parser
             mustMatchToken(Token.RP, "msg.no.paren");
             return pn;
 
-        case Token.NAME:
+        case Token.XMLATTR:
+            mustHaveXML();
+            decompiler.addToken(Token.XMLATTR);
+            pn = attributeIdentifier();
+            return nf.createXMLPrimary(pn);
+
+        case Token.NAME: {
             String name = ts.getString();
             decompiler.addName(name);
-            return nf.createName(name);
+            if (compilerEnv.isXmlAvailable()) {
+                pn = nameOrQualifiedName(name, true);
+            } else {
+                pn = nf.createName(name);
+            }
+            return pn;
+        }
 
         case Token.NUMBER:
             double n = ts.getNumber();
@@ -1507,7 +1792,7 @@ public class Parser
 
     private boolean ok; // Did the parse encounter an error?
 
-    private ScriptOrFnNode currentScriptOrFn;
+    ScriptOrFnNode currentScriptOrFn;
 
     private int nestingOfFunction;
     private int nestingOfWith;

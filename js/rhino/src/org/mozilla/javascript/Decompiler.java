@@ -789,6 +789,18 @@ public class Decompiler
                 result.append(" % ");
                 break;
 
+            case Token.COLONCOLON:
+                result.append("::");
+                break;
+
+            case Token.DOTDOT:
+                result.append("..");
+                break;
+
+            case Token.XMLATTR:
+                result.append('@');
+                break;
+
             default:
                 // If we don't know how to decompile it, raise an exception.
                 throw new RuntimeException();

@@ -426,7 +426,7 @@ public class NativeArray extends IdScriptable {
      * getLengthProperty returns 0 if obj does not have the length property
      * or its value is not convertible to a number.
      */
-    static long getLengthProperty(Scriptable obj) {
+    static long getLengthProperty(Context cx, Scriptable obj) {
         // These will both give numeric lengths within Uint32 range.
         if (obj instanceof NativeString) {
             return ((NativeString)obj).getLength();
@@ -435,8 +435,15 @@ public class NativeArray extends IdScriptable {
         } else if (!(obj instanceof Scriptable)) {
             return 0;
         }
-        return ScriptRuntime.toUint32(ScriptRuntime
-                                      .getProp(obj, "length", obj));
+        return ScriptRuntime.toUint32(
+            ScriptRuntime.getObjectProp(obj, "length", cx));
+    }
+
+    private static Object setLengthProperty(Context cx, Scriptable target,
+                                            long length)
+    {
+        return ScriptRuntime.setObjectProp(target, "length",
+                                           new Double(length), cx);
     }
 
     /* Utility functions to encapsulate index > Integer.MAX_VALUE
@@ -450,21 +457,24 @@ public class NativeArray extends IdScriptable {
         else { target.delete(Long.toString(index)); }
     }
 
-    private static Object getElem(Scriptable target, long index) {
+    private static Object getElem(Context cx, Scriptable target, long index)
+    {
         if (index > Integer.MAX_VALUE) {
             String id = Long.toString(index);
-            return ScriptRuntime.getProp(target, id);
+            return ScriptRuntime.getObjectProp(target, id, cx);
         } else {
-            return ScriptRuntime.getElem(target, (int)index);
+            return ScriptRuntime.getObjectIndex(target, (int)index, cx);
         }
     }
 
-    private static void setElem(Scriptable target, long index, Object value) {
+    private static void setElem(Context cx, Scriptable target, long index,
+                                Object value)
+    {
         if (index > Integer.MAX_VALUE) {
             String id = Long.toString(index);
-            ScriptRuntime.setProp(target, id, value);
+            ScriptRuntime.setObjectProp(target, id, value, cx);
         } else {
-            ScriptRuntime.setElem(target, (int)index, value);
+            ScriptRuntime.setObjectIndex(target, (int)index, value, cx);
         }
     }
 
@@ -477,7 +487,7 @@ public class NativeArray extends IdScriptable {
          * function; StringBuffers are limited to 2^31 in java.
          */
 
-        long length = getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
 
         StringBuffer result = new StringBuffer(256);
 
@@ -511,7 +521,7 @@ public class NativeArray extends IdScriptable {
                 cx.iterating.put(thisObj, 0); // stop recursion.
                 for (i = 0; i < length; i++) {
                     if (i > 0) result.append(separator);
-                    Object elem = getElem(thisObj, i);
+                    Object elem = getElem(cx, thisObj, i);
                     if (elem == null || elem == Undefined.instance) {
                         haslast = false;
                         continue;
@@ -538,7 +548,7 @@ public class NativeArray extends IdScriptable {
                             Scriptable obj = ScriptRuntime.
                                     toObject(cx, thisObj, elem);
                             Object tls = ScriptRuntime.
-                                    getProp(obj, "toLocaleString", thisObj);
+                                    getObjectProp(obj, "toLocaleString", cx);
                             elem = ScriptRuntime.call(cx, tls, elem,
                                                       ScriptRuntime.emptyArgs);
                         }
@@ -570,7 +580,7 @@ public class NativeArray extends IdScriptable {
     {
         String separator;
 
-        long llength = getLengthProperty(thisObj);
+        long llength = getLengthProperty(cx, thisObj);
         int length = (int)llength;
         if (llength != length) {
             throw Context.reportRuntimeError1(
@@ -588,7 +598,7 @@ public class NativeArray extends IdScriptable {
         String[] buf = new String[length];
         int total_size = 0;
         for (int i = 0; i != length; i++) {
-            Object temp = getElem(thisObj, i);
+            Object temp = getElem(cx, thisObj, i);
             if (temp != null && temp != Undefined.instance) {
                 String str = ScriptRuntime.toString(temp);
                 total_size += str.length();
@@ -616,15 +626,15 @@ public class NativeArray extends IdScriptable {
     private static Scriptable js_reverse(Context cx, Scriptable thisObj,
                                          Object[] args)
     {
-        long len = getLengthProperty(thisObj);
+        long len = getLengthProperty(cx, thisObj);
 
         long half = len / 2;
         for(long i=0; i < half; i++) {
             long j = len - i - 1;
-            Object temp1 = getElem(thisObj, i);
-            Object temp2 = getElem(thisObj, j);
-            setElem(thisObj, i, temp2);
-            setElem(thisObj, j, temp1);
+            Object temp1 = getElem(cx, thisObj, i);
+            Object temp2 = getElem(cx, thisObj, j);
+            setElem(cx, thisObj, i, temp2);
+            setElem(cx, thisObj, j, temp1);
         }
         return thisObj;
     }
@@ -636,7 +646,7 @@ public class NativeArray extends IdScriptable {
                                       Scriptable thisObj, Object[] args)
         throws JavaScriptException
     {
-        long length = getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
 
         if (length <= 1) { return thisObj; }
 
@@ -663,14 +673,14 @@ public class NativeArray extends IdScriptable {
             // sorted cheaply.
             Object[] working = new Object[ilength];
             for (int i = 0; i != ilength; ++i) {
-                working[i] = getElem(thisObj, i);
+                working[i] = getElem(cx, thisObj, i);
             }
 
             heapsort(cx, scope, working, ilength, compare, cmpBuf);
 
             // copy the working array back into thisObj
             for (int i = 0; i != ilength; ++i) {
-                setElem(thisObj, i, working[i]);
+                setElem(cx, thisObj, i, working[i]);
             }
         }
         return thisObj;
@@ -790,15 +800,15 @@ public class NativeArray extends IdScriptable {
         // Build heap
         for (long i = length / 2; i != 0;) {
             --i;
-            Object pivot = getElem(target, i);
+            Object pivot = getElem(cx, target, i);
             heapify_extended(cx, scope, pivot, target, i, length, cmp, cmpBuf);
         }
 
         // Sort heap
         for (long i = length; i != 1;) {
             --i;
-            Object pivot = getElem(target, i);
-            setElem(target, i, getElem(target, 0));
+            Object pivot = getElem(cx, target, i);
+            setElem(cx, target, i, getElem(cx, target, 0));
             heapify_extended(cx, scope, pivot, target, 0, i, cmp, cmpBuf);
         }
     }
@@ -814,9 +824,9 @@ public class NativeArray extends IdScriptable {
             if (child >= end) {
                 break;
             }
-            Object childVal = getElem(target, child);
+            Object childVal = getElem(cx, target, child);
             if (child + 1 < end) {
-                Object nextVal = getElem(target, child + 1);
+                Object nextVal = getElem(cx, target, child + 1);
                 if (isBigger(cx, scope, nextVal, childVal, cmp, cmpBuf)) {
                     ++child; childVal = nextVal;
                 }
@@ -824,10 +834,10 @@ public class NativeArray extends IdScriptable {
             if (!isBigger(cx, scope, childVal, pivot, cmp, cmpBuf)) {
                 break;
             }
-            setElem(target, i, childVal);
+            setElem(cx, target, i, childVal);
             i = child;
         }
-        setElem(target, i, pivot);
+        setElem(cx, target, i, pivot);
     }
 
     /**
@@ -837,14 +847,13 @@ public class NativeArray extends IdScriptable {
     private static Object js_push(Context cx, Scriptable thisObj,
                                   Object[] args)
     {
-        long length = getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
         for (int i = 0; i < args.length; i++) {
-            setElem(thisObj, length + i, args[i]);
+            setElem(cx, thisObj, length + i, args[i]);
         }
 
         length += args.length;
-        Double lengthObj = new Double(length);
-        ScriptRuntime.setProp(thisObj, "length", lengthObj);
+        Object lengthObj = setLengthProperty(cx, thisObj, length);
 
         /*
          * If JS1.2, follow Perl4 by returning the last thing pushed.
@@ -864,12 +873,12 @@ public class NativeArray extends IdScriptable {
                                  Object[] args)
     {
         Object result;
-        long length = getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
         if (length > 0) {
             length--;
 
             // Get the to-be-deleted property's value.
-            result = getElem(thisObj, length);
+            result = getElem(cx, thisObj, length);
 
             // We don't need to delete the last property, because
             // setLength does that for us.
@@ -878,7 +887,7 @@ public class NativeArray extends IdScriptable {
         }
         // necessary to match js even when length < 0; js pop will give a
         // length property to any target it is called on.
-        ScriptRuntime.setProp(thisObj, "length", new Double(length));
+        setLengthProperty(cx, thisObj, length);
 
         return result;
     }
@@ -887,13 +896,13 @@ public class NativeArray extends IdScriptable {
                                    Object[] args)
     {
         Object result;
-        long length = getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
         if (length > 0) {
             long i = 0;
             length--;
 
             // Get the to-be-deleted property's value.
-            result = getElem(thisObj, i);
+            result = getElem(cx, thisObj, i);
 
             /*
              * Slide down the array above the first element.  Leave i
@@ -901,8 +910,8 @@ public class NativeArray extends IdScriptable {
              */
             if (length > 0) {
                 for (i = 1; i <= length; i++) {
-                    Object temp = getElem(thisObj, i);
-                    setElem(thisObj, i - 1, temp);
+                    Object temp = getElem(cx, thisObj, i);
+                    setElem(cx, thisObj, i - 1, temp);
                 }
             }
             // We don't need to delete the last property, because
@@ -910,7 +919,7 @@ public class NativeArray extends IdScriptable {
         } else {
             result = Context.getUndefinedValue();
         }
-        ScriptRuntime.setProp(thisObj, "length", new Double(length));
+        setLengthProperty(cx, thisObj, length);
         return result;
     }
 
@@ -918,28 +927,28 @@ public class NativeArray extends IdScriptable {
                                      Object[] args)
     {
         Object result;
-        double length = (double)getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
         int argc = args.length;
 
         if (args.length > 0) {
             /*  Slide up the array to make room for args at the bottom */
             if (length > 0) {
-                for (long last = (long)length - 1; last >= 0; last--) {
-                    Object temp = getElem(thisObj, last);
-                    setElem(thisObj, last + argc, temp);
+                for (long last = length - 1; last >= 0; last--) {
+                    Object temp = getElem(cx, thisObj, last);
+                    setElem(cx, thisObj, last + argc, temp);
                 }
             }
 
             /* Copy from argv to the bottom of the array. */
             for (int i = 0; i < args.length; i++) {
-                setElem(thisObj, i, args[i]);
+                setElem(cx, thisObj, i, args[i]);
             }
 
             /* Follow Perl by returning the new array length. */
             length += args.length;
-            ScriptRuntime.setProp(thisObj, "length", new Double(length));
+            return setLengthProperty(cx, thisObj, length);
         }
-        return new Long((long)length);
+        return new Double(length);
     }
 
     private static Object js_splice(Context cx, Scriptable scope,
@@ -951,7 +960,7 @@ public class NativeArray extends IdScriptable {
         int argc = args.length;
         if (argc == 0)
             return result;
-        long length = getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
 
         /* Convert the first argument into a starting index. */
         long begin = toSliceIndex(ScriptRuntime.toInteger(args[0]), length);
@@ -991,12 +1000,12 @@ public class NativeArray extends IdScriptable {
                  * wrap in [] if necessary.  So JS1.3, default, and other
                  * versions all return an array of length 1 for uniformity.
                  */
-                result = getElem(thisObj, begin);
+                result = getElem(cx, thisObj, begin);
             } else {
                 for (long last = begin; last != end; last++) {
                     Scriptable resultArray = (Scriptable)result;
-                    Object temp = getElem(thisObj, last);
-                    setElem(resultArray, last - begin, temp);
+                    Object temp = getElem(cx, thisObj, last);
+                    setElem(cx, resultArray, last - begin, temp);
                 }
             }
         } else if (count == 0
@@ -1011,25 +1020,24 @@ public class NativeArray extends IdScriptable {
 
         if (delta > 0) {
             for (long last = length - 1; last >= end; last--) {
-                Object temp = getElem(thisObj, last);
-                setElem(thisObj, last + delta, temp);
+                Object temp = getElem(cx, thisObj, last);
+                setElem(cx, thisObj, last + delta, temp);
             }
         } else if (delta < 0) {
             for (long last = end; last < length; last++) {
-                Object temp = getElem(thisObj, last);
-                setElem(thisObj, last + delta, temp);
+                Object temp = getElem(cx, thisObj, last);
+                setElem(cx, thisObj, last + delta, temp);
             }
         }
 
         /* Copy from argv into the hole to complete the splice. */
         int argoffset = args.length - argc;
         for (int i = 0; i < argc; i++) {
-            setElem(thisObj, begin + i, args[i + argoffset]);
+            setElem(cx, thisObj, begin + i, args[i + argoffset]);
         }
 
         /* Update length in case we deleted elements from the end. */
-        ScriptRuntime.setProp(thisObj, "length",
-                              new Double(length + delta));
+        setLengthProperty(cx, thisObj, length + delta);
         return result;
     }
 
@@ -1050,16 +1058,16 @@ public class NativeArray extends IdScriptable {
         /* Put the target in the result array; only add it as an array
          * if it looks like one.
          */
-        if (ScriptRuntime.instanceOf(thisObj, ctor, scope)) {
-            length = getLengthProperty(thisObj);
+        if (ScriptRuntime.instanceOf(thisObj, ctor, cx, scope)) {
+            length = getLengthProperty(cx, thisObj);
 
             // Copy from the target object into the result
             for (slot = 0; slot < length; slot++) {
-                Object temp = getElem(thisObj, slot);
-                setElem(result, slot, temp);
+                Object temp = getElem(cx, thisObj, slot);
+                setElem(cx, result, slot, temp);
             }
         } else {
-            setElem(result, slot++, thisObj);
+            setElem(cx, result, slot++, thisObj);
         }
 
         /* Copy from the arguments into the result.  If any argument
@@ -1067,16 +1075,16 @@ public class NativeArray extends IdScriptable {
          * elements separately; otherwise, just copy the argument.
          */
         for (int i = 0; i < args.length; i++) {
-            if (ScriptRuntime.instanceOf(args[i], ctor, scope)) {
+            if (ScriptRuntime.instanceOf(args[i], ctor, cx, scope)) {
                 // ScriptRuntime.instanceOf => instanceof Scriptable
                 Scriptable arg = (Scriptable)args[i];
-                length = getLengthProperty(arg);
+                length = getLengthProperty(cx, arg);
                 for (long j = 0; j < length; j++, slot++) {
-                    Object temp = getElem(arg, j);
-                    setElem(result, slot, temp);
+                    Object temp = getElem(cx, arg, j);
+                    setElem(cx, result, slot, temp);
                 }
             } else {
-                setElem(result, slot++, args[i]);
+                setElem(cx, result, slot++, args[i]);
             }
         }
         return result;
@@ -1087,7 +1095,7 @@ public class NativeArray extends IdScriptable {
     {
         Scriptable scope = getTopLevelScope(this);
         Scriptable result = ScriptRuntime.newObject(cx, scope, "Array", null);
-        long length = getLengthProperty(thisObj);
+        long length = getLengthProperty(cx, thisObj);
 
         long begin, end;
         if (args.length == 0) {
@@ -1103,8 +1111,8 @@ public class NativeArray extends IdScriptable {
         }
 
         for (long slot = begin; slot < end; slot++) {
-            Object temp = getElem(thisObj, slot);
-            setElem(result, slot - begin, temp);
+            Object temp = getElem(cx, thisObj, slot);
+            setElem(cx, result, slot - begin, temp);
         }
 
         return result;

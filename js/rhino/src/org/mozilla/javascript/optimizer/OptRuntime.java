@@ -46,61 +46,49 @@ public final class OptRuntime extends ScriptRuntime
     public static final Double oneObj = new Double(1.0);
     public static final Double minusOneObj = new Double(-1.0);
 
-    public static Object getElem(Object obj, double dblIndex, Scriptable scope)
+    public static Object getObjectIndex(Object obj, double dblIndex,
+                                        Context cx, Scriptable scope)
     {
-        int index = (int) dblIndex;
-        Scriptable start = obj instanceof Scriptable
-                           ? (Scriptable) obj
-                           : toObject(scope, obj);
-        Scriptable m = start;
-        if (((double) index) != dblIndex) {
-            String s = toString(dblIndex);
-            while (m != null) {
-                Object result = m.get(s, start);
-                if (result != Scriptable.NOT_FOUND)
-                    return result;
-                m = m.getPrototype();
-            }
-        } else {
-            while (m != null) {
-                Object result = m.get(index, start);
-                if (result != Scriptable.NOT_FOUND)
-                    return result;
-                m = m.getPrototype();
-            }
+        if (obj == null || obj == Undefined.instance) {
+            throw undefReadError(obj, toString(dblIndex));
         }
-        return Undefined.instance;
+        Scriptable sobj;
+        if (obj instanceof Scriptable) {
+            sobj = (Scriptable)obj;
+        } else {
+            sobj = toObject(cx, scope, obj);
+        }
+
+        int index = (int)dblIndex;
+        if ((double)index == dblIndex) {
+            return getObjectIndex(sobj, index, cx);
+        } else {
+            String s = toString(dblIndex);
+            return getObjectProp(sobj, s, cx);
+        }
     }
 
-    public static Object setElem(Object obj, double dblIndex, Object value,
-                                 Scriptable scope)
+    public static Object setObjectIndex(Object obj, double dblIndex,
+                                        Object value,
+                                        Context cx, Scriptable scope)
     {
-        int index = (int) dblIndex;
-        Scriptable start = obj instanceof Scriptable
-                     ? (Scriptable) obj
-                     : toObject(scope, obj);
-        Scriptable m = start;
-        if (((double) index) != dblIndex) {
-            String s = toString(dblIndex);
-            do {
-                if (m.has(s, start)) {
-                    m.put(s, start, value);
-                    return value;
-                }
-                m = m.getPrototype();
-            } while (m != null);
-            start.put(s, start, value);
-       } else {
-            do {
-                if (m.has(index, start)) {
-                    m.put(index, start, value);
-                    return value;
-                }
-                m = m.getPrototype();
-            } while (m != null);
-            start.put(index, start, value);
+        if (obj == null || obj == Undefined.instance) {
+            throw undefWriteError(obj, String.valueOf(dblIndex), value);
         }
-        return value;
+        Scriptable sobj;
+        if (obj instanceof Scriptable) {
+            sobj = (Scriptable)obj;
+        } else {
+            sobj = toObject(cx, scope, obj);
+        }
+
+        int index = (int)dblIndex;
+        if ((double)index == dblIndex) {
+            return setObjectIndex(sobj, index, value, cx);
+        } else {
+            String s = toString(dblIndex);
+            return setObjectProp(sobj, s, value, cx);
+        }
     }
 
     public static Object add(Object val1, double val2)
@@ -148,17 +136,6 @@ public final class OptRuntime extends ScriptRuntime
 
         Function function = (Function)prop;
         return function.call(cx, scope, thisArg, args);
-    }
-
-    public static Object getPropScriptable(Scriptable obj, String id)
-    {
-        if (obj == null || obj == Undefined.instance) {
-            throw ScriptRuntime.undefReadError(obj, id);
-        }
-        Object result = ScriptableObject.getProperty(obj, id);
-        if (result != Scriptable.NOT_FOUND)
-            return result;
-        return Undefined.instance;
     }
 
     public static Object[] padStart(Object[] currentArgs, int count) {

@@ -382,7 +382,7 @@ class Optimizer
                     int indexType = rewriteForNumberVariables(arrayIndex);
                     if (indexType == NumberType) {
                         // setting the ISNUMBER_PROP signals the codegen
-                        // to use the scriptRuntime.setElem that takes
+                        // to use the OptRuntime.setObjectIndex that takes
                         // a double index
                         n.putIntProp(Node.ISNUMBER_PROP, Node.LEFT);
                         markDCPNumberContext(arrayIndex);
@@ -410,7 +410,7 @@ class Optimizer
                     if (indexType == NumberType) {
                         if (!convertParameter(arrayIndex)) {
                             // setting the ISNUMBER_PROP signals the codegen
-                            // to use the scriptRuntime.getElem that takes
+                            // to use the OptRuntime.getObjectIndex that takes
                             // a double index
                             n.putIntProp(Node.ISNUMBER_PROP, Node.RIGHT);
                         }

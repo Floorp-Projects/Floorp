@@ -20,16 +20,19 @@
  *
  * Contributor(s):
  *
+ * Kemal Bayram
  * Patrick Beard
  * Norris Boyd
  * Igor Bukanov
  * Brendan Eich
+ * Ethan Hugg
  * Roger Lawrence
+ * Terry Lucas
  * Mike McCabe
+ * Milen Nankov
  * Ian D. Stewart
  * Andi Vajda
  * Andrew Wason
- * Kemal Bayram
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -55,6 +58,8 @@ import java.util.ResourceBundle;
 import java.text.MessageFormat;
 import java.lang.reflect.*;
 import org.mozilla.javascript.debug.*;
+
+import org.mozilla.javascript.xml.XMLLib;
 
 /**
  * This class represents the runtime context of an executing script.
@@ -175,7 +180,7 @@ public class Context
      * to create an object with all enumeratable fields of the original object
      * instead of printing <tt>[object <i>result of
      * {@link Scriptable#getClassName()}</i>]</tt>.
-     *
+     * <p>
      * By default {@link #hasFeature(int)} returns true only if
      * the current JS version is set to {@link #VERSION_1_2}.
      */
@@ -198,6 +203,16 @@ public class Context
      * By default {@link #hasFeature(int)} returns true.
      */
     public static final int FEATURE_PARENT_PROTO_PROPRTIES = 5;
+
+    /**
+     * Control if support for E4X(ECMAScript for XML) extension is available.
+     * If hasFeature(FEATURE_E4X) returns true, the XML syntax is available.
+     * <p>
+     * By default {@link #hasFeature(int)} returns true if
+     * the current JS version is set to {@link #VERSION_DEFAULT}
+     * or is greater then {@link #VERSION_1_6}.
+     */
+    public static final int FEATURE_E4X = 6;
 
     public static final String languageVersionProperty = "language version";
     public static final String errorReporterProperty   = "error reporter";
@@ -1117,14 +1132,22 @@ public class Context
         NativeCall.init(this, scope, sealed);
         NativeScript.init(this, scope, sealed);
 
+        boolean withXml = hasFeature(FEATURE_E4X);
+
         for (int i = 0; i != lazilyNames.length; i += 2) {
             String topProperty = lazilyNames[i];
             String className = lazilyNames[i + 1];
+            if (!withXml && className == XML_INIT_CLASS) {
+                continue;
+            }
             new LazilyLoadedCtor(scope, topProperty, className, sealed);
         }
 
         return scope;
     }
+
+    private static final String
+        XML_INIT_CLASS = "org.mozilla.javascript.xmlimpl.XMLLibImpl";
 
     private static final String[] lazilyNames = {
         "RegExp",        "org.mozilla.javascript.regexp.NativeRegExp",
@@ -1133,6 +1156,10 @@ public class Context
         "getClass",      "org.mozilla.javascript.NativeJavaTopPackage",
         "JavaAdapter",   "org.mozilla.javascript.JavaAdapter",
         "JavaImporter",  "org.mozilla.javascript.ImporterTopLevel",
+        "XML",           XML_INIT_CLASS,
+        "XMLList",       XML_INIT_CLASS,
+        "Namespace",     XML_INIT_CLASS,
+        "QName",         XML_INIT_CLASS,
     };
 
     /**
@@ -1949,11 +1976,17 @@ public class Context
     {
     }
 
-    // Proxy to allow to use deprecated WrapHandler in place of WrapFactory
+    /**
+     * @deprecated Proxy to allow to use deprecated WrapHandler in place
+     * of WrapFactory.
+     */
     private static class WrapHandlerProxy extends WrapFactory
     {
         WrapHandler _handler;
 
+        /**
+         * @deprecated
+         */
         WrapHandlerProxy(WrapHandler handler)
         {
             _handler = handler;
@@ -2080,6 +2113,7 @@ public class Context
      * @see #FEATURE_RESERVED_KEYWORD_AS_IDENTIFIER
      * @see #FEATURE_TO_STRING_AS_SOURCE
      * @see #FEATURE_PARENT_PROTO_PROPRTIES
+     * @see #FEATURE_E4X
      */
     public boolean hasFeature(int featureIndex)
     {
@@ -2096,9 +2130,9 @@ public class Context
                 * we try to protect existing scripts that have specified a
                 * version...
                 */
-                return (version == Context.VERSION_1_0
-                        || version == Context.VERSION_1_1
-                        || version == Context.VERSION_1_2);
+                return (version == VERSION_1_0
+                        || version == VERSION_1_1
+                        || version == VERSION_1_2);
 
             case FEATURE_MEMBER_EXPR_AS_FUNCTION_NAME:
                 return false;
@@ -2111,6 +2145,9 @@ public class Context
 
             case FEATURE_PARENT_PROTO_PROPRTIES:
                 return true;
+
+            case FEATURE_E4X:
+                return version == VERSION_DEFAULT || version >= VERSION_1_6;
         }
         // It is a bug to call the method with unknown featureIndex
         throw new IllegalArgumentException(String.valueOf(featureIndex));
@@ -2572,10 +2609,12 @@ public class Context
     private boolean sealed;
     private Object sealKey;
 
-    /**
-     * The activation of the currently executing function or script.
-     */
-    NativeCall currentActivation;
+    Scriptable topActivationScope;
+    NativeCall currentActivationCall;
+    Scriptable currentActivationScope;
+    int currentActivationDepth;
+
+    XMLLib cachedXMLLib;
 
     // for Objects, Arrays to tag themselves as being printed out,
     // so they don't print themselves out recursively.
@@ -2618,4 +2657,7 @@ public class Context
     // For instruction counting (interpreter only)
     int instructionCount;
     int instructionThreshold;
+
+    // It can be used to return the second long or uint32 result from function
+    long scratchLong;
 }

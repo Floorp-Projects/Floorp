@@ -362,10 +362,10 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
 
         case JSTYPE_OBJECT:
             // Other objects takes #1-#3 spots
-			if (to == fromObj.getClass()) {
-				// No conversion required
-				return 1;
-			}
+            if (to == fromObj.getClass()) {
+                // No conversion required
+                return 1;
+            }
             if (to.isArray()) {
                 if (fromObj instanceof NativeArray) {
                     // This is a native array conversion to a java array
@@ -402,7 +402,6 @@ WrapFactory#wrap(Context cx, Scriptable scope, Object obj, Class)}
         }
 
         return CONVERSION_NONE;
-
     }
 
     static int getSizeRank(Class aType) {

@@ -185,6 +185,10 @@ public class CompilerEnvirons
         this.generatingSource = generatingSource;
     }
 
+    final boolean isXmlAvailable()
+    {
+        return true;
+    }
 
     private ErrorReporter errorReporter;
     private int syntaxErrorCount;

@@ -147,6 +147,15 @@ public class NativeWith implements Scriptable, IdFunctionMaster {
         return prototype.hasInstance(value);
     }
 
+    /**
+     * Must return null to continue looping or the final collection result.
+     */
+    public Object updateDotQuery(boolean value)
+    {
+        // NativeWith itself does not support it
+        throw new IllegalStateException();
+    }
+
     public Object execMethod(IdFunction f, Context cx, Scriptable scope,
                              Scriptable thisObj, Object[] args)
     {

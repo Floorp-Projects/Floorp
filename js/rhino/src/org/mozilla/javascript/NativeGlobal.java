@@ -38,7 +38,8 @@
 package org.mozilla.javascript;
 
 import java.io.Serializable;
-import java.lang.reflect.Method;
+
+import org.mozilla.javascript.xml.XMLLib;
 
 /**
  * This class implements the global native object (function and value
@@ -82,6 +83,9 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                 break;
               case Id_isNaN:
                 name = "isNaN";
+                break;
+              case Id_isXMLName:
+                name = "isXMLName";
                 break;
               case Id_parseFloat:
                 name = "parseFloat";
@@ -193,6 +197,14 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
                         return Boolean.TRUE;
                     double d = ScriptRuntime.toNumber(args[0]);
                     return (d != d) ? Boolean.TRUE : Boolean.FALSE;
+                }
+
+                case Id_isXMLName: {
+                    Object name = (args.length == 0)
+                                  ? Undefined.instance : args[0];
+                    XMLLib xmlLib = XMLLib.extractFromScope(scope);
+                    return ScriptRuntime.wrapBoolean(
+                        xmlLib.isXMLName(cx, name));
                 }
 
                 case Id_parseFloat:
@@ -756,12 +768,13 @@ public class NativeGlobal implements Serializable, IdFunctionMaster
         Id_eval                =  6,
         Id_isFinite            =  7,
         Id_isNaN               =  8,
-        Id_parseFloat          =  9,
-        Id_parseInt            = 10,
-        Id_unescape            = 11,
-        Id_uneval              = 12,
+        Id_isXMLName           =  9,
+        Id_parseFloat          = 10,
+        Id_parseInt            = 11,
+        Id_unescape            = 12,
+        Id_uneval              = 13,
 
-        LAST_SCOPE_FUNCTION_ID = 12,
+        LAST_SCOPE_FUNCTION_ID = 13,
 
-        Id_new_CommonError     = 13;
+        Id_new_CommonError     = 14;
 }
