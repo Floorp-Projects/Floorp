@@ -52,6 +52,8 @@
 #include "nsRect.h"
 #include "nsINetSupport.h"
 #include "nsIContentViewer.h"
+#include "nsScreen.h"
+#include "nsHistory.h"
 
 #include "jsapi.h"
 
@@ -88,6 +90,8 @@ GlobalWindowImpl::GlobalWindowImpl()
   mScriptObject = nsnull;
   mDocument = nsnull;
   mNavigator = nsnull;
+  mScreen = nsnull;
+  mHistory = nsnull;
   mLocation = nsnull;
   mFrames = nsnull;
   mOpener = nsnull;
@@ -109,6 +113,8 @@ GlobalWindowImpl::~GlobalWindowImpl()
   NS_IF_RELEASE(mContext);
   NS_IF_RELEASE(mDocument);
   NS_IF_RELEASE(mNavigator);
+  NS_IF_RELEASE(mScreen);
+  NS_IF_RELEASE(mHistory);
   NS_IF_RELEASE(mLocation);
   NS_IF_RELEASE(mFrames);
   NS_IF_RELEASE(mOpener);
@@ -234,6 +240,9 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
   if (nsnull != mLocation) {
     mLocation->SetWebShell(aWebShell);
   }
+  if (nsnull != mHistory) {
+    mHistory->SetWebShell(aWebShell);
+  }
   if (nsnull != mFrames) {
     mFrames->SetWebShell(aWebShell);
   }
@@ -284,6 +293,37 @@ GlobalWindowImpl::GetNavigator(nsIDOMNavigator** aNavigator)
 
   *aNavigator = mNavigator;
   NS_IF_ADDREF(mNavigator);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetScreen(nsIDOMScreen** aScreen)
+{
+  if (nsnull == mScreen) {
+    mScreen = new ScreenImpl();
+    NS_IF_ADDREF(mScreen);
+  }
+
+  *aScreen = mScreen;
+  NS_IF_ADDREF(mScreen);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+GlobalWindowImpl::GetHistory(nsIDOMHistory** aHistory)
+{
+  if (nsnull == mHistory) {
+    mHistory = new HistoryImpl();
+    if (nsnull != mHistory) {
+      NS_ADDREF(mHistory);
+      mHistory->SetWebShell(mWebShell);
+    }
+  }
+
+  *aHistory = mHistory;
+  NS_IF_ADDREF(mHistory);
 
   return NS_OK;
 }
@@ -723,19 +763,27 @@ GlobalWindowImpl::Close()
 NS_IMETHODIMP
 GlobalWindowImpl::Forward()
 {
-  if (NS_OK == mWebShell->CanForward())
-    mWebShell->Forward();
+  nsIBrowserWindow *mBrowser;
 
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    //XXX tbi
+    //mBrowser->Forward();
+    NS_RELEASE(mBrowser);
+  }
   return NS_OK;
 }
 
 NS_IMETHODIMP
 GlobalWindowImpl::Back()
 {
-  if (NS_OK == mWebShell->CanBack())
-    mWebShell->Back();
-  
-  return NS_OK;
+  nsIBrowserWindow *mBrowser;
+
+  if (NS_OK == GetBrowserWindowInterface(mBrowser)) {
+    //XXX tbi
+    //mBrowser->Back();
+    NS_RELEASE(mBrowser);
+  }
+  return NS_OK;  
 }
 
 NS_IMETHODIMP

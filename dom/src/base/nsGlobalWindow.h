@@ -27,6 +27,7 @@
 #include "nsIDOMWindow.h"
 #include "nsIDOMNavigator.h"
 #include "nsIDOMLocation.h"
+#include "nsIDOMScreen.h"
 #include "nsITimer.h"
 #include "nsIJSScriptObject.h"
 #include "nsIDOMEventCapturer.h"
@@ -45,6 +46,8 @@ typedef struct nsTimeoutImpl nsTimeoutImpl;
 
 class LocationImpl;
 class NavigatorImpl;
+class ScreenImpl;
+class HistoryImpl;
 
 // Global object for scripting
 class GlobalWindowImpl : public nsIScriptObjectOwner, public nsIScriptGlobalObject, public nsIDOMWindow, 
@@ -68,6 +71,8 @@ public:
   NS_IMETHOD    GetSelf(nsIDOMWindow** aSelf);
   NS_IMETHOD    GetDocument(nsIDOMDocument** aDocument);
   NS_IMETHOD    GetNavigator(nsIDOMNavigator** aNavigator);
+  NS_IMETHOD    GetScreen(nsIDOMScreen** aScreen);
+  NS_IMETHOD    GetHistory(nsIDOMHistory** aHistory);
   NS_IMETHOD    GetLocation(nsIDOMLocation** aLocation);
   NS_IMETHOD    GetParent(nsIDOMWindow** aOpener);
   NS_IMETHOD    GetTop(nsIDOMWindow** aTop);
@@ -185,6 +190,8 @@ protected:
   nsIDOMDocument *mDocument;
   NavigatorImpl *mNavigator;
   LocationImpl *mLocation;
+  ScreenImpl *mScreen;
+  HistoryImpl *mHistory;
   nsIWebShell *mWebShell;
   nsIDOMWindow *mOpener;
   

@@ -41,6 +41,10 @@ CPPSRCS =			 \
 	nsFrameList.cpp		 \
 	nsJSSecurityManager.cpp  \
 	nsJSUtils.cpp		 \
+	nsScreen.cpp		 \
+	nsJSScreen.cpp		 \
+	nsHistory.cpp		 \
+	nsJSHistory.cpp		 \
 	$(NULL)
 
 EXPORTS = nsJSUtils.h
