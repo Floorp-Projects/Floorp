@@ -121,19 +121,15 @@ nsresult nsMsgMailSession::GetCurrentServer(nsIMsgIncomingServer ** aServer)
 
 nsresult nsMsgMailSession::GetAccountManager(nsIMsgAccountManager* *aAM)
 {
-  if (!aAM) return NS_ERROR_NULL_POINTER;
+  NS_ENSURE_ARG_POINTER(aAM);
 
-  if (!m_accountManager) {
-    nsresult rv;
-    rv = nsComponentManager::CreateInstance(kMsgAccountManagerCID,
-                                            NULL,
-                                            NS_GET_IID(nsIMsgAccountManager),
-                                            (void **)&m_accountManager);
-    if (NS_FAILED(rv)) return rv;
-    m_accountManager->LoadAccounts();
-  }
+  nsresult rv;
+  
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager, kMsgAccountManagerCID, &rv);
+  if (NS_FAILED(rv)) return rv;
+  accountManager->LoadAccounts();
     
-  *aAM = m_accountManager;
+  *aAM = accountManager;
   NS_IF_ADDREF(*aAM);
   return NS_OK;
 }

@@ -261,8 +261,6 @@ protected:
   //
   
   PRBool mIsServer;
-  nsCString mUsername;
-  nsCString mHostname;
   nsString mName;
   
 };

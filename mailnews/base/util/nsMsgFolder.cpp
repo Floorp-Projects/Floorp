@@ -127,8 +127,12 @@ nsMsgFolder::Init(const char* aURI)
   
   rv = url->SetSpec(aURI);
   if (NS_FAILED(rv)) return rv;
+
+  //
+  // pull some info out of the URI
+  //
   
-  // empty path => server
+  // empty path tells us it's a server.
   nsXPIDLCString path;
   rv = url->GetPath(getter_Copies(path));
   if (NS_SUCCEEDED(rv)) {
@@ -138,20 +142,6 @@ nsMsgFolder::Init(const char* aURI)
       mIsServer = PR_FALSE;
   }
 
-  // mUsername:
-  nsXPIDLCString userName;
-  rv = url->GetPreHost(getter_Copies(userName));
-  if (NS_SUCCEEDED(rv)) {
-    mUsername = userName;
-  }
-
-  // mHostname
-  nsXPIDLCString hostName;
-  rv = url->GetHost(getter_Copies(hostName));
-  if (NS_SUCCEEDED(rv)) {
-    mHostname = hostName;
-  }
-  
   // mName:
   // the name is the trailing directory in the path
   nsXPIDLCString fileName;
@@ -161,6 +151,33 @@ nsMsgFolder::Init(const char* aURI)
     mName = fileName;
   }
 
+  // Get username and hostname so we can get the server
+  nsXPIDLCString userName;
+  rv = url->GetPreHost(getter_Copies(userName));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Error parsing username from folder URI");
+  
+  nsXPIDLCString hostName;
+  rv = url->GetHost(getter_Copies(hostName));
+  NS_ASSERTION(NS_SUCCEEDED(rv), "Error parsing hostname from folder URI");
+  
+  // turn it back into a server:
+
+  NS_WITH_SERVICE(nsIMsgAccountManager, accountManager,
+                  NS_MSGACCOUNTMANAGER_PROGID, &rv);
+  if (NS_FAILED(rv)) return rv;
+
+  nsIMsgIncomingServer *server;
+  rv = accountManager->FindServer(userName,
+                                  hostName,
+                                  GetIncomingServerType(),
+                                  &server);
+  if (NS_FAILED(rv)) return rv;
+
+  // keep weak ref to server
+  m_server = server;
+  NS_IF_RELEASE(server);
+
+  NS_ASSERTION(m_server, "Failed to get server..");
   return NS_OK;
 }
 
@@ -416,55 +433,12 @@ NS_IMETHODIMP nsMsgFolder::BuildUrl(nsMsgDatabase *db, nsMsgKey key, char ** url
 
 NS_IMETHODIMP nsMsgFolder::GetServer(nsIMsgIncomingServer ** aServer)
 {
-
-  /* this should really just:
-     - truncate the URI
-     - GetResource on the URI
-     - QueryInterface to nsIMsgIncomingServer::GetIID()
-  */
-	nsresult rv = NS_OK; 
-	if (!m_server) // if we haven't fetched the server yet....
-	{
-		NS_WITH_SERVICE(nsIMsgMailSession, session, kMsgMailSessionCID, &rv); 
-		if (NS_FAILED(rv)) return rv;
-
-		nsCOMPtr<nsIMsgAccountManager> accountManager;
-		rv = session->GetAccountManager(getter_AddRefs(accountManager));
-		if(NS_FAILED(rv)) return rv;
-
-    char * hostname = nsnull;
-		rv = GetHostname(&hostname);
-		if(NS_FAILED(rv)) return rv;
-
-    char * username = nsnull;
-    rv = GetUsername(&username);
-    if (NS_FAILED(rv)) return rv;
-    
-    nsIMsgIncomingServer *server;
-		rv = accountManager->FindServer(username,
-                                    hostname,
-                                    GetIncomingServerType(),
-                                    &server);
-    PR_FREEIF(username);
-		PR_FREEIF(hostname);
-		if (NS_FAILED(rv)) return rv;
-	
-		m_server = server;
-		// release because we don't wan't to keep a reference.
-		// the server keeps a reference to the folder, and if the
-		// folder keeps one back to the server, we'd get a cycle.
-		NS_IF_RELEASE(server);
-	}
-
-	if (aServer)
-	{
-		*aServer = m_server;
-		NS_IF_ADDREF(*aServer);
-	}
-	else
-		rv = NS_ERROR_NULL_POINTER;
-
-	return rv;
+  NS_ENSURE_ARG_POINTER(aServer);
+  
+  *aServer = m_server;
+  NS_IF_ADDREF(*aServer);
+  
+	return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1428,15 +1402,22 @@ NS_IMETHODIMP nsMsgFolder::UserNeedsToAuthenticateForFolder(PRBool displayOnly, 
 NS_IMETHODIMP nsMsgFolder::GetUsername(char **userName)
 {
   NS_ENSURE_ARG_POINTER(userName);
-
-  *userName = mUsername.ToNewCString();
+  NS_ASSERTION(m_server, "No server when getting username");
+  if (!m_server) return NS_ERROR_UNEXPECTED;
+  
+  m_server->GetUsername(userName);
+  
   return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetHostname(char **hostName)
 {
   NS_ENSURE_ARG_POINTER(hostName);
-  *hostName = mHostname.ToNewCString();
+  NS_ASSERTION(m_server, "No server when getting hostname");
+  if (!m_server) return NS_ERROR_UNEXPECTED;
+  
+  m_server->GetHostName(hostName);
+  
   return NS_OK;
 }
 
