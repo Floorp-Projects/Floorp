@@ -64,7 +64,7 @@
 #include "nsPluginViewer.h"
 #include "nsGUIEvent.h"
 #include "nsIPluginViewer.h"
-
+#include "nsContentCID.h"
 
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
@@ -81,7 +81,7 @@ static NS_DEFINE_IID(kIContentViewerIID, NS_ICONTENTVIEWER_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kCPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIDocumentIID, NS_IDOCUMENT_IID);
-
+static NS_DEFINE_IID(kHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 
 class PluginViewerImpl;
 
@@ -359,6 +359,21 @@ PluginViewerImpl::StartLoad(nsIRequest* request, nsIStreamListener*& aResult)
   nsresult rv = NS_ERROR_FAILURE;
   if(host) 
   {
+    // create a document so that we can pass something back to plugin
+    // instance if it wants one
+    nsCOMPtr<nsIDocument> doc(do_CreateInstance(kHTMLDocumentCID));
+    if (doc) {    
+      mDocument = doc;
+      NS_ADDREF(mDocument);  // released in ~nsPluginViewer
+      
+      // set the document's URL 
+      // so it can be fetched later for resolving relative URLs
+      nsCOMPtr<nsIURI> uri;
+      GetURI(getter_AddRefs(uri));
+      if (uri)
+        mDocument->SetDocumentURL(uri);
+    }
+
     nsRect r;
     mWindow->GetClientBounds(r);
     rv = CreatePlugin(request, host, nsRect(0, 0, r.width, r.height), aResult);
