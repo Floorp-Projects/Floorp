@@ -69,6 +69,22 @@ endif
 ifeq ($(OS_ARCH),UNIX_System_V)
 OS_ARCH		:= NEC
 endif
+ifeq ($(OS_ARCH),OSF1)
+OS_SUB		:= $(shell uname -v)
+# Until I know the other possibilities, or an easier way to compute them, this is all there's gonna be.
+#ifeq ($(OS_SUB),240)
+#OS_RELEASE	:= V2.0
+#endif
+ifeq ($(OS_SUB),148)
+OS_RELEASE	:= V3.2C
+endif
+ifeq ($(OS_SUB),564)
+OS_RELEASE	:= V4.0B
+endif
+ifeq ($(OS_SUB),878)
+OS_RELEASE	:= V4.0D
+endif
+endif
 ifeq ($(OS_ARCH),QNX)
 OS_RELEASE	:= $(shell uname -v | sed 's/^\([0-9]\)\([0-9]*\)$$/\1.\2/')
 endif
@@ -224,7 +240,7 @@ endif
 endif
 
 ifdef USE_AUTOCONF
-OPTIMIZER	= 
+OPTIMIZER	=
 DEFINES		+= -UDEBUG -DNDEBUG -DTRIMMED
 XBCFLAGS	=
 else
@@ -280,7 +296,7 @@ endif # !USE_AUTOCONF
 
 ifdef MOZ_DEBUG
 ifdef USE_AUTOCONF
-OPTIMIZER	= 
+OPTIMIZER	=
 DEFINES		+= -DDEBUG -UNDEBUG -DDEBUG_$(shell $(WHOAMI)) -DTRACING
 else
 OPTIMIZER	= -g
