@@ -1621,7 +1621,7 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
       NotifyAncestors(folder, kNC_SubfoldersHaveUnreadMessages, kFalseLiteral);
     }
 
-    //We will have to change the folderTreeName also
+    //We will have to change the folderTreeName if the unread column is hidden
     NotifyFolderTreeNameChanged(folder, newValue);
   }
   return NS_OK;
@@ -1696,13 +1696,23 @@ nsMsgFolderDataSource::NotifyAncestors(nsIMsgFolder *aFolder, nsIRDFResource *aP
   rv = folder->GetParent(getter_AddRefs(parentFolder));
   NS_ENSURE_SUCCESS(rv,rv);
   
+  nsCOMPtr <nsIMsgFolder> parentMsgFolder = do_QueryInterface(parentFolder, &rv);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = parentMsgFolder->GetIsServer(&isServer);
+  NS_ENSURE_SUCCESS(rv,rv);
+ 
+  // don't need to notify servers either.
+  if (isServer) 
+  {
+    // done, stop
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIRDFResource> parentFolderResource = do_QueryInterface(parentFolder,&rv);
   NS_ENSURE_SUCCESS(rv,rv);
 
   NotifyPropertyChanged(parentFolderResource, aPropertyResource, aNode);
-
-  nsCOMPtr <nsIMsgFolder> parentMsgFolder = do_QueryInterface(parentFolder, &rv);
-  NS_ENSURE_SUCCESS(rv,rv);
 
   return NotifyAncestors(parentMsgFolder, aPropertyResource, aNode);
 }

@@ -122,43 +122,43 @@ NS_IMETHODIMP nsMsgThreadedDBView::ReloadFolderAfterQuickSearch()
 
 nsresult nsMsgThreadedDBView::InitThreadedView(PRInt32 *pCount)
 {
-	nsresult rv;
-
-    m_keys.RemoveAll();
-	m_flags.RemoveAll();
-	m_levels.RemoveAll(); 
-	m_prevKeys.RemoveAll();
-	m_prevFlags.RemoveAll();
-	m_prevLevels.RemoveAll();
-	m_havePrevView = PR_FALSE;
-	nsresult getSortrv = NS_OK; // ### TODO m_db->GetSortInfo(&sortType, &sortOrder);
-
-	// list all the ids into m_keys.
-	nsMsgKey startMsg = 0; 
-	do
-	{
-		const PRInt32 kIdChunkSize = 400;
-		PRInt32			numListed = 0;
-		nsMsgKey	idArray[kIdChunkSize];
-		PRInt32		flagArray[kIdChunkSize];
-		char		levelArray[kIdChunkSize];
-
+  nsresult rv;
+  
+  m_keys.RemoveAll();
+  m_flags.RemoveAll();
+  m_levels.RemoveAll(); 
+  m_prevKeys.RemoveAll();
+  m_prevFlags.RemoveAll();
+  m_prevLevels.RemoveAll();
+  m_havePrevView = PR_FALSE;
+  nsresult getSortrv = NS_OK; // ### TODO m_db->GetSortInfo(&sortType, &sortOrder);
+  
+  // list all the ids into m_keys.
+  nsMsgKey startMsg = 0; 
+  do
+  {
+    const PRInt32 kIdChunkSize = 400;
+    PRInt32			numListed = 0;
+    nsMsgKey	idArray[kIdChunkSize];
+    PRInt32		flagArray[kIdChunkSize];
+    char		levelArray[kIdChunkSize];
+    
     rv = ListThreadIds(&startMsg, (m_viewFlags & nsMsgViewFlagsType::kUnreadOnly) != 0, idArray, flagArray, 
-                    levelArray, kIdChunkSize, &numListed, nsnull);
-		if (NS_SUCCEEDED(rv))
-		{
-			PRInt32 numAdded = AddKeys(idArray, flagArray, levelArray, m_sortType, numListed);
-			if (pCount)
-				*pCount += numAdded;
-		}
-
-	} while (NS_SUCCEEDED(rv) && startMsg != nsMsgKey_None);
-
-	if (NS_SUCCEEDED(getSortrv))
-	{
-		rv = InitSort(m_sortType, m_sortOrder);
-	}
-	return rv;
+      levelArray, kIdChunkSize, &numListed, nsnull);
+    if (NS_SUCCEEDED(rv))
+    {
+      PRInt32 numAdded = AddKeys(idArray, flagArray, levelArray, m_sortType, numListed);
+      if (pCount)
+        *pCount += numAdded;
+    }
+    
+  } while (NS_SUCCEEDED(rv) && startMsg != nsMsgKey_None);
+  
+  if (NS_SUCCEEDED(getSortrv))
+  {
+    rv = InitSort(m_sortType, m_sortOrder);
+  }
+  return rv;
 }
 
 nsresult nsMsgThreadedDBView::AddKeys(nsMsgKey *pKeys, PRInt32 *pFlags, const char *pLevels, nsMsgViewSortTypeValue sortType, PRInt32 numKeysToAdd)

@@ -299,7 +299,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::AddSubfolder(nsAutoString *name,
 		if(name->EqualsIgnoreCase(nsAutoString(kInboxName)))
 		{
 			flags |= MSG_FOLDER_FLAG_INBOX;
-			mBiffState = nsMsgBiffState_Unknown;
+                        SetBiffState(nsIMsgFolder::nsMsgBiffState_Unknown);
 		}
 		else if (name->EqualsIgnoreCase(nsAutoString(kTrashName)))
 			flags |= MSG_FOLDER_FLAG_TRASH;

@@ -479,7 +479,7 @@ nsresult nsMsgDBFolder::SendFlagNotifications(nsISupports *item, PRUint32 oldFla
     {
       //..so..if the msg is read in the folder and the folder has new msgs clear the account level and status bar biffs.
       rv = NotifyPropertyFlagChanged(item, kStatusAtom, oldFlags, newFlags);
-      rv = SetBiffState(newFlags);
+      rv = SetBiffState(nsMsgBiffState_NoMail);
     }
     else if(changedFlags & (MSG_FLAG_READ | MSG_FLAG_REPLIED | MSG_FLAG_FORWARDED
       | MSG_FLAG_IMAP_DELETED | MSG_FLAG_NEW | MSG_FLAG_OFFLINE))

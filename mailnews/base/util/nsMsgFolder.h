@@ -288,7 +288,6 @@ protected:
   PRInt32 mNumPendingUnreadMessages;
   PRInt32 mNumPendingTotalMessages;
 
-  PRUint32	mBiffState;
   PRInt32	mNumNewBiffMessages;
 
   PRBool mIsCachable;

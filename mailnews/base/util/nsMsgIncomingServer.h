@@ -68,11 +68,6 @@ class NS_MSG_BASE nsMsgIncomingServer : public nsIMsgIncomingServer,
   NS_DECL_ISUPPORTS
   NS_DECL_NSIMSGINCOMINGSERVER
   
-private:
-  nsIPref *m_prefs;
-  nsCString m_password;
-  PRBool m_serverBusy;
-
 protected:
   nsCString m_serverKey;
   void getPrefName(const char *serverKey, const char *pref, nsCString& fullPrefName);
@@ -102,11 +97,17 @@ protected:
   // pref callback to clear the user prefs
   static void clearPrefEnum(const char  *aPref, void *aClosure);
 
+private:
+  nsIPref *m_prefs;
+  nsCString m_password;
+  PRUint32	m_biffState;
+  PRPackedBool m_serverBusy;
+protected:
   // member variable for canHaveFilters
-  PRBool m_canHaveFilters;
+  PRPackedBool m_canHaveFilters;
 
   // member variable for to check if we need display startup page
-  PRBool m_displayStartupPage;
+  PRPackedBool m_displayStartupPage;
 };
 
 #endif // nsMsgIncomingServer_h__

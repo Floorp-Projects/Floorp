@@ -90,9 +90,10 @@ static NS_DEFINE_CID(kMsgFilterServiceCID, NS_MSGFILTERSERVICE_CID);
 MOZ_DECL_CTOR_COUNTER(nsMsgIncomingServer)
 
 nsMsgIncomingServer::nsMsgIncomingServer():
-    m_prefs(0),
-    m_serverBusy(PR_FALSE),
     m_rootFolder(0),
+    m_prefs(0),
+    m_biffState(nsIMsgFolder::nsMsgBiffState_NoMail),
+    m_serverBusy(PR_FALSE),
     m_canHaveFilters(PR_FALSE),
     m_displayStartupPage(PR_TRUE)
 {
@@ -174,6 +175,8 @@ nsMsgIncomingServer::PerformBiff()
 	//just return not implemented.
 	return NS_ERROR_NOT_IMPLEMENTED;	
 }
+
+NS_IMPL_GETSET(nsMsgIncomingServer, BiffState, PRUint32, m_biffState);
 
 NS_IMETHODIMP nsMsgIncomingServer::WriteToFolderCache(nsIMsgFolderCache *folderCache)
 {

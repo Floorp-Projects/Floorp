@@ -138,6 +138,9 @@ interface nsIMsgIncomingServer : nsISupports {
   /* how often to biff */
   attribute long biffMinutes;
 
+  /* current biff state */
+  attribute unsigned long biffState;
+
   /* the on-disk path to message storage for this server */
   attribute nsIFileSpec localPath;
 

@@ -117,7 +117,6 @@ nsMsgFolder::nsMsgFolder(void)
   	mNotifyCountChanges(PR_TRUE),
     mExpungedBytes(0),
     mInitializedFromCache(PR_FALSE),
-    mBiffState(nsMsgBiffState_NoMail),
     mNumNewBiffMessages(0),
     mHaveParsedURI(PR_FALSE),
     mIsServerIsValid(PR_FALSE),
@@ -1981,39 +1980,43 @@ NS_IMETHODIMP nsMsgFolder::GetNewMessages(nsIMsgWindow *, nsIUrlListener * /* aL
 
 NS_IMETHODIMP nsMsgFolder::GetBiffState(PRUint32 *aBiffState)
 {
-	if(!aBiffState)
-		return NS_ERROR_NULL_POINTER;
-	*aBiffState = mBiffState;
-	return NS_OK;
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server)
+    rv = server->GetBiffState(aBiffState);
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgFolder::SetBiffState(PRUint32 aBiffState)
 {
-	nsresult rv;
+  PRUint32 oldBiffState;
+  
+  nsCOMPtr<nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  if (NS_SUCCEEDED(rv) && server)
+    rv = server->GetBiffState(&oldBiffState);
+    // Get the server and notify it and not inbox.
+  if(oldBiffState != aBiffState) 
+  {
+    // we don't distinguish between unknown and noMail for servers
+    if (! (oldBiffState == nsMsgBiffState_Unknown && aBiffState == nsMsgBiffState_NoMail))
+    {
+      if (!mIsServer)
+      {
+        nsCOMPtr<nsIMsgFolder> folder;
+        rv = GetRootFolder(getter_AddRefs(folder));
+        if (NS_SUCCEEDED(rv) && folder)
+          return folder->SetBiffState(aBiffState);
+      }
 
-	// this optimization isn't working with filters...
-	// so commenting out the optimization
-	// need to figure out why and fix it !!!
 
-	//if(mBiffState != aBiffState) 
-	//{
-		PRUint32 oldBiffState = mBiffState;
-		mBiffState = aBiffState;
-		nsCOMPtr<nsISupports> supports;
-
-		// Get the server and notify it and not inbox.
-		nsCOMPtr<nsIMsgIncomingServer> aServer;
-		nsCOMPtr<nsIFolder> aRootFolder;
-
-		rv = GetServer(getter_AddRefs(aServer));
-		rv = aServer->GetRootFolder(getter_AddRefs(aRootFolder));
-        if(NS_FAILED(rv))
-            return rv;
-		
-		if(NS_SUCCEEDED(aRootFolder->QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
-			(aRootFolder)->NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, mBiffState);
-	//}
-	return NS_OK;
+      server->SetBiffState(aBiffState);
+      nsCOMPtr<nsISupports> supports;
+      if(NS_SUCCEEDED(QueryInterface(NS_GET_IID(nsISupports), getter_AddRefs(supports))))
+        NotifyPropertyFlagChanged(supports, kBiffStateAtom, oldBiffState, aBiffState);
+    }
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgFolder::GetNumNewMessages(PRInt32 *aNumNewMessages)

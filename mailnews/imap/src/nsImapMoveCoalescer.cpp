@@ -121,7 +121,6 @@ nsresult nsImapMoveCoalescer::PlaybackMoves(nsIEventQueue *eventQueue)
         nsImapMailFolder::AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
         
         destFolder->SetNumNewMessages(keysToAdd->GetSize());
-        //destFolder->SetBiffState(nsIMsgFolder::nsMsgBiffState_NewMail);
         destFolder->SetHasNewMessages(PR_TRUE);
         
         nsCOMPtr <nsISupports> sourceSupports = do_QueryInterface(m_sourceFolder, &rv);
