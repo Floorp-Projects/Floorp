@@ -353,7 +353,7 @@ nsXMLDocument::GetDoctype(nsIDOMDocumentType** aDocumentType)
 {
   // XXX TBI
   *aDocumentType = nsnull;
-  return NS_ERROR_NOT_IMPLEMENTED;
+  return NS_OK;
 }
  
 NS_IMETHODIMP    
