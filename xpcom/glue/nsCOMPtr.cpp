@@ -50,9 +50,7 @@ nsCOMPtr_base::assign_with_AddRef( nsISupports* rawPtr )
 	{
     if ( rawPtr )
     	NSCAP_ADDREF(rawPtr);
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-    mRawPtr = rawPtr;
+    assign_assuming_AddRef(rawPtr);
 	}
 
 void
@@ -61,19 +59,12 @@ nsCOMPtr_base::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& i
 		nsISupports* newRawPtr;
 		if ( !NS_SUCCEEDED( helper(iid, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
 			newRawPtr = 0;
-		if ( mRawPtr )
-			NSCAP_RELEASE(mRawPtr);
-		mRawPtr = newRawPtr;
+    assign_assuming_AddRef(newRawPtr);
 	}
 
 void**
 nsCOMPtr_base::begin_assignment()
   {
-    if ( mRawPtr )
-    	{
-	      NSCAP_RELEASE(mRawPtr);
-	    	mRawPtr = 0;
-    	}
-
+    assign_assuming_AddRef(0);
     return NS_REINTERPRET_CAST(void**, &mRawPtr);
   }

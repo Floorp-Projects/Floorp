@@ -261,7 +261,7 @@ class NS_EXPORT nsQueryInterface : public nsCOMPtr_helper
 
     private:
       nsISupports*  mRawPtr;
-      nsresult*      mErrorPtr;
+      nsresult*     mErrorPtr;
   };
 
 inline
@@ -373,6 +373,23 @@ class nsCOMPtr_base
 
     protected:
       nsISupports* mRawPtr;
+
+			void
+			assign_assuming_AddRef( nsISupports* newPtr )
+			  {
+			  		/*
+			  			|AddRef()|ing the new value (before entering this function) before
+			  			|Release()|ing the old lets us safely ignore the self-assignment case.
+			  			We must, however, be careful only to |Release()| _after_ doing the
+			  			assignment, in case the |Release()| leads to our _own_ destruction,
+			  			which would, in turn, cause an incorrect second |Release()| of our old
+			  			pointer.  Thank waterson@netscape.com for discovering this.
+			  		*/
+			    nsISupports* oldPtr = mRawPtr;
+			    mRawPtr = newPtr;
+			    if ( oldPtr )
+			      NSCAP_RELEASE(oldPtr);
+			  }
   };
 
 // template <class T> class nsGetterAddRefs;
@@ -388,6 +405,15 @@ class nsCOMPtr
       void    assign_with_AddRef( nsISupports* );
       void    assign_from_helper( const nsCOMPtr_helper&, const nsIID& );
       void**  begin_assignment();
+
+      void
+      assign_assuming_AddRef( T* newPtr )
+        {
+          T* oldPtr = mRawPtr;
+          mRawPtr = newPtr;
+          if ( oldPtr )
+            NSCAP_RELEASE(oldPtr);
+        }
 
     private:
       T* mRawPtr;
@@ -495,10 +521,7 @@ class nsCOMPtr
       operator=( const nsDontAddRef<T>& rhs )
           // assign from |dont_AddRef(expr)|
         {
-          if ( mRawPtr )
-            NSCAP_RELEASE(mRawPtr);
-          mRawPtr = rhs.mRawPtr;
-
+        	assign_assuming_AddRef(rhs.mRawPtr);
           NSCAP_ASSERT_NO_QUERY_NEEDED();
           return *this;
         }
@@ -565,9 +588,7 @@ class nsCOMPtr
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
           return NS_REINTERPRET_CAST(T**, begin_assignment());
 #else
-          if ( mRawPtr )
-            NSCAP_RELEASE(mRawPtr);
-          mRawPtr = 0;
+          assign_assuming_AddRef(0);
           return NS_REINTERPRET_CAST(T**, &mRawPtr);
 #endif
         }
@@ -658,10 +679,7 @@ class nsCOMPtr<nsISupports>
       operator=( const nsDontAddRef<nsISupports>& rhs )
           // assign from |dont_AddRef(expr)|
         {
-          if ( mRawPtr )
-            NSCAP_RELEASE(mRawPtr);
-          mRawPtr = rhs.mRawPtr;
-
+          assign_assuming_AddRef(rhs.mRawPtr);
           return *this;
         }
 
@@ -726,9 +744,7 @@ class nsCOMPtr<nsISupports>
 #ifndef NSCAP_FEATURE_INLINE_STARTASSIGNMENT
           return NS_REINTERPRET_CAST(nsISupports**, begin_assignment());
 #else
-          if ( mRawPtr )
-            NSCAP_RELEASE(mRawPtr);
-          mRawPtr = 0;
+          assign_assuming_AddRef(0);
           return NS_REINTERPRET_CAST(nsISupports**, &mRawPtr);
 #endif
         }
@@ -741,9 +757,7 @@ nsCOMPtr<T>::assign_with_AddRef( nsISupports* rawPtr )
   {
     if ( rawPtr )
       NSCAP_ADDREF(rawPtr);
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-    mRawPtr = NS_REINTERPRET_CAST(T*, rawPtr);
+    assign_assuming_AddRef(NS_REINTERPRET_CAST(T*, rawPtr));
   }
 
 template <class T>
@@ -753,21 +767,14 @@ nsCOMPtr<T>::assign_from_helper( const nsCOMPtr_helper& helper, const nsIID& aII
     T* newRawPtr;
     if ( !NS_SUCCEEDED( helper(aIID, NS_REINTERPRET_CAST(void**, &newRawPtr)) ) )
       newRawPtr = 0;
-    if ( mRawPtr )
-      NSCAP_RELEASE(mRawPtr);
-    mRawPtr = newRawPtr;
+    assign_assuming_AddRef(newRawPtr);
   }
 
 template <class T>
 void**
 nsCOMPtr<T>::begin_assignment()
   {
-    if ( mRawPtr )
-      {
-        NSCAP_RELEASE(mRawPtr);
-        mRawPtr = 0;
-      }
-
+    assign_assuming_AddRef(0);
     return NS_REINTERPRET_CAST(void**, &mRawPtr);
   }
 #endif
