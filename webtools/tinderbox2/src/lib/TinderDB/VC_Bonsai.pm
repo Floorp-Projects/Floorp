@@ -40,8 +40,8 @@
 # Contributor(s): 
 
 
-# $Revision: 1.35 $ 
-# $Date: 2002/05/03 22:37:41 $ 
+# $Revision: 1.36 $ 
+# $Date: 2002/05/03 23:16:53 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB/VC_Bonsai.pm,v $ 
 # $Name:  $ 
@@ -101,7 +101,7 @@ use TreeData;
 use VCDisplay;
 
 
-$VERSION = ( qw $Revision: 1.35 $ )[1];
+$VERSION = ( qw $Revision: 1.36 $ )[1];
 
 @ISA = qw(TinderDB::BasicTxtDB);
 
@@ -414,9 +414,16 @@ sub status_table_row {
 
   }
 
+  if (defined($DATABASE{$tree}{$next_time}{'treestate'})) {
+      $LAST_TREESTATE = $DATABASE{$tree}{$next_time}{'treestate'};
+  }
+
   # Do we need a multiline empty cell or do we have data?
 
-  if  ( $next_time < $row_times->[$row_index] ) {
+  if  (
+       ( $next_time < $row_times->[$row_index] ) ||
+       (!(defined($DATABASE{$tree}{$next_time}{'author'})))
+       ) {
       
       # now convert the break time to a rowspan.
 
@@ -465,7 +472,7 @@ sub status_table_row {
 
     $NEXT_DB++;
 
-    if ($DATABASE{$tree}{$time}{'treestate'}) {
+    if (defined($DATABASE{$tree}{$time}{'treestate'})) {
       $LAST_TREESTATE = $DATABASE{$tree}{$time}{'treestate'};
     }
 
