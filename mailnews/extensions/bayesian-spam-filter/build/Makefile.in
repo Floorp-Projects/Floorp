@@ -26,13 +26,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= bayesian
-LIBRARY_NAME	= bayesian
+MODULE		= bayesfilt
+LIBRARY_NAME	= bayesfilt
 META_COMPONENT = mail
 EXPORT_LIBRARY = 1
-SHORT_LIBNAME	= bayesian
+SHORT_LIBNAME	= bayesfilt
 IS_COMPONENT	= 1
-MODULE_NAME	= nsBayesian
+MODULE_NAME	= nsBayesianModule
 REQUIRES	= xpcom \
 		  string \
 		  mailnews \
@@ -53,7 +53,7 @@ CPPSRCS		= nsBayesianFilterFactory.cpp
 EXPORTS		= nsBayesianFilterCID.h
 
 SHARED_LIBRARY_LIBS = \
-		$(DIST)/lib/$(LIB_PREFIX)bayesian_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/$(LIB_PREFIX)bayesfilt_s.$(LIB_SUFFIX) \
 		$(NULL)
 
 EXTRA_DSO_LDOPTS = \
