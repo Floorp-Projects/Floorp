@@ -844,7 +844,7 @@ PRBool CSSParserImpl::ProcessImport(PRInt32& aErrorCode, const nsString& aURLSpe
     }
 
     if (NS_COMFALSE == mSheet->ContainsStyleSheet(url)) { // don't allow circular references
-      mChildLoader->LoadChildSheet(mSheet, url, aMedia, mChildSheetCount++);
+      mChildLoader->LoadChildSheet(mSheet, url, aMedia, kNameSpaceID_Unknown, mChildSheetCount++);
     }
     NS_RELEASE(url);
   }

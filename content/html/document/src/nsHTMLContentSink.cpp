@@ -2480,10 +2480,10 @@ HTMLContentSink::ProcessStyleLink(nsIHTMLContent* aElement,
       }
 
       PRBool doneLoading;
-      result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia,
+      result = mCSSLoader->LoadStyleLink(aElement, url, aTitle, aMedia, kNameSpaceID_HTML,
                                          mStyleSheetCount++, 
-                                        ((blockParser) ? mParser : nsnull),
-                                        doneLoading);
+                                         ((blockParser) ? mParser : nsnull),
+                                         doneLoading);
       NS_RELEASE(url);
       if (NS_SUCCEEDED(result) && blockParser && (! doneLoading)) {
         result = NS_ERROR_HTMLPARSER_BLOCK;
@@ -3014,7 +3014,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
       // Now that we have a url and a unicode input stream, parse the
       // style sheet.
-      rv = mCSSLoader->LoadInlineStyle(element, uin, title, media, 
+      rv = mCSSLoader->LoadInlineStyle(element, uin, title, media, kNameSpaceID_HTML,
                                        mStyleSheetCount++, 
                                        ((blockParser) ? mParser : nsnull),
                                        doneLoading);
@@ -3038,7 +3038,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
         return rv;
       }
 
-      rv = mCSSLoader->LoadStyleLink(element, url, title, media, 
+      rv = mCSSLoader->LoadStyleLink(element, url, title, media, kNameSpaceID_HTML,
                                      mStyleSheetCount++, 
                                      ((blockParser) ? mParser : nsnull), 
                                      doneLoading);
