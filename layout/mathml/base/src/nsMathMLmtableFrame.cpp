@@ -431,10 +431,10 @@ nsMathMLmtableOuterFrame::GetRowFrameAt(nsIPresContext* aPresContext,
   GetTableSize(rowCount, colCount);
   if (aRowIndex <= rowCount) {
     nsIFrame* innerTableFrame = mFrames.FirstChild();
-    nsTableIterator rowgroupIter(aPresContext, *innerTableFrame, dir);
+    nsTableIterator rowgroupIter(*innerTableFrame, dir);
     nsIFrame* rowgroupFrame = rowgroupIter.First();
     while (rowgroupFrame) {
-      nsTableIterator rowIter(aPresContext, *rowgroupFrame, dir);
+      nsTableIterator rowIter(*rowgroupFrame, dir);
       nsIFrame* rowFrame = rowIter.First();
       while (rowFrame) {
         if (--aRowIndex == 0) {

@@ -1319,7 +1319,7 @@ nsTableRowGroupFrame::Reflow(nsIPresContext*          aPresContext,
   aDesiredSize.width = aReflowState.availableWidth;
   if (!haveDesiredHeight) {
     // calculate the height based on the rect of the last row
-    aDesiredSize.height = GetHeightOfRows(aPresContext);
+    aDesiredSize.height = GetHeightOfRows();
   }
 
   aDesiredSize.mOverflowArea.UnionRect(aDesiredSize.mOverflowArea, nsRect(0, 0, aDesiredSize.width,
@@ -1437,7 +1437,7 @@ nsTableRowGroupFrame::InsertFrames(nsIPresContext* aPresContext,
 
   PRInt32 numRows = rows.Count();
   if (numRows > 0) {
-    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
+    nsTableRowFrame* prevRow = (nsTableRowFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, nsLayoutAtoms::tableRowFrame);
     PRInt32 rowIndex = (prevRow) ? prevRow->GetRowIndex() + 1 : startRowIndex;
     tableFrame->InsertRows(*aPresContext, *this, rows, rowIndex, PR_TRUE);
 
@@ -1555,7 +1555,7 @@ nsTableRowGroupFrame::GetHeightBasis(const nsHTMLReflowState& aReflowState)
 }
 
 nscoord 
-nsTableRowGroupFrame::GetHeightOfRows(nsIPresContext* aPresContext)
+nsTableRowGroupFrame::GetHeightOfRows()
 {
   nsTableFrame* tableFrame = nsnull;
   nsresult rv = nsTableFrame::GetTableFrame(this, tableFrame);

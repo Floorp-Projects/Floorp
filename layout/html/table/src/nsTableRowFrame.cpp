@@ -256,7 +256,7 @@ nsTableRowFrame::InsertFrames(nsIPresContext* aPresContext,
   
   // gather the new frames (only those which are cells) into an array
   nsIAtom* cellFrameType = (tableFrame->IsBorderCollapse()) ? nsLayoutAtoms::bcTableCellFrame : nsLayoutAtoms::tableCellFrame;
-  nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(aPresContext, this, aPrevFrame, cellFrameType);
+  nsTableCellFrame* prevCellFrame = (nsTableCellFrame *)nsTableFrame::GetFrameAtOrBefore(this, aPrevFrame, cellFrameType);
   nsVoidArray cellChildren;
   for (nsIFrame* childFrame = aFrameList; childFrame;
        childFrame = childFrame->GetNextSibling()) {
@@ -362,7 +362,7 @@ nsTableRowFrame::DidResize(nsIPresContext*          aPresContext,
   nsTableFrame::GetTableFrame(this, tableFrame);
   if (!tableFrame) return;
   
-  nsTableIterator iter(aPresContext, *this, eTableDIR);
+  nsTableIterator iter(*this, eTableDIR);
   nsIFrame* childFrame = iter.First();
   
   nsHTMLReflowMetrics desiredSize(PR_FALSE);
@@ -520,22 +520,6 @@ nsTableRowFrame::CalcHeight(const nsHTMLReflowState& aReflowState)
   }
   return GetHeight();
 }
-
-#if 0
-static
-PRBool IsFirstRow(nsIPresContext*  aPresContext,
-                  nsTableFrame&    aTable,
-                  nsTableRowFrame& aRow)
-{
-  nsIFrame* firstRowGroup = aTable.GetFirstChild(nsnull);
-  nsIFrame* rowGroupFrame = aRow.GetParent();
-  if (rowGroupFrame == firstRowGroup) {
-    nsIFrame* firstRow = rowGroupFrame->GetFirstChild(nsnull);
-    return (&aRow == firstRow);
-  }
-  return PR_FALSE;
-}
-#endif
 
 NS_METHOD nsTableRowFrame::Paint(nsIPresContext*      aPresContext,
                                  nsIRenderingContext& aRenderingContext,
@@ -823,7 +807,7 @@ nsTableRowFrame::ReflowChildren(nsIPresContext*          aPresContext,
   
   nsTableIteration dir = (aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE)
                          ? eTableLTR : eTableDIR;
-  nsTableIterator iter(aPresContext, *this, dir);
+  nsTableIterator iter(*this, dir);
   // remember the col index of the previous cell to handle rowspans into this row
   PRInt32 firstPrevColIndex = (iter.IsLeftToRight()) ? -1 : aTableFrame.GetColCount();
   PRInt32 prevColIndex  = firstPrevColIndex;
@@ -1401,35 +1385,6 @@ nsTableRowFrame::Reflow(nsIPresContext*          aPresContext,
 #endif
   NS_FRAME_SET_TRUNCATION(aStatus, aReflowState, aDesiredSize);
   return rv;
-}
-
-/* we overload this here because rows have children that can span outside of themselves.
- * so the default "get the child rect, see if it contains the event point" action isn't
- * sufficient.  We have to ask the row if it has a child that contains the point.
- */
-PRBool 
-nsTableRowFrame::Contains(nsIPresContext* aPresContext, 
-                          const nsPoint&  aPoint)
-{
-  PRBool result = PR_FALSE;
-  // first, check the row rect and see if the point is in their
-  if (mRect.Contains(aPoint)) {
-    result = PR_TRUE;
-  }
-  // if that fails, check the cells, they might span outside the row rect
-  else {
-    nsIFrame* kid = GetFirstChild(nsnull);
-    while (nsnull != kid) {
-      nsPoint point(aPoint);
-      point.MoveBy(-mRect.x, -mRect.y); // offset the point to check by the row container
-      if (kid->GetRect().Contains(point)) {
-        result = PR_TRUE;
-        break;
-      }
-      kid = kid->GetNextSibling();
-    }
-  }
-  return result;
 }
 
 /**

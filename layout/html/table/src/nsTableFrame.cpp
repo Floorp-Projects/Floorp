@@ -261,7 +261,7 @@ nsTableFrame::Init(nsIPresContext*  aPresContext,
   SetBorderCollapse(borderCollapse);
   // Create the cell map
   // XXX Why do we do this for continuing frames?
-  mCellMap = new nsTableCellMap(aPresContext, *this, borderCollapse);
+  mCellMap = new nsTableCellMap(*this, borderCollapse);
   if (!mCellMap) return NS_ERROR_OUT_OF_MEMORY;
 
   if (aPrevInFlow) {
@@ -627,8 +627,7 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
   return result;
 }
 
-void nsTableFrame::AdjustRowIndices(nsIPresContext* aPresContext,
-                                    PRInt32         aRowIndex,
+void nsTableFrame::AdjustRowIndices(PRInt32         aRowIndex,
                                     PRInt32         aAdjustment)
 {
   // Iterate over the row groups and adjust the row indices of all rows 
@@ -640,12 +639,11 @@ void nsTableFrame::AdjustRowIndices(nsIPresContext* aPresContext,
   for (PRUint32 rgX = 0; rgX < numRowGroups; rgX++) {
     nsIFrame* kidFrame = (nsIFrame*)rowGroups.ElementAt(rgX);
     nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(kidFrame);
-    AdjustRowIndices(aPresContext, rgFrame, aRowIndex, aAdjustment);
+    AdjustRowIndices(rgFrame, aRowIndex, aAdjustment);
   }
 }
 
-NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIPresContext* aPresContext,
-                                             nsIFrame*       aRowGroup, 
+NS_IMETHODIMP nsTableFrame::AdjustRowIndices(nsIFrame*       aRowGroup,
                                              PRInt32         aRowIndex,
                                              PRInt32         anAdjustment)
 {
@@ -693,7 +691,7 @@ void nsTableFrame::InsertColGroups(nsIPresContext& aPresContext,
   }
 
   if (firstColGroupToReset) {
-    nsTableColGroupFrame::ResetColIndices(&aPresContext, firstColGroupToReset, aStartColIndex);
+    nsTableColGroupFrame::ResetColIndices(firstColGroupToReset, aStartColIndex);
   }
 }
 
@@ -962,8 +960,7 @@ nsTableFrame::CreateAnonymousColFrames(nsIPresContext&       aPresContext,
     PRInt32 startColIndex = aColGroupFrame.GetStartColumnIndex();
     if (aPrevFrameIn) {
       nsTableColFrame* colFrame = 
-        (nsTableColFrame*)nsTableFrame::GetFrameAtOrBefore(&aPresContext,
-                                                           (nsIFrame*)&aColGroupFrame, aPrevFrameIn, 
+        (nsTableColFrame*)nsTableFrame::GetFrameAtOrBefore((nsIFrame*)&aColGroupFrame, aPrevFrameIn, 
                                                            nsLayoutAtoms::tableColFrame);
       if (colFrame) {
         startColIndex = colFrame->GetColIndex() + 1;
@@ -1131,7 +1128,7 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
     nsRect damageArea(0,0,0,0);
     PRInt32 origNumRows = cellMap->GetRowCount();
     PRInt32 numNewRows = aRowFrames.Count();
-    cellMap->InsertRows(&aPresContext, aRowGroupFrame, aRowFrames, aRowIndex, aConsiderSpans, damageArea);
+    cellMap->InsertRows(aRowGroupFrame, aRowFrames, aRowIndex, aConsiderSpans, damageArea);
     PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
     PRInt32 numColsInCache = mColFrames.Count();
     numColsToAdd = numColsInMap - numColsInCache;
@@ -1141,7 +1138,7 @@ nsTableFrame::InsertRows(nsIPresContext&       aPresContext,
                                PR_TRUE);
     }
     if (aRowIndex < origNumRows) {
-      AdjustRowIndices(&aPresContext, aRowIndex, numNewRows);
+      AdjustRowIndices(aRowIndex, numNewRows);
     }
     // assign the correct row indices to the new rows. If they were adjusted above
     // it may not have been done correctly because each row is constructed with index 0
@@ -1190,7 +1187,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
   nsTableCellMap* cellMap = GetCellMap();
   if (cellMap) {
     nsRect damageArea(0,0,0,0);
-    cellMap->RemoveRows(&aPresContext, firstRowIndex, aNumRowsToRemove, aConsiderSpans, damageArea);
+    cellMap->RemoveRows(firstRowIndex, aNumRowsToRemove, aConsiderSpans, damageArea);
     // only remove cols that are of type eTypeAnonymous cell (they are at the end)
     PRInt32 numColsInMap = GetColCount(); // cell map's notion of num cols
     PRInt32 numColsInCache = mColFrames.Count();
@@ -1207,7 +1204,7 @@ void nsTableFrame::RemoveRows(nsIPresContext&  aPresContext,
       SetBCDamageArea(aPresContext, damageArea);
     }
   }
-  AdjustRowIndices(&aPresContext, firstRowIndex, -aNumRowsToRemove);
+  AdjustRowIndices(firstRowIndex, -aNumRowsToRemove);
   //printf("removeRowsAfter\n");
   //Dump(PR_TRUE, PR_FALSE, PR_TRUE);
 }
@@ -1254,8 +1251,7 @@ nsTableFrame::GetRowGroupFrame(nsIFrame* aFrame,
 
 // collect the rows ancestors of aFrame
 PRInt32
-nsTableFrame::CollectRows(nsIPresContext* aPresContext,
-                          nsIFrame*       aFrame,
+nsTableFrame::CollectRows(nsIFrame*       aFrame,
                           nsVoidArray&    aCollection)
 {
   if (!aFrame) return 0;
@@ -1269,7 +1265,7 @@ nsTableFrame::CollectRows(nsIPresContext* aPresContext,
         numRows++;
       }
       else {
-        numRows += CollectRows(aPresContext, childFrame, aCollection);
+        numRows += CollectRows(childFrame, aCollection);
       }
       childFrame = childFrame->GetNextSibling();
     }
@@ -1306,7 +1302,7 @@ nsTableFrame::InsertRowGroups(nsIPresContext&  aPresContext,
         // create and add the cell map for the row group
         cellMap->InsertGroupCellMap(*rgFrame, priorRG);
         // collect the new row frames in an array and add them to the table
-        PRInt32 numRows = CollectRows(&aPresContext, kidFrame, rows);
+        PRInt32 numRows = CollectRows(kidFrame, rows);
         if (numRows > 0) {
           PRInt32 rowIndex = 0;
           if (priorRG) {
@@ -1581,11 +1577,9 @@ nsTableFrame::AdjustSiblingsAfterReflow(nsIPresContext*     aPresContext,
 }
 
 void 
-nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext, 
-                                  nscoord         aHeight,
+nsTableFrame::SetColumnDimensions(nscoord         aHeight,
                                   const nsMargin& aBorderPadding)
 {
-  if (!aPresContext) ABORT0();
   nscoord colHeight = aHeight -= aBorderPadding.top + aBorderPadding.bottom;
   nscoord cellSpacingX = GetCellSpacingX();
 
@@ -1626,7 +1620,7 @@ nsTableFrame::SetColumnDimensions(nsIPresContext* aPresContext,
 // XXX this could be made more general to handle row modifications that change the
 // table height, but first we need to scrutinize every Invalidate
 static void
-ProcessRowInserted(nsIPresContext* aPresContext,
+ProcessRowInserted(nsIPresContext*     aPresContext,
                    nsTableFrame&   aTableFrame,
                    PRBool          aInvalidate,
                    nscoord         aNewHeight)
@@ -2028,7 +2022,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext*          aPresContext,
   }
 
   nsMargin borderPadding = GetChildAreaOffset(&aReflowState);
-  SetColumnDimensions(aPresContext, aDesiredSize.height, borderPadding);
+  SetColumnDimensions(aDesiredSize.height, borderPadding);
   if (doCollapse) {
     AdjustForCollapsingRows(aPresContext, aDesiredSize.height);
     AdjustForCollapsingCols(aPresContext, aDesiredSize.width);
@@ -2368,7 +2362,7 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext* aPresContext,
     const nsStyleVisibility* groupVis = groupFrame->GetStyleVisibility();
     
     PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupVis->mVisible);
-    nsTableIterator colIter(aPresContext, *groupFrame, eTableDIR);
+    nsTableIterator colIter(*groupFrame, eTableDIR);
     nsIFrame* colFrame = colIter.First();
     // iterate over the cols in the col group
     while (nsnull != colFrame) {
@@ -2534,7 +2528,7 @@ nsTableFrame::InsertFrames(nsIPresContext* aPresContext,
     PRInt32 startColIndex = 0;
     if (aPrevFrame) {
       nsTableColGroupFrame* prevColGroup = 
-        (nsTableColGroupFrame*)GetFrameAtOrBefore(aPresContext, this, aPrevFrame,
+        (nsTableColGroupFrame*)GetFrameAtOrBefore(this, aPrevFrame,
                                                   nsLayoutAtoms::tableColGroupFrame);
       if (prevColGroup) {
         startColIndex = prevColGroup->GetStartColumnIndex() + prevColGroup->GetColCount();
@@ -2578,7 +2572,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
     // remove the col frames, the colGroup frame and reset col indices
     colGroup->RemoveChildrenAtEnd(*aPresContext, colGroup->GetColCount());
     mColGroups.DestroyFrame(aPresContext, aOldFrame);
-    nsTableColGroupFrame::ResetColIndices(aPresContext, nextColGroupFrame, firstColIndex); 
+    nsTableColGroupFrame::ResetColIndices(nextColGroupFrame, firstColIndex);
     // remove the cols from the table
     PRInt32 colX;
     for (colX = lastColIndex; colX >= firstColIndex; colX--) {
@@ -2620,7 +2614,7 @@ nsTableFrame::RemoveFrame(nsIPresContext* aPresContext,
       }
       else NS_ASSERTION(numColsInCache == numColsInMap, "cell map has too many cols");
 
-      AdjustRowIndices(aPresContext, startRowIndex, -numRows);
+      AdjustRowIndices(startRowIndex, -numRows);
       // remove the row group frame from the sibling chain
       mFrames.DestroyFrame(aPresContext, aOldFrame);
 
@@ -4230,8 +4224,7 @@ nsTableFrame::CalcMinAndPreferredWidths(const           nsHTMLReflowState& aRefl
 // Find the closet sibling before aPriorChildFrame (including aPriorChildFrame) that
 // is of type aChildType
 nsIFrame* 
-nsTableFrame::GetFrameAtOrBefore(nsIPresContext* aPresContext,
-                                 nsIFrame*       aParentFrame,
+nsTableFrame::GetFrameAtOrBefore(nsIFrame*       aParentFrame,
                                  nsIFrame*       aPriorChildFrame,
                                  nsIAtom*        aChildType)
 {
@@ -4258,7 +4251,7 @@ nsTableFrame::GetFrameAtOrBefore(nsIPresContext* aPresContext,
 
 #ifdef DEBUG
 void 
-nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
+nsTableFrame::DumpRowGroup(nsIFrame* aKidFrame)
 {
   nsTableRowGroupFrame* rgFrame = GetRowGroupFrame(aKidFrame);
   if (rgFrame) {
@@ -4278,7 +4271,7 @@ nsTableFrame::DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aKidFrame)
         printf("\n");
       }
       else {
-        DumpRowGroup(aPresContext, rowFrame);
+        DumpRowGroup(rowFrame);
       }
       rowFrame = rowFrame->GetNextSibling();
     }
@@ -4303,7 +4296,7 @@ nsTableFrame::Dump(PRBool          aDumpRows,
   if (aDumpRows) {
     nsIFrame* kidFrame = mFrames.FirstChild();
     while (kidFrame) {
-      DumpRowGroup(GetPresContext(), kidFrame);
+      DumpRowGroup(kidFrame);
       kidFrame = kidFrame->GetNextSibling();
     }
   }
@@ -4333,8 +4326,7 @@ nsTableFrame::Dump(PRBool          aDumpRows,
 #endif
 
 // nsTableIterator
-nsTableIterator::nsTableIterator(nsIPresContext*  aPresContext,
-                                 nsIFrame&        aSource,
+nsTableIterator::nsTableIterator(nsIFrame&        aSource,
                                  nsTableIteration aType)
 {
   nsIFrame* firstChild = aSource.GetFirstChild(nsnull);
@@ -7331,8 +7323,7 @@ nsTableFrame::GetProperty(nsIPresContext*      aPresContext,
 #define MIN_INDENT 30
 
 static 
-void DumpTableFramesRecur(nsIPresContext* aPresContext,
-                          nsIFrame*       aFrame,
+void DumpTableFramesRecur(nsIFrame*       aFrame,
                           PRUint32        aIndent)
 {
   char indent[MAX_SIZE + 1];
@@ -7361,15 +7352,14 @@ void DumpTableFramesRecur(nsIPresContext* aPresContext,
       IS_TABLE_CELL(fType)) {
     nsIFrame* child = aFrame->GetFirstChild(nsnull);
     while(child) {
-      DumpTableFramesRecur(aPresContext, child, aIndent+1);
+      DumpTableFramesRecur(child, aIndent+1);
       child = child->GetNextSibling();
     }
   }
 }
   
 void
-nsTableFrame::DumpTableFrames(nsIPresContext* aPresContext,
-                              nsIFrame*       aFrame)
+nsTableFrame::DumpTableFrames(nsIFrame* aFrame)
 {
   nsTableFrame* tableFrame = nsnull;
 
@@ -7381,7 +7371,7 @@ nsTableFrame::DumpTableFrames(nsIPresContext* aPresContext,
   }
   tableFrame = (nsTableFrame*)tableFrame->GetFirstInFlow();
   while (tableFrame) {
-    DumpTableFramesRecur(aPresContext, tableFrame, 0);
+    DumpTableFramesRecur(tableFrame, 0);
     tableFrame->GetNextInFlow((nsIFrame**)&tableFrame);
   }
 }

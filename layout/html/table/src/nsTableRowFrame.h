@@ -169,8 +169,6 @@ public:
   /** set this row's starting row index */
   void SetRowIndex (int aRowIndex);
 
-  virtual PRBool Contains(nsIPresContext* aPresContext, const nsPoint& aPoint);
-
   /** used by row group frame code */
   nscoord ReflowCellFrame(nsIPresContext*          aPresContext,
                           const nsHTMLReflowState& aReflowState,

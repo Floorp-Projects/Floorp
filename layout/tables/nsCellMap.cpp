@@ -76,8 +76,7 @@ MOZ_DECL_CTOR_COUNTER(nsCellMap)
 
 // nsTableCellMap
 
-nsTableCellMap::nsTableCellMap(nsIPresContext* aPresContext, 
-                               nsTableFrame&   aTableFrame,
+nsTableCellMap::nsTableCellMap(nsTableFrame&   aTableFrame,
                                PRBool          aBorderCollapse)
 :mTableFrame(aTableFrame), mFirstMap(nsnull), mBCInfo(nsnull)
 {
@@ -462,8 +461,7 @@ nsTableCellMap::RemoveColsAtEnd()
 }
 
 void
-nsTableCellMap::InsertRows(nsIPresContext*       aPresContext,
-                           nsTableRowGroupFrame& aParent,
+nsTableCellMap::InsertRows(nsTableRowGroupFrame& aParent,
                            nsVoidArray&          aRows,
                            PRInt32               aFirstRowIndex,
                            PRBool                aConsiderSpans,
@@ -477,7 +475,7 @@ nsTableCellMap::InsertRows(nsIPresContext*       aPresContext,
   while (cellMap) {
     nsTableRowGroupFrame* rg = cellMap->GetRowGroup();
     if (rg == &aParent) {
-      cellMap->InsertRows(aPresContext, *this, aRows, rowIndex, aConsiderSpans, aDamageArea);
+      cellMap->InsertRows(*this, aRows, rowIndex, aConsiderSpans, aDamageArea);
       aDamageArea.y = aFirstRowIndex;
       aDamageArea.height = PR_MAX(0, GetRowCount() - aFirstRowIndex);
       //Dump("after InsertRows");
@@ -508,8 +506,7 @@ nsTableCellMap::InsertRows(nsIPresContext*       aPresContext,
 }
 
 void
-nsTableCellMap::RemoveRows(nsIPresContext* aPresContext,
-                           PRInt32         aFirstRowIndex,
+nsTableCellMap::RemoveRows(PRInt32         aFirstRowIndex,
                            PRInt32         aNumRowsToRemove,
                            PRBool          aConsiderSpans,
                            nsRect&         aDamageArea)
@@ -518,7 +515,7 @@ nsTableCellMap::RemoveRows(nsIPresContext* aPresContext,
   nsCellMap* cellMap = mFirstMap;
   while (cellMap) {
     if (cellMap->GetRowCount() > rowIndex) {
-      cellMap->RemoveRows(aPresContext, *this, rowIndex, aNumRowsToRemove, aConsiderSpans, aDamageArea);
+      cellMap->RemoveRows(*this, rowIndex, aNumRowsToRemove, aConsiderSpans, aDamageArea);
       nsTableRowGroupFrame* rg = cellMap->GetRowGroup();
       aDamageArea.y += (rg) ? rg->GetStartRowIndex() : 0;
       aDamageArea.height = PR_MAX(0, GetRowCount() - aFirstRowIndex);
@@ -1111,8 +1108,7 @@ void nsCellMap::GrowRow(nsVoidArray& aRow,
 }
 
 void
-nsCellMap::InsertRows(nsIPresContext* aPresContext,
-                      nsTableCellMap& aMap,
+nsCellMap::InsertRows(nsTableCellMap& aMap,
                       nsVoidArray&    aRows,
                       PRInt32         aFirstRowIndex,
                       PRBool          aConsiderSpans,
@@ -1131,7 +1127,7 @@ nsCellMap::InsertRows(nsIPresContext* aPresContext,
   }
 
   if (!aConsiderSpans) {
-    ExpandWithRows(aPresContext, aMap, aRows, aFirstRowIndex, aDamageArea);
+    ExpandWithRows(aMap, aRows, aFirstRowIndex, aDamageArea);
     return;
   }
 
@@ -1142,20 +1138,19 @@ nsCellMap::InsertRows(nsIPresContext* aPresContext,
   // if any of the new cells span out of the new rows being added, then rebuild
   // XXX it would be better to only rebuild the portion of the map that follows the new rows
   if (!spansCauseRebuild && (aFirstRowIndex < mRows.Count())) {
-    spansCauseRebuild = CellsSpanOut(aPresContext, aRows);
+    spansCauseRebuild = CellsSpanOut(aRows);
   }
 
   if (spansCauseRebuild) {
-    RebuildConsideringRows(aPresContext, aMap, aFirstRowIndex, &aRows, 0, aDamageArea);
+    RebuildConsideringRows(aMap, aFirstRowIndex, &aRows, 0, aDamageArea);
   }
   else {
-    ExpandWithRows(aPresContext, aMap, aRows, aFirstRowIndex, aDamageArea);
+    ExpandWithRows(aMap, aRows, aFirstRowIndex, aDamageArea);
   }
 }
 
 void
-nsCellMap::RemoveRows(nsIPresContext* aPresContext,
-                      nsTableCellMap& aMap,
+nsCellMap::RemoveRows(nsTableCellMap& aMap,
                       PRInt32         aFirstRowIndex,
                       PRInt32         aNumRowsToRemove,
                       PRBool          aConsiderSpans,
@@ -1180,7 +1175,7 @@ nsCellMap::RemoveRows(nsIPresContext* aPresContext,
                                               0, numCols - 1);
 
   if (spansCauseRebuild) {
-    RebuildConsideringRows(aPresContext, aMap, aFirstRowIndex, nsnull, aNumRowsToRemove, aDamageArea);
+    RebuildConsideringRows(aMap, aFirstRowIndex, nsnull, aNumRowsToRemove, aDamageArea);
   }
   else {
     ShrinkWithoutRows(aMap, aFirstRowIndex, aNumRowsToRemove, aDamageArea);
@@ -1341,8 +1336,7 @@ nsCellMap::AppendCell(nsTableCellMap&   aMap,
   return origData;
 }
 
-PRBool nsCellMap::CellsSpanOut(nsIPresContext* aPresContext, 
-                               nsVoidArray&    aRows)
+PRBool nsCellMap::CellsSpanOut(nsVoidArray&    aRows)
 { 
   PRInt32 numNewRows = aRows.Count();
   for (PRInt32 rowX = 0; rowX < numNewRows; rowX++) {
@@ -1466,8 +1460,7 @@ void nsCellMap::InsertCells(nsTableCellMap& aMap,
 }
  
 void
-nsCellMap::ExpandWithRows(nsIPresContext* aPresContext,
-                          nsTableCellMap& aMap,
+nsCellMap::ExpandWithRows(nsTableCellMap& aMap,
                           nsVoidArray&    aRowFrames,
                           PRInt32         aStartRowIndexIn,
                           nsRect&         aDamageArea)
@@ -1846,8 +1839,7 @@ void nsCellMap::ShrinkWithoutCell(nsTableCellMap&   aMap,
 }
 
 void
-nsCellMap::RebuildConsideringRows(nsIPresContext* aPresContext,
-                                  nsTableCellMap& aMap,
+nsCellMap::RebuildConsideringRows(nsTableCellMap& aMap,
                                   PRInt32         aStartRowIndex,
                                   nsVoidArray*    aRowsToInsert,
                                   PRBool          aNumRowsToRemove,

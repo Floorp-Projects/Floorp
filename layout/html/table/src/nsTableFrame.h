@@ -285,8 +285,7 @@ public:
 
   // Return the closest sibling of aPriorChildFrame (including aPriroChildFrame)
   // of type aChildType.
-  static nsIFrame* GetFrameAtOrBefore(nsIPresContext* aPresContext,
-                                      nsIFrame*       aParentFrame,
+  static nsIFrame* GetFrameAtOrBefore(nsIFrame*       aParentFrame,
                                       nsIFrame*       aPriorChildFrame,
                                       nsIAtom*        aChildType);
   PRBool IsAutoWidth(PRBool* aIsPctWidth = nsnull);
@@ -790,14 +789,12 @@ public:
     */
   virtual nsTableCellMap* GetCellMap() const;
     
-  void AdjustRowIndices(nsIPresContext* aPresContext,
-                        PRInt32         aRowIndex,
-                        PRInt32         aAdjustment);
+  void AdjustRowIndices(PRInt32 aRowIndex,
+                        PRInt32 aAdjustment);
 
-  NS_IMETHOD AdjustRowIndices(nsIPresContext* aPresContext,
-                              nsIFrame*       aRowGroup, 
-                              PRInt32         aRowIndex,
-                              PRInt32         anAdjustment);
+  NS_IMETHOD AdjustRowIndices(nsIFrame* aRowGroup,
+                              PRInt32   aRowIndex,
+                              PRInt32   anAdjustment);
 
   // Remove cell borders which aren't bordering row and/or col groups 
   void ProcessGroupRules(nsIPresContext* aPresContext);
@@ -821,8 +818,7 @@ protected:
   PRBool HadInitialReflow() const;
   void SetHadInitialReflow(PRBool aValue);
 
-  void SetColumnDimensions(nsIPresContext* aPresContext, 
-                           nscoord         aHeight,
+  void SetColumnDimensions(nscoord         aHeight,
                            const nsMargin& aReflowState);
 
   /** return the number of columns as specified by the input. 
@@ -832,8 +828,7 @@ protected:
     */
   virtual PRInt32 GetSpecifiedColumnCount ();
 
-  PRInt32 CollectRows(nsIPresContext* aPresContext,
-                      nsIFrame*       aFrame,
+  PRInt32 CollectRows(nsIFrame*       aFrame,
                       nsVoidArray&    aCollection);
 
 public: /* ----- Cell Map public methods ----- */
@@ -907,13 +902,12 @@ public:
   nsAutoVoidArray mColFrames; // XXX temporarily public 
 
 #ifdef DEBUG
-  static void DumpTableFrames(nsIPresContext* aPresContext,
-                              nsIFrame*       aFrame);
+  static void DumpTableFrames(nsIFrame*       aFrame);
 #endif
 
 protected:
 #ifdef DEBUG
-  void DumpRowGroup(nsIPresContext* aPresContext, nsIFrame* aChildFrame);
+  void DumpRowGroup(nsIFrame* aChildFrame);
 #endif
   // DATA MEMBERS
 
@@ -1103,10 +1097,9 @@ enum nsTableIteration {
 class nsTableIterator
 {
 public:
-  nsTableIterator(nsIPresContext*  aPresContext,
-                  nsIFrame&        aSource, 
+  nsTableIterator(nsIFrame&        aSource,
                   nsTableIteration aType);
-  nsTableIterator(nsFrameList&     aSource, 
+  nsTableIterator(nsFrameList&     aSource,
                   nsTableIteration aType);
   nsIFrame* First();
   nsIFrame* Next();
