@@ -68,7 +68,6 @@ class nsSoftwareUpdate: public nsISoftwareUpdate,
         NS_IMETHOD InstallJarCallBack();
         NS_IMETHOD GetMasterListener(nsIXPIListener **aListener);
         NS_IMETHOD SetActiveListener(nsIXPIListener *aListener);
-        NS_IMETHOD StartupTasks( PRBool* needAutoreg );
 
         nsSoftwareUpdate();
         virtual ~nsSoftwareUpdate();
