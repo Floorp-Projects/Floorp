@@ -126,8 +126,11 @@ class nsCSSScanner {
   // when the line number is unknown.
   void Init(nsIUnicharInputStream* aInput, nsIURI* aURI, PRUint32 aLineNumber);
 
+  static PRBool InitGlobals();
+  static void ReleaseGlobals();
+
 #ifdef CSS_REPORT_PARSE_ERRORS
-  void AddToError(const nsAString& aErrorText);
+  void AddToError(const nsSubstring& aErrorText);
   void OutputError();
   void ClearError();
 #endif
@@ -201,7 +204,8 @@ protected:
 #ifdef CSS_REPORT_PARSE_ERRORS
   nsXPIDLCString mFileName;
   PRUint32 mErrorLineNumber, mColNumber, mErrorColNumber;
-  nsString mError;
+  nsFixedString mError;
+  PRUnichar mErrorBuf[200];
 #endif
 
   static const PRUint8 IS_DIGIT;

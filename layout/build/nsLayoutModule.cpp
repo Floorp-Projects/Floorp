@@ -61,6 +61,7 @@
 #include "nsIBindingManager.h"
 #include "nsICSSLoader.h"
 #include "nsICSSParser.h"
+#include "nsCSSScanner.h"
 #include "nsICSSStyleSheet.h"
 #include "nsICategoryManager.h"
 #include "nsIComponentManager.h"
@@ -410,6 +411,7 @@ Shutdown()
   nsImageFrame::ReleaseGlobals();
 
   NS_ShutdownCSSParser();
+  nsCSSScanner::ReleaseGlobals();
 
   NS_IF_RELEASE(nsContentDLF::gUAStyleSheet);
   NS_IF_RELEASE(nsRuleNode::gLangService);
