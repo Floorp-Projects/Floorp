@@ -166,4 +166,26 @@
 	{0xa5, 0x63, 0x00, 0x60, 0xb0, 0xfc, 0x4, 0xb7}	\
 }
 
+//
+// addbook URL
+//
+#define NS_ADDBOOKURL_PROGID \
+  "component://netscape/addressbook/services/addbookurl"
+#define NS_ADDBOOKURL_CID \
+{	/* ff04c8e6-501e-11d3-a527-0060b0fc0444 */		\
+	0xff04c8e6, 0x501e, 0x11d3,						\
+	{0xa5, 0x27, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0x44}	\
+}
+
+//
+// addbook Protocol Handler
+//
+#define NS_ADDBOOK_HANDLER_PROGID \
+  "component://netscape/addressbook/services/addbook"
+#define NS_ADDBOOK_HANDLER_CID \
+{	/* ff04c8e6-501e-11d3-ffcc-0060b0fc0444 */		\
+	0xff04c8e6, 0x501e, 0x11d3,						\
+	{0xff, 0xcc, 0x0, 0x60, 0xb0, 0xfc, 0x4, 0x44}	\
+}
+
 #endif // nsAbBaseCID_h__

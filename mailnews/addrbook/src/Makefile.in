@@ -44,6 +44,8 @@ CPPSRCS		= \
 		nsAbDirProperty.cpp \
 		nsAbAutoCompleteSession.cpp \
 		nsAbAddressCollecter.cpp \
+		nsAddbookProtocolHandler.cpp  \
+		nsAddbookUrl.cpp    \
 		$(NULL)
 
 EXPORTS		= \
@@ -61,6 +63,8 @@ EXPORTS		= \
 		nsAbDirProperty.h \
 		nsAbAutoCompleteSession.h \
 		nsAbAddressCollecter.h \
+		nsAddbookProtocolHandler.h  \
+		nsAddbookUrl.h  \
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.

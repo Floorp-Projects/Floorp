@@ -36,6 +36,7 @@ XPIDLSRCS =						 \
 			.\nsIAutoCompleteListener.idl		\
 			.\nsIAbAddressCollecter.idl		\
 			.\nsIAbUpgrader.idl \
+			.\nsIAddbookUrl.idl \
 			$(NULL)
 
 

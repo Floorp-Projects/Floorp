@@ -42,6 +42,7 @@ XPIDLSRCS	= \
 		nsIAutoCompleteSession.idl \
 		nsIAbAddressCollecter.idl \
 		nsIAbUpgrader.idl \
+		nsIAddbookUrl.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

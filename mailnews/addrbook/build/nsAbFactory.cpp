@@ -46,6 +46,8 @@
 #include "nsAbDirProperty.h"
 #include "nsAbAutoCompleteSession.h"
 #include "nsAbAddressCollecter.h"
+#include "nsAddbookProtocolHandler.h"
+#include "nsAddbookUrl.h"
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddressBook)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsAbDirectoryDataSource,Init)
@@ -58,7 +60,10 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbDirProperty)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddrBookSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAutoCompleteSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAbAddressCollecter)
-  
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookUrl)
+
+//NS_GENERIC_FACTORY_CONSTRUCTOR(nsAddbookProtocolHandler)
+
 static nsModuleComponentInfo components[] =
 {
   { "Address Book",
@@ -110,8 +115,15 @@ static nsModuleComponentInfo components[] =
   { "Address Book Address Collector",
     NS_ABADDRESSCOLLECTER_CID,
     NS_ABADDRESSCOLLECTER_PROGID,
-    nsAbAddressCollecterConstructor }
+    nsAbAddressCollecterConstructor },
+  { "The addbook URL Interface", 
+    NS_ADDBOOKURL_CID,
+    NS_ADDBOOKURL_PROGID,
+    nsAddbookUrlConstructor },
+  { "The addbook Protocol Handler", 
+    NS_ADDBOOK_HANDLER_CID,
+    NS_NETWORK_PROTOCOL_PROGID_PREFIX "addbook",
+    nsAddbookProtocolHandler::Create }
 };
-
 
 NS_IMPL_NSGETMODULE("nsAbModule", components)

@@ -32,8 +32,8 @@
 #include "nsIAddrDatabase.h"
 
 typedef struct {
-  char      *abField;
-  PRBool    includeIt;
+  const char  *abField;
+  PRBool      includeIt;
 } reportColumnStruct;
 
 class nsAddbookProtocolHandler : public nsIProtocolHandler
