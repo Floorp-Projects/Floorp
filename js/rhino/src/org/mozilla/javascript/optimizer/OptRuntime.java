@@ -20,6 +20,7 @@
  * Contributor(s):
  * Norris Boyd
  * Roger Lawrence
+ * Hannes Wallnoefer
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -280,29 +281,29 @@ public final class OptRuntime extends ScriptRuntime {
         return function.call(cx, scope, thisArg, args);
     }
     
-    public static Object thisGet(Scriptable thisObj, String id, 
+    public static Object thisGet(Scriptable thisObj, String id,
                                  Scriptable scope)
-    {    
-        Object result = thisObj.get(id, thisObj);
-        if (result != Scriptable.NOT_FOUND)
-            return result;
-        
-        Scriptable start = thisObj;
-        if (start == null) {
+    {
+        if (thisObj == null) {
             throw Context.reportRuntimeError(
                 getMessage("msg.null.to.object", null));
         }
-        Scriptable m = start;
-        do {
-            result = m.get(id, start);
+
+        Object result = thisObj.get(id, thisObj);
+        if (result != Scriptable.NOT_FOUND)
+            return result;
+
+        Scriptable m = thisObj.getPrototype();
+        while (m != null) {
+            result = m.get(id, thisObj);
             if (result != Scriptable.NOT_FOUND)
                 return result;
-                
+
             m = m.getPrototype();
-        } while (m != null);
+        }
         return Undefined.instance;
-     }
-     
+    }
+    
     public static Object[] padStart(Object[] currentArgs, int count) {
         Object[] result = new Object[currentArgs.length + count];
         System.arraycopy(currentArgs, 0, result, count, currentArgs.length);
