@@ -43,6 +43,8 @@
 #define CREATE_NEW 2
 #define CANCEL     3
 
+#define MAX_DRIVES 4
+
 //Interfaces Needed
 #include "nsIXULWindow.h"
 
@@ -110,8 +112,10 @@ class nsPrefMigration: public nsIPrefMigration
                         PRBool readSubdirs,
                         PRUint32* sizeTotal);
 
-      nsresult CheckForSpace(nsFileSpec newProfilePath, 
-                             PRFloat64 requiredSpace);
+      nsresult ComputeSpaceRequirements(PRInt64 DriveArray[], 
+                                        PRUint32 SpaceReqArray[], 
+                                        PRInt64 Drive, 
+                                        PRUint32 SpaceNeeded);
 
       nsresult DoTheCopy(nsIFileSpec *oldPath, 
                          nsIFileSpec *newPath,
