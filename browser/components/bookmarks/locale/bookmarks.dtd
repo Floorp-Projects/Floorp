@@ -57,12 +57,8 @@
 <!ENTITY menuitem.view.ascending.accesskey          "a">
 <!ENTITY menuitem.view.descending.label             "Z > A Sort Order">
 <!ENTITY menuitem.view.descending.accesskey         "z">
-<!ENTITY menuitem.newbookmarkfolder.label           "Set as New Bookmark Folder">
-<!ENTITY menuitem.newbookmarkfolder.accesskey       "b">
-<!ENTITY menuitem.newinternetsearchfolder.label     "Set as New Internet Search Folder">
-<!ENTITY menuitem.newinternetsearchfolder.accesskey "i">
-<!ENTITY menuitem.personaltoolbarfolder.label       "Set as Personal Toolbar Folder">
-<!ENTITY menuitem.personaltoolbarfolder.accesskey   "p">
+<!ENTITY menuitem.personaltoolbarfolder.label       "Set as Bookmarks Toolbar Folder">
+<!ENTITY menuitem.personaltoolbarfolder.accesskey   "b">
 
 <!ENTITY treecol.name.label             "Name">
 <!ENTITY treecol.name.accesskey         "n">
