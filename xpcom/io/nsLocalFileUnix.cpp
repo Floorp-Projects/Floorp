@@ -21,6 +21,8 @@
  * Contributor(s): 
  *     Mike Shaver <shaver@mozilla.org>
  *     Christopher Blizzard <blizzard@mozilla.org>
+ *     Jason Eager <jce2@po.cwru.edu>
+ *     Stuart Parmenter <pavlov@netscape.com>
  */
 
 /*
@@ -47,7 +49,24 @@
 #include "nsILocalFile.h"
 #include "nsLocalFileUnix.h"
 #include "nsIComponentManager.h"
+#include "nsString.h"
 #include "prproces.h"
+
+// we need these for statfs()
+
+#ifdef HAVE_SYS_STATVFS_H
+#include <sys/statvfs.h>
+#endif
+
+#ifdef HAVE_SYS_STATFS_H
+#include <sys/statfs.h>
+#endif
+
+#ifdef HAVE_STATVFS
+#define STATFS statvfs
+#else
+#define STATFS statfs
+#endif
 
 // On some platforms file/directory name comparisons need to
 // be case-blind.
@@ -912,14 +931,103 @@ NS_IMETHODIMP
 nsLocalFile::GetDiskSpaceAvailable(PRInt64 *aDiskSpaceAvailable)
 {
     NS_ENSURE_ARG_POINTER(aDiskSpaceAvailable);
+
+    PRInt64 bytesFree = 0;
+
+    //These systems have the operations necessary to check disk space.
+    
+#if defined(HAVE_SYS_STATFS_H) || defined(HAVE_SYS_STATVFS_H)
+
+    // check to make sure that mPath is properly initialized
+    CHECK_mPath();
+    
+    struct STATFS fs_buf;
+
+    // Members of the STATFS struct that you should know about:
+    // f_bsize = block size on disk.
+    // f_bavail = number of free blocks available to a non-superuser.
+    // f_bfree = number of total free blocks in file system.
+
+    if (STATFS(mPath, &fs_buf) < 0)
+    // The call to STATFS failed.
+    {
+#ifdef DEBUG
+        printf("ERROR: GetDiskSpaceAvailable: STATFS call FAILED. \n");
+#endif
+        return NS_ERROR_FAILURE;
+    }
+#ifdef DEBUG_DISK_SPACE
+    printf("DiskSpaceAvailable: %d bytes\n", 
+       fs_buf.f_bsize * (fs_buf.f_bavail - 1));
+#endif
+
+    // The number of Bytes free = The number of free blocks available to
+    // a non-superuser, minus one as a fudge factor, multiplied by the size
+    // of the beforementioned blocks.
+
+    LL_I2L( bytesFree, (fs_buf.f_bsize * (fs_buf.f_bavail - 1) ) );
+    *aDiskSpaceAvailable = bytesFree;
+    return NS_OK;
+
+#else 
+    /*
+    ** This platform doesn't have statfs or statvfs.
+    ** I'm sure that there's a way to check for free disk space
+    ** on platforms that don't have statfs 
+    ** (I'm SURE they have df, for example).
+    ** 
+    ** Until we figure out how to do that, lets be honest 
+    ** and say that this command isn't implemented
+    ** properly for these platforms yet.
+    */
+#ifdef DEBUG
+    printf("ERROR: GetDiskSpaceAvailable: Not implemented for plaforms without statfs.\n");
+#endif
     return NS_ERROR_NOT_IMPLEMENTED;
+
+#endif /* HAVE_SYS_STATFS_H or HAVE_SYS_STATVFS_H */
+    
 }
 
 NS_IMETHODIMP
 nsLocalFile::GetParent(nsIFile **aParent)
 {
     NS_ENSURE_ARG_POINTER(aParent);
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *aParent = nsnull;
+
+    CHECK_mPath();
+
+    nsCString parentPath = nsAutoString(mPath);
+
+    // check to see whether or not we need to cut off any trailing
+    // slashes
+
+    PRInt32 offset = parentPath.RFindChar('/');
+    PRInt32 length = parentPath.Length();
+
+    // eat of trailing slash marks
+    while ((length > 1) && offset && (length == (offset + 1))) {
+        parentPath.Truncate(offset);
+        offset = parentPath.RFindChar('/');
+        length = parentPath.Length();
+    }
+
+    if (offset == -1)
+        return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+
+    // for the case where we are at '/'
+    if (offset == 0)
+        offset++;
+    parentPath.Truncate(offset);
+
+    nsCOMPtr<nsILocalFile> localFile;
+    nsresult rv =  NS_NewLocalFile(parentPath.GetBuffer(), getter_AddRefs(localFile));
+    
+    if(NS_SUCCEEDED(rv) && localFile)
+    {
+        return localFile->QueryInterface(NS_GET_IID(nsIFile), (void**)aParent);
+    }
+    return rv;
 }
 
 /*
