@@ -33,7 +33,6 @@
 <p><a href="#using_certs_devices">Managing Smart Cards and Other Security Devices</a></p>
 <p><a href="#using_certs_ssl">Managing SSL Warnings and Settings</a></p>
 <p><a href="#using_certs_validation">Controlling Validation</a></p>
-<p><a href="#using_certs_settings">Certificate Settings</a></p>
 </td>
 </tr>
 </table>
@@ -206,7 +205,7 @@
 <a NAME="using_certs_cas"></a><a NAME="certificates:certificate_authorityIDX"></a>
 <H2>Managing Certificates that Identify Certificate Authorities</H2>
 
-<p>Like other commonly used forms of ID, a certificate is issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <a href="glossary.html#certificate_authority_(CA)">certificate authority (CA)</a>. A certificate that identifies a CA is called a CA certificate.
+<p>Like other commonly used forms of ID, a certificate is issued by an organization with recognized authority to issue such identification. An organization that issues certificates is called a <a href="glossary.html#certificate_authority">certificate authority (CA)</a>. A certificate that identifies a CA is called a CA certificate.
 
 <p> Certificate Manager typically has many CA certificates on file. These CA certificates permit Certificate Manager to recognize and work with certificates issued by the corresponding CAs. However, the presence of a CA certificate in this list does <i>not</i> guarantee that the certificates it issues can be trusted. You or your system administrator must make decisions about what kinds of certificates to trust depending on your security needs.  
 
@@ -404,7 +403,7 @@
 <p><a href="#How_Certificate_Validation_Works">How Validation Works</a></p>
 <p><a href="#Managing_CRLs">Managing CRLs</a></p>
 <p><a href="#Configuring_Certificate_Manager_for_OCSP">Configuring OCSP</a></p>
-<p><a href="#validation_help.html">Validation Settings</a></p>
+<p><a href="validation_help.html">Validation Settings</a></p>
 </td>
 </tr>
 </table>
@@ -435,7 +434,7 @@
 <p>&nbsp;</p>
 <a name="Managing_CRLs"></a><h2>Managing CRLs</h2>
 
-<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.html#certificate_authority (CA)">certificate authority (CA)</a> might revoke a certificate, for example, if it has been compromised in some way&mdash;much the way a credit card company might revoke your credit card if you report that it's been stolen.
+<p>A certificate revocation list (CRL) is list of revoked certificates.  A <a href="glossary.html#certificate_authority">certificate authority (CA)</a> might revoke a certificate, for example, if it has been compromised in some way&mdash;much the way a credit card company might revoke your credit card if you report that it's been stolen.
 </p>
 
 <p>This section describes how to import and manage CRLs. <p>For background information, see <a href="#How_Certificate_Validation_Works">How Validation Works</a>. 
