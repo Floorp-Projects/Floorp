@@ -261,7 +261,8 @@ NS_IMETHODIMP nsToolkit::Init(PRThread */*aThread*/)
     nsresult rv = prefs->GetBoolPref("browser.quartz.enable", &enableQuartz);
     if ( NS_FAILED(rv) || enableQuartz ) {
       UInt32 oldFlags = SwapQDTextFlags(kQDDontChangeFlags);
-      SwapQDTextFlags(oldFlags | kQDUseTrueTypeScalerGlyphs | kQDUseCGTextRendering);
+      SwapQDTextFlags(oldFlags | kQDUseTrueTypeScalerGlyphs | kQDUseCGTextRendering |
+                        kQDUseCGTextMetrics);
     }
   }
 #endif
