@@ -1101,6 +1101,8 @@ void nsDocument::SelectAll() {
   startPnt->SetPoint(start, -1, PR_TRUE);
   endPnt->SetPoint(end, -1, PR_FALSE);
 
+  SetDisplaySelection(PR_TRUE);
+
 }
 void nsDocument::TraverseTree(nsString   & aText,  
                               nsIContent * aContent, 
