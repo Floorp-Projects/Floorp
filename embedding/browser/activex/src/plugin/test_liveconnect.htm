@@ -31,6 +31,10 @@ installed to see anything</p>
   <form action="#" method="post">
     <input type="button" value="<< Last Month" onclick="prevMonth()"></input>
 	<input type="button" value="Next Month >>" onclick="nextMonth()"></input><br>
+    <input type="button" value="<< Last Day" onclick="prevDay()"></input>
+	<input type="button" value="Next Day >>" onclick="nextDay()"></input><br>
+	Change the current day: <input name="day_to_set" type="text" size="3"  value="1"></input>
+	<input type="button" value="Set" onclick="setDay()"></input><br>
 	<input type="button" value="Sanity test" onclick="document.cal.x(1)"></input>
   </form>
   <p>
@@ -40,15 +44,24 @@ installed to see anything</p>
 	document.write("<p>Plugin window =" + document.cal.getWindow() + "</p>");
 	function prevMonth()
 	{
-	  // document.cal.x(1);
 	  document.cal.invoke("previousMonth");
 	}
 	function nextMonth()
 	{
-	  // document.cal.x();
 	  document.cal.invoke("nextMonth");
 	}
-
+	function prevDay()
+	{
+	  document.cal.invoke("previousDay");
+	}
+	function nextDay()
+	{
+	  document.cal.invoke("nextDay");
+	}
+	function setDay()
+	{
+	  document.cal.setProperty("day", document.forms[0].elements["day_to_set"].value);
+	}
   </script>
   </p>
 
