@@ -322,3 +322,14 @@ function toggleGroup()
   gFld_Name.focus();
   onFieldInput();
 }
+
+function persistTreeSize()
+{
+  if (!document.getElementById("folderbox").hidden) {
+    var bookmarkView = document.getElementById("bookmarks-view");
+    bookmarkView.setAttribute("height", bookmarkView.boxObject.height);
+    document.persist("bookmarks-view", "height");
+    bookmarkView.setAttribute("width", bookmarkView.boxObject.width);
+    document.persist("bookmarks-view", "width");
+  }
+}

@@ -505,7 +505,7 @@ var BookmarksCommand = {
   {
     var rv = { selectedFolder: null };      
     openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-               "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, null, null, "selectFolder", rv);
+               "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, null, null, "selectFolder", rv);
     if (!rv.target)
       return;
     
@@ -894,7 +894,7 @@ var BookmarksController = {
       var folder = aTarget.parent.Value;
       var rv = { newBookmark: null };
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "", 
-                 "centerscreen,chrome,modal=yes,dialog=yes,resizable=no", null, null, folder, null, "newBookmark", rv);
+                 "centerscreen,chrome,modal=yes,dialog=yes,resizable=yes", null, null, folder, null, "newBookmark", rv);
       break;
     case "cmd_bm_newseparator":
       BookmarksCommand.createNewSeparator(aTarget);
@@ -1506,7 +1506,7 @@ var BookmarksUtils = {
     }
 
     openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "",
-               "centerscreen,chrome,dialog=yes,resizable=no,dependent",
+               "centerscreen,chrome,dialog=yes,resizable=yes,dependent",
                currentTabInfo.name, currentTabInfo.url, null,
                currentTabInfo.charset, "addGroup" + (aSelect ? ",group" : ""), tabsInfo);
   },
@@ -1541,7 +1541,7 @@ var BookmarksUtils = {
 
     if (aShowDialog) {
       openDialog("chrome://communicator/content/bookmarks/addBookmark.xul", "",
-                 "centerscreen,chrome,dialog=yes,resizable=no,dependent", aTitle, aURL, null, aCharset);
+                 "centerscreen,chrome,dialog=yes,resizable=yes,dependent", aTitle, aURL, null, aCharset);
     }
     else {
       // User has elected to override the file dialog and always file bookmarks
