@@ -207,7 +207,7 @@ public class Codegen extends Interpreter {
         if (e != null)
             throw new RuntimeException("Malformed optimizer package " + e);
 
-        if (scriptOrFn instanceof OptFunctionNode) {
+        if (inFunction) {
             NativeFunction f;
             try {
                 Constructor ctor = result.getConstructors()[0];
@@ -256,12 +256,22 @@ public class Codegen extends Interpreter {
     generateCode(Context cx, ScriptOrFnNode scriptOrFn,
                  ObjArray names, ObjArray classFiles)
     {
+        String superClassName;
         this.scriptOrFn = scriptOrFn;
-        int functionCount = scriptOrFn.getFunctionCount();
-        for (int i = 0; i != functionCount; ++i) {
-            OptFunctionNode fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
-            Codegen codegen = new Codegen(this);
-            codegen.generateCode(cx, fn, names, classFiles);
+        if (scriptOrFn.getType() == TokenStream.FUNCTION) {
+            inFunction = true;
+            fnCurrent = (OptFunctionNode)scriptOrFn;
+            inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
+            generatedClassName = fnCurrent.getClassName();
+            superClassName = functionSuperClassName;
+        } else {
+            // better be a script
+            if (scriptOrFn.getType() != TokenStream.SCRIPT) badTree();
+            inFunction = false;
+            boolean isPrimary = (nameHelper.getTargetExtends() == null
+                                 && nameHelper.getTargetImplements() == null);
+            generatedClassName = getScriptClassName(null, isPrimary);
+            superClassName = scriptSuperClassName;
         }
 
         itsUseDynamicScope = cx.hasCompileFunctionsWithDynamicScope();
@@ -273,20 +283,21 @@ public class Codegen extends Interpreter {
         }
         version = cx.getLanguageVersion();
         optLevel = cx.getOptimizationLevel();
-        inFunction = scriptOrFn.getType() == TokenStream.FUNCTION;
-        superClassName = inFunction
-                         ? functionSuperClassName
-                         : scriptSuperClassName;
-        superClassSlashName = superClassName.replace('.', '/');
+
+        // Generate nested function code
+        int functionCount = scriptOrFn.getFunctionCount();
+        for (int i = 0; i != functionCount; ++i) {
+            OptFunctionNode fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+            Codegen codegen = new Codegen(this);
+            codegen.generateCode(cx, fn, names, classFiles);
+        }
+
+        classFile = new ClassFileWriter(generatedClassName, superClassName,
+                                        itsSourceFile);
 
         Node codegenBase;
         if (inFunction) {
-            fnCurrent = (OptFunctionNode)scriptOrFn;
-            inDirectCallFunction = fnCurrent.isTargetOfDirectCall();
-            generatedClassName = fnCurrent.getClassName();
-            classFile = new ClassFileWriter(generatedClassName, superClassName, itsSourceFile);
-            String name = fnCurrent.getFunctionName();
-            generateInit(cx, "<init>", name);
+            generateInit(cx, superClassName);
             if (fnCurrent.isTargetOfDirectCall()) {
                 classFile.startMethod("call",
                                       "(Lorg/mozilla/javascript/Context;" +
@@ -352,7 +363,7 @@ public class Codegen extends Interpreter {
                         markLabel(isObjectLabel);
                     }
                 }
-                generatePrologue(cx, true, scriptOrFn.getParamCount());
+                generatePrologue(cx, scriptOrFn.getParamCount());
             } else {
                 startNewMethod("call",
                                "(Lorg/mozilla/javascript/Context;" +
@@ -360,21 +371,15 @@ public class Codegen extends Interpreter {
                                 "Lorg/mozilla/javascript/Scriptable;" +
                                "[Ljava/lang/Object;)Ljava/lang/Object;",
                                1, false, true);
-                generatePrologue(cx, true, -1);
+                generatePrologue(cx, -1);
             }
             codegenBase = scriptOrFn.getLastChild();
         } else {
-            // better be a script
-            if (scriptOrFn.getType() != TokenStream.SCRIPT)
-                badTree();
-            boolean isPrimary = nameHelper.getTargetExtends() == null &&
-                                nameHelper.getTargetImplements() == null;
-            generatedClassName = getScriptClassName(null, isPrimary);
-            classFile = new ClassFileWriter(generatedClassName, superClassName, itsSourceFile);
+            // script
             classFile.addInterface("org/mozilla/javascript/Script");
-            generateScriptCtor(cx);
+            generateScriptCtor(cx, superClassName);
             generateMain(cx);
-            generateInit(cx, "initScript", "");
+            generateInit(cx, superClassName);
             generateExecute(cx);
             startNewMethod("call",
                            "(Lorg/mozilla/javascript/Context;" +
@@ -382,7 +387,7 @@ public class Codegen extends Interpreter {
                             "Lorg/mozilla/javascript/Scriptable;" +
                             "[Ljava/lang/Object;)Ljava/lang/Object;",
                            1, false, true);
-            generatePrologue(cx, false, -1);
+            generatePrologue(cx, -1);
             int linenum = scriptOrFn.getEndLineno();
             if (linenum != -1)
               classFile.addLineNumberEntry((short)linenum);
@@ -544,10 +549,10 @@ public class Codegen extends Interpreter {
         finishMethod(cx, null);
     }
 
-    private void generateScriptCtor(Context cx) {
+    private void generateScriptCtor(Context cx, String superClassName) {
         startNewMethod("<init>", "()V", 1, false, false);
         addByteCode(ByteCode.ALOAD_0);
-        addSpecialInvoke(superClassSlashName, "<init>", "()", "V");
+        addSpecialInvoke(superClassName, "<init>", "()", "V");
         addByteCode(ByteCode.RETURN);
         finishMethod(cx, null);
     }
@@ -572,39 +577,47 @@ public class Codegen extends Interpreter {
         contextLocal = reserveWordLocal(2);  // reserve 2 for 'context'
     }
 
-    private void generateInit(Context cx, String methodName, String name)
+    private void generateInit(Context cx, String superClassName)
     {
         trivialInit = true;
-        boolean inCtor = false;
-        if (methodName.equals("<init>")) {
+        boolean inCtor;
+        String methodName;
+
+        if (!inFunction) {
+            methodName = "initScript";
+            inCtor = false;
+        } else {
+            methodName = "<init>";
             inCtor = true;
             setNonTrivialInit(methodName);
             addByteCode(ByteCode.ALOAD_0);
-            addSpecialInvoke(superClassSlashName, "<init>", "()", "V");
+            addSpecialInvoke(superClassName, "<init>", "()", "V");
 
             addByteCode(ByteCode.ALOAD_0);
             addByteCode(ByteCode.ALOAD_1);
             classFile.add(ByteCode.PUTFIELD,
                           "org/mozilla/javascript/ScriptableObject",
                           "parent", "Lorg/mozilla/javascript/Scriptable;");
+
+            /*
+             * Generate code to initialize functionName field with the name
+             * of the function.
+             */
+            String name = fnCurrent.getFunctionName();
+            if (name.length() != 0) {
+                addByteCode(ByteCode.ALOAD_0);
+                classFile.addLoadConstant(name);
+                classFile.add(ByteCode.PUTFIELD,
+                              "org/mozilla/javascript/NativeFunction",
+                              "functionName", "Ljava/lang/String;");
+            }
         }
 
         /*
-         * Generate code to initialize functionName field with the name
-         * of the function and argNames string array with the names
+         * Generate code to initialize argNames string array with the names
          * of the parameters and the vars. Initialize argCount
          * to the number of formal parameters.
          */
-
-        if (name.length() != 0) {
-            setNonTrivialInit(methodName);
-            addByteCode(ByteCode.ALOAD_0);
-            classFile.addLoadConstant(name);
-            classFile.add(ByteCode.PUTFIELD,
-                          "org/mozilla/javascript/NativeFunction",
-                          "functionName", "Ljava/lang/String;");
-        }
-
         int N = scriptOrFn.getParamAndVarCount();
         if (N != 0) {
             setNonTrivialInit(methodName);
@@ -625,7 +638,7 @@ public class Codegen extends Interpreter {
 
         int parmCount = scriptOrFn.getParamCount();
         if (parmCount != 0) {
-            setNonTrivialInit(methodName);
+            if (!inFunction || trivialInit) Context.codeBug();
             addByteCode(ByteCode.ALOAD_0);
             push(parmCount);
             classFile.add(ByteCode.PUTFIELD,
@@ -650,10 +663,9 @@ public class Codegen extends Interpreter {
             generateRegExpLiterals(inCtor);
         }
 
-        if (scriptOrFn instanceof OptFunctionNode) {
-
+        if (inFunction) {
             if (fnCurrent.isTargetOfDirectCall()) {
-                setNonTrivialInit(methodName);
+                if (trivialInit) Context.codeBug();
                 String className = fnCurrent.getClassName();
                 String fieldName = className.replace('.', '_');
                 String fieldType = 'L'+classFile.fullyQualifiedForm(className)
@@ -738,7 +750,8 @@ public class Codegen extends Interpreter {
                                flags);
             addByteCode(ByteCode.ALOAD_0);    // load 'this'
 
-            addByteCode(ByteCode.NEW, "org/mozilla/javascript/regexp/NativeRegExp");
+            addByteCode(ByteCode.NEW,
+                        "org/mozilla/javascript/regexp/NativeRegExp");
             addByteCode(ByteCode.DUP);
 
             aload(contextLocal);    // load 'context'
@@ -753,11 +766,11 @@ public class Codegen extends Interpreter {
             push(0);
 
             addSpecialInvoke("org/mozilla/javascript/regexp/NativeRegExp",
-                                "<init>",
-                                "(Lorg/mozilla/javascript/Context;" +
-                                  "Lorg/mozilla/javascript/Scriptable;" +
-                                  "Ljava/lang/String;Ljava/lang/String;Z)",
-                                  "V");
+                             "<init>",
+                             "(Lorg/mozilla/javascript/Context;"
+                             +"Lorg/mozilla/javascript/Scriptable;"
+                             +"Ljava/lang/String;Ljava/lang/String;Z)",
+                             "V");
             classFile.add(ByteCode.PUTFIELD,
                           classFile.fullyQualifiedForm(generatedClassName),
                           fieldName,
@@ -774,8 +787,7 @@ public class Codegen extends Interpreter {
      * @param directParameterCount number of parameters for direct call,
      *        or -1 if not direct call
      */
-    private void
-    generatePrologue(Context cx, boolean inFunction, int directParameterCount)
+    private void generatePrologue(Context cx, int directParameterCount)
     {
         funObjLocal = reserveWordLocal(0);
         contextLocal = reserveWordLocal(1);
@@ -815,7 +827,7 @@ public class Codegen extends Interpreter {
             }
         }
 
-        if (inFunction && ((OptFunctionNode)scriptOrFn).getCheckThis()) {
+        if (inFunction && fnCurrent.getCheckThis()) {
             // Nested functions must check their 'this' value to
             //  insure it is not an activation object:
             //  see 10.1.6 Activation Object
@@ -826,8 +838,7 @@ public class Codegen extends Interpreter {
             astore(thisObjLocal);
         }
 
-        hasVarsInRegs = inFunction &&
-                        !((OptFunctionNode)scriptOrFn).requiresActivation();
+        hasVarsInRegs = inFunction && !fnCurrent.requiresActivation();
         if (hasVarsInRegs) {
             // No need to create activation. Pad arguments if need be.
             int parmCount = scriptOrFn.getParamCount();
@@ -3775,8 +3786,6 @@ public class Codegen extends Interpreter {
 
     private OptClassNameHelper nameHelper;
     private ObjToIntMap classNames;
-    private String superClassName;
-    private String superClassSlashName;
     private String generatedClassName;
     boolean inFunction;
     boolean inDirectCallFunction;
