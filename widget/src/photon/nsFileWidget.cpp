@@ -56,23 +56,22 @@ nsFileWidget::~nsFileWidget()
 //-------------------------------------------------------------------------
 PRBool nsFileWidget::Show()
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show - Not Implemented\n"));
-
   int         err;
   PRBool      res = PR_FALSE;
   char       *title = mTitle.ToNewCString();
 
   PtWidget_t *myParent = (PtWidget_t *) mParent->GetNativeData(NS_NATIVE_WIDGET);
+
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Show myParent=<%p> - Not Implemented\n", myParent));
   
-  PhPoint_t *thePos=nsnull;
-  char      *root_dir = mDefault.ToNewCString();
+  PhPoint_t thePos= {100,100};
+  char      *root_dir = mDisplayDirectory.ToNewCString();
   char      *file_spec = nsnull;
   char      *btn1 = nsnull;
   char      *btn2 = nsnull;
   char      format[] = "100n50d";			/* 100 Pix for Name, 50 Pix for Date */
+  int       flags = 0;
   PtFileSelectionInfo_t    info;
-  int flags = 0;
     
   if (mMode == eMode_load)
   {
@@ -89,7 +88,7 @@ PRBool nsFileWidget::Show()
   for(i=0; i<(mNumberOfFilters-1); i++)
   {
     mFilterList.Append(mFilters[i]);
-	mFilterList.Append(",");
+	mFilterList.Append(";");
   }
 
   mFilterList.Append(mFilters[i]);  /* Add the last one */
@@ -98,15 +97,20 @@ PRBool nsFileWidget::Show()
   
   myParent = nsnull; /* HACK! */
   
-  err = PtFileSelection(myParent, thePos, title, root_dir, file_spec, btn1, btn2, format, &info, flags);
+  err = PtFileSelection(myParent, &thePos, title, root_dir, file_spec, btn1, btn2, format, &info, flags);
   if (err == 0)
   {
 	/* Successfully selected a file or directory */
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Create Success from PtFileSelection\n"));
     if (info.ret == Pt_FSDIALOG_BTN1)
 	{
 		mSelectedFile.SetLength(0);
         mSelectedFile.Append(info.path);
+
+        char *str = mSelectedFile.ToNewCString();
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::Create Success from PtFileSelection str=<%s>\n", str));
+ 		delete [] str;
+		
+        res = PR_TRUE;
 	}
 	else
 	{
@@ -180,7 +184,7 @@ NS_METHOD  nsFileWidget::SetDefaultString(const nsString& aString)
 //-------------------------------------------------------------------------
 NS_METHOD  nsFileWidget::SetDisplayDirectory(const nsFileSpec & aDirectory)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetDisplayDirectory - Not Implemented\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsFileWidget::SetDisplayDirectory to <%s> - Not Implemented\n", aDirectory.GetCString()));
   
   mDisplayDirectory = aDirectory;
   return NS_OK;

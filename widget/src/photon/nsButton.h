@@ -19,7 +19,7 @@
 #ifndef nsButton_h__
 #define nsButton_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsIButton.h"
 #include <Pt.h>
 

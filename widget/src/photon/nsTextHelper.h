@@ -20,7 +20,7 @@
 
 #include "nsITextWidget.h"
 #include "nsITextAreaWidget.h"
-#include "nsWindow.h"
+#include "nsWidget.h"
 
 /**
  * Base class for nsTextAreaWidget and nsTextWidget

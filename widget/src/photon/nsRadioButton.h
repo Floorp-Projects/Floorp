@@ -19,7 +19,7 @@
 #ifndef nsRadioButton_h__
 #define nsRadioButton_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsIRadioButton.h"
 #include <Pt.h>
 
