@@ -38,6 +38,26 @@
 
 //inc_global.php -- Stuff that needs to be done globally to all of Mozilla Update
 
+// ---------------------------
+// quote_smart() --  Quote a variable to make it safe
+// ---------------------------
+function quote_smart($value)
+{
+   // Stripslashes if we need to
+   if (get_magic_quotes_gpc()) {
+       $value = stripslashes($value);
+   }
+
+   // Quote it if it's not an integer
+   if (!is_int($value)) {
+       $value = "'" . mysql_real_escape_string($value) . "'";
+   }
+
+   return $value;
+}
+
+
+
 //Attempt to fix Bug 246743 (strip_tags) and Bug 248242 (htmlentities)
 foreach ($_GET as $key => $val) {
 $_GET["$key"] = htmlentities(str_replace("\\","",strip_tags($_GET["$key"])));
@@ -49,7 +69,7 @@ if ($_GET["debug"]=="true") {$_SESSION["debug"]=$_GET["debug"]; } else if ($_GET
 // Bug 250596 Fixes for incoming $_GET variables.
 if ($_GET["application"]) {
 $_GET["application"] = strtolower($_GET["application"]);
-$sql = "SELECT AppID FROM  `t_applications` WHERE `AppName` = '".ucwords(strtolower($_GET["application"]))."' LIMIT 1";
+$sql = "SELECT AppID FROM  `t_applications` WHERE `AppName` = ".quote_smart(ucwords(strtolower($_GET["application"])))." LIMIT 1";
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
    if (mysql_num_rows($sql_result)===0) {unset($_GET["application"]);}
 }

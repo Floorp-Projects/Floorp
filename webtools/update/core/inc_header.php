@@ -35,17 +35,56 @@
 // the terms of any one of the MPL, the GPL or the LGPL.
 //
 // ***** END LICENSE BLOCK *****
-
-$pos = strpos($_SERVER["REQUEST_URI"], "/admin");
-if ($pos !== false) {
-echo'<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/mozupdates.bak.css">';
-$application="login"; $_SESSION["application"]="login"; unset($_SESSION["app_version"], $_SESSION["app_os"]);
- }
 ?>
+
+ <meta http-equiv="Content-Type" content="text/html; charset=ISO-8859-1">
+ <meta name="keywords" content="web browser mozilla firefox firebird camino thunderbird bugzilla user agent web links cool sites">
+
+ <link rel="stylesheet" type="text/css" href="/css/print.css" media="print">
+ <link rel="stylesheet" type="text/css" href="/css/base/content.css" media="all">
+ <link rel="stylesheet" type="text/css" href="/css/cavendish/content.css" title="Cavendish" media="all">
+ <link rel="stylesheet" type="text/css" href="/css/base/template.css" media="screen">
+ <link rel="stylesheet" type="text/css" href="/css/cavendish/template.css" title="Cavendish" media="screen">
+ <link rel="stylesheet" type="text/css" href="/css/cavendish/home.css" title="Cavendish" media="screen">
+ <link rel="stylesheet" type="text/css" href="/core/update.css" media="all">
+ <link rel="icon" href="/images/mozilla-16.png" type="image/png">
+ <link rel="home" title="Home" href="http://update.mozilla.org/">
+</head>
+
+<body id="update-mozilla-org" class="homepage">
+<div id="container">
+
+<p class="skipLink"><a href="#mainContent" accesskey="2">Skip to main content</a></p>
+
+<div id="header">
+ <h1><a href="/" title="Return to home page" accesskey="1">Mozilla Update</a></h1>
+ <ul title="Main Site Sections">
+  <li id="menu_aboutus"><a href="../about/" title="About Mozilla Update">About</a></li>
+  <li id="menu_developers"><a href="../developers/" title="Using Mozilla's products for your own applications">Developers</a></li>
+  <li id="menu_store"><a href="http://www.mozillastore.com" title="Shop for Mozilla products on CD and other merchanise">---</a></li>
+  <li id="menu_support"><a href="../themes/" title="Installation, trouble-shooting, and the knowledge base">Themes</a></li>
+  <li id="menu_products"><a href="../extensions/" title="All software Mozilla currently offers">Extensions</a></li>
+ </ul>
+ <form id="search" method="get" action="http://www.google.com/custom" title="Mozilla.org Search">
+ <div>
+  <label for="q" title="Search update.mozilla.org">search update:</label>
+  <input type="hidden" name="cof" value="LW:174;LH:60;L:http://www.mozilla.org/images/mlogosm.gif;GIMP:#cc0000;T:black;ALC:#0000ff;GFNT:grey;LC:#990000;BGC:white;AH:center;VLC:purple;GL:0;GALT:#666633;AWFID:9262c37cefe23a86;">
+  <input type="hidden" name="domains" value="mozilla.org">
+  <input type="hidden" name="sitesearch" value="mozilla.org">
+  <input type="text" id="q" name="q" accesskey="s" size="30">
+  <input type="submit" id="submit" value="Go">
+ </div>
+ </form>
+</div>
+<!-- closes #header-->
+<?php return; ?>
+
+
+
+
 <DIV class="header">
 <?php //if ($_GET["application"]) {$application=$_GET["application"]; } else {$application="firefox"; } ?>
 <DIV class="logo"><IMG SRC="/images/<?php echo"$application"; ?>-cornerlogo.png" BORDER=0 ALT=""></DIV>
-<DIV class="header-top"><A HREF="/"><IMG SRC="/images/updatelogo.png" BORDER=0 HEIGHT=55 WIDTH=270 ALT="Mozilla Update"></A></DIV>
 <DIV class="tabbar">
 <A HREF="/?application=mozilla"><IMG SRC="/images/tab-mozilla<?php if ($application=="mozilla") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=98 ALT="[Mozilla] "></A><A HREF="/?application=firefox"><IMG SRC="/images/tab-firefox<?php if ($application=="firefox") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=98 ALT="[Firefox] "></A><A HREF="/?application=thunderbird"><IMG SRC="/images/tab-thunderbird<?php if ($application=="thunderbird") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=105 ALT="[Thunderbird] "></A><A HREF="/developercp.php"><IMG SRC="/images/tab-login<?php if ($application=="login") {echo"-selected"; } ?>.png" BORDER=0 HEIGHT=20 WIDTH=98 ALT="[Login]"></A>
 </DIV>

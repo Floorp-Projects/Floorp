@@ -37,7 +37,24 @@
 // ***** END LICENSE BLOCK *****
 ?>
 <!--Page Footer-->
+  <hr class="hide">
+  <div id="footer">
+   <ul id="bn">
+    <li><a href="sitemap.html">Site Map</a></li>
+    <li><a href="contact/">Contact Us</a></li>
+    <li><a href="foundation/donate.html">Donate</a></li>
+   </ul>
+   <p>Copyright &copy; 1998-2004 The Mozilla Organization</p>
+  </div>
+  <!-- closes #footer-->
+
+</div>
+<!-- closes #container -->
+
 <?php
+
+return;
+
 //Site Timer Counter :: Debug-Mode Item Only
 $time_end = getmicrotime();
 //Returns in format: sss.mmmuuunnnppp ;-) 

@@ -47,7 +47,8 @@ function getmicrotime() {
 $time_start = getmicrotime();
 
 //-- Website Variables--//
-$websitepath = "/opt/update"; // Local Path to Site Files
+$websitepath = "/opt/update-beta/"; // Local Path to Site Files
+$repositorypath = "/opt/update-beta/files";
 $sitehostname = "update.mozilla.org"; // DNS Hostname
 
 //-- MySQL Server/Database Properties/Connection --//
@@ -63,7 +64,6 @@ $db = mysql_select_db("$mysqlData", $connection) or trigger_error("MySQL Error "
 //-- Page Header & Footer --//
 $page_header = "$websitepath/core/inc_header.php";
 $page_footer = "$websitepath/core/inc_footer.php";
-
 
 //includes
 include"inc_guids.php"; // GUID Handler

@@ -39,49 +39,65 @@
 <?php
 require"core/config.php";
 ?>
-<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html401/loose.dtd">
-<html lang="EN" dir="ltr">
-<head>
-    <meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-    <meta http-equiv="Content-Language" content="en">
-    <meta http-equiv="Content-Style-Type" content="text/css">
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
 
-<TITLE>Mozilla Update</TITLE>
-<LINK REL="STYLESHEET" TYPE="text/css" HREF="/core/update.css">
-</HEAD>
-<BODY>
+<head>
+ <title>Mozilla Update</title>
+
 <?php
 include"$page_header";
 ?>
 
-<DIV class="contentbox" style="margin-left: 2px;">
-<DIV class="boxheader">Welcome to Mozilla Update</DIV>
-<SPAN class="itemdescription">
-Mozilla Update hosts Extensions and Themes for Mozilla software. On this site you can find Extensions and Themes for Mozilla Firefox,
-Mozilla Thunderbird and the Mozilla 1.x suite, with more to come. The site is broken up into sections for each product, with the
-extensions and themes categorized to be easy to find. They're also sorted by what version of the product you're using, so you can
-browse only for Firefox 0.9 compatible extensions, for example. For more information about Mozilla Update, please read our <A HREF="/faq/">Frequently Asked Questions...</A>
-
-</SPAN>
-</DIV>
-<?php include"inc_featuredupdate.php"; ?>
-
+<div class="key-point cnet" id="firefox-feature">
+  <script type="text/javascript">
+  <!--
+    var classes = new Array("cnet");
+    var date = new Date();
+    var seconds;
+    var classid;
+    seconds = date.getSeconds();
+    classid = seconds % classes.length;
+    document.getElementById('firefox-feature').className = 'key-point front-feature-' + classes[classid];
+  -->
+  </script>
+  <a href="/products/firefox" title="Learn more about Firefox" id="featurelink">Learn more about Firefox</a>
+  <div id="feature-content">
+    <h2 style="margin: 0; font-size: 2px;"><img src="/images/t_firefox.gif" alt="Featuring: Firefox!"></h2>
+    <p>Firefox 0.9 is the <a href="shelf.html">award winning</a> preview of Mozilla's next generation browser. Download Firefox entirely free or <a href="">purchase it on a CD</a> from the Mozilla store. <a href="#dfg">Learn more about Firefox...</a></p>
+    <script type="text/javascript" src="products/firefox/download.js"></script>
+    <script type="text/javascript">
+    <!--
+    writeDownloadsFrontpage();
+    //-->
+    </script>
+    <noscript>
+      <div class="download">
+        <h3>Download Now</h3>
+        <ul>
+          <li><a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.9.2/FirefoxSetup-0.9.2.exe">Windows (4.7MB)</a> </li>
+          <li><a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.9.1/firefox-0.9.1-i686-linux-gtk2+xft-installer.tar.gz">Linux (8.1MB)</a></li>
+          <li><a href="http://ftp.mozilla.org/pub/mozilla.org/firefox/releases/0.9.1/firefox-0.9.1-mac.dmg.gz">Mac OS X (8.6MB)</a></li>
+        </ul>
+      </div>
+    </noscript>
+  </div>
+</div>
 <?php
-//include"inc_softwareupdate.php";
-if ($_GET["application"]) {$application=$_GET["application"]; }
-?>
-<?php
-//Temporary!! Current Version Array Code
-$currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
-$currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.8", "mozilla"=>"1.7.x");
-$currentver = $currentver_array[$application];
-$currentver_display = $currentver_display_array[$application];
+    if ($_GET["application"]) {$application=$_GET["application"]; }
+
+    //Temporary!! Current Version Array Code
+        $currentver_array = array("firefox"=>"0.95", "thunderbird"=>"0.8", "mozilla"=>"1.7");
+        $currentver_display_array = array("firefox"=>"1.0 Preview Release", "thunderbird"=>"0.8", "mozilla"=>"1.7.x");
+        $currentver = $currentver_array[$application];
+        $currentver_display = $currentver_display_array[$application];
 ?>
 
-
-<DIV class="frontpagecontainer">
-<DIV class="contentbox contentcolumns">
-<DIV class="boxheader"><?php print(ucwords($application)); echo" $currentver_display"; ?> Extensions</DIV>
+<div id="mBody">
+  <div class="frontcolumn">
+    <h2><a href="extensions/">Get Extensions</a></h2>
+    <a href="products/thunderbird"><img src="images/product-front-thunderbird.png" alt="Thunderbird" class="promo" width="60" height="60"></a>
+    <p>Extensions are small add-ons that add new functionality. They can add anything from a toolbar button to a completely new feature.</p>
 
 <?php
 $sql = "SELECT TM.ID
@@ -92,9 +108,106 @@ WHERE  `Type`  =  'E' AND `AppName` = '$application' AND `minAppVer_int`<='$curr
  $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
   $numextensions = mysql_num_rows($sql_result);
 ?>
-     <a href="/extensions/">Browse extensions</a> (<?php echo"$numextensions"; ?> available)<BR> 
-<BR>
+     <a href="/extensions/">Browse extensions</a><BR>(<?php echo"$numextensions"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)<BR> 
+  </div>
+  <div class="frontcolumn">
+    <h2><a href="themes/">Get Themes</a></h2>
+    <a href="products/mozilla1.x"><img src="images/product-front-mozilla.png" alt="Mozilla" class="promo" width="60" height="60"></a>
+    <p>Themes are skins for Firefox, they allow you to change the look and feel of the browser and personalize it to your tastes.</p>
 <?php
+$sql = "SELECT TM.ID FROM  `t_main` TM
+INNER  JOIN t_version TV ON TM.ID = TV.ID
+INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
+WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int`<='$currentver' AND `maxAppVer_int` >='$currentver' AND `approved` = 'YES' GROUP BY TM.ID";
+ $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
+  $numthemes = mysql_num_rows($sql_result);
+?>
+     <a href="/themes/">Browse themes</a><BR>(<?php echo"$numthemes"; ?> available for <?php print(ucwords($application)); echo" $currentver_display"; ?>)
+  </div>
+  <div class="frontcolumnlast">
+    <h2><a href="http://www.MozillaStore.com">Get Plugins</a></h2>
+    <a href="http://www.MozillaStore.com"><img src="images/front-store.jpg" alt="Mozilla Store" class="promo" width="75" height="75"></a>
+    <p>Now you can order all <a href="http://store.mozilla.org/products/software/">Mozilla software on CD</a> and purchase <a href="http://store.mozilla.org/products/clothing">Mozilla logo merchandise</a> at the <a href="http://www.MozillaStore.com">Mozilla Store</a>.</p>
+  </div>
+
+  <br style="clear: both;"><br>
+
+  <!-- Start News Columns -->
+  <div class="frontcolumn">
+<a href="http://www.mozilla.org/news.rdf"><img src="images/rss.png" width="28" height="16" class="rss" alt="Mozilla News in RSS"></a><h2 style="margin-top: 0;"><a href="http://www.mozilla.org" title="the mozilla.org website">New Additions</a></h2>
+<ul class="news">
+<li>
+<div class="date">Aug 28</div>
+<a href="http://www.wired.com/wired/archive/12.09/start.html?pg=12">Firefox: Wired</a>
+</li>
+<li>
+<div class="date">Aug 18</div>
+<a href="http://www.mozilla.org/press/mozilla-2004-08-18.html">Mozilla Japan Created</a>
+</li>
+<li>
+<div class="date">Aug 18</div>
+<a href="http://www.mozilla.org/releases/#1.8a3">Mozilla 1.8 Alpha 3</a>
+</li>
+</ul>
+</div>
+<div class="frontcolumn">
+<a href="http://planet.mozilla.org/rss10.xml"><img src="images/rss.png" width="28" height="16" class="rss" alt="Mozilla Weblogs in RSS"></a><h2 style="margin-top: 0;"><a href="http://planet.mozilla.org/" title="Planet Mozilla - http://planet.mozilla.org/">Most Popular</a></h2>
+<ul class="news">
+<li>
+<div class="date">Aug 30</div>
+<a href="http://weblogs.mozillazine.org/josh/archives/2004/08/gmail_invites.html">Josh Aas: gmail invites</a>
+</li>
+<li>
+<div class="date">Aug 30</div>
+<a href="http://weblogs.mozillazine.org/asa/archives/006315.html">Asa Dotzler: gmail invites gone</a>
+</li>
+<li>
+<div class="date">Aug 30</div>
+<a href="http://weblogs.mozillazine.org/asa/archives/006314.html">Asa Dotzler: extension update changes</a>
+</li>
+</ul>
+</div>
+<div class="frontcolumn">
+<a href="http://www.mozillazine.org/atom.xml"><img src="images/rss.png" width="28" height="16" class="rss" alt="MozillaZine News in RSS"></a><h2 style="margin-top: 0;"><a href="http://www.mozillazine.org/" title="Your Source for Daily Mozilla News and Advocacy">This Space For Rent</a></h2>
+<ul class="news">
+<li>
+<div class="date">Aug 25</div>
+<a href="http://www.mozillazine.org/talkback.html?article=5215">Camino 0.8.1 Released</a>
+</li>
+<li>
+<div class="date">Aug 25</div>
+<a href="http://www.mozillazine.org/talkback.html?article=5213">Community Marketing Initiative Week 5</a>
+</li>
+<li>
+<div class="date">Aug 20</div>
+<a href="http://www.mozillazine.org/talkback.html?article=5200">New Beta of mozilla.org Website Available for Testing</a>
+</li>
+</ul>
+</div>
+
+  <!-- End News Columns -->  
+  <br style="clear: both;">
+
+</div>
+<!-- closes #mBody-->
+
+
+
+<?php
+// #################################################
+//   Old Mozilla Update Layout Code
+//    Particularly Editor's Pick Code. 
+// #################################################
+?>
+<?php
+//<A HREF="/faq/">Frequently Asked Questions...</A>
+
+
+if ($_GET["application"]) {$application=$_GET["application"]; }
+?>
+<?php
+//Featured Editor's Pick for Extensions for $application
+
 $sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `pick` FROM `t_reviews`  TR
 INNER JOIN t_main TM ON TR.ID = TM.ID
 INNER JOIN t_version TV ON TV.ID = TM.ID
@@ -131,22 +244,9 @@ echo"<BR><BR>\n";
 echo"<SPAN class=\"itemdescription\">$body</SPAN><BR>\n";
 }
 ?>
-<BR>
-</DIV>
 
-<DIV class="contentbox contentcolumns">
-<DIV class="boxheader"><?php print(ucwords($application)); echo" $currentver_display"; ?> Themes</DIV>
 <?php
-$sql = "SELECT TM.ID FROM  `t_main` TM
-INNER  JOIN t_version TV ON TM.ID = TV.ID
-INNER  JOIN t_applications TA ON TV.AppID = TA.AppID
-WHERE  `Type`  =  'T' AND `AppName` = '$application' AND `minAppVer_int` <='$currentver' AND `maxAppVer_int` >= '$currentver' AND `approved` = 'YES' GROUP BY TM.ID";
- $sql_result = mysql_query($sql, $connection) or trigger_error("MySQL Error ".mysql_errno().": ".mysql_error()."", E_USER_NOTICE);
-  $numthemes = mysql_num_rows($sql_result);
-?>
-     <a href="/themes/">Browse themes</a> (<?php echo"$numthemes"; ?> available)<BR>
-<BR>
-<?php
+//Featured Editor's Pick for Themes for $application
 $sql = "SELECT TR.ID, `Title`, TR.DateAdded, `Body`, `Type`, `pick` FROM `t_reviews`  TR
 INNER JOIN t_main TM ON TR.ID = TM.ID
 INNER JOIN t_version TV ON TV.ID = TM.ID
@@ -181,8 +281,8 @@ if ($pick=="YES") {echo" Editors Pick<BR><BR>\n";}
 echo"$body<BR>\n";
 }
 ?>
-</DIV>
-</DIV>
+
+
 <?php
 include"$page_footer";
 ?>
