@@ -34,6 +34,7 @@ use Date::Parse;
 
 sub sillyness {
     my $zz;
+    $zz = $::db_name;
     $zz = $::defaultqueryname;
     $zz = $::unconfirmedstate;
     $zz = @::components;
