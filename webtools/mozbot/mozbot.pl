@@ -130,7 +130,7 @@ $|++;
 
 # internal 'constants'
 my $NAME = 'mozbot';
-my $VERSION = q$Revision: 2.1 $;
+my $VERSION = q$Revision: 2.2 $;
 my $USERNAME = "pid-$$";
 my $LOGFILEPREFIX;
 
@@ -155,7 +155,7 @@ if ($LOGGING) {
     }
     "$LOGFILEDIR/$0" =~ /^(.*)$/os; # untaints the evil $0.
     $LOGFILEPREFIX = $1; # for some reason, $0 is considered tainted here, but not in other cases...
-    mkdir($LOGFILEDIR); # if this fails for a bad reason, we'll find out during the next line
+    mkdir($LOGFILEDIR, 0700); # if this fails for a bad reason, we'll find out during the next line
 }
 
 # begin session log...
