@@ -65,6 +65,9 @@ install:: embed_chrome
  $(MAKE_INSTALL) $(DIST)\bin\mfcEmbedComponents.dll $(DIST)\Embed
  $(MAKE_INSTALL) $(DIST)\bin\winembed.exe $(DIST)\Embed
 !ENDIF
+!if defined(MOZ_DEBUG)
+ $(MAKE_INSTALL) $(DIST)\bin\windbgdlg.exe $(DIST)\Embed
+!endif
 
 clobber::
  rm -f $(DIST)\Embed\chrome\installed-chrome.txt
