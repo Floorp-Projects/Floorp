@@ -244,23 +244,14 @@ public:
                                    nsIStyleRuleProcessor* aPrevProcessor);
 
   // nsIStyleRuleProcessor api
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium,
-                           nsIContent* aContent,
-                           nsIStyleContext* aParentContext,
-                           nsRuleWalker* aRuleWalker);
+  NS_IMETHOD RulesMatching(ElementRuleProcessorData* aData,
+                           nsIAtom* aMedium);
 
-  NS_IMETHOD RulesMatching(nsIPresContext* aPresContext,
-                           nsIAtom* aMedium,
-                           nsIContent* aParentContent,
-                           nsIAtom* aPseudoTag,
-                           nsIStyleContext* aParentContext,
-                           nsICSSPseudoComparator* aComparator,
-                           nsRuleWalker* aRuleWalker);
+  NS_IMETHOD RulesMatching(PseudoRuleProcessorData* aData,
+                           nsIAtom* aMedium);
 
-  NS_IMETHOD HasStateDependentStyle(nsIPresContext* aPresContext,
-                                    nsIAtom*        aMedium,
-                                    nsIContent*     aContent);
+  NS_IMETHOD HasStateDependentStyle(StateRuleProcessorData* aData,
+                                    nsIAtom* aMedium);
 
   // XXX style rule enumerations
 
@@ -336,7 +327,7 @@ HTMLCSSStyleSheetImpl::HTMLCSSStyleSheetImpl()
     mFirstLineRule(nsnull),
     mFirstLetterRule(nsnull)
 {
-  NS_INIT_REFCNT();
+  NS_INIT_ISUPPORTS();
 }
 
 HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
@@ -352,39 +343,10 @@ HTMLCSSStyleSheetImpl::~HTMLCSSStyleSheetImpl()
   }
 }
 
-NS_IMPL_ADDREF(HTMLCSSStyleSheetImpl)
-NS_IMPL_RELEASE(HTMLCSSStyleSheetImpl)
-
-nsresult HTMLCSSStyleSheetImpl::QueryInterface(const nsIID& aIID,
-                                               void** aInstancePtrResult)
-{
-  NS_PRECONDITION(nsnull != aInstancePtrResult, "null pointer");
-  if (nsnull == aInstancePtrResult) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
-  if (aIID.Equals(NS_GET_IID(nsIHTMLCSSStyleSheet))) {
-    *aInstancePtrResult = (void*) ((nsIHTMLCSSStyleSheet*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleSheet))) {
-    *aInstancePtrResult = (void*) ((nsIStyleSheet*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIStyleRuleProcessor))) {
-    *aInstancePtrResult = (void*) ((nsIStyleRuleProcessor*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(kISupportsIID)) {
-    *aInstancePtrResult = (void*) ((nsISupports*)(nsIStyleSheet*)this);
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  return NS_NOINTERFACE;
-}
+NS_IMPL_ISUPPORTS3(HTMLCSSStyleSheetImpl,
+                   nsIHTMLCSSStyleSheet,
+                   nsIStyleSheet,
+                   nsIStyleRuleProcessor)
 
 NS_IMETHODIMP
 HTMLCSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
@@ -396,63 +358,48 @@ HTMLCSSStyleSheetImpl::GetStyleRuleProcessor(nsIStyleRuleProcessor*& aProcessor,
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                     nsIAtom* aMedium,
-                                     nsIContent* aContent,
-                                     nsIStyleContext* aParentContext,
-                                     nsRuleWalker* aRuleWalker)
+HTMLCSSStyleSheetImpl::RulesMatching(ElementRuleProcessorData* aData,
+                                     nsIAtom* aMedium)
 {
-  NS_PRECONDITION(nsnull != aPresContext, "null arg");
-  NS_PRECONDITION(nsnull != aContent, "null arg");
-  NS_PRECONDITION(nsnull != aRuleWalker, "null arg");
-
-  nsCOMPtr<nsIStyledContent> styledContent(do_QueryInterface(aContent));
+  nsIStyledContent *styledContent = aData->mStyledContent;
   
   if (styledContent) 
     // just get the one and only style rule from the content's STYLE attribute
-    styledContent->WalkInlineStyleRules(aRuleWalker);
+    styledContent->WalkInlineStyleRules(aData->mRuleWalker);
 
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
-                                     nsIAtom* aMedium,
-                                     nsIContent* aParentContent,
-                                     nsIAtom* aPseudoTag,
-                                     nsIStyleContext* aParentContext,
-                                     nsICSSPseudoComparator* aComparator,
-                                     nsRuleWalker* aRuleWalker)
+HTMLCSSStyleSheetImpl::RulesMatching(PseudoRuleProcessorData* aData,
+                                     nsIAtom* aMedium)
 {
-  if (aPseudoTag == nsHTMLAtoms::firstLinePseudo) {
-    if (!aRuleWalker->AtRoot()) {
-      if (nsnull == mFirstLineRule) {
-        mFirstLineRule = new CSSFirstLineRule(this);
-        if (mFirstLineRule) {
-          NS_ADDREF(mFirstLineRule);
-        }
-      }
-      if (mFirstLineRule) {
-        aRuleWalker->Forward(mFirstLineRule);
-        return NS_OK; 
-      }
-    } 
+  // We only want to add these rules if there are real :first-letter or
+  // :first-line rules that cause a pseudo-element frame to be created.
+  // Otherwise the use of ProbePseudoStyleContextFor will prevent frame
+  // creation, and adding rules here would cause it.
+  if (aData->mRuleWalker->AtRoot())
+    return NS_OK;
+
+  nsIAtom* pseudoTag = aData->mPseudoTag;
+  if (pseudoTag == nsHTMLAtoms::firstLinePseudo) {
+    if (!mFirstLineRule) {
+      mFirstLineRule = new CSSFirstLineRule(this);
+      if (!mFirstLineRule)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(mFirstLineRule);
+    }
+    aData->mRuleWalker->Forward(mFirstLineRule);
   }
-  if (aPseudoTag == nsHTMLAtoms::firstLetterPseudo) {
-    if (!aRuleWalker->AtRoot()) {
-      if (nsnull == mFirstLetterRule) {
-        mFirstLetterRule = new CSSFirstLetterRule(this);
-        if (mFirstLetterRule) {
-          NS_ADDREF(mFirstLetterRule);
-        }
-      }
-      if (mFirstLetterRule) {
-        aRuleWalker->Forward(mFirstLetterRule);
-        return NS_OK; 
-      }
-    } 
-  }
-  // else no pseudo frame style... 
+  else if (pseudoTag == nsHTMLAtoms::firstLetterPseudo) {
+    if (!mFirstLetterRule) {
+      mFirstLetterRule = new CSSFirstLetterRule(this);
+      if (!mFirstLetterRule)
+        return NS_ERROR_OUT_OF_MEMORY;
+      NS_ADDREF(mFirstLetterRule);
+    }
+    aData->mRuleWalker->Forward(mFirstLetterRule);
+  } 
   return NS_OK;
 }
 
@@ -474,9 +421,8 @@ HTMLCSSStyleSheetImpl::Init(nsIURI* aURL, nsIDocument* aDocument)
 
 // Test if style is dependent on content state
 NS_IMETHODIMP
-HTMLCSSStyleSheetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
-                                              nsIAtom*        aMedium,
-                                              nsIContent*     aContent)
+HTMLCSSStyleSheetImpl::HasStateDependentStyle(StateRuleProcessorData* aData,
+                                              nsIAtom* aMedium)
 {
   return NS_COMFALSE;
 }

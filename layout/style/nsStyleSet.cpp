@@ -255,9 +255,6 @@ public:
   NS_IMETHOD AttributeAffectsStyle(nsIAtom *aAttribute, nsIContent *aContent,
                                    PRBool &aAffects);
 
-  void WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc, void* aData,
-                          nsIContent* aContent);
-
 private:
   static nsrefcnt gInstances;
   static nsIURI *gQuirkURI;
@@ -282,7 +279,16 @@ protected:
   nsresult GatherRuleProcessors(void);
 
   void AddImportantRules(nsRuleNode* aCurrLevelNode, nsRuleNode* aLastPrevLevelNode);
-  void FileRules(nsISupportsArrayEnumFunc aCollectorFunc, void* aData, nsIContent* aContent);
+
+  // Enumerate the rules in a way that cares about the order of the
+  // rules.
+  void FileRules(nsISupportsArrayEnumFunc aCollectorFunc,
+                 RuleProcessorData* aData);
+
+  // Enumerate all the rules in a way that doesn't care about the order
+  // of the rules and break out if the enumeration is halted.
+  void WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc,
+                          RuleProcessorData* aData);
 
   nsIStyleContext* GetContext(nsIPresContext* aPresContext, 
                               nsIStyleContext* aParentContext,
@@ -424,8 +430,8 @@ StyleSetImpl::ClearOverrideRuleProcessors(void)
     RecycleArray(mOverrideRuleProcessors);
 }
 
-struct RuleProcessorData {
-  RuleProcessorData(nsISupportsArray* aRuleProcessors) 
+struct RuleProcessorEnumData {
+  RuleProcessorEnumData(nsISupportsArray* aRuleProcessors) 
     : mRuleProcessors(aRuleProcessors),
       mPrevProcessor(nsnull)
   {}
@@ -438,7 +444,7 @@ static PRBool
 EnumRuleProcessor(nsISupports* aSheet, void* aData)
 {
   nsIStyleSheet*  sheet = (nsIStyleSheet*)aSheet;
-  RuleProcessorData* data = (RuleProcessorData*)aData;
+  RuleProcessorEnumData* data = (RuleProcessorEnumData*)aData;
 
   nsIStyleRuleProcessor* processor = nsnull;
   nsresult result = sheet->GetStyleRuleProcessor(processor, data->mPrevProcessor);
@@ -458,7 +464,7 @@ StyleSetImpl::GatherRuleProcessors(void)
   nsresult result = NS_ERROR_OUT_OF_MEMORY;
   if (mAgentSheets && !mAgentRuleProcessors) {
     if (EnsureArray(mAgentRuleProcessors)) {
-      RuleProcessorData data(mAgentRuleProcessors);
+      RuleProcessorEnumData data(mAgentRuleProcessors);
       mAgentSheets->EnumerateBackwards(EnumRuleProcessor, &data);
       PRUint32 count;
       mAgentRuleProcessors->Count(&count);
@@ -470,7 +476,7 @@ StyleSetImpl::GatherRuleProcessors(void)
 
   if (mUserSheets && !mUserRuleProcessors) {
     if (EnsureArray(mUserRuleProcessors)) {
-      RuleProcessorData data(mUserRuleProcessors);
+      RuleProcessorEnumData data(mUserRuleProcessors);
       mUserSheets->EnumerateBackwards(EnumRuleProcessor, &data);
       PRUint32 count;
       mUserRuleProcessors->Count(&count);
@@ -482,7 +488,7 @@ StyleSetImpl::GatherRuleProcessors(void)
 
   if (mDocSheets && !mDocRuleProcessors) {
     if (EnsureArray(mDocRuleProcessors)) {
-      RuleProcessorData data(mDocRuleProcessors);
+      RuleProcessorEnumData data(mDocRuleProcessors);
       mDocSheets->EnumerateBackwards(EnumRuleProcessor, &data);
       PRUint32 count;
       mDocRuleProcessors->Count(&count);
@@ -494,7 +500,7 @@ StyleSetImpl::GatherRuleProcessors(void)
 
   if (mOverrideSheets && !mOverrideRuleProcessors) {
     if (EnsureArray(mOverrideRuleProcessors)) {
-      RuleProcessorData data(mOverrideRuleProcessors);
+      RuleProcessorEnumData data(mOverrideRuleProcessors);
       mOverrideSheets->EnumerateBackwards(EnumRuleProcessor, &data);
       PRUint32 count;
       mOverrideRuleProcessors->Count(&count);
@@ -840,24 +846,16 @@ StyleSetImpl::NotifyStyleSheetStateChanged(PRBool aDisabled)
 }
 
  
-struct RulesMatchingData {
+struct RulesMatchingData : public ElementRuleProcessorData {
   RulesMatchingData(nsIPresContext* aPresContext,
                     nsIAtom* aMedium,
                     nsIContent* aContent,
-                    nsIStyleContext* aParentContext,
                     nsRuleWalker* aRuleWalker)
-    : mPresContext(aPresContext),
-      mMedium(aMedium),
-      mContent(aContent),
-      mParentContext(aParentContext),
-      mRuleWalker(aRuleWalker)
+    : ElementRuleProcessorData(aPresContext, aContent, aRuleWalker),
+      mMedium(aMedium)
   {
   }
-  nsIPresContext*   mPresContext;
   nsIAtom*          mMedium;
-  nsIContent*       mContent;
-  nsIStyleContext*  mParentContext;
-  nsRuleWalker*     mRuleWalker;
 };
 
 static PRBool
@@ -866,8 +864,7 @@ EnumRulesMatching(nsISupports* aProcessor, void* aData)
   nsIStyleRuleProcessor*  processor = (nsIStyleRuleProcessor*)aProcessor;
   RulesMatchingData* data = (RulesMatchingData*)aData;
 
-  processor->RulesMatching(data->mPresContext, data->mMedium, data->mContent, 
-                           data->mParentContext, data->mRuleWalker);
+  processor->RulesMatching(data, data->mMedium);
   return PR_TRUE;
 }
 
@@ -921,10 +918,10 @@ StyleSetImpl::AddImportantRules(nsRuleNode* aCurrLevelNode,
   }
 }
 
+// Enumerate the rules in a way that cares about the order of the rules.
 void
 StyleSetImpl::FileRules(nsISupportsArrayEnumFunc aCollectorFunc, 
-                        void* aData,
-                        nsIContent* aContent)
+                        RuleProcessorData* aData)
 {
 
   // Cascading order:
@@ -955,8 +952,8 @@ StyleSetImpl::FileRules(nsISupportsArrayEnumFunc aCollectorFunc,
   PRBool useRuleProcessors = PR_TRUE;
   if (mStyleRuleSupplier) {
     // We can supply additional document-level sheets that should be walked.
-    mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData, aContent);
-    mStyleRuleSupplier->UseDocumentRules(aContent, &useRuleProcessors);
+    mStyleRuleSupplier->WalkRules(this, aCollectorFunc, aData);
+    mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
   }
   if (mDocRuleProcessors) {
     mDocRuleProcessors->EnumerateForwards(aCollectorFunc, aData);
@@ -974,6 +971,40 @@ StyleSetImpl::FileRules(nsISupportsArrayEnumFunc aCollectorFunc,
   AddImportantRules(lastUserRN, lastAgentRN); //user
   AddImportantRules(lastAgentRN, nsnull);     //agent
 
+}
+
+// Enumerate all the rules in a way that doesn't care about the order
+// of the rules and break out if the enumeration is halted.
+void
+StyleSetImpl::WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc,
+                                 RuleProcessorData* aData)
+{
+  // Walk the agent rules first.
+  if (mAgentRuleProcessors)
+    if (!mAgentRuleProcessors->EnumerateForwards(aFunc, aData))
+      return;
+
+  // Walk the user rules next.
+  if (mUserRuleProcessors)
+    if (!mUserRuleProcessors->EnumerateForwards(aFunc, aData))
+      return;
+
+  PRBool useRuleProcessors = PR_TRUE;
+  if (mStyleRuleSupplier) {
+    // We can supply additional document-level sheets that should be walked.
+    // XXX We ignore whether the enumerator wants to halt here!
+    mStyleRuleSupplier->WalkRules(this, aFunc, aData);
+    mStyleRuleSupplier->UseDocumentRules(aData->mContent, &useRuleProcessors);
+  }
+
+  // Now walk the doc rules.
+  if (mDocRuleProcessors && useRuleProcessors)
+    if (!mDocRuleProcessors->EnumerateForwards(aFunc, aData))
+      return;
+  
+  // Walk the override rules last.
+  if (mOverrideRuleProcessors)
+    mOverrideRuleProcessors->EnumerateForwards(aFunc, aData);
 }
 
 #ifdef NS_DEBUG
@@ -1019,8 +1050,8 @@ nsIStyleContext* StyleSetImpl::ResolveStyleFor(nsIPresContext* aPresContext,
       EnsureRuleWalker(aPresContext);
       nsCOMPtr<nsIAtom> medium;
       aPresContext->GetMedium(getter_AddRefs(medium));
-      RulesMatchingData data(aPresContext, medium, aContent, aParentContext, mRuleWalker);
-      FileRules(EnumRulesMatching, &data, aContent);
+      RulesMatchingData data(aPresContext, medium, aContent, mRuleWalker);
+      FileRules(EnumRulesMatching, &data);
       result = GetContext(aPresContext, aParentContext, nsnull, aForceUnique);
      
       // Now reset the walker back to the root of the tree.
@@ -1063,30 +1094,19 @@ nsIStyleContext* StyleSetImpl::ResolveStyleForNonElement(
 }
 
 
-struct PseudoRulesMatchingData {
+struct PseudoRulesMatchingData : public PseudoRuleProcessorData {
   PseudoRulesMatchingData(nsIPresContext* aPresContext,
                           nsIAtom* aMedium,
                           nsIContent* aParentContent,
                           nsIAtom* aPseudoTag,
-                          nsIStyleContext* aParentContext,
                           nsICSSPseudoComparator* aComparator,
-                          nsRuleWalker* aWalker)
-    : mPresContext(aPresContext),
-      mMedium(aMedium),
-      mParentContent(aParentContent),
-      mPseudoTag(aPseudoTag),
-      mParentContext(aParentContext),
-      mComparator(aComparator),
-      mRuleWalker(aWalker)
+                          nsRuleWalker* aRuleWalker)
+    : PseudoRuleProcessorData(aPresContext, aParentContent, aPseudoTag, aComparator,
+                     aRuleWalker),
+      mMedium(aMedium)
   {
   }
-  nsIPresContext*         mPresContext;
   nsIAtom*                mMedium;
-  nsIContent*             mParentContent;
-  nsIAtom*                mPseudoTag;
-  nsIStyleContext*        mParentContext;
-  nsICSSPseudoComparator* mComparator;
-  nsRuleWalker*          mRuleWalker;
 };
 
 static PRBool
@@ -1095,9 +1115,7 @@ EnumPseudoRulesMatching(nsISupports* aProcessor, void* aData)
   nsIStyleRuleProcessor*  processor = (nsIStyleRuleProcessor*)aProcessor;
   PseudoRulesMatchingData* data = (PseudoRulesMatchingData*)aData;
 
-  processor->RulesMatching(data->mPresContext, data->mMedium,
-                           data->mParentContent, data->mPseudoTag, 
-                           data->mParentContext, data->mComparator, data->mRuleWalker);
+  processor->RulesMatching(data, data->mMedium);
   return PR_TRUE;
 }
 
@@ -1129,8 +1147,8 @@ nsIStyleContext* StyleSetImpl::ResolvePseudoStyleFor(nsIPresContext* aPresContex
       aPresContext->GetMedium(getter_AddRefs(medium));
       EnsureRuleWalker(aPresContext);
       PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                   aPseudoTag, aParentContext, aComparator, mRuleWalker);
-      FileRules(EnumPseudoRulesMatching, &data, aParentContent);
+                                   aPseudoTag, aComparator, mRuleWalker);
+      FileRules(EnumPseudoRulesMatching, &data);
 
       result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
      
@@ -1171,8 +1189,8 @@ nsIStyleContext* StyleSetImpl::ProbePseudoStyleFor(nsIPresContext* aPresContext,
       aPresContext->GetMedium(getter_AddRefs(medium));
       EnsureRuleWalker(aPresContext);
       PseudoRulesMatchingData data(aPresContext, medium, aParentContent, 
-                                   aPseudoTag, aParentContext, nsnull, mRuleWalker);
-      FileRules(EnumPseudoRulesMatching, &data, aParentContent);
+                                   aPseudoTag, nsnull, mRuleWalker);
+      FileRules(EnumPseudoRulesMatching, &data);
 
       if (!mRuleWalker->AtRoot())
         result = GetContext(aPresContext, aParentContext, aPseudoTag, aForceUnique);
@@ -1325,16 +1343,13 @@ StyleSetImpl::ReParentStyleContext(nsIPresContext* aPresContext,
   return result;
 }
 
-struct StatefulData {
+struct StatefulData : public StateRuleProcessorData {
   StatefulData(nsIPresContext* aPresContext, nsIAtom* aMedium, nsIContent* aContent)
-    : mPresContext(aPresContext),
+    : StateRuleProcessorData(aPresContext, aContent),
       mMedium(aMedium),
-      mContent(aContent),
       mStateful(PR_FALSE)
   {}
-  nsIPresContext* mPresContext;
   nsIAtom*        mMedium;
-  nsIContent*     mContent;
   PRBool          mStateful;
 }; 
 
@@ -1342,8 +1357,7 @@ static PRBool SheetHasStatefulStyle(nsISupports* aProcessor, void *aData)
 {
   nsIStyleRuleProcessor* processor = (nsIStyleRuleProcessor*)aProcessor;
   StatefulData* data = (StatefulData*)aData;
-  if (NS_OK == processor->HasStateDependentStyle(data->mPresContext, data->mMedium,
-                                                 data->mContent)) {
+  if (NS_OK == processor->HasStateDependentStyle(data, data->mMedium)) {
     data->mStateful = PR_TRUE;
     return PR_FALSE;  // stop iteration
   }
@@ -1365,7 +1379,7 @@ StyleSetImpl::HasStateDependentStyle(nsIPresContext* aPresContext,
     nsIAtom* medium = nsnull;
     aPresContext->GetMedium(&medium);
     StatefulData data(aPresContext, medium, aContent);
-    WalkRuleProcessors(SheetHasStatefulStyle, &data, aContent);
+    WalkRuleProcessors(SheetHasStatefulStyle, &data);
     NS_IF_RELEASE(medium);
     return ((data.mStateful) ? NS_OK : NS_COMFALSE);
   }
@@ -1739,8 +1753,9 @@ EnumAffectsStyle(nsISupports *aElement, void *aData)
   nsIStyleSheet *sheet = NS_STATIC_CAST(nsIStyleSheet *, aElement);
   AttributeContentPair *pair = (AttributeContentPair *)aData;
   PRBool affects;
-  if (NS_FAILED(sheet->AttributeAffectsStyle(pair->attribute, pair->content,
-                                             affects)) || affects)
+  nsresult res =
+      sheet->AttributeAffectsStyle(pair->attribute, pair->content, affects);
+  if (NS_FAILED(res) || affects)
     return PR_FALSE;            // stop checking
 
   return PR_TRUE;
@@ -1965,31 +1980,3 @@ void StyleSetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
   // - none
 }
 #endif
-
-void
-StyleSetImpl::WalkRuleProcessors(nsISupportsArrayEnumFunc aFunc, void* aData,
-                                 nsIContent* aContent)
-{
-  // Walk the agent rules first.
-  if (mAgentRuleProcessors)
-    mAgentRuleProcessors->EnumerateForwards(aFunc, aData);
-
-  // Walk the user rules next.
-  if (mUserRuleProcessors)
-    mUserRuleProcessors->EnumerateForwards(aFunc, aData);
-
-  PRBool useRuleProcessors = PR_TRUE;
-  if (mStyleRuleSupplier) {
-    // We can supply additional document-level sheets that should be walked.
-    mStyleRuleSupplier->WalkRules(this, aFunc, aData, aContent);
-    mStyleRuleSupplier->UseDocumentRules(aContent, &useRuleProcessors);
-  }
-
-  // Now walk the doc rules.
-  if (mDocRuleProcessors && useRuleProcessors)
-    mDocRuleProcessors->EnumerateForwards(aFunc, aData);
-  
-  // Walk the override rules last.
-  if (mOverrideRuleProcessors)
-    mOverrideRuleProcessors->EnumerateForwards(aFunc, aData);
-}

@@ -289,10 +289,11 @@ public:
   // nsIStyleRuleSupplier
   NS_IMETHOD UseDocumentRules(nsIContent* aContent, PRBool* aResult);
   NS_IMETHOD WalkRules(nsIStyleSet* aStyleSet, 
-                       nsISupportsArrayEnumFunc aFunc, void* aData,
-                       nsIContent* aContent);
-  NS_IMETHOD MatchesScopedRoot(nsIContent* aContent, PRBool* aResult);
-  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData, nsIContent* aContent, PRBool* aAffects);
+                       nsISupportsArrayEnumFunc aFunc,
+                       RuleProcessorData* aData);
+  NS_IMETHOD AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc,
+                                   void* aData, nsIContent* aContent,
+                                   PRBool* aAffects);
 
   // nsIDocumentObserver
   NS_IMETHOD BeginUpdate(nsIDocument* aDocument) { return NS_OK; }
@@ -354,7 +355,7 @@ protected:
   void GetEnclosingScope(nsIContent* aContent, nsIContent** aParent);
   void GetOutermostStyleScope(nsIContent* aContent, nsIContent** aParent);
 
-  void WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData,
+  void WalkRules(nsISupportsArrayEnumFunc aFunc, RuleProcessorData* aData,
                  nsIContent* aParent, nsIContent* aCurrContent);
 
   void AttributeAffectsStyle(nsISupportsArrayEnumFunc aFunc, void* aData,
@@ -402,9 +403,6 @@ protected:
 
   // A queue of binding attached event handlers that are awaiting execution.
   nsCOMPtr<nsISupportsArray> mAttachedQueue;
-
-  // A current scope.  Used when walking style rules.
-  nsIContent* mCurrentStyleRoot;
 };
 
 // Implementation /////////////////////////////////////////////////////////////////
@@ -416,7 +414,6 @@ NS_IMPL_ISUPPORTS3(nsBindingManager, nsIBindingManager, nsIStyleRuleSupplier, ns
 
 // Constructors/Destructors
 nsBindingManager::nsBindingManager(void)
-:mCurrentStyleRoot(nsnull)
 {
   NS_INIT_REFCNT();
 
@@ -1201,13 +1198,6 @@ nsBindingManager::InheritsStyle(nsIContent* aContent, PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsBindingManager::MatchesScopedRoot(nsIContent* aContent, PRBool* aResult)
-{
-  *aResult = (mCurrentStyleRoot == aContent);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
 nsBindingManager::UseDocumentRules(nsIContent* aContent, PRBool* aResult)
 {
   if (!aContent)
@@ -1253,13 +1243,14 @@ nsBindingManager::GetOutermostStyleScope(nsIContent* aContent,
 }
 
 void
-nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData,
+nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc,
+                            RuleProcessorData* aData,
                             nsIContent* aParent, nsIContent* aCurrContent)
 {
   nsCOMPtr<nsIXBLBinding> binding;
   GetBinding(aCurrContent, getter_AddRefs(binding));
   if (binding) {
-    mCurrentStyleRoot = aCurrContent;
+    aData->mScopedRoot = aCurrContent;
     binding->WalkRules(aFunc, aData);
   }
   if (aParent != aCurrContent) {
@@ -1272,22 +1263,26 @@ nsBindingManager::WalkRules(nsISupportsArrayEnumFunc aFunc, void* aData,
 
 NS_IMETHODIMP
 nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
-                            nsISupportsArrayEnumFunc aFunc, void* aData,
-                            nsIContent* aContent)
+                            nsISupportsArrayEnumFunc aFunc,
+                            RuleProcessorData* aData)
 {
-  if (!aContent)
+  nsIContent *content = aData->mContent;
+  if (!content)
     return NS_OK;
 
   nsCOMPtr<nsIContent> parent;
-  GetOutermostStyleScope(aContent, getter_AddRefs(parent));
+  GetOutermostStyleScope(content, getter_AddRefs(parent));
 
-  WalkRules(aFunc, aData, parent, aContent);
+  WalkRules(aFunc, aData, parent, content);
+
+  // Null out the scoped root that we set repeatedly in the other |WalkRules|.
+  aData->mScopedRoot = nsnull;
 
   if (parent) {
     // We cut ourselves off, but we still need to walk the document's attribute sheet
     // so that inline style continues to work on anonymous content.
     nsCOMPtr<nsIDocument> document;
-    aContent->GetDocument(*getter_AddRefs(document));
+    content->GetDocument(*getter_AddRefs(document));
     nsCOMPtr<nsIHTMLContentContainer> container(do_QueryInterface(document));
     if (container) {
       nsCOMPtr<nsIHTMLCSSStyleSheet> inlineSheet;
@@ -1298,8 +1293,6 @@ nsBindingManager::WalkRules(nsIStyleSet* aStyleSet,
     }
   }
 
-  // Null out our mCurrentStyleRoot.
-  mCurrentStyleRoot = nsnull;
   return NS_OK;
 }
 
