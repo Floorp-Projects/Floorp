@@ -170,7 +170,8 @@ nsXKBModeSwitch::HandleMappingNotify()
   DEBUG_PRINTF(("    gModeSwitchKeycode1 = %d", gModeSwitchKeycode1));
   DEBUG_PRINTF(("    gModeSwitchKeycode2 = %d", gModeSwitchKeycode2));
 
-#ifdef HAVE_X11_XKBLIB_H
+#if defined(HAVE_X11_XKBLIB_H) && \
+  defined(XkbMajorVersion) && defined(XbMinorVersion)
   {
     gint xkb_major = XkbMajorVersion;
     gint xkb_minor = XkbMinorVersion;
