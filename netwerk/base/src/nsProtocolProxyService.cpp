@@ -23,8 +23,10 @@
 #include "nsProtocolProxyService.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
+#include "nsIProxyAutoConfig.h"
 
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 static const char PROXY_PREFS[] = "network.proxy";
 PRInt32 PR_CALLBACK ProxyPrefsCallback(const char* pref, void* instance)
 {
@@ -39,7 +41,7 @@ NS_IMPL_ISUPPORTS1(nsProtocolProxyService, nsIProtocolProxyService);
 
 
 nsProtocolProxyService::nsProtocolProxyService():
-    mUseProxy(PR_FALSE)
+    mUseProxy(0)
 {
     NS_INIT_REFCNT();
 }
@@ -101,7 +103,7 @@ nsProtocolProxyService::PrefsChanged(const char* pref) {
         PRInt32 type = -1;
         rv = mPrefs->GetIntPref("network.proxy.type",&type);
         if (NS_SUCCEEDED(rv))
-            mUseProxy = (type == 1); // type == 2 is autoconfig stuff
+            mUseProxy = type; // type == 2 is autoconfig stuff
     }
 
     if (!pref || !PL_strcmp(pref, "network.proxy.http"))
@@ -216,12 +218,36 @@ nsProtocolProxyService::ExamineForProxy(nsIURI *aURI, nsIProxy *aProxy) {
 
     // if proxies are enabled and this host:port combo is
     // supposed to use a proxy, check for a proxy.
-    if (!mUseProxy || !CanUseProxy(aURI)) {
+    if ((0 == mUseProxy) || 
+            ((1 == mUseProxy) && !CanUseProxy(aURI))) {
         rv = aProxy->SetProxyHost(nsnull);
         if (NS_FAILED(rv)) return rv;
         rv = aProxy->SetProxyPort(-1);
         if (NS_FAILED(rv)) return rv;
         return NS_OK;
+    }
+
+    // Proxy auto config magic...
+    if (2 == mUseProxy)
+    {
+        // later on put this in a member variable TODO
+        nsCOMPtr<nsIProxyAutoConfig> pac = 
+            do_CreateInstance(NS_PROXY_AUTO_CONFIG_PROGID, &rv);
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLCString p_host;
+            PRInt32 p_port;
+            if (NS_SUCCEEDED(rv = pac->ProxyForURL(
+                            aURI, getter_Copies(p_host), &p_port)))
+            {
+                if (NS_FAILED(rv = aProxy->SetProxyHost(p_host))) 
+                    return rv;
+                if (NS_FAILED(rv = aProxy->SetProxyPort(p_port)))
+                    return rv;
+                return NS_OK;
+            }
+        }
+        return rv;
     }
 
     nsXPIDLCString scheme;
@@ -337,7 +363,8 @@ nsProtocolProxyService::LoadFilters(const char* filters)
         char* endproxy = np+1; // at least that...
         char* portLocation = 0; 
         PRInt32 nport = 0; // no proxy port
-        while (*endproxy && (*endproxy != ',' && !nsCRT::IsAsciiSpace(*endproxy)))
+        while (*endproxy && (*endproxy != ',' && 
+                    !nsCRT::IsAsciiSpace(*endproxy)))
         {
             if (*endproxy == ':')
                 portLocation = endproxy;
@@ -358,5 +385,4 @@ nsProtocolProxyService::LoadFilters(const char* filters)
         np = endproxy;
     }
 }
-
 

@@ -61,7 +61,7 @@ protected:
     PRBool CanUseProxy(nsIURI* aURI);
 
     nsCOMPtr<nsIPref>       mPrefs;
-    PRBool                  mUseProxy;
+    PRUint16                mUseProxy;
 
     nsXPIDLCString          mHTTPProxyHost;
     PRInt32                 mHTTPProxyPort;
