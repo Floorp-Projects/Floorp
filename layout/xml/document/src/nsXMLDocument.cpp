@@ -575,7 +575,7 @@ NS_IMETHODIMP
 nsXMLDocument::EndLoad()
 {
   nsAutoString cmd;
-  mParser->GetCommand(cmd);
+  if (mParser) mParser->GetCommand(cmd);
   NS_IF_RELEASE(mParser);
   if (cmd.EqualsWithConversion(kLoadAsData)) {
     // Generate a document load event for the case when an XML document was loaded
