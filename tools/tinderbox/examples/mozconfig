@@ -14,5 +14,4 @@ ac_add_options --disable-debug
 # Bloat stats/optimized needs these:
 #
 #ac_add_options --enable-logrefcnt
-#ac_add_options --enable-perf-metrics
 #
