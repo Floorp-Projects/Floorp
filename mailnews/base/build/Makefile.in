@@ -69,7 +69,7 @@ EXTRA_DSO_LDOPTS = \
 		-lnetcache		\
 		-lpref			\
 		-lsecfree		\
-		-lz				\
+		$(ZLIB_LIBS)	\
 		$(NSPR_LIBS)	\
 		-L$(DIST)/bin	\
 		-L$(DIST)/lib	\
