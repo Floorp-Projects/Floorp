@@ -1015,6 +1015,7 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
     PK11SlotListElement *listElement;
     SSMTextGenContext *cx = NULL;
     char *modName=NULL, *processDir = NULL, *fullModuleName=NULL;
+    int modType;
     SSMStatus srv;
 
     PR_EnterMonitor(policySetLock);
@@ -1087,6 +1088,7 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
 	        goto loser;
 	    }
 	    srv = SSM_FindUTF8StringInBundles(cx, "root_certificates", &modName);
+	    SSMTextGen_DestroyContext(cx);
 	    if (srv != SSM_SUCCESS) {
 	        SSM_DEBUG("Couldn't get the value for \"root_certificates\" "
 	                  "from properties file\n");
@@ -1100,7 +1102,11 @@ SSM_InitNSS(char* certpath, SSMControlConnection *ctrl, PRInt32 policy)
         SSM_DEBUG("I think the process lives in <%s>\n", processDir);
         fullModuleName = PR_smprintf("%s%s", processDir, LOADABLE_CERTS_MODULE);
         fullModuleName = SSM_ConvertMacPathToUnix(fullModuleName);
+#elif defined(WIN32)
+        fullModuleName = PL_strdup(LOADABLE_CERTS_MODULE);
 #endif
+        /* If a module exists with the same name, delete it. */
+        SECMOD_DeleteModule(modName, &modType);
         SSM_DEBUG("Will try to load <%s> for root certs.\n");
 	    if (SECMOD_AddNewModule(modName, fullModuleName, 0, 0) != SECSuccess) {
 	        SSM_DEBUG("Couldn't load the module at <%s>",fullModuleName);
