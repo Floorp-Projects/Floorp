@@ -55,7 +55,7 @@ NS_BEGIN_EXTERN_C
  * Parameters:
  *  1. the array to sort
  *  2. the number of elements in the array
- *  3. the size of the array
+ *  3. the size of each array element
  *  4. comparison function taking two elements and parameter #5 and
  *     returning an integer:
  *      + less than zero if the first element should be before the second
