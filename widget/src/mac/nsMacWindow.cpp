@@ -606,7 +606,7 @@ nsMacWindow :: ScrollEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
 pascal OSStatus
 nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef inEvent, void* userData )
 {
-  OSStatus retVal = noErr;
+  OSStatus retVal = eventNotHandledErr;  // Presume we won't consume the event
   
   WindowRef myWind = NULL;
   ::GetEventParameter ( inEvent, kEventParamDirectObject, typeWindowRef, NULL, sizeof(myWind), NULL, &myWind );
@@ -629,6 +629,7 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
             self->mMacEventHandler->ResizeEvent(myWind);
             self->mMacEventHandler->UpdateEvent();
           }
+          retVal = noErr;  // We did consume the resize event
         }
         break;
       }
@@ -641,6 +642,8 @@ nsMacWindow :: WindowEventHandler ( EventHandlerCallRef inHandlerChain, EventRef
         if ( self ) {
           if ( self->mWindowType != eWindowType_invisible )
             retVal = ::CallNextEventHandler( inHandlerChain, inEvent );
+          else
+            retVal = noErr;  // consume the event for the hidden window
         }
         break;
       }      
