@@ -51,7 +51,7 @@ catch(e)
   }
 
 var fontTypes   = ["serif", "sans-serif", "cursive", "fantasy", "monospace"];
-var variableSize, fixedSize, languageList;
+var variableSize, fixedSize, minSize, languageList;
 var languageData = [];
 var currentLanguage;
 var gPrefutilitiesBundle;
@@ -96,7 +96,6 @@ function SetFields( aDataObject )
         var element = document.getElementById( lists[i] );
         if( aDataObject.dataEls )
           {
-            element.value = aDataObject.dataEls[ lists[i] ].value;
             element.selectedItem = element.getElementsByAttribute( "value", aDataObject.dataEls[ lists[i] ].value )[0];
           }
         else
@@ -106,7 +105,6 @@ function SetFields( aDataObject )
             if( prefstring && preftype )
               {
                 var prefvalue = parent.hPrefWindow.getPref( preftype, prefstring );
-                element.value = prefvalue;
                 element.selectedItem = element.getElementsByAttribute( "value", prefvalue )[0];
               }
           }
@@ -152,6 +150,7 @@ function Startup()
   {
     variableSize = document.getElementById( "sizeVar" );
     fixedSize    = document.getElementById( "sizeMono" );
+    minSize      = document.getElementById( "minSize" );
     languageList = document.getElementById( "selectLangs" );
 
     gPrefutilitiesBundle = document.getElementById("bundle_prefutilities");
@@ -287,11 +286,13 @@ function saveFontPrefs()
           }
         var variableSizePref = "font.size.variable." + language;
         var fixedSizePref = "font.size.fixed." + language;
-        var currVariableSize = 12, currFixedSize = 12;
+        var minSizePref = "font.minimum-size." + language;
+        var currVariableSize = 12, currFixedSize = 12, minSizeVal = 0;
         try
           {
             currVariableSize = pref.GetIntPref( variableSizePref );
             currFixedSize = pref.GetIntPref( fixedSizePref );
+            minSizeVal = pref.GetIntPref( minSizePref );
           }
         catch(e)
           {
@@ -300,6 +301,9 @@ function saveFontPrefs()
           pref.SetIntPref( variableSizePref, dataObject.languageData[language].variableSize );
         if( currFixedSize != dataObject.languageData[language].fixedSize )
           pref.SetIntPref( fixedSizePref, dataObject.languageData[language].fixedSize );
+        if ( minSizeVal != dataObject.languageData[language].minSize ) {
+          pref.SetIntPref ( minSizePref, dataObject.languageData[language].minSize );
+        }
       }
 
     // font scaling
@@ -346,7 +350,23 @@ function saveState()
       {
         languageData[currentLanguage].variableSize = parseInt( variableSize.value );
         languageData[currentLanguage].fixedSize = parseInt( fixedSize.value );
+        languageData[currentLanguage].minSize = parseInt( minSize.value );
       }
+  }
+
+// Selects size (or the nearest entry that exists in the list)
+// in the menulist minSize
+function minSizeSelect(size)
+  {
+    var items = minSize.getElementsByAttribute( "value", size );
+    if (items.length > 0)
+      minSize.selectedItem = items[0];
+    else if (size < 6)
+      minSizeSelect(6);
+    else if (size > 16)
+      minSizeSelect(16);
+    else
+      minSizeSelect(size - 1);
   }
 
 function selectLanguage()
@@ -376,11 +396,13 @@ function selectLanguage()
             var dataElements = selectElement.listElement.getElementsByAttribute( "value", languageData[languageList.value].types[fontTypes[i]] );
             var selectedItem = dataElements.length ? dataElements[0] : defaultListSelection;
 
+            minSizeSelect(languageData[languageList.value].minSize);
             if (strDefaultFontFace)
               {
                 selectElement.listElement.selectedItem = selectedItem;
                 variableSize.removeAttribute("disabled");
                 fixedSize.removeAttribute("disabled");
+                minSize.removeAttribute("disabled");
                 variableSize.selectedItem = variableSize.getElementsByAttribute( "value", languageData[languageList.value].variableSize )[0];
                 fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", languageData[languageList.value].fixedSize )[0];
               }
@@ -388,6 +410,7 @@ function selectLanguage()
               {
                 variableSize.setAttribute("disabled","true");
                 fixedSize.setAttribute("disabled","true");
+                minSize.setAttribute("disabled","true");
               }
           }
         else
@@ -398,7 +421,7 @@ function selectLanguage()
 
                 var selectVal;
                 var selectedItem;
-        
+
                 try {
                     var fontPrefString = "font.name." + fontTypes[i] + "." + languageList.value;
                     selectVal   = parent.hPrefWindow.pref.CopyUnicharPref( fontPrefString );
@@ -429,11 +452,11 @@ function selectLanguage()
                     selectedItem    = defaultListSelection;
                 }
 
-                selectElement.listElement.value = selectVal;
                 selectElement.listElement.selectedItem = selectedItem;
 
                 variableSize.removeAttribute("disabled");
                 fixedSize.removeAttribute("disabled");
+                minSize.removeAttribute("disabled");
 
 
                 try {
@@ -443,16 +466,21 @@ function selectLanguage()
                     var sizeVarVal = parent.hPrefWindow.pref.GetIntPref( variableSizePref );
                     var sizeFixedVal = parent.hPrefWindow.pref.GetIntPref( fixedSizePref );
 
-                    variableSize.value = sizeVarVal;
                     variableSize.selectedItem = variableSize.getElementsByAttribute( "value", sizeVarVal )[0];
 
-                    fixedSize.value = sizeFixedVal;
                     fixedSize.selectedItem = fixedSize.getElementsByAttribute( "value", sizeFixedVal )[0];
                 }
 
                 catch(e) {
                     //font size lists can simply deafult to the first entry
                 }
+                var minSizeVal = 0;
+                try {
+                  var minSizePref = "font.minimum-size." + languageList.value;
+                  minSizeVal = pref.GetIntPref( minSizePref );
+                }
+                catch(e) {}
+                minSizeSelect( minSizeVal );
 
             }
             else
@@ -460,6 +488,8 @@ function selectLanguage()
                 //disable otherwise                
                 variableSize.setAttribute("disabled","true");
                 fixedSize.setAttribute("disabled","true");
+                minSize.setAttribute("disabled","true");
+                minSizeSelect(0);
             }
           }
       }
@@ -586,7 +616,7 @@ function disableAllFontElements()
       var doc_ids = [ "selectLangs", "proportionalFont",
                       "sizeVar", "serif", "sans-serif",
                       "cursive", "fantasy", "monospace",
-                      "sizeMono" ];
+                      "sizeMono", "minSize" ];
       for (i=0; i<doc_ids.length; i++) {
           element = document.getElementById( doc_ids[i] );
           element.disabled = true;

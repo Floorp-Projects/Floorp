@@ -213,6 +213,30 @@
             </menupopup>
           </menulist>
         </row>
+        <row>
+          <separator class="thin"/>
+        </row>
+        <row>
+          <spacer/>
+          <hbox align="center" pack="end">
+            <label value="&minSize.label;"
+                   accesskey="&minSize.accesskey;"
+                   control="minSize"/>
+          </hbox>
+          <menulist id="minSize">
+            <menupopup>
+              <menuitem value="0" label="&minSize.none;"/>
+              <menuitem value="6" label="6"/>
+              <menuitem value="7" label="7"/>
+              <menuitem value="8" label="8"/>
+              <menuitem value="9" label="9"/>
+              <menuitem value="10" label="10"/>
+              <menuitem value="12" label="12"/>
+              <menuitem value="14" label="14"/>
+              <menuitem value="16" label="16"/>
+            </menupopup>
+          </menulist>
+        </row>
       </rows>
     </grid>
   </groupbox>
