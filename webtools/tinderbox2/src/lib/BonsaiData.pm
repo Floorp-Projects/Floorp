@@ -7,8 +7,8 @@
 # module which uses this library is: lib/TinderDB/VC_Bonsai.pm
 
 
-# $Revision: 1.15 $ 
-# $Date: 2003/08/17 01:44:06 $ 
+# $Revision: 1.16 $ 
+# $Date: 2003/12/23 13:18:23 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/BonsaiData.pm,v $ 
 # $Name:  $ 
@@ -231,6 +231,13 @@ sub undef_query_vars {
     undef $::query_logexpr;
     undef $::query_debug;
     
+    undef $::CVS_MODULES;
+    undef $::modules;
+
+    undef $::lines_added;
+    undef $::lines_removed;
+    undef $::versioninfo;
+
     return 1;
 }
 
@@ -270,6 +277,21 @@ sub get_checkin_data {
 
     chdir($BONSAI_DIR) ||
 	die("Could not cd to $BONSAI_DIR. $!\n");
+
+    # the bonsai modules load the module table on startup, since we
+    # may run under different cvs roots we need to load the table each
+    # time we get here.
+
+    {
+
+        my $module_file="$::CVS_ROOT/CVSROOT/modules";
+        
+        open(MOD, "<$module_file") || 
+            die ("can't open module_file: $module_file.\n");
+        &parse_modules();
+        close(MOD) ||
+        die ("can't close module_file: $module_file.\n");
+    }
 
     my ($result) = &query_checkins();
 
