@@ -977,7 +977,7 @@ XULSortServiceImpl::GetNodeValue(nsIContent *node1, nsIRDFResource *sortProperty
 						cellPosVal1.Insert(zero, 0, zero.Length() - cellPosVal1.Length());
 			                }
 
-					hasMore = FALSE;
+					hasMore = PR_FALSE;
 					break;
 				}
 			}
