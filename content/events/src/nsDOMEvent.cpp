@@ -212,8 +212,18 @@ nsDOMEvent::GetCurrentTarget(nsIDOMEventTarget** aCurrentTarget)
 NS_IMETHODIMP
 nsDOMEvent::GetOriginalTarget(nsIDOMEventTarget** aOriginalTarget)
 {
+  if (!mOriginalTarget)
+    return GetTarget(aOriginalTarget);
+
   *aOriginalTarget = mOriginalTarget;
   NS_IF_ADDREF(*aOriginalTarget);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsDOMEvent::HasOriginalTarget(PRBool* aResult)
+{
+  *aResult = (mOriginalTarget != nsnull);
   return NS_OK;
 }
 
@@ -1052,12 +1062,6 @@ nsDOMEvent::IsDispatchStopped(PRBool* aIsDispatchStopped)
   }
   return NS_OK;
 }
-
-NS_IMETHODIMP
-nsDOMEvent::GetRealTarget(nsIDOMEventTarget** aRealTarget)
-{
-  return NS_OK;
-}  
 
 NS_IMETHODIMP
 nsDOMEvent::IsHandled(PRBool* aIsHandled)
