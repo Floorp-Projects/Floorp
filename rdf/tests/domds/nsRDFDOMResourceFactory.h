@@ -23,15 +23,37 @@
 
 #include "nsIRDFService.h"
 
+#include "nscore.h"
+#include "nsCOMPtr.h"
+#include "nsWeakPtr.h"
+#include "rdf.h"
+#include "nsRDFResource.h"
+#include "nsIDOMViewerElement.h"
+#include "nsIDOMNode.h"
+
+class nsRDFDOMViewerElement : nsRDFResource,
+                              nsIDOMViewerElement
+{
+public:
+  nsRDFDOMViewerElement();
+  virtual ~nsRDFDOMViewerElement();
+  
+  NS_DECL_ISUPPORTS_INHERITED
+  
+  NS_DECL_NSIDOMVIEWERELEMENT
+
+  static NS_METHOD
+  Create(nsISupports* aOuter,const nsIID& iid, void **result);
+
+private:
+      // weak reference to DOM node
+      //nsWeakPtr mNode;
+      nsCOMPtr<nsIDOMNode> mNode;
+};
+
 /* {84a87046-57f4-11d3-9061-00a0c900d445} */
 #define NS_RDF_DOMRESOURCEFACTORY_CID \
   {0x84a87046, 0x57f4, 0x11d3, \
     { 0x90, 0x61, 0x0, 0xa0, 0xc9, 0x0, 0xd4, 0x45 }}
-  
-
-nsresult
-NS_NewRDFDOMResourceFactory(nsISupports* aOuter,
-                            const nsIID& iid,
-                            void **result);
 
 #endif

@@ -31,7 +31,8 @@ static NS_DEFINE_CID(kRDFDOMDataSourceCID, NS_RDF_DOMDATASOURCE_CID);
 static NS_DEFINE_CID(kRDFDOMResourceFactoryCID, NS_RDF_DOMRESOURCEFACTORY_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
-nsresult
+// return the proper factory to the caller
+extern "C" PR_IMPLEMENT(nsresult)
 NSGetFactory(nsISupports* aServMgr,
              const nsCID &aClass,
              const char* aClassName,
@@ -41,11 +42,11 @@ NSGetFactory(nsISupports* aServMgr,
   nsresult rv=NS_OK;
   nsIGenericFactory* fact;
   if (aClass.Equals(kRDFDOMDataSourceCID)) {
-    rv = NS_NewGenericFactory(&fact, NS_NewRDFDOMDataSource);
+    rv = NS_NewGenericFactory(&fact, nsRDFDOMDataSource::Create);
     printf("Creating datasource: %s\n", NS_SUCCEEDED(rv) ? "succeed" : "failed");
   } else
   if (aClass.Equals(kRDFDOMResourceFactoryCID)) {
-    rv = NS_NewGenericFactory(&fact, NS_NewRDFDOMResourceFactory);
+    rv = NS_NewGenericFactory(&fact, nsRDFDOMViewerElement::Create);
     printf("Creating resource: %s\n", NS_SUCCEEDED(rv) ? "succeed" : "failed");
   }
   else
@@ -60,7 +61,7 @@ NSGetFactory(nsISupports* aServMgr,
   return rv;
 }
 
-nsresult
+extern "C" PR_IMPLEMENT(nsresult)
 NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
 {
   nsresult rv;
@@ -85,7 +86,7 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
 
 }
 
-nsresult
+extern "C" PR_IMPLEMENT(nsresult)
 NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
 {
     nsresult rv;
