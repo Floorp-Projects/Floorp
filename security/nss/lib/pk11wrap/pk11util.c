@@ -703,3 +703,8 @@ SECMOD_DestroyModuleList(SECMODModuleList *list) {
     for ( lp = list; lp != NULL; lp = SECMOD_DestroyModuleListElement(lp)) ;
 }
 
+PRBool
+SECMOD_CanDeleteInternalModule(void)
+{
+    return (PRBool) pendingModule == NULL;
+}

@@ -676,6 +676,7 @@ CERT_StartCertExtensions;
 DER_AsciiToTime;
 PK11_ImportCert;
 PORT_Strdup;
+SECMOD_CanDeleteInternalModule;
 ;+    local:
 ;+       *;
 ;+};
