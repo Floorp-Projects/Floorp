@@ -109,6 +109,7 @@ z_streamp strm;
     state = (struct inflate_state FAR *)strm->state;
     strm->total_in = strm->total_out = state->total = 0;
     strm->msg = Z_NULL;
+    strm->adler = 1;        /* to support ill-conceived Java test suite */
     state->mode = HEAD;
     state->last = 0;
     state->havedict = 0;
