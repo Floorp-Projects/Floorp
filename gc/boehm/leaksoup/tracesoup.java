@@ -132,12 +132,8 @@ public class tracesoup {
 		int rightBracket = line.indexOf(']', leftBracket + 1);
 		String macPath = line.substring(leftBracket + 1, comma);
 		String path = macPath.replace(':', '/');
-		int mozillaIndex = path.indexOf(MOZILLA_BASE);
-		String locationURL;
-		if (mozillaIndex > -1)
-			locationURL = (USE_BLAME ? BONSAI_BASE : LXR_BASE) + path.substring(path.indexOf(MOZILLA_BASE) + MOZILLA_BASE.length());
-		else
-			locationURL = "file:///" + path;
+		
+		// compute the line number in the file.
 		int offset = 0;
 		try {
 			offset = Integer.parseInt(line.substring(comma + 1, rightBracket));
@@ -150,7 +146,21 @@ public class tracesoup {
 			fileTables.put(path, table);
 		}
 		int lineNumber = 1 + table.getLine(offset);
-		// return line.substring(0, leftBracket) + "[" + locationURL + "#" + lineNumber + "]";
+
+		// compute the URL of the file.
+		int mozillaIndex = path.indexOf(MOZILLA_BASE);
+		String locationURL;
+		if (mozillaIndex > -1)
+			locationURL = (USE_BLAME ? BONSAI_BASE : LXR_BASE) + path.substring(path.indexOf(MOZILLA_BASE) + MOZILLA_BASE.length());
+		else
+			locationURL = "file:///" + path;
+		
+		// if using blame, hilite the line number of the call.
+		if (USE_BLAME) {
+			locationURL += "&mark=" + lineNumber;
+			lineNumber -= 10;
+		}
+		
 		return "<A HREF=\"" + locationURL + "#" + lineNumber + "\"TARGET=\"SOURCE\">" + line.substring(0, leftBracket) + "</A>";
 	}
 }
