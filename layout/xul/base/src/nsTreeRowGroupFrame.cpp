@@ -861,3 +861,4 @@ void nsTreeRowGroupFrame::InitSubContentChain(nsTreeRowGroupFrame* aRowGroupFram
     SetContentChain(nsnull);
   }
 }
+
