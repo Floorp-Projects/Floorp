@@ -185,7 +185,7 @@ PR_IMPLEMENT(PRStatus) PR_Connect(
 PR_IMPLEMENT(PRStatus) PR_ConnectContinue(
     PRFileDesc *fd, PRInt16 out_flags)
 {
-	return((fd->methods->reserved_fn_4)(fd,out_flags));
+	return((fd->methods->connectcontinue)(fd,out_flags));
 }
 
 PR_IMPLEMENT(PRFileDesc*) PR_Accept(PRFileDesc *fd, PRNetAddr *addr,

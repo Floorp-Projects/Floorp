@@ -379,7 +379,7 @@ PR_IMPLEMENT(PRStatus) PR_GetConnectStatus(const PRPollDesc *pd)
         PR_SetError(PR_INVALID_ARGUMENT_ERROR, 0);
         return PR_FAILURE;
     }
-    return bottom->methods->reserved_fn_4(bottom, pd->out_flags);
+    return bottom->methods->connectcontinue(bottom, pd->out_flags);
 }
 
 static PRFileDesc* PR_CALLBACK SocketAccept(PRFileDesc *fd, PRNetAddr *addr,

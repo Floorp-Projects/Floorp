@@ -399,7 +399,7 @@ struct PRIOMethods {
     PRSetsocketoptionFN setsocketoption;
                                     /* Set value of specified option            */
     PRSendfileFN sendfile;			/* Send a (partial) file with header/trailer*/
-    PRConnectcontinueFN reserved_fn_4;  /* the connectcontinue method */
+    PRConnectcontinueFN connectcontinue;
                                     /* Continue a nonblocking connect */
     PRReservedFN reserved_fn_3;		/* reserved for future use */
     PRReservedFN reserved_fn_2;		/* reserved for future use */
