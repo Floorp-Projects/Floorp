@@ -484,6 +484,12 @@ NSRegisterSelf(nsISupports* aServMgr, const char* path)
                                   path, PR_TRUE, PR_TRUE);
   if (NS_FAILED(rv)) finalResult = rv;
 
+	rv = compMgr->RegisterComponent(kMsgCopyServiceCID,
+                                  "Mail/News Message Copy Service",
+                                  "component://netscape/messenger/messagecopyservice",
+                                  path, PR_TRUE, PR_TRUE);
+  if (NS_FAILED(rv)) finalResult = rv;
+
 #ifdef NS_DEBUG
   printf("mailnews registering from %s\n",path);
 #endif
@@ -539,6 +545,9 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* path)
   if (NS_FAILED(rv)) finalResult = rv;
 
   rv = compMgr->UnregisterComponent(kCopyMessageStreamListenerCID, path);
+  if (NS_FAILED(rv)) finalResult = rv;
+
+  rv = compMgr->UnregisterComponent(kMsgCopyServiceCID, path);
   if (NS_FAILED(rv)) finalResult = rv;
   return finalResult;
 }
