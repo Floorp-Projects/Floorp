@@ -140,7 +140,7 @@ protected:
   PRUint32       mScrollX;
   PRUint32       mScrollY;
 
-  PRBool         mIsVisible;
+  PRBool         mIsShown;
 
   PRUint32       mPreferredWidth;
   PRUint32       mPreferredHeight;
@@ -158,6 +158,7 @@ protected:
   unsigned long  mBorderPixel;
   GC             mGC;             // until we get gc pooling working...
   nsString       mName;           // name of the type of widget
+  PRBool         mIsToplevel;
 };
 
 extern PRLogModuleInfo *XlibWidgetsLM;
