@@ -4,6 +4,27 @@ strncasecmp
 strdup
 strcmpcore
 
+#Morefiles exports (add more if you need them)
+FSpFileCopy
+FSpGetDirectoryID
+DeleteDirectory
+FSpLocationFromFullPath
+FSpGetFullPath
+GetFullPath
+FSpMoveRenameCompat
+
+# Mem allocator
+free
+realloc
+calloc
+malloc
+__dl__FPv
+__nw__FUl
+__dla__FPv
+__nwa__FUl
+__nwa__FUlRCQ23std9nothrow_t
+__nw__FUlRCQ23std9nothrow_t
+
 __console_exit
 __stdio_exit
 __aborting
@@ -12,11 +33,6 @@ exit
 __atexit
 atexit
 abort
-#__malloc_pool
-free
-realloc
-calloc
-malloc
 __files
 __num_to_file
 __file_to_num
