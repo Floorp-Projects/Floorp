@@ -24,7 +24,11 @@
 #include "nsRenderingContextPh.h"
 #include "nsPhGfxLog.h"
 
-static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
+#include "nspr.h"
+
+#define IsFlagSet(a,b) (a & b)
+
+// static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 
@@ -40,6 +44,7 @@ nsImagePh :: nsImagePh()
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::nsImagePh Constructor called this=<%p>\n", this));
 
+  mImageBits = nsnull;
   mWidth = 0;
   mHeight = 0;
   mDepth = 0;
@@ -47,14 +52,14 @@ nsImagePh :: nsImagePh()
   mNumPaletteColors = 0;
   mSizeImage = 0;
   mRowBytes = 0;
-  mImageBits = nsnull;
-  mIsOptimized = PR_FALSE;
-  mColorMap = nsnull;
+//  mIsOptimized = PR_FALSE;
+//  mColorMap = nsnull;
   mAlphaBits = nsnull;
   mAlphaDepth = 0;
   mARowBytes = 0;
   mAlphaWidth = 0;
   mAlphaHeight = 0;
+  mConvertedBits = nsnull;
   mImageCache = 0;
   mAlphaLevel = 0;
   mImage.palette = nsnull;
@@ -66,8 +71,26 @@ nsImagePh :: ~nsImagePh()
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::~nsImagePh Destructor called this=<%p>\n", this));
 
-  /* from windows */
-  CleanUp(PR_TRUE);
+ 
+  if (mImageBits != nsnull)
+  {
+    delete [] mImageBits;
+    mImageBits = nsnull;
+    mImage.image = nsnull;
+  }
+
+  if (mAlphaBits != nsnull)
+  {
+    delete [] mAlphaBits;
+    mAlphaBits = nsnull;
+  }
+
+  mNumPaletteColors = -1;
+  mNumBytesPixel = 0;
+  mSizeImage = 0;
+  mImageBits = nsnull;
+  mAlphaBits = nsnull;
+
 }
 
 /** ----------------------------------------------------------------
@@ -82,28 +105,22 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init this=<%p> - aWidth=%d aHeight=%d aDepth=%d aMaskRequirements=%d\n", this, aWidth, aHeight, aDepth, aMaskRequirements));
 
-  CleanUp(PR_TRUE);
-
-  if (8 == aDepth)
+  if (mImageBits != nsnull)
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init - Palette image."));
-
-    mNumPaletteColors = 256;
-    mNumBytesPixel = 1;
-    mImage.type = Pg_IMAGE_PALETTE_BYTE;
-    mImage.colors = 256;
-
-    SetDecodedRect(0,0,0,0);  //init
-
-    mColorMap = new nsColorMap;
-    if( mColorMap != nsnull )
-    {
-      mColorMap->NumColors = mNumPaletteColors;
-      mColorMap->Index = new PRUint8[3 * mColorMap->NumColors];
-      memset( mColorMap->Index, 0, sizeof(PRUint8) * ( 3 * mColorMap->NumColors ));
-    }
+    delete [] mImageBits;
+    mImageBits = nsnull;
+    mImage.image = nsnull;
   }
-  else if (24 == aDepth)
+
+  if (mAlphaBits != nsnull)
+  {
+    delete [] mAlphaBits;
+    mAlphaBits = nsnull;
+  }
+  
+  SetDecodedRect(0,0,0,0);  //init
+  
+  if (24 == aDepth)
   {
     mNumPaletteColors = 0;
     mNumBytesPixel = 3;
@@ -116,14 +133,16 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
     return NS_ERROR_UNEXPECTED;
   }
 
-  /* From GTK */
+
   mWidth = aWidth;
   mHeight = aHeight;
   mDepth = aDepth;
+  mIsTopToBottom = PR_TRUE;
 
-  /* Computer the Image Metrics */
-  mRowBytes = CalcBytesSpan(mWidth);
-  mSizeImage = mRowBytes * mHeight;
+
+ // create the memory for the image
+  ComputeMetrics();
+
 
   /* Allocate the Image Data */
   mImageBits = (PRUint8*) new PRUint8[mSizeImage];
@@ -147,12 +166,17 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
     mAlphaHeight = aHeight;
     break;
 
-  case nsMaskRequirements_kNeeds8Bit:
-    mAlphaBits = nsnull;
-    mAlphaWidth = 0;
-    mAlphaHeight = 0;
-    printf("TODO: want an 8bit mask for an image..\n");
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init - 8 bit mask not implemented.\n" ));
+     case nsMaskRequirements_kNeeds8Bit:
+      mARowBytes = aWidth;
+      mAlphaDepth = 8;
+
+      // 32-bit align each row
+      mARowBytes = (mARowBytes + 3) & ~0x3;
+      mAlphaBits = new PRUint8[mARowBytes * aHeight];
+      mAlphaWidth = aWidth;
+      mAlphaHeight = aHeight;
+      printf("TODO: want an 8bit mask for an image..\n");
+      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init - 8 bit mask not implemented.\n" ));
     break;
 
   default:
@@ -171,72 +195,114 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   mImage.spare1        = 0;
   mImage.ghost_bitmap  = nsnull;
   mImage.mask_bpl      = mARowBytes;
+#if 0
   mImage.mask_bm       = (char *)mAlphaBits;
   if( mColorMap )
     mImage.palette     = (PgColor_t *) mColorMap->Index;
   else
+#endif
     mImage.palette     = nsnull;
   mImage.image         = (char *)mImageBits;
 
   return NS_OK;
 }
 
-/** ----------------------------------------------------------------
-  * This routine started out to set up a color table, which as been 
-  * outdated, and seemed to have been used for other purposes.  This 
-  * routine should be deleted soon -- dc
-  * @update dc - 11/20/98
-  * @param aContext - a device context to use
-  * @param aFlags - flags used for the color manipulation
-  * @param aUpdateRect - The update rectangle to use
-  * @result void
-  */
+//------------------------------------------------------------
+
+PRInt32 nsImagePh::GetHeight()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetHeight\n" ));
+  return mHeight;
+}
+
+PRInt32 nsImagePh::GetWidth()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetWidth\n" ));
+  return mWidth;
+}
+
+PRUint8* nsImagePh::GetBits()
+{
+  //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetBits\n" ));
+  return mImageBits;
+}
+
+void* nsImagePh::GetBitInfo()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetBitInfo - Not implemented\n" ));
+  return nsnull;
+}
+
+PRInt32 nsImagePh::GetLineStride()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetLineStride\n" ));
+  return mRowBytes;
+}
+
+nsColorMap* nsImagePh::GetColorMap()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetColorMap\n" ));
+  return nsnull;
+}
+
+PRBool nsImagePh::IsOptimized()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::IsOptimized\n" ));
+  return PR_TRUE;
+}
+
+PRUint8* nsImagePh::GetAlphaBits()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaBits\n" ));
+  return mAlphaBits;
+}
+
+PRInt32 nsImagePh::GetAlphaWidth()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaWidth\n" ));
+  return mAlphaWidth;
+}
+
+PRInt32 nsImagePh::GetAlphaHeight()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaHeight\n" ));
+  return mAlphaHeight;
+}
+
+PRInt32 nsImagePh::GetAlphaLineStride()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaLineStride\n" ));
+  return mARowBytes;
+}
+
+nsIImage *nsImagePh::DuplicateImage()
+{
+  return nsnull;
+}
+
+void nsImagePh::SetAlphaLevel(PRInt32 aAlphaLevel)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::SetAlphaLevel\n" ));
+  mAlphaLevel=aAlphaLevel;
+}
+
+PRInt32 nsImagePh::GetAlphaLevel()
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaLevel\n" ));
+  return(mAlphaLevel);
+}
+
+void nsImagePh::MoveAlphaMask(PRInt32 aX, PRInt32 aY)
+{
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::MoveAlphaMask\n" ));
+}
+
+
 void nsImagePh :: ImageUpdated(nsIDeviceContext *aContext, PRUint8 aFlags, nsRect *aUpdateRect)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::ImageUpdated (%p)\n", this ));
 
-#if 0
-  // REVISIT - we only need to fix images for the screen device (not printers, etc)
-  // Fix the RGB ordering for 24-bit images (swap red and blue values)...
-
-  if( mImageBits && ( mNumBytesPixel == 3 ) && ( aFlags & NS_IMAGE_UPDATE_PIXELS ))
-  {
-    int x,y,off,off2,xm,ym;
-    char c;
-
-    if( aUpdateRect )
-    {
-      xm = aUpdateRect->width*3;
-      ym = aUpdateRect->height;
-      off=mRowBytes*aUpdateRect->y + aUpdateRect->x;
-
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("  Pixels have changed in (%ld,%ld,%ld,%ld).\n", aUpdateRect->x,
-        aUpdateRect->y, aUpdateRect->width, aUpdateRect->height ));
-    }
-    else
-    {
-      xm = mWidth*3;
-      ym = mHeight;
-      off=0;
-
-      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("  All pixels have changed.\n" ));
-    }
-
-    for(y=0;y<ym;y++,off+=mRowBytes)
-    {
-      off2 = off+2;
-      for(x=0;x<xm;x+=3)
-      {
-        c = mImageBits[off+x];
-        mImageBits[off+x] = mImageBits[off2+x];
-        mImageBits[off2+x] = c;
-      }
-    }
-  }
-  else
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("  skipped: mImageBits=%p  mNumBytesPixel=%d  flags=%ld.\n", mImageBits, mNumBytesPixel, aFlags ));
-#endif
-
+  mFlags = aFlags; // this should be 0'd out by Draw()
 }
 
 //------------------------------------------------------------
@@ -268,8 +334,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 				 PRInt32 aSX, PRInt32 aSY, PRInt32 aSWidth, PRInt32 aSHeight,
 				 PRInt32 aDX, PRInt32 aDY, PRInt32 aDWidth, PRInt32 aDHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 this=<%p> aS=(%d,%d,%d,%d) aD=(%d,%d,%d,%d)\n", this,
-    aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight ));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 this=<%p> aS=(%d,%d,%d,%d) aD=(%d,%d,%d,%d) nsImageUpdateFlags_kBitsChanged Flag=<%d>\n", this,
+    aSX, aSY, aSWidth, aSHeight, aDX, aDY, aDWidth, aDHeight,IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags) ));
 
   if( !mImage.image )
   {
@@ -279,17 +345,6 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 
   PhPoint_t pos = { aDX, aDY };
   int       err;
-
-  if( mColorMap )
-  {
-    err=PgSetPalette( (PgColor_t*) mColorMap->Index, 0, 0, mColorMap->NumColors, Pg_PALSET_SOFT, 0 );
-    if (err == -1)
-    {
-      NS_ASSERTION(0,"nsImagePh::Draw Error calling PgSetPalette");
-      abort();
-	  return NS_ERROR_FAILURE;
-    }
-  }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 this=<%p> mImage.size=(%ld,%ld)\n", this, mImage.size.w, mImage.size.h));
 
@@ -315,27 +370,16 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     }
   }
 
+  mFlags = 0;
   PgFLUSH();	// kedl
   return NS_OK;
 }
 
-/** ----------------------------------------------------------------
-  * Draw the bitmap, defaulting the source to 0,0,source 
-  * and destination have the same width and height.
-  * @update dc - 11/20/98
-  * @param aContext - the rendering context to draw with
-  * @param aSurface - The HDC in a nsDrawingsurfacePh to copy the bits to.
-  * @param aX - destination location
-  * @param aY - destination location
-  * @param aWidth - image width
-  * @param aHeight - image height
-  * @result NS_OK if the draw worked
-  */
 NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 				 PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p>\n", this, aX, aY, aWidth, aHeight, aSurface ));
-  //printf("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p>\n", this, aX, aY, aWidth, aHeight, aSurface);
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p> nsImageUpdateFlags_kBitsChanged flags=<%d>\n",
+   this, aX, aY, aWidth, aHeight, aSurface, IsFlagSet(nsImageUpdateFlags_kBitsChanged, mFlags) ));
 
   if( !mImage.image )
   {
@@ -364,7 +408,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     aHeight = mHeight;
   }
 
-#ifdef DEBUG
+#if defined(DEBUG) && 0
 {
   /* Print out all the clipping that applies */
   PhRect_t  *rect;
@@ -420,7 +464,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 }
 #endif
 
-#if 1
+#if defined(DEBUG) && 0
 {
   nsRect aRect;
   PRBool isValid;
@@ -500,53 +544,11 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   PhPoint_t pos = { aX, aY };
   int       err;
   
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d m*âç  ask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
   //printf("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl);
 
   if( mAlphaBits )
   {
-#if 0
-	int x,y;
-	for(x=0; x < mHeight; x++)
-	{
-#if 1
- /* Use PR_LOG */
-      unsigned char a = mAlphaBits[(x*4)+0];
-      unsigned char b = mAlphaBits[(x*4)+1];
-      unsigned char c = mAlphaBits[(x*4)+2];
-      unsigned char d = mAlphaBits[(x*4)+3];
-
-	  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 %2d => %d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d ",x,
-		  ((a&1)==1), ((a&2)==2), ((a&4)==4), ((a&8)==8),
-		  ((a&16)==16), ((a&32)==32), ((a&64)==64), ((a&128)==128),
-
-  		  ((b&1)==1), ((b&2)==2), ((b&4)==4), ((b&8)==8),
-		  ((b&16)==16), ((b&32)==32), ((b&64)==64), ((b&128)==128),
-		  
-		  ((c&1)==1), ((c&2)==2), ((c&4)==4), ((c&8)==8),
-		  ((c&16)==16), ((c&32)==32), ((c&64)==64), ((c&128)==128),	  
-
-		  ((d&1)==1), ((d&2)==2), ((d&4)==4), ((d&8)==8),
-		  ((d&16)==16), ((d&32)==32), ((d&64)==64), ((d&128)==128) ));
-	}
-#else
-  /* use Printfs */
-      printf("%2d => ",x);
-	  for(y=0; 	y<mARowBytes; y++)
-	  {
-		//printf("(%d)", (x*mARowBytes)+y );
-		unsigned char c = mAlphaBits[(x*mARowBytes)+y];
-		printf("%d%d%d%d%d%d%d%d ",
-		  ((c&1)==1), ((c&2)==2), ((c&4)==4), ((c&8)==8),
-		  ((c&16)==16), ((c&32)==32), ((c&64)==64), ((c&128)==128) );
-	  }
-	  printf("\n");
-
-	}
-    printf("\n");
-#endif
-#endif    
-
     err=PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
     if (err == -1)
     {
@@ -565,8 +567,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	  return NS_ERROR_FAILURE;
     }
 
-#if 0
-#ifdef DEBUG
+#if defined(DEBUG) && 0
     /* Try to dump the image to a BMP file */
     PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image to BMP\n"));
 
@@ -576,15 +577,11 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
      PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 Dump image info w,h,d=(%d,%d,%d) mColorMap=<%p> \n",
 	   mWidth, mHeight, mDepth, mColorMap));
 
-
     do_bmp(ptr, mImage.bpl/3, mImage.size.w, mImage.size.h);
 #endif
-#endif
-
   }
 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> finished \n", this));
-  //printf("nsImagePh::Draw2 this=<%p> finished \n", this);
 
 #ifdef CREATE_NEW_GC
   /* Restore the old GC */
@@ -600,11 +597,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   return NS_OK;
 }
 
-/** ----------------------------------------------------------------
- * Create an optimized bitmap, -- this routine may need to be deleted, not really used now
- * @update dc - 11/20/98
- * @param aContext - The device context to use for the optimization
- */
+//------------------------------------------------------------
+
 nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Optimize\n" ));
@@ -612,171 +606,6 @@ nsresult nsImagePh :: Optimize(nsIDeviceContext* aContext)
   return NS_OK;
 }
 
-/** ----------------------------------------------------------------
- * Calculate the number of bytes in a span for this image
- * @update dc - 11/20/98
- * @param aWidth - The width to calulate the number of bytes from
- * @return Number of bytes for the span
- */
-PRInt32  nsImagePh :: CalcBytesSpan(PRUint32  aWidth)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::CalcBytesSpan aWidth=<%d>\n",aWidth));
-
-  /* Stolen from GTK */
-  PRInt32 spanbytes;
-  
-  spanbytes = (aWidth * mDepth) >> 5;
-
-  if (((PRUint32)aWidth * mDepth) & 0x1F)
-     spanbytes++;
-  spanbytes <<= 2;
-
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::CalcBytesSpan spanbytes returns <%d>\n",spanbytes));
-
-  return(spanbytes);
-}
-
-/** ----------------------------------------------------------------
- * Clean up the memory associted with this object.  Has two flavors, 
- * one mode is to clean up everything, the other is to clean up only the DIB information
- * @update dc - 11/20/98
- * @param aWidth - The width to calulate the number of bytes from
- * @return Number of bytes for the span
- */
-void nsImagePh :: CleanUp(PRBool aCleanUpAll)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::CleanUp\n" ));
-
-  if (mImageBits != nsnull)
-  {
-    delete [] mImageBits;
-    mImageBits = nsnull;
-    mImage.image = nsnull;
-  }
-
-  if (mAlphaBits != nsnull)
-  {
-    delete [] mAlphaBits;
-    mAlphaBits = nsnull;
-  }
-
-  // Should be an ISupports, so we can release
-  if (mColorMap != nsnull)
-  {
-    delete [] mColorMap->Index;
-    delete mColorMap;
-  }
-
-  mNumPaletteColors = -1;
-  mNumBytesPixel = 0;
-  mSizeImage = 0;
-  mImageBits = nsnull;
-  mAlphaBits = nsnull;
-  mColorMap = nsnull;
-}
-
-PRInt32 nsImagePh::GetBytesPix()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetBytesPix\n" ));
-
-  return mNumBytesPixel;
-}
-
-PRInt32 nsImagePh::GetHeight()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetHeight\n" ));
-  return mHeight;
-}
-
-PRInt32 nsImagePh::GetWidth()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetWidth\n" ));
-  return mWidth;
-}
-
-PRUint8* nsImagePh::GetBits()
-{
-  //PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetBits\n" ));
-  return mImageBits;
-}
-
-PRInt32 nsImagePh::GetLineStride()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetLineStride\n" ));
-  return mRowBytes;
-}
-
-nsColorMap* nsImagePh::GetColorMap()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetColorMap\n" ));
-  return mColorMap;
-}
-
-PRBool nsImagePh::IsOptimized()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::IsOptimized\n" ));
-  return mIsOptimized;
-}
-
-PRUint8* nsImagePh::GetAlphaBits()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaBits\n" ));
-  return mAlphaBits;
-}
-
-PRInt32 nsImagePh::GetAlphaWidth()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaWidth\n" ));
-  return mAlphaWidth;
-}
-
-PRInt32 nsImagePh::GetAlphaHeight()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaHeight\n" ));
-  return mAlphaHeight;
-}
-
-PRInt32 nsImagePh::GetAlphaLineStride()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaLineStride\n" ));
-  return mARowBytes;
-}
-
-PRBool nsImagePh::GetIsRowOrderTopToBottom()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetIsRowOrderTopToBottom\n" ));
-  return PR_TRUE;
-}
-
-PRIntn nsImagePh::GetSizeHeader()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetSizeHeader\n" ));
-  return 0;
-}
-
-PRIntn nsImagePh::GetSizeImage()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetSizeImage\n" ));
-  return mSizeImage;
-}
-
-void nsImagePh::SetAlphaLevel(PRInt32 aAlphaLevel)
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::SetAlphaLevel\n" ));
-  mAlphaLevel=aAlphaLevel;
-}
-
-PRInt32 nsImagePh::GetAlphaLevel()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::GetAlphaLevel\n" ));
-  return(mAlphaLevel);
-}
-
-void* nsImagePh::GetBitInfo()
-{
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh:: - Not implemented\n" ));
-  return nsnull;
-}
 
 //------------------------------------------------------------
 // lock the image pixels. Implement this if you need it.
