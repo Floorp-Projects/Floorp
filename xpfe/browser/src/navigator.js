@@ -665,10 +665,17 @@
 
   function MsgNewMessage()
   {
-		var msgComposeService = Components.classes['component://netscape/messengercompose'].getService();
-		msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
-		if (msgComposeService)
-			msgComposeService.OpenComposeWindow(null, null, 0, 0, null);
+    var toolkitCore = XPAppCoresManager.Find("ToolkitCore");
+    if (!toolkitCore) {
+      toolkitCore = new ToolkitCore();
+      if (toolkitCore) {
+        toolkitCore.Init("ToolkitCore");
+      }
+    }
+    if (toolkitCore) {
+      toolkitCore.ShowWindow("chrome://messengercompose/content/",
+                             window);
+    }
   }
   
   function DoPreferences()
