@@ -21,6 +21,7 @@
 #include "nsTableFrame.h"
 #include "nsTableCellFrame.h"
 
+#define kIsCollapsedRowsGrowSize 5
 // CellData 
 
 CellData::CellData()
@@ -38,6 +39,7 @@ CellData::~CellData()
 nsCellMap::nsCellMap(int aRowCount, int aColCount)
   : mNumCollapsedRows(0),
     mNumCollapsedCols(0),
+    mIsCollapsedRowsSize(0),
     mRowCount(0),
     mNextAvailRowIndex(0)
 {
@@ -148,6 +150,8 @@ void nsCellMap::InsertRowIntoMap(PRInt32 aRowIndex)
   
   if (row) {
     mRows.InsertElementAt(row, aRowIndex);
+    if(mIsCollapsedRows)
+      InsertIntoCollapsedRows(aRowIndex);
   }
     
   PRInt32* val = new PRInt32(0);
@@ -193,6 +197,8 @@ void nsCellMap::RemoveRowFromMap(PRInt32 aRowIndex)
   } 
   mRows.RemoveElementAt(aRowIndex);
   delete row;
+  if(mIsCollapsedRows)
+    RemoveFromCollapsedRows(aRowIndex);
 
   // Decrement our row and next available index counts.
   mRowCount--;
@@ -525,6 +531,7 @@ void nsCellMap::SetRowCollapsedAt(PRInt32 aRow, PRBool aValue)
   if ((aRow >= 0) && (aRow < mRowCount)) {
     if (nsnull == mIsCollapsedRows) {
       mIsCollapsedRows = new PRPackedBool[mRowCount];
+      mIsCollapsedRowsSize = mRowCount;
       for (PRInt32 i = 0; i < mRowCount; i++) {
         mIsCollapsedRows[i] = PR_FALSE;
       }
@@ -538,6 +545,46 @@ void nsCellMap::SetRowCollapsedAt(PRInt32 aRow, PRBool aValue)
       mIsCollapsedRows[aRow] = aValue; 
     }
   }
+}
+
+void nsCellMap::InsertIntoCollapsedRows(PRInt32 aRow)
+{
+  if(mIsCollapsedRows) {
+    if((mRowCount + 1) > mIsCollapsedRowsSize){
+      PRInt32 newSize = mRowCount + kIsCollapsedRowsGrowSize;
+      PRPackedBool * newIsCollapsedRows = new PRPackedBool[newSize];
+	  if(!newIsCollapsedRows)
+		  return;
+      if(aRow != 0)
+        nsCRT::memcpy(newIsCollapsedRows, mIsCollapsedRows, aRow * sizeof (PRPackedBool));
+      if(aRow != mRowCount)
+        nsCRT::memcpy(newIsCollapsedRows + aRow + 1, mIsCollapsedRows + aRow, 
+                     (mRowCount - aRow) * sizeof(PRPackedBool));
+
+      delete[] mIsCollapsedRows;
+      mIsCollapsedRows = newIsCollapsedRows;
+      mIsCollapsedRowsSize = newSize;
+	}
+    else {
+      if(aRow != mRowCount)
+        nsCRT::memmove(mIsCollapsedRows + aRow + 1, mIsCollapsedRows + aRow, 
+		              (mRowCount - aRow) * sizeof(PRPackedBool));
+	}
+    mIsCollapsedRows[aRow] = PR_FALSE;
+  }
+}
+
+void nsCellMap::RemoveFromCollapsedRows(PRInt32 aRow)
+{
+  //If the row we're removing was collapsed, decrement mNumCollapsedRows
+  if(mIsCollapsedRows[aRow])
+    mNumCollapsedRows--;
+
+  //Don't need to move if last element in array
+  if(aRow < (mRowCount - 1))
+    nsCRT::memmove(mIsCollapsedRows + aRow, mIsCollapsedRows + aRow + 1, 
+	              (mRowCount - 1 - aRow) * sizeof(PRPackedBool));
+
 }
 
 PRInt32 nsCellMap::GetNumCollapsedCols() const

@@ -135,6 +135,11 @@ protected:
   void Grow(PRInt32 aNumMapRows, 
             PRInt32 aNumCols);
 
+	/**  insert a new entry into the mIsCollapsedRows */
+	void InsertIntoCollapsedRows(PRInt32 aRow);
+	/** remove an entry from mIsCollapsedRows */
+  void RemoveFromCollapsedRows(PRInt32 aRow);
+
   /** assign aCellData to the cell at (aRow,aColumn) */
   void SetMapCellAt(CellData& aCellData, 
                     PRInt32   aMapRowIndex, 
@@ -163,7 +168,9 @@ protected:
 
   // an array of booleans where the ith element indicates if the ith row is collapsed
   PRPackedBool* mIsCollapsedRows;
+	PRInt32				mIsCollapsedRowsSize;
   PRInt32       mNumCollapsedRows;
+
 
   // an array of booleans where the ith element indicates if the ith col is collapsed
   PRPackedBool* mIsCollapsedCols;
