@@ -952,7 +952,6 @@ SWITCH: for ($::FORM{'knob'}) {
         SendSQL("SELECT initialowner FROM components " .
                 "WHERE components.id = $comp_id");
         my $newid = FetchOneColumn();
-        my $newname = DBID_to_name($newid);
         DoComma();
         $::query .= "assigned_to = $newid";
         if (Param("useqacontact")) {
