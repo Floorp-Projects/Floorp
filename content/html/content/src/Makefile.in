@@ -92,7 +92,6 @@ CPPSRCS		= \
 		nsHTMLMapElement.cpp \
 		nsHTMLMenuElement.cpp \
 		nsHTMLMetaElement.cpp \
-		nsHTMLModElement.cpp \
 		nsHTMLOListElement.cpp \
 		nsHTMLObjectElement.cpp \
 		nsHTMLOptionElement.cpp \
