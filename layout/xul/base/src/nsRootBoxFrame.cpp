@@ -289,12 +289,9 @@ nsRootBoxFrame::GetPopupSetFrame(nsIFrame** aResult)
 NS_IMETHODIMP
 nsRootBoxFrame::SetPopupSetFrame(nsIFrame* aPopupSet)
 {
-  // Under normal conditions this should only be called once.  However,
-  // if something triggers ReconstructDocElementHierarchy, we will
-  // destroy this frame's child (the nsDocElementBoxFrame), but not this
-  // frame.  Since the anonymous content is associated with the
-  // nsDocElementBoxFrame, we'll get a new popupset.
-  mPopupSetFrame = aPopupSet;
+  NS_ASSERTION(!mPopupSetFrame, "Popup set is already defined! Only 1 allowed.");
+  if (!mPopupSetFrame) 
+    mPopupSetFrame = aPopupSet;
   return NS_OK;
 }
 

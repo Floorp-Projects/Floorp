@@ -466,7 +466,7 @@ nsHTMLSelectElement::InsertOptionsIntoList(nsIContent* aOptions,
           // This is sort of a hack ... we need to notify that the option was
           // set and change selectedIndex even though we didn't really change
           // its value.
-          OnOptionSelected(selectFrame, presContext, i, PR_TRUE, PR_FALSE);
+          OnOptionSelected(selectFrame, presContext, i, PR_TRUE, PR_TRUE);
         }
       }
     }
@@ -655,11 +655,6 @@ nsHTMLSelectElement::RemoveOptionsFromListRecurse(nsIContent* aOptions,
   return NS_OK;
 }
 
-// XXXldb Doing the processing before the content nodes have been added
-// to the document (as the name of this function seems to require, and
-// as the callers do), is highly unusual.  Passing around unparented
-// content to other parts of the app can make those things think the
-// options are the root content node.
 NS_IMETHODIMP
 nsHTMLSelectElement::WillAddOptions(nsIContent* aOptions,
                                     nsIContent* aParent,
