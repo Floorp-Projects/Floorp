@@ -172,6 +172,9 @@ LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
  -I$(PUBLIC)\plugin -I$(PUBLIC)\oji -I$(PUBLIC)\java
 
 LCFLAGS = \
+!if "$(MOZ_ENDER_LITE)"=="1"
+        -DENDER_LITE \
+!endif
         $(LCFLAGS) \
         $(DEFINES) \
         $(NULL)
