@@ -848,6 +848,13 @@ BtnPress(Widget w,
 		lastSelectTime = be->time;
 		return;
 		}
+    /*
+     * If the Grid is using single click activation the activateCallback 
+     * called from Select() will take care of collapsing and
+     * expanding. 
+     */
+    if (((XmLGridWidget)w)->grid.singleClickActivation)
+      return;
 	lastSelectTime = be->time;
 	lastRow = row;
 	xoff = t->tree.levelSpacing;

@@ -1158,6 +1158,12 @@ static XtResource resources[] =
 		XtOffset(XmLGridWidget, grid.hideUnhideButtons),
 		XmRImmediate, (XtPointer)False,
 		},
+		{
+		XmNsingleClickActivation, XmCSingleClickActivation,
+		XmRBoolean, sizeof(Boolean),
+		XtOffset(XmLGridWidget, grid.singleClickActivation),
+		XmRImmediate, (XtPointer)False,
+		},
 #if 0
 		{
 		XmNhideButtonTranslations, XmCTranslations,
@@ -7397,12 +7403,15 @@ Select(Widget w,
                 }
             else if (!g->grid.editTimerSet && g->grid.lastSelectTime != 0)
                 {
-                /* Only begin an edit when we are sure we don't
-                   have a double click */
-                g->grid.editTimerId =
-                    XtAppAddTimeOut(XtWidgetToApplicationContext(w),
+                   /* Only begin an edit when we are sure we don't
+                    * have a double click 
+                    */
+                   if (!g->grid.singleClickActivation) {
+                      g->grid.editTimerId =
+                      XtAppAddTimeOut(XtWidgetToApplicationContext(w),
                                     doubleClickTime*2, EditTimer, (caddr_t)g);
-                g->grid.editTimerSet = 1;
+                      g->grid.editTimerSet = 1;
+                   }
                 }
             }
 		g->grid.lastSelectRow = row;
@@ -7637,6 +7646,16 @@ Select(Widget w,
 		    }
 		  }
 		}
+      if (q == qBEGIN  && g->grid.singleClickActivation) {
+		cbs.reason = XmCR_ACTIVATE;
+		cbs.event = event;
+		cbs.columnType = ColPosToType(g, col);
+		cbs.column = ColPosToTypePos(g, cbs.columnType, col);
+		cbs.rowType = RowPosToType(g, row);
+		cbs.row = RowPosToTypePos(g, cbs.rowType, row);
+		XtCallCallbackList((Widget)g, g->grid.activateCallback,
+			(XtPointer)&cbs);
+    }
 	if (q == qACTIVATE)
 		{
 		cbs.reason = XmCR_ACTIVATE;
@@ -9069,6 +9088,7 @@ _XmLGridCellInsertText(XmLGridCell cell,
          cell->cell.refValues->type != XmICON_CELL)
         || cell->cell.refValues->editable != True
 	    || g->grid.useTextWidget != True)
+      return;
 	XtVaGetValues(w,
 		XmNtextWidget, &text,
 		NULL);

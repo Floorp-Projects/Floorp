@@ -330,6 +330,7 @@ typedef struct _XmLGridPart
         /* XFE Additions */
       XtCallbackList popupCallback;
       Boolean hideUnhideButtons;
+      Boolean singleClickActivation;
       Widget hideButton;
       Widget unhideButton;
       XtTranslations hideButtonTrans;
