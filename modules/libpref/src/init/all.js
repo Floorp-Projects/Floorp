@@ -206,7 +206,7 @@ pref("browser.search.defaultenginename", "chrome://navigator/locale/navigator.pr
 pref("print.print_headerleft", "&T");
 pref("print.print_headercenter", "");
 pref("print.print_headerright", "&U");
-pref("print.print_footerleft", "&P");
+pref("print.print_footerleft", "&PT");
 pref("print.print_footercenter", "");
 pref("print.print_footerright", "&D");
 
