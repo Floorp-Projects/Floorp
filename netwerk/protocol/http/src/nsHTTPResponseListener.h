@@ -19,12 +19,12 @@
 #ifndef _nsHTTPResponseListener_h_
 #define _nsHTTPResponseListener_h_
 
+#include "nsIChannel.h"
 #include "nsIStreamListener.h"
 #include "nsString.h"
 #include "nsCOMPtr.h"
 
 class nsIBuffer;
-class nsIChannel;
 class nsHTTPResponse;
 class nsIHTTPChannel;
 
