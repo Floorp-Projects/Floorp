@@ -95,7 +95,7 @@ char tmpPath[MAX_SIZE];
 
 BOOL IsNewValue = FALSE;
 BOOL IsSameCache = TRUE;
-
+CString Root = "";
 CString CacheFile;
 CString CachePath;
 BOOL UseCache = FALSE;
@@ -133,7 +133,7 @@ BOOL CWizardMachineApp::InitInstance()
 
 	strcpy(currDirPath, Path);
 
-	CString Root = Path;
+	Root = Path;
 
 	WIDGET* wroot = SetGlobal("Root",Root);
 	if (wroot)
@@ -1160,10 +1160,29 @@ void CWizardMachineApp::CreateNewCache()
 		fprintf(out, "--------------** TERMINATED - Can't open cache file **----------------\n");
 		exit( 3 );
 	}
+	CString RootCache = Root + CacheFile;
+	int CompareValue = RootCache.CompareNoCase(CachePath);
 
 	for(int i=0; i< GlobalArrayIndex; i++)
 	{
-		if (GlobalWidgetArray[i].type != "RadioButton" 
+		if (CompareValue)
+		{	
+			if (GlobalWidgetArray[i].type != "RadioButton" 
+			&& GlobalWidgetArray[i].type != "Text" 
+			&& GlobalWidgetArray[i].type != "BoldText" 
+			&& GlobalWidgetArray[i].type != "Button" 
+			&& GlobalWidgetArray[i].type != "GroupBox" 
+			&& GlobalWidgetArray[i].type != "BoldGroup"
+			&& GlobalWidgetArray[i].type != "ComboBox" )
+			{
+				if( (GlobalWidgetArray[i].name != "") && (GlobalWidgetArray[i].name != "Root"))
+				{
+					fprintf(globs, GlobalWidgetArray[i].name + "=" + GlobalWidgetArray[i].value);
+					fprintf(globs, "\n");
+				}
+			}
+		}
+		else if (GlobalWidgetArray[i].type != "RadioButton" 
 			&& GlobalWidgetArray[i].type != "Text" 
 			&& GlobalWidgetArray[i].type != "BoldText" 
 			&& GlobalWidgetArray[i].type != "Button" 
@@ -1176,6 +1195,7 @@ void CWizardMachineApp::CreateNewCache()
 				fprintf(globs, "\n");
 			}
 		}
+
 	}
 	fclose(globs);
 }
