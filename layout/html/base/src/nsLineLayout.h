@@ -75,8 +75,7 @@ public:
                      nscoord aRightEdge);
 
   void EndSpan(nsIFrame* aFrame, nsSize& aSizeResult,
-               nsSize* aMaxElementSize,
-               PRBool* aHaveAtLeastOneNonEmptyTextFrame);
+               nsSize* aMaxElementSize);
 
   PRBool InStrictMode();
 
@@ -272,6 +271,7 @@ protected:
 
     // Other state we use
     PRUint8 mVerticalAlign;
+    PRBool mIsTextFrame;
     PRBool mIsNonEmptyTextFrame;
   };
   PerFrameData mFrameDataBuf[NS_LINELAYOUT_NUM_FRAMES];
@@ -294,6 +294,7 @@ public:
     PRBool mNoWrap;
     PRUint8 mDirection;
     PRBool mChangedFrameDirection;
+    PRBool mZeroEffectiveSpanBox;
 
     nscoord mLeftEdge;
     nscoord mX;
