@@ -39,6 +39,11 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nscore.h"
+
+#define PL_ARENA_CONST_ALIGN_MASK 7
+#define NS_RULEHASH_ARENA_BLOCK_SIZE (256)
+#include "plarena.h"
+
 #include "nsICSSStyleSheet.h"
 #include "nsIArena.h"
 #include "nsCRT.h"
@@ -294,11 +299,21 @@ struct RuleValue {
     mIndex = aIndex;
     mNext = nsnull;
   }
+
+  // CAUTION: ~RuleValue will never get called as RuleValues are arena
+  // allocated and arena cleanup will take care of deleting memory.
+  // Add code to RuleHash::~RuleHash to get it to call the destructor
+  // if any more cleanup needs to happen.
   ~RuleValue(void)
   {
-    if ((nsnull != mNext) && (nsnull != mNext->mNext)) {
-      delete mNext; // don't delete that last in the chain, it's shared
-    }
+    // Rule values are arena allocated. No need for any deletion.
+  }
+
+  // Placement new to arena allocate the RuleValues
+  void *operator new(size_t aSize, PLArenaPool &aArena) {
+    void *mem;
+    PL_ARENA_ALLOCATE(mem, &aArena, aSize);
+    return mem;
   }
 
   nsICSSStyleRule*  mRule;
@@ -337,6 +352,7 @@ protected:
   void AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule, PRBool aCaseSensitive = PR_TRUE);
   void AppendRuleToTable(nsHashtable& aTable, PRInt32 aNameSpace, nsICSSStyleRule* aRule);
 
+  // All rule values in these hashtables are arena allocated
   PRInt32     mRuleCount;
   nsHashtable mIdTable;
   nsHashtable mClassTable;
@@ -347,6 +363,8 @@ protected:
   PRInt32     mEnumListSize;
   RuleValue   mEndValue;
   PRBool      mCaseSensitive;
+
+  PLArenaPool mArena;
 
 #ifdef RULE_HASH_STATS
   PRUint32    mUniversalSelectors;
@@ -391,12 +409,8 @@ RuleHash::RuleHash(void)
     mPseudoTagCalls(0)
 #endif
 {
-}
-
-static PRBool PR_CALLBACK DeleteValue(nsHashKey* aKey, void* aValue, void* closure)
-{
-  delete ((RuleValue*)aValue);
-  return PR_TRUE;
+  // Initialize our arena
+  PL_INIT_ARENA_POOL(&mArena, "RuleHashArena", NS_RULEHASH_ARENA_BLOCK_SIZE);
 }
 
 RuleHash::~RuleHash(void)
@@ -434,13 +448,14 @@ RuleHash::~RuleHash(void)
   }
 #endif // PRINT_UNIVERSAL_RULES
 #endif // RULE_HASH_STATS
-  mIdTable.Enumerate(DeleteValue);
-  mClassTable.Enumerate(DeleteValue);
-  mTagTable.Enumerate(DeleteValue);
-  mNameSpaceTable.Enumerate(DeleteValue);
+  // Rule Values are arena allocated no need to delete them. Their destructor
+  // isn't doing any cleanup. So we dont even bother to enumerate through
+  // the hash tables and call their destructors.
   if (nsnull != mEnumList) {
     delete [] mEnumList;
   }
+  // delete arena for strings and small objects
+  PL_FinishArenaPool(&mArena);
 }
 
 void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyleRule* aRule, PRBool aCaseSensitive)
@@ -452,7 +467,7 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyl
   RuleValue*  value = (RuleValue*)aTable.Get(&key);
 
   if (nsnull == value) {
-    value = new RuleValue(aRule, mRuleCount++);
+    value = new (mArena) RuleValue(aRule, mRuleCount++);
     aTable.Put(&key, value);
     value->mNext = &mEndValue;
   }
@@ -460,7 +475,7 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, nsIAtom* aAtom, nsICSSStyl
     while (&mEndValue != value->mNext) {
       value = value->mNext;
     }
-    value->mNext = new RuleValue(aRule, mRuleCount++);
+    value->mNext = new (mArena) RuleValue(aRule, mRuleCount++);
     value->mNext->mNext = &mEndValue;
   }
   mEndValue.mIndex = mRuleCount;
@@ -472,7 +487,7 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, PRInt32 aNameSpace, nsICSS
   RuleValue*  value = (RuleValue*)aTable.Get(&key);
 
   if (nsnull == value) {
-    value = new RuleValue(aRule, mRuleCount++);
+    value = new (mArena) RuleValue(aRule, mRuleCount++);
     aTable.Put(&key, value);
     value->mNext = &mEndValue;
   }
@@ -480,7 +495,7 @@ void RuleHash::AppendRuleToTable(nsHashtable& aTable, PRInt32 aNameSpace, nsICSS
     while (&mEndValue != value->mNext) {
       value = value->mNext;
     }
-    value->mNext = new RuleValue(aRule, mRuleCount++);
+    value->mNext = new (mArena) RuleValue(aRule, mRuleCount++);
     value->mNext->mNext = &mEndValue;
   }
   mEndValue.mIndex = mRuleCount;
