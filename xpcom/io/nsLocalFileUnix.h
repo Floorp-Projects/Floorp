@@ -40,6 +40,34 @@
 #include "nsLocalFile.h"
 #include "nsXPIDLString.h"
 
+/** 
+ *  we need these for statfs()
+ */
+#ifdef HAVE_SYS_STATVFS_H
+    #if defined(__osf__) && defined(__DECCXX)
+        extern "C" int statvfs(const char *, struct statvfs *);
+    #endif
+    #include <sys/statvfs.h>
+#endif
+
+#ifdef HAVE_SYS_STATFS_H
+    #include <sys/statfs.h>
+#endif
+
+#ifdef HAVE_STATVFS
+    #define STATFS statvfs
+#else
+    #define STATFS statfs
+#endif
+
+// so we can statfs on freebsd
+#if defined(__FreeBSD__)
+    #define HAVE_SYS_STATFS_H
+    #define STATFS statfs
+    #include <sys/param.h>
+    #include <sys/mount.h>
+#endif
+
 #define NSRESULT_FOR_RETURN(ret) (((ret) < 0) ? NSRESULT_FOR_ERRNO() : NS_OK)
 
 inline nsresult
