@@ -52,17 +52,31 @@
 #include "nsLWBrkCIID.h"
 #include "nsIOutputStream.h"
 #include "nsFileStream.h"
+#include "nsIPref.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
 static NS_DEFINE_CID(kLWBrkCID,                   NS_LWBRK_CID);
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
+#define PREF_STRUCTS "converter.html2txt.structs"
+#define PREF_HEADER_STRATEGY "converter.html2txt.header_strategy"
 const  PRInt32 gTabSize=4;
 const  PRInt32 gOLNumberWidth = 3;
+const  PRInt32 gIndentSizeHeaders = 2;       /* Indention of h1, if
+                                                mHeaderStrategy = 1 or = 2.
+                                                Indention of other headers
+                                                is derived from that.
+                                                XXX center h1? */
+const  PRInt32 gIndentIncrementHeaders = 2;  /* If mHeaderStrategy = 1,
+                                                indent h(x+1) this many
+                                                columns more than h(x) */
 const  PRInt32 gIndentSizeList = (gTabSize > gOLNumberWidth+3) ? gTabSize: gOLNumberWidth+3;
                                // Indention of non-first lines of ul and ol
+const  PRInt32 gIndentSizeDD = gTabSize;  // Indention of <dd>
 
 static PRBool IsInline(eHTMLTags aTag);
 static PRBool IsBlockLevel(eHTMLTags aTag);
+static PRInt32 HeaderLevel(eHTMLTags aTag);
 static PRInt32 unicharwidth(PRUnichar ucs);
 static PRInt32 unicharwidth(const PRUnichar* pwcs, PRInt32 n);
 
@@ -181,6 +195,10 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   mBufferLength = 0;
   mBuffer = nsnull;
   mUnicodeEncoder = nsnull;
+  mStructs = PR_TRUE;       // will be read from prefs later
+  mHeaderStrategy = 1 /*indent increasingly*/;   // ditto
+  for (PRInt32 i = 0; i <= 6; i++)
+    mHeaderCounter[i] = 0;
 
   // Line breaker
   mLineBreaker = nsnull;
@@ -272,6 +290,15 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
     mLineBreak.AssignWithConversion("\n");
   else
     mLineBreak.AssignWithConversion(NS_LINEBREAK);         // Platform/default
+
+  // Get some prefs
+  nsresult rv;
+  NS_WITH_SERVICE(nsIPref, prefs, NS_PREF_PROGID, &rv);
+  if (NS_SUCCEEDED(rv) && prefs)
+  {
+    rv = prefs->GetBoolPref(PREF_STRUCTS, &mStructs);
+    rv = prefs->GetIntPref(PREF_HEADER_STRATEGY, &mHeaderStrategy);
+  }
 
   return result;
 }
@@ -514,7 +541,6 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     PRInt32 whitespace;
     if(NS_SUCCEEDED(GetValueOfAttribute(aNode, "style", style)) &&
        (-1 != (whitespace = style.Find("white-space:"))))
-       /* DELETEME: What, if the style is defined in an external stylesheet? */
     {
       if (-1 != style.Find("-moz-pre-wrap", PR_TRUE, whitespace))
       {
@@ -569,19 +595,51 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
 
   if (type == eHTMLTag_p || type == eHTMLTag_pre)
     EnsureVerticalSpace(1); // Should this be 0 in unformatted case?
-
   // Else make sure we'll separate block level tags,
-  // even if we're about to leave before doing any other formatting.
-  // Oddly, I can't find a case where this actually makes any difference.
-  //else if (IsBlockLevel(type))
-  //  EnsureVerticalSpace(0);
+  // even if we're about to leave, before doing any other formatting.
+  else if (IsBlockLevel(type))
+    EnsureVerticalSpace(0);
 
   // The rest of this routine is formatted output stuff,
   // which we should skip if we're not formatted:
   if (!(mFlags & nsIDocumentEncoder::OutputFormatted))
     return NS_OK;
 
-  if (type == eHTMLTag_ul)
+  if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
+      type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
+      type == eHTMLTag_h5 || type == eHTMLTag_h6)
+  {
+    EnsureVerticalSpace(2);
+    if (mHeaderStrategy == 2)  // numbered
+    {
+      mIndent += gIndentSizeHeaders;
+      // Caching
+      nsCAutoString leadup;
+      PRInt32 level = HeaderLevel(type);
+      // Increase counter for current level
+      mHeaderCounter[level]++;
+      // Reset all lower levels
+      PRInt32 i;
+      for (i = level + 1; i <= 6; i++)
+        mHeaderCounter[i] = 0;
+      // Construct numbers
+      for (i = 1; i <= level; i++)
+      {
+        leadup.AppendInt(mHeaderCounter[i]);
+        leadup += ".";
+      }
+      leadup += " ";
+      Write(NS_ConvertASCIItoUCS2(leadup.GetBuffer()));
+    }
+    else if (mHeaderStrategy == 1)  // indent increasingly
+    {
+      mIndent += gIndentSizeHeaders;
+      for (PRInt32 i = HeaderLevel(type); i > 1; i--)
+           // for h(x), run x-1 times
+        mIndent += gIndentIncrementHeaders;
+    }
+  }
+  else if (type == eHTMLTag_ul)
   {
     // Indent here to support nested list, which aren't included in li :-(
     EnsureVerticalSpace(1); // Must end the current line before we change indent.
@@ -612,7 +670,11 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
     
     mInIndentString.AppendWithConversion(' ');
   }
-  else if (type == eHTMLTag_td)
+  else if (type == eHTMLTag_dl)
+    EnsureVerticalSpace(1);
+  else if (type == eHTMLTag_dd)
+    mIndent += gIndentSizeDD;
+  else if (type == eHTMLTag_td || type == eHTMLTag_th)
   {
     // We must make sure that the content of two table cells get a
     // space between them.
@@ -653,30 +715,39 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
   }
   else if (type == eHTMLTag_img)
   {
-    nsAutoString url;
-    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "src", url)) && !url.IsEmpty())
+    /* Output (in decreasing order of preference)
+       alt, title or src (URI) attribute */
+    // See <http://www.w3.org/TR/REC-html40/struct/objects.html#edef-IMG>
+    nsAutoString desc, temp;
+    if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc)))
     {
-      nsAutoString temp, desc;
-      if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "alt", desc))
-          && !desc.IsEmpty())
+      if (!desc.IsEmpty())
       {
-        temp.AppendWithConversion(" (");
+        temp.AppendWithConversion(" ["); // Should we output chars at all here?
         desc.StripChars("\"");
         temp += desc;
-        temp.AppendWithConversion(" <");
-        url.StripChars("\"");
-        temp += url;
-        temp.AppendWithConversion(">) ");
+        temp.AppendWithConversion(" ]");
       }
-      else
-      {
-        temp.AppendWithConversion(" <");
-        url.StripChars("\"");
-        temp += url;
-        temp.AppendWithConversion("> ");
-      }
-      Write(temp);
+      // If the alt attribute has an empty value (|alt=""|), output nothing
     }
+    else if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "title", desc))
+             && !desc.IsEmpty())
+    {
+      temp.AppendWithConversion(" [");
+      desc.StripChars("\"");
+      temp += desc;
+      temp.AppendWithConversion("] ");
+    }
+    else if (NS_SUCCEEDED(GetValueOfAttribute(aNode, "src", desc))
+             && !desc.IsEmpty())
+    {
+      temp.AppendWithConversion(" <");
+      desc.StripChars("\"");
+      temp += desc;
+      temp.AppendWithConversion("> ");
+    }
+    if (!temp.IsEmpty())
+      Write(temp);
   }
   else if (type == eHTMLTag_a && !IsConverted(aNode))
   {
@@ -688,15 +759,21 @@ nsHTMLToTXTSinkStream::OpenContainer(const nsIParserNode& aNode)
       mURL = url;
     }
   }
-  else if (type == eHTMLTag_sup && !IsConverted(aNode))
+  else if (type == eHTMLTag_q)
+    Write(NS_ConvertASCIItoUCS2("\""));
+  else if (type == eHTMLTag_sup && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("^"));
-  else if (type == eHTMLTag_sub && !IsConverted(aNode))
+  else if (type == eHTMLTag_sub && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("_"));
-  else if ((type ==eHTMLTag_strong || type==eHTMLTag_b) && !IsConverted(aNode))
+  else if (type == eHTMLTag_code && mStructs && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("|"));
+  else if ((type == eHTMLTag_strong || type == eHTMLTag_b)
+           && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("*"));
-  else if ((type == eHTMLTag_em || type == eHTMLTag_i) && !IsConverted(aNode))
+  else if ((type == eHTMLTag_em || type == eHTMLTag_i)
+           && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("/"));
-  else if (type == eHTMLTag_u && !IsConverted(aNode))
+  else if (type == eHTMLTag_u && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("_"));
 
   return NS_OK;
@@ -729,6 +806,8 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
         FlushLine();
     } else if ((type == eHTMLTag_tr) ||
                (type == eHTMLTag_li) ||
+               (type == eHTMLTag_dt) ||
+               (type == eHTMLTag_dd) ||
                (type == eHTMLTag_pre) ||
                (type == eHTMLTag_blockquote)) {
       EnsureVerticalSpace(0);
@@ -737,7 +816,8 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
       // in formatted mode, otherwise 0.
       // This is hard. Sometimes 0 is a better number, but
       // how to know?
-      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted) ? 1 : 0);
+      EnsureVerticalSpace((mFlags & nsIDocumentEncoder::OutputFormatted)
+                          ? 1 : 0);
     }
   }
 
@@ -746,7 +826,21 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
   if (!(mFlags & nsIDocumentEncoder::OutputFormatted))
     return NS_OK;
 
-  if (type == eHTMLTag_ul)
+  if (type == eHTMLTag_h1 || type == eHTMLTag_h2 ||
+      type == eHTMLTag_h3 || type == eHTMLTag_h4 ||
+      type == eHTMLTag_h5 || type == eHTMLTag_h6)
+  {
+    if (mHeaderStrategy /*numbered or indent increasingly*/ )
+      mIndent -= gIndentSizeHeaders;
+    if (mHeaderStrategy == 1 /*indent increasingly*/ )
+    {
+      for (PRInt32 i = HeaderLevel(type); i > 1; i--)
+           // for h(x), run x-1 times
+        mIndent -= gIndentIncrementHeaders;
+    }
+    EnsureVerticalSpace(1);
+  }
+  else if (type == eHTMLTag_ul)
   {
     mIndent -= gIndentSizeList;
   }
@@ -756,12 +850,21 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     --mOLStackIndex;
     mIndent -= gIndentSizeList;
   }
+  else if (type == eHTMLTag_dd)
+  {
+    mIndent -= gIndentSizeDD;
+  }
   else if (type == eHTMLTag_blockquote)
   {
     FlushLine();
-    if (mCiteQuoteLevel>0)
+    nsString value;
+    nsresult rv = GetValueOfAttribute(aNode, "type", value);
+    if ( NS_SUCCEEDED(rv) )
+      value.StripChars("\"");
+
+    if (NS_SUCCEEDED(rv)  && value.EqualsWithConversion("cite", PR_TRUE))
       mCiteQuoteLevel--;
-    else if(mIndent >= gTabSize)
+    else
       mIndent -= gTabSize;
   }
   else if (type == eHTMLTag_a && !IsConverted(aNode) && !mURL.IsEmpty())
@@ -772,13 +875,20 @@ nsHTMLToTXTSinkStream::CloseContainer(const nsIParserNode& aNode)
     Write(temp);
     mURL.Truncate();
   }
-  else if ((type== eHTMLTag_sup || type== eHTMLTag_sub) && !IsConverted(aNode))
+  else if (type == eHTMLTag_q)
+    Write(NS_ConvertASCIItoUCS2("\""));
+  else if ((type == eHTMLTag_sup || type == eHTMLTag_sub)
+           && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2(" "));
-  else if ((type== eHTMLTag_strong || type==eHTMLTag_b) && !IsConverted(aNode))
+  else if (type == eHTMLTag_code && mStructs && !IsConverted(aNode))
+    Write(NS_ConvertASCIItoUCS2("|"));
+  else if ((type == eHTMLTag_strong || type == eHTMLTag_b)
+           && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("*"));
-  else if ((type == eHTMLTag_em || type == eHTMLTag_i) && !IsConverted(aNode))
+  else if ((type == eHTMLTag_em || type == eHTMLTag_i)
+           && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("/"));
-  else if (type == eHTMLTag_u && !IsConverted(aNode))
+  else if (type == eHTMLTag_u && mStructs && !IsConverted(aNode))
     Write(NS_ConvertASCIItoUCS2("_"));
 
   return NS_OK;
@@ -887,6 +997,7 @@ nsHTMLToTXTSinkStream::AddLeaf(const nsIParserNode& aNode)
     EnsureVerticalSpace(0);
 
     // Make a line of dashes as wide as the wrap width
+    // XXX honoring percentage would be nice
     nsAutoString line;
     PRUint32 width = (mWrapColumn > 0 ? mWrapColumn : 25);
     while (line.Length() < width)
@@ -1483,20 +1594,23 @@ PRBool IsInline(eHTMLTags aTag)
   {
     case  eHTMLTag_a:
     case  eHTMLTag_address:
+    case  eHTMLTag_b:
     case  eHTMLTag_big:
     case  eHTMLTag_blink:
-    case  eHTMLTag_b:
     case  eHTMLTag_br:
     case  eHTMLTag_cite:
     case  eHTMLTag_code:
     case  eHTMLTag_dfn:
+    case  eHTMLTag_del:
     case  eHTMLTag_em:
     case  eHTMLTag_font:
-    case  eHTMLTag_img:
     case  eHTMLTag_i:
+    case  eHTMLTag_img:
+    case  eHTMLTag_ins:
     case  eHTMLTag_kbd:
     case  eHTMLTag_keygen:
     case  eHTMLTag_nobr:
+    case  eHTMLTag_q:
     case  eHTMLTag_samp:
     case  eHTMLTag_small:
     case  eHTMLTag_spacer:
@@ -1507,6 +1621,7 @@ PRBool IsInline(eHTMLTags aTag)
     case  eHTMLTag_sup:
     case  eHTMLTag_td:
     case  eHTMLTag_textarea:
+    case  eHTMLTag_th:
     case  eHTMLTag_tt:
     case  eHTMLTag_u:
     case  eHTMLTag_var:
@@ -1523,6 +1638,36 @@ PRBool IsInline(eHTMLTags aTag)
 PRBool IsBlockLevel(eHTMLTags aTag) 
 {
   return !IsInline(aTag);
+  /* XXX Note: We output linebreaks for blocks.
+     I.e. we output linebreaks for "unknown" inline tags.
+     I just hunted such a bug for <q>, same for <ins>, <col> etc..
+     Better fallback to inline. /BenB */
+}
+
+/*
+  @return 0 = no header, 1 = h1, ..., 6 = h6
+*/
+PRInt32 HeaderLevel(eHTMLTags aTag)
+{
+  PRInt32 result;
+  switch (aTag)
+  {
+    case eHTMLTag_h1:
+      result = 1; break;
+    case eHTMLTag_h2:
+      result = 2; break;
+    case eHTMLTag_h3:
+      result = 3; break;
+    case eHTMLTag_h4:
+      result = 4; break;
+    case eHTMLTag_h5:
+      result = 5; break;
+    case eHTMLTag_h6:
+      result = 6; break;
+    default:
+      result = 0; break;
+  }
+  return result;
 }
 
 PRBool nsHTMLToTXTSinkStream::MayWrap()
