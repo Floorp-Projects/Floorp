@@ -20,6 +20,7 @@
  *
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
 /* 
@@ -59,6 +60,8 @@ static PRUint32 xtolong(unsigned char *ll);
 /*---------------------------------------------
  * C API wrapper for nsZipArchive
  *--------------------------------------------*/
+
+#ifdef STANDALONE
 
 /**
  * ZIP_OpenArchive
@@ -175,7 +178,7 @@ PR_PUBLIC_API(void*) ZIP_FindInit( void* hZip, const char * pattern )
 
 
 /**
- * ZIP_FindInit
+ * ZIP_FindNext
  *
  * Puts the next name in the passed buffer. Returns ZIP_ERR_SMALLBUF when
  * the name is too large for the buffer, and ZIP_ERR_FNF when there are no 
@@ -187,6 +190,8 @@ PR_PUBLIC_API(void*) ZIP_FindInit( void* hZip, const char * pattern )
  */
 PR_PUBLIC_API(PRInt32) ZIP_FindNext( void* hFind, char * outbuf, PRUint16 bufsize )
 {
+  PRInt32 status;
+
   /*--- error check args ---*/
   if ( hFind == 0 )
     return ZIP_ERR_PARAM;
@@ -196,7 +201,19 @@ PR_PUBLIC_API(PRInt32) ZIP_FindNext( void* hFind, char * outbuf, PRUint16 bufsiz
     return ZIP_ERR_PARAM;   /* whatever it is isn't one of ours! */
 
   /*--- return next filename file ---*/
-  return find->mArchive->FindNext( find, outbuf, bufsize );
+  nsZipItem* item;
+  status = find->mArchive->FindNext( find, &item );
+  if ( status == ZIP_OK )
+  {
+    if ( bufsize > item->namelen ) 
+    {
+        PL_strcpy( outbuf, item->name );
+    }
+    else
+        status = ZIP_ERR_SMALLBUF;
+  }
+
+  return status;
 }
 
 
@@ -221,6 +238,8 @@ PR_PUBLIC_API(PRInt32) ZIP_FindFree( void* hFind )
   /* free the find structure */
   return find->mArchive->FindFree( find );
 }
+
+#endif /* STANDALONE */
 
 
 
@@ -329,14 +348,14 @@ nsZipFind* nsZipArchive::FindInit( const char * aPattern )
 //---------------------------------------------
 // nsZipArchive::FindNext
 //---------------------------------------------
-PRInt32 nsZipArchive::FindNext( nsZipFind* aFind, char * aBuf, PRUint16 aSize )
+PRInt32 nsZipArchive::FindNext( nsZipFind* aFind, nsZipItem** aResult)
 {
   PRInt32    status;
   PRBool     found  = PR_FALSE;
   PRUint16   slot   = aFind->mSlot;
   nsZipItem* item   = aFind->mItem;
 
-  if ( aFind->mArchive != this || aBuf == 0 )
+  if ( aFind->mArchive != this )
     return ZIP_ERR_PARAM;
 
   // we start from last match, look for next
@@ -362,24 +381,13 @@ PRInt32 nsZipArchive::FindNext( nsZipFind* aFind, char * aBuf, PRUint16 aSize )
 
   if ( found ) 
   {
-    if ( aSize > item->namelen ) 
-    {
-      PL_strcpy( aBuf, item->name );
+      *aResult = item;
+      aFind->mSlot = slot;
+      aFind->mItem = item;
       status = ZIP_OK;
-    }
-    else
-      status = ZIP_ERR_SMALLBUF;
   }
   else
     status = ZIP_ERR_FNF;
-
-  // save state for next Find. For 'smallbuf' we give user another chance
-  // to find this same match.
-  if ( status != ZIP_ERR_SMALLBUF ) 
-  {
-    aFind->mSlot = slot;
-    aFind->mItem = item;
-  }
 
   return status;
 }
@@ -397,7 +405,6 @@ PRInt32 nsZipArchive::FindFree( nsZipFind* aFind )
   delete aFind;
   return ZIP_OK;
 }
-
 
 
 
@@ -541,13 +548,7 @@ PRInt32 nsZipArchive::CopyItemToDisk( const nsZipItem* aItem, const char* aOutna
     return ZIP_ERR_MEMORY;
 
   //-- find start of file in archive
-#ifndef STANDALONE 
   if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != (PRInt32)aItem->offset )
-#else
-    // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
-    // if successfull, otherwise a non-zero.
-  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != 0 )
-#endif
   {
     status = ZIP_ERR_CORRUPT;
     goto cleanup;
@@ -655,13 +656,7 @@ PRInt32 nsZipArchive::InflateItemToDisk( const nsZipItem* aItem, const char* aOu
   }
 
   //-- find start of file in archive
-#ifndef STANDALONE 
   if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != (PRInt32)aItem->offset )
-#else
-    // For standalone, PR_Seek() is stubbed with fseek(), which returns 0
-    // if successfull, otherwise a non-zero.
-  if ( PR_Seek( mFd, aItem->offset, PR_SEEK_SET ) != 0 )
-#endif
   {
     status = ZIP_ERR_CORRUPT;
     goto cleanup;
@@ -839,6 +834,17 @@ nsZipFind::~nsZipFind()
     PL_strfree( mPattern );
 }
 
+//------------------------------------------
+// nsZipFind::GetArchive
+//------------------------------------------
+nsZipArchive* nsZipFind::GetArchive()
+{
+    if (!mArchive)
+        return NULL;
+
+    return mArchive;
+}
+
 
 
 
@@ -876,3 +882,5 @@ static PRUint32 xtolong (unsigned char *ll)
 
   return ret;
 }
+
+

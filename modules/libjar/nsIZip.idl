@@ -1,5 +1,5 @@
-/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
-/*
+/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "License"); you may not use this file except in
  * compliance with the License.  You may obtain a copy of the License at
@@ -21,30 +21,29 @@
  * Contributors:
  *     Daniel Veditz <dveditz@netscape.com>
  *     Don Bragg <dbragg@netscape.com>
+ *     Samir Gehani <sgehani@netscape.com>
  */
 
+#include "nsISupports.idl"
+#include "nsIEnumerator.idl"
 
-#ifndef nsIZip_h__
-#define nsIZip_h__
-
-#include "nsZipIIDs.h"
-#include "nsISupports.h"
-#include "nsISupportsUtils.h"
+%{C++
 #include "nsIFactory.h"
 
-#include "nsZipArchive.h"
+#define NS_ZIP_CID \
+{ /* CEB5BDB2-121D-11d3-BCFB-00805F0E1353*/  \
+    0xCEB5BDB2,                              \
+    0x121D,                                  \
+    0x11d3,                                  \
+    {0xBC, 0xFB, 0x00, 0x80, 0x5F, 0x0E, 0x13, 0x53} \
+};
+%}
 
-
-class nsIZip : public nsISupports 
+[uuid(CEB5BDB1-121D-11d3-BCFB-00805F0E1353)]
+interface nsIZip : nsISupports
 {
-  public:
-    NS_DEFINE_STATIC_IID_ACCESSOR( NS_IZip_IID );
-
-    NS_IMETHOD Open(const char * zipFileName, PRInt32 *result)=0;
-   
-    NS_IMETHOD Extract(const char * aFilename,const char * aOutname, PRInt32 *result)=0;
-   
-    NS_IMETHOD Find( const char * aPattern, nsZipFind *aResult )=0;
+	PRInt32 Open(in string aZipFileName);
+	PRInt32 Extract(in string aFilename, in string aOutname);
+	nsISimpleEnumerator Find(in string aPattern);
 };
 
-#endif // nsIZip_h__
