@@ -612,12 +612,12 @@ nsFrame::Paint(nsIPresContext*      aPresContext,
     return result;
 
   PRInt16 displaySelection = nsISelectionDisplay::DISPLAY_ALL;
-  if (aFlags != nsISelectionDisplay::DISPLAY_IMAGES)
+  if (!(aFlags & nsISelectionDisplay::DISPLAY_IMAGES))
   {
     result = shell->GetSelectionFlags(&displaySelection);
     if (NS_FAILED(result))
       return result;
-    if (!(displaySelection == nsISelectionDisplay::DISPLAY_FRAMES))
+    if (!(displaySelection &= nsISelectionDisplay::DISPLAY_FRAMES))
       return NS_OK;
   }
 

@@ -1199,7 +1199,7 @@ protected:
   
   nsCOMPtr<nsIFrameSelection>   mSelection;
   nsCOMPtr<nsICaret>            mCaret;
-  PRPackedBool                  mDisplayNonTextSelection;
+  PRInt16                       mSelectionFlags;
   PRPackedBool                  mScrollingEnabled; //used to disable programmable scrolling from outside
   PRPackedBool                  mPendingReflowEvent;
   PRPackedBool                  mBatchReflows;  // When set to true, the pres shell batches reflow commands.  
@@ -1452,6 +1452,7 @@ PresShell::PresShell():
   if (! gLog)
     gLog = PR_NewLogModule("PresShell");
 #endif
+  mSelectionFlags = nsISelectionDisplay::DISPLAY_TEXT;
 }
 
 NS_IMPL_ADDREF(PresShell)
@@ -3059,7 +3060,7 @@ NS_IMETHODIMP PresShell::GetCaretEnabled(PRBool *aOutEnabled)
 
 NS_IMETHODIMP PresShell::SetSelectionFlags(PRInt16 aInEnable)
 {
-  mDisplayNonTextSelection = aInEnable;
+  mSelectionFlags = aInEnable;
   return NS_OK;
 }
 
@@ -3067,7 +3068,7 @@ NS_IMETHODIMP PresShell::GetSelectionFlags(PRInt16 *aOutEnable)
 {
   if (!aOutEnable)
     return NS_ERROR_INVALID_ARG;
-  *aOutEnable = mDisplayNonTextSelection;
+  *aOutEnable = mSelectionFlags;
   return NS_OK;
 }
 
@@ -5842,7 +5843,7 @@ PresShell::HandleEvent(nsIView         *aView,
 
 /*  if (mSelection && aEvent->eventStructType == NS_KEY_EVENT)
   {//KEY HANDLERS WILL GET RID OF THIS 
-    if (mDisplayNonTextSelection && NS_SUCCEEDED(mSelection->HandleKeyEvent(mPresContext, aEvent)))
+    if (mSelectionFlags && NS_SUCCEEDED(mSelection->HandleKeyEvent(mPresContext, aEvent)))
     {  
       return NS_OK;
     }
