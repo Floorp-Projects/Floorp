@@ -21,6 +21,7 @@
 #include "xp_time.h"
 #include "prtime.h"
 #include "prtypes.h"
+#include "prsystem.h"
 #include "fe_proto.h"
 #include "msg.h"
 #include "msgfinfo.h"
