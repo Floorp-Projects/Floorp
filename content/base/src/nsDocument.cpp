@@ -636,9 +636,6 @@ nsDocument::Reset(nsIChannel* aChannel, nsILoadGroup* aLoadGroup)
       owner->QueryInterface(NS_GET_IID(nsIPrincipal), (void**)&mPrincipal);
   }
 
-  if (NS_SUCCEEDED(rv))
-    rv = NS_NewNameSpaceManager(&mNameSpaceManager);
-
   return rv;
 }
 
@@ -709,9 +706,8 @@ nsDocument::ResetToURI(nsIURI *aURI, nsILoadGroup *aLoadGroup)
     // nsWebShell::SetDocument does not create a load group, and it works just fine.
   }
 
-  if (NS_OK == rv) {
+  if (NS_OK == rv)
     rv = NS_NewNameSpaceManager(&mNameSpaceManager);
-  }
 
   return rv;
 }
