@@ -32,7 +32,7 @@
 
   <script language="JavaScript">
   <![CDATA[
-    _elementIDs = ["engineList","openSidebarPanel"];
+    var _elementIDs = ["engineList","openSidebarPanel"];
   ]]>
   </script> 
   <script language="JavaScript" src="chrome://communicator/content/pref/pref-search.js"></script>       
