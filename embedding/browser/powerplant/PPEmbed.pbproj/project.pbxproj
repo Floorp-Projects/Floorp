@@ -454,7 +454,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\n\nDIST_BIN=../../../dist/bin\nEXECUTABLES_DIR=\"${SYMROOT}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS\"\n\nif [ -n \"$PROFILESHARING\" ]; then\n  rsync -a -L $DIST_BIN/ipc \"$EXECUTABLES_DIR\" || exit 1\n  rsync -a -L $DIST_BIN/mozipcd \"$EXECUTABLES_DIR\" || exit 1\n  rsync -a -L $DIST_BIN/components/libipcdc.dylib \"$EXECUTABLES_DIR\"/components/ || exit 1\n  rsync -a -L $DIST_BIN/components/libtransmngr_client.dylib \"$EXECUTABLES_DIR\"/components/ || exit 1\nfi\n";
+			shellScript = "#!/bin/sh\n\nDIST_BIN=../../../dist/bin\nEXECUTABLES_DIR=\"${SYMROOT}/${PRODUCT_NAME}.${WRAPPER_EXTENSION}/Contents/MacOS\"\n\nif [ -n \"$PROFILESHARING\" ]; then\n  rsync -a -L $DIST_BIN/ipc \"$EXECUTABLES_DIR\" || exit 1\n  rsync -a -L $DIST_BIN/mozilla-ipcd \"$EXECUTABLES_DIR\" || exit 1\n  rsync -a -L $DIST_BIN/components/libipcdc.dylib \"$EXECUTABLES_DIR\"/components/ || exit 1\n  rsync -a -L $DIST_BIN/components/libtransmngr_client.dylib \"$EXECUTABLES_DIR\"/components/ || exit 1\nfi\n";
 		};
 		7964A6AC03E9CA6700202892 = {
 			buildActionMask = 2147483647;
