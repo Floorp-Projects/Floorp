@@ -28,17 +28,5 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= base text html build
 
-# Enable Editor API Logging!
-ENABLE_EDITOR_API_LOG=1
-
-ifdef ENABLE_EDITOR_API_LOG
-DEFINES += -DENABLE_EDITOR_API_LOG
-endif
-
 include $(topsrcdir)/config/rules.mk
 
-install::
-	@$(REGCHROME) content editor comm.jar
-	@$(REGCHROME) content editor-region comm.jar
-	@$(REGCHROME) locale en-US/editor en-US.jar
-	@$(REGCHROME) locale US/editor-region US.jar

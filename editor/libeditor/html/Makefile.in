@@ -26,7 +26,36 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= src
+MODULE		= editor
+LIBRARY_NAME	= htmleditor_s
+# REQUIRES	= xpcom string dom js locale layout uriloader widget txmgr htmlparser necko pref view appshell rdf webshell timer txtsvc intl lwbrk docshell chrome caps appcomps xuldoc
+
+# Building the full blown HTML Editor  so add it's source files and objects:
+
+CPPSRCS  = \
+           nsEditProperty.cpp             \
+           nsHTMLDataTransfer.cpp         \
+           nsHTMLEditor.cpp               \
+           nsHTMLEditorStyle.cpp          \
+           nsHTMLEditRules.cpp            \
+           nsHTMLEditUtils.cpp            \
+           nsTableEditor.cpp              \
+           nsWSRunObject.cpp              \
+           TypeInState.cpp                \
+           TextEditorTest.cpp             \
+           $(NULL)
+
+ifdef ENABLE_EDITOR_API_LOG
+CPPSRCS += nsHTMLEditorLog.cpp             \
+           nsEditorTxnLog.cpp              \
+           $(NULL)
+
+DEFINES += -DENABLE_EDITOR_API_LOG
+endif
+
+# don't want the shared lib; force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+INCLUDES        += -I../base -I../text

@@ -21,7 +21,58 @@
 
 DEPTH=..\..\..
 
-DIRS= public src
+LIBRARY_NAME=libtexteditor_s
+
+CPPSRCS =                             \
+          nsAOLCiter.cpp              \
+          nsEditorEventListeners.cpp  \
+          nsInternetCiter.cpp         \
+          nsPlaintextDataTransfer.cpp \
+          nsPlaintextEditor.cpp       \
+          nsTextEditRules.cpp         \
+          nsTextEditRulesBidi.cpp     \
+          nsTextEditUtils.cpp         \
+          nsWrapUtils.cpp             \
+          $(NULL)
+
+CPP_OBJS =                                         \
+           .\$(OBJDIR)\nsAOLCiter.obj              \
+           .\$(OBJDIR)\nsEditorEventListeners.obj  \
+           .\$(OBJDIR)\nsInternetCiter.obj         \
+           .\$(OBJDIR)\nsPlaintextDataTransfer.obj \
+           .\$(OBJDIR)\nsPlaintextEditor.obj       \
+           .\$(OBJDIR)\nsTextEditRules.obj         \
+           .\$(OBJDIR)\nsTextEditRulesBidi.obj     \
+           .\$(OBJDIR)\nsTextEditUtils.obj         \
+           .\$(OBJDIR)\nsWrapUtils.obj             \
+           $(NULL)
+
+MODULE=editor 
+
+LINCS =                   \
+        -I..\base         \
+        $(NULL)
+
+LCFLAGS =            \
+          $(LCFLAGS) \
+          $(DEFINES) \
+          $(NULL)
+
+# These are the libraries we need to link with to create the dll
+# LLIBS =                                \
+#         $(DIST)\lib\xpcom.lib          \
+#         $(DIST)\lib\js3250.lib         \
+#         $(DIST)\lib\gkparser.lib       \
+#         $(DIST)\lib\raptorwidget_s.lib \
+#         $(DIST)\lib\timer_s.lib        \
+#         $(LIBNSPR)                     \
+#         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(PDBFILE).pdb

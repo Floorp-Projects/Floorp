@@ -21,7 +21,80 @@
 
 DEPTH=..\..\..
 
-DIRS= public src
+LIBRARY_NAME=libbaseeditor_s
+
+CPPSRCS =                          \
+          ChangeAttributeTxn.cpp   \
+          CreateElementTxn.cpp     \
+          DeleteElementTxn.cpp     \
+          DeleteRangeTxn.cpp       \
+          DeleteTextTxn.cpp        \
+          EditAggregateTxn.cpp     \
+          EditTxn.cpp              \
+          IMETextTxn.cpp           \
+          InsertElementTxn.cpp     \
+          InsertTextTxn.cpp        \
+          JoinElementTxn.cpp       \
+          PlaceholderTxn.cpp       \
+          SetDocTitleTxn.cpp       \
+          SplitElementTxn.cpp      \
+          TransactionFactory.cpp   \
+          nsEditor.cpp             \
+          nsEditorCommands.cpp     \
+          nsEditorController.cpp   \
+          nsEditorService.cpp      \
+          nsEditorUtils.cpp        \
+          nsSelectionState.cpp     \
+          nsStyleSheetTxns.cpp     \
+          $(NULL)
+
+CPP_OBJS =                                      \
+           .\$(OBJDIR)\ChangeAttributeTxn.obj   \
+           .\$(OBJDIR)\CreateElementTxn.obj     \
+           .\$(OBJDIR)\DeleteElementTxn.obj     \
+           .\$(OBJDIR)\DeleteRangeTxn.obj       \
+           .\$(OBJDIR)\DeleteTextTxn.obj        \
+           .\$(OBJDIR)\EditAggregateTxn.obj     \
+           .\$(OBJDIR)\EditTxn.obj              \
+           .\$(OBJDIR)\IMETextTxn.obj           \
+           .\$(OBJDIR)\InsertElementTxn.obj     \
+           .\$(OBJDIR)\InsertTextTxn.obj        \
+           .\$(OBJDIR)\JoinElementTxn.obj       \
+           .\$(OBJDIR)\PlaceholderTxn.obj       \
+           .\$(OBJDIR)\SetDocTitleTxn.obj       \
+           .\$(OBJDIR)\SplitElementTxn.obj      \
+           .\$(OBJDIR)\TransactionFactory.obj   \
+           .\$(OBJDIR)\nsEditor.obj             \
+           .\$(OBJDIR)\nsEditorCommands.obj     \
+           .\$(OBJDIR)\nsEditorController.obj   \
+           .\$(OBJDIR)\nsEditorService.obj      \
+           .\$(OBJDIR)\nsEditorUtils.obj        \
+           .\$(OBJDIR)\nsSelectionState.obj     \
+           .\$(OBJDIR)\nsStyleSheetTxns.obj     \
+           $(NULL)
+
+MODULE=editor 
+
+LCFLAGS =            \
+          $(LCFLAGS) \
+          $(DEFINES) \
+          $(NULL)
+
+# These are the libraries we need to link with to create the dll
+# LLIBS =                                \
+#         $(DIST)\lib\xpcom.lib          \
+#         $(DIST)\lib\js3250.lib         \
+#         $(DIST)\lib\gkparser.lib       \
+#         $(DIST)\lib\raptorwidget_s.lib \
+#         $(DIST)\lib\timer_s.lib        \
+#         $(LIBNSPR)                     \
+#         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(PDBFILE).pdb

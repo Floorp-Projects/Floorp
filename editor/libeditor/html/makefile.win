@@ -21,7 +21,85 @@
 
 DEPTH=..\..\..
 
-DIRS= public src
+LIBRARY_NAME=libhtmleditor_s
+
+CPPSRCS =                        \
+          TypeInState.cpp        \
+          nsEditProperty.cpp     \
+          nsHTMLDataTransfer.cpp \
+          nsHTMLEditRules.cpp    \
+          nsHTMLEditUtils.cpp    \
+          nsHTMLEditor.cpp       \
+          nsHTMLEditorStyle.cpp  \
+          nsHTMLURIRefObject.cpp \
+          nsTableEditor.cpp      \
+          nsWSRunObject.cpp      \
+          TextEditorTest.cpp     \
+          $(NULL)
+
+CPP_OBJS =                                    \
+           .\$(OBJDIR)\TypeInState.obj        \
+           .\$(OBJDIR)\nsEditProperty.obj     \
+           .\$(OBJDIR)\nsHTMLDataTransfer.obj \
+           .\$(OBJDIR)\nsHTMLEditRules.obj    \
+           .\$(OBJDIR)\nsHTMLEditUtils.obj    \
+           .\$(OBJDIR)\nsHTMLEditor.obj       \
+           .\$(OBJDIR)\nsHTMLEditorStyle.obj  \
+           .\$(OBJDIR)\nsHTMLURIRefObject.obj \
+           .\$(OBJDIR)\nsTableEditor.obj      \
+           .\$(OBJDIR)\nsWSRunObject.obj      \
+           .\$(OBJDIR)\TextEditorTest.obj     \
+           $(NULL)
+
+
+# Enable Editor API Logging!
+ENABLE_EDITOR_API_LOG=1
+
+!if defined(ENABLE_EDITOR_API_LOG)
+
+CPPSRCS =                     \
+          $(CPPSRCS)          \
+          nsEditorTxnLog.cpp  \
+          nsHTMLEditorLog.cpp \
+          $(NULL)
+
+CPP_OBJS =                                 \
+           $(CPP_OBJS)                     \
+           .\$(OBJDIR)\nsEditorTxnLog.obj  \
+           .\$(OBJDIR)\nsHTMLEditorLog.obj \
+           $(NULL)
+
+DEFINES = -DENABLE_EDITOR_API_LOG $(DEFINES)
+
+!endif
+
+MODULE=editor 
+
+LINCS =             \
+        -I..\base   \
+        -I..\text   \
+        $(NULL)
+
+LCFLAGS =            \
+          $(LCFLAGS) \
+          $(DEFINES) \
+          $(NULL)
+
+# These are the libraries we need to link with to create the dll
+# LLIBS =                                \
+#         $(DIST)\lib\xpcom.lib          \
+#         $(DIST)\lib\js3250.lib         \
+#         $(DIST)\lib\gkparser.lib       \
+#         $(DIST)\lib\raptorwidget_s.lib \
+#         $(DIST)\lib\timer_s.lib        \
+#         $(LIBNSPR)                     \
+#         $(NULL)
 
 include <$(DEPTH)\config\rules.mak>
 
+install:: $(LIBRARY)
+	$(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(PDBFILE).pdb
