@@ -609,31 +609,39 @@ namespace ICodeASM {
 
         string *str;
         begin = ParseAlpha (tl.begin, end, &str);
-
+        
         if (cmp_nocase(*string, keyword_offset, keyword_offset +
                        strlen(keyword_offset) + 1) == 0) {
-            /* label expressed as "Offset +/-N" */
+            /* got the "Offset" keyword, treat next thing as a jump offset
+             * expressed as "Offset +/-N" */
             tl = SeekTokenStart (begin, end);
 
             if ((tl.estimate != teNumeric) && (tl.estimate != teMinus) &&
                 (tl.estimate != tePlus)) 
                 throw new ICodeParseException ("Expected numeric value after Offset keyword.");
-
-            begin = ParseInt32 (tl.begin, end, &(o->asInt32));
-            return begin;
+            int32 ofs;
+            begin = ParseInt32 (tl.begin, end, &ofs);
+            Label *l = new VM::Label(0);
+            l->mOffset = mStatementNodes.size() + ofs - 1;
+            mUnnamedLabels.push_back (l);
+            o->asLabel = l;
         } else {
-            /* label expressed as "label_name" */
-            LabelMap::const_iterator l = mLabels.find(str->c_string());
-            if (l == mLabels.end())
-            {
-                /* if we can't find the label, mark it as a fixup for later */
-                o->asString = str;
-                mFixupNodes.push_back (mStatementNodes.back());
-                return begin;
-            }
-            /* XXX continue here... */
+            /* label expressed as "label_name", look for it in the
+             * namedlabels map */
+            LabelMap::const_iterator l = mLabels.find(str->c_str());
+            if (l != mLabels.end()) {
+                /* found the label, use it */
+                o->asLabel = *l;
+            } else {
+                /* havn't seen the label definition yet, put a placeholder
+                 * in the namedlabels map */
+                VM::Label *new_label = new VM::Label(0);
+                new_label->mOffset = VM::NotALabel;
+                o->asLabel = new_label;
+                mNamedLabels[str] = new_label;
+            }       
         }
-        
+        return begin;
     }
 
     iter

@@ -87,12 +87,13 @@ namespace ICodeASM {
         double asDouble;
         uint32 asUInt32;
         int32 asInt32;
-        VM::Register asRegister;
         bool asBoolean;
-        VM::ArgumentList *asArgumentList;
         string *asString;
+        VM::Register asRegister;
+        VM::Label *asLabel;
+        VM::ArgumentList *asArgumentList;
     };
-        
+    
     struct StatementNode {
         iter pos;
         uint icodeID;
@@ -104,14 +105,15 @@ namespace ICodeASM {
     private:
         uint mMaxRegister;
         std::vector<StatementNode *> mStatementNodes;
-        std::vector<StatementNode *> mFixupNodes;
-        typedef std::map<const char *, StatementNode **> LabelMap;
-        LabelMap mLabels;
+        VM::LabelList mUnnamedLabels;
+        typedef std::map<const char *, VM::Label*> LabelMap;
+        LabelMap mNamedLabels;
 
     public:
         void ParseSourceFromString (const string source);
 
-        /* locate the beginning of the next token, and guess what it might be */
+        /* locate the beginning of the next token and take a guess at what it
+         * might be */
         TokenLocation SeekTokenStart (iter begin, iter end);
 
         /* general purpose parse functions; |begin| is expected to point
