@@ -21,6 +21,7 @@
 #define IDC_PATCH                       1008
 #define IDC_FILEPATTERN                 1009
 #define IDC_SELECTFILE                  1011
+#define IDC_SELECTFOLDER                1012
 
 // Next default values for new objects
 // 
