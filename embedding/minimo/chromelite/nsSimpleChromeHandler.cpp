@@ -54,16 +54,63 @@
 #include "nsURLHelper.h"
 #include "nsStandardURL.h"
 
-class nsSimpleChromeURL : public nsStandardURL
+class nsSimpleChromeURL : public nsIFileURL
 {
 public:
-    nsSimpleChromeURL(nsIFile* file) : nsStandardURL(PR_TRUE), mChromeDir(file)
-    {
-    }
-    NS_IMETHOD GetFile(nsIFile **);
+    nsSimpleChromeURL(nsIFile* file);
+
+    nsresult Init(PRUint32 urlType,
+		  PRInt32 defaultPort,
+		  const nsACString &spec,
+		  const char *charset,
+		  nsIURI *baseURI);
+    
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIFILEURL
+    NS_FORWARD_SAFE_NSIURI(mStandardURL)
+    NS_FORWARD_SAFE_NSIURL(mStandardURL)
+
 private:
     nsCOMPtr<nsIFile> mChromeDir;
+    nsCOMPtr<nsIURL>  mStandardURL;
 };
+
+nsSimpleChromeURL::nsSimpleChromeURL(nsIFile *file) : mChromeDir(file)
+{
+}
+
+nsresult
+nsSimpleChromeURL::Init(PRUint32 urlType,
+                    PRInt32 defaultPort,
+                    const nsACString &spec,
+                    const char *charset,
+                    nsIURI *baseURI)
+
+{
+  nsresult rv;
+  static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);    
+  mStandardURL = do_CreateInstance(kStandardURLCID, &rv);
+  NS_ASSERTION(mStandardURL, "Could not create a Standard URL");
+  
+  if (NS_FAILED(rv)) return rv;
+
+  nsCOMPtr<nsIStandardURL> surl = do_QueryInterface(mStandardURL);
+  return surl->Init(urlType, defaultPort, spec, charset, baseURI);
+}
+
+NS_IMPL_ADDREF(nsSimpleChromeURL)
+NS_IMPL_RELEASE(nsSimpleChromeURL)
+
+  // DO we need to implements a QI for equals?
+NS_INTERFACE_MAP_BEGIN(nsSimpleChromeURL)
+    NS_INTERFACE_MAP_ENTRY(nsIURI)
+    NS_INTERFACE_MAP_ENTRY(nsIURL)
+    NS_INTERFACE_MAP_ENTRY_CONDITIONAL(nsIFileURL, mChromeDir)
+NS_INTERFACE_MAP_END
+
+
+NS_IMETHODIMP 
+nsSimpleChromeURL::SetFile(nsIFile * aFile) { return NS_ERROR_FAILURE; } 
 
 NS_IMETHODIMP
 nsSimpleChromeURL::GetFile(nsIFile **result)
