@@ -161,16 +161,27 @@ protected:
   void UpdateCursor(nsPresContext* aPresContext, nsEvent* aEvent, nsIFrame* aTargetFrame, nsEventStatus* aStatus);
   /**
    * Turn a GUI mouse event into a mouse event targeted at the specified
-   * content and frame.  This will fix the frame if it goes away during the
-   * event, as well.
+   * content.  This returns the primary frame for the content (or null
+   * if it goes away during the event).
    */
-  void DispatchMouseEvent(nsPresContext* aPresContext,
-                          nsGUIEvent* aEvent, PRUint32 aMessage,
-                          nsIContent* aTargetContent,
-                          nsIFrame*& aTargetFrame,
-                          nsIContent* aRelatedContent);
-  void MaybeDispatchMouseEventToIframe(nsPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage);
-  void GenerateMouseEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
+  nsIFrame* DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
+                               nsIContent* aTargetContent,
+                               nsIContent* aRelatedContent);
+  /**
+   * Synthesize DOM and frame mouseover and mouseout events from this
+   * MOUSE_MOVE or MOUSE_EXIT event.
+   */
+  void GenerateMouseEnterExit(nsGUIEvent* aEvent);
+  /**
+   * Tell this ESM and ESMs in parent documents that the mouse is
+   * over some content in this document.
+   */
+  void NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent);
+  /**
+   * Tell this ESM and ESMs in affected child documents that the mouse
+   * has exited this document's currently hovered content.
+   */
+  void NotifyMouseOut(nsGUIEvent* aEvent);
   void GenerateDragDropEnterExit(nsPresContext* aPresContext, nsGUIEvent* aEvent);
   nsresult SetClickCount(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
   nsresult CheckForAndDispatchClick(nsPresContext* aPresContext, nsMouseEvent *aEvent, nsEventStatus* aStatus);
@@ -286,9 +297,16 @@ protected:
   nsCOMPtr<nsIContent> mLastContentFocus;
 
   //Anti-recursive stack controls
+
   nsCOMPtr<nsIContent> mFirstBlurEvent;
   nsCOMPtr<nsIContent> mFirstFocusEvent;
+
+  // The last element on which we fired a mouseover event, or null if
+  // the last mouseover event we fired has finished processing.
   nsCOMPtr<nsIContent> mFirstMouseOverEventElement;
+
+  // The last element on which we fired a mouseout event, or null if
+  // the last mouseout event we fired has finished processing.
   nsCOMPtr<nsIContent> mFirstMouseOutEventElement;
 
   nsPresContext* mPresContext;      // Not refcnted

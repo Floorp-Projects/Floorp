@@ -111,6 +111,7 @@
 #include "nsILookAndFeel.h"
 #include "nsWidgetsCID.h"
 
+#include "nsIFrameFrame.h"
 #include "nsIFrameTraversal.h"
 #include "nsLayoutAtoms.h"
 #include "nsLayoutCID.h"
@@ -471,7 +472,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
       aEvent->message = NS_MOUSE_MOVE;
       // then fall through...
     } else {
-      GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
+      GenerateMouseEnterExit((nsGUIEvent*)aEvent);
       //This is a window level mouse exit event and should stop here
       aEvent->message = 0;
       break;
@@ -496,7 +497,7 @@ nsEventStateManager::PreHandleEvent(nsPresContext* aPresContext,
     // into UpdateCursor().
     GenerateDragGesture(aPresContext, (nsGUIEvent*)aEvent);
     UpdateCursor(aPresContext, aEvent, mCurrentTarget, aStatus);
-    GenerateMouseEnterExit(aPresContext, (nsGUIEvent*)aEvent);
+    GenerateMouseEnterExit((nsGUIEvent*)aEvent);
     break;
 #ifdef CLICK_HOLD_CONTEXT_MENUS
   case NS_DRAGDROP_GESTURE:
@@ -2517,11 +2518,9 @@ nsEventStateManager::AfterDispatchEvent()
   }
 }
 
-void
-nsEventStateManager::DispatchMouseEvent(nsPresContext* aPresContext,
-                                        nsGUIEvent* aEvent, PRUint32 aMessage,
+nsIFrame*
+nsEventStateManager::DispatchMouseEvent(nsGUIEvent* aEvent, PRUint32 aMessage,
                                         nsIContent* aTargetContent,
-                                        nsIFrame*& aTargetFrame,
                                         nsIContent* aRelatedContent)
 {
   nsEventStatus status = nsEventStatus_eIgnore;
@@ -2540,70 +2539,133 @@ nsEventStateManager::DispatchMouseEvent(nsPresContext* aPresContext,
   mCurrentRelatedContent = aRelatedContent;
 
   BeforeDispatchEvent();
+  nsIFrame* targetFrame = nsnull;
   if (aTargetContent) {
-    aTargetContent->HandleDOMEvent(aPresContext, &event, nsnull,
+    aTargetContent->HandleDOMEvent(mPresContext, &event, nsnull,
                                    NS_EVENT_FLAG_INIT, &status);
-    // If frame refs were cleared, we need to re-resolve the frame
-    if (mClearedFrameRefsDuringEvent) {
-      nsIPresShell *shell = aPresContext->GetPresShell();
-      if (shell) {
-        shell->GetPrimaryFrameFor(aTargetContent, &aTargetFrame);
-      } else {
-        aTargetFrame = nsnull;
-      }
+
+    nsIPresShell *shell = mPresContext->GetPresShell();
+    if (shell) {
+      shell->GetPrimaryFrameFor(aTargetContent, &targetFrame);
     }
   }
-  if (aTargetFrame) {
-    aTargetFrame->HandleEvent(aPresContext, &event, &status);
+  if (targetFrame) {
+    targetFrame->HandleEvent(mPresContext, &event, &status);
+    SetFrameExternalReference(targetFrame);
   }
   AfterDispatchEvent();
 
   mCurrentTargetContent = nsnull;
   mCurrentRelatedContent = nsnull;
+
+  return targetFrame;
 }
 
 void
-nsEventStateManager::MaybeDispatchMouseEventToIframe(
-    nsPresContext* aPresContext, nsGUIEvent* aEvent, PRUint32 aMessage)
+nsEventStateManager::NotifyMouseOut(nsGUIEvent* aEvent)
 {
-  // Check to see if we're an IFRAME and if so dispatch the given event
-  // (mouseover / mouseout) to the IFRAME element above us.  This will result
-  // in over-out-over combo to the IFRAME but as long as IFRAMEs are native
-  // windows this will serve as a workaround to maintain IFRAME mouseover state.
-  // If this is the first event in this window then mDocument might not be set
-  // yet.  Call EnsureDocument to set it.
-  EnsureDocument(aPresContext);
-  nsIDocument *parentDoc = mDocument->GetParentDocument();
-  if (parentDoc) {
-    nsIContent *docContent = parentDoc->FindContentForSubDocument(mDocument);
-    if (docContent) {
-      if (docContent->Tag() == nsHTMLAtoms::iframe) {
-        // We're an IFRAME.  Send an event to our IFRAME tag.
-        nsIPresShell *parentShell = parentDoc->GetShellAt(0);
-        if (parentShell) {
-          nsEventStatus status = nsEventStatus_eIgnore;
-          nsMouseEvent event(aMessage, aEvent->widget);
-          event.point = aEvent->point;
-          event.refPoint = aEvent->refPoint;
-          event.isShift = ((nsMouseEvent*)aEvent)->isShift;
-          event.isControl = ((nsMouseEvent*)aEvent)->isControl;
-          event.isAlt = ((nsMouseEvent*)aEvent)->isAlt;
-          event.isMeta = ((nsMouseEvent*)aEvent)->isMeta;
-          event.nativeMsg = ((nsMouseEvent*)aEvent)->nativeMsg;
-          event.internalAppFlags |=
-            aEvent->internalAppFlags & NS_APP_EVENT_FLAG_TRUSTED;
+  if (!mLastMouseOverElement)
+    return;
+  // Before firing mouseout, check for recursion
+  if (mLastMouseOverElement == mFirstMouseOutEventElement)
+    return;
 
-          parentShell->HandleDOMEventWithTarget(docContent, &event, &status);
+  if (mLastMouseOverFrame) {
+    // if the frame is associated with a subdocument,
+    // tell the subdocument that we're moving out of it
+    nsIFrameFrame* subdocFrame;
+    CallQueryInterface(mLastMouseOverFrame, &subdocFrame);
+    if (subdocFrame) {
+      nsCOMPtr<nsIDocShell> docshell;
+      subdocFrame->GetDocShell(getter_AddRefs(docshell));
+      if (docshell) {
+        nsCOMPtr<nsPresContext> presContext;
+        docshell->GetPresContext(getter_AddRefs(presContext));
+        
+        if (presContext) {
+          nsEventStateManager* kidESM =
+            NS_STATIC_CAST(nsEventStateManager*, presContext->EventStateManager());
+          kidESM->NotifyMouseOut(aEvent);
         }
       }
     }
   }
+  // That could have caused DOM events which could wreak havoc. Reverify
+  // things and be careful.
+  if (!mLastMouseOverElement)
+    return;
+
+  // Store the first mouseOut event we fire and don't refire mouseOut
+  // to that element while the first mouseOut is still ongoing.
+  mFirstMouseOutEventElement = mLastMouseOverElement;
+  
+  // Unset :hover
+  SetContentState(nsnull, NS_EVENT_STATE_HOVER);
+  
+  // Fire mouseout
+  DispatchMouseEvent(aEvent, NS_MOUSE_EXIT_SYNTH,
+                     mLastMouseOverElement, nsnull);
+  
+  mLastMouseOverFrame = nsnull;
+  mLastMouseOverElement = nsnull;
+  
+  // Turn recursion protection back off
+  mFirstMouseOutEventElement = nsnull;
 }
 
+void
+nsEventStateManager::NotifyMouseOver(nsGUIEvent* aEvent, nsIContent* aContent)
+{
+  NS_ASSERTION(aContent, "Mouse must be over something");
+
+  if (mLastMouseOverElement == aContent)
+    return;
+
+  // Before firing mouseover, check for recursion
+  if (mLastMouseOverElement == mFirstMouseOverEventElement &&
+      mFirstMouseOverEventElement)
+    return;
+
+  // Check to see if we're a subdocument and if so update the parent
+  // document's ESM state to indicate that the mouse is over the
+  // content associated with our subdocument.
+  EnsureDocument(mPresContext);
+  nsIDocument *parentDoc = mDocument->GetParentDocument();
+  if (parentDoc) {
+    nsIContent *docContent = parentDoc->FindContentForSubDocument(mDocument);
+    if (docContent) {
+      nsIPresShell *parentShell = parentDoc->GetShellAt(0);
+      if (parentShell) {
+        nsEventStateManager* parentESM =
+          NS_STATIC_CAST(nsEventStateManager*, parentShell->GetPresContext()->EventStateManager());
+        parentESM->NotifyMouseOver(aEvent, docContent);
+      }
+    }
+  }
+  // Firing the DOM event in the parent document could cause all kinds of havoc.
+  // Reverify and take care.
+  if (mLastMouseOverElement == aContent)
+    return;
+
+  NotifyMouseOut(aEvent);
+
+  // Store the first mouseOver event we fire and don't refire mouseOver
+  // to that element while the first mouseOver is still ongoing.
+  mFirstMouseOverEventElement = aContent;
+  
+  SetContentState(aContent, NS_EVENT_STATE_HOVER);
+  
+  // Fire mouseover
+  mLastMouseOverFrame = DispatchMouseEvent(aEvent, NS_MOUSE_ENTER_SYNTH,
+                                           aContent, mLastMouseOverElement);
+  mLastMouseOverElement = aContent;
+  
+  // Turn recursion protection back off
+  mFirstMouseOverEventElement = nsnull;
+}
 
 void
-nsEventStateManager::GenerateMouseEnterExit(nsPresContext* aPresContext,
-                                            nsGUIEvent* aEvent)
+nsEventStateManager::GenerateMouseEnterExit(nsGUIEvent* aEvent)
 {
   // Hold onto old target content through the event and reset after.
   nsCOMPtr<nsIContent> targetBeforeEvent = mCurrentTargetContent;
@@ -2614,102 +2676,16 @@ nsEventStateManager::GenerateMouseEnterExit(nsPresContext* aPresContext,
       // Get the target content target (mousemove target == mouseover target)
       nsCOMPtr<nsIContent> targetElement;
       GetEventTargetContent(aEvent, getter_AddRefs(targetElement));
-      if (mLastMouseOverElement == targetElement) {
-        break;
-      }
-
-      // Before firing mouseout, check for recursion
-      // XXX is it wise to fire mouseover / mouseout when the target is null?
-      if (mLastMouseOverElement != mFirstMouseOutEventElement ||
-          !mFirstMouseOutEventElement) {
-
-        // Store the first mouseOut event we fire and don't refire mouseOut
-        // to that element while the first mouseOut is still ongoing.
-        mFirstMouseOutEventElement = mLastMouseOverElement;
-
-        if (mLastMouseOverFrame) {
-          DispatchMouseEvent(aPresContext, aEvent, NS_MOUSE_EXIT_SYNTH,
-                             mLastMouseOverElement, mLastMouseOverFrame,
-                             targetElement);
-          // frame may have changed during the call; make sure bit is set
-          if (mLastMouseOverFrame) {
-            SetFrameExternalReference(mLastMouseOverFrame);
-          }
-
-          // Turn off recursion protection
-          mFirstMouseOutEventElement = nsnull;
-        }
-        else {
-          // If there is no previous frame, we are entering this widget
-          MaybeDispatchMouseEventToIframe(aPresContext, aEvent,
-                                          NS_MOUSE_ENTER_SYNTH);
-        }
-      }
-
-      // Before firing mouseover, check for recursion
-      if (targetElement != mFirstMouseOverEventElement) {
-
-        // Store the first mouseOver event we fire and don't refire mouseOver
-        // to that element while the first mouseOver is still ongoing.
-        mFirstMouseOverEventElement = targetElement;
-
-        if (targetElement) {
-          SetContentState(targetElement, NS_EVENT_STATE_HOVER);
-        }
-
-        // Fire mouseover
-        nsIFrame* targetFrame = nsnull;
-        GetEventTarget(&targetFrame);
-        DispatchMouseEvent(aPresContext, aEvent, NS_MOUSE_ENTER_SYNTH,
-                           targetElement, targetFrame, mLastMouseOverElement);
-
-        mLastMouseOverFrame = targetFrame;
-        // This may be a different frame than the one we started with, so we
-        // need to ensure it has its external reference bit set.
-        if (mLastMouseOverFrame) {
-          SetFrameExternalReference(mLastMouseOverFrame);
-        }
-        mLastMouseOverElement = targetElement;
-
-        // Turn recursion protection back off
-        mFirstMouseOverEventElement = nsnull;
+      NS_ASSERTION(targetElement, "Mouse move must have some target content");
+      if (targetElement) {
+        NotifyMouseOver(aEvent, targetElement);
       }
     }
     break;
   case NS_MOUSE_EXIT:
     {
-      // This is actually the window mouse exit event.
-      if (mLastMouseOverFrame) {
-        // Before firing mouseout, check for recursion
-        if (mLastMouseOverElement != mFirstMouseOutEventElement) {
-
-          // Store the first mouseOut event we fire and don't refire mouseOut
-          // to that element while the first mouseOut is still ongoing.
-          mFirstMouseOutEventElement = mLastMouseOverElement;
-
-          // Unset :hover
-          if (mLastMouseOverElement) {
-            SetContentState(nsnull, NS_EVENT_STATE_HOVER);
-          }
-
-          // Fire mouseout
-          DispatchMouseEvent(aPresContext, aEvent, NS_MOUSE_EXIT_SYNTH,
-                             mLastMouseOverElement, mLastMouseOverFrame,
-                             nsnull);
-
-          // XXX Get the new frame
-          mLastMouseOverFrame = nsnull;
-          mLastMouseOverElement = nsnull;
-
-          // Turn recursion protection back off
-          mFirstMouseOutEventElement = nsnull;
-        }
-      }
-
-      // If we are over an iframe and got this event, fire mouseout at the
-      // iframe's content
-      MaybeDispatchMouseEventToIframe(aPresContext, aEvent,
-                                      NS_MOUSE_EXIT_SYNTH);
+      // This is actually the window mouse exit event. 
+      NotifyMouseOut(aEvent);
     }
     break;
   }
