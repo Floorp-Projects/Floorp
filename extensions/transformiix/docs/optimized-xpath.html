@@ -87,6 +87,42 @@
 
       <h3>Summary</h3>
         <p>
+          Refcount <code>ExprResult</code>s to reduce the number of objects
+          created during evaluation.
+        </p>
+
+      <h3>Details</h3>
+        <p>
+          Right now every subexpression creates a new object during evaluation.
+          If we refcounted objects we would be often be able to reuse the same
+          objects across multiple evaluations. We should also keep global
+          result-objects for true and false, that way expressions that return
+          bool-values would never have to create any objects.
+        </p>
+
+        <p>
+          This does however require that the returned objects arn't modified
+          since they might be used elsewhere. This is not a big problem in the
+          current code where we pretty much only modify nodesets in a couple
+          of places.
+        </p>
+
+        <p>
+          To be able to reuse objects across subexpressions we chould have an
+          <code>ExprResult::ensureModifyable</code>-function. This would
+          return the same object if the refcount is 1, and create a new object
+          to return otherwise. This is especially usefull for nodesets which
+          would be mostly used by a single object at a time. But it could be
+          just as usefull for other types, though then we might need a
+          <code>ExprResult::ensureModifyableOfType(ExprResult::ResultType)</code>-function
+          that only returned itself if it has a refcount of 1 and is of the
+          requsted type.
+        </p>
+
+    <h2>Stage 4</h2>
+
+      <h3>Summary</h3>
+        <p>
           Speed up evaluation of XPath expressions by using specialized
           classes for common optimizable expressions.
         </p>
@@ -133,71 +169,48 @@
 
         <p>
           <h4>Class:</h4>
-          <span>
             Steps along the attribute axis which doesn't contain wildcards
-          </p>
           <h4>Example:</h4>
-          <span>
             @foo
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Walk through the attributes NamedNodeMap and filter each node using a
           NameTest.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Call getAttributeNode (or actually getAttributeNodeNS) on the
             contextnode and return a nodeset containing just the returned node, or
             an empty nodeset if NULL is returned.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             Union expressions where each expression consists of a LocationStep and
           all LocationSteps have the same axis. None of the LocationSteps have any
           predicates (well, this could be relaxed a bit)
-          </span>
           <h4>Example:</h4>
-          <span>
             foo | bar | baz
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Evaluate each LocationStep separately and thus walk the same path through
             the document each time. During the walking the NodeTest is applied to
             filter out the correct nodes. The resulting nodesets are then merged and
             thus we generate orderInfo objects for most nodes.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Have just one LocationStep object which contains a NodeTest that is a
             "UnionNodeTest" which contains a list of NodeTests. The UnionNodeTest
             then tests each NodeTest until it finds one that returns true. If none
             do then false is returned.
             This results in just one walk along the axis and no need to generate any
             orderInfo objects.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             Steps where the predicates isn't context-node-list sensitive.
-          </span>
           <h4>Example:</h4>
-          <span>
             foo[@bar]
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Build a nodeset of all nodes that match 'foo' and then filter the
           nodeset through the predicate and thus do some node shuffling.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Create a "PredicatedNodeTest" that contains a NodeTest and a list of
             predicates. The PredicatedNodeTest returns true if both the NodeTest
             returns true and all predicats evaluate to true. Then let the
@@ -206,98 +219,66 @@
             (Note how this combines nicely with the previous optimisation...)
             (Actually this can be done even if some predicates are context-list
             sensitive, but only up until the first that isn't.)
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             PathExprs that only contains steps that from the child:: and attribute::
             axes.
-          </span>
           <h4>Example:</h4>
-          <span>
             foo/bar/baz
-          </span>
           <h4>What we do today:</h4>
-          <span>
             For each step we evaluate the step once for every node in a nodeset
             (for example for the second step the nodeset is the list of all "foo"
             children) and then merge the resulting nodesets while making sure that
             we keep the nodes in document order (and thus generate orderInfo
             objects).
-          </span>
           <h4>What we could do:</h4>
-          <span>
             The same thing except that we don't merge the resulting nodeset, but
             rather just concatenate them. We always know that the resulting nodesets
             are after each other in node order.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             List of predicates where some predicate are not context-list sensitive
-          </span>
           <h4>Example:</h4>
-          <span>
             foo[position() > 3][@bar][.//baz][position() > size() div 2][.//@fud]
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Apply each predicate separately requiring us to shuffle nodes five times
           in the above example.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Merge all predicates that are not node context-list sensitive into the
             previous predicate. The above predicate list could be merged into the
             following predicate list
             foo[(position() > 3) and (@bar) and (.//baz)][(position() > size() div 2) and (.//@fud)]
             Which only requires two node-shuffles
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             Predicates that are only context-list-position sensitive and not
             context-list-size sensitive
-          </span>
           <h4>Example:</h4>
-          <span>
             foo[position() > 5][position() mod 2]
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Build the entire list of nodes that matches "foo" and then apply the
             predicates
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Apply the predicates during the initial build of the first nodeset. We
             would have to keep track of how many nodes has passed each and somehow
             override the code that calculates the context-list-position.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             Predicates that are constants
-          </span>
           <h4>Example:</h4>
-          <span>
             foo[5]
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Perform the appropriate walk and build the entire nodeset. Then apply
           the predicate.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             There are three types of constant results; 1) Numerical values 2)
             Results with a true boolean-value 3) Results with a false boolean value.
             In the case of 1) we should only step up until the n:th node (5 in above
@@ -309,137 +290,144 @@
             able to decide if it's a constant or not at parsetime.
             Note that while evaluating a LocationStep [//foo] can be considered
             constant.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             PathExprs that contains '//' followed by an unpredicated child-step.
-          </span>
           <h4>Example:</h4>
-          <span>
             .//bar
-          </span>
           <h4>What we do today:</h4>
-          <span>
             We walk the entire subtree below the contextnode and at every node we
             evaluate the 'bar'-expression which walks all the children of the
             contextnode. This means that we'll walk the entire subtree twice.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Change the expression into "./descendant::bar". This means that we'll
             only walk the tree once. This can only be done if there are no
             predicates since the context-node-list will be different for
             predicates in the new expression.
             Note that this combines nicely with the "Steps where the predicates
             isn't context-node-list sensitive" optimization.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             PathExprs where the first step is '.'
-          </span>
           <h4>Example:</h4>
-          <span>
             ./*
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Evaluate the step "." which always returns the same node and then
             evaluate the rest of the PathExpr.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Remove the '.'-step and simply evaluate the other steps. In the example
             we could even remove the entire PathExpr-object and replace it with a
             single Step-object.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             Steps along the attribute axis which doesn't contain wildcards and
             we only care about the boolean value.
-          </span>
           <h4>Example:</h4>
-          <span>
             foo[@bar], @foo or @bar
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Evaluate the step and create a nodeset. Then get the bool-value of
             the nodeset by checking if the nodeset contain any nodes.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Simply check if the current element has an attribute of the
             requested name and return a bool-result.
-          </span>
         </p>
 
         <p>
           <h4>Class:</h4>
-          <span>
             Steps where we only care about the boolean value.
-          </span>
           <h4>Example:</h4>
-          <span>
             foo[processing-instruction()]
-          </span>
           <h4>What we do today:</h4>
-          <span>
             Evaluate the step and create a nodeset. Then get the bool-value of
             the nodeset by checking if the nodeset contain any nodes.
-          </span>
           <h4>What we could do:</h4>
-          <span>
             Walk along the axis until we find a node that matches the nodetest.
             If one is found we can stop the walking and return a true
             bool-result immediatly, otherwise a false bool-result is returned.
             It might not be worth implementing all axes unless we can reuse
-            code from the normal Step-code.
-          </span>
-        </p>
-
-    <h2>Stage 4</h2>
-
-      <h3>Summary</h3>
-        <p>
-          Refcount <code>ExprResult</code>s to reduce the number of objects
-          created during evaluation.
-        </p>
-
-      <h3>Details</h3>
-        <p>
-          Right now every subexpression creates a new object during evaluation.
-          If we refcounted objects we would be often be able to reuse the same
-          objects across multiple evaluations. We should also keep global
-          result-objects for true and false, that way expressions that return
-          bool-values would never have to create any objects.
+            code from the normal Step-code. This could also be applied to
+            <code>PathExpr</code>s by getting the boolvalue of the last step.
         </p>
 
         <p>
-          This does however require that the returned objects arn't modified
-          since they might be used elsewhere. This is not a big problem in the
-          current code where we pretty much only modify nodesets in a couple
-          of places.
+          <h4>Class:</h4>
+            Expressions where the value of an attribute is compared to
+            a literal.
+          <h4>Example:</h4>
+            @bar = 'value'
+          <h4>What we do today:</h4>
+            Evaluate the attribute-step and then compare the resulting nodeset
+            to the value.
+          <h4>What we could do:</h4>
+            Get the attribute-value for the element and compare that directly
+            to the value. In the above example we would just call
+            <code>getAttr('bar', kNameSpaceID_None)</code> and compare the
+            resulting string with 'value'.
         </p>
 
         <p>
-          To be able to reuse objects across subexpressions we chould have an
-          <code>ExprResult::ensureModifyable</code>-function. This would
-          return the same object if the refcount is 1, and create a new object
-          to return otherwise. This is especially usefull for nodesets which
-          would be mostly used by a single object at a time. But it could be
-          just as usefull for other types, though then we might need a
-          <code>ExprResult::ensureModifyableOfType(ExprResult::ResultType)</code>-function
-          that only returned itself if it has a refcount of 1 and is of the
-          requsted type.
+          <h4>Class:</h4>
+            PathExprs where the last step has a predicate that is not
+            context-nodeset dependent and that contains a part that is not
+            context-node dependent.
+          <h4>Example:</h4>
+            foo/*[@bar = current()/@bar]
+          <h4>What we do today:</h4>
+          <h4>What we could do:</h4>
+            First evaluate "foo/*" and "current()/@bar". Then replace
+            "current()/@bar" with a literal (and possibly optimize) and filter
+            all nodes in the nodeset from "foo/*".
+        </p>
+
+        <p>
+          <h4>Class:</h4>
+            local-name() or namespace-uri() compared to a literal
+          <h4>Example:</h4>
+            local-name() = 'foo'
+          <h4>What we do today:</h4>
+            evaluate the local-name function and compare the string-result to
+            the string-result of the literal.
+          <h4>What we could do:</h4>
+            Atomize the literal (or get the namespaceID in case of
+            namespace-uri()) and then compare that to the atom-name of the
+            contextnode. This is primarily usefull when combined with the
+            previous class.
+        </p>
+
+        <p>
+          <h4>Class:</h4>
+            Comparisons where one side is a nodeset and the other is not a
+            bool-value.
+          <h4>Example:</h4>
+            //myElem = @baz
+          <h4>What we do today:</h4>
+            Evaluate both sides and then compare them according to the spec.
+          <h4>What we could do:</h4>
+            First of all we should start by evaluating the nodeset-side, if the
+            result is an empty nodeset false can be returned immediatly.
+            Otherwise we evaluate as normal. When both sides are nodesets we
+            should examine them and try to figure out which is faster to
+            evaluate. That expression should be evaluated first (probably
+            by making it the left-hand-side expression).
+        </p>
+
+        <p>
+          <h4>Class:</h4>
+            Comparisons where one side is a PathExpr and the other is a
+            bool-value.
+          <h4>Example:</h4>
+            baz = ($foo > $bar)
+          <h4>What we do today:</h4>
+            Evaluate both sides and then compare them.
+          <h4>What we could do:</h4>
+            Apply the "Steps where we only care about the boolean
+            value"-optimization on the PathExpr-side and then evaluate as usual.
         </p>
 
     <h2>Stage 5</h2>
