@@ -34,7 +34,7 @@ Rights Reserved.
         xmlns:html="http://www.w3.org/TR/REC-html40"
 		title="&messengerWindow.title;"
         titlemodifier="&titleModifier.label;"
-        titlemenuseperator="&titleSeperator.label;"
+        titlemodifierseperator="&titleSeperator.label;"
 		onload="OnLoadMessenger()"
 		onunload="OnUnloadMessenger()"
 		align="vertical"
