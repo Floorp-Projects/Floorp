@@ -54,6 +54,7 @@
 
 
 class nsIUnicodeEncoder;
+class nsILineBreaker;
 class nsIOutputStream;
 
 class nsIHTMLToTXTSinkStream : public nsIHTMLContentSink {
@@ -195,6 +196,7 @@ protected:
 
   nsIUnicodeEncoder*  mUnicodeEncoder;
   nsString            mCharsetOverride;
+  nsILineBreaker*     mLineBreaker;
 };
 
 inline nsresult

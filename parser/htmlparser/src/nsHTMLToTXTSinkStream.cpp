@@ -46,10 +46,13 @@
 #include "nsICharsetAlias.h"
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
+#include "nsILineBreakerFactory.h"
+#include "nsLWBrkCIID.h"
 #include "nsIOutputStream.h"
 #include "nsFileStream.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kLWBrkCID,                   NS_LWBRK_CID);
 
 const  PRInt32 gTabSize=4;
 const  PRInt32 gOLNumberWidth = 3;
@@ -174,6 +177,7 @@ nsHTMLToTXTSinkStream::nsHTMLToTXTSinkStream()
   mBufferLength = 0;
   mBuffer = nsnull;
   mUnicodeEncoder = nsnull;
+  mLineBreaker = nsnull;
   mWrapColumn = 72;     // XXX magic number, we expect someone to reset this
 
   // Flow
@@ -206,6 +210,7 @@ nsHTMLToTXTSinkStream::~nsHTMLToTXTSinkStream()
   delete[] mTagStack;
   delete[] mOLStack;
   NS_IF_RELEASE(mUnicodeEncoder);
+  NS_IF_RELEASE(mLineBreaker);
 }
 
 /**
@@ -223,7 +228,22 @@ nsHTMLToTXTSinkStream::Initialize(nsIOutputStream* aOutStream,
   mString = aOutString;
   mFlags = aFlags;
 
-  return NS_OK;
+  nsILineBreakerFactory *lf;
+  nsresult result = NS_OK;
+  
+  result = nsServiceManager::GetService(kLWBrkCID,
+                                        NS_GET_IID(nsILineBreakerFactory),
+                                        (nsISupports **)&lf);
+  if (NS_SUCCEEDED(result)) {
+    nsAutoString lbarg("");
+    result = lf->GetBreaker(lbarg, &mLineBreaker);
+    if(NS_FAILED(result)) {
+      mLineBreaker = nsnull;
+    }
+    result = nsServiceManager::ReleaseService(kLWBrkCID, lf);
+  }
+
+  return result;
 }
 
 /**
@@ -977,26 +997,55 @@ nsHTMLToTXTSinkStream::AddToLine(const PRUnichar * aLineFragment, PRInt32 aLineF
     // of letters too long.
     while(linelength+prefixwidth > mWrapColumn+4) {
       // Must wrap. Let's find a good place to do that.
-      PRInt32 goodSpace = mWrapColumn-prefixwidth;
-      while (goodSpace >= 0 &&
-             !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
-        goodSpace--;
+      PRInt32 goodSpace = mWrapColumn-prefixwidth+1;
+      nsresult result = NS_OK;
+      PRBool oNeedMoreText;
+      if (nsnull != mLineBreaker) {
+        result = mLineBreaker->Prev(mCurrentLine.GetUnicode(), mCurrentLine.Length(), goodSpace,
+                                    (PRUint32 *) &goodSpace, &oNeedMoreText);
+        if (nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace-1))) 
+          --goodSpace;    // adjust the position since line breaker returns a position next to space
+      }
+      // fallback if the line breaker is unavailable or failed
+      if (nsnull == mLineBreaker || NS_FAILED(result)) {
+        goodSpace = mWrapColumn-prefixwidth;
+        while (goodSpace >= 0 &&
+               !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
+          goodSpace--;
+        }
       }
     
       nsAutoString restOfLine;
       if(goodSpace<0) {
         // If we don't found a good place to break, accept long line and
         // try to find another place to break
-        goodSpace=mWrapColumn-prefixwidth;
-        while (goodSpace < linelength &&
-               !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
-          goodSpace++;
+        goodSpace=mWrapColumn-prefixwidth+1;
+        result = NS_OK;
+        if (nsnull != mLineBreaker) {
+          result = mLineBreaker->Next(mCurrentLine.GetUnicode(), mCurrentLine.Length(), goodSpace,
+                                      (PRUint32 *) &goodSpace, &oNeedMoreText);
+          if (nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace-1))) 
+            --goodSpace;    // adjust the position since line breaker returns a position next to space
+        }
+        // fallback if the line breaker is unavailable or failed
+        if (nsnull == mLineBreaker || NS_FAILED(result)) {
+          goodSpace=mWrapColumn-prefixwidth;
+          while (goodSpace < linelength &&
+                 !nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace))) {
+            goodSpace++;
+          }
         }
       }
 
       if(goodSpace < linelength && goodSpace > 0) {
         // Found a place to break
-        mCurrentLine.Right(restOfLine, linelength-goodSpace-1);
+
+        // -1 (trim a char at the break position)
+        // only if the line break was a space.
+        if (nsCRT::IsAsciiSpace(mCurrentLine.CharAt(goodSpace)))
+          mCurrentLine.Right(restOfLine, linelength-goodSpace-1);
+        else
+          mCurrentLine.Right(restOfLine, linelength-goodSpace);
         mCurrentLine.Cut(goodSpace, linelength-goodSpace);
         EndLine(PR_TRUE);
         mCurrentLine.Truncate();
