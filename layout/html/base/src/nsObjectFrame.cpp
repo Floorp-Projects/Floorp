@@ -1343,8 +1343,8 @@ nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
                            nsIFrame* child)
 {
   nsSize availSize(NS_UNCONSTRAINEDSIZE, NS_UNCONSTRAINEDSIZE);
-  nsHTMLReflowMetrics kidDesiredSize(nsnull);
-
+  nsHTMLReflowMetrics kidDesiredSize(aMetrics.mComputeMEW);
+  
   nsReflowReason reflowReason;
   nsFrameState frameState;
   child->GetFrameState(&frameState);
@@ -1376,13 +1376,15 @@ nsObjectFrame::HandleChild(nsIPresContext*          aPresContext,
   ReflowChild(child, aPresContext, kidDesiredSize, kidReflowState, 0, 0, 0, status);
   FinishReflowChild(child, aPresContext, &kidReflowState, kidDesiredSize, 0, 0, 0);
 
-    aMetrics.width = kidDesiredSize.width;
-    aMetrics.height = kidDesiredSize.height;
-    aMetrics.ascent = kidDesiredSize.height;
-    aMetrics.descent = 0;
-
+  aMetrics.width   = kidDesiredSize.width;
+  aMetrics.height  = kidDesiredSize.height;
+  aMetrics.ascent  = kidDesiredSize.ascent;
+  aMetrics.descent = kidDesiredSize.descent;
+  if (aMetrics.mComputeMEW) {
+    aMetrics.mMaxElementWidth = kidDesiredSize.mMaxElementWidth;
+  }
   aStatus = NS_FRAME_COMPLETE;
-    return NS_OK;
+  return NS_OK;
 }
 
 
