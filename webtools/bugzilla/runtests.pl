@@ -34,7 +34,7 @@ foreach (@ARGV) {
         $verbose = 1;
     }
     else {
-        $onlytest = $_;
+        $onlytest = sprintf("%0.3d",$_);
     }
 }
 
