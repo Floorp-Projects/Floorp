@@ -101,7 +101,6 @@ messenger.jar:
     content/messenger/mailViewSetup.xul             (/mailnews/extensions/mailviews/resources/content/mailViewSetup.xul)
     content/messenger/mailViewList.xul              (/mailnews/extensions/mailviews/resources/content/mailViewList.xul)
     content/messenger/mailViewList.js               (/mailnews/extensions/mailviews/resources/content/mailViewList.js)
-*   content/messenger-views/contents.rdf            (/mailnews/extensions/mailviews/resources/content/contents.rdf)
     content/messenger/am-mdn.xul                    (/mailnews/extensions/mdn/resources/content/am-mdn.xul)
     content/messenger/am-mdn.js                     (/mailnews/extensions/mdn/resources/content/am-mdn.js)
 *   content/messenger-mdn/contents.rdf              (/mailnews/extensions/mdn/resources/content/contents.rdf)
