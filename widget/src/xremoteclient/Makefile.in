@@ -54,7 +54,7 @@ PROGOBJS        = mozilla-xremote-client.$(OBJ_SUFFIX) \
 		$(NULL)
 
 LIBS            = \
-		$(NSPR_LIBS) \
+		$(XPCOM_LIBS) $(NSPR_LIBS) \
 		$(XLDFLAGS) $(XLIBS)
 
 include $(topsrcdir)/config/rules.mk
