@@ -68,7 +68,6 @@
 
 #include "nsIMsgMailSession.h"
 #include "nsIMsgIdentity.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIMsgAccountManager.h"
 
 #include "nsIPrompt.h"
@@ -80,6 +79,8 @@
 #include "nsIPref.h"
 
 #include "nsIMsgWindow.h"
+#include "nsIPrompt.h"
+
 #include "nntpCore.h"
 
 #undef GetPort  // XXX Windows!
@@ -151,7 +152,6 @@ static NS_DEFINE_CID(kCHeaderParserCID, NS_MSGHEADERPARSER_CID);
 static NS_DEFINE_CID(kNNTPArticleListCID, NS_NNTPARTICLELIST_CID);
 static NS_DEFINE_CID(kNNTPHostCID, NS_NNTPHOST_CID);
 static NS_DEFINE_CID(kCMsgMailSessionCID, NS_MSGMAILSESSION_CID);
-static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kCMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kPrefServiceCID,NS_PREF_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);

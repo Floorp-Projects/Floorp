@@ -39,7 +39,6 @@
 #include "nsMsgBaseCID.h"
 #include "nsMsgNewsCID.h"
 #include "nsIMessage.h"
-#include "nsINetSupportDialogService.h"
 #include "nsIPref.h"
 #include "nsCRT.h"  // for nsCRT::strtok
 #include "nsNntpService.h"
@@ -59,6 +58,7 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsIWebNavigation.h"
 #include "nsIIOService.h"
+#include "nsIPrompt.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -70,7 +70,6 @@ static NS_DEFINE_CID(kCNntpUrlCID, NS_NNTPURL_CID);
 static NS_DEFINE_CID(kCNewsDB, NS_NEWSDB_CID);
 static NS_DEFINE_CID(kCNNTPNewsgroupCID, NS_NNTPNEWSGROUP_CID);
 static NS_DEFINE_CID(kCNNTPNewsgroupPostCID, NS_NNTPNEWSGROUPPOST_CID);
-static NS_DEFINE_CID(kCNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);   
 static NS_DEFINE_CID(kCPrefServiceCID, NS_PREF_CID); 
 static NS_DEFINE_CID(kMsgAccountManagerCID, NS_MSGACCOUNTMANAGER_CID);
 static NS_DEFINE_CID(kMessengerMigratorCID, NS_MESSENGERMIGRATOR_CID);
