@@ -521,14 +521,19 @@ void nsViewManager :: Refresh(nsIView *aView, nsIRenderingContext *aContext, con
   if ((aUpdateFlags & NS_VMREFRESH_DOUBLE_BUFFER) && ds)
 #ifdef NEW_COMPOSITOR
   {
+#ifdef XP_MAC
+    localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, 0);
+#else
 #ifdef XP_UNIX
     localcx->SetClipRect(trect, nsClipCombine_kReplace, result);
-#endif
+#endif //unix
     localcx->CopyOffScreenBits(ds, brect.x, brect.y, brect, 0);
+#endif //mac
   }
 #else
     localcx->CopyOffScreenBits(ds, wrect.x, wrect.y, wrect, NS_COPYBITS_USE_SOURCE_CLIP_REGION);
 #endif
+
 
   if (localcx != aContext)
     NS_RELEASE(localcx);
@@ -1612,6 +1617,7 @@ NS_IMETHODIMP nsViewManager :: DispatchEvent(nsGUIEvent *aEvent, nsEventStatus &
 
           // Check that there's actually something to paint
           view->GetBounds(viewrect);
+          viewrect.x = viewrect.y = 0;
           varea = (float)viewrect.width * viewrect.height;
 
           if (varea > 0.0000001f)
