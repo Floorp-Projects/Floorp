@@ -60,9 +60,8 @@ struct RowReflowState {
   nsTableFrame *tableFrame;
    
 
-  RowReflowState( nsIPresContext*      aPresContext,
-                  const nsReflowState& aReflowState,
-                  nsTableFrame*        aTableFrame)
+  RowReflowState(const nsReflowState& aReflowState,
+                 nsTableFrame*        aTableFrame)
     : reflowState(aReflowState)
   {
     availSize.width = reflowState.maxSize.width;
@@ -614,20 +613,52 @@ nsTableRowFrame::InitialReflow(nsIPresContext*  aPresContext,
 // - maxCellHeight
 // - maxVertCellSpace
 // - x
-nsresult nsTableRowFrame::RecoverState(RowReflowState& aState,
-                                       nsIFrame*       aKidFrame)
+nsresult nsTableRowFrame::RecoverState(nsIPresContext* aPresContext,
+                                       RowReflowState& aState,
+                                       nsIFrame*       aKidFrame,
+                                       nscoord&        aMaxCellTopMargin,
+                                       nscoord&        aMaxCellBottomMargin)
 {
+  aMaxCellTopMargin = aMaxCellBottomMargin = 0;
+
   // Walk the list of children looking for aKidFrame. While we're at
   // it get the maxCellHeight and maxVertCellSpace for all the
   // frames except aKidFrame
   nsIFrame* prevKidFrame = nsnull;
   for (nsIFrame* frame = mFirstChild; nsnull != frame;) {
     if (frame != aKidFrame) {
+      // Update the max top and bottom margins
+      nsMargin       kidMargin;
+      aState.tableFrame->GetCellMarginData((nsTableCellFrame *)frame, kidMargin);
+      if (kidMargin.top > aMaxCellTopMargin)
+        aMaxCellTopMargin = kidMargin.top;
+      if (kidMargin.bottom > aMaxCellBottomMargin)
+        aMaxCellBottomMargin = kidMargin.bottom;
+
       PRInt32 rowSpan = ((nsTableCellFrame*)frame)->GetRowSpan();
       if (mMinRowSpan == rowSpan) {
-        // XXX This isn't quite right. We also need to check whether the cell
-        // has a height property that affects the cell...
+        // Get the cell's desired height the last time it was reflowed
         nsSize  desiredSize = ((nsTableCellFrame *)frame)->GetDesiredSize();
+
+        // See if it has a specified height that overrides the desired size
+        nscoord specifiedHeight = 0;
+        nsIStyleContextPtr kidSC;
+        frame->GetStyleContext(aPresContext, kidSC.AssignRef());
+        const nsStylePosition* kidPosition = (const nsStylePosition*)
+          kidSC->GetStyleData(eStyleStruct_Position);
+        switch (kidPosition->mHeight.GetUnit()) {
+        case eStyleUnit_Coord:
+          specifiedHeight = kidPosition->mHeight.GetCoordValue();
+          break;
+      
+        case eStyleUnit_Inherit:
+          // XXX for now, do nothing
+        default:
+        case eStyleUnit_Auto:
+          break;
+        }
+        if (specifiedHeight > desiredSize.height)
+          desiredSize.height = specifiedHeight;
         
         // Update maxCellHeight
         if (desiredSize.height > aState.maxCellHeight) {
@@ -685,11 +716,16 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   aState.reflowState.reflowCommand->GetNext(kidFrame);
 
   // Recover our reflow state
-  RecoverState(aState, kidFrame);
+  nscoord maxCellTopMargin, maxCellBottomMargin;
+  RecoverState(aPresContext, aState, kidFrame, maxCellTopMargin, maxCellBottomMargin);
 
   // Get the frame's margins
   nsMargin  kidMargin;
   aState.tableFrame->GetCellMarginData((nsTableCellFrame *)kidFrame, kidMargin);
+  if (kidMargin.top > maxCellTopMargin)
+    maxCellTopMargin = kidMargin.top;
+  if (kidMargin.bottom > maxCellBottomMargin)
+    maxCellBottomMargin = kidMargin.bottom;
 
   // At this point, we know the column widths. Get the available width
   // from the known column widths
@@ -778,9 +814,6 @@ nsresult nsTableRowFrame::IncrementalReflow(nsIPresContext*  aPresContext,
   PlaceChild(aPresContext, aState, kidFrame, kidRect, aDesiredSize.maxElementSize,
              &kidMaxElementSize);
 
-  // XXX This needs to be computed somehow...
-  nscoord maxCellTopMargin = 0;
-  nscoord maxCellBottomMargin = 0;
   SetMaxChildHeight(aState.maxCellHeight, maxCellTopMargin, maxCellBottomMargin);
 
   // Return our desired size. Note that our desired width is just whatever width
@@ -820,7 +853,7 @@ nsTableRowFrame::Reflow(nsIPresContext&      aPresContext,
   // Initialize our automatic state object
   nsTableFrame* tableFrame;
   mContentParent->GetContentParent((nsIFrame*&)tableFrame);
-  RowReflowState state(&aPresContext, aReflowState, tableFrame);
+  RowReflowState state(aReflowState, tableFrame);
 
   // Do the reflow
   nsresult  result;
