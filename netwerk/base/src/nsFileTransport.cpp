@@ -715,7 +715,7 @@ nsFileTransport::Process(void)
         LOG(("nsFileTransport: READING [this=%x %s] transferAmt=%u mBufferMaxSize=%u\n",
             this, mStreamName.get(), transferAmt, mBufferMaxSize));
 
-        PRUint32 total, offset = mSourceWrapper->GetBytesRead();
+        PRUint32 total = 0, offset = mSourceWrapper->GetBytesRead();
 
         // Give the listener a chance to read at most transferAmt bytes from
         // the source input stream.
@@ -762,7 +762,7 @@ nsFileTransport::Process(void)
             mStatus = status;
             mXferState = END_READ;
         }
-        else {
+        if (total) {
             // something was read...
             offset += total;
             mOffset += total;

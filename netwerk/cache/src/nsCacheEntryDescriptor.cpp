@@ -434,6 +434,10 @@ nsTransportWrapper::EnsureTransportWithAccess(nsCacheAccessMode  mode)
                                  descriptor->mAccessGranted,
                                  getter_AddRefs(mTransport));
         if (NS_FAILED(rv))  return rv;
+
+        if (mCallbacks) {
+            mTransport->SetNotificationCallbacks(mCallbacks, mCallbackFlags);
+        }
     }
     return NS_OK;
 }
@@ -468,9 +472,11 @@ NS_IMETHODIMP nsCacheEntryDescriptor::
 nsTransportWrapper::GetNotificationCallbacks(nsIInterfaceRequestor **result)
 {
     NS_ENSURE_ARG_POINTER(result);
-    // if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    *result = mCallbacks;
+    NS_IF_ADDREF(*result);
+
+    return NS_OK;
 }
 
 
@@ -478,9 +484,14 @@ NS_IMETHODIMP nsCacheEntryDescriptor::
 nsTransportWrapper::SetNotificationCallbacks(nsIInterfaceRequestor *requestor,
                                              PRUint32 flags)
 {
-    //    if (!mCacheEntry)       return NS_ERROR_NOT_AVAILABLE;
+    if (mTransport) {
+        mTransport->SetNotificationCallbacks(requestor, flags);
+    } 
 
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mCallbacks     = requestor;
+    mCallbackFlags = flags;
+    
+    return NS_OK;;
 }
 
 

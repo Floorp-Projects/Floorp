@@ -906,6 +906,12 @@ nsHttpChannel::ReadFromCache()
     nsresult rv = mCacheEntry->GetTransport(getter_AddRefs(mCacheTransport));
     if (NS_FAILED(rv)) return rv;
 
+    // Hookup the notification callbacks interface to the new transport...
+    mCacheTransport->SetNotificationCallbacks(this, 
+                                  ((mLoadFlags & nsIRequest::LOAD_BACKGROUND) 
+                                    ? nsITransport::DONT_REPORT_PROGRESS 
+                                    : 0));
+
     // Pump the cache data downstream
     return mCacheTransport->AsyncRead(this, mListenerContext,
                                       0, PRUint32(-1), 0,

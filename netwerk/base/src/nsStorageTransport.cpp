@@ -197,6 +197,15 @@ nsStorageTransport::Available(PRUint32 aStartingFrom, PRUint32 *aCount)
     return NS_OK;
 }
 
+void
+nsStorageTransport::FireOnProgress(nsIRequest *aRequest,
+                                   nsISupports *aContext,
+                                   PRUint32 aByteOffset)
+{
+    if (mProgressSink)
+      mProgressSink->OnProgress(aRequest, aContext, aByteOffset, mWriteCursor);
+}
+
 nsresult
 nsStorageTransport::AddWriteSegment()
 {
@@ -285,7 +294,9 @@ NS_IMETHODIMP
 nsStorageTransport::GetNotificationCallbacks(nsIInterfaceRequestor** aCallbacks)
 {
     NS_ENSURE_ARG_POINTER(aCallbacks);
-    *aCallbacks = nsnull;
+    *aCallbacks = mCallbacks;
+
+    NS_IF_ADDREF(*aCallbacks);
     return NS_OK;
 }
 
@@ -293,7 +304,14 @@ NS_IMETHODIMP
 nsStorageTransport::SetNotificationCallbacks(nsIInterfaceRequestor* aCallbacks,
                                              PRUint32 flags)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+    mCallbacks = aCallbacks;
+
+    if (mCallbacks)
+        mProgressSink = do_QueryInterface(mCallbacks);
+    else
+        mProgressSink = 0;
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -466,6 +484,8 @@ nsStorageTransport::nsReadRequest::Process()
                                                this,
                                                mTransferOffset,
                                                count);
+        // Fire the progress notification...
+        mTransport->FireOnProgress(this, mListenerContext, mTransferOffset);
     }
     else if ((mTransferCount == 0) || !mTransport->HasWriter()) {
 
