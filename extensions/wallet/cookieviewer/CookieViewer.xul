@@ -34,29 +34,29 @@
         title="&windowtitle.label;"
         xmlns:html="http://www.w3.org/1999/xhtml"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        align="vertical"
+        style="width: 30em;"
+        orient="vertical"
         onload="Startup()">
 
-  <html:script src="chrome://communicator/content/wallet/CookieViewer.js"/>
-	<html:script language="javascript" src="chrome://global/content/strres.js" />
+  <script src="chrome://communicator/content/wallet/CookieViewer.js"></script>
+	<script language="javascript" src="chrome://global/content/strres.js"></script>
 
   <keyset id="keyset"/>
            
-  <tabcontrol flex="1" align="vertical">
+  <tabcontrol flex="1" orient="vertical">
     <tabbox>
       <tab id="cookiesTab" value="&tab.cookiesonsystem.label;"/>
       <tab value="&tab.bannedservers.label;"/>
       <tab id="imagesTab" style="display:none" value="&tab.bannedimages.label;"/>
 	  <spring flex="1"/>
     </tabbox>
-    <tabpanel id="panel" align="horizontal" style="width: 400px;" flex="1">
-      <box class="tabpanel" id="system" flex="1" align="vertical">
+    <tabpanel id="panel">
+      <box class="tabpanel" id="system" flex="1" orient="vertical">
           <text class="label" value="&div.cookiesonsystem.label;"/>
-          <spring style="height: 10px;"/>
-          <tree id="cookietree" class="inset" style="height: 15em; width: 380px;" align="vertical" 
-            flex="1"
+          <separator class="thin"/>
+          <tree id="cookietree" class="inset" style="height: 10em;"
             multiple="true" onselect="ViewCookieSelected(event);"
-            onclick="ViewCookieSelected(event)"
+            onclick="ViewCookieSelected(event)" flex="1"
             onkeypress="HandleKeyPress(event)">
             <treecolgroup>
               <treecol flex="3" width="0"/>
@@ -70,10 +70,8 @@
             </treehead>
             <treechildren id="cookielist" flex="1"/>
           </tree>
-          <spring style="height: 5px;"/>
-          <titledbox style="border: 2px groove #CCCCDD;" orient="vertical">
-            <title> <text class="label" value="&treehead.infoselected.label;"/> </title>
-            <spring style="height: 5px;"/>
+          <titledbox>
+            <title value="&treehead.infoselected.label;"/>
             <!-- labels -->
             <grid>
               <columns>
@@ -83,33 +81,32 @@
               <rows>
                 <row>
                   <text value="&props.name.label;"/>
-                  <textfield id="ifl_name" readonly="true"/>
+                  <textfield class="plain" id="ifl_name" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.value.label;"/>
-                  <textfield id="ifl_value" readonly="true"/>
+                  <textfield class="plain" id="ifl_value" readonly="true"/>
                 </row>
                 <row>
                   <text id="ifl_domaintype" value="&props.domain.label;"/>
-                  <textfield id="ifl_domain" readonly="true"/>
+                  <textfield class="plain" id="ifl_domain" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.path.label;"/>
-                  <textfield id="ifl_path" readonly="true"/>
+                  <textfield class="plain" id="ifl_path" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.secure.label;"/>
-                  <textfield id="ifl_secure" readonly="true"/>
+                  <textfield class="plain" id="ifl_secure" readonly="true"/>
                 </row>
                 <row>
                   <text value="&props.expires.label;"/>
-                  <textfield id="ifl_expires" readonly="true"/>
+                  <textfield class="plain" id="ifl_expires" readonly="true"/>
                 </row>
               </rows>
             </grid>
           </titledbox>
-          <spring style="height: 5px;"/>
-          <box align="horizontal">
+          <box>
             <button id="removeCookies" class="dialog push" disabled="true"
                           value="&button.removecookie.label;"
                           onclick="DeleteCookieSelected();"/>
@@ -118,14 +115,16 @@
                           onclick="DeleteAllCookies();"/>
             <!--  todo: <button id="restoreCookies" class="dialog push" disabled="true" value="&button.restorecookie.label;" onclick="RestoreCookies();"/> -->
           </box>
-          <checkbox id="checkbox" value="&checkbox.label;" />
+          <separator class="thin"/>
+          <box autostretch="never">
+            <checkbox id="checkbox" value="&checkbox.label;" />
+          </box>
       </box>
       
-      <box class="tabpanel" id="servers" flex="1" align="vertical">
+      <box class="tabpanel" id="servers" flex="1" orient="vertical">
           <text class="label" value="&div.bannedservers.label;"/>
-          <spring style="height: 10px;"/>
-          <tree id="permissionstree" class="inset" style="height: 30em; width: 380px;" align="vertical"
-                flex="1"
+          <separator class="thin"/>
+          <tree id="permissionstree" class="inset" flex="1"
                 onkeypress="if(event.which == 46) gone_p += DeleteItemSelected('permissionstree', 'permtree_', 'permissionslist');"
                 multiple="true" onclick="ViewPermissionSelected();">
             <treecolgroup>
@@ -140,8 +139,7 @@
             </treehead>
             <treechildren flex="1" id="permissionslist"/>
           </tree>
-          <spring style="height: 5px;"/>
-          <box align="horizontal">
+          <box>
             <button id="removePermissions" class="dialog push" disabled="true" 
                           value="&removepermission.label;" 
                           onclick="DeletePermissionSelected();"/>
@@ -149,14 +147,12 @@
                           value="&removeallpermissions.label;" 
                           onclick="DeleteAllPermissions();"/>
           </box>
-          <spring style="height: 5px;"/>
       </box>
 
-      <box class="tabpanel" id="images" style="display:none" flex="1" align="vertical">
+      <box class="tabpanel" id="images" style="display:none" flex="1" orient="vertical">
           <text class="label" value="&div.bannedimages.label;"/>
-          <spring style="height: 10px;"/>
-          <tree id="imagestree" class="inset" style="height: 30em; width: 380px;" align="vertical"
-                flex="1"
+          <separator class="thin"/>
+          <tree id="imagestree" class="inset" flex="1" style="height: 0px;"
                 onkeypress="if(event.which == 46) gone_i += DeleteItemSelected('imagestree', 'imgtree_', 'imageslist');"
                 multiple="true" onclick="ViewImageSelected();">
             <treecolgroup>
@@ -171,8 +167,7 @@
             </treehead>
             <treechildren flex="1" id="imageslist"/>
           </tree>
-          <spring style="height: 5px;"/>
-          <box align="horizontal">
+          <box>
             <button id="removeImages" class="dialog push" disabled="true"
                           value="&removeimage.label;" 
                           onclick="DeleteImageSelected();"/>
@@ -180,16 +175,12 @@
                           value="&removeallimages.label;" 
                           onclick="DeleteAllImages();"/>
           </box>
-          <spring style="height: 5px;"/>
       </box>
 
     </tabpanel>
   </tabcontrol>
   
-  <!-- from dialogOverlay.xul -->
-  <box align="horizontal">
-    <spring flex="1"/>
-    <box id="okCancelButtons"/>
-  </box>
+  <separator class="thin"/>
+  <box id="okCancelButtonsRight"/>
 
 </window>
