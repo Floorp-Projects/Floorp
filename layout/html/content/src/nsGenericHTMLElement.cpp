@@ -76,6 +76,7 @@ static NS_DEFINE_IID(kIPrivateDOMEventIID, NS_IPRIVATEDOMEVENT_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
 static NS_DEFINE_IID(kICSSStyleRuleIID, NS_ICSS_STYLE_RULE_IID);
+static NS_DEFINE_IID(kICSSDeclarationIID, NS_ICSS_DECLARATION_IID);
 static NS_DEFINE_IID(kIDOMNodeListIID, NS_IDOMNODELIST_IID);
 static NS_DEFINE_IID(kIDOMCSSStyleDeclarationIID, NS_IDOMCSSSTYLEDECLARATION_IID);
 static NS_DEFINE_IID(kIDOMDocumentIID, NS_IDOMNODE_IID);
@@ -247,34 +248,60 @@ nsGenericHTMLElement::~nsGenericHTMLElement()
 nsresult
 nsGenericHTMLElement::GetDOMAttribute(const nsString& aName, nsString& aReturn)
 {
+  // XXX need to parse namepsace from name, presume HTML if none
+  // XXX need to uppercase name only if HTML namespace
   nsAutoString  upper;
   aName.ToUpperCase(upper);
-  return nsGenericElement::GetDOMAttribute(upper, aReturn);
+  nsIAtom* nameAtom = NS_NewAtom(upper);
+  nsresult rv = mContent->GetAttribute(kNameSpaceID_HTML, nameAtom, aReturn);
+  NS_RELEASE(nameAtom);
+  return rv;
 }
 
 nsresult
 nsGenericHTMLElement::SetDOMAttribute(const nsString& aName, const nsString& aValue)
 {
+  // XXX need to parse namepsace from name, presume HTML if none
+  // XXX need to uppercase name only if HTML namespace
   nsAutoString  upper;
   aName.ToUpperCase(upper);
-  return nsGenericElement::SetDOMAttribute(upper, aValue);
+  nsIAtom* nameAtom = NS_NewAtom(upper);
+  nsresult rv = mContent->SetAttribute(kNameSpaceID_HTML, nameAtom, aValue, PR_TRUE);
+  NS_RELEASE(nameAtom);
+  return rv;
 }
 
 nsresult
 nsGenericHTMLElement::RemoveAttribute(const nsString& aName)
 {
+  // XXX need to parse namepsace from name, presume HTML if none
+  // XXX need to uppercase name only if HTML namespace
   nsAutoString  upper;
   aName.ToUpperCase(upper);
-  return nsGenericElement::RemoveAttribute(upper);
+  nsIAtom* nameAtom = NS_NewAtom(upper);
+  nsresult rv = mContent->UnsetAttribute(kNameSpaceID_HTML, nameAtom, PR_TRUE);
+  NS_RELEASE(nameAtom);
+  return rv;
 }
 
 nsresult
 nsGenericHTMLElement::GetAttributeNode(const nsString& aName,
                                        nsIDOMAttr** aReturn)
 {
+  // XXX need to parse namepsace from name, presume HTML if none
+  // XXX need to uppercase name only if HTML namespace
   nsAutoString  upper;
   aName.ToUpperCase(upper);
-  return nsGenericElement::GetAttributeNode(upper, aReturn);
+  nsIAtom* nameAtom = NS_NewAtom(upper);
+  nsAutoString value;
+  if (NS_CONTENT_ATTR_NOT_THERE != mContent->GetAttribute(kNameSpaceID_HTML, nameAtom, value)) {
+    *aReturn = new nsDOMAttribute(aName, value);
+  }
+  else {
+    *aReturn = nsnull;
+  }
+  NS_RELEASE(nameAtom);
+  return NS_OK;
 }
 
 nsresult
@@ -521,6 +548,9 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
       result = SetHTMLAttribute(aAttribute, nsHTMLValue(rule), aNotify);
       NS_RELEASE(rule);
     }
+    else {
+      result = SetHTMLAttribute(aAttribute, nsHTMLValue(aValue), aNotify);
+    }
     NS_RELEASE(css);
   }
   else {
@@ -597,6 +627,28 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   return result;
 }
 
+static PRInt32 GetStyleImpactFrom(const nsHTMLValue& aValue)
+{
+  PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
+
+  if (eHTMLUnit_ISupports == aValue.GetUnit()) {
+    nsISupports* supports = aValue.GetISupportsValue();
+    if (nsnull != supports) {
+      nsICSSStyleRule* cssRule;
+      if (NS_SUCCEEDED(supports->QueryInterface(kICSSStyleRuleIID, (void**)&cssRule))) {
+        nsICSSDeclaration* declaration = cssRule->GetDeclaration();
+        if (nsnull != declaration) {
+          declaration->GetStyleImpact(&hint);
+          NS_RELEASE(declaration);
+        }
+        NS_RELEASE(cssRule);
+      }
+      NS_RELEASE(supports);
+    }
+  }
+  return hint;
+}
+
 nsresult
 nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
                                        const nsHTMLValue& aValue,
@@ -610,6 +662,18 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
     return result;
   }
   if (nsnull != mDocument) {  // set attr via style sheet
+    PRInt32 hint = NS_STYLE_HINT_UNKNOWN;
+    if (aNotify && (nsHTMLAtoms::style == aAttribute)) {
+      nsHTMLValue oldValue;
+      PRInt32 oldHint = NS_STYLE_HINT_UNKNOWN;
+      if (NS_CONTENT_ATTR_NOT_THERE != GetHTMLAttribute(aAttribute, oldValue)) {
+        oldHint = GetStyleImpactFrom(oldValue);
+      }
+      hint = GetStyleImpactFrom(aValue);
+      if (hint < oldHint) {
+        hint = oldHint;
+      }
+    }
     nsIHTMLStyleSheet*  sheet = GetAttrStyleSheet(mDocument);
     if (nsnull != sheet) {
         result = sheet->SetAttributeFor(aAttribute, aValue, htmlContent,
@@ -617,7 +681,7 @@ nsGenericHTMLElement::SetHTMLAttribute(nsIAtom* aAttribute,
         NS_RELEASE(sheet);
     }
     if (aNotify) {
-      mDocument->AttributeChanged(mContent, aAttribute, NS_STYLE_HINT_UNKNOWN);
+      mDocument->AttributeChanged(mContent, aAttribute, hint);
     }
   }
   else {  // manage this ourselves and re-sync when we connect to doc
