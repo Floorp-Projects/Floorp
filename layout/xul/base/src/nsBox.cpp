@@ -216,28 +216,37 @@ void Coelesced()
 
 #endif
 
-PRUint32 nsBox::gRefCnt = 0;
+PRBool nsBox::gGotTheme = PR_FALSE;
 nsITheme* nsBox::gTheme = nsnull;
+
+MOZ_DECL_CTOR_COUNTER(nsBox)
 
 nsBox::nsBox(nsIPresShell* aShell):mMouseThrough(unset),
                                    mNextChild(nsnull),
                                    mParentBox(nsnull)
                                    
 {
+  MOZ_COUNT_CTOR(nsBox);
   //mX = 0;
   //mY = 0;
-  gRefCnt++;
-  if (gRefCnt == 1)
-    nsServiceManager::GetService("@mozilla.org/chrome/chrome-native-theme;1",
-                                 NS_GET_IID(nsITheme),
-                                 (nsISupports**)&gTheme);
+  if (!gGotTheme) {
+    gGotTheme = PR_TRUE;
+    CallGetService("@mozilla.org/chrome/chrome-native-theme;1", &gTheme);
+  }
 }
 
 nsBox::~nsBox()
 {
-  gRefCnt--;
-  if (gRefCnt == 0 && gTheme)
-    nsServiceManager::ReleaseService("@mozilla.org/chrome/chrome-native-theme;1", gTheme);
+  // NOTE:  This currently doesn't get called for |nsBoxToBlockAdaptor|
+  // objects, so don't rely on putting anything here.
+  MOZ_COUNT_DTOR(nsBox);
+}
+
+/* static */ void
+nsBox::Shutdown()
+{
+  gGotTheme = PR_FALSE;
+  NS_IF_RELEASE(gTheme);
 }
 
 NS_IMETHODIMP 
