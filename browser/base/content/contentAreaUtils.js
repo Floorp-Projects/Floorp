@@ -375,14 +375,7 @@ function getTargetFile(aData, aSniffer, aContentType, aIsDocument, aSkipPrompt, 
     fp.init(window, bundle.GetStringFromName(titleKey), 
             Components.interfaces.nsIFilePicker.modeSave);
     
-    var urlExt = null;
-    try {
-      var url = aSniffer.uri.QueryInterface(Components.interfaces.nsIURL);
-      urlExt = url.fileExtension;
-    }
-    catch (e) {
-    }
-    appendFiltersForContentType(fp, aContentType, urlExt,
+    appendFiltersForContentType(fp, aContentType, defaultExtension,
                                 aIsDocument ? MODE_COMPLETE : MODE_FILEONLY);  
   
     if (dir)
