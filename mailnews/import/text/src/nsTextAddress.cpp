@@ -878,6 +878,8 @@ nsresult nsTextAddress::GetLdifStringRecord(char* buf, PRInt32 len, PRInt32& sto
 			}
 		}
 	}
+	if ((LFCount == 1 || CRCount == 1) && stopPos == len)
+		m_ldifLine.Append('\n');
 	if ((stopPos == len) && (LFCount > 1) || (CRCount > 2 && LFCount) ||
 		(!LFCount && CRCount > 1))
 		return NS_OK;
@@ -913,10 +915,19 @@ nsresult nsTextAddress::ParseLdifFile( nsIFileSpec *pSrc)
 
 void nsTextAddress::AddLdifRowToDatabase( void)
 {
+	PRBool bIsList = PR_FALSE;
+	if (m_ldifLine.Find("groupOfNames") == -1)
+		bIsList = PR_FALSE;
+	else
+		bIsList = PR_TRUE;
+
 	nsIMdbRow* newRow = nsnull;
 	if (m_database)
 	{
-		m_database->GetNewRow(&newRow); 
+		if (bIsList)
+			m_database->GetNewListRow(&newRow); 
+		else
+			m_database->GetNewRow(&newRow); 
 
 		if (!newRow)
 			return;
@@ -933,24 +944,25 @@ void nsTextAddress::AddLdifRowToDatabase( void)
 	while ( (line = str_getline(&cursor)) != nsnull)
 	{
 		if ( str_parse_line(line, &typeSlot, &valueSlot, &length) == 0) {
-			AddLdifColToDatabase(newRow, typeSlot, valueSlot);
+			AddLdifColToDatabase(newRow, typeSlot, valueSlot, bIsList);
 		}
 		else
 			continue; // parse error: continue with next loop iteration
 	}
 	delete [] saveCursor;
-	m_database->AddCardRowToDB( newRow);	
+	m_database->AddCardRowToDB(newRow);	
 
+	if (bIsList)
+		m_database->AddListDirNode(newRow);
+		
 	if (m_ldifLine.Length() > 0)
 		m_ldifLine.Truncate();
 }
 
-void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot)
+void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char* valueSlot, PRBool bIsList)
 {
     nsCAutoString colType(typeSlot);
-    // nsCAutoString column(valueSlot);
-	nsString		colValue; colValue.AssignWithConversion(valueSlot);
-	char *			column = colValue.ToNewUTF8String();
+    nsCAutoString column(valueSlot);
 
 	mdb_u1 firstByte = (mdb_u1)(colType.GetBuffer())[0];
 	switch ( firstByte )
@@ -962,8 +974,12 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'c':
 	  if ( -1 != colType.Find("cn") || -1 != colType.Find("commonname") )
-		m_database->AddDisplayName(newRow, column);
-
+	  {
+		if (bIsList)
+		  m_database->AddListName(newRow, column);
+		else
+		  m_database->AddDisplayName(newRow, column);
+	  }
 	  else if ( -1 != colType.Find("countryName") )
 		m_database->AddWorkCountry(newRow, column);
 
@@ -1004,8 +1020,12 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'd':
 	  if ( -1 != colType.Find("description") )
-		m_database->AddNotes(newRow, column);
-
+	  {
+		if (bIsList)
+		  m_database->AddListDescription(newRow, column);
+		else
+		  m_database->AddNotes(newRow, column);
+	  }
 //		  else if ( -1 != colType.Find("dn") ) // distinuished name
 //			ioRow->AddColumn(ev, this->ColDistName(), yarn);
 
@@ -1094,10 +1114,8 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	  if ( -1 != colType.Find("mail") )
 		m_database->AddPrimaryEmail(newRow, column);
 
-//		  else if ( -1 != colType.Find("member") && list )
-//		  {
-//			this->add-list-member(list, yarn); // see also "uniquemember"
-//		  }
+	  else if ( -1 != colType.Find("member") && bIsList )
+		m_database->AddLdifListMember(newRow, column);
 
 //		  else if ( -1 != colType.Find("manager") )
 //			ioRow->AddColumn(ev, this->ColManager(), yarn);
@@ -1128,23 +1146,6 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	case 'o':
 //		  if ( -1 != colType.Find("o") ) // organization
 //			ioRow->AddColumn(ev, this->ColCompany(), yarn);
-
-//		  else if ( -1 != colType.Find("objectclass") ) 
-//		  {
-//			if ( strcasecomp(inVal, "person") ) // objectclass == person?
-//			{
-//			  this->put-bool-row-col(row, this->ColPerson(), mdbBool_kTrue);
-//			}
-//			else if ( strcasecomp(inVal, "groupofuniquenames") || 
-//			  strcasecomp(inVal, "groupOfNames") ) // objectclass == list?
-//			{
-//			  this->put-bool-row-col(row, this->ColPerson(), mdbBool_kFalse);
-//			  isList = mdbBool_kTrue;
-//			  if ( !list )
-//				list = this->make-new-mdb-list-table-for-row(ioRow);
-//			}
-//		  }
-
 //		  else if ( -1 != colType.Find("ou") || -1 != colType.Find("orgunit") )
 //			ioRow->AddColumn(ev, this->ColDepartment(), yarn);
 
@@ -1229,10 +1230,8 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'u':
 
-//		  if ( -1 != colType.Find("uniquemember") && list )
-//		  {
-//			this->add-list-member(list, yarn); // see also "member"
-//		  }
+		if ( -1 != colType.Find("uniquemember") && bIsList )
+			m_database->AddLdifListMember(newRow, column);
 
 //		  else if ( -1 != colType.Find("uid") )
 //			ioRow->AddColumn(ev, this->ColUid(), yarn);
@@ -1256,8 +1255,12 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 
 	case 'x':
 	  if ( -1 != colType.Find("xmozillanickname") )
-		m_database->AddNickName(newRow, column);
-
+	  {
+		if (bIsList)
+		  m_database->AddListNickName(newRow, column);
+		else
+		  m_database->AddNickName(newRow, column);
+	  }
 	  else if ( -1 != colType.Find("xmozillausehtmlmail") )
 	  {
 		; //add use plain text
@@ -1274,7 +1277,5 @@ void nsTextAddress::AddLdifColToDatabase(nsIMdbRow* newRow, char* typeSlot, char
 	default:
 	  break; // default
 	}
-
-	nsCRT::free( column);
 }
 
