@@ -313,9 +313,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
           nsAutoString show, href;
           nsLinkVerb verb = eLinkVerb_Undefined; // basically means same as replace
-          nsGenericElement::GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href,
-                                    href);
-          if (href.IsEmpty()) {
+          nsCOMPtr<nsIURI> uri = nsContentUtils::GetXLinkURI(this);
+          if (!uri) {
             *aEventStatus = nsEventStatus_eConsumeDoDefault; 
             break;
           }
@@ -335,15 +334,8 @@ nsXMLElement::HandleDOMEvent(nsIPresContext* aPresContext,
           }
 
           nsCOMPtr<nsIURI> baseURI = GetBaseURI();
-          nsCOMPtr<nsIURI> uri;
-          ret = nsContentUtils::NewURIWithDocumentCharset(getter_AddRefs(uri),
-                                                          href,
-                                                          mDocument,
-                                                          baseURI);
-          if (NS_SUCCEEDED(ret)) {
-            ret = TriggerLink(aPresContext, verb, baseURI, uri, EmptyString(),
-                              PR_TRUE, PR_TRUE);
-          }
+          ret = TriggerLink(aPresContext, verb, baseURI, uri,
+                            EmptyString(), PR_TRUE, PR_TRUE);
 
           *aEventStatus = nsEventStatus_eConsumeDoDefault; 
         }

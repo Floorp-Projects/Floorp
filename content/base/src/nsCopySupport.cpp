@@ -61,12 +61,9 @@
 
 // image copy stuff
 #include "nsIImageLoadingContent.h"
-#include "imgIContainer.h"
-#include "imgIRequest.h"
-#include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
-#include "gfxIImageFrame.h"
 #include "nsIImage.h"
+#include "nsContentUtils.h"
 
 static NS_DEFINE_CID(kCClipboardCID,           NS_CLIPBOARD_CID);
 static NS_DEFINE_CID(kCTransferableCID,        NS_TRANSFERABLE_CID);
@@ -367,9 +364,7 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* imageElement, PRInt16 aClipboar
 {
   nsresult rv;
 
-  nsCOMPtr<nsIImage> image;
-  rv = GetImageFromDOMNode(imageElement, getter_AddRefs(image));
-  if (NS_FAILED(rv)) return rv;
+  nsCOMPtr<nsIImage> image = nsContentUtils::GetImageFromContent(imageElement);
   if (!image) return NS_ERROR_FAILURE;
 
   // Get the Clipboard
@@ -392,48 +387,3 @@ nsCopySupport::ImageCopy(nsIImageLoadingContent* imageElement, PRInt16 aClipboar
   // put the transferable on the clipboard
   return clipboard->SetData(trans, nsnull, aClipboardID);
 }
-
-//
-// GetImage
-//
-// Given a dom node that's an image, finds the nsIImage associated with it.
-//
-// XXX see also nsContentAreaDragDrop, and factor!
-nsresult
-nsCopySupport::GetImageFromDOMNode(nsIImageLoadingContent* content, nsIImage**outImage)
-{
-  NS_ENSURE_ARG_POINTER(outImage);
-  *outImage = nsnull;
-
-  nsCOMPtr<imgIRequest> imgRequest;
-  content->GetRequest(nsIImageLoadingContent::CURRENT_REQUEST,
-                      getter_AddRefs(imgRequest));
-  if (!imgRequest) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  
-  nsCOMPtr<imgIContainer> imgContainer;
-  imgRequest->GetImage(getter_AddRefs(imgContainer));
-
-  if (!imgContainer) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-    
-  nsCOMPtr<gfxIImageFrame> imgFrame;
-  imgContainer->GetFrameAt(0, getter_AddRefs(imgFrame));
-
-  if (!imgFrame) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  
-  nsCOMPtr<nsIInterfaceRequestor> ir = do_QueryInterface(imgFrame);
-
-  if (!ir) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-  
-  return CallGetInterface(ir.get(), outImage);
-}
-
-
-

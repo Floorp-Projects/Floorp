@@ -45,7 +45,6 @@ class nsISelection;
 class nsIDocument;
 class nsIImageLoadingContent;
 class nsIContent;
-class nsIImage;
 class nsITransferable;
  
 class nsCopySupport
@@ -63,12 +62,6 @@ class nsCopySupport
     static nsresult GetContents(const nsACString& aMimeType, PRUint32 aFlags, nsISelection *aSel, nsIDocument *aDoc, nsAString& outdata);
     
     static nsresult ImageCopy(nsIImageLoadingContent* imageElement, PRInt16 aClipboardID);
-
-  protected:
-  
-    // these are ripped from nsContentAreaDragDrop. This so needs factoring.    
-    static nsresult GetImageFromDOMNode(nsIImageLoadingContent* inNode, nsIImage**outImage);
-
 };
 
 #endif

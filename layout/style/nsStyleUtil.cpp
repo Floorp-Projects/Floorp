@@ -50,6 +50,7 @@
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsReadableUtils.h"
+#include "nsContentUtils.h"
 
 // XXX This is here because nsCachedStyleData is accessed outside of
 // the content module; e.g., by nsCSSFrameConstructor.
@@ -483,22 +484,8 @@ PRBool nsStyleUtil::IsSimpleXlink(nsIContent *aContent, nsIPresContext *aPresCon
     // first see if we have an XML element
     nsCOMPtr<nsIXMLContent> xml(do_QueryInterface(aContent));
     if (xml) {
-      // see if it is type=simple (we don't deal with other types)
-      nsAutoString val;
-      aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::type, val);
-      if (val.EqualsLiteral("simple")) {
-        // see if there is an xlink namespace'd href attribute: 
-        // - get it if there is, if not no big deal, it is not required for xlinks
-        // is it bad to re-use val here?
-        aContent->GetAttr(kNameSpaceID_XLink, nsHTMLAtoms::href, val);
-
-        // It's an XLink. Resolve it relative to aContent's base URI.
-        nsCOMPtr<nsIURI> baseURI = aContent->GetBaseURI();
-
-        nsCOMPtr<nsIURI> absURI;
-        // XXX should we make sure to get the right charset off the document?
-        (void) NS_NewURI(getter_AddRefs(absURI), val, nsnull, baseURI);
-
+      nsCOMPtr<nsIURI> absURI = nsContentUtils::GetXLinkURI(aContent);
+      if (absURI) {
         nsILinkHandler *linkHandler = aPresContext->GetLinkHandler();
         if (linkHandler) {
           linkHandler->GetLinkState(absURI, *aState);
