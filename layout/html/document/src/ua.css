@@ -401,6 +401,11 @@ input {
   color: black;
 }
 input[type=radio] {
+  /* these margins are for NavQuirks, we need a Standard ua.css */  
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 3px; 
   border: 2px inset rgb(192, 192, 192);
   background-color:white;
   color:black;
@@ -409,6 +414,11 @@ input[type=radio] {
 }
 
 input[type=checkbox] {
+  /* these margins are for NavQuirks, we need a Standard ua.css */  
+  margin-left:   3px;   
+  margin-right:  5px;  
+  margin-top:    3px; 
+  margin-bottom: 4px;
   border: 2px inset rgb(192, 192, 192);
   width:11px;
   height:11px;
