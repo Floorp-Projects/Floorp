@@ -1,0 +1,6 @@
+electric
+Release
+Debug
+*.plg
+*.idb
+*.pdb

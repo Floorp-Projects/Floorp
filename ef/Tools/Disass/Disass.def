@@ -1,0 +1,4 @@
+LIBRARY     DISASS
+
+EXPORTS
+    RNIGetCompatibleVersion
