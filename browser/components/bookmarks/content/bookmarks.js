@@ -468,7 +468,7 @@ var BookmarksCommand = {
       if (aTargetBrowser == "properties")
         openDialog("chrome://browser/content/bookmarks/bookmarksProperties.xul",
                    "", "centerscreen,chrome,resizable=no", aSelection.item[i].Value);
-      else if (aSelection.type[i] == "Bookmark")
+      else if (type == "Bookmark" || type == "")
         this.openOneBookmark(aSelection.item[i].Value, aTargetBrowser, aDS);
       else if (type == "FolderGroup" || type == "Folder" || type == "PersonalToolbarFolder")
         this.openGroupBookmark(aSelection.item[i].Value, aTargetBrowser);
@@ -730,7 +730,8 @@ var BookmarksController = {
       return true;
     case "cmd_bm_openfolder":
       for (var i=0; i<aSelection.length; ++i) {
-        if (aSelection.type[i] == "Bookmark" ||
+        if (aSelection.type[i] == ""         ||
+            aSelection.type[i] == "Bookmark" ||
             aSelection.type[i] == "BookmarkSeparator")
           return false;
         RDFC.Init(BMDS, aSelection.item[i]);

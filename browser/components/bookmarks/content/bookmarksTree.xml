@@ -425,7 +425,7 @@ dump("error in refresh sort:"+e)
         <body><![CDATA[
           if (aEvent.button == 2 || aEvent.originalTarget.localName != "treechildren")
             return;
-          if (aClickCount == 1 && this.clickCount == 2 && aEvent.button != 1)
+          if (aClickCount != this.clickCount && aEvent.button != 1)
             return;
 
           var row = {};
@@ -433,19 +433,23 @@ dump("error in refresh sort:"+e)
           var obj = {};
           this.treeBoxObject.getCellAt(aEvent.clientX, aEvent.clientY, row, col, obj);
           row = row.value;
+
           if (row == -1 || obj.value == "twisty")
             return;
-          var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
-          if (this.clickCount == 1 || browserTarget != "current" && 
-              this.clickCount == aClickCount && !this.treeBoxObject.selection.isSelected(row)) {
+          var modifKey = aEvent.shiftKey || aEvent.ctrlKey || aEvent.altKey || 
+                         aEvent.metaKey  || aEvent.button == 1;
+          if (this.clickCount == 2 && !modifKey &&
+              this.treeBoxObject.view.isContainer(row))
+            return;
+
+          if (this.clickCount == 1 || modifKey && 
+              !this.treeBoxObject.selection.isSelected(row)) {
             this.treeBoxObject.selection.select(row);
             this._selection = this.getTreeSelection();
           }
           var selection = this._selection;
           
           if (selection.type[0] != "FolderGroup" && selection.isContainer[0]) {
-            var modifKey = aEvent.shiftKey || aEvent.ctrlKey || aEvent.altKey || 
-                           aEvent.metaKey  || aEvent.button == 1;
             if (this.clickCount == 1 && !modifKey) {
               this.treeBoxObject.view.toggleOpenState(row);
               if (selection.protocol[0] != "file")
@@ -453,6 +457,7 @@ dump("error in refresh sort:"+e)
             }
           }
 
+          var browserTarget = BookmarksUtils.getBrowserTargetFromEvent(aEvent);
           BookmarksCommand.openBookmark(selection, browserTarget, this.db);
         ]]></body>
       </method>
