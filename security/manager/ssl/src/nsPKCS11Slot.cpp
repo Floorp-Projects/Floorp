@@ -59,12 +59,18 @@ nsPKCS11Slot::nsPKCS11Slot(PK11SlotInfo *slot)
   CK_SLOT_INFO slot_info;
   if (PK11_GetSlotInfo(mSlot, &slot_info) == SECSuccess) {
     // Set the Description field
-    mSlotDesc.AssignWithConversion((char *)slot_info.slotDescription, 
-                                   sizeof(slot_info.slotDescription));
+    const char *ccDesc = (const char*)slot_info.slotDescription;
+    const nsACString &cDesc = Substring(
+      ccDesc, 
+      ccDesc+PL_strnlen(ccDesc, sizeof(slot_info.slotDescription)));
+    mSlotDesc = NS_ConvertUTF8toUCS2(cDesc);
     mSlotDesc.Trim(" ", PR_FALSE, PR_TRUE);
     // Set the Manufacturer field
-    mSlotManID.AssignWithConversion((char *)slot_info.manufacturerID, 
-                                    sizeof(slot_info.manufacturerID));
+    const char *ccManID = (const char*)slot_info.manufacturerID;
+    const nsACString &cManID = Substring(
+      ccManID, 
+      ccManID+PL_strnlen(ccManID, sizeof(slot_info.manufacturerID)));
+    mSlotManID = NS_ConvertUTF8toUCS2(cManID);
     mSlotManID.Trim(" ", PR_FALSE, PR_TRUE);
     // Set the Hardware Version field
     mSlotHWVersion.AppendInt(slot_info.hardwareVersion.major);
@@ -204,7 +210,11 @@ nsPKCS11Module::GetName(PRUnichar **aName)
 NS_IMETHODIMP 
 nsPKCS11Module::GetLibName(PRUnichar **aName)
 {
-  *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->dllName));
+  if ( mModule->dllName ) {
+    *aName = ToNewUnicode(NS_ConvertUTF8toUCS2(mModule->dllName));
+  } else {
+    *aName = NULL;
+  }
   return NS_OK;
 }
 

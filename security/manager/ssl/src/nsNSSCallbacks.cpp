@@ -172,7 +172,7 @@ PK11PasswordPrompt(PK11SlotInfo* slot, PRBool retry, void* arg) {
   if (NS_FAILED(rv))
     return nsnull; 
 
-  const PRUnichar* formatStrings[1] = { ToNewUnicode(nsDependentCString(PK11_GetTokenName(slot))) };
+  const PRUnichar* formatStrings[1] = { ToNewUnicode(NS_ConvertUTF8toUCS2(PK11_GetTokenName(slot))) };
   rv = nssComponent->PIPBundleFormatStringFromName(NS_LITERAL_STRING("CertPassPrompt").get(),
                                       formatStrings, 1,
                                       getter_Copies(promptString));
