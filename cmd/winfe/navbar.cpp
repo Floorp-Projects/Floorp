@@ -232,6 +232,19 @@ void CNavMenuBar::OnPaint( )
 		dc.FillRect(&rect, &faceBrush);
 	}
 
+	HPALETTE pOldPalette = NULL;
+	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(dc.m_hDC, RASTERCAPS) & RC_PALETTE))
+	{
+		// Use the palette, since we have less than 16 bits per pixel and are
+		// using a palette-based device.
+		HPALETTE hPalette = WFE_GetUIPalette(GetParentFrame());
+		::SelectPalette(dc.m_hDC, hPalette, FALSE);	
+
+		// Find the nearest match in our palette for our colors.
+		ResolveToPaletteColor(m_BackgroundColor, hPalette);
+		ResolveToPaletteColor(m_ForegroundColor, hPalette);
+	}
+
 	// Draw the text.
 	HFONT font = WFE_GetUIFont(dc.m_hDC);
 	HFONT hOldFont = (HFONT)::SelectObject(dc.m_hDC, font);
@@ -243,7 +256,7 @@ void CNavMenuBar::OnPaint( )
 		// Don't write into the close box area!
 		sizeRect.right = sizeRect.left + (rect.Width() - NAVBAR_CLOSEBOX - 9);
 	}
-	sizeRect.left += 5;	// indent slightly horizontally
+	sizeRect.left += 2;	// indent slightly horizontally
 	sizeRect.right += 5;
 
 	// Center the text vertically.
@@ -256,7 +269,7 @@ void CNavMenuBar::OnPaint( )
 	UINT nFormat = DT_SINGLELINE | DT_VCENTER;
 	COLORREF oldColor;
 
-	oldColor = dc.SetTextColor(RGB(255,255,255));
+	oldColor = dc.SetTextColor(m_ForegroundColor);
 	dc.DrawText((LPCSTR)titleText, -1, &sizeRect, DT_CENTER | DT_EXTERNALLEADING | nFormat);
 
 	dc.SetTextColor(oldColor);
@@ -289,6 +302,12 @@ void CNavMenuBar::OnPaint( )
 
 		VERIFY(::DeleteObject(hPen));
 	}
+
+	if (sysInfo.m_iBitsPerPixel < 16 && (::GetDeviceCaps(dc.m_hDC, RASTERCAPS) & RC_PALETTE))
+	{
+		::SelectPalette(dc.m_hDC, pOldPalette, FALSE);
+	}
+
 /*	HPEN hShadowPen = ::CreatePen(PS_SOLID, 1, ::GetSysColor(COLOR_3DSHADOW));
 
 	dc.SelectObject(hShadowPen);
