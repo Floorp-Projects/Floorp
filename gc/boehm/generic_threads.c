@@ -59,6 +59,7 @@ void GC_generic_init_threads(GC_generic_mark_all_stacks_proc mark_all_stacks,
 }
 
 #ifndef LINUX_THREADS
+#ifndef WIN32_THREADS
 void GC_push_all_stacks()
 {
 	GC_generic_mark_all_stacks(&mark_range);
@@ -73,4 +74,5 @@ void GC_start_world()
 {
 	GC_generic_starter(GC_generic_mutex);
 }
+#endif /* WIN32_THREADS */
 #endif

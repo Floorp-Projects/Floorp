@@ -40,7 +40,8 @@
 	  mutex_t GC_allocate_ml;	/* Implicitly initialized.	*/
 #	else
 #          ifdef WIN32_THREADS
-	      GC_API CRITICAL_SECTION GC_allocate_ml;
+/*	      GC_API CRITICAL_SECTION GC_allocate_ml;   */ /* uh, GC_API makes it extern */
+	      CRITICAL_SECTION GC_allocate_ml;
 #          else
 #             if defined(IRIX_THREADS) || defined(LINUX_THREADS) \
 		 || defined(IRIX_JDK_THREADS)
