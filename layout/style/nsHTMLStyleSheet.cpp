@@ -38,6 +38,9 @@ static NS_DEFINE_IID(kIHTMLContentIID, NS_IHTMLCONTENT_IID);
 
 class HTMLAnchorRule : public nsIStyleRule {
 public:
+  HTMLAnchorRule();
+  ~HTMLAnchorRule();
+
   NS_DECL_ISUPPORTS
 
   virtual PRBool Equals(const nsIStyleRule* aRule) const;
@@ -49,6 +52,15 @@ public:
 
   nscolor mColor;
 };
+
+HTMLAnchorRule::HTMLAnchorRule()
+{
+  NS_INIT_REFCNT();
+}
+
+HTMLAnchorRule::~HTMLAnchorRule()
+{
+}
 
 NS_IMPL_ISUPPORTS(HTMLAnchorRule, kIStyleRuleIID);
 
