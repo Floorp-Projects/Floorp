@@ -101,15 +101,6 @@ struct nsPeekOffsetStruct
   PRBool mJumpLines;
 };
 
-// Values for aFlag parameter in HandleTableSelection
-enum {
-  TABLESELECTION_CELL=1,
-  TABLESELECTION_ROW,
-  TABLESELECTION_COLUMN,
-  TABLESELECTION_TABLE,
-  TABLESELECTION_ALLCELLS
-};
-  
 class nsIScrollableView;
 
 
@@ -179,7 +170,7 @@ public:
    *   depending on information contained in aFlags
    *  @param aParentContent is the paretent of either a table or cell that user clicked or dragged the mouse in
    *  @param aContentOffset is the offset of the table or cell
-   *  @param aTarget indicates what to select:
+   *  @param aTarget indicates what to select (defined in nsISelectionPrivate.idl/nsISelectionPrivate.h):
    *    TABLESELECTION_CELL      We should select a cell (content points to the cell)
    *    TABLESELECTION_ROW       We should select a row (content points to any cell in row)
    *    TABLESELECTION_COLUMN    We should select a row (content points to any cell in column)
@@ -187,7 +178,7 @@ public:
    *    TABLESELECTION_ALLCELLS  We should select all cells (content points to any cell in table)
    *  @param aMouseEvent         passed in so we we can get where event occured and what keys are pressed
    */
-  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRUint32 aTarget, nsMouseEvent *aMouseEvent) = 0;
+  NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent) = 0;
 
   /** StartAutoScrollTimer is responsible for scrolling the view so that aPoint is always
    *  visible, and for selecting any frame that contains aPoint. The timer will also reset
