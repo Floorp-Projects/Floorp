@@ -138,7 +138,7 @@ pattern = /((?:a|[^a])*)/g;
   status = inSection(12);
   string = '()';
   actualmatch = string.match(pattern);
-  expectedmatch = Array('(', '(');
+  expectedmatch = Array('()', ')');
   addThis();
 
 
