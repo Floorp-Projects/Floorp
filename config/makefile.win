@@ -66,24 +66,28 @@ build_number::
 
 
 #//
-#// Rule to build makedir.exe
+#// Rules to build make utils
 #//
-makecopy.exe:: makecopy.c
-    $(CC) -O2 -MD makecopy.c
+
+#CFLAGS = /FR /Zi -MDd /W4
+CFLAGS = /O2 /GB /MD
+
+makecopy.exe:: makecopy.cpp
+    $(CC) $(CFLAGS) $**
 
 mangle.exe:: mangle.c
-    $(CC) -O2 -MD mangle.c
+    $(CC) $(CFLAGS) $**
 
 mantomak.exe:: mantomak.c
-    $(CC) -O2 -MD mantomak.c
+    $(CC) $(CFLAGS) $**
 
 bin2rc.exe:: bin2rc.c
-    $(CC) -O2 -MD bin2rc.c
+    $(CC) $(CFLAGS) $**
 
 makedep.exe:: makedep.cpp
-    @cl -MT makedep.cpp 
+    $(CC) -MT /O2 /GB $**
 
-export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number $(INSTALL_FILES)
+export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number
 
 !ifdef MOZ_FULLCIRCLE
 
