@@ -211,6 +211,7 @@ nsLineLayout::Initialize(nsBlockReflowState& aState, nsLineData* aLine)
   mLine = aLine;
   mKidPrevInFlow = nsnull;
   mNewFrames = 0;
+  mFramesReflowed = 0;
   mKidIndex = aLine->mFirstContentOffset;
 
   mReflowData.mMaxElementSize.width = 0;
@@ -247,6 +248,7 @@ nsLineLayout::SetReflowSpace(nsRect& aAvailableSpaceRect)
   mReflowData.mAvailWidth = aAvailableSpaceRect.width;
   mX0 = mReflowData.mX;
   mMaxWidth = mReflowData.mAvailWidth;
+  mNewRightEdge = mX0 + mMaxWidth;
   mReflowDataChanged = PR_TRUE;
 }
 
@@ -339,11 +341,195 @@ nsLineLayout::WordBreakReflow()
   return rv;
 }
 
+/**
+ * Attempt to avoid reflowing a child by seeing if it's been touched
+ * since the last time it was reflowed.
+ */
+nsresult
+nsLineLayout::ReflowMappedChild(nsReflowCommand* aReflowCommand)
+{
+  // XXX look at reflow command and look at the next frame to get the
+  // command and if it's mKidFrame then pass through to ReflowChild
+  // otherwise don't
+  if (nsnull != aReflowCommand) {
+    return ReflowChild(aReflowCommand);
+  }
+
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsLineLayout::ReflowMappedChild: attempt frame=%p[%d]",
+                mKidFrame, mKidIndex));
+
+  // If the child is a container then we need to reflow it if there is
+  // a change in width. Note that if it's an empty container then it
+  // doesn't really matter how much space we give it.
+  if (mBlockReflowState.mDeltaWidth != 0) {
+    nsIFrame* f;
+    mKidFrame->FirstChild(f);
+    if (nsnull != f) {
+      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                   ("nsLineLayout::ReflowMappedChild: has children"));
+      return ReflowChild(aReflowCommand);
+    }
+  }
+
+  // If we need the max-element size and we are splittable then we
+  // have to reflow to get it.
+  nsIFrame::SplittableType splits;
+  mKidFrame->IsSplittable(splits);
+  if (nsnull != mMaxElementSizePointer) {
+    if (nsIFrame::NotSplittable != splits) {
+      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                   ("nsLineLayout::ReflowMappedChild: need max-element-size"));
+      return ReflowChild(aReflowCommand);
+    }
+  }
+
+  nsFrameState state;
+  mKidFrame->GetFrameState(state);
+
+  // XXX a better term for this is "dirty" and once we add a dirty
+  // bit that's what we'll do here.
+
+  // XXX this check will cause pass2 of table reflow to reflow
+  // everything; tables will be even faster if we have a dirty bit
+  // instead (that way we can avoid reflowing non-splittables on
+  // pass2)
+  if (0 != (state & NS_FRAME_IN_REFLOW)) {
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                 ("nsLineLayout::ReflowMappedChild: frame is dirty"));
+    return ReflowChild(aReflowCommand);
+  }
+
+  if (nsIFrame::NotSplittable != splits) {
+    // XXX a next-in-flow propogated dirty-bit eliminates this code
+
+    // The splittable frame has not yet been reflowed. This means
+    // that, in theory, its state is well defined. However, if it has
+    // a prev-in-flow and that frame has been touched then we need to
+    // reflow this frame.
+    nsIFrame* prevInFlow;
+    mKidFrame->GetPrevInFlow(prevInFlow);
+    if (nsnull != prevInFlow) {
+      nsFrameState prevState;
+      prevInFlow->GetFrameState(prevState);
+      if (0 != (prevState & NS_FRAME_IN_REFLOW)) {
+        NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+           ("nsLineLayout::ReflowMappedChild: prev-in-flow frame is dirty"));
+        return ReflowChild(aReflowCommand);
+      }
+    }
+
+    // If the child has a next-in-flow then never-mind, we need to
+    // reflow it in case it has more/less space to reflow into.
+    nsIFrame* nextInFlow;
+    mKidFrame->GetNextInFlow(nextInFlow);
+    if (nsnull != nextInFlow) {
+      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+         ("nsLineLayout::ReflowMappedChild: frame has next-in-flow"));
+      return ReflowChild(aReflowCommand);
+    }
+  }
+
+  // Success! We have (so far) avoided reflowing the child. However,
+  // we do need to place it and advance our position state. Get the
+  // size of the child and its reflow metrics for placing.
+  nsIStyleContextPtr kidSC;
+  nsresult rv = mKidFrame->GetStyleContext(mPresContext, kidSC.AssignRef());
+  if (NS_OK != rv) {
+    return rv;
+  }
+  nsStyleSpacing* kidSpacing = (nsStyleSpacing*)
+    kidSC->GetData(kStyleSpacingSID);
+  nsStyleDisplay* kidDisplay = (nsStyleDisplay*)
+    kidSC->GetData(kStyleDisplaySID);
+  PRBool isBlock = PR_FALSE;
+  switch (kidDisplay->mDisplay) {
+  case NS_STYLE_DISPLAY_BLOCK:
+  case NS_STYLE_DISPLAY_LIST_ITEM:
+    if (mKidFrame != mLine->mFirstChild) {
+      // Block items must be at the start of a line, therefore we need
+      // to break before the block item.
+      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+         ("nsLineLayout::ReflowMappedChild: block requires break-before"));
+      return NS_LINE_LAYOUT_BREAK_BEFORE;
+    }
+    isBlock = PR_TRUE;
+    break;
+  }
+
+  // Compute new total width of child using its current margin values
+  // (they may have changed since the last time the child was reflowed)
+  nsRect kidRect;
+  mKidFrame->GetRect(kidRect);
+  nsMargin kidMargin;
+  kidSpacing->CalcMarginFor(mKidFrame, kidMargin);
+  nscoord totalWidth;
+  totalWidth = kidMargin.left + kidMargin.right + kidRect.width;
+
+  // If the child intersects the area affected by the reflow then
+  // we need to reflow it.
+  if (mReflowData.mX + kidMargin.left + kidRect.width > mNewRightEdge) {
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                 ("nsLineLayout::ReflowMappedChild: failed edge test"));
+    // XXX if !splittable then return NS_LINE_LAYOUT_BREAK_BEFORE
+    return ReflowChild(aReflowCommand);
+  }
+
+  // Make sure the child will fit. The child always fits if it's the
+  // first child on the line.
+  if (mUnconstrainedWidth ||
+      (mKidFrame == mLine->mFirstChild) ||
+      (totalWidth <= mReflowData.mAvailWidth)) {
+    // By convention, mReflowResult is set during ResizeReflow,
+    // IncrementalReflow AND GetReflowMetrics by those frames that are
+    // line layout aware.
+    mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
+    nsReflowMetrics kidMetrics;
+    mKidFrame->GetReflowMetrics(mPresContext, kidMetrics);
+
+    nsSize maxElementSize;
+    nsSize* kidMaxElementSize = nsnull;
+    if (nsnull != mMaxElementSizePointer) {
+      kidMaxElementSize = &maxElementSize;
+      maxElementSize.width = kidRect.width;
+      maxElementSize.height = kidRect.height;
+    }
+    kidRect.x = mReflowData.mX + kidMargin.left;
+    kidRect.y = mY;
+
+    if (NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE == mReflowResult) {
+      mSkipLeadingWhiteSpace = PR_FALSE;
+    }
+
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                 ("nsLineLayout::ReflowMappedChild: fit size=%d,%d",
+                  kidRect.width, kidRect.height));
+    mLine->mIsBlock = isBlock;
+    return PlaceChild(kidRect, kidMetrics, kidMaxElementSize, kidMargin,
+                      NS_FRAME_COMPLETE);
+  }
+
+  // The child doesn't fit as is; if it's splittable then reflow it
+  // otherwise return break-before status so that the non-splittable
+  // child is pushed to the next line.
+  if (nsIFrame::NotSplittable != splits) {
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                 ("nsLineLayout::ReflowMappedChild: can't directly fit"));
+    return ReflowChild(aReflowCommand);
+  }
+  return NS_LINE_LAYOUT_BREAK_BEFORE;
+}
+
 // Return values: <0 for error
 // 0 == NS_LINE_LAYOUT
 nsresult
 nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
 {
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+     ("nsLineLayout::ReflowChild: attempt frame=%p[%d] mX=%d mAvailWidth=%d",
+      mKidFrame, mKidIndex,
+      mReflowData.mX, mReflowData.mAvailWidth));
+
   // Get kid frame's style context
   nsIStyleContextPtr kidSC;
   nsresult rv = mKidFrame->GetStyleContext(mPresContext, kidSC.AssignRef());
@@ -362,13 +548,22 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   switch (kidDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_NONE:
     // Make sure the frame remains zero sized.
+    mKidFrame->WillReflow(*mPresContext);
     mKidFrame->SetRect(nsRect(mReflowData.mX, mY, 0, 0));
+    NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                 ("nsLineLayout::ReflowChild: display=none"));
     return NS_LINE_LAYOUT_COMPLETE;
+
   case NS_STYLE_DISPLAY_INLINE:
     break;
+
   default:
     isBlock = PR_TRUE;
     if (!isFirstChild) {
+      // XXX Make sure child is dirty for next time
+      mKidFrame->WillReflow(*mPresContext);
+      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                   ("nsLineLayout::ReflowChild: block requires break-before"));
       return NS_LINE_LAYOUT_BREAK_BEFORE;
     }
     break;
@@ -386,14 +581,20 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     kidAvailSize.width -= kidMargin.left + kidMargin.right;
     if (!isFirstChild && (kidAvailSize.width <= 0)) {
       // No room.
+
+      // XXX Make sure child is dirty for next time
+      mKidFrame->WillReflow(*mPresContext);
+      NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                   ("nsLineLayout::ReflowChild: !fit"));
       return NS_LINE_LAYOUT_BREAK_BEFORE;
     }
   }
 
   // Reflow the child
+  mFramesReflowed++;
   nsRect kidRect;
   nsSize maxElementSize;
-  nsReflowMetrics kidSize;
+  nsReflowMetrics kidMetrics;
   nsSize* kidMaxElementSize = nsnull;
   nsReflowStatus kidReflowStatus;
   if (nsnull != mMaxElementSizePointer) {
@@ -401,6 +602,10 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   }
   mReflowResult = NS_LINE_LAYOUT_REFLOW_RESULT_NOT_AWARE;
   nscoord dx = mReflowData.mX + kidMargin.left;
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsLineLayout::ReflowChild: reflowing frame=%p[%d] into %d,%d",
+                mKidFrame, mKidIndex,
+                kidAvailSize.width, kidAvailSize.height));
   if (aReflowCommand) {
     nsIFrame* nextFrame;
 
@@ -409,10 +614,10 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     mSpaceManager->Translate(-dx, -mY);
     kidRect.x = dx;
     kidRect.y = mY;
-    kidSize.width = kidRect.width;
-    kidSize.height = kidRect.height;
-    kidSize.ascent = kidRect.height;
-    kidSize.descent = 0;
+    kidMetrics.width = kidRect.width;
+    kidMetrics.height = kidRect.height;
+    kidMetrics.ascent = kidRect.height;
+    kidMetrics.descent = 0;
   } else if (isBlock) {
     // Calculate top margin by collapsing with previous bottom margin
     nscoord negTopMargin;
@@ -447,26 +652,28 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     // undo it if it ends up pushing the line.
 
     mSpaceManager->Translate(dx, mY);
+    mKidFrame->WillReflow(*mPresContext);
     rv = mBlock->ReflowBlockChild(mKidFrame, mPresContext,
                                   mSpaceManager, kidAvailSize, kidRect,
                                   kidMaxElementSize, kidReflowStatus);
     mSpaceManager->Translate(-dx, -mY);
     kidRect.x = dx;
     kidRect.y = mY;
-    kidSize.width = kidRect.width;
-    kidSize.height = kidRect.height;
-    kidSize.ascent = kidRect.height;
-    kidSize.descent = 0;
+    kidMetrics.width = kidRect.width;
+    kidMetrics.height = kidRect.height;
+    kidMetrics.ascent = kidRect.height;
+    kidMetrics.descent = 0;
   }
   else {
     // Reflow the inline child
+    mKidFrame->WillReflow(*mPresContext);
     rv = mBlock->ReflowInlineChild(mKidFrame, mPresContext,
-                                   kidSize, kidAvailSize, kidMaxElementSize,
+                                   kidMetrics, kidAvailSize, kidMaxElementSize,
                                    kidReflowStatus);
     // After we reflow the inline child we will know whether or not it
     // has any height/width. If it doesn't have any height/width then
     // we do not yet apply any previous block bottom margin.
-    if ((0 != kidSize.height) && !mMarginApplied) {
+    if ((0 != kidMetrics.height) && !mMarginApplied) {
       // Before we place the first inline child on this line apply
       // the previous block's bottom margin.
       nscoord bottomMargin = mBlockReflowState.mPrevPosBottomMargin -
@@ -481,13 +688,13 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     }
     kidRect.x = dx;
     kidRect.y = mY;
-    kidRect.width = kidSize.width;
-    kidRect.height = kidSize.height;
+    kidRect.width = kidMetrics.width;
+    kidRect.height = kidMetrics.height;
   }
   if (NS_OK != rv) return rv;
 
   // See if the child fit
-  if (kidSize.width > kidAvailSize.width) {
+  if (kidMetrics.width > kidAvailSize.width) {
     // The child took up too much space. This condition is ignored if
     // the child is the first child (by definition the first child
     // always fits) or we have a word start and the word start is the
@@ -507,6 +714,9 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
         // There is no word to break at and it's not our first child.
         // We are out of room.
         // XXX mKidPrevInFlow
+        NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+                     ("nsLineLayout::ReflowChild: !fit size=%d,%d",
+                      kidRect.width, kidRect.height));
         return NS_LINE_LAYOUT_BREAK_BEFORE;
       }
     }
@@ -518,6 +728,22 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     mSkipLeadingWhiteSpace = PR_FALSE;
   }
 
+  // Now place the child
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsLineLayout::ReflowChild: fit size=%d,%d",
+                kidRect.width, kidRect.height));
+  mLine->mIsBlock = isBlock;
+  return PlaceChild(kidRect, kidMetrics, kidMaxElementSize,
+                    kidMargin, kidReflowStatus);
+}
+
+nsresult
+nsLineLayout::PlaceChild(const nsRect& kidRect,
+                         const nsReflowMetrics& kidMetrics,
+                         const nsSize* kidMaxElementSize,
+                         const nsMargin& kidMargin,
+                         nsReflowStatus kidReflowStatus)
+{
   // Place child
   mKidFrame->SetRect(kidRect);
 
@@ -525,34 +751,35 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
   // XXX RTL
   nscoord horizontalMargins = kidMargin.left +
     kidMargin.right;
-  nscoord totalWidth = kidSize.width + horizontalMargins;
+  nscoord totalWidth = kidMetrics.width + horizontalMargins;
   mReflowData.mX += totalWidth;
   if (!mUnconstrainedWidth) {
     mReflowData.mAvailWidth -= totalWidth;
   }
   if (nsnull != mMaxElementSizePointer) {
-    nscoord elementWidth = maxElementSize.width + horizontalMargins;
+    // XXX I'm not certain that this is doing the right thing; rethink this
+    nscoord elementWidth = kidMaxElementSize->width + horizontalMargins;
     if (elementWidth > mReflowData.mMaxElementSize.width) {
       mReflowData.mMaxElementSize.width = elementWidth;
     }
-    if (kidSize.height > mReflowData.mMaxElementSize.height) {
-      mReflowData.mMaxElementSize.height = kidSize.height;
+    if (kidMetrics.height > mReflowData.mMaxElementSize.height) {
+      mReflowData.mMaxElementSize.height = kidMetrics.height;
     }
   }
-  if (kidSize.ascent > mReflowData.mMaxAscent) {
-    mReflowData.mMaxAscent = kidSize.ascent;
+  if (kidMetrics.ascent > mReflowData.mMaxAscent) {
+    mReflowData.mMaxAscent = kidMetrics.ascent;
   }
-  if (kidSize.descent > mReflowData.mMaxDescent) {
-    mReflowData.mMaxDescent = kidSize.descent;
+  if (kidMetrics.descent > mReflowData.mMaxDescent) {
+    mReflowData.mMaxDescent = kidMetrics.descent;
   }
-  AddAscent(isBlock ? 0 : kidSize.ascent);
-  mLine->mIsBlock = isBlock;
+  AddAscent(mLine->mIsBlock ? 0 : kidMetrics.ascent);
 
   // Set completion status
+  nsresult rv = NS_LINE_LAYOUT_COMPLETE;
   mLine->mLastContentOffset = mKidIndex;
   if (NS_FRAME_IS_COMPLETE(kidReflowStatus)) {
     mLine->mLastContentIsComplete = PR_TRUE;
-    if (isBlock ||
+    if (mLine->mIsBlock ||
         (NS_LINE_LAYOUT_REFLOW_RESULT_BREAK_AFTER == mReflowResult)) {
       rv = NS_LINE_LAYOUT_BREAK_AFTER;
     }
@@ -564,6 +791,8 @@ nsLineLayout::ReflowChild(nsReflowCommand* aReflowCommand)
     mKidPrevInFlow = mKidFrame;
   }
 
+  NS_FRAME_LOG(NS_FRAME_TRACE_CHILD_REFLOW,
+               ("nsLineLayout::PlaceChild: rv=%d", rv));
   return rv;
 }
 
@@ -742,7 +971,9 @@ nsLineLayout::SplitLine(PRInt32 aChildReflowStatus, PRInt32 aRemainingKids)
     from->mChildCount -= aRemainingKids;
     NS_ASSERTION(0 != from->mChildCount, "bad push");
 #ifdef NS_DEBUG
-    from->Verify();
+    if (nsIFrame::GetVerifyTreeEnable()) {
+      from->Verify();
+    }
 #endif
 #ifdef NOISY_REFLOW
     printf("After push, from-line (%d):\n", aRemainingKids);
@@ -765,9 +996,7 @@ nsLineLayout::ReflowMapped()
   mKidFrame = mLine->mFirstChild;
   PRInt32 kidNum = 0;
   while (kidNum < mLine->mChildCount) {
-    // XXX Code to avoid reflowing a child goes here
-
-    nsresult childReflowStatus = ReflowChild(nsnull);
+    nsresult childReflowStatus = ReflowMappedChild(nsnull);
     if (childReflowStatus < 0) {
       reflowStatus = childReflowStatus;
       goto done;
@@ -878,10 +1107,9 @@ nsLineLayout::PullUpChildren()
       }
 
       // Make pulled child part of this line
-#ifdef NOISY_REFLOW
-      printf("Before Pullup:\n");
-      line->List(stdout, 1);
-#endif
+      NS_FRAME_LOG(NS_FRAME_TRACE_PUSH_PULL,
+                   ("nsLineLayout::PullUpChildren: trying to pull frame=%p",
+                    mKidFrame));
       mLine->mChildCount++;
       if (0 == --line->mChildCount) {
         // Remove empty lines from the list
@@ -901,12 +1129,14 @@ nsLineLayout::PullUpChildren()
         line->mFirstChild->GetContentIndex(indexInParent);
         line->mFirstContentOffset = indexInParent;
 #ifdef NS_DEBUG
-        line->Verify();
+        if (nsIFrame::GetVerifyTreeEnable()) {
+          line->Verify();
+        }
 #endif
       }
 
       // Try to reflow it like any other mapped child
-      nsresult childReflowStatus = ReflowChild(nsnull);
+      nsresult childReflowStatus = ReflowMappedChild(nsnull);
       if (childReflowStatus < 0) {
         reflowStatus = childReflowStatus;
         goto done;
@@ -1053,11 +1283,6 @@ nsLineLayout::ReflowUnmapped()
       reflowStatus = rv;
       goto done;
     }
-    if (NS_LINE_LAYOUT_PSEUDO_BREAK_BEFORE_BLOCK == rv) {
-      // We have found a child that should not be a part of the
-      // block. Therefore we are finished!
-      goto done;
-    }
 
     // Add frame to our list
     if (nsnull != mPrevKidFrame) {
@@ -1075,6 +1300,9 @@ nsLineLayout::ReflowUnmapped()
       // need to split the line.
       childReflowStatus = rv;
       pushCount = 1;
+
+      // XXX Mark new frame dirty so it gets reflow later on
+      mKidFrame->WillReflow(*mPresContext);
       goto split_line;
     }
 
@@ -1133,10 +1361,9 @@ done:
 nsresult
 nsLineLayout::ReflowLine()
 {
-#ifdef NOISY_REFLOW
-  printf("Before ReflowLine:\n");
-  mLine->List(stdout, 1);
-#endif
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+               ("enter nsLineLayout::ReflowLine: childCount=%d",
+                mLine->mChildCount));
 
   nsresult rv = NS_LINE_LAYOUT_COMPLETE;
 
@@ -1170,20 +1397,23 @@ nsLineLayout::ReflowLine()
     mLineHeight = mReflowData.mMaxAscent + mReflowData.mMaxDescent;
   }
   else {
-    AlignChildren();
+    if (0 != mFramesReflowed) {
+      AlignChildren();
+    }
   }
 
   // Set final bounds of the line
   mLine->mBounds.height = mLineHeight;
   mLine->mBounds.width = mReflowData.mX - mLine->mBounds.x;
 
-#ifdef NOISY_REFLOW
-  printf("After ReflowLine:\n");
-  mLine->List(stdout, 1);
-#endif
 #ifdef NS_DEBUG
-  mLine->Verify();
+  if (nsIFrame::GetVerifyTreeEnable()) {
+    mLine->Verify();
+  }
 #endif
+  NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
+               ("exit nsLineLayout::ReflowLine: childCount=%d",
+                mLine->mChildCount));
   return rv;
 }
 

@@ -79,7 +79,6 @@ struct nsLineLayout {
   nsresult IncrementalReflowFromChild(nsReflowCommand& aReflowCommand,
                                       nsIFrame*        aChildFrame);
                                       
-
   // The presentation context
   nsIPresContext* mPresContext;
 
@@ -96,6 +95,7 @@ struct nsLineLayout {
 
   // Whenever the line layout creates a frame this slot is incremented
   PRInt32 mNewFrames;
+  PRIntn mFramesReflowed;
 
   // Current reflow data indicating where we are in the line, how much
   // width remains and the maximum element size so far.
@@ -114,6 +114,7 @@ struct nsLineLayout {
   nscoord mMaxHeight;
   nsSize* mMaxElementSizePointer;
   nscoord mX0;
+  nscoord mNewRightEdge;
 
   nscoord* mAscents;
   nscoord mAscentBuf[20];
@@ -158,7 +159,15 @@ protected:
 
   nsresult WordBreakReflow();
 
+  nsresult ReflowMappedChild(nsReflowCommand* aReflowCommand);
+
   nsresult ReflowChild(nsReflowCommand* aReflowCommand);
+
+  nsresult PlaceChild(const nsRect& kidRect,
+                      const nsReflowMetrics& kidMetrics,
+                      const nsSize* kidMaxElementSize,
+                      const nsMargin& kidMargin,
+                      nsReflowStatus kidReflowStatus);
 
   nsresult ReflowMapped();
 
@@ -193,6 +202,5 @@ protected:
 #define NS_LINE_LAYOUT_NOT_COMPLETE              1
 #define NS_LINE_LAYOUT_BREAK_BEFORE              2
 #define NS_LINE_LAYOUT_BREAK_AFTER               3
-#define NS_LINE_LAYOUT_PSEUDO_BREAK_BEFORE_BLOCK 4
 
 #endif /* nsLineLayout_h___ */
