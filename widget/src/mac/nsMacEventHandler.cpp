@@ -26,6 +26,8 @@
 #include <ToolUtils.h>
 #include <DiskInit.h>
 #include <LowMem.h>
+#include <TextServices.h>
+#include <UnicodeConverter.h>
 
 // from MacHeaders.c
 #ifndef topLeft
@@ -44,9 +46,27 @@ PRBool	nsMacEventHandler::mInBackground = PR_FALSE;
 //-------------------------------------------------------------------------
 nsMacEventHandler::nsMacEventHandler(nsMacWindow* aTopLevelWidget)
 {
+	OSErr	err;
+	InterfaceTypeList supportedServices;
+	
 	mTopLevelWidget			= aTopLevelWidget;
 	mLastWidgetHit			= nsnull;
-	mLastWidgetPointed	= nsnull;
+	mLastWidgetPointed		= nsnull;
+	
+	//
+	// create a TSMDocument for this window.  We are allocating a TSM document for
+	// each Mac window
+	//
+	supportedServices[0] = kTextService;
+	err = ::NewTSMDocument(1,supportedServices,&mTSMDocument,(long)this);
+	NS_ASSERTION(err==noErr,"nsMacEventHandler::nsMacEventHandler: NewTSMDocument failed.");
+	printf("nsMacEventHandler::nsMacEventHandler: created TSMDocument[%p]\n",mTSMDocument);
+		
+	mIMEIsComposing = PR_FALSE;
+	mIMECompositionString = nsnull;
+	mIMECompositionStringSize = 0;
+	mIMECompositionStringLength = 0;
+
 }
 
 
@@ -57,6 +77,9 @@ nsMacEventHandler::~nsMacEventHandler()
 
 	if (mLastWidgetHit)
 		mLastWidgetHit->RemoveDeleteObserver(this);
+		
+	if (mTSMDocument)
+		(void)::DeleteTSMDocument(mTSMDocument);
 }
 
 
@@ -496,12 +519,20 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 {
+	OSErr	err;
 	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
 	if (toolkit)
 	{
 		Boolean isActive = ((aOSEvent.modifiers & activeFlag) != 0);
 		if (isActive)
 		{
+			//
+			// Activate The TSMDocument associated with this handler
+			//
+			err = ::ActivateTSMDocument(mTSMDocument);
+			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: ActivateTSMDocument failed");
+			printf("nsEventHandler::HandleActivateEvent: ActivateTSMDocument[%p]\n",mTSMDocument);
+			
 			//¥TODO: retrieve the focused widget for that window
 			nsWindow*	focusedWidget = mTopLevelWidget;
 			toolkit->SetFocus(focusedWidget);
@@ -525,6 +556,13 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		}
 		else
 		{
+			//
+			// Deactivate the TSMDocument assoicated with this EventHandler
+			//
+			err = ::DeactivateTSMDocument(mTSMDocument);
+			NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleActivateEvent: DeactivateTSMDocument failed");
+			printf("nsEventHandler::HandleActivateEvent: DeactivateTSMDocument[%p]\n",mTSMDocument);
+			
 			//¥TODO: save the focused widget for that window
 			toolkit->SetFocus(nsnull);
 	
@@ -842,4 +880,216 @@ void nsMacEventHandler::ConvertOSEventToMouseEvent(
 
 	// nsMouseEvent
 	aMouseEvent.clickCount = lastClickCount;
+}
+
+//-------------------------------------------------------------------------
+//
+// HandlePositionToOffsetEvent
+//
+//-------------------------------------------------------------------------
+long nsMacEventHandler::HandlePositionToOffset(Point aPoint,short* regionClass)
+{
+	*regionClass = kTSMOutsideOfBody;
+	return 0;
+}
+
+//-------------------------------------------------------------------------
+//
+// HandleOffsetToPosition Event
+//
+//-------------------------------------------------------------------------
+PRBool nsMacEventHandler::HandleOffsetToPosition(long offset,Point* thePoint)
+{
+	(*thePoint).v = 0;
+	(*thePoint).h = 0;
+	return PR_TRUE;
+}
+
+//-------------------------------------------------------------------------
+//
+// HandleUpdate Event
+//
+//-------------------------------------------------------------------------
+ nsMacEventHandler::HandleUpdate(Handle textHandle,ScriptCode script,long fixedLength)
+{
+	TextToUnicodeInfo	textToUnicodeInfo;
+	TextEncoding		textEncodingFromScript;
+	ByteCount			text_size, source_read;
+	PRBool				rv;
+	OSErr				err;
+	
+	HLock(textHandle);
+
+	//
+	// if we aren't in composition mode alredy, signal the backing store w/ the mode change
+	//	
+	if (!mIMEIsComposing) {
+		mIMEIsComposing = PR_TRUE;
+		HandleStartComposition();
+	}
+
+	//
+	// convert our script code (smKeyScript) to a TextEncoding 
+	//
+	err = ::UpgradeScriptInfoToTextEncoding(script,kTextLanguageDontCare,kTextRegionDontCare,nsnull,
+											&textEncodingFromScript);
+	NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleUpdate: UpgradeScriptInfoToTextEncoding failed.");
+	if (err!=noErr) { ::HUnlock(textHandle); return PR_FALSE; }
+	
+	err = ::CreateTextToUnicodeInfoByEncoding(textEncodingFromScript,&textToUnicodeInfo);
+	NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleUpdate: CreateUnicodeToTextInfoByEncoding failed.");
+	if (err!=noErr) { ::HUnlock(textHandle); return PR_FALSE; }
+
+	
+	text_size = ::GetHandleSize(textHandle);
+	if (mIMECompositionStringSize < (text_size+1)*3) {
+		mIMECompositionStringSize = (text_size+1)*3;
+		if (mIMECompositionString!=nsnull) delete [] mIMECompositionString;
+		mIMECompositionString = new PRUnichar[(text_size+1)*3];
+	}
+
+	//
+	// convert the text from the Update event into Unicode
+	//
+	err = ::ConvertFromTextToUnicode(textToUnicodeInfo,
+									text_size,*textHandle,
+									kUnicodeLooseMappingsMask,
+									0,NULL,NULL,NULL,
+									mIMECompositionStringSize*sizeof(PRUnichar),&source_read,
+									&mIMECompositionStringLength,mIMECompositionString);
+									
+	NS_ASSERTION(err==noErr,"nsMacEventHandler::HandleUpdate: ConverFromTextToUnicode failed.");
+	if (err!=noErr) { ::HUnlock(textHandle); ::DisposeTextToUnicodeInfo(&textToUnicodeInfo); return PR_FALSE; }
+
+	//
+	// null terminate the string for the XP-stuff
+	//
+	mIMECompositionString[mIMECompositionStringLength/sizeof(PRUnichar)] = (PRUnichar)0;
+		
+	rv = HandleTextEvent();
+	
+	::HUnlock(textHandle);
+	::DisposeTextToUnicodeInfo(&textToUnicodeInfo);
+
+	if (fixedLength==-1 || fixedLength==text_size) {
+		HandleEndComposition();
+		mIMEIsComposing = PR_FALSE;
+	}
+	
+	return rv;
+}
+
+//-------------------------------------------------------------------------
+//
+// HandleStartComposition
+//
+//-------------------------------------------------------------------------
+PRBool nsMacEventHandler::HandleStartComposition(void)
+{
+	// 
+	// get the focused widget [tague: may need to rethink this later]
+	//
+	nsWindow* focusedWidget = mTopLevelWidget;	
+	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
+	if (toolkit)
+		focusedWidget = toolkit->GetFocus();
+	
+	if (!focusedWidget) return PR_FALSE;
+
+	//
+	// create the nsCompositionEvent
+	//
+	nsCompositionEvent		compositionEvent;
+
+	compositionEvent.eventStructType = NS_COMPOSITION_START;
+	compositionEvent.message = NS_COMPOSITION_START;
+	compositionEvent.point.x = 0;
+	compositionEvent.point.y = 0;
+	compositionEvent.time = PR_IntervalNow();
+
+	//
+	// nsGUIEvent parts
+	//
+	compositionEvent.widget	= focusedWidget;
+	compositionEvent.nativeMsg	= (void*)nsnull;		// no native message for this
+
+	return(focusedWidget->DispatchWindowEvent(compositionEvent));
+}
+
+//-------------------------------------------------------------------------
+//
+// HandleEndComposition
+//
+//-------------------------------------------------------------------------
+PRBool nsMacEventHandler::HandleEndComposition(void)
+{
+	// 
+	// get the focused widget [tague: may need to rethink this later]
+	//
+	nsWindow* focusedWidget = mTopLevelWidget;	
+	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
+	if (toolkit)
+		focusedWidget = toolkit->GetFocus();
+	
+	if (!focusedWidget) return PR_FALSE;
+
+	//
+	// create the nsCompositionEvent
+	//
+	nsCompositionEvent		compositionEvent;
+
+	compositionEvent.eventStructType = NS_COMPOSITION_END;
+	compositionEvent.message = NS_COMPOSITION_END;
+	compositionEvent.point.x = 0;
+	compositionEvent.point.y = 0;
+	compositionEvent.time = PR_IntervalNow();
+
+	//
+	// nsGUIEvent parts
+	//
+	compositionEvent.widget	= focusedWidget;
+	compositionEvent.nativeMsg	= (void*)nsnull;		// no native message for this
+
+	return(focusedWidget->DispatchWindowEvent(compositionEvent));
+}
+
+//-------------------------------------------------------------------------
+//
+// HandleTextEvent
+//
+//-------------------------------------------------------------------------
+PRBool nsMacEventHandler::HandleTextEvent(void)
+{
+	// 
+	// get the focused widget [tague: may need to rethink this later]
+	//
+	nsWindow* focusedWidget = mTopLevelWidget;	
+	nsCOMPtr<nsToolkit> toolkit ( dont_AddRef((nsToolkit*)mTopLevelWidget->GetToolkit()) );
+	if (toolkit)
+		focusedWidget = toolkit->GetFocus();
+	
+	if (!focusedWidget) return PR_FALSE;
+
+	//
+	// create the nsCompositionEvent
+	//
+	nsTextEvent		textEvent;
+
+	textEvent.eventStructType = NS_TEXT_EVENT;
+	textEvent.message = NS_TEXT_EVENT;
+	textEvent.point.x = 0;
+	textEvent.point.y = 0;
+	textEvent.time = PR_IntervalNow();
+	textEvent.theText = mIMECompositionString;
+
+	//
+	// nsGUIEvent parts
+	//
+	textEvent.widget	= focusedWidget;
+	textEvent.nativeMsg	= (void*)nsnull;		// no native message for this
+
+	if (focusedWidget->DispatchWindowEvent(textEvent)==NS_OK) 
+		return PR_TRUE;
+	else 
+		return PR_FALSE;
 }

@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "plevent.h"
 #include "prthread.h"
+#include "nsMacTSMMessagePump.h"
 
 #include <MacWindows.h>
 #include <ToolUtils.h>
@@ -158,7 +159,7 @@ static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
  *  @return  NONE
  */
 nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
-	: mToolkit(aToolkit), mMessageSink(aSink), mEventQueue(NULL)
+	: mToolkit(aToolkit), mMessageSink(aSink), mEventQueue(NULL), mTSMMessagePump(NULL)
 {
 	mRunning = PR_FALSE;
 	mMouseRgn = ::NewRgn();
@@ -171,6 +172,13 @@ nsMacMessagePump::nsMacMessagePump(nsToolkit *aToolkit, nsMacMessageSink* aSink)
 			serviceManager->ReleaseService(kEventQueueServiceCID, eventService);
 		}
 	}
+	
+	//
+	// create the TSM Message Pump
+	//
+	mTSMMessagePump = new nsMacTSMMessagePump();
+	NS_ASSERTION(mTSMMessagePump!=NULL,"nsMacMessagePump::nsMacMessagePump: Unable to create TSM Message Pump.");
+	
 }
 
 //=================================================================
@@ -186,6 +194,12 @@ nsMacMessagePump::~nsMacMessagePump()
 
   //¥TODO? release the toolkits and sinks? not if we use COM_auto_ptr.
 	NS_IF_RELEASE(mEventQueue);
+	
+  //
+  // release the TSM Message Pump
+  //
+  if (mTSMMessagePump)
+  	delete mTSMMessagePump;
 }
 
 //=================================================================
@@ -240,6 +254,10 @@ PRBool nsMacMessagePump::GetEvent(EventRecord &theEvent)
 
 	::LMSetSysEvtMask(eventMask);	// we need keyUp events
 	PRBool haveEvent = ::WaitNextEvent(eventMask, &theEvent, sleep, mMouseRgn) ? PR_TRUE : PR_FALSE;
+	if (haveEvent && TSMEvent(&theEvent) )
+	{
+		haveEvent = PR_FALSE;
+	}
 
 	if (mMouseRgn)
 	{
@@ -503,6 +521,10 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 							Boolean					haveEvent;
 							EventRecord			updateEvent;
 							haveEvent = ::WaitNextEvent(updateMask, &updateEvent, 0, nil);
+							if (haveEvent && TSMEvent(&updateEvent))
+							{
+								haveEvent = PR_FALSE;
+							}
 							if (haveEvent)
 								DoUpdate(updateEvent);
 						}
