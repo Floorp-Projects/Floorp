@@ -56,6 +56,11 @@ protected:
                               nsHTMLReflowMetrics& aDesiredLayoutSize,
                               nsSize& aDesiredWidgetSize);
 
+  virtual void GetDesiredSize(nsIPresContext* aPresContext,
+                              const nsHTMLReflowState& aReflowState,
+                              nsHTMLReflowMetrics& aDesiredSize)
+ 				{ nsFormControlFrame::GetDesiredSize(aPresContext, aReflowState, aDesiredSize); }
+
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release() { return NS_OK; }
