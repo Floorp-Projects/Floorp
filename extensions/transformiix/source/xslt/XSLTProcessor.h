@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: XSLTProcessor.h,v 1.7 2000/04/20 22:10:16 Peter.VanderBeken%pandora.be Exp $
+ * $Id: XSLTProcessor.h,v 1.8 2000/06/11 16:54:54 Peter.VanderBeken%pandora.be Exp $
  */
 
 
@@ -75,7 +75,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.7 $ $Date: 2000/04/20 22:10:16 $
+ * @version $Revision: 1.8 $ $Date: 2000/06/11 16:54:54 $
 **/
 class XSLTProcessor
 #ifdef MOZILLA
@@ -295,7 +295,7 @@ private:
      * their value. If this value is true, the allowOnlyTextNodes flag is ignored.
     **/
     MBool getText
-        (DocumentFragment* dfrag, DOMString& dest, MBool deep, MBool allowOnlyTextNodes);
+        (DocumentFragment* dfrag, String& dest, MBool deep, MBool allowOnlyTextNodes);
 
     /**
      * Notifies all registered ErrorObservers of the given error
@@ -337,7 +337,7 @@ private:
      * @param ps the current ProcessorState
     **/
     void processAttrValueTemplate
-        (const String& attValue, DOMString& result, Node* context, ProcessorState* ps);
+        (const String& attValue, String& result, Node* context, ProcessorState* ps);
 
     void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps);
     void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps);
