@@ -27,6 +27,7 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME	= widget_xlib
+IS_COMPONENT	= 1
 
 
 DIRS		= window_service
@@ -35,7 +36,9 @@ CPPSRCS		= \
 		nsAppShell.cpp \
 		nsButton.cpp \
 		nsCheckButton.cpp \
+		nsClipboard.cpp \
 		nsComboBox.cpp \
+		nsDragService.cpp \
 		nsFileWidget.cpp \
 		nsKeyCode.cpp \
 		nsLabel.cpp \
@@ -47,6 +50,7 @@ CPPSRCS		= \
 		nsPopUpMenu.cpp \
 		nsRadioButton.cpp \
 		nsScrollBar.cpp \
+		nsSound.cpp \
 		nsTextAreaWidget.cpp \
 		nsTextHelper.cpp \
 		nsTextWidget.cpp \
@@ -60,7 +64,7 @@ CPPSRCS		= \
 SHARED_LIBRARY_LIBS = $(DIST)/lib/libxpwidgets_s.a
 
 ifndef MOZ_MONOLITHIC_TOOLKIT
-EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lxlibrgb $(MOZ_XLIB_LDFLAGS)
+EXTRA_DSO_LDOPTS += -L$(DIST)/bin -lXt -lxlibrgb -lxlibxtbin -lXpm $(MOZ_XLIB_LDFLAGS)
 else
 EXTRA_DSO_LDOPTS += $(TK_LIBS)
 endif

@@ -24,6 +24,11 @@
 #include "nsGUIEvent.h"
 #include "plevent.h"
 
+// Static Thread Local Storage index of the toolkit object associated with
+// a given thread...
+
+static PRUintn gToolkitTLSIndex = 0;
+
 nsToolkit::nsToolkit()
 {
   NS_INIT_REFCNT();
@@ -38,5 +43,37 @@ NS_IMPL_ISUPPORTS(nsToolkit,kIToolkitIID);
 
 NS_METHOD nsToolkit::Init(PRThread *aThread)
 {
+  return NS_OK;
+}
+
+NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
+{
+  nsIToolkit* toolkit = nsnull;
+  nsresult rv = NS_OK;
+  PRStatus status;
+
+  // Create the TLS (Thread Local Storage) index the first time through
+  if (gToolkitTLSIndex == 0)
+  {
+    status = PR_NewThreadPrivateIndex(&gToolkitTLSIndex, NULL);
+    if (PR_FAILURE == status)
+    {
+      rv = NS_ERROR_FAILURE;
+    }
+  }
+
+  if (NS_SUCCEEDED(rv))
+  {
+    toolkit = (nsIToolkit*)PR_GetThreadPrivate(gToolkitTLSIndex);
+
+    // Create a new toolkit for this thread
+    if (!toolkit)
+    {
+      fprintf(stderr, "Creating a new nsIToolkit!\n");
+    }
+    else
+      fprintf(stderr, "No need to create a new nsIToolkit!\n");
+  }
+
   return NS_OK;
 }

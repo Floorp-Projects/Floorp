@@ -88,6 +88,7 @@ NS_METHOD nsScrollbar::SetPosition(PRUint32 aPos)
 {
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("nsScrollbar::SetPosition()\n"));
   PR_LOG(XlibScrollbarLM, PR_LOG_DEBUG, ("Scroll to %d\n", aPos));
+//  mPosition = (PRUint32)((float)aPos / (float)mRequestedSize.height * (float)mMaxRange);
   mPosition = aPos;
   CalcBarBounds();
   LayoutBar();
@@ -167,6 +168,9 @@ PRBool nsScrollbar::OnScroll(PRUint32 scrollCode, int cPos)
   case NS_SCROLLBAR_PAGE_PREV:
     result = PrevPage();
     break;
+  case NS_SCROLLBAR_POS:
+    result = SetPosition(cPos);
+    break;
   default:
     break;
   }
@@ -194,6 +198,14 @@ PRBool nsScrollbar::DispatchMouseEvent(nsMouseEvent &aEvent)
 
   // check to see if this was on the main window.
   switch (aEvent.message) {
+  case NS_MOUSE_MIDDLE_BUTTON_DOWN:
+    if (mIsVertical == PR_TRUE) {
+      OnScroll(NS_SCROLLBAR_POS, aEvent.point.y);
+    } 
+    else {
+      OnScroll(NS_SCROLLBAR_POS, aEvent.point.x);
+    }
+    break;
   case NS_MOUSE_LEFT_BUTTON_DOWN:
     if (mIsVertical == PR_TRUE) {
       if (aEvent.point.y < mBarBounds.y) {
