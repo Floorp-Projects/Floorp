@@ -128,14 +128,19 @@ BEGIN {
     if (!$^C) {
 
 ###########################################################################
-# Non-interactive override
+# Non-interactive override. Pass a filename on the command line which is
+# a Perl script. This script defines a %answer hash whose names are tags
+# and whose values are answers to all the questions checksetup.pl asks. 
+# Grep this file for references to that hash to see the tags to use for the 
+# possible answers. One example is ADMIN_EMAIL.
 ###########################################################################
-if ($ARGV[0]) {
+if ($ARGV[0] && ($ARGV[0] !~ /^--/)) {
     do $ARGV[0] 
         or ($@ && die("Error $@ processing $ARGV[0]"))
         or die("Error $! processing $ARGV[0]");
     $silent = 1;
 }
+
 ###########################################################################
 # Check required module
 ###########################################################################
@@ -336,6 +341,8 @@ if (%missing) {
 }
 }
 
+# Break out if checking the modules is all we have been asked to do.
+exit if grep(/^--check-modules$/, @ARGV);
 
 # If we're running on Windows, reset the input line terminator so that 
 # console input works properly - loading CGI tends to mess it up
