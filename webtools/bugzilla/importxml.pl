@@ -75,14 +75,12 @@ ConnectToDatabase();
 sub sillyness {
     my $zz;
     $zz = $Data::Dumper::Useqq;
-    $zz = %::components;
     $zz = %::versions;
     $zz = %::keywordsbyname;
     $zz = @::legal_bug_status;
     $zz = @::legal_opsys;
     $zz = @::legal_platform;
     $zz = @::legal_priority;
-    $zz = @::legal_product;
     $zz = @::legal_severity;
     $zz = @::legal_resolution;
     $zz = %::target_milestone;
@@ -372,20 +370,34 @@ for (my $k=1 ; $k <= $bugqty ; $k++) {
      $comp = $default_comp;
   }
 
+  # XXX - why are these arrays??
   my @product;
   my @component;
-  if ((@product = grep /^$prod$/i, @::legal_product) &&
-      (@component = grep /^$comp$/i, @{$::components{$product[0]}}) ) {
-    push (@query, "product");
-    push (@values, SqlQuote($product[0]) );
-    push (@query, "component");
-    push (@values, SqlQuote($component[0]) );
-  } elsif ((@product = grep /^$default_prod$/i, @::legal_product) &&
-      (@component = grep /^$default_comp$/i, @{$::components{$product[0]}}) ) {
-    push (@query, "product");
-    push (@values, SqlQuote($product[0]) );
-    push (@query, "component");
-    push (@values, SqlQuote($component[0]) );
+  my $prod_id;
+  my $comp_id;
+
+  # First, try the given product/component
+  $prod_id = get_product_id($prod);
+  $comp_id = get_component_id($prod_id, $comp) if $prod_id;
+
+  if ($prod_id && $comp_id) {
+      $product[0] = $prod;
+      $component[0] = $comp;
+  } else {
+      # Second, try the defaults
+      $prod_id = get_product_id($default_prod);
+      $comp_id = get_component_id($prod_id, $default_comp) if $prod_id;
+      if ($prod_id && $comp_id) {
+          $product[0] = $default_prod;
+          $component[0] = $default_comp;
+      }
+  }
+
+  if ($prod_id && $comp_id) {
+    push (@query, "product_id");
+    push (@values, $prod_id );
+    push (@query, "component_id");
+    push (@values, $comp_id );
   } else {
     my $subject = "Bug import error: invalid default product or component";
     my $message = "Cannot import these bugs because an invalid default ";
