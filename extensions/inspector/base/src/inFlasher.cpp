@@ -39,15 +39,19 @@
 #include "inFlasher.h"
 #include "inLayoutUtils.h"
 
+#include "nsIServiceManager.h"
 #include "nsIViewManager.h" 
 #include "nsIDeviceContext.h"
 #include "nsIWidget.h"
+
+static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 inFlasher::inFlasher()
 {
   NS_INIT_REFCNT();
+  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inFlasher::~inFlasher()
@@ -121,7 +125,7 @@ inFlasher::DrawElementOutline(nsIDOMElement* aElement, const PRUnichar* aColor, 
   nsPoint origin = inLayoutUtils::GetClientOrigin(frame);
   rect.x = origin.x + bounds.x;
   rect.y = origin.y + bounds.y;
-  inLayoutUtils::AdjustRectForMargins(aElement, rect);
+  mCSSUtils->AdjustRectForMargins(frame, rect);
   
   nsAutoString colorStr;
   colorStr.Assign(aColor);

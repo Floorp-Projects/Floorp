@@ -48,21 +48,14 @@ CPP_OBJS= \
 		$(NULL)
 
 SUB_LIBRARIES = \
-    $(DIST)\lib\xpcom.lib \
-    $(DIST)\lib\rdfutil_s.lib \
     $(DIST)\lib\inspector_s.lib \
-    $(DIST)\lib\gkgfx.lib \
-    $(DIST)\lib\contenthtmlstyle_s.lib \
-    $(DIST)\lib\contentshared_s.lib \
-    $(DIST)\lib\unicharutil_s.lib \
-    $(DIST)\lib\contentbase_s.lib \
-    $(DIST)\lib\contentxmldoc_s.lib \
-    $(DIST)\lib\contenthtmldoc_s.lib \
-    $(DIST)\lib\contenthtmlcontent_s.lib \
-    $(DIST)\lib\contentxmlcontent_s.lib \
-    $(DIST)\lib\contentxsldoc_s.lib \
-    $(DIST)\lib\contentevents_s.lib \
     $(DIST)\lib\inscreencap_s.lib \
+    $(NULL)
+
+LLIBS = \
+    $(DIST)\lib\xpcom.lib \
+    $(DIST)\lib\gkgfx.lib \
+    $(DIST)\lib\unicharutil_s.lib \
     $(DIST)\lib\png.lib             \
     $(DIST)\lib\zlib.lib            \
     $(LIBNSPR) \

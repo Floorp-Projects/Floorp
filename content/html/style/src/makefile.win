@@ -59,6 +59,7 @@ EXPORTS =			\
 	nsIHTMLCSSStyleSheet.h 	\
 	nsDOMCSSDeclaration.h 	\
 	nsIHTMLAttributes.h 	\
+	nsIInspectorCSSUtils.h 	\
 	$(NULL)
 
 CPP_OBJS =					\
@@ -78,6 +79,7 @@ CPP_OBJS =					\
 	.\$(OBJDIR)\nsDOMCSSAttrDeclaration.obj	\
 	.\$(OBJDIR)\nsDOMCSSDeclaration.obj 	\
 	.\$(OBJDIR)\nsComputedDOMStyle.obj 	\
+	.\$(OBJDIR)\nsInspectorCSSUtils.obj 	\
 	.\$(OBJDIR)\nsROCSSPrimitiveValue.obj 	\
 	.\$(OBJDIR)\nsDOMCSSRect.obj		\
   $(NULL)
