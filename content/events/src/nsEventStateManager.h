@@ -30,11 +30,19 @@
 #include "nsIObserver.h"
 #include "nsWeakReference.h"
 #include "nsHashtable.h"
+#include "nsITimer.h"
 
 class nsIDocument;
 class nsIScrollableView;
 class nsIPresShell;
 class nsITreeFrame;
+class nsIFrameSelection;
+
+// mac uses click-hold context menus, a holdover from 4.x
+#ifdef XP_MAC
+#define CLICK_HOLD_CONTEXT_MENUS 1
+#endif
+
 
 /*
  * Event listener manager
@@ -137,7 +145,7 @@ protected:
   // end mousewheel functions
 
   // routines for the d&d gesture tracking state machine
-  void BeginTrackingDragGesture ( nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
+  void BeginTrackingDragGesture ( nsIPresContext* aPresContext, nsGUIEvent* inDownEvent, nsIFrame* inDownFrame ) ;
   void StopTrackingDragGesture ( ) ;
   void GenerateDragGesture ( nsIPresContext* aPresContext, nsGUIEvent *aEvent ) ;
   PRBool IsTrackingDragGesture ( ) const { return mIsTrackingDragGesture; }
@@ -149,6 +157,8 @@ protected:
   nsresult MoveFocusToCaret();
   nsresult MoveCaretToFocus();
   nsresult EnsureCaretVisible(nsIPresShell* aPresShell, nsIContent *aContent);
+
+  void GetSelection ( nsIFrame* inFrame, nsIPresContext* inPresContext, nsIFrameSelection** outSelection ) ;
 
   //Any frames here must be checked for validity in ClearFrameRefs
   nsIFrame* mCurrentTarget;
@@ -203,6 +213,24 @@ protected:
 
   // So we don't have to keep checking accessibility.browsewithcaret pref
   PRBool mBrowseWithCaret;
+  
+#ifdef CLICK_HOLD_CONTEXT_MENUS
+  enum { kClickHoldDelay = 500 } ;        // 500ms == 1/2 second
+
+  void CreateClickHoldTimer ( nsIPresContext* aPresContext, nsGUIEvent* inMouseDownEvent ) ;
+  void KillClickHoldTimer ( ) ;
+  void FireContextClick ( ) ;
+  static void sClickHoldCallback ( nsITimer* aTimer, void* aESM ) ;
+  
+    // stash a bunch of stuff because we're going through a timer and the event
+    // isn't guaranteed to be there later. We don't want to hold strong refs to
+    // things because we're alerted to when they are going away in ClearFrameRefs().
+  nsPoint mEventPoint, mEventRefPoint;
+  nsIWidget* mEventDownWidget;
+  nsIPresContext* mEventPresContext;
+  nsCOMPtr<nsITimer> mClickHoldTimer;
+#endif
+
 };
 
 extern nsresult NS_NewEventStateManager(nsIEventStateManager** aInstancePtrResult);

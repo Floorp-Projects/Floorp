@@ -40,9 +40,24 @@
 #include <locale>
 #endif
 
+#define PINK_PROFILING_ACTIVATE 0
+#if PINK_PROFILING_ACTIVATE
+#include "profilerutils.h"
+#endif
+
 //#define DEBUG_TSM
 extern nsIRollupListener * gRollupListener;
 extern nsIWidget         * gRollupWidget;
+
+#if PINK_PROFILING_ACTIVATE
+static Boolean KeyDown(const UInt8 theKey);
+static Boolean KeyDown(const UInt8 theKey)
+{
+	KeyMap map;
+	GetKeys(map);
+	return ((*((UInt8 *)map + (theKey >> 3)) >> (theKey & 7)) & 1) != 0;
+}
+#endif
 
 
 // from MacHeaders.c
@@ -1064,6 +1079,11 @@ PRBool nsMacEventHandler::HandleKeyEvent(EventRecord& aOSEvent)
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 {
+#if PINK_PROFILING_ACTIVATE
+if (KeyDown(0x39))	// press [caps lock] to start the profile
+	ProfileStart();
+#endif
+
   OSErr err;
   Boolean isActive;
 
@@ -1138,6 +1158,11 @@ PRBool nsMacEventHandler::HandleActivateEvent(EventRecord& aOSEvent)
 		gEventDispatchHandler.SetDeactivated(mTopLevelWidget);
 		mTopLevelWidget->SetIsActive(PR_FALSE);
 	}
+#if PINK_PROFILING_ACTIVATE
+	ProfileSuspend();
+	ProfileStop();
+#endif
+
 	return PR_TRUE;
 }
 
@@ -1161,7 +1186,7 @@ PRBool nsMacEventHandler::HandleUpdateEvent(EventRecord& aOSEvent)
 //
 //-------------------------------------------------------------------------
 PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
-{
+{    
 	PRBool retVal = PR_FALSE;
 
 	WindowPtr		whichWindow;
@@ -1298,6 +1323,15 @@ PRBool nsMacEventHandler::HandleMouseDownEvent(EventRecord&	aOSEvent)
 
 				// dispatch the event
 				retVal = widgetHit->DispatchMouseEvent(mouseEvent);
+				
+				// if we're a control-click, send in an additional NS_CONTEXTMENU event
+				// after the mouse down.
+				if ( mouseButton == NS_MOUSE_RIGHT_BUTTON_DOWN ) {
+    			nsMouseEvent contextMenuEvent;
+    			ConvertOSEventToMouseEvent(aOSEvent, contextMenuEvent, NS_CONTEXTMENU);
+    			contextMenuEvent.isControl = PR_FALSE;    			
+					widgetHit->DispatchMouseEvent(contextMenuEvent);
+        } 
 			} 
 						
 			gEventDispatchHandler.SetWidgetHit(widgetHit);

@@ -41,12 +41,14 @@
 #include "nsWeakReference.h"
 #include "nsIDOMKeyListener.h"
 #include "nsIDOMMouseMotionListener.h"
+#include "nsIDOMContextMenuListener.h"
 #include "nsITimer.h"
 
 #include "nsCommandHandler.h"
 
 class nsWebBrowser;
-class ChromeListener;
+class ChromeTooltipListener;
+class ChromeContextMenuListener;
 
 // {6D10C180-6888-11d4-952B-0020183BF181}
 #define NS_ICDOCSHELLTREEOWNER_IID \
@@ -94,6 +96,7 @@ protected:
     NS_IMETHOD SetWebBrowserChrome(nsIWebBrowserChrome* aWebBrowserChrome);
 
     NS_IMETHOD AddChromeListeners();
+    NS_IMETHOD RemoveChromeListeners();
 
     nsresult   FindChildWithName(const PRUnichar *aName, 
                  PRBool aRecurse, nsIDocShellTreeItem* aRequestor, 
@@ -115,37 +118,31 @@ protected:
    nsIEmbeddingSiteWindow* mOwnerWin;
    nsIInterfaceRequestor*  mOwnerRequestor;
    
-    // the object that listens for chrome events like context menus and tooltips. 
-    // It is a separate object to avoid circular references between |this|
-    // and the DOM. This is a strong, owning ref.
-   ChromeListener*         mChromeListener;
+    // the objects that listen for chrome events like context menus and tooltips. 
+    // They are separate objects to avoid circular references between |this|
+    // and the DOM. These are strong, owning refs.
+   ChromeTooltipListener*         mChromeTooltipListener;
+   ChromeContextMenuListener*     mChromeContextMenuListener;
 };
 
 
 //
-// class ChromeListener
+// class ChromeTooltipListener
 //
 // The class that listens to the chrome events and tells the embedding
-// chrome to show things like context menus or tooltips, as appropriate.
-// Handles registering itself with the DOM with AddChromeListeners()
-// and removing itself with RemoveChromeListeners().
+// chrome to show tooltips, as appropriate. Handles registering itself
+// with the DOM with AddChromeListeners() and removing itself with
+// RemoveChromeListeners().
 //
-// NOTE: Because of a leak/bug in the EventListenerManager having to do with
-//       a single listener with multiple IID's, we need to addref/release
-//       this class instead of just owning it and calling delete when we
-//       know we're done. This also forces us to make RemoveChromeListeners()
-//       public when it doesn't need to be. This is a reminder to fix when I
-//       fix the ELM bug. (pinkerton)
-//
-class ChromeListener : public nsIDOMMouseListener,
-                       public nsIDOMKeyListener,
-                       public nsIDOMMouseMotionListener
+class ChromeTooltipListener : public nsIDOMMouseListener,
+                                public nsIDOMKeyListener,
+                                public nsIDOMMouseMotionListener
 {
 public:
   NS_DECL_ISUPPORTS
   
-  ChromeListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
-  virtual ~ChromeListener ( ) ;
+  ChromeTooltipListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
+  virtual ~ChromeTooltipListener ( ) ;
 
 	  // nsIDOMMouseListener
 	virtual nsresult HandleEvent(nsIDOMEvent* aEvent) {	return NS_OK; }
@@ -172,10 +169,21 @@ public:
 
 private:
 
-  NS_IMETHOD AddContextMenuListener();
+    // various delays for tooltips
+  enum {
+    kTooltipAutoHideTime = 5000,       // 5000ms = 5 seconds
+    kTooltipShowTime = 500             // 500ms = 0.5 seconds
+  };
+
   NS_IMETHOD AddTooltipListener();
-  NS_IMETHOD RemoveContextMenuListener();
   NS_IMETHOD RemoveTooltipListener();
+
+  NS_IMETHOD ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAReadableString & inTipText ) ;
+  NS_IMETHOD HideTooltip ( ) ;
+
+    // Determine if there is a TITLE attribute. Returns |PR_TRUE| if there is,
+    // and sets the text in |outText|.
+  PRBool FindTitleText ( nsIDOMNode* inNode, nsAWritableString & outText ) ;
 
   nsWebBrowser* mWebBrowser;
   nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
@@ -186,23 +194,7 @@ private:
     // to tell it, and no one would ever tell us of that fact.
   nsCOMPtr<nsIWebBrowserChrome> mWebBrowserChrome;
 
-  PRPackedBool mContextMenuListenerInstalled;
   PRPackedBool mTooltipListenerInstalled;
-
-private:
-
-    // various delays for tooltips
-  enum {
-    kTooltipAutoHideTime = 5000,       // 5000ms = 5 seconds
-    kTooltipShowTime = 500             // 500ms = 0.5 seconds
-  };
-
-  NS_IMETHOD ShowTooltip ( PRInt32 inXCoords, PRInt32 inYCoords, const nsAReadableString & inTipText ) ;
-  NS_IMETHOD HideTooltip ( ) ;
-
-    // Determine if there is a TITLE attribute. Returns |PR_TRUE| if there is,
-    // and sets the text in |outText|.
-  PRBool FindTitleText ( nsIDOMNode* inNode, nsAWritableString & outText ) ;
 
   nsCOMPtr<nsITimer> mTooltipTimer;
   static void sTooltipCallback ( nsITimer* aTimer, void* aListener ) ;
@@ -223,8 +215,46 @@ private:
     // reference in each of those cases. So we don't leak.
   nsCOMPtr<nsIDOMNode> mPossibleTooltipNode;
 
-}; // ChromeListener
+}; // ChromeTooltipListener
 
+
+//
+// class ChromeContextMenuListener
+//
+// The class that listens to the chrome events and tells the embedding
+// chrome to show context menus, as appropriate. Handles registering itself
+// with the DOM with AddChromeListeners() and removing itself with
+// RemoveChromeListeners().
+//
+class ChromeContextMenuListener : public nsIDOMContextMenuListener
+{
+public:
+  NS_DECL_ISUPPORTS
+  
+  ChromeContextMenuListener ( nsWebBrowser* inBrowser, nsIWebBrowserChrome* inChrome ) ;
+  virtual ~ChromeContextMenuListener ( ) ;
+
+    // nsIDOMContextMenuListener
+	NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) {	return NS_OK; }
+  NS_IMETHOD ContextMenu ( nsIDOMEvent* aEvent );
+
+    // Add/remove the relevant listeners, based on what interfaces
+    // the embedding chrome implements.
+  NS_IMETHOD AddChromeListeners();
+  NS_IMETHOD RemoveChromeListeners();
+
+private:
+
+  NS_IMETHOD AddContextMenuListener();
+  NS_IMETHOD RemoveContextMenuListener();
+
+  PRPackedBool mContextMenuListenerInstalled;
+
+  nsWebBrowser* mWebBrowser;
+  nsCOMPtr<nsIDOMEventReceiver> mEventReceiver;
+  nsCOMPtr<nsIWebBrowserChrome> mWebBrowserChrome;
+
+}; // class ChromeContextMenuListener
 
 
 
