@@ -760,14 +760,14 @@ nsSocketTransportService::Shutdown(void)
     for (i=0; i<mSelectFDSetCount; i++)
       NS_IF_RELEASE(mActiveTransportList[i]);
 
+    // clear the hostname database (NOTE: this runs when the browser
+    // enters the offline state).
+    PL_DHashTableFinish(&mHostDB);
   } else {
     NS_NOTREACHED("Should have thread when shutting down.");
     rv = NS_ERROR_FAILURE;
   }
 
-  // clear the hostname database (NOTE: this runs when the browser
-  // enters the offline state).
-  PL_DHashTableFinish(&mHostDB);
 
   LOG(("nsSocketTransportService::Shutdown END"));
 
