@@ -137,8 +137,8 @@ function (aTitle, aContentURL, aCustomizeURL)
             }
         }
         catch (e) {
-            titleMessage = "My Sidebar";
-            dialogMessage = aContentURL + " already exists in My Sidebar.";
+            titleMessage = "Sidebar";
+            dialogMessage = aContentURL + " already exists in Sidebar.";
         }
           
         var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
@@ -162,8 +162,8 @@ function (aTitle, aContentURL, aCustomizeURL)
         }
     }
     catch (e) {
-        titleMessage = "Add Tab to My Sidebar";
-        dialogMessage = "Add the Tab '" + aTitle + "' to My Sidebar?\n\n" + "Source: " + aContentURL;
+        titleMessage = "Add Tab to Sidebar";
+        dialogMessage = "Add the Tab '" + aTitle + "' to Sidebar?\n\n" + "Source: " + aContentURL;
     }
           
     var promptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();

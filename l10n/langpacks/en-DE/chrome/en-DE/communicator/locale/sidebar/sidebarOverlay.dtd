@@ -19,13 +19,13 @@
    - Contributor(s): Stephen Lamm <slamm@netscape.com>
   --> 
 
-<!ENTITY sidebar.panels.label        "My Sidebar">
+<!ENTITY sidebar.panels.label        "Sidebar">
 <!ENTITY sidebar.reload.label        "Reload">
 <!ENTITY sidebar.picker.label        "Add">
-<!ENTITY sidebar.customize.label     "Customize My Sidebar...">
+<!ENTITY sidebar.customize.label     "Customize Sidebar...">
 <!ENTITY sidebarCmd.label            "Sidebar">
 <!ENTITY sidebar.loading.label       "Loading...">
 
-<!ENTITY sidebar.no-panels.state     "My Sidebar is currently empty.">
+<!ENTITY sidebar.no-panels.state     "The Sidebar is currently empty.">
 <!ENTITY sidebar.no-panels.add       'You may add panels by clicking on the "Add" button above, and then clicking on "Customize..."'>
-<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide My Sidebar, click on the "View" menu above and select "Sidebar."'>
+<!ENTITY sidebar.no-panels.hide      'If you would like to completely hide the Sidebar, click on the "View" menu above, and select "Sidebar."'>
