@@ -90,6 +90,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "prio.h"
 #include "prmem.h"
 #include "prenv.h"
+#include "prlong.h"
 
 // Rewrite of Multipart form posting
 #include "nsSpecialSystemDirectory.h"
@@ -101,6 +102,8 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsEscape.h"
 #include "nsLinebreakConverter.h"
 #include "nsIMIMEService.h"
+
+#include "nsILocalFile.h"		// Using nsILocalFile to get file size
 
 // Security
 #include "nsIScriptSecurityManager.h"
@@ -1073,10 +1076,27 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
 
           // File inputs add file contents next
           if (NS_FORM_INPUT_FILE == type) {
-            PRFileInfo fileInfo;
-            if (PR_SUCCESS == PR_GetFileInfo(value, &fileInfo)) {
-              contentLen += fileInfo.size;
-            }
+            do {
+              // Because we have a native path to the file we can't use PR_GetFileInfo
+              // on the Mac as it expects a Unix style path.  Instead we'll use our
+              // spiffy new nsILocalFile
+              nsILocalFile* tempFile = nsnull;
+              rv = NS_NewLocalFile(value, &tempFile);
+              NS_ASSERTION(tempFile, "Couldn't create nsIFileSpec to get file size!");
+              if (NS_FAILED(rv) || !tempFile)
+                break; // NS_ERROR_OUT_OF_MEMORY
+              PRUint32 fileSize32 = 0;
+              PRInt64  fileSize = LL_Zero();
+              rv = tempFile->GetFileSize(&fileSize);
+              if (NS_FAILED(rv)) {
+                NS_RELEASE(tempFile);
+                break;
+              }
+              LL_L2UI(fileSize32, fileSize);
+              contentLen += fileSize32;
+              NS_RELEASE(tempFile);
+            } while (false);
+
             // Add CRLF after file
             contentLen += crlfLen;
           } else {
