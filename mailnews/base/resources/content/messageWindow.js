@@ -678,6 +678,7 @@ var MessageWindowController =
 			case "cmd_markAsFlagged":
 			case "cmd_markAsJunk":
 			case "cmd_markAsNotJunk":
+      case "cmd_searchMsgs":
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -795,6 +796,8 @@ var MessageWindowController =
       case "cmd_undo":
       case "cmd_redo":
         return SetupUndoRedoCommand(command);
+      case "cmd_searchMsgs":
+        return true;
       case "cmd_applyFilters":
       case "cmd_runJunkControls":
       case "cmd_deleteJunk":
@@ -977,6 +980,9 @@ var MessageWindowController =
 			case "cmd_previousFlaggedMsg":
         performNavigation(nsMsgNavigationType.previousFlagged);
 				break;
+      case "cmd_searchMsgs":
+        MsgSearchMessages();
+        return;
 		}
 	},
 	

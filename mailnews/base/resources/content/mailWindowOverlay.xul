@@ -277,7 +277,7 @@ Rights Reserved.
               commandupdater="true"
               events="create-menu-tasks"
               oncommandupdate="goUpdateMailMenuItems(this)">
-  <command id="cmd_searchMsgs" oncommand="MsgSearchMessages();"/>
+  <command id="cmd_searchMsgs" oncommand="goDoCommand('cmd_searchMsgs');"/>
   <command id="cmd_applyFilters" oncommand="goDoCommand('cmd_applyFilters');" disabled="true"/>
   <command id="cmd_runJunkControls" oncommand="goDoCommand('cmd_runJunkControls');" disabled="true"/>
   <command id="cmd_deleteJunk" oncommand="goDoCommand('cmd_deleteJunk');" disabled="true"/>
