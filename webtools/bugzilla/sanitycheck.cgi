@@ -20,6 +20,7 @@
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
 #                 Matthew Tuck <matty@chariot.net.au>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 use strict;
 
@@ -200,29 +201,6 @@ if (defined $cgi->param('rescanallBugMail')) {
 print "OK, now running sanity checks.<p>\n";
 
 ###########################################################################
-# Check enumeration values
-###########################################################################
-
-# This one goes first, because if this is wrong, then the below tests
-# will probably fail too
-
-# This isn't extensible. Thats OK; we're not adding any more enum fields
-Status("Checking for invalid enumeration values");
-foreach my $field (("bug_severity", "bug_status", "op_sys",
-                    "priority", "rep_platform", "resolution")) {
-    # undefined enum values in mysql are an empty string which equals 0
-    SendSQL("SELECT bug_id FROM bugs WHERE $field=0 ORDER BY bug_id");
-    my @invalid;
-    while (MoreSQLData()) {
-        push (@invalid, FetchOneColumn());
-    }
-    if (@invalid) {
-        Alert("Bug(s) found with invalid $field value: ".
-              BugListLinks(@invalid));
-    }
-}
-
-###########################################################################
 # Perform referential (cross) checks
 ###########################################################################
 
@@ -351,6 +329,25 @@ CrossCheck("products", "id",
            ["group_control_map", "product_id"],
            ["flaginclusions", "product_id", "type_id"],
            ["flagexclusions", "product_id", "type_id"]);
+
+# Check the former enum types -mkanat@kerio.com
+CrossCheck("bug_status", "value",
+            ["bugs", "bug_status"]);
+
+CrossCheck("resolution", "value",
+            ["bugs", "resolution"]);
+
+CrossCheck("bug_severity", "value",
+            ["bugs", "bug_severity"]);
+
+CrossCheck("op_sys", "value",
+            ["bugs", "op_sys"]);
+
+CrossCheck("priority", "value",
+            ["bugs", "priority"]);
+
+CrossCheck("rep_platform", "value",
+            ["bugs", "rep_platform"]);
 
 CrossCheck('series', 'series_id',
            ['series_data', 'series_id']);

@@ -29,6 +29,8 @@
 #                 Shane H. W. Travis <travis@sedsystems.ca>
 #                 Gervase Markham <gerv@gerv.net>
 #                 Erik Stambaugh <erik@dasbistro.com>
+#                 Dave Lawrence <dkl@redhat.com>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 #
 #
 # Direct any questions on this source code to
@@ -696,101 +698,19 @@ LocalVar('db_check', '
 $db_check = 1;
 ');
 
+my @deprecatedvars;
+push(@deprecatedvars, '@severities') if (LocalVarExists('severities'));
+push(@deprecatedvars, '@priorities') if (LocalVarExists('priorities'));
+push(@deprecatedvars, '@opsys') if (LocalVarExists('opsys'));
+push(@deprecatedvars, '@platforms') if (LocalVarExists('platforms'));
 
-LocalVar('severities', '
-#
-# Which bug and feature-request severities do you want?
-#
-@severities = (
-        "blocker",
-        "critical",
-        "major",
-        "normal",
-        "minor",
-        "trivial",
-        "enhancement"
-);
-');
-
-
-
-LocalVar('priorities', '
-#
-# Which priorities do you want to assign to bugs and feature-request?
-#
-@priorities = (
-        "P1",
-        "P2",
-        "P3",
-        "P4",
-        "P5"
-);
-');
-
-
-
-LocalVar('opsys', '
-#
-# What operatings systems may your products run on?
-#
-@opsys = (
-        "All",
-        "Windows 3.1",
-        "Windows 95",
-        "Windows 98",
-        "Windows ME",  # Millenium Edition (upgrade of 98)
-        "Windows 2000",
-        "Windows NT",
-        "Windows XP",
-        "Windows Server 2003",
-        "Mac System 7",
-        "Mac System 7.5",
-        "Mac System 7.6.1",
-        "Mac System 8.0",
-        "Mac System 8.5",
-        "Mac System 8.6",
-        "Mac System 9.x",
-        "Mac OS X 10.0",
-        "Mac OS X 10.1",
-        "Mac OS X 10.2",
-        "Mac OS X 10.3",
-        "Linux",
-        "BSD/OS",
-        "FreeBSD",
-        "NetBSD",
-        "OpenBSD",
-        "AIX",
-        "BeOS",
-        "HP-UX",
-        "IRIX",
-        "Neutrino",
-        "OpenVMS",
-        "OS/2",
-        "OSF/1",
-        "Solaris",
-        "SunOS",
-        "other"
-);
-');
-
-
-
-LocalVar('platforms', '
-#
-# What hardware platforms may your products run on?
-#
-@platforms = (
-        "All",
-        "DEC",
-        "HP",
-        "Macintosh",
-        "PC",
-        "SGI",
-        "Sun",
-        "Other"
-);
-');
-
+if (@deprecatedvars) {
+    print "\nThe following settings in your localconfig file",
+          " are no longer used:\n  " . join(", ", @deprecatedvars) .
+          "\nThis data is now controlled through the Bugzilla",
+          " administrative interface.\nWe recommend you remove these",
+          " settings from localconfig after checksetup\nruns successfully.\n";
+}
 if (LocalVarExists('mysqlpath')) {
     print "\nThe \$mysqlpath setting in your localconfig file ",
           "is no longer required.\nWe recommend you remove it.\n";
@@ -817,10 +737,22 @@ my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
 my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
-my @my_severities = @{*{$main::{'severities'}}{ARRAY}};
-my @my_priorities = @{*{$main::{'priorities'}}{ARRAY}};
-my @my_platforms = @{*{$main::{'platforms'}}{ARRAY}};
-my @my_opsys = @{*{$main::{'opsys'}}{ARRAY}};
+# mkanat@kerio.com - bug 17453
+# The following values have been removed from localconfig.
+# However, if we are upgrading from a Bugzilla with enums to a 
+# Bugzilla without enums, we use these values one more time so 
+# that we correctly populate the tables.
+my @my_severities;
+@my_severities = @{*{$main::{'severities'}}{ARRAY}} 
+    if exists($main::{'severities'});
+my @my_priorities;
+@my_priorities = @{*{$main::{'priorities'}}{ARRAY}}
+    if exists($main::{'priorities'});
+my @my_platforms;
+@my_platforms = @{*{$main::{'platforms'}}{ARRAY}}
+    if exists($main::{'platforms'});
+my @my_opsys;
+@my_opsys = @{*{$main::{'opsys'}}{ARRAY}} if exists($main::{'opsys'});
 
 if ($my_webservergroup && !$silent) {
     if ($^O !~ /MSWin32/i) {
@@ -1771,27 +1703,23 @@ $table{flagexclusions} =
     INDEX(type_id, product_id, component_id)
    ';
 
-#
-# Apostrophe's are not supportied in the enum types.
-# See http://bugzilla.mozilla.org/show_bug.cgi?id=27309
-#
 $table{bugs} =
    'bug_id mediumint not null auto_increment primary key,
     assigned_to mediumint not null, # This is a comment.
     bug_file_loc text,
-    bug_severity enum($my_severities) not null,
-    bug_status enum("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED", "VERIFIED", "CLOSED") not null,
+    bug_severity varchar(64) not null,
+    bug_status varchar(64) not null,
     creation_ts datetime not null,
     delta_ts datetime not null,
     short_desc mediumtext not null,
-    op_sys enum($my_opsys) not null,
-    priority enum($my_priorities) not null,
+    op_sys varchar(64) not null,
+    priority varchar(64) not null,
     product_id smallint not null,
-    rep_platform enum($my_platforms),
+    rep_platform varchar(64),
     reporter mediumint not null,
     version varchar(64) not null,
     component_id smallint not null,
-    resolution enum("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND", "DUPLICATE", "WORKSFORME", "MOVED") not null,
+    resolution varchar(64) not null,
     target_milestone varchar(20) not null default "---",
     qa_contact mediumint not null,
     status_whiteboard mediumtext not null,
@@ -2150,6 +2078,63 @@ $table{whine_events} =
      subject        varchar(128),
      body           mediumtext';
 
+# mkanat@kerio.com - bug 17453
+# Below are all the old enumerations converted to tables
+$table{bug_status} =
+    'id             smallint        auto_increment primary key,
+     value          varchar(64)     not null,
+     sortkey        smallint        not null default 0,
+     isactive       tinyint(1)      not null default 1,
+
+     unique(value),
+     index(sortkey, value)';
+
+$table{rep_platform} = 
+    'id             smallint        auto_increment primary key,
+     value          varchar(64)     not null,
+     sortkey        smallint        not null default 0,
+     isactive       tinyint(1)      not null default 1,
+
+     unique(value),
+     index(sortkey, value)';
+
+$table{resolution} = 
+    'id             smallint        auto_increment primary key,
+     value          varchar(64)     not null,
+     sortkey        smallint        not null default 0,
+     isactive       tinyint(1)      not null default 1,
+
+     unique(value),
+     index(sortkey, value)';
+
+$table{op_sys} = 
+    'id             smallint        auto_increment primary key,
+     value          varchar(64)     not null,
+     sortkey        smallint        not null default 0,
+     isactive       tinyint(1)      not null default 1,
+
+     unique(value),
+     index(sortkey, value)';
+
+$table{bug_severity} = 
+    'id             smallint        auto_increment primary key,
+     value          varchar(64)     not null,
+     sortkey        smallint        not null default 0,
+     isactive       tinyint(1)      not null default 1,
+
+     unique(value),
+     index(sortkey, value)';
+
+$table{priority} = 
+    'id             smallint        auto_increment primary key,
+     value          varchar(64)     not null,
+     sortkey        smallint        not null default 0,
+     isactive       tinyint(1)      not null default 1,
+
+     unique(value),
+     index(sortkey, value)';
+
+
 ###########################################################################
 # Create tables
 ###########################################################################
@@ -2183,25 +2168,10 @@ $sth = $dbh->table_info(undef, undef, undef, "TABLE");
 my @tables = @{$dbh->selectcol_arrayref($sth, { Columns => [3] })};
 #print 'Tables: ', join " ", @tables, "\n";
 
-# add lines here if you add more --LOCAL-- config vars that end up in the enums:
-
-my $my_severities = '"' . join('", "', @my_severities) . '"';
-my $my_priorities = '"' . join('", "', @my_priorities) . '"';
-my $my_opsys      = '"' . join('", "', @my_opsys)      . '"';
-my $my_platforms  = '"' . join('", "', @my_platforms)  . '"';
-
-# go throught our %table hash and create missing tables
+# go through our %table hash and create missing tables
 while (my ($tabname, $fielddef) = each %table) {
     next if grep /^$tabname$/, @tables;
     print "Creating table $tabname ...\n";
-
-    # add lines here if you add more --LOCAL-- config vars that end up in
-    # the enums:
-
-    $fielddef =~ s/\$my_severities/$my_severities/;
-    $fielddef =~ s/\$my_priorities/$my_priorities/;
-    $fielddef =~ s/\$my_opsys/$my_opsys/;
-    $fielddef =~ s/\$my_platforms/$my_platforms/;
 
     $dbh->do("CREATE TABLE $tabname (\n$fielddef\n) TYPE = MYISAM")
         or die "Could not create table '$tabname'. Please check your '$my_db_driver' access.\n";
@@ -2412,45 +2382,67 @@ sub DropIndexes ($)
     }
 
 }
-#
-# Check if the enums in the bugs table return the same values that are defined
-# in the various locally changeable variables. If this is true, then alter the
-# table definition.
-#
 
-sub CheckEnumField ($$@)
-{
-    my ($table, $field, @against) = @_;
+# mkanat@kerio.com - bug 17453
+# Create the values for the tables that hold what used to be enum types.
+# Don't populate the tables if the table isn't empty.
+sub PopulateEnumTable ($@) {
+    my ($table, @valuelist) = @_;
 
-    my $ref = GetFieldDef($table, $field);
-    #print "0: $$ref[0]   1: $$ref[1]   2: $$ref[2]   3: $$ref[3]  4: $$ref[4]\n";
-    
-    $_ = "enum('" . join("','", @against) . "')";
-    if ($$ref[1] ne $_) {
-        print "Updating field $field in table $table ...\n";
-        $_ .= " NOT NULL" if $$ref[3];
-        $dbh->do("ALTER TABLE $table
-                  CHANGE $field
-                  $field $_");
+    # If we encounter any of the keys in this hash, they are 
+    # automatically set to isactive=0
+    my %defaultinactive = ('---' => 1);
+
+    # Check if there are any table entries
+    my $query = "SELECT COUNT(id) FROM $table";
+    my $sth = $dbh->prepare($query);
+    $sth->execute();
+
+    # If the table is empty...
+    if ( !$sth->fetchrow_array() ) {
+        my $insert = $dbh->prepare("INSERT INTO $table"
+            . " (value,sortkey,isactive) VALUES (?,?,?)");
+        my $sortorder = 0;
+        foreach my $value (@valuelist) {
+            $sortorder = $sortorder + 100;
+            my $isactive = !exists($defaultinactive{$value});
+            print "Inserting value '$value' in table $table" 
+                . " with sortkey $sortorder...\n";
+            $insert->execute($value, $sortorder, $isactive);
+        }
     }
 }
 
+# mkanat@kerio.com - bug 17453
+# Set default values for what used to be the enum types.
+# These values are no longer stored in localconfig.
+# However, if we are upgrading from a Bugzilla with enums to a 
+# Bugzilla without enums, we use the localconfig values one more time.
 
+# The values that you see here are ONLY DEFAULTS. They are only used
+# the FIRST time you run checksetup. After that, they are either 
+# controlled through the Bugzilla UI or through the DB.
+@my_severities = ('blocker','critical','major','normal','minor',
+                 'trivial','enhancement') if !@my_severities;
+@my_priorities = ("P1","P2","P3","P4","P5") if !@my_priorities;
+@my_opsys = ("---","All","Windows","Mac OS","Linux","Other") if !@my_opsys;
+@my_platforms = ("---","All","PC","Macintosh","Other") if !@my_platforms;
 
-#
-# This code changes the enum types of some SQL tables whenever you change
-# some --LOCAL-- variables. Once you have a running system, to add new 
-# severities, priorities, operating systems and platforms, add them to 
-# the localconfig file and then re-run checksetup.pl which will make the 
-# necessary changes to your database. Additions to these fields in
-# checksetup.pl after the initial installation of bugzilla on a system
-# are ignored.
-#
+PopulateEnumTable('bug_severity', @my_severities);
+PopulateEnumTable('priority', @my_priorities);
+PopulateEnumTable('op_sys', @my_opsys);
+PopulateEnumTable('rep_platform', @my_platforms);
 
-CheckEnumField('bugs', 'bug_severity', @my_severities);
-CheckEnumField('bugs', 'priority',     @my_priorities);
-CheckEnumField('bugs', 'op_sys',       @my_opsys);
-CheckEnumField('bugs', 'rep_platform', @my_platforms);
+# The resolution and bug_status lists are absolute. On an upgrade from
+# a Bugzilla with enums, whatever is in the enum will be replaced with
+# this. This is because Bugzilla depends on the exact names of these 
+# resolutions in order to function properly.
+my @states = ("UNCONFIRMED","NEW","ASSIGNED","REOPENED","RESOLVED",
+             "VERIFIED","CLOSED");
+my @resolutions = ("","FIXED","INVALID","WONTFIX","LATER","REMIND",
+                  "DUPLICATE","WORKSFORME","MOVED");
+PopulateEnumTable('bug_status', @states);
+PopulateEnumTable('resolution', @resolutions);
 
 
 ###########################################################################
@@ -2936,16 +2928,6 @@ AddField('profiles', 'mybugslink', 'tinyint not null default 1');
 AddField('namedqueries', 'linkinfooter', 'tinyint not null');
 
 
-# 2000-02-12 Added a new state to bugs, UNCONFIRMED.  Added ability to confirm
-# a vote via bugs.  Added user bits to control which users can confirm bugs
-# by themselves, and which users can edit bugs without their names on them.
-# Added a user field which controls which groups a user can put other users 
-# into.
-
-my @resolutions = ("", "FIXED", "INVALID", "WONTFIX", "LATER", "REMIND",
-                  "DUPLICATE", "WORKSFORME", "MOVED");
-CheckEnumField('bugs', 'resolution', @resolutions);
-
 if (($_ = GetFieldDef('components', 'initialowner')) and ($_->[1] eq 'tinytext')) {
     $sth = $dbh->prepare("SELECT program, value, initialowner, initialqacontact FROM components");
     $sth->execute();
@@ -3004,11 +2986,6 @@ if (($_ = GetFieldDef('components', 'initialqacontact')) and ($_->[1] eq 'tinyte
     ChangeFieldType('components','initialqacontact','mediumint');
 }
 
-
-
-my @states = ("UNCONFIRMED", "NEW", "ASSIGNED", "REOPENED", "RESOLVED",
-              "VERIFIED", "CLOSED");
-CheckEnumField('bugs', 'bug_status', @states);
 
 if (!GetFieldDef('bugs', 'everconfirmed')) {
     AddField('bugs', 'everconfirmed',  'tinyint not null');
@@ -4275,6 +4252,16 @@ if (!GetFieldDef('longdescs', 'already_wrapped')) {
                         OR POSITION('\n' IN thetext ) = 0 )
                   AND SUBSTRING(thetext FROM 1 FOR 80) LIKE '% %'});
 }
+
+# 2001-09-03 dkl@redhat.com bug 17453
+# Moved enum types to separate tables so we need change the old enum types to 
+# standard varchars in the bugs table.
+ChangeFieldType ('bugs', 'bug_status', 'varchar(64) not null');
+ChangeFieldType ('bugs', 'resolution', 'varchar(64) not null');
+ChangeFieldType ('bugs', 'priority', 'varchar(64) not null');
+ChangeFieldType ('bugs', 'bug_severity', 'varchar(64) not null');
+ChangeFieldType ('bugs', 'rep_platform', 'varchar(64) not null');
+ChangeFieldType ('bugs', 'op_sys', 'varchar(64) not null');
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

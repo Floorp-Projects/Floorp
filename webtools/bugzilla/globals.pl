@@ -22,7 +22,9 @@
 #                 Jacob Steenhagen <jake@bugzilla.org>
 #                 Bradley Baetz <bbaetz@student.usyd.edu.au>
 #                 Christopher Aillon <christopher@aillon.com>
-#                 Joel Peshkin <bugreport@peshkin.net> 
+#                 Joel Peshkin <bugreport@peshkin.net>
+#                 Dave Lawrence <dkl@redhat.com>
+#                 Max Kanat-Alexander <mkanat@kerio.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -225,12 +227,12 @@ sub GenerateVersionTable {
     }
     @::log_columns = (sort(@::log_columns));
 
-    @::legal_priority = SplitEnumType($cols->{"priority,type"});
-    @::legal_severity = SplitEnumType($cols->{"bug_severity,type"});
-    @::legal_platform = SplitEnumType($cols->{"rep_platform,type"});
-    @::legal_opsys = SplitEnumType($cols->{"op_sys,type"});
-    @::legal_bug_status = SplitEnumType($cols->{"bug_status,type"});
-    @::legal_resolution = SplitEnumType($cols->{"resolution,type"});
+    @::legal_priority   = get_legal_field_values("priority");
+    @::legal_severity   = get_legal_field_values("bug_severity");
+    @::legal_platform   = get_legal_field_values("rep_platform");
+    @::legal_opsys      = get_legal_field_values("op_sys");
+    @::legal_bug_status = get_legal_field_values("bug_status");
+    @::legal_resolution = get_legal_field_values("resolution");
 
     # 'settable_resolution' is the list of resolutions that may be set 
     # directly by hand in the bug form. Start with the list of legal 
@@ -1026,22 +1028,13 @@ sub LearnAboutColumns {
     return \%a;
 }
 
-
-
-# If the above returned a enum type, take that type and parse it into the
-# list of values.  Assumes that enums don't ever contain an apostrophe!
-
-sub SplitEnumType {
-    my ($str) = (@_);
-    my @result = ();
-    if ($str =~ /^enum\((.*)\)$/) {
-        my $guts = $1 . ",";
-        while ($guts =~ /^\'([^\']*)\',(.*)$/) {
-            push @result, $1;
-            $guts = $2;
-        }
-    }
-    return @result;
+# Returns a list of all the legal values for a field that has a
+# list of legal values, like rep_platform or resolution.
+sub get_legal_field_values {
+    my ($field) = @_;
+    my $dbh = Bugzilla->dbh;
+    my $result_ref = $dbh->selectcol_arrayref("SELECT value FROM $field");
+    return @$result_ref;
 }
 
 sub UserInGroup {

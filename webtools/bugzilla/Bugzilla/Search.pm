@@ -50,14 +50,26 @@ use Date::Parse;
 # Each field points to an array that contains the fields mapped 
 # to, in order.
 our %specialorder = (
-    'bugs.target_milestone' => [ 'ms_order.sortkey','ms_order.value' ]
+    'bugs.target_milestone' => [ 'ms_order.sortkey','ms_order.value' ],
+    'bugs.bug_status' => [ 'bug_status.sortkey','bug_status.value' ],
+    'bugs.rep_platform' => [ 'rep_platform.sortkey','rep_platform.value' ],
+    'bugs.priority' => [ 'priority.sortkey','priority.value' ],
+    'bugs.op_sys' => [ 'op_sys.sortkey','op_sys.value' ],
+    'bugs.resolution' => [ 'resolution.sortkey', 'resolution.value' ],
+    'bugs.bug_severity' => [ 'bug_severity.sortkey','bug_severity.value' ]
 );
 
 # When we add certain fields to the ORDER BY, we need to then add a
 # table join to the FROM statement. This hash maps input fields to 
 # the join statements that ned to be added.
 our %specialorderjoin = (
-    'bugs.target_milestone' => 'LEFT JOIN milestones AS ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id'
+    'bugs.target_milestone' => 'LEFT JOIN milestones AS ms_order ON ms_order.value = bugs.target_milestone AND ms_order.product_id = bugs.product_id',
+    'bugs.bug_status' => 'LEFT JOIN bug_status ON bug_status.value = bugs.bug_status',
+    'bugs.rep_platform' => 'LEFT JOIN rep_platform ON rep_platform.value = bugs.rep_platform',
+    'bugs.priority' => 'LEFT JOIN priority ON priority.value = bugs.priority',
+    'bugs.op_sys' => 'LEFT JOIN op_sys ON op_sys.value = bugs.op_sys',
+    'bugs.resolution' => 'LEFT JOIN resolution ON resolution.value = bugs.resolution',
+    'bugs.bug_severity' => 'LEFT JOIN bug_severity ON bug_severity.value = bugs.bug_severity'
 );
 
 # Create a new Search
