@@ -2354,7 +2354,7 @@ CEditTableCellElement* CEditTableElement::GetPreviousCellInRow(CEditTableCellEle
 
 CEditTableCellElement* CEditTableElement::GetFirstCellAtColumnIndex(intn iIndex)
 {
-    if( iIndex < m_ColumnLayoutData.Size() )
+    if( iIndex >= 0 && iIndex < m_ColumnLayoutData.Size() )
         return m_ColumnLayoutData[iIndex]->pEdCell;
 
     return NULL;
@@ -2362,7 +2362,7 @@ CEditTableCellElement* CEditTableElement::GetFirstCellAtColumnIndex(intn iIndex)
 
 CEditTableCellElement* CEditTableElement::GetFirstCellAtRowIndex(intn iIndex)
 {
-    if( iIndex < m_RowLayoutData.Size() )
+    if( iIndex >= 0 && iIndex < m_RowLayoutData.Size() )
         return m_RowLayoutData[iIndex]->pEdCell;
 
     return NULL;
@@ -3248,7 +3248,9 @@ EDT_TableData* CEditTableElement::NewData(){
     }
     pData->align = ED_ALIGN_LEFT;
     pData->malign = ED_ALIGN_DEFAULT;
-    pData->bUseCols = TRUE;
+    // While this helps layout, it causes lots of problems
+    //  in layout when COLSPAN > 1 an ROWSPAN > 1
+    pData->bUseCols = FALSE;
     pData->iRows = 1;
     pData->iColumns = 1;
     pData->bBorderWidthDefined = TRUE;
@@ -3735,7 +3737,7 @@ void CEditTableElement::AddLayoutData(CEditTableCellElement *pEdCell, LO_Element
         pRowData->iRow = i;
         pRowData->iCellsInRow = lo_GetRowSpan(pLoCell);
         // These are ignored for row data
-        pColData->iCellsInColumn = pColData->iColumn = 0;
+        pRowData->iCellsInColumn = pColData->iColumn = 0;
 
         m_RowLayoutData.Insert(pRowData, i);
     }
