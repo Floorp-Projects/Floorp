@@ -104,9 +104,9 @@ pref("font.name.cursive.x-western", "Comic Sans MS");
 pref("font.name.serif.zh-CN", "宋体"); //MS Song
 pref("font.name.sans-serif.zh-CN", "宋体"); //MS Song
 pref("font.name.monospace.zh-CN", "宋体"); //MS Song
-pref("font.name-list.serif.zh-CN", "MS Song");
-pref("font.name-list.sans-serif.zh-CN", "MS Song");
-pref("font.name-list.monospace.zh-CN", "MS Song");
+pref("font.name-list.serif.zh-CN", "MS Song, SimSun");
+pref("font.name-list.sans-serif.zh-CN", "MS Song, SimSun");
+pref("font.name-list.monospace.zh-CN", "MS Song, SimSun");
 
 pref("font.name.serif.zh-TW", "細明體"); // "MingLiU" 
 pref("font.name.sans-serif.zh-TW", "細明體"); // "MingLiU" 
