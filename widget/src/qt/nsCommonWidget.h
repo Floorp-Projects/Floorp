@@ -90,8 +90,7 @@ public:
     NS_IMETHOD Scroll(PRInt32, PRInt32, nsRect*);
     NS_IMETHOD ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
 
-    NS_METHOD SetModal(PRBool aModal);
-    NS_METHOD ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow);
+    NS_IMETHOD SetModal(PRBool aModal);
 
     virtual void* GetNativeData(PRUint32);
 
@@ -164,6 +163,10 @@ protected:
 
 protected:
     virtual QWidget  *createQWidget(QWidget *parent, nsWidgetInitData *aInitData) = 0;
+    virtual void NativeResize(PRInt32, PRInt32, PRInt32, PRInt32, PRBool);
+    virtual void NativeResize(PRInt32, PRInt32, PRBool);
+    virtual void NativeShow(PRBool);
+
     bool ignoreEvent(nsEventStatus aStatus) const;
 
     /**
@@ -192,6 +195,9 @@ protected:
     QWidget *mWidget;
     nsQtEventDispatcher *mDispatcher;
     PRPackedBool   mListenForResizes;
+    PRPackedBool   mNeedsResize;
+    PRPackedBool   mNeedsShow;
+    PRPackedBool   mIsShown;
     nsCOMPtr<nsIWidget> mParent;
 
 private:

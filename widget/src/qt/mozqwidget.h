@@ -12,6 +12,11 @@ class MozQWidget : public QWidget
 public:
     MozQWidget(nsCommonWidget *receiver, QWidget *parent,
                const char *name, WFlags f);
+
+    /**
+     * Mozilla helper.
+     */
+    void setModal(bool);
 protected:
     virtual bool event(QEvent *ev);
 private:
