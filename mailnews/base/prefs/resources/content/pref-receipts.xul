@@ -58,7 +58,7 @@
   <groupbox>
     <caption label="&pane.title;"/>
 
-    <vbox id="returnReceiptSettings">
+    <vbox id="returnReceiptSettings" align="start">
       <checkbox id="alwaysRequest" label="&requestReceipt.label;"
                 prefstring="mail.receipt.request_return_receipt_on"
                 accesskey="&requestReceipt.accesskey;"/>

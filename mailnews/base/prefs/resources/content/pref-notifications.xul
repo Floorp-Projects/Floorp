@@ -61,16 +61,15 @@
   <groupbox>
     <caption label="&newMessagesArrive.label;"/>
 
-    <hbox align="center">
+    <vbox align="start">
       <checkbox id="newMailNotificationAlert" label="&showAnimatedAlert.label;"
                 prefstring="mail.biff.show_alert"
                 accesskey="&showAnimatedAlert.accesskey;" />
-    </hbox>
+      <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
+                prefstring="mail.biff.play_sound" label="&playSound.label;"
+                oncommand="PlaySoundCheck()"/>
+    </vbox>
     
-    <checkbox id="newMailNotification" accesskey="&playSound.accesskey;"
-         prefstring="mail.biff.play_sound" label="&playSound.label;"
-         oncommand="PlaySoundCheck()"/>
-
     <hbox align="center" class="indent">
       <radiogroup id="newMailNotificationType" prefstring="mail.biff.play_sound.type" orient="vertical">
         <radio id="system" class="iconic" value="0" oncommand="PlaySoundCheck()" 

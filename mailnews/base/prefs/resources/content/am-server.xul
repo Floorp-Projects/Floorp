@@ -110,23 +110,24 @@
 
   <groupbox>
   <caption label="&serverSettings.label;"/>
-  <vbox flex="1">
-  <checkbox wsm_persist="true" id="server.isSecure"
-            label="&isSecure.label;" oncommand="secureSelect();"
-            accesskey="&isSecure.accesskey;"
-            prefattribute="value"
-            prefstring="mail.server.%serverkey%.isSecure"/>
-  <checkbox wsm_persist="true" id="server.useSecAuth"
-            label="&useSecAuth.label;" hidefor="nntp,movemail"
-            accesskey="&useSecAuth.accesskey;"
-            prefattribute="value"
-            prefstring="mail.server.%serverkey%.useSecAuth"/>
-  <checkbox wsm_persist="true"
-            id="server.loginAtStartUp" hidefor="nntp"
-            label="&loginAtStartup.label;"
-            accesskey="&loginAtStartup.accesskey;"
-            prefattribute="value"
-            prefstring="mail.server.%serverkey%.login_at_startup"/>
+  <vbox align="start">
+    <checkbox wsm_persist="true" id="server.isSecure"
+              label="&isSecure.label;" oncommand="secureSelect();"
+              accesskey="&isSecure.accesskey;"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.isSecure"/>
+    <checkbox wsm_persist="true" id="server.useSecAuth"
+              label="&useSecAuth.label;" hidefor="nntp,movemail"
+              accesskey="&useSecAuth.accesskey;"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.useSecAuth"/>
+    <checkbox wsm_persist="true"
+              id="server.loginAtStartUp" hidefor="nntp"
+              label="&loginAtStartup.label;"
+              accesskey="&loginAtStartup.accesskey;"
+              prefattribute="value"
+              prefstring="mail.server.%serverkey%.login_at_startup"/>
+  </vbox>
 <!--
   <checkbox wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
@@ -263,7 +264,7 @@
 -->
 
   <hbox align="end">
-    <vbox flex="1">
+    <vbox align="start" flex="1">
       <checkbox hidefor="pop3,nntp,movemail" wsm_persist="true" id="imap.cleanupInboxOnExit"
                 label="&expungeOnExit.label;"
                 accesskey="&expungeOnExit.accesskey;"
@@ -293,8 +294,6 @@
       <button id="browseForNewsrc" label="&browseNewsrc.label;" filepickertitle="&newsrcPicker.label;"
               accesskey="&browseNewsrc.accesskey;" oncommand="BrowseForNewsrc()"/>
     </hbox>
-  </vbox>
-
   </vbox>
   </groupbox>
 
