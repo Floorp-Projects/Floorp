@@ -1768,24 +1768,29 @@ js_EmitFunctionBody(JSContext *cx, JSCodeGenerator *cg, JSParseNode *body,
 /* A macro for inlining at the top of js_EmitTree (whence it came). */
 #define UPDATE_LINENO_NOTES(cx, cg, pn)                                       \
     JS_BEGIN_MACRO                                                            \
-        uintN _line = (pn)->pn_pos.begin.lineno;                              \
-        uintN _delta = _line - (cg)->currentLine;                             \
-        (cg)->currentLine = _line;                                            \
-        if (_delta) {                                                         \
+        uintN line_ = (pn)->pn_pos.begin.lineno;                              \
+        uintN delta_ = line_ - (cg)->currentLine;                             \
+        if (delta_ != 0) {                                                    \
             /*                                                                \
              * Encode any change in the current source line number by using   \
-             * either several SRC_NEWLINE notes or one SRC_SETLINE note,      \
+             * either several SRC_NEWLINE notes or just one SRC_SETLINE note, \
              * whichever consumes less space.                                 \
+             *                                                                \
+             * NB: We handle backward line number deltas (possible with for   \
+             * loops where the update part is emitted after the body, but its \
+             * line number is <= any line number in the body) here by letting \
+             * unsigned delta_ wrap to a very large number, which triggers a  \
+             * SRC_SETLINE.                                                   \
              */                                                               \
-            if (_delta >= (uintN)(2 + ((_line > SN_3BYTE_OFFSET_MASK)<<1))) { \
-                JS_ASSERT(_line != 0);                                        \
-                if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)_line) < 0)\
+            (cg)->currentLine = line_;                                        \
+            if (delta_ >= (int32)(2 + ((line_ > SN_3BYTE_OFFSET_MASK)<<1))) { \
+                if (js_NewSrcNote2(cx, cg, SRC_SETLINE, (ptrdiff_t)line_) < 0)\
                     return JS_FALSE;                                          \
             } else {                                                          \
                 do {                                                          \
                     if (js_NewSrcNote(cx, cg, SRC_NEWLINE) < 0)               \
                         return JS_FALSE;                                      \
-                } while (--_delta != 0);                                      \
+                } while (--delta_ != 0);                                      \
             }                                                                 \
         }                                                                     \
     JS_END_MACRO
