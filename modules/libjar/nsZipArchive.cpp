@@ -1216,7 +1216,10 @@ nsZipItem::nsZipItem() : name(0), next(0)
 nsZipItem::~nsZipItem()
 {
   if (name != 0 )
+  {
     delete [] name;
+    name = 0;
+  }
 
 #ifndef STANDALONE
   MOZ_COUNT_DTOR(nsZipItem);
@@ -1379,38 +1382,33 @@ char *
 nsZipItem::GetModTime()
 {
 	char *timestr;    /* e.g. 21:07                        */
-	char *datestr;    /* e.g. 06/20/95                     */
-	char *nsprstr;    /* e.g. 06/20/95 21:07               */
+	char *datestr;    /* e.g. 06/20/1995                   */
+	char *nsprstr;    /* e.g. 06/20/1995 21:07             */
 	                  /* NSPR bug parsing dd/mm/yyyy hh:mm */
 	                  /*        so we use mm/dd/yyyy hh:mm */
 	
-	timestr = (char *) malloc(6 * sizeof(char));
-	datestr = (char *) malloc(9 * sizeof(char));
-	nsprstr = (char *) malloc(16 * sizeof(char));
+	timestr = (char *) PR_Malloc(6 * sizeof(char));
+	datestr = (char *) PR_Malloc(11 * sizeof(char));
+	nsprstr = (char *) PR_Malloc(17 * sizeof(char));
 	if (!timestr || !datestr || !nsprstr)
 	{
-		if (timestr)
-			free(timestr);
-		if (datestr)
-			free(datestr);
-		if (nsprstr)
-			free(nsprstr);
+        PR_FREEIF(timestr);
+        PR_FREEIF(datestr);
+        PR_FREEIF(nsprstr);
 		return 0;
 	}
 
 	memset(timestr, 0, 6);
-	memset(datestr, 0, 9);
-	memset(nsprstr, 0, 16);
+	memset(datestr, 0, 11);
+	memset(nsprstr, 0, 17);
 
 	dosdate(datestr, this->date);
 	dostime(timestr, this->time);
 
 	sprintf(nsprstr, "%s %s", datestr, timestr);
 
-    if (datestr)
-        free(datestr);
-    if (timestr)
-        free(timestr);
+    PR_FREEIF(timestr);
+    PR_FREEIF(datestr);
 
 	return nsprstr;
 }
