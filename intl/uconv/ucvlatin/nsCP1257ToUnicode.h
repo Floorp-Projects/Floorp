@@ -17,28 +17,28 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#ifndef nsCP1252ToUnicode_h___
-#define nsCP1252ToUnicode_h___
+#ifndef nsCP1257ToUnicode_h___
+#define nsCP1257ToUnicode_h___
 
 #include "nsUCvLatinSupport.h"
 
 //----------------------------------------------------------------------
-// Class nsCP1252ToUnicode [declaration]
+// Class nsCP1257ToUnicode [declaration]
 
 /**
- * A character set converter from CP1252 to Unicode.
+ * A character set converter from CP1257 to Unicode.
  *
  * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsCP1252ToUnicode : public nsOneByteDecoderSupport
+class nsCP1257ToUnicode : public nsOneByteDecoderSupport
 {
 public:
 
   /**
    * Class constructor.
    */
-  nsCP1252ToUnicode();
+  nsCP1257ToUnicode();
 
   /**
    * Static class constructor.
@@ -46,4 +46,4 @@ public:
   static nsresult CreateInstance(nsISupports **aResult);
 };
 
-#endif /* nsCP1252ToUnicode_h___ */
+#endif /* nsCP1257ToUnicode_h___ */

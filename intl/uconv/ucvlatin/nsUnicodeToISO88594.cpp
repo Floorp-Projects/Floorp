@@ -17,31 +17,42 @@
  * Netscape Communications Corporation.  All Rights Reserved.
  */
 
-#include "nsISO88599ToUnicode.h"
+#include "nsUnicodeToISO88594.h"
 
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_utMappingTable[] = {
-#include "8859-9.ut"
+static PRUint16 g_ufMappingTable[] = {
+#include "8859-4.uf"
 };
 
-static PRInt16 g_utShiftTable[] =  {
+static PRInt16 g_ufShiftTable[] =  {
   0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
 //----------------------------------------------------------------------
-// Class nsISO88599ToUnicode [implementation]
+// Class nsUnicodeToISO88594 [implementation]
 
-nsISO88599ToUnicode::nsISO88599ToUnicode() 
-: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
-                          (uMappingTable*) &g_utMappingTable)
+nsUnicodeToISO88594::nsUnicodeToISO88594() 
+: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
+                        (uMappingTable*) &g_ufMappingTable)
 {
 }
 
-nsresult nsISO88599ToUnicode::CreateInstance(nsISupports ** aResult) 
+nsresult nsUnicodeToISO88594::CreateInstance(nsISupports ** aResult) 
 {
-  *aResult = new nsISO88599ToUnicode();
+  *aResult = new nsUnicodeToISO88594();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
+}
+
+//----------------------------------------------------------------------
+// Subclassing of nsTableEncoderSupport class [implementation]
+
+NS_IMETHODIMP nsUnicodeToISO88594::GetMaxLength(const PRUnichar * aSrc, 
+                                                PRInt32 aSrcLength,
+                                                PRInt32 * aDestLength)
+{
+  *aDestLength = aSrcLength;
+  return NS_OK_UENC_EXACTLENGTH;
 }

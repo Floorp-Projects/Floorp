@@ -22,12 +22,12 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ISO88592MappingTable[] = {
+static PRUint16 g_ufMappingTable[] = {
 #include "8859-2.uf"
 };
 
-static PRInt16 g_ISO88592ShiftTable[] =  {
-  1, u1ByteCharset ,
+static PRInt16 g_ufShiftTable[] =  {
+  0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
@@ -35,8 +35,8 @@ static PRInt16 g_ISO88592ShiftTable[] =  {
 // Class nsUnicodeToISO88592 [implementation]
 
 nsUnicodeToISO88592::nsUnicodeToISO88592() 
-: nsTableEncoderSupport((uShiftTable*) &g_ISO88592ShiftTable, 
-                        (uMappingTable*) &g_ISO88592MappingTable)
+: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
+                        (uMappingTable*) &g_ufMappingTable)
 {
 }
 

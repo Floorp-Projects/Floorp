@@ -22,12 +22,12 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_CP1252MappingTable[] = {
+static PRUint16 g_utMappingTable[] = {
 #include "cp1252.ut"
 };
 
-static PRInt16 g_CP1252ShiftTable[] =  {
-  1, u1ByteCharset ,
+static PRInt16 g_utShiftTable[] =  {
+  0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
@@ -35,8 +35,8 @@ static PRInt16 g_CP1252ShiftTable[] =  {
 // Class nsCP1252ToUnicode [implementation]
 
 nsCP1252ToUnicode::nsCP1252ToUnicode() 
-: nsTableDecoderSupport((uShiftTable*) &g_CP1252ShiftTable, 
-                        (uMappingTable*) &g_CP1252MappingTable)
+: nsOneByteDecoderSupport((uShiftTable*) &g_utShiftTable, 
+                          (uMappingTable*) &g_utMappingTable)
 {
 }
 
@@ -44,16 +44,4 @@ nsresult nsCP1252ToUnicode::CreateInstance(nsISupports ** aResult)
 {
   *aResult = new nsCP1252ToUnicode();
   return (*aResult == NULL)? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-//----------------------------------------------------------------------
-// Subclassing of nsTableDecoderSupport class [implementation]
-
-NS_IMETHODIMP nsCP1252ToUnicode::GetMaxLength(const char * aSrc, 
-                                              PRInt32 aSrcLength, 
-                                              PRInt32 * aDestLength)
-{
-  // we are a single byte to Unicode converter, so...
-  *aDestLength = aSrcLength;
-  return NS_OK_UDEC_EXACTLENGTH;
 }

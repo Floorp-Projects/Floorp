@@ -22,12 +22,12 @@
 //----------------------------------------------------------------------
 // Global functions and data [declaration]
 
-static PRUint16 g_ISO88597MappingTable[] = {
+static PRUint16 g_ufMappingTable[] = {
 #include "8859-7.uf"
 };
 
-static PRInt16 g_ISO88597ShiftTable[] =  {
-  1, u1ByteCharset ,
+static PRInt16 g_ufShiftTable[] =  {
+  0, u1ByteCharset ,
   ShiftCell(0,0,0,0,0,0,0,0)
 };
 
@@ -35,8 +35,8 @@ static PRInt16 g_ISO88597ShiftTable[] =  {
 // Class nsUnicodeToISO88597 [implementation]
 
 nsUnicodeToISO88597::nsUnicodeToISO88597() 
-: nsTableEncoderSupport((uShiftTable*) &g_ISO88597ShiftTable, 
-                        (uMappingTable*) &g_ISO88597MappingTable)
+: nsTableEncoderSupport((uShiftTable*) &g_ufShiftTable, 
+                        (uMappingTable*) &g_ufMappingTable)
 {
 }
 
@@ -50,8 +50,8 @@ nsresult nsUnicodeToISO88597::CreateInstance(nsISupports ** aResult)
 // Subclassing of nsTableEncoderSupport class [implementation]
 
 NS_IMETHODIMP nsUnicodeToISO88597::GetMaxLength(const PRUnichar * aSrc, 
-                                              PRInt32 aSrcLength,
-                                              PRInt32 * aDestLength)
+                                                PRInt32 aSrcLength,
+                                                PRInt32 * aDestLength)
 {
   *aDestLength = aSrcLength;
   return NS_OK_UENC_EXACTLENGTH;

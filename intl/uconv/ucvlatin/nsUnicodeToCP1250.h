@@ -28,7 +28,7 @@
 /**
  * A character set converter from Unicode to CP1250.
  *
- * @created         05/Apr/1999
+ * @created         20/Apr/1999
  * @author  Catalin Rotaru [CATA]
  */
 class nsUnicodeToCP1250 : public nsTableEncoderSupport
