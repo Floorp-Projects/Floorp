@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.247 $ ';
+$::UtilsVersion = '$Revision: 1.248 $ ';
 
 package TinderUtils;
 
@@ -732,12 +732,9 @@ sub BuildIt {
                 # Try posix call to find timezone.
                 # Don't do this for Darwin, Win32.
                 $timezone = POSIX::strftime("%Z", localtime($start_time));
-            } elsif (not ($Settings::OS =~ /^(WIN)/)) {
+            } else {
                 # Fallback to what `date` says.
                 chomp($timezone = `date "+%Z"`);
-            } else {
-                # Guess.
-                $timezone = "PDT";  # PST ?
             }
 
             print "timezone = $timezone\n";
