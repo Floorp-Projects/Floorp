@@ -254,13 +254,7 @@ JAVA_OPTIMIZER	= -g
 XBCFLAGS	= -FR$*
 endif
 
-#
-# XXX For now, we're including $(DEPTH)/include directly instead of
-# getting this stuff from dist. This stuff is old and will eventually
-# be put in the library directories where it belongs so that it can
-# get exported to dist properly.
-#
-INCLUDES	= $(LOCAL_INCLUDES) -I$(PUBLIC) -I$(DIST)/include -I$(XPDIST)/include -I$(topsrcdir)/include $(OS_INCLUDES)
+INCLUDES	= $(LOCAL_INCLUDES) -I$(PUBLIC) -I$(topsrcdir)/include $(OS_INCLUDES)
 
 LIBNT		= $(DIST)/lib/libnt.$(LIB_SUFFIX)
 LIBAWT		= $(DIST)/lib/libawt.$(LIB_SUFFIX)
@@ -309,15 +303,15 @@ endif
 #
 # Override defaults
 
-XPDIST		= $(DEPTH)/dist
-
 # We need to know where to find the libraries we
 # put on the link line for binaries, and should
 # we link statically or dynamic?  Assuming dynamic for now.
 LIBS_DIR	= -L$(DIST)/bin -L$(DIST)/lib
 
-# all public include files go in subdirectories of PUBLIC:
-PUBLIC		= $(XPDIST)/include
+# Default location of include files
+# Note: NSPR doesn't have $(PUBLIC) and 
+# will always install its headers to $(DIST)/include
+PUBLIC		= $(DIST)/include
 
 DEPENDENCIES	= .md
 
@@ -416,7 +410,7 @@ endif
 ######################################################################
 
 # where the bytecode will go
-JAVA_DESTPATH	= $(XPDIST)/classes
+JAVA_DESTPATH	= $(DIST)/classes
 
 # where the sources for the module you are compiling are
 # default is sun-java/classsrc, override for other modules
