@@ -2613,27 +2613,6 @@ nsXULElement::RemoveChildAt(PRInt32 aIndex, PRBool aNotify)
           }
         }
 
-        nsCOMPtr<nsIDOMNodeList> cellList;
-        treeElement->GetSelectedCells(getter_AddRefs(cellList));
-
-        if (cellList) {
-          // Iterate over all of the items and find out if they are contained inside
-          // the removed subtree.
-          PRUint32 length;
-          cellList->GetLength(&length);
-          for (PRUint32 i = 0; i < length; i++) {
-            nsCOMPtr<nsIDOMNode> node;
-            cellList->Item(i, getter_AddRefs(node));
-            if (IsAncestor(parentKid, node)) {
-              nsCOMPtr<nsIContent> content = do_QueryInterface(node);
-              content->UnsetAttribute(kNameSpaceID_None, kSelectedAtom, PR_FALSE);
-              length--;
-              i--;
-              fireSelectionHandler = PR_TRUE;
-            }
-          }
-        }
-
         if (fireSelectionHandler) {
           nsCOMPtr<nsIXULTreeContent> tree = do_QueryInterface(treeElement);
           if (tree) {
@@ -2806,15 +2785,7 @@ nsXULElement::SetAttribute(PRInt32 aNameSpaceID,
           nodeList = do_QueryInterface(nodes);
         }
       }
-      else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
-        nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-        GetParentTree(getter_AddRefs(treeElement));
-        if (treeElement) {
-          nsCOMPtr<nsIDOMNodeList> nodes;
-          treeElement->GetSelectedCells(getter_AddRefs(nodes));
-          nodeList = do_QueryInterface(nodes);
-        }
-      }
+      
       if (nodeList) {
         // Append this node to the list.
         nodeList->AppendNode(this);
@@ -3057,15 +3028,7 @@ nsXULElement::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBool aNotif
                 nodeList = do_QueryInterface(nodes);
             }
         }
-        else if (tag && (tag.get() == kTreeCellAtom) && (aName == kSelectedAtom)) {
-            nsCOMPtr<nsIDOMXULTreeElement> treeElement;
-            GetParentTree(getter_AddRefs(treeElement));
-            if (treeElement) {
-                nsCOMPtr<nsIDOMNodeList> nodes;
-                treeElement->GetSelectedCells(getter_AddRefs(nodes));
-                nodeList = do_QueryInterface(nodes);
-            }
-        }
+        
         if (nodeList) {
             // Remove this node from the list.
             nodeList->RemoveNode(this);
