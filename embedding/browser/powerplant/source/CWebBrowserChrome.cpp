@@ -111,7 +111,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
    NS_INTERFACE_MAP_ENTRY(nsIWebBrowserChrome)
    NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
-   NS_INTERFACE_MAP_ENTRY(nsIBaseWindow)
+   NS_INTERFACE_MAP_ENTRY(nsIWebBrowserSiteWindow)
    NS_INTERFACE_MAP_ENTRY(nsIPrompt)
    NS_INTERFACE_MAP_ENTRY(nsIContextMenuListener)
    NS_INTERFACE_MAP_ENTRY(nsITooltipListener)
@@ -363,23 +363,8 @@ CWebBrowserChrome::OnSecurityChange(nsIWebProgress *aWebProgress,
 
 
 //*****************************************************************************
-// CWebBrowserChrome::nsIBaseWindow
+// CWebBrowserChrome::nsIWebBrowserSiteWindow
 //*****************************************************************************   
-
-NS_IMETHODIMP CWebBrowserChrome::InitWindow(nativeWindow aParentNativeWindow,
-   nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
-{
-   // Ignore wigdet parents for now.  Don't think those are a vaild thing to call.
-   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, PR_FALSE), NS_ERROR_FAILURE);
-
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::Create()
-{
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_UNEXPECTED;
-}
 
 NS_IMETHODIMP CWebBrowserChrome::Destroy()
 {
@@ -458,32 +443,7 @@ NS_IMETHODIMP CWebBrowserChrome::GetPositionAndSize(PRInt32* x, PRInt32* y, PRIn
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::Repaint(PRBool aForce)
-{
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   mBrowserWindow->Refresh();
-   if (aForce)
-      mBrowserWindow->UpdatePort();
-      
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetParentWidget(nsIWidget** aParentWidget)
-{
-   NS_ENSURE_ARG_POINTER(aParentWidget);
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::SetParentWidget(nsIWidget* aParentWidget)
-{
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
+NS_IMETHODIMP CWebBrowserChrome::GetSiteWindow(void ** aParentNativeWindow)
 {
    NS_ENSURE_ARG_POINTER(aParentNativeWindow);
 
@@ -492,48 +452,7 @@ NS_IMETHODIMP CWebBrowserChrome::GetParentNativeWindow(nativeWindow* aParentNati
    return NS_OK;
 }
 
-NS_IMETHODIMP CWebBrowserChrome::SetParentNativeWindow(nativeWindow aParentNativeWindow)
-{
-   NS_ASSERTION(PR_FALSE, "You can't call this");
-   return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetVisibility(PRBool* aVisibility)
-{
-   NS_ENSURE_ARG_POINTER(aVisibility);
-	NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   *aVisibility = mBrowserWindow->IsVisible();
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::SetVisibility(PRBool aVisibility)
-{
-   NS_ENSURE_TRUE(mBrowserWindow, NS_ERROR_NOT_INITIALIZED);
-
-   mBrowserWindow->SetVisibility(aVisibility);
-      
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::GetMainWidget(nsIWidget** aMainWidget)
-{
-   NS_ENSURE_ARG_POINTER(aMainWidget);
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
 NS_IMETHODIMP CWebBrowserChrome::SetFocus()
-{
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
-}
-
-NS_IMETHODIMP CWebBrowserChrome::FocusAvailable(nsIBaseWindow* aCurrentFocus, 
-   PRBool* aTookFocus)
 {
    //XXX First Check In
    NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
