@@ -96,7 +96,7 @@
           node that interferes with navigation to interior nodes.] -->
         <content id="content">
           <xul:hbox flex="1" id="hbox" class="datepicker-box-class">
-            <xul:menulist editable="true" sizetopopup="false" style="width:11em"
+            <xul:menulist editable="true" sizetopopup="false"
                           id="datepicker-text"
                           class="datepicker-text-class"
                           onkeypress="if (event.keyCode == 13) this.kDatePicker.parseTextBoxDate(true);"

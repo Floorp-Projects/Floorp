@@ -34,12 +34,19 @@
  * ***** END LICENSE BLOCK ***** */
 
 /*--------------------------------------------------------------------
- *   Date button (modified from skin/eventDialog.css)
+ *   Datepicker (text field with minimonth popup)
  *-------------------------------------------------------------------*/
-
+ 
+/* flex box around menulist */
 .datepicker-box-class {
 }
-
+ 
+/* menulist */
 .datepicker-text-class {
+  width: 11em;
+}
+
+/* text input field */
+.datepicker-text-class input {
 }
 

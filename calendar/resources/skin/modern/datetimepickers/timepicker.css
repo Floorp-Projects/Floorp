@@ -13,8 +13,7 @@
  *
  * The Original Code is OEone Calendar Code, released October 31st, 2001.
  *
- * The Initial Developer of the Original Code is
- * OEone Corporation.
+ * The Initial Developer of the Original Code is OEone Corporation.
  * Portions created by the Initial Developer are Copyright (C) 2001
  * the Initial Developer. All Rights Reserved.
  *
@@ -35,20 +34,19 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-
-
 /*-------------------------------------------------------------------
- *   Time field and button (modified from skin/eventDialog.css)
+ *   Timepicker (text menulist with popup)
  *-------------------------------------------------------------------*/
 
 .timepicker-box-class {
 }
 
 .timepicker-text-class {
+  width: 8em;
 }
 
 /*-------------------------------------------------------------------
- *   popup (from timepicker/timepicker.css
+ *   popup (from timepicker/timepicker.css)
  *-------------------------------------------------------------------*/
 
 /* Box that occupies whole window */
