@@ -76,4 +76,5 @@ nsMsgCompPrefs::~nsMsgCompPrefs()
 	PR_FREEIF(m_organization);
 	PR_FREEIF(m_userFullName);
 	PR_FREEIF(m_userEmail);
+	PR_FREEIF(m_replyTo);
 }
