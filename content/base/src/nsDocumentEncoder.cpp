@@ -71,6 +71,9 @@
 #include "nsISupportsArray.h"
 #include "nsIParserService.h"
 #include "nsParserCIID.h"
+#include "nsIScriptContext.h"
+#include "nsIScriptGlobalObject.h"
+#include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID,
                      NS_ICHARSETCONVERTERMANAGER_CID);
@@ -193,6 +196,33 @@ nsDocumentEncoder::nsDocumentEncoder()
 
 nsDocumentEncoder::~nsDocumentEncoder()
 {
+}
+
+static PRBool
+IsScriptEnabled(nsIDocument *aDoc)
+{
+  NS_ENSURE_TRUE(aDoc, PR_TRUE);
+
+  nsCOMPtr<nsIScriptSecurityManager> sm(do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID));
+  NS_ENSURE_TRUE(sm, PR_TRUE);
+
+  nsCOMPtr<nsIPrincipal> principal;
+  aDoc->GetPrincipal(getter_AddRefs(principal));
+  NS_ENSURE_TRUE(principal, PR_TRUE);
+
+  nsCOMPtr<nsIScriptGlobalObject> globalObject;
+  aDoc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+
+  nsCOMPtr<nsIScriptContext> scriptContext;
+  globalObject->GetContext(getter_AddRefs(scriptContext));
+  NS_ENSURE_TRUE(scriptContext, PR_TRUE);
+
+  JSContext* cx = (JSContext *) scriptContext->GetNativeContext();
+  NS_ENSURE_TRUE(cx, PR_TRUE);
+
+  PRBool enabled = PR_TRUE;
+  sm->CanExecuteScripts(cx, principal, &enabled);
+  return enabled;
 }
 
 NS_IMETHODIMP
@@ -1048,6 +1078,9 @@ nsHTMLCopyEncoder::Init(nsIDocument* aDocument,
   // Make all links absolute when copying
   // (see related bugs #57296, #41924, #58646, #32768)
   mFlags = aFlags | OutputAbsoluteLinks;
+
+  if (!IsScriptEnabled(mDocument))
+    mFlags |= OutputNoScriptContent;
 
   nsresult rv;
   mParserService = do_GetService(kParserServiceCID, &rv);

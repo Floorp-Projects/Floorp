@@ -148,7 +148,11 @@ public:
     // CR, LF, or CRLF.  If neither of these flags is set, then we
     // will use platform line breaks.
     OutputCRLineBreak = 512,
-    OutputLFLineBreak = 1024
+    OutputLFLineBreak = 1024,
+
+    // Output the content of noscript elements (only for serializing
+    // to plaintext).
+    OutputNoScriptContent = 2048
   };
 
   /**
