@@ -875,7 +875,7 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
             rv = i_Channel->GetProxyType(getter_Copies(proxyType));
             if (NS_SUCCEEDED (rv)) {
                 if (nsCRT::strcasecmp(proxyType, "socks") == 0) {
-                    usingSocksProxy = true;
+                    usingSocksProxy = PR_TRUE;
                 }
             }
         }
