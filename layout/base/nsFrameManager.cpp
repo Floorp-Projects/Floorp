@@ -1384,10 +1384,10 @@ CaptureFrameStateFor(nsIPresContext* aPresContext, nsIFrame* aFrame, nsILayoutHi
         nsIStatefulFrame::StateType type = nsIStatefulFrame::eNoType;
         rv = statefulFrame->GetStateType(aPresContext, &type);
         if (NS_SUCCEEDED(rv)) {
-          nsISupports* frameState;
-          rv = statefulFrame->SaveState(aPresContext, &frameState);
+          nsCOMPtr<nsISupports> frameState;
+          rv = statefulFrame->SaveState(aPresContext, getter_AddRefs(frameState));
           if (NS_SUCCEEDED(rv)) {
-            rv = aState->AddState(ID, frameState, type);
+            rv = aState->AddState(ID, frameState, type);            
           }
         }
       }
