@@ -172,7 +172,7 @@ nsViewerApp::Initialize(int argc, char** argv)
     return rv;
   }
   mAppShell->Create(&argc, argv);
-  mAppShell->SetDispatchListener((nsDispatchListener*) this);
+  //mAppShell->SetDispatchListener((nsDispatchListener*) this);
 
   // Load preferences
   rv = nsRepository::CreateInstance(kPrefCID, NULL, kIPrefIID,
