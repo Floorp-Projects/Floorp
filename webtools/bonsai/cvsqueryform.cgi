@@ -22,8 +22,6 @@
 
 require 'CGI.pl';
 
-use vars qw(@LegalDirs);
-
 $|=1;
 
 print "Content-type: text/html\n\n";
@@ -33,6 +31,9 @@ $CVS_ROOT = $::FORM{'cvsroot'};
 $CVS_ROOT = pickDefaultRepository() unless $CVS_ROOT;
 $::TreeID = $::FORM{'module'} 
      if (exists($::TreeInfo{$::FORM{'module'}}{'repository'}));
+
+$modules = {};
+require 'modules.pl';
 
 PutsHeader("Bonsai - CVS Query Form", "CVS Query Form",
            "$CVS_ROOT - $::TreeInfo{$::TreeID}{shortdesc}");
@@ -90,10 +91,10 @@ else {
 #
 # Print out all the Different Modules
 #
-LoadDirList();
-for $k  (sort( grep(!/\*$/, @::LegalDirs) ) ){
-    print "<OPTION value='$k'>$k\n" if ($k ne $Module);
+for $k  (sort( keys( %$modules ) ) ){
+    print "<OPTION value='$k'>$k\n";
 }
+
 
 print "</SELECT></td>\n";
 print "<td rowspan=2>";

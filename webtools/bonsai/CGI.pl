@@ -265,7 +265,7 @@ sub cvsmenu {
                $desc = $::TreeInfo{$i}{'description'} unless $desc;
 
                $root    = "cvsroot=$::TreeInfo{$i}{'repository'}";
-               $module  = "module=$i";
+               $module  = "module=$::TreeInfo{$i}{'module'}";
                print "<li><a href=\"$page?$root&$module$branch\">$desc</a>\n";
           };
           print "</ul>\n";
