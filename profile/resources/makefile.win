@@ -18,23 +18,6 @@
 DEPTH=..\..
 MODULE=profile
 
-DIRS= locale
+DIRS=locale content skin
+
 include <$(DEPTH)\config\rules.mak>
-
-FILES=\
-        common.css				\
-        cpw.css					\
-        cpw.js					\
-        cpw.xul					\
-        pm.css					\
-	pm.js					\
-        pm.xul					\
-	pmDelete.xul			\
-        pmMigrateAll.xul		\
-	pmRename.xul			\
-	test-content1_1.xul		\
-	test-content1_2.xul		\
-        $(NULL)
-
-install::
-        -for %i in ($(FILES:/=\)) do $(MAKE_INSTALL) %i $(DIST)\bin\res\profile

@@ -22,25 +22,6 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS		= locale
-
-FILES		= \
-		common.css \
-		cpw.css \
-		cpw.js \
-		cpw.xul \
-		pm.css \
-		pm.js \
-		pm.xul \
-		pmDelete.xul \
-		pmMigrateAll.xul \
-		pmrename.xul \
-		test-content1_1.xul \
-		test-content1_2.xul \
-		$(NULL)
+DIRS		= content skin locale
 
 include $(topsrcdir)/config/rules.mk
-
-install::
-	$(INSTALL) $(addprefix $(srcdir)/, $(FILES)) $(DIST)/bin/res/profile
-

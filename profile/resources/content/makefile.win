@@ -21,15 +21,15 @@ MODULE=profile
 include <$(DEPTH)\config\rules.mak>
 
 FILES=\
-        createProfileWizard.js		\
-        createProfileWizard.xul		\
-		profileManager.js			\
-		profileManager.xul			\
-        deleteProfile.xul			\
-        migrateAllProfile.xul		\
-        renameProfile.xul			\
-		newProfile1_1.xul			\
-        newProfile1_2.xul			\
+	createProfileWizard.js		\
+	createProfileWizard.xul		\
+	deleteProfile.xul		\
+	migrateAllProfile.xul		\
+	newProfile1_1.xul		\
+	newProfile1_2.xul		\
+	profileManager.js		\
+	profileManager.xul		\
+	renameProfile.xul		\
         $(NULL)
 
 install::

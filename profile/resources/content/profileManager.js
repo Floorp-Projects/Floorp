@@ -1,12 +1,14 @@
-var profileCore = "";
 var selected    = null;
 var currProfile = "";
+var profile = Components.classes["component://netscape/profile/manager"].createInstance();
+profile = profile.QueryInterface(Components.interfaces.nsIProfile);             
+//dump("profile = " + profile + "\n"); 
 
 function openCreateProfile()
 {
 	// Need to call CreateNewProfile xuls
-	var win = window.openDialog('createProfileWizard.xul', 'CPW', 'chrome');
-    return win;
+	var win = window.openDialog('chrome://profile/content/createProfileWizard.xul', 'CPW', 'chrome');
+	return win;
 }
 
 function CreateProfile()
@@ -18,7 +20,7 @@ function RenameProfile(w)
 {
 	if (!selected)
 	{
-		dump("Select a profile to rename.\n");
+		//dump("Select a profile to rename.\n");
 		return;
 	}
 
@@ -28,12 +30,12 @@ function RenameProfile(w)
 
 	if (migrate == "true")
 	{
-		dump("Migrate this profile before renaming it.\n");
+		//dump("Migrate this profile before renaming it.\n");
 		return;
 	}
 
 	//dump("RenameProfile : " + oldName + " to " + newName + "\n");
-	profileCore.RenameProfile(oldName, newName);
+	profile.renameProfile(oldName, newName);
 	//this.location.replace(this.location);
 	this.location.href = "chrome://profile/content/profileManager.xul";
 }
@@ -42,7 +44,7 @@ function DeleteProfile(deleteFilesFlag)
 {
 	if (!selected)
 	{
-		dump("Select a profile to delete.\n");
+		//dump("Select a profile to delete.\n");
 		return;
 	}
 
@@ -50,7 +52,7 @@ function DeleteProfile(deleteFilesFlag)
 
 	var name = selected.getAttribute("rowName");
 	//dump("Delete '" + name + "'\n");
-	profileCore.DeleteProfile(name, deleteFilesFlag);
+	profile.deleteProfile(name, deleteFilesFlag);
 	//this.location.replace(this.location);
 	//this.location.href = this.location;
 	this.location.href = "chrome://profile/content/profileManager.xul";
@@ -58,10 +60,10 @@ function DeleteProfile(deleteFilesFlag)
 
 function StartCommunicator()
 {
-	dump("************Inside Start Communicator prof\n");
+	//dump("************Inside Start Communicator prof\n");
 	if (!selected)
 	{
-		dump("Select a profile to migrate.\n");
+		//dump("Select a profile to migrate.\n");
 		return;
 	}
 
@@ -70,49 +72,42 @@ function StartCommunicator()
 
 	if (migrate == "true")
 	{
-		profileCore.MigrateProfile(name);
+		profile.migrateProfile(name);
 	}
 
-	dump("************name: "+name+"\n");
-	profileCore.StartCommunicator(name);
+	//dump("************name: "+name+"\n");
+	profile.startCommunicator(name);
 	ExitApp();
 }
 
 function ExitApp()
 {
-	var toolkitCore = XPAppCoresManager.Find("toolkitCore");
-	if (!toolkitCore) {
-		toolkitCore = new ToolkitCore();
-		
-		if (toolkitCore) {
-			toolkitCore.Init("toolkitCore");
-		}
-	}
-	if (toolkitCore) {
-		toolkitCore.CloseWindow(parent);
-	}
+	// Need to call this to stop the event loop
+        var appShell = Components.classes['component://netscape/appshell/appShellService'].getService();
+        appShell = appShell.QueryInterface( Components.interfaces.nsIAppShellService);
+        appShell.Quit();
 }
 
 function showSelection(node)
 {
-	dump("************** In showSelection routine!!!!!!!!! \n");
+	//dump("************** In showSelection routine!!!!!!!!! \n");
 	// (see tree's onclick definition)
 	// Tree events originate in the smallest clickable object which is the cell.  The object 
 	// originating the event is available as event.target.  We want the cell's row, so we go 
 	// one further and get event.target.parentNode.
 	selected = node;
 	var num = node.getAttribute("rowNum");
-	dump("num: "+num+"\n");
+	//dump("num: "+num+"\n");
 
 	var name = node.getAttribute("rowName");
-	dump("name: "+name+"\n");
+	//dump("name: "+name+"\n");
 
 	//dump("Selected " + num + " : " + name + "\n");
 }
 
 function addTreeItem(num, name, migrate)
 {
-  dump("Adding element " + num + " : " + name + "\n");
+  //dump("Adding element " + num + " : " + name + "\n");
   var body = document.getElementById("theTreeBody");
 
   var newitem = document.createElement('treeitem');
@@ -143,18 +138,21 @@ function addTreeItem(num, name, migrate)
 
 function loadElements()
 {
-	dump("****************hacked onload handler adds elements to tree widget\n");
+	//dump("****************hacked onload handler adds elements to tree widget\n");
 	var profileList = "";
 
-	profileCore = Components.classes["component://netscape/profile/profile-services"].createInstance();
-	profileCore = profileCore.QueryInterface(Components.interfaces.nsIProfileServices);
-	dump("profile = " + profileCore + "\n");
-	
-	profileList = profileCore.GetProfileList();	
+	profileList = profile.getProfileList();	
 
 	//dump("Got profile list of '" + profileList + "'\n");
 	profileList = profileList.split(",");
-	currProfile = profileCore.GetCurrentProfile();
+	try {
+		currProfile = profile.currentProfile;
+	}
+	catch (ex) {
+		if (profileList != "") {
+			currProfile = profileList;
+		}
+	}
 
 	for (var i=0; i < profileList.length; i++)
 	{
@@ -165,15 +163,17 @@ function loadElements()
 
 function openRename()
 {
-	if (!selected)
-		dump("Select a profile to rename.\n");
+	if (!selected) {
+		//dump("Select a profile to rename.\n");
+	}
 	else
 	{
 		var migrate = selected.getAttribute("rowMigrate");
-		if (migrate == "true")
-			dump("Migrate the profile before renaming it.\n");
+		if (migrate == "true") {
+			//dump("Migrate the profile before renaming it.\n");
+		}
 		else
-			var win = window.openDialog('renameProfile.xul', 'Renamer', 'chrome');
+			var win = window.openDialog('chrome://profile/content/renameProfile.xul', 'Renamer', 'chrome');
 	}
 }
 
@@ -182,7 +182,7 @@ function ConfirmDelete()
 {
 	if (!selected)
 	{
-		dump("Select a profile to delete.\n");
+		//dump("Select a profile to delete.\n");
 		return;
 	}
 
@@ -191,18 +191,18 @@ function ConfirmDelete()
 
 	if (migrate == "true")
 	{
-		dump("Migrate this profile before deleting it.\n");
+		//dump("Migrate this profile before deleting it.\n");
 		return;
 	}
 
-    var win = window.openDialog('deleteProfile.xul', 'Deleter', 'chrome');
+    var win = window.openDialog('chrome://profile/content/deleteProfile.xul', 'Deleter', 'chrome');
     return win;
 }
 
 
 function ConfirmMigrateAll() 
 {
-    var win = window.openDialog('migrateAllProfile.xul', 'MigrateAll', 'chrome');
+    var win = window.openDialog('chrome://profile/content/profileManagerMigrateAll.xul', 'MigrateAll', 'chrome');
     return win;
 }
 

@@ -1,7 +1,7 @@
-cpw.dtd
-pm.dtd
-pmDelete.dtd
-pmMigrateAll.dtd
-pmrename.dtd
-test-content1_1.dtd
-test-content1_2.dtd
+createProfileWizard.dtd
+newProfile1_1.dtd
+newProfile1_2.dtd
+profileManager.dtd
+profileManagerDelete.dtd
+profileManagerMigrateAll.dtd
+profileManagerRename.dtd
