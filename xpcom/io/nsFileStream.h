@@ -178,11 +178,12 @@ public:
                                       }
     PRBool                            eof() const { return get_at_eof(); }
     char                              get();
-    void                              close()
+    nsresult                          close()
                                       {
     					NS_ASSERTION(mInputStream, "mInputStream is null!");
 					if (mInputStream) {
-						mInputStream->Close();
+						return mInputStream->Close();                        
+                    return NS_OK;
 					}
                                       }
     PRInt32                           read(void* s, PRInt32 n);
@@ -241,14 +242,15 @@ public:
                                       {
                                           return mOutputStream;
                                       }
-    void                              close()
+    nsresult                          close()
                                       {
                                           if (mOutputStream)
-                                            mOutputStream->Close();
+                                            return mOutputStream->Close();
+                                          return NS_OK;
                                       }
     void                              put(char c);
     PRInt32                           write(const void* s, PRInt32 n);
-    virtual void                      flush();
+    virtual nsresult                  flush();
 
     // Output streamers.  Add more as needed (but you have to add delegators to the derived
     // classes, too, because these operators don't inherit).
@@ -609,7 +611,7 @@ public:
                                       nsOutputFileStream(nsIFileSpec* inFile);
     virtual                           ~nsOutputFileStream();
  
-    virtual void                      flush();
+    virtual nsresult                  flush();
     virtual void					  abort();
 
     // Output streamers.  Unfortunately, they don't inherit!
@@ -720,11 +722,11 @@ public:
                                           NS_RELEASE(stream);
                                       }
  
-    virtual void                      close()
+    virtual nsresult                  close()
                                       {
                                           // Doesn't matter which of the two we close:
                                           // they're hooked up to the same file.
-                                          nsInputFileStream::close();
+                                          return nsInputFileStream::close();
                                       }
 
      // Output streamers.  Unfortunately, they don't inherit!
@@ -753,7 +755,7 @@ public:
     nsInputStream&                    operator >> (nsInputStream& (*pf)(nsInputStream&))
                                          { return nsInputStream::operator >>(pf); }
 
-	virtual void flush() {if (mFileOutputStream) mFileOutputStream->Flush();}
+	virtual nsresult flush() {if (mFileOutputStream) mFileOutputStream->Flush(); return error(); }
 
     // DATA
 protected:
