@@ -49,7 +49,7 @@ NS_IMETHODIMP nsObserverBase::NotifyWebShell(
    
    theKey.AssignWithConversion("webshell"); // Key to find webshell service from the bundle. 
     
-   nsISupportsParserBundle* bundle=(nsISupportsParserBundle*)aParserBundle;
+   nsCOMPtr<nsISupportsParserBundle> bundle=do_QueryInterface(aParserBundle);
 
    if (bundle) {
      nsresult res = NS_OK;
