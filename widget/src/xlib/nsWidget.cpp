@@ -55,6 +55,9 @@ Atom   nsWidget::WMDeleteWindow = 0;
 Atom   nsWidget::WMTakeFocus = 0;
 Atom   nsWidget::WMSaveYourself = 0;
 
+// this is the window that has the focus
+Window nsWidget::mFocusWindow = 0;
+
 class nsWindowKey : public nsHashKey {
 protected:
   Window mKey;
@@ -99,7 +102,6 @@ nsWidget::nsWidget() : nsBaseWidget()
   mName = "unnamed";
   mIsShown = PR_FALSE;
   mIsToplevel = PR_FALSE;
-  mIsMapped = PR_FALSE;
   mVisibility = VisibilityFullyObscured; // this is an X constant.
   mWindowType = eWindowType_child;
   mBorderStyle = eBorderStyle_default;
@@ -317,21 +319,16 @@ NS_IMETHODIMP nsWidget::Enable(PRBool bState)
 NS_IMETHODIMP nsWidget::SetFocus(void)
 {
   if (mBaseWindow) {
-    if (mIsMapped && (mVisibility != VisibilityFullyObscured)) {
-      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetFocus() setting focus to 0x%lx\n", mBaseWindow));
-      XSetInputFocus(mDisplay,
-                     mBaseWindow,
-                     RevertToPointerRoot, // XXX is this the right behavior?
-                     CurrentTime);
-    }
-    else {
-      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetFocus() NOT setting focus to 0x%lx because it's not mapped or is not visible\n", mBaseWindow));
-    }
-  }
-  else {
-    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetFocus() tried to set focus to a window that doesn't exist.\n"));
+    PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::SetFocus() setting focus to 0x%lx\n", mBaseWindow));
+    mFocusWindow = mBaseWindow;
   }
   return NS_OK;
+}
+
+Window
+nsWidget::GetFocusWindow(void)
+{
+  return mFocusWindow;
 }
 
 NS_IMETHODIMP nsWidget::Invalidate(PRBool aIsSynchronous)
@@ -456,7 +453,7 @@ NS_IMETHODIMP nsWidget::Show(PRBool bState)
 
 NS_IMETHODIMP nsWidget::IsVisible(PRBool &aState)
 {
-  if (mIsMapped && (mVisibility != VisibilityFullyObscured)) {
+  if (mVisibility != VisibilityFullyObscured) {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("nsWidget::IsVisible: yes\n"));
     aState = PR_TRUE;
   }
@@ -637,7 +634,10 @@ nsWidget::GetEventMask()
 		ButtonPressMask | 
 		ButtonReleaseMask | 
 		PointerMotionMask |
-    VisibilityChangeMask;
+    VisibilityChangeMask |
+    KeyPressMask |
+    KeyReleaseMask |
+    StructureNotifyMask;
 
 	return event_mask;
 }
@@ -1068,11 +1068,6 @@ void nsWidget::Unmap(void)
 void nsWidget::SetVisibility(int aState)
 {
   mVisibility = aState;
-}
-
-void nsWidget::SetMapStatus(PRBool aState)
-{
-  mIsMapped = aState;
 }
 
 // nsresult

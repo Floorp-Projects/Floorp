@@ -119,7 +119,7 @@ public:
 
   static nsWidget        * GetWidgetForWindow(Window aWindow);
   void                     SetVisibility(int aState); // using the X constants here
-  void                     SetMapStatus(PRBool aState);
+  static Window            GetFocusWindow(void);
 
   PRBool DispatchWindowEvent(nsGUIEvent & aEvent);
 
@@ -169,7 +169,6 @@ protected:
   PRBool WidgetVisible  (nsRect   &aBounds);
 
   PRBool         mIsShown;
-  PRBool         mIsMapped;
   int            mVisibility; // this is an int because that's the way X likes it
   PRUint32       mPreferredWidth;
   PRUint32       mPreferredHeight;
@@ -189,6 +188,8 @@ protected:
   nsString       mName;           // name of the type of widget
   PRBool         mIsToplevel;
   nsRect         mRequestedSize;
+
+  static         Window                 mFocusWindow;
 
 private:
   static       nsHashtable *          gsWindowList;

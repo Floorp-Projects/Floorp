@@ -46,7 +46,7 @@ static NS_DEFINE_IID(kWindowServiceCID,NS_XLIB_WINDOW_SERVICE_CID);
 static NS_DEFINE_IID(kWindowServiceIID,NS_XLIB_WINDOW_SERVICE_IID);
 #endif /* !MOZ_MONOLITHIC_TOOLKIT */
 
-#ifndef !MOZ_MONOLITHIC_TOOLKIT
+#ifndef MOZ_MONOLITHIC_TOOLKIT
 // // this is so that we can get the timers in the base.  most widget
 // // toolkits do this through some set of globals.  not here though.  we
 // // don't have that luxury
@@ -563,7 +563,9 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
   PRUint32 eventType = 0;
 
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("Button event for window 0x%lx button %d type %s\n",
-         event->xany.window, event->xbutton.button, (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease")));
+                                       event->xany.window,
+                                       event->xbutton.button,
+                                       (event->type == ButtonPress ? "ButtonPress" : "ButtonRelease")));
   switch(event->type) {
   case ButtonPress:
     switch(event->xbutton.button) {
@@ -592,6 +594,7 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
     }
     break;
   }
+
 
   mevent.message = eventType;
   mevent.widget = aWidget;
@@ -647,11 +650,12 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
                                        event->xconfigure.window,
                                        event->xconfigure.x, event->xconfigure.y,
                                        event->xconfigure.width, event->xconfigure.height));
+
   XEvent    config_event;
-  while (XCheckWindowEvent(event->xany.display, 
-                           event->xany.window, 
-                           StructureNotifyMask, 
-                           &config_event) == True) {
+  while (XCheckTypedWindowEvent(event->xany.display, 
+                                event->xany.window, 
+                                ConfigureNotify,
+                                &config_event) == True) {
     // make sure that we don't get other types of events.  
     // StructureNotifyMask includes other kinds of events, too.
     if (config_event.type == ConfigureNotify) 
@@ -665,6 +669,9 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
                                              event->xconfigure.width, 
                                              event->xconfigure.height));
       }
+    else {
+      PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("EVENT LOSSAGE\n"));
+    }
   }
 
   nsSizeEvent sevent;
@@ -688,11 +695,25 @@ nsAppShell::HandleConfigureNotifyEvent(XEvent *event, nsWidget *aWidget)
 void
 nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
 {
-  char string_buf[CHAR_BUF_SIZE];
-  int  len = 0;
+  char      string_buf[CHAR_BUF_SIZE];
+  int       len = 0;
+  Window    focusWindow = 0;
+  nsWidget *focusWidget = 0;
 
-  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyPress event for window 0x%lx\n",
-                                       event->xkey.window));
+  // figure out where the real focus should go...
+  focusWindow = nsWidget::GetFocusWindow();
+  if (focusWindow) {
+    focusWidget = nsWidget::GetWidgetForWindow(focusWindow);
+  }
+
+  PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("KeyPress event for window 0x%lx ( 0x%lx focus window )\n",
+                                       event->xkey.window,
+                                       focusWindow));
+
+  // don't even bother...
+  if (focusWidget == 0) {
+    return;
+  }
 
   // Dont dispatch events for modifier keys pressed ALONE
   if (nsKeyCode::KeyCodeIsModifier(event->xkey.keycode))
@@ -718,7 +739,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.point.x = 0;
   keyEvent.point.y = 0;
   keyEvent.message = NS_KEY_DOWN;
-  keyEvent.widget = aWidget;
+  keyEvent.widget = focusWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
 
   //  printf("keysym = %x, keycode = %x, vk = %x\n",
@@ -726,7 +747,7 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   //         event->xkey.keycode,
   //         keyEvent.keyCode);
 
-  aWidget->DispatchKeyEvent(keyEvent);
+  focusWidget->DispatchKeyEvent(keyEvent);
 
   keyEvent.keyCode = nsKeyCode::ConvertKeySymToVirtualKey(keysym);
   keyEvent.charCode = string_buf[0];
@@ -737,10 +758,10 @@ nsAppShell::HandleKeyPressEvent(XEvent *event, nsWidget *aWidget)
   keyEvent.point.x = 0;
   keyEvent.point.y = 0;
   keyEvent.message = NS_KEY_PRESS;
-  keyEvent.widget = aWidget;
+  keyEvent.widget = focusWidget;
   keyEvent.eventStructType = NS_KEY_EVENT;
 
-  aWidget->DispatchKeyEvent(keyEvent);
+  focusWidget->DispatchKeyEvent(keyEvent);
 
 }
 
@@ -891,14 +912,16 @@ void nsAppShell::HandleMapNotifyEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("MapNotify event for window 0x%lx\n",
                                        event->xmap.window));
-  aWidget->SetMapStatus(PR_TRUE);
+  // XXX set map status is gone now..
+  //  aWidget->SetMapStatus(PR_TRUE);
 }
 
 void nsAppShell::HandleUnmapNotifyEvent(XEvent *event, nsWidget *aWidget)
 {
   PR_LOG(XlibWidgetsLM, PR_LOG_DEBUG, ("UnmapNotifyEvent for window 0x%lx\n",
                                        event->xunmap.window));
-  aWidget->SetMapStatus(PR_FALSE);
+  // XXX set map status is gone now..
+  //aWidget->SetMapStatus(PR_FALSE);
 }
 
 void nsAppShell::HandleClientMessageEvent(XEvent *event, nsWidget *aWidget)
