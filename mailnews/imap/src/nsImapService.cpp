@@ -1627,37 +1627,40 @@ NS_IMETHODIMP
 nsImapService::DiscoverAllFolders(nsIEventQueue* aClientEventQueue,
                                   nsIMsgFolder* aImapMailFolder,
                                   nsIUrlListener* aUrlListener,
+                                  nsIMsgWindow *  aMsgWindow,
                                   nsIURI** aURL)
 {
-    NS_ASSERTION (aImapMailFolder && aClientEventQueue, 
-                  "Oops ... null aClientEventQueue or aImapMailFolder");
-    if (!aImapMailFolder || ! aClientEventQueue)
-        return NS_ERROR_NULL_POINTER;
-    
-    nsCOMPtr<nsIImapUrl> aImapUrl;
-    nsCAutoString urlSpec;
+  NS_ASSERTION (aImapMailFolder && aClientEventQueue, 
+                "Oops ... null aClientEventQueue or aImapMailFolder");
+  if (!aImapMailFolder || ! aClientEventQueue)
+      return NS_ERROR_NULL_POINTER;
+  
+  nsCOMPtr<nsIImapUrl> imapUrl;
+  nsCAutoString urlSpec;
 
 	PRUnichar hierarchySeparator = GetHierarchyDelimiter(aImapMailFolder);
-    nsresult rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(aImapUrl),
-                                          aImapMailFolder,
-                                          aUrlListener, urlSpec, hierarchySeparator);
-    if (NS_SUCCEEDED (rv))
+  nsresult rv = CreateStartOfImapUrl(nsnull, getter_AddRefs(imapUrl),
+                                     aImapMailFolder,
+                                     aUrlListener, urlSpec, hierarchySeparator);
+  if (NS_SUCCEEDED (rv))
+  {
+    rv = SetImapUrlSink(aImapMailFolder, imapUrl);
+
+    if (NS_SUCCEEDED(rv))
     {
-        rv = SetImapUrlSink(aImapMailFolder, aImapUrl);
-
-        if (NS_SUCCEEDED(rv))
-        {
-            nsCOMPtr<nsIURI> uri = do_QueryInterface(aImapUrl);
-
-            urlSpec.Append("/discoverallboxes");
-			nsCOMPtr <nsIURI> url = do_QueryInterface(aImapUrl, &rv);
-			rv = uri->SetSpec((char *) urlSpec.GetBuffer());
-            if (NS_SUCCEEDED(rv))
-                rv = GetImapConnectionAndLoadUrl(aClientEventQueue, aImapUrl,
-                                                 nsnull, aURL);
-        }
+      nsCOMPtr<nsIURI> uri = do_QueryInterface(imapUrl);
+      nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(imapUrl);
+      if (mailnewsurl)
+        mailnewsurl->SetMsgWindow(aMsgWindow);
+      urlSpec.Append("/discoverallboxes");
+      nsCOMPtr <nsIURI> url = do_QueryInterface(imapUrl, &rv);
+		  rv = uri->SetSpec((char *) urlSpec.GetBuffer());
+      if (NS_SUCCEEDED(rv))
+         rv = GetImapConnectionAndLoadUrl(aClientEventQueue, imapUrl,
+                                          nsnull, aURL);
     }
-    return rv;
+  }
+  return rv;
 }
 
 NS_IMETHODIMP
