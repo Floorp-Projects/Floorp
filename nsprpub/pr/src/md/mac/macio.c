@@ -1040,16 +1040,17 @@ static OSErr CreateMacPathFromUnixPath(const char *unixPath, char **macPath)
 	// It does not do any special directory translation; use ConvertUnixPathToMacPath
 	// for that.
 	
-	char		*src;
+	const char	*src;
 	char		*tgt;
 	OSErr		err = noErr;
 
-	*macPath = malloc(strlen(unixPath) * 2);	// Will be enough extra space.
+	// If unixPath is a zero-length string, we copy ":" into
+	// macPath, so we need a minimum of two bytes to handle
+	// the case of ":". 
+	*macPath = malloc(strlen(unixPath) + 2);	// Will be enough extra space.
 	require_action (*macPath != NULL, exit, err = memFullErr;);
 
-	strcpy(*macPath, "");						// Clear the Mac path
-	
-	(const char *)src = unixPath;
+	src = unixPath;
 	tgt = *macPath;
 	
 	if (PL_strchr(src, PR_DIRECTORY_SEPARATOR) == src)				// If we’re dealing with an absolute
@@ -1607,16 +1608,17 @@ static OSErr CreateMacPathFromUnixPath(const char *unixPath, char **macPath)
 	// It does not do any special directory translation; use ConvertUnixPathToMacPath
 	// for that.
 	
-	char		*src;
+	const char	*src;
 	char		*tgt;
 	OSErr		err = noErr;
 
-	*macPath = malloc(strlen(unixPath) * 2);	// Will be enough extra space.
+	// If unixPath is a zero-length string, we copy ":" into
+	// macPath, so we need a minimum of two bytes to handle
+	// the case of ":". 
+	*macPath = malloc(strlen(unixPath) + 2);	// Will be enough extra space.
 	require_action (*macPath != NULL, exit, err = memFullErr;);
 
-	strcpy(*macPath, "");						// Clear the Mac path
-	
-	(const char *)src = unixPath;
+	src = unixPath;
 	tgt = *macPath;
 	
 	if (PL_strchr(src, PR_DIRECTORY_SEPARATOR) == src)				// If we’re dealing with an absolute
