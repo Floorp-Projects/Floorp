@@ -56,7 +56,7 @@ export CVSROOT HOME os_name os_version os_full MANPATH
 
 if [ "$os_name" = "HP-UX" ]
 then
-    PATH=$PATH:/usr/local/bin:/opt/aCC/bin:/usr/local/bin/audio:/tools/ns/bin:/etc:/usr/contrib/bin:/usr/contrib/bin/X11:/usr/local/hpux/bin:/nfs/iapp1/hphome/bin:/etc
+    PATH=$PATH:/usr/local/bin:/opt/aCC/bin:/usr/local/bin/audio:/tools/ns/bin:/etc:/usr/contrib/bin:/usr/contrib/bin/X11:/usr/local/hpux/bin:/nfs/iapp1/hphome/bin:/etc:/u/svbld/bin/HP/perl/bin
 elif [ "$os_name" = "SunOS" ]
 then
     XAPPLRESDIR=/usr/openwin/lib/app-defaults:/usr/local/lib/X11/app-defaults
