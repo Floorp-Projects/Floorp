@@ -72,6 +72,7 @@ void stopAsyncCursors(void);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIJVMManagerIID, NS_IJVMMANAGER_IID);
 static NS_DEFINE_IID(kIThreadManagerIID, NS_ITHREADMANAGER_IID);
+static NS_DEFINE_IID(kILiveConnectManagerIID, NS_ILIVECONNECTMANAGER_IID);
 static NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
 static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
 static NS_DEFINE_IID(kISymantecDebugManagerIID, NS_ISYMANTECDEBUGMANAGER_IID);
@@ -235,6 +236,11 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
     }
     if (aIID.Equals(kIThreadManagerIID)) {
         *aInstancePtr = (void*) (nsIThreadManager*) this;
+        AddRef();
+        return NS_OK;
+    }
+    if (aIID.Equals(kILiveConnectManagerIID)) {
+        *aInstancePtr = (void*) (nsILiveConnectManager*) this;
         AddRef();
         return NS_OK;
     }
@@ -435,9 +441,9 @@ nsJVMManager::StartupJVM(void)
     **              The code in there right now always creates a new instance.
     **              But for Java we may not create any instances and may need to
     **              do JNI calls via liveconnect.
-    ** nsIPlugin* plugin = NPL_LoadPluginByType(NS_JVM_MIME_TYPE);
     */
-    
+
+	// beard:  Now uses the nsIPluginHost to load the plugin factory for NS_JVM_MIME_TYPE.
 	nsIPluginHost* pluginHost = NULL;
     nsresult err = g_pNSIServiceManager->GetService(kPluginManagerCID, kPluginHostIID, (nsISupports**)&pluginHost);
 	if (err != NS_OK) {
@@ -465,18 +471,8 @@ nsJVMManager::StartupJVM(void)
     }
 
 	// beard: do we really need an explicit startup mechanim for the JVM?
-#if 0
-    // Get an execution environment -- that will cause the VM to start up
-    JNIEnv* env = NULL;
-    rslt = fJVM->GetJNIEnv(&env);
-    if (rslt != NS_OK || env == NULL) {
-        fStatus = nsJVMStatus_Failed;
-    }
-    else {
-        /* else the JVM is running. */
-        fStatus = nsJVMStatus_Running;
-    }
-#endif
+	// since we obtained a working JVM plugin, assume it is running.
+    fStatus = nsJVMStatus_Running;
 
 #if 0
     JSContext* crippledContext = LM_GetCrippledContext();
@@ -585,6 +581,9 @@ nsJVMManager::MaybeStartupLiveConnect(void)
         return PR_TRUE;
 
 	do {
+#if 0
+		// beard: this code is no longer necessary under Seamonkey, the
+		// factory is already registered up front or automatically.	
 		static PRBool registeredLiveConnectFactory = PR_FALSE;
 		if (!registeredLiveConnectFactory) {
             NS_DEFINE_CID(kCLiveconnectCID, NS_CLIVECONNECT_CID);
@@ -592,6 +591,7 @@ nsJVMManager::MaybeStartupLiveConnect(void)
                 (nsRepository::RegisterFactory(kCLiveconnectCID, (const char *)JSJDLL,
                                                PR_FALSE, PR_FALSE) == NS_OK);
         }
+#endif
         if (IsLiveConnectEnabled() && StartupJVM() == nsJVMStatus_Running) {
             JVM_InitLCGlue();
             nsIJVMPlugin* plugin = GetJVMPlugin();
@@ -630,13 +630,13 @@ PRBool
 nsJVMManager::IsLiveConnectEnabled(void)
 {
 #if 0
-TODO: Get a replacement for LM_GetMochaEnabled. This is on Ton's list.
+// TODO: Get a replacement for LM_GetMochaEnabled. This is on Tom's list.
 	if (LM_GetMochaEnabled()) {
 		nsJVMStatus status = GetJVMStatus();
 		return (status == nsJVMStatus_Enabled || status == nsJVMStatus_Running);
 	}
 #endif
-	return PR_FALSE;
+	return PR_TRUE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
