@@ -378,13 +378,8 @@ nsFilePicker::PutLocalFile(Str255 & inTitle, Str255 & inDefaultName, FSSpec* out
 //
 //-------------------------------------------------------------------------
 
-NS_IMETHODIMP nsFilePicker::SetFilterList(PRUint32 aNumberOfFilters,
-                                          const PRUnichar **aTitles,
-                                          const PRUnichar **aFilters)
+NS_IMETHODIMP nsFilePicker::SetFilters(PRUint32 filterMask)
 {
-	mNumberOfFilters  = aNumberOfFilters;
-	mTitles           = aTitles;
-	mFilters          = aFilters;
 	
 #if USE_IC  // FOR NOW JUST BYPASS ALL THIS CODE
 
@@ -490,20 +485,17 @@ bail_wo_IC:
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFilePicker::AppendFilter(const PRUnichar *aTitle,
+                                         const PRUnichar *aFilters)
+{
+  return NS_ERROR_FAILURE;
+}
+
+
 NS_IMETHODIMP nsFilePicker::GetFile(nsILocalFile **aFile)
 {
   NS_ENSURE_ARG_POINTER(*aFile);
   NS_IF_ADDREF(*aFile = mFile);
-  return NS_OK;
-}
-
-
-//-------------------------------------------------------------------------
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::GetSelectedFilter(PRInt32 *aType)
-{
-  NS_ENSURE_ARG_POINTER(aType);
-  *aType = mSelectedType;
   return NS_OK;
 }
 
@@ -546,17 +538,17 @@ NS_IMETHODIMP nsFilePicker::GetDisplayDirectory(nsILocalFile **aDirectory)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsFilePicker::Create(nsIDOMWindow *aParent,
-                                   const PRUnichar *aTitle,
-                                   PRInt16 aMode)
+NS_IMETHODIMP nsFilePicker::Init(nsIDOMWindow *aParent,
+                                 const PRUnichar *aTitle,
+                                 PRInt16 aMode)
 {
-  return nsBaseFilePicker::Create(aParent, aTitle, aMode);
+  return nsBaseFilePicker::Init(aParent, aTitle, aMode);
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsFilePicker::CreateNative(nsIWidget *aParent,
-                                         const PRUnichar *aTitle,
-                                         PRInt16 aMode)
+NS_IMETHODIMP nsFilePicker::InitNative(nsIWidget *aParent,
+                                       const PRUnichar *aTitle,
+                                       PRInt16 aMode)
 {
 
   mTitle = aTitle;
