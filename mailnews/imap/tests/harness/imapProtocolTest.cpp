@@ -528,9 +528,7 @@ nsresult nsIMAP4TestDriver::OnRunIMAPCommand()
             if (NS_SUCCEEDED(rv))
 
                 rv = aImapServer->GetImapConnectionAndLoadUrl(m_eventQueue,
-                                                              m_url, nsnull,
-                                                              nsnull,
-                                                              nsnull); 
+                                                              m_url, nsnull); 
             m_runningURL = PR_TRUE; // we are now running a url...
         }
 	} // if user provided the data...
