@@ -48,9 +48,10 @@
 #include "nsILanguageAtomService.h"
 #include "nsIURL.h"
 #include "nsIEventStateManager.h"
+#include "nsIObserver.h"
 
 // Base class for concrete presentation context classes
-class nsPresContext : public nsIPresContext {
+class nsPresContext : public nsIPresContext, public nsIObserver {
 public:
   NS_DECL_AND_IMPL_ZEROING_OPERATOR_NEW
 
@@ -142,6 +143,11 @@ public:
 #ifdef MOZ_REFLOW_PERF
   NS_IMETHOD CountReflows(const char * aName, PRUint32 aType);
 #endif
+
+  // nsIObserver method
+  NS_IMETHOD Observe(nsISupports* aSubject, const PRUnichar* aTopic,
+                     const PRUnichar* aData);
+
 protected:
   nsPresContext();
   virtual ~nsPresContext();

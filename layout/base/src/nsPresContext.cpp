@@ -116,6 +116,14 @@ nsPresContext::nsPresContext()
 
 nsPresContext::~nsPresContext()
 {
+  if (mShell) {
+    nsCOMPtr<nsIDocument> doc;
+    mShell->GetDocument(getter_AddRefs(doc));
+    if (doc) {
+      doc->RemoveCharSetObserver(this);
+    }
+  }
+
   mShell = nsnull;
 
   Stop();
@@ -145,7 +153,7 @@ nsPresContext::~nsPresContext()
   }
 }
 
-NS_IMPL_ISUPPORTS(nsPresContext, kIPresContextIID);
+NS_IMPL_ISUPPORTS2(nsPresContext, nsIPresContext, nsIObserver)
 
 void
 nsPresContext::GetFontPreferences()
@@ -358,6 +366,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
         doc->GetBaseURL(*getter_AddRefs(mBaseURL));
         if (mLangService) {
           nsAutoString charset;
+          doc->AddCharSetObserver(this);
           doc->GetDocumentCharacterSet(charset);
           mLangService->LookupCharSet(charset.GetUnicode(),
                                       getter_AddRefs(mLanguage));
@@ -378,6 +387,17 @@ nsPresContext::GetShell(nsIPresShell** aResult)
   }
   *aResult = mShell;
   NS_IF_ADDREF(mShell);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPresContext::Observe(nsISupports* aSubject, const PRUnichar* aTopic,
+                       const PRUnichar* aData)
+{
+  if (mLangService) {
+    mLangService->LookupCharSet(aData, getter_AddRefs(mLanguage));
+    GetFontPreferences();
+  }
   return NS_OK;
 }
 
