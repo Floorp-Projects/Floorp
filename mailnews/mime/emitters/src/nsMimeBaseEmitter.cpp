@@ -68,7 +68,8 @@
 
 static PRLogModuleInfo * gMimeEmitterLogModule = nsnull;
 
-#define   MIME_URL      "chrome://messenger/locale/mimeheader.properties"
+#define   MIME_HEADER_URL      "chrome://messenger/locale/mimeheader.properties"
+#define   MIME_URL             "chrome://messenger/locale/mime.properties"
 static    NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 NS_IMPL_THREADSAFE_ADDREF(nsMimeBaseEmitter)
@@ -205,31 +206,70 @@ nsMimeBaseEmitter::CleanupHeaderArray(nsVoidArray *aArray)
   delete aArray;
 }
 
+static PRInt32 MapHeaderNameToID(const char *header)
+{
+  // emitter passes UPPERCASE for header names
+  if (!strcmp(header, "DATE"))
+    return MIME_MHTML_DATE;
+  else if (!strcmp(header, "FROM"))
+    return MIME_MHTML_FROM;
+  else if (!strcmp(header, "SUBJECT"))
+    return MIME_MHTML_SUBJECT;
+  else if (!strcmp(header, "TO"))
+    return MIME_MHTML_TO;
+  else if (!strcmp(header, "SENDER"))
+    return MIME_MHTML_SENDER;
+  else if (!strcmp(header, "RESENT-TO"))
+    return MIME_MHTML_RESENT_TO;
+  else if (!strcmp(header, "RESENT-SENDER"))
+    return MIME_MHTML_RESENT_SENDER;
+  else if (!strcmp(header, "RESENT-FROM"))
+    return MIME_MHTML_RESENT_FROM;
+  else if (!strcmp(header, "RESENT-CC"))
+    return MIME_MHTML_RESENT_CC;
+  else if (!strcmp(header, "REPLY-TO"))
+    return MIME_MHTML_REPLY_TO;
+  else if (!strcmp(header, "REFERENCES"))
+    return MIME_MHTML_REFERENCES;
+  else if (!strcmp(header, "NEWSGROUPS"))
+    return MIME_MHTML_NEWSGROUPS;
+  else if (!strcmp(header, "MESSAGE-ID"))
+    return MIME_MHTML_MESSAGE_ID;
+  else if (!strcmp(header, "FOLLOWUP-TO"))
+    return MIME_MHTML_FOLLOWUP_TO;
+  else if (!strcmp(header, "CC"))
+    return MIME_MHTML_CC;
+  else if (!strcmp(header, "ORGANIZATION"))
+    return MIME_MHTML_ORGANIZATION;
+  else if (!strcmp(header, "BCC"))
+    return MIME_MHTML_BCC;
+
+  return 0;
+}
+
 char *
 nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
 {
 	nsresult res = NS_OK;
 
-	if (!m_stringBundle)
+	if (!m_headerStringBundle)
 	{
-		static const char propertyURL[] = MIME_URL;
+		static const char propertyURL[] = MIME_HEADER_URL;
 
 		nsCOMPtr<nsIStringBundleService> sBundleService = 
 		         do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
 		if (NS_SUCCEEDED(res) && (nsnull != sBundleService)) 
 		{
-			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
+			res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_headerStringBundle));
 		}
 	}
 
-	if (m_stringBundle)
+	if (m_headerStringBundle)
 	{
-    nsAutoString  v;
-    PRUnichar     *ptrv = nsnull;
-    nsString      uniStr; uniStr.AssignWithConversion(aHeaderName);
+    nsXPIDLString val;
 
-    res = m_stringBundle->GetStringFromName(uniStr.get(), &ptrv);
-    v = ptrv;
+    res = m_headerStringBundle->GetStringFromName(NS_ConvertASCIItoUCS2(aHeaderName).get(), 
+                                                  getter_Copies(val));
 
     if (NS_FAILED(res)) 
       return nsnull;
@@ -238,12 +278,42 @@ nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
     // This returns a UTF-8 string so the caller needs to perform a conversion 
     // if this is used as UCS-2 (e.g. cannot do nsString(utfStr);
     //
-    return ToNewUTF8String(v);
+    return ToNewUTF8String(val);
 	}
 	else
 	{
     return nsnull;
 	}
+}
+
+char *
+nsMimeBaseEmitter::MimeGetStringByID(PRInt32 aID)
+{
+  nsresult res = NS_OK;
+
+  if (!m_stringBundle)
+  {
+    static const char propertyURL[] = MIME_URL;
+
+    nsCOMPtr<nsIStringBundleService> sBundleService = 
+                            do_GetService(NS_STRINGBUNDLE_CONTRACTID, &res); 
+    if (NS_SUCCEEDED(res)) 
+      res = sBundleService->CreateBundle(propertyURL, getter_AddRefs(m_stringBundle));
+  }
+
+  if (m_stringBundle)
+  {
+    nsXPIDLString val;
+
+    res = m_stringBundle->GetStringFromID(aID, getter_Copies(val));
+
+    if (NS_FAILED(res)) 
+      return nsnull;
+
+    return ToNewUTF8String(val);
+  }
+  else
+    return nsnull;
 }
 
 // 
@@ -255,7 +325,21 @@ nsMimeBaseEmitter::MimeGetStringByName(const char *aHeaderName)
 char *
 nsMimeBaseEmitter::LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName)
 {
-  char *retVal = MimeGetStringByName(aHeaderName);
+  char *retVal = nsnull;
+
+  // prefer to use translated strings if not for quoting
+  if (mFormat != nsMimeOutput::nsMimeMessageQuoting &&
+      mFormat != nsMimeOutput::nsMimeMessageBodyQuoting)
+  {
+    // map name to id and get the translated string
+    PRInt32 id = MapHeaderNameToID(aHeaderName);
+    if (id > 0)
+      retVal = MimeGetStringByID(id);
+  }
+  
+  // get the string from the other bundle (usually not translated)
+  if (!retVal)
+    retVal = MimeGetStringByName(aHeaderName);
 
   if (retVal)
     return retVal;

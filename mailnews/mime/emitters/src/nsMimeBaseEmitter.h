@@ -108,6 +108,7 @@ public:
 
   // For string bundle usage...
   char                *MimeGetStringByName(const char *aHeaderName);
+  char                *MimeGetStringByID(PRInt32 aID);
   char                *LocalizeHeaderName(const char *aHeaderName, const char *aDefaultName);
 
   // For header processing...
@@ -129,7 +130,8 @@ protected:
   nsresult            OutputGenericHeader(const char *aHeaderVal);
 
   // For string bundle usage...
-  nsCOMPtr<nsIStringBundle>	m_stringBundle;     // For string bundle usage...
+  nsCOMPtr<nsIStringBundle>	m_stringBundle;        // for translated strings
+  nsCOMPtr<nsIStringBundle>	m_headerStringBundle;  // for non-translated header strings
 
   // For buffer management on output
   MimeRebuffer        *mBufferMgr;
