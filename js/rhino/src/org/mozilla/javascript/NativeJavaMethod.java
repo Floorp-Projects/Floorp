@@ -70,39 +70,40 @@ public class NativeJavaMethod extends BaseFunction
         this(new MemberBox(method, null), name);
     }
 
-    private static String scriptSignature(Object value)
-    {
-        if (value == null) {
-            return "null";
-        } else if (value instanceof Boolean) {
-            return "boolean";
-        } else if (value instanceof String) {
-            return "string";
-        } else if (value instanceof Number) {
-            return "number";
-        } else if (value instanceof Scriptable) {
-            if (value instanceof Undefined) {
-                return "undefined";
-            } else if (value instanceof Wrapper) {
-                Object wrapped = ((Wrapper)value).unwrap();
-                return wrapped.getClass().getName();
-            } else if (value instanceof Function) {
-                return "function";
-            } else {
-                return "object";
-            }
-        } else {
-            return JavaMembers.javaSignature(value.getClass());
-        }
-    }
-
     static String scriptSignature(Object[] values)
     {
         StringBuffer sig = new StringBuffer();
-        for (int i = 0; i < values.length; i++) {
-            if (i != 0)
+        for (int i = 0; i != values.length; ++i) {
+            Object value = values[i];
+
+            String s;
+            if (value == null) {
+                s = "null";
+            } else if (value instanceof Boolean) {
+                s = "boolean";
+            } else if (value instanceof String) {
+                s = "string";
+            } else if (value instanceof Number) {
+                s = "number";
+            } else if (value instanceof Scriptable) {
+                if (value instanceof Undefined) {
+                    s = "undefined";
+                } else if (value instanceof Wrapper) {
+                    Object wrapped = ((Wrapper)value).unwrap();
+                    s = wrapped.getClass().getName();
+                } else if (value instanceof Function) {
+                    s = "function";
+                } else {
+                    s = "object";
+                }
+            } else {
+                s = JavaMembers.javaSignature(value.getClass());
+            }
+
+            if (i != 0) {
                 sig.append(',');
-            sig.append(scriptSignature(values[i]));
+            }
+            sig.append(s);
         }
         return sig.toString();
     }
@@ -117,7 +118,7 @@ public class NativeJavaMethod extends BaseFunction
             sb.append("() {");
         }
         sb.append("/*\n");
-        toString(sb);
+        sb.append(toString());
         sb.append(justbody ? "*/\n" : "*/}\n");
         return sb.toString();
     }
@@ -125,12 +126,6 @@ public class NativeJavaMethod extends BaseFunction
     public String toString()
     {
         StringBuffer sb = new StringBuffer();
-        toString(sb);
-        return sb.toString();
-    }
-
-    private void toString(StringBuffer sb)
-    {
         for (int i = 0, N = methods.length; i != N; ++i) {
             Method method = methods[i].method();
             sb.append(JavaMembers.javaSignature(method.getReturnType()));
@@ -139,6 +134,7 @@ public class NativeJavaMethod extends BaseFunction
             sb.append(JavaMembers.liveConnectSignature(methods[i].argTypes));
             sb.append('\n');
         }
+        return sb.toString();
     }
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
@@ -405,59 +401,49 @@ public class NativeJavaMethod extends BaseFunction
     private static int preferSignature(Object[] args,
                                        Class[] sig1, Class[] sig2)
     {
-        int preference = 0;
-
+        int totalPreference = 0;
         for (int j = 0; j < args.length; j++) {
             Class type1 = sig1[j];
             Class type2 = sig2[j];
-
             if (type1 == type2) {
                 continue;
             }
+            Object arg = args[j];
 
-            preference |= preferConversion(args[j], type1, type2);
+            // Determine which of type1, type2 is easier to convert from arg.
 
-            if (preference == PREFERENCE_AMBIGUOUS) {
+            int rank1 = NativeJavaObject.getConversionWeight(arg, type1);
+            int rank2 = NativeJavaObject.getConversionWeight(arg, type2);
+
+            int preference;
+            if (rank1 < rank2) {
+                preference = PREFERENCE_FIRST_ARG;
+            } else if (rank1 > rank2) {
+                preference = PREFERENCE_SECOND_ARG;
+            } else {
+                // Equal ranks
+                if (rank1 == NativeJavaObject.CONVERSION_NONTRIVIAL) {
+                    if (type1.isAssignableFrom(type2)) {
+                        preference = PREFERENCE_SECOND_ARG;
+                    } else if (type2.isAssignableFrom(type1)) {
+                        preference = PREFERENCE_FIRST_ARG;
+                    } else {
+                        preference = PREFERENCE_AMBIGUOUS;
+                    }
+                } else {
+                    preference = PREFERENCE_AMBIGUOUS;
+                }
+            }
+
+            totalPreference |= preference;
+
+            if (totalPreference == PREFERENCE_AMBIGUOUS) {
                 break;
             }
         }
-        return preference;
+        return totalPreference;
     }
 
-
-    /**
-     * Determine which of two types is the easier conversion.
-     * Returns one of PREFERENCE_EQUAL, PREFERENCE_FIRST_ARG,
-     * PREFERENCE_SECOND_ARG, or PREFERENCE_AMBIGUOUS.
-     */
-    private static int preferConversion(Object fromObj,
-                                        Class toClass1, Class toClass2)
-    {
-        int rank1  =
-            NativeJavaObject.getConversionWeight(fromObj, toClass1);
-        int rank2 =
-            NativeJavaObject.getConversionWeight(fromObj, toClass2);
-
-        if (rank1 == NativeJavaObject.CONVERSION_NONTRIVIAL &&
-            rank2 == NativeJavaObject.CONVERSION_NONTRIVIAL) {
-
-            if (toClass1.isAssignableFrom(toClass2)) {
-                return PREFERENCE_SECOND_ARG;
-            }
-            else if (toClass2.isAssignableFrom(toClass1)) {
-                return PREFERENCE_FIRST_ARG;
-            }
-        }
-        else {
-            if (rank1 < rank2) {
-                return PREFERENCE_FIRST_ARG;
-            }
-            else if (rank1 > rank2) {
-                return PREFERENCE_SECOND_ARG;
-            }
-        }
-        return PREFERENCE_AMBIGUOUS;
-    }
 
     private static final boolean debug = false;
 

@@ -86,8 +86,9 @@ class JavaMembers
             if (member == null)
                 return Scriptable.NOT_FOUND;
         }
-        if (member instanceof Scriptable)
-            return member;      // why is this here?
+        if (member instanceof Scriptable) {
+            return member;
+        }
         Context cx = Context.getContext();
         Object rval;
         Class type;
@@ -109,8 +110,8 @@ class JavaMembers
         return cx.getWrapFactory().wrap(cx, scope, rval, type);
     }
 
-    public void put(Scriptable scope, String name, Object javaObject,
-                    Object value, boolean isStatic)
+    void put(Scriptable scope, String name, Object javaObject,
+             Object value, boolean isStatic)
     {
         Hashtable ht = isStatic ? staticMembers : members;
         Object member = ht.get(name);
@@ -295,19 +296,12 @@ class JavaMembers
 
     private void reflect(Scriptable scope)
     {
+        ClassCache cache = ClassCache.get(scope);
+
         // We reflect methods first, because we want overloaded field/method
         // names to be allocated to the NativeJavaMethod before the field
         // gets in the way.
-        reflectMethods(scope);
-        reflectFields(scope);
-        makeBeanProperties(scope, false);
-        makeBeanProperties(scope, true);
 
-        reflectCtors(scope);
-    }
-
-    private void reflectMethods(Scriptable scope)
-    {
         Method[] methods = cl.getMethods();
         for (int i = 0; i < methods.length; i++) {
             Method method = methods[i];
@@ -327,8 +321,8 @@ class JavaMembers
                     overloadedMethods = (ObjArray)value;
                 } else {
                     if (!(value instanceof Method)) Kit.codeBug();
-                    // value should be instance of Method as reflectMethods is
-                    // called when staticMembers and members are empty
+                    // value should be instance of Method as at this stage
+                    // staticMembers and members can only contain methods
                     overloadedMethods = new ObjArray();
                     overloadedMethods.add(value);
                     ht.put(name, overloadedMethods);
@@ -336,12 +330,39 @@ class JavaMembers
                 overloadedMethods.add(method);
             }
         }
-        initNativeMethods(staticMembers, scope);
-        initNativeMethods(members, scope);
-    }
 
-    private void reflectFields(Scriptable scope)
-    {
+        // replace Method instances by wrapped NativeJavaMethod objects
+        // first in staticMembers and then in members
+        for (int tableCursor = 0; tableCursor != 2; ++tableCursor) {
+            boolean isStatic = (tableCursor == 0);
+            Hashtable ht = (isStatic) ? staticMembers : members;
+            Enumeration e = ht.keys();
+            while (e.hasMoreElements()) {
+                String name = (String)e.nextElement();
+                MemberBox[] methodBoxes;
+                Object value = ht.get(name);
+                if (value instanceof Method) {
+                    methodBoxes = new MemberBox[1];
+                    methodBoxes[0] = new MemberBox((Method)value, cache);
+                } else {
+                    ObjArray overloadedMethods = (ObjArray)value;
+                    int N = overloadedMethods.size();
+                    if (N < 2) Kit.codeBug();
+                    methodBoxes = new MemberBox[N];
+                    for (int i = 0; i != N; ++i) {
+                        Method method = (Method)overloadedMethods.get(i);
+                        methodBoxes[i] = new MemberBox(method, cache);
+                    }
+                }
+                NativeJavaMethod fun = new NativeJavaMethod(methodBoxes);
+                if (scope != null) {
+                    ScriptRuntime.setFunctionProtoAndParent(scope, fun);
+                }
+                ht.put(name, fun);
+            }
+        }
+
+        // Reflect fields.
         Field[] fields = cl.getFields();
         for (int i = 0; i < fields.length; i++) {
             Field field = fields[i];
@@ -357,10 +378,19 @@ class JavaMembers
                 ht.put(name, field);
             } else if (member instanceof NativeJavaMethod) {
                 NativeJavaMethod method = (NativeJavaMethod) member;
-                FieldAndMethods fam = new FieldAndMethods(scope,
-                                                          method.methods,
-                                                          field);
-                getFieldAndMethodsTable(isStatic).put(name, fam);
+                FieldAndMethods fam
+                    = new FieldAndMethods(scope, method.methods, field);
+                Hashtable fmht = isStatic ? staticFieldAndMethods
+                                          : fieldAndMethods;
+                if (fmht == null) {
+                    fmht = new Hashtable(4);
+                    if (isStatic) {
+                        staticFieldAndMethods = fmht;
+                    } else {
+                        fieldAndMethods = fmht;
+                    }
+                }
+                fmht.put(name, fam);
                 ht.put(name, fam);
             } else if (member instanceof Field) {
                 Field oldField = (Field) member;
@@ -379,139 +409,93 @@ class JavaMembers
                 Kit.codeBug();
             }
         }
-    }
 
+        // Create bean propeties from corresponding get/set methods first for
+        // static members and then for instance members
+        for (int tableCursor = 0; tableCursor != 2; ++tableCursor) {
+            boolean isStatic = (tableCursor == 0);
+            Hashtable ht = (isStatic) ? staticMembers : members;
 
-    private void makeBeanProperties(Scriptable scope, boolean isStatic)
-    {
-        Hashtable ht = isStatic ? staticMembers : members;
-        Hashtable toAdd = new Hashtable();
+            Hashtable toAdd = new Hashtable();
 
-        // Now, For each member, make "bean" properties.
-        for (Enumeration e = ht.keys(); e.hasMoreElements(); ) {
+            // Now, For each member, make "bean" properties.
+            for (Enumeration e = ht.keys(); e.hasMoreElements(); ) {
 
-            // Is this a getter?
-            String name = (String) e.nextElement();
-            boolean memberIsGetMethod = name.startsWith("get");
-            boolean memberIsIsMethod = name.startsWith("is");
-            if (memberIsGetMethod || memberIsIsMethod) {
-                // Double check name component.
-                String nameComponent = name.substring(memberIsGetMethod ? 3 : 2);
-                if (nameComponent.length() == 0)
-                    continue;
+                // Is this a getter?
+                String name = (String) e.nextElement();
+                boolean memberIsGetMethod = name.startsWith("get");
+                boolean memberIsIsMethod = name.startsWith("is");
+                if (memberIsGetMethod || memberIsIsMethod) {
+                    // Double check name component.
+                    String nameComponent
+                        = name.substring(memberIsGetMethod ? 3 : 2);
+                    if (nameComponent.length() == 0)
+                        continue;
 
-                // Make the bean property name.
-                String beanPropertyName = nameComponent;
-                char ch0 = nameComponent.charAt(0);
-                if (Character.isUpperCase(ch0)) {
-                    if (nameComponent.length() == 1) {
-                        beanPropertyName = nameComponent.toLowerCase();
-                    } else {
-                        char ch1 = nameComponent.charAt(1);
-                        if (!Character.isUpperCase(ch1)) {
-                            beanPropertyName = Character.toLowerCase(ch0)
-                                               +nameComponent.substring(1);
-                        }
-                    }
-                }
-
-                // If we already have a member by this name, don't do this
-                // property.
-                if (ht.containsKey(beanPropertyName))
-                    continue;
-
-                // Get the method by this name.
-                Object member = ht.get(name);
-                if (!(member instanceof NativeJavaMethod))
-                    continue;
-
-                NativeJavaMethod njmGet = (NativeJavaMethod)member;
-                MemberBox getter = extractGetMethod(njmGet.methods, isStatic);
-                if (getter != null) {
-
-                    // We have a getter.  Now, do we have a setter?
-                    NativeJavaMethod njmSet = null;
-                    MemberBox setter = null;
-                    String setterName = "set".concat(nameComponent);
-                    if (ht.containsKey(setterName)) {
-                        // Is this value a method?
-                        member = ht.get(setterName);
-                        if (member instanceof NativeJavaMethod) {
-                            njmSet = (NativeJavaMethod)member;
-                            Class type = getter.method().getReturnType();
-                            setter = extractSetMethod(type, njmSet.methods,
-                                                      isStatic);
+                    // Make the bean property name.
+                    String beanPropertyName = nameComponent;
+                    char ch0 = nameComponent.charAt(0);
+                    if (Character.isUpperCase(ch0)) {
+                        if (nameComponent.length() == 1) {
+                            beanPropertyName = nameComponent.toLowerCase();
+                        } else {
+                            char ch1 = nameComponent.charAt(1);
+                            if (!Character.isUpperCase(ch1)) {
+                                beanPropertyName = Character.toLowerCase(ch0)
+                                                   +nameComponent.substring(1);
+                            }
                         }
                     }
 
-                    // Make the property.
-                    BeanProperty bp = new BeanProperty(getter, setter);
-                    toAdd.put(beanPropertyName, bp);
+                    // If we already have a member by this name, don't do this
+                    // property.
+                    if (ht.containsKey(beanPropertyName))
+                        continue;
+
+                    // Get the method by this name.
+                    Object member = ht.get(name);
+                    if (!(member instanceof NativeJavaMethod))
+                        continue;
+
+                    NativeJavaMethod njmGet = (NativeJavaMethod)member;
+                    MemberBox getter
+                        = extractGetMethod(njmGet.methods, isStatic);
+                    if (getter != null) {
+                        // We have a getter.  Now, do we have a setter?
+                        NativeJavaMethod njmSet = null;
+                        MemberBox setter = null;
+                        String setterName = "set".concat(nameComponent);
+                        if (ht.containsKey(setterName)) {
+                            // Is this value a method?
+                            member = ht.get(setterName);
+                            if (member instanceof NativeJavaMethod) {
+                                njmSet = (NativeJavaMethod)member;
+                                Class type = getter.method().getReturnType();
+                                setter = extractSetMethod(type, njmSet.methods,
+                                                          isStatic);
+                            }
+                        }
+                        // Make the property.
+                        BeanProperty bp = new BeanProperty(getter, setter);
+                        toAdd.put(beanPropertyName, bp);
+                    }
                 }
+            }
+
+            // Add the new bean properties.
+            for (Enumeration e = toAdd.keys(); e.hasMoreElements();) {
+                Object key = e.nextElement();
+                Object value = toAdd.get(key);
+                ht.put(key, value);
             }
         }
 
-        // Add the new bean properties.
-        for (Enumeration e = toAdd.keys(); e.hasMoreElements();) {
-            Object key = e.nextElement();
-            Object value = toAdd.get(key);
-            ht.put(key, value);
-        }
-    }
-
-    private void reflectCtors(Scriptable scope)
-    {
+        // Reflect constructors
         Constructor[] constructors = cl.getConstructors();
-        int N = constructors.length;
-        ctors = new MemberBox[N];
-        ClassCache cache = ClassCache.get(scope);
-        for (int i = 0; i != N; ++i) {
+        ctors = new MemberBox[constructors.length];
+        for (int i = 0; i != constructors.length; ++i) {
             ctors[i] = new MemberBox(constructors[i], cache);
         }
-    }
-
-    private static void initNativeMethods(Hashtable ht, Scriptable scope)
-    {
-        Enumeration e = ht.keys();
-        ClassCache cache = ClassCache.get(scope);
-        while (e.hasMoreElements()) {
-            String name = (String)e.nextElement();
-            MemberBox[] methods;
-            Object value = ht.get(name);
-            if (value instanceof Method) {
-                methods = new MemberBox[1];
-                methods[0] = new MemberBox((Method)value, cache);
-            } else {
-                ObjArray overloadedMethods = (ObjArray)value;
-                int N = overloadedMethods.size();
-                if (N < 2) Kit.codeBug();
-                methods = new MemberBox[N];
-                for (int i = 0; i != N; ++i) {
-                    Method method = (Method)overloadedMethods.get(i);
-                    methods[i] = new MemberBox(method, cache);
-                }
-            }
-            NativeJavaMethod fun = new NativeJavaMethod(methods);
-            if (scope != null) {
-                fun.setPrototype(ScriptableObject.getFunctionPrototype(scope));
-            }
-            ht.put(name, fun);
-        }
-    }
-
-    private Hashtable getFieldAndMethodsTable(boolean isStatic)
-    {
-        Hashtable fmht = isStatic ? staticFieldAndMethods
-                                  : fieldAndMethods;
-        if (fmht == null) {
-            fmht = new Hashtable(11);
-            if (isStatic)
-                staticFieldAndMethods = fmht;
-            else
-                fieldAndMethods = fmht;
-        }
-
-        return fmht;
     }
 
     private static MemberBox extractGetMethod(MemberBox[] methods,
