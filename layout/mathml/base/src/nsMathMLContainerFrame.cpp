@@ -131,18 +131,14 @@ nsMathMLContainerFrame::GetAttribute(nsIContent* aContent,
 {
   // see if we can get the attribute from the content
   if (aContent) {
-    if (NS_CONTENT_ATTR_HAS_VALUE == 
-        aContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue))
-          return NS_CONTENT_ATTR_HAS_VALUE;
+    return aContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue);
   }
-  
+
   // see if we can get the attribute from the mstyle frame
   if (aMathMLmstyleFrame) {
     nsCOMPtr<nsIContent> mstyleContent;
     aMathMLmstyleFrame->GetContent(getter_AddRefs(mstyleContent));
-    if (NS_CONTENT_ATTR_HAS_VALUE == 
-        mstyleContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue))
-          return NS_CONTENT_ATTR_HAS_VALUE;
+    return mstyleContent->GetAttribute(kNameSpaceID_None, aAttributeAtom, aValue);
   }
 
   return NS_CONTENT_ATTR_NOT_THERE;
