@@ -2916,9 +2916,9 @@ static nsStyleStruct* GetNewMutableStyleStruct(nsStyleStructID aSID) {
 
   nsStyleStruct*  result = nsnull;
 
-  static PRBool initialized = false;
+  static PRBool initialized = PR_FALSE;
   if (!initialized) {
-    initialized = true;
+    initialized = PR_TRUE;
     for (short structType = 0; structType < eStyleStruct_Max; structType++) {
       nsStyleStructID structID = (nsStyleStructID)(structType + 1);
       for (short structIndex = 0; structIndex < kStructIndexMax; structIndex++) {
@@ -2947,7 +2947,7 @@ static nsStyleStruct* GetNewMutableStyleStruct(nsStyleStructID aSID) {
             break;
         }
         gStructPointer[structType][structIndex] = structPtr;
-        gStructBusy[structType][structIndex] = false;
+        gStructBusy[structType][structIndex] = PR_FALSE;
       }
     }
   }
@@ -2956,7 +2956,7 @@ static nsStyleStruct* GetNewMutableStyleStruct(nsStyleStructID aSID) {
   for (short structIndex = 0; structIndex < kStructIndexMax; structIndex++) {
     if (!gStructBusy[structType][structIndex]) {
       result = gStructPointer[structType][structIndex];
-      gStructBusy[structType][structIndex] = true;
+      gStructBusy[structType][structIndex] = PR_TRUE;
       break;
     }
   }
