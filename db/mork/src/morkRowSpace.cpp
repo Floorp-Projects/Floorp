@@ -555,8 +555,10 @@ morkRow*
 morkRowSpace::FindRow(morkEnv* ev, mork_column inCol, const mdbYarn* inYarn)
 {
   morkRow* outRow = 0;
-  
-  morkAtom* atom = mSpace_Store->YarnToAtom(ev, inYarn);
+
+  // if yarn hasn't been atomized, there can't be a corresponding row,
+  // so pass in PR_FALSE to not create the row - should help history bloat
+  morkAtom* atom = mSpace_Store->YarnToAtom(ev, inYarn, PR_FALSE);
   if ( atom ) // have or created an atom corresponding to input yarn?
   {
     mork_aid atomAid = atom->GetBookAtomAid();

@@ -272,13 +272,7 @@ morkStore::CloseStore(morkEnv* ev) // called by CloseMorkNode();
       nsIMdbFile_SlotStrongFile((nsIMdbFile*) 0, ev,
         &mStore_File);
       
-      refCnt = file->Release();
-      if ( refCnt > 0 )
-      {
-        nsCOMPtr <nsIMdbObject> object = do_QueryInterface(file);
-        if (object)
-          object->CloseMdbObject(ev->AsMdbEnv());
-      }
+      file->Release();
 
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_InStream);
       morkStream::SlotStrongStream((morkStream*) 0, ev, &mStore_OutStream);
@@ -714,13 +708,13 @@ morkStore::CopyAtom(morkEnv* ev, const morkAtom* inAtom)
   {
     mdbYarn yarn;
     if ( inAtom->AliasYarn(&yarn) )
-      outAtom = this->YarnToAtom(ev, &yarn);
+      outAtom = this->YarnToAtom(ev, &yarn, PR_TRUE /* create */);
   }
   return outAtom;
 }
  
 morkAtom*
-morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
+morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn, PRBool createIfMissing /* = PR_TRUE */)
 {
   morkAtom* outAtom = 0;
   if ( ev->Good() )
@@ -735,7 +729,7 @@ morkStore::YarnToAtom(morkEnv* ev, const mdbYarn* inYarn)
       {
         morkAtomBodyMap* map = &groundSpace->mAtomSpace_AtomBodies;
         outAtom = map->GetAtom(ev, keyAtom);
-        if ( !outAtom )
+        if ( !outAtom && createIfMissing)
         {
           this->MaybeDirtyStore();
           outAtom = groundSpace->MakeBookAtomCopy(ev, *keyAtom);

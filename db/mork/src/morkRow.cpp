@@ -889,7 +889,7 @@ void morkRow::AddColumn(morkEnv* ev, mdb_column inColumn,
     {
       morkAtom* oldAtom = cell->mCell_Atom;
 
-      morkAtom* atom = ioStore->YarnToAtom(ev, inYarn);
+      morkAtom* atom = ioStore->YarnToAtom(ev, inYarn, PR_TRUE /* create */);
       if ( atom && atom != oldAtom )
       {
         morkRowSpace* rowSpace = mRow_Space;
