@@ -93,7 +93,8 @@ public:
    *  might have been encountered.
    *  
    */
-  NS_IMETHOD Encode(nsIOutputStream* aStream) = 0;
+  NS_IMETHOD EncodeToStream(nsIOutputStream* aStream) = 0;
+  NS_IMETHOD EncodeToString(nsString& aOutputString) = 0;
 };
 
 // Example of a output service for a particular encoder

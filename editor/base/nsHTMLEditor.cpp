@@ -43,6 +43,7 @@
 #include "nsIServiceManager.h"
 #include "nsIFileWidget.h" // for GetLocalFileURL stuff
 #include "nsWidgetsCID.h"
+#include "nsIDocumentEncoder.h"
 
 
 static NS_DEFINE_IID(kInsertHTMLTxnIID, NS_INSERT_HTML_TXN_IID);
@@ -52,6 +53,7 @@ static NS_DEFINE_CID(kTextEditorCID,  NS_TEXTEDITOR_CID);
 static NS_DEFINE_CID(kHTMLEditorCID,  NS_HTMLEDITOR_CID);
 static NS_DEFINE_CID(kCContentIteratorCID, NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_CID(kHTMLEncoderCID, NS_HTML_ENCODER_CID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -522,7 +524,19 @@ NS_IMETHODIMP nsHTMLEditor::OutputText(nsString& aOutputString)
 
 NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
 {
+#if defined(DEBUG_kostello) || defined(DEBUG_akkana)
+  nsCOMPtr<nsIHTMLEncoder> encoder;
+  nsresult rv = nsComponentManager::CreateInstance(kHTMLEncoderCID,
+                                                   nsnull,
+                                                   nsIDocumentEncoder::GetIID(),
+                                                   getter_AddRefs(encoder));
+  if (NS_FAILED(rv))
+    return rv;
+
+  return encoder->EncodeToString(aOutputString);
+#else
   return nsTextEditor::OutputHTML(aOutputString);
+#endif
 }
 
 NS_IMETHODIMP nsHTMLEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
@@ -986,7 +1000,7 @@ nsHTMLEditor::ReParentBlockContent(nsIDOMNode  *aNode,
       {
         nsCOMPtr<nsIDOMNode>grandParent;
         blockParentNode->GetParentNode(getter_AddRefs(grandParent));
-        PRInt32 offsetInParent;
+        //PRInt32 offsetInParent;
         res = GetChildOffset(blockParentNode, grandParent, offsetInParent);
         PRUint32 childCount;
         childNodes->GetLength(&childCount);
@@ -1634,7 +1648,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
   //Note that this doesn't need to go through the transaction system
 
   nsresult res=NS_ERROR_NOT_INITIALIZED;
-  PRBool first=PR_TRUE;
+  //PRBool first=PR_TRUE;
   nsCOMPtr<nsIDOMSelection>selection;
   res = nsEditor::GetSelection(getter_AddRefs(selection));
   if (NS_FAILED(res) || !selection)
@@ -1668,7 +1682,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
           // loop through the content iterator for each content node
           nsCOMPtr<nsIContent> content;
           res = iter->CurrentNode(getter_AddRefs(content));
-          PRBool bOtherNodeTypeFound = PR_FALSE;
+          //PRBool bOtherNodeTypeFound = PR_FALSE;
 
           while (NS_COMFALSE == iter->IsDone())
           {
@@ -1682,7 +1696,7 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
               //   so don't return an element
               if (bNodeFound)
               {
-                bNodeFound;
+                //bNodeFound;
                 break;
               }
 
@@ -1725,7 +1739,8 @@ nsHTMLEditor::GetSelectedElement(const nsString& aTagName, nsIDOMElement** aRetu
                       if(notDone)
                       {
                         nsString tmpText;
-                        nsCOMPtr<nsIDOMHTMLAnchorElement> anchor = do_QueryInterface(parent);
+                        /*nsCOMPtr<nsIDOMHTMLAnchorElement>*/
+                        anchor = do_QueryInterface(parent);
                         if (anchor && NS_SUCCEEDED(anchor->GetHref(tmpText)) && tmpText.GetUnicode() && tmpText.Length() != 0)
                         {
                           
@@ -1839,7 +1854,7 @@ nsHTMLEditor::InsertElement(nsIDOMElement* aElement, PRBool aDeleteSelection, ns
   if (!aDeleteSelection)
   {
     nsCOMPtr<nsIDOMSelection>selection;
-    nsresult res = nsEditor::GetSelection(getter_AddRefs(selection));
+    res = nsEditor::GetSelection(getter_AddRefs(selection));
     if (NS_SUCCEEDED(res) && selection)
     {
       selection->ClearSelection();    
