@@ -214,9 +214,15 @@ struct mozIRegistry : public nsISupports {
     |                        it.                                               |
     | EnumerateAllSubtrees - Like EnumerateSubtrees, but will recursively      |
     |                        enumerate lower-level subtrees, too.              |
-    | GetValueInfo         - Returns (in a mozIRegistry::ValueInfo structure   |
-    |                        you allocate) information about the value at      |
-    |                        a specified location in the registry tree.        |
+    | GetValueInfo         - Returns a uint32 value that designates the type   |
+    |                        of data stored at this location in the registry;  |
+    |                        the possible values are defined by the enumerated |
+    |                        type mozIRegistry::DataType.                      |
+    | GetValueLength       - Returns a uint32 value that indicates the length  |
+    |                        of this registry value; the length is the number  |
+    |                        of characters (for Strings), the number of bytes  |
+    |                        (for Bytes), or the number of int32 values (for   |
+    |                        Int32).                                           |
     | EnumerateValues      - Returns a nsIEnumerator that you can use to       |
     |                        enumerate all the value nodes descending from     |
     |                        a specified location.                             |
@@ -228,15 +234,19 @@ struct mozIRegistry : public nsISupports {
     NS_IMETHOD EnumerateSubtrees( Key baseKey, nsIEnumerator **result ) = 0;
     NS_IMETHOD EnumerateAllSubtrees( Key baseKey, nsIEnumerator **result ) = 0;
 
-    NS_IMETHOD GetValueInfo( Key baseKey, const char *path, ValueInfo *result ) = 0;
+    NS_IMETHOD GetValueType( Key baseKey, const char *path, uint32 *result ) = 0;
+    NS_IMETHOD GetValueLength( Key baseKey, const char *path, uint32 *result ) = 0;
 
     NS_IMETHOD EnumerateValues( Key baseKey, nsIEnumerator **result ) = 0;
 
     /*------------------------------ User Name ---------------------------------
     | These functions manipulate the current "user name."  This value controls |
     | the behavior of certain registry functions (namely, ?).                  |
+    |                                                                          |
+    | GetCurrentUserName allocates a copy of the current user name (which the  |
+    | caller should free using PR_Free).                                       |
     --------------------------------------------------------------------------*/
-    NS_IMETHOD GetCurrentUserName( const char **result ) = 0;
+    NS_IMETHOD GetCurrentUserName( char **result ) = 0;
     NS_IMETHOD SetCurrentUserName( const char *name ) = 0;
 
     /*------------------------------ Utilities ---------------------------------
@@ -257,10 +267,12 @@ struct mozIRegistry : public nsISupports {
 | relative path from the base key from which you got this interface.           |
 |                                                                              |
 |   GetName - Returns the path name of this node; this is the relative path    |
-|             from the base key from which this subtree was obtained.          |
+|             from the base key from which this subtree was obtained.  The     |
+|             function allocates a copy of the name; the caller must free it   |
+|             using PR_Free.                                                   |
 ------------------------------------------------------------------------------*/
 struct mozIRegistryNode : public nsISupports {
-    NS_IMETHOD GetName( const char **result ) = 0;
+    NS_IMETHOD GetName( char **result ) = 0;
 }; // mozIRegistryNode
 
 /*----------------------------- mozIRegistryValue ------------------------------
@@ -273,12 +285,22 @@ struct mozIRegistryNode : public nsISupports {
 | about each registry value.                                                   |
 |                                                                              |
 |   GetName      - Returns the path name of this node; this is the relative    |
-|                  path from the base key from which this value was obtained.  |
-|   GetValueInfo - Returns information about the value (type and length).      |
+|                  path\ from the base key from which this value was obtained. |
+|                  The function allocates a copy of the name; the caller must  |
+|                  subsequently free it via PR_Free.                           |
+|   GetValueType - Returns (into a location provided by the caller) the type   |
+|                  of the value; the types are defined by the enumerated       |
+|                  type mozIRegistry::DataType.                                |
+|   GetValueLength - Returns a uint32 value that indicates the length          |
+|                    of this registry value; the length is the number          |
+|                    of characters (for Strings), the number of bytes          |
+|                    (for Bytes), or the number of int32 values (for           |
+|                    Int32).                                                   |
 ------------------------------------------------------------------------------*/
 struct mozIRegistryValue : public nsISupports {
-    NS_IMETHOD GetName( const char **result ) = 0;
-    NS_IMETHOD GetValueInfo( mozIRegistry::ValueInfo *result ) = 0;
+    NS_IMETHOD GetName( char **result ) = 0;
+    NS_IMETHOD GetValueType( uint32 *result ) = 0;
+    NS_IMETHOD GetValueLength( uint32 *result ) = 0;
 }; // mozIRegistryEntry
 
 
