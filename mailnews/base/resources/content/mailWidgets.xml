@@ -262,17 +262,19 @@
       <xul:textfield flex="1" class="search-value-textfield"/>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem data="2" value="Lowest" class="search-value-menuitem"/>
-          <xul:menuitem data="3" value="Low" class="search-value-menuitem"/>
-          <xul:menuitem data="4" value="Normal" class="search-value-menuitem"/>
-          <xul:menuitem data="5" value="High" class="search-value-menuitem"/>
-          <xul:menuitem data="6" value="Highest" class="search-value-menuitem"/>
+          <xul:menuitem data="2" stringTag="priorityLowest" class="search-value-menuitem"/>
+          <xul:menuitem data="3" stringTag="priorityLow" class="search-value-menuitem"/>
+          <xul:menuitem data="4" stringTag="priorityNormal" class="search-value-menuitem"/>
+          <xul:menuitem data="5" stringTag="priorityHigh" class="search-value-menuitem"/>
+          <xul:menuitem data="6" stringTag="priorityHighest" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
       <xul:menulist flex="1" class="search-value-menulist">
         <xul:menupopup class="search-value-popup">
-          <xul:menuitem data="1" value="read" class="search-value-menuitem"/>
-          <xul:menuitem data ="2" value="replied" class="search-value-menuitem"/>
+          <xul:menuitem data="1" stringTag="replied" class="search-value-menuitem"/>
+          <xul:menuitem data ="2" stringTag="read" class="search-value-menuitem"/>
+          <xul:menuitem data ="1048576" stringTag="new" class="search-value-menuitem"/>
+          <xul:menuitem data ="65536" stringTag="forwarded" class="search-value-menuitem"/>
         </xul:menupopup>
       </xul:menulist>
     </content>
@@ -361,7 +363,34 @@
           ]]>
         </body>
       </method>
+      <method name="fillStringsForChildren">
+        <parameter name="parentNode"/>
+        <parameter name="bundle"/>
+        <body>
+          <![CDATA[
+            var children = parentNode.childNodes;
+            var len=children.length;
+            for (var i=0; i<len; i++) {
+              var node = children[i];
+              var stringTag = node.getAttribute("stringTag");
+              if (stringTag) {
+                node.setAttribute("value", bundle.GetStringFromName(stringTag));
+              }
+            }
+          ]]>
+        </body>
+      </method>
     </implementation>
+    <handlers>
+      <handler event="bindingattached">
+      <![CDATA[
+        // initialize strings
+        var bundle = srGetStrBundle("chrome://messenger/locale/messenger.properties");
+        this.fillStringsForChildren(document.getAnonymousNodes(this)[1].firstChild, bundle);
+        this.fillStringsForChildren(document.getAnonymousNodes(this)[2].firstChild, bundle);
+      ]]>
+      </handler>
+    </handlers>
   </binding>
   <binding id="searchterm" name="searchTerm" extends="xul:box">
     <implementation>
