@@ -119,11 +119,18 @@ NET_ChangeSocketBufferSize (int size)
 {
     NET_Socket_Buffer_Size = 0;
 
-	if(size < 1)
-		size = 10*1024; /* default */
+#if !defined(XP_MAC)
+        if(size < 1)
+                size = 10*1024; /* default */
 
-	if(size > 31*1024)
-		size = 31*1024;
+        if(size > 31*1024)
+                size = 31*1024;
+#else
+        /* On the Mac we want a biiiig buffer */
+        if (size < 1 || size > 64*1024)
+                size = 64*1024;
+#endif /* XP_MAC */
+
 
 #if defined(XP_UNIX) && defined(XP_BSD_UNIX)
     FREEIF(net_real_socket_buffer_ptr);
@@ -134,7 +141,7 @@ NET_ChangeSocketBufferSize (int size)
 #endif /* XP_UNIX */
 
    if(!NET_Socket_Buffer)
-	  return(0); 
+          return(0); 
 
    /* else */
    NET_Socket_Buffer_Size = size;

@@ -68,7 +68,7 @@ extern int MK_OUT_OF_MEMORY;
 #ifdef XP_WIN16
 #define MAX_MEMORY_ALLOC_SIZE 32767 /* MAXINT */
 #elif defined(XP_MAC)
-#define MAX_MEMORY_ALLOC_SIZE 12*1024
+#define MAX_MEMORY_ALLOC_SIZE 64*1024
 #else
 #define MAX_MEMORY_ALLOC_SIZE (((unsigned) (~0) << 1) >> 1)  /* MAXINT */
 
@@ -81,7 +81,7 @@ extern int MK_OUT_OF_MEMORY;
  * the cache object in memory
  */
 #ifdef XP_MAC
-#define MEMORY_CACHE_SEGMENT_SIZE 12*1024
+#define MEMORY_CACHE_SEGMENT_SIZE 64*1024
 #else
 #define MEMORY_CACHE_SEGMENT_SIZE 2048
 #endif
