@@ -72,20 +72,6 @@ EXPORTS=	nsNNTPProtocol.h				\
 			nsNNTPCategoryContainer.h \
             $(NULL)
 
-LINCS=							\
-		-I$(PUBLIC)\xpcom		\
-		-I$(PUBLIC)\mailnews	\
-		-I$(PUBLIC)\news	\
-		-I$(PUBLIC)\raptor		\
-		-I$(PUBLIC)\netlib		\
-		-I$(PUBLIC)\security	\
-		-I$(PUBLIC)\rdf			\
-		-I$(PUBLIC)\mime			\
-        -I$(PUBLIC)\pref     \
-        -I$(PUBLIC)\js     \
-        -I$(PUBLIC)\rdfutil  \
-		$(NULL)
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \

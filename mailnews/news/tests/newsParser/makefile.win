@@ -26,18 +26,6 @@ OBJS =                          \
 	.\$(OBJDIR)\newsParserTest.obj    \
 	$(NULL)
 
-LINCS=							\
-		-I$(PUBLIC)\raptor		\
-		-I$(PUBLIC)\xpcom		\
-		-I$(PUBLIC)\netlib		\
-		-I$(PUBLIC)\mailnews	\
-		-I$(PUBLIC)\news	\
-		-I$(PUBLIC)\security	\
-		-I$(PUBLIC)\pref		\
-		-I$(PUBLIC)\js			\
-		-I$(PUBLIC)\rdf			\
-		$(NULL)
-
 MYLIBS=							\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)						\

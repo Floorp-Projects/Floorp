@@ -40,7 +40,6 @@ EXPORTS=	nsEmitterUtils.h				\
     			nsMimeRebuffer.h						\
           $(NULL)
 
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\mailnews -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib -I$(PUBLIC)\security -I$(PUBLIC)\rdf
 
 LCFLAGS = \
         $(LCFLAGS) \

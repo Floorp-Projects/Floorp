@@ -94,14 +94,6 @@ LLIBS=										\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)
 
-LINCS=$(LINCS)  -I.							\
-			   -I..\..\src 			        \
-			   -I$(PUBLIC)\xpcom		    \
-			   -I$(PUBLIC)\mime				\
-			   -I$(PUBLIC)\raptor				\
-			   -I$(PUBLIC)\mailnews				\
-			   $(NULL)
-
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules

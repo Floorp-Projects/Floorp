@@ -53,22 +53,6 @@ EXPORTS=                \
 	nsDirPrefs.h		\
 	$(NULL)
 
-LINCS=                       \
-        -I$(PUBLIC)\xpcom    \
-        -I$(PUBLIC)\mailnews \
-        -I$(PUBLIC)\addressbook \
-        -I$(PUBLIC)\raptor   \
-        -I$(PUBLIC)\rdf      \
-        -I$(PUBLIC)\rdfutil  \
-        -I$(PUBLIC)\pref     \
-        -I$(PUBLIC)\js		 \
-		-I$(PUBLIC)\netlib	 \
-		-I$(PUBLIC)\dom		 \
-		-I$(PUBLIC)\appcores	\
-		-I$(PUBLIC)\security	\
-		-I$(PUBLIC)\mime \
-		$(NULL)
-
 LCFLAGS = \
         $(LCFLAGS) \
         $(DEFINES) \

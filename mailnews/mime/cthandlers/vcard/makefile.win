@@ -101,21 +101,6 @@ LLIBS=							\
 			$(DIST)\lib\xpcom.lib       	\
 			$(NULL)
 
-LINCS=$(LINCS)  -I.             \
-			   -I$(PUBLIC)\js		\
-			   -I$(PUBLIC)\security		\
-			   -I$(PUBLIC)\xpcom		\
-			   -I$(PUBLIC)\raptor		\
-			   -I$(PUBLIC)\mime		\
-			   -I$(PUBLIC)\mailnews		\
-			   -I$(PUBLIC)\uconv		\
-			   -I$(PUBLIC)\intl		\
-			   -I$(PUBLIC)\locale		\
-			   -I$(PUBLIC)\netlib		\
-			   -I$(PUBLIC)\pref		\
-			   -I..\..\src 			\
-			   $(NULL)
-
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules

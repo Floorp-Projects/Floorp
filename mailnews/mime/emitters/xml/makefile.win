@@ -94,20 +94,6 @@ LLIBS=							\
 			$(DIST)\lib\emitterutils.lib    \
 			$(NULL)
 
-LINCS=$(LINCS)  -I.                         		\
-			   -I$(PUBLIC)\pref		\
-			   -I$(PUBLIC)\js		\
-			   -I$(PUBLIC)\security		\
-			   -I$(PUBLIC)\netlib		\
-			   -I$(PUBLIC)\xpcom		\
-			   -I$(PUBLIC)\raptor		\
-			   -I$(PUBLIC)\mime		\
-			   -I$(PUBLIC)\mailnews         \
-			   -I$(PUBLIC)\uconv		\
-			   -I$(PUBLIC)\netcnvts		\
-			   -I$(PUBLIC)\plugin		\
-			   $(NULL)
-
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
