@@ -71,6 +71,7 @@ EXPORTS2= \
 	nsIDOMHTMLQuoteElement.h \
 	nsIDOMHTMLScriptElement.h \
 	nsIDOMHTMLSelectElement.h \
+	nsIDOMNSHTMLSelectElement.h \
 	nsIDOMHTMLStyleElement.h \
 	nsIDOMHTMLTableCaptionElement.h \
 	nsIDOMHTMLTableCellElement.h \
