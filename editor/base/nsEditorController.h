@@ -27,7 +27,7 @@
 #include "nsIEditorController.h"
 #include "nsIControllerCommand.h"
 
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 #include "nsString.h"
 #include "nsWeakPtr.h"
 
