@@ -663,6 +663,10 @@ ifdef USE_PREBINDING
 export LD_PREBIND=1
 export LD_SEG_ADDR_TABLE=$(shell cd $(topsrcdir); pwd)/config/prebind-address-table
 endif
+ifdef MACOS_SDK_DIR
+export NEXT_ROOT=$(MACOS_SDK_DIR)
+endif
+PBBUILD=NEXT_ROOT= $(PBBUILD_BIN)
 endif
 
 ifdef MOZ_NATIVE_MAKEDEPEND

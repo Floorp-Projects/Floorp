@@ -446,6 +446,26 @@ AC_SUBST(GNU_CC)
 AC_SUBST(GNU_CXX)
 
 dnl ========================================================
+dnl = Mac OS X SDK support
+dnl ========================================================
+MACOS_SDK_DIR=
+MOZ_ARG_WITH_STRING(macos-sdk,
+[  --with-macos-sdk=dir   Location of platform SDK to use (Mac OS X only)],
+    MACOS_SDK_DIR=$withval)
+
+AC_SUBST(MACOS_SDK_DIR)
+
+if test "$MACOS_SDK_DIR"; then
+  export NEXT_ROOT=$MACOS_SDK_DIR
+  CFLAGS="-I${MACOS_SDK_DIR}/usr/include $CFLAGS"
+  CXXFLAGS="-I${MACOS_SDK_DIR}/usr/include $CXXFLAGS"
+  changequote(,)
+  GCC_VERSION=`echo $CXX_VERSION | perl -pe "s/gcc version ([^ ]*).*/\1/"`
+  changequote([,])
+  LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
+fi
+
+dnl ========================================================
 dnl Checks for programs.
 dnl ========================================================
 AC_PROG_CPP
@@ -3154,8 +3174,8 @@ photon)
 	AC_DEFINE(MOZ_WIDGET_PHOTON)
     ;;
 mac|cocoa)
-    TK_LIBS='-framework Carbon /System/Library/Frameworks/Carbon.framework/Carbon'
-    TK_CFLAGS="-I/Developer/Headers/FlatCarbon -F/System/Library/Frameworks"
+    TK_LIBS='-framework Carbon'
+    TK_CFLAGS="-I${MACOS_SDK_DIR}/Developer/Headers/FlatCarbon"
     CFLAGS="$CFLAGS $TK_CFLAGS"
     CXXFLAGS="$CXXFLAGS $TK_CFLAGS"
     MOZ_USER_DIR="Mozilla"
@@ -4727,6 +4747,13 @@ MOZ_ARG_WITHOUT_BOOL(libIDL,
 if test "$SKIP_IDL_CHECK" = "no"
 then
     _LIBIDL_FOUND=
+    if test "$MACOS_SDK_DIR"; then 
+      changequote(,)
+      LIBS=`echo $LIBS|sed -e "s?-L${MACOS_SDK_DIR}/usr/lib[^ ]*??g"`
+      changequote([,])
+      unset NEXT_ROOT
+    fi
+
     if test "$MOZ_ENABLE_GTK2"; then
         PKG_CHECK_MODULES(LIBIDL, libIDL-2.0 >= 0.8.0,_LIBIDL_FOUND=1)
     fi
@@ -4753,6 +4780,10 @@ then
     if test -z "$_LIBIDL_FOUND"; then
         AC_MSG_ERROR([libIDL not found.
         libIDL $LIBIDL_VERSION or higher is required.])
+    fi
+    if test "$MACOS_SDK_DIR"; then
+      LIBS="-L${MACOS_SDK_DIR}/usr/lib/gcc/darwin/${GCC_VERSION} -L${MACOS_SDK_DIR}/usr/lib $LIBS"
+      export NEXT_ROOT=$MACOS_SDK_DIR
     fi
 fi
 

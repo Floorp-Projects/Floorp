@@ -1249,8 +1249,10 @@ nsCacheService::SetMemoryCacheCapacity(PRInt32  capacity)
 #elif defined(__hpux)
 #include <sys/pstat.h>
 #elif defined(XP_MACOSX)
+extern "C" {
 #include <mach/mach_init.h>
 #include <mach/mach_host.h>
+}
 #elif defined(XP_OS2)
 #define INCL_DOSMISC
 #include <os2.h>

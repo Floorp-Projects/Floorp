@@ -79,5 +79,10 @@ HOST_CFLAGS	+= -DMDCPUCFG=$(HOST_NSPR_MDCPUCFG)
 endif
 endif
 
+ifdef MACOS_SDK_DIR
+NEXT_ROOT=
+OS_LIBS := $(patsubst -L$(MACOS_SDK_DIR)/usr/lib%,,$(OS_LIBS))
+endif
+
 export::
 	@$(MAKE) libs
