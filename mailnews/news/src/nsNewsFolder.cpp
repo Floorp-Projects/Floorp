@@ -1370,7 +1370,7 @@ nsMsgNewsFolder::RememberLine(char* line)
 	}
 	if (!new_data) return -1; // NS_ERROR_OUT_OF_MEMORY;
 	PL_strcpy(new_data, line);
-	PL_strcat(new_data, LINEBREAK);
+	PL_strcat(new_data, MSG_LINEBREAK);
 
 	mOptionLines = new_data;
 

@@ -539,7 +539,7 @@ nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttrib attrib, int value)
 		*m_fileStream << attribStr;
 		*m_fileStream << "=\"";
 		*m_fileStream << value;
-		*m_fileStream << "\"" LINEBREAK;
+		*m_fileStream << "\"" MSG_LINEBREAK;
 	}
 //		XP_FilePrintf(fid, "%s=\"%d\"%s", attribStr, value, LINEBREAK);
 	return NS_OK;
@@ -560,7 +560,7 @@ nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, nsString2 &
 			*m_fileStream << attribStr;
 			*m_fileStream << "=\"";
 			*m_fileStream << ((escapedStr) ? escapedStr : str);
-			*m_fileStream << "\"" LINEBREAK;
+			*m_fileStream << "\"" MSG_LINEBREAK;
 //			XP_FilePrintf(fid, "%s=\"%s\"%s", attribStr, (escapedStr) ? escapedStr : str, LINEBREAK);
 		}
 		PR_FREEIF(escapedStr);
