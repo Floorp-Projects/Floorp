@@ -40,7 +40,6 @@
 
 #include "oeICalEventImpl.h"
 #include "nsMemory.h"
-//#include "stdlib.h"
 #include "nsCOMPtr.h"
 
 #define strcasecmp strcmp
@@ -141,7 +140,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_location = nsnull;
     m_category = nsnull;
     m_isprivate = true;
-    m_syncid = 0;
+    m_syncid = nsnull;
     m_allday = false;
     m_hasalarm = false;
     m_alarmlength = 0;
@@ -157,6 +156,7 @@ oeICalEventImpl::oeICalEventImpl()
     m_lastalarmack = icaltime_null_time();
     SetAlarmUnits( "minutes" );
     SetRecurUnits( "weeks" );
+    SetSyncId( "" );
 }
 
 oeICalEventImpl::~oeICalEventImpl()
@@ -181,6 +181,8 @@ oeICalEventImpl::~oeICalEventImpl()
       nsMemory::Free( m_inviteemail );
   if( m_recurunits  )
       nsMemory::Free( m_recurunits );
+  if( m_syncid )
+      nsMemory::Free( m_syncid );
   
   if( m_start )
       m_start->Release();
@@ -380,22 +382,34 @@ NS_IMETHODIMP oeICalEventImpl::SetPrivateEvent(PRBool aNewVal)
     return NS_OK;
 }
 
-/* attribute long SyncId; */
-NS_IMETHODIMP oeICalEventImpl::GetSyncId(PRUint32 *aRetVal)
+
+/* attribute string SyncId; */
+NS_IMETHODIMP oeICalEventImpl::GetSyncId(char * *aRetVal)
 {
 #ifdef ICAL_DEBUG_ALL
     printf( "GetSyncId()\n" );
 #endif
-    *aRetVal = m_syncid;
-    return NS_OK;
+    if( m_alarmunits ) {
+        *aRetVal= (char*) nsMemory::Clone( m_syncid, strlen(m_syncid)+1);
+        if( *aRetVal == nsnull )
+            return  NS_ERROR_OUT_OF_MEMORY;
+    } else
+        *aRetVal= EmptyReturn();
+   return NS_OK;
 }
 
-NS_IMETHODIMP oeICalEventImpl::SetSyncId(PRUint32 aNewVal)
+NS_IMETHODIMP oeICalEventImpl::SetSyncId(const char * aNewVal)
 {
 #ifdef ICAL_DEBUG_ALL
-    printf( "SetSyncId(%lu)\n", aNewVal );
+    printf( "SetSyncId( %s )\n", aNewVal );
 #endif
-    m_syncid = aNewVal;
+    if( m_syncid )
+        nsMemory::Free( m_syncid );
+    
+    if( aNewVal )
+        m_syncid= (char*) nsMemory::Clone( aNewVal, strlen(aNewVal)+1);
+    else
+        m_syncid = nsnull;
     return NS_OK;
 }
 
@@ -675,9 +689,14 @@ NS_IMETHODIMP oeICalEventImpl::GetNextRecurrence( PRTime begin, PRTime *retval, 
 
     //for recurring events
     icalcomponent *vcalendar = AsIcalComponent();
+    if ( !vcalendar ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::GetNextRecurrence() failed!\n" );
+        #endif
+        return NS_OK;
+    }
 
     icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
-    assert( vevent != 0);
 
     icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_RRULE_PROPERTY );
     if ( prop != 0) {
@@ -747,11 +766,21 @@ icaltimetype oeICalEventImpl::GetNextAlarmTime( icaltimetype begin ) {
     icaltimetype checkloop = starting;
     do {
         checkloop = GetNextRecurrence( checkloop );
-        if( icaltime_is_null_time( checkloop ) )
-            return checkloop;
         result = checkloop;
+        if( icaltime_is_null_time( checkloop ) ) {
+            break;
+        }
         result = CalculateAlarmTime( result );
     } while ( icaltime_compare( starting, result ) >= 0 );
+
+    for( int i=0; i<m_snoozetimes.size(); i++ ) {
+        icaltimetype snoozetime = ConvertFromPrtime( m_snoozetimes[i] );
+        if( icaltime_is_null_time( result ) || icaltime_compare( snoozetime, result ) < 0 ) {
+            if ( icaltime_compare( snoozetime, starting ) > 0 ) {
+                result = snoozetime;
+            }
+        }
+    }
     return result;
 }
 
@@ -828,7 +857,15 @@ NS_IMETHODIMP oeICalEventImpl::GetIcalString(char **aRetVal)
     printf( "GetIcalString() = " );
 #endif
     
+    *aRetVal = nsnull;
     icalcomponent *vcalendar = AsIcalComponent();
+    if ( !vcalendar ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::GetIcalString() failed!\n" );
+        #endif
+        return NS_OK;
+    }
+
     char *str = icalcomponent_as_ical_string( vcalendar );
     if( str ) {
         *aRetVal= (char*) nsMemory::Clone( str, strlen(str)+1);
@@ -912,6 +949,21 @@ bool oeICalEventImpl::IsExcepted( PRTime date ) {
     return result;
 }
 
+NS_IMETHODIMP oeICalEventImpl::SetSnoozeTime( PRTime snoozetime )
+{
+#ifdef ICAL_DEBUG_ALL
+    printf( "oeICalEventImpl::SetSnoozeTime()\n" );
+#endif
+    icaltimetype tmpdate = ConvertFromPrtime( snoozetime );
+    snoozetime = icaltime_as_timet( tmpdate );
+    snoozetime *= 1000;
+    m_snoozetimes.push_back( snoozetime );
+    PRTime nowinms = time( nsnull );
+    nowinms *= 1000;
+    m_lastalarmack = ConvertFromPrtime( nowinms );
+    return NS_OK;
+}
+
 void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
 {
 #ifdef ICAL_DEBUG_ALL
@@ -919,11 +971,22 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
 #endif
 
     icalcomponent *vevent = icalcomponent_get_first_component( vcalendar, ICAL_VEVENT_COMPONENT );
-    assert( vevent != 0);
+    if ( !vevent ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::ParseIcalComponent() failed: VEVENT not found!\n" );
+        #endif
+        return;
+    }
 
 //id    
     icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
-    assert( prop != 0);
+    if ( !prop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::ParseIcalComponent() failed: UID not found!\n" );
+        #endif
+        return;
+    }
+
     const char *tmpstr = icalproperty_get_uid( prop );
     m_id = atol( tmpstr );
 
@@ -984,17 +1047,17 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
             prop = icalcomponent_get_next_property( vevent, ICAL_X_PROPERTY ) ) {
             icalparameter *tmppar = icalproperty_get_first_parameter( prop, ICAL_MEMBER_PARAMETER );
             if ( tmppar != 0 ) {
-                tmpstr = (char *)icalparameter_get_member( tmppar );
+                tmpstr = icalparameter_get_member( tmppar );
                 if( strcmp( tmpstr, "SyncId" ) == 0 )
                     break;
             }
     }
     
     if ( prop != 0) {
-        tmpstr = (char *)icalproperty_get_value_as_string( prop );
-        m_syncid= atol( tmpstr );
+        tmpstr = icalproperty_get_value_as_string( prop );
+        SetSyncId( tmpstr );
     } else
-        m_syncid = 0;
+        SetSyncId( "" );
 
  //allday
     for( prop = icalcomponent_get_first_property( vevent, ICAL_X_PROPERTY );
@@ -1186,6 +1249,21 @@ void oeICalEventImpl::ParseIcalComponent( icalcomponent *vcalendar )
         PRTime exdateinms = ConvertToPrtime( exdate );
         m_exceptiondates.push_back( exdateinms );
     }
+
+    //snoozetimes
+    icalcomponent *tmpcomp = icalcomponent_get_first_component( vevent, ICAL_X_COMPONENT );
+    if ( tmpcomp != 0) {
+        for( prop = icalcomponent_get_first_property( tmpcomp, ICAL_DTSTAMP_PROPERTY );
+                prop != 0 ;
+                prop = icalcomponent_get_next_property( tmpcomp, ICAL_DTSTAMP_PROPERTY ) ) {
+            icaltimetype snoozetime = icalproperty_get_dtstamp( prop );
+            if( !icaltime_is_null_time( m_lastalarmack ) && icaltime_compare( m_lastalarmack, snoozetime ) >= 0 )
+                continue;
+            PRTime snoozetimeinms = icaltime_as_timet( snoozetime );
+            snoozetimeinms *= 1000;
+            m_snoozetimes.push_back( snoozetimeinms );
+        }
+    }
 }
 
 #define ICALEVENT_VERSION "1.1"
@@ -1198,7 +1276,12 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     icalcomponent *newcalendar;
     
     newcalendar = icalcomponent_new_vcalendar();
-    assert(newcalendar != 0);
+    if ( !newcalendar ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalEventImpl::AsIcalComponent() failed: Cannot create VCALENDAR!\n" );
+        #endif
+        return nsnull;
+    }
 
     //version
     icalproperty *prop = icalproperty_new_version( ICALEVENT_VERSION );
@@ -1243,11 +1326,11 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     icalcomponent_add_property( vevent, prop );
 
     icalparameter *tmppar;
+    
     //syncId
-    if( m_syncid ) {
-        sprintf( tmpstr, "%lu", m_syncid );
-        tmppar = icalparameter_new_member( "SyncId" );
-        prop = icalproperty_new_x( tmpstr );
+    if( m_syncid && strlen( m_syncid ) != 0 ){
+        icalparameter *tmppar = icalparameter_new_member( "SyncId" );
+        prop = icalproperty_new_x( m_syncid );
         icalproperty_add_parameter( prop, tmppar );
         icalcomponent_add_property( vevent, prop );
     }
@@ -1474,6 +1557,18 @@ icalcomponent* oeICalEventImpl::AsIcalComponent()
     }
     prop = icalproperty_new_dtend( m_end->m_datetime );
     icalcomponent_add_property( vevent, prop );
+
+    //snoozetimes
+    icalcomponent *tmpcomp=NULL;
+    for( int i=0; i<m_snoozetimes.size(); i++ ) {
+        if( tmpcomp == NULL )
+            tmpcomp = icalcomponent_new( ICAL_X_COMPONENT );
+        icaltimetype snoozetime = ConvertFromPrtime( m_snoozetimes[i] );
+        prop = icalproperty_new_dtstamp( snoozetime );
+        icalcomponent_add_property( tmpcomp, prop );
+    }
+    if( tmpcomp )
+        icalcomponent_add_component( vevent, tmpcomp );
 
     //add event to newcalendar
     icalcomponent_add_component( newcalendar, vevent );

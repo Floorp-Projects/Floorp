@@ -309,13 +309,28 @@ END:VCALENDAR\n\
 ";
     
     stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
 
     icalcalendar = icalparser_parse_string(icalrawcalendarstr);
-    assert(icalcalendar != 0);
+    if ( !icalcalendar ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: Cannot create VCALENDAR!\n" );
+        #endif
+        return NS_OK;
+    }
 
     icalevent = icalcomponent_get_first_component(icalcalendar,ICAL_VEVENT_COMPONENT);
-    assert(icalevent != 0);
+    if ( !icalevent ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: VEVENT not found!\n" );
+        #endif
+        return NS_OK;
+    }
 
     icalproperty *uid = icalproperty_new_uid( uidstr );
     icalcomponent_add_property( icalevent, uid );
@@ -445,10 +460,20 @@ END:VCALENDAR\n\
 #endif
     
     icalcomponent *fetchedcal = icalfileset_fetch( stream, uidstr );
-    assert( fetchedcal != 0 );
+    if ( !fetchedcal ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: Cannot fetch event!\n" );
+        #endif
+        return NS_OK;
+    }
 	
     icalcomponent *fetchedevent = icalcomponent_get_first_component( fetchedcal,ICAL_VEVENT_COMPONENT);
-    assert( fetchedevent != 0 );
+    if ( !fetchedevent ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: VEVENT not found!\n" );
+        #endif
+        return NS_OK;
+    }
 
 #ifdef ICAL_DEBUG
     printf("Fetched Event\n");
@@ -457,50 +482,90 @@ END:VCALENDAR\n\
     icalproperty *tmpprop;
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_UID_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: UID not found!\n" );
+        #endif
+        return NS_OK;
+    }
 #ifdef ICAL_DEBUG
     printf("id: %s\n", icalproperty_get_uid( tmpprop ) );
 #endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_SUMMARY_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: SUMMARY not found!\n" );
+        #endif
+        return NS_OK;
+    }
 #ifdef ICAL_DEBUG
     printf("Title: %s\n", icalproperty_get_summary( tmpprop ) );
 #endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_CATEGORIES_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: CATEGORIES not found!\n" );
+        #endif
+        return NS_OK;
+    }
 #ifdef ICAL_DEBUG
     printf("Category: %s\n", icalproperty_get_categories( tmpprop ) );
 #endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DESCRIPTION_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: DESCRIPTION not found!\n" );
+        #endif
+        return NS_OK;
+    }
 #ifdef ICAL_DEBUG
     printf("Description: %s\n", icalproperty_get_description( tmpprop ) );
 #endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_LOCATION_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: LOCATION not found!\n" );
+        #endif
+        return NS_OK;
+    }
 #ifdef ICAL_DEBUG
     printf("Location: %s\n", icalproperty_get_location( tmpprop ) );
 #endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_CLASS_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: CLASS not found!\n" );
+        #endif
+        return NS_OK;
+    }
 #ifdef ICAL_DEBUG
     printf("Class: %s\n", (icalproperty_get_class( tmpprop ) == ICAL_CLASS_PUBLIC) ? "PUBLIC" : "PRIVATE" );
 #endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DTSTART_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: DTSTART not found!\n" );
+        #endif
+        return NS_OK;
+    }
     start = icalproperty_get_dtstart( tmpprop );
 #ifdef ICAL_DEBUG
     printf("Start: %d-%d-%d %d:%d\n", start.year, start.month, start.day, start.hour, start.minute );
 #endif
     //
     tmpprop = icalcomponent_get_first_property( fetchedevent, ICAL_DTEND_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: DTEND not found!\n" );
+        #endif
+        return NS_OK;
+    }
     end = icalproperty_get_dtstart( tmpprop );
 #ifdef ICAL_DEBUG
     printf("End: %d-%d-%d %d:%d\n", end.year, end.month, end.day, end.hour, end.minute );
@@ -516,11 +581,26 @@ END:VCALENDAR\n\
     }
 
     icalcomponent *newcomp = icalcomponent_new_clone( fetchedcal );
-    assert( newcomp != 0 );
+    if ( !newcomp ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: Cannot clone event!\n" );
+        #endif
+        return NS_OK;
+    }
     icalcomponent *newevent = icalcomponent_get_first_component( newcomp, ICAL_VEVENT_COMPONENT );
-    assert( newevent != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: VEVENT not found!\n" );
+        #endif
+        return NS_OK;
+    }
     tmpprop = icalcomponent_get_first_property( newevent, ICAL_SUMMARY_PROPERTY );
-    assert( tmpprop != 0 );
+    if ( !tmpprop ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: SUMMARY not found!\n" );
+        #endif
+        return NS_OK;
+    }
     icalproperty_set_summary( tmpprop, "LUNCH AND LEARN TIME" );
 //    icalfileset_modify( stream, fetchedcal, newcomp );
     icalfileset_remove_component( stream, fetchedcal );
@@ -528,20 +608,25 @@ END:VCALENDAR\n\
     icalcomponent_free( fetchedcal );
     //
 
-    icalfileset_commit(stream);
 #ifdef ICAL_DEBUG
 	printf("Event updated\n");
     printf( "New Title: %s\n", icalproperty_get_summary( tmpprop ) );
 #endif
 
     fetchedcal = icalfileset_fetch( stream, uidstr );
-    assert( fetchedcal != 0 );
+    if ( !fetchedcal ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::Test() failed: Cannot fetch event!\n" );
+        #endif
+        return NS_OK;
+    }
     icalfileset_remove_component( stream, fetchedcal );
 	
 #ifdef ICAL_DEBUG
     printf("Removed Event\n");
 #endif
 
+    icalfileset_commit(stream);
     icalfileset_free(stream);
     return NS_OK;                                                                    
 }
@@ -567,7 +652,12 @@ oeICalImpl::SetServer( const char *str ) {
     icalfileset *stream;
     
     stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::SetServer() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
     
     icalcomponent *comp;
     for( comp = icalfileset_get_first_component( stream );
@@ -613,7 +703,16 @@ NS_IMETHODIMP oeICalImpl::SetBatchMode(PRBool aBatchMode)
     if( m_batchMode != newBatchMode )
     {
         m_batchMode = aBatchMode;
+
+        // if batch mode changed to off, call set up alarm mamnager
+
+        if( !m_batchMode )
+        {
+            SetupAlarmManager();
+        }
         
+        // tell observers about the change
+
         for( int i=0; i<m_observerlist.size(); i++ ) 
         {
             if( m_batchMode )
@@ -653,14 +752,24 @@ NS_IMETHODIMP oeICalImpl::AddEvent(oeIICalEvent *icalevent, PRInt32 *retid)
 
 	*retid = 0;
     stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::AddEvent() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
     
-    do {
-        newid = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
-        sprintf( uidstr, "%lu", newid );
-    } while ( (fetchedcal = icalfileset_fetch( stream, uidstr )) != 0 );
+    ((oeICalEventImpl *)icalevent)->GetId( (PRUint32 *)&newid );
 
-    ((oeICalEventImpl *)icalevent)->SetId( newid );
+    if( newid == 0 ) {
+        do {
+            newid = 900000000 + ((rand()%0x4ff) << 16) + rand()%0xFFFF;
+            sprintf( uidstr, "%lu", newid );
+        } while ( (fetchedcal = icalfileset_fetch( stream, uidstr )) != 0 );
+
+        ((oeICalEventImpl *)icalevent)->SetId( newid );
+    }
+
     vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
 	
     icalfileset_add_component( stream, vcalendar );
@@ -703,27 +812,40 @@ NS_IMETHODIMP oeICalImpl::ModifyEvent(oeIICalEvent *icalevent, PRInt32 *retid)
     icalcomponent *vcalendar;
     char uidstr[10];
 
+    *retid = 0;
     stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::ModifyEvent() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
     
     ((oeICalEventImpl *)icalevent)->GetId( (PRUint32 *)&id );
-    vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
     
     sprintf( uidstr, "%lu", id );
     
     icalcomponent *fetchedcal = icalfileset_fetch( stream, uidstr );
     
-    oeICalEventImpl *oldevent;
+    oeICalEventImpl *oldevent=nsnull;
     if( fetchedcal ) {
         icalfileset_remove_component( stream, fetchedcal );
         nsresult rv;
         if( NS_FAILED( rv = NS_NewICalEvent((oeIICalEvent**) &oldevent ))) {
+            icalfileset_free(stream);
             return rv;
         }
         oldevent->ParseIcalComponent( fetchedcal );
         icalcomponent_free( fetchedcal );
+    } else {
+#ifdef ICAL_DEBUG
+    printf( "WARNING Event not found.\n" );
+#endif
+        icalfileset_free(stream);
+        return NS_OK;
     }
     
+    vcalendar = ((oeICalEventImpl *)icalevent)->AsIcalComponent();
     icalfileset_add_component( stream, vcalendar );
     
     *retid = id;
@@ -790,7 +912,12 @@ oeICalImpl::DeleteEvent( PRInt32 id )
     char uidstr[10];
     
     stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::DeleteEvent() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
     
     sprintf( uidstr, "%lu", id );
 
@@ -869,10 +996,20 @@ oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
     eventEnum->Init( this );
     
     stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
+    if ( !stream ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::SearchBySQL() failed: Cannot open stream: %s!\n", serveraddr );
+        #endif
+        return NS_OK;
+    }
     
     gauge = icalgauge_new_from_sql( (char *)sqlstr );
-    assert( gauge != 0 );
+    if ( !gauge ) {
+        #ifdef ICAL_DEBUG
+        printf( "oeICalImpl::SearchBySQL() failed: Cannot create gauge\n" );
+        #endif
+        return NS_OK;
+    }
     
     icalfileset_select( stream, gauge );
 
@@ -881,10 +1018,20 @@ oeICalImpl::SearchBySQL( const char *sqlstr,  nsISimpleEnumerator **resultList )
         comp != 0;
         comp = icalfileset_get_next_component( stream ) ) {
         icalcomponent *vevent = icalcomponent_get_first_component( comp, ICAL_VEVENT_COMPONENT );
-        assert( vevent != 0);
+        if ( !vevent ) {
+            #ifdef ICAL_DEBUG
+            printf( "oeICalImpl::SearchBySQL() failed: VEVENT not found!\n" );
+            #endif
+            return NS_OK;
+        }
 
         icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
-        assert( prop != 0);
+        if ( !prop ) {
+            #ifdef ICAL_DEBUG
+            printf( "oeICalImpl::SearchBySQL() failed: UID not found!\n" );
+            #endif
+            return NS_OK;
+        }
 
         eventEnum->AddEventId( atol( icalproperty_get_uid( prop ) ) );
     }
@@ -1096,6 +1243,15 @@ void oeICalImpl::SetupAlarmManager() {
     printf( "oeICalImpl::SetupAlarmManager()\n" );
 #endif
 
+    if( m_batchMode )
+    {
+        #ifdef ICAL_DEBUG
+            printf( "oeICalImpl::SetupAlarmManager() - defering alarms while in batch mode\n" );
+        #endif
+        
+        return;
+    }
+
     PRTime todayinms = PR_Now();
     PRInt64 usecpermsec;
     LL_I2L( usecpermsec, PR_USEC_PER_MSEC );
@@ -1145,167 +1301,3 @@ void oeICalImpl::SetupAlarmManager() {
         m_alarmtimer->Init( AlarmTimerCallback, this, timediff*1000, NS_PRIORITY_NORMAL, NS_TYPE_ONE_SHOT );
     }
 }
-
-/**
-*
-*   SnoozeEvent
-*
-*   DESCRIPTION: Deactivates an alarm of an event
-*
-*   PARAMETERS: 
-*	id		- Id of the event to deactivet its alarm
-*
-*   RETURN
-*      None
-*/
-/*
-NS_IMETHODIMP
-oeICalImpl::SnoozeEvent( PRInt32 id )
-{
-    cal_open(serveraddr, 0);
-	if( 0 ) {
-		printf("cal_open() failed - SnoozeEvent\n");
-		return 0;
-	}
-
-	if (!cal_snooze(id)) {
-		printf("cal_snooze() failed\n");
-		return 0;
-	}
-	
-	cal_close(0);
-	if ( 0 ) {
-		printf("cal_close() failed\n");
-		return 0;
-	}
-	
-	return NS_OK;
-}
-*/
-
-/*
-void GetNextRecurrence( icalcomponent *vevent, PRInt16 year, PRInt16 month, PRInt16 day, struct icaldurationtype before, char *aRetVal ) {
-
-    struct icaltimetype start, estart, next;
-    struct icalrecurrencetype recur;
-    icalrecur_iterator* ritr;
-
-    start.year = year; start.month = month; start.day = day;
-    start.hour = 0; start.minute = 0; start.second = 0;
-
-    icalproperty *dtstart = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
-    if( dtstart != 0 ) {
-        estart = icalproperty_get_dtstart( dtstart );
-        start.hour = estart.hour; start.minute = estart.minute; start.second = estart.second;
-    }
-
-    aRetVal[0]= 0;
-    icalproperty *prop = icalcomponent_get_first_property( vevent, ICAL_RRULE_PROPERTY );
-    if ( prop != 0) {
-        recur = icalproperty_get_rrule(prop);
-        ritr = icalrecur_iterator_new(recur,estart);
-        for(next = icalrecur_iterator_next(ritr);
-            !icaltime_is_null_time(next);
-            next = icalrecur_iterator_next(ritr)){
-            struct icaltimetype tmpnext = icaltime_add( next, before );
-            if( icaltime_compare( tmpnext , start ) >= 0 ) {
-                sprintf( aRetVal, "%04d%02d%02dT%02d%02d%02d" , next.year, next.month, next.day, next.hour, next.minute, next.second );
-                break;
-            }
-        }
-    }
-}*/
-
-/**
-*
-*   SearchAlarm
-*
-*   DESCRIPTION: Searches for events having active alarms
-*
-*   PARAMETERS: 
-*	whenstr		- String representation of the date-time reference of the alarm
-*	resultstr   - Place to store the string representation of the id list
-*
-*   RETURN
-*      None
-*/
-/*
-NS_IMETHODIMP
-oeICalImpl::SearchAlarm( PRInt16 startyear, PRInt16 startmonth, PRInt16 startday,
-				 PRInt16 starthour, PRInt16 startmin,
-			  	 nsISimpleEnumerator **resultList )
-{
-#ifdef ICAL_DEBUG
-    printf( "oeICalImpl::SearchAlarm()\n" );
-#endif
-    icalfileset *stream;
-    icaltimetype check,checkend;
-    icaldurationtype checkduration;
-    icalproperty *prop;
-
-    nsCOMPtr<oeEventEnumerator> eventEnum = new oeEventEnumerator( );
-    
-    if (!eventEnum)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-    eventEnum->Init( this );
-    
-    check.year = startyear; check.month = startmonth; check.day = startday; 
-    check.hour = starthour; check.minute = startmin; check.second = 0; 
-    printf( "CHECK: %d-%d-%d %d:%d:%d\n", check.year, check.month, check.day, check.hour, check.minute, check.second );
-    checkduration.is_neg = false;
-    checkduration.weeks = checkduration.days = checkduration.minutes = checkduration.seconds = 0;
-    checkduration.hours = 24;
-    checkend = icaltime_add( check, checkduration );
-    printf( "CHECKEND: %d-%d-%d %d:%d:%d\n", checkend.year, checkend.month, checkend.day, checkend.hour, checkend.minute, checkend.second );
-
-    stream = icalfileset_new(serveraddr);
-    assert(stream != 0);
-    
-    icalcomponent *comp;
-    for( comp = icalfileset_get_first_component( stream );
-        comp != 0;
-        comp = icalfileset_get_next_component( stream ) ) {
-        icalcomponent *vevent = icalcomponent_get_first_component( comp, ICAL_VEVENT_COMPONENT );
-        assert( vevent != 0);
-
-        icalcomponent *valarm = icalcomponent_get_first_component( vevent, ICAL_VALARM_COMPONENT );
-        if( valarm ){
-            struct icaltimetype start;
-
-            //get duration 
-            prop = icalcomponent_get_first_property( valarm, ICAL_TRIGGER_PROPERTY );
-            assert( prop != 0);
-            struct icaltriggertype trig;
-            trig = icalproperty_get_trigger( prop );
-            
-            prop = icalcomponent_get_first_property( vevent, ICAL_RRULE_PROPERTY );
-            if ( prop != 0) {
-                char result[80];
-                GetNextRecurrence( vevent, check.year, check.month, check.day , trig.duration, result );
-                start = icaltime_from_string( result );
-                printf( "RECUR START: %d-%d-%d %d:%d:%d\n", start.year, start.month, start.day, start.hour, start.minute, start.second );
-            } else {
-                //get dtstart
-                prop = icalcomponent_get_first_property( vevent, ICAL_DTSTART_PROPERTY );
-                assert( prop != 0);
-                start = icalproperty_get_dtstart( prop );
-                printf( "START: %d-%d-%d %d:%d:%d\n", start.year, start.month, start.day, start.hour, start.minute, start.second );
-            }
-            start = icaltime_add( start, trig.duration );
-            printf( "TRIGGER: %d-%d-%d %d:%d:%d\n", start.year, start.month, start.day, start.hour, start.minute, start.second );
-            if( icaltime_compare( start, check ) >= 0 && icaltime_compare( start, checkend ) < 0 ) {
-                prop = icalcomponent_get_first_property( vevent, ICAL_UID_PROPERTY );
-                assert( prop != 0);
-
-                eventEnum->AddEventId( atol( icalproperty_get_value_as_string( prop ) ) );
-            }
-        }
-    }
-	
-
-    icalfileset_free(stream);
-    
-    // bump ref count
-    return eventEnum->QueryInterface(NS_GET_IID(nsISimpleEnumerator), (void **)resultList);
-}*/

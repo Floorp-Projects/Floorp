@@ -68,13 +68,13 @@ interface oeIICalEvent : nsISupports
 {
     readonly attribute oeIDateTime start;
     readonly attribute oeIDateTime end;
-    readonly attribute unsigned long id;
+    attribute unsigned long id;
     attribute string title;
     attribute string description;
     attribute string location;
     attribute string category;
     attribute boolean privateEvent;
-    attribute unsigned long syncId;
+    attribute string syncId;
     attribute boolean allDay;
     attribute boolean alarm;
     attribute string alarmUnits;
@@ -94,6 +94,7 @@ interface oeIICalEvent : nsISupports
     void parseIcalString(in string icalstr);
     void addException( in PRTime exdate );
 	nsISimpleEnumerator getExceptions();
+    void setSnoozeTime( in PRTime exdate );
 //    PRTime calculateAlarmTime();
 };
 

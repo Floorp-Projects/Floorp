@@ -81,11 +81,10 @@ public:
   /* additional members */
   void ParseIcalComponent( icalcomponent *vcalendar );
   icalcomponent *AsIcalComponent();
-  NS_IMETHODIMP SetId( PRUint32 newid );
   icaltimetype GetNextAlarmTime( icaltimetype begin );
 private:
     unsigned long m_id;
-    unsigned long m_syncid;
+    char *m_syncid;
     char *m_title;
     char *m_description;
     char *m_location;
@@ -109,6 +108,7 @@ private:
     oeDateTimeImpl *m_recurend;
     icaltimetype m_lastalarmack;
     std::vector<PRTime> m_exceptiondates;
+    std::vector<PRTime> m_snoozetimes;
     icaltimetype GetNextRecurrence( icaltimetype begin );
     icaltimetype CalculateAlarmTime( icaltimetype date );
     bool IsExcepted( PRTime date );
