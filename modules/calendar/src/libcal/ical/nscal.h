@@ -47,7 +47,8 @@ class JULIAN_PUBLIC NSCalendar
 {
 private:
 #if 0
-    
+   
+  
     /**
      * Default constructor. Hide from clients. 
      */
