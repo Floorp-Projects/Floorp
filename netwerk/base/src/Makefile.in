@@ -33,6 +33,8 @@ CPPSRCS =                              \
         nsSocketTransportService.cpp   \
         nsIOService.cpp                \
         nsStandardUrl.cpp              \
+	nsNetModuleMgr.cpp             \
+	nsNetModRegEntry.cpp           \
         $(NULL)
 
 EXPORTS = 				\
