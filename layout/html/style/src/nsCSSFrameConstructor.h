@@ -414,6 +414,14 @@ protected:
                              nsIStyleContext*         aStyleContext,
                              nsFrameItems&            aFrameItems,
                              PRBool&                  aHaltProcessing);
+
+  nsresult CreateAnonymousXULContent(nsIPresContext*          aPresContext,
+                           nsIAtom*                 aTag,
+                           nsFrameConstructorState& aState,
+                           nsIContent*              aContent,
+                           nsIFrame*                aNewFrame,
+                           nsFrameItems&            aChildItems);
+
 #endif
 
   nsresult ConstructFrameByDisplayType(nsIPresContext*          aPresContext,

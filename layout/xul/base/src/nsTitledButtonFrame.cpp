@@ -69,6 +69,10 @@
 #include "nsIStyleContext.h"
 #include "nsIPopUpMenu.h"
 
+#include "nsFormControlHelper.h"
+
+#define ONLOAD_CALLED_TOO_EARLY 1
+
 #ifndef _WIN32
 #define BROKEN_IMAGE_URL "resource:/res/html/broken-image.gif"
 #endif
@@ -147,7 +151,32 @@ nsTitledButtonFrame::AttributeChanged(nsIPresContext* aPresContext,
   mNeedsLayout = PR_TRUE;
   UpdateAttributes(*aPresContext);
 
+  // reflow
+  nsCOMPtr<nsIPresShell> shell;
+  aPresContext->GetShell(getter_AddRefs(shell));
+  
+  nsCOMPtr<nsIReflowCommand> reflowCmd;
+  nsresult rv = NS_NewHTMLReflowCommand(getter_AddRefs(reflowCmd), this,
+                                        nsIReflowCommand::StyleChanged);
+  if (NS_SUCCEEDED(rv)) 
+    shell->AppendReflowCommand(reflowCmd);
+
+  // redraw
   mRenderer.Redraw();
+
+  #if !ONLOAD_CALLED_TOO_EARLY
+  // onload handlers are called to early, so we have to do this code
+  // elsewhere. It really belongs HERE.
+    if ( aAttribute == nsHTMLAtoms::value ) {
+      CheckState newState = GetCurrentCheckState();
+      if ( newState == eMixed ) {
+        mHasOnceBeenInMixedState = PR_TRUE;
+      }
+  }
+
+#endif
+
+
   return NS_OK;
 }
 
@@ -158,6 +187,7 @@ nsTitledButtonFrame::nsTitledButtonFrame()
 	mTruncationType = Right;
 	mNeedsLayout = PR_TRUE;
 	mHasImage = PR_FALSE;
+  mHasOnceBeenInMixedState = PR_FALSE;
 }
 
 NS_METHOD
@@ -368,6 +398,8 @@ nsTitledButtonFrame::LayoutTitleAndImage(nsIPresContext& aPresContext,
 	 nscoord left_x   = rect.x;
 	 nscoord center_x   = rect.x + rect.width/2;
 	 nscoord center_y   = rect.y + rect.height/2;
+
+   mTruncatedTitle = "";
 
 	 // if we don't have a title
 	 if (mTitle.Length() == 0)
@@ -900,8 +932,136 @@ nsTitledButtonFrame::HandleEvent(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
+    switch (aEvent->message) {
+    case NS_KEY_PRESS:
+      if (NS_KEY_EVENT == aEvent->eventStructType) {
+        nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
+        if (NS_VK_SPACE == keyEvent->keyCode || NS_VK_RETURN == keyEvent->keyCode) {
+          MouseClicked(aPresContext);
+        }
+      }
+      break;
+
+    case NS_MOUSE_LEFT_CLICK:
+          MouseClicked(aPresContext);
+    break;
+  }
+
   return nsLeafFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
 }
+
+//
+// GetCurrentCheckState
+//
+// Looks in the DOM to find out what the value is. 0 is off, 1 is on, 2 is mixed.
+// This will default to "off" if no value is set in the DOM.
+//
+nsTitledButtonFrame::CheckState
+nsTitledButtonFrame::GetCurrentCheckState()
+{
+  nsString value;
+  CheckState outState = eOff;
+  nsresult res = mContent->GetAttribute ( kNameSpaceID_None, nsXULAtoms::toggled, value );
+
+  // if not se do not do toggling
+  if ( res != NS_CONTENT_ATTR_HAS_VALUE )
+    return eUnset;
+
+  outState = StringToCheckState(value);  
+   
+#if ONLOAD_CALLED_TOO_EARLY
+// this code really belongs in AttributeChanged, but is needed here because
+// setting the value in onload doesn't trip the AttributeChanged method on the frame
+  if ( outState == eMixed )
+    mHasOnceBeenInMixedState = PR_TRUE;
+#endif
+
+  return outState;
+} // GetCurrentCheckState
+
+//
+// SetCurrentCheckState
+//
+// Sets the value in the DOM. 0 is off, 1 is on, 2 is mixed.
+//
+void 
+nsTitledButtonFrame::SetCurrentCheckState(CheckState aState)
+{
+  nsString valueAsString;
+  CheckStateToString ( aState, valueAsString );
+  mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::toggled, valueAsString, PR_TRUE);
+} // SetCurrentCheckState
+
+//
+// MouseClicked
+//
+// handle when the mouse is clicked in the box. If the check is on or off, toggle it.
+// If the state is mixed, then set it to off. You can't ever get back to mixed.
+//
+void 
+nsTitledButtonFrame::MouseClicked ( const nsIPresContext & aPresContext) 
+{
+  // if we are not toggling then do nothing
+  CheckState oldState = GetCurrentCheckState();
+  if (oldState == eUnset)
+    return;
+
+  CheckState newState = eOn;
+  switch ( oldState ) {
+    case eOn:
+      newState = eOff;
+      break;
+      
+    case eMixed:
+      newState = eOn;
+      break;
+    
+    case eOff:
+      newState = mHasOnceBeenInMixedState ? eMixed: eOn;
+  }
+  SetCurrentCheckState(newState);
+}
+
+//
+// StringToCheckState
+//
+// Converts from a string to a CheckState enum
+//
+nsTitledButtonFrame::CheckState
+nsTitledButtonFrame :: StringToCheckState ( const nsString & aStateAsString )
+{
+  if ( aStateAsString == NS_STRING_TRUE )
+    return eOn;
+  else if ( aStateAsString == NS_STRING_FALSE )
+    return eOff;
+  
+  // not true and not false means mixed
+  return eMixed;
+  
+} // StringToCheckState
+
+//
+// CheckStateToString
+//
+// Converts from a CheckState to a string
+//
+void
+nsTitledButtonFrame :: CheckStateToString ( CheckState inState, nsString& outStateAsString )
+{
+  switch ( inState ) {
+    case eOn:
+      outStateAsString = NS_STRING_TRUE;
+	  break;
+
+    case eOff:
+      outStateAsString = NS_STRING_FALSE;
+      break;
+ 
+    case eMixed:
+      outStateAsString = "2";
+      break;
+  }
+} // CheckStateToString
 
 
 //

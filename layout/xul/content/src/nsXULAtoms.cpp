@@ -63,6 +63,13 @@ nsIAtom* nsXULAtoms::tabpanel;
 nsIAtom* nsXULAtoms::tabpage;
 nsIAtom* nsXULAtoms::deck;
 
+nsIAtom* nsXULAtoms::maxpos;
+nsIAtom* nsXULAtoms::curpos;
+nsIAtom* nsXULAtoms::scrollbarbutton;
+nsIAtom* nsXULAtoms::increment;
+nsIAtom* nsXULAtoms::pageincrement;
+nsIAtom* nsXULAtoms::thumb;
+nsIAtom* nsXULAtoms::toggled;
 
 nsIAtom* nsXULAtoms::widget;
 nsIAtom* nsXULAtoms::window;
@@ -120,6 +127,13 @@ void nsXULAtoms::AddrefAtoms() {
   tabpanel = NS_NewAtom("tabpanel");
   tabpage = NS_NewAtom("tabpage");
   tabbox = NS_NewAtom("tabbox");
+  maxpos = NS_NewAtom("maxpos");
+  curpos = NS_NewAtom("curpos");
+  scrollbarbutton = NS_NewAtom("scrollbarbutton");
+  increment = NS_NewAtom("increment");
+  pageincrement = NS_NewAtom("pageincrement");
+  thumb = NS_NewAtom("thumb");
+  toggled = NS_NewAtom("toggled");
 
 
     widget = NS_NewAtom("widget");
@@ -169,6 +183,13 @@ void nsXULAtoms::ReleaseAtoms() {
  	NS_RELEASE(tabbox);
  	NS_RELEASE(tabpanel);
  	NS_RELEASE(tabpage);
+  NS_RELEASE(maxpos);
+ 	NS_RELEASE(curpos);
+ 	NS_RELEASE(scrollbarbutton);
+ 	NS_RELEASE(increment);
+ 	NS_RELEASE(pageincrement);
+ 	NS_RELEASE(thumb);
+ 	NS_RELEASE(toggled);
 
 	NS_RELEASE(widget);
     NS_RELEASE(window);

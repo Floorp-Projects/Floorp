@@ -24,36 +24,26 @@
 #define nsScrollbarFrame_h__
 
 
-#include "nsLeafFrame.h"
-#include "prtypes.h"
-#include "nsIAtom.h"
-#include "nsCOMPtr.h"
-
-class nsString;
-
+#include "nsBoxFrame.h"
 
 nsresult NS_NewScrollbarFrame(nsIFrame** aResult) ;
 
-
-class nsScrollbarFrame : public nsLeafFrame
+class nsScrollbarFrame : public nsBoxFrame
 {
 public:
-  nsScrollbarFrame();
+  nsScrollbarFrame() {}
 
     // nsIFrame overrides
   NS_IMETHOD GetFrameName(nsString& aResult) const {
     return MakeFrameName("ScrollbarFrame", aResult);
   }
-  NS_IMETHOD Paint(nsIPresContext& aPresContext,
-                   nsIRenderingContext& aRenderingContext,
-                   const nsRect& aDirtyRect,
-                   nsFramePaintLayer aWhichLayer);
-  
-protected:
 
-  virtual void GetDesiredSize(nsIPresContext* aPresContext,
-                              const nsHTMLReflowState& aReflowState,
-                              nsHTMLReflowMetrics& aDesiredSize) ;
+ 
+  NS_IMETHOD AttributeChanged(nsIPresContext* aPresContext,
+                              nsIContent* aChild,
+                              nsIAtom* aAttribute,
+                              PRInt32 aHint);
+
 
 }; // class nsScrollbarFrame
 
