@@ -541,7 +541,7 @@ function onParagraphFormatChange(paraMenuList, commandID)
     for (var i=0; i < menuItems.length; i++)
     {
       var menuItem = menuItems.item(i);
-      if (menuItem.value == state)
+      if ("value" in menuItem && menuItem.value == state)
       {
         paraMenuList.selectedItem = menuItem;
         break;
@@ -577,7 +577,7 @@ function onFontFaceChange(fontFaceMenuList, commandID)
     for (var i=0; i < menuItems.length; i++)
     {
       var menuItem = menuItems.item(i);
-      if (menuItem.getAttribute("label") && (menuItem.value.toLowerCase() == state.toLowerCase()))
+      if (menuItem.getAttribute("label") && ("value" in menuItem && menuItem.value.toLowerCase() == state.toLowerCase()))
       {
         fontFaceMenuList.selectedItem = menuItem;
         break;
@@ -1128,7 +1128,14 @@ function SetEditMode(mode)
 
       window._content.focus();
     }
+    ResetWindowTitleWithFilename();
   }
+}
+
+function ResetWindowTitleWithFilename()
+{
+  // Calling this resets the "Title [filename]" that we show on window caption
+  window.editorShell.SetDocumentTitle(window.editorShell.GetDocumentTitle());
 }
 
 function CancelHTMLSource()
@@ -1136,6 +1143,8 @@ function CancelHTMLSource()
   // Don't convert source text back into the DOM document
   gSourceContentWindow.value = "";
   SetDisplayMode(PreviousNonSourceDisplayMode);
+
+  ResetWindowTitleWithFilename();
 }
 
 
