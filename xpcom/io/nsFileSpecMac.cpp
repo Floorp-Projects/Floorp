@@ -1023,7 +1023,7 @@ void nsFileSpec::RecursiveCopy(nsFileSpec newDir) const
 			newDir.CreateDirectory();
 		}
 
-		filePath.Copy(newDir);
+		filePath.CopyToDir(newDir);
 	}
 } // nsFileSpec::RecursiveCopy
 
@@ -1046,7 +1046,7 @@ nsresult nsFileSpec::Rename(const char* inNewName)
 } // nsFileSpec::Rename
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Copy(const nsFileSpec& newParentDir) const
+nsresult nsFileSpec::CopyToDir(const nsFileSpec& newParentDir) const
 //----------------------------------------------------------------------------------------
 {
 	// We can only copy into a directory, and (for now) can not copy entire directories
@@ -1063,10 +1063,10 @@ nsresult nsFileSpec::Copy(const nsFileSpec& newParentDir) const
 
 	return rv;
 
-} // nsFileSpec::Copy
+} // nsFileSpec::CopyToDir
 
 //----------------------------------------------------------------------------------------
-nsresult nsFileSpec::Move(const nsFileSpec& newParentDir) 
+nsresult nsFileSpec::MoveToDir(const nsFileSpec& newParentDir) 
 //----------------------------------------------------------------------------------------
 {
 	// We can only move into a directory
@@ -1085,7 +1085,7 @@ nsresult nsFileSpec::Move(const nsFileSpec& newParentDir)
 		nsCRT::free(leafName);
 	}
 	return result;
-} // nsFileSpec::Move
+} // nsFileSpec::MoveToDir
 
 //----------------------------------------------------------------------------------------
 nsresult nsFileSpec::Execute(const char* /*args - how can this be cross-platform?  problem! */ ) const

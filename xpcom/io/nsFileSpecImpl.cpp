@@ -391,14 +391,14 @@ NS_IMETHODIMP nsFileSpecImpl::Rename(const char *newLeafName)
 NS_IMETHODIMP nsFileSpecImpl::CopyToDir(const nsIFileSpec *newParentDir)
 //----------------------------------------------------------------------------------------
 {
-	return mFileSpec.Copy(FILESPEC(newParentDir));
+	return mFileSpec.CopyToDir(FILESPEC(newParentDir));
 }
 
 //----------------------------------------------------------------------------------------
 NS_IMETHODIMP nsFileSpecImpl::MoveToDir(const nsIFileSpec *newParentDir)
 //----------------------------------------------------------------------------------------
 {
-	return mFileSpec.Move(FILESPEC(newParentDir));
+	return mFileSpec.MoveToDir(FILESPEC(newParentDir));
 }
 
 //----------------------------------------------------------------------------------------

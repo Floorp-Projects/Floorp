@@ -510,8 +510,8 @@ class NS_COM nsFileSpec
                                     const nsAutoCString newName(inNewName);
                                     return Rename(newName);
                                 }
-        nsresult                Copy(const nsFileSpec& inNewParentDirectory) const;
-        nsresult                Move(const nsFileSpec& inNewParentDirectory);
+        nsresult                CopyToDir(const nsFileSpec& inNewParentDirectory) const;
+        nsresult                MoveToDir(const nsFileSpec& inNewParentDirectory);
         nsresult                Execute(const char* args) const;
         nsresult                Execute(const nsString& args) const
                                 {
