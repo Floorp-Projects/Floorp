@@ -205,6 +205,7 @@ protected:
   PRBool ParseCue(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseCursor(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseFont(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
+  PRBool ParseFontWeight(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseFamily(PRInt32& aErrorCode, nsCSSValue& aValue);
   PRBool ParseListStyle(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
   PRBool ParseMargin(PRInt32& aErrorCode, nsICSSDeclaration* aDeclaration, PRInt32& aChangeHint);
@@ -1820,6 +1821,16 @@ PRBool CSSParserImpl::ParseColor(PRInt32& aErrorCode, nsCSSValue& aValue)
         aValue.SetStringValue(tk->mIdent, eCSSUnit_String);
         return PR_TRUE;
       }
+      else {
+        nsCSSKeyword keyword = nsCSSKeywords::LookupKeyword(tk->mIdent);
+        if (eCSSKeyword_UNKNOWN < keyword) { // known keyword
+          PRInt32 index = SearchKeywordTable(keyword, nsCSSProps::kColorKTable);
+          if (0 < index) {
+            aValue.SetIntValue(nsCSSProps::kColorKTable[index], eCSSUnit_Enumerated);
+            return PR_TRUE;
+          }
+        }
+      }
       break;
     case eCSSToken_Function:
       if (mToken.mIdent.EqualsIgnoreCase("rgb")) {
@@ -2861,8 +2872,7 @@ PRBool CSSParserImpl::ParseSingleValueProperty(PRInt32& aErrorCode,
     return ParseVariant(aErrorCode, aValue, VARIANT_HMK,
                         nsCSSProps::kFontVariantKTable);
   case eCSSProperty_font_weight:
-    return ParseVariant(aErrorCode, aValue, VARIANT_HMKI,
-                        nsCSSProps::kFontWeightKTable);
+    return ParseFontWeight(aErrorCode, aValue);
   case eCSSProperty_letter_spacing:
   case eCSSProperty_word_spacing:
     return ParseVariant(aErrorCode, aValue, VARIANT_HL | VARIANT_NORMAL, nsnull);
@@ -3743,6 +3753,19 @@ PRBool CSSParserImpl::ParseFont(PRInt32& aErrorCode, nsICSSDeclaration* aDeclara
       AppendValue(aDeclaration, eCSSProperty_font_size_adjust, nsCSSValue(eCSSUnit_None), aChangeHint);
       return PR_TRUE;
     }
+  }
+  return PR_FALSE;
+}
+
+PRBool CSSParserImpl::ParseFontWeight(PRInt32& aErrorCode, nsCSSValue& aValue)
+{
+  if (ParseVariant(aErrorCode, aValue, VARIANT_HMKI, nsCSSProps::kFontWeightKTable)) {
+    if (eCSSUnit_Integer == aValue.GetUnit()) { // ensure unit value
+      PRInt32 intValue = aValue.GetIntValue();
+      return ((100 <= intValue) && (intValue <= 900) &&
+              (0 == (intValue % 100)));
+    }
+    return PR_TRUE;
   }
   return PR_FALSE;
 }
