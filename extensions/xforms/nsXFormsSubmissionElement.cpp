@@ -58,6 +58,7 @@
 #include "nsIDOMEventTarget.h"
 #include "nsIDOMEventListener.h"
 #include "nsIDOM3Node.h"
+#include "nsIDOMNodeList.h"
 #include "nsIDOMXMLDocument.h"
 #include "nsIDOMXPathResult.h"
 #include "nsIDOMSerializer.h"
@@ -445,6 +446,16 @@ nsXFormsSubmissionElement::LoadReplaceAll(nsIChannel *channel)
   return docshell->LoadStream(mPipeIn, uri, contentType, contentCharset, nsnull);
 }
 
+PRBool
+nsXFormsSubmissionElement::CheckChildren(nsIDOMNode *aNode) {
+  PRBool isValid = PR_FALSE;
+
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  model->ValidateInstanceDataForSubmission(aNode, &isValid);
+
+  return isValid;
+}
+
 nsresult
 nsXFormsSubmissionElement::Submit()
 {
@@ -456,6 +467,12 @@ nsXFormsSubmissionElement::Submit()
   NS_ENSURE_STATE(!mSubmissionActive);
   mSubmissionActive = PR_TRUE;
 
+  // XXX seems to be required by 
+  // http://www.w3.org/TR/2003/REC-xforms-20031014/slice4.html#evt-revalidate
+  // but is it really needed for us?
+  nsCOMPtr<nsIModelElementPrivate> model = GetModel();
+  model->Recalculate();
+  model->Revalidate();
 
   // 2. get selected node from the instance data (use xpath, gives us node
   //    iterator)
@@ -468,6 +485,10 @@ nsXFormsSubmissionElement::Submit()
   //    serialization)
 
   // XXX call nsISchemaValidator::validate on each node
+
+  PRBool isValid = CheckChildren(data);
+  if (!isValid)
+    return NS_ERROR_FAILURE;
 
 
   // 4. serialize instance data
