@@ -67,8 +67,8 @@ public:
 
 /* Generic status codes for OnStopBinding */
 #define NS_BINDING_SUCCEEDED    NS_OK
-#define NS_BINDING_FAILED       (-1)
-#define NS_BINDING_ABORTED      (-2)
+#define NS_BINDING_FAILED       ((nsresult)-1)
+#define NS_BINDING_ABORTED      ((nsresult)-2)
 
 
 
