@@ -25,7 +25,7 @@ include <$(DEPTH)/config/config.mak>
 DIRS = nss \
 !if defined(BUILD_PSM2)
 	manager \
-!else if defined(BUILD_PSM)
+!else
 	psm\lib\nlslayer \
 	psm \
 !endif
