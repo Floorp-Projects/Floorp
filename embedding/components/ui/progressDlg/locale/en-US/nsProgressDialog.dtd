@@ -19,7 +19,8 @@
    - the Initial Developer. All Rights Reserved.
    -
    - Contributor(s):
-   -   Bill Law  <law@netscape.com>
+   -   Bill Law       <law@netscape.com>
+   -   Aaron Kaluszka <ask@swva.net>
    -
    - Alternatively, the contents of this file may be used under the terms of
    - either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -51,6 +52,10 @@
 <!ENTITY openingTitle      "#2&#037; of #1 Completed">
 <!ENTITY openingSource     "Opening From:">
 <!ENTITY openingTarget     "With:">
+
+<!-- This is used when the download percentage is unknown -->
+<!ENTITY unknownSavingTitle  "Saving #1">
+<!ENTITY unknownOpeningTitle "Opening #1">
 
 <!-- Labels on other fields -->
 <!ENTITY status      "Status:"> 
