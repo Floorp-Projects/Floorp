@@ -274,6 +274,10 @@ nsNNTPProtocol::~nsNNTPProtocol()
 	if (m_offlineNewsState)
 		NS_RELEASE(m_offlineNewsState);
 
+	NS_IF_RELEASE(m_outputStream); 
+	NS_IF_RELEASE(m_outputConsumer);
+	NS_IF_RELEASE(m_transport);
+
 	// free our local state
 }
 
@@ -360,7 +364,6 @@ void nsNNTPProtocol::Initialize(nsIURL * aURL, nsITransport * transportLayer)
 	m_articleNumber = 0;
 	m_originalContentLength = 0;
 	m_urlInProgress = PR_FALSE;
-	m_socketIsOpen = PR_FALSE;
 }
 
 PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
@@ -644,12 +647,13 @@ PRInt32 nsNNTPProtocol::LoadURL(nsIURL * aURL)
   else 
   {
 	  // our first state is a process state so drive the state machine...
-	  if (m_socketIsOpen == PR_FALSE)
+	  PRBool transportOpen = PR_FALSE;
+	  m_transport->IsTransportOpen(&transportOpen);
+	  if (transportOpen == PR_FALSE)
 	  {
-		  m_transport->LoadURL(m_runningURL);
-		  m_socketIsOpen = PR_TRUE; // we only want to kick off the socket the first time we make the connection
+		  m_transport->Open(m_runningURL);  // opening the url will cause to get notified when the connection is established
 	  }
-	  else  // the connection is already open so just process it...
+	  else  // the connection is already open so we should begin processing our new url...
 		 status = ProcessNewsState(m_runningURL, nsnull, 0); 
 	  return status;
   }
@@ -4483,14 +4487,6 @@ PRInt32 nsNNTPProtocol::CloseConnection()
 	PR_FREEIF (m_cancelID);
 	PR_FREEIF (m_cancelFromHdr);
 	PR_FREEIF (m_cancelNewsgroups); 
-	PR_FREEIF (m_cancelDistribution);
-
-//    if(cd->destroy_graph_progress)
-//      FE_GraphProgressDestroy(ce->window_id, 
-//                             ce->URL_s, 
-//                             cd->original_content_length,
-//		         			   ce->bytes_received);
-      
-
+	PR_FREEIF (m_cancelDistribution);  
 	return(-1); /* all done */
 }

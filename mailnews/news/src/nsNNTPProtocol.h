@@ -255,9 +255,6 @@ private:
 	char	 *m_commandSpecificData;
 	char	 *m_searchData;
 
-	PRBool	  m_socketIsOpen; // mscott: we should look into keeping this state in the nsSocketTransport...
-							  // I'm using it to make sure I open the socket the first time a URL is loaded into the connection
-
 	PRInt32   m_originalContentLength; /* the content length at the time of calling graph progress */
 	
 	PRInt32	  ProcessNewsState(nsIURL * url, nsIInputStream * inputStream, PRUint32 length);
