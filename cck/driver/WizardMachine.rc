@@ -130,17 +130,21 @@ BEGIN
     PUSHBUTTON      "Help",IDC_BUTTON1,209,250,50,14
 END
 
-IDD_NEWCONFIG_DIALOG DIALOG DISCARDABLE  0, 0, 187, 95
+IDD_NEWCONFIG_DIALOG DIALOG DISCARDABLE  0, 0, 265, 150
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Create New Configuration"
 FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "Create",IDOK,75,74,50,14
-    PUSHBUTTON      "Cancel",IDCANCEL,130,74,50,14
+    DEFPUSHBUTTON   "Create",IDOK,153,130,50,14
+    PUSHBUTTON      "Cancel",IDCANCEL,208,130,50,14
     LTEXT           "Name of new configuration:",IDC_STATIC,7,7,173,13
-    EDITTEXT        IDC_EDIT1,7,20,152,13,ES_AUTOHSCROLL
-    LTEXT           "The CCK wizard creates a new directory in which to store the configuration.",
-                    IDC_STATIC,7,39,173,17
+    EDITTEXT        IDC_EDIT1,7,20,218,13,ES_AUTOHSCROLL
+    LTEXT           "The CCK tool creates a new configuration directory in C:\\CCK\\Configs. Within your new configuration directory, the CCK tool creates a \\Workspace directory, for example, C:\\CCK\\Configs\\CustomBuild01\\Workspace.",
+                    IDC_STATIC,7,39,253,26
+    LTEXT           "You can use the Workspace directory as a convenient place in which to store your custom files.",
+                    IDC_STATIC,7,69,248,17
+    LTEXT           "If you haven't already done so, you should now create your custom files. For information on creating custom files, see the CCK online help or the CCK online documentation.",
+                    IDC_STATIC,7,92,251,27
 END
 
 IDD_DIALOG112 DIALOG DISCARDABLE  0, 0, 187, 95
@@ -208,7 +212,7 @@ END
 IDD_HELP_DLG DIALOGEX 0, 0, 336, 271
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Close",IDCANCEL,279,250,50,14
     EDITTEXT        IDC_EDIT1,15,14,296,202,ES_MULTILINE | ES_READONLY | 
@@ -229,7 +233,7 @@ END
 IDD_WIZ_HELP DIALOGEX 0, 0, 336, 271
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
 CAPTION "Dialog"
-FONT 8, "MS Sans Serif"
+FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     PUSHBUTTON      "Cancel",IDCANCEL,279,250,50,14
     EDITTEXT        ID_HELP_EDIT,18,16,287,125,ES_MULTILINE | ES_AUTOVSCROLL | 
@@ -323,9 +327,9 @@ BEGIN
     IDD_NEWCONFIG_DIALOG, DIALOG
     BEGIN
         LEFTMARGIN, 7
-        RIGHTMARGIN, 180
+        RIGHTMARGIN, 258
         TOPMARGIN, 7
-        BOTTOMMARGIN, 88
+        BOTTOMMARGIN, 143
     END
 
     IDD_DIALOG112, DIALOG
