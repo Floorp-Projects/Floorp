@@ -68,7 +68,7 @@ public:
   virtual ~gfxImageFrame();
 
 protected:
-  nsSize mSize;
+  nsIntSize mSize;
 
 private:
   /* private members */
@@ -80,7 +80,7 @@ private:
   gfx_format   mFormat;
 
   PRInt32 mTimeout; // -1 means display forever
-  nsPoint mOffset;
+  nsIntPoint mOffset;
 
   gfx_color mBackgroundColor;
 
