@@ -40,7 +40,13 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= uconv
 
-DIRS		= idl public util ucvja ucvcn ucvlatin ucvtw ucvtw2 ucvko ucvibm native src
+DIRS		= idl public util ucvja ucvcn ucvlatin ucvtw ucvtw2 ucvko ucvibm
+
+ifdef MOZ_USE_NATIVE_UCONV
+DIRS		+= native
+endif
+
+DIRS		+= src
 
 ifdef MOZ_MATHML
 DIRS           += ucvmath

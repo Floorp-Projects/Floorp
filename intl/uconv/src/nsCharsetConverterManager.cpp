@@ -62,7 +62,10 @@
 #include "nsIUnicodeDecodeHelper.h"
 #include "nsIUnicodeEncodeHelper.h"
 #include "nsCharsetConverterManager.h"
+
+#ifdef MOZ_USE_NATIVE_UCONV
 #include "nsNativeUConvService.h"
+#endif
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kCharsetAliasCID, NS_CHARSETALIAS_CID);
