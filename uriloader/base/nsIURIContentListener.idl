@@ -26,6 +26,7 @@
 #include "nsISupports.idl"
 interface nsIProtocolHandler;
 interface nsIStreamListener;
+interface nsIChannel;
 
 [scriptable, uuid(94928AB3-8B63-11d3-989D-001083010E9B)]
 interface nsIURIContentListener : nsISupports
@@ -47,9 +48,14 @@ interface nsIURIContentListener : nsISupports
      aStreamListener --> the content viewer the content should be displayed in
                         You should return null for this out parameter if you do
                         not want to handle this content type.
+	 aAbortProcess --> If you want to handle the content yourself and you don't
+					   want the dispatcher to do anything else, return TRUE for
+					   this parameter. 
   */
 
    void doContent(in string aContentType, in string aCommand, 
                   in string aWindowTarget, 
-                  out nsIStreamListener aContentHandler);
+				  in nsIChannel aOpenedChannel,
+                  out nsIStreamListener aContentHandler,
+				  out boolean aAbortProcess);
 };
