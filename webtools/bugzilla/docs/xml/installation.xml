@@ -1898,58 +1898,6 @@ system ("C:\\perl\\bin\\perl", "processmail", @ARGLIST);
           </para>
         </step>
 
-        <step>
-          <para>Add 
-          <function>binmode()</function>
-
-          calls so attachments will work (
-          <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=62000">bug
-          62000</ulink>
-
-          ).</para>
-
-          <para>Because Microsoft Windows based systems handle binary files
-          different than Unix based systems, you need to add the following
-          lines to 
-          <filename>createattachment.cgi</filename>
-
-          and 
-          <filename>showattachment.cgi</filename>
-
-          before the 
-          <function>require 'CGI.pl';</function>
-
-          line.</para>
-
-          <para>
-            <programlisting>
-<![CDATA[
-binmode(STDIN);
-binmode(STDOUT);
-]]>
-            </programlisting>
-          </para>
-
-          <note>
-            <para>According to 
-            <ulink url="http://bugzilla.mozilla.org/show_bug.cgi?id=62000">
-            bug 62000</ulink>
-
-            , the perl documentation says that you should always use 
-            <function>binmode()</function>
-
-            when dealing with binary files, but never when dealing with text
-            files. That seems to suggest that rather than arbitrarily putting
-            
-            <function>binmode()</function>
-
-            at the beginning of the attachment files, there should be logic
-            to determine if 
-            <function>binmode()</function>
-
-            is needed or not.</para>
-          </note>
-        </step>
       </procedure>
 
       <tip>
