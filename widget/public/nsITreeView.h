@@ -21,6 +21,8 @@
 
 #include "nsGUIEvent.h"
 
+class nsIContent;
+
 // {FC41CD61-796E-11d2-BF86-00105A1B0627}
 #define NS_ITREEVIEW_IID      \
 { 0xfc41cd61, 0x796e, 0x11d2, { 0xbf, 0x86, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
@@ -29,6 +31,8 @@ class nsITreeView : public nsISupports
 {
 
 public:
+	NS_IMETHOD SetContentRoot(nsIContent* pContent) = 0;
+
 	NS_IMETHOD_(nsEventStatus) HandleEvent(nsGUIEvent *aEvent) = 0;
 };
 
