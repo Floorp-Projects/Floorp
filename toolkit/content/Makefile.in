@@ -25,6 +25,8 @@ topsrcdir = @top_srcdir@
 srcdir    = @srcdir@
 VPATH     = @srcdir@
 
+CHROME_DEPS = buildconfig.html
+
 include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
