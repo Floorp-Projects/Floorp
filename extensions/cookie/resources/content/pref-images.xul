@@ -50,7 +50,7 @@
 
     imageBlockingEnabled();
 
-    var enabled = document.getElementById("networkImageBehaviour").data != "2";
+    var enabled = document.getElementById("networkImageBehaviour").value != "2";
     setWarnAboutImagesEnabled(enabled);
   }
 
@@ -82,36 +82,35 @@
     <radiogroup id="networkImageBehaviour" orient="vertical" autostretch="never"
                 pref="true" preftype="int" prefstring="network.image.imageBehavior"
                 prefattribute="value">
-       <radio group="networkImageBehaviour" value="2" label="&disableImages.label;"
-              accesskey="&disableImages.accesskey;"
-              oncommand="setWarnAboutImagesEnabled(false);"/>
-       <radio group="networkImageBehaviour" value="1" label="&accOrgImagesRadio.label;"
-              accesskey="&accOrgImagesRadio.accesskey;"
-              id="accOrgImages" observes="haveImageBlocking"
-              oncommand="setWarnAboutImagesEnabled(true);"/>
-       <radio group="networkImageBehaviour" value="0" label="&accAllImagesRadio.label;"
-              accesskey="&accAllImagesRadio.accesskey;"
-              oncommand="setWarnAboutImagesEnabled(true);"/>
+      <radio group="networkImageBehaviour" value="2" label="&disableImages.label;"
+             accesskey="&disableImages.accesskey;"
+             oncommand="setWarnAboutImagesEnabled(false);"/>
+      <radio group="networkImageBehaviour" value="1" label="&accOrgImagesRadio.label;"
+             accesskey="&accOrgImagesRadio.accesskey;"
+             id="accOrgImages" observes="haveImageBlocking"
+             oncommand="setWarnAboutImagesEnabled(true);"/>
+      <radio group="networkImageBehaviour" value="0" label="&accAllImagesRadio.label;"
+             accesskey="&accAllImagesRadio.accesskey;"
+             oncommand="setWarnAboutImagesEnabled(true);"/>
     </radiogroup>
 
     <separator observes="haveImageBlocking"/>
 
-    <box autostretch="never">    
-       <checkbox id="networkImageWarnAboutImages" label="&warnAboutImages.label;"
-                 accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
-                 pref="true" preftype="bool" prefattribute="checked"
-                 prefstring="network.image.warnAboutImages"/>
+    <box autostretch="never">
+      <checkbox id="networkImageWarnAboutImages" label="&warnAboutImages.label;"
+                accesskey="&warnAboutImages.accesskey;" observes="haveImageBlocking"
+                pref="true" preftype="bool" prefattribute="checked"
+                prefstring="network.image.warnAboutImages"/>
     </box>
 
-     <separator observes="haveImageBlocking"/>
- 
+    <separator observes="haveImageBlocking"/>
+
     <box autostretch="never" halign="right">
-      <button class="dialog" id="viewImages" lavel="&viewImages.label;"
+      <button class="dialog" id="viewImages" label="&viewImages.label;"
               accesskey="&viewImages.accesskey;" oncommand="viewImages();"
               observes="haveImageBlocking"/>
     </box>
 
   </titledbox>
-
 
 </window>

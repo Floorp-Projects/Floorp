@@ -44,7 +44,7 @@
   {
     parent.initPanel('chrome://cookie/content/pref-cookies.xul');
 
-    var enabled = document.getElementById("networkCookieBehaviour").data != "2";
+    var enabled = document.getElementById("networkCookieBehaviour").value != "2";
     setWarnAboutCookiesEnabled(enabled);
   }
 
