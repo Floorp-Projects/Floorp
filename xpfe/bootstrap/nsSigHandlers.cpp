@@ -145,7 +145,7 @@ void InstallUnixSignalHandlers(const char *ProgramName)
   if (text) 
   {
     long m = atoi(text);
-    
+    m *= (1024*1024);    
     struct rlimit r;
     r.rlim_cur = m;
     r.rlim_max = m;
