@@ -1848,17 +1848,6 @@ static PRStatus pt_Bind(PRFileDesc *fd, const PRNetAddr *addr)
             return PR_FAILURE;
         }
     }
-    else
-    {
-        rv = setsockopt(
-            fd->secret->md.osfd, SOL_SOCKET, SO_REUSEADDR,
-            (_PRSockOptVal_t) &one, sizeof(one));
-        if (rv == -1)
-        {
-            pt_MapError(_PR_MD_MAP_SETSOCKOPT_ERROR, errno);
-            return PR_FAILURE;
-        }
-    }
 
     addr_len = PR_NETADDR_SIZE(addr);
 #ifdef _PR_HAVE_SOCKADDR_LEN

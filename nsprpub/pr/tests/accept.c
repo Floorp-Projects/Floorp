@@ -75,6 +75,18 @@ static PRInt32 count = 1;
 static PRFileDesc *output;
 static PRNetAddr serverAddr;
 static PRThreadScope thread_scope = PR_LOCAL_THREAD;
+static PRInt32 clientCommand;
+static PRInt32 iterations;
+static PRStatus rv;
+static PRFileDesc *listenSock;
+static PRFileDesc *clientSock = NULL;
+static PRNetAddr listenAddr;
+static PRNetAddr clientAddr;
+static PRThread *clientThread;
+static PRNetAddr *raddr;
+static char buf[4096 + 64];
+static PRInt32 status;
+static PRInt32 bytesRead;
 
 PRIntn failed_already=0;
 PRIntn debug_mode;
@@ -111,7 +123,7 @@ ClientThread(void *_action)
     PRFileDesc *sock = NULL;
 
     serverAddr.inet.family = PR_AF_INET;
-    serverAddr.inet.port = PR_htons(BASE_PORT);
+    serverAddr.inet.port = listenAddr.inet.port;
     serverAddr.inet.ip = PR_htonl(PR_INADDR_LOOPBACK);
 
     for (; iterations--;) {
@@ -171,19 +183,6 @@ ErrorExit:
         PR_Close(sock);
 }
 
-
-static  PRInt32 clientCommand;
-static  PRInt32 iterations;
-static  PRStatus rv;
-static     PRFileDesc *listenSock;
-static  PRFileDesc *clientSock = NULL;
-static  PRNetAddr listenAddr;
-static  PRNetAddr clientAddr;
-static  PRThread *clientThread;
-static  PRNetAddr *raddr;
-static  char buf[4096 + 64];
-static  PRInt32 status;
-static  PRInt32 bytesRead;
 
 static void 
 RunTest(PRInt32 acceptType, PRInt32 clientAction)

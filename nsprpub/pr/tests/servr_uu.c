@@ -222,12 +222,23 @@ PRFileDesc *
 ServerSetup(void)
 {
     PRFileDesc *listenSocket;
+    PRSocketOptionData sockOpt;
     PRNetAddr serverAddr;
     PRThread *WorkerThread;
 
     if ( (listenSocket = PR_NewTCPSocket()) == NULL) {
         if (debug_mode) printf("\tServer error creating listen socket\n");
 		else failed_already=1;
+        return NULL;
+    }
+
+    sockOpt.option = PR_SockOpt_Reuseaddr;
+    sockOpt.value.reuse_addr = PR_TRUE;
+    if ( PR_SetSocketOption(listenSocket, &sockOpt) == PR_FAILURE) {
+        if (debug_mode) printf("\tServer error setting socket option: OS error %d\n",
+                PR_GetOSError());
+		else failed_already=1;
+        PR_Close(listenSocket);
         return NULL;
     }
 
