@@ -124,10 +124,6 @@ protected:
 	// used for auth news
  	char 		*mGroupUsername;
 	char		*mGroupPassword;
-
-private:
-    nsresult SetRememberedPref(const char *prefName, const char *prefValue);
-    nsresult GetRememberedPref(const char *prefName, char **prefValue);
 };
 
 #endif // nsMsgNewsFolder_h__

@@ -34,7 +34,7 @@ function doit() {
     }
     if (news) {
 	try {
-		document.getElementById('result').value =  news.ConvertNewsgroupsString(str);
+		document.getElementById('result').value =  news.convertNewsgroupsString(str);
 	}
 	catch (ex) {
 		dump(ex + "\n");

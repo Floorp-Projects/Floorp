@@ -23,10 +23,16 @@
 #include "nsISupports.idl"
 #include "nsIMsgFolder.idl"
 
+interface nsIMsgWindow;
+
 [scriptable, uuid(3716abe4-f6d4-11d2-86d5-004005263078)]
 interface nsIMsgNewsFolder : nsISupports {
   attribute string unreadSetStr;
   attribute string groupUsername;
   attribute string groupPassword;
+    
+  string getGroupPasswordWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
+  string getGroupUsernameWithUI(in wstring aPromptString, in wstring aPromptTitle, in nsIMsgWindow aMsgWindow);
+
   nsIMsgFolder addNewsgroup(in string newsgroupName, in string setStr);
 };

@@ -82,6 +82,15 @@
 #include "nsIRDFResource.h"
 #include "nsRDFCID.h"
 
+#include "nsIMsgWindow.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsINetPrompt.h"
+
+#ifdef DEBUG_sspitzer
+#define DEBUG_NEWS 1
+#endif
+
 #define DEFAULT_NEWS_CHUNK_SIZE -1
 
 // ***jt -- the following were pirated from xpcom/io/nsByteBufferInputStream
@@ -123,8 +132,7 @@ protected:
     PRUint32    mLength;
 };
 
-/*#define CACHE_NEWSGRP_PASSWORD*/
-
+// todo:  get rid of this
 extern "C"
 {
 char * NET_SACopy (char **destination, const char *source);
@@ -294,7 +302,6 @@ char *stateLabels[] = {
    (the object that is going to manage the NNTP connections. it would keep track of the connection list.)
 */
 /* PRIVATE XP_List * nntp_connection_list=0; */
-static PRBool net_news_last_username_probably_valid=PR_FALSE;
 PRInt32 net_NewsChunkSize=DEFAULT_NEWS_CHUNK_SIZE; 
 /* PRIVATE PRInt32 net_news_timeout = 170; */
 /* seconds that an idle NNTP conn can live */
@@ -433,7 +440,7 @@ nsDummyBufferStream::QueryInterface(REFNSIID aIID, void** result)
     return NS_ERROR_NO_INTERFACE;
 }
 
-nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL)
+nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow)
     : nsMsgProtocol(aURL, nsnull)
 {
 	m_messageID = nsnull;
@@ -441,6 +448,10 @@ nsNNTPProtocol::nsNNTPProtocol(nsIURI * aURL)
 	m_cancelNewsgroups = nsnull;
 	m_cancelDistribution = nsnull;
 	m_cancelID = nsnull;
+
+    if (aMsgWindow) {
+        m_msgWindow = aMsgWindow;
+    }
 }
 
 nsNNTPProtocol::~nsNNTPProtocol()
@@ -545,8 +556,37 @@ nsresult nsNNTPProtocol::Initialize(void)
 	return NS_OK;
 }
 
+nsresult
+nsNNTPProtocol::InitializeNewsFolderFromUri(const char *uri)
+{
+        nsresult rv;
+
+        NS_ENSURE_ARG_POINTER(uri);
+
+#ifdef DEBUG_NEWS
+        printf("InitializeNewsFolderFromUri(%s)\n",uri);
+#endif
+
+        NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
+        if (NS_FAILED(rv)) return(rv);
+
+        nsCOMPtr<nsIRDFResource> resource;
+        rv = rdf->GetResource(uri, getter_AddRefs(resource));
+        if (NS_FAILED(rv)) return(rv);
+
+        m_newsFolder = do_QueryInterface(resource, &rv);
+        if (NS_FAILED(rv)) return rv;
+
+        if (!m_newsFolder) return NS_ERROR_FAILURE;
+
+        return NS_OK;
+}
+
+
 nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 {
+  NS_ENSURE_ARG_POINTER(aURL);
+
   PRBool bVal = PR_FALSE;
   nsXPIDLCString group;
   char *commandSpecificData = nsnull;
@@ -555,32 +595,25 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
   nsresult rv = NS_OK;
 
   m_articleNumber = -1;
- if (aURL)
-  {
-	  rv = aURL->GetHost(getter_Copies(m_hostName));
-      if (NS_FAILED(rv)) return rv;
-      rv = aURL->GetPreHost(getter_Copies(m_userName));
-      if (NS_FAILED(rv)) return rv;
-      
-	  m_runningURL = do_QueryInterface(aURL, &rv);
-	  if (NS_FAILED(rv)) return rv;
-	  m_runningURL->GetNewsAction(&m_newsAction);
+  rv = aURL->GetHost(getter_Copies(m_hostName));
+  if (NS_FAILED(rv)) return rv;
+  rv = aURL->GetPreHost(getter_Copies(m_userName));
+  if (NS_FAILED(rv)) return rv;
 
-	  // okay, now fill in our event sinks...Note that each getter ref counts before
-	  // it returns the interface to us...we'll release when we are done
-	  m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
-	  m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
-	  m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
-	  m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
-	  m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
-  }
-  else
-	  rv = NS_ERROR_FAILURE;
+  m_runningURL = do_QueryInterface(aURL, &rv);
+  if (NS_FAILED(rv)) return rv;
+  m_runningURL->GetNewsAction(&m_newsAction);
 
-  if (NS_FAILED(rv))
-  {
-	  goto FAIL;
-  }
+  // okay, now fill in our event sinks...Note that each getter ref counts before
+  // it returns the interface to us...we'll release when we are done
+  m_runningURL->GetNewsgroupList(getter_AddRefs(m_newsgroupList));
+  m_runningURL->GetNntpArticleList(getter_AddRefs(m_articleList));
+  m_runningURL->GetNntpHost(getter_AddRefs(m_newsHost));
+  m_runningURL->GetNewsgroup(getter_AddRefs(m_newsgroup));
+  m_runningURL->GetOfflineNewsState(getter_AddRefs(m_offlineNewsState));
+
+
+  if (NS_FAILED(rv)) goto FAIL;
 
   PR_FREEIF(m_messageID);
   m_messageID = nsnull;
@@ -711,15 +744,14 @@ nsresult nsNNTPProtocol::LoadUrl(nsIURI * aURL, nsISupports * aConsumer)
 		 news:/GROUP
 		 news://HOST/GROUP
 	   */
-#ifdef UNREADY_CODE
-	  if (ce->window_id->type != MWContextNews && ce->window_id->type != MWContextNewsMsg 
-		  && ce->window_id->type != MWContextMailMsg
-		  && ce->window_id->type != MWContextMail && ce->window_id->type != MWContextMailNewsProgress)
-		{
-		  *status = -1;
-		  goto FAIL;
-		}
-#endif
+
+      nsXPIDLCString newsgroupURI;
+      rv = aURL->GetSpec(getter_Copies(newsgroupURI));
+      if (NS_FAILED(rv)) return(rv);
+    
+      rv = InitializeNewsFolderFromUri((const char *)newsgroupURI);
+      if (NS_FAILED(rv)) return(rv);
+   
 	  if (PL_strchr (group, '*'))
 		m_typeWanted = LIST_WANTED;
 	  else
@@ -1111,46 +1143,6 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
     
 	/* authentication required can come at any time
 	 */
-#ifdef CACHE_NEWSGRP_PASSWORD
-	/*
-	 * This is an effort of trying to cache the username/password
-	 * per newsgroup. It is extremely hard to make it work along with
-	 * nntp voluntary password checking mechanism. We are backing this 
-	 * feature out. Instead of touching various of backend msg files
-	 * at this late Dogbert 4.0 beta4 game, the infrastructure will
-	 * remain in the msg library. We only modify codes within this file.
-	 * Maybe one day we will try to do it again. Zzzzz -- jht
-	 */
-
-	if(MK_NNTP_RESPONSE_AUTHINFO_REQUIRE == m_responseCode ||
-       MK_NTTP_RESPONSE_AUTHINFO_SIMPLE_REQUIRE == m_responseCode || 
-	   MK_NNTP_RESPONSE_PERMISSION_DENIED == m_responseCode)
-	  {
-        m_nextState = NNTP_BEGIN_AUTHORIZE;
-		if (MK_NNTP_RESPONSE_PERMISSION_DENIED == m_responseCode) 
-		{
-			if (MK_NNTP_RESPONSE_TYPE_OK == MK_NNTP_RESPONSE_TYPE(m_previousResponseCode) 
-			{
-				if (net_news_last_username_probably_valid)
-				  net_news_last_username_probably_valid = PR_FALSE;
-				else 
-				{
-                  m_newsgroup->SetUsername(NULL);
-                  m_newsgroup->SetPassword(NULL);
-				}
-			}
-			else 
-			{
-			  net_news_last_username_probably_valid = PR_FALSE;
-			  if (NNTP_PASSWORD_RESPONSE == m_nextStateAfterResponse) 
-			  {
-                  m_newsgroup->SetUsername(NULL);
-                  m_newsgroup->SetPassword(NULL);
-			  }
-			}
-		}
-	  }
-#else
 	if (MK_NNTP_RESPONSE_AUTHINFO_REQUIRE == m_responseCode ||
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_REQUIRE == m_responseCode) 
 	{
@@ -1158,17 +1150,12 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	}
 	else if (MK_NNTP_RESPONSE_PERMISSION_DENIED == m_responseCode)
 	{
-	    net_news_last_username_probably_valid = PR_FALSE;
-#ifdef UNREADY_CODE
-		return net_display_html_error_state(ce);
-#else
 		PR_FREEIF(line);
 		return (0);
-#endif
 	}
-#endif
-	else
+	else {
     	m_nextState = m_nextStateAfterResponse;
+    }
 
 	PR_FREEIF(line);
     return(0);  /* everything ok */
@@ -1511,8 +1498,7 @@ PRInt32 nsNNTPProtocol::SendListSubscriptionsResponse(nsIInputStream * inputStre
 	if ('.' != line[0])
 	{
 #if 0
-		char *urlScheme = "news:";
-		char *url = PR_smprintf ("%s//%s/%s", urlScheme, m_hostName, line);
+		char *url = PR_smprintf ("%s//%s/%s", NEWS_SCHEME, m_hostName, line);
 		if (url)
 			MSG_AddSubscribedNewsgroup (cd->pane, url);
 #endif
@@ -2303,163 +2289,65 @@ void nsNNTPProtocol::ParseHeaderForCancel(char *buf)
 PRInt32 nsNNTPProtocol::BeginAuthorization()
 {
 	char * command = 0;
-    nsXPIDLString username;
+    nsXPIDLCString username;
     nsresult rv = NS_OK;
 	PRInt32 status = 0;
-	nsCOMPtr <nsIMsgNewsFolder> newsFolder;
 	nsXPIDLCString cachedUsername;
-#if 0
-	char * cp;
-#endif /* 0 */
 
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-	if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
+    if (!m_newsFolder) {
+        if (!m_runningURL) return NS_ERROR_FAILURE;
 
-	nsCAutoString newsgroupURI;
-	if (m_newsgroup && m_hostName) {
-		nsXPIDLCString groupName;
-    	rv = m_newsgroup->GetName(getter_Copies(groupName));   
-		if (NS_SUCCEEDED(rv) && groupName) {
-			newsgroupURI = kNewsRootURI;
-			newsgroupURI += "/";
-			if (m_userName) {
-				newsgroupURI += m_userName;
-				newsgroupURI += "@";
-			}
-			newsgroupURI += m_hostName;
-			newsgroupURI += "/";
-			newsgroupURI += groupName;
-		}
-	}
-
-#ifdef CACHE_NEWSGRP_PASSWORD
-	/* reuse cached username from newsgroup folder info*/
-	if (cd->pane && 
-		(!net_news_last_username_probably_valid ||
-		 (last_username_hostname && 
-		  PL_strcasecmp(last_username_hostname, m_hostName)))) 
-	{
-      m_newsgroup->GetUsername(&username);
-	  if (username && last_username &&
-		  !PL_strcmp (username, last_username) &&
-		  (m_previousResponseCode == MK_NNTP_RESPONSE_AUTHINFO_OK || 
-		   m_previousResponseCode == MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK ||
-		   m_previousResponseCode == MK_NNTP_RESPONSE_GROUP_SELECTED)) {
-		PR_FREEIF (username);
-        m_newsgroup->SetUsername(NULL);
-        m_newsgroup->SetPassword(NULL);
-	  }
-	}
-#endif
-	
-#if 0
-	/* Following a snews://username:password@newhost.domain.com/newsgroup.topic
-	 * backend calls MSG_Master::FindNewsHost() to locate the folderInfo and setting 
-	 * the username/password to the newsgroup folderInfo
-	 */
-    m_newsgroup->GetUsername(&username);
-    if (username && *username) {
-        NET_SACopy(&last_username, username);
-        NET_SACopy(&last_username_hostname, m_hostName);
-        /* use it for only once */
-        m_newsgroup->SetUsername(NULL);
-    }
-    else {
-        /* empty username; free and clear it so it will work with
-         * our logic
-         */
-        PR_FREEIF(username);
+        nsCAutoString folderURI = "news://";
+        folderURI += (const char *)m_hostName;
+        folderURI += "/";
+        
+        nsXPIDLCString newsgroupName;
+        rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
+        if (NS_SUCCEEDED(rv) && ((const char *)newsgroupName)) {
+            folderURI += (const char *)newsgroupName;
+            rv = InitializeNewsFolderFromUri((const char *)folderURI);
+        }
     }
 
-	/* If the URL/m_hostName contains @ this must be triggered
-	 * from the bookmark. Use the embed username if we could.
-	 */
-	if ((cp = PL_strchr(m_hostName, '@')) != NULL)
-	  {
-		/* in this case the username and possibly
-		 * the password are in the URL
-		 */
-		char * colon;
-		*cp = '\0';
-
-		colon = PL_strchr(m_hostName, ':');
-		if(colon)
-			*colon = '\0';
-
-		NET_SACopy(&username, m_hostName);
-		NET_SACopy(&last_username, m_hostName);
-		NET_SACopy(&last_username_hostname, cp+1);
-
-		*cp = '@';
-
-		if(colon)
-			*colon = ':';
-	  }
-	/* reuse global saved username if we think it is
-	 * valid
-	 */
-    if (!username && net_news_last_username_probably_valid)
-	  {
-		if( last_username_hostname &&
-			!PL_strcasecmp(last_username_hostname, m_hostName) )
-			NET_SACopy(&username, last_username);
-		else
-			net_news_last_username_probably_valid = PR_FALSE;
-	  }
-#endif /* 0 */
-
-	if ((const char *)newsgroupURI) {
-		nsCOMPtr<nsIRDFResource> resource;
-		rv = rdf->GetResource((const char *)newsgroupURI, getter_AddRefs(resource));
-		if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
-
-    	newsFolder = do_QueryInterface(resource, &rv);
-		if (NS_FAILED(rv) || !newsFolder) return(MK_NNTP_AUTH_FAILED);
-
-		rv = newsFolder->GetGroupUsername(getter_Copies(cachedUsername));
-	}
+    if (m_newsFolder) {
+	    rv = m_newsFolder->GetGroupUsername(getter_Copies(cachedUsername));
+    }
 
     if (NS_FAILED(rv) || !cachedUsername) {
 #ifdef DEBUG_NEWS
         printf("ask for the news username\n");
 #endif /* DEBUG_NEWS */
 
-        NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
-        if (NS_FAILED(rv) || !dialog) {
-            return(MK_NNTP_AUTH_FAILED);
-        }
         nsXPIDLString usernamePromptText;
         GetNewsStringByName("enterUsername", getter_Copies(usernamePromptText));
-        PRBool okButtonClicked = PR_FALSE;
-        rv = dialog->Prompt(usernamePromptText, nsnull /* default text */, getter_Copies(username), &okButtonClicked);
+        if (m_newsFolder) {
 
-        if (NS_SUCCEEDED(rv) && !okButtonClicked) {
+            if (!m_msgWindow) {
+		        nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+		        if (mailnewsurl) {
+                    rv = mailnewsurl->GetMsgWindow(getter_AddRefs(m_msgWindow));
+                }
+            }
+            rv = m_newsFolder->GetGroupUsernameWithUI(usernamePromptText, nsnull, m_msgWindow, getter_Copies(username));
+        }
+        else {
+            printf("we don't know the folder\n");
+            printf("this can happen if someone gives us just an article url\n");
+            return(MK_NNTP_AUTH_FAILED);
+        }
+
+        if (NS_FAILED(rv)) {
             nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
             if (mailnewsurl)
                 mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
-#if 0
-            /* reset net_news_last_username_probably_valid to false */
-            net_news_last_username_probably_valid = PR_FALSE;
-#endif /* 0 */
+
             return(MK_NNTP_AUTH_FAILED);
         } 
-
-        if (NS_FAILED(rv) || !username) {
-#if 0
-            /* reset net_news_last_username_probably_valid to false */
-            net_news_last_username_probably_valid = PR_FALSE;
-#endif /* 0 */
-            return(MK_NNTP_AUTH_FAILED);
-        }
 	} // !username
 
-#ifdef CACHE_NEWSGRP_PASSWORD
-    if (NS_SUCCEEDED(m_newsgroup->GetUsername(&username)) {
-	  munged_username = XP_STRDUP (username);
-      m_newsgroup->SetUsername(munged_username);
-	  PR_FreeIF(munged_username);
+	if (NS_FAILED(rv) || (!username && !cachedUsername)) {
+		  return(MK_NNTP_AUTH_FAILED);
 	}
-#endif
 
 	NET_SACopy(&command, "AUTHINFO user ");
 	if (cachedUsername) {
@@ -2469,14 +2357,10 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 		NET_SACat(&command, (const char *)cachedUsername);
 	}
 	else {
-		nsCAutoString usernameCString(username);
 #ifdef DEBUG_NEWS
- 		printf("use %s as the username\n",(const char *)usernameCString);
+ 		printf("use %s as the username\n",(const char *)username);
 #endif /* DEBUG_NEWS */
-		if (newsFolder) {
-			rv = newsFolder->SetGroupUsername((const char *)usernameCString);
-		}
-		NET_SACat(&command, (const char *)usernameCString);
+		NET_SACat(&command, (const char *)username);
 	}
 	NET_SACat(&command, CRLF);
 
@@ -2497,39 +2381,8 @@ PRInt32 nsNNTPProtocol::BeginAuthorization()
 PRInt32 nsNNTPProtocol::AuthorizationResponse()
 {
 	nsresult rv = NS_OK;
-    nsCOMPtr <nsIMsgNewsFolder> newsFolder;
 	PRInt32 status = 0;
-	nsXPIDLCString cachedPassword;
 
-	NS_WITH_SERVICE(nsIRDFService, rdf, kRDFServiceCID, &rv);
-	if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
-
-    nsCAutoString newsgroupURI;
-	if (m_newsgroup && m_hostName) {
-        nsXPIDLCString groupName;
-        rv = m_newsgroup->GetName(getter_Copies(groupName));
-        if (NS_SUCCEEDED(rv) && groupName) {
-			newsgroupURI = kNewsRootURI;
-			newsgroupURI += "/";
-			if (m_userName) {
-				newsgroupURI += m_userName;
-				newsgroupURI += "@";
-			}
-            newsgroupURI += m_hostName;
-            newsgroupURI += "/";
-            newsgroupURI += groupName;
-        }
-    }        
-
-    if ((const char *)newsgroupURI) {
-        nsCOMPtr<nsIRDFResource> resource;
-        rv = rdf->GetResource((const char *)newsgroupURI, getter_AddRefs(resource));
-        if (NS_FAILED(rv)) return(MK_NNTP_AUTH_FAILED);
-
-        newsFolder = do_QueryInterface(resource, &rv);
-        if (NS_FAILED(rv) || !newsFolder) return(MK_NNTP_AUTH_FAILED);
-        rv = newsFolder->GetGroupPassword(getter_Copies(cachedPassword));
-    }     
 	
     if (MK_NNTP_RESPONSE_AUTHINFO_OK == m_responseCode ||
         MK_NNTP_RESPONSE_AUTHINFO_SIMPLE_OK == m_responseCode) 
@@ -2552,7 +2405,6 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 			/* Normal authentication */
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
 
-		net_news_last_username_probably_valid = PR_TRUE;
 		return(0); 
 	  }
 	else if (MK_NNTP_RESPONSE_AUTHINFO_CONT == m_responseCode)
@@ -2560,100 +2412,63 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 		/* password required
 		 */	
 		char * command = 0;
-        nsXPIDLString password;
-#if 0
-		char * cp;
+        nsXPIDLCString password;
+	    nsXPIDLCString cachedPassword;
 
-        if (net_news_last_username_probably_valid 
-			&& last_password
-			&& last_password_hostname
-			&& !PL_strcasecmp(last_password_hostname, m_hostName))
-          {
-#ifdef CACHE_NEWSGRP_PASSWORD
-			if (cd->pane)
-            m_newsgroup->GetPassword(&password);
-            password = XP_STRDUP(password);
-#else
-            NET_SACopy(&password, last_password);
-#endif
-          }
-        else if ((cp = PL_strchr(m_hostName, '@')) != NULL)
-          {
-            /* in this case the username and possibly
-             * the password are in the URL
-             */
-            char * colon;
-            *cp = '\0';
-    
-            colon = PL_strchr(m_hostName, ':');
-            if(colon)
-			  {
-                *colon = '\0';
-    
-            	NET_SACopy(&password, colon+1);
-            	NET_SACopy(&last_password, colon+1);
-            	NET_SACopy(&last_password_hostname, cp+1);
+        if (!m_newsFolder) {
+            if (!m_runningURL) return NS_ERROR_FAILURE;
 
-                *colon = ':';
-			  }
-    
-            *cp = '@';
-    
-          }
-#endif /* 0 */
+            nsCAutoString folderURI = "news://";
+            folderURI += (const char *)m_hostName;
+            folderURI += "/";
 
-		if (!cachedPassword) 
-		{
+            nsXPIDLCString newsgroupName;
+            rv = m_runningURL->GetNewsgroupName(getter_Copies(newsgroupName));
+            if (NS_SUCCEEDED(rv) && ((const char *)newsgroupName)) {
+                folderURI += (const char *)newsgroupName;
+                rv = InitializeNewsFolderFromUri((const char *)folderURI);
+            }
+        }
+
+        if (m_newsFolder) {
+            rv = m_newsFolder->GetGroupPassword(getter_Copies(cachedPassword));
+        }
+		if (NS_FAILED(rv) || !cachedPassword) {
 #ifdef DEBUG_NEWS
             printf("ask for the news password\n");
 #endif /* DEBUG_NEWS */
-
-            NS_WITH_SERVICE(nsIPrompt, dialog, kCNetSupportDialogCID, &rv);
-            if (NS_FAILED(rv) || !dialog) {
-                return(MK_NNTP_AUTH_FAILED);
-            }
 
             nsXPIDLString passwordPromptText;
             GetNewsStringByName("enterPassword", getter_Copies(passwordPromptText));
             nsXPIDLString passwordPromptTitleText;
             GetNewsStringByName("enterPasswordTitle", getter_Copies(passwordPromptTitleText));
-            PRBool okButtonClicked = PR_FALSE;
 
-            rv = dialog->PromptPassword(passwordPromptText, passwordPromptTitleText, getter_Copies(password), &okButtonClicked);
+            if (m_newsFolder) {
+                if (!m_msgWindow) {
+                    nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
+                    if (mailnewsurl) {
+                        rv = mailnewsurl->GetMsgWindow(getter_AddRefs(m_msgWindow));
+                    }
+                }
+                rv = m_newsFolder->GetGroupPasswordWithUI(passwordPromptText, passwordPromptTitleText, m_msgWindow, getter_Copies(password));
+            }
+            else {
+                printf("we don't know the folder\n");
+                printf("this can happen if someone gives us just an article url\n");
+                return(MK_NNTP_AUTH_FAILED);
+            }
             
-            if (NS_SUCCEEDED(rv) && !okButtonClicked) {
+            if (NS_FAILED(rv)) {
                 nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(m_runningURL);
                 if (mailnewsurl)
                     mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(MK_NNTP_AUTH_FAILED, "Aborted by user"));
                 return(MK_NNTP_AUTH_FAILED);
             }
-#if 0
-		  net_news_last_username_probably_valid = PR_FALSE;
-#endif /* 0 */
 		}
 		  
 		if(NS_FAILED(rv) || (!password && !cachedPassword)) {
 		  return(MK_NNTP_AUTH_FAILED);
 		}
-#if 0
-		else 
-		{
-		  NET_SACopy(&last_password, password);
-		  NET_SACopy(&last_password_hostname, m_hostName);
-		}
-#endif /* 0 */
-
-#ifdef CACHE_NEWSGRP_PASSWORD
-        char *garbage_password;
-        nsresult rv;
-        rv = m_newsgroup->GetPassword(&garbage_password);
-        if (!NS_SUCCEEDED(rv)) {
-          PR_Free(garbage_password);
-          munged_password = XP_STRDUP(password);
-          m_newsgroup->SetPassword(munged_password);
-		  PR_FREEIF(munged_password);
-		}
-#endif
 
 		NET_SACopy(&command, "AUTHINFO pass ");
 		if (cachedPassword) {
@@ -2663,14 +2478,10 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 			NET_SACat(&command, (const char *)cachedPassword);
 		}
 		else {
-			nsCAutoString passwordCString(password); 
 #ifdef DEBUG_NEWS
-        	printf("use %s as the password\n",(const char *)passwordCString);
+        	printf("use %s as the password\n",(const char *)password);
 #endif /* DEBUG_NEWS */  
-			if (newsFolder) {
-				rv = newsFolder->SetGroupPassword((const char *)passwordCString);
-			}
-			NET_SACat(&command, (const char *)passwordCString);
+			NET_SACat(&command, (const char *)password);
 		}
 		NET_SACat(&command, CRLF);
 	
@@ -2693,12 +2504,6 @@ PRInt32 nsNNTPProtocol::AuthorizationResponse()
 			mailnewsurl->SetErrorMessage(NET_ExplainErrorDetails(
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
-
-#ifdef CACHE_NEWSGRP_PASSWORD
-		if (cd->pane)
-          m_newsgroup->SetUsername(NULL);
-#endif
-		net_news_last_username_probably_valid = PR_FALSE;
 
         return(MK_NNTP_AUTH_FAILED);
 	  }
@@ -2733,8 +2538,6 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 			/* Normal authentication */
 			m_nextState = SEND_FIRST_NNTP_COMMAND;
 
-		net_news_last_username_probably_valid = PR_TRUE;
-
 		// if we are posting, m_newsgroup will be null
 		if (!m_newsgroupList && m_newsgroup) {
     		nsXPIDLCString groupName;
@@ -2756,10 +2559,6 @@ PRInt32 nsNNTPProtocol::PasswordResponse()
 									MK_NNTP_AUTH_FAILED,
 									m_responseText ? m_responseText : ""));
 
-#ifdef CACHE_NEWSGRP_PASSWORD
-		if (cd->pane)
-          m_newsgroup->SetPassword(NULL);
-#endif
         return(MK_NNTP_AUTH_FAILED);
 	  }
 		

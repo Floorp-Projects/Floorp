@@ -54,6 +54,13 @@
 #include "nsMsgBaseCID.h"
 #include "nsFileStream.h"
 
+#include "nsIMsgWindow.h"
+#include "nsIWebShell.h"
+#include "nsIWebShellWindow.h"
+#include "nsINetPrompt.h"
+
+#include "nsXPIDLString.h"
+
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -69,6 +76,9 @@ static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 #define NEWSGROUP_USERNAME_PREF_PREFIX "newsgroup.username."
 #define NEWSGROUP_PASSWORD_PREF_PREFIX "newsgroup.password."
 #define NEWSRC_FILE_BUFFER_SIZE 1024
+
+#define NEWS_SCHEME "news:"
+#define SNEWS_SCHEME "snews:"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -123,10 +133,6 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
 {
   nsresult rv = NS_OK;
 
-  char *hostname;
-  rv = GetHostname(&hostname);
-  if (NS_FAILED(rv)) return rv;
-
   PRBool isNewsServer = PR_FALSE;
   rv = GetIsServer(&isNewsServer);
   if (NS_FAILED(rv)) return rv;
@@ -158,8 +164,6 @@ nsMsgNewsFolder::CreateSubFolders(nsFileSpec &path)
     rv = NS_OK;
   }
   
-  PR_FREEIF(hostname);
-
   return rv;
 }
 
@@ -167,12 +171,11 @@ NS_IMETHODIMP
 nsMsgNewsFolder::AddNewsgroup(const char *name, const char *setStr, nsIMsgFolder **child)
 {
 	if (!child) return NS_ERROR_NULL_POINTER;
-
-  if (!setStr) return NS_ERROR_NULL_POINTER;
+    if (!setStr) return NS_ERROR_NULL_POINTER;
+    if (!name) return NS_ERROR_NULL_POINTER;
   
 #ifdef DEBUG_NEWS
-  nsCString nameStr(name);
-  printf("AddNewsgroup(%s,??,%s)\n",nameStr.GetBuffer(),setStr);
+  printf("AddNewsgroup(%s,??,%s)\n",name,setStr);
 #endif
   
 	nsresult rv = NS_OK;
@@ -443,8 +446,6 @@ nsMsgNewsFolder::GetMessages(nsIMsgWindow *aMsgWindow, nsISimpleEnumerator* *res
 
 NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
 {
-  const char *urlScheme = "news:";
-
   if(!url)
     return NS_ERROR_NULL_POINTER;
 
@@ -457,10 +458,10 @@ NS_IMETHODIMP nsMsgNewsFolder::GetFolderURL(char **url)
   if (NS_FAILED(rv)) return rv;
 #if defined(XP_MAC)
   nsCAutoString tmpPath((nsFilePath)path); //ducarroz: please don't cast a nsFilePath to char* on Mac
-  *url = PR_smprintf("%s%s", urlScheme, tmpPath.GetBuffer());
+  *url = PR_smprintf("%s%s", NEWS_SCHEME, tmpPath.GetBuffer());
 #else
   const char *pathName = path;
-  *url = PR_smprintf("%s%s", urlScheme, pathName);
+  *url = PR_smprintf("%s%s", NEWS_SCHEME, pathName);
 #endif
   return NS_OK;
 
@@ -774,7 +775,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 
 /* this is news, so remember that DeleteMessage is really CANCEL */
 NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
-                                              nsIMsgWindow *msgWindow, PRBool deleteStorage)
+                                              nsIMsgWindow *aMsgWindow, PRBool deleteStorage)
 {
   nsresult rv = NS_OK;
   
@@ -786,21 +787,18 @@ NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages,
   NS_WITH_SERVICE(nsINntpService, nntpService, kNntpServiceCID, &rv);
   
   if (NS_SUCCEEDED(rv) && nntpService) {
-    char *hostname = nsnull;
-    rv = GetHostname(&hostname);
+    nsXPIDLCString hostname;
+    rv = GetHostname(getter_Copies(hostname));
     if (NS_FAILED(rv)) return rv;
-    PRUnichar *newsgroupname = nsnull;
-    rv = GetName(&newsgroupname);
-	nsCString asciiName(newsgroupname);
+    nsXPIDLString newsgroupname;
+    rv = GetName(getter_Copies(newsgroupname));
+	nsCAutoString asciiName(newsgroupname);
     if (NS_FAILED(rv)) {
-      PR_FREEIF(hostname);
       return rv;
     }
     
-    rv = nntpService->CancelMessages(hostname, asciiName.GetBuffer(), messages, nsnull /* consumer */, nsnull, nsnull);
-    
-    PR_FREEIF(hostname);
-    PR_FREEIF(newsgroupname);
+    rv = nntpService->CancelMessages((const char *)hostname, (const char *)asciiName, messages, nsnull /* consumer */, nsnull, aMsgWindow, nsnull);
+
   }
   
   return rv;
@@ -1154,20 +1152,17 @@ NS_IMETHODIMP nsMsgNewsFolder::SetUnreadSetStr(const char * aUnreadSetStr)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetGroupUsername(char **aGroupUsername)
 {
-    nsresult rv = NS_OK;
-
-	if (!aGroupUsername) return NS_ERROR_NULL_POINTER;
-
-	if (!mGroupUsername) {
-        nsCAutoString prefName = NEWSGROUP_USERNAME_PREF_PREFIX;
-        prefName += mURI;
-        rv = GetRememberedPref((const char *)prefName, &mGroupUsername);
-    }
-    
-    if (NS_SUCCEEDED(rv) && mGroupUsername) {
+    NS_ENSURE_ARG_POINTER(aGroupUsername);
+    nsresult rv;
+#ifdef DEBUG_sspitzer
+    printf("get the group username for %s\n",mURI);
+#endif
+    if (mGroupUsername) {
         *aGroupUsername = PL_strdup(mGroupUsername);
-        if (!*aGroupUsername) return NS_ERROR_FAILURE;
         rv = NS_OK;
+    }
+    else {
+        rv = NS_ERROR_FAILURE;
     }
 
 	return rv;
@@ -1175,113 +1170,184 @@ NS_IMETHODIMP nsMsgNewsFolder::GetGroupUsername(char **aGroupUsername)
 
 NS_IMETHODIMP nsMsgNewsFolder::SetGroupUsername(const char *aGroupUsername)
 {
-    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aGroupUsername);
 
-	if (!aGroupUsername) return NS_ERROR_INVALID_ARG;
 	PR_FREEIF(mGroupUsername);
 
 	mGroupUsername = PL_strdup(aGroupUsername);
-	if (!mGroupUsername) return NS_ERROR_FAILURE;
 
-    nsCAutoString prefName = NEWSGROUP_USERNAME_PREF_PREFIX;
-    prefName += mURI;
-
-    rv = SetRememberedPref((const char *)prefName, mGroupUsername);
-    return rv;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetGroupPassword(char **aGroupPassword)
 {
-    nsresult rv = NS_OK;
-	if (!aGroupPassword) return NS_ERROR_NULL_POINTER;
+    NS_ENSURE_ARG_POINTER(aGroupPassword);
+    nsresult rv;
 
-	if (!mGroupPassword) {
-        nsCAutoString prefName = NEWSGROUP_PASSWORD_PREF_PREFIX;
-        prefName += mURI;
-        rv = GetRememberedPref((const char *)prefName, &mGroupPassword);
-    }
-
-    if (NS_SUCCEEDED(rv) && mGroupPassword) {
+    if (mGroupPassword) {
         *aGroupPassword = PL_strdup(mGroupPassword);
-        if (!*aGroupPassword) return NS_ERROR_FAILURE;
-	    rv = NS_OK;
+        rv = NS_OK;
+    }
+    else {
+        rv = NS_ERROR_FAILURE;
     }
 
-    return rv;
+    return rv;      
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::SetGroupPassword(const char *aGroupPassword)
 {
-    nsresult rv;
+    NS_ENSURE_ARG_POINTER(aGroupPassword);
 
-	if (!aGroupPassword) return NS_ERROR_INVALID_ARG;
-	PR_FREEIF(mGroupPassword);
+    PR_FREEIF(mGroupPassword);
 
-	mGroupPassword = PL_strdup(aGroupPassword);
-	if (!mGroupPassword) return NS_ERROR_FAILURE;
+    mGroupPassword = PL_strdup(aGroupPassword);
 
-    nsCAutoString prefName = NEWSGROUP_PASSWORD_PREF_PREFIX;
-    prefName += mURI;
-
-    rv = SetRememberedPref((const char *)prefName, mGroupPassword);
-	return rv;
+    return NS_OK;    
 }
 
-nsresult nsMsgNewsFolder::GetRememberedPref(const char *prefName, char **prefValue)
+NS_IMETHODIMP
+nsMsgNewsFolder::GetGroupPasswordWithUI(const PRUnichar * aPromptMessage, const
+                                       PRUnichar *aPromptTitle,
+                                       nsIMsgWindow* aMsgWindow,
+                                       char **aGroupPassword)
 {
-    PRBool rememberPassword;
-    nsresult rv;
+    nsresult rv = NS_OK;
 
-    nsCOMPtr <nsIMsgIncomingServer> server;
-    rv = GetServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
+#ifdef DEBUG_sspitzer
+    printf("with ui, get the group username for %s\n",mURI);
+#endif
 
-    rv = server->GetRememberPassword(&rememberPassword);
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_ARG_POINTER(aMsgWindow);
+    NS_ENSURE_ARG_POINTER(aGroupPassword);
 
-    if (!rememberPassword) {
-        // we weren't supposed to have remembered anything
-        *prefValue = nsnull;
-        return NS_OK;
-    }
+    if (!mGroupPassword) {
+        // prompt the user for the password
+        nsCOMPtr<nsIWebShell> webShell;
+        rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+        if (NS_FAILED(rv)) return rv;
+        // get top level window
+        nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+        rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsINetPrompt> dialog( do_QueryInterface( topLevelWindow, &rv ) );
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLString uniGroupPassword;
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+            PRBool okayValue = PR_TRUE;
+            
+            nsCAutoString signonURI(mURI);
+#if SINGLE_SIGNON_USING_FULL_URLS
+            signonURI += "#password";
+#else
+            signonURI = NEWS_SCHEME;
+            signonURI += "//";
+            nsXPIDLCString hostname;
+            rv = GetHostname(getter_Copies(hostname));
+            if (NS_FAILED(rv)) return rv;
 
-    rv = prefs->CopyCharPref(prefName, prefValue);
-#ifdef DEBUG_NEWS
-    if (NS_SUCCEEDED(rv)) {
-        printf("getting %s as %s\n",prefName, prefValue);
-    }
-#endif /* DEBUG_NEWS */
+            signonURI += (const char *)hostname;
+            signonURI += "-";
+
+            nsXPIDLString newsgroupname;
+            rv = GetName(getter_Copies(newsgroupname));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCAutoString asciiName(newsgroupname);
+
+            signonURI += (const char *)asciiName;
+            signonURI += "-password";
+#endif
+
+            rv = dialog->PromptPassword((const char *)signonURI, aPromptTitle, aPromptMessage, getter_Copies(uniGroupPassword), &okayValue);
+            if (NS_FAILED(rv)) return rv;
+
+            if (!okayValue) // if the user pressed cancel, just return NULL;
+            {
+                *aGroupPassword = nsnull;
+                return rv;
+            }
+
+            // we got a password back...so remember it
+            nsCString aCStr(uniGroupPassword);
+            rv = SetGroupPassword((const char *) aCStr);
+            if (NS_FAILED(rv)) return rv;
+
+        } // if we got a prompt dialog
+    } // if the password is empty
+
+    rv = GetGroupPassword(aGroupPassword);
     return rv;
 }
 
-nsresult nsMsgNewsFolder::SetRememberedPref(const char *prefName, const char *prefValue)
+NS_IMETHODIMP
+nsMsgNewsFolder::GetGroupUsernameWithUI(const PRUnichar * aPromptMessage, const
+                                       PRUnichar *aPromptTitle,
+                                       nsIMsgWindow* aMsgWindow,
+                                       char **aGroupUsername)
 {
-    PRBool rememberPassword;
-    nsresult rv;
+    nsresult rv = NS_OK;
 
-    nsCOMPtr <nsIMsgIncomingServer> server;
-    rv = GetServer(getter_AddRefs(server));
-    if (NS_FAILED(rv)) return rv;
+    NS_ENSURE_ARG_POINTER(aMsgWindow);
+    NS_ENSURE_ARG_POINTER(aGroupUsername);
 
-    rv = server->GetRememberPassword(&rememberPassword);
-    if (NS_FAILED(rv)) return rv;
+    if (!mGroupUsername) {
+        // prompt the user for the password
+        nsCOMPtr<nsIWebShell> webShell;
+        rv = aMsgWindow->GetRootWebShell(getter_AddRefs(webShell));
+        if (NS_FAILED(rv)) return rv;
+        // get top level window
+        nsCOMPtr<nsIWebShellContainer> topLevelWindow;
+        rv = webShell->GetTopLevelWindow(getter_AddRefs(topLevelWindow));
+        if (NS_FAILED(rv)) return rv;
+        nsCOMPtr<nsINetPrompt> dialog( do_QueryInterface( topLevelWindow, &rv ) );
+        if (NS_SUCCEEDED(rv))
+        {
+            nsXPIDLString uniGroupUsername;
 
-    if (!rememberPassword) {
-        // we aren't supposed to remember this
-        return NS_OK;
-    }
+            PRBool okayValue = PR_TRUE;
 
-    NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
+            nsCAutoString signonURI(mURI);
+#if SINGLE_SIGNON_USING_FULL_URLS
+            signonURI += "#username";
+#else
+            signonURI = NEWS_SCHEME;
+            signonURI += "//";
+            nsXPIDLCString hostname;
+            rv = GetHostname(getter_Copies(hostname));
+            if (NS_FAILED(rv)) return rv;
 
-    rv = prefs->SetCharPref(prefName, prefValue);
-#ifdef DEBUG_NEWS
-    if (NS_SUCCEEDED(rv)) {
-        printf("setting %s as %s\n",prefName, prefValue);
-    }
-#endif /* DEBUG_NEWS */
-	return rv;
+            signonURI += (const char *)hostname;
+            signonURI += "-";
+
+            nsXPIDLString newsgroupname;
+            rv = GetName(getter_Copies(newsgroupname));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCAutoString asciiName(newsgroupname);
+            
+            signonURI += (const char *)asciiName;
+            signonURI += "-username";
+#endif
+             rv = dialog->Prompt((const char *)signonURI, aPromptTitle, aPromptMessage, getter_Copies(uniGroupUsername), &okayValue);
+            if (NS_FAILED(rv)) return rv;
+
+            if (!okayValue) // if the user pressed cancel, just return NULL;
+            {
+                *aGroupUsername= nsnull;
+                return rv;
+            }
+
+            // we got a username back, remember it
+            nsCString aCStr(uniGroupUsername);
+            rv = SetGroupUsername((const char *) aCStr);
+            if (NS_FAILED(rv)) return rv;
+
+        } // if we got a prompt dialog
+    } // if the password is empty
+
+    rv = GetGroupUsername(aGroupUsername);
+    return rv;
 }
+

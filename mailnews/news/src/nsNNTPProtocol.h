@@ -37,6 +37,8 @@
 #include "nsINNTPHost.h"
 #include "nsINNTPNewsgroup.h"
 #include "nsIMsgOfflineNewsState.h"
+#include "nsIMsgNewsFolder.h"
+#include "nsIMsgWindow.h"
 
 #include "nsMsgLineBuffer.h"
 #include "nsSpecialSystemDirectory.h"
@@ -146,7 +148,7 @@ class nsNNTPProtocol : public nsMsgProtocol
 public:
 	// Creating a protocol instance requires the URL 
 	// need to call Initialize after we do a new of nsNNTPProtocol
-	nsNNTPProtocol(nsIURI * aURL);	
+	nsNNTPProtocol(nsIURI * aURL, nsIMsgWindow *aMsgWindow);	
 	virtual ~nsNNTPProtocol();
 
 	// initialization function given a news url
@@ -184,6 +186,9 @@ private:
 	nsCOMPtr <nsINNTPHost>	 m_newsHost;
 	nsCOMPtr <nsINNTPNewsgroup>	m_newsgroup;
 	nsCOMPtr <nsIMsgOfflineNewsState> m_offlineNewsState;
+
+    nsCOMPtr <nsIMsgNewsFolder> m_newsFolder;
+    nsCOMPtr <nsIMsgWindow> m_msgWindow;
 
 	nsCOMPtr<nsIWebShell> m_displayConsumer;
 	nsCOMPtr<nsIBufferInputStream> mDisplayInputStream;
@@ -374,6 +379,7 @@ private:
 
 	void SetProgressBarPercent(int percent);
 	void SetProgressStatus(char * message);
+    nsresult InitializeNewsFolderFromUri(const char *uri);
 };
 
 NS_BEGIN_EXTERN_C

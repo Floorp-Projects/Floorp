@@ -129,7 +129,7 @@ nsNntpService::SaveMessageToDisk(const char *aMessageURI,
             msgUrl->SetCanonicalLineEnding(canonicalLineEnding);
         }   
     
-        RunNewsUrl(myuri, nsnull);
+        RunNewsUrl(myuri, nsnull, nsnull);
     }
 
     if (aURL)
@@ -181,7 +181,7 @@ nsresult nsNntpService::DisplayMessage(const char* aMessageURI, nsISupports * aD
     if (NS_SUCCEEDED(rv) && webshell)
 	    rv = webshell->LoadURI(myuri, "view", nsnull, PR_TRUE);
     else
-      rv = RunNewsUrl(myuri, aDisplayConsumer);
+      rv = RunNewsUrl(myuri, aMsgWindow, aDisplayConsumer);
   }
 
   if (aURL)
@@ -429,10 +429,11 @@ nsresult nsNntpService::FindHostFromGroup(nsCString &host, nsCString &groupName)
 }
 
 nsresult 
-nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNames)
+nsNntpService::SetUpNntpUrlForPosting(nsINntpUrl *nntpUrl, const char *newsgroupsNames)
 {
   nsresult rv = NS_OK;
-  
+  nsCAutoString host;
+
   if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
   if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
 
@@ -459,7 +460,9 @@ nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNa
   char *token = nsnull;
   char *rest = list;
   nsCAutoString str;
-  
+  PRUint32 numGroups = 0;   // the number of newsgroup we are attempt to post to
+  nsCAutoString currentGroup;
+
   token = nsCRT::strtok(rest, ",", &rest);
   while (token && *token) {
     str = token;
@@ -498,6 +501,7 @@ nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNa
       if (slashpos > 0 ) {
         // theRest is "host/group"
         theRest.Left(currentHost, slashpos);
+        theRest.Right(currentGroup, slashpos);
 #ifdef DEBUG_NEWS
         printf("currentHost == %s\n", currentHost.GetBuffer());
 #endif
@@ -505,12 +509,14 @@ nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNa
       else {
         // theRest is "group"
         rv = FindHostFromGroup(currentHost, str);
+        currentGroup = str;
         if (NS_FAILED(rv)) {
 		PR_FREEIF(list);
 		return rv;
 	}
       }
 
+      numGroups++;
       if (host.IsEmpty()) {
         host = currentHost;
 
@@ -519,7 +525,7 @@ nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNa
       }
       else {
         if (host != currentHost) {
-          printf("no cross posting to multiple hosts!\n");
+          printf("todo, implement an alert:  no cross posting to multiple hosts!\n"); 
           PR_FREEIF(list);
           return NS_ERROR_FAILURE;
         }
@@ -537,10 +543,32 @@ nsNntpService::DetermineHostForPosting(nsCString &host, const char *newsgroupsNa
   }    
   PR_FREEIF(list);
   
-  if (!host.IsEmpty())
-    return NS_OK;
-  else
+  if (host.IsEmpty())
     return NS_ERROR_FAILURE;
+
+  nsCAutoString urlStr = kNewsRootURI;
+  urlStr += "/";
+  urlStr += (const char *)host;
+
+  // if the user tried to post to one newsgroup, set that information in the 
+  // nntp url.  this can save them an authentication, if they've already logged in
+  // and we have that information in the single signon database
+  if ((numGroups == 1) && ((const char *)currentGroup)) {
+    rv = nntpUrl->SetNewsgroupName((const char *)currentGroup);
+    if (NS_FAILED(rv)) return rv;
+  }
+
+  nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
+
+  if (mailnewsurl) {
+    mailnewsurl->SetSpec((const char *)urlStr);
+    mailnewsurl->SetPort(NEWS_PORT);
+  }
+  else {
+    return NS_ERROR_FAILURE;
+  }   
+
+  return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 // nsINntpService support
@@ -712,32 +740,19 @@ nsresult nsNntpService::PostMessage(nsIFileSpec *fileToPost, const char *newsgro
 
   nntpUrl->SetNewsAction(nsINntpUrl::ActionPostArticle);
 
-  nsCAutoString host;
-  rv = DetermineHostForPosting(host, newsgroupsNames);
-  
-  if (NS_FAILED(rv) || (host.IsEmpty())) return rv;
+  rv = SetUpNntpUrlForPosting(nntpUrl, newsgroupsNames);
+  if (NS_FAILED(rv)) return rv;
 
-  printf("post to this host: %s\n",host.GetBuffer());
-
-  char *urlstr = PR_smprintf("%s/%s",kNewsRootURI,host.GetBuffer());
   nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(nntpUrl);
-  if (mailnewsurl) {
-    mailnewsurl->SetSpec(urlstr);
-    mailnewsurl->SetPort(NEWS_PORT);
-  }
-  else {
-    return NS_ERROR_FAILURE;
-  }
-  
-  PR_FREEIF(urlstr);
-  
+  if (!mailnewsurl) return NS_ERROR_FAILURE;
+
   if (aUrlListener) // register listener if there is one...
     mailnewsurl->RegisterListener(aUrlListener);
   
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
 
-  nntpProtocol = new nsNNTPProtocol(mailnewsurl);
+  nntpProtocol = new nsNNTPProtocol(mailnewsurl, nsnull);
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;;
   
   rv = nntpProtocol->Initialize();
@@ -807,15 +822,17 @@ nsresult nsNntpService::ConstructNntpUrl(const char * urlString, const char * ne
 }
 
 nsresult 
-nsNntpService::RunNewsUrl(nsIURI * aUri, nsISupports * aConsumer)
+nsNntpService::RunNewsUrl(nsIURI * aUri, nsIMsgWindow *aMsgWindow, nsISupports * aConsumer)
 {
+  nsresult rv;
+
   // almost there...now create a nntp protocol instance to run the url in...
   nsNNTPProtocol *nntpProtocol = nsnull;
 
-  nntpProtocol = new nsNNTPProtocol(aUri);
+  nntpProtocol = new nsNNTPProtocol(aUri, aMsgWindow);
   if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
-  nsresult rv = nntpProtocol->Initialize();
+  rv = nntpProtocol->Initialize();
   if (NS_FAILED(rv)) return rv;
   
   rv = nntpProtocol->LoadUrl(aUri, aConsumer);
@@ -891,7 +908,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
 		mailNewsUrl->SetMsgWindow(aMsgWindow);
 	}
 
-    rv = RunNewsUrl(aUrl, nsnull);  
+    rv = RunNewsUrl(aUrl, aMsgWindow, nsnull);  
 	
 	if (_retval)
 	{
@@ -907,7 +924,7 @@ NS_IMETHODIMP nsNntpService::GetNewNews(nsINntpIncomingServer *nntpServer, const
   return rv;
 }
 
-NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *newsgroupname, nsISupportsArray *messages, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIURI ** aURL)
+NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *newsgroupname, nsISupportsArray *messages, nsISupports * aConsumer, nsIUrlListener * aUrlListener, nsIMsgWindow *aMsgWindow, nsIURI ** aURL)
 {
   nsresult rv = NS_OK;
   PRUint32 count = 0;
@@ -975,7 +992,7 @@ NS_IMETHODIMP nsNntpService::CancelMessages(const char *hostname, const char *ne
   nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(url);
   if (nntpUrl)
 	nntpUrl->SetNewsAction(nsINntpUrl::ActionCancelArticle);
-  rv = RunNewsUrl(url, aConsumer);  
+  rv = RunNewsUrl(url, aMsgWindow, aConsumer);  
 
   if (aURL)
   {
@@ -1034,7 +1051,7 @@ NS_IMETHODIMP nsNntpService::NewChannel(const char *verb,
                                         nsIChannel **_retval)
 {
 	nsresult rv = NS_OK;
-	nsNNTPProtocol *nntpProtocol = new nsNNTPProtocol(aURI);
+	nsNNTPProtocol *nntpProtocol = new nsNNTPProtocol(aURI, nsnull);
 	if (!nntpProtocol) return NS_ERROR_OUT_OF_MEMORY;
   
 	rv = nntpProtocol->Initialize();
