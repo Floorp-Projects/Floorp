@@ -227,6 +227,8 @@ nsMsgDatabase* nsMsgDatabase::FindInCache(nsFileSpec &dbName)
 		{
 			return(pMessageDB);
 		}
+		else
+			pMessageDB->Release();
 	}
 	return(NULL);
 }
@@ -886,7 +888,9 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessage(nsMsgKey key, nsIDBChangeListener *in
 	if (msgHdr == NULL)
 		return NS_MSG_MESSAGE_NOT_FOUND;
 
-	return DeleteHeader(msgHdr, instigator, commit, PR_TRUE);
+	err = DeleteHeader(msgHdr, instigator, commit, PR_TRUE);
+	NS_IF_RELEASE(msgHdr);
+	return err;
 }
 
 
@@ -906,6 +910,7 @@ NS_IMETHODIMP nsMsgDatabase::DeleteMessages(nsMsgKeyArray* nsMsgKeys, nsIDBChang
 			break;
 		}
 		err = DeleteHeader(msgHdr, instigator, index % 300 == 0, PR_TRUE);
+		NS_IF_RELEASE(msgHdr);
 		if (err != NS_OK)
 			break;
 	}
@@ -951,7 +956,6 @@ NS_IMETHODIMP nsMsgDatabase::DeleteHeader(nsIMsgDBHdr *msg, nsIDBChangeListener 
 		RemoveHeaderFromDB(msgHdr);
 	if (commit)
 		Commit(kSmallCommit);			// ### dmb is this a good time to commit?
-	NS_RELEASE(msg);	// even though we're deleting it from the db, need to Release.
 	return NS_OK;
 }
 
@@ -1524,6 +1528,7 @@ nsMsgDBEnumerator::nsMsgDBEnumerator(nsMsgDatabase* db,
 nsMsgDBEnumerator::~nsMsgDBEnumerator()
 {
     NS_RELEASE(mDB);
+	NS_IF_RELEASE(mResultHdr);
 }
 
 NS_IMPL_ISUPPORTS(nsMsgDBEnumerator, nsIEnumerator::GetIID())

@@ -32,7 +32,8 @@ nsMailDatabase::nsMailDatabase()
 
 nsMailDatabase::~nsMailDatabase()
 {
-	delete m_folderSpec;
+	if(m_folderSpec)
+		delete m_folderSpec;
 }
 
 
@@ -55,7 +56,8 @@ NS_IMETHODIMP nsMailDatabase::Open(nsFileSpec &folderName, PRBool create, nsIMsg
 	if (mailDB)
 	{
 		*pMessageDB = mailDB;
-		mailDB->AddRef();
+		//FindInCache does the AddRef'ing
+		//mailDB->AddRef();
 		return(NS_OK);
 	}
 
@@ -460,7 +462,17 @@ nsresult nsMailDatabase::SetFolderInfoValid(nsFileSpec *folderName, int num, int
 	if (pMessageDB == NULL)
 	{
 		pMessageDB = new nsMailDatabase();
-		pMessageDB->m_folderSpec = &summarySpec;
+		if(!pMessageDB)
+			return NS_ERROR_OUT_OF_MEMORY;
+
+		pMessageDB->m_folderSpec = new nsLocalFolderSummarySpec();
+		if(!pMessageDB->m_folderSpec)
+		{
+			delete pMessageDB;
+			return NS_ERROR_OUT_OF_MEMORY;
+		}
+
+		*(pMessageDB->m_folderSpec) = summarySpec;
 		// ### this does later stuff (marks latered messages unread), which may be a problem
 		err = pMessageDB->OpenMDB(summaryPath, PR_FALSE);
 		if (err != NS_OK)
