@@ -570,7 +570,6 @@ typedef struct _CONTEXTRECORD {
 #endif
 
 extern APIRET (* APIENTRY QueryThreadContext)(TID, ULONG, PCONTEXTRECORD);
-unsigned long _System _DLL_InitTerm( unsigned long mod_handle, unsigned long flag);
 
 /*
 #define _pr_tid            (((PTIB2)_getTIBvalue(offsetof(TIB, tib_ptib2)))->tib2_ultid)
