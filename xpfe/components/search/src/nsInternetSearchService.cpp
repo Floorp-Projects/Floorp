@@ -105,10 +105,11 @@
 #define SEARCH_PROPERTIES "chrome://communicator/locale/search/search-panel.properties"
 #ifdef MOZ_PHOENIX
 #define SEARCHCONFIG_PROPERTIES "chrome://browser/content/searchconfig.properties"
+#define INTL_PROPERTIES "chrome://global/locale/intl.properties"
 #else
 #define SEARCHCONFIG_PROPERTIES "chrome://navigator/content/searchconfig.properties"
+#define INTL_PROPERTIES "chrome://navigator/locale/navigator.properties"
 #endif
-#define INTL_PROPERTIES "chrome://global/locale/intl.properties"
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
 static NS_DEFINE_CID(kRDFContainerCID,             NS_RDFCONTAINER_CID);
@@ -4730,7 +4731,8 @@ InternetSearchDataSource::GetInputs(const PRUnichar *dataUni, nsString &engineNa
       rv = rootBranch->GetComplexValue("browser.search.selectedEngine", 
                                        NS_GET_IID(nsIPrefLocalizedString),
                                        getter_AddRefs(selectedEngineName));
-      selectedEngineName->GetData(getter_Copies(selectedEngineNameStr));
+      if (selectedEngineName)
+        selectedEngineName->GetData(getter_Copies(selectedEngineNameStr));
 
       engineIsNotDefault = !defaultEngineNameStr.Equals(selectedEngineNameStr);
     }
