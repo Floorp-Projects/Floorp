@@ -20,12 +20,12 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: Map.h,v 1.1 2000/04/12 10:49:40 kvisco%ziplink.net Exp $
+ * $Id: Map.h,v 1.2 2001/06/26 11:58:47 sicking%bigfoot.com Exp $
  */
 
 /*
  * A Hashtable for TxObjects
- * @version $Revision: 1.1 $ $Date: 2000/04/12 10:49:40 $
+ * @version $Revision: 1.2 $ $Date: 2001/06/26 11:58:47 $
  */
 
 #ifndef TRANSFRMX_MAP_H
@@ -81,11 +81,21 @@ public:
     void  put(TxObject* key, TxObject* obj);
 
     /**
-     * Removes all elements from the Map table
+     * enum used when setting ownership
+    **/
+    enum txMapOwnership
+    {
+        eOwnsNone         = 0x00,
+        eOwnsItems        = 0x01,
+        eOwnsKeys         = 0x02,
+        eOwnsKeysAndItems = eOwnsItems | eOwnsKeys
+    };
+
+    /**
+     * Removes all elements from the Map. Deletes objects according
+     * to the mOwnership attribute
     **/
     void clear();
-
-    void clear(MBool doObjectDeletion);
 
     /**
      * Returns true if there are no elements in this Map
@@ -93,20 +103,19 @@ public:
     **/
     MBool isEmpty();
 
-    /**
-     * Removes the object associated with the given key from this Map
-     * @param key the TxObject used to compute the hashCode for the object to remove
-     * from the Map
-     * @return the removed object
-    **/
+    // THIS IS DEPRECATED
     TxObject* remove(TxObject* key);
 
+    // THIS IS DEPRECATED, use setOwnership
+    void  setObjectDeletion(MBool deleteObjects)
+    {
+        setOwnership(deleteObjects ? eOwnsKeysAndItems : eOwnsNone );
+    }
+
     /**
-     * Sets the object deletion flag. If set to true, objects in
-     * the Map will be deleted upon calling the clear() method, or
-     * upon destruction. By default this is false.
+     * Sets the ownership attribute.
     **/
-    void  setObjectDeletion(MBool deleteObjects);
+    void setOwnership(txMapOwnership aOwnership);
 
     /**
      * Returns the number of key-element pairs in the Map
@@ -135,7 +144,12 @@ private:
 
     Int32 numberOfBuckets;
     Int32 numberOfElements;
-    MBool doObjectDeletion;
+
+    /**
+     * The ownership flag. Used to decide which objects are
+     * owned by the map and thus should be deleted when released
+    **/
+    txMapOwnership mOwnership;
 
       //-------------------/
      //- Private Methods -/

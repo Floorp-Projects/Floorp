@@ -111,6 +111,7 @@ CPP_OBJS=                                       \
   ../xslt/functions/$(OBJDIR)/ElementAvailableFnCall.obj \
   ../xslt/functions/$(OBJDIR)/FunctionAvailableFnCall.obj \
   ../xslt/functions/$(OBJDIR)/GenerateIdFunctionCall.obj \
+  ../xslt/functions/$(OBJDIR)/txKeyFunctionCall.obj \
   ../xslt/functions/$(OBJDIR)/SystemPropertyFunctionCall.obj \
   ../xslt/util/$(OBJDIR)/NodeSorter.obj \
   ../xslt/util/$(OBJDIR)/NodeStack.obj \

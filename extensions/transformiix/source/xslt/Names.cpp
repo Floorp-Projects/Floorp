@@ -28,14 +28,14 @@
  *       W3C XPath 1.0 Recommendation
  *    -- Added lang attr declaration
  *
- * $Id: Names.cpp,v 1.10 2001/05/12 12:00:11 peterv%netscape.com Exp $
+ * $Id: Names.cpp,v 1.11 2001/06/26 11:58:51 sicking%bigfoot.com Exp $
  */
 
 /**
  * XSL names used throughout the XSLProcessor.
  * Probably should be wrapped in a Namespace
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.10 $ $Date: 2001/05/12 12:00:11 $
+ * @version $Revision: 1.11 $ $Date: 2001/06/26 11:58:51 $
 **/
 #include "Names.h"
 
@@ -63,6 +63,7 @@ const String FOR_EACH           = "for-each";
 const String IF                 = "if";
 const String IMPORT             = "import";
 const String INCLUDE            = "include";
+const String KEY                = "key";
 const String MESSAGE            = "message";
 const String NUMBER             = "number";
 const String OTHERWISE          = "otherwise";
@@ -106,6 +107,7 @@ const String PRIORITY_ATTR           = "priority";
 const String SELECT_ATTR             = "select";
 const String STANDALONE              = "standalone";
 const String TEST_ATTR               = "test";
+const String USE_ATTR                = "use";
 const String USE_ATTRIBUTE_SETS_ATTR = "use-attribute-sets";
 const String VALUE_ATTR              = "value";
 const String VERSION_ATTR            = "version";
