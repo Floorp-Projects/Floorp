@@ -458,6 +458,8 @@ public:
             return mCurrent != aConstIterator.mCurrent; }
     };
 
+    friend class ConstIterator;
+
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
     ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(MatchList*, &mHead)); }
 
@@ -497,6 +499,8 @@ public:
 
         friend class MatchSet;
     };
+
+    friend class Iterator;
 
     Iterator First() { return Iterator(mHead.mNext); }
     Iterator Last() { return Iterator(&mHead); }
@@ -793,6 +797,8 @@ public:
         PRBool operator!=(const ConstIterator& aConstIterator) const {
             return mCurrent != aConstIterator.mCurrent; }
     };
+
+    friend class ConstIterator;
 
     ConstIterator First() const { return ConstIterator(mHead.mNext); }
     ConstIterator Last() const { return ConstIterator(NS_CONST_CAST(Entry*, &mHead)); }
