@@ -36,7 +36,7 @@ class nsIScrollbarListener;
 nsresult NS_NewSliderFrame(nsIFrame** aResult) ;
 
 
-class nsSliderFrame : public nsHTMLContainerFrame, nsIDOMMouseListener
+class nsSliderFrame : public nsHTMLContainerFrame, public nsIDOMMouseListener
 {
 public:
   nsSliderFrame();
