@@ -586,9 +586,9 @@ net_NormalizeFileURL(const nsACString &aURL, nsCString &aResultBuf)
     aURL.BeginReading(beginIter);
     aURL.EndReading(endIter);
 
-    const char *begin = beginIter.get();
+    const char *s, *begin = beginIter.get();
 
-    for (const char *s = begin; s != endIter.get(); ++s)
+    for (s = begin; s != endIter.get(); ++s)
     {
         if (*s == '\\')
         {
