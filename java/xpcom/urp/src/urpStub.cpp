@@ -30,13 +30,13 @@
 #include "urpManager.h"
 
 
-urpStub::urpStub(urpConnection* conn) {
-  manager = new urpManager(PR_TRUE, nsnull, conn);
-//here zavodim condWait i peredaem v urpManager
+urpStub::urpStub(urpManager* man) {
+  manager = man;
 }
 
 
 urpStub::~urpStub() {
+printf("destructor of urpStub\n");
   if(manager) 
      delete manager;
 }
@@ -63,16 +63,21 @@ void urpStub::Dispatch(bcICall *call) {
   nsXPTMethodInfo* info;
   interfaceInfo->GetMethodInfo(mid, (const nsXPTMethodInfo **)&info);
   PRUint32 paramCount = info->GetParamCount();
-printf("ThreadID is written %d\n",paramCount);
   PRMonitor* mon = PR_NewMonitor();
   PR_EnterMonitor(mon);
-  manager->SetCall(call, mon);
+printf("ThreadID is written %d %p %p %p %p\n",paramCount, call, mon, manager, this);
+  nsresult rv = manager->SetCall(call, mon);
+  if(NS_FAILED(rv)) {
+     printf("Error of SetCall in method Dispatch\n");
+     exit(-1);
+  }
   manager->SendUrpRequest(oid, iid, mid, interfaceInfo, call, paramCount,
 		 info);
   if(NS_FAILED(PR_Wait(mon, PR_INTERVAL_NO_TIMEOUT))) {
 	printf("Can't wait on cond var\n");
 	exit(-1);
   }
+  rv = manager->RemoveCall();
   PR_ExitMonitor(mon);
   PR_DestroyMonitor(mon);
 }

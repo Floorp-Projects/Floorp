@@ -17,32 +17,26 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Sergey Lunegov <lsv@sparc.spb.su>
+ * Igor Kushnirskiy <idk@eng.sun.com>
  */
 #include "nsIServiceManager.h"
 #include "nsCRT.h"
 #include "urpComponentFactory.h"
-#include "bcIXPCOMStubsAndProxies.h"
-#include "bcXPCOMStubsAndProxiesCID.h"
-#include "bcIORBComponent.h"
-#include "bcORBComponentCID.h"
-
-#include "urpStub.h"
-
-static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
-static NS_DEFINE_CID(kORBComponent,BC_ORBCOMPONENT_CID);
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(urpComponentFactory, nsIFactory)
 
-static nsISupports* compM = nsnull;
+//static nsISupports* compM = nsnull;
+//nsCOMPtr<nsIComponentManager> compM = nsnull;
 
-urpComponentFactory::urpComponentFactory(const char *_location, const nsCID &aCID) {
+urpComponentFactory::urpComponentFactory(const char *_location, const nsCID &aCID, nsIComponentManager* m) {
     NS_INIT_ISUPPORTS();
     location = nsCRT::strdup(_location);
     aClass = aCID;
+    compM = m;
 }
 
 urpComponentFactory::~urpComponentFactory() {
+    printf("destructor or urpComponentFactory\n");
     nsCRT::free((char*)location);
 }
 
@@ -51,35 +45,10 @@ urpComponentFactory::~urpComponentFactory() {
 NS_IMETHODIMP urpComponentFactory::CreateInstance(nsISupports *aOuter, const nsIID & iid, void * *result) {
     printf("--urpComponentFactory::CreateInstance\n");
     nsresult r;
-    if(!compM) {
-       NS_WITH_SERVICE(bcIXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
-       if (NS_FAILED(r)) {
-           printf("--urpComponentFactory::CreateInstance xpcomStubsAndProxies failed \n");
-           return r;
-       }
-       NS_WITH_SERVICE(bcIORBComponent, _orb, kORBComponent, &r);
-       if (NS_FAILED(r)) {
-           printf("--urpComponentFactory::CreateInstance bcORB failed \n");
-           return r;
-       }
-       bcIORB *orb;
-       _orb->GetORB(&orb);
-       bcOID oid;
-       urpTransport* transport = new urpConnector();
-       PRStatus status = transport->Open("socket,host=indra,port=20009");
-       if(status != PR_SUCCESS) {
-           printf("Error during opening connection\n");
-           exit(-1);
-       }
-       bcIStub *stub = new urpStub(transport->GetConnection());
-       oid = orb->RegisterStub(stub);
-       printf("--urpComponentFactory::CreateInstance after GetOID\n");
-       nsISupports *proxy;
-       printf("--[c++]urpComponentFactory::CreateInstance iid:%s cid:%s\n",iid.ToString(), aClass.ToString());
-       xpcomStubsAndProxies->GetProxy(oid, NS_GET_IID(nsIComponentManager), orb, &proxy);
-       compM = proxy;
-    }
-    ((nsIComponentManager*)(compM))->CreateInstance(aClass, nsnull, iid, result);
+    nsIFactory* factory;
+    ((nsIComponentManager*)(compM))->FindFactory(aClass, &factory);
+    factory->CreateInstance(aOuter, iid, result);
+    NS_RELEASE(factory);
     printf("--urpComponentFactory::CreateInstance end\n");
     return NS_OK;
 }

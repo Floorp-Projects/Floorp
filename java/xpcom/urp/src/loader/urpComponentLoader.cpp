@@ -17,7 +17,7 @@
  * Rights Reserved.
  *
  * Contributor(s):
- * Sergey Lunegov <lsv@sparc.spb.su>
+ * Igor Kushnirskiy <idk@eng.sun.com>
  */
 
 /*
@@ -33,7 +33,16 @@
 #include "nsXPIDLString.h"    
 #include "nsCRT.h"
 
+#include "bcIXPCOMStubsAndProxies.h"
+#include "bcXPCOMStubsAndProxiesCID.h"
+#include "bcIORBComponent.h"
+#include "bcORBComponentCID.h"
 
+#include "urpStub.h"
+#include "urpManager.h"
+
+static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
+static NS_DEFINE_CID(kORBComponent,BC_ORBCOMPONENT_CID);
         
 const char urpComponentTypeName[] = URPCOMPONENTTYPENAME;
 
@@ -50,6 +59,13 @@ const char xpcomKeyName[] = "software/mozilla/XPCOM/components";
 
 NS_IMPL_THREADSAFE_ISUPPORTS(urpComponentLoader,NS_GET_IID(nsIComponentLoader));
 
+nsCOMPtr<nsIComponentManager> compM = nsnull;
+static bcIORB* orb = nsnull;
+static urpTransport* transport;
+static urpManager* man;
+static bcIStub* stub;
+static nsISupports* proxy;
+
 urpComponentLoader::urpComponentLoader() 
     : mCompMgr(NULL),
       
@@ -57,9 +73,37 @@ urpComponentLoader::urpComponentLoader()
 {
     NS_INIT_REFCNT();
     printf("--urpComponentLoader::urpComponentLoader \n");
+    nsresult r;
+    NS_WITH_SERVICE(bcIXPCOMStubsAndProxies, xpcomStubsAndProxies, kXPCOMStubsAndProxies, &r);
+    if (NS_FAILED(r)) {
+        printf("--urpComponentFactory::CreateInstance xpcomStubsAndProxies failed \n");
+        return;
+    }
+    NS_WITH_SERVICE(bcIORBComponent, _orb, kORBComponent, &r);
+    if (NS_FAILED(r)) {
+        printf("--urpComponentFactory::CreateInstance bcORB failed \n");
+        return;
+    }
+    _orb->GetORB(&orb);
+    bcOID oid;
+    transport = new urpConnector();
+    PRStatus status = transport->Open("socket,host=indra,port=20009");
+    if(status != PR_SUCCESS) {
+        printf("Error during opening connection\n");
+        exit(-1);
+    }
+    man = new urpManager(PR_TRUE, nsnull, transport->GetConnection());
+    stub = new urpStub(man);
+    oid = orb->RegisterStub(stub);
+    xpcomStubsAndProxies->GetProxy(oid, NS_GET_IID(nsIComponentManager), orb, &proxy);
+    compM = (nsIComponentManager*)proxy;
 }
 
 urpComponentLoader::~urpComponentLoader() { //nb
+    delete stub;
+    delete man;
+    delete transport;
+    NS_RELEASE(proxy);
     printf("--urpComponentLoader::~urpComponentLoader \n");
 }
 
@@ -77,7 +121,8 @@ NS_IMETHODIMP urpComponentLoader::GetFactory(const nsIID & aCID, const char *aLo
     fprintf(stderr, "--urpComponentLoader::GetFactory(%s,%s,%s)\n", cidString, aLocation, aType);
     delete [] cidString;
 #endif
-    nsIFactory *f = new urpComponentFactory(aLocation, aCID);
+    nsIFactory *f = new urpComponentFactory(aLocation, aCID, compM);
+    NS_ADDREF(f);
     *_retval = f;
     return NS_OK;
 }
@@ -414,6 +459,7 @@ UnregisterRemoteLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
         do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv);
     if (NS_FAILED(rv)) return rv;
     nsXPIDLCString urpLoader;
+    printf("URP component loader is being unregistered\n");
     rv = catman->GetCategoryEntry("component-loader", urpComponentTypeName,
                                   getter_Copies(urpLoader));
     if (NS_FAILED(rv)) return rv;
@@ -421,8 +467,7 @@ UnregisterRemoteLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
     // only unregister if we're the current JS component loader
     if (!strcmp(urpLoader, URP_COMPONENTLOADER_ContractID)) {
         return catman->DeleteCategoryEntry("component-loader",
-					   urpComponentTypeName, PR_TRUE,
-                                           getter_Copies(urpLoader));
+					   urpComponentTypeName, PR_TRUE,getter_Copies(urpLoader));
     }
     return NS_OK;
 }

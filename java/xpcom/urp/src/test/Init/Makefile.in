@@ -21,8 +21,8 @@
 #
 # Sergey Lunegov <lsv@sparc.spb.su>
 
-DEPTH           = ../../../../../
-topsrcdir	= ../../../../../
+DEPTH           = ../../../../../../
+topsrcdir	= ../../../../../../
 srcdir		= .
 VPATH		= .
 
@@ -30,38 +30,20 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/config.mk
 
-DIRS = client Init
-
-LIBRARY_NAME = urpTest
-MODULE = urpTest
+LIBRARY_NAME = urpInit
+MODULE = urpInit
 IS_COMPONENT = 1
-XPIDLSRCS =  urpITest.idl
+XPIDLSRCS =  Init.idl
 
-PROGRAM = server
-
-CXXFLAGS        +=  -I$(topsrcdir)/java/xpcom/xpcom -I../transport -I$(JDKHOME)/include -I$(topsrcdir)/java/xpcom/java/src -I$(topsrcdir)/java/xpcom/connect/xpcom
+CXXFLAGS        +=  -I$(topsrcdir)/java/xpcom/xpcom -I$(JDKHOME)/include -I$(topsrcdir)/java/xpcom/java/src -I$(topsrcdir)/java/xpcom/connect/xpcom -I../
 
 CPPSRCS  =   \
-	 urpTestImpl.cpp \
-	 urpTestImplFactory.cpp \
-	 server.cpp \
+	 initImpl.cpp \
+	 initImplFactory.cpp \
 	 $(NULL)
 
-LIBS            = -L./ -L$(DIST)/bin/components/ $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) \
-      ../urpStub.o \
-      ../urpMarshalToolkit.o \
-      ../urpManager.o \
-      ../transport/llTransport.o ../transport/urpPacket.o \
-      ../transport/urpTransport.o \
-      $(NULL)
 
-EXTRA_DSO_LDOPTS += \
-      ../transport/llTransport.o ../transport/urpPacket.o \
-      ../transport/urpTransport.o \
-      ../urpStub.o \
-      ../urpMarshalToolkit.o \
-      ../urpManager.o \
-      $(NULL)
+LIBS            = -L./ -L$(DIST)/bin/components/ $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) 
 
 
 include $(topsrcdir)/config/rules.mk

@@ -43,6 +43,8 @@
 #include "urpStub.h"
 #include "urpITest.h"
 
+#include "urpTestImpl.h"
+
 static NS_DEFINE_CID(kORBCIID,BC_ORBCOMPONENT_CID);
 static NS_DEFINE_CID(kXPCOMStubsAndProxies,BC_XPCOMSTUBSANDPROXIES_CID);
 
@@ -76,8 +78,8 @@ nsIInterfaceInfo *interfaceInfo;
     bcIORB *orb;
     _orb->GetORB(&orb);
     bcIStub *stub = NULL;
-//    urpITest *object = new urpTestImpl();
-//    object->AddRef();
+    urpITest *object = new urpTestImpl();
+    object->AddRef();
     urpITest *proxy = NULL;
     urpTransport* transport = new urpConnector();
     PRStatus status = transport->Open(connectString);
@@ -85,7 +87,8 @@ nsIInterfaceInfo *interfaceInfo;
         printf("Error during opening connection\n");
         exit(-1);
     }
-    stub = new urpStub(transport->GetConnection());
+    urpManager* man = new urpManager(PR_TRUE, nsnull, transport->GetConnection());
+    stub = new urpStub(man);
     bcOID oid = orb->RegisterStub(stub);
     printf("---urpTestImpl oid=%ld iid=%s\n",oid, NS_GET_IID(urpITest).ToString());
     r = xpcomStubsAndProxies->GetProxy(oid,NS_GET_IID(urpITest),orb,(nsISupports**)&proxy);
@@ -101,7 +104,7 @@ nsIInterfaceInfo *interfaceInfo;
     valueArray[2] = "a";
     valueArray[3] = "b";
 
-    PRInt32 l1 = 1999;
+    PRInt32 l1 = 99;
     PRInt32 ret;
     PRInt32 rt;
 //    object->Test1(&l1);
@@ -109,14 +112,14 @@ nsIInterfaceInfo *interfaceInfo;
     proxy->Test1(&l1);
     printf("--urpTestImpl after Test1 l=%d %d\n",l1,ret);
     /*******************************************/    
-    PRInt32 l2 = 2000;
+    PRInt32 l2 = 2020;
     l1 = 1999;
     proxy->Test2(l1,&l2);
     printf("--urpTestImpl after Test2 l2=%d\n",l2);
 
     /*******************************************/
-    const char * s1 = "s1";
-    char * s2 = "s2";
+    const char * s1 = "s111";
+    char * s2 = "s2222";
     proxy->Test3(s1,&s2);
     printf("--urpTestImpl after Test3 s2=%s\n",s2);
     /*******************************************/

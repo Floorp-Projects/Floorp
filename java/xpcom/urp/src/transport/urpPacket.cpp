@@ -78,12 +78,12 @@ void urpPacket::WriteShort( short shortValue ){
 
 // Write Section 4 bytes
 void urpPacket::WriteInt( int intValue ){
-    intValue = PR_htons( intValue );
+    intValue = PR_htonl( intValue );
     WriteBytes( &intValue, 4 );
 }
 
 void urpPacket::WriteLong( long longValue ){
-    longValue = PR_htons( longValue );
+    longValue = PR_htonl( longValue );
     WriteBytes( &longValue, 4 );
 }
 

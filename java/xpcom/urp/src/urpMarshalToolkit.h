@@ -6,6 +6,7 @@
 #include "bcDefs.h"
 #include "urpTransport.h"
 #include "bcIORB.h"
+#include "urpManager.h"
 
 #include "nsHashtable.h"
 
@@ -34,7 +35,7 @@ public:
 	urpMarshalToolkit(PRBool isClient);
 	~urpMarshalToolkit();
 
-    nsresult ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpConnection* conn);
+    nsresult ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpManager* man);
     nsresult WriteParams(bcICall *call, PRUint32 paramCount, const nsXPTMethodInfo * info, nsIInterfaceInfo* interfaceInfo, urpPacket* message,
                         PRUint16 methodIndex);
     void WriteType(bcIID iid, urpPacket* message);
@@ -54,7 +55,7 @@ private:
     nsresult ReadElement(nsXPTParamInfo * param, uint8 type,
                         nsIInterfaceInfo* interfaceInfo, urpPacket* message,
                         PRUint16 methodIndex, bcIAllocator * allocator,
-			bcIMarshaler* m, bcIORB *orb, urpConnection* conn);
+			bcIMarshaler* m, bcIORB *orb, urpManager* man);
     bcXPType XPTType2bcXPType(uint8 type);
 };
 

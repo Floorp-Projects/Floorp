@@ -17,25 +17,20 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ * Leila.Garin@eng.sun.com
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#ifndef __urpComponentFactory_h
-#define __urpComponentFactory_h
-#include "nsIFactory.h"
+#ifndef __initImpl_h
+#define __initImpl_h
+#include "Init.h"
 
-class urpComponentFactory : public nsIFactory {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
-    urpComponentFactory(const char *location, const nsCID &aCID,
-			nsIComponentManager* m);
-    virtual ~urpComponentFactory();
-private:
-    char *location;
-    nsCID aClass;    
-    nsCOMPtr<nsIComponentManager> compM;
+class initImpl : public  urpInit {
+    NS_DECL_ISUPPORTS 
+    NS_DECL_URPINIT
+    initImpl();
+    virtual ~initImpl();
 };
 
-#endif
+#endif /* __urpTestImpl_h */
 
 

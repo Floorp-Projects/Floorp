@@ -40,16 +40,13 @@ public:
                           PRUint32 paramCount, const nsXPTMethodInfo* info);
 	nsresult ReadMessage(urpConnection* conn, PRBool ic);
 	nsresult SetCall(bcICall* call, PRMonitor *m);
+	nsresult RemoveCall();
 private:
 	nsHashtable* connTable;
+	nsHashtable* monitTable;
 	bcIORB *broker;
 	urpConnection* connection;
-	PRMonitor *mon;
 /* for ReadReply */
-	bcICall* call;
-	PRUint32 paramCount;
-	nsXPTMethodInfo* info;
-	bcMID mid;
 	nsIInterfaceInfo *interfaceInfo;
     void TransformMethodIDAndIID();
     nsresult ReadReply(urpPacket* message, char header,

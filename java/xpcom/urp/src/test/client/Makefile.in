@@ -41,12 +41,14 @@ CPPSRCS  =   \
 	 client.cpp \
 	 $(NULL)
 
-LIBS            = -L./  $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) \
+
+LIBS            = -L./ -L$(DIST)/bin/components/ $(XPCOM_LIBS) $(NSPR_LIBS) $(EXTRA_DSO_LIBS) \
       ../../urpStub.o \
       ../../urpMarshalToolkit.o \
       ../../urpManager.o \
       ../../transport/llTransport.o ../../transport/urpPacket.o \
       ../../transport/urpTransport.o \
+      ../urpTestImpl.o
 
 include $(topsrcdir)/config/rules.mk
 

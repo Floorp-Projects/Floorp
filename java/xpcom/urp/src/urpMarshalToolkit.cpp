@@ -242,7 +242,7 @@ nsresult
 urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
                         nsIInterfaceInfo* interfaceInfo, urpPacket* message,
                         PRUint16 methodIndex, bcIAllocator* allocator,
-			bcIMarshaler* m, bcIORB *broker, urpConnection* conn) {
+			bcIMarshaler* m, bcIORB *broker, urpManager* man) {
 	void* data = allocator->Alloc(sizeof(void*));
 	nsresult r = NS_OK;
 	switch(type) {
@@ -321,7 +321,7 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
                     nsIID iid = ReadType(message);
                     nsISupports *proxy = NULL;
                     if (oid != 0) {
-			   urpStub* stub = new urpStub(conn);
+			   urpStub* stub = new urpStub(man);
 			   broker->RegisterStubWithOID(stub, &oid);
                     }
                     m->WriteSimple(&oid, XPTType2bcXPType(type));
@@ -345,7 +345,7 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
 		   m->WriteSimple(&arraySize,bc_T_U32);
 		   char *current = *(char**)data;
 		   for (int i = 0; i < arraySize; i++) {
-			ReadElement(param,datumType.TagPart(),interfaceInfo, message, methodIndex, allocator, m, broker, conn);
+			ReadElement(param,datumType.TagPart(),interfaceInfo, message, methodIndex, allocator, m, broker, man);
 		   }
 		} else {
 		   size_t length = 0;
@@ -368,7 +368,7 @@ urpMarshalToolkit::ReadElement(nsXPTParamInfo * param, uint8 type,
 }
 
 nsresult
-urpMarshalToolkit::ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpConnection* conn) {
+urpMarshalToolkit::ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, urpPacket* message, nsIInterfaceInfo *interfaceInfo, PRUint16 methodIndex, bcICall* call, bcIORB *orb, urpManager* man) {
 	bcIAllocator * allocator = new urpAllocator(nsAllocator::GetGlobalAllocator());
 	bcIMarshaler* m = call->GetMarshaler();
 	int i;
@@ -384,7 +384,7 @@ urpMarshalToolkit::ReadParams(PRUint32 paramCount, const nsXPTMethodInfo *info, 
 	    }
 
 	    rv = ReadElement(&param, param.GetType().TagPart(), interfaceInfo, 
-		message, methodIndex, allocator, m, orb, conn);
+		message, methodIndex, allocator, m, orb, man);
 	    if(NS_FAILED(rv)) {
 		delete allocator;
 		delete m;

@@ -17,25 +17,26 @@
  * Rights Reserved.
  *
  * Contributor(s):
+ * Leila.Garin@eng.sun.com
  * Igor Kushnirskiy <idk@eng.sun.com>
  */
-#ifndef __urpComponentFactory_h
-#define __urpComponentFactory_h
-#include "nsIFactory.h"
 
-class urpComponentFactory : public nsIFactory {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIFACTORY
-    urpComponentFactory(const char *location, const nsCID &aCID,
-			nsIComponentManager* m);
-    virtual ~urpComponentFactory();
-private:
-    char *location;
-    nsCID aClass;    
-    nsCOMPtr<nsIComponentManager> compM;
+#include "nsISupports.idl"
+
+[scriptable, uuid(e2f5cf82-4ffa-4c55-ad72-9b3a8a4c4b04)]
+interface urpInit : nsISupports
+{
 };
 
-#endif
+%{ C++
+#define URPINIT_CID                 \
+{   /*55503e25-0a47-48e8-b6ae-b41d0f4e170b*/         \
+    0x55503e25,                                      \
+    0x0a47,                                          \
+    0x48e8,                                          \
+    {0xb6, 0xae, 0xb4, 0x1d, 0x0f, 0x4e, 0x17, 0x0b} \
+}
 
+#define URPINIT_PROGID "urpInit"
 
+%}

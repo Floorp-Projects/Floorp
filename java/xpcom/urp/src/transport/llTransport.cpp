@@ -128,7 +128,7 @@ PRStatus llTCPTransport::Open( char *name, llSideType type )
             PR_SetSocketOption( fd, &sopt );
 
             addr.inet.family = AF_INET;
-            addr.inet.port = port;
+            addr.inet.port = PR_htons(port);
             addr.inet.ip = PR_htonl(INADDR_ANY);
             status = PR_Bind( fd, &addr );
             if( status == PR_SUCCESS ) PR_Listen( fd, 5 );
@@ -150,7 +150,9 @@ PRStatus llTCPTransport::Open( char *name, llSideType type )
 
 PRStatus llTCPTransport::Close( void )
 {
-    return PR_Close( fd );
+    if( type == llServer )
+        return PR_Close( fd );
+    return PR_SUCCESS; // client is always successful
 }
 
 llConnection * llTCPTransport::ProvideConnection( void )
@@ -232,8 +234,11 @@ PRStatus llPipeTransport::Open( char *name, llSideType type )
 
 PRStatus llPipeTransport::Close( void )
 {
-    PRNetAddr addr;
-    PR_GetSockName( fd, &addr );
-    PR_Delete( addr.local.path );
-    return PR_Close( fd );
+    if( type == llServer ) {
+        PRNetAddr addr;
+        PR_GetSockName( fd, &addr );
+        PR_Delete( addr.local.path );
+        return PR_Close( fd );
+    }
+    return PR_SUCCESS; // client is always successful
 }
