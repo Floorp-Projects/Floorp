@@ -451,6 +451,11 @@ void StyleContextImpl::PostProcessData(void)
   mSpacing.mBorder = mBorder.mSize;
   mSpacing.mBorderPadding = mSpacing.mPadding;
   mSpacing.mBorderPadding += mBorder.mSize;
+
+  // XXX hack fill in molecule
+  mMolecule.border = mBorder.mSize;
+  mMolecule.margin = mSpacing.mMargin;
+  mMolecule.borderPadding = mSpacing.mBorderPadding;
 }
 
 void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
@@ -475,14 +480,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
     if (buf.EqualsIgnoreCase("B")) {
 //      float p2t = aPresContext->GetPixelsToTwips();
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-//      mMolecule.border.top = nscoord(5 * p2t);
-//      mMolecule.border.right = nscoord(5 * p2t);
-//      mMolecule.border.bottom = nscoord(5 * p2t);
-//      mMolecule.border.left = nscoord(5 * p2t);
-//      for (int i = 0; i < 4; i++) {
-//        mMolecule.borderStyle[i] = NS_STYLE_BORDER_STYLE_INSET;
-//        mMolecule.borderColor[i] = NS_RGB(128, 128, 128);
-//      }
     } else if (buf.EqualsIgnoreCase("A")) {
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
       mMolecule.cursor = NS_STYLE_CURSOR_HAND;
@@ -511,8 +508,8 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
     } else if (buf.EqualsIgnoreCase("PRE")) {
       mMolecule.whiteSpace = NS_STYLE_WHITESPACE_PRE;
-      mMolecule.margin.top = NS_POINTS_TO_TWIPS_INT(3);
-      mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(3);
+      mSpacing.mMargin.top = NS_POINTS_TO_TWIPS_INT(3);
+      mSpacing.mMargin.bottom = NS_POINTS_TO_TWIPS_INT(3);
     } else if (buf.EqualsIgnoreCase("U")) {
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
     } else if (buf.EqualsIgnoreCase("FONT")) {
@@ -525,10 +522,10 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
     } else if (buf.EqualsIgnoreCase("IMG")) {
       float p2t = aPresContext->GetPixelsToTwips();
       mMolecule.display = NS_STYLE_DISPLAY_INLINE;
-      mMolecule.padding.top = nscoord(2 * p2t);
-      mMolecule.padding.right = nscoord(2 * p2t);
-      mMolecule.padding.bottom = nscoord(2 * p2t);
-      mMolecule.padding.left = nscoord(2 * p2t);
+      mSpacing.mPadding.top = nscoord(2 * p2t);
+      mSpacing.mPadding.right = nscoord(2 * p2t);
+      mSpacing.mPadding.bottom = nscoord(2 * p2t);
+      mSpacing.mPadding.left = nscoord(2 * p2t);
       nsString  align("ALIGN");
       nsString  value;
       if (eContentAttr_HasValue == aContent->GetAttribute(align, value)) {
@@ -549,36 +546,36 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
           mMolecule.textAlign = NS_STYLE_TEXT_ALIGN_RIGHT;
         }
       }
-//      mMolecule.margin.top = NS_POINTS_TO_TWIPS_INT(2);
-//      mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(2);
+//      mSpacing.mMargin.top = NS_POINTS_TO_TWIPS_INT(2);
+//      mSpacing.mMargin.bottom = NS_POINTS_TO_TWIPS_INT(2);
     } else if (buf.EqualsIgnoreCase("BODY")) {
       float p2t = aPresContext->GetPixelsToTwips();
-      mMolecule.padding.top = nscoord(5 * p2t);
-      mMolecule.padding.right = nscoord(5 * p2t);
-      mMolecule.padding.bottom = nscoord(5 * p2t);
-      mMolecule.padding.left = nscoord(5 * p2t);
-      mMolecule.border.top = nscoord(1 * p2t);
-      mMolecule.border.right = nscoord(1 * p2t);
-      mMolecule.border.bottom = nscoord(1 * p2t);
-      mMolecule.border.left = nscoord(1 * p2t);
+      mSpacing.mPadding.top = nscoord(5 * p2t);
+      mSpacing.mPadding.right = nscoord(5 * p2t);
+      mSpacing.mPadding.bottom = nscoord(5 * p2t);
+      mSpacing.mPadding.left = nscoord(5 * p2t);
+      mBorder.mSize.top = nscoord(1 * p2t);
+      mBorder.mSize.right = nscoord(1 * p2t);
+      mBorder.mSize.bottom = nscoord(1 * p2t);
+      mBorder.mSize.left = nscoord(1 * p2t);
       for (int i = 0; i < 4; i++) {
-        mMolecule.borderStyle[i] = NS_STYLE_BORDER_STYLE_SOLID;
-        mMolecule.borderColor[i] = NS_RGB(0, 255, 0);
+        mBorder.mStyle[i] = NS_STYLE_BORDER_STYLE_SOLID;
+        mBorder.mColor[i] = NS_RGB(0, 255, 0);
       }
     } else if (buf.EqualsIgnoreCase("LI")) {
       mMolecule.display = NS_STYLE_DISPLAY_LIST_ITEM;
     } else if (buf.EqualsIgnoreCase("UL") || buf.EqualsIgnoreCase("OL")) {
       float p2t = aPresContext->GetPixelsToTwips();
-      mMolecule.padding.left = nscoord(40 * p2t);
-      mMolecule.margin.top = NS_POINTS_TO_TWIPS_INT(5);
-      mMolecule.margin.bottom = NS_POINTS_TO_TWIPS_INT(5);
+      mSpacing.mPadding.left = nscoord(40 * p2t);
+      mSpacing.mMargin.top = NS_POINTS_TO_TWIPS_INT(5);
+      mSpacing.mMargin.bottom = NS_POINTS_TO_TWIPS_INT(5);
     } else if (buf.EqualsIgnoreCase("TABLE")) {                     // TABLE
-      mMolecule.border.top = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.border.bottom = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.border.right = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.border.left = NS_POINTS_TO_TWIPS_INT(1);
-      mMolecule.borderStyle[0] = mMolecule.borderStyle[1] =
-      mMolecule.borderStyle[2] = mMolecule.borderStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
+      mBorder.mSize.top = NS_POINTS_TO_TWIPS_INT(1);
+      mBorder.mSize.bottom = NS_POINTS_TO_TWIPS_INT(1);
+      mBorder.mSize.right = NS_POINTS_TO_TWIPS_INT(1);
+      mBorder.mSize.left = NS_POINTS_TO_TWIPS_INT(1);
+      mBorder.mStyle[0] = mBorder.mStyle[1] =
+      mBorder.mStyle[2] = mBorder.mStyle[3] = NS_STYLE_BORDER_STYLE_SOLID;
       mMolecule.fixedWidth = -1;
       mMolecule.proportionalWidth = -1;
       nsString  align("ALIGN");
@@ -593,15 +590,15 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
     } else if (buf.EqualsIgnoreCase("CAPTION")) {                   // CAPTION
       mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_TOP;
     } else if (buf.EqualsIgnoreCase("TBODY")) {                     // TBODY
-      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.top = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.bottom = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.right = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.left = NS_POINTS_TO_TWIPS_INT(0);
     } else if (buf.EqualsIgnoreCase("TR")) {                        // TROW
-      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(0);
-      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.top = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.bottom = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.right = NS_POINTS_TO_TWIPS_INT(0);
+      mSpacing.mPadding.left = NS_POINTS_TO_TWIPS_INT(0);
     } else if (buf.EqualsIgnoreCase("TD")) {                        // TD
       float p2t = aPresContext->GetPixelsToTwips();
       
@@ -612,17 +609,17 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
         cellPadding = 20;
       mMolecule.verticalAlign = NS_STYLE_VERTICAL_ALIGN_MIDDLE;
         
-      mMolecule.padding.top = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mMolecule.padding.bottom = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mMolecule.padding.right = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mMolecule.padding.left = NS_POINTS_TO_TWIPS_INT(cellPadding);
-      mMolecule.border.top = nscoord(1 * p2t);
-      mMolecule.border.right = nscoord(1 * p2t);
-      mMolecule.border.bottom = nscoord(1 * p2t);
-      mMolecule.border.left = nscoord(1 * p2t);
+      mSpacing.mPadding.top = NS_POINTS_TO_TWIPS_INT(cellPadding);
+      mSpacing.mPadding.bottom = NS_POINTS_TO_TWIPS_INT(cellPadding);
+      mSpacing.mPadding.right = NS_POINTS_TO_TWIPS_INT(cellPadding);
+      mSpacing.mPadding.left = NS_POINTS_TO_TWIPS_INT(cellPadding);
+      mBorder.mSize.top = nscoord(1 * p2t);
+      mBorder.mSize.right = nscoord(1 * p2t);
+      mBorder.mSize.bottom = nscoord(1 * p2t);
+      mBorder.mSize.left = nscoord(1 * p2t);
       for (int i = 0; i < 4; i++) {
-        mMolecule.borderStyle[i] = NS_STYLE_BORDER_STYLE_SOLID;
-        mMolecule.borderColor[i] = NS_RGB(128, 128, 128);
+        mBorder.mStyle[i] = NS_STYLE_BORDER_STYLE_SOLID;
+        mBorder.mColor[i] = NS_RGB(128, 128, 128);
       }
       mMolecule.fixedWidth = -1;
       mMolecule.proportionalWidth = -1;
@@ -685,14 +682,6 @@ void StyleContextImpl::HackStyleFor(nsIPresContext* aPresContext,
   }
 #endif
 
-  mMolecule.borderPadding.top =
-    mMolecule.border.top + mMolecule.padding.top;
-  mMolecule.borderPadding.right =
-    mMolecule.border.right + mMolecule.padding.right;
-  mMolecule.borderPadding.bottom =
-    mMolecule.border.bottom + mMolecule.padding.bottom;
-  mMolecule.borderPadding.left =
-    mMolecule.border.left + mMolecule.padding.left;
 
 }
 
