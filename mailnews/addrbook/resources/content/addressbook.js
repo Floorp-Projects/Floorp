@@ -317,7 +317,7 @@ function AbPrintCard()
 		}
 	}
 
-  if (gPrintSettings == null) {
+  if (!gPrintSettings) {
     gPrintSettings = GetPrintSettings();
   }
 
@@ -354,10 +354,14 @@ function AbPrintAddressBook()
   var abURIArr = uri.split("://");
   var printUrl = "addbook://" + abURIArr[0] + "/" + abURIArr[1] + "?action=print"
 
+  if (!gPrintSettings) {
+    gPrintSettings = GetPrintSettings();
+  }
+
 	printEngineWindow = window.openDialog("chrome://messenger/content/msgPrintEngine.xul",
 										"",
 										"chrome,dialog=no,all",
-										1, [printUrl], statusFeedback);
+										1, [printUrl], statusFeedback, gPrintSettings);
 
 	return;
 }
