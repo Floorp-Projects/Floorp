@@ -23,7 +23,7 @@ public:
     XMLTag() : mFlag(Tag) { }
     XMLTag(String name) : mName(name), mFlag(Tag)  { }
     
-    void addAttribute(String name, String value)    { mAttributeList.insert(AttributeValue(name, value) ); }
+    void addAttribute(const String &name, const String &value)    { mAttributeList.insert(AttributeValue(name, value) ); }
     bool getValue(const String &name, String &value);
     bool hasAttribute(const String &name)                 { return (mAttributeList.find(name) != mAttributeList.end()); }
 
