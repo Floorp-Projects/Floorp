@@ -153,7 +153,7 @@ endif
 ## Motif
 ##
 
-ifdef FE_X_LIBS
+ifdef TK_MOTIF_LIBS
 
 ##
 ## Set the motif include flags
