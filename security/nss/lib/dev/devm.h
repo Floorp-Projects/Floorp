@@ -35,28 +35,119 @@
 #define DEVM_H
 
 #ifdef DEBUG
-static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.4 $ $Date: 2001/11/08 00:14:52 $ $Name:  $";
+static const char DEVM_CVS_ID[] = "@(#) $RCSfile: devm.h,v $ $Revision: 1.5 $ $Date: 2002/04/04 20:00:21 $ $Name:  $";
 #endif /* DEBUG */
-
-#ifndef DEVT_H
-#include "devt.h"
-#endif /* DEVT_H */
-
-#ifndef NSSCKT_H
-#include "nssckt.h"
-#endif /* NSSCKT_H */
 
 #ifndef BASE_H
 #include "base.h"
 #endif /* BASE_H */
 
+#ifndef NSSCKT_H
+#include "nssckt.h"
+#endif /* NSSCKT_H */
+
+#ifndef DEV_H
+#include "dev.h"
+#endif /* DEV_H */
+
+#ifndef DEVTM_H
+#include "devtm.h"
+#endif /* DEVTM_H */
+
 PR_BEGIN_EXTERN_C
+
+/* Shortcut to cryptoki API functions. */
+#define CKAPI(epv) \
+    ((CK_FUNCTION_LIST_PTR)(epv))
+
+NSS_EXTERN void
+nssDevice_AddRef
+(
+ struct nssDeviceBaseStr *device
+);
+
+NSS_EXTERN PRBool
+nssDevice_Destroy
+(
+ struct nssDeviceBaseStr *device
+);
+
+NSS_EXTERN PRBool
+nssModule_IsThreadSafe
+(
+  NSSModule *module
+);
+
+NSS_EXTERN PRBool
+nssModule_IsInternal
+(
+  NSSModule *mod
+);
+
+NSS_EXTERN PRBool
+nssModule_IsModuleDBOnly
+(
+  NSSModule *mod
+);
+
+NSS_EXTERN void *
+nssModule_GetCryptokiEPV
+(
+  NSSModule *mod
+);
+
+NSS_EXTERN NSSSlot *
+nssSlot_Create
+(
+  CK_SLOT_ID slotId,
+  NSSModule *parent
+);
+
+NSS_EXTERN void *
+nssSlot_GetCryptokiEPV
+(
+  NSSSlot *slot
+);
+
+NSS_EXTERN NSSToken *
+nssToken_Create
+(
+  CK_SLOT_ID slotID,
+  NSSSlot *peer
+);
+
+NSS_EXTERN void *
+nssToken_GetCryptokiEPV
+(
+  NSSToken *token
+);
+
+NSS_EXTERN nssSession *
+nssToken_GetDefaultSession
+(
+  NSSToken *token
+);
+
+NSS_EXTERN PRBool
+nssToken_IsLoginRequired
+(
+  NSSToken *token
+);
+
+NSS_EXTERN nssCryptokiObject *
+nssCryptokiObject_Create
+(
+  NSSToken *t, 
+  nssSession *session,
+  CK_OBJECT_HANDLE h
+);
 
 /* PKCS#11 stores strings in a fixed-length buffer padded with spaces.  This
  * function gets the length of the actual string.
  */
 NSS_EXTERN PRUint32
-nssPKCS11StringLength(
+nssPKCS11String_Length
+(
   CK_CHAR *pkcs11str, 
   PRUint32 bufLen
 );
