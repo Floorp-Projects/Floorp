@@ -288,6 +288,7 @@
 #define VerQueryValueA            mozce_VerQueryValueA
 
 #define CreateDialogIndirectParamA CreateDialogIndirectParamW
+#define DialogBoxIndirectParamA    DialogBoxIndirectParamW
 #define SystemParametersInfoA      SystemParametersInfoW
 #define GetMessageA                GetMessageW
 #define DispatchMessageA           DispatchMessageW
