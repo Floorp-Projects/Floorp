@@ -763,6 +763,9 @@ sub BuildIDLProjects()
 		BuildIDLProject(":mozilla:netwerk:protocol:file:macbuild:fileIDL.mcp","file");
 		BuildIDLProject(":mozilla:netwerk:protocol:ftp:macbuild:ftpIDL.mcp","ftp");
 		BuildIDLProject(":mozilla:netwerk:protocol:http:macbuild:httpIDL.mcp","http");
+		
+		# mime service
+		# Just a placeholder as mime.xpt is currently part of the netwerkIDL.mcp build
 	}
 
 	BuildIDLProject(":mozilla:modules:libpref:macbuild:libprefIDL.mcp",				"libpref");
@@ -943,6 +946,9 @@ sub BuildCommonProjects()
 		BuildOneProject(":mozilla:netwerk:protocol:ftp:macbuild:ftp.mcp",			"ftp$D.shlb", "ftp.toc", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:http:macbuild:http.mcp",			"http$D.shlb", "http.toc", 1, $main::ALIAS_SYM_FILES, 1);
 		BuildOneProject(":mozilla:netwerk:protocol:resource:macbuild:resource.mcp",	"resource$D.shlb", "resource.toc", 1, $main::ALIAS_SYM_FILES, 1);
+
+		# mime service
+		BuildOneProject(":mozilla:netwerk:mime:macbuild:mime.mcp",					"mime$D.shlb", "mime.toc", 1, $main::ALIAS_SYM_FILES, 1);
 	}
 	else
 	{
