@@ -37,6 +37,8 @@
 //
 
 #include "mozilladom.h"
+#include "nsCOMPtr.h"
+#include "nsIXMLContent.h"
 
 Node::Node()
 {
@@ -84,10 +86,24 @@ nsIDOMNode* Node::getNSObj()
 //
 const DOMString& Node::getNodeName()
 {
+  nsresult result;
+  nsCOMPtr<nsIXMLContent> nsXMLContent = do_QueryInterface(nsNode);
+  nsCOMPtr<nsIAtom> theNamespaceAtom;
+
   if (nsNode == NULL)
     return NULL_STRING;
 
   nsNode->GetNodeName(nodeName.getNSString());
+  if (nsXMLContent) {
+    result = nsXMLContent->GetNameSpacePrefix(*getter_AddRefs(theNamespaceAtom));
+    if (theNamespaceAtom && NS_SUCCEEDED(result)) {
+      DOMString theNamespacePrefix;
+
+      theNamespaceAtom->ToString(theNamespacePrefix.getNSString());
+      nodeName.insert(0, ":");
+      nodeName.insert(0, theNamespacePrefix);
+    }
+  }
 
   return nodeName;
 }
