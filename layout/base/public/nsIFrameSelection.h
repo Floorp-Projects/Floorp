@@ -208,15 +208,16 @@ public:
    */
   NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent) = 0;
 
-  /** StartAutoScrollTimer is responsible for scrolling the view so that aPoint is always
+  /** StartAutoScrollTimer is responsible for scrolling views so that aPoint is always
    *  visible, and for selecting any frame that contains aPoint. The timer will also reset
-   *  itself to fire again if the view has not scrolled to the end of the document.
+   *  itself to fire again if we have not scrolled to the end of the document.
    *  @param aPresContext is the context to use when figuring out what frame contains the point.
-   *  @param aFrame is the parent of all frames to use when searching for the closest frame to the point.
-   *  @param aPoint is relative to aFrame's parent view.
+   *  @param aView is view to use when searching for the closest frame to the point,
+   *  which is the view that is capturing the mouse
+   *  @param aPoint is relative to the view.
    *  @param aDelay is the timer's interval.
    */
-  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay) = 0;
+  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView* aFrame, nsPoint& aPoint, PRUint32 aDelay) = 0;
 
   /** StopAutoScrollTimer stops any active auto scroll timer.
    */

@@ -209,6 +209,7 @@ public:
 
   void SetScrollbarListener(nsIScrollbarListener* aListener);
 
+  virtual nsIView* GetMouseCapturer() const { return GetView(); }
 
   NS_IMETHOD HandlePress(nsIPresContext* aPresContext,
                          nsGUIEvent *    aEvent,

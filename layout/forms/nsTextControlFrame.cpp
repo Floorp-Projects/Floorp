@@ -423,7 +423,7 @@ public:
                        PRBool aContinueSelection, PRBool aMultipleSelection, PRBool aHint); 
   NS_IMETHOD HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint);
   NS_IMETHOD HandleTableSelection(nsIContent *aParentContent, PRInt32 aContentOffset, PRInt32 aTarget, nsMouseEvent *aMouseEvent);
-  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay);
+  NS_IMETHOD StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView* aView, nsPoint& aPoint, PRUint32 aDelay);
   NS_IMETHOD StopAutoScrollTimer();
   NS_IMETHOD EnableFrameNotification(PRBool aEnable);
   NS_IMETHOD LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt32 aContentLength,
@@ -903,9 +903,9 @@ nsTextInputSelectionImpl::HandleTableSelection(nsIContent *aParentContent, PRInt
 
 
 NS_IMETHODIMP
-nsTextInputSelectionImpl::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint& aPoint, PRUint32 aDelay)
+nsTextInputSelectionImpl::StartAutoScrollTimer(nsIPresContext *aPresContext, nsIView *aView, nsPoint& aPoint, PRUint32 aDelay)
 {
-  return mFrameSelection->StartAutoScrollTimer(aPresContext, aFrame, aPoint, aDelay);
+  return mFrameSelection->StartAutoScrollTimer(aPresContext, aView, aPoint, aDelay);
 }
 
 
