@@ -18,7 +18,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslt.h,v 1.3 2002/03/22 21:43:43 nelsonb%netscape.com Exp $
+ * $Id: sslt.h,v 1.4 2003/02/27 01:31:35 nelsonb%netscape.com Exp $
  */
 
 #ifndef __sslt_h_
@@ -63,6 +67,7 @@ typedef enum {
     ssl_kea_rsa      = 1,
     ssl_kea_dh       = 2,
     ssl_kea_fortezza = 3,
+    ssl_kea_ecdh     = 4,
     ssl_kea_size		/* number of ssl_kea_ algorithms */
 } SSLKEAType;
 
@@ -75,19 +80,22 @@ typedef enum {
 #define kt_rsa   	ssl_kea_rsa
 #define kt_dh   	ssl_kea_dh
 #define kt_fortezza	ssl_kea_fortezza
+#define kt_ecdh   	ssl_kea_ecdh
 #define kt_kea_size	ssl_kea_size
 
 typedef enum {
     ssl_sign_null   = 0, 
     ssl_sign_rsa    = 1,
-    ssl_sign_dsa    = 2
+    ssl_sign_dsa    = 2,
+    ssl_sign_ecdsa  = 3
 } SSLSignType;
 
 typedef enum {
     ssl_auth_null   = 0, 
     ssl_auth_rsa    = 1,
     ssl_auth_dsa    = 2,
-    ssl_auth_kea    = 3
+    ssl_auth_kea    = 3,
+    ssl_auth_ecdsa  = 4
 } SSLAuthType;
 
 typedef enum {

@@ -18,7 +18,11 @@
  * Copyright (C) 2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *      Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ldvector.c,v 1.5 2003/01/30 23:36:36 relyea%netscape.com Exp $
+ * $Id: ldvector.c,v 1.6 2003/02/27 01:31:13 nelsonb%netscape.com Exp $
  */
 
 #include "loader.h"
@@ -171,6 +175,16 @@ static const struct FREEBLVectorStr vector = {
     BLAPI_VerifySelf,
 
     /* End of Version 3.005. */
+
+    EC_NewKey,
+    EC_NewKeyFromSeed,
+    EC_ValidatePublicKey,
+    ECDH_Derive,
+    ECDSA_SignDigest,
+    ECDSA_VerifyDigest,
+    ECDSA_SignDigestWithSeed,
+
+    /* End of Version 3.006. */
 };
 
 

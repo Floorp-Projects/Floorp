@@ -16,8 +16,12 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s): 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
+ * Contributor(s):
  *	Dr Stephen Henson <stephen.henson@gemplus.com>
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -114,6 +118,7 @@ static PK11SlotList pk11_aesSlotList,
     pk11_rsaSlotList,
     pk11_dsaSlotList,
     pk11_dhSlotList,
+    pk11_ecSlotList,
     pk11_ideaSlotList,
     pk11_sslSlotList,
     pk11_tlsSlotList,
@@ -1250,6 +1255,7 @@ PK11_InitSlotLists(void)
     pk11_initSlotList(&pk11_rsaSlotList);
     pk11_initSlotList(&pk11_dsaSlotList);
     pk11_initSlotList(&pk11_dhSlotList);
+    pk11_initSlotList(&pk11_ecSlotList);
     pk11_initSlotList(&pk11_ideaSlotList);
     pk11_initSlotList(&pk11_sslSlotList);
     pk11_initSlotList(&pk11_tlsSlotList);
@@ -1273,6 +1279,7 @@ PK11_DestroySlotLists(void)
     pk11_freeSlotList(&pk11_rsaSlotList);
     pk11_freeSlotList(&pk11_dsaSlotList);
     pk11_freeSlotList(&pk11_dhSlotList);
+    pk11_freeSlotList(&pk11_ecSlotList);
     pk11_freeSlotList(&pk11_ideaSlotList);
     pk11_freeSlotList(&pk11_sslSlotList);
     pk11_freeSlotList(&pk11_tlsSlotList);
@@ -1327,6 +1334,11 @@ PK11_GetSlotList(CK_MECHANISM_TYPE type)
     case CKM_DH_PKCS_KEY_PAIR_GEN:
     case CKM_DH_PKCS_DERIVE:
 	return &pk11_dhSlotList;
+    case CKM_ECDSA:
+    case CKM_ECDSA_SHA1:
+    case CKM_EC_KEY_PAIR_GEN: /* aka CKM_ECDSA_KEY_PAIR_GEN */
+    case CKM_ECDH1_DERIVE:
+	return &pk11_ecSlotList;
     case CKM_SSL3_PRE_MASTER_KEY_GEN:
     case CKM_SSL3_MASTER_KEY_DERIVE:
     case CKM_SSL3_SHA1_MAC:
@@ -2946,10 +2958,11 @@ PK11_GetKeyType(CK_MECHANISM_TYPE type,unsigned long len)
     case CKM_KEA_KEY_DERIVE:
     case CKM_KEA_KEY_PAIR_GEN:
 	return CKK_KEA;
-    case CKM_ECDSA_KEY_PAIR_GEN:
     case CKM_ECDSA:
     case CKM_ECDSA_SHA1:
-	return CKK_ECDSA;
+    case CKM_EC_KEY_PAIR_GEN: /* aka CKM_ECDSA_KEY_PAIR_GEN */
+    case CKM_ECDH1_DERIVE:
+	return CKK_EC;  /* CKK_ECDSA is deprecated */
     case CKM_SSL3_PRE_MASTER_KEY_GEN:
     case CKM_GENERIC_SECRET_KEY_GEN:
     case CKM_SSL3_MASTER_KEY_DERIVE:
@@ -3109,8 +3122,10 @@ PK11_GetKeyGen(CK_MECHANISM_TYPE type)
     case CKM_KEA_KEY_PAIR_GEN:
 	return CKM_KEA_KEY_PAIR_GEN;
     case CKM_ECDSA:
-    case CKM_ECDSA_KEY_PAIR_GEN:
-	return CKM_ECDSA_KEY_PAIR_GEN;
+    case CKM_ECDSA_SHA1:
+    case CKM_EC_KEY_PAIR_GEN: /* aka CKM_ECDSA_KEY_PAIR_GEN */
+    case CKM_ECDH1_DERIVE:
+        return CKM_EC_KEY_PAIR_GEN; 
     case CKM_SSL3_PRE_MASTER_KEY_GEN:
     case CKM_SSL3_MASTER_KEY_DERIVE:
     case CKM_SSL3_KEY_AND_MAC_DERIVE:

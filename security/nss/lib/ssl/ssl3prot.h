@@ -19,7 +19,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -33,7 +37,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: ssl3prot.h,v 1.2 2001/09/18 01:59:19 nelsonb%netscape.com Exp $
+ * $Id: ssl3prot.h,v 1.3 2003/02/27 01:31:30 nelsonb%netscape.com Exp $
  */
 
 #ifndef __ssl3proto_h_
@@ -203,7 +207,11 @@ typedef enum {
     kea_dh_anon, 
     kea_dh_anon_export, 
     kea_fortezza, 
-    kea_rsa_fips
+    kea_rsa_fips,
+    kea_ecdh_ecdsa,
+    kea_ecdhe_ecdsa,
+    kea_ecdh_rsa,
+    kea_ecdhe_rsa
 } SSL3KeyExchangeAlgorithm;
      
 typedef struct {

@@ -18,7 +18,11 @@
  * Copyright (C) 2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: loader.h,v 1.8 2003/01/30 23:36:37 relyea%netscape.com Exp $
+ * $Id: loader.h,v 1.9 2003/02/27 01:31:14 nelsonb%netscape.com Exp $
  */
 
 #ifndef _LOADER_H_
@@ -40,7 +44,7 @@
 
 #include "blapi.h"
 
-#define FREEBL_VERSION 0x0305
+#define FREEBL_VERSION 0x0306
 
 struct FREEBLVectorStr {
 
@@ -333,6 +337,40 @@ struct FREEBLVectorStr {
  PRBool (*p_BLAPI_VerifySelf)(const char *name);
 
   /* Version 3.005 came to here */
+
+ SECStatus (* p_EC_NewKey)(ECParams *           params, 
+                           ECPrivateKey **	privKey);
+
+ SECStatus (* p_EC_NewKeyFromSeed)(ECParams *   params, 
+                             ECPrivateKey **	privKey,
+                             const unsigned char * seed,
+                             int                seedlen);
+
+ SECStatus (* p_EC_ValidatePublicKey)(ECParams *   params, 
+			     SECItem *	        publicValue);
+
+ SECStatus (* p_ECDH_Derive)(SECItem *          publicValue, 
+                             ECParams *         params,
+                             SECItem *          privateValue,
+                             PRBool             withCofactor,
+                             SECItem *          derivedSecret);
+
+ SECStatus (* p_ECDSA_SignDigest)(ECPrivateKey * key,
+                             SECItem *          signature,
+                             const SECItem *    digest);
+
+ SECStatus (* p_ECDSA_VerifyDigest)(ECPublicKey * key,
+                             const SECItem *    signature,
+                             const SECItem *    digest);
+
+ SECStatus (* p_ECDSA_SignDigestWithSeed)(ECPrivateKey * key,
+                             SECItem *          signature,
+                             const SECItem *    digest,
+                             const unsigned char * seed,
+                             const int          seedlen);
+
+  /* Version 3.006 came to here */
+
 };
 
 typedef struct FREEBLVectorStr FREEBLVector;

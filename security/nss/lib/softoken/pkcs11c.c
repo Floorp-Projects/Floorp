@@ -16,8 +16,12 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
- * Contributor(s): 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
+ * Contributor(s):
  *	Dr Stephen Henson <stephen.henson@gemplus.com>
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -89,6 +93,11 @@ static void pk11_Null(void *data, PRBool freeit)
 {
     return;
 } 
+
+#ifdef NSS_ENABLE_ECC
+extern SECStatus EC_DecodeParams(const SECItem *encodedParams, 
+				 ECParams **ecparams);
+#endif /* NSS_ENABLE_ECC */
 
 /*
  * free routines.... Free local type  allocated data, and convert
@@ -1607,6 +1616,41 @@ nsc_DSA_Sign_Stub(void *ctx, void *sigBuf,
     return rv;
 }
 
+#ifdef NSS_ENABLE_ECC
+static SECStatus
+nsc_ECDSAVerifyStub(void *ctx, void *sigBuf, unsigned int sigLen,
+                    void *dataBuf, unsigned int dataLen)
+{
+    SECItem signature, digest;
+    NSSLOWKEYPublicKey *key = (NSSLOWKEYPublicKey *)ctx;
+
+    signature.data = (unsigned char *)sigBuf;
+    signature.len = sigLen;
+    digest.data = (unsigned char *)dataBuf;
+    digest.len = dataLen;
+    return ECDSA_VerifyDigest(&(key->u.ec), &signature, &digest);
+}
+
+static SECStatus
+nsc_ECDSASignStub(void *ctx, void *sigBuf,
+                  unsigned int *sigLen, unsigned int maxSigLen,
+                  void *dataBuf, unsigned int dataLen)
+{
+    SECItem signature = { 0 }, digest;
+    SECStatus rv;
+    NSSLOWKEYPrivateKey *key = (NSSLOWKEYPrivateKey *)ctx;
+
+    (void)SECITEM_AllocItem(NULL, &signature, maxSigLen);
+    digest.data = (unsigned char *)dataBuf;
+    digest.len = dataLen;
+    rv = ECDSA_SignDigest(&(key->u.ec), &signature, &digest);
+    *sigLen = signature.len;
+    PORT_Memcpy(sigBuf, signature.data, signature.len);
+    SECITEM_FreeItem(&signature, PR_FALSE);
+    return rv;
+}
+#endif /* NSS_ENABLE_ECC */
+
 /* NSC_SignInit setups up the signing operations. There are three basic
  * types of signing:
  *	(1) the tradition single part, where "Raw RSA" or "Raw DSA" is applied
@@ -1728,6 +1772,31 @@ finish_rsa:
 	context->maxLen     = DSA_SIGNATURE_LEN;
 
 	break;
+
+#ifdef NSS_ENABLE_ECC
+    case CKM_ECDSA_SHA1:
+	context->multi = PR_TRUE;
+	crv = pk11_doSubSHA1(context);
+	if (crv != CKR_OK) break;
+	/* fall through */
+    case CKM_ECDSA:
+	if (key_type != CKK_EC) {
+	    crv = CKR_KEY_TYPE_INCONSISTENT;
+	    break;
+	}
+	privKey = pk11_GetPrivKey(key,CKK_EC,&crv);
+	if (privKey == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    break;
+	}
+	context->cipherInfo = privKey;
+	context->update     = (PK11Cipher) nsc_ECDSASignStub;
+	context->destroy    = (privKey == key->objectInfo) ?
+		(PK11Destroy) pk11_Null:(PK11Destroy)pk11_FreePrivKey;
+	context->maxLen     = MAX_ECKEY_LEN * 2;
+
+	break;
+#endif /* NSS_ENABLE_ECC */
 
 #define INIT_HMAC_MECH(mmm) \
     case CKM_ ## mmm ## _HMAC_GENERAL: \
@@ -2126,7 +2195,28 @@ finish_rsa:
 	context->verify     = (PK11Verify) nsc_DSA_Verify_Stub;
 	context->destroy    = pk11_Null;
 	break;
-
+#ifdef NSS_ENABLE_ECC
+    case CKM_ECDSA_SHA1:
+	context->multi = PR_TRUE;
+	crv = pk11_doSubSHA1(context);
+	if (crv != CKR_OK) break;
+	/* fall through */
+    case CKM_ECDSA:
+	if (key_type != CKK_EC) {
+	    crv = CKR_KEY_TYPE_INCONSISTENT;
+	    break;
+	}
+	context->multi = PR_FALSE;
+	pubKey = pk11_GetPubKey(key,CKK_EC,&crv);
+	if (pubKey == NULL) {
+	    crv = CKR_HOST_MEMORY;
+	    break;
+	}
+	context->cipherInfo = pubKey;
+	context->verify     = (PK11Verify) nsc_ECDSAVerifyStub;
+	context->destroy    = pk11_Null;
+	break;
+#endif /* NSS_ENABLE_ECC */
 
     INIT_HMAC_MECH(MD2)
     INIT_HMAC_MECH(MD5)
@@ -2872,6 +2962,13 @@ CK_RV NSC_GenerateKeyPair (CK_SESSION_HANDLE hSession,
     int 		private_value_bits = 0;
     DHPrivateKey *	dhPriv;
 
+#ifdef NSS_ENABLE_ECC
+    /* Elliptic Curve Cryptography */
+    SECItem  		ecEncodedParams;  /* DER Encoded parameters */
+    ECPrivateKey *	ecPriv;
+    ECParams *          ecParams;
+#endif /* NSS_ENABLE_ECC */
+
     /*
      * now lets create an object to hang the attributes off of
      */
@@ -3122,6 +3219,51 @@ dhgn_done:
 	/* should zeroize, since this function doesn't. */
 	PORT_FreeArena(dhPriv->arena, PR_TRUE);
 	break;
+
+#ifdef NSS_ENABLE_ECC
+    case CKM_EC_KEY_PAIR_GEN:
+	pk11_DeleteAttributeType(privateKey,CKA_EC_PARAMS);
+	pk11_DeleteAttributeType(privateKey,CKA_VALUE);
+	key_type = CKK_EC;
+
+	/* extract the necessary parameters and copy them to private keys */
+	crv = pk11_Attribute2SSecItem(NULL, &ecEncodedParams, publicKey, 
+				      CKA_EC_PARAMS);
+	if (crv != CKR_OK) break;
+
+	crv = pk11_AddAttributeType(privateKey, CKA_EC_PARAMS, 
+				    pk11_item_expand(&ecEncodedParams));
+	if (crv != CKR_OK) {
+	  PORT_Free(ecEncodedParams.data);
+	  break;
+	}
+
+	/* Decode ec params before calling EC_NewKey */
+	rv = EC_DecodeParams(&ecEncodedParams, &ecParams);
+	PORT_Free(ecEncodedParams.data);
+	if (rv != SECSuccess) {
+	    crv = CKR_DEVICE_ERROR;
+	    break;
+	}
+	rv = EC_NewKey(ecParams, &ecPriv);
+	PORT_FreeArena(ecParams->arena, PR_TRUE);
+	if (rv != SECSuccess) { 
+	  crv = CKR_DEVICE_ERROR;
+	  break;
+	}
+
+	crv = pk11_AddAttributeType(publicKey, CKA_EC_POINT, 
+				pk11_item_expand(&ecPriv->publicValue));
+	if (crv != CKR_OK) goto ecgn_done;
+
+	crv = pk11_AddAttributeType(privateKey, CKA_VALUE, 
+			      pk11_item_expand(&ecPriv->privateValue));
+
+ecgn_done:
+	/* should zeroize, since this function doesn't. */
+	PORT_FreeArena(ecPriv->ecParams.arena, PR_TRUE);
+	break;
+#endif /* NSS_ENABLE_ECC */
 
     default:
 	crv = CKR_MECHANISM_INVALID;
@@ -4777,6 +4919,103 @@ key_and_mac_derive_fail:
 	    
 	break;
       }
+
+#ifdef NSS_ENABLE_ECC
+    case CKM_ECDH1_DERIVE:
+    case CKM_ECDH1_COFACTOR_DERIVE:
+      {
+	SECItem  ecScalar, ecPoint;
+	SECItem  tmp;
+	ECParams *ecParams;
+	PRBool   withCofactor = PR_FALSE;
+	unsigned char secret_hash[20];
+	unsigned char *secret;
+	int secretlen;
+	CK_ECDH1_DERIVE_PARAMS *mechParams;
+
+	/* get params and value attributes */
+	crv = pk11_Attribute2SecItem(NULL, &tmp, sourceKey, 
+	    CKA_EC_PARAMS); 
+	if (crv != CKR_OK) break;
+	crv = pk11_Attribute2SecItem(NULL, &ecScalar, sourceKey, CKA_VALUE); 
+	if (crv != CKR_OK) {
+ 	    PORT_Free(tmp.data);
+	    break;
+	}
+
+	/* Check elliptic curve parameters */
+	rv = EC_DecodeParams(&tmp, &ecParams);
+	PORT_Free(tmp.data);
+	if (rv != SECSuccess) {
+	    crv = CKR_TEMPLATE_INCONSISTENT;
+	    PORT_Free(ecScalar.data);
+	    break;
+	}
+
+	/* Check mechanism parameters */
+	mechParams = (CK_ECDH1_DERIVE_PARAMS *) pMechanism->pParameter;
+	if ((pMechanism->ulParameterLen != sizeof(CK_ECDH1_DERIVE_PARAMS)) ||
+	    ((mechParams->kdf == CKD_NULL) &&
+		((mechParams->ulSharedDataLen != 0) || 
+		    (mechParams->pSharedData != NULL)))) {
+	    crv = CKR_MECHANISM_PARAM_INVALID;
+	    PORT_FreeArena(ecParams->arena, PR_TRUE);
+	    PORT_Free(ecScalar.data);
+	    break;
+	}
+
+	ecPoint.data = mechParams->pPublicData;
+	ecPoint.len  = mechParams->ulPublicDataLen;
+
+	if (pMechanism->mechanism == CKM_ECDH1_COFACTOR_DERIVE) {
+	    withCofactor = PR_TRUE;
+	} else {
+	    /* When not using cofactor derivation, one should
+	     * validate the public key to avoid small subgroup
+	     * attacks.
+	     */
+	    if (EC_ValidatePublicKey(ecParams, &ecPoint) != SECSuccess) {
+		crv = CKR_ARGUMENTS_BAD;
+		PORT_FreeArena(ecParams->arena, PR_TRUE);		
+		PORT_Free(ecScalar.data);
+		break;
+	    }
+	}
+
+	rv = ECDH_Derive(&ecPoint, ecParams, &ecScalar,
+	                 withCofactor, &tmp); 
+	PORT_FreeArena(ecParams->arena, PR_TRUE);
+	PORT_Free(ecScalar.data);
+
+	if (rv != SECSuccess) {
+	    crv = CKR_DEVICE_ERROR;
+	    break;
+	}
+
+	secret = tmp.data;
+	secretlen = tmp.len;
+	if (mechParams->kdf == CKD_SHA1_KDF) {
+	    /* Compute SHA1 hash */
+	    memset(secret_hash, 0, 20);
+	    rv = SHA1_HashBuf(secret_hash, tmp.data, tmp.len);
+	    if (rv != SECSuccess) {
+		PORT_ZFree(tmp.data, tmp.len);
+	    } else {
+		secret = secret_hash;
+		secretlen = 20;
+	    }
+	}
+
+	if (rv == SECSuccess) {
+	    pk11_forceAttribute(key, CKA_VALUE, secret, secretlen);
+	    PORT_ZFree(tmp.data, tmp.len);
+	    memset(secret_hash, 0, 20);
+	} else
+	    crv = CKR_HOST_MEMORY;
+	    
+	break;
+      }
+#endif /* NSS_ENABLE_ECC */
 
     default:
 	crv = CKR_MECHANISM_INVALID;

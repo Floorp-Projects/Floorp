@@ -62,6 +62,7 @@ CSRCS = \
 	alghmac.c \
 	dbinit.c \
 	dbmshim.c \
+	ecdecode.c \
 	fipstest.c \
 	fipstokn.c \
 	keydb.c    \

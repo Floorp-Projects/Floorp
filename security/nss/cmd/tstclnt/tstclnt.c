@@ -15,8 +15,12 @@
  * Communications Corporation.  Portions created by Netscape are 
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
- * 
+ *
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved. 
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -74,6 +78,27 @@ int ssl2CipherSuites[] = {
     SSL_EN_RC2_128_CBC_EXPORT40_WITH_MD5,	/* D */
     SSL_EN_DES_64_CBC_WITH_MD5,			/* E */
     SSL_EN_DES_192_EDE3_CBC_WITH_MD5,		/* F */
+#ifdef NSS_ENABLE_ECC
+    /* NOTE: Since no new SSL2 ciphersuites are being 
+     * invented, and we've run out of lowercase letters
+     * for SSL3 ciphers, we use letters G and beyond
+     * for new SSL3 ciphers.
+     */
+    TLS_ECDH_ECDSA_WITH_NULL_SHA,       	/* G */
+    TLS_ECDH_ECDSA_WITH_RC4_128_SHA,       	/* H */
+    TLS_ECDH_ECDSA_WITH_DES_CBC_SHA,       	/* I */
+    TLS_ECDH_ECDSA_WITH_3DES_EDE_CBC_SHA,    	/* J */
+    TLS_ECDH_ECDSA_WITH_AES_128_CBC_SHA,     	/* K */
+    TLS_ECDH_ECDSA_WITH_AES_256_CBC_SHA,     	/* L */
+    TLS_ECDH_RSA_WITH_NULL_SHA,          	/* M */
+    TLS_ECDH_RSA_WITH_RC4_128_SHA,       	/* N */
+    TLS_ECDH_RSA_WITH_DES_CBC_SHA,       	/* O */
+    TLS_ECDH_RSA_WITH_3DES_EDE_CBC_SHA,      	/* P */
+    TLS_ECDH_RSA_WITH_AES_128_CBC_SHA,       	/* Q */
+    TLS_ECDH_RSA_WITH_AES_256_CBC_SHA,       	/* R */
+    TLS_ECDHE_ECDSA_WITH_AES_128_CBC_SHA,    	/* S */
+    TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA,      	/* T */
+#endif /* NSS_ENABLE_ECC */
     0
 };
 
@@ -206,6 +231,22 @@ static void Usage(const char *progName)
 "D    SSL2 RC2 128 CBC EXPORT40 WITH MD5\n"
 "E    SSL2 DES 64 CBC WITH MD5\n"
 "F    SSL2 DES 192 EDE3 CBC WITH MD5\n"
+#ifdef NSS_ENABLE_ECC
+"G    TLS ECDH ECDSA WITH NULL SHA\n"
+"H    TLS ECDH ECDSA WITH RC4 128 CBC SHA\n"
+"I    TLS ECDH ECDSA WITH DES CBC SHA\n"
+"J    TLS ECDH ECDSA WITH 3DES EDE CBC SHA\n"
+"K    TLS ECDH ECDSA WITH AES 128 CBC SHA\n"
+"L    TLS ECDH ECDSA WITH AES 256 CBC SHA\n"
+"M    TLS ECDH RSA WITH NULL SHA\n"
+"N    TLS ECDH RSA WITH RC4 128 CBC SHA\n"
+"O    TLS ECDH RSA WITH DES CBC SHA\n"
+"P    TLS ECDH RSA WITH 3DES EDE CBC SHA\n"
+"Q    TLS ECDH RSA WITH AES 128 CBC SHA\n"
+"R    TLS ECDH RSA WITH AES 256 CBC SHA\n"
+"S    TLS ECDHE ECDSA WITH AES 128 CBC SHA\n"
+"T    TLS ECDHE RSA WITH AES 128 CBC SHA\n"
+#endif /* NSS_ENABLE_ECC */
 "\n"
 "a    SSL3 FORTEZZA DMS WITH FORTEZZA CBC SHA\n"
 "b    SSL3 FORTEZZA DMS WITH RC4 128 SHA\n"

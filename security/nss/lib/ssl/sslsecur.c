@@ -18,7 +18,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -32,7 +36,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- * $Id: sslsecur.c,v 1.21 2003/02/15 01:21:25 relyea%netscape.com Exp $
+ * $Id: sslsecur.c,v 1.22 2003/02/27 01:31:35 nelsonb%netscape.com Exp $
  */
 #include "cert.h"
 #include "secitem.h"
@@ -639,7 +643,7 @@ SSL_ConfigSecureServer(PRFileDesc *fd, CERTCertificate *cert,
 	pubKey = CERT_ExtractPublicKey(cert);
 	if (!pubKey) 
 	    goto loser;
-	sc->serverKeyBits = SECKEY_PublicKeyStrength(pubKey) * BPB;
+	sc->serverKeyBits = SECKEY_PublicKeyStrengthInBits(pubKey);
 	SECKEY_DestroyPublicKey(pubKey); 
 	pubKey = NULL;
     }

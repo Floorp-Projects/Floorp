@@ -16,7 +16,11 @@
  * Copyright (C) 1994-2000 Netscape Communications Corporation.  All
  * Rights Reserved.
  * 
+ * Portions created by Sun Microsystems, Inc. are Copyright (C) 2003
+ * Sun Microsystems, Inc. All Rights Reserved.
+ *
  * Contributor(s):
+ *	Dr Vipul Gupta <vipul.gupta@sun.com>, Sun Microsystems Laboratories
  * 
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU General Public License Version 2 or later (the
@@ -115,7 +119,8 @@ typedef enum {
     NSSLOWKEYNullKey = 0, 
     NSSLOWKEYRSAKey = 1, 
     NSSLOWKEYDSAKey = 2, 
-    NSSLOWKEYDHKey = 4
+    NSSLOWKEYDHKey = 4,
+    NSSLOWKEYECKey = 5
 } NSSLOWKEYType;
 
 /*
@@ -128,6 +133,7 @@ struct NSSLOWKEYPublicKeyStr {
         RSAPublicKey rsa;
 	DSAPublicKey dsa;
 	DHPublicKey  dh;
+	ECPublicKey  ec;
     } u;
 };
 typedef struct NSSLOWKEYPublicKeyStr NSSLOWKEYPublicKey;
@@ -144,6 +150,7 @@ struct NSSLOWKEYPrivateKeyStr {
         RSAPrivateKey rsa;
 	DSAPrivateKey dsa;
 	DHPrivateKey  dh;
+	ECPrivateKey  ec;
     } u;
 };
 typedef struct NSSLOWKEYPrivateKeyStr NSSLOWKEYPrivateKey;
