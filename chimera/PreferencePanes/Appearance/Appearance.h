@@ -25,6 +25,7 @@
   IBOutlet NSTextField	*fontSampleSerif;
   IBOutlet NSTextField	*fontSampleSansSerif;
   IBOutlet NSTextField	*fontSampleMonospace;
+  IBOutlet NSTextField	*fontSampleCursive;
 
   NSArray								*regionMappingTable;
 }

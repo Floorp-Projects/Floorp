@@ -1,7 +1,13 @@
 {
     IBClasses = (
         {CLASS = FirstResponder; LANGUAGE = ObjC; SUPERCLASS = NSObject; }, 
-        {CLASS = FontChangeReceiver; LANGUAGE = ObjC; SUPERCLASS = NSView; }, 
+        {
+            ACTIONS = {}; 
+            CLASS = FontReceiverView; 
+            LANGUAGE = ObjC; 
+            OUTLETS = {delegate = id; }; 
+            SUPERCLASS = NSView; 
+        }, 
         {
             CLASS = NSPreferencePane; 
             LANGUAGE = ObjC; 
@@ -24,6 +30,7 @@
                 colorwellTextColor = NSColorWell; 
                 colorwellUnvisitedLinks = NSColorWell; 
                 colorwellVisitedLinks = NSColorWell; 
+                fontSampleCursive = NSTextField; 
                 fontSampleMonospace = NSTextField; 
                 fontSampleSansSerif = NSTextField; 
                 fontSampleSerif = NSTextField; 
