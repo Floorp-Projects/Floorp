@@ -661,6 +661,14 @@ nsRegistryDataSource::GetAllResources(nsISimpleEnumerator **_retval)
 
 
 NS_IMETHODIMP
+nsRegistryDataSource::GetAllCommands(nsIRDFResource *aSource, nsIEnumerator **_retval)
+{
+    NS_NOTYETIMPLEMENTED("write me");
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+NS_IMETHODIMP
 nsRegistryDataSource::IsCommandEnabled(nsISupportsArray *aSources, nsIRDFResource *aCommand, nsISupportsArray *aArguments, PRBool *_retval)
 {
     *_retval = PR_FALSE;

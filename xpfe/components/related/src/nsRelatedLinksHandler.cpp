@@ -938,6 +938,15 @@ RelatedLinksHandlerImpl::RemoveObserver(nsIRDFObserver *aObserver)
 
 
 NS_IMETHODIMP
+RelatedLinksHandlerImpl::GetAllCommands(nsIRDFResource* aSource,
+					nsIEnumerator/*<nsIRDFResource>*/** aCommands)
+{
+	return mInner->GetAllCommands(aSource, aCommands);
+}
+
+
+
+NS_IMETHODIMP
 RelatedLinksHandlerImpl::GetAllCmds(nsIRDFResource* aSource,
 					nsISimpleEnumerator/*<nsIRDFResource>*/** aCommands)
 {
