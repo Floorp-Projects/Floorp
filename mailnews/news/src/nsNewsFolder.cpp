@@ -380,7 +380,7 @@ nsresult nsMsgNewsFolder::GetDatabase(nsIMsgWindow *aMsgWindow)
             rv = GetCachedNewsrcLine(getter_Copies(setStr));
 		    if (NS_FAILED(rv)) return rv;        
 
-		    rv = db->SetReadSetWithStr((const char *)setStr);
+		    rv = db->SetReadSetStr((const char *)setStr);
 		    if (NS_FAILED(rv)) return rv;        
 		}
         if (NS_FAILED(rv)) return rv;

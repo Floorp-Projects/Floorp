@@ -30,7 +30,6 @@ MODULE		= msgdb
 
 EXPORTS		= \
 		nsMsgHdr.h \
-		nsINewsDatabase.h \
 		nsMsgDatabase.h \
 		nsMailDatabase.h \
 		nsImapMailDatabase.h \
@@ -44,6 +43,7 @@ XPIDLSRCS	= \
 		nsIDBChangeListener.idl \
 		nsIDBChangeAnnouncer.idl \
 		nsIMsgDatabase.idl \
+		nsINewsDatabase.idl \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

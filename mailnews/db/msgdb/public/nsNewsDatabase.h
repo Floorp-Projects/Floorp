@@ -38,6 +38,7 @@ public:
   virtual ~nsNewsDatabase();
 
   NS_DECL_ISUPPORTS_INHERITED 
+  NS_DECL_NSINEWSDATABASE
 
   virtual  nsresult         MessageDBOpenUsingURL(const char * groupURL);
   char *GetGroupURL()       { return m_groupURL; }
@@ -59,11 +60,6 @@ public:
   NS_IMETHOD                GetHighWaterArticleNum(nsMsgKey *key);
   NS_IMETHOD                GetLowWaterArticleNum(nsMsgKey *key);
   NS_IMETHOD         MarkAllRead(nsMsgKeyArray *thoseMarked);
-
-  // for nsINewsDatabase
-  NS_IMETHOD                GetReadSet(nsMsgKeySet **pSet);
-  NS_IMETHOD                SetReadSetWithStr(const char * setStr);
-  NS_IMETHOD                GetReadSetStr(char **setStr);
 
   virtual nsresult		ExpireUpTo(nsMsgKey expireKey);
   virtual nsresult		ExpireRange(nsMsgKey startRange, nsMsgKey endRange);
