@@ -33,7 +33,7 @@ Rights Reserved.
 <!ENTITY useDefault.accesskey             "R">
 <!ENTITY rememberLastMsg.label            "Remember the last selected message">
 <!ENTITY rememberLastMsg.accesskey        "e">
-<!ENTITY toolbarIntro.label               "Display the following toolbar buttons">
+<!ENTITY toolbarIntro.label               "Select the buttons you want to see in the toolbar">
 <!ENTITY fileButton.label                 "File">
 <!ENTITY nextButton.label                 "Next">
 <!ENTITY junkMailButton.label             "Junk Mail">

@@ -1064,7 +1064,7 @@ Rights Reserved.
            oncommand="goToggleToolbar('searchBox', 'menu_showSearchToolbar'); SearchBarToggled();"
            checked="true"/>
           <menuitem type="checkbox" id="menu_showTaskbar"/>
-          <menuseparator/>
+          <menuseparator id="menu_showSearch_showMessage_Separator"/>
           <menuitem id="menu_showMessage"
            type="checkbox"
            label="&showMessageCmd.label;"
@@ -1493,7 +1493,7 @@ Rights Reserved.
       <toolbarbutton class="toolbarbutton-1" id="button-forward" label="&forwardButton.label;" tooltiptext="&forwardButton.tooltip;" observes="button_forward" oncommand="MsgForwardMessage(event)"/>
       <toolbarseparator class="toolbarseparator-primary"/>
       <toolbarbutton type="menu" id="button-file" class="toolbarbutton-1" 
-                  label="&fileButton.label;" persist="hidden" hidden="true" observes="button_file"
+                  label="&fileButton.label;" observes="button_file"
                   datasources="rdf:null" 
                   tooltiptext="&fileButton.tooltip;"
                   sortResource="http://home.netscape.com/NC-rdf#FolderTreeName" sortDirection="ascending">
@@ -1559,10 +1559,10 @@ Rights Reserved.
         </template>
         <menupopup/>
       </toolbarbutton>
-      <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;" hidden="true" persist="hidden" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-next" label="&nextButton.label;" oncommand="goDoCommand('button_next')" tooltiptext="&nextButton.tooltip;" observes="button_next"/>
       <toolbarbutton class="toolbarbutton-1" id="button-delete" label="&deleteButton.label;" tooltiptext="&deleteButton.tooltip;" observes="button_delete" oncommand="goDoCommand('button_delete')"/>
 <!-- not ready yet
-      <toolbarbutton class="toolbarbutton-1" id="button-junk" label="&junkButton.label;" persist="hidden" tooltiptext="&junkButton.tooltip;" observes="button_junk" oncommand="goDoCommand('button_junk')"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-junk" label="&junkButton.label;" tooltiptext="&junkButton.tooltip;" observes="button_junk" oncommand="goDoCommand('button_junk')"/>
 -->
       <toolbarbutton type="menu-button" id="button-mark" class="toolbarbutton-1" label="&markButton.label;" hidden="true" oncommand="goDoCommand('button_mark')"
                   observes="button_mark" tooltiptext="&markButton.tooltip;">  
@@ -1574,13 +1574,13 @@ Rights Reserved.
                 <menuitem type="checkbox" id="markFlaggedToolbarItem" label="&markFlaggedCmd.label;" accesskey="&markFlaggedCmd.accesskey;" observes="cmd_markAsFlagged"/>
             </menupopup>
       </toolbarbutton>
-      <toolbarbutton id="button-print" type="menu-button" class="toolbarbutton-1" label="&printButton.label;" persist="hidden"
+      <toolbarbutton id="button-print" type="menu-button" class="toolbarbutton-1" label="&printButton.label;"
                   observes="button_print" oncommand="goDoCommand('cmd_print')" tooltiptext="&printButton.tooltip;">  
         <menupopup id="printMenu">
           <menuitem label="&printCmd.label;" accesskey="&printCmd.accesskey;" default="true"/>
           </menupopup>
       </toolbarbutton>
-      <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" persist="hidden" tooltiptext="&stopButton.tooltip;" command="cmd_stop"/>
+      <toolbarbutton class="toolbarbutton-1" id="button-stop" label="&stopButton.label;" tooltiptext="&stopButton.tooltip;" command="cmd_stop"/>
       <spacer flex="1"/>
             <hbox id="throbber-box" align="center">
                 <button id="navigator-throbber" oncommand="goClickThrobber('messenger.throbber.url')" tooltiptext="&throbber.tooltip;"/>

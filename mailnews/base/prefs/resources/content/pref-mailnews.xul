@@ -92,27 +92,29 @@ Contributor(s):
   </groupbox>
 
   <!-- toolbar buttons customization -->
-  <groupbox id="showButtons">
+  <groupbox flex="1" id="showButtons" orient="horizontal">
     <caption label="&toolbarIntro.label;"/>
-    <hbox id="showButtonsBox">
+    <vbox id="showButtonsBox1">
       <checkbox id="fileButton"
                 label="&fileButton.label;"
                 prefstring="mail.toolbars.showbutton.file"/>
       <checkbox id="nextButton"
                 label="&nextButton.label;"
                 prefstring="mail.toolbars.showbutton.next"/>
+      <checkbox id="printButton"
+                label="&printButton.label;"
+                prefstring="mail.toolbars.showbutton.print"/>
+    </vbox>
+    <vbox id="showButtonsBox2">
+      <checkbox id="stopButton"
+                label="&stopButton.label;"
+                prefstring="mail.toolbars.showbutton.stop"/>
 <!-- not ready yet
       <checkbox id="junkMailButton"
                 label="&junkMailButton.label;"
                 prefstring="mail.toolbars.showbutton.junk"/>
 -->
-      <checkbox id="printButton"
-                label="&printButton.label;"
-                prefstring="mail.toolbars.showbutton.print"/>
-      <checkbox id="stopButton"
-                label="&stopButton.label;"
-                prefstring="mail.toolbars.showbutton.stop"/>
-    </hbox>
+    </vbox>
   </groupbox>
  
 </page>

@@ -628,7 +628,7 @@ function ShowHideToolBarButtons()
 
   if (prefArray && (prefCount.value > 0)) {
     for (var i=0;i < prefCount.value;i++) {
-      hideButton(prefArray[i],prefBranch.getBoolPref(prefArray[i]));
+      document.getElementById("button-" + prefArray[i]).hidden = !(prefBranch.getBoolPref(prefArray[i]));
     }
   }
 }
@@ -662,13 +662,7 @@ const gMailToolBarPrefListener =
     // verify that we're changing a button pref
     if (topic != "nsPref:changed")
       return;
-    var buttonName = prefName.substr(this.domain.length+1);
 
-    hideButton(buttonName,pref.getBoolPref(prefName))
+    document.getElementById("button-" + prefName.substr(this.domain.length+1)).hidden = !(pref.getBoolPref(prefName));
   }
 };
-
-function hideButton(name,show)
-{
-  document.getElementById("button-" + name).setAttribute("hidden", show ? "false":"true");
-}
