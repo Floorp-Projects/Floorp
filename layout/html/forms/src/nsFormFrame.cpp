@@ -96,16 +96,12 @@
 
 PRBool nsFormFrame::gInitPasswordManager = PR_FALSE;
 
-static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
-static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
-
 //----------------------------------------------------------------------
 
-static NS_DEFINE_CID(kFormProcessorCID, NS_FORMPROCESSOR_CID);
 //ahmed 15-1
 #ifdef IBMBIDI
 #include "nsIUBidiUtils.h"
-static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
+//static NS_DEFINE_CID(kUBidiUtilCID, NS_UNICHARBIDIUTIL_CID);
 #endif
 //end
 
