@@ -23,8 +23,8 @@ srcdir		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE=nntp
-LIBRARY_NAME=nntp_s
-NO_SHARED_LIB=1
+LIBRARY_NAME=nntp
+# NO_SHARED_LIB=1
 
 EXPORTS = \
 	nsNNTPProtocol.h	\
@@ -51,6 +51,7 @@ EXTRA_DSO_LDOPTS =	\
 	-lxp	\
 	-lxpcom	\
 	-lraptorbase	\
+	-lmsgbaseutil	\
 	$(NSPR_LIBS) \
 	$(NULL)
 
