@@ -46,6 +46,35 @@ CPP_OBJS =                                            \
            $(NULL)
 
 MODULE=composer 
+REQUIRES    = xpcom \
+              string \
+              dom \
+              layout \
+              locale \
+              content \
+              uriloader \
+              txmgr \
+              htmlparser \
+              necko \
+              pref \
+              view \
+              webshell \
+              timer \
+              intl \
+              docshell \
+              gfx \
+              widget \
+              xuldoc \
+              txtsvc \
+              appshell \
+              appcomps \
+              windowwatcher \
+              chrome \
+              exthandler \
+              mimetype \
+              editor \
+              content_xul \
+              $(NULL)
 
 MAKE_OBJ_TYPE = DLL
 DLLNAME = composer

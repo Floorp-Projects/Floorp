@@ -21,9 +21,34 @@
 
 DEPTH=..\..\..
 
+MODULE       = editor 
+
+REQUIRES  = string \
+            xpcom \
+            dom \
+            layout \
+            locale \
+            content \
+            uriloader \
+            txmgr \
+            htmlparser \
+            necko \
+            pref \
+            view \
+            webshell \
+            timer \
+            intl \
+            docshell \
+            gfx \
+            widget \
+            appshell \
+            xuldoc \
+            txtsvc \
+            content_xul \
+            $(NULL)
+
 include <$(DEPTH)/config/config.mak>
 
-MODULE       = editor 
 IS_COMPONENT = 1
 
 # Uncomment the line below, or define MOZ_BUILD_PLAINTEXT_EDITOR_CORE_ONLY
