@@ -155,7 +155,11 @@ NS_IMETHODIMP CPromptService::Alert(nsIDOMWindow *parent, const PRUnichar *dialo
 	nsString 			mTitle(dialogTitle);
 	nsString 			mText(text);
 	PtWidget_t *w = GetWebBrowser( parent );
-	InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull);
+	if( w ) InvokeDialogCallback(w, Pt_MOZ_DIALOG_ALERT, ToNewCString(mTitle), ToNewCString(mText), nsnull, nsnull);
+	else {
+		char const *btns[] = { "&Ok" };
+		PtAlert( NULL, NULL, ToNewCString(mTitle), NULL, ToNewCString(mText), NULL, 1, btns, NULL, 1, 1, 0 );
+		}
 
 	return NS_OK;
 	}

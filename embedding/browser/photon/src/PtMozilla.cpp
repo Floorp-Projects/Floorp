@@ -105,6 +105,9 @@ PtWidgetClass_t *PtCreateMozillaClass( void );
 	PtWidgetClassRef_t *PtMozilla = &__PtMozilla; 
 #endif
 
+/* globals */
+char *g_Print_Left_Header_String, *g_Print_Right_Header_String, *g_Print_Left_Footer_String, *g_Print_Right_Footer_String;
+
 void 
 MozSetPreference(PtWidget_t *widget, int type, char *pref, void *data)
 {
@@ -720,13 +723,26 @@ mozilla_set_pref( PtWidget_t *widget, char *option, char *value )
 	else if( !strcmp( option, "quantize_jpegs" ) ) 		; /* not used */
 	else if( !strcmp( option, "concurrent_decodes" ) ) 		; /* not used */
 
+
 /* Print options */
 	else if( !strcmp( option, "Print_Header_Font" ) ) 		; /* not used */
 	else if( !strcmp( option, "Print_Header_Font_Size" ) ) 		; /* not used */
-	else if( !strcmp( option, "Print_Left_Header_String" ) ) 		; /* not used */
-	else if( !strcmp( option, "Print_Right_Header_String" ) ) 		; /* not used */
-	else if( !strcmp( option, "Print_Left_Footer_String" ) ) 		; /* not used */
-	else if( !strcmp( option, "Print_Right_Footer_String" ) ) 		; /* not used */
+  else if( !strcmp( option, "Print_Left_Header_String" ) ) {
+    if( g_Print_Left_Header_String ) free( g_Print_Left_Header_String );
+    g_Print_Left_Header_String = strdup( value );
+    }
+  else if( !strcmp( option, "Print_Right_Header_String" ) ) {
+    if( g_Print_Right_Header_String ) free( g_Print_Right_Header_String );
+    g_Print_Right_Header_String = strdup( value );
+    }
+  else if( !strcmp( option, "Print_Left_Footer_String" ) ) {
+    if( g_Print_Left_Footer_String ) free( g_Print_Left_Footer_String );
+    g_Print_Left_Footer_String = strdup( value );
+    }
+  else if( !strcmp( option, "Print_Right_Footer_String" ) ) {
+    if( g_Print_Right_Footer_String ) free( g_Print_Right_Footer_String );
+    g_Print_Right_Footer_String = strdup( value );
+    }
 
 
 /* Miscellaneous options */
