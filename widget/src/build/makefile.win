@@ -56,7 +56,7 @@ WIN_LIBS=                               \
  Uuid.lib								\
  ole32.lib								\
  shell32.lib \
- oleacc.lib \
+# oleacc.lib \
  oleaut32.lib
 
 LLIBS= \

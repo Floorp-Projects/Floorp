@@ -116,9 +116,57 @@ STDMETHODIMP_(ULONG) Accessible::Release()
   return 0;
 }
 
+HINSTANCE Accessible::gmAccLib = 0;
+LPFNACCESSIBLEOBJECTFROMWINDOW Accessible::gmAccessibleObjectFromWindow = 0;
+LPFNLRESULTFROMOBJECT Accessible::gmLresultFromObject = 0;
+
 //-----------------------------------------------------
 // IAccessible methods
 //-----------------------------------------------------
+
+STDMETHODIMP Accessible::AccessibleObjectFromWindow(
+  HWND hwnd,
+  DWORD dwObjectID,
+  REFIID riid,
+  void **ppvObject)
+{
+
+  // open the dll dynamically
+    if (!gmAccLib) 
+       gmAccLib =::LoadLibrary("OLEACC.DLL");  
+
+    if (gmAccLib) {
+      if (!gmAccessibleObjectFromWindow)
+       gmAccessibleObjectFromWindow = (LPFNACCESSIBLEOBJECTFROMWINDOW)GetProcAddress(gmAccLib,"AccessibleObjectFromWindow");
+
+      return gmAccessibleObjectFromWindow(hwnd, dwObjectID, riid, ppvObject);
+    }
+    
+
+    return S_FALSE;
+}
+
+
+
+STDMETHODIMP_(LRESULT) Accessible::LresultFromObject(
+  REFIID riid,
+  WPARAM wParam,
+  LPUNKNOWN pAcc)
+{
+    // open the dll dynamically
+    if (!gmAccLib) 
+       gmAccLib =::LoadLibrary("OLEACC.DLL");  
+
+    if (gmAccLib) {
+      if (!gmAccessibleObjectFromWindow)
+       gmLresultFromObject = (LPFNLRESULTFROMOBJECT)GetProcAddress(gmAccLib,"LresultFromObject");
+
+      return gmLresultFromObject(riid,wParam,pAcc);
+    }
+
+    return 0;
+}
+
 
 STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispParent)
 {
@@ -138,12 +186,13 @@ STDMETHODIMP Accessible::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *ppdispPa
   if (pWnd) {
     // get the accessible.
     void* ptr = nsnull;
-    AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr);
-    IAccessible* a = (IAccessible*)ptr;
-    // got one? return it.
-    if (a) {
-      *ppdispParent = a;
-      return NS_OK;
+    if (AccessibleObjectFromWindow(pWnd, OBJID_WINDOW, IID_IAccessible, &ptr) != S_FALSE) {
+      IAccessible* a = (IAccessible*)ptr;
+      // got one? return it.
+      if (a) {
+        *ppdispParent = a;
+        return NS_OK;
+      }
     }
   }
 

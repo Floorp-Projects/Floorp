@@ -3379,7 +3379,13 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                mRootAccessible = new RootAccessible(acc, wnd); // ref is 0       
                mRootAccessible->AddRef();
             }
-            LRESULT lAcc = LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // ref 1
+            // ask accessible to do this do it loads the library dynamically
+            LRESULT lAcc = Accessible::LresultFromObject(IID_IAccessible, wParam, mRootAccessible); // ref 1
+            if (lAcc == 0) {
+              *aRetValue = NULL;
+              return PR_FALSE;
+            }
+
             *aRetValue = lAcc;
             return PR_TRUE; // yes we handled it.
           }
