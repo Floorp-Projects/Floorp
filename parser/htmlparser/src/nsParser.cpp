@@ -197,7 +197,7 @@ nsParser::nsParser(nsITokenObserver* anObserver) : mCommand(""), mUnusedInput(""
   mCharsetSource=kCharsetUninitialized;
   mInternalState=NS_OK;
   
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   RAPTOR_STOPWATCH_DEBUGTRACE(("Reset: Parse Time: nsParser::nsParser(), this=%p\n", this));
   mParseTime.Reset();  
   mDTDTime.Reset();  
@@ -958,7 +958,7 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD, PRBool aIsFinalChunk) {
           NS_STOP_STOPWATCH(mParseTime);
 
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
           // XXX Don't print out Gecko layout time till I make the save/restore
           // implementation use a stack.  We'll calculate page load + layout time
           // in the webshell and print that out for now because that is more easy to
@@ -1308,7 +1308,7 @@ nsresult nsParser::OnDataAvailable(nsIURI* aURL, nsIInputStream *pIStream, PRUin
 
   NS_PRECONDITION(((eOnStart==mParserContext->mStreamListenerState)||(eOnDataAvail==mParserContext->mStreamListenerState)),kOnStartNotCalled);
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   if (0 == sourceOffset) {
     NS_RESET_AND_START_STOPWATCH(mTotalTime);
   }

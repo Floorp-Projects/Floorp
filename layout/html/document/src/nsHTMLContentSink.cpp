@@ -288,7 +288,7 @@ public:
   }
 #endif
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   Stopwatch mWatch; //  Measures content model creation time for current document
 #endif
 };
@@ -1790,7 +1790,7 @@ NS_IMETHODIMP
 HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 {
   // NRA Dump stopwatch stop info here
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: nsHTMLContentSink::DidBuildModel(), this=%p\n", this));
   NS_STOP_STOPWATCH(mWatch)
   RAPTOR_STOPWATCH_TRACE(("Content creation time (this=%p): ", this));

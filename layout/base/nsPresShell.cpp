@@ -66,7 +66,7 @@
 #include "nsIScrollPositionListener.h"
 #include "nsICompositeListener.h"
 #include "stopwatch.h"
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
 #include "nsITimeRecorder.h"
 #endif
 
@@ -362,7 +362,7 @@ private:
   void PushCurrentEventFrame();
   void PopCurrentEventFrame();
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   Stopwatch mReflowWatch;  // Used for measuring time spent in reflow
   Stopwatch mFrameCreationWatch;  // Used for measuring time spent in frame creation
 #endif
@@ -1247,7 +1247,7 @@ PresShell::EndUpdate(nsIDocument *aDocument)
 NS_IMETHODIMP
 PresShell::BeginLoad(nsIDocument *aDocument)
 {  
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   // Reset style resolution stopwatch maintained by style set
   nsresult rv = NS_OK;
   nsCOMPtr<nsITimeRecorder> watch = do_QueryInterface(mStyleSet, &rv);
@@ -1262,7 +1262,7 @@ PresShell::BeginLoad(nsIDocument *aDocument)
 NS_IMETHODIMP
 PresShell::EndLoad(nsIDocument *aDocument)
 {
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
   // Dump reflow, style resolution and frame construction times here.
   RAPTOR_STOPWATCH_DEBUGTRACE(("Stop: Reflow: PresShell::EndLoad(), this=%p\n", this));
   NS_STOP_STOPWATCH(mReflowWatch)

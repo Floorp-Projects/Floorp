@@ -10,7 +10,7 @@ const double gTicks = 1.0e-7;
 #define R__MAC
 #endif
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
 #  define NS_RESET_AND_START_STOPWATCH(_sw)          \
     _sw.Start(PR_TRUE);
 
@@ -35,7 +35,7 @@ const double gTicks = 1.0e-7;
 #endif
 
 
-#ifdef RAPTOR_PERF_METRICS
+#ifdef MOZ_PERF_METRICS
 
 static PRLogModuleInfo* gLogStopwatchModule = PR_NewLogModule("timing");
 

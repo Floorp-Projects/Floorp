@@ -20,9 +20,6 @@ include <$(DEPTH)/config/config.mak>
 
 
 DEFINES=-D_IMPL_NS_WEB -DWIN32_LEAN_AND_MEAN
-!if defined(MOZ_PERF)
-DEFINES = $(DEFINES) -DRAPTOR_PERF_METRICS
-!endif
 MODULE=raptor 
 
 CPPSRCS=				\
