@@ -39,7 +39,7 @@ class nsISupportsArray;
 class nsIHTMLContent;
 class nsIEditor;
 class nsISelectionController;
-
+class nsTextAreaSelectionImpl;
 
 
 
@@ -152,6 +152,7 @@ private:
   nsString *mCachedState;
   PRBool mIsProcessing;
   nsFormFrame *mFormFrame;
+  nsTextAreaSelectionImpl *mTextSelImpl;
 };
 
 #endif
