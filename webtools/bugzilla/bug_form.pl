@@ -49,7 +49,7 @@ sub quoteUrls {
 
     my @things;
     while ($text =~ s%((mailto:)?([\w\.\-\+\=]+\@\w+(?:\.\w+)+)\b|
-                       (\b((?:$protocol):\S+[\w/])))%"##".$count."##"%exo) {
+                       (\b((?:$protocol):\S+[\w/])))%"##$count##"%exo) {
         my $item = $&;
 
         $item = value_quote($item);
@@ -62,6 +62,15 @@ sub quoteUrls {
             $item = qq{<A HREF="$item">$item</A>};
         }
 
+        $things[$count++] = $item;
+    }
+    while ($text =~ s/\bbug(\s|%\#)*(\d+)/"##$count##"/ei) {
+        my $item = $&;
+        my $num = $2;
+        $item = value_quote($item); # Not really necessary, since we know
+                                # there's no special chars in it.
+        my $base = Param('urlbase');
+        $item = qq{<A HREF="${base}show_bug.cgi?id=$num">$item</A>};
         $things[$count++] = $item;
     }
 
