@@ -21,9 +21,43 @@ my $njarurl = 0;
 my %seen = ();
 # Number of dups per extension
 my %extnumdups = ();
+# interesting total times
+my %breakdown = ();
+# main1 cost
+my $main1 = 0;
+# when main window was visible
+my $window = 0;
+# pref files loaded
+my @prefurl = ();
 while (<>)
 {
     chomp;
+
+    # Computer breakdown of startup cost
+    if (/total:/) {
+        # This is a cumulative timer. Keep track of it.
+        /^[0-9\.: ]*(.*) total: ([0-9\.]*)/;
+        $breakdown{$1} = $2;
+    }
+    if (/InitXPCom\.\.\./) {
+        $breakdown{"Before InitXPCom"} = getTimelineStamp($_);
+        next;
+    }
+    if (/InitXPCOM done/) {
+        $breakdown{"InitXPCom"} = getTimelineStamp($_) - $breakdown{"Before InitXPCom"};
+        next;
+    }
+
+    # Find main1's cost to compute percentages
+    if (/\.\.\.main1/) {
+        $main1 = getTimelineStamp($_);;
+    }
+    # find when we showed the window
+    if (/Navigator Window visible now/) {
+        $window = getTimelineStamp($_);;
+    }
+
+    # Find all files loaded
     if (/PR_LoadLibrary/) {
         my $dll = getdll($_);
         push @dlls, $dll;
@@ -67,11 +101,17 @@ while (<>)
         $njarurl++;
         next;
     }
+    if (/load pref file/) {
+        $url = getfile($_);
+        push @prefurl, $url;
+    }
 }
 
 # print results
 print "SUMMARY\n";
 print "----------------------------------------------------------------------\n";
+print  "Total startup time : $main1 sec\n";
+printf "Main window visible: $window sec (%5.2f%%)\n", main1Percent($window);
 print "dlls loaded : ", $#dlls+1, "\n";
 print "Total unique: ", $#allurls+1, " [jar $njarurl, file $nfileurl]\n";
 # print the # of files by extensions sorted
@@ -93,6 +133,24 @@ foreach $i (@extsorted)
 }
 print "\n";
 print "Total non existent files : ", $#nonexistentfiles+1, "\n";
+
+print "\n";
+print "Cost Breakdown\n";
+print "----------------------------------------------------------------------\n";
+# sort by descending order of breakdown cost
+my @breakdownsorted = sort { $breakdown{$b} <=> $breakdown{$a} } keys %breakdown;
+my $totalAccounted = 0;
+foreach $e (@breakdownsorted)
+{
+    # ignore these breakdowns as they are already counted otherwise
+    next if ($e =~ /nsNativeComponentLoader::GetFactory/);
+    my $p = main1Percent($breakdown{$e});
+    #next if ($p == 0);
+    printf "%6.2f %s\n", $p, $e;
+    $totalAccounted += $p;
+}
+print "----------------------\n";
+printf "%6.2f Total Accounted\n", $totalAccounted;
 
 print "\n";
 printf "[%d] List of dlls loaded:\n", $#dlls+1;
@@ -133,7 +191,23 @@ foreach $i (@nonexistentfiles)
     printf "%2d. %s\n", $n++,  $i;
 }
 
+# print prefs loaded
+print "\n";
+printf "[%d] List of pref files loaded:\n", $#prefurl+1;
+print "----------------------------------------------------------------------\n";
+$n = 1;
+foreach $i (@prefurl)
+{
+    printf "%2d. %s\n", $n++,  $i;
+}
+
 # Subrouties
+sub getTimelineStamp() {
+    my $line = shift;
+    $line =~ /^([0-9\.]*)/;
+    return $1+0;
+}
+
 sub getfileurl() {
     my $f = shift;
     $f =~ s/^.*file:\/*(.*)\).*$/\1/;
@@ -159,4 +233,16 @@ sub getext() {
     my $f = shift;
     $f =~ s/^.*\.([^\.]*)$/\1/;
     return $f;
+}
+
+sub getfile() {
+    my $f = shift;
+    $f =~ s/^.*\((.*)\)$/\1/;
+    return $f;
+}
+
+# what % is this of startup
+sub main1Percent() {
+    my $i = shift;
+    return $i/$main1 * 100;
 }
