@@ -20,6 +20,7 @@
 #define nsIImapProtocol_h___
 
 #include "nsIStreamListener.h"
+#include "plevent.h"
 
 /* include all of our event sink interfaces */
 
@@ -53,6 +54,7 @@ public:
 	/////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURL * aUrl, nsISupports * aConsumer) = 0;
 
+    NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue) = 0;
 };
 
 #endif /* nsIImapProtocol_h___ */
