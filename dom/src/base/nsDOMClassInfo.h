@@ -98,6 +98,34 @@ protected:
   static PRInt32 GetArrayIndexFromId(JSContext *cx, jsval id,
                                      PRBool *aIsNumber = nsnull);
 
+  static inline IsReadonlyReplaceable(JSString *str)
+  {
+    return (str == sTop_id          ||
+            str == sScrollbars_id   ||
+            str == sContent_id      ||
+            str == sSidebar_id      ||
+            str == sMenubar_id      ||
+            str == sToolbar_id      ||
+            str == sLocationbar_id  ||
+            str == sPersonalbar_id  ||
+            str == sStatusbar_id    ||
+            str == sDirectories_id  ||
+            str == sControllers_id  ||
+            str == sLength_id);
+  }
+
+  static inline IsWritableReplaceable(JSString *str)
+  {
+    return (str == sInnerHeight_id  ||
+            str == sInnerWidth_id   ||
+            str == sOuterHeight_id  ||
+            str == sOuterWidth_id   ||
+            str == sScreenX_id      ||
+            str == sScreenY_id      ||
+            str == sStatus_id       ||
+            str == sName_id);
+  }
+
   static JSClass sDOMConstructorProtoClass;
 
   static nsIXPConnect *sXPConnect;
@@ -123,6 +151,14 @@ protected:
   static JSString *sDirectories_id;
   static JSString *sControllers_id;
   static JSString *sLength_id;
+  static JSString *sInnerHeight_id;
+  static JSString *sInnerWidth_id;
+  static JSString *sOuterHeight_id;
+  static JSString *sOuterWidth_id;
+  static JSString *sScreenX_id;
+  static JSString *sScreenY_id;
+  static JSString *sStatus_id;
+  static JSString *sName_id;
   static JSString *sOnmousedown_id;
   static JSString *sOnmouseup_id;
   static JSString *sOnclick_id;
