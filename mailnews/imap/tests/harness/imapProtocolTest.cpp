@@ -329,14 +329,14 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::PossibleImapMailbox(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec)
 {
-    printf("nsIMAP4TestDriver::PossibleImapMailbox\r\n");
+    printf("**** nsIMAP4TestDriver::PossibleImapMailbox\r\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::MailboxDiscoveryDone(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::MailboxDiscoveryDone\r\n");
+    printf("**** nsIMAP4TestDriver::MailboxDiscoveryDone\r\n");
     return NS_OK;
 }
 
@@ -345,7 +345,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::UpdateImapMailboxInfo(nsIImapProtocol* aProtocol,
                                      mailbox_spec* aSpec)
 {
-    printf("nsIMAP4TestDriver::UpdateImapMailboxInfo\r\n");
+    printf("**** nsIMAP4TestDriver::UpdateImapMailboxInfo\r\n");
     return NS_OK;
 }
 
@@ -353,14 +353,14 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::UpdateImapMailboxStatus(nsIImapProtocol* aProtocol,
                                        mailbox_spec* aSpec)
 {
-    printf("nsIMAP4TestDriver::UpdateImapMailboxStatus\r\n");
+    printf("**** nsIMAP4TestDriver::UpdateImapMailboxStatus\r\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::ChildDiscoverySucceeded(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::ChildDiscoverySucceeded\r\n");
+    printf("**** nsIMAP4TestDriver::ChildDiscoverySucceeded\r\n");
     return NS_OK;
 }
 
@@ -368,7 +368,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::OnlineFolderDelete(nsIImapProtocol* aProtocol,
                                   const char* folderName)
 {
-    printf("nsIMAP4TestDriver::OnlineFolderDelete\r\n");
+    printf("**** nsIMAP4TestDriver::OnlineFolderDelete\r\n");
     return NS_OK;
 }
 
@@ -376,7 +376,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::OnlineFolderCreateFailed(nsIImapProtocol* aProtocol,
                                         const char* folderName)
 {
-    printf("nsIMAP4TestDriver::OnlineFolderCreateFailed\r\n");
+    printf("**** nsIMAP4TestDriver::OnlineFolderCreateFailed\r\n");
     return NS_OK;
 }
 
@@ -384,7 +384,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::OnlineFolderRename(nsIImapProtocol* aProtocol,
                                   folder_rename_struct* aStruct)
 {
-    printf("nsIMAP4TestDriver::OnlineFolderRename\r\n");
+    printf("**** nsIMAP4TestDriver::OnlineFolderRename\r\n");
     return NS_OK;
 }
 
@@ -392,7 +392,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SubscribeUpgradeFinished(nsIImapProtocol* aProtocol,
                               EIMAPSubscriptionUpgradeState* aState)
 {
-    printf("nsIMAP4TestDriver::SubscribeUpgradeFinished\r\n");
+    printf("**** nsIMAP4TestDriver::SubscribeUpgradeFinished\r\n");
     return NS_OK;
 }
 
@@ -400,7 +400,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::PromptUserForSubscribeUpdatePath(nsIImapProtocol* aProtocol,
                                                 PRBool* aBool)
 {
-    printf("nsIMAP4TestDriver::PromptUserForSubscribeUpdatePath\r\n");
+    printf("**** nsIMAP4TestDriver::PromptUserForSubscribeUpdatePath\r\n");
     return NS_OK;
 }
 
@@ -408,7 +408,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::FolderIsNoSelect(nsIImapProtocol* aProtocol,
                                 FolderQueryInfo* aInfo)
 {
-    printf("nsIMAP4TestDriver::FolderIsNoSelect\r\n");
+    printf("**** nsIMAP4TestDriver::FolderIsNoSelect\r\n");
     return NS_OK;
 }
 
@@ -418,7 +418,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SetupMsgWriteStream(nsIImapProtocol* aProtocol,
                                    StreamInfo* aStreamInfo)
 {
-    printf("nsIMAP4TestDriver::SetupMsgWriteStream\r\n");
+    printf("**** nsIMAP4TestDriver::SetupMsgWriteStream\r\n");
     return NS_OK;
 }
 
@@ -427,7 +427,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
                                    msg_line_info* aMsgLineInfo)
 {
-    printf("nsIMAP4TestDriver::ParseAdoptedMsgLine\r\n");
+    printf("**** nsIMAP4TestDriver::ParseAdoptedMsgLine\r\n");
     return NS_OK;
 }
 
@@ -435,7 +435,7 @@ nsIMAP4TestDriver::ParseAdoptedMsgLine(nsIImapProtocol* aProtocol,
 NS_IMETHODIMP
 nsIMAP4TestDriver::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::NormalEndMsgWriteStream\r\n");
+    printf("**** nsIMAP4TestDriver::NormalEndMsgWriteStream\r\n");
     return NS_OK;
 }
 
@@ -443,7 +443,7 @@ nsIMAP4TestDriver::NormalEndMsgWriteStream(nsIImapProtocol* aProtocol)
 NS_IMETHODIMP
 nsIMAP4TestDriver::AbortMsgWriteStream(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::AbortMsgWriteStream\r\n");
+    printf("**** nsIMAP4TestDriver::AbortMsgWriteStream\r\n");
     return NS_OK;
 }
 
@@ -453,14 +453,14 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::OnlineCopyReport(nsIImapProtocol* aProtocol,
                                 ImapOnlineCopyState* aCopyState)
 {
-    printf("nsIMAP4TestDriver::OnlineCopyReport\r\n");
+    printf("**** nsIMAP4TestDriver::OnlineCopyReport\r\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::BeginMessageUpload(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::BeginMessageUpload\r\n");
+    printf("**** nsIMAP4TestDriver::BeginMessageUpload\r\n");
     return NS_OK;
 }
 
@@ -468,7 +468,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::UploadMessageFile(nsIImapProtocol* aProtocol,
                                  UploadMessageInfo* aMsgInfo)
 {
-    printf("nsIMAP4TestDriver::UploadMessageFile\r\n");
+    printf("**** nsIMAP4TestDriver::UploadMessageFile\r\n");
     return NS_OK;
 }
 
@@ -478,7 +478,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::NotifyMessageFlags(nsIImapProtocol* aProtocol,
                                   FlagsKeyStruct* aKeyStruct)
 {
-    printf("nsIMAP4TestDriver::NotifyMessageFlags\r\n");
+    printf("**** nsIMAP4TestDriver::NotifyMessageFlags\r\n");
     return NS_OK;
 }
 
@@ -487,7 +487,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::NotifyMessageDeleted(nsIImapProtocol* aProtocol,
                                     delete_message_struct* aStruct)
 {
-    printf("nsIMAP4TestDriver::NotifyMessageDeleted\r\n");
+    printf("**** nsIMAP4TestDriver::NotifyMessageDeleted\r\n");
     return NS_OK;
 }
 
@@ -495,7 +495,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::GetMessageSizeFromDB(nsIImapProtocol* aProtocol,
                                     MessageSizeInfo* sizeInfo)
 {
-    printf("nsIMAP4TestDriver::GetMessageSizeFromDB\r\n");
+    printf("**** nsIMAP4TestDriver::GetMessageSizeFromDB\r\n");
     return NS_OK;
 }
 
@@ -506,7 +506,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SetUserAuthenticated(nsIImapProtocol* aProtocol,
 								  PRBool aBool)
 {
-    printf("nsIMAP4TestDriver::SetUserAuthenticated\r\n");
+    printf("**** nsIMAP4TestDriver::SetUserAuthenticated\r\n");
     return NS_OK;
 }
 
@@ -514,7 +514,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SetMailServerUrls(nsIImapProtocol* aProtocol,
                                  const char* hostName)
 {
-    printf("nsIMAP4TestDriver::SetMailServerUrls\r\n");
+    printf("**** nsIMAP4TestDriver::SetMailServerUrls\r\n");
     return NS_OK;
 }
 
@@ -522,7 +522,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SetMailAccountUrl(nsIImapProtocol* aProtocol,
                                  const char* hostName)
 {
-    printf("nsIMAP4TestDriver::SetMailAccountUrl\r\n");
+    printf("**** nsIMAP4TestDriver::SetMailAccountUrl\r\n");
     return NS_OK;
 }
 
@@ -530,7 +530,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::ClearFolderRights(nsIImapProtocol* aProtocol,
                                  TIMAPACLRightsInfo* aclRights)
 {
-    printf("nsIMAP4TestDriver::ClearFolderRights\r\n");
+    printf("**** nsIMAP4TestDriver::ClearFolderRights\r\n");
     return NS_OK;
 }
 
@@ -538,7 +538,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::AddFolderRights(nsIImapProtocol* aProtocol,
                                TIMAPACLRightsInfo* aclRights)
 {
-    printf("nsIMAP4TestDriver::AddFolderRights\r\n");
+    printf("**** nsIMAP4TestDriver::AddFolderRights\r\n");
     return NS_OK;
 }
 
@@ -546,7 +546,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::RefreshFolderRights(nsIImapProtocol* aProtocol,
                                    TIMAPACLRightsInfo* aclRights)
 {
-    printf("nsIMAP4TestDriver::RefreshFolderRights\r\n");
+    printf("**** nsIMAP4TestDriver::RefreshFolderRights\r\n");
     return NS_OK;
 }
 
@@ -554,7 +554,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::FolderNeedsACLInitialized(nsIImapProtocol* aProtocol,
                                          TIMAPACLRightsInfo* aclRights)
 {
-    printf("nsIMAP4TestDriver::FolderNeedsACLInitialized\r\n");
+    printf("**** nsIMAP4TestDriver::FolderNeedsACLInitialized\r\n");
     return NS_OK;
 }
 
@@ -562,7 +562,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SetFolderAdminURL(nsIImapProtocol* aProtocol,
                                  FolderQueryInfo* aInfo)
 {
-    printf("nsIMAP4TestDriver::SetFolderAdminURL\r\n");
+    printf("**** nsIMAP4TestDriver::SetFolderAdminURL\r\n");
     return NS_OK;
 }
 
@@ -573,7 +573,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::AddSearchResult(nsIImapProtocol* aProtocol, 
                                const char* searchHitLine)
 {
-    printf("nsIMAP4TestDriver::AddSearchResult\r\n");
+    printf("**** nsIMAP4TestDriver::AddSearchResult\r\n");
     return NS_OK;
 }
 
@@ -581,7 +581,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::GetArbitraryHeaders(nsIImapProtocol* aProtocol,
                                    GenericInfo* aInfo)
 {
-    printf("nsIMAP4TestDriver::GetArbitraryHeaders\r\n");
+    printf("**** nsIMAP4TestDriver::GetArbitraryHeaders\r\n");
     return NS_OK;
 }
 
@@ -589,21 +589,21 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders(nsIImapProtocol* aProtocol,
                                                  GenericInfo* aInfo)
 {
-    printf("nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders\r\n");
+    printf("**** nsIMAP4TestDriver::GetShouldDownloadArbitraryHeaders\r\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::HeaderFetchCompleted(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::HeaderFetchCompleted\r\n");
+    printf("**** nsIMAP4TestDriver::HeaderFetchCompleted\r\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::UpdateSecurityStatus\r\n");
+    printf("**** nsIMAP4TestDriver::UpdateSecurityStatus\r\n");
     return NS_OK;
 }
 
@@ -611,7 +611,7 @@ nsIMAP4TestDriver::UpdateSecurityStatus(nsIImapProtocol* aProtocol)
 NS_IMETHODIMP
 nsIMAP4TestDriver::FinishImapConnection(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::FinishImapConnection\r\n");
+    printf("**** nsIMAP4TestDriver::FinishImapConnection\r\n");
     return NS_OK;
 }
 
@@ -619,7 +619,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SetImapHostPassword(nsIImapProtocol* aProtocol,
                                    GenericInfo* aInfo)
 {
-    printf("nsIMAP4TestDriver::SetImapHostPassword\r\n");
+    printf("**** nsIMAP4TestDriver::SetImapHostPassword\r\n");
     return NS_OK;
 }
 
@@ -627,7 +627,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::GetPasswordForUser(nsIImapProtocol* aProtocol,
                                   const char* userName)
 {
-    printf("nsIMAP4TestDriver::GetPasswordForUser\r\n");
+    printf("**** nsIMAP4TestDriver::GetPasswordForUser\r\n");
     return NS_OK;
 }
 
@@ -635,7 +635,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::SetBiffStateAndUpdate(nsIImapProtocol* aProtocol,
                                      nsMsgBiffState biffState)
 {
-    printf("nsIMAP4TestDriver::SetBiffStateAndUpdate\r\n");
+    printf("**** nsIMAP4TestDriver::SetBiffStateAndUpdate\r\n");
     return NS_OK;
 }
 
@@ -643,7 +643,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::GetStoredUIDValidity(nsIImapProtocol* aProtocol,
                                     uid_validity_info* aInfo)
 {
-    printf("nsIMAP4TestDriver::GetStoredUIDValidity\r\n");
+    printf("**** nsIMAP4TestDriver::GetStoredUIDValidity\r\n");
     return NS_OK;
 }
 
@@ -651,7 +651,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::LiteSelectUIDValidity(nsIImapProtocol* aProtocol,
                                      PRUint32 uidValidity)
 {
-    printf("nsIMAP4TestDriver::LiteSelectUIDValidity\r\n");
+    printf("**** nsIMAP4TestDriver::LiteSelectUIDValidity\r\n");
     return NS_OK;
 }
 
@@ -659,7 +659,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::FEAlert(nsIImapProtocol* aProtocol,
                        const char* aString)
 {
-    printf("nsIMAP4TestDriver::FEAlert\r\n");
+    printf("**** nsIMAP4TestDriver::FEAlert\r\n");
     return NS_OK;
 }
 
@@ -667,7 +667,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::FEAlertFromServer(nsIImapProtocol* aProtocol,
                                  const char* aString)
 {
-    printf("nsIMAP4TestDriver::FEAlertFromServer\r\n");
+    printf("**** nsIMAP4TestDriver::FEAlertFromServer\r\n");
     return NS_OK;
 }
 
@@ -675,7 +675,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::ProgressStatus(nsIImapProtocol* aProtocol,
                               const char* statusMsg)
 {
-    printf("nsIMAP4TestDriver::ProgressStatus\r\n");
+    printf("**** nsIMAP4TestDriver::ProgressStatus\r\n");
     return NS_OK;
 }
 
@@ -683,14 +683,14 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::PercentProgress(nsIImapProtocol* aProtocol,
                                ProgressInfo* aInfo)
 {
-    printf("nsIMAP4TestDriver::PercentProgress\r\n");
+    printf("**** nsIMAP4TestDriver::PercentProgress\r\n");
     return NS_OK;
 }
 
 NS_IMETHODIMP
 nsIMAP4TestDriver::PastPasswordCheck(nsIImapProtocol* aProtocol)
 {
-    printf("nsIMAP4TestDriver::PastPasswordCheck\r\n");
+    printf("**** nsIMAP4TestDriver::PastPasswordCheck\r\n");
     return NS_OK;
 }
 
@@ -698,7 +698,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::CommitNamespaces(nsIImapProtocol* aProtocol,
                                 const char* hostName)
 {
-    printf("nsIMAP4TestDriver::CommitNamespaces\r\n");
+    printf("**** nsIMAP4TestDriver::CommitNamespaces\r\n");
     return NS_OK;
 }
 
@@ -706,7 +706,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::CommitCapabilityForHost(nsIImapProtocol* aProtocol,
                                        const char* hostName)
 {
-    printf("nsIMAP4TestDriver::CommitCapabilityForHost\r\n");
+    printf("**** nsIMAP4TestDriver::CommitCapabilityForHost\r\n");
     return NS_OK;
 }
 
@@ -714,7 +714,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::TunnelOutStream(nsIImapProtocol* aProtocol,
                                msg_line_info* aInfo)
 {
-    printf("nsIMAP4TestDriver::TunnelOutStream\r\n");
+    printf("**** nsIMAP4TestDriver::TunnelOutStream\r\n");
     return NS_OK;
 }
 
@@ -722,7 +722,7 @@ NS_IMETHODIMP
 nsIMAP4TestDriver::ProcessTunnel(nsIImapProtocol* aProtocol,
                              TunnelInfo *aInfo)
 {
-    printf("nsIMAP4TestDriver::ProcessTunnel\r\n");
+    printf("**** nsIMAP4TestDriver::ProcessTunnel\r\n");
     return NS_OK;
 }
 
@@ -743,6 +743,9 @@ nsresult nsIMAP4TestDriver::InitializeProtocol(const char * urlString)
 	{
 		imapService->CreateImapConnection(m_eventQueue, &m_IMAP4Protocol);
 		nsServiceManager::ReleaseService(kCImapService, imapService);
+        if (m_IMAP4Protocol)
+            m_protocolInitialized = PR_TRUE;
+            
 	}
 
 	return rv;
