@@ -460,6 +460,8 @@ nsSliderFrame::HandleEvent(nsIPresContext* aPresContext,
       //printf("stop capturing\n");
       AddListener();
       DragThumb(aPresContext, PR_FALSE);
+      mRedrawImmediate = PR_FALSE;//we MUST call nsFrame HandleEvent for mouse ups to maintain the selection state and capture state.
+      return nsFrame::HandleEvent(aPresContext, aEvent, aEventStatus);
     }
 
     // we want to draw immediately if the user doing it directly with the
