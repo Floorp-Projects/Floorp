@@ -129,6 +129,7 @@ ProcessorState::ProcessorState(Node* aSourceNode, Document* aXslDocument)
       mResultHandler(0),
       mOutputHandlerFactory(0),
       mXslKeys(MB_TRUE),
+      mKeyHash(mXslKeys),
       mDecimalFormats(MB_TRUE),
       mEvalContext(0),
       mLocalVariables(0),
@@ -154,6 +155,8 @@ ProcessorState::ProcessorState(Node* aSourceNode, Document* aXslDocument)
     mExprHashes[ValueAttr].setOwnership(Map::eOwnsItems);
     mPatternHashes[CountAttr].setOwnership(Map::eOwnsItems);
     mPatternHashes[FromAttr].setOwnership(Map::eOwnsItems);
+
+    mKeyHash.init();
 }
 
 /**
@@ -853,7 +856,7 @@ MBool ProcessorState::addKey(Element* aKeyElem)
 
     txXSLKey* xslKey = (txXSLKey*)mXslKeys.get(keyName);
     if (!xslKey) {
-        xslKey = new txXSLKey(this);
+        xslKey = new txXSLKey(keyName);
         if (!xslKey)
             return MB_FALSE;
         rv = mXslKeys.add(keyName, xslKey);
@@ -877,15 +880,6 @@ MBool ProcessorState::addKey(Element* aKeyElem)
         return MB_FALSE;
     }
     return MB_TRUE;
-}
-
-/**
- * Adds the supplied xsl:key to the set of keys
- * returns NULL if no such key exists
-**/
-txXSLKey* ProcessorState::getKey(txExpandedName& keyName)
-{
-    return (txXSLKey*)mXslKeys.get(keyName);
 }
 
 /*
