@@ -41,7 +41,7 @@ CPPSRCS =				\
 	nsCP936ToUnicode.cpp		\
 	nsUnicodeToCP936.cpp		\
 	nsUCvCnSupport.cpp		\
-	nsUCvCnDll.cpp			\
+	nsUCvCnModule.cpp			\
 	$(NULL)
 
 CPP_OBJS=						\
@@ -59,7 +59,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsCP936ToUnicode.obj 		\
 	.\$(OBJDIR)\nsUnicodeToCP936.obj		\
 	.\$(OBJDIR)\nsUCvCnSupport.obj			\
-	.\$(OBJDIR)\nsUCvCnDll.obj 			\
+	.\$(OBJDIR)\nsUCvCnModule.obj 			\
 	$(NULL)
 
 EXPORTS=nsUCvCnCID.h			\
