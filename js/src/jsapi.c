@@ -1022,7 +1022,7 @@ JS_ToggleOptions(JSContext *cx, uint32 options)
 JS_PUBLIC_API(const char *)
 JS_GetImplementationVersion(void)
 {
-    return "JavaScript-C 1.5 pre-release 4a 2002-03-21";
+    return "JavaScript-C 1.5 pre-release 5 2003-01-10";
 }
 
 
