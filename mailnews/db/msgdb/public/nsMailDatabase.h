@@ -85,27 +85,28 @@ public:
 
   NS_IMETHOD SetFolderStream(nsIOFileStream *aFileStream);
 
-    friend class nsMsgOfflineOpEnumerator;
+  friend class nsMsgOfflineOpEnumerator;
 protected:
 
-  nsresult      GetAllOfflineOpsTable(); // get this on demand
+  nsresult        GetAllOfflineOpsTable(); // get this on demand
 
-  nsIMdbTable       *m_mdbAllOfflineOpsTable;
-	mdb_token			m_offlineOpsRowScopeToken;
-  mdb_token     m_offlineOpsTableKindToken;
+  nsIMdbTable     *m_mdbAllOfflineOpsTable;
+  mdb_token       m_offlineOpsRowScopeToken;
+  mdb_token       m_offlineOpsTableKindToken;
 
-  virtual PRBool			SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
-	virtual void			UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 
-									 MsgFlags flag, nsIOFileStream **ppFileStream);
-	virtual void			SetReparse(PRBool reparse);
-
+  virtual PRBool  SetHdrFlag(nsIMsgDBHdr *, PRBool bSet, MsgFlags flag);
+  virtual void    UpdateFolderFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, 
+                                    MsgFlags flag, nsIOFileStream **ppFileStream);
+  virtual void    SetReparse(PRBool reparse);
+  
 protected:
-	virtual PRBool	ThreadBySubjectWithoutRe() ;
-
-	PRBool					m_reparse;
-	nsFileSpec				*m_folderSpec;
-	nsIOFileStream			*m_folderStream; 	/* this is a cache for loops which want file left open */
-  PRBool m_ownFolderStream; //if we are the owner of m_folderStream
+  void            GetGlobalPrefs();
+  virtual PRBool  ThreadBySubjectWithoutRe() ;
+  
+  PRBool          m_reparse;
+  nsFileSpec	  *m_folderSpec;
+  nsIOFileStream  *m_folderStream; 	/* this is a cache for loops which want file left open */
+  PRBool          m_ownFolderStream; //if we are the owner of m_folderStream
 };
 
 #endif

@@ -48,7 +48,10 @@
 #include "prlog.h"
 #include "prprf.h"
 #include "nsIFileSpec.h"
-
+#ifdef PUTUP_ALERT_ON_INVALID_DB
+#include "nsIPrompt.h"
+#include "nsIWindowWatcher.h"
+#endif
 const char *kOfflineOpsScope = "ns:msg:db:row:scope:ops:all";	// scope for all offine ops table
 const char *kOfflineOpsTableKind = "ns:msg:db:table:kind:ops";
 struct mdbOid gAllOfflineOpsTableOID;
@@ -76,6 +79,19 @@ NS_IMETHODIMP nsMailDatabase::SetFolderStream(nsIOFileStream *aFileStream)
   return NS_OK;
 }
 
+static PRBool gGotGlobalPrefs = PR_FALSE;
+static PRBool gThreadWithoutRe = PR_TRUE;
+static PRInt32 gTimeStampLeeway;
+
+void nsMailDatabase::GetGlobalPrefs()
+{
+  if (!gGotGlobalPrefs)
+  {
+    GetBoolPref("mail.thread_without_re", &gThreadWithoutRe);
+    GetIntPref("mail.db_timestamp_leeway", &gTimeStampLeeway);
+    gGotGlobalPrefs = PR_TRUE;
+  }
+}
 
 NS_IMETHODIMP nsMailDatabase::Open(nsIFileSpec *aFolderName, PRBool create, PRBool upgrading, nsIMsgDatabase** pMessageDB)
 {
@@ -496,7 +512,10 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
   PRUint32  folderDate;
   nsFileSpec::TimeStamp actualFolderTimeStamp;
   PRInt32 numNewMessages;
+  nsAutoString errorMsg;
+
         
+  *aResult = PR_FALSE;
   
   if (m_folderSpec && m_dbFolderInfo)
   {
@@ -506,18 +525,55 @@ NS_IMETHODIMP nsMailDatabase::GetSummaryValid(PRBool *aResult)
     m_dbFolderInfo->GetFolderSize(&folderSize);
     m_dbFolderInfo->GetFolderDate(&folderDate);
 
-    // compare current version of db versus filed out version info.
+    // compare current version of db versus filed out version info, 
+    // and file size in db vs file size on disk.
     PRUint32 version;
+
     m_dbFolderInfo->GetVersion(&version);
     if (folderSize == m_folderSpec->GetFileSize() &&
-      folderDate == actualFolderTimeStamp &&
         numNewMessages >= 0 && GetCurVersion() == version)
     {
-      *aResult = PR_TRUE;
-      return NS_OK;
+      GetGlobalPrefs();
+      // if those values are ok, check time stamp
+      if (gTimeStampLeeway == 0)
+        *aResult = folderDate == actualFolderTimeStamp;
+      else
+        *aResult = abs(actualFolderTimeStamp - folderDate) <= gTimeStampLeeway;
+#ifndef PUTUP_ALERT_ON_INVALID_DB
     }
   }
-  *aResult = PR_FALSE;
+#else
+      if (!*aResult)
+      {
+        errorMsg.AppendWithConversion("time stamp didn't match delta = ");
+        errorMsg.AppendInt(actualFolderTimeStamp - folderDate);
+        errorMsg.AppendWithConversion(" leeway = ");
+        errorMsg.AppendInt(gTimeStampLeeway);
+      }
+    }
+    else if (folderSize != m_folderSpec->GetFileSize())
+    {
+      errorMsg.AppendWithConversion("folder size didn't match db size = ");
+      errorMsg.AppendInt(folderSize);
+      errorMsg.AppendWithConversion(" actual size = ");
+      errorMsg.AppendInt(m_folderSpec->GetFileSize());
+    }
+    else if (numNewMessages < 0)
+    {
+      errorMsg.AppendWithConversion("numNewMessages < 0");
+    }
+  }
+  if (errorMsg.Length())
+  {
+    nsCOMPtr<nsIPrompt> dialog;
+
+    nsCOMPtr<nsIWindowWatcher> wwatch(do_GetService(NS_WINDOWWATCHER_CONTRACTID));
+    if (wwatch)
+      wwatch->GetNewPrompter(0, getter_AddRefs(dialog));
+    if (dialog)
+      dialog->Alert(nsnull, errorMsg.get());
+  }
+#endif // PUTUP_ALERT_ON_INVALID_DB
   return NS_OK;
 }
 
@@ -825,21 +881,11 @@ void nsMailDatabase::SetReparse(PRBool reparse)
 }
 
 
-static PRBool gGotThreadingPrefs = PR_FALSE;
-static PRBool gThreadWithoutRe = PR_TRUE;
-
-
 // should we thread messages with common subjects that don't start with Re: together?
 // I imagine we might have separate preferences for mail and news, so this is a virtual method.
 PRBool	nsMailDatabase::ThreadBySubjectWithoutRe()
 {
-	if (!gGotThreadingPrefs)
-	{
-		GetBoolPref("mail.thread_without_re", &gThreadWithoutRe);
-		gGotThreadingPrefs = PR_TRUE;
-	}
-
-	gThreadWithoutRe = PR_TRUE;	// we need to this to be true for now.
+  GetGlobalPrefs();
 	return gThreadWithoutRe;
 }
 
