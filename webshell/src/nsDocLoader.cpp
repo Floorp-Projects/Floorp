@@ -51,6 +51,11 @@
 #include "nsLayoutCID.h"
 
 #include "nsRDFCID.h"
+#include "nsIXULParentDocument.h"
+#include "nsIXULChildDocument.h"
+#include "nsIRDFResource.h"
+#include "nsIXULDocumentInfo.h"
+#include "nsCOMPtr.h"
 
 /* Forward declarations.... */
 class nsDocLoaderImpl;
@@ -172,6 +177,7 @@ public:
                               const char* aContentType, 
                               const char* aCommand,
                               nsIContentViewerContainer* aContainer,
+                              nsISupports* aExtraInfo,
                               nsIStreamListener** aDocListener,
                               nsIContentViewer** aDocViewer);
 
@@ -192,6 +198,7 @@ public:
     nsresult CreateRDFDocument(const char* aContentType, nsIURL* aURL, 
                                const char* aCommand,
                                nsIContentViewerContainer* aContainer,
+                               nsISupports* aExtraInfo,
                                nsIStreamListener** aDocListener,
                                nsIContentViewer** aDocViewer);
 
@@ -253,6 +260,7 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
                                  const char* aContentType, 
                                  const char *aCommand,
                                  nsIContentViewerContainer* aContainer,
+                                 nsISupports* aExtraInfo,
                                  nsIStreamListener** aDocListener,
                                  nsIContentViewer** aDocViewer)
 {
@@ -289,6 +297,7 @@ nsDocFactoryImpl::CreateInstance(nsIURL* aURL,
         if (0 == PL_strcmp(gRDFTypes[typeIndex++], aContentType)) {
             return CreateRDFDocument(aContentType, aURL, aCommand,
                                      aContainer,
+                                     aExtraInfo,
                                      aDocListener,
                                      aDocViewer);
         }
@@ -450,13 +459,16 @@ nsresult
 nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL, 
                                     const char* aCommand,
                                     nsIContentViewerContainer* aContainer,
+                                    nsISupports* aExtraInfo,
                                     nsIStreamListener** aDocListener,
                                     nsIContentViewer** aDocViewer)
 {
     nsresult rv = NS_ERROR_FAILURE;
     nsIDocument* doc = nsnull;
     nsIDocumentViewer* docv = nsnull;
-
+    nsCOMPtr<nsIXULDocumentInfo> xulDocumentInfo;
+    xulDocumentInfo = do_QueryInterface(aExtraInfo);
+    
     // Load the UA style sheet if we haven't already done that
     if (nsnull == gUAStyleSheet) {
         InitUAStyleSheet();
@@ -479,6 +491,31 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
 
     docv->SetUAStyleSheet(gUAStyleSheet);
 
+    // We are capable of being a XUL child document. If 
+    // we have extra info that supports the XUL document info
+    // interface, then we'll know for sure.
+    if (xulDocumentInfo) {
+        // We are a XUL fragment. Retrieve the parent document
+        // and the fragment's root position within the parent
+        // document.
+        nsCOMPtr<nsIDocument> parentDocument;
+        nsCOMPtr<nsIRDFResource> fragmentRoot;
+        if (NS_SUCCEEDED(xulDocumentInfo->GetDocument(getter_AddRefs(parentDocument))) &&
+            NS_SUCCEEDED(xulDocumentInfo->GetResource(getter_AddRefs(fragmentRoot)))) {
+            // We were able to obtain a resource and a parent document.
+            parentDocument->AddSubDocument(doc);
+            doc->SetParentDocument(parentDocument);
+
+            // We need to set our fragment root as well.  The
+            // XUL child document interface is required to do this.
+            nsCOMPtr<nsIXULChildDocument> xulChildDoc;
+            xulChildDoc = do_QueryInterface(doc);
+            if (xulChildDoc) {
+                xulChildDoc->SetFragmentRoot(fragmentRoot);
+            }
+        }
+    }
+   
     /* 
      * Initialize the document to begin loading the data...
      *
@@ -489,7 +526,7 @@ nsDocFactoryImpl::CreateRDFDocument(const char* aContentType, nsIURL* aURL,
         NS_RELEASE(docv);
         goto done;
     }
-
+   
     /*
      * Bind the document to the Content Viewer...
      */
@@ -648,6 +685,11 @@ public:
                             nsIStreamObserver* anObserver = nsnull,
                             nsURLReloadType aType = nsURLReload,
                             const PRUint32 aLocalIP = 0);
+
+    NS_IMETHOD LoadSubDocument(const nsString& aURLSpec,
+                               nsISupports* aExtraInfo = nsnull,
+                               nsURLReloadType type = nsURLReload,
+                               const PRUint32 aLocalIP = 0);
 
     NS_IMETHOD Stop(void);
 
@@ -919,6 +961,48 @@ done:
   return rv;
 }
 
+NS_IMETHODIMP
+nsDocLoaderImpl::LoadSubDocument(const nsString& aURLSpec,
+                                 nsISupports* aExtraInfo,
+                                 nsURLReloadType type,
+                                 const PRUint32 aLocalIP)
+{
+  nsresult rv;
+  nsURLLoadType loadType;
+  nsDocumentBindInfo* loader = nsnull;
+
+#ifdef DEBUG
+  char buffer[256];
+
+  aURLSpec.ToCString(buffer, sizeof(buffer));
+  PR_LOG(gDocLoaderLog, PR_LOG_DEBUG, 
+         ("DocLoader - LoadSubDocument(...) called for %s.", 
+          buffer));
+#endif /* DEBUG */
+
+  NS_NEWXPCOM(loader, nsDocumentBindInfo);
+  if (nsnull == loader) {
+      rv = NS_ERROR_OUT_OF_MEMORY;
+      return rv;
+  }
+  loader->Init(this,           // DocLoader
+               nsnull,         // Command
+               nsnull,     // Viewer Container
+               aExtraInfo,     // Extra Info
+               mStreamObserver);    // Observer
+
+  /* The DocumentBindInfo reference is only held by the Array... */
+  m_LoadingDocsList->AppendElement((nsIStreamListener *)loader);
+
+  /* Increment the URL counters... */
+  mForegroundURLs++;
+  mTotalURLs++;
+  
+  rv = loader->Bind(aURLSpec, nsnull, nsnull);
+
+  return rv;
+
+}
 
 NS_IMETHODIMP
 nsDocLoaderImpl::Stop(void)
@@ -1611,6 +1695,7 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
                                                            aContentType, 
                                                            m_Command, 
                                                            m_Container,
+                                                           m_ExtraInfo,
                                                            &m_NextStream, 
                                                            &viewer);
         } else {
@@ -1625,11 +1710,13 @@ NS_METHOD nsDocumentBindInfo::OnStartBinding(nsIURL* aURL, const char *aContentT
         /*
          * Give the document container the new viewer...
          */
-        viewer->SetContainer(m_Container);
+        if (m_Container) {
+            viewer->SetContainer(m_Container);
 
-        rv = m_Container->Embed(viewer, m_Command, m_ExtraInfo);
-        if (NS_OK != rv) {
-            goto done;
+            rv = m_Container->Embed(viewer, m_Command, m_ExtraInfo);
+            if (NS_OK != rv) {
+                goto done;
+            }
         }
 
     }
