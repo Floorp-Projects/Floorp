@@ -125,21 +125,14 @@ function CompFields2Recipients(msgCompFields, msgType)
 		awSetInputAndPopup(msgCompFields.GetNewsgroups(), "addr_newsgroups", newTreeChildrenNode, templateNode);
 		awSetInputAndPopup(msgCompFields.GetFollowupTo(), "addr_followup", newTreeChildrenNode, templateNode);
 		
-    if (top.MAX_RECIPIENTS == 0)
-		{
-		  top.MAX_RECIPIENTS = 1;
-			awSetAutoComplete(top.MAX_RECIPIENTS);
-		}
-		else
-		{
-		    //If it's a new message, we need to add an extrat empty recipient.
-		    var msgComposeType = Components.interfaces.nsIMsgCompType;
-		    if (msgType == msgComposeType.New)
-		        _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
-	        var parent = treeChildren.parentNode;
-	        parent.replaceChild(newTreeChildrenNode, treeChildren);
-            setTimeout("awFinishCopyNodes();", 0);
-        }
+		//If it's a new message, we need to add an extrat empty recipient.
+		var msgComposeType = Components.interfaces.nsIMsgCompType;
+		if (msgType == msgComposeType.New || top.MAX_RECIPIENTS == 0)
+		    _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
+		dump("replacing child in comp fields 2 recips \n");
+	    var parent = treeChildren.parentNode;
+	    parent.replaceChild(newTreeChildrenNode, treeChildren);
+        setTimeout("awFinishCopyNodes();", 0);
 	}
 }
 
