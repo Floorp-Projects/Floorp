@@ -320,8 +320,8 @@ public class NewsRC {
             out = null;
           }
         }
-
-        tmp.renameTo(file);
+	System.out.println("Delete : "+file.delete());
+        System.out.println("Rename : "+tmp.renameTo(file));
 
         file_size = file.length();
         file_date = file.lastModified();
