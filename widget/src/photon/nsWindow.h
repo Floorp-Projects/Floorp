@@ -59,8 +59,8 @@ public:
   NS_IMETHOD            SetTitle(const nsString& aTitle);
   NS_IMETHOD            SetMenuBar(nsIMenuBar * aMenuBar);
   NS_IMETHOD            ShowMenuBar(PRBool aShow);
-  NS_IMETHOD            GetBounds( nsRect &aRect );
   NS_IMETHOD            GetClientBounds( nsRect &aRect );
+  NS_IMETHOD            Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint);
   NS_IMETHOD            SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[]);
   NS_IMETHOD            UpdateTooltips(nsRect* aNewTips[]);
   NS_IMETHOD            RemoveTooltips();
@@ -97,7 +97,12 @@ protected:
   PRBool                mClipSiblings;
   static PRBool         mIsResizing;
   nsFont                *mFont;
-
+  nsIMenuBar            *mMenuBar;
+  PRBool                mMenuBarVis;
+  int                   mFrameLeft;
+  int                   mFrameRight;
+  int                   mFrameTop;
+  int                   mFrameBottom;
 };
 
 //

@@ -140,7 +140,7 @@ NS_METHOD nsMenuBar::Create(nsIWidget *aParent)
     PR_LOG(PhWidLog, PR_LOG_ERROR, ("nsMenuBar::Create with nsIWidget parent=%p, this=%p Photon menuBar=<%p>\n", aParent, this, mMenuBar));
 
     SetParent(aParent);
-    PtRealizeWidget(mMenuBar);
+//    PtRealizeWidget(mMenuBar);
     return NS_OK;
   }
 }

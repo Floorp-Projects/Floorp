@@ -83,7 +83,7 @@ class nsWidget : public nsBaseWidget
     NS_IMETHOD Enable(PRBool aState);
     NS_IMETHOD SetFocus(void);
 
-    NS_IMETHOD GetBounds(nsRect &aRect);
+//    NS_IMETHOD GetBounds(nsRect &aRect);
 
     virtual PRBool OnResize(nsRect &aRect);
     virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);

@@ -66,7 +66,6 @@ nsWidget::nsWidget()
   mOnDestroyCalled = PR_FALSE;
   mIsToplevel = PR_FALSE;
   mUpdateArea.SetRect(0, 0, 0, 0);
-  mMenuBar = nsnull;
   mCreateHold = PR_TRUE;
   mHold = PR_FALSE;
 }
@@ -126,19 +125,15 @@ NS_IMETHODIMP nsWidget::Destroy(void)
   if( !mIsDestroying )
   {
     nsBaseWidget::Destroy();
-	NS_IF_RELEASE( mParent );
+    NS_IF_RELEASE( mParent );
   }
 
   if( mWidget )
   {
     mEventCallback = nsnull;
 	RemoveDamagedWidget(mWidget);
-
     PtDestroyWidget( mWidget );
-	
     mWidget = nsnull;
-
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Destroy mOnDestroyCalled=<%d> \n",mOnDestroyCalled));
 
     if( PR_FALSE == mOnDestroyCalled )
       OnDestroy();
@@ -312,34 +307,24 @@ NS_METHOD nsWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
   {
     PtArg_t arg;
     int     *border;
-    PhDim_t *olddim;
-    PhDim_t dim = {aWidth, aHeight};
 
     PtSetArg( &arg, Pt_ARG_BORDER_WIDTH, &border, 0 );
     if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
-      dim.w -= 2*(*border);
-      dim.h -= 2*(*border);
-    }
+      PhDim_t dim = {aWidth - 2*(*border), aHeight - 2*(*border)};
 
-    EnableDamage( mWidget, PR_FALSE );
+      EnableDamage( mWidget, PR_FALSE );
 
-    PtSetArg( &arg, Pt_ARG_DIM, &olddim, 0 );
-    if( PtGetResources( mWidget, 1, &arg ) == 0 )
-    {
-      if(( olddim->w != dim.w ) || ( olddim->h != dim.h ))
+      PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
+      PtSetResources( mWidget, 1, &arg );
+
+      if (aRepaint)
       {
-        PtSetArg( &arg, Pt_ARG_DIM, &dim, 0 );
-        PtSetResources( mWidget, 1, &arg );
-
-        if (aRepaint)
-        {
-          // REVISIT - photon doesnt like being told to redraw...
-        }
+        // REVISIT - photon doesnt like being told to redraw...
       }
-    }
 
-    EnableDamage( mWidget, PR_TRUE );
+      EnableDamage( mWidget, PR_TRUE );
+    }
     Invalidate( PR_FALSE );
   }
   else
@@ -375,12 +360,13 @@ PRBool nsWidget::OnResize(nsRect &aRect)
     InitEvent(event, NS_SIZE);
     event.windowSize = &aRect;
     event.eventStructType = NS_SIZE_EVENT;
-    event.mWinWidth = 0;
-    event.mWinHeight = 0;
-    event.point.x = 0; //mWidget->allocation.x;
-    event.point.y = 0; //mWidget->allocation.y;
+    event.mWinWidth = mBounds.width;
+    event.mWinHeight = mBounds.height;
+    event.point.x = mBounds.x; //mWidget->allocation.x;
+    event.point.y = mBounds.y; //mWidget->allocation.y;
     event.time = 0;
 
+/*
     if (mWidget)
     {
       PhArea_t *area;
@@ -394,6 +380,7 @@ PRBool nsWidget::OnResize(nsRect &aRect)
         event.point.y = area->pos.y;
       }
     }
+*/
 
     PRBool result = DispatchWindowEvent(&event);
 
@@ -450,6 +437,7 @@ NS_METHOD nsWidget::Enable(PRBool bState)
   return NS_OK;
 }
 
+
 //-------------------------------------------------------------------------
 //
 // Give the focus to this component
@@ -466,56 +454,6 @@ NS_METHOD nsWidget::SetFocus(void)
 }
 
 
-NS_METHOD nsWidget::GetBounds(nsRect &aRect)
-{
-  ///////////////////////////////////////////////////////////
-  // NOTE: The nsWidget::GetBounds() function does not work
-  // for nsWindow objects. nsWindow MUST provide its own
-  // GetBounds method.
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetBounds.\n" ));
-
-  if( mWidget )
-  {
-    PtArg_t arg[2];
-//    PhDim_t  *dim;
-    PhArea_t  *area;
-    int      *border;
-
-//    PtSetArg( &arg[0], Pt_ARG_DIM, &dim, 0 );
-    PtSetArg( &arg[0], Pt_ARG_AREA, &area, 0 );
-    PtSetArg( &arg[1], Pt_ARG_BORDER_WIDTH, &border, 0 );
-    if( PtGetResources( mWidget, 2, arg ) == 0 )
-    {
-      mBounds.x = area->pos.x - *border;
-      mBounds.y = area->pos.y - *border;
-      mBounds.width = area->size.w + 2*(*border);
-      mBounds.height = area->size.h + 2*(*border);
-/*
-      mBounds.width = dim->w + 2*(*border);
-      mBounds.height = dim->h + 2*(*border);
-
-      short x,y,ox,oy;
-
-      PtGetAbsPosition( mWidget, &x, &y );
-      PtGetAbsPosition( mClient, &ox, &oy );
-      mBounds.x = x - ox;
-      mBounds.y = y - oy;
-*/
-    }
-    else
-      PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetBounds - GetResources FAILED!\n" ));
-  }
-  else
-    PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetBounds - mWidget is NULL!\n" ));
- 
-  aRect = mBounds;
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::GetBounds - bounds = (%ld,%ld,%ld,%ld)\n", aRect.x, aRect.y, aRect.width, aRect.height ));
-
-  return NS_OK;
-}
-
 //-------------------------------------------------------------------------
 //
 // Get this component font
@@ -527,6 +465,7 @@ nsIFontMetrics *nsWidget::GetFont(void)
 
   return nsnull;
 }
+
 
 //-------------------------------------------------------------------------
 //
@@ -669,8 +608,6 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate %p\n", this ));
 
-//printf( "Invalidate whole widget (%p)\n", this );
-
   if( mWidget )
   {
     PtArg_t  arg;
@@ -681,17 +618,15 @@ NS_METHOD nsWidget::Invalidate(PRBool aIsSynchronous)
     PtSetArg( &arg, Pt_ARG_AREA, &area, 0 );
     if( PtGetResources( mWidget, 1, &arg ) == 0 )
     {
-      rect.x = area->pos.x;
-      rect.y = area->pos.y;
-      rect.width  = area->size.w;
-      rect.height = area->size.h;
-      mBounds = rect;
+      rect = mBounds;
 
       GetParentClippedArea( rect );
 
       if( rect.width && rect.height )
       {
         mUpdateArea.SetRect( rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height );
+
+        PR_LOG(PhWidLog, PR_LOG_DEBUG, ("  rect=(%i,%i,%i,%i)\n", rect.x - mBounds.x, rect.y - mBounds.y, rect.width, rect.height  ));
 
         if (aIsSynchronous)
         {
@@ -719,8 +654,6 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::Invalidate %p (%ld,%ld,%ld,%ld)\n", this, aRect.x, aRect.y, aRect.width, aRect.height ));
 
-//printf( "Invalidate widget (%p) rect\n", this );
-
   if( mWidget )
   {
     PtArg_t  arg;
@@ -739,18 +672,13 @@ NS_METHOD nsWidget::Invalidate(const nsRect & aRect, PRBool aIsSynchronous)
     }
 
 
-//printf( "Invalidate w/ rect: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
     rect.x += mBounds.x;
     rect.y += mBounds.y;
-//printf( "  new origin: %d,%d\n", rect.x, rect.y );
 
     GetParentClippedArea( rect );
 
-//printf( "  rect clipped: %d,%d,%d,%d\n", rect.x, rect.y, rect.width, rect.height );
-
     if( rect.width && rect.height )
     {
-//      mUpdateArea.UnionRect(mUpdateArea, aRect);
       rect.x -= mBounds.x;
       rect.y -= mBounds.y;
 
@@ -981,7 +909,6 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
                                 nsNativeWidget aNativeParent)
 {
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget this=<%p> mRefCnt=<%d>\n", this, mRefCnt));
-
   PtWidget_t *parentWidget = nsnull;
 
   BaseCreate(aParent, aRect, aHandleEventFunction, aContext,
@@ -1004,6 +931,11 @@ nsresult nsWidget::CreateWidget(nsIWidget *aParent,
   {
     PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget - No parent specified!\n" ));
   }
+//  else if(aAppShell) {
+//    nsNativeWidget shellWidget = aAppShell->GetNativeData(NS_NATIVE_SHELL);
+//    if (shellWidget)
+//      parentWidget = GTK_WIDGET(shellWidget);
+//  }
 
   PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsWidget::CreateWidget before GetInstance mRefCnt=<%d>\n", mRefCnt));
 
@@ -1749,9 +1681,6 @@ void nsWidget::RemoveDamagedWidget(PtWidget_t *aWidget)
         dqe = dqe->next;
       }
     }
-
-  PR_LOG(PhWidLog, PR_LOG_DEBUG,("nsWidget::RemoveDamagedWidget the end\n"));
-
 }
 
 
