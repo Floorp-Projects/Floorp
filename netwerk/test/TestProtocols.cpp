@@ -45,16 +45,6 @@
 #include "nsIHttpEventSink.h" 
 #include "nsIEventSinkGetter.h" 
 
-#ifdef XP_PC
-#define XPCOM_DLL  "xpcom32.dll"
-#else
-#ifdef XP_MAC
-#include "nsMacRepository.h"
-#else
-#define XPCOM_DLL  "libxpcom.so"
-#endif
-#endif
-
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 
@@ -302,9 +292,12 @@ main(int argc, char* argv[])
                         // But calling the open is required!
 //                        pConnection->Open();
                     }
+                } else {
+                    printf("NewChannelFromURI failed!\n");
                 }
-
             }
+        } else {
+            printf("NewURI failed!\n");
         }
     }
 
@@ -325,7 +318,7 @@ main(int argc, char* argv[])
 #else
     PLEvent *gEvent;
     rv = gEventQ->GetEvent(&gEvent);
-    PL_HandleEvent(gEvent);
+    rv = gEventQ->HandleEvent(gEvent);
 #endif /* XP_UNIX */
 #endif /* !WIN32 */
   }
