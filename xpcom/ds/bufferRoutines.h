@@ -282,11 +282,13 @@ inline PRInt32 FindChar1(const char* aDest,PRUint32 aDestLength,PRInt32 anOffset
       }
       else {
 
-        PRInt32 theMax = aDestLength-anOffset;
-        char theChar=(char)aChar;
-        const char* result=(const char*)memchr(left, theChar, theMax);
-        if(result) {
-          return result-aDest;
+        PRInt32 theMax = end-left;
+        if(0<theMax) {
+          char theChar=(char)aChar;
+          const char* result=(const char*)memchr(left, theChar, theMax);
+          if(result) {
+            return result-aDest;
+          }
         }
       }
     }
