@@ -45,7 +45,7 @@
 
   <!-- skin information -->
   <RDF:Description about="urn:mozilla:skin:modern/1.0"
-        chrome:displayName="modern"
+        chrome:displayName="Modern"
         chrome:author="mozilla.org"
         chrome:name="modern/1.0">
     <chrome:packages>
