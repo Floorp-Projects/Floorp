@@ -82,6 +82,7 @@ toolbarbutton[checked="true"] {
 
 .toolbarbutton-menu-dropmarker {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+  -moz-image-region: auto; /* cut off inheritance */
 }
 
 .toolbarbutton-menu-dropmarker[disabled="true"] {
