@@ -50,7 +50,7 @@ nsIAllocator* theMemoryAllocator = NULL;		// should also be provided by badaptor
 
 // Common interface IDs.
 
-static NS_DEFINE_IID(kIPluginIID, NS_IPLUGIN_IID);
+static NS_DEFINE_IID(kPluginCID, NS_PLUGIN_CID);
 static NS_DEFINE_IID(kIServiceManagerIID, NS_ISERVICEMANAGER_IID);
 static NS_DEFINE_IID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
 static NS_DEFINE_IID(kIPluginManagerIID, NS_IPLUGINMANAGER_IID);
@@ -74,7 +74,7 @@ static NS_DEFINE_IID(kIWindowlessPluginInstancePeerIID, NS_IWINDOWLESSPLUGININST
 	return nsPluginError_NoError;
 } */
 
-nsresult NSGetFactory(const nsCID &classID, nsISupports* serviceManager, nsIFactory **aFactory)
+nsresult NSGetFactory(nsISupports* serviceManager, const nsCID &aClass, const char *aClassName, const char *aProgID, nsIFactory **aFactory)
 {
 	nsresult result = NS_OK;
 
@@ -88,7 +88,7 @@ nsresult NSGetFactory(const nsCID &classID, nsISupports* serviceManager, nsIFact
 			return NS_ERROR_FAILURE;
 	}
 
-	if (classID.Equals(kIPluginIID)) {
+	if (aClass.Equals(kPluginCID)) {
 		MRJPlugin* pluginFactory = new MRJPlugin();
 		thePlugin = pluginFactory;
 		pluginFactory->AddRef();
