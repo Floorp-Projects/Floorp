@@ -928,7 +928,7 @@ BOOL CNetscapeApp::InitInstance()
     else
 	m_bUseLockedPrefs = FALSE;
 
-#ifdef MOZ_NGLAYOUT
+#ifndef MOZ_NGLAYOUT
     // Frame creation may cause the loading of the home page so register
     // all of the parser and network functions first
     static PA_InitData parser_data;
@@ -1144,7 +1144,7 @@ BOOL CNetscapeApp::InitInstance()
     NET_RegisterContentTypeConverter(TEXT_MDL, FO_PRINT, NULL, INTL_ConvCharCode);
     NET_RegisterContentTypeConverter(TEXT_PLAIN, FO_PRINT, NULL, NET_PlainTextConverter);
     NET_RegisterContentTypeConverter(UNKNOWN_CONTENT_TYPE, FO_PRINT, NULL, NET_PlainTextConverter);
-#ifdef MOZ_NGLAYOUT
+#ifndef MOZ_NGLAYOUT
     NET_RegisterContentTypeConverter(INTERNAL_PARSER, FO_PRINT, (void *)&parser_data, PA_BeginParseMDL);
 #endif /* MOZ_NGLAYOUT */
     NET_RegisterContentTypeConverter(IMAGE_GIF, FO_PRINT, NULL, IL_ViewStream);
