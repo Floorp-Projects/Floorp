@@ -1,5 +1,5 @@
 /*
- * $Id: KeyListenerTest.java,v 1.1 2004/12/01 03:21:23 edburns%acm.org Exp $
+ * $Id: KeyListenerTest.java,v 1.2 2004/12/01 15:46:23 edburns%acm.org Exp $
  */
 
 /* 
@@ -119,6 +119,19 @@ public class KeyListenerTest extends WebclientTestCase {
 		}
 	    });
 	final BitSet bitSet = new BitSet();
+
+	KeyListener manualExitKeyListener = new KeyListener() {
+		public void keyPressed(KeyEvent e) {
+		}
+		public void keyReleased(KeyEvent e) {
+		}
+		public void keyTyped(KeyEvent e) {
+		    if ('z' == e.getKeyChar()) {
+			KeyListenerTest.keepWaiting = false;
+		    }
+		}
+	    };
+	canvas.addKeyListener(manualExitKeyListener);
 	
 	KeyListener keyListener = new KeyListener() {
 		public void keyPressed(KeyEvent e) {
@@ -157,6 +170,17 @@ public class KeyListenerTest extends WebclientTestCase {
 	robot.mouseMove(IN_X, IN_Y);
 	robot.mousePress(InputEvent.BUTTON1_MASK);
 	robot.mouseRelease(InputEvent.BUTTON1_MASK);
+
+
+	// uncomment to enable manual testing
+	/*************
+	KeyListenerTest.keepWaiting = true;
+	
+	// keep waiting until the previous load completes
+	while (KeyListenerTest.keepWaiting) {
+	    Thread.currentThread().sleep(1000);
+	}
+	******************/
 
 	robot.keyPress(KeyEvent.VK_A);
 	robot.keyRelease(KeyEvent.VK_A);

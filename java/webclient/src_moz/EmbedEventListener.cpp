@@ -494,9 +494,7 @@ nsresult EmbedEventListener::addKeyEventDataToProperties(nsCOMPtr<nsIDOMKeyEvent
 
     // Add modifiers, keys, etc, to the mProperties table
 
-    PRInt32 intVal;
     PRUint32 int32Val;
-    PRUint16 int16Val;
     PRBool boolVal;
     char buf[20];
     jstring strVal;

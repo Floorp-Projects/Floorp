@@ -165,12 +165,12 @@ jboolean util_InitStringConstants()
     }
     if (nsnull == (CHAR_CODE = 
                    ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "KeyCode")))) {
+                                       ::util_NewStringUTF(env, "KeyChar")))) {
         return JNI_FALSE;
     }
     if (nsnull == (KEY_CODE = 
                    ::util_NewGlobalRef(env, (jobject)
-                                       ::util_NewStringUTF(env, "KeyChar")))) {
+                                       ::util_NewStringUTF(env, "KeyCode")))) {
         return JNI_FALSE;
     }
     if (nsnull == (ALT_KEY = 

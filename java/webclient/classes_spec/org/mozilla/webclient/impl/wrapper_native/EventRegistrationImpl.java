@@ -444,7 +444,12 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
 	    }
 	}
 	if (null != (str = props.getProperty("KeyCode"))) {
-	    keyCode = Integer.valueOf(str).intValue();
+	    if (0 == str.length() || KeyEvent.KEY_TYPED == eventType) {
+		keyCode = KeyEvent.VK_UNDEFINED;
+	    }
+	    else {
+		keyCode = Integer.valueOf(str).intValue();
+	    }
 	}
 	if (null != (str = props.getProperty("KeyChar"))) {
 	    if (0 == str.length()) {
@@ -458,7 +463,6 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
 
     long when = System.currentTimeMillis();
     if (KeyEvent.KEY_TYPED == eventType) {
-	keyCode = KeyEvent.VK_UNDEFINED;
 	// swalow events where the event is KEY_TYPED, but the keyChar
 	// is undefined, since these would throw an
 	// IllegalArgumentException.
@@ -466,8 +470,17 @@ private EventObject createKeyEvent(long eventType, Object eventData) {
 	    return null;
 	}
     }
-    keyEvent = new KeyEvent((Component) browserControlCanvas, (int) eventType,
-			    when, modifiers, keyCode, keyChar);
+    try {
+	keyEvent = new KeyEvent((Component) browserControlCanvas, (int) eventType,
+				when, modifiers, keyCode, keyChar);
+    }
+    catch (Throwable e) {
+	String msg = e.getMessage();
+	System.out.println(e.toString() + " " + e.getMessage() + 
+			   " eventType: " + eventType + 
+			   " keyCode: " + keyCode +
+			   " keyChar: " + keyChar);
+    }
 
     WebclientEvent event = new WebclientEvent(browserControlCanvas, eventType,
 					      keyEvent);
