@@ -1101,6 +1101,21 @@ NS_METHOD nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 //-------------------------------------------------------------------------
 NS_METHOD nsWindow::Move(PRInt32 aX, PRInt32 aY)
 {
+   // Check to see if window needs to be removed first
+   // to avoid a costly call to SetWindowPos. This check
+   // can not be moved to the calling code in nsView, because 
+   // some platforms do not position child windows correctly
+
+  nsRect currentRect;
+  GetBounds(currentRect); 
+  {
+   if ((currentRect.x == aX) && (currentRect.y == aY))
+   {
+      // Nothing to do, since it is already positioned correctly.
+     return NS_OK;    
+   }
+  }
+
    // When moving a borderless top-level window the window
    // must be placed relative to its parent. WIN32 wants to
    // place it relative to the screen, so we used the cached parent
