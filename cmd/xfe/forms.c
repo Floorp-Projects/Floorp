@@ -2561,11 +2561,11 @@ htmlarea_text_focus(FEFormData *fed, LO_FormElementStruct *form)
 static void
 htmlarea_lost_focus(FEFormData *fed)
 {
-  //
-  // TODO: Do stuff like in ...
-  //
-  // text_lost_focus(fed);
-  //
+  /*
+   * TODO: Do stuff like in ...
+   *
+   * text_lost_focus(fed);
+   */
 }
 
 static void
