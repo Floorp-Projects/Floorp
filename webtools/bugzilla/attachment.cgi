@@ -40,6 +40,7 @@ use vars qw(
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
+use Bugzilla::Config qw(:locations);
 
 # Use these modules to handle flags.
 use Bugzilla::Constants;
@@ -360,12 +361,18 @@ sub validateData
 {
   my $maxsize = $::FORM{'ispatch'} ? Param('maxpatchsize') : Param('maxattachmentsize');
   $maxsize *= 1024; # Convert from K
-
-  my $fh = $cgi->upload('data');
+  my $fh;
+  # Skip uploading into a local variable if the user wants to upload huge
+  # attachments into local files.
+  if (!$::FORM{'bigfile'})
+  {
+    $fh = $cgi->upload('data');
+  }
   my $data;
 
   # We could get away with reading only as much as required, except that then
   # we wouldn't have a size to print to the error handler below.
+  if (!$::FORM{'bigfile'})
   {
       # enable 'slurp' mode
       local $/;
@@ -373,10 +380,11 @@ sub validateData
   }
 
   $data
+    || ($::FORM{'bigfile'})
     || ThrowUserError("zero_length_file");
 
   # Make sure the attachment does not exceed the maximum permitted size
-  my $len = length($data);
+  my $len = $data ? length($data) : 0;
   if ($maxsize && $len > $maxsize) {
       my $vars = { filesize => sprintf("%.0f", $len/1024) };
       if ( $::FORM{'ispatch'} ) {
@@ -504,6 +512,23 @@ sub view
     # Return the appropriate HTTP response headers.
     $filename =~ s/^.*[\/\\]//;
     my $filesize = length($thedata);
+    # A zero length attachment in the database means the attachment is 
+    # stored in a local file
+    if ($filesize == 0)
+    {
+        my $attachid = $::FORM{'id'};
+        my $hash = ($attachid % 100) + 100;
+        $hash =~ s/.*(\d\d)$/group.$1/;
+        if (open(AH, "$attachdir/$hash/attachment.$attachid")) {
+            binmode AH;
+            $filesize = (stat(AH))[7];
+        }
+    }
+    if ($filesize == 0)
+    {
+        ThrowUserError("attachment_removed");
+    }
+
 
     # escape quotes and backslashes in the filename, per RFCs 2045/822
     $filename =~ s/\\/\\\\/g; # escape backslashes
@@ -513,7 +538,15 @@ sub view
                                 -content_disposition=> "inline; filename=\"$filename\"",
                                 -content_length => $filesize);
 
-    print $thedata;
+    if ($thedata) {
+        print $thedata;
+    } else {
+        while (<AH>) {
+            print $_;
+        }
+        close(AH);
+    }
+
 }
 
 sub interdiff
@@ -771,7 +804,7 @@ sub viewall
         $privacy = "AND isprivate < 1 ";
     }
     SendSQL("SELECT attach_id, DATE_FORMAT(creation_ts, '%Y.%m.%d %H:%i'),
-            mimetype, description, ispatch, isobsolete, isprivate, 
+            mimetype, description, ispatch, isobsolete, isprivate,
             LENGTH(thedata)
             FROM attachments WHERE bug_id = $::FORM{'bugid'} $privacy 
             ORDER BY attach_id");
@@ -779,7 +812,7 @@ sub viewall
   while (MoreSQLData())
   {
     my %a; # the attachment hash
-    ($a{'attachid'}, $a{'date'}, $a{'contenttype'}, 
+    ($a{'attachid'}, $a{'date'}, $a{'contenttype'},
      $a{'description'}, $a{'ispatch'}, $a{'isobsolete'}, $a{'isprivate'},
      $a{'datasize'}) = FetchSQLData();
     $a{'isviewable'} = isViewable($a{'contenttype'});
@@ -889,11 +922,39 @@ sub insert
   # Retrieve the ID of the newly created attachment record.
   my $attachid = $dbh->bz_last_key('attachments', 'attach_id');
 
+  # If the file is to be stored locally, stream the file from the webserver
+  # to the local file without reading it into a local variable.
+  if ($::FORM{'bigfile'})
+  {
+    my $fh = $cgi->upload('data');
+    my $hash = ($attachid % 100) + 100;
+    $hash =~ s/.*(\d\d)$/group.$1/;
+    mkdir "$attachdir/$hash", 0770;
+    chmod 0770, "$attachdir/$hash";
+    open(AH, ">$attachdir/$hash/attachment.$attachid");
+    binmode AH;
+    my $sizecount = 0;
+    my $limit = (Param("maxlocalattachment") * 1048576);
+    while (<$fh>) {
+        print AH $_;
+        $sizecount += length($_);
+        if ($sizecount > $limit) {
+            close AH;
+            close $fh;
+            unlink "$attachdir/$hash/attachment.$attachid";
+            ThrowUserError("local_file_too_large");
+        }
+    }
+    close AH;
+    close $fh;
+  }
+
+
   # Insert a comment about the new attachment into the database.
   my $comment = "Created an attachment (id=$attachid)\n$::FORM{'description'}\n";
   $comment .= ("\n" . $::FORM{'comment'}) if $::FORM{'comment'};
 
-  AppendComment($::FORM{'bugid'}, 
+  AppendComment($::FORM{'bugid'},
                 Bugzilla->user->login,
                 $comment,
                 $isprivate,
@@ -906,7 +967,7 @@ sub insert
       SendSQL("INSERT INTO bugs_activity (bug_id, attach_id, who, bug_when, fieldid, removed, added) 
                VALUES ($::FORM{'bugid'}, $obsolete_id, $::userid, $sql_timestamp, $fieldid, '0', '1')");
       # If the obsolete attachment has pending flags, migrate them to the new attachment.
-      if (Bugzilla::Flag::count({ 'attach_id' => $obsolete_id , 
+      if (Bugzilla::Flag::count({ 'attach_id' => $obsolete_id ,
                                   'status' => 'pending',
                                   'is_active' => 1 })) {
         Bugzilla::Flag::migrate($obsolete_id, $attachid, $timestamp);
@@ -1009,11 +1070,11 @@ sub edit
   # Get a list of flag types that can be set for this attachment.
   SendSQL("SELECT product_id, component_id FROM bugs WHERE bug_id = $bugid");
   my ($product_id, $component_id) = FetchSQLData();
-  my $flag_types = Bugzilla::FlagType::match({ 'target_type'  => 'attachment' , 
-                                               'product_id'   => $product_id , 
+  my $flag_types = Bugzilla::FlagType::match({ 'target_type'  => 'attachment' ,
+                                               'product_id'   => $product_id ,
                                                'component_id' => $component_id });
   foreach my $flag_type (@$flag_types) {
-    $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'}, 
+    $flag_type->{'flags'} = Bugzilla::Flag::match({ 'type_id'   => $flag_type->{'id'},
                                                     'attach_id' => $::FORM{'id'},
                                                     'is_active' => 1 });
   }
@@ -1087,10 +1148,10 @@ sub update
   # Update the attachment record in the database.
   # Sets the creation timestamp to itself to avoid it being updated automatically.
   SendSQL("UPDATE  attachments 
-           SET     description = $quoteddescription , 
-                   mimetype = $quotedcontenttype , 
+           SET     description = $quoteddescription ,
+                   mimetype = $quotedcontenttype ,
                    filename = $quotedfilename ,
-                   ispatch = $::FORM{'ispatch'} , 
+                   ispatch = $::FORM{'ispatch'},
                    isobsolete = $::FORM{'isobsolete'} ,
                    isprivate = $::FORM{'isprivate'} 
            WHERE   attach_id = $::FORM{'id'}
@@ -1143,7 +1204,7 @@ sub update
   # Unlock all database tables now that we are finished updating the database.
   $dbh->bz_unlock_tables();
 
-  # If the user submitted a comment while editing the attachment, 
+  # If the user submitted a comment while editing the attachment,
   # add the comment to the bug.
   if ( $::FORM{'comment'} )
   {

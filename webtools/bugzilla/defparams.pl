@@ -1270,6 +1270,17 @@ Reason: %reason%
   },
 
   {
+   name => 'maxlocalattachment',
+   desc => 'The maximum size (in Megabytes) of attachments identified by ' .
+           'the user as "Big Files" to be stored locally on the webserver. ' .
+           'If set to zero, attachments will never be kept on the local ' .
+           'filesystem.',
+   type => 't',
+   default => '0',
+   checker => \&check_numeric
+  },
+
+  {
    name => 'chartgroup',
    desc => 'The name of the group of users who can use the "New Charts" ' .
            'feature. Administrators should ensure that the public categories ' .

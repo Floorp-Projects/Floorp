@@ -55,6 +55,7 @@ use Bugzilla::Util;
 our $libpath = '.';
 our $localconfig = "$libpath/localconfig";
 our $datadir = "$libpath/data";
+our $attachdir = "$datadir/attachments";
 our $templatedir = "$libpath/template";
 our $webdotdir = "$datadir/webdot";
 
@@ -72,7 +73,8 @@ our $webdotdir = "$datadir/webdot";
   (
    admin => [qw(GetParamList UpdateParams SetParam WriteParams)],
    db => [qw($db_driver $db_host $db_port $db_name $db_user $db_pass $db_sock)],
-   locations => [qw($libpath $localconfig $datadir $templatedir $webdotdir)],
+   locations => [qw($libpath $localconfig $attachdir
+                    $datadir $templatedir $webdotdir)],
   );
 Exporter::export_ok_tags('admin', 'db', 'locations');
 

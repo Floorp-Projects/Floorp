@@ -156,6 +156,10 @@
     [% title = "Access Denied" %]
     You are not authorized to access this attachment.
 
+  [% ELSIF error == "attachment_removed" %]
+    [% title = "Attachment Removed" %]
+    The attachment you are attempting to access has been removed.
+
   [% ELSIF error == "bug_access_denied" %]
     [% title = "Access Denied" %]
     You are not authorized to access [% terms.bug %] #[% bug_id FILTER html %].
@@ -604,6 +608,11 @@
     [% title = "Invalid Keyword Name" %]
     You may not use commas or whitespace in a keyword name.
      
+  [% ELSIF error == "local_file_too_large" %]
+    [% title = "Local File Too Large" %]
+    Local file uploads must not exceed 
+    [% Param('maxlocalattachment') %] MB in size.
+
   [% ELSIF error == "login_needed_for_password_change" %]
     [% title = "Login Name Required" %]
     You must enter a login name when requesting to change your password.

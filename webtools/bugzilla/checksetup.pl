@@ -904,6 +904,14 @@ unless (-d $datadir && -e "$datadir/nomail") {
     open FILE, '>>', "$datadir/mail"; close FILE;
 }
 
+
+ unless (-d $attachdir) {
+     print "Creating local attachments directory ...\n";
+     # permissions for non-webservergroup are fixed later on
+     mkdir $attachdir, 0770;
+ }
+
+
 # 2000-12-14 New graphing system requires a directory to put the graphs in
 # This code copied from what happens for the data dir above.
 # If the graphs dir is not present, we assume that they have been using
@@ -1087,6 +1095,17 @@ END
       close HTACCESS;
     }
 
+  }
+  if (!-e "$attachdir/.htaccess") {
+    print "Creating $attachdir/.htaccess...\n";
+    open HTACCESS, ">$attachdir/.htaccess";
+    print HTACCESS <<'END';
+# nothing in this directory is retrievable unless overriden by an .htaccess
+# in a subdirectory;
+deny from all
+END
+    close HTACCESS;
+    chmod $fileperm, "$attachdir/.htaccess";
   }
   if (!-e "Bugzilla/.htaccess") {
     print "Creating Bugzilla/.htaccess...\n";
@@ -1428,6 +1447,7 @@ if ($^O !~ /MSWin32/i) {
         fixPerms("$datadir/duplicates", $<, $webservergid, 027, 1);
         fixPerms("$datadir/mining", $<, $webservergid, 027, 1);
         fixPerms("$datadir/template", $<, $webservergid, 007, 1); # webserver will write to these
+        fixPerms($attachdir, $<, $webservergid, 007, 1); # webserver will write to these
         fixPerms($webdotdir, $<, $webservergid, 007, 1);
         fixPerms("$webdotdir/.htaccess", $<, $webservergid, 027);
         fixPerms("$datadir/params", $<, $webservergid, 017);

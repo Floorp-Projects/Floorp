@@ -65,6 +65,18 @@
         <input type="file" id="data" name="data" size="50">
       </td>
     </tr>
+    [% IF Param("maxlocalattachment") %]
+    <tr>
+      <th>BigFile:</th>
+      <td>
+        <input type="checkbox" id="bigfile"
+               name="bigfile" value="bigfile">
+        <label for="bigfile">
+          Big File - Stored locally and may be purged
+        </label>
+      </td>
+    </tr>
+    [% END %]
     <tr>
       <th><label for="description">Description:</label></th>
       <td>

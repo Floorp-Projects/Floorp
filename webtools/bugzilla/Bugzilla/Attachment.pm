@@ -33,6 +33,7 @@ package Bugzilla::Attachment;
 
 # Use the Flag module to handle flags.
 use Bugzilla::Flag;
+use Bugzilla::Config qw(:locations);
 
 ############################################################################
 # Functions
@@ -92,6 +93,17 @@ sub query
     # Retrieve a list of flags for this attachment.
     $a{'flags'} = Bugzilla::Flag::match({ 'attach_id' => $a{'attachid'},
                                           'is_active' => 1 });
+
+    # A zero size indicates that the attachment is stored locally.
+    if ($a{'datasize'} == 0) {
+        my $attachid = $a{'attachid'};
+        my $hash = ($attachid % 100) + 100;
+        $hash =~ s/.*(\d\d)$/group.$1/;
+        if (open(AH, "$attachdir/$hash/attachment.$attachid")) {
+            $a{'datasize'} = (stat(AH))[7];
+            close(AH);
+        }
+    }
     
     # We will display the edit link if the user can edit the attachment;
     # ie the are the submitter, or they have canedit.
