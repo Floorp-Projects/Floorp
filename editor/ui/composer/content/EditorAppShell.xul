@@ -121,17 +121,25 @@
       <titledbutton id="newButton"/>
       <titledbutton id="openButton"/>
       <titledbutton id="saveButton"/>
+      
+      <html:div class="separator" align="vertical" />
 
       <titledbutton id="printButton"/>
       <titledbutton id="findButton"/>
       <titledbutton id="spellingButton"/>
 
+      <html:div class="separator" align="vertical" />
+
       <titledbutton id="imageButton"/>
       <titledbutton id="hlineButton"/>
       <titledbutton id="tableButton"/>
 
+      <html:div class="separator" align="vertical" />
+
       <titledbutton id="linkButton"/>
       <titledbutton id="tagetButton"/>
+
+      <html:div class="separator" align="vertical" />
 
       <spring flex="100%"/>
       <titledbutton id="DisplayStyleButton"/>
@@ -160,15 +168,21 @@
         <menupopup id="BackColorPopup"/>
       </menu>
       
+      <html:div class="separator" align="vertical" />
+
       <titledbutton id="boldButton"/>
       <titledbutton id="italicButton"/>
       <titledbutton id="underlineButton"/>
+
+      <html:div class="separator" align="vertical" />
 
       <titledbutton id="ulButton"/>
       <titledbutton id="olButton"/>
 
       <titledbutton id="outdentButton"/>
       <titledbutton id="indentButton"/>
+
+      <html:div class="separator" align="vertical" />
 
       <menu>
         <titledbutton id="AlignPopupButton"/>
