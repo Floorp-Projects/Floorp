@@ -5,8 +5,8 @@
 # customizable settings.
 
 
-# $Revision: 1.28 $ 
-# $Date: 2002/05/01 03:08:33 $ 
+# $Revision: 1.29 $ 
+# $Date: 2002/05/02 01:51:04 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/default_conf/TinderConfig.pm,v $ 
 # $Name:  $ 
@@ -137,8 +137,9 @@ $PopUpImpl = (
 
 # Which string should be used in empty table cells?  If this string is
 # set to "&nbsp;" then all cell squares will have borders on them, If
-# this string is set to "" then many cells may be missing borders.
-
+# this string is set to "" then many cells may be missing borders.  If
+# you are a first time user you may find that setting this to "&nbsp;"
+# is clearer.
 
 #$EMPTY_TABLE_CELL = "&nbsp;";
 $EMPTY_TABLE_CELL = "";
@@ -172,12 +173,15 @@ $EMPTY_TABLE_CELL = "";
 $DB_LEGEND_BORDER = "";
 
 # Should the vector of times, which represent the rows use a uniform
-# spacing or should we put one row for each time we have data for.
+# spacing or should we put one row for each time we have data for.  It
+# is recomended to set this to 1 so that verticle length anywhere on the
+# table corresponds to the same amount of elapsed time.
 
 $UNIFORM_ROW_SPACING = 0;
 
 # Spacing on html page (in minutes), this resticts the
 # minimum time between builds (to this value plus 5 minutes).
+# I suggest 5 minutes.
 
 $DB_TABLE_SPACING = 5;
 
@@ -211,7 +215,9 @@ $SECONDS_FROM_NOW_ACCEPTABLE = (60 * 10);
 # This is helpful for users of text based browsers, since text based
 # browsers can not render cell colors additional information needs to
 # be encoded into the HTML page.  Some users may object to the use of
-# extra and perhaps unnneded characters in an already wide table.
+# extra and perhaps unnneded characters in an already wide table.  It
+# is recommended to set this to 1 so that users can use a text browser
+# if they choose.
 
 $ADD_TEXT_BROWSER_STRINGS = 0;
 
@@ -311,6 +317,15 @@ $DEFAULT_DISPLAY_HOURS = 6;
 #$DEFAULT_HTML_PAGE = 'index.html';
 $DEFAULT_HTML_PAGE = 'status.html';
 
+# The indicator that a notice is available for a given notice cell is
+# configurable.  Traditionally it is a star gif however if you wish to
+# run entirely without images I suggest you set it to "X".
+# This is used in TinderDB::Notice.pm
+
+#$NOTICE_AVAILABLE = "X";
+$NOTICE_AVAILABLE = "<img src='/opt/apache/htdocs/tinderbox2/gif/star.gif' border=0>";
+
+
 # The amount of time rmlogs keeps logs on file
 
 $BRIEF_LOG_TRIM_DAYS = 8;
@@ -318,6 +333,9 @@ $FULL_LOG_TRIM_DAYS = 8;
 
 # Should we write performance data to the log file?
 # zero means no, one means yes.
+# This is useful to see if on average the time it takes to create the
+# pages is longer then the time between runs of the pages.
+
 
 $LOG_PERFORMANCE = 0;
 
