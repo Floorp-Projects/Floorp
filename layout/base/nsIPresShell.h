@@ -33,6 +33,8 @@ class nsIDeviceContext;
 class nsIRenderingContext;
 class nsIPageSequenceFrame;
 class nsISelection;
+class nsString;
+class nsStringArray;
 
 #define NS_IPRESSHELL_IID     \
 { 0x76e79c60, 0x944e, 0x11d1, \
@@ -63,6 +65,15 @@ public:
   virtual nsIViewManager * GetViewManager() = 0;
 
   virtual nsIStyleSet* GetStyleSet() = 0;
+
+  NS_IMETHOD GetActiveAlternateStyleSheet(nsString& aSheetTitle) = 0;
+  NS_IMETHOD SelectAlternateStyleSheet(const nsString& aSheetTitle) = 0;
+
+  /**
+   * Gather titles of all selectable (alternate and preferred) style sheets
+   * fills void array with nsString* caller must free strings
+   */
+  NS_IMETHOD ListAlternateStyleSheets(nsStringArray& aTitleList) = 0;
 
   /** GetSelection will return the selection that the presentation shell may implement.
    *  @param aSelection will hold the return value
