@@ -50,7 +50,42 @@ namespace ICG {
     using namespace JSTypes;
     using namespace JSClasses;
     
-    typedef std::map<String, TypedRegister, std::less<String> > VariableList;
+
+    struct VariableList {
+
+        typedef std::map<String, uint32, std::less<String> > VariableMap;
+        VariableMap variableMap;
+
+        std::vector<TypedRegister> registerMap;
+    
+        void setRegisterForVariable(const StringAtom& name, TypedRegister r) 
+        {
+            VariableMap::iterator i = variableMap.find(name);
+            ASSERT(i != variableMap.end());
+            registerMap[(*i).second] = r;
+        }
+
+        TypedRegister findVariable(const StringAtom& name)
+        {
+            VariableMap::iterator i = variableMap.find(name);
+            return (i == variableMap.end()) ? TypedRegister(NotARegister, &None_Type) : registerMap[(*i).second];
+        }
+
+        void add(const StringAtom& name, TypedRegister r)
+        {
+            variableMap[name] = r.first;
+            registerMap.resize(r.first + 1);
+            registerMap[r.first] = r;
+        }
+
+        TypedRegister getRegister(uint32 i)
+        {
+            ASSERT(i < registerMap.size());
+            return registerMap[i];
+        }
+
+    };
+
     typedef std::map<uint32, uint32, std::less<uint32> > InstructionMap;
    
 
@@ -94,7 +129,7 @@ namespace ICG {
         uint32 mNonOptionalParameterCount;
         uint32 mEntryPoint;
         bool mHasRestParameter;
-        bool mHasNamedRestParameter;
+        bool mHasNamedRestParameter;        
 
         static uint32 sMaxID;
         
@@ -170,8 +205,6 @@ namespace ICG {
 
         TypedRegister allocateRegister(const StringAtom& name, JSType *type);
 
-        void setRegisterForVariable(const StringAtom& name, TypedRegister r) { (*variableList)[name] = r; }
-
         JSType *findType(const StringAtom& typeName);
         JSType *extractType(ExprNode *t);
 
@@ -245,12 +278,7 @@ namespace ICG {
 
         TypedRegister allocateVariable(const StringAtom& name);
         TypedRegister allocateVariable(const StringAtom& name, const StringAtom& typeName);
-
-        TypedRegister findVariable(const StringAtom& name)
-        {
-            VariableList::iterator i = variableList->find(name);
-            return (i == variableList->end()) ? TypedRegister(NotARegister, &None_Type) : (*i).second;
-        }
+        TypedRegister allocateVariable(const StringAtom& name, JSType *type) ;
         
         TypedRegister allocateParameter(const StringAtom& name)         { mParameterCount++; return allocateRegister(name, &Any_Type); }
         TypedRegister allocateParameter(const StringAtom& name, const StringAtom& typeName) 
@@ -278,7 +306,7 @@ namespace ICG {
                 
         TypedRegister newObject(TypedRegister constructor);
         TypedRegister newArray();
-        TypedRegister newFunction(ICodeModule *icm, FunctionDefinition *def);
+        TypedRegister newFunction(ICodeModule *icm);
         TypedRegister newClass(JSClass *clazz);
 
         TypedRegister cast(TypedRegister arg, JSType *toType);

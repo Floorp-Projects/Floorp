@@ -124,7 +124,7 @@ static JSValue function_constructor(Context *cx, const JSValues& argv)
         source.append(JSValue::valueToString(argv[argv.size() - 1]).string);
         source.append("}");
         
-        JSFunction *f = new JSFunction(cx->compileFunction(source), NULL);
+        JSFunction *f = new JSFunction(cx->compileFunction(source));
         f->setProperty(widenCString("length"), JSValue(parameterCount));
         JSObject *obj = new JSObject();
         f->setProperty(widenCString("prototype"), JSValue(obj)); 
@@ -652,10 +652,10 @@ JSValue JSValue::valueToInteger(const JSValue& value)
 {
     JSValue result = valueToNumber(value);
     ASSERT(result.tag == f64_tag);
-    result.tag = i64_tag;
+    result.tag = i32_tag;
     bool neg = (result.f64 < 0);
-    result.f64 = floor((neg) ? -result.f64 : result.f64);
-    result.f64 = (neg) ? -result.f64 : result.f64;
+    result.i32 = floor((neg) ? -result.f64 : result.f64);
+    result.i32 = (neg) ? -result.i32 : result.i32;
     return result;
 }
 

@@ -113,11 +113,25 @@ struct Activation : public gc_base {
         }
     }
 
+    // calling a binary operator, no 'this'
     Activation(ICodeModule* iCode, const JSValue arg1, const JSValue arg2)
         : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
     {
-        mRegisters[0] = arg1;
-        mRegisters[1] = arg2;
+        mRegisters[1] = arg1;
+        mRegisters[2] = arg2;
+    }
+
+    // calling a getter function, no arguments
+    Activation(ICodeModule* iCode)
+        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
+    {
+    }
+
+    // calling a setter function, 1 argument
+    Activation(ICodeModule* iCode, const JSValue arg)
+        : mRegisters(iCode->itsMaxRegister + 1), mICode(iCode)
+    {
+        mRegisters[1] = arg;
     }
 
 };
@@ -711,16 +725,16 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                         uint32 i;
                         for (i = 0; i < args.size(); i++) {
                             if (args[i].second) {       // a named argument
-                                VariableList::iterator vi = icm->itsVariables->find(*(args[i].second));
+                                TypedRegister r = icm->itsVariables->findVariable(*(args[i].second));
                                 bool isParameter = false;
-                                if (vi != icm->itsVariables->end()) {   // we found the name in the target's list of variables
-                                    TypedRegister r = (*vi).second;
+                                if (r.first != NotABanana) {   // we found the name in the target's list of variables
                                     if (r.first < icm->mParameterCount) { // make sure we didn't match a local var                                            
                                         ASSERT(r.first <= callArgs.size());
                                         // the named argument is arriving in slot i, but needs to be r instead
                                         // r.first is the intended target register, we subtract 1 since the callArgs array doesn't include 'this'
                                         // here's where we could detect over-writing a positional arg with a named one if that is illegal
                                         // if (callArgs[r.first - 1].first.first != NotARegister)...
+                                        (*registers)[args[i].first.first] = (*registers)[args[i].first.first].convert(r.second);
                                         callArgs[r.first - 1] = Argument(args[i].first, NULL);   // no need to copy the name through?
                                         isParameter = true;
                                     }
@@ -763,7 +777,11 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                                     else
                                         throw new JSException("Too many arguments in call");
                                 }
-                                callArgs[i] = args[i];  // it's a positional, just slap it in place
+                                else {
+                                    TypedRegister r = icm->itsVariables->getRegister(i + 1);    // the variable list includes 'this'
+                                    (*registers)[args[i].first.first] = (*registers)[args[i].first.first].convert(r.second);
+                                    callArgs[i] = args[i];  // it's a positional, just slap it in place
+                                }
                             }
                         }
                         uint32 contiguousArgs = 0;
@@ -863,14 +881,36 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                 break;
             case LOAD_NAME:
                 {
-                    LoadName* ln = static_cast<LoadName*>(instruction);
-                    (*registers)[dst(ln).first] = mGlobal->getVariable(*src1(ln));
+                    LoadName* ln = static_cast<LoadName*>(instruction);                    
+                    JSFunction *getter = mGlobal->getter(*src1(ln));
+                    if (getter) {
+                        ASSERT(!getter->isNative());
+                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, dst(ln));
+                        mActivation = new Activation(getter->getICode());
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
+                        continue;
+                    }
+                    else
+                        (*registers)[dst(ln).first] = mGlobal->getVariable(*src1(ln));
                 }
                 break;
             case SAVE_NAME:
                 {
                     SaveName* sn = static_cast<SaveName*>(instruction);
-                    mGlobal->setVariable(*dst(sn), (*registers)[src1(sn).first]);
+                    JSFunction *setter = mGlobal->setter(*dst(sn));
+                    if (setter) {
+                        ASSERT(!setter->isNative());
+                        mLinkage = new Linkage(mLinkage, ++mPC, mActivation, mGlobal, TypedRegister(NotARegister, &Null_Type));
+                        mActivation = new Activation(setter->getICode(), (*registers)[src1(sn).first]);
+                        registers = &mActivation->mRegisters;
+                        mPC = mActivation->mICode->its_iCode->begin();
+                        endPC = mActivation->mICode->its_iCode->end();
+                        continue;
+                    }
+                    else
+                        mGlobal->setVariable(*dst(sn), (*registers)[src1(sn).first]);
                 }
                 break;
             case NEW_OBJECT:
@@ -893,7 +933,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
             case NEW_FUNCTION:
                 {
                     NewFunction* nf = static_cast<NewFunction*>(instruction);
-                    (*registers)[dst(nf).first] = new JSFunction(src1(nf), src2(nf));
+                    (*registers)[dst(nf).first] = new JSFunction(src1(nf));
                 }
                 break;
             case NEW_ARRAY:
@@ -918,6 +958,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (value.isObject()) {
                         if (value.isType()) {
                             // REVISIT: should signal error if slot doesn't exist.
+                            NOT_REACHED("tell me I'm wrong");
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.type);
                             if (thisClass && thisClass->hasStatic(*src2(gp))) {
                                 const JSSlot& slot = thisClass->getStatic(*src2(gp));
@@ -939,6 +980,7 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     if (value.isObject()) {
                         if (value.isType()) {
                             // REVISIT: should signal error if slot doesn't exist.
+                            NOT_REACHED("tell me I'm wrong");
                             JSClass* thisClass = dynamic_cast<JSClass*>(value.object);
                             if (thisClass && thisClass->hasStatic(*src1(sp))) {
                                 const JSSlot& slot = thisClass->getStatic(*src1(sp));
