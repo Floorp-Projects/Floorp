@@ -602,13 +602,13 @@ nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
     nsIMenuListener * menuListener = nsnull;
     if(mMenuItemVoidArray[menuItemID-1]) {
 	    ((nsIMenuItem*)mMenuItemVoidArray[menuItemID-1])->QueryInterface(NS_GET_IID(nsIMenuListener), &menuListener);
-		if(menuListener) {
-		  eventStatus = menuListener->MenuItemSelected(aMenuEvent);
-		  NS_IF_RELEASE(menuListener);
-		  if(nsEventStatus_eIgnore != eventStatus)
-		    return eventStatus;
-		}
-	}
+      if(menuListener) {
+        eventStatus = menuListener->MenuItemSelected(aMenuEvent);
+        NS_IF_RELEASE(menuListener);
+        if(nsEventStatus_eIgnore != eventStatus)
+          return eventStatus;
+      }
+    }
   } 
 
   // Make sure none of our submenus are the ones that should be handling this
@@ -1300,9 +1300,9 @@ void nsMenu::LoadMenuItem(
       pnsMenuItem->SetChecked(PR_FALSE);
       
     if(type == "checkbox")
-      pnsMenuItem->SetCheckboxType(PR_TRUE);
-    else
-      pnsMenuItem->SetCheckboxType(PR_FALSE);
+      pnsMenuItem->SetMenuItemType(nsIMenuItem::eCheckbox);
+    else if ( type == "radio" )
+      pnsMenuItem->SetMenuItemType(nsIMenuItem::eRadio);
       
 	nsISupports * supports = nsnull;
     pnsMenuItem->QueryInterface(NS_GET_IID(nsISupports), (void**) &supports);
