@@ -25,6 +25,7 @@
 /*
  * Dialog services for PIP.
  */
+#include <stdarg.h>
 #include "nsCOMPtr.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -42,11 +43,14 @@
 #include "nsIPref.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIX509Cert.h"
+#include "nsILocaleService.h"
+#include "nsIDateTimeFormat.h"
+#include "nsDateTimeFormatCID.h"
 
 #include "nsNSSDialogs.h"
 
-/* #define STRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties" */
-#define STRING_BUNDLE_URL "chrome://communicator/locale/security.properties"
+#define PIPSTRING_BUNDLE_URL "chrome://pippki/locale/pippki.properties"
+#define STRING_BUNDLE_URL    "chrome://communicator/locale/security.properties"
 
 #define ENTER_SITE_PREF      "security.warn_entering_secure"
 #define LEAVE_SITE_PREF      "security.warn_leaving_secure"
@@ -55,6 +59,7 @@
 
 static NS_DEFINE_CID(kCStringBundleServiceCID,  NS_STRINGBUNDLESERVICE_CID);
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kDateTimeFormatCID, NS_DATETIMEFORMAT_CID);
 
 /**
  * Common class that provides a standard dialog display function, 
@@ -64,13 +69,53 @@ static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 class nsNSSDialogHelper
 {
 public:
+  const static char *kDefaultOpenWindowParam;
   static nsresult openDialog(
                   nsIDOMWindowInternal *window,
                   const char *url,
                   nsIDialogParamBlock *params);
+
+  static nsresult openDialogVA(nsIDOMWindowInternal *window,
+                               const char *format, ...);
 };
 
+const char* nsNSSDialogHelper::kDefaultOpenWindowParam = "centerscreen,chrome,modal,titlebar";
+
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+
+static nsresult getHiddenWindow(nsIDOMWindowInternal **outWindow);
+static JSContext* getJSContext(nsIDOMWindowInternal *window);
+
+nsresult 
+getHiddenWindow(nsIDOMWindowInternal **outWindow)
+{
+  nsresult rv;
+
+  NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
+  if (NS_FAILED(rv)) 
+    return rv;
+
+  rv = appShell->GetHiddenDOMWindow( outWindow );
+  return rv;
+}
+
+JSContext* 
+getJSContext(nsIDOMWindowInternal *window)
+{
+  nsresult rv;
+
+  // Get JS context from parent window.
+  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( window, &rv );
+  if (!sgo) 
+    return nsnull;
+
+  nsCOMPtr<nsIScriptContext> context;
+  sgo->GetContext( getter_AddRefs( context ) );
+  if (!context) 
+    return nsnull;
+
+  return (JSContext*)context->GetNativeContext();
+}
 
 nsresult
 nsNSSDialogHelper::openDialog(
@@ -82,24 +127,14 @@ nsNSSDialogHelper::openDialog(
   nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
 
   if (!window) {
-    NS_WITH_SERVICE(nsIAppShellService, appShell, kAppShellServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
-    rv = appShell->GetHiddenDOMWindow( getter_AddRefs( hiddenWindow ) );
-    if ( NS_FAILED( rv ) ) return rv;
+    rv = getHiddenWindow(getter_AddRefs(hiddenWindow));
+    if (NS_FAILED(rv))
+      return rv;
 
     window = hiddenWindow;
   }
 
-  // Get JS context from parent window.
-  nsCOMPtr<nsIScriptGlobalObject> sgo = do_QueryInterface( window, &rv );
-  if (!sgo) return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIScriptContext> context;
-  sgo->GetContext( getter_AddRefs( context ) );
-  if (!context) return NS_ERROR_FAILURE;
-
-  JSContext *jsContext = (JSContext*)context->GetNativeContext();
+  JSContext *jsContext = getJSContext(window);
   if (!jsContext) return NS_ERROR_FAILURE;
 
   void *stackPtr;
@@ -108,10 +143,43 @@ nsNSSDialogHelper::openDialog(
                                   "sss%ip",
                                   url,
                                   "_blank",
-                                  "centerscreen,chrome,modal,titlebar",
+                                  nsNSSDialogHelper::kDefaultOpenWindowParam,
                                   &NS_GET_IID(nsIDialogParamBlock),
                                   (nsISupports*)params
                                 );
+  if ( !argv ) return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIDOMWindowInternal> newWindow;
+  rv = window->OpenDialog( jsContext, argv, 4, getter_AddRefs(newWindow) );
+   
+  JS_PopArguments( jsContext, stackPtr );
+
+  return rv;
+}
+
+nsresult
+nsNSSDialogHelper::openDialogVA(nsIDOMWindowInternal *window,
+                                const char *format,  ...)
+{
+  va_list ap;
+  nsresult rv;
+  nsCOMPtr<nsIDOMWindowInternal> hiddenWindow;
+
+  va_start(ap, format);
+  if (!window) {
+    rv = getHiddenWindow(getter_AddRefs(hiddenWindow));
+    if (NS_FAILED(rv))
+      return rv;
+
+    window = hiddenWindow;
+  }
+
+  JSContext *jsContext = getJSContext(window);
+  if (!jsContext) return NS_ERROR_FAILURE;
+
+  void *stackPtr;
+  jsval *argv = JS_PushArgumentsVA(jsContext, &stackPtr, format, ap);
+
   if ( !argv ) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMWindowInternal> newWindow;
@@ -154,6 +222,8 @@ nsNSSDialogs::Init()
                              getter_AddRefs(mStringBundle));
   if (NS_FAILED(rv)) return rv;
 
+  rv = service->CreateBundle(PIPSTRING_BUNDLE_URL, nsnull,
+                             getter_AddRefs(mPIPStringBundle));
   return rv;
 }
 
@@ -175,9 +245,10 @@ nsNSSDialogs::SetPassword(nsIInterfaceRequestor *ctx,
   rv = block->SetString(1, tokenName);
   if (NS_FAILED(rv)) return rv;
 
-  rv = nsNSSDialogHelper::openDialog(parent, 
+  rv = nsNSSDialogHelper::openDialog(parent,
                                 "chrome://pippki/content/changepassword.xul",
                                 block);
+
   if (NS_FAILED(rv)) return rv;
 
   PRInt32 status;
@@ -218,6 +289,7 @@ nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo,
   rv = nsNSSDialogHelper::openDialog(nsnull, 
                                      "chrome://pippki/content/newserver.xul",
                                      block);
+
   if (NS_FAILED(rv))
     return rv;
 
@@ -253,12 +325,50 @@ nsNSSDialogs::UnknownIssuer(nsIChannelSecurityInfo *socketInfo,
 }
 
 /* boolean mismatchDomain (in nsIChannelSecurityInfo socketInfo, 
+                           in wstring targetURL, 
                            in nsIX509Cert cert); */
+
 NS_IMETHODIMP 
 nsNSSDialogs::MismatchDomain(nsIChannelSecurityInfo *socketInfo, 
-                             nsIX509Cert *cert, PRBool *_retVal)
+                             const PRUnichar *targetURL, 
+                             nsIX509Cert *cert, PRBool *_retval) 
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+
+  *_retval = PR_FALSE;
+
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+
+  if (!block)
+    return NS_ERROR_FAILURE;
+
+  nsXPIDLString commonName;
+  rv = cert->GetCommonName(getter_Copies(commonName));
+  if (NS_FAILED(rv))
+    return rv;
+  rv = block->SetString(1, targetURL);
+  if (NS_FAILED(rv))
+    return rv;
+
+  block->SetString(2, commonName);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                                 "chrome://pippki/content/domainMismatch.xul",
+                                 block);
+  if (NS_FAILED(rv))
+    return rv;
+
+  PRInt32 status;
+
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv))
+    return rv;
+
+  *_retval = (status) ? PR_TRUE : PR_FALSE;
+
+  return NS_OK;  
 }
 
 /* boolean certExpired (in nsIChannelSecurityInfo socketInfo, 
@@ -267,7 +377,78 @@ NS_IMETHODIMP
 nsNSSDialogs::CertExpired(nsIChannelSecurityInfo *socketInfo, 
                           nsIX509Cert *cert, PRBool *_retval)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  nsresult rv;
+  PRTime now = PR_Now();
+  PRTime notAfter, notBefore, timeToUse;
+  nsCOMPtr<nsIX509CertValidity> validity;
+  const char *key;
+
+  *_retval = PR_FALSE;
+
+  nsCOMPtr<nsIDialogParamBlock> block = do_CreateInstance(kDialogParamBlockCID);
+
+  if (!block)
+    return NS_ERROR_FAILURE; 
+  rv = cert->GetValidity(getter_AddRefs(validity));
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = validity->GetNotAfter(&notAfter);
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = validity->GetNotBefore(&notBefore);
+  if (NS_FAILED(rv))
+    return rv;
+
+  if (LL_CMP(now, >, notAfter)) {
+    key       = "serverCertExpiredMsg1"; 
+    timeToUse = notAfter; 
+  } else {
+    key = "serverCertNotYetValedMsg1";
+    timeToUse = notBefore;
+  }
+
+  nsXPIDLString message1;
+  PRUnichar *commonName=nsnull;
+  nsString formattedDate;
+
+  rv = cert->GetCommonName(&commonName);
+
+  nsIDateTimeFormat *aDateTimeFormat;
+  rv = nsComponentManager::CreateInstance(kDateTimeFormatCID, NULL,
+                                          NS_GET_IID(nsIDateTimeFormat), 
+                                          (void **) &aDateTimeFormat);
+
+  aDateTimeFormat->FormatPRTime(nsnull, kDateFormatShort, 
+                                kTimeFormatNoSeconds, timeToUse, 
+                                formattedDate);
+  PRUnichar *formattedDatePR = formattedDate.ToNewUnicode();
+  const PRUnichar *formatStrings[2] = { commonName, formattedDatePR }; 
+  nsString keyString = NS_ConvertASCIItoUCS2(key);
+  mPIPStringBundle->FormatStringFromName(keyString.GetUnicode(), formatStrings, 
+                                         2, getter_Copies(message1));
+  
+  Recycle(commonName);
+  Recycle(formattedDatePR);
+
+  rv = block->SetString(1,message1); 
+
+  if (NS_FAILED(rv))
+    return rv;
+
+  rv = nsNSSDialogHelper::openDialog(nsnull,
+                             "chrome://pippki/content/serverCertExpired.xul",
+                             block);
+
+  PRInt32 status;
+  rv = block->GetInt(1, &status);
+  if (NS_FAILED(rv))
+    return rv; 
+
+  *_retval = (status) ? PR_TRUE : PR_FALSE;
+  
+  return NS_OK;
 }
 
 nsresult

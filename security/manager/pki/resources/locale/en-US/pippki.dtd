@@ -35,9 +35,9 @@
 <!ENTITY setPassword.stats.upper "Uppercase:">
 
 <!-- These should be common -->
-<!ENTITY setPassword.ok.label "OK">
-<!ENTITY setPassword.cancel.label "Cancel">
-<!ENTITY setPassword.help.label "Help">
+<!ENTITY ok.label "OK">
+<!ENTITY cancel.label "Cancel">
+<!ENTITY help.label "Help">
 
 <!-- Prefs panel strings -->
 <!ENTITY pref.security.general.lHeader "Security">
@@ -47,3 +47,11 @@
 <!ENTITY pref.security.general.paranoid.label "Use paranoid security settings">
 <!ENTITY pref.security.general.certificates.title "Certificates">
 <!ENTITY pref.security.general.manageCert.label "Manage Certificates">
+
+<!-- Strings for the MismatchDomain dialog  -->
+<!ENTITY domainMismatch.title "Security Error: Domain Name  Mismatch">
+
+<!-- Strings for the Server cert expired dialog  -->
+<!ENTITY serverCertExpired.title "Security Error: Security Certificate Expired">
+<!ENTITY serverCertExpired.continue "Would you like to continue anyway?">
+

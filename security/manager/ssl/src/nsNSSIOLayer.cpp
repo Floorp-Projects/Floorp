@@ -533,32 +533,28 @@ addCertToDB(CERTCertificate *peerCert, PRInt16 addType)
 }
 
 static PRBool
-nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
-                           PRFileDesc      *sslSocket,
-                           int              error)
+nsContinueDespiteCertError(nsNSSSocketInfo  *infoObject,
+                           PRFileDesc       *sslSocket,
+                           int               error,
+                           nsNSSCertificate *nssCert)
 {
   PRBool retVal = PR_FALSE;
   nsIBadCertListener *badCertHandler;
   PRInt16 addType = nsIBadCertListener::UNINIT_ADD_FLAG;
-  nsNSSCertificate *nssCert;
-  CERTCertificate *peerCert;
   nsresult rv;
 
+  if (!nssCert)
+    return PR_FALSE;
   rv = getNSSDialogs((void**)&badCertHandler, 
                      NS_GET_IID(nsIBadCertListener));
   if (NS_FAILED(rv)) 
     return PR_FALSE;
   nsIChannelSecurityInfo *csi =  NS_STATIC_CAST(nsIChannelSecurityInfo*,
                                                 infoObject);
-  peerCert = SSL_PeerCertificate(sslSocket);
-  nssCert = new nsNSSCertificate(peerCert);
-  CERT_DestroyCertificate(peerCert);  //nssCert gets its own reference
-                                      //to the certificate, so let's
-                                      //not leak one here.
-  if (!nssCert)
-    return PR_FALSE;
   NS_ADDREF(nssCert);
   nsIX509Cert *callBackCert = NS_STATIC_CAST(nsIX509Cert*, nssCert);
+  CERTCertificate *peerCert = nssCert->GetCert();
+  NS_ASSERTION(peerCert, "Got nsnull cert back from nsNSSCertificate");
   switch (error) {
   case SEC_ERROR_UNKNOWN_ISSUER:
   case SEC_ERROR_CA_CERT_INVALID:
@@ -566,10 +562,28 @@ nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
     rv = badCertHandler->UnknownIssuer(csi, callBackCert, &addType, &retVal);
     break;
   case SSL_ERROR_BAD_CERT_DOMAIN:
-    rv = badCertHandler->MismatchDomain(csi, callBackCert, &retVal);
+    {
+      char *url = SSL_RevealURL(sslSocket);
+      NS_ASSERTION(url, "could not find valid URL in ssl socket");
+      nsAutoString autoURL = NS_ConvertASCIItoUCS2(url);
+      PRUnichar *autoUnichar = autoURL.ToNewUnicode();
+      NS_ASSERTION(autoUnichar, "Could not allocate new PRUnichar");
+      rv = badCertHandler->MismatchDomain(csi, autoUnichar,
+                                          callBackCert, &retVal);
+      Recycle(autoUnichar);
+      if (NS_SUCCEEDED(rv) && retVal) {
+        rv = CERT_AddOKDomainName(peerCert, url);
+      }
+      PR_Free(url);
+    }
     break;
   case SEC_ERROR_EXPIRED_CERTIFICATE:
     rv = badCertHandler->CertExpired(csi, callBackCert, & retVal);
+    if (rv == SECSuccess && retVal) {
+      // XXX We need an NSS API for this equivalent functionality.
+      //     Having to reach inside the cert is evil.
+      peerCert->timeOK = PR_TRUE;
+    }
     break;
   default:
     rv = NS_ERROR_FAILURE;
@@ -579,8 +593,40 @@ nsContinueDespiteCertError(nsNSSSocketInfo *infoObject,
     addCertToDB(peerCert, addType);
   }
   NS_RELEASE(badCertHandler);
-  NS_RELEASE(nssCert);
+  CERT_DestroyCertificate(peerCert);
   return NS_FAILED(rv) ? PR_FALSE : retVal;
+}
+
+static SECStatus
+verifyCertAgain(CERTCertificate *cert, 
+                PRFileDesc      *sslSocket,
+                nsNSSSocketInfo *infoObject)
+{
+  SECStatus rv;
+
+  // If we get here, the user has accepted the cert so
+  // far, so we don't check the signature again.
+  rv = CERT_VerifyCertNow(CERT_GetDefaultCertDB(), cert,
+                          PR_FALSE, certUsageSSLServer,
+                          (void*)infoObject);
+
+  if (rv != SECSuccess) {
+    return rv;
+  }
+  
+  // Check the name field against the desired hostname.
+  char *hostname = SSL_RevealURL(sslSocket); 
+  if (hostname && hostname[0]) {
+    rv = CERT_VerifyCertName(cert, hostname);
+  } else {
+    rv = SECFailure;
+  }
+
+  if (rv != SECSuccess) {
+    PR_SetError(SSL_ERROR_BAD_CERT_DOMAIN, 0);
+  }
+  PR_FREEIF(hostname);
+  return rv;
 }
 
 static SECStatus
@@ -589,19 +635,29 @@ nsNSSBadCertHandler(void *arg, PRFileDesc *sslSocket)
   SECStatus rv = SECFailure;
   int error;
   nsNSSSocketInfo* infoObject = (nsNSSSocketInfo *)arg;
+  CERTCertificate *peerCert;
+  nsNSSCertificate *nssCert;
 
+
+  peerCert = SSL_PeerCertificate(sslSocket);
+  nssCert = new nsNSSCertificate(peerCert);
+  if (!nssCert) {
+    return SECFailure;
+  } 
   while (rv != SECSuccess) {
     error = PR_GetError();
     if (!nsCertErrorNeedsDialog(error)) {
       // Some weird error we don't really know how to handle.
       break;
     }
-    if (!nsContinueDespiteCertError(infoObject, sslSocket, error)) {
+    if (!nsContinueDespiteCertError(infoObject, sslSocket, 
+                                    error, nssCert)) {
       break;
     }
-    rv = SECSuccess; //This will eventually re-verify the cert to
-                     //make sure nothing else is wrong.
+    rv = verifyCertAgain(peerCert, sslSocket, infoObject);
   }
+  NS_RELEASE(nssCert);
+  CERT_DestroyCertificate(peerCert); 
   return rv;
 }
 

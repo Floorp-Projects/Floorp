@@ -59,6 +59,7 @@ protected:
   nsresult ConfirmDialog(nsIInterfaceRequestor *ctx, const char *prefName,
                    const PRUnichar *messageName, PRBool* _result);
   nsCOMPtr<nsIStringBundle> mStringBundle;
+  nsCOMPtr<nsIStringBundle> mPIPStringBundle;
   nsCOMPtr<nsIPref> mPref;
 };
 

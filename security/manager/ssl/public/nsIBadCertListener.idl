@@ -49,6 +49,7 @@ interface nsIBadCertListener : nsISupports {
                         out short certAddType);
 
   boolean mismatchDomain(in nsIChannelSecurityInfo socketInfo,
+                         in wstring targetURL,
                          in nsIX509Cert cert);
 
   boolean certExpired(in nsIChannelSecurityInfo socketInfo,
