@@ -45,9 +45,6 @@ package org.mozilla.javascript;
  */
 public interface RegExpProxy {
     
-    public Object executeRegExp(Object regExp, Scriptable scopeObj, 
-                                String str, int indexp[], boolean test);
-    
     public boolean isRegExp(Object obj);
     
     public Object newRegExp(Context cx, Scriptable scope, String source, 

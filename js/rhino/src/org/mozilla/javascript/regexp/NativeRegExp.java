@@ -19,6 +19,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ * Norris Boyd
+ * Brendan Eich
+ * Matthias Radestock
  *
  * Alternatively, the contents of this file may be used under the
  * terms of the GNU Public License (the "GPL"), in which case the
@@ -56,6 +59,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
     public static final int FOLD = 0x2;       // 'i' flag: fold
     public static final int MULTILINE = 0x4;  // 'm' flag: multiline
 
+    //type of match to perform
+    public static final int TEST = 0;
+    public static final int MATCH = 1;
+    public static final int PREFIX = 2;
+
     private static final boolean debug = false;
 
     public static void init(Scriptable scope)
@@ -65,7 +73,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
         proto.setParentScope(scope);
         proto.setPrototype(getObjectPrototype(scope));
 
-        String[] fns = { "compile", "toString", "exec", "test" };
+        String[] fns = { "compile", "toString", "exec", "test", "prefix" };
         proto.defineFunctionProperties(fns, NativeRegExp.class,
                                        ScriptableObject.DONTENUM);
 
@@ -162,7 +170,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
 
     public Object call(Context cx, Scriptable scope, Scriptable thisObj,
                        Object[] args) {
-        return execSub(cx, this, args, scope, false, this);
+        return execSub(cx, this, args, scope, MATCH, this);
     }
 
     public Scriptable construct(Context cx, Scriptable scope, Object[] args) {
@@ -263,7 +271,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
 
     private static Object execSub(Context cx, Scriptable thisObj,
                                   Object[] args, Scriptable scopeObj,
-                                  boolean test, Function funObj) {
+                                  int matchType, Function funObj) {
         if (!(thisObj instanceof NativeRegExp)) {
             Object[] errArgs = { ((NativeFunction) funObj).jsGet_name() };
             throw NativeGlobal.constructError(
@@ -294,25 +302,29 @@ public class NativeRegExp extends ScriptableObject implements Function {
             i = 0;
         }
         int indexp[] = { i };
-        Object rval = re.executeRegExp(scopeObj, str, indexp, test);
+        Object rval = re.executeRegExp(scopeObj, str, indexp, matchType);
         if ((re.flags & GLOB) != 0)
-            re.lastIndex = (rval == null) ? 0 : indexp[0];
+            re.lastIndex = (rval == null || rval == Undefined.instance) ? 0 : indexp[0];
         return rval;
     }
 
     public static Object exec(Context cx, Scriptable thisObj,
                               Object[] args, Function funObj) {
-        return execSub(cx, thisObj, args, funObj, false, funObj);
+        return execSub(cx, thisObj, args, funObj, MATCH, funObj);
     }
 
     public static Object test(Context cx, Scriptable thisObj,
                               Object[] args, Function funObj) {
-        Object rval = execSub(cx, thisObj, args, funObj, true, funObj);
+        Object rval = execSub(cx, thisObj, args, funObj, TEST, funObj);
         if (rval == null || !rval.equals(Boolean.TRUE))
             rval = Boolean.FALSE;
         return rval;
     }
 
+    public static Object prefix(Context cx, Scriptable thisObj,
+                                Object[] args, Function funObj) {
+        return execSub(cx, thisObj, args, funObj, PREFIX, funObj);
+    }
 
     static final int JS_BITS_PER_BYTE = 8;
 
@@ -1622,8 +1634,9 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     if (parsub == null)
                         parsub = state.parens[num] = new SubString();
                     int length = parsub.length;
-                    if ((input.length - index) < length)
-                        return -1;
+                    if ((input.length - index) < length) {
+                        return state.noMoreInput();
+                    }
                     else {
                         for (int i = 0; i < length; i++, index++) {
                             if (!matchChar(state.flags, input[index],
@@ -1634,34 +1647,36 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 }
                     break;
                 case REOP_CCLASS:
-                    if (index < input.length) {
-                        if (ren.bitmap == null) {
-                            char[] source = (ren.s != null) 
-                                ? ren.s 
-                                : this.source.toCharArray();
-                            ren.buildBitmap(state, source, ((state.flags & FOLD) != 0));
-                        }
-                        char c = input[index];
-                        int b = (c >>> 3);
-                        if (b >= ren.bmsize) {
-                            if (ren.kid2 == -1) // a ^ class
-                                index++;
-                            else
-                                return -1;
-                        } else {
-                            int bit = c & 7;
-                            bit = 1 << bit;
-                            if ((ren.bitmap[b] & bit) != 0)
-                                index++;
-                            else
-                                return -1;
-                        }
+                    if (index >= input.length) {
+                        return state.noMoreInput();
                     }
-                    else
-                        return -1;
+                    if (ren.bitmap == null) {
+                        char[] source = (ren.s != null) 
+                            ? ren.s 
+                            : this.source.toCharArray();
+                        ren.buildBitmap(state, source, ((state.flags & FOLD) != 0));
+                    }
+                    char c = input[index];
+                    int b = (c >>> 3);
+                    if (b >= ren.bmsize) {
+                        if (ren.kid2 == -1) // a ^ class
+                            index++;
+                        else
+                            return -1;
+                    } else {
+                        int bit = c & 7;
+                        bit = 1 << bit;
+                        if ((ren.bitmap[b] & bit) != 0)
+                            index++;
+                        else
+                            return -1;
+                    }
                     break;
                 case REOP_DOT:
-                    if ((index < input.length) && (input[index] != '\n'))
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (input[index] != '\n')
                         index++;
                     else
                         return -1;
@@ -1674,7 +1689,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         if (input[cp2] == '\n')
                             return -1;
                     }
-                    return -1;
+                    return state.noMoreInput();
                 }
                 case REOP_DOTSTAR: {
                     int cp2;
@@ -1692,18 +1707,28 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     break;
                 }
                 case REOP_WBDRY:
-                    if (((index == 0) || !isWord(input[index-1]))
-                        ^ ((index >= input.length) || !isWord(input[index])))
-                        ; // leave index 
-                    else
-                        return -1;
+                    if (index == 0 || !isWord(input[index-1])) {
+                        if (index >= input.length)
+                            return state.noMoreInput();
+                        if (!isWord(input[index]))
+                            return -1;
+                    }
+                    else {
+                        if (index < input.length && isWord(input[index]))
+                            return -1;
+                    }
                     break;
                 case REOP_WNONBDRY:
-                    if (((index == 0) || !isWord(input[index-1]))
-                        ^ ((index < input.length) && isWord(input[index])))
-                        ; // leave index 
-                    else
-                        return -1;
+                    if (index == 0 || !isWord(input[index-1])) {
+                        if (index < input.length && isWord(input[index]))
+                            return -1;
+                    }
+                    else {
+                        if (index >= input.length)
+                            return state.noMoreInput();
+                        if (!isWord(input[index]))
+                            return -1;
+                    }
                     break;
                 case REOP_EOLONLY:
                 case REOP_EOL: {
@@ -1727,9 +1752,11 @@ public class NativeRegExp extends ScriptableObject implements Function {
                     Context cx = Context.getCurrentContext();
                     RegExpImpl reImpl = getImpl(cx);
                     if (index != 0) {
-                        if ((index < input.length)
-                            && (reImpl.multiline
-                                || ((state.flags & MULTILINE) != 0))) {
+                        if (reImpl.multiline ||
+                            ((state.flags & MULTILINE) != 0)) {
+                            if (index >= input.length) {
+                                return state.noMoreInput();
+                            }
                             if (input[index - 1] == '\n') {
                                 break;
                             }
@@ -1740,51 +1767,58 @@ public class NativeRegExp extends ScriptableObject implements Function {
                 }
                     break;
                 case REOP_DIGIT:
-                    if ((index < input.length) && isDigit(input[index]))
-                        index++;
-                    else
-                        return -1;
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (!isDigit(input[index])) return -1;
+                    index++;
                     break;
                 case REOP_NONDIGIT:
-                    if ((index < input.length) && !isDigit(input[index]))
-                        index++;
-                    else
-                        return -1;
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (isDigit(input[index])) return -1;
+                    index++;
                     break;
                 case REOP_ALNUM:
-                    if ((index < input.length) && isWord(input[index]))
-                        index++;
-                    else
-                        return -1;
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (!isWord(input[index])) return -1;
+                    index++;
                     break;
                 case REOP_NONALNUM:
-                    if ((index < input.length) && !isWord(input[index]))
-                        index++;
-                    else
-                        return -1;
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (isWord(input[index])) return -1;
+                    index++;
                     break;
                 case REOP_SPACE:
-                    if ((index < input.length)
-                        && (TokenStream.isJSSpace(input[index])
-                            || TokenStream.isJSLineTerminator(input[index])))
-                        index++;
-                    else
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (!(TokenStream.isJSSpace(input[index]) ||
+                          TokenStream.isJSLineTerminator(input[index])))
                         return -1;
+                    index++;
                     break;
                 case REOP_NONSPACE:
-                    if ((index < input.length)
-                        && !(TokenStream.isJSSpace(input[index])
-                             || TokenStream.isJSLineTerminator(input[index])))
-                        index++;
-                    else
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (TokenStream.isJSSpace(input[index]) ||
+                        TokenStream.isJSLineTerminator(input[index]))
                         return -1;
+                    index++;
                     break;
                 case REOP_FLAT1:
-                    if ((index < input.length)
-                        && matchChar(state.flags, ren.chr, input[index]))
-                        index++;
-                    else
+                    if (index >= input.length) {
+                        return state.noMoreInput();
+                    }
+                    if (!matchChar(state.flags, ren.chr, input[index]))
                         return -1;
+                    index++;
                     break;
                 case REOP_FLAT: {
                     char[] source = (ren.s != null)
@@ -1792,14 +1826,13 @@ public class NativeRegExp extends ScriptableObject implements Function {
                         : this.source.toCharArray();
                     int start = ((Integer)ren.kid).intValue();
                     int length = ren.kid2 - start;
-                    if ((input.length - index) < length)
-                        return -1;
-                    else {
-                        for (int i = 0; i < length; i++, index++) {
-                            if (!matchChar(state.flags, input[index],
-                                           source[start + i]))
-                                return -1;
-                        }
+                    if ((input.length - index) < length) {
+                        return state.noMoreInput();
+                    }
+                    for (int i = 0; i < length; i++, index++) {
+                        if (!matchChar(state.flags, input[index],
+                                       source[start + i]))
+                            return -1;
                     }
                 }
                     break;
@@ -1832,7 +1865,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
      * indexp is assumed to be an array of length 1
      */
     Object executeRegExp(Scriptable scopeObj, String str, int indexp[], 
-                         boolean test) {
+                         int matchType) {
         NativeRegExp re = this;
         Context cx = Context.getCurrentContext();
         RegExpImpl res = getImpl(cx);
@@ -1841,6 +1874,7 @@ public class NativeRegExp extends ScriptableObject implements Function {
          * Initialize a CompilerState to minimize recursive argument traffic.
          */
         MatchState state = new MatchState();
+        state.inputExhausted = false;
         state.anchoring = false;
         state.flags = re.flags;
         state.scope = scopeObj;
@@ -1868,7 +1902,8 @@ public class NativeRegExp extends ScriptableObject implements Function {
          */
         index = matchRegExp(state, ren, index);
         if (index == -1) {
-            return null;
+            if (matchType != PREFIX || !state.inputExhausted) return null;
+            return Undefined.instance;
         }
         int i = index - state.cpbegin;
         indexp[0] = i;
@@ -1878,14 +1913,15 @@ public class NativeRegExp extends ScriptableObject implements Function {
         Object result;
         Scriptable obj;
 
-        if (test) {
+        if (matchType == TEST) {
             /*
              * Testing for a match and updating cx.regExpImpl: don't allocate
              * an array object, do return true.
              */
             result = Boolean.TRUE;
             obj = null;
-        } else {
+        }
+        else {
             /*
              * The array returned on match has element 0 bound to the matched
              * string, elements 1 through state.parenCount bound to the paren
@@ -1912,15 +1948,14 @@ public class NativeRegExp extends ScriptableObject implements Function {
             for (num = 0; num < state.parenCount; num++) {
                 parsub = state.parens[num];
                 res.parens.setElementAt(parsub, num);
-                if (test)
-                    continue;
+                if (matchType == TEST) continue;
                 String parstr = parsub == null ? "": parsub.toString();
                 obj.put(num+1, obj, parstr);
             }
             res.lastParen = parsub;
         }
 
-        if (!test) {
+        if (! (matchType == TEST)) {
             /*
              * Define the index and input properties last for better for/in loop
              * order (so they come after the elements).
@@ -2309,6 +2344,7 @@ class RENode {
 
 
 class MatchState {
+    boolean	inputExhausted;		/* did we run out of input chars ? */
     boolean     anchoring;              /* true if multiline anchoring ^/$ */
     int         pcend;                  /* pc limit (fencepost) */
     int         cpbegin, cpend;         /* cp base address and limit */
@@ -2320,6 +2356,19 @@ class MatchState {
     SubString[] parens;                 /* certain paren substring matches */
     Scriptable  scope;
     char[]		input;
+
+    public int noMoreInput() {
+        inputExhausted = true;
+        /*
+        try {
+            throw new Exception();
+        }
+        catch (Exception e) {
+            e.printStackTrace();
+        }
+        */
+        return -1;
+    }
 }
 
 class GreedyState {

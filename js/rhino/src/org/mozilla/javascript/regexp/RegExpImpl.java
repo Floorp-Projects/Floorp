@@ -46,6 +46,16 @@ public class RegExpImpl implements RegExpProxy {
         parens = new Vector(9);
     }
     
+    protected Object executeRegExp(Object regExp, Scriptable scopeObj, 
+                                String str, int indexp[], int matchType)
+    {
+        if (regExp instanceof NativeRegExp)
+            return ((NativeRegExp) regExp).executeRegExp(scopeObj, str, 
+                                                         indexp, matchType);
+        return null;
+    }
+    
+    
     public boolean isRegExp(Object obj) {
         return obj instanceof NativeRegExp;
     }
@@ -55,16 +65,6 @@ public class RegExpImpl implements RegExpProxy {
     {
         return new NativeRegExp(cx, scope, source, global, flat);
     }
-    
-    public Object executeRegExp(Object regExp, Scriptable scopeObj, 
-                                String str, int indexp[], boolean test)
-    {
-        if (regExp instanceof NativeRegExp)
-            return ((NativeRegExp) regExp).executeRegExp(scopeObj, str, 
-                                                         indexp, test);
-        return null;
-    }
-    
     
     public Object match(Context cx, Scriptable thisObj, Object[] args, 
                         Function funObj)
@@ -179,7 +179,7 @@ public class RegExpImpl implements RegExpProxy {
         int[] indexp = { 0 };
         Object result = null;
         if (data.mode == GlobData.GLOB_SEARCH) {
-            result = re.executeRegExp(funObj, str, indexp, true);
+            result = re.executeRegExp(funObj, str, indexp, NativeRegExp.TEST);
             if (result != null && result.equals(Boolean.TRUE))
                 result = new Integer(reImpl.leftContext.length);
             else
@@ -187,7 +187,7 @@ public class RegExpImpl implements RegExpProxy {
         } else if (data.global) {
             re.setLastIndex(0);
             for (int count = 0; indexp[0] <= str.length(); count++) {
-                result = re.executeRegExp(funObj, str, indexp, true);
+                result = re.executeRegExp(funObj, str, indexp, NativeRegExp.TEST);
                 if (result == null || !result.equals(Boolean.TRUE))
                     break;
                 data.doGlobal(funObj, count);
@@ -199,7 +199,7 @@ public class RegExpImpl implements RegExpProxy {
             }
         } else {
             result = re.executeRegExp(funObj, str, indexp,
-                                      data.mode == GlobData.GLOB_REPLACE);
+                                      ((data.mode == GlobData.GLOB_REPLACE) ? NativeRegExp.TEST : NativeRegExp.MATCH));
         }
 
         return result;
@@ -222,7 +222,7 @@ public class RegExpImpl implements RegExpProxy {
             /* JS1.2 deviated from Perl by never matching at end of string. */
             int ipsave = ip[0]; // reuse ip to save object creation
             ip[0] = i;
-            if (re.executeRegExp(funObj, target, ip, true) != Boolean.TRUE) 
+            if (re.executeRegExp(funObj, target, ip, NativeRegExp.TEST) != Boolean.TRUE) 
             {
                 // Mismatch: ensure our caller advances i past end of string.
                 ip[0] = ipsave;
