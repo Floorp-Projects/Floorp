@@ -33,6 +33,10 @@ namespace JavaScript {
 		void* GC_malloc_atomic(size_t bytes);
 		void GC_free(void* ptr);
 		void GC_gcollect(void);
+
+		typedef void (*GC_finalization_proc) (void* obj, void* client_data);
+		void GC_register_finalizer(void* obj, GC_finalization_proc proc, void* client_data,
+											  GC_finalization_proc *old_proc, void* *old_client_data);
 	}
 
 	/**
@@ -44,7 +48,7 @@ namespace JavaScript {
 	};
 	
 	/**
-	 * Specializations for blocks of known types:  the macro define_atomic_type(_type)
+	 * Specializations for blocks of atomic types:  the macro define_atomic_type(_type)
 	 * specializes gc_traits<T> for types that need not be scanned by the
 	 * GC. Implementors are free to define other types as atomic, if they are
 	 * guaranteed not to contain pointers.
@@ -70,10 +74,28 @@ namespace JavaScript {
 	
 	#undef define_atomic_type
 	
+	template <class T> struct gc_traits_finalizable {
+		static void finalizer(void* obj, void* client_data)
+		{
+			T* t = static_cast<T*>(obj);
+			size_t n = static_cast<size_t>(client_data);
+			for (size_t i = 0; i < n; ++i)
+				t[i].~T();
+		}
+		
+		static T* allocate(size_t n)
+		{
+			T* t = gc_traits<T>::allocate(n);
+			GC_finalization_proc old_proc; void* old_client_data;
+			GC_register_finalizer((void*)t, &finalizer, (void*)n, &old_proc, &old_client_data);
+			return t;
+		}
+	};
+	
 	/**
 	 * An allocator that can be used to allocate objects in the garbage collected heap.
 	 */
-	template <class T> class gc_allocator {
+	template <class T, class traits = gc_traits<T> > class gc_allocator {
 	public:
 		typedef T value_type;
 		typedef size_t size_type;
@@ -90,7 +112,7 @@ namespace JavaScript {
 		template<class U> gc_allocator(const gc_allocator<U>&) {}
 		// ~gc_allocator() {}
 		
-		static pointer allocate(size_type n, const void* /* hint */ = 0) { return gc_traits<T>::allocate(n); }
+		static pointer allocate(size_type n, const void* /* hint */ = 0) { return traits::allocate(n); }
 		static void deallocate(pointer, size_type) {}
 		
 		static void construct(pointer p, const T &val) { new(p) T(val);}
