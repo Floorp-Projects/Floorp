@@ -267,6 +267,8 @@ public:
   //NSISELECTIONCONTROLLER INTERFACES
   NS_IMETHOD SetDisplaySelection(PRInt16 toggle);
   NS_IMETHOD GetDisplaySelection(PRInt16 *_retval);
+  NS_IMETHOD SetDisplayNonTextSelection(PRBool toggle);
+  NS_IMETHOD GetDisplayNonTextSelection(PRBool *_retval);
   NS_IMETHOD GetSelection(PRInt16 type, nsIDOMSelection **_retval);
   NS_IMETHOD ScrollSelectionIntoView(PRInt16 type, PRInt16 region);
   NS_IMETHOD RepaintSelection(PRInt16 type);
@@ -353,6 +355,18 @@ nsTextInputSelectionImpl::GetDisplaySelection(PRInt16 *aToggle)
   if (mFrameSelection)
     return mFrameSelection->GetDisplaySelection(aToggle);
   return NS_ERROR_NULL_POINTER;
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::SetDisplayNonTextSelection(PRBool aToggle)
+{
+  return NS_OK;//stub this out. not used in input
+}
+
+NS_IMETHODIMP
+nsTextInputSelectionImpl::GetDisplayNonTextSelection(PRBool *aToggle)
+{
+  return NS_OK;//stub this out. not used in input
 }
 
 NS_IMETHODIMP
@@ -915,6 +929,7 @@ nsGfxTextControlFrame2::ReflowStandard(nsIPresContext*          aPresContext,
 }
 
 
+
 PRInt32
 nsGfxTextControlFrame2::CalculateSizeStandard (nsIPresContext*       aPresContext, 
                                               nsIRenderingContext*  aRendContext,
@@ -1412,6 +1427,8 @@ nsGfxTextControlFrame2::GetPrefSize(nsBoxLayoutState& aState, nsSize& aSize)
 
   return NS_OK;
 }
+
+
 
 NS_IMETHODIMP
 nsGfxTextControlFrame2::GetMinSize(nsBoxLayoutState& aState, nsSize& aSize)
