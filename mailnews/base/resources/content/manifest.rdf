@@ -21,6 +21,9 @@
     <RDF:li resource="chrome://communicator/content/pref/pref-advanced.xul"/>
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
+    <RDF:li resource="chrome://communicator/content/history/history.xul"/>
+    <RDF:li resource="chrome://communicator/content/bookmarks/bookmarks.xul"/>
+    <RDF:li resource="chrome://communicator/content/bookmarks/bm-find.xul"/>
     <RDF:li resource="chrome://messenger/content/messenger.xul"/>
     <RDF:li resource="chrome://messenger/content/mail3PaneWindowVertLayout.xul"/>
     <RDF:li resource="chrome://messenger/content/messengercompose/messengercompose.xul"/>
@@ -47,6 +50,21 @@
   <!-- messenger taskbar/tasks menu items -->
   <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
     <RDF:li>chrome://messenger/content/mailTasksOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger items for History -->
+  <RDF:Seq about="chrome://communicator/content/history/history.xul">
+    <RDF:li>chrome://messenger/content/mailNavigatorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger items for Bookmarks -->
+  <RDF:Seq about="chrome://communicator/content/bookmarks/bookmarks.xul">
+    <RDF:li>chrome://messenger/content/mailNavigatorOverlay.xul</RDF:li>
+  </RDF:Seq>
+
+  <!-- messenger items for History -->
+  <RDF:Seq about="chrome://communicator/content/bookmarks/bm-find.xul">
+    <RDF:li>chrome://messenger/content/mailNavigatorOverlay.xul</RDF:li>
   </RDF:Seq>
 
   <!-- messenger items for Navigator -->
