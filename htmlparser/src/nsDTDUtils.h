@@ -38,6 +38,8 @@
 #include "nsString.h"
 #include "nsIElementObserver.h"
 
+class nsIParserNode;
+
 /***************************************************************
   Before digging into the NavDTD, we'll define a helper 
   class called CTagStack.
@@ -242,16 +244,19 @@ struct CRCStruct {
   might be nice to use a more dynamic approach that would permit observers to
   come and go on a document basis.
  ******************************************************************************/
-class CObserverDictionary {
+class CObserverService {
 public:
-  CObserverDictionary();
-  ~CObserverDictionary();
+  CObserverService();
+  ~CObserverService();
 
-  void      RegisterObservers(nsString& aTopicList);
-  void      UnregisterObservers();
   nsDeque*  GetObserversForTag(eHTMLTags aTag);
+  nsresult  Notify(eHTMLTags aTag,nsIParserNode& aNode,
+                   PRUint32 aUniqueID, nsIDTD* aDTD,
+                   nsAutoString& aCharsetValue,nsCharsetSource& aCharsetSource) ;
 
 protected:
+  void      RegisterObservers(nsString& aTopicList);
+  void      UnregisterObservers();
   nsDeque*  mObservers[NS_HTML_TAG_MAX + 1];
 };
 

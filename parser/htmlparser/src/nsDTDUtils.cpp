@@ -19,6 +19,7 @@
 
 #include "nsDTDUtils.h"
 #include "CNavDTD.h" 
+#include "nsIParserNode.h"
 
 #include "nsIObserverService.h"
 #include "nsIServiceManager.h"
@@ -640,7 +641,7 @@ PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size
   come and go on a document basis.
  ******************************************************************************/
 
-CObserverDictionary::CObserverDictionary() {
+CObserverService::CObserverService() {
 
   nsCRT::zero(mObservers,sizeof(mObservers));
 
@@ -652,7 +653,7 @@ CObserverDictionary::CObserverDictionary() {
 
 }
 
-CObserverDictionary::~CObserverDictionary() {
+CObserverService::~CObserverService() {
   UnregisterObservers();
 }
 
@@ -668,19 +669,34 @@ public:
   }
 };
 
-void CObserverDictionary::UnregisterObservers() {
+/**
+ * Release observers and empty the observer array.
+ * 
+ * @update harishd 08/29/99
+ * @param  
+ * @return 
+ */
+
+void CObserverService::UnregisterObservers() {
   int theIndex=0;
   nsObserverReleaser theReleaser;
   for(theIndex=0;theIndex<=NS_HTML_TAG_MAX;theIndex++){
     if(mObservers[theIndex]){
-      //nsIElementObserver* theElementObserver=0;
       mObservers[theIndex]->ForEach(theReleaser);
       delete mObservers[theIndex];
     }
   }
 }
 
-void CObserverDictionary::RegisterObservers(nsString& aTopic) {
+/**
+ * This method will maintain lists of observers registered for specific tags.
+ * 
+ * @update harishd 08/29/99
+ * @param  aTopic  -  The topic under which observers register for.
+ * @return if SUCCESS return NS_OK else return ERROR code.
+ */
+
+void CObserverService::RegisterObservers(nsString& aTopic) {
   nsresult result = NS_OK;
   nsIObserverService* theObserverService = nsnull;
   result = nsServiceManager::GetService(NS_OBSERVERSERVICE_PROGID, nsIObserverService::GetIID(),
@@ -703,22 +719,16 @@ void CObserverDictionary::RegisterObservers(nsString& aTopic) {
           PRUint32 theTagIndex = 0;
           theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
           while (theTagStr != nsnull) {
-            // XXX - HACK - Hardcoding PI for simplification.  PI handling should not
-            // happen along with ** tags **. For now the specific PI, ?xml, is treated
-            // as an unknown tag in the dictionary!!!!
-            eHTMLTags theTag = (nsCRT::strcmp(theTagStr,"?xml") == 0) ? eHTMLTag_unknown :
-                                  nsHTMLTags::LookupTag(nsCAutoString(theTagStr));
+            eHTMLTags theTag = nsHTMLTags::LookupTag(nsCAutoString(theTagStr));
             if((eHTMLTag_userdefined!=theTag) && (theTag <= NS_HTML_TAG_MAX)){
               if(mObservers[theTag] == nsnull) {
                  mObservers[theTag] = new nsDeque(0);
               }
-              NS_ADDREF(theElementObserver);
               mObservers[theTag]->Push(theElementObserver);
             }
             theTagIndex++;
             theTagStr = theElementObserver->GetTagNameAt(theTagIndex);
           }
-          NS_RELEASE(theElementObserver);
         }
       }
     }
@@ -726,7 +736,69 @@ void CObserverDictionary::RegisterObservers(nsString& aTopic) {
   }
 }
 
-nsDeque* CObserverDictionary::GetObserversForTag(eHTMLTags aTag) {
+/**
+ * This method will notify observers registered for specific tags.
+ * 
+ * @update harishd 08/29/99
+ * @param  aTag            -  The tag for which observers could be waiting for.
+ * @param  aNode           -  
+ * @param  aUniqueID       -  The document ID.
+ * @param  aDTD            -  The current DTD.
+ * @param  aCharsetValue   -
+ * @param  aCharsetSource  -
+ * @return if SUCCESS return NS_OK else return ERROR code.
+ */
+nsresult CObserverService::Notify(eHTMLTags aTag,nsIParserNode& aNode,PRUint32 aUniqueID, nsIDTD* aDTD,
+                                  nsAutoString& aCharsetValue,nsCharsetSource& aCharsetSource) {
+  nsresult  result=NS_OK;
+  nsDeque*  theDeque=GetObserversForTag(aTag);
+  if(theDeque){ 
+    PRInt32 theAttrCount =aNode.GetAttributeCount(); 
+    PRUint32 theDequeSize=theDeque->GetSize(); 
+    if(0<theDequeSize){
+      PRInt32 index = 0; 
+      const PRUnichar* theKeys[50]  = {0,0,0,0,0}; // XXX -  should be dynamic
+      const PRUnichar* theValues[50]= {0,0,0,0,0}; // XXX -  should be dynamic
+      for(index=0; index<theAttrCount && index < 50; index++) {
+        theKeys[index]   = aNode.GetKeyAt(index).GetUnicode(); 
+        theValues[index] = aNode.GetValueAt(index).GetUnicode(); 
+      } 
+      nsAutoString theCharsetKey("charset"); 
+      nsAutoString theSourceKey("charsetSource"); 
+      nsAutoString intValue;
+      // Add pseudo attribute in the end
+      if(index < 50) {
+        theKeys[index]=theCharsetKey.GetUnicode(); 
+        theValues[index] = aCharsetValue.GetUnicode();
+        index++;
+      }
+      if(index < 50) {
+        theKeys[index]=theSourceKey.GetUnicode(); 
+        PRInt32 sourceInt = aCharsetSource;
+        intValue.Append(sourceInt,10);
+        theValues[index] = intValue.GetUnicode();
+	  	  index++;
+      }
+      nsAutoString theTagStr(nsHTMLTags::GetStringValue(aTag));
+      nsObserverNotifier theNotifier(theTagStr.GetUnicode(),aUniqueID,index,theKeys,theValues);
+      theDeque->FirstThat(theNotifier); 
+      result=theNotifier.mResult; 
+     }//if 
+  } 
+  return result;
+}
+
+/**
+ * This method will look for the list of observers registered for 
+ * a specific tag.
+ * 
+ * @update harishd 08/29/99
+ * @param aTag - The tag for which observers could be waiting for.
+ * @return if FOUND return "observer list" else return nsnull;
+ *
+ */
+
+nsDeque* CObserverService::GetObserversForTag(eHTMLTags aTag) {
   if(aTag <= NS_HTML_TAG_MAX)
       return mObservers[aTag];
   return nsnull;
