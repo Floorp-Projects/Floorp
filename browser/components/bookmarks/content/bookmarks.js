@@ -303,8 +303,8 @@ var BookmarksCommand = {
     var kSuppArrayContractID = "@mozilla.org/supports-array;1";
     var kSuppArrayIID = Components.interfaces.nsISupportsArray;
     var sourcesArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
-    if (aSourceURI) {
-      sourcesArray.AppendElement (aSource);
+    if (aSource) {
+      sourcesArray.AppendElement(aSource);
     }
   
     var argsArray = Components.classes[kSuppArrayContractID].createInstance(kSuppArrayIID);
@@ -628,8 +628,7 @@ var BookmarksCommand = {
     catch (e) {
       return;
     }
-    var selection = "NC:BookmarksRoot";
-    selection = RDF.GetResource(selection).Value;
+    var selection = RDF.GetResource("NC:BookmarksRoot");
     var args = [{ property: NC_NS+"URL", literal: fileName}];
     this.doBookmarksCommand(selection, NC_NS_CMD+"export", args);
   }
