@@ -629,7 +629,19 @@ int StartIB(CString parms, WIDGET *curWidget)
 	CString cdDir= GetGlobal("CD image");
 	CString networkDir = GetGlobal("Network");
 	CString ftpLocation = GetGlobal("FTPLocation");
+//checking to see if the AnimatedLogoURL has a http:// appended in front of it 
+//if not then we have to append it;
 
+	CString animLogoUrl = GetGlobal("AnimatedLogoURL");
+	CString leftvalue = animLogoUrl.Left(7);
+	CString httpvalue = "http://";
+	if (leftvalue.CompareNoCase("http://") != 0)
+	{
+		httpvalue = httpvalue + animLogoUrl;
+		SetGlobal("AnimatedLogoURL",httpvalue);
+	}
+	
+	
 	if (cdDir.Compare("1") ==0)
 	{
 		_mkdir((char *)(LPCTSTR) cdPath);
