@@ -32,6 +32,9 @@
 #include "nsIServiceManager.h"
 #include "nsINetModuleMgr.h"
 #include "nsIEventQueueService.h"
+#include "nsIMIMEService.h"
+
+static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 #if 0
@@ -214,9 +217,6 @@ nsHTTPChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
     return NS_OK;
 }
 
-
-#define DUMMY_TYPE "text/html"
-
 NS_IMETHODIMP
 nsHTTPChannel::GetContentType(char * *aContentType)
 {
@@ -226,18 +226,44 @@ nsHTTPChannel::GetContentType(char * *aContentType)
         rv = m_pResponse->GetContentType(aContentType);
     }
 
-    // XXX temporary hack until we have a contenttype strategy
     if (NS_FAILED(rv)) {
-        *aContentType = nsCRT::strdup(DUMMY_TYPE);
-        if (!*aContentType) {
-            rv = NS_ERROR_OUT_OF_MEMORY;
-        } else {
-            rv = NS_OK;
+        char *cStrSpec= nsnull;
+        rv = m_URI->GetSpec(&cStrSpec);
+        if (!cStrSpec)
+            return NS_ERROR_OUT_OF_MEMORY;
+        // find the file extension
+        nsString2 specStr(cStrSpec);
+        nsString2 extStr;
+        PRInt32 extLoc = specStr.RFind('.');
+        if (-1 != extLoc) {
+            specStr.Right(extStr, extLoc);
+            PRUnichar *ext = extStr.ToNewUnicode();
+
+            NS_WITH_SERVICE(nsIMIMEService, MIMEService, kMIMEServiceCID, &rv);
+            if (NS_FAILED(rv)) return rv;
+
+            nsIMIMEInfo *MIMEInfo = nsnull;
+            rv = MIMEService->GetFromExtension(ext, &MIMEInfo);
+            delete [] ext;
+            if (NS_FAILED(rv)) return rv;
+
+            rv = MIMEInfo->GetMIMEType(aContentType);
+
+            NS_RELEASE(MIMEInfo);
+            return rv;
+            // we should probably set the content-type for this response at this stage too.
         }
     }
-    return rv;
 
-    //return NS_ERROR_NOT_IMPLEMENTED;
+    // if all else fails treat it as text/html?
+    *aContentType = nsCRT::strdup(DUMMY_TYPE);
+    if (!*aContentType) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    } else {
+        rv = NS_OK;
+    }
+
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
