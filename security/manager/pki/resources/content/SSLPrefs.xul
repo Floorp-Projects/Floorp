@@ -1,0 +1,116 @@
+<?xml version="1.0"?> 
+<!-- 
+   - The contents of this file are subject to the Mozilla Public
+   - License Version 1.1 (the "License"); you may not use this file
+   - except in compliance with the License. You may obtain a copy of
+   - the License at http://www.mozilla.org/MPL/
+   - 
+   - Software distributed under the License is distributed on an "AS
+   - IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+   - implied. See the License for the specific language governing
+   - rights and limitations under the License.
+   - 
+   - The Original Code is mozilla.org code.
+   - 
+   - The Initial Developer of the Original Code is Netscape
+   - Communications Corp.  Portions created by Netscape are
+   - Copyright (C) 2001 Netscape Communications Corp.  All
+   - Rights Reserved.
+   - 
+   - Contributor(s):
+   -   Bob Lord <lord@netscape.com>
+   -   Terry Hayes <thayes@netscape.com>
+  -->
+
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pippki/locale/SSLPrefs.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical" title="Security Preferences"
+        onload="parent.initPanel('chrome://pippki/content/SSLPrefs.xul');" >
+
+  <!-- List elements to manage for prefs -->
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = ["enableSSL2", "enableSSL3", "enableTLS", 
+        "warnEnteringSecure", "warnInsecurePost", "warnInsecurePostFromSecure",
+        "warnSecureRedirect", "warnSecureRedirectToInsecure",
+        "warnViewMixed", "certSelection" ];
+  ]]>
+  </script>
+            
+  <!-- Fancy panel header -->
+  <box class="box-smallheader" title="SSL" description="Settings for SSL"/>
+
+  <titledbox orient="horizontal">
+    <title><text value="&SSLProtocolVersions;"/></title>
+
+    <!-- Prefs -->
+<box orient="vertical" flex="1">
+    <checkbox id="enableSSL2" value="Enable SSL version 2"
+              pref="true" preftype="bool" prefstring="security.enable_ssl2"
+              prefattribute="checked"/>
+    <checkbox id="enableSSL3" value="Enable SSL version 3"
+              pref="true" preftype="bool" prefstring="security.enable_ssl3"
+              prefattribute="checked"/>
+    <checkbox id="enableTLS" value="Enable TLS"
+              pref="true" preftype="bool" prefstring="security.enable_tls"
+              prefattribute="checked"/>
+</box>
+
+    <box orient="vertical" halign="right">
+      <button class="dialog" value="Edit SSL Ciphers..." disabled="true"
+        oncommand="window.openDialog('chrome://pippki/content/cipherViewer.xul', '',
+                       'modal=yes,resizable,chrome');" />
+    </box>
+
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="&SSLWarnings;"/></title>
+    <html>
+Netscape can alert you to the security status of the web page you are viewing.
+Set Netscape to show a warning and ask permission before:
+    </html>
+
+    <!-- Prefs -->
+    <checkbox id="warnEnteringSecure" 
+		  value="Entering a site that supports encryption"
+              pref="true" preftype="bool" prefstring="security.warn_entering_secure"
+              prefattribute="checked"/>
+    <checkbox id="warnInsecurePost"
+		  value="Sending form data from an insecure page to an insecure page"
+              pref="true" preftype="bool" prefstring="security.warn_submit_insecure"
+              prefattribute="checked"/>
+    <checkbox id="warnInsecurePostFromSecure"
+		  value="Sending form data from a secure page to an insecure page"
+              pref="true" preftype="bool" prefstring="pip.security.warn_insecure_post_from_secure"
+              prefattribute="checked" checked="true"  disabled="true"/>
+    <checkbox id="warnSecureRedirect" value="Redirection from one secure site to another"
+              pref="true" preftype="bool" prefstring="pip.security.warn_secure_redirect"
+              prefattribute="checked"/>
+    <checkbox id="warnSecureRedirectToInsecure" 
+              value="Redirection from a secure site to an insecure site"
+              pref="true" preftype="bool" prefstring="pip.security.warn_secure_redirect_to_insecure"
+              prefattribute="checked"/>
+    <checkbox id="warnViewMixed" value="Viewing a page with an encrypted/unencrypted mix"
+              pref="true" preftype="bool" prefstring="security.warn_viewing_mixed"
+              prefattribute="checked" checked="true"/>
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="&SSLClientAuthMethod;"/></title>
+    <html>Decide how Netscape selects a security certificate to 
+	present to web sites that require one:</html>
+    <!-- Prefs -->
+    <radiogroup id="certSelection" pref="true" preftype="int" 
+	prefstring="pip.security.default_personal_cert" prefattribute="data">
+    <radio group="certSelection" value="Select Automatically" data="0"/>
+    <radio group="certSelection" value="Select Manually" data="1"/>
+    </radiogroup>
+  </titledbox>
+
+</window>

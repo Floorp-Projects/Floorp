@@ -1,4 +1,3 @@
-<?xml version="1.0"?>
 <!-- 
    - The contents of this file are subject to the Mozilla Public
    - License Version 1.1 (the "License"); you may not use this file
@@ -18,27 +17,10 @@
    - Rights Reserved.
    - 
    - Contributor(s):
+   -   Bob Lord <lord@netscape.com>
    -   Terry Hayes <thayes@netscape.com>
   -->
 
-<RDF:RDF xmlns:RDF="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:chrome="http://www.mozilla.org/rdf/chrome#">
-
-  <!-- list all the locales being supplied by this jar -->
-  <RDF:Seq about="urn:mozilla:locale:root">
-    <RDF:li resource="urn:mozilla:locale:en-US"/>
-  </RDF:Seq>
-
-  <!-- locale information -->
-  <RDF:Description about="urn:mozilla:locale:en-US"
-        chrome:displayName="English (US)"
-        chrome:author="PSM Team"
-        chrome:name="en-US">
-    <chrome:packages>
-      <RDF:Seq about="urn:mozilla:locale:en-US:packages">
-        <RDF:li resource="urn:mozilla:locale:en-US:pippki"/>
-      </RDF:Seq>
-    </chrome:packages>
-  </RDF:Description>
-
-</RDF:RDF>
+<!ENTITY  SSLProtocolVersions          "SSL Protocol Versions">
+<!ENTITY  SSLWarnings                  "SSL Warnings">
+<!ENTITY  SSLClientAuthMethod          "Client Certificate Selection">

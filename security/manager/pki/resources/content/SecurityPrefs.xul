@@ -1,0 +1,60 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://communicator/skin/dialogOverlay.css" type="text/css"?>
+
+<!DOCTYPE window SYSTEM "chrome://pip/locale/SecurityPrefs.dtd">
+
+<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        class="color-dialog"
+        orient="vertical" title="Security Preferences"
+        onload="parent.initPanel('chrome://pip/content/SecurityPrefs.xul');" >
+
+  <!-- List elements to manage for prefs?? -->
+  <script language="JavaScript">
+  <![CDATA[
+    _elementIDs = [];
+  ]]>
+  </script>
+            
+  <!-- Fancy panel header -->
+  <box class="box-smallheader" title="Privacy/Security" 
+     description="Settings for Privacy/Security"/>
+
+  <titledbox orient="vertical">
+    <title><text value="Reset Settings"/></title>
+<html>
+Use this button to reset Netscape's security preferences to their factory settings.
+</html>
+    <!-- Prefs -->
+    <box halign="left" autostretch="never">
+      <button class="dialog" value="Reset Preferences..." disabled="true"
+        oncommand="alert('You FOOL! You'll get us ALL killed!');" />
+</box>
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="Manage Certificates"/></title>
+<html>
+Use the Certificate Manager to manage your personal certificates, as well as those of other people and certificate authorities.
+</html>
+    <box halign="left" autostretch="never">
+      <button class="dialog" value="Manage Certificates..." disabled="true"
+        oncommand="window.openDialog('chrome://pip/content/cert_manager.xul', '',
+                       'modal=yes,resizable,chrome');" />
+    </box>
+  </titledbox>
+
+  <titledbox orient="vertical">
+    <title><text value="Manage Security Devices"/></title>
+<html>
+Use this button to manage your security devices, such as smart cards.
+</html>
+    <box halign="left" autostretch="never">
+      <button class="dialog" value="Manage Security Devices..." disabled="true"
+        oncommand="window.openDialog('chrome://pip/content/device_manager.xul', '',
+                       'modal=yes,resizable,chrome');" />
+    </box>
+  </titledbox>
+
+
+</window>
