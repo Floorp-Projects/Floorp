@@ -34,7 +34,7 @@ classic.jar:
     skin/classic/messenger/aboutDialog.css          (skin/aboutDialog.css)
 +   skin/classic/global/tree.css                    (skin/tree.css)
 +   skin/classic/global/Preview.png                 (skin/Preview.png) 
-+   skin/classic/global/contents.rdf                (skin/contents.rdf)
+*+  skin/classic/global/contents.rdf                (skin/contents.rdf)
 +   skin/classic/communicator/communicator.css      (skin/communicator.css)
 +   skin/classic/messenger/primaryToolbar.css       (skin/primaryToolbar.css)
 +   skin/classic/messenger/accountCentral.css       (skin/accountCentral.css)
