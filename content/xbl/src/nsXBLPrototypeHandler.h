@@ -44,6 +44,8 @@
 #include "nsString.h"
 #include "nsCOMPtr.h"
 #include "nsIController.h"
+#include "nsAutoPtr.h"
+#include "nsXBLEventHandler.h"
 
 class nsIDOMEvent;
 class nsIContent;
@@ -51,6 +53,7 @@ class nsIDOMUIEvent;
 class nsIDOMKeyEvent;
 class nsIDOMMouseEvent;
 class nsIDOMEventReceiver;
+class nsIDOM3EventTarget;
 class nsXBLPrototypeBinding;
 
 #define NS_HANDLER_TYPE_XBL_JS          (1 << 0)
@@ -77,9 +80,26 @@ public:
   nsXBLPrototypeHandler(nsIContent* aKeyElement);
 
   ~nsXBLPrototypeHandler();
-  
-  PRBool MouseEventMatched(nsIAtom* aEventType, nsIDOMMouseEvent* aEvent);
-  PRBool KeyEventMatched(nsIAtom* aEventType, nsIDOMKeyEvent* aEvent);
+
+  PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
+  inline PRBool KeyEventMatched(nsIAtom* aEventType,
+                                nsIDOMKeyEvent* aEvent)
+  {
+    if (aEventType != mEventName)
+      return PR_FALSE;
+
+    return KeyEventMatched(aEvent);
+  }
+
+  PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
+  inline PRBool MouseEventMatched(nsIAtom* aEventType,
+                                  nsIDOMMouseEvent* aEvent)
+  {
+    if (aEventType != mEventName)
+      return PR_FALSE;
+
+    return MouseEventMatched(aEvent);
+  }
 
   already_AddRefed<nsIContent> GetHandlerElement();
 
@@ -102,10 +122,23 @@ public:
 
   nsresult BindingAttached(nsIDOMEventReceiver* aReceiver);
   nsresult BindingDetached(nsIDOMEventReceiver* aReceiver);
-  
-public:
-  static nsresult GetTextData(nsIContent *aParent, nsString& aResult);
 
+  nsXBLEventHandler* GetEventHandler()
+  {
+    if (!mHandler) {
+      NS_NewXBLEventHandler(this, mEventName, getter_AddRefs(mHandler));
+      // XXX Need to signal out of memory?
+    }
+
+    return mHandler;
+  }
+
+  nsXBLEventHandler* GetCachedEventHandler()
+  {
+    return mHandler;
+  }
+
+public:
   static PRUint32 gRefCnt;
   
 protected:
@@ -121,9 +154,6 @@ protected:
 
   void GetEventType(nsAString& type);
   PRBool ModifiersMatchMask(nsIDOMUIEvent* aEvent, PRInt32 aModifiersMask);
-
-  inline PRBool KeyEventMatched(nsIDOMKeyEvent* aKeyEvent);
-  inline PRBool MouseEventMatched(nsIDOMMouseEvent* aMouseEvent);
 
   PRInt32 KeyToMask(PRInt32 key);
   
@@ -169,6 +199,7 @@ protected:
   // Prototype handlers are chained. We own the next handler in the chain.
   nsXBLPrototypeHandler* mNextHandler;
   nsCOMPtr<nsIAtom> mEventName; // The type of the event, e.g., "keypress"
+  nsRefPtr<nsXBLEventHandler> mHandler;
   nsXBLPrototypeBinding* mPrototypeBinding; // the binding owns us
 };
 

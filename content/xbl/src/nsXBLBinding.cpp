@@ -102,18 +102,6 @@
 
 #include "nsXBLPrototypeHandler.h"
 
-#include "nsXBLKeyHandler.h"
-#include "nsXBLFocusHandler.h"
-#include "nsXBLMouseHandler.h"
-#include "nsXBLMouseMotionHandler.h"
-#include "nsXBLMutationHandler.h"
-#include "nsXBLXULHandler.h"
-#include "nsXBLScrollHandler.h"
-#include "nsXBLFormHandler.h"
-#include "nsXBLDragHandler.h"
-#include "nsXBLLoadHandler.h"
-#include "nsXBLContextMenuHandler.h"
-#include "nsXBLCustomHandler.h"
 #include "nsXBLPrototypeBinding.h"
 #include "nsXBLBinding.h"
 
@@ -166,74 +154,6 @@ nsXBLJSClass::Destroy()
   return 0;
 }
 
-// Static initialization
-PRUint32 nsXBLBinding::gRefCnt = 0;
- 
-nsXBLBinding::EventHandlerMapEntry
-nsXBLBinding::kEventHandlerMap[] = {
-    { "click",         nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "dblclick",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "mousedown",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "mouseup",       nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "mouseover",     nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-    { "mouseout",      nsnull, &NS_GET_IID(nsIDOMMouseListener)       },
-
-    { "mousemove",     nsnull, &NS_GET_IID(nsIDOMMouseMotionListener) },
-
-    { "keydown",       nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-    { "keyup",         nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-    { "keypress",      nsnull, &NS_GET_IID(nsIDOMKeyListener)         },
-
-    { "load",          nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "unload",        nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "abort",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-    { "error",         nsnull, &NS_GET_IID(nsIDOMLoadListener)        },
-
-    { "popupshowing",  nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "popupshown",    nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "popuphiding" ,  nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "popuphidden",   nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "close",         nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "command",       nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "broadcast",     nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-    { "commandupdate", nsnull, &NS_GET_IID(nsIDOMXULListener)        },
-
-    { "overflow",        nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
-    { "underflow",       nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
-    { "overflowchanged", nsnull, &NS_GET_IID(nsIDOMScrollListener)    },
-
-    { "focus",         nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
-    { "blur",          nsnull, &NS_GET_IID(nsIDOMFocusListener)       },
-
-    { "submit",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "reset",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "change",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "select",        nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-    { "input",         nsnull, &NS_GET_IID(nsIDOMFormListener)        },
-
-    { "paint",         nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
-    { "resize",        nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
-    { "scroll",        nsnull, &NS_GET_IID(nsIDOMPaintListener)       },
-
-    { "dragenter",     nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "dragover",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "dragexit",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "dragdrop",      nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-    { "draggesture",   nsnull, &NS_GET_IID(nsIDOMDragListener)        },
-
-    { "DOMSubtreeModified",           nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
-    { "DOMAttrModified",              nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
-    { "DOMCharacterDataModified",     nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
-    { "DOMNodeInserted",              nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
-    { "DOMNodeRemoved",               nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
-    { "DOMNodeInsertedIntoDocument",  nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
-    { "DOMNodeRemovedFromDocument",   nsnull, &NS_GET_IID(nsIDOMMutationListener)        },
-
-    { "contextmenu", nsnull, &NS_GET_IID(nsIDOMContextMenuListener) },
-
-    { nsnull,            nsnull, nsnull                                 }
-};
-
 // Implementation /////////////////////////////////////////////////////////////////
 
 // Implement our nsISupports methods
@@ -241,39 +161,17 @@ NS_IMPL_ISUPPORTS1(nsXBLBinding, nsIXBLBinding)
 
 // Constructors/Destructors
 nsXBLBinding::nsXBLBinding(nsXBLPrototypeBinding* aBinding)
-: mFirstHandler(nsnull),
+: mPrototypeBinding(aBinding),
   mInsertionPointTable(nsnull),
   mIsStyleBinding(PR_TRUE),
   mMarkedForDeath(PR_FALSE)
 {
-  mPrototypeBinding = aBinding;
-  gRefCnt++;
-  //  printf("REF COUNT UP: %d %s\n", gRefCnt, (const char*)mID);
-
-  if (gRefCnt == 1) {
-    EventHandlerMapEntry* entry = kEventHandlerMap;
-    while (entry->mAttributeName) {
-      entry->mAttributeAtom = NS_NewAtom(entry->mAttributeName);
-      ++entry;
-    }
-  }
 }
 
 
 nsXBLBinding::~nsXBLBinding(void)
 {
   delete mInsertionPointTable;
-
-  gRefCnt--;
-  //  printf("REF COUNT DOWN: %d %s\n", gRefCnt, (const char*)mID);
-
-  if (gRefCnt == 0) {
-    EventHandlerMapEntry* entry = kEventHandlerMap;
-    while (entry->mAttributeName) {
-      NS_IF_RELEASE(entry->mAttributeAtom);
-      ++entry;
-    }
-  }
 }
 
 // nsIXBLBinding Interface ////////////////////////////////////////////////////////////////
@@ -825,33 +723,27 @@ nsXBLBinding::InstallEventHandlers()
       return NS_ERROR_FAILURE;
 
     nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
-    nsXBLEventHandler* currHandler = nsnull;
 
     if (handlerChain) {
       nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
       nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(receiver);
       nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
 
-      for (nsXBLPrototypeHandler* curr = handlerChain; curr;
-           curr = curr->GetNextHandler()) {
+      nsXBLPrototypeHandler* curr;
+      for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
         // Fetch the event type.
         nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
-        if (!eventAtom) 
+        if (!eventAtom ||
+            eventAtom == nsXBLAtoms::keyup ||
+            eventAtom == nsXBLAtoms::keydown ||
+            eventAtom == nsXBLAtoms::keypress)
           continue;
-        
-        // Figure out if we're using capturing or not.
-        PRUint8 phase = curr->GetPhase();
-        PRBool useCapture = (phase == NS_PHASE_CAPTURING);
-        
-        // Create a new nsXBLEventHandler.
-        nsXBLEventHandler* handler = nsnull;
-      
+
         nsAutoString type;
         eventAtom->ToString(type);
-      
-        nsIID iid;
-        PRBool found = PR_FALSE;
-        GetEventHandlerIID(eventAtom, &iid, &found);
+
+        // Figure out if we're using capturing or not.
+        PRBool useCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
 
         // If this is a command, add it in the system event group, otherwise 
         // add it to the standard event group.
@@ -865,144 +757,38 @@ nsXBLBinding::InstallEventHandlers()
           eventGroup = systemEventGroup;
         }
 
-        if (found) { 
-          /*
-          // Disable ATTACHTO capability for Mozilla 1.0
-          nsAutoString attachType;
-          child->GetAttr(kNameSpaceID_None, kAttachToAtom, attachType);
-          if (attachType == NS_LITERAL_STRING("_document") || 
-              attachType == NS_LITERAL_STRING("_window"))
-            {
-              nsCOMPtr<nsIDocument> boundDoc;
-              mBoundElement->GetDocument(getter_AddRefs(boundDoc));
-              if (attachType == NS_LITERAL_STRING("_window")) {
-                nsCOMPtr<nsIScriptGlobalObject> global;
-                boundDoc->GetScriptGlobalObject(getter_AddRefs(global));
-                receiver = do_QueryInterface(global);
-              }
-              else receiver = do_QueryInterface(boundDoc);
-            }
-          else if (!attachType.IsEmpty() && !attachType.Equals(NS_LITERAL_STRING("_element"))) {
-            nsCOMPtr<nsIDocument> boundDoc;
-            mBoundElement->GetDocument(getter_AddRefs(boundDoc));
-            nsCOMPtr<nsIDOMDocument> domDoc(do_QueryInterface(boundDoc));
-            nsCOMPtr<nsIDOMElement> otherElement;
-            domDoc->GetElementById(attachType, getter_AddRefs(otherElement));
-            receiver = do_QueryInterface(otherElement);
-          }
-          */
-
-          if (iid.Equals(NS_GET_IID(nsIDOMMouseListener))) {
-            nsXBLMouseHandler* mouseHandler;
-            NS_NewXBLMouseHandler(receiver, curr, &mouseHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMMouseListener*)mouseHandler,
-                                            useCapture, eventGroup);
-            handler = mouseHandler;
-          }
-          else if(iid.Equals(NS_GET_IID(nsIDOMKeyListener))) {
-            nsXBLKeyHandler* keyHandler;
-            NS_NewXBLKeyHandler(receiver, curr, &keyHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMKeyListener*)keyHandler,
-                                            useCapture, eventGroup);
-            handler = keyHandler;
-          }
-          else if (iid.Equals(NS_GET_IID(nsIDOMMouseMotionListener))) {
-            nsXBLMouseMotionHandler* mouseHandler;
-            NS_NewXBLMouseMotionHandler(receiver, curr, &mouseHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMMouseListener*)mouseHandler,
-                                            useCapture, eventGroup);
-            handler = mouseHandler;
-          }
-          else if(iid.Equals(NS_GET_IID(nsIDOMFocusListener))) {
-            nsXBLFocusHandler* focusHandler;
-            NS_NewXBLFocusHandler(receiver, curr, &focusHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMFocusListener*)focusHandler,
-                                            useCapture, eventGroup);
-            handler = focusHandler;
-          }
-          else if (iid.Equals(NS_GET_IID(nsIDOMXULListener))) {
-            nsXBLXULHandler* xulHandler;
-            NS_NewXBLXULHandler(receiver, curr, &xulHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMXULListener*)xulHandler,
-                                            useCapture, eventGroup);
-            handler = xulHandler;
-          }
-          else if (iid.Equals(NS_GET_IID(nsIDOMScrollListener))) {
-            nsXBLScrollHandler* scrollHandler;
-            NS_NewXBLScrollHandler(receiver, curr, &scrollHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMScrollListener*)scrollHandler,
-                                            useCapture, eventGroup);
-            handler = scrollHandler;
-          }
-          else if (iid.Equals(NS_GET_IID(nsIDOMFormListener))) {
-            nsXBLFormHandler* formHandler;
-            NS_NewXBLFormHandler(receiver, curr, &formHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMFormListener*)formHandler,
-                                            useCapture, eventGroup);
-            handler = formHandler;
-          }
-          else if(iid.Equals(NS_GET_IID(nsIDOMDragListener))) {
-            nsXBLDragHandler* dragHandler;
-            NS_NewXBLDragHandler(receiver, curr, &dragHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMDragListener*)dragHandler,
-                                            useCapture, eventGroup);
-            handler = dragHandler;
-          }
-          else if(iid.Equals(NS_GET_IID(nsIDOMLoadListener))) {
-            nsXBLLoadHandler* loadHandler;
-            NS_NewXBLLoadHandler(receiver, curr, &loadHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMLoadListener*)loadHandler,
-                                            useCapture, eventGroup);
-            handler = loadHandler;
-          }
-          else if(iid.Equals(NS_GET_IID(nsIDOMMutationListener))) {
-            nsXBLMutationHandler* mutationHandler;
-            NS_NewXBLMutationHandler(receiver, curr, &mutationHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMMutationListener*)mutationHandler,
-                                            useCapture, eventGroup);
-            handler = mutationHandler;
-          }
-          else if(iid.Equals(NS_GET_IID(nsIDOMContextMenuListener))) {
-            nsXBLContextMenuHandler* menuHandler;
-            NS_NewXBLContextMenuHandler(receiver, curr, &menuHandler);
-            target->AddGroupedEventListener(type,
-                                            (nsIDOMContextMenuListener*)menuHandler,
-                                            useCapture, eventGroup);
-            handler = menuHandler;
-          }
-        }
-        else {
-          nsXBLCustomHandler* customHandler;
-          NS_NewXBLCustomHandler(receiver, curr, &customHandler);
-          target->AddGroupedEventListener(type,
-                                          (nsIDOMEventListener*)customHandler,
-                                          useCapture, eventGroup);
-          handler = customHandler;
-        }
-
-        // We chain all our event handlers together for easy
-        // removal later (if/when the binding dies).
+        nsXBLEventHandler* handler = curr->GetEventHandler();
         if (handler) {
-          if (!currHandler)
-            mFirstHandler = handler;
-          else 
-            currHandler->SetNextHandler(handler);
-        
-          currHandler = handler;
-
-          // Let the listener manager hold on to the handler.
-          NS_RELEASE(handler);
+          target->AddGroupedEventListener(type, handler, useCapture,
+                                          eventGroup);
         }
+      }
+
+      const nsCOMArray<nsXBLKeyEventHandler>* keyHandlers =
+        mPrototypeBinding->GetKeyEventHandlers();
+      PRInt32 i;
+      for (i = 0; i < keyHandlers->Count(); ++i) {
+        nsXBLKeyEventHandler* handler = keyHandlers->ObjectAt(i);
+
+        nsAutoString type;
+        handler->GetEventName(type);
+
+        // Figure out if we're using capturing or not.
+        PRBool useCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
+
+        // If this is a command, add it in the system event group, otherwise 
+        // add it to the standard event group.
+
+        // This is a weak ref. systemEventGroup above is already a
+        // strong ref, so we are guaranteed it will not go away.
+        nsIDOMEventGroup* eventGroup = nsnull;
+        if (handler->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+          if (!systemEventGroup)
+            receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+          eventGroup = systemEventGroup;
+        }
+
+        target->AddGroupedEventListener(type, handler, useCapture, eventGroup);
       }
     }
   }
@@ -1082,10 +868,74 @@ nsXBLBinding::ExecuteDetachedHandler()
 NS_IMETHODIMP
 nsXBLBinding::UnhookEventHandlers()
 {
-  if (mFirstHandler) {
-    // Unhook our event handlers.
-    mFirstHandler->RemoveEventHandlers();
-    mFirstHandler = nsnull;
+  nsXBLPrototypeHandler* handlerChain = mPrototypeBinding->GetPrototypeHandlers();
+
+  if (handlerChain) {
+    nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(mBoundElement);
+    nsCOMPtr<nsIDOM3EventTarget> target = do_QueryInterface(receiver);
+    nsCOMPtr<nsIDOMEventGroup> systemEventGroup;
+
+    nsXBLPrototypeHandler* curr;
+    for (curr = handlerChain; curr; curr = curr->GetNextHandler()) {
+      nsXBLEventHandler* handler = curr->GetCachedEventHandler();
+      if (handler) {
+        nsCOMPtr<nsIAtom> eventAtom = curr->GetEventName();
+        if (!eventAtom ||
+            eventAtom == nsXBLAtoms::keyup ||
+            eventAtom == nsXBLAtoms::keydown ||
+            eventAtom == nsXBLAtoms::keypress)
+          continue;
+
+        nsAutoString type;
+        eventAtom->ToString(type);
+
+        // Figure out if we're using capturing or not.
+        PRBool useCapture = (curr->GetPhase() == NS_PHASE_CAPTURING);
+
+        // If this is a command, remove it from the system event group, otherwise 
+        // remove it from the standard event group.
+
+        // This is a weak ref. systemEventGroup above is already a
+        // strong ref, so we are guaranteed it will not go away.
+        nsIDOMEventGroup* eventGroup = nsnull;
+        if (curr->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+          if (!systemEventGroup)
+            receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+          eventGroup = systemEventGroup;
+        }
+
+        target->RemoveGroupedEventListener(type, handler, useCapture,
+                                           eventGroup);
+      }
+    }
+
+    const nsCOMArray<nsXBLKeyEventHandler>* keyHandlers =
+      mPrototypeBinding->GetKeyEventHandlers();
+    PRInt32 i;
+    for (i = 0; i < keyHandlers->Count(); ++i) {
+      nsXBLKeyEventHandler* handler = keyHandlers->ObjectAt(i);
+
+      nsAutoString type;
+      handler->GetEventName(type);
+
+      // Figure out if we're using capturing or not.
+      PRBool useCapture = (handler->GetPhase() == NS_PHASE_CAPTURING);
+
+      // If this is a command, remove it from the system event group, otherwise 
+      // remove it from the standard event group.
+
+      // This is a weak ref. systemEventGroup above is already a
+      // strong ref, so we are guaranteed it will not go away.
+      nsIDOMEventGroup* eventGroup = nsnull;
+      if (handler->GetType() & NS_HANDLER_TYPE_XBL_COMMAND) {
+        if (!systemEventGroup)
+          receiver->GetSystemEventGroup(getter_AddRefs(systemEventGroup));
+        eventGroup = systemEventGroup;
+      }
+
+      target->RemoveGroupedEventListener(type, handler, useCapture,
+                                         eventGroup);
+    }
   }
   
   return NS_OK;
@@ -1095,11 +945,6 @@ NS_IMETHODIMP
 nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocument)
 {
   if (aOldDocument != aNewDocument) {
-    if (mFirstHandler) {
-      mFirstHandler->MarkForDeath();
-      mFirstHandler = nsnull;
-    }
-
     if (mNextBinding)
       mNextBinding->ChangeDocument(aOldDocument, aNewDocument);
 
@@ -1439,22 +1284,6 @@ nsXBLBinding::IsInExcludesList(nsIAtom* aTag, const nsString& aList)
   return PR_TRUE;
 }
 
-void
-nsXBLBinding::GetEventHandlerIID(nsIAtom* aName, nsIID* aIID, PRBool* aFound)
-{
-  *aFound = PR_FALSE;
-
-  EventHandlerMapEntry* entry = kEventHandlerMap;
-  while (entry->mAttributeAtom) {
-    if (entry->mAttributeAtom == aName) {
-        *aIID = *entry->mHandlerIID;
-        *aFound = PR_TRUE;
-        break;
-    }
-    ++entry;
-  }
-}
-    
 NS_IMETHODIMP
 nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName,
                                      const nsString& aValue)

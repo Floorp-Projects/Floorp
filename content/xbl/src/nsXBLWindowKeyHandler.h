@@ -55,7 +55,11 @@ public:
   virtual ~nsXBLWindowKeyHandler();
   
   // nsIDOMetc.
-  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent) { return NS_OK; };
+  NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent)
+  {
+    return NS_OK;
+  };
+
   NS_IMETHOD KeyUp(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyDown(nsIDOMEvent* aKeyEvent);
   NS_IMETHOD KeyPress(nsIDOMEvent* aKeyEvent);
