@@ -42,11 +42,7 @@ var FAILED = " FAILED! expected: ";
 
 var	DEBUG =	false;
 
-/*
- * change this for date tests if you're not in PST
- */
 
-TZ_DIFF	= -8;
 
 /* wrapper for test cas constructor that doesn't require the SECTION
  * argument.
@@ -227,10 +223,23 @@ var	SecondsPerMinute =	60;
 var	msPerSecond	=		1000;
 var	msPerMinute	=		60000;		//	msPerSecond	* SecondsPerMinute
 var	msPerHour =			3600000;	//	msPerMinute	* MinutesPerHour
-
+var             TZ_DIFF	= getTimeZoneDiff();
 var	TIME_1970	 = 0;
 var	TIME_2000	 = 946684800000;
 var	TIME_1900	 = -2208988800000;
+
+
+/*
+ * Originally, the test suite used a hard-coded value TZ_DIFF = -8. 
+ * But that was only valid for testers in the Pacific Standard Time Zone! 
+ * We calculate the proper number dynamically for any tester. We just
+ * have to be careful not to use a date subject to Daylight Savings Time...
+*/
+function getTimeZoneDiff()
+{
+  return -((new Date(2000, 1, 1)).getTimezoneOffset())/60;
+}
+
 
 function Day( t	) {
 	return ( Math.floor(t/msPerDay ) );

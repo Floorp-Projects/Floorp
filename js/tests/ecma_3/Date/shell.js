@@ -222,11 +222,7 @@ var SecondsPerMinute = 60;
 var msPerSecond = 1000;
 var msPerMinute = 60000;   // msPerSecond * SecondsPerMinute
 var msPerHour = 3600000;   // msPerMinute * MinutesPerHour
-
-/*
- *  Change TZ_DIFF for date tests if you're not in Pacific Standard Time !
- */
-var TZ_DIFF = -8;
+var TZ_DIFF = getTimeZoneDiff();
 var TZ_ADJUST = TZ_DIFF * msPerHour;
 var TIME_1970 = 0;
 var TIME_2000 = 946684800000;
@@ -238,6 +234,18 @@ var now = new Date();
 var TIME_NOW = now.valueOf();  //valueOf() is to accurate to the millisecond
                                                               //Date.parse() is accurate only to the second
 
+
+
+/*
+ * Originally, the test suite used a hard-coded value TZ_DIFF = -8. 
+ * But that was only valid for testers in the Pacific Standard Time Zone! 
+ * We calculate the proper number dynamically for any tester. We just
+ * have to be careful to use a date not subject to Daylight Savings Time...
+*/
+function getTimeZoneDiff()
+{
+  return -((new Date(2000, 1, 1)).getTimezoneOffset())/60;
+}
 
 
 function Day( t) 

@@ -34,7 +34,7 @@ SECTION = "";
 VERSION = "";
 BUGNUMBER="";
 
-TZ_DIFF = -8;
+var TZ_DIFF = getTimeZoneDiff();
 
 var DEBUG = false;
 
@@ -201,4 +201,16 @@ function getFailedCases() {
 }
 function AddTestCase( description, expect, actual ) {
     testcases[tc++] = new TestCase( SECTION, description, expect, actual );
+}
+
+
+/*
+ * Originally, the test suite used a hard-coded value TZ_DIFF = -8. 
+ * But that was only valid for testers in the Pacific Standard Time Zone! 
+ * We calculate the proper number dynamically for any tester. We just
+ * have to be careful to use a date not subject to Daylight Savings Time...
+*/
+function getTimeZoneDiff()
+{
+  return -((new Date(2000, 1, 1)).getTimezoneOffset())/60;
 }
