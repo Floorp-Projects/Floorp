@@ -97,6 +97,15 @@
               <menuitem data="18" value="18"/>
               <menuitem data="20" value="20"/>
               <menuitem data="24" value="24"/>
+              <menuitem data="26" value="26"/>
+              <menuitem data="28" value="28"/>
+              <menuitem data="32" value="32"/>
+              <menuitem data="36" value="36"/>
+              <menuitem data="40" value="40"/>
+              <menuitem data="48" value="48"/>
+              <menuitem data="56" value="56"/>
+              <menuitem data="64" value="64"/>
+              <menuitem data="72" value="72"/>
             </menupopup>
           </menulist>
           <text class="label" value="&units.label;"/>
@@ -174,6 +183,15 @@
               <menuitem data="18" value="18"/>
               <menuitem data="20" value="20"/>
               <menuitem data="24" value="24"/>
+              <menuitem data="26" value="26"/>
+              <menuitem data="28" value="28"/>
+              <menuitem data="32" value="32"/>
+              <menuitem data="36" value="36"/>
+              <menuitem data="40" value="40"/>
+              <menuitem data="48" value="48"/>
+              <menuitem data="56" value="56"/>
+              <menuitem data="64" value="64"/>
+              <menuitem data="72" value="72"/>
             </menupopup>
           </menulist>
           <text class="label" value="&units.label;"/>
