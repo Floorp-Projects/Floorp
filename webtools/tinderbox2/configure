@@ -1,4 +1,4 @@
-#!/bin/sh -x
+#!/bin/sh
 
 
 
@@ -39,6 +39,8 @@ perl_flags='-T'
 #   Build Makefile
 # -------------------
 
+/bin/echo "Building Makefile"
+
 # build a makefile to copy our executables into place and perform
 # subsitutions on them
 
@@ -52,7 +54,6 @@ perl_flags='-T'
 		-e "\$config_script=\"$config_script\";"\
 		-e '
 	use File::Basename;
-        @configurable_cmds = qw(perl gzip uudecode);
 
         # print Makefile Header
 	print <<EOF1;
@@ -87,7 +88,7 @@ build: mk_build_dirs build_files set_build_permissions
 install: build mk_dest_dirs install_files
 
 clean:
-	@ echo "\\n\\n-----Cleaning Build Directory-----\\n\\n"
+	@ /bin/echo "\\n\\n-----Cleaning Build Directory-----\\n\\n"
 	rm -rf \$(builddir)
 
 
@@ -95,20 +96,20 @@ clean:
 # files so ensure the build dir copies are not writable.
 
 set_build_permissions: 
-	@ echo "\\n\\n-----Setting Build directory permissions-----\\n\\n"
+	@ /bin/echo "\\n\\n-----Setting Build directory permissions-----\\n\\n"
 	find \$(builddir) -type f | xargs chmod 444
 	find \$(builddir)/bin -type f | xargs chmod 555
 	find \$(builddir)/test -type f -name 'gen*' | xargs chmod 555
 	find \$(builddir)/clientbin -type f | xargs chmod 555
 
 compile_all_code: build
-	@ echo "\\n\\n-----Testing if perl can compile code-----\\n\\n"
+	@ /bin/echo "\\n\\n-----Testing if perl can compile code-----\\n\\n"
 	find \$(builddir) -type f | \\
 	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \\
 	  xargs -l perl -T -c 
 
 compile_bin_code: build
-	@ echo "\\n\\n-----Testing if perl can compile all files in the bin directory-----\\n\\n"
+	@ /bin/echo "\\n\\n-----Testing if perl can compile all files in the bin directory-----\\n\\n"
 	find \$(builddir)/bin -type f | \\
 	egrep -v -i "readme|\.gif|/test/|addimage.cgi|images.pm|bustagestats.cgi|Storable.pm" | \\
 	  xargs -l perl -T -c 
@@ -119,6 +120,11 @@ gen_test: compile_bin_code
 	perl \$(builddir)/test/gennotices.tst
 	perl \$(builddir)/test/genbugs.tst
 	\$(builddir)/bin/tinder.cgi --daemon-mode
+
+link_test:
+	find \$(builddir) -type f -print | \
+	egrep -v -i "test|mage" | \
+	xargs egrep -i "<a +href"
 
 
 # Automated file list is generated after this line
@@ -186,35 +192,47 @@ EOF3
 #   Build Config.out
 # -------------------
 
+/bin/echo "Building config.out"
+
 rm -rf $config_script
 
 pwd=`/bin/pwd`
 
-echo "#!perl - this script is run from makefile with -n\n" >> $config_script
-echo "# This script is automatically genareated by configure do not edit.\n" >> $config_script
-echo "while (<>) {" >> $config_script
+/bin/echo "#!perl - this script is run from makefile with -n\n" >> $config_script
+/bin/echo "# This script is automatically genareated by configure." >> $config_script
+/bin/echo "# This script configures various global variables.\n" >> $config_script
 
-echo "  s!\#tinder_libdir\#!$destdir/local_conf',\n   '$destdir/default_conf',\n   '$destdir/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
-echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
-echo "  s!\#perlflags\#!$perl_flags!;" >> $config_script
+/bin/echo "while (<>) {" >> $config_script
+
+/bin/echo  >> $config_script
+/bin/echo "  # Set the library search path with suitable interposing directories." >> $config_script
+
+/bin/echo "  s!\#tinder_libdir\#!$destdir/local_conf',\n   '$destdir/default_conf',\n   '$destdir/lib',\n   '$pwd/$builddir/local_conf',\n   '$pwd/$builddir/default_conf',\n   '$pwd/$builddir/lib!;" >> $config_script
+/bin/echo >> $config_script
+/bin/echo "  # Use Taint Perl mode for security." >> $config_script
+
+/bin/echo "  s!\#perlflags\#!$perl_flags!;" >> $config_script
+/bin/echo "  s!\#tinder_version\#!$tinder_version!;" >> $config_script
 
 
-echo -e "\n" >> $config_script
+/bin/echo "\n" >> $config_script
 
+/bin/echo "  # Hard code various executable paths into the source for security reasons." >> $config_script
 
 for cmd in perl gzip uudecode
 do
 	full_cmd=`which $cmd 2> /dev/null `
 	if [ $? -ne 0 ]; then
-		echo "Could not find program: $cmd"
+		/bin/echo "Could not find program: $cmd"
 		exit 9;
 	fi
-	echo "  s!\#$cmd\#!$full_cmd!;" >> $config_script
+	/bin/echo "  s!\#$cmd\#!$full_cmd!;" >> $config_script
 done
 
-echo "} continue {" >> $config_script
-echo "  print or die \"-p destination: \$!\\\\n\";" >> $config_script
-echo "}" >> $config_script
+/bin/echo "} continue {" >> $config_script
+/bin/echo "  print or die \"-p destination: \$!\\\\n\";" >> $config_script
+/bin/echo "}" >> $config_script
 
+/bin/chmod +x $config_script
 
 exit 0;
