@@ -43,6 +43,8 @@
 
 /**
  * Return codes for parsing routines.
+ * @update vidur 12/11/98
+ *
  * NS_ERROR_HTMLPARSER_BLOCK indicates that the parser should
  * block further parsing until it gets a Unblock() method call.
  * NS_ERROR_HTMLPARSER_CONTINUE indicates that the parser should

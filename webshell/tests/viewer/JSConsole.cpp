@@ -881,48 +881,26 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
             LPSTR cleanBuffer = ::NormalizeBuffer(buffer);
 
             // evaluate the string
-            jsval returnValue;
+            nsAutoString returnValue;
+            PRBool isUndefined;
+
             if (mContext->EvaluateString(nsString(cleanBuffer), 
                                          nsnull,
                                          0,
-                                         &returnValue)) {
+                                         returnValue,
+                                         &isUndefined)) {
                 // output the result on the console and on the edit area
                 CHAR result[128];
                 LPSTR res = result;
                 int bDelete = 0;
 
                 JSContext *cx = (JSContext *)mContext->GetNativeContext();
-                JSString *jsstring = JS_ValueToString(cx, returnValue);
-                char *str = JS_GetStringBytes(jsstring);
+                char *str = returnValue.ToNewCString();
 
-                ::printf("The return value is ");
-                if (JSVAL_IS_OBJECT(returnValue)) {
-                    ::printf("an object\n");
-                }
-                else if (JSVAL_IS_INT(returnValue)) {
-                    ::printf("an int [%d]\n", JSVAL_TO_INT(returnValue));
-                }
-                else if (JSVAL_IS_DOUBLE(returnValue)) {
-                    ::printf("a double [%f]\n", *JSVAL_TO_DOUBLE(returnValue));
-                }
-                else if (JSVAL_IS_STRING(returnValue)) {
-                    ::printf("a string [%s]\n", JS_GetStringBytes(JSVAL_TO_STRING(returnValue)));
-                }
-                else if (JSVAL_IS_BOOLEAN(returnValue)) {
-                    ::printf("a boolean [%d]\n", JSVAL_TO_BOOLEAN(returnValue));
-                }
-                else if (JSVAL_IS_NULL(returnValue)) {
-                    printf("null\n");
-                }
-                else if (JSVAL_IS_VOID(returnValue)) {
-                    printf("void\n");
-                }
-                else {
-                    printf("error: unknow return type!\n");
-                }
+                ::printf("The return value is %s\n", str);
 
                 // make a string with 0xA changed to 0xD0xA
-                res = PrepareForTextArea(str, JS_GetStringLength(jsstring));
+                res = PrepareForTextArea(str, returnValue.Length());
                 if (res != str) {
                   bDelete = 1; // if the buffer was new'ed
                 }
@@ -938,6 +916,7 @@ void JSConsole::EvaluateText(UINT aStartSel, UINT aEndSel)
                 if (bDelete > 0) {
                   delete[] res;
                 }
+                delete[] str;
 
                 // clean up a bit
                 JS_GC((JSContext *)mContext->GetNativeContext());

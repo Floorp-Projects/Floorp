@@ -19,6 +19,8 @@
 #define nsJSEnvironment_h___
 
 #include "nsIScriptContext.h"
+#include "jsapi.h"
+
 class nsIScriptSecurityManager;
 
 class nsJSContext : public nsIScriptContext {
@@ -31,10 +33,11 @@ public:
 
   NS_DECL_ISUPPORTS
 
-  virtual PRBool       EvaluateString(nsString& aScript, 
+  virtual PRBool       EvaluateString(const nsString& aScript, 
                                       const char *aURL,
                                       PRUint32 aLineNo,
-                                      jsval *aRetValue);
+                                      nsString& aRetValue,
+                                      PRBool* aIsUndefined);
   virtual nsIScriptGlobalObject*    GetGlobalObject();
   virtual void*                     GetNativeContext();
   virtual nsresult     InitClasses();

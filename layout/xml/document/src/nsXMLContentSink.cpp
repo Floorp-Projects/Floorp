@@ -1126,14 +1126,17 @@ nsXMLContentSink::EvaluateScript(nsString& aScript, PRUint32 aLineNo)
         return rv;
       }
         
-      jsval val;
       nsIURL* mDocURL = mDocument->GetDocumentURL();
       const char* mURL;
       if (mDocURL) {
         mURL = mDocURL->GetSpec();
       }
-      
-      PRBool result = context->EvaluateString(aScript, mURL, aLineNo, &val);
+
+      nsAutoString val;
+      PRBool isUndefined;
+
+      PRBool result = context->EvaluateString(aScript, mURL, aLineNo, 
+                                              val, &isUndefined);
       
       NS_IF_RELEASE(mDocURL);
       

@@ -22,7 +22,6 @@
 #include "nscore.h"
 #include "nsString.h"
 #include "nsISupports.h"
-#include "jsapi.h"
 
 class nsIScriptGlobalObject;
 class nsIScriptSecurityManager;
@@ -51,10 +50,11 @@ public:
    * @return true if the script was valid and got executed
    *
    **/
-  virtual PRBool EvaluateString(nsString& aScript, 
+  virtual PRBool EvaluateString(const nsString& aScript, 
                                 const char *aURL,
                                 PRUint32 aLineNo,
-                                jsval *aRetValue) = 0;
+                                nsString& aRetValue,
+                                PRBool* aIsUndefined) = 0;
 
   /**
    * Return the global object.

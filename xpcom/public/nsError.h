@@ -52,14 +52,14 @@ typedef PRUint32 nsresult;
  *       each module.
  */
 
-#define NS_ERROR_MODULE_XPCOM     1
-#define NS_ERROR_MODULE_BASE      2
-#define NS_ERROR_MODULE_GFX       3
-#define NS_ERROR_MODULE_WIDGET    4
-#define NS_ERROR_MODULE_CALENDAR  5
-#define NS_ERROR_MODULE_NETWORK   6
-#define NS_ERROR_MODULE_PLUGINS   7
-#define NS_ERROR_MODULE_LAYOUT    8
+#define NS_ERROR_MODULE_XPCOM      1
+#define NS_ERROR_MODULE_BASE       2
+#define NS_ERROR_MODULE_GFX        3
+#define NS_ERROR_MODULE_WIDGET     4
+#define NS_ERROR_MODULE_CALENDAR   5
+#define NS_ERROR_MODULE_NETWORK    6
+#define NS_ERROR_MODULE_PLUGINS    7
+#define NS_ERROR_MODULE_LAYOUT     8
 #define NS_ERROR_MODULE_HTMLPARSER 9
 
 /**

@@ -21,6 +21,7 @@
 #include "nsIUnicharInputStream.h"
 #include "nsIHTMLContent.h"
 #include "nsIURL.h"
+#include "nsIURLGroup.h"
 #include "nsIHttpUrl.h"
 #include "nsHTMLDocument.h"
 #include "nsIPresShell.h"
@@ -73,6 +74,7 @@ static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIHTTPUrlIID, NS_IHTTPURL_IID);
 static NS_DEFINE_IID(kIScrollableViewIID, NS_ISCROLLABLEVIEW_IID);
 static NS_DEFINE_IID(kIHTMLDocumentIID, NS_IHTMLDOCUMENT_IID);
+static NS_DEFINE_IID(kIStreamListenerIID, NS_ISTREAMLISTENER_IID);
 
 //----------------------------------------------------------------------
 
@@ -226,6 +228,11 @@ public:
   nsresult ProcessMETATag(const nsIParserNode& aNode);
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
+
+  // Script processing related routines
+  nsresult ResumeParsing();
+  nsresult EvaluateScript(nsString& aScript,
+                          PRInt32 aLineNo);
 };
 
 class SinkContext {
@@ -274,6 +281,38 @@ public:
   PRInt32 mTextLength;
   PRInt32 mTextSize;
 
+};
+
+class nsAccumulatingURLLoader;
+
+typedef void (*nsAccumulationDoneFunc)(nsAccumulatingURLLoader* aLoader,
+                                       nsString& aData,
+                                       void* aRef,
+                                       nsresult aStatus);
+
+class nsAccumulatingURLLoader : public nsIStreamListener {
+public:
+
+  nsAccumulatingURLLoader(nsIURL* aURL,
+                          nsAccumulationDoneFunc aFunc,
+                          void* aRef);
+  ~nsAccumulatingURLLoader();
+  
+  NS_DECL_ISUPPORTS
+
+  NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
+  NS_IMETHOD OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax);
+  NS_IMETHOD OnStatus(nsIURL* aURL, const nsString &aMsg);
+  NS_IMETHOD OnStopBinding(nsIURL* aURL, PRInt32 aStatus, const nsString &aMsg);
+  NS_IMETHOD GetBindInfo(nsIURL* aURL);
+  NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *aIStream, 
+                             PRInt32 aLength);
+
+protected:
+  nsIURL* mURL;
+  nsAccumulationDoneFunc mFunc;
+  void* mRef;
+  nsString* mData;
 };
 
 //----------------------------------------------------------------------
@@ -2057,6 +2096,48 @@ HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
   return NS_OK;
 }
 
+typedef struct {
+  nsString mTitle;
+  nsString mMedia;
+  PRBool mIsActive;
+  nsIURL* mURL;
+  nsIHTMLContent* mElement;
+  HTMLContentSink* mSink;
+} nsAsyncStyleProcessingData;
+
+static void
+nsDoneLoadingStyle(nsAccumulatingURLLoader* aLoader,
+                   nsString& aData,
+                   void* aRef,
+                   nsresult aStatus)
+{
+  nsresult rv = NS_OK;
+  nsAsyncStyleProcessingData* d = (nsAsyncStyleProcessingData*)aRef;
+  nsIUnicharInputStream* uin = nsnull;
+
+  if ((NS_OK == aStatus) && (0 < aData.Length())) {
+    // wrap the string with the CSS data up in a unicode
+    // input stream.
+    rv = NS_NewStringUnicharInputStream(&uin, new nsString(aData));
+    if (NS_OK == rv) {
+      // XXX We have no way of indicating failure. Silently fail?
+      rv = d->mSink->LoadStyleSheet(d->mURL, uin, d->mIsActive, 
+                                    d->mTitle, d->mMedia, d->mElement);
+    }
+  }
+    
+  d->mSink->ResumeParsing();
+
+  NS_RELEASE(d->mURL);
+  NS_IF_RELEASE(d->mElement);
+  NS_RELEASE(d->mSink);
+  delete d;
+
+  // We added a reference when the loader was created. This
+  // release should destroy it.
+  NS_RELEASE(aLoader);
+}
+
 nsresult
 HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 {
@@ -2118,38 +2199,47 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
   if (rel.EqualsIgnoreCase("stylesheet") || rel.EqualsIgnoreCase("alternate stylesheet")) {
     if ((0 == type.Length()) || type.EqualsIgnoreCase("text/css")) {
       nsIURL* url = nsnull;
-      nsIUnicharInputStream* uin = nsnull;
       nsAutoString absURL;
-      nsIURL* docURL = mDocument->GetDocumentURL();
-      result = NS_MakeAbsoluteURL(docURL, mBaseHREF, href, absURL);
+      nsIURLGroup* urlGroup = mDocumentURL->GetURLGroup();
+      result = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, href, absURL);
       if (NS_OK != result) {
         return result;
       }
-      NS_RELEASE(docURL);
-      result = NS_NewURL(&url, nsnull, absURL);
-      if (NS_OK != result) {
-        return result;
+      if (urlGroup) {
+        result = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
+        NS_RELEASE(urlGroup);
       }
-      PRInt32 ec;
-      nsIInputStream* iin = url->Open(&ec);
-      if (nsnull == iin) {
-        NS_RELEASE(url);
-        return (nsresult) ec;/* XXX fix url->Open */
+      else {
+        result = NS_NewURL(&url, nsnull, absURL);
       }
-      result = NS_NewConverterStream(&uin, nsnull, iin);
-      NS_RELEASE(iin);
       if (NS_OK != result) {
-        NS_RELEASE(url);
         return result;
       }
 
-      result = LoadStyleSheet(url, uin, rel.EqualsIgnoreCase("stylesheet"), 
-                              title, media, element);
-      NS_RELEASE(uin);
+      nsAsyncStyleProcessingData* d = new nsAsyncStyleProcessingData;
+      if (nsnull == d) {
+        return NS_ERROR_OUT_OF_MEMORY;
+      }
+      d->mTitle.SetString(title);
+      d->mMedia.SetString(media);
+      d->mIsActive = rel.EqualsIgnoreCase("stylesheet");
+      d->mURL = url;
+      NS_ADDREF(url);
+      d->mElement = element;
+      NS_ADDREF(element);
+      d->mSink = this;
+      NS_ADDREF(this);
+      
+      nsAccumulatingURLLoader* loader = 
+        new nsAccumulatingURLLoader(url, 
+                                    (nsAccumulationDoneFunc)nsDoneLoadingStyle, 
+                                    (void *)d);
       NS_RELEASE(url);
+      result = NS_ERROR_HTMLPARSER_BLOCK;
     }
   }
 
+  NS_RELEASE(element);
   return result;
 }
 
@@ -2214,8 +2304,6 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
   return NS_OK;
 }
 
-#define SCRIPT_BUF_SIZE 1024
-
 // Returns PR_TRUE if the language name is a version of JavaScript and
 // PR_FALSE otherwise
 static PRBool
@@ -2244,6 +2332,78 @@ IsJavaScriptLanguage(const nsString& aName)
 }
 
 nsresult
+HTMLContentSink::ResumeParsing()
+{
+  if (nsnull != mParser) {
+    mParser->EnableParser(PR_TRUE);
+  }
+  
+  return NS_OK;
+}
+
+nsresult
+HTMLContentSink::EvaluateScript(nsString& aScript,
+                                PRInt32 aLineNo)
+{
+  nsresult rv = NS_OK;
+
+  if (aScript.Length() > 0) {
+    nsIScriptContextOwner *owner;
+    nsIScriptContext *context;
+    owner = mDocument->GetScriptContextOwner();
+    if (nsnull != owner) {
+      
+      rv = owner->GetScriptContext(&context);
+      if (rv != NS_OK) {
+        NS_RELEASE(owner);
+        return rv;
+      }
+      
+      nsAutoString ret;
+      nsIURL* docURL = mDocument->GetDocumentURL();
+      const char* url;
+      if (docURL) {
+        url = docURL->GetSpec();
+      }
+  
+      PRBool isUndefined;
+      PRBool result = context->EvaluateString(aScript, url, aLineNo, 
+                                              ret, &isUndefined);
+      
+      NS_IF_RELEASE(docURL);
+      
+      NS_RELEASE(context);
+      NS_RELEASE(owner);
+    }
+  }
+  
+  return rv;
+}
+
+static void
+nsDoneLoadingScript(nsAccumulatingURLLoader* aLoader,
+                    nsString& aData,
+                    void* aRef,
+                    nsresult aStatus)
+{
+  HTMLContentSink* sink = (HTMLContentSink*)aRef;
+
+  if (NS_OK == aStatus) {
+    // XXX We have no way of indicating failure. Silently fail?
+    sink->EvaluateScript(aData, 0);
+  }
+
+  sink->ResumeParsing();
+
+  // The url loader held a reference to the sink
+  NS_RELEASE(sink);
+
+  // We added a reference when the loader was created. This
+  // release should destroy it.
+  NS_RELEASE(aLoader);
+}
+
+nsresult
 HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
@@ -2255,8 +2415,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   for (i = 0; i < ac; i++) {
     const nsString& key = aNode.GetKeyAt(i);
     if (key.EqualsIgnoreCase("src")) {
-      src = aNode.GetValueAt(i);
-      src.Trim("\"", PR_TRUE, PR_TRUE); 
+      GetAttributeValueAt(aNode, i, src, nsnull);
     }
     else if (key.EqualsIgnoreCase("type")) {
       nsAutoString  type;
@@ -2277,87 +2436,53 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   if (isJavaScript) {
     nsAutoString script;
   
-    // If there is a SRC attribute, (for now) read from the
-    // stream synchronously and hold the data in a string.
-    if (src != "") {
-      // Use the SRC attribute value to open a blocking stream
+    mCurrentContext->FlushTags();
+
+    // If there is a SRC attribute...
+    if (src.Length() > 0) {
+      // Use the SRC attribute value to open an accumulating stream
       nsIURL* url = nsnull;
       nsAutoString absURL;
-      nsIURL* docURL = mDocument->GetDocumentURL();
-      rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, src, absURL);
+      nsIURLGroup* urlGroup = mDocumentURL->GetURLGroup();
+      rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
       if (NS_OK != rv) {
         return rv;
       }
-      NS_RELEASE(docURL);
-      rv = NS_NewURL(&url, nsnull, absURL);
+      if (urlGroup) {
+        rv = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
+        NS_RELEASE(urlGroup);
+      }
+      else {
+        rv = NS_NewURL(&url, nsnull, absURL);
+      }
       if (NS_OK != rv) {
         return rv;
       }
-      PRInt32 ec;
-      nsIInputStream* iin = url->Open(&ec);
-      if (nsnull == iin) {
-        NS_RELEASE(url);
-        return (nsresult) ec;/* XXX fix url->Open */
-      }
-  
-      // Drain the stream by reading from it a chunk at a time
-      PRInt32 nb;
-      nsresult err;
-      do {
-        char buf[SCRIPT_BUF_SIZE];
-        
-        err = iin->Read(buf, 0, SCRIPT_BUF_SIZE, &nb);
-        if (NS_OK == err) {
-          script.Append((const char *)buf, nb);
-        }
-      } while (err == NS_OK);
-  
-      if (NS_BASE_STREAM_EOF != err) {
-        rv = NS_ERROR_FAILURE;
-      }
-  
-      NS_RELEASE(iin);
+
+      // Add a reference to this since the url loader is holding
+      // onto it as opaque data.
+      NS_ADDREF(this);
+
+      nsAccumulatingURLLoader* loader = 
+         new nsAccumulatingURLLoader(url, 
+                                     (nsAccumulationDoneFunc)nsDoneLoadingScript, 
+                                     (void *)this);
       NS_RELEASE(url);
+      rv = NS_ERROR_HTMLPARSER_BLOCK;
     }
     else {
       // Otherwise, get the text content of the script tag
       script = aNode.GetSkippedContent();
-    }
 
-    mCurrentContext->FlushTags();
+      PRUint32 lineNo = (PRUint32)aNode.GetSourceLineNumber();
 
-    if (script != "") {
-      nsIScriptContextOwner *owner;
-      nsIScriptContext *context;
-      owner = mDocument->GetScriptContextOwner();
-      if (nsnull != owner) {
-      
-        rv = owner->GetScriptContext(&context);
-        if (rv != NS_OK) {
-          NS_RELEASE(owner);
-          return rv;
-        }
-        
-        jsval val;
-        nsIURL* mDocURL = mDocument->GetDocumentURL();
-        const char* mURL;
-        if (mDocURL) {
-          mURL = mDocURL->GetSpec();
-        }
-        PRUint32 mLineNo = (PRUint32)aNode.GetSourceLineNumber();
-  
-        PRBool result = context->EvaluateString(script, mURL, mLineNo, &val);
-        
-        NS_IF_RELEASE(mDocURL);
-  
-        NS_RELEASE(context);
-        NS_RELEASE(owner);
-      }
+      EvaluateScript(script, lineNo);
     }
   }
 
   return rv;
 }
+
 
 // 3 ways to load a style sheet: inline, style src=, link tag
 // XXX What does nav do if we have SRC= and some style data inline?
@@ -2440,40 +2565,56 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
       url = mDocumentURL;
       NS_IF_ADDREF(url);
     }
+
+    // Now that we have a url and a unicode input stream, parse the
+    // style sheet.
+    rv = LoadStyleSheet(url, uin, PR_TRUE, title, media, element);
+    NS_RELEASE(url);
+    NS_RELEASE(uin);
   } else {
     // src with immediate style data doesn't add up
     // XXX what does nav do?
+    // Use the SRC attribute value to open an accumulating stream
     nsAutoString absURL;
-    nsIURL* docURL = mDocument->GetDocumentURL();
-    rv = NS_MakeAbsoluteURL(docURL, mBaseHREF, src, absURL);
+    nsIURLGroup* urlGroup = mDocumentURL->GetURLGroup();
+    rv = NS_MakeAbsoluteURL(mDocumentURL, mBaseHREF, src, absURL);
     if (NS_OK != rv) {
       return rv;
     }
-    NS_RELEASE(docURL);
-    rv = NS_NewURL(&url, nsnull, absURL);
+    if (urlGroup) {
+      rv = urlGroup->CreateURL(&url, nsnull, absURL, nsnull);
+      NS_RELEASE(urlGroup);
+    }
+    else {
+      rv = NS_NewURL(&url, nsnull, absURL);
+    }
     if (NS_OK != rv) {
       return rv;
     }
-    PRInt32 ec;
-    nsIInputStream* iin = url->Open(&ec);
-    if (nsnull == iin) {
-      NS_RELEASE(url);
-      return (nsresult) ec;/* XXX fix url->Open */
+
+    nsAsyncStyleProcessingData* d = new nsAsyncStyleProcessingData;
+    if (nsnull == d) {
+      return NS_ERROR_OUT_OF_MEMORY;
     }
-    rv = NS_NewConverterStream(&uin, nsnull, iin);
-    NS_RELEASE(iin);
-    if (NS_OK != rv) {
-      NS_RELEASE(url);
-      return rv;
-    }
+    d->mTitle.SetString(title);
+    d->mMedia.SetString(media);
+    d->mIsActive = PR_TRUE;
+    d->mURL = url;
+    NS_ADDREF(url);
+    d->mElement = element;
+    NS_ADDREF(element);
+    d->mSink = this;
+    NS_ADDREF(this);
+
+    nsAccumulatingURLLoader* loader = 
+      new nsAccumulatingURLLoader(url, 
+                                  (nsAccumulationDoneFunc)nsDoneLoadingStyle, 
+                                  (void *)d);
+    NS_RELEASE(url);
+    rv = NS_ERROR_HTMLPARSER_BLOCK;
   }
 
-  // Now that we have a url and a unicode input stream, parse the
-  // style sheet.
-  rv = LoadStyleSheet(url, uin, PR_TRUE, title, media, element);
   NS_RELEASE(element);
-  NS_RELEASE(uin);
-  NS_RELEASE(url);
 
   return rv;
 }
@@ -2600,4 +2741,104 @@ HTMLContentSink::NotifyError(nsresult aErrorResult)
   // Why are you telling us, parser. Deal with it yourself.
   PR_ASSERT(0);
   return NS_OK;
+}
+
+//----------------------------------------------------------------------
+
+nsAccumulatingURLLoader::nsAccumulatingURLLoader(nsIURL* aURL,
+                                                 nsAccumulationDoneFunc aFunc,
+                                                 void* aRef)
+{
+  mFunc = aFunc;
+  mRef = aRef;
+  mData = new nsString();
+
+  nsresult rv;
+  if (aURL) {
+    rv = aURL->Open(this);
+    if ((NS_OK != rv) && (nsnull != mFunc)) {
+      (*mFunc)(this, *mData, mRef, rv);
+    }
+  }
+}
+
+nsAccumulatingURLLoader::~nsAccumulatingURLLoader()
+{
+  if (nsnull != mData) {
+    delete mData;
+  }
+}
+
+NS_IMPL_ISUPPORTS(nsAccumulatingURLLoader, kIStreamListenerIID)
+
+NS_IMETHODIMP 
+nsAccumulatingURLLoader::OnStartBinding(nsIURL* aURL, 
+                                        const char *aContentType)
+{
+  // XXX Should check content type?
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccumulatingURLLoader::OnProgress(nsIURL* aURL, 
+                                    PRInt32 aProgress, 
+                                    PRInt32 aProgressMax)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccumulatingURLLoader::OnStatus(nsIURL* aURL, const nsString &aMsg)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccumulatingURLLoader::OnStopBinding(nsIURL* aURL, 
+                                       PRInt32 aStatus, 
+                                       const nsString &aMsg)
+{
+  (*mFunc)(this, *mData, mRef, aStatus);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsAccumulatingURLLoader::GetBindInfo(nsIURL* aURL)
+{
+  return NS_OK;
+}
+
+#define BUF_SIZE 1024
+
+NS_IMETHODIMP 
+nsAccumulatingURLLoader::OnDataAvailable(nsIURL* aURL, 
+                                         nsIInputStream *aIStream, 
+                                         PRInt32 aLength)
+{
+  nsresult rv = NS_OK;
+  char buffer[BUF_SIZE];
+  PRInt32 len, lenRead;
+  
+  aIStream->GetLength(&len);
+
+  while (len > 0) {
+    if (len < BUF_SIZE) {
+      lenRead = len;
+    }
+    else {
+      lenRead = BUF_SIZE;
+    }
+
+    rv = aIStream->Read(buffer, 0, lenRead, &lenRead);
+    if (NS_OK != rv) {
+      return rv;
+    }
+
+    mData->Append(buffer, lenRead);
+    len -= lenRead;
+  }
+
+  return rv;
 }

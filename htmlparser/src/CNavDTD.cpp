@@ -866,7 +866,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
  *               2) close the top container, and add this to
  *                  whatever container ends up on top.
  *  
- *  @update  gess 3/25/98
+ *  @update  vidur 11/14/98
  *  @param   aToken -- next (start) token to be handled
  *  @param   aNode -- CParserNode representing this start token
  *  @return  PR_TRUE if all went well; PR_FALSE if error occured
@@ -915,8 +915,19 @@ nsresult CNavDTD::HandleStartToken(CToken* aToken) {
               CollectSkippedContent(attrNode,theCount);
               if(NS_OK==result) {
                 result=AddLeaf(attrNode);
-                if(NS_OK==result)
-                  result=CloseHead(attrNode);
+                // XXX If the return value tells us to block, go
+                // ahead and close the tag out anyway, since its
+                // contents will be consumed.
+                if (NS_SUCCEEDED(result)) {
+                  nsresult rv = CloseHead(attrNode);
+                  // XXX Only send along a failure. If the close 
+                  // succeeded we still may need to indicate that the
+                  // parser has blocked (i.e. return the result of
+                  // the AddLeaf.
+                  if (rv != NS_OK) {
+                    result = rv;
+                  }
+                }
               }
             }
           }
@@ -2948,7 +2959,7 @@ nsresult CNavDTD::AddLeaf(const nsIParserNode& aNode){
  * Call this method ONLY when you want to write a leaf
  * into the head container.
  * 
- * @update  gess4/6/98
+ * @update  vidur 11/14/98
  * @param   aNode -- next node to be added to model
  * @return  error code; 0 means OK
  */
@@ -2966,8 +2977,18 @@ nsresult CNavDTD::AddHeadLeaf(const nsIParserNode& aNode){
   nsresult result=OpenHead(aNode);
   if(NS_OK==result) {
     result=AddLeaf(aNode);
-    if(NS_OK==result) {
-      result=CloseHead(aNode);
+    // XXX If the return value tells us to block, go
+    // ahead and close the tag out anyway, since its
+    // contents will be consumed.
+    if (NS_SUCCEEDED(result)) {
+      nsresult rv = CloseHead(aNode);
+      // XXX Only send along a failure. If the close 
+      // succeeded we still may need to indicate that the
+      // parser has blocked (i.e. return the result of
+      // the AddLeaf.
+      if (rv != NS_OK) {
+        result = rv;
+      }
     }
   }
   return result;
