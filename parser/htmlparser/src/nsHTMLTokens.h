@@ -53,7 +53,7 @@ enum eHTMLTokenTypes {
   eToken_unknown=0,
   eToken_start=1,     eToken_end,     eToken_comment,         eToken_entity,
   eToken_whitespace,  eToken_newline, eToken_text,            eToken_attribute,
-  eToken_script,      eToken_style,   eToken_skippedcontent,  
+  eToken_script,      eToken_style,   eToken_skippedcontent,  eToken_instruction,
   eToken_last //make sure this stays the last token...
 };
 
@@ -301,6 +301,23 @@ class CSkippedContentToken: public CAttributeToken {
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
   protected:
+};
+
+
+/**
+ *  Whitespace tokens are used where whitespace can be 
+ *  detected as distinct from text. This allows us to 
+ *  easily skip leading/trailing whitespace when desired.
+ *  
+ *  @update  gess 3/25/98
+ */
+class CInstructionToken: public CHTMLToken {
+  public:
+                        CInstructionToken();
+                        CInstructionToken(const nsString& aString);
+    virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
+    virtual const char* GetClassName(void);
+    virtual PRInt32     GetTokenType(void);
 };
 
 
