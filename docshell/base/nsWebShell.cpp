@@ -779,6 +779,7 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
 {
    NS_ENSURE_ARG_POINTER(aInstancePtr);
    nsresult rv = NS_OK;
+   *aInstancePtr = nsnull;
 
    if(aIID.Equals(NS_GET_IID(nsILinkHandler)))
       {
