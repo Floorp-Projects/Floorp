@@ -285,6 +285,11 @@ VerifyCertDir(char *dir, char *keyName)
 {
   char fn [FNSIZE];
 
+  /* don't try verifying if we don't have a local directory */
+  if (strncmp(dir,"remote:",sizeof("remote:")-1) == 0) {
+     return;
+  }
+
   sprintf (fn, "%s/cert7.db", dir);
 
   if (PR_Access (fn, PR_ACCESS_EXISTS))
