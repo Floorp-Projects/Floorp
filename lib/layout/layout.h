@@ -847,6 +847,7 @@ struct lo_TopState_struct {
     PRPackedBool wedged_on_mocha;
 	Bool in_cell_relayout;
 	int16 table_nesting_level;	/* Counter to keep track of depth of nesting within tables */
+	TagList *metaTags;	/* The meta tags encountered by layout in the currently loaded document. */
 #ifdef DEBUG_ScriptPlugin
 	char * mimetype;
 #endif 

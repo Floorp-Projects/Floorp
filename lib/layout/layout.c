@@ -43,6 +43,7 @@
 #include "xp_ncent.h"
 #include "prefetch.h"
 #include "plvector.h"
+#include "htrdf.h"
 
 /* WEBFONTS are defined only in laytags.c and layout.c */
 #define WEBFONTS
@@ -124,7 +125,7 @@ void					lo_GetRecycleList(
 				  			LO_Element* *recycle_list);
 #endif /* MEMORY_ARENAS */
 intn					lo_ProcessTag_OutOfMemory(MWContext* context, LO_Element* recycle_list, lo_TopState* top_state);
-
+static void lo_FreeTagList( TagList *tags );
 /********** END PROTOTYPES **************/
 
 void
@@ -428,6 +429,7 @@ lo_NewTopState(MWContext *context, char *url)
     top_state->flushing_blockage = FALSE;
     top_state->wedged_on_mocha = FALSE;
 	top_state->in_cell_relayout = FALSE;  /* Used for resize without reload stuff */
+	top_state->metaTags = NULL;
 	
 	return(top_state);
 }
@@ -3875,11 +3877,40 @@ lo_FinishLayout(MWContext *context, lo_DocState *state, int32 mocha_event)
      */
     if (context->compositor)
         lo_UpdateBlinkLayers(context);
+	
+	if (top_state && top_state->metaTags)
+	{		
+		/* Tell RDF HT code that layout of the current document is complete */
+		HT_LayoutComplete( top_state->metaTags, top_state->url );
+
+		/* Free the meta tag list */
+		lo_FreeTagList( top_state->metaTags );
+		top_state->metaTags = NULL;
+	}
 
     /* Prefetch links of this context */
     PRE_Fetch(context);
 }
 
+
+static void lo_FreeTagList( TagList *tags )
+{
+	if (tags != NULL && tags->tagList != NULL)
+	{
+		PA_Tag *tag;
+		PA_Tag *next_tag;
+
+		tag = tags->tagList;
+		do
+		{			
+			next_tag = tag->next;
+			PA_FreeTag( tag );
+			tag = next_tag;
+			
+		} while ( tag != NULL );
+		XP_FREE( tags );		
+	}
+}
 /*******************************************************************************
  * LO_ProcessTag helper routines
  ******************************************************************************/

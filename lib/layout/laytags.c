@@ -4213,13 +4213,6 @@ lo_LayoutTag(MWContext *context, lo_DocState *state, PA_Tag *tag)
     XP_Bool started_in_head=FALSE;
 	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(context);
 
-	/* HACK: Do not layout any tags except the META tag for the dummy context of 
-	   type MWContextRDFSlave. */
-	if (context && context->type == MWContextRDFSlave && tag &&
-		tag->type != P_HEAD &&
-		tag->type != P_META)
-		return;
-
 	XP_ASSERT(state);
 
     if(state->top_state)
@@ -5976,6 +5969,24 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 					PA_UNLOCK(buff);
 					PA_FREE(buff);
 				    }
+				}
+			}
+			
+			if (tag->is_end == FALSE && state && state->top_state)
+			{
+				/* Build up meta tags list for consumption by the RDF HT */
+				lo_TopState *top_state = state->top_state;
+
+				if ( top_state->metaTags == NULL )
+				{
+					top_state->metaTags = (TagList *) XP_NEW_ZAP( TagList );
+					top_state->metaTags->tagList = PA_CloneMDLTag( tag );
+					top_state->metaTags->lastTag = top_state->metaTags->tagList;
+				}
+				else 
+				{
+					top_state->metaTags->lastTag->next = PA_CloneMDLTag( tag );
+					top_state->metaTags->lastTag = top_state->metaTags->lastTag->next;
 				}
 			}
 			break;
