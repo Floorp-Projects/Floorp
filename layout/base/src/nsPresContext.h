@@ -58,6 +58,7 @@
 #include "nsHashtable.h"
 #include "nsIContent.h"
 #include "nsITheme.h"
+#include "nsWeakReference.h"
 
 // Base class for concrete presentation context classes
 class nsPresContext : public nsIPresContext, public nsIObserver {
@@ -213,7 +214,7 @@ protected:
   nsCOMPtr<nsILanguageAtom> mLanguage;
   nsLanguageSpecificTransformType mLanguageSpecificTransformType;
   nsILinkHandler*       mLinkHandler;   // [WEAK]
-  nsISupports*          mContainer;     // [WEAK]
+  nsWeakPtr             mContainer;
   nsCOMPtr<nsILookAndFeel> mLookAndFeel;
   nsCOMPtr<nsIIOService> mIOService;
 

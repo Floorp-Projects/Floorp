@@ -63,6 +63,7 @@
 #include "nsIDOMWindow.h"
 #include "nsNetUtil.h"
 #include "nsXPIDLString.h"
+#include "nsIWeakReferenceUtils.h"
 
 #include "prprf.h"
 #include "nsContentPolicyUtils.h"
@@ -412,7 +413,7 @@ nsPresContext::GetDocumentColorPreferences()
   PRBool usePrefColors = PR_TRUE;
   PRBool boolPref;
   nsXPIDLCString colorStr;
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     PRInt32 docShellType;
     docShell->GetItemType(&docShellType);
@@ -603,7 +604,7 @@ nsPresContext::ClearStyleDataAndReflow()
 void
 nsPresContext::PreferenceChanged(const char* aPrefName)
 {
-  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryInterface(mContainer));
+  nsCOMPtr<nsIDocShellTreeItem> docShell(do_QueryReferent(mContainer));
   if (docShell) {
     PRInt32 docShellType;
     docShell->GetItemType(&docShellType);
@@ -1516,7 +1517,7 @@ nsPresContext::GetLinkHandler(nsILinkHandler** aResult)
 NS_IMETHODIMP
 nsPresContext::SetContainer(nsISupports* aHandler)
 {
-  mContainer = aHandler;
+  mContainer = do_GetWeakReference(aHandler);
   if (mContainer) {
     GetDocumentColorPreferences();
   }
@@ -1527,9 +1528,12 @@ NS_IMETHODIMP
 nsPresContext::GetContainer(nsISupports** aResult)
 {
   NS_PRECONDITION(aResult, "null out param");
-  *aResult = mContainer;
-  NS_IF_ADDREF(mContainer);
-  return NS_OK;
+  if (!mContainer) {
+    *aResult = nsnull;
+    return NS_OK;
+  }
+
+  return CallQueryReferent(mContainer.get(), aResult);
 }
 
 NS_IMETHODIMP
