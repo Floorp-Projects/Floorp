@@ -125,6 +125,8 @@ public:
     {
     }
 
+    virtual ~DiskCacheEntry() {}
+
     nsCOMPtr<nsITransport>& getTransport(nsCacheAccessMode mode)
     {
         return mTransports[mode - 1];
@@ -144,7 +146,8 @@ private:
     nsCOMPtr<nsITransport> mTransports[3];
     PRBool mDirty;
 };
-NS_IMPL_ISUPPORTS0(DiskCacheEntry);
+// NS_IMPL_ISUPPORTS0(DiskCacheEntry);
+NS_IMPL_THREADSAFE_ISUPPORTS0(DiskCacheEntry);
 
 static DiskCacheEntry*
 getDiskCacheEntry(nsCacheEntry * entry)
