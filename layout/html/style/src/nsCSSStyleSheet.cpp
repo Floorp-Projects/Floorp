@@ -56,6 +56,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsCSSAtoms.h"
 #include "nsINameSpaceManager.h"
 #include "nsINameSpace.h"
+#include "nsITextContent.h"
 #include "prlog.h"
 
 //#define DEBUG_REFS
@@ -1407,6 +1408,47 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
                     (tag != nsLayoutAtoms::processingInstructionTagName)) {
                   NS_IF_RELEASE(tag);
                   break;
+                }
+                NS_IF_RELEASE(tag);
+                NS_RELEASE(firstChild);
+              }
+              else {
+                break;
+              }
+            } while (1 == 1);
+            NS_RELEASE(parent);
+          }
+          result = PRBool(aContent == firstChild);
+          NS_IF_RELEASE(firstChild);
+        }
+        else if (nsCSSAtoms::firstNodePseudo == pseudoClass->mAtom) {
+          nsIContent* firstChild = nsnull;
+          nsIContent* parent;
+          aContent->GetParent(parent);
+          if (parent) {
+            PRInt32 index = -1;
+            do {
+              parent->ChildAt(++index, firstChild);
+              if (firstChild) { // skip text & comments
+                nsIAtom* tag;
+                firstChild->GetTag(tag);
+                if ((tag != nsLayoutAtoms::textTagName) && 
+                    (tag != nsLayoutAtoms::commentTagName) &&
+                    (tag != nsLayoutAtoms::processingInstructionTagName)) {
+                  NS_IF_RELEASE(tag);
+                  break;
+                }
+                if (tag == nsLayoutAtoms::textTagName) {  // skip only whitespace text
+                  nsITextContent* text = nsnull;
+                  if (NS_SUCCEEDED(firstChild->QueryInterface(nsITextContent::GetIID(), (void**)&text))) {
+                    PRBool  isWhite;
+                    text->IsOnlyWhitespace(&isWhite);
+                    NS_RELEASE(text);
+                    if (! isWhite) {
+                      NS_RELEASE(tag);
+                      break;
+                    }
+                  }
                 }
                 NS_IF_RELEASE(tag);
                 NS_RELEASE(firstChild);
