@@ -417,21 +417,23 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
 
         if (xdr->mode == JSXDR_ENCODE) {
             principals = script->principals;
-            encodeable = (principals && principals->encode);
+            encodeable = (xdr->cx->runtime->principalsTranscoder != NULL);
             if (!JS_XDRUint32(xdr, &encodeable))
                 goto error;
-            if (encodeable && !principals->encode(xdr, principals))
+            if (encodeable &&
+                !xdr->cx->runtime->principalsTranscoder(xdr, &principals)) {
                 goto error;
+            }
         } else {
             if (!JS_XDRUint32(xdr, &encodeable))
                 goto error;
             if (encodeable) {
-                if (!xdr->cx->runtime->principalsDecoder) {
+                if (!xdr->cx->runtime->principalsTranscoder) {
                     JS_ReportErrorNumber(xdr->cx, js_GetErrorMessage, NULL,
                                          JSMSG_CANT_DECODE_PRINCIPALS);
                     goto error;
                 }
-                if (!xdr->cx->runtime->principalsDecoder(xdr, &principals))
+                if (!xdr->cx->runtime->principalsTranscoder(xdr, &principals))
                     goto error;
                 script->principals = principals;
             }

@@ -70,75 +70,71 @@ nsDestroyJSPrincipals(JSContext *cx, struct JSPrincipals *jsprin)
 }
 
 JS_STATIC_DLL_CALLBACK(JSBool)
-nsDecodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
+nsTranscodeJSPrincipals(JSXDRState *xdr, JSPrincipals **jsprinp)
 {
     nsresult rv;
-    nsCOMPtr<nsIPrincipal> prin;
 
-    NS_ASSERTION(JS_XDRMemDataLeft(xdr) == 0, "XDR out of sync?!");
+    if (xdr->mode == JSXDR_ENCODE) {
+        nsIObjectOutputStream *stream =
+            NS_REINTERPRET_CAST(nsIObjectOutputStream*, xdr->userdata);
 
-    nsIObjectInputStream *stream = NS_REINTERPRET_CAST(nsIObjectInputStream*,
-                                                       xdr->userdata);
+        // Flush xdr'ed data to the underlying object output stream.
+        uint32 size;
+        char *data = (char*) ::JS_XDRMemGetData(xdr, &size);
 
-    rv = stream->ReadObject(PR_TRUE, getter_AddRefs(prin));
-    if (NS_SUCCEEDED(rv)) {
-        PRUint32 size;
-        rv = stream->Read32(&size);
+        rv = stream->Write32(size);
         if (NS_SUCCEEDED(rv)) {
-            char *data = nsnull;
-            if (size != 0)
-                rv = stream->ReadBytes(&data, size);
+            rv = stream->WriteBytes(data, size);
             if (NS_SUCCEEDED(rv)) {
-                char *olddata;
-                uint32 oldsize;
+                ::JS_XDRMemResetData(xdr);
 
-                // Any decode-mode JSXDRState whose userdata points to an
-                // nsIObjectInputStream instance must use nsMemory to allocate
-                // and free its data buffer.  So swap the new buffer we just
-                // read for the old, exhausted data.
+                // Require that GetJSPrincipals has been called already by the
+                // code that compiled the script that owns the principals.
+                nsJSPrincipals *nsjsprin =
+                    NS_STATIC_CAST(nsJSPrincipals*, *jsprinp);
 
-                olddata = (char*) ::JS_XDRMemGetData(xdr, &oldsize);
-                nsMemory::Free(olddata);
-                ::JS_XDRMemSetData(xdr, data, size);
+                rv = stream->WriteObject(nsjsprin->nsIPrincipalPtr, PR_TRUE);
+            }
+        }
+    } else {
+        NS_ASSERTION(JS_XDRMemDataLeft(xdr) == 0, "XDR out of sync?!");
+        nsIObjectInputStream *stream =
+            NS_REINTERPRET_CAST(nsIObjectInputStream*, xdr->userdata);
+
+        nsCOMPtr<nsIPrincipal> prin;
+        rv = stream->ReadObject(PR_TRUE, getter_AddRefs(prin));
+        if (NS_SUCCEEDED(rv)) {
+            PRUint32 size;
+            rv = stream->Read32(&size);
+            if (NS_SUCCEEDED(rv)) {
+                char *data = nsnull;
+                if (size != 0)
+                    rv = stream->ReadBytes(&data, size);
+                if (NS_SUCCEEDED(rv)) {
+                    char *olddata;
+                    uint32 oldsize;
+
+                    // Any decode-mode JSXDRState whose userdata points to an
+                    // nsIObjectInputStream instance must use nsMemory to Alloc
+                    // and Free its data buffer.  Swap the new buffer we just
+                    // read for the old, exhausted data.
+                    olddata = (char*) ::JS_XDRMemGetData(xdr, &oldsize);
+                    nsMemory::Free(olddata);
+                    ::JS_XDRMemSetData(xdr, data, size);
+
+                    prin->GetJSPrincipals(jsprinp);
+                }
             }
         }
     }
 
     if (NS_FAILED(rv)) {
-        ::JS_ReportError(xdr->cx, "can't decode principals (failure code %x)",
+        ::JS_ReportError(xdr->cx, "can't %scode principals (failure code %x)",
+                         (xdr->mode == JSXDR_ENCODE) ? "en" : "de",
                          (unsigned int) rv);
         return JS_FALSE;
     }
-
-    prin->GetJSPrincipals(jsprinp);
     return JS_TRUE;
-}
-
-JS_STATIC_DLL_CALLBACK(JSBool)
-nsEncodeJSPrincipals(JSXDRState *xdr, struct JSPrincipals *jsprin)
-{
-    nsresult rv;
-
-    // Flush xdr'ed data to the underlying object output stream.
-    nsIObjectOutputStream *stream = NS_REINTERPRET_CAST(nsIObjectOutputStream*,
-                                                        xdr->userdata);
-    uint32 size;
-    char *data = (char*) ::JS_XDRMemGetData(xdr, &size);
-
-    rv = stream->Write32(size);
-    if (NS_SUCCEEDED(rv))
-        rv = stream->WriteBytes(data, size);
-    if (NS_FAILED(rv)) return rv;
-
-    ::JS_XDRMemResetData(xdr);
-
-    // Require that GetJSPrincipals has been called already by the code that
-    // compiled the script that owns this principals instance.
-    nsJSPrincipals *nsjsprin = NS_STATIC_CAST(nsJSPrincipals *, jsprin);
-    nsCOMPtr<nsIPrincipal> prin = nsjsprin->nsIPrincipalPtr;
-
-    rv = stream->WriteObject(prin, PR_TRUE);
-    return NS_SUCCEEDED(rv);                    // NB: guaranteed to be 0 or 1
 }
 
 nsresult
@@ -153,9 +149,9 @@ nsJSPrincipals::Startup()
     rtsvc->GetRuntime(&rt);
     NS_ASSERTION(rt != nsnull, "no JSRuntime?!");
 
-    JSPrincipalsDecoder oldpd;
-    oldpd = ::JS_SetPrincipalsDecoder(rt, nsDecodeJSPrincipals);
-    NS_ASSERTION(oldpd == nsnull, "oops, JS_SetPrincipalsDecoder wars!");
+    JSPrincipalsTranscoder oldpx;
+    oldpx = ::JS_SetPrincipalsTranscoder(rt, nsTranscodeJSPrincipals);
+    NS_ASSERTION(oldpx == nsnull, "oops, JS_SetPrincipalsTranscoder wars!");
 
     return NS_OK;
 }
@@ -167,7 +163,6 @@ nsJSPrincipals::nsJSPrincipals()
     globalPrivilegesEnabled = nsGlobalPrivilegesEnabled;
     refcount = 0;
     destroy = nsDestroyJSPrincipals;
-    encode = nsEncodeJSPrincipals;
     nsIPrincipalPtr = nsnull;
 }
 

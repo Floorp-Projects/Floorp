@@ -1035,9 +1035,6 @@ struct JSPrincipals {
     /* Don't call "destroy"; use reference counting macros below. */
     uintN refcount;
     void (* JS_DLL_CALLBACK destroy)(JSContext *cx, struct JSPrincipals *);
-
-    /* XDR API extension hook; if null then this principals isn't XDRable. */
-    JSBool (* JS_DLL_CALLBACK encode)(JSXDRState *xdr, JSPrincipals *);
 };
 
 #define JSPRINCIPALS_HOLD(cx, principals)               \
@@ -1047,8 +1044,8 @@ struct JSPrincipals {
         ? (*(principals)->destroy)((cx), (principals))  \
         : (void) 0)
 
-extern JS_PUBLIC_API(JSPrincipalsDecoder)
-JS_SetPrincipalsDecoder(JSRuntime *rt, JSPrincipalsDecoder pd);
+extern JS_PUBLIC_API(JSPrincipalsTranscoder)
+JS_SetPrincipalsTranscoder(JSRuntime *rt, JSPrincipalsTranscoder px);
 
 /************************************************************************/
 
