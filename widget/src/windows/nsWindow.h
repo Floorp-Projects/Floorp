@@ -447,7 +447,7 @@ protected:
     virtual PRBool          OnPaint(HDC aDC = nsnull);
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
-    BOOL                    OnChar(UINT mbcsCharCode, UINT virtualKeyCode, bool isMultibyte);
+    BOOL                    OnChar(UINT charCode);
 
     BOOL                    OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
     BOOL                    OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyCode);
@@ -466,7 +466,6 @@ protected:
     BOOL                    OnIMEStartComposition();			
     BOOL                    OnIMEReconvert(LPARAM aData, LRESULT *oResult, PRBool aUseUnicode);
 
-    ULONG                   IsSpecialChar(UINT aVirtualKeyCode, WORD *aAsciiKey);
     virtual PRBool          DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVirtualCharCode, LPARAM aKeyCode);
 
     virtual PRBool          DispatchFocus(PRUint32 aEventType, PRBool isMozWindowTakingFocus);

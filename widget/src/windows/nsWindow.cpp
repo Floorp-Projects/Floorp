@@ -2987,89 +2987,73 @@ PRBool nsWindow::DispatchKeyEvent(PRUint32 aEventType, WORD aCharCode, UINT aVir
 //
 //
 //-------------------------------------------------------------------------
-#define WM_CHAR_LATER(vk) ( ((vk)<= VK_SPACE) || \
-                            (('0'<=(vk))&&((vk)<='9')) || \
-                            (('A'<=(vk))&&((vk)<='Z')) || \
-                            ((VK_NUMPAD0 <=(vk))&&((vk)<=VK_DIVIDE)) || \
-                            (((vk)==NS_VK_BACK_QUOTE)) || \
-                            ((NS_VK_OPEN_BRACKET <=(vk))&&((vk)<=NS_VK_QUOTE)) \
-                            )
-#define NO_WM_CHAR_LATER(vk) (! WM_CHAR_LATER(vk))
-
-BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
+BOOL nsWindow::OnKeyDown(UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
-  WORD asciiKey;
-
-  asciiKey = 0;
-
-  aVirtualKeyCode = !mIMEIsComposing?MapFromNativeToDOM(aVirtualKeyCode):aVirtualKeyCode;
+  UINT virtualKeyCode = mIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
 
 #ifdef DEBUG
-  //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, aVirtualKeyCode, aScanCode);
+  //printf("In OnKeyDown ascii %d  virt: %d  scan: %d\n", asciiKey, virtualKeyCode, aScanCode);
 #endif
 
-  BOOL result = DispatchKeyEvent(NS_KEY_DOWN, asciiKey, aVirtualKeyCode, aKeyData);
+  BOOL result = DispatchKeyEvent(NS_KEY_DOWN, 0, virtualKeyCode, aKeyData);
 
-  // XXX: this is a special case hack, should probably use IsSpecialChar and
-  //      do the right thing for all SPECIAL_KEY codes
-  // "SPECIAL_KEY" keys don't generate a WM_CHAR, so don't generate an NS_KEY_PRESS
-  // this is a special case for the delete key
-  if (aVirtualKeyCode==VK_DELETE) 
-  {
-    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode, aKeyData);
-  } 
-  else if (mIsControlDown && aVirtualKeyCode == NS_VK_TAB) {
-    DispatchKeyEvent(NS_KEY_PRESS, 0, NS_VK_TAB, aKeyData);
+  // If we won't be getting a WM_CHAR, WM_SYSCHAR or WM_DEADCHAR, synthesize a keypress 
+  // for almost all keys 
+  switch (virtualKeyCode) {
+    case NS_VK_SHIFT:
+    case NS_VK_CONTROL:
+    case NS_VK_ALT:
+    case NS_VK_CAPS_LOCK:
+    case NS_VK_NUM_LOCK:
+    case NS_VK_SCROLL_LOCK: return result;
   }
-  else if (mIsControlDown && aVirtualKeyCode == VK_BACK) {
-    DispatchKeyEvent(NS_KEY_PRESS, 0, VK_BACK, aKeyData);
-  }
-  else if ((mIsControlDown && !mIsShiftDown) &&
-           ((( NS_VK_0 <= aVirtualKeyCode) && (aVirtualKeyCode <= NS_VK_9)) ||
-            (aVirtualKeyCode == NS_VK_ADD) ||
-            (aVirtualKeyCode == NS_VK_SUBTRACT) ||
-            (aVirtualKeyCode == NS_VK_SEMICOLON) ||
-            (aVirtualKeyCode == NS_VK_EQUALS)    ||
-            (aVirtualKeyCode == NS_VK_COMMA)     ||
-            (aVirtualKeyCode == NS_VK_PERIOD)    ||
-            (aVirtualKeyCode == NS_VK_QUOTE)     ||
-            (aVirtualKeyCode == NS_VK_BACK_QUOTE)     ||
-            (aVirtualKeyCode == NS_VK_SLASH)     
-           )
-          )
+
+  MSG msg;
+  BOOL gotMsg = ::PeekMessage(&msg, mWnd, 0, 0, PM_NOREMOVE | PM_NOYIELD);
+  // Enter and backspace are always handled here to avoid for example the
+  // confusion between ctrl-enter and ctrl-J.
+  if (virtualKeyCode == NS_VK_RETURN || virtualKeyCode == NS_VK_BACK)
   {
-    switch (aVirtualKeyCode) {
-      case NS_VK_ADD       : asciiKey = '+';  break;
-      case NS_VK_SUBTRACT  : asciiKey = '-';  break;
-      case NS_VK_SEMICOLON : asciiKey = ';';  break;
-      case NS_VK_EQUALS    : asciiKey = '=';  break;
-      case NS_VK_COMMA     : asciiKey = ',';  break;
-      case NS_VK_PERIOD    : asciiKey = '.';  break;
-      case NS_VK_QUOTE     : asciiKey = '\''; break;
-      case NS_VK_BACK_QUOTE: asciiKey = '`';  break;
-      case NS_VK_SLASH     : asciiKey = '/';  break;
-      // NS_VK_0 - NS_VK9 line up exactly with ascii '0' - '9'
-      default              : asciiKey = aVirtualKeyCode;  break;
+    // Remove a possible WM_CHAR or WM_SYSCHAR from the message queue
+    if (gotMsg && (msg.message == WM_CHAR || msg.message == WM_SYSCHAR)) {
+      ::GetMessage(&msg, mWnd, 0, 0);
     }
-    // put the ascii character in charcode instead of using keycode.
-    DispatchKeyEvent(NS_KEY_PRESS, asciiKey, 0, aKeyData);
   }
-  else if (NO_WM_CHAR_LATER(aVirtualKeyCode)      &&  
-            (aVirtualKeyCode != NS_VK_SEMICOLON)  &&
-            (aVirtualKeyCode != NS_VK_EQUALS)     &&
-            (aVirtualKeyCode != NS_VK_COMMA)      &&
-            (aVirtualKeyCode != NS_VK_PERIOD))
-  {
-    DispatchKeyEvent(NS_KEY_PRESS, 0, aVirtualKeyCode, aKeyData);
-  } 
+  else if (gotMsg &&
+           (msg.message == WM_CHAR || msg.message == WM_SYSCHAR || msg.message == WM_DEADCHAR)) {
+    return result;
+  }
+  
+  WORD asciiKey = 0;
 
-   // Fix for 50255 (<ctrl><enter> not working
-   // Send keypress event for <ctrl><enter> keyboard action
-  if (mIsControlDown && aVirtualKeyCode == VK_RETURN ) 
-  {
-    DispatchKeyEvent(NS_KEY_PRESS,  0, aVirtualKeyCode, aKeyData);
-  } 
-
+  switch (virtualKeyCode) {
+    // keys to be sent as characters
+    case NS_VK_ADD       : asciiKey = '+';  break;
+    case NS_VK_SUBTRACT  : asciiKey = '-';  break;
+    case NS_VK_SEMICOLON : asciiKey = ';';  break;
+    case NS_VK_EQUALS    : asciiKey = '=';  break;
+    case NS_VK_COMMA     : asciiKey = ',';  break;
+    case NS_VK_PERIOD    : asciiKey = '.';  break;
+    case NS_VK_QUOTE     : asciiKey = '\''; break;
+    case NS_VK_BACK_QUOTE: asciiKey = '`';  break;
+    case NS_VK_DIVIDE    :
+    case NS_VK_SLASH     : asciiKey = '/';  break;
+    case NS_VK_MULTIPLY  : asciiKey = '*';  break;
+    default:
+      // NS_VK_0 - NS_VK9 and NS_VK_A - NS_VK_Z match their ascii values
+      if ((NS_VK_0 <= virtualKeyCode && virtualKeyCode <= NS_VK_9) ||
+          (NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)) {
+        asciiKey = virtualKeyCode;
+        // Take the Shift state into account
+        if (!mIsShiftDown && NS_VK_A <= virtualKeyCode && virtualKeyCode <= NS_VK_Z)
+          asciiKey += 0x20;      
+      }
+  }
+  if (asciiKey)
+    DispatchKeyEvent(NS_KEY_PRESS, asciiKey, 0, aKeyData);
+  else
+    DispatchKeyEvent(NS_KEY_PRESS, 0, virtualKeyCode, aKeyData);
+      
   return result;
 }
 
@@ -3079,7 +3063,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //-------------------------------------------------------------------------
 BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 {
-  aVirtualKeyCode = !mIMEIsComposing?MapFromNativeToDOM(aVirtualKeyCode):aVirtualKeyCode;
+  aVirtualKeyCode = mIMEIsComposing ? aVirtualKeyCode : MapFromNativeToDOM(aVirtualKeyCode);
   BOOL result = DispatchKeyEvent(NS_KEY_UP, 0, aVirtualKeyCode, aKeyData);
   return result;
 }
@@ -3089,79 +3073,68 @@ BOOL nsWindow::OnKeyUp( UINT aVirtualKeyCode, UINT aScanCode, LPARAM aKeyData)
 //
 //
 //-------------------------------------------------------------------------
-BOOL nsWindow::OnChar( UINT mbcsCharCode, UINT virtualKeyCode, bool isMultiByte )
+BOOL nsWindow::OnChar(UINT charCode)
 {
   wchar_t uniChar;
 
-  if (mIMEIsComposing)  {
+  if (mIMEIsComposing) {
     HandleEndComposition();
   }
 
-  if(mIsControlDown && (virtualKeyCode <= 0x1A)) // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details  
-  { 
-    // need to account for shift here.  bug 16486 
-    if ( mIsShiftDown ) 
-      uniChar = virtualKeyCode - 1 + 'A' ; 
-    else 
-      uniChar = virtualKeyCode - 1 + 'a' ; 
-    virtualKeyCode = 0;
-  } 
-  else if (mIsControlDown && (virtualKeyCode <= 0x1F) ) {
+  if (mIsControlDown && charCode <= 0x1A) { // Ctrl+A Ctrl+Z, see Programming Windows 3.1 page 110 for details
+    // need to account for shift here.  bug 16486
+    if (mIsShiftDown)
+      uniChar = charCode - 1 + 'A';
+    else
+      uniChar = charCode - 1 + 'a';
+    charCode = 0;
+  }
+  else if (mIsControlDown && charCode <= 0x1F) {
     // Fix for 50255 - <ctrl><[> and <ctrl><]> are not being processed.
     // also fixes ctrl+\ (x1c), ctrl+^ (x1e) and ctrl+_ (x1f)
     // for some reason the keypress handler need to have the uniChar code set
     // with the addition of a upper case A not the lower case.
-    uniChar = virtualKeyCode -1 + 'A';
-    virtualKeyCode = 0;
-  }
-  else 
-  { // 0x20 - SPACE, 0x3D - EQUALS
-    if(mbcsCharCode < 0x20 || (virtualKeyCode == 0x3D && mIsControlDown)) 
-    {
+    uniChar = charCode - 1 + 'A';
+    charCode = 0;
+  } else { // 0x20 - SPACE, 0x3D - EQUALS
+    if (charCode < 0x20 || (charCode == 0x3D && mIsControlDown)) {
       uniChar = 0;
-    } 
-    else 
-    {
-      if (nsToolkit::mIsNT)  { 
-        uniChar = mbcsCharCode; 
-      } 
-      else   
-      { 
-        char    charToConvert[3]; 
-        size_t  length; 
- 
-        if (!isMultiByte)	{ 
-          if (mLeadByte)  {	// mLeadByte is used for keeping the lead-byte of CJK char 
-            charToConvert[0] = mLeadByte; 
-            charToConvert[1] = LOBYTE(mbcsCharCode); 
-            mLeadByte = '\0'; 
-            length=2;  
-          } 
-          else { 
-            charToConvert[0] = LOBYTE(mbcsCharCode); 
-            if (::IsDBCSLeadByteEx(gCurrentKeyboardCP, charToConvert[0])) { 
-              mLeadByte = charToConvert[0]; 
-              return TRUE; 
-            } 
-            length=1; 
-          } 
-        } else  { 
-          // SC double-byte punctuation mark in Windows-English is 0x0000aca3 
-          uniChar = LOWORD(mbcsCharCode); 
-          charToConvert[0] = LOBYTE(uniChar); 
-          charToConvert[1] = HIBYTE(uniChar); 
-          mLeadByte = '\0'; 
-          length=2; 
-        }   
-        ::MultiByteToWideChar(gCurrentKeyboardCP,MB_PRECOMPOSED,charToConvert,length, 
-          &uniChar, 1); 
-      } 
-      virtualKeyCode = 0;
+    } else {
+      if (nsToolkit::mIsNT) {
+        uniChar = charCode;
+      } else {
+        char    charToConvert[3];
+        size_t  length;
+
+        if (charCode <= 0xFF) { // not a multibyte character
+          if (mLeadByte) {	// mLeadByte is used for keeping the lead-byte of CJK char
+            charToConvert[0] = mLeadByte;
+            charToConvert[1] = LOBYTE(charCode);
+            mLeadByte = '\0';
+            length = 2;
+          } else {
+            charToConvert[0] = LOBYTE(charCode);
+            if (::IsDBCSLeadByteEx(gCurrentKeyboardCP, charToConvert[0])) {
+              mLeadByte = charToConvert[0];
+              return TRUE;
+            }
+            length = 1;
+          }
+        } else {
+          // SC double-byte punctuation mark in Windows-English is 0x0000aca3
+          uniChar = LOWORD(charCode);
+          charToConvert[0] = LOBYTE(uniChar);
+          charToConvert[1] = HIBYTE(uniChar);
+          mLeadByte = '\0';
+          length=2;
+        }
+        ::MultiByteToWideChar(gCurrentKeyboardCP, MB_PRECOMPOSED, charToConvert, length,
+          &uniChar, 1);
+      }
+      charCode = 0;
     }
   }
-  return DispatchKeyEvent(NS_KEY_PRESS, uniChar, virtualKeyCode, 0);
-
-  //return FALSE;
+  return DispatchKeyEvent(NS_KEY_PRESS, uniChar, charCode, 0);
 }
 
 
@@ -3835,49 +3808,23 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
             printf("%s\tchar=%c\twp=%4x\tlp=%8x\n", (msg == WM_SYSCHAR) ? "WM_SYSCHAR" : "WM_CHAR" , wParam, wParam, lParam);
 #endif
 
-            mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            if(WM_SYSCHAR==msg)
-            {
-                mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-                mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-            } else { // WM_KEYUP
-                // If the Context Code bit is down and we got a WM_KEY
-                // it is a key press for character, not accelerator
-                // see p246 of Programming Windows 95 [Charles Petzold] for details
-                mIsControlDown = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_CONTROL);
-                mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
-            }
-
             // ignore [shift+]alt+space so the OS can handle it 
             if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
                 result = PR_FALSE;
                 break;
             }
 
-            unsigned char    ch = (unsigned char)wParam;
-            UINT            virtualKeyCode;  
-            virtualKeyCode = MapVirtualKey(LOBYTE(HIWORD(lParam)), 1);
+            // WM_CHAR with Control and Alt (== AltGr) down really means a normal character
+            PRBool saveIsAltDown = mIsAltDown;
+            PRBool saveIsControlDown = mIsControlDown;
+            if (mIsAltDown && mIsControlDown)
+              mIsAltDown = mIsControlDown = PR_FALSE;
 
-            // <ctrl><enter> and <ctrl>J and generate exactly the same char code
-            // but we want to "eat" the event for <ctrl><enter> because
-            // we generate the KEY_PRESS on the KeyDown, so we want to throw 
-            // this event away here 
-            // <ctrl><backSpace> also generates a char code event but it is handled in 
-            // the KeyDown method, so we can ignore it here as we do for ctrl+enter.
-            if ((mIsControlDown && virtualKeyCode == VK_RETURN)  ||
-                (mIsControlDown && virtualKeyCode == VK_BACK)) {
-              result = PR_FALSE;
-              break;
-            }
-            //
-            // check first for backspace or return, handle them specially 
-            //
-            if ((wParam <= 0xff) && (ch==0x0d || ch==0x08)) {
+            result = OnChar(wParam);
 
-                result = OnChar(wParam, ch==0x0d ? VK_RETURN : VK_BACK, false);
-                break;
-            }
-            result = OnChar(wParam, ch, (wParam > 0xff));
+            mIsAltDown = saveIsAltDown;
+            mIsControlDown = saveIsControlDown;
+
             break;
         }
         case WM_SYSKEYUP:
@@ -3887,25 +3834,16 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
                    (WM_KEYUP==msg)?"WM_KEYUP":"WM_SYSKEYUP" , wParam, lParam);
 #endif
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            if(WM_SYSKEYUP==msg)
-            {
-                mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-                mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-            } else { // WM_KEYUP
-                // If the Context Code bit is down and we got a WM_KEY
-                // it is a key press for character, not accelerator
-                // see p246 of Programming Windows 95 [Charles Petzold] for details
-                mIsControlDown = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_CONTROL);
-                mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
-            }
+            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
 
-            // Note- The origional code pass (HIWORD(lParam)) to OnKeyUp as 
-            // scan code. Howerver, this break Alt+Num pad input.
+            // Note: the original code passed (HIWORD(lParam)) to OnKeyUp as
+            // scan code. However, this breaks Alt+Num pad input.
             // http://msdn.microsoft.com/library/psdk/winui/keybinpt_8qp5.htm
-            // state the following-
-            //  Typically, ToAscii performs the translation based on the 
+            // states the following:
+            //  Typically, ToAscii performs the translation based on the
             //  virtual-key code. In some cases, however, bit 15 of the
-            //  uScanCode parameter may be used to distinguish between a key 
+            //  uScanCode parameter may be used to distinguish between a key
             //  press and a key release. The scan code is used for
             //  translating ALT+number key combinations.
 
@@ -3918,58 +3856,50 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
 
             if (!mIMEIsComposing)
               result = OnKeyUp(wParam, (HIWORD(lParam)), lParam);
-			      else
-				      result = PR_FALSE;
+            else
+              result = PR_FALSE;
 
             DispatchPendingEvents();
             break;
 
         // Let ths fall through if it isn't a key pad
         case WM_SYSKEYDOWN:
-        case WM_KEYDOWN: {
+        case WM_KEYDOWN:
 #ifdef KE_DEBUG
             printf("%s\t\twp=%4x\tlp=%8x\n",  
                    (WM_KEYDOWN==msg)?"WM_KEYDOWN":"WM_SYSKEYDOWN" , wParam, lParam);
 #endif
 
             mIsShiftDown   = IS_VK_DOWN(NS_VK_SHIFT);
-            if(WM_SYSKEYDOWN==msg)
-            {
-                mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
-                mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
-            } else { // WM_KEYUP
-                // If the Context Code bit is down and we got a WM_KEY
-                // it is a key press for character, not accelerator
-                // see p246 of Programming Windows 95 [Charles Petzold] for details
-                mIsControlDown = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_CONTROL);
-                mIsAltDown     = (0 == (KF_ALTDOWN & HIWORD(lParam)))&& IS_VK_DOWN(NS_VK_ALT);
-            }
-            // Note- The origional code pass (HIWORD(lParam)) to OnKeyDown as 
-            // scan code. Howerver, this break Alt+Num pad input.
+            mIsControlDown = IS_VK_DOWN(NS_VK_CONTROL);
+            mIsAltDown     = IS_VK_DOWN(NS_VK_ALT);
+
+            // Note: the original code passed (HIWORD(lParam)) to OnKeyDown as
+            // scan code. However, this breaks Alt+Num pad input.
             // http://msdn.microsoft.com/library/psdk/winui/keybinpt_8qp5.htm
-            // state the following-
-            //  Typically, ToAscii performs the translation based on the 
+            // states the following:
+            //  Typically, ToAscii performs the translation based on the
             //  virtual-key code. In some cases, however, bit 15 of the
-            //  uScanCode parameter may be used to distinguish between a key 
+            //  uScanCode parameter may be used to distinguish between a key
             //  press and a key release. The scan code is used for
             //  translating ALT+number key combinations.
 
             // ignore [shift+]alt+space so the OS can handle it
             if (mIsAltDown && !mIsControlDown && IS_VK_DOWN(NS_VK_SPACE)) {
-                result = PR_FALSE;
-                DispatchPendingEvents();
-                break;
+               result = PR_FALSE;
+               DispatchPendingEvents();
+               break;
             }
 
             if (mIsAltDown && mIMEIsStatusChanged) {
-               mIMEIsStatusChanged = FALSE;
-	             result = PR_FALSE;
+              mIMEIsStatusChanged = FALSE;
+              result = PR_FALSE;
             }
-            else if (!mIMEIsComposing)
-               result = OnKeyDown(wParam, (HIWORD(lParam)), lParam);
-	          else
-	             result = PR_FALSE;
+            else if (!mIMEIsComposing) {
+              result = OnKeyDown(wParam, (HIWORD(lParam)), lParam);
             }
+            else
+              result = PR_FALSE;
 
             if (wParam == VK_MENU || (wParam == VK_F10 && !mIsShiftDown)) {
               // We need to let Windows handle this keypress,
@@ -6061,7 +5991,7 @@ BOOL nsWindow::OnIMEChar(BYTE aByte1, BYTE aByte2, LPARAM aKeyState)
   }
 #endif
 
-  // We need to return TRUE here so that Windows doesnt'
+  // We need to return TRUE here so that Windows doesn't
   // send two WM_CHAR msgs
   DispatchKeyEvent(NS_KEY_PRESS, uniChar, 0, 0);
   return PR_TRUE;
@@ -6405,16 +6335,17 @@ BOOL nsWindow::OnIMENotify(WPARAM  aIMN, LPARAM aData, LRESULT *oResult)
 #endif
 
   // add hacky code here
-  if(IS_VK_DOWN(NS_VK_ALT)) {
-      mIsShiftDown = PR_FALSE;
-      mIsControlDown = PR_FALSE;
-      mIsAltDown = PR_TRUE;
-      DispatchKeyEvent(NS_KEY_PRESS, 0, 192, 0);// XXX hack hack hack
-      if (aIMN == IMN_SETOPENSTATUS)
-        mIMEIsStatusChanged = PR_TRUE;
+  if (IS_VK_DOWN(NS_VK_ALT)) {
+    mIsShiftDown = PR_FALSE;
+    mIsControlDown = PR_FALSE;
+    mIsAltDown = PR_TRUE;
+
+    DispatchKeyEvent(NS_KEY_PRESS, 0, 192, 0); // XXX hack hack hack
+    if (aIMN == IMN_SETOPENSTATUS)
+      mIMEIsStatusChanged = PR_TRUE;
   }
-	// not implement yet 
-	return PR_FALSE;
+  // not implemented yet 
+  return PR_FALSE;
 }
 //==========================================================================
 BOOL nsWindow::OnIMERequest(WPARAM  aIMR, LPARAM aData, LRESULT *oResult, PRBool aUseUnicode)
@@ -6651,7 +6582,7 @@ nsWindow::HandleMouseActionOfIME(int aAction, POINT *ptPos)
 
       // Note: hitText has been done, so no check of mIMECompCharPos
       // and composing char maximum limit is necessary.
-      PRInt32 i = 0;
+      PRUint32 i = 0;
       for (i = 0; i < mIMECompUnicode->Length(); i++) {
         if (PT_IN_RECT(*ptPos, mIMECompCharPos[i]))
           break;
