@@ -55,6 +55,7 @@ CPPSRCS =                       \
     TransactionFactory.cpp      \
     nsInternetCiter.cpp         \
     nsAOLCiter.cpp              \
+    nsInterfaceState.cpp        \
     nsEditorShell.cpp           \
     nsEditorShellFactory.cpp    \
     nsJSEditorLog.cpp           \

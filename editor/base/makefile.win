@@ -50,6 +50,7 @@ CPPSRCS =				\
       EditTable.cpp          \
       nsInternetCiter.cpp     \
       nsAOLCiter.cpp          \
+      nsInterfaceState.cpp    \
       nsEditorShell.cpp				\
       nsEditorShellFactory.cpp	\
       nsJSEditorLog.cpp       \
@@ -88,6 +89,7 @@ CPP_OBJS =					\
   .\$(OBJDIR)\EditTable.obj           \
   .\$(OBJDIR)\nsInternetCiter.obj      \
   .\$(OBJDIR)\nsAOLCiter.obj           \
+  .\$(OBJDIR)\nsInterfaceState.obj     \
   .\$(OBJDIR)\nsEditorShell.obj        \
   .\$(OBJDIR)\nsEditorShellFactory.obj \
   .\$(OBJDIR)\nsJSEditorLog.obj       \
