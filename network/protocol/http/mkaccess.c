@@ -1274,7 +1274,6 @@ net_remove_expired_cookies(void)
 
 PRIVATE XP_List * net_dormant_cookie_list=0;
 Bool net_anonymous = FALSE;
-Bool net_supressNextReferer = FALSE;
 
 PUBLIC void
 NET_AnonymizeCookies()
@@ -1285,7 +1284,6 @@ NET_AnonymizeCookies()
 	net_cookie_list = XP_ListNew();
 	net_unlock_cookie_list();
 	net_anonymous = TRUE;
-	net_supressNextReferer = TRUE;
     }
 }
 
@@ -1299,14 +1297,27 @@ NET_UnanonymizeCookies()
 	net_unlock_cookie_list();
 	net_dormant_cookie_list = 0;
 	net_anonymous = FALSE;
-	net_supressNextReferer = TRUE;
     }
 }
 
+/*
+ * Determine whether or not to suppress the referer field for anonymity.
+ * The first time this function is called on behalf of a given window
+ * after a mode change (into or out of anonymous mode), the returned value is
+ * true.
+ */
 PUBLIC Bool
-NET_SupressRefererForAnonymity() {
-   Bool result = net_supressNextReferer;
-   net_supressNextReferer = FALSE;
+NET_SupressRefererForAnonymity(MWContext *window_id) {
+   MWContext *outermost_window = window_id;
+   Bool result;
+   if (!window_id) {
+      return FALSE;
+   }
+   while (outermost_window->grid_parent) {
+      outermost_window = outermost_window->grid_parent;
+   }
+   result = (window_id->anonymous != net_anonymous);
+   window_id->anonymous = net_anonymous;
    return result;
 }
 
@@ -2458,7 +2469,7 @@ net_SaveCookiePermissions(char * filename)
     net_lock_cookie_permission_list();
     list_ptr = net_cookie_permission_list;
 
-    if(XP_ListIsEmpty(net_cookie_permission_list)) {
+    if(!(net_cookie_permission_list)) {
 	net_unlock_cookie_permission_list();
 	return(-1);
     }
@@ -2610,7 +2621,7 @@ NET_SaveCookies(char * filename)
 
 	net_lock_cookie_list();
 	list_ptr = net_cookie_list;
-	if(XP_ListIsEmpty(list_ptr)) {
+	if(!(list_ptr)) {
 		net_unlock_cookie_list();
 		return(-1);
 	}
