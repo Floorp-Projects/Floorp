@@ -30,7 +30,7 @@ package org.mozilla.webclient.motif;
  * <B>Lifetime And Scope</B> <P>
  * There will be one of these per BrowserControlCanvas (but hasn't been tested yet)
  *
- * @version $Id: MozillaEventThread.java,v 1.1 1999/08/13 23:21:19 mark.lin%eng.sun.com Exp $
+ * @version $Id: MozillaEventThread.java,v 1.2 1999/08/16 23:26:40 mark.lin%eng.sun.com Exp $
  * @see	org.mozilla.webclient.motif.MozillaEventThread
  * 
  */
@@ -42,7 +42,6 @@ public class MozillaEventThread extends Thread {
     static private int eventQueueCount = 0;
     // A mapping of gtkWindowID <-> WebShellInitContext structs
     static private Hashtable webShellContextMapping = null;
-
 
     protected MotifBrowserControlCanvas browserCanvas;
 
@@ -80,9 +79,11 @@ public class MozillaEventThread extends Thread {
         // Infinite loop to eternity.
 	    while (true) {
             // PENDING(mark): Do we need to yield?
-            Thread.currentThread().yield();
+            // Thread.currentThread().yield();
 
-            this.processNativeEventQueue(getContext(this.browserCanvas.getGTKWinPtr()));
+            synchronized(this.browserCanvas.getTreeLock()) {
+                this.processNativeEventQueue(getContext(this.browserCanvas.getGTKWinPtr()));
+            }
         }
     }
 

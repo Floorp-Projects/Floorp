@@ -28,7 +28,7 @@ import org.mozilla.util.ParameterCheck;
 
  * There is one instance of the WebShellCanvas per top level awt Frame.
 
- * @version $Id: MotifBrowserControlCanvas.java,v 1.2 1999/08/13 23:02:40 mark.lin%eng.sun.com Exp $
+ * @version $Id: MotifBrowserControlCanvas.java,v 1.3 1999/08/16 23:26:39 mark.lin%eng.sun.com Exp $
  * 
  * @see	org.mozilla.webclient.BrowserControlCanvasFactory
  * 
@@ -83,9 +83,6 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
                 this.reparentWindow(this.gtkWinID, this.canvasWinID);
 
                 firstTime = false;
-
-                Thread mozillaEventThread = new MozillaEventThread(this);
-                mozillaEventThread.start();
             }
         }
     }
@@ -123,6 +120,9 @@ public class MotifBrowserControlCanvas extends BrowserControlCanvas /* implement
                                            screenSize.height);
             
             this.gtkWinID = this.getGTKWinID(gtkWinPtr);
+
+            Thread mozillaEventThread = new MozillaEventThread(this);
+            mozillaEventThread.start();
         }
 
 		return this.gtkWinPtr;
