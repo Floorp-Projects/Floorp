@@ -108,6 +108,10 @@ nsFontUtils::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 		textFace |= underline;  // THIS IS WRONG, BUT HERE FOR COMPLETENESS
 
 	RGBColor	black = {0};
+
+  float textZoom = 1.0;
+  inDevContext.GetTextZoom(textZoom);
+  textSize *= textZoom;
 	
 	outStyle.tsFont = (short)fontNum;
 	outStyle.tsFace = textFace;
