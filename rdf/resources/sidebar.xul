@@ -133,35 +133,35 @@ function OpenURL(event,node)
 
   <xul:treebody>
     <xul:treeitem id="NC:BookmarksRoot" open="true">
-      <xul:treecell>Bookmarks</xul:treecell>
+      <xul:treecell><xul:treeindentation /><xul:titledbutton />Bookmarks</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
 
     <xul:treeitem id="NC:FilesRoot">
-      <xul:treecell>File System</xul:treecell>
+      <xul:treecell><xul:treeindentation /><xul:titledbutton />File System</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
 
     <xul:treeitem id="NC:HistoryBySite">
-      <xul:treecell>History By Site</xul:treecell>
+      <xul:treecell><xul:treeindentation /><xul:titledbutton />History By Site</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
 
     <xul:treeitem id="NC:HistoryByDate">
-      <xul:treecell>History By Date</xul:treecell>
+      <xul:treecell><xul:treeindentation /><xul:titledbutton />History By Date</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
     </xul:treeitem>
 
     <xul:treeitem id="NC:RelatedLinks" pulse="5">
-      <xul:treecell>Related Links</xul:treecell>
+      <xul:treecell><xul:treeindentation /><xul:titledbutton />Related Links</xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
       <xul:treecell></xul:treecell>
