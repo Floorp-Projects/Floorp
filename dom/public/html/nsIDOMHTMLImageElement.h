@@ -68,14 +68,14 @@ public:
   NS_IMETHOD    GetSrc(nsString& aSrc)=0;
   NS_IMETHOD    SetSrc(const nsString& aSrc)=0;
 
-  NS_IMETHOD    GetUseMap(nsString& aUseMap)=0;
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap)=0;
-
   NS_IMETHOD    GetVspace(nsString& aVspace)=0;
   NS_IMETHOD    SetVspace(const nsString& aVspace)=0;
 
   NS_IMETHOD    GetWidth(nsString& aWidth)=0;
   NS_IMETHOD    SetWidth(const nsString& aWidth)=0;
+
+  NS_IMETHOD    GetUseMap(nsString& aUseMap)=0;
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap)=0;
 };
 
 
@@ -100,12 +100,12 @@ public:
   NS_IMETHOD    SetLongDesc(const nsString& aLongDesc);  \
   NS_IMETHOD    GetSrc(nsString& aSrc);  \
   NS_IMETHOD    SetSrc(const nsString& aSrc);  \
-  NS_IMETHOD    GetUseMap(nsString& aUseMap);  \
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap);  \
   NS_IMETHOD    GetVspace(nsString& aVspace);  \
   NS_IMETHOD    SetVspace(const nsString& aVspace);  \
   NS_IMETHOD    GetWidth(nsString& aWidth);  \
   NS_IMETHOD    SetWidth(const nsString& aWidth);  \
+  NS_IMETHOD    GetUseMap(nsString& aUseMap);  \
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap);  \
 
 
 
@@ -130,12 +130,12 @@ public:
   NS_IMETHOD    SetLongDesc(const nsString& aLongDesc) { return _to SetLongDesc(aLongDesc); } \
   NS_IMETHOD    GetSrc(nsString& aSrc) { return _to GetSrc(aSrc); } \
   NS_IMETHOD    SetSrc(const nsString& aSrc) { return _to SetSrc(aSrc); } \
-  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to GetUseMap(aUseMap); } \
-  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
   NS_IMETHOD    GetVspace(nsString& aVspace) { return _to GetVspace(aVspace); } \
   NS_IMETHOD    SetVspace(const nsString& aVspace) { return _to SetVspace(aVspace); } \
   NS_IMETHOD    GetWidth(nsString& aWidth) { return _to GetWidth(aWidth); } \
   NS_IMETHOD    SetWidth(const nsString& aWidth) { return _to SetWidth(aWidth); } \
+  NS_IMETHOD    GetUseMap(nsString& aUseMap) { return _to GetUseMap(aUseMap); } \
+  NS_IMETHOD    SetUseMap(const nsString& aUseMap) { return _to SetUseMap(aUseMap); } \
 
 
 extern "C" NS_DOM nsresult NS_InitHTMLImageElementClass(nsIScriptContext *aContext, void **aPrototype);
