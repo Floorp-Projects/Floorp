@@ -141,7 +141,9 @@ function EditorOnLoad()
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.
         // Put argument where EditorStartup expects it.
-        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
+        var url = window.arguments[0];
+        document.getElementById( "args" ).setAttribute( "value", url );
+        SetSaveAndPublishUI(url);
     }
 
     // get default character set if provided
@@ -168,7 +170,9 @@ function TextEditorOnLoad()
     if ( window.arguments && window.arguments[0] ) {
         // Opened via window.openDialog with URL as argument.
         // Put argument where EditorStartup expects it.
-        document.getElementById( "args" ).setAttribute( "value", window.arguments[0] );
+        var url = window.arguments[0];
+        document.getElementById( "args" ).setAttribute( "value", url );
+        SetSaveAndPublishUI(url);
     }
     // Continue with normal startup.
     EditorStartup('text', document.getElementById("content-frame"));
