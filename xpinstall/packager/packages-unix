@@ -220,6 +220,7 @@ bin/defaults/pref/psm-glue.js
 bin/defaults/profile/*
 ; this is only here if you have plugins -blizzard
 ; bin/plugins/*
+bin/searchplugins/*
 bin/res/entityTables/*
 bin/res/FieldSchema.tbl
 bin/res/SchemaConcat.tbl
@@ -236,7 +237,6 @@ bin/res/rdf/document.gif
 bin/res/rdf/folder-closed.gif
 bin/res/rdf/folder-open.gif
 bin/res/rdf/loading.gif
-bin/res/rdf/datasets/*
 bin/res/xpinstall/*
 bin/res/throbber/*
 bin/res/toolbar/*
