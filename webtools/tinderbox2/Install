@@ -217,17 +217,21 @@ destined for the webserver. Similarly the bug tracking system should
 send mail to 'tinderbox_bugs'.
 
 
-*) If you are using VC_CVS.pm then you will need to put a ~/.cvspass
-for tinderbox to use.  Log into the CVS repository yourself, once for
-each tree you have defined.  The login command must use the
-hostname/modules exactly as you wrote it in VCData.  Then copy your
-~/.cvspass into the tinderbox server user id's home directory.  This
-must be the REAL home of the Tinderbox daemon, as listed in
-/etc/passwd/ and set in the $HOME environmental variable for
-tinder.cgi.  The file must not be world readable or writable or
-executable. It is recommended that VC_CVS.pm is only used as an
-interim step in setting up VC_Bonsai. VC_Bonsai is not hard to setup
-and provided many useful features which are absent in VC_CVS.pm.
+*) Make sure that when tinderbox runs it has all the permissions that
+it needs to access the Version Control database.  This usually means
+having an environmental variable set when tinderbox is run from
+cron. If you are using VC_CVS.pm then you will need to put a
+~/.cvspass for the tinderbox server to use.  To create this file you
+will need to Log into the CVS repository yourself, once for each tree
+you have defined.  The login command must use the hostname/modules
+exactly as you wrote it in VCData.  Then copy your ~/.cvspass into the
+tinderbox server user id's home directory.  This must be the REAL home
+of the Tinderbox daemon, as listed in /etc/passwd/ and set in the
+$HOME environmental variable for tinder.cgi.  The file must not be
+world readable or writable or executable. It is recommended that
+VC_CVS.pm is only used as an interim step in setting up
+VC_Bonsai. VC_Bonsai is not hard to setup and provided many useful
+features which are absent in VC_CVS.pm.
 
 
 *) Setup the build machines to mail their build logs (with tinderbox
