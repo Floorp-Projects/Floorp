@@ -1073,12 +1073,7 @@ var BookmarksUtils = {
       node = BMDS.GetTarget(aInput, arc, true);
     else
       node = aDS .GetTarget(aInput, arc, true);
-    try {
-      return node.QueryInterface(kRDFRSCIID).Value;
-    }
-    catch (e) {
-      return node? node.QueryInterface(kRDFLITIID).Value : "";
-    }    
+    return (node instanceof kRDFRSCIID) || (node instanceof kRDFLITIID) ? node.Value : "";
   },
 
   getResource: function (aName)
