@@ -58,8 +58,6 @@ enum {
   TARGET_IMAGE_JPEG,
   TARGET_IMAGE_GIF,
   // compatibility types
-  TARGET_NS4_HTML_NETSCAPE,
-  TARGET_NS4_HTML,
   TARGET_COMPOUND_TEXT,
   TARGET_UNKNOWN,
   TARGET_LAST
@@ -219,8 +217,6 @@ void nsClipboard::Init(void)
   sSelTypes[TARGET_IMAGE_JPEG]    = gdk_atom_intern(kJPEGImageMime, FALSE);
   sSelTypes[TARGET_IMAGE_GIF]     = gdk_atom_intern(kGIFImageMime, FALSE);
   // compatibility with other apps
-  sSelTypes[TARGET_NS4_HTML_NETSCAPE] = gdk_atom_intern("NETSCAPE_HTML", FALSE);
-  sSelTypes[TARGET_NS4_HTML]          = gdk_atom_intern("HTML", FALSE);
 
 
   // create invisible widget to use for the clipboard
@@ -245,19 +241,6 @@ void nsClipboard::Init(void)
   gtk_signal_connect(GTK_OBJECT(sWidget), "selection_received",
                      GTK_SIGNAL_FUNC(nsClipboard::SelectionReceivedCB),
                      nsnull);
-
-
-#if 0
-  // Handle selection requests if we called gtk_selection_add_targets:
-  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_request_event",
-                     GTK_SIGNAL_FUNC(nsClipboard::SelectionRequestCB),
-                     nsnull);
-  
-  // Watch this, experimenting with Gtk :-)
-  gtk_signal_connect(GTK_OBJECT(sWidget), "selection_notify_event",
-                     GTK_SIGNAL_FUNC(nsClipboard::SelectionNotifyCB),
-                     nsnull);
-#endif
 }
 
 
@@ -283,19 +266,14 @@ NS_IMETHODIMP nsClipboard::SetNativeClipboardData()
     __gtk_selection_target_list_remove(sWidget);
     //    gtk_selection_remove_all(sWidget);
   }
-#if 0
-  else
-  {
-#endif
-    // we arn't already the owner, so we will become it
-    gint have_selection = gtk_selection_owner_set(sWidget,
-                                                  GDK_SELECTION_PRIMARY,
-                                                  GDK_CURRENT_TIME);
-    if (have_selection == 0)
-      return NS_ERROR_FAILURE;
-#if 0
-  }
-#endif
+
+  // we arn't already the owner, so we will become it
+  gint have_selection = gtk_selection_owner_set(sWidget,
+                                                GDK_SELECTION_PRIMARY,
+                                                GDK_CURRENT_TIME);
+  if (have_selection == 0)
+    return NS_ERROR_FAILURE;
+
 
   nsString *df;
   int i = 0;
@@ -348,10 +326,6 @@ gint nsClipboard::GetFormat(const nsString &aMimeStr)
     type = TARGET_TEXT_UNICODE;
   } else if (aMimeStr.Equals(kHTMLMime)) {
     type = TARGET_TEXT_HTML;
-  } else if (aMimeStr.Equals("HTML")) {
-    type = TARGET_TEXT_HTML;
-  } else if (aMimeStr.Equals("NETSCAPE_HTML")) {
-    type = TARGET_TEXT_HTML;
   } else if (aMimeStr.Equals(kAOLMailMime)) {
     type = TARGET_AOLMAIL;
   } else if (aMimeStr.Equals(kPNGImageMime)) {
@@ -390,9 +364,6 @@ void nsClipboard::RegisterFormat(gint format)
 
     // STRING (what X uses)
     AddTarget(GDK_SELECTION_TYPE_STRING);
-
-    // COMPOUND_TEXT (what X uses)
-    AddTarget(sSelTypes[TARGET_COMPOUND_TEXT]);
     break;
 
 
@@ -405,15 +376,15 @@ void nsClipboard::RegisterFormat(gint format)
   case TARGET_TEXT_UNICODE:
     // text/unicode (default)
     AddTarget(sSelTypes[format]);
+
+    // COMPOUND_TEXT (what X uses)
+    AddTarget(sSelTypes[TARGET_COMPOUND_TEXT]);
     break;
 
 
   case TARGET_TEXT_HTML:
     // text/html (default)
     AddTarget(sSelTypes[format]);
-
-    // HTML (used in NS4.x)
-    AddTarget(sSelTypes[TARGET_NS4_HTML]);
     break;
 
 
@@ -515,14 +486,12 @@ PRBool nsClipboard::DoConvert(gint format)
   case TARGET_TEXT_UNICODE:
     r = DoRealConvert(sSelTypes[format]);
     if (r) return r;
+    r = DoRealConvert(sSelTypes[TARGET_COMPOUND_TEXT]);
+    if (r) return r;
     break;
 
   case TARGET_TEXT_HTML:
     r = DoRealConvert(sSelTypes[format]);
-    if (r) return r;
-    r = DoRealConvert(sSelTypes[TARGET_NS4_HTML_NETSCAPE]);
-    if (r) return r;
-    r = DoRealConvert(sSelTypes[TARGET_NS4_HTML]);
     if (r) return r;
     break;
 
@@ -824,13 +793,6 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
     default:
       {
         /* handle outside things */
-        if (aInfo == sSelTypes[TARGET_NS4_HTML] ||
-            aInfo == sSelTypes[TARGET_NS4_HTML_NETSCAPE])
-        {
-          type = aInfo;
-          dataFlavor = kHTMLMime;
-          break;
-        }
       }
     }
 #ifdef DEBUG_CLIPBOARD
@@ -843,8 +805,12 @@ void nsClipboard::SelectionGetCB(GtkWidget        *widget,
                                           &dataLength);
 
   if (NS_SUCCEEDED(rv) && clipboardData && dataLength > 0) {
+    // find the number of bytes in the data for the below thing
+    size_t size = sizeof(clipboardData[0]);
+    g_print("************  *****************      ******************* %i\n", size);
+
     gtk_selection_data_set(aSelectionData,
-                           type, 8,
+                           type, size*8,
                            (unsigned char *)clipboardData,
                            dataLength);
   }
