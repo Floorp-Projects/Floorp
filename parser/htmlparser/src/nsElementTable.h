@@ -177,6 +177,7 @@ CTagList  gHxAutoClose(6,eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTa
 CTagList  gTRCloseTags(2,eHTMLTag_td,eHTMLTag_th);
 CTagList  gTDCloseTags(2,eHTMLTag_td,eHTMLTag_th);
 CTagList  gDTCloseTags(2,eHTMLTag_dt,eHTMLTag_dd);
+CTagList  gULCloseTags(1,eHTMLTag_li);
 
  
 static const int kNone= 0x0;
@@ -287,7 +288,7 @@ static nsHTMLElement gHTMLElements[] = {
   {eHTMLTag_noscript,   &gRootTags,    0,              0,              kBPBCIC},
   
   {eHTMLTag_object,     &gRootTags,    0,              0,              kAll,         0,            &gContainsParam},
-  {eHTMLTag_ol,         &gOLRootTags,  0,              0,              kAll,         0,            &gULKids},
+  {eHTMLTag_ol,         &gOLRootTags,  0,              &gULCloseTags,  kAll,         0,            &gULKids},
   {eHTMLTag_optgroup,   &gRootTags,    0,              0,              kNone, &gOptgroupParents,   &gContainsOpts},
   {eHTMLTag_option,     &gOptionRootTags,0,              0,            kNone, &gOptgroupParents,   &gContainsText},
 
@@ -328,7 +329,7 @@ static nsHTMLElement gHTMLElements[] = {
   {eHTMLTag_tt,         &gRootTags,    0,              0,              kBPIPIC},
 
   {eHTMLTag_u,          &gRootTags,    0,              0,              kBPIPIC},
-  {eHTMLTag_ul,         &gOLRootTags,  0,              0,              kAll,         0,            &gULKids},
+  {eHTMLTag_ul,         &gOLRootTags,  0,              &gULCloseTags,  kAll,         0,            &gULKids},
   {eHTMLTag_var,        &gRootTags,    0,              0,              kBPIPIC},
   {eHTMLTag_wbr,        &gRootTags,    0,              0,              kBPIP},
   {eHTMLTag_xmp,        &gRootTags,    0,              0,              kBPIP},

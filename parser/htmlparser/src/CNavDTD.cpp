@@ -469,6 +469,8 @@ nsresult CNavDTD::BuildModel(nsIParser* aParser) {
 
   nsHTMLTokenizer*  theTokenizer=(nsHTMLTokenizer*)GetTokenizer();
   nsITokenRecycler* theRecycler=GetTokenRecycler();
+
+  //nsresult result2=NS_ERROR_HTMLPARSER_BLOCK;
   if(theTokenizer) {
     while(NS_OK==result){
       CToken* theToken=theTokenizer->PopToken();
@@ -737,6 +739,7 @@ nsresult CNavDTD::HandleDefaultStartToken(CToken* aToken,eHTMLTags aChildTag,nsI
   eHTMLTags theTarget=FindAutoCloseTargetForStartTag(aChildTag,mBodyContext->mTags);
   if(eHTMLTag_unknown!=theTarget){
     result=CloseContainersTo(theTarget,PR_TRUE);
+    theParentTag=mBodyContext->Last();
   }
 
 
@@ -1274,7 +1277,7 @@ PRBool CNavDTD::CanPropagate(eHTMLTags aParentTag,eHTMLTags aChildTag) const {
  
 /**
  *  This method gets called to determine whether a given 
- *  tag can contain newlines. Most do not.
+ *  tag can be omitted from opening. Most cannot.
  *  
  *  @update  gess 3/25/98
  *  @param   aTag -- tag to test for containership
@@ -1333,7 +1336,9 @@ PRBool CNavDTD::CanOmit(eHTMLTags aParent,eHTMLTags aChild) const {
       break;
 
     case eHTMLTag_head:
-      result=!gHeadKids.Contains(aChild);
+      if(eHTMLTag_body==aChild)
+        result=PR_FALSE;
+      else result=!gHeadKids.Contains(aChild);
       break;
 
     default:
@@ -1443,7 +1448,7 @@ PRBool IsCompatibleTag(eHTMLTags aTag1,eHTMLTags aTag2) {
  *  can be autoclosed. This means that based on the current
  *  context, the stack should be closed to the nearest matching
  *  tag.
- *   
+ *    
  *  @param   aTag -- tag enum of child to be tested
  *  @return  PR_TRUE if autoclosure should occur
  */ 
@@ -1457,15 +1462,34 @@ eHTMLTags FindAutoCloseTargetForEndTag(eHTMLTags aCurrentTag,nsTagStack& aTagSta
     }
     
     if(nsHTMLElement::IsBlockCloser(aCurrentTag)) {
+
+        /*here's what to do: 
+            Our here is sitting at aChildIndex. There are other tags above it
+            on the stack. We have to try to close them out, but we may encounter
+            one that can block us. The way to tell is by comparing each tag on
+            the stack against our closeTag and rootTag list. 
+
+            For each tag above our here on the stack, ask 3 questions:
+              1. Is it in the closeTag list? If so, the we can skip over it
+              2. Is it in the rootTag list? If so, then we're gated by it
+              3. Otherwise its non-specified and we simply presume we can close it.
+        */
+
       CTagList* theCloseTags=gHTMLElements[aCurrentTag].GetAutoCloseEndTags();
       CTagList* theRootTags=gHTMLElements[aCurrentTag].GetRootTags();
       if(theCloseTags){  
-        PRInt32 thePeerIndex=theCloseTags->GetTopmostIndexOf(aTagStack);
-        if(kNotFound!=thePeerIndex){
-          PRInt32   theRootIndex=theRootTags->GetTopmostIndexOf(aTagStack);
-          if(theRootIndex<thePeerIndex)
-            return aTagStack.mTags[thePeerIndex];
-        } //if
+
+        while(aChildIndex<--theTopIndex) {
+          eHTMLTags theNextTag=aTagStack.mTags[theTopIndex];
+          if(PR_FALSE==theCloseTags->Contains(theNextTag)) {
+            if(PR_FALSE==theRootTags->Contains(theNextTag)) {
+              break; //we encountered a tag in root list so fail (because we're gated).
+            }
+            //otherwise presume it's something we can simply ignore and continue search...
+          }
+          //otherwise its in the close list so skip to next tag...
+        }
+        return aCurrentTag; //if you make it here, we're ungated and found a target!
       }//if
       else if(theRootTags) {
         //since we didn't find any close tags, see if there is an instance of aCurrentTag
@@ -1691,6 +1715,17 @@ PRBool CNavDTD::HasOpenContainer(const eHTMLTags aTagSet[],PRInt32 aCount) const
  */
 eHTMLTags CNavDTD::GetTopNode() const {
   return mBodyContext->Last();
+}
+
+/**
+ * Finds the topmost occurance of given tag within context vector stack.
+ * @update	gess5/11/98
+ * @param   tag to be found
+ * @return  index of topmost tag occurance -- may be -1 (kNotFound).
+ */
+PRInt32 GetTopmostIndexOfBelowOffset(eHTMLTags aTag,PRInt32 anOffset){
+  PRInt32 result=-1;
+  return result;
 }
 
 /**
