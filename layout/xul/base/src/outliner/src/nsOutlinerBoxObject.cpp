@@ -354,6 +354,15 @@ nsOutlinerBoxObject::GetCoordsForCellItem(PRInt32 aRow, const PRUnichar *aColID,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOutlinerBoxObject::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool *_retval)
+{  
+  nsIOutlinerBoxObject* body = GetOutlinerBody();
+  if (body)
+    return body->IsCellCropped(aRow, aColID, _retval);
+  return NS_OK;
+}
+
 NS_IMETHODIMP nsOutlinerBoxObject::RowCountChanged(PRInt32 aIndex, PRInt32 aDelta)
 {
   nsIOutlinerBoxObject* body = GetOutlinerBody();

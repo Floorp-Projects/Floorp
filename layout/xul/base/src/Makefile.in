@@ -105,6 +105,7 @@ CPPSRCS		= \
 		nsRepeatService.cpp \
 		nsTitleBarFrame.cpp \
 		nsResizerFrame.cpp \
+  nsXULTooltipListener.cpp \
 		$(NULL)
 
 include $(topsrcdir)/config/config.mk

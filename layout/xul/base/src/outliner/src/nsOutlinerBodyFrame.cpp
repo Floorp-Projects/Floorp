@@ -1170,6 +1170,95 @@ nsOutlinerBodyFrame::GetItemWithinCellAt(PRInt32 aX, const nsRect& aCellRect,
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsOutlinerBodyFrame::IsCellCropped(PRInt32 aRow, const nsAString& aColID, PRBool *_retval)
+{  
+  nsOutlinerColumn* currCol = nsnull;
+  // Keep looping until we find a column with a matching Id.
+  for (currCol = mColumns; currCol; currCol = currCol->GetNext()) {
+    nsAutoString colID;
+    currCol->GetID(colID);
+    if (colID.Equals(aColID))
+      break;
+  }
+  
+  if (currCol) {
+    // The rect for the current cell.
+    nsRect cellRect(0, 0, currCol->GetWidth(), mRowHeight);
+
+    // Adjust borders and padding for the cell.
+    nsCOMPtr<nsIStyleContext> cellContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinercell, getter_AddRefs(cellContext));
+    AdjustForBorderPadding(cellContext, cellRect);
+
+    nscoord remainWidth = cellRect.width;
+
+    if (currCol->IsPrimary()) {
+      // If the current Column is a Primary, then we need to take into account 
+      // the indentation and possibly a twisty. 
+
+      // The amount of indentation is the indentation width (|mIndentation|) by the level.
+      PRInt32 level;
+      mView->GetLevel(aRow, &level);
+      remainWidth -= mIndentation * level;
+
+      // Find the twisty rect by computing its size.
+      nsCOMPtr<nsIStyleContext> twistyContext;
+      GetPseudoStyleContext(nsXULAtoms::mozoutlinertwisty, getter_AddRefs(twistyContext));
+
+      // |GetImageSize| returns the rect of the twisty image, including the 
+      // borders and padding.
+      nsRect twistyImageRect = GetImageSize(aRow, currCol->GetID(), twistyContext);
+      
+      // Add in the margins of the twisty element.
+      const nsStyleMargin* twistyMarginData = (const nsStyleMargin*) twistyContext->GetStyleData(eStyleStruct_Margin);
+      nsMargin twistyMargin;
+      twistyMarginData->GetMargin(twistyMargin);
+      twistyImageRect.Inflate(twistyMargin);
+
+      remainWidth -= twistyImageRect.width;
+    }
+
+    nsCOMPtr<nsIStyleContext> imageContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinerimage, getter_AddRefs(imageContext));
+
+    // Account for the width of the cell image.
+    nsRect imageSize = GetImageSize(aRow, currCol->GetID(), imageContext);
+    remainWidth -= imageSize.width;
+    
+    // Get the cell text.
+    nsXPIDLString text;
+    mView->GetCellText(aRow, currCol->GetID(), getter_Copies(text));
+    nsAutoString cellText(text);
+
+    nsCOMPtr<nsIStyleContext> textContext;
+    GetPseudoStyleContext(nsXULAtoms::mozoutlinercelltext, getter_AddRefs(textContext));
+
+    // Get the borders and padding for the text.
+    nsStyleBorderPadding borderPadding;
+    textContext->GetBorderPaddingFor(borderPadding);
+    nsMargin bp(0,0,0,0);
+    borderPadding.GetBorderPadding(bp);
+    
+    // Get the font style for the text and pass it to the rendering context.
+    const nsStyleFont* fontStyle = (const nsStyleFont*) textContext->GetStyleData(eStyleStruct_Font);
+    nsCOMPtr<nsIPresShell> shell;
+    mPresContext->GetShell(getter_AddRefs(shell));
+    nsCOMPtr<nsIRenderingContext> rc;
+    shell->CreateRenderingContext(this, getter_AddRefs(rc));
+    rc->SetFont(fontStyle->mFont);
+
+    // Get the width of the text itself
+    nscoord width;
+    rc->GetWidth(cellText, width);
+    nscoord totalTextWidth = width + bp.left + bp.right;
+    
+    // If |totalTextWidth| is greater than |remainWidth|, then we are cropping.
+    *_retval = totalTextWidth > remainWidth;
+  }
+  
+  return NS_OK;
+}
 
 NS_IMETHODIMP nsOutlinerBodyFrame::RowCountChanged(PRInt32 aIndex, PRInt32 aCount)
 {
@@ -2441,7 +2530,10 @@ nsOutlinerBodyFrame::EnsureColumns()
         frame->GetParent(&colContainer);
     } while (!frame);
           
-     nsCOMPtr<nsIBox> colContainerBox(do_QueryInterface(colContainer));
+    if (!colContainer)
+      return;
+
+    nsCOMPtr<nsIBox> colContainerBox(do_QueryInterface(colContainer));
     nsIBox* colBox = nsnull;
     colContainerBox->GetChildBox(&colBox);
     

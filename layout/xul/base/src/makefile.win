@@ -103,6 +103,7 @@ CPPSRCS=					\
 	nsPopupSetFrame.cpp \
 	nsTitleBarFrame.cpp \
 	nsResizerFrame.cpp \
+ nsXULTooltipListener.cpp \
 	$(NULL)
 
 CPP_OBJS=					\
@@ -158,6 +159,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsMenuDismissalListener.obj \
 	.\$(OBJDIR)\nsTitleBarFrame.obj \
 	.\$(OBJDIR)\nsResizerFrame.obj \
+	.\$(OBJDIR)\nsXULTooltipListener.obj \
 	$(NULL)
 
 LINCS= \

@@ -61,6 +61,8 @@
 #include "nsBoxFrame.h"
 #include "nsStackLayout.h"
 #include "nsIRootBox.h"
+#include "nsIContent.h"
+#include "nsXULTooltipListener.h"
 
 // Interface IDs
 
@@ -77,6 +79,10 @@ public:
 
   NS_IMETHOD GetPopupSetFrame(nsIFrame** aResult);
   NS_IMETHOD SetPopupSetFrame(nsIFrame* aPopupSet);
+  NS_IMETHOD GetDefaultTooltip(nsIContent** aResult);
+  NS_IMETHOD SetDefaultTooltip(nsIContent* aTooltip);
+  NS_IMETHOD AddTooltipSupport(nsIContent* aNode);
+  NS_IMETHOD RemoveTooltipSupport(nsIContent* aNode);
 
   NS_IMETHOD AppendFrames(nsIPresContext* aPresContext,
                           nsIPresShell&   aPresShell,
@@ -123,6 +129,9 @@ public:
 #endif
 
   nsIFrame* mPopupSetFrame;
+
+protected:
+  nsIContent* mDefaultTooltip;
 };
 
 //----------------------------------------------------------------------
@@ -303,6 +312,41 @@ nsRootBoxFrame::SetPopupSetFrame(nsIFrame* aPopupSet)
   if (!mPopupSetFrame) 
     mPopupSetFrame = aPopupSet;
   return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRootBoxFrame::GetDefaultTooltip(nsIContent** aTooltip)
+{
+  *aTooltip = mDefaultTooltip;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRootBoxFrame::SetDefaultTooltip(nsIContent* aTooltip)
+{
+  mDefaultTooltip = aTooltip;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRootBoxFrame::AddTooltipSupport(nsIContent* aNode)
+{
+  // listener will be refcounted by dom event targets that
+  // it will add itself to, and destroyed when those targets
+  // are destroyed
+  nsXULTooltipListener* listener = new nsXULTooltipListener();
+  listener->Init(aNode, this);
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsRootBoxFrame::RemoveTooltipSupport(nsIContent* aNode)
+{
+  // XXjh yuck, I'll have to implement a way to get at
+  // the tooltip listener for a given node to make 
+  // this work.  Not crucial, we aren't removing 
+  // tooltips from any nodes in the app just yet.
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP_(nsrefcnt) 

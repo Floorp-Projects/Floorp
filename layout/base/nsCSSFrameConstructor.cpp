@@ -103,6 +103,7 @@
 #include "nsRuleNode.h"
 #include "nsIXULDocument.h"
 #include "nsIPrintPreviewContext.h"
+#include "nsIDOMMutationEvent.h"
 
 static NS_DEFINE_CID(kTextNodeCID,   NS_TEXTNODE_CID);
 static NS_DEFINE_CID(kHTMLElementFactoryCID,   NS_HTML_ELEMENT_FACTORY_CID);
@@ -5522,6 +5523,21 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
         isReplaced = PR_TRUE;
         rv = NS_NewMenuPopupFrame(aPresShell, &newFrame);
 
+        if (aTag == nsXULAtoms::tooltip) {
+          nsAutoString defaultTooltip;
+          aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::defaultz, defaultTooltip);
+          if (defaultTooltip.EqualsIgnoreCase("true")) {
+            // Locate the root frame and tell it about the tooltip.
+            nsIFrame* rootFrame = nsnull;
+            aState.mFrameManager->GetRootFrame(&rootFrame);
+            if (rootFrame)
+              rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
+            nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+            if (rootBox)
+              rootBox->SetDefaultTooltip(aContent);
+          }
+        }
+
         // If a popup is inside a menu, then the menu understands the complex
         // rules/behavior governing the cascade of multiple menu popups and can handle
         // having the real popup frame placed under it as a child.  
@@ -5648,6 +5664,24 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*            aPresShell,
     else
       // Add the new frame to our list of frame items.
       aFrameItems.AddChild(topFrame);
+  }
+
+
+  // register tooltip support if needed
+  nsAutoString value;
+  if (aTag == nsXULAtoms::outlinerbody || // outliners always need titletips
+      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltiptext, value) !=
+        NS_CONTENT_ATTR_NOT_THERE ||
+      aContent->GetAttr(kNameSpaceID_None, nsXULAtoms::tooltip, value) !=
+        NS_CONTENT_ATTR_NOT_THERE)
+  {
+    nsIFrame* rootFrame = nsnull;
+    aState.mFrameManager->GetRootFrame(&rootFrame);
+    if (rootFrame)
+      rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
+    nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+    if (rootBox)
+      rootBox->AddTooltipSupport(aContent);
   }
 
 // addToHashTable:
@@ -10106,6 +10140,23 @@ nsCSSFrameConstructor::AttributeChanged(nsIPresContext* aPresContext,
       tag.get() == nsXULAtoms::treerow || tag.get() == nsXULAtoms::treecell))
       return NS_OK;
   }
+
+  if (aAttribute == nsXULAtoms::tooltiptext ||
+      aAttribute == nsXULAtoms::tooltip) 
+  {
+    nsIFrame* rootFrame = nsnull;
+    shell->GetRootFrame(&rootFrame);
+    if (rootFrame)
+      rootFrame->FirstChild(aPresContext, nsnull, &rootFrame);   
+    nsCOMPtr<nsIRootBox> rootBox(do_QueryInterface(rootFrame));
+    if (rootBox) {
+      if (aModType == nsIDOMMutationEvent::REMOVAL)
+        rootBox->RemoveTooltipSupport(aContent);
+      if (aModType == nsIDOMMutationEvent::ADDITION)
+        rootBox->AddTooltipSupport(aContent);
+    }
+  }
+
 #endif // INCLUDE_XUL
 
   // check for inline style.  we need to clear the data at the style context's rule
