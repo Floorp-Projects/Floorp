@@ -231,7 +231,6 @@ typedef enum JSExnType {
     JSEXN_NONE = -1,
       JSEXN_ERR,
 	JSEXN_INTERNALERR,
-	JSEXN_CONVERSIONERR,
 	JSEXN_EVALERR,
 	JSEXN_RANGEERR,
 	JSEXN_REFERENCEERR,
@@ -249,7 +248,6 @@ struct JSExnSpec {
 static struct JSExnSpec exceptions[] = {
     { JSEXN_NONE,          "Error"             },
     { JSEXN_ERR,           "InternalError"     },
-    { JSEXN_ERR,           "ConversionError"   },
     { JSEXN_ERR,           "EvalError"         },
     { JSEXN_ERR,           "RangeError"        },
     { JSEXN_ERR,           "ReferenceError"    },
@@ -289,10 +287,8 @@ Exception(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     } else {
 	message = cx->runtime->emptyString;
     }
-    if (!JS_DefineProperty(cx, obj, "message", STRING_TO_JSVAL(message),
-                           NULL, NULL, JSPROP_ENUMERATE));
-
-    return JS_TRUE;
+    return JS_DefineProperty(cx, obj, "message", STRING_TO_JSVAL(message),
+                           NULL, NULL, JSPROP_ENUMERATE);
 }
 
 /*
