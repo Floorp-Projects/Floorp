@@ -2002,7 +2002,7 @@ nsChildView::Idle()
   
 } // mouseUp
 
-const PRInt32 kNumLines = 8;
+const PRInt32 kNumLines = 4;
 
 -(void)scrollWheel:(NSEvent*)theEvent
 {
