@@ -119,8 +119,6 @@ protected:
 
   nsresult UpdateTitle();
 
-  nsRefPtr<nsMediaDocumentStreamListener>  mStreamListener;
-
   nsCOMPtr<nsIStringBundle>     mStringBundle;
   nsCOMPtr<nsIDOMElement>       mImageElement;
 
@@ -153,6 +151,8 @@ ImageListener::~ImageListener()
 NS_IMETHODIMP
 ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
+
   nsImageDocument *imgDoc = (nsImageDocument*)mDocument.get();
   nsCOMPtr<nsIChannel> channel = do_QueryInterface(request);
   if (!channel) {
@@ -172,6 +172,7 @@ NS_IMETHODIMP
 ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
                              nsresult status)
 {
+  NS_ENSURE_TRUE(mDocument, NS_ERROR_FAILURE);
   nsImageDocument *imgDoc = (nsImageDocument*)mDocument.get();
   imgDoc->UpdateTitle();
   
@@ -252,11 +253,11 @@ nsImageDocument::StartDocumentLoad(const char*         aCommand,
     return rv;
   }
 
-  mStreamListener = new ImageListener(this);
-  if (!mStreamListener)
-    return NS_ERROR_OUT_OF_MEMORY;
   NS_ASSERTION(aDocListener, "null aDocListener");
-  NS_ADDREF(*aDocListener = mStreamListener);
+  *aDocListener = new ImageListener(this);
+  if (!*aDocListener)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(*aDocListener);
 
   return NS_OK;
 }
