@@ -4269,6 +4269,38 @@ nsHTMLEditor::CanContainTag(nsIDOMNode* aParent, const nsString &aTag)
 }
 
 
+NS_IMETHODIMP 
+nsHTMLEditor::SelectEntireDocument(nsIDOMSelection *aSelection)
+{
+  nsresult res;
+  if (!aSelection || !mRules) { return NS_ERROR_NULL_POINTER; }
+  
+  // get body node
+  nsCOMPtr<nsIDOMElement>bodyElement;
+  res = GetBodyElement(getter_AddRefs(bodyElement));
+  if (NS_FAILED(res)) return res;
+  nsCOMPtr<nsIDOMNode>bodyNode = do_QueryInterface(bodyElement);
+  if (!bodyNode) return NS_ERROR_FAILURE;
+  
+  // is doc empty?
+  PRBool bDocIsEmpty;
+  res = mRules->DocumentIsEmpty(&bDocIsEmpty);
+  if (NS_FAILED(res)) return res;
+    
+  if (bDocIsEmpty)
+  {
+    // if its empty dont select entire doc - that would select the bogus node
+    return aSelection->Collapse(bodyNode, 0);
+  }
+  else
+  {
+    return nsEditor::SelectEntireDocument(aSelection);
+  }
+  return res;
+}
+
+
+
 #ifdef XP_MAC
 #pragma mark -
 #pragma mark --- Random methods ---

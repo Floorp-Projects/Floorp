@@ -98,12 +98,17 @@ nsHTMLEditRules::Init(nsHTMLEditor *aEditor, PRUint32 aFlags)
   bodyNode = do_QueryInterface(bodyElem);
   if (bodyNode)
   {
+    // temporarily turn off rules sniffing
+    nsAutoLockRulesSniffing lockIt((nsTextEditRules*)this);
     res = nsComponentManager::CreateInstance(kRangeCID, nsnull, NS_GET_IID(nsIDOMRange),
                                                     getter_AddRefs(mDocChangeRange));
     if (NS_FAILED(res)) return res;
     if (!mDocChangeRange) return NS_ERROR_NULL_POINTER;
     mDocChangeRange->SelectNode(bodyNode);
-    AdjustSpecialBreaks();
+    res = ReplaceNewlines(mDocChangeRange);
+    if (NS_FAILED(res)) return res;
+    res = AdjustSpecialBreaks();
+    if (NS_FAILED(res)) return res;
   }
   // turn on undo
   mEditor->EnableUndo(PR_TRUE);
@@ -179,6 +184,13 @@ nsHTMLEditRules::AfterEdit(PRInt32 action, nsIEditor::EDirection aDirection)
       {
         res = AdjustWhitespace(selection);
         if (NS_FAILED(res)) return res;
+      }
+      // replace newlines that are preformatted
+      if ((action == nsEditor::kOpInsertText) || 
+          (action == nsEditor::kOpInsertIMEText) ||
+          (action == nsEditor::kOpInsertNode))
+      {
+        res = ReplaceNewlines(mDocChangeRange);
       }
       // clean up any empty nodes in the selection
       res = RemoveEmptyNodes();
@@ -1577,8 +1589,27 @@ nsHTMLEditRules::WillAlign(nsIDOMSelection *aSelection,
   PRBool outMakeEmpty;
   res = ShouldMakeEmptyBlock(aSelection, alignType, &outMakeEmpty);
   if (NS_FAILED(res)) return res;
-  if (outMakeEmpty) return NS_OK;
-  
+  if (outMakeEmpty) 
+  {
+    PRInt32 offset;
+    nsCOMPtr<nsIDOMNode> brNode, parent, theDiv;
+    nsAutoString divType("div");
+    res = mEditor->GetStartNodeAndOffset(aSelection, &parent, &offset);
+    if (NS_FAILED(res)) return res;
+    res = mEditor->CreateNode(divType, parent, offset, getter_AddRefs(theDiv));
+    if (NS_FAILED(res)) return res;
+    // set up the alignment on the div
+    nsCOMPtr<nsIDOMElement> divElem = do_QueryInterface(theDiv);
+    nsAutoString attr("align");
+    res = mEditor->SetAttribute(divElem, attr, *alignType);
+    if (NS_FAILED(res)) return res;
+    *aHandled = PR_TRUE;
+    // put in a moz-br so that it won't get deleted
+    res = CreateMozBR(theDiv, 0, &brNode);
+    if (NS_FAILED(res)) return res;
+    res = aSelection->Collapse(theDiv, 0);
+    return res;
+  }
 
   // convert the selection ranges into "promoted" selection ranges:
   // this basically just expands the range to include the immediate

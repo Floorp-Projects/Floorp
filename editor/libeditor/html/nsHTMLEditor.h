@@ -241,11 +241,6 @@ public:
 
   NS_IMETHOD DebugUnitTests(PRInt32 *outNumTests, PRInt32 *outNumTestsFailed);
 
-  /* ------------ nsICSSLoaderObserver -------------- */
-  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
-
-  /* ------------ nsEditor overrides ---------------- */
-
   /** All editor operations which alter the doc should be prefaced
    *  with a call to StartOperation, naming the action and direction */
   NS_IMETHOD StartOperation(PRInt32 opID, nsIEditor::EDirection aDirection);
@@ -257,6 +252,12 @@ public:
   /** returns PR_TRUE if aParent can contain a child of type aTag */
   PRBool CanContainTag(nsIDOMNode* aParent, const nsString &aTag);
   
+  /** make the given selection span the entire document */
+  NS_IMETHOD SelectEntireDocument(nsIDOMSelection *aSelection);
+
+  /* ------------ nsICSSLoaderObserver -------------- */
+  NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
+
   /* ------------ Utility Routines, not part of public API -------------- */
   NS_IMETHOD GetBodyStyleContext(nsIStyleContext** aStyleContext);
 
