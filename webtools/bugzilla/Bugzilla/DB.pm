@@ -133,8 +133,11 @@ sub connect_shadow {
                     Param("shadowdbsock"), $db_user, $db_pass);
 }
 
-sub connect_main {
-    return _connect($db_driver, $db_host, $db_name, $db_port,
+sub connect_main (;$) {
+    my ($no_db_name) = @_;
+    my $connect_to_db = $db_name;
+    $connect_to_db = "" if $no_db_name;
+    return _connect($db_driver, $db_host, $connect_to_db, $db_port,
                     $db_sock, $db_user, $db_pass);
 }
 
@@ -147,7 +150,9 @@ sub _connect {
     my $pkg_module = "Bugzilla::DB::" . $db_module;
 
     # do the actual import
-    eval ("require $pkg_module") || die ($@);
+    eval ("require $pkg_module")
+        || die ("'$db_module' is not a valid choice for \$db_driver in "
+                . " localconfig: " . $@);
 
     # instantiate the correct DB specific module
     my $dbh = $pkg_module->new($user, $pass, $host, $dbname, $port, $sock);
@@ -279,7 +284,7 @@ sub db_new {
 
     # set up default attributes used to connect to the database
     # (if not defined by DB specific implementation)
-    $attributes = { RaiseError => 1,
+    $attributes = { RaiseError => 0,
                     AutoCommit => 1,
                     PrintError => 0,
                     ShowErrorStatement => 1,
@@ -294,7 +299,14 @@ sub db_new {
 
     # connect using our known info to the specified db
     # Apache::DBI will cache this when using mod_perl
-    my $self = DBI->connect($dsn, $user, $pass, $attributes);
+    my $self = DBI->connect($dsn, $user, $pass, $attributes)
+        or die "\nCan't connect to the database.\nError: $DBI::errstr\n"
+        . "  Is your database installed and up and running?\n  Do you have"
+        . "the correct username and password selected in localconfig?\n\n";
+
+    # RaiseError was only set to 0 so that we could catch the 
+    # above "die" condition.
+    $self->{RaiseError} = 1;
 
     # class variables
     $self->{private_bz_in_transaction} = 0;
@@ -362,7 +374,11 @@ should not be called from anywhere else.
 
  Description: Function to connect to the main database, returning a new
               database handle.
- Params:      none
+ Params:      $no_db_name (optional) - If true, Connect to the database 
+                  server, but don't connect to a specific database. This 
+                  is only used when creating a database. After you create
+                  the database, you should re-create a new Bugzilla::DB object
+                  without using this parameter. 
  Returns:     new instance of the DB class
 
 =item C<connect_shadow>

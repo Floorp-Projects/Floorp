@@ -803,12 +803,7 @@ if ($newstuff ne "") {
 # care less whether they were defined ahead of time or not. 
 my $my_db_check = ${*{$main::{'db_check'}}{SCALAR}};
 my $my_db_driver = ${*{$main::{'db_driver'}}{SCALAR}};
-my $my_db_host = ${*{$main::{'db_host'}}{SCALAR}};
-my $my_db_port = ${*{$main::{'db_port'}}{SCALAR}};
 my $my_db_name = ${*{$main::{'db_name'}}{SCALAR}};
-my $my_db_user = ${*{$main::{'db_user'}}{SCALAR}};
-my $my_db_sock = ${*{$main::{'db_sock'}}{SCALAR}};
-my $my_db_pass = ${*{$main::{'db_pass'}}{SCALAR}};
 my $my_index_html = ${*{$main::{'index_html'}}{SCALAR}};
 my $my_create_htaccess = ${*{$main::{'create_htaccess'}}{SCALAR}};
 my $my_webservergroup = ${*{$main::{'webservergroup'}}{SCALAR}};
@@ -1525,19 +1520,8 @@ if ($my_db_check) {
     # Do we have the database itself?
 
     my $sql_want = "3.23.41";  # minimum version of MySQL
-
-# original DSN line was:
-#    my $dsn = "DBI:$my_db_driver:$my_db_name;$my_db_host;$my_db_port";
-# removed the $db_name because we don't know it exists yet, and this will fail
-# if we request it here and it doesn't. - justdave@syndicomm.com 2000/09/16
-    my $dsn = "DBI:$my_db_driver:;$my_db_host;$my_db_port";
-    if ($my_db_sock ne "") {
-        $dsn .= ";mysql_socket=$my_db_sock";
-    }
-    my $dbh = DBI->connect($dsn, $my_db_user, $my_db_pass)
-      or die "Can't connect to the $my_db_driver database. Is the database " .
-        "installed and\nup and running?  Do you have the correct username " .
-        "and password selected in\nlocalconfig?\n\n";
+    
+    my $dbh = Bugzilla::DB::connect_main("no database connection");
     printf("Checking for %15s %-9s ", "MySQL Server", "(v$sql_want)") unless $silent;
     my $qh = $dbh->prepare("SELECT VERSION()");
     $qh->execute;
@@ -1586,14 +1570,7 @@ EOF
 }
 
 # now get a handle to the database:
-my $connectstring = "dbi:$my_db_driver:$my_db_name:host=$my_db_host:port=$my_db_port";
-if ($my_db_sock ne "") {
-    $connectstring .= ";mysql_socket=$my_db_sock";
-}
-
-my $dbh = DBI->connect($connectstring, $my_db_user, $my_db_pass)
-    or die "Can't connect to the table '$connectstring'.\n",
-           "Have you read the Bugzilla Guide in the doc directory?  Have you read the doc of '$my_db_driver'?\n";
+my $dbh = Bugzilla::DB::connect_main();
 
 END { $dbh->disconnect if $dbh }
 
