@@ -7,3 +7,4 @@ nsINetService.h
 nsIURL.h
 nsIPostToServer.h
 nsIHttpUrl.h
+nsINetContainerApplication.h

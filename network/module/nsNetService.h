@@ -22,12 +22,14 @@
 #include "nspr.h"
 #include "nsINetService.h"
 
+class nsINetContainerApplication;
+
 class nsNetlibService : public nsINetService {
 
 public:
     NS_DECL_ISUPPORTS
 
-    nsNetlibService();
+    nsNetlibService(nsINetContainerApplication *aContainer);
 
     /* Implementation of the nsINetService interface */
     NS_IMETHOD OpenStream(nsIURL *aUrl, nsIStreamListener *aConsumer);
@@ -35,12 +37,16 @@ public:
                                   nsIStreamListener *aConsumer,
                                   nsIInputStream **aNewStream);
 
+    NS_IMETHOD GetContainerApplication(nsINetContainerApplication **aContainer);
+    nsresult SetContainerApplication(nsINetContainerApplication *aContainer);
+
 protected:
     virtual ~nsNetlibService();
 
 private:
     /* XXX: This is temporary until bamwrap.cpp is removed... */
     void *m_stubContext;
+    nsINetContainerApplication *mContainer;
 };
 
 
