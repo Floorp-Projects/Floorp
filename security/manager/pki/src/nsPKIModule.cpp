@@ -26,7 +26,7 @@
 
 #include "nsNSSDialogs.h"
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsNSSDialogs)
+NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsNSSDialogs, Init)
 
 static nsModuleComponentInfo components[] =
 {
