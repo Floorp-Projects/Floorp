@@ -5,3 +5,4 @@
 nsISizeOfHandler.h
 nsFileStream.h
 nsFileSpec.h
+nsRepeater.h
