@@ -1457,7 +1457,6 @@ nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult)
   uri.Cut(0, nsCRT::strlen(rootURI));
 
   PRInt32 uriLen = uri.Length();
-
   PRInt32 pos;
   while(uriLen > 0) {
     nsAutoString folderName;
@@ -1468,6 +1467,7 @@ nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult)
       uri.Cut(0, 1);
       uriLen--;
     }
+
     if (uriLen == 0)
       break;
 
@@ -1475,9 +1475,11 @@ nsURI2Path(const char* rootURI, char* uriStr, nsFileSpec& pathResult)
     if (pos < 0)
       pos = uriLen;
 
-    NS_ASSERTION(uri.Left(folderName, pos) == pos,
-                 "something wrong with nsString");
 
+    PRInt32 leftRes = uri.Left(folderName, pos);
+
+    NS_ASSERTION(leftRes == pos,
+                 "something wrong with nsString");
     path += sep;
 
     // the first time around the separator is special because
@@ -1540,7 +1542,8 @@ nsPath2URI(const char* rootURI, nsFileSpec& spec, char* *uri)
     if (pos < 0) 
       pos = pathStrLen;
 
-    NS_ASSERTION(pathStr.Left(folderName, pos) == pos,
+	PRInt32 leftRes = pathStr.Left(folderName, pos);
+    NS_ASSERTION(leftRes == pos,
                  "something wrong with nsString");
 
     pathStr.Cut(0, pos + sepLen);
