@@ -11,7 +11,7 @@ use POSIX qw(sys_wait_h strftime);
 use Cwd;
 use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
-$::Version = '$Revision: 1.79 $ ';
+$::Version = '$Revision: 1.80 $ ';
 
 sub PrintUsage {
     die <<END_USAGE
@@ -354,7 +354,7 @@ sub run_tests {
         print_log "Running  DomToTextConversionTest ...\n";
         $test_result =
           FileBasedTest("DomToTextConversionTest", $build_dir, $binary_dir,
-                        "TestOutSinks", 15, "FAILED", 0);
+                        "TestOutSinks", 45, "FAILED", 0);
     }
     return $test_result;
 }
