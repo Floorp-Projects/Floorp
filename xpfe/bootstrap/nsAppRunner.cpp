@@ -31,11 +31,12 @@
 #include "nsCRT.h"
 #include "nsFileSpec.h"
 
-// include this for _getcwd call
-#include <direct.h>
 
 // header file for profile manager
 #ifdef XP_PC
+	// include this for _getcwd call
+	#include <direct.h>
+
 	#include "nsIProfile.h"
 #endif // XP_PC
 
