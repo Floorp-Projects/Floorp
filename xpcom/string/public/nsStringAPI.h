@@ -173,6 +173,22 @@ NS_StringGetData
    PRBool *aTerminated = nsnull);
 
 /**
+ * NS_StringGetData
+ *
+ * This function returns a null-terminated copy of the string's
+ * internal buffer.
+ *
+ * @param aStr          abstract string reference
+ * @return              null-terminated copy of the string's internal buffer
+ *                      (it must be free'd using using nsMemory::Free)
+ * 
+ * @status FROZEN
+ */
+NS_STRINGAPI(PRUnichar *)
+NS_StringCloneData
+  (const nsAString &aStr);
+
+/**
  * NS_StringSetData
  *
  * This function copies aData into aStr.
@@ -380,6 +396,22 @@ NS_STRINGAPI(PRUint32)
 NS_CStringGetData
   (const nsACString &aStr, const char **aData,
    PRBool *aTerminated = nsnull);
+
+/**
+ * NS_CStringGetData
+ *
+ * This function returns a null-terminated copy of the string's
+ * internal buffer.
+ *
+ * @param aStr          abstract string reference
+ * @return              null-terminated copy of the string's internal buffer
+ *                      (it must be free'd using using nsMemory::Free)
+ * 
+ * @status FROZEN
+ */
+NS_STRINGAPI(char *)
+NS_CStringCloneData
+  (const nsACString &aStr);
 
 /**
  * NS_CStringSetData

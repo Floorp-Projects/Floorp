@@ -78,6 +78,12 @@ NS_StringGetData(const nsAString &aStr, const PRUnichar **aData,
   return begin.size_forward();
 }
 
+NS_STRINGAPI(PRUnichar *)
+NS_StringCloneData(const nsAString &aStr)
+{
+  return ToNewUnicode(aStr);
+}
+
 NS_STRINGAPI(nsresult)
 NS_StringSetData(nsAString &aStr, const PRUnichar *aData, PRUint32 aDataLength)
 {
@@ -155,6 +161,12 @@ NS_CStringGetData(const nsACString &aStr, const char **aData,
   aStr.BeginReading(begin);
   *aData = begin.get();
   return begin.size_forward();
+}
+
+NS_STRINGAPI(char *)
+NS_CStringCloneData(const nsACString &aStr)
+{
+  return ToNewCString(aStr);
 }
 
 NS_STRINGAPI(nsresult)
