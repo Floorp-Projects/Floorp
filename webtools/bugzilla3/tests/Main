@@ -1,4 +1,4 @@
-#!/usr/local/bin/perl -wT
+#!/usr/bin/perl -wT
 # -*- Mode: perl; tab-width: 4; indent-tabs-mode: nil; -*-
 #
 # This file is MPL/GPL dual-licensed under the following terms:
