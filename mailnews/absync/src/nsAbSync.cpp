@@ -759,8 +759,7 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
   PRUnichar     *aName = nsnull;
   nsString      tProtLine;
   PRInt32       phoneCount = 1;
-  PRBool        foundPhone = PR_FALSE;
-  const char    *phoneType;
+  const char    *phoneType = nsnull;
 
   protLine.Truncate();
 
@@ -797,38 +796,23 @@ nsAbSync::GenerateProtocolForCard(nsIAbCard *aCard, PRBool aAddId, nsString &pro
                                             nsCaseInsensitiveStringComparator()))
         continue;
 
-      // Reset this flag...
-      foundPhone = PR_FALSE;
+      // Reset the type...
+      phoneType = nsnull;
       // If this is a phone number, we have to special case this because
       // phone #'s are handled differently than all other tags...sigh!
       //
       if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kWorkPhoneColumn, strlen(kWorkPhoneColumn)))
-      {
-        foundPhone = PR_TRUE;
         phoneType = ABSYNC_WORK_PHONE_TYPE;
-      }
       else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kHomePhoneColumn, strlen(kHomePhoneColumn)))
-      {
-        foundPhone = PR_TRUE;
         phoneType = ABSYNC_HOME_PHONE_TYPE;
-      }
       else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kFaxColumn, strlen(kFaxColumn)))
-      {
-        foundPhone = PR_TRUE;
         phoneType = ABSYNC_FAX_PHONE_TYPE;
-      }
       else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kPagerColumn, strlen(kPagerColumn)))
-      {
-        foundPhone = PR_TRUE;
         phoneType = ABSYNC_PAGER_PHONE_TYPE;
-      }
       else if (!nsCRT::strncasecmp(mSchemaMappingList[i].abField, kCellularColumn, strlen(kCellularColumn)))
-      {
-        foundPhone = PR_TRUE;
         phoneType = ABSYNC_CELL_PHONE_TYPE;
-      }
 
-      if (foundPhone)
+      if (phoneType)
       {
         char *pVal = PR_smprintf("phone%d", phoneCount);
         if (pVal)

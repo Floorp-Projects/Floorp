@@ -123,7 +123,7 @@ nsresult nsImapMoveCoalescer::PlaybackMoves()
         nsCAutoString messageIds;
         
         nsImapMailFolder::AllocateUidStringFromKeys(keysToAdd->GetArray(), keysToAdd->GetSize(), messageIds);
-        PRUint32 numKeysToAdd = keysToAdd->GetSize();
+        PRInt32 numKeysToAdd = keysToAdd->GetSize();
         if (numKeysToAdd == 0)
           continue;
         

@@ -246,7 +246,7 @@ nsMsgFilter::GetSortedActionList(nsISupportsArray *actionList)
   nsresult err = m_actionList->Count(&numActions);
   NS_ENSURE_SUCCESS(err, err);
 
-  for (PRInt32 index =0; index < numActions; index++)
+  for (PRUint32 index =0; index < numActions; index++)
   {
     nsCOMPtr<nsIMsgRuleAction> action;
     err = m_actionList->QueryElementAt(index, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(action));
@@ -621,7 +621,7 @@ nsresult nsMsgFilter::SaveRule(nsIOFileStream *aStream)
   err = m_actionList->Count(&numActions);
   NS_ENSURE_SUCCESS(err, err);
 
-  for (PRInt32 index =0; index < numActions; index++)
+  for (PRUint32 index =0; index < numActions; index++)
   {
     nsCOMPtr<nsIMsgRuleAction> action;
     err = m_actionList->QueryElementAt(index, NS_GET_IID(nsIMsgRuleAction), (void **)getter_AddRefs(action));

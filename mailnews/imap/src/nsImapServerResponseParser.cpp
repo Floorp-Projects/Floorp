@@ -61,6 +61,8 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
     fReportingErrors(PR_TRUE),
     fCurrentFolderReadOnly(PR_FALSE),
     fCurrentLineContainedFlagInfo(PR_FALSE),
+    fFetchEverythingRFC822(PR_FALSE),
+    fServerIsNetscape3xServer(PR_FALSE),
     fNumberOfUnseenMessages(0),
     fNumberOfExistingMessages(0),
     fNumberOfRecentMessages(0),
@@ -70,8 +72,6 @@ nsImapServerResponseParser::nsImapServerResponseParser(nsImapProtocol &imapProto
     fSelectedMailboxName(nsnull),
     fIMAPstate(kNonAuthenticated),
     fLastChunk(PR_FALSE),
-    fFetchEverythingRFC822(PR_FALSE),
-    fServerIsNetscape3xServer(PR_FALSE),
     m_shell(nsnull),
     fServerConnection(imapProtocolConnection),
     fHostSessionList(nsnull)

@@ -953,7 +953,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *ide
   return rv;
 }
 
-nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgProgress *progress)
+NS_IMETHODIMP nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity, nsIMsgProgress *progress)
 {
   nsresult rv = NS_OK;
   PRBool entityConversionDone = PR_FALSE;
@@ -3930,7 +3930,7 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
       htmlDomains = str;
     }
 
-    *_retval = -1;
+    *_retval = nsIAbPreferMailFormat::html;
     for (i = 0; i < MAX_OF_RECIPIENT_ARRAY; i ++)
     {
       PRInt32 nbrRecipients = recipientsList[i].Count();
@@ -3963,12 +3963,11 @@ NS_IMETHODIMP nsMsgCompose::CheckAndPopulateRecipients(PRBool populateMailList, 
           switch (recipient->mPreferFormat)
           {
             case nsIAbPreferMailFormat::html :
-              if (*_retval == -1)
-                *_retval = nsIAbPreferMailFormat::html;
+              // nothing to do
               break;
 
             case nsIAbPreferMailFormat::plaintext :
-              if (*_retval == -1 || *_retval == nsIAbPreferMailFormat::html)
+              if (*_retval == nsIAbPreferMailFormat::html)
                 *_retval = nsIAbPreferMailFormat::plaintext;
               break;
 

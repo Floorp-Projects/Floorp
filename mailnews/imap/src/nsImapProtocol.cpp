@@ -5767,7 +5767,7 @@ PRBool nsImapProtocol::DeleteSubFolders(const char* selectedMailbox, PRBool &aDe
          outerIndex++)
     {
         char* longestName = nsnull;
-        PRInt32 longestIndex;
+        PRInt32 longestIndex = 0; // fix bogus warning by initializing
         for (innerIndex = 0; 
              innerIndex < m_deletableChildren->Count();
              innerIndex++)

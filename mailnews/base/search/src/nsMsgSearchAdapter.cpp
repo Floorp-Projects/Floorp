@@ -304,7 +304,7 @@ char *nsMsgSearchAdapter::UnEscapeSearchUrl (const char *commandSpecificData)
 				scratchBuf[0] = (char) *commandSpecificData++;
 				scratchBuf[1] = (char) *commandSpecificData++;
 				scratchBuf[2] = '\0';
-				int accum = 0;
+				unsigned int accum = 0;
 				sscanf (scratchBuf, "%X", &accum);
 				*resultPtr++ = (char) accum;
 			}

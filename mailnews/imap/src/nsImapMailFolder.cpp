@@ -1860,10 +1860,11 @@ static int PR_CALLBACK CompareKey (const void *v1, const void *v2, void *)
 /* static */nsresult
 nsImapMailFolder::AllocateUidStringFromKeys(nsMsgKey *keys, PRInt32 numKeys, nsCString &msgIds)
 {
+  if (numKeys <= 0)
+    return NS_ERROR_INVALID_ARG;
   nsresult rv = NS_OK;
-  PRUint32 startSequence; // no need to init; we won't use it unless numKeys > 0
-  if (numKeys > 0)
-    startSequence = keys[0];
+  PRUint32 startSequence;
+  startSequence = keys[0];
   PRUint32 curSequenceEnd = startSequence;
   PRUint32 total = numKeys;
   // sort keys and then generate ranges instead of singletons!
@@ -2513,7 +2514,7 @@ NS_IMETHODIMP nsImapMailFolder::ParseMsgHdrs(nsIImapProtocol *aProtocol, nsIImap
   nsCOMPtr <nsIImapHeaderInfo> headerInfo;
 
   nsresult rv = aHdrXferInfo->GetNumHeaders(&numHdrs);
-  for (PRInt32 i = 0; NS_SUCCEEDED(rv) && i < numHdrs; i++)
+  for (PRUint32 i = 0; NS_SUCCEEDED(rv) && i < numHdrs; i++)
   {
 
     rv = aHdrXferInfo->GetHeader(i, getter_AddRefs(headerInfo));

@@ -901,7 +901,7 @@ NS_IMETHODIMP nsMsgSaveAsListener::OnDataAvailable(nsIRequest* request,
 
   while (count > 0)
   {
-      if (count < (PRInt32) maxReadCount)
+      if (count < maxReadCount)
           maxReadCount = count;
       rv = inStream->Read(m_dataBuffer + m_leftOver,
                           maxReadCount,
@@ -924,7 +924,7 @@ NS_IMETHODIMP nsMsgSaveAsListener::OnDataAvailable(nsIRequest* request,
       count -= readCount;
       maxReadCount = SAVE_BUF_SIZE - m_leftOver;
 
-      if (!end && count > (PRInt32) maxReadCount)
+      if (!end && count > maxReadCount)
           // must be a very very long line; sorry cannot handle it
           return NS_ERROR_FAILURE;
 

@@ -406,7 +406,6 @@ NS_IMETHODIMP nsMsgThread::GetChildKeyAt(PRInt32 aIndex, nsMsgKey *result)
 {
   nsresult ret = NS_OK;
   mdbOid oid;
-  nsIMdbRow *hdrRow = nsnull;
 
   ret = m_mdbTable->PosToOid( m_mdbDB->GetEnv(), aIndex, &oid);
   if (ret == 0)

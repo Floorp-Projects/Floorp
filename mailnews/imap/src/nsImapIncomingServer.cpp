@@ -1744,7 +1744,7 @@ NS_IMETHODIMP nsImapIncomingServer::DiscoveryDone()
               if (NS_SUCCEEDED(rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_TRASH, 2, 
                   &numFolders, trashFolders)))
               {
-                  for (int i = 0; i < numFolders; i++)
+                  for (PRUint32 i = 0; i < numFolders; i++)
                   {
                       nsXPIDLString folderName;
                       if (NS_SUCCEEDED(trashFolders[i]->GetName(getter_Copies(folderName))) && 

@@ -483,7 +483,7 @@ NS_IMETHODIMP nsMsgComposeSecure::BeginCryptoEncapsulation(nsOutputFileStream * 
     break;
 	case mime_crypto_opaque_signed:
     PR_ASSERT(0);    /* #### no api for this yet */
-    rv = -1;
+    rv = NS_ERROR_NOT_IMPLEMENTED;
 	  break;
 	case mime_crypto_signed_encrypted:
     rv = MimeInitEncryption(PR_TRUE, sendReport);
@@ -508,7 +508,7 @@ FAIL:
 /* void finishCryptoEncapsulation (in boolean aAbort); */
 NS_IMETHODIMP nsMsgComposeSecure::FinishCryptoEncapsulation(PRBool aAbort, nsIMsgSendReport *sendReport)
 {
-  nsresult rv;
+  nsresult rv = NS_OK;
 
   if (!aAbort) {
 	  switch (mCryptoState) {
