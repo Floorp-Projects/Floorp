@@ -1979,7 +1979,7 @@ DirtyLinesWithDirtyContinuations(const nsLineList::iterator& aLineStart,
                                  const nsLineList::iterator& aLineEnd)
 {
   // The line we're looking at right now
-  line_iterator line(aLineEnd);
+  nsLineList::iterator line(aLineEnd);
 
   // Whether the line following the current one is dirty
   PRBool nextLineDirty = PR_FALSE;
