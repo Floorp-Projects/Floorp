@@ -96,7 +96,7 @@ public:
     kOpSetTextProperty     = 3010,
     kOpRemoveTextProperty  = 3011,
     kOpHTMLPaste           = 3012,
-    kOpHTMLLoad            = 3013
+    kOpLoadHTML            = 3013
   };
 
 

@@ -117,6 +117,7 @@ protected:
                             const nsAReadableString  *inString,
                             nsAWritableString        *outString,
                             PRInt32          aMaxLength);
+  nsresult WillLoadHTML(nsISelection *aSelection, PRBool *aCancel);
   nsresult WillInsertBreak(nsISelection *aSelection, PRBool *aCancel, PRBool *aHandled);
   nsresult DidInsertBreak(nsISelection *aSelection, nsresult aResult);
   nsresult WillDeleteSelection(nsISelection *aSelection, nsIEditor::EDirection aAction, 
