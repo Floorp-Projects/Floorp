@@ -23,15 +23,17 @@
  */
 
 #include "prlog.h"
+
+#include "nsCOMPtr.h"
+#include "nsICategoryManager.h"
 #include "nsIComponentLoader.h"
 #include "nsIComponentManager.h"
-#include "nsIServiceManager.h"
-#include "nsCOMPtr.h"
-#include "nsISupports.h"
-#include "nsIModule.h"
-#include "nsILocalFile.h"
-#include "mozJSComponentLoader.h"
 #include "nsIGenericFactory.h"
+#include "nsILocalFile.h"
+#include "nsIModule.h"
+#include "nsIServiceManager.h"
+#include "nsISupports.h"
+#include "mozJSComponentLoader.h"
 #include "nsIJSRuntimeService.h"
 #include "nsIJSContextStack.h"
 #include "nsIXPConnect.h"
@@ -39,8 +41,10 @@
 #include "nsIAllocator.h"
 #include "nsIRegistry.h"
 #include "nsXPIDLString.h"
-#include "nsIScriptSecurityManager.h"
 #include "nsIObserverService.h"
+#ifndef XPCONNECT_STANDALONE
+#include "nsIScriptSecurityManager.h"
+#endif
 
 // For reporting errors with the console service
 #include "nsIScriptError.h"
@@ -88,8 +92,19 @@ Dump(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
     return JS_TRUE;
 }
 
+static JSBool
+Debug(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+#ifdef DEBUG
+  return Dump(cx, obj, argc, argv, rval);
+#else
+  return JS_TRUE;
+#endif
+}
+
 static JSFunctionSpec gGlobalFun[] = {
     {"dump", Dump, 1 },
+    {"debug", Debug, 1 },
     {0}
 };
 
@@ -105,6 +120,7 @@ mozJSComponentLoader::mozJSComponentLoader()
       mRuntime(nsnull),
       mContext(nsnull),
       mCompMgrWrapper(nsnull),
+      mSeasonPass(nsnull),
       mModules(nsnull),
       mGlobals(nsnull),
       mXPCOMKey(0),
@@ -151,6 +167,8 @@ mozJSComponentLoader::~mozJSComponentLoader()
         mGlobals = nsnull;
 
         JS_RemoveRoot(mContext, &mSuperGlobal);
+	JS_RemoveRoot(mContext, &mCompMgrWrapper);
+	JS_RemoveRoot(mContext, &mSeasonPass);
         mCompMgrWrapper = nsnull; // release wrapper so GC can release CM
 
         JS_DestroyContext(mContext);
@@ -306,10 +324,11 @@ mozJSComponentLoader::ReallyInit()
     if (NS_FAILED(rv))
         return rv;
     
-    nsCOMPtr<nsIXPConnectJSObjectHolder> wrappedCM;
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = mXPC->WrapNative(mContext, mSuperGlobal, mCompMgr, 
                           NS_GET_IID(nsIComponentManager),
-                          getter_AddRefs(wrappedCM));
+                          getter_AddRefs(holder));
+
     if (NS_FAILED(rv)) {
 #ifdef DEBUG_shaver
         fprintf(stderr, "WrapNative(%p,%p,nsIComponentManager) failed: %x\n",
@@ -326,6 +345,11 @@ mozJSComponentLoader::ReallyInit()
         return rv;
     }
     JS_SetErrorReporter(mContext, Reporter);
+
+#ifdef shaver_not_yet
+    nsCOMPtr<nsIScriptObjectPrincipal> seasonPass = 
+      new mozSeasonPass();
+#endif
 
     mModules = PL_NewHashTable(16, PL_HashString, PL_CompareStrings,
                                PL_CompareValues, 0, 0);
@@ -344,6 +368,7 @@ mozJSComponentLoader::ReallyInit()
     /* root last, so that we don't leak the roots in case of failure */
     JS_AddNamedRoot(mContext, &mSuperGlobal, "mJCL::mSuperGlobal");
     JS_AddNamedRoot(mContext, &mCompMgrWrapper, "mJCL::mCompMgrWrapper");
+    JS_AddNamedRoot(mContext, &mSeasonPass, "mJCL::mSeasonPass");
     return NS_OK;
 }
 
@@ -883,6 +908,8 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
         return nsnull;
     
     nsresult rv;
+    JSPrincipals* jsPrincipals = nsnull;
+#ifndef XPCONNECT_STANDALONE
     NS_WITH_SERVICE(nsIScriptSecurityManager, secman, NS_SCRIPTSECURITYMANAGER_PROGID, &rv);
     if(NS_FAILED(rv) || !secman)
         return nsnull;
@@ -892,12 +919,13 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     if(NS_FAILED(rv) || !iPrincipals)
         return nsnull;
 
-    JSPrincipals* jsPrincipals;
     rv = iPrincipals->GetJSPrincipals(&jsPrincipals);
     if(NS_FAILED(rv) || !jsPrincipals)
         return nsnull;
+#endif /* XPCONNECT_STANDALONE */
 
     obj = JS_NewObject(mContext, &gGlobalClass, mSuperGlobal, NULL);
+
     if (!obj)
         return nsnull;
 
@@ -1010,230 +1038,49 @@ mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
 
 //----------------------------------------------------------------------
 
-NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader)
+/* XXX this should all be data-driven, via NS_IMPL_GETMODULE_WITH_CATEGORIES */
+static nsresult
+RegisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
+		 const char *registryLocation, const char *componentType)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString previous;
+    return catman->AddCategoryEntry("component-loader", jsComponentTypeName,
+				    mozJSComponentLoaderProgID,
+                                    PR_TRUE, PR_TRUE, getter_Copies(previous));
+}
+
+static nsresult
+UnregisterJSLoader(nsIComponentManager *aCompMgr, nsIFile *aPath,
+		   const char *registryLocation)
+{
+    nsresult rv;
+    nsCOMPtr<nsICategoryManager> catman =
+        do_GetService(NS_CATEGORYMANAGER_PROGID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    nsXPIDLCString jsLoader;
+    rv = catman->GetCategoryEntry("component-loader", jsComponentTypeName,
+                                  getter_Copies(jsLoader));
+    if (NS_FAILED(rv)) return rv;
+
+    // only unregister if we're the current JS component loader
+    if (!strcmp(jsLoader, mozJSComponentLoaderProgID)) {
+        return catman->DeleteCategoryEntry("component-loader",
+					   jsComponentTypeName, PR_TRUE,
+                                           getter_Copies(jsLoader));
+    }
+    return NS_OK;
+}
+
+NS_GENERIC_FACTORY_CONSTRUCTOR(mozJSComponentLoader);
 
 static nsModuleComponentInfo components[] = {
     { "JS component loader", MOZJSCOMPONENTLOADER_CID,
-      mozJSComponentLoaderProgID, mozJSComponentLoaderConstructor }
+      mozJSComponentLoaderProgID, mozJSComponentLoaderConstructor,
+      RegisterJSLoader, UnregisterJSLoader }
 };
 
-/*
- * I would really like to just subclass nsGenericModule here, but I can't
- * because nsGenericFactory.h isn't exported.  If that ever changes, we
- * only need custom behaviour in the RegisterSelf case, so a simple overriding
- * of that method would be sufficient, and much smaller.
- *
- * Instead, we have nutso copy-and-paste here.
- */
-#include "nsHashtable.h"
-class mozJSModule : public nsIModule
-{
-public:
-    mozJSModule(const char *moduleName, PRUint32 componentCount,
-                nsModuleComponentInfo *components);
-    virtual ~mozJSModule();
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIMODULE
-
-protected:
-    nsresult Initialize();
-
-    void Shutdown();
-
-    PRBool                      mInitialized;
-    const char*                 mModuleName;
-    PRUint32                    mComponentCount;
-    nsModuleComponentInfo*      mComponents;
-    nsSupportsHashtable         mFactories;
-};
-
-mozJSModule::mozJSModule(const char* moduleName, PRUint32 componentCount,
-                         nsModuleComponentInfo* aComponents)
-    : mInitialized(PR_FALSE), 
-      mModuleName(moduleName),
-      mComponentCount(componentCount),
-      mComponents(aComponents),
-      mFactories(8, PR_FALSE)
-{
-    NS_INIT_ISUPPORTS();
-}
-
-mozJSModule::~mozJSModule()
-{
-    Shutdown();
-}
-
-NS_IMPL_ISUPPORTS1(mozJSModule, nsIModule)
-
-// Perform our one-time intialization for this module
-nsresult
-mozJSModule::Initialize()
-{
-    if (mInitialized) {
-        return NS_OK;
-    }
-    mInitialized = PR_TRUE;
-    return NS_OK;
-}
-
-// Shutdown this module, releasing all of the module resources
-void
-mozJSModule::Shutdown()
-{
-    // Release the factory objects
-    mFactories.Reset();
-}
-
-// Create a factory object for creating instances of aClass.
-NS_IMETHODIMP
-mozJSModule::GetClassObject(nsIComponentManager *aCompMgr,
-                                const nsCID& aClass,
-                                const nsIID& aIID,
-                                void** r_classObj)
-{
-    nsresult rv;
-
-    // Defensive programming: Initialize *r_classObj in case of error below
-    if (!r_classObj) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *r_classObj = NULL;
-
-    // Do one-time-only initialization if necessary
-    if (!mInitialized) {
-        rv = Initialize();
-        if (NS_FAILED(rv)) {
-            // Initialization failed! yikes!
-            return rv;
-        }
-    }
-
-    // Choose the appropriate factory, based on the desired instance
-    // class type (aClass).
-    nsIDKey key(aClass);
-    nsCOMPtr<nsIGenericFactory> fact = getter_AddRefs(NS_REINTERPRET_CAST(nsIGenericFactory *, mFactories.Get(&key)));
-    if (fact == nsnull) {
-        nsModuleComponentInfo* desc = mComponents;
-        for (PRUint32 i = 0; i < mComponentCount; i++) {
-            if (desc->mCID.Equals(aClass)) {
-                rv = NS_NewGenericFactory(getter_AddRefs(fact), desc->mConstructor);
-                if (NS_FAILED(rv)) return rv;
-
-                (void)mFactories.Put(&key, fact);
-                goto found;
-            }
-            desc++;
-        }
-        // not found in descriptions
-#ifdef DEBUG
-        char* cs = aClass.ToString();
-        printf("+++ nsGenericModule %s: unable to create factory for %s\n", mModuleName, cs);
-        nsCRT::free(cs);
-#endif
-        // XXX put in stop-gap so that we don't search for this one again
-		return NS_ERROR_FACTORY_NOT_REGISTERED;
-    }
-  found:    
-    rv = fact->QueryInterface(aIID, r_classObj);
-    return rv;
-}
-
-NS_IMETHODIMP
-mozJSModule::RegisterSelf(nsIComponentManager *aCompMgr,
-                              nsIFile* aPath,
-                              const char* registryLocation,
-                              const char* componentType)
-{
-    nsresult rv = NS_OK;
-
-#ifdef DEBUG
-    printf("*** Registering %s components (all right -- an almost-generic module!)\n", mModuleName);
-#endif
-
-    nsModuleComponentInfo* cp = mComponents;
-    for (PRUint32 i = 0; i < mComponentCount; i++) {
-        rv = aCompMgr->RegisterComponentSpec(cp->mCID, cp->mDescription,
-                                             cp->mProgID, aPath, PR_TRUE,
-                                             PR_TRUE);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsGenericModule %s: unable to register %s component => %x\n",
-                   mModuleName, cp->mDescription, rv);
-#endif
-            break;
-        }
-        cp++;
-    }
-
-    return aCompMgr->RegisterComponentLoader(jsComponentTypeName,
-                                             mozJSComponentLoaderProgID,
-                                             PR_TRUE);
-}
-
-NS_IMETHODIMP
-mozJSModule::UnregisterSelf(nsIComponentManager* aCompMgr,
-                            nsIFile* aPath,
-                            const char* registryLocation)
-{
-#ifdef DEBUG
-    printf("*** Unregistering %s components (all right -- an almost-generic module!)\n", mModuleName);
-#endif
-    nsModuleComponentInfo* cp = mComponents;
-    for (PRUint32 i = 0; i < mComponentCount; i++) {
-        nsresult rv = aCompMgr->UnregisterComponentSpec(cp->mCID, aPath);
-        if (NS_FAILED(rv)) {
-#ifdef DEBUG
-            printf("nsGenericModule %s: unable to unregister %s component => %x\n",
-                   mModuleName, cp->mDescription, rv);
-#endif
-        }
-        cp++;
-    }
-
-    return NS_OK;
-}
-
-NS_IMETHODIMP
-mozJSModule::CanUnload(nsIComponentManager *aCompMgr, PRBool *okToUnload)
-{
-    if (!okToUnload) {
-        return NS_ERROR_INVALID_POINTER;
-    }
-    *okToUnload = PR_FALSE;
-    return NS_ERROR_FAILURE;
-}
-
-NS_EXPORT nsresult
-NS_NewJSModule(const char* moduleName,
-               PRUint32 componentCount,
-               nsModuleComponentInfo* aComponents,
-               nsIModule* *result)
-{
-    nsresult rv = NS_OK;
-
-    NS_ASSERTION(result, "Null argument");
-
-    // Create and initialize the module instance
-    mozJSModule *m =  new mozJSModule(moduleName, componentCount, aComponents);
-    if (!m) {
-        return NS_ERROR_OUT_OF_MEMORY;
-    }
-
-    // Increase refcnt and store away nsIModule interface to m in return_cobj
-    rv = m->QueryInterface(NS_GET_IID(nsIModule), (void**)result);
-    if (NS_FAILED(rv)) {
-        delete m;
-        m = nsnull;
-    }
-    return rv;
-}
-
-extern "C" NS_EXPORT nsresult NSGetModule(nsIComponentManager *compMgr,
-                                          nsIFile *location,
-                                          nsIModule** result)
-{
-    return NS_NewJSModule("mozJSComponentLoader",
-                          sizeof(components) / sizeof(components[0]),
-                          components, result);
-}
-
+NS_IMPL_NSGETMODULE("JS component loader", components);

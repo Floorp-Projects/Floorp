@@ -135,22 +135,6 @@ interface nsIComponentManager : nsISupports
                          in boolean aReplace);
 
     /**
-     * registerComponentLoader
-     *
-     * Register a ProgID whose CID will be the loader for component type
-     * aType. When creating instances of this component type, module loading
-     * and factory creation is delegated to the component loader.
-     *
-     * @param aType : Component Type for which the loader progid is being
-     *                registered.
-     * @param aProgID : ProgID of object that will be the loader for aType
-     * @param aReplace : Boolean that indicates whether to replace a previous
-     *                   loader registration for aType.
-     */
-    void registerComponentLoader(in string aType, in string aProgID,
-                                 in boolean aReplace);
-
-    /**
      * registerComponent
      *
      * Register a native dll module via its registry representation as returned
