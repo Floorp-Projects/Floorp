@@ -861,7 +861,11 @@ void nsImapServerResponseParser::mailbox(mailbox_spec *boxSpec)
 		//boxSpec->hostName = nsnull;
 		//if (boxSpec->connection && boxSpec->connection->GetCurrentUrl())
 		boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
-		boxSpec->connection->GetCurrentUrl()->GetHost(&boxSpec->hostName);
+		nsIURL * aURL = nsnull;
+		boxSpec->connection->GetCurrentUrl()->QueryInterface(nsIURL::GetIID(), (void **) &aURL);
+		if (aURL)
+			aURL->GetHost(&boxSpec->hostName);
+		NS_IF_RELEASE(aURL);
         if (boxname)
             PL_strfree( boxname);
 		// storage for the boxSpec is now owned by server connection
@@ -2295,7 +2299,15 @@ struct mailbox_spec *nsImapServerResponseParser::CreateCurrentMailboxSpec(const 
 		returnSpec->allocatedPathName = convertedMailboxName;
 		returnSpec->connection = &fServerConnection;
 		if (returnSpec->connection)
-			returnSpec->connection->GetCurrentUrl()->GetHost(&returnSpec->hostName);
+		{
+			nsIURL * aUrl = nsnull;
+			nsresult rv = NS_OK;
+			returnSpec->connection->GetCurrentUrl()->QueryInterface(nsIURL::GetIID(), (void **) &aUrl);
+			if (NS_SUCCEEDED(rv) && aUrl)
+				aUrl->GetHost(&returnSpec->hostName);
+			NS_IF_RELEASE(aUrl);
+			
+		}
 		else
 			returnSpec->hostName = nsnull;
 		if (fFlagState)
