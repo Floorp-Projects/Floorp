@@ -92,6 +92,7 @@
 #include "nsReadableUtils.h"
 #include "nsNewsDownloader.h"
 #include "nsIStringBundle.h"
+#include "nsEscape.h"
 
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
@@ -952,11 +953,20 @@ nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages, nsIMsgWindow *aMsgWi
   nsXPIDLCString messageID;
   rv = msgHdr->GetMessageId(getter_Copies(messageID));
   NS_ENSURE_SUCCESS(rv,rv);
+  
+  // we need to escape the message ID, 
+  // it might contain characters which will mess us up later, like #
+  // see bug #120502
+  char *escapedMessageID = nsEscape(messageID.get(), url_Path);
+  if (!escapedMessageID)
+    return NS_ERROR_OUT_OF_MEMORY;
 
   nsCAutoString cancelURL((const char *)serverURI);
   cancelURL += '/';
-  cancelURL += (const char *)messageID;
+  cancelURL += escapedMessageID;
   cancelURL += "?cancel";
+
+  PR_FREEIF(escapedMessageID);
 
   nsXPIDLCString messageURI;
   rv = GetUriForMsg(msgHdr, getter_Copies(messageURI));

@@ -81,6 +81,7 @@
 #include "prprf.h"
 #include "nsICacheService.h"
 #include "nsNetCID.h"
+#include "nsEscape.h"
 
 #undef GetPort  // XXX Windows!
 #undef SetPort  // XXX Windows!
@@ -181,15 +182,22 @@ nsNntpService::CreateMessageIDURL(nsIMsgFolder *folder, nsMsgKey key, char **url
     NS_ENSURE_ARG_POINTER(folder);
     NS_ENSURE_ARG_POINTER(url);
     if (key == nsMsgKey_None) return NS_ERROR_INVALID_ARG;
+    
+    nsresult rv;
+    nsCOMPtr <nsIMsgNewsFolder> newsFolder = do_QueryInterface(folder, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
 
-    nsCOMPtr <nsIMsgDBHdr> hdr;
-    nsresult rv = folder->GetMessageHeader(key, getter_AddRefs(hdr));
-    NS_ENSURE_SUCCESS(rv,rv);
-    
     nsXPIDLCString messageID;
-    rv = hdr->GetMessageId(getter_Copies(messageID));
+    rv = newsFolder->GetMessageIdForKey(key, getter_Copies(messageID));
     NS_ENSURE_SUCCESS(rv,rv);
-    
+
+    // we need to escape the message ID, 
+    // it might contain characters which will mess us up later, like #
+    // see bug #120502
+    char *escapedMessageID = nsEscape(messageID.get(), url_Path);
+    if (!escapedMessageID)
+      return NS_ERROR_OUT_OF_MEMORY;
+
     nsCOMPtr <nsIMsgFolder> rootFolder;
     rv = folder->GetRootFolder(getter_AddRefs(rootFolder));
     NS_ENSURE_SUCCESS(rv,rv);
@@ -201,9 +209,14 @@ nsNntpService::CreateMessageIDURL(nsIMsgFolder *folder, nsMsgKey key, char **url
     nsCAutoString uri;
     uri = rootFolderURI.get();
     uri += '/';
-    uri += messageID.get();
+    uri += escapedMessageID;
     *url = nsCRT::strdup(uri.get());
-    if (!*url) return NS_ERROR_OUT_OF_MEMORY;
+    
+    PR_FREEIF(escapedMessageID);
+
+    if (!*url) 
+      return NS_ERROR_OUT_OF_MEMORY;
+    
     return NS_OK;
 }
 
