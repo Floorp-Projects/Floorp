@@ -154,11 +154,11 @@ PR_STATIC_CALLBACK(PRStatus) InitThread(void)
 nsTimerImpl::nsTimerImpl() :
   mClosure(nsnull),
   mCallbackType(CALLBACK_TYPE_UNKNOWN),
+  mIdle(PR_TRUE),
   mFiring(PR_FALSE),
   mArmed(PR_FALSE),
   mCanceled(PR_FALSE),
-  mTimeout(0),
-  mIdle(PR_TRUE)
+  mTimeout(0)
 {
   NS_INIT_ISUPPORTS();
   nsIThread::GetCurrent(getter_AddRefs(mCallingThread));
