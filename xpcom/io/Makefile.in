@@ -68,7 +68,6 @@ EXPORTS		= \
 		nsSpecialSystemDirectory.h \
 	        nsScriptableInputStream.h \
 		nsStorageStream.h \
-		nsIByteArrayInputStream.h \
 		$(NULL)			
 
 XPIDLSRCS	= \
