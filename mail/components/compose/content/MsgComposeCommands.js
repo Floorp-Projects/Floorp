@@ -1124,6 +1124,10 @@ function ComposeFieldsReady(msgType)
   }
   CompFields2Recipients(gMsgCompose.compFields, gMsgCompose.type);
   SetComposeWindowTitle();
+
+  if (gMsgCompose.composeHTML)
+    setTimeout("loadHTMLMsgPrefs();", 0);
+
   enableEditableFields();
   AdjustFocus();
 }
@@ -3060,4 +3064,40 @@ function toggleAddressPicker()
 function AddRecipient(recipientType, address)
 {
   awAddRecipient(recipientType, address);
+}
+
+function loadHTMLMsgPrefs() 
+{
+  var pref = GetPrefs();
+  var fontFace;
+  var fontSize;
+  var textColor;
+  var bgColor;
+  
+  try { 
+    fontFace = pref.getCharPref("msgcompose.font_face");
+    doStatefulCommand('cmd_fontFace', fontFace);
+  } catch (e) {}
+ 
+  try { 
+    fontSize = pref.getCharPref("msgcompose.font_size");
+    EditorSetFontSize(fontSize);
+    } catch (e) {}  
+   
+  var bodyElement = GetBodyElement(); 
+  try { 
+    textColor = pref.getCharPref("msgcompose.text_color");
+    bodyElement.setAttribute("text", textColor);
+    gDefaultTextColor = textColor;
+    document.getElementById("cmd_fontColor").setAttribute("state", textColor);    
+    onFontColorChange();
+  } catch (e) {}
+ 
+  try { 
+    bgColor = pref.getCharPref("msgcompose.background_color");
+    bodyElement.setAttribute("bgcolor", bgColor);
+    gDefaultBackgroundColor = bgColor;
+    document.getElementById("cmd_backgroundColor").setAttribute("state", bgColor);
+    onBackgroundColorChange();
+  } catch (e) {}
 }

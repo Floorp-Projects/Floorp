@@ -39,6 +39,12 @@
 
       }
 
+      function htmlComposeDialog()
+      {
+        window.openDialog("chrome://messenger/content/messengercompose/pref-composing_html.xul", "_blank",
+                   "chrome,resizable=yes,centerscreen","htmlCompose");
+
+      }
     ]]>
   </script>
 
@@ -120,6 +126,14 @@
       <button label="&sendOptions.label;" 
               accesskey="&sendOptions.accesskey;"
               oncommand="sendOptionsDialog();"/>
+    </hbox>
+
+    <hbox align="center">
+      <description>&htmlComposeDescription.label;</description>
+      <spring flex="1"/>
+      <button label="&htmlCompose.label;" 
+              accesskey="&htmlCompose.accesskey;"
+              oncommand="htmlComposeDialog();"/>
     </hbox>
   </groupbox>
 

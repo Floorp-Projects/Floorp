@@ -1,0 +1,138 @@
+<?xml version="1.0"?>
+
+<?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+
+<!DOCTYPE dialog [
+<!ENTITY % htmlComposeDTD SYSTEM "chrome://messenger/locale/messengercompose/pref-composing_html.dtd">
+%htmlComposeDTD;
+<!ENTITY % editorOverlayDTD SYSTEM "chrome://editor/locale/editorOverlay.dtd">
+%editorOverlayDTD;
+]>
+
+<dialog id="htmlCompose"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        title="&dialog.title;"
+        onload="populateFonts(); window.opener.top.initPanel('chrome://messenger/content/messengercompose/pref-composing_html.xul', window);" 
+        buttons="accept,cancel"
+        ondialogaccept="onDialogAccept();">
+
+  <script>
+    <![CDATA[
+
+      var _elementIDs = ["FontSelect", "fontSizeSelect", "textColor", "backgroundColor"];
+                          
+      function Startup()
+      {
+        getColorFromWellAndSetValue("textColorButton"); 
+        getColorFromWellAndSetValue("backgroundColorButton");        
+      }
+      
+      function setColorWell(aPicker)
+      {
+        var colorRef = aPicker.nextSibling;
+        colorRef.setAttribute( "value", aPicker.color );
+      }
+      
+      function getColorFromWellAndSetValue(aPickerId)
+      {
+        var picker = document.getElementById(aPickerId);
+        var colorRef  = picker.nextSibling;
+        var color = colorRef.getAttribute("value");
+        picker.color = color;
+        return color;
+      }
+      
+      function populateFonts() 
+      {
+        var fontsList = document.getElementById("FontSelect");
+        try {
+          var enumerator = Components.classes["@mozilla.org/gfx/fontenumerator;1"]
+                                     .getService(Components.interfaces.nsIFontEnumerator);
+          var localFontCount = { value: 0 }
+          var localFonts = enumerator.EnumerateAllFonts(localFontCount);
+          for (var i = 0; i < localFonts.length; ++i) 
+          {
+            if (localFonts[i] != "") 
+              fontsList.appendItem(localFonts[i], localFonts[i]);
+          }
+        }
+          catch(e) { }
+      }   
+
+      function restoreDefaults()
+      {
+        document.getElementById('FontSelect').value = "";
+        document.getElementById('fontSizeSelect').value = "medium";
+        document.getElementById('textColor').setAttribute('value','#000000');
+        document.getElementById('backgroundColor').setAttribute('value', '#FFFFFF');
+
+        Startup(); // reset the color wells
+      }
+
+      function onDialogAccept()
+      {
+        window.opener.top.hPrefWindow.wsm.savePageData(window.location.href, window);
+        return true;
+      }
+  ]]>
+  </script>  
+
+  <groupbox align="start">
+    <caption label="&defaultMessagesHeader.label;"/>  
+    <vbox>
+      <hbox align="center">
+        <label control="FontSelect" value="&font.label;" accesskey="&font.accesskey;"/>
+        <menulist id="FontSelect" preftype="string" prefstring="msgcompose.font_face">
+          <menupopup>
+            <menuitem value="" label="&fontVarWidth.label;"/>
+              <menuitem value="tt" label="&fontFixedWidth.label;"/>
+              <menuseparator/>
+              <menuitem value="Helvetica, Arial, sans-serif" label="&fontHelveticaFont.label;"/>
+              <menuitem value="Times New Roman, Times, serif" label="&fontTimes.label;"/>
+              <menuitem value="Courier New, Courier, monospace" label="&fontCourier.label;"/>
+              <menuseparator/>
+            </menupopup>
+          </menulist>           
+      </hbox>
+
+      <separator class="thin"/>
+        
+      <hbox align="center">
+        <label control="fontSizeSelect" value="&size.label;" accesskey="&size.accesskey;"/>
+        <menulist id="fontSizeSelect" preftype="string" prefstring="msgcompose.font_size">
+          <menupopup>
+            <menuitem value="x-small" label="&size-x-smallCmd.label;"/>
+            <menuitem value="small" label="&size-smallCmd.label;"/>
+            <menuitem value="medium" label="&size-mediumCmd.label;"/>
+            <menuitem value="large" label="&size-largeCmd.label;"/>
+            <menuitem value="x-large" label="&size-x-largeCmd.label;"/>
+            <menuitem value="xx-large" label="&size-xx-largeCmd.label;"/>
+          </menupopup>
+        </menulist>
+      </hbox>
+
+      <separator class="thin"/>
+      <hbox align="center">
+        <label control="textColorButton" value="&fontColor.label;" accesskey="&fontColor.accesskey;"/>
+        <colorpicker type="button" id="textColorButton" onchange="setColorWell(this)"/>
+        <data id="textColor" preftype="color" prefstring="msgcompose.text_color" prefattribute="value" wsm_attributes="value"/>
+        <spring flex="1"/>
+        <label control="backgroundColorButton" value="&bgColor.label;" accesskey="&bgColor.accesskey;"/>      
+        <colorpicker type="button" id="backgroundColorButton" onchange="setColorWell(this)"/>
+        <data id="backgroundColor" preftype="color" prefstring="msgcompose.background_color" prefattribute="value" wsm_attributes="value"/>
+      </hbox>
+      
+      <separator/>
+      <hbox align="center">
+        <description>&restoreDefaultsDescription.label;</description>
+        <spring flex="1"/>
+        <button label="&restoreDefaults.label;" 
+                accesskey="&restoreDefaults.accesskey;"
+                oncommand="restoreDefaults();"/>
+      </hbox>
+      <separator class="thin"/>
+
+    </vbox>    
+  </groupbox>
+
+</dialog>
