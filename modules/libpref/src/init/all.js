@@ -33,7 +33,8 @@ pref("general.startup.browser",             true);
 pref("general.startup.mail",                false);
 pref("general.startup.news",                false);
 pref("general.startup.editor",              false);
-pref("general.startup.calendar",            false);
+pref("general.startup.compose",             false);
+pref("general.startup.addressbook",         false);
 
 pref("general.always_load_images",          true);
 pref("general.always_load_movies",          true);
