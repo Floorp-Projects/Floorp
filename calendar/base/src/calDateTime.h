@@ -41,11 +41,15 @@
 
 #include "nsString.h"
 
+#include "jsapi.h"
+#include "nsIXPCScriptable.h"
+
 #include "calIDateTime.h"
 
 struct icaltimetype;
 
-class calDateTime : public calIDateTime
+class calDateTime : public calIDateTime,
+                    public nsIXPCScriptable
 {
 public:
     calDateTime ();
@@ -57,6 +61,8 @@ public:
     // calIDateTime interface
     NS_DECL_CALIDATETIME
 
+    // nsIXPCScriptable interface
+    NS_DECL_NSIXPCSCRIPTABLE
 protected:
     PRBool mImmutable;
 

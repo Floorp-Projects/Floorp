@@ -50,6 +50,8 @@ FORCE_STATIC_LIB = 1
 GRE_MODULE       = 1
 
 REQUIRES = xpcom \
+	   js \
+	   xpconnect \
            string \
 	   ical \
 	   $(NULL)

@@ -61,10 +61,8 @@ interface calIDateTime : nsISupports
   // year/etc.
   attribute PRTime nativeTime;
 
-  //
-  // Date/Time components.  Setting any of these causes the DateTime
-  // to become invalid, until normalize() is called.
-  //
+  // also implemented is a jsTime attribute,
+  // for getting/setting a javascript Date object
 
   // Year, fully exploded (e.g. "1989", "2004")
   attribute short year;
