@@ -38,6 +38,7 @@
 #include "BrowserFrame.h"
 #include "MailFrame.h"
 #include "ChatFrame.h"
+#include "EditorFrame.h"
 
 #include "GeckoProtocolHandler.h"
 #include "GeckoWindowCreator.h"
@@ -80,13 +81,15 @@ class EmbedApp : public wxApp
     void OnAbout(wxCommandEvent &event);
     void OnMail(wxCommandEvent &event);
     void OnChat(wxCommandEvent &event);
+    void OnEditor(wxCommandEvent &event);
 };
 
 BEGIN_EVENT_TABLE(EmbedApp, wxApp)
-    EVT_MENU(XRCID("menu_quit"),  EmbedApp::OnQuit)
-    EVT_MENU(XRCID("menu_about"), EmbedApp::OnAbout)
-    EVT_MENU(XRCID("menu_mail"),  EmbedApp::OnMail)
-    EVT_MENU(XRCID("menu_chat"),  EmbedApp::OnChat)
+    EVT_MENU(XRCID("menu_quit"),   EmbedApp::OnQuit)
+    EVT_MENU(XRCID("menu_about"),  EmbedApp::OnAbout)
+    EVT_MENU(XRCID("menu_mail"),   EmbedApp::OnMail)
+    EVT_MENU(XRCID("menu_chat"),   EmbedApp::OnChat)
+    EVT_MENU(XRCID("menu_editor"), EmbedApp::OnEditor)
 END_EVENT_TABLE()
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -166,12 +169,27 @@ void EmbedApp::OnAbout(wxCommandEvent & WXUNUSED(event))
 void EmbedApp::OnMail(wxCommandEvent & WXUNUSED(event))
 {
     // Create the mail frame window
-    MailFrame * frame = new MailFrame(NULL);
-    frame->Show(TRUE);
+    static MailFrame * frame = NULL;
+    if (!frame)
+        frame = new MailFrame(NULL);
+    if (frame)
+        frame->Show(TRUE);
 }
 
 void EmbedApp::OnChat(wxCommandEvent & WXUNUSED(event))
 {
-    ChatFrame * frame = new ChatFrame(NULL);
-    frame->Show(TRUE);
+    static ChatFrame * frame = NULL;
+    if (!frame)
+        frame = new ChatFrame(NULL);
+    if (frame)
+        frame->Show(TRUE);
+}
+
+void EmbedApp::OnEditor(wxCommandEvent & WXUNUSED(event))
+{
+    static EditorFrame * frame = NULL;
+    if (!frame)
+        frame = new EditorFrame(NULL);
+    if (frame)
+        frame->Show(TRUE);
 }

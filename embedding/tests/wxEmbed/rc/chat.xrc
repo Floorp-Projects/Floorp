@@ -33,7 +33,7 @@
       </object>
       <object class="sizeritem">
         <flag>wxGROW|wxALIGN_LEFT|wxALIGN_CENTER_VERTICAL</flag>
-        <object class="wxTextCtrl" name="url">
+        <object class="wxTextCtrl" name="chat">
           <style>wxTE_PROCESS_ENTER</style>
         </object>
       </object>

@@ -90,6 +90,14 @@ SOURCE=.\BrowserFrame.cpp
 # End Source File
 # Begin Source File
 
+SOURCE=.\ChatFrame.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditorFrame.cpp
+# End Source File
+# Begin Source File
+
 SOURCE=.\EmbedApp.cpp
 # End Source File
 # Begin Source File
@@ -99,6 +107,10 @@ SOURCE=.\GeckoContainer.cpp
 # Begin Source File
 
 SOURCE=.\GeckoContainerUI.cpp
+# End Source File
+# Begin Source File
+
+SOURCE=.\GeckoFrame.cpp
 # End Source File
 # Begin Source File
 
@@ -126,7 +138,19 @@ SOURCE=.\BrowserFrame.h
 # End Source File
 # Begin Source File
 
+SOURCE=.\ChatFrame.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\EditorFrame.h
+# End Source File
+# Begin Source File
+
 SOURCE=.\GeckoContainer.h
+# End Source File
+# Begin Source File
+
+SOURCE=.\GeckoFrame.h
 # End Source File
 # Begin Source File
 
@@ -159,6 +183,14 @@ SOURCE=.\rc\back.gif
 # Begin Source File
 
 SOURCE=.\rc\browser.xrc
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\chat.xrc
+# End Source File
+# Begin Source File
+
+SOURCE=.\rc\editor.xrc
 # End Source File
 # Begin Source File
 

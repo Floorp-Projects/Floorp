@@ -32,12 +32,10 @@
 #ifndef MAILFRAME_H
 #define MAILFRAME_H
 
-#include "GeckoContainer.h"
-#include "GeckoWindow.h"
+#include "GeckoFrame.h"
 
 class MailFrame :
-    public wxFrame,
-    public GeckoContainerUI
+    public GeckoFrame
 {
 public :
     MailFrame(wxWindow* aParent);
@@ -46,8 +44,6 @@ public :
 
     void OnArticleClick(wxListEvent &event);
 
-    GeckoWindow            *mGeckoWnd;
-    nsCOMPtr<nsIWebBrowser> mWebbrowser;
 };
 
 #endif

@@ -1,0 +1,70 @@
+<?xml version="1.0"?>
+
+<resource version="2.3.0.1">
+
+  <object class="wxFrame" name="editor_frame">
+    <title>wxEmbed Mail</title>
+    <size>300,300</size>
+    <style>wxCAPTION|wxSYSTEM_MENU|wxRESIZE_BORDER|wxRESIZE_BOX|wxCLIP_CHILDREN</style>
+    <pos>-1,-1</pos>
+
+    <!-- Editor menu -->
+    <object class="wxMenuBar" name="mainmenu">
+      <style>wxMB_DOCKABLE</style>
+      <object_ref ref="menu_file"/>
+    </object>
+
+    <!-- Editor tool bar -->
+    <object class="wxToolBar" name="toolbar">
+      <style>wxTB_FLAT|wxTB_DOCKABLE</style>
+      <margins>2,2</margins>
+      <bitmapsize>20,18</bitmapsize>
+  
+      <object class="tool" name="edit_bold">
+        <bitmap>home.gif</bitmap>
+        <tooltip>Bold</tooltip>
+      </object>
+      <object class="tool" name="browse_italic">
+        <bitmap>home.gif</bitmap>
+        <tooltip>Italic</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="browse_underline">
+        <bitmap>home.gif</bitmap>
+        <tooltip>Underline</tooltip>
+      </object>
+      <object class="separator"/>
+      <object class="tool" name="browse_indent">
+        <bitmap>home.gif</bitmap>
+        <tooltip>Indent paragraph</tooltip>
+      </object>
+      <object class="tool" name="browse_outdent">
+        <bitmap>home.gif</bitmap>
+        <tooltip>Outdent paragraph</tooltip>
+      </object>
+    </object>
+
+
+    <object class="wxFlexGridSizer">
+      <cols>1</cols>
+      <rows>1</rows>
+      <vgap>0</vgap>
+      <hgap>0</hgap>
+      <growablecols>0</growablecols>
+      <growablerows>0</growablerows>
+
+      <!-- Gecko Window -->
+
+      <object class="sizeritem">
+        <flag>wxGROW|wxALL</flag>
+        <object class="wxPanel" name="gecko" subclass="GeckoWindow">
+          <style>wxCLIP_CHILDREN|wxSUNKEN_BORDER</style>
+          <size>500,280</size>
+        </object>
+      </object>
+
+    </object>
+
+
+  </object>
+</resource>

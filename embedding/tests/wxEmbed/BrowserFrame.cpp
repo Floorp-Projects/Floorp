@@ -35,7 +35,7 @@
 
 #include "nsIURI.h"
 
-BEGIN_EVENT_TABLE(BrowserFrame, wxFrame)
+BEGIN_EVENT_TABLE(BrowserFrame, GeckoFrame)
     EVT_MENU(XRCID("browse_back"),      BrowserFrame::OnBrowserBack)
     EVT_UPDATE_UI(XRCID("browse_back"), BrowserFrame::OnUpdateBrowserBack)
     EVT_MENU(XRCID("browse_fwd"),       BrowserFrame::OnBrowserForward)
@@ -48,38 +48,13 @@ BEGIN_EVENT_TABLE(BrowserFrame, wxFrame)
     EVT_TEXT_ENTER(XRCID("url"),        BrowserFrame::OnBrowserUrl)
 END_EVENT_TABLE()
 
-BrowserFrame::BrowserFrame(wxWindow* aParent) :
-    mGeckoWnd(NULL)
+BrowserFrame::BrowserFrame(wxWindow* aParent)
 {
     wxXmlResource::Get()->LoadFrame(this, aParent, wxT("browser_frame"));
 
     SetIcon(wxICON(appicon));
 
-    mGeckoWnd = (GeckoWindow *) FindWindowById(XRCID("gecko"), this);
-    if (mGeckoWnd)
-    {
-        // Note we pass in 'browser' as the role so that when the content
-        // wants to open a popup the window creator can say okay but deny it
-        // for other roles such as 'mail' or whatever.
-        GeckoContainer *geckoContainer = new GeckoContainer(this, "browser");
-        if (geckoContainer)
-        {
-            mGeckoWnd->SetGeckoContainer(geckoContainer);
-
-            PRUint32 aChromeFlags = nsIWebBrowserChrome::CHROME_ALL;
-            geckoContainer->SetChromeFlags(aChromeFlags);
-            geckoContainer->SetParent(nsnull);
-
-            wxSize size = mGeckoWnd->GetClientSize();
-
-            // Insert the browser
-            geckoContainer->CreateBrowser(0, 0, size.GetWidth(), size.GetHeight(),
-                (nativeWindow) mGeckoWnd->GetHWND(), getter_AddRefs(mWebbrowser));
-
-            GeckoContainerUI::ShowWindow(PR_TRUE);
-
-        }
-    }
+    SetupDefaultGeckoWindow();
 
     CreateStatusBar();
 }
@@ -91,13 +66,13 @@ BrowserFrame::BrowserFrame(wxWindow* aParent) :
 
 void BrowserFrame::OnBrowserGo(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
         wxTextCtrl *txtCtrl = (wxTextCtrl *) FindWindowById(XRCID("url"), this);
         wxString url = txtCtrl->GetValue();
         if (!url.IsEmpty())
         {
-            nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+            nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
             webNav->LoadURI(NS_ConvertASCIItoUCS2(url.c_str()).get(),
                                    nsIWebNavigation::LOAD_FLAGS_NONE,
                                    nsnull,
@@ -114,9 +89,9 @@ void BrowserFrame::OnBrowserUrl(wxCommandEvent & event)
 
 void BrowserFrame::OnBrowserBack(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->GoBack();
     }
 }
@@ -124,9 +99,9 @@ void BrowserFrame::OnBrowserBack(wxCommandEvent & WXUNUSED(event))
 void BrowserFrame::OnUpdateBrowserBack(wxUpdateUIEvent &event)
 {
     PRBool canGoBack = PR_FALSE;
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->GetCanGoBack(&canGoBack);
     }
     event.Enable(canGoBack);
@@ -134,9 +109,9 @@ void BrowserFrame::OnUpdateBrowserBack(wxUpdateUIEvent &event)
 
 void BrowserFrame::OnBrowserForward(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->GoForward();
     }
 }
@@ -144,9 +119,9 @@ void BrowserFrame::OnBrowserForward(wxCommandEvent & WXUNUSED(event))
 void BrowserFrame::OnUpdateBrowserForward(wxUpdateUIEvent &event)
 {
     PRBool canGoForward = PR_FALSE;
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->GetCanGoForward(&canGoForward);
     }
     event.Enable(canGoForward);
@@ -154,18 +129,18 @@ void BrowserFrame::OnUpdateBrowserForward(wxUpdateUIEvent &event)
 
 void BrowserFrame::OnBrowserReload(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->Reload(nsIWebNavigation::LOAD_FLAGS_NONE);
     }
 }
 
 void BrowserFrame::OnBrowserStop(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->Stop(nsIWebNavigation::STOP_ALL);
     }
 }
@@ -177,9 +152,9 @@ void BrowserFrame::OnUpdateBrowserStop(wxUpdateUIEvent &event)
 
 void BrowserFrame::OnBrowserHome(wxCommandEvent & WXUNUSED(event))
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         webNav->LoadURI(NS_ConvertASCIItoUCS2("http://www.mozilla.org/projects/embedding/").get(),
                                nsIWebNavigation::LOAD_FLAGS_NONE,
                                nsnull,
@@ -211,9 +186,9 @@ void BrowserFrame::UpdateStatusBarText(const PRUnichar* aStatusText)
 
 void BrowserFrame::UpdateCurrentURI()
 {
-    if (mWebbrowser)
+    if (mWebBrowser)
     {
-        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebbrowser);
+        nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
         nsCOMPtr<nsIURI> currentURI;
         webNav->GetCurrentURI(getter_AddRefs(currentURI));
         nsCAutoString spec;

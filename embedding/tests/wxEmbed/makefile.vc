@@ -10,8 +10,10 @@ OBJECTS = \
     BrowserFrame.obj \
     MailFrame.obj \
     ChatFrame.obj \
+    EditorFrame.obj \
     GeckoContainer.obj \
     GeckoContainerUI.obj \
+    GeckoFrame.obj \
     GeckoWindow.obj \
     GeckoWindowCreator.obj \
     GeckoProtocolHandler.obj \
@@ -22,6 +24,7 @@ XRC = \
     rc\browser.xrc \
     rc\mail.xrc \
     rc\chat.xrc \
+    rc\editor.xrc \
     $(NULL)
 
 # Needing to include this big long list of includes STINKS!!!
@@ -41,6 +44,7 @@ MOZINC = \
   -I$(MOZSDK)\include\webbrwsr \
   -I$(MOZSDK)\include\embed_base \
   -I$(MOZSDK)\include\windowwatcher \
+  -I$(MOZSDK)\include\composer \
   $(NULL)
 
 # This isn't much better either!

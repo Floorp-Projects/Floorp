@@ -28,20 +28,41 @@
  *   Adam Lock <adamlock@netscape.com>
  *
  * ***** END LICENSE BLOCK ***** */
+ 
+#include "global.h"
 
-#ifndef CHATFRAME_H
+#include "nsIWebNavigation.h"
+#include "nsIDOMDocument.h"
+#include "nsIDOMHTMLDocument.h"
+#include "nsIDOMWindow.h"
+#include "nsIEditingSession.h"
 
-#include "GeckoFrame.h"
+#include "EditorFrame.h"
 
-class ChatFrame :
-    public GeckoFrame
+BEGIN_EVENT_TABLE(EditorFrame, GeckoFrame)
+    //EVT_TEXT_ENTER(XRCID("chat"),        ChatFrame::OnChat)
+END_EVENT_TABLE()
+
+EditorFrame::EditorFrame(wxWindow* aParent)
 {
-public :
-    ChatFrame(wxWindow* aParent);
+    wxXmlResource::Get()->LoadFrame(this, aParent, wxT("editor_frame"));
 
-    DECLARE_EVENT_TABLE()
+    SetIcon(wxICON(appicon));
 
-    void OnChat(wxCommandEvent &event);
-};
+    SetupDefaultGeckoWindow();
 
-#endif
+    nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(mWebBrowser);
+    webNav->LoadURI(NS_ConvertASCIItoUCS2("www.mozilla.org").get(),
+        nsIWebNavigation::LOAD_FLAGS_NONE, nsnull, nsnull, nsnull);
+
+
+    nsCOMPtr<nsIDOMWindow> domWindow;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(domWindow));
+
+    nsCOMPtr<nsIEditingSession> editingSession = do_GetInterface(mWebBrowser);
+    if (!editingSession)
+        return;// NS_ERROR_FAILURE;
+  
+    editingSession->MakeWindowEditable(domWindow, NULL, PR_TRUE);
+}
+

@@ -29,19 +29,31 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef CHATFRAME_H
+#ifndef GECKOFRAME_H
+#define GECKOFRAME_H
 
-#include "GeckoFrame.h"
+#include "nsIWebBrowser.h"
 
-class ChatFrame :
-    public GeckoFrame
+#include "GeckoWindow.h"
+#include "GeckoContainer.h"
+
+class GeckoFrame :
+    public wxFrame,
+    public GeckoContainerUI
 {
-public :
-    ChatFrame(wxWindow* aParent);
+protected:
+    GeckoWindow            *mGeckoWnd;
+    nsCOMPtr<nsIWebBrowser> mWebBrowser;
+public:
+    GeckoFrame();
 
-    DECLARE_EVENT_TABLE()
-
-    void OnChat(wxCommandEvent &event);
+    // This method searches for a "gecko" wxWindow and sets it up with the frame
+    // as the container UI. The results are stored in the mGeckoWnd and mWebBrowser
+    // member variables.
+    bool SetupDefaultGeckoWindow();
+    // This method sets up the specified window with the specified container UI
+    // and returns the nsIWebBrowser interface to it.
+    bool SetupGeckoWindow(GeckoWindow *aGeckoWindow, GeckoContainerUI *aUI, nsIWebBrowser **aWebBrowser) const;
 };
 
 #endif
