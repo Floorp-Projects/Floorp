@@ -380,7 +380,7 @@ nsXULCommandDispatcher::Focus(nsIDOMEvent* aEvent)
           mCurrentElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
           nsCOMPtr<nsIDOMDocument> windowDoc;
           mCurrentWindow->GetDocument(getter_AddRefs(windowDoc));
-          if (ownerDoc == windowDoc.get())
+          if (ownerDoc == windowDoc)
             mCurrentElement = nsnull;
         }
 
