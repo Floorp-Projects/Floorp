@@ -308,7 +308,7 @@ PRBool nsMailDatabase::SetHdrFlag(nsIMsgDBHdr *msgHdr, PRBool bSet, MsgFlags fla
   nsIOFileStream *fileStream = NULL;
   PRBool		ret = PR_FALSE;
 
-  if (!m_folderStream)  //we are going to create a stream, bail out if someone else has lock
+  if (!m_folderStream && m_folder)  //we are going to create a stream, bail out if someone else has lock
   {
     PRBool isLocked;
     m_folder->GetLocked(&isLocked);
