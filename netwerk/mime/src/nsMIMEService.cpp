@@ -40,6 +40,7 @@
 #include "nsIURL.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
+#include "nsMimeTypes.h"
 
 
 #ifdef XP_MAC
@@ -218,7 +219,11 @@ NS_IMETHODIMP nsMIMEService::GetTypeFromFile( nsIFile* aFile, char **aContentTyp
 				
 				if ( NS_SUCCEEDED( rv) )
 				{
-					return info->GetMIMEType(aContentType);
+					rv = info->GetMIMEType(aContentType);
+					if (NS_SUCCEEDED(rv)) {
+						if (nsCRT::strcasecmp(*aContentType, TEXT_PLAIN))  // Let nsUnknownDecoder try to do better.
+							return rv;
+					}
 				}
     }
 #endif
