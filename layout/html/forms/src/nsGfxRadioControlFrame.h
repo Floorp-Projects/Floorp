@@ -48,7 +48,11 @@ public:
   NS_IMETHOD SetRadioButtonFaceStyleContext(nsIStyleContext *aRadioButtonFaceStyleContext);
 
 
-  virtual PRBool GetChecked(PRBool aGetInitialValue);
+  virtual PRBool GetChecked();
+  virtual PRBool GetDefaultChecked();
+  virtual PRBool GetRestoredChecked() { return mRestoredChecked;}
+  virtual PRBool IsRestored()         { return mIsRestored;}
+
   virtual void   SetChecked(nsIPresContext* aPresContext, PRBool aValue, PRBool aSetInitialValue);
 
   void InitializeControl(nsIPresContext* aPresContext);
@@ -107,8 +111,10 @@ protected:
 	virtual void 		SetRadioState(nsIPresContext* aPresContext, PRBool aValue);
 
     //GFX-rendered state variables
-  PRBool							mChecked;
-  nsIStyleContext* 		mRadioButtonFaceStyle;
+  PRBool           mChecked;
+  nsIStyleContext* mRadioButtonFaceStyle;
+  PRBool           mRestoredChecked;
+  PRBool           mIsRestored;
 
 private:
   NS_IMETHOD_(nsrefcnt) AddRef() { return NS_OK; }

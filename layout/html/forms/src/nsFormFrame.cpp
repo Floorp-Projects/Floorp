@@ -316,8 +316,8 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFrame& aF
             nsFormFrame* formFrame = nsnull;
             result = presShell->GetPrimaryFrameFor(formContent, (nsIFrame**)&formFrame);
             if (NS_SUCCEEDED(result) && formFrame) {
-              formFrame->AddFormControlFrame(aPresContext, *fcFrame);
               fcFrame->SetFormFrame(formFrame);
+              formFrame->AddFormControlFrame(aPresContext, *fcFrame);
             }
             NS_RELEASE(formContent);
           }
@@ -339,8 +339,6 @@ nsFormFrame::RemoveFrame(nsIPresContext* aPresContext,
                          nsIAtom*        aListName,
                          nsIFrame*       aOldFrame)
 {
-  nsresult rv = NS_OK;
-
   nsIFormControlFrame* fcFrame = nsnull;
   nsresult result = aOldFrame->QueryInterface(kIFormControlFrameIID, (void**)&fcFrame);
   if ((NS_OK == result) || (nsnull != fcFrame)) {
@@ -389,7 +387,7 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
                                      nsRadioControlGroup *    aGroup,
                                      nsGfxRadioControlFrame * aRadioToIgnore)
 {
-#if 0
+#if 1
   // If in standard mode, then a radio group MUST default 
   // to the first item in the group (it must be selected)
   nsCompatibility mode;
@@ -398,19 +396,29 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
     // first find out if any have a default selection
     PRInt32 i;
     PRInt32 numItems = aGroup->GetNumRadios();
-    PRBool changed          = PR_FALSE;
     PRBool oneIsDefSelected = PR_FALSE;
-    for (i=0;i<numItems && !oneIsDefSelected;i++) {
+    for (i=0;i<numItems;i++) {
       nsGfxRadioControlFrame * radioBtn = (nsGfxRadioControlFrame*) aGroup->GetRadioAt(i);
       nsCOMPtr<nsIContent> content;
       radioBtn->GetContent(getter_AddRefs(content));
       if (content) {
         nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(content));
         if (input) {
-          input->GetDefaultChecked(&oneIsDefSelected);
-          PRBool currentValue = radioBtn->GetChecked(PR_FALSE);
-          if (currentValue != oneIsDefSelected) {
-            changed = PR_TRUE;
+          PRBool initiallyChecked = PR_FALSE;
+          if (radioBtn->IsRestored()) {
+            initiallyChecked = radioBtn->GetRestoredChecked();
+          } else {
+            initiallyChecked = radioBtn->GetDefaultChecked();
+          }
+
+          PRBool isRestored   = radioBtn->IsRestored();
+          PRBool currentValue = radioBtn->GetChecked();
+          if (currentValue != initiallyChecked ) {
+            input->SetChecked(initiallyChecked);
+            //radioBtn->SetChecked(aPresContext, initSelected, PR_FALSE);
+          }
+          if (initiallyChecked) {
+            oneIsDefSelected = PR_TRUE;
           }
         }
       }
@@ -420,7 +428,7 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
     // select the firdst one in the group.
     // if aRadioToIgnore is not null then it is being deleted
     // so don't select that item, select the next one if there is one.
-    if (!changed && !oneIsDefSelected && numItems > 0) {
+    if (!oneIsDefSelected && numItems > 0) {
       nsGfxRadioControlFrame * radioBtn = (nsGfxRadioControlFrame*) aGroup->GetRadioAt(0);
       if (aRadioToIgnore != nsnull && aRadioToIgnore == radioBtn) {
         if (numItems == 1) {
@@ -434,7 +442,7 @@ void nsFormFrame::DoDefaultSelection(nsIPresContext*          aPresContext,
         nsCOMPtr<nsIDOMHTMLInputElement> input(do_QueryInterface(content));
         if (input) {
           input->SetChecked(PR_TRUE);
-          OnRadioChecked(aPresContext, *radioBtn, PR_TRUE);
+          //OnRadioChecked(aPresContext, *radioBtn, PR_TRUE);
         }
       }
     }
@@ -478,11 +486,17 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
       group->AddRadio(radioFrame);
     }
     // allow only one checked radio button
-    if (radioFrame->GetChecked(PR_TRUE)) {
+    PRBool initiallyChecked = PR_FALSE;
+    if (radioFrame->IsRestored()) {
+      initiallyChecked = radioFrame->GetRestoredChecked();
+    } else {
+      initiallyChecked = radioFrame->GetDefaultChecked();
+    }
+    if (initiallyChecked) {
 	    if (nsnull == group->GetCheckedRadio()) {
 	      group->SetCheckedRadio(radioFrame);
 	    } else {
-	      radioFrame->SetChecked(aPresContext, PR_FALSE, PR_TRUE);
+	      radioFrame->SetChecked(aPresContext, PR_FALSE, PR_FALSE);
 	    }
     }
     DoDefaultSelection(aPresContext, group);

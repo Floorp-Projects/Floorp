@@ -186,7 +186,7 @@ public:
     * @returns NS_OK or NS_CONTENT_ATTR_HAS_VALUE
     */
 
-  nsresult GetCurrentCheckState(PRBool* aState);
+  //nsresult GetCurrentCheckState(PRBool* aState);
  
    /**
     * Set the state of the checked attribute.
