@@ -73,10 +73,12 @@ void nsFileSpecHelpers::Canonify(nsSimpleCharString& ioPath, PRBool inMakeDirs)
     *buffer = '\0';
     char* canonicalPath = _fullpath(buffer, ioPath, _MAX_PATH);
 
-    NS_ASSERTION( canonicalPath[0] != '\0', "Uh oh...couldn't convert" );
-    if (canonicalPath[0] == '\0')
-        return;
-
+	if (canonicalPath)
+	{
+		NS_ASSERTION( canonicalPath[0] != '\0', "Uh oh...couldn't convert" );
+		if (canonicalPath[0] == '\0')
+			return;
+	}
     ioPath = canonicalPath;
 } // nsFileSpecHelpers::Canonify
 
