@@ -934,7 +934,32 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
                               PRInt32 aXPos, PRInt32 aYPos, 
                               const nsString& aPopupType, const nsString& aPopupAlignment)
 {
-  return NS_OK;
+  nsresult rv = NS_OK;
+
+  // Find out if we're a menu.
+  nsCOMPtr<nsIDOMNodeList> menuNodes;
+  if (NS_FAILED(rv = aElement->GetElementsByTagName("menu", getter_AddRefs(menuNodes)))) {
+    NS_ERROR("Error occurred looking for nodes.");
+    return rv;
+  }
+
+  // We got something.
+  PRUint32 length;
+  menuNodes->GetLength(&length);
+  if (length > 0) {
+    nsCOMPtr<nsIDOMNode> menuItem;
+    menuNodes->Item(0, getter_AddRefs(menuItem));
+    if (menuItem) {
+      nsCOMPtr<nsIDOMElement> menuElement = do_QueryInterface(menuItem);
+
+      // XXX Call the context menu creation method
+
+    }
+    return NS_OK;
+  }
+  
+  // XXX Handle the arbitrary popup XUL case.
+  return rv;
 }
 
 NS_IMETHODIMP
