@@ -147,7 +147,7 @@ endif
 ifdef MOZ_SVG_RENDERER_CAIRO
 SHARED_LIBRARY_LIBS += \
                 $(DIST)/lib/$(LIB_PREFIX)gksvgrenderercairo_s.$(LIB_SUFFIX) \
-                $(NSNULL)
+                $(NULL)
 endif
 endif
 
@@ -158,6 +158,10 @@ EXTRA_DSO_LDOPTS = \
 		$(MOZ_COMPONENT_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(NULL)
+
+ifdef NS_TRACE_MALLOC
+EXTRA_DSO_LIBS	+= tracemalloc
+endif
 
 ifdef MOZ_SVG_RENDERER_LIBART
 EXTRA_DSO_LDOPTS += $(MOZ_LIBART_LIBS) \
