@@ -50,7 +50,7 @@
 #include <string.h>
 #include <time.h>
 #if defined(XP_WIN32)
-#include <malloc.h> /* _heapMin */
+#include <malloc.h>             /* _heapMin */
 #endif
 
 #if defined(HAVE_BOUTELL_GD)
@@ -86,26 +86,13 @@ STGlobals globals;
 /*
 ** have the heap cleanup at opportune times, if possible.
 */
-void heapCompact(void)
+void
+heapCompact(void)
 {
 #if defined(XP_WIN32)
     _heapmin();
 #endif
 }
-
-/*
-** showHelp
-**
-** Give simple command line help.
-** Returns !0 if the help was showed.
-*/
-int showHelp(void)
-{
-    int retval = 0;
-
-    if(PR_FALSE != globals.mCommandLineOptions.mHelp)
-    {
-        PR_fprintf(PR_STDOUT, "Usage:\t%s [OPTION]... [-|filename]\n\n", globals.mProgramName);
 
 #define ST_CMD_OPTION_BOOL(option_name, option_genre, option_help) \
     PR_fprintf(PR_STDOUT, "--%s\nDisabled by default.\n%s\n", #option_name, option_help);
@@ -120,11 +107,27 @@ int showHelp(void)
 #define ST_CMD_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) \
     PR_fprintf(PR_STDOUT, "--%s=<value>\nDefault value is %llu.\n%s\n", #option_name, default_value, option_help);
 
+/*
+** showHelp
+**
+** Give simple command line help.
+** Returns !0 if the help was showed.
+*/
+int
+showHelp(void)
+{
+    int retval = 0;
+
+    if (PR_FALSE != globals.mCommandLineOptions.mHelp) {
+        PR_fprintf(PR_STDOUT, "Usage:\t%s [OPTION]... [-|filename]\n\n",
+                   globals.mProgramName);
+
+
 #include "stoptions.h"
 
         /*
-        ** Showed something.
-        */
+         ** Showed something.
+         */
         retval = __LINE__;
     }
 
@@ -137,7 +140,8 @@ int showHelp(void)
 ** Convert platform specific ticks to second units
 ** Returns 0 on success.
 */
-PRUint32 ticks2xsec(tmreader* aReader, PRUint32 aTicks, PRUint32 aResolution)
+PRUint32
+ticks2xsec(tmreader * aReader, PRUint32 aTicks, PRUint32 aResolution)
 {
     PRUint32 retval = 0;
     PRUint64 bigone;
@@ -151,6 +155,7 @@ PRUint32 ticks2xsec(tmreader* aReader, PRUint32 aTicks, PRUint32 aResolution)
     LL_L2UI(retval, bigone);
     return retval;
 }
+
 #define ticks2msec(reader, ticks) ticks2xsec((reader), (ticks), 1000)
 #define ticks2usec(reader, ticks) ticks2xsec((reader), (ticks), 1000000)
 
@@ -160,14 +165,15 @@ PRUint32 ticks2xsec(tmreader* aReader, PRUint32 aTicks, PRUint32 aResolution)
 ** Determine global settings for the application.
 ** Returns 0 on success.
 */
-int initOptions(int aArgCount, char** aArgArray)
+int
+initOptions(int aArgCount, char **aArgArray)
 {
     int retval = 0;
     int traverse = 0;
 
     /*
-    **  Set the initial global default options.
-    */
+     **  Set the initial global default options.
+     */
 #define ST_CMD_OPTION_BOOL(option_name, option_genre, option_help) globals.mCommandLineOptions.m##option_name = PR_FALSE;
 #define ST_CMD_OPTION_STRING(option_name, option_genre, default_value, option_help) PR_snprintf(globals.mCommandLineOptions.m##option_name, sizeof(globals.mCommandLineOptions.m##option_name), "%s", default_value);
 #define ST_CMD_OPTION_STRING_ARRAY(option_name, option_genre, array_size, option_help) { int loop; for(loop = 0; loop < array_size; loop++) { globals.mCommandLineOptions.m##option_name[loop][0] = '\0'; } }
@@ -178,22 +184,19 @@ int initOptions(int aArgCount, char** aArgArray)
 #include "stoptions.h"
 
     /*
-    ** Go through all arguments.
-    ** Two dashes lead off an option.
-    ** Any single dash leads off help, unless it is a lone dash (stdin).
-    ** Anything else will be attempted as a file to be processed.
-    */
-    for(traverse = 1; traverse < aArgCount; traverse++)
-    {
-        if('-' == aArgArray[traverse][0] && '-' == aArgArray[traverse][1])
-        {
-            const char* option = &aArgArray[traverse][2];
+     ** Go through all arguments.
+     ** Two dashes lead off an option.
+     ** Any single dash leads off help, unless it is a lone dash (stdin).
+     ** Anything else will be attempted as a file to be processed.
+     */
+    for (traverse = 1; traverse < aArgCount; traverse++) {
+        if ('-' == aArgArray[traverse][0] && '-' == aArgArray[traverse][1]) {
+            const char *option = &aArgArray[traverse][2];
 
             /*
-            **  Initial if(0) needed to make "else if"s valid.
-            */
-            if(0)
-            {
+             **  Initial if(0) needed to make "else if"s valid.
+             */
+            if (0) {
             }
 
 #define ST_CMD_OPTION_BOOL(option_name, option_genre, option_help) \
@@ -278,36 +281,36 @@ int initOptions(int aArgCount, char** aArgArray)
 #include "stoptions.h"
 
             /*
-            **  If no match on options, this else will get hit.
-            */
-            else
-            {
+             **  If no match on options, this else will get hit.
+             */
+            else {
                 REPORT_ERROR_MSG(__LINE__, option);
                 retval = __LINE__;
                 globals.mCommandLineOptions.mHelp = PR_TRUE;
             }
         }
-        else if('-' == aArgArray[traverse][0] && '\0' != aArgArray[traverse][1])
-        {
+        else if ('-' == aArgArray[traverse][0]
+                 && '\0' != aArgArray[traverse][1]) {
             /*
-            **  Show help, bad/legacy option.
-            */
+             **  Show help, bad/legacy option.
+             */
             REPORT_ERROR_MSG(__LINE__, aArgArray[traverse]);
             retval = __LINE__;
             globals.mCommandLineOptions.mHelp = PR_TRUE;
         }
-        else
-        {
+        else {
             /*
-            ** Default is same as FileName option, the file to process.
-            */
-            PR_snprintf(globals.mCommandLineOptions.mFileName, sizeof(globals.mCommandLineOptions.mFileName), "%s", aArgArray[traverse]);
+             ** Default is same as FileName option, the file to process.
+             */
+            PR_snprintf(globals.mCommandLineOptions.mFileName,
+                        sizeof(globals.mCommandLineOptions.mFileName), "%s",
+                        aArgArray[traverse]);
         }
     }
 
     /*
-    ** initalize the categories
-    */
+     ** initalize the categories
+     */
     initCategories(&globals);
 
     return retval;
@@ -331,41 +334,37 @@ int initOptions(int aArgCount, char** aArgArray)
 **   trasparent (white) background
 **   incremental display
 */
-gdImagePtr createGraph(int* aTransparencyColor)
+gdImagePtr
+createGraph(int *aTransparencyColor)
 {
     gdImagePtr retval = NULL;
 
-    if(NULL != aTransparencyColor)
-    {
+    if (NULL != aTransparencyColor) {
         *aTransparencyColor = -1;
 
         retval = gdImageCreate(STGD_WIDTH, STGD_HEIGHT);
-        if(NULL != retval)
-        {
+        if (NULL != retval) {
             /*
-            ** Background color (first one).
-            */
+             ** Background color (first one).
+             */
             *aTransparencyColor = gdImageColorAllocate(retval, 255, 255, 255);
-            if(-1 != *aTransparencyColor)
-            {
+            if (-1 != *aTransparencyColor) {
                 /*
-                ** As transparency.
-                */
+                 ** As transparency.
+                 */
                 gdImageColorTransparent(retval, *aTransparencyColor);
             }
 
             /*
-            ** And to set interlacing.
-            */
+             ** And to set interlacing.
+             */
             gdImageInterlace(retval, 1);
         }
-        else
-        {
+        else {
             REPORT_ERROR(__LINE__, gdImageCreate);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, createGraph);
     }
 
@@ -380,25 +379,27 @@ gdImagePtr createGraph(int* aTransparencyColor)
 ** This function mainly exists to simplify putitng all the pretty lace
 **  around a home made graph.
 */
-void drawGraph(gdImagePtr aImage, int aColor,
-               const char* aGraphTitle,
-               const char* aXAxisTitle,
-               const char* aYAxisTitle,
-               PRUint32 aXMarkCount,
-               PRUint32* aXMarkPercents,
-               const char** aXMarkTexts,
-               PRUint32 aYMarkCount,
-               PRUint32* aYMarkPercents,
-               const char** aYMarkTexts,
-               PRUint32 aLegendCount,
-               int* aLegendColors, const char** aLegendTexts)
+void
+drawGraph(gdImagePtr aImage, int aColor,
+          const char *aGraphTitle,
+          const char *aXAxisTitle,
+          const char *aYAxisTitle,
+          PRUint32 aXMarkCount,
+          PRUint32 * aXMarkPercents,
+          const char **aXMarkTexts,
+          PRUint32 aYMarkCount,
+          PRUint32 * aYMarkPercents,
+          const char **aYMarkTexts,
+          PRUint32 aLegendCount,
+          int *aLegendColors, const char **aLegendTexts)
 {
-    if(NULL != aImage && NULL != aGraphTitle &&
-       NULL != aXAxisTitle && NULL != aYAxisTitle &&
-       (0 == aXMarkCount || (NULL != aXMarkPercents && NULL != aXMarkTexts)) &&
-       (0 == aYMarkCount || (NULL != aYMarkPercents && NULL != aYMarkTexts)) &&
-       (0 == aLegendCount || (NULL != aLegendColors && NULL != aLegendTexts)))
-    {
+    if (NULL != aImage && NULL != aGraphTitle &&
+        NULL != aXAxisTitle && NULL != aYAxisTitle &&
+        (0 == aXMarkCount || (NULL != aXMarkPercents && NULL != aXMarkTexts))
+        && (0 == aYMarkCount
+            || (NULL != aYMarkPercents && NULL != aYMarkTexts))
+        && (0 == aLegendCount
+            || (NULL != aLegendColors && NULL != aLegendTexts))) {
         int margin = 1;
         PRUint32 traverse = 0;
         PRUint32 target = 0;
@@ -408,8 +409,8 @@ void drawGraph(gdImagePtr aImage, int aColor,
         int x2 = 0;
         int y2 = 0;
         time_t theTimeT = time(NULL);
-        char* theTime = ctime(&theTimeT);
-        const char* logo = "SpaceTrace";
+        char *theTime = ctime(&theTimeT);
+        const char *logo = "SpaceTrace";
         gdFontPtr titleFont = gdFontMediumBold;
         gdFontPtr markFont = gdFontTiny;
         gdFontPtr dateFont = gdFontTiny;
@@ -418,21 +419,19 @@ void drawGraph(gdImagePtr aImage, int aColor,
         gdFontPtr logoFont = gdFontTiny;
 
         /*
-        ** Fixup the color.
-        ** Black by default.
-        */
-        if(-1 == aColor)
-        {
+         ** Fixup the color.
+         ** Black by default.
+         */
+        if (-1 == aColor) {
             aColor = gdImageColorAllocate(aImage, 0, 0, 0);
         }
-        if(-1 == aColor)
-        {
+        if (-1 == aColor) {
             aColor = gdImageColorClosest(aImage, 0, 0, 0);
         }
 
         /*
-        ** Output the box.
-        */
+         ** Output the box.
+         */
         x1 = STGD_MARGIN - margin;
         y1 = STGD_MARGIN - margin;
         x2 = STGD_WIDTH - x1;
@@ -441,13 +440,14 @@ void drawGraph(gdImagePtr aImage, int aColor,
         margin++;
 
         /*
-        ** Need to make small markings on the graph to indicate where the
-        **  labels line up exactly.
-        ** While we're at it, draw the label text.
-        */
-        for(traverse = 0; traverse < aXMarkCount; traverse++)
-        {
-            target = ((STGD_WIDTH - (STGD_MARGIN * 2)) * aXMarkPercents[traverse]) / 100;
+         ** Need to make small markings on the graph to indicate where the
+         **  labels line up exactly.
+         ** While we're at it, draw the label text.
+         */
+        for (traverse = 0; traverse < aXMarkCount; traverse++) {
+            target =
+                ((STGD_WIDTH -
+                  (STGD_MARGIN * 2)) * aXMarkPercents[traverse]) / 100;
 
             x1 = STGD_MARGIN + target;
             y1 = STGD_MARGIN - margin;
@@ -459,16 +459,20 @@ void drawGraph(gdImagePtr aImage, int aColor,
             y2 = STGD_HEIGHT - y2;
             gdImageLine(aImage, x1, y1, x2, y2, aColor);
 
-            if(NULL != aXMarkTexts[traverse])
-            {
+            if (NULL != aXMarkTexts[traverse]) {
                 x1 = STGD_MARGIN + target - (markFont->h / 2);
-                y1 = STGD_HEIGHT - STGD_MARGIN + margin + markSize + (strlen(aXMarkTexts[traverse]) * markFont->w);
-                gdImageStringUp(aImage, markFont, x1, y1, (unsigned char*)aXMarkTexts[traverse], aColor);
+                y1 = STGD_HEIGHT - STGD_MARGIN + margin + markSize +
+                    (strlen(aXMarkTexts[traverse]) * markFont->w);
+                gdImageStringUp(aImage, markFont, x1, y1,
+                                (unsigned char *) aXMarkTexts[traverse],
+                                aColor);
             }
         }
-        for(traverse = 0; traverse < aYMarkCount; traverse++)
-        {
-            target = ((STGD_HEIGHT - (STGD_MARGIN * 2)) * (100 - aYMarkPercents[traverse])) / 100;
+        for (traverse = 0; traverse < aYMarkCount; traverse++) {
+            target =
+                ((STGD_HEIGHT - (STGD_MARGIN * 2)) * (100 -
+                                                      aYMarkPercents
+                                                      [traverse])) / 100;
 
             x1 = STGD_MARGIN - margin;
             y1 = STGD_MARGIN + target;
@@ -480,74 +484,80 @@ void drawGraph(gdImagePtr aImage, int aColor,
             x2 = STGD_WIDTH - x2;
             gdImageLine(aImage, x1, y1, x2, y2, aColor);
 
-            if(NULL != aYMarkTexts[traverse])
-            {
-                x1 = STGD_MARGIN - margin - markSize - (strlen(aYMarkTexts[traverse]) * markFont->w);
+            if (NULL != aYMarkTexts[traverse]) {
+                x1 = STGD_MARGIN - margin - markSize -
+                    (strlen(aYMarkTexts[traverse]) * markFont->w);
                 y1 = STGD_MARGIN + target - (markFont->h / 2);
-                gdImageString(aImage, markFont, x1, y1, (unsigned char*)aYMarkTexts[traverse], aColor);
+                gdImageString(aImage, markFont, x1, y1,
+                              (unsigned char *) aYMarkTexts[traverse],
+                              aColor);
             }
         }
         margin += markSize;
 
         /*
-        ** Title will be centered above the image.
-        */
+         ** Title will be centered above the image.
+         */
         x1 = (STGD_WIDTH / 2) - ((strlen(aGraphTitle) * titleFont->w) / 2);
         y1 = ((STGD_MARGIN - margin) / 2) - (titleFont->h / 2);
-        gdImageString(aImage, titleFont, x1, y1, (unsigned char*)aGraphTitle, aColor);
+        gdImageString(aImage, titleFont, x1, y1,
+                      (unsigned char *) aGraphTitle, aColor);
 
         /*
-        ** Upper left will be the date.
-        */
+         ** Upper left will be the date.
+         */
         x1 = 0;
         y1 = 0;
         traverse = strlen(theTime) - 1;
-        if(isspace(theTime[traverse]))
-        {
+        if (isspace(theTime[traverse])) {
             theTime[traverse] = '\0';
         }
-        gdImageString(aImage, dateFont, x1, y1, (unsigned char*)theTime, aColor);
+        gdImageString(aImage, dateFont, x1, y1, (unsigned char *) theTime,
+                      aColor);
 
         /*
-        ** Lower right will be the logo.
-        */
+         ** Lower right will be the logo.
+         */
         x1 = STGD_WIDTH - (strlen(logo) * logoFont->w);
         y1 = STGD_HEIGHT - logoFont->h;
-        gdImageString(aImage, logoFont, x1, y1, (unsigned char*)logo, aColor);
+        gdImageString(aImage, logoFont, x1, y1, (unsigned char *) logo,
+                      aColor);
 
         /*
-        ** X and Y axis titles
-        */
+         ** X and Y axis titles
+         */
         x1 = (STGD_WIDTH / 2) - ((strlen(aXAxisTitle) * axisFont->w) / 2);
         y1 = STGD_HEIGHT - axisFont->h;
-        gdImageString(aImage, axisFont, x1, y1, (unsigned char*)aXAxisTitle, aColor);
+        gdImageString(aImage, axisFont, x1, y1, (unsigned char *) aXAxisTitle,
+                      aColor);
         x1 = 0;
         y1 = (STGD_HEIGHT / 2) + ((strlen(aYAxisTitle) * axisFont->w) / 2);
-        gdImageStringUp(aImage, axisFont, x1, y1, (unsigned char*)aYAxisTitle, aColor);
+        gdImageStringUp(aImage, axisFont, x1, y1,
+                        (unsigned char *) aYAxisTitle, aColor);
 
         /*
-        ** The legend.
-        ** Centered on the right hand side, going up.
-        */
-        x1 = STGD_WIDTH - STGD_MARGIN + margin + (aLegendCount * legendFont->h) / 2;
+         ** The legend.
+         ** Centered on the right hand side, going up.
+         */
+        x1 = STGD_WIDTH - STGD_MARGIN + margin +
+            (aLegendCount * legendFont->h) / 2;
         x2 = STGD_WIDTH - (aLegendCount * legendFont->h);
-        if(x1 > x2)
-        {
+        if (x1 > x2) {
             x1 = x2;
         }
 
         y1 = 0;
-        for(traverse = 0; traverse < aLegendCount; traverse++)
-        {
-            y2 = (STGD_HEIGHT / 2) + ((strlen(aLegendTexts[traverse]) * legendFont->w) / 2);
-            if(y2 > y1)
-            {
+        for (traverse = 0; traverse < aLegendCount; traverse++) {
+            y2 = (STGD_HEIGHT / 2) +
+                ((strlen(aLegendTexts[traverse]) * legendFont->w) / 2);
+            if (y2 > y1) {
                 y1 = y2;
             }
         }
-        for(traverse = 0; traverse < aLegendCount; traverse++)
-        {
-            gdImageStringUp(aImage, legendFont, x1, y1, (unsigned char*)aLegendTexts[traverse], aLegendColors[traverse]);
+        for (traverse = 0; traverse < aLegendCount; traverse++) {
+            gdImageStringUp(aImage, legendFont, x1, y1,
+                            (unsigned char *) aLegendTexts[traverse],
+                            aLegendColors[traverse]);
             x1 += legendFont->h;
         }
     }
@@ -561,9 +571,10 @@ void drawGraph(gdImagePtr aImage, int aColor,
 **
 ** GD callback, used to write out the png.
 */
-int pngSink(void* aContext, const char* aBuffer, int aLen)
+int
+pngSink(void *aContext, const char *aBuffer, int aLen)
 {
-    return PR_Write((PRFileDesc*)aContext, aBuffer, aLen);
+    return PR_Write((PRFileDesc *) aContext, aBuffer, aLen);
 }
 #endif /* HAVE_BOUTELL_GD */
 
@@ -573,7 +584,8 @@ int pngSink(void* aContext, const char* aBuffer, int aLen)
 ** Formats a number with thousands separator. Dont free the result. Returns
 ** static data.
 */
-char *FormatNumber(PRInt32 num)
+char *
+FormatNumber(PRInt32 num)
 {
     static char buf[64];
     char tmpbuf[64];
@@ -586,12 +598,9 @@ char *FormatNumber(PRInt32 num)
     /* now insert the thousands separator */
     mod3 = 0;
     len = strlen(tmpbuf);
-    while (len >= 0)
-    {
-        if (tmpbuf[len] >= '0' && tmpbuf[len] <= '9')
-        {
-            if (mod3 == 3)
-            {
+    while (len >= 0) {
+        if (tmpbuf[len] >= '0' && tmpbuf[len] <= '9') {
+            if (mod3 == 3) {
                 buf[bufindex--] = ',';
                 mod3 = 0;
             }
@@ -599,7 +608,7 @@ char *FormatNumber(PRInt32 num)
         }
         buf[bufindex--] = tmpbuf[len--];
     }
-    return buf+bufindex+1;
+    return buf + bufindex + 1;
 }
 
 /*
@@ -607,24 +616,23 @@ char *FormatNumber(PRInt32 num)
 **
 ** Apply alignment and overhead to size to figure out actual byte size
 */
-PRUint32 actualByteSize(STOptions* inOptions, PRUint32 retval)
+PRUint32
+actualByteSize(STOptions * inOptions, PRUint32 retval)
 {
     /*
-    ** Need to bump the result by our alignment and overhead.
-    ** The idea here is that an allocation actually costs you more than you
-    **  thought.
-    **
-    ** The msvcrt malloc has an alignment of 16 with an overhead of 8.
-    ** The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
-    */
-    if(0 != retval)
-    {
+     ** Need to bump the result by our alignment and overhead.
+     ** The idea here is that an allocation actually costs you more than you
+     **  thought.
+     **
+     ** The msvcrt malloc has an alignment of 16 with an overhead of 8.
+     ** The win32 HeapAlloc has an alignment of 8 with an overhead of 8.
+     */
+    if (0 != retval) {
         PRUint32 eval = 0;
         PRUint32 over = 0;
 
         eval = retval - 1;
-        if(0 != inOptions->mAlignBy)
-        {
+        if (0 != inOptions->mAlignBy) {
             over = eval % inOptions->mAlignBy;
         }
         retval = eval + inOptions->mOverhead + inOptions->mAlignBy - over;
@@ -640,23 +648,22 @@ PRUint32 actualByteSize(STOptions* inOptions, PRUint32 retval)
 ** Might expand in the future to report size at a given time.
 ** For now, just use last relevant event.
 */
-PRUint32 byteSize(STOptions* inOptions, STAllocation* aAlloc)
+PRUint32
+byteSize(STOptions * inOptions, STAllocation * aAlloc)
 {
     PRUint32 retval = 0;
 
-    if(NULL != aAlloc && 0 != aAlloc->mEventCount)
-    {
+    if (NULL != aAlloc && 0 != aAlloc->mEventCount) {
         PRUint32 index = aAlloc->mEventCount;
 
         /*
-        ** Generally, the size is the last event's size.
-        */
-        do
-        {
+         ** Generally, the size is the last event's size.
+         */
+        do {
             index--;
             retval = aAlloc->mEvents[index].mHeapSize;
         }
-        while(0 == retval && 0 != index);
+        while (0 == retval && 0 != index);
     }
     return actualByteSize(inOptions, retval);
 }
@@ -668,19 +675,22 @@ PRUint32 byteSize(STOptions* inOptions, STAllocation* aAlloc)
 ** Given an allocation, does a recalculation of Cost - weight, heapcount etc.
 ** and does the right thing to propogate the cost upwards.
 */
-int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun* aRun, STAllocation* aAllocation, PRBool updateParent)
+int
+recalculateAllocationCost(STOptions * inOptions, STContext * inContext,
+                          STRun * aRun, STAllocation * aAllocation,
+                          PRBool updateParent)
 {
     /*
-    ** Now, see if they desire a callsite update.
-    ** As mentioned previously, we decide if the run desires us to
-    **  manipulate the callsite data only if it's stamp is set.
-    ** We change all callsites and parent callsites to have that
-    **  stamp as well, so as to mark them as being relevant to
-    **  the current run in question.
-    */
-    if(NULL != inContext && 0 != aRun->mStats[inContext->mIndex].mStamp)
-    {
-        PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
+     ** Now, see if they desire a callsite update.
+     ** As mentioned previously, we decide if the run desires us to
+     **  manipulate the callsite data only if it's stamp is set.
+     ** We change all callsites and parent callsites to have that
+     **  stamp as well, so as to mark them as being relevant to
+     **  the current run in question.
+     */
+    if (NULL != inContext && 0 != aRun->mStats[inContext->mIndex].mStamp) {
+        PRUint32 timeval =
+            aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         PRUint32 size = byteSize(inOptions, aAllocation);
         PRUint64 weight64 = LL_INIT(0, 0);
         PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
@@ -692,8 +702,8 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
         LL_MUL(weight64, timeval64, size64);
 
         /*
-        ** First, update this run.
-        */
+         ** First, update this run.
+         */
         aRun->mStats[inContext->mIndex].mCompositeCount++;
         aRun->mStats[inContext->mIndex].mHeapRuntimeCost += heapCost;
         aRun->mStats[inContext->mIndex].mSize += size;
@@ -703,52 +713,48 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
                aRun->mStats[inContext->mIndex].mWeight64, weight64);
 
         /*
-        ** Use the first event of the allocation to update the parent
-        **  callsites.
-        ** This has positive effect of not updating realloc callsites
-        **  with the same data over and over again.
-        */
-        if(updateParent && 0 < aAllocation->mEventCount)
-        {
-            tmcallsite* callsite = aAllocation->mEvents[0].mCallsite;
-            STRun* callsiteRun = NULL;
+         ** Use the first event of the allocation to update the parent
+         **  callsites.
+         ** This has positive effect of not updating realloc callsites
+         **  with the same data over and over again.
+         */
+        if (updateParent && 0 < aAllocation->mEventCount) {
+            tmcallsite *callsite = aAllocation->mEvents[0].mCallsite;
+            STRun *callsiteRun = NULL;
 
             /*
-            ** Go up parents till we drop.
-            */
-            while(NULL != callsite && NULL != callsite->method)
-            {
+             ** Go up parents till we drop.
+             */
+            while (NULL != callsite && NULL != callsite->method) {
                 callsiteRun = CALLSITE_RUN(callsite);
-                if(NULL != callsiteRun)
-                {
+                if (NULL != callsiteRun) {
                     /*
-                    ** Do we init it?
-                    */
-                    if(callsiteRun->mStats[inContext->mIndex].mStamp !=
-                       aRun->mStats[inContext->mIndex].mStamp)
-                    {
+                     ** Do we init it?
+                     */
+                    if (callsiteRun->mStats[inContext->mIndex].mStamp !=
+                        aRun->mStats[inContext->mIndex].mStamp) {
                         memset(&callsiteRun->mStats[inContext->mIndex], 0,
                                sizeof(STCallsiteStats));
                         callsiteRun->mStats[inContext->mIndex].mStamp =
                             aRun->mStats[inContext->mIndex].mStamp;
                     }
-                            
+
                     /*
-                    ** Add the values.
-                    ** Note that if the allocation was ever realloced,
-                    **  we are actually recording the final size.
-                    ** Also, the composite count does not include
-                    **  calls to realloc (or free for that matter),
-                    **  but rather is simply a count of actual heap
-                    **  allocation objects, from which someone will
-                    **  draw conclusions regarding number of malloc
-                    **  and free calls.
-                    ** It is possible to generate the exact number
-                    **  of calls to free/malloc/realloc should the
-                    **  absolute need arise to count them individually,
-                    **  but I fear it will take mucho memory and this
-                    **  is perhaps good enough for now.
-                    */
+                     ** Add the values.
+                     ** Note that if the allocation was ever realloced,
+                     **  we are actually recording the final size.
+                     ** Also, the composite count does not include
+                     **  calls to realloc (or free for that matter),
+                     **  but rather is simply a count of actual heap
+                     **  allocation objects, from which someone will
+                     **  draw conclusions regarding number of malloc
+                     **  and free calls.
+                     ** It is possible to generate the exact number
+                     **  of calls to free/malloc/realloc should the
+                     **  absolute need arise to count them individually,
+                     **  but I fear it will take mucho memory and this
+                     **  is perhaps good enough for now.
+                     */
                     callsiteRun->mStats[inContext->mIndex].mCompositeCount++;
                     callsiteRun->mStats[inContext->mIndex].mHeapRuntimeCost +=
                         heapCost;
@@ -760,7 +766,7 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
                            callsiteRun->mStats[inContext->mIndex].mWeight64,
                            weight64);
                 }
-                        
+
                 callsite = callsite->parent;
             }
         }
@@ -782,63 +788,60 @@ int recalculateAllocationCost(STOptions* inOptions, STContext* inContext, STRun*
 ** Returns !0 on success.
 */
 int
-appendAllocation(STOptions* inOptions, STContext* inContext,
-                 STRun* aRun, STAllocation* aAllocation)
+appendAllocation(STOptions * inOptions, STContext * inContext,
+                 STRun * aRun, STAllocation * aAllocation)
 {
     int retval = 0;
 
-    if(NULL != aRun && NULL != aAllocation && NULL != inOptions)
-    {
-        STAllocation** expand = NULL;
+    if (NULL != aRun && NULL != aAllocation && NULL != inOptions) {
+        STAllocation **expand = NULL;
 
         /*
-        ** Expand the size of the array if needed.
-        */
-        expand = (STAllocation**)realloc(aRun->mAllocations,
-                                         sizeof(STAllocation*) * (aRun->mAllocationCount + 1));
-        if(NULL != expand)
-        {
+         ** Expand the size of the array if needed.
+         */
+        expand = (STAllocation **) realloc(aRun->mAllocations,
+                                           sizeof(STAllocation *) *
+                                           (aRun->mAllocationCount + 1));
+        if (NULL != expand) {
             /*
-            ** Reassign in case of pointer move.
-            */
+             ** Reassign in case of pointer move.
+             */
             aRun->mAllocations = expand;
 
             /*
-            ** Stick the allocation in.
-            */
+             ** Stick the allocation in.
+             */
             aRun->mAllocations[aRun->mAllocationCount] = aAllocation;
 
             /*
-            ** If this is the global run, we need to let the allocation
-            **  track the index back to us.
-            */
-            if(&globals.mRun == aRun)
-            {
+             ** If this is the global run, we need to let the allocation
+             **  track the index back to us.
+             */
+            if (&globals.mRun == aRun) {
                 aAllocation->mRunIndex = aRun->mAllocationCount;
             }
 
             /*
-            ** Increase the count.
-            */
+             ** Increase the count.
+             */
             aRun->mAllocationCount++;
 
             /*
-            ** We're good.
-            */
+             ** We're good.
+             */
             retval = __LINE__;
 
             /*
-            ** update allocation cost
-            */
-            recalculateAllocationCost(inOptions, inContext, aRun, aAllocation, PR_TRUE);
+             ** update allocation cost
+             */
+            recalculateAllocationCost(inOptions, inContext, aRun, aAllocation,
+                                      PR_TRUE);
         }
-        else
-        {
+        else {
             REPORT_ERROR(__LINE__, appendAllocation);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, appendAllocation);
     }
 
@@ -852,47 +855,42 @@ appendAllocation(STOptions* inOptions, STContext* inContext,
 **
 ** Returns 0 if there is no match.
 */
-int hasCallsiteMatch(tmcallsite* aCallsite, const char* aMatch, int aDirection)
+int
+hasCallsiteMatch(tmcallsite * aCallsite, const char *aMatch, int aDirection)
 {
     int retval = 0;
 
-    if(NULL != aCallsite && NULL != aCallsite->method &&
-       NULL != aMatch && '\0' != *aMatch)
-    {
-        const char* methodName = NULL;
+    if (NULL != aCallsite && NULL != aCallsite->method &&
+        NULL != aMatch && '\0' != *aMatch) {
+        const char *methodName = NULL;
 
-        do
-        {
+        do {
             methodName = tmmethodnode_name(aCallsite->method);
-            if(NULL != methodName && NULL != strstr(methodName, aMatch))
-            {
+            if (NULL != methodName && NULL != strstr(methodName, aMatch)) {
                 /*
-                ** Contains the text.
-                */
+                 ** Contains the text.
+                 */
                 retval = __LINE__;
                 break;
             }
-            else
-            {
-                switch(aDirection)
-                {
-                    case ST_FOLLOW_SIBLINGS:
-                        aCallsite = aCallsite->siblings;
-                        break;
-                    case ST_FOLLOW_PARENTS:
-                        aCallsite = aCallsite->parent;
-                        break;
-                    default:
-                        aCallsite = NULL;
-                        REPORT_ERROR(__LINE__, hasCallsiteMatch);
-                        break;
+            else {
+                switch (aDirection) {
+                case ST_FOLLOW_SIBLINGS:
+                    aCallsite = aCallsite->siblings;
+                    break;
+                case ST_FOLLOW_PARENTS:
+                    aCallsite = aCallsite->parent;
+                    break;
+                default:
+                    aCallsite = NULL;
+                    REPORT_ERROR(__LINE__, hasCallsiteMatch);
+                    break;
                 }
             }
         }
-        while(NULL != aCallsite && NULL != aCallsite->method);
+        while (NULL != aCallsite && NULL != aCallsite->method);
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, hasCallsiteMatch);
     }
 
@@ -914,27 +912,26 @@ int hasCallsiteMatch(tmcallsite* aCallsite, const char* aMatch, int aDirection)
 ** Returns !0 on error, though aOutRun may contain a partial data set.
 */
 int
-harvestRun(const STRun* aInRun, STRun* aOutRun,
-           STOptions* aOptions, STContext* inContext)
+harvestRun(const STRun * aInRun, STRun * aOutRun,
+           STOptions * aOptions, STContext * inContext)
 {
     int retval = 0;
 
 #if defined(DEBUG_dp)
     PRIntervalTime start = PR_IntervalNow();
+
     fprintf(stderr, "DEBUG: harvesting run...\n");
 #endif
 
-    if(NULL != aInRun && NULL != aOutRun && aInRun != aOutRun && NULL != aOptions && NULL != inContext)
-    {
+    if (NULL != aInRun && NULL != aOutRun && aInRun != aOutRun
+        && NULL != aOptions && NULL != inContext) {
         PRUint32 traverse = 0;
-        STAllocation* current = NULL;
+        STAllocation *current = NULL;
 
-        for(traverse = 0;
-            0 == retval && traverse < aInRun->mAllocationCount; traverse++)
-        {
+        for (traverse = 0;
+             0 == retval && traverse < aInRun->mAllocationCount; traverse++) {
             current = aInRun->mAllocations[traverse];
-            if(NULL != current)
-            {
+            if (NULL != current) {
                 PRUint32 lifetime = 0;
                 PRUint32 bytesize = 0;
                 PRUint64 weight64 = LL_INIT(0, 0);
@@ -945,112 +942,101 @@ harvestRun(const STRun* aInRun, STRun* aOutRun,
                 PRBool matched = PR_FALSE;
 
                 /*
-                ** Use this as an opportune time to fixup a memory
-                **  leaked timeval, so as to not completely skew
-                **  the weights.
-                */
-                if(ST_TIMEVAL_MAX == current->mMaxTimeval)
-                {
+                 ** Use this as an opportune time to fixup a memory
+                 **  leaked timeval, so as to not completely skew
+                 **  the weights.
+                 */
+                if (ST_TIMEVAL_MAX == current->mMaxTimeval) {
                     current->mMaxTimeval = globals.mMaxTimeval;
                 }
 
                 /*
-                ** Check allocation timeval restrictions.
-                ** We have to slide the recorded timevals to be zero
-                **  based, so that the comparisons make sense.
-                */
+                 ** Check allocation timeval restrictions.
+                 ** We have to slide the recorded timevals to be zero
+                 **  based, so that the comparisons make sense.
+                 */
                 if ((aOptions->mAllocationTimevalMin >
                      (current->mMinTimeval - globals.mMinTimeval)) ||
                     (aOptions->mAllocationTimevalMax <
-                     (current->mMinTimeval - globals.mMinTimeval)))
-                {
+                     (current->mMinTimeval - globals.mMinTimeval))) {
                     continue;
                 }
 
                 /*
-                ** Check timeval restrictions.
-                ** We have to slide the recorded timevals to be zero
-                **  based, so that the comparisons make sense.
-                */
+                 ** Check timeval restrictions.
+                 ** We have to slide the recorded timevals to be zero
+                 **  based, so that the comparisons make sense.
+                 */
                 if ((aOptions->mTimevalMin >
                      (current->mMinTimeval - globals.mMinTimeval)) ||
                     (aOptions->mTimevalMax <
-                     (current->mMinTimeval - globals.mMinTimeval)))
-                {
+                     (current->mMinTimeval - globals.mMinTimeval))) {
                     continue;
                 }
 
                 /*
-                ** Check lifetime restrictions.
-                */
+                 ** Check lifetime restrictions.
+                 */
                 lifetime = current->mMaxTimeval - current->mMinTimeval;
                 if ((lifetime < aOptions->mLifetimeMin) ||
-                    (lifetime > aOptions->mLifetimeMax))
-                {
+                    (lifetime > aOptions->mLifetimeMax)) {
                     continue;
                 }
 
                 /*
-                ** Check byte size restrictions.
-                */
+                 ** Check byte size restrictions.
+                 */
                 bytesize = byteSize(aOptions, current);
                 if ((bytesize < aOptions->mSizeMin) ||
-                    (bytesize > aOptions->mSizeMax))
-                {
+                    (bytesize > aOptions->mSizeMax)) {
                     continue;
                 }
 
                 /*
-                ** Check weight restrictions.
-                */
+                 ** Check weight restrictions.
+                 */
                 LL_UI2L(bytesize64, bytesize);
                 LL_UI2L(lifetime64, lifetime);
                 LL_MUL(weight64, bytesize64, lifetime64);
-                if(LL_UCMP(weight64, <, aOptions->mWeightMin64) ||
-                   LL_UCMP(weight64, >, aOptions->mWeightMax64))
-                {
+                if (LL_UCMP(weight64, <, aOptions->mWeightMin64) ||
+                    LL_UCMP(weight64, >, aOptions->mWeightMax64)) {
                     continue;
                 }
 
                 /*
-                ** Possibly restrict the callsite by text.
-                ** Do this last, as it is a heavier check.
-                **
-                ** One day, we may need to expand the logic to check for
-                **  events beyond the initial allocation event.
-                */
-                for(looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++)
-                {
-                    if('\0' != aOptions->mRestrictText[looper][0])
-                    {
-                        if(0 == hasCallsiteMatch(current->mEvents[0].mCallsite,
-                                                 aOptions->mRestrictText[looper],
-                                                 ST_FOLLOW_PARENTS))
-                        {
+                 ** Possibly restrict the callsite by text.
+                 ** Do this last, as it is a heavier check.
+                 **
+                 ** One day, we may need to expand the logic to check for
+                 **  events beyond the initial allocation event.
+                 */
+                for (looper = 0; ST_SUBSTRING_MATCH_MAX > looper; looper++) {
+                    if ('\0' != aOptions->mRestrictText[looper][0]) {
+                        if (0 ==
+                            hasCallsiteMatch(current->mEvents[0].mCallsite,
+                                             aOptions->mRestrictText[looper],
+                                             ST_FOLLOW_PARENTS)) {
                             break;
                         }
                     }
-                    else
-                    {
+                    else {
                         matched = PR_TRUE;
                         break;
                     }
                 }
-                if(ST_SUBSTRING_MATCH_MAX == looper)
-                {
+                if (ST_SUBSTRING_MATCH_MAX == looper) {
                     matched = PR_TRUE;
                 }
-                if(PR_FALSE == matched)
-                {
+                if (PR_FALSE == matched) {
                     continue;
                 }
 
                 /*
-                ** You get here, we add to the run.
-                */
-                appendRes = appendAllocation(aOptions, inContext, aOutRun, current);
-                if(0 == appendRes)
-                {
+                 ** You get here, we add to the run.
+                 */
+                appendRes =
+                    appendAllocation(aOptions, inContext, aOutRun, current);
+                if (0 == appendRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, appendAllocation);
                 }
@@ -1060,7 +1046,8 @@ harvestRun(const STRun* aInRun, STRun* aOutRun,
 
 #if defined(DEBUG_dp)
     fprintf(stderr, "DEBUG: harvesting ends: %dms [%d allocations]\n",
-            PR_IntervalToMilliseconds(PR_IntervalNow() - start), aInRun->mAllocationCount);
+            PR_IntervalToMilliseconds(PR_IntervalNow() - start),
+            aInRun->mAllocationCount);
 #endif
     return retval;
 }
@@ -1071,13 +1058,15 @@ harvestRun(const STRun* aInRun, STRun* aOutRun,
 ** Goes over all allocations of a run and recalculates and propogates
 ** the allocation costs - weight, heapcount, size
 */
-int recalculateRunCost(STOptions* inOptions, STContext* inContext, STRun* aRun)
+int
+recalculateRunCost(STOptions * inOptions, STContext * inContext, STRun * aRun)
 {
     PRUint32 traverse = 0;
-    STAllocation* current = NULL;
+    STAllocation *current = NULL;
 
 #if defined(DEBUG_dp)
     PRIntervalTime start = PR_IntervalNow();
+
     fprintf(stderr, "DEBUG: recalculateRunCost...\n");
 #endif
 
@@ -1090,18 +1079,18 @@ int recalculateRunCost(STOptions* inOptions, STContext* inContext, STRun* aRun)
     /* reset timestamp to force propogation of cost */
     aRun->mStats[inContext->mIndex].mStamp = PR_IntervalNow();
 
-    for(traverse = 0; traverse < aRun->mAllocationCount; traverse++)
-    {
+    for (traverse = 0; traverse < aRun->mAllocationCount; traverse++) {
         current = aRun->mAllocations[traverse];
-        if(NULL != current)
-        {
-            recalculateAllocationCost(inOptions, inContext, aRun, current, PR_TRUE);
+        if (NULL != current) {
+            recalculateAllocationCost(inOptions, inContext, aRun, current,
+                                      PR_TRUE);
         }
     }
 
 #if defined(DEBUG_dp)
     fprintf(stderr, "DEBUG: recalculateRunCost ends: %dms [%d allocations]\n",
-            PR_IntervalToMilliseconds(PR_IntervalNow() - start), aRun->mAllocationCount);
+            PR_IntervalToMilliseconds(PR_IntervalNow() - start),
+            aRun->mAllocationCount);
 #endif
 
     return 0;
@@ -1114,29 +1103,27 @@ int recalculateRunCost(STOptions* inOptions, STContext* inContext, STRun* aRun)
 ** qsort callback.
 ** Compare the allocations as specified by the options.
 */
-int compareAllocations(const void* aAlloc1, const void* aAlloc2, void* aContext)
+int
+compareAllocations(const void *aAlloc1, const void *aAlloc2, void *aContext)
 {
     int retval = 0;
-    STOptions* inOptions = (STOptions*)aContext;
+    STOptions *inOptions = (STOptions *) aContext;
 
-    if(NULL != aAlloc1 && NULL != aAlloc2 && NULL != inOptions)
-    {
-        STAllocation* alloc1 = *((STAllocation**)aAlloc1);
-        STAllocation* alloc2 = *((STAllocation**)aAlloc2);
+    if (NULL != aAlloc1 && NULL != aAlloc2 && NULL != inOptions) {
+        STAllocation *alloc1 = *((STAllocation **) aAlloc1);
+        STAllocation *alloc2 = *((STAllocation **) aAlloc2);
 
-        if(NULL != alloc1 && NULL != alloc2)
-        {
+        if (NULL != alloc1 && NULL != alloc2) {
             /*
-            ** Logic determined by pref/option.
-            */
-            switch(inOptions->mOrderBy)
-            {
-                case ST_COUNT:
-                    /*
-                    ** "By count" on a single allocation means nothing,
-                    **  fall through to weight.
-                    */
-                case ST_WEIGHT:
+             ** Logic determined by pref/option.
+             */
+            switch (inOptions->mOrderBy) {
+            case ST_COUNT:
+                /*
+                 ** "By count" on a single allocation means nothing,
+                 **  fall through to weight.
+                 */
+            case ST_WEIGHT:
                 {
                     PRUint64 weight164 = LL_INIT(0, 0);
                     PRUint64 weight264 = LL_INIT(0, 0);
@@ -1146,72 +1133,68 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2, void* aContext)
                     PRUint64 timeval264 = LL_INIT(0, 0);
 
                     LL_UI2L(bytesize164, byteSize(inOptions, alloc1));
-                    LL_UI2L(timeval164, (alloc1->mMaxTimeval - alloc1->mMinTimeval));
+                    LL_UI2L(timeval164,
+                            (alloc1->mMaxTimeval - alloc1->mMinTimeval));
                     LL_MUL(weight164, bytesize164, timeval164);
                     LL_UI2L(bytesize264, byteSize(inOptions, alloc2));
-                    LL_UI2L(timeval264, (alloc2->mMaxTimeval - alloc2->mMinTimeval));
+                    LL_UI2L(timeval264,
+                            (alloc2->mMaxTimeval - alloc2->mMinTimeval));
                     LL_MUL(weight264, bytesize264, timeval264);
 
-                    if(LL_UCMP(weight164, <, weight264))
-                    {
+                    if (LL_UCMP(weight164, <, weight264)) {
                         retval = __LINE__;
                     }
-                    else if(LL_UCMP(weight164, >, weight264))
-                    {
-                        retval = - __LINE__;
+                    else if (LL_UCMP(weight164, >, weight264)) {
+                        retval = -__LINE__;
                     }
                 }
                 break;
 
-                case ST_SIZE:
+            case ST_SIZE:
                 {
                     PRUint32 size1 = byteSize(inOptions, alloc1);
                     PRUint32 size2 = byteSize(inOptions, alloc2);
 
-                    if(size1 < size2)
-                    {
+                    if (size1 < size2) {
                         retval = __LINE__;
                     }
-                    else if(size1 > size2)
-                    {
-                        retval = - __LINE__;
+                    else if (size1 > size2) {
+                        retval = -__LINE__;
                     }
                 }
                 break;
 
-                case ST_TIMEVAL:
+            case ST_TIMEVAL:
                 {
-                    PRUint32 timeval1 = (alloc1->mMaxTimeval - alloc1->mMinTimeval);
-                    PRUint32 timeval2 = (alloc2->mMaxTimeval - alloc2->mMinTimeval);
+                    PRUint32 timeval1 =
+                        (alloc1->mMaxTimeval - alloc1->mMinTimeval);
+                    PRUint32 timeval2 =
+                        (alloc2->mMaxTimeval - alloc2->mMinTimeval);
 
-                    if(timeval1 < timeval2)
-                    {
+                    if (timeval1 < timeval2) {
                         retval = __LINE__;
                     }
-                    else if(timeval1 > timeval2)
-                    {
-                        retval = - __LINE__;
+                    else if (timeval1 > timeval2) {
+                        retval = -__LINE__;
                     }
                 }
                 break;
 
-                case ST_HEAPCOST:
+            case ST_HEAPCOST:
                 {
                     PRUint32 cost1 = alloc1->mHeapRuntimeCost;
                     PRUint32 cost2 = alloc2->mHeapRuntimeCost;
 
-                    if(cost1 < cost2)
-                    {
+                    if (cost1 < cost2) {
                         retval = __LINE__;
                     }
-                    else if(cost1 > cost2)
-                    {
-                        retval = - __LINE__;
+                    else if (cost1 > cost2) {
+                        retval = -__LINE__;
                     }
                 }
                 break;
 
-                default:
+            default:
                 {
                     REPORT_ERROR(__LINE__, compareAllocations);
                 }
@@ -1229,19 +1212,19 @@ int compareAllocations(const void* aAlloc1, const void* aAlloc2, void* aContext)
 ** Given a run, sort it in the manner specified by the options.
 ** Returns !0 on failure.
 */
-int sortRun(STOptions* inOptions, STRun* aRun)
+int
+sortRun(STOptions * inOptions, STRun * aRun)
 {
     int retval = 0;
 
-    if(NULL != aRun && NULL != inOptions)
-    {
-        if(NULL != aRun->mAllocations && 0 < aRun->mAllocationCount)
-        {
-            NS_QuickSort(aRun->mAllocations, aRun->mAllocationCount, sizeof(STAllocation*), compareAllocations, inOptions);
+    if (NULL != aRun && NULL != inOptions) {
+        if (NULL != aRun->mAllocations && 0 < aRun->mAllocationCount) {
+            NS_QuickSort(aRun->mAllocations, aRun->mAllocationCount,
+                         sizeof(STAllocation *), compareAllocations,
+                         inOptions);
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, sortRun);
     }
@@ -1262,23 +1245,22 @@ int sortRun(STOptions* inOptions, STRun* aRun)
 **
 ** Returns NULL on failure.
 */
-STRun* createRun(STContext* inContext, PRUint32 aStamp)
+STRun *
+createRun(STContext * inContext, PRUint32 aStamp)
 {
-    STRun* retval = NULL;
+    STRun *retval = NULL;
 
-    retval = (STRun*)calloc(1, sizeof(STRun));
-    if(NULL != retval)
-    {
-        retval->mStats = (STCallsiteStats*)calloc(globals.mCommandLineOptions.mContexts, sizeof(STCallsiteStats));
-        if(NULL != retval->mStats)
-        {
-            if(NULL != inContext)
-            {
+    retval = (STRun *) calloc(1, sizeof(STRun));
+    if (NULL != retval) {
+        retval->mStats =
+            (STCallsiteStats *) calloc(globals.mCommandLineOptions.mContexts,
+                                       sizeof(STCallsiteStats));
+        if (NULL != retval->mStats) {
+            if (NULL != inContext) {
                 retval->mStats[inContext->mIndex].mStamp = aStamp;
             }
         }
-        else
-        {
+        else {
             free(retval);
             retval = NULL;
         }
@@ -1292,23 +1274,21 @@ STRun* createRun(STContext* inContext, PRUint32 aStamp)
 **
 ** Free off the run and the associated data.
 */
-void freeRun(STRun* aRun)
+void
+freeRun(STRun * aRun)
 {
-    if(NULL != aRun)
-    {
-        if(NULL != aRun->mAllocations)
-        {
+    if (NULL != aRun) {
+        if (NULL != aRun->mAllocations) {
             /*
-            ** We do not free the allocations themselves.
-            ** They are likely pointed to by at least 2 other existing
-            **  runs.
-            */
+             ** We do not free the allocations themselves.
+             ** They are likely pointed to by at least 2 other existing
+             **  runs.
+             */
             free(aRun->mAllocations);
             aRun->mAllocations = NULL;
         }
 
-        if(NULL != aRun->mStats)
-        {
+        if (NULL != aRun->mStats) {
             free(aRun->mStats);
             aRun->mStats = NULL;
         }
@@ -1325,72 +1305,67 @@ void freeRun(STRun* aRun)
 ** Returns NULL on failure.
 ** Must call freeRun() with the new STRun.
 */
-STRun* createRunFromGlobal(STOptions* inOptions, STContext* inContext)
+STRun *
+createRunFromGlobal(STOptions * inOptions, STContext * inContext)
 {
-    STRun* retval = NULL;
+    STRun *retval = NULL;
 
-    if(NULL != inOptions && NULL != inContext)
-    {
+    if (NULL != inOptions && NULL != inContext) {
         /*
-        ** We stamp the run.
-        ** As things are appended to it, it realizes that it should stamp the
-        **  callsite backtrace with the information as well.
-        ** In this manner, we can provide meaningful callsite data.
-        */
+         ** We stamp the run.
+         ** As things are appended to it, it realizes that it should stamp the
+         **  callsite backtrace with the information as well.
+         ** In this manner, we can provide meaningful callsite data.
+         */
         retval = createRun(inContext, PR_IntervalNow());
-        
-        if(NULL != retval)
-        {
-            STCategoryNode* node = NULL;
+
+        if (NULL != retval) {
+            STCategoryNode *node = NULL;
             int failure = 0;
-            int harvestRes = harvestRun(&globals.mRun, retval, inOptions, inContext);
-            if(0 == harvestRes)
-            {
+            int harvestRes =
+                harvestRun(&globals.mRun, retval, inOptions, inContext);
+            if (0 == harvestRes) {
                 int sortRes = sortRun(inOptions, retval);
-                if(0 != sortRes)
-                {
+
+                if (0 != sortRes) {
                     failure = __LINE__;
                 }
             }
-            else
-            {
+            else {
                 failure = __LINE__;
             }
-            
-            
-            if(0 != failure)
-            {
+
+
+            if (0 != failure) {
                 freeRun(retval);
                 retval = NULL;
-                
+
                 REPORT_ERROR(failure, createRunFromGlobal);
             }
-            
+
             /*
-            ** Categorize the run.
-            */
+             ** Categorize the run.
+             */
             failure = categorizeRun(inOptions, inContext, retval, &globals);
-            if (0 != failure)
-            {
+            if (0 != failure) {
                 REPORT_ERROR(__LINE__, categorizeRun);
             }
-            
+
             /*
-            ** if we are focussing on a category, return that run instead of
-            ** the harvested run. Make sure to recalculate cost.
-            */
+             ** if we are focussing on a category, return that run instead of
+             ** the harvested run. Make sure to recalculate cost.
+             */
             node = findCategoryNode(inOptions->mCategoryName, &globals);
-            if (node)
-            {
+            if (node) {
                 /* Recalculate cost of run */
-                recalculateRunCost(inOptions, inContext, node->runs[inContext->mIndex]);
-                
+                recalculateRunCost(inOptions, inContext,
+                                   node->runs[inContext->mIndex]);
+
                 retval = node->runs[inContext->mIndex];
             }
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, createRunFromGlobal);
     }
 
@@ -1407,66 +1382,62 @@ STRun* createRunFromGlobal(STOptions* inOptions, STContext* inContext)
 **
 ** Returns the allocation on success, otherwise NULL.
 */
-STAllocation* getLiveAllocationByHeapID(STRun* aRun, PRUint32 aHeapID)
+STAllocation *
+getLiveAllocationByHeapID(STRun * aRun, PRUint32 aHeapID)
 {
-    STAllocation* retval = NULL;
+    STAllocation *retval = NULL;
 
-    if(NULL != aRun && 0 != aHeapID)
-    {
+    if (NULL != aRun && 0 != aHeapID) {
         PRUint32 traverse = aRun->mAllocationCount;
-        STAllocation* eval = NULL;
+        STAllocation *eval = NULL;
 
         /*
-        ** Go through in reverse order.
-        ** Stop when we have a return value.
-        */
-        while(0 < traverse && NULL == retval)
-        {
+         ** Go through in reverse order.
+         ** Stop when we have a return value.
+         */
+        while (0 < traverse && NULL == retval) {
             /*
-            ** Back up one to align with zero based index.
-            */
+             ** Back up one to align with zero based index.
+             */
             traverse--;
 
             /*
-            ** Take the pointer math out of further operations.
-            */
+             ** Take the pointer math out of further operations.
+             */
             eval = aRun->mAllocations[traverse];
 
             /*
-            ** Take a look at the events in reverse order.
-            ** Basically the last event must NOT be a free.
-            ** The last event must NOT be a realloc of size zero (free).
-            ** Otherwise, try to match up the heapID of the event.
-            */
-            if(0 != eval->mEventCount)
-            {
-                STAllocEvent* event = eval->mEvents + (eval->mEventCount - 1);
+             ** Take a look at the events in reverse order.
+             ** Basically the last event must NOT be a free.
+             ** The last event must NOT be a realloc of size zero (free).
+             ** Otherwise, try to match up the heapID of the event.
+             */
+            if (0 != eval->mEventCount) {
+                STAllocEvent *event = eval->mEvents + (eval->mEventCount - 1);
 
-                switch(event->mEventType)
-                {
-                    case TM_EVENT_FREE:
+                switch (event->mEventType) {
+                case TM_EVENT_FREE:
                     {
                         /*
-                        ** No freed allocation can match.
-                        */
+                         ** No freed allocation can match.
+                         */
                     }
                     break;
-                        
-                    case TM_EVENT_REALLOC:
-                    case TM_EVENT_CALLOC:
-                    case TM_EVENT_MALLOC:
+
+                case TM_EVENT_REALLOC:
+                case TM_EVENT_CALLOC:
+                case TM_EVENT_MALLOC:
                     {
                         /*
-                        ** Heap IDs must match.
-                        */
-                        if(aHeapID == event->mHeapID)
-                        {
+                         ** Heap IDs must match.
+                         */
+                        if (aHeapID == event->mHeapID) {
                             retval = eval;
                         }
                     }
                     break;
 
-                    default:
+                default:
                     {
                         REPORT_ERROR(__LINE__, getAllocationByHeapID);
                     }
@@ -1475,8 +1446,7 @@ STAllocation* getLiveAllocationByHeapID(STRun* aRun, PRUint32 aHeapID)
             }
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, getAllocationByHeapID);
     }
 
@@ -1489,38 +1459,41 @@ STAllocation* getLiveAllocationByHeapID(STRun* aRun, PRUint32 aHeapID)
 ** Given an allocation, append a new event to it's lifetime.
 ** Returns the new event on success, otherwise NULL.
 */
-STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aTimeval, char aEventType, PRUint32 aHeapID, PRUint32 aHeapSize, tmcallsite* aCallsite)
+STAllocEvent *
+appendEvent(STAllocation * aAllocation, PRUint32 aTimeval, char aEventType,
+            PRUint32 aHeapID, PRUint32 aHeapSize, tmcallsite * aCallsite)
 {
-    STAllocEvent* retval = NULL;
+    STAllocEvent *retval = NULL;
 
-    if(NULL != aAllocation && NULL != aCallsite)
-    {
-        STAllocEvent* expand = NULL;
+    if (NULL != aAllocation && NULL != aCallsite) {
+        STAllocEvent *expand = NULL;
 
         /*
-        ** Expand the allocation's event array.
-        */
-        expand = (STAllocEvent*)realloc(aAllocation->mEvents, sizeof(STAllocEvent) * (aAllocation->mEventCount + 1));
-        if(NULL != expand)
-        {
+         ** Expand the allocation's event array.
+         */
+        expand =
+            (STAllocEvent *) realloc(aAllocation->mEvents,
+                                     sizeof(STAllocEvent) *
+                                     (aAllocation->mEventCount + 1));
+        if (NULL != expand) {
             /*
-            ** Reassign in case of pointer move.
-            */
+             ** Reassign in case of pointer move.
+             */
             aAllocation->mEvents = expand;
 
             /*
-            ** Remove the pointer math from rest of code.
-            */
+             ** Remove the pointer math from rest of code.
+             */
             retval = aAllocation->mEvents + aAllocation->mEventCount;
 
             /*
-            ** Increase event array count.
-            */
+             ** Increase event array count.
+             */
             aAllocation->mEventCount++;
 
             /*
-            ** Fill in the event.
-            */
+             ** Fill in the event.
+             */
             retval->mTimeval = aTimeval;
             retval->mEventType = aEventType;
             retval->mHeapID = aHeapID;
@@ -1528,32 +1501,28 @@ STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aTimeval, char aEv
             retval->mCallsite = aCallsite;
 
             /*
-            ** Allocation may need to update idea of lifetime.
-            ** See allocationTracker to see mMinTimeval inited to ST_TIMEVAL_MAX.
-            */
-            if(aAllocation->mMinTimeval > aTimeval)
-            {
+             ** Allocation may need to update idea of lifetime.
+             ** See allocationTracker to see mMinTimeval inited to ST_TIMEVAL_MAX.
+             */
+            if (aAllocation->mMinTimeval > aTimeval) {
                 aAllocation->mMinTimeval = aTimeval;
             }
 
             /*
-            ** This a free event?
-            ** Can only set max timeval on a free.
-            ** Otherwise, mMaxTimeval remains  ST_TIMEVAL_MAX.
-            ** Set in allocationTracker.
-            */
-            if(TM_EVENT_FREE == aEventType)
-            {
+             ** This a free event?
+             ** Can only set max timeval on a free.
+             ** Otherwise, mMaxTimeval remains  ST_TIMEVAL_MAX.
+             ** Set in allocationTracker.
+             */
+            if (TM_EVENT_FREE == aEventType) {
                 aAllocation->mMaxTimeval = aTimeval;
             }
         }
-        else
-        {
+        else {
             REPORT_ERROR(__LINE__, appendEvent);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, appendEvent);
     }
 
@@ -1567,33 +1536,30 @@ STAllocEvent* appendEvent(STAllocation* aAllocation, PRUint32 aTimeval, char aEv
 ** This is really nothing more than a pointer comparison loop.
 ** Returns !0 if the run has the allocation.
 */
-int hasAllocation(STRun* aRun, STAllocation* aTestFor)
+int
+hasAllocation(STRun * aRun, STAllocation * aTestFor)
 {
     int retval = 0;
 
-    if(NULL != aRun && NULL != aTestFor)
-    {
+    if (NULL != aRun && NULL != aTestFor) {
         PRUint32 traverse = aRun->mAllocationCount;
 
         /*
-        ** Go through reverse, in the hopes it exists nearer the end.
-        */
-        while(0 < traverse)
-        {
+         ** Go through reverse, in the hopes it exists nearer the end.
+         */
+        while (0 < traverse) {
             /*
-            ** Back up.
-            */
+             ** Back up.
+             */
             traverse--;
 
-            if(aTestFor == aRun->mAllocations[traverse])
-            {
+            if (aTestFor == aRun->mAllocations[traverse]) {
                 retval = __LINE__;
                 break;
             }
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, hasAllocation);
     }
 
@@ -1609,145 +1575,142 @@ int hasAllocation(STRun* aRun, STAllocation* aTestFor)
 ** Returns a pointer to the allocation on success.
 ** Return NULL on failure.
 */
-STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRuntimeCost, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
+STAllocation *
+allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRuntimeCost,
+                  tmcallsite * aCallsite, PRUint32 aHeapID, PRUint32 aSize,
+                  tmcallsite * aOldCallsite, PRUint32 aOldHeapID,
+                  PRUint32 aOldSize)
 {
-    STAllocation* retval = NULL;
+    STAllocation *retval = NULL;
     static int compactor = 1;
     const int frequency = 10000;
     PRUint32 actualSize, actualOldSize = 0;
+
     actualSize = actualByteSize(&globals.mCommandLineOptions, aSize);
     if (aOldSize)
-        actualOldSize = actualByteSize(&globals.mCommandLineOptions, aOldSize);
+        actualOldSize =
+            actualByteSize(&globals.mCommandLineOptions, aOldSize);
 
-    if(NULL != aCallsite)
-    {
+    if (NULL != aCallsite) {
         int newAllocation = 0;
-        tmcallsite* searchCallsite = NULL;
+        tmcallsite *searchCallsite = NULL;
         PRUint32 searchHeapID = 0;
-        STAllocation* allocation = NULL;
+        STAllocation *allocation = NULL;
 
         /*
-        ** Global operation ID increases.
-        */
+         ** Global operation ID increases.
+         */
         globals.mOperationCount++;
 
         /*
-        ** Fix up the timevals if needed.
-        */
-        if(aTimeval < globals.mMinTimeval)
-        {
+         ** Fix up the timevals if needed.
+         */
+        if (aTimeval < globals.mMinTimeval) {
             globals.mMinTimeval = aTimeval;
         }
-        if(aTimeval > globals.mMaxTimeval)
-        {
+        if (aTimeval > globals.mMaxTimeval) {
             globals.mMaxTimeval = aTimeval;
         }
 
-        switch(aType)
-        {
-            case TM_EVENT_FREE:
+        switch (aType) {
+        case TM_EVENT_FREE:
             {
                 /*
-                ** Update the global counter.
-                */
+                 ** Update the global counter.
+                 */
                 globals.mFreeCount++;
 
                 /*
-                ** Update our peak memory used counter
-                */
+                 ** Update our peak memory used counter
+                 */
                 globals.mMemoryUsed -= actualSize;
 
                 /*
-                ** Not a new allocation, will need to search passed in site
-                **  for the original allocation.
-                */
+                 ** Not a new allocation, will need to search passed in site
+                 **  for the original allocation.
+                 */
                 searchCallsite = aCallsite;
                 searchHeapID = aHeapID;
             }
             break;
 
-            case TM_EVENT_MALLOC:
+        case TM_EVENT_MALLOC:
             {
                 /*
-                ** Update the global counter.
-                */
+                 ** Update the global counter.
+                 */
                 globals.mMallocCount++;
 
                 /*
-                ** Update our peak memory used counter
-                */
+                 ** Update our peak memory used counter
+                 */
                 globals.mMemoryUsed += actualSize;
-                if (globals.mMemoryUsed > globals.mPeakMemoryUsed)
-                {
+                if (globals.mMemoryUsed > globals.mPeakMemoryUsed) {
                     globals.mPeakMemoryUsed = globals.mMemoryUsed;
                 }
 
                 /*
-                ** This will be a new allocation.
-                */
+                 ** This will be a new allocation.
+                 */
                 newAllocation = __LINE__;
             }
             break;
 
-            case TM_EVENT_CALLOC:
+        case TM_EVENT_CALLOC:
             {
                 /*
-                ** Update the global counter.
-                */
+                 ** Update the global counter.
+                 */
                 globals.mCallocCount++;
 
                 /*
-                ** Update our peak memory used counter
-                */
+                 ** Update our peak memory used counter
+                 */
                 globals.mMemoryUsed += actualSize;
-                if (globals.mMemoryUsed > globals.mPeakMemoryUsed)
-                {
+                if (globals.mMemoryUsed > globals.mPeakMemoryUsed) {
                     globals.mPeakMemoryUsed = globals.mMemoryUsed;
                 }
 
                 /*
-                ** This will be a new allocation.
-                */
+                 ** This will be a new allocation.
+                 */
                 newAllocation = __LINE__;
             }
             break;
 
-            case TM_EVENT_REALLOC:
+        case TM_EVENT_REALLOC:
             {
                 /*
-                ** Update the global counter.
-                */
+                 ** Update the global counter.
+                 */
                 globals.mReallocCount++;
 
                 /*
-                ** Update our peak memory used counter
-                */
+                 ** Update our peak memory used counter
+                 */
                 globals.mMemoryUsed += actualSize - actualOldSize;
-                if (globals.mMemoryUsed > globals.mPeakMemoryUsed)
-                {
+                if (globals.mMemoryUsed > globals.mPeakMemoryUsed) {
                     globals.mPeakMemoryUsed = globals.mMemoryUsed;
                 }
 
                 /*
-                ** This might be a new allocation.
-                */
-                if(NULL == aOldCallsite)
-                {
+                 ** This might be a new allocation.
+                 */
+                if (NULL == aOldCallsite) {
                     newAllocation = __LINE__;
                 }
-                else
-                {
+                else {
                     /*
-                    ** Need to search for the original callsite for the
-                    **  index to the allocation.
-                    */
+                     ** Need to search for the original callsite for the
+                     **  index to the allocation.
+                     */
                     searchCallsite = aOldCallsite;
                     searchHeapID = aOldHeapID;
                 }
             }
             break;
 
-            default:
+        default:
             {
                 REPORT_ERROR(__LINE__, allocationTracker);
             }
@@ -1755,145 +1718,141 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
         }
 
         /*
-        ** We are either modifying an existing allocation or we are creating
-        **  a new one.
-        */
-        if(0 != newAllocation)
-        {
-            allocation = (STAllocation*)calloc(1, sizeof(STAllocation));
-            if(NULL != allocation)
-            {
+         ** We are either modifying an existing allocation or we are creating
+         **  a new one.
+         */
+        if (0 != newAllocation) {
+            allocation = (STAllocation *) calloc(1, sizeof(STAllocation));
+            if (NULL != allocation) {
                 /*
-                ** Fixup the min timeval so if logic later will just work.
-                */
+                 ** Fixup the min timeval so if logic later will just work.
+                 */
                 allocation->mMinTimeval = ST_TIMEVAL_MAX;
                 allocation->mMaxTimeval = ST_TIMEVAL_MAX;
             }
         }
-        else if(NULL != searchCallsite && NULL != CALLSITE_RUN(searchCallsite) && 0 != searchHeapID)
-        {
+        else if (NULL != searchCallsite
+                 && NULL != CALLSITE_RUN(searchCallsite)
+                 && 0 != searchHeapID) {
             /*
-            ** We know what to search for, and we reduce what we search
-            **  by only looking for those allocations at a known callsite.
-            */
-            allocation = getLiveAllocationByHeapID(CALLSITE_RUN(searchCallsite), searchHeapID);
+             ** We know what to search for, and we reduce what we search
+             **  by only looking for those allocations at a known callsite.
+             */
+            allocation =
+                getLiveAllocationByHeapID(CALLSITE_RUN(searchCallsite),
+                                          searchHeapID);
         }
-        else
-        {
+        else {
             REPORT_ERROR(__LINE__, allocationTracker);
         }
 
-        if(NULL != allocation)
-        {
-            STAllocEvent* appendResult = NULL;
+        if (NULL != allocation) {
+            STAllocEvent *appendResult = NULL;
 
             /*
-            ** Record the amount of time this allocation event took.
-            */
+             ** Record the amount of time this allocation event took.
+             */
             allocation->mHeapRuntimeCost += aHeapRuntimeCost;
 
             /*
-            ** Now that we have an allocation, we need to make sure it has
-            **  the proper event.
-            */
-            appendResult = appendEvent(allocation, aTimeval, aType, aHeapID, aSize, aCallsite);
-            if(NULL != appendResult)
-            {
-                if(0 != newAllocation)
-                {
+             ** Now that we have an allocation, we need to make sure it has
+             **  the proper event.
+             */
+            appendResult =
+                appendEvent(allocation, aTimeval, aType, aHeapID, aSize,
+                            aCallsite);
+            if (NULL != appendResult) {
+                if (0 != newAllocation) {
                     int runAppendResult = 0;
                     int callsiteAppendResult = 0;
 
                     /*
-                    ** A new allocation needs to be added to the global run.
-                    ** A new allocation needs to be added to the callsite.
-                    */
-                    runAppendResult = appendAllocation(&globals.mCommandLineOptions, NULL, &globals.mRun, allocation);
-                    callsiteAppendResult = appendAllocation(&globals.mCommandLineOptions, NULL, CALLSITE_RUN(aCallsite), allocation);
-                    if(0 != runAppendResult && 0 != callsiteAppendResult)
-                    {
+                     ** A new allocation needs to be added to the global run.
+                     ** A new allocation needs to be added to the callsite.
+                     */
+                    runAppendResult =
+                        appendAllocation(&globals.mCommandLineOptions, NULL,
+                                         &globals.mRun, allocation);
+                    callsiteAppendResult =
+                        appendAllocation(&globals.mCommandLineOptions, NULL,
+                                         CALLSITE_RUN(aCallsite), allocation);
+                    if (0 != runAppendResult && 0 != callsiteAppendResult) {
                         /*
-                        ** Success.
-                        */
+                         ** Success.
+                         */
                         retval = allocation;
                     }
-                    else
-                    {
+                    else {
                         REPORT_ERROR(__LINE__, appendAllocation);
                     }
                 }
-                else
-                {
+                else {
                     /*
-                    ** An existing allocation, if a realloc situation,
-                    **  may need to be added to the new callsite.
-                    ** This can only occur if the new and old callsites
-                    **  differ.
-                    ** Even then, a brute force check will need to be made
-                    **  to ensure the allocation was not added twice; 
-                    **  consider a realloc scenario where two different
-                    **  call stacks bump the allocation back and forth.
-                    */
-                    if(aCallsite != searchCallsite)
-                    {
+                     ** An existing allocation, if a realloc situation,
+                     **  may need to be added to the new callsite.
+                     ** This can only occur if the new and old callsites
+                     **  differ.
+                     ** Even then, a brute force check will need to be made
+                     **  to ensure the allocation was not added twice; 
+                     **  consider a realloc scenario where two different
+                     **  call stacks bump the allocation back and forth.
+                     */
+                    if (aCallsite != searchCallsite) {
                         int found = 0;
 
-                        found = hasAllocation(CALLSITE_RUN(aCallsite), allocation);
-                        if(0 == found)
-                        {
+                        found =
+                            hasAllocation(CALLSITE_RUN(aCallsite),
+                                          allocation);
+                        if (0 == found) {
                             int appendResult = 0;
 
-                            appendResult = appendAllocation(&globals.mCommandLineOptions, NULL, CALLSITE_RUN(aCallsite), allocation);
-                            if(0 != appendResult)
-                            {
+                            appendResult =
+                                appendAllocation(&globals.mCommandLineOptions,
+                                                 NULL,
+                                                 CALLSITE_RUN(aCallsite),
+                                                 allocation);
+                            if (0 != appendResult) {
                                 /*
-                                ** Success.
-                                */
+                                 ** Success.
+                                 */
                                 retval = allocation;
                             }
-                            else
-                            {
+                            else {
                                 REPORT_ERROR(__LINE__, appendAllocation);
                             }
                         }
-                        else
-                        {
+                        else {
                             /*
-                            ** Already there.
-                            */
+                             ** Already there.
+                             */
                             retval = allocation;
                         }
                     }
-                    else
-                    {
+                    else {
                         /*
-                        ** Success.
-                        */
+                         ** Success.
+                         */
                         retval = allocation;
                     }
                 }
             }
-            else
-            {
+            else {
                 REPORT_ERROR(__LINE__, appendEvent);
             }
         }
-        else
-        {
+        else {
             REPORT_ERROR(__LINE__, allocationTracker);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, allocationTracker);
     }
 
     /*
-    ** Compact the heap a bit if you can.
-    */
+     ** Compact the heap a bit if you can.
+     */
     compactor++;
-    if(0 == (compactor % frequency))
-    {
+    if (0 == (compactor % frequency)) {
         heapCompact();
     }
 
@@ -1906,34 +1865,36 @@ STAllocation* allocationTracker(PRUint32 aTimeval, char aType, PRUint32 aHeapRun
 ** An allocation event has dropped in on us.
 ** We need to do the right thing and track it.
 */
-void trackEvent(PRUint32 aTimeval, char aType, PRUint32 aHeapRuntimeCost, tmcallsite* aCallsite, PRUint32 aHeapID, PRUint32 aSize, tmcallsite* aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
+void
+trackEvent(PRUint32 aTimeval, char aType, PRUint32 aHeapRuntimeCost,
+           tmcallsite * aCallsite, PRUint32 aHeapID, PRUint32 aSize,
+           tmcallsite * aOldCallsite, PRUint32 aOldHeapID, PRUint32 aOldSize)
 {
-    if(NULL != aCallsite)
-    {
+    if (NULL != aCallsite) {
         /*
-        ** Verify the old callsite just in case.
-        */
-        if(NULL != CALLSITE_RUN(aCallsite) && (NULL == aOldCallsite || NULL != CALLSITE_RUN(aOldCallsite)))
-        {
-            STAllocation* allocation = NULL;
+         ** Verify the old callsite just in case.
+         */
+        if (NULL != CALLSITE_RUN(aCallsite)
+            && (NULL == aOldCallsite || NULL != CALLSITE_RUN(aOldCallsite))) {
+            STAllocation *allocation = NULL;
 
             /*
-            ** Add to the allocation tracking code.
-            */
-            allocation = allocationTracker(aTimeval, aType, aHeapRuntimeCost, aCallsite, aHeapID, aSize, aOldCallsite, aOldHeapID, aOldSize);
-        
-            if(NULL == allocation)
-            {
+             ** Add to the allocation tracking code.
+             */
+            allocation =
+                allocationTracker(aTimeval, aType, aHeapRuntimeCost,
+                                  aCallsite, aHeapID, aSize, aOldCallsite,
+                                  aOldHeapID, aOldSize);
+
+            if (NULL == allocation) {
                 REPORT_ERROR(__LINE__, allocationTracker);
             }
         }
-        else
-        {
+        else {
             REPORT_ERROR(__LINE__, trackEvent);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, trackEvent);
     }
 }
@@ -1944,132 +1905,130 @@ void trackEvent(PRUint32 aTimeval, char aType, PRUint32 aHeapRuntimeCost, tmcall
 ** Callback from the tmreader_eventloop function.
 ** Simply tries to sort out what we desire to know.
 */
-void tmEventHandler(tmreader* aReader, tmevent* aEvent)
+void
+tmEventHandler(tmreader * aReader, tmevent * aEvent)
 {
-    if(NULL != aReader && NULL != aEvent)
-    {
-        switch(aEvent->type)
-        {
+    if (NULL != aReader && NULL != aEvent) {
+        switch (aEvent->type) {
             /*
-            ** Events we ignore.
-            */
-            case TM_EVENT_LIBRARY:
-            case TM_EVENT_METHOD:
-            case TM_EVENT_STATS:
-            case TM_EVENT_TIMESTAMP:
-            case TM_EVENT_FILENAME:
-                break;
+             ** Events we ignore.
+             */
+        case TM_EVENT_LIBRARY:
+        case TM_EVENT_METHOD:
+        case TM_EVENT_STATS:
+        case TM_EVENT_TIMESTAMP:
+        case TM_EVENT_FILENAME:
+            break;
 
             /*
-            ** Allocation events need to be tracked.
-            */
-            case TM_EVENT_MALLOC:
-            case TM_EVENT_CALLOC:
-            case TM_EVENT_REALLOC:
-            case TM_EVENT_FREE:
+             ** Allocation events need to be tracked.
+             */
+        case TM_EVENT_MALLOC:
+        case TM_EVENT_CALLOC:
+        case TM_EVENT_REALLOC:
+        case TM_EVENT_FREE:
             {
                 PRUint32 oldptr = 0;
                 PRUint32 oldsize = 0;
-                tmcallsite* callsite = NULL;
-                tmcallsite* oldcallsite = NULL;
+                tmcallsite *callsite = NULL;
+                tmcallsite *oldcallsite = NULL;
 
-                if(TM_EVENT_REALLOC == aEvent->type)
-                {
+                if (TM_EVENT_REALLOC == aEvent->type) {
                     /*
-                    ** Only care about old arguments if there were any.
-                    */
-                    if(0 != aEvent->u.alloc.oldserial)
-                    {
+                     ** Only care about old arguments if there were any.
+                     */
+                    if (0 != aEvent->u.alloc.oldserial) {
                         oldptr = aEvent->u.alloc.oldptr;
                         oldsize = aEvent->u.alloc.oldsize;
-                        oldcallsite = tmreader_callsite(aReader, aEvent->u.alloc.oldserial);
-                        if(NULL == oldcallsite)
-                        {
+                        oldcallsite =
+                            tmreader_callsite(aReader,
+                                              aEvent->u.alloc.oldserial);
+                        if (NULL == oldcallsite) {
                             REPORT_ERROR(__LINE__, tmreader_callsite);
                         }
                     }
                 }
 
                 callsite = tmreader_callsite(aReader, aEvent->serial);
-                if(NULL != callsite)
-                {
+                if (NULL != callsite) {
                     /*
-                    ** Verify a callsite run is there.
-                    ** If not, we are ignoring this callsite.
-                    */
-                    if(NULL != CALLSITE_RUN(callsite))
-                    {
+                     ** Verify a callsite run is there.
+                     ** If not, we are ignoring this callsite.
+                     */
+                    if (NULL != CALLSITE_RUN(callsite)) {
                         char eventType = aEvent->type;
                         PRUint32 eventSize = aEvent->u.alloc.size;
-                        
+
                         /*
-                        ** Play a nasty trick on reallocs of size zero.
-                        ** They are to become free events, adjust the size accordingly.
-                        ** This allows me to avoid all types of special case code.
-                        */
-                        if(0 == aEvent->u.alloc.size && TM_EVENT_REALLOC == aEvent->type)
-                        {
+                         ** Play a nasty trick on reallocs of size zero.
+                         ** They are to become free events, adjust the size accordingly.
+                         ** This allows me to avoid all types of special case code.
+                         */
+                        if (0 == aEvent->u.alloc.size
+                            && TM_EVENT_REALLOC == aEvent->type) {
                             eventType = TM_EVENT_FREE;
-                            if(0 != aEvent->u.alloc.oldserial)
-                            {
+                            if (0 != aEvent->u.alloc.oldserial) {
                                 eventSize = aEvent->u.alloc.oldsize;
                             }
                         }
-                        trackEvent(ticks2msec(aReader, aEvent->u.alloc.interval), eventType, ticks2usec(aReader, aEvent->u.alloc.cost), callsite, aEvent->u.alloc.ptr, eventSize, oldcallsite, oldptr, oldsize);
+                        trackEvent(ticks2msec
+                                   (aReader, aEvent->u.alloc.interval),
+                                   eventType, ticks2usec(aReader,
+                                                         aEvent->u.alloc.
+                                                         cost), callsite,
+                                   aEvent->u.alloc.ptr, eventSize,
+                                   oldcallsite, oldptr, oldsize);
                     }
                 }
-                else
-                {
+                else {
                     REPORT_ERROR(__LINE__, tmreader_callsite);
                 }
             }
             break;
 
             /*
-            ** Callsite, set up the callsite run if it does not exist.
-            */
-            case TM_EVENT_CALLSITE:
+             ** Callsite, set up the callsite run if it does not exist.
+             */
+        case TM_EVENT_CALLSITE:
             {
-                tmcallsite* callsite = tmreader_callsite(aReader, aEvent->serial);
+                tmcallsite *callsite =
+                    tmreader_callsite(aReader, aEvent->serial);
 
-                if(NULL != callsite)
-                {
-                    if(NULL == CALLSITE_RUN(callsite))
-                    {
+                if (NULL != callsite) {
+                    if (NULL == CALLSITE_RUN(callsite)) {
                         int createrun = __LINE__;
 
 #if defined(MOZILLA_CLIENT)
                         /*
-                        ** For a mozilla spacetrace, ignore this particular
-                        **  callsite as it is just noise, and causes us to
-                        **  use a lot of memory.
-                        **
-                        ** This callsite is present on the linux build,
-                        **  not sure if the other platforms have it.
-                        */
-                        if(0 != hasCallsiteMatch(callsite, "g_main_is_running", ST_FOLLOW_PARENTS))
-                        {
+                         ** For a mozilla spacetrace, ignore this particular
+                         **  callsite as it is just noise, and causes us to
+                         **  use a lot of memory.
+                         **
+                         ** This callsite is present on the linux build,
+                         **  not sure if the other platforms have it.
+                         */
+                        if (0 !=
+                            hasCallsiteMatch(callsite, "g_main_is_running",
+                                             ST_FOLLOW_PARENTS)) {
                             createrun = 0;
                         }
 #endif /* MOZILLA_CLIENT */
 
-                        if(0 != createrun)
-                        {
+                        if (0 != createrun) {
                             callsite->data = createRun(NULL, 0);
                         }
                     }
                 }
-                else
-                {
+                else {
                     REPORT_ERROR(__LINE__, tmreader_callsite);
                 }
             }
             break;
 
             /*
-            ** Unhandled events should not be allowed.
-            */
-            default:
+             ** Unhandled events should not be allowed.
+             */
+        default:
             {
                 REPORT_ERROR(__LINE__, tmEventHandler);
             }
@@ -2083,10 +2042,10 @@ void tmEventHandler(tmreader* aReader, tmevent* aEvent)
 **
 **  Output option get data.
 */
-void optionGetDataOut(PRFileDesc* inFD, STOptions* inOptions)
+void
+optionGetDataOut(PRFileDesc * inFD, STOptions * inOptions)
 {
-    if(NULL != inFD && NULL != inOptions)
-    {
+    if (NULL != inFD && NULL != inOptions) {
         int mark = 0;
 
 #define ST_WEB_OPTION_BOOL(option_name, option_genre, option_help) \
@@ -2102,7 +2061,7 @@ void optionGetDataOut(PRFileDesc* inFD, STOptions* inOptions)
             PR_fprintf(inFD, "%s%s=%s", (0 == mark++) ? "?" : "&", #option_name, inOptions->m##option_name[loop]); \
         } \
     }
-#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) /* no implementation */
+#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help)  /* no implementation */
 #define ST_WEB_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) \
     PR_fprintf(inFD, "%s%s=%u", (0 == mark++) ? "?" : "&", #option_name, inOptions->m##option_name / multiplier);
 #define ST_WEB_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) \
@@ -2124,80 +2083,71 @@ void optionGetDataOut(PRFileDesc* inFD, STOptions* inOptions)
 **
 ** Output an HTML anchor, or just the text depending on the mode.
 */
-void htmlAnchor(STRequest* inRequest,
-                const char* aHref,
-                const char* aText,
-                const char* aTarget,
-                const char* aClass,
-                STOptions* inOptions)
+void
+htmlAnchor(STRequest * inRequest,
+           const char *aHref,
+           const char *aText,
+           const char *aTarget, const char *aClass, STOptions * inOptions)
 {
-    if(NULL != aHref && '\0' != *aHref && NULL != aText && '\0' != *aText)
-    {
+    if (NULL != aHref && '\0' != *aHref && NULL != aText && '\0' != *aText) {
         int anchorLive = 1;
 
         /*
-        ** In batch mode, we need to verify the anchor is live.
-        */
-        if(0 != inRequest->mOptions.mBatchRequestCount)
-        {
+         ** In batch mode, we need to verify the anchor is live.
+         */
+        if (0 != inRequest->mOptions.mBatchRequestCount) {
             PRUint32 loop = 0;
             int comparison = 1;
-            
-            for(loop = 0; loop < inRequest->mOptions.mBatchRequestCount; loop++)
-            {
-                comparison = strcmp(aHref, inRequest->mOptions.mBatchRequest[loop]);
-                if(0 == comparison)
-                {
+
+            for (loop = 0; loop < inRequest->mOptions.mBatchRequestCount;
+                 loop++) {
+                comparison =
+                    strcmp(aHref, inRequest->mOptions.mBatchRequest[loop]);
+                if (0 == comparison) {
                     break;
                 }
             }
-            
+
             /*
-            ** Did we find it?
-            */
-            if(0 == comparison)
-            {
+             ** Did we find it?
+             */
+            if (0 == comparison) {
                 anchorLive = 0;
             }
         }
 
         /*
-        ** In any mode, don't make an href to the current page.
-        */
-        if(0 != anchorLive && NULL != inRequest->mGetFileName)
-        {
-            if(0 == strcmp(aHref, inRequest->mGetFileName))
-            {
+         ** In any mode, don't make an href to the current page.
+         */
+        if (0 != anchorLive && NULL != inRequest->mGetFileName) {
+            if (0 == strcmp(aHref, inRequest->mGetFileName)) {
                 anchorLive = 0;
             }
         }
-        
+
         /*
-        **  Do the right thing.
-        */
-        if(0 != anchorLive)
-        {
+         **  Do the right thing.
+         */
+        if (0 != anchorLive) {
             PR_fprintf(inRequest->mFD, "<a class=\"%s\" ", aClass);
-            if(NULL != aTarget && '\0' != *aTarget)
-            {
+            if (NULL != aTarget && '\0' != *aTarget) {
                 PR_fprintf(inRequest->mFD, "target=\"%s\" ", aTarget);
             }
             PR_fprintf(inRequest->mFD, "href=\"./%s", aHref);
 
             /*
-            **  The options, if desired, get appended as form data.
-            */
+             **  The options, if desired, get appended as form data.
+             */
             optionGetDataOut(inRequest->mFD, inOptions);
 
             PR_fprintf(inRequest->mFD, "\">%s</a>\n", aText);
         }
-        else
-        {
-            PR_fprintf(inRequest->mFD, "<span class=\"%s\">%s</span>\n", aClass, aText);
+        else {
+            PR_fprintf(inRequest->mFD, "<span class=\"%s\">%s</span>\n",
+                       aClass, aText);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, htmlAnchor);
     }
 }
@@ -2207,23 +2157,25 @@ void htmlAnchor(STRequest* inRequest,
 **
 ** Output an html achor that will resolve to the allocation in question.
 */
-void htmlAllocationAnchor(STRequest* inRequest, STAllocation* aAllocation, const char* aText)
+void
+htmlAllocationAnchor(STRequest * inRequest, STAllocation * aAllocation,
+                     const char *aText)
 {
-    if(NULL != aAllocation && NULL != aText && '\0' != *aText)
-    {
+    if (NULL != aAllocation && NULL != aText && '\0' != *aText) {
         char buffer[128];
 
         /*
-        ** This is a total hack.
-        ** The filename contains the index of the allocation in globals.mRun.
-        ** Safer than using the raw pointer value....
-        */
-        PR_snprintf(buffer, sizeof(buffer), "allocation_%u.html", aAllocation->mRunIndex);
+         ** This is a total hack.
+         ** The filename contains the index of the allocation in globals.mRun.
+         ** Safer than using the raw pointer value....
+         */
+        PR_snprintf(buffer, sizeof(buffer), "allocation_%u.html",
+                    aAllocation->mRunIndex);
 
-        htmlAnchor(inRequest, buffer, aText, NULL, "allocation", &inRequest->mOptions);
+        htmlAnchor(inRequest, buffer, aText, NULL, "allocation",
+                   &inRequest->mOptions);
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, htmlAllocationAnchor);
     }
 }
@@ -2234,25 +2186,23 @@ void htmlAllocationAnchor(STRequest* inRequest, STAllocation* aAllocation, const
 ** Easy way to get a readable/short name.
 ** NULL if not present, not resolvable.
 */
-const char* resolveSourceFile(tmmethodnode* aMethod)
+const char *
+resolveSourceFile(tmmethodnode * aMethod)
 {
-    const char* retval = NULL;
+    const char *retval = NULL;
 
-    if(NULL != aMethod)
-    {
-        const char* methodSays = NULL;
+    if (NULL != aMethod) {
+        const char *methodSays = NULL;
 
         methodSays = aMethod->sourcefile;
 
-        if(NULL != methodSays && '\0' != methodSays[0] && 0 != strcmp("noname", methodSays))
-        {
+        if (NULL != methodSays && '\0' != methodSays[0]
+            && 0 != strcmp("noname", methodSays)) {
             retval = strrchr(methodSays, '/');
-            if(NULL != retval)
-            {
+            if (NULL != retval) {
                 retval++;
             }
-            else
-            {
+            else {
                 retval = methodSays;
             }
         }
@@ -2270,92 +2220,103 @@ const char* resolveSourceFile(tmmethodnode* aMethod)
 ** RealName determines wether or not we crawl our parents until the point
 **  we no longer match stats.
 */
-void htmlCallsiteAnchor(STRequest* inRequest, tmcallsite* aCallsite, const char* aText, int aRealName)
+void
+htmlCallsiteAnchor(STRequest * inRequest, tmcallsite * aCallsite,
+                   const char *aText, int aRealName)
 {
-    if(NULL != aCallsite)
-    {
+    if (NULL != aCallsite) {
         char textBuf[512];
         char hrefBuf[128];
-        tmcallsite* namesite = aCallsite;
+        tmcallsite *namesite = aCallsite;
 
         /*
-        ** Should we use a different name?
-        */
-        if(0 == aRealName && NULL != namesite->parent && NULL != namesite->parent->method)
-        {
-            STRun* myRun = NULL;
-            STRun* upRun = NULL;
+         ** Should we use a different name?
+         */
+        if (0 == aRealName && NULL != namesite->parent
+            && NULL != namesite->parent->method) {
+            STRun *myRun = NULL;
+            STRun *upRun = NULL;
 
-            do
-            {
+            do {
                 myRun = CALLSITE_RUN(namesite);
                 upRun = CALLSITE_RUN(namesite->parent);
-                
-                if(0 != memcmp(&myRun->mStats[inRequest->mContext->mIndex], &upRun->mStats[inRequest->mContext->mIndex], sizeof(STCallsiteStats)))
-                {
+
+                if (0 !=
+                    memcmp(&myRun->mStats[inRequest->mContext->mIndex],
+                           &upRun->mStats[inRequest->mContext->mIndex],
+                           sizeof(STCallsiteStats))) {
                     /*
-                    ** Doesn't match, stop.
-                    */
+                     ** Doesn't match, stop.
+                     */
                     break;
                 }
-                else
-                {
+                else {
                     /*
-                    ** Matches, keep going up.
-                    */
+                     ** Matches, keep going up.
+                     */
                     namesite = namesite->parent;
                 }
             }
-            while(NULL != namesite->parent && NULL != namesite->parent->method);
+            while (NULL != namesite->parent
+                   && NULL != namesite->parent->method);
         }
 
         /*
-        ** If no text, provide our own.
-        */
-        if(NULL == aText || '\0' == *aText)
-        {
-            const char* methodName = NULL;
-            const char* sourceFile = NULL;
+         ** If no text, provide our own.
+         */
+        if (NULL == aText || '\0' == *aText) {
+            const char *methodName = NULL;
+            const char *sourceFile = NULL;
 
-            if(NULL != namesite->method)
-            {
+            if (NULL != namesite->method) {
                 methodName = tmmethodnode_name(namesite->method);
             }
-            else
-            {
+            else {
                 methodName = "==NONAME==";
             }
 
             /*
-            ** Decide which format to use to identify the callsite.
-            ** If we can detect availability, hook up the filename with lxr information.
-            */
+             ** Decide which format to use to identify the callsite.
+             ** If we can detect availability, hook up the filename with lxr information.
+             */
             sourceFile = resolveSourceFile(namesite->method);
-            if(NULL != sourceFile && 0 == strncmp("mozilla/", namesite->method->sourcefile, 8))
-            {
+            if (NULL != sourceFile
+                && 0 == strncmp("mozilla/", namesite->method->sourcefile,
+                                8)) {
                 char lxrHREFBuf[512];
 
-                PR_snprintf(lxrHREFBuf, sizeof(lxrHREFBuf), " [<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">%s:%u</a>]", namesite->method->sourcefile + 8, namesite->method->linenumber, sourceFile, namesite->method->linenumber);
-                PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source mozilla-source\">%s</span>%s", methodName, lxrHREFBuf);
+                PR_snprintf(lxrHREFBuf, sizeof(lxrHREFBuf),
+                            " [<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">%s:%u</a>]",
+                            namesite->method->sourcefile + 8,
+                            namesite->method->linenumber, sourceFile,
+                            namesite->method->linenumber);
+                PR_snprintf(textBuf, sizeof(textBuf),
+                            "<span class=\"source mozilla-source\">%s</span>%s",
+                            methodName, lxrHREFBuf);
             }
-            else if(NULL != sourceFile)
-            {
-                PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source external-source\">%s [<span class=\"source-extra\">%s:%u</span>]</span>", methodName, sourceFile, namesite->method->linenumber);
+            else if (NULL != sourceFile) {
+                PR_snprintf(textBuf, sizeof(textBuf),
+                            "<span class=\"source external-source\">%s [<span class=\"source-extra\">%s:%u</span>]</span>",
+                            methodName, sourceFile,
+                            namesite->method->linenumber);
             }
-            else
-            {
-                PR_snprintf(textBuf, sizeof(textBuf), "<span class=\"source binary-source\">%s [<span class=\"source-extra\">+%u(%u)</span>]</span>", methodName, namesite->offset, (PRUint32)namesite->entry.key);
+            else {
+                PR_snprintf(textBuf, sizeof(textBuf),
+                            "<span class=\"source binary-source\">%s [<span class=\"source-extra\">+%u(%u)</span>]</span>",
+                            methodName, namesite->offset,
+                            (PRUint32) namesite->entry.key);
             }
 
             aText = textBuf;
         }
 
-        PR_snprintf(hrefBuf, sizeof(hrefBuf), "callsite_%u.html", (PRUint32)aCallsite->entry.key);
+        PR_snprintf(hrefBuf, sizeof(hrefBuf), "callsite_%u.html",
+                    (PRUint32) aCallsite->entry.key);
 
-        htmlAnchor(inRequest, hrefBuf, aText, NULL, "callsite", &inRequest->mOptions);
+        htmlAnchor(inRequest, hrefBuf, aText, NULL, "callsite",
+                   &inRequest->mOptions);
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, htmlCallsiteAnchor);
     }
 }
@@ -2365,7 +2326,8 @@ void htmlCallsiteAnchor(STRequest* inRequest, tmcallsite* aCallsite, const char*
 **
 ** Output a standard header in the report files.
 */
-void htmlHeader(STRequest* inRequest, const char* aTitle)
+void
+htmlHeader(STRequest * inRequest, const char *aTitle)
 {
     PR_fprintf(inRequest->mFD,
                "<html>\n"
@@ -2379,20 +2341,22 @@ void htmlHeader(STRequest* inRequest, const char* aTitle)
                "<span class=navigate>\n"
                "<span class=\"category-title header-text\">Category:</span>\n"
                "<span class=\"current-category\">%s</span>\n",
-               aTitle,
-               inRequest->mOptions.mCategoryName);
+               aTitle, inRequest->mOptions.mCategoryName);
 
-    PR_fprintf(inRequest->mFD,"<span class=\"header-item\">");
-    htmlAnchor(inRequest, "index.html", "Index", NULL, "header-menuitem", &inRequest->mOptions);
-    PR_fprintf(inRequest->mFD,"</span>\n");
+    PR_fprintf(inRequest->mFD, "<span class=\"header-item\">");
+    htmlAnchor(inRequest, "index.html", "Index", NULL, "header-menuitem",
+               &inRequest->mOptions);
+    PR_fprintf(inRequest->mFD, "</span>\n");
 
-    PR_fprintf(inRequest->mFD,"<span class=\"header-item\">");
-    htmlAnchor(inRequest, "options.html", "Options", NULL, "header-menuitem", &inRequest->mOptions);
-    PR_fprintf(inRequest->mFD,"</span>\n"); 
+    PR_fprintf(inRequest->mFD, "<span class=\"header-item\">");
+    htmlAnchor(inRequest, "options.html", "Options", NULL, "header-menuitem",
+               &inRequest->mOptions);
+    PR_fprintf(inRequest->mFD, "</span>\n");
 
-    PR_fprintf(inRequest->mFD,"</span>\n"); /* class=navigate */
+    PR_fprintf(inRequest->mFD, "</span>\n");    /* class=navigate */
 
-    PR_fprintf(inRequest->mFD, "</div>\n<div class=\"header-separator\"></div>\n");
+    PR_fprintf(inRequest->mFD,
+               "</div>\n<div class=\"header-separator\"></div>\n");
 }
 
 /*
@@ -2400,16 +2364,14 @@ void htmlHeader(STRequest* inRequest, const char* aTitle)
 **
 ** Output a standard footer in the report file.
 */
-void htmlFooter(STRequest* inRequest)
+void
+htmlFooter(STRequest * inRequest)
 {
     PR_fprintf(inRequest->mFD,
-"<div class=\"footer-separator\"></div>\n"
-"<div class=\"footer\">\n"
-"<span class=\"footer-text\">SpaceTrace</span>\n"
-"</div>\n"
-"</body>\n"
-"</html>\n"
-        );
+               "<div class=\"footer-separator\"></div>\n"
+               "<div class=\"footer\">\n"
+               "<span class=\"footer-text\">SpaceTrace</span>\n"
+               "</div>\n" "</body>\n" "</html>\n");
 }
 
 /*
@@ -2417,7 +2379,8 @@ void htmlFooter(STRequest* inRequest)
 **
 ** Not found message.
 */
-void htmlNotFound(STRequest* inRequest)
+void
+htmlNotFound(STRequest * inRequest)
 {
     htmlHeader(inRequest, "File Not Found");
     PR_fprintf(inRequest->mFD, "File Not Found\n");
@@ -2434,66 +2397,65 @@ void htmlNotFound(STRequest* inRequest)
 ** Returns the number of items in the array.
 ** If the same as aExistingCount, then nothing happened.
 */
-PRUint32 callsiteArrayFromCallsite(tmcallsite*** aArray, PRUint32 aExistingCount, tmcallsite* aSite, int aFollow)
+PRUint32
+callsiteArrayFromCallsite(tmcallsite *** aArray, PRUint32 aExistingCount,
+                          tmcallsite * aSite, int aFollow)
 {
     PRUint32 retval = 0;
 
-    if(NULL != aArray && NULL != aSite)
-    {
-        tmcallsite** expand = NULL;
+    if (NULL != aArray && NULL != aSite) {
+        tmcallsite **expand = NULL;
 
         /*
-        ** If we have an existing count, we just keep expanding this.
-        */
+         ** If we have an existing count, we just keep expanding this.
+         */
         retval = aExistingCount;
 
         /*
-        ** Go through every allocation.
-        */
-        do
-        {
+         ** Go through every allocation.
+         */
+        do {
             /*
-            ** expand the array.
-            */
-            expand = (tmcallsite**)realloc(*aArray, sizeof(tmcallsite*) * (retval + 1));
-            if(NULL != expand)
-            {
+             ** expand the array.
+             */
+            expand =
+                (tmcallsite **) realloc(*aArray,
+                                        sizeof(tmcallsite *) * (retval + 1));
+            if (NULL != expand) {
                 /*
-                ** Set the callsite in case of pointer move.
-                */
+                 ** Set the callsite in case of pointer move.
+                 */
                 *aArray = expand;
-                
+
                 /*
-                ** Assign the value.
-                */
+                 ** Assign the value.
+                 */
                 (*aArray)[retval] = aSite;
                 retval++;
             }
-            else
-            {
+            else {
                 REPORT_ERROR(__LINE__, realloc);
                 break;
             }
-            
+
 
             /*
-            ** What do we follow?
-            */
-            switch(aFollow)
-            {
-                case ST_FOLLOW_SIBLINGS:
-                    aSite = aSite->siblings;
-                    break;
-                case ST_FOLLOW_PARENTS:
-                    aSite = aSite->parent;
-                    break;
-                default:
-                    aSite = NULL;
-                    REPORT_ERROR(__LINE__, callsiteArrayFromCallsite);
-                    break;
+             ** What do we follow?
+             */
+            switch (aFollow) {
+            case ST_FOLLOW_SIBLINGS:
+                aSite = aSite->siblings;
+                break;
+            case ST_FOLLOW_PARENTS:
+                aSite = aSite->parent;
+                break;
+            default:
+                aSite = NULL;
+                REPORT_ERROR(__LINE__, callsiteArrayFromCallsite);
+                break;
             }
         }
-        while(NULL != aSite && NULL != aSite->method);
+        while (NULL != aSite && NULL != aSite->method);
     }
 
     return retval;
@@ -2509,57 +2471,65 @@ PRUint32 callsiteArrayFromCallsite(tmcallsite*** aArray, PRUint32 aExistingCount
 ** Returns the number of items in the array.
 ** If the same as aExistingCount, then nothing happened.
 */
-PRUint32 callsiteArrayFromRun(tmcallsite*** aArray, PRUint32 aExistingCount, STRun* aRun)
+PRUint32
+callsiteArrayFromRun(tmcallsite *** aArray, PRUint32 aExistingCount,
+                     STRun * aRun)
 {
     PRUint32 retval = 0;
 
-    if(NULL != aArray && NULL != aRun && 0 < aRun->mAllocationCount)
-    {
+    if (NULL != aArray && NULL != aRun && 0 < aRun->mAllocationCount) {
         PRUint32 allocLoop = 0;
         PRUint32 eventLoop = 0;
         int stopLoops = 0;
 
         /*
-        ** If we have an existing count, we just keep expanding this.
-        */
+         ** If we have an existing count, we just keep expanding this.
+         */
         retval = aExistingCount;
 
         /*
-        ** Go through every allocation.
-        */
-        for(allocLoop = 0; 0 == stopLoops && allocLoop < aRun->mAllocationCount; allocLoop++)
-        {
+         ** Go through every allocation.
+         */
+        for (allocLoop = 0;
+             0 == stopLoops && allocLoop < aRun->mAllocationCount;
+             allocLoop++) {
             /*
-            ** Go through every event.
-            */
-            for(eventLoop = 0; 0 == stopLoops && eventLoop < aRun->mAllocations[allocLoop]->mEventCount; eventLoop++)
-            {
+             ** Go through every event.
+             */
+            for (eventLoop = 0;
+                 0 == stopLoops
+                 && eventLoop < aRun->mAllocations[allocLoop]->mEventCount;
+                 eventLoop++) {
                 /*
-                ** Skip the free events.
-                */
-                if(TM_EVENT_FREE != aRun->mAllocations[allocLoop]->mEvents[eventLoop].mEventType)
-                {
-                    tmcallsite** expand = NULL;
+                 ** Skip the free events.
+                 */
+                if (TM_EVENT_FREE !=
+                    aRun->mAllocations[allocLoop]->mEvents[eventLoop].
+                    mEventType) {
+                    tmcallsite **expand = NULL;
 
                     /*
-                    ** expand the array.
-                    */
-                    expand = (tmcallsite**)realloc(*aArray, sizeof(tmcallsite*) * (retval + 1));
-                    if(NULL != expand)
-                    {
+                     ** expand the array.
+                     */
+                    expand =
+                        (tmcallsite **) realloc(*aArray,
+                                                sizeof(tmcallsite *) *
+                                                (retval + 1));
+                    if (NULL != expand) {
                         /*
-                        ** Set the callsite in case of pointer move.
-                        */
+                         ** Set the callsite in case of pointer move.
+                         */
                         *aArray = expand;
-                        
+
                         /*
-                        ** Assign the value.
-                        */
-                        (*aArray)[retval] = aRun->mAllocations[allocLoop]->mEvents[eventLoop].mCallsite;
+                         ** Assign the value.
+                         */
+                        (*aArray)[retval] =
+                            aRun->mAllocations[allocLoop]->mEvents[eventLoop].
+                            mCallsite;
                         retval++;
                     }
-                    else
-                    {
+                    else {
                         REPORT_ERROR(__LINE__, realloc);
                         stopLoops = __LINE__;
                     }
@@ -2580,37 +2550,38 @@ PRUint32 callsiteArrayFromRun(tmcallsite*** aArray, PRUint32 aExistingCount, STR
 ** Do not touch storage space unless a find is made.
 ** Returns !0 on failure.
 */
-int getDataPRUint32Base(const FormData* aGetData, const char* aCheckFor, int inIndex, void* aStoreResult, PRUint32 aBits)
+int
+getDataPRUint32Base(const FormData * aGetData, const char *aCheckFor,
+                    int inIndex, void *aStoreResult, PRUint32 aBits)
 {
     int retval = 0;
 
-    if(NULL != aGetData && NULL != aCheckFor && 0 != inIndex && NULL != aStoreResult)
-    {
+    if (NULL != aGetData && NULL != aCheckFor && 0 != inIndex
+        && NULL != aStoreResult) {
         unsigned finder = 0;
 
         /*
-        **  Loop over the names, looking for an exact string match.
-        **  Skip over initial finds, decrementing inIndex, until "1".
-        */
-        for(finder = 0; finder < aGetData->mNVCount; finder++)
-        {
-            if(0 == strcmp(aCheckFor, aGetData->mNArray[finder]))
-            {
+         **  Loop over the names, looking for an exact string match.
+         **  Skip over initial finds, decrementing inIndex, until "1".
+         */
+        for (finder = 0; finder < aGetData->mNVCount; finder++) {
+            if (0 == strcmp(aCheckFor, aGetData->mNArray[finder])) {
                 inIndex--;
-                
-                if(0 == inIndex)
-                {
+
+                if (0 == inIndex) {
                     PRInt32 scanRes = 0;
-                    if(64 == aBits)
-                    {
-                        scanRes = PR_sscanf(aGetData->mVArray[finder], "%llu", aStoreResult);
+
+                    if (64 == aBits) {
+                        scanRes =
+                            PR_sscanf(aGetData->mVArray[finder], "%llu",
+                                      aStoreResult);
                     }
-                    else
-                    {
-                        scanRes = PR_sscanf(aGetData->mVArray[finder], "%u", aStoreResult);
+                    else {
+                        scanRes =
+                            PR_sscanf(aGetData->mVArray[finder], "%u",
+                                      aStoreResult);
                     }
-                    if(1 != scanRes)
-                    {
+                    if (1 != scanRes) {
                         retval = __LINE__;
                         REPORT_ERROR(__LINE__, PR_sscanf);
                     }
@@ -2619,24 +2590,30 @@ int getDataPRUint32Base(const FormData* aGetData, const char* aCheckFor, int inI
             }
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, getDataPRUint32Base);
     }
 
     return retval;
 }
-int getDataPRUint32(const FormData* aGetData, const char* aCheckFor, int inIndex, PRUint32* aStoreResult, PRUint32 aConversion)
+
+int
+getDataPRUint32(const FormData * aGetData, const char *aCheckFor, int inIndex,
+                PRUint32 * aStoreResult, PRUint32 aConversion)
 {
     int retval = 0;
 
-    retval =  getDataPRUint32Base(aGetData, aCheckFor, inIndex, aStoreResult, 32);
+    retval =
+        getDataPRUint32Base(aGetData, aCheckFor, inIndex, aStoreResult, 32);
     *aStoreResult *= aConversion;
 
     return retval;
 }
-int getDataPRUint64(const FormData* aGetData, const char* aCheckFor, int inIndex, PRUint64* aStoreResult64, PRUint64 aConversion64)
+
+int
+getDataPRUint64(const FormData * aGetData, const char *aCheckFor, int inIndex,
+                PRUint64 * aStoreResult64, PRUint64 aConversion64)
 {
     int retval = 0;
     PRUint64 value64 = LL_INIT(0, 0);
@@ -2655,34 +2632,33 @@ int getDataPRUint64(const FormData* aGetData, const char* aCheckFor, int inIndex
 ** Do not touch storage space unless a find is made.
 ** Return !0 on failure.
 */
-int getDataString(const FormData* aGetData, const char* aCheckFor, int inIndex, char* aStoreResult, int inStoreResultLength)
+int
+getDataString(const FormData * aGetData, const char *aCheckFor, int inIndex,
+              char *aStoreResult, int inStoreResultLength)
 {
     int retval = 0;
 
-    if(NULL != aGetData && NULL != aCheckFor && 0 != inIndex && NULL != aStoreResult && 0 != inStoreResultLength)
-    {
+    if (NULL != aGetData && NULL != aCheckFor && 0 != inIndex
+        && NULL != aStoreResult && 0 != inStoreResultLength) {
         unsigned finder = 0;
 
         /*
-        **  Loop over the names, looking for an exact string match.
-        **  Skip over initial finds, decrementing inIndex, until "1".
-        */
-        for(finder = 0; finder < aGetData->mNVCount; finder++)
-        {
-            if(0 == strcmp(aCheckFor, aGetData->mNArray[finder]))
-            {
+         **  Loop over the names, looking for an exact string match.
+         **  Skip over initial finds, decrementing inIndex, until "1".
+         */
+        for (finder = 0; finder < aGetData->mNVCount; finder++) {
+            if (0 == strcmp(aCheckFor, aGetData->mNArray[finder])) {
                 inIndex--;
 
-                if(0 == inIndex)
-                {
-                    PR_snprintf(aStoreResult, inStoreResultLength, "%s", aGetData->mVArray[finder]);
+                if (0 == inIndex) {
+                    PR_snprintf(aStoreResult, inStoreResultLength, "%s",
+                                aGetData->mVArray[finder]);
                     break;
                 }
             }
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, getDataPRUint32);
     }
@@ -2698,16 +2674,15 @@ int getDataString(const FormData* aGetData, const char* aCheckFor, int inIndex, 
 **
 ** Returns !0 on failure.
 */
-int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
+int
+displayTopAllocations(STRequest * inRequest, STRun * aRun, int aWantCallsite)
 {
     int retval = 0;
 
-    if(NULL != aRun)
-    {
-        if(0 < aRun->mAllocationCount)
-        {
+    if (NULL != aRun) {
+        if (0 < aRun->mAllocationCount) {
             PRUint32 loop = 0;
-            STAllocation* current = NULL;
+            STAllocation *current = NULL;
 
             PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
             PR_fprintf(inRequest->mFD, "<tr class=\"row-header\">\n");
@@ -2717,21 +2692,21 @@ int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
             PR_fprintf(inRequest->mFD, "<th>Lifespan Seconds</th>\n");
             PR_fprintf(inRequest->mFD, "<th>Weight</th>\n");
             PR_fprintf(inRequest->mFD, "<th>Heap Operation Seconds</th>\n");
-            if(0 != aWantCallsite)
-            {
+            if (0 != aWantCallsite) {
                 PR_fprintf(inRequest->mFD, "<th>Origin Callsite</th>\n");
             }
             PR_fprintf(inRequest->mFD, "</tr>\n");
 
             /*
-            ** Loop over the items, up to some limit or until the end.
-            */
-            for(loop = 0; loop < inRequest->mOptions.mListItemMax && loop < aRun->mAllocationCount; loop++)
-            {
+             ** Loop over the items, up to some limit or until the end.
+             */
+            for (loop = 0;
+                 loop < inRequest->mOptions.mListItemMax
+                 && loop < aRun->mAllocationCount; loop++) {
                 current = aRun->mAllocations[loop];
-                if(NULL != current)
-                {
-                    PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
+                if (NULL != current) {
+                    PRUint32 lifespan =
+                        current->mMaxTimeval - current->mMinTimeval;
                     PRUint32 size = byteSize(&inRequest->mOptions, current);
                     PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
@@ -2746,45 +2721,54 @@ int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
                     PR_fprintf(inRequest->mFD, "<tr>\n");
 
                     /*
-                    ** Rank.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", loop + 1);
+                     ** Rank.
+                     */
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n",
+                               loop + 1);
 
                     /*
-                    ** Index.
-                    */
-                    PR_snprintf(buffer, sizeof(buffer), "%u", current->mRunIndex);
+                     ** Index.
+                     */
+                    PR_snprintf(buffer, sizeof(buffer), "%u",
+                                current->mRunIndex);
                     PR_fprintf(inRequest->mFD, "<td align=right>\n");
                     htmlAllocationAnchor(inRequest, current, buffer);
                     PR_fprintf(inRequest->mFD, "</td>\n");
 
                     /*
-                    ** Byte Size.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", size);
+                     ** Byte Size.
+                     */
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n",
+                               size);
 
                     /*
-                    ** Lifespan.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
+                     ** Lifespan.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n",
+                               ST_TIMEVAL_PRINTABLE(lifespan));
 
                     /*
-                    ** Weight.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>%llu</td>\n", weight64);
+                     ** Weight.
+                     */
+                    PR_fprintf(inRequest->mFD, "<td align=right>%llu</td>\n",
+                               weight64);
 
                     /*
-                    ** Heap operation cost.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
+                     ** Heap operation cost.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td align=right>" ST_MICROVAL_FORMAT
+                               "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
 
-                    if(0 != aWantCallsite)
-                    {
+                    if (0 != aWantCallsite) {
                         /*
-                        ** Callsite.
-                        */
+                         ** Callsite.
+                         */
                         PR_fprintf(inRequest->mFD, "<td>");
-                        htmlCallsiteAnchor(inRequest, current->mEvents[0].mCallsite, NULL, 0);
+                        htmlCallsiteAnchor(inRequest,
+                                           current->mEvents[0].mCallsite,
+                                           NULL, 0);
                         PR_fprintf(inRequest->mFD, "</td>\n");
                     }
 
@@ -2795,8 +2779,7 @@ int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
             PR_fprintf(inRequest->mFD, "</table>\n");
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, displayTopAllocations);
     }
@@ -2812,15 +2795,15 @@ int displayTopAllocations(STRequest* inRequest, STRun* aRun, int aWantCallsite)
 **
 ** Returns !0 on failure.
 */
-int displayMemoryLeaks(STRequest* inRequest, STRun* aRun)
+int
+displayMemoryLeaks(STRequest * inRequest, STRun * aRun)
 {
     int retval = 0;
 
-    if(NULL != aRun)
-    {
+    if (NULL != aRun) {
         PRUint32 loop = 0;
         PRUint32 displayed = 0;
-        STAllocation* current = NULL;
+        STAllocation *current = NULL;
 
         PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
         PR_fprintf(inRequest->mFD, "<tr class=\"row-header\">\n");
@@ -2834,80 +2817,91 @@ int displayMemoryLeaks(STRequest* inRequest, STRun* aRun)
         PR_fprintf(inRequest->mFD, "</tr>\n");
 
         /*
-        ** Loop over all of the items, or until we've displayed enough.
-        */
-        for(loop = 0; displayed < inRequest->mOptions.mListItemMax && loop < aRun->mAllocationCount; loop++)
-        {
+         ** Loop over all of the items, or until we've displayed enough.
+         */
+        for (loop = 0;
+             displayed < inRequest->mOptions.mListItemMax
+             && loop < aRun->mAllocationCount; loop++) {
             current = aRun->mAllocations[loop];
-            if(NULL != current && 0 != current->mEventCount)
-            {
+            if (NULL != current && 0 != current->mEventCount) {
                 /*
-                ** In order to be a leak, the last event of it's life must
-                **  NOT be a free operation.
-                **
-                ** A free operation is just that, a free.
-                */
-                if(TM_EVENT_FREE != current->mEvents[current->mEventCount - 1].mEventType)
-                {
-                    PRUint32 lifespan = current->mMaxTimeval - current->mMinTimeval;
+                 ** In order to be a leak, the last event of it's life must
+                 **  NOT be a free operation.
+                 **
+                 ** A free operation is just that, a free.
+                 */
+                if (TM_EVENT_FREE !=
+                    current->mEvents[current->mEventCount - 1].mEventType) {
+                    PRUint32 lifespan =
+                        current->mMaxTimeval - current->mMinTimeval;
                     PRUint32 size = byteSize(&inRequest->mOptions, current);
                     PRUint32 heapCost = current->mHeapRuntimeCost;
                     PRUint64 weight64 = LL_INIT(0, 0);
                     PRUint64 size64 = LL_INIT(0, 0);
                     PRUint64 lifespan64 = LL_INIT(0, 0);
                     char buffer[32];
-                    
+
                     LL_UI2L(size64, size);
                     LL_UI2L(lifespan64, lifespan);
                     LL_MUL(weight64, size64, lifespan64);
 
                     /*
-                    ** One more shown.
-                    */
+                     ** One more shown.
+                     */
                     displayed++;
-                    
+
                     PR_fprintf(inRequest->mFD, "<tr>\n");
-                    
-                    /*
-                    ** Rank.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", displayed);
 
                     /*
-                    ** Index.
-                    */
-                    PR_snprintf(buffer, sizeof(buffer), "%u", current->mRunIndex);
+                     ** Rank.
+                     */
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n",
+                               displayed);
+
+                    /*
+                     ** Index.
+                     */
+                    PR_snprintf(buffer, sizeof(buffer), "%u",
+                                current->mRunIndex);
                     PR_fprintf(inRequest->mFD, "<td align=right>\n");
                     htmlAllocationAnchor(inRequest, current, buffer);
                     PR_fprintf(inRequest->mFD, "</td>\n");
-                    
-                    /*
-                    ** Byte Size.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n", size);
-                    
-                    /*
-                    ** Lifespan.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(lifespan));
-                    
-                    /*
-                    ** Weight.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>%llu</td>\n", weight64);
-                    
-                    /*
-                    ** Heap Operation Seconds.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
 
                     /*
-                    ** Callsite.
-                    */
+                     ** Byte Size.
+                     */
+                    PR_fprintf(inRequest->mFD, "<td align=right>%u</td>\n",
+                               size);
+
+                    /*
+                     ** Lifespan.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td align=right>" ST_TIMEVAL_FORMAT "</td>\n",
+                               ST_TIMEVAL_PRINTABLE(lifespan));
+
+                    /*
+                     ** Weight.
+                     */
+                    PR_fprintf(inRequest->mFD, "<td align=right>%llu</td>\n",
+                               weight64);
+
+                    /*
+                     ** Heap Operation Seconds.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td align=right>" ST_MICROVAL_FORMAT
+                               "</td>\n", ST_MICROVAL_PRINTABLE(heapCost));
+
+                    /*
+                     ** Callsite.
+                     */
                     PR_fprintf(inRequest->mFD, "<td>");
-                    htmlCallsiteAnchor(inRequest, current->mEvents[0].mCallsite, NULL, 0);
+                    htmlCallsiteAnchor(inRequest,
+                                       current->mEvents[0].mCallsite, NULL,
+                                       0);
                     PR_fprintf(inRequest->mFD, "</td>\n");
-                    
+
                     PR_fprintf(inRequest->mFD, "</tr>\n");
                 }
             }
@@ -2915,8 +2909,7 @@ int displayMemoryLeaks(STRequest* inRequest, STRun* aRun)
 
         PR_fprintf(inRequest->mFD, "</table>\n");
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, displayMemoryLeaks);
     }
@@ -2932,40 +2925,38 @@ int displayMemoryLeaks(STRequest* inRequest, STRun* aRun)
 ** If the stamp is zero, then must match the global sorted run stamp.
 ** Return !0 on error.
 */
-int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, PRUint32 aStamp, int aRealNames)
+int
+displayCallsites(STRequest * inRequest, tmcallsite * aCallsite, int aFollow,
+                 PRUint32 aStamp, int aRealNames)
 {
     int retval = 0;
 
-    if(NULL != aCallsite && NULL != aCallsite->method)
-    {
+    if (NULL != aCallsite && NULL != aCallsite->method) {
         int headerDisplayed = 0;
-        STRun* run = NULL;
+        STRun *run = NULL;
 
         /*
-        ** Correct the stamp if need be.
-        */
-        if(0 == aStamp && NULL != inRequest->mContext->mSortedRun)
-        {
-            aStamp = inRequest->mContext->mSortedRun->mStats[inRequest->mContext->mIndex].mStamp;
+         ** Correct the stamp if need be.
+         */
+        if (0 == aStamp && NULL != inRequest->mContext->mSortedRun) {
+            aStamp =
+                inRequest->mContext->mSortedRun->mStats[inRequest->mContext->
+                                                        mIndex].mStamp;
         }
 
         /*
-        ** Loop over the callsites looking for a stamp match.
-        ** A stamp guarantees there is something interesting to look at too.
-        ** If found, output it.
-        */
-        while(NULL != aCallsite && NULL != aCallsite->method)
-        {
+         ** Loop over the callsites looking for a stamp match.
+         ** A stamp guarantees there is something interesting to look at too.
+         ** If found, output it.
+         */
+        while (NULL != aCallsite && NULL != aCallsite->method) {
             run = CALLSITE_RUN(aCallsite);
-            if(NULL != run)
-            {
-                if(aStamp == run->mStats[inRequest->mContext->mIndex].mStamp)
-                {
+            if (NULL != run) {
+                if (aStamp == run->mStats[inRequest->mContext->mIndex].mStamp) {
                     /*
-                    ** We got a header?
-                    */
-                    if(0 == headerDisplayed)
-                    {
+                     ** We got a header?
+                     */
+                    if (0 == headerDisplayed) {
                         headerDisplayed = __LINE__;
 
                         PR_fprintf(inRequest->mFD,
@@ -2981,81 +2972,100 @@ int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, P
                     }
 
                     /*
-                    ** Output the information.
-                    */
+                     ** Output the information.
+                     */
                     PR_fprintf(inRequest->mFD, "<tr>\n");
 
                     /*
-                    ** Method name.
-                    */
+                     ** Method name.
+                     */
                     PR_fprintf(inRequest->mFD, "<td>");
-                    htmlCallsiteAnchor(inRequest, aCallsite, NULL, aRealNames);
+                    htmlCallsiteAnchor(inRequest, aCallsite, NULL,
+                                       aRealNames);
                     PR_fprintf(inRequest->mFD, "</td>");
 
                     /*
-                    ** Byte Size.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mStats[inRequest->mContext->mIndex].mSize);
+                     ** Byte Size.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td valign=top align=right>%u</td>\n",
+                               run->mStats[inRequest->mContext->mIndex].
+                               mSize);
 
                     /*
-                    ** Seconds.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats[inRequest->mContext->mIndex].mTimeval64));
+                     ** Seconds.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td valign=top align=right>" ST_TIMEVAL_FORMAT
+                               "</td>\n",
+                               ST_TIMEVAL_PRINTABLE64(run->
+                                                      mStats[inRequest->
+                                                             mContext->
+                                                             mIndex].
+                                                      mTimeval64));
 
                     /*
-                    ** Weight.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%llu</td>\n", run->mStats[inRequest->mContext->mIndex].mWeight64);
-                    
-                    /*
-                    ** Allocation object count.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", run->mStats[inRequest->mContext->mIndex].mCompositeCount);
+                     ** Weight.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td valign=top align=right>%llu</td>\n",
+                               run->mStats[inRequest->mContext->mIndex].
+                               mWeight64);
 
                     /*
-                    ** Heap Operation Seconds.
-                    */
-                    PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats[inRequest->mContext->mIndex].mHeapRuntimeCost));
+                     ** Allocation object count.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td valign=top align=right>%u</td>\n",
+                               run->mStats[inRequest->mContext->mIndex].
+                               mCompositeCount);
+
+                    /*
+                     ** Heap Operation Seconds.
+                     */
+                    PR_fprintf(inRequest->mFD,
+                               "<td valign=top align=right>"
+                               ST_MICROVAL_FORMAT "</td>\n",
+                               ST_MICROVAL_PRINTABLE(run->
+                                                     mStats[inRequest->
+                                                            mContext->mIndex].
+                                                     mHeapRuntimeCost));
 
                     PR_fprintf(inRequest->mFD, "</tr>\n");
                 }
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayCallsites);
                 break;
             }
 
             /*
-            ** What do we follow?
-            */
-            switch(aFollow)
-            {
-                case ST_FOLLOW_SIBLINGS:
-                    aCallsite = aCallsite->siblings;
-                    break;
-                case ST_FOLLOW_PARENTS:
-                    aCallsite = aCallsite->parent;
-                    break;
-                default:
-                    aCallsite = NULL;
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, displayCallsites);
-                    break;
+             ** What do we follow?
+             */
+            switch (aFollow) {
+            case ST_FOLLOW_SIBLINGS:
+                aCallsite = aCallsite->siblings;
+                break;
+            case ST_FOLLOW_PARENTS:
+                aCallsite = aCallsite->parent;
+                break;
+            default:
+                aCallsite = NULL;
+                retval = __LINE__;
+                REPORT_ERROR(__LINE__, displayCallsites);
+                break;
             }
         }
 
         /*
-        ** Terminate the table if we should.
-        */
-        if(0 != headerDisplayed)
-        {
+         ** Terminate the table if we should.
+         */
+        if (0 != headerDisplayed) {
             PR_fprintf(inRequest->mFD, "</table>\n");
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, displayCallsites);
     }
@@ -3070,15 +3080,16 @@ int displayCallsites(STRequest* inRequest, tmcallsite* aCallsite, int aFollow, P
 **
 ** Returns !0 on error.
 */
-int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
+int
+displayAllocationDetails(STRequest * inRequest, STAllocation * aAllocation)
 {
     int retval = 0;
 
-    if(NULL != aAllocation)
-    {
+    if (NULL != aAllocation) {
         PRUint32 traverse = 0;
         PRUint32 bytesize = byteSize(&inRequest->mOptions, aAllocation);
-        PRUint32 timeval = aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
+        PRUint32 timeval =
+            aAllocation->mMaxTimeval - aAllocation->mMinTimeval;
         PRUint32 heapCost = aAllocation->mHeapRuntimeCost;
         PRUint64 weight64 = LL_INIT(0, 0);
         PRUint64 bytesize64 = LL_INIT(0, 0);
@@ -3090,19 +3101,31 @@ int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
         LL_UI2L(timeval64, timeval);
         LL_MUL(weight64, bytesize64, timeval64);
 
-        PR_fprintf(inRequest->mFD, "Allocation %u Details:<p>\n", aAllocation->mRunIndex);
+        PR_fprintf(inRequest->mFD, "Allocation %u Details:<p>\n",
+                   aAllocation->mRunIndex);
 
         PR_fprintf(inRequest->mFD, "<table class=\"data summary\">\n");
-        PR_fprintf(inRequest->mFD, "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n", bytesize);
-        PR_fprintf(inRequest->mFD, "<tr><td align=left>Lifespan Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE(timeval));
-        PR_fprintf(inRequest->mFD, "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n", weight64);
-        PR_fprintf(inRequest->mFD, "<tr><td align=left>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(heapCost));
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td align=left>Final Size:</td><td align=right>%u</td></tr>\n",
+                   bytesize);
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td align=left>Lifespan Seconds:</td><td align=right>"
+                   ST_TIMEVAL_FORMAT "</td></tr>\n",
+                   ST_TIMEVAL_PRINTABLE(timeval));
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td align=left>Weight:</td><td align=right>%llu</td></tr>\n",
+                   weight64);
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td align=left>Heap Operation Seconds:</td><td align=right>"
+                   ST_MICROVAL_FORMAT "</td></tr>\n",
+                   ST_MICROVAL_PRINTABLE(heapCost));
         PR_fprintf(inRequest->mFD, "</table><p>\n");
 
         /*
-        ** The events.
-        */
-        PR_fprintf(inRequest->mFD, "%u Life Event(s):<br>\n", aAllocation->mEventCount);
+         ** The events.
+         */
+        PR_fprintf(inRequest->mFD, "%u Life Event(s):<br>\n",
+                   aAllocation->mEventCount);
         PR_fprintf(inRequest->mFD, "<table class=\"data\">\n");
         PR_fprintf(inRequest->mFD, "<tr>\n");
         PR_fprintf(inRequest->mFD, "<td></td>\n");
@@ -3112,62 +3135,68 @@ int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
         PR_fprintf(inRequest->mFD, "<td></td>\n");
         PR_fprintf(inRequest->mFD, "</tr>\n");
 
-        for(traverse = 0; traverse < aAllocation->mEventCount && traverse < inRequest->mOptions.mListItemMax; traverse++)
-        {
+        for (traverse = 0;
+             traverse < aAllocation->mEventCount
+             && traverse < inRequest->mOptions.mListItemMax; traverse++) {
             PR_fprintf(inRequest->mFD, "<tr>\n");
 
             /*
-            ** count.
-            */
-            PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u.</td>\n", traverse + 1);
+             ** count.
+             */
+            PR_fprintf(inRequest->mFD,
+                       "<td valign=top align=right>%u.</td>\n", traverse + 1);
 
             /*
-            ** Operation.
-            */
+             ** Operation.
+             */
             PR_fprintf(inRequest->mFD, "<td valign=top>");
-            switch(aAllocation->mEvents[traverse].mEventType)
-            {
-                case TM_EVENT_CALLOC:
-                    PR_fprintf(inRequest->mFD, "calloc");
-                    break;
-                case TM_EVENT_FREE:
-                    PR_fprintf(inRequest->mFD, "free");
-                    break;
-                case TM_EVENT_MALLOC:
-                    PR_fprintf(inRequest->mFD, "malloc");
-                    break;
-                case TM_EVENT_REALLOC:
-                    PR_fprintf(inRequest->mFD, "realloc");
-                    break;
-                default:
-                    retval = __LINE__;
-                    REPORT_ERROR(__LINE__, displayAllocationDetails);
-                    break;
+            switch (aAllocation->mEvents[traverse].mEventType) {
+            case TM_EVENT_CALLOC:
+                PR_fprintf(inRequest->mFD, "calloc");
+                break;
+            case TM_EVENT_FREE:
+                PR_fprintf(inRequest->mFD, "free");
+                break;
+            case TM_EVENT_MALLOC:
+                PR_fprintf(inRequest->mFD, "malloc");
+                break;
+            case TM_EVENT_REALLOC:
+                PR_fprintf(inRequest->mFD, "realloc");
+                break;
+            default:
+                retval = __LINE__;
+                REPORT_ERROR(__LINE__, displayAllocationDetails);
+                break;
             }
             PR_fprintf(inRequest->mFD, "</td>");
 
             /*
-            ** Size.
-            */
-            PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n", aAllocation->mEvents[traverse].mHeapSize);
+             ** Size.
+             */
+            PR_fprintf(inRequest->mFD, "<td valign=top align=right>%u</td>\n",
+                       aAllocation->mEvents[traverse].mHeapSize);
 
             /*
-            ** Timeval.
-            */
-            cacheval = aAllocation->mEvents[traverse].mTimeval - globals.mMinTimeval;
-            PR_fprintf(inRequest->mFD, "<td valign=top align=right>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE(cacheval));
+             ** Timeval.
+             */
+            cacheval =
+                aAllocation->mEvents[traverse].mTimeval - globals.mMinTimeval;
+            PR_fprintf(inRequest->mFD,
+                       "<td valign=top align=right>" ST_TIMEVAL_FORMAT
+                       "</td>\n", ST_TIMEVAL_PRINTABLE(cacheval));
 
             /*
-            ** Callsite backtrace.
-            ** Only relevant backtrace is for event 0 for now until
-            **  trace-malloc outputs proper callsites for all others.
-            */
+             ** Callsite backtrace.
+             ** Only relevant backtrace is for event 0 for now until
+             **  trace-malloc outputs proper callsites for all others.
+             */
             PR_fprintf(inRequest->mFD, "<td valign=top>\n");
-            if(0 == traverse)
-            {
-                displayRes = displayCallsites(inRequest, aAllocation->mEvents[traverse].mCallsite, ST_FOLLOW_PARENTS, 0, __LINE__);
-                if(0 != displayRes)
-                {
+            if (0 == traverse) {
+                displayRes =
+                    displayCallsites(inRequest,
+                                     aAllocation->mEvents[traverse].mCallsite,
+                                     ST_FOLLOW_PARENTS, 0, __LINE__);
+                if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayCallsite);
                 }
@@ -3178,8 +3207,7 @@ int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
         }
         PR_fprintf(inRequest->mFD, "</table><p>\n");
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, displayAllocationDetails);
     }
@@ -3196,112 +3224,101 @@ int displayAllocationDetails(STRequest* inRequest, STAllocation* aAllocation)
 **  this is so that a duplicate detector loop can
 **  simply skip sorted items until the callsite is different.
 */
-int compareCallsites(const void* aSite1, const void* aSite2, void* aContext)
+int
+compareCallsites(const void *aSite1, const void *aSite2, void *aContext)
 {
     int retval = 0;
-    STRequest* inRequest = (STRequest*)aContext;
+    STRequest *inRequest = (STRequest *) aContext;
 
-    if(NULL != aSite1 && NULL != aSite2)
-    {
-        tmcallsite* site1 = *((tmcallsite**)aSite1);
-        tmcallsite* site2 = *((tmcallsite**)aSite2);
+    if (NULL != aSite1 && NULL != aSite2) {
+        tmcallsite *site1 = *((tmcallsite **) aSite1);
+        tmcallsite *site2 = *((tmcallsite **) aSite2);
 
-        if(NULL != site1 && NULL != site2)
-        {
-            STRun* run1 = CALLSITE_RUN(site1);
-            STRun* run2 = CALLSITE_RUN(site2);
+        if (NULL != site1 && NULL != site2) {
+            STRun *run1 = CALLSITE_RUN(site1);
+            STRun *run2 = CALLSITE_RUN(site2);
 
-            if(NULL != run1 && NULL != run2)
-            {
-                STCallsiteStats* stats1 = &(run1->mStats[inRequest->mContext->mIndex]);
-                STCallsiteStats* stats2 = &(run2->mStats[inRequest->mContext->mIndex]);
+            if (NULL != run1 && NULL != run2) {
+                STCallsiteStats *stats1 =
+                    &(run1->mStats[inRequest->mContext->mIndex]);
+                STCallsiteStats *stats2 =
+                    &(run2->mStats[inRequest->mContext->mIndex]);
 
                 /*
-                ** Logic determined by pref/option.
-                */
-                switch(inRequest->mOptions.mOrderBy)
-                {
-                    case ST_WEIGHT:
+                 ** Logic determined by pref/option.
+                 */
+                switch (inRequest->mOptions.mOrderBy) {
+                case ST_WEIGHT:
                     {
                         PRUint64 weight164 = stats1->mWeight64;
                         PRUint64 weight264 = stats2->mWeight64;
 
-                        if(LL_UCMP(weight164, <, weight264))
-                        {
+                        if (LL_UCMP(weight164, <, weight264)) {
                             retval = __LINE__;
                         }
-                        else if(LL_UCMP(weight164, >, weight264))
-                        {
-                            retval = - __LINE__;
+                        else if (LL_UCMP(weight164, >, weight264)) {
+                            retval = -__LINE__;
                         }
                     }
                     break;
 
-                    case ST_SIZE:
+                case ST_SIZE:
                     {
                         PRUint32 size1 = stats1->mSize;
                         PRUint32 size2 = stats2->mSize;
 
-                        if(size1 < size2)
-                        {
+                        if (size1 < size2) {
                             retval = __LINE__;
                         }
-                        else if(size1 > size2)
-                        {
-                            retval = - __LINE__;
+                        else if (size1 > size2) {
+                            retval = -__LINE__;
                         }
                     }
                     break;
 
-                    case ST_TIMEVAL:
+                case ST_TIMEVAL:
                     {
                         PRUint64 timeval164 = stats1->mTimeval64;
                         PRUint64 timeval264 = stats2->mTimeval64;
 
-                        if(LL_UCMP(timeval164, <, timeval264))
-                        {
+                        if (LL_UCMP(timeval164, <, timeval264)) {
                             retval = __LINE__;
                         }
-                        else if(LL_UCMP(timeval164, >, timeval264))
-                        {
-                            retval = - __LINE__;
+                        else if (LL_UCMP(timeval164, >, timeval264)) {
+                            retval = -__LINE__;
                         }
                     }
                     break;
 
-                    case ST_COUNT:
+                case ST_COUNT:
                     {
                         PRUint32 count1 = stats1->mCompositeCount;
                         PRUint32 count2 = stats2->mCompositeCount;
 
-                        if(count1 < count2)
-                        {
+                        if (count1 < count2) {
                             retval = __LINE__;
                         }
-                        else if(count1 > count2)
-                        {
-                            retval = - __LINE__;
+                        else if (count1 > count2) {
+                            retval = -__LINE__;
                         }
                     }
                     break;
 
-                    case ST_HEAPCOST:
+                case ST_HEAPCOST:
                     {
                         PRUint32 cost1 = stats1->mHeapRuntimeCost;
                         PRUint32 cost2 = stats2->mHeapRuntimeCost;
 
-                        if(cost1 < cost2)
-                        {
+                        if (cost1 < cost2) {
                             retval = __LINE__;
                         }
-                        else if(cost1 > cost2)
-                        {
-                            retval = - __LINE__;
+                        else if (cost1 > cost2) {
+                            retval = -__LINE__;
                         }
                     }
                     break;
 
-                    default:
+                default:
                     {
                         REPORT_ERROR(__LINE__, compareAllocations);
                     }
@@ -3309,18 +3326,15 @@ int compareCallsites(const void* aSite1, const void* aSite2, void* aContext)
                 }
 
                 /*
-                ** If the return value is still zero, do a pointer compare.
-                ** This makes sure we return zero, only iff the same object.
-                */
-                if(0 == retval)
-                {
-                    if(stats1 < stats2)
-                    {
+                 ** If the return value is still zero, do a pointer compare.
+                 ** This makes sure we return zero, only iff the same object.
+                 */
+                if (0 == retval) {
+                    if (stats1 < stats2) {
                         retval = __LINE__;
                     }
-                    else if(stats1 > stats2)
-                    {
-                        retval = - __LINE__;
+                    else if (stats1 > stats2) {
+                        retval = -__LINE__;
                     }
                 }
             }
@@ -3342,49 +3356,51 @@ int compareCallsites(const void* aSite1, const void* aSite2, void* aContext)
 **
 ** Returns !0 on error.
 */
-int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 aCallsiteCount, PRUint32 aStamp, int aRealName)
+int
+displayTopCallsites(STRequest * inRequest, tmcallsite ** aCallsites,
+                    PRUint32 aCallsiteCount, PRUint32 aStamp, int aRealName)
 {
     int retval = 0;
 
-    if(NULL != aCallsites && 0 < aCallsiteCount)
-    {
+    if (NULL != aCallsites && 0 < aCallsiteCount) {
         PRUint32 traverse = 0;
-        STRun* run = NULL;
-        tmcallsite* site = NULL;
+        STRun *run = NULL;
+        tmcallsite *site = NULL;
         int headerDisplayed = 0;
         PRUint32 displayed = 0;
 
         /*
-        ** Fixup the stamp.
-        */
-        if(0 == aStamp && NULL != inRequest->mContext->mSortedRun)
-        {
-            aStamp = inRequest->mContext->mSortedRun->mStats[inRequest->mContext->mIndex].mStamp;
+         ** Fixup the stamp.
+         */
+        if (0 == aStamp && NULL != inRequest->mContext->mSortedRun) {
+            aStamp =
+                inRequest->mContext->mSortedRun->mStats[inRequest->mContext->
+                                                        mIndex].mStamp;
         }
 
         /*
-        ** Sort the things.
-        */
-        NS_QuickSort(aCallsites, aCallsiteCount, sizeof(tmcallsite*), compareCallsites, inRequest);
+         ** Sort the things.
+         */
+        NS_QuickSort(aCallsites, aCallsiteCount, sizeof(tmcallsite *),
+                     compareCallsites, inRequest);
 
         /*
-        ** Time for output.
-        */
-        for(traverse = 0; traverse < aCallsiteCount && inRequest->mOptions.mListItemMax > displayed; traverse++)
-        {
+         ** Time for output.
+         */
+        for (traverse = 0;
+             traverse < aCallsiteCount
+             && inRequest->mOptions.mListItemMax > displayed; traverse++) {
             site = aCallsites[traverse];
             run = CALLSITE_RUN(site);
 
             /*
-            ** Only if the same stamp....
-            */
-            if(aStamp == run->mStats[inRequest->mContext->mIndex].mStamp)
-            {
+             ** Only if the same stamp....
+             */
+            if (aStamp == run->mStats[inRequest->mContext->mIndex].mStamp) {
                 /*
-                ** We got a header yet?
-                */
-                if(0 == headerDisplayed)
-                {
+                 ** We got a header yet?
+                 */
+                if (0 == headerDisplayed) {
                     headerDisplayed = __LINE__;
 
                     PR_fprintf(inRequest->mFD,
@@ -3405,52 +3421,71 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
                 PR_fprintf(inRequest->mFD, "<tr>\n");
 
                 /*
-                ** Rank.
-                */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", displayed);
+                 ** Rank.
+                 */
+                PR_fprintf(inRequest->mFD,
+                           "<td align=right valign=top>%u</td>\n", displayed);
 
                 /*
-                ** Method.
-                */
+                 ** Method.
+                 */
                 PR_fprintf(inRequest->mFD, "<td>");
                 htmlCallsiteAnchor(inRequest, site, NULL, aRealName);
                 PR_fprintf(inRequest->mFD, "</td>\n");
 
                 /*
-                ** Size.
-                */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mStats[inRequest->mContext->mIndex].mSize);
+                 ** Size.
+                 */
+                PR_fprintf(inRequest->mFD,
+                           "<td align=right valign=top>%u</td>\n",
+                           run->mStats[inRequest->mContext->mIndex].mSize);
 
                 /*
-                ** Timeval.
-                */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_TIMEVAL_FORMAT "</td>\n", ST_TIMEVAL_PRINTABLE64(run->mStats[inRequest->mContext->mIndex].mTimeval64));
+                 ** Timeval.
+                 */
+                PR_fprintf(inRequest->mFD,
+                           "<td align=right valign=top>" ST_TIMEVAL_FORMAT
+                           "</td>\n",
+                           ST_TIMEVAL_PRINTABLE64(run->
+                                                  mStats[inRequest->mContext->
+                                                         mIndex].mTimeval64));
 
                 /*
-                ** Weight.
-                */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%llu</td>\n", run->mStats[inRequest->mContext->mIndex].mWeight64);
+                 ** Weight.
+                 */
+                PR_fprintf(inRequest->mFD,
+                           "<td align=right valign=top>%llu</td>\n",
+                           run->mStats[inRequest->mContext->mIndex].
+                           mWeight64);
 
                 /*
-                ** Allocation object count.
-                */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>%u</td>\n", run->mStats[inRequest->mContext->mIndex].mCompositeCount);
+                 ** Allocation object count.
+                 */
+                PR_fprintf(inRequest->mFD,
+                           "<td align=right valign=top>%u</td>\n",
+                           run->mStats[inRequest->mContext->mIndex].
+                           mCompositeCount);
 
                 /*
-                ** Heap operation seconds.
-                */
-                PR_fprintf(inRequest->mFD, "<td align=right valign=top>" ST_MICROVAL_FORMAT "</td>\n", ST_MICROVAL_PRINTABLE(run->mStats[inRequest->mContext->mIndex].mHeapRuntimeCost));
+                 ** Heap operation seconds.
+                 */
+                PR_fprintf(inRequest->mFD,
+                           "<td align=right valign=top>" ST_MICROVAL_FORMAT
+                           "</td>\n",
+                           ST_MICROVAL_PRINTABLE(run->
+                                                 mStats[inRequest->mContext->
+                                                        mIndex].
+                                                 mHeapRuntimeCost));
 
                 PR_fprintf(inRequest->mFD, "</tr>\n");
 
 
-                if(inRequest->mOptions.mListItemMax > displayed)
-                {
+                if (inRequest->mOptions.mListItemMax > displayed) {
                     /*
-                    ** Skip any dups.
-                    */
-                    while(((traverse + 1) < aCallsiteCount) && (site == aCallsites[traverse + 1]))
-                    {
+                     ** Skip any dups.
+                     */
+                    while (((traverse + 1) < aCallsiteCount)
+                           && (site == aCallsites[traverse + 1])) {
                         traverse++;
                     }
                 }
@@ -3458,15 +3493,13 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
         }
 
         /*
-        ** We need to terminate anything?
-        */
-        if(0 != headerDisplayed)
-        {
+         ** We need to terminate anything?
+         */
+        if (0 != headerDisplayed) {
             PR_fprintf(inRequest->mFD, "</table>\n");
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, displayTopCallsites);
     }
@@ -3483,84 +3516,108 @@ int displayTopCallsites(STRequest* inRequest, tmcallsite** aCallsites, PRUint32 
 **
 ** Returns !0 on error.
 */
-int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
+int
+displayCallsiteDetails(STRequest * inRequest, tmcallsite * aCallsite)
 {
     int retval = 0;
 
-    if(NULL != aCallsite && NULL != aCallsite->method)
-    {
-        STRun* sortedRun = NULL;
-        STRun* thisRun = CALLSITE_RUN(aCallsite);
-        const char* sourceFile = NULL;
+    if (NULL != aCallsite && NULL != aCallsite->method) {
+        STRun *sortedRun = NULL;
+        STRun *thisRun = CALLSITE_RUN(aCallsite);
+        const char *sourceFile = NULL;
 
         sourceFile = resolveSourceFile(aCallsite->method);
-        if(NULL != sourceFile)
-        {
-            PR_fprintf(inRequest->mFD, "<b>%s</b>", tmmethodnode_name(aCallsite->method));
-            PR_fprintf(inRequest->mFD, "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">(%s:%u)</a>", aCallsite->method->sourcefile, aCallsite->method->linenumber, sourceFile, aCallsite->method->linenumber);
+        if (NULL != sourceFile) {
+            PR_fprintf(inRequest->mFD, "<b>%s</b>",
+                       tmmethodnode_name(aCallsite->method));
+            PR_fprintf(inRequest->mFD,
+                       "<a href=\"http://lxr.mozilla.org/mozilla/source/%s#%u\" class=\"lxr\" target=\"_st_lxr\">(%s:%u)</a>",
+                       aCallsite->method->sourcefile,
+                       aCallsite->method->linenumber, sourceFile,
+                       aCallsite->method->linenumber);
             PR_fprintf(inRequest->mFD, " Callsite Details:<p>\n");
         }
-        else
-        {
-            PR_fprintf(inRequest->mFD, "<b>%s</b>+%u(%u) Callsite Details:<p>\n", tmmethodnode_name(aCallsite->method), aCallsite->offset, (PRUint32)aCallsite->entry.key);
+        else {
+            PR_fprintf(inRequest->mFD,
+                       "<b>%s</b>+%u(%u) Callsite Details:<p>\n",
+                       tmmethodnode_name(aCallsite->method),
+                       aCallsite->offset, (PRUint32) aCallsite->entry.key);
         }
 
         PR_fprintf(inRequest->mFD, "<table class=\"data summary\">\n");
-        PR_fprintf(inRequest->mFD, "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n", thisRun->mStats[inRequest->mContext->mIndex].mSize);
-        PR_fprintf(inRequest->mFD, "<tr><td>Composite Seconds:</td><td align=right>" ST_TIMEVAL_FORMAT "</td></tr>\n", ST_TIMEVAL_PRINTABLE64(thisRun->mStats[inRequest->mContext->mIndex].mTimeval64));
-        PR_fprintf(inRequest->mFD, "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n", thisRun->mStats[inRequest->mContext->mIndex].mWeight64);
-        PR_fprintf(inRequest->mFD, "<tr><td>Heap Object Count:</td><td align=right>%u</td></tr>\n", thisRun->mStats[inRequest->mContext->mIndex].mCompositeCount);
-        PR_fprintf(inRequest->mFD, "<tr><td>Heap Operation Seconds:</td><td align=right>" ST_MICROVAL_FORMAT "</td></tr>\n", ST_MICROVAL_PRINTABLE(thisRun->mStats[inRequest->mContext->mIndex].mHeapRuntimeCost));
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td>Composite Byte Size:</td><td align=right>%u</td></tr>\n",
+                   thisRun->mStats[inRequest->mContext->mIndex].mSize);
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td>Composite Seconds:</td><td align=right>"
+                   ST_TIMEVAL_FORMAT "</td></tr>\n",
+                   ST_TIMEVAL_PRINTABLE64(thisRun->
+                                          mStats[inRequest->mContext->mIndex].
+                                          mTimeval64));
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td>Composite Weight:</td><td align=right>%llu</td></tr>\n",
+                   thisRun->mStats[inRequest->mContext->mIndex].mWeight64);
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td>Heap Object Count:</td><td align=right>%u</td></tr>\n",
+                   thisRun->mStats[inRequest->mContext->mIndex].
+                   mCompositeCount);
+        PR_fprintf(inRequest->mFD,
+                   "<tr><td>Heap Operation Seconds:</td><td align=right>"
+                   ST_MICROVAL_FORMAT "</td></tr>\n",
+                   ST_MICROVAL_PRINTABLE(thisRun->
+                                         mStats[inRequest->mContext->mIndex].
+                                         mHeapRuntimeCost));
         PR_fprintf(inRequest->mFD, "</table>\n<p>\n");
 
         /*
-        ** Kids (callsites we call):
-        */
-        if(NULL != aCallsite->kids && NULL != aCallsite->kids->method)
-        {
+         ** Kids (callsites we call):
+         */
+        if (NULL != aCallsite->kids && NULL != aCallsite->kids->method) {
             int displayRes = 0;
             PRUint32 siteCount = 0;
-            tmcallsite** sites = NULL;
+            tmcallsite **sites = NULL;
 
             /*
-            ** Collect the kid sibling callsites.
-            ** Doing it this way sorts them for relevance.
-            */
-            siteCount = callsiteArrayFromCallsite(&sites, 0, aCallsite->kids, ST_FOLLOW_SIBLINGS);
-            if(0 != siteCount && NULL != sites)
-            {
+             ** Collect the kid sibling callsites.
+             ** Doing it this way sorts them for relevance.
+             */
+            siteCount =
+                callsiteArrayFromCallsite(&sites, 0, aCallsite->kids,
+                                          ST_FOLLOW_SIBLINGS);
+            if (0 != siteCount && NULL != sites) {
                 /*
-                ** Got something to show.
-                */
+                 ** Got something to show.
+                 */
                 PR_fprintf(inRequest->mFD, "Children Callsites:<br>\n");
 
-                displayRes = displayTopCallsites(inRequest, sites, siteCount, 0, __LINE__);
-                if(0 != displayRes)
-                {
+                displayRes =
+                    displayTopCallsites(inRequest, sites, siteCount, 0,
+                                        __LINE__);
+                if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayTopCallsites);
                 }
                 PR_fprintf(inRequest->mFD, "<p>\n");
 
                 /*
-                ** Done with array.
-                */
+                 ** Done with array.
+                 */
                 free(sites);
                 sites = NULL;
             }
         }
 
         /*
-        ** Parents (those who call us):
-        */
-        if(NULL != aCallsite->parent && NULL != aCallsite->parent->method)
-        {
+         ** Parents (those who call us):
+         */
+        if (NULL != aCallsite->parent && NULL != aCallsite->parent->method) {
             int displayRes = 0;
 
             PR_fprintf(inRequest->mFD, "Parent Callsites:<br>\n");
-            displayRes = displayCallsites(inRequest, aCallsite->parent, ST_FOLLOW_PARENTS, 0, __LINE__);
-            if(0 != displayRes)
-            {
+            displayRes =
+                displayCallsites(inRequest, aCallsite->parent,
+                                 ST_FOLLOW_PARENTS, 0, __LINE__);
+            if (0 != displayRes) {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, displayCallsites);
             }
@@ -3568,62 +3625,56 @@ int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
         }
 
         /*
-        ** Allocations we did.
-        ** Simply harvest our own run.
-        */
+         ** Allocations we did.
+         ** Simply harvest our own run.
+         */
         sortedRun = createRun(inRequest->mContext, 0);
-        if(NULL != sortedRun)
-        {
+        if (NULL != sortedRun) {
             int harvestRes = 0;
 
-            harvestRes = harvestRun(CALLSITE_RUN(aCallsite), sortedRun, &inRequest->mOptions, inRequest->mContext);
-            if(0 == harvestRes)
-            {
-                if(0 != sortedRun->mAllocationCount)
-                {
+            harvestRes =
+                harvestRun(CALLSITE_RUN(aCallsite), sortedRun,
+                           &inRequest->mOptions, inRequest->mContext);
+            if (0 == harvestRes) {
+                if (0 != sortedRun->mAllocationCount) {
                     int sortRes = 0;
 
                     sortRes = sortRun(&inRequest->mOptions, sortedRun);
-                    if(0 == sortRes)
-                    {
+                    if (0 == sortRes) {
                         int displayRes = 0;
 
                         PR_fprintf(inRequest->mFD, "Allocations:<br>\n");
-                        displayRes = displayTopAllocations(inRequest, sortedRun, 0);
-                        if(0 != displayRes)
-                        {
+                        displayRes =
+                            displayTopAllocations(inRequest, sortedRun, 0);
+                        if (0 != displayRes) {
                             retval = __LINE__;
                             REPORT_ERROR(__LINE__, displayTopAllocations);
                         }
                         PR_fprintf(inRequest->mFD, "<p>\n");
                     }
-                    else
-                    {
+                    else {
                         retval = __LINE__;
                         REPORT_ERROR(__LINE__, sortRun);
                     }
                 }
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, harvestRun);
             }
 
             /*
-            ** Done with the run.
-            */
+             ** Done with the run.
+             */
             freeRun(sortedRun);
             sortedRun = NULL;
         }
-        else
-        {
+        else {
             retval = __LINE__;
             REPORT_ERROR(__LINE__, createRun);
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, displayCallsiteDetails);
     }
@@ -3642,12 +3693,12 @@ int displayCallsiteDetails(STRequest* inRequest, tmcallsite* aCallsite)
 **
 ** Returns !0 on failure.
 */
-int graphFootprint(STRequest* inRequest, STRun* aRun)
+int
+graphFootprint(STRequest * inRequest, STRun * aRun)
 {
     int retval = 0;
 
-    if(NULL != aRun)
-    {
+    if (NULL != aRun) {
         PRUint32 *YData = NULL;
         PRUint32 YDataArray[STGD_SPACE_X];
         PRUint32 traverse = 0;
@@ -3656,138 +3707,140 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
         PRBool underLock = PR_FALSE;
 
         /*
-        ** Decide if this is custom or we should use the cache.
-        */
-        if(aRun == inRequest->mContext->mSortedRun)
-        {
+         ** Decide if this is custom or we should use the cache.
+         */
+        if (aRun == inRequest->mContext->mSortedRun) {
             YData = inRequest->mContext->mFootprintYData;
             underLock = PR_TRUE;
         }
-        else
-        {
+        else {
             YData = YDataArray;
         }
 
         /*
-        **  Protect the shared data so that only one client has access to it
-        **      at any given time.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Protect the shared data so that only one client has access to it
+         **      at any given time.
+         */
+        if (PR_FALSE != underLock) {
             PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
-        ** Only do the computations if we aren't cached already.
-        */
-        if(YData != inRequest->mContext->mFootprintYData || PR_FALSE == inRequest->mContext->mFootprintCached)
-        {
+         ** Only do the computations if we aren't cached already.
+         */
+        if (YData != inRequest->mContext->mFootprintYData
+            || PR_FALSE == inRequest->mContext->mFootprintCached) {
             memset(YData, 0, sizeof(PRUint32) * STGD_SPACE_X);
 
             /*
-            ** Initialize our Y data.
-            ** Pretty brutal loop here....
-            */
-            for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
-            {
+             ** Initialize our Y data.
+             ** Pretty brutal loop here....
+             */
+            for (traverse = 0; 0 == retval && traverse < STGD_SPACE_X;
+                 traverse++) {
                 /*
-                ** Compute what timeval this Y data lands in.
-                */
-                timeval = ((traverse * (globals.mMaxTimeval - globals.mMinTimeval)) / STGD_SPACE_X) + globals.mMinTimeval;
+                 ** Compute what timeval this Y data lands in.
+                 */
+                timeval =
+                    ((traverse *
+                      (globals.mMaxTimeval -
+                       globals.mMinTimeval)) / STGD_SPACE_X) +
+                    globals.mMinTimeval;
 
                 /*
-                ** Loop over the run.
-                ** Should an allocation contain said Timeval, we're good.
-                */
-                for(loop = 0; loop < aRun->mAllocationCount; loop++)
-                {
-                    if(timeval >= aRun->mAllocations[loop]->mMinTimeval && timeval <= aRun->mAllocations[loop]->mMaxTimeval)
-                    {
-                        YData[traverse] += byteSize(&inRequest->mOptions, aRun->mAllocations[loop]);
+                 ** Loop over the run.
+                 ** Should an allocation contain said Timeval, we're good.
+                 */
+                for (loop = 0; loop < aRun->mAllocationCount; loop++) {
+                    if (timeval >= aRun->mAllocations[loop]->mMinTimeval
+                        && timeval <= aRun->mAllocations[loop]->mMaxTimeval) {
+                        YData[traverse] +=
+                            byteSize(&inRequest->mOptions,
+                                     aRun->mAllocations[loop]);
                     }
                 }
             }
 
             /*
-            ** Did we cache this?
-            */
-            if(YData == inRequest->mContext->mFootprintYData)
-            {
+             ** Did we cache this?
+             */
+            if (YData == inRequest->mContext->mFootprintYData) {
                 inRequest->mContext->mFootprintCached = PR_TRUE;
             }
         }
 
         /*
-        **  Done with the lock.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Done with the lock.
+         */
+        if (PR_FALSE != underLock) {
             PR_Unlock(inRequest->mContext->mImageLock);
         }
 
-        if(0 == retval)
-        {
-            PRUint32 minMemory = (PRUint32)-1;
+        if (0 == retval) {
+            PRUint32 minMemory = (PRUint32) - 1;
             PRUint32 maxMemory = 0;
             int transparent = 0;
             gdImagePtr graph = NULL;
 
             /*
-            ** Go through and find the minimum and maximum sizes.
-            */
-            for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-            {
-                if(YData[traverse] < minMemory)
-                {
+             ** Go through and find the minimum and maximum sizes.
+             */
+            for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
+                if (YData[traverse] < minMemory) {
                     minMemory = YData[traverse];
                 }
-                if(YData[traverse] > maxMemory)
-                {
+                if (YData[traverse] > maxMemory) {
                     maxMemory = YData[traverse];
                 }
             }
 
             /*
-            ** We can now draw the graph.
-            */
+             ** We can now draw the graph.
+             */
             graph = createGraph(&transparent);
-            if(NULL != graph)
-            {
+            if (NULL != graph) {
                 gdSink theSink;
                 int red = 0;
                 int x1 = 0;
                 int y1 = 0;
                 int x2 = 0;
                 int y2 = 0;
-                PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* timevals[11];
-                char* bytes[11];
+                PRUint32 percents[11] =
+                    { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+                char *timevals[11];
+                char *bytes[11];
                 char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
-                const char* legends[1] = { "Memory in Use" };
+                const char *legends[1] = { "Memory in Use" };
                 PRUint32 cached = 0;
 
                 /*
-                ** Figure out what the labels will say.
-                */
-                for(traverse = 0; traverse < 11; traverse++)
-                {
+                 ** Figure out what the labels will say.
+                 */
+                for (traverse = 0; traverse < 11; traverse++) {
                     timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    cached = ((globals.mMaxTimeval - globals.mMinTimeval) * percents[traverse]) / 100;
-                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
-                    PR_snprintf(bytes[traverse], 32, "%u", ((maxMemory - minMemory) * percents[traverse]) / 100);
+                    cached =
+                        ((globals.mMaxTimeval -
+                          globals.mMinTimeval) * percents[traverse]) / 100;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT,
+                                ST_TIMEVAL_PRINTABLE(cached));
+                    PR_snprintf(bytes[traverse], 32, "%u",
+                                ((maxMemory -
+                                  minMemory) * percents[traverse]) / 100);
                 }
-                
+
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
-                
-                drawGraph(graph, -1, "Memory Footprint Over Time", "Seconds", "Bytes", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
-                if(maxMemory != minMemory)
-                {
+                drawGraph(graph, -1, "Memory Footprint Over Time", "Seconds",
+                          "Bytes", 11, percents, (const char **) timevals, 11,
+                          percents, (const char **) bytes, 1, legendColors,
+                          legends);
+
+                if (maxMemory != minMemory) {
                     PRInt64 in64 = LL_INIT(0, 0);
                     PRInt64 ydata64 = LL_INIT(0, 0);
                     PRInt64 spacey64 = LL_INIT(0, 0);
@@ -3795,16 +3848,15 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
                     PRInt32 in32 = 0;
 
                     /*
-                    ** Go through our Y data and mark it up.
-                    */
-                    for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-                    {
+                     ** Go through our Y data and mark it up.
+                     */
+                    for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
                         x1 = traverse + STGD_MARGIN;
                         y1 = STGD_HEIGHT - STGD_MARGIN;
 
                         /*
-                        ** Need to do this math in 64 bits.
-                        */
+                         ** Need to do this math in 64 bits.
+                         */
                         LL_I2L(ydata64, YData[traverse]);
                         LL_I2L(spacey64, STGD_SPACE_Y);
                         LL_I2L(mem64, (maxMemory - minMemory));
@@ -3812,10 +3864,10 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
                         LL_MUL(in64, ydata64, spacey64);
                         LL_DIV(in64, in64, mem64);
                         LL_L2I(in32, in64);
-                        
+
                         x2 = x1;
                         y2 = y1 - in32;
-                        
+
                         gdImageLine(graph, x1, y1, x2, y2, red);
                     }
                 }
@@ -3824,18 +3876,16 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
                 theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
-                
+
                 gdImageDestroy(graph);
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, createGraph);
             }
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, graphFootprint);
     }
@@ -3855,12 +3905,12 @@ int graphFootprint(STRequest* inRequest, STRun* aRun)
 **
 ** Returns !0 on failure.
 */
-int graphTimeval(STRequest* inRequest, STRun* aRun)
+int
+graphTimeval(STRequest * inRequest, STRun * aRun)
 {
     int retval = 0;
 
-    if(NULL != aRun)
-    {
+    if (NULL != aRun) {
         PRUint32 *YData = NULL;
         PRUint32 YDataArray[STGD_SPACE_X];
         PRUint32 traverse = 0;
@@ -3869,142 +3919,144 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
         PRBool underLock = PR_FALSE;
 
         /*
-        ** Decide if this is custom or we should use the global cache.
-        */
-        if(aRun == inRequest->mContext->mSortedRun)
-        {
+         ** Decide if this is custom or we should use the global cache.
+         */
+        if (aRun == inRequest->mContext->mSortedRun) {
             YData = inRequest->mContext->mTimevalYData;
             underLock = PR_TRUE;
         }
-        else
-        {
+        else {
             YData = YDataArray;
         }
 
         /*
-        **  Protect the shared data so that only one client has access to it
-        **      at any given time.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Protect the shared data so that only one client has access to it
+         **      at any given time.
+         */
+        if (PR_FALSE != underLock) {
             PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
-        ** Only do the computations if we aren't cached already.
-        */
-        if(YData != inRequest->mContext->mTimevalYData || PR_FALSE == inRequest->mContext->mTimevalCached)
-        {
+         ** Only do the computations if we aren't cached already.
+         */
+        if (YData != inRequest->mContext->mTimevalYData
+            || PR_FALSE == inRequest->mContext->mTimevalCached) {
             PRUint32 prevTimeval = 0;
 
             memset(YData, 0, sizeof(PRUint32) * STGD_SPACE_X);
 
             /*
-            ** Initialize our Y data.
-            ** Pretty brutal loop here....
-            */
-            for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
-            {
+             ** Initialize our Y data.
+             ** Pretty brutal loop here....
+             */
+            for (traverse = 0; 0 == retval && traverse < STGD_SPACE_X;
+                 traverse++) {
                 /*
-                ** Compute what timeval this Y data lands in.
-                */
+                 ** Compute what timeval this Y data lands in.
+                 */
                 prevTimeval = timeval;
-                timeval = ((traverse * (globals.mMaxTimeval - globals.mMinTimeval)) / STGD_SPACE_X) + globals.mMinTimeval;
+                timeval =
+                    ((traverse *
+                      (globals.mMaxTimeval -
+                       globals.mMinTimeval)) / STGD_SPACE_X) +
+                    globals.mMinTimeval;
 
                 /*
-                ** Loop over the run.
-                ** Should an allocation have been allocated between
-                **  prevTimeval and timeval....
-                */
-                for(loop = 0; loop < aRun->mAllocationCount; loop++)
-                {
-                    if(prevTimeval < aRun->mAllocations[loop]->mMinTimeval && timeval >= aRun->mAllocations[loop]->mMinTimeval)
-                    {
-                        YData[traverse] += byteSize(&inRequest->mOptions, aRun->mAllocations[loop]);
+                 ** Loop over the run.
+                 ** Should an allocation have been allocated between
+                 **  prevTimeval and timeval....
+                 */
+                for (loop = 0; loop < aRun->mAllocationCount; loop++) {
+                    if (prevTimeval < aRun->mAllocations[loop]->mMinTimeval
+                        && timeval >= aRun->mAllocations[loop]->mMinTimeval) {
+                        YData[traverse] +=
+                            byteSize(&inRequest->mOptions,
+                                     aRun->mAllocations[loop]);
                     }
                 }
             }
 
             /*
-            ** Did we cache this?
-            */
-            if(YData == inRequest->mContext->mTimevalYData)
-            {
+             ** Did we cache this?
+             */
+            if (YData == inRequest->mContext->mTimevalYData) {
                 inRequest->mContext->mTimevalCached = PR_TRUE;
             }
         }
 
         /*
-        **  Done with the lock.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Done with the lock.
+         */
+        if (PR_FALSE != underLock) {
             PR_Unlock(inRequest->mContext->mImageLock);
         }
 
-        if(0 == retval)
-        {
-            PRUint32 minMemory = (PRUint32)-1;
+        if (0 == retval) {
+            PRUint32 minMemory = (PRUint32) - 1;
             PRUint32 maxMemory = 0;
             int transparent = 0;
             gdImagePtr graph = NULL;
 
             /*
-            ** Go through and find the minimum and maximum sizes.
-            */
-            for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-            {
-                if(YData[traverse] < minMemory)
-                {
+             ** Go through and find the minimum and maximum sizes.
+             */
+            for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
+                if (YData[traverse] < minMemory) {
                     minMemory = YData[traverse];
                 }
-                if(YData[traverse] > maxMemory)
-                {
+                if (YData[traverse] > maxMemory) {
                     maxMemory = YData[traverse];
                 }
             }
 
             /*
-            ** We can now draw the graph.
-            */
+             ** We can now draw the graph.
+             */
             graph = createGraph(&transparent);
-            if(NULL != graph)
-            {
+            if (NULL != graph) {
                 gdSink theSink;
                 int red = 0;
                 int x1 = 0;
                 int y1 = 0;
                 int x2 = 0;
                 int y2 = 0;
-                PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* timevals[11];
-                char* bytes[11];
+                PRUint32 percents[11] =
+                    { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+                char *timevals[11];
+                char *bytes[11];
                 char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
-                const char* legends[1] = { "Memory Allocated" };
+                const char *legends[1] = { "Memory Allocated" };
                 PRUint32 cached = 0;
 
                 /*
-                ** Figure out what the labels will say.
-                */
-                for(traverse = 0; traverse < 11; traverse++)
-                {
+                 ** Figure out what the labels will say.
+                 */
+                for (traverse = 0; traverse < 11; traverse++) {
                     timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    cached = ((globals.mMaxTimeval - globals.mMinTimeval) * percents[traverse]) / 100;
-                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
-                    PR_snprintf(bytes[traverse], 32, "%u", ((maxMemory - minMemory) * percents[traverse]) / 100);
+                    cached =
+                        ((globals.mMaxTimeval -
+                          globals.mMinTimeval) * percents[traverse]) / 100;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT,
+                                ST_TIMEVAL_PRINTABLE(cached));
+                    PR_snprintf(bytes[traverse], 32, "%u",
+                                ((maxMemory -
+                                  minMemory) * percents[traverse]) / 100);
                 }
-                
+
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
-                
-                drawGraph(graph, -1, "Allocation Times", "Seconds", "Bytes", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
-                if(maxMemory != minMemory)
-                {
+                drawGraph(graph, -1, "Allocation Times", "Seconds", "Bytes",
+                          11, percents, (const char **) timevals, 11,
+                          percents, (const char **) bytes, 1, legendColors,
+                          legends);
+
+                if (maxMemory != minMemory) {
                     PRInt64 in64 = LL_INIT(0, 0);
                     PRInt64 ydata64 = LL_INIT(0, 0);
                     PRInt64 spacey64 = LL_INIT(0, 0);
@@ -4012,16 +4064,15 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
                     PRInt32 in32 = 0;
 
                     /*
-                    ** Go through our Y data and mark it up.
-                    */
-                    for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-                    {
+                     ** Go through our Y data and mark it up.
+                     */
+                    for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
                         x1 = traverse + STGD_MARGIN;
                         y1 = STGD_HEIGHT - STGD_MARGIN;
 
                         /*
-                        ** Need to do this math in 64 bits.
-                        */
+                         ** Need to do this math in 64 bits.
+                         */
                         LL_I2L(ydata64, YData[traverse]);
                         LL_I2L(spacey64, STGD_SPACE_Y);
                         LL_I2L(mem64, (maxMemory - minMemory));
@@ -4029,10 +4080,10 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
                         LL_MUL(in64, ydata64, spacey64);
                         LL_DIV(in64, in64, mem64);
                         LL_L2I(in32, in64);
-                        
+
                         x2 = x1;
                         y2 = y1 - in32;
-                        
+
                         gdImageLine(graph, x1, y1, x2, y2, red);
                     }
                 }
@@ -4041,18 +4092,16 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
                 theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
-                
+
                 gdImageDestroy(graph);
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, createGraph);
             }
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, graphTimeval);
     }
@@ -4072,12 +4121,12 @@ int graphTimeval(STRequest* inRequest, STRun* aRun)
 **
 ** Returns !0 on failure.
 */
-int graphLifespan(STRequest* inRequest, STRun* aRun)
+int
+graphLifespan(STRequest * inRequest, STRun * aRun)
 {
     int retval = 0;
 
-    if(NULL != aRun)
-    {
+    if (NULL != aRun) {
         PRUint32 *YData = NULL;
         PRUint32 YDataArray[STGD_SPACE_X];
         PRUint32 traverse = 0;
@@ -4086,145 +4135,146 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
         PRBool underLock = PR_FALSE;
 
         /*
-        ** Decide if this is custom or we should use the global cache.
-        */
-        if(aRun == inRequest->mContext->mSortedRun)
-        {
+         ** Decide if this is custom or we should use the global cache.
+         */
+        if (aRun == inRequest->mContext->mSortedRun) {
             YData = inRequest->mContext->mLifespanYData;
             underLock = PR_TRUE;
         }
-        else
-        {
+        else {
             YData = YDataArray;
         }
 
         /*
-        **  Protect the shared data so that only one client has access to it
-        **      at any given time.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Protect the shared data so that only one client has access to it
+         **      at any given time.
+         */
+        if (PR_FALSE != underLock) {
             PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
-        ** Only do the computations if we aren't cached already.
-        */
-        if(YData != inRequest->mContext->mLifespanYData || PR_FALSE == inRequest->mContext->mLifespanCached)
-        {
+         ** Only do the computations if we aren't cached already.
+         */
+        if (YData != inRequest->mContext->mLifespanYData
+            || PR_FALSE == inRequest->mContext->mLifespanCached) {
             PRUint32 prevTimeval = 0;
             PRUint32 lifespan = 0;
 
             memset(YData, 0, sizeof(PRUint32) * STGD_SPACE_X);
 
             /*
-            ** Initialize our Y data.
-            ** Pretty brutal loop here....
-            */
-            for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
-            {
+             ** Initialize our Y data.
+             ** Pretty brutal loop here....
+             */
+            for (traverse = 0; 0 == retval && traverse < STGD_SPACE_X;
+                 traverse++) {
                 /*
-                ** Compute what timeval this Y data lands in.
-                */
+                 ** Compute what timeval this Y data lands in.
+                 */
                 prevTimeval = timeval;
-                timeval = (traverse * (globals.mMaxTimeval - globals.mMinTimeval)) / STGD_SPACE_X;
+                timeval =
+                    (traverse * (globals.mMaxTimeval - globals.mMinTimeval)) /
+                    STGD_SPACE_X;
 
                 /*
-                ** Loop over the run.
-                ** Should an allocation have lived between
-                **  prevTimeval and timeval....
-                */
-                for(loop = 0; loop < aRun->mAllocationCount; loop++)
-                {
-                    lifespan = aRun->mAllocations[loop]->mMaxTimeval - aRun->mAllocations[loop]->mMinTimeval;
+                 ** Loop over the run.
+                 ** Should an allocation have lived between
+                 **  prevTimeval and timeval....
+                 */
+                for (loop = 0; loop < aRun->mAllocationCount; loop++) {
+                    lifespan =
+                        aRun->mAllocations[loop]->mMaxTimeval -
+                        aRun->mAllocations[loop]->mMinTimeval;
 
-                    if(prevTimeval < lifespan && timeval >= lifespan)
-                    {
-                        YData[traverse] += byteSize(&inRequest->mOptions, aRun->mAllocations[loop]);
+                    if (prevTimeval < lifespan && timeval >= lifespan) {
+                        YData[traverse] +=
+                            byteSize(&inRequest->mOptions,
+                                     aRun->mAllocations[loop]);
                     }
                 }
             }
 
             /*
-            ** Did we cache this?
-            */
-            if(YData == inRequest->mContext->mLifespanYData)
-            {
+             ** Did we cache this?
+             */
+            if (YData == inRequest->mContext->mLifespanYData) {
                 inRequest->mContext->mLifespanCached = PR_TRUE;
             }
         }
 
         /*
-        **  Done with the lock.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Done with the lock.
+         */
+        if (PR_FALSE != underLock) {
             PR_Unlock(inRequest->mContext->mImageLock);
         }
 
-        if(0 == retval)
-        {
-            PRUint32 minMemory = (PRUint32)-1;
+        if (0 == retval) {
+            PRUint32 minMemory = (PRUint32) - 1;
             PRUint32 maxMemory = 0;
             int transparent = 0;
             gdImagePtr graph = NULL;
 
             /*
-            ** Go through and find the minimum and maximum sizes.
-            */
-            for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-            {
-                if(YData[traverse] < minMemory)
-                {
+             ** Go through and find the minimum and maximum sizes.
+             */
+            for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
+                if (YData[traverse] < minMemory) {
                     minMemory = YData[traverse];
                 }
-                if(YData[traverse] > maxMemory)
-                {
+                if (YData[traverse] > maxMemory) {
                     maxMemory = YData[traverse];
                 }
             }
 
             /*
-            ** We can now draw the graph.
-            */
+             ** We can now draw the graph.
+             */
             graph = createGraph(&transparent);
-            if(NULL != graph)
-            {
+            if (NULL != graph) {
                 gdSink theSink;
                 int red = 0;
                 int x1 = 0;
                 int y1 = 0;
                 int x2 = 0;
                 int y2 = 0;
-                PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* timevals[11];
-                char* bytes[11];
+                PRUint32 percents[11] =
+                    { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+                char *timevals[11];
+                char *bytes[11];
                 char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
-                const char* legends[1] = { "Live Memory" };
+                const char *legends[1] = { "Live Memory" };
                 PRUint32 cached = 0;
 
                 /*
-                ** Figure out what the labels will say.
-                */
-                for(traverse = 0; traverse < 11; traverse++)
-                {
+                 ** Figure out what the labels will say.
+                 */
+                for (traverse = 0; traverse < 11; traverse++) {
                     timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    cached = ((globals.mMaxTimeval - globals.mMinTimeval) * percents[traverse]) / 100;
-                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
-                    PR_snprintf(bytes[traverse], 32, "%u", ((maxMemory - minMemory) * percents[traverse]) / 100);
+                    cached =
+                        ((globals.mMaxTimeval -
+                          globals.mMinTimeval) * percents[traverse]) / 100;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT,
+                                ST_TIMEVAL_PRINTABLE(cached));
+                    PR_snprintf(bytes[traverse], 32, "%u",
+                                ((maxMemory -
+                                  minMemory) * percents[traverse]) / 100);
                 }
-                
+
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
-                
-                drawGraph(graph, -1, "Allocation Lifespans", "Lifespan", "Bytes", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
-                if(maxMemory != minMemory)
-                {
+                drawGraph(graph, -1, "Allocation Lifespans", "Lifespan",
+                          "Bytes", 11, percents, (const char **) timevals, 11,
+                          percents, (const char **) bytes, 1, legendColors,
+                          legends);
+
+                if (maxMemory != minMemory) {
                     PRInt64 in64 = LL_INIT(0, 0);
                     PRInt64 ydata64 = LL_INIT(0, 0);
                     PRInt64 spacey64 = LL_INIT(0, 0);
@@ -4232,16 +4282,15 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
                     PRInt32 in32 = 0;
 
                     /*
-                    ** Go through our Y data and mark it up.
-                    */
-                    for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-                    {
+                     ** Go through our Y data and mark it up.
+                     */
+                    for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
                         x1 = traverse + STGD_MARGIN;
                         y1 = STGD_HEIGHT - STGD_MARGIN;
 
                         /*
-                        ** Need to do this math in 64 bits.
-                        */
+                         ** Need to do this math in 64 bits.
+                         */
                         LL_I2L(ydata64, YData[traverse]);
                         LL_I2L(spacey64, STGD_SPACE_Y);
                         LL_I2L(mem64, (maxMemory - minMemory));
@@ -4249,10 +4298,10 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
                         LL_MUL(in64, ydata64, spacey64);
                         LL_DIV(in64, in64, mem64);
                         LL_L2I(in32, in64);
-                        
+
                         x2 = x1;
                         y2 = y1 - in32;
-                        
+
                         gdImageLine(graph, x1, y1, x2, y2, red);
                     }
                 }
@@ -4261,18 +4310,16 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
                 theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
-                
+
                 gdImageDestroy(graph);
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, createGraph);
             }
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, graphLifespan);
     }
@@ -4292,12 +4339,12 @@ int graphLifespan(STRequest* inRequest, STRun* aRun)
 **
 ** Returns !0 on failure.
 */
-int graphWeight(STRequest* inRequest, STRun* aRun)
+int
+graphWeight(STRequest * inRequest, STRun * aRun)
 {
     int retval = 0;
 
-    if(NULL != aRun)
-    {
+    if (NULL != aRun) {
         PRUint64 *YData64 = NULL;
         PRUint64 YDataArray64[STGD_SPACE_X];
         PRUint32 traverse = 0;
@@ -4306,128 +4353,127 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
         PRBool underLock = PR_FALSE;
 
         /*
-        ** Decide if this is custom or we should use the global cache.
-        */
-        if(aRun == inRequest->mContext->mSortedRun)
-        {
+         ** Decide if this is custom or we should use the global cache.
+         */
+        if (aRun == inRequest->mContext->mSortedRun) {
             YData64 = inRequest->mContext->mWeightYData64;
             underLock = PR_TRUE;
         }
-        else
-        {
+        else {
             YData64 = YDataArray64;
         }
 
         /*
-        **  Protect the shared data so that only one client has access to it
-        **      at any given time.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Protect the shared data so that only one client has access to it
+         **      at any given time.
+         */
+        if (PR_FALSE != underLock) {
             PR_Lock(inRequest->mContext->mImageLock);
         }
 
         /*
-        ** Only do the computations if we aren't cached already.
-        */
-        if(YData64 != inRequest->mContext->mWeightYData64 || PR_FALSE == inRequest->mContext->mWeightCached)
-        {
+         ** Only do the computations if we aren't cached already.
+         */
+        if (YData64 != inRequest->mContext->mWeightYData64
+            || PR_FALSE == inRequest->mContext->mWeightCached) {
             PRUint32 prevTimeval = 0;
 
             memset(YData64, 0, sizeof(PRUint64) * STGD_SPACE_X);
 
             /*
-            ** Initialize our Y data.
-            ** Pretty brutal loop here....
-            */
-            for(traverse = 0; 0 == retval && traverse < STGD_SPACE_X; traverse++)
-            {
+             ** Initialize our Y data.
+             ** Pretty brutal loop here....
+             */
+            for (traverse = 0; 0 == retval && traverse < STGD_SPACE_X;
+                 traverse++) {
                 /*
-                ** Compute what timeval this Y data lands in.
-                */
+                 ** Compute what timeval this Y data lands in.
+                 */
                 prevTimeval = timeval;
-                timeval = ((traverse * (globals.mMaxTimeval - globals.mMinTimeval)) / STGD_SPACE_X) + globals.mMinTimeval;
+                timeval =
+                    ((traverse *
+                      (globals.mMaxTimeval -
+                       globals.mMinTimeval)) / STGD_SPACE_X) +
+                    globals.mMinTimeval;
 
                 /*
-                ** Loop over the run.
-                ** Should an allocation have been allocated between
-                **  prevTimeval and timeval....
-                */
-                for(loop = 0; loop < aRun->mAllocationCount; loop++)
-                {
-                    if(prevTimeval < aRun->mAllocations[loop]->mMinTimeval && timeval >= aRun->mAllocations[loop]->mMinTimeval)
-                    {
+                 ** Loop over the run.
+                 ** Should an allocation have been allocated between
+                 **  prevTimeval and timeval....
+                 */
+                for (loop = 0; loop < aRun->mAllocationCount; loop++) {
+                    if (prevTimeval < aRun->mAllocations[loop]->mMinTimeval
+                        && timeval >= aRun->mAllocations[loop]->mMinTimeval) {
                         PRUint64 size64 = LL_INIT(0, 0);
                         PRUint64 lifespan64 = LL_INIT(0, 0);
                         PRUint64 weight64 = LL_INIT(0, 0);
 
-                        LL_UI2L(size64, byteSize(&inRequest->mOptions, aRun->mAllocations[loop]));
-                        LL_UI2L(lifespan64, (aRun->mAllocations[loop]->mMaxTimeval - aRun->mAllocations[loop]->mMinTimeval));
+                        LL_UI2L(size64,
+                                byteSize(&inRequest->mOptions,
+                                         aRun->mAllocations[loop]));
+                        LL_UI2L(lifespan64,
+                                (aRun->mAllocations[loop]->mMaxTimeval -
+                                 aRun->mAllocations[loop]->mMinTimeval));
                         LL_MUL(weight64, size64, lifespan64);
 
-                        LL_ADD(YData64[traverse], YData64[traverse], weight64);
+                        LL_ADD(YData64[traverse], YData64[traverse],
+                               weight64);
                     }
                 }
             }
 
             /*
-            ** Did we cache this?
-            */
-            if(YData64 == inRequest->mContext->mWeightYData64)
-            {
+             ** Did we cache this?
+             */
+            if (YData64 == inRequest->mContext->mWeightYData64) {
                 inRequest->mContext->mWeightCached = PR_TRUE;
             }
         }
 
         /*
-        **  Done with the lock.
-        */
-        if(PR_FALSE != underLock)
-        {
+         **  Done with the lock.
+         */
+        if (PR_FALSE != underLock) {
             PR_Unlock(inRequest->mContext->mImageLock);
         }
 
-        if(0 == retval)
-        {
+        if (0 == retval) {
             PRUint64 minWeight64 = LL_INIT(0xFFFFFFFF, 0xFFFFFFFF);
             PRUint64 maxWeight64 = LL_INIT(0, 0);
             int transparent = 0;
             gdImagePtr graph = NULL;
 
             /*
-            ** Go through and find the minimum and maximum weights.
-            */
-            for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-            {
-                if(LL_UCMP(YData64[traverse], <, minWeight64))
-                {
+             ** Go through and find the minimum and maximum weights.
+             */
+            for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
+                if (LL_UCMP(YData64[traverse], <, minWeight64)) {
                     minWeight64 = YData64[traverse];
                 }
-                if(LL_UCMP(YData64[traverse], >, maxWeight64))
-                {
+                if (LL_UCMP(YData64[traverse], >, maxWeight64)) {
                     maxWeight64 = YData64[traverse];
                 }
             }
 
             /*
-            ** We can now draw the graph.
-            */
+             ** We can now draw the graph.
+             */
             graph = createGraph(&transparent);
-            if(NULL != graph)
-            {
+            if (NULL != graph) {
                 gdSink theSink;
                 int red = 0;
                 int x1 = 0;
                 int y1 = 0;
                 int x2 = 0;
                 int y2 = 0;
-                PRUint32 percents[11] = { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
-                char* timevals[11];
-                char* bytes[11];
+                PRUint32 percents[11] =
+                    { 0, 10, 20, 30, 40, 50, 60, 70, 80, 90, 100 };
+                char *timevals[11];
+                char *bytes[11];
                 char timevalSpace[11][32];
                 char byteSpace[11][32];
                 int legendColors[1];
-                const char* legends[1] = { "Memory Weight" };
+                const char *legends[1] = { "Memory Weight" };
                 PRUint64 percent64 = LL_INIT(0, 0);
                 PRUint64 result64 = LL_INIT(0, 0);
                 PRUint64 hundred64 = LL_INIT(0, 0);
@@ -4436,15 +4482,17 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
                 LL_UI2L(hundred64, 100);
 
                 /*
-                ** Figure out what the labels will say.
-                */
-                for(traverse = 0; traverse < 11; traverse++)
-                {
+                 ** Figure out what the labels will say.
+                 */
+                for (traverse = 0; traverse < 11; traverse++) {
                     timevals[traverse] = timevalSpace[traverse];
                     bytes[traverse] = byteSpace[traverse];
 
-                    cached = ((globals.mMaxTimeval - globals.mMinTimeval) * percents[traverse]) / 100;
-                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT, ST_TIMEVAL_PRINTABLE(cached));
+                    cached =
+                        ((globals.mMaxTimeval -
+                          globals.mMinTimeval) * percents[traverse]) / 100;
+                    PR_snprintf(timevals[traverse], 32, ST_TIMEVAL_FORMAT,
+                                ST_TIMEVAL_PRINTABLE(cached));
 
                     LL_UI2L(percent64, percents[traverse]);
                     LL_SUB(result64, maxWeight64, minWeight64);
@@ -4452,40 +4500,41 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
                     LL_DIV(result64, result64, hundred64);
                     PR_snprintf(bytes[traverse], 32, "%llu", result64);
                 }
-                
+
                 red = gdImageColorAllocate(graph, 255, 0, 0);
                 legendColors[0] = red;
-                
-                drawGraph(graph, -1, "Allocation Weights", "Seconds", "Weight", 11, percents, (const char**)timevals, 11, percents, (const char**)bytes, 1, legendColors, legends);
 
-                if(LL_NE(maxWeight64, minWeight64))
-                {
+                drawGraph(graph, -1, "Allocation Weights", "Seconds",
+                          "Weight", 11, percents, (const char **) timevals,
+                          11, percents, (const char **) bytes, 1,
+                          legendColors, legends);
+
+                if (LL_NE(maxWeight64, minWeight64)) {
                     PRInt64 in64 = LL_INIT(0, 0);
                     PRInt64 spacey64 = LL_INIT(0, 0);
                     PRInt64 weight64 = LL_INIT(0, 0);
                     PRInt32 in32 = 0;
 
                     /*
-                    ** Go through our Y data and mark it up.
-                    */
-                    for(traverse = 0; traverse < STGD_SPACE_X; traverse++)
-                    {
+                     ** Go through our Y data and mark it up.
+                     */
+                    for (traverse = 0; traverse < STGD_SPACE_X; traverse++) {
                         x1 = traverse + STGD_MARGIN;
                         y1 = STGD_HEIGHT - STGD_MARGIN;
 
                         /*
-                        ** Need to do this math in 64 bits.
-                        */
+                         ** Need to do this math in 64 bits.
+                         */
                         LL_I2L(spacey64, STGD_SPACE_Y);
                         LL_SUB(weight64, maxWeight64, minWeight64);
 
                         LL_MUL(in64, YData64[traverse], spacey64);
                         LL_DIV(in64, in64, weight64);
                         LL_L2I(in32, in64);
-                        
+
                         x2 = x1;
                         y2 = y1 - in32;
-                        
+
                         gdImageLine(graph, x1, y1, x2, y2, red);
                     }
                 }
@@ -4494,18 +4543,16 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
                 theSink.context = inRequest->mFD;
                 theSink.sink = pngSink;
                 gdImagePngToSink(graph, &theSink);
-                
+
                 gdImageDestroy(graph);
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, createGraph);
             }
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, graphWeight);
     }
@@ -4514,19 +4561,6 @@ int graphWeight(STRequest* inRequest, STRun* aRun)
 }
 #endif /* ST_WANT_GRAPHS */
 
-/*
-**  fillOptions
-**
-**  Given an appropriate hexcaped string, distill the option values
-**      and fill the given STOption struct.
-**
-**  Note that the options passed in are not touched UNLESS there is
-**      a replacement found in the form data.
-*/
-void fillOptions(STOptions* outOptions, const FormData* inFormData)
-{
-    if(NULL != outOptions && NULL != inFormData)
-    {
 #define ST_WEB_OPTION_BOOL(option_name, option_genre, option_help) \
     { \
         PRUint32 convert = (PRUint32)outOptions->m##option_name; \
@@ -4559,7 +4593,7 @@ void fillOptions(STOptions* outOptions, const FormData* inFormData)
             outOptions->m##option_name[found][0] = '\0'; \
         } \
     }
-#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) /* no implementation */
+#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help)  /* no implementation */
 #define ST_WEB_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) \
     getDataPRUint32(inFormData, #option_name, 1, &outOptions->m##option_name, multiplier);
 #define ST_WEB_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) \
@@ -4568,117 +4602,130 @@ void fillOptions(STOptions* outOptions, const FormData* inFormData)
         \
         getDataPRUint64(inFormData, #option_name, 1, &outOptions->m##option_name##64, mul64); \
     }
+/*
+**  fillOptions
+**
+**  Given an appropriate hexcaped string, distill the option values
+**      and fill the given STOption struct.
+**
+**  Note that the options passed in are not touched UNLESS there is
+**      a replacement found in the form data.
+*/
+void
+fillOptions(STOptions * outOptions, const FormData * inFormData)
+{
+    if (NULL != outOptions && NULL != inFormData) {
 
 #include "stoptions.h"
 
         /*
-        **  Special sanity check here for some options that need data validation.
-        */
-        if(!outOptions->mCategoryName[0] || !findCategoryNode(outOptions->mCategoryName, &globals))
-        {
-            PR_snprintf(outOptions->mCategoryName, sizeof(outOptions->mCategoryName), "%s", ST_ROOT_CATEGORY_NAME);
+         **  Special sanity check here for some options that need data validation.
+         */
+        if (!outOptions->mCategoryName[0]
+            || !findCategoryNode(outOptions->mCategoryName, &globals)) {
+            PR_snprintf(outOptions->mCategoryName,
+                        sizeof(outOptions->mCategoryName), "%s",
+                        ST_ROOT_CATEGORY_NAME);
         }
     }
 }
 
-/* no bool options yet */
-#if 0
-void displayOptionBool(const char* option_name, option_genre, option_help)
-{
-PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", #option_name); \
-    PR_fprintf(inRequest->mFD, "<input type=radio name=%s value=%d%s>Disabled</input>\n", #option_name, PR_FALSE, PR_FALSE == inRequest->mOptions.m##option_name ? " checked" : ""); \
-    PR_fprintf(inRequest->mFD, "<input type=radio name=%s value=%d%s>Enabled</input>\n", #option_name, PR_TRUE, PR_FALSE != inRequest->mOptions.m##option_name ? " checked" : ""); \
-    PR_fprintf(inRequest->mFD, "Disabled by default.\n%s\n", option_help);
-}
-#endif
 
-void displayOptionString(STRequest* inRequest,
-                         const char* option_name,
-                         const char* option_genre,
-                         const char* default_value,
-                         const char* option_help,
-                         const char* value)
+void
+displayOptionString(STRequest * inRequest,
+                    const char *option_name,
+                    const char *option_genre,
+                    const char *default_value,
+                    const char *option_help, const char *value)
 {
 #if 0
     PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
 #endif
     PR_fprintf(inRequest->mFD, "<div class=option-box>\n");
     PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
-    PR_fprintf(inRequest->mFD, "<input type=text name=\"%s\" value=\"%s\">\n", option_name, value); 
-    PR_fprintf(inRequest->mFD, "<p class=option-default>Default value is \"%s\".</p>\n<p class=option-help>%s</p>\n", default_value, option_help);
+    PR_fprintf(inRequest->mFD,
+               "<input type=text name=\"%s\" value=\"%s\">\n",
+               option_name, value);
+    PR_fprintf(inRequest->mFD,
+               "<p class=option-default>Default value is \"%s\".</p>\n<p class=option-help>%s</p>\n",
+               default_value, option_help);
     PR_fprintf(inRequest->mFD, "</div>\n");
-};
+}
 
 static void
-displayOptionStringArray(STRequest* inRequest,
-                         const char* option_name,
-                         const char* option_genre,
+displayOptionStringArray(STRequest * inRequest,
+                         const char *option_name,
+                         const char *option_genre,
                          PRUint32 array_size,
-                         const char* option_help,
-                         const char values[5][ST_OPTION_STRING_MAX])
+                         const char *option_help, const char values[5]
+                         [ST_OPTION_STRING_MAX])
 {
-    // values should not be a fixed length!
-    PR_ASSERT(array_size==5);
-
+    /* values should not be a fixed length! */
+    PR_ASSERT(array_size == 5);
 #if 0
     PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
 #endif
     PR_fprintf(inRequest->mFD, "<div class=\"option-box\">\n");
-    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
-    {
+    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name); {
         PRUint32 loop = 0;
-       
-        for(loop = 0; loop < array_size; loop++)
-        {
-            PR_fprintf(inRequest->mFD, "<input type=text name=\"%s\" value=\"%s\"><br>\n", option_name, values[loop]);
+
+        for (loop = 0; loop < array_size; loop++) {
+            PR_fprintf(inRequest->mFD,
+                       "<input type=text name=\"%s\" value=\"%s\"><br>\n",
+                       option_name, values[loop]);
         }
     }
-    PR_fprintf(inRequest->mFD, "<p class=option-default>Up to %u occurrences allowed.</p>\n<p class=option-help>%s</p>\n", array_size, option_help);
+    PR_fprintf(inRequest->mFD,
+               "<p class=option-default>Up to %u occurrences allowed.</p>\n<p class=option-help>%s</p>\n",
+               array_size, option_help);
     PR_fprintf(inRequest->mFD, "</div>\n");
 }
 
 static void
-displayOptionInt(STRequest *inRequest,
-                 const char* option_name,
-                 const char* option_genre,
+displayOptionInt(STRequest * inRequest,
+                 const char *option_name,
+                 const char *option_genre,
                  PRUint32 default_value,
-                 PRUint32 multiplier,
-                 const char* option_help,
-                 PRUint32 value)
+                 PRUint32 multiplier, const char *option_help, PRUint32 value)
 {
 #if 0
     PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
 #endif
     PR_fprintf(inRequest->mFD, "<div class=\"option-box\">\n");
     PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
-    PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%u>\n", option_name, value / multiplier);
-    PR_fprintf(inRequest->mFD, "<p class=option-default>Default value is %u.</p>\n<p class=option-help>%s</p>\n", default_value, option_help);
+    PR_fprintf(inRequest->mFD,
+               "<input type=text name=%s value=%u>\n", option_name,
+               value / multiplier);
+    PR_fprintf(inRequest->mFD,
+               "<p class=option-default>Default value is %u.</p>\n<p class=option-help>%s</p>\n",
+               default_value, option_help);
     PR_fprintf(inRequest->mFD, "</div>\n");
 }
 
 static void
-displayOptionInt64(STRequest* inRequest,
-                   const char* option_name,
-                   const char* option_genre,
+displayOptionInt64(STRequest * inRequest,
+                   const char *option_name,
+                   const char *option_genre,
                    PRUint64 default_value,
                    PRUint64 multiplier,
-                   const char* option_help,
-                   PRUint64 value)
+                   const char *option_help, PRUint64 value)
 {
 #if 0
     PR_fprintf(inRequest->mFD, "<input type=submit value=%s>\n", option_name);
 #endif
-    
     PR_fprintf(inRequest->mFD, "<div class=\"option-box\">\n");
-    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name);
-    {
+    PR_fprintf(inRequest->mFD, "<p class=option-name>%s</p>\n", option_name); {
         PRUint64 def64 = default_value;
         PRUint64 mul64 = multiplier;
         PRUint64 div64;
 
         LL_DIV(div64, value, mul64);
-        PR_fprintf(inRequest->mFD, "<input type=text name=%s value=%llu>\n", option_name, div64);
-        PR_fprintf(inRequest->mFD, "<p class=option-default>Default value is %llu.</p>\n<p class=option-help>%s</p>\n", def64, option_help);
+        PR_fprintf(inRequest->mFD,
+                   "<input type=text name=%s value=%llu>\n",
+                   option_name, div64);
+        PR_fprintf(inRequest->mFD,
+                   "<p class=option-default>Default value is %llu.</p>\n<p class=option-help>%s</p>\n",
+                   def64, option_help);
     }
     PR_fprintf(inRequest->mFD, "</div>\n");
 }
@@ -4688,69 +4735,59 @@ displayOptionInt64(STRequest* inRequest,
 **
 **  Present the settings for change during execution.
 */
-void displaySettings(STRequest* inRequest)
+void
+displaySettings(STRequest * inRequest)
 {
     int applyRes = 0;
 
     /*
-    ** We've got a form to create.
-    */
+     ** We've got a form to create.
+     */
     PR_fprintf(inRequest->mFD, "<form method=get action=\"./index.html\">\n");
-
     /*
-    **  Respect newlines in help text.
-    */
+     **  Respect newlines in help text.
+     */
 #if 0
     PR_fprintf(inRequest->mFD, "<pre>\n");
 #endif
-
 #define ST_WEB_OPTION_BOOL(option_name, option_genre, option_help) \
     displayOptionBool(option_name, option_genre, option_help)
-    
 #define ST_WEB_OPTION_STRING(option_name, option_genre, default_value, option_help) \
     displayOptionString(inRequest, #option_name, #option_genre, default_value, option_help, inRequest->mOptions.m##option_name);
-
 #define ST_WEB_OPTION_STRING_ARRAY(option_name, option_genre, array_size, option_help) \
     displayOptionStringArray(inRequest, #option_name, #option_genre, array_size, option_help, inRequest->mOptions.m##option_name);
-    
-#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) /* no implementation */
-    
+#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help)  /* no implementation */
 #define ST_WEB_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) \
     displayOptionInt(inRequest, #option_name, #option_genre, default_value, multiplier, option_help, inRequest->mOptions.m##option_name);
-
 #define ST_WEB_OPTION_UINT64(option_name, option_genre, default_value, multiplier, option_help) \
     displayOptionInt64(inRequest, #option_name, #option_genre, default_value, multiplier, option_help, inRequest->mOptions.m##option_name##64);
-    
-
 #include "stoptions.h"
-
     /*
-    **  Give a submit/reset button, obligatory.
-    **  Done respecting newlines in help text.
-    */
-    PR_fprintf(inRequest->mFD, "<input type=submit value=\"Save Options\"> <input type=reset>\n");
+     **  Give a submit/reset button, obligatory.
+     **  Done respecting newlines in help text.
+     */
+    PR_fprintf(inRequest->mFD,
+               "<input type=submit value=\"Save Options\"> <input type=reset>\n");
 #if 0
     PR_fprintf(inRequest->mFD, "</pre>\n");
 #endif
-
     /*
-    ** Done with form.
-    */
+     ** Done with form.
+     */
     PR_fprintf(inRequest->mFD, "</form>\n");
 }
 
-int handleLocalFile(STRequest* inRequest, const char* aFilename)
+int
+handleLocalFile(STRequest * inRequest, const char *aFilename)
 {
-    static const char* const local_files[] = {
+    static const char *const local_files[] = {
         "spacetrace.css",
     };
-
     static const size_t local_file_count =
         sizeof(local_files) / sizeof(local_files[0]);
-    
     size_t i;
-    
-    for (i=0; i<local_file_count; i++) {
+
+    for (i = 0; i < local_file_count; i++) {
         if (0 == strcmp(local_files[i], aFilename))
             return 1;
     }
@@ -4762,26 +4799,24 @@ int handleLocalFile(STRequest* inRequest, const char* aFilename)
 **
 ** reads a file from disk, and streams it to the request
 */
-int displayFile(STRequest* inRequest, const char* aFilename)
+int
+displayFile(STRequest * inRequest, const char *aFilename)
 {
-    PRFileDesc* inFd;
-
-    const char* filepath = PR_smprintf("res%c%s", PR_GetDirectorySeparator(), aFilename);
+    PRFileDesc *inFd;
+    const char *filepath =
+        PR_smprintf("res%c%s", PR_GetDirectorySeparator(), aFilename);
     char buffer[2048];
     PRInt32 readRes;
 
     inFd = PR_Open(filepath, PR_RDONLY, PR_IRUSR);
-    if (!inFd) return -1;
-
-
+    if (!inFd)
+        return -1;
     while ((readRes = PR_Read(inFd, buffer, sizeof(buffer))) > 0) {
         PR_Write(inRequest->mFD, buffer, readRes);
     }
     if (readRes != 0)
         return -1;
-
     PR_Close(inFd);
-    
     return 0;
 }
 
@@ -4791,53 +4826,49 @@ int displayFile(STRequest* inRequest, const char* aFilename)
 ** Present a list of the reports you can drill down into.
 ** Returns !0 on failure.
 */
-int displayIndex(STRequest* inRequest)
+int
+displayIndex(STRequest * inRequest)
 {
     int retval = 0;
-    STOptions* options = &inRequest->mOptions;
+    STOptions *options = &inRequest->mOptions;
 
     /*
-    ** Present reports in a list format.
-    */
+     ** Present reports in a list format.
+     */
     PR_fprintf(inRequest->mFD, "<ul>");
-    
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "root_callsites.html", "Root Callsites", NULL, "mainmenu", options);
-    
+    htmlAnchor(inRequest, "root_callsites.html", "Root Callsites",
+               NULL, "mainmenu", options);
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "categories_summary.html", "Categories Report", NULL, "mainmenu", options);
-
+    htmlAnchor(inRequest, "categories_summary.html",
+               "Categories Report", NULL, "mainmenu", options);
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "top_callsites.html", "Top Callsites Report", NULL, "mainmenu", options);
-    
+    htmlAnchor(inRequest, "top_callsites.html",
+               "Top Callsites Report", NULL, "mainmenu", options);
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "top_allocations.html", "Top Allocations Report", NULL, "mainmenu", options);
-    
+    htmlAnchor(inRequest, "top_allocations.html",
+               "Top Allocations Report", NULL, "mainmenu", options);
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "memory_leaks.html", "Memory Leak Report", NULL, "mainmenu", options);
-
-#if ST_WANT_GRAPHS    
+    htmlAnchor(inRequest, "memory_leaks.html",
+               "Memory Leak Report", NULL, "mainmenu", options);
+#if ST_WANT_GRAPHS
     PR_fprintf(inRequest->mFD, "\n<li>Graphs");
-    
     PR_fprintf(inRequest->mFD, "<ul>");
-    
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "footprint_graph.html", "Footprint", NULL, "mainmenu graph", options);
-    
+    htmlAnchor(inRequest, "footprint_graph.html", "Footprint",
+               NULL, "mainmenu graph", options);
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "lifespan_graph.html", "Allocation Lifespans", NULL, "mainmenu graph", options);
-    
+    htmlAnchor(inRequest, "lifespan_graph.html",
+               "Allocation Lifespans", NULL, "mainmenu graph", options);
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "times_graph.html", "Allocation Times", NULL, "mainmenu graph", options);
-    
+    htmlAnchor(inRequest, "times_graph.html", "Allocation Times",
+               NULL, "mainmenu graph", options);
     PR_fprintf(inRequest->mFD, "\n<li>");
-    htmlAnchor(inRequest, "weight_graph.html", "Allocation Weights", NULL, "mainmenu graph", options);
-    
+    htmlAnchor(inRequest, "weight_graph.html",
+               "Allocation Weights", NULL, "mainmenu graph", options);
     PR_fprintf(inRequest->mFD, "\n</ul>\n");
 #endif /* ST_WANT_GRAPHS */
-    
     PR_fprintf(inRequest->mFD, "\n</ul>\n");
-    
     return retval;
 }
 
@@ -4849,26 +4880,26 @@ int displayIndex(STRequest* inRequest)
 **      Copy over global options.
 **      If getData present, attempt to use options therein.
 */
-void initRequestOptions(STRequest* inRequest)
+void
+initRequestOptions(STRequest * inRequest)
 {
-    if(NULL != inRequest)
-    {
+    if (NULL != inRequest) {
         /*
-        **  Copy of global options.
-        */
-        memcpy(&inRequest->mOptions, &globals.mCommandLineOptions, sizeof(globals.mCommandLineOptions));
-        
+         **  Copy of global options.
+         */
+        memcpy(&inRequest->mOptions, &globals.mCommandLineOptions,
+               sizeof(globals.mCommandLineOptions));
         /*
-        **  Decide what will override global options if anything.
-        */
-        if(NULL != inRequest->mGetData)
-        {
+         **  Decide what will override global options if anything.
+         */
+        if (NULL != inRequest->mGetData) {
             fillOptions(&inRequest->mOptions, inRequest->mGetData);
         }
     }
 }
 
-STContext* contextLookup(STOptions* inOptions)
+STContext *
+contextLookup(STOptions * inOptions)
 /*
 **  Lookup a context that matches the options.
 **  The lookup may block, especially if the context needs to be created.
@@ -4883,49 +4914,43 @@ STContext* contextLookup(STOptions* inOptions)
 **              NULL on failure.
 */
 {
-    STContext* retval = NULL;
-    STContextCache* inCache = &globals.mContextCache;
+    STContext *retval = NULL;
+    STContextCache *inCache = &globals.mContextCache;
 
-    if(NULL != inOptions && NULL != inCache)
-    {
+    if (NULL != inOptions && NULL != inCache) {
         PRUint32 loop = 0;
-        STContext* categoryException = NULL;
+        STContext *categoryException = NULL;
         PRBool newContext = PR_FALSE;
         PRBool evictContext = PR_FALSE;
         PRBool changeCategoryContext = PR_FALSE;
 
         /*
-        **  Own the context cache while we are in here.
-        */
+         **  Own the context cache while we are in here.
+         */
         PR_Lock(inCache->mLock);
-
         /*
-        **  Loop until successful.
-        **  Waiting on the condition variable makes sure we don't hog the
-        **      lock below.
-        */
-        while(1)
-        {
+         **  Loop until successful.
+         **  Waiting on the condition variable makes sure we don't hog the
+         **      lock below.
+         */
+        while (1) {
             /*
-            **  Go over the cache items.
-            **  At this point we are looking for a cache hit, with multiple
-            **      readers.
-            */
-            for(loop = 0; loop < inCache->mItemCount; loop++)
-            {
+             **  Go over the cache items.
+             **  At this point we are looking for a cache hit, with multiple
+             **      readers.
+             */
+            for (loop = 0; loop < inCache->mItemCount; loop++) {
                 /*
-                **  Must be in use.
-                */
-                if(PR_FALSE != inCache->mItems[loop].mInUse)
-                {
-                    int delta[(STOptionGenre)MaxGenres];
-                    
+                 **  Must be in use.
+                 */
+                if (PR_FALSE != inCache->mItems[loop].mInUse) {
+                    int delta[(STOptionGenre) MaxGenres];
+
                     /*
-                    **  Compare the relevant options, figure out if different
-                    **      in any genre that we care about.
-                    */
+                     **  Compare the relevant options, figure out if different
+                     **      in any genre that we care about.
+                     */
                     memset(&delta, 0, sizeof(delta));
-                    
 #define ST_WEB_OPTION_BOOL(option_name, option_genre, option_help) \
     if(inOptions->m##option_name != inCache->mItems[loop].mOptions.m##option_name) \
     { \
@@ -4953,7 +4978,7 @@ STContext* contextLookup(STOptions* inOptions)
             delta[(STOptionGenre)option_genre]++; \
         } \
     }
-#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) /* no implementation */
+#define ST_WEB_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help)  /* no implementation */
 #define ST_WEB_OPTION_UINT32(option_name, option_genre, default_value, multiplier, option_help) \
     if(inOptions->m##option_name != inCache->mItems[loop].mOptions.m##option_name) \
     { \
@@ -4964,213 +4989,186 @@ STContext* contextLookup(STOptions* inOptions)
     { \
         delta[(STOptionGenre)option_genre]++; \
     }
-                    
 #include "stoptions.h"
-                    
                     /*
-                    **  If there is no genre out of alignment, we accept this as the context.
-                    */
-                    if(
-                        0 == delta[CategoryGenre] &&
+                     **  If there is no genre out of alignment, we accept this as the context.
+                     */
+                    if (0 == delta[CategoryGenre] &&
                         0 == delta[DataSortGenre] &&
-                        0 == delta[DataSetGenre] &&
-                        0 == delta[DataSizeGenre]
-                        )
-                    {
+                        0 == delta[DataSetGenre] && 0 == delta[DataSizeGenre]
+                        ) {
                         retval = &inCache->mItems[loop].mContext;
                         break;
                     }
-                    
+
                     /*
-                    **  A special exception to the rule here.
-                    **  If all that is different is the category genre, and there
-                    **      is no one looking at the context (zero ref count),
-                    **      then there is some magic we can perform.
-                    */
-                    if(NULL == retval &&
+                     **  A special exception to the rule here.
+                     **  If all that is different is the category genre, and there
+                     **      is no one looking at the context (zero ref count),
+                     **      then there is some magic we can perform.
+                     */
+                    if (NULL == retval &&
                         0 == inCache->mItems[loop].mReferenceCount &&
                         0 != delta[CategoryGenre] &&
                         0 == delta[DataSortGenre] &&
-                        0 == delta[DataSetGenre] &&
-                        0 == delta[DataSizeGenre]
-                        )
-                    {
+                        0 == delta[DataSetGenre] && 0 == delta[DataSizeGenre]
+                        ) {
                         categoryException = &inCache->mItems[loop].mContext;
                     }
                 }
             }
-            
+
             /*
-            **  Pick up our category exception if relevant.
-            */
-            if(NULL == retval && NULL != categoryException)
-            {
+             **  Pick up our category exception if relevant.
+             */
+            if (NULL == retval && NULL != categoryException) {
                 retval = categoryException;
                 categoryException = NULL;
                 changeCategoryContext = PR_TRUE;
             }
-            
+
             /*
-            **  If we don't have a cache hit, then we need to check for an empty
-            **      spot to take over.
-            */
-            if(NULL == retval)
-            {
-                for(loop = 0; loop < inCache->mItemCount; loop++)
-                {
+             **  If we don't have a cache hit, then we need to check for an empty
+             **      spot to take over.
+             */
+            if (NULL == retval) {
+                for (loop = 0; loop < inCache->mItemCount; loop++) {
                     /*
-                    **  Must NOT be in use, then it will be the context.
-                    */
-                    if(PR_FALSE == inCache->mItems[loop].mInUse)
-                    {
+                     **  Must NOT be in use, then it will be the context.
+                     */
+                    if (PR_FALSE == inCache->mItems[loop].mInUse) {
                         retval = &inCache->mItems[loop].mContext;
                         newContext = PR_TRUE;
                         break;
                     }
                 }
             }
-            
+
             /*
-            **  If we still don't have a return value, then we need to see if
-            **      there are any old items with zero ref counts that we
-            **      can take over.
-            */
-            if(NULL == retval)
-            {
-                for(loop = 0; loop < inCache->mItemCount; loop++)
-                {
+             **  If we still don't have a return value, then we need to see if
+             **      there are any old items with zero ref counts that we
+             **      can take over.
+             */
+            if (NULL == retval) {
+                for (loop = 0; loop < inCache->mItemCount; loop++) {
                     /*
-                    **  Must be in use.
-                    */
-                    if(PR_FALSE != inCache->mItems[loop].mInUse)
-                    {
+                     **  Must be in use.
+                     */
+                    if (PR_FALSE != inCache->mItems[loop].mInUse) {
                         /*
-                        **  Must have a ref count of zero.
-                        */
-                        if(0 == inCache->mItems[loop].mReferenceCount)
-                        {
+                         **  Must have a ref count of zero.
+                         */
+                        if (0 == inCache->mItems[loop].mReferenceCount) {
                             /*
-                            **  Must be older than any other we know of.
-                            */
-                            if(NULL != retval)
-                            {
-                                if(inCache->mItems[loop].mLastAccessed < inCache->mItems[retval->mIndex].mLastAccessed)
-                                {
+                             **  Must be older than any other we know of.
+                             */
+                            if (NULL != retval) {
+                                if (inCache->mItems[loop].mLastAccessed <
+                                    inCache->mItems[retval->mIndex].
+                                    mLastAccessed) {
                                     retval = &inCache->mItems[loop].mContext;
                                 }
                             }
-                            else
-                            {
+                            else {
                                 retval = &inCache->mItems[loop].mContext;
                             }
                         }
                     }
                 }
 
-                if(NULL != retval)
-                {
+                if (NULL != retval) {
                     evictContext = PR_TRUE;
                 }
             }
 
             /*
-            **  If we still don't have a return value, then we can not avoid
-            **      waiting around until someone gives us the chance.
-            **  The chance, in specific, comes when a cache item reference
-            **      count returns to zero, upon which we can try to take
-            **      it over again.
-            */
-            if(NULL == retval)
-            {
+             **  If we still don't have a return value, then we can not avoid
+             **      waiting around until someone gives us the chance.
+             **  The chance, in specific, comes when a cache item reference
+             **      count returns to zero, upon which we can try to take
+             **      it over again.
+             */
+            if (NULL == retval) {
                 /*
-                **  This has the side effect of release the context lock.
-                **  This is a good thing so that other clients can continue
-                **      to connect and hopefully have cache hits.
-                **  If they do not have cache hits, then we will end up
-                **      with a bunch of waiters here....
-                */
+                 **  This has the side effect of release the context lock.
+                 **  This is a good thing so that other clients can continue
+                 **      to connect and hopefully have cache hits.
+                 **  If they do not have cache hits, then we will end up
+                 **      with a bunch of waiters here....
+                 */
                 PR_WaitCondVar(inCache->mCacheMiss, PR_INTERVAL_NO_TIMEOUT);
             }
-            
-            /*
-            **  If we have a return value, improve the reference count here.
-            */
-            if(NULL != retval)
-            {
-                /*
-                **  Decide if there are any changes to be made.
-                **  Do as little as possible, then fall through the context
-                **      cache lock to finish up.
-                **  This way, lengthy init operations will not block
-                **      other clients, only matches to this context.
-                */
-                if(
-                    PR_FALSE != newContext ||
-                    PR_FALSE != evictContext ||
-                    PR_FALSE != changeCategoryContext
-                    )
-                {
-                    /*
-                    **  Overwrite the prefs for this context.
-                    **  They are changing.
-                    */
-                    memcpy(&inCache->mItems[retval->mIndex].mOptions, inOptions, sizeof(inCache->mItems[retval->mIndex].mOptions));
 
+            /*
+             **  If we have a return value, improve the reference count here.
+             */
+            if (NULL != retval) {
+                /*
+                 **  Decide if there are any changes to be made.
+                 **  Do as little as possible, then fall through the context
+                 **      cache lock to finish up.
+                 **  This way, lengthy init operations will not block
+                 **      other clients, only matches to this context.
+                 */
+                if (PR_FALSE != newContext ||
+                    PR_FALSE != evictContext ||
+                    PR_FALSE != changeCategoryContext) {
                     /*
-                    **  As we are going to be changing the context, we need to write lock it.
-                    **  This makes sure no readers are allowed while we are making our changes.
-                    */
+                     **  Overwrite the prefs for this context.
+                     **  They are changing.
+                     */
+                    memcpy(&inCache->mItems[retval->mIndex].mOptions,
+                           inOptions,
+                           sizeof(inCache->mItems[retval->mIndex].mOptions));
+                    /*
+                     **  As we are going to be changing the context, we need to write lock it.
+                     **  This makes sure no readers are allowed while we are making our changes.
+                     */
                     PR_RWLock_Wlock(retval->mRWLock);
                 }
-        
+
                 /*
-                **  NOTE, ref count gets incremented here, inside content
-                **      cache lock so it can not be flushed once lock
-                **      released.
-                */
+                 **  NOTE, ref count gets incremented here, inside content
+                 **      cache lock so it can not be flushed once lock
+                 **      released.
+                 */
                 inCache->mItems[retval->mIndex].mInUse = PR_TRUE;
                 inCache->mItems[retval->mIndex].mReferenceCount++;
-
                 /*
-                **  That's all folks.
-                */
+                 **  That's all folks.
+                 */
                 break;
             }
-            
-        } /* while(1), try again */
+
+        }                       /* while(1), try again */
 
         /*
-        **  Done with context cache.
-        */
+         **  Done with context cache.
+         */
         PR_Unlock(inCache->mLock);
-
         /*
-        **  Now that the context cached is free to continue accepting other
-        **      requests, we have a little more work to do.
-        */
-        if(NULL != retval)
-        {
+         **  Now that the context cached is free to continue accepting other
+         **      requests, we have a little more work to do.
+         */
+        if (NULL != retval) {
             PRBool unlock = PR_FALSE;
 
             /*
-            **  If evicting, we need to free off the old stuff.
-            */
-            if(PR_FALSE != evictContext)
-            {
+             **  If evicting, we need to free off the old stuff.
+             */
+            if (PR_FALSE != evictContext) {
                 unlock = PR_TRUE;
-
                 /*
-                **  We do not free the sorted run.
-                **  The category code takes care of this.
-                */
+                 **  We do not free the sorted run.
+                 **  The category code takes care of this.
+                 */
                 retval->mSortedRun = NULL;
-
 #if ST_WANT_GRAPHS
                 /*
-                **  There is no need to
-                **      PR_Lock(retval->mImageLock)
-                **  We are already under write lock for the entire structure.
-                */
+                 **  There is no need to
+                 **      PR_Lock(retval->mImageLock)
+                 **  We are already under write lock for the entire structure.
+                 */
                 retval->mFootprintCached = PR_FALSE;
                 retval->mTimevalCached = PR_FALSE;
                 retval->mLifespanCached = PR_FALSE;
@@ -5179,43 +5177,46 @@ STContext* contextLookup(STOptions* inOptions)
             }
 
             /*
-            **  If new or recently evicted, we need to fully init.
-            */
-            if(PR_FALSE != newContext || PR_FALSE != evictContext)
-            {
+             **  If new or recently evicted, we need to fully init.
+             */
+            if (PR_FALSE != newContext || PR_FALSE != evictContext) {
                 unlock = PR_TRUE;
-
-                retval->mSortedRun = createRunFromGlobal(&inCache->mItems[retval->mIndex].mOptions, &inCache->mItems[retval->mIndex].mContext);
+                retval->mSortedRun =
+                    createRunFromGlobal(&inCache->mItems[retval->mIndex].
+                                        mOptions,
+                                        &inCache->mItems[retval->mIndex].
+                                        mContext);
             }
 
             /*
-            **  If changing category, we need to do some sneaky stuff.
-            */
-            if(PR_FALSE != changeCategoryContext)
-            {
-                STCategoryNode* node = NULL;
-                
-                unlock = PR_TRUE;
+             **  If changing category, we need to do some sneaky stuff.
+             */
+            if (PR_FALSE != changeCategoryContext) {
+                STCategoryNode *node = NULL;
 
+                unlock = PR_TRUE;
                 /*
-                ** Just a category change. We dont need to harvest. Just find the
-                ** right node and set the cache.mSortedRun. We need to recompute
-                ** cost though. But that is cheap.
-                */            
-                node = findCategoryNode(inCache->mItems[retval->mIndex].mOptions.mCategoryName, &globals);
-                if(node)
-                {
+                 ** Just a category change. We dont need to harvest. Just find the
+                 ** right node and set the cache.mSortedRun. We need to recompute
+                 ** cost though. But that is cheap.
+                 */
+                node =
+                    findCategoryNode(inCache->mItems[retval->mIndex].mOptions.
+                                     mCategoryName, &globals);
+                if (node) {
                     /* Recalculate cost of run */
-                    recalculateRunCost(&inCache->mItems[retval->mIndex].mOptions, retval, node->runs[retval->mIndex]);
+                    recalculateRunCost(&inCache->mItems[retval->mIndex].
+                                       mOptions, retval,
+                                       node->runs[retval->mIndex]);
                     retval->mSortedRun = node->runs[retval->mIndex];
                 }
 
 #if ST_WANT_GRAPHS
                 /*
-                **  There is no need to
-                **      PR_Lock(retval->mImageLock)
-                **  We are already under write lock for the entire structure.
-                */
+                 **  There is no need to
+                 **      PR_Lock(retval->mImageLock)
+                 **  We are already under write lock for the entire structure.
+                 */
                 retval->mFootprintCached = PR_FALSE;
                 retval->mTimevalCached = PR_FALSE;
                 retval->mLifespanCached = PR_FALSE;
@@ -5224,18 +5225,17 @@ STContext* contextLookup(STOptions* inOptions)
             }
 
             /*
-            **  Release the write lock if we took one to make changes.
-            */
-            if(PR_FALSE != unlock)
-            {
+             **  Release the write lock if we took one to make changes.
+             */
+            if (PR_FALSE != unlock) {
                 PR_RWLock_Unlock(retval->mRWLock);
             }
 
             /*
-            **  Last thing possible, take a read lock on our return value.
-            **  This will cause us to block if the context is not fully
-            **      initialized in another thread holding the write lock.
-            */
+             **  Last thing possible, take a read lock on our return value.
+             **  This will cause us to block if the context is not fully
+             **      initialized in another thread holding the write lock.
+             */
             PR_RWLock_Rlock(retval->mRWLock);
         }
     }
@@ -5243,46 +5243,43 @@ STContext* contextLookup(STOptions* inOptions)
     return retval;
 }
 
-void contextRelease(STContext* inContext)
+void
+contextRelease(STContext * inContext)
 /*
 **  After a successful call to contextLookup, one should call this API when
 **      done with the context.
 **  This effectively removes the usage of the client on a cached item.
 */
 {
-    STContextCache* inCache = &globals.mContextCache;
+    STContextCache *inCache = &globals.mContextCache;
 
-    if(NULL != inContext && NULL != inCache)
-    {
+    if (NULL != inContext && NULL != inCache) {
         /*
-        **  Own the context cache while in here.
-        */
+         **  Own the context cache while in here.
+         */
         PR_Lock(inCache->mLock);
-
         /*
-        **  Give up the read lock on the context.
-        */
+         **  Give up the read lock on the context.
+         */
         PR_RWLock_Unlock(inContext->mRWLock);
-
         /*
-        **  Decrement the reference count on the context.
-        **  If it was the last reference, notify that a new item is
-        **      available for eviction.
-        **  A waiting thread will wake up and eat it.
-        **  Also set when it was last accessed so the oldest unused item
-        **      can be targeted for eviction.
-        */
+         **  Decrement the reference count on the context.
+         **  If it was the last reference, notify that a new item is
+         **      available for eviction.
+         **  A waiting thread will wake up and eat it.
+         **  Also set when it was last accessed so the oldest unused item
+         **      can be targeted for eviction.
+         */
         inCache->mItems[inContext->mIndex].mReferenceCount--;
-        if(0 == inCache->mItems[inContext->mIndex].mReferenceCount)
-        {
+        if (0 == inCache->mItems[inContext->mIndex].mReferenceCount) {
             PR_NotifyCondVar(inCache->mCacheMiss);
-
-            inCache->mItems[inContext->mIndex].mLastAccessed = PR_IntervalNow();
+            inCache->mItems[inContext->mIndex].mLastAccessed =
+                PR_IntervalNow();
         }
 
         /*
-        **  Done with context cache.
-        */
+         **  Done with context cache.
+         */
         PR_Unlock(inCache->mLock);
     }
 }
@@ -5296,381 +5293,344 @@ void contextRelease(STContext* inContext)
 **
 ** Returns !0 on error.
 */
-int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const FormData* aGetData)
+int
+handleRequest(tmreader * aTMR, PRFileDesc * aFD,
+              const char *aFileName, const FormData * aGetData)
 {
     int retval = 0;
 
-    if(NULL != aTMR && NULL != aFD && NULL != aFileName && '\0' != *aFileName)
-    {
+    if (NULL != aTMR && NULL != aFD && NULL != aFileName
+        && '\0' != *aFileName) {
         STRequest request;
 
         /*
-        ** Init the request.
-        */
+         ** Init the request.
+         */
         memset(&request, 0, sizeof(request));
-
         request.mFD = aFD;
         request.mGetFileName = aFileName;
         request.mGetData = aGetData;
-
         /*
-        **  Set local options for this request.
-        */
+         **  Set local options for this request.
+         */
         initRequestOptions(&request);
-
         /*
-        **  Get our cached context for this client.
-        **  Simply based on the options.
-        */
-
-        
+         **  Get our cached context for this client.
+         **  Simply based on the options.
+         */
         request.mContext = contextLookup(&request.mOptions);
-        if(NULL != request.mContext)
-        {
+        if (NULL != request.mContext) {
             /*
-            ** Attempt to find the file of interest.
-            */
+             ** Attempt to find the file of interest.
+             */
             if (handleLocalFile(&request, aFileName)) {
                 displayFile(&request, aFileName);
             }
-            else if(0 == strcmp("index.html", aFileName))
-            {
+            else if (0 == strcmp("index.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "SpaceTrace Index");
-                
                 displayRes = displayIndex(&request);
-                if(0 != displayRes)
-                {
+                if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayIndex);
                 }
-                
+
                 htmlFooter(&request);
             }
-            else if(0 == strcmp("settings.html", aFileName) ||
-                    0 == strcmp("options.html", aFileName))
-            {
+            else if (0 == strcmp("settings.html", aFileName) ||
+                     0 == strcmp("options.html", aFileName)) {
                 htmlHeader(&request, "SpaceTrace Options");
-                
                 displaySettings(&request);
-                
                 htmlFooter(&request);
             }
-            else if(0 == strcmp("top_allocations.html", aFileName))
-            {
+            else if (0 == strcmp("top_allocations.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "SpaceTrace Top Allocations Report");
-                
-                displayRes = displayTopAllocations(&request, request.mContext->mSortedRun, 1);
-                if(0 != displayRes)
-                {
+                displayRes =
+                    displayTopAllocations(&request,
+                                          request.mContext->mSortedRun, 1);
+                if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayTopAllocations);
                 }
-                
+
                 htmlFooter(&request);
             }
-            else if(0 == strcmp("top_callsites.html", aFileName))
-            {
+            else if (0 == strcmp("top_callsites.html", aFileName)) {
                 int displayRes = 0;
-                tmcallsite** array = NULL;
+                tmcallsite **array = NULL;
                 PRUint32 arrayCount = 0;
-                
+
                 /*
-                ** Display header after we figure out if we are going to focus
-                ** on a category.
-                */
+                 ** Display header after we figure out if we are going to focus
+                 ** on a category.
+                 */
                 htmlHeader(&request, "SpaceTrace Top Callsites Report");
-                
-                if(NULL != request.mContext->mSortedRun && 0 < request.mContext->mSortedRun->mAllocationCount)
-                {
-                    arrayCount = callsiteArrayFromRun(&array, 0, request.mContext->mSortedRun);
-                    
-                    if(0 != arrayCount && NULL != array)
-                    {
-                        displayRes = displayTopCallsites(&request, array, arrayCount, 0, 0);
-                        if(0 != displayRes)
-                        {
+                if (NULL != request.mContext->mSortedRun
+                    && 0 < request.mContext->mSortedRun->mAllocationCount) {
+                    arrayCount =
+                        callsiteArrayFromRun(&array, 0,
+                                             request.mContext->mSortedRun);
+                    if (0 != arrayCount && NULL != array) {
+                        displayRes =
+                            displayTopCallsites(&request, array, arrayCount,
+                                                0, 0);
+                        if (0 != displayRes) {
                             retval = __LINE__;
                             REPORT_ERROR(__LINE__, displayTopCallsites);
                         }
-                        
+
                         /*
-                        ** Done with the array.
-                        */
+                         ** Done with the array.
+                         */
                         free(array);
                         array = NULL;
                     }
                 }
-                else
-                {
+                else {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, handleRequest);
                 }
-                
+
                 htmlFooter(&request);
             }
-            else if(0 == strcmp("memory_leaks.html", aFileName))
-            {
+            else if (0 == strcmp("memory_leaks.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "SpaceTrace Memory Leaks Report");
-                
-                displayRes = displayMemoryLeaks(&request, request.mContext->mSortedRun);
-                if(0 != displayRes)
-                {
+                displayRes =
+                    displayMemoryLeaks(&request,
+                                       request.mContext->mSortedRun);
+                if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayMemoryLeaks);
                 }
-                
+
                 htmlFooter(&request);
             }
-            else if(0 == strncmp("allocation_", aFileName, 11))
-            {
+            else if (0 == strncmp("allocation_", aFileName, 11)) {
                 int scanRes = 0;
                 PRUint32 allocationIndex = 0;
-                
+
                 /*
-                ** Oh, what a hack....
-                ** The index to the allocation structure in the global run
-                **   is in the filename.  Better than the pointer value....
-                */
+                 ** Oh, what a hack....
+                 ** The index to the allocation structure in the global run
+                 **   is in the filename.  Better than the pointer value....
+                 */
                 scanRes = PR_sscanf(aFileName + 11, "%u", &allocationIndex);
-                
-                if(1 == scanRes && globals.mRun.mAllocationCount > allocationIndex && NULL != globals.mRun.mAllocations[allocationIndex])
-                {
-                    STAllocation* allocation = globals.mRun.mAllocations[allocationIndex];
+                if (1 == scanRes
+                    && globals.mRun.mAllocationCount > allocationIndex
+                    && NULL != globals.mRun.mAllocations[allocationIndex]) {
+                    STAllocation *allocation =
+                        globals.mRun.mAllocations[allocationIndex];
                     char buffer[128];
                     int displayRes = 0;
-                    
-                    PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Allocation %u Details Report", allocationIndex);
+
+                    PR_snprintf(buffer, sizeof(buffer),
+                                "SpaceTrace Allocation %u Details Report",
+                                allocationIndex);
                     htmlHeader(&request, buffer);
-                    
-                    displayRes = displayAllocationDetails(&request, allocation);
-                    if(0 != displayRes)
-                    {
+                    displayRes =
+                        displayAllocationDetails(&request, allocation);
+                    if (0 != displayRes) {
                         retval = __LINE__;
                         REPORT_ERROR(__LINE__, displayAllocationDetails);
                     }
-                    
+
                     htmlFooter(&request);
                 }
-                else
-                {
+                else {
                     htmlNotFound(&request);
                 }
             }
-            else if(0 == strncmp("callsite_", aFileName, 9))
-            {
+            else if (0 == strncmp("callsite_", aFileName, 9)) {
                 int scanRes = 0;
                 PRUint32 callsiteSerial = 0;
-                tmcallsite* resolved = NULL;
-                
+                tmcallsite *resolved = NULL;
+
                 /*
-                ** Oh, what a hack....
-                ** The serial(key) to the callsite structure in the hash table
-                **   is in the filename.  Better than the pointer value....
-                */
+                 ** Oh, what a hack....
+                 ** The serial(key) to the callsite structure in the hash table
+                 **   is in the filename.  Better than the pointer value....
+                 */
                 scanRes = PR_sscanf(aFileName + 9, "%u", &callsiteSerial);
-                
-                if(1 == scanRes && 0 != callsiteSerial && NULL != (resolved = tmreader_callsite(aTMR, callsiteSerial)))
-                {
+                if (1 == scanRes && 0 != callsiteSerial
+                    && NULL != (resolved =
+                                tmreader_callsite(aTMR, callsiteSerial))) {
                     char buffer[128];
                     int displayRes = 0;
-                    
-                    PR_snprintf(buffer, sizeof(buffer), "SpaceTrace Callsite %u Details Report", callsiteSerial);
+
+                    PR_snprintf(buffer, sizeof(buffer),
+                                "SpaceTrace Callsite %u Details Report",
+                                callsiteSerial);
                     htmlHeader(&request, buffer);
-                    
                     displayRes = displayCallsiteDetails(&request, resolved);
-                    if(0 != displayRes)
-                    {
+                    if (0 != displayRes) {
                         retval = __LINE__;
                         REPORT_ERROR(__LINE__, displayAllocationDetails);
                     }
-                    
+
                     htmlFooter(&request);
                 }
-                else
-                {
+                else {
                     htmlNotFound(&request);
                 }
             }
-            else if(0 == strcmp("root_callsites.html", aFileName))
-            {
+            else if (0 == strcmp("root_callsites.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "SpaceTrace Root Callsites");
-                
-                displayRes = displayCallsites(&request, aTMR->calltree_root.kids, ST_FOLLOW_SIBLINGS, 0, __LINE__);
-                if(0 != displayRes)
-                {
+                displayRes =
+                    displayCallsites(&request, aTMR->calltree_root.kids,
+                                     ST_FOLLOW_SIBLINGS, 0, __LINE__);
+                if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayCallsites);
                 }
-                
+
                 htmlFooter(&request);
             }
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("footprint_graph.html", aFileName))
-            {
+            else if (0 == strcmp("footprint_graph.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "SpaceTrace Memory Footprint Report");
-                
                 PR_fprintf(request.mFD, "<div align=center>\n");
                 PR_fprintf(request.mFD, "<img src=\"./footprint.png");
                 optionGetDataOut(request.mFD, &request.mOptions);
                 PR_fprintf(request.mFD, "\">\n");
                 PR_fprintf(request.mFD, "</div>\n");
-                
                 htmlFooter(&request);
             }
 #endif /* ST_WANT_GRAPHS */
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("times_graph.html", aFileName))
-            {
+            else if (0 == strcmp("times_graph.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "SpaceTrace Allocation Times Report");
-                
                 PR_fprintf(request.mFD, "<div align=center>\n");
                 PR_fprintf(request.mFD, "<img src=\"./times.png");
                 optionGetDataOut(request.mFD, &request.mOptions);
                 PR_fprintf(request.mFD, "\">\n");
                 PR_fprintf(request.mFD, "</div>\n");
-                
                 htmlFooter(&request);
             }
 #endif /* ST_WANT_GRAPHS */
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("lifespan_graph.html", aFileName))
-            {
+            else if (0 == strcmp("lifespan_graph.html", aFileName)) {
                 int displayRes = 0;
-                
-                htmlHeader(&request, "SpaceTrace Allocation Lifespans Report");
-                
+
+                htmlHeader(&request,
+                           "SpaceTrace Allocation Lifespans Report");
                 PR_fprintf(request.mFD, "<div align=center>\n");
                 PR_fprintf(request.mFD, "<img src=\"./lifespan.png");
                 optionGetDataOut(request.mFD, &request.mOptions);
                 PR_fprintf(request.mFD, "\">\n");
                 PR_fprintf(request.mFD, "</div>\n");
-                
                 htmlFooter(&request);
             }
 #endif /* ST_WANT_GRAPHS */
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("weight_graph.html", aFileName))
-            {
+            else if (0 == strcmp("weight_graph.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "SpaceTrace Allocation Weights Report");
-                
                 PR_fprintf(request.mFD, "<div align=center>\n");
                 PR_fprintf(request.mFD, "<img src=\"./weight.png");
                 optionGetDataOut(request.mFD, &request.mOptions);
                 PR_fprintf(request.mFD, "\">\n");
                 PR_fprintf(request.mFD, "</div>\n");
-                
                 htmlFooter(&request);
             }
 #endif /* ST_WANT_GRAPHS */
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("footprint.png", aFileName))
-            {
+            else if (0 == strcmp("footprint.png", aFileName)) {
                 int graphRes = 0;
-                
-                graphRes = graphFootprint(&request, request.mContext->mSortedRun);
-                if(0 != graphRes)
-                {
+
+                graphRes =
+                    graphFootprint(&request, request.mContext->mSortedRun);
+                if (0 != graphRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, graphFootprint);
                 }
             }
 #endif /* ST_WANT_GRAPHS */
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("times.png", aFileName))
-            {
+            else if (0 == strcmp("times.png", aFileName)) {
                 int graphRes = 0;
-                
-                graphRes = graphTimeval(&request, request.mContext->mSortedRun);
-                if(0 != graphRes)
-                {
+
+                graphRes =
+                    graphTimeval(&request, request.mContext->mSortedRun);
+                if (0 != graphRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, graphTimeval);
                 }
             }
 #endif /* ST_WANT_GRAPHS */
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("lifespan.png", aFileName))
-            {
+            else if (0 == strcmp("lifespan.png", aFileName)) {
                 int graphRes = 0;
-                
-                graphRes = graphLifespan(&request, request.mContext->mSortedRun);
-                if(0 != graphRes)
-                {
+
+                graphRes =
+                    graphLifespan(&request, request.mContext->mSortedRun);
+                if (0 != graphRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, graphLifespan);
                 }
             }
 #endif /* ST_WANT_GRAPHS */
 #if ST_WANT_GRAPHS
-            else if(0 == strcmp("weight.png", aFileName))
-            {
+            else if (0 == strcmp("weight.png", aFileName)) {
                 int graphRes = 0;
-                
-                graphRes = graphWeight(&request, request.mContext->mSortedRun);
-                if(0 != graphRes)
-                {
+
+                graphRes =
+                    graphWeight(&request, request.mContext->mSortedRun);
+                if (0 != graphRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, graphWeight);
                 }
             }
 #endif /* ST_WANT_GRAPHS */
-            else if(0 == strcmp("categories_summary.html", aFileName))
-            {
+            else if (0 == strcmp("categories_summary.html", aFileName)) {
                 int displayRes = 0;
-                
+
                 htmlHeader(&request, "Category Report");
-                
-                displayRes = displayCategoryReport(&request, &globals.mCategoryRoot, 1);
-                if(0 != displayRes)
-                {
+                displayRes =
+                    displayCategoryReport(&request, &globals.mCategoryRoot,
+                                          1);
+                if (0 != displayRes) {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, displayMemoryLeaks);
                 }
-                
+
                 htmlFooter(&request);
             }
-            else
-            {
+            else {
                 htmlNotFound(&request);
             }
-        
+
             /*
-            **  Release the context we obtained earlier.
-            */
+             **  Release the context we obtained earlier.
+             */
             contextRelease(request.mContext);
             request.mContext = NULL;
         }
-        else
-        {
+        else {
             retval = __LINE__;
             REPORT_ERROR(__LINE__, contextObtain);
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, handleRequest);
     }
 
     /*
-    ** Compact a little if you can after each request.
-    */
+     ** Compact a little if you can after each request.
+     */
     heapCompact();
-
     return retval;
 }
 
@@ -5681,161 +5641,145 @@ int handleRequest(tmreader* aTMR, PRFileDesc* aFD, const char* aFileName, const 
 ** Read the fd for the request.
 ** Output the results.
 */
-void handleClient(void* inArg)
+void
+handleClient(void *inArg)
 {
-    PRFileDesc* aFD = NULL;
+    PRFileDesc *aFD = NULL;
 
-    aFD = (PRFileDesc*)inArg;
-    if(NULL != aFD)
-    {
+    aFD = (PRFileDesc *) inArg;
+    if (NULL != aFD) {
         PRStatus closeRes = PR_SUCCESS;
         char aBuffer[2048];
         PRInt32 readRes = 0;
 
         readRes = PR_Read(aFD, aBuffer, sizeof(aBuffer));
-        if(0 <= readRes)
-        {
-            const char* sanityCheck = "GET /";
+        if (0 <= readRes) {
+            const char *sanityCheck = "GET /";
 
-            if(0 == strncmp(sanityCheck, aBuffer, 5))
-            {
-                char* eourl = NULL;
-                char* start = &aBuffer[5];
-                char* getData = NULL;
+            if (0 == strncmp(sanityCheck, aBuffer, 5)) {
+                char *eourl = NULL;
+                char *start = &aBuffer[5];
+                char *getData = NULL;
                 int realFun = 0;
-                const char* crlf = "\015\012";
-                char* eoline = NULL;
-                FormData* fdGet = NULL;
+                const char *crlf = "\015\012";
+                char *eoline = NULL;
+                FormData *fdGet = NULL;
 
                 /*
-                ** Truncate the line if possible.
-                ** Only want first one.
-                */
+                 ** Truncate the line if possible.
+                 ** Only want first one.
+                 */
                 eoline = strstr(aBuffer, crlf);
-                if(NULL != eoline)
-                {
+                if (NULL != eoline) {
                     *eoline = '\0';
                 }
 
                 /*
-                ** Find the whitespace.
-                ** That is either end of line or the " HTTP/1.x" suffix.
-                ** We do not care.
-                */
-                for(eourl = start; 0 == isspace(*eourl) && '\0' != *eourl; eourl++)
-                {
+                 ** Find the whitespace.
+                 ** That is either end of line or the " HTTP/1.x" suffix.
+                 ** We do not care.
+                 */
+                for (eourl = start; 0 == isspace(*eourl) && '\0' != *eourl;
+                     eourl++) {
                     /*
-                    ** No body.
-                    */
+                     ** No body.
+                     */
                 }
 
                 /*
-                ** Cap it off.
-                ** Convert empty '/' to index.html.
-                */
+                 ** Cap it off.
+                 ** Convert empty '/' to index.html.
+                 */
                 *eourl = '\0';
-                if('\0' == *start)
-                {
+                if ('\0' == *start) {
                     strcpy(start, "index.html");
                 }
 
                 /*
-                ** Have we got any GET form data?
-                */
+                 ** Have we got any GET form data?
+                 */
                 getData = strchr(start, '?');
-                if(NULL != getData)
-                {
+                if (NULL != getData) {
                     /*
-                    ** Whack it off.
-                    */
+                     ** Whack it off.
+                     */
                     *getData = '\0';
                     getData++;
                 }
 
                 /*
-                **  Convert get data into a more useful format.
-                */
+                 **  Convert get data into a more useful format.
+                 */
                 fdGet = FormData_Create(getData);
-
                 /*
-                ** This is totally a hack, but oh well....
-                **
-                ** Send that the request was OK, regardless.
-                **
-                ** If we have any get data, then it is a set of options
-                **      we attempt to apply.
-                **
-                ** Other code will tell the user they were wrong or if
-                **      there was an error.
-                ** If the filename contains a ".png", then send the image
-                **      mime type, otherwise, say it is text/html. 
-                */
+                 ** This is totally a hack, but oh well....
+                 **
+                 ** Send that the request was OK, regardless.
+                 **
+                 ** If we have any get data, then it is a set of options
+                 **      we attempt to apply.
+                 **
+                 ** Other code will tell the user they were wrong or if
+                 **      there was an error.
+                 ** If the filename contains a ".png", then send the image
+                 **      mime type, otherwise, say it is text/html. 
+                 */
                 PR_fprintf(aFD, "HTTP/1.1 200 OK%s", crlf);
-                PR_fprintf(aFD, "Server: %s%s", "$Id: spacetrace.c,v 1.44 2003/06/05 19:56:05 alecf%flett.org Exp $", crlf);
+                PR_fprintf(aFD, "Server: %s%s",
+                           "$Id: spacetrace.c,v 1.45 2003/06/17 21:10:48 alecf%flett.org Exp $",
+                           crlf);
                 PR_fprintf(aFD, "Content-type: ");
-                if(NULL != strstr(start, ".png"))
-                {
+                if (NULL != strstr(start, ".png")) {
                     PR_fprintf(aFD, "image/png");
                 }
-                else if(NULL != strstr(start, ".jpg"))
-                {
+                else if (NULL != strstr(start, ".jpg")) {
                     PR_fprintf(aFD, "image/jpeg");
                 }
-                else if(NULL != strstr(start, ".txt"))
-                {
+                else if (NULL != strstr(start, ".txt")) {
                     PR_fprintf(aFD, "text/plain");
                 }
-                else if(NULL != strstr(start, ".css"))
-                {
+                else if (NULL != strstr(start, ".css")) {
                     PR_fprintf(aFD, "text/css");
                 }
-                else
-                {
+                else {
                     PR_fprintf(aFD, "text/html");
                 }
                 PR_fprintf(aFD, crlf);
-
                 /*
-                ** One more to seperate headers from content.
-                */
+                 ** One more to seperate headers from content.
+                 */
                 PR_fprintf(aFD, crlf);
-
                 /*
-                ** Ready for the real fun.
-                */
+                 ** Ready for the real fun.
+                 */
                 realFun = handleRequest(globals.mTMR, aFD, start, fdGet);
-                if(0 != realFun)
-                {
+                if (0 != realFun) {
                     REPORT_ERROR(__LINE__, handleRequest);
                 }
 
                 /*
-                **  Free off get data if around.
-                */
+                 **  Free off get data if around.
+                 */
                 FormData_Destroy(fdGet);
                 fdGet = NULL;
             }
-            else
-            {
+            else {
                 REPORT_ERROR(__LINE__, handleClient);
             }
         }
-        else
-        {
+        else {
             REPORT_ERROR(__LINE__, lineReader);
         }
 
         /*
-        ** Done with the connection.
-        */
+         ** Done with the connection.
+         */
         closeRes = PR_Close(aFD);
-        if(PR_SUCCESS != closeRes)
-        {
+        if (PR_SUCCESS != closeRes) {
             REPORT_ERROR(__LINE__, PR_Close);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, handleClient);
     }
 }
@@ -5848,155 +5792,143 @@ void handleClient(void* inArg)
 **
 ** Returns !0 on error.
 */
-int serverMode(void)
+int
+serverMode(void)
 {
     int retval = 0;
-    PRFileDesc* socket = NULL;
+    PRFileDesc *socket = NULL;
 
     /*
-    ** Create a socket.
-    */
+     ** Create a socket.
+     */
     socket = PR_NewTCPSocket();
-    if(NULL != socket)
-    {
+    if (NULL != socket) {
         PRStatus closeRes = PR_SUCCESS;
         PRNetAddr bindAddr;
         PRStatus bindRes = PR_SUCCESS;
 
         /*
-        ** Bind it to an interface/port.
-        ** Any interface.
-        */
+         ** Bind it to an interface/port.
+         ** Any interface.
+         */
         bindAddr.inet.family = PR_AF_INET;
-        bindAddr.inet.port = PR_htons((PRUint16)globals.mCommandLineOptions.mHttpdPort);
+        bindAddr.inet.port =
+            PR_htons((PRUint16) globals.mCommandLineOptions.mHttpdPort);
         bindAddr.inet.ip = PR_htonl(PR_INADDR_ANY);
-
         bindRes = PR_Bind(socket, &bindAddr);
-        if(PR_SUCCESS == bindRes)
-        {
+        if (PR_SUCCESS == bindRes) {
             PRStatus listenRes = PR_SUCCESS;
             const int backlog = 0x20;
 
             /*
-            ** Start listening for clients.
-            ** Give a decent backlog, some of our processing will take
-            **  a bit.
-            */
+             ** Start listening for clients.
+             ** Give a decent backlog, some of our processing will take
+             **  a bit.
+             */
             listenRes = PR_Listen(socket, backlog);
-            if(PR_SUCCESS == listenRes)
-            {
-                PRFileDesc* connection = NULL;
+            if (PR_SUCCESS == listenRes) {
+                PRFileDesc *connection = NULL;
                 int failureSum = 0;
                 char message[80];
 
                 /*
-                ** Output a little message saying we are receiving.
-                */
-                PR_snprintf(message, sizeof(message), "server accepting connections at http://localhost:%u/", globals.mCommandLineOptions.mHttpdPort);
+                 ** Output a little message saying we are receiving.
+                 */
+                PR_snprintf(message, sizeof(message),
+                            "server accepting connections at http://localhost:%u/",
+                            globals.mCommandLineOptions.mHttpdPort);
                 REPORT_INFO(message);
-
-                PR_fprintf(PR_STDOUT, "Peak memory used: %s bytes\n", FormatNumber(globals.mPeakMemoryUsed));
+                PR_fprintf(PR_STDOUT, "Peak memory used: %s bytes\n",
+                           FormatNumber(globals.mPeakMemoryUsed));
                 PR_fprintf(PR_STDOUT, "Total calls     : %s",
-                           FormatNumber(globals.mMallocCount + globals.mCallocCount + globals.mReallocCount));
-                PR_fprintf(PR_STDOUT, " [%s", FormatNumber(globals.mMallocCount));
-                PR_fprintf(PR_STDOUT, " + %s", FormatNumber(globals.mCallocCount));
-                PR_fprintf(PR_STDOUT, " + %s]\n", FormatNumber(globals.mReallocCount));
-
+                           FormatNumber(globals.mMallocCount +
+                                        globals.mCallocCount +
+                                        globals.mReallocCount));
+                PR_fprintf(PR_STDOUT, " [%s",
+                           FormatNumber(globals.mMallocCount));
+                PR_fprintf(PR_STDOUT, " + %s",
+                           FormatNumber(globals.mCallocCount));
+                PR_fprintf(PR_STDOUT, " + %s]\n",
+                           FormatNumber(globals.mReallocCount));
                 /*
-                **  Keep accepting until we know otherwise.
-                **
-                **  We do a thread per connection.
-                **  Up to the thread to close the connection when done.
-                **
-                **  This is known by me to be suboptimal, and I would rather
-                **      do a thread pool if it ever becomes a resource issue.
-                **  Any issues would simply point to a need to get
-                **      more machines or a beefier machine to handle the
-                **      requests, as well as a need to do thread pooling and
-                **      avoid thread creation overhead.
-                **  The threads are not tracked, except possibly by NSPR
-                **      itself and PR_Cleanup will wait on them all to exit as
-                **      user threads so our shared data is valid.
-                */
-                while(0 == retval)
-                {
-                    connection = PR_Accept(socket, NULL, PR_INTERVAL_NO_TIMEOUT);
-                    if(NULL != connection)
-                    {
-                        PRThread* clientThread = NULL;
+                 **  Keep accepting until we know otherwise.
+                 **
+                 **  We do a thread per connection.
+                 **  Up to the thread to close the connection when done.
+                 **
+                 **  This is known by me to be suboptimal, and I would rather
+                 **      do a thread pool if it ever becomes a resource issue.
+                 **  Any issues would simply point to a need to get
+                 **      more machines or a beefier machine to handle the
+                 **      requests, as well as a need to do thread pooling and
+                 **      avoid thread creation overhead.
+                 **  The threads are not tracked, except possibly by NSPR
+                 **      itself and PR_Cleanup will wait on them all to exit as
+                 **      user threads so our shared data is valid.
+                 */
+                while (0 == retval) {
+                    connection =
+                        PR_Accept(socket, NULL, PR_INTERVAL_NO_TIMEOUT);
+                    if (NULL != connection) {
+                        PRThread *clientThread = NULL;
 
                         /*
-                        **  Thread per connection.
-                        */
-                        clientThread = PR_CreateThread(
-                            PR_USER_THREAD, /* PR_Cleanup sync */
-                            handleClient,
-                            (void*)connection,
-                            PR_PRIORITY_NORMAL,
-                            PR_GLOBAL_THREAD, /* IO enabled */
-                            PR_UNJOINABLE_THREAD,
-                            0
-                            );
-
-                        if(NULL == clientThread)
-                        {
+                         **  Thread per connection.
+                         */
+                        clientThread = PR_CreateThread(PR_USER_THREAD,  /* PR_Cleanup sync */
+                                                       handleClient, (void *) connection, PR_PRIORITY_NORMAL, PR_GLOBAL_THREAD, /* IO enabled */
+                                                       PR_UNJOINABLE_THREAD,
+                                                       0);
+                        if (NULL == clientThread) {
                             PRStatus closeRes = PR_SUCCESS;
 
                             failureSum += __LINE__;
                             REPORT_ERROR(__LINE__, PR_Accept);
-
                             /*
-                            **  Close the connection as well, no service
-                            */
+                             **  Close the connection as well, no service
+                             */
                             closeRes = PR_Close(connection);
-                            if(PR_FAILURE == closeRes)
-                            {
+                            if (PR_FAILURE == closeRes) {
                                 REPORT_ERROR(__LINE__, PR_Close);
                             }
                         }
                     }
-                    else
-                    {
+                    else {
                         failureSum += __LINE__;
                         REPORT_ERROR(__LINE__, PR_Accept);
                     }
                 }
-             
-                if(0 != failureSum)
-                {
+
+                if (0 != failureSum) {
                     retval = __LINE__;
                 }
 
                 /*
-                ** Output a little message saying it is all over.
-                */
+                 ** Output a little message saying it is all over.
+                 */
                 REPORT_INFO("server no longer accepting connections....");
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, PR_Listen);
             }
         }
-        else
-        {
+        else {
             retval = __LINE__;
             REPORT_ERROR(__LINE__, PR_Bind);
         }
 
         /*
-        ** Done with socket.
-        */
+         ** Done with socket.
+         */
         closeRes = PR_Close(socket);
-        if(PR_SUCCESS != closeRes)
-        {
+        if (PR_SUCCESS != closeRes) {
             retval = __LINE__;
             REPORT_ERROR(__LINE__, PR_Close);
         }
         socket = NULL;
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, PR_NewTCPSocket);
     }
@@ -6009,12 +5941,12 @@ int serverMode(void)
 **
 ** Perform whatever batch requests we were asked to do.
 */
-int batchMode(void)
+int
+batchMode(void)
 {
     int retval = 0;
 
-    if(0 != globals.mCommandLineOptions.mBatchRequestCount)
-    {
+    if (0 != globals.mCommandLineOptions.mBatchRequestCount) {
         PRUint32 loop = 0;
         int failureSum = 0;
         int handleRes = 0;
@@ -6022,56 +5954,55 @@ int batchMode(void)
         PRUint32 sprintfRes = 0;
 
         /*
-        ** Go through and process the various files requested.
-        ** We do not stop on failure, as it is too costly to rerun the
-        **  batch job.
-        */
-        for(loop = 0; loop < globals.mCommandLineOptions.mBatchRequestCount; loop++)
-        {
-            sprintfRes = PR_snprintf(aFileName, sizeof(aFileName), "%s%c%s", globals.mCommandLineOptions.mOutputDir, PR_GetDirectorySeparator(), globals.mCommandLineOptions.mBatchRequest[loop]);
-            if((PRUint32)-1 != sprintfRes)
-            {
-                PRFileDesc* outFile = NULL;
-                
+         ** Go through and process the various files requested.
+         ** We do not stop on failure, as it is too costly to rerun the
+         **  batch job.
+         */
+        for (loop = 0;
+             loop < globals.mCommandLineOptions.mBatchRequestCount; loop++) {
+            sprintfRes =
+                PR_snprintf(aFileName, sizeof(aFileName), "%s%c%s",
+                            globals.mCommandLineOptions.mOutputDir,
+                            PR_GetDirectorySeparator(),
+                            globals.mCommandLineOptions.mBatchRequest[loop]);
+            if ((PRUint32) - 1 != sprintfRes) {
+                PRFileDesc *outFile = NULL;
+
                 outFile = PR_Open(aFileName, ST_FLAGS, ST_PERMS);
-                if(NULL != outFile)
-                {
+                if (NULL != outFile) {
                     PRStatus closeRes = PR_SUCCESS;
-                    
-                    handleRes = handleRequest(globals.mTMR, outFile, globals.mCommandLineOptions.mBatchRequest[loop], NULL);
-                    if(0 != handleRes)
-                    {
+
+                    handleRes =
+                        handleRequest(globals.mTMR, outFile,
+                                      globals.mCommandLineOptions.
+                                      mBatchRequest[loop], NULL);
+                    if (0 != handleRes) {
                         failureSum += __LINE__;
                         REPORT_ERROR(__LINE__, handleRequest);
                     }
-                    
+
                     closeRes = PR_Close(outFile);
-                    if(PR_SUCCESS != closeRes)
-                    {
+                    if (PR_SUCCESS != closeRes) {
                         failureSum += __LINE__;
                         REPORT_ERROR(__LINE__, PR_Close);
                     }
                 }
-                else
-                {
+                else {
                     failureSum += __LINE__;
                     REPORT_ERROR(__LINE__, PR_Open);
                 }
             }
-            else
-            {
+            else {
                 failureSum += __LINE__;
                 REPORT_ERROR(__LINE__, PR_snprintf);
             }
         }
 
-        if(0 != failureSum)
-        {
+        if (0 != failureSum) {
             retval = __LINE__;
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, outputReports);
     }
@@ -6085,74 +6016,73 @@ int batchMode(void)
 ** Perform the actual processing this program requires.
 ** Returns !0 on failure.
 */
-int doRun(void)
+int
+doRun(void)
 {
     int retval = 0;
 
     /*
-    ** Create the new trace-malloc reader.
-    */
+     ** Create the new trace-malloc reader.
+     */
     globals.mTMR = tmreader_new(globals.mProgramName, NULL);
-    if(NULL != globals.mTMR)
-    {
+    if (NULL != globals.mTMR) {
         int tmResult = 0;
         int outputResult = 0;
 
 #if defined(DEBUG_dp)
         PRIntervalTime start = PR_IntervalNow();
+
         fprintf(stderr, "DEBUG: reading tracemalloc data...\n");
 #endif
-        tmResult = tmreader_eventloop(globals.mTMR, globals.mCommandLineOptions.mFileName, tmEventHandler);
+        tmResult =
+            tmreader_eventloop(globals.mTMR,
+                               globals.mCommandLineOptions.mFileName,
+                               tmEventHandler);
 #if defined(DEBUG_dp)
-        fprintf(stderr, "DEBUG: reading tracemalloc data ends: %dms [%d allocations]\n",
-                PR_IntervalToMilliseconds(PR_IntervalNow() - start), globals.mRun.mAllocationCount);
+        fprintf(stderr,
+                "DEBUG: reading tracemalloc data ends: %dms [%d allocations]\n",
+                PR_IntervalToMilliseconds(PR_IntervalNow() - start),
+                globals.mRun.mAllocationCount);
 #endif
-        if(0 == tmResult)
-        {
+        if (0 == tmResult) {
             REPORT_ERROR(__LINE__, tmreader_eventloop);
             retval = __LINE__;
         }
 
-        if(0 == retval)
-        {
+        if (0 == retval) {
             /*
-            ** Decide if we're going into batch mode or server mode.
-            */
-            if(0 != globals.mCommandLineOptions.mBatchRequestCount)
-            {
+             ** Decide if we're going into batch mode or server mode.
+             */
+            if (0 != globals.mCommandLineOptions.mBatchRequestCount) {
                 /*
-                ** Output in one big step while everything still exists.
-                */
+                 ** Output in one big step while everything still exists.
+                 */
                 outputResult = batchMode();
-                if(0 != outputResult)
-                {
+                if (0 != outputResult) {
                     REPORT_ERROR(__LINE__, batchMode);
                     retval = __LINE__;
                 }
             }
-            else
-            {
+            else {
                 int serverRes = 0;
-                
+
                 /*
-                ** httpd time.
-                */
+                 ** httpd time.
+                 */
                 serverRes = serverMode();
-                if(0 != serverRes)
-                {
+                if (0 != serverRes) {
                     REPORT_ERROR(__LINE__, serverMode);
                     retval = __LINE__;
                 }
             }
-            
+
             /*
-            ** Clear our categorization tree
-            */
+             ** Clear our categorization tree
+             */
             freeCategories(&globals);
         }
     }
-    else
-    {
+    else {
         REPORT_ERROR(__LINE__, tmreader_new);
         retval = __LINE__;
     }
@@ -6160,7 +6090,8 @@ int doRun(void)
     return retval;
 }
 
-int initCaches(void)
+int
+initCaches(void)
 /*
 **  Initialize the global caches.
 **  More involved since we have to allocated/create some objects.
@@ -6170,72 +6101,65 @@ int initCaches(void)
 */
 {
     int retval = 0;
-    STContextCache* inCache = &globals.mContextCache;
+    STContextCache *inCache = &globals.mContextCache;
 
-    if(NULL != inCache && 0 != globals.mCommandLineOptions.mContexts)
-    {
+    if (NULL != inCache && 0 != globals.mCommandLineOptions.mContexts) {
         inCache->mLock = PR_NewLock();
-        if(NULL != inCache->mLock)
-        {
+        if (NULL != inCache->mLock) {
             inCache->mCacheMiss = PR_NewCondVar(inCache->mLock);
-            if(NULL != inCache->mCacheMiss)
-            {
-                inCache->mItems = (STContextCacheItem*)calloc(globals.mCommandLineOptions.mContexts, sizeof(STContextCacheItem));
-                if(NULL != inCache->mItems)
-                {
+            if (NULL != inCache->mCacheMiss) {
+                inCache->mItems =
+                    (STContextCacheItem *) calloc(globals.mCommandLineOptions.
+                                                  mContexts,
+                                                  sizeof(STContextCacheItem));
+                if (NULL != inCache->mItems) {
                     PRUint32 loop = 0;
                     char buffer[64];
 
-                    inCache->mItemCount = globals.mCommandLineOptions.mContexts;
-
+                    inCache->mItemCount =
+                        globals.mCommandLineOptions.mContexts;
                     /*
-                    **  Init each item as needed.
-                    */
-                    for(loop = 0; loop < inCache->mItemCount; loop++)
-                    {
+                     **  Init each item as needed.
+                     */
+                    for (loop = 0; loop < inCache->mItemCount; loop++) {
                         inCache->mItems[loop].mContext.mIndex = loop;
-
-                        PR_snprintf(buffer, sizeof(buffer), "Context Item %d RW Lock", loop);
-                        inCache->mItems[loop].mContext.mRWLock = PR_NewRWLock(PR_RWLOCK_RANK_NONE, buffer);
-                        if(NULL == inCache->mItems[loop].mContext.mRWLock)
-                        {
+                        PR_snprintf(buffer, sizeof(buffer),
+                                    "Context Item %d RW Lock", loop);
+                        inCache->mItems[loop].mContext.mRWLock =
+                            PR_NewRWLock(PR_RWLOCK_RANK_NONE, buffer);
+                        if (NULL == inCache->mItems[loop].mContext.mRWLock) {
                             break;
                         }
 #if ST_WANT_GRAPHS
-                        inCache->mItems[loop].mContext.mImageLock = PR_NewLock();
-                        if(NULL == inCache->mItems[loop].mContext.mImageLock)
-                        {
+                        inCache->mItems[loop].mContext.mImageLock =
+                            PR_NewLock();
+                        if (NULL == inCache->mItems[loop].mContext.mImageLock) {
                             break;
                         }
 #endif
                     }
 
-                    if(loop != inCache->mItemCount)
-                    {
+                    if (loop != inCache->mItemCount) {
                         retval = __LINE__;
                         REPORT_ERROR(__LINE__, initCaches);
                     }
                 }
-                else
-                {
+                else {
                     retval = __LINE__;
                     REPORT_ERROR(__LINE__, calloc);
                 }
             }
-            else
-            {
+            else {
                 retval = __LINE__;
                 REPORT_ERROR(__LINE__, PR_NewCondVar);
             }
         }
-        else
-        {
+        else {
             retval = __LINE__;
             REPORT_ERROR(__LINE__, PR_NewLock);
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, initCaches);
     }
@@ -6243,7 +6167,8 @@ int initCaches(void)
     return retval;
 }
 
-int destroyCaches(void)
+int
+destroyCaches(void)
 /*
 **  Clean up any global caches we have laying around.
 **
@@ -6252,25 +6177,21 @@ int destroyCaches(void)
 */
 {
     int retval = 0;
-    STContextCache* inCache = &globals.mContextCache;
+    STContextCache *inCache = &globals.mContextCache;
 
-    if(NULL != inCache)
-    {
+    if (NULL != inCache) {
         PRUint32 loop = 0;
 
         /*
-        **  Uninit item data one by one.
-        */
-        for(loop = 0; loop < inCache->mItemCount; loop++)
-        {
-            if(NULL != inCache->mItems[loop].mContext.mRWLock)
-            {
+         **  Uninit item data one by one.
+         */
+        for (loop = 0; loop < inCache->mItemCount; loop++) {
+            if (NULL != inCache->mItems[loop].mContext.mRWLock) {
                 PR_DestroyRWLock(inCache->mItems[loop].mContext.mRWLock);
                 inCache->mItems[loop].mContext.mRWLock = NULL;
             }
 #if ST_WANT_GRAPHS
-            if(NULL != inCache->mItems[loop].mContext.mImageLock)
-            {
+            if (NULL != inCache->mItems[loop].mContext.mImageLock) {
                 PR_DestroyLock(inCache->mItems[loop].mContext.mImageLock);
                 inCache->mItems[loop].mContext.mImageLock = NULL;
             }
@@ -6278,26 +6199,22 @@ int destroyCaches(void)
         }
 
         inCache->mItemCount = 0;
-        if(NULL != inCache->mItems)
-        {
+        if (NULL != inCache->mItems) {
             free(inCache->mItems);
             inCache->mItems = NULL;
         }
 
-        if(NULL != inCache->mCacheMiss)
-        {
+        if (NULL != inCache->mCacheMiss) {
             PR_DestroyCondVar(inCache->mCacheMiss);
             inCache->mCacheMiss = NULL;
         }
 
-        if(NULL != inCache->mLock)
-        {
+        if (NULL != inCache->mLock) {
             PR_DestroyLock(inCache->mLock);
             inCache->mLock = NULL;
         }
     }
-    else
-    {
+    else {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, destroyCaches);
     }
@@ -6310,7 +6227,8 @@ int destroyCaches(void)
 **
 ** Process entry and exit.
 */
-int main(int aArgCount, char** aArgArray)
+int
+main(int aArgCount, char **aArgArray)
 {
     int retval = 0;
     int optionsResult = 0;
@@ -6320,97 +6238,87 @@ int main(int aArgCount, char** aArgArray)
     int cacheResult = 0;
 
     /*
-    ** NSPR init.
-    */
+     ** NSPR init.
+     */
     PR_Init(PR_USER_THREAD, PR_PRIORITY_NORMAL, 0);
-
     /*
-    ** Initialize globals
-    */
+     ** Initialize globals
+     */
     memset(&globals, 0, sizeof(globals));
-
     /*
-    ** Set the program name.
-    */
+     ** Set the program name.
+     */
     globals.mProgramName = aArgArray[0];
-
     /*
-    ** Set the minimum timeval really high so other code
-    **  that checks the timeval will get it right.
-    */
+     ** Set the minimum timeval really high so other code
+     **  that checks the timeval will get it right.
+     */
     globals.mMinTimeval = ST_TIMEVAL_MAX;
-
     /*
-    ** Handle initializing options.
-    */
+     ** Handle initializing options.
+     */
     optionsResult = initOptions(aArgCount, aArgArray);
-    if(0 != optionsResult)
-    {
+    if (0 != optionsResult) {
         REPORT_ERROR(optionsResult, initOptions);
         retval = __LINE__;
     }
 
     /*
-    **  Initialize our caches.
-    */
+     **  Initialize our caches.
+     */
     cacheResult = initCaches();
-    if(0 != cacheResult)
-    {
+    if (0 != cacheResult) {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, initCaches);
     }
 
     /*
-    **  Small alloc code init.
-    */
-    globals.mCategoryRoot.runs = (STRun**)calloc(globals.mCommandLineOptions.mContexts, sizeof(STRun*));
-    if(NULL == globals.mCategoryRoot.runs)
-    {
+     **  Small alloc code init.
+     */
+    globals.mCategoryRoot.runs =
+        (STRun **) calloc(globals.mCommandLineOptions.mContexts,
+                          sizeof(STRun *));
+    if (NULL == globals.mCategoryRoot.runs) {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, calloc);
     }
 
     /*
-    ** Show help on usage if need be.
-    */
+     ** Show help on usage if need be.
+     */
     showedHelp = showHelp();
-
     /*
-    ** Only perform the run if everything is checking out.
-    */
-    if(0 == showedHelp && 0 == retval)
-    {
+     ** Only perform the run if everything is checking out.
+     */
+    if (0 == showedHelp && 0 == retval) {
         int runResult = 0;
 
         runResult = doRun();
-        if(0 != runResult)
-        {
+        if (0 != runResult) {
             REPORT_ERROR(runResult, doRun);
             retval = __LINE__;
         }
     }
 
-    if(0 != retval)
-    {
+    if (0 != retval) {
         REPORT_ERROR(retval, main);
     }
 
     /*
-    **  Have NSPR join all client threads we started.
-    */
+     **  Have NSPR join all client threads we started.
+     */
     prResult = PR_Cleanup();
-    if(PR_SUCCESS != prResult)
-    {
+    if (PR_SUCCESS != prResult) {
         REPORT_ERROR(retval, PR_Cleanup);
         retval = __LINE__;
     }
     /*
-    **  All threads are joined/done by this line.
-    */
+     **  All threads are joined/done by this line.
+     */
 
     /*
-    **  Options allocated a little.
-    */
+     **  Options allocated a little.
+     */
 #define ST_CMD_OPTION_STRING_PTR_ARRAY(option_name, option_genre, option_help) \
     if(NULL != globals.mCommandLineOptions.m##option_name) \
     { \
@@ -6421,29 +6329,26 @@ int main(int aArgCount, char** aArgArray)
 #include "stoptions.h"
 
     /*
-    **  globals has a small modification to clear up.
-    */
-    if(NULL != globals.mCategoryRoot.runs)
-    {
+     **  globals has a small modification to clear up.
+     */
+    if (NULL != globals.mCategoryRoot.runs) {
         free(globals.mCategoryRoot.runs);
         globals.mCategoryRoot.runs = NULL;
     }
 
     /*
-    **  Blow away our caches.
-    */
+     **  Blow away our caches.
+     */
     cacheResult = destroyCaches();
-    if(0 != cacheResult)
-    {
+    if (0 != cacheResult) {
         retval = __LINE__;
         REPORT_ERROR(__LINE__, initCaches);
     }
 
     /*
-    **  We are safe to kill our tmreader data.
-    */
-    if(NULL != globals.mTMR)
-    {
+     **  We are safe to kill our tmreader data.
+     */
+    if (NULL != globals.mTMR) {
         tmreader_destroy(globals.mTMR);
         globals.mTMR = NULL;
     }
