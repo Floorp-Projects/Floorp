@@ -1,9 +1,18 @@
-unix builds the windows classic skin, all of the unix sub directories are ignored, and exists as 
-placeholders for a future implementation.
+Welcome to the Classic Skin, a contemporary native look for Mozilla. 
 
-this is the classic skin (the original 6.0 skin)
+Notes:
 
-if you add to this, make sure you add to the other skin, otherwise when you
-switch skins, bad things will happen.
+Unix builds the Windows version, and all Unix subdirectories are ignored. Should get around to 
+removing them some day.
 
-questions to pixeljockeys@netscape.com 
+Many aspects of this skin have been tuned for optimum performance. Barring style sheet scoping
+work, the rules here are generally good. 
+
+Do NOT inject Dumb-Ass style rules into this skin, or I will hunt you down and kill you. 
+
+Do NOT inject Tabs into skins in this skin, even the Mac files, or I will hunt you down and kill you. Configure your editor to insert Tabs as spaces.
+
+This skin uses System Colours in the Windows version, and is slowly picking up System Colour usage in the Macintosh version as support is implemented. Please don't check in hard coded colour values into the Windows version or the Macintosh version where an appropriate System Colour exists. 
+
+Send comments and questions to <ben@netscape.com>
+
