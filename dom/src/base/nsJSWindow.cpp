@@ -92,59 +92,56 @@ static NS_DEFINE_IID(kIWindowEventOwnerIID, NS_IDOMWINDOWEVENTOWNER_IID);
 enum Window_slots {
   WINDOW_DOCUMENT = -1,
   WINDOW_PARENT = -2,
-  WINDOW_SCROLLBARS = -3,
-  WINDOW_FRAMES = -4,
-  WINDOW_NAME = -5,
-  WINDOW_SCROLLX = -6,
-  WINDOW_SCROLLY = -7,
-  WINDOWINTERNAL_WINDOW = -8,
-  WINDOWINTERNAL_SELF = -9,
-  WINDOWINTERNAL_NAVIGATOR = -10,
-  WINDOWINTERNAL_SCREEN = -11,
-  WINDOWINTERNAL_HISTORY = -12,
-  WINDOWINTERNAL_STATUSBAR = -13,
-  WINDOWINTERNAL_DIRECTORIES = -14,
-  WINDOWINTERNAL_CLOSED = -15,
-  WINDOWINTERNAL_CRYPTO = -16,
-  WINDOWINTERNAL_PKCS11 = -17,
-  WINDOWINTERNAL_OPENER = -18,
-  WINDOWINTERNAL_STATUS = -19,
-  WINDOWINTERNAL_DEFAULTSTATUS = -20,
-  WINDOWINTERNAL_LOCATION = -21,
-  WINDOWINTERNAL_TITLE = -22,
-  WINDOWINTERNAL_INNERWIDTH = -23,
-  WINDOWINTERNAL_INNERHEIGHT = -24,
-  WINDOWINTERNAL_OUTERWIDTH = -25,
-  WINDOWINTERNAL_OUTERHEIGHT = -26,
-  WINDOWINTERNAL_SCREENX = -27,
-  WINDOWINTERNAL_SCREENY = -28,
-  WINDOWINTERNAL_PAGEXOFFSET = -29,
-  WINDOWINTERNAL_PAGEYOFFSET = -30,
-  WINDOWEVENTOWNER_ONMOUSEDOWN = -31,
-  WINDOWEVENTOWNER_ONMOUSEUP = -32,
-  WINDOWEVENTOWNER_ONCLICK = -33,
-  WINDOWEVENTOWNER_ONMOUSEOVER = -34,
-  WINDOWEVENTOWNER_ONMOUSEOUT = -35,
-  WINDOWEVENTOWNER_ONKEYDOWN = -36,
-  WINDOWEVENTOWNER_ONKEYUP = -37,
-  WINDOWEVENTOWNER_ONKEYPRESS = -38,
-  WINDOWEVENTOWNER_ONMOUSEMOVE = -39,
-  WINDOWEVENTOWNER_ONFOCUS = -40,
-  WINDOWEVENTOWNER_ONBLUR = -41,
-  WINDOWEVENTOWNER_ONSUBMIT = -42,
-  WINDOWEVENTOWNER_ONRESET = -43,
-  WINDOWEVENTOWNER_ONCHANGE = -44,
-  WINDOWEVENTOWNER_ONSELECT = -45,
-  WINDOWEVENTOWNER_ONLOAD = -46,
-  WINDOWEVENTOWNER_ONUNLOAD = -47,
-  WINDOWEVENTOWNER_ONCLOSE = -48,
-  WINDOWEVENTOWNER_ONABORT = -49,
-  WINDOWEVENTOWNER_ONERROR = -50,
-  WINDOWEVENTOWNER_ONPAINT = -51,
-  WINDOWEVENTOWNER_ONDRAGDROP = -52,
-  WINDOWEVENTOWNER_ONRESIZE = -53,
-  WINDOWEVENTOWNER_ONSCROLL = -54,
-  ABSTRACTVIEW_DOCUMENT = -55
+  WINDOW_FRAMES = -3,
+  WINDOW_NAME = -4,
+  WINDOW_SCROLLX = -5,
+  WINDOW_SCROLLY = -6,
+  WINDOWINTERNAL_WINDOW = -7,
+  WINDOWINTERNAL_SELF = -8,
+  WINDOWINTERNAL_NAVIGATOR = -9,
+  WINDOWINTERNAL_SCREEN = -10,
+  WINDOWINTERNAL_HISTORY = -11,
+  WINDOWINTERNAL_CLOSED = -12,
+  WINDOWINTERNAL_CRYPTO = -13,
+  WINDOWINTERNAL_PKCS11 = -14,
+  WINDOWINTERNAL_OPENER = -15,
+  WINDOWINTERNAL_STATUS = -16,
+  WINDOWINTERNAL_DEFAULTSTATUS = -17,
+  WINDOWINTERNAL_LOCATION = -18,
+  WINDOWINTERNAL_TITLE = -19,
+  WINDOWINTERNAL_INNERWIDTH = -20,
+  WINDOWINTERNAL_INNERHEIGHT = -21,
+  WINDOWINTERNAL_OUTERWIDTH = -22,
+  WINDOWINTERNAL_OUTERHEIGHT = -23,
+  WINDOWINTERNAL_SCREENX = -24,
+  WINDOWINTERNAL_SCREENY = -25,
+  WINDOWINTERNAL_PAGEXOFFSET = -26,
+  WINDOWINTERNAL_PAGEYOFFSET = -27,
+  WINDOWEVENTOWNER_ONMOUSEDOWN = -28,
+  WINDOWEVENTOWNER_ONMOUSEUP = -29,
+  WINDOWEVENTOWNER_ONCLICK = -30,
+  WINDOWEVENTOWNER_ONMOUSEOVER = -31,
+  WINDOWEVENTOWNER_ONMOUSEOUT = -32,
+  WINDOWEVENTOWNER_ONKEYDOWN = -33,
+  WINDOWEVENTOWNER_ONKEYUP = -34,
+  WINDOWEVENTOWNER_ONKEYPRESS = -35,
+  WINDOWEVENTOWNER_ONMOUSEMOVE = -36,
+  WINDOWEVENTOWNER_ONFOCUS = -37,
+  WINDOWEVENTOWNER_ONBLUR = -38,
+  WINDOWEVENTOWNER_ONSUBMIT = -39,
+  WINDOWEVENTOWNER_ONRESET = -40,
+  WINDOWEVENTOWNER_ONCHANGE = -41,
+  WINDOWEVENTOWNER_ONSELECT = -42,
+  WINDOWEVENTOWNER_ONLOAD = -43,
+  WINDOWEVENTOWNER_ONUNLOAD = -44,
+  WINDOWEVENTOWNER_ONCLOSE = -45,
+  WINDOWEVENTOWNER_ONABORT = -46,
+  WINDOWEVENTOWNER_ONERROR = -47,
+  WINDOWEVENTOWNER_ONPAINT = -48,
+  WINDOWEVENTOWNER_ONDRAGDROP = -49,
+  WINDOWEVENTOWNER_ONRESIZE = -50,
+  WINDOWEVENTOWNER_ONSCROLL = -51,
+  ABSTRACTVIEW_DOCUMENT = -52
 };
 
 /***********************************************************************/
@@ -187,19 +184,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         if (NS_SUCCEEDED(rv)) {
           nsIDOMWindow* prop;
           rv = a->GetParent(&prop);
-          if (NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-          }
-        }
-        break;
-      }
-      case WINDOW_SCROLLBARS:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLBARS, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          rv = a->GetScrollbars(&prop);
           if (NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -344,46 +328,6 @@ GetWindowProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
           nsIDOMWindowInternal* b;
           if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
             rv = b->GetHistory(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case WINDOWINTERNAL_STATUSBAR:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_STATUSBAR, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          nsIDOMWindowInternal* b;
-          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
-            rv = b->GetStatusbar(&prop);
-            if(NS_SUCCEEDED(rv)) {
-            // get the js object
-            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
-            }
-            NS_RELEASE(b);
-          }
-          else {
-            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
-          }
-        }
-        break;
-      }
-      case WINDOWINTERNAL_DIRECTORIES:
-      {
-        rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DIRECTORIES, PR_FALSE);
-        if (NS_SUCCEEDED(rv)) {
-          nsIDOMBarProp* prop;
-          nsIDOMWindowInternal* b;
-          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
-            rv = b->GetDirectories(&prop);
             if(NS_SUCCEEDED(rv)) {
             // get the js object
             nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
@@ -2030,6 +1974,67 @@ WindowtopSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
 /***********************************************************************/
 //
+// scrollbars Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowscrollbarsGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLBARS, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMBarProp* prop;
+          rv = a->GetScrollbars(&prop);
+          if (NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// scrollbars Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowscrollbarsSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindow *a = (nsIDOMWindow*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOW_SCROLLBARS, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "scrollbars", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
 // _content Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2506,6 +2511,142 @@ WindowInternalpersonalbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *v
 
 /***********************************************************************/
 //
+// statusbar Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalstatusbarGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_STATUSBAR, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMBarProp* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetStatusbar(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// statusbar Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternalstatusbarSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_STATUSBAR, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "statusbar", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// directories Property Getter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternaldirectoriesGetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DIRECTORIES, PR_FALSE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+          nsIDOMBarProp* prop;
+          nsIDOMWindowInternal* b;
+          if (NS_OK == a->QueryInterface(kIWindowInternalIID, (void **)&b)) {
+            rv = b->GetDirectories(&prop);
+            if(NS_SUCCEEDED(rv)) {
+            // get the js object
+            nsJSUtils::nsConvertObjectToJSVal((nsISupports *)prop, cx, obj, vp);
+            }
+            NS_RELEASE(b);
+          }
+          else {
+            rv = NS_ERROR_DOM_WRONG_TYPE_ERR;
+          }
+
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
+// directories Property Setter
+//
+PR_STATIC_CALLBACK(JSBool)
+WindowInternaldirectoriesSetter(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
+{
+  nsIDOMWindowInternal *a = (nsIDOMWindowInternal*)nsJSUtils::nsGetNativeThis(cx, obj);
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == a) {
+    return JS_TRUE;
+  }
+
+  nsresult rv;
+  nsIScriptSecurityManager *secMan = nsJSUtils::nsGetSecurityManager(cx, obj);
+  if (!secMan)
+      return PR_FALSE;
+  rv = secMan->CheckScriptAccess(cx, obj, NS_DOM_PROP_WINDOWINTERNAL_DIRECTORIES, PR_TRUE);
+  if (NS_FAILED(rv)) {
+    return nsJSUtils::nsReportError(cx, obj, rv);
+  }
+
+
+  JS_DefineProperty(cx, obj, "directories", *vp, nsnull, nsnull, JSPROP_ENUMERATE);
+  return PR_TRUE;
+}
+
+/***********************************************************************/
+//
 // controllers Property Getter
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -2647,7 +2788,6 @@ static JSPropertySpec WindowProperties[] =
 {
   {"document",    WINDOW_DOCUMENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"parent",    WINDOW_PARENT,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"scrollbars",    WINDOW_SCROLLBARS,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"frames",    WINDOW_FRAMES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"name",    WINDOW_NAME,    JSPROP_ENUMERATE},
   {"scrollX",    WINDOW_SCROLLX,    JSPROP_ENUMERATE | JSPROP_READONLY},
@@ -2657,8 +2797,6 @@ static JSPropertySpec WindowProperties[] =
   {"navigator",    WINDOWINTERNAL_NAVIGATOR,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"screen",    WINDOWINTERNAL_SCREEN,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"history",    WINDOWINTERNAL_HISTORY,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"statusbar",    WINDOWINTERNAL_STATUSBAR,    JSPROP_ENUMERATE | JSPROP_READONLY},
-  {"directories",    WINDOWINTERNAL_DIRECTORIES,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"closed",    WINDOWINTERNAL_CLOSED,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"crypto",    WINDOWINTERNAL_CRYPTO,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {"pkcs11",    WINDOWINTERNAL_PKCS11,    JSPROP_ENUMERATE | JSPROP_READONLY},
@@ -2710,6 +2848,7 @@ static JSPropertySpec WindowProperties[] =
 static JSPropertySpec WindowReplaceableProperties[] =
 {
   {"top",    0,    JSPROP_ENUMERATE, WindowtopGetter, WindowtopSetter},
+  {"scrollbars",    0,    JSPROP_ENUMERATE, WindowscrollbarsGetter, WindowscrollbarsSetter},
   {"_content",    0,    JSPROP_ENUMERATE, WindowInternal_contentGetter, WindowInternal_contentSetter},
   {"sidebar",    0,    JSPROP_ENUMERATE, WindowInternalsidebarGetter, WindowInternalsidebarSetter},
   {"prompter",    0,    JSPROP_ENUMERATE, WindowInternalprompterGetter, WindowInternalprompterSetter},
@@ -2717,6 +2856,8 @@ static JSPropertySpec WindowReplaceableProperties[] =
   {"toolbar",    0,    JSPROP_ENUMERATE, WindowInternaltoolbarGetter, WindowInternaltoolbarSetter},
   {"locationbar",    0,    JSPROP_ENUMERATE, WindowInternallocationbarGetter, WindowInternallocationbarSetter},
   {"personalbar",    0,    JSPROP_ENUMERATE, WindowInternalpersonalbarGetter, WindowInternalpersonalbarSetter},
+  {"statusbar",    0,    JSPROP_ENUMERATE, WindowInternalstatusbarGetter, WindowInternalstatusbarSetter},
+  {"directories",    0,    JSPROP_ENUMERATE, WindowInternaldirectoriesGetter, WindowInternaldirectoriesSetter},
   {"controllers",    0,    JSPROP_ENUMERATE, WindowInternalcontrollersGetter, WindowInternalcontrollersSetter},
   {"length",    0,    JSPROP_ENUMERATE, WindowInternallengthGetter, WindowInternallengthSetter},
   {0}
