@@ -8,7 +8,7 @@ DLLNAMESTUB = libwebclientstub.so
 MOZILLA_TOP = ../../..
 DIST = ${MOZILLA_TOP}/dist
 LIBDIR = ${DIST}/lib
-CC = CC -g
+CC = gcc -g
 MKSHLIB = cc -G
 # WARNING: YOU NEED TO RUN 'gtk-config --cflags' and stick it in here
 GTKINCLUDES = -I/usr/openwin/include -I/opt/local/lib/glib/include -I/opt/local/include
@@ -19,7 +19,7 @@ JAVAINCLUDE = -I${JAVADIR}/include -I${JAVADIR}/include/solaris
 # For Solaris
 JAVALIBS = -L${JAVADIR}/jre/lib/sparc -ljava
 INCLUDE = ${JAVAINCLUDE} -I${DIST}/include -I${MOZILLA_TOP}/widget/src/gtk ${GTKINCLUDES} ${GTKMOZILLAINCLUDE}
-DEFINES = -D_REENTRANT -DNECKO -DXP_UNIX -DDEBUG_RAPTOR_CANVAS -DMOZ_DLL_SUFFIX=\".so\"
+DEFINES = -D_REENTRANT -DNECKO -DXP_UNIX -DNS_DEBUG -DDEBUG_RAPTOR_CANVAS -DMOZ_DLL_SUFFIX=\".so\"
 STUBDEFINES = -D_REENTRANT
 STUBINCLUDE = ${JAVAINCLUDE}
 STUBLIBS = ${JAVALIBS} /usr/lib/libC.so.5

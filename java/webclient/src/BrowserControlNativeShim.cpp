@@ -393,7 +393,7 @@ EmbeddedEventHandler (void * arg) {
 #endif
 
     // Don't loop here. The looping will be handled by a Java Thread 
-    // (see org.mozilla.webclient.motif.MozillaEventThread).
+    // (see org.mozilla.webclient.motif.NativeEventThread).
 #ifndef XP_UNIX	
     do {
         if (!processEventLoop(initContext)) {
@@ -428,7 +428,7 @@ InitEmbeddedEventHandler (WebShellInitContext* initContext)
     printf("InitEmbeddedEventHandler(%lx): Creating embedded thread...\n", initContext);
 #endif
     // Don't create a NSPR Thread on Unix, because we will use a Java Thread instead.
-    // (see org.mozilla.webclient.motif.MozillaEventThread).
+    // (see org.mozilla.webclient.motif.NativeEventThread).
 #ifndef XP_UNIX
     initContext->embeddedThread = ::PR_CreateThread(PR_SYSTEM_THREAD,
                                                     EmbeddedEventHandler,
@@ -773,38 +773,38 @@ Java_org_mozilla_webclient_BrowserControlNativeShim_nativeWebShellCreate (
     // This probably needs some explaining...
     // On Unix, instead of using a NSPR thread to manage our Mozilla event loop, we
     // use a Java Thread (for reasons I won't go into now, see 
-    // org.mozilla.webclient.motif.MozillaEventThread for more details). This java thread will 
+    // org.mozilla.webclient.motif.NativeEventThread for more details). This java thread will 
     // process any pending native events in 
-    // org.mozilla.webclient.motif.MozillaEventThread.processNativeEventQueue()
+    // org.mozilla.webclient.motif.NativeEventThread.processNativeEventQueue()
     // (see below). However, when processNativeEventQueue() gets called, it needs access to it's associated
     // WebShellInitContext structure in order to process any GTK / Mozilla related events. So what we
-    // do is we keep a static Hashtable inside the class MozillaEventThread to store mappings of
+    // do is we keep a static Hashtable inside the class NativeEventThread to store mappings of
     // gtkWindowID's to WebShellInitContext's (since there is one WebShellInitContext to one GTK Window). 
     // This is what this part of the code does:
     //
-    // 1) It first accesses the class org.mozilla.webclient.motif.MozillaEventThread
+    // 1) It first accesses the class org.mozilla.webclient.motif.NativeEventThread
     // 2) It then accesses a static method in this class called "storeContext()" which takes as
     //    arguments, a GTK window pointer and a WebShellInitContext pointer
     // 3) Then it invokes the method
-    // 4) Inside MozillaEventThread.run(), you can see the code which fetches the appropriate 
+    // 4) Inside NativeEventThread.run(), you can see the code which fetches the appropriate 
     //    WebShellInitContext and then calls processNativeEventQueue() with it below.
 
     // PENDING(mark): Should we cache this? Probably....
-    jclass mozillaEventThreadClass = env->FindClass("org/mozilla/webclient/motif/MozillaEventThread");
+    jclass mozillaEventThreadClass = env->FindClass("org/mozilla/webclient/motif/NativeEventThread");
 
     if (mozillaEventThreadClass == NULL) {
-        printf("Error: Cannot find class org.mozilla.webclient.motif.MozillaEventThread!\n");
+        printf("Error: Cannot find class org.mozilla.webclient.motif.NativeEventThread!\n");
 
-        ThrowExceptionToJava(env, "Error: Cannot find class org.mozilla.webclient.motif.MozillaEventThread!");
+        ThrowExceptionToJava(env, "Error: Cannot find class org.mozilla.webclient.motif.NativeEventThread!");
         return 0;
     }
 
     jmethodID storeMethodID = env->GetStaticMethodID(mozillaEventThreadClass, "storeContext", "(II)V");
 
     if (storeMethodID == NULL) {
-        printf("Error: Cannot get static method storeContext(int, int) from MozillaEventThread!\n");
+        printf("Error: Cannot get static method storeContext(int, int) from NativeEventThread!\n");
 
-        ThrowExceptionToJava(env, "Error: Cannot get static method storeContext(int, int) from MozillaEventThread!");
+        ThrowExceptionToJava(env, "Error: Cannot get static method storeContext(int, int) from NativeEventThread!");
         return 0;
     }
 
@@ -1534,7 +1534,7 @@ JNIEXPORT jboolean JNICALL
  * Method:    processNativeEventQueue
  * Signature: ()V
  */
-JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_MozillaEventThread_processNativeEventQueue
+JNIEXPORT void JNICALL Java_org_mozilla_webclient_motif_NativeEventThread_processNativeEventQueue
     (JNIEnv * env, jobject obj, jint webShellInitContextPtr) {
     // Given a WebShellInitContext pointer, process any pending Mozilla / GTK events
     WebShellInitContext * initContext = (WebShellInitContext *) webShellInitContextPtr;
