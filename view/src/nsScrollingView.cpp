@@ -541,7 +541,7 @@ NS_IMETHODIMP nsScrollingView :: SetPosition(nscoord aX, nscoord aY)
     if (scrolledView)
     {
       // Adjust the positions of the scrollbars and clip view's widget
-      AdjustChildWidgets(this, scrolledView, 0, 0, t2p);
+      AdjustChildWidgets(this, this, 0, 0, t2p);
     }
   
     if (nsnull != thiswin)
