@@ -114,7 +114,6 @@ nsDOMCSSAttributeDeclaration::GetCSSDeclaration(nsCSSDeclaration **aDecl,
         return NS_ERROR_OUT_OF_MEMORY;
       }
 
-      nsCOMPtr<nsICSSStyleRule> cssRule;
       result = NS_NewCSSStyleRule(getter_AddRefs(cssRule), nsnull, decl);
       if (NS_FAILED(result)) {
         decl->RuleAbort();
@@ -149,10 +148,11 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   *aCSSLoader = nsnull;
   *aCSSParser = nsnull;
 
-  nsINodeInfo *nodeInfo = mContent->GetNodeInfo();
-
-  // XXXbz GetOwnerDocument
-  nsIDocument* doc = nsContentUtils::GetDocument(nodeInfo);
+  nsIDocument* doc = mContent->GetOwnerDoc();
+  if (!doc) {
+    // document has been destroyed
+    return NS_ERROR_NOT_AVAILABLE;
+  }
 
   nsCOMPtr<nsIURI> baseURI = mContent->GetBaseURI();
   nsCOMPtr<nsIURI> sheetURI = doc->GetDocumentURI();
@@ -177,7 +177,7 @@ nsDOMCSSAttributeDeclaration::GetCSSParsingEnvironment(nsIURI** aSheetURI,
   // namespace.  If we're XHTML, we need to be case-sensitive Otherwise, we
   // should not be
   (*aCSSParser)->SetCaseSensitive(!mContent->IsContentOfType(nsIContent::eHTML) ||
-                                  nodeInfo->NamespaceEquals(kNameSpaceID_XHTML));
+                                  mContent->GetNodeInfo()->NamespaceEquals(kNameSpaceID_XHTML));
 
   baseURI.swap(*aBaseURI);
   sheetURI.swap(*aSheetURI);
