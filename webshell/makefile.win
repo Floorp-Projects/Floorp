@@ -26,6 +26,5 @@ DIRS=public        \
 !if !defined(DISABLE_TESTS)
      tests         \
 !endif
-     embed         \
      $(NULL)
 include <$(DEPTH)\config\rules.mak>
