@@ -96,7 +96,10 @@ nsCmdLineService::Initialize(int aArgc, char ** aArgv)
 
   // Save aArgc and argv
   mArgc = aArgc;
-  mArgv = aArgv;
+  mArgv = new char*[ aArgc ];
+  for(i=0; i<aArgc; i++) {
+    mArgv[i] = nsCRT::strdup( aArgv[i] ? aArgv[i] : "" );
+  }
   //Insert the program name 
   if (aArgc > 0 && aArgv[0])
   {
@@ -308,6 +311,15 @@ nsCmdLineService::~nsCmdLineService()
       nsMemory::Free(str);
     --curr;
   }
+
+  curr = mArgc;
+  while ( curr ) {
+    char *str = mArgv ? mArgv[curr-1] : 0;
+    if ( str )
+      nsMemory::Free( mArgv[curr-1] );
+    --curr;
+  }
+  delete [] mArgv;
 }
 
 NS_IMETHODIMP

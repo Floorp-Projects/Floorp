@@ -797,7 +797,10 @@ struct MessageWindow {
     // SendRequest: Pass string via WM_COPYDATA to message window.
     NS_IMETHOD SendRequest( const char *cmd ) {
         COPYDATASTRUCT cds = { 0, ::strlen( cmd ) + 1, (void*)cmd };
-        ::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
+        HWND newWin = (HWND)::SendMessage( mHandle, WM_COPYDATA, 0, (LPARAM)&cds );
+        if ( newWin ) {
+            ::SetForegroundWindow( newWin );
+        }
         return NS_OK;
     }
 
@@ -810,6 +813,11 @@ struct MessageWindow {
             printf( "Incoming request: %s\n", (const char*)cds->lpData );
 #endif
             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)cds->lpData );
+
+            // Get current window and return its window handle.
+            nsCOMPtr<nsIDOMWindowInternal> win;
+            GetMostRecentWindow( 0, getter_AddRefs( win ) );
+            return win ? (long)hwndForDOMWindow( win ) : 0;
  } else if ( msg == WM_USER ) {
      if ( lp == WM_RBUTTONUP ) {
          // Show menu with Exit disabled/enabled appropriately.
@@ -831,7 +839,7 @@ struct MessageWindow {
 
          switch (selectedItem) {
          case TURBO_NAVIGATOR:
-             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
+             (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -browser" );
              break;
          case TURBO_MAIL:
              (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla -mail" );
@@ -888,15 +896,10 @@ struct MessageWindow {
          }
          PostMessage(msgWindow, WM_NULL, 0, 0);
      } else if ( lp == WM_LBUTTONDBLCLK ) {
-         // Activate window or open a new one.
-         nsCOMPtr<nsIDOMWindowInternal> win;
-         GetMostRecentWindow( 0, getter_AddRefs( win ) );
-         if ( win ) {
-             activateWindow( win );
-         } else {
-            // This will do the default thing and open a new window.
-            (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
-         }
+         // Dbl-click will open nav/mailnews/composer based on prefs
+         // (if no windows are open), or, open nav (if some windows are
+         // already open).  That's done in HandleRequest.
+         (void)nsNativeAppSupportWin::HandleRequest( (LPBYTE)"mozilla" );
      }
   }
   return TRUE;
@@ -1357,14 +1360,6 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
       return;
     }
 
-    // try using the command line service to get the url
-    nsCString taskURL;
-    rv = GetStartupURL(args, taskURL);
-    if (NS_SUCCEEDED(rv) && NS_SUCCEEDED(nativeApp->EnsureProfile(args))) {
-      (void)OpenWindow(taskURL.get(), "");
-      return;
-    }
-
     // try for the "-kill" argument, to shut down the server
     rv = args->GetCmdLineValue( "-kill", getter_Copies(arg));
     if ( NS_SUCCEEDED(rv) && (const char*)arg ) {
@@ -1397,6 +1392,45 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     rv = args->GetCmdLineValue(MAPI_STARTUP_ARG, getter_Copies(arg));
     if (NS_SUCCEEDED(rv) && (const char*)arg) return;
 
+    // Try standard startup's command-line handling logic from nsAppRunner.cpp...
+
+    // Need profile before opening windows.
+    rv = nativeApp->EnsureProfile(args);
+    if (NS_FAILED(rv)) return;
+
+    // This will tell us whether the command line processing opened a window.
+    PRBool windowOpened = PR_FALSE;
+
+    // If there are no command line arguments, then we want to open windows
+    // based on startup prefs (which say to open navigator and/or mailnews
+    // and/or composer), or, open just a Navigator window.  We do the former
+    // if there are no open windows (i.e., we're in turbo mode), the latter
+    // if there are open windows.  Note that we call DoCommandLines in the
+    // case where there are no command line args but there are windows open
+    // (i.e., with heedStartupPrefs==PR_FALSE) despite the fact that it may
+    // not actually do anything in that case.  That way we're covered if the
+    // logic in DoCommandLines changes.  Note that we cover this case below
+    // by opening a navigator window if DoCommandLines doesn't open one.  We
+    // have to cover that case anyway, because DoCommandLines won't open a
+    // window when given "mozilla -foobar" or the like.
+    PRBool heedStartupPrefs = PR_FALSE;
+    PRInt32 argc = 0;
+    args->GetArgc( &argc );
+    if ( argc <= 1 ) {
+        // Use startup prefs iff there are no windows currently open.
+        nsCOMPtr<nsIDOMWindowInternal> win;
+        GetMostRecentWindow( 0, getter_AddRefs( win ) );
+        if ( !win ) {
+            heedStartupPrefs = PR_TRUE;
+        }
+    }
+
+    // Process command line options.
+    rv = DoCommandLines( args, heedStartupPrefs, &windowOpened );
+
+    // If a window was opened, then we're done.
+    // Note that we keep on trying in the unlikely event of an error.
+    if (windowOpened) return;
 
     // ok, no idea what the param is.
 #if MOZ_DEBUG_DDE
@@ -1406,9 +1440,6 @@ nsNativeAppSupportWin::HandleRequest( LPBYTE request, PRBool newWindow ) {
     const char * const contractID =
       "@mozilla.org/commandlinehandler/general-startup;1?type=browser";
     nsCOMPtr<nsICmdLineHandler> handler = do_GetService(contractID, &rv);
-    if (NS_FAILED(rv)) return;
-
-    rv = nativeApp->EnsureProfile(args);
     if (NS_FAILED(rv)) return;
 
     nsXPIDLString defaultArgs;
@@ -2068,27 +2099,3 @@ nsNativeAppSupportWin::OnLastWindowClosing( nsIXULWindow *aWindow ) {
 
     return NS_OK;
 }
-
-// go through the command line arguments, and try to load a handler
-// for one, and when we do, get the chrome URL for its task
-nsresult
-nsNativeAppSupportWin::GetStartupURL(nsICmdLineService *args, nsCString& taskURL)
-{
-    nsresult rv;
-
-    nsCOMPtr<nsICmdLineHandler> handler;
-
-    // see if there is a handler
-    rv = args->GetHandlerForParam(nsnull, getter_AddRefs(handler));
-    if (NS_FAILED(rv)) return rv;
-
-    // ok, from here on out, failures really are fatal
-    nsXPIDLCString url;
-    rv = handler->GetChromeUrlForTask(getter_Copies(url));
-    if (NS_FAILED(rv)) return rv;
-
-    taskURL.Assign(url.get());
-    return NS_OK;
-}
-
-

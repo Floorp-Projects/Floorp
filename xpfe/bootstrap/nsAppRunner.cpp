@@ -477,7 +477,7 @@ static void DumpArbitraryHelp()
 }
 
 static
-nsresult LaunchApplication(const char *aParam, PRInt32 height, PRInt32 width)
+nsresult LaunchApplication(const char *aParam, PRInt32 height, PRInt32 width, PRBool *windowOpened)
 {
   nsresult rv = NS_OK;
 
@@ -504,6 +504,11 @@ nsresult LaunchApplication(const char *aParam, PRInt32 height, PRInt32 width)
   else {
     rv = OpenWindow(chromeUrlForTask, width, height);
   }
+  
+  // If we get here without an error, then a window was opened OK.
+  if (NS_SUCCEEDED(rv)) {
+    *windowOpened = PR_TRUE;
+  }
 
   return rv;
 }
@@ -512,11 +517,12 @@ static nsresult
 LaunchApplicationWithArgs(const char *commandLineArg,
                           nsICmdLineService *cmdLineArgs,
                           const char *aParam,
-                          PRInt32 height, PRInt32 width)
+                          PRInt32 height, PRInt32 width, PRBool *windowOpened)
 {
   NS_ENSURE_ARG(commandLineArg);
   NS_ENSURE_ARG(cmdLineArgs);
   NS_ENSURE_ARG(aParam);
+  NS_ENSURE_ARG(windowOpened);
 
   nsresult rv;
 
@@ -568,6 +574,10 @@ LaunchApplicationWithArgs(const char *commandLineArg,
           rv = OpenWindow(cmdResult, width, height);
           if (NS_FAILED(rv)) return rv;
         }
+        // If we get here without an error, then a window was opened OK.
+        if (NS_SUCCEEDED(rv)) {
+          *windowOpened = PR_TRUE;
+        }
       }
       else {
         nsXPIDLString defaultArgs;
@@ -576,6 +586,8 @@ LaunchApplicationWithArgs(const char *commandLineArg,
 
         rv = OpenWindow(chromeUrlForTask, defaultArgs);
         if (NS_FAILED(rv)) return rv;
+        // Window was opened OK.
+        *windowOpened = PR_TRUE;
       }
     }
   }
@@ -589,6 +601,10 @@ LaunchApplicationWithArgs(const char *commandLineArg,
         rv = OpenWindow(cmdResult, width, height);
         if (NS_FAILED(rv)) return rv;
       }
+      // If we get here without an error, then a window was opened OK.
+      if (NS_SUCCEEDED(rv)) {
+        *windowOpened = PR_TRUE;
+      }
     }
   }
 
@@ -600,6 +616,7 @@ typedef struct
   nsIPref *prefs;
   PRInt32 height;
   PRInt32 width;
+  PRBool  windowOpened;
 } StartupClosure;
 
 static
@@ -635,7 +652,7 @@ void startupPrefEnumerationFunction(const char *prefName, void *data)
 #ifdef DEBUG_CMD_LINE
     printf("cmd line parameter = %s\n", param);
 #endif /* DEBUG_CMD_LINE */
-    rv = LaunchApplication(param, closure->height, closure->width);
+    rv = LaunchApplication(param, closure->height, closure->width, &closure->windowOpened);
   }
   return;
 }
@@ -658,7 +675,7 @@ static PRBool IsStartupCommand(const char *arg)
   return PR_FALSE;
 }
 
-static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs)
+static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref *prefs,  PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
 	nsresult rv;
 	PRInt32 height = nsIAppShellService::SIZE_TO_CONTENT;
@@ -686,16 +703,15 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
     closure.prefs = prefs;
     closure.height = height;
     closure.width = width;
+    closure.windowOpened = *windowOpened;
 
     prefs->EnumerateChildren(PREF_STARTUP_PREFIX, startupPrefEnumerationFunction,(void *)(&closure));
+    *windowOpened = closure.windowOpened;
   }
   else {
     PRInt32 argc = 0;
     rv = cmdLineArgs->GetArgc(&argc);
     if (NS_FAILED(rv)) return rv;
-
-    NS_ASSERTION(argc > 1, "we shouldn't be here if there were no command line arguments");
-    if (argc <= 1) return NS_ERROR_FAILURE;
 
     char **argv = nsnull;
     rv = cmdLineArgs->GetArgv(&argv);
@@ -720,7 +736,7 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
         // this can fail, as someone could do -foo, where -foo is not handled
         rv = LaunchApplicationWithArgs((const char *)(argv[i]),
                                        cmdLineArgs, command,
-                                       height, width);
+                                       height, width, windowOpened);
       }
     }
   }
@@ -729,14 +745,17 @@ static nsresult HandleArbitraryStartup( nsICmdLineService* cmdLineArgs, nsIPref 
 }
 
 // This should be done by app shell enumeration someday
-static nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs)
+nsresult DoCommandLines(nsICmdLineService* cmdLine, PRBool heedGeneralStartupPrefs, PRBool *windowOpened)
 {
+  NS_ENSURE_ARG( windowOpened );
+  *windowOpened = PR_FALSE;
+
   nsresult rv;
 
   nsCOMPtr<nsIPref> prefs(do_GetService(NS_PREF_CONTRACTID, &rv));
   if (NS_FAILED(rv)) return rv;
 
-  rv = HandleArbitraryStartup(cmdLine, prefs, heedGeneralStartupPrefs);
+  rv = HandleArbitraryStartup(cmdLine, prefs, heedGeneralStartupPrefs, windowOpened);
   return rv;
 }
 
@@ -1231,11 +1250,12 @@ static nsresult main1(int argc, char* argv[], nsISupports *nativeApp )
   // "general.startup.*" prefs
   // if we had no command line arguments, argc == 1.
 
+  PRBool windowOpened = PR_FALSE;
 #ifdef XP_MAC
   // if we do no command line args on the mac, it says argc is 0, and not 1
-  rv = DoCommandLines( cmdLineArgs, ((argc == 1) || (argc == 0)) );
+  rv = DoCommandLines( cmdLineArgs, ((argc == 1) || (argc == 0)), &windowOpened );
 #else
-  rv = DoCommandLines( cmdLineArgs, (argc == 1) );
+  rv = DoCommandLines( cmdLineArgs, (argc == 1), &windowOpened );
 #endif /* XP_MAC */
     NS_ASSERTION(NS_SUCCEEDED(rv), "failed to process command line");
   if ( NS_FAILED(rv) )
