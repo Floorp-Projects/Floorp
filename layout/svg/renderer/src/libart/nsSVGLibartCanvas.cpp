@@ -375,7 +375,46 @@ nsSVGLibartCanvas::PopClip()
     in float width, in float height); */
 NS_IMETHODIMP
 nsSVGLibartCanvas::SetClipRect(nsIDOMSVGMatrix *aCTM, float aX, float aY,
-                              float aWidth, float aHeight)
+                               float aWidth, float aHeight)
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+
+/** Implements pushSurface(in nsISVGRendereerSurface surface); */
+NS_IMETHODIMP
+nsSVGLibartCanvas::PushSurface(nsISVGRendererSurface *aSurface)
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements popSurface(); */
+NS_IMETHODIMP
+nsSVGLibartCanvas::PopSurface()
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
+                                      in unsigned long x, in unsigned long y,
+                                      in float opacity); */
+NS_IMETHODIMP
+nsSVGLibartCanvas::CompositeSurface(nsISVGRendererSurface *aSurface,
+                                    PRUint32 aX, PRUint32 aY, float aOpacity)
+{
+  // XXX
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+/** Implements  void compositeSurface(in nsISVGRendererSurface surface,
+                                      in nsIDOMSVGMatrix canvasTM,
+                                      in float opacity); */
+NS_IMETHODIMP
+nsSVGLibartCanvas::CompositeSurfaceMatrix(nsISVGRendererSurface *aSurface,
+                                          nsIDOMSVGMatrix *aCTM, float aOpacity)
 {
   // XXX
   return NS_ERROR_NOT_IMPLEMENTED;

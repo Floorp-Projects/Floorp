@@ -51,6 +51,7 @@ using namespace Gdiplus;
 #include "nsSVGGDIPlusGlyphMetrics.h"
 #include "nsSVGGDIPlusCanvas.h"
 #include "nsSVGGDIPlusRegion.h"
+#include "nsSVGGDIPlusSurface.h"
 
 void NS_InitSVGGDIPlusGlyphMetricsGlobals();
 void NS_FreeSVGGDIPlusGlyphMetricsGlobals();
@@ -187,3 +188,10 @@ nsSVGRendererGDIPlus::CreateRectRegion(float x, float y, float width, float heig
   return NS_NewSVGGDIPlusRectRegion(_retval, x, y, width, height);
 }
 
+/** Implements nsISVGRendererSurface createSurface(in float width, in float height); */
+NS_IMETHODIMP
+nsSVGRendererGDIPlus::CreateSurface(PRUint32 width, PRUint32 height,
+                                    nsISVGRendererSurface **_retval)
+{
+  return NS_NewSVGGDIPlusSurface(_retval, width, height);
+}

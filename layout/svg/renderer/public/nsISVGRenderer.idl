@@ -52,6 +52,7 @@ interface nsISVGRendererPathGeometry;
 interface nsISVGRendererGlyphMetrics;
 interface nsISVGRendererGlyphGeometry;
 interface nsISVGRendererCanvas;
+interface nsISVGRendererSurface;
 interface nsIRenderingContext;
 interface nsISVGRendererRegion;
 interface nsPresContext;
@@ -75,7 +76,7 @@ interface nsPresContext;
  * cross-platform libart engine
  * ("@mozilla.org/svg/renderer;1?tech=LIBART").
  */
-[scriptable, uuid(8a1398db-fb25-4711-85fc-4f5665ea7d17)]
+[scriptable, uuid(14e914e0-f283-4fd0-9d71-d3e842927007)]
 interface nsISVGRenderer : nsISupports
 {
   // void Init(in nsPresContext presContext);
@@ -136,6 +137,16 @@ interface nsISVGRenderer : nsISupports
    * @return A rendering engine-native region object.
    */
   nsISVGRendererRegion createRectRegion(in float x, in float y, in float width, in float height);
+
+  /**
+   * Create a rendering engine-native surface object.
+   *
+   * @param width Width of rectangle (pixels).
+   * @param height Height of rectangle (pixels).
+   *
+   * @return A rendering engine-native surface object.
+   */
+  [noscript] nsISVGRendererSurface createSurface(in unsigned long width, in unsigned long height);
 };
 
 /** @} */

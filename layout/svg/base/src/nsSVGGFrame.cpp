@@ -38,6 +38,12 @@
 
 #include "nsIDOMSVGTransformable.h"
 #include "nsSVGDefsFrame.h"
+#include "nsISVGRenderer.h"
+#include "nsISVGRendererSurface.h"
+#include "nsISVGOuterSVGFrame.h"
+#include "nsISVGRendererCanvas.h"
+#include "nsIFrame.h"
+#include <math.h>
 
 typedef nsSVGDefsFrame nsSVGGFrameBase;
 
@@ -83,12 +89,47 @@ NS_NewSVGGFrame(nsIPresShell* aPresShell, nsIContent* aContent, nsIFrame** aNewF
 NS_IMETHODIMP
 nsSVGGFrame::Paint(nsISVGRendererCanvas* canvas, const nsRect& dirtyRectTwips)
 {
+  nsCOMPtr<nsISVGRendererSurface> surface;
+
+  const nsStyleDisplay *display = mStyleContext->GetStyleDisplay();
+  if (display->mOpacity == 0.0)
+    return NS_OK;
+
+  if (display->mOpacity != 1.0) {
+    nsISVGOuterSVGFrame* outerSVGFrame = GetOuterSVGFrame();
+    if (outerSVGFrame) {
+      nsIFrame *frame = nsnull;
+      CallQueryInterface(outerSVGFrame, &frame);
+
+      if (frame) {
+        nsSize size = frame->GetSize();
+        float p2t = GetPresContext()->ScaledPixelsToTwips();
+        PRUint32 width = (PRUint32)ceil(size.width/p2t);
+        PRUint32 height = (PRUint32)ceil(size.height/p2t);
+        
+        nsCOMPtr<nsISVGRenderer> renderer;
+        outerSVGFrame->GetRenderer(getter_AddRefs(renderer));
+        if (renderer)
+          renderer->CreateSurface(width, height, getter_AddRefs(surface));
+        if (surface) {
+          if (NS_FAILED(canvas->PushSurface(surface)))
+            surface = nsnull;
+        }
+      }
+    }
+  }
+
   for (nsIFrame* kid = mFrames.FirstChild(); kid;
        kid = kid->GetNextSibling()) {
     nsISVGChildFrame* SVGFrame=nsnull;
     kid->QueryInterface(NS_GET_IID(nsISVGChildFrame),(void**)&SVGFrame);
     if (SVGFrame)
       SVGFrame->Paint(canvas, dirtyRectTwips);
+  }
+
+  if (surface) {
+    canvas->PopSurface();
+    canvas->CompositeSurface(surface, 0, 0, display->mOpacity);
   }
 
   return NS_OK;
