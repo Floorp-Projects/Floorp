@@ -2749,18 +2749,6 @@ SI_FindValueInArgs(nsAutoString results, char* name) {
     return value.ToNewCString();
 }
 
-PUBLIC void
-SI_MakeDialog(char* S) {
-  nsFileSpec dialogPath("res");
-  dialogPath += "samples";
-  dialogPath += "htmldlgs.htm";
-  nsOutputFileStream strm(dialogPath);
-  strm << S;
-//strm.write(S, PL_strlen(S));
-  strm.flush();
-  strm.close();
-}
-
 extern void
 Wallet_SignonViewerReturn (nsAutoString results);
 
@@ -2912,9 +2900,23 @@ SINGSIGN_GetRejectListForViewer(nsString& aRejectList)
     PR_FREEIF(buffer);
 }
 
-#define BUFLEN 50000
 extern void Wallet_GetNocaptureListForViewer(nsString& aNocaptureList);
 extern void Wallet_GetNopreviewListForViewer(nsString& aNopreviewList);
+
+#ifdef xxx
+#define BUFLEN 50000
+
+PUBLIC void
+SI_MakeDialog(char* S) {
+  nsFileSpec dialogPath("res");
+  dialogPath += "samples";
+  dialogPath += "htmldlgs.htm";
+  nsOutputFileStream strm(dialogPath);
+  strm << S;
+//strm.write(S, PL_strlen(S));
+  strm.flush();
+  strm.close();
+}
 
 PUBLIC void
 SINGSIGN_DisplaySignonInfoAsHTML()
@@ -3518,6 +3520,28 @@ SINGSIGN_DisplaySignonInfoAsHTML()
     SI_MakeDialog(buffer);
     PR_FREEIF(buffer);
 }
+
+#else // not xxx
+PUBLIC void
+SINGSIGN_DisplaySignonInfoAsHTML()
+{
+#ifdef APPLE_KEYCHAIN
+    /* If the Keychain has been locked or an item deleted or updated,
+       we need to reload the signon data */
+    if (si_list_invalid)
+    {
+            /* set si_list_invalid to PR_FALSE first because si_RemoveAllSignonData
+               calls si_GetSignonRememberingPref */
+        si_list_invalid = PR_FALSE;
+        si_RemoveAllSignonData();
+        SI_LoadSignonData(TRUE);
+    }
+#endif
+
+    /* force loading of the signons file */
+    si_RegisterSignonPrefCallbacks();
+}
+#endif
 
 #else
 #include "prtypes.h"

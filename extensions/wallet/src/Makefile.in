@@ -42,4 +42,6 @@ EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))
 include $(topsrcdir)/config/rules.mk
 
 install::
+	$(INSTALL) $(srcdir)/WalletPreview.html $(DIST)/bin/res/samples
+	$(INSTALL) $(srcdir)/SignonViewer.html $(DIST)/bin/res/samples
 	$(INSTALL) $(srcdir)/wallet.properties $(DIST)/bin/res

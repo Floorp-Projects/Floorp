@@ -77,4 +77,6 @@ clobber::
 
 install:: $(DLL)
 		$(MAKE_INSTALL) .\$(OBJDIR)\$(DLLNAME).dll $(DIST)\bin\components
+		$(MAKE_INSTALL) WalletPreview.html $(DIST)\bin\res\samples
+		$(MAKE_INSTALL) SignonViewer.html $(DIST)\bin\res\samples
 		$(MAKE_INSTALL) wallet.properties $(DIST)\bin\res

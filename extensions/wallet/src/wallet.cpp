@@ -1640,16 +1640,17 @@ WLLT_GetPrefillListForViewer(nsString& aPrefillList)
   PR_FREEIF(buffer);
 }
 
-#define BUFLEN 50000
-
-extern void
-SI_MakeDialog(char* S);
-
 extern PRBool
 SI_InSequence(char* sequence, int number);
 
 extern char*
 SI_FindValueInArgs(nsAutoString results, char* name);
+
+#ifdef xxx
+extern void
+SI_MakeDialog(char* S);
+
+#define BUFLEN 50000
 
 void
 wallet_RequestToPrefill(XP_List * list, nsString url) {
@@ -1832,6 +1833,7 @@ wallet_RequestToPrefill(XP_List * list, nsString url) {
   SI_MakeDialog(buffer);
   PR_FREEIF(buffer);
 }
+#endif
 
 #define WALLET_EDITOR_NAME "walleted.html"
 // bad!!! should pass the above URL as parameter to wallet_PostEdit
@@ -2376,7 +2378,9 @@ WLLT_Prefill(nsIPresShell* shell, nsString url, PRBool quick) {
     /* let user preview and verify the prefills first */
     wallet_list = wallet_PrefillElement_list;
     wallet_url = url;
+#ifdef xxx
     wallet_RequestToPrefill(wallet_PrefillElement_list, url);
+#endif
 #ifdef DEBUG
 wallet_DumpStopwatch();
 wallet_ClearStopwatch();

@@ -124,7 +124,7 @@ NS_IMETHODIMP nsSignonCore::ShowWindow(nsIDOMWindow* aCurrentFrontWin)
     window = nsnull;
 
     nsCOMPtr<nsIURL> urlObj;
-    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/htmldlgs.htm");
+    rv = NS_NewURL(getter_AddRefs(urlObj), "resource://res/samples/SignonViewer.html");
     if (NS_FAILED(rv))
         return rv;
 

@@ -1,0 +1,146 @@
+<HTML>
+<HEAD>
+  <TITLE>Pre-Filling</TITLE>
+  <SCRIPT language="javascript" src="WalletWindow.js"></SCRIPT>
+  <SCRIPT>
+    index_frame = 0;
+    title_frame = 1;
+    list_frame = 2;
+    button_frame = 3;
+    var prefillList = [];
+
+    function loadFillins(){
+      top.frames[title_frame].document.open();
+      top.frames[title_frame].document.write
+        ("&nbsp;Following items can be pre-filled for you.");
+      top.frames[title_frame].document.close();
+
+      top.frames[list_frame].document.open();
+      top.frames[list_frame].document.write(
+        "<FORM name=fSelectFillin>" +
+          "<BR>" +
+          "<TABLE BORDER=0>" +
+            "<TR>" +
+              "<TD>" +
+                "<BR>" 
+      )
+      var count;
+      for (i=1; i<prefillList.length-2; i+=3) {
+        if(prefillList[i] != 0) {
+          count = prefillList[i];
+          top.frames[list_frame].document.write(
+                "<TR>" +
+                  "<TD>" + prefillList[i+1] + ":  </TD>" +
+                  "<TD>" +
+                    "<SELECT>" 
+          )
+          count--;
+        }
+        top.frames[list_frame].document.write(
+                      "<OPTION VALUE=\""+prefillList[i+1]+"\">" +
+                        prefillList[i+2] +
+                      "</OPTION>" 
+        )
+        if(count == 0) {
+          top.frames[list_frame].document.write(
+                      "<OPTION VALUE=\""+prefillList[i+1]+"\"></OPTION>" +
+                    "</SELECT><BR>" +
+                  "</TD>" +
+                "</TR>" 
+          )
+        }
+      }
+      top.frames[list_frame].document.write(
+              "</TD>" +
+            "</TR>" +
+          "</TABLE>" +
+        "</FORM>"
+      );
+      top.frames[list_frame].document.close();
+    };
+
+    function loadButtons(){
+      top.frames[button_frame].document.open();
+      top.frames[button_frame].document.write(
+        "<FORM name=buttons>" +
+          "<BR>" +
+          "<INPUT type=CHECKBOX name=skip> Bypass this screen when prefilling this form in the future" +
+          "<BR>" +
+          "<BR>" +
+          "<DIV align=center>" +
+            "<INPUT type=BUTTON value=OK width=80 onclick=parent.Save()>" +
+            " &nbsp;&nbsp;" +
+            "<INPUT type=BUTTON value=Cancel width=80 onclick=parent.DoCancel()>" +
+          "</DIV>" +
+          "<INPUT TYPE=HIDDEN NAME=fillins VALUE=\" \" SIZE=-1>" +
+          "<INPUT TYPE=HIDDEN NAME=list VALUE=\" \" SIZE=-1>" +
+          "<INPUT TYPE=HIDDEN NAME=url VALUE=\" \" SIZE=-1>" +
+        "</FORM>"
+      );
+      top.frames[button_frame].document.close();
+    }
+
+    function loadFrames(){
+      StartUp("Wallet");
+      list = DoGetPrefillList();
+      BREAK = list[0];
+      prefillList = list.split(BREAK);
+      loadFillins();
+      loadButtons();
+    }
+
+    function Save(){
+      selname = top.frames[list_frame].document.fSelectFillin;
+      var list = top.frames[button_frame].document.buttons.list;
+      var url = top.frames[button_frame].document.buttons.url;
+      var skip = top.frames[button_frame].document.buttons.skip;
+      list.value = prefillList[prefillList.length-2];
+      url.value = "prefillList[prefillList.length-1]";
+      var fillins = top.frames[button_frame].document.buttons.fillins;
+      fillins.value = "";
+      for (i=0; i<selname.length; i++) {
+        fillins.value = fillins.value +
+          selname.elements[i].options[selname.elements[i].selectedIndex].value + "#*%&" +
+          selname.elements[i].options[selname.elements[i].selectedIndex].text + "#*%&";
+      }
+      var result = "|list|"+list.value+"|fillins|"+fillins.value;
+      result += "|url|"+url.value+"|skip|"+skip.checked+"|";
+      DoSave(result);
+    }
+
+  </SCRIPT>
+</HEAD>
+<FRAMESET ROWS = 25,25,*,75
+         BORDER=0
+         FRAMESPACING=0
+         onLoad=loadFrames()>
+  <FRAME SRC=about:blank
+        NAME=index_frame
+        SCROLLING=NO
+        MARGINWIDTH=1
+        MARGINHEIGHT=1
+        NORESIZE>
+  <FRAME SRC=about:blank
+        NAME=title_frame
+        SCROLLING=NO
+        MARGINWIDTH=1
+        MARGINHEIGHT=1
+        NORESIZE>
+    <FRAME SRC=about:blank
+          NAME=list_frame
+          SCROLLING=AUTO
+          MARGINWIDTH=0
+          MARGINHEIGHT=0
+          NORESIZE>
+  <FRAME SRC=about:blank
+        NAME=button_frame
+        SCROLLING=NO
+        MARGINWIDTH=1
+        MARGINHEIGHT=1
+        NORESIZE>
+</FRAMESET>
+
+<NOFRAMES>
+  <BODY> <BR> </BODY>
+</NOFRAMES>
+</HTML>
