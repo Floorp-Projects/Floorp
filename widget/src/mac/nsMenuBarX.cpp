@@ -53,6 +53,8 @@
 #include <Appearance.h>
 #include "nsMacResources.h"
 
+#include "nsGUIEvent.h"
+
 // CIDs
 #include "nsWidgetsCID.h"
 static NS_DEFINE_CID(kMenuBarCID, NS_MENUBAR_CID);

@@ -38,6 +38,8 @@
 #include "nsIDocument.h"
 #include "nsIDOMDocument.h"
 
+#include "nsGUIEvent.h"
+
 #include "nsStringUtil.h"
 
 
