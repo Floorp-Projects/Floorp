@@ -92,7 +92,6 @@ nsWindow::nsWindow() : nsBaseWidget()
     mIsAltDown          = PR_FALSE;
     mIsDestroying       = PR_FALSE;
     mOnDestroyCalled    = PR_FALSE;
-    mTooltip            = NULL;
     mDeferredPositioner = NULL;
     mLastPoint.x        = 0;
     mLastPoint.y        = 0;
@@ -219,50 +218,6 @@ NS_METHOD nsWindow::EndResizingChildren(void)
   return NS_OK;
 }
 
-// DoCreateTooltip - creates a tooltip control and adds some tools  
-//     to it. 
-// Returns the handle of the tooltip control if successful or NULL
-//     otherwise. 
-// hwndOwner - handle of the owner window 
-// 
-
-void nsWindow::AddTooltip(HWND hwndOwner,nsRect* aRect, int aId) 
-{ 
-    TOOLINFO ti;    // tool information
-    memset(&ti, 0, sizeof(TOOLINFO));
-  
-    // Make sure the common control DLL is loaded
-    InitCommonControls(); 
- 
-    // Create a tooltip control for the window if needed
-    if (mTooltip == (HWND) NULL) {
-        mTooltip = CreateWindow(TOOLTIPS_CLASS, (LPSTR) NULL, TTS_ALWAYSTIP, 
-        CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, CW_USEDEFAULT, 
-        NULL, (HMENU) NULL, 
-        nsToolkit::mDllInstance,
-        NULL);
-    }
- 
-    if (mTooltip == (HWND) NULL) 
-        return;
-
-    ti.cbSize = sizeof(TOOLINFO); 
-    ti.uFlags = TTF_SUBCLASS;
-    ti.hwnd = hwndOwner; 
-    ti.hinst = nsToolkit::mDllInstance; 
-    ti.uId = aId;
-    ti.lpszText = (LPSTR)" "; // must set text to 
-                              // something for tooltip to give events; 
-    ti.rect.left = aRect->x; 
-    ti.rect.top = aRect->y; 
-    ti.rect.right = aRect->x + aRect->width; 
-    ti.rect.bottom = aRect->y + aRect->height; 
-
-    if (!SendMessage(mTooltip, TTM_ADDTOOL, 0, 
-            (LPARAM) (LPTOOLINFO) &ti)) 
-        return; 
-}
-
 NS_METHOD nsWindow::WidgetToScreen(const nsRect& aOldRect, nsRect& aNewRect)
 {
   POINT point;
@@ -288,79 +243,6 @@ NS_METHOD nsWindow::ScreenToWidget(const nsRect& aOldRect, nsRect& aNewRect)
   aNewRect.height = aOldRect.height;
   return NS_OK;
 } 
-
-//-------------------------------------------------------------------------
-//
-// Setup initial tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
-{
-  RemoveTooltips();
-  for (int i = 0; i < (int)aNumberOfTips; i++) {
-    AddTooltip(mWnd, aTooltipAreas[i], i);
-  }
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Update all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::UpdateTooltips(nsRect* aNewTips[])
-{
-  TOOLINFO ti;
-  memset(&ti, 0, sizeof(TOOLINFO));
-  ti.cbSize = sizeof(TOOLINFO);
-  ti.hwnd = mWnd;
-  // Get the number of tooltips
-  UINT count = ::SendMessage(mTooltip, TTM_GETTOOLCOUNT, 0, 0); 
-  NS_ASSERTION(count > 0, "Called UpdateTooltips before calling SetTooltips");
-
-  for (UINT i = 0; i < count; i++) {
-    ti.uId = i;
-    int result =::SendMessage(mTooltip, TTM_ENUMTOOLS, i, (LPARAM) (LPTOOLINFO)&ti);
-
-    nsRect* newTip = aNewTips[i];
-    ti.rect.left    = newTip->x; 
-    ti.rect.top     = newTip->y; 
-    ti.rect.right   = newTip->x + newTip->width; 
-    ti.rect.bottom  = newTip->y + newTip->height; 
-    ::SendMessage(mTooltip, TTM_NEWTOOLRECT, 0, (LPARAM) (LPTOOLINFO)&ti);
-
-  }
-  return NS_OK;
-}
-
-//-------------------------------------------------------------------------
-//
-// Remove all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsWindow::RemoveTooltips()
-{
-  TOOLINFO ti;
-  memset(&ti, 0, sizeof(TOOLINFO));
-  ti.cbSize = sizeof(TOOLINFO);
-  long val;
-
-  if (mTooltip == NULL)
-    return NS_ERROR_FAILURE;
-
-  // Get the number of tooltips
-  UINT count = ::SendMessage(mTooltip, TTM_GETTOOLCOUNT, 0, (LPARAM)&val); 
-  for (UINT i = 0; i < count; i++) {
-    ti.uId = i;
-    ti.hwnd = mWnd;
-    ::SendMessage(mTooltip, TTM_DELTOOL, 0, (LPARAM) (LPTOOLINFO)&ti);
-  }
-  return NS_OK;
-}
-
 
 //-------------------------------------------------------------------------
 //
@@ -2364,19 +2246,6 @@ PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT 
               }
               break;
 
-              case TTN_SHOW: {
-                  nsTooltipEvent event;
-                  InitEvent(event, NS_SHOW_TOOLTIP);
-                  event.tipIndex = (PRUint32)wParam;
-                  event.eventStructType = NS_TOOLTIP_EVENT;
-                  result = DispatchWindowEvent(&event);
-                  NS_RELEASE(event.widget);
-              }
-              break;
-
-              case TTN_POP:
-                result = DispatchStandardEvent(NS_HIDE_TOOLTIP);
-                break;
             }
           }
           break;
@@ -3036,12 +2905,6 @@ void nsWindow::OnDestroy()
     if (mPalette) {
       VERIFY(::DeleteObject(mPalette));
       mPalette = NULL;
-    }
-
-    // free tooltip window
-    if (mTooltip) {
-      VERIFY(::DestroyWindow(mTooltip));
-      mTooltip = NULL;
     }
 
     // if we were in the middle of deferred window positioning then

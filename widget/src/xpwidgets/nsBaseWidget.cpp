@@ -73,40 +73,6 @@ nsBaseWidget::Enumerator::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   return NS_NOINTERFACE; 
 }
 
-
-//-------------------------------------------------------------------------
-//
-// Setup initial tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsBaseWidget::SetTooltips(PRUint32 aNumberOfTips,nsRect* aTooltipAreas[])
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//-------------------------------------------------------------------------
-//
-// Update all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsBaseWidget::UpdateTooltips(nsRect* aNewTips[])
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-//-------------------------------------------------------------------------
-//
-// Remove all tooltip rectangles
-//
-//-------------------------------------------------------------------------
-
-NS_METHOD nsBaseWidget::RemoveTooltips()
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
 //-------------------------------------------------------------------------
 //
 // nsBaseWidget constructor
@@ -835,7 +801,6 @@ case _value: eventName = _name ; break
     _ASSIGN_eventName(NS_FORM_RESET,"NS_FORM_RESET");
     _ASSIGN_eventName(NS_FORM_SUBMIT,"NS_FORM_SUBMIT");
     _ASSIGN_eventName(NS_GOTFOCUS,"NS_GOTFOCUS");
-    _ASSIGN_eventName(NS_HIDE_TOOLTIP,"NS_HIDE_TOOLTIP");
     _ASSIGN_eventName(NS_IMAGE_ABORT,"NS_IMAGE_ABORT");
     _ASSIGN_eventName(NS_IMAGE_ERROR,"NS_IMAGE_ERROR");
     _ASSIGN_eventName(NS_IMAGE_LOAD,"NS_IMAGE_LOAD");
@@ -871,9 +836,7 @@ case _value: eventName = _name ; break
     _ASSIGN_eventName(NS_SCROLLBAR_PAGE_NEXT,"NS_SCROLLBAR_PAGE_NEXT");
     _ASSIGN_eventName(NS_SCROLLBAR_PAGE_PREV,"NS_SCROLLBAR_PAGE_PREV");
     _ASSIGN_eventName(NS_SCROLLBAR_POS,"NS_SCROLLBAR_POS");
-    _ASSIGN_eventName(NS_SHOW_TOOLTIP,"NS_SHOW_TOOLTIP");
     _ASSIGN_eventName(NS_SIZE,"NS_SIZE");
-    _ASSIGN_eventName(NS_TABCHANGE,"NS_TABCHANGE");
 
 #undef _ASSIGN_eventName
 

@@ -36,13 +36,11 @@ class nsIListBox;
 class nsIListWidget;
 class nsILookAndFeel;
 class nsIMouseListener;
-class nsITabWidget;
 class nsIToolkit;
 class nsIWidget;
 class nsICheckButton;
 class nsIScrollbar;
 class nsIRadioButton;
-class nsITooltipWidget;
 class nsITextWidget;
 class nsIBrowserWindow;
 
@@ -93,13 +91,6 @@ NS_CreateTextAreaWidget(nsISupports* aParent,
                     EVENT_CALLBACK aHandleEventFunction,
                     const nsFont* aFont = nsnull);
 
-extern NS_WIDGET nsresult 
-NS_CreateTooltipWidget(nsISupports* aParent,	
-                      nsITooltipWidget* aWidget, 
-                      const nsRect& aRect, 
-                      EVENT_CALLBACK aHandleEventFunction,
-                      const nsFont* aFont = nsnull);
-
 
 extern NS_WIDGET nsresult 
 NS_CreateListBox(nsISupports* aParent,	
@@ -112,13 +103,6 @@ NS_CreateListBox(nsISupports* aParent,
 extern NS_WIDGET nsresult 
 NS_CreateComboBox(nsISupports* aParent,	
                       nsIComboBox* aWidget, 
-                      const nsRect& aRect, 
-                      EVENT_CALLBACK aHandleEventFunction,
-                      const nsFont* aFont = nsnull);
-
-extern NS_WIDGET nsresult 
-NS_CreateTabWidget(nsISupports* aParent,	
-                      nsITabWidget* aWidget, 
                       const nsRect& aRect, 
                       EVENT_CALLBACK aHandleEventFunction,
                       const nsFont* aFont = nsnull);

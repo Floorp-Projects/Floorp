@@ -30,13 +30,11 @@
 #include "nsIListWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIMouseListener.h"
-#include "nsITabWidget.h"
 #include "nsIToolkit.h"
 #include "nsIWidget.h"
 #include "nsICheckButton.h"
 #include "nsIScrollbar.h"
 #include "nsIRadioButton.h"
-#include "nsITooltipWidget.h"
 #include "nsITextWidget.h"
 
 
@@ -309,70 +307,6 @@ NS_CreateComboBox(nsISupports* aParent,
   return NS_OK;
 }
 
-
-WIDGET_SUPPORT_EXPORT(nsresult)
-NS_CreateTabWidget(nsISupports* aParent, 
-									nsITabWidget* aWidget, 
-									const nsRect& aRect, 
-                  EVENT_CALLBACK aHandleEventFunction,
-                  const nsFont* aFont)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
-
-  nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    if (aFont != nsnull)
-	  	widget->SetFont(*aFont);
-    NS_IF_RELEASE(widget);
-	}
-  else
-  {
-    NS_ERROR("Called QueryInterface on a non kIWidgetIID supported object");
-  }
-
-	if (aParent)
-	  NS_IF_RELEASE(parent);
-
-  return NS_OK;
-}
-
-
-
-
-
-WIDGET_SUPPORT_EXPORT(nsresult)
-NS_CreateTooltipWidget(nsISupports* aParent,	
-                nsITooltipWidget* aWidget, 
-                const nsRect& aRect, 
-                EVENT_CALLBACK aHandleEventFunction,
-                const nsFont* aFont)
-{
-	nsIWidget* parent = nsnull;
-	if (aParent != nsnull)
-    aParent->QueryInterface(kIWidgetIID,(void**)&parent);
-
-  nsIWidget* 	widget = nsnull;
-	if (NS_OK == aWidget->QueryInterface(kIWidgetIID,(void**)&widget)) {
-	  widget->Create(parent, aRect, aHandleEventFunction, NULL);
-	  widget->Show(PR_TRUE);
-    if (aFont != nsnull)
-	  	widget->SetFont(*aFont);
-    NS_IF_RELEASE(widget);
-	}
-  else
-  {
-    NS_ERROR("Call QueryInterface on a non kIWidgetIID supported object");
-  }
-
-	if (aParent)
-	  NS_IF_RELEASE(parent);
-
-  return NS_OK;
-}
 
 
 WIDGET_SUPPORT_EXPORT(nsresult)

@@ -49,8 +49,6 @@
 #include "nsFont.h"
 #include "nsIComponentManager.h"
 #include "nsWidgetsCID.h"
-#include "nsITabWidget.h"
-#include "nsITooltipWidget.h"
 #include "nsIAppShell.h"
 #include "nsWidgetSupport.h"
 
@@ -80,11 +78,8 @@ nsIListBox    *gMultiListBox = NULL;
 
 nsIWidget     *movingWidget  = NULL;
 nsIScrollbar  *scrollbar     = NULL;
-nsITabWidget  *tabWidget     = NULL;
 nsIButton     *toolTipButton1 = NULL;
 nsIButton     *toolTipButton2 = NULL;
-
-nsITooltipWidget *tooltipWindow = NULL;
 
 nsIRadioButton * gRadioBtns[16];
 int    gNumRadioBtns = 0;
@@ -133,16 +128,6 @@ char * gFailedMsg = NULL;
 #define kBrowseBtn       "Browse..."
 #define kSetSelectedIndices "Set 0,2,4"
 
-#define kTooltip1_x 400
-#define kTooltip1_y 100
-#define kTooltip1_width 100
-#define kTooltip1_height 100
-
-#define kTooltip2_x 200
-#define kTooltip2_y 300
-#define kTooltip2_width 100
-#define kTooltip2_height 100
-
 // class ids
 static NS_DEFINE_IID(kCWindowCID, NS_WINDOW_CID);
 static NS_DEFINE_IID(kCChildCID, NS_CHILD_CID);
@@ -158,8 +143,6 @@ static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 static NS_DEFINE_IID(kLookAndFeelCID, NS_LOOKANDFEEL_CID);
 
-static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
-static NS_DEFINE_IID(kCTooltipWidgetCID, NS_TOOLTIPWIDGET_CID);
 static NS_DEFINE_IID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_IID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_IID(kCAppShellCID, NS_APPSHELL_CID);
@@ -181,8 +164,6 @@ static NS_DEFINE_IID(kIListBoxIID,        NS_ILISTBOX_IID);
 static NS_DEFINE_IID(kIListWidgetIID,     NS_ILISTWIDGET_IID);
 static NS_DEFINE_IID(kIComboBoxIID,       NS_ICOMBOBOX_IID);
 static NS_DEFINE_IID(kIFileWidgetIID,     NS_IFILEWIDGET_IID);
-static NS_DEFINE_IID(kITabWidgetIID,      NS_ITABWIDGET_IID);
-static NS_DEFINE_IID(kITooltipWidgetIID,  NS_ITOOLTIPWIDGET_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIAppShellIID,       NS_IAPPSHELL_IID);
 
@@ -452,31 +433,6 @@ nsIButton* createSimpleButton(nsIWidget * aWin,
   button->SetLabel(aTitle);
   return button;
 }
-
-
-/**--------------------------------------------------------------------------------
-  *
- */
-nsITooltipWidget* createTooltipWindow(nsIWidget * aWin, 
-                     char * aTitle, 
-                     int aX, 
-                     int aY, 
-                     int aWidth, 
-                     EVENT_CALLBACK aHandleEventFunction) {
-  nsITooltipWidget *tooltip;
-  nsRect rect(aX, aY, aWidth, 40);  
-  nsComponentManager::CreateInstance(kCTooltipWidgetCID, nsnull, kITooltipWidgetIID, (void**)&tooltip);
-  NS_CreateTooltipWidget((nsISupports*)nsnull,tooltip,rect,aHandleEventFunction);
-  
-  nsIWidget* toolTipWidget;
-  if (NS_OK == tooltip->QueryInterface(kIWidgetIID,(void**)&toolTipWidget))
-  {
-    /*nsIButton *toolTipButton =*/ createSimpleButton(toolTipWidget, "tooltip",5, 5, 80, 0);
-    NS_RELEASE(toolTipWidget);
-  }
-  return tooltip;
-}
-
 
 
 /**--------------------------------------------------------------------------------
@@ -881,27 +837,6 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
    PRUint32 actualSize;
    switch(aEvent->message) {
 
-        case NS_SHOW_TOOLTIP:
-          {
-            char buf[256];
-            nsTooltipEvent* tEvent = (nsTooltipEvent*)aEvent;
-            sprintf(buf,"Show tooltip %d", tEvent->tipIndex);
-            statusText->SetText(buf,actualSize);
-            nsRect oldPos;
-            oldPos.x = aEvent->point.x;
-            oldPos.y = aEvent->point.y;
-            nsRect newPos;
-            window->WidgetToScreen(oldPos, newPos);
-            NS_MoveWidget(tooltipWindow,newPos.x + 5, newPos.y + 5);
-            NS_ShowWidget(tooltipWindow,PR_TRUE);
-          }
-          break;
-
-        case NS_HIDE_TOOLTIP:
-          statusText->SetText("Hide tooltip",actualSize);
-          NS_ShowWidget(tooltipWindow,PR_FALSE);
-          break;
-        
         case NS_MOVE: {
             char str[256];
             sprintf(str, "Moved window to %d,%d", aEvent->point.x, aEvent->point.y);
@@ -1060,101 +995,6 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
   return(nsEventStatus_eConsumeDoDefault);
 }
 
-/*--------------------------------------------------------------------------------
- * Tab change handler
- *--------------------------------------------------------------------------------
- */
-
-nsEventStatus PR_CALLBACK HandleTabEvent(nsGUIEvent *aEvent)
-{
-  PRUint32 actualSize;
-  switch(aEvent->message) {
-           
-    case NS_TABCHANGE:
-      PRUint32 tab = 0;
-      tabWidget->GetSelectedTab(tab);
-      char buf[256];
-      sprintf(buf, "Selected tab %d", tab);
-      statusText->SetText(buf,actualSize);
-    break;
-  }
-
-  return(nsEventStatus_eConsumeDoDefault);
-}
-
-
-void SetTooltipPos(int pos, nsIWidget *aWidget, nsIButton *aButton1, nsIButton *aButton2)
-{
-  switch(pos) {
-    case 1: {
-      nsRect* tips1[2];
-      tips1[0] = new nsRect(
-                        kTooltip1_x,
-                        kTooltip1_y,
-                        kTooltip1_width / 2,
-                        kTooltip1_height);
-      tips1[1] = new nsRect(
-                        kTooltip1_x + (kTooltip1_width / 2),
-                        kTooltip1_y,
-                        kTooltip1_width / 2,
-                        kTooltip1_height);
-      aWidget->SetTooltips(2, tips1);
-      NS_MoveWidget(aButton1,kTooltip1_x, kTooltip1_y);
-      NS_MoveWidget(aButton2,kTooltip1_x + kTooltip1_width, kTooltip1_y + kTooltip1_height);
-      delete tips1[0];
-      delete tips1[1];
-            }
-      break;
-    case 2: {
-      nsRect* tipsDummy[1];
-
-        // Test updating the tooltips by initialy giving a tooltip
-        // location that is 100 pixels to the left, then changing
-        // it to the correct position.
-      tipsDummy[0] = new nsRect(kTooltip2_x - 100,kTooltip2_y,
-                      kTooltip2_width,kTooltip2_height);
-     
-      aWidget->SetTooltips(1, tipsDummy);
-
-      nsRect* tips2[1];
-      tips2[0] = new nsRect(kTooltip2_x,kTooltip2_y,
-                      kTooltip2_width,kTooltip2_height);
-
-      aWidget->UpdateTooltips(tips2); // Put it in the correct position
-
-      NS_MoveWidget(aButton1,kTooltip2_x, kTooltip2_y);
-      NS_MoveWidget(aButton2,kTooltip2_x + kTooltip2_width, kTooltip2_y + kTooltip2_height);
-
-      delete tips2[0];
-      delete tipsDummy[0];
-      }
-      break;
-    }
-}
-
-
-nsEventStatus MoveTooltip(int aPos, nsGUIEvent *aEvent)
-{
- switch(aEvent->message) {
-           
-    case NS_MOUSE_LEFT_BUTTON_DOWN:
-      SetTooltipPos(aPos, window, toolTipButton1, toolTipButton2);
-    break;
-  }
- 
-  return(nsEventStatus_eConsumeDoDefault);
-}
-
-nsEventStatus PR_CALLBACK TooltipPos1(nsGUIEvent *aEvent)
-{
-  return(MoveTooltip(1, aEvent));
-}
-
-nsEventStatus PR_CALLBACK TooltipPos2(nsGUIEvent *aEvent)
-{
-  return(MoveTooltip(2, aEvent));
-}
-
 /*----------------------------------------------------------------------------
  * DoSelfTests
  *---------------------------------------------------------------------------*/
@@ -1228,8 +1068,6 @@ nsresult WidgetTest(int *argc, char **argv)
     nsComponentManager::RegisterComponentLib(kCVertScrollbarCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponentLib(kCTextAreaCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponentLib(kCTextFieldCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCTabWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
-    nsComponentManager::RegisterComponentLib(kCTooltipWidgetCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponentLib(kCAppShellCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponentLib(kCToolkitCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
     nsComponentManager::RegisterComponentLib(kClipboardCID, NULL, NULL, WIDGET_DLL, PR_FALSE, PR_FALSE);
@@ -1302,16 +1140,6 @@ nsresult WidgetTest(int *argc, char **argv)
       deviceContext->Init(window->GetNativeData(NS_NATIVE_WIDGET));
       NS_ADDREF(deviceContext);
     }
-
-#ifdef XP_PC
-    tooltipWindow = createTooltipWindow(window, "INSERT <tooltip> here", 0, 0, 150, 0);
-    NS_ShowWidget(tooltipWindow,PR_FALSE);
-    toolTipButton1 = createSimpleButton(window, "Tooltip \\/\\/",400, 100, 100, 0);
-    toolTipButton2 = createSimpleButton(window, "Tooltip /\\/\\",500, 200, 100, 0);
-    createTestButton(window, "Move Tooltip pos 1", 450, 150, 130, TooltipPos1);
-    createTestButton(window, "Move Tooltip pos 2", 450, 175, 130, TooltipPos2);
-    SetTooltipPos(1, window, toolTipButton1, toolTipButton2);
-#endif
 
     //
     // create a child
@@ -1570,18 +1398,6 @@ nsresult WidgetTest(int *argc, char **argv)
 
     y += rect.height + 5;
     x = 5;
-
-    //
-    // create a tab widget
-    //
-    rect.SetRect(300, 500, 200, 50);  
-    nsComponentManager::CreateInstance(kCTabWidgetCID, nsnull, kITabWidgetIID, (void**)&tabWidget);
-    if (tabWidget)
-    {
-	    NS_CreateTabWidget(window,tabWidget,rect,HandleTabEvent);
-	    nsString tabs[] = {"low", "medium", "high" };
-	    tabWidget->SetTabs(3, tabs);
-    }
 
     //
     // create a Radio button
