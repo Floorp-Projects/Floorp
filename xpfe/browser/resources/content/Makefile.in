@@ -29,10 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/nsContextMenu.js \
 		$(srcdir)/tooltip.js \
-		$(srcdir)/contentframe.js \
 		$(srcdir)/openLocation.js \
 		$(srcdir)/viewsource.js \
-		$(srcdir)/contentframe.xul \
 		$(srcdir)/navigator.xul \
 		$(srcdir)/navigatorOverlay.xul \
 		$(srcdir)/navigator.js \

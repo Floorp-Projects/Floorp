@@ -26,12 +26,10 @@ include <$(DEPTH)\config\rules.mak>
 DISTBROWSWER=$(DIST)\bin\chrome\navigator\content\default
 
 install::
-	$(MAKE_INSTALL) contentframe.js $(DISTBROWSWER)
 	$(MAKE_INSTALL) openLocation.js $(DISTBROWSWER)
     $(MAKE_INSTALL) openLocation.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) viewsource.js $(DISTBROWSWER)
 	$(MAKE_INSTALL) viewSource.xul $(DISTBROWSWER)
-	$(MAKE_INSTALL) contentframe.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigatorOverlay.xul $(DISTBROWSWER)
 	$(MAKE_INSTALL) navigator.js $(DISTBROWSWER)
@@ -42,12 +40,10 @@ install::
 
 
 clobber::
-  rm -f $(DISTBROWSER)\contentframe.js
   rm -f $(DISTBROWSER)\openLocation.js
   rm -f $(DISTBROWSER)\openLocation.xul
   rm -f $(DISTBROWSER)\viewsource.js
   rm -f $(DISTBROWSER)\viewSource.xul
-  rm -f $(DISTBROWSER)\contentframe.xul
   rm -f $(DISTBROWSER)\navigator.xul
    rm -f $(DISTBROWSER)\navigatorOverlay.xul
   rm -f $(DISTBROWSER)\navigator.js

@@ -31,7 +31,6 @@ install::
 	$(MAKE_INSTALL) .\messagel.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) .\navigator.css $(DISTBROWSER)
 	$(MAKE_INSTALL) .\questionl.gif $(DISTBROWSER)
-	$(MAKE_INSTALL) .\contentframe.css $(DISTBROWSER)
 	$(MAKE_INSTALL) .\back.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) .\forward.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) .\home.gif $(DISTBROWSER)
@@ -55,7 +54,6 @@ clobber::
   rm -f $(DISTBROWSER)\messagel.gif
   rm -f $(DISTBROWSER)\navigator.css
   rm -f $(DISTBROWSER)\questionl.gif
-  rm -f $(DISTBROWSER)\contentframe.css
   rm -f $(DISTBROWSER)\back.gif
   rm -f $(DISTBROWSER)\forward.gif
   rm -f $(DISTBROWSER)\home.gif
