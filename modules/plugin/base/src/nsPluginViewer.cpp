@@ -546,7 +546,7 @@ HandlePluginEvent(nsGUIEvent *aEvent)
     void *clientData;
     (nsIWidget*)(aEvent->widget)->GetClientData(clientData);
     PluginViewerImpl * pluginViewer = (PluginViewerImpl *)clientData;
-    if (pluginViewer != nsnull && pluginViewer->mOwner != nsnull)
+    if (pluginViewer && pluginViewer->mOwner && pluginViewer->mWindow == aEvent->widget)
       return pluginViewer->mOwner->ProcessEvent(*aEvent);
 #endif // XP_MAC
   }
