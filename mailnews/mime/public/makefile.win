@@ -25,6 +25,7 @@ EXPORTS =					\
 	nsIMimeEmitter.h			\
 	nsMailHeaders.h				\
 	nsIMsgHeaderParser.h			\
+	nsIMimeContentTypeHandler.h			\
         $(NULL)
 
 MODULE=mime
