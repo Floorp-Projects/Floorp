@@ -376,6 +376,7 @@ nsDTDContext::nsDTDContext() : mStack(), mEntities(0){
   mTransitional=PR_FALSE;
   ResetCounters();
   mHadDocTypeDecl=PR_FALSE;
+  mHasOpenHead=PR_FALSE;
 
 #ifdef  NS_DEBUG
   memset(mXTags,0,sizeof(mXTags));
