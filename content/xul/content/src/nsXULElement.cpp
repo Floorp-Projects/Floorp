@@ -350,8 +350,8 @@ RDFElementImpl::RDFElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag)
       mContentsMustBeGenerated(PR_FALSE),
       mBroadcastListeners(nsnull),
       mBroadcaster(nsnull),
-      mController(nsnull),
-      mInnerXULElement(nsnull)
+      mInnerXULElement(nsnull),
+      mController(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
@@ -1441,7 +1441,7 @@ RDFElementImpl::SetDocument(nsIDocument* aDocument, PRBool aDeep)
 
     if (aDeep && mChildren) {
         PRUint32 cnt;
-        nsresult rv = mChildren->Count(&cnt);
+        rv = mChildren->Count(&cnt);
         if (NS_FAILED(rv)) return rv;
         for (PRInt32 i = cnt - 1; i >= 0; --i) {
             // XXX this entire block could be more rigorous about
@@ -1495,7 +1495,7 @@ RDFElementImpl::ChildCount(PRInt32& aResult) const
 
     if (mChildren) {
         PRUint32 cnt;
-        nsresult rv = mChildren->Count(&cnt);
+        rv = mChildren->Count(&cnt);
         if (NS_FAILED(rv)) return rv;
         aResult = cnt;
     }
@@ -1555,9 +1555,9 @@ RDFElementImpl::InsertChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     // Make sure that we're not trying to insert the same child
     // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
     // freak out.
-    PRInt32 index = mChildren->IndexOf(aKid);
-    NS_ASSERTION(index < 0, "element is already a child");
-    if (index >= 0)
+    PRInt32 i = mChildren->IndexOf(aKid);
+    NS_ASSERTION(i < 0, "element is already a child");
+    if (i >= 0)
         return NS_ERROR_FAILURE;
 
     PRBool insertOk = mChildren->InsertElementAt(aKid, aIndex);/* XXX fix up void array api to use nsresult's*/
@@ -1602,9 +1602,9 @@ RDFElementImpl::ReplaceChildAt(nsIContent* aKid, PRInt32 aIndex, PRBool aNotify)
     // Make sure that we're not trying to insert the same child
     // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
     // freak out.
-    PRInt32 index = mChildren->IndexOf(aKid);
-    NS_ASSERTION(index < 0, "element is already a child");
-    if (index >= 0)
+    PRInt32 i = mChildren->IndexOf(aKid);
+    NS_ASSERTION(i < 0, "element is already a child");
+    if (i >= 0)
         return NS_ERROR_FAILURE;
 
     PRBool replaceOk = mChildren->ReplaceElementAt(aKid, aIndex);
@@ -1637,9 +1637,9 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
     // Make sure that we're not trying to insert the same child
     // twice. If we do, the DOM APIs (e.g., GetNextSibling()), will
     // freak out.
-    PRInt32 index = mChildren->IndexOf(aKid);
-    NS_ASSERTION(index < 0, "element is already a child");
-    if (index >= 0)
+    PRInt32 i = mChildren->IndexOf(aKid);
+    NS_ASSERTION(i < 0, "element is already a child");
+    if (i >= 0)
         return NS_ERROR_FAILURE;
 
     PRBool appendOk = mChildren->AppendElement(aKid);
@@ -1649,7 +1649,7 @@ RDFElementImpl::AppendChildTo(nsIContent* aKid, PRBool aNotify)
         aKid->SetDocument(mDocument, PR_TRUE);
         if (aNotify && ElementIsInDocument()) {
             PRUint32 cnt;
-            nsresult rv = mChildren->Count(&cnt);
+            rv = mChildren->Count(&cnt);
             if (NS_FAILED(rv)) return rv;
             
             mDocument->ContentAppended(NS_STATIC_CAST(nsIStyledContent*, this), cnt - 1);
@@ -1987,6 +1987,10 @@ RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, R
 
     owner = mDocument->GetScriptContextOwner();
 
+    // This can happen normally as part of teardown code.
+    if (! owner)
+        return NS_OK;
+
     nsAutoString tagStr;
     mTag->ToString(tagStr);
 
@@ -2012,12 +2016,12 @@ RDFElementImpl::AddScriptEventListener(nsIAtom* aName, const nsString& aValue, R
       else {
         nsIEventListenerManager *manager;
         if (NS_OK == GetListenerManager(&manager)) {
-            nsIScriptObjectOwner* owner;
+            nsIScriptObjectOwner* owner2;
             if (NS_OK == QueryInterface(kIScriptObjectOwnerIID,
-                                        (void**) &owner)) {
-                ret = manager->AddScriptEventListener(context, owner,
+                                        (void**) &owner2)) {
+                ret = manager->AddScriptEventListener(context, owner2,
                                                       aName, aValue, aIID);
-                NS_RELEASE(owner);
+                NS_RELEASE(owner2);
             }
             NS_RELEASE(manager);
         }
