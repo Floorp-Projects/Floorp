@@ -34,4 +34,4 @@ EXPORT_RESOURCE_CONTENT = \
 	$(NULL)
 
 install::
-	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/dialogs/content
+	$(INSTALL) $(EXPORT_RESOURCE_CONTENT) $(DIST)/bin/chrome/editor/dialogs/content/default
