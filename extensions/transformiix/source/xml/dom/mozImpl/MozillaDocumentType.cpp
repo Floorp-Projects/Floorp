@@ -22,11 +22,15 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMDocumentType
-   interface into a TransforMIIX DocumentType interface.
-*/
+/**
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMDocumentType
+ * interface into a TransforMIIX DocumentType interface.
+ */
 
 #include "mozilladom.h"
+#include "nsIDOMDocumentType.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMNotation.h"
 
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
@@ -47,21 +51,6 @@ DocumentType::~DocumentType()
 }
 
 /**
- * Call nsIDOMDocumentType::GetName to get the name of the document type.
- *
- * @return the name of the document type
- */
-const String& DocumentType::getName()
-{
-    NSI_FROM_TX(DocumentType)
-
-    nodeName.clear();
-    if (nsDocumentType)
-        nsDocumentType->GetName(nodeName);
-    return nodeName;
-}
-
-/**
  * Call nsIDOMDocumentType::GetEntities to get the entities of the document
  * type.
  *
@@ -69,13 +58,13 @@ const String& DocumentType::getName()
  */
 NamedNodeMap* DocumentType::getEntities()
 {
-    NSI_FROM_TX_NULL_CHECK(DocumentType)
+    NSI_FROM_TX(DocumentType);
     nsCOMPtr<nsIDOMNamedNodeMap> tmpEntities;
-
-    if (NS_SUCCEEDED(nsDocumentType->GetEntities(getter_AddRefs(tmpEntities))))
-        return (NamedNodeMap*)ownerDocument->createNamedNodeMap(tmpEntities);
-    else
-        return NULL;
+    nsDocumentType->GetEntities(getter_AddRefs(tmpEntities));
+    if (!tmpEntities) {
+        return nsnull;
+    }
+    return mOwnerDocument->createNamedNodeMap(tmpEntities);
 }
 
 /**
@@ -86,11 +75,11 @@ NamedNodeMap* DocumentType::getEntities()
  */
 NamedNodeMap* DocumentType::getNotations()
 {
-    NSI_FROM_TX_NULL_CHECK(DocumentType)
+    NSI_FROM_TX(DocumentType);
     nsCOMPtr<nsIDOMNamedNodeMap> notations;
-
-    if (NS_SUCCEEDED(nsDocumentType->GetNotations(getter_AddRefs(notations))))
-        return (NamedNodeMap*)ownerDocument->createNamedNodeMap(notations);
-    else
-        return NULL;
+    nsDocumentType->GetNotations(getter_AddRefs(notations));
+    if (!notations) {
+        return nsnull;
+    }
+    return mOwnerDocument->createNamedNodeMap(notations);
 }

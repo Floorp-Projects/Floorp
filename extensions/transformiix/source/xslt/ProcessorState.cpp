@@ -468,12 +468,18 @@ Node* ProcessorState::findTemplate(Node* aNode,
         TX_GET_ATOM_STRING(aMode.mLocalName, mode);
     }
     if (matchTemplate) {
+        String matchAttr;
+        // matchTemplate can be a document (see addLREStylesheet)
+        unsigned short nodeType = matchTemplate->getNodeType();
+        if (nodeType == Node::ELEMENT_NODE) {
+            ((Element*)matchTemplate)->getAttr(txXSLTAtoms::match,
+                                               kNameSpaceID_None,
+                                               matchAttr);
+        }
         PR_LOG(txLog::xslt, PR_LOG_DEBUG,
                ("MatchTemplate, Pattern %s, Mode %s, Stylesheet %s, " \
                 "Node %s\n",
-                NS_LossyConvertUCS2toASCII(
-                    ((Element*)matchTemplate)->getAttribute(String("match")))
-                    .get(),
+                NS_LossyConvertUCS2toASCII(matchAttr).get(),
                 NS_LossyConvertUCS2toASCII(mode).get(),
                 NS_LossyConvertUCS2toASCII(matchTemplate->getBaseURI()).get(),
                 NS_LossyConvertUCS2toASCII(aNode->getNodeName()).get()));

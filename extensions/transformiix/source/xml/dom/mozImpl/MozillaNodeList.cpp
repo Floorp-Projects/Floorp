@@ -22,11 +22,14 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla nsIDOMNodeList
-   interface into a TransforMIIX NodeList interface.
-*/
+/**
+ * Implementation of the wrapper class to convert the Mozilla nsIDOMNodeList
+ * interface into a TransforMIIX NodeList interface.
+ */
 
 #include "mozilladom.h"
+#include "nsIDOMNode.h"
+#include "nsIDOMNodeList.h"
 
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
@@ -55,13 +58,13 @@ NodeList::~NodeList()
  */
 Node* NodeList::item(PRUint32 aIndex)
 {
-    NSI_FROM_TX_NULL_CHECK(NodeList)
+    NSI_FROM_TX(NodeList);
     nsCOMPtr<nsIDOMNode> node;
-
-    if (NS_SUCCEEDED(nsNodeList->Item(aIndex, getter_AddRefs(node))))
-        return ownerDocument->createWrapper(node);
-    else
-        return NULL;
+    nsNodeList->Item(aIndex, getter_AddRefs(node));
+    if (!node) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(node);
 }
 
 /**
@@ -71,10 +74,8 @@ Node* NodeList::item(PRUint32 aIndex)
  */
 PRUint32 NodeList::getLength()
 {
-    NSI_FROM_TX(NodeList)
+    NSI_FROM_TX(NodeList);
     PRUint32 length = 0;
-
-    if (nsNodeList)
-        nsNodeList->GetLength(&length);
+    nsNodeList->GetLength(&length);
     return length;
 }

@@ -22,11 +22,14 @@
  *
  */
 
-/* Implementation of the wrapper class to convert the Mozilla
-   nsIDOMNamedNodeMap interface into a TransforMIIX NamedNodeMap interface.
-*/
+/**
+ * Implementation of the wrapper class to convert the Mozilla
+ * nsIDOMNamedNodeMap interface into a TransforMIIX NamedNodeMap interface.
+ */
 
 #include "mozilladom.h"
+#include "nsIDOMNamedNodeMap.h"
+#include "nsIDOMNode.h"
 
 /**
  * Construct a wrapper with the specified Mozilla object and document owner.
@@ -35,7 +38,7 @@
  * @param aOwner the document that owns this object
  */
 NamedNodeMap::NamedNodeMap(nsIDOMNamedNodeMap* aNamedNodeMap,
-            Document* aOwner) :
+                           Document* aOwner) :
         MozillaObjectWrapper(aNamedNodeMap, aOwner)
 {
 }
@@ -57,54 +60,13 @@ NamedNodeMap::~NamedNodeMap()
  */
 Node* NamedNodeMap::getNamedItem(const String& aName)
 {
-    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
+    NSI_FROM_TX(NamedNodeMap);
     nsCOMPtr<nsIDOMNode> node;
-
-    if (NS_SUCCEEDED(nsNamedNodeMap->GetNamedItem(aName,
-                getter_AddRefs(node))))
-        return ownerDocument->createWrapper(node);
-    else
-        return NULL;
-}
-
-/**
- * Call nsIDOMNamedNodeMap::SetNamedItem to add a node to the NamedNodeMap.
- *
- * @param aNode the node to add to the NamedNodeMap
- *
- * @return the node that was added
- */
-Node* NamedNodeMap::setNamedItem(Node* aNode)
-{
-    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
-    nsCOMPtr<nsIDOMNode> nsNode(do_QueryInterface(GET_NSOBJ(aNode)));
-    nsCOMPtr<nsIDOMNode> node;
-
-    if (NS_SUCCEEDED(nsNamedNodeMap->SetNamedItem(nsNode,
-                getter_AddRefs(node))))
-        return ownerDocument->createWrapper(node);
-    else
-        return NULL;
-}
-
-/**
- * Call nsIDOMNamedNodeMap::RemoveNamedItem to remove a node from the
- * NamedNodeMap.
- *
- * @param aName the name of the node that you want to remove
- *
- * @return the node that was removed
- */
-Node* NamedNodeMap::removeNamedItem(const String& aName)
-{
-    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
-    nsCOMPtr<nsIDOMNode> node;
-
-    if (NS_SUCCEEDED(nsNamedNodeMap->RemoveNamedItem(aName,
-                getter_AddRefs(node))))
-        return ownerDocument->createWrapper(node);
-    else
-        return NULL;
+    nsNamedNodeMap->GetNamedItem(aName, getter_AddRefs(node));
+    if (!node) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(node);
 }
 
 /**
@@ -116,13 +78,13 @@ Node* NamedNodeMap::removeNamedItem(const String& aName)
  */
 Node* NamedNodeMap::item(PRUint32 aIndex)
 {
-    NSI_FROM_TX_NULL_CHECK(NamedNodeMap)
+    NSI_FROM_TX(NamedNodeMap);
     nsCOMPtr<nsIDOMNode> node;
-
-    if (NS_SUCCEEDED(nsNamedNodeMap->Item(aIndex, getter_AddRefs(node))))
-        return ownerDocument->createWrapper(node);
-    else
-        return NULL;
+    nsNamedNodeMap->Item(aIndex, getter_AddRefs(node));
+    if (!node) {
+        return nsnull;
+    }
+    return mOwnerDocument->createWrapper(node);
 }
 
 /**
@@ -132,10 +94,8 @@ Node* NamedNodeMap::item(PRUint32 aIndex)
  */
 PRUint32 NamedNodeMap::getLength()
 {
-    NSI_FROM_TX(NamedNodeMap)
+    NSI_FROM_TX(NamedNodeMap);
     PRUint32 length = 0;
-
-    if (nsNamedNodeMap)
-        nsNamedNodeMap->GetLength(&length);
+    nsNamedNodeMap->GetLength(&length);
     return length;
 }

@@ -57,6 +57,7 @@
 #include "txNodeSetContext.h"
 #include "txSingleNodeContext.h"
 #ifndef TX_EXE
+#include "nsIDocShell.h"
 #include "nsIDocument.h"
 #include "nsIObserverService.h"
 #include "nsIURL.h"
@@ -729,7 +730,7 @@ void XSLTProcessor::processInclude(String& aHref,
     aPs->getEnteredStylesheets()->push(&aHref);
 
     // Load XSL document
-    Node* stylesheet = aPs->retrieveDocument(aHref, NULL_STRING);
+    Node* stylesheet = aPs->retrieveDocument(aHref, String());
     if (!stylesheet) {
         String err("Unable to load included stylesheet ");
         err.append(aHref);
@@ -1042,9 +1043,9 @@ void XSLTProcessor::processAction(Node* aNode,
                     continue;
                 // Process Attribute Value Templates
                 String value;
-                aPs->processAttrValueTemplate(attr->getValue(), actionElement, value);
+                aPs->processAttrValueTemplate(attr->getNodeValue(), actionElement, value);
                 NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
-                mResultHandler->attribute(attr->getName(), attr->getNamespaceID(), value);
+                mResultHandler->attribute(attr->getNodeName(), attr->getNamespaceID(), value);
             }
         }
 
@@ -2004,7 +2005,7 @@ void XSLTProcessor::startTransform(Node* aNode, ProcessorState* aPs)
 {
     mHaveDocumentElement = MB_FALSE;
     mOutputHandler->startDocument();
-    process(aNode, NULL_STRING, aPs);
+    process(aNode, String(), aPs);
 #ifdef TX_EXE
     txOutputFormat* format = aPs->getOutputFormat();
     if (format->mMethod == eMethodNotSet) {
@@ -2167,7 +2168,7 @@ void XSLTProcessor::copyNode(Node* aNode, ProcessorState* aPs)
         case Node::COMMENT_NODE:
         {
             NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
-            mResultHandler->comment(((Comment*)aNode)->getData());
+            mResultHandler->comment(aNode->getNodeValue());
             break;
         }
         case Node::DOCUMENT_NODE:
@@ -2195,8 +2196,8 @@ void XSLTProcessor::copyNode(Node* aNode, ProcessorState* aPs)
                 for (i = 0; i < attList->getLength(); i++) {
                     Attr* attr = (Attr*)attList->item(i);
                     NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
-                    mResultHandler->attribute(attr->getName(), attr->getNamespaceID(),
-                                              attr->getValue());
+                    mResultHandler->attribute(attr->getNodeName(), attr->getNamespaceID(),
+                                              attr->getNodeValue());
                 }
             }
 
@@ -2222,7 +2223,7 @@ void XSLTProcessor::copyNode(Node* aNode, ProcessorState* aPs)
         case Node::CDATA_SECTION_NODE:
         {
             NS_ASSERTION(mResultHandler, "mResultHandler must not be NULL!");
-            mResultHandler->characters(((CharacterData*)aNode)->getData());
+            mResultHandler->characters(aNode->getNodeValue());
             break;
         }
     }

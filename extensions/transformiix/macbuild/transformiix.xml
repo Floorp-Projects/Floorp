@@ -1337,20 +1337,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCharacterData.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentFragment.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaDocumentType.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1359,34 +1345,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaEntity.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntityReference.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaComment.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCDATASection.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaText.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1421,13 +1379,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDOMImplementation.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>XSLTProcessor.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -1450,13 +1401,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>DocumentFunctionCall.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaObjectWrapper.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -1909,22 +1853,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDOMImplementation.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaAttr.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCDATASection.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaComment.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -1939,17 +1868,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCharacterData.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaElement.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentFragment.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -1960,11 +1879,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaEntity.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntityReference.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -1989,11 +1903,6 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaText.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaNotation.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
@@ -2010,11 +1919,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>DocumentFunctionCall.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaObjectWrapper.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -3377,20 +3281,6 @@
                 </FILE>
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCharacterData.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentFragment.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaDocumentType.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
@@ -3399,34 +3289,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaEntity.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntityReference.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaComment.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCDATASection.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaText.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -3455,13 +3317,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>SimpleErrorObserver.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDOMImplementation.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -3518,13 +3373,6 @@
                 <FILE>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>DocumentFunctionCall.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                    <FILEKIND>Text</FILEKIND>
-                    <FILEFLAGS></FILEFLAGS>
-                </FILE>
-                <FILE>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaObjectWrapper.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                     <FILEKIND>Text</FILEKIND>
                     <FILEFLAGS></FILEFLAGS>
@@ -3965,22 +3813,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDOMImplementation.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaAttr.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCDATASection.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaComment.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -3995,17 +3828,7 @@
                 </FILEREF>
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaCharacterData.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaElement.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaDocumentFragment.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4016,11 +3839,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaEntity.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaEntityReference.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4041,11 +3859,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>MozillaNode.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaText.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4086,11 +3899,6 @@
                 <FILEREF>
                     <PATHTYPE>Name</PATHTYPE>
                     <PATH>DocumentFunctionCall.cpp</PATH>
-                    <PATHFORMAT>MacOS</PATHFORMAT>
-                </FILEREF>
-                <FILEREF>
-                    <PATHTYPE>Name</PATHTYPE>
-                    <PATH>MozillaObjectWrapper.cpp</PATH>
                     <PATHFORMAT>MacOS</PATHFORMAT>
                 </FILEREF>
                 <FILEREF>
@@ -4351,43 +4159,13 @@
                     <FILEREF>
                         <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                         <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaCDATASection.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaCharacterData.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaComment.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
                         <PATH>MozillaDocument.cpp</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                     <FILEREF>
                         <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                         <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaDocumentFragment.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
                         <PATH>MozillaDocumentType.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaDOMImplementation.cpp</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                     <FILEREF>
@@ -4400,12 +4178,6 @@
                         <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                         <PATHTYPE>Name</PATHTYPE>
                         <PATH>MozillaEntity.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaEntityReference.cpp</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                     <FILEREF>
@@ -4435,19 +4207,7 @@
                     <FILEREF>
                         <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
                         <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaObjectWrapper.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
                         <PATH>MozillaProcInstruction.cpp</PATH>
-                        <PATHFORMAT>MacOS</PATHFORMAT>
-                    </FILEREF>
-                    <FILEREF>
-                        <TARGETNAME>transformiixDebug.shlb</TARGETNAME>
-                        <PATHTYPE>Name</PATHTYPE>
-                        <PATH>MozillaText.cpp</PATH>
                         <PATHFORMAT>MacOS</PATHFORMAT>
                     </FILEREF>
                 </GROUP>
