@@ -25,6 +25,8 @@
 #include "resources.h"
 #include "nsString.h"
 
+#include <windows.h>
+
 /* 
   This class loads creates and loads URLs until finished.
   When the doc counter reaches zero, the DocLoader (optionally)
