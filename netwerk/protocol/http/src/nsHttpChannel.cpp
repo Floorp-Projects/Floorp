@@ -802,10 +802,6 @@ end:
         const char *val;
         // Add If-Modified-Since header if a Last-Modified was given
         val = mCachedResponseHead->PeekHeader(nsHttp::Last_Modified);
-        if (!val) {
-            LOG(("No Last-Modified header sent, using the Date header instead...\n"));
-            val = mCachedResponseHead->PeekHeader(nsHttp::Date);
-        }
         if (val)
             mRequestHead.SetHeader(nsHttp::If_Modified_Since, val);
 
