@@ -457,7 +457,7 @@ sub confirm_login {
 		$realpwd = FetchOneColumn();
             }
 	    print "Content-type: text/html\n\n";
-	    PutHeader("<H1>Password has been emailed");
+	    PutHeader("Password has been emailed");
             MailPassword($enteredlogin, $realpwd);
             exit;
         }
