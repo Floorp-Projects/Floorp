@@ -872,6 +872,31 @@ SingleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
 
   return count;
 }
+static void 
+ReverseBuffer(char* aBuf, gint count)
+{
+    char *head, *tail, *med;
+    head = aBuf;
+    tail = &aBuf[count-1];
+    med = &aBuf[count/2];
+
+    while(head < med)
+    {
+       char tmp = *head;
+       *head++ = *tail;
+       *tail-- = tmp;
+    }
+}
+
+static gint
+SingleByteConvertReverse(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
+  PRInt32 aSrcLen, char* aDestBuf, PRInt32 aDestLen)
+{
+    gint count = SingleByteConvert(aSelf, aSrcBuf,
+                       aSrcLen, aDestBuf,  aDestLen);
+    ReverseBuffer(aDestBuf, count);
+    return count;
+}
 
 static gint
 DoubleByteConvert(nsFontCharSetInfo* aSelf, const PRUnichar* aSrcBuf,
@@ -960,7 +985,7 @@ static nsFontCharSetInfo ISO88596 =
 static nsFontCharSetInfo ISO88597 =
   { "iso-8859-7", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO88598 =
-  { "iso-8859-8", SingleByteConvert, 0 };
+  { "iso-8859-8", SingleByteConvertReverse, 0 };
 static nsFontCharSetInfo ISO88599 =
   { "iso-8859-9", SingleByteConvert, 0 };
 static nsFontCharSetInfo ISO885915 =
@@ -969,6 +994,8 @@ static nsFontCharSetInfo JISX0201 =
   { "jis_0201", SingleByteConvert, 1 };
 static nsFontCharSetInfo KOI8R =
   { "KOI8-R", SingleByteConvert, 0 };
+static nsFontCharSetInfo TIS620 =
+  { "TIS-620", SingleByteConvert, 0 };
 
 static nsFontCharSetInfo Big5 =
   { "x-x-big5", DoubleByteConvert, 1 };
@@ -976,6 +1003,16 @@ static nsFontCharSetInfo CNS116431 =
   { "x-cns-11643-1", DoubleByteConvert, 1 };
 static nsFontCharSetInfo CNS116432 =
   { "x-cns-11643-2", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116433 =
+  { "x-cns-11643-3", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116434 =
+  { "x-cns-11643-4", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116435 =
+  { "x-cns-11643-5", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116436 =
+  { "x-cns-11643-6", DoubleByteConvert, 1 };
+static nsFontCharSetInfo CNS116437 =
+  { "x-cns-11643-7", DoubleByteConvert, 1 };
 static nsFontCharSetInfo GB2312 =
   { "gb_2312-80", DoubleByteConvert, 1 };
 static nsFontCharSetInfo JISX0208 =
@@ -1022,10 +1059,20 @@ static nsFontCharSetMap gCharSetMap[] =
   { "cns11643.1986-1",    &CNS116431     },
   { "cns11643.1986-2",    &CNS116432     },
   { "cns11643.1992-1",    &CNS116431     },
+  { "cns11643.1992.1-0",  &CNS116431     },
   { "cns11643.1992-12",   &Ignore        },
+  { "cns11643.1992.2-0",  &CNS116432     },
   { "cns11643.1992-2",    &CNS116432     },
-  { "cns11643.1992-3",    &Ignore        },
-  { "cns11643.1992-4",    &Ignore        },
+  { "cns11643.1992-3",    &CNS116433     },
+  { "cns11643.1992.3-0",  &CNS116433     },
+  { "cns11643.1992.4-0",  &CNS116434     },
+  { "cns11643.1992-4",    &CNS116434     },
+  { "cns11643.1992.5-0",  &CNS116435     },
+  { "cns11643.1992-5",    &CNS116435     },
+  { "cns11643.1992.6-0",  &CNS116436     },
+  { "cns11643.1992-6",    &CNS116436     },
+  { "cns11643.1992.7-0",  &CNS116437     },
+  { "cns11643.1992-7",    &CNS116437     },
   { "cp1251-1",           &CP1251        },
   { "dec-dectech",        &Ignore        },
   { "dtsymbol-1",         &Ignore        },
@@ -1078,6 +1125,7 @@ static nsFontCharSetMap gCharSetMap[] =
   { "sun-fontspecific",   &Ignore        },
   { "sunolcursor-1",      &Ignore        },
   { "sunolglyph-1",       &Ignore        },
+  { "tis620.2529-1",      &TIS620        },
   { "ucs2.cjk-0",         &Ignore        },
   { "ucs2.cjk_japan-0",   &Ignore        },
   { "ucs2.cjk_taiwan-0",  &Ignore        },
