@@ -147,7 +147,7 @@ interface nsIEventLoop : nsISupports
 					event object that can store the event data.  You can get one of
 					these by calling CreateEvent().  
 	@return NS_OK - evt has been retrieved and ready to be processed.
-				NS_COMFALSE - An exit event has been signalled.  evt may be null.
+				NS_COMFALSE - An exit event has been signalled.
 				NS_ERROR_INVALID_ARG - The event passed in was invalid.
 				NS_ERROR_FAILURE - Internal failure, ignore all results and
 								cease use of loop.
@@ -171,9 +171,12 @@ interface nsIEventLoop : nsISupports
 	@param fRemoveEvent Indicates that the Event should be removed from the 
 					queue as it is pulled off.  Passing false allows you to walk
 					through the queue without actually removing the queued messages.
-					Be careful when you do this.
+					Be careful when you do this.  (False is not supported in all
+					implementations, in those that do not support false, NS_COMFALSE
+					will be returned.)
 	@return NS_OK - msg has been retrieved and ready to be processed.
-				NS_COMFALSE - There are no more events to retrieve.  evt will be null.
+				NS_COMFALSE - There are no more events to retrieve.  Or 
+					fRemoveEvent was false and this is not supported.
 				NS_ERROR_INVALID_ARG - The event passed in was invalid.
 				NS_ERROR_FAILURE - Internal failure, ignore all results and
 								cease use of loop.
