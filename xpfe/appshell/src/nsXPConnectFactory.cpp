@@ -190,3 +190,4 @@ nsresult NS_NewXPConnectFactoryFactory(nsIFactory** aResult)
   *aResult = inst;
   return rv;
 }
+

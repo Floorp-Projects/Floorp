@@ -3135,3 +3135,4 @@ NS_IMETHODIMP nsWebShellWindow::PromptPassword(const char *url, const PRUnichar 
    nsCOMPtr<nsIPrompt> prompter = this;
    return wallet->PromptPasswordURL(text, pwd, url, prompter,  _retval);
 }
+
