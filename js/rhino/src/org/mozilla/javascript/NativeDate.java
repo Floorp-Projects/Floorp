@@ -991,12 +991,10 @@ final class NativeDate extends IdScriptable
             if (timeZoneFormatter == null)
                 timeZoneFormatter = new java.text.SimpleDateFormat("zzz");
 
-            if (timeZoneFormatter != null) {
-                result.append(" (");
-                java.util.Date date = new Date((long) t);
-                result.append(timeZoneFormatter.format(date));
-                result.append(')');
-            }
+            result.append(" (");
+            java.util.Date date = new Date((long) t);
+            result.append(timeZoneFormatter.format(date));
+            result.append(')');
         }
         return result.toString();
     }
