@@ -333,6 +333,61 @@ nsBlockReflowContext::ReflowBlock(nsIFrame* aFrame,
   return rv;
 }
 
+static void
+ComputeShrinkwrapMargins(const nsStyleSpacing* aStyleSpacing, nscoord aWidth, nsMargin& aMargin, nscoord& aXToUpdate) {
+  nscoord boxWidth = aWidth;
+  float   leftPct = 0.0;
+  float   rightPct = 0.0;
+  
+  if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetLeftUnit()) {
+    nsStyleCoord  leftCoord;
+    
+    aStyleSpacing->mMargin.GetLeft(leftCoord);
+    leftPct = leftCoord.GetPercentValue();
+    
+  } else {
+    boxWidth += aMargin.left;
+  }
+  
+  if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetRightUnit()) {
+    nsStyleCoord  rightCoord;
+    
+    aStyleSpacing->mMargin.GetRight(rightCoord);
+    rightPct = rightCoord.GetPercentValue();
+    
+  } else {
+    boxWidth += aMargin.right;
+  }
+  
+  // The total shrink wrap width "sww" is calculated by the expression:
+  //   sww = bw + (mp * sww)
+  // where "bw" is the box width (frame width plus margins that aren't percentage
+  // based) and "mp" are the total margin percentages (i.e., the left percentage
+  // value plus the right percentage value)
+  // Solving for "sww" gives us:
+  //  sww = bw / (1 - mp)
+  // Note that this is only well defined for "mp" less than 100%
+  float marginPct = leftPct + rightPct;
+  if (marginPct >= 1.0) {
+    // Ignore the right percentage and just use the left percentage
+    // XXX Pay attention to direction property...
+    marginPct = leftPct;
+    rightPct = 0.0;
+  }
+  
+  if ((marginPct > 0.0) && (marginPct < 1.0)) {
+    double shrinkWrapWidth = float(boxWidth) / (1.0 - marginPct);
+    
+    if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetLeftUnit()) {
+      aMargin.left = NSToCoordFloor((float)(shrinkWrapWidth * leftPct));
+      aXToUpdate += aMargin.left;
+    }
+    if (eStyleUnit_Percent == aStyleSpacing->mMargin.GetRightUnit()) {
+      aMargin.right = NSToCoordFloor((float)(shrinkWrapWidth * rightPct));
+    }
+  }
+}
+
 nsresult
 nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
                                     nsReflowReason aReason,
@@ -602,57 +657,7 @@ nsBlockReflowContext::DoReflowBlock(nsHTMLReflowState &aReflowState,
   // based margins. If so, we can calculate them now that we know the shrink
   // wrap width
   if (NS_SHRINKWRAPWIDTH == aReflowState.mComputedWidth) {
-    nscoord boxWidth = mMetrics.width;
-    float   leftPct = 0.0;
-    float   rightPct = 0.0;
-    
-    if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
-      nsStyleCoord  leftCoord;
-      
-      aReflowState.mStyleSpacing->mMargin.GetLeft(leftCoord);
-      leftPct = leftCoord.GetPercentValue();
-
-    } else {
-      boxWidth += mMargin.left;
-    }
-
-    if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetRightUnit()) {
-      nsStyleCoord  rightCoord;
-
-      aReflowState.mStyleSpacing->mMargin.GetRight(rightCoord);
-      rightPct = rightCoord.GetPercentValue();
-
-    } else {
-      boxWidth += mMargin.right;
-    }
-
-    // The total shrink wrap width "sww" is calculated by the expression:
-    //   sww = bw + (mp * sww)
-    // where "bw" is the box width (frame width plus margins that aren't percentage
-    // based) and "mp" are the total margin percentages (i.e., the left percentage
-    // value plus the right percentage value)
-    // Solving for "sww" gives us:
-    //  sww = bw / (1 - mp)
-    // Note that this is only well defined for "mp" less than 100%
-    float marginPct = leftPct + rightPct;
-    if (marginPct >= 1.0) {
-      // Ignore the right percentage and just use the left percentage
-      // XXX Pay attention to direction property...
-      marginPct = leftPct;
-      rightPct = 0.0;
-    }
-
-    if ((marginPct > 0.0) && (marginPct < 1.0)) {
-      double shrinkWrapWidth = float(boxWidth) / (1.0 - marginPct);
-
-      if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetLeftUnit()) {
-        mMargin.left = NSToCoordFloor(shrinkWrapWidth * leftPct);
-        mX += mMargin.left;
-      }
-      if (eStyleUnit_Percent == aReflowState.mStyleSpacing->mMargin.GetRightUnit()) {
-        mMargin.right = NSToCoordFloor(shrinkWrapWidth * rightPct);
-      }
-    }
+    ComputeShrinkwrapMargins(aReflowState.mStyleSpacing, mMetrics.width, mMargin, mX);
   }
 
   return rv;
@@ -757,13 +762,21 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
       // use the collapsed top and bottom margin values.
       if (nsnull != mMetrics.maxElementSize) {
         nsSize* m = mMetrics.maxElementSize;
+        nsMargin maxElemMargin = mMargin;
+
+        if (NS_SHRINKWRAPWIDTH == mComputedWidth) {
+          nscoord dummyXOffset;
+          // Base the margins on the max-element size
+          ComputeShrinkwrapMargins(mStyleSpacing, m->width, maxElemMargin, dummyXOffset);
+        }
+
         // Do not allow auto margins to impact the max-element size
         // since they are springy and don't really count!
         if (eStyleUnit_Auto != mStyleSpacing->mMargin.GetLeftUnit()) {
-          m->width += mMargin.left;
+          m->width += maxElemMargin.left;
         }
         if (eStyleUnit_Auto != mStyleSpacing->mMargin.GetRightUnit()) {
-          m->width += mMargin.right;
+          m->width += maxElemMargin.right;
         }
 
 #if XXX_fix_me
