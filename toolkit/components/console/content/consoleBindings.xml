@@ -62,9 +62,7 @@
             this.mSelectedItem.removeAttribute("selected");
           
           this.mSelectedItem = val;
-          if (val)
-            val.setAttribute("selected", "true");
-          document.commandDispatcher.updateCommands("select");
+          val.setAttribute("selected", "true");
         ]]></setter>
       </property>
     
@@ -94,7 +92,6 @@
           this.mMode = this.getAttribute("mode") || "All";
 
           this.appendInitialItems();
-          this.selectedItem = null; // fires command updater
         ]]></body>
       </method>
     
@@ -209,7 +206,6 @@
           var newRows = this.mConsoleRowBox.cloneNode(false);
           this.mConsoleRowBox.parentNode.replaceChild(newRows, this.mConsoleRowBox);
           this.mConsoleRowBox = newRows;
-          this.selectedItem = null;
         ]]></body>
       </method>
             
@@ -298,7 +294,8 @@
           while (target && !("_IsConsoleRow" in target))
             target = target.parentNode;
 
-          this.selectedItem = target;
+          if (target)
+            this.selectedItem = target;
         }
       ]]></handler>
     </handlers>
@@ -313,17 +310,17 @@
         <xul:vbox class="console-row-content" xbl:inherits="selected" flex="1">
           <xul:box class="console-row-msg" align="start">
             <xul:label class="label" xbl:inherits="value=typetext"/>
-            <xul:description class="console-error-msg" xbl:inherits="value=msg" flex="1"/>
+            <xul:description class="console-error-msg" xbl:inherits="xbl:text=msg" flex="1"/>
           </xul:box>
           <xul:box class="console-row-file" xbl:inherits="hidden=hideSource">
             <xul:label class="label" value="&errFile.label;"/>
-            <xul:box class="console-error-source" xbl:inherits="url"/>
+            <xul:box class="console-error-source" xbl:inherits="url,line"/>
             <spacer flex="1"/>
             <xul:label class="label" value="&errLine.label;"/>
             <xul:label class="label" xbl:inherits="value=line" flex="1"/>
           </xul:box>
           <xul:vbox class="console-row-code" xbl:inherits="selected,hidden=hideCode">
-            <xul:label class="monospace console-code" xbl:inherits="value=code"/>
+            <xul:label class="monospace console-code" xbl:inherits="value=code" crop="end"/>
             <xul:box xbl:inherits="hidden=hideCaret">
               <xul:label class="monospace console-dots" xbl:inherits="value=errorDots"/>
               <xul:label class="monospace console-caret" xbl:inherits="value=errorCaret"/>
@@ -371,7 +368,7 @@
         </xul:box>
         <xul:vbox class="console-row-content" xbl:inherits="selected" flex="1">
           <xul:vbox class="console-row-msg" flex="1">
-            <xul:description class="console-msg-text" xbl:inherits="value=msg" flex="1"/>
+            <xul:description class="console-msg-text" xbl:inherits="xbl:text=msg"/>
           </xul:vbox>
         </xul:vbox>
       </xul:box>
@@ -393,9 +390,11 @@
 
     <handlers>
       <handler event="click"><![CDATA[
+          var url = this.getAttribute("url");
+          var line = getAttribute("line");  
           window.openDialog(
             "chrome://global/content/viewSource.xul", "_blank", 
-            "scrollbars,resizable,chrome,dialog=no", this.getAttribute("url"));
+            "all,dialog=no", url, null, null, line);
       ]]></handler>
     </handlers>
   </binding>

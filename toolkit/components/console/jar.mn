@@ -1,8 +1,8 @@
 toolkit.jar:
 *+ content/global/console.js                            (content/console.js)
 *+ content/global/console.xul                           (content/console.xul)
-   content/global/console.css                           (content/console.css)
-   content/global/consoleBindings.xml                   (content/consoleBindings.xml)
++   content/global/console.css                           (content/console.css)
++   content/global/consoleBindings.xml                   (content/consoleBindings.xml)
 
 classic.jar:
 +  skin/classic/global/console/console.css              (skin/console.css)
