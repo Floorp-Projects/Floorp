@@ -963,8 +963,23 @@ function getFontContext(cx)
 
 function msgIsImportant (msg, sourceNick, network)
 {
+    /* This is a huge hack, but it works. What we want is to match against the
+     * plain text of a message, ignoring color codes, bold, etc. so we put it
+     * through the munger. This produces a tree of HTML elements, which we use
+     * |.innerHTML| to convert to a textual representation.
+     * 
+     * Then we remove all the HTML tags, using a RegExp.
+     * 
+     * It certainly isn't ideal, and there has to be a better way, but it:
+     *   a) works, and
+     *   b) is fast enough to not cause problems,
+     * so it will do for now.
+     */
+    var plainMsg = client.munger.munge(msg, null, {});
+    plainMsg = plainMsg.innerHTML.replace(/<[^>]+>/g, "");
+    
     var re = network.stalkExpression;
-    if (msg.search(re) != -1 || sourceNick && sourceNick.search(re) == 0)
+    if (plainMsg.search(re) != -1 || sourceNick && sourceNick.search(re) == 0)
         return true;
 
     return false;    
