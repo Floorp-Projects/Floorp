@@ -69,6 +69,7 @@ class nsIPresState;
 class nsIScrollableView;
 class nsILayoutHistoryState;
 struct nsRect;
+struct nsSize;
 
 
 /**
@@ -163,7 +164,15 @@ public:
   nsresult GetOffsetRect(nsRect& aRect,
                          nsIContent** aOffsetParent);
   nsresult GetScrollInfo(nsIScrollableView **aScrollableView, float *aP2T,
-                         float *aT2P);
+                         float *aT2P, nsIFrame **aFrame = nsnull);
+
+  /**
+   * Get an element's client info if the element doesn't have a
+   * scrollable view.
+   * @param aFrame the frame for which to get the client area size
+   * @return the size of the frame's client area
+   */
+  static const nsSize GetClientAreaSize(nsIFrame *aFrame);
 
   // Implementation for nsIContent
   NS_IMETHOD SetDocument(nsIDocument* aDocument, PRBool aDeep,

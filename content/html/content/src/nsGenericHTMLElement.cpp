@@ -958,7 +958,8 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
 nsresult
 nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
-                                    float *aP2T, float *aT2P)
+                                    float *aP2T, float *aT2P,
+                                    nsIFrame **aFrame)
 {
   *aScrollableView = nsnull;
   *aP2T = 0.0f;
@@ -980,6 +981,13 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     return NS_OK;
   }
 
+  // Get the presentation context
+  nsCOMPtr<nsIPresContext> presContext;
+  presShell->GetPresContext(getter_AddRefs(presContext));
+  if (!presContext) {
+    return NS_OK;
+  }
+
   // Get the primary frame for this element
   nsIFrame *frame = nsnull;
   presShell->GetPrimaryFrameFor(this, &frame);
@@ -987,11 +995,8 @@ nsGenericHTMLElement::GetScrollInfo(nsIScrollableView **aScrollableView,
     return NS_OK;
   }
 
-  // Get the presentation context
-  nsCOMPtr<nsIPresContext> presContext;
-  presShell->GetPresContext(getter_AddRefs(presContext));
-  if (!presContext) {
-    return NS_OK;
+  if (aFrame) {
+    *aFrame = frame;
   }
 
   presContext->GetPixelsToTwips(aP2T);
@@ -1168,6 +1173,26 @@ nsGenericHTMLElement::GetScrollWidth(PRInt32* aScrollWidth)
   return rv;
 }
 
+// static
+const nsSize
+nsGenericHTMLElement::GetClientAreaSize(nsIFrame *aFrame)
+{
+  nsRect rect;
+  aFrame->GetRect(rect);
+
+  const nsStyleBorder* border = nsnull;
+  aFrame->GetStyleData(eStyleStruct_Border, (const nsStyleStruct*&)border);
+
+  if (border) {
+    nsMargin border_size;
+    border->CalcBorderFor(aFrame, border_size);
+
+    rect.Deflate(border_size);
+  }
+
+  return nsSize(rect.width, rect.height);
+}
+
 nsresult
 nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
 {
@@ -1175,10 +1200,10 @@ nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
   *aClientHeight = 0;
 
   nsIScrollableView *scrollView = nsnull;
-  nsresult rv = NS_OK;
   float p2t, t2p;
+  nsIFrame *frame = nsnull;
 
-  GetScrollInfo(&scrollView, &p2t, &t2p);
+  GetScrollInfo(&scrollView, &p2t, &t2p, &frame);
 
   if (scrollView) {
     const nsIView *view = nsnull;
@@ -1188,9 +1213,16 @@ nsGenericHTMLElement::GetClientHeight(PRInt32* aClientHeight)
     view->GetBounds(r);
 
     *aClientHeight = NSTwipsToIntPixels(r.height, t2p);
+  } else if (mNodeInfo->Equals(nsHTMLAtoms::body) && frame) {
+    // Special case code to make document.body.clientHeight work even
+    // if the body element's overflow is hidden.
+    //
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=180552
+
+    *aClientHeight = NSTwipsToIntPixels(GetClientAreaSize(frame).height, t2p);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
@@ -1200,10 +1232,10 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
   *aClientWidth = 0;
 
   nsIScrollableView *scrollView = nsnull;
-  nsresult rv = NS_OK;
   float p2t, t2p;
+  nsIFrame *frame = nsnull;
 
-  GetScrollInfo(&scrollView, &p2t, &t2p);
+  GetScrollInfo(&scrollView, &p2t, &t2p, &frame);
 
   if (scrollView) {
     const nsIView *view = nsnull;
@@ -1213,9 +1245,16 @@ nsGenericHTMLElement::GetClientWidth(PRInt32* aClientWidth)
     view->GetBounds(r);
 
     *aClientWidth = NSTwipsToIntPixels(r.width, t2p);
+  } else if (mNodeInfo->Equals(nsHTMLAtoms::body) && frame) {
+    // Special case code to make document.body.clientWidth work even
+    // if the body element's overflow is hidden.
+    //
+    // http://bugzilla.mozilla.org/show_bug.cgi?id=180552
+
+    *aClientWidth = NSTwipsToIntPixels(GetClientAreaSize(frame).width, t2p);
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult
