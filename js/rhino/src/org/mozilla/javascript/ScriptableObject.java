@@ -122,17 +122,16 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     public boolean has(String name, Scriptable start) {
         // See comments in get about cache operations
         Slot slot = lastAccess;
-        if (name == slot.stringKey && slot.wasDeleted == 0) {
-            return true;
-        }
-        slot = getSlot(name, name.hashCode(), false);
-        if (slot != null) {
-        // Update cache
+        if (name != slot.stringKey || slot.wasDeleted != 0) {
+            slot = getSlot(name, name.hashCode());
+            if (slot == null) {
+                return false;
+            }
+
             slot.stringKey = name;
             lastAccess = slot;
-            return true;
         }
-        return false;
+        return true;
     }
 
     /**
@@ -143,7 +142,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return true if and only if the property was found in the object
      */
     public boolean has(int index, Scriptable start) {
-        return getSlot(null, index, false) != null;
+        return getSlot(null, index) != null;
     }
 
     /**
@@ -157,34 +156,29 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return the value of the property (may be null), or NOT_FOUND
      */
     public Object get(String name, Scriptable start) {
-        Slot slot = lastAccess; // Get local copy
-        if (name == slot.stringKey) {
-            // Cache match, check if it was not deleted
-            if (slot.wasDeleted == 0) { return slot.value; }
+        // Query last access cache and check that it was not deleted
+        Slot slot = lastAccess;
+        if (name != slot.stringKey || slot.wasDeleted != 0) {
+            slot = getSlot(name, name.hashCode());
+            if (slot == null) {
+                return Scriptable.NOT_FOUND;
+            }
+
+            // Update cache - here stringKey.equals(name) holds, but it can be
+            // that slot.stringKey != name. To make last name cache work, need
+            // to change the key
+            slot.stringKey = name;
+            lastAccess = slot;
         }
 
-        int hashCode = name.hashCode();
-        slot = getSlot(name, hashCode, false);
-        if (slot == null) {
-            return Scriptable.NOT_FOUND;
-        }
-        else if ((slot.flags & Slot.HAS_GETTER) != 0) {
-            return getByGetter((GetterSlot) slot, name, start);
+        if ((slot.flags & Slot.HAS_GETTER) != 0) {
+            return getByGetter((GetterSlot) slot, start);
         }
 
-        // Here stringKey.equals(name) holds, but it can be that
-        // slot.stringKey != name. To make last name cache work, need
-        // to change the key
-        slot.stringKey = name;
-
-        // Update cache.
-        lastAccess = slot;
         return slot.value;
     }
 
-    private Object getByGetter(GetterSlot slot,
-                               String name, Scriptable start)
-    {
+    private Object getByGetter(GetterSlot slot, Scriptable start) {
         try {
             if (slot.delegateTo == null) {
                 // Walk the prototype chain to find an appropriate
@@ -219,7 +213,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @return the value of the property (may be null), or NOT_FOUND
      */
     public Object get(int index, Scriptable start) {
-        Slot slot = getSlot(null, index, false);
+        Slot slot = getSlot(null, index);
         if (slot == null)
             return Scriptable.NOT_FOUND;
         return slot.value;
@@ -244,7 +238,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         Slot slot = lastAccess; // Get local copy
         if (name != slot.stringKey || slot.wasDeleted != 0) {
             int hash = name.hashCode();
-            slot = getSlot(name, hash, false);
+            slot = getSlot(name, hash);
             if (slot == null) {
                 if (start != this) {
                     start.put(name, start, value);
@@ -252,66 +246,75 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 }
                 slot = getSlotToSet(name, hash);
             }
+            // Note: cache is not updated in put
         }
+
         if ((slot.attributes & ScriptableObject.READONLY) != 0) {
             return;
         }
-        else if ((slot.flags & Slot.HAS_SETTER) != 0) {
-            setBySetter((GetterSlot)slot, name, start, value);
+        if ((slot.flags & Slot.HAS_SETTER) != 0) {
+            setBySetter((GetterSlot)slot, start, value);
             return;
         }
         if (this == start) {
-            // Note: no cache update
             slot.value = value;
         } else {
             start.put(name, start, value);
         }
     }
 
-    private void setBySetter(GetterSlot slot,
-                             String name, Scriptable start, Object value)
-    {
-        Context cx = Context.getContext();
+    private void setBySetter(GetterSlot slot, Scriptable start, Object value) {
+        Object setterThis;
+        Object[] args;
         Object setterResult;
-        try {
-            Class pTypes[] = slot.setter.getParameterTypes();
-            Class desired = pTypes[pTypes.length - 1];
-            Object actualArg
-                    = FunctionObject.convertArg(cx, start, value, desired);
-            if (slot.delegateTo == null) {
-                // Walk the prototype chain to find an appropriate
-                // object to invoke the setter on.
-                Object[] arg = { actualArg };
-                Class clazz = slot.setter.getDeclaringClass();
-                while (!clazz.isInstance(start)) {
-                    start = start.getPrototype();
-                    if (start == null) {
-                        start = this;
-                        break;
-                    }
+        Context cx = Context.getContext();
+        Class pTypes[] = slot.setter.getParameterTypes();
+        Class desired = pTypes[pTypes.length - 1];
+        Object actualArg
+                = FunctionObject.convertArg(cx, start, value, desired);
+        if (slot.delegateTo == null) {
+            // Walk the prototype chain to find an appropriate
+            // object to invoke the setter on.
+            Class clazz = slot.setter.getDeclaringClass();
+            while (!clazz.isInstance(start)) {
+                start = start.getPrototype();
+                if (start == null) {
+                    start = this;
+                    break;
                 }
-                setterResult = slot.setter.invoke(start, arg);
             }
-            else {
-                Object[] args = { this, actualArg };
-                setterResult = slot.setter.invoke(slot.delegateTo, args);
-            }
+            setterThis = start;
+            args = new Object[] { actualArg };
+        } else {
+            setterThis = slot.delegateTo;
+            args = new Object[] { this, actualArg };
         }
-        catch (InvocationTargetException e) {
+
+        try {
+            setterResult = slot.setter.invoke(setterThis, args);
+        } catch (InvocationTargetException e) {
             throw WrappedException.wrapException(e);
-        }
-        catch (IllegalAccessException e) {
+        } catch (IllegalAccessException e) {
             throw WrappedException.wrapException(e);
         }
 
         if (slot.setterReturnsValue) {
-            slot.value = setterResult;
-            if (!(setterResult instanceof Method)) {
-                slot.flags = 0;
+            // Replace Getter slot by a simple one
+            Slot replacement = new Slot();
+            replacement.intKey = slot.intKey;
+            replacement.stringKey = slot.stringKey;
+            replacement.attributes = slot.attributes;
+            replacement.value = setterResult;
+
+            synchronized (this) {
+                int i = getSlotPosition(slots, slot.stringKey, slot.intKey);
+                // Check slot was not deleted/replaced before synchronization
+                if (i >= 0 && slots[i] == slot) {
+                    slots[i] = replacement;
+                }
             }
         }
     }
-
 
     /**
      * Sets the value of the indexed property, creating it if need be.
@@ -321,7 +324,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
      * @param value value to set the property to
      */
     public void put(int index, Scriptable start, Object value) {
-        Slot slot = getSlot(null, index, false);
+        Slot slot = getSlot(null, index);
         if (slot == null) {
             if (start != this) {
                 start.put(index, start, value);
@@ -382,7 +385,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     public int getAttributes(String name, Scriptable start)
         throws PropertyException
     {
-        Slot slot = getSlot(name, name.hashCode(), false);
+        Slot slot = getSlot(name, name.hashCode());
         if (slot == null) {
             throw PropertyException.withMessage0("msg.prop.not.found");
         }
@@ -406,7 +409,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     public int getAttributes(int index, Scriptable start)
         throws PropertyException
     {
-        Slot slot = getSlot(null, index, false);
+        Slot slot = getSlot(null, index);
         if (slot == null) {
             throw PropertyException.withMessage0("msg.prop.not.found");
         }
@@ -442,7 +445,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     {
         final int mask = READONLY | DONTENUM | PERMANENT;
         attributes &= mask; // mask out unused bits
-        Slot slot = getSlot(name, name.hashCode(), false);
+        Slot slot = getSlot(name, name.hashCode());
         if (slot == null) {
             throw PropertyException.withMessage0("msg.prop.not.found");
         }
@@ -469,7 +472,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     {
         final int mask = READONLY | DONTENUM | PERMANENT;
         attributes &= mask; // mask out unused bits
-        Slot slot = getSlot(null, index, false);
+        Slot slot = getSlot(null, index);
         if (slot == null) {
             throw PropertyException.withMessage0("msg.prop.not.found");
         }
@@ -1604,44 +1607,35 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             Slot slot = slots[i];
             if (slot == null || slot == REMOVED)
                 continue;
-            if ((slot.flags & slot.HAS_SETTER) != 0 && attribute == READONLY)
-                continue;
             slot.attributes |= attribute;
         }
     }
 
-    private Slot getSlot(String id, int index, boolean shouldDelete) {
-        Slot[] slots = this.slots;
-        if (slots == null)
-            return null;
-        int start = (index & 0x7fffffff) % slots.length;
-        int i = start;
-        do {
-            Slot slot = slots[i];
-            if (slot == null)
-                return null;
-            if (slot != REMOVED && slot.intKey == index &&
-                (slot.stringKey == id || (id != null &&
-                                          id.equals(slot.stringKey))))
-            {
-                if (shouldDelete) {
-                    if ((slot.attributes & PERMANENT) == 0) {
-                        // Mark the slot as removed to handle a case when
-                        // another thread manages to put just removed slot
-                        // into lastAccess cache.
-                        slot.wasDeleted = (byte)1;
-                        slots[i] = REMOVED;
-                        count--;
-                        if (slot == lastAccess)
-                            lastAccess = REMOVED;
-                    }
+    private Slot getSlot(String id, int index) {
+        Slot[] slots = this.slots; // Get local copy
+        int i = getSlotPosition(slots, id, index);
+        return (i < 0) ? null : slots[i];
+    }
+
+    private static int getSlotPosition(Slot[] slots, String id, int index) {
+        if (slots != null) {
+            int start = (index & 0x7fffffff) % slots.length;
+            int i = start;
+            do {
+                Slot slot = slots[i];
+                if (slot == null)
+                    break;
+                if (slot != REMOVED && slot.intKey == index &&
+                    (slot.stringKey == id || (id != null &&
+                                              id.equals(slot.stringKey))))
+                {
+                    return i;
                 }
-                return slot;
-            }
-            if (++i == slots.length)
-                i = 0;
-        } while (i != start);
-        return null;
+                if (++i == slots.length)
+                    i = 0;
+            } while (i != start);
+        }
+        return -1;
     }
 
     // First search for the existing slot without using synchronization
@@ -1737,7 +1731,22 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
     private synchronized void removeSlot(String name, int index) {
         if (count < 0)
             throw Context.reportRuntimeError0("msg.remove.sealed");
-        getSlot(name, index, true);
+
+        int i = getSlotPosition(slots, name, index);
+        if (i >= 0) {
+            Slot slot = slots[i];
+            if ((slot.attributes & PERMANENT) == 0) {
+                // Mark the slot as removed to handle a case when
+                // another thread manages to put just removed slot
+                // into lastAccess cache.
+                slot.wasDeleted = (byte)1;
+                slots[i] = REMOVED;
+                count--;
+                if (slot == lastAccess) {
+                    lastAccess = REMOVED;
+                }
+            }
+        }
     }
 
      // Grow the hash table to accommodate new entries.
