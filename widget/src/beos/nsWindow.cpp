@@ -551,7 +551,11 @@ nsresult nsWindow::StandardWindowCreate(nsIWidget *aParent,
     {
       // create window (dialog)
       bool is_subset = (parent)? true : false;
-      window_feel feel = (is_subset) ? B_MODAL_SUBSET_WINDOW_FEEL : B_MODAL_APP_WINDOW_FEEL;
+      
+      // see bugzilla bug 66809 regarding this change -wade <guru@startrek.com>
+      //window_feel feel = (is_subset) ? B_MODAL_SUBSET_WINDOW_FEEL : B_MODAL_APP_WINDOW_FEEL;
+      window_feel feel = B_NORMAL_WINDOW_FEEL;
+      
       BRect winrect = BRect(aRect.x, aRect.y, aRect.x + aRect.width - 1, aRect.y + aRect.height - 1);
       
       winrect.OffsetBy( 10, 30 );
