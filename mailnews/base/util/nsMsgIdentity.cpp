@@ -795,6 +795,7 @@ nsMsgIdentity::Copy(nsIMsgIdentity *identity)
     COPY_IDENTITY_WSTR_VALUE(identity,GetFullName,SetFullName)
     COPY_IDENTITY_WSTR_VALUE(identity,GetOrganization,SetOrganization)
     COPY_IDENTITY_STR_VALUE(identity,GetDraftFolder,SetDraftFolder)
+    COPY_IDENTITY_STR_VALUE(identity,GetFccFolder,SetFccFolder)
     COPY_IDENTITY_STR_VALUE(identity,GetStationeryFolder,SetStationeryFolder)
     COPY_IDENTITY_BOOL_VALUE(identity,GetAttachSignature,SetAttachSignature)
     COPY_IDENTITY_FILE_VALUE(identity,GetSignature,SetSignature)
@@ -804,6 +805,7 @@ nsMsgIdentity::Copy(nsIMsgIdentity *identity)
     COPY_IDENTITY_INT_VALUE(identity,GetSignatureDate,SetSignatureDate)
     COPY_IDENTITY_BOOL_VALUE(identity,GetAttachVCard,SetAttachVCard)
     COPY_IDENTITY_STR_VALUE(identity,GetEscapedVCard,SetEscapedVCard)
+    COPY_IDENTITY_STR_VALUE(identity,GetSmtpServerKey,SetSmtpServerKey)
     return NS_OK;
 }
 
