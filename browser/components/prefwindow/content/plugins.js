@@ -42,6 +42,7 @@ var gPrefs = null;
 
 const kDisabledPluginTypesPref = "browser.download.pluginOverrideTypes";
 const kPluginHandlerContractID = "@mozilla.org/content/plugin/document-loader-factory;1";
+const kPluginOverrideTypesNotHandled = "browser.download.pluginOverrideTypesNotHandled";
 
 function init()
 {
@@ -134,8 +135,24 @@ function PluginTypes()
     var types = gPrefs.getCharPref(kDisabledPluginTypesPref);
     var disabledTypes = types.split(",");
     
-    for (var i = 0; i < disabledTypes.length; ++i)
-      this.addType(disabledTypes[i], false);
+    // Don't show types for which there is no plugin configured, even if that type
+    // is listed in the override list. This may be because the user is running a different
+    // build with a profile that was used in another build that had other plugins installed.
+    // We don't want to clobber the override list and we also don't want to display the
+    // entries for the plugins that aren't configured. 
+    var validOverrides = { };
+    if (gPrefs.prefHasUserValue(kPluginOverrideTypesNotHandled)) {
+      var notHandledTypes = gPrefs.getCharPref(kPluginOverrideTypesNotHandled);
+      notHandledTypes = notHandledTypes.split(",");
+      
+      for (var i = 0; i < notHandledTypes.length; ++i)
+        validOverrides[notHandledTypes[i]] = notHandledTypes[i];
+    }
+    
+    for (i = 0; i < disabledTypes.length; ++i) {
+      if (!(disabledTypes[i] in validOverrides)) 
+        this.addType(disabledTypes[i], false);
+    }
   }
   catch (e) { }
   
@@ -157,6 +174,11 @@ PluginTypes.prototype = {
         this._pluginTypeHash[mimeInfo.primaryExtension] = pluginType;
         this._pluginTypes.push(pluginType);
       }        
+      // We check that the primary extension has already been hashed
+      // by a plugin that is installed in this build before adding a disable
+      // override to the list. Otherwise we might end up showing disabled
+      // plugin entries for plugins that actually aren't installed and configured
+      // in this build, but were for another build that was using this profile.
       else {
         // Append this MIME type to the list of MIME types for the extension. 
         var pluginType = this._pluginTypeHash[mimeInfo.primaryExtension];
