@@ -840,6 +840,12 @@ void nsMenuX::LoadMenuItem( nsIMenu* inParentMenu, nsIContent* inMenuItemContent
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::label, menuitemName);
     inMenuItemContent->GetAttr(kNameSpaceID_None, nsWidgetAtoms::command, menuitemCmd);
 
+    // Bug 164155 - Carbon interprets a leading hyphen on a menu item as
+    // a separator. We want a real menu item, so "escape" the hyphen by inserting
+    // a zero width space (Unicode 8204) before it.
+    if ( menuitemName[0] == '-' )
+      menuitemName.Assign( NS_LITERAL_STRING("\u200c") + menuitemName );
+
     //printf("menuitem %s \n", NS_LossyConvertUCS2toASCII(menuitemName).get());
               
     PRBool enabled = ! (disabled.EqualsLiteral("true"));
