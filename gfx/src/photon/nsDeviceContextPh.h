@@ -30,6 +30,7 @@
 #include "nsIRenderingContext.h"
 
 #include "nsRenderingContextPh.h"
+//#include "nsIClientPrintContext.h"
 #include <Pt.h>
 
 class nsDeviceContextPh : public DeviceContextImpl
@@ -41,6 +42,7 @@ public:
   NS_DECL_ISUPPORTS
   
   NS_IMETHOD  Init(nsNativeWidget aWidget);
+
 
   NS_IMETHOD  CreateRenderingContext(nsIRenderingContext *&aContext);
   NS_IMETHOD  CreateRenderingContext(nsIView *aView, nsIRenderingContext *&aContext) {return (DeviceContextImpl::CreateRenderingContext(aView,aContext));}
