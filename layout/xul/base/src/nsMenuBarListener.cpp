@@ -76,7 +76,7 @@ nsMenuBarListener::~nsMenuBarListener()
 {
 }
 
-NS_IMETHODIMP
+nsresult
 nsMenuBarListener::GetMenuAccessKey(PRInt32* aAccessKey)
 {
   if (!aAccessKey)
