@@ -465,12 +465,13 @@ nsBrowserInstance::~nsBrowserInstance()
 }
 
 void
-nsBrowserInstance::ReinitializeContentVariables()
+nsBrowserInstance::ReinitializeContentWindow()
 {
   nsresult rv;
 
   nsCOMPtr<nsIDOMWindowInternal> contentWindow;
   mDOMWindow->Get_content(getter_AddRefs(contentWindow));
+
   nsCOMPtr<nsIScriptGlobalObject> globalObj(do_QueryInterface(contentWindow));
 
   if (globalObj) {
@@ -528,9 +529,17 @@ nsBrowserInstance::ReinitializeContentVariables()
         mUrlbarHistory = ubHistory;
     }
   }
+}
+
+void
+nsBrowserInstance::ReinitializeContentVariables()
+{
+  ReinitializeContentWindow();
+
+  nsresult rv;
 
   /* reinitialize the security module */
-  nsCOMPtr<nsSecureBrowserUI> security = do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv);
+  nsCOMPtr<nsSecureBrowserUI> security(do_CreateInstance(NS_SECURE_BROWSER_UI_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && security) {
     nsCOMPtr<nsIDOMDocument> doc;
     rv = mDOMWindow->GetDocument(getter_AddRefs(doc));
@@ -538,6 +547,9 @@ nsBrowserInstance::ReinitializeContentVariables()
       nsCOMPtr<nsIDOMElement> button;
       rv = doc->GetElementById(NS_LITERAL_STRING("security-button"), getter_AddRefs(button));
       if (NS_SUCCEEDED(rv)) {
+        nsCOMPtr<nsIDOMWindowInternal> contentWindow;
+        mDOMWindow->Get_content(getter_AddRefs(contentWindow));
+
         security->Init(contentWindow, button);
       }
     }
@@ -798,7 +810,7 @@ nsBrowserInstance::SetWebShellWindow(nsIDOMWindowInternal* aWin)
     }
   }
 
-  ReinitializeContentVariables();
+  ReinitializeContentWindow();
 
   return NS_OK;
 }
