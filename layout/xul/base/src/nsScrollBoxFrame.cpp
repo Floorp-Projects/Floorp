@@ -478,8 +478,9 @@ nsScrollBoxFrame::GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 NS_IMETHODIMP
 nsScrollBoxFrame::GetMinSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize)
 {
-  aSize.width = 0;
-  aSize.height = 0;
+  nsIBox* child = nsnull;
+  GetChildBox(&child);
+  aSize = child->GetMinSizeForScrollArea(aBoxLayoutState);
   AddBorderAndPadding(aSize);
   AddInset(aSize);
   nsIBox::AddCSSMinSize(aBoxLayoutState, this, aSize);

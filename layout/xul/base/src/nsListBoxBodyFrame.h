@@ -93,6 +93,9 @@ public:
   NS_IMETHOD DoLayout(nsBoxLayoutState& aBoxLayoutState);
   NS_IMETHOD NeedsRecalc();
 
+  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState);
+  NS_IMETHOD GetPrefSize(nsBoxLayoutState& aBoxLayoutState, nsSize& aSize);
+
   // size calculation 
   PRInt32 GetRowCount();
   PRInt32 GetRowHeightTwips() { return mRowHeight; }

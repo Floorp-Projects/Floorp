@@ -1304,6 +1304,12 @@ NS_PTR_TO_INT32(frame->GetProperty(nsLayoutAtoms::embeddingLevel))
   NS_HIDDEN_(nsresult)
     GetOrdinal(nsBoxLayoutState& aBoxLayoutState, PRUint32& aOrdinal);
 
+  /**
+   * This returns the minimum size for the scroll area if this frame is
+   * being scrolled. Usually it's (0,0).
+   */
+  virtual nsSize GetMinSizeForScrollArea(nsBoxLayoutState& aBoxLayoutState) = 0;
+
   NS_IMETHOD GetAscent(nsBoxLayoutState& aBoxLayoutState, nscoord& aAscent)=0;
   NS_IMETHOD IsCollapsed(nsBoxLayoutState& aBoxLayoutState, PRBool& aCollapsed)=0;
   // This does not alter the overflow area. If the caller is changing
