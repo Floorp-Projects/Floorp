@@ -2538,7 +2538,7 @@ public:
                   nsIContent** aResult);
 
     nsresult
-    SetEmpty(nsIContent *aElement, const Match* aMatch);
+    SetContainerAttrs(nsIContent *aElement, const Match* aMatch);
 
 #ifdef PR_LOGGING
     nsresult
@@ -4445,7 +4445,7 @@ nsXULTemplateBuilder::FireNewlyMatchedRules(const ClusterKeySet& aNewKeys)
                                      PR_TRUE, bestmatch, nsnull, nsnull);
 
             // Update the 'empty' attribute
-            SetEmpty(content, bestmatch);
+            SetContainerAttrs(content, bestmatch);
 
             // Remember the best match as the new "last" match
             matches->SetLastMatch(bestmatch);
@@ -4520,7 +4520,7 @@ nsXULTemplateBuilder::Retract(nsIRDFResource* aSource,
                 RemoveMember(content, VALUE_TO_IRDFRESOURCE(memberval), PR_TRUE);
 
                 // Update the 'empty' attribute
-                SetEmpty(content, match.operator->());
+                SetContainerAttrs(content, match.operator->());
             }
         }
 
@@ -6175,7 +6175,7 @@ nsXULTemplateBuilder::CreateElement(PRInt32 aNameSpaceID,
 }
 
 nsresult
-nsXULTemplateBuilder::SetEmpty(nsIContent *aElement, const Match* aMatch)
+nsXULTemplateBuilder::SetContainerAttrs(nsIContent *aElement, const Match* aMatch)
 {
     NS_PRECONDITION(aMatch->mRule != nsnull, "null ptr");
     if (! aMatch->mRule)
@@ -6184,16 +6184,25 @@ nsXULTemplateBuilder::SetEmpty(nsIContent *aElement, const Match* aMatch)
     Value containerval;
     aMatch->mAssignments.GetAssignmentFor(aMatch->mRule->GetContainerVariable(), &containerval);
 
-    nsAutoString oldvalue;
-    aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldvalue);
+    nsAutoString oldcontainer;
+    aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::container, oldcontainer);
+
+    nsAutoString oldempty;
+    aElement->GetAttribute(kNameSpaceID_None, nsXULAtoms::empty, oldempty);
 
     PRBool iscontainer, isempty;
     CheckContainer(VALUE_TO_IRDFRESOURCE(containerval), &iscontainer, &isempty);
 
-    const nsString& newvalue = (iscontainer && isempty) ? kTrueStr : kFalseStr;
+    const nsString& newcontainer = iscontainer ? kTrueStr : kFalseStr;
 
-    if (oldvalue != newvalue) {
-        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, newvalue, PR_TRUE);
+    if (oldcontainer != newcontainer) {
+        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::container, newcontainer, PR_TRUE);
+    }
+
+    const nsString& newempty = (iscontainer && isempty) ? kTrueStr : kFalseStr;
+
+    if (oldempty != newempty) {
+        aElement->SetAttribute(kNameSpaceID_None, nsXULAtoms::empty, newempty, PR_TRUE);
     }
 
     return NS_OK;
