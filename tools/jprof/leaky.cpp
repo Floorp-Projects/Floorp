@@ -376,9 +376,10 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   // she had.  I dont remember her name but I always feel guilty about globals)
 
   // Shell Sort. 581130733 is the max 31 bit value of h = 3h+1
-  for(int mx=usefulSymbols/9, h=581130733; h>0; h/=3) {
+  int mx, i, h;
+  for(mx=usefulSymbols/9, h=581130733; h>0; h/=3) {
     if(h<mx) {
-      for(int i = h-1; i<usefulSymbols; i++) {
+      for(i = h-1; i<usefulSymbols; i++) {
         int j, tmp=rankingTable[i], val = countArray[tmp];
 	for(j = i; (j>=h) && (countArray[rankingTable[j-h]]<val); j-=h) {
 	  rankingTable[j] = rankingTable[j-h];
@@ -398,7 +399,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   fprintf(fp, "%5s %5s    %4s %s\n",
   "index", "Count", "Hits", "Function Name");
 
-  for(int i=0; i<usefulSymbols && countArray[rankingTable[i]]>0; i++) {
+  for(i=0; i<usefulSymbols && countArray[rankingTable[i]]>0; i++) {
     Symbol *sp=&externalSymbols[rankingTable[i]];
     
     sp->cntP.printReport(fp, this);
@@ -417,10 +418,10 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
 
   // Cut-N-Paste Shell sort from above.  The Ranking Table has already been
   // populated, so we do not have to reinitialize it.
-  for(int mx=usefulSymbols/9, h=581130733; h>0; h/=3) {
+  for(mx=usefulSymbols/9, h=581130733; h>0; h/=3) {
     if(h<mx) {
-      for(int i = h-1; i<usefulSymbols; i++) {
-        int j, tmp=rankingTable[i], val = externalSymbols[tmp].timerHit;
+      for(i = h-1; i<usefulSymbols; i++) {
+	int j, tmp=rankingTable[i], val = externalSymbols[tmp].timerHit;
 	for(j = i;
 	  (j>=h) && (externalSymbols[rankingTable[j-h]].timerHit<val); j-=h) {
 	  rankingTable[j] = rankingTable[j-h];
@@ -434,7 +435,7 @@ void leaky::generateReportHTML(FILE *fp, int *countArray, int count)
   fprintf(fp, "<pre>\n");
   fprintf(fp, "Count   Function Name\n");
   // Now loop for as long as we have timer hits
-  for(int i=0;
+  for(i=0;
     i<usefulSymbols && externalSymbols[rankingTable[i]].timerHit>0; i++) {
 
     Symbol *sp=&externalSymbols[rankingTable[i]];
