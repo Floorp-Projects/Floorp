@@ -739,6 +739,7 @@ $(OBJDIR):
 #// Include the makefile for building the various targets...
 #//
 #//------------------------------------------------------------------------
+include <$(DEPTH)/config/version.inc>
 include <$(DEPTH)/config/obj.inc>
 include <$(DEPTH)/config/exe.inc>
 include <$(DEPTH)/config/dll.inc>
