@@ -78,6 +78,7 @@
 #include "nsBlockFrame.h"
 
 #include "nsGfxTextControlFrame.h"
+#include "nsIScrollableFrame.h"
 
 #include "nsIServiceManager.h"
 #include "nsIXBLService.h"
@@ -2260,6 +2261,8 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
 
     styleContext = newContext;
     aParentFrame = newScrollFrame;
+    // now set the primary frame to the ScrollFrame
+    aState.mFrameManager->SetPrimaryFrameFor( aDocElement, scrollFrame );
   }
 
   nsIFrame* contentFrame = nsnull;
@@ -2288,9 +2291,6 @@ nsCSSFrameConstructor::ConstructDocElementFrame(nsIPresShell*        aPresShell,
                             aParentFrame, styleContext, nsnull, contentFrame);
   }
   
-  // set the primary frame
-  aState.mFrameManager->SetPrimaryFrameFor(aDocElement, contentFrame);
-
   // Finish building the scrollframe
   if (isScrollable) {
     FinishBuildingScrollFrame(aPresContext, 
@@ -2582,6 +2582,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
       view->QueryInterface(kScrollViewIID, (void**)&scrollableView);
       viewManager->SetRootScrollableView(scrollableView);
       parentFrame = newScrollableFrame;
+    
+      // now set the primary frame to the ScrollFrame
+      state.mFrameManager->SetPrimaryFrameFor( aDocElement, newFrame );
 
       // if gfx scrollbars store them
       if (HasGfxScrollbars(aPresContext)) {
@@ -3307,7 +3310,9 @@ nsCSSFrameConstructor::ConstructFieldSetFrame(nsIPresShell*        aPresShell,
   nsIFrame * newFrame;
   PRUint32 flags = aIsAbsolutelyPositioned ? NS_BLOCK_SPACE_MGR : 0;
   nsresult rv = NS_NewFieldSetFrame(aPresShell, &newFrame, flags);
-
+  if (!NS_SUCCEEDED(rv)){
+    return rv;
+  }
 
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
@@ -4149,6 +4154,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
 
         // we have a scrollframe so the parent becomes the scroll frame.
         newFrame->GetParent(&aParentFrame);
+
         primaryFrameSet = PR_TRUE;
 
         frameHasBeenInitialized = PR_TRUE;
@@ -4171,6 +4177,7 @@ nsCSSFrameConstructor::ConstructXULFrame(nsIPresShell*        aPresShell,
 
         // we have a scrollframe so the parent becomes the scroll frame.
         newFrame->GetParent(&aParentFrame);
+
         primaryFrameSet = PR_TRUE;
 
         frameHasBeenInitialized = PR_TRUE;
@@ -4500,9 +4507,6 @@ nsCSSFrameConstructor::FinishBuildingScrollFrame(nsIPresContext*      aPresConte
   // the the scroll frames child list
   aScrollFrame->SetInitialChildList(aPresContext, nsnull, aScrolledFrame);
 
-  if (aContent != nsnull)
-     aState.mFrameManager->SetPrimaryFrameFor(aContent, aScrolledFrame);
-
   return NS_OK;
 }
  
@@ -4598,6 +4602,9 @@ nsCSSFrameConstructor::BuildScrollFrame       (nsIPresShell* aPresShell,
                           scrolledContentStyle);
 
     aScrolledContentStyle = scrolledContentStyle;
+
+    // now set the primary frame to the ScrollFrame
+    aState.mFrameManager->SetPrimaryFrameFor( aContent, aNewFrame );
 
     return NS_OK;
 
@@ -5566,14 +5573,17 @@ nsCSSFrameConstructor::GetFrameFor(nsIPresShell*    aPresShell,
         } 
       }
     } else {
-      // If the primary frame is a scroll frame, then get the scrolled frame.
-      // That's the frame that gets the reflow command
       const nsStyleDisplay* display;
       frame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&)display);
-
-      if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
-        frame->FirstChild(aPresContext, nsnull, &frame);
-      } 
+      
+      // If the primary frame is a scroll frame, then get the scrolled frame.
+      // That's the frame that gets the reflow command
+      nsIScrollableFrame *pScrollableFrame = nsnull;
+      if (NS_SUCCEEDED( frame->QueryInterface(nsIScrollableFrame::GetIID(), 
+                                              (void **)&pScrollableFrame) ))
+      {
+        pScrollableFrame->GetScrolledFrame( aPresContext, frame );
+      }
       // if we get an outer table frame use its 1st child which is a table inner frame
       // if we get a table cell frame   use its 1st child which is an area frame
       else if ((NS_STYLE_DISPLAY_TABLE      == display->mDisplay) ||
