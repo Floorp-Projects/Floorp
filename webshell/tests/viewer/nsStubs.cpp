@@ -21,7 +21,6 @@
 #include "xp_mcom.h"
 #include "net.h"
 #include "xp_linebuf.h"
-#include "mkbuf.h"
 
 /* Unix: Moved these stubs to lib/xp/xp_stubs.c so we don't keep
    copying this stub function around.  Mac & Win32 should follow suit. */

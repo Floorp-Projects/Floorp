@@ -138,7 +138,6 @@ NETLIB_LIBS =	      \
 	-lnetcache    \
 	-lnetcnvts    \
 	-lnetlib      \
-	-lnetutil     \
 	-lnetwork     \
 	-lxp	      \
 	-ljsurl	      \
