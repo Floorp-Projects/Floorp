@@ -259,11 +259,15 @@ struct NS_COM nsStr {
 
 protected:
   nsStr() {
+#ifdef TRACE_STRINGS
     MOZ_COUNT_CTOR(nsStr);
+#endif
   }
 
   ~nsStr() {
+#ifdef TRACE_STRINGS
     MOZ_COUNT_DTOR(nsStr);
+#endif
   }
 
 protected:
