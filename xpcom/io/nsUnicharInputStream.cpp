@@ -143,7 +143,7 @@ NS_NewB2UConverter(nsIUnicodeDecoder** aInstancePtrResult,
   nsAutoString defaultCharset("ISO-8859-1");
 
   if (aCharSet == nsnull) aCharSet = &defaultCharset;
-  res = nsServiceManager::GetService(nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(),
+  res = nsServiceManager::GetService(kCharsetConverterManagerCID,
       nsCOMTypeInfo<nsICharsetConverterManager>::GetIID(), (nsISupports**)&ccm);
   if (NS_FAILED(res)) return res;
 
