@@ -42,3 +42,12 @@
 <!ENTITY vkm.MainWindow.title "JavaScript Console Debugger">
 <!ENTITY vkm.ReloadUI.label "Reload UI">
 <!ENTITY vkm.ReloadUI.akey "R">
+
+<!ENTITY CallStack.header "Call Stack">
+<!ENTITY FunctionName.header "Function">
+<!ENTITY FileName.header "File">
+<!ENTITY LineNumber.header "Line">
+<!ENTITY IsCurrent.header "Current">
+<!ENTITY Breakpoint.header "Breakpoint">
+<!ENTITY SourceText.header "Source Text">
+<!ENTITY ScriptCount.header "Scripts">
