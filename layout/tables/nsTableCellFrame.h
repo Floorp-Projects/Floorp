@@ -241,7 +241,6 @@ protected:
 
   /** these are the last computed desired and max element sizes */
   nsSize       mDesiredSize;
-  nsSize       mMaxElementSize;
 
   /** these are the Pass 1 unconstrained desired and max element sizes */
   nsSize       mPass1DesiredSize;
