@@ -38,9 +38,16 @@ class nsIHTMLStyleSheet : public nsIStyleSheet {
 public:
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument) = 0;
   NS_IMETHOD Reset(nsIURI* aURL) = 0;
+  NS_IMETHOD GetLinkColor(nscolor& aColor) = 0;
   NS_IMETHOD SetLinkColor(nscolor aColor) = 0;
+  NS_IMETHOD GetActiveLinkColor(nscolor& aColor) = 0;
   NS_IMETHOD SetActiveLinkColor(nscolor aColor) = 0;
+  NS_IMETHOD GetVisitedLinkColor(nscolor& aColor) = 0;
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor) = 0;
+  NS_IMETHOD GetDocumentForegroundColor(nscolor& aColor) = 0;
+  NS_IMETHOD SetDocumentForegroundColor(nscolor aColor) = 0;
+  NS_IMETHOD GetDocumentBackgroundColor(nscolor& aColor) = 0;
+  NS_IMETHOD SetDocumentBackgroundColor(nscolor aColor) = 0;
 
   // Attribute management methods
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
@@ -70,5 +77,8 @@ extern NS_HTML nsresult
 
 extern NS_HTML nsresult
   NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult);
+
+#define NS_HTML_STYLE_PROPERTY_NOT_THERE \
+  NS_ERROR_GENERATE_SUCCESS(NS_ERROR_MODULE_LAYOUT,2)
 
 #endif /* nsIHTMLStyleSheet_h___ */

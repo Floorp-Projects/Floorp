@@ -53,10 +53,10 @@ static NS_DEFINE_IID(kIStyleSheetIID, NS_ISTYLE_SHEET_IID);
 static NS_DEFINE_IID(kIStyleRuleIID, NS_ISTYLE_RULE_IID);
 static NS_DEFINE_IID(kIStyleFrameConstructionIID, NS_ISTYLE_FRAME_CONSTRUCTION_IID);
 
-class HTMLAnchorRule : public nsIStyleRule {
+class HTMLColorRule : public nsIStyleRule {
 public:
-  HTMLAnchorRule(nsIHTMLStyleSheet* aSheet);
-  virtual ~HTMLAnchorRule();
+  HTMLColorRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~HTMLColorRule();
 
   NS_DECL_ISUPPORTS
 
@@ -75,34 +75,46 @@ public:
   nsIHTMLStyleSheet*  mSheet;
 };
 
-HTMLAnchorRule::HTMLAnchorRule(nsIHTMLStyleSheet* aSheet)
+class HTMLDocumentColorRule : public HTMLColorRule {
+public:
+  HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet);
+  virtual ~HTMLDocumentColorRule();
+
+  NS_IMETHOD MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext);
+
+  nscolor mBackgroundColor;
+  PRBool mForegroundSet;
+  PRBool mBackgroundSet;
+};
+
+HTMLColorRule::HTMLColorRule(nsIHTMLStyleSheet* aSheet)
   : mSheet(aSheet)
 {
   NS_INIT_REFCNT();
 }
 
-HTMLAnchorRule::~HTMLAnchorRule()
+HTMLColorRule::~HTMLColorRule()
 {
 }
 
-NS_IMPL_ISUPPORTS(HTMLAnchorRule, kIStyleRuleIID);
+NS_IMPL_ISUPPORTS(HTMLColorRule, kIStyleRuleIID);
 
 NS_IMETHODIMP
-HTMLAnchorRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
+HTMLColorRule::Equals(const nsIStyleRule* aRule, PRBool& aResult) const
 {
   aResult = PRBool(this == aRule);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLAnchorRule::HashValue(PRUint32& aValue) const
+HTMLColorRule::HashValue(PRUint32& aValue) const
 {
   aValue = (PRUint32)(mColor);
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLAnchorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
+HTMLColorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 {
   NS_IF_ADDREF(mSheet);
   aSheet = mSheet;
@@ -111,20 +123,20 @@ HTMLAnchorRule::GetStyleSheet(nsIStyleSheet*& aSheet) const
 
 // Strength is an out-of-band weighting, always 0 here
 NS_IMETHODIMP
-HTMLAnchorRule::GetStrength(PRInt32& aStrength) const
+HTMLColorRule::GetStrength(PRInt32& aStrength) const
 {
   aStrength = 0;
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLAnchorRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+HTMLColorRule::MapFontStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   return NS_OK;
 }
 
 NS_IMETHODIMP
-HTMLAnchorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+HTMLColorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
 {
   nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
 
@@ -135,8 +147,36 @@ HTMLAnchorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresCon
 }
 
 NS_IMETHODIMP
-HTMLAnchorRule::List(FILE* out, PRInt32 aIndent) const
+HTMLColorRule::List(FILE* out, PRInt32 aIndent) const
 {
+  return NS_OK;
+}
+
+HTMLDocumentColorRule::HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet) 
+  : HTMLColorRule(aSheet)
+{
+  mForegroundSet = PR_FALSE;
+  mBackgroundSet = PR_FALSE;
+}
+  
+HTMLDocumentColorRule::~HTMLDocumentColorRule()
+{
+}
+
+NS_IMETHODIMP
+HTMLDocumentColorRule::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* aPresContext)
+{
+  nsStyleColor* styleColor = (nsStyleColor*)(aContext->GetMutableStyleData(eStyleStruct_Color));
+
+  if (nsnull != styleColor) {
+    if (mForegroundSet) {
+      styleColor->mColor = mColor;
+    }
+    if (mBackgroundSet) {
+      styleColor->mBackgroundColor = mBackgroundColor;
+      styleColor->mBackgroundFlags &= ~NS_STYLE_BG_COLOR_TRANSPARENT;
+    }
+  }
   return NS_OK;
 }
 
@@ -361,9 +401,16 @@ public:
   // nsIHTMLStyleSheet api
   NS_IMETHOD Init(nsIURI* aURL, nsIDocument* aDocument);
   NS_IMETHOD Reset(nsIURI* aURL);
+  NS_IMETHOD GetLinkColor(nscolor& aColor);
+  NS_IMETHOD GetActiveLinkColor(nscolor& aColor);
+  NS_IMETHOD GetVisitedLinkColor(nscolor& aColor);
+  NS_IMETHOD GetDocumentForegroundColor(nscolor& aColor);
+  NS_IMETHOD GetDocumentBackgroundColor(nscolor& aColor);
   NS_IMETHOD SetLinkColor(nscolor aColor);
   NS_IMETHOD SetActiveLinkColor(nscolor aColor);
   NS_IMETHOD SetVisitedLinkColor(nscolor aColor);
+  NS_IMETHOD SetDocumentForegroundColor(nscolor aColor);
+  NS_IMETHOD SetDocumentBackgroundColor(nscolor aColor);
 
   // Attribute management methods, aAttributes is an in/out param
   NS_IMETHOD SetAttributesFor(nsIHTMLContent* aContent, 
@@ -400,9 +447,10 @@ protected:
 
   nsIURI*              mURL;
   nsIDocument*         mDocument;
-  HTMLAnchorRule*      mLinkRule;
-  HTMLAnchorRule*      mVisitedRule;
-  HTMLAnchorRule*      mActiveRule;
+  HTMLColorRule*       mLinkRule;
+  HTMLColorRule*       mVisitedRule;
+  HTMLColorRule*       mActiveRule;
+  HTMLDocumentColorRule* mDocumentColorRule;
   TableBackgroundRule* mTableBackgroundRule;
   nsHashtable          mMappedAttrTable;
 };
@@ -450,7 +498,8 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mDocument(nsnull),
     mLinkRule(nsnull),
     mVisitedRule(nsnull),
-    mActiveRule(nsnull)
+    mActiveRule(nsnull),
+    mDocumentColorRule(nsnull)
 {
   NS_INIT_REFCNT();
   mTableBackgroundRule = new TableBackgroundRule(this);
@@ -478,6 +527,10 @@ HTMLStyleSheetImpl::~HTMLStyleSheetImpl()
   if (nsnull != mActiveRule) {
     mActiveRule->mSheet = nsnull;
     NS_RELEASE(mActiveRule);
+  }
+  if (nsnull != mDocumentColorRule) {
+    mDocumentColorRule->mSheet = nsnull;
+    NS_RELEASE(mDocumentColorRule);
   }
   if (nsnull != mTableBackgroundRule) {
     mTableBackgroundRule->mSheet = nsnull;
@@ -649,6 +702,12 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
         aPresContext->GetCompatibilityMode(&mode);
         if (eCompatibility_NavQuirks == mode) {
           aResults->AppendElement(mTableBackgroundRule);
+          matchCount++;
+        }
+      }
+      else if (tag == nsHTMLAtoms::html) {
+        if (mDocumentColorRule) {
+          aResults->AppendElement(mDocumentColorRule);
           matchCount++;
         }
       }
@@ -831,10 +890,67 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURI* aURL)
   return NS_OK;
 }
 
+NS_IMETHODIMP HTMLStyleSheetImpl::GetLinkColor(nscolor& aColor)
+{
+  if (nsnull == mLinkRule) {
+    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
+  }
+  else {
+    aColor = mLinkRule->mColor;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::GetActiveLinkColor(nscolor& aColor)
+{
+  if (nsnull == mActiveRule) {
+    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
+  }
+  else {
+    aColor = mActiveRule->mColor;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::GetVisitedLinkColor(nscolor& aColor)
+{
+  if (nsnull == mVisitedRule) {
+    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
+  }
+  else {
+    aColor = mVisitedRule->mColor;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::GetDocumentForegroundColor(nscolor& aColor)
+{
+  if ((nsnull == mDocumentColorRule) ||
+      !mDocumentColorRule->mForegroundSet) {
+    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
+  }
+  else {
+    aColor = mDocumentColorRule->mColor;
+    return NS_OK;
+  }
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::GetDocumentBackgroundColor(nscolor& aColor)
+{
+  if ((nsnull == mDocumentColorRule) ||
+      !mDocumentColorRule->mBackgroundSet) {
+    return NS_HTML_STYLE_PROPERTY_NOT_THERE;
+  }
+  else {
+    aColor = mDocumentColorRule->mBackgroundColor;
+    return NS_OK;
+  }
+}
+
 NS_IMETHODIMP HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
 {
   if (nsnull == mLinkRule) {
-    mLinkRule = new HTMLAnchorRule(this);
+    mLinkRule = new HTMLColorRule(this);
     if (nsnull == mLinkRule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -844,10 +960,11 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
   return NS_OK;
 }
 
+
 NS_IMETHODIMP HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
 {
   if (nsnull == mActiveRule) {
-    mActiveRule = new HTMLAnchorRule(this);
+    mActiveRule = new HTMLColorRule(this);
     if (nsnull == mActiveRule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -860,13 +977,41 @@ NS_IMETHODIMP HTMLStyleSheetImpl::SetActiveLinkColor(nscolor aColor)
 NS_IMETHODIMP HTMLStyleSheetImpl::SetVisitedLinkColor(nscolor aColor)
 {
   if (nsnull == mVisitedRule) {
-    mVisitedRule = new HTMLAnchorRule(this);
+    mVisitedRule = new HTMLColorRule(this);
     if (nsnull == mVisitedRule) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
     NS_ADDREF(mVisitedRule);
   }
   mVisitedRule->mColor = aColor;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetDocumentForegroundColor(nscolor aColor)
+{
+  if (nsnull == mDocumentColorRule) {
+    mDocumentColorRule = new HTMLDocumentColorRule(this);
+    if (nsnull == mDocumentColorRule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mDocumentColorRule);
+  }
+  mDocumentColorRule->mColor = aColor;
+  mDocumentColorRule->mForegroundSet = PR_TRUE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP HTMLStyleSheetImpl::SetDocumentBackgroundColor(nscolor aColor)
+{
+  if (nsnull == mDocumentColorRule) {
+    mDocumentColorRule = new HTMLDocumentColorRule(this);
+    if (nsnull == mDocumentColorRule) {
+      return NS_ERROR_OUT_OF_MEMORY;
+    }
+    NS_ADDREF(mDocumentColorRule);
+  }
+  mDocumentColorRule->mBackgroundColor = aColor;
+  mDocumentColorRule->mBackgroundSet = PR_TRUE;
   return NS_OK;
 }
 
