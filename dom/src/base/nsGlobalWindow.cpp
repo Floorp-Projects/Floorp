@@ -55,6 +55,8 @@
 #include "nsIBrowserWindow.h"
 #include "nsIWebShell.h"
 #include "nsIDocShell.h"
+#include "nsIDocShellTreeNode.h"
+#include "nsIDocShellTreeItem.h"
 #include "nsIBaseWindow.h"
 #include "nsIScriptGlobalObjectOwner.h"
 #include "nsIDocument.h"
@@ -381,6 +383,7 @@ GlobalWindowImpl::SetNewDocument(nsIDOMDocument *aDocument)
 NS_IMETHODIMP
 GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
 {
+   nsCOMPtr<nsIDocShell> aDocShell(do_QueryInterface(aWebShell));
   //mWebShell isn't refcnt'd here.  WebShell calls SetWebShell(nsnull) when deleted.
 
   // When SetWebShell(nsnull) is called, drop our references to the
@@ -410,7 +413,7 @@ GlobalWindowImpl::SetWebShell(nsIWebShell *aWebShell)
     mHistory->SetWebShell(aWebShell);
   }
   if (nsnull != mFrames) {
-    mFrames->SetWebShell(aWebShell);
+    mFrames->SetDocShell(aDocShell);
   }
 
   if (mWebShell) {
@@ -690,12 +693,18 @@ GlobalWindowImpl::GetParent(nsIDOMWindow** aParent)
    if(!mWebShell)
       return NS_OK;
 
-   nsCOMPtr<nsIWebShell> parentWebShell;
-   mWebShell->GetParent(*getter_AddRefs(parentWebShell));
-   
-   if(parentWebShell)
-      NS_ENSURE_SUCCESS(WebShellToDOMWindow(parentWebShell, aParent), 
+   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIDocShellTreeItem> parent;
+   docShellAsItem->GetSameTypeParent(getter_AddRefs(parent));
+
+   if(parent)
+      {
+      nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(parent));
+      NS_ENSURE_SUCCESS(CallQueryInterface(globalObject.get(), aParent),
          NS_ERROR_FAILURE);
+      }
    else
       {
       *aParent = NS_STATIC_CAST(nsIDOMWindow*, this);
@@ -725,11 +734,13 @@ GlobalWindowImpl::GetTop(nsIDOMWindow** aTop)
 
   *aTop = nsnull;
   if (nsnull != mWebShell) {
-    nsIWebShell *rootWebShell;
-    mWebShell->GetRootWebShell(rootWebShell);
-    if (nsnull != rootWebShell) {
-      WebShellToDOMWindow(rootWebShell, aTop);
-      NS_RELEASE(rootWebShell);
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+    nsCOMPtr<nsIDocShellTreeItem> root;
+    docShellAsItem->GetSameTypeRootTreeItem(getter_AddRefs(root));
+
+    if (root) {
+       nsCOMPtr<nsIScriptGlobalObject> globalObject(do_GetInterface(root));
+       CallQueryInterface(globalObject.get(), aTop);
     }
   }
 
@@ -769,8 +780,9 @@ GlobalWindowImpl::GetClosed(PRBool* aClosed)
 NS_IMETHODIMP
 GlobalWindowImpl::GetFrames(nsIDOMWindowCollection** aFrames)
 {
-  if ((nsnull == mFrames) && (nsnull != mWebShell)) {
-    mFrames = new nsDOMWindowList(mWebShell);
+  nsCOMPtr<nsIDocShell> mDocShell(do_QueryInterface(mWebShell));
+  if ((nsnull == mFrames) && (mDocShell)) {
+    mFrames = new nsDOMWindowList(mDocShell);
     if (nsnull == mFrames) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -840,9 +852,10 @@ GlobalWindowImpl::SetDefaultStatus(const nsString& aDefaultStatus)
 NS_IMETHODIMP
 GlobalWindowImpl::GetName(nsString& aName)
 {
-  const PRUnichar *name = nsnull;
-  if (nsnull != mWebShell) {
-    mWebShell->GetName(&name);
+  nsXPIDLString name;
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+  if (docShellAsItem) {
+    docShellAsItem->GetName(getter_Copies(name));
   }
   aName = name;
   return NS_OK;
@@ -852,8 +865,9 @@ NS_IMETHODIMP
 GlobalWindowImpl::SetName(const nsString& aName)
 {
   nsresult result = NS_OK;
-  if (nsnull != mWebShell) {
-    result = mWebShell->SetName(aName.GetUnicode());
+  nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+  if (docShellAsItem) {
+    result = docShellAsItem->SetName(aName.GetUnicode());
   }
   return result;
 }
@@ -1764,7 +1778,7 @@ GlobalWindowImpl::DropTimeout(nsTimeoutImpl *aTimeout,
   if (--aTimeout->ref_count > 0) {
     return;
   }
- 
+  
   if (!aContext)
     aContext = mContext;
   if (aContext) {
@@ -2304,11 +2318,13 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
           return NS_ERROR_FAILURE;
         }
 
+        nsCOMPtr<nsIDocShellTreeItem> newShellAsItem(do_QueryInterface(newOuterShell));
+        NS_ASSERTION(newShellAsItem, "We got a shell that isn't an item!"); 
         if (nameSpecified) {
-          newOuterShell->SetName(name.GetUnicode());
+          newShellAsItem->SetName(name.GetUnicode());
         }
         else {
-          newOuterShell->SetName(nsnull);
+          newShellAsItem->SetName(nsnull);
         }
         newOuterShell->LoadURL(mAbsURL.GetUnicode());
         SizeAndShowOpenedWebShell(newOuterShell, options, windowIsNew, aDialog);
@@ -2830,9 +2846,10 @@ GlobalWindowImpl::GetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     else if (PL_strcmp("title", cString) == 0) {
       if (mWebShell) {
         // See if we're a chrome shell.
-        nsWebShellType type;
-        mWebShell->GetWebShellType(type);
-        if (type == nsWebShellChrome) {
+        PRInt32 type;
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+        docShellAsItem->GetItemType(&type);
+        if (type == nsIDocShellTreeItem::typeChrome) {
           nsCOMPtr<nsIBrowserWindow> browser;
           if (NS_OK == GetBrowserWindowInterface(*getter_AddRefs(browser)) && browser) {
             // We got a browser window interface
@@ -2886,9 +2903,10 @@ GlobalWindowImpl::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
     else if (PL_strcmp("title", cString) == 0) {
       if (mWebShell) {
         // See if we're a chrome shell.
-        nsWebShellType type;
-        mWebShell->GetWebShellType(type);
-        if (type == nsWebShellChrome) {
+        PRInt32 type;
+        nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mWebShell));
+        docShellAsItem->GetItemType(&type);
+        if (type == nsIDocShellTreeItem::typeChrome) {
           nsCOMPtr<nsIBrowserWindow> browser;
           if (NS_OK == GetBrowserWindowInterface(*getter_AddRefs(browser)) && browser) {
             // We got a browser window interface
@@ -2924,11 +2942,13 @@ GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
                           JSVAL_NULL, nsnull, nsnull, 0);
     }
     else if (nsnull != mWebShell) {
+      nsCOMPtr<nsIDocShellTreeNode> docShellAsNode(do_QueryInterface(mWebShell));
       PRInt32 count;
-      if (NS_SUCCEEDED(mWebShell->GetChildCount(count)) && count) {
-        nsIWebShell *child = nsnull;
-        nsAutoString name(JS_GetStringBytes(JS_ValueToString(aContext, aID))); 
-        if (NS_SUCCEEDED(mWebShell->FindChildWithName(name.GetUnicode(), child))) {
+      if (NS_SUCCEEDED(docShellAsNode->GetChildCount(&count)) && count) {
+        nsCOMPtr<nsIDocShellTreeItem> child;
+        nsAutoString name(JS_GetStringBytes(JS_ValueToString(aContext, aID)));
+        if (NS_SUCCEEDED(docShellAsNode->FindChildWithName(name.GetUnicode(),
+          PR_FALSE, nsnull, getter_AddRefs(child)))) {
           if (child) {
             JSObject *childObj;
             //We found a subframe of the right name.  The rest of this is to get its script object.
@@ -2950,7 +2970,6 @@ GlobalWindowImpl::Resolve(JSContext *aContext, jsval aID)
                                   JS_GetStringBytes(JS_ValueToString(aContext, aID)),
                                   OBJECT_TO_JSVAL(childObj), nsnull, nsnull, 0);
             }
-            NS_RELEASE(child);
           }
         }
       }
@@ -3541,31 +3560,31 @@ NS_IMETHODIMP
 GlobalWindowImpl::GetPrivateParent(nsPIDOMWindow** aParent)
 {
    nsCOMPtr<nsIDOMWindow> parent;
+   *aParent = nsnull; // Set to null so we can bail out later
+
    GetParent(getter_AddRefs(parent));
 
    if(NS_STATIC_CAST(nsIDOMWindow*, this) == parent.get())
       {
       nsCOMPtr<nsIContent> chromeElement(do_QueryInterface(mChromeEventHandler));
-      if(chromeElement)
-         {
-         nsCOMPtr<nsIDocument> doc;
-         NS_ENSURE_SUCCESS(chromeElement->GetDocument(*getter_AddRefs(doc)),
-            NS_ERROR_FAILURE);
+      if(!chromeElement)
+         return NS_OK; // This is ok, just means a null parent.
 
-         nsCOMPtr<nsIScriptGlobalObject> globalObject;
-         doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
-         NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
+      nsCOMPtr<nsIDocument> doc;
+      chromeElement->GetDocument(*getter_AddRefs(doc));
+      if(!doc)
+         return NS_OK; // This is ok, just means a null parent.
 
-         parent = do_QueryInterface(globalObject);
-         }
-      else
-         parent = nsnull;
+      nsCOMPtr<nsIScriptGlobalObject> globalObject;
+      doc->GetScriptGlobalObject(getter_AddRefs(globalObject));
+      if(!globalObject)
+         return NS_OK; // This is ok, just means a null parent.
+
+      parent = do_QueryInterface(globalObject);
       }
 
    if(parent)
-      NS_ENSURE_SUCCESS(CallQueryInterface(parent.get(), aParent), NS_ERROR_FAILURE);
-   else
-      *aParent = nsnull;
+      CallQueryInterface(parent.get(), aParent);
 
    return NS_OK;
 }
