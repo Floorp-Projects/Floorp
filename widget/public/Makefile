@@ -77,6 +77,7 @@ EXPORTS =               \
 	nsIToolbarDataModel.h \
 	nsIDMWidget.h \
 	nsITreeDMWidget.h \
+	nsIToolbarDMWidget.h \
 	nsITreeColumn.h \
 	nsITreeDMItem.h \
 	nsIToolbarDMItem.h \
