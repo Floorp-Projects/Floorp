@@ -3774,6 +3774,16 @@ PR_IMPLEMENT(PRFileDesc*) PR_ImportFile(PRInt32 osfd)
     return fd;
 }  /* PR_ImportFile */
 
+PR_IMPLEMENT(PRFileDesc*) PR_ImportPipe(PRInt32 osfd)
+{
+    PRFileDesc *fd;
+
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+    fd = pt_SetMethods(osfd, PR_DESC_PIPE, PR_FALSE);
+    if (NULL == fd) close(osfd);
+    return fd;
+}  /* PR_ImportPipe */
+
 PR_IMPLEMENT(PRFileDesc*) PR_ImportTCPSocket(PRInt32 osfd)
 {
     PRFileDesc *fd;
