@@ -10185,21 +10185,6 @@ nsCSSFrameConstructor::StyleChangeReflow(nsIPresContext* aPresContext,
       shell->AppendReflowCommand(reflowCmd);
   }
 
-  // If the background of the frame is painted on one of its ancestors,
-  // the reflow might not invalidate correctly.
-  nsIFrame *ancestor = aFrame;
-  const nsStyleBackground *bg;
-  PRBool isCanvas;
-  while (!nsCSSRendering::FindBackground(aPresContext, ancestor,
-                                         &bg, &isCanvas)) {
-    ancestor->GetParent(&ancestor);
-    NS_ASSERTION(ancestor, "canvas must paint");
-  }
-  // This isn't the most efficient way to do it, but it saves code
-  // size and doesn't add much cost compared to the reflow..
-  if (ancestor != aFrame)
-    ApplyRenderingChangeToTree(aPresContext, ancestor, nsnull, nsChangeHint_RepaintFrame);
-
   return NS_OK;
 }
 
@@ -12008,6 +11993,24 @@ nsCSSFrameConstructor::RecreateFramesForContent(nsIPresContext* aPresContext,
 
   nsIFrame* frame;
   shell->GetPrimaryFrameFor(aContent, &frame);
+
+  if (frame) {
+    // If the background of the frame is painted on one of its ancestors,
+    // the frame reconstruct might not invalidate correctly.
+    nsIFrame *ancestor = frame;
+    const nsStyleBackground *bg;
+    PRBool isCanvas;
+    while (!nsCSSRendering::FindBackground(aPresContext, ancestor,
+                                           &bg, &isCanvas)) {
+      ancestor->GetParent(&ancestor);
+      NS_ASSERTION(ancestor, "canvas must paint");
+    }
+    // This isn't the most efficient way to do it, but it saves code
+    // size and doesn't add much cost compared to the frame reconstruct.
+    if (ancestor != frame)
+      ApplyRenderingChangeToTree(aPresContext, ancestor, nsnull,
+                                 nsChangeHint_RepaintFrame);
+  }
 
   if (frame && IsFrameSpecial(frame)) {
 #ifdef DEBUG
