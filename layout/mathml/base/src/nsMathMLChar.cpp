@@ -90,14 +90,14 @@ struct nsCharData {
 class nsGlyphTable {
 public:
   nsGlyphTable(PRInt32      aType,
-               nsString&    aFontName,
+               char*        aFontName,
                nsCharData*  aCharArray,
                PRInt32      aCharCount,
                nsGlyphCode* aGlyphArray,
                PRInt32      aGlyphCount)
   {
     mType = aType;
-    mFontName = aFontName;
+    mFontName.Assign(aFontName);
     mCharArray = aCharArray;
     mCharCount = aCharCount;
     mGlyphArray = aGlyphArray;
@@ -401,7 +401,7 @@ nsGlyphTableList gGlyphTableList;
 
 // And this is a dummy glyph table that we will use as a flag for gCharInfo[].mGlyphTable
 nsGlyphTable gGlyphTableUNDEFINED =
-nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("UNDEFINED"),
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, "UNDEFINED",
              nsnull, 0, nsnull, 0);
 
 
@@ -427,7 +427,7 @@ static nsGlyphCode gGlyphCodeSymbol[] = {
 };
 
 nsGlyphTable gGlyphTableSymbol =
-nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("Symbol"),
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, "Symbol",
              gCharDataSymbol,  sizeof(gCharDataSymbol)  / sizeof(gCharDataSymbol[0]),
              gGlyphCodeSymbol, sizeof(gGlyphCodeSymbol) / sizeof(gGlyphCodeSymbol[0]));
 
@@ -451,7 +451,7 @@ static nsGlyphCode gGlyphCodeMTExtra[] = {
 };
 
 nsGlyphTable gGlyphTableMTExtra = 
-nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("MT Extra"),
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, "MT Extra",
              gCharDataMTExtra,  sizeof(gCharDataMTExtra)  / sizeof(gCharDataMTExtra[0]),
              gGlyphCodeMTExtra, sizeof(gGlyphCodeMTExtra) / sizeof(gGlyphCodeMTExtra[0]));
 
@@ -475,7 +475,7 @@ static nsGlyphCode gGlyphCodeCMEX[] = {
 };
 
 nsGlyphTable gGlyphTableCMEX =
-nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("CMEX10"),
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, "CMEX10",
              gCharDataCMEX,  sizeof(gCharDataCMEX)  / sizeof(gCharDataCMEX[0]),
              gGlyphCodeCMEX, sizeof(gGlyphCodeCMEX) / sizeof(gGlyphCodeCMEX[0]));
 
@@ -499,7 +499,7 @@ static nsGlyphCode gGlyphCodeCMSY[] = {
 };
 
 nsGlyphTable gGlyphTableCMSY =
-nsGlyphTable(NS_TABLE_TYPE_UNICODE, nsAutoString("CMSY10"),
+nsGlyphTable(NS_TABLE_TYPE_UNICODE, "CMSY10",
              gCharDataCMSY,  sizeof(gCharDataCMSY)  / sizeof(gCharDataCMSY[0]),
              gGlyphCodeCMSY, sizeof(gGlyphCodeCMSY) / sizeof(gGlyphCodeCMSY[0]));
 
@@ -514,6 +514,7 @@ nsGlyphTable* gAllGlyphTables[] = {
 
   nsnull
 };
+
 
 // -----------------------------------------------------------------------------------
 // And now the implementation of nsMathMLChar
@@ -865,7 +866,7 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
 #endif
     if (gCharInfo[mEnum].mGlyphTable == &gGlyphTableUNDEFINED) { // first time
       // gCharInfo[mEnum].mGlyphTable is not yet initialized, scan the global list
-      nscoord sizeGlue = 0;
+      nscoord lengthGlue = 0;
       gCharInfo[mEnum].mGlyphTable = nsnull; // clear the first time flag
       glyphTable = gGlyphTableList.FirstTable();
       while (glyphTable) {
@@ -873,14 +874,14 @@ nsMathMLChar::Stretch(nsIPresContext*      aPresContext,
           ch = glyphTable->GlueOf(mEnum);
           rv = glyphTable->GetBoundingMetrics(aRenderingContext, ch, bm);
           if (NS_SUCCEEDED(rv)) {
-            nscoord size = (aDirection == NS_STRETCH_DIRECTION_VERTICAL)
-                         ? bm.ascent + bm.descent
-                         : bm.rightBearing - bm.leftBearing;
-            NS_ASSERTION(size, "glue should never be zero *** Erroneous glue in glyph table!");
-            if (IsSizeBetter(size, sizeGlue, 0, NS_STRETCH_SMALLER)) {
+            nscoord length = (aDirection == NS_STRETCH_DIRECTION_VERTICAL)
+                           ? bm.ascent + bm.descent
+                           : bm.rightBearing - bm.leftBearing;
+            NS_ASSERTION(length, "glue should never be zero *** Erroneous glue in glyph table!");
+            if (IsSizeBetter(length, lengthGlue, 0, NS_STRETCH_SMALLER)) {
               // current glyph table is the one with the smallest glue, update the cache...
               gCharInfo[mEnum].mGlyphTable = glyphTable;
-              sizeGlue = size;
+              lengthGlue = length;
             }
           }
         }
