@@ -487,7 +487,7 @@ protected:
 
   // This is the composite update area (union of all the calls to
   // Invalidate)
-  nsIRegion *mUpdateArea;
+  nsCOMPtr<nsIRegion> mUpdateArea;
 
   PRBool mShown;
 

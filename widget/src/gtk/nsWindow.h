@@ -86,6 +86,7 @@ public:
   NS_IMETHOD           SetCursor(nsCursor aCursor);
   NS_IMETHOD           SetFocus(void);
   NS_IMETHOD           GetAttention(void);
+  NS_IMETHOD           Destroy();
 
   void                 QueueDraw();
   void                 UnqueueDraw();

@@ -773,6 +773,11 @@ handle_gdk_event (GdkEvent *event, gpointer data)
       // It was an event on one of our superwindows
 
       nsWindow *window = (nsWindow *)gtk_object_get_data (object, "nsWindow");
+
+      // if we don't have a window here anymore, we are probably in the process of being or have been destroyed
+      if (!window)
+        return;
+
       GtkWidget *current_grab = gtk_grab_get_current();
 
       // if there's a grab in progress, make sure to send it right to that widget.
