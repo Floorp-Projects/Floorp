@@ -2913,11 +2913,13 @@ PRBool CSSParserImpl::ParsePositiveVariant(PRInt32& aErrorCode,
     if (eCSSUnit_Number == aValue.GetUnit() || 
         aValue.IsLengthUnit()){ 
       if (aValue.GetFloatValue() < 0) { 
+        UngetToken();
         return PR_FALSE; 
       } 
     } 
     else if(aValue.GetUnit() == eCSSUnit_Percent) { 
       if (aValue.GetPercentValue() < 0) { 
+        UngetToken();
         return PR_FALSE; 
       } 
     } 
@@ -4196,11 +4198,11 @@ PRBool CSSParserImpl::ParseBorderSpacing(PRInt32& aErrorCode, nsICSSDeclaration*
                                          PRInt32& aChangeHint)
 {
   nsCSSValue  xValue;
-  if (ParseVariant(aErrorCode, xValue, VARIANT_HL, nsnull)) {
+  if (ParsePositiveVariant(aErrorCode, xValue, VARIANT_HL, nsnull)) {
     if (xValue.IsLengthUnit()) {
       // We have one length. Get the optional second length.
       nsCSSValue yValue;
-      if (ParseVariant(aErrorCode, yValue, VARIANT_LENGTH, nsnull)) {
+      if (ParsePositiveVariant(aErrorCode, yValue, VARIANT_LENGTH, nsnull)) {
         // We have two numbers
         if (ExpectEndProperty(aErrorCode, PR_TRUE)) {
           AppendValue(aDeclaration, eCSSProperty_border_x_spacing, xValue, aChangeHint);
