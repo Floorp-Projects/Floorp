@@ -30,7 +30,7 @@ CPP_OBJS=				\
  .\$(OBJDIR)\winmain.obj		\
  $(NULL)
 
-LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js
+LINCS=-I$(XPDIST)\public\xpcom -I$(XPDIST)\public\raptor -I$(XPDIST)\public\dom -I$(XPDIST)\public\js -I..
 
 MAKE_OBJ_TYPE = LIB
 
