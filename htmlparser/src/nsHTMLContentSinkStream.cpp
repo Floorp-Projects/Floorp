@@ -380,11 +380,12 @@ void nsHTMLContentSinkStream::WriteAttributes(const nsIParserNode& aNode) {
       value.Trim("\"", PR_TRUE, PR_TRUE);
 
       // 
-      // Filter out special case of <br type="_moz">,
+      // Filter out special case of <br type="_moz"> or <br _moz*>,
       // used by the editor.  Bug 16988.  Yuck.
       //
       if ((eHTMLTags)aNode.GetNodeType() == eHTMLTag_br
-          && key.Equals("type", PR_TRUE) && value.Equals("_moz"))
+          && ((key.Equals("type", PR_TRUE) && value.Equals("_moz"))
+              || key.Equals("_moz", PR_TRUE, 4)))
         continue;
 
       // 
@@ -727,7 +728,7 @@ void nsHTMLContentSinkStream::AddStartTag(const nsIParserNode& aNode)
   else
     tagName.ToUpperCase();
 
-#ifdef DEBUG_akkana
+#ifdef DEBUG_prettyprint
   if (isDirty)
     printf("AddStartTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
            name.ToNewCString(),
@@ -802,7 +803,7 @@ void nsHTMLContentSinkStream::AddEndTag(const nsIParserNode& aNode)
   nsAutoString      tagName;
   PRBool            isDirty = mDirtyStack[mHTMLStackPos-1];
 
-#ifdef DEBUG_akkana
+#ifdef DEBUG_prettyprint
   if (isDirty)
     printf("AddEndTag(%s): BBO=%d, BAO=%d, BBC=%d, BAC=%d\n",
            aNode.GetText().ToNewCString(),

@@ -124,7 +124,7 @@ static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 #define NS_ERROR_EDITOR_NO_SELECTION NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,1)
 #define NS_ERROR_EDITOR_NO_TEXTNODE  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_EDITOR,2)
 
-const char* nsEditor::kMOZEditorBogusNodeAttr="MOZ_EDITOR_BOGUS_NODE";
+const char* nsEditor::kMOZEditorBogusNodeAttr="_moz_editor_bogus_node";
 const char* nsEditor::kMOZEditorBogusNodeValue="TRUE";
 
 #ifdef NS_DEBUG_EDITOR
