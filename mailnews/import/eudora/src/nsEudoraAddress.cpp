@@ -563,7 +563,7 @@ CAliasEntry *nsEudoraAddress::ResolveAlias( nsCString& name)
 	CAliasEntry *pEntry;
 	for (PRInt32 i = 0; i < max; i++) {
 		pEntry = (CAliasEntry *) m_alias.ElementAt( i);
-		if (!name.Compare( pEntry->m_name, PR_TRUE))
+		if (!name.CompareWithConversion( pEntry->m_name, PR_TRUE))
 			return( pEntry);
 	}
 	
