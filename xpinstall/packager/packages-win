@@ -111,6 +111,8 @@ bin\components\prefmigr.xpt
 bin\components\profile.dll
 bin\components\profile.xpt
 bin\components\proxyObjInst.xpt
+bin\components\psmglue.dll
+bin\components\psmglue.xpt
 bin\components\rdf.dll
 bin\components\rdf.xpt
 bin\components\regviewer.xpt
