@@ -40,6 +40,7 @@
 #include "nsIPrivateCompositionEvent.h"
 #include "nsIEditorMailSupport.h"
 #include "nsIDocumentEncoder.h"
+#include "nsIPrivateDOMEvent.h"
 
 // for repainting hack only
 #include "nsIView.h"
@@ -146,6 +147,15 @@ nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
   {
     //non-key event passed to keydown.  bad things.
     return NS_OK;
+  }
+  
+  nsCOMPtr<nsIPrivateDOMEvent> privateEvent = do_QueryInterface(aKeyEvent);
+  if(privateEvent) 
+  {
+    PRBool dispatchStopped;
+    privateEvent->IsDispatchStopped(&dispatchStopped);
+    if(dispatchStopped)
+      return NS_OK;
   }
 
   PRBool keyProcessed;

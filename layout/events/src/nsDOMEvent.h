@@ -138,6 +138,7 @@ public:
   // nsIPrivateDOMEvent interface
   NS_IMETHOD    DuplicatePrivateData();
   NS_IMETHOD    SetTarget(nsIDOMNode* aNode);
+  NS_IMETHOD    IsDispatchStopped(PRBool* aIsDispatchStopped);
 
   // nsIPrivateTextEvent interface
 	NS_IMETHOD GetText(nsString& aText);

@@ -821,6 +821,17 @@ NS_METHOD nsDOMEvent::SetTarget(nsIDOMNode* aTarget)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsDOMEvent::IsDispatchStopped(PRBool* aIsDispatchStopped)
+{
+  if (mEvent->flags & NS_EVENT_FLAG_STOP_DISPATCH) {
+    *aIsDispatchStopped = PR_TRUE;
+  } else {
+    *aIsDispatchStopped = PR_FALSE;
+  }
+  return NS_OK;
+}
+
 const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
 {
   switch(aEventType) {
