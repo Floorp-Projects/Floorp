@@ -69,13 +69,13 @@ nsresult nsFontRetrieverService::QueryInterface(const nsIID& aIID, void** aInsta
 
   nsresult rv = NS_NOINTERFACE;
 
-  if (aIID.Equals(nsIFontRetrieverService::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIFontRetrieverService>::GetIID())) {
     *aInstancePtr = (void*) ((nsIFontRetrieverService*)this);
     NS_ADDREF_THIS();
     return NS_OK;
   }
 
-  if (aIID.Equals(nsIFontNameIterator::GetIID())) {
+  if (aIID.Equals(nsCOMTypeInfo<nsIFontNameIterator>::GetIID())) {
     *aInstancePtr = (void*) ((nsIFontNameIterator*)this);
     NS_ADDREF_THIS();
     return NS_OK;

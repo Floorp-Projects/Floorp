@@ -59,8 +59,7 @@ nsresult nsTooltipWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
   nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-  static NS_DEFINE_IID(kInsTooltipWidgetIID, NS_ITOOLTIPWIDGET_IID);
-  if (result == NS_NOINTERFACE && aIID.Equals(kInsTooltipWidgetIID)) {
+  if (result == NS_NOINTERFACE && aIID.Equals(nsCOMTypeInfo<nsITooltipWidget>::GetIID())) {
       *aInstancePtr = (void*) ((nsITooltipWidget*)this);
       NS_ADDREF_THIS();
       result = NS_OK;

@@ -25,7 +25,7 @@
 
 NS_IMPL_ADDREF(nsFontSizeIterator)
 NS_IMPL_RELEASE(nsFontSizeIterator)
-NS_IMPL_QUERY_INTERFACE(nsFontSizeIterator, nsIFontSizeIterator::GetIID())
+NS_IMPL_QUERY_INTERFACE(nsFontSizeIterator, nsCOMTypeInfo<nsIFontSizeIterator>::GetIID())
 
 //----------------------------------------------------------
 nsFontSizeIterator::nsFontSizeIterator() 

@@ -72,7 +72,7 @@ SoundImpl::~SoundImpl()
 
 
 
-NS_IMPL_ISUPPORTS(SoundImpl, nsISound::GetIID());
+NS_IMPL_ISUPPORTS(SoundImpl, nsCOMTypeInfo<nsISound>::GetIID());
 
 
 NS_IMETHODIMP

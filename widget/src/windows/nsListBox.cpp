@@ -251,15 +251,13 @@ nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     nsresult result = nsWindow::QueryInterface(aIID, aInstancePtr);
 
-    static NS_DEFINE_IID(kInsListBoxIID, NS_ILISTBOX_IID);
-    static NS_DEFINE_IID(kInsListWidgetIID, NS_ILISTWIDGET_IID);
     if (result == NS_NOINTERFACE) {
-      if (aIID.Equals(kInsListBoxIID)) {
+      if (aIID.Equals(nsCOMTypeInfo<nsIListBox>::GetIID())) {
         *aInstancePtr = (void*) ((nsIListBox*)this);
         NS_ADDREF_THIS();
         result = NS_OK;
       }
-      else if (aIID.Equals(kInsListWidgetIID)) {
+      else if (aIID.Equals(nsCOMTypeInfo<nsIListWidget>::GetIID())) {
         *aInstancePtr = (void*) ((nsIListWidget*)this);
         NS_ADDREF_THIS();
         result = NS_OK;
