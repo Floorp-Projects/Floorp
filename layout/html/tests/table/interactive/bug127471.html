@@ -1,0 +1,45 @@
+<HTML>
+<HEAD>
+<TITLE>
+Table Background Testcase
+</TITLE>
+<style type="text/css">
+table {border-collapse: collapse; font-size: xx-large}
+td {border: 6px solid black; vertical-align: baseline}
+#g {border: 20px solid red}
+</style>
+</HEAD>
+<BODY>
+<div>
+        <TABLE border=1 cellspacing=5>
+        <colgroup>
+                <col>
+                <col>
+        </colgroup>
+        <colgroup span=2>
+        </colgroup>
+        <tbody style="background: url(file:///S|/mozilla/layout/html/tests/table/images/smblue_paper.gif);">
+        <TR>
+                <TD>Cell A</TD>
+                <TD>Cell B</TD>
+                <TD>Cell C</TD>
+                <TD>Cell D</TD>
+        </TR>
+        <TR>
+                <TD>Cell E</TD>
+                <TD>Cell F</TD>
+                <TD id="g">Cell G</TD>
+                <TD>Cell H</TD>
+        </TR>
+        <TR>
+                <TD>Cell I</TD>
+                <TD>Cell J</TD>
+                <TD>Cell K</TD>
+                <TD>Cell L</TD>
+        </TR>
+        </tbody>
+        </TABLE>
+
+</div>
+</BODY>
+</HTML>
