@@ -377,9 +377,13 @@ Permission_Save() {
     return;
   }
 
-  strm.write("# HTTP Permission File\n", 30); 
-  strm.write("# http://www.netscape.com/newsref/std/cookie_spec.html\n", 55);
-  strm.write("# This is a generated file!  Do not edit.\n\n", 43);
+#define PERMISSIONFILE_LINE1 "# HTTP Permission File\n"
+#define PERMISSIONFILE_LINE2 "# http://www.netscape.com/newsref/std/cookie_spec.html\n"
+#define PERMISSIONFILE_LINE3 "# This is a generated file!  Do not edit.\n\n"
+
+  strm.write(PERMISSIONFILE_LINE1, PL_strlen(PERMISSIONFILE_LINE1));
+  strm.write(PERMISSIONFILE_LINE2, PL_strlen(PERMISSIONFILE_LINE2));
+  strm.write(PERMISSIONFILE_LINE3, PL_strlen(PERMISSIONFILE_LINE3));
 
   /* format shall be:
    * host \t permission \t permission ... \n
