@@ -28,7 +28,6 @@
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"
-#include "nsIRDFCursor.h"
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -75,7 +74,7 @@ public:
     NS_IMETHOD GetSources(nsIRDFResource* property,
                           nsIRDFNode* target,
                           PRBool tv,
-                          nsIRDFAssertionCursor** sources /* out */)  ;
+                          nsISimpleEnumerator** sources /* out */)  ;
     NS_IMETHOD GetTarget(nsIRDFResource* source,
                          nsIRDFResource* property,
                          PRBool tv,
@@ -83,7 +82,7 @@ public:
     NS_IMETHOD GetTargets(nsIRDFResource* source,
                           nsIRDFResource* property,
                           PRBool tv,
-                          nsIRDFAssertionCursor** targets /* out */)  ;
+                          nsISimpleEnumerator** targets /* out */)  ;
     NS_IMETHOD Assert(nsIRDFResource* source, 
                       nsIRDFResource* property, 
                       nsIRDFNode* target,
@@ -99,10 +98,10 @@ public:
     NS_IMETHOD AddObserver(nsIRDFObserver* n)  ;
     NS_IMETHOD RemoveObserver(nsIRDFObserver* n)  ;
     NS_IMETHOD ArcLabelsIn(nsIRDFNode* node,
-                           nsIRDFArcsInCursor** labels /* out */)  ;
+                           nsISimpleEnumerator** labels /* out */)  ;
     NS_IMETHOD ArcLabelsOut(nsIRDFResource* source,
-                            nsIRDFArcsOutCursor** labels /* out */)  ;
-    NS_IMETHOD GetAllResources(nsIRDFResourceCursor** aCursor)  ;
+                            nsISimpleEnumerator** labels /* out */)  ;
+    NS_IMETHOD GetAllResources(nsISimpleEnumerator** aResult)  ;
     NS_IMETHOD Flush(void)  ;
     NS_IMETHOD GetAllCommands(nsIRDFResource* source,
                               nsIEnumerator/*<nsIRDFResource>*/** commands)  ;
@@ -493,7 +492,7 @@ NS_IMETHODIMP
 nsChromeRegistry::GetSources(nsIRDFResource* property,
                       nsIRDFNode* target,
                       PRBool tv,
-                      nsIRDFAssertionCursor** sources /* out */)
+                      nsISimpleEnumerator** sources /* out */)
 {
   return mInner->GetSources(property, target, tv, sources);
 }
@@ -512,7 +511,7 @@ NS_IMETHODIMP
 nsChromeRegistry::GetTargets(nsIRDFResource* source,
                       nsIRDFResource* property,
                       PRBool tv,
-                      nsIRDFAssertionCursor** targets /* out */)
+                      nsISimpleEnumerator** targets /* out */)
 {
   return mInner->GetTargets(source, property, tv, targets);
 }
@@ -555,18 +554,18 @@ NS_IMETHODIMP nsChromeRegistry::RemoveObserver(nsIRDFObserver* n)
 }
 
 NS_IMETHODIMP nsChromeRegistry::ArcLabelsIn(nsIRDFNode* node,
-                       nsIRDFArcsInCursor** labels /* out */)
+                       nsISimpleEnumerator** labels /* out */)
 {
   return mInner->ArcLabelsIn(node, labels);
 }
 
 NS_IMETHODIMP nsChromeRegistry::ArcLabelsOut(nsIRDFResource* source,
-                        nsIRDFArcsOutCursor** labels /* out */) 
+                        nsISimpleEnumerator** labels /* out */) 
 {
   return mInner->ArcLabelsOut(source, labels);
 }
 
-NS_IMETHODIMP nsChromeRegistry::GetAllResources(nsIRDFResourceCursor** aCursor)
+NS_IMETHODIMP nsChromeRegistry::GetAllResources(nsISimpleEnumerator** aCursor)
 {
   return mInner->GetAllResources(aCursor);
 }

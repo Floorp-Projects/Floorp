@@ -26,7 +26,6 @@ MODULE = rdfutil
 
 EXPORTS =				\
         nsRDFResource.h                 \
-        nsRDFCursorUtils.h              \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

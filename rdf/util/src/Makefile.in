@@ -27,7 +27,6 @@ include $(topsrcdir)/config/config.mk
 LIBRARY_NAME = rdfutil_s
 
 CPPSRCS =				\
-        nsRDFCursorUtils.cpp            \
         nsRDFResource.cpp               \
 	$(NULL)
 

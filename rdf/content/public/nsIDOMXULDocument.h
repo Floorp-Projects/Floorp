@@ -25,7 +25,6 @@
 #include "nsIScriptContext.h"
 #include "nsIDOMDocument.h"
 
-class nsIRDFService;
 class nsIDOMElement;
 class nsIDOMNodeList;
 
@@ -37,8 +36,6 @@ class nsIDOMXULDocument : public nsIDOMDocument {
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IDOMXULDOCUMENT_IID; return iid; }
 
-  NS_IMETHOD    GetRdf(nsIRDFService** aRdf)=0;
-
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn)=0;
 
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn)=0;
@@ -46,14 +43,12 @@ public:
 
 
 #define NS_DECL_IDOMXULDOCUMENT   \
-  NS_IMETHOD    GetRdf(nsIRDFService** aRdf);  \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn);  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn);  \
 
 
 
 #define NS_FORWARD_IDOMXULDOCUMENT(_to)  \
-  NS_IMETHOD    GetRdf(nsIRDFService** aRdf) { return _to GetRdf(aRdf); } \
   NS_IMETHOD    GetElementById(const nsString& aId, nsIDOMElement** aReturn) { return _to GetElementById(aId, aReturn); }  \
   NS_IMETHOD    GetElementsByAttribute(const nsString& aName, const nsString& aValue, nsIDOMNodeList** aReturn) { return _to GetElementsByAttribute(aName, aValue, aReturn); }  \
 

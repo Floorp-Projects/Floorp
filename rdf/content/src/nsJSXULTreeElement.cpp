@@ -67,7 +67,11 @@ GetXULTreeElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
         nsIRDFCompositeDataSource* prop;
         if (NS_OK == a->GetDatabase(&prop)) {
           // get the js object
+#ifdef XPIDL_JS_STUBS
           *vp = OBJECT_TO_JSVAL(nsIRDFCompositeDataSource::GetJSObject(cx, prop));
+#else
+          nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFCompositeDataSource::GetIID(), cx, vp);
+#endif
         }
         else {
           return JS_FALSE;

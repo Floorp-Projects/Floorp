@@ -45,7 +45,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
@@ -479,9 +478,9 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
     // handles multi-attributes. For performance...
 
     // Create a cursor that'll enumerate all of the outbound arcs
-    nsCOMPtr<nsIRDFArcsOutCursor> properties;
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(resource, getter_AddRefs(properties))))
-        return rv;
+    nsCOMPtr<nsISimpleEnumerator> properties;
+    rv = mDB->ArcLabelsOut(resource, getter_AddRefs(properties));
+    if (NS_FAILED(rv)) return rv;
 
 // rjc - sort
 	nsISupportsArray	*tempArray;
@@ -489,17 +488,18 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 		return(rv);
 
     while (1) {
-        rv = properties->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = properties->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
-        nsCOMPtr<nsIRDFResource> property;
+        nsCOMPtr<nsISupports> isupports;
+        rv = properties->GetNext(getter_AddRefs(isupports));
+        if (NS_FAILED(rv)) return rv;
 
-        if (NS_FAILED(rv = properties->GetLabel(getter_AddRefs(property))))
-            break;
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
         // If it's not a widget item property, then it doesn't specify an
         // object that is member of the current container element;
@@ -510,42 +510,33 @@ RDFGenericBuilderImpl::CreateContents(nsIContent* aElement)
 
         // Create a second cursor that'll enumerate all of the values
         // for all of the arcs.
-        nsCOMPtr<nsIRDFAssertionCursor> assertions;
-        if (NS_FAILED(rv = mDB->GetTargets(resource, property, PR_TRUE, getter_AddRefs(assertions)))) {
-            NS_ERROR("unable to get targets for property");
-            return rv;
-        }
+        nsCOMPtr<nsISimpleEnumerator> targets;
+        rv = mDB->GetTargets(resource, property, PR_TRUE, getter_AddRefs(targets));
+        if (NS_FAILED(rv)) return rv;
 
         while (1) {
-            rv = assertions->Advance();
-            if (NS_FAILED(rv))
-                return rv;
+            PRBool hasMore;
+            rv = targets->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
 
-            if (rv == NS_RDF_CURSOR_EMPTY)
+            if (! hasMore)
                 break;
 
-            nsCOMPtr<nsIRDFNode> value;
-            if (NS_FAILED(rv = assertions->GetValue(getter_AddRefs(value)))) {
-                NS_ERROR("unable to get cursor value");
-                // return rv;
-                break;
-            }
+            nsCOMPtr<nsISupports> isupports;
+            rv = targets->GetNext(getter_AddRefs(isupports));
+            if (NS_FAILED(rv)) return rv;
 
-            nsCOMPtr<nsIRDFResource> valueResource;
-            if (NS_SUCCEEDED(value->QueryInterface(kIRDFResourceIID, (void**) getter_AddRefs(valueResource)))
-                && IsContainmentProperty(aElement, property)) {
+            nsCOMPtr<nsIRDFResource> valueResource = do_QueryInterface(isupports);
+            if (valueResource && IsContainmentProperty(aElement, property)) {
 			/* XXX hack: always append value resource 1st!
 			       due to sort callback implementation */
                 	tempArray->AppendElement(valueResource);
                 	tempArray->AppendElement(property);
             }
             else {
-               /* if (NS_FAILED(rv = SetCellValue(aElement, property, value))) {
-                    NS_ERROR("unable to set cell value");
-                    // return rv;
-                    break;
-                XXX Dave - WHY IS THIS HERE? 
-                }*/
+                nsCOMPtr<nsIRDFNode> value = do_QueryInterface(isupports);
+                rv = SetWidgetAttribute(aElement, property, value);
+                if (NS_FAILED(rv)) return rv;
             }
         }
     }
@@ -1316,33 +1307,42 @@ RDFGenericBuilderImpl::IsContainmentProperty(nsIContent* aElement, nsIRDFResourc
 PRBool
 RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResource)
 {
-    PRBool result = PR_FALSE;
-    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
-    if (NS_FAILED(mDB->ArcLabelsOut(aResource, getter_AddRefs(arcs)))) {
-        NS_ERROR("unable to get arcs out");
-        return result;
-    }
+    // Look at all of the arcs extending _out_ of the resource: if any
+    // of them are that "containment" property, then we know we'll
+    // have children.
+
+    // XXX Per Bug 3367, this'll have to be fixed.
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    nsresult rv;
+
+    rv = mDB->ArcLabelsOut(aResource, getter_AddRefs(arcs));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
+    if (NS_FAILED(rv))
+        return PR_FALSE;
 
     while (1) {
-        nsresult rv = arcs->Advance();
+        PRBool hasMore;
+        nsresult rv = arcs->HasMoreElements(&hasMore);
         NS_ASSERTION(NS_SUCCEEDED(rv), "severe error advancing cursor");
         if (NS_FAILED(rv))
             return PR_FALSE;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
-        nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(arcs->GetLabel(getter_AddRefs(property)))) {
-            NS_ERROR("unable to get cursor value");
-            return result;
-        }
+        nsCOMPtr<nsISupports> isupports;
+        rv = arcs->GetNext(getter_AddRefs(isupports));
+        if (NS_FAILED(rv))
+            return PR_FALSE;
+
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
         // Ignore properties that are used to indicate "tree-ness"
         if (IsContainmentProperty(aElement, property))
             return PR_TRUE;
     }
-    return result;
+
+    return PR_FALSE;
 }
 
 PRBool

@@ -75,7 +75,7 @@ private:
                    nsIAtom* aName,
                    const nsString& aValue);
 
-    ~nsXULAttribute();
+    virtual ~nsXULAttribute();
 
     friend nsresult
     NS_NewXULAttribute(nsXULAttribute** aResult,

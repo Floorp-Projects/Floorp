@@ -1,2 +1,1 @@
-#define XPIDL_JS_STUBS 1
 #include "MacPrefix.h"

@@ -26,7 +26,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsIPtr.h"
 #include "nsString.h"
-#include "nsIRDFService.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMXULDocument.h"
 #include "nsIDOMNodeList.h"
@@ -35,22 +34,14 @@
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIJSScriptObjectIID, NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptGlobalObjectIID, NS_ISCRIPTGLOBALOBJECT_IID);
-static NS_DEFINE_IID(kIRDFServiceIID, NS_IRDFSERVICE_IID);
 static NS_DEFINE_IID(kIElementIID, NS_IDOMELEMENT_IID);
 static NS_DEFINE_IID(kIXULDocumentIID, NS_IDOMXULDOCUMENT_IID);
 static NS_DEFINE_IID(kINodeListIID, NS_IDOMNODELIST_IID);
 
-NS_DEF_PTR(nsIRDFService);
 NS_DEF_PTR(nsIDOMElement);
 NS_DEF_PTR(nsIDOMXULDocument);
 NS_DEF_PTR(nsIDOMNodeList);
 
-//
-// XULDocument property ids
-//
-enum XULDocument_slots {
-  XULDOCUMENT_RDF = -1
-};
 
 /***********************************************************************/
 //
@@ -68,18 +59,7 @@ GetXULDocumentProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
 
   if (JSVAL_IS_INT(id)) {
     switch(JSVAL_TO_INT(id)) {
-      case XULDOCUMENT_RDF:
-      {
-        nsIRDFService* prop;
-        if (NS_OK == a->GetRdf(&prop)) {
-          // get the js object
-          *vp = OBJECT_TO_JSVAL(nsIRDFService::GetJSObject(cx, prop));
-        }
-        else {
-          return JS_FALSE;
-        }
-        break;
-      }
+      case 0:
       default:
         return nsJSUtils::nsCallJSScriptObjectGetProperty(a, cx, id, vp);
     }
@@ -250,7 +230,6 @@ JSClass XULDocumentClass = {
 //
 static JSPropertySpec XULDocumentProperties[] =
 {
-  {"rdf",    XULDOCUMENT_RDF,    JSPROP_ENUMERATE | JSPROP_READONLY},
   {0}
 };
 

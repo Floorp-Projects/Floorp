@@ -1,3 +1,2 @@
 #define DEBUG		1
-#define XPIDL_JS_STUBS 1
 #include "MacPrefix_debug.h"

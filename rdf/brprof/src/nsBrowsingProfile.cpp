@@ -26,7 +26,6 @@
 #include "nsRDFCID.h"
 #include "nsIRDFResource.h"
 #include "nsIRDFDataSource.h"
-#include "nsIRDFCursor.h"
 #include "nsHashtable.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
@@ -401,37 +400,41 @@ nsBrowsingProfile::CountPageVisit(const char* initialURL)
         nsIRDFResource* urlRes;
         rv = gRDFService->GetResource(url, &urlRes);
         if (NS_SUCCEEDED(rv)) {
-            nsIRDFAssertionCursor* cursor;
-            rv = gCategoryDB->GetSources(kOPENDIR_narrow, urlRes, PR_TRUE, &cursor);
+            nsISimpleEnumerator* sources;
+            rv = gCategoryDB->GetSources(kOPENDIR_narrow, urlRes, PR_TRUE, &sources);
             if (NS_SUCCEEDED(rv)) {
                 while (1) {
-                    rv = cursor->Advance();
+                    PRBool hasMore;
+                    rv = sources->HasMoreElements(&hasMore);
                     if (NS_FAILED(rv)) {
                         done = PR_TRUE;
                         break;
                     }
 
-                    if (rv == NS_RDF_CURSOR_EMPTY)
+                    if (! hasMore)
                         break;
 
-                    nsIRDFResource* category;
-                    rv = cursor->GetSource(&category);
+                    nsISupports* isupports;
+                    rv = sources->GetNext(&isupports);
                     if (NS_SUCCEEDED(rv)) {
-                        // found this page in a category -- count it
-                        PRUint16 id;
-                        rv = GetCategoryID(category, &id);
-                        if (NS_SUCCEEDED(rv)) {
-                            nsXPIDLCString catURI;
-                            rv = category->GetValue( getter_Copies(catURI) );
+                        nsCOMPtr<nsIRDFResource> category = do_QueryInterface(isupports);
+                        if (category) {
+                            // found this page in a category -- count it
+                            PRUint16 id;
+                            rv = GetCategoryID(category, &id);
                             if (NS_SUCCEEDED(rv)) {
-                                rv = RecordHit(catURI, id);
+                                nsXPIDLCString catURI;
+                                rv = category->GetValue( getter_Copies(catURI) );
+                                if (NS_SUCCEEDED(rv)) {
+                                    rv = RecordHit(catURI, id);
+                                }
                             }
                         }
-                        NS_RELEASE(category);
+                        NS_RELEASE(isupports);
                         done = PR_TRUE;
                     }
                 }
-                NS_RELEASE(cursor);
+                NS_RELEASE(sources);
             }
             NS_RELEASE(urlRes);
         }

@@ -34,7 +34,6 @@
  */
 
 #include "nsCOMPtr.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFService.h"
@@ -475,70 +474,111 @@ rdf_ContainerGetNextValue(nsIRDFDataSource* aDataSource,
     if (! aContainer)
         return NS_ERROR_NULL_POINTER;
 
+    NS_PRECONDITION(aResult != nsnull, "null ptr");
+    if (! aResult)
+        return NS_ERROR_NULL_POINTER;
+
     nsresult rv;
     rv = rdf_EnsureRDFService();
     if (NS_FAILED(rv)) return rv;
 
-    nsIRDFNode* nextValNode       = nsnull;
-    nsIRDFLiteral* nextValLiteral = nsnull;
-    nsXPIDLString s;
-    nsAutoString nextValStr;
-    PRInt32 nextVal;
-    PRInt32 err;
-
     // Get the next value, which hangs off of the bag via the
     // RDF:nextVal property.
-    if (NS_FAILED(rv = aDataSource->GetTarget(aContainer, kRDF_nextVal, PR_TRUE, &nextValNode)))
-        goto done;
+    nsCOMPtr<nsIRDFNode> nextValNode;
+    rv = aDataSource->GetTarget(aContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextValNode));
+    if (NS_FAILED(rv)) return rv;
 
-    if (rv == NS_RDF_NO_VALUE) {
-        rv = NS_ERROR_UNEXPECTED;
-        goto done;
-    }
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_ERROR_UNEXPECTED;
 
-    if (NS_FAILED(rv = nextValNode->QueryInterface(kIRDFLiteralIID, (void**) &nextValLiteral)))
-        goto done;
+    nsCOMPtr<nsIRDFLiteral> nextValLiteral;
+    rv = nextValNode->QueryInterface(kIRDFLiteralIID, getter_AddRefs(nextValLiteral));
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = nextValLiteral->GetValue( getter_Copies(s) )))
-        goto done;
+    nsXPIDLString s;
+    rv = nextValLiteral->GetValue( getter_Copies(s) );
+    if (NS_FAILED(rv)) return rv;
 
-    nextValStr = (const PRUnichar*) s;
-    nextVal = nextValStr.ToInteger(&err);
+    nsAutoString nextValStr = (const PRUnichar*) s;
+
+    PRInt32 err;
+    PRInt32 nextVal = nextValStr.ToInteger(&err);
     if (NS_FAILED(err))
-        goto done;
+        return NS_ERROR_UNEXPECTED;
 
     // Generate a URI that we can return.
     nextValStr = kRDFNameSpaceURI;
     nextValStr.Append("_");
     nextValStr.Append(nextVal, 10);
 
-    if (NS_FAILED(rv = gRDFService->GetUnicodeResource(nextValStr.GetUnicode(), aResult)))
-        goto done;
+    rv = gRDFService->GetUnicodeResource(nextValStr.GetUnicode(), aResult);
+    if (NS_FAILED(rv)) return rv;
 
     // Now increment the RDF:nextVal property.
-    if (NS_FAILED(rv = aDataSource->Unassert(aContainer, kRDF_nextVal, nextValLiteral)))
-        goto done;
-
-    NS_RELEASE(nextValLiteral);
+    rv = aDataSource->Unassert(aContainer, kRDF_nextVal, nextValLiteral);
+    if (NS_FAILED(rv)) return rv;
 
     ++nextVal;
     nextValStr.Truncate();
     nextValStr.Append(nextVal, 10);
 
-    if (NS_FAILED(rv = gRDFService->GetLiteral(nextValStr.GetUnicode(), &nextValLiteral)))
-        goto done;
+    rv = gRDFService->GetLiteral(nextValStr.GetUnicode(), getter_AddRefs(nextValLiteral));
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = aDataSource->Assert(aContainer, kRDF_nextVal, nextValLiteral, PR_TRUE)))
-        goto done;
+    rv = aDataSource->Assert(aContainer, kRDF_nextVal, nextValLiteral, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
-done:
-    NS_IF_RELEASE(nextValLiteral);
-    NS_IF_RELEASE(nextValNode);
-    return rv;
+    return NS_OK;
 }
 
 
+nsresult
+rdf_ContainerGetCount(nsIRDFDataSource* aDataSource,
+                           nsIRDFResource* aContainer,
+                           PRInt32* aCount)
+{
+    NS_PRECONDITION(aDataSource != nsnull, "null ptr");
+    if (! aDataSource)
+        return NS_ERROR_NULL_POINTER;
 
+    NS_PRECONDITION(aContainer != nsnull, "null ptr");
+    if (! aContainer)
+        return NS_ERROR_NULL_POINTER;
+
+    NS_PRECONDITION(aCount != nsnull, "null ptr");
+    if (! aCount)
+        return NS_ERROR_NULL_POINTER;
+
+    nsresult rv;
+    rv = rdf_EnsureRDFService();
+    if (NS_FAILED(rv)) return rv;
+
+    // Get the next value, which hangs off of the bag via the
+    // RDF:nextVal property.
+    nsCOMPtr<nsIRDFNode> nextValNode;
+    rv = aDataSource->GetTarget(aContainer, kRDF_nextVal, PR_TRUE, getter_AddRefs(nextValNode));
+    if (NS_FAILED(rv)) return rv;
+
+    if (rv == NS_RDF_NO_VALUE)
+        return NS_ERROR_UNEXPECTED;
+
+    nsCOMPtr<nsIRDFLiteral> nextValLiteral;
+    rv = nextValNode->QueryInterface(kIRDFLiteralIID, getter_AddRefs(nextValLiteral));
+    if (NS_FAILED(rv)) return rv;
+
+    nsXPIDLString s;
+    rv = nextValLiteral->GetValue( getter_Copies(s) );
+    if (NS_FAILED(rv)) return rv;
+
+    nsAutoString nextValStr = (const PRUnichar*) s;
+
+    PRInt32 err;
+    *aCount = nextValStr.ToInteger(&err);
+    if (NS_FAILED(err))
+        return NS_ERROR_UNEXPECTED;
+
+    return NS_OK;
+}
 
 
 nsresult
@@ -572,11 +612,74 @@ rdf_ContainerAppendElement(nsIRDFDataSource* aDataSource,
 }
 
 
+static nsresult
+rdf_ContainerRenumber(nsIRDFDataSource* aDataSource,
+                      nsIRDFResource* aContainer,
+                      PRInt32 aStartIndex)
+{
+    // Renumber the elements in the container
+    nsresult rv;
+
+    PRInt32 count;
+    rv = rdf_ContainerGetCount(aDataSource, aContainer, &count);
+    if (NS_FAILED(rv)) return rv;
+
+    PRInt32 oldIndex = aStartIndex;
+    PRInt32 newIndex = aStartIndex;
+    while (oldIndex < count) {
+        nsCOMPtr<nsIRDFResource> oldOrdinal;
+        rv = rdf_IndexToOrdinalResource(oldIndex, getter_AddRefs(oldOrdinal));
+        if (NS_FAILED(rv)) return rv;
+
+        // Because of aggregation, we need to be paranoid about
+        // the possibility that >1 element may be present per
+        // ordinal.
+        nsCOMPtr<nsISimpleEnumerator> targets;
+        rv = aDataSource->GetTargets(aContainer, oldOrdinal, PR_TRUE, getter_AddRefs(targets));
+        if (NS_FAILED(rv)) return rv;
+
+        while (1) {
+            PRBool hasMore;
+            rv = targets->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
+
+            if (! hasMore)
+                break;
+
+            nsCOMPtr<nsISupports> isupports;
+            rv = targets->GetNext(getter_AddRefs(isupports));
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRDFNode> element( do_QueryInterface(isupports) );
+            NS_ASSERTION(element != nsnull, "something funky in the enumerator");
+            if (! element)
+                return NS_ERROR_UNEXPECTED;
+
+            rv = aDataSource->Unassert(aContainer, oldOrdinal, element);
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRDFResource> newOrdinal;
+            rv = rdf_IndexToOrdinalResource(++newIndex, getter_AddRefs(newOrdinal));
+            if (NS_FAILED(rv)) return rv;
+
+            rv = aDataSource->Assert(aContainer, newOrdinal, element, PR_TRUE);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
+
+    // Update the container's nextVal to reflect the renumbering
+    rv = rdf_ContainerSetNextValue(aDataSource, aContainer, ++newIndex);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
+
 
 nsresult
 rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
                            nsIRDFResource* aContainer,
-                           nsIRDFNode* aElement)
+                           nsIRDFNode* aElement,
+                           PRBool aRenumber)
 {
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
     if (! aDataSource)
@@ -592,117 +695,31 @@ rdf_ContainerRemoveElement(nsIRDFDataSource* aDataSource,
 
     nsresult rv;
 
-    // Create a cursor and grovel through the container looking for
-    // the specified element.
-    nsCOMPtr<nsIRDFAssertionCursor> elements;
-    if (NS_FAILED(rv = NS_NewContainerCursor(aDataSource,
-                                             aContainer,
-                                             getter_AddRefs(elements)))) {
-        NS_ERROR("unable to create container cursor");
-        return rv;
-    }
+    PRInt32 index;
+    rv = rdf_ContainerIndexOf(aDataSource, aContainer, aElement, &index);
+    if (NS_FAILED(rv)) return rv;
 
-    while (1) {
-        rv = elements->Advance();
-        if (NS_FAILED(rv))
-            return rv;
-
-        if (rv == NS_RDF_CURSOR_EMPTY)
-            break;
-
-        nsCOMPtr<nsIRDFNode> element;
-        if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
-            NS_ERROR("unable to read cursor");
-            return rv;
-        }
-
-        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null item in cursor");
-        if (rv == NS_RDF_NO_VALUE)
-            continue;
-
-        PRBool eq;
-        if (NS_FAILED(rv = element->EqualsNode(aElement, &eq))) {
-            NS_ERROR("severe error on equality check");
-            return rv;
-        }
-
-        if (! eq)
-            continue;
-
-        // Okay, we've found it.
-
-        // What was it's index?
-        nsCOMPtr<nsIRDFResource> ordinal;
-        if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
-            NS_ERROR("unable to get element's ordinal index");
-            return rv;
-        }
-
-        // First, remove the element.
-        if (NS_FAILED(rv = aDataSource->Unassert(aContainer, ordinal, element))) {
-            NS_ERROR("unable to remove element from the container");
-            return rv;
-        }
-
-        PRInt32 index;
-        if (NS_FAILED(rv = rdf_OrdinalResourceToIndex(ordinal, &index))) {
-            NS_ERROR("unable to convert ordinal URI to index");
-            return rv;
-        }
-
-        // Now slide the rest of the collection backwards to fill in
-        // the gap.
-        while (1) {
-            rv = elements->Advance();
-            if (NS_FAILED(rv))
-                return rv;
-
-            if (rv == NS_RDF_CURSOR_EMPTY)
-                break;
-
-            if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
-                NS_ERROR("unable to get element from cursor");
-                return rv;
-            }
-
-            NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
-            if (rv == NS_RDF_NO_VALUE)
-                continue;
-
-            if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
-                NS_ERROR("unable to get element's ordinal index");
-                return rv;
-            }
-
-            if (NS_FAILED(rv = aDataSource->Unassert(aContainer, ordinal, element))) {
-                NS_ERROR("unable to remove element from the container");
-                return rv;
-            }
-
-            if (NS_FAILED(rv = rdf_IndexToOrdinalResource(index, getter_AddRefs(ordinal)))) {
-                NS_ERROR("unable to construct ordinal resource");
-                return rv;
-            }
-
-            rv = aDataSource->Assert(aContainer, ordinal, element, PR_TRUE);
-            if (rv != NS_RDF_ASSERTION_ACCEPTED) {
-                NS_ERROR("unable to add element to the container");
-                return NS_ERROR_FAILURE;
-            }
-
-            ++index;
-        }
-
-        // Update the container's nextVal to reflect this mumbo jumbo
-        if (NS_FAILED(rv = rdf_ContainerSetNextValue(aDataSource, aContainer, index))) {
-            NS_ERROR("unable to update container's nextVal");
-            return rv;
-        }
-
+    if (index < 0) {
+        NS_WARNING("attempt to remove non-existant element");
         return NS_OK;
     }
 
-    NS_WARNING("attempt to remove non-existant element from container");
+    // Remove the element.
+    nsCOMPtr<nsIRDFResource> ordinal;
+    rv = rdf_IndexToOrdinalResource(index, getter_AddRefs(ordinal));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = aDataSource->Unassert(aContainer, ordinal, aElement);
+    if (NS_FAILED(rv)) return rv;
+
+    if (aRenumber) {
+        // Now slide the rest of the collection backwards to fill in
+        // the gap. This will have the side effect of completely
+        // renumber the container from index to the end.
+        rv = rdf_ContainerRenumber(aDataSource, aContainer, index);
+        if (NS_FAILED(rv)) return rv;
+    }
+
     return NS_OK;
 }
 
@@ -712,7 +729,8 @@ nsresult
 rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
                              nsIRDFResource* aContainer,
                              nsIRDFNode* aElement,
-                             PRInt32 aIndex)
+                             PRInt32 aIndex,
+                             PRBool aRenumber)
 {
     NS_PRECONDITION(aDataSource != nsnull, "null ptr");
     if (! aDataSource)
@@ -732,125 +750,28 @@ rdf_ContainerInsertElementAt(nsIRDFDataSource* aDataSource,
 
     nsresult rv;
 
-    nsCOMPtr<nsIRDFAssertionCursor> elements;
+    PRInt32 count;
+    rv = rdf_ContainerGetCount(aDataSource, aContainer, &count);
+    if (NS_FAILED(rv)) return rv;
 
-    if (NS_FAILED(rv = NS_NewContainerCursor(aDataSource,
-                                             aContainer,
-                                             getter_AddRefs(elements)))) {
-        NS_ERROR("unable to create container cursor");
-        return rv;
+    NS_ASSERTION(aIndex <= count, "illegal value");
+    if (aIndex > count)
+        return NS_ERROR_ILLEGAL_VALUE;
+
+    if (aRenumber) {
+        // Make a hole for the element. This will have the side effect of
+        // completely renumbering the container from 'aIndex' to 'count',
+        // and will spew assertions.
+        rv = rdf_ContainerRenumber(aDataSource, aContainer, aIndex);
+        if (NS_FAILED(rv)) return rv;
     }
 
     nsCOMPtr<nsIRDFResource> ordinal;
-    PRInt32 index = 1;
+    rv = rdf_IndexToOrdinalResource(aIndex, getter_AddRefs(ordinal));
+    if (NS_FAILED(rv)) return rv;
 
-    // Advance the cursor to the aIndex'th element.
-    while (1) {
-        rv = elements->Advance();
-        if (NS_FAILED(rv))
-            return rv;
-
-        if (rv == NS_RDF_CURSOR_EMPTY)
-            break;
-
-        if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
-            NS_ERROR("unable to get element's ordinal index");
-            return rv;
-        }
-
-        if (NS_FAILED(rv = rdf_OrdinalResourceToIndex(ordinal, &index))) {
-            NS_ERROR("unable to convert ordinal resource to index");
-            return rv;
-        }
-
-        // XXX Use >= in case any "holes" exist...
-        if (index >= aIndex)
-            break;
-    }
-
-    // Remember if we've exhausted the cursor: if so, this degenerates
-    // into a simple "append" operation.
-    PRBool cursorExhausted = (rv == NS_RDF_CURSOR_EMPTY);
-
-    // XXX Be paranoid: there may have been a "hole"
-    if (index > aIndex)
-        index = aIndex;
-
-    // If we ran all the way to the end of the cursor, then "index"
-    // will contain the ordinal value of the last element in the
-    // container. Increment it by one to get the position at which
-    // we'll want to insert it into the container.
-    if (cursorExhausted && aIndex > index) {
-        if (index != aIndex) {
-            // Sanity check only: aIndex was _way_ too large...
-            NS_WARNING("out of bounds");
-        }
-
-        ++index;
-    }
-
-    // At this point "index" contains the index at which we want to
-    // insert the new element.
-    if (NS_FAILED(rv = rdf_IndexToOrdinalResource(index, getter_AddRefs(ordinal)))) {
-        NS_ERROR("unable to convert index to ordinal resource");
-        return rv;
-    }
-
-    // Insert it!
-    if (NS_FAILED(rv = aDataSource->Assert(aContainer, ordinal, aElement, PR_TRUE))) {
-        NS_ERROR("unable to add element to container");
-        return rv;
-    }
-
-    // Now slide the rest of the container "up" by one...
-    if (! cursorExhausted) {
-        do {
-            if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
-                NS_ERROR("unable to get element's ordinal index");
-                return rv;
-            }
-
-            nsCOMPtr<nsIRDFNode> element;
-            if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
-                NS_ERROR("unable to get element from cursor");
-                return rv;
-            }
-
-            NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
-            if (rv == NS_RDF_NO_VALUE)
-                continue;
-
-            if (NS_FAILED(rv = aDataSource->Unassert(aContainer, ordinal, element))) {
-                NS_ERROR("unable to remove element from container");
-                return rv;
-            }
-
-            if (NS_FAILED(rv = rdf_IndexToOrdinalResource(++index, getter_AddRefs(ordinal)))) {
-                NS_ERROR("unable to convert index to ordinal resource");
-                return rv;
-            }
-
-            rv = aDataSource->Assert(aContainer, ordinal, element, PR_TRUE);
-            if (rv != NS_RDF_ASSERTION_ACCEPTED) {
-                NS_ERROR("unable to add element to container");
-                return NS_ERROR_FAILURE;
-            }
-
-            rv = elements->Advance();
-            if (NS_FAILED(rv))
-                return rv;
-
-            if (rv == NS_RDF_CURSOR_EMPTY)
-                break;
-        }
-        while (1);
-    }
-
-    // Now update the container's nextVal
-    if (NS_FAILED(rv = rdf_ContainerSetNextValue(aDataSource, aContainer, ++index))) {
-        NS_ERROR("unable to update container's nextVal");
-        return rv;
-    }
+    rv = aDataSource->Assert(aContainer, ordinal, aElement, PR_TRUE);
+    if (NS_FAILED(rv)) return rv;
 
     return NS_OK;
 }
@@ -880,52 +801,45 @@ rdf_ContainerIndexOf(nsIRDFDataSource* aDataSource,
 
     nsresult rv;
 
-    nsCOMPtr<nsIRDFAssertionCursor> elements;
-    if (NS_FAILED(rv = NS_NewContainerCursor(aDataSource,
-                                             aContainer,
-                                             getter_AddRefs(elements)))) {
-        NS_ERROR("unable to create container cursor");
-        return rv;
-    }
+    PRInt32 count;
+    rv = rdf_ContainerGetCount(aDataSource, aContainer, &count);
+    if (NS_FAILED(rv)) return rv;
 
-
-    // Advance the cursor until we find the element we want
-    while (1) {
-        rv = elements->Advance();
-        if (NS_FAILED(rv))
-            return rv;
-
-        if (rv == NS_RDF_CURSOR_EMPTY)
-            break;
-
-        nsCOMPtr<nsIRDFNode> element;
-        if (NS_FAILED(rv = elements->GetTarget(getter_AddRefs(element)))) {
-            NS_ERROR("unable to get element from cursor");
-            return rv;
-        }
-
-        NS_ASSERTION(rv != NS_RDF_NO_VALUE, "null value in cursor");
-        if (rv == NS_RDF_NO_VALUE)
-            continue;
-
-        // Okay, we've found it.
+    for (PRInt32 index = 0; index < count; ++index) {
         nsCOMPtr<nsIRDFResource> ordinal;
-        if (NS_FAILED(rv = elements->GetLabel(getter_AddRefs(ordinal)))) {
-            NS_ERROR("unable to get element's ordinal index");
-            return rv;
+        rv = rdf_IndexToOrdinalResource(index, getter_AddRefs(ordinal));
+        if (NS_FAILED(rv)) return rv;
+
+        // Get all of the elements in the container with the specified
+        // ordinal. This is an ultra-paranoid way to do it, but -- due
+        // to aggregation, we may end up with a container that has >1
+        // element for the same ordinal.
+        nsCOMPtr<nsISimpleEnumerator> targets;
+        rv = aDataSource->GetTargets(aContainer, ordinal, PR_TRUE, getter_AddRefs(targets));
+        if (NS_FAILED(rv)) return rv;
+
+        while (1) {
+            PRBool hasMore;
+            rv = targets->HasMoreElements(&hasMore);
+            if (NS_FAILED(rv)) return rv;
+
+            if (! hasMore)
+                break;
+
+            nsCOMPtr<nsISupports> isupports;
+            rv = targets->GetNext(getter_AddRefs(isupports));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to read cursor");
+            if (NS_FAILED(rv)) return rv;
+
+            nsCOMPtr<nsIRDFNode> element = do_QueryInterface(isupports);
+
+            if (element.get() != aElement)
+                continue;
+
+            // Okay, we've found it!
+            *aIndex = index;
+            return NS_OK;
         }
-
-        PRInt32 index;
-        if (NS_FAILED(rv = rdf_OrdinalResourceToIndex(ordinal, &index))) {
-            NS_ERROR("unable to convert ordinal resource to index");
-            return rv;
-        }
-
-        if (element != nsCOMPtr<nsIRDFNode>( do_QueryInterface(aElement)) )
-            continue;
-
-        *aIndex = index;
-        return NS_OK;
     }
 
     NS_WARNING("element not found");

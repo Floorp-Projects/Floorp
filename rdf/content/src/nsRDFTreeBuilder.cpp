@@ -44,7 +44,6 @@
 #include "nsIDocument.h"
 #include "nsINameSpaceManager.h"
 #include "nsIRDFContentModelBuilder.h"
-#include "nsIRDFCursor.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFDocument.h"
 #include "nsIRDFNode.h"
@@ -463,28 +462,31 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 	nsCOMPtr<nsIRDFResource>	res;
 	if (NS_SUCCEEDED(rv = domElement->GetResource(getter_AddRefs(res))))
 	{
-		nsCOMPtr<nsIRDFArcsOutCursor> arcs;
-		if (NS_FAILED(rv = mDB->ArcLabelsOut(res, getter_AddRefs(arcs))))
-		{
-			NS_ERROR("unable to get arcs out");
-			return (rv);
-		}
+        // XXX Per Bug 3367, this'll have to be fixed.
+		nsCOMPtr<nsISimpleEnumerator> arcs;
+		rv = mDB->ArcLabelsOut(res, getter_AddRefs(arcs));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
+        if (NS_FAILED(rv)) return rv;
 
-		while (PR_TRUE)
-		{
-			rv = arcs->Advance();
-			if (NS_FAILED(rv))		return(rv);
-			if (rv == NS_RDF_CURSOR_EMPTY)	break;
+		while (1) {
+            PRBool hasMore;
+			rv = arcs->HasMoreElements(&hasMore);
+			if (NS_FAILED(rv))
+                return rv;
 
-			nsCOMPtr<nsIRDFResource> property;
-			if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property))))
-			{
-				NS_ERROR("unable to get cursor value");
-				return(rv);
-			}
+            if (! hasMore)
+                break;
+
+            nsCOMPtr<nsISupports> isupports;
+			rv = arcs->GetNext(getter_AddRefs(isupports));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get cursor value");
+            if(NS_FAILED(rv)) return rv;
+
+			nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
 			if (!IsContainmentProperty(container, property))	continue;
 
+            // XXX this seems gratuitous? why is it here?
 			PRInt32 nameSpaceID;
 			nsCOMPtr<nsIAtom> tag;
 			if (NS_FAILED(rv = mDocument->SplitProperty(property, &nameSpaceID, getter_AddRefs(tag))))
@@ -493,28 +495,26 @@ RDFTreeBuilderImpl::CheckRDFGraphForUpdates(nsIContent *container)
 				return(rv);
 			}
 
-			nsCOMPtr<nsIRDFAssertionCursor> assertions;
-			if (NS_FAILED(rv = db->GetTargets(res, property, PR_TRUE, getter_AddRefs(assertions))))
-			{
-				NS_ERROR("unable to get targets for property");
-				return rv;
-			}
-			while (PR_TRUE)
-			{
-				rv = assertions->Advance();
-				if (NS_FAILED(rv))		return rv;
-				if (rv == NS_RDF_CURSOR_EMPTY)	break;
+			nsCOMPtr<nsISimpleEnumerator> targets;
+			rv = db->GetTargets(res, property, PR_TRUE, getter_AddRefs(targets));
+            NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get targets for property");
+			if (NS_FAILED(rv)) return rv;
 
-				nsCOMPtr<nsIRDFNode> value;
-				if (NS_FAILED(rv = assertions->GetValue(getter_AddRefs(value))))
-				{
-					NS_ERROR("unable to get cursor value");
-					break;
-				}
-				nsCOMPtr<nsIRDFResource> valueResource;
-				if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFResourceIID, (void**) getter_AddRefs(valueResource)) &&
-					(rv != NS_RDF_NO_VALUE)))
-				{
+			while (1) {
+                PRBool hasMore;
+				rv = targets->HasMoreElements(&hasMore);
+				if (NS_FAILED(rv))		return rv;
+
+                if (! hasMore)
+                    break;
+
+                nsCOMPtr<nsISupports> isupports;
+				rv = targets->GetNext(getter_AddRefs(isupports));
+                NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get cursor value");
+                if (NS_FAILED(rv)) return rv;
+
+				nsCOMPtr<nsIRDFResource> valueResource = do_QueryInterface(isupports);
+				if (valueResource) {
 					// Note: hack, storing value then property in array
 					childArray.AppendElement(valueResource.get());
 					childArray.AppendElement(property.get());
@@ -944,7 +944,7 @@ RDFTreeBuilderImpl::OnRemoveChild(nsIDOMNode* aParent, nsIDOMNode* aOldChild)
                 // tinkering with an RDF container...
                 if (rdf_IsContainer(mDB, resource) &&
                     rdf_IsOrdinalProperty(property)) {
-                    rv = rdf_ContainerRemoveElement(mDB, resource, target);
+                    rv = rdf_ContainerRemoveElement(mDB, resource, target, PR_TRUE);
                 }
                 else {
                     rv = mDB->Unassert(resource, property, target);
@@ -1106,25 +1106,25 @@ RDFTreeBuilderImpl::AddWidgetItem(nsIContent* aElement,
 
     // Add miscellaneous attributes by iterating _all_ of the
     // properties out of the resource.
-    nsCOMPtr<nsIRDFArcsOutCursor> arcs;
-    if (NS_FAILED(rv = mDB->ArcLabelsOut(aValue, getter_AddRefs(arcs)))) {
-        NS_ERROR("unable to get arcs out");
-        return rv;
-    }
+    nsCOMPtr<nsISimpleEnumerator> arcs;
+    rv = mDB->ArcLabelsOut(aValue, getter_AddRefs(arcs));
+    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get arcs out");
+    if (NS_FAILED(rv)) return rv;
 
     while (1) {
-        rv = arcs->Advance();
-        if (NS_FAILED(rv))
-            return rv;
+        PRBool hasMore;
+        rv = arcs->HasMoreElements(&hasMore);
+        if (NS_FAILED(rv)) return rv;
 
-        if (rv == NS_RDF_CURSOR_EMPTY)
+        if (! hasMore)
             break;
 
-        nsCOMPtr<nsIRDFResource> property;
-        if (NS_FAILED(rv = arcs->GetLabel(getter_AddRefs(property)))) {
-            NS_ERROR("unable to get cursor value");
-            return rv;
-        }
+        nsCOMPtr<nsISupports> isupports;
+        rv = arcs->GetNext(getter_AddRefs(isupports));
+        NS_ASSERTION(NS_SUCCEEDED(rv), "unable to get cursor value");
+        if (NS_FAILED(rv)) return rv;
+
+        nsCOMPtr<nsIRDFResource> property = do_QueryInterface(isupports);
 
         // Ignore properties that are used to indicate "tree-ness"
         if (IsContainmentProperty(aElement, property))

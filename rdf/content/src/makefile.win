@@ -19,7 +19,7 @@ DEPTH=..\..\..
 MODULE=rdf
 LIBRARY_NAME=rdfcontent_s
 
-DEFINES=-D_IMPL_NS_DOM -DXPIDL_JS_STUBS
+DEFINES=-D_IMPL_NS_DOM
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -56,7 +56,7 @@ LINCS=  -I$(PUBLIC)\rdf          \
         -I$(PUBLIC)\xpcom        \
         -I$(PUBLIC)\netlib       \
         -I$(PUBLIC)\raptor       \
-        -I$(PUBLIC)\lwbrk       \
+        -I$(PUBLIC)\lwbrk        \
         -I$(PUBLIC)\js           \
         -I$(PUBLIC)\dom          \
         -I$(DEPTH)\rdf\base\src  \

@@ -23,12 +23,14 @@
 #include <ctype.h> // for toupper()
 #include <stdio.h>
 #include "nscore.h"
-#include "nsIRDFCursor.h"
+#include "nsCOMPtr.h"
 #include "nsIRDFDataSource.h"
 #include "nsIRDFNode.h"
 #include "nsIRDFObserver.h"
 #include "nsIRDFResourceFactory.h"
 #include "nsIServiceManager.h"
+#include "nsISupportsArray.h"
+#include "nsEnumeratorUtils.h"
 #include "nsString.h"
 #include "nsVoidArray.h"  // XXX introduces dependency on raptorbase
 #include "nsXPIDLString.h"
@@ -43,32 +45,104 @@
 #include "prio.h"
 #include "rdf.h"
 #include "nsIRDFFind.h"
-#include "nsFindDataSource.h"
-
-
 
 static NS_DEFINE_CID(kRDFServiceCID,               NS_RDFSERVICE_CID);
-static NS_DEFINE_IID(kIRDFServiceIID,              NS_IRDFSERVICE_IID);
-static NS_DEFINE_IID(kIRDFDataSourceIID,           NS_IRDFDATASOURCE_IID);
-static NS_DEFINE_IID(kIRDFFindDataSourceIID,       NS_IRDFFINDDATAOURCE_IID);
-static NS_DEFINE_IID(kIRDFAssertionCursorIID,      NS_IRDFASSERTIONCURSOR_IID);
-static NS_DEFINE_IID(kIRDFCursorIID,               NS_IRDFCURSOR_IID);
-static NS_DEFINE_IID(kIRDFArcsOutCursorIID,        NS_IRDFARCSOUTCURSOR_IID);
 static NS_DEFINE_IID(kISupportsIID,                NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIRDFResourceIID,             NS_IRDFRESOURCE_IID);
-static NS_DEFINE_IID(kIRDFNodeIID,                 NS_IRDFNODE_IID);
-static NS_DEFINE_IID(kIRDFLiteralIID,              NS_IRDFLITERAL_IID);
+
+
+typedef	struct	_findTokenStruct
+{
+	char			*token;
+	char			*value;
+} findTokenStruct, *findTokenPtr;
 
 
 
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, child);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, Name);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, URL);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, FindObject);
-DEFINE_RDF_VOCAB(NC_NAMESPACE_URI, NC, pulse);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, instanceOf);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, type);
-DEFINE_RDF_VOCAB(RDF_NAMESPACE_URI, RDF, Seq);
+class FindDataSource : public nsIRDFFindDataSource
+{
+private:
+	char			*mURI;
+	nsVoidArray		*mObservers;
+
+	static PRInt32		gRefCnt;
+
+    // pseudo-constants
+	static nsIRDFResource	*kNC_Child;
+	static nsIRDFResource	*kNC_Name;
+	static nsIRDFResource	*kNC_URL;
+	static nsIRDFResource	*kNC_FindObject;
+	static nsIRDFResource	*kNC_pulse;
+	static nsIRDFResource	*kRDF_InstanceOf;
+	static nsIRDFResource	*kRDF_type;
+
+	NS_METHOD	getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aResult);
+
+	NS_METHOD	getFindName(nsIRDFResource *source, nsIRDFLiteral** aResult);
+
+	NS_METHOD	parseResourceIntoFindTokens(nsIRDFResource *u,
+				findTokenPtr tokens);
+	NS_METHOD	doMatch(nsIRDFLiteral *literal, char *matchMethod,
+				char *matchText);
+	NS_METHOD	parseFindURL(nsIRDFResource *u,
+				nsISupportsArray *array);
+
+public:
+
+	NS_DECL_ISUPPORTS
+
+			FindDataSource(void);
+	virtual		~FindDataSource(void);
+
+	// nsIRDFDataSource methods
+
+	NS_IMETHOD	Init(const char *uri);
+	NS_IMETHOD	GetURI(char **uri);
+	NS_IMETHOD	GetSource(nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv,
+				nsIRDFResource **source /* out */);
+	NS_IMETHOD	GetSources(nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv,
+				nsISimpleEnumerator **sources /* out */);
+	NS_IMETHOD	GetTarget(nsIRDFResource *source,
+				nsIRDFResource *property,
+				PRBool tv,
+				nsIRDFNode **target /* out */);
+	NS_IMETHOD	GetTargets(nsIRDFResource *source,
+				nsIRDFResource *property,
+				PRBool tv,
+				nsISimpleEnumerator **targets /* out */);
+	NS_IMETHOD	Assert(nsIRDFResource *source,
+				nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv);
+	NS_IMETHOD	Unassert(nsIRDFResource *source,
+				nsIRDFResource *property,
+				nsIRDFNode *target);
+	NS_IMETHOD	HasAssertion(nsIRDFResource *source,
+				nsIRDFResource *property,
+				nsIRDFNode *target,
+				PRBool tv,
+				PRBool *hasAssertion /* out */);
+	NS_IMETHOD	ArcLabelsIn(nsIRDFNode *node,
+				nsISimpleEnumerator **labels /* out */);
+	NS_IMETHOD	ArcLabelsOut(nsIRDFResource *source,
+				nsISimpleEnumerator **labels /* out */);
+	NS_IMETHOD	GetAllResources(nsISimpleEnumerator** aCursor);
+	NS_IMETHOD	AddObserver(nsIRDFObserver *n);
+	NS_IMETHOD	RemoveObserver(nsIRDFObserver *n);
+	NS_IMETHOD	Flush();
+	NS_IMETHOD	GetAllCommands(nsIRDFResource* source,
+				nsIEnumerator/*<nsIRDFResource>*/** commands);
+	NS_IMETHOD	IsCommandEnabled(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+				nsIRDFResource*   aCommand,
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments,
+                PRBool* aResult);
+	NS_IMETHOD	DoCommand(nsISupportsArray/*<nsIRDFResource>*/* aSources,
+				nsIRDFResource*   aCommand,
+				nsISupportsArray/*<nsIRDFResource>*/* aArguments);
+};
 
 
 static	nsIRDFService		*gRDFService = nsnull;
@@ -84,22 +158,6 @@ nsIRDFResource		*FindDataSource::kNC_pulse;
 nsIRDFResource		*FindDataSource::kRDF_InstanceOf;
 nsIRDFResource		*FindDataSource::kRDF_type;
 
-
-
-static PRBool
-peq(nsIRDFResource* r1, nsIRDFResource* r2)
-{
-	PRBool		retVal=PR_FALSE, result;
-
-	if (NS_SUCCEEDED(r1->EqualsResource(r2, &result)))
-	{
-		if (result)
-		{
-			retVal = PR_TRUE;
-		}
-	}
-	return(retVal);
-}
 
 
 static PRBool
@@ -126,18 +184,19 @@ FindDataSource::FindDataSource(void)
 
     if (gRefCnt++ == 0) {
         nsresult rv = nsServiceManager::GetService(kRDFServiceCID,
-                                                   kIRDFServiceIID,
+                                                   nsIRDFService::GetIID(),
                                                    (nsISupports**) &gRDFService);
 
         PR_ASSERT(NS_SUCCEEDED(rv));
 
-	gRDFService->GetResource(kURINC_child, &kNC_Child);
-	gRDFService->GetResource(kURINC_Name, &kNC_Name);
-	gRDFService->GetResource(kURINC_URL, &kNC_URL);
-	gRDFService->GetResource(kURINC_FindObject, &kNC_FindObject);
-	gRDFService->GetResource(kURINC_FindObject, &kNC_pulse);
-	gRDFService->GetResource(kURIRDF_instanceOf, &kRDF_InstanceOf);
-	gRDFService->GetResource(kURIRDF_type, &kRDF_type);
+        gRDFService->GetResource(NC_NAMESPACE_URI "child",       &kNC_Child);
+        gRDFService->GetResource(NC_NAMESPACE_URI "Name",        &kNC_Name);
+        gRDFService->GetResource(NC_NAMESPACE_URI "URL",         &kNC_URL);
+        gRDFService->GetResource(NC_NAMESPACE_URI "FindObject",  &kNC_FindObject);
+        gRDFService->GetResource(NC_NAMESPACE_URI "FindObject",  &kNC_pulse);
+
+        gRDFService->GetResource(RDF_NAMESPACE_URI "instanceOf", &kRDF_InstanceOf);
+        gRDFService->GetResource(RDF_NAMESPACE_URI "type",       &kRDF_type);
 
         gFindDataSource = this;
     }
@@ -179,8 +238,7 @@ FindDataSource::~FindDataSource (void)
 
 
 
-// NS_IMPL_ISUPPORTS(FindDataSource, kIRDFFindDataSourceIID);
-NS_IMPL_ISUPPORTS(FindDataSource, kIRDFDataSourceIID);
+NS_IMPL_ISUPPORTS(FindDataSource, nsIRDFDataSource::GetIID());
 
 
 
@@ -226,7 +284,7 @@ NS_IMETHODIMP
 FindDataSource::GetSources(nsIRDFResource *property,
                            nsIRDFNode *target,
 			   PRBool tv,
-                           nsIRDFAssertionCursor **sources /* out */)
+                           nsISimpleEnumerator **sources /* out */)
 {
 	PR_ASSERT(0);
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -248,13 +306,11 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 
 	if (isFindURI(source))
 	{
-		nsVoidArray		*array = nsnull;
-
-		if (peq(property, kNC_Name))
+		if (property == kNC_Name)
 		{
 //			rv = GetName(source, &array);
 		}
-		else if (peq(property, kNC_URL))
+		else if (property == kNC_URL)
 		{
 			// note: lie and say there is no URL
 //			rv = GetURL(source, &array);
@@ -264,45 +320,31 @@ FindDataSource::GetTarget(nsIRDFResource *source,
 			*target = literal;
 			rv = NS_OK;
 		}
-		else if (peq(property, kRDF_type))
+		else if (property == kRDF_type)
 		{
-                    nsXPIDLCString uri;
-			kNC_FindObject->GetValue( getter_Copies(uri) );
-			if (uri)
-			{
-				nsAutoString	url(uri);
-				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url.GetUnicode(), &literal);
-				*target = literal;
-				rv = NS_OK;
-			}
-			return(rv);
+            nsXPIDLCString uri;
+			rv = kNC_FindObject->GetValue( getter_Copies(uri) );
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString	url(uri);
+            nsIRDFLiteral	*literal;
+            gRDFService->GetLiteral(url.GetUnicode(), &literal);
+
+            *target = literal;
+			return NS_OK;
 		}
-		else if (peq(property, kNC_pulse))
+		else if (property == kNC_pulse)
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
-			array = new nsVoidArray();
-			if (array)
-			{
-				array->AppendElement(pulseLiteral);
-				rv = NS_OK;
-			}
-		}
-		if (array != nsnull)
-		{
-			nsIRDFLiteral *literal = (nsIRDFLiteral *)(array->ElementAt(0));
-			*target = (nsIRDFNode *)literal;
-			delete array;
-			rv = NS_OK;
-		}
-		else
-		{
-			rv = NS_RDF_NO_VALUE;
+			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+            if (NS_FAILED(rv)) return rv;
+
+            *target = pulseLiteral;
+            return NS_OK;
 		}
 	}
-	return(rv);
+	return NS_RDF_NO_VALUE;
 }
 
 
@@ -401,7 +443,7 @@ FindDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *matchTe
 
 
 NS_METHOD
-FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
+FindDataSource::parseFindURL(nsIRDFResource *u, nsISupportsArray *array)
 {
 	findTokenStruct		tokens[5];
 	nsresult		rv;
@@ -420,25 +462,27 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 		nsIRDFDataSource	*datasource;
 		if (NS_SUCCEEDED(rv = gRDFService->GetDataSource(tokens[0].value, &datasource)))
 		{
-			nsIRDFResourceCursor	*cursor = nsnull;
+			nsISimpleEnumerator	*cursor = nsnull;
 			if (NS_SUCCEEDED(rv = datasource->GetAllResources(&cursor)))
 			{
 				while (1) 
 				{
-                                    rv = cursor->Advance();
-                                    if (NS_FAILED(rv))
-                                        break;
+                    PRBool hasMore;
+                    rv = cursor->HasMoreElements(&hasMore);
+                    if (NS_FAILED(rv))
+                        break;
 
-                                    if (rv == NS_RDF_CURSOR_EMPTY)
-                                        break;
+                    if (! hasMore)
+                        break;
 
-					nsIRDFNode	*node = nsnull;
-					if (NS_SUCCEEDED(rv = cursor->GetValue(&node)))
+                    nsCOMPtr<nsISupports> isupports;
+					rv = cursor->GetNext(getter_AddRefs(isupports));
+                    if (NS_SUCCEEDED(rv))
 					{
 						nsIRDFResource	*source = nsnull;
-						if (NS_SUCCEEDED(rv = node->QueryInterface(kIRDFResourceIID, (void **)&source)))
+						if (NS_SUCCEEDED(rv = isupports->QueryInterface(nsIRDFResource::GetIID(), (void **)&source)))
 						{
-                                                    nsXPIDLCString uri;
+                            nsXPIDLCString uri;
 							source->GetValue( getter_Copies(uri) );
 							if (PL_strncmp(uri, "find:", PL_strlen("find:")))	// never match against a "find:" URI
 							{
@@ -451,16 +495,15 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 										(rv != NS_RDF_NO_VALUE) && (nsnull != value))
 									{
 										nsIRDFLiteral	*literal = nsnull;
-										if (NS_SUCCEEDED(rv = value->QueryInterface(kIRDFLiteralIID, (void **)&literal)) &&
+										if (NS_SUCCEEDED(rv = value->QueryInterface(nsIRDFLiteral::GetIID(), (void **)&literal)) &&
 											(rv != NS_RDF_NO_VALUE) && (nsnull != literal))
 										{
 											if (PR_TRUE == doMatch(literal, tokens[2].value, tokens[3].value))
 											{
-												array->AppendElement(node);
+												array->AppendElement(source);
 											}
 											NS_RELEASE(literal);
 										}
-										NS_RELEASE(node);
 									}
 									NS_RELEASE(property);
 								}
@@ -493,26 +536,33 @@ FindDataSource::parseFindURL(nsIRDFResource *u, nsVoidArray *array)
 
 
 NS_METHOD
-FindDataSource::getFindResults(nsIRDFResource *source, nsVoidArray **array /* out */)
+FindDataSource::getFindResults(nsIRDFResource *source, nsISimpleEnumerator** aResult)
 {
 	nsresult	rv;
-	nsVoidArray	*nameArray = new nsVoidArray();
-	*array = nameArray;
-	if (nsnull == nameArray)
-	{
-		return(NS_ERROR_OUT_OF_MEMORY);
-	}
-	rv = parseFindURL(source, *array);
-	return(rv);
+	nsCOMPtr<nsISupportsArray> nameArray;
+    rv = NS_NewISupportsArray( getter_AddRefs(nameArray) );
+    if (NS_FAILED(rv)) return rv;
+
+	rv = parseFindURL(source, nameArray);
+    if (NS_FAILED(rv)) return rv;
+
+    nsISimpleEnumerator* result = new nsArrayEnumerator(nameArray);
+    if (! result)
+        NS_ERROR_OUT_OF_MEMORY;
+
+    NS_ADDREF(result);
+    *aResult = result;
+
+    return NS_OK;
 }
 
 
 
 NS_METHOD
-FindDataSource::getFindName(nsIRDFResource *source, nsVoidArray **array /* out */)
+FindDataSource::getFindName(nsIRDFResource *source, nsIRDFLiteral** aResult)
 {
 	// XXX construct find URI human-readable name
-	*array = nsnull;
+	*aResult = nsnull;
 	return(NS_OK);
 }
 
@@ -522,9 +572,8 @@ NS_IMETHODIMP
 FindDataSource::GetTargets(nsIRDFResource *source,
                            nsIRDFResource *property,
                            PRBool tv,
-                           nsIRDFAssertionCursor **targets /* out */)
+                           nsISimpleEnumerator **targets /* out */)
 {
-	nsVoidArray		*array = nsnull;
 	nsresult		rv = NS_ERROR_FAILURE;
 
 	// we only have positive assertions in the find data source.
@@ -533,50 +582,71 @@ FindDataSource::GetTargets(nsIRDFResource *source,
 
 	if (isFindURI(source))
 	{
-		if (peq(property, kNC_Child))
+		if (property == kNC_Child)
 		{
-			rv = getFindResults(source, &array);
+			return getFindResults(source, targets);
 		}
-		else if (peq(property, kNC_Name))
+		else if (property == kNC_Name)
 		{
-			rv = getFindName(source, &array);
+            nsCOMPtr<nsIRDFLiteral> name;
+            rv = getFindName(source, getter_AddRefs(name));
+            if (NS_FAILED(rv)) return rv;
+
+            nsISimpleEnumerator* result =
+                new nsSingletonEnumerator(name);
+
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
 		}
-		else if (peq(property, kRDF_type))
+		else if (property == kRDF_type)
 		{
 			nsXPIDLCString uri;
-			kNC_FindObject->GetValue( getter_Copies(uri) );
-			if (uri)
-			{
-				nsAutoString	url(uri);
-				nsIRDFLiteral	*literal;
-				gRDFService->GetLiteral(url.GetUnicode(), &literal);
-				array = new nsVoidArray();
-				if (array)
-				{
-					array->AppendElement(literal);
-					rv = NS_OK;
-				}
-			}
+			rv = kNC_FindObject->GetValue( getter_Copies(uri) );
+            if (NS_FAILED(rv)) return rv;
+
+            nsAutoString	url(uri);
+            nsIRDFLiteral	*literal;
+            rv = gRDFService->GetLiteral(url.GetUnicode(), &literal);
+            if (NS_FAILED(rv)) return rv;
+
+            nsISimpleEnumerator* result = 
+                new nsSingletonEnumerator(literal);
+
+            NS_RELEASE(literal);
+
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
 		}
-		else if (peq(property, kNC_pulse))
+		else if (property == kNC_pulse)
 		{
 			nsAutoString	pulse("15");
 			nsIRDFLiteral	*pulseLiteral;
-			gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
-			array = new nsVoidArray();
-			if (array)
-			{
-				array->AppendElement(pulseLiteral);
-				rv = NS_OK;
-			}
+			rv = gRDFService->GetLiteral(pulse.GetUnicode(), &pulseLiteral);
+            if (NS_FAILED(rv)) return rv;
+
+            nsISimpleEnumerator* result =
+                new nsSingletonEnumerator(pulseLiteral);
+
+            NS_RELEASE(pulseLiteral);
+
+            if (! result)
+                return NS_ERROR_OUT_OF_MEMORY;
+
+            NS_ADDREF(result);
+            *targets = result;
+            return NS_OK;
 		}
 	}
-	if ((rv == NS_OK) && (nsnull != array))
-	{
-		*targets = new FindCursor(source, property, PR_FALSE, array);
-		NS_ADDREF(*targets);
-	}
-	return(rv);
+
+	return NS_NewEmptyEnumerator(targets);
 }
 
 
@@ -622,9 +692,9 @@ FindDataSource::HasAssertion(nsIRDFResource *source,
 
 	if (isFindURI(source))
 	{
-		if (peq(property, kRDF_type))
+		if (property == kRDF_type)
 		{
-			if (peq((nsIRDFResource *)target, kRDF_type))
+			if ((nsIRDFResource *)target == kRDF_type)
 			{
 				*hasAssertion = PR_TRUE;
 			}
@@ -637,7 +707,7 @@ FindDataSource::HasAssertion(nsIRDFResource *source,
 
 NS_IMETHODIMP
 FindDataSource::ArcLabelsIn(nsIRDFNode *node,
-                            nsIRDFArcsInCursor ** labels /* out */)
+                            nsISimpleEnumerator ** labels /* out */)
 {
 	PR_ASSERT(0);
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -647,34 +717,36 @@ FindDataSource::ArcLabelsIn(nsIRDFNode *node,
 
 NS_IMETHODIMP
 FindDataSource::ArcLabelsOut(nsIRDFResource *source,
-                             nsIRDFArcsOutCursor **labels /* out */)
+                             nsISimpleEnumerator **labels /* out */)
 {
-	nsresult		rv = NS_RDF_NO_VALUE;
-
-	*labels = nsnull;
+	nsresult		rv;
 
 	if (isFindURI(source))
 	{
-		nsVoidArray *temp = new nsVoidArray();
-		if (nsnull == temp)
-			return NS_ERROR_OUT_OF_MEMORY;
-		temp->AppendElement(kNC_Child);
-		temp->AppendElement(kNC_pulse);
-		*labels = new FindCursor(source, kNC_Child, PR_TRUE, temp);
-		if (nsnull != *labels)
-		{
-			NS_ADDREF(*labels);
-			rv = NS_OK;
-		}
-	}
-	return(rv);
+		nsCOMPtr<nsISupportsArray> array;
+        rv = NS_NewISupportsArray( getter_AddRefs(array) );
+        if (NS_FAILED(rv)) return rv;
 
+		array->AppendElement(kNC_Child);
+		array->AppendElement(kNC_pulse);
+
+        nsISimpleEnumerator* result = new nsArrayEnumerator(array);
+        if (! result)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_ADDREF(result);
+        *labels = result;
+        return NS_OK;
+	}
+    else {
+        return NS_NewEmptyEnumerator(labels);
+    }
 }
 
 
 
 NS_IMETHODIMP
-FindDataSource::GetAllResources(nsIRDFResourceCursor** aCursor)
+FindDataSource::GetAllResources(nsISimpleEnumerator** aCursor)
 {
 	NS_NOTYETIMPLEMENTED("sorry!");
 	return NS_ERROR_NOT_IMPLEMENTED;
@@ -769,147 +841,3 @@ NS_NewRDFFindDataSource(nsIRDFDataSource **result)
 
 
 
-FindCursor::FindCursor(nsIRDFResource *source,
-				nsIRDFResource *property,
-				PRBool isArcsOut,
-				nsVoidArray *array)
-	: mSource(source),
-	  mProperty(property),
-	  mArcsOut(isArcsOut),
-	  mArray(array),
-	  mCount(0),
-	  mTarget(nsnull),
-	  mValue(nsnull)
-{
-	NS_INIT_REFCNT();
-	NS_ADDREF(mSource);
-	NS_ADDREF(mProperty);
-}
-
-
-
-FindCursor::~FindCursor(void)
-{
-	NS_IF_RELEASE(mSource);
-	NS_IF_RELEASE(mValue);
-	NS_IF_RELEASE(mProperty);
-	NS_IF_RELEASE(mTarget);
-	if (nsnull != mArray)
-	{
-		delete mArray;
-	}
-}
-
-
-
-NS_IMETHODIMP
-FindCursor::Advance(void)
-{
-	if (!mArray)
-		return NS_ERROR_NULL_POINTER;
-	if (mArray->Count() <= mCount)
-		return NS_RDF_CURSOR_EMPTY;
-	NS_IF_RELEASE(mValue);
-	mTarget = mValue = (nsIRDFNode *)mArray->ElementAt(mCount++);
-	NS_ADDREF(mValue);
-	NS_ADDREF(mTarget);
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-FindCursor::GetValue(nsIRDFNode **aValue)
-{
-	if (nsnull == mValue)
-		return NS_ERROR_NULL_POINTER;
-	NS_ADDREF(mValue);
-	*aValue = mValue;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-FindCursor::GetDataSource(nsIRDFDataSource **aDataSource)
-{
-	NS_ADDREF(gFindDataSource);
-	*aDataSource = gFindDataSource;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-FindCursor::GetSource(nsIRDFResource **aResource)
-{
-	NS_ADDREF(mSource);
-	*aResource = mSource;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-FindCursor::GetLabel(nsIRDFResource **aPredicate)
-{
-	if (mArcsOut == PR_FALSE)
-	{
-		NS_ADDREF(mProperty);
-		*aPredicate = mProperty;
-	}
-	else
-	{
-		if (nsnull == mValue)
-			return NS_ERROR_NULL_POINTER;
-		NS_ADDREF(mValue);
-		*(nsIRDFNode **)aPredicate = mValue;
-	}
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-FindCursor::GetTarget(nsIRDFNode **aObject)
-{
-	if (nsnull != mTarget)
-		NS_ADDREF(mTarget);
-	*aObject = mTarget;
-	return NS_OK;
-}
-
-
-
-NS_IMETHODIMP
-FindCursor::GetTruthValue(PRBool *aTruthValue)
-{
-	*aTruthValue = 1;
-	return NS_OK;
-}
-
-
-
-NS_IMPL_ADDREF(FindCursor);
-NS_IMPL_RELEASE(FindCursor);
-
-
-
-NS_IMETHODIMP
-FindCursor::QueryInterface(REFNSIID iid, void **result)
-{
-	if (! result)
-		return NS_ERROR_NULL_POINTER;
-
-	*result = nsnull;
-	if (iid.Equals(kIRDFAssertionCursorIID) ||
-		iid.Equals(kIRDFCursorIID) ||
-		iid.Equals(kIRDFArcsOutCursorIID) ||
-		iid.Equals(kISupportsIID))
-	{
-		*result = NS_STATIC_CAST(nsIRDFAssertionCursor *, this);
-		AddRef();
-		return NS_OK;
-	}
-	return(NS_NOINTERFACE);
-}
