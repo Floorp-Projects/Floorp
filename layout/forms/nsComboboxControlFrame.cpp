@@ -530,7 +530,9 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
   dropdownFrame->GetRect(currentRect);
   //if (currentRect != dropdownRect) {
     dropdownFrame->SetRect(dropdownRect);
+#ifdef DEBUG_rods
     printf("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
+#endif
   //}
 
   return rv;
@@ -637,6 +639,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
                                const nsHTMLReflowState& aReflowState, 
                                nsReflowStatus&          aStatus)
 {
+#ifdef DEBUG_rods
   printf("nsComboboxControlFrame::Reflow %d   Reason: ", myCounter++);
   switch (aReflowState.reason) {
     case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
@@ -644,6 +647,7 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
     case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
     case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
   }
+#endif
 
   nsresult rv = NS_OK;
   nsIFrame* buttonFrame = GetButtonFrame(aPresContext);
