@@ -53,6 +53,7 @@ class nsPersistentProperties : public nsIPersistentProperties
 public:
   nsPersistentProperties();
   virtual ~nsPersistentProperties();
+  nsresult Init();
 
   NS_DECL_ISUPPORTS
   NS_DECL_NSIPROPERTIES
