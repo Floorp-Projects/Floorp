@@ -268,7 +268,6 @@ protected:
   nscolor           mCurrBrushColor;
   HBRUSH            mCurrBrush;
   nsIFontMetrics    *mCurrFontMetrics;
-  nsFontWin         *mCurrFontWin;
   HFONT             mCurrFont;
   nscolor           mCurrPenColor;
   HPEN              mCurrPen;

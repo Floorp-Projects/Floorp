@@ -1521,8 +1521,7 @@ NS_IMETHODIMP nsRenderingContextWin :: GetWidth(const char* aString,
     // space.
     if ((1 == aLength) && (aString[0] == ' '))
     {
-      nsFontMetricsWin* fontMetricsWin = (nsFontMetricsWin*)mFontMetrics;
-      return fontMetricsWin->GetSpaceWidth(aWidth);
+      return mFontMetrics->GetSpaceWidth(aWidth);
     }
 
     SIZE  size;
@@ -1614,17 +1613,16 @@ nsRenderingContextWin::GetTextDimensions(const char*       aString,
     nscoord prevBreakState_Width = 0; // accumulated width to this point
 
     // Initialize OUT parameters
-    aLastWordDimensions.ascent = mCurrFontWin->mMaxAscent;
-    aLastWordDimensions.descent = mCurrFontWin->mMaxDescent;
+    mFontMetrics->GetMaxAscent(aLastWordDimensions.ascent);
+    mFontMetrics->GetMaxDescent(aLastWordDimensions.descent);
     aLastWordDimensions.width = -1;
     aNumCharsFit = 0;
 
     // Iterate each character in the string and determine which font to use
-    nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
     nscoord width = 0;
     PRInt32 start = 0;
     nscoord aveCharWidth;
-    metrics->GetAveCharWidth(aveCharWidth);
+    mFontMetrics->GetAveCharWidth(aveCharWidth);
 
     while (start < aLength) {
       // Estimate how many characters will fit. Do that by diving the available
@@ -1665,7 +1663,7 @@ nsRenderingContextWin::GetTextDimensions(const char*       aString,
       // Measure the text
       nscoord twWidth = 0;
       if ((1 == numChars) && (aString[start] == ' ')) {
-        metrics->GetSpaceWidth(twWidth);
+        mFontMetrics->GetSpaceWidth(twWidth);
       } 
       else if (numChars > 0) {
         SIZE  size;
@@ -1719,7 +1717,7 @@ nsRenderingContextWin::GetTextDimensions(const char*       aString,
           numChars = aBreaks[breakIndex] - start;
           
           if ((1 == numChars) && (aString[start] == ' ')) {
-            metrics->GetSpaceWidth(twWidth);
+            mFontMetrics->GetSpaceWidth(twWidth);
           } 
           else if (numChars > 0) {
             SIZE  size;
@@ -1736,8 +1734,8 @@ nsRenderingContextWin::GetTextDimensions(const char*       aString,
     }
 
     aDimensions.width = width;
-    aDimensions.ascent = mCurrFontWin->mMaxAscent;
-    aDimensions.descent = mCurrFontWin->mMaxDescent;
+    mFontMetrics->GetMaxAscent(aDimensions.ascent);
+    mFontMetrics->GetMaxDescent(aDimensions.descent);
 
     return NS_OK;
   }
@@ -2156,10 +2154,13 @@ nsRenderingContextWin::GetTextDimensions(const char*       aString,
                                          PRUint32          aLength,
                                          nsTextDimensions& aDimensions)
 {
-  SetupFontAndColor(); // need this for the case it is space ' '
+  if (!mFontMetrics) {
+    aDimensions.Clear();
+    return NS_ERROR_FAILURE;
+  }
   GetWidth(aString, aLength, aDimensions.width);
-  aDimensions.ascent = mCurrFontWin->mMaxAscent;
-  aDimensions.descent = mCurrFontWin->mMaxDescent;
+  mFontMetrics->GetMaxAscent(aDimensions.ascent);
+  mFontMetrics->GetMaxDescent(aDimensions.descent);
   return NS_OK;
 }
 
@@ -2782,8 +2783,10 @@ void nsRenderingContextWin :: SetupFontAndColor(void)
 
     mCurrFont = tfont;
 
-    nsFontMetricsWin* metrics = (nsFontMetricsWin*)mFontMetrics;
-    mCurrFontWin = metrics->GetFontFor(mCurrFont);
+    // nsFontMetricsWin vs. nsFontMetricsWinA
+    // When making changes in the font code, set |useAFunctions = 1| in nsGfxFactoryWin
+    // to verify that the changes didn't let the 'A' versions out of sync. 
+    NS_ASSERTION(((nsFontMetricsWin*)mFontMetrics)->GetFontFor(mCurrFont), "internal error");
 
     mCurrFontMetrics = mFontMetrics;
   }

@@ -413,10 +413,10 @@ public:
 class nsFontMetricsWinA : public nsFontMetricsWin
 {
 public:
-  virtual nsFontWin* FindLocalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUnichar aChar, nsString* aName);
-  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUnichar aChar);
-  virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUnichar aChar);
+  virtual nsFontWin* FindLocalFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* LoadGenericFont(HDC aDC, PRUint32 aChar, nsString* aName);
+  virtual nsFontWin* FindGlobalFont(HDC aDC, PRUint32 aChar);
+  virtual nsFontWin* FindSubstituteFont(HDC aDC, PRUint32 aChar);
 
   virtual nsFontWin* LoadFont(HDC aDC, nsString* aName);
   virtual nsFontWin* LoadGlobalFont(HDC aDC, nsGlobalFont* aGlobalFontItem);
