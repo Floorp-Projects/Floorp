@@ -216,7 +216,7 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
         // if none was found, create one and tuck it into the appropriate places.
         if (record == NULL) {
             record = new nsInterfaceRecord();
-            record->typelibRecord = tlrecord;
+            record->typelibRecord = NULL;
             record->interfaceDescriptor = NULL;
             record->info = NULL;
 
@@ -247,6 +247,7 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
                 PR_smprintf_free(warnstr);
             }
             record->interfaceDescriptor = current->interface_descriptor;
+            record->typelibRecord = tlrecord;
             record->iid = current->iid;
 
             if (foundInIIDTable == PR_FALSE) {

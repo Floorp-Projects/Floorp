@@ -34,7 +34,7 @@ nsInterfaceRecord::GetInfo(nsInterfaceInfo **result)
         return NS_OK;
     }
 
-    if (this->interfaceDescriptor == NULL) {
+    if (this->interfaceDescriptor == NULL || this->typelibRecord == NULL) {
         *result = NULL;
         return NS_ERROR_FAILURE;
     }
