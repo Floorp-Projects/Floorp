@@ -49,6 +49,7 @@
 #include "nsXPIDLString.h"
 #include "nsReadableUtils.h"
 #include "nsString.h"
+#include "nsVoidArray.h"
 
 #if defined(PR_LOGGING)
 //
@@ -69,10 +70,60 @@ PRLogModuleInfo* gLoadGroupLog = nsnull;
 
 ////////////////////////////////////////////////////////////////////////////////
 
+class RequestMapEntry : public PLDHashEntryHdr
+{
+public:
+    RequestMapEntry(nsIRequest *aRequest) :
+        mKey(aRequest)
+    {
+    }
+
+    nsCOMPtr<nsIRequest> mKey;
+};
+
+PR_STATIC_CALLBACK(const void *)
+RequestHashGetKey(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    RequestMapEntry *e = NS_STATIC_CAST(RequestMapEntry *, entry);
+
+    return e->mKey.get();
+}
+
+PR_STATIC_CALLBACK(PRBool)
+RequestHashMatchEntry(PLDHashTable *table, const PLDHashEntryHdr *entry,
+                      const void *key)
+{
+    const RequestMapEntry *e =
+        NS_STATIC_CAST(const RequestMapEntry *, entry);
+    const nsIRequest *request = NS_STATIC_CAST(const nsIRequest *, key);
+
+    return e->mKey == request;
+}
+
+PR_STATIC_CALLBACK(void)
+RequestHashClearEntry(PLDHashTable *table, PLDHashEntryHdr *entry)
+{
+    RequestMapEntry *e = NS_STATIC_CAST(RequestMapEntry *, entry);
+
+    // An entry is being cleared, let the entry do its own cleanup.
+    e->~RequestMapEntry();
+}
+
+PR_STATIC_CALLBACK(void)
+RequestHashInitEntry(PLDHashTable *table, PLDHashEntryHdr *entry,
+                     const void *key)
+{
+    const nsIRequest *const_request = NS_STATIC_CAST(const nsIRequest *, key);
+    nsIRequest *request = NS_CONST_CAST(nsIRequest *, const_request);
+
+    // Initialize the entry with placement new
+    new (entry) RequestMapEntry(request);
+}
+
+
 nsLoadGroup::nsLoadGroup(nsISupports* outer)
     : mForegroundCount(0)
     , mLoadFlags(LOAD_NORMAL)
-    , mRequests(nsnull)
     , mStatus(NS_OK)
     , mIsCanceling(PR_FALSE)
 {
@@ -85,6 +136,11 @@ nsLoadGroup::nsLoadGroup(nsISupports* outer)
 #endif
 
     LOG(("LOADGROUP [%x]: Created.\n", this));
+
+    // Initialize the ops in the hash to null to make sure we get
+    // consistent errors if someone fails to call ::Init() on an
+    // nsLoadGroup.
+    mRequests.ops = nsnull;
 }
 
 nsLoadGroup::~nsLoadGroup()
@@ -94,7 +150,10 @@ nsLoadGroup::~nsLoadGroup()
     rv = Cancel(NS_BINDING_ABORTED);
     NS_ASSERTION(NS_SUCCEEDED(rv), "Cancel failed");
 
-    NS_IF_RELEASE(mRequests);
+    if (mRequests.ops) {
+        PL_DHashTableFinish(&mRequests);
+    }
+
     mDefaultLoadRequest = 0;
 
     LOG(("LOADGROUP [%x]: Destroyed.\n", this));
@@ -103,7 +162,27 @@ nsLoadGroup::~nsLoadGroup()
 
 nsresult nsLoadGroup::Init()
 {
-    return NS_NewISupportsArray(&mRequests);
+    static PLDHashTableOps hash_table_ops =
+    {
+        PL_DHashAllocTable,
+        PL_DHashFreeTable,
+        RequestHashGetKey,
+        PL_DHashVoidPtrKeyStub,
+        RequestHashMatchEntry,
+        PL_DHashMoveEntryStub,
+        RequestHashClearEntry,
+        PL_DHashFinalizeStub,
+        RequestHashInitEntry
+    };
+
+    if (!PL_DHashTableInit(&mRequests, &hash_table_ops, nsnull,
+                           sizeof(RequestMapEntry), 16)) {
+        mRequests.ops = nsnull;
+
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return NS_OK;
 }
 
 
@@ -193,15 +272,58 @@ nsLoadGroup::GetStatus(nsresult *status)
     return NS_OK; 
 }
 
+// PLDHashTable enumeration callback that appends strong references to
+// all nsIRequest to an nsVoidArray.
+PR_STATIC_CALLBACK(PLDHashOperator)
+AppendRequestsToVoidArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                          PRUint32 number, void *arg)
+{
+    RequestMapEntry *e = NS_STATIC_CAST(RequestMapEntry *, hdr);
+    nsVoidArray *array = NS_STATIC_CAST(nsVoidArray *, arg);
+
+    nsIRequest *request = e->mKey;
+    NS_ASSERTION(request, "What? Null key in pldhash entry?");
+
+    PRBool ok = array->AppendElement(request);
+
+    if (!ok) {
+        return PL_DHASH_STOP;
+    }
+
+    NS_ADDREF(request);
+
+    return PL_DHASH_NEXT;
+}
+
+// nsVoidArray enumeration callback that releases all items in the
+// nsVoidArray
+PR_STATIC_CALLBACK(PRBool)
+ReleaseVoidArrayItems(void* aElement, void *aData)
+{
+    nsISupports *s = NS_STATIC_CAST(nsISupports *, aElement);
+
+    NS_RELEASE(s);
+
+    return PR_TRUE;
+}
+
 NS_IMETHODIMP
 nsLoadGroup::Cancel(nsresult status)
 {
     NS_ASSERTION(NS_FAILED(status), "shouldn't cancel with a success code");
     nsresult rv, firstError;
-    PRUint32 count;
+    PRUint32 count = mRequests.entryCount;
 
-    rv = mRequests->Count(&count);
-    if (NS_FAILED(rv)) return rv;
+    nsAutoVoidArray requests;
+
+    PL_DHashTableEnumerate(&mRequests, AppendRequestsToVoidArray,
+                           NS_STATIC_CAST(nsVoidArray *, &requests));
+
+    if (requests.Count() != (PRInt32)count) {
+        requests.EnumerateForwards(ReleaseVoidArrayItems, nsnull);
+
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     // set the load group status to our cancel status while we cancel 
     // all our requests...once the cancel is done, we'll reset it...
@@ -215,51 +337,55 @@ nsLoadGroup::Cancel(nsresult status)
 
     firstError = NS_OK;
 
-    if (count) {
-        nsIRequest* request;
+    nsIRequest* request;
 
-        //
-        // Operate the elements from back to front so that if items get
-        // get removed from the list it won't affect our iteration
-        //
-        while (count > 0) {
-            request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
+    while (count > 0) {
+        request = NS_STATIC_CAST(nsIRequest*, requests.ElementAt(--count));
 
-            NS_ASSERTION(request, "NULL request found in list.");
-            if (!request)
-                continue;
+        NS_ASSERTION(request, "NULL request found in list.");
 
-#if defined(PR_LOGGING)
-            nsCAutoString nameStr;
-            request->GetName(nameStr);
-            LOG(("LOADGROUP [%x]: Canceling request %x %s.\n",
-                this, request, nameStr.get()));
-#endif
+        RequestMapEntry *entry =
+            NS_STATIC_CAST(RequestMapEntry *,
+                           PL_DHashTableOperate(&mRequests, request,
+                                                PL_DHASH_LOOKUP));
 
-            //
-            // Remove the request from the load group...  This may cause
-            // the OnStopRequest notification to fire...
-            //
-            // XXX: What should the context be?
-            //
-            (void)RemoveRequest(request, nsnull, status);
-
-            // Cancel the request...
-            rv = request->Cancel(status);
-
-            // Remember the first failure and return it...
-            if (NS_FAILED(rv) && NS_SUCCEEDED(firstError))
-                firstError = rv;
+        if (!PL_DHASH_ENTRY_IS_LIVE(entry)) {
+            // |request| was removed already
 
             NS_RELEASE(request);
+
+            continue;
         }
 
-#if defined(DEBUG)
-        (void)mRequests->Count(&count);
-        NS_ASSERTION(count == 0,            "Request list is not empty.");
-        NS_ASSERTION(mForegroundCount == 0, "Foreground URLs are active.");
+#if defined(PR_LOGGING)
+        nsCAutoString nameStr;
+        request->GetName(nameStr);
+        LOG(("LOADGROUP [%x]: Canceling request %x %s.\n",
+             this, request, nameStr.get()));
 #endif
+
+        //
+        // Remove the request from the load group...  This may cause
+        // the OnStopRequest notification to fire...
+        //
+        // XXX: What should the context be?
+        //
+        (void)RemoveRequest(request, nsnull, status);
+
+        // Cancel the request...
+        rv = request->Cancel(status);
+
+        // Remember the first failure and return it...
+        if (NS_FAILED(rv) && NS_SUCCEEDED(firstError))
+            firstError = rv;
+
+        NS_RELEASE(request);
     }
+
+#if defined(DEBUG)
+    NS_ASSERTION(mRequests.entryCount == 0, "Request list is not empty.");
+    NS_ASSERTION(mForegroundCount == 0, "Foreground URLs are active.");
+#endif
 
     mStatus = NS_OK;
     mIsCanceling = PR_FALSE;
@@ -272,10 +398,18 @@ NS_IMETHODIMP
 nsLoadGroup::Suspend()
 {
     nsresult rv, firstError;
-    PRUint32 count;
+    PRUint32 count = mRequests.entryCount;
 
-    rv = mRequests->Count(&count);
-    if (NS_FAILED(rv)) return rv;
+    nsAutoVoidArray requests;
+
+    PL_DHashTableEnumerate(&mRequests, AppendRequestsToVoidArray,
+                           NS_STATIC_CAST(nsVoidArray *, &requests));
+
+    if (requests.Count() != (PRInt32)count) {
+        requests.EnumerateForwards(ReleaseVoidArrayItems, nsnull);
+
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     firstError = NS_OK;
     //
@@ -283,7 +417,8 @@ nsLoadGroup::Suspend()
     // get removed from the list it won't affect our iteration
     //
     while (count > 0) {
-        nsIRequest* request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
+        nsIRequest* request =
+            NS_STATIC_CAST(nsIRequest*, requests.ElementAt(--count));
 
         NS_ASSERTION(request, "NULL request found in list.");
         if (!request)
@@ -314,10 +449,18 @@ NS_IMETHODIMP
 nsLoadGroup::Resume()
 {
     nsresult rv, firstError;
-    PRUint32 count;
+    PRUint32 count = mRequests.entryCount;
 
-    rv = mRequests->Count(&count);
-    if (NS_FAILED(rv)) return rv;
+    nsAutoVoidArray requests;
+
+    PL_DHashTableEnumerate(&mRequests, AppendRequestsToVoidArray,
+                           NS_STATIC_CAST(nsVoidArray *, &requests));
+
+    if (requests.Count() != (PRInt32)count) {
+        requests.EnumerateForwards(ReleaseVoidArrayItems, nsnull);
+
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     firstError = NS_OK;
     //
@@ -325,7 +468,8 @@ nsLoadGroup::Resume()
     // get removed from the list it won't affect our iteration
     //
     while (count > 0) {
-        nsIRequest* request = NS_STATIC_CAST(nsIRequest*, mRequests->ElementAt(--count));
+        nsIRequest* request =
+            NS_STATIC_CAST(nsIRequest*, requests.ElementAt(--count));
 
         NS_ASSERTION(request, "NULL request found in list.");
         if (!request)
@@ -413,12 +557,12 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     nsresult rv;
 
 #if defined(PR_LOGGING)
-    PRUint32 count = 0;
-    (void)mRequests->Count(&count);
-    nsCAutoString nameStr;
-    request->GetName(nameStr);
-    LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
-        this, request, nameStr.get(), count));
+    {
+        nsCAutoString nameStr;
+        request->GetName(nameStr);
+        LOG(("LOADGROUP [%x]: Adding request %x %s (count=%d).\n",
+             this, request, nameStr.get(), mRequests.entryCount));
+    }
 #endif /* PR_LOGGING */
 
     //
@@ -435,8 +579,9 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     }
 
     nsLoadFlags flags;
-    // if the request is the default load request or if the default load request
-    // is null, then the load group should inherit its load flags from the request.
+    // if the request is the default load request or if the default
+    // load request is null, then the load group should inherit its
+    // load flags from the request.
     if (mDefaultLoadRequest == request || !mDefaultLoadRequest)
         rv = request->GetLoadFlags(&flags);
     else
@@ -446,10 +591,15 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
     //
     // Add the request to the list of active requests...
     //
-    // XXX this method incorrectly returns a bool
-    //
-    rv = mRequests->AppendElement(request) ? NS_OK : NS_ERROR_FAILURE;
-    if (NS_FAILED(rv)) return rv;
+
+    RequestMapEntry *entry =
+        NS_STATIC_CAST(RequestMapEntry *,
+                       PL_DHashTableOperate(&mRequests, request,
+                                        PL_DHASH_ADD));
+
+    if (!entry) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
 
     if (!(flags & nsIRequest::LOAD_BACKGROUND)) {
         // Update the count of foreground URIs..
@@ -474,9 +624,11 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
                 // The URI load has been canceled by the observer.  Clean up
                 // the damage...
                 //
-                // XXX this method incorrectly returns a bool
-                //
-                rv = mRequests->RemoveElement(request) ? NS_OK : NS_ERROR_FAILURE;
+
+                PL_DHashTableOperate(&mRequests, request, PL_DHASH_REMOVE);
+
+                rv = NS_OK;
+
                 mForegroundCount -= 1;
             }
         }
@@ -486,34 +638,44 @@ nsLoadGroup::AddRequest(nsIRequest *request, nsISupports* ctxt)
 }
 
 NS_IMETHODIMP
-nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt, nsresult aStatus)
+nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt,
+                           nsresult aStatus)
 {
     NS_ENSURE_ARG_POINTER(request);
     nsresult rv;
 
 #if defined(PR_LOGGING)
-        PRUint32 count = 0;
-        (void)mRequests->Count(&count);
+    {
         nsCAutoString nameStr;
         request->GetName(nameStr);
         LOG(("LOADGROUP [%x]: Removing request %x %s status %x (count=%d).\n",
-            this, request, nameStr.get(), aStatus, count-1));
+            this, request, nameStr.get(), aStatus, mRequests.entryCount-1));
+    }
 #endif
+
+    // Make sure we have a owning reference to the request we're about
+    // to remove.
+
+    nsCOMPtr<nsIRequest> kungFuDeathGrip(request);
 
     //
     // Remove the request from the group.  If this fails, it means that
     // the request was *not* in the group so do not update the foreground
     // count or it will get messed up...
     //
-    //
-    // XXX this method incorrectly returns a bool
-    //
-    rv = mRequests->RemoveElement(request) ? NS_OK : NS_ERROR_FAILURE;
-    if (NS_FAILED(rv)) {
+    RequestMapEntry *entry =
+        NS_STATIC_CAST(RequestMapEntry *,
+                       PL_DHashTableOperate(&mRequests, request,
+                                        PL_DHASH_LOOKUP));
+
+    if (!PL_DHASH_ENTRY_IS_LIVE(entry)) {
         LOG(("LOADGROUP [%x]: Unable to remove request %x. Not in group!\n",
             this, request));
-        return rv;
+
+        return NS_ERROR_FAILURE;
     }
+
+    PL_DHashTableRawRemove(&mRequests, entry);
 
     nsLoadFlags flags;
     rv = request->GetLoadFlags(&flags);
@@ -530,19 +692,55 @@ nsLoadGroup::RemoveRequest(nsIRequest *request, nsISupports* ctxt, nsresult aSta
                  "(foreground count=%d).\n", this, request, mForegroundCount));
 
             rv = observer->OnStopRequest(request, ctxt, aStatus);
-            if (NS_FAILED(rv))
+
+#if defined(PR_LOGGING)
+            if (NS_FAILED(rv)) {
                 LOG(("LOADGROUP [%x]: OnStopRequest for request %x FAILED.\n",
                     this, request));
+            }
+#endif
         }
     }
 
     return rv;
 }
 
+// PLDHashTable enumeration callback that appends all items in the
+// hash to an nsISupportsArray.
+PR_STATIC_CALLBACK(PLDHashOperator)
+AppendRequestsToISupportsArray(PLDHashTable *table, PLDHashEntryHdr *hdr,
+                               PRUint32 number, void *arg)
+{
+    RequestMapEntry *e = NS_STATIC_CAST(RequestMapEntry *, hdr);
+    nsISupportsArray *array = NS_STATIC_CAST(nsISupportsArray *, arg);
+
+    PRBool ok = array->AppendElement(e->mKey);
+
+    if (!ok) {
+        return PL_DHASH_STOP;
+    }
+
+    return PL_DHASH_NEXT;
+}
+
 NS_IMETHODIMP
 nsLoadGroup::GetRequests(nsISimpleEnumerator * *aRequests)
 {
-    return NS_NewArrayEnumerator(aRequests, mRequests);
+    nsCOMPtr<nsISupportsArray> array;
+    nsresult rv = NS_NewISupportsArray(getter_AddRefs(array));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    PL_DHashTableEnumerate(&mRequests, AppendRequestsToISupportsArray,
+                           array.get());
+
+    PRUint32 count;
+    array->Count(&count);
+
+    if (count != mRequests.entryCount) {
+        return NS_ERROR_OUT_OF_MEMORY;
+    }
+
+    return NS_NewArrayEnumerator(aRequests, array);
 }
 
 NS_IMETHODIMP

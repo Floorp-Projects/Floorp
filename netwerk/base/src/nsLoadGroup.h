@@ -47,6 +47,7 @@
 #include "nsWeakReference.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIInterfaceRequestorUtils.h"
+#include "pldhash.h"
 
 class  nsISupportsArray;
 
@@ -86,7 +87,7 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     nsCOMPtr<nsIRequest>            mDefaultLoadRequest;
-    nsISupportsArray*               mRequests;
+    PLDHashTable                    mRequests;
 
     nsWeakPtr                       mObserver;
     
