@@ -1217,10 +1217,18 @@ BookmarkParser::ParseBookmarkInfo(BookmarkField *fields, PRBool isBookmarkFlag,
             }
         }
 
-	// The last thing we do is add the bookmark to the container.
-	// This ensures the minimal amount of reflow.
-	rv = aContainer->AppendElement(bookmark);
-	NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");
+        // prevent duplicates                                                       
+        PRInt32 aIndex;                                                             
+        nsCOMPtr<nsIRDFResource> containerRes;
+        aContainer->GetResource(getter_AddRefs(containerRes));
+        if (containerRes && NS_SUCCEEDED(gRDFC->IndexOf(mDataSource, containerRes, bookmark, &aIndex)) &&                 
+            (aIndex < 0))                                                           
+        {                                                                           
+          // The last thing we do is add the bookmark to the container.           
+          // This ensures the minimal amount of reflow.                           
+          rv = aContainer->AppendElement(bookmark);                               
+          NS_ASSERTION(NS_SUCCEEDED(rv), "unable to add bookmark to container");  
+        }      
     }
 
     // free up any allocated data in field table AFTER processing
