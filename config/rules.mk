@@ -464,7 +464,7 @@ $(SIMPLE_PROGRAMS):$(OBJDIR)/%: $(OBJDIR)/%.o
 ifeq ($(CPP_PROG_LINK),1)
 	$(CCC) $(WRAP_MALLOC_CFLAGS) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 else
-	$(CC) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS)
+	$(CC) -o $@ $< $(LDFLAGS) $(LIBS_DIR) $(LIBS) $(OS_LIBS) $(EXTRA_LIBS) $(WRAP_MALLOC_LIB)
 endif
 
 #
