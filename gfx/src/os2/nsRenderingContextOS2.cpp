@@ -468,7 +468,7 @@ NS_IMETHODIMP nsRenderingContextOS2 :: PopState(void)
           // set copy of pstate->mClipRegion as current clip region
           HRGN hrgn = GFX (::GpiCreateRegion (mPS, 0, NULL), RGN_ERROR);
           GFX (::GpiCombineRegion (mPS, hrgn, pstate->mClipRegion, 0, CRGN_COPY), RGN_ERROR);
-          int cliptype = OS2_SetClipRegion (mPS, hrgn);
+          OS2_SetClipRegion (mPS, hrgn);
         }
       }
 
@@ -613,7 +613,7 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, ns
    PRUint32     ulHeight = mSurface->GetHeight ();
 
    HRGN hrgn = pRegion->GetHRGN( ulHeight, mPS);
-   int cmode;
+   LONG cmode = 0L;
 
    switch( aCombine)
    {
@@ -633,7 +633,7 @@ NS_IMETHODIMP nsRenderingContextOS2::SetClipRegion( const nsIRegion &aRegion, ns
          // Compiler informational...
          NS_ASSERTION( 0, "illegal clip combination");
          break;
-   }
+  }
 
   if (NULL != hrgn)
   {
