@@ -54,6 +54,7 @@ LPSTR           szTempSetupPath;
 LPSTR           szClassName;
 LPSTR           szSetupDir;
 LPSTR           szTempDir;
+LPSTR           szOSTempDir;
 LPSTR           szFileIniConfig;
 
 LPSTR           szSiteSelectorDescription;

@@ -58,7 +58,7 @@ Default Setup Type=Setup Type 0
 ; Default Font Size is 32
 ; Default Font Color is WHITE (of BLACK and GREEN)
 ; Default Font Shadow is TRUE
-Setup Title0=Mozilla Seamonkey Setup
+Setup Title0=Mozilla Seamonkey Pr2 Setup
 Setup Title0 Font Size=
 Setup Title0 Font Color=
 Setup Title0 Font Shadow=TRUE
@@ -199,7 +199,7 @@ Message0=Setup will add program icons to the Program Folder listed below.  You m
 [Dialog Site Selector]
 Show Dialog=FALSE
 Title=Site Selector
-Message0=Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from releative to where you are.
+Message0=Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from relative to where you are.
 
 [Dialog Start Install]
 Show Dialog=FALSE
@@ -309,7 +309,7 @@ Server Path0=$ServerPath$
 
 [Core]
 Source=[XPI PATH]\core.xpi
-Destination=[TEMP]\core.ns
+Destination=[WIZTEMP]\core.ns
 $InstallSize$:core
 Cleanup=TRUE
 Message=Preparing Install, please wait...
@@ -404,6 +404,19 @@ Target=[SETUP PATH]\mozilla.exe
 Parameters=-installer
 WorkingDir=[SETUP PATH]
 
+[Windows Registry0]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Mozilla\Mozilla Seamonkey\$UserAgent$\Main
+Name=Program Folder Path
+Name Value=[Default Folder]
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
 ; Values for Show Folder:
 ;   HIDE             Hides the window and activates another window.
 ;   MAXIMIZE         Maximizes the specified window.
@@ -434,21 +447,21 @@ Timing=post smartupdate
 Show Folder=SHOW
 Program Folder=[Default Folder]
 
-[Program Folder0-Shortcut0]
-File=[SETUP PATH]\mozilla.exe
-Arguments=
-Working Dir=[SETUP PATH]
-Description=Mozilla Seamonkey
-Icon Path=[SETUP PATH]\mozilla.exe
-Icon Id=0
+;[Program Folder0-Shortcut0]
+;File=[SETUP PATH]\mozilla.exe
+;Arguments=
+;Working Dir=[SETUP PATH]
+;Description=Mozilla Seamonkey
+;Icon Path=[SETUP PATH]\mozilla.exe
+;Icon Id=0
 
-[Program Folder0-Shortcut1]
-File=[SETUP PATH]\mozilla.exe
-Arguments=-ProfileManager
-Working Dir=[SETUP PATH]
-Description=Profile Manager
-Icon Path=[SETUP PATH]\mozilla.exe
-Icon Id=0
+;[Program Folder0-Shortcut1]
+;File=[SETUP PATH]\mozilla.exe
+;Arguments=-ProfileManager
+;Working Dir=[SETUP PATH]
+;Description=Profile Manager
+;Icon Path=[SETUP PATH]\mozilla.exe
+;Icon Id=0
 
 ;[Program Folder0-Shortcut2]
 ;File=[SETUP PATH]\bin\Net2fone.exe

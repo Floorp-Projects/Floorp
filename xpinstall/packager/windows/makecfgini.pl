@@ -29,8 +29,13 @@
 #
 # Input: .it file
 #             - which is a .ini template
+#
 #        version
 #             - version to display on the blue background
+#
+#        UserAgent
+#             - user agent to use in the windows registry.  should be the same as the one
+#               built into the browser (ie "6.0b2 (en)")
 #
 #        Path to staging area
 #             - path on where the seamonkey built bits are staged to
@@ -48,19 +53,22 @@
 #               Either ftp:// or http:// can be used
 #               ie: ftp://ftp.netscape.com/pub/seamonkey/xpi
 #
-#   ie: perl makecfgini.pl config.it 5.0.0.1999120608 k:\windows\32bit\5.0 d:\builds\mozilla\dist\win32_o.obj\install\xpi ftp://ftp.netscape.com/pub/seamonkey/windows/32bit/x86/1999-09-13-10-M10 ftp://ftp.netscape.com/pub/seamonkey/windows/32bit/x86/1999-09-13-10-M10/xpi
+#   ie: perl makecfgini.pl config.it 5.0.0.1999120608 "5.0b1 (en)" k:\windows\32bit\5.0 d:\builds\mozilla\dist\win32_o.obj\install\xpi ftp://ftp.netscape.com/pub/seamonkey/windows/32bit/x86/1999-09-13-10-M10 ftp://ftp.netscape.com/pub/seamonkey/windows/32bit/x86/1999-09-13-10-M10/xpi
 #
 #
 
 # Make sure there are at least two arguments
-if($#ARGV < 5)
+if($#ARGV < 6)
 {
-  die "usage: $0 <.it file> <version> <staging path> <.xpi path> <redirect file url> <xpi url>
+  die "usage: $0 <.it file> <version> <UserAgent> <staging path> <.xpi path> <redirect file url> <xpi url>
 
        .it file      : input ini template file
 
        version       : version to be shown in setup.  Typically the same version
                        as show in mozilla.exe.
+
+       UserAgent     : user agent to use in the windows registry.  should be the same as the one
+                       built into the browser (ie \"6.0b2 (en)\")
 
        staging path  : path to where the components are staged at
 
@@ -78,10 +86,11 @@ if($#ARGV < 5)
 
 $inItFile         = $ARGV[0];
 $inVersion        = $ARGV[1];
-$inStagePath      = $ARGV[2];
-$inXpiPath        = $ARGV[3];
-$inRedirIniUrl    = $ARGV[4];
-$inUrl            = $ARGV[5];
+$inUserAgent      = $ARGV[2];
+$inStagePath      = $ARGV[3];
+$inXpiPath        = $ARGV[4];
+$inRedirIniUrl    = $ARGV[5];
+$inUrl            = $ARGV[6];
 
 $inDomain;
 $inServerPath;
@@ -164,6 +173,7 @@ while($line = <fpInIt>)
     $line =~ s/\$Domain\$/$inDomain/i;
     $line =~ s/\$ServerPath\$/$inServerPath/i;
     $line =~ s/\$RedirIniUrl\$/$inRedirIniUrl/i;
+    $line =~ s/\$UserAgent\$/$inUserAgent/i;
     print fpOutIni $line;
   }
 }

@@ -276,28 +276,31 @@ void cbXPIProgress(const char* msg, PRInt32 val, PRInt32 max)
   char szStrProcessingFileBuf[MAX_BUF];
   char szStrCopyingFileBuf[MAX_BUF];
 
-  ParsePath((char *)msg, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
+  if(sgProduct.dwMode != SILENT)
+  {
+    ParsePath((char *)msg, szFilename, sizeof(szFilename), PP_FILENAME_ONLY);
 
-  if(max == 0)
-  {
-    wsprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
-    SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
-    bBarberBar = TRUE;
-    UpdateGaugeFileBarber();
-  }
-  else
-  {
-    if(bBarberBar == TRUE)
+    if(max == 0)
     {
-      dlgInfo.nFileBars = 0;
-      ++dwCurrentArchive;
-      UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
-      bBarberBar = FALSE;
+      wsprintf(szStrProcessingFileBuf, szStrProcessingFile, szFilename);
+      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrProcessingFileBuf);
+      bBarberBar = TRUE;
+      UpdateGaugeFileBarber();
     }
+    else
+    {
+      if(bBarberBar == TRUE)
+      {
+        dlgInfo.nFileBars = 0;
+        ++dwCurrentArchive;
+        UpdateGaugeArchiveProgressBar((unsigned)(((double)(dwCurrentArchive)/(double)dwTotalArchives)*(double)100));
+        bBarberBar = FALSE;
+      }
 
-    wsprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
-    SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
-    UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
+      wsprintf(szStrCopyingFileBuf, szStrCopyingFile, szFilename);
+      SetDlgItemText(dlgInfo.hWndDlg, IDC_STATUS3, szStrCopyingFileBuf);
+      UpdateGaugeFileProgressBar((unsigned)(((double)(val+1)/(double)max)*(double)100));
+    }
   }
 
   ProcessWindowsMessages();
@@ -349,39 +352,43 @@ ProgressDlgProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 static void
 UpdateGaugeFileBarber()
 {
-	int	nBars;
-	HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+	int	  nBars;
+	HWND	hWndGauge;
 	RECT	rect;
 
-  if(dwBarberDirection == BDIR_RIGHT)
+  if(sgProduct.dwMode != SILENT)
   {
-    if(lBarberCounter < 151)
-      ++lBarberCounter;
-    else
-      dwBarberDirection = BDIR_LEFT;
+	  hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+    if(dwBarberDirection == BDIR_RIGHT)
+    {
+      if(lBarberCounter < 151)
+        ++lBarberCounter;
+      else
+        dwBarberDirection = BDIR_LEFT;
+    }
+    else if(dwBarberDirection == BDIR_LEFT)
+    {
+      if(lBarberCounter > 0)
+        --lBarberCounter;
+      else
+        dwBarberDirection = BDIR_RIGHT;
+    }
+
+    // Figure out how many bars should be displayed
+    nBars = (dlgInfo.nMaxFileBars * lBarberCounter / 100);
+
+    // Update the gauge state before painting
+    dlgInfo.nFileBars = nBars;
+
+    // Only invalidate the part that needs updating
+    GetClientRect(hWndGauge, &rect);
+    InvalidateRect(hWndGauge, &rect, FALSE);
+
+    // Update the whole extracting dialog. We do this because we don't
+    // have a message loop to process WM_PAINT messages in case the
+    // extracting dialog was exposed
+    UpdateWindow(dlgInfo.hWndDlg);
   }
-  else if(dwBarberDirection == BDIR_LEFT)
-  {
-    if(lBarberCounter > 0)
-      --lBarberCounter;
-    else
-      dwBarberDirection = BDIR_RIGHT;
-  }
-
-  // Figure out how many bars should be displayed
-  nBars = (dlgInfo.nMaxFileBars * lBarberCounter / 100);
-
-  // Update the gauge state before painting
-  dlgInfo.nFileBars = nBars;
-
-  // Only invalidate the part that needs updating
-  GetClientRect(hWndGauge, &rect);
-  InvalidateRect(hWndGauge, &rect, FALSE);
-
-  // Update the whole extracting dialog. We do this because we don't
-  // have a message loop to process WM_PAINT messages in case the
-  // extracting dialog was exposed
-  UpdateWindow(dlgInfo.hWndDlg);
 }
 
 // This routine will update the File Gauge progress bar to the specified percentage
@@ -391,27 +398,30 @@ UpdateGaugeFileProgressBar(unsigned value)
 {
 	int	nBars;
 
-	// Figure out how many bars should be displayed
-	nBars = dlgInfo.nMaxFileBars * value / 100;
-
-	// Only paint if we need to display more bars
-	if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
+  if(sgProduct.dwMode != SILENT)
   {
-		HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
-		RECT	rect;
+    // Figure out how many bars should be displayed
+    nBars = dlgInfo.nMaxFileBars * value / 100;
 
-		// Update the gauge state before painting
-		dlgInfo.nFileBars = nBars;
+    // Only paint if we need to display more bars
+    if((nBars > dlgInfo.nFileBars) || (dlgInfo.nFileBars == 0))
+    {
+      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_FILE);
+      RECT	rect;
 
-		// Only invalidate the part that needs updating
-		GetClientRect(hWndGauge, &rect);
-		InvalidateRect(hWndGauge, &rect, FALSE);
-	
-		// Update the whole extracting dialog. We do this because we don't
-		// have a message loop to process WM_PAINT messages in case the
-		// extracting dialog was exposed
-		UpdateWindow(dlgInfo.hWndDlg);
-	}
+      // Update the gauge state before painting
+      dlgInfo.nFileBars = nBars;
+
+      // Only invalidate the part that needs updating
+      GetClientRect(hWndGauge, &rect);
+      InvalidateRect(hWndGauge, &rect, FALSE);
+    
+      // Update the whole extracting dialog. We do this because we don't
+      // have a message loop to process WM_PAINT messages in case the
+      // extracting dialog was exposed
+      UpdateWindow(dlgInfo.hWndDlg);
+    }
+  }
 }
 
 // This routine will update the Archive Gauge progress bar to the specified percentage
@@ -421,27 +431,30 @@ UpdateGaugeArchiveProgressBar(unsigned value)
 {
 	int	nBars;
 
-	// Figure out how many bars should be displayed
-	nBars = dlgInfo.nMaxArchiveBars * value / 100;
-
-	// Only paint if we need to display more bars
-	if (nBars > dlgInfo.nArchiveBars)
+  if(sgProduct.dwMode != SILENT)
   {
-		HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE);
-		RECT	rect;
+    // Figure out how many bars should be displayed
+    nBars = dlgInfo.nMaxArchiveBars * value / 100;
 
-		// Update the gauge state before painting
-		dlgInfo.nArchiveBars = nBars;
+    // Only paint if we need to display more bars
+    if (nBars > dlgInfo.nArchiveBars)
+    {
+      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE_ARCHIVE);
+      RECT	rect;
 
-		// Only invalidate the part that needs updating
-		GetClientRect(hWndGauge, &rect);
-		InvalidateRect(hWndGauge, &rect, FALSE);
-	
-		// Update the whole extracting dialog. We do this because we don't
-		// have a message loop to process WM_PAINT messages in case the
-		// extracting dialog was exposed
-		UpdateWindow(dlgInfo.hWndDlg);
-	}
+      // Update the gauge state before painting
+      dlgInfo.nArchiveBars = nBars;
+
+      // Only invalidate the part that needs updating
+      GetClientRect(hWndGauge, &rect);
+      InvalidateRect(hWndGauge, &rect, FALSE);
+    
+      // Update the whole extracting dialog. We do this because we don't
+      // have a message loop to process WM_PAINT messages in case the
+      // extracting dialog was exposed
+      UpdateWindow(dlgInfo.hWndDlg);
+    }
+  }
 }
 
 // Draws a recessed border around the gauge
@@ -663,26 +676,32 @@ void InitProgressDlg()
 {
 	WNDCLASS	wc;
 
-	memset(&wc, 0, sizeof(wc));
-  wc.style          = CS_GLOBALCLASS;
-	wc.hInstance      = hInst;
-	wc.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
-  wc.lpfnWndProc    = (WNDPROC)GaugeFileWndProc;
-	wc.lpszClassName  = "GaugeFile";
-	RegisterClass(&wc);
+  if(sgProduct.dwMode != SILENT)
+  {
+    memset(&wc, 0, sizeof(wc));
+    wc.style          = CS_GLOBALCLASS;
+    wc.hInstance      = hInst;
+    wc.hbrBackground  = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.lpfnWndProc    = (WNDPROC)GaugeFileWndProc;
+    wc.lpszClassName  = "GaugeFile";
+    RegisterClass(&wc);
 
-  wc.lpfnWndProc    = (WNDPROC)GaugeArchiveWndProc;
-	wc.lpszClassName  = "GaugeArchive";
-	RegisterClass(&wc);
+    wc.lpfnWndProc    = (WNDPROC)GaugeArchiveWndProc;
+    wc.lpszClassName  = "GaugeArchive";
+    RegisterClass(&wc);
 
-	// Display the dialog box
-	dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_EXTRACTING), hWndMain, (WNDPROC)ProgressDlgProc);
-	UpdateWindow(dlgInfo.hWndDlg);
+    // Display the dialog box
+    dlgInfo.hWndDlg = CreateDialog(hSetupRscInst, MAKEINTRESOURCE(DLG_EXTRACTING), hWndMain, (WNDPROC)ProgressDlgProc);
+    UpdateWindow(dlgInfo.hWndDlg);
+  }
 }
 
 void DeInitProgressDlg()
 {
-  DestroyWindow(dlgInfo.hWndDlg);
-  UnregisterClass("GaugeFile", hInst);
-  UnregisterClass("GaugeArchive", hInst);
+  if(sgProduct.dwMode != SILENT)
+  {
+    DestroyWindow(dlgInfo.hWndDlg);
+    UnregisterClass("GaugeFile", hInst);
+    UnregisterClass("GaugeArchive", hInst);
+  }
 }

@@ -1,7 +1,5 @@
 //Microsoft Developer Studio generated resource script.
 //
-
-#define WINVER 0x400
 #include "setuprsc.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -151,10 +149,10 @@ STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
 FONT 8, "MS Sans Serif", 0, 0, 0x1
 BEGIN
     EDITTEXT        IDC_EDIT_PROGRAM_FOLDER,101,64,204,12,ES_AUTOHSCROLL
-    LISTBOX         IDC_LIST,101,94,204,77,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
+    LISTBOX         IDC_LIST,101,94,204,79,LBS_SORT | LBS_NOINTEGRALHEIGHT | 
                     WS_VSCROLL | WS_HSCROLL | WS_TABSTOP
     PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
-    DEFPUSHBUTTON   "&Next",IDWIZNEXT,188,186,53,14
+    DEFPUSHBUTTON   "&Install",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
     LTEXT           "",IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
     LTEXT           "&Program Folder:",IDC_STATIC,101,54,105,8
@@ -163,6 +161,8 @@ BEGIN
                     WS_EX_CLIENTEDGE
     CONTROL         "",IDC_STATIC,"Static",SS_ETCHEDHORZ,11,179,295,1,
                     WS_EX_STATICEDGE
+    PUSHBUTTON      "Download Site Selector",IDC_BUTTON_SITE_SELECTOR,11,186,
+                    90,14
 END
 
 DLG_LICENSE DIALOG DISCARDABLE  51, 56, 315, 205
@@ -250,14 +250,13 @@ END
 
 DLG_SITE_SELECTOR DIALOGEX 51, 56, 315, 205
 STYLE WS_POPUP | WS_VISIBLE | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
-    DEFPUSHBUTTON   "&Install",IDWIZNEXT,188,186,53,14
+    DEFPUSHBUTTON   "&Ok",IDWIZNEXT,188,186,53,14
     PUSHBUTTON      "&Cancel",IDCANCEL,252,186,53,14
-    COMBOBOX        IDC_SITE_SELECTOR,101,49,198,124,CBS_DROPDOWNLIST | 
+    COMBOBOX        IDC_LIST_SITE_SELECTOR,101,49,198,124,CBS_DROPDOWNLIST | 
                     CBS_SORT | CBS_NOINTEGRALHEIGHT | WS_VSCROLL | 
                     WS_TABSTOP
-    PUSHBUTTON      "< &Back",IDWIZBACK,134,186,53,14
     LTEXT           "Select the region you wish to download from, or leave it on Default for Setup to automatically determine the best place to download from releative to where you are.",
                     IDC_MESSAGE0,101,11,204,33,NOT WS_GROUP
     CONTROL         108,-1,"Static",SS_BITMAP,11,11,80,160,WS_EX_CLIENTEDGE
@@ -319,6 +318,11 @@ IDB_BOX_CHECKED_DISABLED BITMAP  FIXED IMPURE    "box_ch_d.bmp"
 #ifdef APSTUDIO_INVOKED
 GUIDELINES DESIGNINFO DISCARDABLE 
 BEGIN
+    DLG_PROGRAM_FOLDER, DIALOG
+    BEGIN
+        HORZGUIDE, 144
+    END
+
     DLG_EXTRACTING, DIALOG
     BEGIN
         BOTTOMMARGIN, 72
@@ -383,6 +387,7 @@ BEGIN
                             "The following directory does not exist:%sWould you like to create it?"
     IDS_STR_CREATE_DIRECTORY "Create Directory?"
     IDS_ERROR_PROGRAM_FOLDER_NAME "Invalid program folder name entered."
+    IDS_ERROR_DESTINATION_PATH "Invalid path entered."
     IDS_CB_DEFAULT          "Default"
 END
 

@@ -31,8 +31,16 @@
 #define BAR_SPACING   2
 #define BAR_WIDTH     6
 #define MAX_BUF       4096
+#define WIZ_TEMP_DIR  "ns_temp"
 
-char szTitle[4096];
+/* Mode of Setup to run in */
+#define NORMAL                          0
+#define SILENT                          1
+#define AUTO                            2
+
+char      szTitle[MAX_BUF];
+char      szCmdLineToSetup[MAX_BUF];
+DWORD     dwMode;
 HINSTANCE hInst;
 
 /////////////////////////////////////////////////////////////////////////////
@@ -60,8 +68,183 @@ GetFullTempPathName(LPCTSTR lpszFileName, DWORD dwBufferLength, LPTSTR lpszBuffe
 	dwLen = GetTempPath(dwBufferLength, lpszBuffer);
 	if (lpszBuffer[dwLen - 1] != '\\')
 		strcat(lpszBuffer, "\\");
+	strcat(lpszBuffer, WIZ_TEMP_DIR);
+
+  dwLen = lstrlen(lpszBuffer);
+	if (lpszBuffer[dwLen - 1] != '\\')
+		strcat(lpszBuffer, "\\");
 	strcat(lpszBuffer, lpszFileName);
+
 	return TRUE;
+}
+
+/* Function to remove quotes from a string */
+void RemoveQuotes(LPSTR lpszSrc, LPSTR lpszDest, int iDestSize)
+{
+  char *lpszBegin;
+
+  if(lstrlen(lpszSrc) > iDestSize)
+    return;
+
+  if(*lpszSrc == '\"')
+    lpszBegin = &lpszSrc[1];
+  else
+    lpszBegin = lpszSrc;
+
+  lstrcpy(lpszDest, lpszBegin);
+
+  if(lpszDest[lstrlen(lpszDest) - 1] == '\"')
+    lpszDest[lstrlen(lpszDest) - 1] = '\0';
+}
+
+/* Function to locate the first non space character in a string,
+ * and return a pointer to it. */
+LPSTR GetFirstNonSpace(LPSTR lpszString)
+{
+  int   i;
+  int   iStrLength;
+
+  iStrLength = lstrlen(lpszString);
+
+  for(i = 0; i < iStrLength; i++)
+  {
+    if(!isspace(lpszString[i]))
+      return(&lpszString[i]);
+  }
+
+  return(NULL);
+}
+
+/* Function to return the argument count given a command line input
+ * format string */
+int GetArgC(LPSTR lpszCommandLine)
+{
+  int   i;
+  int   iArgCount;
+  int   iStrLength;
+  LPSTR lpszBeginStr;
+  BOOL  bFoundQuote;
+  BOOL  bFoundSpace;
+
+  iArgCount    = 0;
+  lpszBeginStr = GetFirstNonSpace(lpszCommandLine);
+
+  if(lpszBeginStr == NULL)
+    return(iArgCount);
+
+  iStrLength   = lstrlen(lpszBeginStr);
+  bFoundQuote  = FALSE;
+  bFoundSpace  = TRUE;
+
+  for(i = 0; i < iStrLength; i++)
+  {
+    if(lpszCommandLine[i] == '\"')
+    {
+      if(bFoundQuote == FALSE)
+      {
+        ++iArgCount;
+        bFoundQuote = TRUE;
+      }
+      else
+      {
+        bFoundQuote = FALSE;
+      }
+    }
+    else if(bFoundQuote == FALSE)
+    {
+      if(!isspace(lpszCommandLine[i]) && (bFoundSpace == TRUE))
+      {
+        ++iArgCount;
+        bFoundSpace = FALSE;
+      }
+      else if(isspace(lpszCommandLine[i]))
+      {
+        bFoundSpace = TRUE;
+      }
+    }
+  }
+
+  return(iArgCount);
+}
+
+/* Function to return a specific argument parameter from a given command line input
+ * format string. */
+LPSTR GetArgV(LPSTR lpszCommandLine, int iIndex, LPSTR lpszDest, int iDestSize)
+{
+  int   i;
+  int   j;
+  int   iArgCount;
+  int   iStrLength;
+  LPSTR lpszBeginStr;
+  LPSTR lpszDestTemp;
+  BOOL  bFoundQuote;
+  BOOL  bFoundSpace;
+
+  iArgCount    = 0;
+  lpszBeginStr = GetFirstNonSpace(lpszCommandLine);
+
+  if(lpszBeginStr == NULL)
+    return(NULL);
+
+  lpszDestTemp = (char *)calloc(iDestSize, sizeof(char));
+  if(lpszDestTemp == NULL)
+  {
+    MessageBox(NULL, "Out of memory", NULL, MB_OK | MB_ICONEXCLAMATION);
+    exit(1);
+  }
+
+  ZeroMemory(lpszDest, iDestSize);
+  iStrLength    = lstrlen(lpszBeginStr);
+  bFoundQuote   = FALSE;
+  bFoundSpace   = TRUE;
+  j             = 0;
+
+  for(i = 0; i < iStrLength; i++)
+  {
+    if(lpszCommandLine[i] == '\"')
+    {
+      if(bFoundQuote == FALSE)
+      {
+        ++iArgCount;
+        bFoundQuote = TRUE;
+      }
+      else
+      {
+        bFoundQuote = FALSE;
+      }
+    }
+    else if(bFoundQuote == FALSE)
+    {
+      if(!isspace(lpszCommandLine[i]) && (bFoundSpace == TRUE))
+      {
+        ++iArgCount;
+        bFoundSpace = FALSE;
+      }
+      else if(isspace(lpszCommandLine[i]))
+      {
+        bFoundSpace = TRUE;
+      }
+    }
+
+    if((iIndex == (iArgCount - 1)) &&
+      ((bFoundQuote == TRUE) || (bFoundSpace == FALSE) ||
+      ((bFoundQuote == FALSE) && (lpszCommandLine[i] == '\"'))))
+    {
+      if(j < iDestSize)
+      {
+        lpszDestTemp[j] = lpszCommandLine[i];
+        ++j;
+      }
+      else
+      {
+        lpszDestTemp[j] = '\0';
+      }
+    }
+  }
+
+  RemoveQuotes(lpszDestTemp, lpszDest, iDestSize);
+  free(lpszDestTemp);
+  return(lpszDest);
 }
 
 // this function appends a backslash at the end of a string,
@@ -78,6 +261,29 @@ void AppendBackSlash(LPSTR szInput, DWORD dwInputSize)
       }
     }
   }
+}
+
+HRESULT CreateDirectoriesAll(char* szPath)
+{
+  int     i;
+  int     iLen = lstrlen(szPath);
+  char    szCreatePath[MAX_BUF];
+  HRESULT hrResult;
+
+  ZeroMemory(szCreatePath, MAX_BUF);
+  memcpy(szCreatePath, szPath, iLen);
+  for(i = 0; i < iLen; i++)
+  {
+    if((iLen > 1) &&
+      ((i != 0) && ((szPath[i] == '\\') || (szPath[i] == '/'))) &&
+      (!((szPath[0] == '\\') && (i == 1)) && !((szPath[1] == ':') && (i == 2))))
+    {
+      szCreatePath[i] = '\0';
+      hrResult        = CreateDirectory(szCreatePath, NULL);
+      szCreatePath[i] = szPath[i];
+    }
+  }
+  return(hrResult);
 }
 
 // This function removes a directory and its subdirectories
@@ -128,6 +334,29 @@ HRESULT DirectoryRemove(LPSTR szDestination, BOOL bRemoveSubdirs)
   return(0);
 }
 
+void ParseCommandLine(LPSTR lpszCmdLine)
+{
+  char  szArgVBuf[MAX_BUF];
+  int   i;
+  int   iArgC;
+
+  ZeroMemory(szCmdLineToSetup, MAX_BUF);
+  dwMode = NORMAL;
+  iArgC  = GetArgC(lpszCmdLine);
+  i      = 0;
+  while(i < iArgC)
+  {
+    GetArgV(lpszCmdLine, i, szArgVBuf, sizeof(szArgVBuf));
+    if((lstrcmpi(szArgVBuf, "-ms") == 0) || (lstrcmpi(szArgVBuf, "/ms") == 0))
+    {
+      dwMode = SILENT;
+      lstrcat(szCmdLineToSetup, " /ms");
+    }
+
+    ++i;
+  }
+}
+
 // Centers the specified window over the desktop. Assumes the window is
 // smaller both horizontally and vertically than the desktop
 static void
@@ -151,10 +380,14 @@ CenterWindow(HWND hWndDlg)
 static void
 SetStatusLine(LPCTSTR lpszStatus)
 {
-	HWND	hWndLabel = GetDlgItem(dlgInfo.hWndDlg, IDC_STATUS);
+	HWND	hWndLabel;
 
-	SetWindowText(hWndLabel, lpszStatus);
-	UpdateWindow(hWndLabel);
+  if(dwMode != SILENT)
+  {
+	  hWndLabel = GetDlgItem(dlgInfo.hWndDlg, IDC_STATUS);
+	  SetWindowText(hWndLabel, lpszStatus);
+	  UpdateWindow(hWndLabel);
+  }
 }
 
 // This routine will update the progress bar to the specified percentage
@@ -164,43 +397,50 @@ UpdateProgressBar(unsigned value)
 {
 	int	nBars;
 
-	// Figure out how many bars should be displayed
-	nBars = dlgInfo.nMaxBars * value / 100;
+  if(dwMode != SILENT)
+  {
+    // Figure out how many bars should be displayed
+    nBars = dlgInfo.nMaxBars * value / 100;
 
-	// Only paint if we need to display more bars
-	if (nBars > dlgInfo.nBars) {
-		HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE);
-		RECT	rect;
+    // Only paint if we need to display more bars
+    if (nBars > dlgInfo.nBars)
+    {
+      HWND	hWndGauge = GetDlgItem(dlgInfo.hWndDlg, IDC_GAUGE);
+      RECT	rect;
 
-		// Update the gauge state before painting
-		dlgInfo.nBars = nBars;
+      // Update the gauge state before painting
+      dlgInfo.nBars = nBars;
 
-		// Only invalidate the part that needs updating
-		GetClientRect(hWndGauge, &rect);
-		rect.left = BAR_MARGIN + (nBars - 1) * (BAR_WIDTH + BAR_SPACING);
-		InvalidateRect(hWndGauge, &rect, FALSE);
-	
-		// Update the whole extracting dialog. We do this because we don't
-		// have a message loop to process WM_PAINT messages in case the
-		// extracting dialog was exposed
-		UpdateWindow(dlgInfo.hWndDlg);
-	}
+      // Only invalidate the part that needs updating
+      GetClientRect(hWndGauge, &rect);
+      rect.left = BAR_MARGIN + (nBars - 1) * (BAR_WIDTH + BAR_SPACING);
+      InvalidateRect(hWndGauge, &rect, FALSE);
+    
+      // Update the whole extracting dialog. We do this because we don't
+      // have a message loop to process WM_PAINT messages in case the
+      // extracting dialog was exposed
+      UpdateWindow(dlgInfo.hWndDlg);
+    }
+  }
 }
 
 // Window proc for dialog
 BOOL APIENTRY
 DialogProc(HWND hWndDlg, UINT msg, WPARAM wParam, LPARAM lParam)
 {
-	switch (msg) {
-		case WM_INITDIALOG:
-			// Center the dialog over the desktop
-			CenterWindow(hWndDlg);
-			return FALSE;
+  if(dwMode != SILENT)
+  {
+    switch (msg) {
+      case WM_INITDIALOG:
+        // Center the dialog over the desktop
+        CenterWindow(hWndDlg);
+        return FALSE;
 
-		case WM_COMMAND:
-			DestroyWindow(hWndDlg);
-			return TRUE;
-	}
+      case WM_COMMAND:
+        DestroyWindow(hWndDlg);
+        return TRUE;
+    }
+  }
 
 	return FALSE;  // didn't handle the message
 }
@@ -268,6 +508,7 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 
 	// Create a file in the temp directory
 	GetFullTempPathName(lpszName, sizeof(szTmpFile), szTmpFile);
+  CreateDirectoriesAll(szTmpFile);
 
 	// Extract the file
 	hResInfo = FindResource((HINSTANCE)hModule, lpszName, lpszType);
@@ -275,8 +516,7 @@ ExtractFilesProc(HANDLE hModule, LPCTSTR lpszType, LPTSTR lpszName, LONG lParam)
 	lpBytes = (LPBYTE)LockResource(hGlobal);
 
 	// Create the file
-	hFile = CreateFile(szTmpFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-		FILE_ATTRIBUTE_TEMPORARY, NULL);
+	hFile = CreateFile(szTmpFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_TEMPORARY, NULL);
 
 	if (hFile != INVALID_HANDLE_VALUE) {
 		DWORD	dwSize;
@@ -449,86 +689,93 @@ GaugeWndProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 // WinMain
 
 static BOOL
-RunInstaller(LPSTR lpCmdLine)
+RunInstaller()
 {
-    PROCESS_INFORMATION pi;
-    STARTUPINFO         sti;
-    char                szCmdLine[MAX_PATH];
-    BOOL                bRet;
-	  char                szText[256];
-    char                szTempPath[4096];
-    char                szTmp[MAX_PATH];
-    char                szCurrentDirectory[MAX_PATH];
-    char                szBuf[MAX_PATH];
+  PROCESS_INFORMATION pi;
+  STARTUPINFO         sti;
+  char                szCmdLine[MAX_PATH];
+  BOOL                bRet;
+  char                szText[256];
+  char                szTempPath[4096];
+  char                szTmp[MAX_PATH];
+  char                szCurrentDirectory[MAX_PATH];
+  char                szBuf[MAX_PATH];
+  DWORD               dwLen;
 
-	// Update UI
-	UpdateProgressBar(100);
-	LoadString(hInst, IDS_STATUS_LAUNCHING_SETUP, szText, sizeof(szText));
-	SetStatusLine(szText);
+  // Update UI
+  UpdateProgressBar(100);
+  LoadString(hInst, IDS_STATUS_LAUNCHING_SETUP, szText, sizeof(szText));
+  SetStatusLine(szText);
 
-    memset(&sti,0,sizeof(sti));
-    sti.cb = sizeof(STARTUPINFO);
+  memset(&sti,0,sizeof(sti));
+  sti.cb = sizeof(STARTUPINFO);
 
-    // Setup program is in the directory specified for temporary files
-	  GetFullTempPathName("SETUP.EXE", sizeof(szCmdLine), szCmdLine);
-	  GetTempPath(4096, szTempPath);
-    GetCurrentDirectory(MAX_PATH, szCurrentDirectory);
-    GetShortPathName(szCurrentDirectory, szBuf, MAX_PATH);
+  // Setup program is in the directory specified for temporary files
+  GetFullTempPathName("SETUP.EXE", sizeof(szCmdLine), szCmdLine);
 
-    lstrcat(szCmdLine, " -a");
-    lstrcat(szCmdLine, szBuf);
+  dwLen = GetTempPath(4096, szTempPath);
+  if (szTempPath[dwLen - 1] != '\\')
+    strcat(szTempPath, "\\");
+  strcat(szTempPath, WIZ_TEMP_DIR);
 
-    if((lpCmdLine != NULL) && (*lpCmdLine != '\0'))
-    {
-      lstrcat(szCmdLine, " ");
-      lstrcat(szCmdLine, lpCmdLine);
+  GetCurrentDirectory(MAX_PATH, szCurrentDirectory);
+  GetShortPathName(szCurrentDirectory, szBuf, MAX_PATH);
+
+  lstrcat(szCmdLine, " -a ");
+  lstrcat(szCmdLine, szBuf);
+
+  if(szCmdLine != NULL)
+    lstrcat(szCmdLine, szCmdLineToSetup);
+
+  // Launch the installer
+  bRet = CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, 0, NULL, szTempPath, &sti, &pi);
+
+  if (!bRet)
+    return FALSE;
+
+  CloseHandle(pi.hThread);
+
+  // Wait for the InstallShield UI to appear before taking down the dialog box
+  WaitForInputIdle(pi.hProcess, 3000);  // wait up to 3 seconds
+  if(dwMode != SILENT)
+  {
+    DestroyWindow(dlgInfo.hWndDlg);
+  }
+
+  // Wait for the installer to complete
+  WaitForSingleObject(pi.hProcess, INFINITE);
+  CloseHandle(pi.hProcess);
+
+  // That was just the installer bootstrapper. Now we need to wait for the
+  // installer itself. We can find the process ID by looking for a window of
+  // class ISINSTALLSCLASS
+  HWND	hWnd = FindWindow("ISINSTALLSCLASS", NULL);
+
+  if (hWnd) {
+    DWORD	dwProcessId;
+    HANDLE	hProcess;
+
+    // Get the associated process handle and wait for it to terminate
+    GetWindowThreadProcessId(hWnd, &dwProcessId);
+
+    // We need the process handle to use WaitForSingleObject
+    hProcess = OpenProcess(STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE, FALSE, dwProcessId);
+
+    if (hProcess) {
+      WaitForSingleObject(hProcess, INFINITE);
+      CloseHandle(hProcess);
     }
-
-	  // Launch the installer
-    bRet = CreateProcess(NULL, szCmdLine, NULL, NULL, FALSE, 0, NULL, szTempPath, &sti, &pi);
-
-    if (!bRet)
-        return FALSE;
-
-   	CloseHandle(pi.hThread);
-
-	// Wait for the InstallShield UI to appear before taking down the dialog box
-	WaitForInputIdle(pi.hProcess, 3000);  // wait up to 3 seconds
-	DestroyWindow(dlgInfo.hWndDlg);
-
-	// Wait for the installer to complete
-    WaitForSingleObject(pi.hProcess, INFINITE);
-    CloseHandle(pi.hProcess);
-
-	// That was just the installer bootstrapper. Now we need to wait for the
-	// installer itself. We can find the process ID by looking for a window of
-	// class ISINSTALLSCLASS
-	HWND	hWnd = FindWindow("ISINSTALLSCLASS", NULL);
-
-	if (hWnd) {
-		DWORD	dwProcessId;
-		HANDLE	hProcess;
-
-		// Get the associated process handle and wait for it to terminate
-		GetWindowThreadProcessId(hWnd, &dwProcessId);
-
-		// We need the process handle to use WaitForSingleObject
-		hProcess = OpenProcess(STANDARD_RIGHTS_REQUIRED | SYNCHRONIZE, FALSE, dwProcessId);
-
-		if (hProcess) {
-			WaitForSingleObject(hProcess, INFINITE);
-			CloseHandle(hProcess);
-		}
-	}
-	// Delete the files from the temp directory
+  }
+  // Delete the files from the temp directory
   EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)DeleteTempFilesProc, 0);
 
   // delete archive.lst file in the temp directory
-	GetFullTempPathName("Archive.lst", sizeof(szTmp), szTmp);
-	DeleteFile(szTmp);
-	GetFullTempPathName("core.ns", sizeof(szTmp), szTmp);
+  GetFullTempPathName("Archive.lst", sizeof(szTmp), szTmp);
+  DeleteFile(szTmp);
+  GetFullTempPathName("core.ns", sizeof(szTmp), szTmp);
   DirectoryRemove(szTmp, TRUE);
-	return TRUE;
+  DirectoryRemove(szTempPath, FALSE);
+  return TRUE;
 }
 
 int APIENTRY
@@ -537,28 +784,33 @@ WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdS
 	WNDCLASS	wc;
 
 	hInst = hInstance;
-	LoadString(hInst, IDS_TITLE, szTitle, sizeof(szTitle));
+	LoadString(hInst, IDS_TITLE, szTitle, MAX_BUF);
+
+  // Parse the command line
+  ParseCommandLine(lpCmdLine);
 
 	// Figure out the total size of the resources
 	EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)SizeOfResourcesProc, 0);
 
-	// Register a class for the gauge
-	memset(&wc, 0, sizeof(wc));
-	wc.lpfnWndProc = (WNDPROC)GaugeWndProc;
-	wc.hInstance = hInstance;
-	wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
-	wc.lpszClassName = "NSGauge";
-	RegisterClass(&wc);
+  if(dwMode != SILENT)
+  {
+    // Register a class for the gauge
+    memset(&wc, 0, sizeof(wc));
+    wc.lpfnWndProc = (WNDPROC)GaugeWndProc;
+    wc.hInstance = hInstance;
+    wc.hbrBackground = (HBRUSH)(COLOR_BTNFACE + 1);
+    wc.lpszClassName = "NSGauge";
+    RegisterClass(&wc);
 
-	// Display the dialog box
-	dlgInfo.hWndDlg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_EXTRACTING),
-		NULL, (DLGPROC)DialogProc);
-	UpdateWindow(dlgInfo.hWndDlg);
+	  // Display the dialog box
+	  dlgInfo.hWndDlg = CreateDialog(hInstance, MAKEINTRESOURCE(IDD_EXTRACTING), NULL, (DLGPROC)DialogProc);
+	  UpdateWindow(dlgInfo.hWndDlg);
+  }
 
 	// Extract the files
 	EnumResourceNames(NULL, "FILE", (ENUMRESNAMEPROC)ExtractFilesProc, 0);
 	
 	// Launch the install program and wait for it to finish
-	RunInstaller(lpCmdLine);
+	RunInstaller();
 	return 0;  
 }
