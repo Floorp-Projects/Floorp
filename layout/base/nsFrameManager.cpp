@@ -1510,7 +1510,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
         if (!prevInFlow) {
           // Checking for a :before frame is cheaper than getting the
           // :before style context.
-          if (!nsLayoutUtils::GetBeforeFrame(aFrame, aPresContext) &&
+          if (!nsLayoutUtils::GetBeforeFrame(aFrame) &&
               nsLayoutUtils::HasPseudoStyle(localContent, newContext,
                                             nsCSSPseudoElements::before,
                                             aPresContext)) {
@@ -1539,7 +1539,7 @@ nsFrameManager::ReResolveStyleContext(nsPresContext    *aPresContext,
           if (nsLayoutUtils::HasPseudoStyle(localContent, newContext,
                                             nsCSSPseudoElements::after,
                                             aPresContext) &&
-              !nsLayoutUtils::GetAfterFrame(aFrame, aPresContext)) {
+              !nsLayoutUtils::GetAfterFrame(aFrame)) {
             // have to create the new :after frame
             NS_UpdateHint(aMinChange, nsChangeHint_ReconstructFrame);
             aChangeList->AppendChange(aFrame, content,

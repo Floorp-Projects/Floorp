@@ -65,10 +65,9 @@ public:
    * the first-in-flow.   
    *
    * @param aFrame the frame whose :before is wanted
-   * @param aPresContext the prescontext
    * @return the :before frame or nsnull if there isn't one
    */
-  static nsIFrame* GetBeforeFrame(nsIFrame* aFrame, nsPresContext* aPresContext);
+  static nsIFrame* GetBeforeFrame(nsIFrame* aFrame);
 
   /**
    * GetAfterFrame returns the :after frame of the given frame, if one
@@ -77,10 +76,9 @@ public:
    * frames, following in-flows, etc.
    *
    * @param aFrame the frame whose :after is wanted
-   * @param aPresContext the prescontext
    * @return the :after frame or nsnull if there isn't one
    */
-  static nsIFrame* GetAfterFrame(nsIFrame* aFrame, nsPresContext* aPresContext);
+  static nsIFrame* GetAfterFrame(nsIFrame* aFrame);
 
   /** 
    * Given a frame, search up the frame tree until we find an

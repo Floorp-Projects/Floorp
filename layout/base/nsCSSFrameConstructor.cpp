@@ -7992,8 +7992,7 @@ nsCSSFrameConstructor::AppendFrames(nsPresContext*  aPresContext,
   if (nsLayoutUtils::HasPseudoStyle(aContainer, parentStyle,
                                     nsCSSPseudoElements::after,
                                     aPresContext)) {
-    nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(aParentFrame,
-                                                        aPresContext);
+    nsIFrame* afterFrame = nsLayoutUtils::GetAfterFrame(aParentFrame);
     if (afterFrame) {
       nsFrameList frames(aParentFrame->GetFirstChild(nsnull));
 
