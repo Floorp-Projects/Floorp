@@ -222,12 +222,8 @@ nsCmdLineService::GetURLToLoad(char ** aResult)
 NS_IMETHODIMP
 nsCmdLineService::GetProgramName(char ** aResult)
 {
-  nsresult rv = NS_OK;
-
-  *aResult = (char *)mArgValueList.SafeElementAt(0);
-
-  return rv;
-
+  *aResult = nsCRT::strdup((char *)mArgValueList.SafeElementAt(0));
+  return NS_OK;
 }
 
 PRBool nsCmdLineService::ArgsMatch(const char *lookingFor, const char *userGave)
