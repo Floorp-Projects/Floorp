@@ -329,7 +329,6 @@ function SetupRenameMenuItem(folderResource, numSelected, isServer, serverType, 
   var folderTree = GetFolderTree();
   var isSpecialFolder = !(specialFolder == "none" || (specialFolder == "Junk" && CanRenameDeleteJunkMail(msgFolder.URI)));
   var canRename = GetFolderAttribute(folderTree, folderResource, "CanRename") == "true";
-  canRename = canRename || !isSpecialFolder;
 
   ShowMenuItem("folderPaneContext-rename", (numSelected <= 1) && !isServer && !isSpecialFolder && canRename);
   var folder = GetMsgFolderFromResource(folderResource);
