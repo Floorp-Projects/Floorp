@@ -1577,17 +1577,18 @@ nsEventStateManager::ShiftFocus(PRBool forward)
     return;
   }
 
-  if (nsnull == mCurrentFocus) {
-    if (nsnull == mDocument) {
-      nsCOMPtr<nsIPresShell> presShell;
-      mPresContext->GetShell(getter_AddRefs(presShell));
-      if (presShell) {
-        presShell->GetDocument(&mDocument);
-        if (nsnull == mDocument) {
-          return;
-        }
+  if (nsnull == mDocument) {
+    nsCOMPtr<nsIPresShell> presShell;
+    mPresContext->GetShell(getter_AddRefs(presShell));
+    if (presShell) {
+      presShell->GetDocument(&mDocument);
+      if (nsnull == mDocument) {
+        return;
       }
     }
+  }
+  
+  if (nsnull == mCurrentFocus) {
     mCurrentFocus = mDocument->GetRootContent();
     if (nsnull == mCurrentFocus) {  
       return;
