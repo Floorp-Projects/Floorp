@@ -11,11 +11,11 @@
  * for the specific language governing rights and limitations under the
  * License.
  *
- * The Original Code is OEone Calendar Code, released October 31st, 2001.
+ * The Original Code is Mozilla Calendar code.
  *
  * The Initial Developer of the Original Code is
- * OEone Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2001
+ * ArentJan Banck <ajbanck@planet.nl>.
+ * Portions created by the Initial Developer are Copyright (C) 2002
  * the Initial Developer. All Rights Reserved.
  *
  * Contributor(s): ArentJan Banck <ajbanck@planet.nl>
@@ -38,64 +38,10 @@
 *
 * NOTES 
 *   TODO items
-*     - Move string constants so they can be localized.
-*     - Cleanup workarounds if METHOD and DTSTAMP properties are implemented.
 *     - Add a clipboard listener, to enable/disable menu-items depending if 
 *       valid clipboard data is available.
-*     - Currently only one item is copied or pasted. This could be expanded to 
-*       support multiple events.
 *
 ******/
-
-
-
-
-// Can something from dateUtils be used here?
-function formatDateTime( oeDateTime )
-{
-   var date = new Date(oeDateTime.getTime());
-   return dateService.FormatDateTime("", dateService.dateFormatLong, 
-          dateService.timeFormatSeconds, date.getFullYear(), date.getMonth()+1, 
-          date.getDate(), date.getHours(), date.getMinutes(), date.getSeconds());  
-//   return( gCalendarWindow.dateFormater.getFormatedDate( date ) + " " +
-//           gCalendarWindow.dateFormater.getFormatedTime( date ) );
-}
-
-
-function formatDateTimeInterval( oeDateStart, oeDateEnd )
-{
-   // TODO: Extend this function to create pretty looking strings
-   // When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time (US & Canada); Tijuana.
-   // When: 7/1/1997 10:00AM PDT - 7/1/97 10:30AM PDT
-   return formatDateTime(oeDateStart) + " - " + formatDateTime(oeDateEnd);
-}
-
-
-/** 
-* Initialize an event with a start and end date.
-*/
-
-function initCalendarEvent( calendarEvent )
-{
-   var startDate = gCalendarWindow.currentView.getNewEventDate();
-
-   var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
-
-   startDate = new Date( startDate.getFullYear(),
-                         startDate.getMonth(),
-                         startDate.getDate(),
-                         startDate.getHours(),
-                         Minutes,
-                         0);
-
-   calendarEvent.start.setTime( startDate );
-   
-   var MinutesToAddOn = gCalendarWindow.calendarPreferences.getPref( "defaulteventlength" );
-
-   var endDateTime = startDate.getTime() + ( 1000 * 60 * MinutesToAddOn );
-
-   calendarEvent.end.setTime( endDateTime );
-}
 
 
 function getClipboard()
@@ -141,7 +87,7 @@ function createSupportsWString()
 
 /** 
 * Test if the clipboard has items that can be pasted into Calendar.
-* This must be type "text/calendar" or "text/unicode"
+* This must be of type "text/calendar" or "text/unicode"
 */
 
 function canPaste()
@@ -151,33 +97,30 @@ function canPaste()
    var clipboard = getClipboard();
    var flavourArray = createSupportsArray();   
    var flavours = ["text/calendar", "text/unicode"];
-   for (var i = 0; i < flavours.length; ++i) {
+   
+   for (var i = 0; i < flavours.length; ++i)
+   {
       const kSuppString = createSupportsString();
       kSuppString.data = flavours[i];
       flavourArray.AppendElement(kSuppString);
    }
+   
    return clipboard.hasDataMatchingFlavors(flavourArray, kClipboardIID.kGlobalClipboard);
 }
 
 
 /** 
-* Convert an event to a block of HTML code, no headers
-* Sample:
-*    When: Thursday, November 09, 2000 11:00 PM-11:30 PM (GMT-08:00) Pacific Time (US & Canada); Tijuana.
-*    Where: San Francisco
-*    Organizer: foo1@example.com
-*    Summary: Phone Conference
-*
+* Copy iCalendar data to the Clipboard, and delete the selected events.
+* Does not use eventarray parameter, because DeletCcommand delete selected events.
 */
 
-function eventToHTML( calendarEvent )
+function cutToClipboard( /* calendarEventArray */)
 {
-   var sTextHTML = "";
-   sTextHTML += "<B>When:</B>\t" + formatDateTimeInterval(calendarEvent.start, calendarEvent.end) + "<BR>";
-   sTextHTML += "<B>Where:</B>\t" + calendarEvent.location + "<BR>";
-   // sTextHTML += "<B>Organiser:</B>\t" + Event.???
-   sTextHTML += "<B>Summary:</B>\t" + calendarEvent.description + "<BR>";
-   return sTextHTML;
+  // if( !calendarEventArray)
+  var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+
+   if( copyToClipboard( calendarEventArray ) )
+      unifinderDeleteCommand(); // deletes all selected events.
 }
 
 
@@ -191,47 +134,18 @@ function eventToHTML( calendarEvent )
 *
 **/
 
-function copyToClipboard()
-{
-   var calendarEvent = gCalendarWindow.EventSelection.selectedEvents[0];
-   if(!calendarEvent)
+function copyToClipboard( calendarEventArray )
+{  
+   if( !calendarEventArray)
+      var calendarEventArray = gCalendarWindow.EventSelection.selectedEvents;
+
+   if(calendarEventArray.length == 0)
       alert("No events selected");
 
-   var sTextiCalendar = calendarEvent.getIcalString();
-   
-   // Create a second ical data string for manipulation to export patched iCalendar to outlook.
-   var sTextiCalendarPatched = sTextiCalendar;
-   
-   // TODO HACK: Remove this hack when Calendar supports METHOD properties
-   var i = sTextiCalendarPatched.indexOf("METHOD")
-   if(i = -1) 
-   {
-      var i = sTextiCalendarPatched.indexOf("VERSION")
-      if(i != -1) {
-         sTextiCalendarPatched = 
-            sTextiCalendarPatched.substring(0,i) + "METHOD:PUBLISH\n" + sTextiCalendarPatched.substring(i, sTextiCalendarPatched.length);
-      }
-   }
-   
-   // TODO HACK: Remove this hack when Calendar supports DTSTAMP properties
-   var i = sTextiCalendarPatched.indexOf("DTSTAMP")
-   if(i = -1) 
-   {
-      var i = sTextiCalendarPatched.indexOf("UID")
-      if(i != -1) {
-         sTextiCalendarPatched = 
-            sTextiCalendarPatched.substring(0,i) + "DTSTAMP:20020430T114937Z\n" + sTextiCalendarPatched.substring(i, sTextiCalendarPatched.length);
-      }
-   }
-   
-   // HACK: TRIGGER patch hack for Outlook 2000
-   var i = sTextiCalendarPatched.indexOf("TRIGGER\n ;VALUE=DURATION\n :-");
-   if(i != -1) {
-      sTextiCalendarPatched =
-         sTextiCalendarPatched.substring(0,i+27) + sTextiCalendarPatched.substring(i+28, sTextiCalendarPatched.length);
-   }
- 
-   var sTextHTML = eventToHTML( calendarEvent ); 
+   var calendarEvent;  
+   var sTextiCalendar = eventArrayToICalString( calendarEventArray );
+   var sTextiCalendarExport =  eventArrayToICalString( calendarEventArray, true );
+   var sTextHTML = eventArrayToHTML( calendarEventArray ); 
 
    // 1. get the clipboard service
    var clipboard = getClipboard();
@@ -240,38 +154,40 @@ function copyToClipboard()
    var trans = createTransferable(); 
 
    if ( trans && clipboard) {
-                     
+
       // 3. register the data flavors
       trans.addDataFlavor("text/calendar");
       trans.addDataFlavor("text/unicode");
       trans.addDataFlavor("text/html");
-                     
+
       // 4. create the data objects
       var icalWrapper = createSupportsWString();
       var textWrapper = createSupportsWString();
       var htmlWrapper = createSupportsWString();
-                     
+
       if ( icalWrapper && textWrapper && htmlWrapper ) {
          // get the data
          icalWrapper.data = sTextiCalendar;        // plainTextRepresentation;
-         textWrapper.data = sTextiCalendarPatched; // plainTextRepresentation;
+         textWrapper.data = sTextiCalendarExport;  // plainTextRepresentation;
          htmlWrapper.data = sTextHTML;             // htmlRepresentation;
-                     
+
          // 5. add data objects to transferable
          // Both Outlook 2000 client and Lotus Organizer use text/unicode when pasting iCalendar data
          trans.setTransferData ( "text/calendar", icalWrapper, icalWrapper.data.length*2 ); // double byte data
          trans.setTransferData ( "text/unicode", textWrapper, textWrapper.data.length*2 );
          trans.setTransferData ( "text/html", htmlWrapper, htmlWrapper.data.length*2 );
-            
+
          clipboard.setData( trans, null, Components.interfaces.nsIClipboard.kGlobalClipboard );
+
+         return true;         
       }
-          
-   }   
+   }
 }
 
 
 /** 
-* Paste an iCalendar event from the clipboard, or paste clipboard text into description
+* Paste iCalendar events from the clipboard, 
+* or paste clipboard text into description of new event
 */
 
 function pasteFromClipboard()
@@ -279,8 +195,6 @@ function pasteFromClipboard()
    const kClipboardIID = Components.interfaces.nsIClipboard;
 
    if( canPaste() ) {   
-      calendarEvent = createEvent();
- 
       // 1. get the clipboard service
       var clipboard = getClipboard();
 
@@ -305,26 +219,31 @@ function pasteFromClipboard()
 	 data = data.value.QueryInterface(Components.interfaces.nsISupportsWString).data;
 	 //DEBUG alert("clipboard type: " + flavour.value);
 	 switch (flavour.value) {
-	 case "text/calendar": // at the moment "text/calendar" only contains standard iCalendar text 
+	 case "text/calendar":
+            var calendarEventArray;
+            calendarEventArray = parseIcalData( data );
+            addEventsToCalendar( calendarEventArray );
+            break;
 	 case "text/unicode":
-         // strip VCALENDAR part. Workaround for parseIcalString
-         // TODO: Clean this up if parseIcalString is fixed
-         var i = data.indexOf("BEGIN:VEVENT");
-         calendarEvent.parseIcalString(data.substring(i, data.length));
-         if(calendarEvent.start.year == 0) // Is there a beter way to detect failed parsing?
-         {
-            // initialize start and end dates.
-            initCalendarEvent( calendarEvent )
-
-            // parsing import iCalendar failed. Save clipboard text into description.
-            calendarEvent.description = data;      
-         }
-         break;
+            if ( data.indexOf("BEGIN:VEVENT") == -1 )
+            {
+               // no iCalendar data, paste clipboard text into description of new event 
+               calendarEvent = createEvent();
+               initCalendarEvent( calendarEvent );
+               calendarEvent.description = data;
+               editNewEvent( calendarEvent );
+            }
+            else
+            {
+               var calendarEventArray;
+               calendarEventArray = parseIcalData( data );
+               addEventsToCalendar( calendarEventArray );
+            }
+            break;            
 	 default: 
             alert("Unknown clipboard type: " + flavour.value);
 	 }
       }
-      editNewEvent( calendarEvent );
    }
    else
      alert( "No iCalendar or text on the clipboard." );
