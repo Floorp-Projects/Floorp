@@ -74,7 +74,7 @@
             
             <tr>
               <td align="right" valign="middle">
-                <label class="enabled" for="image.altTextInput"> &altTextEditField.label; </label>
+                <label class="enabled" for="image.altTextInput" id="image.altTextLabel"> &altTextEditField.label; </label>
               </td>
               <td>
                 <input type="text" size="30" id="image.altTextInput" onchange="doValueChanged()"/>
@@ -121,8 +121,8 @@
 	              <label class="disabled" for="imagewidthInput" id="imagewidthLabel"> &widthEditField.label; </label>
 	            </td>
 	            <td>
-			          <input type="text" size="4" length="4" id="imagewidthInput" 
-			          		onkeypress="forceInteger('imagewidthInput')" onchange="doValueChanged()" />
+			          <input type="text" size="4" length="4" id="imagewidthInput" onfocus="oldSourceInt = this.value;"
+			          		onkeypress="constrainProportions(this.id, 'imageheightInput')" onchange="doValueChanged()" />
 			        </td>
 			        <td>
                 <xul:titledbutton class="popup PixelOrPercent" id="widthunitSelect" value="&pixelsPopup.value;" 
@@ -137,8 +137,8 @@
 	              <label class="disabled" for="imageheightInput" id="imageheightLabel"> &heightEditField.label; </label>
 	            </td>
 	            <td>
-	              <input type="text" size="4" length="4" id="imageheightInput" 
-	              		onkeypress="forceInteger('imageheightInput')" onchange="doValueChanged()" />
+	              <input type="text" size="4" length="4" id="imageheightInput" onfocus="oldSourceInt = this.value;"
+	              		onkeypress="constrainProportions(this.id, 'imagewidthInput')" onchange="doValueChanged()" />
 			        </td>
 			        <td>
                 <xul:titledbutton class="popup PixelOrPercent" id="heightunitSelect" value="&pixelsPopup.value;" 
@@ -175,7 +175,7 @@
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" id="imageleftrightInput" 
-                		onkeypress="forceInteger('imageleftrightInput')" onchange="doValueChanged()"/>
+                		onkeypress="forceInteger(this.id)" onchange="doValueChanged()"/>
               </td>
               <td valign="middle">
                 <label class="disabled" for="imageleftrightInput" id="leftrighttypeLabel"> &pixelsPopup.value; </label>
@@ -188,7 +188,7 @@
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" id="imagetopbottomInput" 
-                		onkeypress="forceInteger('imagetopbottomInput')" onchange="doValueChanged()"/>
+                		onkeypress="forceInteger(this.id)" onchange="doValueChanged()"/>
               </td>
               <td valign="middle">
                 <label class="disabled" for="imagetopbottomInput" id="topbottomtypeLabel"> &pixelsPopup.value; </label>
@@ -201,7 +201,7 @@
               </td>
               <td>
                 <input type="text" size="4" length="4" maxlength="4" id="imageborderInput" 
-                		onkeypress="forceInteger('imageborderInput')" onchange="doValueChanged()" />
+                		onkeypress="forceInteger(this.id)" onchange="doValueChanged()" />
               </td>
               <td valign="middle">
                 <label class="disabled" for="imageborderInput" id="bordertypeLabel"> &pixelsPopup.value; </label>
