@@ -5055,9 +5055,9 @@ nsCSSDeclaration::GetValue(nsCSSProperty aProperty,
       CSS_VARONSTACK_GET(Display);
       if (HAS_RECT(theDisplay,mClip)) {
         aValue.Append(NS_LITERAL_STRING("rect("));
-        AppendValueToString(eCSSProperty_clip_top, aValue);     aValue.Append(PRUnichar(' '));
-        AppendValueToString(eCSSProperty_clip_right, aValue);   aValue.Append(PRUnichar(' '));
-        AppendValueToString(eCSSProperty_clip_bottom, aValue);  aValue.Append(PRUnichar(' '));
+        AppendValueToString(eCSSProperty_clip_top, aValue);     aValue.Append(NS_LITERAL_STRING(", "));
+        AppendValueToString(eCSSProperty_clip_right, aValue);   aValue.Append(NS_LITERAL_STRING(", "));
+        AppendValueToString(eCSSProperty_clip_bottom, aValue);  aValue.Append(NS_LITERAL_STRING(", "));
         AppendValueToString(eCSSProperty_clip_left, aValue);
         aValue.Append(PRUnichar(')'));
       }
@@ -5609,6 +5609,38 @@ nsCSSDeclaration::TryFourSidesShorthand(nsAString & aString,
   return PR_FALSE;
 }
 
+void nsCSSDeclaration::DoClipShorthand(nsAString & aString,
+                                       PRInt32 aTop,
+                                       PRInt32 aBottom,
+                                       PRInt32 aLeft,
+                                       PRInt32 aRight)
+{
+  NS_ASSERTION((!aTop && !aBottom && !aLeft && !aRight) ||
+               (aTop && aBottom && aLeft && aRight),
+               "How did we manage to set only some of the clip properties?");
+  if (!aTop)
+    return;  // No clip set
+
+  PRBool isImportant;
+#ifdef DEBUG
+  PRBool allSameImportance =
+#endif
+    AllPropertiesSameImportance(aTop, aBottom, aLeft, aRight, 0, 0, isImportant);
+  NS_ASSERTION(allSameImportance, "Why are the clip pseudo-values of different importance??");
+
+  aString.Append(NS_ConvertASCIItoUCS2(nsCSSProps::GetStringValue(eCSSProperty_clip))
+                 + NS_LITERAL_STRING(": "));
+  nsAutoString clipValue;
+  if (isImportant) {
+    mImportant->GetValue(eCSSProperty_clip, clipValue);
+  } else {
+    GetValue(eCSSProperty_clip, clipValue);
+  }
+  aString.Append(clipValue);
+  AppendImportanceToString(isImportant, aString);
+  aString.Append(NS_LITERAL_STRING("; "));
+}
+
 void
 nsCSSDeclaration::TryBackgroundShorthand(nsAString & aString,
                                          PRInt32 & aBgColor,
@@ -5707,6 +5739,7 @@ nsCSSDeclaration::ToString(nsAString& aString)
     PRInt32 bgColor = 0, bgImage = 0, bgRepeat = 0, bgAttachment = 0;
     PRInt32 bgPositionX = 0, bgPositionY = 0;
     PRUint32 borderPropertiesSet = 0, finalBorderPropertiesToSet = 0;
+    PRInt32 clipTop = 0, clipBottom = 0, clipLeft = 0, clipRight = 0;
     for (index = 0; index < count; index++) {
       nsCSSProperty property = (nsCSSProperty)mOrder->ValueAt(index);
       switch (property) {
@@ -5765,6 +5798,10 @@ nsCSSDeclaration::ToString(nsAString& aString)
         case eCSSProperty_background_attachment: bgAttachment      = index+1; break;
         case eCSSProperty_background_x_position: bgPositionX       = index+1; break;
         case eCSSProperty_background_y_position: bgPositionY       = index+1; break;
+        case eCSSProperty_clip_top:              clipTop           = index+1; break;
+        case eCSSProperty_clip_bottom:           clipBottom        = index+1; break;
+        case eCSSProperty_clip_left:             clipLeft          = index+1; break;
+        case eCSSProperty_clip_right:            clipRight         = index+1; break;
         default:                                 ;
       }
     }
@@ -5834,6 +5871,8 @@ nsCSSDeclaration::ToString(nsAString& aString)
                            bgColor, bgImage, bgRepeat, bgAttachment,
                            bgPositionX, bgPositionY);
 
+    DoClipShorthand(aString, clipTop, clipBottom, clipLeft, clipRight);
+
     for (index = 0; index < count; index++) {
       PRBool isImportant;
       nsCSSProperty property = (nsCSSProperty)mOrder->ValueAt(index);
@@ -5881,6 +5920,18 @@ nsCSSDeclaration::ToString(nsAString& aString)
         NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_repeat, bgRepeat)
         NS_CASE_OUTPUT_PROPERTY_VALUE(eCSSProperty_background_attachment, bgAttachment)
 
+        // The clip "shorthand" must always consume the "longhand"
+        // properties, since those are not real CSS properties in
+        // any case.
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
+                                                  eCSSProperty_clip_top, 0)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
+                                                  eCSSProperty_clip_right, 0)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
+                                                  eCSSProperty_clip_bottom, 0)
+        NS_CASE_CONDITIONAL_OUTPUT_PROPERTY_VALUE(PR_FALSE,
+                                                  eCSSProperty_clip_left, 0)
+        
         case eCSSProperty_background_x_position:
         case eCSSProperty_background_y_position:
           // 0 means not in the mOrder array; otherwise it's index+1
