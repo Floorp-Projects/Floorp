@@ -653,6 +653,13 @@ class nsIWidget : public nsISupports {
     NS_IMETHOD EnableFileDrop(PRBool aEnable) = 0;
    
     virtual void  ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY) = 0;
+
+    /**
+     * Enables/Disables system mouse capture.
+     * @param aCapture PR_TRUE enables mouse capture, PR_FALSE disables mouse capture 
+     *
+     */
+    NS_IMETHOD CaptureMouse(PRBool aCapture) = 0;
 };
 
 #endif // nsIWidget_h__

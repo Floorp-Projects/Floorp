@@ -217,6 +217,11 @@ void nsBaseWidget::BaseCreate(nsIWidget *aParent,
     }
 }
 
+NS_IMETHODIMP nsBaseWidget::CaptureMouse(PRBool aCapture)
+{
+  return NS_OK;
+}
+
 //-------------------------------------------------------------------------
 //
 // Accessor functions to get/set the client data

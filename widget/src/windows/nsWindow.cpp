@@ -155,6 +155,17 @@ nsWindow::~nsWindow()
 }
 
 
+NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
+{
+  if (PR_TRUE == aCapture) { 
+    SetCapture(mWnd);
+  } else {
+    ReleaseCapture();
+  }
+  return NS_OK;
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Default for height modification is to do nothing
@@ -2017,7 +2028,7 @@ BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
 }
 #else
 BOOL nsWindow::OnKeyDown( UINT aVirtualKeyCode, UINT aScanCode)
-{
+{ 
   WORD asciiKey;
 
   asciiKey = 0;
@@ -3138,13 +3149,13 @@ PRBool ChildWindow::DispatchMouseEvent(PRUint32 aEventType, nsPoint* aPoint)
     case NS_MOUSE_LEFT_BUTTON_DOWN:
     case NS_MOUSE_MIDDLE_BUTTON_DOWN:
     case NS_MOUSE_RIGHT_BUTTON_DOWN:
-      SetCapture(mWnd);
+        SetCapture(mWnd);
       break;
 
     case NS_MOUSE_LEFT_BUTTON_UP:
     case NS_MOUSE_MIDDLE_BUTTON_UP:
     case NS_MOUSE_RIGHT_BUTTON_UP:
-      ReleaseCapture();
+        ReleaseCapture(); 
       break;
 
     default:

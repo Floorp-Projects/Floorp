@@ -86,7 +86,7 @@ public:
     NS_IMETHOD              IsVisible(PRBool & aState);
     HWND                    mBorderlessParent;
 
-
+    NS_IMETHOD              CaptureMouse(PRBool aCapture);
     NS_IMETHOD              Move(PRUint32 aX, PRUint32 aY);
     NS_IMETHOD              Resize(PRUint32 aWidth,
                                    PRUint32 aHeight,
