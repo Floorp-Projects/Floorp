@@ -721,13 +721,17 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
 
   nsresult rv = NS_OK;
 
+  // ALWAYS drain overflow. We never want to leave the previnflow's
+  // overflow lines hanging around; block reflow depends on the
+  // overflow line lists being cleared out between reflow passes.
+  DrainOverflowLines(aPresContext);
+
   switch (aReflowState.reason) {
   case eReflowReason_Initial:
 #ifdef NOISY_REFLOW_REASON
     ListTag(stdout);
     printf(": reflow=initial\n");
 #endif
-    DrainOverflowLines(aPresContext);
     rv = PrepareInitialReflow(state);
     mState &= ~NS_FRAME_FIRST_REFLOW;
     break;  
@@ -796,7 +800,6 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   }
 
   case eReflowReason_StyleChange:
-    DrainOverflowLines(aPresContext);
     rv = PrepareStyleChangedReflow(state);
     break;
 
@@ -806,7 +809,6 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
     ListTag(stdout);
     printf(": reflow=resize (%d)\n", aReflowState.reason);
 #endif
-    DrainOverflowLines(aPresContext);
     rv = PrepareResizeReflow(state);
     break;
   }
@@ -818,6 +820,14 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
   rv = ReflowDirtyLines(state);
   NS_ASSERTION(NS_SUCCEEDED(rv), "reflow dirty lines failed");
   if (NS_FAILED(rv)) return rv;
+
+  nsIFrame* nextInFlow;
+  GetNextInFlow(&nextInFlow);
+  if (nextInFlow && NS_FRAME_IS_NOT_COMPLETE(state.mReflowStatus)) {
+    if (GetOverflowLines() || GetOverflowPlaceholders()) {
+      state.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+    }
+  }
 
   // If the block is complete, put continuted floats in the closest ancestor 
   // block that uses the same space manager and leave the block complete; this 
@@ -894,7 +904,7 @@ nsBlockFrame::Reflow(nsPresContext*          aPresContext,
         nsLineList::iterator nextToLastLine = ----end_lines();
         PushLines(state, nextToLastLine);
       }
-      state.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+      state.mReflowStatus |= NS_FRAME_NOT_COMPLETE;
     }
     delete overflowPlace;
   }
@@ -1674,7 +1684,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
   // is impacted by a float (bug 19579)
   aState.GetAvailableSpace();
 
-  // See if this is this a constrained resize reflow that is not impacted by floats
+  // See if this is a constrained resize reflow that is not impacted by floats
   if ((! aState.IsImpactedByFloat()) &&
       (aState.mReflowState.reason == eReflowReason_Resize) &&
       (NS_UNCONSTRAINEDSIZE != aState.mReflowState.availableWidth)) {
@@ -2129,19 +2139,24 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
   if (repositionViews)
     ::PlaceFrameView(aState.mPresContext, this);
 
+  PRBool touchedNextInFlow = PR_FALSE;
+
   // Pull data from a next-in-flow if there's still room for more
   // content here.
   while (keepGoing && (nsnull != aState.mNextInFlow)) {
+    touchedNextInFlow = PR_TRUE;
+
     // Grab first line from our next-in-flow
     nsBlockFrame* nextInFlow = aState.mNextInFlow;
     line_iterator nifLine = nextInFlow->begin_lines();
     if (nifLine == nextInFlow->end_lines()) {
-      NS_WARNING("Drained the life from next-in-flow!\n");
       aState.mNextInFlow = (nsBlockFrame*) aState.mNextInFlow->mNextInFlow;
       continue;
     }
+
     // XXX See if the line is not dirty; if it's not maybe we can
-    // avoid the pullup if it can't fit?
+    // avoid the pullup if it can't fit? This is important if we want
+    // to avoid reflowing our next-in-flow!
     nsLineBox *toMove = nifLine;
     nextInFlow->mLines.erase(nifLine);
     if (0 == toMove->GetChildCount()) {
@@ -2223,6 +2238,10 @@ nsBlockFrame::ReflowDirtyLines(nsBlockReflowState& aState)
     // There are no lines so we have to fake up some y motion so that
     // we end up with *some* height.
     aState.mY += metrics.height;
+  }
+
+  if (touchedNextInFlow && NS_FRAME_IS_NOT_COMPLETE(aState.mReflowStatus)) {
+    aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
   }
 
 #ifdef DEBUG
@@ -3052,7 +3071,7 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
     UndoSplitPlaceholders(aState, lastPlaceholder);
     PushLines(aState, aLine.prev());
     *aKeepReflowGoing = PR_FALSE;
-    aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+    aState.mReflowStatus = NS_FRAME_NOT_COMPLETE | NS_FRAME_REFLOW_NEXTINFLOW;
   }
   else {
     // Note: line-break-after a block is a nop
@@ -3111,6 +3130,11 @@ nsBlockFrame::ReflowBlockFrame(nsBlockReflowState& aState,
         // only the following lines will be pushed.
         PushLines(aState, aLine);
         aState.mReflowStatus = NS_FRAME_NOT_COMPLETE;
+        // If we need to reflow the continuation of the block child,
+        // then we'd better reflow our continuation
+        if (frameReflowStatus & NS_FRAME_REFLOW_NEXTINFLOW) {
+          aState.mReflowStatus |= NS_FRAME_REFLOW_NEXTINFLOW;
+        }
         *aKeepReflowGoing = PR_FALSE;
 
         // The bottom margin for a block is only applied on the last
@@ -4734,6 +4758,32 @@ nsBlockFrame::DoRemoveOutOfFlowFrame(nsPresContext* aPresContext,
   aFrame->Destroy(aPresContext);
 }
 
+// This helps us iterate over the list of all normal + overflow lines
+void
+nsBlockFrame::NextOverAllLines(nsLineList::iterator* aIterator,
+                               nsLineList::iterator* aEndIterator,
+                               PRBool* aInOverflowLines) {
+  (*aIterator)++;
+  if (*aIterator == *aEndIterator) {
+    if (!*aInOverflowLines) {
+      *aInOverflowLines = PR_TRUE;
+      // Try the overflow lines
+      nsLineList* overflowLines = GetOverflowLines();
+      if (overflowLines) {
+        *aIterator = overflowLines->begin();
+        *aEndIterator = overflowLines->end();
+      }
+    }
+  }
+}
+
+// This function removes aDeletedFrame and all its continuations.  It
+// is optimized for deleting a whole series of frames. The easy
+// implementation would invoke itself recursively on
+// aDeletedFrame->GetNextInFlow, then locate the line containing
+// aDeletedFrame and remove aDeletedFrame from that line. But here we
+// start by locating aDeletedFrame and then scanning from that point
+// on looking for continuations.
 nsresult
 nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
                             nsIFrame* aDeletedFrame)
@@ -4750,12 +4800,11 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
   
   // Find the line and the previous sibling that contains
   // deletedFrame; we also find the pointer to the line.
-  nsBlockFrame* flow = this;
-  nsLineList* lines = &flow->mLines;
-  nsLineList::iterator line = lines->begin(),
-                       line_end = lines->end();
+  nsLineList::iterator line = mLines.begin(),
+                       line_end = mLines.end();
+  PRBool searchingOverflowList = PR_FALSE;
   nsIFrame* prevSibling = nsnull;
-  for ( ; line != line_end; ++line) {
+  for (; line != line_end; NextOverAllLines(&line, &line_end, &searchingOverflowList)) {
     nsIFrame* frame = line->mFirstChild;
     PRInt32 n = line->GetChildCount();
     while (--n >= 0) {
@@ -4771,12 +4820,16 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
     NS_ERROR("can't find deleted frame in lines");
     return NS_ERROR_FAILURE;
   }
+
+  if (prevSibling && !prevSibling->GetNextSibling()) {
+    // We must have found the first frame in the overflow line list. So
+    // there is no prevSibling
+    prevSibling = nsnull;
+  }
   NS_ASSERTION(!prevSibling || prevSibling->GetNextSibling() == aDeletedFrame, "bad prevSibling");
 
-  // Remove frame and all of its continuations
-  while (nsnull != aDeletedFrame) {
     while ((line != line_end) && (nsnull != aDeletedFrame)) {
-      NS_ASSERTION(flow == aDeletedFrame->GetParent(), "messed up delete code");
+    NS_ASSERTION(this == aDeletedFrame->GetParent(), "messed up delete code");
       NS_ASSERTION(line->Contains(aDeletedFrame), "frame not in line");
 
       // See if the frame being deleted is the last one on the line
@@ -4794,6 +4847,8 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
         line->mFirstChild = nextFrame;
       }
 
+    // Hmm, this won't do anything if we're removing a frame in the first
+    // overflow line... Hopefully doesn't matter
       --line;
       if (line != line_end && !line->IsBlock()) {
         // Since we just removed a frame that follows some inline
@@ -4804,7 +4859,7 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
 
       // Take aDeletedFrame out of the sibling list. Note that
       // prevSibling will only be nsnull when we are deleting the very
-      // first frame.
+    // first frame in the main or overflow list.
       if (prevSibling) {
         prevSibling->SetNextSibling(nextFrame);
       }
@@ -4826,10 +4881,12 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
       aDeletedFrame->Destroy(aPresContext);
       aDeletedFrame = nextInFlow;
 
-      // If line is empty, remove it now
-      if (0 == lineChildCount) {
+    // If line is empty, remove it now.
+    // Don't bother removing empty lines in the overflow list, they'll get
+    // annihilated later
+    if (!searchingOverflowList && 0 == lineChildCount) {
         nsLineBox *cur = line;
-        line = lines->erase(line);
+      line = mLines.erase(line);
         // Invalidate the space taken up by the line.
         // XXX We need to do this if we're removing a frame as a result of
         // a call to RemoveFrame(), but we may not need to do this in all
@@ -4856,7 +4913,12 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
         // If we just removed the last frame on the line then we need
         // to advance to the next line.
         if (isLastFrameOnLine) {
-          ++line;
+        NextOverAllLines(&line, &line_end, &searchingOverflowList);
+        // Detect the case when we've run off the end of the normal line
+        // list and we're starting the overflow line list
+        if (prevSibling && !prevSibling->GetNextSibling()) {
+          prevSibling = nsnull;
+        }
         }
       }
 
@@ -4867,31 +4929,24 @@ nsBlockFrame::DoRemoveFrame(nsPresContext* aPresContext,
           // the current flow's frame list. Therefore we know that the
           // continuation is in a different parent. So break out of
           // the loop so that we advance to the next parent.
-          NS_ASSERTION(aDeletedFrame->GetParent() != flow, "strange continuation");
+        NS_ASSERTION(aDeletedFrame->GetParent() != this, "strange continuation");
           break;
         }
       }
     }
 
-    // Advance to next flow block if the frame has more continuations
-    if (flow && aDeletedFrame) {
-      flow = (nsBlockFrame*) flow->mNextInFlow;
-      NS_ASSERTION(nsnull != flow, "whoops, continuation without a parent");
-      // add defensive pointer check for bug 56894
-      if (flow) {
-        lines = &flow->mLines;
-        line = lines->begin();
-        line_end = lines->end();
-        prevSibling = nsnull;
-      } else {
-        aDeletedFrame = nsnull;
-      }
-    }
-  }
-
 #ifdef DEBUG
   VerifyLines(PR_TRUE);
 #endif
+
+  // Advance to next flow block if the frame has more continuations
+  if (aDeletedFrame) {
+    nsBlockFrame* nextBlock = NS_STATIC_CAST(nsBlockFrame*, aDeletedFrame->GetParent());
+    NS_ASSERTION(nextBlock->GetType() == nsLayoutAtoms::blockFrame,
+                 "Our child's continuation's parent is not a block?");
+    return nextBlock->DoRemoveFrame(aPresContext, aDeletedFrame);
+  }
+
   return NS_OK;
 }
 
