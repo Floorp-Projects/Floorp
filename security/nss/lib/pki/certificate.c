@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.40 $ $Date: 2002/08/29 22:11:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certificate.c,v $ $Revision: 1.41 $ $Date: 2002/08/30 22:57:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSPKI_H
@@ -1098,6 +1098,8 @@ nssCRL_Create
                                           NULL,  /* XXX sessionOpt */
                                           arena,
                                           &rvCRL->encoding,
+                                          NULL, /* subject */
+                                          NULL, /* class */
                                           &rvCRL->url,
                                           &rvCRL->isKRL);
     if (status != PR_SUCCESS) {

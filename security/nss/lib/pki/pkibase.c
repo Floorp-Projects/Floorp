@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.13 $ $Date: 2002/08/02 17:43:36 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkibase.c,v $ $Revision: 1.14 $ $Date: 2002/08/30 22:57:03 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef DEV_H
@@ -1157,6 +1157,8 @@ crl_getUIDFromInstance(nssCryptokiObject *instance, NSSItem *uid,
                                         NULL,    /* XXX sessionOpt */
                                         arena,   /* arena    */
                                         &uid[0], /* encoding */
+                                        NULL,    /* subject  */
+                                        NULL,    /* class    */
                                         NULL,    /* url      */
                                         NULL);   /* isKRL    */
 }

@@ -113,7 +113,7 @@ CERT_VerifySignedData(CERTSignedData *sd, CERTCertificate *cert,
     if ( !pubKey ) {
 	return(SECFailure);
     }
-    
+
     /* check the signature */
     sig = sd->signature;
     DER_ConvertBitString(&sig);
@@ -267,37 +267,7 @@ SECStatus
 SEC_CheckCRL(CERTCertDBHandle *handle,CERTCertificate *cert,
 	     CERTCertificate *caCert, int64 t, void * wincx)
 {
-    CERTSignedCrl *crl = NULL;
-    SECStatus rv = SECSuccess;
-    CERTCrlEntry **crlEntry;
-
-    /* first look up the CRL */
-    crl = SEC_FindCrlByName(handle,&caCert->derSubject, SEC_CRL_TYPE);
-    if (crl == NULL) {
-	/* XXX for now no CRL is ok */
-	goto done;
-    }
-
-    /* now verify the CRL signature */
-    rv = CERT_VerifySignedData(&crl->signatureWrap, caCert, t, wincx);
-    if (rv != SECSuccess) {
-	PORT_SetError(SEC_ERROR_CRL_BAD_SIGNATURE);
-        rv = SECWouldBlock; /* Soft error, ask the user */
-    	goto done;
-    }
-
-    /* now make sure the key is not on the revocation list */
-    for (crlEntry = crl->crl.entries; crlEntry && *crlEntry; crlEntry++) {
-	if (SECITEM_CompareItem(&(*crlEntry)->serialNumber,&cert->serialNumber) == SECEqual) {
-	    PORT_SetError(SEC_ERROR_REVOKED_CERTIFICATE);
-	    rv = SECFailure; /* cert is revoked */
-	    goto done;
-	}
-    }
-
-done:
-    if (crl) SEC_DestroyCrl(crl);
-    return rv;
+    return CERT_CheckCRL(cert, caCert, NULL, t, wincx);
 }
 
 /*

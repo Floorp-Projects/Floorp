@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.25 $ $Date: 2002/08/27 23:37:55 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: ckhelper.c,v $ $Revision: 1.26 $ $Date: 2002/08/30 22:56:57 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -611,6 +611,8 @@ nssCryptokiCRL_GetAttributes
   nssSession *sessionOpt,
   NSSArena *arenaOpt,
   NSSItem *encodingOpt,
+  NSSItem *subjectOpt,
+  CK_ULONG* crl_class,
   NSSUTF8 **urlOpt,
   PRBool *isKRLOpt
 )
@@ -619,11 +621,14 @@ nssCryptokiCRL_GetAttributes
     NSSSlot *slot;
     nssSession *session;
     CK_ATTRIBUTE_PTR attr;
-    CK_ATTRIBUTE crl_template[5];
+    CK_ATTRIBUTE crl_template[7];
     CK_ULONG crl_size;
     PRUint32 i;
 
     NSS_CK_TEMPLATE_START(crl_template, attr, crl_size);
+    if (crl_class) {
+        NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_CLASS);
+    }
     if (encodingOpt) {
 	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_VALUE);
     }
@@ -632,6 +637,9 @@ nssCryptokiCRL_GetAttributes
     }
     if (isKRLOpt) {
 	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_NETSCAPE_KRL);
+    }
+    if (subjectOpt) {
+	NSS_CK_SET_ATTRIBUTE_NULL(attr, CKA_SUBJECT);
     }
     NSS_CK_TEMPLATE_FINISH(crl_template, attr, crl_size);
 
@@ -655,6 +663,9 @@ nssCryptokiCRL_GetAttributes
     }
 
     i=0;
+    if (crl_class) {
+        NSS_CK_ATTRIBUTE_TO_ULONG(&crl_template[i], *crl_class); i++;
+    }
     if (encodingOpt) {
 	NSS_CK_ATTRIBUTE_TO_ITEM(&crl_template[i], encodingOpt); i++;
     }
@@ -663,6 +674,9 @@ nssCryptokiCRL_GetAttributes
     }
     if (isKRLOpt) {
 	NSS_CK_ATTRIBUTE_TO_BOOL(&crl_template[i], *isKRLOpt); i++;
+    }
+    if (subjectOpt) {
+	NSS_CK_ATTRIBUTE_TO_ITEM(&crl_template[i], subjectOpt); i++;
     }
     return PR_SUCCESS;
 }

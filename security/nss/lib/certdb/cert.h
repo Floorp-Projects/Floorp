@@ -34,7 +34,7 @@
 /*
  * cert.h - public data structures and prototypes for the certificate library
  *
- * $Id: cert.h,v 1.20 2002/08/07 03:42:45 jpierre%netscape.com Exp $
+ * $Id: cert.h,v 1.21 2002/08/30 22:56:51 jpierre%netscape.com Exp $
  */
 
 #ifndef _CERT_H_
@@ -408,6 +408,7 @@ CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
 
 #define CRL_DECODE_DONT_COPY_DER            0x00000001
 #define CRL_DECODE_SKIP_ENTRIES             0x00000002
+#define CRL_DECODE_KEEP_BAD_CRL             0x00000004
 
 /* complete the decoding of a partially decoded CRL, ie. decode the
    entries. Note that entries is an optional field in a CRL, so the
@@ -1428,6 +1429,14 @@ CERT_SPKDigestValueForCert(PRArenaPool *arena, CERTCertificate *cert,
  * fill in nsCertType field of the cert based on the cert extension
  */
 extern SECStatus CERT_GetCertType(CERTCertificate *cert);
+
+
+SECStatus InitCRLCache(void);
+SECStatus ShutdownCRLCache(void);
+
+SECStatus CERT_CheckCRL(CERTCertificate* cert, CERTCertificate* issuer,
+                        SECItem* dp, int64 t, void* wincx);
+
 
 SEC_END_PROTOS
 

@@ -34,9 +34,9 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.15 2002/08/24 00:46:21 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.16 2002/08/30 22:56:52 jpierre%netscape.com Exp $
  */
-
+ 
 #include "cert.h"
 #include "certi.h"
 #include "secder.h"
@@ -47,6 +47,12 @@
 #include "prtime.h"
 #include "secerr.h"
 #include "pk11func.h"
+#include "dev.h"
+#include "../pk11wrap/secmodti.h"
+#include "../base/nssbase.h"
+#ifdef USE_RWLOCK
+#include "nssrwlk.h"
+#endif
 
 const SEC_ASN1Template SEC_CERTExtensionTemplate[] = {
     { SEC_ASN1_SEQUENCE,
@@ -364,6 +370,20 @@ CERT_KeyFromDERCrl(PRArenaPool *arena, SECItem *derCrl, SECItem *key)
     return(SECSuccess);
 }
 
+#define GetOpaqueCRLFields(x) ((OpaqueCRLFields*)x->opaque)
+
+/*
+PRBool CERT_CRLIsInvalid(CERTSignedCrl* crl)
+{
+    OpaqueCRLFields* extended = NULL;
+
+    if (crl && (extended = (OpaqueCRLFields*) crl->opaque)) {
+        return extended->bad;
+    }
+    return PR_TRUE;
+}
+*/
+
 SECStatus CERT_CompleteCRLDecodeEntries(CERTSignedCrl* crl)
 {
     SECStatus rv = SECSuccess;
@@ -422,6 +442,7 @@ CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
     /* allocate the CRL structure */
     crl = (CERTSignedCrl *)PORT_ArenaZAlloc(arena, sizeof(CERTSignedCrl));
     if ( !crl ) {
+        PORT_SetError(SEC_ERROR_NO_MEMORY);
 	goto loser;
     }
 
@@ -460,10 +481,15 @@ CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
     switch (type) {
     case SEC_CRL_TYPE:
         rv = SEC_QuickDERDecodeItem(arena, crl, crlTemplate, crl->derCrl);
-	if (rv != SECSuccess)
-	    break;
+	if (rv != SECSuccess) {
+            extended->badDER = PR_TRUE;
+            break;
+        }
         /* check for critical extentions */
 	rv =  cert_check_crl_version (&crl->crl);
+	if (rv != SECSuccess) {
+            extended->badExtensions = PR_TRUE;
+        }
 	break;
 
     case SEC_KRL_TYPE:
@@ -484,6 +510,11 @@ CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
     return(crl);
     
 loser:
+    if (options & CRL_DECODE_KEEP_BAD_CRL) {
+        extended->bad = PR_TRUE;
+        crl->referenceCount = 1;
+        return(crl);
+    }
 
     if ((narena == NULL) && arena ) {
 	PORT_FreeArena(arena, PR_FALSE);
@@ -504,34 +535,57 @@ CERT_DecodeDERCrl(PRArenaPool *narena, SECItem *derSignedCrl, int type)
 /*
  * Lookup a CRL in the databases. We mirror the same fast caching data base
  *  caching stuff used by certificates....?
+ * return values :
+ *
+ * SECSuccess means we got a valid DER CRL (passed in "decoded"), or no CRL at all
+ *
+ * SECFailure means we got a fatal error - most likely, we found a CRL,
+ * and it failed decoding, or there was an out of memory error. Do NOT ignore
+ * it and specifically do NOT treat it the same as having no CRL, as this
+ * can compromise security !!! Ideally, you should treat this case as if you
+ * received a "catch-all" CRL where all certs you were looking up are
+ * considered to be revoked
  */
-CERTSignedCrl *
-SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type)
+static SECStatus
+SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
+                       CERTSignedCrl** decoded, PRInt32 decodeoptions)
 {
+    SECStatus rv = SECSuccess;
     CERTSignedCrl *crl = NULL;
-    SECItem *derCrl;
-    CK_OBJECT_HANDLE crlHandle;
+    SECItem *derCrl = NULL;
+    CK_OBJECT_HANDLE crlHandle = 0;
     char *url = NULL;
+
+    PORT_Assert(decoded);
+    if (!decoded) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
 
     if (slot) {
 	PK11_ReferenceSlot(slot);
     }
-     
+
+    /* XXX it would be really useful to be able to fetch the CRL directly into an
+       arena. This would avoid a copy later on in the decode step */
     derCrl = PK11_FindCrlByName(&slot, &crlHandle, crlKey, type, &url);
     if (derCrl == NULL) {
 	goto loser;
     }
     PORT_Assert(crlHandle != CK_INVALID_HANDLE);
     
-    crl = CERT_DecodeDERCrl(NULL, derCrl, type);
+    crl = CERT_DecodeDERCrlEx(NULL, derCrl, type, decodeoptions);
     if (crl) {
-	crl->slot = slot;
-	slot = NULL; /* adopt it */
-	crl->pkcs11ID = crlHandle;
-	if (url) {
-	    crl->url = PORT_ArenaStrdup(crl->arena,url);
-	}
+        crl->slot = slot;
+        slot = NULL; /* adopt it */
+        crl->pkcs11ID = crlHandle;
+        if (url) {
+            crl->url = PORT_ArenaStrdup(crl->arena,url);
+        }
+    } else {
+        rv = SECFailure;
     }
+    
     if (url) {
 	PORT_Free(url);
     }
@@ -540,10 +594,22 @@ loser:
     if (slot) {
 	PK11_FreeSlot(slot);
     }
+
     if (derCrl) {
-	SECITEM_FreeItem(derCrl,PR_TRUE);
+        /* destroy the DER, unless a decoded CRL was returned with DER
+           allocated on the heap. This is solely for cache purposes */
+        if (crl && (decodeoptions & CRL_DECODE_DONT_COPY_DER)) {
+            /* mark the DER as having come from the heap instead of the
+               arena, so it can be destroyed */
+            GetOpaqueCRLFields(crl)->heapDER = PR_TRUE;
+        } else {
+            SECITEM_FreeItem(derCrl, PR_TRUE);
+        }
     }
-    return(crl);
+
+    *decoded = crl;
+
+    return rv;
 }
 
 SECStatus SEC_DestroyCrl(CERTSignedCrl *crl);
@@ -555,7 +621,11 @@ crl_storeCRL (PK11SlotInfo *slot,char *url,
     CERTSignedCrl *oldCrl = NULL, *crl = NULL;
     CK_OBJECT_HANDLE crlHandle;
 
-    oldCrl = SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type);
+    PORT_Assert(newCrl);
+    PORT_Assert(derCrl);
+
+    SEC_FindCrlByKeyOnSlot(slot, &newCrl->crl.derName, type,
+                                &oldCrl, CRL_DECODE_SKIP_ENTRIES);
 
     /* if there is an old crl, make sure the one we are installing
      * is newer. If not, exit out, otherwise delete the old crl.
@@ -619,7 +689,15 @@ done:
 CERTSignedCrl *
 SEC_FindCrlByName(CERTCertDBHandle *handle, SECItem *crlKey, int type)
 {
-	return SEC_FindCrlByKeyOnSlot(NULL,crlKey,type);
+    SECStatus rv = SECSuccess;    
+    CERTSignedCrl* crl = NULL;
+    /* XXX we should check the return value and fail, unfortunately, we can't,
+       because of this legacy exported prototype */
+    SEC_FindCrlByKeyOnSlot(NULL,crlKey,type, &crl, CRL_DECODE_DEFAULT_OPTIONS);
+    if (!crl) {
+        return NULL;
+    }
+    return crl;
 }
 
 /*
@@ -678,6 +756,9 @@ SEC_DestroyCrl(CERTSignedCrl *crl)
 	    if (crl->slot) {
 		PK11_FreeSlot(crl->slot);
 	    }
+            if (PR_TRUE == GetOpaqueCRLFields(crl)->heapDER) {
+                SECITEM_FreeItem(crl->derCrl, PR_TRUE);
+            }
 	    PORT_FreeArena(crl->arena, PR_FALSE);
 	}
     }
@@ -726,4 +807,842 @@ SEC_LookupCrls(CERTCertDBHandle *handle, CERTCrlHeadNode **nodes, int type)
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_IssuerAndSNTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_CrlTemplate)
 SEC_ASN1_CHOOSER_IMPLEMENT(CERT_SetOfSignedCrlTemplate)
+
+static CRLCache crlcache = { NULL, NULL };
+
+/* this needs to be called at NSS initialization time */
+
+SECStatus InitCRLCache(void)
+{
+    if (!crlcache.lock)
+    {
+        crlcache.lock = PR_NewLock();
+        if (!crlcache.lock)
+        {
+            return SECFailure;
+        }
+        crlcache.issuers = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
+                                  PL_CompareValues, NULL, NULL);
+        if (!crlcache.issuers)
+        {
+            PR_DestroyLock(crlcache.lock);
+            crlcache.lock = PR_FALSE;
+            return SECFailure;
+        }
+    }
+    return SECSuccess;
+}
+
+SECStatus IssuerCache_Destroy(CRLIssuerCache* cache);
+
+PRIntn PR_CALLBACK FreeIssuer(PLHashEntry *he, PRIntn i, void *arg)
+{
+    CRLIssuerCache* issuer = NULL;
+    PR_ASSERT(he);
+    if (!he) {
+        return HT_ENUMERATE_NEXT;
+    }
+    issuer = (CRLIssuerCache*) he->value;
+    PR_ASSERT(issuer);
+    if (issuer) {
+        IssuerCache_Destroy(issuer);
+    }
+    return HT_ENUMERATE_NEXT;
+}
+
+SECStatus ShutdownCRLCache(void)
+{
+    PR_ASSERT(crlcache.lock);
+    PR_ASSERT(crlcache.issuers);
+    if (!crlcache.lock || !crlcache.issuers)
+    {
+        return SECFailure;
+    }
+    /* empty the cache */
+    PL_HashTableEnumerateEntries(crlcache.issuers, &FreeIssuer, NULL);
+    PL_HashTableDestroy(crlcache.issuers);
+    PR_DestroyLock(crlcache.lock);
+    return SECSuccess;
+}
+
+SECStatus DP_AddCRL(CRLDPCache* cache, CERTSignedCrl* crl)
+{
+    CERTSignedCrl** newcrls = NULL;
+    PORT_Assert(cache);
+    PORT_Assert(crl);
+    if (!cache || !crl) {
+        return SECFailure;
+    }
+
+    newcrls = (CERTSignedCrl**)PORT_Realloc(cache->crls,
+        (cache->ncrls+1)*sizeof(CERTSignedCrl*));
+    if (!newcrls) {
+        return SECFailure;
+    }
+    cache->crls = newcrls;
+    cache->ncrls++;
+    cache->crls[cache->ncrls-1] = crl;
+    return SECSuccess;
+}
+
+PRBool CRLStillExists(CERTSignedCrl* crl)
+{
+    NSSItem newsubject;
+    SECItem subject;
+    CK_ULONG crl_class;
+    PRStatus status;
+    PK11SlotInfo* slot = NULL;
+    NSSToken* token = NULL;
+    nssCryptokiObject instance;
+    NSSArena* arena;
+    PRBool xstatus = PR_TRUE;
+    SECItem* oldSubject = NULL;
+
+    PORT_Assert(crl);
+    if (!crl) {
+        return PR_FALSE;
+    }
+    slot = crl->slot;
+    PORT_Assert(slot);
+    if (!slot) {
+        return PR_FALSE;
+    }
+    oldSubject = &crl->crl.derName;
+    PR_ASSERT(oldSubject);
+    if (!oldSubject) {
+        return PR_FALSE;
+    }
+
+    /* XXX query subject and type attributes in order to determine if the
+       object has been deleted */
+
+    /* first, make an nssCryptokiObject */
+    instance.handle = crl->pkcs11ID;
+    PORT_Assert(instance.handle);
+    if (!instance.handle) {
+        return PR_FALSE;
+    }
+    instance.token = slot->nssToken;
+    PORT_Assert(instance.token);
+    if (!instance.token) {
+        return PR_FALSE;
+    }
+    instance.isTokenObject = PR_TRUE;
+    instance.label = NULL;
+
+    arena = NSSArena_Create();
+    PORT_Assert(arena);
+    if (!arena) {
+        return PR_FALSE;
+    }
+
+    status = nssCryptokiCRL_GetAttributes(&instance,
+                                          NULL,  /* XXX sessionOpt */
+                                          arena,
+                                          NULL,
+                                          &newsubject,  /* subject */
+                                          &crl_class,   /* class */
+                                          NULL,
+                                          NULL);
+    if (PR_SUCCESS == status) {
+        subject.data = newsubject.data;
+        subject.len = newsubject.size;
+        if (SECITEM_CompareItem(oldSubject, &subject) != SECEqual) {
+            xstatus = PR_FALSE;
+        }
+        if (CKO_NETSCAPE_CRL != crl_class) {
+            xstatus = PR_FALSE;
+        }
+    } else {
+        xstatus = PR_FALSE;
+    }
+    NSSArena_Destroy(arena);
+    return xstatus;
+}
+
+/*
+** Pre-allocator hash allocator ops.
+*/
+static void * PR_CALLBACK
+PreAllocTable(void *pool, PRSize size)
+{
+    PreAllocator* alloc = (PreAllocator*)pool;
+    PR_ASSERT(alloc);
+    if (!alloc)
+    {
+        /* no allocator, or buffer full */
+        return NULL;
+    }
+    if (size > (alloc->len - alloc->used))
+    {
+        alloc->extra += size;
+        return PORT_ArenaAlloc(alloc->arena, size);
+    }
+    alloc->used += size;
+    return (char*) alloc->data + alloc->used - size;
+}
+
+static void PR_CALLBACK
+PreFreeTable(void *pool, void *item)
+{
+}
+
+static PLHashEntry * PR_CALLBACK
+PreAllocEntry(void *pool, const void *key)
+{
+    return PreAllocTable(pool, sizeof(PLHashEntry));
+}
+
+static void PR_CALLBACK
+PreFreeEntry(void *pool, PLHashEntry *he, PRUintn flag)
+{
+}
+
+static PLHashAllocOps preAllocOps = {
+    PreAllocTable, PreFreeTable,
+    PreAllocEntry, PreFreeEntry
+};
+
+void PreAllocator_Destroy(PreAllocator* PreAllocator)
+{
+    if (!PreAllocator)
+    {
+        return;
+    }
+    if (PreAllocator->arena)
+    {
+        PORT_FreeArena(PreAllocator->arena, PR_TRUE);
+    }
+    if (PreAllocator->data)
+    {
+        PORT_Free(PreAllocator->data);
+    }
+    PORT_Free(PreAllocator);
+}
+
+PreAllocator* PreAllocator_Create(PRSize size)
+{
+    PreAllocator prebuffer;
+    PreAllocator* prepointer = NULL;
+    memset(&prebuffer, 0, sizeof(PreAllocator));
+    prebuffer.len = size;
+    prebuffer.arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    PR_ASSERT(prebuffer.arena);
+    if (!prebuffer.arena) {
+        PreAllocator_Destroy(&prebuffer);
+        return NULL;
+    }
+    if (prebuffer.len) {
+        prebuffer.data = PR_Malloc(prebuffer.len);
+        if (!prebuffer.data) {
+            PreAllocator_Destroy(&prebuffer);
+            return NULL;
+        }
+    } else {
+        prebuffer.data = NULL;
+    }
+    prepointer = (PreAllocator*)PR_Malloc(sizeof(PreAllocator));
+    if (!prepointer) {
+        PreAllocator_Destroy(&prebuffer);
+        return NULL;
+    }
+    *prepointer = prebuffer;
+    return prepointer;
+}
+
+SECStatus DPCache_Fetch(CRLDPCache* cache, int64 t, void* wincx)
+{
+    SECStatus rv = SECSuccess;
+    SECStatus signstatus = SECSuccess;
+    CERTSignedCrl* crlobject = NULL;
+    PRUint32 i=0;
+    /* XCRL For now, we can only get one full CRL. In the future, we'll be able to
+       find more than one object, because of multiple tokens and deltas */
+    rv = SEC_FindCrlByKeyOnSlot(NULL, &cache->issuer->derSubject, SEC_CRL_TYPE,
+                                &crlobject, CRL_DECODE_DONT_COPY_DER |
+                                            CRL_DECODE_SKIP_ENTRIES  |
+                                            CRL_DECODE_KEEP_BAD_CRL);
+    /* if this function fails, something very wrong happened, such as an out
+       of memory error during CRL decoding. We don't want to proceed and must
+       mark the cache object invalid */
+    if (SECFailure == rv) {
+        cache->invalid |= CRL_CACHE_LAST_FETCH_FAILED;
+    } else {
+        cache->invalid &= (~CRL_CACHE_LAST_FETCH_FAILED);
+    }
+
+    if ((SECSuccess == rv) && (!crlobject)) {
+        /* no CRL was found. This is OK */
+        return SECSuccess;
+    }
+
+    /* now check if we already have a binary equivalent DER CRL */
+    for (i=0;i<cache->ncrls;i++) {
+        CERTSignedCrl* existing = cache->crls[i];
+        if (existing && (SECEqual == SECITEM_CompareItem(existing->derCrl, crlobject->derCrl))) {
+            /* yes. Has the matching CRL been marked deleted ? */
+            if (PR_TRUE == GetOpaqueCRLFields(crlobject)->deleted) {
+                /* Yes. Just replace the CK object ID and slot in the existing object.
+                   This avoids an unnecessary signature verification & entry decode */
+                /* XCRL we'll need to lock the CRL here in the future for iCRLs that are
+                   shared between multiple CAs */
+                existing->pkcs11ID = crlobject->pkcs11ID;
+                PK11_FreeSlot(existing->slot); /* release reference to old
+                                                  CRL slot */
+                existing->slot = crlobject->slot; /* adopt new CRL slot */
+                crlobject->slot = NULL; /* clear slot to avoid double-freeing it
+                                           during CRL destroy */
+                rv = SEC_DestroyCrl(crlobject);
+                PORT_Assert(SECSuccess == rv);
+                return rv;
+            } else {
+                /* We got an identical CRL from a different token.
+                   Throw it away. */
+                return SEC_DestroyCrl(crlobject);
+            }
+        }
+    }
+
+    /* add the CRL to our array */
+    if (SECSuccess == rv) {
+        rv = DP_AddCRL(cache, crlobject);
+    }
+    /* check if it is an invalid CRL */
+    if ( (SECSuccess == rv) &&
+         ( (PR_TRUE == GetOpaqueCRLFields(crlobject)->bad) ||
+           (SECSuccess != (signstatus = CERT_VerifySignedData(
+                                                &crlobject->signatureWrap,
+                                                cache->issuer, t, wincx)) ) )
+       ) {
+            if (SECSuccess != signstatus) {
+                PORT_SetError(SEC_ERROR_CRL_BAD_SIGNATURE);
+            }
+        /*  we got a bad CRL. We want to cache it in order to avoid
+            subsequent fetches of this same identical bad CRL. We set
+            the cache to the invalid state to ensure that all certs
+            on this DP are considered revoked from now on. The cache
+            object will remain in this state until the bad CRL object
+            is removed from the token it was fetched from */
+        cache->invalid = PR_TRUE;
+        return SECSuccess;
+    }
+    
+    /* XXX complete the entry decoding */
+    rv = CERT_CompleteCRLDecodeEntries(crlobject);
+    if (SECSuccess == rv) {
+        /* XCRL : if this is a delta, add it to the hash table */
+        /* for now, always build the hash table from the full CRL */
+        CERTCrlEntry** crlEntry = NULL;
+        PRUint32 numEntries = 0;
+        if (cache->entries) {
+            /* we already have a hash table, destroy it */
+            PL_HashTableDestroy(cache->entries);
+            cache->entries = NULL;
+            /* also destroy the PreAllocator */
+            PreAllocator_Destroy(cache->prebuffer);
+            cache->prebuffer = NULL;
+        }
+        /* count CRL entries so we can pre-allocate space for hash table entries */
+        for (crlEntry = crlobject->crl.entries; crlEntry && *crlEntry; crlEntry++) {
+            numEntries++;
+        }
+        cache->prebuffer = PreAllocator_Create(numEntries*sizeof(PLHashEntry));
+        PR_ASSERT(cache->prebuffer);
+        if (cache->prebuffer) {
+            /* create a new hash table */
+            cache->entries = PL_NewHashTable(0, SECITEM_Hash, SECITEM_HashCompare,
+                                      PL_CompareValues, &preAllocOps, cache->prebuffer);
+        }
+        PR_ASSERT(cache->entries);
+        if (!cache->entries) {
+            rv = SECFailure;
+        }
+        if (SECSuccess == rv){
+            /* add all serial numbers to the hash table */
+            for (crlEntry = crlobject->crl.entries; crlEntry && *crlEntry; crlEntry++) {
+                PL_HashTableAdd(cache->entries, &(*crlEntry)->serialNumber, *crlEntry);
+            }
+            cache->full = crlobject;
+        } else {
+            cache->invalid = PR_TRUE;
+        }
+    } else {
+        cache->invalid = PR_TRUE;
+    }
+    return rv;
+}
+
+SECStatus DPCache_Lookup(CRLDPCache* cache, SECItem* sn, CERTCrlEntry** returned)
+{
+    CERTSignedCrl* crl = NULL;
+    CERTCrlEntry* acrlEntry = NULL;
+    if (!cache || !sn) {
+        /* no cache or SN to look up, this is bad */
+        return SECFailure;
+    }
+    if (!cache->full) {
+        /* no CRL means no entry to return, but this is OK */
+        *returned = NULL;
+        return SECSuccess;
+    }
+    crl = cache->full;
+    PR_ASSERT(cache->entries);
+    if (!cache->entries)
+    {
+        return SECFailure;
+    }
+    acrlEntry = PL_HashTableLookup(cache->entries, (void*)sn);
+    if (acrlEntry)
+    {
+        *returned = acrlEntry;
+    }
+    return SECSuccess;
+}
+
+SECStatus DPCache_Update(CRLDPCache* cache, int64 t, void* wincx, PRBool readlocked)
+{
+    /* Update the CRLDPCache now. We don't cache token CRL lookup misses
+       yet, as we have no way of getting notified of new PKCS#11 object
+       creation that happens in a token  */
+    SECStatus rv = SECSuccess;
+    if (!cache) {
+        return SECFailure;
+    }
+
+    if (cache->full) {
+        /* check if the full CRL still exists */
+        if (PR_TRUE != CRLStillExists(cache->full)) {
+            /* the CRL is gone. But first, we need to check if we are
+               the first to do the update. We can't acquire the write lock
+               now or it could create a deadlock */
+#ifdef USE_RWLOCK
+            if (readlocked){
+                NSSRWLock_UnlockRead(cache->lock);
+            }
+            NSSRWLock_LockWrite(cache->lock);
+#else
+            /* no extra locking here, we already hold the PRLock, and it's
+               not re-entrant */
+#endif
+            /* first, we need to check if another thread updated
+               it before we did, and abort if it has been created since
+               we created the lock */
+            if (PR_TRUE != CRLStillExists(cache->full)) {
+                /* the CRL is gone. And we are the one to do the update */
+                /* Mark the CRL deleted, and try to fetch a new one */
+                GetOpaqueCRLFields(cache->full)->deleted = PR_TRUE;
+                rv = DPCache_Fetch(cache, t, wincx);
+            }
+#ifdef USE_RWLOCK
+            if (readlocked){
+                NSSRWLock_LockRead(cache->lock);
+            }
+            NSSRWLock_UnlockWrite(cache->lock);
+#endif
+        }
+    } else {
+        /* this is the first time we fetch a CRL for this DP, or we had
+           an invalid CRL */
+#ifdef USE_RWLOCK
+        if (readlocked) {
+            NSSRWLock_UnlockRead(cache->lock);
+        }
+        NSSRWLock_LockWrite(cache->lock);
+#endif
+        /* check if another thread updated before us, and skip update if so */
+        if (!cache->full)
+        {
+            /* we are the first */
+            rv = DPCache_Fetch(cache, t, wincx);
+        }
+#ifdef USE_RWLOCK
+        if (readlocked) {
+            NSSRWLock_LockRead(cache->lock);
+        }
+        NSSRWLock_UnlockWrite(cache->lock);
+#endif
+    }
+
+    return rv;
+}
+
+SECStatus DPCache_Initialize(CRLDPCache* cache,
+                         CERTCertificate* issuer, SECItem* dp)
+{
+    CK_OBJECT_HANDLE crloid = 0;
+    SECItem* crlder = NULL;
+
+    PORT_Assert(cache);
+    PORT_Assert(issuer);
+    if (!cache || !issuer) {
+        return SECFailure;
+    }
+    memset(cache, 0, sizeof(CRLDPCache));
+#ifdef USE_RWLOCK
+    cache->lock = NSSRWLock_New(NSS_RWLOCK_RANK_NONE, NULL);
+#else
+    cache->lock = PR_NewLock();
+#endif
+    if (!cache->lock)
+    {
+        return SECFailure;
+    }
+    cache->issuer = CERT_DupCertificate(issuer);
+    cache->distributionPoint = SECITEM_DupItem(dp);
+    return SECSuccess;
+}
+
+SECStatus DPCache_Destroy(CRLDPCache* cache)
+{
+    PRUint32 i = 0;
+    PR_ASSERT(cache);
+    if (!cache) {
+        return SECFailure;
+    }
+    if (cache->lock)
+    {
+#ifdef USE_RWLOCK
+        NSSRWLock_Destroy(cache->lock);
+#else
+        PR_DestroyLock(cache->lock);
+#endif
+    }
+    /* destroy all our CRL objects */
+    for (i=0;i<cache->ncrls;i++)
+    {
+        SEC_DestroyCrl(cache->crls[i]);
+    }
+    /* destroy the hash table */
+    if (cache->entries)
+    {
+        PL_HashTableDestroy(cache->entries);
+    }
+    /* free the pre buffer */
+    if (cache->prebuffer)
+    {
+        PreAllocator_Destroy(cache->prebuffer);
+    }
+    /* destroy the cert */
+    if (cache->issuer)
+    {
+        CERT_DestroyCertificate(cache->issuer);
+    }
+    return SECSuccess;
+}
+
+SECStatus IssuerCache_Destroy(CRLIssuerCache* cache)
+{
+    PORT_Assert(cache);
+    if (!cache)
+    {
+        return SECFailure;
+    }
+    if (!--cache->refcount)
+    {
+#if 0
+        /* XCRL */
+        if (cache->lock)
+        {
+            NSSRWLock_Destroy(cache->lock);
+        }
+#endif
+        if (cache->issuer)
+        {
+            CERT_DestroyCertificate(cache->issuer);
+        }
+        DPCache_Destroy(&cache->dp);
+        PR_Free(cache);
+    }
+    return SECSuccess;
+}
+
+SECStatus IssuerCache_Create(CRLIssuerCache** returned,
+                             CERTCertificate* issuer, SECItem* dp)
+{
+    SECStatus rv = SECSuccess;
+    CRLIssuerCache* cache = NULL;
+    PORT_Assert(returned);
+    if (!returned)
+    {
+        return SECFailure;
+    }
+    cache = (CRLIssuerCache*) PR_Malloc(sizeof(CRLIssuerCache));
+    if (!cache)
+    {
+        return SECFailure;
+    }
+    memset(cache, 0, sizeof(CRLIssuerCache));
+#if 0
+    /* XCRL */
+    cache->lock = NSSRWLock_New(NSS_RWLOCK_RANK_NONE, NULL);
+    if (!cache->lock)
+    {
+        rv = SECFailure;
+    }
+#endif
+    cache->refcount = 0;
+    if ((SECSuccess == rv) && (!(cache->issuer = CERT_DupCertificate(issuer))))
+    {
+        rv = SECFailure;
+    }
+
+    if (SECSuccess != rv)
+    {
+        return IssuerCache_Destroy(cache);
+    }
+    *returned = cache;
+    return SECSuccess;
+}
+
+SECStatus IssuerCache_AddDP(CRLIssuerCache* cache,
+                            SECItem* dp, CRLDPCache** newdpc)
+{
+    SECStatus rv = SECSuccess;
+    /* now create the required DP cache object */
+    if (!dp) {
+        /* default distribution point */
+        rv = DPCache_Initialize(&cache->dp, cache->issuer, NULL);
+        if (SECSuccess == rv) {
+            cache->dpp = &cache->dp;
+            if (newdpc) {
+                *newdpc = cache->dpp;
+            }
+        }
+    } else {
+        /* we should never hit this until we support multiple DPs */
+        PORT_Assert(dp);
+        rv = SECFailure;
+        /* XCRL allocate a new distribution point cache object, initialize it,
+           and add it to the hash table of DPs */
+    }
+    return rv;
+}
+
+SECStatus CRLCache_AddIssuer(SECItem* issuerDER, CRLIssuerCache* issuer)
+{    
+    PORT_Assert(issuerDER);
+    PORT_Assert(issuer);
+    PORT_Assert(crlcache.issuers);
+    if (!issuerDER || !issuer || !crlcache.issuers) {
+        return SECFailure;
+    }
+    if (NULL == PL_HashTableAdd(crlcache.issuers, (void*) issuerDER,
+                                (void*) issuer)) {
+        return SECFailure;
+    }
+    return SECSuccess;
+}
+
+SECStatus GetIssuerCache(CRLCache* cache, SECItem* subject, CRLIssuerCache** returned)
+{
+    /* we need to look up the issuer in the hash table */
+    SECStatus rv = SECSuccess;
+    PORT_Assert(cache);
+    PORT_Assert(subject);
+    PORT_Assert(returned);
+    PORT_Assert(crlcache.issuers);
+    if (!cache || !subject || !returned || !crlcache.issuers) {
+        rv = SECFailure;
+    }
+
+    if (SECSuccess == rv){
+        *returned = (CRLIssuerCache*) PL_HashTableLookup(crlcache.issuers,
+                                                         (void*) subject);
+    }
+
+    return rv;
+}
+
+CRLDPCache* GetDPCache(CRLIssuerCache* cache, SECItem* dp)
+{
+    CRLDPCache* dpp = NULL;
+    PORT_Assert(cache);
+    /* XCRL for now we only support the "default" DP, ie. the
+       full CRL. So we can return the global one without locking. In
+       the future we will have a lock */
+    PORT_Assert(NULL == dp);
+    if (!cache || dp) {
+        return NULL;
+    }
+#if 0
+    /* XCRL */
+    NSSRWLock_LockRead(cache->lock);
+#endif
+    dpp = cache->dpp;
+#if 0
+    /* XCRL */
+    NSSRWLock_UnlockRead(cache->lock);
+#endif
+    return dpp;
+}
+
+SECStatus
+CERT_CheckCRL(CERTCertificate* cert, CERTCertificate* issuer, SECItem* dp,
+              int64 t, void* wincx)
+{
+    PRBool lockedwrite = PR_FALSE;
+    SECStatus rv = SECSuccess;
+    SECCertTimeValidity validity;
+    CRLIssuerCache* issuercache = NULL;
+    CRLDPCache* dpcache = NULL;
+    if (!cert || !issuer) {
+        return SECFailure;
+    }
+    /* we must check the cert issuer (or more appropriately, the CRL
+       signer)'s validity time first. If it's expired, then don't go to the
+       cache.
+       If we do and the cache is empty, a CRL will be fetched, but it won't
+       verify because of the expired issuer, causing us to put the cache in
+       the invalid state.
+       If we do and the cache is already populated, we will lookup the cert
+       in the CRL for no good reason. */
+    validity = CERT_CheckCertValidTimes(issuer, t, PR_FALSE);
+    if ( validity != secCertTimeValid ) {
+	return SECFailure;
+    }
+    PORT_Assert(crlcache.lock);
+    if (!crlcache.lock) {
+        /* CRL cache is not initialized */
+        return SECFailure;
+    }
+    PR_Lock(crlcache.lock);
+    rv = GetIssuerCache(&crlcache, &issuer->derSubject, &issuercache);
+    if (SECSuccess != rv) {
+        PR_Unlock(crlcache.lock);
+        return SECFailure;
+    }
+    if (!issuercache) {
+        /* there is no cache for this issuer yet. This means this is the
+           first time we look up a cert from that issuer, and we need to
+           create the cache. Do it within the global cache lock to ensure
+           no two threads will simultaneously try to create the same issuer
+           cache. XXX this could be optimized with a r/w lock at this level
+           too. But the code would have to check if it already exists when
+           adding to the hash table */
+        
+        rv = IssuerCache_Create(&issuercache, issuer, dp);
+        if (SECSuccess == rv && !issuercache) {
+            PORT_Assert(issuercache);
+            rv = SECFailure;
+        }
+
+        if (SECSuccess == rv) {
+            /* This is the first time we look up a cert of this issuer.
+               Create the DPCache for this DP . */
+            rv = IssuerCache_AddDP(issuercache, dp, &dpcache);
+        }
+
+        if (SECSuccess == rv) {
+            /* lock the DPCache for write to ensure the update happens in this thread */
+            lockedwrite = PR_TRUE;
+#ifdef USE_RWLOCK
+            NSSRWLock_LockWrite(dpcache->lock);
+#else
+            PR_Lock(dpcache->lock);
+#endif
+        }
+        
+        if (SECSuccess == rv) {
+            /* now add the new issuer cache to the global hash table of issuers */
+            rv = CRLCache_AddIssuer(&issuercache->issuer->derSubject, issuercache);
+            if (SECSuccess != rv) {
+                /* failure */
+                rv = SECFailure;
+            }
+        }
+
+        /* now unlock the global cache. We only want to lock the hash table
+           addition. Holding it longer would hurt scalability */
+        PR_Unlock(crlcache.lock);
+
+        if (SECSuccess != rv && issuercache) {
+            if (PR_TRUE == lockedwrite) {
+#ifdef USE_RWLOCK
+                NSSRWLock_UnlockWrite(dpcache->lock);
+#else
+                PR_Unlock(dpcache->lock);
+#endif
+            }
+            IssuerCache_Destroy(issuercache);
+            issuercache = NULL;
+        }
+
+        if (SECSuccess != rv) {
+            return SECFailure;
+        }
+    } else {
+        PR_Unlock(crlcache.lock);
+        dpcache = GetDPCache(issuercache, dp);
+    }
+    /* we now have a DPCache that we can use for lookups */
+    /* lock it for read, unless we already locked for write */
+    if (PR_FALSE == lockedwrite)
+    {
+#ifdef USE_RWLOCK
+        NSSRWLock_LockRead(dpcache->lock);
+#else
+        PR_Lock(dpcache->lock);
+#endif
+    }
+    
+    if (SECSuccess == rv) {
+        /* currently there is always one and only one DPCache */
+        PORT_Assert(dpcache);
+        if (dpcache)
+        {
+            /* make sure the DP cache is up to date before using it */
+            rv = DPCache_Update(dpcache, t, wincx, PR_FALSE == lockedwrite);
+        }
+        else
+        {
+            rv = SECFailure;
+        }
+    }
+    if (SECSuccess == rv) {
+        /* now look up the certificate SN in the DP cache's CRL */
+        CERTCrlEntry* entry = NULL;
+        rv = DPCache_Lookup(dpcache, &cert->serialNumber, &entry);
+        if (SECSuccess == rv && entry) {
+            /* check the time if we have one */
+            if (entry->revocationDate.data && entry->revocationDate.len) {
+                int64 revocationDate = 0;
+                if (SECSuccess == DER_UTCTimeToTime(&revocationDate,
+                                                    &entry->revocationDate)) {
+                    /* we got a good revocation date, only consider the
+                       certificate revoked if the time we are inquiring about
+                       is past the revocation date */
+                    if (t>=revocationDate) {
+                        rv = SECFailure;
+                    }
+                } else {
+                    /* invalid revocation date, consider the certificate
+                       permanently revoked */
+                    rv = SECFailure;
+                }
+            } else {
+                /* no revocation date, certificate is permanently revoked */
+                rv = SECFailure;
+            }
+            if (SECFailure == rv) {
+                PORT_SetError(SEC_ERROR_REVOKED_CERTIFICATE);
+            }
+        }
+    }
+    if (PR_TRUE == lockedwrite) {
+#ifdef USE_RWLOCK
+        NSSRWLock_UnlockWrite(dpcache->lock);
+#else
+        PR_Unlock(dpcache->lock);
+#endif
+    } else {
+#ifdef USE_RWLOCK
+        NSSRWLock_UnlockRead(dpcache->lock);
+#else
+        PR_Unlock(dpcache->lock);
+#endif
+    }
+
+    PORT_Assert(issuercache);
+    return rv;
+}
 

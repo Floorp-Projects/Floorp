@@ -41,7 +41,7 @@
  */
 
 #ifdef DEBUG
-static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.30 $ $Date: 2002/08/27 23:37:56 $ $Name:  $";
+static const char DEV_CVS_ID[] = "@(#) $RCSfile: dev.h,v $ $Revision: 1.31 $ $Date: 2002/08/30 22:56:58 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKT_H
@@ -755,6 +755,8 @@ nssCryptokiCRL_GetAttributes
   nssSession *sessionOpt,
   NSSArena *arenaOpt,
   NSSItem *encodingOpt,
+  NSSItem * subjectOpt,
+  CK_ULONG * crl_class,
   NSSUTF8 **urlOpt,
   PRBool *isKRLOpt
 );

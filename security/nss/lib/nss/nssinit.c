@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.54 2002/07/18 23:08:55 jpierre%netscape.com Exp $
+ # $Id: nssinit.c,v 1.55 2002/08/30 22:56:59 jpierre%netscape.com Exp $
  */
 
 #include <ctype.h>
@@ -411,6 +411,10 @@ nss_Init(const char *configdir, const char *certPrefix, const char *keyPrefix,
 	return SECSuccess;
     }
 
+    if (SECSuccess != InitCRLCache()) {
+        return SECFailure;
+    }
+
     flags = nss_makeFlags(readOnly,noCertDB,noModDB,forceOpen,
 					pk11_password_required, optimizeSpace);
     if (flags == NULL) return rv;
@@ -536,6 +540,7 @@ NSS_Shutdown(void)
 {
     SECStatus rv;
 
+    ShutdownCRLCache();
     SECOID_Shutdown();
     STAN_Shutdown();
     rv = SECMOD_Shutdown();
