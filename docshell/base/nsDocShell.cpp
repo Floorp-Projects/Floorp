@@ -4001,7 +4001,7 @@ nsresult nsDocShell::AddToSessionHistory(nsIURI *aURI,
         PRInt32 childCount=0;
         shContainer->GetChildCount(&childCount);
         // Remove all children of this entry 
-        for(PRInt32 i=0; i<childCount; i++) {
+        for(PRInt32 i=childCount-1; i>=0; i--) {
           nsCOMPtr<nsISHEntry> child;
           shContainer->GetChildAt(i, getter_AddRefs(child));
           shContainer->RemoveChild(child);
