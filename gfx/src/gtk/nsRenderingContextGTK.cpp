@@ -1157,31 +1157,29 @@ nsRenderingContextGTK::GetWidth(const PRUnichar* aString, PRUint32 aLength,
       nsFontGTK** end = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < end) {
         if (IS_REPRESENTABLE((*font)->mMap, c)) {
-	  currFont = *font;
-	  goto FoundFont; // for speed -- avoid "if" statement
-	}
-	font++;
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
       }
       currFont = metrics->FindFont(c);
 FoundFont:
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
-	if (currFont != prevFont) {
-          rawWidth += nsFontMetricsGTK::GetWidth(prevFont, &aString[start],
-	    i - start);
-	  prevFont = currFont;
-	  start = i;
-	}
+        if (currFont != prevFont) {
+          rawWidth += prevFont->GetWidth(&aString[start], i - start);
+          prevFont = currFont;
+          start = i;
+        }
       }
       else {
         prevFont = currFont;
-	start = i;
+        start = i;
       }
     }
 
     if (prevFont) {
-      rawWidth += nsFontMetricsGTK::GetWidth(prevFont, &aString[start],
-        i - start);
+      rawWidth += prevFont->GetWidth(&aString[start], i - start);
     }
 
     aWidth = NSToCoordRound(rawWidth * mP2T);
@@ -1306,60 +1304,57 @@ nsRenderingContextGTK::DrawString(const PRUnichar* aString, PRUint32 aLength,
       nsFontGTK** lastFont = &metrics->mLoadedFonts[metrics->mLoadedFontsCount];
       while (font < lastFont) {
         if (IS_REPRESENTABLE((*font)->mMap, c)) {
-	  currFont = *font;
-	  goto FoundFont; // for speed -- avoid "if" statement
-	}
-	font++;
+          currFont = *font;
+          goto FoundFont; // for speed -- avoid "if" statement
+        }
+        font++;
       }
       currFont = metrics->FindFont(c);
 FoundFont:
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
-	if (currFont != prevFont) {
-	  if (aSpacing) {
-	    const PRUnichar* str = &aString[start];
-	    const PRUnichar* end = &aString[i];
-	    while (str < end) {
-	      x = aX;
-	      y = aY;
-        mTMatrix->TransformCoord(&x, &y);
-        nsFontMetricsGTK::DrawString(this, mSurface, prevFont, x, y, str, 1);
-	      aX += *aSpacing++;
-	      str++;
-	    }
-	  }
-	  else {
-      nsFontMetricsGTK::DrawString(this, mSurface, prevFont, x, y,
-                                   &aString[start], i - start);
-      x += nsFontMetricsGTK::GetWidth(prevFont, &aString[start],
+        if (currFont != prevFont) {
+          if (aSpacing) {
+            const PRUnichar* str = &aString[start];
+            const PRUnichar* end = &aString[i];
+            while (str < end) {
+              x = aX;
+              y = aY;
+              mTMatrix->TransformCoord(&x, &y);
+              prevFont->DrawString(this, mSurface, x, y, str, 1);
+              aX += *aSpacing++;
+              str++;
+            }
+          }
+          else {
+            x += prevFont->DrawString(this, mSurface, x, y, &aString[start],
                                       i - start);
-	  }
-	  prevFont = currFont;
-	  start = i;
-	}
+          }
+          prevFont = currFont;
+          start = i;
+        }
       }
       else {
         prevFont = currFont;
-	start = i;
+        start = i;
       }
     }
 
     if (prevFont) {
       if (aSpacing) {
-	const PRUnichar* str = &aString[start];
-	const PRUnichar* end = &aString[i];
-	while (str < end) {
-	  x = aX;
-	  y = aY;
-    mTMatrix->TransformCoord(&x, &y);
-    nsFontMetricsGTK::DrawString(this, mSurface, prevFont, x, y, str, 1);
-	  aX += *aSpacing++;
-	  str++;
-	}
+        const PRUnichar* str = &aString[start];
+        const PRUnichar* end = &aString[i];
+        while (str < end) {
+          x = aX;
+          y = aY;
+          mTMatrix->TransformCoord(&x, &y);
+          prevFont->DrawString(this, mSurface, x, y, str, 1);
+          aX += *aSpacing++;
+          str++;
+        }
       }
       else {
-        nsFontMetricsGTK::DrawString(this, mSurface, prevFont, x, y, &aString[start],
-                                     i - start);
+        prevFont->DrawString(this, mSurface, x, y, &aString[start], i - start);
       }
     }
   }
@@ -1619,9 +1614,8 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
       // XXX avoid this test by duplicating code -- erik
       if (prevFont) {
         if (currFont != prevFont) {
-          nsFontMetricsGTK::GetBoundingMetrics(prevFont, 
-                                               (const PRUnichar*) &aString[start],
-                                               i - start, rawbm);
+          prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
+                                       i - start, rawbm);
           if (firstTime) {
             firstTime = PR_FALSE;
             aBoundingMetrics = rawbm;
@@ -1640,9 +1634,8 @@ nsRenderingContextGTK::GetBoundingMetrics(const PRUnichar*   aString,
     }
     
     if (prevFont) {
-      nsFontMetricsGTK::GetBoundingMetrics(prevFont, 
-                                           (const PRUnichar*) &aString[start],
-                                           i - start, rawbm);
+      prevFont->GetBoundingMetrics((const PRUnichar*) &aString[start],
+                                   i - start, rawbm);
       if (firstTime) {
         aBoundingMetrics = rawbm;
       }

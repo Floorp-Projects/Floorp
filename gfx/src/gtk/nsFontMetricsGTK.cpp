@@ -27,6 +27,7 @@
 #include "nsIServiceManager.h"
 #include "nsICharsetConverterManager.h"
 #include "nsICharRepresentable.h"
+#include "nsISaveAsCharset.h"
 #include "nsIPref.h"
 #include "nsILocale.h"
 #include "nsILocaleService.h"
@@ -44,6 +45,7 @@
 #undef REALLY_NOISY_FONTS
 
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kSaveAsCharsetCID, NS_SAVEASCHARSET_CID);
 
 nsFontMetricsGTK::nsFontMetricsGTK()
 {
@@ -86,6 +88,11 @@ nsFontMetricsGTK::~nsFontMetricsGTK()
   if (mLoadedFonts) {
     PR_Free(mLoadedFonts);
     mLoadedFonts = nsnull;
+  }
+
+  if (mSubstituteFont) {
+    delete mSubstituteFont;
+    mSubstituteFont = nsnull;
   }
 
   mFontHandle = nsnull;
@@ -1239,6 +1246,224 @@ nsFontGTK::LoadFont(nsFontCharSet* aCharSet, nsFontMetricsGTK* aMetrics)
   }
 }
 
+nsFontGTK::nsFontGTK()
+{
+}
+
+nsFontGTK::~nsFontGTK()
+{
+}
+
+class nsFontGTKNormal : public nsFontGTK
+{
+public:
+  nsFontGTKNormal();
+  virtual ~nsFontGTKNormal();
+
+  virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength);
+  virtual gint DrawString(nsRenderingContextGTK* aContext,
+                          nsDrawingSurfaceGTK* aSurface, nscoord aX,
+                          nscoord aY, const PRUnichar* aString,
+                          PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
+                                      PRUint32           aLength,
+                                      nsBoundingMetrics& aBoundingMetrics);
+#endif
+};
+
+nsFontGTKNormal::nsFontGTKNormal()
+{
+}
+
+nsFontGTKNormal::~nsFontGTKNormal()
+{
+}
+
+gint
+nsFontGTKNormal::GetWidth(const PRUnichar* aString, PRUint32 aLength)
+{
+  XChar2b buf[512];
+  gint len = mCharSetInfo->Convert(mCharSetInfo, aString, aLength,
+    (char*) buf, sizeof(buf));
+  return ::gdk_text_width(mFont, (char*) buf, len);
+}
+
+gint
+nsFontGTKNormal::DrawString(nsRenderingContextGTK* aContext,
+                            nsDrawingSurfaceGTK* aSurface,
+                            nscoord aX, nscoord aY,
+                            const PRUnichar* aString, PRUint32 aLength)
+{
+  XChar2b buf[512];
+  gint len = mCharSetInfo->Convert(mCharSetInfo, aString, aLength,
+    (char*) buf, sizeof(buf));
+  ::gdk_draw_text(aSurface->GetDrawable(), mFont, aContext->GetGC(), aX,
+    aY + mBaselineAdjust, (char*) buf, len);
+  return ::gdk_text_width(mFont, (char*) buf, len);
+}
+
+#ifdef MOZ_MATHML
+// bounding metrics for a string 
+// remember returned values are not in app units
+nsresult
+nsFontGTKNormal::GetBoundingMetrics (const PRUnichar*   aString,
+                                     PRUint32           aLength,
+                                     nsBoundingMetrics& aBoundingMetrics)                                 
+{
+  aBoundingMetrics.Clear();               
+
+  if (aString && 0 < aLength) {
+    XChar2b buf[512]; // XXX watch buffer length !!!
+    gint len = mCharSetInfo->Convert(mCharSetInfo, aString, aLength,
+                                     (char*) buf, sizeof(buf));
+    gdk_text_extents (mFont, (char*) buf, len, 
+                      &aBoundingMetrics.leftBearing, 
+                      &aBoundingMetrics.rightBearing, 
+                      &aBoundingMetrics.width, 
+                      &aBoundingMetrics.ascent, 
+                      &aBoundingMetrics.descent); 
+    // get italic correction
+    XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (mFont);
+    unsigned long pr = 0;
+    if (::XGetFontProperty(fontInfo, XA_ITALIC_ANGLE, &pr)) {
+      aBoundingMetrics.subItalicCorrection = (gint) pr; 
+      aBoundingMetrics.supItalicCorrection = (gint) pr;
+    }
+  }
+
+  return NS_OK;
+}
+#endif
+
+class nsFontGTKSubstitute : public nsFontGTK
+{
+public:
+  nsFontGTKSubstitute(nsFontGTK* aFont);
+  virtual ~nsFontGTKSubstitute();
+
+  virtual gint GetWidth(const PRUnichar* aString, PRUint32 aLength);
+  virtual gint DrawString(nsRenderingContextGTK* aContext,
+                          nsDrawingSurfaceGTK* aSurface, nscoord aX,
+                          nscoord aY, const PRUnichar* aString,
+                          PRUint32 aLength);
+#ifdef MOZ_MATHML
+  virtual nsresult GetBoundingMetrics(const PRUnichar*   aString,
+                                      PRUint32           aLength,
+                                      nsBoundingMetrics& aBoundingMetrics);
+#endif
+  virtual PRUint32 Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
+                           PRUnichar* aDest, PRUint32 aDestLen);
+
+  nsFontGTK* mSubstituteFont;
+
+  static int gCount;
+  static nsISaveAsCharset* gConverter;
+};
+
+int nsFontGTKSubstitute::gCount = 0;
+nsISaveAsCharset* nsFontGTKSubstitute::gConverter = nsnull;
+
+nsFontGTKSubstitute::nsFontGTKSubstitute(nsFontGTK* aFont)
+{
+  gCount++;
+  mSubstituteFont = aFont;
+}
+
+nsFontGTKSubstitute::~nsFontGTKSubstitute()
+{
+  if ((!--gCount) && gConverter) {
+    nsServiceManager::ReleaseService(kSaveAsCharsetCID, gConverter);
+    gConverter = nsnull;
+  }
+  // Do not free mSubstituteFont here. It is owned by somebody else.
+}
+
+PRUint32
+nsFontGTKSubstitute::Convert(const PRUnichar* aSrc, PRUint32 aSrcLen,
+  PRUnichar* aDest, PRUint32 aDestLen)
+{
+  nsresult res;
+  if (!gConverter) {
+    nsServiceManager::GetService(kSaveAsCharsetCID,
+      NS_GET_IID(nsISaveAsCharset), (nsISupports**) &gConverter);
+    if (gConverter) {
+      res = gConverter->Init("ISO-8859-1",
+                             nsISaveAsCharset::attr_FallbackQuestionMark +
+                               nsISaveAsCharset::attr_EntityBeforeCharsetConv,
+                             nsIEntityConverter::transliterate);
+      if (NS_FAILED(res)) {
+        nsServiceManager::ReleaseService(kSaveAsCharsetCID, gConverter);
+        gConverter = nsnull;
+      }
+    }
+  }
+
+  if (gConverter) {
+    nsAutoString tmp(aSrc, aSrcLen);
+    char* conv = nsnull;
+    res = gConverter->Convert(tmp.GetUnicode(), &conv);
+    if (NS_SUCCEEDED(res) && conv) {
+      char* p = conv;
+      PRUint32 i;
+      for (i = 0; i < aDestLen; i++) {
+        if (*p) {
+          aDest[i] = *p;
+        }
+        else {
+          break;
+        }
+        p++;
+      }
+      nsAllocator::Free(conv);
+      conv = nsnull;
+      return i;
+    }
+  }
+
+  if (aSrcLen > aDestLen) {
+    aSrcLen = aDestLen;
+  }
+  for (PRUint32 i = 0; i < aSrcLen; i++) {
+    aDest[i] = '?';
+  }
+
+  return aSrcLen;
+}
+
+gint
+nsFontGTKSubstitute::GetWidth(const PRUnichar* aString, PRUint32 aLength)
+{
+  PRUnichar buf[512];
+  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf)/2);
+  return mSubstituteFont->GetWidth(buf, len);
+}
+
+gint
+nsFontGTKSubstitute::DrawString(nsRenderingContextGTK* aContext,
+                                nsDrawingSurfaceGTK* aSurface,
+                                nscoord aX, nscoord aY,
+                                const PRUnichar* aString, PRUint32 aLength)
+{
+  PRUnichar buf[512];
+  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf)/2);
+  return mSubstituteFont->DrawString(aContext, aSurface, aX, aY, buf, len);
+}
+
+#ifdef MOZ_MATHML
+// bounding metrics for a string 
+// remember returned values are not in app units
+nsresult
+nsFontGTKSubstitute::GetBoundingMetrics(const PRUnichar*   aString,
+                                        PRUint32           aLength,
+                                        nsBoundingMetrics& aBoundingMetrics)                                 
+{
+  PRUnichar buf[512]; // XXX watch buffer length !!!
+  PRUint32 len = Convert(aString, aLength, buf, sizeof(buf)/2);
+  return mSubstituteFont->GetBoundingMetrics(buf, len, aBoundingMetrics);
+}
+#endif
+
 void
 PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
   nsFontCharSet* aCharSet)
@@ -1342,7 +1567,7 @@ PickASizeAndLoad(nsFontSearch* aSearch, nsFontStretch* aStretch,
       }
     }
     if (p == endScaled) {
-      s = new nsFontGTK;
+      s = new nsFontGTKNormal;
       if (s) {
         /*
          * XXX Instead of passing desiredSize, we ought to take underline
@@ -2062,7 +2287,7 @@ GetFontNames(char* aPattern)
     }
     if (stretch->mSizesCount == stretch->mSizesAlloc) {
       int newSize = 2 * (stretch->mSizesAlloc ? stretch->mSizesAlloc : 1);
-      nsFontGTK* newPointer = new nsFontGTK[newSize];
+      nsFontGTK* newPointer = new nsFontGTKNormal[newSize];
       if (newPointer) {
         for (int j = stretch->mSizesAlloc - 1; j >= 0; j--) {
           newPointer[j] = stretch->mSizes[j];
@@ -2233,6 +2458,22 @@ nsFontMetricsGTK::FindGenericFont(nsFontSearch* aSearch)
   mTriedAllGenerics = 1;
 }
 
+void
+nsFontMetricsGTK::FindSubstituteFont(nsFontSearch* aSearch)
+{
+  if (!mSubstituteFont) {
+    if (!mInFindSubstituteFont) { // to avoid infinite recursion
+      mInFindSubstituteFont = 1;
+      nsFontGTK* font = FindFont('a');
+      if (font) {
+        mSubstituteFont = new nsFontGTKSubstitute(font);
+      }
+      mInFindSubstituteFont = 0;
+    }
+  }
+  aSearch->mFont = mSubstituteFont;
+}
+
 /*
  * XListFonts(*) is expensive. Delay this till the last possible moment.
  * XListFontsWithInfo is expensive. Use XLoadQueryFont instead.
@@ -2350,66 +2591,13 @@ nsFontMetricsGTK::FindFont(PRUnichar aChar)
     return search.mFont;
   }
 
-  // XXX Just return nsnull for now.
-  // Need to draw boxes eventually. Or pop up dialog like plug-in dialog.
-  return nsnull;
-}
-
-#ifdef MOZ_MATHML
-// bounding metrics for a string 
-// remember returned values are not in app units
-nsresult
-nsFontMetricsGTK::GetBoundingMetrics (nsFontGTK*         aFont, 
-                                      const PRUnichar*   aString,
-                                      PRUint32           aLength,
-                                      nsBoundingMetrics& aBoundingMetrics)                                 
-{
-  aBoundingMetrics.Clear();               
-
-  if (aString && 0 < aLength) {
-    XChar2b buf[512]; // XXX watch buffer length !!!
-    gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
-                                            (char*) buf, sizeof(buf));
-    gdk_text_extents (aFont->mFont, (char*) buf, len, 
-                      &aBoundingMetrics.leftBearing, 
-                      &aBoundingMetrics.rightBearing, 
-                      &aBoundingMetrics.width, 
-                      &aBoundingMetrics.ascent, 
-                      &aBoundingMetrics.descent); 
-    // get italic correction
-    XFontStruct *fontInfo = (XFontStruct *) GDK_FONT_XFONT (aFont->mFont);
-    unsigned long pr = 0;
-    if (::XGetFontProperty(fontInfo, XA_ITALIC_ANGLE, &pr)) {
-      aBoundingMetrics.subItalicCorrection = (gint) pr; 
-      aBoundingMetrics.supItalicCorrection = (gint) pr;
-    }
+  // XXX Or pop up dialog like plug-in dialog.
+  FindSubstituteFont(&search);
+  if (search.mFont) {
+    return search.mFont;
   }
 
-  return NS_OK;
-}
-#endif
-
-gint
-nsFontMetricsGTK::GetWidth(nsFontGTK* aFont, const PRUnichar* aString,
-  PRUint32 aLength)
-{
-  XChar2b buf[512];
-  gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
-    (char*) buf, sizeof(buf));
-  return gdk_text_width(aFont->mFont, (char*) buf, len);
-}
-
-void
-nsFontMetricsGTK::DrawString(nsRenderingContextGTK* aContext, nsDrawingSurfaceGTK* aSurface,
-                             nsFontGTK* aFont,
-                             nscoord aX, nscoord aY,
-                             const PRUnichar* aString, PRUint32 aLength)
-{
-  XChar2b buf[512];
-  gint len = aFont->mCharSetInfo->Convert(aFont->mCharSetInfo, aString, aLength,
-    (char*) buf, sizeof(buf));
-  ::gdk_draw_text(aSurface->GetDrawable(), aFont->mFont, aContext->GetGC(), aX,
-    aY + aFont->mBaselineAdjust, (char*) buf, len);
+  return nsnull;
 }
 
 nsresult
