@@ -998,7 +998,7 @@ nsresult nsHTTPServerListener::ParseHTTPHeader(nsIBufferInputStream* in,
     // If last character in the header string is a LF, then the header 
     // may be complete...
     //
-    if (mHeaderBuffer.Last() == '\n' ) {
+    if (!mHeaderBuffer.IsEmpty() && mHeaderBuffer.Last() == '\n' ) {
       // This line is either LF or CRLF so the header is complete...
       if (mHeaderBuffer.Length() <= 2) {
           break;
