@@ -29,6 +29,10 @@ How To Build:
 
 * Follow the directions in ..\README
 
+* if you do not have working OJI set OJI_DISABLED to 1
+  (You can do it in your command prompt, or you can set it in 
+   mozilla/java/plugins/src).
+
 * type "nmake /f makefile.win"
 
 * apply the patch to mozilla/modules/plugin/nglsrc/nsPluginHostImpl.cpp
@@ -41,13 +45,17 @@ How to Run:
 
 * Add following directories to to your path:
   %MOZILLA_FIVE_HOME%
+  In case OJI_DISABLED add %JDKHOME%\jre\bin\classic to your path
 
+* Copy class files from mozilla/dist/classes to your JRE/lib/ext directory and
+add JRE/lib/ext to your classpath
+ 
 How to build and run test
 * go to the test directory and type "nmake /f makefile.win"
 
 * Set PLUGLET environment to the  directory you have test.jar
 
-* Run appletviewer and load page test.html from test directory and if evething is ok you will see
+* Run mozilla and load page test.html from test directory and if evething is ok you will see
   some output from the test pluglet on the stdout.
 
 Problems:

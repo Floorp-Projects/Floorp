@@ -126,10 +126,12 @@ PlugletEngine::PlugletEngine(nsISupports* aService) {
     if (NS_FAILED(res)) {
       return;
     }
+#ifndef OJI_DISABLED
     res = sm->GetService(kJVMManagerCID,kIJVMManagerIID,(nsISupports**)&jvmManager);
     if (NS_FAILED(res)) {
 	jvmManager = NULL;
     }
+#endif
     NS_RELEASE(sm);
     engine = this;
     objectCount++;
@@ -140,9 +142,13 @@ PlugletEngine::~PlugletEngine(void) {
     objectCount--;
 }
 
-//nb for debug only
-#ifndef PATH_SEPARATOR
+
+#ifdef OJI_DISABLE
+
+#ifdef XP_PC
 #define PATH_SEPARATOR ';'
+#else
+#define PATH_SEPARATOR ':'
 #endif 
 
 JavaVM *jvm = NULL;	
@@ -150,10 +156,10 @@ JavaVM *jvm = NULL;
 static void StartJVM() {
     JNIEnv *env = NULL;	
     jint res;
-	JDK1_1InitArgs vm_args;
+    JDK1_1InitArgs vm_args;
     char classpath[1024];
-    vm_args.version = 0x00010001;
     JNI_GetDefaultJavaVMInitArgs(&vm_args);
+    vm_args.version = 0x00010001;
     /* Append USER_CLASSPATH to the default system class path */
     sprintf(classpath, "%s%c%s",
             vm_args.classpath, PATH_SEPARATOR, PR_GetEnv("CLASSPATH"));
@@ -161,11 +167,15 @@ static void StartJVM() {
     vm_args.classpath = classpath;
     /* Create the Java VM */	
     res = JNI_CreateJavaVM(&jvm, &env, &vm_args);
+    if(res < 0 ) {
+        printf("--JNI_CreateJavaVM failed \n");
+    }
 }
+#endif // OJI_DISABLE
 
 JNIEnv * PlugletEngine::GetJNIEnv(void) {
    JNIEnv * res;
-   //#if 0
+#ifndef OJI_DISABLE
    if (!jvmManager) {
        //nb it is bad :(
        return NULL;
@@ -177,14 +187,13 @@ JNIEnv * PlugletEngine::GetJNIEnv(void) {
    ::SetSecurityContext(res,securityContext);
 
    //nb error handling
-   //#endif
-#if 0
+#else
     if (!jvm) {
            printf(":) starting jvm\n");
 	   StartJVM();
    }
    jvm->AttachCurrentThread(&res,NULL);
-#endif
+#endif //OJI_DISABLED
    return res;
 }
 

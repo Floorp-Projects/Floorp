@@ -43,7 +43,7 @@ LIBRARY_NAME = nppluglet
 
 DEPTH= ..\..\..\
 
-REQUIRES = java plug xpcom raptor oji
+REQUIRES = java plug xpcom raptor
 
 OBJS =  \
 	.\$(OBJDIR)\Pluglet.obj \
@@ -58,7 +58,9 @@ OBJS =  \
 	.\$(OBJDIR)\PlugletManager.obj \
 	.\$(OBJDIR)\PlugletInputStream.obj \
 	.\$(OBJDIR)\PlugletInstanceView.obj \
+!ifndef OJI_DISABLE
 	.\$(OBJDIR)\PlugletSecurityContext.obj \
+!endif
 	.\$(OBJDIR)\Registry.obj	
 
 MAKE_OBJ_TYPE = DLL
@@ -83,7 +85,18 @@ DLL = .\$(OBJDIR)\$(DLLNAME).dll
 #//     (ie. LCFLAGS, LLFLAGS, LLIBS, LINCS)
 #//
 #//------------------------------------------------------------------------
-LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom.lib $(DIST)\lib\oji.lib
+LLIBS=$(LLIBS)  $(LIBNSPR) $(DIST)\lib\xpcom.lib \
+!ifdef  OJI_DISABLE
+        $(JDKHOME)\lib\jvm.lib 
+!else
+        $(DIST)\lib\oji.lib
+!endif
+
+!ifdef  OJI_DISABLE
+LCFLAGS=$(LCFLAGS) -DOJI_DISABLE
+!endif
+        
+
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules
