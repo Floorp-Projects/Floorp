@@ -114,4 +114,5 @@ private:
   GtkWidget* mProtoLayout;
 
   PRUint8 mDisabledWidgetTypes[32];
+  static const char* sDisabledEngines[];
 };
