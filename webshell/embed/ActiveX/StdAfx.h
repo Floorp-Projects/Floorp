@@ -117,6 +117,7 @@ typedef long int32;
 #include "MozillaControl.h"
 #include "PropertyList.h"
 #include "PropertyBag.h"
+#include "ItemContainer.h"
 #include "ControlSite.h"
 #include "ControlSiteIPFrame.h"
 
@@ -135,6 +136,7 @@ typedef long int32;
 #include "nsIPluginInstance.h"
 #include "ActiveXPlugin.h"
 #include "ActiveXPluginInstance.h"
+#include "ActiveScriptSite.h"
 #endif
 
 //{{AFX_INSERT_LOCATION}}
