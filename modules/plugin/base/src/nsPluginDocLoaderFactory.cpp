@@ -42,6 +42,7 @@
 #include "nsIServiceManager.h"
 #include "nsPluginDocLoaderFactory.h"
 #include "nsPluginViewer.h"
+#include "nsPluginError.h"
 
 NS_METHOD
 nsPluginDocLoaderFactory::Create(nsISupports* aOuter, REFNSIID aIID, void** aResult)
@@ -77,6 +78,20 @@ nsPluginDocLoaderFactory::CreateInstance(const char *aCommand,
   nsCOMPtr<nsIPluginHost> pluginHost = do_GetService(kPluginManagerCID);
   if(! pluginHost)
     return NS_ERROR_FAILURE;
+
+  if (NS_FAILED(pluginHost->IsPluginEnabledForType(aContentType))) {
+    // if we fail here refresh plugins and try again, see bug 143178
+    nsCOMPtr<nsIPluginManager> pluginManager = do_GetService(kPluginManagerCID);
+    if (!pluginManager)
+      return NS_ERROR_FAILURE;
+
+    // no need to do anything if plugins have not been changed
+    if (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == pluginManager->ReloadPlugins(PR_FALSE))
+      return NS_ERROR_FAILURE;
+
+    if (NS_FAILED(pluginHost->IsPluginEnabledForType(aContentType)))
+      return NS_ERROR_FAILURE;
+  }
 
   if (pluginHost->IsPluginEnabledForType(aContentType) != NS_OK)
     return NS_ERROR_FAILURE;

@@ -2736,21 +2736,26 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 
   nsresult rv = NS_OK;
 
+  // this will create the initial plugin list out of cache
+  // if it was not created yet
+  LoadPlugins();
+
   // we are re-scanning plugins. New plugins may have been added, also some
   // plugins may have been removed, so we should probably shut everything down
   // but don't touch running (active and  not stopped) plugins
+
+  // check if plugins changed, no need to do anything else
+  // if no changes to plugins have been made
+  // PR_FALSE instructs not to touch the plugin list, just to
+  // look for possible changes
+  PRBool pluginschanged = PR_TRUE;
+  FindPlugins(PR_FALSE, &pluginschanged);
+
+  // if no changed detected, return an appropriate error code
+  if (!pluginschanged)
+    return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
+
   if(reloadPages) {
-    // check if plugins changed, no need to refresh and reload
-    // page if no changes to plugins have been made
-    // PR_FALSE instructs not to touch the plugin list, just to
-    // look for possible changes
-    PRBool pluginschanged = PR_TRUE;
-    FindPlugins(PR_FALSE, &pluginschanged);
-
-    // if no changed detected, return an appropriate error code
-    if (!pluginschanged)
-      return NS_ERROR_PLUGINS_PLUGINSNOTCHANGED;
-
     // if we have currently running plugins we should set a flag not to
     // unload them from memory, see bug #61388
     // and form a list of libs to be unloaded later
@@ -2797,17 +2802,6 @@ nsresult nsPluginHostImpl::ReloadPlugins(PRBool reloadPages)
 
   // set flags
   mPluginsLoaded = PR_FALSE;
-
-  //refresh the component registry first
-  nsCOMPtr<nsIServiceManager> servManager;
-  NS_GetServiceManager(getter_AddRefs(servManager));
-  nsCOMPtr<nsIComponentRegistrar> registrar = do_QueryInterface(servManager);
-  if (!registrar) {
-    NS_ASSERTION(0, "No nsIComponentRegistrar from get service");
-    return NS_ERROR_FAILURE;
-  }
-  NS_ASSERTION(registrar, "No nsIComponentRegistrar from get service");
-  rv = registrar->AutoRegister(nsnull);
 
   // load them again
   rv = LoadPlugins();
@@ -3782,12 +3776,49 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
                                                     nsIURI *aURL,
                                                     nsIPluginInstanceOwner *aOwner)
 {
+  nsresult rv = NS_OK;
+
+  rv = TrySetUpPluginInstance(aMimeType, aURL, aOwner);
+
+  // if we fail, refresh plugin list just in case the plugin has been
+  // just added and try to instantiate plugin instance again, see bug 143178
+  if (NS_FAILED(rv)) {
+    // we should also make sure not to do this more than once per page
+    // so if there are a few embed tags with unknown plugins,
+    // we don't get unnecessary overhead
+    // let's cache document to decide whether this is the same page or not
+    nsCOMPtr<nsIDocument> document;
+    if (aOwner)
+      aOwner->GetDocument(getter_AddRefs(document));
+
+    nsCOMPtr<nsIDocument> currentdocument = do_QueryReferent(mCurrentDocument);
+    if (document == currentdocument)
+      return rv;
+
+    mCurrentDocument = getter_AddRefs(NS_GetWeakReference(document));
+
+    // ReloadPlugins will do the job smartly: nothing will be done 
+    // if no changes detected, in such a case just return
+    if (NS_ERROR_PLUGINS_PLUGINSNOTCHANGED == ReloadPlugins(PR_FALSE))
+      return rv;
+
+    // other failure return codes may be not fatal, so we can still try
+    rv = TrySetUpPluginInstance(aMimeType, aURL, aOwner);
+  }
+
+  return rv;
+}
+
+NS_IMETHODIMP nsPluginHostImpl::TrySetUpPluginInstance(const char *aMimeType, 
+                                                       nsIURI *aURL,
+                                                       nsIPluginInstanceOwner *aOwner)
+{
 #ifdef PLUGIN_LOGGING
   nsCAutoString urlSpec;
   if(aURL != nsnull) (void)aURL->GetSpec(urlSpec);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_NORMAL,
-        ("nsPluginHostImpl::SetupPluginInstance Begin mime=%s, owner=%p, url=%s\n",
+        ("nsPluginHostImpl::TrySetupPluginInstance Begin mime=%s, owner=%p, url=%s\n",
         aMimeType, aOwner, urlSpec.get()));
 
   PR_LogFlush();
@@ -3961,7 +3992,7 @@ NS_IMETHODIMP nsPluginHostImpl::SetUpPluginInstance(const char *aMimeType,
   if(aURL != nsnull) (void)aURL->GetSpec(urlSpec2);
 
   PR_LOG(nsPluginLogging::gPluginLog, PLUGIN_LOG_BASIC,
-        ("nsPluginHostImpl::SetupPluginInstance Finished mime=%s, rv=%d, owner=%p, url=%s\n",
+        ("nsPluginHostImpl::TrySetupPluginInstance Finished mime=%s, rv=%d, owner=%p, url=%s\n",
         aMimeType, result, aOwner, urlSpec2.get()));
 
   PR_LogFlush();
