@@ -1752,9 +1752,9 @@ InternetSearchDataSource::MapEncoding(const nsString &numericEncoding, nsString 
 
 	struct	encodings	encodingList[] =
 	{
-		"2336",	"EUC-JP",
-		"2561", "Shift_JIS",
-		nsnull, nsnull
+		{	"2336",	"EUC-JP"	},
+		{	"2561", "Shift_JIS"	},
+		{	nsnull, nsnull		}
 	};
 
 	stringEncoding.Truncate();
