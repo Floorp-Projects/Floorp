@@ -76,10 +76,6 @@ nsBodyFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   if (NULL == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIAnchoredItemsIID)) {
-    *aInstancePtr = (void*) ((nsIAnchoredItems*) this);
-    return NS_OK;
-  }
   if (aIID.Equals(kIAbsoluteItemsIID)) {
     *aInstancePtr = (void*) ((nsIAbsoluteItems*) this);
     return NS_OK;
@@ -112,6 +108,122 @@ nsBodyFrame::Init(nsIPresContext& aPresContext, nsIFrame* aChildList)
 
   // Queue up the frames for the block frame
   return mFirstChild->Init(aPresContext, aChildList);
+}
+
+#ifdef NS_DEBUG
+void
+nsBodyFrame::BandData::ComputeAvailSpaceRect()
+{
+  nsBandTrapezoid*  trapezoid = data;
+
+  if (count > 1) {
+    // If there's more than one trapezoid that means there are floaters
+    PRInt32 i;
+
+    // Stop when we get to space occupied by a right floater, or when we've
+    // looked at every trapezoid and none are right floaters
+    for (i = 0; i < count; i++) {
+      nsBandTrapezoid*  trapezoid = &data[i];
+      if (trapezoid->state != nsBandTrapezoid::Available) {
+        const nsStyleDisplay* display;
+        if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+          PRInt32 j, numFrames = trapezoid->frames->Count();
+          NS_ASSERTION(numFrames > 0, "bad trapezoid frame list");
+          for (j = 0; j < numFrames; j++) {
+            nsIFrame* f = (nsIFrame*)trapezoid->frames->ElementAt(j);
+            f->GetStyleData(eStyleStruct_Display,
+                            (const nsStyleStruct*&)display);
+            if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+              goto foundRightFloater;
+            }
+          }
+        } else {
+          trapezoid->frame->GetStyleData(eStyleStruct_Display,
+                                         (const nsStyleStruct*&)display);
+          if (NS_STYLE_FLOAT_RIGHT == display->mFloats) {
+            break;
+          }
+        }
+      }
+    }
+  foundRightFloater:
+
+    if (i > 0) {
+      trapezoid = &data[i - 1];
+    }
+  }
+
+  if (nsBandTrapezoid::Available == trapezoid->state) {
+    // The trapezoid is available
+    trapezoid->GetRect(availSpace);
+  } else {
+    const nsStyleDisplay* display;
+
+    // The trapezoid is occupied. That means there's no available space
+    trapezoid->GetRect(availSpace);
+
+    // XXX Better handle the case of multiple frames
+    if (nsBandTrapezoid::Occupied == trapezoid->state) {
+      trapezoid->frame->GetStyleData(eStyleStruct_Display,
+                                     (const nsStyleStruct*&)display);
+      if (NS_STYLE_FLOAT_LEFT == display->mFloats) {
+        availSpace.x = availSpace.XMost();
+      }
+    }
+    availSpace.width = 0;
+  }
+}
+#endif
+
+NS_IMETHODIMP
+nsBodyFrame::Paint(nsIPresContext&      aPresContext,
+                   nsIRenderingContext& aRenderingContext,
+                   const nsRect&        aDirtyRect)
+{
+  nsresult rv = nsHTMLContainerFrame::Paint(aPresContext, aRenderingContext,
+                                            aDirtyRect);
+
+#ifdef NS_DEBUG
+  if (nsIFrame::GetShowFrameBorders()) {
+    // Render the bands in the spacemanager
+    BandData band;
+    nsISpaceManager* sm = mSpaceManager;
+    nscoord y = 0;
+    while (y < mRect.height) {
+      sm->GetBandData(y, nsSize(mRect.width, mRect.height - y), band);
+      band.ComputeAvailSpaceRect();
+
+      // Render a box and a diagonal line through the band
+      aRenderingContext.SetColor(NS_RGB(0,255,0));
+      aRenderingContext.DrawRect(0, band.availSpace.y,
+                                 mRect.width, band.availSpace.height);
+      aRenderingContext.DrawLine(0, band.availSpace.y,
+                                 mRect.width, band.availSpace.YMost());
+
+      // Render boxes and opposite diagonal lines around the
+      // unavailable parts of the band.
+      PRInt32 i;
+      for (i = 0; i < band.count; i++) {
+        nsBandTrapezoid* trapezoid = &band.data[i];
+        if (nsBandTrapezoid::Available != trapezoid->state) {
+          nsRect r;
+          trapezoid->GetRect(r);
+          if (nsBandTrapezoid::OccupiedMultiple == trapezoid->state) {
+            aRenderingContext.SetColor(NS_RGB(0,255,128));
+          }
+          else {
+            aRenderingContext.SetColor(NS_RGB(128,255,0));
+          }
+          aRenderingContext.DrawRect(r);
+          aRenderingContext.DrawLine(r.x, r.YMost(), r.XMost(), r.y);
+        }
+      }
+      y = band.availSpace.YMost();
+    }
+  }
+#endif
+
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -147,90 +259,91 @@ nsBodyFrame::Reflow(nsIPresContext&          aPresContext,
     // Get the target and the type of reflow command
     aReflowState.reflowCommand->GetTarget(reflowCmdTarget);
     aReflowState.reflowCommand->GetType(reflowCmdType);
+    if (nsIReflowCommand::StyleChanged != reflowCmdType) {
+      // XXX CONSTRUCTION
+      if (this == reflowCmdTarget) {
+        NS_ASSERTION(nsIReflowCommand::FrameAppended == reflowCmdType,
+                     "unexpected reflow command");
 
-    // XXX CONSTRUCTION
-    if (this == reflowCmdTarget) {
-      NS_ASSERTION(nsIReflowCommand::FrameAppended == reflowCmdType,
-                   "unexpected reflow command");
+        // Append reflow commands will be targeted at us. Reset the target and
+        // send the reflow command.
+        // XXX Would it be better to have the frame generate the reflow command
+        // that way it could correctly set the target?
+        reflowCmdTarget = mFirstChild;
+        aReflowState.reflowCommand->SetTarget(mFirstChild);
 
-      // Append reflow commands will be targeted at us. Reset the target and
-      // send the reflow command.
-      // XXX Would it be better to have the frame generate the reflow command
-      // that way it could correctly set the target?
-      reflowCmdTarget = mFirstChild;
-      aReflowState.reflowCommand->SetTarget(mFirstChild);
-
-      // Reset the geometric and content parent for each of the child frames
-      nsIFrame* childList;
-      aReflowState.reflowCommand->GetChildFrame(childList);
-      for (nsIFrame* frame = childList; nsnull != frame; frame->GetNextSibling(frame)) {
-        frame->SetGeometricParent(mFirstChild);
-        frame->SetContentParent(mFirstChild);
-      }
-    }
-
-    // The reflow command should never be target for us
-#ifdef NS_DEBUG
-    NS_ASSERTION(this != reflowCmdTarget, "bad reflow command target");
-#endif
-
-    // Is the next frame in the reflow chain the pseudo block-frame or an
-    // absolutely positioned frame?
-    //
-    // If the next frame is the pseudo block-frame then fall thru to the main
-    // code below. The only thing that should be handled below is absolutely
-    // positioned elements...
-    nsIFrame* nextFrame;
-    aReflowState.reflowCommand->GetNext(nextFrame);
-    if ((nsnull != nextFrame) && (mFirstChild != nextFrame)) {
-      NS_ASSERTION(this != nextFrame, "huh?");
-      NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
-                     ("nsBodyFrame::Reflow: reflowing frame=%p",
-                      nextFrame));
-      // It's an absolutely positioned frame that's the target.
-      // XXX FIX ME. For an absolutely positioned item we need to properly
-      // compute the available space and compute the origin...
-      nsIHTMLReflow*  reflow;
-      if (NS_OK == nextFrame->QueryInterface(kIHTMLReflowIID, (void**)&reflow)) {
-        nsHTMLReflowState reflowState(aPresContext, nextFrame, aReflowState,
-                                      aReflowState.maxSize);
-        reflowState.spaceManager = mSpaceManager;
-        reflow->WillReflow(aPresContext);
-        nsresult rv = reflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
-        if (NS_OK != rv) {
-          return rv;
+        // Reset the geometric and content parent for each of the child frames
+        nsIFrame* childList;
+        aReflowState.reflowCommand->GetChildFrame(childList);
+        for (nsIFrame* frame = childList; nsnull != frame; frame->GetNextSibling(frame)) {
+          frame->SetGeometricParent(mFirstChild);
+          frame->SetContentParent(mFirstChild);
         }
-        nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
       }
 
-      // XXX Commented this out because the absolute positioning code
-      // above doesn't check if it needs to position the absolute frame.
-#if 0
-      // XXX Temporary code: if the frame we just reflowed is a
-      // floating frame then fall through into the main reflow pathway
-      // after clearing out our incremental reflow status. This forces
-      // our child to adjust to the new size of the floater.
-      //
-      // XXXX We shouldn't be here at all for floating frames, just for absolutely
-      // positioned frames. What's happening is that if a child of the body is
-      // floated then the reflow state path isn't getting set up correctly. The
-      // body's block pseudo-frame isn't getting included in the reflow path like
-      // it shoudld and that's why we end up here
-      const nsStyleDisplay* display;
-      nextFrame->GetStyleData(eStyleStruct_Display,
-                              (const nsStyleStruct*&) display);
-      if (NS_STYLE_FLOAT_NONE == display->mFloats) {
-        return NS_OK;
-      }
+      // The reflow command should never be target for us
+#ifdef NS_DEBUG
+      NS_ASSERTION(this != reflowCmdTarget, "bad reflow command target");
 #endif
 
-      // Switch over to a reflow-state that is called resize instead
-      // of an incremental reflow state like we were passed in.
-      resizeReflowState.reason = eReflowReason_Resize;
-      resizeReflowState.reflowCommand = nsnull;
-      rsp = &resizeReflowState;
+      // Is the next frame in the reflow chain the pseudo block-frame or an
+      // absolutely positioned frame?
+      //
+      // If the next frame is the pseudo block-frame then fall thru to the main
+      // code below. The only thing that should be handled below is absolutely
+      // positioned elements...
+      nsIFrame* nextFrame;
+      aReflowState.reflowCommand->GetNext(nextFrame);
+      if ((nsnull != nextFrame) && (mFirstChild != nextFrame)) {
+        NS_ASSERTION(this != nextFrame, "huh?");
+        NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
+                       ("nsBodyFrame::Reflow: reflowing frame=%p",
+                        nextFrame));
+        // It's an absolutely positioned frame that's the target.
+        // XXX FIX ME. For an absolutely positioned item we need to properly
+        // compute the available space and compute the origin...
+        nsIHTMLReflow*  reflow;
+        if (NS_OK == nextFrame->QueryInterface(kIHTMLReflowIID, (void**)&reflow)) {
+          nsHTMLReflowState reflowState(aPresContext, nextFrame, aReflowState,
+                                        aReflowState.maxSize);
+          reflowState.spaceManager = mSpaceManager;
+          reflow->WillReflow(aPresContext);
+          nsresult rv = reflow->Reflow(aPresContext, aDesiredSize, reflowState, aStatus);
+          if (NS_OK != rv) {
+            return rv;
+          }
+          nextFrame->SizeTo(aDesiredSize.width, aDesiredSize.height);
+        }
 
-      // XXX End temporary code
+        // XXX Commented this out because the absolute positioning code
+        // above doesn't check if it needs to position the absolute frame.
+#if 0
+        // XXX Temporary code: if the frame we just reflowed is a
+        // floating frame then fall through into the main reflow pathway
+        // after clearing out our incremental reflow status. This forces
+        // our child to adjust to the new size of the floater.
+        //
+        // XXXX We shouldn't be here at all for floating frames, just for absolutely
+        // positioned frames. What's happening is that if a child of the body is
+        // floated then the reflow state path isn't getting set up correctly. The
+        // body's block pseudo-frame isn't getting included in the reflow path like
+        // it shoudld and that's why we end up here
+        const nsStyleDisplay* display;
+        nextFrame->GetStyleData(eStyleStruct_Display,
+                                (const nsStyleStruct*&) display);
+        if (NS_STYLE_FLOAT_NONE == display->mFloats) {
+          return NS_OK;
+        }
+#endif
+
+        // Switch over to a reflow-state that is called resize instead
+        // of an incremental reflow state like we were passed in.
+        resizeReflowState.reason = eReflowReason_Resize;
+        resizeReflowState.reflowCommand = nsnull;
+        rsp = &resizeReflowState;
+
+        // XXX End temporary code
+      }
     }
   }
 
@@ -753,27 +866,6 @@ nsBodyFrame::GetCursorAndContentAt(nsIPresContext& aPresContext,
     kid->GetNextSibling(kid);
   }
   return NS_OK;
-}
-
-/////////////////////////////////////////////////////////////////////////////
-// nsIAnchoredItems
-
-void nsBodyFrame::AddAnchoredItem(nsIFrame*         aAnchoredItem,
-                                  AnchoringPosition aPosition,
-                                  nsIFrame*         aContainer)
-{
-  // Set the geometric parent and add the anchored frame to the child list
-  aAnchoredItem->SetGeometricParent(this);
-  AddFrame(aAnchoredItem);
-}
-
-void nsBodyFrame::RemoveAnchoredItem(nsIFrame* aAnchoredItem)
-{
-  NS_PRECONDITION(IsChild(aAnchoredItem), "bad anchored item");
-  NS_ASSERTION(aAnchoredItem != mFirstChild, "unexpected anchored item");
-  // Remove the anchored item from the child list
-  // XXX Implement me
-  mChildCount--;
 }
 
 /////////////////////////////////////////////////////////////////////////////
