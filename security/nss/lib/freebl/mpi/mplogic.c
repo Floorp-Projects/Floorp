@@ -34,7 +34,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.3 2000/07/21 21:04:14 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.4 2000/07/25 00:12:57 nelsonb%netscape.com Exp $
  */
 
 #include "mplogic.h"
@@ -450,7 +450,7 @@ mp_err mpl_get_bit(mp_int *a, unsigned int bitNum)
   ARGCHK(a != NULL, MP_BADARG);
 
   ix = bitNum / MP_DIGIT_BIT;
-  ARGCHK(ix > MP_USED(a) - 1, MP_RANGE);
+  ARGCHK(ix <= MP_USED(a) - 1, MP_RANGE);
 
   bit   = bitNum % MP_DIGIT_BIT;
   rv = (mp_err)(MP_DIGIT(a, ix) >> bit) & 1;
