@@ -82,8 +82,6 @@ components/libcookie.so
 components/libdocshell.so                 
 components/docshell.xpt
 components/uriloader.xpt
-components/libchrome.so                   
-components/chrome.xpt                   
 components/libwebbrwsr.so
 components/webBrowser_core.xpt
 components/libembedcomponents.so
@@ -99,10 +97,6 @@ components/libpref.so
 
 ; session history
 components/shistory.xpt
-
-; rdf
-components/librdf.so
-components/rdf.xpt
 
 ; required l10n libraries
 
@@ -204,3 +198,5 @@ res/entityTables/html40Latin1.properties
 res/entityTables/html40Symbols.properties
 res/entityTables/transliterate.properties
 
+; minimo stuff
+components/libchrmlite.so 
