@@ -214,11 +214,11 @@ char *
 SECU_GetModulePassword(PK11SlotInfo *slot, PRBool retry, void *arg) 
 {
     char prompt[255];
-    secuPWData *pwdata = arg;
+    secuPWData *pwdata = (secuPWData *)arg;
     secuPWData pwnull = { PW_NONE, 0 };
     char *pw;
 
-    if (arg == NULL)
+    if (pwdata == NULL)
 	pwdata = &pwnull;
 
     if (retry && pwdata->source != PW_NONE) {

@@ -546,7 +546,7 @@ P12U_ImportPKCS12Object(char *in_file, PK11SlotInfo *slot,
     }
 
     /* init the decoder context */
-    p12dcx = SEC_PKCS12DecoderStart(&uniPwitem, slot, NULL,
+    p12dcx = SEC_PKCS12DecoderStart(&uniPwitem, slot, slotPw,
 				    p12u_DigestOpen, p12u_DigestClose,
 				    p12u_DigestRead, p12u_DigestWrite,
 				    tmpcxt);
@@ -711,7 +711,7 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 	pk12uErrno = PK12UERR_PK11GETSLOT;
 	goto loser;
     }
-    cert = PK11_FindCertFromNickname(nn, NULL);
+    cert = PK11_FindCertFromNickname(nn, slotPw);
     if(!cert) {
 	SECU_PrintError(progName,"find cert by nickname failed");
 	pk12uErrno = PK12UERR_FINDCERTBYNN;
@@ -730,7 +730,7 @@ P12U_ExportPKCS12Object(char *nn, char *outfile, PK11SlotInfo *inSlot,
 	goto loser;
     }
 
-    p12ecx = SEC_PKCS12CreateExportContext(NULL, NULL, cert->slot, NULL);
+    p12ecx = SEC_PKCS12CreateExportContext(NULL, NULL, cert->slot, slotPw);
     if(!p12ecx) {
 	SECU_PrintError(progName,"export context creation failed");
 	pk12uErrno = PK12UERR_EXPORTCXCREATE;
