@@ -885,7 +885,7 @@ sub MessageToMTA ($) {
     return unless $enableSendMail;
 
     my @args;
-    if (Param("maildeliverymethod") eq "sendmail" && Param("sendmailnow")) {
+    if (Param("maildeliverymethod") eq "sendmail" && !Param("sendmailnow")) {
         push @args, "-ODeliveryMode=deferred";
     }
     if (Param("maildeliverymethod") eq "smtp") {
