@@ -124,15 +124,15 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
   PRInt32 flexes = 0;
   PopulateBoxSizes(aBox, aState, boxSizes, computedBoxSizes, minSize, maxSize, flexes);
   
-  nscoord width = clientRect.width;
+  nscoord size = clientRect.width;
   if (!IsHorizontal(aBox))
-      width = clientRect.height;
+      size = clientRect.height;
 
-  ComputeChildSizes(aBox, aState, width, boxSizes, computedBoxSizes);
+  ComputeChildSizes(aBox, aState, size, boxSizes, computedBoxSizes);
 
 
   if (IsHorizontal(aBox)) {
-      clientRect.width = width;
+      clientRect.width = size;
       if (clientRect.height < minSize)
          clientRect.height = minSize;
 
@@ -141,7 +141,7 @@ nsSprocketLayout::Layout(nsIBox* aBox, nsBoxLayoutState& aState)
            clientRect.height = maxSize;
       }
   } else {
-      clientRect.height = width;
+      clientRect.height = size;
       if (clientRect.width < minSize)
          clientRect.width = minSize;
 

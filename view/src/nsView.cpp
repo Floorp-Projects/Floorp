@@ -853,7 +853,9 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
     dx->GetAppUnitsToDevUnits(t2p);
     NS_RELEASE(dx);
 
-
+    /* You would think that doing a move and resize all in one operation would
+     * be faster but its not. Something is really broken here. So I'm comenting 
+     * this out for now
     // if we moved and resized do it all in one shot
     if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED && mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED)
     {
@@ -863,35 +865,63 @@ NS_IMETHODIMP nsView :: SynchWidgetSizePosition()
       GetOffsetFromWidget(&parx, &pary, pwidget);
       NS_IF_RELEASE(pwidget);
 
-      mWindow->Resize(NSTwipsToIntPixels(mBounds.x + parx, t2p),
-                      NSTwipsToIntPixels(mBounds.y + pary, t2p),
-                      NSTwipsToIntPixels(mBounds.width, t2p), NSTwipsToIntPixels(mBounds.height, t2p),
-                      PR_TRUE);
+      PRInt32 x = NSTwipsToIntPixels(mBounds.x + parx, t2p);
+      PRInt32 y = NSTwipsToIntPixels(mBounds.y + pary, t2p);
+      PRInt32 width = NSTwipsToIntPixels(mBounds.width, t2p);
+      PRInt32 height = NSTwipsToIntPixels(mBounds.height, t2p);
+
+      nsRect bounds;
+      mWindow->GetBounds(bounds);
+      if (bounds.x == x && bounds.y == y ) 
+         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+      else if (bounds.width == width && bounds.height == bounds.height)
+         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+      else {
+         mWindow->Resize(x,y,width,height, PR_TRUE);
+         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+         mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
+         return NS_OK;
+      }
+    } 
+    */
+
+    // if we just resized do it
+    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
+    {
+
+      PRInt32 width = NSTwipsToIntPixels(mBounds.width, t2p);
+      PRInt32 height = NSTwipsToIntPixels(mBounds.height, t2p);
+
+      nsRect bounds;
+      mWindow->GetBounds(bounds);
+
+      if (bounds.width != width || bounds.height != bounds.height)
+        mWindow->Resize(width,height, PR_TRUE);
 
       mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
+    } 
+    
+    if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED) {
+      // if we just moved do it.
+      nscoord parx = 0, pary = 0;
+      nsIWidget         *pwidget = nsnull;
+
+      GetOffsetFromWidget(&parx, &pary, pwidget);
+      NS_IF_RELEASE(pwidget);
+
+      PRInt32 x = NSTwipsToIntPixels(mBounds.x + parx, t2p);
+      PRInt32 y = NSTwipsToIntPixels(mBounds.y + pary, t2p);
+
+      nsRect bounds;
+      mWindow->GetBounds(bounds);
+      
+      if (bounds.x != x || bounds.y != y) 
+         mWindow->Move(x,y);
+
       mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
-    } else {
-      // if we just resized do it
-      if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED) 
-      {
-        mWindow->Resize(NSTwipsToIntPixels(mBounds.width, t2p), NSTwipsToIntPixels(mBounds.height, t2p),
-                        PR_TRUE);
-        mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_RESIZED;
-      } else if (mVFlags & NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED) {
-        // if we just moved do it.
-        nscoord parx = 0, pary = 0;
-        nsIWidget         *pwidget = nsnull;
-
-        GetOffsetFromWidget(&parx, &pary, pwidget);
-        NS_IF_RELEASE(pwidget);
-
-        mWindow->Move(NSTwipsToIntPixels(mBounds.x + parx, t2p),
-                      NSTwipsToIntPixels(mBounds.y + pary, t2p));
-
-        mVFlags &= ~NS_VIEW_PUBLIC_FLAG_WIDGET_MOVED;
-      }        
-    }
+    }        
   }
+  
 
   return NS_OK;
 }

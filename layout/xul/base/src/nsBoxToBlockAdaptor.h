@@ -56,10 +56,14 @@ public:
   virtual ~nsBoxToBlockAdaptor();
 
 protected:
+  virtual PRBool HasStyleChange();
+  virtual void SetStyleChangeFlag(PRBool aDirty);
+
   virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
   virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
 
-  virtual nsresult Reflow(nsIPresContext*   aPresContext,
+  virtual nsresult Reflow(nsBoxLayoutState& aState,
+                   nsIPresContext*   aPresContext,
                    nsHTMLReflowMetrics&     aDesiredSize,
                    const nsHTMLReflowState& aReflowState,
                    nsReflowStatus&          aStatus,
@@ -83,6 +87,7 @@ protected:
   nscoord mMinWidth;
   PRBool mWasCollapsed;
   nscoord mCachedMaxElementHeight;
+  PRBool mStyleChange;
 };
 
 #endif

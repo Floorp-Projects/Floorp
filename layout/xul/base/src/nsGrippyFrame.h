@@ -30,12 +30,12 @@
 #ifndef nsGrippyFrame_h___
 #define nsGrippyFrame_h___
 
-#include "nsTitledButtonFrame.h"
+#include "nsButtonBoxFrame.h"
 #include "nsCOMPtr.h"
 #include "nsIContent.h"
 
 
-class nsGrippyFrame : public nsTitledButtonFrame
+class nsGrippyFrame : public nsButtonBoxFrame
 {
 public:
 

@@ -136,76 +136,6 @@ static NS_DEFINE_CID(kCXIFConverterCID,        NS_XIFFORMATCONVERTER_CID);
 
 #undef NOISY
 
-//========================================================================
-#ifdef MOZ_REFLOW_PERF
-class ReflowCountMgr;
-
-static const char * kGrandTotalsStr = "Grand Totals";
-#define NUM_REFLOW_TYPES 5
-
-// Counting Class
-class ReflowCounter {
-public:
-  ReflowCounter(ReflowCountMgr * aMgr);
-  ~ReflowCounter();
-
-  void ClearTotals();
-  void DisplayTotals(const char * aStr);
-  void DisplayHTMLTotals(const char * aStr);
-
-  void Add(nsReflowReason aType)                  { mTotals[aType]++; mTotal++; }
-  void Add(nsReflowReason aType, PRUint32 aTotal) { mTotals[aType] += aTotal; mTotal += aTotal; }
-
-protected:
-  void DisplayTotals(PRUint32 * aArray, const char * aTitle);
-  void DisplayHTMLTotals(PRUint32 * aArray, const char * aTitle);
-
-  PRUint32 mTotals[NUM_REFLOW_TYPES];
-  PRUint32 mTotal;
-  ReflowCountMgr * mMgr;
-};
-
-// Manager Class
-class ReflowCountMgr {
-public:
-  ReflowCountMgr();
-  //static ReflowCountMgr * GetInstance() { return &gReflowCountMgr; } 
-
-  ~ReflowCountMgr();
-
-  void ClearTotals();
-  void DisplayTotals(const char * aStr);
-  void DisplayHTMLTotals(const char * aStr);
-
-  void Add(const char * aName, nsReflowReason aType);
-  ReflowCounter * LookUp(const char * aName);
-
-  FILE * GetOutFile() { return mFD; }
-
-protected:
-  void DisplayTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
-  void DisplayHTMLTotals(PRUint32 * aArray, PRUint32 * aDupArray, char * aTitle);
-
-  static PRIntn RemoveItems(PLHashEntry *he, PRIntn i, void *arg);
-  void CleanUp();
-
-  // stdout Output Methods
-  static PRIntn DoSingleTotal(PLHashEntry *he, PRIntn i, void *arg);
-  void DoGrandTotals();
-
-  // HTML Output Methods
-  static PRIntn DoSingleHTMLTotal(PLHashEntry *he, PRIntn i, void *arg);
-  void DoGrandHTMLTotals();
-
-  PLHashTable * mCounts;
-  FILE * mFD;
-
-  // ReflowCountMgr gReflowCountMgr;
-};
-#endif
-//========================================================================
-
-
 // comment out to hide caret
 #define SHOW_CARET
 
@@ -330,7 +260,6 @@ StackArena::Push()
     StackMark* oldMarks = mMarks;
     PRUint32 oldLength = mMarkLength;
     mMarkLength += MARK_INCREMENT;
-    void* marks = 0;
     mMarks = new StackMark[mMarkLength];
     nsCRT::memcpy(mMarks, oldMarks, sizeof(StackMark)*oldLength);
 
@@ -2127,6 +2056,12 @@ PresShell::AlreadyInQueue(nsIReflowCommand* aReflowCommand)
   return inQueue;
 }
 
+/*
+#ifdef DEBUG_evaughan
+static PRInt32 gPosted = 0;
+#endif
+*/
+
 NS_IMETHODIMP
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
@@ -2152,6 +2087,11 @@ PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
   if (!AlreadyInQueue(aReflowCommand)) {
     NS_ADDREF(aReflowCommand);
     rv = (mReflowCommands.AppendElement(aReflowCommand) ? NS_OK : NS_ERROR_OUT_OF_MEMORY);
+    /*
+#ifdef DEBUG_evaughan
+    printf("ReflowCommandsPosted=%d\n", ++gPosted);
+#endif
+    */
   }
 
   // Kick off a reflow event if we aren't batching reflows

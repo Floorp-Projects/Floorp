@@ -68,9 +68,11 @@ public:
   NS_IMETHOD GetInsertionPoint(nsIFrame** aFrame);
   NS_IMETHOD SetInsertionPoint(nsIFrame* aFrame);
 
+  virtual ~nsContainerBox() {}
 protected:
 
   virtual nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect);
+  //virtual nsresult LayoutChildAt(nsBoxLayoutState& aState, nsIBox* aBox, const nsRect& aRect, PRUint32 aFlags);
 
   nsIBox* mFirstChild;
   nsIBox* mLastChild;

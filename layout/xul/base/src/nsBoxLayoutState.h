@@ -56,11 +56,18 @@ public:
   nsBoxLayoutState(nsIPresShell* aShell);
   nsBoxLayoutState(const nsBoxLayoutState& aState);
 
-  virtual PRBool HandleReflow(nsIBox* aRootBox, PRBool aCoalesce);
+  virtual void HandleReflow(nsIBox* aRootBox);
 
   virtual nsIPresContext* GetPresContext() { return mPresContext.get(); }
   virtual nsresult GetPresShell(nsIPresShell** aShell);
   virtual void GetMaxElementSize(nsSize** aMaxElementSize);
+
+  virtual void GetOverFlowSize(nsSize& aSize);
+  virtual void SetOverFlowSize(const nsSize& aSize);
+  virtual void GetIncludeOverFlow(PRBool& aOverFlow);
+  virtual void SetIncludeOverFlow(const PRBool& aOverFlow);
+  virtual void GetLayoutFlags(PRUint32& aFlags);
+  virtual void SetLayoutFlags(const PRUint32& aFlags);
 
   virtual eBoxLayoutReason GetLayoutReason() { return mType; }
   virtual void SetLayoutReason(eBoxLayoutReason aReason) { mType = aReason; }
@@ -75,8 +82,8 @@ public:
   nsresult AllocateStackMemory(size_t aSize, void** aResult);
 
 private:
-  void DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox);
-  PRBool UnWind(nsIReflowCommand* aCommand, nsIBox* aRootBox, PRBool aCoalesce);
+  //void DirtyAllChildren(nsBoxLayoutState& aState, nsIBox* aBox);
+  void UnWind(nsIReflowCommand* aCommand, nsIBox* aRootBox);
   nsIBox* GetTargetBox(nsIReflowCommand* mCommand, PRBool& aIsAdaptor);
   nsIBox* GetBoxForFrame(nsIFrame* aFrame, PRBool& aIsAdaptor);
 
@@ -84,6 +91,9 @@ private:
   const nsHTMLReflowState* mReflowState;
   eBoxLayoutReason mType;
   nsSize* mMaxElementSize;
+  nsSize mOverFlowSize;
+  PRBool mIncludeOverFlow;
+  PRUint32 mLayoutFlags;
 };
 
 #endif

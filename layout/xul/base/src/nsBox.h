@@ -74,7 +74,11 @@ public:
   NS_IMETHOD GetDebugBoxAt(const nsPoint& aPoint, nsIBox** aBox);
   NS_IMETHOD GetDebug(PRBool& aDebug);
   NS_IMETHOD RelayoutDirtyChild(nsBoxLayoutState& aState, nsIBox* aChild);
+  NS_IMETHOD RelayoutStyleChange(nsBoxLayoutState& aState, nsIBox* aChild);
   NS_IMETHOD GetMouseThrough(PRBool& aMouseThrough);
+
+  NS_IMETHOD MarkChildrenStyleChange();
+  NS_IMETHOD MarkStyleChange(nsBoxLayoutState& aState);
 
   // XXX Eventually these will move into nsIFrame.
   // These methods are used for XBL <children>.
@@ -105,9 +109,13 @@ public:
   static void BoundsCheck(nsSize& aMinSize, nsSize& aPrefSize, nsSize& aMaxSize);
 
 protected:
+  virtual PRBool HasStyleChange();
+  virtual void SetStyleChangeFlag(PRBool aDirty);
+
   virtual PRBool GetWasCollapsed(nsBoxLayoutState& aState);
   virtual void SetWasCollapsed(nsBoxLayoutState& aState, PRBool aWas);
   virtual PRBool GetDefaultFlex(PRInt32& aFlex);
+  virtual void GetLayoutFlags(PRUint32& aFlags);
 
   enum eMouseThrough {
     unset,

@@ -94,7 +94,7 @@ nsDeckFrame::AttributeChanged(nsIPresContext* aPresContext,
      MarkDirty(state);
   }
 
-  return NS_OK;
+  return rv;
 }
 
 nsIFrame* 

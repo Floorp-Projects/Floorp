@@ -77,6 +77,7 @@
 #include "nsLegendFrame.h"
 #include "nsTitleFrame.h"
 #include "nsIContentIterator.h"
+#include "nsBoxLayoutState.h"
 
 #include "nsIDOMWindow.h"
 #include "nsPIDOMWindow.h"
@@ -9043,31 +9044,29 @@ StyleChangeReflow(nsIPresContext* aPresContext,
                   nsIFrame* aFrame,
                   nsIAtom * aAttribute)
 {
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
+
+  // Is it a box? If so we can coelesce.
+  nsresult rv;
+  nsCOMPtr<nsIBox> box = do_QueryInterface(aFrame, &rv);
+  if (NS_SUCCEEDED(rv) && box) {
+    nsBoxLayoutState state(aPresContext);
+    box->MarkStyleChange(state);
+  } else {
+    nsCOMPtr<nsIPresShell> shell;
+    aPresContext->GetShell(getter_AddRefs(shell));
  
 
+    nsIReflowCommand* reflowCmd;
+    nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
+                                          nsIReflowCommand::StyleChanged,
+                                          nsnull,
+                                          aAttribute);
   
-  nsIReflowCommand* reflowCmd;
-  nsresult rv = NS_NewHTMLReflowCommand(&reflowCmd, aFrame,
-                                        nsIReflowCommand::StyleChanged,
-                                        nsnull,
-                                        aAttribute);
-  if (NS_SUCCEEDED(rv)) {
-    shell->AppendReflowCommand(reflowCmd);
-    NS_RELEASE(reflowCmd);
+    if (NS_SUCCEEDED(rv)) {
+      shell->AppendReflowCommand(reflowCmd);
+      NS_RELEASE(reflowCmd);
+    }
   }
-  
-  /*
-
-    nsFrameState state;
-    aFrame->GetFrameState(&state);
-    state |= NS_FRAME_IS_DIRTY;
-    aFrame->SetFrameState(state);
-    nsIFrame* parent;
-    aFrame->GetParent(&parent);
-    parent->ReflowDirtyChild(shell, aFrame);
-*/
 }
 
 NS_IMETHODIMP

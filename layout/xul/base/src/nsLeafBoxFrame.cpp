@@ -147,7 +147,7 @@ nsLeafBoxFrame::Reflow(nsIPresContext*   aPresContext,
   // create the layout state
   nsBoxLayoutState state(aPresContext, aReflowState, aDesiredSize);
 
-  state.HandleReflow(this, PR_FALSE);
+  state.HandleReflow(this);
 
   nsSize computedSize(aReflowState.mComputedWidth,aReflowState.mComputedHeight);
 

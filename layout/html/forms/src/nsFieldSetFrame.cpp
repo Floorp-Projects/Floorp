@@ -285,6 +285,9 @@ nsFieldSetFrame::Reflow(nsIPresContext*          aPresContext,
                     return Reflow(aPresContext, aDesiredSize, newState, aStatus);
                   }
                   break;
+
+                  default:
+                    NS_ERROR("Unexpected Reflow Type");
             }
         } else {
              aReflowState.reflowCommand->GetNext(incrementalChild);

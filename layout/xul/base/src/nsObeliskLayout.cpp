@@ -149,7 +149,7 @@ nsObeliskLayout::GetMinSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
   //  node = node->GetNext();
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP
@@ -182,7 +182,7 @@ nsObeliskLayout::GetMaxSize(nsIBox* aBox, nsBoxLayoutState& aState, nsSize& aSiz
   //  node = node->GetNext();
   }
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP

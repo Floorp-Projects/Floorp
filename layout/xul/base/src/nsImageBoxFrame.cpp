@@ -281,7 +281,6 @@ nsImageBoxFrame::Paint(nsIPresContext* aPresContext,
 
   nsresult rv = nsLeafBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
- 	nsRect rect (0,0, mRect.width, mRect.height);
   PaintImage(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
 
   return rv;

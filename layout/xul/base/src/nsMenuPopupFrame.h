@@ -138,6 +138,10 @@ public:
 
 
 protected:
+  // redefine to tell the box system not to move the
+  // views.
+  virtual void GetLayoutFlags(PRUint32& aFlags);
+
   // return true if the alignment is horizontal false if vertical
   virtual PRBool GetInitialOrientation(PRBool& aIsHorizontal); 
 

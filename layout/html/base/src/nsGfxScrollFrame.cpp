@@ -662,7 +662,11 @@ nsGfxScrollFrameInner::AttributeChanged(nsIDocument *aDocument,
            y = value.ToInteger(&error);
         }
 
+        nsIScrollableView* s = GetScrollableView(mOuter->mPresContext);
+        s->RemoveScrollPositionListener(this);
         ScrollbarChanged(mOuter->mPresContext, x*mOnePixel, y*mOnePixel);
+        s->AddScrollPositionListener(this);
+
      }
    }
 
@@ -762,7 +766,11 @@ NS_IMETHODIMP
 nsGfxScrollFrame::Layout(nsBoxLayoutState& aState)
 {
    PropagateDebug(aState);
+   PRUint32 flags = 0;
+   aState.GetLayoutFlags(flags);
    nsresult rv =  mInner->Layout(aState);
+   aState.SetLayoutFlags(flags);
+
    nsBox::Layout(aState);
    return rv;
 }
@@ -960,68 +968,64 @@ nsGfxScrollFrameInner::Layout(nsBoxLayoutState& aState)
   scrollable->SetLineHeight(fontHeight);
 
 
-    // layout the vertical and horizontal scrollbars
-
-
-  // set the scrollbars properties. Mark the scrollbars for reflow if there values change.
-  if (mHasVerticalScrollbar) {
-      nsRect vRect(clientRect);
-      vRect.width = vSize.width;
-      vRect.y = clientRect.y;
-
-      if (mHasHorizontalScrollbar) {
-        vRect.height -= hSize.height;
-        if (!scrollBarBottom)
-            vRect.y += hSize.height;
-      }
-
-      vRect.x = clientRect.x;
-
-      if (scrollBarRight)
-         vRect.x += clientRect.width - vSize.width;
-
-      if (vMinSize.width > vRect.width || vMinSize.height > vRect.height) {
-        mVScrollbarBox->Collapse(aState);
-      } else {
-        SetAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY);
-        SetAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(scrollAreaRect.height - fontHeight));
-        SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight, PR_FALSE);
-
-        LayoutBox(aState, mVScrollbarBox, vRect);
-      }
-  }
+  // layout vertical scrollbar
+  nsRect vRect(clientRect);
+  vRect.width = vSize.width;
+  vRect.y = clientRect.y;
 
   if (mHasHorizontalScrollbar) {
-
-      nsRect hRect(clientRect);
-      hRect.height = hSize.height;
-
-      hRect.x = clientRect.x;
-
-      if (mHasVerticalScrollbar) {
-         hRect.width -= vSize.width;
-         if (!scrollBarRight)
-            hRect.x += vSize.width;
-      }
-
-      hRect.y = clientRect.y;
-
-      if (scrollBarBottom)
-         hRect.y += clientRect.height - hSize.height;
-
-
-      if (hMinSize.width > hRect.width || hMinSize.height > hRect.height) {
-        mHScrollbarBox->Collapse(aState);
-      } else {
-        SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX);
-        SetAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(scrollAreaRect.width)*0.8));
-        SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel, PR_FALSE);
-
-        LayoutBox(aState, mHScrollbarBox, hRect);
-      }
+    vRect.height -= hSize.height;
+    if (!scrollBarBottom)
+        vRect.y += hSize.height;
   }
-      
- return NS_OK;
+
+  vRect.x = clientRect.x;
+
+  if (scrollBarRight)
+     vRect.x += clientRect.width - vSize.width;
+
+  if (mHasVerticalScrollbar) {
+    SetAttribute(mVScrollbarBox, nsXULAtoms::maxpos, maxY);
+    SetAttribute(mVScrollbarBox, nsXULAtoms::pageincrement, nscoord(scrollAreaRect.height - fontHeight));
+    SetAttribute(mVScrollbarBox, nsXULAtoms::increment, fontHeight, PR_FALSE);
+  }
+
+  LayoutBox(aState, mVScrollbarBox, vRect);
+
+  if (!mHasVerticalScrollbar || (vMinSize.width > vRect.width || vMinSize.height > vRect.height)) 
+       mVScrollbarBox->Collapse(aState);
+
+
+  // layout horizontal scrollbar
+  nsRect hRect(clientRect);
+  hRect.height = hSize.height;
+
+  hRect.x = clientRect.x;
+
+  if (mHasVerticalScrollbar) {
+     hRect.width -= vSize.width;
+     if (!scrollBarRight)
+        hRect.x += vSize.width;
+  }
+
+  hRect.y = clientRect.y;
+
+  if (scrollBarBottom)
+     hRect.y += clientRect.height - hSize.height;
+
+  if (mHasHorizontalScrollbar) {
+    SetAttribute(mHScrollbarBox, nsXULAtoms::maxpos, maxX);
+    SetAttribute(mHScrollbarBox, nsXULAtoms::pageincrement, nscoord(float(scrollAreaRect.width)*0.8));
+    SetAttribute(mHScrollbarBox, nsXULAtoms::increment, 10*mOnePixel, PR_FALSE);
+  } 
+
+  LayoutBox(aState, mHScrollbarBox, hRect);
+  
+  if (!mHasHorizontalScrollbar || (hMinSize.width > hRect.width || hMinSize.height > hRect.height)) {
+    mHScrollbarBox->Collapse(aState);
+  } 
+  
+  return NS_OK;
 }  
 
 void
