@@ -48,6 +48,9 @@ static PRLogModuleInfo * FontMetricsXlibLM = PR_NewLogModule("FontMetricsXlib");
 
 static Display *gDisplay = NULL;
 
+static int gFontMetricsXlibCount = 0;
+static nsIPref* gPref = nsnull;
+
 nsFontMetricsXlib::nsFontMetricsXlib()
 {
   NS_INIT_REFCNT();
@@ -72,6 +75,8 @@ nsFontMetricsXlib::nsFontMetricsXlib()
   mUnderlineSize = 0;
   mUnderlineOffset = 0;
   mSpaceWidth = 0;
+
+  gFontMetricsXlibCount++;
 }
 
 nsFontMetricsXlib::~nsFontMetricsXlib()
@@ -105,6 +110,9 @@ nsFontMetricsXlib::~nsFontMetricsXlib()
 
 #endif
 
+  if (0 == --gFontMetricsXlibCount) {
+    NS_IF_RELEASE(gPref);
+  }
 }
 
 NS_IMPL_ISUPPORTS(nsFontMetricsXlib, kIFontMetricsIID)
@@ -2276,8 +2284,6 @@ FindFamily(nsFontSearch* aSearch, nsString* aName)
   }
   TryFamily(aSearch, family);
 }
-
-static nsIPref* gPref = nsnull;
 
 static void
 PrefEnumCallback(const char* aName, void* aClosure)

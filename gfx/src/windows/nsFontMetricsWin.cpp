@@ -64,10 +64,15 @@ PLHashTable* nsFontMetricsWin::gFontWeights = nsnull;
 #undef CHAR_BUFFER_SIZE
 #define CHAR_BUFFER_SIZE 1024
 
+static nsIPref* gPref = nsnull;
+
+static int gFontMetricsWinCount = 0;
+
 nsFontMetricsWin :: nsFontMetricsWin()
 {
   NS_INIT_REFCNT();
   mSpaceWidth = 0;
+  ++gFontMetricsWinCount;
 }
   
 nsFontMetricsWin :: ~nsFontMetricsWin()
@@ -101,6 +106,11 @@ nsFontMetricsWin :: ~nsFontMetricsWin()
     delete mGeneric;
     mGeneric = nsnull;
   }
+
+  if (0 == --gFontMetricsWinCount) {
+    NS_IF_RELEASE(gPref);
+  }
+
 }
 
 #ifdef LEAK_DEBUG
@@ -2292,8 +2302,6 @@ typedef struct PrefEnumInfo
   nsFontWin*        mFont;
   nsFontMetricsWin* mMetrics;
 } PrefEnumInfo;
-
-static nsIPref* gPref = nsnull;
 
 void
 PrefEnumCallback(const char* aName, void* aClosure)
