@@ -225,7 +225,7 @@ nsresult nsMsgMessageDataSource::Init()
 nsresult nsMsgMessageDataSource::CreateLiterals(nsIRDFService *rdf)
 {
 	PRUnichar *prustr = nsnull;
-	createNode(NS_LITERAL_STRING(" "), getter_AddRefs(kEmptyStringLiteral), rdf);
+	createNode((const PRUnichar*)NS_LITERAL_STRING(" "), getter_AddRefs(kEmptyStringLiteral), rdf);
 
   //
   // internal strings - not to be localized - usually reflected into the DOM
