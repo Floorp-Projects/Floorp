@@ -91,6 +91,7 @@ static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
 static NS_DEFINE_IID(kIAppShellServiceIID,       NS_IAPPSHELL_SERVICE_IID);
 static NS_DEFINE_CID(kGenericFactoryCID,    NS_GENERICFACTORY_CID);
+static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
 
 // I18N
 static NS_DEFINE_CID(charsetCID,  CONV_CID);
@@ -187,23 +188,23 @@ GetRemoteAttachments()
   NS_ADDREF(url);
   attachments[0].url = url; // The URL to attach. This should be 0 to signify "end of list".
 
-  attachments[0].desired_type;	    // The type to which this document should be
+  (void)attachments[0].desired_type;	    // The type to which this document should be
 						                        // converted.  Legal values are NULL, TEXT_PLAIN
 						                        // and APPLICATION_POSTSCRIPT (which are macros
                                     // defined in net.h); other values are ignored.
 
-  attachments[0].real_type;		    // The type of the URL if known, otherwise NULL. For example, if 
+  (void)attachments[0].real_type;		    // The type of the URL if known, otherwise NULL. For example, if 
                                   // you were attaching a temp file which was known to contain HTML data, 
                                   // you would pass in TEXT_HTML as the real_type, to override whatever type 
                                   // the name of the tmp file might otherwise indicate.
 
-  attachments[0].real_encoding;	  // Goes along with real_type 
+  (void)attachments[0].real_encoding;	  // Goes along with real_type 
 
-  attachments[0].real_name;		    // The original name of this document, which will eventually show up in the 
+  (void)attachments[0].real_name;		    // The original name of this document, which will eventually show up in the 
                                   // Content-Disposition header. For example, if you had copied a document to a 
                                   // tmp file, this would be the original, human-readable name of the document.
 
-  attachments[0].description;	    // If you put a string here, it will show up as the Content-Description header.  
+  (void)attachments[0].description;	    // If you put a string here, it will show up as the Content-Description header.  
                                   // This can be any explanatory text; it's not a file name.						 
 
   nsMsgNewURL(&url, nsString("http://www.pennatech.com"));
@@ -265,8 +266,6 @@ SetupRegistry(void)
   nsComponentManager::RegisterComponent(kNetServiceCID,     NULL, NULL, NETLIB_DLL,  PR_FALSE, PR_FALSE);
   
   // xpcom
-  static NS_DEFINE_CID(kAllocatorCID,  NS_ALLOCATOR_CID);
-  static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
   nsComponentManager::RegisterComponent(kEventQueueServiceCID, NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kEventQueueCID,        NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponent(kGenericFactoryCID,    NULL, NULL, XPCOM_DLL,  PR_FALSE, PR_FALSE);
@@ -380,13 +379,14 @@ int main(int argc, char *argv[])
   }
 
   NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv);
-  if (NS_FAILED(rv)) 
+  if (NS_FAILED(rv) || !mailSession) 
   {
     printf("Failure on Mail Session Init!\n");
     return rv;
   }  
 
-  nsIMsgIdentity *identity = GetHackIdentity();
+  nsIMsgIdentity *identity;
+  identity = GetHackIdentity();
   OnIdentityCheck();
 
   rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
@@ -405,7 +405,6 @@ int main(int argc, char *argv[])
                                              (void **) &pMsgCompFields); 
     if (rv == NS_OK && pMsgCompFields)
     { 
-      PRInt32 rv;
       pMsgCompFields->SetFrom(", rhp@netscape.com, ", NULL);
       pMsgCompFields->SetTo("rhp@netscape.com", NULL);
       pMsgCompFields->SetSubject("[spam] test", NULL);
