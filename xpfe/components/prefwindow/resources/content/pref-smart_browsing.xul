@@ -19,6 +19,7 @@
    Rights Reserved.
    
    Contributor(s): 
+	Blake Ross <blakeross@telocity.com>
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -38,6 +39,7 @@
         orient="vertical"
   		  onload="parent.initPanel('chrome://communicator/content/pref/pref-smart_browsing.xul');">
 
+  <script language="Javascript" src="chrome://global/content/strres.js" />
   <script language="JavaScript">
   <![CDATA[
   
@@ -145,6 +147,33 @@
       document.getElementById("addDomainButton").removeAttribute("disabled");
   }  
 
+  function moreInfo()
+  {
+    var browserURL = null;
+    var bundle = srGetStrBundle("chrome://global/locale/brand.properties");
+    if (bundle)
+      var smartBrowsingURL = bundle.GetStringFromName("smartBrowsingURL");
+    if (smartBrowsingURL) {
+      try {
+        var prefs = Components.classes["component://netscape/preferences"];
+        if (prefs) {
+          prefs = prefs.getService();
+          if (prefs)
+            prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
+        }
+        if (prefs) {
+          var url = prefs.CopyCharPref("browser.chromeURL");
+          if (url)
+            browserURL = url;
+        }
+      } catch(e) {
+      }
+      if (browserURL == null)
+        browserURL = "chrome://navigator/content/navigator.xul";
+      window.openDialog( browserURL, "_blank", "chrome,all,dialog=no", smartBrowsingURL );
+    }
+  }
+        
   ]]>
   </script>
         
@@ -199,7 +228,7 @@
                 pref="true" preftype="bool" prefstring="keyword.enabled"
                 prefattribute="checked"/>
       <spring flex="1"/>
-      <button class="dialog" value="&moreInformation.label;" accesskey="&moreInformation.accesskey;"/>
+      <button class="dialog" value="&moreInformation.label;" accesskey="&moreInformation.accesskey;" oncommand="moreInfo();"/>
     </box>
     
   </titledbox>
