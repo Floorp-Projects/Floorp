@@ -39,14 +39,14 @@ package org.mozilla.javascript.optimizer;
 import org.mozilla.javascript.*;
 import java.util.*;
 
-class OptFunctionNode extends FunctionNode {
+final class OptFunctionNode extends FunctionNode {
 
     OptFunctionNode(String name) {
         super(name);
     }
 
-    protected void finishParsing(IRFactory irFactory) {
-        super.finishParsing(irFactory);
+    void init()
+    {
         int N = getParamAndVarCount();
         int parameterCount = getParamCount();
         optVars = new OptLocalVariable[N];

@@ -61,7 +61,6 @@ public class IRFactory {
     {
         Node children = ((Node) body).getFirstChild();
         if (children != null) { scriptNode.addChildrenToBack(children); }
-        scriptNode.finishParsing(this);
     }
 
     /**
@@ -200,9 +199,51 @@ public class IRFactory {
     public Object initFunction(FunctionNode fnNode, int functionIndex,
                                Object statements, int functionType)
     {
+        Node stmts = (Node)statements;
         fnNode.setFunctionType(functionType);
-        fnNode.addChildToBack((Node)statements);
-        fnNode.finishParsing(this);
+        fnNode.addChildToBack(stmts);
+
+        int functionCount = fnNode.getFunctionCount();
+        if (functionCount != 0) {
+            // Functions containing other functions require activation objects
+            fnNode.setRequiresActivation(true);
+            for (int i = 0; i != functionCount; ++i) {
+                FunctionNode fn = fnNode.getFunctionNode(i);
+                // nested function expression statements overrides var
+                if (fn.getFunctionType()
+                        == FunctionNode.FUNCTION_EXPRESSION_STATEMENT)
+                {
+                    String name = fn.getFunctionName();
+                    if (name != null && name.length() != 0) {
+                        fnNode.removeParamOrVar(name);
+                    }
+                }
+            }
+        }
+
+        if (functionType == FunctionNode.FUNCTION_EXPRESSION) {
+            String name = fnNode.getFunctionName();
+            if (name != null && name.length() != 0
+                && !fnNode.hasParamOrVar(name))
+            {
+                // A function expression needs to have its name as a
+                // variable (if it isn't already allocated as a variable).
+                // See ECMA Ch. 13.  We add code to the beginning of the
+                // function to initialize a local variable of the
+                // function's name to the function value.
+                fnNode.addVar(name);
+                Node setFn = new Node(Token.POP,
+                                new Node(Token.SETVAR, Node.newString(name),
+                                         new Node(Token.THISFN)));
+                stmts.addChildrenToFront(setFn);
+            }
+        }
+
+        // Add return to end if needed.
+        Node lastStmt = stmts.getLastChild();
+        if (lastStmt == null || lastStmt.getType() != Token.RETURN) {
+            stmts.addChildToBack(new Node(Token.RETURN));
+        }
 
         Node result = Node.newString(Token.FUNCTION,
                                      fnNode.getFunctionName());
@@ -1123,10 +1164,8 @@ public class IRFactory {
 
     private Interpreter compiler;
 
-    // Only needed to call reportSyntaxError. Could create an interface
-    // that TokenStream implements if we want to make the connection less
-    // direct.
-    TokenStream ts;
+    // Only needed to call reportCurrentLineError.
+    private TokenStream ts;
 
     private static final int LOOP_DO_WHILE = 0;
     private static final int LOOP_WHILE    = 1;

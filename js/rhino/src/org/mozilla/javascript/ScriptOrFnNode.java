@@ -174,8 +174,6 @@ public class ScriptOrFnNode extends Node {
         }
     }
 
-    protected void finishParsing(IRFactory irFactory) { }
-
     private int encodedSourceStart;
     private int encodedSourceEnd;
     private String sourceName;

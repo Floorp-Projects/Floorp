@@ -77,6 +77,7 @@ public class Codegen extends Interpreter {
 
     public ScriptOrFnNode transform(Context cx, ScriptOrFnNode tree)
     {
+        initOptFunctions_r(tree);
         int optLevel = cx.getOptimizationLevel();
         Hashtable possibleDirectCalls = null;
         if (optLevel > 0) {
@@ -118,6 +119,15 @@ public class Codegen extends Interpreter {
         }
 
         return tree;
+    }
+
+    private static void initOptFunctions_r(ScriptOrFnNode scriptOrFn)
+    {
+        for (int i = 0, N = scriptOrFn.getFunctionCount(); i != N; ++i) {
+            OptFunctionNode fn = (OptFunctionNode)scriptOrFn.getFunctionNode(i);
+            fn.init();
+            initOptFunctions_r(fn);
+        }
     }
 
     public Object compile(Context cx, Scriptable scope,
@@ -300,8 +310,6 @@ public class Codegen extends Interpreter {
         int count = scriptOrFnNodes.length;
         for (int i = 0; i != count; ++i) {
             ScriptOrFnNode n = scriptOrFnNodes[i];
-
-            boolean isFunction = (n.getType() == Token.FUNCTION);
 
             BodyCodegen bodygen = new BodyCodegen();
             bodygen.cfw = cfw;
