@@ -9,11 +9,11 @@ import java.awt.event.*;
 import java.awt.print.*;
 import java.io.*;
 
-public class JView implements Pluglet {
+public class JView implements PlugletFactory {
     public JView() {
     }
-    public PlugletInstance createPlugletInstance(String mimeType) {
- 	return new JViewInstance();
+    public Pluglet createPluglet(String mimeType) {
+ 	return new RTFView();
     }
     public void initialize(PlugletManager manager) {	
     }
@@ -21,7 +21,7 @@ public class JView implements Pluglet {
     }
 }
 
-class JViewInstance implements PlugletInstance {
+class RTFView implements Pluglet {
 //    JScrollPane view;
     ScrollPane view;
     JEditorPane viewPane;
@@ -48,10 +48,10 @@ class JViewInstance implements PlugletInstance {
 	System.out.println("++ Showing");
     }
 
-    public JViewInstance() {
+    public RTFView() {
     }
 
-    public void initialize(PlugletInstancePeer peer) {
+    public void initialize(PlugletPeer peer) {
 	PlugletTagInfo2 info = (PlugletTagInfo2)peer.getTagInfo();
 	defaultSize = new Dimension(info.getWidth(), info.getHeight());
     }
@@ -81,9 +81,9 @@ class JViewInstance implements PlugletInstance {
 }
 
 class JViewStreamListener implements PlugletStreamListener {
-    JViewInstance viewer;
+    RTFView viewer;
 
-    public void setViewer(JViewInstance view) {
+    public void setViewer(RTFView view) {
 	viewer = view;
     }
     public JViewStreamListener() {

@@ -17,13 +17,13 @@ import java.util.zip.*;
 import java.util.Enumeration;
 import java.util.Vector;
 
-public class ZipView implements Pluglet {
+public class ZipView implements PlugletFactory {
 
     public ZipView() {
     }
 
-    public PlugletInstance createPlugletInstance(String mimeType) {
- 	return new ZipInstance();
+    public Pluglet createPluglet(String mimeType) {
+ 	return new ZipDecoder();
     }
 
     public void initialize(PlugletManager manager) {	
@@ -43,7 +43,7 @@ class Node {
     }
 
 }
-class ZipInstance implements PlugletInstance {
+class ZipDecoder implements Pluglet {
     Button extract;
     byte[] b;
     Frame frm;
@@ -55,7 +55,7 @@ class ZipInstance implements PlugletInstance {
     Dimension defaultSize;
     String zname;
 
-    public ZipInstance() {
+    public ZipDecoder() {
 
     }
 
@@ -275,7 +275,7 @@ class ZipInstance implements PlugletInstance {
 
     }
 
-    public void initialize(PlugletInstancePeer peer) {
+    public void initialize(PlugletPeer peer) {
 	PlugletTagInfo2 info = (PlugletTagInfo2)peer.getTagInfo();
 	defaultSize = new Dimension(info.getWidth()-65, info.getHeight()-10);
 
@@ -319,7 +319,7 @@ class ZipInstance implements PlugletInstance {
 
 class ZipStreamListener implements PlugletStreamListener {
     int total = 0, length = 0, first = 0;
-    ZipInstance zip;
+    ZipDecoder zip;
     byte[] b, bb;
     Vector v = new Vector(20, 20);
 
@@ -333,7 +333,7 @@ class ZipStreamListener implements PlugletStreamListener {
 
     }
 
-    public void setZip(ZipInstance zip) {
+    public void setZip(ZipDecoder zip) {
 	this.zip=zip;
     }
 

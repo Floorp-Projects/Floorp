@@ -15,12 +15,12 @@ import java.io.*;
 import java.util.*;
 
 
-public class JMPlayer implements Pluglet {
+public class JMPlayer implements PlugletFactory {
     public JMPlayer() {
     }
 
-    public PlugletInstance createPlugletInstance(String mimeType) {
- 	return new JMPlayerInstance();
+    public Pluglet createPluglet(String mimeType) {
+ 	return new Player();
     }
 
     public void initialize(PlugletManager manager) {	
@@ -30,8 +30,8 @@ public class JMPlayer implements Pluglet {
     }
 }
 
-class JMPlayerInstance implements PlugletInstance, ControllerListener {
-    PlugletInstancePeer peer;
+class Player implements Pluglet, ControllerListener {
+    PlugletPeer peer;
     Dimension defaultSize;
     Frame frm;
     int w, h;
@@ -54,10 +54,10 @@ class JMPlayerInstance implements PlugletInstance, ControllerListener {
 	}
     }
 
-    public JMPlayerInstance() {
+    public Player() {
     }
 
-    public void initialize(PlugletInstancePeer peer) {
+    public void initialize(PlugletPeer peer) {
 	PlugletTagInfo2 info = (PlugletTagInfo2)peer.getTagInfo();
 	w = info.getWidth();
 	h = info.getHeight();
@@ -120,7 +120,7 @@ class JMPlayerInstance implements PlugletInstance, ControllerListener {
 }
 
 class JMPlayerStreamListener implements PlugletStreamListener {
-    JMPlayerInstance jmp;
+    Player jmp;
     int total=0;
 
     public JMPlayerStreamListener() {
@@ -136,7 +136,7 @@ class JMPlayerStreamListener implements PlugletStreamListener {
 
     }
 
-    public void setPlayer(JMPlayerInstance jmp) {
+    public void setPlayer(Player jmp) {
 	this.jmp = jmp;
     }
 

@@ -12,12 +12,12 @@ import java.util.Vector;
 
 import com.adobe.acrobat.Viewer;
 
-public class PDFView implements Pluglet {
+public class PDFView implements PlugletFactory {
     public PDFView() {
     }
-    public PlugletInstance createPlugletInstance(String mimeType) {
+    public Pluglet createPluglet(String mimeType) {
 	try {
- 	    return new PDFViewInstance();
+ 	    return new AcrobatView();
 	} catch(Exception e) {
 	}
 	return null;
@@ -28,7 +28,7 @@ public class PDFView implements Pluglet {
     }
 }
 
-class PDFViewInstance extends Viewer implements PlugletInstance {
+class AcrobatView extends Viewer implements Pluglet {
     JScrollPane view;
     com.adobe.acrobat.Viewer acr;
     Dimension defaultSize;
@@ -59,10 +59,10 @@ class PDFViewInstance extends Viewer implements PlugletInstance {
     }
 
 
-    public PDFViewInstance() throws Exception {
+    public AcrobatView() throws Exception {
     }
 
-    public void initialize(PlugletInstancePeer peer) {
+    public void initialize(PlugletPeer peer) {
 	PlugletTagInfo2 info = (PlugletTagInfo2)peer.getTagInfo();
 	defaultSize = new Dimension(info.getWidth(), info.getHeight());
     }
@@ -93,12 +93,12 @@ class PDFViewInstance extends Viewer implements PlugletInstance {
 }
 
 class PDFViewStreamListener implements PlugletStreamListener {
-    PDFViewInstance viewer;
+    AcrobatView viewer;
     int total = 0, length = 0, first = 0;
     byte[] b, bb;
     Vector v = new Vector(20, 20);
 
-    public void setViewer(PDFViewInstance view) {
+    public void setViewer(AcrobatView view) {
 	viewer = view;
     }
     public PDFViewStreamListener() {
