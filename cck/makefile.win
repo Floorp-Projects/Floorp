@@ -21,7 +21,7 @@
 
 DEPTH=..
 
-DIRS=globals driver ib customcd cckcd cckwiz wizard
+DIRS=globals driver ib customcd cckcd cckwiz wizard hash 
 
 include <$(DEPTH)\config\rules.mak>
 
@@ -44,6 +44,7 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Installer
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\ISetup
 	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\ISetup\NCIFiles
+	-mkdir $(CCKDIST)\CCKTool\Configs\Default\Workspace\Sidebar
 
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Output
@@ -58,6 +59,7 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Installer
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup
 	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\ISetup\NCIFiles
+	-mkdir $(CCKDIST)\CCKTool\Configs\MyIsp\Workspace\Sidebar
 
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Output
@@ -72,6 +74,7 @@ export::
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Installer
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup
 	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\ISetup\NCIFiles
+	-mkdir $(CCKDIST)\CCKTool\WSTemplate\Workspace\Sidebar
 
 	-mkdir $(CCKDIST)\CCKTool\CCKDocs
 
