@@ -7,8 +7,8 @@
 #		 columns from being shown on the default pages.
 
 
-# $Revision: 1.17 $ 
-# $Date: 2001/10/10 15:06:48 $ 
+# $Revision: 1.18 $ 
+# $Date: 2001/12/07 19:30:34 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/bin/admintree.cgi,v $ 
 # $Name:  $ 
@@ -223,7 +223,7 @@ sub get_current_ignore_builds  {
 sub format_input_page {
   my ($tree)= @_;
   my (@build_names) = get_build_names($tree);
-  my (@tree_states) = TreeData::get_all_tree_states($tree);
+  my (@tree_states) = TreeData::get_all_sorted_tree_states($tree);
   my ($title) = "Tinderbox Adminstration for Tree: $tree";
   my (@out);
 
