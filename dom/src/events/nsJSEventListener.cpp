@@ -58,6 +58,8 @@ NS_IMPL_ADDREF(nsJSEventListener)
 
 NS_IMPL_RELEASE(nsJSEventListener)
 
+static nsString onPrefix = "on";
+
 nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
   jsval funval, result;
@@ -70,6 +72,8 @@ nsresult nsJSEventListener::HandleEvent(nsIDOMEvent* aEvent)
     //JS can't handle this event yet or can't handle it at all
     return NS_OK;
   }
+
+  mEventString = onPrefix + mEventString;
 
   mEventChars = mEventString.ToNewCString();
 
