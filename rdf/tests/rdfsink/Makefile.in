@@ -29,6 +29,7 @@ LOCAL_INCLUDES = -I/usr/include/sys
 REQUIRES	= 
 
 LIBS		= \
+	-lxpcom \
 	$(NSPR_LIBS) \
 	$(NULL)
 
