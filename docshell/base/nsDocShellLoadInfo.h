@@ -35,12 +35,12 @@
 class nsDocShellLoadInfo : public nsIDocShellLoadInfo
 {
 public:
-   NS_DECL_ISUPPORTS
+   nsDocShellLoadInfo();
 
+   NS_DECL_ISUPPORTS
    NS_DECL_NSIDOCSHELLLOADINFO
 
 protected:
-   nsDocShellLoadInfo();
    virtual ~nsDocShellLoadInfo();
 
 protected:
