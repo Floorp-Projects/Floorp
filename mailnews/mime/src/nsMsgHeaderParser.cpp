@@ -275,7 +275,8 @@ NS_IMETHODIMP nsMsgHeaderParser::ParseHeadersWithEnumerator(const PRUnichar *lin
 nsresult nsMsgHeaderParser::ParseHeaderAddresses (const char *charset, const char *line, char **names, char **addresses, PRUint32 *numAddresses)
 {
 #if DEBUG
-  (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+  if (line)
+    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
 #endif
 
   *numAddresses = msg_parse_Header_addresses(line, names, addresses);
@@ -288,7 +289,8 @@ nsresult nsMsgHeaderParser::ExtractHeaderAddressMailboxes (const char *charset, 
   if (mailboxes)
   {
 #if DEBUG
-    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+    if (line)
+      (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
 #endif
     
     *mailboxes = msg_extract_Header_address_mailboxes(line);
@@ -303,7 +305,8 @@ nsresult nsMsgHeaderParser::ExtractHeaderAddressNames (const char *charset, cons
 	if (names)
 	{
 #if DEBUG
-    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+    if (line)
+      (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
 #endif
 
     *names = msg_extract_Header_address_names(line);
@@ -319,7 +322,8 @@ nsresult nsMsgHeaderParser::ExtractHeaderAddressName (const char *charset, const
 	if (name)
 	{
 #if DEBUG
-    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+    if (line)
+      (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
 #endif
 
 		*name = msg_extract_Header_address_name(line);
@@ -334,7 +338,8 @@ nsresult nsMsgHeaderParser::ReformatHeaderAddresses (const char *charset, const 
 	if (reformattedAddress)
 	{
 #if DEBUG
-    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+    if (line)
+      (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
 #endif
 
 		*reformattedAddress = msg_reformat_Header_addresses(line);
@@ -349,8 +354,10 @@ nsresult nsMsgHeaderParser::RemoveDuplicateAddresses (const char *charset, const
 	if (newOutput)
 	{
 #if DEBUG
-  (void) NS_ConvertUTF8toUCS2(addrs).get(); // asserts if invalid UTF-8
-  (void) NS_ConvertUTF8toUCS2(other_addrs).get();
+    if (addrs)
+      (void) NS_ConvertUTF8toUCS2(addrs).get(); // asserts if invalid UTF-8
+    if (other_addrs)
+      (void) NS_ConvertUTF8toUCS2(other_addrs).get();
 #endif
 
 		*newOutput = msg_remove_duplicate_addresses(addrs, other_addrs, removeAliasesToMe);
@@ -365,7 +372,8 @@ nsresult nsMsgHeaderParser::MakeFullAddress (const char *charset, const char* na
 	if (fullAddress)
 	{
 #if DEBUG
-    (void) NS_ConvertUTF8toUCS2(addr).get(); // asserts if invalid UTF-8
+    if (addr)
+      (void) NS_ConvertUTF8toUCS2(addr).get(); // asserts if invalid UTF-8
 #endif
 
 		*fullAddress = msg_make_full_address(name, addr);
@@ -378,7 +386,8 @@ nsresult nsMsgHeaderParser::MakeFullAddress (const char *charset, const char* na
 nsresult nsMsgHeaderParser::UnquotePhraseOrAddr (const char *charset, const char *line, char** lineout)
 {
 #if DEBUG
-  (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
+  if (line)
+    (void) NS_ConvertUTF8toUCS2(line).get(); // asserts if invalid UTF-8
 #endif
 
   msg_unquote_phrase_or_addr(line, lineout);

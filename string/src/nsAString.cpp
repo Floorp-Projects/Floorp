@@ -306,13 +306,13 @@ nsAString::do_AssignFromElementPtr( const char_type* aPtr )
 void
 nsAString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AssignFromReadable(nsDependentString(aPtr, aLength));
+    do_AssignFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsAString::do_AssignFromElement( char_type aChar )
   {
-    do_AssignFromReadable(nsDependentString(&aChar, 1));
+    do_AssignFromReadable(Substring(&aChar, &aChar+1));
   }
 
 
@@ -371,13 +371,13 @@ nsAString::do_AppendFromElementPtr( const char_type* aPtr )
 void
 nsAString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AppendFromReadable(nsDependentString(aPtr, aLength));
+    do_AppendFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsAString::do_AppendFromElement( char_type aChar )
   {
-    do_AppendFromReadable(nsDependentString(&aChar, 1));
+    do_AppendFromReadable(Substring(&aChar, &aChar + 1));
   }
 
 
@@ -440,13 +440,13 @@ nsAString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPosition
 void
 nsAString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    do_InsertFromReadable(nsDependentString(aPtr, aLength), atPosition);
+    do_InsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
   }
 
 void
 nsAString::do_InsertFromElement( char_type aChar, index_type atPosition )
   {
-    do_InsertFromReadable(nsDependentString(&aChar, 1), atPosition);
+    do_InsertFromReadable(Substring(&aChar, &aChar+1), atPosition);
   }
 
 
@@ -825,13 +825,13 @@ nsACString::do_AssignFromElementPtr( const char_type* aPtr )
 void
 nsACString::do_AssignFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AssignFromReadable(nsDependentCString(aPtr, aLength));
+    do_AssignFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsACString::do_AssignFromElement( char_type aChar )
   {
-    do_AssignFromReadable(nsDependentCString(&aChar, 1));
+    do_AssignFromReadable(Substring(&aChar, &aChar+1));
   }
 
 
@@ -890,13 +890,13 @@ nsACString::do_AppendFromElementPtr( const char_type* aPtr )
 void
 nsACString::do_AppendFromElementPtrLength( const char_type* aPtr, size_type aLength )
   {
-    do_AppendFromReadable(nsDependentCString(aPtr, aLength));
+    do_AppendFromReadable(Substring(aPtr, aPtr+aLength));
   }
 
 void
 nsACString::do_AppendFromElement( char_type aChar )
   {
-    do_AppendFromReadable(nsDependentCString(&aChar, 1));
+    do_AppendFromReadable(Substring(&aChar, &aChar + 1));
   }
 
 
@@ -959,13 +959,13 @@ nsACString::do_InsertFromElementPtr( const char_type* aPtr, index_type atPositio
 void
 nsACString::do_InsertFromElementPtrLength( const char_type* aPtr, index_type atPosition, size_type aLength )
   {
-    do_InsertFromReadable(nsDependentCString(aPtr, aLength), atPosition);
+    do_InsertFromReadable(Substring(aPtr, aPtr+aLength), atPosition);
   }
 
 void
 nsACString::do_InsertFromElement( char_type aChar, index_type atPosition )
   {
-    do_InsertFromReadable(nsDependentCString(&aChar, 1), atPosition);
+    do_InsertFromReadable(Substring(&aChar, &aChar+1), atPosition);
   }
 
 

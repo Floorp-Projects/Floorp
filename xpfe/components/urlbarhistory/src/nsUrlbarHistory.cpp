@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 0 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -323,7 +323,6 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
     nsXPIDLString prevSearchString;
     PRUint32 searchStrLen = nsCRT::strlen(searchStr);
     nsresult rv;
-    nsAutoString   searchAutoStr(searchStr);
 
     rv = previousSearchResult->GetSearchString(getter_Copies(prevSearchString));
     if (NS_FAILED(rv))
@@ -333,8 +332,12 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
         return NS_ERROR_FAILURE;
     
     PRUint32 prevSearchStrLen = nsCRT::strlen(prevSearchString);
+    // XXXldb This code used to be the line:
+    // if (searchStrLen < prevSearchStrLen || nsCRT::strncasecmp(searchStr, prevSearchString, prevSearchStrLen != 0))
+    // which doesn't make any sense (since the "!= 0" was inside the
+    // parentheses)
     if (searchStrLen < prevSearchStrLen ||
-        Compare(nsDependentString(searchStr),
+        Compare(Substring(searchStr, searchStr+prevSearchStrLen),
                 nsDependentString(prevSearchString, prevSearchStrLen),
                 nsCaseInsensitiveStringComparator())!= 0)
         return NS_ERROR_ABORT;
@@ -365,11 +368,11 @@ nsUrlbarHistory::SearchPreviousResults(const PRUnichar *searchStr, nsIAutoComple
 
 			if (itemValue.IsEmpty())
 				continue;
-		    if (Compare(nsDependentString(searchStr, searchStrLen),
-                        itemValue,
+            if (Compare(nsDependentString(searchStr, searchStrLen),
+                        Substring(itemValue, 0, searchStrLen),
                         nsCaseInsensitiveStringComparator()) == 0)
-			    continue;
-			
+                continue;
+
 	    }
 	    return NS_OK;
     }

@@ -670,12 +670,16 @@ void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) {
         break;
       case kSpace:
       case kTab:
-        newToken = state->tokenAllocator->CreateTokenOfType(eToken_whitespace,eHTMLTag_unknown, nsDependentString((PRUnichar*)s, len)); 
+        newToken = state->tokenAllocator->CreateTokenOfType(
+                       eToken_whitespace,
+                       eHTMLTag_unknown,
+                       Substring(NS_REINTERPRET_CAST(const PRUnichar*, s),
+                                 NS_REINTERPRET_CAST(const PRUnichar*, s) + len));
         break;
       default:
         {
           CTextToken* textToken = (CTextToken*)state->tokenAllocator->CreateTokenOfType(eToken_text, eHTMLTag_unknown);
-          PRUnichar* ptr = (PRUnichar*)s;
+          const PRUnichar* ptr = NS_REINTERPRET_CAST(const PRUnichar*, s);
           if ((ptr >= state->bufferStart) && (ptr < state->bufferEnd)) {
             nsReadingIterator<PRUnichar> start, end;
             start = state->currentIterator;
@@ -685,7 +689,7 @@ void Tokenizer_HandleCharacterData(void *userData, const XML_Char *s, int len) {
             textToken->Bind(state->scanner, start, end);
           }
           else {
-            textToken->Bind(nsDependentString(ptr, len));
+            textToken->Bind(Substring(ptr, ptr+len));
           }
           newToken = textToken;
         }

@@ -542,7 +542,11 @@ mozTXTToHTMLConv::ItMatchesDelimited(const PRUnichar * aInString,
           nsCRT::IsAsciiDigit(textAfterPos) ||
           textAfterPos == *rep
         ) ||
-        Compare(nsDependentString(aInString + (before == LT_IGNORE ? 0 : 1) ), nsDependentString(rep, aRepLen), nsCaseInsensitiveStringComparator())
+        Compare(Substring(nsDependentString(aInString, aInLength),
+                          (before == LT_IGNORE ? 0 : 1),
+                          aRepLen),
+                nsDependentString(rep, aRepLen),
+                nsCaseInsensitiveStringComparator())
     )
     return PR_FALSE;
 
@@ -974,8 +978,8 @@ mozTXTToHTMLConv::CiteLevelTXT(const PRUnichar *line,
       const PRUnichar * indexString = &line[logLineStart];
            // here, |logLineStart < lineLength| is always true
       PRUint32 minlength = MinInt(6,nsCRT::strlen(indexString));
-      if (!Compare(nsDependentString(indexString, minlength),
-                   nsDependentString(NS_LITERAL_STRING(">From ").get(), minlength), nsCaseInsensitiveStringComparator()))
+      if (!Compare(Substring(indexString, indexString+minlength),
+                   Substring(NS_LITERAL_STRING(">From "), 0, minlength), nsCaseInsensitiveStringComparator()))
         //XXX RFC2646
         moreCites = PR_FALSE;
       else

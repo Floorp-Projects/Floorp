@@ -3005,12 +3005,20 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 
 /* static */void nsMsgDatabase::YarnTonsString(struct mdbYarn *yarn, nsString *str)
 {
-	str->AssignWithConversion((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
+    const char* buf = (const char*)yarn->mYarn_Buf;
+    if (buf)
+        str->AssignWithConversion(buf, yarn->mYarn_Fill);
+    else
+        str->Truncate();
 }
 
 /* static */void nsMsgDatabase::YarnTonsCString(struct mdbYarn *yarn, nsCString *str)
 {
-	str->Assign((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
+    const char* buf = (const char*)yarn->mYarn_Buf;
+    if (buf)
+        str->Assign(buf, yarn->mYarn_Fill);
+    else
+        str->Truncate();
 }
 
 // WARNING - if yarn is empty, *pResult will not be changed!!!!

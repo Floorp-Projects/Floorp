@@ -3676,8 +3676,8 @@ nsImapMailFolder::NotifyMessageDeleted(const char *onlineFolderName,PRBool delet
 PRBool nsImapMailFolder::ShowDeletedMessages()
 {
   nsresult err;
-    nsCOMPtr<nsIImapHostSessionList> hostSession = 
-             do_GetService(kCImapHostSessionList, &err);
+  nsCOMPtr<nsIImapHostSessionList> hostSession = 
+      do_GetService(kCImapHostSessionList, &err);
   PRBool showDeleted = PR_FALSE;
 
   if (NS_SUCCEEDED(err) && hostSession)
@@ -3704,11 +3704,13 @@ PRBool nsImapMailFolder::ShowDeletedMessages()
         nsXPIDLString convertedName;
         rv = imapServer->ConvertFolderName(specialTrashName.get(), getter_Copies(convertedName));
         if (NS_SUCCEEDED(rv))
-      {
-        nsXPIDLString folderName;
-        GetName(getter_Copies(folderName));
-          if (!Compare(folderName, convertedName, nsCaseInsensitiveStringComparator()))
-          showDeleted = PR_TRUE;
+        {
+          nsXPIDLString folderName;
+          GetName(getter_Copies(folderName));
+          if (!Compare(Substring(folderName,0,convertedName.Length()),
+                       convertedName,
+                       nsCaseInsensitiveStringComparator()))
+            showDeleted = PR_TRUE;
         }
       }
     }

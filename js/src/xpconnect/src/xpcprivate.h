@@ -2266,7 +2266,7 @@ public:
     { }
 
     XPCReadableJSStringWrapper() :
-        nsDependentString(nsnull, (PRUint32)0), mStr(nsnull),
+        nsDependentString(&sEmptyString, &sEmptyString), mStr(nsnull),
         mBufferHandle(nsnull), mHandleIsShared(JS_FALSE)
     { }
 
@@ -2289,6 +2289,9 @@ public:
     }
 
 protected:
+
+    static const PRUnichar sEmptyString;
+
     struct WrapperBufferHandle :
         public nsSharedBufferHandleWithAllocator<PRUnichar>
     {

@@ -2278,7 +2278,8 @@ nsParser::DetectMetaTag(const char* aBytes,
 
   // Fast and loose parsing to determine if we have a complete
   // META tag in this block, looking upto 2k into it.
-  nsDependentCString str(aBytes, PR_MIN(aLen, 2048));
+  const nsASingleFragmentCString& str =
+      Substring(aBytes, aBytes + PR_MIN(aLen, 2048));
   nsReadingIterator<char> begin, end;
   
   str.BeginReading(begin);

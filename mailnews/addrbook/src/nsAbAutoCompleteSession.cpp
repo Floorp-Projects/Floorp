@@ -256,8 +256,8 @@ static PRBool CommonPrefix(const PRUnichar *aString, const PRUnichar *aSubstr, P
   if (aSubstrLen == 0 || nsCRT::strlen(aString) < aSubstrLen)
     return PR_FALSE;
 
-  return (Compare(nsDependentString(aString, aSubstrLen),
-                  nsDependentString(aSubstr, aSubstrLen),
+  return (Compare(Substring(aString, aString+aSubstrLen),
+                  Substring(aSubstr, aSubstr+aSubstrLen),
                   nsCaseInsensitiveStringComparator()) == 0);
 }
 

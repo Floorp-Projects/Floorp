@@ -28,6 +28,10 @@
 #include "nsAString.h"
 #endif
 
+#ifndef nsASingleFragmentString_h___
+#include "nsASingleFragmentString.h"
+#endif
+
 #ifndef nsStringTraits_h___
 #include "nsStringTraits.h"
 #endif
@@ -145,8 +149,88 @@ class NS_COM nsDependentCSubstring
   };
 
 
+class NS_COM nsDependentSingleFragmentSubstring
+      : public nsASingleFragmentString
+  {
+    public:
+      typedef nsDependentSingleFragmentSubstring self_type;
+      typedef nsASingleFragmentString   abstract_single_fragment_type;
+
+      void
+      Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
+        {
+          NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentSingleFragmentString must wrap a non-NULL buffer");
+          mHandle.DataStart(aStartPtr);
+          mHandle.DataEnd(aEndPtr);
+        }
+
+      void
+      Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength )
+        {
+          const_char_iterator iter;
+          mHandle.DataStart(aString.BeginReading(iter) + NS_MIN(aStartPos, aString.Length()));
+          mHandle.DataEnd( NS_MIN(mHandle.DataStart() + aLength, aString.EndReading(iter)) );
+        }
+
+      nsDependentSingleFragmentSubstring( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
+      nsDependentSingleFragmentSubstring( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength ) { Rebind(aString, aStartPos, aLength); }
+
+      // nsDependentSingleFragmentSubstring( const self_type& );                  // auto-generated copy-constructor OK
+      // ~nsDependentSingleFragmentSubstring();                                   // auto-generated destructor OK
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      void operator=( const self_type& );                                       // we're immutable, so no copy-assignment operator
+
+    public:
+      virtual const buffer_handle_type* GetFlatBufferHandle() const             { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
+      virtual const buffer_handle_type* GetBufferHandle() const                 { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
+
+    private:
+      const_buffer_handle_type mHandle;
+  };
 
 
+class NS_COM nsDependentSingleFragmentCSubstring
+      : public nsASingleFragmentCString
+  {
+    public:
+      typedef nsDependentSingleFragmentCSubstring self_type;
+      typedef nsASingleFragmentCString  abstract_single_fragment_type;
+
+      void
+      Rebind( const char_type* aStartPtr, const char_type* aEndPtr )
+        {
+          NS_ASSERTION(aStartPtr && aEndPtr, "nsDependentSingleFragmentCString must wrap a non-NULL buffer");
+          mHandle.DataStart(aStartPtr);
+          mHandle.DataEnd(aEndPtr);
+        }
+
+      void
+      Rebind( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength )
+        {
+          const_char_iterator iter;
+          mHandle.DataStart(aString.BeginReading(iter) + NS_MIN(aStartPos, aString.Length()));
+          mHandle.DataEnd( NS_MIN(mHandle.DataStart() + aLength, aString.EndReading(iter)) );
+        }
+
+      nsDependentSingleFragmentCSubstring( const char_type* aStartPtr, const char_type* aEndPtr ) { Rebind(aStartPtr, aEndPtr); }
+      nsDependentSingleFragmentCSubstring( const abstract_single_fragment_type& aString, const PRUint32 aStartPos, const PRUint32 aLength ) { Rebind(aString, aStartPos, aLength); }
+
+      // nsDependentSingleFragmentCSubstring( const self_type& );                  // auto-generated copy-constructor OK
+      // ~nsDependentSingleFragmentCSubstring();                                   // auto-generated destructor OK
+
+    private:
+        // NOT TO BE IMPLEMENTED
+      void operator=( const self_type& );                                       // we're immutable, so no copy-assignment operator
+
+    public:
+      virtual const buffer_handle_type* GetFlatBufferHandle() const             { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
+      virtual const buffer_handle_type* GetBufferHandle() const                 { return NS_REINTERPRET_CAST(const buffer_handle_type*, &mHandle); }
+
+    private:
+      const_buffer_handle_type mHandle;
+  };
 
 
 
@@ -176,6 +260,35 @@ const nsDependentSubstring
 Substring( const nsAString::const_iterator& aStart, const nsAString::const_iterator& aEnd )
   {
     return nsDependentSubstring(aStart, aEnd);
+  }
+
+
+inline
+const nsDependentSingleFragmentCSubstring
+Substring( const nsASingleFragmentCString& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
+  {
+    return nsDependentSingleFragmentCSubstring(aString, aStartPos, aSubstringLength);
+  }
+
+inline
+const nsDependentSingleFragmentSubstring
+Substring( const nsASingleFragmentString& aString, PRUint32 aStartPos, PRUint32 aSubstringLength )
+  {
+    return nsDependentSingleFragmentSubstring(aString, aStartPos, aSubstringLength);
+  }
+
+inline
+const nsDependentSingleFragmentCSubstring
+Substring( const nsASingleFragmentCString::const_char_iterator& aStart, const nsASingleFragmentCString::const_char_iterator& aEnd )
+  {
+    return nsDependentSingleFragmentCSubstring(aStart, aEnd);
+  }
+
+inline
+const nsDependentSingleFragmentSubstring
+Substring( const nsASingleFragmentString::const_char_iterator& aStart, const nsASingleFragmentString::const_char_iterator& aEnd )
+  {
+    return nsDependentSingleFragmentSubstring(aStart, aEnd);
   }
 
 

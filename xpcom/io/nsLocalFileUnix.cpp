@@ -262,11 +262,10 @@ nsLocalFile::InitWithPath(const char *filePath)
     NS_ENSURE_ARG(filePath);
 
     ssize_t len  = strlen(filePath);
-    char   *name = (char *) nsMemory::Clone(filePath, len+1);
-    while (name[len-1] == '/' && len > 1)
-        name[--len] = '\0';
-
-    mPath.Adopt(name);
+    while (filePath[len-1] == '/' && len > 1)
+        --len;
+    // XXXldb change to |Assign| rather than |Adopt(ToNewCString|
+    mPath.Adopt(ToNewCString(Substring(filePath, filePath+len)));
 
     InvalidateCache();
     return NS_OK;
