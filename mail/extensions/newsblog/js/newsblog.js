@@ -279,7 +279,7 @@ function NSGetModule(aCompMgr, aFileSpec)
 function loadScripts()
 {
   var scriptLoader =  Components.classes["@mozilla.org/moz/jssubscript-loader;1"]
-                     .createInstance(Components.interfaces.mozIJSSubScriptLoader);
+                     .getService(Components.interfaces.mozIJSSubScriptLoader);
   if (scriptLoader)
   { 
     scriptLoader.loadSubScript("chrome://messenger-newsblog/content/Feed.js");

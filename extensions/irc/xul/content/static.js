@@ -2653,7 +2653,7 @@ function cli_load(url, scope)
 
         var cls;
         if ((cls = Components.classes[LOADER_CTRID]))
-            client._loader = cls.createInstance(mozIJSSubScriptLoader);
+            client._loader = cls.getService(mozIJSSubScriptLoader);
     }
 
     return client._loader.loadSubScript(url, scope);

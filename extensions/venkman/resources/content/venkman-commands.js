@@ -1191,7 +1191,7 @@ function cmdLoadd (e)
 
         var cls;
         if ((cls = Components.classes[LOADER_CTRID]))
-            console._loader = cls.createInstance(mozIJSSubScriptLoader);
+            console._loader = cls.getService(mozIJSSubScriptLoader);
     }
     
     var obj = ("scope" in e) ? e.scope : null;
