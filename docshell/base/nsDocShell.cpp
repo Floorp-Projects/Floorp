@@ -3466,46 +3466,52 @@ NS_IMETHODIMP nsDocShell::DoChannelLoad(nsIChannel *aChannel, nsURILoadCommand a
    (void)aChannel->GetLoadAttributes(&loadAttribs);
    loadAttribs |= nsIChannel::LOAD_DOCUMENT_URI;
   
-  	switch ( mLoadType )
-  	{
-  	 case LOAD_HISTORY:
-  	 		loadAttribs |= nsIChannel::VALIDATE_NEVER;
-  	 		break;
-  	 		
-  	 case LOAD_RELOAD_NORMAL:
-  	 			loadAttribs |= nsIChannel::FORCE_VALIDATION;
-  	 		break;
-  	 		
-  	 case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
-  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
-  	 		break;
-  	 case LOAD_REFRESH:
-  	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
-  	 		break;
-     case LOAD_NORMAL:
-     case LOAD_LINK:
-		   // Set cache checking flags
-		   if ( mPrefs )
-		   {
-		   		PRInt32 prefSetting;
-		   		if ( NS_SUCCEEDED( 	mPrefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
-		   		{
-		   			switch ( prefSetting )
-		   			{
-		   				case 0:
-		   					loadAttribs |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
-		   					break;
-		   				case 1:
-		   					loadAttribs |= nsIChannel::VALIDATE_ALWAYS;
-		   					break;
-		   				case 2:
-		   					loadAttribs |= nsIChannel::VALIDATE_NEVER;
-		   					break;
-		   			}
-		   		}
-			   }
-			break;
-   }
+    // "View source" always wants VALIDATE_NEVER.
+    if ( mViewMode == viewSource ) {
+        loadAttribs |= nsIChannel::VALIDATE_NEVER;
+    } else {
+        // Load attributes depend on load type...
+      	switch ( mLoadType )
+      	{
+      	 case LOAD_HISTORY:
+      	 		loadAttribs |= nsIChannel::VALIDATE_NEVER;
+      	 		break;
+      	 		
+      	 case LOAD_RELOAD_NORMAL:
+      	 			loadAttribs |= nsIChannel::FORCE_VALIDATION;
+      	 		break;
+      	 		
+      	 case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
+      	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+      	 		break;
+      	 case LOAD_REFRESH:
+      	 		loadAttribs |= nsIChannel::FORCE_RELOAD;
+      	 		break;
+         case LOAD_NORMAL:
+         case LOAD_LINK:
+    		   // Set cache checking flags
+    		   if ( mPrefs )
+    		   {
+    		   		PRInt32 prefSetting;
+    		   		if ( NS_SUCCEEDED( 	mPrefs->GetIntPref( "browser.cache.check_doc_frequency" , &prefSetting) ) )
+    		   		{
+    		   			switch ( prefSetting )
+    		   			{
+    		   				case 0:
+    		   					loadAttribs |= nsIChannel::VALIDATE_ONCE_PER_SESSION;
+    		   					break;
+    		   				case 1:
+    		   					loadAttribs |= nsIChannel::VALIDATE_ALWAYS;
+    		   					break;
+    		   				case 2:
+    		   					loadAttribs |= nsIChannel::VALIDATE_NEVER;
+    		   					break;
+    		   			}
+    		   		}
+    			   }
+    			break;
+       }
+    }
    
    (void) aChannel->SetLoadAttributes(loadAttribs);
 
