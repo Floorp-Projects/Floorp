@@ -91,6 +91,7 @@ var gCharsetConvertManager;
 
 var gLastElementToHaveFocus;  
 var gSuppressCommandUpdating;
+var gReceiptOptionChanged;
 
 const kComposeAttachDirPrefName = "mail.compose.attach.dir";
 
@@ -132,6 +133,7 @@ function InitializeGlobalVariables()
 
   gLastElementToHaveFocus = null;  
   gSuppressCommandUpdating = false;
+  gReceiptOptionChanged = false;
 }
 InitializeGlobalVariables();
 
@@ -1871,6 +1873,8 @@ function ToggleReturnReceipt(target)
     {
         msgCompFields.returnReceipt = ! msgCompFields.returnReceipt;
         target.setAttribute('checked', msgCompFields.returnReceipt);
+        if (!gReceiptOptionChanged)
+          gReceiptOptionChanged = true;
     }
 }
 
@@ -2398,6 +2402,8 @@ function LoadIdentity(startup)
           RemoveDirectoryServerObserver(prefstring);
           var prevReplyTo = prevIdentity.replyTo;
           var prevBcc = "";
+          var prevReceipt =
+            prevIdentity.getBoolAttribute("request_return_receipt_on");
           if (prevIdentity.bccSelf)
             prevBcc += prevIdentity.email;
           if (prevIdentity.bccOthers)
@@ -2409,6 +2415,8 @@ function LoadIdentity(startup)
 
           var newReplyTo = gCurrentIdentity.replyTo;
           var newBcc = "";
+          var newReceipt =
+            gCurrentIdentity.getBoolAttribute("request_return_receipt_on");
           if (gCurrentIdentity.bccSelf)
             newBcc += gCurrentIdentity.email;
           if (gCurrentIdentity.bccOthers)
@@ -2420,6 +2428,15 @@ function LoadIdentity(startup)
 
           var needToCleanUp = false;
           var msgCompFields = gMsgCompose.compFields;
+
+          if (!gReceiptOptionChanged &&
+              prevReceipt == msgCompFields.returnReceipt &&
+              prevReceipt != newReceipt)
+          {
+            msgCompFields.returnReceipt = newReceipt;
+            document.getElementById("returnReceiptMenu").setAttribute('checked',msgCompFields.returnReceipt);
+          }
+
 
           if (newReplyTo != prevReplyTo)
           {
