@@ -1,19 +1,20 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
- * Version 1.0 (the "NPL"); you may not use this file except in
- * compliance with the NPL.  You may obtain a copy of the NPL at
+ * Version 1.0 (the "License"); you may not use this file except in
+ * compliance with the License.  You may obtain a copy of the License at
  * http://www.mozilla.org/NPL/
  *
- * Software distributed under the NPL is distributed on an "AS IS" basis,
- * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
- * for the specific language governing rights and limitations under the
- * NPL.
+ * Software distributed under the License is distributed on an "AS IS"
+ * basis, WITHOUT WARRANTY OF ANY KIND, either express or implied.  See
+ * the License for the specific language governing rights and limitations
+ * under the License.
  *
- * The Initial Developer of this code under the NPL is Netscape
- * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
- * Reserved.
+ * The Original Code is Mozilla Communicator client code.
+ *
+ * The Initial Developer of the Original Code is Netscape Communications
+ * Corporation.  Portions created by Netscape are Copyright (C) 1998
+ * Netscape Communications Corporation.  All Rights Reserved.
  */
 
 #include "nsRepository.h"
@@ -27,7 +28,8 @@ extern "C" {
 #include "mktrace.h"
 #include "mkstream.h"
 #include "cvchunk.h"
-};
+}; /* end of extern "C" */
+
 #include "netcache.h"
 #include "cookies.h"
 #include "plstr.h"
@@ -59,20 +61,13 @@ MWContext *new_stub_context(URL_Struct *URL_s);
 void free_stub_context(MWContext *window_id);
 static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id);
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(NETLIB_THREAD)
 nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct* URL_s, nsIURL* aURL);
-#endif /* XP_WIN */
+#endif /* XP_WIN && !NETLIB_THREAD */
+
+extern nsIStreamListener* ns_NewStreamListenerProxy(nsIStreamListener* aListener);
 
 extern "C" {
-#include "fileurl.h"
-#include "httpurl.h"
-#include "ftpurl.h"
-#include "abouturl.h"
-#include "gophurl.h"
-#include "fileurl.h"
-#include "remoturl.h"
-#include "netcache.h"
-
 #if defined(XP_WIN) || defined(XP_OS2)
 extern char *XP_AppCodeName;
 extern char *XP_AppVersion;
@@ -87,32 +82,10 @@ extern const char *XP_AppLanguage;
 extern const char *XP_AppPlatform;
 #endif
 
-extern "C" void RL_Init();
-
-PUBLIC NET_StreamClass * 
-NET_NGLayoutConverter(FO_Present_Types format_out,
-                      void *converter_obj,
-                      URL_Struct  *URL_s,
-                      MWContext   *context);
-};
-
-/*
- * Initialize our protocols
- */
-
-extern "C" void NET_ClientProtocolInitialize()
-{
-    NET_InitFileProtocol();
-    NET_InitHTTPProtocol();
-    NET_InitMemCacProtocol();
-    NET_InitFTPProtocol();
-    NET_InitAboutProtocol();
-    NET_InitGopherProtocol();
-    NET_InitRemoteProtocol();
-}
+}; /* end of extern "C" */
 
 static NS_DEFINE_IID(kIProtocolConnectionIID,  NS_IPROTOCOLCONNECTION_IID);
-static NS_DEFINE_IID(kINetContainerApplicationIID,  NS_INETCONTAINERAPPLICATION_IID);
+
 
 nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
 {
@@ -121,50 +94,28 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
     /*
       m_stubContext = new_stub_context();
     */
-
-    /* Initialize netlib with 32 sockets... */
-    NET_InitNetLib(0, 32);
-
-    /* Initialize the file extension -> content-type mappings */
-    NET_InitFileFormatTypes(nsnull, nsnull);
-
-    NET_FinishInitNetLib();
-
-    NET_RegisterContentTypeConverter("*", FO_CACHE_AND_NGLAYOUT, NULL,
-                                     NET_CacheConverter);
-    NET_RegisterContentTypeConverter("*", FO_NGLAYOUT, NULL,
-                                     NET_NGLayoutConverter);
-    NET_RegisterContentTypeConverter(APPLICATION_HTTP_INDEX, FO_NGLAYOUT,
-                                    NULL, NET_HTTPIndexFormatToHTMLConverter);
-
-    NET_RegisterUniversalEncodingConverter("chunked",
-                                           NULL,
-                                           NET_ChunkedDecoderStream);
-
     mPollingTimer = nsnull;
-    RL_Init();
+    mContainer    = nsnull;
     
-    mContainer = aContainerApp;
-    NS_IF_ADDREF(mContainer);
-    if (NULL != mContainer) {
-        nsAutoString str;
-        
-        mContainer->GetAppCodeName(str);
-        XP_AppCodeName = str.ToNewCString();
-        mContainer->GetAppVersion(str);
-        XP_AppVersion = str.ToNewCString();
-        mContainer->GetAppName(str);
-        XP_AppName = str.ToNewCString();
-        mContainer->GetPlatform(str);
-        XP_AppPlatform = str.ToNewCString();
-        mContainer->GetLanguage(str);
-        XP_AppLanguage = str.ToNewCString();
+    mNetlibThread = new nsNetlibThread();
+    if (nsnull != mNetlibThread) {
+        mNetlibThread->Start();
+    }
+
+    if (NULL != aContainerApp) {
+        XP_AppCodeName = NULL;
+        XP_AppVersion  = NULL;
+        XP_AppName     = NULL;
+        XP_AppLanguage = NULL;
+        XP_AppPlatform = NULL;
+
+        SetContainerApplication(aContainerApp);
     }
     else {
         // XXX: Where should the defaults really come from
         XP_AppCodeName = PL_strdup("Mozilla");
-        XP_AppVersion = PL_strdup("5.0 Netscape/5.0 (Windows;I;x86;en)");
-        XP_AppName = PL_strdup("Netscape");
+        XP_AppVersion  = PL_strdup("5.0 Netscape/5.0 (Windows;I;x86;en)");
+        XP_AppName     = PL_strdup("Netscape");
 
         /* 
          * XXX: Some of these should come from resources and/or 
@@ -184,7 +135,7 @@ nsNetlibService::nsNetlibService(nsINetContainerApplication *aContainerApp)
 
 
 NS_DEFINE_IID(kINetServiceIID, NS_INETSERVICE_IID);
-NS_IMPL_ISUPPORTS(nsNetlibService,kINetServiceIID);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsNetlibService,kINetServiceIID);
 
 
 nsNetlibService::~nsNetlibService()
@@ -200,8 +151,14 @@ nsNetlibService::~nsNetlibService()
 
     NS_IF_RELEASE(mPollingTimer);
     NS_IF_RELEASE(mContainer);
-    NET_ShutdownNetLib();
+
+    if (nsnull != mNetlibThread) {
+        mNetlibThread->Stop();
+        delete mNetlibThread;
+    }
 }
+
+
 
 void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) {
     nsresult result;
@@ -228,6 +185,8 @@ void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) {
      * accordingly. */
     if (loadAttribs) {
         PRUint32 localIP = 0;
+
+        NS_VERIFY_THREADSAFE_INTERFACE(loadAttribs);
         if (type == 2 || type == 3) {
             result = loadAttribs->GetBypassProxy((int *)&(aURL_s->bypassProxy));
             if (result != NS_OK)
@@ -238,6 +197,7 @@ void nsNetlibService::SetupURLStruct(nsIURL *aUrl, URL_Struct *aURL_s) {
         if (result != NS_OK)
             localIP = 0;
         aURL_s->localIP = localIP;
+        NS_RELEASE(loadAttribs);
     }
 }
 
@@ -249,32 +209,35 @@ nsresult nsNetlibService::OpenStream(nsIURL *aUrl,
     nsIProtocolConnection *pProtocol;
     nsresult result;
     NET_ReloadMethod reloadType;
-    nsILoadAttribs* loadAttribs = nsnull;
+    nsIStreamListener* consumer;
 
     if ((NULL == aConsumer) || (NULL == aUrl)) {
         return NS_FALSE;
     }
 
+    consumer = ns_NewStreamListenerProxy(aConsumer);
+    if (nsnull == consumer) {
+        return NS_FALSE;
+    }
+
     /* Create the nsConnectionInfo object... */
-    pConn = new nsConnectionInfo(aUrl, NULL, aConsumer);
+    pConn = new nsConnectionInfo(aUrl, NULL, consumer);
     if (NULL == pConn) {
         return NS_FALSE;
     }
-    pConn->AddRef();
+    NS_ADDREF(pConn);
 
     /* We've got a nsConnectionInfo(), now hook it up
      * to the nsISupports of the nsIContentViewerContainer
      */
     pConn->pContainer = aUrl->GetContainer();
-    if(pConn->pContainer) {
-        NS_ADDREF(pConn->pContainer);
-    }
+    NS_VERIFY_THREADSAFE_INTERFACE(pConn->pContainer);
 
     /* Create the URLStruct... */
 
     URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
     if (NULL == URL_s) {
-        pConn->Release();
+        NS_RELEASE(pConn);
         return NS_FALSE;
     }
 
@@ -340,16 +303,21 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
     nsConnectionInfo *pConn;
     nsNetlibStream *pBlockingStream;
     nsIProtocolConnection *pProtocol;
+    nsIStreamListener* consumer = nsnull;
     nsresult result;
-    nsILoadAttribs* loadAttribs = nsnull;
-
-
 
     if (NULL == aNewStream) {
         return NS_FALSE;
     }
 
     if (NULL != aUrl) {
+        if (nsnull != aConsumer) {
+            consumer = ns_NewStreamListenerProxy(aConsumer);
+            if (nsnull == consumer) {
+                goto loser;
+            }
+        }
+
         /* Create the blocking stream... */
         pBlockingStream = new nsBlockingStream();
         NET_ReloadMethod reloadType;
@@ -361,36 +329,34 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
          * AddRef the new stream in anticipation of returning it... This will
          * keep it alive :-)
          */
-        pBlockingStream->AddRef();
+        NS_ADDREF(pBlockingStream);
 
         /* Create the nsConnectionInfo object... */
-        pConn = new nsConnectionInfo(aUrl, pBlockingStream, aConsumer);
+        pConn = new nsConnectionInfo(aUrl, pBlockingStream, consumer);
         if (NULL == pConn) {
-            pBlockingStream->Release();
+            NS_RELEASE(pBlockingStream);
             goto loser;
         }
-        pConn->AddRef();
+        NS_ADDREF(pConn);
 
         /* We've got a nsConnectionInfo(), now hook it up
          * to the nsISupports of the nsIContentViewerContainer
          */
         pConn->pContainer = aUrl->GetContainer();
-        if(pConn->pContainer) {
-            NS_ADDREF(pConn->pContainer);
-        }
+        NS_VERIFY_THREADSAFE_INTERFACE(pConn->pContainer);
 
         /* Create the URLStruct... */
 
         URL_s = NET_CreateURLStruct(aUrl->GetSpec(), reloadType);
         if (NULL == URL_s) {
-            pBlockingStream->Release();
-            pConn->Release();
+            NS_RELEASE(pBlockingStream);
+            NS_RELEASE(pConn);
             goto loser;
         }
 
         SetupURLStruct(aUrl, URL_s);
 
-#if defined(XP_WIN)
+#if defined(XP_WIN) && !defined(NETLIB_THREAD)
         /*
          * When opening a blocking HTTP stream, perform a synchronous DNS 
          * lookup now, to avoid netlib from doing an async lookup later
@@ -399,11 +365,11 @@ nsresult nsNetlibService::OpenBlockingStream(nsIURL *aUrl,
         result = PerformNastyWindowsAsyncDNSHack(URL_s, aUrl);
         if (NS_OK != result) {
             NET_FreeURLStruct(URL_s);
-            pBlockingStream->Release();
-            pConn->Release();
+            NS_RELEASE(pBlockingStream);
+            NS_RELEASE(pConn);
             goto loser;
         }
-#endif /* XP_WIN */
+#endif /* XP_WIN && !NETLIB_THREAD */
 
         /* 
          * Mark the URL as background loading.  This prevents many
@@ -469,21 +435,24 @@ loser:
 NS_IMETHODIMP
 nsNetlibService::GetContainerApplication(nsINetContainerApplication **aContainer)
 {
+    NS_LOCK_INSTANCE();
     *aContainer = mContainer;
+    NS_IF_ADDREF(*aContainer);
+    NS_UNLOCK_INSTANCE();
 
-    NS_IF_ADDREF(mContainer);
-    
     return NS_OK;
 }
 
 nsresult
 nsNetlibService::SetContainerApplication(nsINetContainerApplication *aContainer)
 {
+    NS_LOCK_INSTANCE();
+
     NS_IF_RELEASE(mContainer);
 
     mContainer = aContainer;
-    
     NS_IF_ADDREF(mContainer);
+    NS_VERIFY_THREADSAFE_INTERFACE(mContainer);
 
     if (mContainer) {
         nsAutoString str;
@@ -515,6 +484,7 @@ nsNetlibService::SetContainerApplication(nsINetContainerApplication *aContainer)
         XP_AppLanguage = str.ToNewCString();
     }
     
+    NS_UNLOCK_INSTANCE();
     return NS_OK;
 }
 
@@ -557,23 +527,28 @@ nsNetlibService::SetCookieString(nsIURL *aURL, const nsString& aCookie)
 
 void nsNetlibService::SchedulePollingTimer()
 {
+#if !defined(NETLIB_THREAD)
     // If a timer is already active, then do not create another...
     if (nsnull == mPollingTimer) {
         if (NS_OK == NS_NewTimer(&mPollingTimer)) {
             mPollingTimer->Init(nsNetlibService::NetPollSocketsCallback, this, 1000 / 50);
         }
     }
+#endif /* ! NETLIB_THREAD */
 }
 
 
 void nsNetlibService::CleanupPollingTimer(nsITimer* aTimer) 
 {
+#if !defined(NETLIB_THREAD)
     NS_PRECONDITION((aTimer == mPollingTimer), "Unknown Timer...");
 
     NS_RELEASE(mPollingTimer);
+#endif /* ! NETLIB_THREAD */
 }
 
 
+#if !defined(NETLIB_THREAD)
 void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
 {
     nsNetlibService* inet = (nsNetlibService*)aClosure;
@@ -636,6 +611,8 @@ nsresult PerformNastyWindowsAsyncDNSHack(URL_Struct *URL_s, nsIURL* aURL)
     return rv;
 }
 #endif /* XP_WIN */
+#endif /* !NETLIB_THREAD */
+
 
 // This is global so it can be accessed by the NetFactory (nsNetFactory.cpp)
 nsNetlibService *gNetlibService = nsnull;
@@ -646,11 +623,20 @@ nsNetlibService *gNetlibService = nsnull;
 struct nsNetlibInit {
   nsNetlibInit() {
     gNetlibService = nsnull;
+#if !defined(NETLIB_THREAD)
+    /*
+     * The netlib thread cannot be created within a static constructor
+     * since a runtime library lock is being held by the mozilla thread
+     * which results in a deadlock when the netlib thread is started...
+     */
     (void) NS_InitINetService(nsnull);
+#endif /* !NETLIB_THREAD */
   }
 
   ~nsNetlibInit() {
+#if !defined(NETLIB_THREAD)
     NS_ShutdownINetService();
+#endif /* !NETLIB_THREAD */
     gNetlibService = nsnull;
   }
 };
@@ -681,7 +667,8 @@ NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
 
     // The Netlib Service is created by the nsNetlibInit class...
     if (nsnull == gNetlibService) {
-        return NS_ERROR_OUT_OF_MEMORY;
+        (void) NS_InitINetService(nsnull);
+///     return NS_ERROR_OUT_OF_MEMORY;
     }
 
     return gNetlibService->QueryInterface(kINetServiceIID, (void**)aInstancePtrResult);
@@ -743,8 +730,7 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
              */
             if (pConn->pNetStream) {
                 pConn->pNetStream->Close();
-                pConn->pNetStream->Release();
-                pConn->pNetStream = NULL;
+                NS_RELEASE(pConn->pNetStream);
             }
 
             /* 
@@ -755,13 +741,12 @@ static void bam_exit_routine(URL_Struct *URL_s, int status, MWContext *window_id
             if (pConn->pConsumer) {
                 nsAutoString status;
                 pConn->pConsumer->OnStopBinding(pConn->pURL, NS_BINDING_FAILED, status);
-                pConn->pConsumer->Release();
-                pConn->pConsumer = NULL;
+                NS_RELEASE(pConn->pConsumer);
             }
 
             /* Release the nsConnectionInfo object hanging off of the fe_data */
             URL_s->fe_data = NULL;
-            pConn->Release();
+            NS_RELEASE(pConn);
         }
 
         /* Delete the URL_Struct... */
