@@ -176,7 +176,7 @@ OpenMAPI(void)
 #ifdef WIN16
 	m_hInstMapi = LoadLibrary("Y:\\ns\\cmd\\winfe\\mapi\\MAPI.DLL");	
 #else
-  m_hInstMapi = LoadLibrary(".\\COMPONENTS\\MAPI32.DLL");
+  m_hInstMapi = LoadLibrary("..\\..\\..\\..\\mapidll\\mozMAPI32.DLL");
 #endif
 
   if (!m_hInstMapi)
@@ -438,7 +438,7 @@ DoMAPIFindNext(HWND hWnd)
       {
         wsprintf(msg, "%s: \"%s\" Sender: %s", 
                   messageID, 
-                  mapiMsg->lpszSubject, 
+                  mapiMsg->lpszSubject ? mapiMsg->lpszSubject : "", 
                   mapiMsg->lpOriginator->lpszName);
         DoMAPIFreeBuffer(hWnd, mapiMsg, FALSE);
       }
