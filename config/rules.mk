@@ -226,7 +226,7 @@ CLICK_STOPWATCH		= true
 endif
 
 ifdef MOZ_UPDATE_XTERM
-UPDATE_TITLE           = echo "]2;gmake: $@ in $(shell pwd | sed 's:\.\./::g ')/$$d"
+UPDATE_TITLE           = echo "]2;gmake: $@ in $(shell $(topsrcdir)/build/autoconf/print-depth-path.sh)/$$d"
 else
 UPDATE_TITLE		= true
 endif
