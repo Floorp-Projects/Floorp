@@ -113,7 +113,7 @@ NS_METHOD FixedSizeFrame::Reflow(nsIPresContext&      aPresContext,
                                  const nsReflowState& aReflowState,
                                  nsReflowStatus&      aStatus)
 {
-  NS_PRECONDITION((aReflowState.maxSize.width > 0) && (aReflowState.maxSize.height > 0),
+  NS_PRECONDITION((aReflowState.availableWidth > 0) && (aReflowState.availableHeight > 0),
                   "bad max size");
   FixedSizeContent* content = (FixedSizeContent*)mContent;
   nsReflowStatus    status = NS_FRAME_COMPLETE;

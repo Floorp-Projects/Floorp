@@ -241,8 +241,8 @@ nsAreaFrame::Reflow(nsIPresContext&          aPresContext,
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsAreaFrame::Reflow: maxSize=%d,%d reason=%d",
-                  aReflowState.maxSize.width,
-                  aReflowState.maxSize.height,
+                  aReflowState.availableWidth,
+                  aReflowState.availableHeight,
                   aReflowState.reason));
 
   nsresult  rv = NS_OK;
@@ -587,10 +587,10 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresConte
                  "unexpected offset type");
     // Percentage values refer to the width of the containing block. If the
     // width is unconstrained then just use 0
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
       aRect.x = 0;
     } else {
-      aRect.x = (nscoord)((float)aReflowState.maxSize.width *
+      aRect.x = (nscoord)((float)aReflowState.availableWidth *
                           aPosition->mLeftOffset.GetPercentValue());
     }
   }
@@ -607,10 +607,10 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresConte
                  "unexpected offset type");
     // Percentage values refer to the height of the containing block. If the
     // height is unconstrained then interpret it like 'auto'
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.height) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
       aRect.y = offset.y;
     } else {
-      aRect.y = (nscoord)((float)aReflowState.maxSize.height *
+      aRect.y = (nscoord)((float)aReflowState.availableHeight *
                           aPosition->mTopOffset.GetPercentValue());
     }
   }
@@ -622,17 +622,17 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresConte
   // width
   if (eStyleUnit_Auto == aPosition->mWidth.GetUnit()) {
     // Use the right-edge of the containing block
-    aRect.width = aReflowState.maxSize.width - aRect.x;
+    aRect.width = aReflowState.availableWidth - aRect.x;
   } else if (eStyleUnit_Coord == aPosition->mWidth.GetUnit()) {
     aRect.width = aPosition->mWidth.GetCoordValue();
   } else {
     NS_ASSERTION(eStyleUnit_Percent == aPosition->mWidth.GetUnit(),
                  "unexpected width type");
     // Percentage values refer to the width of the containing block
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
       aRect.width = NS_UNCONSTRAINEDSIZE;
     } else {
-      aRect.width = (nscoord)((float)aReflowState.maxSize.width *
+      aRect.width = (nscoord)((float)aReflowState.availableWidth *
                               aPosition->mWidth.GetPercentValue());
     }
   }
@@ -649,10 +649,10 @@ void nsAreaFrame::ComputeAbsoluteFrameBounds(nsIPresContext&          aPresConte
     // Percentage values refer to the height of the containing block. If the
     // height is unconstrained, then interpret it like 'auto' and make the
     // height unconstrained
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.height) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableHeight) {
       aRect.height = NS_UNCONSTRAINEDSIZE;
     } else {
-      aRect.height = (nscoord)((float)aReflowState.maxSize.height * 
+      aRect.height = (nscoord)((float)aReflowState.availableHeight * 
                                aPosition->mHeight.GetPercentValue());
     }
   }

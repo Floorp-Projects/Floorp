@@ -360,7 +360,7 @@ nsInlineReflow::ComputeAvailableSize()
       pfd->mMargin.bottom;
   }
   if (mOuterReflowState.mNoWrap) {
-    mFrameAvailSize.width = mOuterReflowState.maxSize.width;
+    mFrameAvailSize.width = mOuterReflowState.availableWidth;
     return PR_TRUE;
   }
 

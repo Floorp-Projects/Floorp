@@ -601,7 +601,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     mDidInit = PR_TRUE;
   }
 
-  nsSize availSize(aReflowState.maxSize);
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
 
   // reflow the child
   nsHTMLReflowState reflowState(aPresContext, mFirstChild, aReflowState, availSize);

@@ -85,9 +85,10 @@ enum nsReflowReason {
 
 /**
  * Reflow state passed to a frame during reflow. The reflow states are linked
- * together. The max size represents the max available space in which to reflow
- * your frame, and is computed as the parent frame's available content area
- * minus any room for margins that your frame requests. A value of
+ * together. The availableWidth and availableHeight represent the available
+ * space in which to reflow your frame, and are computed based on the parent
+ * frame's computed width and computed height. The available space is the total
+ * space including margins, border, padding, and content area. A value of
  * NS_UNCONSTRAINEDSIZE means you can choose whatever size you want
  *
  * @see #Reflow()
@@ -97,7 +98,8 @@ struct nsReflowState {
   nsIFrame*            frame;             // the frame being reflowed
   nsReflowReason       reason;            // the reason for the reflow
   nsIReflowCommand*    reflowCommand;     // the reflow command. only set for eReflowReason_Incremental
-  nsSize               maxSize;           // the max available space in which to reflow
+  nscoord              availableWidth,
+                       availableHeight;   // the available space in which to reflow
   nsIRenderingContext* rendContext;       // rendering context to use for measurement
   PRPackedBool         isTopOfPage;       // is the current context at the top of a page?
 
@@ -108,29 +110,29 @@ struct nsReflowState {
   // non-incremental reflow command
   nsReflowState(nsIFrame*            aFrame,
                 nsReflowReason       aReason, 
-                const nsSize&        aMaxSize,
+                const nsSize&        aAvailableSpace,
                 nsIRenderingContext* aContext);
 
   // Constructs an initial reflow state (no parent reflow state) for an
   // incremental reflow command
   nsReflowState(nsIFrame*            aFrame,
                 nsIReflowCommand&    aReflowCommand,
-                const nsSize&        aMaxSize,
+                const nsSize&        aAvailableSpace,
                 nsIRenderingContext* aContext);
 
   // Construct a reflow state for the given frame, parent reflow state, and
-  // max size. Uses the reflow reason, reflow command, and isTopOfPage value
+  // available space. Uses the reflow reason, reflow command, and isTopOfPage value
   // from the parent's reflow state
   nsReflowState(nsIFrame*            aFrame,
                 const nsReflowState& aParentReflowState,
-                const nsSize&        aMaxSize);
+                const nsSize&        aAvailableSpace);
 
   // Constructs a reflow state that overrides the reflow reason of the parent
   // reflow state. Uses the isTopOfPage value from the parent's reflow state, and
   // sets the reflow command to NULL
   nsReflowState(nsIFrame*            aFrame,
                 const nsReflowState& aParentReflowState,
-                const nsSize&        aMaxSize,
+                const nsSize&        aAvailableSpace,
                 nsReflowReason       aReflowReason);
 };
 
@@ -272,14 +274,15 @@ private:
 // non-incremental reflow command
 inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
                                     nsReflowReason       aReason, 
-                                    const nsSize&        aMaxSize,
+                                    const nsSize&        aAvailableSpace,
                                     nsIRenderingContext* aContext)
 {
   NS_PRECONDITION(aReason != eReflowReason_Incremental, "unexpected reflow reason");
   NS_PRECONDITION(!(aContext == nsnull), "no rendering context");
   reason = aReason;
   reflowCommand = nsnull;
-  maxSize = aMaxSize;
+  availableWidth = aAvailableSpace.width;
+  availableHeight = aAvailableSpace.height;
   parentReflowState = nsnull;
   frame = aFrame;
   rendContext = aContext;
@@ -290,13 +293,14 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
 // incremental reflow command
 inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
                                     nsIReflowCommand&    aReflowCommand,
-                                    const nsSize&        aMaxSize,
+                                    const nsSize&        aAvailableSpace,
                                     nsIRenderingContext* aContext)
 {
   NS_PRECONDITION(!(aContext == nsnull), "no rendering context");
   reason = eReflowReason_Incremental;
   reflowCommand = &aReflowCommand;
-  maxSize = aMaxSize;
+  availableWidth = aAvailableSpace.width;
+  availableHeight = aAvailableSpace.height;
   parentReflowState = nsnull;
   frame = aFrame;
   rendContext = aContext;
@@ -308,11 +312,12 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
 // from the parent's reflow state
 inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
                                     const nsReflowState& aParentReflowState,
-                                    const nsSize&        aMaxSize)
+                                    const nsSize&        aAvailableSpace)
 {
   reason = aParentReflowState.reason;
   reflowCommand = aParentReflowState.reflowCommand;
-  maxSize = aMaxSize;
+  availableWidth = aAvailableSpace.width;
+  availableHeight = aAvailableSpace.height;
   parentReflowState = &aParentReflowState;
   frame = aFrame;
   rendContext = aParentReflowState.rendContext;
@@ -324,12 +329,13 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
 // sets the reflow command to NULL
 inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
                                     const nsReflowState& aParentReflowState,
-                                    const nsSize&        aMaxSize,
+                                    const nsSize&        aAvailableSpace,
                                     nsReflowReason       aReflowReason)
 {
   reason = aReflowReason;
   reflowCommand = nsnull;
-  maxSize = aMaxSize;
+  availableWidth = aAvailableSpace.width;
+  availableHeight = aAvailableSpace.height;
   parentReflowState = &aParentReflowState;
   frame = aFrame;
   rendContext = aParentReflowState.rendContext;

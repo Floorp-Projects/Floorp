@@ -807,7 +807,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
 {
-  //printf("FramesetFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
+  //printf("FramesetFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   return Reflow(aPresContext, nsnull, aDesiredSize, aReflowState, aStatus);
 }
 
@@ -822,7 +822,7 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
                             const nsHTMLReflowState& aReflowState,
                             nsReflowStatus&          aStatus)
 {
-  //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
+  //printf("FramesetFrame2::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   // Always get the size so that the caller knows how big we are
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
 
@@ -856,10 +856,10 @@ nsHTMLFramesetFrame::Reflow(nsIPresContext&          aPresContext,
   }
   PRInt32 numCells = mNumRows*mNumCols;
 
-  nscoord width  = (aDesiredSize.width <= aReflowState.maxSize.width)
-    ? aDesiredSize.width : aReflowState.maxSize.width;
-  nscoord height = (aDesiredSize.height <= aReflowState.maxSize.height)
-    ? aDesiredSize.height : aReflowState.maxSize.height;
+  nscoord width  = (aDesiredSize.width <= aReflowState.availableWidth)
+    ? aDesiredSize.width : aReflowState.availableWidth;
+  nscoord height = (aDesiredSize.height <= aReflowState.availableHeight)
+    ? aDesiredSize.height : aReflowState.availableHeight;
   // subtract out the width of all of the potential borders. There are
   // only borders between <frame>s. There are none on the edges (e.g the
   // leftmost <frame> has no left border).
@@ -1458,8 +1458,8 @@ void nsHTMLFramesetBorderFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                           const nsHTMLReflowState& aReflowState,
                                           nsHTMLReflowMetrics& aDesiredSize)
 {
-  aDesiredSize.width   = aReflowState.maxSize.width;
-  aDesiredSize.height  = aReflowState.maxSize.height;
+  aDesiredSize.width   = aReflowState.availableWidth;
+  aDesiredSize.height  = aReflowState.availableHeight;
   aDesiredSize.ascent  = aDesiredSize.width;
   aDesiredSize.descent = 0;
 }
@@ -1481,7 +1481,6 @@ nsHTMLFramesetBorderFrame::Reflow(nsIPresContext&          aPresContext,
                                   const nsHTMLReflowState& aReflowState,
                                   nsReflowStatus&          aStatus)
 {
-  //printf("BorderFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
   GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
   aStatus = NS_FRAME_COMPLETE;
   return NS_OK;
@@ -1638,8 +1637,8 @@ void nsHTMLFramesetBlankFrame::GetDesiredSize(nsIPresContext* aPresContext,
                                               const nsHTMLReflowState& aReflowState,
                                               nsHTMLReflowMetrics& aDesiredSize)
 {
-  aDesiredSize.width   = aReflowState.maxSize.width;
-  aDesiredSize.height  = aReflowState.maxSize.height;
+  aDesiredSize.width   = aReflowState.availableWidth;
+  aDesiredSize.height  = aReflowState.availableHeight;
   aDesiredSize.ascent  = aDesiredSize.width;
   aDesiredSize.descent = 0;
 }

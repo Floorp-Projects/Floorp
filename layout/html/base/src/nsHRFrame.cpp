@@ -268,17 +268,17 @@ HRuleFrame::GetDesiredSize(nsIPresContext* aPresContext,
     aDesiredSize.width = aReflowState.computedWidth;
   }
   else {
-    if (NS_UNCONSTRAINEDSIZE == aReflowState.maxSize.width) {
+    if (NS_UNCONSTRAINEDSIZE == aReflowState.availableWidth) {
       aDesiredSize.width =  nscoord(p2t);
     }
     else {
-      aDesiredSize.width = aReflowState.maxSize.width;
+      aDesiredSize.width = aReflowState.availableWidth;
     }
   }
   mComputedWidth = aDesiredSize.width;
-  if (aReflowState.maxSize.width != NS_UNCONSTRAINEDSIZE) {
-    if (aDesiredSize.width  < aReflowState.maxSize.width) {
-      aDesiredSize.width = aReflowState.maxSize.width;
+  if (aReflowState.availableWidth != NS_UNCONSTRAINEDSIZE) {
+    if (aDesiredSize.width  < aReflowState.availableWidth) {
+      aDesiredSize.width = aReflowState.availableWidth;
     }
   }
 

@@ -241,8 +241,8 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
 {
   NS_FRAME_TRACE_MSG(NS_FRAME_TRACE_CALLS,
                      ("enter nsScrollFrame::Reflow: maxSize=%d,%d",
-                      aReflowState.maxSize.width,
-                      aReflowState.maxSize.height));
+                      aReflowState.availableWidth,
+                      aReflowState.availableHeight));
 
   nsIFrame* targetFrame;
   nsIFrame* nextFrame;
@@ -303,7 +303,7 @@ nsScrollFrame::Reflow(nsIPresContext&          aPresContext,
     // We have an 'auto' height and so we should shrink wrap around the
     // scrolled frame. Let the scrolled frame be as high as the available
     // height
-    scrollAreaSize.height = aReflowState.maxSize.height;
+    scrollAreaSize.height = aReflowState.availableHeight;
     scrollAreaSize.height -= border.top + border.bottom;
 
     // XXX Check for min/max limits...

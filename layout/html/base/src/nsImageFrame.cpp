@@ -437,7 +437,7 @@ nsImageFrame::Reflow(nsIPresContext&          aPresContext,
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsImageFrame::Reflow: aMaxSize=%d,%d",
-                  aReflowState.maxSize.width, aReflowState.maxSize.height));
+                  aReflowState.availableWidth, aReflowState.availableHeight));
 
   NS_PRECONDITION(mState & NS_FRAME_IN_REFLOW, "frame is not in reflow");
 

@@ -304,18 +304,16 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
-  //printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
+  //printf("OuterFrame::Reflow %X (%d,%d) \n", this, aReflowState.availableWidth, aReflowState.availableHeight); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsHTMLFrameOuterFrame::Reflow: maxSize=%d,%d reason=%d",
-      aReflowState.maxSize.width,
-      aReflowState.maxSize.height,
-      aReflowState.reason));
+      aReflowState.availableWidth, aReflowState.availableHeight, aReflowState.reason));
 
   if (IsInline()) {
     GetDesiredSize(&aPresContext, aReflowState, aDesiredSize);
   } else {
-    aDesiredSize.width  = aReflowState.maxSize.width;
-    aDesiredSize.height = aReflowState.maxSize.height;
+    aDesiredSize.width  = aReflowState.availableWidth;
+    aDesiredSize.height = aReflowState.availableHeight;
   }
 
   if (nsnull == mFirstChild) {
@@ -729,11 +727,10 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
                               const nsHTMLReflowState& aReflowState,
                               nsReflowStatus&          aStatus)
 {
-  //printf("InnerFrame::Reflow %X (%d,%d) \n", this, aReflowState.maxSize.width, aReflowState.maxSize.height); 
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
      ("enter nsHTMLFrameInnerFrame::Reflow: maxSize=%d,%d reason=%d",
-      aReflowState.maxSize.width,
-      aReflowState.maxSize.height,
+      aReflowState.availableWidth,
+      aReflowState.availableHeight,
       aReflowState.reason));
 
   nsresult rv = NS_OK;
@@ -748,9 +745,10 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
     nsSize size;
 
     // if the size is not 0 and there is a src, create the web shell
-    if ((aReflowState.maxSize.width >= 0) && (aReflowState.maxSize.height >= 0) && hasURL) {
+    if ((aReflowState.availableWidth >= 0) && (aReflowState.availableHeight >= 0) && hasURL) {
       if (nsnull == mWebShell) {
-        rv = CreateWebShell(aPresContext, aReflowState.maxSize);
+        nsSize  maxSize(aReflowState.availableWidth, aReflowState.availableHeight);
+        rv = CreateWebShell(aPresContext, maxSize);
       }
 
       if (nsnull != mWebShell) {
@@ -768,8 +766,8 @@ nsHTMLFrameInnerFrame::Reflow(nsIPresContext&          aPresContext,
     NS_RELEASE(content);
   }
 
-  aDesiredSize.width  = aReflowState.maxSize.width;
-  aDesiredSize.height = aReflowState.maxSize.height;
+  aDesiredSize.width  = aReflowState.availableWidth;
+  aDesiredSize.height = aReflowState.availableHeight;
   aDesiredSize.ascent = aDesiredSize.height;
   aDesiredSize.descent = 0;
 

@@ -123,7 +123,7 @@ nsLegendFrame::Reflow(nsIPresContext& aPresContext,
                       const nsHTMLReflowState& aReflowState,
                       nsReflowStatus& aStatus)
 {
-  nsSize availSize(aReflowState.maxSize);
+  nsSize availSize(aReflowState.availableWidth, aReflowState.availableHeight);
 
   // reflow the child
   nsHTMLReflowState reflowState(aPresContext, mFirstChild, aReflowState,

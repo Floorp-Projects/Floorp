@@ -305,24 +305,22 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
   mRunInToFrame = nsnull;
 
   mY = mAscent = mDescent = 0;
-  mUnconstrainedWidth = maxSize.width == NS_UNCONSTRAINEDSIZE;
-  mUnconstrainedHeight = maxSize.height == NS_UNCONSTRAINEDSIZE;
+  mUnconstrainedWidth = availableWidth == NS_UNCONSTRAINEDSIZE;
+  mUnconstrainedHeight = availableHeight == NS_UNCONSTRAINEDSIZE;
 #ifdef NS_DEBUG
-  if (!mUnconstrainedWidth && (maxSize.width > 100000)) {
+  if (!mUnconstrainedWidth && (availableWidth > 100000)) {
     mBlock->ListTag(stdout);
-    printf(": bad parent: maxSize WAS %d,%d\n",
-           maxSize.width, maxSize.height);
-    if (maxSize.width > 100000) {
-      maxSize.width = NS_UNCONSTRAINEDSIZE;
+    printf(": bad parent: maxSize WAS %d,%d\n", availableWidth, availableHeight);
+    if (availableWidth > 100000) {
+      availableWidth = NS_UNCONSTRAINEDSIZE;
       mUnconstrainedWidth = PR_TRUE;
     }
   }
-  if (!mUnconstrainedHeight && (maxSize.height > 100000)) {
+  if (!mUnconstrainedHeight && (availableHeight > 100000)) {
     mBlock->ListTag(stdout);
-    printf(": bad parent: maxSize WAS %d,%d\n",
-           maxSize.width, maxSize.height);
-    if (maxSize.height > 100000) {
-      maxSize.height = NS_UNCONSTRAINEDSIZE;
+    printf(": bad parent: maxSize WAS %d,%d\n", availableWidth, availableHeight);
+    if (availableHeight > 100000) {
+      availableHeight = NS_UNCONSTRAINEDSIZE;
       mUnconstrainedHeight = PR_TRUE;
     }
   }
@@ -346,14 +344,14 @@ nsBlockReflowState::nsBlockReflowState(nsIPresContext& aPresContext,
       mContentArea.width = NS_UNCONSTRAINEDSIZE;
     }
     else {
-      mBorderArea.width = maxSize.width;
-      mContentArea.width = maxSize.width - lr;
+      mBorderArea.width = availableWidth;
+      mContentArea.width = availableWidth - lr;
     }
   }
 
-  mBorderArea.height = maxSize.height;
-  mContentArea.height = maxSize.height;
-  mBottomEdge = maxSize.height;
+  mBorderArea.height = availableHeight;
+  mContentArea.height = availableHeight;
+  mBottomEdge = availableHeight;
   if (!mUnconstrainedHeight) {
     mBottomEdge -= mBorderPadding.bottom;
   }
@@ -686,8 +684,8 @@ nsBaseIBFrame::Reflow(nsIPresContext&          aPresContext,
 {
   NS_FRAME_TRACE(NS_FRAME_TRACE_CALLS,
                  ("enter nsBaseIBFrame::Reflow: maxSize=%d,%d reason=%d",
-                  aReflowState.maxSize.width,
-                  aReflowState.maxSize.height,
+                  aReflowState.availableWidth,
+                  aReflowState.availableHeight,
                   aReflowState.reason));
 
   // XXX subclass!
@@ -837,8 +835,8 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
         !compact) {
       // Fluff out to the max width if we aren't already that wide
       if (0 == (BLOCK_IS_INLINE & mFlags)) {
-        if (computedWidth < aState.maxSize.width) {
-          computedWidth = aState.maxSize.width;
+        if (computedWidth < aState.availableWidth) {
+          computedWidth = aState.availableWidth;
         }
       }
     }
@@ -932,7 +930,7 @@ nsBaseIBFrame::ComputeFinalSize(nsBlockReflowState& aState,
     ListTag(stdout);
     printf(": max-element-size:%d,%d desired:%d,%d maxSize:%d,%d\n",
            maxWidth, maxHeight, aMetrics.width, aMetrics.height,
-           aState.maxSize.width, aState.maxSize.height);
+           aState.availableWidth, aState.availableHeight);
 #endif
   }
 
@@ -3594,11 +3592,10 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
   }
 
   // Compute the available width for the floater
-  nsSize& kidAvailSize = aFloaterReflowState.maxSize;
   if (aFloaterReflowState.HaveFixedContentWidth()) {
     // When the floater has a contrained width, give it just enough
     // space for its styled width plus its borders and paddings.
-    kidAvailSize.width = aFloaterReflowState.computedWidth + bp.left + bp.right;
+    aFloaterReflowState.availableWidth = aFloaterReflowState.computedWidth + bp.left + bp.right;
   }
   else {
     // CSS2 section 10.3.5: Floating non-replaced elements with an
@@ -3613,15 +3610,15 @@ nsBaseIBFrame::ReflowFloater(nsIPresContext& aPresContext,
         return;
       }
     }
-    kidAvailSize.width = NS_UNCONSTRAINEDSIZE;
+    aFloaterReflowState.availableWidth = NS_UNCONSTRAINEDSIZE;
   }
 
   // Compute the available height for the floater
   if (aFloaterReflowState.HaveFixedContentHeight()) {
-    kidAvailSize.height = aFloaterReflowState.computedHeight + bp.top + bp.bottom;
+    aFloaterReflowState.availableHeight = aFloaterReflowState.computedHeight + bp.top + bp.bottom;
   }
   else {
-    kidAvailSize.height = NS_UNCONSTRAINEDSIZE;
+    aFloaterReflowState.availableHeight = NS_UNCONSTRAINEDSIZE;
   }
 
   // Resize reflow the anchored item into the available space

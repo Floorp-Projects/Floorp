@@ -107,14 +107,14 @@ struct InnerTableReflowState {
   {
     y=0;  // border/padding???
 
-    unconstrainedWidth = PRBool(aReflowState.maxSize.width == NS_UNCONSTRAINEDSIZE);
-    availSize.width = aReflowState.maxSize.width;
+    unconstrainedWidth = PRBool(aReflowState.availableWidth == NS_UNCONSTRAINEDSIZE);
+    availSize.width = aReflowState.availableWidth;
     if (!unconstrainedWidth) {
       availSize.width -= aBorderPadding.left + aBorderPadding.right;
     }
 
-    unconstrainedHeight = PRBool(aReflowState.maxSize.height == NS_UNCONSTRAINEDSIZE);
-    availSize.height = aReflowState.maxSize.height;
+    unconstrainedHeight = PRBool(aReflowState.availableHeight == NS_UNCONSTRAINEDSIZE);
+    availSize.height = aReflowState.availableHeight;
     if (!unconstrainedHeight) {
       availSize.height -= aBorderPadding.top + aBorderPadding.bottom;
     }
@@ -2331,7 +2331,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   {
     printf("-----------------------------------------------------------------\n");
     printf("nsTableFrame::Reflow: table %p reason %d given maxSize=%d,%d\n",
-            this, aReflowState.reason, aReflowState.maxSize.width, aReflowState.maxSize.height);
+            this, aReflowState.reason, aReflowState.availableWidth, aReflowState.availableHeight);
   }
 
   // Initialize out parameter
@@ -2348,7 +2348,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
   }
 
   // NeedsReflow and IsFirstPassValid take into account reflow type = Initial_Reflow
-  if (PR_TRUE==NeedsReflow(aReflowState, aReflowState.maxSize))
+  if (PR_TRUE==NeedsReflow(aReflowState, nsSize(aReflowState.availableWidth, aReflowState.availableHeight)))
   {
     PRBool needsRecalc=PR_FALSE;
     if (PR_TRUE==gsDebug || PR_TRUE==gsDebugIR) printf("TIF Reflow: needs reflow\n");
@@ -2411,7 +2411,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
     if (nsnull==mPrevInFlow)
     { // only do this for a first-in-flow table frame
       // assign column widths, and assign aMaxElementSize->width
-      BalanceColumnWidths(aPresContext, aReflowState, aReflowState.maxSize,
+      BalanceColumnWidths(aPresContext, aReflowState, nsSize(aReflowState.availableWidth, aReflowState.availableHeight),
                           aDesiredSize.maxElementSize);
 
       // assign table width
@@ -2420,7 +2420,7 @@ NS_METHOD nsTableFrame::Reflow(nsIPresContext& aPresContext,
 
     // Constrain our reflow width to the computed table width
     nsHTMLReflowState    reflowState(aReflowState);
-    reflowState.maxSize.width = mRect.width;
+    reflowState.availableWidth = mRect.width;
     rv = ResizeReflowPass2(aPresContext, aDesiredSize, reflowState, aStatus);
     if (NS_FAILED(rv))
         return rv;
@@ -2468,7 +2468,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
   NS_ASSERTION(nsnull != mContent, "null content");
 
   if (PR_TRUE==gsDebugNT) printf("%p nsTableFrame::ResizeReflow Pass1: maxSize=%d,%d\n",
-                               this, aReflowState.maxSize.width, aReflowState.maxSize.height);
+                               this, aReflowState.availableWidth, aReflowState.availableHeight);
   nsresult rv=NS_OK;
   // set out params
   aStatus = NS_FRAME_COMPLETE;
@@ -2576,7 +2576,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
                   "bad parent reflow state");
   if (PR_TRUE==gsDebugNT)
     printf("%p nsTableFrame::ResizeReflow Pass2: maxSize=%d,%d\n",
-           this, aReflowState.maxSize.width, aReflowState.maxSize.height);
+           this, aReflowState.availableWidth, aReflowState.availableHeight);
 
   nsresult rv = NS_OK;
   // set out param
@@ -3075,9 +3075,10 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
   // Pass along the reflow command
   nsHTMLReflowMetrics desiredSize(nsnull);
   // XXX Correctly compute the available space...
+  nsSize  availSpace(aReflowState.reflowState.availableWidth, aReflowState.reflowState.availableHeight);
   nsHTMLReflowState kidReflowState(aPresContext, aNextFrame,
                                    aReflowState.reflowState,
-                                   aReflowState.reflowState.maxSize);
+                                   availSpace);
 
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
@@ -3104,7 +3105,7 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
 
 nscoord nsTableFrame::ComputeDesiredWidth(const nsHTMLReflowState& aReflowState) const
 {
-  nscoord desiredWidth=aReflowState.maxSize.width;
+  nscoord desiredWidth=aReflowState.availableWidth;
   // this is the biggest hack in the world.  But there's no other rational way to handle nested percent tables
   const nsStylePosition* position;
   PRBool isNested=IsNested(aReflowState, position);
@@ -4612,7 +4613,7 @@ PRBool nsTableFrame::IsNested(const nsHTMLReflowState& aReflowState, const nsSty
 nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowState)
 {
   const nsStyleDisplay *display;
-  nscoord parentWidth = aReflowState.maxSize.width;
+  nscoord parentWidth = aReflowState.availableWidth;
 
   // Walk up the reflow state chain until we find a block
   // frame. Our width is computed relative to there.
@@ -4643,9 +4644,9 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
       // then we can use it
       if (PR_FALSE==skipThisBlock)
       {
-        if (NS_UNCONSTRAINEDSIZE!=rs->maxSize.width)
+        if (NS_UNCONSTRAINEDSIZE!=rs->availableWidth)
         {
-          parentWidth = rs->maxSize.width;
+          parentWidth = rs->availableWidth;
           if (PR_TRUE==gsDebugNT)
             printf("%p: found a block frame %p, returning width %d\n", 
                    aReflowState.frame, rs->frame, parentWidth);
@@ -4778,7 +4779,7 @@ nscoord nsTableFrame::GetTableContainerWidth(const nsHTMLReflowState& aReflowSta
                 else
                 {
                   // the table has not yet been sized, so we need to infer the available space
-                  parentWidth = rs->maxSize.width;
+                  parentWidth = rs->availableWidth;
                   if (eStyleUnit_Percent == tablePosition->mWidth.GetUnit())
                   {
                     float percent = tablePosition->mWidth.GetPercentValue();

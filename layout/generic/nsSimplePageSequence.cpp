@@ -60,7 +60,7 @@ nsSimplePageSequenceFrame::Reflow(nsIPresContext&          aPresContext,
   // Compute the size of each page and the x coordinate that each page will
   // be placed at
   nsSize  pageSize(aPresContext.GetPageWidth(), aPresContext.GetPageHeight());
-  PRInt32 extra = aReflowState.maxSize.width - 2*PAGE_SPACING_TWIPS - pageSize.width;
+  PRInt32 extra = aReflowState.availableWidth - 2 * PAGE_SPACING_TWIPS - pageSize.width;
 
   // Note: nscoord is an unsigned type so don't combine these
   // two statements or the extra will be promoted to unsigned
