@@ -28,6 +28,7 @@
 #include "nsMemory.h"
 
 #include "nsLocalFileOS2.h"
+#include "nsXPIDLString.h"
 
 #include "nsISimpleEnumerator.h"
 #include "nsIComponentManager.h"
@@ -2178,10 +2179,23 @@ nsLocalFile::SetPersistentDescriptor(const char * aPersistentDescriptor)
    return InitWithPath(aPersistentDescriptor);   
 }
 
+#ifndef OPEN_DEFAULT
+#define OPEN_DEFAULT 0
+#endif
+
+
 NS_IMETHODIMP
 nsLocalFile::Reveal()
 {
-  return NS_ERROR_FAILURE;
+  nsXPIDLCString platformPath;
+
+  GetPath(getter_Copies(platformPath));  
+
+  HOBJECT hobject = WinQueryObject(platformPath);
+  WinOpenObject( hobject, OPEN_DEFAULT, TRUE);
+
+  // we don't care if it succeeded or failed.
+  return NS_OK;
 }
 
 

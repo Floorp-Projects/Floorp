@@ -48,6 +48,8 @@
 #define INCL_DOSMODULEMGR
 #define INCL_DOSNLS
 #define INCL_WINCOUNTRY
+#define INCL_WINWORKPLACE
+
 #include <os2.h>
 
 #if 0 // OLDWAY
