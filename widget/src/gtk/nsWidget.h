@@ -244,7 +244,7 @@ private:
   static gint sButtonMotionRootX;
   static gint sButtonMotionRootY;
   static gint sButtonMotionWidgetX;
-  static gint sButtonMotionWidgetY;;
+  static gint sButtonMotionWidgetY;
 };
 
 #endif /* nsWidget_h__ */
