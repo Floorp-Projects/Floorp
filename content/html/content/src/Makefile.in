@@ -47,7 +47,6 @@ REQUIRES	= xpcom \
 		  xuldoc \
 		  caps \
 		  editor \
-		  uconv \
 		  gfx2 \
 		  imglib2 \
 		  $(NULL)
