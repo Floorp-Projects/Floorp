@@ -152,22 +152,27 @@ nsJSUtils::nsConvertXPCObjectToJSVal(nsISupports* aSupports,
                                      JSContext* aContext,
                                      jsval* aReturn)
 {
-  nsresult rv;
+  *aReturn = JSVAL_NULL; // a sane value, just in case something blows up
+  if (aSupports != nsnull) {
+    nsresult rv;
+    NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
+    if (NS_FAILED(rv)) return;
 
-  *aReturn = nsnull; // a sane value, just in case something blows up
-
-  NS_WITH_SERVICE(nsIXPConnect, xpc, kXPConnectCID, &rv);
-  if (NS_SUCCEEDED(rv)) {
     nsIXPConnectWrappedNative* wrapper;
-    nsresult rv = xpc->WrapNative(aContext, aSupports, aIID, &wrapper);
+    rv = xpc->WrapNative(aContext, aSupports, aIID, &wrapper);
     if (NS_SUCCEEDED(rv)) {
       JSObject* obj;
       rv = wrapper->GetJSObject(&obj);
       if (NS_SUCCEEDED(rv)) {
+        // set the return value
         *aReturn = OBJECT_TO_JSVAL(obj);
       }
       NS_RELEASE(wrapper);
     }
+    // Yes, this is bizarre, but since this method used in a very
+    // specific ways in idlc-generated code, it's okay. And yes, it's
+    // really the semantics that we want.
+    NS_RELEASE(aSupports);
   }
 }
 

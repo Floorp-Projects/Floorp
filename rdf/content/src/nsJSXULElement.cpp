@@ -72,7 +72,7 @@ GetXULElementProperty(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
       {
         nsIRDFResource* prop;
         if (NS_OK == a->GetResource(&prop)) {
-          // get the js object
+          // get the js object; n.b., this will do a release on 'prop'
           nsJSUtils::nsConvertXPCObjectToJSVal(prop, nsIRDFResource::GetIID(), cx, vp);
         }
         else {
