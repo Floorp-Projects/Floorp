@@ -55,6 +55,7 @@ CPP_OBJS=									\
 	.\$(OBJDIR)\nsPop3IncomingServer.obj	\
 	.\$(OBJDIR)\nsLocalMessage.obj			\
 	.\$(OBJDIR)\nsLocalUtils.obj			\
+	.\$(OBJDIR)\nsLocalUndoTxn.obj			\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

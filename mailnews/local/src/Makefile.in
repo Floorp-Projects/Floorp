@@ -37,6 +37,7 @@ CPPSRCS = \
 	nsPop3IncomingServer.cpp	\
 	nsLocalMessage.cpp \
 	nsLocalUtils.cpp \
+	nsLocalUndoTxn.cpp \
 	$(NULL)
 
 EXPORTS= \
