@@ -8,7 +8,6 @@ skins/blue.jar:
     communicator/skin/button.css                               (communicator/button.css)
     communicator/skin/communicator.css                         (communicator/communicator.css)
     communicator/skin/formatting.css                           (communicator/formatting.css)
-    communicator/skin/menu.css                                 (communicator/menu.css)
     communicator/skin/menubutton.css                           (communicator/menubutton.css)
     communicator/skin/navbar-endbox.gif                        (communicator/navbar-endbox.gif)
     communicator/skin/splitter.css                             (communicator/splitter.css)

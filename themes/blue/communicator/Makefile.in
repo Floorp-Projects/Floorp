@@ -35,7 +35,6 @@ EXPORT_RESOURCE = \
 		$(srcdir)/button.css \
 		$(srcdir)/communicator.css \
 		$(srcdir)/formatting.css \
-		$(srcdir)/menu.css \
 		$(srcdir)/menubuttonBindings.xml \
 		$(srcdir)/menubutton.css \
 		$(srcdir)/splitter.css \

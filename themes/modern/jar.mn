@@ -13,7 +13,6 @@ skins/modern.jar:
     communicator/skin/document.gif                             (communicator/document.gif)
     communicator/skin/formatting.css                           (communicator/formatting.css)
     communicator/skin/lock.gif                                 (communicator/lock.gif)
-    communicator/skin/menu.css                                 (communicator/menu.css)
     communicator/skin/menubutton.css                           (communicator/menubutton.css)
     communicator/skin/menubuttonBindings.xml                   (communicator/menubuttonBindings.xml)
     communicator/skin/navbar-endbox.gif                        (communicator/navbar-endbox.gif)

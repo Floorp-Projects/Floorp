@@ -41,7 +41,6 @@ EXPORT_RESOURCE = \
 		$(srcdir)/document.gif \
 		$(srcdir)/formatting.css \
 		$(srcdir)/lock.gif \
-		$(srcdir)/menu.css \
 		$(srcdir)/menubutton.css \
 		$(srcdir)/menubuttonBindings.xml \
 		$(srcdir)/navbar-endbox.gif \
