@@ -4221,7 +4221,8 @@ nsXULDocument::PrepareToLoadPrototype(nsIURI* aURI, const char* aCommand,
     parser->SetCommand(nsCRT::strcmp(aCommand, "view-source") ? eViewNormal :
       eViewSource);
 
-    parser->SetDocumentCharset(NS_ConvertASCIItoUCS2("UTF-8"), kCharsetFromDocTypeDefault);
+    nsAutoString charset(NS_ConvertASCIItoUCS2("UTF-8"));
+    parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
     parser->SetContentSink(sink); // grabs a reference to the parser
 
     *aResult = parser;

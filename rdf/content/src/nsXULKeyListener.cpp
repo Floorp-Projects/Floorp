@@ -1149,7 +1149,8 @@ NS_IMETHODIMP nsXULKeyListenerImpl::LoadKeyBindingDocument(nsIURI* aURI, nsIDOMX
 
   parser->SetCommand(eViewNormal);
 
-  parser->SetDocumentCharset(NS_ConvertASCIItoUCS2("UTF-8"), kCharsetFromDocTypeDefault);
+  nsAutoString charset(NS_ConvertASCIItoUCS2("UTF-8"));
+  parser->SetDocumentCharset(charset, kCharsetFromDocTypeDefault);
   parser->SetContentSink(sink); // grabs a reference to the parser
 
   // Now do a blocking synchronous parse of the file.
