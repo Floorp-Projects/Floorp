@@ -30,10 +30,10 @@
 #include "nsString2.h"
 
 #include "nsImapServerResponseParser.h"
-#include "nsIMsgIdentity.h"
 #include "nsImapProxyEvent.h"
 
 class nsIMAPMessagePartIDArray;
+class nsIMsgIncomingServer;
 
 class nsImapProtocol : public nsIImapProtocol
 {
@@ -49,7 +49,7 @@ public:
 	// we support the nsIImapProtocol interface
 	//////////////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURL * aURL, nsISupports * aConsumer);
-	NS_IMETHOD Initialize(PLEventQueue * aSinkEventQueue);
+	NS_IMETHOD Initialize(nsIImapHostSessionList * aHostSessionList, PLEventQueue * aSinkEventQueue);
     NS_IMETHOD GetThreadEventQueue(PLEventQueue **aEventQueue);
     NS_IMETHOD SetMessageDownloadOutputStream(nsIOutputStream* aOutputStream);
     // Notify FE Event has been completed
@@ -212,7 +212,7 @@ private:
     PRBool ImapThreadIsRunning();
     nsISupports* m_consumer;
     PRInt32 m_connectionStatus;
-    nsIMsgIdentity *m_identity;
+    nsIMsgIncomingServer * m_server;
     nsImapLogProxy *m_imapLog;
     nsImapMailfolderProxy *m_imapMailfolder;
     nsImapMessageProxy *m_imapMessage;
