@@ -122,3 +122,8 @@ treecol[sortActive="true"]
   {
     background-color       : #DFDFDF;
   }
+
+.treecell-popup-icon
+  {
+    list-style-image       : url("chrome://global/skin/opentwisty.gif");
+  }
