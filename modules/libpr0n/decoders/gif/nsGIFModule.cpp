@@ -41,7 +41,9 @@
 #include "nsIGenericFactory.h"
 #include "nsISupports.h"
 #include "nsCOMPtr.h"
-#include "nsGifAllocator.h"
+#include "nsRecyclingAllocator.h"
+
+extern nsRecyclingAllocator *gGifAllocator;
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsGIFDecoder2)
 
