@@ -2159,6 +2159,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 
     // Add AREA object to the current map
     mCurrentMap->AppendChildTo(area, PR_FALSE);
+	NS_RELEASE(area);
   }
   return NS_OK;
 }
