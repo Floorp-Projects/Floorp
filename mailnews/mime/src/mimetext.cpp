@@ -115,7 +115,12 @@ MimeInlineText_initialize (MimeObject *obj)
           NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
           if ( NS_SUCCEEDED(rv) && prefs)
           {
-            prefs->CopyCharPref("mailnews.view_default_charset", &(text->defaultCharset));
+            PRUnichar* value;
+            rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", &value);
+            if(NS_SUCCEEDED(rv)) {
+              text->defaultCharset = nsCRT::strdup(NS_ConvertUCS2toUTF8(value));
+              nsMemory::Free(value);
+            }
           }
 
           if (!text->defaultCharset)

@@ -146,7 +146,12 @@ nsPrefWindow.prototype =
                     case "color":
                     case "string":
                     default:
-                      return !aDefaultFlag ? pref.CopyUnicharPref( aPrefString ) : pref.CopyDefaultUnicharPref( aPrefString );
+                      if((aPrefString == "mailnews.view_default_charset") ||
+                         (aPrefString == "mailnews.send_default_charset")) {
+                            return  pref.getLocalizedUnicharPref( aPrefString );
+                      } else {
+                         return !aDefaultFlag ? pref.CopyUnicharPref( aPrefString ) : pref.CopyDefaultUnicharPref( aPrefString );
+                      }
                       break;
                   }
               }

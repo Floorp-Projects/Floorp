@@ -42,7 +42,7 @@ function startUp()
       if (prefInt) {
         prefInt = prefInt.getService();
         prefInt = prefInt.QueryInterface(Components.interfaces.nsIPref);
-        pref_string = prefInt.CopyCharPref("mailnews.view_default_charset");
+        pref_string = prefInt.getLocalizedUnicharPref("mailnews.view_default_charset");
       }
     }
   }

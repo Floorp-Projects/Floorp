@@ -416,13 +416,14 @@ char * nsMsgI18NGetDefaultMailCharset()
   NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &res); 
   if (nsnull != prefs && NS_SUCCEEDED(res))
   {
-      char *prefValue;
-	  res = prefs->CopyCharPref("mailnews.send_default_charset", &prefValue);
+      PRUnichar *prefValue;
+	  res = prefs->GetLocalizedUnicharPref("mailnews.send_default_charset", &prefValue);
 	  
 	  if (NS_SUCCEEDED(res)) 
 	  {
   		//TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
-  		 retVal = prefValue;
+  		 retVal = nsCRT::strdup(NS_ConvertUCS2toUTF8(prefValue));
+                 nsMemory::Free(prefValue);
 	  }
 	  else 
 		  retVal = nsCRT::strdup("ISO-8859-1");

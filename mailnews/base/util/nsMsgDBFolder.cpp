@@ -257,16 +257,16 @@ NS_IMETHODIMP nsMsgDBFolder::GetCharset(PRUnichar * *aCharset)
 	{
 		NS_WITH_SERVICE(nsIPref, prefs, kPrefServiceCID, &rv);
 
-		char *prefCharset = nsnull;
+		PRUnichar *prefCharset = nsnull;
 		if (NS_SUCCEEDED(rv))
 		{
-			rv = prefs->CopyCharPref("mailnews.view_default_charset", &prefCharset);
+			rv = prefs->GetLocalizedUnicharPref("mailnews.view_default_charset", &prefCharset);
 		}
   
 		nsAutoString prefCharsetStr;
 		if(prefCharset)
 		{
-			prefCharsetStr.AssignWithConversion(prefCharset);
+			prefCharsetStr.Assign(prefCharset);
 			PR_Free(prefCharset);
 		}
 		else

@@ -496,7 +496,7 @@ function InitCharsetMenuCheckMark()
     dump("failed to get prefs service!\n");
     prefs = null;
   }
-  var send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
+  var send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
 //  send_default_charset = send_default_charset.toUpperCase();
   dump("send_default_charset is " + send_default_charset + "\n");
 
@@ -531,7 +531,7 @@ function GetCharsetUIString()
       prefs = Components.classes['component://netscape/preferences'];
       prefs = prefs.getService();
       prefs = prefs.QueryInterface(Components.interfaces.nsIPref);
-      g_send_default_charset = prefs.CopyCharPref("mailnews.send_default_charset");
+      g_send_default_charset = prefs.getLocalizedUnicharPref("mailnews.send_default_charset");
     }
     catch (ex) {
       dump("failed to get prefs service!\n");
