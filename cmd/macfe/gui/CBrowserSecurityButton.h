@@ -18,10 +18,10 @@
 
 #pragma once
 
-#include "CPatternButton.h"
+#include "CToolbarBevelButton.h"
 #include "CSecurityStateListener.h"
 
-class CBrowserSecurityButton : public CPatternButton, public CSecurityStateListener
+class CBrowserSecurityButton : public CToolbarBevelButton, public CSecurityStateListener
 {
 	public:
 		enum {	class_ID = 'BrSB'	};

@@ -19,7 +19,7 @@
 #include "CBrowserSecurityButton.h"
 
 CBrowserSecurityButton::CBrowserSecurityButton(LStream* inStream)
-:	CPatternButton(inStream)
+:	CToolbarBevelButton(inStream)
 {
 }
 
@@ -34,10 +34,13 @@ ResIDT CBrowserSecurityButton::GetIconID(ESecurityState inSecurityState)
 void CBrowserSecurityButton::NoteSecurityState(ESecurityState inSecurityState)
 {
 	ResIDT wantedIconID = GetIconID(inSecurityState);
+	ControlButtonContentInfo currInfo;
+	GetContentInfo ( currInfo );
 
-	if (wantedIconID != GetGraphicID())
+	if (wantedIconID != currInfo.u.resID)
 	{
-		SetGraphicID(wantedIconID);
-		Draw(NULL);
+		// set the new icon
+		currInfo.u.resID = wantedIconID;
+		SetContentInfo ( currInfo );
 	}
 }

@@ -36,6 +36,4 @@ class CMiniSecurityButton : public CBrowserSecurityButton
 
 	protected:
 
-		virtual void		DrawButtonContent(void);
-		virtual	void		DrawButtonGraphic(void);
 };
