@@ -151,7 +151,7 @@ nsresult nsMailboxProtocol::OpenFileSocketForReuse(nsIURI * aURL, PRUint32 aStar
 
   m_multipleMsgMoveCopyStream = do_QueryInterface(fileStream, &rv);
   NS_ENSURE_SUCCESS(rv, rv);
-  fileStream->Init(file,  PR_RDONLY, 0664);  //just have to read the messages
+  fileStream->Init(file,  PR_RDONLY, 0664, PR_FALSE);  //just have to read the messages
   PRUint32 length;
   PRInt64 fileSize; 
   rv = file->GetFileSize( &fileSize);

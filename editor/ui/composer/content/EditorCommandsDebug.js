@@ -269,7 +269,7 @@ function EditorExecuteScript(theFile)
   var inputStream = Components.classes["@mozilla.org/network/file-input-stream;1"].createInstance();
   inputStream = inputStream.QueryInterface(Components.interfaces.nsIFileInputStream);
 
-  inputStream.init(theFile, 1, 0);    // open read only
+  inputStream.init(theFile, 1, 0, false);    // open read only
   
   var scriptableInputStream = Components.classes["@mozilla.org/scriptableinputstream;1"].createInstance();
   scriptableInputStream = scriptableInputStream.QueryInterface(Components.interfaces.nsIScriptableInputStream);

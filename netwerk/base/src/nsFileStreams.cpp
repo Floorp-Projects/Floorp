@@ -266,7 +266,7 @@ nsFileIO::GetInputStream(nsIInputStream * *aInputStream)
     if (fileIn == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(fileIn);
-    rv = fileIn->Init(mFile, mIOFlags, mPerm);
+    rv = fileIn->Init(mFile, mIOFlags, mPerm, PR_FALSE);
     if (NS_SUCCEEDED(rv)) {
 #ifdef NS_NO_INPUT_BUFFERING
         *aInputStream = fileIn;
@@ -448,7 +448,7 @@ nsFileInputStream::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMETHODIMP
-nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
+nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm, PRBool deleteOnClose)
 {
     NS_ASSERTION(mFD == nsnull, "already inited");
     if (mFD != nsnull)
@@ -463,7 +463,18 @@ nsFileInputStream::Init(nsIFile* file, PRInt32 ioFlags, PRInt32 perm)
 
     mLineBuffer = nsnull;
     
-    return localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
+    rv = localFile->OpenNSPRFileDesc(ioFlags, perm, &mFD);
+    if (NS_FAILED(rv)) return rv;
+
+    if (deleteOnClose) {
+#if defined(XP_UNIX) || defined(XP_WIN)
+        rv = file->Remove(PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete file");
+#else
+        mFileToDelete = file;
+#endif
+    }
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -471,7 +482,15 @@ nsFileInputStream::Close()
 {
     PR_FREEIF(mLineBuffer);
     mLineBuffer = nsnull;       // in case Close() is called again after failing
-    return nsFileStream::Close();
+    nsresult rv = nsFileStream::Close();
+#if !defined(XP_UNIX) && !defined(XP_WIN)
+    if (NS_FAILED(rv)) return rv;
+    if (mFileToDelete) {
+        rv = mFileToDelete->Remove(PR_FALSE);
+        NS_ASSERTION(NS_SUCCEEDED(rv), "failed to delete file");
+    }
+#endif
+    return rv;
 }
 
 NS_IMETHODIMP
