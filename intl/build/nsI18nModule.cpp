@@ -42,51 +42,14 @@
 #include "nsIServiceManager.h"
 
 // chardet
-#include "nsMetaCharsetCID.h"
-#include "nsICharsetDetector.h"
-#include "nsICharsetAlias.h"
-#include "nsMetaCharsetObserver.h"
-#include "nsDocumentCharsetInfo.h"
-#include "nsXMLEncodingObserver.h"
-#include "nsICharsetDetectionAdaptor.h"
-#include "nsICharsetDetectionObserver.h"
-#include "nsDetectionAdaptor.h"
-#include "nsIStringCharsetDetector.h"
-#include "nsPSMDetectors.h"
-#include "nsCyrillicDetector.h"
-#include "nsDocumentCharsetInfoCID.h"
-#include "nsXMLEncodingCID.h"
-#include "nsCharsetDetectionAdaptorCID.h"
+#include "nsCharDetConstructors.h"
 
-// chardet
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsMetaCharsetObserver);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDocumentCharsetInfo);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsXMLEncodingObserver);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsDetectionAdaptor);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsJAStringPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsKOPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsKOStringPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsZHTWPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsZHTWStringPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsZHCNPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsZHCNStringPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsZHPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsZHStringPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCJKPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsCJKStringPSMDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsRUProbDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUKProbDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsRUStringProbDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsUKStringProbDetector);
-#ifdef INCLUDE_DBGDETECTOR
-NS_GENERIC_FACTORY_CONSTRUCTOR(ns1stBlkDbgDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(ns2ndBlkDbgDetector);
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsLastBlkDbgDetector);
-#endif /* INCLUDE_DBGDETECTOR */
+// lwbrk
+#include "nsLWBrkConstructors.h"
 
-
-
+// unicharutil
+#include "nsUcharUtilConstructors.h"
+    
 static NS_METHOD
 AddCategoryEntry(const char* category,
                  const char* key,
@@ -306,9 +269,8 @@ static nsModuleComponentInfo components[] =
     NULL, NULL},
  { "Probability based Ukrainian String Charset Detector", NS_UK_STRING_PROBDETECTOR_CID, 
     NS_STRCDETECTOR_CONTRACTID_BASE "ukprob", nsUKStringProbDetectorConstructor, 
-    NULL, NULL}
+   NULL, NULL},
 #ifdef INCLUDE_DBGDETECTOR
- ,
  { "Debuging Detector 1st block", NS_1STBLKDBG_DETECTOR_CID, 
     NS_CHARSET_DETECTOR_CONTRACTID_BASE "1stblkdbg", ns1stBlkDbgDetectorConstructor, 
     NULL, NULL},
@@ -319,7 +281,19 @@ static nsModuleComponentInfo components[] =
     NS_CHARSET_DETECTOR_CONTRACTID_BASE "lastblkdbg", nsLastBlkDbgDetectorConstructor, 
     NULL, NULL},
 #endif /* INCLUDE_DBGDETECTOR */
-    
+ // lwbrk
+  { "Line and Word Breaker", NS_LWBRK_CID,
+    NS_LWBRK_CONTRACTID, nsLWBreakerFImpConstructor},
+
+ // unicharutil
+  { "Unichar Utility", NS_UNICHARUTIL_CID, 
+      NS_UNICHARUTIL_CONTRACTID, nsCaseConversionImp2Constructor},
+  { "Unicode To Entity Converter", NS_ENTITYCONVERTER_CID, 
+      NS_ENTITYCONVERTER_CONTRACTID, nsEntityConverterConstructor },
+  { "Unicode To Charset Converter", NS_SAVEASCHARSET_CID, 
+      NS_SAVEASCHARSET_CONTRACTID, nsSaveAsCharsetConstructor},
+  { "Japanese Hankaku To Zenkaku", NS_HANKAKUTOZENKAKU_CID, 
+      NS_HANKAKUTOZENKAKU_CONTRACTID, CreateNewHankakuToZenkaku},
 };
 
 

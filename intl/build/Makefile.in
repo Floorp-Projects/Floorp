@@ -33,6 +33,9 @@ REQUIRES	= xpcom \
 		  unicharutil \
 		  chardet \
 		  uconv \
+		  lwbrk \
+		  intl \
+		  unicharutil \
 		  htmlparser \
 		  content \
 		  widget \
@@ -46,10 +49,14 @@ CPPSRCS		= \
 
 LOCAL_INCLUDES = \
 			-I$(srcdir)/../chardet/src \
+			-I$(srcdir)/../lwbrk/src \
+			-I$(srcdir)/../unicharutil/src \
 			$(NULL)
 
 SHARED_LIBRARY_LIBS = \
 			$(DIST)/lib/$(LIB_PREFIX)chardet_s.$(LIB_SUFFIX) \
+			$(DIST)/lib/$(LIB_PREFIX)lwbrk_s.$(LIB_SUFFIX) \
+			$(DIST)/lib/$(LIB_PREFIX)ucharucomp_s.$(LIB_SUFFIX) \
 			$(NULL)
 
 EXTRA_DSO_LDOPTS = \
