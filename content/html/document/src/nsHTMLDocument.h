@@ -31,7 +31,6 @@
 #include "nsIDOMNode.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsIHTMLContentContainer.h"
-#include "nsIParserService.h"
 #include "plhash.h"
 #include "jsapi.h"
 #include "rdf.h"
@@ -42,9 +41,7 @@ class nsContentList;
 class nsIHTMLStyleSheet;
 class nsIHTMLCSSStyleSheet;
 class nsIParser;
-class BlockText;
 class nsICSSLoader;
-class nsIParserService;
 
 class nsHTMLDocument : public nsMarkupDocument,
                        public nsIHTMLDocument,
