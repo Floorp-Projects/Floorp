@@ -29,18 +29,19 @@ MAKE_OBJ_TYPE=DLL
 DLLNAME=fileprotocol
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
 
-LLIBS= $(LLIBS)               \
-	$(LIBNSPR)            \
-	$(DIST)\lib\plc3.lib  \
-	$(DIST)\lib\xpcom.lib \
+LLIBS= $(LLIBS)                 \
+	$(LIBNSPR)              \
+	$(DIST)\lib\plc3.lib    \
+	$(DIST)\lib\xpcom.lib   \
+	$(DIST)\lib\netwerk.lib \
 	$(NULL)
 
 MISCDEP=$(LLIBS)
 
-CPP_OBJS=                                     \
-	.\$(OBJDIR)\nsFileChannel.obj         \
-	.\$(OBJDIR)\nsFileProtocolHandler.obj \
-	.\$(OBJDIR)\nsFileProtocolFactory.obj \
+CPP_OBJS=                                      \
+	.\$(OBJDIR)\nsFileChannel.obj          \
+	.\$(OBJDIR)\nsFileProtocolHandler.obj  \
+	.\$(OBJDIR)\nsFileProtocolFactory.obj  \
 	$(NULL)
 
 LOCAL_INCLUDES=-I.	

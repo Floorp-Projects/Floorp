@@ -18,6 +18,8 @@
 
 #include "nsIChannel.idl"
 
+interface nsISimpleEnumerator;
+
 [scriptable, uuid(73025830-0ce2-11d3-9331-00104ba0fd40)]
 interface nsIFileChannel : nsIChannel
 {
@@ -43,6 +45,14 @@ interface nsIFileChannel : nsIChannel
     readonly attribute nsIFileChannel Parent;
 
     /**
+     * Returns an enumeration of the elements in a directory. Each
+     * element in the enumeration is an nsIFileChannel. 
+     * @return NS_ERROR_FAILURE if the current nsIFileChannel does
+     *   not specify a directory.
+     */
+    readonly attribute nsISimpleEnumerator Children;
+
+    /**
      * Returns a native path string suitable to be passes to native platform
      * routines.
      */
@@ -64,7 +74,7 @@ interface nsIFileChannel : nsIChannel
     void Delete();
 
     /**
-     * Move or renames a file. 
+     * Move or rename a file. 
      */
     void MoveFrom(in nsIURI src);
 
@@ -102,5 +112,11 @@ interface nsIFileChannel : nsIChannel
      */
     string MakeUniqueFileName(in string baseName);
 
+    /**
+     * Executes a program specified by the file channel. 
+     * @param args - The program arguments to run with. If not specified,
+     *   the Query portion of the URI is used as the argument string. 
+     */
+    void Execute(in string args);
 };
 

@@ -20,12 +20,18 @@
 #define nsFileChannel_h__
 
 #include "nsIFileChannel.h"
+#include "nsIThread.h"
 #include "nsFileSpec.h"
+#include "prlock.h"
 
 class nsIEventSinkGetter;
 class nsIStreamListener;
+class nsFileProtocolHandler;
+class nsIBaseStream;
+class nsIBuffer;
+class nsIBufferInputStream;
 
-class nsFileChannel : public nsIFileChannel {
+class nsFileChannel : public nsIFileChannel, public nsIRunnable {
 public:
 
     NS_DECL_ISUPPORTS
@@ -75,6 +81,9 @@ public:
     /* readonly attribute nsIFileChannel Parent; */
     NS_IMETHOD GetParent(nsIFileChannel * *aParent);
 
+    /* readonly attribute nsISimpleEnumerator Children; */
+    NS_IMETHOD GetChildren(nsISimpleEnumerator * *aChildren);
+
     /* readonly attribute string NativePath; */
     NS_IMETHOD GetNativePath(char * *aNativePath);
 
@@ -108,6 +117,14 @@ public:
     /* string MakeUniqueFileName (in string baseName); */
     NS_IMETHOD MakeUniqueFileName(const char *baseName, char **_retval);
 
+    /* void Execute (in string args); */
+    NS_IMETHOD Execute(const char *args);
+
+    ////////////////////////////////////////////////////////////////////////////
+    // nsIRunnable methods:
+
+    NS_IMETHOD Run(void);
+
     ////////////////////////////////////////////////////////////////////////////
     // nsFileChannel:
 
@@ -122,13 +139,42 @@ public:
     nsresult Init(const char* verb, nsIURI* uri, nsIEventSinkGetter* getter,
                   nsIEventQueue* queue);
 
-protected:
-    nsIURI*             mURI;
-    nsIEventSinkGetter* mGetter;        // XXX it seems wrong keeping this -- used by GetParent
-    nsIStreamListener*  mListener;
-    nsIEventQueue*      mEventQueue;
+    void Process(void);
 
-    nsFileSpec          mSpec;
+    enum State {
+        START_READ,
+        READING,
+        START_WRITE,
+        WRITING,
+        ENDING,
+        ENDED
+    };
+
+protected:
+    nsIURI*                     mURI;
+    nsIEventSinkGetter*         mGetter;        // XXX it seems wrong keeping this -- used by GetParent
+    nsIStreamListener*          mListener;
+    nsIEventQueue*              mEventQueue;
+
+    nsFileSpec                  mSpec;
+
+    nsISupports*                mContext;
+    nsFileProtocolHandler*      mHandler;
+    State                       mState;
+    PRBool                      mSuspended;
+
+    // state variables:
+    nsIBaseStream*              mFileStream;    // cast to nsIInputStream/nsIOutputStream for reading/writing
+    nsIBuffer*                  mBuffer;
+    nsIBufferInputStream*       mBufferStream;
+    nsresult                    mStatus;
+    PRUint32                    mSourceOffset;
+    PRInt32                     mAmount;
+
+private:
+    PRLock*                     mLock;
 };
+
+#define NS_FILE_TRANSPORT_BUFFER_SIZE   (4*1024)
 
 #endif // nsFileChannel_h__

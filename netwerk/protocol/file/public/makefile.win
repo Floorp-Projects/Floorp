@@ -27,8 +27,9 @@ PUBLIC = $(DEPTH)\netwerk\dist\include
 
 XPIDL_MODULE = netwerk_file
 
-XPIDLSRCS =                  \
-        .\nsIFileChannel.idl \
+XPIDLSRCS =                          \
+        .\nsIFileChannel.idl         \
+        .\nsIFileProtocolHandler.idl \
         $(NULL)
 
 include <$(DEPTH)/config/rules.mak>

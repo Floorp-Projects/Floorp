@@ -24,16 +24,34 @@
 #include "nsIServiceManager.h"
 #include "nsIEventSinkGetter.h"
 #include "nsIProgressEventSink.h"
+#include "nsIThread.h"
+#include "nsISupportsArray.h"
+#include "nsFileSpec.h"
 
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 
-nsFileProtocolHandler::nsFileProtocolHandler() {
+nsFileProtocolHandler::nsFileProtocolHandler()
+    : mPool(nsnull)
+{
     NS_INIT_REFCNT();
 }
 
-nsFileProtocolHandler::~nsFileProtocolHandler() {
+nsresult
+nsFileProtocolHandler::Init()
+{
+    nsresult rv;
+    rv = NS_NewThreadPool(&mPool, NS_FILE_TRANSPORT_WORKER_COUNT,
+                          NS_FILE_TRANSPORT_WORKER_COUNT, 8*1024);
+    return rv;
+}
+
+nsFileProtocolHandler::~nsFileProtocolHandler()
+{
+    // this will wait for all outstanding requests to be processed, then
+    // join with the worker threads, and finally free the pool:
+    NS_IF_RELEASE(mPool);
 }
 
 NS_IMPL_ISUPPORTS(nsFileProtocolHandler, nsIProtocolHandler::GetIID());
@@ -48,7 +66,10 @@ nsFileProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult
     if (ph == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(ph);
-    nsresult rv = ph->QueryInterface(aIID, aResult);
+    nsresult rv = ph->Init();
+    if (NS_SUCCEEDED(rv)) {
+        rv = ph->QueryInterface(aIID, aResult);
+    }
     NS_RELEASE(ph);
     return rv;
 }
@@ -147,6 +168,73 @@ nsFileProtocolHandler::NewChannel(const char* verb, nsIURI* url,
 
     *result = channel;
     return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+NS_IMETHODIMP
+nsFileProtocolHandler::NewChannelFromNativePath(const char* nativePath, 
+                                                nsIFileChannel* *result)
+{
+    nsresult rv;
+    nsFileSpec spec(nativePath);
+    nsFileURL fileURL(spec);
+    const char* urlStr = fileURL.GetURLString();
+    nsIURI* uri;
+
+    rv = NewURI(urlStr, nsnull, &uri);
+    if (NS_FAILED(rv)) return rv;
+
+    rv = NewChannel("load",  // XXX what should this be?
+                    uri,
+                    nsnull,  // XXX bogus getter
+                    nsnull,  // XXX bogus
+                    (nsIChannel**)result);
+    NS_RELEASE(uri);
+    return rv;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsFileProtocolHandler::ProcessPendingRequests(void)
+{
+    return mPool->ProcessPendingRequests();
+}
+
+nsresult
+nsFileProtocolHandler::DispatchRequest(nsIRunnable* runnable)
+{
+    return mPool->DispatchRequest(runnable);
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+nsresult
+nsFileProtocolHandler::Suspend(nsFileChannel* request)
+{
+    nsresult rv;
+    if (mSuspended == nsnull) {
+        rv = NS_NewISupportsArray(&mSuspended);
+        if (NS_FAILED(rv)) return rv;
+    }
+    return mSuspended->AppendElement(NS_STATIC_CAST(nsIChannel*, request));
+}
+
+nsresult
+nsFileProtocolHandler::Resume(nsFileChannel* request)
+{
+    nsresult rv;
+    if (mSuspended == nsnull)
+        return NS_ERROR_FAILURE;
+    // XXX RemoveElement returns a bool instead of nsresult!
+    PRBool removed = mSuspended->RemoveElement(NS_STATIC_CAST(nsIChannel*, request));
+    rv = removed ? NS_OK : NS_ERROR_FAILURE;
+    if (NS_FAILED(rv)) return rv;
+
+    // restart the request
+    rv = mPool->DispatchRequest(NS_STATIC_CAST(nsIRunnable*, request));
+    return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
