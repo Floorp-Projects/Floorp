@@ -105,9 +105,7 @@
       </hbox>
     </vbox>
     
-    <splitter id="gray_horizontal_splitter" collapse="after" persist="state">
-      <grippy/>
-    </splitter>
+    <splitter id="gray_horizontal_splitter" collapse="after" persist="state"/>
     
     <vbox flex="1">
       <vbox id="searchResultListBox" flex="1">
