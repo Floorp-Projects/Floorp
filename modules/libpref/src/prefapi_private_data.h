@@ -51,12 +51,7 @@ extern char *               gLockVendor;
 
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 PrefResult pref_savePref(PLHashEntry *he, int i, void *arg);
-PrefResult pref_saveLIPref(PLHashEntry *he, int i, void *arg);
 PRBool pref_VerifyLockFile(char* buf, long buflen);
-
-#ifdef MOZ_OLD_UI_STUFF
-PrefResult PREF_SetSpecialPrefsLocal(void);
-#endif /* MOZ_OLD_UI_STUFF */
 
 int pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);

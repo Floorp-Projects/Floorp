@@ -105,12 +105,6 @@ typedef enum {
 // </font>
 */
 
-PrefResult
-PREF_ReadUserJSFile(const char *filename);
-
-PrefResult
-PREF_ReadLIJSFile(const char *filename);
-
 #if defined (XP_WIN) || defined (XP_MAC) || defined(XP_OS2)
 /* PREF_Init actually returns a profile object */
 void *
@@ -154,14 +148,6 @@ PREF_CleanupPrefs();
 */
 PrefResult
 PREF_ReadLockFile(const char *filename);
-
-#if 0 /* OBSOLETE */
-JSBool PREF_EvaluateJSBuffer(const char * js_buffer, size_t length);
-JSBool PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length);
-    /* Like the above but does not generate callbacks. */
-JSBool PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length);
-    /* Like the above but does not generate callbacks and executes in scope of global config object */
-#endif /* OBSOLETE */
 
 JSBool
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
@@ -338,12 +324,6 @@ PrefType PREF_GetPrefType(const char *pref_name);
 // </font>
 */
 PrefResult PREF_SavePrefFile(void);
-PrefResult PREF_SavePrefFileAs(const char *filename);
-
-/* LI_STUFF */
-#ifdef MOZ_OLD_UI_STUFF
-PrefResult PREF_SaveLIPrefFile(const char *filename);
-#endif /* MOZ_OLD_UI_STUFF */
 
 /*
  * Called to handle the "about:config" command.
