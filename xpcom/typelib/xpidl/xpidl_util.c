@@ -65,7 +65,7 @@ xpidl_strdup(const char *s)
 void
 xpidl_write_comment(TreeState *state, int indent)
 {
-    fprintf(state->file, "\n%*s/* ", indent, "");
+    fprintf(state->file, "%*s/* ", indent, "");
     IDL_tree_to_IDL(state->tree, state->ns, state->file,
                     IDLF_OUTPUT_NO_NEWLINES |
                     IDLF_OUTPUT_NO_QUALIFY_IDENTS |
@@ -239,4 +239,33 @@ check_native(TreeState *state)
                    "``native %s;'' needs C++ type: ``native %s(<C++ type>);''",
                    native_name, native_name);
     return FALSE;
+}
+
+/*
+ * Print a GSList as char strings to a file.
+ */
+void
+printlist(FILE *outfile, GSList *slist)
+{
+    guint i;
+    guint len = g_slist_length(slist);
+
+    for(i = 0; i < len; i++) {
+        fprintf(outfile, 
+                "%s\n", (char *)g_slist_nth_data(slist, i));
+    }
+}
+
+void
+xpidl_list_foreach(IDL_tree p, IDL_tree_func foreach, gpointer user_data)
+{
+    IDL_tree_func_data tfd;
+
+    while (p) {
+        struct _IDL_LIST *list = &IDL_LIST(p);
+        tfd.tree = list->data;
+        if (!foreach(&tfd, user_data))
+            return;
+        p = list->next;
+    }
 }

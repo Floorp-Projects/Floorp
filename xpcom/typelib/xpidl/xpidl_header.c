@@ -68,6 +68,8 @@ header_prolog(TreeState *state)
             fprintf(state->file, "#include \"%s.h\"\n",
                     (char *)g_slist_nth_data(state->base_includes, i));
         }
+        if (i > 0)
+            fputc('\n', state->file);
     }
     
     return TRUE;
@@ -108,17 +110,14 @@ interface(TreeState *state)
     const char *name_space;
     struct nsID id;
     char iid_parsed[UUID_LENGTH];
+    GSList *doc_comments = IDL_IDENT(IDL_INTERFACE(iface).ident).comments;
 
 #define FAIL    do {ok = FALSE; goto out;} while(0)
-
-    orig = state->tree;
 
     fprintf(state->file,   "\n/* starting interface:    %s */\n",
             className);
 
     name_space = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "namespace");
-    iid = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "uuid");
-
     if (name_space) {
         fprintf(state->file, "/* namespace:             %s */\n",
                 name_space);
@@ -126,6 +125,7 @@ interface(TreeState *state)
                 name_space,className);
     }
 
+    iid = IDL_tree_property_get(IDL_INTERFACE(iface).ident, "uuid");
     if (iid) {
         /* Redundant, but a better error than 'cannot parse.' */
         if (strlen(iid) != 36) {
@@ -147,7 +147,6 @@ interface(TreeState *state)
         }
 
         /* #define NS_ISUPPORTS_IID_STR "00000000-0000-0000-c000-000000000046" */
-        fputc('\n', state->file);
         fputs("#define ", state->file);
         write_classname_iid_define(state->file, className);
         fprintf(state->file, "_STR \"%s\"\n", iid_parsed);
@@ -166,24 +165,29 @@ interface(TreeState *state)
         fputc('\n', state->file);
     }
 
+    if (doc_comments != NULL)
+        printlist(state->file, doc_comments);
+
     /* The interface declaration itself. */
     fprintf(state->file, "class %s", className);
     if ((iter = IDL_INTERFACE(iface).inheritance_spec)) {
         fputs(" : ", state->file);
-        do {
-            fprintf(state->file, "public %s",
-                    IDL_IDENT(IDL_LIST(iter).data).str);
-            if (IDL_LIST(iter).next)
-                fputs(", ", state->file);
-        } while ((iter = IDL_LIST(iter).next));
+        if (IDL_LIST(iter).next != NULL) {
+            IDL_tree_error(iter,
+                           "multiple inheritance is not supported by xpidl");
+            FAIL;
+        }
+        fprintf(state->file, "public %s", IDL_IDENT(IDL_LIST(iter).data).str);
     }
     fputs(" {\n"
-          " public: \n", state->file);
+          " public: \n\n", state->file);
     if (iid) {
         fputs("  NS_DEFINE_STATIC_IID_ACCESSOR(", state->file);
         write_classname_iid_define(state->file, className);
-        fputs(")\n", state->file);
+        fputs(")\n\n", state->file);
     }
+
+    orig = state->tree; /* It would be nice to remove this state-twiddling. */
 
     state->tree = IDL_INTERFACE(iface).body;
 
@@ -487,6 +491,27 @@ write_attr_accessor(IDL_tree attr_tree, FILE * outfile,
 static gboolean
 attr_dcl(TreeState *state)
 {
+    /*
+     * XXX lists of attributes with the same type, e.g.
+     * attribute string foo, bar sil;
+     * are legal IDL... but we don't do anything with 'em.
+     */
+
+    GSList *doc_comments =
+        IDL_IDENT(IDL_LIST(IDL_ATTR_DCL
+                           (state->tree).simple_declarations).data).comments;
+
+    if (doc_comments != NULL) {
+        write_indent(state->file);
+        printlist(state->file, doc_comments);
+    }
+
+    if (IDL_LIST(IDL_ATTR_DCL(state->tree).simple_declarations).next != NULL) {
+        XPIDL_WARNING((state->tree, IDL_WARNING1,
+                       "multiple attributes in a single declaration aren't "
+                       "currently supported by xpidl"));
+    }
+
     xpidl_write_comment(state, 2);
 
     write_indent(state->file);
@@ -500,6 +525,8 @@ attr_dcl(TreeState *state)
             return FALSE;
         fputs(" = 0;\n", state->file);
     }
+    fputc('\n', state->file);
+
     return TRUE;
 }
 
@@ -517,6 +544,7 @@ do_const_dcl(TreeState *state)
     struct _IDL_CONST_DCL *dcl = &IDL_CONST_DCL(state->tree);
     const char *name = IDL_IDENT(dcl->ident).str;
     gboolean success, is_signed;
+    GSList *doc_comments = IDL_IDENT(dcl->ident).comments;
 
     /* const -> list -> interface */
     if (!IDL_NODE_UP(IDL_NODE_UP(state->tree)) ||
@@ -541,11 +569,17 @@ do_const_dcl(TreeState *state)
         is_signed = IDL_TYPE_INTEGER(dcl->const_type).f_signed;
     }
 
+    if (doc_comments != NULL) {
+        write_indent(state->file);
+        printlist(state->file, doc_comments);
+    }
+
     if (success) {
         const char *const_format = is_signed ? "%" IDL_LL "d" : "%" IDL_LL "u";
-        fprintf(state->file, "\n  enum { %s = ", name);
+        write_indent(state->file);
+        fprintf(state->file, "enum { %s = ", name);
         fprintf(state->file, const_format, IDL_INTEGER(dcl->const_exp).value);
-        fprintf(state->file, " };\n");
+        fprintf(state->file, " };\n\n");
     } else {
         IDL_tree_error(state->tree,
                        "const declaration \'%s\' must be of type short or long",
@@ -558,21 +592,26 @@ do_const_dcl(TreeState *state)
 static gboolean
 do_typedef(TreeState *state)
 {
-    IDL_tree type = IDL_TYPE_DCL(state->tree).type_spec,
-        dcls = IDL_TYPE_DCL(state->tree).dcls,
-        complex;
+    IDL_tree type = IDL_TYPE_DCL(state->tree).type_spec;
+    IDL_tree dcls = IDL_TYPE_DCL(state->tree).dcls;
+    IDL_tree complex;
+    GSList *doc_comments;
 
     if (IDL_NODE_TYPE(type) == IDLN_TYPE_SEQUENCE) {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
                        "sequences not supported, ignored"));
     } else {
-        state->tree = type;
-        fputs("\ntypedef ", state->file);
-        if (!write_type(state->tree, state->file))
-            return FALSE;
-        fputs(" ", state->file);
         if (IDL_NODE_TYPE(complex = IDL_LIST(dcls).data) == IDLN_TYPE_ARRAY) {
             IDL_tree dim = IDL_TYPE_ARRAY(complex).size_list;
+            doc_comments = IDL_IDENT(IDL_TYPE_ARRAY(complex).ident).comments;
+
+            if (doc_comments != NULL)
+                printlist(state->file, doc_comments);
+
+            fputs("typedef ", state->file);
+            if (!write_type(type, state->file))
+                return FALSE;
+            fputs(" ", state->file);
 
             fprintf(state->file, "%s",
                     IDL_IDENT(IDL_TYPE_ARRAY(complex).ident).str);
@@ -585,10 +624,18 @@ do_typedef(TreeState *state)
                 fputc(']', state->file);
             } while ((dim = IDL_LIST(dim).next) != NULL);
         } else {
+            doc_comments = IDL_IDENT(IDL_LIST(dcls).data).comments;
+
+            if (doc_comments != NULL)
+                printlist(state->file, doc_comments);
+
+            fputs("typedef ", state->file);
+            if (!write_type(type, state->file))
+                return FALSE;
             fputs(" ", state->file);
             fputs(IDL_IDENT(IDL_LIST(dcls).data).str, state->file);
         }
-        fputs(";\n", state->file);
+        fputs(";\n\n", state->file);
     }
     return TRUE;
 }
@@ -634,7 +681,8 @@ write_param(IDL_tree param_tree, FILE *outfile)
 
     /* arrays get a bonus * too */
     /* XXX Should this be a leading '*' or a trailing "[]" ?*/
-    if (IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator, "array"))
+    if (IDL_tree_property_get(IDL_PARAM_DCL(param_tree).simple_declarator,
+                              "array"))
         fputc('*', outfile);
 
     fputs(IDL_IDENT(IDL_PARAM_DCL(param_tree).simple_declarator).str, outfile);
@@ -650,9 +698,15 @@ forward_dcl(TreeState *state)
 {
     IDL_tree iface = state->tree;
     const char *className = IDL_IDENT(IDL_FORWARD_DCL(iface).ident).str;
+    GSList *doc_comments = IDL_IDENT(IDL_INTERFACE(iface).ident).comments;
+
     if (!className)
         return FALSE;
-    fprintf(state->file, "class %s; /* forward decl */\n", className);
+
+    if (doc_comments != NULL)
+        printlist(state->file, doc_comments);
+
+    fprintf(state->file, "class %s; /* forward declaration */\n\n", className);
     return TRUE;
 }
 
@@ -746,19 +800,25 @@ write_method_signature(IDL_tree method_tree, FILE *outfile, gboolean as_call)
 static gboolean
 op_dcl(TreeState *state)
 {
+    GSList *doc_comments = IDL_IDENT(IDL_OP_DCL(state->tree).ident).comments;
+
     /*
      * Verify that e.g. non-scriptable methods in [scriptable] interfaces
-     * are declared so.  Do this in a seperate verification pass?
+     * are declared so.  Do this in a separate verification pass?
      */
     if (!verify_method_declaration(state->tree))
         return FALSE;
 
+    if (doc_comments != NULL) {
+        write_indent(state->file);
+        printlist(state->file, doc_comments);
+    }
     xpidl_write_comment(state, 2);
 
     write_indent(state->file);
     if (!write_method_signature(state->tree, state->file, FALSE))
         return FALSE;
-    fputs(" = 0;\n", state->file);
+    fputs(" = 0;\n\n", state->file);
 
     return TRUE;
 }
@@ -776,6 +836,8 @@ static gboolean
 codefrag(TreeState *state)
 {
     const char *desc = IDL_CODEFRAG(state->tree).desc;
+    GSList *lines = IDL_CODEFRAG(state->tree).lines;
+    guint fragment_length;
     
     if (strcmp(desc, "C++") && /* libIDL bug? */ strcmp(desc, "C++\r")) {
         XPIDL_WARNING((state->tree, IDL_WARNING1,
@@ -784,8 +846,28 @@ codefrag(TreeState *state)
 
         return TRUE;
     }
-    g_slist_foreach(IDL_CODEFRAG(state->tree).lines, write_codefrag_line,
-                    (gpointer)state);
+
+    /*
+     * Emit #file directive to point debuggers back to the original .idl file
+     * for the duration of the code fragment.  We look at internal IDL node
+     * properties _file, _line to do this; hopefully they won't change.
+     *
+     * _line seems to refer to the line immediately after the closing %}, so
+     * we backtrack to get the proper line for the beginning of the block.
+     */
+    /*
+     * Looks like getting this right means maintaining an accurate line
+     * count of everything generated, so we can set the file back to the
+     * correct line in the generated file afterwards.  Skipping for now...
+     */
+
+    fragment_length = g_slist_length(lines);
+/*      fprintf(state->file, "#line %d \"%s\"\n", */
+/*              state->tree->_line - fragment_length - 1, */
+/*              state->tree->_file); */
+
+    g_slist_foreach(lines, write_codefrag_line, (gpointer)state);
+
     return TRUE;
 }
 

@@ -210,4 +210,7 @@ verify_method_declaration(IDL_tree method_tree);
 gboolean
 check_native(TreeState *state);
 
+void
+printlist(FILE *outfile, GSList *slist);
+
 #endif /* __xpidl_h */
