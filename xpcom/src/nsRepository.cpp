@@ -47,7 +47,7 @@
  * alpha0.20 : First time we did versioning
  * alpha0.30 : Changing autoreg to begin registration from ./components on unix
  */
-#define NS_XPCOM_REPOSITORY_VERSION_STRING "alpha0.32"
+#define NS_XPCOM_REPOSITORY_VERSION_STRING "alpha0.33"
 
 #include "NSReg.h"
 
@@ -243,43 +243,48 @@ public:
  *
  * Deletes a key sub tree entirely.
  */
-static nsresult platformDeleteKey(HREG hreg, RKEY rootkey, const char *hierarchy)
+static nsresult platformDeleteKey(HREG hreg, RKEY rootkey, const char *keyname)
 {
-    REGENUM state = 0;
     RKEY key;
-    char keyname[MAXREGPATHLEN+1];
-    int n = sizeof(keyname);
+	char subkeyname[MAXREGPATHLEN+1];
+    int n = sizeof(subkeyname);
+    REGENUM state = 0;
 
-    REGERR err = NR_RegGetKey(hreg, rootkey, (char *)hierarchy, &key);
+	REGERR rerr = REGERR_OK;
 
+    REGERR err = NR_RegGetKeyRaw(hreg, rootkey, (char *)keyname, &key);
     if (err != REGERR_OK)
         return (err);
 
-    keyname[0] = '\0';
-    while (NR_RegEnumSubkeys(hreg, key, &state, keyname, n, REGENUM_DEPTH_FIRST) == REGERR_OK)
+	// Now recurse through and delete all keys under hierarchy
+	
+    subkeyname[0] = '\0';
+    while (NR_RegEnumSubkeys(hreg, key, &state, subkeyname, n, REGENUM_NORMAL) == REGERR_OK)
     {
         PR_LOG(logmodule, PR_LOG_ALWAYS,
-               ("nsRepository: ...deleting %s", keyname));
-        err = NR_RegDeleteKey(hreg, key, keyname);
-        if (err != REGERR_OK)
-        {
-            // Couldn't delete a key. We wont be able to delete the entire
-            // hierarchy. ABORT.
-            break;
-        }
-        keyname[0] = '\0';
+               ("nsRepository: ...deleting %s", subkeyname));
 
-        // buf in NR_RegEnumSubKeys() causes it to return ./libxpcom.so first then
-        // subsequently libraptor.so (NOTE without the initial ./ which was there in
-        // the key). Hence continuing thought the enum and delete will fail with
-        // not found. Hence, restarting the enum everytime.
-        state = 0;
-    }
+		rerr = platformDeleteKey(hreg, key, subkeyname);
 
-    if (err == REGERR_OK)
-        err = NR_RegDeleteKey(hreg, rootkey, (char *)hierarchy);
+		if (rerr != REGERR_OK)
+		{
+			break;
+		}
+	}
+
+	// If success in deleting all subkeys, delete this key too
+	if (rerr == REGERR_OK)
+	{
+		err = NR_RegDeleteKeyRaw(hreg, rootkey, (char *)keyname);
+	}
+	else
+	{
+		err = rerr;
+	}
+
     return (err);
 }
+
 
 
 /**
@@ -321,8 +326,11 @@ static nsresult platformVersionCheck()
                 "Nuking xpcom registry hierarchy.", buf, NS_XPCOM_REPOSITORY_VERSION_STRING));
 
         // Delete the XPCOM and CLSID hierarchy
-        platformDeleteKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM");
-        platformDeleteKey(hreg, ROOTKEY_COMMON, "Classes/CLSID");
+		RKEY akey;
+		NR_RegGetKey(hreg, ROOTKEY_COMMON, "Software/Netscape", &akey);
+        platformDeleteKey(hreg, akey, "XPCOM");
+		NR_RegGetKey(hreg, ROOTKEY_COMMON, "Classes", &akey);
+        platformDeleteKey(hreg, akey, "Classes/CLSID");
 
         // Recreate XPCOM and CLSID keys
         NR_RegAddKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM", &xpcomKey);
@@ -366,7 +374,7 @@ static nsDll *platformCreateDll(const char *fullname)
 	}
 	
 	RKEY key;
-	err = NR_RegGetKey(hreg, xpcomKey, (char *)fullname, &key);
+	err = NR_RegGetKeyRaw(hreg, xpcomKey, (char *)fullname, &key);
 	if (err != REGERR_OK)
 	{
 		return (NULL);
@@ -412,7 +420,7 @@ static nsresult platformMarkNoComponents(nsDll *dll)
 	}
 	
 	RKEY key;
-	err = NR_RegAddKey(hreg, xpcomKey, (char *)dll->GetFullPath(), &key);
+	err = NR_RegAddKeyRaw(hreg, xpcomKey, (char *)dll->GetFullPath(), &key);
 	
 	if (err != REGERR_OK)
 	{
@@ -461,7 +469,7 @@ static nsresult platformRegister(NSQuickRegisterData regd, nsDll *dll)
 
 	RKEY key;
 	NR_RegAddKey(hreg, classesKey, "CLSID", &key);
-	NR_RegAddKey(hreg, key, (char *)regd->CIDString, &key);
+	NR_RegAddKeyRaw(hreg, key, (char *)regd->CIDString, &key);
 
 	NR_RegSetEntryString(hreg, key, "ClassName", (char *)regd->className);
 	if (regd->progID)
@@ -471,7 +479,7 @@ static nsresult platformRegister(NSQuickRegisterData regd, nsDll *dll)
 
 	if (regd->progID)
 	{
-		NR_RegAddKey(hreg, classesKey, (char *)regd->progID, &key);
+		NR_RegAddKeyRaw(hreg, classesKey, (char *)regd->progID, &key);
 		NR_RegSetEntryString(hreg, key, "CLSID", (char *)regd->CIDString);
 	}
 
@@ -488,7 +496,7 @@ static nsresult platformRegister(NSQuickRegisterData regd, nsDll *dll)
 		return (NS_OK);
 	}
 
-	NR_RegAddKey(hreg, xpcomKey, (char *)dll->GetFullPath(), &key);
+	NR_RegAddKeyRaw(hreg, xpcomKey, (char *)dll->GetFullPath(), &key);
 
 	PRTime lastModTime = dll->GetLastModifiedTime();
 	PRUint32 fileSize = dll->GetSize();
@@ -534,7 +542,7 @@ static nsresult platformUnregister(NSQuickRegisterData regd, const char *aLibrar
 	RKEY key;
 	NR_RegAddKey(hreg, classesKey, "CLSID", &key);
 	RKEY cidKey;
-	NR_RegAddKey(hreg, key, (char *)regd->CIDString, &cidKey);
+	NR_RegAddKeyRaw(hreg, key, (char *)regd->CIDString, &cidKey);
 	char progID[MAXREGNAMELEN];
 	uint32 plen = sizeof(progID);
 	if (NR_RegGetEntryString(hreg, cidKey, "ProgID", progID, plen) == REGERR_OK)
@@ -554,7 +562,7 @@ static nsresult platformUnregister(NSQuickRegisterData regd, const char *aLibrar
 		return (NS_OK);
 	}
 
-	NR_RegGetKey(hreg, xpcomKey, (char *)aLibrary, &key);
+	NR_RegGetKeyRaw(hreg, xpcomKey, (char *)aLibrary, &key);
 
 	// We need to reduce the ComponentCount by 1.
 	// If the ComponentCount hits 0, delete the entire key.
@@ -605,7 +613,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 	
 	RKEY cidKey;
 	char *cidString = aCID.ToString();
-	err = NR_RegGetKey(hreg, key, cidString, &cidKey);
+	err = NR_RegGetKeyRaw(hreg, key, cidString, &cidKey);
 	delete [] cidString;
 
 	if (err != REGERR_OK)
@@ -636,7 +644,7 @@ static FactoryEntry *platformFind(const nsCID &aCID)
 	RKEY xpcomKey;
 	if (NR_RegAddKey(hreg, ROOTKEY_COMMON, "Software/Netscape/XPCOM", &xpcomKey) == REGERR_OK)
 	{
-		if (NR_RegGetKey(hreg, xpcomKey, library, &key) == REGERR_OK)
+		if (NR_RegGetKeyRaw(hreg, xpcomKey, library, &key) == REGERR_OK)
 		{
 			uint32 n = sizeof(lastModTime);
 			NR_RegGetEntry(hreg, key, "LastModTimeStamp", &lastModTime, &n);
@@ -676,7 +684,7 @@ static nsresult platformProgIDToCLSID(const char *aProgID, nsCID *aClass)
 	}
 
 	RKEY key;
-	err = NR_RegGetKey(hreg, classesKey, (char *)aProgID, &key);
+	err = NR_RegGetKeyRaw(hreg, classesKey, (char *)aProgID, &key);
 	if (err != REGERR_OK)
 	{
 		NR_RegClose(hreg);
@@ -728,7 +736,7 @@ static nsresult platformCLSIDToProgID(nsCID *aClass,
 	}
 
 	RKEY key;
-	err = NR_RegGetKey(hreg, classesKey, cidStr, &key);
+	err = NR_RegGetKeyRaw(hreg, classesKey, cidStr, &key);
 	if (err != REGERR_OK)
 	{
 		res = NS_ERROR_FAILURE;
