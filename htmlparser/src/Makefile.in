@@ -70,6 +70,7 @@ EXPORTS =     \
 	nsIParser.h \
 	nsParser.h \
 	nsIDTD.h \
+	nsIDTDDebug.h \
 	nsIParserFilter.h \
 	nsToken.h \
 	CNavDTD.h \
