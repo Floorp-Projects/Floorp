@@ -225,11 +225,13 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
     if (mLastContentOffset >= aIndexInParent) {
       AdjustIndexInParents(frame, aContainer, aIndexInParent, ::ContentInserted);
   
+#if XXX
       // If the frame is being used as a pseudo-frame then make sure to propagate
       // the content offsets back up the tree
       if (isPseudoFrame) {
         frame->PropagateContentOffsets();
       }
+#endif
     }
 
     frame->GetNextInFlow((nsIFrame*&)frame);
@@ -289,9 +291,11 @@ NS_METHOD nsHTMLContainerFrame::ContentInserted(nsIPresShell*   aShell,
       // The new frame is the last child frame
       parent->SetLastContentOffset(newFrame);
 
+#if XXX
       if (parent->IsPseudoFrame()) {
         parent->PropagateContentOffsets();
       }
+#endif
     }
   }
   parent->mChildCount++;
