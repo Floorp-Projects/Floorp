@@ -29,6 +29,7 @@
 #include "nsIWebShell.h"
 
 #include <Menus.h>
+#include <UnicodeConverter.h>
 
 class nsIMenuBar;
 class nsIMenuListener;
@@ -105,6 +106,8 @@ protected:
     nsIDOMElement  * menuElement,
     nsIDOMNode     * menuNode);
 
+  void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString);
+
   nsString     mLabel;
   PRUint32     mNumMenuItems;
   nsVoidArray  mMenuItemVoidArray;
@@ -127,6 +130,8 @@ protected:
   
   nsIDOMNode  * mDOMNode;
   nsIWebShell * mWebShell;
+  UnicodeToTextRunInfo	mUnicodeTextRunConverter;
+
 private:
 };
 

@@ -24,6 +24,7 @@
 #include "nsIMenuListener.h"
 
 #include <Menus.h>
+#include <UnicodeConverter.h>
 
 class nsIMenuBar;
 class nsIMenuListener;
@@ -102,6 +103,10 @@ protected:
   PRInt16			  mMacMenuID;
   MenuHandle          mMacMenuHandle;
   nsIMenuListener *   mListener;
+  UnicodeToTextRunInfo	mUnicodeTextRunConverter;
+
+void NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& nsString);
+MenuHandle NSStringNewMenu(short menuID, nsString& menuTitle);
 
 private:
   

@@ -94,6 +94,15 @@ nsContextMenu::nsContextMenu() : nsIContextMenu()
   mY             = 0;
   mDOMNode       = nsnull;
   mWebShell      = nsnull;
+
+  //
+  // create a multi-destination Unicode converter which can handle all of the installed
+  //	script systems
+  //
+  OSErr err = ::CreateUnicodeToTextRunInfoByScriptCode(0,NULL,&mUnicodeTextRunConverter);
+  NS_ASSERTION(err==noErr,"nsMenu::nsMenu: CreateUnicodeToTextRunInfoByScriptCode failed.");	
+
+
 }
 
 //-------------------------------------------------------------------------
@@ -134,7 +143,8 @@ nsContextMenu::~nsContextMenu()
   }
   
   mMacMenuIDCount--;
-  
+  OSErr err = ::DisposeUnicodeToTextRunInfo(&mUnicodeTextRunConverter);
+  NS_ASSERTION(err==noErr,"nsMenu::~nsMenu: DisposeUnicodeToTextRunInfo failed.");	    
 }
 
 //-------------------------------------------------------------------------
@@ -223,11 +233,10 @@ NS_METHOD nsContextMenu::AddMenu(nsIMenu * aMenu)
       // We have to add it as a menu item and then associate it with the item
       nsString label;
       aMenu->GetLabel(label);
-      char* menuLabel = label.ToNewCString();
+
       mNumMenuItems++;
       ::InsertMenuItem(mMacMenuHandle, "\p ", mNumMenuItems);
-      ::SetMenuItemText(mMacMenuHandle, mNumMenuItems, c2pstr(menuLabel));
-      delete[] menuLabel;
+      NSStringSetMenuItemText(mMacMenuHandle, mNumMenuItems,label);
   
       MenuHandle menuHandle;
       aMenu->GetNativeData((void**)&menuHandle);
@@ -606,3 +615,49 @@ void nsContextMenu::LoadSubMenu(
 	NS_RELEASE(pnsMenu);
   }     
 }
+
+void nsContextMenu::NSStringSetMenuItemText(MenuHandle macMenuHandle, short menuItem, nsString& menuString)
+{
+	OSErr					err;
+	const PRUnichar*		unicodeText;
+	char*					scriptRunText;
+	size_t					unicodeTextLengthInBytes, unicdeTextReadInBytes,
+							scriptRunTextSizeInBytes, scriptRunTextLengthInBytes,
+							scriptCodeRunListLength;
+	ScriptCodeRun			convertedTextScript;
+	long					scriptMgrVariable;
+	
+	//
+	// extract the Unicode text from the nsString and convert it into a single script run
+	//
+	unicodeText = menuString.GetUnicode();
+	unicodeTextLengthInBytes = menuString.Length() * sizeof(PRUnichar);
+	scriptRunTextSizeInBytes = unicodeTextLengthInBytes * 2;
+	scriptRunText = new char[scriptRunTextSizeInBytes];
+	
+	err = ::ConvertFromUnicodeToScriptCodeRun(mUnicodeTextRunConverter,
+				unicodeTextLengthInBytes,unicodeText,
+				0, /* no flags*/
+				0,NULL,NULL,NULL, /* no offset arrays */
+				scriptRunTextSizeInBytes,&unicdeTextReadInBytes,&scriptRunTextLengthInBytes,
+				scriptRunText,
+				1 /* count of script runs*/,&scriptCodeRunListLength,&convertedTextScript);
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: ConvertFromUnicodeToScriptCodeRun failed.");
+	if (err!=noErr) { delete [] scriptRunText; return; }
+	scriptRunText[scriptRunTextLengthInBytes] = 0;	// null terminate
+	
+	//
+	// get a font from the script code
+	//
+	scriptMgrVariable = ::GetScriptVariable(convertedTextScript.script,smScriptAppFondSize);
+	::SetMenuItemText(macMenuHandle,menuItem,c2pstr(scriptRunText));
+	err = ::SetMenuItemFontID(macMenuHandle,menuItem,HiWord(scriptMgrVariable));
+	NS_ASSERTION(err==noErr,"nsMenu::NSStringSetMenuItemText: SetMenuItemFontID failed.");
+	
+	//
+	// clean up and exit
+	//
+	delete [] scriptRunText;
+			
+}
+	
