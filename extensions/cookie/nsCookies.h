@@ -50,7 +50,7 @@
 
 // XXX these casts and constructs are horrible, but our nsInt64/nsTime
 // classes are lacking so we need them for now. see bug 198694.
-#define USEC_PER_SEC   (nsInt64(long(PR_USEC_PER_SEC)))
+#define USEC_PER_SEC   (nsInt64(PRInt64(1000000)))
 #define NOW_IN_SECONDS (nsInt64(PR_Now()) / USEC_PER_SEC)
 
 // main cookie storage struct
