@@ -57,6 +57,14 @@ typedef struct __struct_Options
 **  mHelp           Wether or not help should be shown.
 **  mModules        Output module by module information.
 **  mTotalOnly      Only output one number, the total.
+**  mMinSize        Ignore lines below this size.
+**  mMaxSize        Ignore lines above this size.
+**  mMatchScopes    For a line to be processed, it should match.
+**  mMachClasses    For a line to be processed, it should match.
+**  mMatchModules   For a line to be processed, it should match.
+**  mMatchSections  For a line to be processed, it should match.
+**  mMatchObjects   For a line to be processed, it should match.
+**  mMatchSymbols   For a line to be processed, it should match.
 */
 {
     const char* mProgramName;
@@ -67,6 +75,20 @@ typedef struct __struct_Options
     int mHelp;
     int mModules;
     int mTotalOnly;
+    unsigned long mMinSize;
+    unsigned long mMaxSize;
+    char** mMatchScopes;
+    unsigned mMatchScopeCount;
+    char** mMatchClasses;
+    unsigned mMatchClassCount;
+    char** mMatchModules;
+    unsigned mMatchModuleCount;
+    char** mMatchSections;
+    unsigned mMatchSectionCount;
+    char** mMatchObjects;
+    unsigned mMatchObjectCount;
+    char** mMatchSymbols;
+    unsigned mMatchSymbolCount;
 }
 Options;
 
@@ -91,12 +113,28 @@ static Switch gOutputSwitch = {"--output", "-o", 1, NULL, "Specify output file."
 static Switch gHelpSwitch = {"--help", "-h", 0, NULL, "Information on usage."};
 static Switch gModuleSwitch = {"--modules", "-m", 0, NULL, "Output individual module numbers as well."};
 static Switch gTotalSwitch = {"--totalonly", "-t", 0, NULL, "Output only one number." DESC_NEWLINE "The total overall size." DESC_NEWLINE "Overrides other output options."};
+static Switch gMinSize = {"--min-size", "-min", 1, NULL, "Only consider symbols equal to or greater than this size." DESC_NEWLINE "The default is 0x00000000."};
+static Switch gMaxSize = {"--max-size", "-max", 1, NULL, "Only consider symbols equal to or smaller than this size." DESC_NEWLINE "The default is 0xFFFFFFFF."};
+static Switch gMatchScope = {"--match-scope", "-msco", 1, NULL, "Only consider scopes that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify a range of scopes," DESC_NEWLINE "though PUBLIC, STATIC, and UNDEF are your only choices."};
+static Switch gMatchClass = {"--match-class", "-mcla", 1, NULL, "Only consider classes that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify a range of classes," DESC_NEWLINE "though CODE and DATA are your only choices."};
+static Switch gMatchModule = {"--match-module", "-mmod", 1, NULL, "Only consider modules that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of modules."};
+static Switch gMatchSection = {"--match-sections", "-msec", 1, NULL, "Only consider sections that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of sections."  DESC_NEWLINE "Section is considered symbol type."};
+static Switch gMatchObject = {"--match-object", "-mobj", 1, NULL, "Only consider objects that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of objects."};
+static Switch gMatchSymbol = {"--match-symbol", "-msym", 1, NULL, "Only consider symbols that have a substring match." DESC_NEWLINE "Multiple uses allowed to specify an array of symbols."};
 
 static Switch* gSwitches[] = {
         &gInputSwitch,
         &gOutputSwitch,
         &gModuleSwitch,
         &gTotalSwitch,
+        &gMinSize,
+        &gMaxSize,
+        &gMatchClass,
+        &gMatchScope,
+        &gMatchModule,
+        &gMatchSection,
+        &gMatchObject,
+        &gMatchSymbol,
         &gHelpSwitch
 };
 
@@ -229,6 +267,9 @@ int codesighs(Options* inOptions)
 
             symbol = strchr(lineBuffer, '\t') + 1;
 
+            /*
+            **  Qualify the segment class.
+            */
             if(0 == strcmp(segClass, "DATA"))
             {
                 segmentClass = DATA;
@@ -245,6 +286,167 @@ int codesighs(Options* inOptions)
 
             if(0 == retval)
             {
+                /*
+                **  Match any options required before continuing.
+                **  This is where you would want to add more restrictive totalling.
+                */
+
+                /*
+                **  Match size.
+                */
+                if(size < inOptions->mMinSize)
+                {
+                    continue;
+                }
+                if(size > inOptions->mMaxSize)
+                {
+                    continue;
+                }
+
+                /*
+                **  Match class.
+                */
+                if(0 != inOptions->mMatchClassCount)
+                {
+                    unsigned loop = 0;
+
+                    for(loop = 0; loop < inOptions->mMatchClassCount; loop++)
+                    {
+                        if(NULL != strstr(segClass, inOptions->mMatchClasses[loop]))
+                        {
+                            break;
+                        }
+                    }
+
+                    /*
+                    **  If there was no match, we skip the line.
+                    */
+                    if(loop == inOptions->mMatchClassCount)
+                    {
+                        continue;
+                    }
+                }
+
+                /*
+                **  Match scope.
+                */
+                if(0 != inOptions->mMatchScopeCount)
+                {
+                    unsigned loop = 0;
+
+                    for(loop = 0; loop < inOptions->mMatchScopeCount; loop++)
+                    {
+                        if(NULL != strstr(scope, inOptions->mMatchScopes[loop]))
+                        {
+                            break;
+                        }
+                    }
+
+                    /*
+                    **  If there was no match, we skip the line.
+                    */
+                    if(loop == inOptions->mMatchScopeCount)
+                    {
+                        continue;
+                    }
+                }
+
+                /*
+                **  Match modules.
+                */
+                if(0 != inOptions->mMatchModuleCount)
+                {
+                    unsigned loop = 0;
+
+                    for(loop = 0; loop < inOptions->mMatchModuleCount; loop++)
+                    {
+                        if(NULL != strstr(module, inOptions->mMatchModules[loop]))
+                        {
+                            break;
+                        }
+                    }
+
+                    /*
+                    **  If there was no match, we skip the line.
+                    */
+                    if(loop == inOptions->mMatchModuleCount)
+                    {
+                        continue;
+                    }
+                }
+
+                /*
+                **  Match sections.
+                */
+                if(0 != inOptions->mMatchSectionCount)
+                {
+                    unsigned loop = 0;
+
+                    for(loop = 0; loop < inOptions->mMatchSectionCount; loop++)
+                    {
+                        if(NULL != strstr(segment, inOptions->mMatchSections[loop]))
+                        {
+                            break;
+                        }
+                    }
+
+                    /*
+                    **  If there was no match, we skip the line.
+                    */
+                    if(loop == inOptions->mMatchSectionCount)
+                    {
+                        continue;
+                    }
+                }
+
+                /*
+                **  Match object.
+                */
+                if(0 != inOptions->mMatchObjectCount)
+                {
+                    unsigned loop = 0;
+
+                    for(loop = 0; loop < inOptions->mMatchObjectCount; loop++)
+                    {
+                        if(NULL != strstr(object, inOptions->mMatchObjects[loop]))
+                        {
+                            break;
+                        }
+                    }
+
+                    /*
+                    **  If there was no match, we skip the line.
+                    */
+                    if(loop == inOptions->mMatchObjectCount)
+                    {
+                        continue;
+                    }
+                }
+
+                /*
+                **  Match symbols.
+                */
+                if(0 != inOptions->mMatchSymbolCount)
+                {
+                    unsigned loop = 0;
+
+                    for(loop = 0; loop < inOptions->mMatchSymbolCount; loop++)
+                    {
+                        if(NULL != strstr(symbol, inOptions->mMatchSymbols[loop]))
+                        {
+                            break;
+                        }
+                    }
+
+                    /*
+                    **  If there was no match, we skip the line.
+                    */
+                    if(loop == inOptions->mMatchSymbolCount)
+                    {
+                        continue;
+                    }
+                }
+
                 /*
                 **  Update overall totals.
                 */
@@ -411,6 +613,7 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
     outOptions->mInputName = strdup("stdin");
     outOptions->mOutput = stdout;
     outOptions->mOutputName = strdup("stdout");
+    outOptions->mMaxSize = 0xFFFFFFFFU;
 
     if(NULL == outOptions->mOutputName || NULL == outOptions->mInputName)
     {
@@ -540,6 +743,208 @@ int initOptions(Options* outOptions, int inArgc, char** inArgv)
             {
                 outOptions->mTotalOnly = __LINE__;
             }
+            else if(current == &gMinSize)
+            {
+                unsigned long arg = 0;
+                char* endScan = NULL;
+
+                errno = 0;
+                arg = strtoul(current->mValue, &endScan, 0);
+                if(0 == errno && endScan != current->mValue)
+                {
+                    outOptions->mMinSize = arg;
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to convert to a number.");
+                }
+            }
+            else if(current == &gMaxSize)
+            {
+                unsigned long arg = 0;
+                char* endScan = NULL;
+
+                errno = 0;
+                arg = strtoul(current->mValue, &endScan, 0);
+                if(0 == errno && endScan != current->mValue)
+                {
+                    outOptions->mMaxSize = arg;
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to convert to a number.");
+                }
+            }
+            else if(current == &gMatchClass)
+            {
+                char* dupMatch = NULL;
+                
+                dupMatch = strdup(current->mValue);
+                if(NULL != dupMatch)
+                {
+                    void* moved = NULL;
+
+                    moved = realloc(outOptions->mMatchClasses, sizeof(char*) * (outOptions->mMatchClassCount + 1));
+                    if(NULL != moved)
+                    {
+                        outOptions->mMatchClasses = (char**)moved;
+                        outOptions->mMatchClasses[outOptions->mMatchClassCount] = dupMatch;
+                        outOptions->mMatchClassCount++;
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        ERROR_REPORT(retval, current->mLongName, "Unable to expand array.");
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to duplicate string.");
+                }
+            }
+            else if(current == &gMatchScope)
+            {
+                char* dupMatch = NULL;
+                
+                dupMatch = strdup(current->mValue);
+                if(NULL != dupMatch)
+                {
+                    void* moved = NULL;
+
+                    moved = realloc(outOptions->mMatchScopes, sizeof(char*) * (outOptions->mMatchScopeCount + 1));
+                    if(NULL != moved)
+                    {
+                        outOptions->mMatchScopes = (char**)moved;
+                        outOptions->mMatchScopes[outOptions->mMatchScopeCount] = dupMatch;
+                        outOptions->mMatchScopeCount++;
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        ERROR_REPORT(retval, current->mLongName, "Unable to expand array.");
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to duplicate string.");
+                }
+            }
+            else if(current == &gMatchModule)
+            {
+                char* dupMatch = NULL;
+                
+                dupMatch = strdup(current->mValue);
+                if(NULL != dupMatch)
+                {
+                    void* moved = NULL;
+
+                    moved = realloc(outOptions->mMatchModules, sizeof(char*) * (outOptions->mMatchModuleCount + 1));
+                    if(NULL != moved)
+                    {
+                        outOptions->mMatchModules = (char**)moved;
+                        outOptions->mMatchModules[outOptions->mMatchModuleCount] = dupMatch;
+                        outOptions->mMatchModuleCount++;
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        ERROR_REPORT(retval, current->mLongName, "Unable to expand array.");
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to duplicate string.");
+                }
+            }
+            else if(current == &gMatchSection)
+            {
+                char* dupMatch = NULL;
+                
+                dupMatch = strdup(current->mValue);
+                if(NULL != dupMatch)
+                {
+                    void* moved = NULL;
+
+                    moved = realloc(outOptions->mMatchSections, sizeof(char*) * (outOptions->mMatchSectionCount + 1));
+                    if(NULL != moved)
+                    {
+                        outOptions->mMatchSections = (char**)moved;
+                        outOptions->mMatchSections[outOptions->mMatchSectionCount] = dupMatch;
+                        outOptions->mMatchSectionCount++;
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        ERROR_REPORT(retval, current->mLongName, "Unable to expand array.");
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to duplicate string.");
+                }
+            }
+            else if(current == &gMatchObject)
+            {
+                char* dupMatch = NULL;
+                
+                dupMatch = strdup(current->mValue);
+                if(NULL != dupMatch)
+                {
+                    void* moved = NULL;
+
+                    moved = realloc(outOptions->mMatchObjects, sizeof(char*) * (outOptions->mMatchObjectCount + 1));
+                    if(NULL != moved)
+                    {
+                        outOptions->mMatchObjects = (char**)moved;
+                        outOptions->mMatchObjects[outOptions->mMatchObjectCount] = dupMatch;
+                        outOptions->mMatchObjectCount++;
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        ERROR_REPORT(retval, current->mLongName, "Unable to expand array.");
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to duplicate string.");
+                }
+            }
+            else if(current == &gMatchSymbol)
+            {
+                char* dupMatch = NULL;
+                
+                dupMatch = strdup(current->mValue);
+                if(NULL != dupMatch)
+                {
+                    void* moved = NULL;
+
+                    moved = realloc(outOptions->mMatchSymbols, sizeof(char*) * (outOptions->mMatchSymbolCount + 1));
+                    if(NULL != moved)
+                    {
+                        outOptions->mMatchSymbols = (char**)moved;
+                        outOptions->mMatchSymbols[outOptions->mMatchSymbolCount] = dupMatch;
+                        outOptions->mMatchSymbolCount++;
+                    }
+                    else
+                    {
+                        retval = __LINE__;
+                        ERROR_REPORT(retval, current->mLongName, "Unable to expand array.");
+                    }
+                }
+                else
+                {
+                    retval = __LINE__;
+                    ERROR_REPORT(retval, current->mValue, "Unable to duplicate string.");
+                }
+            }
             else
             {
                 retval = __LINE__;
@@ -557,6 +962,8 @@ void cleanOptions(Options* inOptions)
 **  Clean up any open handles.
 */
 {
+    unsigned loop = 0;
+
     CLEANUP(inOptions->mInputName);
     if(NULL != inOptions->mInput && stdin != inOptions->mInput)
     {
@@ -567,6 +974,42 @@ void cleanOptions(Options* inOptions)
     {
         fclose(inOptions->mOutput);
     }
+
+    for(loop = 0; loop < inOptions->mMatchClassCount; loop++)
+    {
+        CLEANUP(inOptions->mMatchClasses[loop]);
+    }
+    CLEANUP(inOptions->mMatchClasses);
+
+    for(loop = 0; loop < inOptions->mMatchScopeCount; loop++)
+    {
+        CLEANUP(inOptions->mMatchScopes[loop]);
+    }
+    CLEANUP(inOptions->mMatchScopes);
+
+    for(loop = 0; loop < inOptions->mMatchModuleCount; loop++)
+    {
+        CLEANUP(inOptions->mMatchModules[loop]);
+    }
+    CLEANUP(inOptions->mMatchModules);
+
+    for(loop = 0; loop < inOptions->mMatchSectionCount; loop++)
+    {
+        CLEANUP(inOptions->mMatchSections[loop]);
+    }
+    CLEANUP(inOptions->mMatchSections);
+
+    for(loop = 0; loop < inOptions->mMatchObjectCount; loop++)
+    {
+        CLEANUP(inOptions->mMatchObjects[loop]);
+    }
+    CLEANUP(inOptions->mMatchObjects);
+
+    for(loop = 0; loop < inOptions->mMatchSymbolCount; loop++)
+    {
+        CLEANUP(inOptions->mMatchSymbols[loop]);
+    }
+    CLEANUP(inOptions->mMatchSymbols);
 
     memset(inOptions, 0, sizeof(Options));
 }
