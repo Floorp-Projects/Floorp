@@ -194,7 +194,7 @@ nsDragService :: RegisterDragItemsAndFlavors ( nsISupportsArray * inArray )
   unsigned int numDragItems = 0;
   inArray->Count ( &numDragItems ) ;
   for ( int itemIndex = 0; itemIndex < numDragItems; ++itemIndex ) {  
-    nsCOMPtr<nsITransferable> currItem ( do_QueryInterface((*inArray)[itemIndex]) );
+    nsCOMPtr<nsITransferable> currItem ( do_QueryInterface(inArray->ElementAt(itemIndex)) );
     if ( currItem ) {   
       nsVoidArray* flavorList = nsnull;
       if ( NS_SUCCEEDED(currItem->FlavorsTransferableCanExport(&flavorList)) ) {
