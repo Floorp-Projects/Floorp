@@ -180,7 +180,7 @@ nsresult nsMsgAttachment::DeleteAttachment()
   nsCOMPtr<nsILocalFile> urlFile(do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv))
 	{
-    rv = urlFile->SetURL(mUrl);
+    rv = urlFile->SetURL(mUrl.get());
     if (NS_SUCCEEDED(rv))
 	  {
       PRBool bExists = PR_FALSE;

@@ -3062,7 +3062,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const char* url, PRUnichar** _retval
     return NS_OK;
   }
   
-  if (PL_strncasestr(unescapeURL, "file:", 5))
+  if (PL_strncasestr(unescapeURL.get(), "file:", 5))
   {
     nsFileURL fileUrl(url);
     nsFileSpec fileSpec(fileUrl);
