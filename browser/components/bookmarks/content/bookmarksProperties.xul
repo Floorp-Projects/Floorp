@@ -47,15 +47,6 @@
     </tabs>
     <tabpanels>
       <vbox>
-        <separator class="thin"/>
-        <hbox align="start">
-          <image class="message-icon"/>
-          <separator class="thin" orient="vertical"/>
-          <description id="bookmarkDescription" flex="1"/>
-        </hbox>
-   
-        <separator class="thin"/>
-        
         <vbox class="box-padded">    
           <grid>
             <columns>
