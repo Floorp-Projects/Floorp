@@ -49,6 +49,7 @@ extern "C" {
 
 
 void RL_Init();
+
 PUBLIC NET_StreamClass * 
 NET_NGLayoutConverter(FO_Present_Types format_out,
                       void *converter_obj,
@@ -56,6 +57,10 @@ NET_NGLayoutConverter(FO_Present_Types format_out,
                       MWContext   *context);
 
 }; /* end of extern "C" */
+
+#if defined(XP_PC)
+void net_InitAsyncDNS();
+#endif /* XP_PC */
 
 
 /*
@@ -94,6 +99,10 @@ nsresult NS_InitNetlib(void)
                                            NULL,
                                            NET_ChunkedDecoderStream);
     RL_Init();
+
+#if defined(XP_PC)
+    net_InitAsyncDNS();
+#endif /* XP_PC */
 
     return NS_OK;
 }
