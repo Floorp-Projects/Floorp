@@ -313,18 +313,14 @@ nsresult nsImapProtocol::Initialize(nsIImapHostSessionList * aHostSessionList, n
 		m_fetchBodyListMonitor = PR_NewMonitor();
 
 		SetFlag(IMAP_FIRST_PASS_IN_THREAD);
-//        m_thread = PR_CreateThread(PR_USER_THREAD, ImapThreadMain, (void*)
-  //                                 this, PR_PRIORITY_NORMAL, PR_LOCAL_THREAD,
-    //                               PR_UNJOINABLE_THREAD, 0);
-      nsIThread* workerThread = nsnull;
  
-		nsresult rv = NS_NewThread(&workerThread, this);
+		nsresult rv = NS_NewThread(getter_AddRefs(m_iThread), this);
 		if (NS_FAILED(rv)) 
 		{
-			NS_ASSERTION(workerThread, "Unable to create imap thread.\n");
+			NS_ASSERTION(m_iThread, "Unable to create imap thread.\n");
 			return rv;
 		}
-		workerThread->GetPRThread(&m_thread);
+		m_iThread->GetPRThread(&m_thread);
 
     }
 	return NS_OK;
@@ -686,6 +682,7 @@ NS_IMETHODIMP nsImapProtocol::Run()
     me->m_imapExtensionSink = null_nsCOMPtr();
     me->m_imapMessageSink = null_nsCOMPtr();
     me->m_imapMiscellaneousSink = null_nsCOMPtr();
+	m_iThread = null_nsCOMPtr();
 
     NS_RELEASE(me);
 	return NS_OK;

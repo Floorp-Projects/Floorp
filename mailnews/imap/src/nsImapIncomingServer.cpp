@@ -212,9 +212,9 @@ nsImapIncomingServer::GetImapConnectionAndLoadUrl(nsIEventQueue * aClientEventQu
                                                   nsISupports* aConsumer)
 {
     nsresult rv = NS_OK;
-    nsIImapProtocol* aProtocol = nsnull;
+    nsCOMPtr <nsIImapProtocol> aProtocol;
     
-    rv = CreateImapConnection(aClientEventQueue, aImapUrl, &aProtocol);
+    rv = CreateImapConnection(aClientEventQueue, aImapUrl, getter_AddRefs(aProtocol));
     if (NS_FAILED(rv)) return rv;
 
 	nsCOMPtr<nsIMsgMailNewsUrl> mailnewsurl = do_QueryInterface(aImapUrl, &rv);
@@ -273,9 +273,9 @@ nsImapIncomingServer::LoadNextQueuedUrl(PRBool *aResult)
 
             NS_IF_ADDREF(aConsumer);
             
-            nsIImapProtocol * protocolInstance = nsnull;
+            nsCOMPtr <nsIImapProtocol>  protocolInstance ;
             rv = CreateImapConnection(nsnull, aImapUrl,
-                                               &protocolInstance);
+                                               getter_AddRefs(protocolInstance));
             if (NS_SUCCEEDED(rv) && protocolInstance)
             {
 				nsCOMPtr<nsIURI> url = do_QueryInterface(aImapUrl, &rv);
