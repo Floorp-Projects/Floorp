@@ -610,6 +610,7 @@ NS_IMETHODIMP nsMenuPopupFrame::SetCurrentMenuItem(nsIMenuFrame* aMenuItem)
     if (isOpen) {
       // Don't close up immediately.
       // Kick off a close timer.
+      KillCloseTimer(); // Ensure we don't have another stray waiting closure.
       PRInt32 menuDelay = 300;   // ms
 
       nsILookAndFeel * lookAndFeel;
