@@ -6209,33 +6209,31 @@ nsTableFrame::CalcBCBorders(nsIPresContext& aPresContext)
 class BCMapBorderIterator
 {
 public:
-  BCMapBorderIterator(nsTableFrame&         aTableFrameInFlow,
-                      nsTableRowGroupFrame& aRowGroupFrameInFlow,
-                      nsTableRowFrame&      aRowInFlow,
+  BCMapBorderIterator(nsTableFrame&         aTableFrame,
+                      nsTableRowGroupFrame& aRowGroupFrame,
+                      nsTableRowFrame&      aRowFrame,
                       const nsRect&         aDamageArea);
-  void Reset(nsTableFrame&         aTableFrameInFlow,
-             nsTableRowGroupFrame& aRowGroupFrameInFlow,
-             nsTableRowFrame&      aRowInFlow,
+  void Reset(nsTableFrame&         aTableFrame,
+             nsTableRowGroupFrame& aRowGroupFrame,
+             nsTableRowFrame&      aRowFrame,
              const nsRect&         aDamageArea);
   void First();
   void Next();
 
-  nsTableFrame*         tableInFlow;
   nsTableFrame*         table;
   nsTableCellMap*       tableCellMap;
   nsCellMap*            cellMap;
 
   nsVoidArray           rowGroups;
   nsTableRowGroupFrame* prevRg;
-  nsTableRowGroupFrame* rgInFlow;
   nsTableRowGroupFrame* rg;
   PRInt32               rowGroupIndex;
+  PRInt32               fifRowGroupStart;
   PRInt32               rowGroupStart;
   PRInt32               rowGroupEnd;
-  PRInt32               numRows;
+  PRInt32               numRows; // number of rows in the table and all continuations
 
   nsTableRowFrame*      prevRow;
-  nsTableRowFrame*      rowInFlow;
   nsTableRowFrame*      row;
   PRInt32               numCols;
   PRInt32               x;
@@ -6247,9 +6245,9 @@ public:
   BCCellData*           cellData;
   BCData*               bcData;
 
-  PRBool                IsTopMostTable()    { return (y == 0) && !tableInFlow->GetPrevInFlow(); }
+  PRBool                IsTopMostTable()    { return (y == 0) && !table->GetPrevInFlow(); }
   PRBool                IsRightMostTable()  { return (x >= numCols); }
-  PRBool                IsBottomMostTable() { return (y >= numRows) && !tableInFlow->GetNextInFlow(); }
+  PRBool                IsBottomMostTable() { return (y >= numRows) && !table->GetNextInFlow(); }
   PRBool                IsLeftMostTable()   { return (x == 0); }
   PRBool                IsTopMost()    { return (y == startY); }
   PRBool                IsRightMost()  { return (x >= endX); }
@@ -6267,48 +6265,45 @@ public:
 
 private:
 
-  PRBool SetNewRow(nsTableRowFrame* aRowInFlow = nsnull,
-                   nsTableRowFrame* aRow       = nsnull);
-  PRBool SetNewRowGroup(PRBool aSetInFlow);
+  PRBool SetNewRow(nsTableRowFrame* aRow = nsnull);
+  PRBool SetNewRowGroup();
   void   SetNewData(PRInt32 aY, PRInt32 aX);
 
 };
 
-BCMapBorderIterator::BCMapBorderIterator(nsTableFrame&         aTableInFlow,
-                                         nsTableRowGroupFrame& aRowGroupInFlow,
-                                         nsTableRowFrame&      aRowInFlow,
+BCMapBorderIterator::BCMapBorderIterator(nsTableFrame&         aTable,
+                                         nsTableRowGroupFrame& aRowGroup,
+                                         nsTableRowFrame&      aRow,
                                          const nsRect&         aDamageArea)
 {
-  Reset(aTableInFlow, aRowGroupInFlow, aRowInFlow, aDamageArea);
+  Reset(aTable, aRowGroup, aRow, aDamageArea);
 }
 
 void
-BCMapBorderIterator::Reset(nsTableFrame&         aTableInFlow,
-                           nsTableRowGroupFrame& aRowGroupInFlow,
-                           nsTableRowFrame&      aRowInFlow,
+BCMapBorderIterator::Reset(nsTableFrame&         aTable,
+                           nsTableRowGroupFrame& aRowGroup,
+                           nsTableRowFrame&      aRow,
                            const nsRect&         aDamageArea)
 {
   atEnd = PR_TRUE; // gets reset when First() is called
 
-  tableInFlow = &aTableInFlow;
-  table       = (nsTableFrame*)aTableInFlow.GetFirstInFlow(); if (!table) ABORT0();
-  rgInFlow    = &aRowGroupInFlow;                
-  rowInFlow   = &aRowInFlow;                     
+  table = &aTable;
+  rg    = &aRowGroup;                
+  row   = &aRow;                     
 
-  tableCellMap  = table->GetCellMap();
+  nsTableFrame* tableFif = (nsTableFrame*)table->GetFirstInFlow(); if (!tableFif) ABORT0();
+  tableCellMap = tableFif->GetCellMap();
 
   startX   = aDamageArea.x;
   startY   = aDamageArea.y;
   endY     = aDamageArea.y + aDamageArea.height;
   endX     = aDamageArea.x + aDamageArea.width;
 
-  numRows       = table->GetRowCount();
+  numRows       = tableFif->GetRowCount();
   y             = 0;
-  numCols       = table->GetColCount();
+  numCols       = tableFif->GetColCount();
   x             = 0;
   rowGroupIndex = -1;
-  rg            = nsnull;
-  row           = nsnull;
   cell          = nsnull;
   cellData      = nsnull;
 
@@ -6340,7 +6335,7 @@ BCMapBorderIterator::SetNewData(PRInt32 aY,
   }
   else {
     bcData = nsnull;
-    nsVoidArray* row = (nsVoidArray*)cellMap->mRows.ElementAt(y - rowGroupStart);
+    nsVoidArray* row = (nsVoidArray*)cellMap->mRows.ElementAt(y - fifRowGroupStart);
     if (row) {
       cellData = (row->Count() > x) ? (BCCellData*)row->ElementAt(x) : nsnull;
       if (cellData) {
@@ -6353,7 +6348,7 @@ BCMapBorderIterator::SetNewData(PRInt32 aY,
             aX -= cellData->GetColSpanOffset();
           }
           if ((aX >= 0) && (aY >= 0)) {
-            row = (nsVoidArray*)cellMap->mRows.ElementAt(aY - rowGroupStart);
+            row = (nsVoidArray*)cellMap->mRows.ElementAt(aY - fifRowGroupStart);
             if (row) {
               cellData = (BCCellData*)row->ElementAt(aX);
             }
@@ -6369,14 +6364,12 @@ BCMapBorderIterator::SetNewData(PRInt32 aY,
 }
 
 PRBool
-BCMapBorderIterator::SetNewRow(nsTableRowFrame* aRowInFlow,
-                               nsTableRowFrame* aRow)
+BCMapBorderIterator::SetNewRow(nsTableRowFrame* aRow)
 {
   prevRow = row;
-  row       = (aRow) ? aRow : row->GetNextRow();
-  rowInFlow = (aRowInFlow) ? aRowInFlow : rowInFlow->GetNextRow();
+  row      = (aRow) ? aRow : row->GetNextRow();
  
-  if (rowInFlow && row) {
+  if (row) {
     isNewRow = PR_TRUE;
     y = row->GetRowIndex();
     x = startX;
@@ -6389,7 +6382,7 @@ BCMapBorderIterator::SetNewRow(nsTableRowFrame* aRowInFlow,
 
 
 PRBool
-BCMapBorderIterator::SetNewRowGroup(PRBool aSetInFlow)
+BCMapBorderIterator::SetNewRowGroup()
 {
   rowGroupIndex++;
 
@@ -6400,39 +6393,17 @@ BCMapBorderIterator::SetNewRowGroup(PRBool aSetInFlow)
     prevRg = rg;
     nsIFrame* frame = (nsTableRowGroupFrame*)rowGroups.ElementAt(rowGroupIndex); if (!frame) ABORT1(PR_FALSE);
     rg = table->GetRowGroupFrame(frame); if (!rg) ABORT1(PR_FALSE);
-    rowGroupStart = rg->GetStartRowIndex(); 
-    rowGroupEnd   = rowGroupStart + rg->GetRowCount() - 1;
+    fifRowGroupStart = ((nsTableRowGroupFrame*)rg->GetFirstInFlow())->GetStartRowIndex();
+    rowGroupStart    = rg->GetStartRowIndex(); 
+    rowGroupEnd      = rowGroupStart + rg->GetRowCount() - 1;
 
-    if (aSetInFlow) {
-      if (rgInFlow && tableInFlow->GetPrevInFlow()) {
-        // if there is a prev in flow, then the next rgInFlow is (a) either the previous ones next sibling
-        // or (b) the rg of the next sibling of the parent if the parent is a scroll frame
-        nsIFrame* frame  = nsnull;
-        nsIFrame* parent = nsnull;
-        rgInFlow->GetParent(&parent);
-        if (parent == tableInFlow) {
-          rgInFlow->GetNextSibling(&frame);
-        }
-        else if (parent) {
-          parent->GetNextSibling(&frame);
-        }
-        rgInFlow = table->GetRowGroupFrame(frame);
-        if (!rgInFlow) {
-          atEnd = PR_TRUE;
-          ABORT1(PR_FALSE);
-        }
-      }
-      else {
-        rgInFlow = rg;
-      }
+    if (SetNewRow(rg->GetFirstRow())) {
+      cellMap = tableCellMap->GetMapFor(*(nsTableRowGroupFrame*)rg->GetFirstInFlow()); 
     }
-    if (SetNewRow(rgInFlow->GetFirstRow(), rg->GetFirstRow())) {
-      cellMap  = tableCellMap->GetMapFor(*rg); 
-    }
-    if (rgInFlow && tableInFlow->GetPrevInFlow() && !rgInFlow->GetPrevInFlow()) {
-      // if rgInFlow doesn't have a prev in flow, then it may be a repeated header or footer
+    if (rg && table->GetPrevInFlow() && !rg->GetPrevInFlow()) {
+      // if rg doesn't have a prev in flow, then it may be a repeated header or footer
       const nsStyleDisplay* display;
-      rgInFlow->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
+      rg->GetStyleData(eStyleStruct_Display, (const nsStyleStruct *&)display);
       if (y == startY) {
         isRepeatedHeader = (NS_STYLE_DISPLAY_TABLE_HEADER_GROUP == display->mDisplay);
       }
@@ -6463,7 +6434,7 @@ BCMapBorderIterator::First()
       PRInt32 end   = start + rowG->GetRowCount() - 1;
       if ((startY >= start) && (startY <= end)) {
         rowGroupIndex = rgX - 1; // SetNewRowGroup increments rowGroupIndex
-        if (SetNewRowGroup(PR_FALSE)) { 
+        if (SetNewRowGroup()) { 
           while ((y < startY) && !atEnd) {
             SetNewRow();
           }
@@ -6495,7 +6466,7 @@ BCMapBorderIterator::Next()
         SetNewRow();
       }
       else {
-        SetNewRowGroup(PR_TRUE);
+        SetNewRowGroup();
       }
     }
     else {
@@ -6815,7 +6786,7 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
     PRInt32 xAdj = iter.x - iter.startX;
     if (iter.isNewRow) {
       prevHorSegHeight = 0;
-      iter.rowInFlow->GetRect(rowRect);
+      iter.row->GetRect(rowRect);
       if (iter.isRepeatedHeader) {
         repeatedHeaderY = iter.y;
       }
@@ -6959,7 +6930,7 @@ nsTableFrame::PaintBCBorders(nsIPresContext*      aPresContext,
     cornerSubWidth = (iter.bcData) ? iter.bcData->GetCorner(ownerSide, bevel) : 0;
     nscoord verWidth = PR_MAX(verInfo[xAdj].segWidth, leftSegWidth);
     if (iter.isNewRow || (iter.IsLeftMost() && iter.IsBottomMostTable())) {
-      iter.rowInFlow->GetRect(rowRect);
+      iter.row->GetRect(rowRect);
       horSeg.y = nextY;
       nextY    = nextY + rowRect.height;
       horSeg.x = startColX;
