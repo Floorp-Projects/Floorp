@@ -3721,7 +3721,8 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   }
   
 
-  rootFrame->Init(aPresContext, nsnull, parentFrame, rootPseudoStyle, nsnull);
+  rootFrame->Init(aPresContext, aDocElement, parentFrame,
+                  rootPseudoStyle, nsnull);
   
   if (!isPaginated || (isPaginated && printPreviewContext)) {
     if (isScrollable) {
@@ -3802,12 +3803,12 @@ nsCSSFrameConstructor::CreatePlaceholderFrameFor(nsIPresShell*    aPresShell,
     placeholderFrame->Init(aPresContext, aContent, aParentFrame,
                            placeholderStyle, nsnull);
   
-    // Add mapping from absolutely positioned frame to its placeholder frame
-    aFrameManager->SetPlaceholderFrameFor(aFrame, placeholderFrame);
-
     // The placeholder frame has a pointer back to the out-of-flow frame
     placeholderFrame->SetOutOfFlowFrame(aFrame);
   
+    // Add mapping from absolutely positioned frame to its placeholder frame
+    aFrameManager->RegisterPlaceholderFrame(placeholderFrame);
+
     *aPlaceholderFrame = NS_STATIC_CAST(nsIFrame*, placeholderFrame);
   }
 
@@ -8922,7 +8923,7 @@ DoDeletingFrameSubtree(nsIPresContext*  aPresContext,
         NS_ASSERTION(outOfFlowFrame, "no out-of-flow frame");
   
         // Remove the mapping from the out-of-flow frame to its placeholder
-        aFrameManager->SetPlaceholderFrameFor(outOfFlowFrame, nsnull);
+        aFrameManager->UnregisterPlaceholderFrame((nsPlaceholderFrame*)childFrame);
         
         // Destroy the out-of-flow frame only if aRemovedFrame is _not_
         // one of its ancestor frames or if it is a popup frame. 
@@ -9406,13 +9407,14 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     const nsStyleDisplay* display;
     childFrame->GetStyleData(eStyleStruct_Display,
                              (const nsStyleStruct*&)display);
-    nsIFrame* placeholderFrame = nsnull;
+    nsPlaceholderFrame* placeholderFrame = nsnull;
     if (display->mDisplay == NS_STYLE_DISPLAY_POPUP)
       // Get the placeholder frame
-      frameManager->GetPlaceholderFrameFor(childFrame, &placeholderFrame);
+      frameManager->GetPlaceholderFrameFor(childFrame,
+                                           (nsIFrame**)&placeholderFrame);
     if (placeholderFrame) {
       // Remove the mapping from the frame to its placeholder
-      frameManager->SetPlaceholderFrameFor(childFrame, nsnull);
+      frameManager->UnregisterPlaceholderFrame(placeholderFrame);
     
       // Locate the root popup set and remove ourselves from the popup set's list
       // of popup frames.
@@ -9446,11 +9448,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       printf("  ==> child display is still floating!\n");
 #endif
       // Get the placeholder frame
-      nsIFrame* placeholderFrame;
-      frameManager->GetPlaceholderFrameFor(childFrame, &placeholderFrame);
+      nsPlaceholderFrame* placeholderFrame;
+      frameManager->GetPlaceholderFrameFor(childFrame,
+                                           (nsIFrame**)&placeholderFrame);
 
       // Remove the mapping from the frame to its placeholder
-      frameManager->SetPlaceholderFrameFor(childFrame, nsnull);
+      if (placeholderFrame)
+        frameManager->UnregisterPlaceholderFrame(placeholderFrame);
 
       // Now we remove the floating frame
 
@@ -9475,11 +9479,13 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
       // See if it's absolutely or fixed positioned
       if (display->IsAbsolutelyPositioned()) {
         // Get the placeholder frame
-        nsIFrame* placeholderFrame;
-        frameManager->GetPlaceholderFrameFor(childFrame, &placeholderFrame);
+        nsPlaceholderFrame* placeholderFrame;
+        frameManager->GetPlaceholderFrameFor(childFrame,
+                                             (nsIFrame**)&placeholderFrame);
 
         // Remove the mapping from the frame to its placeholder
-        frameManager->SetPlaceholderFrameFor(childFrame, nsnull);
+        if (placeholderFrame)
+          frameManager->UnregisterPlaceholderFrame(placeholderFrame);
 
         // Generate two notifications. First for the absolutely positioned
         // frame
@@ -10585,11 +10591,11 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
   GetChildListNameFor(aPresContext, parentFrame, aFrame, getter_AddRefs(listName));
 
   // If the frame is out of the flow, then it has a placeholder frame.
-  nsIFrame* placeholderFrame = nsnull;
+  nsPlaceholderFrame* placeholderFrame = nsnull;
   nsCOMPtr<nsIPresShell> presShell;
   aPresContext->GetShell(getter_AddRefs(presShell));
   if (listName) {
-    presShell->GetPlaceholderFrameFor(aFrame, &placeholderFrame);
+    presShell->GetPlaceholderFrameFor(aFrame, (nsIFrame**)&placeholderFrame);
   }
 
   // Get the previous sibling frame
@@ -10615,12 +10621,6 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       // Reset the primary frame mapping
       frameManager->SetPrimaryFrameFor(content, newFrame);
 
-      if (placeholderFrame) {
-        // Reuse the existing placeholder frame, and add an association to the
-        // new frame
-        frameManager->SetPlaceholderFrameFor(newFrame, placeholderFrame);
-      }
-
       // Replace the old frame with the new frame
       frameManager->ReplaceFrame(aPresContext, *presShell, parentFrame,
                                  listName, aFrame, newFrame);
@@ -10629,11 +10629,15 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
       // frame then complete the transition from image frame to new frame
       if (placeholderFrame) {
         // Remove the association between the old frame and its placeholder
-        frameManager->SetPlaceholderFrameFor(aFrame, nsnull);
+        frameManager->UnregisterPlaceholderFrame(placeholderFrame);
         
         // Placeholder frames have a pointer back to the out-of-flow frame.
         // Make sure that's correct, too.
-        ((nsPlaceholderFrame*)placeholderFrame)->SetOutOfFlowFrame(newFrame);
+        placeholderFrame->SetOutOfFlowFrame(newFrame);
+
+        // Reuse the existing placeholder frame, and add an association to the
+        // new frame
+        frameManager->RegisterPlaceholderFrame(placeholderFrame);
 
         // XXX Work around a bug in the block code where the floater won't get
         // reflowed unless the line containing the placeholder frame is reflowed...
@@ -10696,7 +10700,7 @@ nsCSSFrameConstructor::CantRenderReplacedElement(nsIPresShell* aPresShell,
         // Remove the association between the old frame and its placeholder
         // Note: ConstructFrameByDisplayType() will already have added an
         // association for the new placeholder frame
-        state.mFrameManager->SetPlaceholderFrameFor(aFrame, nsnull);
+        state.mFrameManager->UnregisterPlaceholderFrame(placeholderFrame);
 
         // Verify that the new frame is also a placeholder frame
         NS_ASSERTION(IsPlaceholderFrame(newFrame), "unexpected frame type");
@@ -12482,8 +12486,8 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
 
   // Discover the placeholder frame for the letter frame
   nsIFrame* parentFrame;
-  nsIFrame* placeholderFrame;
-  aFrameManager->GetPlaceholderFrameFor(floater, &placeholderFrame);
+  nsPlaceholderFrame* placeholderFrame;
+  aFrameManager->GetPlaceholderFrameFor(floater, (nsIFrame**)&placeholderFrame);
   if (!placeholderFrame) {
     // Somethings really wrong
     return NS_OK;
@@ -12552,7 +12556,7 @@ nsCSSFrameConstructor::RemoveFloatingFirstLetterFrames(
   printf("RemoveFloatingFirstLetterFrames: textContent=%p oldTextFrame=%p newTextFrame=%p\n",
          textContent.get(), textFrame, newTextFrame);
 #endif
-  aFrameManager->SetPlaceholderFrameFor(floater, nsnull);
+  aFrameManager->UnregisterPlaceholderFrame(placeholderFrame);
   aFrameManager->SetPrimaryFrameFor(textContent, nsnull);
 
   // Remove the floater frame
