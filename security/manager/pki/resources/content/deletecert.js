@@ -34,20 +34,18 @@ var helpUrl;
 
 function setWindowName()
 {
-  pkiParams = window.arguments[0].QueryInterface(nsIDialogParamBlock);
-  dialogParams = pkiParams.QueryInterface(nsIDialogParamBlock);
-
+  params = window.arguments[0].QueryInterface(nsIDialogParamBlock);
+  
   //  Get the cert from the cert database
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
   
-  var typeFlag = dialogParams.GetString(1);
-  var numberOfCerts = dialogParams.GetInt(2);
+  var typeFlag = params.GetString(1);
+  var numberOfCerts = params.GetInt(2);
   var dbkey;
-  var isupport 
   for(var x=0; x<numberOfCerts;x++)
   {
-     isupport = pkiParams.getISupportAtIndex(x+1);
-     certs[x]    = isupport.QueryInterface(nsIX509Cert);
+     dbkey = params.GetString(x+3);
+     certs[x] = certdb.getCertByDBKey(dbkey , null);
   }
   
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
@@ -58,23 +56,23 @@ function setWindowName()
   if(typeFlag == bundle.GetStringFromName("deleteUserCertFlag"))
   {
      title = bundle.GetStringFromName("deleteUserCertTitle");
-	 confirm = bundle.GetStringFromName("deleteUserCertConfirm");
-	 impact = bundle.GetStringFromName("deleteUserCertImpact");
-	 helpUrl = "chrome://help/content/help.xul?delete_my_certs"
+     confirm = bundle.GetStringFromName("deleteUserCertConfirm");
+     impact = bundle.GetStringFromName("deleteUserCertImpact");
+     helpUrl = "chrome://help/content/help.xul?delete_my_certs"
   }
   else if(typeFlag == bundle.GetStringFromName("deleteSslCertFlag"))
   {
      title = bundle.GetStringFromName("deleteSslCertTitle");
-	 confirm = bundle.GetStringFromName("deleteSslCertConfirm");
-	 impact = bundle.GetStringFromName("deleteSslCertImpact");
-	 helpUrl = "chrome://help/content/help.xul?delete_web_certs"
+     confirm = bundle.GetStringFromName("deleteSslCertConfirm");
+     impact = bundle.GetStringFromName("deleteSslCertImpact");
+     helpUrl = "chrome://help/content/help.xul?delete_web_certs"
   }
   else if(typeFlag == bundle.GetStringFromName("deleteCaCertFlag"))
   {
      title = bundle.GetStringFromName("deleteCaCertTitle");
-	 confirm = bundle.GetStringFromName("deleteCaCertConfirm");
-	 impact = bundle.GetStringFromName("deleteCaCertImpact");
-	 helpUrl = "chrome://help/content/help.xul?delete_ca_certs"   
+     confirm = bundle.GetStringFromName("deleteCaCertConfirm");
+     impact = bundle.GetStringFromName("deleteCaCertImpact");
+     helpUrl = "chrome://help/content/help.xul?delete_ca_certs"   
   }
   else
   {
@@ -92,8 +90,8 @@ function setWindowName()
   for(var x=0;x<certs.length;x++)
   {
     text = document.createElement("text");
-	text.setAttribute("value",certs[x].commonName);
-	box.appendChild(text);
+    text.setAttribute("value",certs[x].commonName);
+    box.appendChild(text);
   }
 
   setText("impact",impact);
