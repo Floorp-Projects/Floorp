@@ -425,8 +425,12 @@ nsMessenger::SaveAs(const char* url, PRBool asFile)
           rv = fileSpec->ChooseOutputFile("Save Message", "",
                                   nsIFileSpecWithUI::eAllMailOutputFilters);
           if (NS_SUCCEEDED(rv))
-            messageService->SaveMessageToDisk(url, fileSpec, PR_FALSE, nsnull,
-                                              nsnull);
+          {
+            nsCOMPtr<nsIFileSpec> aSpec = do_QueryInterface(fileSpec, &rv);
+            if (NS_SUCCEEDED(rv))
+              messageService->SaveMessageToDisk(url, aSpec, PR_FALSE,
+                                                nsnull, nsnull);
+          }
         }                                
       }
     }
