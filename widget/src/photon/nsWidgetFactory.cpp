@@ -142,7 +142,7 @@ nsWidgetFactory::~nsWidgetFactory()
 nsresult nsWidgetFactory::QueryInterface(const nsIID &aIID,   
                                          void **aResult)   
 {   
-  PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::QueryInterface mRefCnt=<%d>\n", mRefCnt));
+//  PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::QueryInterface mRefCnt=<%d>\n", mRefCnt));
 
   if (NULL == aResult) {
     return NS_ERROR_NULL_POINTER;
@@ -169,7 +169,7 @@ nsresult nsWidgetFactory::CreateInstance( nsISupports *aOuter,
                                           const nsIID &aIID,  
                                           void **aResult)  
 {  
-PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\n", mRefCnt));
+//PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\n", mRefCnt));
 
     if (aResult == NULL) {  
         return NS_ERROR_NULL_POINTER;  
@@ -297,7 +297,7 @@ PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 1 mRefCnt=<%d>\
         return NS_ERROR_OUT_OF_MEMORY;  
     }  
 
-PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 2 mRefCnt=<%d>\n", mRefCnt));
+//PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 2 mRefCnt=<%d>\n", mRefCnt));
 
     nsresult res = inst->QueryInterface(aIID, aResult);
 
@@ -313,7 +313,7 @@ PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::CreateInstance 2 mRefCnt=<%d>\
 
 nsresult nsWidgetFactory::LockFactory(PRBool aLock)  
 {  
-  PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::Lock Factory mRefCnt=<%d> - Not Implemented\n", mRefCnt));
+//  PR_LOG(PhWidLog, PR_LOG_ERROR,( "nsWidgetFactory::Lock Factory mRefCnt=<%d> - Not Implemented\n", mRefCnt));
 
     // Not implemented in simplest case.  
     return NS_OK;

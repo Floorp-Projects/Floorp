@@ -444,10 +444,11 @@ NS_METHOD nsAppShell::Exit()
 //-------------------------------------------------------------------------
 void* nsAppShell::GetNativeData(PRUint32 aDataType)
 {
-  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::GetNativeShell - Not Implemented.\n"));
+  PR_LOG(PhWidLog, PR_LOG_DEBUG, ("nsAppShell::GetNativeData\n"));
 
   if( aDataType == NS_NATIVE_SHELL )
   {
+    /* This is what GTK does */
     return nsnull;
   }
   return nsnull;
