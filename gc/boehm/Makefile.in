@@ -29,11 +29,43 @@ LIBRARY_NAME=boehm
 
 DEFINES += -DATOMIC_UNCOLLECTABLE -DNO_SIGNALS -DNO_EXECUTE_PERMISSION -DALL_INTERIOR_POINTERS -DSILENT
 
+DEFINES += -DREDIRECT_MALLOC=GC_malloc
+
 # linux-specific stuff
 DEFINES += -DLINUX_THREADS -D_REENTRANT
 
+EXPORTS = gc.h
 
-CSRCS= reclaim.c allchblk.c misc.c alloc.c mach_dep.c os_dep.c mark_rts.c headers.c mark.c obj_map.c pcr_interface.c blacklst.c finalize.c new_hblk.c real_malloc.c dyn_load.c dbg_mlc.c malloc.c stubborn.c checksums.c solaris_threads.c irix_threads.c linux_threads.c typd_mlc.c ptr_chck.c mallocx.c solaris_pthreads.c
+CSRCS= allchblk.c \
+		alloc.c \
+		blacklst.c \
+		checksums.c \
+		dbg_mlc.c \
+		dyn_load.c \
+		finalize.c \
+		headers.c \
+		irix_threads.c \
+		linux_threads.c \
+		mach_dep.c \
+		malloc.c \
+		mallocx.c \
+		mark.c \
+		mark_rts.c \
+		misc.c \
+		new_hblk.c \
+		obj_map.c \
+		os_dep.c \
+		pcr_interface.c \
+		ptr_chck.c \
+		real_malloc.c \
+		reclaim.c \
+		solaris_pthreads.c \
+		solaris_threads.c \
+		stubborn.c \
+		typd_mlc.c \
+		$(NULL)
+
+CPPSRCS = gc_cpp.cc
 
 EXTRA_DSO_LDOPTS += \
 	-lpthread	\
