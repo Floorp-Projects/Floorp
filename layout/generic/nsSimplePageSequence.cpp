@@ -555,13 +555,11 @@ nsSimplePageSequenceFrame::SetPageNumberFormat(const char* aPropName, const char
   // Doing this here so we only have to go get these formats once
   nsAutoString pageNumberFormat;
   // Now go get the Localized Page Formating String
-  const PRUnichar* uPropName = NS_ConvertUTF8toUCS2(aPropName).get();
-  if (uPropName != nsnull) {
-    nsresult rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, uPropName, pageNumberFormat);
-    if (NS_FAILED(rv)) { // back stop formatting
-      pageNumberFormat.AssignWithConversion(aDefPropVal);
-    }
+  nsresult rv = nsFormControlHelper::GetLocalizedString(PRINTING_PROPERTIES, NS_ConvertUTF8toUCS2(aPropName).get(), pageNumberFormat);
+  if (NS_FAILED(rv)) { // back stop formatting
+    pageNumberFormat.AssignWithConversion(aDefPropVal);
   }
+
   // Sets the format into a static data memeber which will own the memory and free it
   PRUnichar* uStr = ToNewUnicode(pageNumberFormat);
   if (uStr != nsnull) {
