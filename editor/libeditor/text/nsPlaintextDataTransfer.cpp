@@ -215,7 +215,7 @@ NS_IMETHODIMP nsPlaintextEditor::InsertFromDrop(nsIDOMEvent* aDropEvent)
       nsCOMPtr<nsIDOMMouseEvent> mouseEvent ( do_QueryInterface(aDropEvent) );
       if (mouseEvent)
 
-#ifdef XP_MAC
+#if defined(XP_MAC) || defined(XP_MACOSX)
         mouseEvent->GetAltKey(&userWantsCopy);
 #else
         mouseEvent->GetCtrlKey(&userWantsCopy);
