@@ -48,7 +48,7 @@ int main(int argc, char **argv) {
     nsCOMPtr<nsIIDNService> converter = do_GetService(NS_IDNSERVICE_CONTRACTID);
     NS_ASSERTION(converter, "idnSDK not installed!");
     if (converter) {
-        converter->UTF8ToIDNHostName("臺灣.公司", &buf);
+        converter->ConvertUTF8toACE("臺灣.公司", &buf);
         printf("converted = %s", buf);
     }
     return 0;

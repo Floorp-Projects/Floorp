@@ -959,7 +959,7 @@ nsStandardURL::GetAsciiHost(nsACString &result)
 
     if (gIDNService) {
         nsresult rv;
-        rv = gIDNService->UTF8ToIDNHostName(PromiseFlatCString(Host()).get(), &mHostA);
+        rv = gIDNService->ConvertUTF8toACE(PromiseFlatCString(Host()).get(), &mHostA);
         if (NS_SUCCEEDED(rv)) {
             result = mHostA;
             return NS_OK;
