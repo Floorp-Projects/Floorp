@@ -94,8 +94,11 @@ public:
                                     nsIRenderingContext& aRC,
                                     nscoord& aDeltaWidth);
 #endif
-  NS_IMETHOD VerticalAlignFrames(nscoord aLineHeight,
-                                 nscoord aDistanceFromTopEdge);
+  NS_IMETHOD VerticalAlignFrames(nsIPresContext& aPresContext,
+                                 const nsHTMLReflowState& aState,
+                                 nscoord aLineHeight,
+                                 nscoord aDistanceFromTopEdge,
+                                 nsRect& aCombinedArea);
 
 protected:
   // Reflow state used during our reflow methods
@@ -1290,45 +1293,66 @@ nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
 }
 
 // Perform pass2 vertical alignment on top/bottom aligned child frames
+// XXX relative positioning will need to be done *after* this
 NS_IMETHODIMP
-nsInlineFrame::VerticalAlignFrames(nscoord aLineHeight,
-                                   nscoord aDistanceFromTopEdge)
+nsInlineFrame::VerticalAlignFrames(nsIPresContext& aPresContext,
+                                   const nsHTMLReflowState& aState,
+                                   nscoord aLineHeight,
+                                   nscoord aDistanceFromTopEdge,
+                                   nsRect& aCombinedArea)
 {
   if (HaveAnonymousBlock()) {
     // This should be impossible - when we have an inline frame and it
     // contains an anonymous block, none of the blocks children or the
     // block itself will trigger a pass2 valign at this level.
     NS_NOTREACHED("can't get here");
+    aCombinedArea = mRect;
     return NS_OK;
   }
 
-  nsRect bbox;
+  // topEdge is the y coordinate of the line's top, relative to this
+  // frame (== in this frames local coordinate system).
+  nscoord topEdge = -aDistanceFromTopEdge;
 
+  nsRect bbox, childCombinedArea;
+  nscoord x0 = 0;
+  nscoord y0 = 0;
+  nscoord x1 = mRect.width;
+  nscoord y1 = mRect.height;
   nsIFrame* frame = mFrames.FirstChild();
   while (nsnull != frame) {
     const nsStyleText* textStyle;
     frame->GetStyleData(eStyleStruct_Text, (const nsStyleStruct*&)textStyle);
     nsStyleUnit verticalAlignUnit = textStyle->mVerticalAlign.GetUnit();
     frame->GetRect(bbox);
+
     if (eStyleUnit_Enumerated == verticalAlignUnit) {
       PRUint8 verticalAlignEnum = textStyle->mVerticalAlign.GetIntValue();
-      switch (verticalAlignEnum) {
-      default:
-        break;
-
-      case NS_STYLE_VERTICAL_ALIGN_TOP:
-        // XXX what about the top margin?
-        // XXX relative positioning will need to be done *after* this
-        bbox.y = -aDistanceFromTopEdge;
+      if (NS_STYLE_VERTICAL_ALIGN_TOP == verticalAlignEnum) {
+        nsMargin margin;
+        nsHTMLReflowState::ComputeMarginFor(frame, &aState, margin);
+        nsCSSFrameType frameType =
+          nsHTMLReflowState::DetermineFrameType(frame);
+        bbox.y = topEdge + margin.top;
+        if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
+          nsMargin bp;
+          nsHTMLReflowState::ComputeBorderPaddingFor(frame, &aState, bp);
+          bbox.y -= bp.top;
+        }
         frame->SetRect(bbox);
-        break;
-
-      case NS_STYLE_VERTICAL_ALIGN_BOTTOM:
-        // XXX what about the bottom margin?
-        // XXX relative positioning will need to be done *after* this
-        bbox.y = (aLineHeight - bbox.height) - aDistanceFromTopEdge;
+      }
+      else if (NS_STYLE_VERTICAL_ALIGN_BOTTOM == verticalAlignEnum) {
+        nsMargin margin;
+        nsHTMLReflowState::ComputeMarginFor(frame, &aState, margin);
+        nsCSSFrameType frameType =
+          nsHTMLReflowState::DetermineFrameType(frame);
+        bbox.y = topEdge + aLineHeight - bbox.height - margin.bottom;
+        if (NS_CSS_FRAME_TYPE_INLINE == frameType) {
+          nsMargin bp;
+          nsHTMLReflowState::ComputeBorderPaddingFor(frame, &aState, bp);
+          bbox.y += bp.bottom;
+        }
         frame->SetRect(bbox);
-        break;
       }
     }
 
@@ -1337,11 +1361,35 @@ nsInlineFrame::VerticalAlignFrames(nscoord aLineHeight,
     nsIHTMLReflow* ihr;
     nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
     if (NS_SUCCEEDED(rv)) {
-      nscoord distanceFromTopEdge = aDistanceFromTopEdge + mRect.y;
-      ihr->VerticalAlignFrames(aLineHeight, distanceFromTopEdge);
+      nsSize availSize(0, 0);
+      nsHTMLReflowState rs(aPresContext, frame, aState, availSize);
+      nscoord distanceFromTopEdge = bbox.y - topEdge;
+      ihr->VerticalAlignFrames(aPresContext, rs, aLineHeight,
+                               distanceFromTopEdge, childCombinedArea);
+      nscoord x = childCombinedArea.x;
+      if (x < x0) x0 = x;
+      nscoord y = childCombinedArea.y;
+      if (y < y0) y0 = y;
+      nscoord xmost = childCombinedArea.XMost();
+      if (xmost > x1) x1 = xmost;
+      nscoord ymost = childCombinedArea.YMost();
+      if (ymost > y1) y1 = ymost;
     }
 
     frame->GetNextSibling(&frame);
+  }
+
+  aCombinedArea.x = mRect.x + x0;
+  aCombinedArea.y = mRect.y + y0;
+  aCombinedArea.width = x1 - x0;
+  aCombinedArea.height = y1 - y0;
+
+  // Update our outside-children flag bit
+  if ((x0 < 0) || (y0 < 0) || (x1 > mRect.width) || (y1 > mRect.height)) {
+    mState |= NS_FRAME_OUTSIDE_CHILDREN;
+  }
+  else {
+    mState &= ~NS_FRAME_OUTSIDE_CHILDREN;
   }
   return NS_OK;
 }
@@ -1441,13 +1489,13 @@ nsInlineFrame::ReflowInlineFrames(ReflowState& rs,
     nsInlineReflow* ir = rs.inlineReflow;
     nsRect bbox;
     ir->VerticalAlignFrames(bbox, aMetrics.ascent, aMetrics.descent);
-    // XXX what about our border/padding and the combined area?
     ir->RelativePositionFrames(aMetrics.mCombinedArea);
-    aMetrics.width = bbox.width;
+    aMetrics.width = bbox.XMost();
     if (NS_FRAME_IS_COMPLETE(aStatus)) {
       aMetrics.width += rs.mBorderPadding.right;
     }
-    aMetrics.height = bbox.height;
+    aMetrics.height = bbox.height + rs.mBorderPadding.top +
+      rs.mBorderPadding.bottom;
     aMetrics.mCarriedOutTopMargin = 0;
     aMetrics.mCarriedOutBottomMargin = 0;
     if (nsnull != aMetrics.maxElementSize) {
