@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messenger/skin/" type="text/css"?> 
 
 <!DOCTYPE window
 [
@@ -10,17 +10,17 @@
 <!-- File menu items -->
 
 <!-- Toolbar items -->  
-<!ENTITY getMsgButton.img "resource:/res/mailnews/messenger/getmsg.gif">
+<!ENTITY getMsgButton.img "chrome://messenger/skin/getmsg.gif">
 <!ENTITY getMsgButton.label "Get Msg">  
-<!ENTITY newMsgButton.img "resource:/res/mailnews/messenger/newmsg.gif">
+<!ENTITY newMsgButton.img "chrome://messenger/skin/newmsg.gif">
 <!ENTITY newMsgButton.label "New Msg">  
-<!ENTITY replyButton.img "resource:/res/mailnews/messenger/reply.gif">
+<!ENTITY replyButton.img "chrome://messenger/skin/reply.gif">
 <!ENTITY replyButton.label "Reply">  
-<!ENTITY forwardButton.img "resource:/res/mailnews/messenger/forward.gif">
+<!ENTITY forwardButton.img "chrome://messenger/skin/forward.gif">
 <!ENTITY forwardButton.label "Forward">  
-<!ENTITY deleteButton.img "resource:/res/mailnews/messenger/delete.gif">
+<!ENTITY deleteButton.img "chrome://messenger/skin/delete.gif">
 <!ENTITY deleteButton.label "Delete">  
-<!ENTITY getNewsButton.img "resource:/res/mailnews/messenger/getmsg.gif">
+<!ENTITY getNewsButton.img "chrome://messenger/skin/getmsg.gif">
 <!ENTITY getNewsButton.label "Load News">  
 <!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
 <!ENTITY throbber.url "http://www.mozilla.org/"> 

@@ -30,6 +30,7 @@ SAMPLES_DIR = $(DIST)/bin/res/mailnews/messenger
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/mailshell.xul \
+	$(srcdir)/messenger.css \
 	$(srcdir)/folderPane.xul \
 	$(srcdir)/folderPane.css \
 	$(srcdir)/threadPane.xul \

@@ -42,7 +42,7 @@ function NavigatorWindow()
 
     if (toolkitCore)
 	{
-      toolkitCore.ShowWindow("resource:/res/samples/navigator.xul",
+      toolkitCore.ShowWindow("chrome://navigator/content/",
                              window);
     }
 

@@ -25,6 +25,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: 
 	$(MAKE_INSTALL) mailshell.xul	$(DIST)\bin\res\mailnews\messenger
+	$(MAKE_INSTALL) messenger.css	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) folderPane.xul	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) folderPane.css	$(DIST)\bin\res\mailnews\messenger
 	$(MAKE_INSTALL) threadPane.xul  $(DIST)\bin\res\mailnews\messenger
@@ -51,6 +52,7 @@ install::
 
 clobber::
 	rm -f $(DIST)\res\mailnews\messenger\mailshell.xul
+	rm -f $(DIST)\res\mailnews\messenger\messenger.css
 	rm -f $(DIST)\res\mailnews\messenger\folderPane.xul
 	rm -f $(DIST)\res\mailnews\messenger\folderPane.css
 	rm -f $(DIST)\res\mailnews\messenger\threadPane.xul

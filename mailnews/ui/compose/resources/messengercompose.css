@@ -1,0 +1,205 @@
+/** this should only contain XUL widget defaults. Defaults for widgets of
+    a particular application should be in that application's style sheet.
+	For example style definitions for navigator can be found in navigator.css
+**/
+
+box {
+  display: block;
+}
+
+box[debug] box {
+  border: 5px solid blue;
+  margin: 1px;
+  padding: 1px;
+}
+
+box[debug] box[align="vertical"] {
+   border: 5px solid red;
+}
+
+spring {
+   display: block;
+}
+
+box[debug] spring {
+   background-color: green;
+}
+
+toolbar {
+    display:block;
+    background-color: #CCCCCC;
+    border-bottom: solid darkGray 1px;
+    border-top: solid white 1px;
+    border-left: solid white 1px;
+    border-right: solid darkGray 1px;
+    font: 10pt sans-serif;
+    min-height: 20px;
+}
+
+toolbar[collapsed="true"] {
+	display:none;
+}
+toolbar[hidden="true"] {
+	display:none;
+}
+
+toolbox { 
+        background-color:darkgray;
+		display: block;
+}
+
+:toolbox-normal {
+	background-color: #666699;
+	background-image: url("resource:/res/toolbar/TB_Tab.gif");
+	background-repeat: no-repeat;
+	color: lightgray;
+	border-bottom: solid darkGray 1px;
+	border-top: solid white 0px;
+	border-left: solid white 0px;
+	border-right: solid darkGray 1px;
+}
+:toolbox-rollover {
+	background-color: #ccccff;
+	background-image: url("resource:/res/toolbar/TB_Tab_mo.gif");
+	background-repeat: no-repeat;
+	color: green;
+	border-bottom: solid darkGray 1px;
+	border-top: solid white 0px;
+	border-left: solid white 0px;
+	border-right: solid darkGray 1px;
+}
+
+window { 
+  background-color:#CCCCCC;
+  display: block; 
+  overflow: hidden;
+}
+
+broadcaster {
+	display: none;
+}
+
+observes {
+	display: none;
+}
+
+menubar {
+	display: none;
+}
+
+menu {
+	display: none;
+}
+
+menuitem {
+	display: none;
+}
+
+progressmeter {
+        display:inline;
+        border: 1px #666699;
+        color : #9999CC;         
+}
+
+:progressmeter-stripe {
+	color: #BBBBCC;
+}
+
+titledbutton {
+  display: inline;
+}
+
+toolbar titledbutton {
+  display: inline;
+  color:black; 
+
+  padding: 2px;
+  margin: 2px;
+
+  font: 2.5mm sans-serif;
+}
+
+toolbar titledbutton[pseudoclass~="hover"] {
+  border: 1px outset white;
+	color:blue;
+	//text-decoration:underline;
+  padding: 1px;
+}
+ 
+toolbar titledbutton[pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+ 
+toolbar titledbutton[pseudoclass~="active"] {
+
+  text-decoration:none;
+  border: 1px inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+toolbar titledbutton[pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
+}
+ 
+toolbar titledbutton[disabled] {
+	opacity: 0.5;
+}
+
+
+titledbutton[class=push] { 
+  display: inline;
+  vertical-align: bottom;
+  cursor: default;
+
+  border: 2px outset rgb(156, 154, 156);
+  background-color: rgb(206, 207, 206);
+  color:black; 
+
+  padding: 1px;
+}
+
+titledbutton[class=push][pseudoclass~="active"] {
+  border-style: inset;
+
+  padding-left: 2px;
+  padding-right: 0px;
+  padding-top: 2px;
+  padding-bottom: 0px;
+}
+
+titledbutton[class=push][pseudoclass~="hover"] {
+}
+
+titledbutton[class=push][pseudoclass~="active"]:-moz-outline {
+   border : 1px solid black;
+}
+
+titledbutton[class=push][pseudoclass~="hover"]:-moz-outline {
+   border : 1px solid black;
+}
+
+titledbutton[class=push][disabled] {
+   border-style: solid;
+}
+
+titledbutton[class=push]:-moz-focus-inner {
+   padding-left  : 2px;
+   padding-right : 2px;
+   padding-top   : 1px;
+   padding-bottom: 1px;
+   margin: 0px;
+}
+
+titledbutton[class=push][pseudoclass~="focus"]:-moz-focus-inner {
+   padding-left  : 1px;
+   padding-right : 1px;
+   padding-top   : 0px;
+   padding-bottom: 0px;
+ 
+   margin: 0px;
+   border : 1px dotted black;
+}

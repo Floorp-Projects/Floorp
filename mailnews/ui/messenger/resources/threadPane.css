@@ -51,12 +51,12 @@ icon {
  display: list-item;
  height: 16px;
  width: 16px;
- list-style-image: url("resource:/res/mailnews/messenger/closedMailFolder.gif");
+ list-style-image: url("chrome://messenger/skin/closedMailFolder.gif");
 }
 
 treeitem > treecell > titledbutton {
  vertical-align: bottom;
  height: 16px;
  width: 16px;
- list-style-image: url("resource:/res/mailnews/messenger/mailMessage.gif");
+ list-style-image: url("chrome://messenger/skin/mailMessage.gif");
 }

@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<?xml-stylesheet href="threadPane.css" type="text/css"?>
+<?xml-stylesheet href="chrome://messenger/skin/threadPane.css" type="text/css"?>
 
 <!DOCTYPE window
 [

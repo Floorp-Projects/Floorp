@@ -30,6 +30,7 @@ SAMPLES_DIR = $(DIST)/bin/res/mailnews/compose
 
 EXPORT_RESOURCE_SAMPLES = \
 	$(srcdir)/msgcompose.xul \
+	$(srcdir)/messengercompose.css \
 	$(srcdir)/msgcomposebody.html \
 	$(srcdir)/send.gif \
 	$(srcdir)/quote.gif \

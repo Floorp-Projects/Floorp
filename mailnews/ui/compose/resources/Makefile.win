@@ -23,6 +23,7 @@ include <$(DEPTH)\config\rules.mak>
 
 install:: $(DLL)
 	$(MAKE_INSTALL) msgcompose.xul $(DIST)\bin\res\mailnews\compose
+	$(MAKE_INSTALL) messengercompose.css $(DIST)\bin\res\mailnews\compose
 	$(MAKE_INSTALL) msgcomposeBody.html $(DIST)\bin\res\mailnews\compose
 	$(MAKE_INSTALL) send.gif $(DIST)\bin\res\mailnews\compose
 	$(MAKE_INSTALL) quote.gif $(DIST)\bin\res\mailnews\compose
@@ -34,6 +35,7 @@ install:: $(DLL)
 
 clobber::
 	rm -f $(DIST)\bin\res\mailnews\compose\msgcompose.xul
+	rm -f $(DIST)\bin\res\mailnews\compose\messengercompose.css
 	rm -f $(DIST)\bin\res\mailnews\compose\msgcomposeBody.html
 	rm -f $(DIST)\bin\res\mailnews\compose\send.gif
 	rm -f $(DIST)\bin\res\mailnews\compose\quote.gif

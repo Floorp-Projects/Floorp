@@ -40,7 +40,7 @@ function ComposeMessage(tree, nodeList, msgAppCore, type)
   var appCore = FindComposeAppCore();
   if (appCore != null) {
     appCore.SetWindow(window);
-    appCore.NewMessage("resource:/res/mailnews/compose/msgcompose.xul", tree,
+    appCore.NewMessage("chrome://messengercompose/content/", tree,
 		       nodeList, msgAppCore, type); 
   }
 }

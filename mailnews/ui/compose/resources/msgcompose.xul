@@ -1,5 +1,5 @@
 <?xml version="1.0"?> 
-<?xml-stylesheet href="resource:/res/samples/xul.css" type="text/css"?> 
+<?xml-stylesheet href="chrome://messengercompose/skin/" type="text/css"?> 
 
 <!DOCTYPE window
 [
@@ -59,19 +59,19 @@
 <!ENTITY checkSpellCmd.label ".Check Spelling...">
 
 <!-- Toolbar items -->
-<!ENTITY sendButton.img "resource:/res/mailnews/compose/send.gif">
+<!ENTITY sendButton.img "chrome://messengercompose/skin/send.gif">
 <!ENTITY sendButton.label "Send">
-<!ENTITY quoteButton.img "resource:/res/mailnews/compose/quote.gif">
+<!ENTITY quoteButton.img "chrome://messengercompose/skin/quote.gif">
 <!ENTITY quoteButton.label "Quote">
-<!ENTITY addressButton.img "resource:/res/mailnews/compose/address.gif">
+<!ENTITY addressButton.img "chrome://messengercompose/skin/address.gif">
 <!ENTITY addressButton.label "Address">
-<!ENTITY attachButton.img "resource:/res/mailnews/compose/attach.gif">
+<!ENTITY attachButton.img "chrome://messengercompose/skin/attach.gif">
 <!ENTITY attachButton.label "Attach">
-<!ENTITY spellingButton.img "resource:/res/mailnews/compose/spelling.gif">
+<!ENTITY spellingButton.img "chrome://messengercompose/skin/spelling.gif">
 <!ENTITY spellingButton.label "Spelling">
-<!ENTITY saveButton.img "resource:/res/mailnews/compose/save.gif">
+<!ENTITY saveButton.img "chrome://messengercompose/skin/save.gif">
 <!ENTITY saveButton.label "Save">
-<!ENTITY stopButton.img "resource:/res/mailnews/compose/stop.gif">
+<!ENTITY stopButton.img "chrome://messengercompose/skin/stop.gif">
 <!ENTITY stopButton.label "Stop">
 <!ENTITY throbberButton.img "resource:/res/throbber/anims00.gif">
 <!ENTITY throbberButton.url "http://www.mozilla.org/">
