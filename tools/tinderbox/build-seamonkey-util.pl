@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.92 $ ';
+$::UtilsVersion = '$Revision: 1.93 $ ';
 
 package TinderUtils;
 
@@ -941,6 +941,9 @@ sub run_all_tests {
 		}
 		if($open_time) {
 			$test_result = 'success';
+			if($Settings::TestsPhoneHome) {
+			  send_xulwinopen_results_to_server(1200, "no data", ::hostname());
+			}
 		} else {
 			$test_result = 'testfailed';
 		}
@@ -981,12 +984,16 @@ sub run_all_tests {
 		# Then load startup-test.html, which will pull off the begin argument
 		# and compare it to the current time to compute startup time.
 		# Since we are iterating here, save off logs as StartupPerformanceTest-0,1,2...
+		#
+		# -P $Settings::MozProfileName added 3% to startup time, assume one profile
+		# and get the 3% back.
+		#
 		if($test_result eq 'success') {
 		  $startuptime = 
 			AliveTestReturnToken("StartupPerformanceTest-$i", 
 								 $build_dir,
 								 $binary,
-								 "-P $Settings::MozProfileName " . $url,
+								 $url,
 								 $Settings::StartupPerformanceTestTimeout,
 								 "__startuptime",
 								 ",");
@@ -1335,6 +1342,26 @@ sub print_test_errors {
 }
 
 
+sub send_startup_results_to_server () {
+    my ($value, $data, $tbox) = @_;
+  
+    $data =~ s/ /:/g;
+	my $tmpurl = 'http://tegu.mozilla.org/graph/startup/collect.cgi';
+    $tmpurl .= "?value=$value&data=$data&tbox=$tbox";
+
+	send_results_to_server($tmpurl);
+}
+
+sub send_xulwinopen_results_to_server () {
+    my ($value, $data, $tbox) = @_;
+  
+	my $tmpurl = 'http://tegu.mozilla.org/graph/xulwinopen/collect.cgi';
+    $tmpurl .= "?value=$value&data=$data&tbox=$tbox";
+
+	send_results_to_server($tmpurl);
+}
+
+
 # Report test results back to a server.
 # Netscape-internal now, will push to mozilla.org, ask
 # mcafee or jrgm for details.
@@ -1348,12 +1375,8 @@ sub print_test_errors {
 # perl-URI-1.12-5.noarch.rpm
 # perl-libwww-perl-5.53-3.noarch.rpm
 #
-sub send_startup_results_to_server () {
-    my ($avg, $data, $tbox) = @_;
-    $data =~ s/ /:/g;
-    # my $url = 'http://cowtools.mcom.com/cgi-bin/startup/tinderbox/collect.pl';
-	my $url = 'http://tegu.mozilla.org/graph/startup/collect.cgi';
-    $url .= "?avg=$avg&data=$data&tbox=$tbox";
+sub send_results_to_server () {
+    my ($url) = @_;
     my $res = eval q{
         use LWP::UserAgent;
         use HTTP::Request;
