@@ -78,12 +78,14 @@ sub find_scrape_data {
   my @rv;
   my @line;
   while (<$fh>) {
-    if (/TinderboxPrint,/) {
+    if (/TinderboxPrint:/) {
       # Line format:
-      #  TinderboxPrint,aaa,bbb,ccc,ddd
+      #  TinderboxPrint:aaa,bbb,ccc,ddd
+
+      # Strip off the TinderboxPrint: part of the line
       chomp;
+      s/.*TinderboxPrint://;
       @line = split(',', $_);
-      shift(@line);
       push(@rv, @line);
     }
   }
