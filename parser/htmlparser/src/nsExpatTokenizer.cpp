@@ -341,7 +341,7 @@ nsExpatTokenizer::AddErrorMessageTokens(nsParserError* aError)
       mState->tokenRecycler->CreateTokenOfType(eToken_attribute, eHTMLTag_unknown);  
   nsString& key = attrToken->GetKey();
   key.AssignWithConversion("xmlns");
-  attrToken->SetStringValue(kHTMLNameSpaceURI);
+  attrToken->SetCStringValue(kHTMLNameSpaceURI);
   newToken->SetAttributeCount(1);
   newToken = (CToken*) attrToken;
   AddToken(newToken, NS_OK, mState->tokenDeque, mState->tokenRecycler);

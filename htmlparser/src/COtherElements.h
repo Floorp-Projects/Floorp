@@ -231,7 +231,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=0;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=0;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -250,21 +257,12 @@ public:
 class CDeprecatedElement: public CElement {
 public:
 
-  static CGroupMembers& GetGroup(void) {
-    static CGroupMembers theGroup={0};
-    return theGroup;
-  }
 
-  static CGroupMembers& GetContainedGroups(void) {
-    static CGroupMembers theContainedGroups={0};
-    return theContainedGroups;
-  }
-
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
     anElement.mProperties.mIsContainer=0;
     anElement.mTag=aTag;
-    anElement.mGroup.mAllBits=aGroup.mAllBits;
-    anElement.mContainsGroups.mAllBits=aGroupContains.mAllBits;
+    anElement.mGroup.mAllBits=0;
+    anElement.mContainsGroups.mAllBits=0;
   }
 
   CDeprecatedElement(eHTMLTags aTag) : CElement(aTag) {
@@ -305,7 +303,14 @@ public:
     return theGroup;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -336,7 +341,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aContainsGroup=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aContainsGroup){
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
     anElement.mContainsGroups.mAllBits=aContainsGroup.mAllBits;
@@ -370,7 +382,14 @@ public:
     return theGroup; 
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -400,7 +419,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -433,7 +459,14 @@ public:
     return theGroup;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -463,15 +496,15 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aContainsGroup=GetContainedGroups()){
-    anElement.mTag=aTag;
-    anElement.mGroup.mAllBits=aGroup.mAllBits;
-    anElement.mContainsGroups.mAllBits=aContainsGroup.mAllBits;
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
     anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
   }
 
   CFontStyleElement(eHTMLTags aTag) : CElement(aTag) {
-    Initialize(*this,aTag,GetGroup(),GetContainedGroups());
+    Initialize(*this,aTag);
   }
 
 };
@@ -494,7 +527,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aContainsGroup=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aContainsGroup){
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
     anElement.mContainsGroups.mAllBits=aContainsGroup.mAllBits;
@@ -527,7 +567,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -559,7 +606,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -589,7 +643,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -620,7 +681,14 @@ public:
     return theGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -639,27 +707,18 @@ public:
 class CFrameElement: public CElement {
 public:
 
-  static CGroupMembers& GetGroup(void) {
-    static CGroupMembers theGroup={0};
-    theGroup.mBits.mFrame=1;
-    return theGroup;
-  }
 
-  static CGroupMembers& GetContainedGroups(void) {
-    static CGroupMembers theGroup={0};
-    theGroup.mBits.mFrame=1;
-    return theGroup; 
-  }
-
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
-    anElement.mGroup.mAllBits=aGroup.mAllBits;
-    anElement.mContainsGroups.mAllBits=aGroupContains.mAllBits;
+    anElement.mGroup.mAllBits=0;
+    anElement.mGroup.mBits.mFrame=1;
+    anElement.mContainsGroups.mAllBits=0;
+    anElement.mContainsGroups.mBits.mFrame=1;
   }
 
   CFrameElement(eHTMLTags aTag) : CElement(aTag) {
-    Initialize(*this,aTag,GetGroup(),GetContainedGroups());
+    Initialize(*this,aTag);
   }
 
 };
@@ -716,7 +775,14 @@ public:
     return theGroupsContainedByHead;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -806,7 +872,14 @@ public:
     return theContainedGroups;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -866,11 +939,12 @@ public:
 class CTitleElement : public CTextContainer {
 public:
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
-    anElement.mProperties.mIsContainer=1;
-    anElement.mTag=aTag;
-    anElement.mGroup.mAllBits=aGroup.mAllBits;
-    anElement.mContainsGroups.mAllBits=aGroupContains.mAllBits;
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CTextContainer::Initialize(anElement,aTag);
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
+    CTextContainer::Initialize(anElement,aTag,aGroup,aGroupContains);
   }
 
   CTitleElement() : CTextContainer(eHTMLTag_title), mText("") {
@@ -923,6 +997,10 @@ public:
 class CStyleElement: public CTextContainer {
 public:
 
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CTextContainer::Initialize(anElement,aTag);
+  }
+
   static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=CTextContainer::GetGroup(), CGroupMembers& aGroupContains=CTextContainer::GetContainedGroups()){
     CTextContainer::Initialize(anElement,aTag,aGroup,aGroupContains);
   }
@@ -939,6 +1017,10 @@ public:
  **********************************************************/
 class CScriptElement: public CTextContainer {
 public:
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    CTextContainer::Initialize(anElement,aTag);
+  }
 
   static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=CTextContainer::GetGroup(), CGroupMembers& aGroupContains=CTextContainer::GetContainedGroups()){
     CTextContainer::Initialize(anElement,aTag,aGroup,aGroupContains);
@@ -970,7 +1052,15 @@ public:
     return theGroup;
   }
 
-  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup=GetGroup(), CGroupMembers& aGroupContains=GetContainedGroups()){
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag){
+    anElement.mProperties.mIsContainer=1;
+    anElement.mTag=aTag;
+    anElement.mGroup.mAllBits=GetGroup().mAllBits;
+    anElement.mContainsGroups.mAllBits=GetContainedGroups().mAllBits;
+  }
+
+  static void Initialize(CElement& anElement,eHTMLTags aTag,CGroupMembers& aGroup, CGroupMembers& aGroupContains){
     anElement.mProperties.mIsContainer=1;
     anElement.mTag=aTag;
     anElement.mGroup.mAllBits=aGroup.mAllBits;
@@ -1337,7 +1427,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_form].mIncludeKids=kFormKids;
   mDfltElements[eHTMLTag_form].mExcludeKids=kFormExcludeKids;
 
-  CLeafElement::Initialize(         mDfltElements[eHTMLTag_frame],      eHTMLTag_frame,  CFrameElement::GetGroup(), CLeafElement::GetContainedGroups());
+  CFrameElement::Initialize(         mDfltElements[eHTMLTag_frame],      eHTMLTag_frame);
   CFrameElement::Initialize(        mDfltElements[eHTMLTag_frameset],   eHTMLTag_frameset);
   mDfltElements[eHTMLTag_frameset].mIncludeKids=kFramesetKids;
   
@@ -1358,9 +1448,9 @@ void CElementTable::InitializeElements() {
   CDeprecatedElement::Initialize(   mDfltElements[eHTMLTag_ilayer],     eHTMLTag_ilayer);
   CLeafElement::Initialize(         mDfltElements[eHTMLTag_img],        eHTMLTag_img, CSpecialElement::GetGroup(),  CLeafElement::GetContainedGroups());
   CDeprecatedElement::Initialize(   mDfltElements[eHTMLTag_image],      eHTMLTag_image);
-  CLeafElement::Initialize(         mDfltElements[eHTMLTag_input],      eHTMLTag_input, CFormControlElement::GetGroup());
+  CLeafElement::Initialize(         mDfltElements[eHTMLTag_input],      eHTMLTag_input, CFormControlElement::GetGroup(),CLeafElement::GetContainedGroups());
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_ins],        eHTMLTag_ins, CPhraseElement::GetGroup(),  CFlowElement::GetContainedGroups());
-  CLeafElement::Initialize(         mDfltElements[eHTMLTag_isindex],    eHTMLTag_isindex,  CHeadElement::GetMiscGroup());
+  CLeafElement::Initialize(         mDfltElements[eHTMLTag_isindex],    eHTMLTag_isindex,  CHeadElement::GetMiscGroup(), CLeafElement::GetContainedGroups());
 
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_kbd],        eHTMLTag_kbd);
   CPhraseElement::Initialize(       mDfltElements[eHTMLTag_keygen],     eHTMLTag_keygen);
@@ -1413,7 +1503,7 @@ void CElementTable::InitializeElements() {
   mDfltElements[eHTMLTag_optgroup].mContainsGroups.mBits.mLeaf=1;
 
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_p],          eHTMLTag_p, CBlockElement::GetGroup(), CInlineElement::GetContainedGroups());
-  CLeafElement::Initialize(         mDfltElements[eHTMLTag_param],      eHTMLTag_param, CSpecialElement::GetGroup());
+  CLeafElement::Initialize(         mDfltElements[eHTMLTag_param],      eHTMLTag_param, CSpecialElement::GetGroup(), CLeafElement::GetContainedGroups());
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_parsererror],eHTMLTag_parsererror);
   CDeprecatedElement::Initialize(   mDfltElements[eHTMLTag_plaintext],  eHTMLTag_plaintext);
   CBlockElement::Initialize(        mDfltElements[eHTMLTag_pre],        eHTMLTag_pre);

@@ -124,7 +124,7 @@ class CToken {
      * @update	gess5/11/98
      * @param   name is a char* value containing new string value
      */
-    virtual void SetStringValue(const char* name);
+    virtual void SetCStringValue(const char* name);
 
     /**
      * Setter method for the string value of this token

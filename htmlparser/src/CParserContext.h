@@ -67,15 +67,15 @@ public:
 
     CParserContext*     mPrevContext;
     eParseMode          mParseMode;
+    eParserDocType      mDocType;
+    nsAutoString        mMimeType;
+
     eStreamState        mStreamListenerState; //this is really only here for debug purposes.
     PRBool              mMultipart;
     eContextType        mContextType;
     eAutoDetectResult   mAutoDetectStatus;
     eParserCommands     mParserCommand;   //tells us to viewcontent/viewsource/viewerrors...
     nsIChannel*         mChannel; // provided by necko to differnciate different input streams
-
-    nsAutoString        mMimeType;
-    eParserDocType      mDocType;
 
     nsScanner*          mScanner;
     nsIDTD*             mDTD;

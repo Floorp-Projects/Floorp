@@ -1,4 +1,4 @@
-#if 0
+
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */  
 /*                               
  * The contents of this file are subject to the Netscape Public
@@ -20,9 +20,9 @@
  * 
  * Contributor(s):   
  */         
-   
+    
 //#define ENABLE_CRC  
-//#define RICKG_DEBUG   
+//#define RICKG_DEBUG    
 
 
 #ifdef  RICKG_DEBUG
@@ -70,9 +70,9 @@ static char*        kVerificationDir = "c:/temp";
 static char gShowCRC;
 #endif
 
-  
+   
  
-#ifdef MOZ_PERF_METRICS
+#ifdef MOZ_PERF_METRICS 
 #  define START_TIMER()                    \
     if(mParser) MOZ_TIMER_START(mParser->mParseTime); \
     if(mParser) MOZ_TIMER_START(mParser->mDTDTime); 
@@ -190,14 +190,14 @@ nsCParserNode* COtherDTD::CreateNode(void) {
   } 
   else{
     result=new nsCParserNode();
-#ifdef NS_DEBUG
+#ifdef NS_DEBUG 
 #if 1
-    gNodeCount++;
+    gNodeCount++; 
 #endif
 #endif
   }
   return result;
-}
+} 
 
 
 /**
@@ -2032,5 +2032,3 @@ nsresult COtherDTD::WillInterruptParse(void){
 
   return result;
 }
-
-#endif
