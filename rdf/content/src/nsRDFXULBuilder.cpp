@@ -206,6 +206,7 @@ private:
     static nsIAtom* kMenuAtom;
     static nsIAtom* kMenuBarAtom;
     static nsIAtom* kKeysetAtom;
+    static nsIAtom* kObservesAtom;
     static nsIAtom* kRefAtom;
     static nsIAtom* kToolbarAtom;
     static nsIAtom* kTreeAtom;
@@ -367,6 +368,7 @@ nsIAtom*        RDFXULBuilderImpl::kContainerContentsGeneratedAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuAtom;
 nsIAtom*        RDFXULBuilderImpl::kMenuBarAtom;
 nsIAtom*        RDFXULBuilderImpl::kKeysetAtom;
+nsIAtom*        RDFXULBuilderImpl::kObservesAtom;
 nsIAtom*        RDFXULBuilderImpl::kRefAtom;
 nsIAtom*        RDFXULBuilderImpl::kToolbarAtom;
 nsIAtom*        RDFXULBuilderImpl::kTreeAtom;
@@ -442,6 +444,7 @@ RDFXULBuilderImpl::Init()
         kMenuAtom                 = NS_NewAtom("menu");
         kMenuBarAtom              = NS_NewAtom("menubar");
         kKeysetAtom               = NS_NewAtom("keyset");
+        kObservesAtom             = NS_NewAtom("observes");
         kRefAtom                  = NS_NewAtom("ref");
         kToolbarAtom              = NS_NewAtom("toolbar");
         kTreeAtom                 = NS_NewAtom("tree");
@@ -516,6 +519,7 @@ RDFXULBuilderImpl::~RDFXULBuilderImpl(void)
         NS_IF_RELEASE(kMenuAtom);
         NS_IF_RELEASE(kMenuBarAtom);
         NS_IF_RELEASE(kKeysetAtom);
+        NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(kRefAtom);
         NS_IF_RELEASE(kToolbarAtom);
     }
@@ -2351,75 +2355,6 @@ RDFXULBuilderImpl::CreateHTMLElement(nsINameSpace* aContainingNameSpace,
         return rv;
     }
 
-    // The observes relationship has to be hooked up here, since the children
-    // were already built.  We'll miss out on it if we don't plug in here.
-    // Now that the contents have been created, perform broadcaster
-    // hookups if any of the children are observes nodes.
-    // XXX: Initial sync-up doesn't work, since no document observer exists
-    // yet.
-    PRInt32 childCount;
-    element->ChildCount(childCount);
-    for (PRInt32 j = 0; j < childCount; j++)
-    {
-        nsIContent* childContent = nsnull;
-        element->ChildAt(j, childContent);
-      
-        if (!childContent)
-          break;
-
-        nsIAtom* tag = nsnull;
-        childContent->GetTag(tag);
-
-        if (!tag)
-          break;
-
-        nsAutoString tagName;
-        tag->ToString(tagName);
-
-        if (tagName == "observes")
-        {
-            // Find the node that we're supposed to be
-            // observing and perform the hookup.
-            nsAutoString elementValue;
-            nsAutoString attributeValue;
-            nsCOMPtr<nsIDOMElement> domContent;
-            domContent = do_QueryInterface(childContent);
-
-            domContent->GetAttribute("element",
-                                     elementValue);
-            
-            domContent->GetAttribute("attribute",
-                                     attributeValue);
-
-            nsIDOMElement* domElement = nsnull;
-            nsCOMPtr<nsIDOMXULDocument> xulDoc;
-            xulDoc = do_QueryInterface(doc);
-            
-            if (xulDoc)
-              xulDoc->GetElementById(elementValue, &domElement);
-            
-            if (!domElement)
-              break;
-
-            // We have a DOM element to bind to.  Add a broadcast
-            // listener to that element, but only if it's a XUL element.
-            // XXX: Handle context nodes.
-            nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(element) );
-            nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
-            if (listener)
-            {
-                broadcaster->AddBroadcastListener(attributeValue,
-                                                  listener);
-            }
-
-            NS_RELEASE(domElement);
-        }
-
-        NS_RELEASE(childContent);
-        NS_RELEASE(tag);
-    }
-
-
     return NS_OK;
 }
 
@@ -2627,6 +2562,44 @@ RDFXULBuilderImpl::CreateXULElement(nsINameSpace* aContainingNameSpace,
 			NS_RELEASE(target);
         }
         // Who has ownership of the listener?
+    }
+
+    // If we're an observes node, then we need to add our parent element
+    // as a broadcast listener.
+    if (aTagName == kObservesAtom) {
+      // Find the node that we're supposed to be
+      // observing and perform the hookup.
+      nsAutoString elementValue;
+      nsAutoString attributeValue;
+      
+      nsCOMPtr<nsIDOMElement> domContent;
+      domContent = do_QueryInterface(element);
+
+      domContent->GetAttribute("element",
+                               elementValue);
+      
+      domContent->GetAttribute("attribute",
+                               attributeValue);
+
+      nsCOMPtr<nsIDOMXULDocument> xulDocument( do_QueryInterface(mDocument) );
+      nsCOMPtr<nsIDOMElement> domElement;
+      xulDocument->GetElementById(elementValue, getter_AddRefs(domElement));
+      
+      if (domElement) {
+        // We have a DOM element to bind to.  Add a broadcast
+        // listener to that element, but only if it's a XUL element.
+        // XXX: Handle context nodes.
+        nsCOMPtr<nsIDOMNode> parentElement;
+        domContent->GetParentNode(getter_AddRefs(parentElement));
+        nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
+        nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(parentElement) );
+        
+        if (listener)
+        {
+            broadcaster->AddBroadcastListener(attributeValue,
+                                              listener);
+        }
+      }
     }
 
     // Finally, assign the newly constructed element to the result

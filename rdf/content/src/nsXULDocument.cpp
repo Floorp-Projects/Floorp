@@ -2586,61 +2586,6 @@ XULDocumentImpl::CreateContents(nsIContent* aElement)
         NS_RELEASE(builder);
     }
 
-    // Now that the contents have been created, perform broadcaster
-    // hookups if any of the children are observes nodes.
-    // XXX: Initial sync-up doesn't work, since no document observer exists
-    // yet.
-    PRInt32 childCount;
-    aElement->ChildCount(childCount);
-    for (PRInt32 j = 0; j < childCount; j++)
-    {
-        nsCOMPtr<nsIContent> childContent;
-        aElement->ChildAt(j, *getter_AddRefs(childContent));
-      
-        if (!childContent)
-          break;
-
-        nsCOMPtr<nsIAtom> tag;
-        childContent->GetTag(*getter_AddRefs(tag));
-
-        if (!tag)
-          break;
-
-        if (tag.get() == kObservesAtom)
-        {
-            // Find the node that we're supposed to be
-            // observing and perform the hookup.
-            nsAutoString elementValue;
-            nsAutoString attributeValue;
-            
-            nsCOMPtr<nsIDOMElement> domContent;
-            domContent = do_QueryInterface(childContent);
-
-            domContent->GetAttribute("element",
-                                     elementValue);
-            
-            domContent->GetAttribute("attribute",
-                                     attributeValue);
-
-            nsCOMPtr<nsIDOMElement> domElement;
-            GetElementById(elementValue, getter_AddRefs(domElement));
-            
-            if (!domElement)
-              break;
-
-            // We have a DOM element to bind to.  Add a broadcast
-            // listener to that element, but only if it's a XUL element.
-            // XXX: Handle context nodes.
-            nsCOMPtr<nsIDOMElement> listener( do_QueryInterface(aElement) );
-            nsCOMPtr<nsIDOMXULElement> broadcaster( do_QueryInterface(domElement) );
-            if (listener)
-            {
-                broadcaster->AddBroadcastListener(attributeValue,
-                                                  listener);
-            }
-        }
-    }
-
     return NS_OK;
 }
 
