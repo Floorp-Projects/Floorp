@@ -115,6 +115,7 @@ nsMovemailIncomingServer::SetFlagsOnDefaultMailboxes()
                                             MSG_FOLDER_FLAG_DRAFTS |
                                             MSG_FOLDER_FLAG_TEMPLATES |
                                             MSG_FOLDER_FLAG_TRASH |
+                                            MSG_FOLDER_FLAG_JUNK |
                                             // hmm?
                                             MSG_FOLDER_FLAG_QUEUE);
     return NS_OK;

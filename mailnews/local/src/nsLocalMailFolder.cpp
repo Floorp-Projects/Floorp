@@ -3384,7 +3384,9 @@ nsMsgLocalMailFolder::SetFlagsOnDefaultMailboxes(PRUint32 flags)
   if (flags & MSG_FOLDER_FLAG_QUEUE)
     setSubfolderFlag(NS_LITERAL_STRING("Unsent Messages").get(), MSG_FOLDER_FLAG_QUEUE);
 	
-  // what about the Junk folder?
+  if (flags & MSG_FOLDER_FLAG_JUNK)
+    setSubfolderFlag(NS_LITERAL_STRING("Junk").get(), MSG_FOLDER_FLAG_JUNK);
+
 	return NS_OK;
 }
 

@@ -194,7 +194,8 @@ nsPop3IncomingServer::SetFlagsOnDefaultMailboxes()
                                             MSG_FOLDER_FLAG_SENTMAIL |
                                             MSG_FOLDER_FLAG_DRAFTS |
                                             MSG_FOLDER_FLAG_TEMPLATES |
-                                            MSG_FOLDER_FLAG_TRASH);
+                                            MSG_FOLDER_FLAG_TRASH |
+                                            MSG_FOLDER_FLAG_JUNK);
     return NS_OK;
 }
     
