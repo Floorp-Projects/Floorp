@@ -1117,7 +1117,7 @@ nsMsgAccountManager::MigratePopAccounts(nsIMsgIdentity *identity)
     }
     
     char *str = nsnull;
-    mailDir->GetPersistentDescriptorString(&str);
+    mailDir->GetNativePath(&str);
     
     if (str && *str) {
       server->SetLocalPath(str);
@@ -1321,7 +1321,7 @@ nsMsgAccountManager::MigrateImapAccount(nsIMsgIdentity *identity, const char *ho
   if (NS_FAILED(rv)) return rv;
 
   char *str = nsnull;
-  imapMailDir->GetPersistentDescriptorString(&str);
+  imapMailDir->GetNativePath(&str);
 
   if (str && *str) {
     server->SetLocalPath(str);
@@ -1658,7 +1658,7 @@ nsMsgAccountManager::MigrateNewsAccount(nsIMsgIdentity *identity, const char *ho
 	if (NS_FAILED(rv)) return rv;
 
 	char *str = nsnull;
-	newsDir->GetPersistentDescriptorString(&str);
+	newsDir->GetNativePath(&str);
 	
 	if (str && *str) {
 		server->SetLocalPath(str);
