@@ -172,9 +172,9 @@ int main(int argc, char *argv[])
 
     ProfileChangeObserver *observer = new ProfileChangeObserver;
     observer->AddRef();
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-approve-change", PR_FALSE);
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-change-teardown", PR_FALSE);
-    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-after-change", PR_FALSE);
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-approve-change", PR_TRUE);
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-change-teardown", PR_TRUE);
+    observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, observer), "profile-after-change", PR_TRUE);
 
     InitializeWindowCreator();
 
@@ -1346,7 +1346,7 @@ nsresult AppCallbacks::CreateBrowserWindow(PRUint32 aChromeFlags,
   nsCOMPtr<nsIObserverService> observerService(do_GetService("@mozilla.org/observer-service;1"));
   if (observerService)
     observerService->AddObserver(NS_STATIC_CAST(nsIObserver *, chrome),
-                                 "profile-change-teardown", PR_FALSE);
+                                 "profile-change-teardown", PR_TRUE);
 
   // if opened as chrome, it'll be made visible after the chrome has loaded.
   // otherwise, go ahead and show it now.
