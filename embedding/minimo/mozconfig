@@ -1,10 +1,11 @@
-
 mk_add_options MOZ_OBJDIR=@TOPSRCDIR@/obj-minimo
+
 
 #ac_add_options --enable-default-toolkit=gtk2
 
 ac_add_options --disable-xul
 ac_add_options --disable-profilesharing
+ac_add_options --disable-profilelocking
 
 #MOZ_ENABLE_COREXFONTS=0
 #ac_add_options --enable-xft
@@ -38,6 +39,10 @@ ac_add_options --enable-image-decoders=png,gif,jpeg
 
 ac_add_options --enable-reorder
 ac_add_options --enable-elf-dynstr-gc
-ac_add_options --enable-optimize=-O2
+
+ac_add_options --enable-optimize=-Os
 ac_add_options --disable-debug
 ac_add_options --enable-strip
+
+LDFLAGS="-nodefaultlibs -lgcc -lc -lminicpp"
+
