@@ -316,9 +316,11 @@ static PRLogModuleInfo* gLogModule;
 
 static PRUint32 gVerifyReflowFlags;
 
-#define VERIFY_REFLOW_ON    0x1
-#define VERIFY_REFLOW_NOISY 0x2
-#define VERIFY_REFLOW_ALL   0x4
+#define VERIFY_REFLOW_ON            0x01
+#define VERIFY_REFLOW_NOISY         0x02
+#define VERIFY_REFLOW_ALL           0x04
+#define VERIFY_REFLOW_DUMP_COMMANDS 0x08
+#define VERIFY_REFLOW_NOISY_RC      0x10
 #endif
 
 static PRBool gVerifyReflowEnabled;
@@ -342,6 +344,12 @@ nsIPresShell::GetVerifyReflowEnable()
     }
     if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
       printf(" (all)");
+    }
+    if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+      printf(" (show reflow commands)");
+    }
+    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+      printf(" (noisy reflow commands)");
     }
     printf("\n");
   }
@@ -1153,9 +1161,21 @@ PresShell::EndReflow(nsIDocument *aDocument, nsIPresShell* aShell)
 NS_IMETHODIMP
 PresShell::AppendReflowCommand(nsIReflowCommand* aReflowCommand)
 {
-#ifdef NS_DEBUG
+#ifdef DEBUG
   if (mInVerifyReflow) {
     return NS_OK;
+  }
+  if (GetVerifyReflowEnable()) {
+    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+      printf("PresShell@%p: adding reflow command\n", this);
+      aReflowCommand->List(stdout);
+      printf("Current content model:\n");
+      nsCOMPtr<nsIContent> rootContent;
+      rootContent = getter_AddRefs(mDocument->GetRootContent());
+      if (rootContent) {
+        rootContent->List(stdout, 0);
+      }
+    }
   }
 #endif
   NS_ADDREF(aReflowCommand);
@@ -1189,31 +1209,39 @@ PresShell::ProcessReflowCommands()
   if (0 != mReflowCommands.Count()) {
     nsHTMLReflowMetrics   desiredSize(nsnull);
     nsIRenderingContext*  rcx;
-
     CreateRenderingContext(mRootFrame, &rcx);
 
+#ifdef DEBUG
+    if (GetVerifyReflowEnable()) {
+      if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+        printf("ProcessReflowCommands: begin incremental reflow\n");
+      }
+      if (VERIFY_REFLOW_DUMP_COMMANDS & gVerifyReflowFlags) {
+        PRInt32 i, n = mReflowCommands.Count();
+        for (i = 0; i < n; i++) {
+          nsIReflowCommand* rc = (nsIReflowCommand*)
+            mReflowCommands.ElementAt(i);
+          rc->List(stdout);
+        }
+      }
+    }
+#endif
+
     while (0 != mReflowCommands.Count()) {
+      // Use RemoveElementAt in case the reflowcommand dispatches a
+      // new one during its execution.
       nsIReflowCommand* rc = (nsIReflowCommand*) mReflowCommands.ElementAt(0);
       mReflowCommands.RemoveElementAt(0);
 
       // Dispatch the reflow command
       nsSize          maxSize;
       mRootFrame->GetSize(maxSize);
-#ifdef NS_DEBUG
-      nsIReflowCommand::ReflowType type;
-      rc->GetType(type);
-      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-         ("PresShell::ProcessReflowCommands: begin reflow command type=%d",
-          type));
-#endif
       rc->Dispatch(*mPresContext, desiredSize, maxSize, *rcx);
       NS_RELEASE(rc);
-      NS_FRAME_LOG(NS_FRAME_TRACE_CALLS,
-         ("PresShell::ProcessReflowCommands: end reflow command"));
     }
     NS_IF_RELEASE(rcx);
 
-#ifdef NS_DEBUG
+#ifdef DEBUG
     if (nsIFrame::GetVerifyTreeEnable()) {
       mRootFrame->VerifyTree();
     }
@@ -1227,10 +1255,9 @@ PresShell::ProcessReflowCommands()
       mInVerifyReflow = PR_TRUE;
       PRBool ok = VerifyIncrementalReflow();
       mInVerifyReflow = PR_FALSE;
-      if (!ok) {
-        if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
-          printf("verifyreflow: finished\n");
-        }
+      if (VERIFY_REFLOW_ALL & gVerifyReflowFlags) {
+        printf("ProcessReflowCommands: finished (%s)\n",
+               ok ? "ok" : "failed");
       }
 
       if (0 != mReflowCommands.Count()) {
