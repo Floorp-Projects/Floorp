@@ -155,6 +155,8 @@ nsFrameImageLoader::Init(nsIPresContext* aPresContext,
     aPresContext->GetTwipsToPixels(&t2p);
     aPresContext->GetDeviceContext(&theDC);
     theDC->GetCanonicalPixelScale(devScale);
+    NS_RELEASE(theDC);
+    
     desiredWidth = NSToCoordRound((mDesiredSize.width * t2p)/devScale);
     desiredHeight = NSToCoordRound((mDesiredSize.height * t2p)/devScale);
   }
