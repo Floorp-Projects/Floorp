@@ -165,6 +165,9 @@ sub ParseInstallerCfg
       elsif ($prop eq "NameProduct") {
         $ENV{WIZ_nameProduct} = $value;
       }
+      elsif ($prop eq "ShortNameProduct") {
+        $ENV{WIZ_shortNameProduct} = $value;
+      }
       elsif ($prop eq "NameProductInternal") {
         $ENV{WIZ_nameProductInternal} = $value;
       }

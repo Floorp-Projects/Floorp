@@ -3593,24 +3593,22 @@ HRESULT InitDlgWindowsIntegration(diWI *diDialog)
     exit(1);
   if((diDialog->szMessage0 = NS_GlobalAlloc(MAX_BUF)) == NULL)
     exit(1);
+  if((diDialog->szRegistryKey = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    exit(1);
 
   diDialog->wiCB0.bEnabled = FALSE;
   diDialog->wiCB1.bEnabled = FALSE;
   diDialog->wiCB2.bEnabled = FALSE;
-  diDialog->wiCB3.bEnabled = FALSE;
-
+  
   diDialog->wiCB0.bCheckBoxState = FALSE;
   diDialog->wiCB1.bCheckBoxState = FALSE;
   diDialog->wiCB2.bCheckBoxState = FALSE;
-  diDialog->wiCB3.bCheckBoxState = FALSE;
-
+  
   if((diDialog->wiCB0.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->wiCB1.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->wiCB2.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->wiCB3.szDescription = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   if((diDialog->wiCB0.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
@@ -3618,8 +3616,6 @@ HRESULT InitDlgWindowsIntegration(diWI *diDialog)
   if((diDialog->wiCB1.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
   if((diDialog->wiCB2.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
-    return(1);
-  if((diDialog->wiCB3.szArchive = NS_GlobalAlloc(MAX_BUF)) == NULL)
     return(1);
 
   return(0);
@@ -3630,15 +3626,14 @@ void DeInitDlgWindowsIntegration(diWI *diDialog)
   FreeMemory(&(diDialog->szTitle));
   FreeMemory(&(diDialog->szSubTitle));
   FreeMemory(&(diDialog->szMessage0));
+  FreeMemory(&(diDialog->szRegistryKey));
 
   FreeMemory(&(diDialog->wiCB0.szDescription));
   FreeMemory(&(diDialog->wiCB1.szDescription));
   FreeMemory(&(diDialog->wiCB2.szDescription));
-  FreeMemory(&(diDialog->wiCB3.szDescription));
   FreeMemory(&(diDialog->wiCB0.szArchive));
   FreeMemory(&(diDialog->wiCB1.szArchive));
   FreeMemory(&(diDialog->wiCB2.szArchive));
-  FreeMemory(&(diDialog->wiCB3.szArchive));
 }
 
 HRESULT InitDlgProgramFolder(diPF *diDialog)
@@ -7504,12 +7499,43 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     diSelectAdditionalComponents.bShowDialog = TRUE;
 
   /* Windows Integration dialog */
-  GetPrivateProfileString("Dialog Windows Integration", "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
-  GetPrivateProfileString("Dialog Windows Integration", "Title",        "", diWindowsIntegration.szTitle,    MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Windows Integration", "Sub Title",    "", diWindowsIntegration.szSubTitle, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Dialog Windows Integration", "Message0",     "", diWindowsIntegration.szMessage0, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Windows Integration", "Show Dialog",  "", szShowDialog,                       sizeof(szShowDialog), szFileIniConfig);
+  GetPrivateProfileString("Dialog Windows Integration", "Title",        "", diWindowsIntegration.szTitle,       MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Windows Integration", "Sub Title",    "", diWindowsIntegration.szSubTitle,    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Windows Integration", "Message0",     "", diWindowsIntegration.szMessage0,    MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Windows Integration", "Registry Key", "", diWindowsIntegration.szRegistryKey, MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diWindowsIntegration.bShowDialog = TRUE;
+
+  GetPrivateProfileString("Windows Integration-Item0", "CheckBoxState", "", szBuf,                                    sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item0", "Description",   "", diWindowsIntegration.wiCB0.szDescription, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item0", "Archive",       "", diWindowsIntegration.wiCB0.szArchive,     MAX_BUF, szFileIniConfig);
+  /* Check to see if the checkbox need to be shown at all or not */
+  if(*diWindowsIntegration.wiCB0.szDescription != '\0')
+    diWindowsIntegration.wiCB0.bEnabled = TRUE;
+  /* check to see if the checkbox needs to be checked by default or not */
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diWindowsIntegration.wiCB0.bCheckBoxState = TRUE;
+
+  GetPrivateProfileString("Windows Integration-Item1", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item1", "Description",   "", diWindowsIntegration.wiCB1.szDescription, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item1", "Archive",       "", diWindowsIntegration.wiCB1.szArchive, MAX_BUF, szFileIniConfig);
+  /* Check to see if the checkbox need to be shown at all or not */
+  if(*diWindowsIntegration.wiCB1.szDescription != '\0')
+    diWindowsIntegration.wiCB1.bEnabled = TRUE;
+  /* check to see if the checkbox needs to be checked by default or not */
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diWindowsIntegration.wiCB1.bCheckBoxState = TRUE;
+
+  GetPrivateProfileString("Windows Integration-Item2", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item2", "Description",   "", diWindowsIntegration.wiCB2.szDescription, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Windows Integration-Item2", "Archive",       "", diWindowsIntegration.wiCB2.szArchive, MAX_BUF, szFileIniConfig);
+  /* Check to see if the checkbox need to be shown at all or not */
+  if(*diWindowsIntegration.wiCB2.szDescription != '\0')
+    diWindowsIntegration.wiCB2.bEnabled = TRUE;
+  /* check to see if the checkbox needs to be checked by default or not */
+  if(lstrcmpi(szBuf, "TRUE") == 0)
+    diWindowsIntegration.wiCB2.bCheckBoxState = TRUE;
 
   /* Program Folder dialog */
   GetPrivateProfileString("Dialog Program Folder",      "Show Dialog",  "", szShowDialog,                    sizeof(szShowDialog), szFileIniConfig);
@@ -7647,46 +7673,6 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     diReboot.dwShowDialog = TRUE;
   else if(lstrcmpi(szShowDialog, "AUTO") == 0)
     diReboot.dwShowDialog = AUTO;
-
-  GetPrivateProfileString("Windows Integration-Item0", "CheckBoxState", "", szBuf,                                    sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item0", "Description",   "", diWindowsIntegration.wiCB0.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item0", "Archive",       "", diWindowsIntegration.wiCB0.szArchive,     MAX_BUF, szFileIniConfig);
-  /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB0.szDescription != '\0')
-    diWindowsIntegration.wiCB0.bEnabled = TRUE;
-  /* check to see if the checkbox needs to be checked by default or not */
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB0.bCheckBoxState = TRUE;
-
-  GetPrivateProfileString("Windows Integration-Item1", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item1", "Description",   "", diWindowsIntegration.wiCB1.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item1", "Archive",       "", diWindowsIntegration.wiCB1.szArchive, MAX_BUF, szFileIniConfig);
-  /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB1.szDescription != '\0')
-    diWindowsIntegration.wiCB1.bEnabled = TRUE;
-  /* check to see if the checkbox needs to be checked by default or not */
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB1.bCheckBoxState = TRUE;
-
-  GetPrivateProfileString("Windows Integration-Item2", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item2", "Description",   "", diWindowsIntegration.wiCB2.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item2", "Archive",       "", diWindowsIntegration.wiCB2.szArchive, MAX_BUF, szFileIniConfig);
-  /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB2.szDescription != '\0')
-    diWindowsIntegration.wiCB2.bEnabled = TRUE;
-  /* check to see if the checkbox needs to be checked by default or not */
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB2.bCheckBoxState = TRUE;
-
-  GetPrivateProfileString("Windows Integration-Item3", "CheckBoxState", "", szBuf,                           sizeof(szBuf), szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item3", "Description",   "", diWindowsIntegration.wiCB3.szDescription, MAX_BUF, szFileIniConfig);
-  GetPrivateProfileString("Windows Integration-Item3", "Archive",       "", diWindowsIntegration.wiCB3.szArchive, MAX_BUF, szFileIniConfig);
-  /* Check to see if the checkbox need to be shown at all or not */
-  if(*diWindowsIntegration.wiCB3.szDescription != '\0')
-    diWindowsIntegration.wiCB3.bEnabled = TRUE;
-  /* check to see if the checkbox needs to be checked by default or not */
-  if(lstrcmpi(szBuf, "TRUE") == 0)
-    diWindowsIntegration.wiCB3.bCheckBoxState = TRUE;
 
   /* Read in the Site Selector Status */
   GetPrivateProfileString("Site Selector", "Status", "", szBuf, sizeof(szBuf), szFileIniConfig);

@@ -39,213 +39,133 @@ function createShortcuts()
   var szStartMenu;
   var szFolderDesktop;
   var szFolderQuickLaunch;
-  var szFolderSendTo;
   var szFolderAppData;
-  var szStartupFolder;
   var winreg;
-  var fWindows;
   var fTemp;
   var fProgram;
   var fDefShortcuts;
   var fileExe;
-  var fileReadme;
-  var fileLicense;
   var scExeDesc;
-  var scReadmeDesc;
-  var scLicenseDesc;
-  var scProfileDesc;
-  var scProfileDescParam;
   var scFolderName;
   var fFolderDesktop;
-  var fFolderPath;
-  var fFolderPathStr;
+  var fFolderPrograms;
+  var fFolderProgramsStr;
   var fFolderQuickLaunch;
   var is_winnt;
   var szCurrentVersion;
   var folderQuickLaunchExists;
 
   winreg               = getWinRegistry();
-  fWindows             = getFolder("Windows");
   fProgram             = getFolder("Program");
   fDefShortcuts        = getFolder("Program","defaults/shortcuts");
   fTemp                = fProgram + "$MainExeFile$";
   fileExe              = getFolder("file:///", fTemp);
-  fileReadme           = getFolder("file:///", fProgram + "readme.txt");
-  fileLicense          = getFolder("file:///", fProgram + "license");
   scExeDesc            = "$ProductName$";
-  scReadmeDesc         = "Readme";
-  scLicenseDesc        = "License";
-  scProfileDesc        = "Profile Manager";
-  scProfileDescParam   = "-ProfileManager";
   scFolderName         = "$ProductName$";
-  if(winreg != null) 
-  {
-    /* determine if the script is running under NT or not */
+  scSafeModeDesc       = "$ProductName$ (No Extensions)";
+  scSafeModeParam      = "-no-extensions";
+
+  if (winreg) {
+    // determine if the script is running under NT or not
     winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
     subkey              = "SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion";
     szCurrentVersion    = winreg.getValueString(subkey, "CurrentVersion");
     logComment("szCurrentVersion: " + szCurrentVersion);
-    if((szCurrentVersion == "") || (szCurrentVersion == null))
-    {
-      is_winnt = false;
-    }
-    else
-    {
-      is_winnt = true;
-    }
-
+    is_winnt = szCurrentVersion != "";
     logComment("is_winnt value: " + is_winnt);
-    if(!is_winnt || restrictedAccess)
-    {
+
+    // Locate the various folders we're about to install shortcuts into.     
+    if(!is_winnt || restrictedAccess) {
       winreg.setRootKey(winreg.HKEY_CURRENT_USER);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
       szStartMenuPrograms = winreg.getValueString(subkey, "Programs");
       szStartMenu         = winreg.getValueString(subkey, "Start Menu");
       szFolderDesktop     = winreg.getValueString(subkey, "Desktop");
-      szStartupFolder     = winreg.getValueString(subkey, "Startup");
-	}
-    else
-    {
+	  }
+    else {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
       subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
       szStartMenuPrograms = winreg.getValueString(subkey, "Common Programs");
       szStartMenu         = winreg.getValueString(subkey, "Common Start Menu");
       szFolderDesktop     = winreg.getValueString(subkey, "Common Desktop");
-      szStartupFolder     = winreg.getValueString(subkey, "Common Startup");
-   }
+    }
 
+    // Locate the Start Menu Programs Folder
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+    fFolderProgramsStr  = winreg.getValueString(subkey, "Program Folder Path");
+    fFolderPrograms = getFolder("file:///", fFolderProgramsStr || szStartMenuPrograms);
+
+    // Locate the Desktop Folder
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    fFolderDesktop = getFolder("file:///", szFolderDesktop);
+
+    // Locate the Quick Launch folder
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
     subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
-    szFolderSendTo      = winreg.getValueString(subkey, "SendTo");
-
-    subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
     szFolderAppData     = winreg.getValueString(subkey, "AppData");
-
-    // locate the Quick Launch folder
-    szFolderQuickLaunch     = szFolderAppData + "\\Microsoft\\Internet Explorer\\Quick Launch";
-    fFolderQuickLaunch      = getFolder("file:///", szFolderQuickLaunch);
+    szFolderQuickLaunch = szFolderAppData + "\\Microsoft\\Internet Explorer\\Quick Launch";
+    fFolderQuickLaunch  = getFolder("file:///", szFolderQuickLaunch);
     folderQuickLaunchExists = File.isDirectory(fFolderQuickLaunch);
-    if(!folderQuickLaunchExists)
-    {
+    if(!folderQuickLaunchExists) {
       subkey                  = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\GrpConv\\MapGroups";
       szFolderQuickLaunch     = winreg.getValueString(subkey, "Quick Launch");
-      folderQuickLaunchExists = File.isDirectory(fFolderPath);
+      folderQuickLaunchExists = File.isDirectory(fFolderPrograms);
       if(folderQuickLaunchExists)
         fFolderQuickLaunch = getFolder("file:///", szFolderQuickLaunch);
     }
     logComment("folderQuickLaunchExists: " + folderQuickLaunchExists);
 
-    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
-    fFolderPathStr      = winreg.getValueString(subkey, "Program Folder Path");
-    if((fFolderPathStr == "") || (fFolderPathStr == null))
-    {
-      fTemp       = szStartMenuPrograms + "\\" + scFolderName;
-      fFolderPath = getFolder("file:///", fTemp);
-    }
-    else
-    {
-      /* convert the path string to a path folder object */
-      fFolderPath = getFolder("file:///", fFolderPathStr);
-    }
-    /* convert the path string to a path folder object */
-    fFolderDesktop = getFolder("file:///", szFolderDesktop);
-
     logComment("Folder StartMenuPrograms: " + szStartMenuPrograms);
     logComment("Folder StartMenu        : " + szStartMenu);
     logComment("Folder FolderDesktop    : " + szFolderDesktop);
-    logComment("Folder FolderSendTo     : " + szFolderSendTo);
     logComment("Folder FolderQuickLaunch: " + szFolderQuickLaunch);
     logComment("fileExe                 : " + fileExe);
-    logComment("fFolderPath             : " + fFolderPath);
+    logComment("fFolderPrograms         : " + fFolderPrograms);
     logComment("scExeDesc               : " + scExeDesc);
     logComment("fProgram                : " + fProgram);
 
-    /* explicitly create the fFolderPath even though the windowsShortcut function creates the folder.
-     * This is so that the folder creation gets logged for uninstall to remove it. */
-    if(!File.exists(fFolderPath))
-      File.dirCreate(fFolderPath);
+    // Explicitly create the fFolderPrograms even though the windowsShortcut 
+    // function creates the folder. This is so that the folder creation gets 
+    // logged for uninstall to remove it.
+    if(!File.exists(fFolderPrograms))
+      File.dirCreate(fFolderPrograms);
     if(!File.exists(fDefShortcuts))
       File.dirCreate(fDefShortcuts);
 
-    /* create the shortcuts */
-    File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc,     fProgram,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fFolderPath,    scExeDesc,     fProgram,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fDefShortcuts,  scExeDesc,     fProgram,  "",                 fileExe, 0);
-    File.windowsShortcut(fileExe, fFolderPath,    scProfileDesc, fProgram,  scProfileDescParam, fileExe, 0);
-    File.windowsShortcut(fileReadme,  fFolderPath, scReadmeDesc,  fProgram, "",                 fileReadme, 0);
-    File.windowsShortcut(fileLicense, fFolderPath, scLicenseDesc, fProgram, "",                 fileLicense, 0);
-
-    // create shortcut in the Quick Launch folder
-    if(folderQuickLaunchExists)
+    // Create the Shortcuts
+    winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+    subkey              = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main";
+    if (winreg.getValueNumber(subkey, "Create Desktop Shortcut") != 0)
+      File.windowsShortcut(fileExe, fFolderDesktop, scExeDesc, fProgram, "", fileExe, 0);
+    if (winreg.getValueNumber(subkey, "Create Start Menu Shortcut") != 0) {
+      File.windowsShortcut(fileExe, fFolderPrograms, scExeDesc, fProgram, "", fileExe, 0);
+      File.windowsShortcut(fileExe, fFolderPrograms,  scSafeModeDesc, fProgram, scSafeModeParam,  fileExe, 0);
+    }
+    if (winreg.getValueNumber(subkey, "Create Quick Launch Shortcut") != 0 && folderQuickLaunchExists) {
+      logComment("creating QuickLaunch in " + fFolderQuickLaunch);
       File.windowsShortcut(fileExe, fFolderQuickLaunch, scExeDesc, fProgram,  "", fileExe, 0);
+    }
+    // Always create the default shortcuts. 
+    File.windowsShortcut(fileExe, fDefShortcuts,    scExeDesc,      fProgram, "",               fileExe, 0);
+    File.windowsShortcut(fileExe, fDefShortcuts,    scSafeModeDesc, fProgram, scSafeModeParam,  fileExe, 0);
 
-    if(!restrictedAccess)
-    {
+    if(!restrictedAccess) {
       winreg.setRootKey(winreg.HKEY_LOCAL_MACHINE);
-      registerProgramFolderKey(winreg, fFolderPath);
-      
+      registerProgramFolderKey(winreg, fFolderPrograms);
+
+      // This is so that Windows Media Player works with us      
       var subkey = "SOFTWARE\\Microsoft\\MediaPlayer\\ShimInclusionList\\$MainExeFile$";
       winreg.createKey(subkey, "");
     }
 
     winreg.setRootKey(winreg.HKEY_CURRENT_USER);
-    registerProgramFolderKey(winreg, fFolderPath);
-
-    /* remove turbo mode shortcut */
-
-    fFolderPath = getFolder("file:///", szStartupFolder);
-									
-    /* remove shortcut from the startup folder */
-
-    basename = "$MainExeFile$"
-    fTemp = fFolderPath + basename + ".lnk";
-    fFolderPath = getFolder("file:///", fTemp);
-    if (File.exists(fFolderPath)) 
-    { 
-        logComment("Removing Quick Launch shortcut from Windows startup folder\n");
-        fileDelete(fFolderPath);
-    }
-
-    subkey  = "SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Setup";
-    regvalue = winreg.getValueString(subkey, "browserargs");
-
-    /* log this so if the user turns on turbo mode in the browser the uninstaller will undo it */
-
-    logComment( "store registry value string: HKEY_CURRENT_USER\\Software\\Microsoft\\Windows\\CurrentVersion\\Run [Mozilla Quick Launch]");
-    if (regvalue && regvalue != undefined && regvalue.length != 0) 
-    {
-        var value = new String(regvalue);
-        var index = value.indexOf("turbo");
-        if (index != -1) 
-        {
-            var index2 = value.indexOf("=", index);
-            if (index2 != -1) 
-            {
-                turboarg = value.slice(index2 + 1, index2 + 2);
-                winreg.setRootKey(winreg.HKEY_CURRENT_USER);
-                subkey = "Software\\Microsoft\\Windows\\CurrentVersion\\Run";
-                valname = "Mozilla Quick Launch";
-                if ( turboarg == "Y" || turboarg == "y") 
-                {
-                    fTemp = fileExe;
-                    fileExe = getFolder("file:///", fTemp);
-                    newKey = '"' + fileExe + '"' + ' -turbo';
-                    winreg.createKey(subkey,"");
-                    winreg.setValueString(subkey, valname, newKey);
-                } 
-                else 
-                {
-                    winreg.deleteValue(subkey, valname);
-                }
-            }
-        }
-    }
+    registerProgramFolderKey(winreg, fFolderPrograms);
   }
   else
-  {
     logComment("winreg is null");
-  }
 }
+
 function IsWinnt()
 {
   /* Determines if the script is running under NT or not.

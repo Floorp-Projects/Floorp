@@ -162,7 +162,7 @@ url=http://orb.mcom.com/install/error.cgi
 ;
 ; Default value is TRUE if nothing is set.
 Show Confirmation=TRUE
-Confirmation Message=There was an error encountered during installation of $ProductName$.  The following information will be sent back to us to help us improve the product: %s
+Confirmation Message=There was an error encountered during installation of $ProductShortName$.  The following information will be sent back to us to help us improve the product: %s
 
 
 
@@ -183,7 +183,7 @@ Verify Existence=
 [Dialog Welcome]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup
+Title=$ProductShortName$ Setup
 ;*** LOCALIZE ME BABY ***
 MessageWelcome=Welcome to %s.
 ;*** LOCALIZE ME BABY ***
@@ -267,7 +267,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Select Components
 ;*** LOCALIZE ME BABY ***
-Sub Title=Additional components that enhance $ProductName$.
+Sub Title=Additional components that enhance $ProductShortName$.
 ;*** LOCALIZE ME BABY ***
 Message0=Choose additional components you want to install, then click Next.
 
@@ -276,9 +276,9 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Install Folder
 ;*** LOCALIZE ME BABY ***
-Sub Title=Where $ProductName$ will be installed.
+Sub Title=Where $ProductShortName$ will be installed.
 ;*** LOCALIZE ME BABY ***
-Message0=$ProductName$ will be installed into the following folder:
+Message0=$ProductShortName$ will be installed into the following folder:
 
 [Dialog Upgrade]
 Show Dialog=FALSE
@@ -286,7 +286,7 @@ Show In Easy Install=FALSE
 ;*** LOCALIZE ME BABY ***
 Title=Upgrade
 ;*** LOCALIZE ME BABY ***
-Sub Title=Upgrades an existing $ProductName$ installation.
+Sub Title=Upgrades an existing $ProductShortName$ installation.
 ;*** LOCALIZE ME BABY ***
 Message Cleanup=A previous $ProductNameInternal$ installation has been found in the chosen folder.
 ; XXXben - we need a strategy for uninstallation that obviates the need for "Safe Upgrade" which can doing nasty things if you have installed the app into a stupid location.
@@ -305,24 +305,26 @@ Message Install Over Windir=A Safe Upgrade of $ProductNameInternal$ cannot be pe
 [Dialog Select Additional Components]
 Show Dialog=FALSE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Select Additional Components
+Title=$ProductShortName$ Setup - Select Additional Components
 ;*** LOCALIZE ME BABY ***
 Message0=Select or clear the additional components you want to install.
 
 [Dialog Windows Integration]
 ; Note - this dialog isn't actually used yet!
 Show Dialog=TRUE
+Registry Key=SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main
 ;*** LOCALIZE ME BABY ***
-Title=Windows Integration
+Title=Set Up Shortcuts
 ;*** LOCALIZE ME BABY ***
-Sub Title=Create Shortcuts and set Default Browser
+Sub Title=Creates Program Icons
 ;*** LOCALIZE ME BABY ***
-Message0=Create %s shortcuts:
+Message0=Create icons for $ProductShortName$:
 
-; Only a maximum of 4 "Windows Integration-Item"s are allowded.  Each Item
+
+; Only a maximum of 3 "Windows Integration-Item"s are allowded.  Each Item
 ; shows up as a checkbox in the Windows Integration dialog.
 [Windows Integration-Item0]
-CheckBoxState=TRUE
+CheckBoxState=FALSE
 ;*** LOCALIZE ME BABY ***
 Description=On my Desktop
 Archive=
@@ -339,23 +341,17 @@ CheckBoxState=TRUE
 Description=In my Quick Launch bar
 Archive=
 
-[Windows Integration-Item3]
-CheckBoxState=TRUE
-;*** LOCALIZE ME BABY ***
-Description=Use %s as my Default Browser.
-Archive=
-
 [Dialog Program Folder]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Select Program Folder
+Title=$ProductShortName$ Setup - Select Program Folder
 ;*** LOCALIZE ME BABY ***
 Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
 
 [Dialog Additional Options]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Additional Options
+Title=$ProductShortName$ Setup - Additional Options
 ;*** LOCALIZE ME BABY ***
 Message1=Select the following option if you wish to save downloaded Setup files on your own computer.  This allows you to re-run Setup without downloading the files again.  The Setup files will be saved to the path below.
 Save Installer=
@@ -370,7 +366,7 @@ Recapture Homepage=FALSE
 [Dialog Advanced Settings]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Advanced Settings
+Title=$ProductShortName$ Setup - Advanced Settings
 ;*** LOCALIZE ME BABY ***
 Message0=If your Internet connection requires a proxy server, enter your server name and port information.  If your Internet connection doesn't require a proxy server, leave the fields blank.
 Proxy Server=
@@ -393,7 +389,7 @@ Show Protocols=TRUE
 [Dialog Quick Launch]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Quick Launch
+Title=$ProductShortName$ Setup - Quick Launch
 ;*** LOCALIZE ME BABY ***
 Message0=Quick Launch starts Mozilla faster by keeping portions of the program in computer memory.
 ;*** LOCALIZE ME BABY ***
@@ -414,7 +410,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Summary
 ;*** LOCALIZE ME BABY ***
-Sub Title=Ready to start installing $ProductName$.
+Sub Title=Ready to start installing $ProductShortName$.
 ;*** LOCALIZE ME BABY ***
 Message Install=Setup will now install the following components:
 ;*** LOCALIZE ME BABY ***
@@ -429,7 +425,7 @@ Title=Downloading
 ;*** LOCALIZE ME BABY ***
 Sub Title=Downloading required components...
 ;*** LOCALIZE ME BABY ***
-Blurb=Setup is downloading the files required to install $ProductName$.
+Blurb=Setup is downloading the files required to install $ProductShortName$.
 ;*** LOCALIZE ME BABY ***
 File Name=Currently Downloading:
 ;*** LOCALIZE ME BABY ***
@@ -440,7 +436,7 @@ Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
 Title=Installing
 ;*** LOCALIZE ME BABY ***
-Sub Title=Installing $ProductName$...
+Sub Title=Installing $ProductShortName$...
 ;*** LOCALIZE ME BABY ***
 Blurb=Setup is installing application files. 
 ;*** LOCALIZE ME BABY ***
@@ -465,7 +461,7 @@ Launch App Checked=TRUE
 [Dialog Download]
 Show Dialog=TRUE
 ;*** LOCALIZE ME BABY ***
-Title=$ProductName$ Setup - Download
+Title=$ProductShortName$ Setup - Download
 ;*** LOCALIZE ME BABY ***
 Message Download0=Setup is downloading the required files now.  This may take some time depending on your network connection speed.
 ;*** LOCALIZE ME BABY ***
@@ -488,7 +484,7 @@ Window Name=
 Process Name=$MainExeFile$
 Pretty Name=$ProductNameInternal$
 ;*** LOCALIZE ME BABY ***
-Message=Download of $ProductName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
+Message=Download of $ProductShortName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
 Message Full Installer=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
 ;*** LOCALIZE ME BABY ***
@@ -611,9 +607,9 @@ Attributes=SELECTED|INVISIBLE
 FileCount=$FileCount$
 
 [Component Browser]
-Description Short=$ProductName$ Browser
+Description Short=$ProductShortName$ Browser
 ;*** LOCALIZE ME BABY ***
-Description Long=The $ProductName$ Browser
+Description Long=The $ProductShortName$ Browser
 Archive=browser.xpi
 $InstallSize$:browser
 $InstallSizeSystem$
@@ -645,9 +641,9 @@ Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
 FileCount=$FileCount$
 
 [Component Help]
-Description Short=$ProductName$ Help
+Description Short=$ProductShortName$ Help
 ;*** LOCALIZE ME BABY ***
-Description Long=Offline Help for learning about and using $ProductName$.
+Description Long=Offline Help for learning about and using $ProductShortName$.
 Archive=help.xpi
 $InstallSize$:help
 $InstallSizeArchive$:help.xpi
@@ -658,7 +654,7 @@ FileCount=$FileCount$
 [Component Uninstaller]
 Description Short=$CompanyName$ Uninstaller
 ;*** LOCALIZE ME BABY ***
-Description Long=Uninstaller for $ProductName$
+Description Long=Uninstaller for $ProductShortName$
 Archive=$UninstallFileZip$
 $InstallSize$:$UninstallFileZip$
 $InstallSizeSystem$
@@ -713,7 +709,7 @@ FileCount=$FileCount$
 [Component QFA]
 Description Short=Quality Feedback Agent
 ;*** LOCALIZE ME BABY ***
-Description Long=for reporting $ProductName$ crash information
+Description Long=for reporting $ProductShortName$ crash information
 Archive=talkback.xpi
 Install Size=870
 Install Size System=1
@@ -1119,100 +1115,15 @@ Product Name1=Mozilla
 Product Reg Key1=Software\Mozilla.org\Mozilla
 Current Version1=$UserAgent$
 
-
-
-; Values for Show Folder:
-;   HIDE             Hides the window and activates another window.
-;   MAXIMIZE         Maximizes the specified window.
-;   MINIMIZE         Minimizes the specified window and activates the next
-;                    top-level window in the z-order.
-;   RESTORE          Activates and displays the window. If the window is
-;                    minimized or maximized, Windows restores it to its
-;                    original size and position. An application should specify
-;                    this flag when restoring a minimized window.
-;   SHOW             Activates the window and displays it in its current size
-;                    and position.
-;   SHOWMAXIMIZED    Activates the window and displays it as a maximized
-;                    window.
-;   SHOWMINIMIZED    Activates the window and displays it as a minimized
-;                    window.
-;   SHOWMINNOACTIVE  Displays the window as a minimized window. The active
-;                    window remains active.
-;   SHOWNA           Displays the window in its current state. The active
-;                    window remains active.
-;   SHOWNOACTIVATE   Displays a window in its most recent size and position.
-;                    The active window remains active.
-;   SHOWNORMAL       Activates and displays a window. If the window is
-;                    minimized or maximized, Windows restores it to its
-;                    original size and position. An application should specify
-;                    this flag when displaying the window for the first time.
-[Program Folder0]
-Timing=post smartupdate
-Show Folder=HIDE
-Program Folder=[Default Folder]
-
-[Program Folder0-Shortcut0]
-File=[SETUP PATH]\uninstall\$UninstallFile$
-Arguments=/ua "$UserAgent$"
-Working Dir=[SETUP PATH]
-Description=Uninstall $ProductName$
-Icon Path=[SETUP PATH]\uninstall\$UninstallFile$
-Icon Id=0
-
-; Default value:
-;    IGNORE
-;
-; Possible values:
-;    ONLY_RESTRICTED    - create shortcut only if user access is restricted
-;    ONLY_NONRESTRICTED - create shortcut only if user access is not restricted
-Restricted Access=ONLY_RESTRICTED
-
-;[Program Folder0-Shortcut1]
-;File=[SETUP PATH]\$MainExeFile$
-;Arguments=-ProfileManager
-;Working Dir=[SETUP PATH]
-;Description=Profile Manager
-;Icon Path=[SETUP PATH]\$MainExeFile$
-;Icon Id=0
-
-;[Program Folder0-Shortcut2]
-;File=[SETUP PATH]\bin\Net2fone.exe
-;Arguments=
-;Working Dir=[SETUP PATH]
-;Description=Net2Fone
-;Icon Path=[SETUP PATH]\bin\Net2fone.exe
-;Icon Id=0
-
-;[Program Folder1]
-;Timing=post download
-;Show Folder=SHOW
-;Program Folder=[Default Folder]\lala land
-
-;[Program Folder1-Shortcut0]
-;File=c:\bin\getver.exe
-;Arguments=
-;Working Dir=[TEMP]
-;Description=Getver Test
-;Icon Path=[WINDISK]\4nt\4nt.exe
-;Icon Id=0
-
-;[Program Folder1-Shortcut1]
-;File=c:\perl\bin\perl.exe
-;Arguments=
-;Working Dir=[WINSYS]
-;Description=Perl
-;Icon Path=c:\perl\bin\perl.exe
-;Icon Id=0
-
 [Strings]
 ;*** LOCALIZE ME BABY ***
 Message Unfinished Download Restart=A previous session of Setup did not finish downloading all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
 ;*** LOCALIZE ME BABY ***
 Message Unfinished Install Xpi Restart=A previous session of Setup did not finish with installation of all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
 ;*** LOCALIZE ME BABY ***
-Error Corrupted Archives Detected=Setup has detected that the following archives within this Setup are corrupted:%sYou will need to obtain another copy of the $ProductName$ Setup in order for installation to proceed.
+Error Corrupted Archives Detected=Setup has detected that the following archives within this Setup are corrupted:%sYou will need to obtain another copy of the $ProductShortName$ Setup in order for installation to proceed.
 ;*** LOCALIZE ME BABY ***
-Error Corrupted Archives Detected AUTO mode=Setup has detected that at least one archive within this Setup is corrupt.  You will need to obtain another copy of the $ProductName$ Setup in order for installation to proceed.
+Error Corrupted Archives Detected AUTO mode=Setup has detected that at least one archive within this Setup is corrupt.  You will need to obtain another copy of the $ProductShortName$ Setup in order for installation to proceed.
 ;*** LOCALIZE ME BABY ***
 Error Too Many CRC Failures=Too many download failures.  Setup will cancel.  Any files already downloaded will not be deleted.  The next time Setup is run, these files will be taken into account during the download.
 ;*** LOCALIZE ME BABY ***
@@ -1254,9 +1165,9 @@ IDC Turbo Mode=&Use Quick Launch for faster startup times when possible
 ;*** LOCALIZE ME BABY ***
 Message Download Paused=Setup has encountered a network problem and has paused the download.  If you have just lost your network connection, please click Resume once your network has been reestablished.
 ;*** LOCALIZE ME BABY ***
-Message NORMAL Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  It is highly recommended that you do not continue with the installation of $ProductName$, or it may not function properly.  Would you still like to continue?
+Message NORMAL Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  It is highly recommended that you do not continue with the installation of $ProductShortName$, or it may not function properly.  Would you still like to continue?
 ;*** LOCALIZE ME BABY ***
-Message AUTO Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  Setup cannot continue with the installation of $ProductName$.
+Message AUTO Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  Setup cannot continue with the installation of $ProductShortName$.
 
 
 [Site Selector]
