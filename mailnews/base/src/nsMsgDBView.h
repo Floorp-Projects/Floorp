@@ -115,7 +115,6 @@ protected:
   static nsIAtom* kForwardedMsgAtom;
   static nsIAtom* kOfflineMsgAtom;
   static nsIAtom* kFlaggedMsgAtom;
-  static nsIAtom* kNewsMsgAtom;
   static nsIAtom* kImapDeletedMsgAtom;
   static nsIAtom* kAttachMsgAtom;
   static nsIAtom* kHasUnreadAtom;
@@ -341,6 +340,7 @@ protected:
   nsCOMPtr <nsIMsgDatabase> m_db;
   nsCOMPtr <nsIMsgFolder> m_folder;
   nsCOMPtr <nsIAtom> mRedirectorTypeAtom;
+  nsCOMPtr <nsIAtom> mMessageTypeAtom; // news, rss, mail, etc. 
   nsMsgViewSortTypeValue  m_sortType;
   nsMsgViewSortOrderValue m_sortOrder;
   nsMsgViewFlagsTypeValue m_viewFlags;

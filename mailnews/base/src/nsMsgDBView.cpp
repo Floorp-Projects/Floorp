@@ -85,7 +85,6 @@ nsIAtom * nsMsgDBView::kRepliedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kForwardedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kOfflineMsgAtom	= nsnull;
 nsIAtom * nsMsgDBView::kFlaggedMsgAtom = nsnull;
-nsIAtom * nsMsgDBView::kNewsMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kImapDeletedMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kAttachMsgAtom = nsnull;
 nsIAtom * nsMsgDBView::kHasUnreadAtom = nsnull;
@@ -172,7 +171,6 @@ void nsMsgDBView::InitializeAtomsAndLiterals()
   kForwardedMsgAtom = NS_NewAtom("forwarded");
   kOfflineMsgAtom = NS_NewAtom("offline");
   kFlaggedMsgAtom = NS_NewAtom("flagged");
-  kNewsMsgAtom = NS_NewAtom("news");
   kImapDeletedMsgAtom = NS_NewAtom("imapdeleted");
   kAttachMsgAtom = NS_NewAtom("attach");
   kHasUnreadAtom = NS_NewAtom("hasUnread");
@@ -220,7 +218,6 @@ nsMsgDBView::~nsMsgDBView()
     NS_IF_RELEASE(kForwardedMsgAtom);
     NS_IF_RELEASE(kOfflineMsgAtom);
     NS_IF_RELEASE(kFlaggedMsgAtom);
-    NS_IF_RELEASE(kNewsMsgAtom);
     NS_IF_RELEASE(kImapDeletedMsgAtom);
     NS_IF_RELEASE(kAttachMsgAtom);
     NS_IF_RELEASE(kHasUnreadAtom);
@@ -1256,8 +1253,8 @@ NS_IMETHODIMP nsMsgDBView::GetCellProperties(PRInt32 aRow, nsITreeColumn *col, n
   if (mRedirectorTypeAtom)
     properties->AppendElement(mRedirectorTypeAtom);
 
-  if (mIsNews)
-    properties->AppendElement(kNewsMsgAtom);
+  if (mMessageTypeAtom)
+    properties->AppendElement(mMessageTypeAtom);
 
   nsXPIDLCString imageSize;
   msgHdr->GetStringProperty("imageSize", getter_Copies(imageSize));
@@ -1811,6 +1808,12 @@ NS_IMETHODIMP nsMsgDBView::Open(nsIMsgFolder *folder, nsMsgViewSortTypeValue sor
       mRedirectorTypeAtom = do_GetAtom(redirectorType.get());
 
     mIsNews = !strcmp("nntp",type.get());
+
+    if (type.IsEmpty())
+      mMessageTypeAtom = nsnull;
+    else  // special case nntp --> news since we'll break themes if we try to be consistent
+      mMessageTypeAtom = do_GetAtom(mIsNews ? "news" : type.get());
+
     GetImapDeleteModel(nsnull);
 
     if (mIsNews)
