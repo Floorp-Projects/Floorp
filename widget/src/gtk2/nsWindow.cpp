@@ -342,11 +342,12 @@ nsWindow::Create(nsNativeWidget aParent,
 NS_IMETHODIMP
 nsWindow::Destroy(void)
 {
-    if (mIsDestroyed)
+    if (mIsDestroyed || !mCreated)
         return NS_OK;
 
     LOG(("nsWindow::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
+    mCreated = PR_FALSE;
 
     // ungrab if required
     nsCOMPtr<nsIWidget> rollupWidget = do_QueryReferent(gRollupWindow);
@@ -506,6 +507,9 @@ nsWindow::Move(PRInt32 aX, PRInt32 aY)
 
     mBounds.x = aX;
     mBounds.y = aY;
+
+    if (!mCreated)
+        return NS_OK;
 
     if (mIsTopLevel) {
         if (mParent && mWindowType == eWindowType_popup) {

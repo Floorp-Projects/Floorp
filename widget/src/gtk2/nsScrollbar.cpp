@@ -97,11 +97,12 @@ nsScrollbar::Create(nsNativeWidget aParent,
 NS_IMETHODIMP
 nsScrollbar::Destroy(void)
 {
-    if (mIsDestroyed)
+    if (mIsDestroyed || !mCreated)
         return NS_OK;
 
     LOG(("nsScrollbar::Destroy [%p]\n", (void *)this));
     mIsDestroyed = PR_TRUE;
+    mCreated = PR_FALSE;
 
     NativeShow(PR_FALSE);
 

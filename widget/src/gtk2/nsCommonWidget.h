@@ -149,6 +149,8 @@ protected:
     PRPackedBool        mNeedsShow;
     // is this widget enabled?
     PRBool              mEnabled;
+    // has the native window for this been created yet?
+    PRBool              mCreated;
 
     // Preferred sizes
     PRUint32            mPreferredWidth;

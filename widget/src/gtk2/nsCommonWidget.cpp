@@ -48,6 +48,7 @@ nsCommonWidget::nsCommonWidget()
     mIsShown          = PR_FALSE;
     mNeedsShow        = PR_FALSE;
     mEnabled          = PR_TRUE;
+    mCreated          = PR_FALSE;
 
     mPreferredWidth   = 0;
     mPreferredHeight  = 0;
@@ -71,6 +72,7 @@ nsCommonWidget::CommonCreate(nsIWidget *aParent, PRBool aListenForResizes)
 {
     mParent = aParent;
     mListenForResizes = aListenForResizes;
+    mCreated = PR_TRUE;
 }
 
 void
@@ -321,8 +323,8 @@ nsCommonWidget::Show(PRBool aState)
     // Ok, someone called show on a window that isn't sized to a sane
     // value.  Mark this window as needing to have Show() called on it
     // and return.
-    if (aState && !AreBoundsSane()) {
-        LOG(("\tbounds are insane\n"));
+    if ((aState && !AreBoundsSane()) || !mCreated) {
+        LOG(("\tbounds are insane or window hasn't been created yet\n"));
         mNeedsShow = PR_TRUE;
         return NS_OK;
     }
@@ -349,6 +351,9 @@ nsCommonWidget::Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
 {
     mBounds.width = aWidth;
     mBounds.height = aHeight;
+
+    if (!mCreated)
+        return NS_OK;
 
     // There are several cases here that we need to handle, based on a
     // matrix of the visibility of the widget, the sanity of this resize
@@ -415,6 +420,9 @@ nsCommonWidget::Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight,
     mBounds.y = aY;
     mBounds.width = aWidth;
     mBounds.height = aHeight;
+
+    if (!mCreated)
+        return NS_OK;
 
     // There are several cases here that we need to handle, based on a
     // matrix of the visibility of the widget, the sanity of this resize
