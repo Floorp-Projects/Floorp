@@ -2891,6 +2891,9 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
 
             if (m_transport)
                 m_transport->OnStopBinding(m_nsIPop3URL, 0, nsnull);
+			
+			if (m_nsIPop3URL)
+				m_nsIPop3URL->SetUrlState(PR_FALSE, NS_OK);
 
             m_pop3ConData->next_state = POP3_FREE;
             break;
@@ -2958,6 +2961,9 @@ nsPop3Protocol::ProcessPop3State (nsIURL* aURL, nsIInputStream* aInputStream,
             
             if (m_transport)
                 m_transport->OnStopBinding(m_nsIPop3URL, 0, nsnull);
+
+			if (m_nsIPop3URL)
+				m_nsIPop3URL->SetUrlState(PR_FALSE, NS_ERROR_FAILURE);
 
             m_pop3ConData->pause_for_read = PR_FALSE;
             break;
