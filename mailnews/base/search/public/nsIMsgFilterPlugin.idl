@@ -95,11 +95,12 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
      * Given a message URL, determine what its current classification is
      * according to the current training set.
      */
-    void classifyMessage(in string aMsgURI,
+    void classifyMessage(in string aMsgURI, in nsIMsgWindow aMsgWindow,
                          in nsIJunkMailClassificationListener aListener);
 
     void classifyMessages(in unsigned long aCount,
                           [array, size_is(aCount)] in string aMsgURIs,
+                          in nsIMsgWindow aMsgWindow,
                           in nsIJunkMailClassificationListener aListener);
     
     /**
@@ -115,5 +116,6 @@ interface nsIJunkMailPlugin : nsIMsgFilterPlugin
     void setMessageClassification(
         in string aMsgURI, in nsMsgJunkStatus aOldUserClassification,
         in nsMsgJunkStatus aNewClassification,
+        in nsIMsgWindow aMsgWindow,
         in nsIJunkMailClassificationListener aListener);
 };
