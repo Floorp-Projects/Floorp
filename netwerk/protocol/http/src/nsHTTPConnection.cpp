@@ -132,6 +132,13 @@ nsHTTPConnection::GetResponseHeader(const char* i_Header, const char* *o_Value)
         return NS_ERROR_NOT_IMPLEMENTED; // NS_ERROR_NO_RESPONSE_YET ? 
 }
 
+// XXX jud
+#if 0
+static NS_DEFINE_CID(kNetModuleMgrCID, NS_NETMODULEMGR_CID);
+static NS_DEFINE_IID(kINetModuleMgrIID, NS_INETMODULEMGR_IID);
+static NS_DEFINE_CID(kCookieModuleCID, NS_COOKIEMODULE_CID);
+#endif // jud
+
 NS_METHOD
 nsHTTPConnection::Open(void)
 {
@@ -157,6 +164,52 @@ nsHTTPConnection::Open(void)
 
     NS_ASSERTION(port>0, "Bad port setting!");
     PRUint32 unsignedPort = port;
+
+// jud
+#if 0
+    // XXX this is not the right place for this
+    // Check for any modules that want to set headers before we
+    // send out a request.
+    nsINetModuleMgr* pNetModuleMgr = nsnull;
+    nsresult ret = nsServiceManager::GetService(kNetModuleMgrCID, kINetModuleMgrIID,
+        (nsISupports**) &pNetModuleMgr);
+
+    if (NS_SUCCEEDED(ret)) {
+        nsIEnumerator* pModules = nsnull;
+        ret = pNetModuleMgr->EnumerateModules("http-request", &pModules);
+        if (NS_SUCCEEDED(ret)) ) {
+            nsIProxyObjectManager*  proxyObjectManager = nsnull; 
+            ret = nsComponentManager::CreateInstance(kProxyObjectManagerCID, 
+                                               nsnull, 
+                                               nsIProxyObjectManager::GetIID(), 
+                                               (void**)&proxyObjectManager);
+            nsNetModuleEntry *entry = nsnull;
+            pModules->First(&entry);
+            while (NS_SUCCEEDED(ret)) {
+                // send the SetHeaders event to each registered module,
+                // using the nsISupports Proxy service
+                nsIHttpNotify *pNotify = nsnull;
+                
+                ret = proxyObjectManager->GetProxyObject(entry->mEventQ, 
+                                                   kCookieModuleCID,
+                                                   nsnull,
+                                                   nsIHttpNotify::GetIID(),
+                                                   (void**)&nsIHttpNotify);
+
+                if (NS_SUCCEEDED(ret)) {
+                    // send off the notification, and block.
+                    ret = nsIHttpNotify->SetHeaders();
+                    if (NS_SUCCEEDED(ret)) {
+                        ;
+                    }
+                }
+
+                pModules->Next(&entry);
+  
+            }
+        }
+    }
+#endif // jud
 
     rv = m_pHandler->GetTransport(host, unsignedPort, &temp);
     if (temp)
