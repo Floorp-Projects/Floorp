@@ -118,6 +118,7 @@
             <treerow>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#Name"/>
               <treecell label="rdf:http://home.netscape.com/NC-rdf#VisitCount" hidden="true"/>
+              <treecell label="rdf:http://home.netscape.com/NC-rdf#Date" hidden="true"/>
             </treerow>
           </treeitem>
         </treechildren>
@@ -128,9 +129,12 @@
                hideheader="true" primary="true"
                sort="rdf:http://home.netscape.com/NC-rdf#Name"
                sortActive="true"/>
-      <treecol flex="1" id="VisitCount" hidden="true" hideheader="true"
+      <treecol id="VisitCount" hidden="true" hideheader="true"
                persist="sortActive sortDirection"
                sort="rdf:http://home.netscape.com/NC-rdf#VisitCount"/>
+      <treecol id="Date" hidden="true" hideheader="true"
+               persist="sortActive sortDirection"
+               sort="rdf:http://home.netscape.com/NC-rdf#Date"/>
     </treecols>
   </tree>
 </page>
