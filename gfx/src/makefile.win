@@ -26,6 +26,8 @@ DIRS = windows
 MODULE=gfx
 
 REQUIRES=   xpcom \
+			windowwatcher \
+			dom \
             string \
             widget \
             locale \

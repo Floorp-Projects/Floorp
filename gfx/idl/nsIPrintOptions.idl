@@ -129,7 +129,7 @@ interface nsIPrintOptions : nsISupports
   /**
    * Show Native Print Options dialog, this may not be supported on all platforms
    */
-  void ShowNativeDialog();
+  void ShowPrintSetupDialog(in nsIPrintSettings aThePrintSettings);
 
   /**
    * Set PrintOptions 

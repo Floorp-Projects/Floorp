@@ -31,6 +31,8 @@ EXPORTS         = nsFontList.h
 LIBRARY_NAME    = gkgfx
 EXPORT_LIBRARY = 1
 REQUIRES    = xpcom \
+			windowwatcher \
+			dom \
           string \
           widget \
           locale \
