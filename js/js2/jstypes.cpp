@@ -183,7 +183,7 @@ Formatter& operator<<(Formatter& f, const JSValue& value)
     return f;
 }
 
-JSValue JSValue::toPrimitive(ECMA_type hint) const
+JSValue JSValue::toPrimitive(ECMA_type /*hint*/) const
 {
     JSObject *obj;
     switch (tag) {
