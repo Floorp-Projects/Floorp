@@ -45,8 +45,8 @@ LIBRARY_NAME=rdf
 REQUIRES=nspr dbm java js htmldlgs util img layer pref
 CSRCS=bmk2mcf.c vocab.c  nlcstore.c mcf.c mcff2mcf.c rdfht.c \
     remstore.c ht.c glue.c utils.c fs2rdf.c hist2rdf.c \
-    rdfparse.c   es2mcf.c columns.c  xmlparse.c \
-    xmlglue.c xmlss.c scook.c \
+    rdfparse.c   es2mcf.c columns.c   \
+     scook.c \
 
 C_OBJS=.\$(OBJDIR)\bmk2mcf.obj .\$(OBJDIR)\vocab.obj \
      .\$(OBJDIR)\nlcstore.obj \
@@ -56,8 +56,7 @@ C_OBJS=.\$(OBJDIR)\bmk2mcf.obj .\$(OBJDIR)\vocab.obj \
     .\$(OBJDIR)\hist2rdf.obj .\$(OBJDIR)\rdfparse.obj \
      .\$(OBJDIR)\es2mcf.obj \
     .\$(OBJDIR)\columns.obj  \
-    .\$(OBJDIR)\xmlparse.obj .\$(OBJDIR)\xmlglue.obj \
-    .\$(OBJDIR)\xmlss.obj .\$(OBJDIR)\scook.obj 
+    .\$(OBJDIR)\scook.obj 
 !if "$(MOZ_BITS)" != "16"
 LINCS=-I$(XPDIST)\public\nspr -I$(XPDIST)\public\dbm \
     -I$(XPDIST)\public\java -I$(XPDIST)\public\js \

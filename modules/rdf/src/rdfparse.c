@@ -127,7 +127,7 @@ freeNamespaces (RDFFile f)
 
 
 
-char *
+PR_PUBLIC_API(char *)
 getAttributeValue (char** attlist, char* elName)
 {
   size_t n = 0;

@@ -42,7 +42,7 @@ XP_BEGIN_PROTOS
 char *		getHref(char** attlist);
 int		parseNextRDFXMLBlob (NET_StreamClass *stream, char* blob, int32 size);
 void		parseRDFProcessingInstruction (RDFFile f, char* token);
-char *		getAttributeValue (char** attlist, char* elName);
+PR_PUBLIC_API(char *)		getAttributeValue (char** attlist, char* elName);
 PRBool		tagEquals (RDFFile f, char* tag1, char* tag2);
 void		addElementProps (char** attlist, char* elementName, RDFFile f, RDF_Resource obj);
 PRBool		knownObjectElement (char* eln);

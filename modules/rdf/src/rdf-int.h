@@ -279,7 +279,7 @@ PLHashNumber idenHash(const void* key);
 
 int16 charSearch(const char c,const  char* string);
 int16 revCharSearch(const char c, const char* string);
-PRBool startsWith(const char* startPattern,const  char* string);
+PR_PUBLIC_API(PRBool) startsWith(const char* startPattern,const  char* string);
 PRBool endsWith(const char* endPattern,const  char* string);
 PRBool inverseTV(PRBool tv);
 void createBootstrapResources();

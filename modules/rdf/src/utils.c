@@ -264,7 +264,7 @@ endsWith (const char* pattern, const char* uuid)
 
 
 
-PRBool
+PR_PUBLIC_API(PRBool)
 startsWith (const char* pattern, const char* uuid)
 {
   short l1 = strlen(pattern);

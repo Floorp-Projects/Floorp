@@ -56,7 +56,7 @@ void		stringAppendBase (char* dest, const char* addition);
 void		stringAppend (char* dest, const char* addition);
 int16		charSearch (const char c, const char* data);
 PRBool		endsWith (const char* pattern, const char* uuid);
-PRBool		startsWith (const char* pattern, const char* uuid);
+
 PRBool		substring (const char* pattern, const char* data);
 int16		revCharSearch (const char c, const char* data);
 PRBool		urlEquals (const char* url1, const char* url2);
