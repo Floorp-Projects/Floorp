@@ -101,10 +101,11 @@ class SocketBase {
 
     void close() throws IOException {
         socketClose();
-        sockProxy = null;
     }
 
-    native void socketClose() throws IOException;
+    // This method is synchronized because there is a potential race
+    // condition in the native code.
+    native synchronized void socketClose() throws IOException;
 
     private boolean requestingClientAuth = false;
 

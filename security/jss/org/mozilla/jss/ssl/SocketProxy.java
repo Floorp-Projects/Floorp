@@ -39,14 +39,10 @@ class SocketProxy extends org.mozilla.jss.util.NativeProxy {
         super(pointer);
     }
 
-    /** 
-     * Theoretically, we don't need to do anything, since SSLSocket should
-     * call close() when it finalizes. When a socket is closed all its
-     * resources are freed, and there's nothing left to release.
-     */
-    protected void releaseNativeResources() { }
+    protected native void releaseNativeResources();
 
     protected void finalize() throws Throwable {
+        System.out.println("In SocketProxy.finalize");
         super.finalize();
     }
 }

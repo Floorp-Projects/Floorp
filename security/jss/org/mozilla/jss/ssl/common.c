@@ -263,6 +263,7 @@ JSSL_CreateSocketData(JNIEnv *env, jobject sockObj, PRFileDesc* newFD,
     sockdata->clientCertSelectionCallback = NULL;
     sockdata->clientCert = NULL;
     sockdata->jsockPriv = priv;
+    sockdata->closed = PR_FALSE;
 
     /*
      * Make a global ref to the socket. Since it is a weak reference, it will
@@ -285,15 +286,35 @@ finish:
     return sockdata;
 }
 
+JNIEXPORT void JNICALL
+Java_org_mozilla_jss_ssl_SocketProxy_releaseNativeResources
+    (JNIEnv *env, jobject this)
+{
+    JSSL_SocketData *sock = NULL;
+
+    /* get the FD */
+    if( JSS_getPtrFromProxy(env, this, (void**)&sock) != PR_SUCCESS) {
+        /* exception was thrown */
+        goto finish;
+    }
+
+    JSSL_DestroySocketData(env, sock);
+
+finish:
+    return;
+}
+
 void
 JSSL_DestroySocketData(JNIEnv *env, JSSL_SocketData *sd)
 {
     PR_ASSERT(sd != NULL);
 
-    if( sd->fd != NULL ) {
+    if( !sd->closed ) {
         PR_Close(sd->fd);
+        sd->closed = PR_TRUE;
         /* this may have thrown an exception */
     }
+
     if( sd->socketObject != NULL ) {
         DELETE_WEAK_GLOBAL_REF(env, sd->socketObject );
     }
@@ -375,6 +396,11 @@ finish:
     }
 }
 
+/*
+ * This method is synchronized because of a potential race condition.
+ * We want to avoid two threads simultaneously calling this code, in case
+ * one sets sd->fd to NULL and then the other calls PR_Close on the NULL.
+ */
 JNIEXPORT void JNICALL
 Java_org_mozilla_jss_ssl_SocketBase_socketClose(JNIEnv *env, jobject self)
 {
@@ -386,11 +412,14 @@ Java_org_mozilla_jss_ssl_SocketBase_socketClose(JNIEnv *env, jobject self)
         goto finish;
     }
 
-    /* destroy the FD and any supporting data */
-    JSSL_DestroySocketData(env, sock);
+    if( ! sock->closed ) {
+        PR_Close(sock->fd);
+        sock->closed = PR_TRUE;
+        /* this may have thrown an exception */
+    }
 
 finish:
-    /* Don't do EXCEPTION_CHECK, because the underlying fd has been deleted */
+    EXCEPTION_CHECK(env, sock)
     return;
 }
 

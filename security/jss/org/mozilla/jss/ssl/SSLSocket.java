@@ -386,10 +386,7 @@ public class SSLSocket extends java.net.Socket {
      * Closes this socket.
      */
     public void close() throws IOException {
-        if( sockProxy != null ) {
-            base.close();
-            sockProxy = null;
-        }
+        base.close();
     }
 
     private native void socketConnect(byte[] addr, String hostname, int port)
@@ -666,9 +663,7 @@ public class SSLSocket extends java.net.Socket {
      */
     public native void redoHandshake(boolean flushCache) throws SocketException;
 
-    protected void finalize() throws Throwable {
-        close();
-    }
+    protected void finalize() throws Throwable { }
 
     public static class CipherPolicy {
         private int enum;

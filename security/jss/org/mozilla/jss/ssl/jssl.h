@@ -41,6 +41,7 @@ struct JSSL_SocketData {
     jobject clientCertSelectionCallback; /* global ref */
     CERTCertificate *clientCert;
     PRFilePrivate *jsockPriv;
+    PRBool closed;
 };
 typedef struct JSSL_SocketData JSSL_SocketData;
 

@@ -246,6 +246,7 @@ Java_org_mozilla_jss_CryptoManager_verifyCertNowNative;
 Java_org_mozilla_jss_ssl_SSLServerSocket_setServerCert;
 Java_org_mozilla_jss_ssl_SocketBase_setClientCert;
 Java_org_mozilla_jss_CryptoManager_verifyCertTempNative;
+Java_org_mozilla_jss_ssl_SocketProxy_releaseNativeResources;
 ;+    local:
 ;+       *;
 ;+};
