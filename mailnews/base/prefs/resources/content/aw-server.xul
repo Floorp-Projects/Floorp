@@ -46,13 +46,10 @@ Rights Reserved.
       <html>&incomingServerTypeDesc.label;</html>
       <separator class="thin"/>
       <box autostretch="never">
-        <text class="label" style="width: 8em;" value="&incomingServerTypeLabel.label;" for="servertype"/>
-        <menulist id="servertype" wsm_persist="true">
-          <menupopup>
-            <menuitem value="pop3" label="&popType.label;"/>
-            <menuitem value="imap" label="&imapType.label;"/>
-          </menupopup>
-        </menulist>
+        <radiogroup id="servertype" wsm_persist="true">
+            <radio group="servertype" value="pop3" label="&popType.label;" checked="true"/>
+            <radio group="servertype" value="imap" label="&imapType.label;"/>
+        </radiogroup>
       </box>
       <separator/>
       <html>&incomingServerNameDesc.label;</html>

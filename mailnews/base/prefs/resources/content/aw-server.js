@@ -72,6 +72,16 @@ function validate()
 }
 
 function onInit() {
+  var serverTypeRadioGroup = document.getElementById("servertype");
+  if (serverTypeRadioGroup) {
+    /* Ideally, I shouldn't be doing the following as querying for value 
+     * on radiogroup should return me the value of the radio item selected 
+     * by default (i.e., whose checked attribute is set to true). 
+     * See bugzilla bug 80399.
+     */
+    serverTypeRadioGroup.value = serverTypeRadioGroup.selectedItem.getAttribute("value");
+  }
+
   gPrefsBundle = document.getElementById("bundle_prefs");
   var smtpTextBox = document.getElementById("smtphostname");
 

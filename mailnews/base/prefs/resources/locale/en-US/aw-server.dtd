@@ -15,9 +15,9 @@
 <!ENTITY smtpServerDesc.label "Enter the name of your outgoing (SMTP) server (for example, &quot;smtp.example.net&quot;).">
 <!ENTITY smtpServerLabel.label "Server Name:">
 <!-- LOCALIZATION NOTE (imapType.label) : Do not translate "IMAP" in below line -->
-<!ENTITY imapType.label "IMAP Mail Server">
+<!ENTITY imapType.label "IMAP">
 <!-- LOCALIZATION NOTE (popType.label) : Do not translate "POP" in below line -->
-<!ENTITY popType.label "POP Mail Server">
+<!ENTITY popType.label "POP">
 <!ENTITY nntpType.label "News Server">
 
 <!-- for when the user has an SMTP server pre-configured -->
