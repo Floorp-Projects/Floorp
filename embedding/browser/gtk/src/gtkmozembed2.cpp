@@ -188,9 +188,9 @@ handle_toplevel_focus_out(GtkMozArea    *aArea,
 
 // globals for this type of widget
 
-static GtkBinClass *parent_class;
+static GtkBinClass *embed_parent_class;
 
-guint moz_embed_signals[LAST_SIGNAL] = { 0 };
+guint moz_embed_signals[EMBED_LAST_SIGNAL] = { 0 };
 
 // GtkObject + class-related functions
 
@@ -230,7 +230,7 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
   widget_class    = GTK_WIDGET_CLASS(klass);
   object_class    = GTK_OBJECT_CLASS(klass);
 
-  parent_class = (GtkBinClass *)gtk_type_class(gtk_bin_get_type());
+  embed_parent_class = (GtkBinClass *)gtk_type_class(gtk_bin_get_type());
 
   widget_class->realize = gtk_moz_embed_realize;
   widget_class->unrealize = gtk_moz_embed_unrealize;
@@ -239,8 +239,6 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
   widget_class->unmap = gtk_moz_embed_unmap;
 
   object_class->destroy = gtk_moz_embed_destroy;
-
-
   
   // set up our signals
 
@@ -415,7 +413,8 @@ gtk_moz_embed_class_init(GtkMozEmbedClass *klass)
 		   gtk_marshal_BOOL__POINTER,
 		   GTK_TYPE_BOOL, 1, GTK_TYPE_POINTER);
 
-  gtk_object_class_add_signals(object_class, moz_embed_signals, LAST_SIGNAL);
+  gtk_object_class_add_signals(object_class, moz_embed_signals,
+			       EMBED_LAST_SIGNAL);
 
 }
 
@@ -447,6 +446,7 @@ gtk_moz_embed_destroy(GtkObject *object)
   embedPrivate = (EmbedPrivate *)embed->data;
 
   if (embedPrivate) {
+    embedPrivate->Destroy();
     delete embedPrivate;
     embed->data = NULL;
   }
@@ -489,12 +489,18 @@ gtk_moz_embed_realize(GtkWidget *widget)
   widget->style = gtk_style_attach (widget->style, widget->window);
   gtk_style_set_background (widget->style, widget->window, GTK_STATE_NORMAL);
 
-  // initialize the widget now that we have a window
+  // initialize the window
   nsresult rv;
   rv = embedPrivate->Init(embed);
   g_return_if_fail(NS_SUCCEEDED(rv));
-  rv = embedPrivate->Realize();
+  
+  PRBool alreadyRealized = PR_FALSE;
+  rv = embedPrivate->Realize(&alreadyRealized);
   g_return_if_fail(NS_SUCCEEDED(rv));
+
+  // if we're already realized we don't need to hook up to anything below
+  if (alreadyRealized)
+    return;
 
   if (embedPrivate->mURI.Length())
     embedPrivate->LoadCurrentURI();
@@ -539,6 +545,8 @@ gtk_moz_embed_unrealize(GtkWidget *widget)
 
   embed = GTK_MOZ_EMBED(widget);
   embedPrivate = (EmbedPrivate *)embed->data;
+
+  GTK_WIDGET_UNSET_FLAGS(widget, GTK_REALIZED);
 
   if (embedPrivate) {
     embedPrivate->Unrealize();
@@ -1030,4 +1038,117 @@ gtk_moz_embed_get_title_unichar (GtkMozEmbed *embed)
     retval = embedPrivate->mWindow->mTitle.ToNewUnicode();
                    
   return retval;
+}
+
+// class and instance initialization
+
+GtkType
+gtk_moz_embed_single_get_type(void);
+
+static void
+gtk_moz_embed_single_class_init(GtkMozEmbedSingleClass *klass);
+
+static void
+gtk_moz_embed_single_init(GtkMozEmbedSingle *embed);
+
+GtkMozEmbedSingle *
+gtk_moz_embed_single_new(void);
+
+enum {
+  NEW_WINDOW_ORPHAN,
+  SINGLE_LAST_SIGNAL
+};
+
+guint moz_embed_single_signals[SINGLE_LAST_SIGNAL] = { 0 };
+
+// GtkObject + class-related functions
+
+GtkType
+gtk_moz_embed_single_get_type(void)
+{
+  static GtkType moz_embed_single_type = 0;
+  if (!moz_embed_single_type)
+  {
+    static const GtkTypeInfo moz_embed_single_info =
+    {
+      "GtkMozEmbedSingle",
+      sizeof(GtkMozEmbedSingle),
+      sizeof(GtkMozEmbedSingleClass),
+      (GtkClassInitFunc)gtk_moz_embed_single_class_init,
+      (GtkObjectInitFunc)gtk_moz_embed_single_init,
+      0,
+      0,
+      0
+    };
+    moz_embed_single_type = gtk_type_unique(GTK_TYPE_OBJECT,
+					    &moz_embed_single_info);
+  }
+
+  return moz_embed_single_type;
+}
+
+static void
+gtk_moz_embed_single_class_init(GtkMozEmbedSingleClass *klass)
+{
+  GtkObjectClass     *object_class;
+
+  object_class    = GTK_OBJECT_CLASS(klass);
+
+  // set up our signals
+
+  moz_embed_single_signals[NEW_WINDOW_ORPHAN] =
+    gtk_signal_new("new_window_orphan",
+		   GTK_RUN_FIRST,
+		   object_class->type,
+		   GTK_SIGNAL_OFFSET(GtkMozEmbedSingleClass,
+				     new_window_orphan),
+		   gtk_marshal_NONE__POINTER_UINT,
+		   GTK_TYPE_NONE, 2, GTK_TYPE_POINTER, GTK_TYPE_UINT);
+  
+  gtk_object_class_add_signals(object_class, moz_embed_single_signals,
+			       SINGLE_LAST_SIGNAL);
+}
+
+static void
+gtk_moz_embed_single_init(GtkMozEmbedSingle *embed)
+{
+  // this is a placeholder for later in case we need to stash data at
+  // a later data and maintain backwards compatibility.
+  embed->data = nsnull;
+}
+
+GtkMozEmbedSingle *
+gtk_moz_embed_single_new(void)
+{
+  return (GtkMozEmbedSingle *)gtk_type_new(gtk_moz_embed_single_get_type());
+}
+
+GtkMozEmbedSingle *
+gtk_moz_embed_single_get(void)
+{
+  static GtkMozEmbedSingle *singleton_object = nsnull;
+  if (!singleton_object)
+  {
+    singleton_object = gtk_moz_embed_single_new();
+  }
+
+  return singleton_object;
+}
+
+// our callback from the window creator service
+void
+gtk_moz_embed_single_create_window(GtkMozEmbed **aNewEmbed,
+				   guint         aChromeFlags)
+{
+  GtkMozEmbedSingle *single = gtk_moz_embed_single_get();
+
+  *aNewEmbed = nsnull;
+
+  if (!single)
+    return;
+
+  gtk_signal_emit(GTK_OBJECT(single),
+		  moz_embed_single_signals[NEW_WINDOW_ORPHAN],
+		  aNewEmbed, aChromeFlags);
+
 }

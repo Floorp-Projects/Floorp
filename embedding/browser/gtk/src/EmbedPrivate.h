@@ -54,11 +54,12 @@ class EmbedPrivate {
   ~EmbedPrivate();
 
   nsresult    Init            (GtkMozEmbed *aOwningWidget);
-  nsresult    Realize         (void);
+  nsresult    Realize         (PRBool *aAlreadRealized);
   void        Unrealize       (void);
   void        Show            (void);
   void        Hide            (void);
   void        Resize          (PRUint32 aWidth, PRUint32 aHeight);
+  void        Destroy         (void);
   void        SetURI          (const char *aURI);
   void        LoadCurrentURI  (void);
 
@@ -139,6 +140,8 @@ class EmbedPrivate {
   PRBool                         mIsChrome;
   // has the chrome finished loading?
   PRBool                         mChromeLoaded;
+  // saved window ID for reparenting later
+  GdkWindow                     *mMozWindow;
 
  private:
 
@@ -154,6 +157,12 @@ class EmbedPrivate {
   
   static nsresult StartupProfile (void);
   static void     ShutdownProfile(void);
+
+  // offscreen window methods and the offscreen widget
+  static void       CreateOffscreenWindow(void);
+  static void       DestroyOffscreenWindow(void);
+  static GtkWidget *sOffscreenWindow;
+  
 };
 
 #endif /* __EmbedPrivate_h */

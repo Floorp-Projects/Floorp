@@ -69,6 +69,7 @@ nsVoidArray *EmbedPrivate::sWindowList  = nsnull;
 char        *EmbedPrivate::sProfileDir  = nsnull;
 char        *EmbedPrivate::sProfileName = nsnull;
 nsIPref     *EmbedPrivate::sPrefs       = nsnull;
+GtkWidget   *EmbedPrivate::sOffscreenWindow = 0;
 
 EmbedPrivate::EmbedPrivate(void)
 {
@@ -82,6 +83,7 @@ EmbedPrivate::EmbedPrivate(void)
   mIsChrome         = PR_FALSE;
   mChromeLoaded     = PR_FALSE;
   mListenersAttached = PR_FALSE;
+  mMozWindow        = 0;
 
   PushStartup();
   if (!sWindowList) {
@@ -99,6 +101,10 @@ EmbedPrivate::~EmbedPrivate()
 nsresult
 EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
 {
+  // are we being re-initialized?
+  if (mOwningWidget)
+    return NS_OK;
+
   // hang on with a reference to the owning widget
   mOwningWidget = aOwningWidget;
 
@@ -154,8 +160,26 @@ EmbedPrivate::Init(GtkMozEmbed *aOwningWidget)
 }
 
 nsresult
-EmbedPrivate::Realize(void)
+EmbedPrivate::Realize(PRBool *aAlreadyRealized)
 {
+
+  *aAlreadyRealized = PR_FALSE;
+
+  // create the offscreen window if we have to
+  if (!sOffscreenWindow)
+    CreateOffscreenWindow();
+
+  // Have we ever been initialized before?  If so then just reparent
+  // from the offscreen window.
+  if (mMozWindow) {
+    gdk_window_reparent(mMozWindow,
+			GTK_WIDGET(mOwningWidget)->window,
+			GTK_WIDGET(mOwningWidget)->allocation.x,
+			GTK_WIDGET(mOwningWidget)->allocation.y);
+    *aAlreadyRealized = PR_TRUE;
+    return NS_OK;
+  }
+
   // Get the nsIWebBrowser object for our embedded window.
   nsCOMPtr<nsIWebBrowser> webBrowser;
   mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
@@ -185,12 +209,61 @@ EmbedPrivate::Realize(void)
   uriListener = do_QueryInterface(mContentListenerGuard);
   webBrowser->SetParentURIContentListener(uriListener);
 
+  // save the window id of the newly created window
+  nsCOMPtr<nsIWidget> mozWidget;
+  mWindow->mBaseWindow->GetMainWidget(getter_AddRefs(mozWidget));
+  // get the native drawing area
+  GdkWindow *tmp_window =
+    NS_STATIC_CAST(GdkWindow *,
+		   mozWidget->GetNativeData(NS_NATIVE_WINDOW));
+  // and, thanks to superwin we actually need the parent of that.
+  tmp_window = gdk_window_get_parent(tmp_window);
+  mMozWindow = tmp_window;
 
   return NS_OK;
 }
 
 void
 EmbedPrivate::Unrealize(void)
+{
+  // move the widget to the offscreen window
+  gdk_window_reparent(mMozWindow, sOffscreenWindow->window, 0, 0);
+}
+
+void
+EmbedPrivate::Show(void)
+{
+  // Get the nsIWebBrowser object for our embedded window.
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+  // and set the visibility on the thing
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
+  baseWindow->SetVisibility(PR_TRUE);
+}
+
+void
+EmbedPrivate::Hide(void)
+{
+  // Get the nsIWebBrowser object for our embedded window.
+  nsCOMPtr<nsIWebBrowser> webBrowser;
+  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
+
+  // and set the visibility on the thing
+  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
+  baseWindow->SetVisibility(PR_FALSE);
+}
+
+void
+EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
+{
+  mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
+			 nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
+			 0, 0, aWidth, aHeight);
+}
+
+void
+EmbedPrivate::Destroy(void)
 {
   // Get the nsIWebBrowser object for our embedded window.
   nsCOMPtr<nsIWebBrowser> webBrowser;
@@ -230,38 +303,8 @@ EmbedPrivate::Unrealize(void)
     mEventReceiver = nsnull;
   
   mOwningWidget = nsnull;
-}
 
-void
-EmbedPrivate::Show(void)
-{
-  // Get the nsIWebBrowser object for our embedded window.
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-
-  // and set the visibility on the thing
-  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
-  baseWindow->SetVisibility(PR_TRUE);
-}
-
-void
-EmbedPrivate::Hide(void)
-{
-  // Get the nsIWebBrowser object for our embedded window.
-  nsCOMPtr<nsIWebBrowser> webBrowser;
-  mWindow->GetWebBrowser(getter_AddRefs(webBrowser));
-
-  // and set the visibility on the thing
-  nsCOMPtr<nsIBaseWindow> baseWindow = do_QueryInterface(webBrowser);
-  baseWindow->SetVisibility(PR_FALSE);
-}
-
-void
-EmbedPrivate::Resize(PRUint32 aWidth, PRUint32 aHeight)
-{
-  mWindow->SetDimensions(nsIEmbeddingSiteWindow::DIM_FLAGS_POSITION |
-			 nsIEmbeddingSiteWindow::DIM_FLAGS_SIZE_INNER,
-			 0, 0, aWidth, aHeight);
+  mMozWindow = 0;
 }
 
 void
@@ -327,6 +370,9 @@ EmbedPrivate::PopStartup(void)
 {
   sWidgetCount--;
   if (sWidgetCount == 0) {
+
+    // destroy the offscreen window
+    DestroyOffscreenWindow();
     
     // shut down the profiles
     ShutdownProfile();
@@ -733,4 +779,20 @@ EmbedPrivate::ShutdownProfile(void)
     NS_RELEASE(sPrefs);
     sPrefs = 0;
   }
+}
+
+/* static */
+void
+EmbedPrivate::CreateOffscreenWindow(void)
+{
+  sOffscreenWindow = gtk_window_new(GTK_WINDOW_TOPLEVEL);
+  gtk_widget_realize(sOffscreenWindow);
+}
+
+/* static */
+void
+EmbedPrivate::DestroyOffscreenWindow(void)
+{
+  gtk_widget_destroy(sOffscreenWindow);
+  sOffscreenWindow = 0;
 }
