@@ -1666,7 +1666,7 @@ nsBookmarksService::Init()
         {
             nsCAutoString spec;
             uri->GetSpec(spec);
-            if (!uri.IsEmpty())
+            if (!spec.IsEmpty())
             {
                 stringService->CreateBundle(spec.get(), getter_AddRefs(mBundle));
             }
