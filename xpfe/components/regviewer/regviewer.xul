@@ -40,7 +40,7 @@
             onselect="OnSelect(event);">
         <treecolgroup>
           <treecol flex="1"/>
-        </treecolgroupo>
+        </treecolgroup>
 
         <template>
           <treechildren flex="1">
