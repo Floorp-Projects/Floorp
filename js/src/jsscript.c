@@ -774,8 +774,25 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     rt = cx->runtime;
     hook = rt->newScriptHook;
     if (hook) {
+        /*
+         * We use a dummy stack frame to protect the script from a GC caused
+         * by debugger-hook execution.
+         *
+         * XXX We really need a way to manage local roots and such more
+         * XXX automatically, at which point we can remove this one-off hack
+         * XXX and others within the engine.  See bug 40757 for discussion.
+         */
+        JSStackFrame dummy;
+        
+        memset(&dummy, 0, sizeof dummy);
+        dummy.down = cx->fp;
+        dummy.script = script;
+        cx->fp = &dummy;
+
         (*hook)(cx, cg->filename, cg->firstLine, script, fun,
                 rt->newScriptHookData);
+
+        cx->fp = dummy.down;
     }
     return script;
 }
