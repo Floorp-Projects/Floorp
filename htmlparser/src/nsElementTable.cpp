@@ -855,7 +855,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gOptgroupParents,&gOptgroupParents,	 
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kNone, kPCDATA, kFlowEntity,	
-    /*special props, prop-range*/       kNoStyleLeaksIn, kDefaultPropRange,
+    /*special props, prop-range*/       kNoPropagate|kNoStyleLeaksIn, kDefaultPropRange,
     /*special parents,kids,skip*/       &gOptgroupParents,&gContainsText,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_p,
@@ -935,7 +935,7 @@ nsHTMLElement gHTMLElements[] = {
 	  /*rootnodes,endrootnodes*/          &gInForm,&gInForm,	
     /*autoclose starttags and endtags*/ 0,0,0,
     /*parent,incl,exclgroups*/          kFormControl, kNone, kFlowEntity,	
-    /*special props, prop-range*/       kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
+    /*special props, prop-range*/       kNoPropagate|kOmitWS|kNoStyleLeaksIn, kDefaultPropRange,
     /*special parents,kids,skip*/       &gInForm,&gContainsOpts,eHTMLTag_unknown},
 
   { /*tag*/                             eHTMLTag_server,
