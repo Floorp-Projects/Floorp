@@ -34,7 +34,7 @@
 /*
  * Certificate handling code
  *
- * $Id: certdb.c,v 1.39 2002/08/14 20:42:34 relyea%netscape.com Exp $
+ * $Id: certdb.c,v 1.40 2002/08/21 18:05:20 wtc%netscape.com Exp $
  */
 
 #include "nssilock.h"
@@ -390,9 +390,6 @@ CERT_KeyFromDERCert(PRArenaPool *arena, SECItem *derCert, SECItem *key)
     int rv;
     CERTSignedData sd;
     CERTCertKey certkey;
-
-    PORT_Memset(&sd, 0, sizeof(CERTSignedData));    
-    PORT_Memset(&certkey, 0, sizeof(CERTCertKey));    
 
     PORT_Memset(&sd, 0, sizeof(CERTSignedData));
     rv = SEC_ASN1DecodeItem(arena, &sd, CERT_SignedDataTemplate, derCert);
