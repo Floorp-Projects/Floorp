@@ -354,6 +354,13 @@ NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(nsIFontMetrics& inMetrics,
 	if (aFont->weight > NS_FONT_WEIGHT_NORMAL)	// don't test NS_FONT_WEIGHT_BOLD
 		textFace |= bold;
 
+	if ( aFont->decorations & NS_FONT_DECORATION_UNDERLINE )
+		textFace |= underline;
+	if ( aFont->decorations & NS_FONT_DECORATION_OVERLINE )
+		textFace |= underline;  // THIS IS WRONG, BUT HERE FOR COMPLETENESS
+	if ( aFont->decorations & NS_FONT_DECORATION_LINE_THROUGH )
+		textFace |= underline;  // THIS IS WRONG, BUT HERE FOR COMPLETENESS
+
 	RGBColor	black = {0};
 	
 	outStyle.tsFont = (short)fontNum;
