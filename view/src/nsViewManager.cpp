@@ -980,8 +980,10 @@ void nsViewManager::Refresh(nsView *aView, nsIRenderingContext *aContext,
   }
 
   if (RootViewManager()->mRecursiveRefreshPending) {
-    UpdateAllViews(aUpdateFlags);
+    // Unset this flag first, since if aUpdateFlags includes NS_VMREFRESH_IMMEDIATE
+    // we'll reenter this code from the UpdateAllViews call.
     RootViewManager()->mRecursiveRefreshPending = PR_FALSE;
+    UpdateAllViews(aUpdateFlags);
   }
 
   localcx->ReleaseBackbuffer();
