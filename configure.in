@@ -162,6 +162,7 @@ if test -n "$_WIN32_MSVC"; then
     SKIP_PATH_CHECKS=1
     SKIP_COMPILER_CHECKS=1
     SKIP_LIBRARY_CHECKS=1
+    AC_CHECK_HEADERS(mmintrin.h)
 fi
 
 if test -z "$SKIP_COMPILER_CHECKS"; then
