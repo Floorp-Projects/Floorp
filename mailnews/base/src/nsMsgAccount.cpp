@@ -99,6 +99,7 @@ nsMsgAccount::GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer)
   nsresult rv = NS_OK;
 
   // need to call SetKey() first!
+  NS_ASSERTION(m_accountKey, "Account key not initialized.");
   if (!m_accountKey) return NS_ERROR_NOT_INITIALIZED;
   
   // create the incoming server lazily
@@ -184,6 +185,7 @@ nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
 NS_IMETHODIMP
 nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 {
+  NS_ASSERTION(m_accountKey, "Account key not initialized.");
   if (!_retval) return NS_ERROR_NULL_POINTER;
   if (!m_identities) return NS_ERROR_UNEXPECTED;
   
@@ -197,6 +199,7 @@ nsMsgAccount::GetIdentities(nsISupportsArray **_retval)
 NS_IMETHODIMP
 nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
 {
+  NS_ASSERTION(m_accountKey, "Account key not initialized.");
   if (!aDefaultIdentity) return NS_ERROR_NULL_POINTER;
   if (!m_defaultIdentity) return NS_ERROR_NULL_POINTER;
   
@@ -208,6 +211,7 @@ nsMsgAccount::GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity)
 NS_IMETHODIMP
 nsMsgAccount::SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity)
 {
+  NS_ASSERTION(m_accountKey, "Account key not initialized.");
   NS_ASSERTION(m_identities->IndexOf(aDefaultIdentity) != -1, "Where did that identity come from?!");
   if (m_identities->IndexOf(aDefaultIdentity) == -1)
     return NS_ERROR_UNEXPECTED;
