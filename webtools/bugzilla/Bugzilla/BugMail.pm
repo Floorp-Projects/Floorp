@@ -853,6 +853,8 @@ sub NewProcessOnePerson ($$$$$$$$$$$$$) {
     } else {
       $substs{"diffs"} = $difftext . "\n\n" . $newcomments;
     }
+    $substs{"product"} = $values{'product'};
+    $substs{"component"} = $values{'component'};
     $substs{"summary"} = $values{'short_desc'};
     $substs{"reasonsheader"} = join(" ", @reasons);
     $substs{"reasonsbody"} = $reasonsbody;
