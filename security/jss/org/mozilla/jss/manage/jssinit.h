@@ -34,7 +34,6 @@
 #include <jni.h>
 #include <nspr.h>
 */
-#include "svrplcy.h"
 
 #ifndef JSS_INIT_H
 #define JSS_INIT_H
@@ -74,22 +73,5 @@ JSS_completeInitialize(JNIEnv *env,
  */
 PR_EXTERN( void )
 JSS_setPasswordCallback(JNIEnv *env, jobject callback);
-
-
-/***********************************************************************
- * JSS_isDomestic
- *
- * Returns true if this build of jssjava is "domestic", false otherwise.
- */
-PR_EXTERN( PRBool )
-JSS_isDomestic( void );
-
-/***********************************************************************
- * JSS_getExportControlPolicyType
- *
- * Returns the export control policy type
- */
-PR_EXTERN( SVRPLCYPolicyType )
-JSS_getExportControlPolicyType( void );
 
 #endif

@@ -35,9 +35,9 @@
 
 #include <pk11func.h>
 #include <nspr.h>
-#include <pqggen.h>
 #include <key.h>
 #include <secitem.h>
+#include <pqgutil.h>
 
 #include <jssutil.h>
 #include <pk11util.h>

@@ -313,7 +313,7 @@ public class CertificationRequest implements ASN1Value {
 
         // make new Name
         Name name = new Name();
-        name.addCommonName("asldkj\u00dsdlkfj\u00e");
+        name.addCommonName("asldkj");
         name.addCountryName("US");
         name.addOrganizationName("Some Corp");
         name.addOrganizationalUnitName("Some Org Unit");

@@ -32,7 +32,7 @@
 # 
 CORE_DEPTH = ../../../../..
  
-MODULE = ninja
+MODULE = jss
  
 NS_USE_JDK = 1
 

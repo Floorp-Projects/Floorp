@@ -110,42 +110,4 @@ public class KeyGenAlgorithm extends Algorithm {
     PBA_SHA1_HMAC = new KeyGenAlgorithm(
         CKM_PBA_SHA1_WITH_SHA1_HMAC,
             "PBA/SHA1/HMAC", 160, null, PBEKeyGenParams.class );
-
-    //////////////////////////////////////////////////////////////
-	// Export control code
-    //////////////////////////////////////////////////////////////
-
-    private static final int NUMBER_OF_ALGORITHMS = 4;
-
-	public KeyGenAlgorithm[] getAllAlgorithms( Usage usage ) {
-		KeyGenAlgorithm[] algs = new KeyGenAlgorithm[NUMBER_OF_ALGORITHMS];
-
-		long[] indices = getAllAlgorithmIndices( usage );
-
-		int j = 0;
-		for( int i = 0; i <= indices.length; i++ ) {
-			switch( ( int ) indices[i] ) {
-				case CKM_DES_KEY_GEN:
-					algs[j] = DES;
-					j++;
-					break;
-				case CKM_DES3_KEY_GEN:
-					algs[j] = DES3;
-					j++;
-					break;
-				case CKM_RC4_KEY_GEN:
-					algs[j] = RC4;
-					j++;
-					break;
-				case CKM_PBA_SHA1_WITH_SHA1_HMAC:
-					algs[j] = PBA_SHA1_HMAC;
-					j++;
-					break;
-				default:
-					continue;
-			}
-		}
-
-		return algs;
-	}
 }

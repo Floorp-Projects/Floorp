@@ -45,6 +45,8 @@
 #include <java_ids.h>
 #include <jss_exceptions.h>
 #include <Algorithm.h>
+#include <pk11func.h>
+#include <secoid.h>
 
 #define HCLHACK
 #ifdef HCLHACK

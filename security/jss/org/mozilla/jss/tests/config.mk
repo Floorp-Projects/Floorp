@@ -30,23 +30,3 @@
 # may use your version of this file under either the MPL or the
 # GPL.
 # 
-
-#######################################################################
-# Adjust specific variables for all platforms                         #
-#######################################################################
-
-LD_LIBS	+=				\
-		$(LIBSECMOD)		\
-		$(LIBCERT)		\
-		$(LIBKEY)		\
-		$(LIBCRYPTO)		\
-		$(LIBHASH)		\
-		$(LIBPLDS)		\
-		$(LIBSECUTIL)		\
-		$(LIBPR)		\
-		$(LIBDBM)		\
-		$(LIBPLC)		\
-		$(LIBSYSTEM)		\
-		$(LIBJSSUTIL)		\
-		$(LIBJSSPKCS11)		\
-		$(NULL)

@@ -40,16 +40,16 @@
 #include <nspr.h>
 #include <key.h>
 #include <secasn1.h>
-#include <crypto.h>
 #include <base64.h>
 #include <cert.h>
+#include <cryptohi.h>
+#include <pqgutil.h>
 
 #include <jssutil.h>
 #include <jss_exceptions.h>
 #include <jss_bigint.h>
 #include <Algorithm.h>
 
-#include <pqggen.h>
 #include <secitem.h>
 #include "java_ids.h"
 
@@ -958,7 +958,6 @@ JNIEXPORT jstring JNICALL Java_org_mozilla_jss_pkcs11_PK11Token_generatePK10
     unsigned char *b64request;
     SECItem p, q, g;
     PQGParams *dsaParams=NULL;
-    jobject keyPair=NULL;
     const char* c_keyType;
     jboolean k_isCopy;
     unsigned int ktype = 0;
@@ -1064,7 +1063,6 @@ GenerateCertRequest(JNIEnv *env,
 
 	SECKEYPrivateKey *privk = NULL;
 	SECKEYPublicKey *pubk = NULL;
-	int i = 0;
 	SECStatus rv;
 	PRArenaPool *arena;
 	SECItem result_der, result;

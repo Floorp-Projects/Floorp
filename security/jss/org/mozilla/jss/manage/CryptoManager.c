@@ -32,7 +32,6 @@
  */
 #include "_jni/org_mozilla_jss_CryptoManager.h"
 
-#include <svrplcy.h>
 #include <secitem.h>
 #include <mcom_db.h>
 #include <secmod.h>
@@ -44,6 +43,8 @@
 #include <secrng.h>
 #include <nspr.h>
 #include <plstr.h>
+#include <cdbhdl.h>
+#include <pkcs11.h>
 
 #include <jssutil.h>
 #include <java_ids.h>
@@ -51,7 +52,6 @@
 
 #include "jssinit.h"
 #include "pk11util.h"
-#include "Policy.h"
 
 #if defined(AIX) || defined(HPUX) || defined(LINUX)
 #include <signal.h>
@@ -77,26 +77,6 @@ makePWCBInfo(JNIEnv *env, PK11SlotInfo *slot);
 
 static char*
 getPWFromCallback(PK11SlotInfo *slot, PRBool retry, void *arg);
-
-static jint
-getPolicyTypeIndex( SVRPLCYPolicyType thisPolicy );
-
-/***********************************************************************
-**
-**  Policy Type indices.  This must be kept in sync with the policy
-**	type indices in the CryptoManager class.
-**/
-
-#define NUM_POLICIES 4
-
-SVRPLCYPolicyType JSS_PolicyTable[NUM_POLICIES] = {
-/* 0 */		{ SVRPLCYNull },
-/* 1 */		{ SVRPLCYDomestic },
-/* 2 */		{ SVRPLCYExport },
-/* 3 */		{ SVRPLCYFrance }
-
-/* REMEMBER TO UPDATE NUM_POLICIES!!! */
-};
 
 /*************************************************************
  * AIX, HP, and Linux signal handling madness
@@ -293,30 +273,7 @@ simpleInitialize(JNIEnv *env)
     PR_SetConcurrency( concurrency );
 
     RNG_RNGInit();
-
-    /* establish a Utility policy */
-    if( SVRPLCY_InstallUtilityPolicy() != PR_SUCCESS ) {
-        JSS_throwMsg(env, SECURITY_EXCEPTION,
-            "Failed to install utility policy");
-        return PR_FAILURE;
-    }
-
-    /* establish an SSL policy */
-    SVRPLCY_InstallSSLPolicy();
-
-    /* establish a JSS policy */
-    if( SVRPLCY_InstallJSSPolicy() != PR_SUCCESS ) {
-        JSS_throwMsg(env, SECURITY_EXCEPTION,
-            "Failed to install JSS policy");
-        return PR_FAILURE;
-    }
-
-    /* establish JSS max key sizes */
-	if( JSS_InstallMaxKeySizesAllowed() != PR_SUCCESS ) {
-        JSS_throwMsg(env, SECURITY_EXCEPTION,
-            "Failed to install max JSS key sizes");
-        return PR_FAILURE;
-	}
+    RNG_SystemInfoForRNG();
 
     initialized = PR_TRUE;
 
@@ -754,7 +711,7 @@ getPWFromCallback(PK11SlotInfo *slot, PRBool retry, void *arg)
     }
 
     /* Get the JNI environment */
-    if( (*javaVM)->AttachCurrentThread(javaVM, &env, NULL) != 0) {
+    if( (*javaVM)->AttachCurrentThread(javaVM, (void**)&env, NULL) != 0) {
         PR_ASSERT(PR_FALSE);
         goto finish;
     }
@@ -1071,67 +1028,6 @@ Java_org_mozilla_jss_CryptoManager_FIPSEnabled(JNIEnv *env, jobject this)
     } else {
         return JNI_FALSE;
     }
-}
-
-/***********************************************************************
- * CryptoManager.isDomestic
- *
- * Returns true if this build of jssjava is "domestic", false otherwise.
- */
-JNIEXPORT jboolean JNICALL
-Java_org_mozilla_jss_CryptoManager_isDomestic(JNIEnv *env, jobject this)
-{
-    /* "C" data members */
-	PRBool result;
-
-    result = JSS_isDomestic();
-
-	/* Return a java boolean */
-	if( result != PR_TRUE ) {
-		return JNI_FALSE;
-	}
-
-	return JNI_TRUE;
-}
-
-/***********************************************************************
- * CryptoManager.getPolicyTypeIndex
- *
- * Input export control policy from embedded utility policy table.
- *
- * Returns the index where the policy is stored in the JSS_PolicyTable[].
- */
-static jint
-getPolicyTypeIndex( SVRPLCYPolicyType thisPolicy )
-{
-	jint i;
-
-	for( i = 0; i < NUM_POLICIES; i++ ) {
-		if( thisPolicy == JSS_PolicyTable[i] ) {
-			return i;
-		}
-	};
-
-	return( -1 );
-}
-
-/***********************************************************************
- * CryptoManager.getExportControlPolicyType
- *
- * Returns an integer related to the export control policy type
- */
-JNIEXPORT jint JNICALL
-Java_org_mozilla_jss_CryptoManager_getExportControlPolicyType( JNIEnv *env,
-																jobject this )
-{
-    /* "C" data members */
-	SVRPLCYPolicyType policy;
-
-	/* Get the export control policy from the embedded utility policy table */
-    policy = JSS_getExportControlPolicyType();
-
-	/* Return a java int */
-	return( getPolicyTypeIndex( policy ) );
 }
 
 /***********************************************************************

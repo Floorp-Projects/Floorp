@@ -902,7 +902,6 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
     jobject leafObject=NULL;
     CERTIssuerAndSN *issuerAndSN;
     PLArenaPool *arena=NULL;
-    int root_cert = -1;
 
     /***************************************************
      * Validate arguments
@@ -1106,7 +1105,6 @@ Java_org_mozilla_jss_CryptoManager_importCertPackageNative
      * Now add the rest of the certs (which should all be CAs)
      ***************************************************/
     if( numCerts-userCertFound>= 1 ) {
-      SECCertUsage usage;
 
       if (certi == 0) {
         status = ImportCAChain(derCerts+userCertFound,
@@ -1783,8 +1781,6 @@ Java_org_mozilla_jss_CryptoManager_importCRLNative
 
 {
     CERTCertDBHandle *certdb = CERT_GetDefaultCertDB();
-    jbyte *packageBytes=NULL;
-    jsize packageLen;
 	CERTSignedCrl *crl = NULL;
 	SECItem *packageItem = NULL;
 	int status = SECFailure;

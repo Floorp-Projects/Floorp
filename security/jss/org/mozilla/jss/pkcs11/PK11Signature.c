@@ -39,8 +39,9 @@
 #include "_jni/org_mozilla_jss_pkcs11_PK11Signature.h"
 #include "_jni/org_mozilla_jss_pkcs11_SigContextProxy.h"
 #include <Algorithm.h>
-#include <crypto.h>
 #include <secerr.h>
+#include <cryptoht.h>
+#include <cryptohi.h>
 
 #include <jssutil.h>
 #include <java_ids.h>

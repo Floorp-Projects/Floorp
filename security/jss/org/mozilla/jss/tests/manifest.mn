@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ../../../../..
  
-MODULE = ninja
+MODULE = jss
  
 NS_USE_JDK = 1
 
@@ -47,9 +47,7 @@ PRIVATE_CLASSES = 											\
 					JCASigTest								\
                     CloseDBs                                \
                     KeyWrapping                             \
-                    TestExportControlPolicy					\
                     ListCerts                               \
-                    socketTest                              \
 			        $(NULL)
 
 JSRCS = 											\
@@ -60,7 +58,5 @@ JSRCS = 											\
 					JCASigTest.java							\
                     CloseDBs.java                           \
                     KeyWrapping.java                        \
-                    TestExportControlPolicy.java			\
                     ListCerts.java                           \
-                    socketTest.java                           \
 			        $(NULL)

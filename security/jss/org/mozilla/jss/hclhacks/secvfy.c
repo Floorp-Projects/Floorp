@@ -32,14 +32,17 @@
  */
 
 #include <stdio.h>
-#include "crypto.h"
 #include "sechash.h"
 #include "key.h"
 #include "secasn1.h"
 #include "secoid.h"
 #include "pk11func.h"
-#include "rsa.h"
 #include "secerr.h"
+#include "secdigt.h"
+#include "secdig.h"
+#include "cryptohi.h"
+
+#define MAX_RSA_MODULUS_LEN 4096
 
 /*
 ** Decrypt signature block using public key (in place)

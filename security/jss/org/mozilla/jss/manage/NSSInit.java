@@ -139,14 +139,14 @@ public final class NSSInit {
                          keyDBName,
                          certDBName,
                          true,      // readOnly
-                         "Netscape Communications Corp     ",
+                         "mozilla.org                      ",
                          "Internal Crypto Services         ",
                          "Internal Crypto Services Token   ",
                          "Internal Key Storage Token       ",
-        "Netscape Internal Cryptographic Services                         ",
-        "Netscape Internal Private Key and Certificate Storage            ",
-        "Netscape Internal FIPS-140-1 Cryptographic Services              ",
-        "Netscape Internal FIPS-140-1 Private Key and Certificate Storage ");
+        "NSS Internal Cryptographic Services                              ",
+        "NSS Internal Private Key and Certificate Storage                 ",
+        "NSS Internal FIPS-140-1 Cryptographic Services                   ",
+        "NSS Internal FIPS-140-1 Private Key and Certificate Storage      ");
 
         setPasswordCallback( new ConsolePasswordCallback() );
         mNSSInitialized = true;

@@ -38,7 +38,7 @@
 #include <secitem.h>
 #include "jssutil.h"
 #include "jss_bigint.h"
-#include <jss_exceptions.h>
+#include "jss_exceptions.h"
 #include "java_ids.h"
 
 #include "_jni/org_mozilla_jss_util_Password.h"

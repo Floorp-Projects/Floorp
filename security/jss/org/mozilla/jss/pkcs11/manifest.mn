@@ -33,7 +33,7 @@
 
 CORE_DEPTH = ../../../../..
 
-MODULE = ninja
+MODULE = jss
 
 NS_USE_JDK = 1
 
@@ -45,7 +45,6 @@ PACKAGE =       org/mozilla/jss/pkcs11
 PRIVATE_EXPORTS =   pk11util.h       \
 					secmodi.h        \
 					secmodti.h       \
-					rsa.h            \
                     $(NULL)
 
 JNI_GEN =   										\

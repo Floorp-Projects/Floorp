@@ -39,7 +39,8 @@
 #include <secitem.h>
 #include <secoidt.h>
 #include <keyt.h>   /* for PQGParams */
-#include <pqggen.h>
+#include <blapi.h>
+#include <pqgutil.h>
 
 #include <jss_bigint.h>
 #include <jssutil.h>

@@ -51,7 +51,7 @@ import org.mozilla.jss.CRLImportException;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.2 $ $Date: 2000/12/19 06:18:01 $ 
+ * @version $Revision: 1.3 $ $Date: 2001/01/16 23:49:19 $ 
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -174,7 +174,7 @@ public final class CryptoManager implements TokenSupplier
         ////////////////////////////////////////////////////////////////////
         /**
          * Returns the Manufacturer ID of the internal PKCS #11 module.
-         * <p>The default is <code>"Netscape Communications Corp     "</code>.
+         * <p>The default is <code>"mozilla.org                     "</code>.
          */
         public String getManufacturerID() { return manufacturerID; }
 
@@ -192,7 +192,7 @@ public final class CryptoManager implements TokenSupplier
             manufacturerID = s;
         }
         private String manufacturerID =
-            "Netscape Communications Corp     ";
+            "mozilla.org                      ";
 
         ////////////////////////////////////////////////////////////////////
         // Library Description
@@ -282,7 +282,7 @@ public final class CryptoManager implements TokenSupplier
         ////////////////////////////////////////////////////////////////////
         /**
          * Returns the description of the internal PKCS #11 slot.
-         * <p>The default is <code>"Netscape Internal Cryptographic Services                         "</code>.
+         * <p>The default is <code>"NSS Internal Cryptographic Services                              "</code>.
          */
         public String getInternalSlotDescription() {
             return internalSlotDescription;
@@ -304,14 +304,14 @@ public final class CryptoManager implements TokenSupplier
             internalSlotDescription = s;
         }
         private String internalSlotDescription =
-            "Netscape Internal Cryptographic Services                         ";
+            "NSS Internal Cryptographic Services                              ";
 
         ////////////////////////////////////////////////////////////////////
         // Internal Key Storage Slot Description
         ////////////////////////////////////////////////////////////////////
         /**
          * Returns the description of the internal PKCS #11 key storage slot.
-         * <p>The default is <code>"Netscape Internal Private Key and Certificate Storage            "</code>.
+         * <p>The default is <code>"NSS Internal Private Key and Certificate Storage                 "</code>.
 
          */
         public String getInternalKeyStorageSlotDescription() {
@@ -334,14 +334,14 @@ public final class CryptoManager implements TokenSupplier
             internalKeyStorageSlotDescription = s;
         }
         private String internalKeyStorageSlotDescription =
-            "Netscape Internal Private Key and Certificate Storage            ";
+            "NSS Internal Private Key and Certificate Storage                 ";
 
         ////////////////////////////////////////////////////////////////////
         // FIPS Slot Description
         ////////////////////////////////////////////////////////////////////
         /**
          * Returns the description of the internal PKCS #11 FIPS slot.
-         * <p>The default is <code>"Netscape Internal FIPS-140-1 Cryptographic Services              "</code>.
+         * <p>The default is <code>"NSS Internal FIPS-140-1 Cryptographic Services                   "</code>.
          */
         public String getFIPSSlotDescription() {
             return FIPSSlotDescription;
@@ -363,7 +363,7 @@ public final class CryptoManager implements TokenSupplier
             FIPSSlotDescription = s;
         }
         private String FIPSSlotDescription =
-            "Netscape Internal FIPS-140-1 Cryptographic Services              ";
+            "NSS Internal FIPS-140-1 Cryptographic Services                   ";
 
         ////////////////////////////////////////////////////////////////////
         // FIPS Key Storage Slot Description
@@ -371,7 +371,7 @@ public final class CryptoManager implements TokenSupplier
         /**
          * Returns the description of the internal PKCS #11 FIPS
          * Key Storage slot.
-         * <p>The default is <code>"Netscape Internal FIPS-140-1 Private Key and Certificate Storage "</code>.
+         * <p>The default is <code>"NSS Internal FIPS-140-1 Private Key and Certificate Storage      "</code>.
          */
         public String getFIPSKeyStorageSlotDescription() {
             return FIPSKeyStorageSlotDescription;
@@ -393,7 +393,7 @@ public final class CryptoManager implements TokenSupplier
             FIPSKeyStorageSlotDescription = s;
         }
         private String FIPSKeyStorageSlotDescription =
-            "Netscape Internal FIPS-140-1 Private Key and Certificate Storage ";
+            "NSS Internal FIPS-140-1 Private Key and Certificate Storage      ";
 
 		/**
 		 * To have NSS check the OCSP responder for when verifying
@@ -434,7 +434,7 @@ public final class CryptoManager implements TokenSupplier
 
     /**
      * Retrieves the internal cryptographic services token. This is the
-     * token built into the Netscape Security Library that performs bulk
+     * token built into NSS that performs bulk
      * cryptographic operations.
      * <p>In FIPS mode, the internal cryptographic services token is the
      * same as the internal key storage token.
@@ -447,7 +447,7 @@ public final class CryptoManager implements TokenSupplier
 
     /**
      * Retrieves the internal key storage token.  This is the token
-     * provided by the Netscape Security Library to store private keys.
+     * provided by NSS to store private keys.
      * The keys stored in this token are stored in an encrypted key database.
      * <p>In FIPS mode, the internal key storage token is the same as
      * the internal cryptographic services token.
@@ -527,8 +527,8 @@ public final class CryptoManager implements TokenSupplier
     }
 
     /**
-     * Retrieves all tokens except those built into the Netscape Security
-     * Library.  This excludes the internal token and the internal
+     * Retrieves all tokens except those built into NSS.
+     * This excludes the internal token and the internal
      * key storage token (which are one and the same in FIPS mode).
      *
      * @return All tokens accessible from JSS, except for the built-in
@@ -679,24 +679,6 @@ public final class CryptoManager implements TokenSupplier
 	public synchronized native boolean FIPSEnabled();
 
     ///////////////////////////////////////////////////////////////////////
-    // Export Control Policy management
-    ///////////////////////////////////////////////////////////////////////
-
-	/**
-	 * Determines whether this build of jssjava is "domestic".
-	 *
-	 * @return true if jssjava is "domestic", false otherwise.
-	 */
-	public synchronized native boolean isDomestic();
-
-	/**
-	 * Determines what policy this build of jssjava contains.
-	 *
-	 * @return the policy type of this jssjava executable.
-	 */
-	public synchronized native int getExportControlPolicyType();
-
-    ///////////////////////////////////////////////////////////////////////
     // Password Callback management
     ///////////////////////////////////////////////////////////////////////
 
@@ -838,7 +820,7 @@ public final class CryptoManager implements TokenSupplier
 							1);
 		if(position==-11) {
 			Debug.trace(Debug.ERROR,
-				"Unable to install Netscape provider");
+				"Unable to install default provider");
 		}
     }
 
@@ -1244,8 +1226,7 @@ public final class CryptoManager implements TokenSupplier
     /**
      * Retrieves a FIPS-140-1 validated random number generator.
      *
-     * @return A JSS SecureRandom implemented with the FIPS-validated
-     *      Netscape security library.
+     * @return A JSS SecureRandom implemented with FIPS-validated NSS.
      */
     public org.mozilla.jss.crypto.JSSSecureRandom 
     createPseudoRandomNumberGenerator()
@@ -1256,8 +1237,7 @@ public final class CryptoManager implements TokenSupplier
     /**
      * Retrieves a FIPS-140-1 validated random number generator.
      *
-     * @return A JSS SecureRandom implemented with the FIPS-validated
-     *      Netscape security library.
+     * @return A JSS SecureRandom implemented with FIPS-validated NSS.
      */
     public org.mozilla.jss.crypto.JSSSecureRandom
     getSecureRNG() {

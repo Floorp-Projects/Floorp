@@ -72,34 +72,4 @@ public class KeyPairAlgorithm extends Algorithm {
 
     public static final KeyPairAlgorithm
     DSA = new KeyPairAlgorithm(CKM_DSA_KEY_PAIR_GEN, "DSA", DSAFamily);
-
-    ////////////////////////////////////////////////////////////////
-	// Export control code
-    ////////////////////////////////////////////////////////////////
-
-    private static final int NUMBER_OF_ALGORITHMS = 4;
-
-	public KeyPairAlgorithm[] getAllAlgorithms( Usage usage ) {
-		KeyPairAlgorithm[] algs = new KeyPairAlgorithm[NUMBER_OF_ALGORITHMS];
-
-		long[] indices = getAllAlgorithmIndices( usage );
-
-		int j = 0;
-		for( int i = 0; i <= indices.length; i++ ) {
-			switch( ( int ) indices[i] ) {
-				case CKM_RSA_PKCS_KEY_PAIR_GEN:
-					algs[j] = RSA;
-					j++;
-					break;
-				case CKM_DSA_KEY_PAIR_GEN:
-					algs[j] = DSA;
-					j++;
-					break;
-				default:
-					continue;
-			}
-		}
-
-		return algs;
-	}
 }

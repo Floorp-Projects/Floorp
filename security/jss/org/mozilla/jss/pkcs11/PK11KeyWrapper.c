@@ -39,7 +39,6 @@
 #include <pk11func.h>
 #include <secitem.h>
 #include <keyt.h>
-#include <rsa.h>
 
 /* JSS includes */
 #include <java_ids.h>
