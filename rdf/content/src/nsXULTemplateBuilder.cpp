@@ -2519,7 +2519,7 @@ RDFGenericBuilderImpl::IsContainer(nsIContent* aElement, nsIRDFResource* aResour
 		nsAutoString		emptyVal("true");
 		nsCOMPtr<nsIRDFNode>	value;
 		if (NS_SUCCEEDED(rv = mDB->GetTarget(aResource, property, PR_TRUE,
-			getter_AddRefs(value))) && (value))
+			getter_AddRefs(value))) && (rv != NS_RDF_NO_VALUE) && (value))
 		{
 			emptyVal = "false";
 		}
