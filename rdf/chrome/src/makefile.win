@@ -21,6 +21,7 @@ LIBRARY_NAME=chrome_s
 
 CPP_OBJS=\
         .\$(OBJDIR)\nsChromeRegistry.obj    \
+        .\$(OBJDIR)\nsChromeProtocolHandler.obj    \
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>

@@ -263,7 +263,9 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
     nsIURL* url = nsnull;
     rv = aChromeURL->QueryInterface(nsIURL::GetIID(), (void**)&url);
     if (NS_SUCCEEDED(rv)) {
-        (void)url->GetQuery(&file);
+        rv = url->GetQuery(&file);
+		if (NS_FAILED(rv))
+			file = nsCRT::strdup("");
         NS_RELEASE(url);
     }
 #else

@@ -28,6 +28,7 @@ LIBRARY_NAME = chrome_s
 
 CPPSRCS =				\
 	nsChromeRegistry.cpp		\
+	nsChromeProtocolHandler.cpp     \
 	$(NULL)
 
 EXPORTS = \
