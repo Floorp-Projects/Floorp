@@ -1371,6 +1371,20 @@ AC_CACHE_CHECK(for C++ template specialization support,
                                X<Y> y_x;,
                                ac_cv_cpp_template_specialization=yes,
                                ac_cv_cpp_template_specialization=no)])
+dnl The above test works fine for Sun's WorkShop 4.2 compiler, but
+dnl dies horribly trying to build mozilla with HAVE_CPP_SPECIALIZATION
+dnl defined.  So, even though the output above will say yes, we force
+dnl it to reconsider....  (5.0 works fine, though.)
+dnl Info and testing provided by tor@cs.brown.edu.
+case "$target" in
+  *-*-solaris*)
+	if test ! "$GNU_CC"; then
+	   if test ! -z "`${CC} -V 2>&1 | head -1 | grep '4.2'`"
+             ac_cv_cpp_template_specialization=no
+	   fi
+	fi
+	;;
+esac
 if test "$ac_cv_cpp_template_specialization" = yes ; then
   AC_DEFINE(HAVE_CPP_SPECIALIZATION)
 fi
