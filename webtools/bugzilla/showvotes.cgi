@@ -19,6 +19,7 @@
 # Rights Reserved.
 #
 # Contributor(s): Terry Weissman <terry@mozilla.org>
+#                 Stephan Niemz  <st.n@gmx.net>
 
 use diagnostics;
 use strict;
@@ -59,7 +60,7 @@ if (defined $::FORM{'bug_id'}) {
     PutHeader("Show votes", "Show votes", $name);
     print qq{<form action="doeditvotes.cgi">\n};
     print "<table><tr><td></td><th>Bug \#</th><th>Summary</th><th>Votes</th></tr>\n";
-    SendSQL("lock tables bugs read, votes write");
+    SendSQL("lock tables bugs read, products read, votes write");
     if (defined($::FORM{'voteon'})) {
         # Oh, boy, what a hack.  Make sure there is an entry for this bug
         # in the vote table, just so that things display right.
@@ -71,12 +72,21 @@ if (defined $::FORM{'bug_id'}) {
     }
     my $canedit = (defined $::COOKIE{'Bugzilla_login'} &&
                    $::COOKIE{'Bugzilla_login'} eq $name);
+    my %maxvotesperbug;
+    if( $canedit ) {
+        SendSQL("SELECT products.product, products.maxvotesperbug FROM products");
+        while (MoreSQLData()) {
+            my ($prod, $max) = (FetchSQLData());
+            $maxvotesperbug{$prod}= $max;
+        }
+    }
     foreach my $product (sort(keys(%::prodmaxvotes))) {
         if ($::prodmaxvotes{$product} <= 0) {
             next;
         }
         my $qprod = value_quote($product);
         SendSQL("select votes.bug_id, votes.count, bugs.short_desc, bugs.bug_status from votes, bugs where votes.who = $who and votes.bug_id = bugs.bug_id and bugs.product = " . SqlQuote($product) . "order by votes.bug_id");
+        next if !MoreSQLData(); # don't show products without any votes
         my $sum = 0;
         print "<tr><th>$product</th></tr>";
         while (MoreSQLData()) {
@@ -90,14 +100,21 @@ if (defined $::FORM{'bug_id'}) {
             $summary = html_quote($summary);
             $sum += $count;
             if ($canedit) {
-                $count = "<input name=$id value=$count size=5>";
+                my $min = $maxvotesperbug{$product}; # minimum of these two
+                $min = $::prodmaxvotes{$product} if $::prodmaxvotes{$product} < $min;
+                if( $min < 2 ) { # checkbox
+                    my $checked = $count ? ' checked' : '';
+                    $count = qq{<input type="checkbox" name="$id" value="1"$checked>};
+                }else { # normal input
+                    $count = qq{<input name="$id" value="$count" size="5">};
+                }
             }
             print qq{
 <tr>
 <td></td>
 <td>$strike<a href="showvotes.cgi?bug_id=$id">$id</a>$endstrike</td>
 <td><a href="show_bug.cgi?id=$id">$summary</a></td>
-<td align=right>$count</td>
+<td align="right">$count</td>
 </tr>
 };
         }
@@ -109,15 +126,14 @@ if (defined $::FORM{'bug_id'}) {
     if ($canedit) {
         print qq{<input type=submit value="Submit">\n};
         print "<br>To change your votes, type in new numbers (using zero to\n";
-        print "mean no votes), and then click <b>Submit</b>.\n";
+        print "mean no votes) or change the checkbox, and then click <b>Submit</b>.\n";
     }
     print "<input type=hidden name=who value=$who>";
     print "</form>\n";
     SendSQL("delete from votes where count <= 0");
     SendSQL("unlock tables");
 }
-    
+
 print qq{<a href="votehelp.html">Help!  I don't understand this voting stuff</a>};
 
 PutFooter();
-    
