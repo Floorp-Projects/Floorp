@@ -237,6 +237,22 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext) {
     } else if (NS_SUCCEEDED(uri->SchemeIs("gopher", &isScheme)) && isScheme) {
         mExpectAbsLoc = PR_TRUE;
     }
+    else {
+        // default behavior for other protocols is to assume the channel's
+        // URL references a directory ending in '/' -- fixup if necessary.
+        nsCAutoString path;
+        rv = uri->GetPath(path);
+        if (NS_FAILED(rv)) return rv;
+        if (baseUri.Last() != '/') {
+            baseUri.Append('/');
+            path.Append('/');
+            uri->SetPath(path);
+        }
+        if (!path.Equals("/")) {
+            rv = uri->Resolve(NS_LITERAL_CSTRING(".."), parentStr);
+            if (NS_FAILED(rv)) return rv;
+        }
+    }
 
     nsString buffer;
     buffer.Assign(NS_LITERAL_STRING("<?xml version=\"1.0\" encoding=\""));
