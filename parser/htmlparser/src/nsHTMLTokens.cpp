@@ -2091,7 +2091,12 @@ const nsAReadableString& CErrorToken::GetStringValue(void)
 
 // Doctype decl token
 
-CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag) : CHTMLToken(aTag) {
+CDoctypeDeclToken::CDoctypeDeclToken(eHTMLTags aTag)
+  : CHTMLToken(aTag) {
+}
+
+CDoctypeDeclToken::CDoctypeDeclToken(const nsAReadableString& aString,eHTMLTags aTag)
+  : CHTMLToken(aTag), mTextValue(aString) {
 }
 
 /**
