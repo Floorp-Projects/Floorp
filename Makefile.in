@@ -57,7 +57,23 @@ endif
 	$(MAKE) tier_99
 
 # Make sure that the existing rulesets work
-DIRS = $(NSPRPUB_DIR) $(foreach d,0 1 9 95 96 97 98 99, $(tier_${d}_dirs))
+DIRS = $(NSPRPUB_DIR) \
+	$(tier_0_dirs) \
+	$(tier_1_dirs) \
+	$(tier_9_dirs) \
+	$(NULL)
+
+ifdef MOZ_PSM
+DIRS += $(tier_95_dirs)
+endif
+ifdef MOZ_MAIL_NEWS
+DIRS += $(tier_97_dirs)
+endif
+ifdef MOZ_CALENDAR
+DIRS += $(tier_98_dirs)
+endif
+
+DIRS	+= $(tier_99_dirs)
 
 #
 # tier 0 - base build config dirs
@@ -242,16 +258,14 @@ include $(topsrcdir)/config/rules.mk
 
 tier_%: 
 	@echo "$@: $($@_dirs)"
-	@if test -n "$($@_dirs)"; then \
-		$(EXIT_ON_ERROR) \
+	@$(EXIT_ON_ERROR) \
 		for d in $($@_dirs); do $(UPDATE_TITLE) \
 			$(MAKE) -C $$d export; \
 		done ; \
 		$(PERL) $(MOZILLA_DIR)/config/purge-old-headers.pl $(DIST)/include ;\
 		for d in $($@_dirs); do $(UPDATE_TITLE) \
 			$(MAKE) -C $$d libs; \
-		done \
-	fi
+		done
 #
 # Individual modules
 #
