@@ -224,8 +224,10 @@ nsPasswordManager::FindPasswordEntry
   // Emumerate through set of saved logins
   while (hasMoreElements) {
     rv = enumerator->GetNext(getter_AddRefs(passwordElem));
+    if (NS_FAILED(rv))
+      return rv;
 
-    if (NS_SUCCEEDED(rv) && passwordElem) {
+    if (passwordElem) {
 
       // Get the contents of this saved login
       nsCAutoString hostURI;
