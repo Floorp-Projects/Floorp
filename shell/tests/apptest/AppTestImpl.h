@@ -15,7 +15,11 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "nscore.h"
+
+#ifdef NS_WIN32
 #include <windows.h>
+#endif
 #include "nsAppTest.h"
 
 void InitAppTest(nsAppTest * aAppTest);

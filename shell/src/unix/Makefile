@@ -17,9 +17,9 @@
 
 DEPTH = ../../..
 
-MODULE=shell
+MODULE=shel
 
-LIBRARY_NAME = shell_s
+LIBRARY_NAME = shellentry_s
 
 DEFINES = -D_IMPL_NS_SHELL
 
@@ -35,5 +35,7 @@ CPP_OBJS=				\
  $(NULL)
 
 include $(DEPTH)/config/config.mk
+
+TARGETS = $(LIBRARY)
 
 include $(DEPTH)/config/rules.mk

@@ -20,20 +20,27 @@
 #include "nsShellInstance.h"
 #include "nsApplicationManager.h"
 
+#include <Xm/Xm.h>
+
 #define SHELL_DLL "libshell.so"
 
 extern nsIID kIXPCOMApplicationShellCID ;
 
-static NS_DEFINE_IID(kIApplicationShellIID, NS_IAPPLICATIONSHELL_IID);
-static NS_DEFINE_IID(kCApplicationShellIID, NS_IAPPLICATIONSHELL_CID);
 static NS_DEFINE_IID(kCShellInstanceIID, NS_ISHELLINSTANCE_IID);
 
 void main(int argc, char **argv)
 {
+        Widget topLevel;
+	XtAppContext app_context ;
+
 	nsresult result = NS_OK ;
 
 	nsIShellInstance * pShellInstance ;
 	nsIApplicationShell * pApplicationShell ;
+
+	XtSetLanguageProc(NULL, NULL, NULL);
+
+	topLevel = XtVaAppInitialize(&app_context, "Shell", NULL, 0, &argc, argv, NULL, NULL);
 
     // Let get a ShellInstance for this Application instance
     NSRepository::RegisterFactory(kCShellInstanceIID, SHELL_DLL, PR_FALSE, PR_FALSE);
@@ -44,7 +51,7 @@ void main(int argc, char **argv)
 										  (void **) &pShellInstance) ;
 
 	if (result != NS_OK)
-		return result ;
+		return  ;
 
     // Let's instantiate the Application's Shell
     NS_RegisterApplicationShellFactory() ;
@@ -55,15 +62,17 @@ void main(int argc, char **argv)
 										  (void **) &pApplicationShell) ;
 		
 	if (result != NS_OK)
-		return result ;
+		return  ;
 
     // Let the the State know who it's Application Instance is
-    pShellInstance->SetNativeInstance((nsNativeApplicationInstance) NULL);
+    pShellInstance->SetNativeInstance((nsNativeApplicationInstance) topLevel);
     pShellInstance->SetApplicationShell(pApplicationShell);
 
     // Tell the application manager to store away the association so the
     // Application can look up its State
+#ifdef NS_WIN32
     NSApplicationManager::SetShellAssociation(pApplicationShell, pShellInstance);
+#endif
 
     // Initialize the system
     pShellInstance->Init();
@@ -73,9 +82,11 @@ void main(int argc, char **argv)
 	result = pApplicationShell->Run();
 
     // We're done, clean up
+#ifdef NS_WIN32
     NSApplicationManager::DeleteShellAssociation(pApplicationShell, pShellInstance);
+#endif
 
     // book out of here
-	return result;
+	return ;
 }
 

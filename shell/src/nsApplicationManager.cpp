@@ -20,6 +20,8 @@
 
 #ifdef NS_WIN32
 #include "windows.h"
+#elif NS_UNIX
+#include <Xm/Xm.h>
 #endif
 
 #include "nsApplicationManager.h"
