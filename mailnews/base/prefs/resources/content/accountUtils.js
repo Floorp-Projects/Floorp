@@ -34,6 +34,7 @@ function getInvalidAccounts(accounts)
         var account = accounts.QueryElementAt(i, Components.interfaces.nsIMsgAccount);
         try {
             if (!account.incomingServer.valid) {
+                dump("Found invalid server " + account.incomingServer + " in " + account + "!\n");
                 invalidAccounts[invalidAccounts.length] = account;
                 // skip to the next account
                 continue;
@@ -49,13 +50,17 @@ function getInvalidAccounts(accounts)
         for (var j=0; j<numIdentities; j++) {
             var identity = identities.QueryElementAt(j, Components.interfaces.nsIMsgIdentity);
             if (!identity.valid) {
+                dump("Found invalid identity " + identity + " in " + account + "\n");
                 invalidAccounts[invalidAccounts.length] = account;
                 continue;
             }
         }
     }
 
-    // none found
+    dump("getInvalidAccounts found: \n");
+    for (var i=0; i<invalidAccounts.length; i++) {
+        
+    }
     return invalidAccounts;
 }
 

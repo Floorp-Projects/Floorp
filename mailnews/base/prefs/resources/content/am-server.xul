@@ -25,33 +25,35 @@
       <column/>
     </columns>
     <rows>      
-      <row>
+      <row autostretch="never">
         <text class="label" value="&serverType.label;"/>
         <text class="label" id="servertype.verbose"/>
       </row>
-      <row>
+      <row autostretch="never">
         <text class="label" value="&serverName.label;"/>
         <text class="label" id="servername.verbose"/>
       </row>
-      <row>
+      <row autostretch="never">
         <text class="label" value="&userName.label;"/>
         <text class="label" id="username.verbose"/>
       </row>
-      <row>
+      <row autostretch="never">
         <text class="label" value="&port.label;"/>
         <textfield wsm_persist="true" size="3" id="server.port"/>
       </row>
     </rows>
   </grid>
   <spring class="spacer"/>
+  <titledbox>
+  <title><text class="header label" value="&serverSettings.label;"/></title>
   <box id="serverPrefContainer" orient="vertical">
 
-  <checkbox wsm_persist="true" id="server.isSecure" value="&isSecure.label;"/>
+  <checkbox wsm_persist="true" id="server.isSecure" value="&isSecure.label;" hidefor="pop3"/>
 <!--
   <checkbox wsm_persist="true" id="server.rememberPassword" hidefor="nntp"
             value="&savePassword.label;"/>
 -->
-  <box orient="horizontal">
+  <box orient="horizontal" autostretch="never">
     <checkbox wsm_persist="true" id="server.doBiff" value="&biffStart.label;"/>
     <textfield wsm_persist="true" id="server.biffMinutes" size="3"/>
     <text class="label" for="server.biffMinutes" value="&biffEnd.label;"/>
@@ -64,13 +66,13 @@
 
   <checkbox wsm_persist="true" id="pop3.deleteMailLeftOnServer"
             value="&deleteOnServer.label;"/>
-  <box iscontrolcontainer="true">
+  <box iscontrolcontainer="true" autostretch="never">
     <checkbox wsm_persist="true" value="&maxMessageSizePrefix.label;" id="pop3.limitMessageSize"/>
     <textfield wsm_persist="true" id="pop3.maxMessageSize" size="3"/>
     <text value="&maxMessageSizePostfix.label;" for="pop3.limitMessageSize" class="label"/>
   </box>
   <!-- IMAP -->
-  <box iscontrolcontainer="true">
+  <box iscontrolcontainer="true" autostretch="never">
     <text class="label" value="&deleteMessagePrefix.label;"/>
     <menulist wsm_persist="true" id="imap.deleteModel">
       <menupopup>
@@ -79,6 +81,7 @@
         <menuitem data="2" value="&modelDeleteImmediately.label;"/>
       </menupopup>
     </menulist>
+    <spring flex="1"/>
   </box>
 
   <checkbox wsm_persist="true" id="imap.cleanupInboxOnExit"
@@ -106,14 +109,15 @@
   <box orient="horizontal">
     <checkbox wsm_persist="true" id="nntp.notifyOn"
                 value="&maxMessagesStart.label;"/>
-    <box iscontrolcontainer="true">
+    <box iscontrolcontainer="true" autostretch="never">
       <textfield wsm_persist="true" id="nntp.maxArticles" size="6"/>
       <text class="label" for="nntp.maxArticles" value="&maxMessagesEnd.label;"/>
     </box>
   </box>
+<!-- take out for now - bug 45079
     <box iscontrolcontainer="true" flex="100%">
       <titledbox orient="vertical">
-         <title><text value="&abbreviate.label;"/></title>
+         <title><text class="header label" value="&abbreviate.label;"/></title>
 
          <radiogroup orient="vertical" wsm_persist="true" id="nntp.abbreviate">
            <radio group="nntp.abbreviate" wsm_persist="true" data="true" value="&abbreviateOn.label;"/>
@@ -121,17 +125,19 @@
          </radiogroup>
       </titledbox>
   </box>
+-->
 
   <box orient="vertical" iscontrolcontainer="true">
-    <text value="&newsrcFilePath.label;" for="nntp.newsrcFilePath"/>
-    <textfield wsm_persist="true" size="60" id="nntp.newsrcFilePath"
+    <text class="label" value="&newsrcFilePath.label;" for="nntp.newsrcFilePath"/>
+    <textfield wsm_persist="true" id="nntp.newsrcFilePath"
                datatype="nsIFileSpec"/>
   </box>
   </box>
+  </titledbox>
   <spring flex="100%"/>
   <box orient="vertical">
-    <text value="&localPath.label;" for="server.localPath"/>
-    <textfield wsm_persist="true" size="60" id="server.localPath"
+    <text class="label" value="&localPath.label;" for="server.localPath"/>
+    <textfield wsm_persist="true" id="server.localPath"
             datatype="nsIFileSpec"/>
   </box>
 </window>

@@ -22,7 +22,8 @@
 <text hidden="true" wsm_persist="true" id="identity.email"/>
 
   <box class="box-smallheader" title="&copyAndFolderTitle.label;"/>
-  <text class="label" value="&sendingPrefix.label;"/>
+  <titledbox orient="vertical">
+  <title><text class="header label" value="&sendingPrefix.label;"/></title>
 
   <box>
     <checkbox wsm_persist="true" id="identity.doFcc"
@@ -36,31 +37,32 @@
 
   <checkbox wsm_persist="true" id="identity.bccSelf" before="&bccAccount.label; &lt;" after="&gt;"/>
 
-  <box>
+  <box autostretch="never">
     <checkbox wsm_persist="true" id="identity.bccOthers"
         value="&bccAddress.label;"/>
     <textfield wsm_persist="true" id="identity.bccList"/>
   </box>
+  </titledbox>
 
-<spring class="spacer"/>
-<spring class="spacer"/>
-<text class="label" value="&specialFolderTitle.label;"/>
+<titledbox orient="vertical">
+<title><text class="header label" value="&specialFolderTitle.label;"/></title>
 <grid>
   <columns>
     <column flex="1"/>
     <column flex="2"/>
   </columns>
   <rows>
-    <row>
+    <row autostretch="never">
       <text class="label" value="&draftMailFolder.label;"/>
       <!-- name="identity.draftFolder" -->
       <menu id="msgDraftsFolderPicker"/>
     </row>
-    <row>
+    <row autostretch="never">
       <text class="label" value="&templateMailFolder.label;"/>
       <!-- name="identity.stationeryFolder " -->
       <menu id="msgStationeryFolderPicker"/>
     </row>
   </rows>
 </grid>
+</titledbox>
 </window>

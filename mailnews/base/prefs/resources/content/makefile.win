@@ -45,7 +45,6 @@ CHROME_CONTENT = \
 	.\am-smtp.js \
 	.\pref-advanced_overlay.xul \
 	.\pref-appearance_overlay.xul \
-	.\pref-tree_overlay.xul \
 	.\pref-mailnews.xul \
 	.\pref-mailnews.js \
 	.\pref-viewing_messages.xul \

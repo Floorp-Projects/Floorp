@@ -17,7 +17,7 @@
 
   <box class="box-smallheader" title="&smtpServer.label;"/>
 
-<html>&smtpDesc.label;</html>
+  <html>&smtpDesc.label;</html>
 
   <box id="smtpServerEditor"/>
 

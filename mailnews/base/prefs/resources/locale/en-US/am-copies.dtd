@@ -1,6 +1,6 @@
 <!-- extracted from am-copies.xul -->
 
-<!ENTITY copyAndFolderTitle.label "Copy and Folder settings">
+<!ENTITY copyAndFolderTitle.label "Copy and Folder Settings">
 <!ENTITY sendingPrefix.label "When sending messages, automatically: ">
 <!ENTITY fccMailFolder.label "Place a copy in:">
 <!ENTITY chooseFolderButton.label "Choose Folder...">

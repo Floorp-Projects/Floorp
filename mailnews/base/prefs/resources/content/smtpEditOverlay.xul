@@ -32,8 +32,8 @@
   <script src="smtpEditOverlay.js"/>
 
   <box id="smtpServerEditor" orient="vertical">
-    <box orient="horizontal">
-      <text value="&serverName.label;"/>
+    <box orient="horizontal" autostretch="never">
+      <text class="label" value="&serverName.label;"/>
       <textfield wsm_persist="true" id="smtp.hostname"/>
     </box>
     <!-- use a grid here when it's implemented -->
@@ -44,19 +44,21 @@
       <checkbox id="smtp.useUsername" value="&alwaysUseUsername.label;"
                 oncommand="onUseUsername(event.target,true);"/>
       <box orient="vertical" style="margin-left: 2em">
-        <box orient="horizontal">
-          <text value="&userName.label;"/>
+        <box orient="horizontal" autostretch="never">
+          <text class="label" value="&userName.label;"/>
           <textfield wsm_persist="true" id="smtp.username"/>
         </box>
       </box>
      </box>
-     <checkbox wsm_persist="true" id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
+<!-- remove for now - bug 46393
+  <checkbox wsm_persist="true" id="smtp.isSecure" value="&isSecure.label;" oncommand="updateControls();"/>
      <radiogroup id="smtp.trySSL">
        <box orient="horizontal">
          <radio group="smtp.trySSL" value="&alwaysSecure.label;" id="smtp.alwaysSecure"/>
          <radio group="smtp.trySSL" value="&sometimesSecure.label;" id="smtp.sometimesSecure"/>
        </box>
      </radiogroup>
+-->
   </box>
 
 </overlay>

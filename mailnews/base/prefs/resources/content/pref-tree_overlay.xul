@@ -30,11 +30,6 @@
             <treecell indent="true" url="chrome://messenger/content/pref-receipts.xul" value="&return.label;"/> 
           </treerow>
         </treeitem>
-        <treeitem open="true">
-          <treerow>
-            <treecell indent="true" url="chrome://messenger/content/pref-diskspace.xul" value="&disk.label;"/> 
-          </treerow>
-        </treeitem>
       </treechildren>
     </treeitem>
   </treechildren>

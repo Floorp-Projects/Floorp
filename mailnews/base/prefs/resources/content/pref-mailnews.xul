@@ -13,8 +13,7 @@
 
   <script language="javascript">
   <![CDATA[
-    var _elementIDs = ["mailPaneConfig", "mailPlaySound", "mailnewsConfirmMoveFoldersToTrash", 
-                       "reuseThreadWindow", 
+    var _elementIDs = ["mailPaneConfig", "mailnewsConfirmMoveFoldersToTrash", 
                        "mailnewsStartPageEnabled", "mailnewsStartPageUrl", "mailnewsRememberSelectedMessage"];
   ]]>
   </script>
@@ -46,6 +45,7 @@
     <checkbox id="mailnewsConfirmMoveFoldersToTrash" value="&confirmMove.label;" accesskey="&confirmMove.label;"
               pref="true" preftype="bool" prefstring="mailnews.confirm.moveFoldersToTrash"
               prefattribute="checked"/>
+<!--
 	<checkbox id="mailPlaySound" value="&playSound.label;" accesskey="&playSound.accesskey;"
               pref="true" preftype="bool" prefstring="mail.play_sound"
               prefattribute="checked"/>
@@ -53,7 +53,7 @@
     <checkbox id="reuseThreadWindow" value="&reuseMessage.label;" accesskey="&reuseMessage.accesskey;"
               pref="true" preftype="bool" prefstring="mailnews.reuse_message_window"
               prefattribute="checked"/>
-		
+-->
 	</titledbox>
 
 	<titledbox orient="vertical">

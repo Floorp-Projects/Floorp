@@ -651,15 +651,14 @@ function getAccountFromServerId(serverId) {
   // get the account by dipping into RDF and then into the acount manager
   var serverResource = RDF.GetResource(serverId);
   try {
-  var serverFolder =
-    serverResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var serverFolder =
+      serverResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+    var incomingServer = serverFolder.server;
+    var account = accountManager.FindAccountForServer(incomingServer);
+    return account;
   } catch (ex) {
     return null;
   }
-  var incomingServer = serverFolder.server;
-
-  var account = accountManager.FindAccountForServer(incomingServer);
-  return account;
 }
 
 //

@@ -72,8 +72,10 @@ function getIspDefaultsForDomain(domain) {
 function getIspDefaultsForEmail(email) {
 
     var emailData = getEmailInfo(email);
-    
-    var ispData = getIspDefaultsForDomain(emailData.domain);
+
+    var ispData;
+    if (emailData)
+        ispData = getIspDefaultsForDomain(emailData.domain);
 
     prefillIspData(ispData, email);
 
