@@ -29,6 +29,7 @@
 #include "prtypes.h"
 #include "nsError.h"
 #include "nscore.h"
+#include <MacTypes.h>
 
 class nsISupports;
 
