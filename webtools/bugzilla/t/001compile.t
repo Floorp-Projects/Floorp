@@ -53,7 +53,7 @@ my $fh;
 }
 
 my @testitems = @Support::Files::testitems;
-my $perlapp = $^X;
+my $perlapp = "\"$^X\"";
 
 # Test the scripts by compiling them
 

@@ -47,7 +47,7 @@ my $fh;
 }
 
 my @testitems = @Support::Files::testitems; 
-my $perlapp = $^X;
+my $perlapp = "\"$^X\"";
 
 foreach my $file (@testitems) {
     $file =~ s/\s.*$//; # nuke everything after the first space (#comment)
