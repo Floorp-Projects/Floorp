@@ -459,6 +459,18 @@ NS_IMETHODIMP nsExternalHelperAppService::LoadUrl(nsIURI * aURL)
   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+NS_IMETHODIMP nsExternalHelperAppService::Open(nsIFile * aFile)
+{
+  // this method should only be implemented by each OS specific implementation of this service.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsExternalHelperAppService::OpenFolder(nsIFile * aFile)
+{
+  // this method should only be implemented by each OS specific implementation of this service.
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 //////////////////////////////////////////////////////////////////////////////////////////////////////
 // begin external app handler implementation 
 //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -482,6 +494,7 @@ nsExternalAppHandler::nsExternalAppHandler()
   mReceivedDispostionInfo = PR_FALSE;
   mStopRequestIssued = PR_FALSE;
   mDataBuffer = (char *) nsMemory::Alloc((sizeof(char) * DATA_BUFFER_SIZE));
+  mProgressWindowCreated = PR_FALSE;
 }
 
 nsExternalAppHandler::~nsExternalAppHandler()
@@ -498,15 +511,21 @@ NS_IMETHODIMP nsExternalAppHandler::GetInterface(const nsIID & aIID, void * *aIn
 
 
 NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListener * aWebProgressListener)
-{
+{ 
+  // this call back means we've succesfully brought up the 
+  // progress window so set the appropriate flag...
+
+  mProgressWindowCreated = PR_TRUE;
+
   // while we were bringing up the progress dialog, we actually finished processing the
   // url. If that's the case then mStopRequestIssued will be true. Tell the dialog to go away in that
-  // case....
+  // case and we need to execute the operation since we are actually done.
   if (mStopRequestIssued && aWebProgressListener)
   {
     // simulate a notification saying the document is done.  This will turn around and cause our
     // progress dialog to go away....
-    return aWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
+    aWebProgressListener->OnStateChange(nsnull, nsnull, nsIWebProgressListener::STATE_STOP, NS_OK);
+    return ExecuteDesiredAction();
   }
 
   // o.t. go ahead and register the progress listener....
@@ -524,8 +543,11 @@ NS_IMETHODIMP nsExternalAppHandler::SetWebProgressListener(nsIWebProgressListene
   return NS_OK;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::GetDownloadInfo(nsIURI ** aSourceUrl, nsIFile ** aTarget)
+NS_IMETHODIMP nsExternalAppHandler::GetDownloadInfo(nsIURI ** aSourceUrl, PRInt64 * aTimeDownloadStarted, nsIFile ** aTarget)
 {
+
+  *aTimeDownloadStarted = mTimeDownloadStarted;
+
   if (mFinalFileDestination)
   {
     *aTarget = mFinalFileDestination;
@@ -767,6 +789,8 @@ NS_IMETHODIMP nsExternalAppHandler::OnStartRequest(nsIChannel * aChannel, nsISup
   else
     mReceivedDispostionInfo = PR_TRUE; // no need to wait for a response from the user
 
+  mTimeDownloadStarted = PR_Now();
+
   return NS_OK;
 }
 
@@ -818,20 +842,22 @@ NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIChannel * aChannel, nsISupp
     mOutStream = nsnull;
   }
 
-  if (mReceivedDispostionInfo && !mCanceled)
+  return ExecuteDesiredAction();
+}
+
+nsresult nsExternalAppHandler::ExecuteDesiredAction()
+{
+  nsresult rv;
+  if (mProgressWindowCreated && !mCanceled)
   {
     nsMIMEInfoHandleAction action = nsIMIMEInfo::saveToDisk;
     mMimeInfo->GetPreferredAction(&action);
     if (action == nsIMIMEInfo::saveToDisk)
-    {
-      rv = SaveToDisk(mFinalFileDestination, PR_FALSE);
-    }
+      rv = MoveFile(mFinalFileDestination);
     else
-    {
-      rv = LaunchWithApplication(nsnull, PR_FALSE);
-    }
+      rv = OpenWithApplication(nsnull);
   }
-
+  
   return rv;
 }
 
@@ -878,39 +904,13 @@ nsresult nsExternalAppHandler::PromptForSaveToFile(nsILocalFile ** aNewFile, con
   return rv;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBool aRememberThisPreference)
+nsresult nsExternalAppHandler::MoveFile(nsIFile * aNewFileLocation)
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsILocalFile> fileToUse;
-  if (mCanceled)
-    return NS_OK;
+  NS_ASSERTION(mStopRequestIssued, "uhoh, how did we get here if we aren't done getting data?");
+ 
+  nsCOMPtr<nsILocalFile> fileToUse = do_QueryInterface(aNewFileLocation);
 
-  mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
-
-  if (!aNewFileLocation)
-  {
-    nsXPIDLString leafName;
-    mTempFile->GetUnicodeLeafName(getter_Copies(leafName));
-    if (mSuggestedFileName.IsEmpty())
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName);
-    else
-      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.GetUnicode());
-
-    if (NS_FAILED(rv)) 
-      return Cancel();
-    mFinalFileDestination = do_QueryInterface(fileToUse);
-
-    // now that the user has chosen the file location to save to, it's okay to fire the refresh tag
-    // if there is one. We don't want to do this before the save as dialog goes away because this dialog
-    // is modal and we do bad things if you try to load a web page in the underlying window while a modal
-    // dialog is still up. 
-    ProcessAnyRefreshTags();
-  }
-  else
-   fileToUse = do_QueryInterface(aNewFileLocation);
-
-  mReceivedDispostionInfo = PR_TRUE;
-  
   // if the on stop request was actually issued then it's now time to actually perform the file move....
   if (mStopRequestIssued && fileToUse)
   {
@@ -935,30 +935,66 @@ NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBoo
        rv = mTempFile->MoveTo(directoryLocation, fileName);
      }
   }
-  else
-  {
-    ShowProgressDialog();
-  }
 
   return rv;
 }
 
-NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication, PRBool aRememberThisPreference)
+// SaveToDisk should only be called by the helper app dialog which allows
+// the user to say launch with application or save to disk. It doesn't actually 
+// perform the save, it just prompts for the destination file name. The actual save
+// won't happen until we are done downloading the content and are sure we've 
+// shown a progress dialog. This was done to simplify the 
+// logic that was showing up in this method. Internal callers who actually want
+// to preform the save should call ::MoveFile
+
+NS_IMETHODIMP nsExternalAppHandler::SaveToDisk(nsIFile * aNewFileLocation, PRBool aRememberThisPreference)
 {
+  nsresult rv = NS_OK;
   if (mCanceled)
     return NS_OK;
 
-  mMimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+  mMimeInfo->SetPreferredAction(nsIMIMEInfo::saveToDisk);
 
-  // user has chosen to launch using an application, fire any refresh tags now...
-  ProcessAnyRefreshTags(); 
+  if (!aNewFileLocation)
+  {
+    nsXPIDLString leafName;
+    nsCOMPtr<nsILocalFile> fileToUse;
+    mTempFile->GetUnicodeLeafName(getter_Copies(leafName));
+    if (mSuggestedFileName.IsEmpty())
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), leafName);
+    else
+      rv = PromptForSaveToFile(getter_AddRefs(fileToUse), mSuggestedFileName.GetUnicode());
 
-  mReceivedDispostionInfo = PR_TRUE; 
-  if (mMimeInfo && aApplication)
-    mMimeInfo->SetPreferredApplicationHandler(aApplication);
+    if (NS_FAILED(rv)) 
+      return Cancel();
+    
+    mFinalFileDestination = do_QueryInterface(fileToUse);
 
-  // if a stop request was already issued then proceed with launching the application.
+    if (!mProgressWindowCreated) 
+      ShowProgressDialog();
+
+    // now that the user has chosen the file location to save to, it's okay to fire the refresh tag
+    // if there is one. We don't want to do this before the save as dialog goes away because this dialog
+    // is modal and we do bad things if you try to load a web page in the underlying window while a modal
+    // dialog is still up. 
+    ProcessAnyRefreshTags();
+  }
+
+  mReceivedDispostionInfo = PR_TRUE;
+  return rv;
+}
+
+
+nsresult nsExternalAppHandler::OpenWithApplication(nsIFile * aApplication)
+{
   nsresult rv = NS_OK;
+  if (mCanceled)
+    return NS_OK;
+  
+  // we only should have gotten here if the on stop request had been fired already.
+
+  NS_ASSERTION(mStopRequestIssued, "uhoh, how did we get here if we aren't done getting data?");
+  // if a stop request was already issued then proceed with launching the application.
   if (mStopRequestIssued)
   {
     nsCOMPtr<nsPIExternalAppLauncher> helperAppService (do_GetService(NS_EXTERNALHELPERAPPSERVICE_CONTRACTID));
@@ -967,12 +1003,35 @@ NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication
       rv = helperAppService->LaunchAppWithTempFile(mMimeInfo, mTempFile);
     }
   }
-  else
-  {
-    ShowProgressDialog();
-  }
 
-  return NS_OK;
+  return rv;
+}
+
+// LaunchWithApplication should only be called by the helper app dialog which allows
+// the user to say launch with application or save to disk. It doesn't actually 
+// perform launch with application. That won't happen until we are done downloading
+// the content and are sure we've showna progress dialog. This was done to simplify the 
+// logic that was showing up in this method. 
+
+NS_IMETHODIMP nsExternalAppHandler::LaunchWithApplication(nsIFile * aApplication, PRBool aRememberThisPreference)
+{
+  if (mCanceled)
+    return NS_OK;
+
+  mMimeInfo->SetPreferredAction(nsIMIMEInfo::useHelperApp);
+
+  // launch the progress window now that the user has picked the desired action.
+  if (!mProgressWindowCreated) 
+   ShowProgressDialog();
+
+  // user has chosen to launch using an application, fire any refresh tags now...
+  ProcessAnyRefreshTags(); 
+  
+  mReceivedDispostionInfo = PR_TRUE; 
+  if (mMimeInfo && aApplication)
+    mMimeInfo->SetPreferredApplicationHandler(aApplication);
+
+ return NS_OK;
 }
 
 NS_IMETHODIMP nsExternalAppHandler::Cancel()
