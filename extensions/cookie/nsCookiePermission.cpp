@@ -89,8 +89,20 @@ nsCookiePermission::TestPermission(nsIURI *aURI,
     nsCAutoString hostPort;
     aURI->GetHostPort(hostPort);
 
-    if (!aCookie || hostPort.IsEmpty()) {
-      return NS_ERROR_UNEXPECTED;
+    if (!aCookie) {
+       return NS_ERROR_UNEXPECTED;
+    }
+    // If there is no host, use the scheme, and append "://",
+    // to make sure it isn't a host or something.
+    // This is done to make the dialog appear for javascript cookies from
+    // file:// urls, and make the text on it not too weird. (bug 209689)
+    if (hostPort.IsEmpty()) {
+      aURI->GetScheme(hostPort);
+      if (hostPort.IsEmpty()) {
+        // still empty. Just return the default.
+        return NS_OK;
+      }
+      hostPort = hostPort + NS_LITERAL_CSTRING("://");
     }
 
     // we don't cache the cookiePromptService - it's not used often, so not
