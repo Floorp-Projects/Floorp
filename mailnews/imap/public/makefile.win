@@ -22,6 +22,7 @@ EXPORTS =							\
 			nsIImapUrl.h			\
 			nsIImapProtocol.h		\
 			nsIImapLog.h			\
+			nsIIMAPHostSessionList.h \
 			$(NULL)
 
 MODULE= mailnews
