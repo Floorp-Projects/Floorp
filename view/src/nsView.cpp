@@ -148,7 +148,7 @@ nsView :: ~nsView()
 
   if (nsnull != mZParent)
   {
-    mZParent->RemoveChild(this);
+    mZParent->RemoveReparentedView();
     mZParent->Destroy();
   }
 
