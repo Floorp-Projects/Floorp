@@ -142,6 +142,7 @@ SECMOD_LoadPKCS11Module(SECMODModule *mod) {
     CK_INFO info;
     CK_ULONG slotCount = 0;
     CK_C_INITIALIZE_ARGS moduleArgs;
+    CK_VOID_PTR pInitArgs;
 
     if (mod->loaded) return SECSuccess;
 
@@ -227,13 +228,14 @@ SECMOD_LoadPKCS11Module(SECMODModule *mod) {
 
     mod->isThreadSafe = PR_TRUE;
     /* Now we initialize the module */
-    moduleArgs = secmodLockFunctions; /* use the default lock functions */
     if (mod->libraryParams) {
+	moduleArgs = secmodLockFunctions;
 	moduleArgs.LibraryParameters = (void *) mod->libraryParams;
+	pInitArgs = &moduleArgs;
     } else {
-	moduleArgs.LibraryParameters = NULL;
+	pInitArgs = (void *) &secmodLockFunctions;
     }
-    if (PK11_GETTAB(mod)->C_Initialize(&moduleArgs) != CKR_OK) {
+    if (PK11_GETTAB(mod)->C_Initialize(pInitArgs) != CKR_OK) {
 	mod->isThreadSafe = PR_FALSE;
     	if (PK11_GETTAB(mod)->C_Initialize(NULL) != CKR_OK) goto fail;
     }
