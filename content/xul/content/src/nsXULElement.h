@@ -103,14 +103,14 @@ public:
 
     virtual ~nsXULPrototypeNode()
     {
-        MOZ_COUNT_CTOR(nsXULPrototypeNode);
+        MOZ_COUNT_DTOR(nsXULPrototypeNode);
     }
 
 protected:
     nsXULPrototypeNode(Type aType, PRInt32 aLineNo)
         : mType(aType), mLineNo(aLineNo)
     {
-        MOZ_COUNT_DTOR(nsXULPrototypeNode);
+        MOZ_COUNT_CTOR(nsXULPrototypeNode);
     }
 };
 
