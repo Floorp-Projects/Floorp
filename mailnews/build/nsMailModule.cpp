@@ -95,6 +95,7 @@
 #include "nsMsgSpecialViews.h"
 #include "nsMsgXFVirtualFolderDBView.h"
 #include "nsMsgQuickSearchDBView.h"
+#include "nsMsgGroupView.h"  
 #include "nsMsgOfflineManager.h"
 #include "nsMsgProgress.h"
 #include "nsSpamSettings.h"
@@ -318,6 +319,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgWatchedThreadsWithUnreadDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSearchDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgXFVirtualFolderDBView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgQuickSearchDBView)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgGroupView)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgOfflineManager)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgProgress)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSpamSettings)
@@ -738,6 +740,10 @@ static const nsModuleComponentInfo gComponents[] = {
     { "cross folder virtual folder db view", NS_MSG_XFVFDBVIEW_CID,
        NS_MSGXFVFDBVIEW_CONTRACTID,
        nsMsgXFVirtualFolderDBViewConstructor,
+    },
+    { "grouped view", NS_MSG_GROUPDBVIEW_CID,
+      NS_MSGGROUPDBVIEW_CONTRACTID,
+      nsMsgGroupViewConstructor,
     },
     { "Messenger Offline Manager", NS_MSGOFFLINEMANAGER_CID,
       NS_MSGOFFLINEMANAGER_CONTRACTID,
