@@ -248,10 +248,12 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
 
         // Fire a notification that the write has finished...
         if (eSocketState_DoneRead != mCurrentState) {
-          if (mWriteObserver) {
-            mWriteObserver->OnStopBinding(mWriteContext, rv, nsnull);
+          if (mWriteStream) {
+            if (mWriteObserver) {
+              mWriteObserver->OnStopBinding(mWriteContext, rv, nsnull);
+              NS_RELEASE(mWriteObserver);
+            }
             NS_RELEASE(mWriteStream);
-            NS_RELEASE(mWriteObserver);
             NS_IF_RELEASE(mWriteContext);
           }
         }
@@ -259,7 +261,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
         //
         // Set up the connection for the next operation...
         //
-        if (mReadListener || mWriteObserver) {
+        if (mReadListener || mWriteStream) {
           mCurrentState = eSocketState_WaitReadWrite;
         } else {
           mCurrentState = gStateTable[mOperation][mCurrentState];
@@ -285,7 +287,7 @@ nsresult nsSocketTransport::Process(PRInt16 aSelectFlags)
           }
         }
 
-        if (NS_SUCCEEDED(rv) && mWriteObserver) {
+        if (NS_SUCCEEDED(rv) && mWriteStream) {
           rv = doWrite(aSelectFlags);
           if (NS_OK == rv) {
             mCurrentState = eSocketState_DoneWrite;
@@ -821,21 +823,31 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
 {
   nsresult rv = NS_OK;
 
-  if (eSocketOperation_None != mOperation) {
+  // Enter the socket transport lock...
+  Lock();
+
+  // If a read is already in progress then fail...
+  if (mReadListener) {
     rv = NS_ERROR_IN_PROGRESS;
   }
 
-  if (NS_SUCCEEDED(rv) && !mReadStream) {
-    rv = NS_NewByteBufferInputStream(&mReadStream, PR_FALSE, 
-                                     MAX_IO_BUFFER_SIZE);
-  }
+///  if (NS_SUCCEEDED(rv) && !mReadStream) {
+///    rv = NS_NewByteBufferInputStream(&mReadStream, PR_FALSE, 
+///                                     MAX_IO_BUFFER_SIZE);
+///  }
 
   if (NS_SUCCEEDED(rv)) {
-    NS_IF_RELEASE(mReadContext);
-    mReadContext = nsnull;
+    nsIInputStream *stream;
 
-    NS_IF_RELEASE(mReadListener);
-    rv = NS_NewSyncStreamListener(&mReadListener, result);
+    NS_IF_RELEASE(mReadStream);
+    NS_IF_RELEASE(mReadContext);
+
+    rv = NS_NewSyncStreamListener(&mReadListener, &stream);
+    // XXX:  This is sorta nasty...
+    if (NS_SUCCEEDED(rv)) {
+      rv = stream->QueryInterface(nsIByteBufferInputStream::GetIID(), (void**)&mReadStream);
+    }
+    *result = mReadStream;
   }
 
   if (NS_SUCCEEDED(rv)) {
@@ -843,6 +855,9 @@ nsSocketTransport::OpenInputStream(nsIInputStream* *result)
 
     rv = mService->AddToWorkQ(this);
   }
+
+  // Leave the socket transport lock...
+  Unlock();
 
   return rv;
 }
@@ -853,16 +868,22 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
 {
   nsresult rv = NS_OK;
 
-  if (eSocketOperation_None != mOperation) {
+  // Enter the socket transport lock...
+  Lock();
+
+  // If a write is already in progress then fail...
+  if (mWriteStream) {
     rv = NS_ERROR_IN_PROGRESS;
   }
 
-  // If we don't have a write stream at this point, get one!
-  if (!mWriteStream) {
-	// We want a pipe here so the caller can "write" into one end
-	// and the other end (aWriteStream) gets the data. This data
-	// is then written to the underlying socket when nsSocketTransport::doWrite()
-	// is called.
+  if (NS_SUCCEEDED(rv)) {
+    NS_IF_RELEASE(mWriteObserver);
+    NS_IF_RELEASE(mWriteContext);
+
+  	// We want a pipe here so the caller can "write" into one end
+  	// and the other end (aWriteStream) gets the data. This data
+  	// is then written to the underlying socket when nsSocketTransport::doWrite()
+  	// is called.
 
     // XXX not sure if this should be blocking (PR_TRUE) or non-blocking.
     rv = NS_NewPipe(&mWriteStream,
@@ -875,6 +896,9 @@ nsSocketTransport::OpenOutputStream(nsIOutputStream* *result)
     // Start the crank.
     rv = mService->AddToWorkQ(this);
   }
+
+  // Leave the socket transport lock...
+  Unlock();
 
   return rv;
 }
