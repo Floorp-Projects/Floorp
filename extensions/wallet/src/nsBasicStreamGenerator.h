@@ -37,8 +37,8 @@
 class nsBasicStreamGenerator : public nsIKeyedStreamGenerator
 {
  public:
-    NS_DECL_ISUPPORTS;
-    NS_DECL_NSIKEYEDSTREAMGENERATOR;
+    NS_DECL_ISUPPORTS
+    NS_DECL_NSIKEYEDSTREAMGENERATOR
 
     nsBasicStreamGenerator();
 
