@@ -58,6 +58,7 @@ build_number::
     $(PERL) bdate.pl > $@
     echo Setting build number...
     $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/content/navigator.xul $@
+    $(PERL) aboutime.pl $(DEPTH)/xpfe/browser/resources/content/viewSource.xul $@
 !endif
 
 
@@ -83,9 +84,6 @@ makedep.exe:: makedep.cpp
     @cl -MT makedep.cpp 
 
 export:: makecopy.exe mangle.exe mantomak.exe bin2rc.exe makedep.exe build_number $(INSTALL_FILES)
-!ifdef MOZILLA_OFFICIAL
-    $(PERL) set-timebomb.pl 0 30
-!endif
 
 !ifdef MOZ_FULLCIRCLE
 
