@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -9,20 +9,19 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *  
  * The Original Code is The Waterfall Java Plugin Module
- * 
+ *  
  * The Initial Developer of the Original Code is Sun Microsystems Inc
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
- *
- * $Id: PluggableJVM.java,v 1.1 2001/05/10 18:12:27 edburns%acm.org Exp $
- *
  * 
- * Contributor(s): 
- *
- *   Nikolay N. Igotti <inn@sparc.spb.su>
- */
+ * $Id: PluggableJVM.java,v 1.2 2001/07/12 19:57:54 edburns%acm.org Exp $
+ * 
+ * Contributor(s):
+ * 
+ *     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+ */ 
 
 /** 
  * Main Waterfall Java class. It works as a message queue handler.
@@ -180,7 +179,6 @@ public abstract class PluggableJVM
     public boolean registerService(ObjectFactory f)
     {
 	int proceed = 0;
-	trace("registerService " +f, LOG_DEBUG);
 	if (f == null) return false;
 	Enumeration e = f.getCIDs();
 	if (e == null) return false;
@@ -197,9 +195,10 @@ public abstract class PluggableJVM
 			    if (f.equals(f1)) continue;
 			    if (!f.handleConflict(cid, f1) || 
 				f1.handleConflict(cid, f)) continue;
-			}
-		    
+			}		    
 		    hashCID.put(cid, f);
+		    trace("registered service "+f+" for contract ID "+cid,
+			  LOG_INFO);
 		    proceed++;
 		}
 	} catch (Exception ex) {
@@ -249,7 +248,7 @@ public abstract class PluggableJVM
 		    }
 	    }
 	return (proceed > 0);
-    }     
+    }
     
 
     public PermissionCollection getExtensionsPermissions(CodeSource codesource)
@@ -285,6 +284,7 @@ public abstract class PluggableJVM
 	    }
 	return p;
     }
+
     // XXX: kill me ASAP
     public CodeSource getCodeSource()
     {
@@ -303,6 +303,20 @@ public abstract class PluggableJVM
 	  }
       // fallback to defaults
       return tryToGetHandler(null, "sun.net.www.protocol", protocol);
+    }
+
+    /**
+     * It registers packages that can be loader with this classloader
+     * as URL handlers, according to standard procedure described 
+     * in java.net.URL documentation.
+     **/
+    public void registerProtocolHandlers(ClassLoader  loader,
+					 String       pkgs)
+    {
+      synchronized (protocolHandlers) 
+	{
+	  protocolHandlers.addElement(new ProtoHandlerDesc(loader, pkgs));
+	}
     }
     /***************** END OF PUBLIC METHODS *************************/
     /*****************************************************************/
@@ -331,7 +345,10 @@ public abstract class PluggableJVM
 	// stuff like components autoregistration moved to this thread 
 	// to minimize latency
 	String wfHome = System.getProperty("jvmp.home");
-	loader.registerAllInDir(new File(wfHome, "ext"));
+	synchronized (loader) 
+	  {
+	    loader.registerAllInDir(new File(wfHome, "ext"));
+	  }
 	running = true;		
 	runMainLoop();
     }
@@ -341,8 +358,10 @@ public abstract class PluggableJVM
 	// init AWT here
 	if (inited) return;	
 	Frame f = new Frame();
-	f.setBounds(0, 0, 0, 0);
+	f.setBounds(0, 0, 1, 1);
 	f.addNotify();
+	//f.show();
+	//f.hide();
 	f.removeNotify();	
 	f = null;
 	
@@ -364,6 +383,7 @@ public abstract class PluggableJVM
 	    codesource = new CodeSource(c.toURL(), null);
 	    policy = new WFPolicy(this, c.toURL());
 	    java.security.Policy.setPolicy(policy);
+	    //trace("policy is "+java.security.Policy.getPolicy(), LOG_DEBUG);
 	} catch (Exception e) {
 	    trace("Wow, cannot set system wide policy: "+e, LOG_CRITICAL);
 	}	
@@ -408,14 +428,7 @@ public abstract class PluggableJVM
     {
 	Frame f = getFrameWithId(id);
 	NativeFrame nf = null;
-	if (f != null) 
-	    {
-	    Object lock = f.getTreeLock();
-	    synchronized (lock) 
-		{
-		    nf = SysUnregisterWindow(id);		
-		}
-	    }
+	if (f != null)  nf = SysUnregisterWindow(id);		
 	if (nf == null) return 0;
 	// remove from ID table
 	nativeFrames.remove(id);
@@ -819,14 +832,14 @@ public abstract class PluggableJVM
       switch (id)
 	  {
 	  case CMD_CTL_CONSOLE:
-	      //log("CMD_CTL_CONSOLE: "+data);
+	      //trace("CMD_CTL_CONSOLE: "+data, LOG_DEBUG);
 	      switch ((int)data)
 		  {
 		  case 0:
-		      console.hide();
+		      if (console.isVisible()) console.setVisible(false);
 		      return 1;
 		  case 1:
-		      console.show();
+		      if (!console.isVisible()) console.setVisible(true);
 		      return 1;
 		  case 2:
 		      return (console.isVisible() ? 2 : 1);
@@ -915,15 +928,6 @@ public abstract class PluggableJVM
 	      //e.printStackTrace();	    
 	  }
 	return null;
-}
-
-     void registerProtocolHandlers(ClassLoader  loader,
-				   String       pkgs)
-    {
-	synchronized (protocolHandlers) 
-	    {
-		protocolHandlers.add(new ProtoHandlerDesc(loader, pkgs));
-	    }
     }
 };
 

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -9,19 +9,18 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *  
  * The Original Code is The Waterfall Java Plugin Module
- * 
+ *  
  * The Initial Developer of the Original Code is Sun Microsystems Inc
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
- *
- * $Id: wf_moz6_common.h,v 1.1 2001/05/10 18:12:36 edburns%acm.org Exp $
- *
  * 
- * Contributor(s): 
- *
- *   Nikolay N. Igotti <inn@sparc.spb.su>
+ * $Id: wf_moz6_common.h,v 1.2 2001/07/12 19:58:19 edburns%acm.org Exp $
+ * 
+ * Contributor(s):
+ * 
+ *     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
  */
 
 #ifndef __wf_moz6_common_h
@@ -69,7 +68,7 @@ typedef struct JavaObjectWrapper JavaObjectWrapper;
 
 #define WF_APPLETPEER_CID "@sun.com/wf/mozilla/appletpeer;1"
 
-enum JSCallType {	    //	Possible JS call type
+enum JSCallType {	    /*	Possible JS call type */
 	JS_Unknown = 0,
 	JS_GetWindow = 1,
 	JS_ToString,
@@ -85,65 +84,65 @@ enum JSCallType {	    //	Possible JS call type
 
 struct JSObject_CallInfo
 {
-    const char*		pszUrl;			// URL of the CodeSource object in the Java call
-    jobjectArray	jCertArray;		// Certificate array of the CodeSource object
-    jintArray		jCertLengthArray;	// Certificate length array of the CodeSource object
-    int			iNumOfCerts;		// Number of certificates in the cert and cert length array
-    jobject		jAccessControlContext;	// AccessControlContext object that represents the Java callstack 
-    enum JSCallType	type;			// Type of JSObject call
-    jthrowable		jException;		// Java exception object as the result of the call
-    JavaObjectWrapper*  pWrapper;               // native-Java glueing object 
+    const char*		pszUrl;			
+    jobjectArray	jCertArray;		
+    jintArray		jCertLengthArray;	
+    int			iNumOfCerts;		
+    jobject		jAccessControlContext;	
+    enum JSCallType	type;			
+    jthrowable		jException;	        
+    JavaObjectWrapper*  pWrapper;               
     union {
 	struct __GetWindow {
-	    void*    pPlugin;		// Plug-in instance corresponded to the JSObject call
-	    jint	    iNativeJSObject;	// Native JS object as the result of the GetWindow call
+	    void*    pPlugin;		
+	    jint	    iNativeJSObject;
 	} __getWindow;
 	struct __Finalize  {
-	    jint	iNativeJSObject;	// Native JS object that needs to be finalized 	
+	    jint	iNativeJSObject;	
 	} __finalize;
 	struct __ToString  {
-	    jint	iNativeJSObject;	// Native JS object that corresponded to the JSObject.toString
-	    jstring	jResult;		// Result of JSObject.toString
+	    jint	iNativeJSObject;	
+	    jstring	jResult;		
 	} __toString;
 	struct __Call  {
-	    const jchar*    pszMethodName;	// Method name
-	    int		    iMethodNameLen;	// Length of method name
-	    jobjectArray    jArgs;		// Argument for the JSObject.Call
- 	    jint	    iNativeJSObject;	// Native JS object corresponded to the JSObject.call
-	    jobject	    jResult;		// Result of JSObject.call
+	    const jchar*    pszMethodName;	
+	  int		    iMethodNameLen;	
+	    jobjectArray    jArgs;		
+ 	    jint	    iNativeJSObject;	
+	    jobject	    jResult;		
 	} __call;
 	struct __Eval  {
-	    const jchar*    pszEval;		// String to be evaluated
-	    int		    iEvalLen;		// Length of the evaluatation string
-	    jint	    iNativeJSObject;	// Native JS object corresponded to the JSObject.eval
-	    jobject	    jResult;		// Result of JSObject.eval
+	    const jchar*    pszEval;		
+	    int		    iEvalLen;		
+	    jint	    iNativeJSObject;	
+	    jobject	    jResult;		
 	} __eval;
 	struct __GetMember  {
-	    const jchar*    pszName;		// Member name
-	    int		    iNameLen;		// Length of member name
-	    jint	    iNativeJSObject;	// Native JS object corresponded to the JSObject.getMember
-	    jobject	    jResult;		// Result of JSObject.getMember
+	    const jchar*    pszName;		
+	    int		    iNameLen;		
+	    jint	    iNativeJSObject;	
+	    jobject	    jResult;		
 	} __getMember;
 	struct __SetMember  {
-	    const jchar*    pszName;		// Member name
-	    int		    iNameLen;		// Length of member name
-	    jint	    iNativeJSObject;	// Native JS object corresponded to the JSObject.setMember
-	    jobject	    jValue;		// Result of JSObject.setMember
+	    const jchar*    pszName;		
+	    int		    iNameLen;		
+	    jint	    iNativeJSObject;	
+	    jobject	    jValue;		
 	} __setMember;
 	struct __RemoveMember  {
-	    const jchar*    pszName;		// Member name
-	    int		    iNameLen;		// Length of member name
-	    jint	    iNativeJSObject;	// Native JS object corresponded to the JSObject.removeMember
+	    const jchar*    pszName;		
+	    int		    iNameLen;		
+	    jint	    iNativeJSObject;	
 	} __removeMember;
 	struct __GetSlot  {
-	    int		    iIndex;		// Slot number
-	    jint	    iNativeJSObject;	// Native JS object corresponded to the JSObject.getSlot  
-	    jobject	    jResult;		// Result of JSObject.getSlot
+	    int		    iIndex;		
+	    jint	    iNativeJSObject;	
+	    jobject	    jResult;		
 	} __getSlot;
 	struct __SetSlot  {
-	    int		    iIndex;		// Slot number
-	    jobject	    jValue;		// Value to set in the slot
-	    jint	    iNativeJSObject;	// Native JS object corresponded to the JSObject.setSlot
+	    int		    iIndex;		
+	    jobject	    jValue;		
+	    jint	    iNativeJSObject;	
 	} __setSlot;
     } data;
 };

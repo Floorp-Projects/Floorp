@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -9,19 +9,18 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *  
  * The Original Code is The Waterfall Java Plugin Module
- * 
+ *  
  * The Initial Developer of the Original Code is Sun Microsystems Inc
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
- *
- * $Id: native.c,v 1.1 2001/05/10 18:12:37 edburns%acm.org Exp $
- *
  * 
- * Contributor(s): 
- *
- *   Nikolay N. Igotti <inn@sparc.spb.su>
+ * $Id: native.c,v 1.2 2001/07/12 19:58:24 edburns%acm.org Exp $
+ * 
+ * Contributor(s):
+ * 
+ *     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
  */
 
 /* Waterfall headers */
@@ -102,14 +101,16 @@ static WidgetClass getVendorShellWidgetClass() {
 
 static int initAWTGlue() 
 {
+  static int inited = 0;
 #define AWT_RESOLVE(method) awt.##method = \
     (method##_t) dlsym(awtDLL, #method); \
   if (awt.##method == NULL)  { \
-    fprintf(stderr, "dlsyn: %s", dlerror()); \
+    fprintf(stderr, "dlsym: %s", dlerror()); \
     return 0; \
   }
   char awtPath[MAXPATHLEN];
 
+  if (inited) return 1;
   /* JAVA_HOME/JAVAHOME set by Waterfall before, see java_plugin.c */
 #ifdef _JVMP_SUNJVM
   sprintf(awtPath, "%s/lib/" ARCH "/" AWTDLL,
@@ -119,7 +120,7 @@ static int initAWTGlue()
   sprintf(awtPath, "%s/bin/" AWTDLL,
 	  getenv("JAVAHOME"));
 #endif
-  //fprintf(stderr,"loading %s\n", awtPath);
+  /* fprintf(stderr,"loading %s\n", awtPath); */
   awtDLL = dlopen(awtPath, RTLD_NOW);
   if (awtDLL == NULL) 
     { 
@@ -130,6 +131,7 @@ static int initAWTGlue()
   awt.getAwtLockFunctions(&LockIt, &UnLockIt, &NoFlushUnlockIt, NULL);
   AWT_RESOLVE(getAwtData);
   AWT_RESOLVE(getAwtDisplay);
+  inited = 1;
   return 1;
 }
 
@@ -211,12 +213,30 @@ Java_sun_jvmp_generic_motif_Plugin_getWidget(JNIEnv *env, jclass clz,
     return PTR_TO_JLONG(w);
 }
 
+/** the only reason of this #if is request of pjava team - they don't have
+ *  working JNI_OnLoad. If it will be fixed - remove it at all, as it looks 
+ *  nasty.
+ **/
+#if (defined WF_PJAVA)
+#if (defined __GNUC__)
+void init() __attribute__ ((constructor));
+void init()
+{
+  fprintf(stderr, "pJava-ready WF native code\n");
+  initAWTGlue();
+}
+#else
+#error "Implement constructor-like init() function for your compiler"
+#endif
+#else
 JNIEXPORT jint JNICALL 
 JNI_OnLoad(JavaVM *vm, void *reserved)
 { 
   if (!initAWTGlue()) return 0;
   return JNI_VERSION_1_2; 
 } 
+#endif
+
 
 static jlong getTimeMillis()
 {

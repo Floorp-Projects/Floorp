@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -9,20 +9,19 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *  
  * The Original Code is The Waterfall Java Plugin Module
- * 
+ *  
  * The Initial Developer of the Original Code is Sun Microsystems Inc
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
- *
- * $Id: WFPolicy.java,v 1.1 2001/05/10 18:12:32 edburns%acm.org Exp $
- *
  * 
- * Contributor(s): 
- *
- *   Nikolay N. Igotti <inn@sparc.spb.su>
- */
+ * $Id: WFPolicy.java,v 1.2 2001/07/12 19:58:03 edburns%acm.org Exp $
+ * 
+ * Contributor(s):
+ * 
+ *     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+ */ 
 
 package sun.jvmp.security;
 
@@ -31,8 +30,9 @@ import java.security.*;
 import java.net.*;
 import java.util.*;
 
-public class WFPolicy extends sun.security.provider.PolicyFile
+public class WFPolicy extends Policy
 {
+    Policy           sysPolicy;
     URL              wfcodebase;
     PluggableJVM     jvm;
     String           wfextpath;
@@ -41,6 +41,7 @@ public class WFPolicy extends sun.security.provider.PolicyFile
 	this.wfcodebase = wfcodebase;
 	wfextpath = wfcodebase.getPath()+"ext";
 	this.jvm = jvm;
+	this.sysPolicy = Policy.getPolicy();
     }
 
     protected boolean isAllPermissionGranted(CodeSource codesource)
@@ -66,7 +67,8 @@ public class WFPolicy extends sun.security.provider.PolicyFile
 			  PluggableJVM.LOG_DEBUG);
 		return perms;
 	    }
-	PermissionCollection p = super.getPermissions(codesource);
+	PermissionCollection p = null;
+	if (sysPolicy != null) p = sysPolicy.getPermissions(codesource);
 	if (p != null)
 	    {
 		for (Enumeration e=p.elements(); e.hasMoreElements(); )
@@ -80,4 +82,17 @@ public class WFPolicy extends sun.security.provider.PolicyFile
 	    }
 	return perms;
     }
+
+    public void refresh()
+    {
+	if (sysPolicy != null) sysPolicy.refresh();
+    }
 }
+
+
+
+
+
+
+
+

@@ -8,19 +8,19 @@
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-# 
+#  
 # The Original Code is The Waterfall Java Plugin Module
-# 
+#  
 # The Initial Developer of the Original Code is Sun Microsystems Inc
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
-#
-# $Id: GNUmakefile,v 1.1 2001/05/10 18:12:22 edburns%acm.org Exp $
-#
 # 
-# Contributor(s): 
-#
-#   Nikolay N. Igotti <inn@sparc.spb.su>
+# $Id: GNUmakefile,v 1.2 2001/07/12 19:57:39 edburns%acm.org Exp $
+# 
+# Contributor(s):
+# 
+#     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+# 
 
 include Defs.gmk
 #___________________________________________________________________
@@ -138,9 +138,8 @@ host_objs: $(HOSTOBJS)
 $(HOSTPROG): $(HOSTOBJS)
 	$(CXX) -o $(HOSTPROG) $(HOSTOBJS) $(HOSTLIBS) 
 
-clean: java_clean
+clean:
 	rm -f $(HOSTPROG) $(PLUGINOBJS) $(HOSTOBJS) core *.so *.o $(PRELOAD_HACK) plugin.policy
-
 java_clean:
 	@cd ../java; $(MAKE) clean
 

@@ -8,21 +8,23 @@
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-# 
+#  
 # The Original Code is The Waterfall Java Plugin Module
-# 
+#  
 # The Initial Developer of the Original Code is Sun Microsystems Inc
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
-#
-# $Id: FileListCommon.mk,v 1.1 2001/05/10 18:12:21 edburns%acm.org Exp $
-#
 # 
-# Contributor(s): 
-#
-#   Nikolay N. Igotti <inn@sparc.spb.su>
+# $Id: FileListCommon.mk,v 1.2 2001/07/12 19:57:33 edburns%acm.org Exp $
+# 
+# Contributor(s):
+# 
+#     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+# 
 
 FILES_java = \
+	sun/jvmp/ConsoleWindow.java \
+	sun/jvmp/DebugOutputStream.java \
 	sun/jvmp/HostObjectPeer.java \
 	sun/jvmp/PluggableJVM.java \
 	sun/jvmp/ObjectFactory.java \
@@ -45,4 +47,17 @@ FILES_java = \
 	sun/jvmp/security/AccessControlDecider.java \
 	sun/jvmp/security/CallingContext.java \
 	sun/jvmp/security/WFPolicy.java \
-	sun/jvmp/generic/GenericSynchroObject.java 
+	netscape/javascript/JSObject.java \
+	netscape/javascript/JSException.java \
+	netscape/javascript/JSUtil.java \
+	sun/jvmp/javascript/JSContext.java \
+	sun/jvmp/generic/GenericSynchroObject.java \
+	sun/jvmp/applet/WFAppletViewer.java \
+	sun/jvmp/applet/AppletManager.java \
+	sun/jvmp/applet/WFAppletContext.java \
+	sun/jvmp/applet/WFAppletClassLoader.java \
+	sun/jvmp/applet/WFAppletSecurityManager.java \
+	sun/jvmp/applet/AppletViewerArgs.java \
+	sun/jvmp/applet/ProxyInfo.java \
+	sun/jvmp/applet/ProxyType.java \
+	sun/jvmp/applet/ProxyHandler.java 

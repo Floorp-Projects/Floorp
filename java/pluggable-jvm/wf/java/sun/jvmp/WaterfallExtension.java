@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -9,20 +9,19 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *  
  * The Original Code is The Waterfall Java Plugin Module
- * 
+ *  
  * The Initial Developer of the Original Code is Sun Microsystems Inc
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
- *
- * $Id: WaterfallExtension.java,v 1.1 2001/05/10 18:12:27 edburns%acm.org Exp $
- *
  * 
- * Contributor(s): 
- *
- *   Nikolay N. Igotti <inn@sparc.spb.su>
- */
+ * $Id: WaterfallExtension.java,v 1.2 2001/07/12 19:57:54 edburns%acm.org Exp $
+ * 
+ * Contributor(s):
+ * 
+ *     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+ */ 
 
 package sun.jvmp;
 
@@ -66,7 +65,9 @@ class WaterfallExtension implements AccessControlDecider, IDObject
 	m_classname = classname;
 	try 
 	    {
-		classpath = getDefaultClassPath() + classpath;
+	      	// XXX: I dunno, if default should be in classpath 
+	        classpath = //getDefaultClassPath() + 
+		  classpath;
 		URL[] urls = getURLs(classpath);
 		ClassLoader loader =  this.getClass().getClassLoader();
 		
@@ -182,8 +183,8 @@ class WaterfallExtension implements AccessControlDecider, IDObject
 		  url = new URL(classpath.substring(pos));
 		else 
 		  url = new URL(classpath.substring(pos, i));
-		//m_jvm.trace("adding URL: "+ url,  PluggableJVM.LOG_DEBUG);
-		v.add(url);
+		m_jvm.trace("adding URL: "+ url,  PluggableJVM.LOG_DEBUG);
+		v.addElement(url);
 		pos = i+1;
 	    }
 	while (i > -1);
@@ -215,13 +216,14 @@ class WaterfallExtension implements AccessControlDecider, IDObject
 	if (dir == null || !dir.isDirectory()) return "";
 	File[] comps = dir.listFiles();
 	if (comps == null) return "";
-	try {
-	    for (int i=0; i<comps.length; i++)
-		if (comps[i].isFile()) 
-		    sb.append(comps[i].toURL().toString()+"|");
-	} catch(Exception e) {
-	}
-	return sb.toString();
+//      try {
+//  	    for (int i=0; i<comps.length; i++)
+//  		if (comps[i].isFile()) 
+//  		    sb.append(comps[i].toURL().toString()+"|");
+//  	} catch(Exception e) {
+//  	}
+//  	return sb.toString();
+	return "";
     }
 }
 

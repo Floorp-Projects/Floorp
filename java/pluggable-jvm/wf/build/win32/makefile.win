@@ -8,19 +8,19 @@
 # IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 # implied. See the License for the specific language governing
 # rights and limitations under the License.
-# 
+#  
 # The Original Code is The Waterfall Java Plugin Module
-# 
+#  
 # The Initial Developer of the Original Code is Sun Microsystems Inc
 # Portions created by Sun Microsystems Inc are Copyright (C) 2001
 # All Rights Reserved.
-#
-# $Id: makefile.win,v 1.1 2001/05/10 18:12:23 edburns%acm.org Exp $
-#
 # 
-# Contributor(s): 
-#
-#   Nikolay N. Igotti <inn@sparc.spb.su>
+# $Id: makefile.win,v 1.2 2001/07/12 19:57:43 edburns%acm.org Exp $
+# 
+# Contributor(s):
+# 
+#     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+# 
 
 BUILDDIR=.
 ROOTDIR=..\..
@@ -54,7 +54,7 @@ EXTRA_CFLAGS = $(CCDEBUG)  -D$(JVMTYPE) -D$(THREADTYPE) -DXP_WIN32 -DARCH="\"win
 
 CFLAGS  = -nologo -DWIN32 $(PICFLAGS) $(EXTRA_CFLAGS) $(INCLUDES) -WX
 CXXFLAGS = $(CFLAGS) -I$(HOSTINCPATH) -I$(HOSTINCPATH)\glib -I$(HOSTINCPATH)\gdk  -DXP_WIN32
-LIBFLAGS = -nologo -debug 
+LIBFLAGS = -nologo -debug -incremental:NO
 
 PLUGINCSRCDIR = ..\..\src\plugin
 PLUGINMDDIR = ..\..\src\plugin\win32
@@ -103,7 +103,6 @@ HOSTLIBS=$(HOSTLIBPATH)\glib-1.3.lib $(HOSTLIBPATH)\gtk-1.3.lib $(HOSTLIBPATH)\g
 {$(PLUGINMDDIR)}.c{$(OBJDIR)}.obj:
 	@$(CC) $(CFLAGS) -D_JVMP_IMPLEMENTATION -c -Fo$@ $<
 {$(HOSTCPPSRCDIR)}.cpp{$(OBJDIR)}.obj:
-	@echo $<	
 	@$(CXX) $(CXXFLAGS) -c -Fo$@ $<
 {$(MOZEXTSRCDIR)}.c{$(OBJDIR)}.obj:
 	@$(CC) $(CFLAGS)  -c -Fo$@ $<
@@ -115,27 +114,26 @@ HOSTLIBS=$(HOSTLIBPATH)\glib-1.3.lib $(HOSTLIBPATH)\gtk-1.3.lib $(HOSTLIBPATH)\g
 
 all: makefile.win ext plugin
 release: all
-    @ cd ..\java
-    @ $(MAKE) -fmakefile.win release     
-    @ cd ..\win32 
-    @ IF NOT EXIST wfrelease $(MKDIR) wfrelease
-    @ $(DELTREE) wfrelease > NUL
-    @ $(MKDIR) wfrelease\ext
-    @ $(CP) wf.jar          wfrelease > NUL 
-    @ $(CP) $(PLUGIN_DLL)   wfrelease > NUL
-    @ $(CP) $(MOZEXT_DLL)   wfrelease > NUL
-    @ $(CP) $(PLUGIN_NATIVE_DLL) wfrelease > NUL
-    @ $(CP) plugin.policy   wfrelease > NUL
-    @ $(CP) ext\*.jar wfrelease\ext\
-    @ $(ZIP) -r wf-bin.zip wfrelease
-    @ echo "Release is wf-bin.zip"
+	@ cd ..\java
+	@ $(MAKE) -fmakefile.win release
+	@ cd ..\win32 
+	-@ $(DELTREE) wfrelease > NUL
+	@ IF NOT EXIST wfrelease $(MKDIR) wfrelease
+	@ IF NOT EXIST wfrelease\ext $(MKDIR) wfrelease\ext
+	@ $(CP) wf.jar          wfrelease > NUL 
+	@ $(CP) $(PLUGIN_DLL)   wfrelease > NUL
+	@ $(CP) $(MOZEXT_DLL)   wfrelease > NUL
+	@ $(CP) $(PLUGIN_NATIVE_DLL) wfrelease > NUL
+	@ $(CP) plugin.policy   wfrelease > NUL
+	@ $(CP) ext\*.jar wfrelease\ext > NUL
+	@ $(ZIP) -r wf-bin.zip wfrelease
+	@ echo "Release is wf-bin.zip"
 .SUFFIXES:
 .SUFFIXES: .cpp .c .obj      
 
 .cpp.obj:
 	$(CXX) $(CFLAGS) -c $<
-plugin_no_java: plugin_objs plugin_dll plugin_native_dll plugin_exec plugin.policy 
-#$(INSTALLER)
+plugin_no_java: plugin_objs plugin_dll plugin_native_dll plugin_exec plugin.policy $(INSTALLER)
 plugin:	plugin_no_java java_classes 
 plugin_objs:	$(PLUGINOBJS) $(PLUGIN_NATIVE_OBJS)
 plugin_dll: $(PLUGIN_DLL)
@@ -144,7 +142,7 @@ $(MOZEXT_DLL): $(MOZEXTOBJS)
 	@echo linking $@
 	@$(LD) $(LIBFLAGS) -dll -def:wfe_mozilla.def -out:$@ $(MOZEXTOBJS)
 $(TESTEXT_DLL): $(TESTEXTOBJS)
-	@echo linking $<
+	@echo linking $@
 	@$(LD) $(LIBFLAGS) -dll -def:wfe_test.def -out:$(TESTEXT_DLL) $(TESTEXTOBJS)
 $(PLUGIN_DLL): $(PLUGINOBJS)
 	@echo linking $@
@@ -157,8 +155,9 @@ $(PLUGIN_NATIVE_DLL): $(PLUGIN_NATIVE_OBJS)
 plugin.policy: ..\..\java\plugin.policy
 	@$(CP) ..\..\java\plugin.policy . > NUL
 java_classes: 
-	@ cd ..\java
-        $(MAKE) -fmakefile.win all
+	@ echo Making Java classes
+	@ cd ..\java	 
+	@$(MAKE) -fmakefile.win all
 
 
 host_prog:   $(HOSTOBJS) $(HOSTPROG)
@@ -170,15 +169,14 @@ $(HOSTPROG): $(HOSTOBJS)
 
 clean:
 	@echo Removing compiled files..
-	@-del/Q  $(PLUGINOBJS) $(HOSTOBJS) *.exe *.dll *.obj *.ilk *.exp *.lib *.pdb
-	@rm -rf ext
+	@-del/Q  $(PLUGINOBJS) $(HOSTOBJS) *.exe *.dll *.obj
 	@cd ..\java
         @$(MAKE)  -fmakefile.win clean
 
 
 $(INSTALLER): $(INSTOBJS)
-	@echo Compiling installer
-	$(LD)  $(LIBFLAGS) -out:$(INSTALLER) $(INSTOBJS) $(INSTLIBS)
+	@echo Linking installer
+	@$(LD)  $(LIBFLAGS) -out:$(INSTALLER) $(INSTOBJS) $(INSTLIBS)
 
 plugin_exec:
 .PHONY: java_classes clean all host_objs plugin_native_dll plugin_exec release

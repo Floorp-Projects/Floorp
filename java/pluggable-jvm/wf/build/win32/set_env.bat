@@ -8,19 +8,19 @@
 @REM IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
 @REM implied. See the License for the specific language governing
 @REM rights and limitations under the License.
-@REM 
+@REM  
 @REM The Original Code is The Waterfall Java Plugin Module
-@REM 
+@REM  
 @REM The Initial Developer of the Original Code is Sun Microsystems Inc
 @REM Portions created by Sun Microsystems Inc are Copyright (C) 2001
 @REM All Rights Reserved.
-@REM
-@REM $Id: set_env.bat,v 1.1 2001/05/10 18:12:23 edburns%acm.org Exp $
-@REM
 @REM 
-@REM Contributor(s): 
-@REM
-@REM   Nikolay N. Igotti <inn@sparc.spb.su>
+@REM $Id: set_env.bat,v 1.2 2001/07/12 19:57:43 edburns%acm.org Exp $
+@REM 
+@REM Contributor(s):
+@REM 
+@REM     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
+@REM 
 
 @echo off
 echo Setting some variables for WF....

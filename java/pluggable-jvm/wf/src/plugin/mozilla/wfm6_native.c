@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  * 
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -9,19 +9,18 @@
  * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
  * implied. See the License for the specific language governing
  * rights and limitations under the License.
- * 
+ *  
  * The Original Code is The Waterfall Java Plugin Module
- * 
+ *  
  * The Initial Developer of the Original Code is Sun Microsystems Inc
  * Portions created by Sun Microsystems Inc are Copyright (C) 2001
  * All Rights Reserved.
- *
- * $Id: wfm6_native.c,v 1.1 2001/05/10 18:12:36 edburns%acm.org Exp $
- *
  * 
- * Contributor(s): 
- *
- *   Nikolay N. Igotti <inn@sparc.spb.su>
+ * $Id: wfm6_native.c,v 1.2 2001/07/12 19:58:20 edburns%acm.org Exp $
+ * 
+ * Contributor(s):
+ * 
+ *     Nikolay N. Igotti <nikolay.igotti@Sun.Com>
  */
 
 #include <stdlib.h>
@@ -323,7 +322,7 @@ Java_sun_jvmp_mozilla_MozillaPeerFactory_nativeHandleCall
 	   JS object? */
 	static jmethodID  m              = NULL;
 	jobject           jObj           = NULL;
-	fprintf(stderr, "Java_WrapJSObject: %lx %lx\n", 
+	fprintf(stderr, "Java_WrapJSObject: %x %x\n", 
 		call->data.__wrapJSObject.jstid,
 		call->data.__wrapJSObject.jsObject);	
 	if (!m)
@@ -534,9 +533,19 @@ Java_sun_jvmp_mozilla_MozillaPeerFactory_nativeHandleCall
   jException = (*env)->ExceptionOccurred(env);
   if (jException)
       {
-	  fprintf(stderr, "hmm, exception in handle call\n"); 
+       	  fprintf(stderr, "wfm6_native.c: hmm, exception in handle call %d\n", call->type);
+	  /* XXX: this behavior is kinda incorrect, but otherwise
+	   * Mozilla with no LiveConnect just crashes on pages like
+	   * http://javaapplets.com, when call goes in JS->Java direction.
+	   * I have no complete understanding of reason of this crash, maybe 
+	   * incorrect Mozilla code - I'm not sure.
+	   */
+#if 0	  
 	  jException = (*env)->NewLocalRef(env, jException);
 	  call->jException = jException;
+#else
+	  (*env)->ExceptionDescribe(env);
+#endif
 	  (*env)->ExceptionClear(env);
       }  
   return 1;
@@ -744,7 +753,7 @@ Java_sun_jvmp_mozilla_JSObject_JSFinalize
 {
     struct JSObject_CallInfo* pInfo = NULL;
 
-    fprintf(stderr, "Java_sun_jvmp_mozilla_JSObject_JSFinalize: %lx\n", 
+    fprintf(stderr, "Java_sun_jvmp_mozilla_JSObject_JSFinalize: %x\n", 
 	    nativeJSObject);
     if (getBrowserWrapper(env, NULL, jsClass) == NULL)
 	return;
