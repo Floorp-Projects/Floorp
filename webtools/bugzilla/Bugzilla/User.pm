@@ -79,6 +79,7 @@ sub _create {
         'name'           => '',
         'login'          => '',
         'showmybugslink' => 0,
+        'flags'          => {},
     };
     bless ($self, $class);
     return $self unless $cond && $val;
@@ -138,6 +139,19 @@ sub login { $_[0]->{login}; }
 sub email { $_[0]->{login}; }
 sub name { $_[0]->{name}; }
 sub showmybugslink { $_[0]->{showmybugslink}; }
+
+sub set_flags {
+    my $self = shift;
+    while (my $key = shift) {
+        $self->{'flags'}->{$key} = shift;
+    }
+}
+
+sub get_flag {
+    my $self = shift;
+    my $key = shift;
+    return $self->{'flags'}->{$key};
+}
 
 # Generate a string to identify the user by name + email if the user
 # has a name or by email only if she doesn't.
@@ -1108,6 +1122,21 @@ all MySQL supported, this will go away.
 =item C<can_bless>
 
 Returns C<1> if the user can bless at least one group. Otherwise returns C<0>.
+
+=item C<set_flags>
+=item C<get_flag>
+
+User flags are template-accessible user status information, stored in the form
+of a hash.  For an example of use, when the current user is authenticated in
+such a way that they are allowed to log out, the 'can_logout' flag is set to
+true (1).  The template then checks this flag before displaying the "Log Out"
+link.
+
+C<set_flags> is called with any number of key,value pairs.  Flags for each key
+will be set to the specified value.
+
+C<get_flag> is called with a single key name, which returns the associated
+value.
 
 =back
 

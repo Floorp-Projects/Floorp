@@ -36,6 +36,12 @@ sub login_class {
     return $current_login_class;
 }
 
+# can_logout determines if a user may log out
+sub can_logout {
+    return 1 if (login_class && login_class->can_logout);
+    return 0;
+}
+
 sub login {
     my ($class, $type) = @_;
 
@@ -64,6 +70,8 @@ sub login {
     if ($userid) {
         $user = new Bugzilla::User($userid);
 
+        $user->set_flags('can_logout' => $class->can_logout);
+
         # Compat stuff
         $::userid = $userid;
     } else {
@@ -74,7 +82,7 @@ sub login {
 
 sub logout {
     my ($class, $user, $option) = @_;
-    if ($class->login_class) {
+    if (can_logout) {
         $class->login_class->logout($user, $option);
     }
 }

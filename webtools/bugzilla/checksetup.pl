@@ -1810,6 +1810,7 @@ $table{profiles} =
     mybugslink tinyint not null default 1,
     emailflags mediumtext,
     refreshed_when datetime not null,
+    extern_id varchar(64) default null,
     unique(login_name)';
 
 
@@ -3998,6 +3999,10 @@ if (GetFieldDef("group_group_map", "isbless")) {
     $dbh->do("ALTER TABLE group_group_map 
               ADD UNIQUE (member_id, grantor_id, grant_type)");
 }    
+
+# Allow profiles to optionally be linked to a unique identifier in an outside
+# login data source
+AddField("profiles", "extern_id", "varchar(64)");
 
 # If you had to change the --TABLE-- definition in any way, then add your
 # differential change code *** A B O V E *** this comment.

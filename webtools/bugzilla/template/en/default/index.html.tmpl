@@ -66,7 +66,9 @@ function addSidebar() {
   </p><p>
 [% IF user.id %]
   <a href="userprefs.cgi">Change password or user preferences</a><br>
-  <a href="relogin.cgi">Logout [% user.login FILTER html %]</a><br>
+  [% IF user.get_flag('can_logout') %]
+    <a href="relogin.cgi">Logout [% user.login FILTER html %]</a><br>
+  [% END %]
 [% ELSE %]
   <a href="query.cgi?GoAheadAndLogIn=1">Log in to an existing account</a><br>
   [% IF Param('createemailregexp') %]

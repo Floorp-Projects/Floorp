@@ -435,6 +435,36 @@ sub find_languages {
    default => '',
   },
 
+  {
+   name => 'auth_env_id',
+   desc    => 'Environment variable used by external authentication system ' .
+              'to store a unique identifier for each user.  Leave it blank ' .
+              'if there isn\'t one or if this method of authentication ' .
+              'is not being used.',
+   type    => 't',
+   default => '',
+  },
+
+  {
+   name    => 'auth_env_email',
+   desc    => 'Environment variable used by external authentication system ' .
+              'to store each user\'s email address.  This is a required ' .
+              'field for environmental authentication.  Leave it blank ' .
+              'if you are not going to use this feature.',
+   type    => 't',
+   default => '',
+  },
+
+  {
+   name    => 'auth_env_realname',
+   desc    => 'Environment variable used by external authentication system ' .
+              'to store the user\'s real name.  Leave it blank if there ' .
+              'isn\'t one or if this method of authentication is not being ' .
+              'used.',
+   type    => 't',
+   default => '',
+  },
+
   # XXX in the future:
   #
   # user_verify_class and user_info_class should have choices gathered from
@@ -455,9 +485,14 @@ sub find_languages {
               <dd>
                 Asks for username and password via CGI form interface.
               </dd>
-             </dl>',
+              <dt>Env</dt>
+              <dd>
+                Info for a pre-authenticated user is passed in system
+                environment variables.
+              </dd>
+            </dl>',
    type => 's',
-   choices => [ 'CGI' ],
+   choices => [ 'CGI', 'Env', 'Env,CGI' ],
    default => 'CGI',
    checker => \&check_multi
   },

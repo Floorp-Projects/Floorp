@@ -186,6 +186,9 @@ sub login {
                                           type => $type, });
 }
 
+# This auth style allows the user to log out.
+sub can_logout { return 1; }
+
 # Logs user out, according to the option provided; this consists of
 # removing entries from logincookies for the specified $user.
 sub logout {
