@@ -151,11 +151,15 @@ static NS_METHOD ImageRegisterProc(nsIComponentManager *aCompMgr,
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  for (int i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++) {
+  for (unsigned i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++) {
     catMan->AddCategoryEntry("Gecko-Content-Viewers", gImageMimeTypes[i],
                              "@mozilla.org/content/document-loader-factory;1",
                              PR_TRUE, PR_TRUE, nsnull);
   }
+
+  catMan->AddCategoryEntry("content-sniffing-services", "@mozilla.org/image/loader;1",
+                           "@mozilla.org/image/loader;1", PR_TRUE, PR_TRUE,
+                           nsnull);
   return NS_OK;
 }
 
@@ -167,7 +171,7 @@ static NS_METHOD ImageUnregisterProc(nsIComponentManager *aCompMgr,
   nsCOMPtr<nsICategoryManager> catMan(do_GetService(NS_CATEGORYMANAGER_CONTRACTID, &rv));
   if (NS_FAILED(rv))
     return rv;
-  for (int i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++)
+  for (unsigned i = 0; i < sizeof(gImageMimeTypes)/sizeof(*gImageMimeTypes); i++)
     catMan->DeleteCategoryEntry("Gecko-Content-Viewers", gImageMimeTypes[i], PR_TRUE);
 
   return NS_OK;

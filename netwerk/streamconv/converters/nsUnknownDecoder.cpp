@@ -47,7 +47,9 @@
 #include "nsXPIDLString.h"
 #include "nsIPrefService.h"
 #include "nsIPrefBranch.h"
-#include "imgILoader.h"
+#include "nsICategoryManager.h"
+#include "nsISupportsPrimitives.h"
+#include "nsIContentSniffer.h"
 
 #include "nsCRT.h"
 
@@ -346,7 +348,7 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest)
     }
   }
 
-  if (SniffForImageMimeType(aRequest)) {
+  if (TryContentSniffers(aRequest)) {
     return;
   }
 
@@ -363,18 +365,46 @@ void nsUnknownDecoder::DetermineContentType(nsIRequest* aRequest)
   LastDitchSniff(aRequest);
 }
 
-PRBool nsUnknownDecoder::SniffForImageMimeType(nsIRequest* aRequest)
+PRBool nsUnknownDecoder::TryContentSniffers(nsIRequest* aRequest)
 {
-  // Just ask libpr0n
-  nsCOMPtr<imgILoader> loader(do_GetService("@mozilla.org/image/loader;1"));
-  if (!loader) return PR_FALSE;
+  // Enumerate content sniffers
+  nsCOMPtr<nsICategoryManager> catMan(do_GetService("@mozilla.org/categorymanager;1"));
+  if (!catMan) {
+    return PR_FALSE;
+  }
 
-  char* temp;
-  nsresult rv = loader->SupportImageWithContents(mBuffer, mBufferLen, &temp);
-  if (NS_FAILED(rv) || !temp) return PR_FALSE;
+  nsCOMPtr<nsISimpleEnumerator> sniffers;
+  catMan->EnumerateCategory("content-sniffing-services", getter_AddRefs(sniffers));
+  if (!sniffers) {
+    return PR_FALSE;
+  }
 
-  mContentType.Adopt(temp);
-  return PR_TRUE;
+  PRBool hasMore;
+  while (NS_SUCCEEDED(sniffers->HasMoreElements(&hasMore)) && hasMore) {
+    nsCOMPtr<nsISupports> elem;
+    sniffers->GetNext(getter_AddRefs(elem));
+    NS_ASSERTION(elem, "No element even though hasMore returned true!?");
+
+    nsCOMPtr<nsISupportsCString> sniffer_id(do_QueryInterface(elem));
+    NS_ASSERTION(sniffer_id, "element is no nsISupportsCString!?");
+    nsCAutoString contractid;
+    nsresult rv = sniffer_id->GetData(contractid);
+    if (NS_FAILED(rv)) {
+      continue;
+    }
+
+    nsCOMPtr<nsIContentSniffer> sniffer(do_GetService(contractid.get()));
+    if (!sniffer) {
+      continue;
+    }
+
+    rv = sniffer->GetMIMETypeFromContent((const PRUint8*)mBuffer, mBufferLen, mContentType);
+    if (NS_SUCCEEDED(rv)) {
+      return PR_TRUE;
+    }
+  }
+
+  return PR_FALSE;
 }
 
 PRBool nsUnknownDecoder::SniffForHTML(nsIRequest* aRequest)

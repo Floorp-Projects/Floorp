@@ -88,7 +88,7 @@ protected:
   
   // Various sniffer functions.  Returning PR_TRUE means that a type
   // was determined; PR_FALSE means no luck.
-  PRBool SniffForImageMimeType(nsIRequest* aRequest);
+  PRBool TryContentSniffers(nsIRequest* aRequest);
   PRBool SniffForHTML(nsIRequest* aRequest);
   PRBool SniffForXML(nsIRequest* aRequest);
 

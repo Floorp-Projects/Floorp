@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "imgILoader.h"
+#include "nsIContentSniffer.h"
 
 #ifdef LOADER_THREADSAFE
 #include "prlock.h"
@@ -57,16 +58,17 @@ class nsILoadGroup;
     {0xa5, 0xb8, 0x95, 0x1f, 0x13, 0xc8, 0x46, 0xf7} \
 }
 
-class imgLoader : public imgILoader
+class imgLoader : public imgILoader, public nsIContentSniffer
 {
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_IMGILOADER
+  NS_DECL_NSICONTENTSNIFFER
 
   imgLoader();
   virtual ~imgLoader();
 
-  static nsresult GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, char** aContentType);
+  static nsresult GetMimeTypeFromContent(const char* aContents, PRUint32 aLength, nsACString& aContentType);
 
 private:
   nsresult CreateNewProxyForRequest(imgRequest *aRequest, nsILoadGroup *aLoadGroup,
