@@ -213,7 +213,11 @@ XPCCallContext::GetMember() const
 inline JSBool
 XPCCallContext::HasInterfaceAndMember() const
 {
-    return mState >= HAVE_NAME && mInterface && mMember;
+    return mState >= HAVE_NAME && mInterface && (mMember
+#ifdef XPC_IDISPATCH_SUPPORT
+        || mIDispatchMember
+#endif
+        );
 }
 
 inline jsval
@@ -558,6 +562,52 @@ inline void XPCNativeSet::ASSERT_NotMarked()
 
 /***************************************************************************/
 
+inline
+JSObject* XPCWrappedNativeTearOff::GetJSObject() const 
+{
+#ifdef XPC_IDISPATCH_SUPPORT
+    return IsIDispatch() ? GetIDispatchInfo()->GetJSObject() : mJSObject; 
+#else
+    return mJSObject;
+#endif
+}
+
+inline
+void XPCWrappedNativeTearOff::SetJSObject(JSObject*  JSObj)                
+{
+#ifdef XPC_IDISPATCH_SUPPORT
+    if(IsIDispatch())
+        GetIDispatchInfo()->SetJSObject(JSObj);
+    else
+#endif
+        mJSObject = JSObj;
+}
+
+#ifdef XPC_IDISPATCH_SUPPORT
+inline void
+XPCWrappedNativeTearOff::SetIDispatch(JSContext* cx) 
+{
+    mJSObject = (JSObject*)(((jsword)
+        ::XPCDispInterface::NewInstance(cx, 
+                                          mNative)) | 2); 
+}
+
+inline XPCDispInterface* 
+XPCWrappedNativeTearOff::GetIDispatchInfo() const 
+{
+    return NS_REINTERPRET_CAST(XPCDispInterface*,
+                               (((jsword)mJSObject) & ~JSOBJECT_MASK));
+}
+
+inline JSBool 
+XPCWrappedNativeTearOff::IsIDispatch() const 
+{
+    return (JSBool)(((jsword)mJSObject) & IDISPATCH_BIT);
+}
+
+#endif
+/***************************************************************************/
+
 inline JSBool
 XPCWrappedNative::HasInterfaceNoQI(XPCNativeInterface* aInterface)
 {
@@ -615,6 +665,20 @@ xpc_ForcePropertyResolve(JSContext* cx, JSObject* obj, jsval idval)
     if(prop)
         OBJ_DROP_PROPERTY(cx, obj2, prop);
     return JS_TRUE;
+}
+
+inline
+JSBool ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
+{
+    XPCThrower::ThrowBadParam(rv, paramNum, ccx);
+    return JS_FALSE;
+}
+
+inline 
+void ThrowBadResult(nsresult result, XPCCallContext& ccx)
+{
+    XPCThrower::ThrowBadResult(NS_ERROR_XPC_NATIVE_RETURNED_FAILURE,
+                               result, ccx);
 }
 
 /***************************************************************************/

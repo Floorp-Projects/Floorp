@@ -242,3 +242,43 @@ XPCThrower::ThrowExceptionObject(JSContext* cx, nsIException* e)
     }
     return success;
 }
+
+#ifdef XPC_IDISPATCH_SUPPORT
+// static
+void
+XPCThrower::ThrowCOMError(JSContext* cx, HRESULT COMErrorCode)
+{
+    IErrorInfo * pError;
+    // Get the current COM error object
+    HRESULT result = GetErrorInfo(0, &pError);
+    if(SUCCEEDED(result) && pError)
+    {
+        // Build an error message from the COM error object
+        nsCAutoString msg;
+        BSTR bstrDesc = nsnull;
+        BSTR bstrSource = nsnull;
+        if(SUCCEEDED(pError->GetSource(&bstrSource)) && bstrSource)
+        {
+            msg = NS_STATIC_CAST(const char *,_bstr_t(bstrSource, FALSE));
+            msg += " : ";
+        }
+        char buffer[9];
+        sprintf(buffer, "%0X", COMErrorCode);
+        msg += buffer;
+        if(SUCCEEDED(pError->GetDescription(&bstrDesc)) && bstrDesc)
+        {
+            msg += " - ";
+            msg += NS_STATIC_CAST(const char *,_bstr_t(bstrDesc, FALSE));
+        }
+        XPCThrower::BuildAndThrowException(cx, NS_ERROR_XPC_COM_ERROR, msg.get());
+    }
+    else
+    {
+        // No error object, so just report the result
+        char buffer[48];
+        sprintf(buffer, "COM Error Result = %0X", COMErrorCode);
+        XPCThrower::BuildAndThrowException(cx, NS_ERROR_XPC_COM_UNKNOWN, buffer);
+    }
+}
+
+#endif

@@ -43,7 +43,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(nsXPCWrappedJSClass, nsIXPCWrappedJSClass)
 // the value of this variable is never used - we use its address as a sentinel
 static uint32 zero_methods_descriptor;
 
-static inline JSExceptionState* DoPreScriptEvaluated(JSContext* cx)
+JSExceptionState* xpc_DoPreScriptEvaluated(JSContext* cx)
 {
     if(JS_GetContextThread(cx))
         JS_BeginRequest(cx);
@@ -67,7 +67,7 @@ static inline JSExceptionState* DoPreScriptEvaluated(JSContext* cx)
     return nsnull;
 }
 
-static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
+void xpc_DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
 {
     if(state)
         JS_RestoreExceptionState(cx, state);
@@ -100,7 +100,7 @@ static inline void DoPostScriptEvaluated(JSContext* cx, JSExceptionState* state)
 
 // It turns out that some errors may be not worth reporting. So, this
 // function is factored out to manage that.
-static inline JSBool IsReportableErrorCode(nsresult code)
+JSBool xpc_IsReportableErrorCode(nsresult code)
 {
     if(NS_SUCCEEDED(code))
         return JS_FALSE;
@@ -249,7 +249,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
 
     // OK, it looks like we'll be calling into JS code.
 
-    JSExceptionState* saved_exception = DoPreScriptEvaluated(cx);
+    JSExceptionState* saved_exception = xpc_DoPreScriptEvaluated(cx);
 
     // XXX we should install an error reporter that will sent reports to
     // the JS error console service.
@@ -266,7 +266,7 @@ nsXPCWrappedJSClass::CallQueryInterfaceOnJSObject(XPCCallContext& ccx,
         success = JS_ValueToObject(cx, retval, &retObj);
     JS_SetErrorReporter(cx, older);
 
-    DoPostScriptEvaluated(cx, saved_exception);
+    xpc_DoPostScriptEvaluated(cx, saved_exception);
 
     return success ? retObj : nsnull;
 }
@@ -300,14 +300,14 @@ nsXPCWrappedJSClass::GetNamedPropertyAsVariant(XPCCallContext& ccx,
     jsid id;
     nsresult rv;
 
-    JSExceptionState* saved_exception = DoPreScriptEvaluated(cx);
+    JSExceptionState* saved_exception = xpc_DoPreScriptEvaluated(cx);
     JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
 
     ok = JS_ValueToId(cx, aName, &id) && 
          GetNamedPropertyAsVariantRaw(ccx, aJSObj, id, aResult, &rv);
 
     JS_SetErrorReporter(cx, older);
-    DoPostScriptEvaluated(cx, saved_exception);
+    xpc_DoPostScriptEvaluated(cx, saved_exception);
 
     return ok ? NS_OK : NS_FAILED(rv) ? rv : NS_ERROR_FAILURE;
 }
@@ -327,7 +327,7 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
     int i;
 
     // Saved state must be restored, all exits through 'out'...
-    JSExceptionState* saved_exception = DoPreScriptEvaluated(cx);
+    JSExceptionState* saved_exception = xpc_DoPreScriptEvaluated(cx);
     JSErrorReporter older = JS_SetErrorReporter(cx, nsnull);
 
     idArray = JS_Enumerate(cx, aJSObj);
@@ -380,7 +380,7 @@ out:
     if(idArray)
         JS_DestroyIdArray(cx, idArray);
     JS_SetErrorReporter(cx, older);
-    DoPostScriptEvaluated(cx, saved_exception);
+    xpc_DoPostScriptEvaluated(cx, saved_exception);
 
     return retval;
 }
@@ -512,6 +512,13 @@ nsXPCWrappedJSClass::DelegatedQueryInterface(nsXPCWrappedJS* self,
         return NS_OK;
     }
 
+#ifdef XPC_IDISPATCH_SUPPORT
+    // If IDispatch is enabled and we're QI'ing to IDispatch
+    else if(nsXPConnect::IsIDispatchEnabled() && aIID.Equals(NSID_IDISPATCH))
+    {
+        return XPCIDispatchExtension::IDispatchQIWrappedJS(self, aInstancePtr);
+    }
+#endif
     if(aIID.Equals(NS_GET_IID(nsIPropertyBag)))
     {
         // We only want to expose one implementation from our aggregate.
@@ -597,7 +604,7 @@ nsXPCWrappedJSClass::GetRootJSObject(XPCCallContext& ccx, JSObject* aJSObj)
     return result ? result : aJSObj;
 }
 
-JS_STATIC_DLL_CALLBACK(void)
+void JS_DLL_CALLBACK
 xpcWrappedJSErrorReporter(JSContext *cx, const char *message,
                           JSErrorReport *report)
 {
@@ -861,7 +868,7 @@ nsXPCWrappedJSClass::CallMethod(nsXPCWrappedJS* wrapper, uint16 methodIndex,
     if(!cx || !xpcc || !IsReflectable(methodIndex))
         goto pre_call_clean_up;
 
-    saved_exception = DoPreScriptEvaluated(cx);
+    saved_exception = xpc_DoPreScriptEvaluated(cx);
 
     xpcc->SetPendingResult(pending_result);
     xpcc->SetException(nsnull);
@@ -1252,7 +1259,7 @@ pre_call_clean_up:
         nsresult e_result;
         if(NS_SUCCEEDED(xpc_exception->GetResult(&e_result)))
         {
-            if(IsReportableErrorCode(e_result))
+            if(xpc_IsReportableErrorCode(e_result))
             {
 #ifdef DEBUG
                 static const char line[] =
@@ -1568,7 +1575,7 @@ done:
     if(cx)
     {
         JS_SetErrorReporter(cx, older);
-        DoPostScriptEvaluated(cx, saved_exception);
+        xpc_DoPostScriptEvaluated(cx, saved_exception);
     }
 
 #ifdef DEBUG_stats_jband

@@ -209,7 +209,19 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
     NS_ASSERTION(!Scope->GetRuntime()->GetThreadRunningGC(), 
                  "XPCWrappedNative::GetNewOrUsed called during GC");
 
-    nsCOMPtr<nsISupports> identity(do_QueryInterface(Object));
+    nsCOMPtr<nsISupports> identity;
+#ifdef XPC_IDISPATCH_SUPPORT
+    // XXX This is done for the benefit of some warped COM implementations
+    // where QI(IID_IUnknown, a.b) == QI(IID_IUnknown, a). If someone passes
+    // in a pointer that hasn't been QI'd to IDispatch properly this could
+    // create multiple wrappers for the same object, creating a fair bit of
+    // confusion.
+    if(!nsXPConnect::IsIDispatchEnabled() && Interface->GetIID()->Equals(NSID_IDISPATCH))
+        identity = Object;
+    else
+#endif
+        identity = do_QueryInterface(Object);
+
     if(!identity)
     {
         NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
@@ -284,7 +296,7 @@ XPCWrappedNative::GetNewOrUsed(XPCCallContext& ccx,
             XPCWrappedNativeScope* betterScope =
                 XPCWrappedNativeScope::FindInJSObjectScope(ccx, parent);
             if(betterScope != Scope)
-                return GetNewOrUsed(ccx, Object, betterScope, Interface,
+                return GetNewOrUsed(ccx, identity, betterScope, Interface,
                                     resultWrapper);
         }
 
@@ -419,9 +431,21 @@ XPCWrappedNative::GetUsedOnly(XPCCallContext& ccx,
                               XPCNativeInterface* Interface,
                               XPCWrappedNative** resultWrapper)
 {
-    nsCOMPtr<nsISupports> identity(do_QueryInterface(Object));
+    NS_ASSERTION(Object, "XPCWrappedNative::GetUsedOnly was called with a null Object");
+    nsCOMPtr<nsISupports> identity;
+#ifdef XPC_IDISPATCH_SUPPORT
+    // XXX See GetNewOrUsed for more info on this
+    if(!nsXPConnect::IsIDispatchEnabled() && Interface->GetIID()->Equals(NSID_IDISPATCH))
+        identity = Object;
+    else
+#endif
+        identity = do_QueryInterface(Object);
+
     if(!identity)
+    {
+        NS_ERROR("This XPCOM object fails in QueryInterface to nsISupports!");
         return NS_ERROR_FAILURE;
+    }
 
     XPCWrappedNative* wrapper;
     Native2WrappedNativeMap* map = Scope->GetWrappedNativeMap();
@@ -1413,7 +1437,13 @@ XPCWrappedNative::InitTearOff(XPCCallContext& ccx,
 
     aTearOff->SetInterface(aInterface);
     aTearOff->SetNative(obj);
-
+#ifdef XPC_IDISPATCH_SUPPORT
+    // Are we building a tearoff for IDispatch?
+    if(ccx.GetXPConnect()->IsIDispatchEnabled() && iid->Equals(NSID_IDISPATCH))
+    {
+        aTearOff->SetIDispatch(ccx);
+    }  
+#endif
     if(needJSObject && !InitTearOffJSObject(ccx, aTearOff))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1442,18 +1472,6 @@ static JSBool Throw(uintN errNum, XPCCallContext& ccx)
 {
     XPCThrower::Throw(errNum, ccx);
     return JS_FALSE;
-}
-
-static JSBool ThrowBadParam(nsresult rv, uintN paramNum, XPCCallContext& ccx)
-{
-    XPCThrower::ThrowBadParam(rv, paramNum, ccx);
-    return JS_FALSE;
-}
-
-static void ThrowBadResult(nsresult result, XPCCallContext& ccx)
-{
-    XPCThrower::ThrowBadResult(NS_ERROR_XPC_NATIVE_RETURNED_FAILURE,
-                               result, ccx);
 }
 
 static JSBool ReportOutOfMemory(XPCCallContext& ccx)

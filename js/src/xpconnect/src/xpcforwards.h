@@ -90,4 +90,11 @@ class AutoMarkingPtr;
 class xpcProperty;
 class xpcPropertyBagEnumerator;
 
+#ifdef XPC_IDISPATCH_SUPPORT
+// Forwards
+class XPCDispInterface;
+struct IDispatch;
+#endif
+
+
 #endif /* xpcforwards_h___ */
