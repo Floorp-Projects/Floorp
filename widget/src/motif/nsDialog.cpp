@@ -143,8 +143,9 @@ void nsDialog::SetLabel(const nsString& aText)
 {
   NS_ALLOC_STR_BUF(label, aText, 256);
   XmString str;
+  // XXX What is up with this, why does label work better than str?
   str = XmStringCreate(label, XmFONTLIST_DEFAULT_TAG);
-  XtVaSetValues(mWidget, XmNlabelString, str, nsnull);
+  XtVaSetValues(mShell, XmNtitle, label, nsnull);
   NS_FREE_STR_BUF(label);
   XmStringFree(str);
 
@@ -158,7 +159,7 @@ void nsDialog::SetLabel(const nsString& aText)
 void nsDialog::GetLabel(nsString& aBuffer)
 {
   XmString str;
-  XtVaGetValues(mWidget, XmNlabelString, &str, nsnull);
+  XtVaGetValues(mShell, XmNtitle, &str, nsnull);
   char * text;
   if (XmStringGetLtoR(str, XmFONTLIST_DEFAULT_TAG, &text)) {
     aBuffer.SetLength(0);
