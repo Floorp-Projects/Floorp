@@ -449,7 +449,7 @@ void nsImageGTK::UpdateCachedImage()
                                    GDK_RGB_DITHER_MAX,
                                    mImageBits + mRowBytes*rect->y + 3*rect->x,
                                    mRowBytes,
-                                   rect->x, rect->y);
+                                   0, 0);
     }
 
     if (mAlphaDepth==1) {
