@@ -1231,7 +1231,6 @@ NS_NewBlockFrame(nsIFrame*& aNewFrame, PRUint32 aFlags)
 }
 
 nsBlockFrame::nsBlockFrame()
-  : nsBlockFrameSuper()
 {
   // XXX for now these are a memory leak
   if (nsnull == gFloaterAtom) {
