@@ -38,6 +38,9 @@
 #ifndef NSDEFS_H
 #define NSDEFS_H
 
+#ifdef _DEBUG
+#define INCL_WINERRORS
+#endif
 #include <os2.h>
 #ifdef XP_OS2_VACPP
 #include <builtin.h>
@@ -50,7 +53,7 @@
 #endif  
 
 #ifdef _DEBUG
-  #define VERIFY(exp)                 ((exp) ? 0: (WinGetLastError((HAB)0), BREAK_TO_DEBUGGER))
+  #define VERIFY(exp)                 ((exp) ? (void)0: (WinGetLastError((HAB)0), BREAK_TO_DEBUGGER))
 #else   // !_DEBUG
   #define VERIFY(exp)                 (exp)
 #endif  // !_DEBUG
