@@ -81,7 +81,7 @@ interface nsIBrowserHistory : nsISupports
      * lastPageVisited
      * the most recently visited page
      */
-    readonly attribute string lastPageVisited;
+    attribute string lastPageVisited;
 
 
     /**

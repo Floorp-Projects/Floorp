@@ -327,7 +327,6 @@ protected:
   // misc unrelated stuff
   //
   nsCOMPtr<nsIStringBundle> mBundle;
-  nsresult SaveLastPageVisited(const char *);
 
   // pseudo-constants. although the global history really is a
   // singleton, we'll use this metaphor to be consistent.
