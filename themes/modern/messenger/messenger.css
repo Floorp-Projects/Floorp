@@ -562,6 +562,11 @@ spring.spacer {
   height: 5px;
 }
 
+/* ::::: Search Dialog adjustments ::::: */
+#fileMessageButton {
+   margin: 0px 0px 0px 0px;
+ }
+
 /* ::::: move to content :::::: */
 
 dummy.usesMailWidgets {
