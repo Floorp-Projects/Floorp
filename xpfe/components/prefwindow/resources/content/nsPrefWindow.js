@@ -30,11 +30,9 @@ const _DEBUG = false;
 function initPanel ( aPrefTag )
   {
     if( hPrefWindow )
-      hPrefWindow.onpageload( aPrefTag )
-    else {
-      dump("*** queueing up a panel...\n");
+      hPrefWindow.onpageload( aPrefTag );
+    else
       window.queuedTag = aPrefTag;
-    }
   } 
  
 window.doneLoading = false; 

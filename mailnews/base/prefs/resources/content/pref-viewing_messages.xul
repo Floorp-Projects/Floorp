@@ -15,7 +15,7 @@
 
   <script language="javascript">
   <![CDATA[
-    _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
+    var _elementIDs = ["mailFixedWidthMessages", "mailQuotedStyle", "mailQuotedSize", "wrapLongLines", "displayGlyph", "mailCitationColor", "sendDefaultCharsetList", "forceCharsetOverride"];
 
     function Startup()
     {
@@ -36,9 +36,6 @@
       var colorRef = aPicker.nextSibling; 
       colorRef.setAttribute("value", aPicker.color );
     }
-
-    dump("*** foopy noopy\n");
-
   ]]>
   </script>
         
