@@ -107,13 +107,6 @@ PhDrawContext_t *nsToolkit::GetDefaultPhotonDrawContext()
   return nsToolkit::mDefaultPhotonDrawContext;
 }
 
-PhPoint_t nsToolkit::GetConsoleOffset( ) {
-  PhRect_t  console;
-	if( PhWindowQueryVisible( Ph_QUERY_GRAPHICS, 0, 1, &console ) == 0 )
-		return(PhPoint_t)  {console.ul.x, console.ul.y};
-   return(PhPoint_t)  {0,0};
-	}
-
 //-------------------------------------------------------------------------
 //
 // Return the nsIToolkit for the current thread.  If a toolkit does not
@@ -162,5 +155,3 @@ NS_METHOD NS_GetCurrentToolkit(nsIToolkit* *aResult)
 
   return rv;
 }
-
-

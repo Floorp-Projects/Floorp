@@ -53,7 +53,28 @@ public:
   virtual ~nsAppShell();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSIAPPSHELL
+
+	NS_IMETHOD Create(int *argc, char **argv);
+	NS_IMETHOD Run(void);
+	NS_IMETHOD Spinup(void);
+	NS_IMETHOD Spindown(void);
+	NS_IMETHOD ListenToEventQueue(nsIEventQueue * aQueue, PRBool aListen);
+	inline NS_IMETHOD GetNativeEvent(PRBool & aRealEvent, void * & aEvent)
+		{
+		aRealEvent = PR_FALSE;
+		aEvent = 0;
+		return NS_OK;
+		}
+
+	inline NS_IMETHOD DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
+		{
+		PtProcessEvent();
+//		PtFlush();
+		return NS_OK;
+		}
+
+	NS_IMETHOD SetDispatchListener(nsDispatchListener * aDispatchListener);
+	NS_IMETHOD Exit(void);
 
 public:
   static PRBool  gExitMainLoop;

@@ -222,9 +222,12 @@ nsresult nsLookAndFeel::NativeGetColor(const nsColorID aID, nscolor &aColor)
   
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 {
+
+
   nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
   if (NS_SUCCEEDED(res))
       return res;
+
   res = NS_OK;
 
   /*
@@ -298,9 +301,21 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
   case eMetric_MultiLineCaretWidth:
     aMetric = 2;
     break;
+	case eMetric_ShowCaretDuringSelection:
+		aMetric = 0;
+		break;
+	case eMetric_SelectTextfieldsOnKeyFocus:
+		// Select textfield content when focused by kbd
+		// used by nsEventStateManager::sTextfieldSelectModel
+		aMetric = 1;
+		break;
   case eMetric_SubmenuDelay:
     aMetric = 200;
     break;
+	case eMetric_MenusCanOverlapOSBar:
+		// we want XUL popups to be able to overlap the task bar.
+		aMetric = 1;
+		break;
 	case eMetric_DragFullWindow:
 		aMetric = 1;
 		break;
@@ -321,7 +336,7 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
     break;
 
   default:
-    aMetric = -1;
+    aMetric = 0;
     res     = NS_ERROR_FAILURE;
   }
 
@@ -330,9 +345,11 @@ NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricID aID, PRInt32 & aMetric)
 
 NS_IMETHODIMP nsLookAndFeel::GetMetric(const nsMetricFloatID aID, float & aMetric)
 {
+
   nsresult res = nsXPLookAndFeel::GetMetric(aID, aMetric);
   if (NS_SUCCEEDED(res))
       return res;
+
   res = NS_OK;
 
   switch (aID) {

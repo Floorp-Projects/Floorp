@@ -67,20 +67,6 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kCmdLineServiceCID, NS_COMMANDLINE_SERVICE_CID);
 static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
-static int
-our_photon_input_add (int               fd,
-                      PtFdProc_t        event_processor_callback,
-                      void		         *data)
-{
-  int err = PtAppAddFd( NULL, fd, (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN ), event_processor_callback, data );
-  if (err != 0)
-  {
-    NS_ASSERTION(0,"nsAppShell::our_photon_input_add Error calling PtAppAddFD\n");
-  }
-
-  return (err);
-}
-
 //-------------------------------------------------------------------------
 //
 // nsAppShell constructor
@@ -284,29 +270,9 @@ NS_IMETHODIMP nsAppShell::Run()
 NS_METHOD nsAppShell::Exit()
 {
   gExitMainLoop = PR_TRUE;
-
   return NS_OK;
 }
 
-
-NS_METHOD nsAppShell::GetNativeEvent(PRBool &aRealEvent, void *&aEvent)
-{
-  aRealEvent = PR_FALSE;
-  aEvent = 0;
-
-  return NS_OK;
-}
-
-
-NS_METHOD nsAppShell::DispatchNativeEvent(PRBool aRealEvent, void * aEvent)
-{
-  if (!mEventQueue)
-    return NS_ERROR_NOT_INITIALIZED;  
-
-	PtProcessEvent();
-	PtFlush();
-  return NS_OK;
-}
 
 #define NUMBER_HASH_KEY(_num) ((PLHashNumber) _num)
 
@@ -334,10 +300,9 @@ NS_IMETHODIMP nsAppShell::ListenToEventQueue(nsIEventQueue *aQueue,
 
     /* only add if we arn't already in the table */
     if (!PL_HashTableLookup(sQueueHashTable, (void *)(key))) {
-      PRInt32 tag;
-      tag = our_photon_input_add(aQueue->GetEventQueueSelectFD(),
-                              event_processor_callback,
-                              aQueue);
+			PRInt32 tag = PtAppAddFd( NULL, aQueue->GetEventQueueSelectFD(), (Pt_FD_READ | Pt_FD_NOPOLL | Pt_FD_DRAIN ),
+							event_processor_callback, aQueue );
+
       if (tag >= 0) {
         PL_HashTableAdd(sQueueHashTable, (void *)(key), (void *)(key));
       }

@@ -75,53 +75,63 @@ public:
 
   NS_IMETHOD           Scroll(PRInt32 aDx, PRInt32 aDy, nsRect *aClipRect);
   NS_IMETHOD           ScrollWidgets(PRInt32 aDx, PRInt32 aDy);
-  NS_IMETHOD           ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy);
+  inline NS_IMETHOD    ScrollRect(nsRect &aSrcRect, PRInt32 aDx, PRInt32 aDy)
+		{
+		NS_WARNING("nsWindow::ScrollRect Not Implemented\n");
+		return NS_OK;
+		}
 
   NS_IMETHOD           SetTitle(const nsString& aTitle);
-  NS_IMETHOD           CaptureMouse(PRBool aCapture);
  
-  NS_IMETHOD           ConstrainPosition(PRBool aAllowSlop,
-                                         PRInt32 *aX, PRInt32 *aY);
   NS_IMETHOD           Move(PRInt32 aX, PRInt32 aY);
 
   NS_IMETHOD           Resize(PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint);
-  NS_IMETHOD           Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth,
-                              PRInt32 aHeight, PRBool aRepaint);
+  NS_IMETHOD           Resize(PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight, PRBool aRepaint)
+		{
+		Move(aX,aY);
+		Resize(aWidth,aHeight,aRepaint);
+		return NS_OK;
+		}
 
-  NS_IMETHOD           BeginResizingChildren(void);
-  NS_IMETHOD           EndResizingChildren(void);
 
   NS_IMETHOD           CaptureRollupEvents(nsIRollupListener * aListener,
                                            PRBool aDoCapture,
                                            PRBool aConsumeRollupEvent);
-  NS_IMETHOD           Invalidate(PRBool aIsSynchronous);
-  NS_IMETHOD           Invalidate(const nsRect &aRect, PRBool aIsSynchronous);
-  NS_IMETHOD           InvalidateRegion(const nsIRegion* aRegion, PRBool aIsSynchronous);
-  NS_IMETHOD           SetBackgroundColor(const nscolor &aColor);
-  NS_IMETHOD           SetFocus(PRBool aRaise);
-  NS_IMETHOD           GetAttention(void);
 
-  NS_IMETHOD           Update(void);
-  
+  inline NS_IMETHOD    GetAttention(void)
+		{
+/* ATENTIE */ printf( "\n\n\n!!!!!!!!!!!!! GetAttention !!!!!!!!!!!!!!!!!!!!!!\n\n\n\n" );
+		if( mWidget ) PtWindowToFront( mWidget );
+		return NS_OK;
+		}
+
   virtual PRBool       IsChild() const;
 
 
   // Utility methods
-  virtual PRBool        OnPaint(nsPaintEvent &event);
-  PRBool                OnKey(nsKeyEvent &aEvent);
-  PRBool                DispatchFocus(nsGUIEvent &aEvent);
-  virtual PRBool        OnScroll(nsScrollbarEvent & aEvent, PRUint32 cPos);
-  NS_IMETHOD            SetColorMap(nsColorMap *aColorMap);
-  NS_IMETHOD            GetClientBounds( nsRect &aRect );
+  inline PRBool         OnKey(nsKeyEvent &aEvent)
+		{
+		if( mEventCallback ) return DispatchWindowEvent(&aEvent);
+		return PR_FALSE;
+		}
+
+  inline NS_IMETHOD			GetClientBounds( nsRect &aRect )
+		{
+		aRect.x = 0;
+		aRect.y = 0;
+		aRect.width = mBounds.width;
+		aRect.height = mBounds.height;
+		return NS_OK;
+		}
+
   NS_IMETHOD            SetModal(PRBool aModal);
-  void                  ScreenToWidget( PhPoint_t &pt );
 
  // Native draw function... like doPaint()
  static void            RawDrawFunc( PtWidget_t *pWidget, PhTile_t *damage );
 
- nsIRegion              *GetRegion();
+ inline nsIRegion              *GetRegion();
 
-protected:
+private:
   // this is the "native" destroy code that will destroy any
   // native windows / widgets for this logical widget
   virtual void          DestroyNative(void);
@@ -135,24 +145,18 @@ protected:
 	static int						OpeningHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
 	static int            EvInfo( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
   static int            WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t *cbinfo );
-  PRBool                HandleEvent( PtWidget_t *widget, PtCallbackInfo_t* aCbInfo );
 
-  void                  ResizeHoldOff();
-  void                  RemoveResizeWidget();
-  static int            ResizeWorkProc( void *data );
-  NS_IMETHOD            ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow);
+  inline NS_IMETHOD     ModalEventFilter(PRBool aRealEvent, void *aEvent, PRBool *aForWindow)
+		{
+		*aForWindow = PR_TRUE;
+		return NS_OK;
+		}
 
-  PtWidget_t            *mClientWidget;
-  PRBool                mIsTooSmall;
-  static PRBool         mResizeQueueInited;
-  PRBool                mIsResizing;
-
-  // when this is PR_TRUE we will block focus
-  // events to prevent recursion
-  PRBool                mBlockFocusEvents;
-  
-  static DamageQueueEntry *mResizeQueue;
-  static PtWorkProcId_t *mResizeProcID;
+private:
+  PtWidget_t *mClientWidget, *mLastMenu;
+  PRBool mIsTooSmall;
+	static nsIRollupListener *gRollupListener;
+	static nsIWidget *gRollupWidget;
 };
 
 //
@@ -160,10 +164,13 @@ protected:
 //
 class ChildWindow : public nsWindow {
   public:
-    ChildWindow();
-    ~ChildWindow();
-	virtual PRBool IsChild() const;
+    ChildWindow()
+			{
+			mBorderStyle     = eBorderStyle_none;
+			mWindowType      = eWindowType_child;
+			}
+    ~ChildWindow() { }
+	inline PRBool IsChild() const { return PR_TRUE; }
 };
-
 
 #endif // Window_h__

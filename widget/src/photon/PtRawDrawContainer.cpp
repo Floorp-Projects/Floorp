@@ -49,9 +49,7 @@ PtWidgetClassRef_t *PtRawDrawContainer = &WRawDrawContainer;
 //
 static void raw_draw_container_dflts( PtWidget_t *widget )
 {
-	RawDrawContainerWidget	*rdc = ( RawDrawContainerWidget * ) widget;
-     widget->flags |= ( Pt_OPAQUE );
-	rdc->draw_f = NULL;
+  widget->flags |= ( Pt_OPAQUE );
 }
 
 //
@@ -60,17 +58,7 @@ static void raw_draw_container_dflts( PtWidget_t *widget )
 static void raw_draw_container_draw( PtWidget_t *widget, PhTile_t *damage )
 {
   RawDrawContainerWidget	*rdc = ( RawDrawContainerWidget * ) widget;
-
-
-  if (widget == NULL)
-  {
-#ifdef DEBUG
-    printf("raw_draw_container_draw NULL widget!\n");
-#endif
-    return;	
-  }
-  if( rdc->draw_f )
-    rdc->draw_f( widget, damage );
+  rdc->draw_f( widget, damage );
 }
 
 //
