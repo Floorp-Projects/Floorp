@@ -254,12 +254,12 @@ function DropOnTree ( event )
 		}
 	}
 
-  var targetID = getAbsoluteID(treeRoot, treeItem);
+  var targetID = getAbsoluteID("bookmarksTree", treeItem);
   if (!targetID)  return(false);
   var targetNode = RDF.GetResource(targetID, true);
   if (!targetNode)  return(false);
 
-  var containerID = getAbsoluteID(treeRoot, containerItem);
+  var containerID = getAbsoluteID("bookmarksTree", containerItem);
   if (!containerID) return(false);
   var containerNode = RDF.GetResource(containerID);
   if (!containerNode) return(false);
