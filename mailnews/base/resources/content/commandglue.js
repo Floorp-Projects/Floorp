@@ -652,6 +652,10 @@ function OnClickThreadAndMessagePaneSplitterGrippy()
 
 function FolderPaneSelectionChange()
 {
+    if(gTimelineEnabled) {
+      gTimelineService.startTimer("FolderLoading");
+      gTimelineService.enter("FolderLoading has Started");
+    }
     var folderOutliner = GetFolderOutliner();
     if (folderOutliner.outlinerBoxObject.selection.count == 1)
     {

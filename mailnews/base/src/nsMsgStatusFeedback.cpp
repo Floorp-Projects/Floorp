@@ -53,6 +53,7 @@
 #include "nsIDocShellTreeItem.h"
 #include "nsIChannel.h"
 #include "prinrval.h"
+#include "nsITimelineService.h"
 
 #define MSGFEEDBACK_TIMER_INTERVAL 500
 
@@ -123,6 +124,8 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
   {
     if (aProgressStateFlags & STATE_START)
     {
+      NS_TIMELINE_START_TIMER("Start Msg Loading");
+      NS_TIMELINE_ENTER("Start Msg Loading in progress");
       m_lastPercent = 0;
       StartMeteors();
       nsXPIDLString loadingDocument;
@@ -133,6 +136,10 @@ nsMsgStatusFeedback::OnStateChange(nsIWebProgress* aWebProgress,
     }
     else if (aProgressStateFlags & STATE_STOP)
     {
+      NS_TIMELINE_STOP_TIMER("Start Msg Loading");
+      NS_TIMELINE_LEAVE("Start Msg Loading is finished");
+      NS_TIMELINE_MARK_TIMER("Start Msg Loading");
+      NS_TIMELINE_RESET_TIMER("Start Msg Loading");
       StopMeteors();
       nsXPIDLString documentDone;
       rv = mBundle->GetStringFromName(NS_LITERAL_STRING("documentDone").get(),

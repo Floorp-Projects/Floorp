@@ -324,6 +324,11 @@ nsMsgStatusFeedback.prototype =
   },
    _stopMeteors : function()
     {
+      if(gTimelineEnabled){
+        gTimelineService.stopTimer("FolderLoading");
+        gTimelineService.markTimer("FolderLoading");
+        gTimelineService.resetTimer("FolderLoading");
+      }
       this.ensureStatusFields();
       // Record page loading time.
       var elapsed = ( (new Date()).getTime() - this.startTime ) / 1000;
