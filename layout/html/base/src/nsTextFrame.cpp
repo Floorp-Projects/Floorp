@@ -466,8 +466,9 @@ protected:
 #define TEXT_FIRST_LETTER    0x10000000
 
 // Bits in mState used for reflow flags
-#define TEXT_REFLOW_FLAGS    0x7F000000
+#define TEXT_REFLOW_FLAGS    0x1F000000
 
+#define TEXT_OPTIMIZE_RESIZE 0x40000000
 #define TEXT_BLINK_ON        0x80000000
 
 //----------------------------------------------------------------------
@@ -2338,6 +2339,13 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   if (nsnull != mPrevInFlow) {
     nsTextFrame* prev = (nsTextFrame*) mPrevInFlow;
     startingOffset = prev->mContentOffset + prev->mContentLength;
+
+    // If our starting offset doesn't agree with mContentOffset, then our
+    // prev-in-flow has changed the number of characters it maps and so we
+    // need to measure text and not try and optimize a resize reflow
+    if (startingOffset != mContentOffset) {
+      mState &= ~TEXT_OPTIMIZE_RESIZE;
+    }
   }
 
   nsLineLayout& lineLayout = *aReflowState.mLineLayout;
@@ -2418,6 +2426,27 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   PRBool breakable = lineLayout.LineIsBreakable();
   PRInt32 lastWordLen=0;
   PRUnichar* bp = nsnull;
+  PRBool measureText = PR_TRUE;
+
+  // We can avoid actually measuring the text if:
+  // - this is a resize reflow
+  // - we don't have a next in flow
+  // - the previous reflow successfully reflowed all text in the available space
+  // - the available width is at least as big as our current frame width
+  // - we aren't computing the max element size (that requires we measure
+  //   text)
+  // - we're not preformatted text or we're at the same column as before (this
+  //   is an issue for tabbed text)
+  if (eReflowReason_Resize == aReflowState.reason) {
+    if (!mNextInFlow && (mState & TEXT_OPTIMIZE_RESIZE) &&
+        (maxWidth >= mRect.width) && !aMetrics.maxElementSize &&
+        (!ts.mPreformatted || (prevColumn == column))) {
+
+      // We can skip measuring of text and use the value from our previous reflow
+      measureText = PR_FALSE;
+    }
+  }
+
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
@@ -2474,36 +2503,42 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
         }
         justDidFirstLetter = PR_TRUE;
       }
-      if (ts.mSmallCaps) {
-        MeasureSmallCapsText(aReflowState, ts, bp, wordLen, &width);
-      }
-      else {
-        aReflowState.rendContext->GetWidth(bp, wordLen, width);
-        if (ts.mLetterSpacing) {
-          width += ts.mLetterSpacing * wordLen;
+      
+      if (measureText) {
+        if (ts.mSmallCaps) {
+          MeasureSmallCapsText(aReflowState, ts, bp, wordLen, &width);
         }
+        else {
+          aReflowState.rendContext->GetWidth(bp, wordLen, width);
+          if (ts.mLetterSpacing) {
+            width += ts.mLetterSpacing * wordLen;
+          }
+        }
+        lastWordWidth = width;
       }
       skipWhitespace = PR_FALSE;
-      lastWordWidth = width;
     }
 
     // See if there is room for the text
-    if ((0 != x) && wrapping && (x + width > maxWidth)) {
-      // The text will not fit.
-#ifdef NOISY_REFLOW
-      ListTag(stdout);
-      printf(": won't fit (at offset=%d) x=%d width=%d maxWidth=%d\n",
-             offset, x, width, maxWidth);
-#endif
-      break;
+    if (measureText) {
+      if ((0 != x) && wrapping && (x + width > maxWidth)) {
+        // The text will not fit.
+  #ifdef NOISY_REFLOW
+        ListTag(stdout);
+        printf(": won't fit (at offset=%d) x=%d width=%d maxWidth=%d\n",
+               offset, x, width, maxWidth);
+  #endif
+        break;
+      }
+      x += width;
+      prevMaxWordWidth = maxWordWidth;
+      if (width > maxWordWidth) {
+        maxWordWidth = width;
+      }
     }
+
     prevColumn = column;
     column += wordLen;
-    x += width;
-    prevMaxWordWidth = maxWordWidth;
-    if (width > maxWordWidth) {
-      maxWordWidth = width;
-    }
     endsInWhitespace = isWhitespace;
     prevOffset = offset;
     offset += contentLen;
@@ -2514,6 +2549,12 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
   }
   if (tx.HasMultibyte()) {
     mState |= TEXT_HAS_MULTIBYTE;
+  }
+
+  // If we didn't actually measure any text, then make sure it looks
+  // like we did
+  if (!measureText) {
+    x = mRect.width;
   }
 
   // Post processing logic to deal with word-breaking that spans
@@ -2574,6 +2615,21 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
           // Look ahead in the text-run and compute the final word
           // width, taking into account any style changes and stopping
           // at the first breakable point.
+          if (!measureText) {
+            // We didn't measure any text so we don't know lastWordWidth.
+            // We have to compute it now
+            if (ts.mSmallCaps) {
+              MeasureSmallCapsText(aReflowState, ts, tx.GetTextAt(prevOffset),
+                                   lastWordLen, &lastWordWidth);
+            }
+            else {
+              aReflowState.rendContext->GetWidth(tx.GetTextAt(prevOffset),
+                                                 lastWordLen, lastWordWidth);
+              if (ts.mLetterSpacing) {
+                lastWordWidth += ts.mLetterSpacing * lastWordLen;
+              }
+            }
+          }
           nscoord wordWidth = ComputeTotalWordWidth(&aPresContext, lb, lineLayout,
                                                     aReflowState, next,
                                                     lastWordWidth,
@@ -2675,6 +2731,21 @@ nsTextFrame::Reflow(nsIPresContext& aPresContext,
     rs = NS_INLINE_LINE_BREAK_BEFORE();
   }
   aStatus = rs;
+
+  // For future resize reflows we would like to avoid measuring the text.
+  // We can only do this if after this reflow we're:
+  // - complete. If we're not complete then our desired width doesn't
+  //   represent our total size
+  // - we fit in the available space. We may be complete, but if we
+  //   return a larger desired width than is available we may get pushed
+  //   and our frame width won't get set
+  if ((NS_FRAME_COMPLETE == aStatus) && (aMetrics.width <= maxWidth)) {
+    mState |= TEXT_OPTIMIZE_RESIZE;
+    mRect.width = aMetrics.width;
+  }
+  else {
+    mState &= ~TEXT_OPTIMIZE_RESIZE;
+  }
 
 #ifdef NOISY_REFLOW
   ListTag(stdout);
