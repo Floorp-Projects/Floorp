@@ -49,7 +49,6 @@ public:
 
   //nsIDragService
   NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIRegion * aRegion, PRUint32 aActionType);
-  //NS_IMETHOD InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType);
 
   //nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);

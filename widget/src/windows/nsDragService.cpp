@@ -118,30 +118,14 @@ NS_IMETHODIMP nsDragService::InvokeDragSession (nsISupportsArray * anArrayTransf
     NS_RELEASE(supports);
     nsClipboard::CreateNativeDataObject(trans, &dataObj);
     dataObjCollection->AddDataObject(dataObj);
+    NS_IF_RELEASE(dataObj);
   }
 
   StartInvokingDragSession((IDataObject *)dataObjCollection, aActionType);
 
-  NS_IF_RELEASE(dataObj);
-
   return NS_OK;
 }
 
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsDragService::InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType)
-{
-  // The clipboard class contains some static utility methods
-  // that we can use to create an IDataObject from the transferable
-  IDataObject * dataObj = nsnull;
-  nsClipboard::CreateNativeDataObject(aTransferable, &dataObj);
-
-  StartInvokingDragSession(dataObj, aActionType);
-
-  NS_IF_RELEASE(dataObj);
-
-  return NS_OK;
-
-}
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsDragService::StartInvokingDragSession(IDataObject * aDataObj, PRUint32 aActionType)
 {

@@ -153,26 +153,6 @@ nsresult nsDragService::InvokeDragSession( nsISupportsArray *aTransArray,
    return rc;
 }
 
-// Even though it says single, it may well be multiple 'cos of the files thing.
-nsresult nsDragService::InvokeDragSessionSingle( nsITransferable *aTransferable,
-                                                 nsIRegion       *aRegion,
-                                                 PRUint32         aActionType)
-{
-   PDRAGITEM pDragItems = 0;
-   ULONG     cDragItems = 0;
-
-   CreateDragItems( &cDragItems, &pDragItems, aTransferable);
-
-   nsresult rc = NS_ERROR_FAILURE;
-
-   if( cDragItems)
-   {
-      rc = InvokeDrag( pDragItems, cDragItems, aActionType);
-      delete [] pDragItems;
-   }
-
-   return rc;
-}
 
 nsresult nsDragService::GetData( nsITransferable *aTransferable,
                                  PRUint32         aItemIndex)

@@ -36,10 +36,7 @@ NS_IMPL_RELEASE(nsBaseDragService)
 //
 //-------------------------------------------------------------------------
 nsBaseDragService::nsBaseDragService() :
-  mCanDrop(PR_FALSE), 
-  mDoingDrag(PR_FALSE),
-  mTargetSize(0,0), 
-  mDragAction(DRAGDROP_ACTION_NONE)
+  mCanDrop(PR_FALSE), mDoingDrag(PR_FALSE), mTargetSize(0,0), mDragAction(DRAGDROP_ACTION_NONE)
 {
   NS_INIT_REFCNT();
   nsresult result = NS_NewISupportsArray(getter_AddRefs(mTransArray));
@@ -161,11 +158,6 @@ NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsISupportsArray * anArrayTr
   return NS_ERROR_FAILURE;
 }
 
-//-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::InvokeDragSessionSingle (nsITransferable * aTransferable,  nsIRegion * aRegion, PRUint32 aActionType)
-{
-  return NS_ERROR_FAILURE;
-}
 
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsBaseDragService::GetCurrentSession (nsIDragSession ** aSession)
