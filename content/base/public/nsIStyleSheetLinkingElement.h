@@ -43,6 +43,7 @@
 
 class nsIParser;
 class nsIDocument;
+class nsICSSLoaderObserver;
 
 #define NS_ISTYLESHEETLINKINGELEMENT_IID          \
   {0xa6cf90e9, 0x15b3, 0x11d2,                    \
@@ -88,8 +89,11 @@ public:
    * @param aOldDocument the document that this element was part
    *                     of (nsnull if we're not moving the element
    *                     from one document to another).
+   * @param aObserver    observer to notify once the stylesheet is loaded.
+   *                     It might be notified before the function returns.
    */
-  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument) = 0;
+  NS_IMETHOD UpdateStyleSheet(nsIDocument *aOldDocument,
+                              nsICSSLoaderObserver* aObserver) = 0;
 
   /**
    * Tells this element wether to update the stylesheet when the

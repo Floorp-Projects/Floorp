@@ -690,7 +690,7 @@ nsXMLContentSink::CloseElement(nsIContent* aContent, PRBool* aAppendContent)
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      rv = ssle->UpdateStyleSheet(nsnull);
+      rv = ssle->UpdateStyleSheet(nsnull, nsnull);
       if (rv == NS_ERROR_HTMLPARSER_BLOCK && mParser) {
         mParser->BlockParser();
       }
@@ -1960,7 +1960,7 @@ nsXMLContentSink::HandleProcessingInstruction(const PRUnichar *aTarget,
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(nsnull);
+      result = ssle->UpdateStyleSheet(nsnull, nsnull);
 
       if (NS_FAILED(result)) {
         if (result == NS_ERROR_HTMLPARSER_BLOCK && mParser) {

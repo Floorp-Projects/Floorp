@@ -4976,7 +4976,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 
     if (ssle) {
       ssle->SetEnableUpdates(PR_TRUE);
-      result = ssle->UpdateStyleSheet(nsnull);
+      result = ssle->UpdateStyleSheet(nsnull, nsnull);
 
       // look for <link rel="next" href="url">
       nsAutoString relVal;
@@ -5790,7 +5790,7 @@ HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 
   if (ssle) {
     ssle->SetEnableUpdates(PR_TRUE);
-    rv = ssle->UpdateStyleSheet(nsnull);
+    rv = ssle->UpdateStyleSheet(nsnull, nsnull);
   }
 
   return rv;
