@@ -436,8 +436,8 @@ LocalSearchDataSource::doMatch(nsIRDFLiteral *literal, char *matchMethod, char *
 	if ((nsnull == literal) || (nsnull == matchMethod) || (nsnull == matchText))
 		return(found);
 
-        nsXPIDLString	str;
-	literal->GetValue( getter_Copies(str) );
+	const	PRUnichar	*str = nsnull;
+	literal->GetValueConst( &str );
 	if (! str)	return(found);
 	nsAutoString	value(str);
 
@@ -653,8 +653,8 @@ LocalSearchDataSource::GetTargets(nsIRDFResource *source,
 		}
 		else if (property == kRDF_type)
 		{
-			nsXPIDLCString	uri;
-			rv = kNC_FindObject->GetValue( getter_Copies(uri) );
+			const	char	*uri = nsnull;
+			rv = kNC_FindObject->GetValueConst( &uri );
 			if (NS_FAILED(rv)) return rv;
 
 			nsAutoString	url(uri);
