@@ -21,6 +21,7 @@
 #                 Dan Mosedale <dmose@mozilla.org>
 #                 Jake <jake@acutex.net>
 #                 Bradley Baetz <bbaetz@cs.mcgill.ca>
+#                 Christopher Aillon <christopher@aillon.com>
 
 # Contains some global variables and routines used throughout bugzilla.
 
@@ -1502,6 +1503,22 @@ sub PerformSubsts {
     return $str;
 }
 
+# Min and max routines.
+sub min {
+    my $min = shift(@_);
+    foreach my $val (@_) {
+        $min = $val if $val < $min;
+    }
+    return $min;
+}
+
+sub max {
+    my $max = shift(@_);
+    foreach my $val (@_) {
+        $max = $val if $val > $max;
+    }
+    return $max;
+}
 
 # Trim whitespace from front and back.
 
