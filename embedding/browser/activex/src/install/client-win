@@ -4,6 +4,8 @@
 ; Copy it to embedding/dist so that additional files here are picked up in addition to
 ; those in basebrowser-win.
 
+[Embed]
+
 ; MathML
 components\ucvmath.dll
 res\mathml.css
