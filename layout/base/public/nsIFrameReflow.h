@@ -99,6 +99,7 @@ struct nsReflowState {
   nsIReflowCommand*    reflowCommand;     // the reflow command. only set for eReflowReason_Incremental
   nsSize               maxSize;           // the max available space in which to reflow
   nsIRenderingContext* rendContext;       // rendering context to use for measurement
+  PRPackedBool         isTopOfPage;       // is the current context at the top of a page?
 
   // Note: there is no copy constructor, so the compiler can generate an
   // optimal one.
@@ -118,14 +119,15 @@ struct nsReflowState {
                 nsIRenderingContext* aContext);
 
   // Construct a reflow state for the given frame, parent reflow state, and
-  // max size. Uses the reflow reason and reflow command from the parent's
-  // reflow state
+  // max size. Uses the reflow reason, reflow command, and isTopOfPage value
+  // from the parent's reflow state
   nsReflowState(nsIFrame*            aFrame,
                 const nsReflowState& aParentReflowState,
                 const nsSize&        aMaxSize);
 
   // Constructs a reflow state that overrides the reflow reason of the parent
-  // reflow state. Sets the reflow command to NULL
+  // reflow state. Uses the isTopOfPage value from the parent's reflow state, and
+  // sets the reflow command to NULL
   nsReflowState(nsIFrame*            aFrame,
                 const nsReflowState& aParentReflowState,
                 const nsSize&        aMaxSize,
@@ -281,6 +283,7 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   parentReflowState = nsnull;
   frame = aFrame;
   rendContext = aContext;
+  isTopOfPage = PR_FALSE;
 }
 
 // Constructs an initial reflow state (no parent reflow state) for an
@@ -297,11 +300,12 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   parentReflowState = nsnull;
   frame = aFrame;
   rendContext = aContext;
+  isTopOfPage = PR_FALSE;
 }
 
 // Construct a reflow state for the given frame, parent reflow state, and
-// max size. Uses the reflow reason and reflow command from the parent's
-// reflow state
+// max size. Uses the reflow reason, reflow command, and isTopOfPage value
+// from the parent's reflow state
 inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
                                     const nsReflowState& aParentReflowState,
                                     const nsSize&        aMaxSize)
@@ -312,10 +316,12 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   parentReflowState = &aParentReflowState;
   frame = aFrame;
   rendContext = aParentReflowState.rendContext;
+  isTopOfPage = aParentReflowState.isTopOfPage;
 }
 
 // Constructs a reflow state that overrides the reflow reason of the parent
-// reflow state. Sets the reflow command to NULL
+// reflow state. Uses the isTopOfPage value from the parent's reflow state, and
+// sets the reflow command to NULL
 inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
                                     const nsReflowState& aParentReflowState,
                                     const nsSize&        aMaxSize,
@@ -327,6 +333,7 @@ inline nsReflowState::nsReflowState(nsIFrame*            aFrame,
   parentReflowState = &aParentReflowState;
   frame = aFrame;
   rendContext = aParentReflowState.rendContext;
+  isTopOfPage = aParentReflowState.isTopOfPage;
 }
 
 #endif /* nsIFrameReflow_h___ */
