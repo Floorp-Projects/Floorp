@@ -444,12 +444,23 @@ nsSVGLength::GetTransformedValue(nsIDOMSVGMatrix *matrix,
 NS_IMETHODIMP
 nsSVGLength::SetContext(nsSVGCoordCtx* context)
 {
-  // XXX should we bracket this inbetween WillModify/DidModify pairs?
-  MaybeRemoveAsObserver();
-  WillModify(mod_context);
+  /* Unless our unit type is SVG_LENGTHTYPE_NUMBER or SVG_LENGTHTYPE_PX, our
+     user unit value is determined by our context and we must notify our
+     observers that we have changed. */
+
+  if (mSpecifiedUnitType != SVG_LENGTHTYPE_NUMBER &&
+      mSpecifiedUnitType != SVG_LENGTHTYPE_PX) {
+    WillModify(mod_context);
+    MaybeRemoveAsObserver();
+  }
+
   mContext = context;
-  DidModify(mod_context);
-  MaybeAddAsObserver();
+
+  if (mSpecifiedUnitType != SVG_LENGTHTYPE_NUMBER &&
+      mSpecifiedUnitType != SVG_LENGTHTYPE_PX) {
+    MaybeAddAsObserver();
+    DidModify(mod_context);
+  }
   return NS_OK;
 }
 
