@@ -39,6 +39,11 @@
  * ***** END LICENSE BLOCK ***** */
  */
 
+
+// Many thanks to Paul Graham, Gary Robinson and the spambayes list
+// (Tim Peters et alia).  Though none of the lisp nor python code was
+// used directly, many of the ideas implemented here originated with them.
+
 // the junkmail plugin object itself
 //
 const NS_JUNKMAIL_CONTRACTID = 
