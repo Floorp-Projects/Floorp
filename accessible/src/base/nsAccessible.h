@@ -64,15 +64,27 @@ struct nsStateMapEntry
 };
 
 enum ENameRule {
-  eAggregateSubtree,  // Collect name from text & img descendents; use title if resulting name is "".
-  eTitleOnly          // Use the title attribute for a name
+  eNoName,
+  eNameFromSubtree,  // Collect name from text & img descendents; use title if resulting name is "".
+  eNameFromTitle,    // Use the title attribute for a name
 };
+
+enum EValueRule {
+  eNoValue,
+  eHasValue,         // Supports value from waistate:valuenow attribute
+  eHasValueMinMax    // Supports value, min and max from waistate:valuenow, valuemin and valuemax
+};
+
+#define eNoReqStates 0
+#define END_ENTRY {0, 0, 0}  // To fill in array of state mappings
+#define BOOL_STATE 0
 
 struct nsRoleMapEntry
 {
   const char *roleString; // such as "button"
   PRUint32 role;   // use this role
   ENameRule nameRule;  // how to compute name
+  EValueRule valueRule;  // how to compute name
   PRUint32 state;  // always OR state with this
   // For this role with a DOM attribute/value match definined in
   // nsStateMapEntry.attributeName && .attributeValue, OR accessible state with
@@ -82,6 +94,7 @@ struct nsRoleMapEntry
   nsStateMapEntry attributeMap1;
   nsStateMapEntry attributeMap2;
   nsStateMapEntry attributeMap3;
+  nsStateMapEntry attributeMap4;
 };
 
 class nsAccessible : public nsAccessNodeWrap, 
@@ -119,7 +132,7 @@ public:
   static PRBool IsCorrectFrameType(nsIFrame* aFrame, nsIAtom* aAtom);
 
 protected:
-  PRUint32 MappedAttrState(nsIContent *aContent, PRUint32 aStartState,nsStateMapEntry *aStateMapEntry);
+  PRBool MappedAttrState(nsIContent *aContent, PRUint32 *aStateInOut, nsStateMapEntry *aStateMapEntry);
   virtual nsIFrame* GetBoundsFrame();
   virtual void GetBoundsRect(nsRect& aRect, nsIFrame** aRelativeFrame);
   PRBool IsPartiallyVisible(PRBool *aIsOffscreen); 

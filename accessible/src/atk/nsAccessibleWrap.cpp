@@ -532,11 +532,16 @@ nsAccessibleWrap::TranslateStates(PRUint32 aState, PRUint32 aExtState, void *aAt
         atk_state_set_add_state (state_set, ATK_STATE_SENSITIVE);
     }
 
-    // The following state is
-    // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
-    if (aExtState & nsIAccessible::EXT_STATE_INVALID)
+    if (aState & nsIAccessible::STATE_INVALID)
         atk_state_set_add_state (state_set, ATK_STATE_INVALID);
 
+#ifdef MAI_HAS_ATK_STATE_REQUIRED
+    if (aState & nsIAccessible::STATE_REQUIRED)
+        atk_state_set_add_state (state_set, ATK_STATE_REQUIRED);
+#endif
+
+    // The following state is
+    // Extended state flags (for now non-MSAA, for Java and Gnome/ATK support)
     if (aExtState & nsIAccessible::EXT_STATE_ACTIVE)
         atk_state_set_add_state (state_set, ATK_STATE_ACTIVE);
 
