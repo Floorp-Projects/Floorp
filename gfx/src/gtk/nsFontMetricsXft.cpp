@@ -112,7 +112,10 @@ class nsFontXftInfo;
 // class for regular 'Unicode' fonts that are actually what they claim to be. 
 class nsFontXftUnicode : public nsFontXft {
 public:
-    nsFontXftUnicode(FcPattern *aPattern, FcPattern *aFontName);
+    nsFontXftUnicode(FcPattern *aPattern, FcPattern *aFontName)
+      : nsFontXft(aPattern, aFontName)
+    { }
+
     virtual ~nsFontXftUnicode();
 
     virtual PRBool     HasChar (PRUint32 aChar);
@@ -133,7 +136,11 @@ class nsFontXftCustom : public nsFontXft {
 public:
     nsFontXftCustom(FcPattern* aPattern, 
                     FcPattern* aFontName, 
-                    nsFontXftInfo* aFontInfo);
+                    nsFontXftInfo* aFontInfo)
+      : nsFontXft(aPattern, aFontName)
+      , mFontInfo(aFontInfo)
+      , mFT_Face(nsnull)
+    { }
 
     virtual ~nsFontXftCustom();
 
@@ -2130,13 +2137,6 @@ nsFontXft::FillDrawStringSpec(FcChar32 *aString, PRUint32 aLen, void *aData)
 
 // class nsFontXftUnicode impl
   
-inline
-nsFontXftUnicode::nsFontXftUnicode(FcPattern* aPattern, FcPattern* aFontName) :
-                                   nsFontXft(aPattern, aFontName)
-{
-}
-
-inline
 nsFontXftUnicode::~nsFontXftUnicode()
 {
 }
@@ -2148,14 +2148,6 @@ nsFontXftUnicode::HasChar(PRUint32 aChar)
 }
 
 // class nsFontXftCustom impl
-
-inline
-nsFontXftCustom::nsFontXftCustom(FcPattern* aPattern, FcPattern* aFontName,
-                                 nsFontXftInfo* aFontInfo) :
-                                 nsFontXft(aPattern, aFontName),
-                                 mFontInfo(aFontInfo), mFT_Face(nsnull)
-{
-}
 
 nsFontXftCustom::~nsFontXftCustom()
 {
