@@ -11,6 +11,9 @@ endif
 PERL_OBJDIR	= $(OBJDIR)/perl
 PERL_PKGDIR	= $(PKGDIR)/perl
 
+# HACK, should figure out dynamically from PERL_DIR
+PERL_REV	= 5.00503
+
 ###package:: $(PERL_PKGDIR) package-perl
 
 $(PERL_PKGDIR):

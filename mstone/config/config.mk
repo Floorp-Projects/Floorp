@@ -4,7 +4,8 @@
 INCLUDED_CONFIG_MK = 1
 
 # These normally get overridden on the command line from ../Makefile
-BUILD_VARIANT	= debug
+# This is the default build type
+BUILD_VARIANT	= release
 ifeq ($(BUILD_VARIANT), debug)
 	BUILD_TYPE = DEBUG
 	OBJDIR_TAG = _DBG
