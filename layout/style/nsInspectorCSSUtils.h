@@ -57,7 +57,9 @@ public:
     NS_IMETHOD GetRuleNodeRule(nsRuleNode *aNode, nsIStyleRule **aRule);
     NS_IMETHOD IsRuleNodeRoot(nsRuleNode *aNode, PRBool *aIsRoot);
     NS_IMETHOD AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect);
-
+    NS_IMETHOD GetStyleContextForContent(nsIPresShell* aPresShell,
+                                         nsIContent* aContent,
+                                         nsIStyleContext** aStyleContext);
 };
 
 #endif /* nsInspectorCSSUtils_h___ */

@@ -40,6 +40,7 @@
 #include "nsInspectorCSSUtils.h"
 #include "nsRuleNode.h"
 #include "nsString.h"
+#include "nsLayoutAtoms.h"
 
 nsInspectorCSSUtils::nsInspectorCSSUtils()
 {
@@ -111,3 +112,32 @@ nsInspectorCSSUtils::AdjustRectForMargins(nsIFrame* aFrame, nsRect& aRect)
   return NS_OK;
 }
 
+NS_IMETHODIMP
+nsInspectorCSSUtils::GetStyleContextForContent(nsIPresShell* aPresShell,
+                                               nsIContent* aContent,
+                                               nsIStyleContext** aStyleContext)
+{
+    NS_PRECONDITION(aPresShell, "Null pres shell");
+
+    nsIFrame* frame = nsnull;
+    nsresult rv = aPresShell->GetPrimaryFrameFor(aContent, &frame);
+    if (NS_FAILED(rv) || !frame) return rv;
+    
+    /* For tables the primary frame is the "outer frame" but the style
+     * rules are applied to the "inner frame".  Luckily, the "outer
+     * frame" actually inherits style from the "inner frame" so we can
+     * just move one level up in the style hierarchy....
+     */
+    nsCOMPtr<nsIAtom> frameType;
+    frame->GetFrameType(getter_AddRefs(frameType));
+    if (frameType == nsLayoutAtoms::tableOuterFrame) {
+        nsCOMPtr<nsIPresContext> presContext;
+        rv = aPresShell->GetPresContext(getter_AddRefs(presContext));
+        if (! presContext)
+            return rv;
+        PRBool isChild;
+        rv = frame->GetParentStyleContextFrame(presContext, &frame, &isChild);
+        if (NS_FAILED(rv) || !frame) return rv;
+    }
+    return aPresShell->GetStyleContextFor(frame, aStyleContext);
+}    
