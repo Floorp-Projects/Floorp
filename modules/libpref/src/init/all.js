@@ -413,7 +413,7 @@ pref("dom.disable_window_open_feature.status",      false);
 pref("dom.allow_scripts_to_close_windows",          false);
 
 pref("dom.disable_open_during_load",                false);
-pref("dom.popup_maximum",                           false);
+pref("dom.popup_maximum",                           2);
 pref("dom.popup_allowed_events", "change click dblclick error reset submit");
 
 pref("javascript.enabled",                  true);
