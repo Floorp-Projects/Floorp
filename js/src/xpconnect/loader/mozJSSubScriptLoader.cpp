@@ -273,7 +273,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     }
     
     rv = chan->GetContentLength (&len);
-    if (NS_FAILED(rv) || len == PRUint32(-1))
+    if (NS_FAILED(rv) || len == -1)
     {
         errmsg = JS_NewStringCopyZ (cx, LOAD_ERROR_NOCONTENT);
         goto return_exception;
@@ -300,8 +300,10 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
      * JSPRINCIPALS_DROP macro takes a JSContext, which we won't have in the
      * destructor */
     rv = mSystemPrincipal->GetJSPrincipals(&jsPrincipals);
-    if (NS_FAILED(rv) || !jsPrincipals)
+    if (NS_FAILED(rv) || !jsPrincipals) {
+        delete[] buf;
         return rv;
+    }
 
     /* set our own error reporter so we can report any bad things as catchable
      * exceptions, including the source/line number */
@@ -316,7 +318,7 @@ mozJSSubScriptLoader::LoadSubScript (const PRUnichar * /*url*/
     cc->SetReturnValueWasSet (ok);
 
     delete[] buf;
-
+    JSPRINCIPALS_DROP(cx, jsPrincipals);
     return NS_OK;
 
  return_exception:

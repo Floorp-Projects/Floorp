@@ -1063,6 +1063,7 @@ nsXPConnect::ReleaseJSContext(JSContext * aJSContext, PRBool noGC)
                    aJSContext);
 #endif
             ccx->SetDestroyJSContextInDestructor(JS_TRUE);
+            JS_ClearNewbornRoots(aJSContext);
             return NS_OK;
         }
         // else continue on and synchronously destroy the JSContext ...

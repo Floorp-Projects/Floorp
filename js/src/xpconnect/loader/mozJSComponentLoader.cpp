@@ -274,19 +274,22 @@ EvalInSandbox(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
         return JS_FALSE;
     }
     
+    JSBool ok;
     JSContext *sandcx = JS_NewContext(JS_GetRuntime(cx), 8192);
     if (!sandcx) {
         JS_ReportError(cx, "Can't prepare context for evalInSandbox");
-        return JS_FALSE;
-    }
-    JS_SetGlobalObject(sandcx, sandbox);
-    JS_SetErrorReporter(sandcx, Reporter);
+        ok = JS_FALSE;
+    } else {
+        JS_SetGlobalObject(sandcx, sandbox);
+        JS_SetErrorReporter(sandcx, Reporter);
 
-    JSBool ok = JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
-                                                 JS_GetStringChars(source),
-                                                 JS_GetStringLength(source),
-                                                 URL8.get(), 1, rval);
-    JS_DestroyContext(sandcx);
+        ok = JS_EvaluateUCScriptForPrincipals(sandcx, sandbox, jsPrincipals,
+                                              JS_GetStringChars(source),
+                                              JS_GetStringLength(source),
+                                              URL8.get(), 1, rval);
+        JS_DestroyContext(sandcx);
+    }
+    JSPRINCIPALS_DROP(cx, jsPrincipals);
     return ok;
 }        
 
@@ -366,13 +369,10 @@ BackstagePass::NewResolve(nsIXPConnectWrappedNative *wrapper,
                           JSObject * *objp, PRBool *_retval)
 {
     JSBool resolved;
-    if(JS_ResolveStandardClass(cx, obj, id, &resolved))
-    {
-        if(resolved)
-            *objp = obj;
-    }
-    else
-        *_retval = JS_FALSE;
+
+    *_retval = JS_ResolveStandardClass(cx, obj, id, &resolved);
+    if (*_retval && resolved)
+        *objp = obj;
     return NS_OK;
 }
 
@@ -399,7 +399,9 @@ UnloadAndReleaseModules(PLHashEntry *he, PRIntn i, void *arg)
     nsIModule *module = NS_STATIC_CAST(nsIModule *, he->value);
     nsIComponentManager *mgr = NS_STATIC_CAST(nsIComponentManager *, arg);
     PRBool canUnload;
-    if (NS_SUCCEEDED(module->CanUnload(mgr, &canUnload)) && canUnload) {
+    nsresult rv = module->CanUnload(mgr, &canUnload);
+    NS_ASSERTION(NS_SUCCEEDED(rv), "module CanUnload failed");
+    if (NS_SUCCEEDED(rv) && canUnload) {
         NS_RELEASE(module);
         /* XXX need to unroot the global for the module as well */
         nsCRT::free((char *)he->key);
@@ -410,20 +412,6 @@ UnloadAndReleaseModules(PLHashEntry *he, PRIntn i, void *arg)
 
 mozJSComponentLoader::~mozJSComponentLoader()
 {
-    if (mInitialized) {
-        mInitialized = PR_FALSE;
-        PL_HashTableEnumerateEntries(mModules, 
-                                     UnloadAndReleaseModules,
-                                     mCompMgr);
-        PL_HashTableDestroy(mModules);
-        mModules = nsnull;
-
-        PL_HashTableEnumerateEntries(mGlobals, UnrootGlobals, mRuntime);
-        PL_HashTableDestroy(mGlobals);
-        mGlobals = nsnull;
-
-        mRuntimeService = nsnull;
-    }
 }
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(mozJSComponentLoader, nsIComponentLoader);
@@ -986,6 +974,7 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 {
     JSObject *global = nsnull;
     PRBool needRelease = PR_FALSE;
+    JSScript *script = nsnull;
     PLHashNumber hash = PL_HashString(aLocation);
     PLHashEntry **hep = PL_HashTableRawLookup(mGlobals, hash,
                                               (void *)aLocation);
@@ -993,12 +982,15 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
     if (he)
         return (JSObject *)he->value;
 
-    if (!mInitialized &&
-        NS_FAILED(ReallyInit()))
+    if (!mInitialized && NS_FAILED(ReallyInit()))
         return nsnull;
     
     nsresult rv;
     JSPrincipals* jsPrincipals = nsnull;
+
+    JSCLAutoContext cx(mRuntime);
+    if (NS_FAILED(cx.GetError()))
+        return nsnull;
 
 #ifndef XPCONNECT_STANDALONE
     nsCOMPtr<nsIScriptObjectPrincipal> backstagePass =
@@ -1006,116 +998,120 @@ mozJSComponentLoader::GlobalForLocation(const char *aLocation,
 
     rv = mSystemPrincipal->GetJSPrincipals(&jsPrincipals);
     if (NS_FAILED(rv) || !jsPrincipals)
-      return nsnull;
+        return nsnull;
 
 #else
     nsCOMPtr<nsISupports> backstagePass = new BackstagePass();
 #endif
 
+    JSCLAutoErrorReporterSetter aers(cx, Reporter);
+    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
+
     nsCOMPtr<nsIXPConnect> xpc = do_GetService(kXPConnectServiceContractID);
     if (!xpc)
-      return nsnull;
+        goto out;
 
-    JSCLAutoContext cx(mRuntime);
-    if(NS_FAILED(cx.GetError()))
-        return nsnull;
-
-    JSCLAutoErrorReporterSetter aers(cx, Reporter);
-
-    nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
     rv = xpc->InitClassesWithNewWrappedGlobal(cx, backstagePass,
                                               NS_GET_IID(nsISupports),
                                               PR_FALSE,
                                               getter_AddRefs(holder));
     if (NS_FAILED(rv))
-        return nsnull;
-    
+        goto out;
+
     rv = holder->GetJSObject(&global);
-    if (NS_FAILED(rv))
-        return nsnull;
+    if (NS_FAILED(rv)) {
+        NS_ASSERTION(global == nsnull, "bad GetJSObject?");
+        goto out;
+    }
 
     if (!JS_DefineFunctions(cx, global, gGlobalFun)) {
-        return nsnull;
+        global = nsnull;
+        goto out;
     }
 
     if (!component) {
         // what I want to do here is QI for a Component Registration Manager.  Since this 
         // has not been invented yet, QI to the obsolete manager.  Kids, don't do this at home.
         nsCOMPtr<nsIComponentManagerObsolete> obsoleteManager = do_QueryInterface(mCompMgr, &rv);
-        if (!obsoleteManager)
-            return nsnull;
+        if (!obsoleteManager) {
+            global = nsnull;
+            goto out;
+        }
 
-        if (NS_FAILED(obsoleteManager->SpecForRegistryLocation(aLocation, &component)))
-            return nsnull;
+        if (NS_FAILED(obsoleteManager->SpecForRegistryLocation(aLocation, &component))) {
+            global = nsnull;
+            goto out;
+        }
         needRelease = PR_TRUE;
     }
 
-    nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(component);
+    {
+        nsCOMPtr<nsILocalFile> localFile = do_QueryInterface(component);
+        if (!localFile) {
+            global = nsnull;
+            goto out;
+        }
 
+        // Quick hack to unbust XPCONNECT_STANDALONE.
+        // This leaves the jsdebugger with a non-URL pathname in the 
+        // XPCONNECT_STANDALONE case - but at least it builds and runs otherwise.
+        // See: http://bugzilla.mozilla.org/show_bug.cgi?id=121438
+        {
+            nsCAutoString nativePath;
+            FILE* fileHandle;
 #ifdef XPCONNECT_STANDALONE
-    nsString temp;
-#endif
-    char *location;             // declare before first jump to out:
-    jsval retval;
-    nsXPIDLCString displayPath;
-    FILE* fileHandle;
-    JSScript *script = nsnull;
-    
-    if (!localFile) {
-        global = nsnull;
-        goto out;
-    }
-
-    // Quick hack to unbust XPCONNECT_STANDALONE.
-    // This leaves the jsdebugger with a non-URL pathname in the 
-    // XPCONNECT_STANDALONE case - but at least it builds and runs otherwise.
-    // See: http://bugzilla.mozilla.org/show_bug.cgi?id=121438 
-#ifdef XPCONNECT_STANDALONE
-    localFile->GetPath(temp);
-    displayPath = NS_LossyConvertUCS2toASCII(temp);
+            localFile->GetNativePath(nativePath);
 #else
-    NS_GetURLSpecFromFile(localFile, displayPath);
+            NS_GetURLSpecFromFile(localFile, nativePath);
 #endif
-    rv = localFile->OpenANSIFileDesc("r", &fileHandle);
-    if (NS_FAILED(rv)) {
-        global = nsnull;
-        goto out;
-    }
+            rv = localFile->OpenANSIFileDesc("r", &fileHandle);
+            if (NS_FAILED(rv)) {
+                global = nsnull;
+                goto out;
+            }
 
-    script = 
-        JS_CompileFileHandleForPrincipals(cx, global,
-                                          (const char *)displayPath, 
-                                          fileHandle, jsPrincipals);
+            script = 
+                JS_CompileFileHandleForPrincipals(cx, global, nativePath.get(),
+                                                  fileHandle, jsPrincipals);
     
-    /* JS will close the filehandle after compilation is complete. */
+            /* JS will close the filehandle after compilation is complete. */
 
-    if (!script) {
+            if (!script) {
 #ifdef DEBUG_shaver_off
-        fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
-                nativePath);
+                fprintf(stderr, "mJCL: script compilation of %s FAILED\n",
+                        nativePath.get());
 #endif
-        global = nsnull;
-        goto out;
+                global = nsnull;
+                goto out;
+            }
+
+#ifdef DEBUG_shaver_off
+            fprintf(stderr, "mJCL: compiled JS component %s\n",
+                    nativePath.get());
+#endif
+
+            jsval retval;
+            if (!JS_ExecuteScript(cx, global, script, &retval)) {
+#ifdef DEBUG_shaver_off
+                fprintf(stderr, "mJCL: failed to execute %s\n",
+                        nativePath.get());
+#endif
+                global = nsnull;
+                goto out;
+            }
+        }
     }
 
-#ifdef DEBUG_shaver_off
-    fprintf(stderr, "mJCL: compiled JS component %s\n", nativePath);
-#endif
-
-    if (!JS_ExecuteScript(cx, global, script, &retval)) {
-#ifdef DEBUG_shaver_off
-        fprintf(stderr, "mJCL: failed to execute %s\n", nativePath);
-#endif
-        global = nsnull;
-        goto out;
+    {
+        /* freed when we remove from the table */
+        char *location = nsCRT::strdup(aLocation);
+        he = PL_HashTableRawAdd(mGlobals, hep, hash, location, global);
+        JS_AddNamedRoot(cx, &he->value, location);
     }
-
-    /* freed when we remove from the table */
-    location = nsCRT::strdup(aLocation);
-    he = PL_HashTableRawAdd(mGlobals, hep, hash, location, global);
-    JS_AddNamedRoot(cx, &he->value, location);
 
  out:
+    if (jsPrincipals)
+        JSPRINCIPALS_DROP(cx, jsPrincipals);
     if (script)
         JS_DestroyScript(cx, script);
     if (needRelease)
@@ -1142,18 +1138,28 @@ NS_IMETHODIMP
 mozJSComponentLoader::UnloadAll(PRInt32 aWhen)
 {
     if (mInitialized) {
+        mInitialized = PR_FALSE;
 
         // stabilize the component manager, etc.
         nsCOMPtr<nsIComponentManager> kungFuDeathGrip = mCompMgr;
 
-        PL_HashTableEnumerateEntries(mModules, UnloadAndReleaseModules,
+        PL_HashTableEnumerateEntries(mModules, 
+                                     UnloadAndReleaseModules,
                                      mCompMgr);
-        
+        PL_HashTableDestroy(mModules);
+        mModules = nsnull;
+
+        PL_HashTableEnumerateEntries(mGlobals, UnrootGlobals, mRuntime);
+        PL_HashTableDestroy(mGlobals);
+        mGlobals = nsnull;
+
         JSContext* cx = JS_NewContext(mRuntime, 256);
         if (cx) {
-            JS_MaybeGC(cx);
+            JS_GC(cx);
             JS_DestroyContext(cx);
         }
+
+        mRuntimeService = nsnull;
     }
 
 #ifdef DEBUG_shaver_off
@@ -1196,6 +1202,7 @@ JSCLAutoContext::JSCLAutoContext(JSRuntime* rt)
 JSCLAutoContext::~JSCLAutoContext()
 {
     if (mContext && mContextThread) {
+        JS_ClearNewbornRoots(mContext);
         JS_EndRequest(mContext);
     }
 
