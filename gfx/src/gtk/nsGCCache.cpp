@@ -38,7 +38,13 @@ nsGCCache::nsGCCache()
 
 nsGCCache::~nsGCCache()
 {
-
+  int i;
+  int maxi = (gc_cache_wrapped_p ? countof(gc_cache) : gc_cache_fp);
+  for (i = 0; i < maxi; i++) {
+    gdk_gc_unref(gc_cache[i].gc);
+    if (gc_cache[i].clipRegion)
+      gdk_region_destroy(gc_cache[i].clipRegion);
+  }
 }
 
 GdkRegion *
