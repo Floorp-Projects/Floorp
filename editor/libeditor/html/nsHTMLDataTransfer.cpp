@@ -477,7 +477,7 @@ nsHTMLEditor::InsertHTMLWithCharsetAndContext(const nsAString & aInputString,
       {
         // if we had to insert something higher up in the paste heirarchy, we want to 
         // skip any further paste nodes that descend from that.  Else we will paste twice.
-        if (nsHTMLEditUtils::IsDescendantOf(curNode, insertedContextParent))
+        if (nsEditorUtils::IsDescendantOf(curNode, insertedContextParent))
           continue;
       }
       
@@ -2425,7 +2425,7 @@ nsHTMLEditor::ReplaceOrphanedStructure(PRBool aEnd,
     {
       endpoint = GetArrayEndpoint(aEnd, aNodeArray);
       if (!endpoint) break;
-      if (nsHTMLEditUtils::IsDescendantOf(endpoint, replaceNode))
+      if (nsEditorUtils::IsDescendantOf(endpoint, replaceNode))
         aNodeArray.RemoveObject(endpoint);
       else
         break;

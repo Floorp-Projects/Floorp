@@ -75,8 +75,6 @@ public:
   static PRBool IsMozDiv(nsIDOMNode *aNode);
   static PRBool IsMailCite(nsIDOMNode *aNode);
   static PRBool IsFormWidget(nsIDOMNode *aNode);
-  static PRBool IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset = 0);
-  static PRBool IsLeafNode(nsIDOMNode *aNode);
   static PRBool SupportsAlignAttr(nsIDOMNode *aNode);
 
 };

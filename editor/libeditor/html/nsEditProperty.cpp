@@ -144,6 +144,7 @@ nsIAtom * nsIEditProperty::cssTextDecoration;
 nsIAtom * nsIEditProperty::cssVerticalAlign;
 nsIAtom * nsIEditProperty::cssWhitespace;
 nsIAtom * nsIEditProperty::cssWidth;
+nsIAtom * nsIEditProperty::cssMozUserSelect;
 
 
 nsIAtom * nsIEditProperty::cssPxUnit;
@@ -282,6 +283,7 @@ nsEditProperty::nsEditProperty()
   nsIEditProperty::cssVerticalAlign   = NS_NewAtom("vertical-align");
   nsIEditProperty::cssWhitespace      = NS_NewAtom("white-space");
   nsIEditProperty::cssWidth           = NS_NewAtom("width");
+  nsIEditProperty::cssMozUserSelect   = NS_NewAtom("-moz-user-select");
 
 
   nsIEditProperty::cssPxUnit          = NS_NewAtom("px");
@@ -394,6 +396,7 @@ nsEditProperty::~nsEditProperty()
   NS_IF_RELEASE(nsIEditProperty::cssVerticalAlign);
   NS_IF_RELEASE(nsIEditProperty::cssWhitespace);
   NS_IF_RELEASE(nsIEditProperty::cssWidth);
+  NS_IF_RELEASE(nsIEditProperty::cssMozUserSelect);
 
   NS_IF_RELEASE(nsIEditProperty::cssPxUnit);
   NS_IF_RELEASE(nsIEditProperty::cssEmUnit);

@@ -167,6 +167,7 @@ public:
   static nsIAtom *cssVerticalAlign;
   static nsIAtom *cssWhitespace;
   static nsIAtom *cssWidth;
+  static nsIAtom *cssMozUserSelect;
 
 
   static nsIAtom *cssPxUnit;
