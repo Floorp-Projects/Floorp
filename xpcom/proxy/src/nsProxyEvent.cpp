@@ -58,7 +58,6 @@
 #include "xptcall.h"
 
 #include "nsIComponentManager.h"
-#include "nsComponentManagerObsolete.h"
 #include "nsIServiceManager.h"
 #include "nsMemory.h"
 #include "nsIEventQueueService.h"
