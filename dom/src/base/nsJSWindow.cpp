@@ -2565,6 +2565,7 @@ static JSFunctionSpec WindowMethods[] =
 };
 
 
+#if 0
 //
 // Window constructor
 //
@@ -2573,6 +2574,7 @@ Window(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   return JS_FALSE;
 }
+#endif
 
 
 //
