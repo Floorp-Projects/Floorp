@@ -59,9 +59,9 @@ namespace JSTypes {
     
     class JSObject;
     class JSArray;
+    class JSString;
     class JSFunction;
     class JSScope;
-    class JSString;
     class JSType;
     class Context;
     
@@ -226,13 +226,13 @@ namespace JSTypes {
         JSString* mClass;       // this is the internal [[Class]] property
 
         static JSObject *initJSObject();
-        static String ObjectString;
-        static JSObject *objectPrototypeObject;
+        static JSString *ObjectString;
+        static JSObject *ObjectPrototypeObject;
 
-        void init(JSObject* prototype);
+        void init(JSObject* prototype)  { mPrototype = prototype; mType = &Any_Type; mClass = ObjectString; }
 
     public:
-        JSObject()                      { init(objectPrototypeObject); }
+        JSObject()                      { init(ObjectPrototypeObject); }
         JSObject(JSValue &constructor)  { init(constructor.object->getProperty(widenCString("prototype")).object); }
         JSObject(JSObject *prototype)   { init(prototype); }
     
@@ -362,49 +362,6 @@ namespace JSTypes {
         }
     };
         
-    /**
-     * Private representation of a JS function. This simply
-     * holds a reference to the iCode module that is the
-     * compiled code of the function.
-     */
-    class JSFunction : public JSObject {
-        static String FunctionString;
-        static JSObject *functionPrototypeObject;
-        ICodeModule* mICode;
-    protected:
-        JSFunction() : mICode(0) {}
-
-   	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
-	    typedef gc_allocator<JSFunction, traits> allocator;
-		
-    public:
-        static void JSFunction::initFunctionObject(JSScope *g);
-
-        JSFunction(ICodeModule* iCode);
-        ~JSFunction();
-    
-        void* operator new(size_t) { return allocator::allocate(1); }
-
-        ICodeModule* getICode()    { return mICode; }
-        virtual bool isNative()    { return false; }
-    };
-
-    class JSNativeFunction : public JSFunction {
-    public:
-        typedef JSValue (*JSCode)(Context *cx, const JSValues& argv);
-        JSCode mCode;
-        JSNativeFunction(JSCode code) : mCode(code) {}
-        virtual bool isNative()    { return true; }
-    };
-        
-    class JSBinaryOperator : public JSFunction {
-    public:
-        typedef JSValue (*JSBinaryCode)(const JSValue& arg1, const JSValue& arg2);
-        JSBinaryCode mCode;
-        JSBinaryOperator(JSBinaryCode code) : mCode(code) {}
-        virtual bool isNative()    { return true; }
-    };
-        
 #if defined(XP_UNIX)
     // bastring.cc defines a funky operator new that assumes a byte-allocator.
     typedef string_char_traits<char16> JSCharTraits;
@@ -446,6 +403,55 @@ namespace JSTypes {
         printString(f, str.begin(), str.end());
         return f;
     }
+
+    /**
+     * Private representation of a JS function. This simply
+     * holds a reference to the iCode module that is the
+     * compiled code of the function.
+     */
+    class JSFunction : public JSObject {
+        static JSString* FunctionString;
+        static JSObject* FunctionPrototypeObject;
+        ICodeModule* mICode;
+    protected:
+        JSFunction() : mICode(0) {}
+
+   	    typedef JavaScript::gc_traits_finalizable<JSFunction> traits;
+	    typedef gc_allocator<JSFunction, traits> allocator;
+		
+    public:
+        static void JSFunction::initFunctionObject(JSScope *g);
+
+        JSFunction(ICodeModule* iCode)
+            : JSObject(FunctionPrototypeObject),
+              mICode(iCode)
+        {
+            setClass(FunctionString);
+        }
+
+        ~JSFunction();
+    
+        void* operator new(size_t) { return allocator::allocate(1); }
+
+        ICodeModule* getICode()    { return mICode; }
+        virtual bool isNative()    { return false; }
+    };
+
+    class JSNativeFunction : public JSFunction {
+    public:
+        typedef JSValue (*JSCode)(Context *cx, const JSValues& argv);
+        JSCode mCode;
+        JSNativeFunction(JSCode code) : mCode(code) {}
+        virtual bool isNative()    { return true; }
+    };
+        
+    class JSBinaryOperator : public JSFunction {
+    public:
+        typedef JSValue (*JSBinaryCode)(const JSValue& arg1, const JSValue& arg2);
+        JSBinaryCode mCode;
+        JSBinaryOperator(JSBinaryCode code) : mCode(code) {}
+        virtual bool isNative()    { return true; }
+    };
 
    /**
      * Provides a set of nested scopes. 
@@ -560,12 +566,6 @@ namespace JSTypes {
 
         int32 distance(const JSType *other) const;
     };
-
-    
-    inline void JSObject::init(JSObject* prototype) { mPrototype = prototype; mType = &Any_Type; mClass = new JSString(ObjectString); }
-    
-    inline JSFunction::JSFunction(ICodeModule* iCode) : mICode(iCode), JSObject(functionPrototypeObject) { setClass(new JSString(FunctionString)); }
-
 
 } /* namespace JSTypes */    
 } /* namespace JavaScript */

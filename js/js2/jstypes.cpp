@@ -76,8 +76,8 @@ struct ObjectFunctionEntry {
 };
 
 
-JSObject *JSObject::objectPrototypeObject = JSObject::initJSObject();
-String JSObject::ObjectString = widenCString("Object");
+JSObject* JSObject::ObjectPrototypeObject = JSObject::initJSObject();
+JSString* JSObject::ObjectString = new JSString("Object");
 
 // This establishes the ur-prototype, there's a timing issue
 // here - the JSObject static initializers have to run before
@@ -98,12 +98,9 @@ void JSObject::initObjectObject(JSScope *g)
 {
     JSNativeFunction *objCon = new JSNativeFunction(objectConstructor);
 
-    objCon->setProperty(widenCString("prototype"), JSValue(objectPrototypeObject));
+    objCon->setProperty(widenCString("prototype"), JSValue(ObjectPrototypeObject));
     
-
-
-
-    g->setProperty(ObjectString, JSValue(objCon));
+    g->setProperty(*ObjectString, JSValue(objCon));
 }
 
 
@@ -149,8 +146,8 @@ JSValue function_call(Context *cx, const JSValues& argv)
 
 
 
-String JSFunction::FunctionString = widenCString("Function");
-JSObject *JSFunction::functionPrototypeObject = NULL;   // the 'original Function prototype object'
+JSString* JSFunction::FunctionString = new JSString("Function");
+JSObject* JSFunction::FunctionPrototypeObject = NULL;   // the 'original Function prototype object'
 
 struct FunctionFunctionEntry {
     char *name;
@@ -165,21 +162,21 @@ struct FunctionFunctionEntry {
 void JSFunction::initFunctionObject(JSScope *g)
 {
     // first build the Function Prototype Object
-    functionPrototypeObject = new JSNativeFunction(functionPrototypeFunction);
+    FunctionPrototypeObject = new JSNativeFunction(functionPrototypeFunction);
     for (int i = 0; i < sizeof(FunctionFunctions) / sizeof(FunctionFunctionEntry); i++)
-        functionPrototypeObject->setProperty(widenCString(FunctionFunctions[i].name), JSValue(new JSNativeFunction(FunctionFunctions[i].fn) ) );
+        FunctionPrototypeObject->setProperty(widenCString(FunctionFunctions[i].name), JSValue(new JSNativeFunction(FunctionFunctions[i].fn) ) );
 
     // now the Function Constructor Object
     JSNativeFunction *functionConstructorObject = new JSNativeFunction(function_constructor);
-    functionConstructorObject->setPrototype(functionPrototypeObject);
+    functionConstructorObject->setPrototype(FunctionPrototypeObject);
     functionConstructorObject->setProperty(widenCString("length"), JSValue((int32)1));
-    functionConstructorObject->setProperty(widenCString("prototype"), JSValue(functionPrototypeObject));
+    functionConstructorObject->setProperty(widenCString("prototype"), JSValue(FunctionPrototypeObject));
 
     // This is interesting - had to use defineVariable here to specify a type because
     // when left as Any_Type (via setProperty), the Function predefined type interacted
     // badly with this value. (I think setProperty perhaps should have reset the entry
     // in mTypes) (?)
-    g->defineVariable(FunctionString, &Function_Type, JSValue(functionConstructorObject));
+    g->defineVariable(*FunctionString, &Function_Type, JSValue(functionConstructorObject));
 }
 
 /**************************************************************************************/
