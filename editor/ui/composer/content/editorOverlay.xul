@@ -120,7 +120,7 @@
     <command id="cmd_isindex"          oncommand="goDoCommand('cmd_isindex')"/>
     <command id="cmd_objectProperties" oncommand="goDoCommand('cmd_objectProperties')"/>
     <command id="cmd_insertChars"      oncommand="goDoCommand('cmd_insertChars')"    label="&insertCharsCmd.label;"/>
-    <command id="cmd_insertHTMLWithDialog" oncommand="goDoCommand('cmd_insertHTMLDlg')"  label="&insertHTMLCmd.label;"/>
+    <command id="cmd_insertHTMLWithDialog" oncommand="goDoCommand('cmd_insertHTMLWithDialog')"  label="&insertHTMLCmd.label;"/>
 
     <command id="cmd_insertBreak"      oncommand="goDoCommand('cmd_insertBreak')"/>
     <command id="cmd_insertBreakAll"   oncommand="goDoCommand('cmd_insertBreakAll')"/>
