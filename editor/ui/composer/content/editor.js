@@ -404,13 +404,16 @@ function CheckAndSaveDocument(reasonToSave, allowDontSave)
   promptService = promptService.QueryInterface(Components.interfaces.nsIPromptService);
 
   var result = {value:0};
-  promptService.confirmEx(window, dialogTitle, dialogMsg,
-  						  (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
-  						  (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
-  						  (allowDontSave ? (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2) : 0),
-  						  null, null,
-  						  (allowDontSave ? GetString("DontSave") : null),
-  						  null, {value:0}, result);
+  var promptFlags = 
+    (promptService.BUTTON_TITLE_SAVE * promptService.BUTTON_POS_0) +
+    (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1) +
+    (allowDontSave
+    ? (promptService.BUTTON_TITLE_DONT_SAVE * promptService.BUTTON_POS_2)
+    : 0);
+  promptService.confirmEx(
+    window, dialogTitle, dialogMsg, promptFlags,
+    null, null, null, null, {value:0}, result
+  );
 
   if (result.value == 0)
   {
