@@ -50,7 +50,7 @@ class AsyncReadStreamAdaptor : public nsIInputStream {
 public:
     AsyncReadStreamAdaptor(nsMemCacheChannel* aChannel, nsIInputStream *aSyncStream):
         mSyncStream(aSyncStream), mDataAvailCursor(0),
-        mRemaining(0), mChannel(aChannel), mAvailable(0), mAborted(false), mSuspended(false)
+        mRemaining(0), mAvailable(0), mChannel(aChannel), mAborted(PR_FALSE), mSuspended(PR_FALSE)
         {
             NS_INIT_REFCNT();
             NS_ADDREF(mChannel);
@@ -71,18 +71,18 @@ public:
 
     nsresult
     Cancel(void) {
-        mAborted = true;
+        mAborted = PR_TRUE;
         return mStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_ABORTED, nsnull);
     }
 
     nsresult
-    Suspend(void) { mSuspended = true; return NS_OK; }
+    Suspend(void) { mSuspended = PR_TRUE; return NS_OK; }
 
     nsresult
     Resume(void) {
         if (!mSuspended)
             return NS_ERROR_FAILURE;
-        mSuspended = false;
+        mSuspended = PR_FALSE;
         return NextListenerEvent();
     }
 
@@ -159,7 +159,7 @@ protected:
 
     nsresult
     Fail(void) {
-        mAborted = true;
+        mAborted = PR_TRUE;
         return mStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_FAILED, nsnull);
     }
 
@@ -198,8 +198,8 @@ private:
     PRUint32                    mAvailable;      // Number of bytes for which OnDataAvailable fired
     nsMemCacheChannel*          mChannel;        // Associated memory cache channel, strong link
                                                  //   but can not use nsCOMPtr
-    bool                        mAborted;        // Abort() has been called
-    bool                        mSuspended;      // Suspend() has been called
+    PRBool                      mAborted;        // Abort() has been called
+    PRBool                      mSuspended;      // Suspend() has been called
 };
 
 NS_IMPL_ISUPPORTS(AsyncReadStreamAdaptor,  NS_GET_IID(nsIInputStream))

@@ -137,7 +137,7 @@ private:
 
     // Initialize internal fields of this nsCachedNetData instance from the
     // underlying raw cache database record.
-    nsresult Deserialize(bool aDeserializeFlags);
+    nsresult Deserialize(PRBool aDeserializeFlags);
 
     // Notify stream-as-file observers about change in cache entry status
     nsresult Notify(PRUint32 aMessage, nsresult aError);
