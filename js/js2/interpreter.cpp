@@ -711,6 +711,15 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     (*registers)[dst(na).first] = new JSArray();
                 }
                 break;
+            case DELETE_PROP:
+                {
+                    DeleteProp* dp = static_cast<DeleteProp*>(instruction);
+                    JSValue& value = (*registers)[src1(dp).first];
+                    if (value.isObject() && !value.isType()) {
+                        (*registers)[dst(dp).first] = value.object->deleteProperty(*src2(dp));
+                    }
+                }
+                break;
             case GET_PROP:
                 {
                     GetProp* gp = static_cast<GetProp*>(instruction);
