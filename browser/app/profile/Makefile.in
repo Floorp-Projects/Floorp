@@ -34,8 +34,17 @@ FILES := \
 	bookmarks.html \
 	localstore.rdf \
 	search.rdf \
-	mimeTypes.rdf \
 	$(NULL)
+
+ifeq ($(OS_ARCH),WINNT)
+FILES += win/mimeTypes.rdf
+else
+ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
+FILES += mac/mimeTypes.rdf
+else
+FILES += mimeTypes.rdf
+endif
+endif
 
 libs:: $(FILES)
 	$(INSTALL) $^ $(DIST)/bin/defaults/profile
