@@ -890,8 +890,6 @@ other-licenses/branding/thunderbird/content/Makefile
 MAKEFILES_phoenix="
 browser/Makefile
 browser/app/Makefile
-browser/app/profile/Makefile
-browser/app/profile/chrome/Makefile
 browser/base/Makefile
 browser/components/Makefile
 browser/components/bookmarks/Makefile
@@ -901,7 +899,6 @@ browser/components/build/Makefile
 browser/components/cookieviewer/Makefile
 browser/components/history/Makefile
 browser/components/prefwindow/Makefile
-browser/components/security/Makefile
 browser/components/sidebar/Makefile
 browser/components/sidebar/public/Makefile
 browser/components/sidebar/src/Makefile
@@ -928,7 +925,6 @@ chrome/tools/chromereg/Makefile
 toolkit/Makefile
 toolkit/content/Makefile
 toolkit/content/buildconfig.html
-toolkit/locale/Makefile
 toolkit/obsolete/Makefile
 toolkit/components/autocomplete/Makefile
 toolkit/components/autocomplete/public/Makefile
@@ -961,13 +957,9 @@ toolkit/mozapps/installer/windows/wizard/setup/Makefile
 toolkit/mozapps/installer/windows/wizard/setuprsc/Makefile
 toolkit/mozapps/installer/windows/wizard/uninstall/Makefile
 toolkit/xre/Makefile
-toolkit/locale/contents-platform.rdf
-toolkit/locale/contents-region.rdf
-toolkit/locale/contents.rdf
 toolkit/components/passwordmgr/resources/content/contents.rdf
 toolkit/components/passwordmgr/resources/locale/contents.rdf
 toolkit/mozapps/contents-content.rdf
-toolkit/mozapps/contents-locale.rdf
 "
 
 
