@@ -97,11 +97,6 @@ include <$(DEPTH)\config\rules.mak>
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) .\$(OBJDIR)\$(MODULE).lib $(DIST)\lib
-	$(MAKE_INSTALL) ..\xul\EditorAppShell.xul    $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\EditorCommands.js     $(DIST)\bin\res\samples	
-	$(MAKE_INSTALL) ..\xul\EditorInitPage.html   $(DIST)\bin\res\samples
-	$(MAKE_INSTALL) ..\xul\EditorInitPagePlain.html   $(DIST)\bin\res\samples
-
 	$(MAKE_INSTALL) ..\xul\pref-advanced.html       $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\pref-applications.html   $(DIST)\bin\res\samples
 	$(MAKE_INSTALL) ..\xul\pref-appearance.html       $(DIST)\bin\res\samples
@@ -198,30 +193,6 @@ install:: $(DLL)
 	$(MAKE_INSTALL) ..\xul\resources\TB_NewHome.gif			$(DIST)\bin\res\toolbar
 	$(MAKE_INSTALL) ..\xul\resources\TB_NewPrint.gif			$(DIST)\bin\res\toolbar
 
-	$(MAKE_INSTALL) ..\xul\resources\ED_Bold.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_Bullets.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_Center.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_ClearStyle.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_Copy.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_Cut.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_Dedent.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_Find.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_HLine.gif			$(DIST)\bin\res\toolbar
-	$(MAKE_INSTALL) ..\xul\resources\ED_Image.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Indent.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Italic.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Left.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Link.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Numbers.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Paste.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Redo.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Right.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Spell.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Table.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Target.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Underline.gif			$(DIST)\bin\res\toolbar
-  $(MAKE_INSTALL) ..\xul\resources\ED_Undo.gif			$(DIST)\bin\res\toolbar
-
   $(MAKE_INSTALL) ..\xul\resources\throbbingN.gif			$(DIST)\bin\res\throbber
 
 clobber::
@@ -303,30 +274,6 @@ clobber::
 	rm -f $(DIST)\bin\res\samples\TB_NewStop.gif	
 	rm -f $(DIST)\bin\res\samples\TB_NewHome.gif	
 	rm -f $(DIST)\bin\res\samples\TB_NewPrint.gif	
-  
-  rm -f $(DIST)\bin\res\samples\ED_Bold.gif			
-	rm -f $(DIST)\bin\res\samples\ED_Bullets.gif			
-	rm -f $(DIST)\bin\res\samples\ED_Center.gif			
-	rm -f $(DIST)\bin\res\samples\ED_ClearStyle.gif			
-	rm -f $(DIST)\bin\res\samples\ED_Copy.gif			
-	rm -f $(DIST)\bin\res\samples\ED_Cut.gif			
-	rm -f $(DIST)\bin\res\samples\ED_Dedent.gif			
-	rm -f $(DIST)\bin\res\samples\ED_Find.gif			
-	rm -f $(DIST)\bin\res\samples\ED_HLine.gif			
-	rm -f $(DIST)\bin\res\samples\ED_Image.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Indent.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Italic.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Left.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Link.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Numbers.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Paste.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Redo.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Right.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Spell.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Table.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Target.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Underline.gif			
-  rm -f $(DIST)\bin\res\samples\ED_Undo.gif			
   
   rm -f $(DIST)\bin\res\throbber\throbbingN.gif
 

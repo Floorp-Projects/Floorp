@@ -25,11 +25,7 @@ include $(topsrcdir)/config/config.mk
 include $(topsrcdir)/config/rules.mk
 
 EXPORT_RESOURCE_SAMPLES = \
-	$(srcdir)/EditorAppShell.xul \
-	$(srcdir)/EditorCommands.js \
-	$(srcdir)/EditorInitPage.html \
-	$(srcdir)/EditorInitPagePlain.html \
-    $(srcdir)/pref-advanced.html \
+  $(srcdir)/pref-advanced.html \
 	$(srcdir)/pref-applications.html \
 	$(srcdir)/pref-appearance.html \
 	$(srcdir)/pref-cache.html \
@@ -67,29 +63,6 @@ EXPORT_RESOURCE_TOOLBAR = \
 	$(srcdir)/resources/DialogMailIcon_mo.gif \
 	$(srcdir)/resources/DialogNavIcon.gif \
 	$(srcdir)/resources/DialogNavIcon_mo.gif \
-	$(srcdir)/resources/ED_Bold.gif \
-	$(srcdir)/resources/ED_Bullets.gif \
-	$(srcdir)/resources/ED_Center.gif \
-	$(srcdir)/resources/ED_ClearStyle.gif \
-	$(srcdir)/resources/ED_Copy.gif \
-	$(srcdir)/resources/ED_Cut.gif \
-	$(srcdir)/resources/ED_Dedent.gif \
-	$(srcdir)/resources/ED_Find.gif \
-	$(srcdir)/resources/ED_HLine.gif \
-	$(srcdir)/resources/ED_Image.gif \
-	$(srcdir)/resources/ED_Indent.gif \
-	$(srcdir)/resources/ED_Italic.gif \
-	$(srcdir)/resources/ED_Left.gif \
-	$(srcdir)/resources/ED_Link.gif \
-	$(srcdir)/resources/ED_Numbers.gif \
-	$(srcdir)/resources/ED_Paste.gif \
-	$(srcdir)/resources/ED_Redo.gif \
-	$(srcdir)/resources/ED_Right.gif \
-	$(srcdir)/resources/ED_Spell.gif \
-	$(srcdir)/resources/ED_Table.gif \
-	$(srcdir)/resources/ED_Target.gif \
-	$(srcdir)/resources/ED_Underline.gif \
-	$(srcdir)/resources/ED_Undo.gif \
 	$(srcdir)/resources/TB_Back.gif \
 	$(srcdir)/resources/TB_Back_dis.gif \
 	$(srcdir)/resources/TB_Back_mo.gif \
