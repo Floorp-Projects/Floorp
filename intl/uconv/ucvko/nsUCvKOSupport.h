@@ -34,7 +34,7 @@
 /**
  * Support class for the Unicode decoders. 
  *
- * The class source files for this class are in /ucvlatin/nsUCvLatinSupport. 
+ * The class source files for this class are in /ucvlatin/nsUCvKOSupport. 
  * However, because these objects requires non-xpcom subclassing, local copies
  * will be made into the other directories using them. Just don't forget to 
  * keep in sync with the master copy!
@@ -236,6 +236,25 @@ protected:
 };
 
 //----------------------------------------------------------------------
+// Class nsBasicEncoder [declaration]
+
+class nsBasicEncoder : public nsIUnicodeEncoder, public nsICharRepresentable
+{
+  NS_DECL_ISUPPORTS
+
+public:
+  /**
+   * Class constructor.
+   */
+  nsBasicEncoder();
+
+  /**
+   * Class destructor.
+   */
+  virtual ~nsBasicEncoder();
+
+};
+//----------------------------------------------------------------------
 // Class nsEncoderSupport [declaration]
 
 /**
@@ -249,9 +268,8 @@ protected:
  * @created         17/Feb/1999
  * @author  Catalin Rotaru [CATA]
  */
-class nsEncoderSupport : public nsIUnicodeEncoder, public nsICharRepresentable
+class nsEncoderSupport :  public nsBasicEncoder
 {
-  NS_DECL_ISUPPORTS
 
 protected:
 
