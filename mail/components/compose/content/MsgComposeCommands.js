@@ -2284,6 +2284,9 @@ function AttachPage()
         var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
         attachment.url = result.value;
         AddAttachment(attachment);
+        var attachmentBox = document.getElementById("attachments-box");
+        attachmentBox.hidden = false;
+        document.getElementById("attachmentbucket-sizer").hidden=false;
       }
    }
 }
