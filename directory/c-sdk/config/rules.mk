@@ -213,6 +213,18 @@ distclean::
 	rm -rf $(wildcard *.OBJ *.OBJD) dist $(ALL_TRASH) $(DIST_GARBAGE)
 	+$(LOOP_OVER_DIRS)
 
+real_install:: $(RELEASE_BINS) $(RELEASE_HEADERS) $(RELEASE_LIBS)
+ifdef RELEASE_BINS
+	$(NSINSTALL) -t -m 0755 $(RELEASE_BINS) $(DESTDIR)$(bindir)
+endif
+ifdef RELEASE_HEADERS
+	$(NSINSTALL) -t -m 0644 $(RELEASE_HEADERS) $(DESTDIR)$(includedir)
+endif
+ifdef RELEASE_LIBS
+	$(NSINSTALL) -t -m 0755 $(RELEASE_LIBS) $(DESTDIR)$(libdir)
+endif
+	+$(LOOP_OVER_DIRS)
+
 release:: export
 ifdef RELEASE_BINS
 	@echo "Copying executable programs and scripts to release directory"

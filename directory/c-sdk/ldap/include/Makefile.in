@@ -57,6 +57,8 @@ PRIVATEHEADERS := $(addprefix $(srcdir)/, $(PRIVATEHEADERS))
 
 GENERATED_HEADERS = ldap-standard.h
 
+RELEASE_HEADERS	= $(HEADERS) $(GENHEADERS)
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDEDIR	= $(DIST)/public/ldap
@@ -87,3 +89,4 @@ $(INCLUDEDIR)/ldap-standard.h:	ldap-standard-tmpl.h $(INCLUDEDIR)
 			< $< > $@
 
 FORCE:
+

@@ -84,6 +84,7 @@ ifeq ($(OS_ARCH),WINNT)
 SRCS		+= dllmain.c \
                    mozock.c
 endif
+RELEASE_LIBS	= $(SHARED_LIBRARY) $(DLLLDAP)
 
 REALOBJS	= $(SRCS:.c=.$(OBJ_SUFFIX))
 OBJS		= $(addprefix $(OBJDIR_NAME)/, $(REALOBJS))

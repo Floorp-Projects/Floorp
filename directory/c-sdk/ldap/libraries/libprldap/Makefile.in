@@ -50,6 +50,8 @@ DLLPRLDAP	= $(addprefix $(OBJDIR_NAME)/, \
 
 INSTALLDIR      = $(DIST)/$(OBJDIR_NAME)
 
+RELEASE_LIBS	= $(DLLPRLDAP)
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES  = -I$(PUBLIC)/nspr
