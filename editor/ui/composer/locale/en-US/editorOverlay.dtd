@@ -74,7 +74,7 @@
 <!ENTITY editcopy.keybinding "c">
 <!ENTITY pasteCmd.label "Paste">
 <!ENTITY editpaste.accesskey "p">
-<!ENTITY editpaste.keybinding "v"> <!-- also used for pasteAsQuotationCmd -->
+<!ENTITY editpaste.keybinding "v">
 <!ENTITY pasteAsQuotationCmd.label "Paste As Quotation">
 <!ENTITY editpastequotation.accesskey "q">
 <!ENTITY clearCmd.label "Clear">
