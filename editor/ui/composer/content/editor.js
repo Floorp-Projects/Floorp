@@ -63,6 +63,7 @@ const kHTMLMimeType = "text/html";
 
 var gPreviousNonSourceDisplayMode = 1;
 var gEditorDisplayMode = -1;
+var WebCompose = false;     // Set true for Web Composer, leave false for Messenger Composer
 var docWasModified = false;  // Check if clean document, if clean then unload when user "Opens"
 var gContentWindow = 0;
 var gSourceContentWindow = 0;
@@ -163,6 +164,7 @@ function EditorOnLoad()
       }
     }
 
+    WebCompose = true;
     window.tryToClose = EditorCanClose;
 
     // Continue with normal startup.
@@ -205,26 +207,6 @@ function IsEditingRenderedHTML()
   return isHTMLEditor() && !IsInHTMLSourceMode();
 }
 
-function IsWebComposer()
-{
-  return document.getElementById("WebComposerWindow");
-}
-
-function IsDocumentEditable()
-{
-  try {
-    return GetCurrentEditor().isDocumentEditable;
-  } catch (e) {}
-  return false;
-}
-
-function IsDocumentModified()
-{
-  try {
-    return GetCurrentEditor().documentModified;
-  } catch(e) {}
-  return false;
-}
 
 var DocumentReloadListener =
 {
@@ -252,6 +234,56 @@ function addEditorClickEventListener()
   } catch (e) {}
 }
 
+function DoWindowCommandControllerSetting(aEditor)
+{
+  // Get the window command controller created in SetupComposerWindowCommands()
+  if (gComposerWindowControllerID != -1)
+  {
+    try { 
+      var controller = window.controllers.getControllerById(gComposerWindowControllerID);
+      controller.SetCommandRefCon(aEditor.QueryInterface(Components.interfaces.nsISupports));
+    } catch (e) {}
+  }
+}
+
+var MessageComposeDocumentStateListener =
+{
+  NotifyDocumentCreated: function()
+  {
+    gEditor = editorShell.editor;
+
+    // do all of our QI'ing here so we don't need to do it elsewhere
+    DoAllQueryInterfaceOnEditor();
+    try {
+      gEditor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
+    } catch(e) {}
+
+    // XXX Temporary: This should be set during startup 
+    //  once we finish transition from nsIEditorShell is to nsIEditorSession
+    try {
+      gEditor.contentsMIMEType = gIsHTMLEditor ? kHTMLMimeType : kTextMimeType;
+    } catch(e) {}
+
+    addEditorClickEventListener();
+
+    try {
+      // Add the base sheet for editor cursor etc.
+      gEditor.addOverrideStyleSheet(kBaseEditorStyleSheet);
+    } catch (e) {}
+  },
+
+  NotifyDocumentWillBeDestroyed: function()
+  {
+    // note that the editor seems to be gone at this point 
+    // so we don't have a way to remove the click listener.
+    // hopefully it is being cleaned up with all listeners
+  },
+
+  NotifyDocumentStateChanged:function()
+  {
+  }
+};
+
 function DoAllQueryInterfaceOnEditor()
 {
   // do QI here so the interfaces will be accessible on gEditor
@@ -271,82 +303,58 @@ function DoAllQueryInterfaceOnEditor()
 
 // This is called when the real editor document is created,
 // before it's loaded.
-// IMPORTANT: This is used by ALL Composers, so be careful!
 var DocumentStateListener =
 {
   NotifyDocumentCreated: function()
   {
     gEditor = editorShell.editor;
 
-    // Just for convenience
-    gContentWindow = window._content;
+    DoWindowCommandControllerSetting(gEditor);
 
     // do all of our QI'ing here so we don't need to do it elsewhere
     DoAllQueryInterfaceOnEditor();
-
-    if (editorShell.editorType == "htmlmail"
-        || editorShell.editorType == "textmail")
-    {
-      gEditor.QueryInterface(Components.interfaces.nsIEditorMailSupport);
-    }
-    else
-    {
-      // Mail Composers start focus in address area
-      gContentWindow.focus();
-    }
-
-    if (!("InsertCharWindow" in window))
-      window.InsertCharWindow = null;
-
-    try {
-      // Add the base sheets for editor cursor etc.
-      gEditor.addOverrideStyleSheet(kBaseEditorStyleSheet);
-
-      //  and extra styles for showing anchors, table borders, smileys, etc
-      gEditor.addOverrideStyleSheet(kNormalStyleSheet);
-    } catch (e) {}
 
     // XXX Temporary: This should be set during startup 
     //  once we finish transition from nsIEditorShell is to nsIEditorSession
     try {
       gEditor.contentsMIMEType = gIsHTMLEditor ? kHTMLMimeType : kTextMimeType;
     } catch(e) {}
+
+    // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
+    EditorSetDefaultPrefsAndDoctype();
+    EditorInitToolbars();
     
+    // Set window title and build "Recent Files" menu  
+    // (to detect empty menu and disable it)
+    UpdateWindowTitle();
+    BuildRecentMenu();
+
+    // Just for convenience
+    gContentWindow = window._content;
+    gContentWindow.focus();
+
+    // udpate menu items now that we have an editor to play with
+    // Note: This must be AFTER gContentWindow.focus();
+    window.updateCommands("create");
+
+    if (!("InsertCharWindow" in window))
+      window.InsertCharWindow = null;
+    
+    // We must wait until document is created to get proper Url
+    // (Windows may load with local file paths)
+    SetSaveAndPublishUI(GetDocumentUrl());
+
     // Add mouse click watcher if right type of editor
     if (isHTMLEditor())
       addEditorClickEventListener();
 
-    // udpate menu items now that we have an editor to play with
-    window.updateCommands("create");
+    try {
+      // Add the base sheet for editor cursor etc.
+      gEditor.addOverrideStyleSheet(kBaseEditorStyleSheet);
+    } catch (e) {}
 
-    // Do the rest only if a Web Composer application
-    if (IsWebComposer())
-    {
-      // Get the window command controller created in SetupComposerWindowCommands()
-      if (gComposerWindowControllerID != -1)
-      {
-        try { 
-          var controller = window.controllers.getControllerById(gComposerWindowControllerID);
-          controller.SetCommandRefCon(gEditor.QueryInterface(Components.interfaces.nsISupports));
-        } catch (e) {}
-      }
-
-      // Call EditorSetDefaultPrefsAndDoctype first so it gets the default author before initing toolbars
-      EditorSetDefaultPrefsAndDoctype();
-      EditorInitToolbars();
-    
-      // Set window title and build "Recent Files" menu  
-      // (to detect empty menu and disable it)
-      UpdateWindowTitle();
-      BuildRecentMenu();
-
-      // We must wait until document is created to get proper Url
-      // (Windows may load with local file paths)
-      SetSaveAndPublishUI(GetDocumentUrl());
-
-      // Start in "Normal" edit mode
-      SetDisplayMode(kDisplayModeNormal);
-    }
+    // Start in "Normal" edit mode
+    SetDisplayMode(kDisplayModeNormal);
   },
 
     // note that the editor seems to be gone at this point 
@@ -458,7 +466,6 @@ function EditorSharedStartup()
   // So we can't use gEditor.AddDocumentStateListener here.
   if (gIsHTMLEditor)
   {
-    //XXX this is replaced by nsIEditor::contentsMIMEType
     editorShell.contentsMIMEType = kHTMLMimeType;
     SetupHTMLEditorCommands();
   }
@@ -469,7 +476,11 @@ function EditorSharedStartup()
   }
 
   // add a listener to be called when document is really done loading
-  editorShell.RegisterDocumentStateListener( DocumentStateListener );
+  if (editorShell.editorType == "htmlmail"
+      || editorShell.editorType == "textmail")
+    editorShell.RegisterDocumentStateListener( MessageComposeDocumentStateListener );
+  else
+    editorShell.RegisterDocumentStateListener( DocumentStateListener );
 
   var isMac = (GetOS() == gMac);
 
@@ -1412,11 +1423,10 @@ function EditorClick(event)
     return;
   }
 
-  // For Web Composer: In Show All Tags Mode,
+  // In Show All Tags Mode,
   // single click selects entire element,
   //  except for body and table elements
-  if (event.target && IsWebComposer()
-      && isHTMLEditor() && gEditorDisplayMode == kDisplayModeAllTags)
+  if (event.target && isHTMLEditor() && gEditorDisplayMode == kDisplayModeAllTags)
   {
     try
     {
@@ -1803,7 +1813,7 @@ function UpdateWindowTitle()
         windowTitle += " [" + scheme + ":/.../" + filename + "]";
     }
     // Set window title with " - Composer" appended
-    var xulWin = document.getElementById("WebComposerWindow");
+    var xulWin = document.getElementById("editorWindow");
     window.title = windowTitle + xulWin.getAttribute("titlemenuseparator") + xulWin.getAttribute("titlemodifier");
 
     // Save changed title in the recent pages data in prefs

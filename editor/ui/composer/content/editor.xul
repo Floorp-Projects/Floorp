@@ -50,7 +50,7 @@
 %brandDTD;
 ]> 
 
-<window id="WebComposerWindow"
+<window id="editorWindow"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         onload="EditorOnLoad()"
         onunload="EditorShutdown()"
