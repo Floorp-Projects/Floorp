@@ -34,10 +34,11 @@ struct nsRect;
  { 0xa6cf905d, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 // Chrome mask
-#define NS_CHROME_WINDOW_BORDERS_ON 0x1
-#define NS_CHROME_WINDOW_CLOSE_ON   0x2
-#define NS_CHROME_TOOL_BAR_ON       0x4
-#define NS_CHROME_STATUS_BAR_ON     0x8
+#define NS_CHROME_WINDOW_BORDERS_ON 0x01
+#define NS_CHROME_WINDOW_CLOSE_ON   0x02
+#define NS_CHROME_MENU_BAR_ON       0x04
+#define NS_CHROME_TOOL_BAR_ON       0x08
+#define NS_CHROME_STATUS_BAR_ON     0x10
 
 /**
  * API to a "browser window". A browser window contains a toolbar, a web shell
