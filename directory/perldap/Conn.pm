@@ -1,5 +1,5 @@
 #############################################################################
-# $Id: Conn.pm,v 1.5 1998/07/29 08:41:39 leif Exp $
+# $Id: Conn.pm,v 1.6 1998/07/29 09:00:51 leif Exp $
 #
 # The contents of this file are subject to the Mozilla Public License
 # Version 1.0 (the "License"); you may not use this file except in
@@ -41,22 +41,35 @@ sub new
 {
   my $class = shift;
   my $self = {};
-  my ($host, $port, $binddn, $bindpasswd, $certdb, $authmeth) = @_;
+  my $ref;
 
-  #
-  # Add support for passing the hash array of parameters...
-  #
-  if (!defined($port) || ($port eq ""))
+  $ref = ref($_[0]);
+  if (ref $_[0] eq "HASH")
     {
-      $port = (($certdb ne "") ? LDAPS_PORT : LDAP_PORT);
+      my $hash;
+
+      $hash = $_[0];
+      $self->{host} = $hash->{host};
+      $self->{port} = $hash->{port};
+      $self->{binddn} = $hash->{$bind};
+      $self->{bindpasswd} = $hash->{pswd};
+      $self->{certdb} = $hash->{cert};
+    }
+  else
+    {
+      my ($host, $port, $binddn, $bindpasswd, $certdb, $authmeth) = @_;
+
+      $self->{host} = $host;
+      $self->{port} = $port;
+      $self->{binddn} = $binddn;
+      $self->{bindpasswd} = $bindpasswd;
+      $self->{certdb} = $certdb;
     }
 
-  $self->{host} = $host;
-  $self->{port} = $port;
-  $self->{binddn} = $binddn;
-  $self->{bindpasswd} = $bindpasswd;
-  $self->{certdb} = $certdb;
-  $self->{authmethod} = $authmethod;
+  if (!defined($self->{port}) || ($self->{port} eq ""))
+    {
+      $self->{port} = (($self->{certdb} ne "") ? LDAPS_PORT : LDAP_PORT);
+    }
 
   bless $self, $class;
 
