@@ -309,6 +309,7 @@ protected:
                                nsIFrame*&       aNewFrame);
 
   nsresult ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
+                                       const nsStyleDisplay*  aDisplay,
                                        nsIContent*      aContent,
                                        nsIFrame*        aParentFrame,
                                        nsIStyleContext* aStyleContext,
@@ -1051,7 +1052,8 @@ HTMLStyleSheetImpl::ConstructTableFrame(nsIPresContext*  aPresContext,
       case NS_STYLE_DISPLAY_TABLE_CAPTION:
         // Have we already created a caption? If so, ignore this caption
         if (nsnull == captionFrame) {
-          NS_NewBodyFrame(childContent, aNewFrame, captionFrame, PR_FALSE);
+          NS_NewBodyFrame(childContent, aNewFrame, captionFrame,
+                          NS_BODY_NO_AUTO_MARGINS);
           captionFrame->SetStyleContext(aPresContext, childStyleContext);
           // Process the caption's child content and initialize it
           nsIFrame* captionChildList;
@@ -1210,7 +1212,8 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 //    processChildren = PR_TRUE;
   }
   else if (nsHTMLAtoms::body == aTag) {
-    rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame, PR_TRUE);
+    rv = NS_NewBodyFrame(aContent, aParentFrame, aNewFrame,
+                         NS_BODY_THE_BODY|NS_BODY_NO_AUTO_MARGINS);
     processChildren = PR_TRUE;
   }
   else if (nsHTMLAtoms::form == aTag) {
@@ -1246,22 +1249,19 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
 nsresult
 HTMLStyleSheetImpl::ConstructFrameByDisplayType(nsIPresContext*  aPresContext,
+                                                const nsStyleDisplay* aDisplay,
                                                 nsIContent*      aContent,
                                                 nsIFrame*        aParentFrame,
                                                 nsIStyleContext* aStyleContext,
                                                 nsIFrame*&       aNewFrame)
 {
-  const nsStyleDisplay* styleDisplay;
   PRBool                processChildren = PR_FALSE;  // whether we should process child content
   nsresult              rv = NS_OK;
 
   // Initialize OUT parameter
   aNewFrame = nsnull;
 
-  // Get the 'display' type to choose which kind of frame to create
-  styleDisplay = (const nsStyleDisplay*)aStyleContext->GetStyleData(eStyleStruct_Display);
-
-  switch (styleDisplay->mDisplay) {
+  switch (aDisplay->mDisplay) {
   case NS_STYLE_DISPLAY_BLOCK:
   case NS_STYLE_DISPLAY_LIST_ITEM:
     rv = NS_NewBlockFrame(aContent, aParentFrame, aNewFrame, PR_FALSE);
@@ -1356,26 +1356,43 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
   } else {
     styleContext = aPresContext->ResolveStyleContextFor(aContent, aParentFrame);
   }
-
-  // Create a frame.
-  if (nsnull == aParentFrame) {
-    // Construct the root frame object
-    rv = ConstructRootFrame(aPresContext, aContent, styleContext, aFrameSubTree);
-
-  } else {
-    // Handle specific frame types
-    rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame,
-                             tag, styleContext, aFrameSubTree);
-
-    if (NS_SUCCEEDED(rv) && (nsnull == aFrameSubTree)) {
-      // When there is no explicit frame to create, assume it's a container
-      // and let display style dictate the rest
-      rv = ConstructFrameByDisplayType(aPresContext, aContent, aParentFrame,
-                                       styleContext, aFrameSubTree);
+  // XXX bad api - no nsresult returned!
+  if (nsnull == styleContext) {
+    rv = NS_ERROR_OUT_OF_MEMORY;
+  }
+  else {
+    // Pre-check for display "none" - if we find that, don't create
+    // any frame at all.
+    const nsStyleDisplay* display = (const nsStyleDisplay*)
+      styleContext->GetStyleData(eStyleStruct_Display);
+    if (NS_STYLE_DISPLAY_NONE == display->mDisplay) {
+      aFrameSubTree = nsnull;
+      rv = NS_OK;
     }
+    else {
+      // Create a frame.
+      if (nsnull == aParentFrame) {
+        // Construct the root frame object
+        rv = ConstructRootFrame(aPresContext, aContent, styleContext,
+                                aFrameSubTree);
+
+      } else {
+        // Handle specific frame types
+        rv = ConstructFrameByTag(aPresContext, aContent, aParentFrame,
+                                 tag, styleContext, aFrameSubTree);
+
+        if (NS_SUCCEEDED(rv) && (nsnull == aFrameSubTree)) {
+          // When there is no explicit frame to create, assume it's a
+          // container and let display style dictate the rest
+          rv = ConstructFrameByDisplayType(aPresContext, display,
+                                           aContent, aParentFrame,
+                                           styleContext, aFrameSubTree);
+        }
+      }
+    }
+    NS_RELEASE(styleContext);
   }
   
-  NS_RELEASE(styleContext);
   NS_IF_RELEASE(tag);
   return rv;
 }
@@ -1897,7 +1914,7 @@ void HTMLStyleSheetImpl::List(FILE* out, PRInt32 aIndent) const
 }
 
 NS_HTML nsresult
-  NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL)
+NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURL* aURL)
 {
   if (aInstancePtrResult == nsnull) {
     return NS_ERROR_NULL_POINTER;
