@@ -543,6 +543,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
   PRInt32 start=0;  PRInt32 end=0;  
 
   // handle docs with a max length
+  // NOTE, this function copies inString into outString for us.
   res = TruncateInsertionIfNeeded(aSelection, inString, outString, aMaxLength);
   if (NS_FAILED(res)) return res;
   
@@ -612,7 +613,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     
   if (aAction == kInsertTextIME) 
   { 
-    res = mEditor->JoeInsertTextImpl(*inString, &selNode, &selOffset, doc);
+    res = mEditor->JoeInsertTextImpl(*outString, &selNode, &selOffset, doc);
     if (NS_FAILED(res)) return res;
   }
   else // aAction == kInsertText
@@ -630,7 +631,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     // dont spaz my selection in subtransactions
     nsAutoTxnsConserveSelection dontSpazMySelection(mEditor);
     nsSubsumeStr subStr;
-    const PRUnichar *unicodeBuf = inString->GetUnicode();
+    const PRUnichar *unicodeBuf = outString->GetUnicode();
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
         
@@ -640,11 +641,11 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     if (isPRE)
     {
       char newlineChar = '\n';
-      while (unicodeBuf && (pos != -1) && (pos < inString->Length()))
+      while (unicodeBuf && (pos != -1) && (pos < outString->Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = inString->FindChar(newlineChar, PR_FALSE, oldPos);
+        pos = outString->FindChar(newlineChar, PR_FALSE, oldPos);
         
         if (pos != -1) 
         {
@@ -655,8 +656,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = inString->Length() - oldPos;
-          pos = inString->Length();
+          subStrLen = outString->Length() - oldPos;
+          pos = outString->Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
@@ -678,11 +679,11 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     {
       char specialChars[] = {'\t','\n',0};
       nsAutoString tabString = "    ";
-      while (unicodeBuf && (pos != -1) && (pos < inString->Length()))
+      while (unicodeBuf && (pos != -1) && (pos < outString->Length()))
       {
         PRInt32 oldPos = pos;
         PRInt32 subStrLen;
-        pos = inString->FindCharInSet(specialChars, oldPos);
+        pos = outString->FindCharInSet(specialChars, oldPos);
         
         if (pos != -1) 
         {
@@ -693,8 +694,8 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
         }
         else
         {
-          subStrLen = inString->Length() - oldPos;
-          pos = inString->Length();
+          subStrLen = outString->Length() - oldPos;
+          pos = outString->Length();
         }
 
         subStr.Subsume((PRUnichar*)&unicodeBuf[oldPos], PR_FALSE, subStrLen);
