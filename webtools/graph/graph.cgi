@@ -164,11 +164,11 @@ sub show_graph {
   if($SHOWPOINT) {
     my @xy = split(",",$SHOWPOINT);
 
-    open POINTFILE, ">db/$TESTNAME/point.txt";
+    open POINTFILE, ">db/$TESTNAME/point.$$";
     print POINTFILE "$xy[0]\t$xy[1]\n";
     close POINTFILE;
 
-    $plot_cmd .= ", \"db/$TESTNAME/point.txt\" using 1:2 with points ls 4";
+    $plot_cmd .= ", \"db/$TESTNAME/point.$$\" using 1:2 with points ls 4";
   }
 
 
@@ -224,7 +224,7 @@ sub show_graph {
 
   # Cleanup generated files.
   if($SHOWPOINT) {
-    unlink("db/$TESTNAME/point.txt");
+    unlink("db/$TESTNAME/point.$$");
   }
 
   print "Content-type: image/png\n\n";
