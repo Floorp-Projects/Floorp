@@ -10,4 +10,6 @@
             attribute  boolean              noResize;
             attribute  DOMString            scrolling;
             attribute  DOMString            src;
+  // Introduced in DOM Level 2:
+            attribute  Document             contentDocument;
  };

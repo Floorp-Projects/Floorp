@@ -30,8 +30,13 @@
 #include "nsIMutableStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsIPresContext.h"
+#include "nsIPresShell.h"
+#include "nsIDocument.h"
+#include "nsIDOMDocument.h"
+#include "nsIWebNavigation.h"
 #include "nsIHTMLAttributes.h"
 #include "nsIChromeEventHandler.h"
+#include "nsDOMError.h"
 
 static NS_DEFINE_IID(kIDOMHTMLIFrameElementIID, NS_IDOMHTMLIFRAMEELEMENT_IID);
 
@@ -77,6 +82,8 @@ public:
   NS_IMETHOD SetSrc(const nsString& aSrc);
   NS_IMETHOD GetWidth(nsString& aWidth);
   NS_IMETHOD SetWidth(const nsString& aWidth);
+  NS_IMETHOD GetContentDocument(nsIDOMDocument** aContentDocument);
+  NS_IMETHOD SetContentDocument(nsIDOMDocument* aContentDocument);
 
   // nsIJSScriptObject
   NS_IMPL_IJSSCRIPTOBJECT_USING_GENERIC(mInner)
@@ -163,6 +170,46 @@ NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Scrolling, scrolling)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Src, src)
 NS_IMPL_STRING_ATTR(nsHTMLIFrameElement, Width, width)
 
+
+NS_IMETHODIMP
+nsHTMLIFrameElement::GetContentDocument(nsIDOMDocument** aContentDocument)
+{
+  NS_ENSURE_ARG_POINTER(aContentDocument);
+
+  *aContentDocument = nsnull;
+
+  NS_ENSURE_TRUE(mInner.mDocument, NS_OK);
+
+  nsCOMPtr<nsIPresShell> presShell;
+
+  presShell = dont_AddRef(mInner.mDocument->GetShellAt(0));
+  NS_ENSURE_TRUE(presShell, NS_OK);
+
+  nsCOMPtr<nsISupports> tmp;
+
+  presShell->GetSubShellFor(this, getter_AddRefs(tmp));
+  NS_ENSURE_TRUE(tmp, NS_OK);
+
+  nsCOMPtr<nsIWebNavigation> webNav = do_QueryInterface(tmp);
+  NS_ENSURE_TRUE(webNav, NS_OK);
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+
+  webNav->GetDocument(getter_AddRefs(domDoc));
+
+  *aContentDocument = domDoc;
+
+  NS_IF_ADDREF(*aContentDocument);
+
+  return NS_OK;
+}
+  
+NS_IMETHODIMP
+nsHTMLIFrameElement::SetContentDocument(nsIDOMDocument* aContentDocument)
+{   
+  return NS_ERROR_DOM_INVALID_MODIFICATION_ERR;
+} 
+    
 NS_IMETHODIMP
 nsHTMLIFrameElement::StringToAttribute(nsIAtom* aAttribute,
                                        const nsString& aValue,
