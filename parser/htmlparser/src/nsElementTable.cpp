@@ -79,106 +79,106 @@ eHTMLTags GetTagAt(PRUint32 anIndex,TagList& aTagList) {
 
 
 //First, define the set of taglists for tags with special parents...
-TagList  gAParents={1,eHTMLTag_map};
-TagList  gInAddress={1,eHTMLTag_address};
-TagList  gInHead={1,eHTMLTag_head};
-TagList  gInTable={1,eHTMLTag_table};
-TagList  gInHTML={1,eHTMLTag_html};
-TagList  gInBody={1,eHTMLTag_body};
-TagList  gInForm={1,eHTMLTag_form};
-TagList  gInFieldset={1,eHTMLTag_fieldset};
-TagList  gInTR={1,eHTMLTag_tr};
-TagList  gInDL={2,eHTMLTag_dl,eHTMLTag_body};
-TagList  gInFrameset={1,eHTMLTag_frameset};
-TagList  gInNoframes={1,eHTMLTag_noframes};
-TagList  gInP={4,eHTMLTag_address,eHTMLTag_form,eHTMLTag_span,eHTMLTag_table};
-TagList  gOptgroupParents={2,eHTMLTag_optgroup,eHTMLTag_select};
-TagList  gBodyParents={2,eHTMLTag_html,eHTMLTag_noframes};
-TagList  gColParents={2,eHTMLTag_table,eHTMLTag_colgroup};
-TagList  gFramesetParents={2,eHTMLTag_html,eHTMLTag_frameset};
-TagList  gLegendParents={1,eHTMLTag_fieldset};
-TagList  gAreaParent={1,eHTMLTag_map};
-TagList  gParamParents={2,eHTMLTag_applet,eHTMLTag_object};
-TagList  gTRParents={4,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table};
-TagList  gTREndParents={6,eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_td,eHTMLTag_th};
+TagList  gAParents={1,{eHTMLTag_map}};
+TagList  gInAddress={1,{eHTMLTag_address}};
+TagList  gInHead={1,{eHTMLTag_head}};
+TagList  gInTable={1,{eHTMLTag_table}};
+TagList  gInHTML={1,{eHTMLTag_html}};
+TagList  gInBody={1,{eHTMLTag_body}};
+TagList  gInForm={1,{eHTMLTag_form}};
+TagList  gInFieldset={1,{eHTMLTag_fieldset}};
+TagList  gInTR={1,{eHTMLTag_tr}};
+TagList  gInDL={2,{eHTMLTag_dl,eHTMLTag_body}};
+TagList  gInFrameset={1,{eHTMLTag_frameset}};
+TagList  gInNoframes={1,{eHTMLTag_noframes}};
+TagList  gInP={4,{eHTMLTag_address,eHTMLTag_form,eHTMLTag_span,eHTMLTag_table}};
+TagList  gOptgroupParents={2,{eHTMLTag_optgroup,eHTMLTag_select}};
+TagList  gBodyParents={2,{eHTMLTag_html,eHTMLTag_noframes}};
+TagList  gColParents={2,{eHTMLTag_table,eHTMLTag_colgroup}};
+TagList  gFramesetParents={2,{eHTMLTag_html,eHTMLTag_frameset}};
+TagList  gLegendParents={1,{eHTMLTag_fieldset}};
+TagList  gAreaParent={1,{eHTMLTag_map}};
+TagList  gParamParents={2,{eHTMLTag_applet,eHTMLTag_object}};
+TagList  gTRParents={4,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table}};
+TagList  gTREndParents={6,{eHTMLTag_tbody,eHTMLTag_tfoot,eHTMLTag_thead,eHTMLTag_table,eHTMLTag_td,eHTMLTag_th}};
 
 
 //*********************************************************************************************
 //  Next, define the set of taglists for tags with special kids...
 //*********************************************************************************************
 
-TagList  gContainsText={4,eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity};
-TagList  gUnknownKids={2,eHTMLTag_html,eHTMLTag_frameset};
-TagList  gContainsOpts={3,eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script};
-TagList  gContainsParam={1,eHTMLTag_param};
-TagList  gColgroupKids={1,eHTMLTag_col}; 
-TagList  gAddressKids={1,eHTMLTag_p};
-TagList  gBodyKids={5,eHTMLTag_del,eHTMLTag_ins,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li};
-TagList  gButtonKids={2,eHTMLTag_caption,eHTMLTag_legend};
-TagList  gDLKids={2,eHTMLTag_dd,eHTMLTag_dt};
-TagList  gDTKids={1,eHTMLTag_dt};
-TagList  gFieldsetKids={2,eHTMLTag_legend,eHTMLTag_text};
-TagList  gFontKids={2,eHTMLTag_legend,eHTMLTag_text};
-TagList  gFormKids={1,eHTMLTag_keygen};
-TagList  gFramesetKids={3,eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes};
+TagList  gContainsText={4,{eHTMLTag_text,eHTMLTag_newline,eHTMLTag_whitespace,eHTMLTag_entity}};
+TagList  gUnknownKids={2,{eHTMLTag_html,eHTMLTag_frameset}};
+TagList  gContainsOpts={3,{eHTMLTag_option,eHTMLTag_optgroup,eHTMLTag_script}};
+TagList  gContainsParam={1,{eHTMLTag_param}};
+TagList  gColgroupKids={1,{eHTMLTag_col}}; 
+TagList  gAddressKids={1,{eHTMLTag_p}};
+TagList  gBodyKids={5,{eHTMLTag_del,eHTMLTag_ins,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_li}};
+TagList  gButtonKids={2,{eHTMLTag_caption,eHTMLTag_legend}};
+TagList  gDLKids={2,{eHTMLTag_dd,eHTMLTag_dt}};
+TagList  gDTKids={1,{eHTMLTag_dt}};
+TagList  gFieldsetKids={2,{eHTMLTag_legend,eHTMLTag_text}};
+TagList  gFontKids={2,{eHTMLTag_legend,eHTMLTag_text}};
+TagList  gFormKids={1,{eHTMLTag_keygen}};
+TagList  gFramesetKids={3,{eHTMLTag_frame,eHTMLTag_frameset,eHTMLTag_noframes}};
 
-TagList  gHtmlKids={8,eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace};
-TagList  gHeadKids={9,eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript};
+TagList  gHtmlKids={8,{eHTMLTag_body,eHTMLTag_frameset,eHTMLTag_head,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_newline,eHTMLTag_whitespace}};
+TagList  gHeadKids={9,{eHTMLTag_base,eHTMLTag_bgsound,eHTMLTag_link,eHTMLTag_meta,eHTMLTag_script,eHTMLTag_style,eHTMLTag_title,eHTMLTag_noembed,eHTMLTag_noscript}};
 
-TagList  gLabelKids={1,eHTMLTag_span};
-TagList  gLIKids={2,eHTMLTag_ol,eHTMLTag_ul};
-TagList  gMapKids={1,eHTMLTag_area};
-TagList  gNoframesKids={1,eHTMLTag_body};
-TagList  gPreKids={2,eHTMLTag_hr,eHTMLTag_center};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
+TagList  gLabelKids={1,{eHTMLTag_span}};
+TagList  gLIKids={2,{eHTMLTag_ol,eHTMLTag_ul}};
+TagList  gMapKids={1,{eHTMLTag_area}};
+TagList  gNoframesKids={1,{eHTMLTag_body}};
+TagList  gPreKids={2,{eHTMLTag_hr,eHTMLTag_center}};  //note that CENTER is here for backward compatibility; it's not 4.0 spec.
 
-TagList  gTableKids={10,eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
+TagList  gTableKids={10,{eHTMLTag_caption,eHTMLTag_col,eHTMLTag_colgroup,eHTMLTag_form,
                      eHTMLTag_thead,eHTMLTag_tbody,eHTMLTag_tfoot,
-                     eHTMLTag_map,eHTMLTag_script,eHTMLTag_input};
+                     eHTMLTag_map,eHTMLTag_script,eHTMLTag_input}};
   
-TagList  gTableElemKids={7,eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr};
-TagList  gTRKids={6,eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script,eHTMLTag_input};
-TagList  gTBodyKids={3,eHTMLTag_tr,eHTMLTag_form,eHTMLTag_input};
-TagList  gULKids={2,eHTMLTag_li,eHTMLTag_p};
+TagList  gTableElemKids={7,{eHTMLTag_form,eHTMLTag_map,eHTMLTag_noscript,eHTMLTag_script,eHTMLTag_td,eHTMLTag_th,eHTMLTag_tr}};
+TagList  gTRKids={6,{eHTMLTag_td,eHTMLTag_th,eHTMLTag_map,eHTMLTag_form,eHTMLTag_script,eHTMLTag_input}};
+TagList  gTBodyKids={3,{eHTMLTag_tr,eHTMLTag_form,eHTMLTag_input}};
+TagList  gULKids={2,{eHTMLTag_li,eHTMLTag_p}};
 
 
 //*********************************************************************************************
 // The following tag lists are used to define common set of root notes for the HTML elements...
 //*********************************************************************************************
 
-TagList  gRootTags={3,eHTMLTag_body,eHTMLTag_td,eHTMLTag_table};
-TagList  gHTMLRootTags={1,eHTMLTag_unknown};
+TagList  gRootTags={3,{eHTMLTag_body,eHTMLTag_td,eHTMLTag_table}};
+TagList  gHTMLRootTags={1,{eHTMLTag_unknown}};
 
-TagList  gLIRootTags={7,eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td};
+TagList  gLIRootTags={7,{eHTMLTag_ul,eHTMLTag_ol,eHTMLTag_dir,eHTMLTag_menu,eHTMLTag_p,eHTMLTag_body,eHTMLTag_td}};
 
-TagList  gOLRootTags={3,eHTMLTag_body,eHTMLTag_li,eHTMLTag_td};
-TagList  gTDRootTags={3,eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_table};
-TagList  gNoframeRoot={2,eHTMLTag_body,eHTMLTag_frameset};
+TagList  gOLRootTags={3,{eHTMLTag_body,eHTMLTag_li,eHTMLTag_td}};
+TagList  gTDRootTags={3,{eHTMLTag_tr,eHTMLTag_tbody,eHTMLTag_table}};
+TagList  gNoframeRoot={2,{eHTMLTag_body,eHTMLTag_frameset}};
 
 //*********************************************************************************************
 // The following tag lists are used to define the autoclose properties of the html elements...
 //*********************************************************************************************
 
-TagList  gBodyAutoClose={1,eHTMLTag_head};
-TagList  gTBodyAutoClose={3,eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody};
-TagList  gCaptionAutoClose={1,eHTMLTag_tbody};
-TagList  gLIAutoClose={2,eHTMLTag_p,eHTMLTag_li};
-TagList  gPAutoClose={2,eHTMLTag_p,eHTMLTag_li};
-TagList  gHRAutoClose={1,eHTMLTag_p};
-TagList  gOLAutoClose={3,eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul};
-TagList  gDivAutoClose={1,eHTMLTag_p};
+TagList  gBodyAutoClose={1,{eHTMLTag_head}};
+TagList  gTBodyAutoClose={3,{eHTMLTag_thead,eHTMLTag_tfoot,eHTMLTag_tbody}};
+TagList  gCaptionAutoClose={1,{eHTMLTag_tbody}};
+TagList  gLIAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
+TagList  gPAutoClose={2,{eHTMLTag_p,eHTMLTag_li}};
+TagList  gHRAutoClose={1,{eHTMLTag_p}};
+TagList  gOLAutoClose={3,{eHTMLTag_p,eHTMLTag_ol,eHTMLTag_ul}};
+TagList  gDivAutoClose={1,{eHTMLTag_p}};
 
-TagList  gHeadingTags={6,eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6};
+TagList  gHeadingTags={6,{eHTMLTag_h1,eHTMLTag_h2,eHTMLTag_h3,eHTMLTag_h4,eHTMLTag_h5,eHTMLTag_h6}};
 
-TagList  gTRCloseTags={3,eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th};
-TagList  gTDCloseTags={2,eHTMLTag_td,eHTMLTag_th};
-TagList  gDTCloseTags={3,eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p};
-TagList  gULCloseTags={1,eHTMLTag_li};
+TagList  gTRCloseTags={3,{eHTMLTag_tr,eHTMLTag_td,eHTMLTag_th}};
+TagList  gTDCloseTags={2,{eHTMLTag_td,eHTMLTag_th}};
+TagList  gDTCloseTags={3,{eHTMLTag_dt,eHTMLTag_dd,eHTMLTag_p}};
+TagList  gULCloseTags={1,{eHTMLTag_li}};
 
 //*********************************************************************************************
 // The following tag lists are used to define the non-autoclose properties of the html elements...
 //*********************************************************************************************
 
-TagList  gDontAutoClose={1,eHTMLTag_td};
+TagList  gDontAutoClose={1,{eHTMLTag_td}};
 
 //*********************************************************************************************
 //Lastly, bind tags with their rules, their special parents and special kids.
