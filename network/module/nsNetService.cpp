@@ -535,10 +535,31 @@ void nsNetlibService::NetPollSocketsCallback(nsITimer* aTimer, void* aClosure)
     }
 }
 
-extern "C" {
 
 static nsNetlibService *gNetlibService = nsnull;
 
+//
+// Class to manage static initialization of the Netlib DLL...
+//
+struct nsNetlibInit {
+  nsNetlibInit() {
+    gNetlibService = nsnull;
+    (void) NS_InitINetService(nsnull);
+  }
+
+  ~nsNetlibInit() {
+    NS_ShutdownINetService();
+    gNetlibService = nsnull;
+  }
+};
+
+#ifdef XP_MAC
+static nsNetlibInit* netlibInit = nsnull;
+#else
+static nsNetlibInit netlibInit;
+#endif
+
+extern "C" {
 /*
  * Factory for creating instance of the NetlibService...
  */
@@ -554,7 +575,7 @@ NS_NET nsresult NS_NewINetService(nsINetService** aInstancePtrResult,
     if (nsnull == netlibInit) {
         netlibInit = new nsNetlibInit;
     }
-#endif /* XP_MAC */
+#endif /* XP_MAC */ // XXX on the mac this never gets shutdown
 
     // The Netlib Service is created by the nsNetlibInit class...
     if (nsnull == gNetlibService) {
@@ -594,28 +615,6 @@ NS_NET nsresult NS_ShutdownINetService()
 }
 
 }; /* extern "C" */
-
-//
-// Class to manage static initialization of the Netlib DLL...
-//
-struct nsNetlibInit {
-  nsNetlibInit() {
-    gNetlibService = nsnull;
-    (void) NS_InitINetService(nsnull);
-  }
-
-  ~nsNetlibInit() {
-    NS_ShutdownINetService();
-    gNetlibService = nsnull;
-  }
-};
-
-#ifdef XP_MAC
-static nsNetlibInit* netlibInit = nsnull;
-#else
-static nsNetlibInit netlibInit;
-#endif
-
 
 /*
  * This is the generic exit routine for all URLs loaded via the new
