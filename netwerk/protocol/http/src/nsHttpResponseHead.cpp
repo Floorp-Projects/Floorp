@@ -19,6 +19,7 @@
  * 
  * Contributor(s): 
  *   Darin Fisher <darin@netscape.com> (original author)
+ *   Andreas M. Schneider <clarence@clarence.de>
  */
 
 #include <stdlib.h>
@@ -157,7 +158,7 @@ nsHttpResponseHead::ParseStatusLine(char *line)
 void
 nsHttpResponseHead::ParseHeaderLine(char *line)
 {
-    char *p = PL_strchr(line, ':');
+    char *p = PL_strchr(line, ':'), *p2;
 
     // the header is malformed... but, there are malformed headers in the
     // world.  search for ' ' and '\t' to simulate 4.x/IE behavior.
@@ -173,13 +174,18 @@ nsHttpResponseHead::ParseHeaderLine(char *line)
     }
 
     if (p) {
-        *p = 0; // overwrite ':' char
+        // ignore whitespace between header name and colon
+        p2 = p;
+        while (--p2 >= line && ((*p2 == ' ') || (*p2 == '\t')))
+            ;
+        *++p2= 0; // overwrite first char after header name
+
         nsHttpAtom atom = nsHttp::ResolveAtom(line);
         if (atom) {
             // skip over whitespace
             do {
                 ++p;
-            } while (*p == ' ');
+            } while ((*p == ' ') || (*p == '\t'));
 
             // assign response header
             mHeaders.SetHeader(atom, p);
@@ -408,26 +414,39 @@ nsHttpResponseHead::ParseContentType(char *type)
 
     LOG(("nsHttpResponseHead::ParseContentType [type=%s]\n", type));
 
-    if (p) {
-        // we don't care about comments
+    if (p)
+        // we don't care about comments (although they are invalid here)
         *p = 0;
-        // trim any trailing whitespace
-        do {
-            --p;
-        } while ((*p == ' ') && (p > type));
-    }
 
-    if (p != type) {
-        // check if the content-type has additional fields...
-        if ((p = PL_strchr(type, ';')) != nsnull) {
-            // null out the ';' char
-            *p = 0;
-            // is there a charset field?
-            if ((p = PL_strcasestr(p, "charset=")) != nsnull)
-                mContentCharset = p + 8;
+    // check if the content-type has additional fields...
+    if ((p = PL_strchr(type, ';')) != nsnull) {
+        char *p2, *p3;
+        // is there a charset field?
+        if ((p2 = PL_strcasestr(p, "charset=")) != nsnull) {
+            p2 += 8;
+
+            // check end of charset parameter
+            if ((p3 = PL_strchr(p2, ';')) == nsnull)
+                p3 = p2 + PL_strlen(p2);
+
+            // trim any trailing whitespace
+            do {
+                --p3;
+            } while ((*p3 == ' ') || (*p3 == '\t'));
+            *++p3 = 0; // overwrite first char after the charset field
+
+            mContentCharset = p2;
         }
-        mContentType = type;
     }
+    else
+        p = type + PL_strlen(type);
+
+    // trim any trailing whitespace
+    while (--p >= type && ((*p == ' ') || (*p == '\t')))
+        ;
+    *++p = 0; // overwrite first char after the media type
+
+    mContentType = type;
 
     return NS_OK;
 }
