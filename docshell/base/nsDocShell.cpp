@@ -3504,8 +3504,8 @@ nsDocShell::GetCurScrollPos(PRInt32 scrollOrientation, PRInt32 * curPos)
 {
     NS_ENSURE_ARG_POINTER(curPos);
 
-    nsCOMPtr<nsIScrollableView> scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+    nsIScrollableView* scrollView;
+    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
     if (!scrollView) {
         return NS_ERROR_FAILURE;
@@ -3532,8 +3532,8 @@ nsDocShell::GetCurScrollPos(PRInt32 scrollOrientation, PRInt32 * curPos)
 NS_IMETHODIMP
 nsDocShell::SetCurScrollPos(PRInt32 scrollOrientation, PRInt32 curPos)
 {
-    nsCOMPtr<nsIScrollableView> scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+    nsIScrollableView* scrollView;
+    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
     if (!scrollView) {
         return NS_ERROR_FAILURE;
@@ -3570,8 +3570,8 @@ nsDocShell::SetCurScrollPos(PRInt32 scrollOrientation, PRInt32 curPos)
 NS_IMETHODIMP
 nsDocShell::SetCurScrollPosEx(PRInt32 curHorizontalPos, PRInt32 curVerticalPos)
 {
-    nsCOMPtr<nsIScrollableView> scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+    nsIScrollableView* scrollView;
+    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
     if (!scrollView) {
         return NS_ERROR_FAILURE;
@@ -3590,8 +3590,8 @@ nsDocShell::GetScrollRange(PRInt32 scrollOrientation,
 {
     NS_ENSURE_ARG_POINTER(minPos && maxPos);
 
-    nsCOMPtr<nsIScrollableView> scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+    nsIScrollableView* scrollView;
+    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
     if (!scrollView) {
         return NS_ERROR_FAILURE;
@@ -3766,8 +3766,8 @@ NS_IMETHODIMP
 nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
                                    PRBool * horizontalVisible)
 {
-    nsCOMPtr<nsIScrollableView> scrollView;
-    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+    nsIScrollableView* scrollView;
+    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
     if (!scrollView) {
         return NS_ERROR_FAILURE;
@@ -3795,9 +3795,9 @@ nsDocShell::GetScrollbarVisibility(PRBool * verticalVisible,
 NS_IMETHODIMP
 nsDocShell::ScrollByLines(PRInt32 numLines)
 {
-    nsCOMPtr<nsIScrollableView> scrollView;
+    nsIScrollableView* scrollView;
 
-    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
     if (!scrollView) {
         return NS_ERROR_FAILURE;
@@ -3811,9 +3811,9 @@ nsDocShell::ScrollByLines(PRInt32 numLines)
 NS_IMETHODIMP
 nsDocShell::ScrollByPages(PRInt32 numPages)
 {
-    nsCOMPtr<nsIScrollableView> scrollView;
+    nsIScrollableView* scrollView;
 
-    NS_ENSURE_SUCCESS(GetRootScrollableView(getter_AddRefs(scrollView)),
+    NS_ENSURE_SUCCESS(GetRootScrollableView(&scrollView),
                       NS_ERROR_FAILURE);
     if (!scrollView) {
         return NS_ERROR_FAILURE;
