@@ -311,6 +311,7 @@ nsListControlFrame::nsListControlFrame(nsIPresShell* aShell,
 
   mDummyFrame                  = nsnull;
 
+  mControlSelectMode           = PR_FALSE;
   REFLOW_COUNTER_INIT()
 }
 
@@ -3025,7 +3026,15 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
   // DOM_VK_ESCAPE cancels the selection
   // default processing checks to see if the pressed the first 
   //   letter of an item in the list and advances to it
-
+  
+  if (isControl && (keycode == nsIDOMKeyEvent::DOM_VK_UP ||
+                    keycode == nsIDOMKeyEvent::DOM_VK_LEFT ||
+                    keycode == nsIDOMKeyEvent::DOM_VK_DOWN ||
+                    keycode == nsIDOMKeyEvent::DOM_VK_RIGHT)) {
+    mControlSelectMode = PR_TRUE;
+  } else if (charcode != ' ') {
+    mControlSelectMode = PR_FALSE;
+  }
   switch (keycode) {
 
     case nsIDOMKeyEvent::DOM_VK_UP:
@@ -3205,6 +3214,8 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
       mStartSelectionIndex = newIndex;
       mEndSelectionIndex = newIndex;
       ScrollToIndex(newIndex);
+    } else if (mControlSelectMode && charcode == ' ') {
+      SingleSelection(newIndex, PR_TRUE);
     } else {
       PRBool wasChanged = PerformSelection(newIndex, isShift, isControl);
       if (wasChanged) {
