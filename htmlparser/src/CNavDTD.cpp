@@ -370,7 +370,7 @@ void CNavDTD::RecycleNode(nsCParserNode* aNode) {
   if(aNode) {
 
     CToken* theToken=0;
-    while(theToken=(CToken*)aNode->PopAttributeToken()){
+    while(theToken=((CToken*)aNode->PopAttributeToken())){
       gRecycler->RecycleToken(theToken);
     }
 
@@ -402,7 +402,7 @@ CNavDTD::~CNavDTD(){
   if(mTokenizer)
     delete (nsHTMLTokenizer*)mTokenizer;
   nsCParserNode* theNode=0;
-  while(theNode=(nsCParserNode*)mSharedNodes.Pop()){
+  while(theNode=((nsCParserNode*)mSharedNodes.Pop())){
     delete theNode;
   }
   NS_IF_RELEASE(mDTDDebug);
@@ -815,6 +815,7 @@ nsresult CNavDTD::DidHandleStartTag(nsCParserNode& aNode,eHTMLTags aChildTag){
  *  @param   eHTMLTags tag to be searched for in stack
  *  @return  topmost index of tag on stack
  */
+#if 0
 static
 PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsEntryStack& aTagStack) {
   int i=0;
@@ -825,7 +826,7 @@ PRInt32 GetTopmostIndexOf(eHTMLTags aTag,nsEntryStack& aTagStack) {
   }
   return kNotFound;
 }
-
+#endif
 
 /**
  *  Call this to find the index of a given child, or (if not found)

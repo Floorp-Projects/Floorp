@@ -194,6 +194,11 @@ static void SetFont(const char* aFace,const char* aSize,PRBool aEnable,nsIConten
     theNode.Init(theToken,0);
     aSink.CloseContainer(theNode);
   }
+
+  while(theToken=((CToken*)theNode.PopAttributeToken())){
+    //dump the attributes since they're on the stack...
+  }
+
   if(theToken)
     gTokenRecycler->RecycleToken(theToken);
 }
@@ -213,12 +218,17 @@ static void SetColor(const char* aColor,PRBool aEnable,nsIContentSink& aSink) {
     theNode.Init(theToken,0);
     aSink.CloseContainer(theNode);
   }
+
+  while(theToken=((CToken*)theNode.PopAttributeToken())){
+    //dump the attributes since they're on the stack...
+  }
+
   if(theToken)
     gTokenRecycler->RecycleToken(theToken);
 }
 
 static void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
-  nsCParserNode theNode;
+  static nsCParserNode theNode;
   CToken*       theToken=0;
   if(aEnable){
     theToken=gTokenRecycler->CreateTokenOfType(eToken_start,theTag); 
@@ -230,6 +240,7 @@ static void SetStyle(eHTMLTags theTag,PRBool aEnable,nsIContentSink& aSink) {
     theNode.Init(theToken);
     aSink.CloseContainer(theNode);
   }
+
   if(theToken)
     gTokenRecycler->RecycleToken(theToken);
 }
@@ -340,9 +351,12 @@ NS_IMETHODIMP CViewSourceHTML::WillBuildModel(nsString& aFilename,PRBool aNotify
       //now let's automatically open the body...
     CStartToken theBodyToken(eHTMLTag_body);
     theNode.Init(&theBodyToken,0);
+    CAttributeToken theColor("bgcolor","white");
+    theNode.AddAttribute(&theColor);
+
     mSink->OpenBody(theNode);
 
-     //now let's automatically open the body...
+     //now let's automatically open the pre...
     if(mIsPlaintext) {
       CStartToken thePREToken(eHTMLTag_pre);
       theNode.Init(&thePREToken,0);
@@ -897,7 +911,7 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     case eToken_instruction:
       {
         if(!mIsPlaintext){
-          SetColor("orange",PR_TRUE,*mSink);
+          SetColor("#D74702",PR_TRUE,*mSink);
           SetStyle(eHTMLTag_i,PR_TRUE,*mSink);
         }
 
@@ -964,6 +978,11 @@ NS_IMETHODIMP CViewSourceHTML::HandleToken(CToken* aToken,nsIParser* aParser) {
     default:
       result=NS_OK;
   }//switch
+
+  while(theContext.mTokenNode.PopAttributeToken()){
+    //dump the attributes since they're on the stack...
+  }
+
   return result;
 }
 
