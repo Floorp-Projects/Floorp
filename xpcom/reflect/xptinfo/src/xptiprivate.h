@@ -64,6 +64,7 @@
 #include "nsIDirectoryService.h"
 #include "nsDirectoryServiceDefs.h"
 #include "nsAppDirectoryServiceDefs.h"
+#include "nsIWeakReference.h"
 
 #include "nsCRT.h"
 #include "nsMemory.h"
@@ -879,11 +880,12 @@ private:
 /***************************************************************************/
 
 class xptiInterfaceInfoManager 
-    : public nsIInterfaceInfoManager,
+    : public nsIInterfaceInfoSuperManager,
       public xptiEntrySink
 {
     NS_DECL_ISUPPORTS
     NS_DECL_NSIINTERFACEINFOMANAGER
+    NS_DECL_NSIINTERFACEINFOSUPERMANAGER
 
     // implement xptiEntrySink
     PRBool 
@@ -985,6 +987,8 @@ private:
     PRLock*                     mResolveLock;
     PRLock*                     mAutoRegLock;
     PRMonitor*                  mInfoMonitor;
+    PRLock*                     mAdditionalManagersLock;
+    nsSupportsArray             mAdditionalManagers;
     nsCOMPtr<nsILocalFile>      mManifestDir;
     nsCOMPtr<nsISupportsArray>  mSearchPath;
 };
