@@ -33,13 +33,10 @@
 
 NS_DEF_PTR(nsIStyleContext);
 
-const nsIID kTableRowFrameCID = NS_TABLEROWFRAME_CID;
-
 #ifdef NS_DEBUG
 static PRBool gsDebug1 = PR_FALSE;
 static PRBool gsDebug2 = PR_FALSE;
 //#define NOISY
-//#define NOISY_FLOW
 #else
 static const PRBool gsDebug1 = PR_FALSE;
 static const PRBool gsDebug2 = PR_FALSE;
@@ -123,12 +120,12 @@ nsTableRowFrame::DidReflow(nsIPresContext& aPresContext,
       PRInt32 rowSpan = tableFrame->GetEffectiveRowSpan(mRowIndex, cellFrame);
       if (1==rowSpan)
       {
-        // resize the cell's height
+        // Resize the cell's height
         nsSize  cellFrameSize;
         cellFrame->GetSize(cellFrameSize);
         cellFrame->SizeTo(cellFrameSize.width, cellHeight);
   
-        // realign cell content based on the new height
+        // Realign cell content based on the new height
         cellFrame->VerticallyAlignChild(&aPresContext);
       }
   
@@ -340,42 +337,20 @@ void nsTableRowFrame::PlaceChild(nsIPresContext*    aPresContext,
  * @param   aPresContext presentation context to use
  * @param   aState current inline state
  * @return  true if we successfully reflowed all the mapped children and false
- *            otherwise, e.g. we pushed children to the next in flow
+ *            otherwise
  */
 PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
                                              RowReflowState& aState,
                                              nsSize*         aMaxElementSize)
 {
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
 #ifdef NOISY
   ListTag(stdout);
   printf(": reflow mapped (childCount=%d) [%d,%d,%c]\n",
          mChildCount,
          mFirstContentOffset, mLastContentOffset,
          (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowFrame* flow = (nsTableRowFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
 #endif
   NS_PRECONDITION(nsnull != mFirstChild, "no children");
-
-  PRInt32   childCount = 0;
-  nsIFrame* prevKidFrame = nsnull;
-
-  // Remember our original mLastContentIsComplete so that if we end up
-  // having to push children, we have the correct value to hand to
-  // PushChildren.
-  PRBool    lastContentIsComplete = mLastContentIsComplete;
 
   nsSize      kidMaxElementSize;
   nsSize*     pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
@@ -385,10 +360,6 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
 
   // Reflow each of our existing child frames
   for (nsIFrame*  kidFrame = mFirstChild; nsnull != kidFrame; ) {
-    nsSize kidAvailSize(aState.availSize);
-    if (0>=kidAvailSize.height)
-      kidAvailSize.height = 1;      // XXX: HaCk - we don't handle negative heights yet
-
     // Get the frame's margins and compare the top and bottom margin
     // against our current max values
     nsMargin       kidMargin;
@@ -398,13 +369,6 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     if (kidMargin.bottom > maxCellBottomMargin)
       maxCellBottomMargin = kidMargin.bottom;
  
-    // Figure out the amount of available size for the child (subtract
-    // off the top margin we are going to apply to it)
-    if (PR_FALSE == aState.unconstrainedHeight) 
-    {
-      kidAvailSize.height -= kidMargin.top + kidMargin.bottom;
-    }
-
     // left and right margins already taken into account by table layout strategy
 
     // Compute the x-origin for the child
@@ -412,19 +376,24 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
     // XXX Having to re-compute the value each time from scratch is very inefficent...
     nscoord x = ComputeCellXOffset(aState, kidFrame, kidMargin);
 
-    // Compute the cell avail width from the column widths
+    // Compute the cell available width from the column widths
     nscoord availWidth = ComputeCellAvailWidth(aState, kidFrame);
 
-    // If the available space is the same as last time we reflowed the cell
+    // If the available width is the same as last time we reflowed the cell,
     // then just use the previous desired size
     //
-    // XXX Wouldn't it be cleaner for the row to reflow the cell and have the
-    // cell decide whether it could use the cached value rather than having
-    // the row make that determination?
+    // XXX Wouldn't it be cleaner (but slightly less efficient) for the row to
+    // just reflow the cell, and have the cell decide whether it could use the
+    // cached value rather than having the row make that determination?
     nsReflowMetrics desiredSize(pKidMaxElementSize);
     nsReflowStatus  status;
     if (availWidth != ((nsTableCellFrame *)kidFrame)->GetPriorAvailWidth())
     {
+      // Always let the cell be as high as it wants. We ignore the height that's passed
+      // in and always place the entire row. Let the row group decide whether we fit or
+      // wehther the entire row is pushed
+      nsSize  kidAvailSize(availWidth, NS_UNCONSTRAINEDSIZE);
+  
       // Reflow the child
       kidFrame->WillReflow(*aPresContext);
       kidFrame->MoveTo(x, kidMargin.top);
@@ -432,6 +401,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
                                    eReflowReason_Resize);
       status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
+      NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "unexpected reflow status");
 
       if (gsDebug1)
       {
@@ -451,27 +421,7 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
       nsSize priorSize = ((nsTableCellFrame *)kidFrame)->GetPriorDesiredSize();
       desiredSize.width = priorSize.width;
       desiredSize.height = priorSize.height;
-      status = NS_FRAME_COMPLETE; // XXX: in paginated world, this doesn't work!
-    }
-
-    // Did the child fit?
-    if ((kidFrame != mFirstChild) &&
-        ((kidAvailSize.height <= 0) ||
-         (desiredSize.height > kidAvailSize.height)))
-    {
-      // The child's height is too big to fit at all in our remaining space,
-      // and it's not our first child.
-
-      // Since we are giving the next-in-flow our last child, we
-      // give it our original mLastContentIsComplete, too (in case we
-      // are pushing into an empty next-in-flow)
-      PushChildren(kidFrame, prevKidFrame, lastContentIsComplete);
-			SetLastContentOffset(prevKidFrame);
-
-      // Our mLastContentIsComplete was already set by the last kid we
-      // reflowed reflow's status
-      result = PR_FALSE;
-      break;
+      status = NS_FRAME_COMPLETE;
     }
 
     // Place the child after taking into account its margin and attributes
@@ -512,62 +462,6 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
 
     PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize,
                pKidMaxElementSize);
-    childCount++;
-
-		// Remember where we just were in case we end up pushing children
-		prevKidFrame = kidFrame;
-
-    // Update mLastContentIsComplete now that this kid fits
-    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
-
-    /* Rows should not create continuing frames for cells 
-     * unless they absolutely have to!
-     * check to see if this is absolutely necessary (with new params from troy)
-     * otherwise PushChildren and bail.
-     */
-    // Special handling for incomplete children
-    if (NS_FRAME_IS_NOT_COMPLETE(status)) {
-      // XXX It's good to assume that we might still have room
-      // even if the child didn't complete (floaters will want this)
-      nsIFrame* kidNextInFlow;
-       
-      kidFrame->GetNextInFlow(kidNextInFlow);
-			PRBool lastContentIsComplete = mLastContentIsComplete;
-      if (nsnull == kidNextInFlow) {
-        // No the child isn't complete, and it doesn't have a next in flow so
-        // create a continuing frame. This hooks the child into the flow.
-        nsIFrame* continuingFrame;
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(aPresContext, kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
-                                        continuingFrame);
-        NS_RELEASE(kidSC);
-
-        // Insert the frame. We'll reflow it next pass through the loop
-        nsIFrame* nextSib;
-         
-        kidFrame->GetNextSibling(nextSib);
-        continuingFrame->SetNextSibling(nextSib);
-        kidFrame->SetNextSibling(continuingFrame);
-        if (nsnull == nextSib) {
-          // Assume that the continuation frame we just created is
-          // complete, for now. It will get reflowed by our
-          // next-in-flow (we are going to push it now)
-          lastContentIsComplete = PR_TRUE;
-        }
-      }
-      // We've used up all of our available space so push the remaining
-      // children to the next-in-flow
-      nsIFrame* nextSibling;
-       
-      kidFrame->GetNextSibling(nextSibling);
-      if (nsnull != nextSibling) {
-        PushChildren(nextSibling, kidFrame, lastContentIsComplete);
-        SetLastContentOffset(prevKidFrame);
-      }
-      result = PR_FALSE;
-      break;
-    }
 
     // Get the next child
     kidFrame->GetNextSibling(kidFrame);
@@ -575,23 +469,6 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
 
   SetMaxChildHeight(aState.maxCellHeight,maxCellTopMargin, maxCellBottomMargin);  // remember height of tallest child who doesn't have a row span
 
-  // Update the child count
-  mChildCount = childCount;
-
-#ifdef NS_DEBUG
-  NS_POSTCONDITION(LengthOf(mFirstChild) == mChildCount, "bad child count");
-
-  nsIFrame* lastChild;
-  PRInt32   lastIndexInParent;
-
-  LastChild(lastChild);
-  lastChild->GetContentIndex(lastIndexInParent);
-	NS_POSTCONDITION(lastIndexInParent == mLastContentOffset, "bad last content offset");
-#endif
-
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
 #ifdef NOISY
   ListTag(stdout);
   printf(": reflow mapped %sok (childCount=%d) [%d,%d,%c]\n",
@@ -599,283 +476,8 @@ PRBool nsTableRowFrame::ReflowMappedChildren(nsIPresContext* aPresContext,
          mChildCount,
          mFirstContentOffset, mLastContentOffset,
          (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowFrame* flow = (nsTableRowFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-#endif
-  return result;
-}
-
-/**
- * Try and pull-up frames from our next-in-flow
- *
- * @param   aPresContext presentation context to use
- * @param   aState current inline state
- * @return  true if we successfully pulled-up all the children and false
- *            otherwise, e.g. child didn't fit
- */
-PRBool nsTableRowFrame::PullUpChildren(nsIPresContext*      aPresContext,
-                                            RowReflowState& aState,
-                                            nsSize*         aMaxElementSize)
-{
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
-#endif
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": pullup (childCount=%d) [%d,%d,%c]\n",
-         mChildCount,
-         mFirstContentOffset, mLastContentOffset,
-         (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowFrame* flow = (nsTableRowFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-#endif
-  nsTableRowFrame* nextInFlow = (nsTableRowFrame*)mNextInFlow;
-  nsSize    kidMaxElementSize;
-  nsSize*   pKidMaxElementSize = (nsnull != aMaxElementSize) ? &kidMaxElementSize : nsnull;
-  nsSize    kidAvailSize(aState.availSize);
-#ifdef NS_DEBUG
-  PRInt32        kidIndex = NextChildOffset();
-#endif
-  nsIFrame*      prevKidFrame;
-   
-  LastChild(prevKidFrame);
-
-  // This will hold the prevKidFrame's mLastContentIsComplete
-  // status. If we have to push the frame that follows prevKidFrame
-  // then this will become our mLastContentIsComplete state. Since
-  // prevKidFrame is initially our last frame, it's completion status
-  // is our mLastContentIsComplete value.
-  PRBool        prevLastContentIsComplete = mLastContentIsComplete;
-
-  PRBool        result = PR_TRUE;
-
-  while (nsnull != nextInFlow) {
-    nsReflowMetrics desiredSize(pKidMaxElementSize);
-    desiredSize.width=desiredSize.height=desiredSize.ascent=desiredSize.descent=0;
-    nsReflowStatus  status;
-
-    // Get the next child
-    nsIFrame* kidFrame = nextInFlow->mFirstChild;
-
-    // Any more child frames?
-    if (nsnull == kidFrame) {
-      // No. Any frames on its overflow list?
-      if (nsnull != nextInFlow->mOverflowList) {
-        // Move the overflow list to become the child list
-//        NS_ABORT();
-        nextInFlow->AppendChildren(nextInFlow->mOverflowList);
-        nextInFlow->mOverflowList = nsnull;
-        kidFrame = nextInFlow->mFirstChild;
-      } else {
-        // We've pulled up all the children, so move to the next-in-flow.
-        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
-        continue;
-      }
-    }
-
-    // See if the child fits in the available space. If it fits or
-    // it's splittable then reflow it. The reason we can't just move
-    // it is that we still need ascent/descent information
-    nsSize            kidFrameSize(0,0);
-    nsSplittableType  kidIsSplittable;
-
-    kidFrame->GetSize(kidFrameSize);
-    kidFrame->IsSplittable(kidIsSplittable);
-    
-    if ((kidFrameSize.height > aState.availSize.height) &&
-        NS_FRAME_IS_NOT_SPLITTABLE(kidIsSplittable)) {
-      result = PR_FALSE;
-      mLastContentIsComplete = prevLastContentIsComplete;
-      break;
-    }
-
-    // we're in a constrained situation, so get the avail width from the known column widths
-    nsCellLayoutData *cellData = aState.tableFrame->GetCellLayoutData((nsTableCellFrame *)kidFrame);
-    PRInt32 cellStartingCol = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-    PRInt32 cellColSpan = ((nsTableCellFrame *)kidFrame)->GetColSpan();
-    nscoord availWidth = 0;
-    for (PRInt32 numColSpan=0; numColSpan<cellColSpan; numColSpan++)
-      availWidth += aState.tableFrame->GetColumnWidth(cellStartingCol+numColSpan);
-    NS_ASSERTION(0<availWidth, "illegal width for this column");
-    kidAvailSize.width = availWidth;
-    nsReflowState kidReflowState(kidFrame, aState.reflowState, kidAvailSize,
-                                 eReflowReason_Resize);
-    kidFrame->WillReflow(*aPresContext);
-    status = ReflowChild(kidFrame, aPresContext, desiredSize, kidReflowState);
-    if (nsnull!=pKidMaxElementSize)
-    {
-      if (gsDebug1) 
-      {
-        if (nsnull!=pKidMaxElementSize)
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = %d,%d\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height, 
-                  pKidMaxElementSize->width, pKidMaxElementSize->height);
-        else
-          printf("reflow of cell returned result = %s with desired=%d,%d, min = nsnull\n",
-                  NS_FRAME_IS_COMPLETE(status)?"complete":"NOT complete", 
-                  desiredSize.width, desiredSize.height);
-      }
-    }
-
-    // Did the child fit?
-    if ((desiredSize.height > aState.availSize.height) && (nsnull != mFirstChild)) {
-      // The child is too tall to fit in the available space, and it's
-      // not our first child
-      result = PR_FALSE;
-      mLastContentIsComplete = prevLastContentIsComplete;
-      break;
-    }
-
-    // Adjust the running x-offset, taking into account intruders (cells from prior rows with rowspans > 1)
-    aState.x = 0;
-    PRInt32 cellColIndex = ((nsTableCellFrame *)kidFrame)->GetColIndex();
-    for (PRInt32 colIndex=0; colIndex<cellColIndex; colIndex++)
-          aState.x += aState.tableFrame->GetColumnWidth(colIndex);
-    // Place the child
-    nsRect kidRect (aState.x, 0, desiredSize.width, desiredSize.height);
-    PlaceChild(aPresContext, aState, kidFrame, kidRect, aMaxElementSize, pKidMaxElementSize);
-
-    // Remove the frame from its current parent
-    kidFrame->GetNextSibling(nextInFlow->mFirstChild);
-    nextInFlow->mChildCount--;
-    // Update the next-in-flows first content offset
-    if (nsnull != nextInFlow->mFirstChild) {
-      nextInFlow->SetFirstContentOffset(nextInFlow->mFirstChild);
-    }
-
-    // Link the frame into our list of children
-    kidFrame->SetGeometricParent(this);
-    nsIFrame* kidContentParent;
-
-    kidFrame->GetContentParent(kidContentParent);
-    if (nextInFlow == kidContentParent) {
-      kidFrame->SetContentParent(this);
-    }
-    if (nsnull == prevKidFrame) {
-      mFirstChild = kidFrame;
-      SetFirstContentOffset(kidFrame);
-    } else {
-      prevKidFrame->SetNextSibling(kidFrame);
-    }
-    kidFrame->SetNextSibling(nsnull);
-    mChildCount++;
-
-    // Remember where we just were in case we end up pushing children
-    prevKidFrame = kidFrame;
-    prevLastContentIsComplete = mLastContentIsComplete;
-
-    // Is the child we just pulled up complete?
-    mLastContentIsComplete = NS_FRAME_IS_COMPLETE(status);
-    if (NS_FRAME_IS_NOT_COMPLETE(status)) {
-      // No the child isn't complete
-      nsIFrame* kidNextInFlow;
-       
-      kidFrame->GetNextInFlow(kidNextInFlow);
-      if (nsnull == kidNextInFlow) {
-        // The child doesn't have a next-in-flow so create a
-        // continuing frame. The creation appends it to the flow and
-        // prepares it for reflow.
-        nsIFrame* continuingFrame;
-        nsIStyleContext* kidSC;
-        kidFrame->GetStyleContext(aPresContext, kidSC);
-        kidFrame->CreateContinuingFrame(aPresContext, this, kidSC,
-                                        continuingFrame);
-        NS_RELEASE(kidSC);
-        NS_ASSERTION(nsnull != continuingFrame, "frame creation failed");
-
-        // Add the continuing frame to our sibling list and then push
-        // it to the next-in-flow. This ensures the next-in-flow's
-        // content offsets and child count are set properly. Note that
-        // we can safely assume that the continuation is complete so
-        // we pass PR_TRUE into PushChidren in case our next-in-flow
-        // was just drained and now needs to know it's
-        // mLastContentIsComplete state.
-        kidFrame->SetNextSibling(continuingFrame);
-
-        PushChildren(continuingFrame, kidFrame, PR_TRUE);
-
-        // After we push the continuation frame we don't need to fuss
-        // with mLastContentIsComplete beause the continuation frame
-        // is no longer on *our* list.
-      }
-
-      // If the child isn't complete then it means that we've used up
-      // all of our available space.
-      result = PR_FALSE;
-      break;
-    }
-  }
-
-  // Update our last content offset
-  if (nsnull != prevKidFrame) {
-    NS_ASSERTION(IsLastChild(prevKidFrame), "bad last child");
-    SetLastContentOffset(prevKidFrame);
-  }
-
-  // We need to make sure the first content offset is correct for any empty
-  // next-in-flow frames (frames where we pulled up all the child frames)
-  nextInFlow = (nsTableRowFrame*)mNextInFlow;
-  if ((nsnull != nextInFlow) && (nsnull == nextInFlow->mFirstChild)) {
-    // We have at least one empty frame. Did we succesfully pull up all the
-    // child frames?
-    if (PR_FALSE == result) {
-      // No, so we need to adjust the first content offset of all the empty
-      // frames
-      AdjustOffsetOfEmptyNextInFlows();
-#ifdef NS_DEBUG
-    } else {
-      // Yes, we successfully pulled up all the child frames which means all
-      // the next-in-flows must be empty. Do a sanity check
-      while (nsnull != nextInFlow) {
-        NS_ASSERTION(nsnull == nextInFlow->mFirstChild, "non-empty next-in-flow");
-        nextInFlow->GetNextInFlow((nsIFrame*&)nextInFlow);
-      }
-#endif
-    }
-  }
-
-#ifdef NS_DEBUG
-  VerifyLastIsComplete();
 #endif
 
-#ifdef NOISY
-  ListTag(stdout);
-  printf(": pullup %sok (childCount=%d) [%d,%d,%c]\n",
-         (result ? "" : "NOT "),
-         mChildCount,
-         mFirstContentOffset, mLastContentOffset,
-         (mLastContentIsComplete ? 'T' : 'F'));
-#ifdef NOISY_FLOW
-  {
-    nsTableRowFrame* flow = (nsTableRowFrame*) mNextInFlow;
-    while (flow != 0) {
-      printf("  %p: [%d,%d,%c]\n",
-             flow, flow->mFirstContentOffset, flow->mLastContentOffset,
-             (flow->mLastContentIsComplete ? 'T' : 'F'));
-      flow = (nsTableRowFrame*) flow->mNextInFlow;
-    }
-  }
-#endif
-#endif
   return result;
 }
 
@@ -1297,44 +899,26 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
     // Initialize our internal data
     ResetMaxChildHeight();
   
-    PRBool reflowMappedOK = PR_TRUE;
-  
+    // We're never continued
     aStatus = NS_FRAME_COMPLETE;
   
-    // Check for an overflow list
-    MoveOverflowToChildList();
+    // We should never have an overflow list
+    NS_ASSERTION(nsnull == mOverflowList, "unexpected overflow list");
   
-    // Reflow the existing frames
-    if (nsnull != mFirstChild) {
-      reflowMappedOK = ReflowMappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
-      if (PR_FALSE == reflowMappedOK) {
-        aStatus = NS_FRAME_NOT_COMPLETE;
-      }
-    }
-  
-    // Did we successfully relow our mapped children?
-    if (PR_TRUE == reflowMappedOK) {
-      // Any space left?
-      if (state.availSize.height <= 0) {
-        // No space left. Don't try to pull-up children or reflow unmapped
-        if (NextChildOffset() < mContent->ChildCount()) {
-          aStatus = NS_FRAME_NOT_COMPLETE;
-        }
-      } else if (NextChildOffset() < mContent->ChildCount()) {
-        // Try and pull-up some children from a next-in-flow
-        if (PullUpChildren(aPresContext, state, aDesiredSize.maxElementSize)) {
-          // If we still have unmapped children then create some new frames
-          if (NextChildOffset() < mContent->ChildCount()) {
-            aStatus = ReflowUnmappedChildren(aPresContext, state, aDesiredSize.maxElementSize);
-            GetMinRowSpan();
-            FixMinCellHeight();
-          }
-        } else {
-          // We were unable to pull-up all the existing frames from the
-          // next in flow
-          aStatus = NS_FRAME_NOT_COMPLETE;
-        }
-      }
+    // If we have existing frames them reflow them; otherwise create some frames
+    if (nsnull == mFirstChild) {
+      NS_ASSERTION(eReflowReason_Initial == aReflowState.reason,
+                   "unexpected reflow reason");
+      aStatus = ReflowUnmappedChildren(aPresContext, state,
+                                       aDesiredSize.maxElementSize);
+      NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "unexpected reflow status");
+      GetMinRowSpan();
+      FixMinCellHeight();
+
+    } else {
+      PRBool  reflowMappedOK = ReflowMappedChildren(aPresContext, state,
+                                                    aDesiredSize.maxElementSize);
+      NS_ASSERTION(PR_TRUE == reflowMappedOK, "unexpected result");
     }
   }
 
@@ -1360,7 +944,6 @@ nsTableRowFrame::Reflow(nsIPresContext*      aPresContext,
   }
 
   return NS_OK;
-
 }
 
 NS_METHOD
@@ -1370,7 +953,7 @@ nsTableRowFrame::CreateContinuingFrame(nsIPresContext*  aPresContext,
                                        nsIFrame*&       aContinuingFrame)
 {
   // Because rows are always complete we should never be asked to create
-  // a continuikng frame
+  // a continuing frame
   NS_ERROR("Unexpected request");
   return NS_ERROR_NOT_IMPLEMENTED;
 }
@@ -1391,56 +974,3 @@ nsresult nsTableRowFrame::NewFrame( nsIFrame** aInstancePtrResult,
   return NS_OK;
 }
 
-NS_METHOD
-nsTableRowFrame::QueryInterface(const nsIID& aIID, void** aInstancePtr)
-{
-  NS_PRECONDITION(0 != aInstancePtr, "null ptr");
-  if (NULL == aInstancePtr) {
-    return NS_ERROR_NULL_POINTER;
-  }
-  if (aIID.Equals(kTableRowFrameCID)) {
-    *aInstancePtr = (void*) (this);
-    return NS_OK;
-  }
-  return nsContainerFrame::QueryInterface(aIID, aInstancePtr);
-}
-
-// For Debugging ONLY
-NS_METHOD nsTableRowFrame::MoveTo(nscoord aX, nscoord aY)
-{
-  if ((aX != mRect.x) || (aY != mRect.y)) {
-    mRect.x = aX;
-    mRect.y = aY;
-
-    nsIView* view;
-    GetView(view);
-
-    // Let the view know
-    if (nsnull != view) {
-      // Position view relative to it's parent, not relative to our
-      // parent frame (our parent frame may not have a view).
-      nsIView* parentWithView;
-      nsPoint origin;
-      GetOffsetFromView(origin, parentWithView);
-      view->SetPosition(origin.x, origin.y);
-      NS_IF_RELEASE(parentWithView);
-    }
-  }
-
-  return NS_OK;
-}
-
-NS_METHOD nsTableRowFrame::SizeTo(nscoord aWidth, nscoord aHeight)
-{
-  mRect.width = aWidth;
-  mRect.height = aHeight;
-
-  nsIView* view;
-  GetView(view);
-
-  // Let the view know
-  if (nsnull != view) {
-    view->SetDimensions(aWidth, aHeight);
-  }
-  return NS_OK;
-}
