@@ -189,11 +189,11 @@ URDFUtilities :: GetColor ( HT_Resource inNode, void* inHTToken, RGBColor* outCo
 
 	if ( inNode && inHTToken ) {
 		char* color = NULL;
-		PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
+		PRBool success = HT_GetTemplateData ( inNode, inHTToken, HT_COLUMN_STRING, &color );
 		if ( success && color ) {
 			uint8 red, green, blue;
-			if ( XP_ColorNameToRGB(color, &red, &green, &blue) == 0 ) {
-				*outColor = UGraphics::MakeRGBColor(red, green, blue);\
+			if ( LO_ParseRGB(color, &red, &green, &blue) ) {
+				*outColor = UGraphics::MakeRGBColor(red, green, blue);
 				usingHTColor = true;
 			}	
 		}
@@ -208,20 +208,33 @@ URDFUtilities :: GetColor ( HT_Resource inNode, void* inHTToken, RGBColor* outCo
 // PropertyValueBool
 //
 // Gets the value of the given token and determines if it is "[Y|y]es" or "[N|n]o" based
-// on the first character. Returns the appropriate boolean value (yes = true).
+// on the first character. Returns the appropriate boolean value (yes = true). If the
+// property is not specified (or not specified correctly) return the default value.
 //
 bool
-URDFUtilities :: PropertyValueBool ( HT_Resource inNode, void* inHTToken )
+URDFUtilities :: PropertyValueBool ( HT_Resource inNode, void* inHTToken, bool inDefaultValue )
 {
-	char* value = NULL;
+	bool retVal = inDefaultValue;
 	
-	PRBool success = HT_GetNodeData ( inNode, inHTToken, HT_COLUMN_STRING, &value );
-	if ( success && value )
-		return (*value == 'y' || *value == 'Y') ? true : false;
-
-	return false;
+	if ( inNode && inHTToken ) {
+		char* value = NULL;
+		
+		PRBool success = HT_GetTemplateData ( inNode, inHTToken, HT_COLUMN_STRING, &value );
+		if ( success && value ) {
+			switch ( *value ) {
+				case 'Y': case 'y':
+					retVal = true;
+					break;
+				case 'N': case 'n':
+					retVal = false;
+			}
+		}
+	}
+	
+	return retVal;
 	
 } // PropertyValueBool
+
 
 //
 // LaunchNode
