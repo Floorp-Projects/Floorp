@@ -33,11 +33,22 @@
 #define COOKIE_FILE "cookies"
 #endif
 
+#ifdef CookieManagement
 #define COOKIE_PERMISSION_FILE_TOK "%COOKIE_PERMISSION_F%"
 #ifdef XP_PC
 #define COOKIE_PERMISSION_FILE "cookperm.txt"
 #else
 #define COOKIE_PERMISSION_FILE "cookperm"
+#endif
+#endif
+
+#ifdef SingleSignon
+#define SIGNON_FILE_TOK "%SIGNON_F%"
+#ifdef XP_PC
+#define SIGNON_FILE "signons.txt"
+#else
+#define SIGNON_FILE "signons"
+#endif
 #endif
 
 #define CACHE_DB_F_TOK "%CACHE_DB_F%"

@@ -582,7 +582,7 @@ NS_IMETHODIMP_(void) nsXPBaseWindow::Alert(const nsString &aText)
   char *str;
 
   str = aText.ToNewCString();
-  printf("Browser Window Alert: %s\n", str);
+  printf("%cBrowser Window Alert: %s\n", '\007', str);
   PR_Free(str);
 }
 
@@ -592,10 +592,18 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::Confirm(const nsString &aText)
   char *str;
 
   str = aText.ToNewCString();
-  printf("Browser Window Confirm: %s (returning false)\n", str);
+  printf("%cBrowser Window Confirm: %s (y/n)? \n", '\007', str);
   PR_Free(str);
-
-  return PR_FALSE;
+  char c;
+  for (;;) {
+    c = getchar();
+    if (tolower(c) == 'y') {
+      return PR_TRUE;
+    }
+    if (tolower(c) == 'n') {
+      return PR_FALSE;
+    }
+  }
 }
 
 //----------------------------------------
@@ -610,7 +618,7 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::Prompt(const nsString &aText,
   printf("Browser Window: %s\n", str);
   PR_Free(str);
 
-  printf("Prompt: ");
+  printf("%cPrompt: ", '\007');
   scanf("%s", buf);
   aResult = buf;
   
@@ -629,10 +637,10 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptUserAndPassword(const nsString &aTe
   printf("Browser Window: %s\n", str);
   PR_Free(str);
 
-  printf("User: ");
+  printf("%cUser: ", '\007');
   scanf("%s", buf);
   aUser = buf;
-  printf("Password: ");
+  printf("%cPassword: ", '\007');
   scanf("%s", buf);
   aPassword = buf;
   
@@ -650,7 +658,7 @@ NS_IMETHODIMP_(PRBool) nsXPBaseWindow::PromptPassword(const nsString &aText,
   printf("Browser Window: %s\n", str);
   PR_Free(str);
 
-  printf("Password: ");
+  printf("%cPassword: ", '\007');
   scanf("%s", buf);
   aPassword = buf;
  

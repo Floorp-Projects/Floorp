@@ -68,6 +68,31 @@ si_SaveSignonDataInKeychain();
 
 #endif
 
+/* temporary */
+/*
+ * Need this for now because the normal call to FE_Confirm goes through
+ * a pointer in the context (context->func->confirm) and the context
+ * doesn't exist when we get control from layout, namely when SI_RememberSignonData
+ * is called
+ */
+#undef FE_Confirm
+Bool
+FE_Confirm(MWContext* context, const char* szMessage)
+{
+    char c;
+    fprintf(stdout, "%c%s  (y/n)?  ", '\007', szMessage); /* \007 is BELL */
+    for (;;) {
+        c = getchar();
+        if (tolower(c) == 'y') {
+            return JS_TRUE;
+        }
+        if (tolower(c) == 'n') {
+            return JS_FALSE;
+        }
+    }
+}
+/* end of temporary */
+
 PRIVATE void
 si_lock_signon_list(void)
 {
@@ -170,7 +195,7 @@ si_SignonRememberingPrefChanged(const char * newpref, void * data)
 void
 si_RegisterSignonPrefCallbacks(void)
 {
-    Bool x;
+    Bool x = TRUE; /* initialize to default value in case PREF_GetBoolPref fails */
     static Bool first_time = TRUE;
 
     if(first_time)
@@ -1064,7 +1089,7 @@ SI_StartOfForm() {
  */
 #ifdef APPLE_KEYCHAIN
 OSStatus PR_CALLBACK
-si_KeychainCallback( KCEvent keychainEvent, KCCallbackInfo *info, void *userContext ) {
+si_KeychainCallback( KCEvent keychainEvent, KCCallbackInfo *info, void *userContext) {
         Bool    *listInvalid = (Bool*)userContext;
 
         *listInvalid = TRUE;
@@ -1730,11 +1755,12 @@ SI_RemoveAllSignonData() {
  * Check for a signon submission and remember the data if so
  */
 PUBLIC void
-SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
+SI_RememberSignonData(char* URLName, LO_FormSubmitData * submit)
 {
     int i, j;
     int passwordCount = 0;
     int pswd[3];
+    MWContext *context; /* not used -- just a hold-over from the old world order */
 
     /* do nothing if signon preference is not enabled */
     if (!si_GetSignonRememberingPref()){
@@ -1763,9 +1789,9 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
         }
 
         if (si_OkToSave(context,
-                context->hist.cur_doc_ptr->address, /* urlname */
+                URLName, /* urlname */
                 ((char **)submit->value_array)[j] /* username */)) {
-            si_PutData(context->hist.cur_doc_ptr->address, submit, TRUE);
+            si_PutData(URLName, submit, TRUE);
         }
     } else if (passwordCount == 2) {
         /* two-password form is a registration */
@@ -1787,10 +1813,8 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
 
         /* ask user if this is a password change */
         si_lock_signon_list();
-        user = si_GetUserForChangeForm(
-            context,
-            context->hist.cur_doc_ptr->address,
-            MK_SIGNON_PASSWORDS_REMEMBER);
+        user = si_GetUserForChangeForm
+            (context, URLName, MK_SIGNON_PASSWORDS_REMEMBER);
 
         /* return if user said no */
         if (!user) {
@@ -1823,6 +1847,40 @@ SI_RememberSignonData(MWContext *context, LO_FormSubmitData * submit)
         si_SaveSignonDataLocked(NULL);
         si_unlock_signon_list();
     }
+}
+
+PUBLIC void
+SI_RestoreSignonData
+    (char* URLName, char* name, char** value)
+{
+    MWContext *context; /* not used -- just a hold-over from the old world order */
+//    si_SignonURLStruct* url;
+    si_SignonUserStruct* user;
+    si_SignonDataStruct* data;
+    XP_List * data_ptr=0;
+
+    /* do nothing if signon preference is not enabled */
+    if (!si_GetSignonRememberingPref()){
+        return;
+    }
+
+    /* get first user for this url */
+    si_lock_signon_list();
+//    url = si_GetURL(URLName);
+    user = si_GetUser(context, URLName, TRUE, NULL);
+
+    /* restore the data from previous time this URL was visited */
+    if (user) {
+        data_ptr = user->signonData_list;
+        while((data = (si_SignonDataStruct *) XP_ListNextObject(data_ptr))!=0) {
+            if(name && XP_STRCMP(data->name, name)==0) {
+                StrAllocCopy(*value, data->value);
+                si_unlock_signon_list();
+                return;
+            }
+        }
+    }
+    si_unlock_signon_list();
 }
 
 /*
@@ -1964,7 +2022,7 @@ si_RememberSignonDataFromBrowser(char* URLName, char* username, char* password)
 
 PUBLIC void
 SI_RememberSignonDataFromBrowser
-    (MWContext *context,char* URLName, char* username, char* password)
+    (MWContext *context, char* URLName, char* username, char* password)
 {
     if (si_OkToSave(context, URLName, username)) {
         si_RememberSignonDataFromBrowser (URLName, username, password);
@@ -2223,7 +2281,55 @@ SI_UnanonymizeSignons()
     }
 }
 
+#ifdef HTMLDialogs
 #include "htmldlgs.h"
+#else
+#define XP_DIALOG_CANCEL_BUTTON		(1<<0)
+#define XP_DIALOG_OK_BUTTON             (1<<2)
+#define XP_STRINGS_CHUNKSIZE 512
+typedef struct _XPDialogState XPDialogState;
+typedef struct _XPDialogInfo XPDialogInfo;
+typedef struct _XPDialogStrings XPDialogStrings;
+typedef PRBool (* XP_HTMLDialogHandler)(XPDialogState *state, char **argv,
+                                        int argc, unsigned int button);
+struct _XPDialogState {
+    PRArenaPool *arena;
+    void *window;
+    void *proto_win;
+    XPDialogInfo *dialogInfo;
+    void *arg;
+    void (* deleteCallback)(void *arg);
+    void *cbarg;
+    PRBool deleted;
+};
+struct _XPDialogInfo {
+    unsigned int buttonFlags;
+    XP_HTMLDialogHandler handler;
+    int width;
+    int height;
+};
+struct _XPDialogStrings
+{
+    PRArenaPool *arena;
+    int basestringnum;
+    int nargs;
+    char **args;
+    char *contents;
+};
+
+extern time_t CookieTime();
+extern XPDialogState *
+    XP_MakeRawHTMLDialog(void *proto_win, XPDialogInfo *dialogInfo,
+		     int titlenum, XPDialogStrings *strings,
+		     int handlestring, void *arg);
+extern XPDialogStrings *XP_GetDialogStrings(int stringnum);
+extern void
+    XP_SetDialogString(XPDialogStrings *strings, int argNum, char *string);
+extern char *
+    XP_FindValueInArgs(const char *name, char **av, int ac);
+
+#endif
+
 extern int XP_CERT_PAGE_STRINGS;
 extern int SA_REMOVE_BUTTON_LABEL;
 extern int MK_SIGNON_VIEW_SIGNONS;
@@ -2765,6 +2871,15 @@ SI_DisplaySignonInfoAsHTML(MWContext *context)
 "    }\n"
 "\n"
 "    function clicker(but,win){\n"
+#ifndef HTMLDialogs 
+"      var goneS = top.frames[button_frame].document.buttons.goneS;\n"
+"      var goneR = top.frames[button_frame].document.buttons.goneR;\n"
+"      var expires = new Date();\n"
+"      expires.setTime(expires.getTime() + 1000*60*60*24*365);\n"
+"      document.cookie = \"htmldlgs=|\" + but.value +\n"
+"        \"|goneS|\" + goneS.value + \"|goneR|\" + goneR.value + \"|\" +\n"
+"        \"; expires=\" + expires.toGMTString();\n"
+#endif
 "      top.frames[button_frame].document.buttons.xxxbuttonxxx.value = but.value;\n"
 "      top.frames[button_frame].document.buttons.xxxbuttonxxx.name = 'button';\n"
 "      top.frames[button_frame].document.buttons.submit();\n"
