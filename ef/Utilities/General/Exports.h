@@ -31,7 +31,7 @@
   #endif
 
  #pragma warning(disable: 4251)
-#elif defined(LINUX)
+#elif defined(LINUX) || defined(FREEBSD)
   #define NS_NATIVECALL(inReturnType) __attribute__((stdcall)) inReturnType
   #define NS_EXPORT 
   #define NS_EXTERN 

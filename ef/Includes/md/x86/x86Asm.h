@@ -21,6 +21,8 @@
 
 #if defined(LINUX)
 #include "x86LinuxAsm.h"
-#endif /* LINUX */
+#elif defined(FREEBSD)
+#include "x86FreeBSDAsm.h"
+#endif
 
 #endif /* _MD_X86_ASM_H_ */
