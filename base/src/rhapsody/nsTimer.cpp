@@ -109,6 +109,8 @@ TimerImpl::Init(nsTimerCallbackFunc aFunc,
     mClosure = aClosure;
     // mRepeat = aRepeat;
 
+    printf("TimerImpl::Init() not implemented\n");
+
 #ifdef RHAPSODY_NEEDS_TO_IMPLEMENT_THIS
     mTimerId = XtAppAddTimeOut(gAppContext, aDelay,(XtTimerCallbackProc)nsTimerExpired, this);
 #endif
@@ -123,6 +125,8 @@ TimerImpl::Init(nsITimerCallback *aCallback,
 {
     mCallback = aCallback;
     // mRepeat = aRepeat;
+
+printf("TimerImpl::Init() not implmented.\n");
 
 #ifdef RHAPSODY_NEEDS_TO_IMPLEMENT_THIS
     mTimerId = XtAppAddTimeOut(gAppContext, aDelay, (XtTimerCallbackProc)nsTimerExpired, this);
@@ -146,6 +150,9 @@ NS_IMPL_ISUPPORTS(TimerImpl, kITimerIID)
 void
 TimerImpl::Cancel()
 {
+
+  printf("TimerImpl::Cancel() not implemented.\n");
+
 #ifdef RHAPSODY_NEEDS_TO_IMPLEMENT_THIS
   XtRemoveTimeOut(mTimerId);
 #endif
