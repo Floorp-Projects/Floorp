@@ -47,7 +47,7 @@ install::
 	$(MAKE_INSTALL) scroll-thumb-vert.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) scroll-thumb-vert-hover.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) scroll-thumb-vert-disabled.gif $(DISTBROWSER)
-        $(MAKE_INSTALL) scroll-thumb-horiz.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) scroll-thumb-horiz.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) scroll-thumb-horiz-hover.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) scroll-thumb-horiz-disabled.gif $(DISTBROWSER)
 
@@ -59,6 +59,11 @@ install::
 	$(MAKE_INSTALL) menuCheck.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) menuCheck_mo.gif $(DISTBROWSER)
 	$(MAKE_INSTALL) menuCheck_dis.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) alert-icon.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) error-icon.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) message-icon.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) question-icon.gif $(DISTBROWSER)
+	$(MAKE_INSTALL) return.gif $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\skin\default\*.*
