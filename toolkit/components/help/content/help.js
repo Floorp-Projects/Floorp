@@ -331,6 +331,11 @@ function goBack() {
   }
 }
 
+function reload() {
+  const reloadFlags = Components.interfaces.nsIWebNavigation.LOAD_FLAGS_NONE;
+  return BrowserReloadWithFlags(reloadFlags);
+}
+
 function goForward() {
     try
     {
@@ -432,20 +437,25 @@ function gotoHistoryIndex(aEvent) {
 }
 
 function nsHelpStatusHandler() {
+  this.init();
 }
 
 nsHelpStatusHandler.prototype = {
 
     onStateChange : function(aWebProgress, aRequest, aStateFlags, aStatus)
     {
-      var webProgress = Components.interfaces.nsIWebProgress;
+      const nsIWebProgressListener = Components.interfaces.nsIWebProgressListener;
 
-      //Turn on and off the throbber depending on whether or not a page is loading. This is used in case
-      //someone has a Help Viewer Content Pack that gets pages off of a web server.
-      if (aStateFlags & webProgress.STATE_START)
-        this.throbberElement.setAttribute("busy", "true");
-      else if (aStateFlags & webProgress.STATE_STOP)
-        this.throbberElement.removeAttribute("busy");
+#     //Turn on and off the throbber depending on whether or not a page is loading. This is used in case
+#     //someone has a Help Viewer Content Pack that gets pages off of a web server.
+      if (aStateFlags & nsIWebProgressListener.STATE_START) {
+        if (this.throbberElement)
+          this.throbberElement.setAttribute("busy", "true");
+      } else if (aStateFlags & nsIWebProgressListener.STATE_STOP) {
+        if (aRequest && this.throbberElement) {
+          this.throbberElement.removeAttribute("busy");
+        }
+      }
     },
     onProgressChange : function(aWebProgress, aRequest, aCurSelfProgress,
         aMaxSelfProgress, aCurTotalProgress, aMaxTotalProgress) {},
@@ -465,12 +475,12 @@ nsHelpStatusHandler.prototype = {
 
     init : function()
     {
-      this.throbberElement = document.getElementById("navigator-throbber");
+      this.throbberElement = document.getElementById("help-throbber");
     },
 
     destroy : function()
     {
-      //this needed to avoid memory leaks.
+      //this needed to avoid memory leaks, see bug 60729
       this.throbberElement = null;
     },
 
