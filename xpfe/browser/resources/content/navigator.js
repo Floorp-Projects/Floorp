@@ -1353,19 +1353,25 @@ function clearErrorNotification()
   consoleListener.isShowingError = false;
 }
 
+var urlWidgetService = null; 
+try {                                                                                
+  urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]             
+                               .getService(Components.interfaces.nsIUrlWidget); 
+} catch (ex) {                                                           
+}                                                                               
+ 
 //Posts the currently displayed url to a native widget so third-party apps can observe it.
 function postURLToNativeWidget()
 {
-  var urlWidgetService = Components.classes["@mozilla.org/urlwidget;1"]
-                                   .getService(Components.interfaces.nsIUrlWidget);
-
-  // XXX This somehow causes a big leak, back to the old way
-  //     till we figure out why. See bug 61886.
-  // var url = getWebNavigation().currentURI.spec;
-  var url = _content.location.href;
-  try {
-    urlWidgetService.SetURLToHiddenControl(url, window);
-  } catch(ex) {
+  if (urlWidgetService) {
+    // XXX This somehow causes a big leak, back to the old way
+    //     till we figure out why. See bug 61886.
+    // var url = getWebNavigation().currentURI.spec;
+    var url = _content.location.href;
+    try {
+      urlWidgetService.SetURLToHiddenControl(url, window);
+    } catch(ex) {
+    }
   }
 }
 
