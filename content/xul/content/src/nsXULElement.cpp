@@ -1011,12 +1011,6 @@ nsXULElement::InsertChildAt(nsIContent* aKid, PRUint32 aIndex, PRBool aNotify,
     nsIDocument* doc = GetCurrentDoc();
     mozAutoDocUpdate updateBatch(doc, UPDATE_CONTENT_MODEL, aNotify);
 
-    if (aIndex > mAttrsAndChildren.ChildCount()) {
-      // XXX This *does* happen, probably a bug in the overlay code.
-      // See bug 233641.
-      return NS_ERROR_FAILURE;
-    }
-
     rv = mAttrsAndChildren.InsertChildAt(aKid, aIndex);
     NS_ENSURE_SUCCESS(rv, rv);
 
