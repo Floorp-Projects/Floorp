@@ -158,6 +158,7 @@ nsViewerApp::Exit()
 {
   Destroy();
   mAppShell->Exit();
+  NS_RELEASE(mAppShell);
   return NS_OK;
 }
 
