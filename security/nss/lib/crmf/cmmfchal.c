@@ -40,10 +40,9 @@
 #include "cert.h"
 #include "secitem.h"
 #include "secmod.h"
-#include "secmodi.h"
 #include "keyhi.h"
 
-static SECStatus
+static int
 cmmf_create_witness_and_challenge(PRArenaPool     *poolp,
 				  CMMFChallenge   *challenge,
 				  long             inRandom,
@@ -53,7 +52,6 @@ cmmf_create_witness_and_challenge(PRArenaPool     *poolp,
 {
     SECItem       *encodedRandNum;
     SECItem        encodedRandStr = {siBuffer, NULL, 0};
-    SECItem        encryptBlock   = {siBuffer, NULL, 0};
     SECItem       *dummy;
     unsigned char *randHash, *senderHash, *encChal=NULL;
     unsigned       modulusLen = 0;
@@ -216,7 +214,6 @@ CMMF_POPODecKeyChallContentSetNextChallenge
     SECStatus                    rv;
     SECItem                     *genNameDER;
     void                        *mark;
-    SECItem                      senderDER = {siBuffer, NULL, 0};
 
     PORT_Assert (inDecKeyChall != NULL &&
 		 inSender      != NULL &&

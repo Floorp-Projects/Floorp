@@ -73,7 +73,7 @@ cmmf_CertOrEncCertSetCertificate(CMMFCertOrEncCert *certOrEncCert,
 				 CERTCertificate   *inCert)
 {
     SECItem               *derDest = NULL;
-    SECStatus             rv;
+    SECStatus             rv = SECFailure;
 
     if (inCert->derCert.data == NULL) {
         derDest = SEC_ASN1EncodeItem(NULL, NULL, inCert, 

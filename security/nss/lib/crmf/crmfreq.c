@@ -171,7 +171,7 @@ crmf_template_copy_secalg (PRArenaPool *poolp, SECAlgorithmID **dest,
 			   SECAlgorithmID* src)
 {
     SECStatus         rv;
-    void             *mark;
+    void             *mark = NULL;
     SECAlgorithmID   *mySecAlg;
 
     if (poolp != NULL) {
@@ -185,14 +185,14 @@ crmf_template_copy_secalg (PRArenaPool *poolp, SECAlgorithmID **dest,
     if (rv != SECSuccess) {
         goto loser;
     }
-    if (poolp != NULL) {
+    if (mark) {
         PORT_ArenaUnmark(poolp, mark);
     }
     return SECSuccess;
 
  loser:
     *dest = NULL;
-    if (poolp != NULL) {
+    if (mark) {
         PORT_ArenaRelease(poolp, mark);
     }
     return SECFailure;

@@ -260,7 +260,7 @@ crmf_copy_encryptedkey(PRArenaPool       *poolp,
 		       CRMFEncryptedKey  *destEncrKey)
 {
     SECStatus          rv;
-    void              *mark;
+    void              *mark = NULL;
 
     if (poolp != NULL) {
         mark = PORT_ArenaMark(poolp);
@@ -285,13 +285,13 @@ crmf_copy_encryptedkey(PRArenaPool       *poolp,
         goto loser;
     }
     destEncrKey->encKeyChoice = srcEncrKey->encKeyChoice;
-    if (poolp != NULL) {
+    if (mark) {
     	PORT_ArenaUnmark(poolp, mark);
     }
     return SECSuccess;
 
  loser:
-    if (poolp != NULL) {
+    if (mark) {
         PORT_ArenaRelease(poolp, mark);
     }
     return SECFailure;
@@ -660,12 +660,12 @@ crmf_encrypted_value_unwrap_priv_key(PRArenaPool        *poolp,
     SECItem           *params = NULL, *publicValue = NULL;
     int                keySize, origLen;
     CK_KEY_TYPE        keyType;
-    CK_ATTRIBUTE_TYPE *usage;
+    CK_ATTRIBUTE_TYPE *usage = NULL;
     CK_ATTRIBUTE_TYPE rsaUsage[] = {
       CKA_UNWRAP, CKA_DECRYPT, CKA_SIGN, CKA_SIGN_RECOVER };
     CK_ATTRIBUTE_TYPE dsaUsage[] = { CKA_SIGN };
     CK_ATTRIBUTE_TYPE dhUsage[] = { CKA_DERIVE };
-    int usageCount;
+    int usageCount = 0;
 
     oidTag = SECOID_GetAlgorithmTag(encValue->symmAlg);
     wrapMechType = crmf_get_pad_mech_from_tag(oidTag);
@@ -711,6 +711,8 @@ crmf_encrypted_value_unwrap_priv_key(PRArenaPool        *poolp,
         usageCount = sizeof(dsaUsage)/sizeof(dsaUsage[0]);
         break;
     }
+    PORT_Assert(usage != NULL);
+    PORT_Assert(usageCount != 0);
     *unWrappedKey = PK11_UnwrapPrivKey(slot, wrappingKey, wrapMechType, params,
 				       &encValue->encValue, nickname,
 				       publicValue, PR_TRUE,PR_TRUE, 
@@ -1018,7 +1020,6 @@ static SECStatus
 crmf_encode_pkiarchiveoptions(PRArenaPool *poolp, CRMFControl *inControl)
 {
     const SEC_ASN1Template *asn1Template;
-    SECStatus               rv;
 
     asn1Template = crmf_get_pkiarchiveoptions_subtemplate(inControl);
     /* We've got a union, so passing a pointer to one element of the 
