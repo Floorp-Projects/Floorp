@@ -466,7 +466,7 @@
            var b = this.parentNode.outlinerBoxObject;
            b.getCellAt(event.clientX, event.clientY, row, col);
            if (b.view.isContainer(row.value))
-             b.toggleOpenState(row.value);
+             b.view.toggleOpenState(row.value);
       ]]>
       </handler>
     </handlers>
