@@ -62,17 +62,26 @@ class nsMsgCompose : public nsIMsgCompose
   nsresult                      BuildBodyMessage();
 
   nsString                      mQuoteURI;
-  nsFileSpec                    *mSigFileSpec;
-  nsFileSpec                    *mTempComposeFileSpec;
 
   PRInt32                       mWhatHolder;
 
-  nsresult                      ProcessSignature(nsOutputFileStream *aAppendFileStream,
-                                                 nsIMsgIdentity *identity); // for setting up the users compose window environment
-  nsresult                      BuildQuotedMessageAndSignature(void);                    // for setting up the users compose window environment
+  nsresult                      ProcessSignature(nsIMsgIdentity *identity,        // for setting up the users compose window environment
+                                                  nsString      *aMsgBody);       // the body to append the sig to
+  nsresult                      BuildQuotedMessageAndSignature(void);             // for setting up the users compose window environment
 	nsresult                      ShowWindow(PRBool show);
   nsresult                      LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData);
 
+  nsresult                      GetCompFields(nsMsgCompFields **aCompFields) 
+                                {
+                                  if (aCompFields)
+                                    *aCompFields = m_compFields;
+                                  return NS_OK;
+                                }
+  nsresult                      GetIdentity(nsIMsgIdentity **aIdentity)
+                                {
+                                  *aIdentity = m_identity;
+                                  return NS_OK;
+                                }
 
  private:
 	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const PRUnichar *callback);

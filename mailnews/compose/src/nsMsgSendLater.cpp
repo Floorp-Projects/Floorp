@@ -53,7 +53,7 @@ static NS_DEFINE_CID(kMsgCompFieldsCID, NS_MSGCOMPFIELDS_CID);
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID); 
 static NS_DEFINE_CID(kISupportsArrayCID, NS_SUPPORTSARRAY_CID);
 
-// 
+//
 // This function will be used by the factory to generate the 
 // nsMsgComposeAndSend Object....
 //
@@ -73,15 +73,13 @@ nsresult NS_NewMsgSendLater(const nsIID &aIID, void ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-NS_IMPL_ISUPPORTS(nsMsgSendLater, nsCOMTypeInfo<nsIMsgSendLater>::GetIID())
+NS_IMPL_ISUPPORTS2(nsMsgSendLater, nsIMsgSendLater, nsIStreamListener)
 
 nsMsgSendLater::nsMsgSendLater()
 {
   mIdentity = nsnull;  
   mTempIFileSpec = nsnull;
   mTempFileSpec = nsnull;
-  mHackTempIFileSpec = nsnull;
-  mHackTempFileSpec = nsnull;
   mOutFile = nsnull;
   mEnumerator = nsnull;
   mTotalSentSuccessfully = 0;
@@ -110,7 +108,6 @@ nsMsgSendLater::nsMsgSendLater()
   m_flagsPosition = 0;
   m_headersSize = 0;
 
-  mSaveListener = nsnull;
   mRequestReturnReceipt = PR_FALSE;
   NS_INIT_REFCNT();
 }
@@ -119,7 +116,6 @@ nsMsgSendLater::~nsMsgSendLater()
 {
   NS_IF_RELEASE(mEnumerator);
   NS_IF_RELEASE(mTempIFileSpec);
-  NS_IF_RELEASE(mSaveListener);
   PR_FREEIF(m_to);
   PR_FREEIF(m_fcc);
   PR_FREEIF(m_bcc);
@@ -134,8 +130,10 @@ nsMsgSendLater::~nsMsgSendLater()
 
 // Stream is done...drive on!
 nsresult
-nsMsgSendLater::Close(void) 
+nsMsgSendLater::OnStopRequest(nsIChannel *channel, nsISupports *ctxt, nsresult status, const PRUnichar *errorMsg)
 {
+  nsresult    rv;
+
   // First, this shouldn't happen, but if
   // it does, flush the buffer and move on.
   if (mLeftoverBuffer)
@@ -146,8 +144,36 @@ nsMsgSendLater::Close(void)
   if (mOutFile)
     mOutFile->close();
 
-  // Message is done...send it!
-  return CompleteMailFileSend();
+  // See if we succeeded on reading the message from the message store?
+  //
+  if (NS_SUCCEEDED(status))
+  {
+    // Message is done...send it!
+    rv = CompleteMailFileSend();
+
+#ifdef NS_DEBUG
+    printf("nsMsgSendLater: Success on getting message...\n");
+#endif
+    
+    // If the send operation failed..try the next one...
+    if (NS_FAILED(rv))
+    {
+      rv = StartNextMailFileSend();
+      if (NS_FAILED(rv))
+        NotifyListenersOnStopSending(rv, nsnull, mTotalSendCount, mTotalSentSuccessfully);
+    }
+  }
+  else
+  {
+    nsMsgDisplayMessageByID(NS_ERROR_QUEUED_DELIVERY_FAILED);
+    
+    // Getting the data failed, but we will still keep trying to send the rest...
+    rv = StartNextMailFileSend();
+    if (NS_FAILED(rv))
+      NotifyListenersOnStopSending(rv, nsnull, mTotalSendCount, mTotalSentSuccessfully);
+  }
+
+  return rv;
 }
 
 char *
@@ -210,7 +236,7 @@ nsMsgSendLater::BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *tota
 
 // Got data?
 nsresult
-nsMsgSendLater::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount) 
+nsMsgSendLater::OnDataAvailable(nsIChannel *channel, nsISupports *ctxt, nsIInputStream *inStr, PRUint32 sourceOffset, PRUint32 count)
 {
   // This is a little bit tricky since we have to chop random 
   // buffers into lines and deliver the lines...plus keeping the
@@ -221,7 +247,12 @@ nsMsgSendLater::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
   char        *endBuf;
   char        *lineEnd;
   char        *newbuf = nsnull;
-  PRUint32     size;
+  PRUint32    size;  
+
+  PRUint32    aCount = count;
+  char        *aBuf = (char *)PR_Malloc(aCount + 1);
+
+  inStr->Read(aBuf, count, &aCount);
 
   // First, create a new work buffer that will 
   if (NS_FAILED(BuildNewBuffer(aBuf, aCount, &size))) // no leftovers...
@@ -256,59 +287,14 @@ nsMsgSendLater::Write(const char* aBuf, PRUint32 aCount, PRUint32 *aWriteCount)
   if (newbuf)
     PR_FREEIF(newbuf);
 
-  *aWriteCount = aCount;
+  PR_FREEIF(aBuf);
   return rv;
 }
 
 nsresult
-nsMsgSendLater::Flush(void) 
+nsMsgSendLater::OnStartRequest(nsIChannel *channel, nsISupports *ctxt)
 {
   return NS_OK;
-}
-
-nsresult
-SaveMessageCompleteCallback(nsIURI *aUrl, nsresult aExitCode, void *tagData)
-{
-  nsresult rv = NS_OK;
-
-  if (tagData)
-  {
-    nsMsgSendLater *ptr = (nsMsgSendLater *) tagData;
-    if (NS_SUCCEEDED(aExitCode))
-    {
-#ifdef NS_DEBUG
-      printf("nsMsgSendLater: Success on the message save...\n");
-#endif
-      // RICHIE 
-      // Drive the file IO to the stream..which is us :-)
-      rv = ptr->DriveFakeStream(ptr);
-
-      // If the send operation failed..try the next one...
-      if (NS_FAILED(rv))
-      {
-        rv = ptr->StartNextMailFileSend();
-        if (NS_FAILED(rv))
-          ptr->NotifyListenersOnStopSending(rv, nsnull, ptr->mTotalSendCount, 
-                                            ptr->mTotalSentSuccessfully);
-      }
-
-      NS_RELEASE(ptr);
-    }
-    else
-    {
-      // RICHIE - do we do the message loss here?
-      nsMsgDisplayMessageByID(NS_ERROR_QUEUED_DELIVERY_FAILED);
-
-      // Save failed, but we will still keep trying to send the rest...
-      rv = ptr->StartNextMailFileSend();
-      if (NS_FAILED(rv))
-        ptr->NotifyListenersOnStopSending(rv, nsnull, ptr->mTotalSendCount, 
-                                          ptr->mTotalSentSuccessfully);
-      NS_RELEASE(ptr);
-    }
-  }
-
-  return rv;
 }
 
 ////////////////////////////////////////////////////////////////////////////////////
@@ -596,14 +582,6 @@ nsMsgSendLater::StartNextMailFileSend()
 	if (!mTempIFileSpec)
     return NS_ERROR_FAILURE;
 
-  mHackTempFileSpec = nsMsgCreateTempFileSpec("hack.tmp"); 
-	if (!mHackTempFileSpec)
-    return NS_ERROR_FAILURE;
-
-  NS_NewFileSpecWithSpec(*mHackTempFileSpec, &mHackTempIFileSpec);
-	if (!mHackTempIFileSpec)
-    return NS_ERROR_FAILURE;
-
   nsIMsgMessageService * messageService = nsnull;
 	rv = GetMessageServiceFromURI(aMessageURI, &messageService);
   if (NS_FAILED(rv) && !messageService)
@@ -622,31 +600,22 @@ nsMsgSendLater::StartNextMailFileSend()
   PR_FREEIF(mLeftoverBuffer);
 
   //
-  // RICHIE
-  // For now, we save as a file, but in the future, we will get a 
-  // stream of data from netlib and make ourselves the consumer of this
-  // stream
+  // Now, get our stream listener interface and plug it into the DisplayMessage
+  // operation
   //
   NS_ADDREF(this);
 
-  // cleanup the save listener...
-  if (mSaveListener)
-    NS_RELEASE(mSaveListener);
-
-  mSaveListener = new nsMsgDeliveryListener(SaveMessageCompleteCallback, nsFileSaveDelivery, this);
-  if (!mSaveListener)
+  nsCOMPtr<nsIStreamListener> convertedListener = do_QueryInterface(this);
+  if (convertedListener)
   {
-    ReleaseMessageServiceFromURI(aMessageURI, messageService);
-    return NS_ERROR_OUT_OF_MEMORY;
+    // Now, just plug the two together and get the hell out of the way!
+    rv = messageService->DisplayMessage(aMessageURI, convertedListener, nsnull, nsnull);
   }
+  else
+    rv = NS_ERROR_FAILURE;
 
-  NS_ADDREF(mSaveListener);
-  rv = messageService->SaveMessageToDisk(aMessageURI, mHackTempIFileSpec, PR_FALSE, mSaveListener, nsnull);
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
-
-  // RICHIE 
-  // Problem. If I release the SaveListener, then there is a refcount problem.
-  // NS_RELEASE(mSaveListener); 
+  Release();
 
 	if (NS_FAILED(rv))
     return rv;    
@@ -959,38 +928,6 @@ SEARCH_NEWLINE:
   return NS_OK;
 }
 
-// 
-// This is a temporary method...in the future, we will build this
-// buffer as we receive the data from the mail store.
-//
-nsresult
-nsMsgSendLater::DriveFakeStream(nsIOutputStream *stream)
-{
-  nsIOFileStream  *inFile = nsnull;
-  PRInt32         totSize = 0;
-  char            buf[8192];
-  PRUint32        aWriteCount;
-  
-  inFile = new nsIOFileStream(*mHackTempFileSpec);
-  if (!inFile)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  m_headersFP = 0;
-  inFile->seek(0);
-  while (!inFile->eof())
-  {
-    buf[0] = '\0';
-    totSize = inFile->read(buf, sizeof(buf));
-    if (totSize > 0)
-      stream->Write(buf, totSize, &aWriteCount);
-  }
-
-  inFile->close();  
-  delete inFile;
-  mHackTempFileSpec->Delete(PR_FALSE);
-  return stream->Close();
-}
-
 int
 DoGrowBuffer(PRInt32 desired_size, PRInt32 element_size, PRInt32 quantum,
     				char **buffer, PRInt32 *size)
@@ -1037,6 +974,13 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
 //    line[length++] = LF;
 //  }
 //
+  //
+  // We are going to check if we are looking at a "From - " line. If so, 
+  // then just eat it and return NS_OK
+  //
+  if (!PL_strncasecmp(line, "From - ", 7))
+    return NS_OK;
+
   if (m_inhead)
   {
     if (m_headersPosition == 0)
@@ -1153,13 +1097,16 @@ nsMsgSendLater::AddListener(nsIMsgSendLaterListener *aListener)
 {
   if ( (mListenerArrayCount > 0) || mListenerArray )
   {
-    mListenerArrayCount = 1;
+    ++mListenerArrayCount;
     mListenerArray = (nsIMsgSendLaterListener **) 
                   PR_Realloc(*mListenerArray, sizeof(nsIMsgSendLaterListener *) * mListenerArrayCount);
     if (!mListenerArray)
       return NS_ERROR_OUT_OF_MEMORY;
     else
+    {
+      mListenerArray[mListenerArrayCount - 1] = aListener;
       return NS_OK;
+    }
   }
   else
   {

@@ -213,7 +213,10 @@ nsMsgComposeAndSend::Clear()
 			m_plaintext->mOutFile->close();
 
 		if (m_plaintext->mFileSpec)
+    {
+		  m_plaintext->mFileSpec->Delete(PR_TRUE);
 		  delete m_plaintext->mFileSpec;
+    }
 		delete m_plaintext;
 		m_plaintext = nsnull;
 	}
@@ -349,6 +352,7 @@ nsMsgComposeAndSend::GatherMimeAttachments()
   PRBool multiPartRelatedWithAttachments = PR_FALSE;
   char  *attachmentSeparator = nsnull;
   char  *multipartRelatedSeparator = nsnull;
+  char  *multipartAlternativeSeparator = nsnull;
   PRBool tonews;
 	nsMsgSendPart* toppart = nsnull;			// The very top most container of the message
 											// that we are going to send.
@@ -406,6 +410,10 @@ nsMsgComposeAndSend::GatherMimeAttachments()
       }
     }
   }
+
+  // We'll need this for multipart alternative messages...
+  if (mCompFields->GetUseMultipartAlternative()) 
+    multipartAlternativeSeparator = mime_make_separator("");
 
   // to news is true if we have a m_field and we have a Newsgroup and it is not empty
 	tonews = PR_FALSE;
@@ -506,11 +514,9 @@ nsMsgComposeAndSend::GatherMimeAttachments()
 	{
     //
     // If we get here, we have an HTML body, but we really need to send
-    // a text/plain message, so we need to run this through html -> text
-    // conversion and write it out to the nsHTMLFileSpec file. This will
-    // be sent instead as the primary message body.
-    //
-    // RICHIE - we need that plain text converter!
+    // a text/plain message, so we will write the HTML out to a disk file,
+    // fire off another URL request for this local disk file and that will
+    // take care of the conversion...
     //
     mHTMLFileSpec = nsMsgCreateTempFileSpec("nsmail.tmp");
 		if (!mHTMLFileSpec)
@@ -1074,6 +1080,7 @@ FAIL:
 
   PR_FREEIF(multipartRelatedSeparator);
   PR_FREEIF(attachmentSeparator);
+  PR_FREEIF(multipartAlternativeSeparator);
 
   PR_FREEIF(headers);
   if (in_file) 
@@ -2224,6 +2231,11 @@ nsMsgComposeAndSend::InitCompositionFields(nsMsgCompFields *fields)
 										mCompFields->GetOrganization(),
 										mCompFields->GetOtherRandomHeaders());
 	}
+  
+  // RICHIE SHERRY mason HACK for testing!!!!!
+  // printf("Here is a hack for testing\7\n");
+  // mCompFields->SetUseMultipartAlternative(PR_TRUE);
+  // RICHIE SHERRY mason HACK for testing!!!!!
 
 	return rv;
 }
@@ -2763,13 +2775,16 @@ nsMsgComposeAndSend::AddListener(nsIMsgSendListener *aListener)
 {
   if ( (mListenerArrayCount > 0) || mListenerArray )
   {
-    mListenerArrayCount = 1;
+    ++mListenerArrayCount;
     mListenerArray = (nsIMsgSendListener **) 
                   PR_Realloc(*mListenerArray, sizeof(nsIMsgSendListener *) * mListenerArrayCount);
     if (!mListenerArray)
       return NS_ERROR_OUT_OF_MEMORY;
     else
+    {
+      mListenerArray[mListenerArrayCount - 1] = aListener;
       return NS_OK;
+    }
   }
   else
   {

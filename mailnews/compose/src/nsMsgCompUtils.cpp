@@ -2103,3 +2103,63 @@ ERROR_OUT:
 	nsAllocator::Free(url);
   return nsnull;
 }
+
+//
+// Convert an nsString buffer to plain text...
+//
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsHTMLToTXTSinkStream.h"
+#include "CNavDTD.h"
+
+nsresult
+ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
+{
+  nsresult    rv;
+  nsString    convertedText;
+  nsIParser   *parser;
+
+  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
+  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
+
+  rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
+                                          kCParserIID, (void **)&parser);
+  if (NS_SUCCEEDED(rv) && parser)
+  {
+    nsHTMLToTXTSinkStream     *sink = nsnull;
+
+    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, 0, 0);
+    if (sink && NS_SUCCEEDED(rv)) 
+    {  
+        sink->DoFragment(PR_TRUE);
+        parser->SetContentSink(sink);
+
+        // Set the charset...
+        // 
+        if (charSet)
+        {
+          nsAutoString cSet(charSet);
+          parser->SetDocumentCharset(cSet, kCharsetFromMetaTag);
+        }
+        
+        nsIDTD* dtd = nsnull;
+        rv = NS_NewNavHTMLDTD(&dtd);
+        if (NS_SUCCEEDED(rv)) 
+        {
+          parser->RegisterDTD(dtd);
+          rv = parser->Parse(aConBuf, 0, "text/html", PR_FALSE, PR_TRUE);           
+        }
+        NS_IF_RELEASE(dtd);
+        NS_IF_RELEASE(sink);
+    }
+
+    NS_RELEASE(parser);
+    //
+    // Now assign the results if we worked!
+    //
+    if (NS_SUCCEEDED(rv))
+      aConBuf = convertedText;
+  }
+
+  return rv;
+}

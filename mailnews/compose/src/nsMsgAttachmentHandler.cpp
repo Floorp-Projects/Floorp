@@ -665,6 +665,30 @@ nsMsgAttachmentHandler::SnarfAttachment(nsMsgCompFields *compFields)
 }
 
 nsresult
+nsMsgAttachmentHandler::LoadDataFromFile(nsFileSpec& fSpec, nsString &sigData)
+{
+  PRInt32       readSize;
+  char          *readBuf;
+
+  nsInputFileStream tempFile(fSpec);
+  if (!tempFile.is_open())
+    return NS_MSG_ERROR_WRITING_FILE;        
+  
+  readSize = fSpec.GetFileSize();
+  readBuf = (char *)PR_Malloc(readSize + 1);
+  if (!readBuf)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsCRT::memset(readBuf, 0, readSize + 1);
+
+  readSize = tempFile.read(readBuf, readSize);
+  tempFile.close();
+
+  sigData = readBuf;
+  PR_FREEIF(readBuf);
+  return NS_OK;
+}
+
+nsresult
 nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
 {
   NS_ASSERTION(m_mime_delivery_state != NULL, "not-null m_mime_delivery_state");
@@ -729,10 +753,30 @@ nsMsgAttachmentHandler::UrlExit(nsresult status, const PRUnichar* aMsg)
         width = 30000;
 
       //
-      // RICHIE - we need some converter service here to do the right 
+      // Now use the converter service here to do the right 
       // thing and convert this data to plain text for us!
       //
-      printf("...more magic happens and the data is converted to plain text!\n");
+      nsString      conData = "";
+
+      if (NS_SUCCEEDED(LoadDataFromFile(*mFileSpec, conData)))
+      {
+        if (NS_SUCCEEDED(ConvertBufToPlainText(conData, m_charset)))
+        {
+          mFileSpec->Delete(PR_FALSE);
+
+          nsOutputFileStream tempfile(*mFileSpec);
+		      if (tempfile.is_open()) 
+          {
+            char    *tData = conData.ToNewCString();
+            if (tData)
+            {
+              (void) tempfile.write(tData, conData.Length());
+              PR_FREEIF(tData);
+            }
+            tempfile.close();
+          }
+        }
+      }
 
 	    PR_FREEIF(m_type);
 	    m_type = m_desired_type;

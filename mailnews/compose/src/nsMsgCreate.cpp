@@ -62,8 +62,6 @@ nsMsgDraft::nsMsgDraft()
 {
 	NS_INIT_REFCNT();
 
-  mTmpFileSpec = nsnull;
-  mTmpIFileSpec = nsnull;
   mURI = nsnull;
   mMessageService = nsnull;
   mOutType = nsMimeOutput::nsMimeMessageDraftOrTemplate;
@@ -102,201 +100,8 @@ NS_NewMsgDraft(const nsIID &aIID, void ** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-
 // stream converter
 static NS_DEFINE_CID(kStreamConverterCID,    NS_MAILNEWS_MIME_STREAM_CONVERTER_CID);
-
-////////////////////////////////////////////////////////////////////////////////////
-// THIS IS A TEMPORARY CLASS THAT MAKES A DISK FILE LOOK LIKE A nsIInputStream 
-// INTERFACE...this may already exist, but I didn't find it. Eventually, you would
-// just plugin a Necko stream when they are all rewritten to be new style streams
-////////////////////////////////////////////////////////////////////////////////////
-class DraftFileInputStreamImpl : public nsIInputStream
-{
-public:
-  DraftFileInputStreamImpl(void) 
-  { 
-    NS_INIT_REFCNT(); 
-    mBufLen = 0;
-    mInFile = nsnull;
-  }
-  virtual ~DraftFileInputStreamImpl(void) 
-  {
-    if (mInFile) delete mInFile;
-  }
-  
-  // nsISupports interface
-  NS_DECL_ISUPPORTS
-    
-  // nsIBaseStream interface
-  NS_IMETHOD Close(void) 
-  {
-    if (mInFile)
-      mInFile->close();  
-    return NS_OK;
-  }
-  
-  // nsIInputStream interface
-  NS_IMETHOD Available(PRUint32 *_retval)
-  {
-    *_retval = mBufLen;
-    return NS_OK;
-  }
-  
-  /* unsigned long Read (in charStar buf, in unsigned long count); */
-  NS_IMETHOD Read(char * buf, PRUint32 count, PRUint32 *_retval)
-  {
-    nsCRT::memcpy(buf, mBuf, mBufLen);
-    *_retval = mBufLen;
-    return NS_OK;
-  }
-  
-  NS_IMETHOD OpenDiskFile(nsFileSpec fs);
-  NS_IMETHOD PumpFileStream();
-
-private:
-  PRUint32        mBufLen;
-  char            mBuf[8192];
-  nsIOFileStream  *mInFile;
-};
-
-nsresult
-DraftFileInputStreamImpl::OpenDiskFile(nsFileSpec fs)
-{
-  mInFile = new nsIOFileStream(fs);
-  if (!mInFile)
-    return NS_ERROR_NULL_POINTER;
-  mInFile->seek(0);
-  return NS_OK;
-}
-
-nsresult
-DraftFileInputStreamImpl::PumpFileStream()
-{
-  if (mInFile->eof())
-    return NS_ERROR_FAILURE;
-  
-  mBufLen = mInFile->read(mBuf, sizeof(mBuf));
-  if (mBufLen > 0)
-    return NS_OK;
-  else
-    return NS_ERROR_FAILURE;
-}
-
-NS_IMPL_ISUPPORTS(DraftFileInputStreamImpl, nsCOMTypeInfo<nsIInputStream>::GetIID());
-
-////////////////////////////////////////////////////////////////////////////////////
-// End of DraftFileInputStreamImpl()
-////////////////////////////////////////////////////////////////////////////////////
-
-
-////////////////////////////////////////////////////////////////////////
-
-nsresult
-SaveDraftMessageCompleteCallback(nsIURI *aURL, nsresult aExitCode, void *tagData)
-{
-  nsresult        rv = NS_OK;
-
-  if (!tagData)
-  {
-    return NS_ERROR_INVALID_ARG;
-  }
-
-  nsMsgDraft *ptr = (nsMsgDraft *) tagData;
-  if (ptr->mMessageService)
-  {
-    ReleaseMessageServiceFromURI(ptr->mURI, ptr->mMessageService);
-    ptr->mMessageService = nsnull;
-  }
-
-  /* mscott - the NS_BINDING_ABORTED is a hack to get around a problem I have
-     with the necko code...it returns this and treats it as an error when
-	 it really isn't an error! I'm trying to get them to change this.
-   */
-  if (NS_FAILED(aExitCode) && aExitCode != NS_BINDING_ABORTED)
-  {
-    NS_RELEASE(ptr);
-    return aExitCode;
-  }
-
-  // Create a mime parser (nsIStreamConverter)!
-  nsCOMPtr<nsIStreamConverter> mimeParser;
-  rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
-                                          NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
-                                          (void **) getter_AddRefs(mimeParser)); 
-  if (NS_FAILED(rv) || !mimeParser)
-  {
-    NS_RELEASE(ptr);
-    printf("Failed to create MIME stream converter...\n");
-    return rv;
-  }
-  
-  // This is the producer stream that will deliver data from the disk file...
-  // ...someday, we'll just get streams from Necko.
-  // mscott --> the type for a nsCOMPtr needs to be an interface.
-  // but this class (which is only temporary anyway) is mixing and matching
-  // interface calls and implementation calls....so you really can't use a
-  // com ptr. to get around it, I'm using fileStream to make calls on the
-  // methods that aren't supported by the nsIInputStream and "in" for
-  // methods that are supported as part of the interface...
-  DraftFileInputStreamImpl * fileStream = new DraftFileInputStreamImpl();
-  nsCOMPtr<nsIInputStream> in = do_QueryInterface(fileStream);
-  if (!in || !fileStream)
-  {
-    NS_RELEASE(ptr);
-    printf("Failed to create nsIInputStream\n");
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-
-  if (NS_FAILED(fileStream->OpenDiskFile(*(ptr->mTmpFileSpec))))
-  {
-    NS_RELEASE(ptr);
-    printf("Unable to open input file\n");
-    return NS_ERROR_FAILURE;
-  }
-  
-  // Set us as the output stream for HTML data from libmime...
-  nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
-  if (mimeConverter)
-  {
-	  mimeConverter->SetMimeOutputType(ptr->mOutType);  // Set the type of
-                                                        // output for libmime
-      mimeConverter->SetForwardInline(ptr->mAddInlineHeaders);
-  }
-
-  nsCOMPtr<nsIChannel> dummyChannel;
-  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
-  rv = netService->NewInputStreamChannel(aURL, 
-                                         nsnull,      // contentType
-                                         -1,          // contentLength
-                                         nsnull,      // inputStream
-                                         nsnull,      // loadGroup
-                                         getter_AddRefs(dummyChannel));
-
-  if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
-  {
-    NS_RELEASE(ptr);
-    printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
-    return NS_ERROR_UNEXPECTED;
-  }
-
-  // Assuming this is an RFC822 message...
-  mimeParser->OnStartRequest(nsnull, aURL);
-
-  // Just pump all of the data from the file into libmime...
-  while (NS_SUCCEEDED(fileStream->PumpFileStream()))
-  {
-    PRUint32    len;
-    in->Available(&len);
-    mimeParser->OnDataAvailable(nsnull, aURL, in, 0, len);
-  }
-
-  mimeParser->OnStopRequest(nsnull, aURL, NS_OK, nsnull);
-  in->Close();
-  ptr->mTmpFileSpec->Delete(PR_FALSE);
-  NS_RELEASE(ptr);
-  return NS_OK;
-}
 
 nsIMessage *
 GetIMessageFromURI(const PRUnichar *msgURI)
@@ -331,15 +136,7 @@ nsresult  rv;
   if (!msgURI)
     return NS_ERROR_INVALID_ARG;
 
-  mTmpFileSpec = nsMsgCreateTempFileSpec("nsdraft.tmp"); 
-	if (!mTmpFileSpec)
-    return NS_ERROR_FAILURE;
-
-  NS_NewFileSpecWithSpec(*mTmpFileSpec, &mTmpIFileSpec);
-	if (!mTmpIFileSpec)
-    return NS_ERROR_FAILURE;
-
-  nsString                convertString(msgURI);
+  nsString        convertString(msgURI);
   mURI = convertString.ToNewCString();
 
   if (!mURI)
@@ -352,20 +149,82 @@ nsresult  rv;
   }
 
   NS_ADDREF(this);
-  nsMsgDeliveryListener *sendListener = new nsMsgDeliveryListener(SaveDraftMessageCompleteCallback, 
-                                                                  nsFileSaveDelivery, this);
-  if (!sendListener)
+
+  // Now, we can create a mime parser (nsIStreamConverter)!
+  nsCOMPtr<nsIStreamConverter> mimeParser;
+  rv = nsComponentManager::CreateInstance(kStreamConverterCID, 
+                                          NULL, nsCOMTypeInfo<nsIStreamConverter>::GetIID(), 
+                                          (void **) getter_AddRefs(mimeParser)); 
+  if (NS_FAILED(rv) || !mimeParser)
   {
+    Release();
     ReleaseMessageServiceFromURI(mURI, mMessageService);
     mMessageService = nsnull;
-    return NS_ERROR_OUT_OF_MEMORY;
+#ifdef NS_DEBUG
+    printf("Failed to create MIME stream converter...\n");
+#endif
+    return rv;
+  }
+  
+  // Set us as the output stream for HTML data from libmime...
+  nsCOMPtr<nsIMimeStreamConverter> mimeConverter = do_QueryInterface(mimeParser);
+  if (mimeConverter)
+  {
+	    mimeConverter->SetMimeOutputType(mOutType);  // Set the type of output for libmime
+      mimeConverter->SetForwardInline(mAddInlineHeaders);
+  }
+
+  nsCOMPtr<nsIStreamListener> convertedListener = do_QueryInterface(mimeParser);
+  if (!convertedListener)
+  {
+    Release();
+    ReleaseMessageServiceFromURI(mURI, mMessageService);
+    mMessageService = nsnull;
+#ifdef NS_DEBUG
+    printf("Unable to get the nsIStreamListener interface from libmime\n");
+#endif
+    return NS_ERROR_UNEXPECTED;
+  }  
+
+  nsCOMPtr<nsIChannel> dummyChannel;
+  NS_WITH_SERVICE(nsIIOService, netService, kIOServiceCID, &rv);
+
+  nsCOMPtr<nsIURI> aURL;
+  rv = CreateStartupUrl(mURI, getter_AddRefs(aURL));
+
+  rv = netService->NewInputStreamChannel(aURL, 
+                                         nsnull,      // contentType
+                                         -1,          // contentLength
+                                         nsnull,      // inputStream
+                                         nsnull,      // loadGroup
+                                         getter_AddRefs(dummyChannel));
+  if (NS_FAILED(mimeParser->AsyncConvertData(nsnull, nsnull, nsnull, dummyChannel)))
+  {
+    Release();
+    ReleaseMessageServiceFromURI(mURI, mMessageService);
+    mMessageService = nsnull;
+#ifdef NS_DEBUG
+    printf("Unable to set the output stream for the mime parser...\ncould be failure to create internal libmime data\n");
+#endif
+
+    return NS_ERROR_UNEXPECTED;
   }
 
   // Make sure we return this if requested!
   if (aMsgToReplace)
     *aMsgToReplace = GetIMessageFromURI(msgURI);
 
-  return mMessageService->SaveMessageToDisk(mURI, mTmpIFileSpec, PR_FALSE, sendListener, nsnull);
+  // Now, just plug the two together and get the hell out of the way!
+  rv = mMessageService->DisplayMessage(mURI, convertedListener, nsnull, nsnull);
+
+  ReleaseMessageServiceFromURI(mURI, mMessageService);
+  mMessageService = nsnull;
+  Release();
+
+	if (NS_FAILED(rv))
+    return rv;    
+  else
+    return NS_OK;
 }
 
 nsresult

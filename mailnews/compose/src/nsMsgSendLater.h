@@ -73,15 +73,15 @@ public:
 
 	NS_DECL_ISUPPORTS
 
-  //  nsIBaseStream interface
-  NS_DECL_NSIBASESTREAM
-
-  // nsIOutputStream interface
-  NS_DECL_NSIOUTPUTSTREAM
-
   // nsIMsgSendLater support
   NS_IMETHOD                SendUnsentMessages(nsIMsgIdentity *identity,
                                                nsIMsgSendLaterListener          **listenerArray);
+
+  // For nsIStreamListener interface...
+  NS_DECL_NSISTREAMLISTENER
+
+  // For nsIStreamObserver interface...
+  NS_DECL_NSISTREAMOBSERVER
 
   // Methods needed for implementing interface...
   nsresult		    GetUnsentMessagesFolder(nsIMsgIdentity *userIdentity, nsIMsgFolder **folder);
@@ -95,11 +95,6 @@ public:
   nsresult                  DeliverQueuedLine(char *line, PRInt32 length);
   nsresult                  RebufferLeftovers(char *startBuf,  PRUint32 aLen);
   nsresult                  BuildNewBuffer(const char* aBuf, PRUint32 aCount, PRUint32 *totalBufSize);
-
-  // RICHIE
-  // This will go away when we get a stream from netlib...
-  //
-  nsresult                  DriveFakeStream(nsIOutputStream *stream);
 
   // methods for listener array processing...
   NS_IMETHOD  SetListenerArray(nsIMsgSendLaterListener **aListener);
@@ -143,8 +138,6 @@ private:
   nsOutputFileStream        *mOutFile;
 
   void                      *mTagData;
-
-  nsMsgDeliveryListener     *mSaveListener;
 
   // For building headers and stream parsing...
   char                      *m_to;

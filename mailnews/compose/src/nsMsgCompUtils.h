@@ -126,6 +126,8 @@ char        *nsMsgGetExtensionFromFileURL(nsString aUrl);
 char        *GetFolderURIFromUserPrefs(nsMsgDeliverMode   aMode,
                                        nsIMsgIdentity *identity);
                                        
+// File calls...
+nsresult    ConvertBufToPlainText(nsString &aConBuf, const char *charSet);
 
 NS_END_EXTERN_C
 

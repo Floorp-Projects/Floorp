@@ -47,8 +47,6 @@ public:
   // 
   // Implementation data...
   //
-  nsFileSpec            *mTmpFileSpec;
-  nsIFileSpec           *mTmpIFileSpec;
   char                  *mURI;
   nsIMsgMessageService  *mMessageService;
   nsMimeOutputType      mOutType;

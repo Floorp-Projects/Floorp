@@ -30,11 +30,7 @@
 #include "nsIPref.h"
 #include "nsIDocumentEncoder.h"    // for editor output flags
 #include "nsXPIDLString.h"
-#include "nsIParser.h"
-#include "nsParserCIID.h"
 #include "nsIMsgHeaderParser.h"
-#include "nsHTMLToTXTSinkStream.h"
-#include "CNavDTD.h"
 #include "nsMsgCompUtils.h"
 #include "nsMsgComposeStringBundle.h"
 #include "nsSpecialSystemDirectory.h"
@@ -43,6 +39,7 @@
 #include "nsMailHeaders.h"
 #include "nsMsgPrompts.h"
 #include "nsMimeTypes.h"
+#include "nsICharsetConverterManager.h"
 
 // XXX temporary so we can use the current identity hack -alecf
 #include "nsIMsgMailSession.h"
@@ -60,9 +57,7 @@ nsMsgCompose::nsMsgCompose()
 {
 	NS_INIT_REFCNT();
 
-	mTempComposeFileSpec = nsnull;
 	mQuotingToFollow = PR_FALSE;
-	mSigFileSpec = nsnull;
 	mWhatHolder = 1;                // RICHIE - hack for old quoting
 	mQuoteURI = "";
 	mDocumentListener = nsnull;
@@ -100,9 +95,141 @@ nsMsgCompose::~nsMsgCompose()
 	NS_IF_RELEASE(mQuoteStreamListener);
 }
 
-
 /* the following macro actually implement addref, release and query interface for our component. */
 NS_IMPL_ISUPPORTS(nsMsgCompose, nsCOMTypeInfo<nsMsgCompose>::GetIID());
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// RICHIEHACK:
+// THIS WILL ALL GO AWAY WHEN THE EDITOR API's WORK THE WAY WE WANT THEM
+// TO WORK
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+
+//
+// Once we are here, convert the data which we know to be UTF-8 to UTF-16
+// for insertion into the editor
+//
+static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+
+nsresult
+ConvertAndLoadComposeWindow(nsIEditorShell *aEditor, nsString aBuf, PRBool aQuoted, PRBool aHTMLEditor)
+{
+  nsresult            res;
+  nsString            inputCharset("UTF-8"); 
+  nsString            outputCharset("UTF-16"); 
+  nsIUnicodeDecoder   *decoder = nsnull;
+  nsIUnicodeEncoder   *encoder = nsnull;
+  PRInt32             unicharLength = 0;
+  PRInt32             outputLength;
+  PRUnichar           *unicharString = nsnull;
+  PRUnichar           *unicodeInputString = nsnull;   // Unicode version of input
+
+  char                *inputString = nsnull;          // original string...
+  PRInt32             inputStringLength;      
+
+  // RICHIE - after this gets into the tree and tested, I think this changes...
+  // If this is text compose, just insert what we have into the editor
+  if (!aHTMLEditor)
+  {
+    aEditor->InsertText(aBuf.GetUnicode());
+/* RICHIE SHERRY - InsertAsQuotation on a plain text editor is not working yet!
+    if (aQuoted)
+      aEditor->InsertAsQuotation(aBuf.GetUnicode());
+    else
+      aEditor->InsertText(aBuf.GetUnicode());
+***/
+    return NS_OK;
+  }
+
+  // Get the service for charset conversion...
+  NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &res); 
+  if (NS_FAILED(res) || !ccm)
+    return NS_ERROR_FAILURE;
+
+  // Get the decoder to go from UTF-8 to Unicode...
+  ccm->GetUnicodeDecoder(&inputCharset, &decoder);
+  if (!decoder)
+    return NS_ERROR_FAILURE;
+
+  // RICHIE
+  // This could go away....getting the aBuf in oneByteChar format...
+  inputString = aBuf.ToNewCString();
+  inputStringLength = (PRInt32) nsCRT::strlen(inputString);
+
+  // Get the maximum output length and create the output buffer...
+  res = decoder->GetMaxLength(inputString, inputStringLength, &unicharLength); 
+  unicodeInputString = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
+  if (!unicodeInputString)
+  {
+    PR_FREEIF(inputString);
+    return NS_ERROR_FAILURE;
+  }
+
+  res = decoder->Convert(inputString, &inputStringLength, unicodeInputString, &unicharLength); 
+  if (NS_FAILED(res))
+  {
+    PR_FREEIF(inputString);
+    PR_FREEIF(unicodeInputString);
+    return NS_ERROR_FAILURE;
+  }
+ 
+  // Now get the UTF-16 encoder...
+  outputLength = unicharLength;
+  ccm->GetUnicodeEncoder(&outputCharset, &encoder); 
+  if (!encoder)
+  {
+    PR_FREEIF(inputString);
+    PR_FREEIF(unicodeInputString);
+    return NS_ERROR_FAILURE;
+  }
+ 
+  // Find the buffer size and allocate an output buffer...
+  res = encoder->GetMaxLength(unicodeInputString, outputLength, &unicharLength); 
+  unicharString = (PRUnichar *) PR_Malloc(unicharLength * sizeof(PRUnichar));
+  if (!unicharString)
+  {
+    PR_FREEIF(inputString);
+    PR_FREEIF(unicodeInputString);
+    return NS_ERROR_FAILURE;
+  }
+ 
+  nsCRT::memset(unicharString, 0, unicharLength * sizeof(PRUnichar));
+
+  // Do the UTF-16 conversion...
+  res = encoder->Convert(unicodeInputString, &outputLength, (char *)unicharString, &unicharLength); 
+  if (NS_FAILED(res))
+  {
+    PR_FREEIF(inputString);
+    PR_FREEIF(unicodeInputString);
+    PR_FREEIF(unicharString);
+    return NS_ERROR_FAILURE;
+  }
+
+  // Finally, insert it into the editor the correct way!
+  if (aQuoted)
+    aEditor->InsertAsQuotation(unicharString);
+  else
+  {
+    if (aHTMLEditor)
+      aEditor->InsertSource(unicharString);
+    else
+      aEditor->InsertText(unicharString);
+  }
+
+  PR_FREEIF(inputString);
+  PR_FREEIF(unicodeInputString);
+  PR_FREEIF(unicharString);
+  return NS_OK;
+}
+
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
+// END OF RICHIEHACK:
+// THIS WILL ALL GO AWAY WHEN THE EDITOR API's WORK THE WAY WE WANT THEM
+// TO WORK
+////////////////////////////////////////////////////////////////////////
+////////////////////////////////////////////////////////////////////////
 
 nsresult 
 nsMsgCompose::SetQuotingToFollow(PRBool aVal)
@@ -125,7 +252,7 @@ nsMsgCompose::LoadAsQuote(nsString  aTextToLoad)
   {
     if (aTextToLoad.Length())
     {
-      m_editor->InsertAsQuotation(aTextToLoad.GetUnicode());
+      ConvertAndLoadComposeWindow(m_editor, aTextToLoad, PR_TRUE, m_composeHTML);
     }
   }
 
@@ -508,28 +635,11 @@ nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor)
   // Make sure we setup to listen for editor state changes...
   m_editor->RegisterDocumentStateListener(mDocumentListener);
 
-  //
-  // Have to check to see if there is a body stored in the 
-  // comp fields...
-  //
-  PRBool    bodyInCompFields = PR_FALSE;
-  if (m_compFields)
-  {
-    PRUnichar     *bod;
+  // Now, lets init the editor here!
+  // Just get a blank editor started...
+  m_editor->LoadUrl(nsString("about:blank").GetUnicode());
 
-    m_compFields->GetBody(&bod);
-    if ((bod) && (*bod))
-      bodyInCompFields = PR_TRUE;
-  }
-
-  // Now, do the appropriate startup operation...signature only
-  // or quoted message and signature...
-  if ( QuotingToFollow() )
-    return BuildQuotedMessageAndSignature();
-  else if (bodyInCompFields)
-    return BuildBodyMessage();
-  else
-    return ProcessSignature(nsnull, m_identity);
+  return NS_OK;
 } 
 
 nsresult nsMsgCompose::GetDomWindow(nsIDOMWindow * *aDomWindow)
@@ -703,89 +813,37 @@ QuotingOutputStreamListener::QuotingOutputStreamListener(const PRUnichar * origi
   mComposeObj = nsnull;
   mQuoteHeaders = quoteHeaders;
   mIdentity = identity;
-
+  
   nsCOMPtr<nsIMessage> originalMsg = getter_AddRefs(GetIMessageFromURI(originalMsgURI));
   if (originalMsg && !quoteHeaders)
   {
     nsresult rv;
-	nsString author;
-	rv = originalMsg->GetMime2DecodedAuthor(&author);
-	if (NS_SUCCEEDED(rv))
-	{
-	  char * authorName = nsnull;
-	  nsCOMPtr<nsIMsgHeaderParser> parser;
+    nsString author;
+    rv = originalMsg->GetMime2DecodedAuthor(&author);
+    if (NS_SUCCEEDED(rv))
+    {
+      char * authorName = nsnull;
+      nsCOMPtr<nsIMsgHeaderParser> parser;
       nsComponentManager::CreateInstance(kHeaderParserCID,
-                                            nsnull,
-                                            nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
-                                            getter_AddRefs(parser));
-	  if (parser)
-	    if (NS_SUCCEEDED(parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName)))
-		{
+        nsnull,
+        nsCOMTypeInfo<nsIMsgHeaderParser>::GetIID(),
+        getter_AddRefs(parser));
+      if (parser)
+        if (NS_SUCCEEDED(parser->ExtractHeaderAddressName(nsnull, nsAutoCString(author), &authorName)))
+        {
           mMsgBody = "<br><br>";
-	      mMsgBody += authorName;
-	      mMsgBody += " wrote:<br><BLOCKQUOTE TYPE=CITE><html>";
-		}
-	  if (authorName)
-		PL_strfree(authorName);
-	}
+          mMsgBody += authorName;
+          mMsgBody += " wrote:<br><BLOCKQUOTE TYPE=CITE><html>";
+        }
+        if (authorName)
+          PL_strfree(authorName);
+    }
   }
   
   if (mMsgBody.IsEmpty())
     mMsgBody = "<br><br>--- Original Message ---<br><BLOCKQUOTE TYPE=CITE><html>";
-
+  
   NS_INIT_REFCNT(); 
-}
-
-static nsresult
-ConvertBufToPlainText(nsString &aConBuf, const char *charSet)
-{
-  nsresult    rv;
-  nsString    convertedText;
-  nsIParser   *parser;
-
-  static NS_DEFINE_IID(kCParserIID, NS_IPARSER_IID);
-  static NS_DEFINE_IID(kCParserCID, NS_PARSER_IID);
-
-  rv = nsComponentManager::CreateInstance(kCParserCID, nsnull, 
-                                          kCParserIID, (void **)&parser);
-  if (NS_SUCCEEDED(rv) && parser)
-  {
-    nsHTMLToTXTSinkStream     *sink = nsnull;
-
-    rv = NS_New_HTMLToTXT_SinkStream((nsIHTMLContentSink **)&sink, &convertedText, 0, 0);
-    if (sink && NS_SUCCEEDED(rv)) 
-    {  
-        sink->DoFragment(PR_TRUE);
-        parser->SetContentSink(sink);
-
-        // Set the charset...
-        // 
-        if (charSet)
-        {
-          nsAutoString cSet(charSet);
-          parser->SetDocumentCharset(cSet, kCharsetFromMetaTag);
-        }
-        
-        nsIDTD* dtd = nsnull;
-        rv = NS_NewNavHTMLDTD(&dtd);
-        if (NS_SUCCEEDED(rv)) 
-        {
-          parser->RegisterDTD(dtd);
-          rv = parser->Parse(aConBuf, 0, "text/html", PR_FALSE, PR_TRUE);           
-        }
-        NS_IF_RELEASE(dtd);
-        NS_IF_RELEASE(sink);
-    }
-
-    NS_RELEASE(parser);
-    //
-    // Now assign the results if we worked!
-    //
-    if (NS_SUCCEEDED(rv))
-      aConBuf = convertedText;
-  }
-
-  return rv;
 }
 
 nsresult
@@ -802,71 +860,71 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStartRequest(nsIChannel * /* aChann
 NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChannel */, nsISupports * /* ctxt */, nsresult status, const PRUnichar * /* errorMsg */)
 {
   nsresult rv = NS_OK;
-
+  
   if (mComposeObj) 
   {
-  	MSG_ComposeType type = mComposeObj->GetMessageType();
-
-  	if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll))
-  	{
-		nsIMsgCompFields *compFields = nsnull;
-		mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
-		if (compFields)
-		{
-			nsString aCharset(msgCompHeaderInternalCharset());
+    MSG_ComposeType type = mComposeObj->GetMessageType();
+    
+    if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll))
+    {
+      nsIMsgCompFields *compFields = nsnull;
+      mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
+      if (compFields)
+      {
+        nsString aCharset(msgCompHeaderInternalCharset());
 	      	nsString replyTo;
-			nsString newgroups;
-			nsString followUpTo;
-			char *outCString;
-			PRUnichar emptyUnichar = 0;
-
-			mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
-			if (outCString)
-			{
-				// Convert fields to UTF-8
-				ConvertToUnicode(aCharset, outCString, replyTo);
-				PR_Free(outCString);
-			}
-
-			mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, &outCString);
-			if (outCString)
-			{
-				// Convert fields to UTF-8
-				ConvertToUnicode(aCharset, outCString, newgroups);
-				PR_Free(outCString);
-			}
-
-			mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, &outCString);
-			if (outCString)
-			{
-				// Convert fields to UTF-8
-				ConvertToUnicode(aCharset, outCString, followUpTo);
-				PR_Free(outCString);
-			}
-			
-			if (! replyTo.IsEmpty())
-				compFields->SetTo(replyTo.GetUnicode());
-			
-			if (! newgroups.IsEmpty())
-			{
-				compFields->SetNewsgroups(newgroups.GetUnicode());
-				if (type == nsIMsgCompType::Reply)
-					compFields->SetTo(&emptyUnichar);
-			}
-
-			if (! followUpTo.IsEmpty())
-			{
-				compFields->SetNewsgroups(followUpTo.GetUnicode());
-				if (type == nsIMsgCompType::Reply)
-					compFields->SetTo(&emptyUnichar);
-			}
-			
-			NS_RELEASE(compFields);
-		}
-	}
-  
+          nsString newgroups;
+          nsString followUpTo;
+          char *outCString;
+          PRUnichar emptyUnichar = 0;
+          
+          mHeaders->ExtractHeader(HEADER_REPLY_TO, PR_FALSE, &outCString);
+          if (outCString)
+          {
+            // Convert fields to UTF-8
+            ConvertToUnicode(aCharset, outCString, replyTo);
+            PR_Free(outCString);
+          }
+          
+          mHeaders->ExtractHeader(HEADER_NEWSGROUPS, PR_FALSE, &outCString);
+          if (outCString)
+          {
+            // Convert fields to UTF-8
+            ConvertToUnicode(aCharset, outCString, newgroups);
+            PR_Free(outCString);
+          }
+          
+          mHeaders->ExtractHeader(HEADER_FOLLOWUP_TO, PR_FALSE, &outCString);
+          if (outCString)
+          {
+            // Convert fields to UTF-8
+            ConvertToUnicode(aCharset, outCString, followUpTo);
+            PR_Free(outCString);
+          }
+          
+          if (! replyTo.IsEmpty())
+            compFields->SetTo(replyTo.GetUnicode());
+          
+          if (! newgroups.IsEmpty())
+          {
+            compFields->SetNewsgroups(newgroups.GetUnicode());
+            if (type == nsIMsgCompType::Reply)
+              compFields->SetTo(&emptyUnichar);
+          }
+          
+          if (! followUpTo.IsEmpty())
+          {
+            compFields->SetNewsgroups(followUpTo.GetUnicode());
+            if (type == nsIMsgCompType::Reply)
+              compFields->SetTo(&emptyUnichar);
+          }
+          
+          NS_RELEASE(compFields);
+      }
+    }
+    
     mMsgBody += "</html></BLOCKQUOTE>";
-
+    
     // Now we have an HTML representation of the quoted message.
     // If we are in plain text mode, we need to convert this to plain
     // text before we try to insert it into the editor. If we don't, we
@@ -876,45 +934,23 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel * /* aChanne
     mComposeObj->GetComposeHTML(&composeHTML);
     if (!composeHTML)
       ConvertToPlainText();
-
-
+    
     //
     // Ok, now we have finished quoting so we should load this into the editor
     // window.
     // 
-
     PRBool    compHTML = PR_FALSE;
     mComposeObj->GetComposeHTML(&compHTML);
-    mComposeObj->mTempComposeFileSpec = nsMsgCreateTempFileSpec((char *)"nscomp.html");
-    if (!mComposeObj->mTempComposeFileSpec)
-    {
-      rv = NS_MSG_ERROR_WRITING_FILE;
-      goto done;
-    }
-
-    nsOutputFileStream tempFile(*(mComposeObj->mTempComposeFileSpec));
-    if (!tempFile.is_open())
-    {
-      rv = NS_MSG_ERROR_WRITING_FILE;
-      goto done;
-    }     
-    tempFile.write(nsAutoCString(mMsgBody), mMsgBody.Length());
-    mComposeObj->ProcessSignature(&tempFile, mIdentity);
-    tempFile.close();
-
-    // Now load the URL...
-    nsString          urlStr = nsMsgPlatformFileToURL(*(mComposeObj->mTempComposeFileSpec));
-    nsIEditorShell    *editor;
-
-    mComposeObj->GetEditor(&editor);
     
-    if (editor)
-      editor->LoadUrl(urlStr.GetUnicode());
-    else
-      rv = NS_ERROR_FAILURE;
+    mComposeObj->ProcessSignature(mIdentity, &mMsgBody);
+    
+    nsIEditorShell *editor = nsnull;
+    if (NS_SUCCEEDED(mComposeObj->GetEditor(&editor)) && editor)
+    {
+      ConvertAndLoadComposeWindow(editor, mMsgBody, PR_TRUE, compHTML);
+    }
   }
-
-done:
+  
   NS_IF_RELEASE(mComposeObj);	//We are done with it, therefore release it.
   return rv;
 }
@@ -1281,25 +1317,52 @@ nsMsgDocumentStateListener::SetComposeObj(nsMsgCompose *obj)
 nsresult
 nsMsgDocumentStateListener::NotifyDocumentCreated(void)
 {
-  // Ok, now the document has been loaded, so we are ready to let
-  // the user run hog wild with editing...but first, lets cleanup
-  // any temp files
+  // Ok, now the document has been loaded, so we are ready to setup
+  // the compose window and let the user run hog wild!
+
   //
-  if (mComposeObj->mSigFileSpec)
+  // Have to check to see if there is a body stored in the 
+  // comp fields...
+  //
+  PRBool            bodyInCompFields = PR_FALSE;
+  nsMsgCompFields   *compFields = nsnull; 
+  nsIMsgIdentity    *identity = nsnull;
+  PRBool            compHTML = PR_FALSE;
+	nsIEditorShell    *editor = nsnull;
+
+  mComposeObj->GetCompFields(&compFields);
+  mComposeObj->GetIdentity(&identity);
+  mComposeObj->GetComposeHTML(&compHTML);
+  mComposeObj->GetEditor(&editor);
+
+  if (compFields)
   {
-    mComposeObj->mSigFileSpec->Delete(PR_FALSE);
-    delete mComposeObj->mSigFileSpec;
-    mComposeObj->mSigFileSpec = nsnull;
+    PRUnichar     *bod;
+
+    compFields->GetBody(&bod);
+    if ((bod) && (*bod))
+      bodyInCompFields = PR_TRUE;
   }
 
-  if (mComposeObj->mTempComposeFileSpec)
+  // Now, do the appropriate startup operation...signature only
+  // or quoted message and signature...
+  if ( mComposeObj->QuotingToFollow() )
+    return mComposeObj->BuildQuotedMessageAndSignature();
+  else if (bodyInCompFields)
+    return mComposeObj->BuildBodyMessage();
+  else
   {
-    mComposeObj->mTempComposeFileSpec->Delete(PR_FALSE);
-    delete mComposeObj->mTempComposeFileSpec;
-    mComposeObj->mTempComposeFileSpec = nsnull;
-  }
+    nsresult    rv;
+    nsString    tBody = "";
 
-  return NS_OK;
+    rv = mComposeObj->ProcessSignature(identity, &tBody);
+    if ((NS_SUCCEEDED(rv)) && editor)
+    {
+      ConvertAndLoadComposeWindow(editor, tBody, PR_FALSE, compHTML);
+    }
+
+    return rv;
+  }
 }
 
 nsresult
@@ -1384,31 +1447,20 @@ nsMsgCompose::BuildQuotedMessageAndSignature(void)
 }
 
 //
-// This will process the signature file for the user. If aAppendFile
-// is passed in, then this will be treated as an operation following
-// a quoting operation and the specified signature will be appended
-// to the file passed in. If this argument is null, then this is a clean
-// compose window and we should just create whatever we need to create 
-// as a temp file and do a LoadURL operation.
+// This will process the signature file for the user. This method
+// will always append the results to the mMsgBody member variable.
 //
 nsresult
-nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream,
-                               nsIMsgIdentity *identity)
+nsMsgCompose::ProcessSignature(nsIMsgIdentity *identity, nsString *aMsgBody)
 {
   nsresult    rv;
-
-  // 
-  // This should never happen...if it does, just bail out...
-  //
-  if (!m_editor)
-    return NS_ERROR_FAILURE;
 
   // Now, we can get sort of fancy. This is the time we need to check
   // for all sorts of user defined stuff, like signatures and editor
   // types and the like!
   //
-  //    user_pref("mail.signature_file", "y:\\sig.html");
-  //    user_pref("mail.use_signature_file", true);
+  //    user_pref(".....signature_file", "y:\\sig.html");
+  //    user_pref(".....use_signature_file", true);
   //
   // Note: We will have intelligent signature behavior in that we
   // look at the signature file first...if the extension is .htm or 
@@ -1429,120 +1481,61 @@ nsMsgCompose::ProcessSignature(nsOutputFileStream *aAppendFileStream,
     }
   }
   
-  // Setup the urlStr to load to be the signature if the user wants it 
-  // that way...
+  // Now, if they didn't even want to use a signature, we should
+  // just return nicely.
   //
-  if ((useSigFile) && (sigFileSpec))
+  if ((!useSigFile) || (!sigFileSpec))
+    return NS_OK;
+
+  nsFileSpec    testSpec;
+  sigFileSpec->GetFileSpec(&testSpec);
+  
+  // If this file doesn't really exist, just bail!
+  if (!testSpec.Exists())
+    return NS_OK;
+
+  // Once we get here, we need to figure out if we have the correct file
+  // type for the editor.
+  //
+  nsFileURL sigFilePath(testSpec);
+  char    *fileExt = nsMsgGetExtensionFromFileURL(nsString(sigFilePath));
+  
+  if ( (fileExt) && (*fileExt) )
   {
-    nsFileSpec    testSpec;
-    sigFileSpec->GetFileSpec(&testSpec);
-    
-    if (!testSpec.Exists())
-    {
-      if (m_composeHTML)
-        urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
-      else
-        urlStr = "chrome://messengercompose/content/defaultTextBody.html";
-    }
-    else
-    {
-      // Once we get here, we need to figure out if we have the correct file
-      // type for the editor.
-      //
-      nsFileURL sigFilePath(testSpec);
-      char    *fileExt = nsMsgGetExtensionFromFileURL(nsString(sigFilePath));
-
-      if ( (fileExt) && (*fileExt) )
-      {
-        htmlSig = ( (!PL_strcasecmp(fileExt, "HTM")) || (!PL_strcasecmp(fileExt, "HTML")) );
-        PR_FREEIF(fileExt);
-      }
-
-      // is this a text sig with an HTML editor?
-      if ( (m_composeHTML) && (!htmlSig) )
-        ConvertTextToHTML(testSpec, sigData);
-      // is this a HTML sig with a text window?
-      else if ( (!m_composeHTML) && (htmlSig) )
-        ConvertHTMLToText(testSpec, sigData);
-      else // We have a match...
-      {
-        if (!aAppendFileStream)  // Just load this URL {
-          urlStr = nsMsgPlatformFileToURL(testSpec);
-        else
-          LoadDataFromFile(testSpec, sigData);  // Get the data!
-          
-      }
-    }
-  }
-  else
-  {
-    if (m_composeHTML)
-      urlStr = "chrome://messengercompose/content/defaultHtmlBody.html";
-    else
-      urlStr = "chrome://messengercompose/content/defaultTextBody.html";
-  }
-
-  // This is the "load signature alone" operation!
-  char      *htmlBreak = "<BR>";
-  char      *dashes = "--";
-  if (!aAppendFileStream)
-  {
-    if ( (sigData == "") && (urlStr != "") ) // just load URL
-    {
-      m_editor->LoadUrl(urlStr.GetUnicode());
-    }
-    else   // Have to write data to a temp file then load the URL...
-    {
-      mSigFileSpec = nsMsgCreateTempFileSpec((char *)"sig.html");
-      if (!mSigFileSpec)
-        return NS_ERROR_FAILURE;
-
-      nsOutputFileStream tempFile(*mSigFileSpec);
-      if (!tempFile.is_open())
-        return NS_MSG_ERROR_WRITING_FILE;        
-
-      if (m_composeHTML)
-        tempFile.write(htmlBreak, PL_strlen(htmlBreak));
-      else
-      {
-        tempFile.write(CRLF, 2);
-        tempFile.write(dashes, PL_strlen(dashes));
-      }
-      if (m_composeHTML)
-        tempFile.write(htmlBreak, PL_strlen(htmlBreak));
-      else
-        tempFile.write(CRLF, 2);
-
-      tempFile.write(nsAutoCString(sigData), sigData.Length());
-      tempFile.close();
-      nsFileURL fileUrl(*mSigFileSpec);
-      urlStr = fileUrl;
-      m_editor->LoadUrl(urlStr.GetUnicode());
-    }
-  }
-  else    // This is where we are appending to the current file...
-  {
-    if (sigData != "")
-    {
-      if (!aAppendFileStream->is_open())
-        return NS_MSG_ERROR_WRITING_FILE;
-
-      if (m_composeHTML)
-        aAppendFileStream->write(htmlBreak, PL_strlen(htmlBreak));
-      else
-        aAppendFileStream->write(CRLF, 2);
-    
-      aAppendFileStream->write(dashes, PL_strlen(dashes));
-      if (m_composeHTML)
-        aAppendFileStream->write(htmlBreak, PL_strlen(htmlBreak));
-      else
-        aAppendFileStream->write(CRLF, 2);
-    
-      aAppendFileStream->write(nsAutoCString(sigData), sigData.Length());
-    }
-    // else // We are punting on putting a default signature on a quoted message!
+    htmlSig = ( (!PL_strcasecmp(fileExt, "HTM")) || (!PL_strcasecmp(fileExt, "HTML")) );
+    PR_FREEIF(fileExt);
   }
   
+  // is this a text sig with an HTML editor?
+  if ( (m_composeHTML) && (!htmlSig) )
+    ConvertTextToHTML(testSpec, sigData);
+  // is this a HTML sig with a text window?
+  else if ( (!m_composeHTML) && (htmlSig) )
+    ConvertHTMLToText(testSpec, sigData);
+  else // We have a match...
+    LoadDataFromFile(testSpec, sigData);  // Get the data!
+
+  // Now that sigData holds data...if any, append it to the body in a nice
+  // looking manner
+  //
+  char      *htmlBreak = "<BR>";
+  char      *dashes = "--";
+  if (sigData != "")
+  {
+    if (m_composeHTML)
+      aMsgBody->Append(htmlBreak);
+    else
+      aMsgBody->Append(CRLF);
+    
+    aMsgBody->Append(dashes);
+    if (m_composeHTML)
+      aMsgBody->Append(htmlBreak);
+    else
+      aMsgBody->Append(CRLF);
+    
+    aMsgBody->Append(sigData);
+  }
+
   return NS_OK;
 }
 
@@ -1557,27 +1550,16 @@ nsMsgCompose::BuildBodyMessage()
   if (!m_editor)
     return NS_ERROR_FAILURE;
 
-  // Since we have a body in the comp fields, we need to create a 
-  // body of this old body...
-  //  
-  mTempComposeFileSpec = nsMsgCreateTempFileSpec((char *)"nscomp.html");
-  if (!mTempComposeFileSpec)
-    return NS_MSG_ERROR_WRITING_FILE;
-  
-  nsOutputFileStream tempFile(*(mTempComposeFileSpec));
-  if (!tempFile.is_open())
-    return NS_MSG_ERROR_WRITING_FILE;
- 
-  m_compFields->GetBody(&bod);
-
-  nsString     tempBody(bod);
-  tempFile.write(nsAutoCString(tempBody), tempBody.Length());
-  tempFile.close();
-
+  // 
+  // Now, we have the body so we can just blast it into the
+  // composition editor window.
   //
-  // Now load the URL...
-  //  
-  nsString urlStr = nsMsgPlatformFileToURL(*mTempComposeFileSpec);
-  m_editor->LoadUrl(urlStr.GetUnicode());
+  m_compFields->GetBody(&bod);
+  if (bod)
+  {
+    ConvertAndLoadComposeWindow(m_editor, bod, PR_FALSE, m_composeHTML);
+  }
+
   return NS_OK;
 }
+
