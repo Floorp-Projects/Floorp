@@ -253,7 +253,6 @@ typedef struct mozce_OUTLINETEXTMETRIC
 #define DISPID_WINDOWACTIVATE           (__LINE__ + 3000) /* 111 */
 
 
-#define OUT_TT_PRECIS 4
 #define CBM_INIT 4
 
 #endif

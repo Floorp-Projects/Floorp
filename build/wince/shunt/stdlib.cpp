@@ -47,7 +47,9 @@ extern "C" {
 MOZCE_SHUNT_API char *mozce_fullpath(char *absPath, const char *relPath, size_t maxLength)
 {
 #ifdef LOG_CALLS
+#ifdef DEBUG
     printf("*mozce_fullpath called\n");
+#endif
 #endif
     return 0;
 }
@@ -55,7 +57,9 @@ MOZCE_SHUNT_API char *mozce_fullpath(char *absPath, const char *relPath, size_t 
 MOZCE_SHUNT_API void mozce_splitpath(const char* inPath, char* outDrive, char* outDir, char* outFname, char* outExt)
 {
 #ifdef LOG_CALLS
+#ifdef DEBUG
     printf("mozce_splitpath called\n");
+#endif
 #endif
     if(NULL != outDrive)
     {
@@ -162,7 +166,9 @@ MOZCE_SHUNT_API void mozce_splitpath(const char* inPath, char* outDrive, char* o
 MOZCE_SHUNT_API void mozce_makepath(char* outPath, const char* inDrive, const char* inDir, const char* inFname, const char* inExt)
 {
 #ifdef LOG_CALLS
+#ifdef DEBUG
     printf("mozce_makepath called\n");
+#endif
 #endif
     if(NULL != outPath)
     {
@@ -176,19 +182,21 @@ MOZCE_SHUNT_API void mozce_makepath(char* outPath, const char* inDrive, const ch
             }
         }
         _snprintf(outPath, _MAX_PATH, "%s%s%s%s%s",
-            (NULL != inDir) ? inDir : "",
-            (NULL != inDir && '\\' != inDir[dirLen] && '/' != inDir[dirLen]) ? "\\" : "",
-            (NULL != inFname) ? inFname : "",
-            (NULL != inExt && '.' != inExt[0]) ? "." : "",
-            (NULL != inExt) ? inExt : ""
-            );
+                  (NULL != inDir) ? inDir : "",
+                  (NULL != inDir && '\\' != inDir[dirLen] && '/' != inDir[dirLen]) ? "\\" : "",
+                  (NULL != inFname) ? inFname : "",
+                  (NULL != inExt && '.' != inExt[0]) ? "." : "",
+                  (NULL != inExt) ? inExt : ""
+                  );
     }
 }
 
 MOZCE_SHUNT_API int mozce_strcmpi(const char *dest, const char *src)
 {
 #ifdef LOG_CALLS
+#ifdef DEBUG
     printf("mozce_strcmpi called\n");
+#endif
 #endif
     int f,l;
     
