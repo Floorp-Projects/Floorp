@@ -242,11 +242,14 @@ typedef struct
 
 
 /* XFE Additions */
-#define XmNshowHideButton "showHideButton"
-#define XmCShowHideButton "ShowHideButton"
+#define XmNhideUnhideButtons "hideUnhideButtons"
+#define XmCHideUnhideButtons "HideUnhideButtons"
 #define XmNuseTextWidget "useTextWidget"
 #define XmCUseTextWidget "UseTextWidget"
+#if 0
 #define XmNhideButtonTranslations "hideButtonTranslations"
+#define XmNunhideButtonTranslations "unhideButtonTranslations"
+#endif /*0*/
 #define XmNminColumnWidth "minColumnWidth"
 #define XmCMinColumnWidth "MinColumnWidth"
 
@@ -282,6 +285,8 @@ typedef struct
 #define XmCColumnResizable "ColumnResizable"
 #define XmNcolumnSizePolicy "columnSizePolicy"
 #define XmCColumnSizePolicy "ColumnSizePolicy"
+#define XmNcolumnHidden "columnHidden"
+#define XmCColumnHidden "ColumnHidden"
 #define XmNcolumnStep "columnStep"
 #define XmCColumnStep "ColumnStep"
 #define XmNcolumnType "columnType"
@@ -551,6 +556,7 @@ typedef void XmLCGridCell;
 #define XmDRAWNB_SQUARE      3
 #define XmDRAWNB_DOUBLEBAR   4
 #define XmDRAWNB_STRING      5
+#define XmDRAWNB_SMALLARROW  6
 
 #define XmDRAWNB_RIGHT 0
 #define XmDRAWNB_LEFT  1

@@ -219,6 +219,7 @@ static void TextModifyVerify(Widget w, XtPointer clientData,
 static void Traverse(Widget w, XEvent *event, String *, Cardinal *);
 
 /* XFE Additions */
+static void CreateHideUnhideButtons(XmLGridWidget g);
 static void HideColumn(Widget w, XEvent *event, String *, Cardinal *);
 static void UnhideColumn(Widget w, XEvent *event, String *, Cardinal *);
 static void MenuArm(Widget w, XEvent *event, String *, Cardinal *);
@@ -308,9 +309,9 @@ static XtActionsRec actions[] =
 	{ "XmLGridSelect",       Select       },
 	{ "XmLGridDragStart",    DragStart    },
 	{ "XmLGridTraverse",     Traverse     },
+	/* XFE Additions */
 	{ "XmLGridHideColumn",   HideColumn   },
 	{ "XmLGridUnhideColumn", UnhideColumn },
-	/* XFE Additions */
 	{ "MenuArm", MenuArm },
 	{ "MenuDisarm", MenuDisarm },
 	};
@@ -426,6 +427,14 @@ static char editTranslations[] =
 ~Ctrl ~Shift <Key>Tab:	        XmLGridEditComplete(RIGHT)\n\
 ~Ctrl ~Shift <Key>osfUp:        XmLGridEditComplete(UP)\n\
 <Key>osfCancel:                 XmLGridEditCancel()";
+
+#if 0
+static char hideButtonTranslations[] =
+"<BtnDown>,<BtnUp>:                      XmLGridHideColumn()";
+
+static char unhideButtonTranslations[] =
+"<BtnDown>,<BtnUp>:                      XmLGridUnhideColumn()";
+#endif /*0*/
 
 static XtResource resources[] =
 	{
@@ -960,6 +969,13 @@ static XtResource resources[] =
 		XtOffset(XmLGridWidget, grid.colType),
 		XmRImmediate, (XtPointer)XmINVALID_TYPE,
 		},
+        /* xfe Column Resource additions */
+		{
+		XmNcolumnHidden, XmCColumnHidden,
+		XmRBoolean, sizeof(Boolean),
+		XtOffset(XmLGridWidget, grid.colHidden),
+		XmRImmediate, (XtPointer)FALSE,
+		},
 		/* Cell Resources */
 		{
 		XmNcellAlignment, XmCCellAlignment,
@@ -1118,13 +1134,27 @@ static XtResource resources[] =
 		XtOffset(XmLGridWidget, manager.shadow_thickness),
 		XmRImmediate, (XtPointer)2,
 		},
-
+        /* XFE Addition*/
 		{
-		XmNshowHideButton, XmCShowHideButton,
+		XmNhideUnhideButtons, XmCHideUnhideButtons,
 		XmRBoolean, sizeof(Boolean),
-		XtOffset(XmLGridWidget, grid.showHideButton),
+		XtOffset(XmLGridWidget, grid.hideUnhideButtons),
 		XmRImmediate, (XtPointer)False,
 		},
+#if 0
+		{
+		XmNhideButtonTranslations, XmCTranslations,
+		XmRTranslationTable, sizeof(XtTranslations),
+		XtOffset(XmLGridWidget, grid.hideButtonTrans),
+		XmRString, (XtPointer)hideButtonTranslations,
+		},
+		{
+		XmNunhideButtonTranslations, XmCTranslations,
+		XmRTranslationTable, sizeof(XtTranslations),
+		XtOffset(XmLGridWidget, grid.unhideButtonTrans),
+		XmRString, (XtPointer)unhideButtonTranslations,
+		},
+#endif /*0*/
 		{
 		XmNuseTextWidget, XmCUseTextWidget,
 		XmRBoolean, sizeof(Boolean),
@@ -1392,29 +1422,15 @@ Initialize(Widget reqW,
 	XtAddCallback(g->grid.vsb, XmNdragCallback, ScrollCB, 0);
 	XtAddCallback(g->grid.vsb, XmNvalueChangedCallback, ScrollCB, 0);
 
-	if (g->grid.showHideButton)
-	    {
-		g->grid.hideButton = XtVaCreateWidget(
-		    "hide", xmDrawnButtonWidgetClass,
-   		    (Widget)g, XmNhighlightThickness, 0,
-		    XmNshadowThickness, 1,
-   		    XmNtraversalOn, False,
-  		    XmNbackground, g->core.background_pixel,
-		    XmNforeground, g->manager.foreground,
-		    XmNtopShadowColor, g->manager.top_shadow_color,
-		    XmNbottomShadowColor, g->manager.bottom_shadow_color,
-		    NULL);
-
-		XmLDrawnButtonSetType(g->grid.hideButton,
-				      XmDRAWNB_DOUBLEARROW,
-				      XmDRAWNB_RIGHT);
-	    }
-	else 
-	    {
-		g->grid.hideButton = 0;
-	    }
-
-	g->grid.realColCount = -1;
+    if (g->grid.hideUnhideButtons)
+        {
+        CreateHideUnhideButtons(g);
+        }
+    else
+        {
+        g->grid.hideButton = 0;
+        g->grid.unhideButton = 0;
+        }
 
 	g->grid.inResize = False;
 
@@ -1532,8 +1548,8 @@ Initialize(Widget reqW,
 		}
 	if (g->grid.visibleRows)
 		ApplyVisibleRows(g);
-	if (g->grid.visibleCols)
-		ApplyVisibleCols(g);
+	if (g->grid.visibleCols && g->grid.hsPolicy == XmCONSTANT)
+        ApplyVisibleCols(g);
 
 	g->grid.layoutFrozen = layoutFrozen;
 	VertLayout(g, 1);
@@ -1689,7 +1705,10 @@ Redisplay(Widget w,
 	hasDrawCB = 0;
 	if (XtHasCallbacks(w, XmNcellDrawCallback) == XtCallbackHasSome)
 			hasDrawCB = 1;
-/* add extra shadow around the whole widget if 512 is set for shadow regions */
+
+    /* Add extra shadow around the whole widget 
+     * if 512 is set for shadow regions 
+     */
     if (g->grid.shadowRegions == 512
         && g->manager.shadow_thickness
 		&& XmLRectIntersect(&eRect, &rRect) != XmLRectInside)
@@ -1714,8 +1733,6 @@ Redisplay(Widget w,
 /* end of extra shadow */
 	for (i = 0; i < 9; i++)
 		{
-		if (g->grid.debugLevel > 1)
-			fprintf(stderr, "XmLGrid: Redisplay region %d phase 0\n", i);
 		if (!reg[i].width || !reg[i].height)
 			continue;
 		rRect.x = reg[i].x;
@@ -1724,8 +1741,8 @@ Redisplay(Widget w,
 		rRect.height = reg[i].height;
 		if (XmLRectIntersect(&eRect, &rRect) == XmLRectOutside)
 			continue;
-		if (g->grid.debugLevel > 1)
-			fprintf(stderr, "XmLGrid: Redisplay region %d phase 1\n", i);
+		if (g->grid.debugLevel > 2)
+			fprintf(stderr, "XmLGrid: Redisplay region %d shadows\n", i);
 		rRect.x += st;
 		rRect.width -= st * 2;
 		rRect.y += st;
@@ -1766,8 +1783,8 @@ Redisplay(Widget w,
 			}
 		rRect.x += st;
 		height = 0;
-		if (g->grid.debugLevel > 1)
-			fprintf(stderr, "XmLGrid: Redisplay region %d phase 2\n", i);
+		if (g->grid.debugLevel > 2)
+			fprintf(stderr, "XmLGrid: Redisplay region %d content\n", i);
 		for (r = reg[i].row; r < reg[i].row + reg[i].nrow; r++)
 			{
 			rowHeight = GetRowHeight(g, r);
@@ -1781,6 +1798,12 @@ Redisplay(Widget w,
 				if (g->grid.singleColScrollMode)
 					rRect.x -= g->grid.singleColScrollPos;
 				rRect.width = GetColWidth(g, c);
+#if 0                
+                if (i == 1 && r == reg[1].row && c == reg[1].col - 1)
+                    {
+                        rRect.width -= 10;
+                    }
+#endif /*0 slamm */
 				rRect.height = rowHeight;
 				width += rRect.width;
 				cell = GetCell(g, r, c);
@@ -2170,6 +2193,7 @@ DrawArea(XmLGridWidget g,
 	case DrawVScroll:
 		{
 		for (i = 3; i < 6; i++)
+
 			{
 			if (!reg[i].width || !reg[i].height)
 				continue;
@@ -2620,10 +2644,6 @@ Resize(Widget w)
 
 	g = (XmLGridWidget)w;
 
-    if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
-        {
-            SizeColumnsToFit(g, 0);
-        }
 	if (!g->grid.inResize)
 	  {
 	    cbs.reason = XmCR_RESIZE_GRID;
@@ -2646,8 +2666,9 @@ PlaceScrollbars(XmLGridWidget g)
 	int x, y;
 	int width, height;
 	Widget vsb, hsb;
-	Dimension headingRowHeight = 0;
+	Dimension st, headingRowHeight = 0;
 
+	st = g->manager.shadow_thickness;
 	vsb = g->grid.vsb;
 	hsb = g->grid.hsb;
 	width = g->core.width;
@@ -2670,13 +2691,16 @@ PlaceScrollbars(XmLGridWidget g)
 
 	    rowp = (XmLGridRow)XmLArrayGet(g->grid.rowArray, 0);
 	    
-	    headingRowHeight = XmLGridRowHeightInPixels(rowp) + g->manager.shadow_thickness;
+	    headingRowHeight = XmLGridRowHeightInPixels(rowp) + st;
 	  }
 
-        if (g->grid.showHideButton && g->grid.hideButton)
+    if (g->grid.hideUnhideButtons
+        && g->grid.hideButton && g->grid.unhideButton)
 	    {
+          int buttonWidth = vsb->core.width - 4;
+
 	      if (headingRowHeight == 0)
-		headingRowHeight = 20;
+              headingRowHeight = 20;
 
 	      /* if there is at least heading row, we make the
 		   height of the button the height of the first
@@ -2684,11 +2708,16 @@ PlaceScrollbars(XmLGridWidget g)
 
 		   This is pretty braindead... */
 
+		XtConfigureWidget(g->grid.unhideButton, 
+				  g->core.width - buttonWidth*2 - st,
+				  y + st,
+				  buttonWidth,
+				  headingRowHeight - st, 0);
 		XtConfigureWidget(g->grid.hideButton, 
-				  g->core.width - vsb->core.width,
-				  y + g->manager.shadow_thickness,
-				  vsb->core.width,
-				  headingRowHeight, 0);
+				  g->core.width - buttonWidth - st,
+				  y + st,
+				  buttonWidth,
+				  headingRowHeight - st, 0);
 
 		/* once we've positioned it, make sure it's managed.
 		   Doing it in this order (position, then manage) reduces
@@ -2696,14 +2725,16 @@ PlaceScrollbars(XmLGridWidget g)
 		   upper left corner for an instant. */
 		if (!XtIsManaged(g->grid.hideButton)) 
 		    XtManageChild(g->grid.hideButton);
+		if (!XtIsManaged(g->grid.unhideButton)) 
+		    XtManageChild(g->grid.unhideButton);
 	    }
 
 	if (height <= 0)
 		width = 1;
 	x = g->core.width - vsb->core.width;
 	XtConfigureWidget(vsb, 
-			  x, y + headingRowHeight + g->manager.shadow_thickness * 2, 
-			  vsb->core.width, height - headingRowHeight - g->manager.shadow_thickness * 2, 
+			  x, y + headingRowHeight + g->manager.shadow_thickness, 
+			  vsb->core.width, height - headingRowHeight - g->manager.shadow_thickness, 
 			  0);
 	}
 
@@ -2886,11 +2917,11 @@ VertLayout(XmLGridWidget g,
 		}
 	if (g->grid.debugLevel)
 			{
-			fprintf(stderr, "XmLGrid: VertLayout T y %d h %d r %d nr %d\n",
+			fprintf(stderr, "XmLGrid: VertLayout TOP %3dy %3dh %3dr %3dnr\n",
 				reg[0].y, reg[0].height, reg[0].row, reg[0].nrow);
-			fprintf(stderr, "XmLGrid: VertLayout M y %d h %d r %d nr %d\n",
+			fprintf(stderr, "XmLGrid: VertLayout MID %3dy %3dh %3dr %3dnr\n",
 				reg[3].y, reg[3].height, reg[3].row, reg[3].nrow);
-			fprintf(stderr, "XmLGrid: VertLayout B y %d h %d r %d nr %d\n",
+			fprintf(stderr, "XmLGrid: VertLayout BOT %3dy %3dh %3dr %3dnr\n",
 				reg[6].y, reg[6].height, reg[6].row, reg[6].nrow);
 			}
 	if (needsSB)
@@ -3005,17 +3036,18 @@ HorizLayout(XmLGridWidget g,
 	scrollChanged = 0;
 	needsResize = 0;
 	needsSB = 0;
-#if 0
-	/* we can't use this one if we're going to allow for hidden columns,
-	   as we're changing what g->grid.colCount is. 
 
-	   the calculation we're replacing it with works the same, and results
-	   in less code being munged.
-	   */
-	colCount = XmLArrayGetCount(g->grid.colArray);
-#else
-	colCount = g->grid.colCount + g->grid.headingColCount + g->grid.footerColCount;
-#endif
+    if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE && g->grid.visibleCols)
+        colCount = g->grid.visibleCols;
+    else
+        colCount = g->grid.colCount + g->grid.headingColCount
+            + g->grid.footerColCount;
+    
+    if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+        {
+        SizeColumnsToFit(g, 0);
+        }
+
 	reg = g->grid.reg;
 	st2 = g->manager.shadow_thickness * 2;
 	TextAction(g, TEXT_HIDE);
@@ -3053,7 +3085,8 @@ HorizLayout(XmLGridWidget g,
 		width += g->grid.scrollBarMargin;
 		}
 	maxWidth = g->core.width - width;
-	if (g->grid.hsPolicy != XmCONSTANT)
+	if (g->grid.hsPolicy == XmVARIABLE ||
+        g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
 		{
 		if (colCount == leftNCol + rightNCol)
 			midWidth = 0;
@@ -3070,7 +3103,7 @@ HorizLayout(XmLGridWidget g,
             if (g->grid.hsPolicy == XmVARIABLE)
                 fprintf(stderr, "XmLGrid: HorizLayout VARIABLE width\n");
             else
-                fprintf(stderr, "XmLGrid: HorizLayout RESIZE_IF_POSSIBLE width\n");
+                fprintf(stderr, "XmLGrid: HorizLayout REZISE_IF_POSSIBLE\n");
             }
 		}
 	else
@@ -3163,11 +3196,11 @@ HorizLayout(XmLGridWidget g,
 
 	if (g->grid.debugLevel)
 		{
-		fprintf(stderr, "XmLGrid: HorizLayout TOP x %d w %d c %d nc %d\n",
+		fprintf(stderr, "XmLGrid: HorizLayout LFT %3dx %3dw %3dc %3dnc\n",
 			reg[0].x, reg[0].width, reg[0].col, reg[0].ncol);
-		fprintf(stderr, "XmLGrid: HorizLayout MID x %d w %d c %d nc %d\n",
+		fprintf(stderr, "XmLGrid: HorizLayout MID %3dx %3dw %3dc %3dnc\n",
 			reg[1].x, reg[1].width, reg[1].col, reg[1].ncol);
-		fprintf(stderr, "XmLGrid: HorizLayout BOT x %d w %d c %d nc %d\n",
+		fprintf(stderr, "XmLGrid: HorizLayout RHT %3dx %3dw %3dc %3dnc\n",
 			reg[2].x, reg[2].width, reg[2].col, reg[2].ncol);
 		}
 	if (g->grid.hsPolicy == XmCONSTANT && colCount == 1 &&
@@ -3716,66 +3749,64 @@ PosIsResize(XmLGridWidget g,
 		for (i = 0; i < 2; i++)
 			{
 				nx = x;
-				ny = y;
-				if (i)
-					ny = y - 4;
-				if (XYToRowCol(g, nx, ny, row, col) == -1)
-					continue;
-				if (RowColToXY(g, *row, *col, False, &rect) == -1)
-					continue;
-				if (ColPosToType(g, *col) != XmHEADING)
-					continue;
-				margin = ny - (rect.y + rect.height);
-				if (margin > -5 && margin < 5)
-					{
-						*isVert = 1;
-						return 1;
-					}
+				ny = y - (4 * i);
+
+				if (XYToRowCol(g, nx, ny, row, col) != -1
+                    && RowColToXY(g, *row, *col, False, &rect) != -1
+                    && ColPosToType(g, *col) == XmHEADING)
+                    {
+                        margin = ny - (rect.y + rect.height);
+                        if (margin > -5 && margin < 5)
+                            {
+                                *isVert = 1;
+                                return 1;
+                            }
+                    }
 			}
 	/* check for right resize */
 	if (g->grid.allowColResize == True)
-		for (i = 0; i < 2; i++)
-			{
-				XmLGridColumn colp;
-				int c;
+      for (i = 0; i < 2; i++)
+        {
+          XmLGridColumn colp;
+          int c;
+                
+          nx = x - (4 * i);
+          ny = y;
 
-				nx = x;
-				ny = y;
-				if (i)
-					nx = x - 4;
-				if (XYToRowCol(g, nx, ny, row, col) == -1)
-					continue;
-				if (RowColToXY(g, *row, *col, False, &rect) == -1)
-					continue;
-				if (RowPosToType(g, *row) != XmHEADING)
-					continue;
-				
-				/* if it's the last column, don't allow resize. */
-				if (*col == XmLArrayGetCount(g->grid.colArray) - 1)
-					continue;
-				
-				colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, *col);
-				
-				if (!colp->grid.resizable)
-					continue;
-				
-				for (c = *col + 1 + i; c < XmLArrayGetCount(g->grid.colArray); c ++)
-					{
-						colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, c);
-						
-						if (colp->grid.resizable)
-							break;
+          if (XYToRowCol(g, nx, ny, row, col) != -1
+              && RowColToXY(g, *row, *col, False, &rect) != -1
+              && RowPosToType(g, *row) == XmHEADING
+              && *col != XmLArrayGetCount(g->grid.colArray) - 1)
+            {
+              Boolean foundResizable = 0;
 
-						return 0;
-					}
+              colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, *col);
+              
+              if (!colp->grid.resizable)
+                continue;
+              
+              for (c = *col + 1;
+                   c < XmLArrayGetCount(g->grid.colArray);
+                   c ++)
+                {
+                  colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, c);
+                  
+                  if (colp->grid.resizable)
+                    {
+                      foundResizable = True;
+                      break;
+                    }
+                }
+              if (!foundResizable) return 0;
 
-				margin = nx - (rect.x + rect.width);
-				if (margin > -5 && margin < 5)
-					{
-						*isVert = 0;
-						return 1;
-					}
+              margin = nx - (rect.x + rect.width);
+              if (margin > -5 && margin < 5)
+                {
+                  *isVert = 0;
+                  return 1;
+                }
 			}
+        }
 	return 0;
 }
 
@@ -5065,34 +5096,27 @@ SetValues(Widget curW,
 		}
 	if (NE(grid.visibleCols))
 		{
-		ApplyVisibleCols(g);
+        if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+            XmLGridSetVisibleColumnCount((Widget)g, g->grid.visibleCols);
+        else
+            ApplyVisibleCols(g);
 		needsHorizLayout = 1;
 		needsRedraw = 1;
 		}
 
 	/* for the hidden columns stuff */
-	if (NE(grid.showHideButton))
+	if (NE(grid.hideUnhideButtons))
 	    {
-		if (g->grid.showHideButton)
+		if (g->grid.hideUnhideButtons)
 		    {
-			g->grid.hideButton = XtVaCreateWidget(
-			    "hide", xmDrawnButtonWidgetClass,
-			(Widget)g, XmNhighlightThickness, 0,
-		        XmNshadowThickness, 1,
-			XmNtraversalOn, False,
-  		        XmNbackground, g->core.background_pixel,
-		        XmNforeground, g->manager.foreground,
-		        XmNtopShadowColor, g->manager.top_shadow_color,
-		        XmNbottomShadowColor, g->manager.bottom_shadow_color,
-			NULL);
-
-			XmLDrawnButtonSetType(g->grid.hideButton,
-					      XmDRAWNB_DOUBLEARROW,
-					      XmDRAWNB_RIGHT);
+                CreateHideUnhideButtons(g);
 		    }
 		else 
 		    {
 			XtDestroyWidget(g->grid.hideButton);
+			XtDestroyWidget(g->grid.unhideButton);
+            g->grid.hideButton = 0;
+            g->grid.unhideButton = 0;
 		    }
 
 		needsVertLayout = 1;
@@ -5505,7 +5529,7 @@ _GetColumnValueMask(XmLGridWidget g,
 		    char *s,
 		    long *mask)
 	{
-	static XrmQuark qWidth, qSizePolicy, qUserData, qResizable;
+	static XrmQuark qWidth, qSizePolicy, qUserData, qResizable, qHidden;
 	static int quarksValid = 0;
 	XrmQuark q;
 
@@ -5515,6 +5539,7 @@ _GetColumnValueMask(XmLGridWidget g,
 		qSizePolicy = XrmStringToQuark(XmNcolumnSizePolicy);
 		qUserData = XrmStringToQuark(XmNcolumnUserData);
 		qResizable = XrmStringToQuark(XmNcolumnResizable);
+		qHidden = XrmStringToQuark(XmNcolumnHidden);
 		quarksValid = 1;
 		}
 	q = XrmStringToQuark(s);
@@ -5526,6 +5551,8 @@ _GetColumnValueMask(XmLGridWidget g,
 			*mask |= XmLGridColumnUserData;
 	else if (q == qResizable)
 			*mask |= XmLGridColumnResizable;
+	else if (q == qHidden)
+			*mask |= XmLGridColumnHidden;
 	}
 
 static void
@@ -5557,6 +5584,9 @@ _GetColumnValue(XmLGridWidget g,
 			break;
 		case XmLGridColumnResizable:
 			*((Boolean *)value) = col->grid.resizable;
+			break;
+		case XmLGridColumnHidden:
+			*((Boolean *)value) = col->grid.hidden;
 			break;
 
 		}
@@ -5606,11 +5636,18 @@ _SetColumnValues(XmLGridWidget g, XmLGridColumn col, long mask)
 		col->grid.sizePolicy = g->grid.colSizePolicy;
 		if (visible && !g->grid.inResize)
 			needsResize = 1;
+        if (col->grid.sizePolicy != XmCONSTANT
+            && g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+            {
+                XmLWarning((Widget)g, "XmNcolumnSizePolicy must equal XmCONSTANT");
+            }
 		}
 	if (mask & XmLGridColumnUserData)
 		col->grid.userData = g->grid.colUserData;
 	if (mask & XmLGridColumnResizable)
 		col->grid.resizable = g->grid.colResizable;
+	if (mask & XmLGridColumnHidden)
+		col->grid.hidden = g->grid.colHidden;
 	return needsResize;
 	}
 
@@ -7504,6 +7541,17 @@ Select(Widget w,
 						(rect.width - GetColWidth(g, c));
 				if (width < 6 && g->grid.allowColHide == False)
 					width = 6;
+                if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
+                    {
+                    /* Resize all columns to the right */
+                    XmLGridColumn colp;
+                    colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray,
+                                                      cbs.column);
+                    colp->grid.width = width;
+                    SizeColumnsToFit(g, cbs.column + 1);
+                    HorizLayout(g, 0);
+                    DrawArea(g, DrawAll, 0, 0);
+                    }
 				XtVaSetValues((Widget)g,
 					XmNcolumnType, cbs.columnType,
 					XmNcolumn, cbs.column,
@@ -7512,12 +7560,6 @@ Select(Widget w,
 					NULL);
 				cbs.reason = XmCR_RESIZE_COLUMN;
 
-                if (g->grid.hsPolicy == XmRESIZE_IF_POSSIBLE)
-                    {
-                        SizeColumnsToFit(g, cbs.column + 1);
-                        HorizLayout(g, 0);
-                        DrawArea(g, DrawAll, 0, 0);
-                    }
 				}
 			XtCallCallbackList((Widget)g, g->grid.resizeCallback,
 				(XtPointer)&cbs);
@@ -8158,9 +8200,8 @@ XmLGridColumnGetVisPos(XmLGridColumn column)
 static Boolean
 XmLGridColumnIsHidden(XmLGridColumn column)
 	{
-	if (!column->grid.width)
-		return True;
-	return False;
+    return column->grid.width == 0
+        || column->grid.hidden;
 	}
 
 static Boolean
@@ -10502,16 +10543,104 @@ XmLGridPastePos(Widget w,
 
 /* XFE Additions below here */
 void
-XmLGridInstallHideButtonTranslations(Widget w)
+XmLGridSetVisibleColumnCount(Widget w, int new_num_visible)
 {
   XmLGridWidget g = (XmLGridWidget)w;
-  Widget hideButton = g->grid.hideButton;
+  int ii, num_columns, visible_count;
+  XmLGridColumn colp;
 
-  if (g->grid.showHideButton == False
-      || hideButton == NULL)
-    return;
 
-  /*  XtOverrideTranslations(hideButton, g->grid.hideButtonTrans);*/
+  visible_count = 0;
+  num_columns = XmLArrayGetCount(g->grid.colArray);
+
+  if (new_num_visible == 0)
+      return;
+  for (ii = 0; ii < num_columns; ii ++)
+  {
+      colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, ii);
+      
+      if (colp->grid.hidden && visible_count < new_num_visible)
+      {
+          colp->grid.hidden = False;
+      }
+      else if (!colp->grid.hidden && visible_count >= new_num_visible)
+      {
+          colp->grid.hidden = True;
+      }
+      if (!colp->grid.hidden)
+          visible_count++;
+  }
+  if (visible_count < num_columns)
+      g->grid.visibleCols = visible_count;
+  else
+      g->grid.visibleCols = 0;
+
+  HorizLayout(g, 1);
+  DrawArea(g, DrawAll, 0, 0);
+}
+
+static void
+hide_cb(Widget w, XtPointer clientData, XtPointer cb_data)
+{
+	Widget g = (Widget) clientData;
+
+    XmLGridHideRightColumn(g);
+}
+static void
+unhide_cb(Widget w, XtPointer clientData, XtPointer cb_data)
+{
+	Widget g = (Widget) clientData;
+
+    XmLGridUnhideRightColumn(g);
+}
+
+static void
+CreateHideUnhideButtons(XmLGridWidget g)
+{
+	if (!g->grid.hideUnhideButtons)
+        {
+        XmLWarning((Widget)g,"CreateHideUnhideButtons - Creating buttons when XmNhideUnhideButtons is False.");
+        return;
+        }
+
+    g->grid.hideButton = XtVaCreateWidget(
+		    "hide", xmDrawnButtonWidgetClass,
+   		    (Widget)g, XmNhighlightThickness, 0,
+		    XmNshadowThickness, 1,
+   		    XmNtraversalOn, False,
+  		    XmNbackground, g->core.background_pixel,
+		    XmNforeground, g->manager.foreground,
+		    XmNtopShadowColor, g->manager.top_shadow_color,
+		    XmNbottomShadowColor, g->manager.bottom_shadow_color,
+		    NULL);
+
+    g->grid.unhideButton = XtVaCreateWidget(
+		    "unhide", xmDrawnButtonWidgetClass,
+   		    (Widget)g, XmNhighlightThickness, 0,
+		    XmNshadowThickness, 1,
+   		    XmNtraversalOn, False,
+  		    XmNbackground, g->core.background_pixel,
+		    XmNforeground, g->manager.foreground,
+		    XmNtopShadowColor, g->manager.top_shadow_color,
+		    XmNbottomShadowColor, g->manager.bottom_shadow_color,
+		    NULL);
+
+    XmLDrawnButtonSetType(g->grid.hideButton,
+                          XmDRAWNB_SMALLARROW,
+                          XmDRAWNB_RIGHT);
+    XmLDrawnButtonSetType(g->grid.unhideButton,
+                          XmDRAWNB_SMALLARROW,
+                          XmDRAWNB_LEFT);
+    XtAddCallback(g->grid.hideButton, XmNactivateCallback,
+                  hide_cb, (XtPointer)g);
+    XtAddCallback(g->grid.unhideButton, XmNactivateCallback,
+                  unhide_cb, (XtPointer)g);
+#if 0
+    XtOverrideTranslations(g->grid.unhideButton,
+                           g->grid.unhideButtonTrans);
+    XtOverrideTranslations(g->grid.hideButton,
+                           g->grid.hideButtonTrans);
+#endif /*0*/
 }
 
 static void 
@@ -10520,49 +10649,7 @@ HideColumn(Widget w,
 	   String *params, 
 	   Cardinal *num_params)
 {
-    XmLGridWidget g = (XmLGridWidget)w;
-
-    if (g->grid.colCount == 1 || g->grid.colCount == 0) {
-	/* if there's only one column left, don't let them
-	   hide it.  Also, if there are no columns at all,
-	   they can't hide any. */
-
-	return;
-    }
-    else {
-    
-	if (g->grid.realColCount == -1) {
-	    /* nothing's been hidden yet, so we save off the
-	       actual column count before mucking with it. */
-	    g->grid.realColCount = g->grid.colCount;
-	}
-
-	g->grid.colCount--;
-	
-	HorizLayout(g, 1);
-	DrawArea(g, DrawAll, 0, 0);
-    }
-}
-
-void
-XmLGridSetVisibleColumnCount(Widget w,
-			     int num_visible)
-{
-  XmLGridWidget g = (XmLGridWidget)w;
-  int real_count;
-
-  if (g->grid.realColCount == -1)
-    real_count = g->grid.colCount;
-  else
-    real_count = g->grid.realColCount;
-
-  if (num_visible > real_count)
-    return; /* should really be an error... */
-
-  if (g->grid.realColCount == -1)
-    g->grid.realColCount = g->grid.colCount;
-
-  g->grid.colCount = num_visible;
+  XmLGridHideRightColumn(w);
 }
 
 static void 
@@ -10571,26 +10658,33 @@ UnhideColumn(Widget w,
 	     String *params, 
 	     Cardinal *num_params)
 {
-    XmLGridWidget g = (XmLGridWidget)w;
+  XmLGridUnhideRightColumn(w);
+}
 
-    if (g->grid.realColCount == -1) {
-	/* there is nothing hidden, so we can't unhide it */
-	return;
-    }
-    else {
+void
+XmLGridHideRightColumn(Widget w)
+{
+  XmLGridWidget g = (XmLGridWidget)w;
+  int colCount = XmLArrayGetCount(g->grid.colArray);
+  if (colCount <= 1)
+      return;
 
-	g->grid.colCount++;
+  /* If visibleCols is zero, that means all the columns are visible. */
+  if (g->grid.visibleCols == 0 || g->grid.visibleCols > colCount)
+      XmLGridSetVisibleColumnCount(w, colCount - 1);
+  else 
+      XmLGridSetVisibleColumnCount(w, g->grid.visibleCols - 1);
+}
 
-	HorizLayout(g, 1);
-	DrawArea(g, DrawAll, 0, 0);
+void
+XmLGridUnhideRightColumn(Widget w)
+{
+  XmLGridWidget g = (XmLGridWidget)w;
+  int colCount = XmLArrayGetCount(g->grid.colArray);
 
-	if (g->grid.colCount == g->grid.realColCount) {
-	    /* there's nothing hidden anymore, so we reinitialize
-	       the realColCount to -1, as some functions (like this
-	       one) might want to use this value */
-	    g->grid.realColCount = -1;
-	}
-    }
+  /* If visibleCols is zero, that means all the columns are visible. */
+  if ( g->grid.visibleCols != 0 && g->grid.visibleCols < colCount)
+      XmLGridSetVisibleColumnCount(w, g->grid.visibleCols + 1);
 }
 
 static void 
@@ -10621,40 +10715,59 @@ MenuDisarm(Widget w,
 static int
 SizeColumnsToFit(XmLGridWidget g, int starting_at)
 {
-    int total_column_width = 0;
 	int resizable_width = 0;
     int delta = 0;
-	int ii, column_count;
+    float hidden_col_adjust;
+	int ii, num_columns;
     XmLGridColumn colp;
     
     /* Total the width of the columns and
        also total how much of that can be resized */
     delta = g->core.width;
-    column_count = XmLArrayGetCount(g->grid.colArray);
-    for (ii = 0; ii < column_count; ii ++)
+    delta -= g->manager.shadow_thickness * 2;
+#if 0
+	if (g->grid.hideUnhideButtons)
+        {
+            delta -= 24;
+        }
+	if (XtIsManaged(g->grid.vsb))
+		{
+            delta -= g->grid.vsb->core.width; 
+		}
+#endif        
+
+    num_columns = g->grid.colCount + g->grid.headingColCount
+        + g->grid.footerColCount;
+    for (ii = 0; ii < num_columns; ii ++)
         {
             colp = (XmLGridColumn)XmLArrayGet(g->grid.colArray, ii);
             
-            if (colp->grid.sizePolicy != XmCONSTANT)
-                XmLWarning((Widget)g, "SizeColumnsToFit() - only valid for XmNcolumnSizePolicy == XmCONSTANT");
+            if (colp->grid.sizePolicy != XmCONSTANT) 
+                {
+                    XmLWarning((Widget)g, "SizeColumnsToFit() - only valid for XmNcolumnSizePolicy == XmCONSTANT");
+                    colp->grid.sizePolicy = XmCONSTANT;
+                }
+            if (!g->grid.visibleCols || ii < g->grid.visibleCols) 
+                {
+                    delta -= colp->grid.width;
 
-            delta -= colp->grid.width;
-
-            if (ii >= starting_at && colp->grid.resizable)
-                resizable_width += colp->grid.width;
+                    if (ii >= starting_at && colp->grid.resizable)
+                        resizable_width += colp->grid.width;
+                }
         }
-
     if (delta == 0 || resizable_width <= 0)
         return delta;
 
     if (g->grid.debugLevel)
         {
             fprintf(stderr,"Applying delta(%d) from %d to %d (%d resizable)\n",
-                    delta, starting_at, column_count - 1, resizable_width);
+                    delta, starting_at, num_columns - 1, resizable_width);
         }
 
+    hidden_col_adjust = (float)delta / resizable_width;
+    
     /* Adjust each column to fit based on its percentage of the total width */
-	for (ii = starting_at; ii < column_count ; ii ++)
+	for (ii = starting_at; ii < num_columns ; ii ++)
 		{
 			int col_width;
 			int col_delta;
@@ -10666,10 +10779,13 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
 			if (!colp->grid.resizable || col_width == 0)
                 continue;
 
-			if (col_width < resizable_width && resizable_width > 0)
-                col_delta = delta * ((float)col_width / resizable_width);
-            else                    
-                col_delta = delta;
+            if (colp->grid.hidden)
+                col_delta = (int)(hidden_col_adjust * col_width);
+            else
+                if (col_width < resizable_width && resizable_width > 0)
+                    col_delta = delta * ((float)col_width / resizable_width);
+                else                    
+                    col_delta = delta;
 
 			new_col_width = col_width + col_delta;
 			
@@ -10679,11 +10795,12 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
 					col_delta = col_width - new_col_width;
 				}
 			
-            delta -= col_delta;
-            resizable_width -= col_width;
+            if (!colp->grid.hidden)
+                {
+                    delta -= col_delta;
+                    resizable_width -= col_width;
+                }
 
-            /* this is actually the character width need to change
-               the pixel width instead */
 			colp->grid.width = new_col_width;
 
             if (g->grid.debugLevel)
@@ -10694,3 +10811,5 @@ SizeColumnsToFit(XmLGridWidget g, int starting_at)
 
 	return delta;
 }
+
+

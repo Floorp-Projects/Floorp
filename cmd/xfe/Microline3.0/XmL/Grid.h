@@ -82,7 +82,6 @@ void XmLGridMoveRows(Widget w, int newPosition, int position, int count);
 Boolean XmLGridPaste(Widget w);
 Boolean XmLGridPastePos(Widget w, unsigned char rowType, int row,
 	unsigned char columnType, int column);
-void XmLGridInstallHideButtonTranslations(Widget w);
 int XmLGridRead(Widget w, FILE *file, int format, char delimiter);
 int XmLGridReadPos(Widget w, FILE *file, int format, char delimiter,
 	unsigned char rowType, int row, unsigned char columnType, int column);
@@ -119,6 +118,8 @@ int XmLGridXYToRowColumn(Widget w, int x, int y, unsigned char *rowType,
 int XmLGridPosIsResize(Widget g, int x, int y);
 
 void XmLGridSetVisibleColumnCount(Widget w, int num_visible);
+void XmLGridHideRightColumn(Widget w);
+void XmLGridUnhideRightColumn(Widget w);
 
 #ifdef XmL_CPP
 }

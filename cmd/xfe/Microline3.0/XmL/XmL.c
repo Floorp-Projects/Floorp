@@ -615,6 +615,15 @@ XmLDrawnBDrawCB(Widget w,
 	np[1] = 0;
 	switch (type)
 		{
+		case XmDRAWNB_SMALLARROW:
+			p[0][0].x = md / 4;
+			p[0][0].y = md / 4;
+			p[0][1].x = md / 4;
+			p[0][1].y = md - md / 4;
+			p[0][2].x = md - md / 4;
+			p[0][2].y = md / 2;
+			np[0] = 3;
+			break;
 		case XmDRAWNB_ARROW:
 			p[0][0].x = md / 6;
 			p[0][0].y = md / 6;
@@ -705,7 +714,7 @@ XmLDrawnBDrawCB(Widget w,
 					/* points unchanged */
 					break;
 				case XmDRAWNB_LEFT:
-					p[i][j].x = md - p[i][j].x;
+					p[i][j].x = md - p[i][j].x - 1;
 					break;
 				case XmDRAWNB_UP:
 					temp = p[i][j].x;

@@ -133,7 +133,8 @@ typedef int (*XmLGridCellActionProc)();
 #define XmLGridColumnSizePolicy      (1L<<1)
 #define XmLGridColumnUserData        (1L<<2)
 #define XmLGridColumnResizable       (1L<<3)
-#define XmLGridColumnValueMaskLen         4
+#define XmLGridColumnHidden          (1L<<4)
+#define XmLGridColumnValueMaskLen         5
 
 /* flags for XmLGridCell flags member */
 #define XmLGridCellSelectedFlag     (1 << 0)
@@ -272,6 +273,9 @@ typedef struct _XmLGridColumnPart
 	unsigned int widthInPixelsValid:1;
 	Boolean resizable;
 	int visPos;
+
+    /* xfe additions */
+    Boolean hidden;
 	} XmLGridColumnPart;
 
 struct _XmLGridColumnRec
@@ -324,10 +328,12 @@ typedef struct _XmLGridPart
 	XtCallbackList resizeCallback, scrollCallback;
 
         /* XFE Additions */
+      Boolean hideUnhideButtons;
       Widget hideButton;
-      Boolean showHideButton;
+      Widget unhideButton;
       XtTranslations hideButtonTrans;
-      int realColCount;
+      XtTranslations unhideButtonTrans;
+
       Boolean inResize;
 
       Boolean useTextWidget;
@@ -370,6 +376,7 @@ typedef struct _XmLGridPart
 	int cellRowRangeStart, cellRowRangeEnd;
 	int rowStep, colStep;
 	unsigned char rowType, colType;
+    Boolean colHidden;
 
 	/* cell resources */
 	XmString cellString;
