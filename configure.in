@@ -515,39 +515,6 @@ if test -z "$MKSHLIB_FORCE_ALL"; then
 fi
 AC_SUBST(NO_LD_ARCHIVE_FLAGS)
 
-dnl ========================================================
-dnl =
-dnl = --diable-pic-dso-cflags
-dnl =
-dnl = A hack to disable the generation of PIC for shared libs
-dnl =
-dnl ========================================================
-ENABLE_PIC_DSO_CFLAGS=1
-
-MOZ_ARG_DISABLE_BOOL(pic-dso-cflags,
-[  --disable-pic-dso-cflags         Dont generate PIC for shared libs)],
-  ENABLE_PIC_DSO_CFLAGS= )
-
-if test ! "$ENABLE_PIC_DSO_CFLAGS"
-then
-  DSO_PIC_CFLAGS=""
-fi
-
-dnl ========================================================
-dnl =
-dnl = --diable-dtd-debug
-dnl =
-dnl = Disable some DTD debugging code in the parser that 
-dnl = breaks on some compilers because of evil and broken 
-dnl = streams code in htmlparser/src/prstrm.cpp
-dnl =
-dnl ========================================================
-MOZ_DISABLE_DTD_DEBUG=
-
-MOZ_ARG_DISABLE_BOOL(dtd-debug,
-[  --disable-dtd-debug         Disable some DTD debuggin code in the parser)],
-  MOZ_DISABLE_DTD_DEBUG=1 
-  AC_DEFINE(MOZ_DISABLE_DTD_DEBUG) )
 
 
 XLDFLAGS="$X_LIBS"
@@ -1618,17 +1585,16 @@ MOZ_ARG_DISABLE_BOOL(mailnews,
 [  --disable-mailnews      Dont build Mail & News],
   MOZ_MAIL_NEWS= )
 
+
+dnl NECKO is the new netlib landing.
+MOZ_ARG_ENABLE_BOOL(necko,
+[  --enable-necko  Enable NECKO, the new network library.],
+  NECKO=1)
+
 dnl Note: This conflicts with --disable-shared
 MOZ_ARG_ENABLE_BOOL(oji,
 [  --enable-oji            Enable use of Open JVM Interface],
   [MOZ_OJI=1 FULL_STATIC_BUILD= NO_SHARED_LIB=])
-
-dnl build the tests by default
-ENABLE_TESTS=1
-
-MOZ_ARG_DISABLE_BOOL(tests,
-[  --disable-tests         Dont build the tests],
-  ENABLE_TESTS= )
 
 dnl Build PICS (mozilla/extensions/pics) code
 MOZ_ARG_ENABLE_BOOL(pics,
@@ -1637,11 +1603,43 @@ MOZ_ARG_ENABLE_BOOL(pics,
 
 AC_DEFINE(ENABLE_PICS)
 
+
+dnl build the tests by default
+ENABLE_TESTS=1
+
+MOZ_ARG_DISABLE_BOOL(tests,
+[  --disable-tests         Dont build the tests],
+  ENABLE_TESTS= )
+
+
+dnl Toolbar drag & drop
+MOZ_ARG_ENABLE_BOOL(toolbar_dd,
+[  --enable-toolbar-dd  Enable toolbar drag and drop.],
+  AC_DEFINE(TOOLBAR_DD))
+
 dnl Build browsing profile; off by default
 MOZ_ARG_ENABLE_BOOL(brprof,
 [  --enable-brprof        Enable browsing profile cookie],
   MOZ_BRPROF=1
   AC_DEFINE(MOZ_BRPROF))
+
+dnl ========================================================
+dnl =
+dnl = --diable-pic-dso-cflags
+dnl =
+dnl = A hack to disable the generation of PIC for shared libs
+dnl =
+dnl ========================================================
+ENABLE_PIC_DSO_CFLAGS=1
+
+MOZ_ARG_DISABLE_BOOL(pic-dso-cflags,
+[  --disable-pic-dso-cflags         Dont generate PIC for shared libs)],
+  ENABLE_PIC_DSO_CFLAGS= )
+
+if test ! "$ENABLE_PIC_DSO_CFLAGS"
+then
+  DSO_PIC_CFLAGS=""
+fi
 
 dnl ========================================================
 dnl =
@@ -1709,7 +1707,6 @@ then
   sleep 3
 fi
 dnl ========================================================
-
 
 dnl ========================================================
 dnl =
@@ -1936,15 +1933,22 @@ MOZ_ARG_ENABLE_BOOL(xterm-updates,
 [  --enable-xterm-updates  Update XTERM titles with current command.],
   MOZ_UPDATE_XTERM=1)
 
-dnl NECKO is the new netlib landing.
-MOZ_ARG_ENABLE_BOOL(necko,
-[  --enable-necko  Enable NECKO, the new network library.],
-  NECKO=1)
+dnl ========================================================
+dnl =
+dnl = --diable-dtd-debug
+dnl =
+dnl = Disable some DTD debugging code in the parser that 
+dnl = breaks on some compilers because of evil and broken 
+dnl = streams code in htmlparser/src/prstrm.cpp
+dnl =
+dnl ========================================================
+MOZ_DISABLE_DTD_DEBUG=
 
-dnl Toolbar drag & drop
-MOZ_ARG_ENABLE_BOOL(toolbar_dd,
-[  --enable-toolbar-dd  Enable toolbar drag and drop.],
-  AC_DEFINE(TOOLBAR_DD))
+MOZ_ARG_DISABLE_BOOL(dtd-debug,
+[  --disable-dtd-debug         Disable some DTD debuggin code in the parser)],
+  MOZ_DISABLE_DTD_DEBUG=1 
+  AC_DEFINE(MOZ_DISABLE_DTD_DEBUG) )
+
 
 dnl commenting this out
 dnl according to waterson it is obsolete.
