@@ -830,7 +830,6 @@ RDFXMLDataSourceImpl::rdfXMLFlush(nsIURI *aURI)
         }
     }
 
-done:
     return NS_OK;
 }
 
