@@ -322,6 +322,7 @@ netwerk/protocol/ftp/src/Makefile
 netwerk/protocol/http/Makefile
 netwerk/protocol/http/public/Makefile
 netwerk/protocol/http/src/Makefile
+netwerk/protocol/http/res/Makefile
 netwerk/protocol/jar/Makefile
 netwerk/protocol/jar/public/Makefile
 netwerk/protocol/jar/src/Makefile
@@ -335,8 +336,13 @@ netwerk/protocol/resource/src/Makefile
 netwerk/mime/Makefile
 netwerk/mime/public/Makefile
 netwerk/mime/src/Makefile
+netwerk/security/Makefile
+netwerk/security/browser/Makefile
+netwerk/security/psm/Makefile
 netwerk/socket/Makefile
 netwerk/socket/base/Makefile
+netwerk/socket/ssl/Makefile
+netwerk/socket/tests/Makefile
 netwerk/streamconv/Makefile
 netwerk/streamconv/converters/Makefile
 netwerk/streamconv/public/Makefile
@@ -638,6 +644,12 @@ embedding/browser/build/Makefile
 embedding/browser/webBrowser/Makefile
 embedding/browser/setup/Makefile
 
+# Security Makefiles
+security/Makefile
+security/psm/Makefile
+security/psm/lib/Makefile
+security/psm/lib/client/Makefile
+security/psm/lib/protocol/Makefile
 
 # xpfe/browser/public/Makefile
 

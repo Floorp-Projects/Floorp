@@ -146,6 +146,20 @@ endif
 
 
 #######################################################################
+# PSM client libs
+#
+
+PSM_CO_MODULE= mozilla/security
+PSM_CO_FLAGS := -P
+CVSCO_PSM    = cvs $(CVS_FLAGS) co $(PSM_CO_FLAGS)
+PSM_CO_TAG   = SeaMonkey_M14_BRANCH
+
+ifdef PSM_CO_TAG
+  PSM_CO_FLAGS := $(PSM_CO_FLAGS) -r $(PSM_CO_TAG)
+endif
+
+
+#######################################################################
 # NSPR
 #
 
@@ -202,6 +216,11 @@ real_checkout:
 	: Checkout NSPR; \
 	echo $(CVSCO_NSPR) $(NSPR_CO_MODULE); \
 	($(CVSCO_NSPR) $(NSPR_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
+	  | tee -a $(CVSCO_LOGFILE); \
+	if test -f cvs-failed.tmp; then exit 1; else true; fi; \
+	: Checkout PSM client libs; \
+	echo $(CVSCO_PSM) $(PSM_CO_MODULE); \
+	($(CVSCO_PSM) $(PSM_CO_MODULE) || touch cvs-failed.tmp) 2>&1 \
 	  | tee -a $(CVSCO_LOGFILE); \
 	if test -f cvs-failed.tmp; then exit 1; else true; fi; \
 	: Checkout the SeaMonkeyAll; \

@@ -117,6 +117,10 @@ pull_nspr:
       cd $(MOZ_SRC)\.
       $(CVSCO_NSPR) mozilla/nsprpub
 
+pull_psm:
+	cd $(MOZ_SRC)\.
+	$(CVSCO_PSM) mozilla/security
+
 # pull either layout only or seamonkey the browser
 pull_layout:
 	cd $(MOZ_SRC)\.
@@ -131,13 +135,18 @@ pull_seamonkey:
 # nmake has to be hardcoded, or we have to depend on mozilla/config
 # being pulled already to figure out what $(NMAKE) should be.
 
-clobber_all: clobber_nspr clobber_seamonkey
+clobber_all: clobber_nspr clobber_psm clobber_seamonkey
 
-build_all: build_nspr build_seamonkey
+build_all: build_nspr build_psm build_seamonkey
 
 clobber_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	nmake -f makefile.win clobber_all
+
+clobber_psm:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
+	nmake -f makefile.win clobber_all
+
 
 clobber_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
@@ -158,6 +167,10 @@ build_nspr:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
 	nmake -f makefile.win export
 
+build_psm:
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
+	nmake -f makefile.win export
+		
 build_seamonkey:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	set DIST_DIRS=1
@@ -189,6 +202,8 @@ install:
 
 export:
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\nsprpub
+	nmake -f makefile.win export
+	@cd $(MOZ_SRC)\$(MOZ_TOP)\security
 	nmake -f makefile.win export
 	@cd $(MOZ_SRC)\$(MOZ_TOP)\.
 	set DIST_DIRS=1
