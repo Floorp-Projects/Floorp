@@ -139,6 +139,18 @@ NS_IMETHODIMP nsImageContainer::SetLoopCount(PRInt32 aLoopCount)
     return NS_ERROR_NOT_IMPLEMENTED;
 }
 
+/* void endFrameDecode (in gfxIImageFrame item, in unsigned long timeout); */
+NS_IMETHODIMP nsImageContainer::EndFrameDecode(PRUint32 aFrameNum, PRUint32 aTimeout)
+{
+  return NS_OK;
+}
+
+/* void decodingComplete (); */
+NS_IMETHODIMP nsImageContainer::DecodingComplete(void)
+{
+  return NS_OK;
+}
+
 
 /** nsPIImageContainerGtk methods **/
 
