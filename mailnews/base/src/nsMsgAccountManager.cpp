@@ -72,6 +72,7 @@
 #define ACCOUNT_PREFIX "account"
 #define SERVER_PREFIX "server"
 #define ID_PREFIX "id"
+#define OFFLINE_STATUS_CHANGED_TOPIC "network:offline-status-changed"
 
 static NS_DEFINE_CID(kMsgAccountCID, NS_MSGACCOUNT_CID);
 static NS_DEFINE_CID(kMsgIdentityCID, NS_MSGIDENTITY_CID);
@@ -144,16 +145,17 @@ nsMsgAccountManager::~nsMsgAccountManager()
   if(!m_haveShutdown)
   {
     Shutdown();
-	//Don't remove from Observer service in Shutdown because Shutdown also gets called
-	//from xpcom shutdown observer.  And we don't want to remove from the service in that case.
-	NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
-    if (NS_SUCCEEDED(rv))
-	{    
+	  //Don't remove from Observer service in Shutdown because Shutdown also gets called
+	  //from xpcom shutdown observer.  And we don't want to remove from the service in that case.
+	  NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_CONTRACTID, &rv);
+      if (NS_SUCCEEDED(rv))
+	  {    
       nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
       observerService->RemoveObserver(this, topic.GetUnicode());
-	}
+      topic.Assign(NS_LITERAL_STRING("network:offline-status-changed"));
+      observerService->RemoveObserver(this, topic.GetUnicode());
+    }
   }
-
 }
 
 nsresult nsMsgAccountManager::Init()
@@ -174,6 +176,8 @@ nsresult nsMsgAccountManager::Init()
     nsAutoString topic; topic.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
     observerService->AddObserver(this, topic.GetUnicode());
     topic.AssignWithConversion("quit-application");
+    observerService->AddObserver(this, topic.GetUnicode());
+    topic.Assign(NS_LITERAL_STRING("network:offline-status-changed"));
     observerService->AddObserver(this, topic.GetUnicode());
   }
 
@@ -211,7 +215,7 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
   shutdownString.AssignWithConversion(NS_XPCOM_SHUTDOWN_OBSERVER_ID);
   nsAutoString quitApplicationString;
   quitApplicationString.AssignWithConversion("quit-application");
-
+  nsAutoString offlineStatusChangedString(NS_LITERAL_STRING("network:offline-status-changed"));
   if(topicString == shutdownString)
   {
     Shutdown();
@@ -219,6 +223,15 @@ NS_IMETHODIMP nsMsgAccountManager::Observe(nsISupports *aSubject, const PRUnicha
   else if (topicString == quitApplicationString)
   {
     m_shutdownInProgress = PR_TRUE;
+  }
+  else if (topicString == offlineStatusChangedString)
+  {
+    nsAutoString dataString(NS_LITERAL_STRING("offline"));
+    if (someData)
+    {
+      if (dataString == someData)
+        CloseCachedConnections();
+    }
   }
 	
  return NS_OK;
