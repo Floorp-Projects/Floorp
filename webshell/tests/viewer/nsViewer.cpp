@@ -1470,6 +1470,11 @@ nsEventStatus nsViewer::ProcessMenu(PRUint32 aId, WindowData* wd)
         }
       }
       break;
+
+    case VIEWER_DEBUGSAVE:
+      DoDebugSave(wd);
+      break;
+
   }
 
   return(result);
@@ -1832,14 +1837,19 @@ void nsViewer::DoDebugRobot(WindowData* aWinData)
   printf("DebugRobot not implemented\n");
 }
 
+void nsViewer::CopySelection(WindowData* aWindata)
+{
+  printf("CopySelection not implemented\n");
+}
+
 void nsViewer::DoSiteWalker(WindowData* aWinData)
 {
   printf("Site Walker not implemented\n");
 }
 
-void nsViewer::CopySelection(WindowData* aWindata)
+void nsViewer::DoDebugSave(WindowData* aWinData)
 {
-  printf("CopySelection not implemented\n");
+  printf("DebugSave not implemented\n");
 }
 
 void nsViewer::CrtSetDebug(PRUint32 aNewFlags)

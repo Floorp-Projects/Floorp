@@ -598,6 +598,19 @@ CAttributeToken::CAttributeToken(const nsString& aName) : CHTMLToken(aName),
 }
 
 /*
+ *  construct initializing data to 
+ *  key value pair
+ *  
+ *  @update  gess 3/25/98
+ *  @param   aName -- string value to init token name with
+ *  @return  
+ */
+CAttributeToken::CAttributeToken(const nsString& aKey, const nsString& aName) : CHTMLToken(aName) {
+  mTextKey = aKey;
+  mLastAttribute=PR_FALSE;
+}
+
+/*
  *  
  *  
  *  @update  gess 3/25/98

@@ -40,6 +40,7 @@ CPPSRCS=					\
 	nsToken.obj				\
 	nsTokenHandler.obj			\
 	nsHTMLContentSinkStream.obj			\
+  nsXIFDTD.obj      \
 	prstrm.obj				\
 	$(NULL)
 
@@ -60,6 +61,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsToken.obj			\
 	.\$(OBJDIR)\nsTokenHandler.obj		\
 	.\$(OBJDIR)\nsHTMLContentSinkStream.obj		\
+	.\$(OBJDIR)\nsXIFDTD.obj		\
 	.\$(OBJDIR)\prstrm.obj			\
 	$(NULL)
 
@@ -80,6 +82,7 @@ EXPORTS=					\
 	CRTFDTD.h				\
 	COtherDTD.h				\
 	nsIDTD.h				\
+  nsXIFDTD.h \
 	$(NULL)
 
 EXTRA_EXPORTS=					\

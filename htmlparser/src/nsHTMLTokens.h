@@ -201,6 +201,7 @@ class CTextToken: public CHTMLToken {
 class CAttributeToken: public CHTMLToken {
   public:
                           CAttributeToken(const nsString& aString);
+                          CAttributeToken(const nsString& aKey, const nsString& aString);
     virtual PRInt32       Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char*   GetClassName(void);
     virtual PRInt32       GetTokenType(void);
