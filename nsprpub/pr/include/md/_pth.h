@@ -167,8 +167,8 @@
 #elif defined(AIX)
 #include <sys/priv.h>
 #include <sys/sched.h>
-#ifndef _PT_PTHREAD_CREATE_JOINABLE
-#define _PT_PTHREAD_CREATE_JOINABLE     _PT_PTHREAD_CREATE_UNDETACHED
+#ifndef PTHREAD_CREATE_JOINABLE
+#define PTHREAD_CREATE_JOINABLE     PTHREAD_CREATE_UNDETACHED
 #endif
 #define PT_PRIO_MIN            DEFAULT_PRIO
 #define PT_PRIO_MAX            DEFAULT_PRIO
