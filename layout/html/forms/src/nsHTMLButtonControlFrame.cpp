@@ -411,7 +411,36 @@ nsHTMLButtonControlFrame::Paint(nsIPresContext& aPresContext,
     mRenderer.PaintButton(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer, rect);
   }
 
+#if 0 // old way
   PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+#else // temporary
+    // XXX This is temporary
+  // clips to it's size minus the border and padding,
+  // but the real problem is the FirstChild (the AreaFrame)
+  // isn't being constrained properly
+  // Bug #17474
+  const nsStyleSpacing* spacing;
+  GetStyleData(eStyleStruct_Spacing,  (const nsStyleStruct *&)spacing);
+  nsMargin borderPadding;
+  borderPadding.SizeTo(0, 0, 0, 0);
+  spacing->CalcBorderPaddingFor(this, borderPadding);
+
+  nsRect rect;
+  GetRect(rect);
+  rect.x = 0;
+  rect.y = 0;
+  rect.Deflate(borderPadding);
+  aRenderingContext.PushState();
+  PRBool clipEmpty;
+
+  aRenderingContext.SetClipRect(rect, nsClipCombine_kReplace, clipEmpty);
+
+  PaintChildren(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+
+  aRenderingContext.PopState(clipEmpty);
+
+#endif
 
   return NS_OK;
 }
@@ -557,6 +586,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
   nsRect rect = nsRect(focusPadding.left + aReflowState.mComputedBorderPadding.left, focusPadding.top + aReflowState.mComputedBorderPadding.top, aDesiredSize.width, aDesiredSize.height);
   firstKid->SetRect(&aPresContext, rect);
 
+#if 0 // old way
   // if computed use the computed values.
   if (aReflowState.mComputedWidth != NS_INTRINSICSIZE && (aDesiredSize.width < aReflowState.mComputedWidth)) 
     aDesiredSize.width = aReflowState.mComputedWidth;
@@ -567,6 +597,19 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     aDesiredSize.height = aReflowState.mComputedHeight;
   else
     aDesiredSize.height += focusPadding.top + focusPadding.bottom;
+
+#else // temporary for Bug #17474
+  // if computed use the computed values.
+  if (aReflowState.mComputedWidth != NS_INTRINSICSIZE) 
+    aDesiredSize.width = aReflowState.mComputedWidth;
+  else 
+    aDesiredSize.width  += focusPadding.left + focusPadding.right;
+
+  if (aReflowState.mComputedHeight != NS_INTRINSICSIZE) 
+    aDesiredSize.height = aReflowState.mComputedHeight;
+  else
+    aDesiredSize.height += focusPadding.top + focusPadding.bottom;
+#endif
 
   AddComputedBorderPaddingToDesiredSize(aDesiredSize, aReflowState);
   //aDesiredSize.width  += aReflowState.mComputedBorderPadding.left + aReflowState.mComputedBorderPadding.right;
