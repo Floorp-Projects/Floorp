@@ -368,6 +368,9 @@ gtk_moz_embed_realize(GtkWidget *widget)
   g_return_if_fail(NS_SUCCEEDED(rv));
   rv = embedPrivate->Realize();
   g_return_if_fail(NS_SUCCEEDED(rv));
+
+  if (embedPrivate->mURI.Length())
+    embedPrivate->LoadCurrentURI();
 }
 
 static void
@@ -473,7 +476,7 @@ gtk_moz_embed_set_comp_path(char *aPath)
 void
 gtk_moz_embed_set_profile_path(char *aDir, char *aName)
 {
-  // XXX
+  EmbedPrivate::SetProfilePath(aDir, aName);
 }
 
 void

@@ -31,6 +31,9 @@
 #include <nsIAppShell.h>
 #include <nsIDOMEventReceiver.h>
 #include <nsVoidArray.h>
+// for profiles
+#include <nsIPref.h>
+
 
 #include "gtkmozembedprivate.h"
 
@@ -58,6 +61,7 @@ class EmbedPrivate {
   static void PushStartup     (void);
   static void PopStartup      (void);
   static void SetCompPath     (char *aPath);
+  static void SetProfilePath  (char *aDir, char *aName);
 
   // This function will find the specific EmbedPrivate object for a
   // given nsIWebBrowserChrome.
@@ -99,6 +103,11 @@ class EmbedPrivate {
   static PRBool                  sCreatorInit;
   // the list of all open windows
   static nsVoidArray            *sWindowList;
+  // what is our profile path?
+  static char                   *sProfileDir;
+  static char                   *sProfileName;
+  // for profiles
+  static nsIPref                *sPrefs;
 
  private:
 
@@ -108,6 +117,8 @@ class EmbedPrivate {
   void GetListener    (void);
   void AttachListeners(void);
   void DetachListeners(void);
+  
+  static nsresult StartupProfile(void);
 
 };
 
