@@ -83,6 +83,7 @@ void TimerImpl::FireTimeout()
 
 // Always repeating here
 
+// if (mRepeat)
 //  mTimerId = XtAppAddTimeOut(gAppContext, GetDelay(),(XtTimerCallbackProc)nsTimerExpired, this);
 }
 
@@ -94,6 +95,7 @@ TimerImpl::TimerImpl()
   mCallback = NULL;
   mNext = NULL;
   mTimerId = 0;
+  mDelay = 0;
 }
 
 TimerImpl::~TimerImpl()
@@ -131,7 +133,7 @@ TimerImpl::Init(nsITimerCallback *aCallback,
 nsresult
 TimerImpl::Init(PRUint32 aDelay)
 {
-
+    mDelay = aDelay;
     NS_ADDREF(this);
 
     return NS_OK;
