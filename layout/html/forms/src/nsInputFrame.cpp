@@ -161,6 +161,8 @@ nsInputFrame::GetDesiredSize(nsIPresContext* aPresContext,
   // subclasses should always override this method, but if not and no css, make it small
   aDesiredLayoutSize.width  = (styleSize.width  > CSS_NOTSET) ? styleSize.width  : 144;
   aDesiredLayoutSize.height = (styleSize.height > CSS_NOTSET) ? styleSize.height : 144;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
 }

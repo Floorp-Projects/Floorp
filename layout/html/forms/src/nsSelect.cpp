@@ -228,12 +228,13 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredLayoutSize.width = ((numRows < select->ChildCount()) || isCombo) 
     ? calcSize.width + 350 : calcSize.width + 100;
   aDesiredLayoutSize.height = calcSize.height;
+  aDesiredLayoutSize.ascent = aDesiredLayoutSize.height;
+  aDesiredLayoutSize.descent = 0;
 
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = 
     (isCombo && !heightExplicit) ? aDesiredLayoutSize.height + (rowHeight * numChildren) + 100 
                                  : aDesiredLayoutSize.height;
-
 
   NS_RELEASE(select);
 }
