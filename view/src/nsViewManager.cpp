@@ -499,6 +499,9 @@ nsViewManager::~nsViewManager()
                                              getter_AddRefs(eventQueue));
     NS_ASSERTION(nsnull != eventQueue, "Event queue is null"); 
     eventQueue->RevokeEvents(this);
+  } else {
+    // We have a strong ref to mRootViewManager
+    NS_IF_RELEASE(mRootViewManager);
   }
   
   mInvalidateEventQueue = nsnull;  
@@ -646,19 +649,22 @@ NS_IMETHODIMP nsViewManager::SetRootView(nsIView *aView)
   mRootView = view;
 
   if (mRootView) {
+    if (mRootViewManager && mRootViewManager != this) {
+      NS_RELEASE(mRootViewManager);
+    }
     nsView* parent = mRootView->GetParent();
     if (parent) {
       parent->InsertChild(mRootView, nsnull);
       mRootViewManager = parent->GetViewManager()->RootViewManager();
+      NS_ASSERTION(mRootViewManager != this, "Something's wrong");
+      NS_ADDREF(mRootViewManager);
     } else {
       mRootViewManager = this;
     }
 
     mRootView->SetZIndex(PR_FALSE, 0, PR_FALSE);
-  } else {
-    // XXXbz not really needed, probably
-    mRootViewManager = this;
   }
+  // Else don't touch mRootViewManager
 
   return NS_OK;
 }

@@ -489,6 +489,7 @@ private:
   nsISupportsArray  *mCompositeListeners;
   nsCOMPtr<nsIFactory> mRegionFactory;
   nsView            *mRootView;
+  // mRootViewManager is a strong ref unless it equals |this|
   nsViewManager     *mRootViewManager;
   nsCOMPtr<nsIEventQueueService>  mEventQueueService;
   nsCOMPtr<nsIEventQueue>         mSynthMouseMoveEventQueue;
