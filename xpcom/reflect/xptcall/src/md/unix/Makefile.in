@@ -108,6 +108,9 @@ ifeq ($(OS_ARCH),HP-UX)
 ifneq ($(CC),gcc)
 CPPSRCS		:= xptcinvoke_pa32.cpp xptcstubs_pa32.cpp
 ASFILES		:= xptcstubs_asm_pa32.s xptcinvoke_asm_pa32.s
+
+# #18875  Building the CPP's (CXX) optimized causes a crash
+OS_CXXFLAGS 	:=  $(filter-out -O, $(OS_CXXFLAGS))
 endif
 endif
 
