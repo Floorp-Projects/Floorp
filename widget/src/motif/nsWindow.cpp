@@ -1228,9 +1228,9 @@ NS_METHOD nsWindow::AddEventListener(nsIEventListener * aListener)
   return NS_OK;
 }
 
-// FIXME: Needs to be implemented.  --ZuperDee
 NS_METHOD nsWindow::AddMenuListener(nsIMenuListener * aListener)
 {
+//XXX:Implement this.
   return NS_OK;
 }
 
@@ -1678,8 +1678,14 @@ NS_METHOD nsWindow::Paint(nsIRenderingContext& aRenderingContext,
   return NS_OK;
 }
 
-// FIXME: Needs to be implemented. --ZuperDee
 NS_METHOD nsWindow::EnableFileDrop(PRBool aEnable)
 {
+//XXX:Implement this.
+  return NS_OK;
+}
+
+NS_METHOD nsWindow::CaptureMouse(PRBool aCapture)
+{
+//XXX:Implement this.
   return NS_OK;
 }
