@@ -221,7 +221,7 @@ XPCOM_LIBS = \
 ifeq ($(OS_ARCH), SunOS)
 NSPR_LINK_LIBS = -L$(DIST)/lib -Bdynamic -lnspr4 -lplc4 -lplds4
 XPCOM_LINK_LIBS = -lxpcom
-XPCOM_LIBS += $(DIST)/lib/libzlib.$(DLL_SUFFIX)
+XPCOM_LIBS += $(DIST)/lib/libz.$(DLL_SUFFIX)
 else
 NSPR_LINK_LIBS = $(NSPR_LIBS)
 XPCOM_LINK_LIBS	= $(XPCOM_LIBS)
