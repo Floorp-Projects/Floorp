@@ -50,6 +50,11 @@ installer: installer.cfg firefox.manifest
 ifneq ($(ABS_topsrcdir),$(ABS_depth))
 	ln -sf $(srcdir)/*.jst $(srcdir)/*.it $(srcdir)/packages* .
 endif
+ifndef MOZ_USE_OFFICIAL_BRANDING
+	$(NSINSTALL) -D $(DIST)/install
+	cp $(srcdir)/header.png $(DIST)/install/header.png
+	cp $(srcdir)/watermark.png $(DIST)/install/watermark.png
+endif
 	$(PERL) $(topsrcdir)/toolkit/mozapps/installer/build_static.pl -config $(CONFIG_DIR) -objdir $(ABS_depth) -srcdir $(ABS_topsrcdir)
 
 ifeq ($(OS_ARCH)_$(TARGET_CPU)_$(MOZ_WIDGET_TOOLKIT)_$(MOZ_ENABLE_XFT), Linux_i686_gtk2_1)

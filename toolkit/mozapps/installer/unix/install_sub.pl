@@ -11,8 +11,8 @@ $exe_suffix = '';
 		 "mozilla-installer",
                  "mozilla-installer-bin",
 		 "installer.ini",
-		 "watermark.xpm",
-		 "header.xpm"
+		 "watermark.png",
+		 "header.png"
 		 );
 @extra_ini_files = ();
 
