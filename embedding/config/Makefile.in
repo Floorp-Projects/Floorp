@@ -28,11 +28,16 @@ include $(topsrcdir)/config/rules.mk
 
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
   BASEBROWSER = basebrowser-mac-macho
+  _PLATFORM = unix
 else
 ifeq (windows,$(MOZ_WIDGET_TOOLKIT))
   BASEBROWSER = basebrowser-win
+  _PLATFORM = dos
+  WINAPP=mfcembed
+  #WINAPP=winembed
 else
   BASEBROWSER = basebrowser-unix
+  _PLATFORM = unix
 endif
 endif
 
@@ -56,7 +61,21 @@ else
 endif
 
 libs:: embed_chrome
-	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEBROWSER) -o unix -v
+	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(BASEBROWSER) -o $(_PLATFORM) -v
 	$(NSINSTALL) -t $(srcdir)/installed-chrome.txt $(DIST)/Embed/chrome
 	$(NSINSTALL) -t $(srcdir)/readme.html $(DIST)/Embed
+ifeq ($(OS_ARCH),WINNT)
+ifeq ($(WINAPP),mfcembed)
+	$(NSINSTALL) -t $(DIST)/bin/mfcembed.exe $(DIST)/Embed
+	$(NSINSTALL) -t $(DIST)/bin/mfcEmbedComponents.dll $(DIST)/Embed
+else
+ifeq ($(WINAPP),winembed)
+	$(NSINSTALL) -t $(DIST)/bin/winembed.exe $(DIST)/Embed
+endif
+endif
+ifdef MOZ_DEBUG
+	$(NSINSTALL) -t $(DIST)/bin/windbgdlg.exe $(DIST)/Embed
+endif
+endif # WINNT
+
 
