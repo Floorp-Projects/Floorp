@@ -44,8 +44,9 @@
 #include "xptc_gcc_x86_unix.h"
 
 extern "C" {
-static nsresult ATTRIBUTE_USED ATTRIBUTE_STDCALL
-PrepareAndDispatch(nsXPTCStubBase* self, uint32 methodIndex, PRUint32* args)
+static nsresult ATTRIBUTE_USED
+__attribute__ ((regparm (3)))
+PrepareAndDispatch(uint32 methodIndex, nsXPTCStubBase* self, PRUint32* args)
 {
 #define PARAM_BUFFER_COUNT     16
 
@@ -113,8 +114,8 @@ PRUint32
 xptc_PrepareAndDispatch_keeper (void)
 {
     PRUint32 dummy1;
-    nsresult ATTRIBUTE_USED ATTRIBUTE_STDCALL (*dummy2)
-        (nsXPTCStubBase *, uint32, PRUint32*) = PrepareAndDispatch;
+    nsresult ATTRIBUTE_USED __attribute__ ((regparm (3))) (*dummy2)
+        (uint32, nsXPTCStubBase *, PRUint32*) = PrepareAndDispatch;
 // dummy2 references PrepareAndDispatch, now "use" it
     __asm__ __volatile__ (
         ""
@@ -172,17 +173,8 @@ asm(".section	\".text\"\n\t"
     ".type	SharedStub,@function\n\t"
     "SharedStub:\n\t"
     "leal	0x08(%esp), %ecx\n\t"
-    "pushl	%ecx\n\t"
-    "pushl	%eax\n\t"
-    "movl	0x0c(%esp), %ecx\n\t"
-    "pushl	%ecx\n\t"
-    // We don't have to load %ebx and call with @plt here since the
-    // function is local.
-    "call	PrepareAndDispatch\n\t"
-#ifndef MOZ_USE_STDCALL
-    "addl	$12, %esp\n\t"
-#endif
-    "ret\n\t"
+    "movl	0x04(%esp), %edx\n\t"
+    "jmp	PrepareAndDispatch\n\t"
     ".size	SharedStub,.-SharedStub");
 
 #define SENTINEL_ENTRY(n) \
