@@ -35,7 +35,7 @@
 
 #include "nsWidgetDefs.h"
 #include "nsHashtable.h"
-#include "resid.h"
+#include "resource.h"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -53,6 +53,17 @@
 #define KBD_CTRL KBD_CONTROL
 #endif
 
+HMODULE gModuleHandle;
+
+unsigned long _System _DLL_InitTerm(unsigned long mod_handle, unsigned long flag)
+{
+   if (!flag)
+      gModuleHandle = mod_handle;
+   else
+      gModuleHandle = 0;
+   return 1;
+}
+
 NS_IMPL_ISUPPORTS0(nsWidgetModuleData)
 
 nsWidgetModuleData::nsWidgetModuleData()
@@ -65,19 +76,9 @@ void nsWidgetModuleData::Init( nsIAppShell *aPrimaevalAppShell)
 {
    if( 0 != hModResources) return;
 
-   char   buffer[CCHMAXPATH];
-   APIRET rc;
+   char buffer[CCHMAXPATH];
 
-   rc = DosLoadModule( buffer, CCHMAXPATH, "WDGTRES", &hModResources);
-
-   if( rc)
-   {
-#ifdef DEBUG
-      printf( "Widget failed to load resource DLL. rc = %d, cause = %s\n",
-              (int)rc, buffer);
-#endif
-      hModResources = 0;
-   }
+   hModResources = gModuleHandle;
 
    szScreen.cx = WinQuerySysValue( HWND_DESKTOP, SV_CXSCREEN);
    szScreen.cy = WinQuerySysValue( HWND_DESKTOP, SV_CYSCREEN);
@@ -130,8 +131,6 @@ nsWidgetModuleData::~nsWidgetModuleData()
       WinDestroyPointer( hptrSelect);
    if( hptrFrameIcon)
       WinDestroyPointer( hptrFrameIcon);
-   if( hModResources)
-      DosFreeModule( hModResources);
 #if 0
    delete mWindows;
 #endif

@@ -23,11 +23,13 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE	= widget
+MODULE		= widget
 LIBRARY_NAME	= wdgtos2
-EXPORT_LIBRARY = 1
-IS_COMPONENT    = 1
+EXPORT_LIBRARY	= 1
+IS_COMPONENT	= 1
+RESFILE		= widget.res
 MODULE_NAME	= nsWidgetOS2Module
+
 REQUIRES	= gfx \
 		  xpcom \
 		  string \
@@ -39,10 +41,6 @@ REQUIRES	= gfx \
 		  plugin \
 		  webshell \
 		  $(NULL)
-
-EXTRA_DSO_LIBS	= gkgfx
-
-DIRS		= res
 
 ifdef ENABLE_TESTS
 #DIRS		+= tests
@@ -77,6 +75,8 @@ SHARED_LIBRARY_LIBS = \
 	$(DIST)/lib/$(LIB_PREFIX)xpwidgets_s.$(LIB_SUFFIX) \
 	$(NULL)
 
+EXTRA_DSO_LIBS	= gkgfx
+
 EXTRA_DSO_LDOPTS = \
 		$(EXTRA_DSO_LIBS) \
 		$(MOZ_UNICHARUTIL_LIBS) \
@@ -91,8 +91,13 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-DEFINES		+= -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir)
+DEFINES		+= -D_IMPL_NS_WIDGET
 
-CXXFLAGS	+= $(TK_CFLAGS)
+LOCAL_INCLUDES	= -I. -I$(srcdir)/../xpwidgets -I$(srcdir)
+
+export::
+	-mkdir ./res
+	-cp $(srcdir)/res/*.ico ./res
+	-cp $(srcdir)/res/*.ptr ./res
 
 ADD_TO_DEF_FILE = cat < $(srcdir)/extradefs.os2 >>$(DEF_FILE)
