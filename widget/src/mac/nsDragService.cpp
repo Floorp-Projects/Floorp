@@ -340,20 +340,6 @@ nsDragService::BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNo
       Point offsetFromLocalToGlobal = { 0, 0 };
       ::LocalToGlobal ( &offsetFromLocalToGlobal );
       ::OffsetRgn ( ioDragRgn, offsetFromLocalToGlobal.h, offsetFromLocalToGlobal.v );
-
-#ifdef MOZ_WIDGET_COCOA
-      // for cocoa, we have to transform this region into cocoa screen 
-      // coordinates. Only the main screen is important in this caculation
-      // as that's where the 2 coord systems differ.
-      Rect regionBounds;
-      GetRegionBounds(ioDragRgn, &regionBounds);
-      
-      GDHandle  screenDevice = ::GetMainDevice();
-      Rect      screenRect   = (**screenDevice).gdRect;
-      // offset the rect
-      short screenHeight = screenRect.bottom - screenRect.top;
-      ::OffsetRgn(ioDragRgn, 0, screenRect.top + (screenHeight - regionBounds.top) - regionBounds.top);
-#endif
     }
   }
   else {
@@ -368,17 +354,6 @@ nsDragService::BuildDragRegion ( nsIScriptableRegion* inRegion, nsIDOMNode* inNo
       useRectFromFrame = ComputeGlobalRectFromFrame ( inNode, frameRect );
     else
       NS_WARNING ( "Can't find anything to get a drag rect from. I'm dyin' out here!" );
-
-#ifdef MOZ_WIDGET_COCOA
-    // for cocoa, we have to transform this region into cocoa screen 
-    // coordinates. Only the main screen is important in this caculation
-    // as that's where the 2 coord systems differ.
-    GDHandle  screenDevice = ::GetMainDevice();
-    Rect      screenRect   = (**screenDevice).gdRect;
-    // offset the rect
-    short screenHeight = screenRect.bottom - screenRect.top;
-    ::OffsetRect(&frameRect, 0, screenRect.top + (screenHeight - frameRect.top) - frameRect.top);
-#endif
 
     if ( ioDragRgn ) {
       RgnHandle frameRgn = ::NewRgn();
