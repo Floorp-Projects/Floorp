@@ -521,152 +521,72 @@ if (exists $::FORM{'rebuildkeywordcache'}) {
 }
 
 ###########################################################################
-# Perform duplicates table checks
+# General bug checks
 ###########################################################################
 
-Status("Checking duplicates table");
-
-SendSQL("SELECT bugs.bug_id " .
-        "FROM bugs, duplicates " .
-        "WHERE bugs.resolution != 'DUPLICATE' " .
-        "  AND bugs.bug_id = duplicates.dupe " .
-        "ORDER BY bugs.bug_id");
-
-@badbugs = ();
-
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push (@badbugs, $id);
+sub BugCheck ($$) {
+    my ($middlesql, $errortext) = @_;
+    
+    SendSQL("SELECT DISTINCT bugs.bug_id " .
+            "FROM $middlesql " .
+            "ORDER BY bugs.bug_id");
+    
+    my @badbugs = ();
+    
+    while (@row = FetchSQLData()) {
+        my ($id) = (@row);
+        push (@badbugs, $id);
+    }
+    
+    @badbugs = map(BugLink($_), @badbugs);
+    
+    if (@badbugs) {
+        Alert("$errortext: " . join(', ', @badbugs));
+    }
 }
 
-if (@badbugs) {
-    Alert("Bug(s) found on duplicates table that are not marked duplicate: " .
-          join(', ', @badbugs));
-}
+Status("Checking resolution/duplicates");
 
-SendSQL("SELECT bugs.bug_id " .
-        "FROM bugs LEFT JOIN duplicates ON bugs.bug_id = duplicates.dupe " .
-        "WHERE bugs.resolution = 'DUPLICATE' AND duplicates.dupe IS NULL " .
-        "ORDER BY bugs.bug_id");
+BugCheck("bugs, duplicates WHERE " .
+         "bugs.resolution != 'DUPLICATE' AND " .
+         "bugs.bug_id = duplicates.dupe",
+         "Bug(s) found on duplicates table that are not marked duplicate");
 
-@badbugs = ();
-
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push (@badbugs, $id);
-}
-
-if (@badbugs) {
-    Alert("Bug(s) found marked resolved duplicate and not on duplicates " .
-          "table: " . join(', ', @badbugs));
-}
-
-###########################################################################
-# Perform status/resolution checks
-###########################################################################
+BugCheck("bugs LEFT JOIN duplicates ON bugs.bug_id = duplicates.dupe WHERE " .
+         "bugs.resolution = 'DUPLICATE' AND " .
+         "duplicates.dupe IS NULL",
+         "Bug(s) found marked resolved duplicate and not on duplicates table");
 
 Status("Checking statuses/resolutions");
 
 my @open_states = map(SqlQuote($_), OpenStates());
 my $open_states = join(', ', @open_states);
 
-@badbugs = ();
-
-SendSQL("SELECT   bug_id FROM bugs " .
-        "WHERE    bug_status IN ($open_states) " .
-        "AND      resolution != '' " .
-        "ORDER BY bug_id");
-
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push(@badbugs, $id);
-}
-
-if (@badbugs > 0) {
-    Alert("Bugs with open status and a resolution: " .
-          join (", ", @badbugs));
-}
-
-@badbugs = ();
-
-SendSQL("SELECT   bug_id FROM bugs " .
-        "WHERE    bug_status NOT IN ($open_states) " .
-        "AND      resolution = '' " .
-        "ORDER BY bug_id");
-
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push(@badbugs, $id);
-}
-
-if (@badbugs > 0) {
-    Alert("Bugs with non-open status and no resolution: " .
-          join (", ", @badbugs));
-}
-
-###########################################################################
-# Perform status/everconfirmed checks
-###########################################################################
+BugCheck("bugs WHERE bug_status IN ($open_states) AND resolution != ''",
+         "Bugs with open status and a resolution");
+BugCheck("bugs WHERE bug_status NOT IN ($open_states) AND resolution = ''",
+         "Bugs with non-open status and no resolution");
 
 Status("Checking statuses/everconfirmed");
 
-@badbugs = ();
+my $sqlunconfirmed = SqlQuote($::unconfirmedstate);
 
-SendSQL("SELECT   bug_id FROM bugs " .
-        "WHERE    bug_status = " . SqlQuote($::unconfirmedstate) . ' ' .
-        "AND      everconfirmed = 1 " .
-        "ORDER BY bug_id");
-
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push(@badbugs, $id);
-}
-
-if (@badbugs > 0) {
-    Alert("Bugs that are UNCONFIRMED but have everconfirmed set: " .
-          join (", ", @badbugs));
-}
-
-@badbugs = ();
-
-SendSQL("SELECT   bug_id FROM bugs " .
-        "WHERE    bug_status IN ('NEW', 'ASSIGNED', 'REOPENED') " .
-        "AND      everconfirmed = 0 " .
-        "ORDER BY bug_id");
-
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push(@badbugs, $id);
-}
-
-if (@badbugs > 0) {
-    Alert("Bugs with confirmed status but don't have everconfirmed set: " .
-          join (", ", @badbugs));
-}
-
-###########################################################################
-# Perform vote/everconfirmed checks
-###########################################################################
+BugCheck("bugs WHERE bug_status = $sqlunconfirmed AND everconfirmed = 1",
+         "Bugs that are UNCONFIRMED but have everconfirmed set");
+# The below list of resolutions is hardcoded because we don't know if future
+# resolutions will be confirmed, unconfirmed or maybeconfirmed.  I suspect
+# they will be maybeconfirmed, eg ASLEEP and REMIND.  This hardcoding should
+# disappear when we have customised statuses.
+BugCheck("bugs WHERE bug_status IN ('NEW', 'ASSIGNED', 'REOPENED') AND everconfirmed = 0",
+         "Bugs with confirmed status but don't have everconfirmed set"); 
 
 Status("Checking votes/everconfirmed");
 
-@badbugs = ();
-
-SendSQL("SELECT   bug_id FROM bugs, products " .
-        "WHERE    bugs.product_id = products.id " .
-        "AND      bug_status = " . SqlQuote($::unconfirmedstate) . ' ' .
-        "AND      votestoconfirm <= votes " .
-        "ORDER BY bug_id");
-
-while (@row = FetchSQLData()) {
-    my ($id) = (@row);
-    push(@badbugs, $id);
-}
-
-if (@badbugs > 0) {
-    Alert("Bugs that have enough votes to be confirmed but haven't been: " .
-          join (", ", @badbugs));
-}
+BugCheck("bugs, products WHERE " .
+         "bugs.product = products.product AND " .
+         "everconfirmed = 0 AND " .
+         "votestoconfirm <= votes",
+         "Bugs that have enough votes to be confirmed but haven't been");
 
 ###########################################################################
 # Unsent mail
