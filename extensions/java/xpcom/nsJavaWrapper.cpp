@@ -1121,15 +1121,14 @@ CreateJavaProxy(JNIEnv* env, nsISupports* aXPCOMObject, const nsIID& aIID,
     return NS_ERROR_OUT_OF_MEMORY;
 
   // Get interface name
-  char* iface_name;
-  rv = info->GetName(&iface_name);
+  const char* iface_name;
+  rv = info->GetNameShared(&iface_name);
 
   if (NS_SUCCEEDED(rv)) {
     // Create proxy class name
     nsCAutoString class_name("org/mozilla/xpcom/stubs/");
     class_name.AppendASCII(iface_name);
     class_name.AppendLiteral("_Stub");
-    nsMemory::Free(iface_name);
 
     // Create java proxy object
     jclass clazz;
