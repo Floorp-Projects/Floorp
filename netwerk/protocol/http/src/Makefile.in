@@ -49,7 +49,7 @@ CPPSRCS		= \
 		nsHTTPSHandler.cpp \
 		$(NULL)
 
-LOCAL_INCLUDES=-I../../../streamconv/converters
+LOCAL_INCLUDES=-I$(srcdir)/../../../streamconv/converters
 
 EXTRA_DSO_LDOPTS += $(MOZ_COMPONENT_LIBS)
 
