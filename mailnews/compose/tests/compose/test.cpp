@@ -61,6 +61,7 @@
 #include "nsMsgTransition.h"
 #include "nsCRT.h"
 #include "prmem.h"
+#include "nsIURL.h"
 
 #include "nsIMimeURLUtils.h"
 
@@ -167,32 +168,34 @@ nsMsgNewURL(nsIURI** aInstancePtrResult, const nsString& aSpec)
   return rv;
 }
 
-
 nsMsgAttachedFile *
 GetLocalAttachments(void)
 {  
-  int attachCount = 2;
+  int         attachCount = 3;
   nsIURI      *url = nsnull;
+  nsIURI      *url2 = nsnull;
+
   nsMsgAttachedFile *attachments = (nsMsgAttachedFile *) PR_Malloc(sizeof(nsMsgAttachedFile) * attachCount);
   
   if (!attachments)
     return NULL;
   
-  nsMsgNewURL(&url, nsString("file://C:/boxster.jpg"));
-  
   nsCRT::memset(attachments, 0, sizeof(nsMsgAttachedFile) * attachCount);
+
+  nsMsgNewURL(&url, nsString("file://C:/boxster.jpg"));
   attachments[0].orig_url = url;
   attachments[0].file_spec = new nsFileSpec("C:\\boxster.jpg");
   attachments[0].type = PL_strdup("image/jpeg");
   attachments[0].encoding = PL_strdup(ENCODING_BINARY);
   attachments[0].description = PL_strdup("Boxster Image");
-  /*
-  attachments[1].orig_url = url;
+  
+  nsMsgNewURL(&url2, nsString("file://C:/boxster.jpg"));
+  attachments[1].orig_url = url2;
   attachments[1].file_spec = new nsFileSpec("C:\\boxster.jpg");
   attachments[1].type = PL_strdup("image/jpeg");
   attachments[1].encoding = PL_strdup(ENCODING_BINARY);
   attachments[1].description = PL_strdup("Boxster Image");
-  */
+  
   return attachments;
 }
 
@@ -233,7 +236,7 @@ GetRemoteAttachments()
   // This can be any explanatory text; it's not a file name.						 
   
   url = nsnull;
-  nsMsgNewURL(&url, nsString("file:///C|/test.jpg"));
+  nsMsgNewURL(&url, nsString("http://people.netscape.com/rhp/sherry.html"));
   NS_ADDREF(url);
   attachments[1].url = url; // The URL to attach. This should be 0 to signify "end of list".
   
@@ -247,7 +250,7 @@ char *email = {"\
                   <b><font face=\"Arial,Helvetica\"><font color=\"#FF0000\">Here is some HTML\n\
                   in RED!</font></font></b>\n\
                   <br><b><font face=\"Arial,Helvetica\"><font color=\"#FF0000\">Now a picture:</font></font></b>\n\
-                  <br><img SRC=\"file://C:/test.jpg\" height=8 width=10>\n\
+                  <br><img SRC=\"http://people.netscape.com/rhp/WSJPicture.GIF\">\n\
                   <br>All done!\n\
                   <br>&nbsp;\n\
                   </body>\n\
@@ -375,17 +378,29 @@ int main(int argc, char *argv[])
   SendOperationListener *sendListener = nsnull;
   
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, nsCOMTypeInfo<nsIMsgSend>::GetIID(), (void **) &pMsgSend); 
-  if (rv == NS_OK && pMsgSend) 
+  if (NS_SUCCEEDED(rv) && pMsgSend) 
   { 
     printf("We succesfully obtained a nsIMsgSend interface....\n");    
     rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), 
       (void **) &pMsgCompFields); 
-    if (rv == NS_OK && pMsgCompFields)
+    if (NS_SUCCEEDED(rv) && pMsgCompFields)
     { 
-      pMsgCompFields->SetFrom(nsAutoString(", rhp@netscape.com, ").GetUnicode());
+      char  *aEmail = nsnull;
+      char  *aFullName = nsnull;
+      char  addr[256];
+      char  subject[256];
+
+      identity->GetEmail(&aEmail);
+      identity->GetFullName(&aFullName);
+      PR_snprintf(addr, sizeof(addr), "%s <%s>", aFullName, aEmail);
+      PR_FREEIF(aEmail);
+      PR_FREEIF(aFullName);      
+
+      pMsgCompFields->SetFrom(nsAutoString(addr).GetUnicode());
       pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
-      //pMsgCompFields->SetNewsgroups(nsAutoString("news://news.mozilla.org./netscape.test").GetUnicode());
-      pMsgCompFields->SetSubject(nsAutoString("[spam] test").GetUnicode());
+      PR_snprintf(subject, sizeof(subject), "Spam from: %s", addr);
+
+      pMsgCompFields->SetSubject(nsAutoString(subject).GetUnicode());
       // pMsgCompFields->SetTheForcePlainText(PR_TRUE, &rv);
       pMsgCompFields->SetBody(nsAutoString(email).GetUnicode());
       pMsgCompFields->SetCharacterSet(nsAutoString("us-ascii").GetUnicode());

@@ -168,6 +168,7 @@ nsMsgCreateTempFileSpec(char *tFileName)
 // This is the listener class for the send operation. We have to create this class 
 // to listen for message send completion and eventually notify the caller
 ////////////////////////////////////////////////////////////////////////////////////
+PRBool keepOnRunning = PR_TRUE;
 class nsMsgSendLater;
 class SendOperationListener : public nsIMsgSendListener
 {
@@ -252,6 +253,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
     printf("Save Mail File Operation FAILED!\n");
   }
 
+  keepOnRunning = PR_FALSE;
   printf("Exit code = [%d]\n", aStatus);
   return NS_OK;
 }
@@ -273,12 +275,12 @@ CreateListenerArray(nsIMsgSendListener *listener)
 char *email = {"\
 Message-ID: <375FF6D0.3070505@netscape.com>\
 \nDate: Thu, 10 Jun 1999 13:33:04 -0500\
-\nFrom: rhp@netscape.com\
+\nFrom: %s\
 \nUser-Agent: Mozilla 5.0 [en] (Win95; I)\
 \nX-Accept-Language: en\
 \nMIME-Version: 1.0\
 \nTo: rhp@netscape.com\
-\nSubject: [spam] test\
+\nSubject: %s\
 \nContent-Type: text/html; charset=\
 \nContent-Transfer-Encoding: 7bit\
 \n\
@@ -298,6 +300,22 @@ nsresult
 WriteTempMailFile(nsFileSpec *mailFile)
 {
   nsOutputFileStream      *outFile;         // the actual output file stream
+  nsIMsgIdentity *identity = GetHackIdentity();
+  const char *to = "rhp@netscape.com";
+  char  *aEmail = nsnull;
+  char  *aFullName = nsnull;
+  char  addr[256];
+  char  subject[256];
+  char  emailMessage[2048];
+  
+  identity->GetEmail(&aEmail);
+  identity->GetFullName(&aFullName);
+  PR_snprintf(addr, sizeof(addr), "%s <%s>", aFullName, aEmail);
+  PR_FREEIF(aEmail);
+  PR_FREEIF(aFullName);      
+  PR_snprintf(subject, sizeof(subject), "Spam from: %s", addr);
+  
+  PR_snprintf(emailMessage, sizeof(emailMessage), email, to, subject);
 
   outFile = new nsOutputFileStream(*mailFile);
 	if (! outFile->is_open()) 
@@ -305,7 +323,7 @@ WriteTempMailFile(nsFileSpec *mailFile)
 	    return NS_ERROR_FAILURE;
   }
 
-  outFile->write(email, PL_strlen(email));
+  outFile->write(emailMessage, PL_strlen(emailMessage));
   outFile->close();
   return NS_OK;
 }
@@ -369,17 +387,8 @@ int main(int argc, char *argv[])
     return rv;
   }  
 
-  rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
-                                           nsCOMTypeInfo<nsIMsgCompFields>::GetIID(), (void **) &pMsgCompFields);   
-  if (rv == NS_OK && pMsgCompFields) { 
-    printf("We succesfully obtained a nsIMsgCompFields interface....\n");
-    printf("Releasing the interface now...\n");
-    pMsgCompFields->Release(); 
-  } 
-  
   printf("Creating temp mail file...\n");
   mailFile = nsMsgCreateTempFileSpec("mailTest.eml");
-
   if (NS_FAILED(WriteTempMailFile(mailFile)))
   {
     printf("Failed to create temp mail file!\n");
@@ -391,18 +400,14 @@ int main(int argc, char *argv[])
     return NS_ERROR_FAILURE;
 
   rv = nsComponentManager::CreateInstance(kMsgSendCID, NULL, kIMsgSendIID, (void **) &pMsgSend); 
-  if (rv == NS_OK && pMsgSend) 
+  if (NS_SUCCEEDED(rv) && pMsgSend) 
   { 
     printf("We succesfully obtained a nsIMsgSend interface....\n");    
     rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, kIMsgCompFieldsIID, 
                                              (void **) &pMsgCompFields); 
-    if (rv == NS_OK && pMsgCompFields)
+    if (NS_SUCCEEDED(rv) && pMsgCompFields)
     { 
-      const char *to = "rhp@netscape.com";
-      
-      pMsgCompFields->SetTo(nsString(to).GetUnicode());
-
-            // Create the listener for the send operation...
+      // Create the listener for the send operation...
       SendOperationListener *mSendListener = new SendOperationListener();
       if (!mSendListener)
       {
@@ -417,20 +422,21 @@ int main(int argc, char *argv[])
         return NS_ERROR_FAILURE;
       }
 
+      pMsgCompFields->SetTo(nsAutoString("rhp@netscape.com").GetUnicode());
       pMsgSend->SendMessageFile(GetHackIdentity(),  // identity...
                           pMsgCompFields, // nsIMsgCompFields                  *fields,
                           mailIFile,             // nsFileSpec                        *sendFileSpec,
                           PR_TRUE,              // PRBool                            deleteSendFileOnCompletion,
 						              PR_FALSE,             // PRBool                            digest_p,
 						              nsMsgDeliverNow,      // nsMsgDeliverMode                  mode,
-			  nsnull, // nsIMessage *msgToReplace
+                  			  nsnull, // nsIMessage *msgToReplace
                           tArray);              // nsIMsgSendListener array
     }    
   }
 
 #ifdef XP_PC
   printf("Sitting in an event processing loop ...Hit Cntl-C to exit...");
-  while (1)
+  while (keepOnRunning)
   {
     MSG msg;
     if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
