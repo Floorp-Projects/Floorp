@@ -57,7 +57,7 @@ Rights Reserved.
 			<spring style="height:.5em"/>
 				
 			<box align="vertical" style="border: 1px inset white">
-				<tree	id="fieldList" style="width:32em; height:280px;" 
+				<tree	id="fieldList" style="width:32em; height:300px;" 
 						ondragover="return DragOverTree(event);"
 						ondraggesture="return BeginDrag( event);"
 						ondragdrop="return DropOnTree( event);">

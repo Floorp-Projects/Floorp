@@ -11,7 +11,7 @@ function OnLoadFieldMapImport()
 	// top.bundle = srGetStrBundle("chrome://messenger/locale/importMsgs.properties");
 	top.importService = Components.classes["component://mozilla/import/import-service"].createInstance();
 	top.importService = top.importService.QueryInterface(Components.interfaces.nsIImportService);
-	top.transferType = "text/plain";
+	top.transferType = "moz/fieldmap";
 	top.recordNum = 0;
 	
 	// We need a field map object...
@@ -151,12 +151,13 @@ function BeginDrag( event)
 	if ( trans ) trans = trans.QueryInterface(Components.interfaces.nsITransferable);
 	if ( !trans )		return(false);
 
-	var genData = Components.classes["component://netscape/supports-string"].createInstance();
-	if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsString);
+	var genData = Components.classes["component://netscape/supports-wstring"].createInstance();
+	if ( genData ) genData = genData.QueryInterface(Components.interfaces.nsISupportsWString);
 	if (!genData)		return(false);
 
     trans.addDataFlavor( top.transferType);
-        
+    trans.addDataFlavor( "text/unicode");
+
 	// the index is on the <treeitem> which is two levels above the <treecell> which is
 	// the target of the event.
 	if (event.target.getAttribute( 'noDrag') == "true")
@@ -166,7 +167,8 @@ function BeginDrag( event)
 	var indexStr = ("" + index);
 	genData.data = indexStr;
 
-	trans.setTransferData ( top.transferType, genData, indexStr.length);
+	trans.setTransferData ( top.transferType, genData, indexStr.length * 2);
+	trans.setTransferData ( "text/unicode", genData, indexStr.length * 2);
 
 	var transArray = Components.classes["component://netscape/supports-array"].createInstance();
 	if ( transArray ) transArray = transArray.QueryInterface(Components.interfaces.nsISupportsArray);
@@ -279,7 +281,7 @@ function DropOnTree( event)
 		try {
 			trans.getAnyTransferData( bestFlavor, dataObj, len);
 			if ( dataObj )	{
-				dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsString);
+				dataObj = dataObj.value.QueryInterface(Components.interfaces.nsISupportsWString);
 			}
 			if ( !dataObj )	{
 				continue;

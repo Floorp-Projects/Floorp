@@ -281,7 +281,7 @@ function AddModuleToList(moduleName, index)
 function ContinueImport( info) {
 	var isMail = false;
 
-	dump( "*** ContinueImport\n");
+	/* dump( "*** ContinueImport\n"); */
 
 	if (info.importType == 'mail')
 		isMail = true;
@@ -306,7 +306,17 @@ function ContinueImport( info) {
 		else if ((pcnt = info.importInterface.GetProgress()) < 100) {
 			clear = false;
 			if (info.progressWindow != null) {
+				if (pcnt < 5)
+					pcnt = 5;
 				info.progressWindow.SetProgress( pcnt);
+				if (isMail == true) {
+					var mailName = info.importInterface.GetData( "currentMailbox");
+					if (mailName != null) {
+						mailName = mailName.QueryInterface( Components.interfaces.nsISupportsWString);
+						if (mailName != null)
+							info.progressWindow.SetDivText( 'progressStatus', mailName.data);
+					}
+				}
 			}
 		}
 		else {
