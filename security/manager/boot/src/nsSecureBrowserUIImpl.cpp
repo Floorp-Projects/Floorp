@@ -326,7 +326,6 @@ void nsSecureBrowserUIImpl::ResetStateTracking()
   mNewToplevelSecurityState = STATE_IS_INSECURE;
   mInfoTooltip.Truncate();
   mDocumentRequestsInProgress = 0;
-  mSubRequestsInProgress = 0;
   mSubRequestsHighSecurity = 0;
   mSubRequestsLowSecurity = 0;
   mSubRequestsBrokenSecurity = 0;
@@ -677,21 +676,6 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
     return NS_OK;
   }
 
-  if (aProgressStateFlags & STATE_START
-      &&
-      aProgressStateFlags & STATE_IS_REQUEST)
-  {
-    if (!isSubDocumentRelevant)
-      return NS_OK;
-
-    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-           ("SecureUI:%p: OnStateChange: ++mSubRequestsInProgress\n", this
-            ));
-    
-    ++mSubRequestsInProgress;
-    return NS_OK;
-  }
-
   if (aProgressStateFlags & STATE_STOP
       &&
       aProgressStateFlags & STATE_IS_REQUEST
@@ -713,10 +697,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
 
     if (!mToplevelEventSink && channel)
     {
-      nsCOMPtr<nsIInterfaceRequestor> requestor;
-      channel->GetNotificationCallbacks(getter_AddRefs(requestor));
-      if (requestor)
-        mToplevelEventSink = do_GetInterface(requestor);
+      ObtainEventSink(channel);
     }
 
     if (!--mDocumentRequestsInProgress)
@@ -751,10 +732,7 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
         mNewToplevelSecurityState = nsIWebProgressListener::STATE_IS_INSECURE;
       }
 
-      if (!mSubRequestsInProgress)
-      {
-        return FinishedLoadingStateChange(aRequest);
-      }
+      return UpdateSecurityState(aRequest);
     }
     
     return NS_OK;
@@ -803,28 +781,25 @@ nsSecureBrowserUIImpl::OnStateChange(nsIWebProgress* aWebProgress,
       ++mSubRequestsNoSecurity;
     }
     
-    PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-           ("SecureUI:%p: OnStateChange: --mSubRequestsInProgress\n", this
-            ));
-
-    if (!--mSubRequestsInProgress)
-    {
-      // we are arriving at zero, all STOPs for currently known sub requests
-      // have been received
-      
-      if (!mDocumentRequestsInProgress)
-      {
-        return FinishedLoadingStateChange(aRequest);
-      }
-    }
-    
-    return NS_OK;
+    return UpdateSecurityState(aRequest);
   }
 
   return NS_OK;
 }
 
-nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
+void nsSecureBrowserUIImpl::ObtainEventSink(nsIChannel *channel)
+{
+  if (!mToplevelEventSink)
+  {
+    nsCOMPtr<nsIInterfaceRequestor> requestor;
+    channel->GetNotificationCallbacks(getter_AddRefs(requestor));
+    if (requestor)
+      mToplevelEventSink = do_GetInterface(requestor);
+  }
+
+}
+
+nsresult nsSecureBrowserUIImpl::UpdateSecurityState(nsIRequest* aRequest)
 {
   lockIconState newSecurityState;
 
@@ -878,7 +853,7 @@ nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
   }
 
   PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-         ("SecureUI:%p: FinishedLoadingStateChange:  old-new  %d - %d\n", this,
+         ("SecureUI:%p: UpdateSecurityState:  old-new  %d - %d\n", this,
          mPreviousSecurityState, newSecurityState
           ));
 
@@ -1004,7 +979,7 @@ nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
     }
 
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-           ("SecureUI:%p: FinishedLoadingStateChange: calling OnSecurityChange\n", this
+           ("SecureUI:%p: UpdateSecurityState: calling OnSecurityChange\n", this
             ));
 
     mToplevelEventSink->OnSecurityChange(aRequest, newState);
@@ -1012,7 +987,7 @@ nsresult nsSecureBrowserUIImpl::FinishedLoadingStateChange(nsIRequest* aRequest)
   else
   {
     PR_LOG(gSecureDocLog, PR_LOG_DEBUG,
-           ("SecureUI:%p: FinishedLoadingStateChange: NO mToplevelEventSink!\n", this
+           ("SecureUI:%p: UpdateSecurityState: NO mToplevelEventSink!\n", this
             ));
 
   }
