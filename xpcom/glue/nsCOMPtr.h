@@ -98,7 +98,7 @@
 #ifdef NS_DEBUG
   #define NSCAP_FEATURE_TEST_DONTQUERY_CASES
   #define NSCAP_FEATURE_DEBUG_PTR_TYPES
-  #define NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
+//#define NSCAP_FEATURE_TEST_NONNULL_QUERY_SUCCEEDS
 #endif
 
   /*
@@ -185,7 +185,7 @@ class nsDerivedSafe : public T
 
         /*
           Compiler warnings and errors: nsDerivedSafe operator=() hides inherited operator=().
-          If you see that, that means somebody checked in a (XP)COM interface class that declares an
+          If you see that, that means somebody checked in a [XP]COM interface class that declares an
           |operator=()|, and that's _bad_.  So bad, in fact, that this declaration exists explicitly
           to stop people from doing it.
         */
@@ -835,13 +835,11 @@ class nsGetterAddRefs
           // nothing else to do
         }
 
-#if 0
 #ifdef NSCAP_FEATURE_TEST_DONTQUERY_CASES
      ~nsGetterAddRefs()
          {
            mTargetSmartPtr.Assert_NoQueryNeeded();
          }
-#endif
 #endif
 
       operator void**()
