@@ -67,8 +67,8 @@ static void PrintImageDecoders()
     if (s) {
       nsCOMPtr<nsISupportsCString> ss(do_QueryInterface(s));
 
-      nsXPIDLCString xcs;
-      ss->GetData(getter_Copies(xcs));
+      nsCAutoString xcs;
+      ss->GetData(xcs);
 
       NS_NAMED_LITERAL_CSTRING(decoderContract, "@mozilla.org/image/decoder;2?type=");
 
