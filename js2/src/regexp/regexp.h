@@ -45,24 +45,12 @@ typedef char16 jschar;
 typedef uint8 jsbytecode;
 
 
-typedef struct RECharSet {
-    bool converted;
-    bool sense;
-    uint16 length;
-    union {
-        uint8 *bits;
-        struct {
-            uint16 startIndex;
-            uint16 length;
-        } src;
-    } u;
-} RECharSet;
-
 
 #define JSREG_FOLD      0x01    /* fold uppercase to lowercase */
 #define JSREG_GLOB      0x02    /* global exec, creates array of matches */
 #define JSREG_MULTILINE 0x04    /* treat ^ and $ as begin and end of line */
 
+typedef struct RECharSet RECharSet;
 
 struct JS2RegExp {
     uint32       parenCount:24, /* number of parenthesized submatches */

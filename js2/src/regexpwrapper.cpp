@@ -56,6 +56,18 @@
 #include "bytecodecontainer.h"
 #include "js2metadata.h"
 
+typedef struct RECharSet {
+    bool converted;
+    bool sense;
+    uint16 length;
+    union {
+        uint8 *bits;
+        struct {
+            uint16 startIndex;
+            uint16 length;
+        } src;
+    } u;
+} RECharSet;
 
 namespace JavaScript {      
 namespace MetaData {
@@ -119,6 +131,7 @@ typedef int32 intN;
 typedef uint32 jsint;
 typedef char16 JSString;
 typedef char16 JSSubString;
+
 
 
 typedef struct REMatchState {
