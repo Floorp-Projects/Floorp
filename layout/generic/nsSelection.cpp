@@ -2750,9 +2750,6 @@ nsSelection::LookUpSelection(nsIContent *aContent, PRInt32 aContentOffset, PRInt
 
   STATUS_CHECK_RETURN_MACRO();
 
-  // Never use "slow check" when in table selection mode
-  if (aSlowCheck)
-    aSlowCheck = (mSelectingTableCellMode == 0);
 
   *aReturnDetails = nsnull;
   PRInt8 j;
@@ -4861,8 +4858,8 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
     // First select frame of content passed in
     result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(aContent, &frame);
     if (NS_SUCCEEDED(result) && frame)
-      //NOTE: aRange and eSpreadDown are now IGNORED. Selected state is set only for given frame
-      frame->SetSelected(aPresContext, aRange, aFlags, eSpreadDown);
+       //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
+      frame->SetSelected(aPresContext, nsnull, aFlags, eSpreadDown);
     
     // Now iterated through the child frames and set them
     nsCOMPtr<nsIContent> innercontent;
@@ -4873,8 +4870,8 @@ nsTypedSelection::selectFrames(nsIPresContext* aPresContext,
       {
         result = mFrameSelection->GetTracker()->GetPrimaryFrameFor(innercontent, &frame);
         if (NS_SUCCEEDED(result) && frame)
-          //NOTE: aRange and eSpreadDown are now IGNORED. Selected state is set only for given frame
-          frame->SetSelected(aPresContext, aRange,aFlags,eSpreadDown);//spread from here to hit all frames in flow
+          //NOTE: eSpreadDown is now IGNORED. Selected state is set only for given frame
+          frame->SetSelected(aPresContext, nsnull,aFlags,eSpreadDown);//spread from here to hit all frames in flow
       }
       result = aInnerIter->Next();
       if (NS_FAILED(result))
