@@ -328,25 +328,6 @@ nsHttpResponseHead::MustValidate()
         return PR_TRUE;
     }
 
-    // Check the Vary header.  Per comments on bug 37609, most of the request
-    // headers that we generate do not vary with the exception of Accept-Charset
-    // and Accept-Language, so we force validation only if these headers or "*"
-    // are listed with the Vary response header.
-    //
-    // XXX this may not be sufficient if embedders start tweaking or adding HTTP
-    // request headers.
-    //
-    // XXX will need to add the Accept header to this list if we start sending
-    // a full Accept header, since the addition of plugins could change this
-    // header (see bug 58040).
-    val = PeekHeader(nsHttp::Vary);
-    if (val && (PL_strstr(val, "*") ||
-                PL_strcasestr(val, "accept-charset") ||
-                PL_strcasestr(val, "accept-language"))) {
-        LOG(("Must validate based on \"%s\" header\n", val));
-        return PR_TRUE;
-    }
-
     LOG(("no mandatory validation requirement\n"));
     return PR_FALSE;
 }
