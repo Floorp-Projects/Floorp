@@ -43,6 +43,7 @@ GtkWidgetClass *parent_class = NULL;
 enum {
   TOPLEVEL_FOCUS_IN,
   TOPLEVEL_FOCUS_OUT,
+  TOPLEVEL_CONFIGURE,
   LAST_SIGNAL
 };
 
@@ -104,6 +105,13 @@ gtk_mozarea_class_init (GtkMozAreaClass *klass)
                    GTK_RUN_FIRST,
                    object_class->type,
                    GTK_SIGNAL_OFFSET(GtkMozAreaClass, toplevel_focus_out),
+                   gtk_marshal_NONE__NONE,
+                   GTK_TYPE_NONE, 0);
+  mozarea_signals[TOPLEVEL_CONFIGURE] =
+    gtk_signal_new("toplevel_configure",
+                   GTK_RUN_FIRST,
+                   object_class->type,
+                   GTK_SIGNAL_OFFSET(GtkMozAreaClass, toplevel_configure),
                    gtk_marshal_NONE__NONE,
                    GTK_TYPE_NONE, 0);
   gtk_object_class_add_signals(object_class, mozarea_signals, LAST_SIGNAL);
@@ -321,6 +329,9 @@ toplevel_window_filter(GdkXEvent   *aGdkXEvent,
   case FocusOut:
     mozarea->toplevel_focus = FALSE;
     gtk_signal_emit(GTK_OBJECT(mozarea), mozarea_signals[TOPLEVEL_FOCUS_OUT]);
+    break;
+  case ConfigureNotify:
+    gtk_signal_emit(GTK_OBJECT(mozarea), mozarea_signals[TOPLEVEL_CONFIGURE]);
     break;
   default:
     break;

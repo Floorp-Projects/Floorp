@@ -99,6 +99,10 @@ gint handle_mozarea_focus_out (
     GdkEventFocus *  aGdkFocusEvent, 
     gpointer         aData);
 
+void handle_toplevel_configure (
+    GtkMozArea *      aArea,
+    nsWindow   *      aWindow);
+
 gboolean handle_toplevel_property_change (
     GtkWidget *widget,
     GdkEventProperty *event,
@@ -283,13 +287,11 @@ void nsWindow::InvalidateWindowPos(void)
   mCachedX = mCachedY = -1;
 }
 
-gboolean
-handle_invalidate_pos(GtkWidget *w, GdkEventConfigure *conf, gpointer p)
+void
+handle_invalidate_pos(GtkMozArea *aArea, gpointer p)
 {
   nsWindow *widget = (nsWindow *)p;
   widget->InvalidateWindowPos();
-
-  return PR_FALSE;
 }
 
 PRBool nsWindow::GetWindowPos(nscoord &x, nscoord &y)
@@ -1829,10 +1831,6 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                              "size_allocate",
                              GTK_SIGNAL_FUNC(handle_size_allocate),
                              this);
-    gtk_signal_connect_after(GTK_OBJECT(mShell),
-                             "configure_event",
-                             GTK_SIGNAL_FUNC(handle_configure_event),
-                             this);
     break;
 
   case eWindowType_child:
@@ -1984,6 +1982,15 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
                        "key_release_event",
                        GTK_SIGNAL_FUNC(handle_key_release_event),
                        this);
+
+    // Connect to the configure event from the mozarea.  This will
+    // notify us when the toplevel window that contains the mozarea
+    // changes size so that we can update our size caches.  It handles
+    // the plug/socket case, too.
+    gtk_signal_connect(GTK_OBJECT(mMozArea),
+                       "toplevel_configure",
+                       GTK_SIGNAL_FUNC(handle_toplevel_configure),
+                       this);
   }
 
   if (mSuperWin) {
@@ -1993,15 +2000,17 @@ NS_METHOD nsWindow::CreateNative(GtkObject *parentWidget)
     g_hash_table_insert(mWindowLookupTable, mSuperWin->shell_window, this);
   }
 
+  // Any time the toplevel window invalidates mark ourselves as dirty
+  // with respect to caching window positions.
   GtkWidget *top_mozarea = GetMozArea();
   if (top_mozarea) {
-    GtkWidget *top_window = gtk_widget_get_toplevel(top_mozarea);
-    gtk_signal_connect_while_alive(GTK_OBJECT(top_window),
-                                   "configure_event",
+    gtk_signal_connect_while_alive(GTK_OBJECT(top_mozarea),
+                                   "toplevel_configure",
                                    GTK_SIGNAL_FUNC(handle_invalidate_pos),
                                    this,
                                    GTK_OBJECT(mSuperWin));
   }
+
   return NS_OK;
 }
 
@@ -2837,6 +2846,28 @@ gint handle_mozarea_focus_out(GtkWidget *      aWidget,
   widget->HandleMozAreaFocusOut();
 
   return FALSE;
+}
+
+void handle_toplevel_configure (
+    GtkMozArea *      aArea,
+    nsWindow   *      aWindow)
+{
+  // This event handler is only installed on toplevel windows
+
+  // Find out if the window position has changed
+  nsRect oldBounds;
+  aWindow->GetBounds(oldBounds);
+
+  // this is really supposed to be get_origin, not get_root_origin
+  // - bryner
+  nscoord x,y;
+  gdk_window_get_origin(GTK_WIDGET(aArea)->window, &x, &y);
+
+  if ((oldBounds.x == x) && (oldBounds.y == y)) {
+    return;
+  }
+
+  aWindow->OnMove(x, y);
 }
 
 
