@@ -239,3 +239,10 @@ NS_IMETHODIMP imgContainer::SetLoopCount(PRInt32 aLoopCount)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }
+
+//******************************************************************************
+/* void resetAnimation (); */
+NS_IMETHODIMP imgContainer::ResetAnimation()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}

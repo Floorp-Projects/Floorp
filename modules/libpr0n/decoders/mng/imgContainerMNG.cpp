@@ -226,6 +226,13 @@ imgContainerMNG::StopAnimation()
 }
 
 //****************************************************************************
+/* void resetAnimation (); */
+NS_IMETHODIMP imgContainerMNG::ResetAnimation()
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+//****************************************************************************
 /* attribute long loopCount; */
 NS_IMETHODIMP
 imgContainerMNG::GetLoopCount(PRInt32 *aLoopCount)
