@@ -120,7 +120,7 @@ public:
     mGeneratingSubmit(PR_FALSE),
     mGeneratingReset(PR_FALSE),
     mIsSubmitting(PR_FALSE),
-    mInSubmitClick(PR_FALSE),
+    mDeferSubmission(PR_FALSE),
     mPendingSubmission(nsnull),
     mSubmittingRequest(nsnull) { }
 
@@ -298,7 +298,7 @@ protected:
   /** Whether we are submitting currently */
   PRPackedBool mIsSubmitting;
   /** Whether the submission was triggered by an Image or Submit*/
-  PRPackedBool mInSubmitClick;
+  PRPackedBool mDeferSubmission;
 
   /** The pending submission object */
   nsCOMPtr<nsIFormSubmission> mPendingSubmission;
@@ -741,6 +741,11 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
       return NS_OK;
     }
     mGeneratingSubmit = PR_TRUE;
+
+    // let the form know that it needs to defer the submission,
+    // that means that if there are scripted submissions, the
+    // latest one will be deferred until after the exit point of the handler. 
+    mDeferSubmission = PR_TRUE;
   }
   else if (aEvent->message == NS_FORM_RESET) {
     if (mGeneratingReset) {
@@ -749,23 +754,44 @@ nsHTMLFormElement::HandleDOMEvent(nsIPresContext* aPresContext,
     mGeneratingReset = PR_TRUE;
   }
 
+
   nsresult rv = nsGenericHTMLContainerElement::HandleDOMEvent(aPresContext,
                                                               aEvent,
                                                               aDOMEvent,
                                                               aFlags,
-                                                              aEventStatus);
+                                                              aEventStatus); 
+  if (mDeferSubmission) {
+    // let the form know not to defer subsequent submissions
+    mDeferSubmission = PR_FALSE;
+  }
 
-  if (NS_SUCCEEDED(rv) && (*aEventStatus == nsEventStatus_eIgnore) &&
+  if (NS_SUCCEEDED(rv) &&
       !(aFlags & NS_EVENT_FLAG_CAPTURE) &&
       !(aFlags & NS_EVENT_FLAG_SYSTEM_EVENT)) {
 
-    switch (aEvent->message) {
-      case NS_FORM_RESET:
-      case NS_FORM_SUBMIT:
-      {
-        rv = DoSubmitOrReset(aPresContext, aEvent, aEvent->message);
+    if (*aEventStatus == nsEventStatus_eIgnore) {
+      switch (aEvent->message) {
+        case NS_FORM_RESET:
+        case NS_FORM_SUBMIT:
+        {
+          if (mPendingSubmission) {
+            // tell the form to forget a possible pending submission.
+            // the reason is that the script returned true (the event was
+            // ignored) so if there is a stored submission, it will miss
+            // the name/value of the submitting element, thus we need
+            // to forget it and the form element will build a new one
+            ForgetPendingSubmission();
+          }
+          rv = DoSubmitOrReset(aPresContext, aEvent, aEvent->message);
+        }
+        break;
       }
-      break;
+    } else {
+      // tell the form to flush a possible pending submission.
+      // the reason is that the script returned false (the event was
+      // not ignored) so if there is a stored submission, it needs to
+      // be submitted immediatelly.
+      FlushPendingSubmission();
     }
   }
 
@@ -850,8 +876,8 @@ nsHTMLFormElement::DoSubmit(nsIPresContext* aPresContext, nsEvent* aEvent)
   //
   BuildSubmission(aPresContext, submission, aEvent); 
   
-  if(mInSubmitClick) { 
-    // we are in the onclick event handler so we have to
+  if(mDeferSubmission) { 
+    // we are in an event handler, JS submitted so we have to
     // defer this submission. let's remember it and return
     // without submitting
     mPendingSubmission = submission;
@@ -1310,14 +1336,14 @@ nsHTMLFormElement::ResolveName(const nsAString& aName,
 NS_IMETHODIMP
 nsHTMLFormElement::OnSubmitClickBegin()
 {
-  mInSubmitClick = PR_TRUE;
+  mDeferSubmission = PR_TRUE;
   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsHTMLFormElement::OnSubmitClickEnd()
 {
-  mInSubmitClick = PR_FALSE;
+  mDeferSubmission = PR_FALSE;
   return NS_OK;
 }
 
