@@ -806,7 +806,8 @@ CSSMediaRuleImpl::CSSMediaRuleImpl(const CSSMediaRuleImpl& aCopy)
     NS_NewISupportsArray(getter_AddRefs(mRules));
     if (mRules) {
       aCopy.mRules->EnumerateForwards(CloneRuleInto, mRules);
-      mRules->EnumerateForwards(SetParentRuleReference, this);
+      mRules->EnumerateForwards(SetParentRuleReference,
+                                NS_STATIC_CAST(nsICSSGroupRule*, this));
     }
   }
 }
@@ -1087,7 +1088,8 @@ CSSMediaRuleImpl::InsertStyleRulesAt(PRUint32 aIndex, nsISupportsArray* aRules)
   NS_ENSURE_TRUE(mRules, NS_ERROR_FAILURE);
 
   aRules->EnumerateForwards(SetStyleSheetReference, mSheet);
-  aRules->EnumerateForwards(SetParentRuleReference, this);
+  aRules->EnumerateForwards(SetParentRuleReference,
+                            NS_STATIC_CAST(nsICSSGroupRule*, this));
   // There is no xpcom-compatible version of InsertElementsAt.... :(
   if (! mRules->InsertElementsAt(aRules, aIndex)) {
     return NS_ERROR_FAILURE;
