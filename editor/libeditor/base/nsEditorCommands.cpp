@@ -316,7 +316,7 @@ nsCopyOrDeleteCommand::DoCommand(const char *aCommandName,
       PRBool isCollapsed;
       rv = selection->GetIsCollapsed(&isCollapsed);
       if (NS_SUCCEEDED(rv) && isCollapsed)
-        return editor->DeleteSelection(nsIEditor::eToEndOfLine);
+        return editor->DeleteSelection(nsIEditor::eNextWord);
     }
     return editor->Copy();
   }
