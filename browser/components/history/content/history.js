@@ -65,6 +65,8 @@ function HistoryCommonInit()
       document.getElementById("byvisited").setAttribute("checked", "true");
     else if (mode == "lastvisited")
       document.getElementById("bylastvisited").setAttribute("checked", "true");
+    else if (mode == "dayandsite")
+      document.getElementById("bydayandsite").setAttribute("checked", "true");
     else
       document.getElementById("byday").setAttribute("checked", "true");
     gHistoryTree.focus();
@@ -78,7 +80,7 @@ function historyOnSelect()
     gLastDomain = "";
     var match;
     var currentIndex = gHistoryTree.currentIndex;
-    var rowIsContainer = gHistoryGrouping == "day" ? isContainer(gHistoryTree, currentIndex) : false;
+    var rowIsContainer = (gHistoryGrouping == "day" || gHistoryGrouping == "dayandsite") ? isContainer(gHistoryTree, currentIndex) : false;
     var url = gHistoryTree.builder.QueryInterface(Components.interfaces.nsIXULTreeBuilder).getResourceAtIndex(currentIndex).Value;
 
     if (url && !rowIsContainer) {
@@ -250,22 +252,14 @@ function GroupBy(groupingType)
         // xxx for now
         gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
         break;
+    case "dayandsite":
+        gHistoryTree.setAttribute("ref", "NC:HistoryByDateAndSite");
+        break;
     case "day":
     default:
         gHistoryTree.setAttribute("ref", "NC:HistoryByDate");
         break;
     }
-}
-
-var groupObserver = {
-  observe: function(aPrefBranch, aTopic, aPrefName) {
-    try {
-      gHistoryGrouping = aPrefBranch.QueryInterface(Components.interfaces.nsIPrefBranch).getCharPref(aPrefName);
-      GroupBy(gHistoryGrouping);
-    }
-    catch(ex) {
-    }
-  }
 }
 
 function historyAddBookmarks()

@@ -101,6 +101,7 @@ nsIRDFResource* nsGlobalHistory::kNC_Referrer;
 nsIRDFResource* nsGlobalHistory::kNC_child;
 nsIRDFResource* nsGlobalHistory::kNC_URL;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryRoot;
+nsIRDFResource* nsGlobalHistory::kNC_HistoryByDateAndSite;
 nsIRDFResource* nsGlobalHistory::kNC_HistoryByDate;
 nsIMdbFactory* nsGlobalHistory::gMdbFactory = nsnull;
 nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
@@ -559,6 +560,7 @@ nsGlobalHistory::~nsGlobalHistory()
     NS_IF_RELEASE(kNC_child);
     NS_IF_RELEASE(kNC_URL);
     NS_IF_RELEASE(kNC_HistoryRoot);
+    NS_IF_RELEASE(kNC_HistoryByDateAndSite);
     NS_IF_RELEASE(kNC_HistoryByDate);
     
     NS_IF_RELEASE(gMdbFactory);
@@ -1502,6 +1504,7 @@ nsGlobalHistory::GetTarget(nsIRDFResource* aSource,
     // matching row?
   if (aProperty == kNC_child &&
       (aSource == kNC_HistoryRoot ||
+       aSource == kNC_HistoryByDateAndSite ||
        aSource == kNC_HistoryByDate ||
        IsFindResource(aSource))) {
       
@@ -1785,10 +1788,15 @@ nsGlobalHistory::GetTargets(nsIRDFResource* aSource,
     NS_ADDREF(*aTargets);
     return NS_OK;
   }
+  else if ((aSource == kNC_HistoryByDateAndSite) &&
+           (aProperty == kNC_child)) {
+
+    return GetRootDayQueries(aTargets, PR_TRUE);
+  }
   else if ((aSource == kNC_HistoryByDate) &&
            (aProperty == kNC_child)) {
 
-    return GetRootDayQueries(aTargets);
+    return GetRootDayQueries(aTargets, PR_FALSE);
   }
   else if (aProperty == kNC_child &&
            IsFindResource(aSource)) {
@@ -1836,7 +1844,8 @@ nsGlobalHistory::Unassert(nsIRDFResource* aSource,
 {
   // translate into an appropriate removehistory call
   nsresult rv;
-  if ((aSource == kNC_HistoryRoot || aSource == kNC_HistoryByDate || IsFindResource(aSource)) &&
+  if ((aSource == kNC_HistoryRoot || aSource == kNC_HistoryByDateAndSite || aSource == kNC_HistoryByDate 
+       || IsFindResource(aSource)) &&
       aProperty == kNC_child) {
 
     nsCOMPtr<nsIRDFResource> resource = do_QueryInterface(aTarget, &rv);
@@ -2052,6 +2061,7 @@ nsGlobalHistory::HasArcOut(nsIRDFResource *aSource, nsIRDFResource *aArc, PRBool
     return NS_ERROR_NULL_POINTER;
 
   if ((aSource == kNC_HistoryRoot) ||
+      (aSource == kNC_HistoryByDateAndSite) ||
       (aSource == kNC_HistoryByDate)) {
     *result = (aArc == kNC_child);
   }
@@ -2105,6 +2115,7 @@ nsGlobalHistory::ArcLabelsOut(nsIRDFResource* aSource,
   nsresult rv;
 
   if ((aSource == kNC_HistoryRoot) ||
+      (aSource == kNC_HistoryByDateAndSite) ||
       (aSource == kNC_HistoryByDate)) {
     return NS_NewSingletonEnumerator(aLabels, kNC_child);
   }
@@ -2337,6 +2348,7 @@ nsGlobalHistory::Init()
     gRDFService->GetResource(NC_NAMESPACE_URI "child",       &kNC_child);
     gRDFService->GetResource(NC_NAMESPACE_URI "URL",         &kNC_URL);
     gRDFService->GetResource("NC:HistoryRoot",               &kNC_HistoryRoot);
+    gRDFService->GetResource("NC:HistoryByDateAndSite",           &kNC_HistoryByDateAndSite);
     gRDFService->GetResource("NC:HistoryByDate",           &kNC_HistoryByDate);
   }
 
@@ -2954,7 +2966,7 @@ nsGlobalHistory::NotifyChange(nsIRDFResource* aSource,
 // only returns queries that currently have matches in global history
 // 
 nsresult
-nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
+nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult, PRBool aBySite)
 {
   nsresult rv;
   nsCOMPtr<nsISupportsArray> dayArray;
@@ -2970,7 +2982,8 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
   for (i=0; i<7; i++) {
     uri = prefix;
     uri.AppendInt(i);
-    uri.Append("&groupby=Hostname");
+    if (aBySite)
+      uri.Append("&groupby=Hostname");
     rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
     if (NS_FAILED(rv)) continue;
     rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
@@ -2982,7 +2995,8 @@ nsGlobalHistory::GetRootDayQueries(nsISimpleEnumerator **aResult)
 
   uri = FIND_BY_AGEINDAYS_PREFIX "isgreater" "&text=";
   uri.AppendInt(i-1);
-  uri.Append("&groupby=Hostname");
+  if (aBySite)
+    uri.Append("&groupby=Hostname");
   rv = gRDFService->GetResource(uri.get(), getter_AddRefs(finduri));
   if (NS_SUCCEEDED(rv)) {
     rv = CreateFindEnumerator(finduri, getter_AddRefs(findEnumerator));
@@ -3252,8 +3266,27 @@ nsGlobalHistory::NotifyFindAssertions(nsIRDFResource *aSource,
 
   GetFindUriPrefix(query, PR_TRUE, findUri);
   gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
-  NotifyAssert(kNC_HistoryByDate, kNC_child, childFindResource);
+  NotifyAssert(kNC_HistoryByDateAndSite, kNC_child, childFindResource);
   
+  query.terms.Clear();
+
+  query.groupBy = 0;
+  query.terms.AppendElement((void *)&ageterm);
+
+  GetFindUriPrefix(query, PR_TRUE, findUri);
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  NotifyAssert(kNC_HistoryByDate, kNC_child, childFindResource);
+
+  query.terms.Clear();
+  
+
+  query.groupBy = 0;
+  query.terms.AppendElement((void *)&ageterm);
+
+  GetFindUriPrefix(query, PR_TRUE, findUri);
+  gRDFService->GetResource(findUri.get(), getter_AddRefs(childFindResource));
+  NotifyAssert(childFindResource, kNC_child, aSource);
+
   query.terms.Clear();
 
   // 3) AgeInDays=<age>&groupby=Hostname ->
@@ -3356,6 +3389,8 @@ nsGlobalHistory::NotifyFindUnassertions(nsIRDFResource *aSource,
   
   gRDFService->GetResource(findUri.get(), getter_AddRefs(findResource));
   NotifyUnassert(findResource, kNC_child, aSource);
+
+  query.terms.Clear();
 
   return NS_OK;
 }

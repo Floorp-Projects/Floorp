@@ -58,3 +58,5 @@
 <!ENTITY byMostVisited.accesskey "V">
 <!ENTITY byLastVisited.label "By Last Visited">
 <!ENTITY byLastVisited.accesskey "L">
+<!ENTITY byDayAndSite.label "By Date and Site">
+<!ENTITY byDayAndSite.accesskey "t">
