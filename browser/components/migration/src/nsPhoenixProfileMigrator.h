@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef seamonkeyprofilemigrator___h___
-#define seamonkeyprofilemigrator___h___
+#ifndef phoenixprofilemigrator___h___
+#define phoenixprofilemigrator___h___
 
 #include "nsIBrowserProfileMigrator.h"
 #include "nsILocalFile.h"

@@ -56,6 +56,8 @@
 
 #define FILE_NAME_BOOKMARKS       NS_LITERAL_STRING("bookmarks.html")
 #define FILE_NAME_COOKIES         NS_LITERAL_STRING("cookies.txt")
+#define FILE_NAME_SITEPERM_OLD    NS_LITERAL_STRING("cookperm.txt")
+#define FILE_NAME_SITEPERM_NEW    NS_LITERAL_STRING("hostperm.1")
 #define FILE_NAME_CERT8DB         NS_LITERAL_STRING("cert8.db")
 #define FILE_NAME_KEY3DB          NS_LITERAL_STRING("key3.db")
 #define FILE_NAME_SECMODDB        NS_LITERAL_STRING("secmod.db")
@@ -99,6 +101,16 @@ nsSeamonkeyProfileMigrator::Migrate(PRUint32 aItems, PRBool aReplace, const PRUn
   COPY_DATA(CopyPasswords,    aReplace, nsIBrowserProfileMigrator::PASSWORDS);
   COPY_DATA(CopyOtherData,    aReplace, nsIBrowserProfileMigrator::OTHERDATA);
   COPY_DATA(CopyBookmarks,    aReplace, nsIBrowserProfileMigrator::BOOKMARKS);
+
+  if (aReplace && 
+      (aItems & nsIBrowserProfileMigrator::SETTINGS || 
+       aItems & nsIBrowserProfileMigrator::COOKIES || 
+       aItems & nsIBrowserProfileMigrator::PASSWORDS ||
+       !aItems)) {
+    // Permissions (Images, Cookies, Popups)
+    rv |= CopyFile(FILE_NAME_SITEPERM_NEW, FILE_NAME_SITEPERM_NEW);
+    rv |= CopyFile(FILE_NAME_SITEPERM_OLD, FILE_NAME_SITEPERM_OLD);
+  }
 
   NOTIFY_OBSERVERS(MIGRATION_ENDED, nsnull);
 
