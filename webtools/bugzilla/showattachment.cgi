@@ -18,7 +18,6 @@
 # Netscape Communications Corporation. All Rights Reserved.
 # 
 # Contributor(s): Terry Weissman <terry@mozilla.org>
-#                 David Gardiner <david.gardiner@unisa.edu.au>
 
 use diagnostics;
 use strict;
@@ -29,7 +28,7 @@ ConnectToDatabase();
 
 my @row;
 if (defined $::FORM{'attach_id'}) {
-    SendSQL("select mimetype, filename, thedata from attachments where attach_id = $::FORM{'attach_id'}");
+    SendSQL("select mimetype, thedata from attachments where attach_id = $::FORM{'attach_id'}");
     @row = FetchSQLData();
 }
 if (!@row) {
@@ -38,6 +37,6 @@ if (!@row) {
     print "Please hit back and try again.\n";
     exit;
 }
-print qq{Content-type: $row[0]; name="$row[1]"; \n\n$row[2]};
+print qq{Content-type: $row[0]"; \n\n$row[1]};
 
     
