@@ -158,6 +158,8 @@ static NS_DEFINE_CID(kCookieServiceCID, NS_COOKIESERVICE_CID);
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
+
 static PRBool
 IsNamedItem(nsIContent* aContent, nsIAtom *aTag, nsAString& aName);
 
@@ -2148,10 +2150,24 @@ nsHTMLDocument::GetAnchors(nsIDOMHTMLCollection** aAnchors)
 NS_IMETHODIMP    
 nsHTMLDocument::GetCookie(nsAString& aCookie)
 {
+  aCookie.Truncate(); // clear current cookie in case service fails;
+                      // no cookie isn't an error condition.
+
+  // If caller is not chrome and dom.disable_cookie_get is true,
+  // prevent getting cookies by exiting early
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs) {
+    PRBool disableCookieGet = PR_FALSE;
+    prefs->GetBoolPref("dom.disable_cookie_get", &disableCookieGet);
+
+    if (disableCookieGet && !nsContentUtils::IsCallerChrome()) {
+      return NS_OK;
+    }
+  }
+
   nsresult result = NS_OK;
   nsAutoString str;
 
-  aCookie.Truncate(); // clear current cookie in case service fails; no cookie isn't an error condition.
 
   nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &result);
   if (NS_SUCCEEDED(result) && service && mDocumentURL) {
@@ -2166,6 +2182,17 @@ nsHTMLDocument::GetCookie(nsAString& aCookie)
 NS_IMETHODIMP    
 nsHTMLDocument::SetCookie(const nsAString& aCookie)
 {
+  // If caller is not chrome and dom.disable_cookie_get is true,
+  // prevent setting cookies by exiting early
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs) {
+    PRBool disableCookieSet = PR_FALSE;
+    prefs->GetBoolPref("dom.disable_cookie_set", &disableCookieSet);
+    if (disableCookieSet && !nsContentUtils::IsCallerChrome()) {
+      return NS_OK;
+    }
+  }
+
   nsresult result = NS_OK;
   nsCOMPtr<nsICookieService> service = do_GetService(kCookieServiceCID, &result);
   if (NS_SUCCEEDED(result) && service && mDocumentURL) {

@@ -170,6 +170,50 @@ static const char *kDOMBundleURL = "chrome://global/locale/commonDialogs.propert
 static const char * const kCryptoContractID = NS_CRYPTO_CONTRACTID;
 static const char * const kPkcs11ContractID = NS_PKCS11_CONTRACTID;
 
+static PRBool IsCallerChrome()
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
+  if (stack) {
+    JSContext *cx = nsnull;
+    stack->Peek(&cx);
+
+    if (cx) {
+      nsCOMPtr<nsIScriptGlobalObject> sgo;
+      nsJSUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
+      if (sgo) {
+        sgo->GetDocShell(getter_AddRefs(docShell));
+      }
+    }
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
+  if (item) {
+    PRInt32 callerType = nsIDocShellTreeItem::typeChrome;
+    item->GetItemType(&callerType);
+
+    if (callerType != nsIDocShellTreeItem::typeChrome) {
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
+}
+
+static PRBool CanSetProperty(const char * prefName)
+{
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (!prefs) {
+    return PR_FALSE;
+  }
+
+  PRBool prefValue = PR_TRUE;
+  // if pref is set to true, we can't set the property
+  prefs->GetBoolPref(prefName, &prefValue);
+
+  return !prefValue;
+}
+
 //*****************************************************************************
 //***    GlobalWindowImpl: Object Management
 //*****************************************************************************
@@ -1261,6 +1305,15 @@ GlobalWindowImpl::GetStatus(nsAString& aStatus)
 NS_IMETHODIMP
 GlobalWindowImpl::SetStatus(const nsAString& aStatus)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_status_change is true,
+   * prevent setting window.status by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_status_change") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   mStatus = aStatus;
 
   nsCOMPtr<nsIWebBrowserChrome> browserChrome;
@@ -1283,13 +1336,23 @@ GlobalWindowImpl::GetDefaultStatus(nsAString& aDefaultStatus)
 NS_IMETHODIMP
 GlobalWindowImpl::SetDefaultStatus(const nsAString& aDefaultStatus)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_status_change is true,
+   * prevent setting window.defaultStatus by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_status_change") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   mDefaultStatus = aDefaultStatus;
 
-   nsCOMPtr<nsIWebBrowserChrome> browserChrome;
-   GetWebBrowserChrome(getter_AddRefs(browserChrome));
-   if(browserChrome)
-      browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT,
-                               PromiseFlatString(aDefaultStatus).get());
+  nsCOMPtr<nsIWebBrowserChrome> browserChrome;
+  GetWebBrowserChrome(getter_AddRefs(browserChrome));
+  if (browserChrome) {
+    browserChrome->SetStatus(nsIWebBrowserChrome::STATUS_SCRIPT_DEFAULT,
+                             PromiseFlatString(aDefaultStatus).get());
+  }
 
   return NS_OK;
 }
@@ -1332,6 +1395,15 @@ GlobalWindowImpl::GetInnerWidth(PRInt32* aInnerWidth)
 NS_IMETHODIMP
 GlobalWindowImpl::SetInnerWidth(PRInt32 aInnerWidth)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent setting window.innerWidth by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
@@ -1374,6 +1446,15 @@ GlobalWindowImpl::GetInnerHeight(PRInt32* aInnerHeight)
 NS_IMETHODIMP
 GlobalWindowImpl::SetInnerHeight(PRInt32 aInnerHeight)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent setting window.innerHeight by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
@@ -1419,6 +1500,15 @@ GlobalWindowImpl::GetOuterWidth(PRInt32* aOuterWidth)
 NS_IMETHODIMP
 GlobalWindowImpl::SetOuterWidth(PRInt32 aOuterWidth)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent setting window.outerWidth by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -1453,6 +1543,15 @@ GlobalWindowImpl::GetOuterHeight(PRInt32* aOuterHeight)
 NS_IMETHODIMP
 GlobalWindowImpl::SetOuterHeight(PRInt32 aOuterHeight)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent setting window.outerHeight by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -1487,6 +1586,15 @@ GlobalWindowImpl::GetScreenX(PRInt32* aScreenX)
 NS_IMETHODIMP
 GlobalWindowImpl::SetScreenX(PRInt32 aScreenX)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent setting window.screenX by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -1522,6 +1630,15 @@ GlobalWindowImpl::GetScreenY(PRInt32* aScreenY)
 NS_IMETHODIMP
 GlobalWindowImpl::SetScreenY(PRInt32 aScreenY)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent setting window.screenY by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -2166,6 +2283,15 @@ GlobalWindowImpl::Prompt(nsAString& aReturn)
 NS_IMETHODIMP
 GlobalWindowImpl::Focus()
 {
+  /*
+   * If caller is not chrome and dom.disable_window_flip is true,
+   * prevent setting window.focus() by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_flip") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   if (treeOwnerAsWin) {
@@ -2300,6 +2426,15 @@ GlobalWindowImpl::Print()
 NS_IMETHODIMP
 GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent window.moveTo() by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -2316,6 +2451,15 @@ GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
 NS_IMETHODIMP
 GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent window.moveBy() by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -2336,6 +2480,15 @@ GlobalWindowImpl::MoveBy(PRInt32 aXDif, PRInt32 aYDif)
 NS_IMETHODIMP
 GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent window.resizeTo() by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -2352,6 +2505,15 @@ GlobalWindowImpl::ResizeTo(PRInt32 aWidth, PRInt32 aHeight)
 NS_IMETHODIMP
 GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * prevent window.resizeBy() by exiting early
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIBaseWindow> treeOwnerAsWin;
   GetTreeOwner(getter_AddRefs(treeOwnerAsWin));
   NS_ENSURE_TRUE(treeOwnerAsWin, NS_ERROR_FAILURE);
@@ -2373,6 +2535,15 @@ GlobalWindowImpl::ResizeBy(PRInt32 aWidthDif, PRInt32 aHeightDif)
 NS_IMETHODIMP
 GlobalWindowImpl::SizeToContent()
 {
+  /*
+   * If caller is not chrome and dom.disable_window_move_resize is true,
+   * block window.SizeToContent() by exiting
+   */
+
+  if (!CanSetProperty("dom.disable_window_move_resize") && !IsCallerChrome()) {
+    return NS_OK;
+  }
+
   nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(mDocShell));
   NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 

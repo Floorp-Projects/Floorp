@@ -47,6 +47,11 @@
 #include "nsIDocument.h"
 #include "nsINodeInfo.h"
 
+#include "nsIJSContextStack.h"
+#include "nsIDocShell.h"
+#include "nsIDocShellTreeItem.h"
+
+static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 
 nsIDOMScriptObjectFactory *nsContentUtils::sDOMScriptObjectFactory = nsnull;
 nsIXPConnect *nsContentUtils::sXPConnect = nsnull;
@@ -514,5 +519,38 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
 
   return doReparentContentWrapper(aContent, aNewDocument, aOldDocument, cx,
                                   obj);
+}
+
+PRBool
+nsContentUtils::IsCallerChrome()
+{
+  nsCOMPtr<nsIDocShell> docShell;
+  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
+
+  if (stack) {
+    JSContext *cx = nsnull;
+    stack->Peek(&cx);
+
+    if (cx) {
+      nsCOMPtr<nsIScriptGlobalObject> sgo;
+      nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(sgo));
+
+      if (sgo) {
+        sgo->GetDocShell(getter_AddRefs(docShell));
+      }
+    }
+  }
+
+  nsCOMPtr<nsIDocShellTreeItem> item(do_QueryInterface(docShell));
+  if (item) {
+    PRInt32 callerType = nsIDocShellTreeItem::typeChrome;
+    item->GetItemType(&callerType);
+
+    if (callerType != nsIDocShellTreeItem::typeChrome) {
+      return PR_FALSE;
+    }
+  }
+
+  return PR_TRUE;
 }
 

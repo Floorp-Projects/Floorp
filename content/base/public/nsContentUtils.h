@@ -58,6 +58,8 @@ public:
                                          nsIDocument *aNewDocument,
                                          nsIDocument *aOldDocument);
 
+  static PRBool IsCallerChrome();
+
   // These are copied from nsJSUtils.h
 
   static nsresult GetStaticScriptGlobal(JSContext* aContext,

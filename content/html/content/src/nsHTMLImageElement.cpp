@@ -68,6 +68,7 @@
 #include "nsGUIEvent.h"
 #include "nsContentPolicyUtils.h"
 #include "nsIDOMWindow.h"
+#include "nsIPref.h"
 
 #include "imgIContainer.h"
 #include "imgILoader.h"
@@ -79,6 +80,8 @@
 #include "nsRuleNode.h"
 
 #include "nsIJSContextStack.h"
+
+static NS_DEFINE_CID(kPrefServiceCID, NS_PREF_CID);
 
 // XXX nav attrs: suppress
 
@@ -970,6 +973,21 @@ nsHTMLImageElement::SetSrcInner(nsIURI* aBaseURL,
 NS_IMETHODIMP
 nsHTMLImageElement::SetSrc(const nsAString& aSrc)
 {
+  /*
+   * If caller is not chrome and dom.disable_image_src_set is true,
+   * prevent setting image.src by exiting early
+   */
+
+  nsCOMPtr<nsIPref> prefs(do_GetService(kPrefServiceCID));
+  if (prefs) {
+    PRBool disableImageSrcSet = PR_FALSE;
+    prefs->GetBoolPref("dom.disable_image_src_set", &disableImageSrcSet);
+
+    if (disableImageSrcSet && !nsContentUtils::IsCallerChrome()) {
+      return NS_OK;
+    }
+  }
+
   nsCOMPtr<nsIURI> baseURL;
   nsresult rv = NS_OK;
 

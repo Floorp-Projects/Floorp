@@ -52,7 +52,7 @@
   <script type="application/x-javascript">
     <![CDATA[
       var panel = "chrome://communicator/content/pref/pref-scripts.xul";
-      var _elementIDs = ["javascriptAllowNavigator", "allowWindowOpen", "allowTargetNew", "allowWindowMoveResize", "allowWindowFlip", "allowWindowStatusChange", "allowImageSrcChange", "allowDocumentCookieSet", "allowDocumentCookieGet"];
+      var _elementIDs = ["javascriptAllowNavigator", "allowWindowOpen", "allowWindowMoveResize", "allowWindowFlip", "allowWindowStatusChange", "allowImageSrcChange", "allowDocumentCookieSet", "allowDocumentCookieGet","allowTargetNew"];
     ]]>
   </script>
 

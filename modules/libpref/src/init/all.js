@@ -349,7 +349,16 @@ pref("capability.policy.mailnews.Window.resizeTo", "noAccess");
 pref("capability.policy.mailnews.Window.screenX.set", "noAccess");
 pref("capability.policy.mailnews.Window.screenY.set", "noAccess");
 pref("capability.policy.mailnews.Window.sizeToContent", "noAccess");
-pref("dom.disable_open_during_load", false);
+
+// Scripts & Windows prefs
+pref("browser.block.target_new_window",     false);
+pref("dom.disable_cookie_get",              false);
+pref("dom.disable_cookie_set",              false);
+pref("dom.disable_image_src_set",           false);
+pref("dom.disable_open_during_load",        false);
+pref("dom.disable_window_flip",             false);
+pref("dom.disable_window_move_resize",      false);
+pref("dom.disable_window_status_change",    false);
 
 pref("javascript.enabled",                  true);
 pref("javascript.allow.mailnews",           false);
@@ -358,7 +367,7 @@ pref("javascript.options.showInConsole",    true);
 
 // advanced prefs
 pref("advanced.always_load_images",         true);
-pref("security.enable_java",                 true);
+pref("security.enable_java",                true);
 pref("css.allow",                           true);
 pref("advanced.mailftp",                    false);
 pref("image.animation_mode",                "normal");
