@@ -1,18 +1,25 @@
-/* header stuff */
-table.main  {
-  position: relative;
-  right: 0px;
-  border-spacing: 0px;
+body {
+  margin: 0px;
+  padding: 0px;
 }
 
+/* header stuff */
 .spacetrace-header {
-  border: 2px inset;
-  float: right;
+  background: green;
+  min-height: 2em;
+}
+
+.navigate {
+  background: lightgrey;
+  position: absolute;
+  right: 0px;
+  margin: 0px;
+  padding: 2px;
 }
 
 .header-item {
   border: 2px outset;
-  background: lightgrey;
+  margin: 0px;
 }
 
 .header-item > a {
@@ -21,14 +28,12 @@ table.main  {
 }
 
 
-.category-title, .header-item {
-  padding: 2px; 
-  margin: 0px;
+.header-item {
   font-weight: bold;
 }
 
 .category-title {
-  background: lightgrey;
+  font-weight: bold;
 }
 
 /* footer stuff */
@@ -49,20 +54,29 @@ table.main  {
 
 /* headers at the top of specific call site pages */
 
-table.data-header {
+table.summary {
   border: 1px solid black;
 }
 
 /* lists of callsites/etc */
 table.data td {
   border-top: 1px solid;
+  padding: 5px;
 }
 
 table.data {
   clear: right;
+  border-collapse: collapse;
+}
+
+tr.row-header {
+  background: #009090;
+  width: 100%;
 }
 
 table.data th {
+  padding: 5px;
+  margin: 0px;
   text-align: right;
 }
 
