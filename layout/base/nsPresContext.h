@@ -20,23 +20,20 @@
 
 #include "nslayout.h"
 #include "nsISupports.h"
-#include "nsIImageObserver.h"
 #include "nsRect.h"
 
-class nsIImage;
+struct nsFont;
+
+class nsIContent;
+class nsIDeviceContext;
+class nsIFontMetrics;
+class nsIFrame;
+class nsIFrameImageLoader;
+class nsIImageGroup;
 class nsILinkHandler;
 class nsIPresShell;
-class nsIRenderingContext;
-class nsIFrame;
 class nsIStyleContext;
-class nsIFontMetrics;
-class nsIContent;
-class nsViewManager;
-class nsIView;
-class nsIFontCache;
-class nsIDeviceContext;
 class nsString;
-struct nsFont;
 
 #define NS_IPRESCONTEXT_IID   \
 { 0x0a5d12e0, 0x944e, 0x11d1, \
@@ -75,27 +72,22 @@ public:
    */
   virtual const nsFont& GetDefaultFont(void) = 0;
 
+  NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult) = 0;
+
   /**
-   * Load an image for the given url name for the given frame. When
-   * the image is ready for rendering the frame will be repainted.
-   *
-   * If the image is ready then this method will return the image,
-   * otherwise it will return nsnull and guarantee that the frame
-   * is repained when the image is ready.
-   *
-   * If the image dimensions are known then they are returned
-   * immediately.
-   *
-   * This call can be safely made as many times as wanted with
-   * aImageStatus updated each time indicating what is known about the
-   * image.
+   * Load an image for the target frame. This call can be made
+   * repeated with only a single image every being loaded. If
+   * aNeedSizeUpdate is PR_TRUE then when the image's size is
+   * determined the target frame will be reflowed (via a
+   * ContentChanged notification on the presentation shell). When the
+   * image's data is ready for rendering the target frames Paint
+   * method will be invoked (via the ViewManager so that the
+   * appropriate damage repair is done).
    */
   NS_IMETHOD LoadImage(const nsString& aURL,
-                       nsIFrame* aForFrame,
-                       PRInt32& aLoadImageStatus,
-                       nsImageError& aError,
-                       nsSize& aImageSize,
-                       nsIImage*& aImage) = 0;
+                       nsIFrame* aTargetFrame,
+                       PRBool aNeedSizeUpdate,
+                       nsIFrameImageLoader*& aLoader) = 0;
 
   /**
    * Stop any image loading being done on behalf of the argument frame.

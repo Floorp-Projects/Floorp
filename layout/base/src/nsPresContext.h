@@ -37,12 +37,11 @@ public:
                                                   nsIFrame* aParentFrame);
   virtual nsIFontMetrics* GetMetricsFor(const nsFont& aFont);
   virtual const nsFont& GetDefaultFont(void);
+  NS_IMETHOD GetImageGroup(nsIImageGroup*& aGroupResult);
   NS_IMETHOD LoadImage(const nsString& aURL,
-                       nsIFrame* aForFrame,
-                       PRInt32& aImageStatus,
-                       nsImageError& aError,
-                       nsSize& aImageSize,
-                       nsIImage*& aImage);
+                       nsIFrame* aTargetFrame,
+                       PRBool aNeedSizeUpdate,
+                       nsIFrameImageLoader*& aLoader);
   NS_IMETHOD StopLoadImage(nsIFrame* aForFrame);
   NS_IMETHOD SetContainer(nsISupports* aContainer);
   NS_IMETHOD GetContainer(nsISupports** aResult);
