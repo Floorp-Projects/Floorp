@@ -37,7 +37,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.6 2000/03/18 23:32:49 seth%cs.brandeis.edu Exp $
+# $Id: bug_email.pl,v 1.7 2000/08/30 21:47:17 cyeh%bluemartini.com Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -285,10 +285,10 @@ sub getEnumList( $ )
 # Uses the global var. $Control{ 'priority' }
 sub CheckPriority
 {
-    my $prio = ($Control{'priority'} ||= "");
+    my $prio = $Control{'priority'};
     my @all_prios = getEnumList( "priority" );
 
-    if( (lsearch( \@all_prios, $prio ) == -1) || $prio eq "" ) {
+    if( $prio eq "" || (lsearch( \@all_prios, $prio ) == -1)  ) {
 	# OK, Prio was not defined - create Answer
 	my $Text = "You sent wrong priority-setting, valid values are:" .
 	    join( "\n\t", @all_prios ) . "\n\n";
