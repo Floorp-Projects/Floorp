@@ -41,8 +41,6 @@
 #include "nsSocketProviderService.h"
 #include "nsISocketProvider.h"
 
-static NS_DEFINE_CID(kSocketProviderService, NS_SOCKETPROVIDERSERVICE_CID);
-
 ////////////////////////////////////////////////////////////////////////////////
 
 nsSocketProviderService::nsSocketProviderService()
