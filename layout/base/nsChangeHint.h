@@ -45,12 +45,8 @@ enum nsChangeHint {
   nsChangeHint_RepaintFrame = 0x01,  // change was visual only (e.g., COLOR=)
   nsChangeHint_ReflowFrame = 0x02,   // change requires reflow (e.g., WIDTH=)
   nsChangeHint_SyncFrameView = 0x04, // change requires view to be updated, if there is one (e.g., clip:)
-  nsChangeHint_ReconstructFrame = 0x08,   // change requires frame change (e.g., display:)
+  nsChangeHint_ReconstructFrame = 0x08   // change requires frame change (e.g., display:)
                                          // This subsumes all the above
-  nsChangeHint_ReconstructDoc = 0x10
-  // change requires reconstruction of entire document (e.g., style sheet change)
-  // This subsumes all the above
-
   // TBD: add nsChangeHint_ForceFrameView to force frame reconstruction if the frame doesn't yet
   // have a view
 };
@@ -102,8 +98,6 @@ inline PRBool NS_IsHintSubset(nsChangeHint aSubset, nsChangeHint aSuperSet) {
   nsChangeHint(NS_STYLE_HINT_VISUAL | nsChangeHint_ReflowFrame)
 #define NS_STYLE_HINT_FRAMECHANGE \
   nsChangeHint(NS_STYLE_HINT_REFLOW | nsChangeHint_ReconstructFrame)
-#define NS_STYLE_HINT_RECONSTRUCT_ALL \
-  nsChangeHint(NS_STYLE_HINT_FRAMECHANGE | nsChangeHint_ReconstructDoc)
 
 
 /**

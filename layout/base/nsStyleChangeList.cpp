@@ -85,9 +85,9 @@ nsStyleChangeList::ChangeAt(PRInt32 aIndex, const nsStyleChangeData** aChangeDat
 nsresult 
 nsStyleChangeList::AppendChange(nsIFrame* aFrame, nsIContent* aContent, nsChangeHint aHint)
 {
-  NS_ASSERTION(aFrame || (aHint & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc)),
+  NS_ASSERTION(aFrame || (aHint & nsChangeHint_ReconstructFrame),
                "must have frame");
-  NS_ASSERTION(aContent || !(aHint & (nsChangeHint_ReconstructFrame | nsChangeHint_ReconstructDoc)),
+  NS_ASSERTION(aContent || !(aHint & nsChangeHint_ReconstructFrame),
                "must have content");
 
   if ((0 < mCount) && (aHint & nsChangeHint_ReconstructFrame)) { // filter out all other changes for same content

@@ -70,9 +70,6 @@ public:
   // nsIDOMHTMLMapElement
   NS_DECL_NSIDOMHTMLMAPELEMENT
 
-  NS_IMETHOD GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                    PRInt32 aModType,
-                                    nsChangeHint& aHint) const;
   virtual void SetDocument(nsIDocument* aDocument, PRBool aDeep,
                            PRBool aCompileEventHandlers);
 
@@ -213,18 +210,3 @@ nsHTMLMapElement::GetAreas(nsIDOMHTMLCollection** aAreas)
 
 
 NS_IMPL_STRING_ATTR(nsHTMLMapElement, Name, name)
-
-
-NS_IMETHODIMP
-nsHTMLMapElement::GetAttributeChangeHint(const nsIAtom* aAttribute,
-                                         PRInt32 aModType,
-                                         nsChangeHint& aHint) const
-{
-  nsresult rv =
-    nsGenericHTMLContainerElement::GetAttributeChangeHint(aAttribute,
-                                                          aModType, aHint);
-  if (aAttribute == nsHTMLAtoms::name) {
-    NS_UpdateHint(aHint, NS_STYLE_HINT_RECONSTRUCT_ALL);
-  }
-  return rv;
-}

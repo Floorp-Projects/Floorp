@@ -5361,10 +5361,7 @@ PresShell::ReconstructStyleData()
                                       changeList, NS_STYLE_HINT_NONE,
                                       frameChange);
 
-  if (frameChange & nsChangeHint_ReconstructDoc)
-    mFrameConstructor->ReconstructDocElementHierarchy(mPresContext);
-  else
-    mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
+  mFrameConstructor->ProcessRestyledFrames(changeList, mPresContext);
 
   VERIFY_STYLE_TREE;
   
