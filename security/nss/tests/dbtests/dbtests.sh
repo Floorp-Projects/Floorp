@@ -105,8 +105,8 @@ dbtest_main()
     cd ${HOSTDIR}
     certutil -L -d ./non_existant_dir
     ret=$?
-    if [ $ret -eq 0 ]; then
-      html_failed "<TR><TD> Certutil succeeded in a nonexisting directory "
+    if [ $ret -ne 255 ]; then
+      html_failed "<TR><TD> Certutil succeeded in a nonexisting directory $ret"
     else
       html_passed "<TR><TD> Certutil failed in a nonexisting dir $ret" 
     fi
@@ -114,15 +114,15 @@ dbtest_main()
     mkdir $EMPTY_DIR
     tstclnt -h  ${HOST}  -d $EMPTY_DIR 
     ret=$?
-    if [ $ret -eq 0 ]; then
-      html_failed "<TR><TD> tstclnt succeded in an empty directory "
+    if [ $ret -ne 1 ]; then
+      html_failed "<TR><TD> tstclnt succeded in an empty directory $ret"
     else
       html_passed "<TR><TD> tstclnt failed in an empty dir $ret"
     fi
     certutil -D -n xxxx -d $EMPTY_DIR #created DB
     ret=$?
-    if [ $ret -eq 0 ]; then 
-        html_failed "<TR><TD> Certutil succeeded in deleting a cert in an empty directory "
+    if [ $ret -ne 255 ]; then 
+        html_failed "<TR><TD> Certutil succeeded in deleting a cert in an empty directory $ret"
     else
         html_passed "<TR><TD> Certutil failed in an empty dir $ret"
     fi
@@ -132,8 +132,8 @@ dbtest_main()
     chmod -w * .
     certutil -D -n "TestUser" -d .
     ret=$?
-    if [ $ret -eq 0 ]; then
-      html_failed "<TR><TD> Certutil succeeded in deleting a cert in an readonly directory "
+    if [ $ret -ne 255 ]; then
+      html_failed "<TR><TD> Certutil succeeded in deleting a cert in an readonly directory $ret"
     else
         html_passed "<TR><TD> Certutil failed in an readonly dir $ret"
     fi
