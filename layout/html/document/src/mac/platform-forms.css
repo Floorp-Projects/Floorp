@@ -45,13 +45,13 @@ textarea[disabled] {
   padding: 0px 1px 0px 1px;
   font-size: 11px;
   margin: 1px 1px 1px 1px;
-  background-color: transparent;
+  background-color: -moz-field;
 }
 
 select {
   -moz-appearance: menulist;
   margin: 1px 1px 1px 1px;
-  background-color: transparent !important;
+  background-color: -moz-field !important;
   color: -moz-FieldText !important;
   font-size: 11px;
 }
