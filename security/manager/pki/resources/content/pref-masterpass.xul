@@ -23,7 +23,7 @@
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
 
-<!DOCTYPE window [
+<!DOCTYPE page [
   <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd">
   <!ENTITY % prefPass SYSTEM "chrome://pippki/locale/pref-masterpass.dtd">
   %brandDTD;
