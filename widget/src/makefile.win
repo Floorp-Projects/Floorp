@@ -16,6 +16,6 @@
 # Reserved.
 DEPTH=..\..
 
-DIRS=xpwidgets windows build
+DIRS=xpwidgets windows support build
 
 include <$(DEPTH)\config\rules.mak>
