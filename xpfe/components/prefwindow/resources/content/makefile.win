@@ -29,6 +29,11 @@ CHROME_CONTENT = \
 	.\pref-imageblocking.xul \
 	.\pref-appearance.xul \
 	.\pref-applications.xul \
+	.\pref-applications.js \
+	.\pref-applications-edit.xul \
+	.\pref-applications-new.xul \
+	.\pref-applications-new.js \
+	.\overrideHandler.js \
 	.\pref-cache.js \
 	.\pref-cache.xul \
 	.\pref-colors.js \

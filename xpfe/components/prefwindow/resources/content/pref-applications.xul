@@ -19,6 +19,7 @@
    Rights Reserved.
    
    Contributor(s): 
+     Ben Goodger <ben@netscape.com>, original implementor
   -->
 
 <?xml-stylesheet href="chrome://communicator/skin/" type="text/css"?>
@@ -28,51 +29,93 @@
 
 <window xmlns:html="http://www.w3.org/1999/xhtml"
     		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
         class="color-dialog"
+        style="user-focus: ignore;"
         title="&window.title;" align="vertical"
   		  onload="parent.initPanel('chrome://communicator/content/pref/pref-applications.xul');">
 
-  <!-- NOTE to owner of this panel 
-            - this panel is quite complex. It will probably require a getfields 
-              and setfields function for getting and setting appropriate data. 
-              
-              you will need to write some JS to get the correct names and values
-              from the list as appropriate to pass to the Data Manager
-      -->              
-
+  <script language="JavaScript" src="chrome://communicator/content/pref/pref-applications.js"></script>
+  <script language="JavaScript" src="chrome://communicator/content/pref/overrideHandler.js"></script>
+  <script language="JavaScript" src="chrome://global/content/strres.js"></script>
+        
   <box class="box-smallheader" title="&lHeader;"/>
 
   <titledbox>
     <title><text value="&descript;"/></title>
     
-    <box orient="vertical">
+    <box orient="vertical" flex="1">
       <text class="label" value="&fileTypes.label;"/>
-      <tree id="appTree" class="inset" flex="1">
+      <tree id="appTree" class="inset" flex="1" 
+            datasources="rdf:null" ref="urn:mimetypes"
+            onselect="selectApplication();">
         <treecolgroup>
           <treecol flex="1"/>
         </treecolgroup>
-        <treechildren flex="1">
-          <treeitem>
-            <treerow>
-              <treecell value="&aimLaunchSelect.label;"/>
-            </treerow>
-          </treeitem>
-        </treechildren>
+        <template>
+          <rule>
+            <conditions>
+              <content uri="?uri"/>
+              <!-- the RDF Seq of MIME types -->
+              <triple subject="?uri" object="?MIME-types"
+                      predicate="http://home.netscape.com/NC-rdf#MIME-types"/>
+              <!-- each MIME type -->
+              <member container="?MIME-types" child="?type"/>
+              <!-- MIME type value -->
+              <triple subject="?type" object="?value"
+                      predicate="http://home.netscape.com/NC-rdf#value"/>
+              <triple subject="?type" object="?editable"
+                      predicate="http://home.netscape.com/NC-rdf#editable"/>
+            </conditions>
+            <action> 
+              <treechildren flex="1">
+                <treeitem uri="?type">
+                  <treerow>
+                    <treecell value="?description"/>
+                  </treerow>
+                </treeitem>
+              </treechildren>
+            </action>
+          </rule>        
+        </template>
       </tree>
     </box>
     
-    <box orient="vertical" halign="top">
-	  	<button class="dialog push" id="newTypeButton" value="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" />
-  		<button class="dialog push" id="editButton" value="&editButton.label;" accesskey="&editButton.accesskey;" />
-	  	<button class="dialog push" id="removeButton" value="&removeButton.label;" accesskey="&removeButton.accesskey;" />
+    <box orient="vertical">
+	  	<button id="newTypeButton" 
+              value="&newTypeButton.label;" accesskey="&newTypeButton.accesskey;" 
+              oncommand="newType();"/>
+  		<button id="editButton" 
+              value="&editButton.label;" accesskey="&editButton.accesskey;" 
+              oncommand="editType();"/>
+	  	<button id="removeButton" 
+              value="&removeButton.label;" accesskey="&removeButton.accesskey;" 
+              oncommand="removeType();"/>
  	  </box>
   </titledbox>
     
   <titledbox orient="vertical">
     <title><text value="&file;"/></title>
-    <text class="label" value="&exten;"/>
-    <text class="label" value="&mimeType;"/>
-    <text class="label" value="&handle;"/>
+    <grid flex="1">
+      <columns>
+        <column/>
+        <column flex="1"/>
+      </columns>
+      <rows>
+        <row>
+          <text class="label" value="&exten;"/>
+          <text class="label" id="extension"/>
+        </row>
+        <row>
+          <text class="label" value="&mimeType;"/>
+          <text class="label" id="mimeType"/>
+        </row>
+        <row>
+          <text class="label" value="&handle;"/>
+          <text class="label" id="handler"/>
+        </row>
+      </rows>
+    </grid>
   </titledbox>
   
 </window>
