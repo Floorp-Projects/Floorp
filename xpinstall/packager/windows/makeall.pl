@@ -75,7 +75,7 @@ $ENV{WIZ_fileMainExe}          = "Mozilla.exe";
 $ENV{WIZ_fileUninstall}        = $seuFileNameSpecific;
 
 # Set the location of the local tmp stage directory
-$gLocalTmpStage = "$inDistPath\\tmpstage";
+$gLocalTmpStage = $inStagePath;
 
 # Check for existence of staging path
 if(!(-d "$inStagePath"))
@@ -132,11 +132,6 @@ else
   mkdir ("$inDistPath\\setup",0775);
 }
 
-# Create the local tmp stage area
-if(CreateTmpStage())
-{
-  exit(1);
-}
 if(MakeXpiFile())
 {
   exit(1);
@@ -149,9 +144,6 @@ if(MakeConfigFile())
 {
   exit(1);
 }
-
-# Remove the local tmp stage area
-RemoveLocalTmpStage();
 
 # Copy the setup files to the dist setup directory.
 if(system("copy install.ini $inDistPath"))
@@ -543,6 +535,7 @@ sub VerifyComponents()
     if($mComponent =~ /talkback/i)
     {
       print " place holder: $inStagePath\\$mComponent\n";
+      mkdir("$inStagePath\\$mComponent", 775);
     }
     elsif(-d "$inStagePath\\$mComponent")
     {
