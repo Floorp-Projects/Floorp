@@ -2676,6 +2676,11 @@ PRUint8 *theBits,*curline;
 PRBool isTopToBottom;
 PRInt32 sRow, eRow, rStep; 
 
+  // No point in scaling images to 0--some printers choke on it (bug 191684)
+  if (aWidth == 0 || aHeight == 0) {
+    return;
+  }
+
   XL_SET_NUMERIC_LOCALE();
 
   if(mPrintSetup->color == PR_FALSE ){
