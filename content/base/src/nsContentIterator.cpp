@@ -911,6 +911,8 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   
   // now to find the last node
   aRange->GetEndOffset(&indx);
+  numChildren = GetNumChildren(endParent);
+
   if (indx > numChildren) indx = numChildren;
   if (!indx)
   {
@@ -918,8 +920,6 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   }
   else
   {
-    numChildren = GetNumChildren(endParent);
-  
     if (!numChildren) // no children, must be a text node
     {
       cN = cEndP; 
