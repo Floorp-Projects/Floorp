@@ -25,15 +25,15 @@ VPATH		= @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
+IS_COMPONENT	= 1
 MODULE		= timer
-LIBRARY_NAME	= timer_s
+LIBRARY_NAME	= timer
 
 REQUIRES	= xpcom
 
-CPPSRCS		= nsTimer.cpp
+CPPSRCS		= nsTimerOS2.cpp
 
-override NO_SHARED_LIB=1
-override NO_STATIC_LIB=
+EXTRA_DSO_LDOPTS = $(MOZ_COMPONENT_LIBS)
 
 include $(topsrcdir)/config/rules.mk
 

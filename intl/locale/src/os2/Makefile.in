@@ -24,11 +24,9 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 
 MODULE		= locale
-LIBRARY_NAME	= nglocale
+LIBRARY_NAME	= nslocale
 IS_COMPONENT	= 1
-OS2_IMPLIB	= 1
-OS2_LIBRARYNAME	= nglocale
-OS2_LIBS	= libuni xpcom ngbase libnslocale_s
+EXTRA_DSO_LIBS	= nslocale_s
 
 REQUIRES	= xpcom unicharutil
 
@@ -38,13 +36,22 @@ CPPSRCS		= \
 		nsCollationOS2.cpp \
 		nsDateTimeFormatOS2.cpp \
 		nsLocaleDllOS2.cpp \
+		nsLocaleModule.cpp \
 		$(NULL)
 
-EXPORTS		= nsILocaleOS2.h
+EXTRA_DSO_LDOPTS = $(EXTRA_DSO_LIBS) \
+	$(MOZ_COMPONENT_LIBS) \
+	$(NULL)
+
+ifeq ($(MOZ_OS2_TOOLS),VACPP)
+EXTRA_DSO_LDOPTS += libuls.lib
+else
+EXTRA_DSO_LDOPTS += -llibuni
+endif
 
 include $(topsrcdir)/config/rules.mk
 
-INCLUDES	+= $(srcdir) $(srcdir)/..
+INCLUDES	+= $(srcdir)/..
 
 OS_LIBS		+= $(NSPR_LIBS)
 
