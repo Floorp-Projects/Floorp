@@ -1,0 +1,41 @@
+<?xml version="1.0"?>
+<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+         xmlns:nc="http://home.netscape.com/NC-rdf#">
+ 
+  <rdf:Description about="help-toc.rdf#nav-doc-ses">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li> <rdf:Description ID="nav-doc-quicklaunch" nc:name="Using Quick Launch" nc:link="nav_help.xhtml#using_quick_launch"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+  <rdf:Description about="help-toc.rdf#advanced_pref_advanced">
+    <nc:subheadings>
+      <rdf:Seq>
+        <rdf:li><rdf:Description ID="advanced_pref_system" nc:name="System" nc:link="cs_nav_prefs_advanced.xhtml#system"/> </rdf:li>
+      </rdf:Seq>
+    </nc:subheadings>
+  </rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#q">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Quick_Launch"
+         nc:name="Quick Launch"
+	 nc:link="nav_help.xhtml#using_quick_launch"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="help-indexAZ.rdf#s">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="System"
+         nc:name="System Preferences"
+	 nc:link="cs_nav_prefs_advanced.xhtml#system"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+</rdf:RDF>

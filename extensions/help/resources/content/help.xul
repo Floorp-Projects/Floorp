@@ -155,8 +155,7 @@
         </template>
             <treecols>
                <treecol id="GlossaryNameColumn" flex="1"
-                  hideheader="true"
-                  primary="true"/>
+                  hideheader="true"/>
             </treecols>
          </tree>
 
@@ -248,7 +247,7 @@
 
                  <treecols>
                     <treecol id="ResultsColumn" flex="1"
-                             hideheader="true" primary="true"
+                             hideheader="true"
                              sortActive="true"
                              sortDirection="ascending"
                              sort="?name"/>

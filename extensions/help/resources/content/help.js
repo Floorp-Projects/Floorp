@@ -44,8 +44,8 @@ var helpBrowser;
 var helpExternal;
 var helpSearchPanel;
 var emptySearch;
-var emptySearchText
-var emptySearchLink
+var emptySearchText = "No search items found.";
+var emptySearchLink = "about:blank";
 var helpTocPanel;
 var helpIndexPanel;
 var helpGlossaryPanel;
@@ -59,6 +59,7 @@ const RDF = Components.classes["@mozilla.org/rdf/rdf-service;1"].getService(Comp
 const RDF_ROOT = RDF.GetResource("urn:root");
 const NC_PANELLIST = RDF.GetResource(NC + "panellist");
 const NC_PANELID = RDF.GetResource(NC + "panelid");
+const NC_PLATFORM = RDF.GetResource(NC + "platform");
 const NC_EMPTY_SEARCH_TEXT = RDF.GetResource(NC + "emptysearchtext");
 const NC_EMPTY_SEARCH_LINK = RDF.GetResource(NC + "emptysearchlink");
 const NC_DATASOURCES = RDF.GetResource(NC + "datasources");
@@ -87,6 +88,9 @@ const defaultHelpFile = "chrome://help/locale/mozillahelp.rdf";
 var defaultTopic = "welcome"; 
 var searchDatasources = "rdf:null";
 var searchDS = null;
+var platform = /mac/i.test(navigator.platform) ? "mac" :
+               /win/i.test(navigator.platform) ? "win" :
+               /os\/2/i.test(navigator.platform) ? "os/2" : "unix";
 
 const NSRESULT_RDF_SYNTAX_ERROR = 0x804e03f7; 
 
@@ -212,24 +216,27 @@ function loadHelpRDF() {
       var panelDefs = helpFileDS.GetTarget(RDF_ROOT, NC_PANELLIST, true);      
       RDFContainer.Init(helpFileDS, panelDefs);
       var iterator = RDFContainer.GetElements();
-        while (iterator.hasMoreElements()) {
+      while (iterator.hasMoreElements()) {
         var panelDef = iterator.getNext();
-        var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID, null);        
+        if (getAttribute(helpFileDS, panelDef, NC_PLATFORM, platform) != platform)
+          continue; // ignore datasources for other platforms.
 
-        var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "rdf:none");
+        var panelID = getAttribute(helpFileDS, panelDef, NC_PANELID, null);
+
+        var datasources = getAttribute(helpFileDS, panelDef, NC_DATASOURCES, "rdf:null");
         datasources = normalizeLinks(helpBaseURI, datasources);
         // cache additional datsources to augment search datasources.
         if (panelID == "search") {
-	       emptySearchText = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_TEXT, "No search items found.");
-	       emptySearchLink = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_LINK, "about:blank");
-          searchDatasources = datasources;
-          datasources = "rdf:null"; // but don't try to display them yet!
+          emptySearchText = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_TEXT, emptySearchText);
+          emptySearchLink = getAttribute(helpFileDS, panelDef, NC_EMPTY_SEARCH_LINK, emptySearchLink);
+          searchDatasources += " " + datasources;
+          continue; // but don't try to display them yet!
         }  
 
         // cache toc datasources for use by ID lookup.
         var tree = document.getElementById("help-" + panelID + "-panel");
         loadDatabasesBlocking(datasources);
-        tree.setAttribute("datasources", datasources);
+        tree.setAttribute("datasources", tree.getAttribute("datasources") + " " + datasources);
       }  
     }
     catch (e) {
