@@ -32,7 +32,7 @@
 #include "nsITimer.h"
 #include "nsITimerCallback.h"
 
-#include "nsHashTable.h"
+#include "nsHashtable.h"
 
 class nsIHTMLEditor;
 class nsIDOMXULDocument;
