@@ -90,7 +90,9 @@ nsRadioControlFrame::PostCreateWidget(nsIPresContext* aPresContext, nscoord& aWi
 {
   nsIRadioButton* radio = nsnull;
   if (mWidget && (NS_OK == mWidget->QueryInterface(GetIID(),(void**)&radio))) {
-		radio->SetState(GetChecked(PR_TRUE));
+		PRBool checked = PR_TRUE;
+    GetCurrentCheckState(&checked);
+    radio->SetState(checked);
 
 	  const nsStyleColor* color = 
 	    nsStyleUtil::FindNonTransparentBackground(mStyleContext);
@@ -118,8 +120,10 @@ nsRadioControlFrame::AttributeChanged(nsIPresContext* aPresContext,
       nsIRadioButton* button = nsnull;
       result = mWidget->QueryInterface(kIRadioIID, (void**)&button);
       if ((NS_SUCCEEDED(result)) && (nsnull != button)) {
-        PRBool checkedAttr  = GetChecked(PR_TRUE);
-        PRBool checkedPrevState = GetChecked(PR_FALSE);
+        PRBool checkedAttr = PR_TRUE;
+        GetCurrentCheckState(&checkedAttr);
+        PRBool checkedPrevState = PR_TRUE;
+        button->GetState(checkedPrevState);
         if (checkedAttr != checkedPrevState) {
           button->SetState(checkedAttr);
           mFormFrame->OnRadioChecked(*this, checkedAttr);
@@ -138,40 +142,24 @@ nsRadioControlFrame::MouseClicked(nsIPresContext* aPresContext)
   if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID, (void**)&radioWidget))) {
 	  radioWidget->SetState(PR_TRUE);
     NS_RELEASE(radioWidget);
-    if (mFormFrame) {
-      mFormFrame->OnRadioChecked(*this);
-    } 
   }
+
+  SetCurrentCheckState(PR_TRUE); // Update content model.
+    
+  if (mFormFrame) {
+     // The form frame will determine which radio button needs
+     // to be turned off and will call SetChecked on the 
+     // nsRadioControlFrame to unset the checked state
+    mFormFrame->OnRadioChecked(*this);
+  } 
 }
 
 PRBool
 nsRadioControlFrame::GetChecked(PRBool aGetInitialValue) 
 {
-  if (aGetInitialValue) {
-    if (mContent) {
-      nsIHTMLContent* iContent = nsnull;
-      nsresult result = mContent->QueryInterface(kIHTMLContentIID, (void**)&iContent);
-      if ((NS_OK == result) && iContent) {
-        nsHTMLValue value;
-        result = iContent->GetHTMLAttribute(nsHTMLAtoms::checked, value);
-        if (NS_CONTENT_ATTR_HAS_VALUE == result) {
-          return PR_TRUE;
-        }
-        NS_RELEASE(iContent);
-      }
-    }
-    return PR_FALSE;
-  }
-
-  PRBool result = PR_FALSE;
-  nsIRadioButton* radio = nsnull;
-  if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio))) {
-    radio->GetState(result);
-    NS_RELEASE(radio);
-  } else {
-    result = GetChecked(PR_TRUE);
-  }
-  return result;
+  PRBool checked = PR_FALSE;
+  GetCurrentCheckState(&checked);
+  return(checked);
 }
 
 void
@@ -230,11 +218,9 @@ nsRadioControlFrame::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
 void 
 nsRadioControlFrame::Reset() 
 {
-  nsIRadioButton* radio = nsnull;
-  if (mWidget && (NS_OK == mWidget->QueryInterface(kIRadioIID,(void**)&radio))) {
-    radio->SetState(GetChecked(PR_TRUE));
-    NS_RELEASE(radio);
-  }
+  PRBool checked = PR_TRUE;
+  GetDefaultCheckState(&checked);
+  SetCurrentCheckState(checked);
 }  
 
 
@@ -304,15 +290,6 @@ nsRadioControlFrame::GetFrameName(nsString& aResult) const
 // Expect this code to repackaged and moved to a new location in the future.
 //
 
-void nsRadioControlFrame::GetCurrentRadioState(PRBool *aState)
-{
-  nsIDOMHTMLInputElement* inputElement;
-  if (NS_OK == mContent->QueryInterface(kIDOMHTMLInputElementIID, (void**)&inputElement)) {
-    inputElement->GetChecked(aState);
-    NS_RELEASE(inputElement);
-  }
-}
-
 void
 nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
                                       nsIRenderingContext& aRenderingContext,
@@ -324,7 +301,7 @@ nsRadioControlFrame::PaintRadioButton(nsIPresContext& aPresContext,
                          aDirtyRect, mStyleContext, PR_FALSE, this, mRect.width, mRect.height);
 
   PRBool checked = PR_TRUE;
-  GetCurrentRadioState(&checked); // Get check state from the content model
+  GetCurrentCheckState(&checked); // Get check state from the content model
   if (PR_TRUE == checked) {
 	  // Have to do 180 degress at a time because FillArc will not correctly
 	  // go from 0-360
