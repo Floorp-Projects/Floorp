@@ -2254,7 +2254,12 @@ RDFElementImpl::HandleDOMEvent(nsIPresContext& aPresContext,
     //Capturing stage
     // XXX Needs to be implemented.  Copy from nsGenericElement at some point.
     // Talk to joki@netscape.com for help.
-  
+    // For now at least handle document capture.
+    if ((NS_EVENT_FLAG_BUBBLE != aFlags) && (mDocument != nsnull)) {
+        ret = mDocument->HandleDOMEvent(aPresContext, aEvent, aDOMEvent,
+                                        NS_EVENT_FLAG_CAPTURE, aEventStatus);
+    }
+
     //Local handling stage
     if (nsnull != mListenerManager) {
         mListenerManager->HandleEvent(aPresContext, aEvent, aDOMEvent, aFlags, aEventStatus);
