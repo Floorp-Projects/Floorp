@@ -957,7 +957,7 @@ struct nsMathMLmtableCreator: public nsTableCreator {
   virtual nsresult CreateTableOuterFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableFrame(nsIFrame** aNewFrame);
   virtual nsresult CreateTableRowFrame(nsIFrame** aNewFrame);
-  virtual nsresult CreateTableCellFrame(nsIFrame** aNewFrame);
+  virtual nsresult CreateTableCellFrame(nsIFrame* aParentFrame, nsIFrame** aNewFrame);
   virtual nsresult CreateTableCellInnerFrame(nsIFrame** aNewFrame);
 
   nsMathMLmtableCreator(nsIPresShell* aPresShell)
@@ -983,8 +983,10 @@ nsMathMLmtableCreator::CreateTableRowFrame(nsIFrame** aNewFrame)
 }
 
 nsresult
-nsMathMLmtableCreator::CreateTableCellFrame(nsIFrame** aNewFrame)
+nsMathMLmtableCreator::CreateTableCellFrame(nsIFrame*  aParentFrame,
+                                            nsIFrame** aNewFrame)
 {
+  NS_ASSERTION(!IsBorderCollapse(aParentFrame), "not implemented");
   return NS_NewMathMLmtdFrame(mPresShell, aNewFrame);
 }
 
