@@ -150,7 +150,29 @@ elif [ "$os_name" = "Windows_95" -o \
 then
     #FIXME net use, mount the neccessary pnetwork drives and partitiones first
     PATH=`echo $SHELL | sed -e "s/.ksh.exe//g"  -e "s/.sh.exe//g"`
-    PATH="Z:/nstools/bin;Z:/nstools/perl5;z:/bin;$PATH"
+    MOZTOOLS_IN_PATH=NO
+    if [ -n $MOZ_TOOLS -a -d  $MOZ_TOOLS ] ; then
+        MOZ_TOOLS=`ls -d "$MOZ_TOOLS" | sed -e 's/\\\/\//g'`
+        #echo "MOZ_TOOLS reformated to $MOZ_TOOLS"
+        if [ -d $MOZ_TOOLS ] ; then #still exist after reformating?
+            MOZTOOLS_IN_PATH=OK
+        fi
+    fi
+    if [ -n $MOZTOOLS_IN_PATH -a $MOZTOOLS_IN_PATH = OK ] ; then
+        #echo "Use MOZTOOLS in PATH"
+        PATH="$MOZ_TOOLS/bin;$MOZ_TOOLS/perl5;$PATH"
+    elif [ -d Z:/nstools/bin ] ; then
+        PATH="Z:/nstools/bin;Z:/nstools/perl5;$PATH"
+    elif [ -d C:/nstools/bin ] ; then
+        PATH="C:/nstools/bin;C:/nstools/perl5;$PATH"
+    elif [ -d D:/nstools/bin ] ; then
+        PATH="D:/nstools/bin;D:/nstools/perl5;$PATH"
+    elif [ -d D:/i386/nstools/bin ] ; then
+        PATH="D:/i386/nstools/bin;D:/i386/nstools/perl5;$PATH"
+    else
+        echo "FATAL: Can't find nstools"
+        exit
+    fi
 
     if [  "$os_name" = "Windows_NT" -o \
         "$os_name" = "WINNT" ]
