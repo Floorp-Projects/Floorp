@@ -28,6 +28,7 @@
 **/
 
 #include "Expr.h"
+#include "ExprResult.h"
 
 /**
  * Create a new AttributeValueTemplate

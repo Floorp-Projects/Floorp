@@ -34,9 +34,10 @@
 #ifndef TRANSFRMX_NODESET_H
 #define TRANSFRMX_NODESET_H
 
-#include "dom.h"
 #include "ExprResult.h"
 #include "txError.h"
+
+class Node;
 
 class NodeSet : public ExprResult
 {

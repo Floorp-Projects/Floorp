@@ -33,11 +33,9 @@
 #ifndef TRANSFRMX_FUNCTIONLIB_H
 #define TRANSFRMX_FUNCTIONLIB_H
 
-
-#include "TxString.h"
 #include "primitives.h"
-#include "ExprResult.h"
 #include "Expr.h"
+#include "TxString.h"
 
 /**
  * The following are definitions for the XPath functions

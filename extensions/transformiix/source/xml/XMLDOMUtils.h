@@ -26,8 +26,10 @@
 #ifndef TRANSFRMX_XMLDOMUTILS_H
 #define TRANSFRMX_XMLDOMUTILS_H
 
-#include "dom.h"
 #include "baseutils.h"
+
+class Node;
+class String;
 
 /*
  * A utility class for use with XML DOM implementations

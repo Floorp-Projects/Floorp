@@ -38,6 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsXPathResult.h"
+#include "dom.h"
 #include "ExprResult.h"
 #include "NodeSet.h"
 #include "nsDOMError.h"

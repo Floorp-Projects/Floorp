@@ -32,7 +32,9 @@
 
 #include "baseutils.h"
 #include "TxObject.h"
-#include "StringList.h"
+#include "TxString.h"
+
+class StringList;
 
 class NamedMap : public TxObject {
 

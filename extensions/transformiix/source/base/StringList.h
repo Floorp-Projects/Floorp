@@ -32,8 +32,8 @@
 #ifndef TRANSFRMX_STRINGLIST_H
 #define TRANSFRMX_STRINGLIST_H
 
-#include "TxString.h"
 #include "baseutils.h"
+#include "TxString.h"
 
 class StringListIterator;
 

@@ -48,6 +48,7 @@
 #include "nsINameSpaceManager.h"
 #include "pldhash.h"
 #include "txAtom.h"
+#include "TxObject.h"
 #include "TxString.h"
 
 #ifndef NULL

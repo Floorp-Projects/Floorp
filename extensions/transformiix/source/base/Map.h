@@ -31,7 +31,8 @@
 
 #include "baseutils.h"
 #include "TxObject.h"
-#include "List.h"
+
+class txList;
 
 class Map : public TxObject {
 
@@ -64,7 +65,7 @@ public:
      *
      * You will need to delete this List when you are done with it.
     **/
-    List* keys();
+    txList* keys();
 
     /**
      *  Returns the object reference in this Map associated with the given name

@@ -33,9 +33,10 @@
  */
 
 #include "FunctionLib.h"
+#include "NodeSet.h"
+#include "Tokenizer.h"
 #include "txAtoms.h"
 #include "txIXPathContext.h"
-#include "Tokenizer.h"
 #include "XMLDOMUtils.h"
 
 /*

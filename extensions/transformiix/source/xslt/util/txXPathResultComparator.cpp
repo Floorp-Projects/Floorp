@@ -39,7 +39,8 @@
 
 #include "txXPathResultComparator.h"
 #include "Expr.h"
-#include "txNodeSorter.h"
+#include "ExprResult.h"
+#include "primitives.h"
 #ifndef TX_EXE
 #include "nsCollationCID.h"
 #include "nsILocale.h"

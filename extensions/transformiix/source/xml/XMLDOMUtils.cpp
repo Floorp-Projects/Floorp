@@ -24,6 +24,8 @@
  */
 
 #include "XMLDOMUtils.h"
+#include "dom.h"
+#include "TxString.h"
 
 void XMLDOMUtils::getNodeValue(Node* aNode, String& aResult)
 {

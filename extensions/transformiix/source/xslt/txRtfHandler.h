@@ -42,6 +42,9 @@
 #include "txXMLEventHandler.h"
 #include "NodeSet.h"
 
+class Document;
+class Node;
+
 class txRtfHandler : public txXMLEventHandler
 {
 public:

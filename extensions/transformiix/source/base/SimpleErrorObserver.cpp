@@ -24,6 +24,7 @@
  */
 
 #include "ErrorObserver.h"
+#include "TxString.h"
 
 /**
  * Creates a new SimpleErrorObserver.

@@ -31,9 +31,9 @@
  */
 
 #include "NodeSet.h"
+#include "dom.h"
 #include "XMLDOMUtils.h"
-#include "string.h"
-#include "stdio.h"
+#include <string.h>
 
 static const int kTxNodeSetMinSize = 4;
 static const int kTxNodeSetGrowFactor = 2;

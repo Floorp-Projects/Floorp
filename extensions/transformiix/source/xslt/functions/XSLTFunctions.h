@@ -32,9 +32,8 @@
 #define TRANSFRMX_XSLT_FUNCTIONS_H
 
 #include "Expr.h"
-#include "TxString.h"
 #include "Map.h"
-#include "ExprResult.h"
+#include "NodeSet.h"
 
 class NamedMap;
 class ProcessorState;
