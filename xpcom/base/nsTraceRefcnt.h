@@ -94,6 +94,22 @@ PR_BEGIN_MACRO                                                \
   nsTraceRefcnt::LogDtor((void*)this, #_type, sizeof(*this)); \
 PR_END_MACRO
 
+#ifdef HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR  // from autoconf (XXX needs to be
+                                          // set for non-autoconf platforms)
+
+// nsCOMPtr.h allows these macros to be defined by clients
+// a dynamic_cast to void* gives the most derived object
+#define NSCAP_LOG_ASSIGNMENT(_c, _p)               \
+  if ((_p)) nsTraceRefcnt::LogAddCOMPtr((_c),dynamic_cast<void *>(NS_STATIC_CAST(nsISupports*,_p)))
+
+#define NSCAP_RELEASE(_c, _p);                                      \
+  if ((_p)) {                                                       \
+    nsTraceRefcnt::LogReleaseCOMPtr((_c),dynamic_cast<void *>(NS_STATIC_CAST(nsISupports*,_p))); \
+    NS_RELEASE(_p);                                                 \
+  }
+
+#endif /* HAVE_CPP_DYNAMIC_CAST_TO_VOID_PTR */
+
 #else /* !NS_BUILD_REFCNT_LOGGING */
 
 #define NS_LOG_ADDREF(_p, _rc, _type, _size)
@@ -176,6 +192,10 @@ public:
 
   static NS_COM void LogDtor(void* aPtr, const char* aTypeName,
                              PRUint32 aInstanceSize);
+
+  static NS_COM void LogAddCOMPtr(void *aCOMPtr, void* aObject);
+
+  static NS_COM void LogReleaseCOMPtr(void *aCOMPtr, void* aObject);
 
   enum StatisticsType {
     ALL_STATS,
