@@ -24,6 +24,7 @@ var pop_last=0, pop_chunk=25;
 var isinited=false;
 var xalan_base, xalan_xml, xalan_elems, xalan_length, content_row, target;
 var matchRE, matchNameTag, matchFieldTag;
+var tests_run, tests_passed, tests_failed;
 
 function loaderstuff(eve) {
   var ns = "http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul";
@@ -38,6 +39,9 @@ function loaderstuff(eve) {
   target = document.getElementById("xalan_grid");
   matchNameTag = document.getElementById("search-name");
   matchFieldTag = document.getElementById("search-field");
+  tests_run = document.getElementById("tests_run");
+  tests_passed = document.getElementById("tests_passed");
+  tests_failed = document.getElementById("tests_failed");
   xalan_base = document.getElementById("xalan_base");
   xalan_xml = document.implementation.createDocument("","",null);
   xalan_xml.addEventListener("load", xalanIndexLoaded, false);
@@ -47,15 +51,14 @@ function loaderstuff(eve) {
 }
 
 function xalanIndexLoaded(e) {
-  xalan_elems = xalan_xml.getElementsByTagName("test");
-  xalan_length = xalan_elems.length;
+  xalan_elems = xalan_xml.documentElement;
+  xalan_length = Math.floor(xalan_elems.childNodes.length/2);
   return true;
 }
 
 function refresh_xalan() {
   while(target.childNodes.length>1) target.removeChild(target.lastChild);
-  xalan_elems = xalan_xml.getElementsByTagName("test");
-  xalan_length = xalan_elems.length;
+  pop_last = 0;
   populate_xalan();
   return true;
 }
@@ -70,7 +73,7 @@ function populate_xalan() {
   var matchRE = new RegExp(matchValue);
   for (i=pop_last;i<Math.min(upper,xalan_length);i++){
     current = content_row.cloneNode(true);
-    test = xalan_elems.item(i);
+    test = xalan_elems.childNodes.item(2*i+1);
     if (!test.getAttribute("file").match(re)){
       current.setAttribute("id", test.getAttribute("file"));
       current.childNodes.item(1).setAttribute("value",
@@ -101,10 +104,14 @@ function dump_checked(){
   var nds = target.childNodes;
   var todo = new Array();
   for (i=1;i<nds.length;i++){
-    node=nds.item(i).firstChild;
+    node=nds.item(i);
+    if(node.getAttribute("class") != "notrun")
+      node.setAttribute("class", "notrun");
+    node=node.firstChild;
     if(node.hasAttribute("checked"))
       todo.push(node.nextSibling.getAttribute("value"));
   }
+  reset_stats();
   do_transforms(todo);
 }
 
@@ -114,6 +121,11 @@ function handle_result(name,success){
   if (content_row){
     content_row.setAttribute("class",classname);
   }
+  tests_run.getAttributeNode("value").nodeValue++;
+  if (success)
+    tests_passed.getAttributeNode("value").nodeValue++;
+  else
+    tests_failed.getAttributeNode("value").nodeValue++;
 }
 
 function hide_checked(yes){
@@ -180,4 +192,10 @@ function browse_base_dir(){
     }
     xalan_base.setAttribute('value',fp.fileURL.path);
   }
+}
+
+function reset_stats(){
+  tests_run.setAttribute("value", "0");
+  tests_passed.setAttribute("value", "0");
+  tests_failed.setAttribute("value", "0");
 }

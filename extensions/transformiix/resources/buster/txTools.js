@@ -32,7 +32,6 @@ function do_transforms(new_name_array,verbose){
   if (name_array.length){
     current=name_array.shift();
     __docSet=new txDocSet(current);
-    setTimeout("do_transforms()",20);
   }
 }
 
@@ -95,6 +94,7 @@ txDocSet.prototype = {
         dump("Reference:\n");
         DumpDOM(this.mReference);
       }
+      do_transforms();
     }
   }
 };
