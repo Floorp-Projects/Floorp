@@ -70,6 +70,11 @@ treecell.propertylist {
   padding-right: 2px;
 }
 
+.tree-cell-icon {
+  list-style-image: inherit;
+  padding-right: 2px;
+}
+
 .tree-cell-twisty {
  list-style-image: url("chrome://global/skin/closedtwisty.gif");
  user-focus:ignore;
