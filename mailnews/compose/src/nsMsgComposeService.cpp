@@ -294,15 +294,21 @@ void nsMsgComposeService::CloseWindow(nsIDOMWindowInternal *domWindow)
     if (globalObj)
     {
       globalObj->GetDocShell(getter_AddRefs(docshell));
-      nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docshell));
-      nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
-      treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
-      if (treeItem)
+      if (docshell)
       {
-        nsCOMPtr<nsIBaseWindow> baseWindow;
-        baseWindow = do_QueryInterface(treeOwner);
-        if (baseWindow)
-          baseWindow->Destroy();
+        nsCOMPtr<nsIDocShellTreeItem>  treeItem(do_QueryInterface(docshell));
+        if (treeItem)
+        {
+          nsCOMPtr<nsIDocShellTreeOwner> treeOwner;
+          treeItem->GetTreeOwner(getter_AddRefs(treeOwner));
+          if (treeOwner)
+          {
+            nsCOMPtr<nsIBaseWindow> baseWindow;
+            baseWindow = do_QueryInterface(treeOwner);
+            if (baseWindow)
+              baseWindow->Destroy();
+          }
+        }
       }
     }
   }
