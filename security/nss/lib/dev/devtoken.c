@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.30 $ $Date: 2002/10/10 20:30:10 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.31 $ $Date: 2002/10/10 21:17:39 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef NSSCKEPV_H
@@ -52,6 +52,8 @@ static const char CVS_ID[] = "@(#) $RCSfile: devtoken.c,v $ $Revision: 1.30 $ $D
 #include "dev3hack.h"
 #include "secerr.h"
 #endif
+
+extern const NSSError NSS_ERROR_NOT_FOUND;
 
 /* The number of object handles to grab during each call to C_FindObjects */
 #define OBJECT_STACK_SIZE 16
