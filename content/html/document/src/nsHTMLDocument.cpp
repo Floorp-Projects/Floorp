@@ -302,7 +302,7 @@ NS_CLASSINFO_MAP_BEGIN(HTMLDocument)
 NS_CLASSINFO_MAP_END
 
 
-// QueryInterface implementation for nsHTMLAnchorElement
+// QueryInterface implementation for nsHTMLDocument
 NS_INTERFACE_MAP_BEGIN(nsHTMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIHTMLDocument)
   NS_INTERFACE_MAP_ENTRY(nsIDOMHTMLDocument)
