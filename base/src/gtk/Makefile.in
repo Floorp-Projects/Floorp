@@ -34,3 +34,4 @@ CPPSRCS		= nsTimer.cpp
 
 include $(topsrcdir)/config/rules.mk
 
+CFLAGS		+= $(shell gtk-config --cflags)

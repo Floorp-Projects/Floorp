@@ -896,6 +896,7 @@ base/Makefile
 base/public/Makefile
 base/src/Makefile
 base/src/unix/Makefile
+base/src/gtk/Makefile
 base/tests/Makefile
 caps/Makefile
 caps/public/Makefile
@@ -1086,6 +1087,7 @@ base/public/Makefile
 base/src/Makefile
 base/src/rhapsody/Makefile
 base/src/unix/Makefile
+base/src/gtk/Makefile
 base/tests/Makefile
 config/Makefile
 config/autoconf.mk
