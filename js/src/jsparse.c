@@ -717,39 +717,113 @@ static JSParseNode *
 FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
             JSBool lambda)
 {
-    JSParseNode *pn, *body;
     JSOp op, prevop;
+    JSParseNode *pn, *body;
     JSAtom *funAtom, *argAtom;
-    JSFunction *fun;
-    JSObject *parent;
-    JSObject *pobj;
+    JSStackFrame *fp;
+    JSObject *varobj, *pobj;
+    JSAtomListElement *ale;
     JSProperty *prop;
+    JSFunction *fun;
     uintN dupflag;
     JSBool ok;
     JSTreeContext funtc;
-    JSAtomListElement *ale;
 
     /* Make a TOK_FUNCTION node. */
-    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_FUNC, tc);
-    if (!pn)
-        return NULL;
 #if JS_HAS_GETTER_SETTER
     op = CURRENT_TOKEN(ts).t_op;
 #endif
+    pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_FUNC, tc);
+    if (!pn)
+        return NULL;
 
     /* Scan the optional function name into funAtom. */
-    if (js_MatchToken(cx, ts, TOK_NAME))
-        funAtom = CURRENT_TOKEN(ts).t_atom;
-    else
-        funAtom = NULL;
+    funAtom = js_MatchToken(cx, ts, TOK_NAME) ? CURRENT_TOKEN(ts).t_atom : NULL;
 
     /* Find the nearest variable-declaring scope and use it as our parent. */
-    parent = cx->fp->varobj;
-    fun = js_NewFunction(cx, NULL, NULL, 0, lambda ? JSFUN_LAMBDA : 0, parent,
+    fp = cx->fp;
+    varobj = fp->varobj;
+
+    /*
+     * Record names for function statements in tc->decls so we know when to
+     * avoid optimizing variable references that might name a function.
+     */
+    if (!lambda && funAtom) {
+        ATOM_LIST_SEARCH(ale, &tc->decls, funAtom);
+        if (ale) {
+            prevop = ALE_JSOP(ale);
+            if (JS_HAS_STRICT_OPTION(cx) || prevop == JSOP_DEFCONST) {
+                const char *name = js_AtomToPrintableString(cx, funAtom);
+                if (!name ||
+                    !js_ReportCompileErrorNumber(cx, ts, NULL,
+                                                 (prevop != JSOP_DEFCONST)
+                                                 ? JSREPORT_WARNING |
+                                                   JSREPORT_STRICT
+                                                 : JSREPORT_ERROR,
+                                                 JSMSG_REDECLARED_VAR,
+                                                 (prevop == JSOP_DEFFUN ||
+                                                  prevop == JSOP_CLOSURE)
+                                                 ? js_function_str
+                                                 : (prevop == JSOP_DEFCONST)
+                                                 ? js_const_str
+                                                 : js_var_str,
+                                                 name)) {
+                    return NULL;
+                }
+            }
+            if (tc->topStmt && prevop == JSOP_DEFVAR)
+                tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
+        } else {
+            ale = js_IndexAtom(cx, funAtom, &tc->decls);
+            if (!ale)
+                return NULL;
+        }
+        ALE_SET_JSOP(ale, tc->topStmt ? JSOP_CLOSURE : JSOP_DEFFUN);
+
+#if JS_HAS_LEXICAL_CLOSURE
+        /*
+         * A function nested at top level inside another's body needs only a
+         * local variable to bind its name to its value, and not an activation
+         * object property (it might also need the activation property, if the
+         * outer function contains with statements, e.g., but the stack slot
+         * wins when jsemit.c's LookupArgOrVar can optimize a JSOP_NAME into a
+         * JSOP_GETVAR bytecode).
+         */
+        if (!tc->topStmt && (tc->flags & TCF_IN_FUNCTION)) {
+            /*
+             * Define a property on the outer function so that LookupArgOrVar
+             * can properly optimize accesses.
+             *
+             * XXX Here and in Variables, we use the function object's scope,
+             * XXX arguably polluting it, when we could use a compiler-private
+             * XXX scope structure.  Tradition!
+             */
+            JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
+            JS_ASSERT(fp->fun == (JSFunction *) JS_GetPrivate(cx, varobj));
+            if (!js_LookupProperty(cx, varobj, (jsid)funAtom, &pobj, &prop))
+                return NULL;
+            if (prop)
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
+            if (!prop || pobj != varobj) {
+                if (!js_DefineNativeProperty(cx, varobj, (jsid)funAtom,
+                                             JSVAL_VOID,
+                                             js_GetLocalVariable,
+                                             js_SetLocalVariable,
+                                             JSPROP_ENUMERATE | JSPROP_SHARED,
+                                             SPROP_HAS_SHORTID, fp->fun->nvars,
+                                             NULL)) {
+                    return NULL;
+                }
+                fp->fun->nvars++;
+            }
+        }
+#endif
+    }
+
+    fun = js_NewFunction(cx, NULL, NULL, 0, lambda ? JSFUN_LAMBDA : 0, varobj,
                          funAtom);
     if (!fun)
         return NULL;
-
 #if JS_HAS_GETTER_SETTER
     if (op != JSOP_NOP)
         fun->flags |= (op == JSOP_GETTER) ? JSPROP_GETTER : JSPROP_SETTER;
@@ -843,87 +917,6 @@ FunctionDef(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc,
         }
     }
 #endif
-
-    /*
-     * Record names for function statements in tc->decls so we know when to
-     * avoid optimizing variable references that might name a function.
-     */
-    if (!lambda && funAtom) {
-        ATOM_LIST_SEARCH(ale, &tc->decls, funAtom);
-        if (ale) {
-            prevop = ALE_JSOP(ale);
-            if (JS_HAS_STRICT_OPTION(cx) || prevop == JSOP_DEFCONST) {
-                const char *name = js_AtomToPrintableString(cx, funAtom);
-                if (!name ||
-                    !js_ReportCompileErrorNumber(cx, ts, NULL,
-                                                 (prevop != JSOP_DEFCONST)
-                                                 ? JSREPORT_WARNING |
-                                                   JSREPORT_STRICT
-                                                 : JSREPORT_ERROR,
-                                                 JSMSG_REDECLARED_VAR,
-                                                 (prevop == JSOP_DEFFUN ||
-                                                  prevop == JSOP_CLOSURE)
-                                                 ? js_function_str
-                                                 : (prevop == JSOP_DEFCONST)
-                                                 ? js_const_str
-                                                 : js_var_str,
-                                                 name)) {
-                    return NULL;
-                }
-            }
-            if (tc->topStmt && prevop == JSOP_DEFVAR)
-                tc->flags |= TCF_FUN_CLOSURE_VS_VAR;
-        } else {
-            ale = js_IndexAtom(cx, funAtom, &tc->decls);
-            if (!ale)
-                return NULL;
-        }
-        ALE_SET_JSOP(ale, tc->topStmt ? JSOP_CLOSURE : JSOP_DEFFUN);
-
-#if JS_HAS_LEXICAL_CLOSURE
-        /*
-         * A function nested at top level inside another's body needs only a
-         * local variable to bind its name to its value, and not an activation
-         * object property (it might also need the activation property, if the
-         * outer function contains with statements, e.g., but the stack slot
-         * wins when jsemit.c's LookupArgOrVar can optimize a JSOP_NAME into a
-         * JSOP_GETVAR bytecode).
-         */
-        if (!tc->topStmt && (tc->flags & TCF_IN_FUNCTION)) {
-            JSStackFrame *fp;
-            JSObject *varobj;
-
-            /*
-             * Define a property on the outer function so that LookupArgOrVar
-             * can properly optimize accesses.
-             *
-             * XXX Here and in Variables, we use the function object's scope,
-             * XXX arguably polluting it, when we could use a compiler-private
-             * XXX scope structure.  Tradition!
-             */
-            fp = cx->fp;
-            varobj = fp->varobj;
-            JS_ASSERT(OBJ_GET_CLASS(cx, varobj) == &js_FunctionClass);
-            JS_ASSERT(fp->fun == (JSFunction *) JS_GetPrivate(cx, varobj));
-            if (!js_LookupProperty(cx, varobj, (jsid)funAtom, &pobj, &prop))
-                return NULL;
-            if (prop)
-                OBJ_DROP_PROPERTY(cx, pobj, prop);
-            if (!prop || pobj != varobj) {
-                if (!js_DefineNativeProperty(cx, varobj, (jsid)funAtom,
-                                             JSVAL_VOID,
-                                             js_GetLocalVariable,
-                                             js_SetLocalVariable,
-                                             JSPROP_ENUMERATE | JSPROP_SHARED,
-                                             SPROP_HAS_SHORTID, fp->fun->nvars,
-                                             NULL)) {
-                    return NULL;
-                }
-                fp->fun->nvars++;
-            }
-        }
-#endif
-    }
 
 #if JS_HAS_LEXICAL_CLOSURE
     if (lambda || !funAtom) {
@@ -1817,6 +1810,13 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         break;
 
       case TOK_WITH:
+        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
+                                         JSREPORT_WARNING | JSREPORT_STRICT,
+                                         JSMSG_DEPRECATED_USAGE,
+                                         js_with_statement_str)) {
+            return NULL;
+        }
+
         pn = NewParseNode(cx, &CURRENT_TOKEN(ts), PN_BINARY, tc);
         if (!pn)
             return NULL;
@@ -1832,14 +1832,6 @@ Statement(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
         if (!pn2)
             return NULL;
         js_PopStatement(tc);
-
-        /* Deprecate after parsing, in case of WERROR option. */
-        if (!js_ReportCompileErrorNumber(cx, ts, NULL,
-                                         JSREPORT_WARNING | JSREPORT_STRICT,
-                                         JSMSG_DEPRECATED_USAGE,
-                                         js_with_statement_str)) {
-            return NULL;
-        }
 
         pn->pn_pos.end = pn2->pn_pos.end;
         pn->pn_right = pn2;
