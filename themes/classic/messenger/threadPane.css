@@ -206,19 +206,19 @@ treechildren:-moz-tree-image(subjectCol, news, offline) {
 
 /* ..... new thread icons for watch and ignore ..... */
 
-treechildren:-moz-tree-image(news, threadCol, container, watch) {
+treechildren:-moz-tree-image(news, threadCol, watch) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed-eye.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, ignore) {
+treechildren:-moz-tree-image(news, threadCol, ignore) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed-kill.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, watch, offline) {
+treechildren:-moz-tree-image(news, threadCol, watch, offline) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed-offl-eye.gif");
 }
 
-treechildren:-moz-tree-image(news, threadCol, container, ignore, offline) {
+treechildren:-moz-tree-image(news, threadCol, ignore, offline) {
   list-style-image: url("chrome://messenger/skin/icons/thread-closed-offl-kill.gif");
 }
 
