@@ -1484,8 +1484,15 @@ CL_ScrollCompositorWindow(CL_Compositor *compositor,
     
     LOCK_COMPOSITOR(compositor);
 
+#if defined(XP_WIN) && _MSC_VER >= 1100
+    /* Hack to avoid optimizer bug in VC++ v5 */
+    delta_x = (compositor->x_offset != x_origin ) ||
+              (compositor->y_offset != y_origin );
+    if ( delta_x ) {
+#else
     if ((compositor->x_offset != x_origin) ||
         (compositor->y_offset != y_origin)) {
+#endif
         
         /* Invalidate backing store.
            For better performance, perhaps we should be scrolling it, instead */
