@@ -221,11 +221,11 @@ var trashObserver = {
     while (toolbarItem) {
       if (toolbarItem.firstChild.id == buttonId) {
         toolbar.removeChild(toolbarItem);
+        gToolbarChanged = true;
         return;
       }
       toolbarItem = toolbarItem.nextSibling;
     }
-    gToolbarChanged = true;
   },
   _flavourSet: null,
   getSupportedFlavours: function ()
