@@ -122,8 +122,8 @@ while (<JARFILE>)
   # Split up the common format, which is e.g.:
   # messenger/skin/fred/foo.xul (xpfe/barney/wilma/foo.xul)
   m/(.*)\s+\((.*)\)/;
-  my $chromefile = File::Spec->canonpath("$jarfilename/$1");
-  my $cvsfile = File::Spec->canonpath($2);
+  my $chromefile = $1;
+  my $cvsfile = $2;  
 
   # Deal with those jar.mns which have just a single line,
   # implying that the file is in the current directory.
@@ -132,6 +132,9 @@ while (<JARFILE>)
     $chromefile = File::Spec->canonpath("$jarfilename/$_");
     $_ =~ /.*\/(.*?)$/;
     $cvsfile = File::Spec->canonpath($1);
+  } else {
+    $chromefile = File::Spec->canonpath("$jarfilename/$chromefile");
+    $cvsfile = File::Spec->canonpath($cvsfile);
   }
 
   # Convert to platform-specific separator for the chrome version.
