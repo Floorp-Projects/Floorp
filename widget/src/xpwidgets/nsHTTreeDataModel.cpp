@@ -164,7 +164,7 @@ void nsHTTreeDataModel::GetTitleBarStyle(nsIDeviceContext* dc, nsBasicStyleInfo&
 	styleInfo.foregroundColor = NS_RGB(255,255,255);
 	styleInfo.backgroundColor = NS_RGB(0,0,0);
 
-	styleInfo.pBackgroundImage = GetTitleBGImage();
+	styleInfo.pBackgroundImage = nsnull; //GetTitleBGImage();
 }
 
 void nsHTTreeDataModel::GetColumnHeaderStyle(nsIDeviceContext* dc, nsColumnHeaderStyleInfo& styleInfo) const
@@ -185,13 +185,13 @@ void nsHTTreeDataModel::GetColumnHeaderStyle(nsIDeviceContext* dc, nsColumnHeade
 	styleInfo.font = theFont;
 	
 	// Init the colors
-	styleInfo.foregroundColor = NS_RGB(255,255,255);
+	styleInfo.foregroundColor = NS_RGB(0,0,0);
 	styleInfo.backgroundColor = NS_RGB(192,192,192);
 	styleInfo.sortFGColor = NS_RGB(0,0,0);
 	styleInfo.sortBGColor = NS_RGB(64,64,64);
-	styleInfo.disabledColor = NS_RGB(192,192,192);
+	styleInfo.disabledColor = NS_RGB(128,128,128);
 
-	styleInfo.pBackgroundImage = GetColumnHeaderBGImage();
+	styleInfo.pBackgroundImage = nsnull; //GetColumnHeaderBGImage();
 }
 
 void nsHTTreeDataModel::GetControlStripStyle(nsIDeviceContext* dc, nsBasicStyleInfo& styleInfo) const
@@ -215,7 +215,7 @@ void nsHTTreeDataModel::GetControlStripStyle(nsIDeviceContext* dc, nsBasicStyleI
 	styleInfo.foregroundColor = NS_RGB(255,255,255);
 	styleInfo.backgroundColor = NS_RGB(0,0,0);
 
-	styleInfo.pBackgroundImage = GetControlStripBGImage();
+	styleInfo.pBackgroundImage = nsnull; //GetControlStripBGImage();
 }
 
 void nsHTTreeDataModel::GetTitleBarText(nsString& text) const
