@@ -50,15 +50,6 @@
    To unify matters, I share a data structure between top.xul and files.js.
 */
 
-var gData; // for structure, see RegistryToData()
-           /* While each prefs pane (top and files) has its own |gData| var,
-              they all point to the same object, gotten from data manager.
-              I.e. top.js and files.js practically share the same
-              object. This is important so that files selection can be
-              disabled, if roaming is disabled, and be enabled as soon
-              as the user enabled roaming (but didn't save yet). */
-
-
 // for pane switches
 function Unload()
 {
@@ -91,9 +82,6 @@ function RoamingPrefs()
   this.registry = undefined;
 
   this.registryToData();
-
-  var me = this;
-  parent.hPrefWindow.registerOKCallbackFunc(function() { me.okClicked(); });
 }
 RoamingPrefs.prototype =
 {
