@@ -23,6 +23,10 @@ DEPTH=..\..
 
 DIRS= base\public base\src samples\default\windows
 
+!ifndef DISABLE_TESTS
+DIRS = $(DIRS) samples\simple
+!endif
+
 #//------------------------------------------------------------------------
 #//
 #// Include the common makefile rules

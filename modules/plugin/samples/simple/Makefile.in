@@ -37,6 +37,9 @@ REQUIRES	= xpcom \
 		  widget \
 		  $(NULL)
 
+# Make sure that it builds but don't install it
+NO_DIST_INSTALL	= 1
+
 XPIDLSRCS	= nsISimplePluginInstance.idl
 
 CPPSRCS		= npsimple.cpp
