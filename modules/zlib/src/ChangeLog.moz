@@ -4,6 +4,7 @@
 Mozilla.org changes:
 - 17 June 2004
   Sync'd with 1.2.1 release
+  see bug #226733
 
 - 17 June 2004
   Add mozzconf.h
@@ -16,3 +17,7 @@ Mozilla.org changes:
 
 - 25 June 2004
   define NO_vsnprintf for VMS in zutil.h
+
+- 21 September 2004
+  applied patch for DoS vulnerabililty in inflate.c
+  see bug #258009
