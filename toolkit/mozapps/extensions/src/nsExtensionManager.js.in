@@ -101,17 +101,22 @@ nsExtensionManager.prototype = {
   
   updateExtension: function (aExtensionID)
   {
+    var pref = Components.classes["@mozilla.org/preferences-service;1"]
+                         .getService(Components.interfaces.nsIPrefBranch);
+    var appID = pref.getCharPref(PREF_EM_APP_ID);
+    var appVersion = pref.getCharPref(PREF_EM_APP_VERSION);
+    
+    var extensionVersion = this._ds.getExtensionProperty(aExtensionID, "version");
+
     var os = Components.classes["@mozilla.org/observer-service;1"]
                        .getService(Components.interfaces.nsIObserverService);
     var itemCount = 0;
 
     var proxy = null;
-    function getResults()
+    function getExtensionUpdateURL(aExtensionGUID, aInstalledVersion, 
+                                   aTargetApp, aTargetAppVersion)
     {
-      if (proxy) {
-        proxy.count();
-        proxy.contents();
-      }
+      proxy.getNewestExtension(aExtensionGUID, aInstalledVersion, aTargetApp, aTargetAppVersion);
     }
     
     if (!proxy) {    
@@ -120,7 +125,7 @@ nsExtensionManager.prototype = {
         { 
           proxy = aProxy;
           proxy.setListener(this);
-          getResults();
+          getExtensionUpdateURL(aExtensionID, extensionVersion, appID, appVersion);
         },
         
         onError: function (aError)
@@ -128,25 +133,27 @@ nsExtensionManager.prototype = {
           dump("*** onError ERROR = " + aError + "\n");
         },
         
-        countCallback: function (aResult)
+        getNewestExtensionCallback: function (aResult)
         {
-          this._count = aResult;
+          this._newestID = aResult;
+          
+          if (this._newestID != -1)
+            proxy.getProperty(this._newestID, "xpiurl");
         },
 
-        contentsCallback: function (aResult)
+        getPropertyCallback: function (aResult)
         {
-          for (var i = 0; i < this._count; ++i)
-            dump("*** quote " + i + " = " + aResult[i] + "\n");
+          dump("*** UPDATE URL = " + aResult + "\n");
         },
       };
 
       var wspFactory = Components.classes["@mozilla.org/xmlextras/proxy/webserviceproxyfactory;1"]
                                  .getService(Components.interfaces.nsIWebServiceProxyFactory);
-      wspFactory.createProxyAsync("http://localhost:8080/axis/quote.wsdl", 
-                                  "Quote", "", true, listener);
+      wspFactory.createProxyAsync("http://localhost:8080/axis/VersionCheck.wsdl", 
+                                  "VersionCheck", "", true, listener);
     }
     else
-      getResults();
+      getExtensionUpdateURL(aExtensionID, extensionVersion, appID, appVersion);
           
     return;
 
@@ -257,6 +264,7 @@ nsExtensionManager.prototype = {
 
 const PREF_EM_DEFAULTUPDATEURL = "update.url.extensions";
 const PREF_EM_APP_ID = "app.id";
+const PREF_EM_APP_VERSION = "general.useragent.vendorSub";
 
 function EM_NS(aProperty)
 {
@@ -289,6 +297,12 @@ nsExtensionsDataSource.prototype = {
       aDS.Change(aSource, aProperty, oldValue, aNewValue);
     else
       aDS.Assert(aSource, aProperty, aNewValue, true);
+  },
+  
+  getExtensionProperty: function (aExtensionID, aProperty)
+  {
+    var extension = this._rdf.GetResource("urn:mozilla:extension:" + aExtensionID);
+    return this.GetTarget(extension, this._emR(aProperty), true).QueryInterface(Components.interfaces.nsIRDFLiteral).Value;
   },
   
   _setExtensionProperty: function (aExtensionID, aPropertyArc, aPropertyValue)
