@@ -31,6 +31,10 @@
 #include "nsXPIDLString.h"
 #include "nsIFolder.h"
 
+#if defined(DEBUG_sspitzer) || defined(DEBUG_seth)
+#define DEBUG_SUBSCRIBE 1
+#endif
+
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);
 
 MOZ_DECL_CTOR_COUNTER(nsSubscribableServer);
@@ -100,6 +104,10 @@ nsSubscribableServer::SetAsSubscribedInSubscribeDS(const char *aName)
 NS_IMETHODIMP
 nsSubscribableServer::UpdateSubscribedInSubscribeDS()
 {
+#ifdef DEBUG_SUBSCRIBE
+	printf("UpdateSubscribedInSubscribeDS()");
+#endif
+
 	nsresult rv;
     nsCOMPtr<nsIEnumerator> subFolders;
     nsCOMPtr<nsIFolder> rootFolder;
