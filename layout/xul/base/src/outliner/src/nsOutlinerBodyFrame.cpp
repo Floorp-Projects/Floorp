@@ -184,6 +184,34 @@ NS_IMETHODIMP nsOutlinerBodyFrame::RowsRemoved(PRInt32 index, PRInt32 count)
   return NS_OK;
 }
 
+// Painting routines
+NS_IMETHODIMP nsOutlinerBodyFrame::Paint(nsIPresContext*      aPresContext,
+                                         nsIRenderingContext& aRenderingContext,
+                                         const nsRect&        aDirtyRect,
+                                         nsFramePaintLayer    aWhichLayer)
+{
+  return nsLeafBoxFrame::Paint(aPresContext, aRenderingContext, aDirtyRect, aWhichLayer);
+}
+
+NS_IMETHODIMP nsOutlinerBodyFrame::PaintRow(int aRowIndex, 
+                                            nsIPresContext*      aPresContext,
+                                            nsIRenderingContext& aRenderingContext,
+                                            const nsRect&        aDirtyRect,
+                                            nsFramePaintLayer    aWhichLayer)
+{
+  return NS_OK;
+}
+  
+NS_IMETHODIMP nsOutlinerBodyFrame::PaintCell(int aRowIndex, 
+                                             const PRUnichar* aColID, 
+                                             nsIPresContext*      aPresContext,
+                                             nsIRenderingContext& aRenderingContext,
+                                             const nsRect&        aDirtyRect,
+                                             nsFramePaintLayer    aWhichLayer)
+{
+  return NS_OK;
+}
+
 //
 // QueryInterface
 //
