@@ -47,7 +47,7 @@ public:
   il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
 
   GIFCallbk(il_container *aContainer){ NS_INIT_ISUPPORTS(); mContainer=aContainer; };
-  ~GIFCallbk() { };	// XXX Pam needs to fix this
+  virtual ~GIFCallbk() { };	// XXX Pam needs to fix this
 
 private:
   il_container* mContainer;

@@ -65,7 +65,7 @@ public:
   il_container *SetContainer(il_container *ic) {mContainer=ic; return ic;};
 
   ImgDecoder(il_container *aContainer){ NS_INIT_ISUPPORTS(); mContainer=aContainer;};
-  ~ImgDecoder(); // XXX Pam needs to fix this
+  virtual ~ImgDecoder(); // XXX Pam needs to fix this
 
 private:
   il_container* mContainer;
