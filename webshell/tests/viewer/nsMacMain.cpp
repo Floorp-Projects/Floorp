@@ -435,7 +435,7 @@ nsNativeBrowserWindow::DispatchMenuItem(PRInt32 aID)
 /**
  * Quit AppleEvent handler.
  */
-static pascal OSErr handleQuitApplication(const AppleEvent*, AppleEvent*, long)
+static pascal OSErr handleQuitApplication(const AppleEvent*, AppleEvent*, unsigned long)
 {
     if (gTheApp != nsnull) {
         gTheApp->Exit();
