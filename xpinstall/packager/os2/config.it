@@ -278,7 +278,7 @@ Show Dialog=FALSE
 ;*** LOCALIZE ME BABY ***
 Title=$ProductName$ Setup - Quick Launch
 ;*** LOCALIZE ME BABY ***
-Message0=Quick Launch starts Mozilla faster by keeping portions of the program in computer memory.
+Message0=Quick Launch starts $ProductName$ faster by keeping portions of the program in computer memory.
 ;*** LOCALIZE ME BABY ***
 Message1=You can access Quick Launch through the icon on the Windows taskbar tray.
 ;*** LOCALIZE ME BABY ***
@@ -333,13 +333,12 @@ Message Full Installer=$ProductNameNoVersion$ must be closed to proceed with ins
 ; the process id of this app instance window found.
 Close All Process Windows=TRUE
 
-; These keys are not normally necessary for checking instances.  They are
-; set here because Mozilla requires a way to shut down it's turbo mode.
-Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
-Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
-Extra Cmd0 Reg Name=
+; This parameter provides the information needed to shut down turbo mode
 Extra Cmd0 Parameter=-kill
 
+[Check Instance1]
+Process Name=mozturbo.exe
+Extra Cmd0 Parameter=-u
 
 [Component XPCOM]
 Description Short=Mozilla XPCOM
@@ -695,7 +694,7 @@ Timing=pre smartupdate
 
 [OS2 INI3]
 App=$ProductName$
-Key=Current Version
+Key=CurrentVersion
 Key Value=$ProductName$ $UserAgent$
 Decrypt App=FALSE
 Decrypt Key=FALSE
@@ -712,7 +711,7 @@ Decrypt Key Value=TRUE
 Timing=pre smartupdate
 
 [OS2 INI5]
-App=Mozilla 1.0 (en)
+App=$ProductName$ $UserAgent$
 Key=Components
 Key Value=[SETUP PATH]\Components
 Decrypt App=FALSE
@@ -731,12 +730,7 @@ Timing=pre smartupdate
 
 [Cleanup Previous Product RegKeys]
 Product Name0=Mozilla
-Product Reg Key0=Software\Mozilla.org\Mozilla
-Current Version0=1.0 (en)
-
-[Cleanup Previous Product RegKeys]
-Product Name0=Mozilla
-Product Reg Key0=Software\Mozilla.org\Mozilla
+Product INI App0=Mozilla
 Current Version0=$UserAgent$
 
 ; Open Folder indicates whether to open the program folder after the install
@@ -759,7 +753,7 @@ Object ID=<MOZILLA>
 
 [Program Folder0-Object1]
 ClassName=WPProgram
-Title=Mozilla Profile Manager
+Title=$ProductName$ Profile Manager
 File=[SETUP PATH]\$MainExeFile$
 Parameters=-ProfileManager
 Working Dir=[SETUP PATH]
