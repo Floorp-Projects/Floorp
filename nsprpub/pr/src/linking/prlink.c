@@ -117,6 +117,8 @@ struct PRLibrary {
 #if TARGET_CARBON
     CFBundleRef                 bundle;
 #endif
+
+    Ptr                         main;
 #endif
 
 #ifdef XP_UNIX
@@ -605,7 +607,6 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 #if defined(XP_MAC) && TARGET_RT_MAC_CFM
     {
     OSErr                 err;
-    Ptr                   main;
     CFragConnectionID     connectionID;
     Str255                errName;
     Str255                pName;
@@ -652,10 +653,10 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
          * plugins, but those should go in the Extensions folder anyhow.
          */
 #if 0
-        err = NSGetSharedLibrary(pName, &connectionID, &main);
+        err = NSGetSharedLibrary(pName, &connectionID, &lm->main);
 #else
         err = GetSharedLibrary(pName, kCompiledCFragArch, kReferenceCFrag,
-                &connectionID, &main, errName);
+                &connectionID, &lm->main, errName);
 #endif
         if (err != noErr)
         {
@@ -703,7 +704,7 @@ pr_LoadLibraryByPathname(const char *name, PRIntn flags)
 
         /* Finally, try to load the library */
         err = GetDiskFragment(&fileSpec, 0, kCFragGoesToEOF, fileSpec.name, 
-                              kLoadCFrag, &connectionID, &main, errName);
+                              kLoadCFrag, &connectionID, &lm->main, errName);
 
         memcpy(cName, fileSpec.name + 1, fileSpec.name[0]);
         cName[fileSpec.name[0]] = '\0';
@@ -1201,6 +1202,8 @@ pr_FindSymbolInLib(PRLibrary *lm, const char *name)
         PStrFromCStr(name, pName);    
         
         f = (NSFindSymbol(lm->dlh, pName, &symAddr, &symClass) == noErr) ? symAddr : NULL;
+        
+        if (f == NULL && strcmp(name, "main") == 0) f = lm->main;
     }
 #endif /* XP_MAC */
 
