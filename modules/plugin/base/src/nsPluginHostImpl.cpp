@@ -31,6 +31,8 @@
 #include "nsIServiceManager.h"
 #include "prprf.h"
 #include "gui.h"
+#include "nsCacheManager.h"
+#include "nsDiskModule.h"
 
 #ifdef XP_PC
 #include "windows.h"
@@ -169,6 +171,10 @@ public:
   nsresult Initialize(nsIPluginInstance *aInstance, void *aNotifyData);
 
 private:
+
+  nsresult SetUpStreamPeer(nsIURL* aURL, nsIPluginInstance *instance, 
+							const char* aContentType, PRInt32 aProgressMax = 0);
+
   nsIURL                  *mURL;
   nsPluginStreamPeer      *mPeer;
   nsIPluginInstanceOwner  *mOwner;
@@ -183,7 +189,11 @@ private:
   PRInt32                 mLength;
   PRBool                  mGotProgress;
   nsPluginStreamType      mStreamType;
-  FILE                    *mStreamFile;
+#ifdef USE_CACHE
+  nsCacheObject*		  mCachedFile;
+#else
+  FILE*					  mStreamFile;
+#endif
 };
 
 nsPluginStreamListener :: nsPluginStreamListener()
@@ -204,7 +214,11 @@ nsPluginStreamListener :: nsPluginStreamListener()
   mLength = 0;
   mGotProgress = PR_FALSE;
   mStreamType = nsPluginStreamType_Normal;
+#ifdef USE_CACHE
+  mCachedFile = nsnull;
+#else
   mStreamFile = nsnull;
+#endif
 }
 
 nsPluginStreamListener :: ~nsPluginStreamListener()
@@ -234,11 +248,19 @@ printf("killing stream for %s\n", mURL ? mURL->GetSpec() : "(unknown URL)");
 
   NS_IF_RELEASE(mHost);
 
-  if (nsnull != mStreamFile)
+#ifdef USE_CACHE
+  if (nsnull != mCachedFile)
   {
-    fclose(mStreamFile);
-    mStreamFile = nsnull;
+	delete mCachedFile;
+	mCachedFile = nsnull;
   }
+#else // USE_CACHE
+  if(nsnull != mStreamFile)
+  {
+	  fclose(mStreamFile);
+	  mStreamFile = nsnull;
+  }
+#endif // USE_CACHE
 }
 
 NS_IMPL_ADDREF(nsPluginStreamListener)
@@ -374,44 +396,8 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
 
   if ((PR_TRUE == mGotProgress) && (nsnull == mPeer) &&
       (nsnull != instance) && (PR_FALSE == mBound))
-  {
-    //need to create new peer and tell plugin that we have new stream...
-
-    mPeer = (nsPluginStreamPeer *)new nsPluginStreamPeer();
-
-    NS_ADDREF(mPeer);
-
-    mPeer->Initialize(aURL, mLength, 0, aContentType, mNotifyData);
-    instance->NewStream(mPeer, &mStream);
-
-    if (nsnull != mStream)
-      mStream->GetStreamType(&mStreamType);
-
-    if ((mStreamType == nsPluginStreamType_AsFile) ||
-        (mStreamType == nsPluginStreamType_AsFileOnly))
-    {
-      char  buf[400], tpath[300];
-
-#ifdef XP_PC
-      ::GetTempPath(sizeof(tpath), tpath);
-
-      PRInt32 len = PL_strlen(tpath);
-
-      if ((len > 0) && (tpath[len - 1] != '\\'))
-      {
-        tpath[len] = '\\';
-        tpath[len + 1] = 0;
-      }
-#elif defined (XP_UNIX)
-      PL_strcpy(tpath, "/tmp/");
-#else
-      tpath[0] = 0;
-#endif
-
-      PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
-      mStreamFile = fopen(buf, "wb");
-    }
-  }
+	rv = SetUpStreamPeer(aURL, instance, aContentType);
+		
 
   NS_IF_RELEASE(instance);
 
@@ -422,6 +408,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStartBinding(nsIURL* aURL, const char 
 
 NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
 {
+  nsresult rv = NS_OK;
   if ((aProgress == 0) && (nsnull == mPeer))
   {
     nsIPluginInstance *instance = nsnull;
@@ -437,41 +424,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgre
     if (nsnull != instance)
     {
       //need to create new peer and and tell plugin that we have new stream...
-
-      mPeer = (nsPluginStreamPeer *)new nsPluginStreamPeer();
-
-      NS_ADDREF(mPeer);
-
-      mPeer->Initialize(aURL, aProgressMax, 0, mMIMEType, mNotifyData);
-      instance->NewStream(mPeer, &mStream);
-
-      if (nsnull != mStream)
-        mStream->GetStreamType(&mStreamType);
-
-      if ((mStreamType == nsPluginStreamType_AsFile) ||
-          (mStreamType == nsPluginStreamType_AsFileOnly))
-      {
-        char  buf[400], tpath[300];
-
-#ifdef XP_PC
-        ::GetTempPath(sizeof(tpath), tpath);
-
-        PRInt32 len = PL_strlen(tpath);
-
-        if ((len > 0) && (tpath[len - 1] != '\\'))
-        {
-          tpath[len] = '\\';
-          tpath[len + 1] = 0;
-        }
-#elif defined (XP_UNIX)
-        PL_strcpy(tpath, "/tmp/");
-#else
-        tpath[0] = 0;
-#endif
-
-        PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
-        mStreamFile = fopen(buf, "wb");
-      }
+	  rv = SetUpStreamPeer(aURL, instance, nsnull, aProgressMax);
 
       NS_RELEASE(instance);
     }
@@ -480,7 +433,7 @@ NS_IMETHODIMP nsPluginStreamListener :: OnProgress(nsIURL* aURL, PRInt32 aProgre
   mLength = aProgressMax;
   mGotProgress = PR_TRUE;
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsPluginStreamListener :: OnStatus(nsIURL* aURL, const nsString &aMsg)
@@ -514,33 +467,49 @@ NS_IMETHODIMP nsPluginStreamListener :: OnStopBinding(nsIURL* aURL, PRInt32 aSta
     if ((mStreamType == nsPluginStreamType_AsFile) ||
         (mStreamType == nsPluginStreamType_AsFileOnly))
     {
-      if (nsnull != mStreamFile)
-      {
-        fclose(mStreamFile);
-        mStreamFile = nsnull;
+#ifdef USE_CACHE
+		if (nsnull != mCachedFile)
+			{
+			PRInt32 len;
+			nsCachePref* cachePref = nsCachePref::GetInstance();
 
-        char  buf[400], tpath[300];
+			const char* cachePath = cachePref->DiskCacheFolder();
+			const char* filename = mCachedFile->Filename();
 
-#ifdef XP_PC
-        ::GetTempPath(sizeof(tpath), tpath);
+			// we need to pass the whole path and filename to the plugin
+			len = PL_strlen(cachePath) + PL_strlen(filename) + 1;
+			char* pathAndFilename = (char*)PR_Malloc(len * sizeof(char));
+			pathAndFilename = PL_strcpy(pathAndFilename, cachePath);
+			pathAndFilename = PL_strcat(pathAndFilename, filename);
 
-        PRInt32 len = PL_strlen(tpath);
+			mStream->AsFile(pathAndFilename);
+		}
+#else // USE_CACHE
+		if(nsnull != mStreamFile)
+		{
+			fclose(mStreamFile);
+			mStreamFile = nsnull;
 
-        if ((len > 0) && (tpath[len - 1] != '\\'))
-        {
-          tpath[len] = '\\';
-          tpath[len + 1] = 0;
-        }
+			char buf[400], tpath[300];
+#ifdef XP_WIN
+			::GetTempPath(sizeof(tpath), tpath);
+			PRInt32 len = PL_strlen(tpath);
+
+			if((len > 0) && (tpath[len-1] != '\\'))
+			{
+				tpath[len] = '\\';
+				tpath[len+1] = 0;
+			}
 #elif defined (XP_UNIX)
-        PL_strcpy(tpath, "/tmp/");
+			PL_strcpy(tpath, "/tmp/");
 #else
-        tpath[0] = 0;
-#endif
-
-        PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
-        mStream->AsFile(buf);
-      }
-    }
+			tpath[0] = 0;
+#endif // XP_WIN
+			PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
+			mStream->AsFile(buf);
+		}
+#endif // USE_CACHE
+	}
 
     nsIPluginInstance *instance = nsnull;
 
@@ -598,14 +567,84 @@ NS_IMETHODIMP nsPluginStreamListener :: OnDataAvailable(nsIURL* aURL, nsIInputSt
     PRInt32 readlen;
     aIStream->Read((char *)mBuffer, 0, aLength, &readlen);
 
-    if (nsnull != mStreamFile)
-      fwrite(mBuffer, 1, aLength, mStreamFile);
+#ifdef USE_CACHE
+	if(nsnull != mCachedFile)
+	  mCachedFile->Write((char*)mBuffer, aLength);
+#else
+	if(nsnull != mStreamFile)
+		fwrite(mBuffer, 1, aLength, mStreamFile);
+#endif
 
     if (mStreamType != nsPluginStreamType_AsFileOnly)
       mStream->Write((char *)mBuffer, 0, aLength, &readlen);
   }
 
   return NS_OK;
+}
+
+nsresult nsPluginStreamListener::SetUpStreamPeer(nsIURL* aURL, nsIPluginInstance *instance, 
+												 const char* aContentType, PRInt32 aProgressMax)
+{
+	mPeer = (nsPluginStreamPeer *)new nsPluginStreamPeer();
+	if(mPeer == nsnull)
+		return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mPeer);
+
+	if(aContentType != nsnull)
+		mPeer->Initialize(aURL, mLength, 0, aContentType, mNotifyData);
+	else
+		mPeer->Initialize(aURL, aProgressMax, 0, mMIMEType, mNotifyData);
+
+    instance->NewStream(mPeer, &mStream);
+
+    if (nsnull != mStream)
+      mStream->GetStreamType(&mStreamType);
+
+	// check to see if we need to cache the file
+    if ((mStreamType == nsPluginStreamType_AsFile) ||
+        (mStreamType == nsPluginStreamType_AsFileOnly))
+		{
+#ifdef USE_CACHE
+		nsString urlString;
+		char* cString;
+
+		aURL->ToString(urlString);
+		cString = urlString.ToNewCString();
+		mCachedFile = new nsCacheObject(cString);
+		delete [] cString;
+		
+		if(mCachedFile == nsnull)
+			return NS_ERROR_OUT_OF_MEMORY;
+
+		// use the actual filename of the net-based file as the cache filename
+		//mCachedFile->Filename(aURL->GetFile());
+		mCachedFile->Filename("xmas1.mid");
+
+		nsCacheManager* cacheManager = nsCacheManager::GetInstance();
+		nsDiskModule* diskCache = cacheManager->GetDiskModule();
+		diskCache->AddObject(mCachedFile);
+#else // USE_CACHE
+		char buf[400], tpath[300];
+#ifdef XP_WIN
+		::GetTempPath(sizeof(tpath), tpath);
+		PRInt32 len = PL_strlen(tpath);
+
+		if((len > 0) && (tpath[len-1] != '\\'))
+		{
+			tpath[len] = '\\';
+			tpath[len+1] = 0;
+		}
+#elif defined (XP_UNIX)
+		PL_strcpy(tpath, "/tmp/");
+#else
+		tpath[0] = 0;
+#endif // XP_WIN
+		PR_snprintf(buf, sizeof(buf), "%s%08X.ngl", tpath, mStream);
+		mStreamFile = fopen(buf, "wb");
+#endif // USE_CACHE
+	}
+
+	return NS_OK;
 }
 
 nsPluginHostImpl :: nsPluginHostImpl()
