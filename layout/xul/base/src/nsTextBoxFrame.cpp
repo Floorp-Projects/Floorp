@@ -70,8 +70,8 @@
 #ifdef IBMBIDI
 #include "nsBidiUtils.h"
 #include "nsBidiPresUtils.h"
-#include "nsReadableUtils.h"
 #endif // IBMBIDI
+#include "nsReadableUtils.h"
 
 #define ELLIPSIS "..."
 
