@@ -87,6 +87,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsGenericElement.obj 	\
 	.\$(OBJDIR)\nsContentList.obj 	 	\
 	.\$(OBJDIR)\nsContentIterator.obj 	\
+	.\$(OBJDIR)\nsContentPolicy.obj         \
 	.\$(OBJDIR)\nsDocument.obj		\
 	.\$(OBJDIR)\nsDocumentEncoder.obj	\
 	.\$(OBJDIR)\nsDocumentFragment.obj	\
