@@ -9,4 +9,3 @@ nsIDOMProfileCore.h
 nsIDOMToolkitCore.h
 nsIDOMBrowserAppCore.h
 nsAppCoresCIDs.h
-nsIDOMEditorAppCore.h
