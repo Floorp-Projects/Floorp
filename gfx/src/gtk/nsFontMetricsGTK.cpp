@@ -1395,8 +1395,9 @@ CheckMap(nsFontCharSetMap* aEntry)
       nsCOMPtr<nsIAtom> charset =
         getter_AddRefs(NS_NewAtom(aEntry->mInfo->mCharSet));
       if (charset) {
-        nsIUnicodeEncoder* converter = nsnull;
-        res = gCharSetManager->GetUnicodeEncoder(charset, &converter);
+        nsCOMPtr<nsIUnicodeEncoder> converter;
+        res = gCharSetManager->GetUnicodeEncoder(charset,
+          getter_AddRefs(converter));
         if (NS_FAILED(res)) {
           printf("=== %s failed (%s)\n", aEntry->mInfo->mCharSet, __FILE__);
         }
