@@ -98,6 +98,8 @@
 #include "nsIDOMDocument.h"
 #include "nsIDOMElement.h"
 #include "nsITheme.h"
+#include "nsTransform2D.h"
+
 
 // Needed for Print Preview
 #include "nsIDocument.h"
@@ -1691,12 +1693,22 @@ nsBoxFrame::PaintChild(nsIPresContext*      aPresContext,
       // coordinate system.
       damageArea.x -= kidRect.x;
       damageArea.y -= kidRect.y;
-      aRenderingContext.Translate(kidRect.x, kidRect.y);
 
+      // Save the transformation matrix's translation components.
+      float xMatrix;
+      float yMatrix;
+      nsTransform2D *theTransform; 
+      aRenderingContext.GetCurrentTransform(theTransform);
+      NS_ASSERTION(theTransform != nsnull, "The rendering context transform is null");
+      theTransform->GetTranslation(&xMatrix, &yMatrix);
+
+      aRenderingContext.Translate(kidRect.x, kidRect.y);
+     
       // Paint the kid
       aFrame->Paint(aPresContext, aRenderingContext, damageArea, aWhichLayer);
-      // don't use PushState and PopState, because they're slow
-      aRenderingContext.Translate(-kidRect.x, -kidRect.y);
+
+      // Restore the transformation matrix's translation components.
+      theTransform->SetTranslation(xMatrix, yMatrix);
     }
   }
 }
