@@ -31,16 +31,33 @@
 #include "nsAppDirectoryServiceDefs.h"
 #include "nsDirectoryService.h"
 #include "nsIStreamListener.h"
+#include "nsIStringBundle.h"
+#include "nsIDirectoryService.h"
+#include "nsDirectoryServiceDefs.h"
 #include "prlog.h"
 
 #include "nss.h"
 #include "pk11func.h"
 #include "ssl.h"
 #include "sslproto.h"
+#include "secmod.h"
 
 #ifdef PR_LOGGING
 PRLogModuleInfo* gPIPNSSLog = nsnull;
 #endif
+
+static PRBool gNSSInitialized = PR_FALSE;
+static nsrefcnt gRefCnt = 0;
+static NS_DEFINE_CID(kCStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
+static nsIStringBundle* gPIPNSSBundle = nsnull;
+
+#ifdef XP_MAC
+extern OSErr ConvertMacPathToUnixPath(const char *macPath, char **unixPath);
+#endif
+
+static void InitializePIPNSSBundle();
+
+#define PIPNSS_STRBUNDLE_URL "chrome://pipnss/locale/pipnss.properties"
 
 
 nsNSSComponent::nsNSSComponent()
@@ -50,51 +67,191 @@ nsNSSComponent::nsNSSComponent()
 
 nsNSSComponent::~nsNSSComponent()
 {
+  
+  if (--gRefCnt == 0) {
+    NS_IF_RELEASE(gPIPNSSBundle);
+  }
+}
+
+#ifdef XP_MAC
+#ifdef DEBUG
+#define LOADABLE_CERTS_MODULE ":Essential Files:NSSckbiDebug.shlb"
+#else
+#define LOADABLE_CERTS_MODULE ":Essential Files:NSSckbi.shlb"
+#endif /*DEBUG*/ 
+#endif /*XP_MAC*/
+
+nsresult 
+nsNSSComponent::PIPBundleFormatStringFromName(const PRUnichar *name,
+                                              const PRUnichar **params,
+                                              PRUint32 numParams,
+                                              PRUnichar **outString)
+{
+  nsresult rv = NS_ERROR_FAILURE;
+
+  if (!gPIPNSSBundle) {
+    InitializePIPNSSBundle();
+  }
+  if (gPIPNSSBundle && name) {
+    rv = gPIPNSSBundle->FormatStringFromName(name, params, 
+                                             numParams, outString);
+  }
+  return rv;
+}
+
+nsresult 
+nsNSSComponent::GetPIPNSSBundleString(const PRUnichar *name,
+                                      nsString &outString)
+{
+  if (!gPIPNSSBundle) {
+    InitializePIPNSSBundle();
+  }
+  PRUnichar *ptrv = nsnull;
+  if (gPIPNSSBundle && name) {
+    nsresult rv = gPIPNSSBundle->GetStringFromName(name, &ptrv);
+    if (NS_SUCCEEDED(rv)) {
+      outString = ptrv;
+    } else {
+      outString.SetLength(0);
+    }
+    nsMemory::Free(ptrv);
+  } else {
+    outString.SetLength(0);
+  }
+  return NS_OK;
+}
+
+void
+nsNSSComponent::InstallLoadableRoots()
+{
+  PRBool hasRoot = PR_FALSE;
+  PK11SlotListElement *listElement;
+  PK11SlotList *slotList = PK11_GetAllTokens(CKM_INVALID_MECHANISM, 
+                                             PR_FALSE, PR_FALSE, nsnull); 
+  if (slotList) {
+    for (listElement=slotList->head; listElement != NULL; 
+         listElement = listElement->next) {
+      if (PK11_HasRootCerts(listElement->slot)) {
+        hasRoot = PR_TRUE;
+        break;
+      }    
+    }     
+  }
+  if (!hasRoot) {
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> service(do_GetService(kCStringBundleServiceCID, &rv));
+    if (NS_FAILED(rv)) return;
+    nsString modName;
+    rv = GetPIPNSSBundleString(NS_LITERAL_STRING("RootCertModuleName"),
+                               modName);
+    if (NS_FAILED(rv)) return;
+
+    nsCOMPtr<nsILocalFile> mozFile;
+
+    NS_WITH_SERVICE(nsIProperties, directoryService, NS_DIRECTORY_SERVICE_CONTRACTID, &rv);									
+    if (NS_FAILED(rv)) {
+        return ;
+    }    
+    										
+    directoryService->Get( NS_XPCOM_CURRENT_PROCESS_DIR,
+                           NS_GET_IID(nsIFile), 
+                           getter_AddRefs(mozFile));
+    
+    if (!mozFile) {
+      return;
+    }
+    char *processDir = nsnull;
+    mozFile->GetPath(&processDir);
+#ifdef XP_MAC
+    if (processDir == NULL) {
+      return;
+    }
+    char *fullModuleName = PR_smprintf("%s%s", processDir, 
+                                       LOADABLE_CERTS_MODULE);
+    char *unixModulePath=nsnull;
+    
+    ConvertMacPathToUnixPath(fullModuleName, &unixModulePath);
+    PR_Free(fullModuleName);
+    fullModuleName = unixModulePath;
+#else
+    char *fullModuleName = PR_GetLibraryName(processDir, "nssckbi");
+#endif
+    PR_FREEIF(processDir);
+    /* If a module exists with the same name, delete it. */
+    char *modNameCString = modName.ToNewCString();
+    int modType;
+    SECMOD_DeleteModule(modNameCString, &modType);
+    SECMOD_AddNewModule(modNameCString, fullModuleName, 0, 0);
+    PR_Free(modNameCString);
+  }
+}
+
+static void
+InitializePIPNSSBundle()
+{
+  nsresult rv;
+  nsCOMPtr<nsIStringBundleService> bundleService(do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv));
+  if (NS_FAILED(rv) || !bundleService) return;
+  
+  bundleService->CreateBundle(PIPNSS_STRBUNDLE_URL, nsnull,
+                              &gPIPNSSBundle);
+  if (gPIPNSSBundle)
+    NS_ADDREF(gPIPNSSBundle); 
 }
 
 NS_IMETHODIMP
 nsNSSComponent::Init()
 {
+  nsresult rv;
 #ifdef PR_LOGGING
   if (!gPIPNSSLog)
     gPIPNSSLog = PR_NewLogModule("pipnss");
 #endif
 
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("Beginning NSS initialization\n"));
-  
-  nsXPIDLCString profileStr;
-  nsCOMPtr<nsIFile> profilePath;
-  
-  nsresult rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
-                                       getter_AddRefs(profilePath));
-  if (NS_FAILED(rv)) {
-    PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
-    return rv;
+  gRefCnt++;
+  if (!gPIPNSSBundle) {
+    InitializePIPNSSBundle();
   }
-
-  rv = profilePath->GetPath(getter_Copies(profileStr));
-  if (NS_FAILED(rv)) return rv;
-  
-  PK11_SetPasswordFunc(PK11PasswordPrompt);
-  NSS_InitReadWrite(profileStr);
-  NSS_SetDomesticPolicy();
-  //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
-
-  // XXX should use prefs
-  SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_TRUE);
-  SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE);
-  SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE);
-
+  if (!gNSSInitialized) {
+    nsXPIDLCString profileStr;
+    nsCOMPtr<nsIFile> profilePath;
+    
+    rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR,
+                                getter_AddRefs(profilePath));
+    if (NS_FAILED(rv)) {
+      PR_LOG(gPIPNSSLog, PR_LOG_ERROR, ("Unable to get profile directory\n"));
+      return rv;
+    }
+    
+    rv = profilePath->GetPath(getter_Copies(profileStr));
+    if (NS_FAILED(rv)) return rv;
+    
+    PK11_SetPasswordFunc(PK11PasswordPrompt);
+    NSS_InitReadWrite(profileStr);
+    NSS_SetDomesticPolicy();
+    //  SSL_EnableCipher(SSL_RSA_WITH_NULL_MD5, SSL_ALLOWED);
+    
+    // XXX should use prefs
+    SSL_OptionSetDefault(SSL_ENABLE_SSL2, PR_TRUE);
+    SSL_OptionSetDefault(SSL_ENABLE_SSL3, PR_TRUE);
+    SSL_OptionSetDefault(SSL_ENABLE_TLS, PR_TRUE);
+    InstallLoadableRoots();
+    gNSSInitialized = PR_TRUE;
+  } else {
+      PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS has already been initialized\n"));
+  }
   PR_LOG(gPIPNSSLog, PR_LOG_DEBUG, ("NSS Initialization done\n"));
-
+  
   return rv;
 }
 
 /* nsISupports Implementation for the class */
-NS_IMPL_THREADSAFE_ISUPPORTS3(nsNSSComponent,
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsNSSComponent,
                               nsISecurityManagerComponent,
                               nsIContentHandler,
-                              nsISignatureVerifier);
+                              nsISignatureVerifier,
+                              nsIEntropyCollector);
 
 
 NS_IMETHODIMP
@@ -290,5 +447,13 @@ nsNSSComponent::VerifySignature(const char* aRSABuf, PRUint32 aRSABufLen,
                                 PRInt32* aErrorCode,
                                 nsIPrincipal** aPrincipal)
 {
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsNSSComponent::RandomUpdate(void *entropy, PRInt32 bufLen)
+{
+  if (gNSSInitialized)
+    PK11_RandomUpdate(entropy, bufLen);
   return NS_OK;
 }
