@@ -60,7 +60,8 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
                                        nsPresContext* aPresContext,
                                        nsBlockFrame* aFrame,
                                        const nsHTMLReflowMetrics& aMetrics,
-                                       PRBool aBlockMarginRoot)
+                                       PRBool aTopMarginRoot,
+                                       PRBool aBottomMarginRoot)
   : mBlock(aFrame),
     mPresContext(aPresContext),
     mReflowState(aReflowState),
@@ -71,14 +72,10 @@ nsBlockReflowState::nsBlockReflowState(const nsHTMLReflowState& aReflowState,
 {
   const nsMargin& borderPadding = BorderPadding();
 
-  if (aBlockMarginRoot) {
-    SetFlag(BRS_ISTOPMARGINROOT, PR_TRUE);
-    SetFlag(BRS_ISBOTTOMMARGINROOT, PR_TRUE);
-  }
-  if (0 != aReflowState.mComputedBorderPadding.top) {
+  if (aTopMarginRoot || 0 != aReflowState.mComputedBorderPadding.top) {
     SetFlag(BRS_ISTOPMARGINROOT, PR_TRUE);
   }
-  if (0 != aReflowState.mComputedBorderPadding.bottom) {
+  if (aBottomMarginRoot || 0 != aReflowState.mComputedBorderPadding.bottom) {
     SetFlag(BRS_ISBOTTOMMARGINROOT, PR_TRUE);
   }
   if (GetFlag(BRS_ISTOPMARGINROOT)) {
@@ -336,68 +333,6 @@ nsBlockReflowState::GetAvailableSpace(nscoord aY)
            mBand.GetTrapezoidCount());
   }
 #endif
-}
-
-PRBool
-nsBlockReflowState::ClearPastFloats(PRUint8 aBreakType)
-{
-  nscoord saveY, deltaY;
-
-  PRBool applyTopMargin = PR_FALSE;
-  switch (aBreakType) {
-  case NS_STYLE_CLEAR_LEFT:
-  case NS_STYLE_CLEAR_RIGHT:
-  case NS_STYLE_CLEAR_LEFT_AND_RIGHT:
-    // Apply the previous margin before clearing
-    saveY = mY + mPrevBottomMargin.get();
-    ClearFloats(saveY, aBreakType);
-#ifdef NOISY_FLOAT_CLEARING
-    nsFrame::ListTag(stdout, mBlock);
-    printf(": ClearPastFloats: mPrevBottomMargin=%d saveY=%d oldY=%d newY=%d deltaY=%d\n",
-           mPrevBottomMargin.get(), saveY, saveY - mPrevBottomMargin.get(), mY,
-           mY - saveY);
-#endif
-
-    // Determine how far we just moved. If we didn't move then there
-    // was nothing to clear to don't mess with the normal margin
-    // collapsing behavior. In either case we need to restore the Y
-    // coordinate to what it was before the clear.
-    deltaY = mY - saveY;
-    if (0 != deltaY) {
-      // Pretend that the distance we just moved is a previous
-      // blocks bottom margin. Note that GetAvailableSpace has been
-      // done so that the available space calculations will be done
-      // after clearing the appropriate floats.
-      //
-      // What we are doing here is applying CSS2 section 9.5.2's
-      // rules for clearing - "The top margin of the generated box
-      // is increased enough that the top border edge is below the
-      // bottom outer edge of the floating boxes..."
-      //
-      // What this will do is cause the top-margin of the block
-      // frame we are about to reflow to be collapsed with that
-      // distance.
-      
-      // XXXldb This doesn't handle collapsing with negative margins
-      // correctly, although it's arguable what "correct" is.
-
-      // XXX Are all the other margins included by this point?
-      mPrevBottomMargin.Zero();
-      mPrevBottomMargin.Include(deltaY);
-      mY = saveY;
-
-      // Force margin to be applied in this circumstance
-      applyTopMargin = PR_TRUE;
-    }
-    else {
-      // Put mY back to its original value since no clearing
-      // happened. That way the previous blocks bottom margin will
-      // be applied properly.
-      mY = saveY - mPrevBottomMargin.get();
-    }
-    break;
-  }
-  return applyTopMargin;
 }
 
 /*
@@ -851,12 +786,10 @@ nsBlockReflowState::FlowAndPlaceFloat(nsFloatCache*   aFloatCache,
   // See if the float should clear any preceeding floats...
   if (NS_STYLE_CLEAR_NONE != floatDisplay->mBreakType) {
     // XXXldb Does this handle vertical margins correctly?
-    ClearFloats(mY, floatDisplay->mBreakType);
+    mY = ClearFloats(mY, floatDisplay->mBreakType);
   }
-  else {
     // Get the band of available space
     GetAvailableSpace();
-  }
 
   NS_ASSERTION(floatFrame->GetParent() == mBlock,
                "Float frame has wrong parent");
@@ -1154,14 +1087,14 @@ nsBlockReflowState::PlaceBelowCurrentLineFloats(nsFloatCacheList& aList)
   return PR_TRUE;
 }
 
-void
+nscoord
 nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType)
 {
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    printf("clear floats: in: mY=%d aY=%d(%d)\n",
-           mY, aY, aY - BorderPadding().top);
+    printf("clear floats: in: aY=%d(%d)\n",
+           aY, aY - BorderPadding().top);
   }
 #endif
 
@@ -1173,14 +1106,15 @@ nsBlockReflowState::ClearFloats(nscoord aY, PRUint8 aBreakType)
   
   const nsMargin& bp = BorderPadding();
   nscoord newY = mSpaceManager->ClearFloats(aY - bp.top, aBreakType);
-  mY = newY + bp.top;
-  GetAvailableSpace();
+  newY += bp.top;
 
 #ifdef DEBUG
   if (nsBlockFrame::gNoisyReflow) {
     nsFrame::IndentBy(stdout, nsBlockFrame::gNoiseIndent);
-    printf("clear floats: out: mY=%d(%d)\n", mY, mY - bp.top);
+    printf("clear floats: out: y=%d(%d)\n", newY, newY - bp.top);
   }
 #endif
+
+  return newY;
 }
 

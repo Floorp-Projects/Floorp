@@ -434,3 +434,33 @@ nsLayoutUtils::GetNearestScrollingView(nsIView* aView, Direction aDirection)
   }
   return scrollableView;
 }
+
+// Combine aNewBreakType with aOrigBreakType, but limit the break types
+// to NS_STYLE_CLEAR_LEFT, RIGHT, LEFT_AND_RIGHT.
+PRUint8
+nsLayoutUtils::CombineBreakType(PRUint8 aOrigBreakType,
+                                PRUint8 aNewBreakType)
+{
+  PRUint8 breakType = aOrigBreakType;
+  switch(breakType) {
+  case NS_STYLE_CLEAR_LEFT:
+    if ((NS_STYLE_CLEAR_RIGHT          == aNewBreakType) ||
+        (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aNewBreakType)) {
+      breakType = NS_STYLE_CLEAR_LEFT_AND_RIGHT;
+    }
+    break;
+  case NS_STYLE_CLEAR_RIGHT:
+    if ((NS_STYLE_CLEAR_LEFT           == aNewBreakType) ||
+        (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aNewBreakType)) {
+      breakType = NS_STYLE_CLEAR_LEFT_AND_RIGHT;
+    }
+    break;
+  case NS_STYLE_CLEAR_NONE:
+    if ((NS_STYLE_CLEAR_LEFT           == aNewBreakType) ||
+        (NS_STYLE_CLEAR_RIGHT          == aNewBreakType) ||
+        (NS_STYLE_CLEAR_LEFT_AND_RIGHT == aNewBreakType)) {
+      breakType = aNewBreakType;
+    }
+  }
+  return breakType;
+}

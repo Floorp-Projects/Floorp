@@ -53,7 +53,7 @@ public:
                      nsPresContext* aPresContext,
                      nsBlockFrame* aFrame,
                      const nsHTMLReflowMetrics& aMetrics,
-                     PRBool aBlockMarginRoot);
+                     PRBool aTopMarginRoot, PRBool aBottomMarginRoot);
 
   ~nsBlockReflowState();
 
@@ -85,12 +85,9 @@ public:
 
   PRBool PlaceBelowCurrentLineFloats(nsFloatCacheList& aFloats);
 
-  // called when clearing a line with a break type caused by a BR past
-  // floats, and also used internally by ClearPastFloats
-  void ClearFloats(nscoord aY, PRUint8 aBreakType);
-
-  // called when clearing a block past floats
-  PRBool ClearPastFloats(PRUint8 aBreakType);
+  // Returns the first coordinate >= aY that clears the
+  // indicated floats.
+  nscoord ClearFloats(nscoord aY, PRUint8 aBreakType);
 
   PRBool IsAdjacentWithTop() const {
     return mY == mReflowState.mComputedBorderPadding.top;

@@ -69,6 +69,11 @@ class nsIntervalSet;
 #define NS_BLOCK_HAS_OVERFLOW_OUT_OF_FLOWS  0x04000000
 #define NS_BLOCK_HAS_OVERFLOW_PLACEHOLDERS  0x08000000
 
+// Set on any block that has descendant frames in the normal
+// flow with 'clear' set to something other than 'none'
+// (including <BR CLEAR="..."> frames)
+#define NS_BLOCK_HAS_CLEAR_CHILDREN         0x10000000
+
 #define nsBlockFrameSuper nsHTMLContainerFrame
 
 #define NS_BLOCK_FRAME_CID \
@@ -223,6 +228,11 @@ public:
 
   virtual void DeleteNextInFlowChild(nsPresContext* aPresContext,
                                      nsIFrame*       aNextInFlow);
+
+  // Determines whether the collapsed margin carried out of the last
+  // line includes the margin-top of a line with clearance (in which
+  // case we must avoid collapsing that margin with our bottom margin)
+  PRBool CheckForCollapsedBottomMarginFromClearanceLine();
 
   /** return the topmost block child based on y-index.
     * almost always the first or second line, if there is one.

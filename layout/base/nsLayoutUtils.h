@@ -236,6 +236,10 @@ public:
    * otherwise return nsnull.
    */
   static nsIFrame* GetFloatFromPlaceholder(nsIFrame* aPossiblePlaceholder);
+
+  // Combine aNewBreakType with aOrigBreakType, but limit the break types
+  // to NS_STYLE_CLEAR_LEFT, RIGHT, LEFT_AND_RIGHT.
+  static PRUint8 CombineBreakType(PRUint8 aOrigBreakType, PRUint8 aNewBreakType);
 };
 
 #endif // nsLayoutUtils_h__

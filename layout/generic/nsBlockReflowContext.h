@@ -39,10 +39,12 @@
 #define nsBlockReflowContext_h___
 
 #include "nsIFrame.h"
-#include "nsHTMLReflowState.h"
 #include "nsHTMLReflowMetrics.h"
 
 class nsBlockFrame;
+class nsBlockReflowState;
+class nsHTMLReflowState;
+class nsLineBox;
 class nsIFrame;
 class nsPresContext;
 class nsLineLayout;
@@ -62,7 +64,8 @@ public:
 
   nsresult ReflowBlock(const nsRect&       aSpace,
                        PRBool              aApplyTopMargin,
-                       nsCollapsingMargin& aPrevBottomMargin,
+                       nsCollapsingMargin& aPrevMargin,
+                       nscoord             aClearance,
                        PRBool              aIsAdjacentWithTop,
                        nsMargin&           aComputedOffsets,
                        nsHTMLReflowState&  aReflowState,
@@ -70,6 +73,7 @@ public:
 
   PRBool PlaceBlock(const nsHTMLReflowState& aReflowState,
                     PRBool                   aForceFit,
+                    nsLineBox*               aLine,
                     const nsMargin&          aComputedOffsets,
                     nsCollapsingMargin&      aBottomMarginResult /* out */,
                     nsRect&                  aInFlowBounds,
@@ -101,9 +105,23 @@ public:
     return mMetrics.mMaximumWidth;
   }
 
-  static void ComputeCollapsedTopMargin(nsPresContext* aPresContext,
-                                        nsHTMLReflowState& aRS,
-                           /* inout */  nsCollapsingMargin& aMargin);
+  /**
+   * Computes the collapsed top margin for a block whose reflow state is in aRS.
+   * The computed margin is added into aMargin.
+   * If aClearanceFrame is null then this is the first optimistic pass which shall assume
+   * that no frames have clearance, and we clear the HasClearance on all frames encountered.
+   * If non-null, this is the second pass and
+   * the caller has decided aClearanceFrame needs clearance (and we will
+   * therefore stop collapsing there); also, this function is responsible for marking
+   * it with SetHasClearance.
+   * If in the optimistic pass any frame is encountered that might possibly need
+   * clearance (i.e., if we really needed the optimism assumption) then we set aMayNeedRetry
+   * to true.
+   * We return PR_TRUE if we changed the clearance state of any line and marked it dirty.
+   */
+  static PRBool ComputeCollapsedTopMargin(const nsHTMLReflowState& aRS,
+                                          nsCollapsingMargin* aMargin, nsIFrame* aClearanceFrame,
+                                          PRBool* aMayNeedRetry);
 
 protected:
   nsPresContext* mPresContext;
