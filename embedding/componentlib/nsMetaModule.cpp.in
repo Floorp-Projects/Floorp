@@ -1,0 +1,120 @@
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+ *
+ * The contents of this file are subject to the Netscape Public
+ * License Version 1.1 (the "License"); you may not use this file
+ * except in compliance with the License. You may obtain a copy of
+ * the License at http://www.mozilla.org/NPL/
+ *
+ * Software distributed under the License is distributed on an "AS
+ * IS" basis, WITHOUT WARRANTY OF ANY KIND, either express or
+ * implied. See the License for the specific language governing
+ * rights and limitations under the License.
+ *
+ * The Original Code is mozilla.org code.
+ *
+ * The Initial Developer of the Original Code is Netscape
+ * Communications Corporation.  Portions created by Netscape are
+ * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Rights Reserved.
+ *
+ * Contributor(s): 
+ *   Christopher Seawood <cls@seawood.org> 
+ *   Doug Turner <dougt@netscape.com>
+ *   Chris Waterson <waterson@netscape.com>
+ */
+
+#line 27 "nsMetaModule.cpp.in"
+#include "nsError.h"
+#include "nsIModule.h"
+#include "nsIFile.h"
+#include "nsIGenericFactory.h"
+#include "prmem.h"
+
+%DECLARE_SUBMODULE_INFOS%
+#line 35 "nsMetaModule.cpp.in"
+
+static nsModuleInfo* gSubModules[] = {
+    %SUBMODULE_INFOS%
+#line 39 "nsMetaModule.cpp.in"
+};
+
+#define NUM_SUB_MODULES (sizeof(gSubModules) / sizeof(gSubModules[0]))
+
+static nsModuleComponentInfo* gComponentInfo;
+static PRBool gInitialized = PR_FALSE;
+
+PR_STATIC_CALLBACK(nsresult)
+Initialize(nsIModule *self)
+{
+    if (! gInitialized) {
+        // Run the ctor for each sub-module
+        gInitialized = PR_TRUE;
+
+        nsModuleInfo** module = gSubModules;
+        nsModuleInfo** limit = module + NUM_SUB_MODULES;
+        for ( ; module < limit; ++module) {
+            if ((*module)->mCtor)
+                ((*module)->mCtor)(self);
+        }
+    }
+
+    return NS_OK;
+}
+
+PR_STATIC_CALLBACK(void)
+Shutdown(nsIModule *self)
+{
+    if (gInitialized) {
+        // Run the dtor for each sub-module
+        gInitialized = PR_FALSE;
+
+        nsModuleInfo** module = gSubModules;
+        nsModuleInfo** limit = module + NUM_SUB_MODULES;
+        for ( ; module < limit; ++module) {
+            if ((*module)->mDtor)
+                ((*module)->mDtor)(self);
+        }
+    }
+}
+
+extern "C" NS_EXPORT nsresult
+nsMetaModule_nsGetModule(nsIComponentManager *servMgr,
+                         nsIFile *location,                 
+                         nsIModule **result)                
+{                                                                            
+    // Count the number of components contained in all of the
+    // sub-modules
+    nsModuleInfo** info = gSubModules;
+    nsModuleInfo** limit = info + NUM_SUB_MODULES;
+    PRUint32 count = 0;
+    for ( ; info < limit; ++info)
+        count += (*info)->mCount;
+
+    // Allocate an nsModuleComponentInfo array large enough to contain
+    // all of them. This will be permanently leaked.
+    gComponentInfo = new nsModuleComponentInfo[count];
+    if (! gComponentInfo)
+        return NS_ERROR_OUT_OF_MEMORY;
+
+    // Copy the module component info into the contiguous array
+    nsModuleComponentInfo *comps = gComponentInfo;
+    for (info = gSubModules; info < limit; ++info) {
+        PRUint32 n = (*info)->mCount;
+        ::memcpy(comps, (*info)->mComponents, sizeof(nsModuleComponentInfo) * n);
+        comps += n;
+    }
+
+    // Dummy up an nsModuleInfo struct to register us as a generic
+    // module that contains all our sub-module's components.
+    nsModuleInfo metainfo;
+    memset(&metainfo, 0, sizeof(metainfo));
+    metainfo.mVersion    = NS_MODULEINFO_VERSION;
+    metainfo.mModuleName = META_MODULE " meta module";
+    metainfo.mComponents = gComponentInfo;
+    metainfo.mCount      = count;
+    metainfo.mCtor       = Initialize;
+    metainfo.mDtor       = Shutdown;
+
+    return NS_NewGenericModule2(&metainfo, result);
+}
+
