@@ -79,6 +79,8 @@ interface nsIDocShellLoadInfo : nsISupports
     const long loadRefresh = 8;
     const long loadReloadCharsetChange = 9;
     const long loadBypassHistory = 10;
+    const long loadStopContent = 11;
+    const long loadStopContentAndReplace = 12;
 
     /** Contains a load type as specified by the load* constants */
     attribute nsDocShellInfoLoadType loadType;

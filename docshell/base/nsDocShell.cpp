@@ -504,6 +504,12 @@ ConvertDocShellLoadInfoToLoadType(nsDocShellInfoLoadType aDocShellLoadType)
     case nsIDocShellLoadInfo::loadBypassHistory:
         loadType = LOAD_BYPASS_HISTORY;
         break;
+    case nsIDocShellLoadInfo::loadStopContent:
+        loadType = LOAD_STOP_CONTENT;
+        break;
+    case nsIDocShellLoadInfo::loadStopContentAndReplace:
+        loadType = LOAD_STOP_CONTENT_AND_REPLACE;
+        break;
     }
 
     return loadType;
@@ -547,6 +553,12 @@ nsDocShell::ConvertLoadTypeToDocShellLoadInfo(PRUint32 aLoadType)
         break;
     case LOAD_BYPASS_HISTORY:
         docShellLoadType = nsIDocShellLoadInfo::loadBypassHistory;
+        break;
+    case LOAD_STOP_CONTENT:
+        docShellLoadType = nsIDocShellLoadInfo::loadStopContent;
+        break;
+    case LOAD_STOP_CONTENT_AND_REPLACE:
+        docShellLoadType = nsIDocShellLoadInfo::loadStopContentAndReplace;
         break;
     }
 
@@ -603,7 +615,8 @@ nsDocShell::LoadURI(nsIURI * aURI,
     }
 #endif
 
-    if (!shEntry && loadType != LOAD_NORMAL_REPLACE) {
+    if (!shEntry &&
+        !LOAD_TYPE_HAS_FLAGS(loadType, LOAD_FLAGS_REPLACE_HISTORY)) {
         // First verify if this is a subframe.
         nsCOMPtr<nsIDocShellTreeItem> parentAsItem;
         GetSameTypeParent(getter_AddRefs(parentAsItem));
@@ -4310,6 +4323,7 @@ nsDocShell::Embed(nsIContentViewer * aContentViewer,
     switch (mLoadType) {
     case LOAD_RELOAD_CHARSET_CHANGE:  //don't perserve history in charset reload
     case LOAD_NORMAL_REPLACE:
+    case LOAD_STOP_CONTENT_AND_REPLACE:
     case LOAD_RELOAD_BYPASS_CACHE:
     case LOAD_RELOAD_BYPASS_PROXY:
     case LOAD_RELOAD_BYPASS_PROXY_AND_CACHE:
@@ -5427,7 +5441,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
     }
     
     if ((aLoadType == LOAD_NORMAL ||
-         aLoadType == LOAD_NORMAL_REPLACE ||
+         aLoadType == LOAD_STOP_CONTENT ||
+         LOAD_TYPE_HAS_FLAGS(aLoadType, LOAD_FLAGS_REPLACE_HISTORY) ||
          aLoadType == LOAD_HISTORY ||
          aLoadType == LOAD_LINK) && allowScroll) {
         PRBool wasAnchor = PR_FALSE;
@@ -5546,7 +5561,8 @@ nsDocShell::InternalLoad(nsIURI * aURI,
             mContentViewer->GetPreviousViewer(getter_AddRefs(zombieViewer));
         }
 
-        if (zombieViewer) {
+        if (zombieViewer ||
+            LOAD_TYPE_HAS_FLAGS(aLoadType, LOAD_FLAGS_STOP_CONTENT)) {
             rv = Stop(nsIWebNavigation::STOP_ALL);
         } else {
             rv = Stop(nsIWebNavigation::STOP_NETWORK);
@@ -5558,7 +5574,7 @@ nsDocShell::InternalLoad(nsIURI * aURI,
 
     mLoadType = aLoadType;
     // mLSHE should be assigned to aSHEntry, only after Stop() has
-    // been called. 
+    // been called.
     mLSHE = aSHEntry;
 
     rv = DoURILoad(aURI, aReferrer,
@@ -6319,11 +6335,12 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     nsCOMPtr<nsIDocShellTreeItem> root;
     GetSameTypeRootTreeItem(getter_AddRefs(root));     
     /*
-     * If this is a LOAD_NORMAL_REPLACE in a subframe, we use
+     * If this is a LOAD_FLAGS_REPLACE_HISTORY in a subframe, we use
      * the existing SH entry in the page and replace the url and
      * other vitalities.
      */
-    if (LOAD_NORMAL_REPLACE == mLoadType && (root.get() != NS_STATIC_CAST(nsIDocShellTreeItem *, this))) {
+    if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY) &&
+        root != NS_STATIC_CAST(nsIDocShellTreeItem *, this)) {
         // This is a subframe 
         entry = mOSHE;
         nsCOMPtr<nsISHContainer> shContainer(do_QueryInterface(entry));
@@ -6414,9 +6431,9 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
         entry->SetExpirationStatus(PR_TRUE);
 
 
-    if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this) && mSessionHistory) {
+    if (root == NS_STATIC_CAST(nsIDocShellTreeItem *, this) && mSessionHistory) {
         // This is the root docshell
-        if (mLoadType == LOAD_NORMAL_REPLACE) {            
+        if (LOAD_TYPE_HAS_FLAGS(mLoadType, LOAD_FLAGS_REPLACE_HISTORY)) {            
             // Replace current entry in session history.
             PRInt32  index = 0;   
             nsCOMPtr<nsIHistoryEntry> hEntry;
@@ -6436,8 +6453,8 @@ nsDocShell::AddToSessionHistory(nsIURI * aURI,
     }
     else {  
         // This is a subframe.
-        if ((mLoadType != LOAD_NORMAL_REPLACE) ||
-            (mLoadType == LOAD_NORMAL_REPLACE && !mOSHE))
+        if (!mOSHE || !LOAD_TYPE_HAS_FLAGS(mLoadType,
+                                           LOAD_FLAGS_REPLACE_HISTORY))
             rv = DoAddChildSHEntry(entry, mChildOffset);
     }
 

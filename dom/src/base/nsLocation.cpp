@@ -314,7 +314,7 @@ nsLocation::GetWritableURI(nsIURI** aURI)
 }
 
 nsresult
-nsLocation::SetURI(nsIURI* aURI)
+nsLocation::SetURI(nsIURI* aURI, PRBool aReplace)
 {
   if (mDocShell) {
     nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
@@ -323,7 +323,12 @@ nsLocation::SetURI(nsIURI* aURI)
     if(NS_FAILED(CheckURL(aURI, getter_AddRefs(loadInfo))))
       return NS_ERROR_FAILURE;
 
-    webNav->Stop(nsIWebNavigation::STOP_CONTENT);
+    if (aReplace) {
+      loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContentAndReplace);
+    } else {
+      loadInfo->SetLoadType(nsIDocShellLoadInfo::loadStopContent);
+    }
+
     return mDocShell->LoadURI(aURI, loadInfo,
                               nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
   }
@@ -386,17 +391,7 @@ nsLocation::SetHash(const nsAString& aHash)
 
   if (url) {
     url->SetRef(NS_ConvertUCS2toUTF8(aHash));
-
-    if (mDocShell) {
-      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-
-      if (NS_SUCCEEDED(CheckURL(url, getter_AddRefs(loadInfo))))
-        // We're not calling nsIWebNavigation->Stop, we don't want to
-        // stop the load when we're just scrolling to a named anchor
-        // in the document. See bug 114975.
-        mDocShell->LoadURI(url, loadInfo,
-                           nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
-    }
+    SetURI(url);
   }
 
   return result;
@@ -506,13 +501,6 @@ nsLocation::GetHref(nsAString& aHref)
 NS_IMETHODIMP
 nsLocation::SetHref(const nsAString& aHref)
 {
-  if (!aHref.IsEmpty() && aHref.First() == PRUnichar('#')) {
-    // Special-case anchor loads so that we don't stop content
-    // Note that SetHash (or more precisely nsIURL::SetRef) deals with
-    // the leading '#'.
-    return SetHash(aHref);
-  }
-  
   nsAutoString oldHref;
   nsresult rv = NS_OK;
 
@@ -583,15 +571,7 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
   else
     result = NS_NewURI(getter_AddRefs(newUri), aHref, nsnull, baseURI);
 
-  if (newUri && mDocShell) {
-    nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
-    nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell));
-
-    nsresult rv = CheckURL(newUri, getter_AddRefs(loadInfo));
-
-    if(NS_FAILED(rv))
-      return rv;
-     
+  if (newUri) {
     /* Check with the scriptContext if it is currently processing a script tag.
      * If so, this must be a <script> tag with a location.href in it.
      * we want to do a replace load, in such a situation. 
@@ -626,13 +606,7 @@ nsLocation::SetHrefWithBase(const nsAString& aHref, nsIURI* aBase,
       } //cx
     }  // stack
 
-    if (aReplace || inScriptTag) {
-      loadInfo->SetLoadType(nsIDocShellLoadInfo::loadNormalReplace);
-    }
-
-    webNav->Stop(nsIWebNavigation::STOP_CONTENT);
-    return mDocShell->LoadURI(newUri, loadInfo,
-                              nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
+    return SetURI(newUri, aReplace || inScriptTag);
   }
 
   return result;
