@@ -52,8 +52,7 @@ nsStreamLoader::Init(nsIURI* aURL,
                      nsILoadGroup* aGroup,
                      nsIInterfaceRequestor* notificationCallbacks,
                      nsLoadFlags loadAttributes,
-                     nsIURI *referrer,
-                     PRUint32 referrerFlags)
+                     nsIURI *referrer)
 {
   nsresult rv = NS_OK;
   
@@ -67,7 +66,7 @@ nsStreamLoader::Init(nsIURI* aURL,
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
 
     if (httpChannel) {
-      rv = httpChannel->SetReferrer(referrer, referrerFlags);
+      rv = httpChannel->SetReferrer(referrer);
       if (NS_FAILED(rv)) return rv;
     }
   }

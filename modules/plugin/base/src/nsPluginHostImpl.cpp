@@ -5831,7 +5831,7 @@ nsresult nsPluginHostImpl::NewEmbededPluginStream(nsIURI* aURL,
       if (httpChannel && doc) {
         nsCOMPtr<nsIURI> referrerURL;
         if (NS_SUCCEEDED(doc->GetBaseURL(*getter_AddRefs(referrerURL))))
-          httpChannel->SetReferrer(referrerURL, nsIHttpChannel::REFERRER_INLINES);
+          httpChannel->SetReferrer(referrerURL);
       }
 
       rv = channel->AsyncOpen(listener, nsnull);

@@ -159,7 +159,6 @@ private:
     PRUint32                          mStatus;
     PRUint32                          mLogicalOffset;
     PRUint8                           mCapabilities;
-    PRUint8                           mReferrerType;
 
     // cache specific data
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;

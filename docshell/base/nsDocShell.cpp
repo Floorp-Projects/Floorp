@@ -5079,6 +5079,12 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                                            getter_AddRefs(loadGroup));
     if (NS_FAILED(rv)) return rv;
 
+    nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+    if (firstParty) {
+        // tag first party URL loads
+        loadFlags |= nsIChannel::LOAD_INITIAL_DOCUMENT_URI;
+    }
+
     // open a channel for the url
     nsCOMPtr<nsIChannel> channel;
 
@@ -5086,14 +5092,14 @@ nsDocShell::DoURILoad(nsIURI * aURI,
                        aURI,
                        nsnull,
                        loadGroup,
-                       NS_STATIC_CAST(nsIInterfaceRequestor *, this));
+                       NS_STATIC_CAST(nsIInterfaceRequestor *, this),
+                       loadFlags);
     if (NS_FAILED(rv))
         return rv;
 
     channel->SetOriginalURI(aURI);
 
     nsCOMPtr<nsIHttpChannel> httpChannel(do_QueryInterface(channel));
-
     if (httpChannel) {
       if (firstParty) {
         httpChannel->SetDocumentURI(aURI);
@@ -5166,8 +5172,7 @@ nsDocShell::DoURILoad(nsIURI * aURI,
         }
         // Set the referrer explicitly
         if (aReferrerURI)       // Referrer is currenly only set for link clicks here.
-            httpChannel->SetReferrer(aReferrerURI,
-                                     nsIHttpChannel::REFERRER_LINK_CLICK);
+            httpChannel->SetReferrer(aReferrerURI);
     }
     // We want to use the pref for directory listings
     nsCOMPtr<nsIDirectoryListing> dirList = do_QueryInterface(channel);

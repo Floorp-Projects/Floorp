@@ -415,8 +415,7 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
                    nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL),
-                   nsIURI* referrer = nsnull,
-                   PRUint32 referrerFlags = 0)
+                   nsIURI* referrer = nsnull)
 {
     nsresult rv;
     nsCOMPtr<nsIStreamLoader> loader;
@@ -427,8 +426,7 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
                                             getter_AddRefs(loader));
     if (NS_FAILED(rv)) return rv;
     rv = loader->Init(uri, observer, context, loadGroup,
-                      notificationCallbacks, loadAttributes, referrer,
-                      referrerFlags);
+                      notificationCallbacks, loadAttributes, referrer);
                       
     if (NS_FAILED(rv)) return rv;
     *result = loader;
