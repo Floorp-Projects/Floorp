@@ -140,7 +140,7 @@ servers.
 <p><ul><B>Thank you for playing nice.</B></UL>
 
 <p>If you really find an image offensive, please
-<A HREF=mailto:ltabb\@netscape.com?Subject=offensive%20image>tell us</A>
+<A HREF=mailto:terry\@netscape.com?Subject=offensive%20tinderbox%20image>tell us</A>
 nicely before someone causes a stink.  Be sure to include the URL of
 the image.  Remember, we don't screen these submissions and may not
 have even seen it.
