@@ -838,17 +838,20 @@ class IRFactory
             n.putIntProp(Node.INCRDECR_PROP, incrDecrMask);
             return n;
           }
-          case Token.CALL: {
-            // Turn call into reference_call and recurse
-            child.setType(Token.REF_CALL);
-            Node ref = new Node(Token.GET_REF, child);
-            return createIncDec(nodeType, post, ref);
-          }
         }
-        // TODO: This should be a ReferenceError--but that's a runtime
-        //  exception. Should we compile an exception into the code?
-        parser.reportError("msg.bad.lhs.assign");
-        return child;
+        return createIncDec(nodeType, post, makeReferenceGet(child));
+    }
+
+    private Node makeReferenceGet(Node node)
+    {
+        Node ref;
+        if (node.getType() == Token.CALL) {
+            node.setType(Token.REF_CALL);
+            ref = node;
+        } else {
+            ref = new Node(Token.GENERIC_REF, node);
+        }
+        return new Node(Token.GET_REF, ref);
     }
 
     /**
@@ -1054,17 +1057,8 @@ class IRFactory
             Node ref = left.getFirstChild();
             return new Node(Token.SET_REF, ref, right);
           }
-          case Token.CALL: {
-            left.setType(Token.REF_CALL);
-            return new Node(Token.SET_REF, left, right);
-          }
-
-          default:
-            // TODO: This should be a ReferenceError--but that's a runtime
-            //  exception. Should we compile an exception into the code?
-            parser.reportError("msg.bad.lhs.assign");
-            return left;
         }
+        return createAssignment(makeReferenceGet(left), right);
     }
 
     Object createAssignmentOp(int assignOp, Object leftObj, Object rightObj)
@@ -1082,7 +1076,6 @@ class IRFactory
             Node lvalueLeft = Node.newString(Token.BINDNAME, s);
             return new Node(Token.SETNAME, lvalueLeft, op);
           }
-
           case Token.GETPROP:
           case Token.GETELEM: {
             Node obj = left.getFirstChild();
@@ -1096,26 +1089,14 @@ class IRFactory
             Node op = new Node(assignOp, opLeft, right);
             return new Node(type, obj, id, op);
           }
-
           case Token.GET_REF: {
             Node ref = left.getFirstChild();
             Node opLeft = new Node(Token.USE_STACK);
             Node op = new Node(assignOp, opLeft, right);
             return new Node(Token.SET_REF_OP, ref, op);
           }
-          case Token.CALL: {
-            // Turn call into reference_call and recurse
-            left.setType(Token.REF_CALL);
-            Node ref = new Node(Token.GET_REF, left);
-            return createAssignmentOp(assignOp, ref, right);
-          }
-
-          default:
-            // TODO: This should be a ReferenceError--but that's a runtime
-            //  exception. Should we compile an exception into the code?
-            parser.reportError("msg.bad.lhs.assign");
-            return left;
         }
+        return createAssignmentOp(assignOp, makeReferenceGet(left), right);
     }
 
     Node createUseLocal(Node localBlock)

@@ -129,11 +129,8 @@ public class Interpreter
         Icode_GETVAR1                   = -43,
         Icode_SETVAR1                   = -44,
 
-    // Construct special reference
-        Icode_SPECIAL_REF               = -45,
-
     // Last icode
-        MIN_ICODE                       = -45;
+        MIN_ICODE                       = -44;
 
     static {
         // Checks for byte code consistencies, good compiler can eliminate them
@@ -1051,10 +1048,16 @@ public class Interpreter
                 stackDelta = 1;
                 iCodeTop = generateICode(child, iCodeTop);
                 int special = node.getExistingIntProp(Node.SPECIAL_PROP_PROP);
-                iCodeTop = addIcode(Icode_SPECIAL_REF, iCodeTop);
+                iCodeTop = addToken(Token.SPECIAL_REF, iCodeTop);
                 iCodeTop = addByte(special, iCodeTop);
                 break;
             }
+
+            case Token.GENERIC_REF:
+                stackDelta = 1;
+                iCodeTop = generateICode(child, iCodeTop);
+                iCodeTop = addToken(Token.GENERIC_REF, iCodeTop);
+                break;
 
             default :
                 throw badTree(node);
@@ -1638,7 +1641,6 @@ public class Interpreter
           case Icode_REG_STR4:         return "LOAD_STR4";
           case Icode_GETVAR1:          return "GETVAR1";
           case Icode_SETVAR1:          return "SETVAR1";
-          case Icode_SPECIAL_REF:      return "SPECIAL_REF";
         }
 
         // icode without name
@@ -1695,7 +1697,7 @@ public class Interpreter
                 break;
               }
 
-              case Icode_SPECIAL_REF : {
+              case Token.SPECIAL_REF : {
                 int specialType = iCode[pc];
                 out.println(tname + " " + specialType);
                 ++pc;
@@ -1861,7 +1863,7 @@ public class Interpreter
                 // type of ++/--
                 return 1 + 1;
 
-            case Icode_SPECIAL_REF:
+            case Token.SPECIAL_REF:
                 // type of special property
                 return 1 + 1;
 
@@ -2828,11 +2830,18 @@ switch (op) {
         stack[++stackTop] = ScriptRuntime.getParent(lhs);
         continue Loop;
     }
-    case Icode_SPECIAL_REF : {
+    case Token.SPECIAL_REF : {
         Object lhs = stack[stackTop];
         if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
-        stack[stackTop] = ScriptRuntime.specialReference(lhs, scope, iCode[pc]);
+        stack[stackTop] = ScriptRuntime.specialReference(lhs, iCode[pc],
+                                                         cx, scope);
         ++pc;
+        continue Loop;
+    }
+    case Token.GENERIC_REF : {
+        Object lhs = stack[stackTop];
+        if (lhs == DBL_MRK) lhs = doubleWrap(sDbl[stackTop]);
+        stack[stackTop] = ScriptRuntime.genericReference(lhs, cx, scope);
         continue Loop;
     }
     case Icode_SCOPE :

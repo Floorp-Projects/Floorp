@@ -1277,8 +1277,9 @@ public class ScriptRuntime {
     }
 
     public static Object specialReference(final Object obj,
-                                          final Scriptable scope,
-                                          final int specialType)
+                                          final int specialType,
+                                          Context cx,
+                                          final Scriptable scope)
     {
         if (!(specialType == Node.SPECIAL_PROP_PROTO
               || specialType == Node.SPECIAL_PROP_PARENT))
@@ -1304,6 +1305,13 @@ public class ScriptRuntime {
                 }
             }
         };
+    }
+
+    public static Object genericReference(Object obj,
+                                          Context cx, Scriptable scope)
+    {
+        String msg = getMessage1("msg.not.ref", toString(obj));
+        throw constructError("ReferenceError", msg);
     }
 
     /**

@@ -1850,6 +1850,10 @@ class BodyCodegen
                 visitSpecialRef(node, child);
                 break;
 
+              case Token.GENERIC_REF:
+                visitGenericRef(node, child);
+                break;
+
               default:
                 throw new RuntimeException("Unexpected node type "+type);
         }
@@ -3508,12 +3512,26 @@ class BodyCodegen
     {
         int special = node.getExistingIntProp(Node.SPECIAL_PROP_PROP);
         generateCodeFromNode(child, node);
-        cfw.addALoad(variableObjectLocal);             // get variable object
-        cfw.addPush(special);                 // push name
+        cfw.addPush(special);
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
         addScriptRuntimeInvoke("specialReference",
-            "(Ljava/lang/Object;"
+            "(Ljava/lang/Object;I"
+            +"Lorg/mozilla/javascript/Context;"
             +"Lorg/mozilla/javascript/Scriptable;"
-            +"I)Ljava/lang/Object;");
+            +")Ljava/lang/Object;");
+    }
+
+    private void visitGenericRef(Node node, Node child)
+    {
+        generateCodeFromNode(child, node);
+        cfw.addALoad(contextLocal);
+        cfw.addALoad(variableObjectLocal);
+        addScriptRuntimeInvoke("genericReference",
+            "(Ljava/lang/Object;"
+            +"Lorg/mozilla/javascript/Context;"
+            +"Lorg/mozilla/javascript/Scriptable;"
+            +")Ljava/lang/Object;");
     }
 
     private int getLocalBlockRegister(Node node)

@@ -143,71 +143,72 @@ public class Token
         GET_REF     = 69, // *reference
         SET_REF     = 70, // *reference = something
         REF_CALL    = 71, // f(args) = something or f(args)++
+        SPECIAL_REF = 72, // reference for special properties like __proto
+        GENERIC_REF = 73, // generic reference to generate runtime ref errors
 
-        LAST_BYTECODE_TOKEN = 71,
+        LAST_BYTECODE_TOKEN = 73,
         // End of interpreter bytecodes
 
-        TRY         = 72,
-        SEMI        = 73,  // semicolon
-        LB          = 74,  // left and right brackets
-        RB          = 75,
-        LC          = 76,  // left and right curlies (braces)
-        RC          = 77,
-        LP          = 78,  // left and right parentheses
-        RP          = 79,
-        COMMA       = 80,  // comma operator
-        ASSIGN      = 81, // simple assignment  (=)
-        ASSIGNOP    = 82, // assignment with operation (+= -= etc.)
-        HOOK        = 83, // conditional (?:)
-        COLON       = 84,
-        OR          = 85, // logical or (||)
-        AND         = 86, // logical and (&&)
-        INC         = 87, // increment/decrement (++ --)
-        DEC         = 88,
-        DOT         = 89, // member operator (.)
-        FUNCTION    = 90, // function keyword
-        EXPORT      = 91, // export keyword
-        IMPORT      = 92, // import keyword
-        IF          = 93, // if keyword
-        ELSE        = 94, // else keyword
-        SWITCH      = 95, // switch keyword
-        CASE        = 96, // case keyword
-        DEFAULT     = 97, // default keyword
-        WHILE       = 98, // while keyword
-        DO          = 99, // do keyword
-        FOR         = 100, // for keyword
-        BREAK       = 101, // break keyword
-        CONTINUE    = 102, // continue keyword
-        VAR         = 103, // var keyword
-        WITH        = 104, // with keyword
-        CATCH       = 105, // catch keyword
-        FINALLY     = 106, // finally keyword
-        VOID        = 107, // void keyword
-        RESERVED    = 108, // reserved keywords
+        TRY         = 74,
+        SEMI        = 75,  // semicolon
+        LB          = 76,  // left and right brackets
+        RB          = 77,
+        LC          = 78,  // left and right curlies (braces)
+        RC          = 79,
+        LP          = 80,  // left and right parentheses
+        RP          = 81,
+        COMMA       = 82,  // comma operator
+        ASSIGN      = 83, // simple assignment  (=)
+        ASSIGNOP    = 84, // assignment with operation (+= -= etc.)
+        HOOK        = 85, // conditional (?:)
+        COLON       = 86,
+        OR          = 87, // logical or (||)
+        AND         = 88, // logical and (&&)
+        INC         = 89, // increment/decrement (++ --)
+        DEC         = 90,
+        DOT         = 91, // member operator (.)
+        FUNCTION    = 92, // function keyword
+        EXPORT      = 93, // export keyword
+        IMPORT      = 94, // import keyword
+        IF          = 95, // if keyword
+        ELSE        = 96, // else keyword
+        SWITCH      = 97, // switch keyword
+        CASE        = 98, // case keyword
+        DEFAULT     = 99, // default keyword
+        WHILE       = 100, // while keyword
+        DO          = 101, // do keyword
+        FOR         = 102, // for keyword
+        BREAK       = 103, // break keyword
+        CONTINUE    = 104, // continue keyword
+        VAR         = 105, // var keyword
+        WITH        = 106, // with keyword
+        CATCH       = 107, // catch keyword
+        FINALLY     = 108, // finally keyword
+        VOID        = 109, // void keyword
+        RESERVED    = 110, // reserved keywords
 
-        EMPTY       = 109,
+        EMPTY       = 111,
 
         /* types used for the parse tree - these never get returned
          * by the scanner.
          */
 
-        BLOCK       = 110, // statement block
-        LABEL       = 111, // label
-        TARGET      = 112,
-        LOOP        = 113,
-        EXPRSTMT    = 114,
-        JSR         = 115,
-        SCRIPT      = 116,   // top-level node for entire script
-        TYPEOFNAME  = 117,  // for typeof(simple-name)
-        USE_STACK   = 118,
-        SETPROP_OP  = 119, // x.y op= something
-        SETELEM_OP  = 120, // x[y] op= something
-        INIT_LIST   = 121,
-        LOCAL_BLOCK = 122,
-        SET_REF_OP  = 123, // *reference op= something
-        SPECIAL_REF = 124, // reference for special properties like __proto
+        BLOCK       = 112, // statement block
+        LABEL       = 113, // label
+        TARGET      = 114,
+        LOOP        = 115,
+        EXPRSTMT    = 116,
+        JSR         = 117,
+        SCRIPT      = 118,   // top-level node for entire script
+        TYPEOFNAME  = 119,  // for typeof(simple-name)
+        USE_STACK   = 120,
+        SETPROP_OP  = 121, // x.y op= something
+        SETELEM_OP  = 122, // x[y] op= something
+        INIT_LIST   = 123,
+        LOCAL_BLOCK = 124,
+        SET_REF_OP  = 125, // *reference op= something
 
-        LAST_TOKEN  = 124;
+        LAST_TOKEN  = 125;
 
     public static String name(int token)
     {
@@ -293,6 +294,8 @@ public class Token
           case GET_REF:         return "GET_REF";
           case SET_REF:         return "SET_REF";
           case REF_CALL:        return "REF_CALL";
+          case SPECIAL_REF:     return "SPECIAL_REF";
+          case GENERIC_REF:     return "GENERIC_REF";
           case TRY:             return "TRY";
           case SEMI:            return "SEMI";
           case LB:              return "LB";
@@ -344,7 +347,6 @@ public class Token
           case INIT_LIST:       return "INIT_LIST";
           case LOCAL_BLOCK:     return "LOCAL_BLOCK";
           case SET_REF_OP:      return "SET_REF_OP";
-          case SPECIAL_REF:     return "SPECIAL_REF";
         }
 
         // Token without name
