@@ -323,8 +323,13 @@
         </menu>
 #endif
 
+#ifdef XP_WIN
+          <menu label="&helpMenuWin.label;"
+                accesskey="&helpMenuWin.accesskey;">
+#else
           <menu label="&helpMenu.label;"
                 accesskey="&helpMenu.accesskey;">
+#endif
             <menupopup id="menu_HelpPopup">
               <menuitem accesskey="&releaseCmd.accesskey;"
                         label="&releaseCmd.label;"

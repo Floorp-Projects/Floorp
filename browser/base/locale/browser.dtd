@@ -69,10 +69,6 @@
 <!ENTITY manBookmarksWinCmd.commandkey "i">
 <!ENTITY emptyItem.label "(Empty)">
 
-<!ENTITY helpMenuCmd.label "Help">
-<!ENTITY helpMenuCmd.accesskey "h">
-<!ENTITY helpContentsCmd.label "Help Contents">
-
 <!ENTITY backCmd.label                "Back">
 <!ENTITY backCmd.accesskey            "B">
 <!ENTITY backButton.tooltip           "Go back one page">
@@ -170,7 +166,9 @@
 <!ENTITY earlierHistory.label "Earlier History">
 
 <!ENTITY helpMenu.label         "Help"> 
-<!ENTITY helpMenu.accesskey       "H"> 
+<!ENTITY helpMenu.accesskey     "H"> 
+<!ENTITY helpMenuWin.label      "?"> 
+<!ENTITY helpMenuWin.accesskey  "?"> 
 
 <!ENTITY releaseCmd.label       "Release Notes">
 <!ENTITY releaseCmd.accesskey       "R">
