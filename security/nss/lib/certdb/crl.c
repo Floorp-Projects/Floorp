@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.8 2002/02/26 02:02:47 relyea%netscape.com Exp $
+ * $Id: crl.c,v 1.9 2002/03/15 20:17:15 wtc%netscape.com Exp $
  */
 
 #include "cert.h"
@@ -408,11 +408,13 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type)
     if (derCrl == NULL) {
 	goto loser;
     }
+    PORT_Assert(crlHandle != CK_INVALID_HANDLE);
     
     crl = CERT_DecodeDERCrl(NULL, derCrl, type);
     if (crl) {
 	crl->slot = slot;
 	slot = NULL; /* adopt it */
+	crl->pkcs11ID = crlHandle;
     }
     if (url) {
 	crl->url = PORT_ArenaStrdup(crl->arena,url);
