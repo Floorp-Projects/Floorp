@@ -517,43 +517,22 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL, nsACString& aResult)
     return NS_OK;
   
   rv = GetBaseURL(package, provider, finalURL);
-#ifdef DEBUG
   if (NS_FAILED(rv)) {
+#ifdef DEBUG
     nsCAutoString msg("chrome: failed to get base url");
     nsCAutoString url;
-    rv = aChromeURL->GetSpec(url);
-    if (NS_SUCCEEDED(rv)) {
+    nsresult rv2 = aChromeURL->GetSpec(url);
+    if (NS_SUCCEEDED(rv2)) {
       msg += " for ";
       msg += url.get();
     }
     msg += " -- using wacky default";
     NS_WARNING(msg.get());
-  }
 #endif
-  if (finalURL.IsEmpty()) {
-    // hard-coded fallback
-    if (provider.Equals("skin")) {
-      finalURL = "resource:/chrome/skins/classic/";
-    }
-    else if (provider.Equals("locale")) {
-      finalURL = "resource:/chrome/locales/en-US/";
-    }
-    else if (package.Equals("aim")) {
-      finalURL = "resource:/chrome/packages/aim/";
-    }
-    else if (package.Equals("messenger")) {
-      finalURL = "resource:/chrome/packages/messenger/";
-    }
-    else if (package.Equals("global")) {
-      finalURL = "resource:/chrome/packages/widget-toolkit/";
-    }
-    else {
-      finalURL = "resource:/chrome/packages/core/";
-    }
+    return rv;
   }
 
   aResult = finalURL + remaining;
-
   return NS_OK;
 }
 
