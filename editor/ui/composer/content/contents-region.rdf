@@ -11,7 +11,7 @@
   <RDF:Description about="urn:mozilla:package:editor-region"
         chrome:author="mozilla.org"
         chrome:name="editor-region"
- 	chrome:localeVersion="1.2b">
+ 	chrome:localeVersion="1.2">
   </RDF:Description>
 
 </RDF:RDF>

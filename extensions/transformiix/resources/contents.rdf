@@ -12,7 +12,7 @@
         chrome:displayName="XSLT QA Tools"
         chrome:author="mozilla.org"
         chrome:name="xslt-qa"
-        chrome:localeVersion="1.2b"
+        chrome:localeVersion="1.2"
         chrome:skinVersion="1.2">
   </RDF:Description>
 

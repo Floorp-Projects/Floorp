@@ -13,7 +13,7 @@
         chrome:author="mozilla.org"
         chrome:name="US"
         chrome:localeType="region"
-        chrome:localeVersion="1.2b"
+        chrome:localeVersion="1.2"
         chrome:previewURL="http://www.mozilla.org/locales/US.gif">
     <chrome:packages>
       <RDF:Seq about="urn:mozilla:locale:US:packages">
@@ -25,5 +25,5 @@
   <!-- Version Information.  State that we work only with major version of this
        package. -->
   <RDF:Description about="urn:mozilla:locale:US:global-region"
-	chrome:localeVersion="1.2b"/>
+	chrome:localeVersion="1.2"/>
 </RDF:RDF>

@@ -17,5 +17,5 @@
   </RDF:Description>
 
   <RDF:Description about="urn:mozilla:locale:en-US:cascades"
-	                 chrome:localeVersion="1.2b"/>
+	                 chrome:localeVersion="1.2"/>
 </RDF:RDF>

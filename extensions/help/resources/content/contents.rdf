@@ -10,7 +10,7 @@
         chrome:displayName="Mozilla Help Viewer"
         chrome:author="netscape.com"
         chrome:name="help"
-        chrome:localeVersion="1.2b">
+        chrome:localeVersion="1.2">
   </RDF:Description> 
 
   <!-- Declare overlay points used in this package -->

@@ -13,7 +13,7 @@
         chrome:displayName="Messenger"
         chrome:author="mozilla.org"
         chrome:name="messenger-smoketest"
-        chrome:localeVersion="1.2b"
+        chrome:localeVersion="1.2"
         chrome:skinVersion="1.2">
   </RDF:Description>
 
