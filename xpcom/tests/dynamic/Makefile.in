@@ -24,7 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 LIBRARY_NAME = testdynamic
 
-LOCAL_INCLUDES = -I$(srcdir)/.. -I$(srcdir)/../../src
+LOCAL_INCLUDES = -I$(srcdir)/.. -I$(srcdir)/../../public
 
 CPPSRCS = \
 	TestDynamic.cpp	\
