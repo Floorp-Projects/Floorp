@@ -52,7 +52,7 @@ public:
   NS_DECL_ISUPPORTS_INHERITED
   
   //nsIDragService
-  NS_IMETHOD InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
+  NS_IMETHOD InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType);
 
   //nsIDragSession
   NS_IMETHOD GetData (nsITransferable * aTransferable, PRUint32 aItemIndex);
@@ -77,6 +77,7 @@ private:
   static pascal OSErr DragSendDataProc ( FlavorType inFlavor, void* inRefCon,
   										 ItemReference theItemRef, DragReference inDragRef ) ;
 
+  PRBool mImageDraggingSupported;
   static DragSendDataUPP sDragSendDataUPP;
   DragReference mDragRef;        // reference to _the_ drag. There can be only one.
   nsISupportsArray* mDataItems;  // cached here for when we start the drag so the 

@@ -134,7 +134,7 @@ NS_IMETHODIMP nsBaseDragService::IsDataFlavorSupported(const char *aDataFlavor, 
 }
 
 //-------------------------------------------------------------------------
-NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
+NS_IMETHODIMP nsBaseDragService::InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * anArrayTransferables, nsIScriptableRegion * aRegion, PRUint32 aActionType)
 {
   return NS_ERROR_FAILURE;
 }

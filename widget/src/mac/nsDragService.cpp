@@ -43,6 +43,19 @@
 #include "nsPrimitiveHelpers.h"
 #include "nsILocalFileMac.h"
 
+// rjc
+#include <Gestalt.h>
+#include "nsIContent.h"
+#include "nsIDOMNode.h"
+#include "nsIDocument.h"
+#include "nsIPresShell.h"
+#include "nsIPresContext.h"
+#include "nsIFrame.h"
+#include "nsIView.h"
+#include "nsRect.h"
+#include "nsPoint.h"
+#include "nsIWidget.h"
+
 
 #if !TARGET_CARBON
 DragSendDataUPP nsDragService::sDragSendDataUPP = NewDragSendDataProc(DragSendDataProc);
@@ -58,8 +71,15 @@ NS_IMPL_QUERY_INTERFACE3(nsDragService, nsIDragService, nsIDragSession, nsIDragS
 // DragService constructor
 //
 nsDragService::nsDragService()
-  : mDragRef(0), mDataItems(nsnull)
+  : mDragRef(0), mDataItems(nsnull), mImageDraggingSupported(PR_FALSE)
 {
+  // rjc - check if the Drag Manager supports image dragging
+  long response;
+  OSErr err = Gestalt(gestaltDragMgrAttr, &response); 
+  if (err == noErr && (response & (1L << gestaltDragMgrHasImageSupport)))
+  {
+      mImageDraggingSupported = PR_TRUE;
+  }
 }
 
 
@@ -77,8 +97,86 @@ nsDragService::~nsDragService()
 // Do all the work to kick it off.
 //
 NS_IMETHODIMP
-nsDragService :: InvokeDragSession (nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
+nsDragService :: InvokeDragSession (nsIDOMNode *aDOMNode, nsISupportsArray * aTransferableArray, nsIScriptableRegion * aDragRgn, PRUint32 aActionType)
 {
+	// rjc - compute rect of drag area in global coordinants
+	PRBool	haveRectFlag = PR_FALSE;
+	Rect	aMacRect;
+	aMacRect.left = aMacRect.right = aMacRect.top = aMacRect.bottom = 0;
+
+	nsCOMPtr<nsIContent>	contentNode;
+	if (aDOMNode)	contentNode = do_QueryInterface(aDOMNode);
+
+	nsCOMPtr<nsIDocument>	doc;
+	if (contentNode)	contentNode->GetDocument(*getter_AddRefs(doc));
+	nsCOMPtr<nsIPresShell>	presShell;
+	if (doc)		presShell = getter_AddRefs(doc->GetShellAt(0));
+	nsCOMPtr<nsIPresContext>presContext;
+	// note: nsIFrames are not refcounted
+	nsIFrame		*aFrame = nsnull;
+	if (presShell)
+	{
+		presShell->GetPresContext(getter_AddRefs(presContext));
+		presShell->GetPrimaryFrameFor(contentNode, &aFrame);
+	}
+
+	nsRect	aRect(0,0,0,0);
+	nsPoint	offset(0,0);
+
+	// note: are nsIViews recounted ???
+	nsIView	*parentView = nsnull;
+	if (aFrame && presContext)
+	{
+		aFrame->GetRect(aRect);
+
+		nsIView *containingView = nsnull;
+		aFrame->GetOffsetFromView(presContext, offset, &containingView);
+
+		aFrame->GetView(presContext, &parentView);
+		if (!parentView)
+		{
+			// note: nsIFrames are not refcounted
+			nsIFrame	*aParentFrame = nsnull;
+			aFrame->GetParentWithView(presContext, &aParentFrame);
+			if (aParentFrame)
+			{
+				aParentFrame->GetView(presContext, &parentView);
+			}
+		}
+	}
+
+	nsCOMPtr<nsIWidget>	aWidget = nsnull;
+	if (parentView)
+	{
+		// note: are nsIViews recounted ???
+		nsIView 		*view = parentView;
+		while (!aWidget && view)
+		{
+			view->GetWidget(*getter_AddRefs(aWidget));
+			if (!aWidget)
+			{
+				view->GetParent(view);
+			}
+		}
+	}
+	if (aWidget)
+	{
+		nsRect	screenRect(0,0,0,0);
+		aWidget->WidgetToScreen ( aRect, screenRect );
+		aRect.MoveBy(screenRect.x, screenRect.y);
+
+		float		twips2Pixels = 1.0;
+		presContext->GetTwipsToPixels(&twips2Pixels);
+
+		aMacRect.left = aRect.x + offset.x * twips2Pixels;
+		aMacRect.top = aRect.y + offset.y * twips2Pixels;
+		aMacRect.right = aMacRect.left + aRect.width * twips2Pixels;
+		aMacRect.bottom = aMacRect.top + aRect.height * twips2Pixels;
+
+		haveRectFlag = PR_TRUE;
+	}
+
+
   DragReference theDragRef;
   OSErr result = ::NewDrag(&theDragRef);
   if ( result != noErr )
@@ -113,7 +211,22 @@ printf("**** created drag ref %ld\n", theDragRef);
   theEvent.modifiers = 0;
   
   RgnHandle theDragRgn = ::NewRgn();
-  BuildDragRegion ( aDragRgn, globalMouseLoc, theDragRgn );
+  ::RectRgn(theDragRgn, &aMacRect);		// rjc: set rect
+
+  if ((haveRectFlag == PR_TRUE) && (mImageDraggingSupported == PR_TRUE))
+  {
+    Point	imgOffsetPt;
+    imgOffsetPt.v = imgOffsetPt.h = 0;
+
+    // rjc - note: passing in null for image's PixMapHandle
+    //       to SetDragImage() means use bits on screen
+    ::SetDragImage (theDragRef, nsnull, theDragRgn,
+    	imgOffsetPt, kDragDarkerTranslucency);
+  }
+  else
+  {
+    BuildDragRegion ( aDragRgn, globalMouseLoc, theDragRgn );
+  }
 
   // register drag send proc which will call us back when asked for the actual
   // flavor data (instead of placing it all into the drag manager)
