@@ -1103,7 +1103,7 @@ static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
     // In case the security component can not do its internal initialization, 
     // we must warn the user and exit.
     
-    const char *panicMsg = "PANIC! The security component of Mozilla can not initialize.\n\n"
+    char *panicMsg = "PANIC! The security component of Mozilla can not initialize.\n\n"
       "While this can have multiple reasons, it is likely that there is a problem "
       "with the directory on your hard disk where Mozilla stores your preferences. "
       "Maybe the files containing security certificates can't be accessed or created.\n\n"
@@ -1113,7 +1113,7 @@ static nsresult VerifyPsmAbsentOrSane(int argc, char **argv)
       "Please fix this problem or show this message to your system administrator.\n\n"
       "The browser will now abort.";
 
-    const char *panicMessageFilename = "nssifail.txt";
+    char *panicMessageFilename = "nssifail.txt";
     
     ShowOSAlertFromFile(argc, argv, panicMessageFilename, panicMsg);
     
