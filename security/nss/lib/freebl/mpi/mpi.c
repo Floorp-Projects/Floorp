@@ -35,7 +35,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mpi.c,v 1.36 2001/09/20 22:14:09 relyea%netscape.com Exp $
+ *  $Id: mpi.c,v 1.37 2001/09/20 23:15:12 relyea%netscape.com Exp $
  */
 
 #include "mpi-priv.h"
@@ -3364,6 +3364,9 @@ mp_err   s_mp_div_d(mp_int *mp, mp_digit d, mp_digit *r)
 #else
   {
     mp_digit p;
+#if !defined(MP_ASSEMBLY_DIV_2DX1D)
+    mp_digit norm;
+#endif
 
     MP_CHECKOK( mp_init_copy(&rem, mp) );
 
