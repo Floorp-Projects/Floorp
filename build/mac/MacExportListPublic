@@ -134,6 +134,9 @@ mozilla:modules:libreg:include:export.mac			:libreg
 #LIBUTIL
 mozilla:modules:libutil:public:export.mac			:libutil
 
+#OJI
+mozilla:modules:oji:src:export.mac					:oji
+
 #PROGRESS
 mozilla:modules:progress:public:export.mac			:progress
 
