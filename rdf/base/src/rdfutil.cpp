@@ -319,36 +319,6 @@ rdf_Assert(nsIRDFDataSource* ds,
            nsIRDFResource* predicate,
            nsIRDFNode* object)
 {
-    NS_ASSERTION(ds,        "null ptr");
-    NS_ASSERTION(subject,   "null ptr");
-    NS_ASSERTION(predicate, "null ptr");
-    NS_ASSERTION(object,    "null ptr");
-
-#ifdef DEBUG_waterson
-    nsXPIDLCString s;
-    predicate->GetValue( getter_Copies(s) );
-    printf(" %s", (strchr(s, '#') ? strchr(s, '#')+1 : (const char*) s));
-    subject->GetValue( getter_Copies(s) );
-    printf("(%s, ", s);
-     
-
-    nsIRDFResource* objectResource;
-    nsIRDFLiteral* objectLiteral;
-
-    if (NS_SUCCEEDED(object->QueryInterface(kIRDFResourceIID, (void**) &objectResource))) {
-        objectResource->GetValue( getter_Copies(s) );
-        printf(" %s)\n", (const char*) s);
-        NS_RELEASE(objectResource);
-    }
-    else if (NS_SUCCEEDED(object->QueryInterface(kIRDFLiteralIID, (void**) &objectLiteral))) {
-        nsXPIDLString p;
-        objectLiteral->GetValue( getter_Copies(p) );
-        nsAutoString s2((const PRUnichar*) p);
-        char buf[1024];
-        printf(" %s)\n", s2.ToCString(buf, sizeof buf));
-        NS_RELEASE(objectLiteral);
-    }
-#endif
     return ds->Assert(subject, predicate, object, PR_TRUE);
 }
 
