@@ -37,6 +37,7 @@
 #include "nsISupportsArray.h"
 #include "nsIDeviceContext.h"
 #include "nsIView.h"
+#include "nsIScrollableView.h"
 
 static NS_DEFINE_IID(kIFormControlFrameIID,      NS_IFORMCONTROLFRAME_IID);
 static NS_DEFINE_IID(kIComboboxControlFrameIID,  NS_ICOMBOBOXCONTROLFRAME_IID);
@@ -326,7 +327,6 @@ void
 nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
 {
   if (PR_TRUE == aShowList) {
-    mListControlFrame->AboutToDropDown();
     ShowPopup(PR_TRUE);
     mDroppedDown = PR_TRUE;
      // The listcontrol frame will call back to the nsComboboxControlFrame's ListWasSelected
@@ -345,7 +345,7 @@ nsComboboxControlFrame::ShowList(nsIPresContext* aPresContext, PRBool aShowList)
 void 
 nsComboboxControlFrame::MouseClicked(nsIPresContext* aPresContext)
 {
-   ToggleList(aPresContext);
+   //ToggleList(aPresContext);
 }
 
 
@@ -455,6 +455,7 @@ nsComboboxControlFrame::GetScreenHeight(nsIPresContext& aPresContext,
   return NS_ERROR_FAILURE;
 }
 
+int counter = 0;
 
 nsresult 
 nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext, 
@@ -478,7 +479,10 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
   nsresult rv = NS_OK;
   nsIFrame* dropdownFrame = GetDropdownFrame();
   nscoord dropdownYOffset = aHeight;
-/* XXX: Enable this code to debug popping up above the display frame, rather than below it
+// XXX: Enable this code to debug popping up above the display frame, rather than below it
+  nsRect dropdownRect;
+  dropdownFrame->GetRect(dropdownRect);
+
   nscoord screenHeightInPixels = 0;
   if (NS_SUCCEEDED(GetScreenHeight(aPresContext, screenHeightInPixels))) {
      nsRect absoluteRect;
@@ -493,16 +497,18 @@ nsComboboxControlFrame::PositionDropdown(nsIPresContext& aPresContext,
       // Check to see if the drop-down list will go offscreen
     if (NS_SUCCEEDED(rv) && ((aAbsolutePixelRect.y + aAbsolutePixelRect.height + absoluteDropDownHeight) > screenHeightInPixels)) {
       // move the dropdown list up
-      dropdownYOffset = - (aAbsoluteTwipsRect.height);
+      dropdownYOffset = - (dropdownRect.height);
     }
   } 
-*/
  
-  nsRect dropdownRect;
-  dropdownFrame->GetRect(dropdownRect);
   dropdownRect.x = 0;
   dropdownRect.y = dropdownYOffset; 
-  dropdownFrame->SetRect(dropdownRect);
+  nsRect currentRect;
+  dropdownFrame->GetRect(currentRect);
+  //if (currentRect != dropdownRect) {
+    dropdownFrame->SetRect(dropdownRect);
+    printf("%d Position Dropdown at: %d %d %d %d\n", counter++, dropdownRect.x, dropdownRect.y, dropdownRect.width, dropdownRect.height);
+  //}
 
   return rv;
 }
@@ -534,8 +540,46 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
   if (NS_SUCCEEDED(rv) && (nsnull != containingView)) {
     aAbsoluteTwipsRect.x += offset.x;
     aAbsoluteTwipsRect.y += offset.y;
+
+    nsPoint viewOffset;
+    containingView->GetPosition(&viewOffset.x, &viewOffset.y);
+    nsIView * parent;
+    containingView->GetParent(parent);
+    while (nsnull != parent) {
+      nsPoint po;
+      parent->GetPosition(&po.x, &po.y);
+      viewOffset.x += po.x;
+      viewOffset.y += po.y;
+      nsIScrollableView * scrollView;
+      if (NS_OK == containingView->QueryInterface(nsIScrollableView::GetIID(), (void **)&scrollView)) {
+        nscoord x;
+        nscoord y;
+        scrollView->GetScrollPosition(x, y);
+        viewOffset.x -= x;
+        viewOffset.y -= y;
+      }
+      nsIWidget * widget;
+      parent->GetWidget(widget);
+      if (nsnull != widget) {
+        // Add in the absolute offset of the widget.
+        nsRect absBounds2;
+        nsRect absBounds;
+        //widget->GetAbsoluteBounds(absBounds2);
+        nsRect lc;
+        widget->WidgetToScreen(lc, absBounds);
+        // Convert widget coordinates to twips   
+        aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
+        aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
+        NS_RELEASE(widget);
+        break;
+      }
+      parent->GetParent(parent);
+    }
+    aAbsoluteTwipsRect.x += viewOffset.x;
+    aAbsoluteTwipsRect.y += viewOffset.y;
+
      // Addin the containing view's offset form it's containing widget
-    nsIWidget* widget = nsnull;
+    /*nsIWidget* widget = nsnull;
     nscoord widgetx = 0;
     nscoord widgety = 0;
     rv = containingView->GetOffsetFromWidget(&widgetx, &widgety, widget);
@@ -551,7 +595,7 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
       aAbsoluteTwipsRect.x += NSIntPixelsToTwips(absBounds.x, p2t);
       aAbsoluteTwipsRect.y += NSIntPixelsToTwips(absBounds.y, p2t);   
       NS_RELEASE(widget);
-    }
+    }*/
   }
 
    // convert to pixel coordinates
@@ -565,13 +609,21 @@ nsComboboxControlFrame::GetAbsoluteFramePosition(nsIPresContext& aPresContext,
   return rv;
 }
 
-
+static int myCounter = 0;
 NS_IMETHODIMP 
 nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext, 
-                                             nsHTMLReflowMetrics&     aDesiredSize,
-                                             const nsHTMLReflowState& aReflowState, 
-                                             nsReflowStatus&          aStatus)
+                               nsHTMLReflowMetrics&     aDesiredSize,
+                               const nsHTMLReflowState& aReflowState, 
+                               nsReflowStatus&          aStatus)
 {
+  printf("nsComboboxControlFrame::Reflow %d   Reason: ", myCounter++);
+  switch (aReflowState.reason) {
+    case eReflowReason_Initial:printf("eReflowReason_Initial\n");break;
+    case eReflowReason_Incremental:printf("eReflowReason_Incremental\n");break;
+    case eReflowReason_Resize:printf("eReflowReason_Resize\n");break;
+    case eReflowReason_StyleChange:printf("eReflowReason_StyleChange\n");break;
+  }
+
   nsresult rv = NS_OK;
   nsIFrame* buttonFrame = GetButtonFrame(aPresContext);
   nsIFrame* displayFrame = GetDisplayFrame(aPresContext);
@@ -620,8 +672,8 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
         // Reposition the popup.
         nsRect absoluteTwips;
         nsRect absolutePixels;
-        GetAbsoluteFramePosition(aPresContext, displayFrame,  absoluteTwips, absolutePixels);
-        PositionDropdown(aPresContext, displayRect.height, absoluteTwips, absolutePixels);
+        //GetAbsoluteFramePosition(aPresContext, displayFrame,  absoluteTwips, absolutePixels);
+        //PositionDropdown(aPresContext, displayRect.height, absoluteTwips, absolutePixels);
         return rv;
       }
     }
@@ -674,10 +726,10 @@ nsComboboxControlFrame::Reflow(nsIPresContext&          aPresContext,
       // Size the button to be the same height as the displayFrame
     SetChildFrameSize(buttonFrame, size.height, size.height);
 
-      // Compute display width
-    buttonFrame->GetRect(buttonRect);
-    nscoord displayWidth;
-    displayWidth = firstPassState.mComputedWidth - buttonRect.width;
+    // Compute display width
+    // Since the button's width is the same as its height
+    // we subtract size.height (the width)
+    nscoord displayWidth = firstPassState.mComputedWidth - size.height;
 
      // Set the displayFrame to match the displayWidth computed above
     SetChildFrameSize(displayFrame, displayWidth, size.height);
@@ -801,6 +853,15 @@ nsComboboxControlFrame::ReResolveStyleContext(nsIPresContext* aPresContext,
 nsresult
 nsComboboxControlFrame::MouseDown(nsIDOMEvent* aMouseEvent)
 {
+  nsRect absoluteTwips;
+  nsRect absolutePixels;
+  nsIFrame * displayFrame = GetDisplayFrame(*mPresContext);
+  nsRect displayRect;
+   // Get the current sizes of the combo box child frames
+  displayFrame->GetRect(displayRect);
+  GetAbsoluteFramePosition(*mPresContext, displayFrame,  absoluteTwips, absolutePixels);
+  PositionDropdown(*mPresContext, displayRect.height, absoluteTwips, absolutePixels);
+
   ToggleList(mPresContext);
   return NS_OK;
 }
@@ -846,6 +907,23 @@ nsComboboxControlFrame::SelectionChanged()
     frame->HandleEvent(*mPresContext, &event, status);
   }
   
+}
+
+NS_IMETHODIMP 
+nsComboboxControlFrame::HandleEvent(nsIPresContext& aPresContext, 
+                                       nsGUIEvent*     aEvent,
+                                       nsEventStatus&  aEventStatus)
+{
+  if (nsEventStatus_eConsumeNoDefault == aEventStatus) {
+    return NS_OK;
+  }
+
+  if (aEvent->message == NS_KEY_PRESS) {
+    int x = 0;
+    x++;
+  }
+
+  return NS_OK;
 }
 
 

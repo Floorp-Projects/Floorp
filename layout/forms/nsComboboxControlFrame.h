@@ -76,6 +76,10 @@ public:
                                    nsStyleChangeList* aChangeList,
                                    PRInt32* aLocalChange);
 
+  NS_IMETHOD HandleEvent(nsIPresContext& aPresContext,
+                         nsGUIEvent* aEvent,
+                         nsEventStatus& aEventStatus);
+
   NS_IMETHOD GetFrameName(nsString& aResult) const;
   NS_IMETHOD Destroy(nsIPresContext& aPresContext);
   NS_IMETHOD FirstChild(nsIAtom* aListName, nsIFrame** aFirstChild) const;
