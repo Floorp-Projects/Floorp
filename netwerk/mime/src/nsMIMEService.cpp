@@ -102,6 +102,10 @@ nsMIMEService::InitFromHack() {
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
     mInfoArray->AppendElement(anInfo);
 
+	 anInfo = new nsMIMEInfoImpl("message/rfc822", "eml", "RFC-822 data");
+    if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
+    mInfoArray->AppendElement(anInfo);
+
     /////////////////
     // Images
     /////////////////
