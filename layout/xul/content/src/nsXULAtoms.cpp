@@ -52,6 +52,12 @@ nsIAtom* nsXULAtoms::treecolgroup;
 nsIAtom* nsXULAtoms::treefoot;
 nsIAtom* nsXULAtoms::treepusher;
 
+nsIAtom* nsXULAtoms::menu;
+nsIAtom* nsXULAtoms::menuitem;
+nsIAtom* nsXULAtoms::menubar;
+nsIAtom* nsXULAtoms::menubutton;
+nsIAtom* nsXULAtoms::menuchildren;
+
 nsIAtom* nsXULAtoms::progressmeter;
 nsIAtom* nsXULAtoms::titledbutton;
 nsIAtom* nsXULAtoms::mode;
@@ -109,7 +115,7 @@ void nsXULAtoms::AddrefAtoms() {
   	toolbaritem = NS_NewAtom("toolbaritem");
     toolbox = NS_NewAtom("toolbox");
 
-    tree = NS_NewAtom("tree");
+  tree = NS_NewAtom("tree");
 	treecaption = NS_NewAtom("treecaption");
 	treehead = NS_NewAtom("treehead");
 	treerow = NS_NewAtom("treerow");
@@ -117,11 +123,17 @@ void nsXULAtoms::AddrefAtoms() {
 	treeitem = NS_NewAtom("treeitem");
 	treechildren = NS_NewAtom("treechildren");
 	treeindentation = NS_NewAtom("treeindentation");
-    treeallowevents = NS_NewAtom("treeallowevents");
-    treecol = NS_NewAtom("treecol");
+  treeallowevents = NS_NewAtom("treeallowevents");
+  treecol = NS_NewAtom("treecol");
 	treecolgroup = NS_NewAtom("treecolgroup");
   treefoot = NS_NewAtom("treefoot");
   treepusher = NS_NewAtom("treepusher");
+
+  menuitem = NS_NewAtom("menuitem");
+  menubar = NS_NewAtom("menubar");
+  menu = NS_NewAtom("menu");
+  menubutton = NS_NewAtom("menubutton");
+  menuchildren = NS_NewAtom("menuchildren");
 
 	progressmeter = NS_NewAtom("progressmeter");
 	titledbutton = NS_NewAtom("titledbutton");
@@ -170,7 +182,7 @@ void nsXULAtoms::ReleaseAtoms() {
     NS_RELEASE(toolbar);
     NS_RELEASE(toolbox);
 
-    NS_RELEASE(tree);
+  NS_RELEASE(tree);
 	NS_RELEASE(treecaption);
 	NS_RELEASE(treehead);
 	NS_RELEASE(treerow);
@@ -178,13 +190,19 @@ void nsXULAtoms::ReleaseAtoms() {
 	NS_RELEASE(treeitem);
 	NS_RELEASE(treechildren);
 	NS_RELEASE(treeindentation);
-    NS_RELEASE(treeallowevents);
+  NS_RELEASE(treeallowevents);
 	NS_RELEASE(treecol);
 	NS_RELEASE(treecolgroup);
   NS_RELEASE(treefoot);
   NS_RELEASE(treepusher);
 
-    NS_RELEASE(progressmeter);
+  NS_RELEASE(menu);
+  NS_RELEASE(menubar);
+  NS_RELEASE(menuitem);
+  NS_RELEASE(menubutton);
+  NS_RELEASE(menuchildren);
+
+  NS_RELEASE(progressmeter);
 	NS_RELEASE(mode);
 
 	NS_RELEASE(box);
