@@ -38,6 +38,7 @@
     { 0x80, 0x6e, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e } }
 
 class nsIURL;
+class nsIImapUrl;
 class nsIImapHostSessionList;
 class nsIWebShell;
 
@@ -56,6 +57,19 @@ public:
 	// a thread safe object to our test app. 
 	/////////////////////////////////////////////////////////////////////////
 	NS_IMETHOD LoadUrl(nsIURL * aUrl, nsISupports * aConsumer) = 0;
+
+	///////////////////////////////////////////////////////////////////////// 
+	// IsBusy returns true if the connection is currently processing a url
+	// and false otherwise.
+	/////////////////////////////////////////////////////////////////////////
+	NS_IMETHOD IsBusy(PRBool & aIsConnectionBusy) = 0;
+
+	// Protocol instance examines the url, looking at the host name,
+	// user name and folder the action would be on in order to figure out
+	// if it can process this url. I decided to push the semantics about
+	// whether a connection can handle a url down into the connection level
+	// instead of in the connection cache.
+	NS_IMETHOD CanHandleUrl(nsIImapUrl * aImapUrl, PRBool & aCanRunUrl) = 0;
 
 	/////////////////////////////////////////////////////////////////////////
 	// Right now, initialize requires the event queue of the UI thread, 
