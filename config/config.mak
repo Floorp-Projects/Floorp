@@ -71,7 +71,7 @@ WINOS=$(WINOS: =)^
 #//-----------------------------------------------------------------------
 
 XPDIST=$(DEPTH)\dist
-!if defined(MOZ_TRACK_MODULE_DEPS) && defined(MODULE)
+!ifdef MODULE
 PUBLIC=$(XPDIST)\include\$(MODULE)
 !else
 PUBLIC=$(XPDIST)\include

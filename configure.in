@@ -4026,7 +4026,6 @@ dnl =
 dnl = Maintainer debug option (no --enable equivalent)
 dnl =
 dnl ========================================================
-AC_SUBST(MOZ_TRACK_MODULE_DEPS)
 
 AC_SUBST(AR)
 AC_SUBST(AR_FLAGS)

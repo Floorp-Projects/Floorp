@@ -711,9 +711,7 @@ include <$(DEPTH)/config/java.inc>
 export:: $(EXPORTS)
     @echo +++ make: exporting headers
  	$(MAKE_INSTALL:/=\) $(MKCPYFLAGS) $(EXPORTS) $(PUBLIC)
-!ifdef MOZ_TRACK_MODULE_DEPS
 	$(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(PUBLIC)/.headerlist $(EXPORTS)
-!endif
 
 #// don't delete exported stuff on a local clobber, use clobber_all
 #clobber::
@@ -820,9 +818,7 @@ export:: $(XPDIST)\idl
 export:: $(XPIDL_GEN_DIR) $(XPIDL_HEADERS) $(PUBLIC)
         @echo +++ make: exporting generated XPIDL header files
         $(MAKE_INSTALL) $(XPIDL_HEADERS:/=\) $(PUBLIC)
-!ifdef MOZ_TRACK_MODULE_DEPS
 	$(PERL) -I$(DEPTH)\config $(DEPTH)\config\build-list.pl $(PUBLIC)/.headerlist $(XPIDL_HEADERS)
-!endif
 
 !ifndef NO_GEN_XPT
 install:: $(XPIDL_GEN_DIR) $(TYPELIB)
