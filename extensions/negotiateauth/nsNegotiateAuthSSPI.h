@@ -50,13 +50,19 @@
 // The nsNegotiateAuth class provides responses for the GSS-API Negotiate method
 // as specified by Microsoft in draft-brezak-spnego-http-04.txt
 
+// It can also be configured to talk raw NTLM.  This implementation of NTLM has
+// the advantage of being able to access the user's logon credentials.  This
+// implementation of NTLM should only be used for single-signon.  It should be
+// avoided when authenticating over the internet since it may use a lower-grade
+// version of password hashing depending on the version of Windows being used.
+
 class nsNegotiateAuth : public nsIAuthModule
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSIAUTHMODULE
 
-    nsNegotiateAuth();
+    nsNegotiateAuth(PRBool useNTLM = PR_FALSE);
 
 private:
     ~nsNegotiateAuth();
@@ -68,6 +74,7 @@ private:
     CtxtHandle   mCtxt;
     nsCString    mServiceName;
     PRUint32     mServiceFlags;
+    PRBool       mUseNTLM;
 };
 
 #endif /* nsNegotiateAuthSSPI_h__ */

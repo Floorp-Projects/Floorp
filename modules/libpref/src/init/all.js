@@ -578,6 +578,14 @@ pref("network.negotiate-auth.trusted-uris", "");
 // This list controls which URIs can support delegation.
 pref("network.negotiate-auth.delegation-uris", "");
 
+// The following prefs are used to enable automatic use of the operating
+// system's NTLM implementation to silently authenticate the user with their
+// Window's domain logon.  By default, this is enabled for proxy servers.
+// The trusted-uris pref follows the format of the trusted-uris pref for
+// negotiate authentication.
+pref("network.automatic-ntlm-auth.allow-proxies", true);
+pref("network.automatic-ntlm-auth.trusted-uris", "");
+
 
 // sspitzer:  change this back to "news" when we get to beta.
 // for now, set this to news.mozilla.org because you can only
