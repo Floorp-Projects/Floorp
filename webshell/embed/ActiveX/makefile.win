@@ -19,28 +19,43 @@
 !message This module requires the MS Platform SDK to be installed.
 !else
 
-DLLNAME = MozillaControl
+DLLNAME = npmozctl
 QUIET =
 DEPTH =..\..\..
 IGNORE_MANIFEST=1
 
 MAKE_OBJ_TYPE = DLL
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
-RESFILE = $(DLLNAME).res
-DEFFILE = $(DLLNAME).def
+RESFILE = MozillaControl.res
+!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+DEFFILE = npmozctl.def
+!else
+DEFFILE = MozillaControl.def
+!endif
 
-OBJS =                                     \
+OBJS =                                 \
 	.\$(OBJDIR)\StdAfx.obj             \
 	.\$(OBJDIR)\nsSetupRegistry.obj    \
 	.\$(OBJDIR)\MozillaControl.obj     \
 	.\$(OBJDIR)\MozillaBrowser.obj     \
     .\$(OBJDIR)\WebShellContainer.obj  \
 	.\$(OBJDIR)\ControlSite.obj        \
+	.\$(OBJDIR)\ControlSiteIPFrame.obj \
+	.\$(OBJDIR)\PropertyBag.obj        \
+!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+	.\$(OBJDIR)\ActiveXPlugin.obj      \
+	.\$(OBJDIR)\ActiveXPluginInstance.obj \
+	.\$(OBJDIR)\LegacyPlugin.obj       \
+	.\$(OBJDIR)\npwin.obj              \
+!endif
 	$(NULL)
 
 # most of these have to be here for nsSetupRegistry.cpp...
 
 LINCS=  \
+!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+  -I$(MOZ_PLUGINSDK)\include \
+!endif
   -I$(PUBLIC)\raptor \
   -I$(PUBLIC)\xpcom \
   -I$(PUBLIC)\dom \
@@ -83,6 +98,10 @@ include <$(DEPTH)\config\rules.mak>
 LCFLAGS = $(LCFLAGS) -DMOZ_NO_DEBUG_RTL
 !endif
 
+!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+LCFLAGS = $(LCFLAGS) -DMOZ_ACTIVEX_PLUGIN_SUPPORT
+!endif
+
 install:: $(DLL)
 	$(MAKE_INSTALL) $(DLL) $(DIST)\bin
 	$(MAKE_INSTALL) MozillaControl.html $(DIST)\bin\res
@@ -91,10 +110,22 @@ install:: $(DLL)
 MozillaControl_i.c MozillaControl.h: MozillaControl.idl
 	midl /Oicf /h MozillaControl.h /iid MozillaControl_i.c MozillaControl.idl
 
+!ifdef MOZ_ACTIVEX_PLUGIN_SUPPORT
+LegacyPlugin.cpp \
+ActiveXPlugin.cpp \
+ActiveXPluginInstance.cpp: StdAfx.h ActiveXPlugin.h ActiveXPluginInstance.h
+
+npwin.cpp: $(MOZ_PLUGINSDK)/common/npwin.cpp
+	-cp -f $(MOZ_PLUGINSDK)/common/npwin.cpp .
+!endif
+
+ControlSite.cpp \
+ControlSiteIPFrame.cpp \
+PropertyBag.cpp : StdAfx.h PropertyBag.h ControlSite.h ControlSiteIPFrame.h
+
 MozillaControl.cpp \
 MozillaBrowser.cpp \
 WebShellContainer.cpp \
-ControlSite.cpp \
 StdAfx.cpp: StdAfx.h MozillaControl.h MozillaBrowser.h WebShellContainer.h
 
 clobber::
