@@ -416,6 +416,7 @@ xpinstall/Makefile
 xpinstall/public/Makefile
 xpinstall/res/Makefile
 xpinstall/src/Makefile
+xpinstall/notifier/Makefile
 xpfe/Makefile
 xpfe/AppCores/Makefile
 xpfe/AppCores/public/Makefile
