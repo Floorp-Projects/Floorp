@@ -47,7 +47,7 @@
 #include "nsIPlatformCharset.h"
 
 #include "nsUConvDll.h"
-
+#include "nsReadableUtils.h"
 
 #include "nsURLProperties.h"
 //==============================================================
@@ -60,11 +60,11 @@ public:
   nsCharsetAlias2();
   virtual ~nsCharsetAlias2();
 
-   NS_IMETHOD GetPreferred(const nsString& aAlias, nsString& oResult);
+   NS_IMETHOD GetPreferred(const nsAString& aAlias, nsAString& oResult);
    NS_IMETHOD GetPreferred(const PRUnichar* aAlias, const PRUnichar** oResult) ;
    NS_IMETHOD GetPreferred(const char* aAlias, char* oResult, PRInt32 aBufLength) ;
 
-   NS_IMETHOD Equals(const nsString& aCharset1, const nsString& aCharset2, PRBool* oResult) ;
+   NS_IMETHOD Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* oResult) ;
    NS_IMETHOD Equals(const PRUnichar* aCharset1, const PRUnichar* aCharset2, PRBool* oResult) ;
    NS_IMETHOD Equals(const char* aCharset1, const char* aCharset2, PRBool* oResult) ;
 
@@ -88,18 +88,18 @@ nsCharsetAlias2::~nsCharsetAlias2()
      delete mDelegate;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsString& aAlias, nsString& oResult)
+NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const nsAString& aAlias, nsAString& oResult)
 {
-   nsAutoString aKey;
-   aAlias.ToLowerCase(aKey);
-   oResult.SetLength(0);
+   nsAutoString aKey(aAlias);
+   ToLowerCase(aKey);
+   oResult.Truncate();
    if(!mDelegate) {
-     if(aKey.EqualsWithConversion("utf-8")) {
-       oResult.AssignWithConversion("UTF-8");
+     if(aKey.Equals(NS_LITERAL_STRING("utf-8"))) {
+       oResult = NS_LITERAL_STRING("UTF-8");
        return NS_OK;
      } 
-     if(aKey.EqualsWithConversion("iso-8859-1")) {
-       oResult.AssignWithConversion("ISO-8859-1");
+     if(aKey.Equals(NS_LITERAL_STRING("iso-8859-1"))) {
+       oResult = NS_LITERAL_STRING("ISO-8859-1");
        return NS_OK;
      } 
      nsAutoString propertyURL; propertyURL.AssignWithConversion("resource:/res/charsetalias.properties");
@@ -126,11 +126,11 @@ NS_IMETHODIMP nsCharsetAlias2::GetPreferred(const char* aAlias, char* oResult, P
    return NS_ERROR_NOT_IMPLEMENTED;
 }
 //--------------------------------------------------------------
-NS_IMETHODIMP nsCharsetAlias2::Equals(const nsString& aCharset1, const nsString& aCharset2, PRBool* oResult)
+NS_IMETHODIMP nsCharsetAlias2::Equals(const nsAString& aCharset1, const nsAString& aCharset2, PRBool* oResult)
 {
    nsresult res = NS_OK;
 
-   if(aCharset1.EqualsIgnoreCase(aCharset2)) {
+   if(Compare(aCharset1, aCharset2, nsCaseInsensitiveStringComparator()) == 0) {
       *oResult = PR_TRUE;
       return res;
    }
