@@ -204,10 +204,10 @@ checkout:
 	@date > $(CVSCO_LOGFILE)
 	cd $(ROOTDIR) && \
 	  $(CVSCO) SeaMonkeyEditor | tee -a $(CVSCO_LOGFILE)
-	@if egrep -q "^C " $(CVSCO_LOGFILE) ; then \
-	  echo "$(MAKE): *** Conflicts during checkout. \
-	       Refer to $(CVSCO_LOGFILE)."; \
-	  exit 1; \
+#	@if egrep -q "^C " $(CVSCO_LOGFILE) ; then \
+#	  echo "$(MAKE): *** Conflicts during checkout. \
+#	       Refer to $(CVSCO_LOGFILE)."; \
+#	  exit 1; \
 	fi
 
 
