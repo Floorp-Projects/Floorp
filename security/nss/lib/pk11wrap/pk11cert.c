@@ -4054,7 +4054,8 @@ CERTSignedCrl* PK11_ImportCRL(PK11SlotInfo * slot, SECItem *derCRL, char *url,
     newCrl = crl = NULL;
 
     do {
-        newCrl = CERT_DecodeDERCrlEx(arena, derCRL, type, decodeoptions);
+        newCrl = CERT_DecodeDERCrlWithFlags(arena, derCRL, type,
+                                            decodeoptions);
         if (newCrl == NULL) {
             if (type == SEC_CRL_TYPE) {
                 /* only promote error when the error code is too generic */

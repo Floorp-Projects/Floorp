@@ -34,7 +34,7 @@
 /*
  * Moved from secpkcs7.c
  *
- * $Id: crl.c,v 1.25 2002/09/18 00:34:32 jpierre%netscape.com Exp $
+ * $Id: crl.c,v 1.26 2002/09/23 21:31:38 wtc%netscape.com Exp $
  */
  
 #include "cert.h"
@@ -432,8 +432,8 @@ SECStatus CERT_CompleteCRLDecodeEntries(CERTSignedCrl* crl)
  * allow reusing the input DER without making a copy
  */
 CERTSignedCrl *
-CERT_DecodeDERCrlEx(PRArenaPool *narena, SECItem *derSignedCrl, int type,
-                          PRInt32 options)
+CERT_DecodeDERCrlWithFlags(PRArenaPool *narena, SECItem *derSignedCrl,
+                          int type, PRInt32 options)
 {
     PRArenaPool *arena;
     CERTSignedCrl *crl;
@@ -541,7 +541,7 @@ loser:
 CERTSignedCrl *
 CERT_DecodeDERCrl(PRArenaPool *narena, SECItem *derSignedCrl, int type)
 {
-    return CERT_DecodeDERCrlEx(narena, derSignedCrl, type, CRL_DECODE_DEFAULT_OPTIONS);
+    return CERT_DecodeDERCrlWithFlags(narena, derSignedCrl, type, CRL_DECODE_DEFAULT_OPTIONS);
 }
 
 /*
@@ -586,7 +586,7 @@ SEC_FindCrlByKeyOnSlot(PK11SlotInfo *slot, SECItem *crlKey, int type,
     }
     PORT_Assert(crlHandle != CK_INVALID_HANDLE);
     
-    crl = CERT_DecodeDERCrlEx(NULL, derCrl, type, decodeoptions);
+    crl = CERT_DecodeDERCrlWithFlags(NULL, derCrl, type, decodeoptions);
     if (crl) {
         crl->slot = slot;
         slot = NULL; /* adopt it */
