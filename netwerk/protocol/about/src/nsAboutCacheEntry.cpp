@@ -51,11 +51,11 @@ nsAboutCacheEntry::NewChannel(nsIURI *aURI, nsIChannel **result)
 {
     nsresult rv;
 
-    mStreamChannel = do_CreateInstance(NS_STREAMIOCHANNEL_CONTRACTID, &rv);
+    nsCOMPtr<nsIStreamIOChannel> chan;
+    rv = NS_NewStreamIOChannel(getter_AddRefs(chan), aURI, nsnull);
     if (NS_FAILED(rv)) return rv;
 
-    rv = mStreamChannel->SetURI(aURI);
-    if (NS_FAILED(rv)) return rv;
+    mStreamChannel = do_QueryInterface(chan);
 
     return CallQueryInterface((nsIAboutModule *) this, result);
 }
@@ -195,13 +195,6 @@ nsAboutCacheEntry::GetURI(nsIURI **value)
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::SetURI(nsIURI *value)
-{
-    NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
-    return mStreamChannel->SetURI(value);
-}
-
-NS_IMETHODIMP
 nsAboutCacheEntry::GetOwner(nsISupports **value)
 {
     NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
@@ -230,17 +223,17 @@ nsAboutCacheEntry::SetLoadGroup(nsILoadGroup *value)
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::GetLoadAttributes(PRUint32 *value)
+nsAboutCacheEntry::GetLoadFlags(PRUint32 *value)
 {
     NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
-    return mStreamChannel->GetLoadAttributes(value);
+    return mStreamChannel->GetLoadFlags(value);
 }
 
 NS_IMETHODIMP
-nsAboutCacheEntry::SetLoadAttributes(PRUint32 value)
+nsAboutCacheEntry::SetLoadFlags(PRUint32 value)
 {
     NS_ENSURE_TRUE(mStreamChannel, NS_ERROR_NOT_INITIALIZED);
-    return mStreamChannel->SetLoadAttributes(value);
+    return mStreamChannel->SetLoadFlags(value);
 }
 
 NS_IMETHODIMP

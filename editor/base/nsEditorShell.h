@@ -36,7 +36,6 @@
 #include "nsISelectionListener.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsIPrompt.h"
-#include "nsIStreamObserver.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMEventListener.h"
 #include "nsIURIContentListener.h"

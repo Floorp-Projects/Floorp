@@ -96,7 +96,7 @@ NS_INTERFACE_MAP_BEGIN(nsWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersist)
     NS_INTERFACE_MAP_ENTRY(nsIWebBrowserPersistProgress)
     NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
 NS_INTERFACE_MAP_END
 
 //*****************************************************************************
@@ -413,7 +413,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnProgress(PRUint32 aStatus, nsIURI *aURI, PR
 
 
 //*****************************************************************************
-// nsWebBrowserPersist::nsIStreamObserver
+// nsWebBrowserPersist::nsIRequestObserver
 //*****************************************************************************
 
 
@@ -423,7 +423,7 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStartRequest(nsIRequest* request, nsISuppor
     return rv;
 }
  
-NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest* request, nsISupports *ctxt, nsresult status, const PRUnichar *statusArg)
+NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(nsIRequest* request, nsISupports *ctxt, nsresult status)
 {
     OnEndDownload();
     CleanUp();

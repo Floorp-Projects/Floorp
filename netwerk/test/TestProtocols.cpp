@@ -239,17 +239,17 @@ public:
   virtual ~InputTestConsumer();
 
   NS_DECL_ISUPPORTS
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
   NS_DECL_NSISTREAMLISTENER
 };
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class OpenObserver : public nsIStreamObserver 
+class OpenObserver : public nsIRequestObserver 
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     OpenObserver(InputTestConsumer* cons)
         : mInputConsumer(cons) { 
@@ -261,7 +261,7 @@ protected:
     InputTestConsumer* mInputConsumer;
 };
 
-NS_IMPL_ISUPPORTS1(OpenObserver, nsIStreamObserver);
+NS_IMPL_ISUPPORTS1(OpenObserver, nsIRequestObserver);
 
 NS_IMETHODIMP
 OpenObserver::OnStartRequest(nsIRequest *request, nsISupports* context)
@@ -284,7 +284,7 @@ OpenObserver::OnStartRequest(nsIRequest *request, nsISupports* context)
 
 NS_IMETHODIMP
 OpenObserver::OnStopRequest(nsIRequest *request, nsISupports* context,
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
     printf("\n+++ OpenObserver::OnStopRequest (status = %x) +++."
            "\tContext = %p\n", 
@@ -395,7 +395,7 @@ void FireDecrement()
 
 NS_IMETHODIMP
 InputTestConsumer::OnStopRequest(nsIRequest *request, nsISupports* context,
-                                 nsresult aStatus, const PRUnichar* aStatusArg)
+                                 nsresult aStatus)
 {
   URLLoadInfo* info = (URLLoadInfo*)context;
 

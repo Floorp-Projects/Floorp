@@ -37,6 +37,7 @@
 #include "nsIChannel.h"
 #include "nsCRT.h"
 #include "nsIServiceManager.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_IID(kIURLIID, NS_IURL_IID);
 

@@ -37,6 +37,7 @@
 #include "nsIRDFContainer.h"
 #include "nsIRDFContainerUtils.h"
 #include "nsIURL.h"
+#include "nsNetCID.h"
 
 
 static NS_DEFINE_CID(kRDFServiceCID, NS_RDFSERVICE_CID);

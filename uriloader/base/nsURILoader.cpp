@@ -90,8 +90,8 @@ public:
     nsresult RetargetOutput(nsIRequest *request, const char * aSrcContentType, 
                             const char * aOutContentType, nsIStreamListener * aStreamListener);
 
-    // nsIStreamObserver methods:
-    NS_DECL_NSISTREAMOBSERVER
+    // nsIRequestObserver methods:
+    NS_DECL_NSIREQUESTOBSERVER
 
     // nsIStreamListener methods:
     NS_DECL_NSISTREAMLISTENER
@@ -117,8 +117,8 @@ NS_IMPL_THREADSAFE_ADDREF(nsDocumentOpenInfo);
 NS_IMPL_THREADSAFE_RELEASE(nsDocumentOpenInfo);
 
 NS_INTERFACE_MAP_BEGIN(nsDocumentOpenInfo)
-   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamObserver)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIRequestObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
 NS_INTERFACE_MAP_END_THREADSAFE
 
@@ -261,7 +261,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnDataAvailable(nsIRequest *request, nsISuppor
 }
 
 NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
-                                                nsresult aStatus, const PRUnichar * errorMsg)
+                                                nsresult aStatus)
 {
   nsresult rv = NS_OK;
   
@@ -271,7 +271,7 @@ NS_IMETHODIMP nsDocumentOpenInfo::OnStopRequest(nsIRequest *request, nsISupports
   if (!mOnStopFired && m_targetStreamListener)
   {
     mOnStopFired = PR_TRUE;
-    m_targetStreamListener->OnStopRequest(request, aCtxt, aStatus, errorMsg);
+    m_targetStreamListener->OnStopRequest(request, aCtxt, aStatus);
   }
 
   m_targetStreamListener = 0;
@@ -286,8 +286,10 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
   nsCOMPtr<nsISupports> originalWindowContext = m_originalContext; // local variable to keep track of this.
   nsCOMPtr<nsIStreamListener> contentStreamListener;
   nsCOMPtr<nsIChannel> aChannel = do_QueryInterface(request);
-  if (!aChannel)
+  if (!aChannel) {
+      printf(">>> QI for channel from request failed!!\n");
       return NS_ERROR_FAILURE;
+  }
 
   rv = aChannel->GetContentType(getter_Copies(contentType));
   if (NS_FAILED(rv)) return rv;
@@ -359,10 +361,10 @@ nsresult nsDocumentOpenInfo::DispatchContent(nsIRequest *request, nsISupports * 
       if (contentListener.get() != m_contentListener.get())
       {
          // we must be retargeting...so set an appropriate flag on the channel
-        nsLoadFlags loadAttribs = 0;
-        aChannel->GetLoadAttributes(&loadAttribs);
-        loadAttribs |= nsIChannel::LOAD_RETARGETED_DOCUMENT_URI;
-        aChannel->SetLoadAttributes(loadAttribs);
+        nsLoadFlags loadFlags = 0;
+        aChannel->GetLoadFlags(&loadFlags);
+        loadFlags |= nsIRequest::LOAD_RETARGETED_DOCUMENT_URI;
+        aChannel->SetLoadFlags(loadFlags);
       }
 
       rv = contentListener->DoContent(contentTypeToUse, mCommand, m_windowTarget, 

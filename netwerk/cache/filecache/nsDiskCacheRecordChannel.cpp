@@ -37,6 +37,7 @@
 #include "nsISupportsUtils.h"
 #include "prio.h"
 #include "nsMimeTypes.h"
+#include "nsNetCID.h"
 
 //static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kFileTransportServiceCID, NS_FILETRANSPORTSERVICE_CID);
@@ -173,7 +174,7 @@ nsDiskCacheRecordChannel::nsDiskCacheRecordChannel(nsDiskCacheRecord *aRecord,
                                                    nsILoadGroup *aLoadGroup)
   : mRecord(aRecord),
     mLoadGroup(aLoadGroup),
-    mLoadAttributes(nsIChannel::LOAD_NORMAL),
+    mLoadFlags(nsIRequest::LOAD_NORMAL),
     mStatus(NS_OK) 
 {
   NS_INIT_REFCNT();
@@ -238,7 +239,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsDiskCacheRecordChannel,
                               nsIChannel, 
                               nsIRequest,
                               nsIStreamListener,
-                              nsIStreamObserver)
+                              nsIRequestObserver)
 
 // implement nsIRequest
 NS_IMETHODIMP
@@ -320,23 +321,16 @@ nsDiskCacheRecordChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetURI(nsIURI* aURI)
-{
-  NS_NOTREACHED("nsDiskCacheRecordChannel::SetURI");
-  return NS_ERROR_NOT_IMPLEMENTED ;
-}
-
-NS_IMETHODIMP
 nsDiskCacheRecordChannel::Open(nsIInputStream **aResult)
 {
-    return OpenInputStream(0, -1, 0, aResult);
+    return OpenInputStream(0, PRUint32(-1), 0, aResult);
 }
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsCOMPtr<nsIRequest> req;
-    return AsyncRead(aListener, aContext, 0, -1, 0, getter_AddRefs(req));
+    return AsyncRead(aListener, aContext, 0, PRUint32(-1), 0, getter_AddRefs(req));
 }
 
 NS_IMETHODIMP
@@ -411,20 +405,6 @@ nsDiskCacheRecordChannel::AsyncRead(nsIStreamListener *aListener, nsISupports *a
   nsCOMPtr<nsIStreamListener> tempListener = this;
 
   if (mLoadGroup) {
-    nsCOMPtr<nsILoadGroupListenerFactory> factory;
-    //
-    // Create a load group "proxy" listener...
-    //
-    rv = mLoadGroup->GetGroupListenerFactory(getter_AddRefs(factory));
-    if (factory) {
-      nsIStreamListener *newListener;
-      rv = factory->CreateLoadGroupListener(mRealListener, &newListener);
-      if (NS_SUCCEEDED(rv)) {
-        mRealListener = newListener;
-        NS_RELEASE(newListener);
-        }
-      }
-
       rv = mLoadGroup->AddRequest(this, nsnull);
       if (NS_FAILED(rv)) return rv;
   }
@@ -474,16 +454,16 @@ nsDiskCacheRecordChannel::AsyncWrite(nsIStreamProvider *provider, nsISupports *c
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+nsDiskCacheRecordChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsDiskCacheRecordChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+nsDiskCacheRecordChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -649,14 +629,14 @@ nsDiskCacheRecordChannel::OnStartRequest(nsIRequest* transportRequest, nsISuppor
 
 NS_IMETHODIMP
 nsDiskCacheRecordChannel::OnStopRequest(nsIRequest* transportRequest, nsISupports* context,
-                                        nsresult aStatus, const PRUnichar* aStatusArg)
+                                        nsresult aStatus)
 {
   nsresult rv;
 
-  rv = mRealListener->OnStopRequest(this, context, aStatus, aStatusArg);
+  rv = mRealListener->OnStopRequest(this, context, aStatus);
 
   if (mLoadGroup)
-      mLoadGroup->RemoveRequest(this, context, aStatus, aStatusArg);
+      mLoadGroup->RemoveRequest(this, context, aStatus);
 
   // Release the reference to the consumer stream listener...
   mRealListener = null_nsCOMPtr();

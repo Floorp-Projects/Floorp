@@ -60,7 +60,7 @@ public:
     NS_DECL_NSIREQUEST
     NS_DECL_NSICHANNEL
     NS_DECL_NSIJARCHANNEL
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
     NS_DECL_NSISTREAMIO
     NS_DECL_NSIDOWNLOADOBSERVER
@@ -86,7 +86,7 @@ protected:
 	nsCOMPtr<nsILoadGroup>              mLoadGroup;
 	nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
 	nsCOMPtr<nsIURI>                    mOriginalURI;
-    nsLoadFlags                         mLoadAttributes;
+    nsLoadFlags                         mLoadFlags;
     nsCOMPtr<nsISupports>               mOwner;
 
     nsCOMPtr<nsISupports>               mUserContext;

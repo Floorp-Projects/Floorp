@@ -41,7 +41,7 @@ CPPSRCS		= \
 		nsFileTransportService.cpp \
 		nsSimpleStreamListener.cpp \
 		nsSimpleStreamProvider.cpp \
-		nsStreamObserverProxy.cpp \
+		nsRequestObserverProxy.cpp \
 		nsStreamListenerProxy.cpp \
 		nsStreamProviderProxy.cpp \
 		nsStdURLParser.cpp \

@@ -32,7 +32,7 @@
 
 #include "png.h"
 
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 
 #include "nsRect.h"
 

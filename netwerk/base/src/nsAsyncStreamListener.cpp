@@ -133,9 +133,8 @@ nsStreamListenerEvent::Fire(nsIEventQueue* aEventQueue)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsAsyncStreamObserver,
-                              nsIAsyncStreamObserver,
-                              nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS1(nsAsyncStreamObserver,
+                              nsIRequestObserver)
 
 NS_IMPL_ADDREF_INHERITED(nsAsyncStreamListener, nsAsyncStreamObserver);
 NS_IMPL_RELEASE_INHERITED(nsAsyncStreamListener, nsAsyncStreamObserver);
@@ -158,7 +157,7 @@ nsAsyncStreamListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 }
 
 NS_IMETHODIMP
-nsAsyncStreamObserver::Init(nsIStreamObserver* aObserver, nsIEventQueue* aEventQ)
+nsAsyncStreamObserver::Init(nsIRequestObserver* aObserver, nsIEventQueue* aEventQ)
 {
     nsresult rv = NS_OK;
     NS_ASSERTION(aObserver, "null observer");
@@ -198,7 +197,7 @@ nsOnStartRequestEvent::HandleEvent()
   PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
          ("netlibEvent: Handle Start [event=%x]", this));
 #endif
-  nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
+  nsIRequestObserver* receiver = (nsIRequestObserver*)mListener->GetReceiver();
   if (receiver == nsnull) {
       // must have already called OnStopRequest (it clears the receiver)
       return NS_ERROR_FAILURE;
@@ -257,12 +256,11 @@ public:
           mStatus(NS_OK) {}
     virtual ~nsOnStopRequestEvent();
 
-    nsresult Init(nsresult aStatus, const PRUnichar* aStatusArg);
+    nsresult Init(nsresult aStatus);
     NS_IMETHOD HandleEvent();
 
 protected:
     nsresult    mStatus;
-    nsString    mStatusArg;
 };
 
 nsOnStopRequestEvent::~nsOnStopRequestEvent()
@@ -270,10 +268,9 @@ nsOnStopRequestEvent::~nsOnStopRequestEvent()
 }
 
 nsresult
-nsOnStopRequestEvent::Init(nsresult aStatus, const PRUnichar* aStatusArg)
+nsOnStopRequestEvent::Init(nsresult aStatus)
 {
     mStatus = aStatus;
-    mStatusArg = aStatusArg;
     return NS_OK;
 }
 
@@ -286,7 +283,7 @@ nsOnStopRequestEvent::HandleEvent()
     PR_LOG(gStreamEventLog, PR_LOG_DEBUG,
            ("netlibEvent: Handle Stop [event=%x]", this));
 #endif
-    nsIStreamObserver* receiver = (nsIStreamObserver*)mListener->GetReceiver();
+    nsIRequestObserver* receiver = (nsIRequestObserver*)mListener->GetReceiver();
     if (receiver == nsnull) {
         // must have already called OnStopRequest (it clears the receiver)
         return NS_ERROR_FAILURE;
@@ -303,7 +300,7 @@ nsOnStopRequestEvent::HandleEvent()
     if (NS_SUCCEEDED(rv) && NS_FAILED(status)) {
         mStatus = status;
     }
-    rv = receiver->OnStopRequest(mRequest, mContext, mStatus, mStatusArg.GetUnicode());
+    rv = receiver->OnStopRequest(mRequest, mContext, mStatus);
     // Call clear on the listener to make sure it's cleanup is done on the correct thread
     mListener->Clear();
     return rv;
@@ -311,7 +308,7 @@ nsOnStopRequestEvent::HandleEvent()
 
 NS_IMETHODIMP 
 nsAsyncStreamObserver::OnStopRequest(nsIRequest* request, nsISupports* context,
-                                     nsresult aStatus, const PRUnichar* aStatusArg)
+                                     nsresult aStatus)
 {
     nsresult rv;
 
@@ -324,7 +321,7 @@ nsAsyncStreamObserver::OnStopRequest(nsIRequest* request, nsISupports* context,
     if (event == nsnull)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = event->Init(aStatus, aStatusArg);
+    rv = event->Init(aStatus);
     if (NS_FAILED(rv)) goto failed;
 #if defined(PR_LOGGING)
     PLEventQueue *equeue;

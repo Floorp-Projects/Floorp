@@ -215,8 +215,7 @@ EmbedStream::CloseStream(void)
   if (NS_FAILED(rv))
     goto loser;
   
-  rv = mStreamListener->OnStopRequest(request, NULL,
-				      NS_OK, NULL);
+  rv = mStreamListener->OnStopRequest(request, NULL, NS_OK);
   if (NS_FAILED(rv))
     return rv;
 

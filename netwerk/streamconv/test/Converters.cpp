@@ -102,7 +102,7 @@ TestConverter::OnDataAvailable(nsIRequest* request,
     return mListener->OnDataAvailable(request, ctxt, convertedStream, sourceOffset, len);
 };
 
-// nsIStreamObserver methods
+// nsIRequestObserver methods
 /* These methods just pass through directly to the mListener */
 NS_IMETHODIMP
 TestConverter::OnStartRequest(nsIRequest* request, nsISupports *ctxt) {
@@ -111,8 +111,8 @@ TestConverter::OnStartRequest(nsIRequest* request, nsISupports *ctxt) {
 
 NS_IMETHODIMP
 TestConverter::OnStopRequest(nsIRequest* request, nsISupports *ctxt, 
-                             nsresult aStatus, const PRUnichar* aStatusArg) {
-    return mListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
+                             nsresult aStatus) {
+    return mListener->OnStopRequest(request, ctxt, aStatus);
 };
 
 

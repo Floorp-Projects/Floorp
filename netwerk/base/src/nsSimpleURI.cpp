@@ -29,6 +29,7 @@
 #include "prmem.h"
 #include "prprf.h"
 #include "nsURLHelper.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kSimpleURICID, NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kThisSimpleURIImplementationCID,

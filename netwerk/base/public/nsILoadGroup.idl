@@ -22,19 +22,9 @@
 
 #include "nsIRequest.idl"
 
-interface nsIChannel;
-interface nsIRequest;
 interface nsISimpleEnumerator;
-interface nsIStreamObserver;
-interface nsIStreamListener;
-interface nsIInputStream;
-
-[scriptable, uuid(60fdf550-5392-11d3-9a97-0080c7cb1080)]
-interface nsILoadGroupListenerFactory : nsISupports
-{
-    nsIStreamListener createLoadGroupListener(in nsIStreamListener alistener);
-};
-
+interface nsIRequestObserver;
+interface nsIInterfaceRequestor;
 
 /**
  * A load group maintains a collection of active URL requests. 
@@ -44,40 +34,34 @@ interface nsILoadGroupListenerFactory : nsISupports
 [scriptable, uuid(19845248-29ab-11d3-8cce-0060b0fc14a3)]
 interface nsILoadGroup : nsIRequest
 {
-    void init(in nsIStreamObserver observer);
-
     /**
-     * Accesses the default load attributes for the group, returned as
-     * a flag word. Setting the default load attributes will cause them
-     * to be applied to each new channel inserted into the group.
+     * The group observer is notified when requests are added to and removed
+     * from this load group.  The groupObserver is weak referenced.
      */
-    attribute unsigned long defaultLoadAttributes;
+    attribute nsIRequestObserver groupObserver;
 
     /**
-     * Accesses the default load channel for the group.  Each time a number
-     * of request are added to a group, the DefaultLoadChannel may be set
-     * to indicate that all of the requests are related to a particular URL.
+     * Accesses the default load request for the group.  Each time a number
+     * of requests are added to a group, the defaultLoadRequest may be set
+     * to indicate that all of the requests are related to a base request.
      */
     attribute nsIRequest defaultLoadRequest;
 
     /**
-     * Adds a new request to the group. This will cause the default load
-     * attributes to be applied to that request. If the request added is 
-     * the first request in the group, the group's observer's OnStartRequest
-     * method is called.
+     * Adds a new request to the group.  This will cause the default load
+     * attributes to be applied to the request.  If this is a foreground
+     * request then the groupObserver's onStartRequest will be called.
      */
     void addRequest(in nsIRequest request,
                     in nsISupports ctxt);
 
     /**
-     * Removes a request from the group. If the request removed is 
-     * the last request in the group, the group's observer's OnStopRequest
-     * method is called.
+     * Removes a request from the group.  If this is a foreground request
+     * then the groupObserver's onStopRequest will be called.
      */
     void removeRequest(in nsIRequest request, 
                        in nsISupports ctxt,
-                       in nsresult status,
-                       in wstring statusArg);
+                       in nsresult status);
 
     /**
      * Returns the requests contained directly in this group.
@@ -85,22 +69,14 @@ interface nsILoadGroup : nsIRequest
      */
     readonly attribute nsISimpleEnumerator requests;
 
-    attribute nsIStreamObserver groupObserver;
-
-    attribute nsILoadGroupListenerFactory groupListenerFactory;
-
-
+    /**
+     * Returns the count of "active" requests (ie. requests without the
+     * LOAD_BACKGROUND bit set).
+     */
 	readonly attribute unsigned long activeCount;
+
+    /**
+     * Notification callbacks for the load group.
+     */
+    attribute nsIInterfaceRequestor notificationCallbacks;
 };
-
-%{C++
-
-#define NS_LOADGROUP_CID                             \
-{ /* e1c61582-2a84-11d3-8cce-0060b0fc14a3 */         \
-    0xe1c61582,                                      \
-    0x2a84,                                          \
-    0x11d3,                                          \
-    {0x8c, 0xce, 0x00, 0x60, 0xb0, 0xfc, 0x14, 0xa3} \
-}
-
-%}

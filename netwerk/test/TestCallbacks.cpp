@@ -77,7 +77,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(ConsumerContext, nsIEquals);
 class Consumer : public nsIStreamListener {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     Consumer();
@@ -95,10 +95,10 @@ public:
 };
 
 // nsISupports implementation
-NS_IMPL_THREADSAFE_ISUPPORTS2(Consumer, nsIStreamListener, nsIStreamObserver);
+NS_IMPL_THREADSAFE_ISUPPORTS2(Consumer, nsIStreamListener, nsIRequestObserver);
 
 
-// nsIStreamObserver implementation
+// nsIRequestObserver implementation
 NS_IMETHODIMP
 Consumer::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
     fprintf(stderr, "Consumer::OnStart() -> in\n\n");
@@ -117,7 +117,7 @@ Consumer::OnStartRequest(nsIRequest *request, nsISupports* aContext) {
 
 NS_IMETHODIMP
 Consumer::OnStopRequest(nsIRequest *request, nsISupports *aContext,
-                        nsresult aStatus, const PRUnichar* aStatusArg) {
+                        nsresult aStatus) {
     fprintf(stderr, "Consumer::OnStop() -> in\n\n");
 
     if (!mOnStart) {

@@ -26,13 +26,17 @@
 #include "nsIInputStream.h"
 #include "nsIPipe.h"
 #include "nsAutoLock.h"
+#include "prlog.h"
 
-#define LOG(args) PR_LOG(gStreamProxyLog, PR_LOG_DEBUG, args)
+#if defined(PR_LOGGING)
+static PRLogModuleInfo *gStreamListenerProxyLog;
+#endif
+
+#define LOG(args) PR_LOG(gStreamListenerProxyLog, PR_LOG_DEBUG, args)
 
 #define DEFAULT_BUFFER_SEGMENT_SIZE 2048
 #define DEFAULT_BUFFER_MAX_SIZE  (4*2048)
 
-//
 //----------------------------------------------------------------------------
 // Design Overview
 //
@@ -49,20 +53,19 @@
 // XXX The current design does NOT allow the request to be "externally"
 // suspended!!  For the moment this is not a problem, but it should be fixed.
 //----------------------------------------------------------------------------
-//
 
-//
 //----------------------------------------------------------------------------
 // nsStreamListenerProxy implementation...
 //----------------------------------------------------------------------------
-//
 
 nsStreamListenerProxy::nsStreamListenerProxy()
     : mLock(nsnull)
     , mPendingCount(0)
     , mPipeEmptied(PR_FALSE)
     , mListenerStatus(NS_OK)
-{ }
+{
+    NS_INIT_ISUPPORTS();
+}
 
 nsStreamListenerProxy::~nsStreamListenerProxy()
 {
@@ -70,6 +73,14 @@ nsStreamListenerProxy::~nsStreamListenerProxy()
         PR_DestroyLock(mLock);
         mLock = nsnull;
     }
+    NS_IF_RELEASE(mObserverProxy);
+}
+
+nsresult
+nsStreamListenerProxy::GetListener(nsIStreamListener **listener)
+{
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
+    return CallQueryInterface(mObserverProxy->Observer(), listener);
 }
 
 PRUint32
@@ -78,178 +89,171 @@ nsStreamListenerProxy::GetPendingCount()
     return PR_AtomicSet((PRInt32 *) &mPendingCount, 0);
 }
 
-//
 //----------------------------------------------------------------------------
 // nsOnDataAvailableEvent internal class...
 //----------------------------------------------------------------------------
-//
-class nsOnDataAvailableEvent : public nsStreamObserverEvent
+
+class nsOnDataAvailableEvent : public nsARequestObserverEvent
 {
 public:
-    nsOnDataAvailableEvent(nsStreamProxyBase *aProxy,
-                           nsIRequest *aRequest,
-                           nsISupports *aContext,
-                           nsIInputStream *aSource,
-                           PRUint32 aOffset)
-        : nsStreamObserverEvent(aProxy, aRequest, aContext)
-        , mSource(aSource)
-        , mOffset(aOffset)
+    nsOnDataAvailableEvent(nsStreamListenerProxy *proxy,
+                           nsIRequest *request,
+                           nsISupports *context,
+                           nsIInputStream *source,
+                           PRUint32 offset)
+        : nsARequestObserverEvent(request, context)
+        , mProxy(proxy)
+        , mSource(source)
+        , mOffset(offset)
     {
         MOZ_COUNT_CTOR(nsOnDataAvailableEvent);
+        NS_PRECONDITION(mProxy, "null pointer");
+        NS_ADDREF(mProxy);
     }
 
    ~nsOnDataAvailableEvent()
     {
         MOZ_COUNT_DTOR(nsOnDataAvailableEvent);
+        NS_RELEASE(mProxy);
     }
 
-    NS_IMETHOD HandleEvent();
+    void HandleEvent();
 
 protected:
-   nsCOMPtr<nsIInputStream> mSource;
-   PRUint32                 mOffset;
+    nsStreamListenerProxy    *mProxy;
+    nsCOMPtr<nsIInputStream>  mSource;
+    PRUint32                  mOffset;
 };
 
-NS_IMETHODIMP
+void
 nsOnDataAvailableEvent::HandleEvent()
 {
-    LOG(("nsOnDataAvailableEvent: HandleEvent [event=%x, chan=%x]", this, mRequest.get()));
+    LOG(("nsOnDataAvailableEvent: HandleEvent [req=%x]", mRequest.get()));
 
-    nsStreamListenerProxy *listenerProxy =
-        NS_STATIC_CAST(nsStreamListenerProxy *, mProxy);
-
-    if (NS_FAILED(listenerProxy->GetListenerStatus())) {
-        LOG(("nsOnDataAvailableEvent: Discarding event [listener_status=%x, chan=%x]\n",
-            listenerProxy->GetListenerStatus(), mRequest.get()));
-        return NS_ERROR_FAILURE;
-    }
-
-    nsCOMPtr<nsIStreamListener> listener = listenerProxy->GetListener();
-    if (!listener) {
-        LOG(("nsOnDataAvailableEvent: Already called OnStopRequest (listener is NULL), [chan=%x]\n",
-            mRequest.get()));
-        return NS_ERROR_FAILURE;
+    if (NS_FAILED(mProxy->GetListenerStatus())) {
+        LOG(("nsOnDataAvailableEvent: Discarding event [listener_status=%x, req=%x]\n",
+            mProxy->GetListenerStatus(), mRequest.get()));
+        return;
     }
 
     nsresult status = NS_OK;
     nsresult rv = mRequest->GetStatus(&status);
     NS_ASSERTION(NS_SUCCEEDED(rv), "GetStatus failed");
 
-    //
     // We should only forward this event to the listener if the request is
     // still in a "good" state.  Because these events are being processed
     // asynchronously, there is a very real chance that the listener might
     // have cancelled the request after _this_ event was triggered.
-    //
-    if (NS_SUCCEEDED(status)) {
-        //
-        // Find out from the listener proxy how many bytes to report.
-        //
-        PRUint32 count = listenerProxy->GetPendingCount();
+
+    if (NS_FAILED(status)) {
+        LOG(("nsOnDataAvailableEvent: Not calling OnDataAvailable [req=%x]",
+            mRequest.get()));
+        return;
+    }
+
+    // Find out from the listener proxy how many bytes to report.
+    PRUint32 count = mProxy->GetPendingCount();
 
 #if defined(PR_LOGGING)
-        {
-            PRUint32 avail;
-            mSource->Available(&avail);
-            LOG(("nsOnDataAvailableEvent: Calling the consumer's OnDataAvailable "
-                "[offset=%u count=%u avail=%u chan=%x]\n",
-                mOffset, count, avail, mRequest.get()));
-        }
+    {
+        PRUint32 avail;
+        mSource->Available(&avail);
+        LOG(("nsOnDataAvailableEvent: Calling the consumer's OnDataAvailable "
+            "[offset=%u count=%u avail=%u req=%x]\n",
+            mOffset, count, avail, mRequest.get()));
+    }
 #endif
 
-        // Forward call to listener
-        rv = listener->OnDataAvailable(mRequest, mContext, mSource, mOffset, count);
+    nsCOMPtr<nsIStreamListener> listener;
+    rv = mProxy->GetListener(getter_AddRefs(listener));
 
-        LOG(("nsOnDataAvailableEvent: Done with the consumer's OnDataAvailable "
-            "[rv=%x, chan=%x]\n",
-            rv, mRequest.get()));
+    // Forward call to listener
+    if (listener)
+        rv = listener->OnDataAvailable(mRequest, mContext,
+                                       mSource, mOffset, count);
 
-        //
-        // XXX Need to suspend the underlying request... must consider
-        //     other pending events (such as OnStopRequest). These
-        //     should not be forwarded to the listener if the request
-        //     is suspended. Also, handling the Resume could be tricky.
-        //
-        if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
-            NS_NOTREACHED("listener returned NS_BASE_STREAM_WOULD_BLOCK"
-                          " -- support for this is not implemented");
-            rv = NS_ERROR_NOT_IMPLEMENTED;
-        }
+    LOG(("nsOnDataAvailableEvent: Done with the consumer's OnDataAvailable "
+         "[rv=%x, req=%x]\n", rv, mRequest.get()));
 
-        // Cancel the request on unexpected errors
-        if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_CLOSED)) {
-            LOG(("OnDataAvailable failed [rv=%x] canceling request!\n"));
-            mRequest->Cancel(rv);
-        }
+    // XXX Need to suspend the underlying request... must consider
+    //     other pending events (such as OnStopRequest). These
+    //     should not be forwarded to the listener if the request
+    //     is suspended. Also, handling the Resume could be tricky.
 
-        //
-        // Update the listener status
-        //
-        listenerProxy->SetListenerStatus(rv);
+    if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
+        NS_NOTREACHED("listener returned NS_BASE_STREAM_WOULD_BLOCK"
+                      " -- support for this is not implemented");
+        rv = NS_BINDING_FAILED;
     }
-    else
-        LOG(("nsOnDataAvailableEvent: Not calling OnDataAvailable [chan=%x]",
-            mRequest.get()));
-    return NS_OK;
+
+    // Cancel the request on unexpected errors
+    if (NS_FAILED(rv) && (rv != NS_BASE_STREAM_CLOSED)) {
+        LOG(("OnDataAvailable failed [rv=%x] canceling request!\n"));
+        mRequest->Cancel(rv);
+    }
+
+    mProxy->SetListenerStatus(rv);
 }
 
-//
 //----------------------------------------------------------------------------
-// nsISupports implementation...
+// nsStreamListenerProxy::nsISupports implementation...
 //----------------------------------------------------------------------------
-//
-NS_IMPL_ISUPPORTS_INHERITED3(nsStreamListenerProxy,
-                             nsStreamProxyBase,
-                             nsIStreamListenerProxy,
-                             nsIStreamListener,
-                             nsIInputStreamObserver)
 
-//
+NS_IMPL_THREADSAFE_ISUPPORTS4(nsStreamListenerProxy,
+                              nsIStreamListener,
+                              nsIRequestObserver,
+                              nsIStreamListenerProxy,
+                              nsIInputStreamObserver)
+
 //----------------------------------------------------------------------------
-// nsIStreamObserver implementation...
+// nsStreamListenerProxy::nsIRequestObserver implementation...
 //----------------------------------------------------------------------------
-//
+
 NS_IMETHODIMP
-nsStreamListenerProxy::OnStartRequest(nsIRequest *aRequest,
-                                      nsISupports *aContext)
+nsStreamListenerProxy::OnStartRequest(nsIRequest *request,
+                                      nsISupports *context)
 {
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
+
+    // This will create a cyclic reference between the pipe and |this|, which
+    // will be broken when onStopRequest is called.
     nsresult rv = mPipeIn->SetObserver(this);
     if (NS_FAILED(rv)) return rv;
 
-    return nsStreamProxyBase::OnStartRequest(aRequest, aContext);
+    return mObserverProxy->OnStartRequest(request, context);
 }
 
 NS_IMETHODIMP
-nsStreamListenerProxy::OnStopRequest(nsIRequest *aRequest,
-                                     nsISupports *aContext,
-                                     nsresult aStatus,
-                                     const PRUnichar *aStatusText)
+nsStreamListenerProxy::OnStopRequest(nsIRequest *request,
+                                     nsISupports *context,
+                                     nsresult status)
 {
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
+
     mPipeIn = 0;
     mPipeOut = 0;
 
-    return nsStreamProxyBase::OnStopRequest(aRequest, aContext,
-                                            aStatus, aStatusText);
+    return mObserverProxy->OnStopRequest(request, context, status);
 }
 
-//
 //----------------------------------------------------------------------------
 // nsIStreamListener implementation...
 //----------------------------------------------------------------------------
-//
+
 NS_IMETHODIMP
-nsStreamListenerProxy::OnDataAvailable(nsIRequest *aRequest,
-                                       nsISupports *aContext,
-                                       nsIInputStream *aSource,
-                                       PRUint32 aOffset,
-                                       PRUint32 aCount)
+nsStreamListenerProxy::OnDataAvailable(nsIRequest *request,
+                                       nsISupports *context,
+                                       nsIInputStream *source,
+                                       PRUint32 offset,
+                                       PRUint32 count)
 {
     nsresult rv;
     PRUint32 bytesWritten=0;
 
-    LOG(("nsStreamListenerProxy: OnDataAvailable [offset=%u count=%u chan=%x]\n",
-         aOffset, aCount, aRequest));
+    LOG(("nsStreamListenerProxy: OnDataAvailable [offset=%u count=%u req=%x]\n",
+         offset, count, request));
 
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
     NS_PRECONDITION(mRequestToResume == 0, "Unexpected call to OnDataAvailable");
     NS_PRECONDITION(mPipeIn, "Pipe not initialized");
     NS_PRECONDITION(mPipeOut, "Pipe not initialized");
@@ -260,7 +264,8 @@ nsStreamListenerProxy::OnDataAvailable(nsIRequest *aRequest,
     {
         nsresult status = mListenerStatus;
         if (NS_FAILED(status)) {
-            LOG(("nsStreamListenerProxy: Listener failed [status=%x chan=%x]\n", status, aRequest));
+            LOG(("nsStreamListenerProxy: Listener failed [status=%x req=%x]\n",
+                status, request));
             return status;
         }
     }
@@ -275,25 +280,25 @@ nsStreamListenerProxy::OnDataAvailable(nsIRequest *aRequest,
         // that the pipe was emptied during this time, we retry copying data
         // into the pipe.
         //
-        rv = mPipeOut->WriteFrom(aSource, aCount, &bytesWritten);
+        rv = mPipeOut->WriteFrom(source, count, &bytesWritten);
 
-        LOG(("nsStreamListenerProxy: Wrote data to pipe [rv=%x count=%u bytesWritten=%u chan=%x]\n",
-            rv, aCount, bytesWritten, aRequest));
+        LOG(("nsStreamListenerProxy: Wrote data to pipe [rv=%x count=%u bytesWritten=%u req=%x]\n",
+            rv, count, bytesWritten, request));
 
         if (NS_FAILED(rv)) {
             if (rv == NS_BASE_STREAM_WOULD_BLOCK) {
                 nsAutoLock lock(mLock);
                 if (mPipeEmptied) {
-                    LOG(("nsStreamListenerProxy: Pipe emptied; looping back [chan=%x]\n", aRequest));
+                    LOG(("nsStreamListenerProxy: Pipe emptied; looping back [req=%x]\n", request));
                     continue;
                 }
-                LOG(("nsStreamListenerProxy: Pipe full; setting request to resume [chan=%x]\n", aRequest));
-                mRequestToResume = aRequest;
+                LOG(("nsStreamListenerProxy: Pipe full; setting request to resume [req=%x]\n", request));
+                mRequestToResume = request;
             }
             return rv;
         }
         if (bytesWritten == 0) {
-            LOG(("nsStreamListenerProxy: Copied zero bytes; not posting an event [chan=%x]\n", aRequest));
+            LOG(("nsStreamListenerProxy: Copied zero bytes; not posting an event [req=%x]\n", request));
             return NS_OK;
         }
 
@@ -306,8 +311,8 @@ nsStreamListenerProxy::OnDataAvailable(nsIRequest *aRequest,
     //
     PRUint32 total = PR_AtomicAdd((PRInt32 *) &mPendingCount, bytesWritten);
     if (total > bytesWritten) {
-        LOG(("nsStreamListenerProxy: Piggy-backing pending event [total=%u, chan=%x]\n",
-            total, aRequest));
+        LOG(("nsStreamListenerProxy: Piggy-backing pending event [total=%u, req=%x]\n",
+            total, request));
         return NS_OK;
     }
  
@@ -315,66 +320,73 @@ nsStreamListenerProxy::OnDataAvailable(nsIRequest *aRequest,
     // Post an event for the number of bytes actually written.
     //
     nsOnDataAvailableEvent *ev =
-        new nsOnDataAvailableEvent(this, aRequest, aContext, mPipeIn, aOffset);
+        new nsOnDataAvailableEvent(this, request, context, mPipeIn, offset);
     if (!ev) return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = ev->FireEvent(GetEventQueue());
-    if (NS_FAILED(rv)) {
+    // Reuse the event queue of the observer proxy
+    rv = mObserverProxy->FireEvent(ev);
+    if (NS_FAILED(rv))
         delete ev;
-        return rv;
-    }
-    return NS_OK;
+    return rv;
 }
 
-//
 //----------------------------------------------------------------------------
-// nsIStreamListenerProxy implementation...
+// nsStreamListenerProxy::nsIStreamListenerProxy implementation...
 //----------------------------------------------------------------------------
-//
+
 NS_IMETHODIMP
-nsStreamListenerProxy::Init(nsIStreamListener *aListener,
-                            nsIEventQueue *aEventQ,
-                            PRUint32 aBufferSegmentSize,
-                            PRUint32 aBufferMaxSize)
+nsStreamListenerProxy::Init(nsIStreamListener *listener,
+                            nsIEventQueue *eventQ,
+                            PRUint32 bufferSegmentSize,
+                            PRUint32 bufferMaxSize)
 {
-    NS_PRECONDITION(GetReceiver() == nsnull, "Listener already set");
-    NS_PRECONDITION(GetEventQueue() == nsnull, "Event queue already set");
+    NS_ENSURE_ARG_POINTER(listener);
+
+#if defined(PR_LOGGING)
+    if (!gStreamListenerProxyLog)
+        gStreamListenerProxyLog = PR_NewLogModule("nsStreamListenerProxy");
+#endif
 
     //
-    // Create the ChannelToResume lock
+    // Create the RequestToResume lock
     //
     mLock = PR_NewLock();
     if (!mLock) return NS_ERROR_OUT_OF_MEMORY;
 
     //
+    // Create the request observer proxy
+    //
+    mObserverProxy = new nsRequestObserverProxy();
+    if (!mObserverProxy) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mObserverProxy);
+
+    //
     // Create the pipe
     //
-    if (aBufferSegmentSize == 0)
-        aBufferSegmentSize = DEFAULT_BUFFER_SEGMENT_SIZE;
-    if (aBufferMaxSize == 0)
-        aBufferMaxSize = DEFAULT_BUFFER_MAX_SIZE;
+    if (bufferSegmentSize == 0)
+        bufferSegmentSize = DEFAULT_BUFFER_SEGMENT_SIZE;
+    if (bufferMaxSize == 0)
+        bufferMaxSize = DEFAULT_BUFFER_MAX_SIZE;
     // The segment size must not exceed the maximum
-    aBufferSegmentSize = PR_MIN(aBufferMaxSize, aBufferSegmentSize);
+    bufferSegmentSize = PR_MIN(bufferMaxSize, bufferSegmentSize);
 
     nsresult rv = NS_NewPipe(getter_AddRefs(mPipeIn),
                              getter_AddRefs(mPipeOut),
-                             aBufferSegmentSize,
-                             aBufferMaxSize,
+                             bufferSegmentSize,
+                             bufferMaxSize,
                              PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIStreamObserver> observer = do_QueryInterface(aListener);
-    SetReceiver(observer);
-    return SetEventQueue(aEventQ);
+    nsCOMPtr<nsIRequestObserver> observer = do_QueryInterface(listener);
+    return mObserverProxy->Init(observer, eventQ);
 }
 
-//
 //----------------------------------------------------------------------------
-// nsIInputStreamObserver implementation...
+// nsStreamListenerProxy::nsIInputStreamObserver implementation...
 //----------------------------------------------------------------------------
-//
+
 NS_IMETHODIMP
-nsStreamListenerProxy::OnEmpty(nsIInputStream *aInputStream)
+nsStreamListenerProxy::OnEmpty(nsIInputStream *inputStream)
 {
     LOG(("nsStreamListenerProxy: OnEmpty\n"));
     //

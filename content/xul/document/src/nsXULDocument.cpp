@@ -333,8 +333,8 @@ public:
     NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
     NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
     NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
-    NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes) { *aLoadAttributes = nsIChannel::LOAD_NORMAL; return NS_OK; }
-   	NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes) { return NS_OK; }
+    NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
+   	NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
  	NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
  	NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
  	NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
@@ -5035,7 +5035,7 @@ nsXULDocument::ResumeWalk()
     // docshell, and run the onload handlers, etc.
     nsCOMPtr<nsILoadGroup> group = do_QueryReferent(mDocumentLoadGroup);
     if (group) {
-        rv = group->RemoveRequest(mPlaceHolderRequest, nsnull, NS_OK, nsnull);
+        rv = group->RemoveRequest(mPlaceHolderRequest, nsnull, NS_OK);
         if (NS_FAILED(rv)) return rv;
 
         mPlaceHolderRequest = nsnull;
@@ -6134,7 +6134,7 @@ nsXULDocument::CachedChromeStreamListener::~CachedChromeStreamListener()
 }
 
 
-NS_IMPL_ISUPPORTS2(nsXULDocument::CachedChromeStreamListener, nsIStreamObserver, nsIStreamListener);
+NS_IMPL_ISUPPORTS2(nsXULDocument::CachedChromeStreamListener, nsIRequestObserver, nsIStreamListener);
 
 NS_IMETHODIMP
 nsXULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest *request, nsISupports* acontext)
@@ -6146,8 +6146,7 @@ nsXULDocument::CachedChromeStreamListener::OnStartRequest(nsIRequest *request, n
 NS_IMETHODIMP
 nsXULDocument::CachedChromeStreamListener::OnStopRequest(nsIRequest *request,
                                                          nsISupports* aContext,
-                                                         nsresult aStatus,
-                                                         const PRUnichar* aErrorMsg)
+                                                         nsresult aStatus)
 {
     nsresult rv;
     rv = mDocument->PrepareToWalk();
@@ -6186,7 +6185,7 @@ nsXULDocument::ParserObserver::~ParserObserver()
     NS_IF_RELEASE(mDocument);
 }
 
-NS_IMPL_ISUPPORTS1(nsXULDocument::ParserObserver, nsIStreamObserver);
+NS_IMPL_ISUPPORTS1(nsXULDocument::ParserObserver, nsIRequestObserver);
 
 NS_IMETHODIMP
 nsXULDocument::ParserObserver::OnStartRequest(nsIRequest *request,
@@ -6198,8 +6197,7 @@ nsXULDocument::ParserObserver::OnStartRequest(nsIRequest *request,
 NS_IMETHODIMP
 nsXULDocument::ParserObserver::OnStopRequest(nsIRequest *request,
                                              nsISupports* aContext,
-                                             nsresult aStatus,
-                                             const PRUnichar* aErrorMsg)
+                                             nsresult aStatus)
 {
     nsresult rv = NS_OK;
 

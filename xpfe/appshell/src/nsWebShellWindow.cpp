@@ -34,8 +34,8 @@
 #include "nsIURL.h"
 #include "nsIIOService.h"
 #include "nsIURL.h"
+#include "nsNetCID.h"
 #include "nsIStringBundle.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIPref.h"
 
 #include "nsINameSpaceManager.h"

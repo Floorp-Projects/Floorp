@@ -27,7 +27,7 @@
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsIndexedToHTML,
                               nsIStreamConverter,
-                              nsIStreamObserver,
+                              nsIRequestObserver,
                               nsIStreamListener);
 
 
@@ -100,7 +100,7 @@ nsIndexedToHTML::OnStartRequest(nsIRequest* request, nsISupports *aContext)
 
 NS_IMETHODIMP
 nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
-                               nsresult aStatus, const PRUnichar* aStatusArg) {
+                               nsresult aStatus) {
     nsresult rv = NS_OK;
     nsString buffer;
     buffer.AssignWithConversion("</table><hr></pre></body></html>\n");    
@@ -117,7 +117,7 @@ nsIndexedToHTML::OnStopRequest(nsIRequest* request, nsISupports *aContext,
                                     inputData, 0, buffer.Length());
     if (NS_FAILED(rv)) return rv;
 
-    return mListener->OnStopRequest(request, aContext, aStatus, aStatusArg);
+    return mListener->OnStopRequest(request, aContext, aStatus);
 }
 
 nsresult 

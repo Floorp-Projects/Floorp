@@ -532,13 +532,13 @@ nsHTMLDocument::StartDocumentLoad(const char* aCommand,
     }
 
     PRUint32 loadAttr = 0;
-    rv = httpChannel->GetLoadAttributes(&loadAttr);
+    rv = httpChannel->GetLoadFlags(&loadAttr);
     NS_ASSERTION(NS_SUCCEEDED(rv),"cannot get load attribute");
     if(NS_SUCCEEDED(rv)) {
       // copy from nsHTTPChannel.cpp
       if(loadAttr & nsIChannel::CACHE_AS_FILE)
         cacheFlags = nsINetDataCacheManager::CACHE_AS_FILE;
-      else if(loadAttr & nsIChannel::INHIBIT_PERSISTENT_CACHING)
+      else if(loadAttr & nsIRequest::INHIBIT_PERSISTENT_CACHING)
         cacheFlags = nsINetDataCacheManager::BYPASS_PERSISTENT_CACHE;
       bTryCache = PR_TRUE;
     }

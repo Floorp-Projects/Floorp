@@ -690,7 +690,7 @@ class CertDownloader : public nsIStreamListener
         virtual ~CertDownloader();
 
         NS_DECL_ISUPPORTS
-        NS_DECL_NSISTREAMOBSERVER
+        NS_DECL_NSIREQUESTOBSERVER
         NS_DECL_NSISTREAMLISTENER
     protected:
         char* mByteData;
@@ -780,8 +780,7 @@ CertDownloader::OnDataAvailable(nsIRequest *request,
 NS_IMETHODIMP
 CertDownloader::OnStopRequest(nsIRequest *request, 
                               nsISupports* context,
-                              nsresult aStatus,
-                              const PRUnichar* aMsg)
+                              nsresult aStatus)
 {
 
     nsCOMPtr<nsIPSMComponent> psm = do_QueryInterface(context);

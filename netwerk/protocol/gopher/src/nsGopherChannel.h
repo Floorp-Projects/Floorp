@@ -47,7 +47,7 @@ public:
     NS_DECL_NSICHANNEL
     NS_DECL_NSIPROXY
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     // nsGopherChannel methods:
     nsGopherChannel();
@@ -66,7 +66,7 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;
     nsCOMPtr<nsIURI>                    mUrl;
     nsCOMPtr<nsIStreamListener>         mListener;
-    PRUint32                            mLoadAttributes;
+    PRUint32                            mLoadFlags;
     nsCOMPtr<nsILoadGroup>              mLoadGroup;
     nsCString                           mContentType;
     PRInt32                             mContentLength;

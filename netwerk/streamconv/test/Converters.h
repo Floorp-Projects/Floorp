@@ -22,7 +22,7 @@ static NS_DEFINE_CID(kTestConverterCID,          NS_TESTCONVERTER_CID);
 class TestConverter : public nsIStreamConverter {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     TestConverter();

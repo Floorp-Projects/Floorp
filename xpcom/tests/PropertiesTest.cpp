@@ -29,8 +29,8 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsIChannel.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIComponentManager.h"
 #include "nsIEnumerator.h"
 #include <iostream.h>  //BAD DOG -- no biscuit!
@@ -59,6 +59,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #endif
 #endif
 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueCID, NS_EVENTQUEUE_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 

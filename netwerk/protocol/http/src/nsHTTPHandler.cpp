@@ -1198,14 +1198,14 @@ nsresult nsHTTPHandler::RequestTransport(nsIURI* i_Uri,
        
         if (NS_FAILED(rv)) return rv;
 
-        nsLoadFlags loadFlags = nsIChannel::LOAD_NORMAL;
-        i_Channel->GetLoadAttributes(&loadFlags);
+        nsLoadFlags loadFlags = nsIRequest::LOAD_NORMAL;
+        i_Channel->GetLoadFlags(&loadFlags);
 
         nsCOMPtr<nsIInterfaceRequestor> callbacks;
         
         callbacks = do_QueryInterface(NS_STATIC_CAST(nsIHTTPChannel*, i_Channel));
         trans->SetNotificationCallbacks(callbacks,
-                                        (loadFlags & nsIChannel::LOAD_BACKGROUND));
+                                        (loadFlags & nsIRequest::LOAD_BACKGROUND));
 
         socketTrans = do_QueryInterface(trans, &rv);
         if (NS_SUCCEEDED(rv)) {

@@ -65,8 +65,8 @@ class nsXPInstallManager : public nsIXPIListener,
 
         NS_IMETHOD InitManager(nsIScriptGlobalObject* aGlobalObject, nsXPITriggerInfo* aTrigger, PRUint32 aChromeType );
 
-        // nsIStreamObserver
-        NS_DECL_NSISTREAMOBSERVER
+        // nsIRequestObserver
+        NS_DECL_NSIREQUESTOBSERVER
 
         // nsIStreamListener
         NS_DECL_NSISTREAMLISTENER

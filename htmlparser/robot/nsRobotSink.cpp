@@ -29,7 +29,7 @@
 #include "nsIURL.h"
 #include "nsIServiceManager.h"
 #include "nsIIOService.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNetCID.h"
 #include "nsCRT.h"
 #include "nsVoidArray.h"
 class nsIDocument;
@@ -42,6 +42,7 @@ class nsIDocument;
 //      - IMG SRC
 //      - LAYER SRC
 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIHTMLContentSinkIID, NS_IHTML_CONTENT_SINK_IID);
 static NS_DEFINE_IID(kIRobotSinkIID, NS_IROBOTSINK_IID);

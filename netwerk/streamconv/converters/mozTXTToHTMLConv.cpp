@@ -35,6 +35,7 @@
 
 #include "mozTXTToHTMLConv.h"
 #include "nsIServiceManager.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -1105,7 +1106,7 @@ mozTXTToHTMLConv::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
 NS_IMETHODIMP
 mozTXTToHTMLConv::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
-                                nsresult aStatus, const PRUnichar* aStatusArg)
+                                nsresult aStatus)
 {
   return NS_ERROR_NOT_IMPLEMENTED;
 }

@@ -38,7 +38,7 @@ MOZ_DECL_CTOR_COUNTER(CParserContext)
 CParserContext::CParserContext(nsScanner* aScanner, 
                                void *aKey, 
                                eParserCommands aCommand,
-                               nsIStreamObserver* aListener, 
+                               nsIRequestObserver* aListener, 
                                nsIDTD *aDTD, 
                                eAutoDetectResult aStatus, 
                                PRBool aCopyUnused)

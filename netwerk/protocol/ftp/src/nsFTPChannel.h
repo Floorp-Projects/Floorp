@@ -70,7 +70,7 @@ public:
     NS_DECL_NSIINTERFACEREQUESTOR
     NS_DECL_NSIPROGRESSEVENTSINK
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     // nsFTPChannel methods:
     nsFTPChannel();
@@ -93,7 +93,7 @@ protected:
     nsCOMPtr<nsIInterfaceRequestor> mCallbacks;
 
     PRBool                          mConnected;
-    PRUint32                        mLoadAttributes;
+    PRUint32                        mLoadFlags;
 
     PRUint32                        mSourceOffset;
     PRInt32                         mAmount;
@@ -103,7 +103,7 @@ protected:
     nsCOMPtr<nsISupports>           mOwner;
 
     nsCOMPtr<nsIStreamListener>     mListener;
-    nsCOMPtr<nsIStreamObserver>     mObserver;
+    nsCOMPtr<nsIRequestObserver>    mObserver;
 
     nsFtpState*                     mFTPState;   
 

@@ -21,23 +21,10 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIChannel.idl"
 
 interface nsIProtocolHandler;
+interface nsIChannel;
 interface nsIURI;
-interface nsIInterfaceRequestor;
-interface nsIStreamObserver;
-interface nsIStreamListener;
-interface nsIEventQueue;
-interface nsIBufferInputStream;
-interface nsIInputStream;
-interface nsIBufferOutputStream;
-interface nsIFileChannel;
-interface nsILoadGroup;
-interface nsILoadGroupObserver;
-interface nsIFile;
-interface nsIInputStream;
-interface nsIOutputStream;
 
 [scriptable, uuid(ab7c3a84-d488-11d3-8cda-0060b0fc14a3)]
 interface nsIIOService : nsISupports
@@ -182,15 +169,3 @@ interface nsIIOService : nsISupports
     string resolveRelativePath(in string relativePath,
                                in string basePath);
 };
-
-%{C++
-
-#define NS_IOSERVICE_CID                             \
-{ /* 9ac9e770-18bc-11d3-9337-00104ba0fd40 */         \
-    0x9ac9e770,                                      \
-    0x18bc,                                          \
-    0x11d3,                                          \
-    {0x93, 0x37, 0x00, 0x10, 0x4b, 0xa0, 0xfd, 0x40} \
-}
-
-%}

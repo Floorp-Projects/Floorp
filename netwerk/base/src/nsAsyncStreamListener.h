@@ -26,17 +26,17 @@
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 #include "nsIEventQueue.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsIStreamListener.h"
 #include "nsIRequest.h"
+
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsAsyncStreamObserver : public nsIAsyncStreamObserver
+class nsAsyncStreamObserver : public nsIRequestObserver
 {
 public:
     NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMOBSERVER
-    NS_DECL_NSIASYNCSTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
     // nsAsyncStreamObserver methods:
     nsAsyncStreamObserver() 
@@ -49,12 +49,14 @@ public:
     static NS_METHOD
     Create(nsISupports *aOuter, REFNSIID aIID, void **aResult);
 
+    NS_METHOD Init(nsIRequestObserver *, nsIEventQueue *);
+
     nsISupports* GetReceiver()      { return mReceiver.get(); }
     void Clear()      { mReceiver = nsnull; }
 
 protected:
-    nsCOMPtr<nsIEventQueue>     mEventQueue;
-    nsCOMPtr<nsIStreamObserver> mReceiver;
+    nsCOMPtr<nsIEventQueue>      mEventQueue;
+    nsCOMPtr<nsIRequestObserver> mReceiver;
 };
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -74,9 +76,9 @@ public:
 
     NS_IMETHOD OnStopRequest(nsIRequest* request,
                              nsISupports* context, 
-                             nsresult aStatus, const PRUnichar* aStatusArg) 
+                             nsresult aStatus)
     { 
-        return nsAsyncStreamObserver::OnStopRequest(request, context, aStatus, aStatusArg); 
+        return nsAsyncStreamObserver::OnStopRequest(request, context, aStatus);
     }
 
     NS_IMETHOD OnDataAvailable(nsIRequest* request, nsISupports* context,

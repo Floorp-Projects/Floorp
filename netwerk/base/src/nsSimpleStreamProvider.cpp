@@ -32,11 +32,11 @@
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsSimpleStreamProvider,
                               nsISimpleStreamProvider,
                               nsIStreamProvider,
-                              nsIStreamObserver)
+                              nsIRequestObserver)
 
 //
 //----------------------------------------------------------------------------
-// nsIStreamObserver implementation...
+// nsIRequestObserver implementation...
 //----------------------------------------------------------------------------
 //
 NS_IMETHODIMP
@@ -50,11 +50,10 @@ nsSimpleStreamProvider::OnStartRequest(nsIRequest *request,
 NS_IMETHODIMP
 nsSimpleStreamProvider::OnStopRequest(nsIRequest* request,
                                       nsISupports *aContext,
-                                      nsresult aStatus,
-                                      const PRUnichar *aStatusText)
+                                      nsresult aStatus)
 {
     return mObserver ?
-        mObserver->OnStopRequest(request, aContext, aStatus, aStatusText) : NS_OK;
+        mObserver->OnStopRequest(request, aContext, aStatus) : NS_OK;
 }
 
 //
@@ -86,7 +85,7 @@ nsSimpleStreamProvider::OnDataWritable(nsIRequest *request,
 //
 NS_IMETHODIMP
 nsSimpleStreamProvider::Init(nsIInputStream *aSource,
-                             nsIStreamObserver *aObserver)
+                             nsIRequestObserver *aObserver)
 {
     NS_PRECONDITION(aSource, "null input stream");
 

@@ -36,7 +36,7 @@
 #include "nsString.h"
 #include "nsISupports.h"
 
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsIInputStream.h"
 #include "nsIObserver.h"
 #include "nsICmdLineHandler.h"

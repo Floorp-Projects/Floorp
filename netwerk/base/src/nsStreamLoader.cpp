@@ -79,7 +79,7 @@ nsStreamLoader::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMPL_ISUPPORTS3(nsStreamLoader, nsIStreamLoader,
-                   nsIStreamObserver, nsIStreamListener)
+                   nsIRequestObserver, nsIStreamListener)
 
 NS_IMETHODIMP 
 nsStreamLoader::GetNumBytesRead(PRUint32* aNumBytes)
@@ -111,7 +111,7 @@ nsStreamLoader::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
 NS_IMETHODIMP 
 nsStreamLoader::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
-                              nsresult aStatus, const PRUnichar* aStatusArg)
+                              nsresult aStatus)
 {
   nsresult rv;
   mRequest = request;

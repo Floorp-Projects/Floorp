@@ -23,13 +23,18 @@
 
 #include "nsStreamProviderProxy.h"
 #include "nsIPipe.h"
+#include "nsIRequest.h"
+#include "prlog.h"
 
-#define LOG(args) PR_LOG(gStreamProxyLog, PR_LOG_DEBUG, args)
+#if defined(PR_LOGGING)
+static PRLogModuleInfo *gStreamProviderProxyLog;
+#endif
+
+#define LOG(args) PR_LOG(gStreamProviderProxyLog, PR_LOG_DEBUG, args)
 
 #define DEFAULT_BUFFER_SEGMENT_SIZE 2048
 #define DEFAULT_BUFFER_MAX_SIZE  (4*2048)
 
-//
 //----------------------------------------------------------------------------
 // Design Overview
 //
@@ -42,64 +47,68 @@
 // The request is only resumed once the event has been successfully handled;
 // meaning that data has been written to the pipe.
 //----------------------------------------------------------------------------
-//
 
 nsStreamProviderProxy::nsStreamProviderProxy()
     : mProviderStatus(NS_OK)
-{ }
+{
+    NS_INIT_ISUPPORTS();
+}
 
 nsStreamProviderProxy::~nsStreamProviderProxy()
-{ }
+{
+    NS_IF_RELEASE(mObserverProxy);
+}
 
-//
+nsresult
+nsStreamProviderProxy::GetProvider(nsIStreamProvider **provider)
+{
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
+    return CallQueryInterface(mObserverProxy->Observer(), provider);
+}
+
 //----------------------------------------------------------------------------
 // nsOnDataWritableEvent internal class...
 //----------------------------------------------------------------------------
-//
-class nsOnDataWritableEvent : public nsStreamObserverEvent
+
+class nsOnDataWritableEvent : public nsARequestObserverEvent
 {
 public:
-    nsOnDataWritableEvent(nsStreamProxyBase *aProxy,
-                         nsIRequest *aRequest,
-                         nsISupports *aContext,
-                         nsIOutputStream *aSink,
-                         PRUint32 aOffset,
-                         PRUint32 aCount)
-        : nsStreamObserverEvent(aProxy, aRequest, aContext)
-        , mSink(aSink)
-        , mOffset(aOffset)
-        , mCount(aCount)
+    nsOnDataWritableEvent(nsStreamProviderProxy *proxy,
+                          nsIRequest *request,
+                          nsISupports *context,
+                          nsIOutputStream *sink,
+                          PRUint32 offset,
+                          PRUint32 count)
+        : nsARequestObserverEvent(request, context)
+        , mProxy(proxy)
+        , mSink(sink)
+        , mOffset(offset)
+        , mCount(count)
     {
         MOZ_COUNT_CTOR(nsOnDataWritableEvent);
+        NS_PRECONDITION(mProxy, "null pointer");
+        NS_ADDREF(mProxy);
     }
 
    ~nsOnDataWritableEvent()
     {
         MOZ_COUNT_DTOR(nsOnDataWritableEvent);
+        NS_RELEASE(mProxy);
     }
 
-    NS_IMETHOD HandleEvent();
+    void HandleEvent();
 
 protected:
-   nsCOMPtr<nsIOutputStream> mSink;
-   PRUint32                  mOffset;
-   PRUint32                  mCount;
+    nsStreamProviderProxy    *mProxy; 
+    nsCOMPtr<nsIOutputStream> mSink;
+    PRUint32                  mOffset;
+    PRUint32                  mCount;
 };
 
-NS_IMETHODIMP
+void
 nsOnDataWritableEvent::HandleEvent()
 {
-    LOG(("nsOnDataWritableEvent: HandleEvent [event=%x chan=%x]",
-        this, mRequest.get()));
-
-    nsStreamProviderProxy *providerProxy = 
-        NS_STATIC_CAST(nsStreamProviderProxy *, mProxy);
-
-    nsCOMPtr<nsIStreamProvider> provider = providerProxy->GetProvider();
-    if (!provider) {
-        LOG(("nsOnDataWritableEvent: Already called OnStopRequest (provider is NULL)\n"));
-        return NS_ERROR_FAILURE;
-    }
+    LOG(("nsOnDataWritableEvent::HandleEvent [req=%x]", mRequest.get()));
 
     nsresult status = NS_OK;
     nsresult rv = mRequest->GetStatus(&status);
@@ -111,72 +120,75 @@ nsOnDataWritableEvent::HandleEvent()
     // asynchronously, there is a very real chance that the provider might
     // have cancelled the request after _this_ event was triggered.
     //
-    if (NS_SUCCEEDED(status)) {
-        LOG(("nsOnDataWritableEvent: Calling the consumer's OnDataWritable\n"));
-        rv = provider->OnDataWritable(mRequest, mContext, mSink, mOffset, mCount);
-        LOG(("nsOnDataWritableEvent: Done with the consumer's OnDataWritable [rv=%x]\n", rv));
-
-        //
-        // Mask NS_BASE_STREAM_WOULD_BLOCK return values.
-        //
-        providerProxy->SetProviderStatus(
-            rv != NS_BASE_STREAM_WOULD_BLOCK ? rv : NS_OK);
-
-        //
-        // The request is already suspended, so unless the provider returned
-        // NS_BASE_STREAM_WOULD_BLOCK, we should wake up the request.
-        //
-        if (rv != NS_BASE_STREAM_WOULD_BLOCK)
-            mRequest->Resume();
-    }
-    else
+    if (NS_FAILED(status)) {
         LOG(("nsOnDataWritableEvent: Not calling OnDataWritable"));
-    return NS_OK;
+        return;
+    }
+
+    LOG(("nsOnDataWritableEvent: Calling the consumer's OnDataWritable\n"));
+
+    nsCOMPtr<nsIStreamProvider> provider;
+    rv = mProxy->GetProvider(getter_AddRefs(provider));
+
+    if (provider)
+        rv = provider->OnDataWritable(mRequest, mContext,
+                                      mSink, mOffset, mCount);
+
+    LOG(("nsOnDataWritableEvent: Done with the consumer's OnDataWritable "
+         "[rv=%x]\n", rv));
+
+    //
+    // Mask NS_BASE_STREAM_WOULD_BLOCK return values.
+    //
+    mProxy->SetProviderStatus(rv != NS_BASE_STREAM_WOULD_BLOCK ? rv : NS_OK);
+
+    //
+    // The request is already suspended, so unless the provider returned
+    // NS_BASE_STREAM_WOULD_BLOCK, we should wake up the request.
+    //
+    if (rv != NS_BASE_STREAM_WOULD_BLOCK)
+        mRequest->Resume();
 }
 
-//
 //----------------------------------------------------------------------------
-// nsISupports implementation...
+// nsStreamProviderProxy::nsISupports implementation...
 //----------------------------------------------------------------------------
-//
-NS_IMPL_ISUPPORTS_INHERITED2(nsStreamProviderProxy,
-                             nsStreamProxyBase,
-                             nsIStreamProviderProxy,
-                             nsIStreamProvider)
 
-//
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsStreamProviderProxy,
+                              nsIStreamProvider,
+                              nsIRequestObserver,
+                              nsIStreamProviderProxy)
+
 //----------------------------------------------------------------------------
-// nsIStreamObserver implementation...
+// nsStreamProviderProxy::nsIRequestObserver implementation...
 //----------------------------------------------------------------------------
-//
+
 NS_IMETHODIMP
 nsStreamProviderProxy::OnStartRequest(nsIRequest *request,
-                                      nsISupports *aContext)
+                                      nsISupports *context)
 {
-    return nsStreamProxyBase::OnStartRequest(request, aContext);
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
+    return mObserverProxy->OnStartRequest(request, context);
 }
 
 NS_IMETHODIMP
 nsStreamProviderProxy::OnStopRequest(nsIRequest* request,
-                                     nsISupports *aContext,
-                                     nsresult aStatus,
-                                     const PRUnichar *aStatusText)
+                                     nsISupports *context,
+                                     nsresult status)
 {
-    //
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
+
     // Close the pipe
-    //
     mPipeIn = 0;
     mPipeOut = 0;
 
-    return nsStreamProxyBase::OnStopRequest(request, aContext,
-                                            aStatus, aStatusText);
+    return mObserverProxy->OnStopRequest(request, context, status);
 }
 
-//
 //----------------------------------------------------------------------------
-// nsIStreamProvider implementation...
+// nsStreamProviderProxy::nsIStreamProvider implementation...
 //----------------------------------------------------------------------------
-//
+
 static NS_METHOD
 nsWriteToSink(nsIInputStream *source,
               void *closure,
@@ -190,18 +202,19 @@ nsWriteToSink(nsIInputStream *source,
 }
 
 NS_IMETHODIMP
-nsStreamProviderProxy::OnDataWritable(nsIRequest *aRequest,
-                                      nsISupports *aContext,
-                                      nsIOutputStream *aSink,
-                                      PRUint32 aOffset,
-                                      PRUint32 aCount)
+nsStreamProviderProxy::OnDataWritable(nsIRequest *request,
+                                      nsISupports *context,
+                                      nsIOutputStream *sink,
+                                      PRUint32 offset,
+                                      PRUint32 count)
 {
     nsresult rv;
 
     LOG(("nsStreamProviderProxy: OnDataWritable [offset=%u, count=%u]\n",
-        aOffset, aCount));
+        offset, count));
 
-    NS_PRECONDITION(aCount > 0, "Invalid parameter");
+    NS_ENSURE_TRUE(mObserverProxy, NS_ERROR_NOT_INITIALIZED);
+    NS_PRECONDITION(count > 0, "Invalid parameter");
     NS_PRECONDITION(mPipeIn, "Pipe not initialized");
     NS_PRECONDITION(mPipeOut, "Pipe not initialized");
     NS_PRECONDITION(mProviderStatus != NS_BASE_STREAM_WOULD_BLOCK,
@@ -217,17 +230,17 @@ nsStreamProviderProxy::OnDataWritable(nsIRequest *aRequest,
 
     //
     // Provide the request with whatever data is already in the pipe (not
-    // exceeding aCount).
+    // exceeding count).
     //
-    PRUint32 count;
-    rv = mPipeIn->Available(&count);
+    PRUint32 amount;
+    rv = mPipeIn->Available(&amount);
     if (NS_FAILED(rv)) return rv;
 
-    if (count > 0) {
-        count = PR_MIN(count, aCount);
+    if (amount > 0) {
+        amount = PR_MIN(amount, count);
 
         PRUint32 bytesWritten;
-        rv = mPipeIn->ReadSegments(nsWriteToSink, aSink, count, &bytesWritten);
+        rv = mPipeIn->ReadSegments(nsWriteToSink, sink, amount, &bytesWritten);
         if (NS_FAILED(rv)) return rv;
 
         return NS_OK;
@@ -237,12 +250,12 @@ nsStreamProviderProxy::OnDataWritable(nsIRequest *aRequest,
     // Post an event requesting the provider for more data.
     //
     nsOnDataWritableEvent *ev =
-        new nsOnDataWritableEvent(this, aRequest, aContext,
-                                 mPipeOut, aOffset, aCount);
+        new nsOnDataWritableEvent(this, request, context, mPipeOut, offset, count);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
 
-    rv = ev->FireEvent(GetEventQueue());
+    // Reuse the event queue of the observer proxy
+    rv = mObserverProxy->FireEvent(ev);
     if (NS_FAILED(rv)) {
         delete ev;
         return rv;
@@ -250,38 +263,47 @@ nsStreamProviderProxy::OnDataWritable(nsIRequest *aRequest,
     return NS_BASE_STREAM_WOULD_BLOCK;
 }
 
-//
 //----------------------------------------------------------------------------
-// nsIStreamProviderProxy implementation...
+// nsStreamProviderProxy::nsIStreamProviderProxy implementation...
 //----------------------------------------------------------------------------
-//
+
 NS_IMETHODIMP
-nsStreamProviderProxy::Init(nsIStreamProvider *aProvider,
-                            nsIEventQueue *aEventQ,
-                            PRUint32 aBufferSegmentSize,
-                            PRUint32 aBufferMaxSize)
+nsStreamProviderProxy::Init(nsIStreamProvider *provider,
+                            nsIEventQueue *eventQ,
+                            PRUint32 bufferSegmentSize,
+                            PRUint32 bufferMaxSize)
 {
-    NS_PRECONDITION(GetReceiver() == nsnull, "Listener already set");
-    NS_PRECONDITION(GetEventQueue() == nsnull, "Event queue already set");
+    NS_ENSURE_ARG_POINTER(provider);
+
+#if defined(PR_LOGGING)
+    if (!gStreamProviderProxyLog)
+        gStreamProviderProxyLog = PR_NewLogModule("nsStreamProviderProxy");
+#endif
+
+    // 
+    // Create the request observer proxy
+    //
+    mObserverProxy = new nsRequestObserverProxy();
+    if (!mObserverProxy) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(mObserverProxy);
 
     //
     // Create the pipe
     //
-    if (aBufferSegmentSize == 0)
-        aBufferSegmentSize = DEFAULT_BUFFER_SEGMENT_SIZE;
-    if (aBufferMaxSize == 0)
-        aBufferMaxSize = DEFAULT_BUFFER_MAX_SIZE;
+    if (bufferSegmentSize == 0)
+        bufferSegmentSize = DEFAULT_BUFFER_SEGMENT_SIZE;
+    if (bufferMaxSize == 0)
+        bufferMaxSize = DEFAULT_BUFFER_MAX_SIZE;
     // The segment size must not exceed the maximum
-    aBufferSegmentSize = PR_MIN(aBufferMaxSize, aBufferSegmentSize);
+    bufferSegmentSize = PR_MIN(bufferMaxSize, bufferSegmentSize);
 
     nsresult rv = NS_NewPipe(getter_AddRefs(mPipeIn),
                              getter_AddRefs(mPipeOut),
-                             aBufferSegmentSize,
-                             aBufferMaxSize,
+                             bufferSegmentSize,
+                             bufferMaxSize,
                              PR_TRUE, PR_TRUE);
     if (NS_FAILED(rv)) return rv;
 
-    nsCOMPtr<nsIStreamObserver> observer = do_QueryInterface(aProvider);
-    SetReceiver(observer);
-    return SetEventQueue(aEventQ);
+    nsCOMPtr<nsIRequestObserver> observer = do_QueryInterface(provider);
+    return mObserverProxy->Init(observer, eventQ);
 }

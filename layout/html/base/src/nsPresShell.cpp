@@ -708,8 +708,8 @@ public:
   NS_IMETHOD SetURI(nsIURI* aURI) { gURI = aURI; NS_ADDREF(gURI); return NS_OK; }
   NS_IMETHOD Open(nsIInputStream **_retval) { *_retval = nsnull; return NS_OK; }
   NS_IMETHOD AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt) { return NS_OK; }
-  NS_IMETHOD GetLoadAttributes(nsLoadFlags *aLoadAttributes) { *aLoadAttributes = nsIChannel::LOAD_NORMAL; return NS_OK; }
-  NS_IMETHOD SetLoadAttributes(nsLoadFlags aLoadAttributes) { return NS_OK; }
+  NS_IMETHOD GetLoadFlags(nsLoadFlags *aLoadFlags) { *aLoadFlags = nsIRequest::LOAD_NORMAL; return NS_OK; }
+  NS_IMETHOD SetLoadFlags(nsLoadFlags aLoadFlags) { return NS_OK; }
   NS_IMETHOD GetOwner(nsISupports * *aOwner) { *aOwner = nsnull; return NS_OK; }
   NS_IMETHOD SetOwner(nsISupports * aOwner) { return NS_OK; }
   NS_IMETHOD GetLoadGroup(nsILoadGroup * *aLoadGroup) { *aLoadGroup = mLoadGroup; NS_IF_ADDREF(*aLoadGroup); return NS_OK; }
@@ -5711,7 +5711,7 @@ PresShell::RemoveDummyLayoutRequest(void)
     }
 
     if (loadGroup && mDummyLayoutRequest) {
-      rv = loadGroup->RemoveRequest(mDummyLayoutRequest, nsnull, NS_OK, nsnull);
+      rv = loadGroup->RemoveRequest(mDummyLayoutRequest, nsnull, NS_OK);
       if (NS_FAILED(rv)) return rv;
 
       mDummyLayoutRequest = nsnull;

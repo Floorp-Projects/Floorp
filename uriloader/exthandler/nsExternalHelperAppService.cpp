@@ -500,7 +500,7 @@ NS_IMPL_THREADSAFE_RELEASE(nsExternalAppHandler)
 NS_INTERFACE_MAP_BEGIN(nsExternalAppHandler)
    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIStreamListener)
    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
-   NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+   NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
    NS_INTERFACE_MAP_ENTRY(nsIHelperAppLauncher)   
    NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
@@ -677,7 +677,7 @@ nsresult nsExternalAppHandler::RetargetLoadNotifications(nsIRequest *request)
     origContextLoader->GetDocumentChannel(getter_AddRefs(mOriginalChannel));
 
   if(oldLoadGroup)
-     oldLoadGroup->RemoveRequest(request, nsnull, NS_OK, nsnull);
+     oldLoadGroup->RemoveRequest(request, nsnull, NS_OK);
       
    aChannel->SetLoadGroup(newLoadGroup);
    nsCOMPtr<nsIInterfaceRequestor> req (do_QueryInterface(mLoadCookie));
@@ -866,7 +866,7 @@ NS_IMETHODIMP nsExternalAppHandler::OnDataAvailable(nsIRequest *request, nsISupp
 }
 
 NS_IMETHODIMP nsExternalAppHandler::OnStopRequest(nsIRequest *request, nsISupports *aCtxt, 
-                                                nsresult aStatus, const PRUnichar * errorMsg)
+                                                  nsresult aStatus)
 {
   mStopRequestIssued = PR_TRUE;
 

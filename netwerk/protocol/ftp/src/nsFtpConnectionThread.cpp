@@ -76,7 +76,7 @@ public:
     
     NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
     
     NS_FORWARD_NSIREQUEST(mRequest->)
     NS_FORWARD_NSICHANNEL(mChannel->)
@@ -102,7 +102,7 @@ protected:
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(DataRequestForwarder, 
                               nsIStreamListener, 
-                              nsIStreamObserver, 
+                              nsIRequestObserver, 
                               nsIChannel,
                               nsIRequest);
 
@@ -190,7 +190,7 @@ DataRequestForwarder::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 }
 
 NS_IMETHODIMP
-DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode, const PRUnichar *statusText)
+DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsresult statusCode)
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) DataRequestForwarder OnStopRequest [status=%x]\n", this, statusCode)); 
 #ifdef DOUGT_NEW_CACHE
@@ -212,7 +212,7 @@ DataRequestForwarder::OnStopRequest(nsIRequest *request, nsISupports *ctxt, nsre
     }
 #endif
     if (mListener)
-        return mListener->OnStopRequest(this, ctxt, statusCode, statusText);
+        return mListener->OnStopRequest(this, ctxt, statusCode);
     
     return NS_OK;
 }
@@ -250,7 +250,7 @@ DataRequestForwarder::OnDataAvailable(nsIRequest *request, nsISupports *ctxt, ns
 
 NS_IMPL_THREADSAFE_ISUPPORTS3(nsFtpState, 
                               nsIStreamListener, 
-                              nsIStreamObserver, 
+                              nsIRequestObserver, 
                               nsIRequest);
 
 nsFtpState::nsFtpState() {
@@ -421,7 +421,7 @@ printf("!!! %s\n", logString.get());
 }
 
 
-// nsIStreamObserver implementation
+// nsIRequestObserver implementation
 NS_IMETHODIMP
 nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *aContext)
 {
@@ -437,7 +437,7 @@ nsFtpState::OnStartRequest(nsIRequest *request, nsISupports *aContext)
 
 NS_IMETHODIMP
 nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *aContext,
-                            nsresult aStatus, const PRUnichar* aStatusArg)
+                            nsresult aStatus)
 {
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) nsFtpState::OnStopRequest() rv=%x\n", this, aStatus));
     mControlStatus = aStatus;
@@ -1557,7 +1557,7 @@ nsFtpState::S_stor() {
     NS_ASSERTION(mWriteStream, "we're trying to upload without any data");
     
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIStreamObserver> observer = do_QueryInterface(mChannel, &rv);
+    nsCOMPtr<nsIRequestObserver> observer = do_QueryInterface(mChannel, &rv);
     if (NS_FAILED(rv)) return rv;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) writing on Data Transport\n", this));
@@ -1901,6 +1901,32 @@ nsFtpState::Resume(void)
     return rv;
 }
 
+NS_IMETHODIMP
+nsFtpState::GetLoadGroup(nsILoadGroup **aLoadGroup)
+{
+    *aLoadGroup = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpState::SetLoadGroup(nsILoadGroup *aLoadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsFtpState::GetLoadFlags(nsLoadFlags *aLoadFlags)
+{
+    *aLoadFlags = nsIRequest::LOAD_NORMAL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFtpState::SetLoadFlags(nsLoadFlags aLoadFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 nsresult
 nsFtpState::Init(nsIFTPChannel* aChannel,
                  nsIPrompt*  aPrompter) {
@@ -2002,8 +2028,8 @@ nsFtpState::Connect()
         
             if (accessMode & nsICache::ACCESS_READ) {
                 // we can read from the cache.
-                PRUint32 aLoadAttributes;
-                mChannel->GetLoadAttributes(&aLoadAttributes);
+                PRUint32 aLoadFlags;
+                mChannel->GetLoadFlags(&aLoadFlags);
 
                 if (accessMode & nsICache::ACCESS_WRITE) {
                     // we said that we could validate, so here we do it.
@@ -2139,7 +2165,7 @@ nsFtpState::StopProcessing() {
         if(NS_FAILED(rv)) return rv;
 
         //(void) asyncListener->OnStartRequest(channelRequest, nsnull);
-        (void) asyncListener->OnStopRequest(channelRequest, nsnull, broadcastErrorCode, nsnull);
+        (void) asyncListener->OnStopRequest(channelRequest, nsnull, broadcastErrorCode);
     }
     
     // Clean up the event loop

@@ -31,8 +31,9 @@
 #include "nsISupportsArray.h"
 #include "nsFileSpec.h"
 #include "nsAutoLock.h"
+#include "nsNetCID.h"
 
-static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kStandardURLCID, NS_STANDARDURL_CID);
 
 ////////////////////////////////////////////////////////////////////////////////
 

@@ -101,7 +101,7 @@ nsDownloader::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
 }
 
 NS_IMPL_ISUPPORTS3(nsDownloader, nsIDownloader,
-                   nsIStreamObserver, nsIStreamListener)
+                   nsIRequestObserver, nsIStreamListener)
 
 NS_IMETHODIMP 
 nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
@@ -111,7 +111,7 @@ nsDownloader::OnStartRequest(nsIRequest *request, nsISupports *ctxt)
 
 NS_IMETHODIMP 
 nsDownloader::OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                              nsresult aStatus, const PRUnichar* aStatusArg)
+                              nsresult aStatus)
 {
   nsCOMPtr<nsIFile> file;
   if (NS_SUCCEEDED(aStatus))

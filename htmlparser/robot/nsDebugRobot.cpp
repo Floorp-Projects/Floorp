@@ -34,10 +34,11 @@
 #include "nsIServiceManager.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
-static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
+#include "nsNetCID.h"
 #include "nsIComponentManager.h"
 #include "nsParserCIID.h"
 
+static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_IID(kIRobotSinkObserverIID, NS_IROBOTSINKOBSERVER_IID);
 
 class RobotSinkObserver : public nsIRobotSinkObserver {

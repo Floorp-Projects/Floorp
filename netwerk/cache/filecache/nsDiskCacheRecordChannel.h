@@ -59,8 +59,8 @@ class nsDiskCacheRecordChannel : public nsIChannel,
   NS_IMETHOD AsyncWrite(nsIStreamProvider *, nsISupports *, PRUint32, PRUint32, PRUint32, nsIRequest **);
   NS_IMETHOD SetNotificationCallbacks(nsIInterfaceRequestor*, PRBool);
 
-  // Declare nsIStreamObserver methods
-  NS_DECL_NSISTREAMOBSERVER
+  // Declare nsIRequestObserver methods
+  NS_DECL_NSIREQUESTOBSERVER
 
   // Declare nsIStreamListener methods
   NS_DECL_NSISTREAMLISTENER
@@ -73,7 +73,7 @@ class nsDiskCacheRecordChannel : public nsIChannel,
 
   nsDiskCacheRecord*                    mRecord ;
   nsCOMPtr<nsILoadGroup>                mLoadGroup ;
-  nsLoadFlags                           mLoadAttributes;
+  nsLoadFlags                           mLoadFlags;
   nsCOMPtr<nsISupports>                 mOwner ;
   nsCOMPtr<nsITransport>                mFileTransport ;
   nsCOMPtr<nsIRequest>                  mFileRequest;

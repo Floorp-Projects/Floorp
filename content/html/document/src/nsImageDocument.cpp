@@ -88,8 +88,7 @@ public:
   nsresult StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener);
 #endif
   nsresult EndLayout(nsISupports *ctxt, 
-                        nsresult status, 
-                        const PRUnichar *errorMsg);
+                     nsresult status);
   nsresult UpdateTitle( void );
 
   void StartLayout();
@@ -110,8 +109,8 @@ public:
   virtual ~ImageListener();
 
   NS_DECL_ISUPPORTS
-  // nsIStreamObserver methods:
-  NS_DECL_NSISTREAMOBSERVER
+  // nsIRequestObserver methods:
+  NS_DECL_NSIREQUESTOBSERVER
 
   // nsIStreamListener methods:
   NS_DECL_NSISTREAMLISTENER
@@ -178,16 +177,16 @@ ImageListener::OnStartRequest(nsIRequest* request, nsISupports *ctxt)
 
 NS_IMETHODIMP
 ImageListener::OnStopRequest(nsIRequest* request, nsISupports *ctxt,
-                             nsresult status, const PRUnichar *errorMsg)
+                             nsresult status)
 {
   if(mDocument){
-    mDocument->EndLayout(ctxt, status, errorMsg);
+    mDocument->EndLayout(ctxt, status);
   }
 
   if (nsnull == mNextStream) {
     return NS_ERROR_FAILURE;
   }
-  return mNextStream->OnStopRequest(request, ctxt, status, errorMsg);
+  return mNextStream->OnStopRequest(request, ctxt, status);
 }
 
 NS_IMETHODIMP
@@ -428,8 +427,7 @@ nsImageDocument::StartLayout()
 
 nsresult
 nsImageDocument::EndLayout(nsISupports *ctxt, 
-                           nsresult status, 
-                           const PRUnichar *errorMsg)
+                           nsresult status)
 {
   // Layout has completed: now update the title
   UpdateTitle();

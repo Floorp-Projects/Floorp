@@ -1191,7 +1191,7 @@ public:
     }
 
     NS_IMETHOD OnStopRequest(nsIRequest *request, nsISupports *ctxt,
-                             nsresult aStatus, const PRUnichar* aStatusArg) {
+                             nsresult aStatus) {
         if (NS_FAILED(aStatus)) {
             mCacheEntry->SetFlag(nsCachedNetData::TRUNCATED_CONTENT);
         } else {
@@ -1208,7 +1208,7 @@ public:
         // Tell any stream-as-file observers that the file has been completely written
         mCacheEntry->Notify(nsIStreamAsFileObserver::NOTIFY_AVAILABLE, NS_OK);
 
-        return mOriginalListener->OnStopRequest(request, ctxt, aStatus, aStatusArg);
+        return mOriginalListener->OnStopRequest(request, ctxt, aStatus);
     }
 
     NS_IMETHOD OnDataAvailable(nsIRequest *request, nsISupports *ctxt,
@@ -1310,7 +1310,7 @@ private:
 };
 
 
-NS_IMPL_THREADSAFE_ISUPPORTS3(InterceptStreamListener, nsIInputStream, nsIStreamListener, nsIStreamObserver)
+NS_IMPL_THREADSAFE_ISUPPORTS3(InterceptStreamListener, nsIInputStream, nsIStreamListener, nsIRequestObserver)
 
 NS_IMETHODIMP
 nsCachedNetData::InterceptAsyncRead(nsIStreamListener *aOriginalListener,

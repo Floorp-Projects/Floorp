@@ -1399,7 +1399,7 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
         rv = NS_ERROR_IN_PROGRESS;
     
     nsCOMPtr<nsIStreamListener> listener;
-    nsCOMPtr<nsIStreamObserver> observer;
+    nsCOMPtr<nsIRequestObserver> observer;
 
     if (NS_SUCCEEDED(rv)) {
         // Proxy the stream listener and observer methods by default.
@@ -1413,7 +1413,7 @@ nsSocketTransport::AsyncRead(nsIStreamListener* aListener,
                 observer = do_QueryInterface(listener);
             }
             else {
-                rv = NS_NewStreamObserverProxy(getter_AddRefs(observer), aListener);
+                rv = NS_NewRequestObserverProxy(getter_AddRefs(observer), aListener);
                 listener = aListener;
             }
         }
@@ -1476,7 +1476,7 @@ nsSocketTransport::AsyncWrite(nsIStreamProvider* aProvider,
         rv = NS_ERROR_IN_PROGRESS;
 
     nsCOMPtr<nsIStreamProvider> provider;
-    nsCOMPtr<nsIStreamObserver> observer;
+    nsCOMPtr<nsIRequestObserver> observer;
     
     if (NS_SUCCEEDED(rv)) {
         // Proxy the stream provider and observer methods by default.
@@ -1490,7 +1490,7 @@ nsSocketTransport::AsyncWrite(nsIStreamProvider* aProvider,
                 observer = do_QueryInterface(provider);
             }
             else {
-                rv = NS_NewStreamObserverProxy(getter_AddRefs(observer), aProvider);
+                rv = NS_NewRequestObserverProxy(getter_AddRefs(observer), aProvider);
                 provider = aProvider;
             }
         }
@@ -2429,7 +2429,7 @@ nsSocketRequest::OnStop()
             mObserver->OnStartRequest(this, mContext);
             mStartFired = PR_TRUE;
         }
-        mObserver->OnStopRequest(this, mContext, mStatus, nsnull);
+        mObserver->OnStopRequest(this, mContext, mStatus);
         mObserver = 0;
         mStopFired = PR_TRUE;
     }
@@ -2462,6 +2462,7 @@ nsSocketRequest::GetStatus(nsresult *aResult)
 NS_IMETHODIMP
 nsSocketRequest::Cancel(nsresult status)
 {
+    NS_BREAK();
     if (!mTransport)
         return NS_ERROR_NOT_INITIALIZED;
     LOG(("nsSocketRequest: Cancel [this=%x status=%x]\n", this, status));
@@ -2506,6 +2507,32 @@ nsSocketRequest::GetTransport(nsITransport **result)
     NS_ENSURE_ARG_POINTER(result);
     NS_IF_ADDREF(*result = mTransport);
     return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketRequest::GetLoadGroup(nsILoadGroup **loadGroup)
+{
+    *loadGroup = nsnull;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketRequest::SetLoadGroup(nsILoadGroup *loadGroup)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP
+nsSocketRequest::GetLoadFlags(nsLoadFlags *loadFlags)
+{
+    *loadFlags = nsIRequest::LOAD_NORMAL;
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSocketRequest::SetLoadFlags(nsLoadFlags loadFlags)
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 //

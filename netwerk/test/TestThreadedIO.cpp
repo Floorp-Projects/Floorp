@@ -119,7 +119,7 @@ TestListener::~TestListener() {
     printf( "TestListener dtor called on thread %d\n", mThreadNo );
 }
 
-NS_IMPL_ISUPPORTS2( TestListener, nsIStreamListener, nsIStreamObserver );
+NS_IMPL_ISUPPORTS2( TestListener, nsIStreamListener, nsIRequestObserver );
 
 NS_IMETHODIMP
 TestListener::OnStartRequest( nsIChannel *aChannel, nsISupports *aContext ) {

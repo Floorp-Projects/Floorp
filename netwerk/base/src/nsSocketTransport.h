@@ -392,7 +392,7 @@ public:
     PRBool IsCanceled() { return mCanceled; }
 
     void SetTransport(nsSocketTransport *);
-    void SetObserver(nsIStreamObserver *obs) { mObserver = obs; }
+    void SetObserver(nsIRequestObserver *obs) { mObserver = obs; }
     void SetContext(nsISupports *ctx) { mContext = ctx; }
     void SetStatus(nsresult status) { mStatus = status; }
 
@@ -402,14 +402,14 @@ public:
     virtual nsresult OnStop();
 
 protected:
-    nsSocketTransport          *mTransport;
-    nsCOMPtr<nsIStreamObserver> mObserver;
-    nsCOMPtr<nsISupports>       mContext;
-    nsresult                    mStatus;
-    PRIntn                      mSuspendCount;
-    PRPackedBool                mCanceled;
-    PRPackedBool                mStartFired;
-    PRPackedBool                mStopFired;
+    nsSocketTransport           *mTransport;
+    nsCOMPtr<nsIRequestObserver> mObserver;
+    nsCOMPtr<nsISupports>        mContext;
+    nsresult                     mStatus;
+    PRIntn                       mSuspendCount;
+    PRPackedBool                 mCanceled;
+    PRPackedBool                 mStartFired;
+    PRPackedBool                 mStopFired;
 };
 
 /**

@@ -3776,7 +3776,7 @@ nsEnderDocumentObserver::QueryInterface(const nsIID& aIID,
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(NS_GET_IID(nsIDocumentObserver))) {
-    *aInstancePtr = (void*) ((nsIStreamObserver*)this);
+    *aInstancePtr = (void*) ((nsIRequestObserver*)this);
     AddRef();
     return NS_OK;
   }

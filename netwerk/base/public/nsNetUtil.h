@@ -29,6 +29,7 @@
 #include "nsIOutputStream.h"
 #include "nsIStreamListener.h"
 #include "nsIStreamProvider.h"
+#include "nsIRequestObserverProxy.h"
 #include "nsILoadGroup.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsString.h"
@@ -96,7 +97,7 @@ NS_OpenURI(nsIChannel* *result,
            nsIIOService* ioService = nsnull,    // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
+           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL))
 {
     nsresult rv;
 
@@ -119,8 +120,8 @@ NS_OpenURI(nsIChannel* *result,
         rv = channel->SetNotificationCallbacks(notificationCallbacks);
         if (NS_FAILED(rv)) return rv;
     }
-    if (loadAttributes != nsIChannel::LOAD_NORMAL) {
-        rv = channel->SetLoadAttributes(loadAttributes);
+    if (loadAttributes != nsIRequest::LOAD_NORMAL) {
+        rv = channel->SetLoadFlags(loadAttributes);
         if (NS_FAILED(rv)) return rv;
     }
 
@@ -140,7 +141,7 @@ NS_OpenURI(nsIInputStream* *result,
            nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
+           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
@@ -164,7 +165,7 @@ NS_OpenURI(nsIStreamListener* aConsumer,
            nsIIOService* ioService = nsnull,     // pass in nsIIOService to optimize callers
            nsILoadGroup* loadGroup = nsnull,
            nsIInterfaceRequestor* notificationCallbacks = nsnull,
-           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
+           nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIChannel> channel;
@@ -286,7 +287,7 @@ NS_NewInputStreamChannel(nsIChannel **result,
 }
 
 inline nsresult
-NS_NewLoadGroup(nsILoadGroup* *result, nsIStreamObserver* obs)
+NS_NewLoadGroup(nsILoadGroup* *result, nsIRequestObserver* obs)
 {
     nsresult rv;
     nsCOMPtr<nsILoadGroup> group;
@@ -295,7 +296,7 @@ NS_NewLoadGroup(nsILoadGroup* *result, nsIStreamObserver* obs)
                                             NS_GET_IID(nsILoadGroup), 
                                             getter_AddRefs(group));
     if (NS_FAILED(rv)) return rv;
-    rv = group->Init(obs);
+    rv = group->SetGroupObserver(obs);
     if (NS_FAILED(rv)) return rv;
 
     *result = group;
@@ -312,7 +313,7 @@ NS_NewDownloader(nsIDownloader* *result,
                    PRBool synchronous = PR_FALSE,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
+                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIDownloader> downloader;
@@ -337,7 +338,7 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
                    nsISupports* context = nsnull,
                    nsILoadGroup* loadGroup = nsnull,
                    nsIInterfaceRequestor* notificationCallbacks = nsnull,
-                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIChannel::LOAD_NORMAL))
+                   nsLoadFlags loadAttributes = NS_STATIC_CAST(nsLoadFlags, nsIRequest::LOAD_NORMAL))
 {
     nsresult rv;
     nsCOMPtr<nsIStreamLoader> loader;
@@ -357,19 +358,19 @@ NS_NewStreamLoader(nsIStreamLoader* *result,
 }
 
 inline nsresult
-NS_NewStreamObserverProxy(nsIStreamObserver **aResult,
-                          nsIStreamObserver *aObserver,
-                          nsIEventQueue *aEventQ=nsnull)
+NS_NewRequestObserverProxy(nsIRequestObserver **aResult,
+                           nsIRequestObserver *aObserver,
+                           nsIEventQueue *aEventQ=nsnull)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 
     nsresult rv;
-    nsCOMPtr<nsIStreamObserverProxy> proxy;
-    static NS_DEFINE_CID(kStreamObserverProxyCID, NS_STREAMOBSERVERPROXY_CID);
+    nsCOMPtr<nsIRequestObserverProxy> proxy;
+    static NS_DEFINE_CID(kRequestObserverProxyCID, NS_REQUESTOBSERVERPROXY_CID);
 
-    rv = nsComponentManager::CreateInstance(kStreamObserverProxyCID,
+    rv = nsComponentManager::CreateInstance(kRequestObserverProxyCID,
                                             nsnull,
-                                            NS_GET_IID(nsIStreamObserverProxy),
+                                            NS_GET_IID(nsIRequestObserverProxy),
                                             getter_AddRefs(proxy));
     if (NS_FAILED(rv)) return rv;
 
@@ -434,7 +435,7 @@ NS_NewStreamProviderProxy(nsIStreamProvider **aResult,
 inline nsresult
 NS_NewSimpleStreamListener(nsIStreamListener **aResult,
                            nsIOutputStream *aSink,
-                           nsIStreamObserver *aObserver=nsnull)
+                           nsIRequestObserver *aObserver=nsnull)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 
@@ -457,7 +458,7 @@ NS_NewSimpleStreamListener(nsIStreamListener **aResult,
 inline nsresult
 NS_NewSimpleStreamProvider(nsIStreamProvider **aResult,
                            nsIInputStream *aSource,
-                           nsIStreamObserver *aObserver=nsnull)
+                           nsIRequestObserver *aObserver=nsnull)
 {
     NS_ENSURE_ARG_POINTER(aResult);
 
@@ -477,10 +478,11 @@ NS_NewSimpleStreamProvider(nsIStreamProvider **aResult,
     return NS_OK;
 }
 
+/*
 // Depracated, prefer NS_NewStreamObserverProxy
 inline nsresult
-NS_NewAsyncStreamObserver(nsIStreamObserver **result,
-                          nsIStreamObserver *receiver,
+NS_NewAsyncStreamObserver(nsIRequestObserver **result,
+                          nsIRequestObserver *receiver,
                           nsIEventQueue *eventQueue)
 {
     nsresult rv;
@@ -497,6 +499,7 @@ NS_NewAsyncStreamObserver(nsIStreamObserver **result,
     NS_ADDREF(*result = obs);
     return NS_OK;
 }
+*/
 
 // Depracated, prefer NS_NewStreamListenerProxy
 inline nsresult
@@ -558,7 +561,7 @@ NS_AsyncWriteFromStream(nsIRequest **aRequest,
                         PRUint32 aOffset=0,
                         PRUint32 aCount=0,
                         PRUint32 aFlags=0,
-                        nsIStreamObserver *aObserver=NULL,
+                        nsIRequestObserver *aObserver=NULL,
                         nsISupports *aContext=NULL)
 {
     NS_ENSURE_ARG_POINTER(aTransport);
@@ -600,7 +603,7 @@ NS_AsyncReadToStream(nsIRequest **aRequest,
                      PRUint32 aOffset=0,
                      PRUint32 aCount=0,
                      PRUint32 aFlags=0,
-                     nsIStreamObserver *aObserver=NULL,
+                     nsIRequestObserver *aObserver=NULL,
                      nsISupports *aContext=NULL)
 {
     NS_ENSURE_ARG_POINTER(aTransport);

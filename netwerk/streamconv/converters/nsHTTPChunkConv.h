@@ -74,7 +74,7 @@ public:
     // nsISupports methods
     NS_DECL_ISUPPORTS
 
-	NS_DECL_NSISTREAMOBSERVER
+	NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSISTREAMLISTENER
 
     // nsIStreamConverter methods

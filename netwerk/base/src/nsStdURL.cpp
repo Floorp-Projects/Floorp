@@ -37,6 +37,7 @@
 #include "nsIServiceManager.h"
 #include "nsILocalFile.h"
 #include "nsEscape.h"
+#include "nsNetCID.h"
 
 #if defined(XP_PC) && !defined(XP_OS2)
 #include <windows.h>

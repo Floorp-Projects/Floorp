@@ -29,7 +29,7 @@
 #include "nsIDocumentLoader.h"
 #include "nsIWebProgress.h"
 #include "nsIWebProgressListener.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 #include "nsWeakReference.h"
 #include "nsILoadGroup.h"
 #include "nsISupportsArray.h"
@@ -49,7 +49,7 @@ struct nsRequestInfo;
  ****************************************************************************/
 
 class nsDocLoaderImpl : public nsIDocumentLoader, 
-                        public nsIStreamObserver,
+                        public nsIRequestObserver,
                         public nsSupportsWeakReference,
                         public nsIProgressEventSink,
                         public nsIWebProgress,
@@ -74,8 +74,8 @@ public:
 
     NS_DECL_NSISECURITYEVENTSINK
 
-    // nsIStreamObserver methods: (for observing the load group)
-    NS_DECL_NSISTREAMOBSERVER
+    // nsIRequestObserver methods: (for observing the load group)
+    NS_DECL_NSIREQUESTOBSERVER
     NS_DECL_NSIWEBPROGRESS
 
     NS_DECL_NSIINTERFACEREQUESTOR

@@ -58,7 +58,7 @@ NS_INTERFACE_MAP_BEGIN(CWebBrowserContainer)
 	NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 	NS_INTERFACE_MAP_ENTRY(nsIDocShellTreeOwner)
     NS_INTERFACE_MAP_ENTRY(nsIEmbeddingSiteWindow)
-    NS_INTERFACE_MAP_ENTRY(nsIStreamObserver)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIDocumentLoaderObserver)
 	NS_INTERFACE_MAP_ENTRY(nsIWebProgressListener)
 	NS_INTERFACE_MAP_ENTRY(nsIPrompt)
@@ -673,7 +673,7 @@ CWebBrowserContainer::ExitModalEventLoop(nsresult aStatus)
 }
 
 ///////////////////////////////////////////////////////////////////////////////
-// nsIStreamObserver implementation
+// nsIRequestObserver implementation
 
 
 NS_IMETHODIMP

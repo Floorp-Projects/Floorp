@@ -34,6 +34,7 @@
 #include "nsINodeInfo.h"
 #include "nsIURL.h"
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 #include "nsIServiceManager.h"
 #include "nsXPIDLString.h"
 #include "nsIDocShell.h"

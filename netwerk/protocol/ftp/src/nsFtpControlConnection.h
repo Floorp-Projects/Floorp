@@ -37,7 +37,7 @@ class nsFtpControlConnection  : public nsIStreamListener
 public:
 	NS_DECL_ISUPPORTS
     NS_DECL_NSISTREAMLISTENER
-    NS_DECL_NSISTREAMOBSERVER
+    NS_DECL_NSIREQUESTOBSERVER
 
 	nsFtpControlConnection(nsITransport* socketTransport);
 	virtual ~nsFtpControlConnection();

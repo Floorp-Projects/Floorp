@@ -17,7 +17,6 @@
  */
 
 #include "nsIStreamListener.h"
-#include "nsIStreamObserver.h"
 #include "nsIServiceManager.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
@@ -258,7 +257,7 @@ protected:
     nsCOMPtr<nsIChannel> mChannel;
 };
 
-NS_IMPL_ISUPPORTS2(nsReader, nsIStreamListener, nsIStreamObserver)
+NS_IMPL_ISUPPORTS2(nsReader, nsIStreamListener, nsIRequestObserver)
 
 static nsIEventQueue* eventQueue;
 

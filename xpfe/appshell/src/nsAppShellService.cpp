@@ -53,7 +53,7 @@
 #endif
 
 #include "nsWidgetsCID.h"
-#include "nsIStreamObserver.h"
+#include "nsIRequestObserver.h"
 
 #include "nsMetaCharsetCID.h"
 #include "nsIMetaCharsetService.h"

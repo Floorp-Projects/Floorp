@@ -46,6 +46,7 @@
 #include "nsITimer.h"
 #include "nsIDOMDocument.h"
 #include "nsIURL.h"
+#include "nsIChannel.h"
 #include "nsIFileWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsIComponentManager.h"
@@ -116,6 +117,7 @@
 
 #endif
 #include "nsIIOService.h"
+#include "nsNetCID.h"
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
 #if defined(ClientWallet) || defined(SingleSignon)

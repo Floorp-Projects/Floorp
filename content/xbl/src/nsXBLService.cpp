@@ -199,7 +199,7 @@ class nsXBLStreamListener : public nsIStreamListener, public nsIDOMLoadListener
 public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISTREAMLISTENER
-  NS_DECL_NSISTREAMOBSERVER
+  NS_DECL_NSIREQUESTOBSERVER
 
   nsresult Load(nsIDOMEvent* aEvent);
   nsresult Unload(nsIDOMEvent* aEvent) { return NS_OK; };
@@ -230,7 +230,7 @@ nsIXULPrototypeCache* nsXBLStreamListener::gXULCache = nsnull;
 PRInt32 nsXBLStreamListener::gRefCnt = 0;
 
 /* Implementation file */
-NS_IMPL_ISUPPORTS4(nsXBLStreamListener, nsIStreamListener, nsIStreamObserver, nsIDOMLoadListener, nsIDOMEventListener)
+NS_IMPL_ISUPPORTS4(nsXBLStreamListener, nsIStreamListener, nsIRequestObserver, nsIDOMLoadListener, nsIDOMEventListener)
 
 nsXBLStreamListener::nsXBLStreamListener(nsXBLService* aXBLService,
                                          nsIStreamListener* aInner, nsIDocument* aDocument,
@@ -283,11 +283,11 @@ nsXBLStreamListener::OnStartRequest(nsIRequest* request, nsISupports* aCtxt)
 }
 
 NS_IMETHODIMP 
-nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt, nsresult aStatus, const PRUnichar* aStatusArg)
+nsXBLStreamListener::OnStopRequest(nsIRequest* request, nsISupports* aCtxt, nsresult aStatus)
 {
   nsresult rv = NS_OK;
   if (mInner) {
-     rv = mInner->OnStopRequest(request, aCtxt, aStatus, aStatusArg);
+     rv = mInner->OnStopRequest(request, aCtxt, aStatus);
   }
 
   if (NS_FAILED(rv) || NS_FAILED(aStatus))
@@ -1303,7 +1303,7 @@ nsXBLService::FetchBindingDocument(nsIContent* aBoundElement, nsIDocument* aBoun
     if (NS_FAILED(rv))
         break;
   }
-  listener->OnStopRequest(request, nsnull, NS_OK, nsnull);
+  listener->OnStopRequest(request, nsnull, NS_OK);
 
   // don't leak proxy!
   proxy->Close();

@@ -73,7 +73,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS5(nsGopherChannel,
                               nsIChannel,
                               nsIRequest,
                               nsIStreamListener,
-                              nsIStreamObserver,
+                              nsIRequestObserver,
                               nsIProxy);
 
 nsresult
@@ -302,13 +302,6 @@ nsGopherChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsGopherChannel::SetURI(nsIURI* aURI)
-{
-    mUrl = aURI;
-    return NS_OK;
-}
-
-NS_IMETHODIMP
 nsGopherChannel::Open(nsIInputStream **_retval)
 {
     nsresult rv = NS_OK;
@@ -333,7 +326,7 @@ nsGopherChannel::Open(nsIInputStream **_retval)
     if (NS_FAILED(rv)) return rv;
     
     mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadAttributes & LOAD_BACKGROUND));
+                                         (mLoadFlags & LOAD_BACKGROUND));
     
     return mTransport->OpenInputStream(0, (PRUint32)-1, 0, _retval);
 }
@@ -373,26 +366,26 @@ nsGopherChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
     if (NS_FAILED(rv)) return rv;
 
     mTransport->SetNotificationCallbacks(mCallbacks,
-                                         (mLoadAttributes & LOAD_BACKGROUND));    
+                                         (mLoadFlags & LOAD_BACKGROUND));    
     
     return SendRequest(mTransport);
 }
 
 NS_IMETHODIMP
-nsGopherChannel::GetLoadAttributes(PRUint32 *aLoadAttributes)
+nsGopherChannel::GetLoadFlags(PRUint32 *aLoadFlags)
 {
     if (mProxyChannel)
-        mProxyChannel->GetLoadAttributes(aLoadAttributes);
-    *aLoadAttributes = mLoadAttributes;
+        mProxyChannel->GetLoadFlags(aLoadFlags);
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsGopherChannel::SetLoadAttributes(PRUint32 aLoadAttributes)
+nsGopherChannel::SetLoadFlags(PRUint32 aLoadFlags)
 {
     if (mProxyChannel)
-        mProxyChannel->SetLoadAttributes(aLoadAttributes);
-    mLoadAttributes = aLoadAttributes;
+        mProxyChannel->SetLoadFlags(aLoadFlags);
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 
@@ -531,7 +524,7 @@ nsGopherChannel::GetSecurityInfo(nsISupports * *aSecurityInfo)
     return NS_OK;
 }
 
-// nsIStreamObserver methods
+// nsIRequestObserver methods
 NS_IMETHODIMP
 nsGopherChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 {
@@ -552,7 +545,7 @@ nsGopherChannel::OnStartRequest(nsIRequest *aRequest, nsISupports *aContext)
 
 NS_IMETHODIMP
 nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
-                               nsresult aStatus, const PRUnichar* aStatusArg)
+                               nsresult aStatus)
 {
     PR_LOG(gGopherLog,
            PR_LOG_DEBUG,
@@ -566,12 +559,12 @@ nsGopherChannel::OnStopRequest(nsIRequest* aRequest, nsISupports* aContext,
             aContext=mResponseContext;
 
         if (mListener) {
-            rv = mListener->OnStopRequest(this, aContext, aStatus, aStatusArg);
+            rv = mListener->OnStopRequest(this, aContext, aStatus);
             if (NS_FAILED(rv)) return rv;
         }
 
         if (mLoadGroup) {
-            rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus, aStatusArg);
+            rv = mLoadGroup->RemoveRequest(this, nsnull, aStatus);
         }
         
         mTransport = 0;

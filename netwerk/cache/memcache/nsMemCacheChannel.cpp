@@ -76,7 +76,7 @@ public:
       if (NS_SUCCEEDED(mAbortStatus)) {
         mAbortStatus = status;
         return mEventQueueStreamListener ?
-            mEventQueueStreamListener->OnStopRequest(mChannel, mContext, status, nsnull):
+            mEventQueueStreamListener->OnStopRequest(mChannel, mContext, status):
             status;
       } else {
         // Cancel has already been called...  Do not fire another OnStopRequest!
@@ -140,14 +140,14 @@ public:
 
     NS_IMETHOD
     OnStopRequest(nsIRequest *request, nsISupports *aContext,
-                  nsresult aStatus, const PRUnichar* aStatusArg) {
+                  nsresult aStatus) {
         nsresult rv = NS_OK;
 
 		
 		NS_ASSERTION(mDownstreamListener, "no downstream listener");
 
 		if (mDownstreamListener) {
-            rv = mDownstreamListener->OnStopRequest(mChannel, aContext, aStatus, aStatusArg);
+            rv = mDownstreamListener->OnStopRequest(mChannel, aContext, aStatus);
             mDownstreamListener = 0;
 		}
 		// Tricky: causes this instance to be free'ed because mEventQueueStreamListener
@@ -253,7 +253,7 @@ protected:
     nsresult
     Fail(void) {
         mAbortStatus = NS_BINDING_ABORTED;
-        return mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_FAILED, nsnull);
+        return mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_BINDING_FAILED);
     }
 
     // If more data remains in the source stream that the downstream consumer
@@ -276,7 +276,7 @@ protected:
             mAvailable += size;
             return rv;
         } else {
-            rv = mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_OK, nsnull);
+            rv = mEventQueueStreamListener->OnStopRequest(mChannel, mContext, NS_OK);
             AsyncReadStreamAdaptor* thisAlias = this;
             NS_RELEASE(thisAlias);
             return rv;
@@ -300,7 +300,7 @@ private:
 };
 
 NS_IMPL_ISUPPORTS3(AsyncReadStreamAdaptor, nsIInputStream, 
-                   nsIStreamListener, nsIStreamObserver)
+                   nsIStreamListener, nsIRequestObserver)
 
 // The only purpose of this output stream wrapper is to adjust the cache's
 // overall occupancy as new data flows into the cache entry.
@@ -386,7 +386,7 @@ NS_IMPL_THREADSAFE_ISUPPORTS1(MemCacheWriteStreamWrapper, nsIOutputStream)
 
 nsMemCacheChannel::nsMemCacheChannel(nsMemCacheRecord *aRecord, nsILoadGroup *aLoadGroup)
     : mRecord(aRecord), mStatus(NS_OK),
-      mLoadAttributes(nsIChannel::LOAD_NORMAL)
+      mLoadFlags(nsIRequest::LOAD_NORMAL)
 {
     NS_INIT_REFCNT();
     mRecord->mNumChannels++;
@@ -470,24 +470,16 @@ nsMemCacheChannel::GetURI(nsIURI* *aURI)
 }
 
 NS_IMETHODIMP
-nsMemCacheChannel::SetURI(nsIURI* aURI)
-{
-    // Not required to be implemented, since it is implemented by cache manager
-    NS_NOTREACHED("nsMemCacheChannel::SetURI");
-    return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
 nsMemCacheChannel::Open(nsIInputStream **aResult)
 {
-    return OpenInputStream(0, -1, 0, aResult);
+    return OpenInputStream(0, PRUint32(-1), 0, aResult);
 }
 
 NS_IMETHODIMP
 nsMemCacheChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *aContext)
 {
     nsCOMPtr<nsIRequest> req;
-    return AsyncRead(aListener, aContext, 0, -1, 0, getter_AddRefs(req));
+    return AsyncRead(aListener, aContext, 0, PRUint32(-1), 0, getter_AddRefs(req));
 }
 
 NS_IMETHODIMP
@@ -569,16 +561,16 @@ nsMemCacheChannel::SetContentLength(PRInt32 aContentLength)
 }
 
 NS_IMETHODIMP
-nsMemCacheChannel::GetLoadAttributes(nsLoadFlags *aLoadAttributes)
+nsMemCacheChannel::GetLoadFlags(nsLoadFlags *aLoadFlags)
 {
-    *aLoadAttributes = mLoadAttributes;
+    *aLoadFlags = mLoadFlags;
     return NS_OK;
 }
 
 NS_IMETHODIMP
-nsMemCacheChannel::SetLoadAttributes(nsLoadFlags aLoadAttributes)
+nsMemCacheChannel::SetLoadFlags(nsLoadFlags aLoadFlags)
 {
-    mLoadAttributes = aLoadAttributes;
+    mLoadFlags = aLoadFlags;
     return NS_OK;
 }
 

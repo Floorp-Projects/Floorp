@@ -52,7 +52,7 @@ public:
    CParserContext(  nsScanner* aScanner,
                     void* aKey=0, 
                     eParserCommands aCommand=eViewNormal,
-                    nsIStreamObserver* aListener=0, 
+                    nsIRequestObserver* aListener=0, 
                     nsIDTD *aDTD=0, 
                     eAutoDetectResult aStatus=eUnknownDetect, 
                     PRBool aCopyUnused=PR_FALSE); 
@@ -79,7 +79,7 @@ public:
     nsIDTD*             mValidator;
 
     char*               mTransferBuffer;
-    nsIStreamObserver*  mListener;
+    nsIRequestObserver*  mListener;
 
     void*               mKey;
     PRUint32            mTransferBufferSize;

@@ -30,6 +30,7 @@
 #include "nsIAboutModule.h"
 #include "nsString.h"
 #include "nsReadableUtils.h"
+#include "nsNetCID.h"
 
 static NS_DEFINE_CID(kSimpleURICID,     NS_SIMPLEURI_CID);
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
