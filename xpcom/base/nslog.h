@@ -208,7 +208,9 @@ inline void nsNoop(...) {}
 #define PR_NewLogModule                   #error use_NS_IMPL_LOG_instead
 #undef  PR_ASSERT
 #define PR_ASSERT(x)                      NS_ASSERTION(x, #x)
+#undef printf
 #define printf                            use_NS_LOG_PRINTF_instead
+#undef fprintf
 #define fprintf                           use_NS_LOG_PRINTF_instead
 
 ////////////////////////////////////////////////////////////////////////////////
