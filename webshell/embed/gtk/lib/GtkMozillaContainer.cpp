@@ -362,7 +362,8 @@ GtkMozillaContainer::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupC
                                  const nsString& aPopupType, 
                                  const nsString& anAnchorAlignment,
                                  const nsString& aPopupAlignment,
-                                 nsIDOMWindow* aWindow)
+                                 nsIDOMWindow* aWindow,
+                                 nsIDOMWindow** outPopup)
 {
   printf("CreatePopup\n");
   return NS_ERROR_FAILURE;

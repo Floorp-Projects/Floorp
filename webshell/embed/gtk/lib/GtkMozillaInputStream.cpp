@@ -16,6 +16,9 @@
  */
 #include "nscore.h"
 #include "GtkMozillaInputStream.h"
+
+#include "stdio.h"
+
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 static NS_DEFINE_IID(kIInputStreamIID, NS_IINPUTSTREAM_IID);
 static NS_DEFINE_IID(kIBaseStreamIID, NS_IBASESTREAM_IID);
