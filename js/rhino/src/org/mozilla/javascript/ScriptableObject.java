@@ -1718,7 +1718,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
         if (slots != null) {
             int start = (index & 0x7fffffff) % slots.length;
             int i = start;
-            for (;;) {
+            do {
                 Slot slot = slots[i];
                 if (slot == null)
                     break;
@@ -1730,9 +1730,7 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 }
                 if (++i == slots.length)
                     i = 0;
-                if (i == start)
-                    throw new IllegalStateException();
-            }
+            } while (i != start);
         }
         return -1;
     }
@@ -1811,10 +1809,15 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
                 // another thread manages to put just removed slot
                 // into lastAccess cache.
                 slot.wasDeleted = (byte)1;
-                slots[i] = REMOVED;
-                count--;
                 if (slot == lastAccess) {
                     lastAccess = REMOVED;
+                }
+                count--;
+                if (count != 0) {
+                    slots[i] = REMOVED;
+                } else {
+                    // With no slots it is OK to mark with null.
+                    slots[i] = null;
                 }
             }
         }
