@@ -163,6 +163,10 @@ nsMsgStatusFeedback::ShowStatusString(const PRUnichar *status)
 NS_IMETHODIMP
 nsMsgStatusFeedback::ShowProgress(PRInt32 percentage)
 {
+	nsString strPercentage;
+	
+	strPercentage.Append(percentage, 10);
+	setAttribute( mWebShell, "Messenger:LoadingProgress", "busy", strPercentage);
 	return NS_OK;
 }
 
@@ -192,7 +196,16 @@ nsMsgStatusFeedback::StopMeteors()
 
 void nsMsgStatusFeedback::SetWebShell(nsIWebShell *shell, nsIDOMWindow *aWindow)
 {
-	mWebShell = shell;
+	if (aWindow)
+	{
+		nsCOMPtr<nsIScriptGlobalObject>
+			globalScript(do_QueryInterface(aWindow));
+		nsCOMPtr<nsIWebShell> webshell, rootWebshell;
+		if (globalScript)
+			globalScript->GetWebShell(getter_AddRefs(webshell));
+		if (webshell)
+			webshell->GetRootWebShell(*getter_AddRefs(mWebShell));
+	}
 	mWindow = aWindow;
 }
 
