@@ -712,54 +712,6 @@ protected:
     nsCOMPtr<nsIFileSpecOutputStream>     mFileOutputStream;
 }; // class nsOutputFileStream
 
-//========================================================================================
-class NS_COM nsOutputConsoleStream
-// Please read the comments at the top of this file
-//========================================================================================
-:	public nsOutputFileStream
-{
-public:
-
-                                      nsOutputConsoleStream()
-                                      {
-                                          nsISupports* stream;
-                                          if (NS_FAILED(NS_NewOutputConsoleStream(&stream)))
-                                              return;
-                                          mFile = do_QueryInterface(stream);
-                                          mOutputStream = do_QueryInterface(stream);
-                                          mFileOutputStream = do_QueryInterface(stream);
-                                          NS_RELEASE(stream);
-                                      }
-
-    // Output streamers.  Unfortunately, they don't inherit!
-    nsOutputStream&                   operator << (const char* buf)
-                                        { return nsOutputStream::operator << (buf); }
-    nsOutputStream&                   operator << (char ch)
-                                        { return nsOutputStream::operator << (ch); }
-    nsOutputStream&                   operator << (short val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (unsigned short val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (long val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (unsigned long val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (int val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (unsigned int val)
-                                        { return nsOutputStream::operator << (val); }
-    nsOutputStream&                   operator << (nsOutputStream& (*pf)(nsOutputStream&))
-                                        { return nsOutputStream::operator << (pf); }
-
-
-private:
-
-    // private and unimplemented to disallow copies and assigns
-                                      nsOutputConsoleStream(const nsOutputConsoleStream& rhs);
-    nsOutputConsoleStream&            operator=(const nsOutputConsoleStream& rhs);
-
-
-}; // class nsOutputConsoleStream
 
 //========================================================================================
 class NS_COM nsIOFileStream

@@ -39,7 +39,6 @@ PROG5 = .\$(OBJDIR)\TestServMgr.exe
 PROG7 = .\$(OBJDIR)\TestAtoms.exe
 PROG8 = .\$(OBJDIR)\nsIFileTest.exe
 PROG9 = .\$(OBJDIR)\TestCRT.exe
-PROG10 = .\$(OBJDIR)\FilesTest.exe
 PROG12 = .\$(OBJDIR)\TestAutoLock.exe
 PROG13 = .\$(OBJDIR)\TestThreads.exe
 PROG14 = .\$(OBJDIR)\TestObserverService.exe
@@ -104,7 +103,6 @@ $(PROG5): $(OBJDIR) TestServMgr.cpp
 $(PROG7): $(OBJDIR) TestAtoms.cpp
 $(PROG8): $(OBJDIR) nsIFileTest.cpp
 $(PROG9): $(OBJDIR) TestCRT.cpp
-$(PROG10): $(OBJDIR) FilesTest.cpp
 $(PROG12): $(OBJDIR) TestAutoLock.cpp
 $(PROG13): $(OBJDIR) TestThreads.cpp
 $(PROG14): $(OBJDIR) TestObserverService.cpp
