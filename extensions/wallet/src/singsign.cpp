@@ -1937,7 +1937,7 @@ si_RememberSignonData
         Wallet_GiveCaveat(window, nsnull);
         for (j=0; j<signonData->Count(); j++) {
           data2 = NS_STATIC_CAST(si_SignonDataStruct*, signonData->ElementAt(j));
-          nsAutoString value = data2->value;
+          nsAutoString value(data2->value);
           if (NS_FAILED(si_Encrypt(value, data2->value))) {
             return;
           }
@@ -2256,7 +2256,7 @@ SINGSIGN_PromptUsernameAndPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm = NS_ConvertToString(passwordRealm);   // XXX hack
+    nsString realm(NS_ConvertToString(passwordRealm));   // XXX hack
     return dialog->PromptUsernameAndPassword(dialogTitle, text, realm.GetUnicode(), 
                                              savePassword, user, pwd, pressedOK);
   }
@@ -2298,7 +2298,7 @@ SINGSIGN_PromptPassword
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm = NS_ConvertToString(passwordRealm);      // XXX hack
+    nsString realm(NS_ConvertToString(passwordRealm));      // XXX hack
     res = dialog->PromptPassword(dialogTitle,
                                  text, realm.GetUnicode(), savePassword,
                                  pwd, pressedOK);
@@ -2345,7 +2345,7 @@ SINGSIGN_Prompt
 
   /* do only the dialog if signon preference is not enabled */
   if (!si_GetSignonRememberingPref()){
-    nsString realm = NS_ConvertToString(passwordRealm);   // XXX hack
+    nsString realm(NS_ConvertToString(passwordRealm));   // XXX hack
     res = dialog->Prompt(dialogTitle, text, realm.GetUnicode(), savePassword, defaultText, resultText, pressedOK);
     return res;
   }
