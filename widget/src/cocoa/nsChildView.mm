@@ -67,6 +67,8 @@
 #include <unistd.h>
 #include "nsCursorManager.h"
 
+#define USE_OPAQUE_VIEWS  1
+
 #define NSAppKitVersionNumber10_2 663
 
 // category of NSView methods to quiet warnings
@@ -117,6 +119,8 @@
 - (BOOL)getIsPluginView;
 
 - (BOOL)childViewHasPlugin;
+
+- (void)flushRect:(NSRect)inRect;
 
 #if USE_CLICK_HOLD_CONTEXTMENU
  // called on a timer two seconds after a mouse down to see if we should display
@@ -2386,7 +2390,11 @@ nsChildView::Idle()
 // But we can't. :(
 - (BOOL)isOpaque
 {
+#ifdef USE_OPAQUE_VIEWS
+  return YES;
+#else
   return mIsPluginView;
+#endif
 }
 
 -(void)setIsPluginView:(BOOL)aIsPlugin
@@ -2479,6 +2487,9 @@ nsChildView::Idle()
     ConvertCocoaToGeckoRect(aRect, r);
     nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
     mGeckoChild->UpdateWidget(r, rendContext);
+#ifdef USE_OPAQUE_VIEWS
+    [self flushRect:aRect];
+#endif
   }
   // If >10.3, only paint the sub-rects that need it. This avoids the
   // nasty coalesced updates that result in big white areas.
@@ -2491,8 +2502,25 @@ nsChildView::Idle()
       ConvertCocoaToGeckoRect(rects[i], r);
       nsCOMPtr<nsIRenderingContext> rendContext = getter_AddRefs(mGeckoChild->GetRenderingContext());
       mGeckoChild->UpdateWidget(r, rendContext);
+#ifdef USE_OPAQUE_VIEWS
+      [self flushRect:rects[i]];
+#endif
     }
   }
+}
+
+- (void)flushRect:(NSRect)inRect
+{
+  Rect updateRect;
+  updateRect.left   = (short)inRect.origin.x;
+  updateRect.top    = (short)inRect.origin.y;
+  updateRect.right  = updateRect.left + (short)inRect.size.width;
+  updateRect.bottom = updateRect.top +  (short)inRect.size.height;
+
+  RgnHandle updateRgn = ::NewRgn();
+  RectRgn(updateRgn, &updateRect);
+  ::QDFlushPortBuffer([self qdPort], updateRgn);
+  ::DisposeRgn(updateRgn);
 }
 
 //
