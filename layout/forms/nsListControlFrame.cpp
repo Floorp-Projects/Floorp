@@ -3355,7 +3355,7 @@ nsListControlFrame::KeyPress(nsIDOMEvent* aKeyEvent)
               if (optionElement) {
                 nsAutoString text;
                 if (NS_OK == optionElement->GetText(text)) {
-                  text.ToUpperCase();
+                  text.ToLowerCase();
                   PRUnichar firstChar = text.CharAt(0);
                   if (firstChar == (PRUnichar)code) {
                     mOldSelectedIndex = mSelectedIndex;
