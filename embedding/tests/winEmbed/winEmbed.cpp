@@ -533,7 +533,7 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
     PRBool canPaste = PR_FALSE;
 
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-    if (nsIClipboardCommands)
+    if (clipCmds)
     {
         clipCmds->CanCutSelection(&canCutSelection);
         clipCmds->CanCopySelection(&canCopySelection);
