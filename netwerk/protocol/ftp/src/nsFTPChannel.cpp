@@ -28,7 +28,6 @@
 #include "nsIEventQueueService.h"
 #include "nsIProgressEventSink.h"
 #include "nsIEventSinkGetter.h"
-#include "nsIIOService.h"
 #include "nsIPipe.h"
 #include "nsILoadGroup.h"
 #include "nsIFTPContext.h"
@@ -38,7 +37,6 @@
 
 static NS_DEFINE_IID(kProxyObjectManagerCID,        NS_PROXYEVENT_MANAGER_CID);
 static NS_DEFINE_CID(kMIMEServiceCID,               NS_MIMESERVICE_CID);
-static NS_DEFINE_CID(kIOServiceCID,                 NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kEventQueueService,            NS_EVENTQUEUESERVICE_CID);
 
 #if defined(PR_LOGGING)
@@ -235,9 +233,6 @@ nsFTPChannel::OpenInputStream(PRUint32 startPosition, PRInt32 readCount,
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFTPChannel::OpenInputStream() called\n"));
 
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
-
     rv = serv->NewSyncStreamListener(_retval /* nsIInputStream **inStream */, 
                                      &mBufferOutputStream /* nsIBufferOutputStream **outStream */,
                                      &mListener/* nsIStreamListener **listener */);
@@ -298,9 +293,6 @@ nsFTPChannel::AsyncRead(PRUint32 startPosition, PRInt32 readCount,
         mContext = ctxt;
         NS_ADDREF(mContext);
     }
-
-    NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
-    if (NS_FAILED(rv)) return rv;
 
     mListener = listener;
     NS_ADDREF(mListener);
