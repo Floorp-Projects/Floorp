@@ -2671,13 +2671,7 @@ SINGSIGN_Enumerate
   }
 
   nsAutoString userName;
-  if (NS_SUCCEEDED(si_Decrypt(data->value, userName))) {
-    if ((!data->isPassword) /* need this test in case all fields are passwords */
-        && (data->value.CharAt(0) != '~')) {
-      /* this is an encrypted value */
-      userName.AppendWithConversion("(encrypted)");
-    }
-  } else {
+  if (NS_FAILED(si_Decrypt(data->value, userName))) {
     /* don't display saved signons if user couldn't unlock the database */
     return NS_ERROR_FAILURE;
   }

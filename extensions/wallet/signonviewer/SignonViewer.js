@@ -42,6 +42,7 @@ var deleted_nocaptures_count = 0;
 var nopreviews_count = 0;
 var nocaptures_count = 0;
 var pref;
+var encrypted = "";
 
 // function : <SignonViewer.js>::Startup();
 // purpose  : initialises interface, calls init functions for each page
@@ -71,6 +72,13 @@ function Startup()
     } catch(e) {
       dump("wallet.enabled pref is missing from all.js");
     }
+
+    try {
+      encrypted = pref.GetBoolPref("wallet.crypto");
+    } catch(e) {
+      dump("wallet.crypto pref is missing from all.js");
+    }
+
   } catch (ex) {
     dump("failed to get prefs service!\n");
     pref = null;
@@ -137,6 +145,7 @@ function LoadSignons()
 {
   var enumerator = passwordmanager.enumerator;
   var count = 0;
+  var bundle = srGetStrBundle("chrome://communicator/locale/wallet/SignonViewer.properties");
   while (enumerator.hasMoreElements()) {
     try {
       var nextPassword = enumerator.getNext();
@@ -162,6 +171,10 @@ function LoadSignons()
       } else {
         user = "<>";
       }
+    }
+
+    if (encrypted) {
+      user = bundle.formatStringFromName ("encrypted", [user], 1);
     }
 
     AddSignonToList(count, host, user, rawuser);
