@@ -250,6 +250,8 @@ static
 EncodeSimpleValue(const nsAString & aValue,
                   const nsAString & aNamespaceURI,
                   const nsAString & aName,
+                  nsISchemaType * aSchemaType,
+                  PRUint16 aSchemaVersion,
                   nsIDOMElement * aDestination, nsIDOMElement ** _retval)
 {
   nsCOMPtr < nsIDOMDocument > document;
@@ -260,6 +262,28 @@ EncodeSimpleValue(const nsAString & aValue,
   rc = document->CreateElementNS(aNamespaceURI, aName, _retval);
   if (NS_FAILED(rc))
     return rc;
+/*
+  if (aSchemaType && aNamespaceURI.IsEmpty()) { // Elements with namespaces require no xsi:type
+    nsAutoString name;
+    rc = aSchemaType->GetName(name);
+    if (NS_FAILED(rc))
+      return rc;
+    nsAutoString ns;
+    rc = aSchemaType->GetTargetNamespace(ns);
+    if (NS_FAILED(rc))
+      return rc;
+    nsAutoString type;
+    rc = nsSOAPUtils::MakeNamespacePrefix(*_retval,
+                                            ns, type);
+    if (NS_FAILED(rc))
+      return rc;
+    type.Append(nsSOAPUtils::kQualifiedSeparator);
+    type.Append(name);
+    rc = (*_retval)->
+        SetAttributeNS(*nsSOAPUtils::kXSIURI[aSchemaVersion],
+                         nsSOAPUtils::kXSITypeAttribute, type);
+  }
+*/
   nsCOMPtr < nsIDOMNode > ignore;
   rc = aDestination->AppendChild(*_retval, getter_AddRefs(ignore));
   if (NS_FAILED(rc))
@@ -466,6 +490,8 @@ NS_IMETHODIMP
   rc = aEncoding->GetEncoder(encodingKey, getter_AddRefs(encoder));
   if (NS_FAILED(rc))
     return rc;
+  nsCOMPtr<nsISchemaType> type;
+
   if (encoder) {
     nsresult rc =
         encoder->Encode(aEncoding, aSource, aNamespaceURI, aName,
@@ -654,12 +680,12 @@ NS_IMETHODIMP
     if (aName.IsEmpty()) {
       rc = EncodeSimpleValue(kEmpty,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kStructSOAPType, aDestination,
+                             kStructSOAPType, aSchemaType, mSchemaVersion, aDestination,
                              aReturnValue);
     }
     else {
       rc = EncodeSimpleValue(kEmpty,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
     }
     if (NS_FAILED(rc))
@@ -690,10 +716,10 @@ NS_IMETHODIMP
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
                              kAnySimpleTypeSchemaType,
-                             aDestination, aReturnValue);
+                             aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -719,11 +745,11 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {        //  Now create the element to hold the array
     rc = EncodeSimpleValue(kEmpty,
                            *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                           kArraySOAPType, aDestination, aReturnValue);
+                           kArraySOAPType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   } else {
     rc = EncodeSimpleValue(kEmpty,
                            aNamespaceURI,
-                           aName, aDestination, aReturnValue);
+                           aName, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   if (NS_FAILED(rc))
     return rc;
@@ -759,6 +785,8 @@ NS_IMETHODIMP
           rc = EncodeSimpleValue(value,\
                        *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],\
                        k##SOAPType##SchemaType,\
+		       nsnull,\
+		       mSchemaVersion,\
                        *aReturnValue,\
                        getter_AddRefs(dummy));\
           if (NS_FAILED(rc)) return rc;\
@@ -857,10 +885,10 @@ NS_IMETHODIMP
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
                              kStringSchemaType,
-                             aDestination, aReturnValue);
+                             aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -885,11 +913,11 @@ NS_IMETHODIMP
     return EncodeSimpleValue(b ? nsSOAPUtils::kTrueA : nsSOAPUtils::
                              kFalseA,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kBooleanSchemaType, aDestination,
+                             kBooleanSchemaType, aSchemaType, mSchemaVersion, aDestination,
                              aReturnValue);
   }
   return EncodeSimpleValue(b ? nsSOAPUtils::kTrueA : nsSOAPUtils::kFalseA,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -920,10 +948,10 @@ NS_IMETHODIMP
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
                              kDoubleSchemaType,
-                             aDestination, aReturnValue);
+                             aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -953,10 +981,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kFloatSchemaType, aDestination, aReturnValue);
+                             kFloatSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -986,10 +1014,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kLongSchemaType, aDestination, aReturnValue);
+                             kLongSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1019,10 +1047,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kIntSchemaType, aDestination, aReturnValue);
+                             kIntSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1052,10 +1080,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kShortSchemaType, aDestination, aReturnValue);
+                             kShortSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1085,10 +1113,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kByteSchemaType, aDestination, aReturnValue);
+                             kByteSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1118,10 +1146,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kLongSchemaType, aDestination, aReturnValue);
+                             kLongSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1151,10 +1179,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kIntSchemaType, aDestination, aReturnValue);
+                             kIntSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1184,10 +1212,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kShortSchemaType, aDestination, aReturnValue);
+                             kShortSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1217,10 +1245,10 @@ NS_IMETHODIMP
   if (aName.IsEmpty()) {
     return EncodeSimpleValue(value,
                              *nsSOAPUtils::kSOAPEncURI[mSOAPVersion],
-                             kByteSchemaType, aDestination, aReturnValue);
+                             kByteSchemaType, aSchemaType, mSchemaVersion, aDestination, aReturnValue);
   }
   return EncodeSimpleValue(value,
-                           aNamespaceURI, aName, aDestination,
+                           aNamespaceURI, aName, aSchemaType, mSchemaVersion, aDestination,
                            aReturnValue);
 }
 
@@ -1231,7 +1259,6 @@ NS_IMETHODIMP
                              nsISOAPAttachments * aAttachments,
                              nsIVariant ** _retval)
 {
-  nsCOMPtr < nsISOAPDecoder > decoder;
   nsCOMPtr < nsISOAPEncoding > encoding = aEncoding;        //  First, handle encoding redesignation, if any
 
   {
@@ -1260,101 +1287,122 @@ NS_IMETHODIMP
   }
 
   nsCOMPtr < nsISchemaType > type = aSchemaType;
-  if (!type) {                        //  Where no type has been specified, look one up from schema attribute, if it exists
+  nsCOMPtr < nsISOAPDecoder > decoder;  //  All that comes out of this block is decoder, type, and some checks.
+  {                        //  Look up type element and schema attribute, if possible
+    nsCOMPtr < nsISchemaType > subType;
     nsCOMPtr < nsISchemaCollection > collection;
     nsresult rc =
         aEncoding->GetSchemaCollection(getter_AddRefs(collection));
     if (NS_FAILED(rc))
       return rc;
-    nsAutoString explicittype;
-    rc = aSource->GetAttributeNS(*nsSOAPUtils::kXSIURI[mSchemaVersion],
-                                 nsSOAPUtils::kXSITypeAttribute,
-                                 explicittype);
-    if (NS_FAILED(rc))
-      return rc;
     nsAutoString ns;
     nsAutoString name;
-    if (!explicittype.IsEmpty()) {
-      rc = nsSOAPUtils::GetNamespaceURI(aSource, explicittype, ns);
+
+    rc = aSource->GetNamespaceURI(ns);
+    if (NS_FAILED(rc))
+      return rc;
+    rc = aSource->GetLocalName(name);
+    if (NS_FAILED(rc))
+      return rc;
+    nsCOMPtr < nsISchemaElement > element;
+    rc = collection->GetElement(name, ns, getter_AddRefs(element));
+//      if (NS_FAILED(rc)) return rc;
+    if (element) {
+      rc = element->GetType(getter_AddRefs(subType));
       if (NS_FAILED(rc))
         return rc;
-      rc = nsSOAPUtils::GetLocalName(explicittype, name);
+    } else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion])) {        //  Last-ditch hack to get undeclared types from SOAP namespace
+      if (name.Equals(kArraySOAPType)
+          || name.Equals(kStructSOAPType)) {        //  This should not be needed if schema has these declarations
+        rc = collection->GetType(name, ns, getter_AddRefs(subType));
+      } else {
+        rc = collection->GetType(name,
+                                 *nsSOAPUtils::
+                                 kXSURI[mSchemaVersion],
+                                 getter_AddRefs(subType));
+      }
+//        if (NS_FAILED(rc)) return rc;
+    }
+    if (!subType)
+      subType = type;
+
+    nsCOMPtr < nsISchemaType > subsubType;
+    nsAutoString explicitType;
+    rc = aSource->GetAttributeNS(*nsSOAPUtils::kXSIURI[mSchemaVersion],
+                                 nsSOAPUtils::kXSITypeAttribute,
+                                 explicitType);
+    if (NS_FAILED(rc))
+      return rc;
+    if (!explicitType.IsEmpty()) {
+      rc = nsSOAPUtils::GetNamespaceURI(aSource, explicitType, ns);
       if (NS_FAILED(rc))
         return rc;
-      rc = collection->GetType(name, ns, getter_AddRefs(type));
+      rc = nsSOAPUtils::GetLocalName(explicitType, name);
+      if (NS_FAILED(rc))
+        return rc;
+      rc = collection->GetType(name, ns, getter_AddRefs(subsubType));
 //      if (NS_FAILED(rc)) return rc;
     }
-    if (!type) {
-      rc = aSource->GetNamespaceURI(ns);
-      if (NS_FAILED(rc))
-        return rc;
-      rc = aSource->GetLocalName(name);
-      if (NS_FAILED(rc))
-        return rc;
-      nsCOMPtr < nsISchemaElement > element;
-      rc = collection->GetElement(name, ns, getter_AddRefs(element));
-//      if (NS_FAILED(rc)) return rc;
-      if (element) {
-        rc = element->GetType(getter_AddRefs(type));
+    if (!subsubType)
+      subsubType = subType;
+  
+    if (subsubType) {  //  Loop up the hierarchy, to check and look for decoders
+      nsCOMPtr < nsISchemaType > lookupType = subsubType;
+      do {
+        if (lookupType == subType) {  //  Tick off the located super classes
+	  subType = nsnull;
+        }
+        if (lookupType == type) {  //  Tick off the located super classes
+	  type = nsnull;
+        }
+        PRUint16 typevalue;
+        rc = lookupType->GetSchemaType(&typevalue);
         if (NS_FAILED(rc))
           return rc;
-      } else if (ns.Equals(*nsSOAPUtils::kSOAPEncURI[mSOAPVersion])) {        //  Last-ditch hack to get undeclared types from SOAP namespace
-        if (name.Equals(kArraySOAPType)) {        //  This should not be needed if schema has these declarations
-          rc = collection->GetType(name, ns, getter_AddRefs(type));
-        } else {
-          rc = collection->GetType(name,
-                                   *nsSOAPUtils::
-                                   kXSURI[mSchemaVersion],
-                                   getter_AddRefs(type));
-        }
-//        if (NS_FAILED(rc)) return rc;
-      }
-    }
-  }
-  if (type) {
-    nsCOMPtr < nsISchemaType > lookupType = type;
-    do {
-      nsAutoString schemaType;
-      nsAutoString schemaURI;
-      nsresult rc = lookupType->GetName(schemaType);
-      if (NS_FAILED(rc))
-        return rc;
-      rc = lookupType->GetTargetNamespace(schemaURI);
-      if (NS_FAILED(rc))
-        return rc;
-      PRUint16 typevalue;
-      rc = lookupType->GetSchemaType(&typevalue);
-      if (NS_FAILED(rc))
-        return rc;
+        if (!decoder) {
+          nsAutoString schemaType;
+          nsAutoString schemaURI;
+          nsresult rc = lookupType->GetName(schemaType);
+          if (NS_FAILED(rc))
+            return rc;
+          rc = lookupType->GetTargetNamespace(schemaURI);
+          if (NS_FAILED(rc))
+            return rc;
+  
+//rayw:  I think this is no longer necessary, because we have double-registered
+// so we probably want them to use the decoder registered the way the document is.
+
       // Special case builtin types so that the namespace for the
       // type is the version that corresponds to our SOAP version.
-      if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
-        nsCOMPtr < nsISchemaSimpleType > simpleType =
-            do_QueryInterface(lookupType);
-        PRUint16 simpleTypeValue;
-        rc = simpleType->GetSimpleType(&simpleTypeValue);
-        if (NS_FAILED(rc))
-          return rc;
-        if (simpleTypeValue == nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN) {
-          schemaURI.Assign(*nsSOAPUtils::kXSURI[mSchemaVersion]);
+//      if (typevalue == nsISchemaType::SCHEMA_TYPE_SIMPLE) {
+//        nsCOMPtr < nsISchemaSimpleType > simpleType =
+//            do_QueryInterface(lookupType);
+//        PRUint16 simpleTypeValue;
+//        rc = simpleType->GetSimpleType(&simpleTypeValue);
+//        if (NS_FAILED(rc))
+//          return rc;
+//        if (simpleTypeValue == nsISchemaSimpleType::SIMPLE_TYPE_BUILTIN) {
+//          schemaURI.Assign(*nsSOAPUtils::kXSURI[mSchemaVersion]);
+//        }
+//      }
+          nsAutoString encodingKey;
+          SOAPEncodingKey(schemaURI, schemaType, encodingKey);
+          rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
+          if (NS_FAILED(rc))
+            return rc;
         }
-      }
-      nsAutoString encodingKey;
-      SOAPEncodingKey(schemaURI, schemaType, encodingKey);
-      rc = aEncoding->GetDecoder(encodingKey, getter_AddRefs(decoder));
-      if (NS_FAILED(rc))
-        return rc;
-      if (decoder)
-        break;
-      if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
-        nsCOMPtr < nsISchemaComplexType > oldtype =
-            do_QueryInterface(lookupType);
-        oldtype->GetBaseType(getter_AddRefs(lookupType));
-      } else {
-        break;
-      }
+        if (typevalue == nsISchemaType::SCHEMA_TYPE_COMPLEX) {
+          nsCOMPtr < nsISchemaComplexType > oldType =
+              do_QueryInterface(lookupType);
+          oldType->GetBaseType(getter_AddRefs(lookupType));
+        } else {
+          break;
+        }
+      } while (lookupType);
+      if (type || subType)  //  If the proper subclass relationships didn't exist, then error return.
+        return NS_ERROR_FAILURE;
+      type = subsubType;    //  If they did, then we now have a new, better type.
     }
-    while (lookupType);
   }
   if (!decoder) {
     PRBool simple;
