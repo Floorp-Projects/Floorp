@@ -60,7 +60,7 @@
   "@mozilla.org/autocomplete/search;1?name=form-history"
 
 #define NS_GLOBALHISTORY_DATASOURCE_CONTRACTID \
-    "@mozilla.org/rdf/datasource;1?name=history"
+  "@mozilla.org/rdf/datasource;1?name=history"
 
 #define NS_GLOBALHISTORY_AUTOCOMPLETE_CONTRACTID \
     "@mozilla.org/autocomplete/search;1?name=history"
@@ -93,3 +93,4 @@
 // {59648a91-5a60-4122-8ff2-54b839c84aed}
 #define NS_GLOBALHISTORY_CID \
 { 0x59648a91, 0x5a60, 0x4122, { 0x8f, 0xf2, 0x54, 0xb8, 0x39, 0xc8, 0x4a, 0xed} }
+

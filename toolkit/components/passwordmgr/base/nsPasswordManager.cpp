@@ -274,7 +274,7 @@ nsPasswordManager::Init()
   nsCAutoString path;
   mSignonFile->GetNativePath(path);
 
-  ReadSignonFile();
+  ReadPasswords(mSignonFile);
 
   return NS_OK;
 }
@@ -573,6 +573,148 @@ nsPasswordManager::FindPasswordEntry(const nsACString& aHostURI,
   return NS_OK;
 }
 
+#ifdef MIGRATION_ENABLED
+NS_IMETHODIMP
+nsPasswordManager::AddUserFull(const nsACString& aHost,
+                               const nsAString& aUser,
+                               const nsAString& aPassword,
+                               const nsAString& aUserFieldName,
+                               const nsAString& aPassFieldName)
+{
+  // First check for an existing entry for this host + user
+  if (!aHost.IsEmpty()) {
+    SignonHashEntry *hashEnt;
+    if (mSignonTable.Get(aHost, &hashEnt)) {
+      nsString empty;
+      SignonDataEntry *entry = nsnull;
+      FindPasswordEntryInternal(hashEnt->head, aUser, empty, empty, &entry);
+      if (entry) {
+        // Just change the password
+        EncryptDataUCS2(aPassword, entry->passValue);
+        // ... and update the field names...s
+        entry->userField.Assign(aUserFieldName);
+        entry->passField.Assign(aPassFieldName);
+        return NS_OK;
+      }
+    }
+  }
+
+  SignonDataEntry* entry = new SignonDataEntry();
+  entry->userField.Assign(aUserFieldName);
+  entry->passField.Assign(aPassFieldName);
+  EncryptDataUCS2(aUser, entry->userValue);
+  EncryptDataUCS2(aPassword, entry->passValue);
+
+  AddSignonData(aHost, entry);
+  WriteSignonFile();
+
+  return NS_OK;
+}
+#endif
+
+#ifdef MIGRATION_ENABLED
+NS_IMETHODIMP
+#else
+nsresult
+#endif
+nsPasswordManager::ReadPasswords(nsIFile* aPasswordFile)
+{
+  nsCOMPtr<nsIInputStream> fileStream;
+  NS_NewLocalFileInputStream(getter_AddRefs(fileStream), aPasswordFile);
+  if (!fileStream)
+    return NS_ERROR_OUT_OF_MEMORY;
+
+  nsCOMPtr<nsILineInputStream> lineStream = do_QueryInterface(fileStream);
+  NS_ASSERTION(lineStream, "File stream is not an nsILineInputStream");
+
+  // Read the header
+  nsAutoString buffer;
+  PRBool moreData = PR_FALSE;
+  nsresult rv = lineStream->ReadLine(buffer, &moreData);
+  if (NS_FAILED(rv))
+    return NS_OK;
+
+  if (!buffer.Equals(NS_LITERAL_STRING("#2c"))) {
+    NS_ERROR("Unexpected version header in signon file");
+    return NS_OK;
+  }
+
+  enum { STATE_REJECT, STATE_REALM, STATE_USERFIELD, STATE_USERVALUE,
+         STATE_PASSFIELD, STATE_PASSVALUE } state = STATE_REJECT;
+
+  nsCAutoString realm;
+  SignonDataEntry* entry = nsnull;
+
+  do {
+    rv = lineStream->ReadLine(buffer, &moreData);
+    if (NS_FAILED(rv))
+      return NS_OK;
+
+    switch (state) {
+    case STATE_REJECT:
+      if (buffer.Equals(NS_LITERAL_STRING(".")))
+        state = STATE_REALM;
+      else
+        mRejectTable.Put(NS_ConvertUCS2toUTF8(buffer), 1);
+
+      break;
+
+    case STATE_REALM:
+      realm.Assign(NS_ConvertUCS2toUTF8(buffer));
+      state = STATE_USERFIELD;
+      break;
+
+    case STATE_USERFIELD:
+
+      // Commit any completed entry
+      if (entry)
+        AddSignonData(realm, entry);
+
+      // If the line is a ., we've reached the end of this realm's entries.
+      if (buffer.Equals(NS_LITERAL_STRING("."))) {
+        entry = nsnull;
+        state = STATE_REALM;
+      } else {
+        entry = new SignonDataEntry();
+        entry->userField.Assign(buffer);
+        state = STATE_USERVALUE;
+      }
+
+      break;
+
+    case STATE_USERVALUE:
+      NS_ASSERTION(entry, "bad state");
+
+      entry->userValue.Assign(buffer);
+
+      state = STATE_PASSFIELD;
+      break;
+
+    case STATE_PASSFIELD:
+      NS_ASSERTION(entry, "bad state");
+
+      // Strip off the leading "*" character
+      entry->passField.Assign(Substring(buffer, 1, buffer.Length() - 1));
+
+      state = STATE_PASSVALUE;
+      break;
+
+    case STATE_PASSVALUE:
+      NS_ASSERTION(entry, "bad state");
+
+      entry->passValue.Assign(buffer);
+
+      state = STATE_USERFIELD;
+      break;
+    }
+  } while (moreData);
+
+  // Don't leak if the file ended unexpectedly
+  delete entry;
+
+  return NS_OK;
+}
+
 
 // nsIObserver implementation
 NS_IMETHODIMP
@@ -665,8 +807,46 @@ nsPasswordManager::OnStateChange(nsIWebProgress* aWebProgress,
         continue;
       }
 
-      form->ResolveName(e->passField, getter_AddRefs(foundNode));
-      temp = do_QueryInterface(foundNode);
+      if (!(e->passField).IsEmpty()) {
+        form->ResolveName(e->passField, getter_AddRefs(foundNode));
+        temp = do_QueryInterface(foundNode);
+      }
+      else {
+        // No password field name was supplied, try to locate one in the form.
+        nsCOMPtr<nsIFormControl> fc(do_QueryInterface(foundNode));
+        PRInt32 index = -1;
+        form->IndexOfControl(fc, &index);
+        if (index >= 0) {
+          PRUint32 count;
+          form->GetElementCount(&count);
+
+          PRUint32 i;
+          temp = nsnull;
+
+          // Search forwards
+          nsCOMPtr<nsIFormControl> passField;
+          for (i = index; i < count; ++i) {
+            form->GetElementAt(i, getter_AddRefs(passField));
+
+            if (passField && passField->GetType() == NS_FORM_INPUT_PASSWORD) {
+              foundNode = passField;
+              temp = do_QueryInterface(foundNode);
+            }
+          }
+
+          if (!temp) {
+            // Search backwards
+            for (i = index; i >= 0; --i) {
+              form->GetElementAt(i, getter_AddRefs(passField));
+
+              if (passField && passField->GetType() == NS_FORM_INPUT_PASSWORD) {
+                foundNode = passField;
+                temp = do_QueryInterface(foundNode);
+              }
+            }
+          }
+        }
+      }
 
       nsAutoString oldPassValue;
 
@@ -1259,7 +1439,7 @@ nsPasswordManager::BeforeUnload(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-/* static */ PLDHashOperator PR_CALLBACK
+ /* static */ PLDHashOperator PR_CALLBACK
 nsPasswordManager::RemoveForDOMDocumentEnumerator(nsISupports* aKey,
                                                   PRInt32& aEntry,
                                                   void* aUserData)
@@ -1325,111 +1505,6 @@ Format of the single signon file:
 <EOF>
 
 */
-
-void
-nsPasswordManager::ReadSignonFile()
-{
-  nsCOMPtr<nsIInputStream> fileStream;
-  NS_NewLocalFileInputStream(getter_AddRefs(fileStream), mSignonFile);
-  if (!fileStream)
-    return;
-
-  nsCOMPtr<nsILineInputStream> lineStream = do_QueryInterface(fileStream);
-  NS_ASSERTION(lineStream, "File stream is not an nsILineInputStream");
-
-  // Read the header
-  nsAutoString buffer;
-  nsCAutoString utf8Buffer;
-  PRBool moreData = PR_FALSE;
-  nsresult rv = lineStream->ReadLine(buffer, &moreData);
-  if (NS_FAILED(rv))
-    return;
-
-  if (!buffer.Equals(NS_LITERAL_STRING("#2c"))) {
-    NS_ERROR("Unexpected version header in signon file");
-    return;
-  }
-
-  enum { STATE_REJECT, STATE_REALM, STATE_USERFIELD, STATE_USERVALUE,
-         STATE_PASSFIELD, STATE_PASSVALUE } state = STATE_REJECT;
-
-  nsCAutoString realm;
-  SignonDataEntry* entry = nsnull;
-
-  do {
-    rv = lineStream->ReadLine(buffer, &moreData);
-    if (NS_FAILED(rv))
-      return;
-
-    // |buffer| will contain UTF-8 encoded characters, so move it into
-    // a narrow string so we can manipulate it.  If NS_ReadLine is ever
-    // fixed to handle character encoding, this code should be cleaned up.
-
-    utf8Buffer.AssignWithConversion(buffer);
-
-    switch (state) {
-    case STATE_REJECT:
-      if (utf8Buffer.Equals(NS_LITERAL_CSTRING(".")))
-        state = STATE_REALM;
-      else
-        mRejectTable.Put(utf8Buffer, 1);
-
-      break;
-
-    case STATE_REALM:
-      realm.Assign(utf8Buffer);
-      state = STATE_USERFIELD;
-      break;
-
-    case STATE_USERFIELD:
-
-      // Commit any completed entry
-      if (entry)
-        AddSignonData(realm, entry);
-
-      // If the line is a ., we've reached the end of this realm's entries.
-      if (utf8Buffer.Equals(NS_LITERAL_CSTRING("."))) {
-        entry = nsnull;
-        state = STATE_REALM;
-      } else {
-        entry = new SignonDataEntry();
-        CopyUTF8toUTF16(utf8Buffer, entry->userField);
-        state = STATE_USERVALUE;
-      }
-
-      break;
-
-    case STATE_USERVALUE:
-      NS_ASSERTION(entry, "bad state");
-
-      CopyUTF8toUTF16(utf8Buffer, entry->userValue);
-
-      state = STATE_PASSFIELD;
-      break;
-
-    case STATE_PASSFIELD:
-      NS_ASSERTION(entry, "bad state");
-
-      // Strip off the leading "*" character
-      CopyUTF8toUTF16(Substring(utf8Buffer, 1, utf8Buffer.Length() - 1),
-                      entry->passField);
-
-      state = STATE_PASSVALUE;
-      break;
-
-    case STATE_PASSVALUE:
-      NS_ASSERTION(entry, "bad state");
-
-      CopyUTF8toUTF16(utf8Buffer, entry->passValue);
-
-      state = STATE_USERFIELD;
-      break;
-    }
-  } while (moreData);
-
-  // Don't leak if the file ended unexpectedly
-  delete entry;
-}
 
 /* static */ PLDHashOperator PR_CALLBACK
 nsPasswordManager::WriteRejectEntryEnumerator(const nsACString& aKey,
