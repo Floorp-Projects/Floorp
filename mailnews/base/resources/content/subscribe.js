@@ -301,6 +301,9 @@ function InSearchMode()
 
 function SearchOnClick(event)
 {
+  // we only care about button 0 (left click) events
+  if (event.button != 0) return;
+
   var t = event.originalTarget;
 
   if (t.localName == "outlinerbody") {
@@ -404,7 +407,10 @@ function ReverseStateFromNode(node)
 
 function SubscribeOnClick(event)
 {
-    var t = event.originalTarget;
+  // we only care about button 0 (left click) events
+  if (event.button != 0) return;
+ 
+  var t = event.originalTarget;
 
 	if (event.detail == 2) {
 		ReverseStateFromNode(t.parentNode.parentNode);

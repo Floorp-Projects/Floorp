@@ -722,7 +722,9 @@ function GetSelectedFolder()
 
 function FolderPaneOnClick(event)
 {
-	debug("in FolderPaneClick()\n");
+  debug("in FolderPaneClick()\n");
+  // we only care about button 0 (left click) events
+  if (event.button != 0) return;
 
   var t = event.originalTarget;
   var item;

@@ -23,6 +23,9 @@ var gThreadPaneCommandUpdater = null;
 
 function ThreadPaneOnClick(event)
 {
+    // we only care about button 0 (left click) events
+    if (event.button != 0) return;
+
     // we are already handling marking as read and flagging
     // in nsMsgDBView.cpp
     // so all we need to worry about here is double clicks

@@ -73,7 +73,7 @@ function GetSelectedFolderURI()
 
 	return uri;
 }
-
+ 
 
 function MsgRenameFolder() 
 {

@@ -742,9 +742,12 @@ function printAttachmentAttachment(contentType, url, displayName, messageUri)
 // this is our onclick handler for the attachment tree. 
 // A double click in a tree cell simulates "opening" the attachment....
 function attachmentTreeClick(event)
-{
-	if(event.detail == 2) // double click
-	{
+{ 
+    // we only care about button 0 (left click) events
+    if (event.button != 0) return;
+
+    if(event.detail == 2) // double click
+    {
     var target = event.originalTarget;
 		item = target.parentNode.parentNode;
 		if (item.localName == "treeitem")
@@ -753,7 +756,7 @@ function attachmentTreeClick(event)
       var openString = 'openAttachment' + commandStringSuffix;
       eval(openString);
     }
-	}
+    }
 }
 
 // on command handlers for the attachment tree context menu...
