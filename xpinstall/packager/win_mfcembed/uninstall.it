@@ -160,4 +160,6 @@ ERROR_GETVERSION=GetVersionEx() failed!
 MB_ATTENTION_STR=Attention
 MSG_FORCE_QUIT_PROCESS=Uninstall has detected that %s (%s) is still running.  Click OK to quit %s and proceed with uninstallation. Alternatively, use the Windows Task Manager to quit %s, and then click OK to continue with uninstallation.
 MSG_FORCE_QUIT_PROCESS_FAILED=Uninstall will now exit.  Uninstall could not continue because %s (%s) is still running. Try manually quitting %s using Windows Task Manager, and then run Uninstall again.
+MSG_DELETE_INSTALLATION_PATH=Not all files were uninstalled from the installation directory:\n\n  %s\n\nDo you want to completely delete this directory?
+MSG_INSTALLATION_PATH_WITHIN_WINDIR=Uninstall has detected that the installation path of $ProductNameInternal$ is installed to a folder within your Windows folder.  Uninstall will not attempt to delete this installation due to the potential removal of critical system files.
 

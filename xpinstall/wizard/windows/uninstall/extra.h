@@ -98,5 +98,9 @@ void              RemovePathToExeXX(HKEY hkRootKey, LPSTR szKey, DWORD dwIndex, 
 HRESULT           GetUninstallLogPath();
 BOOL              WinRegNameExists(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
 void              DeleteWinRegValue(HKEY hkRootKey, LPSTR szKey, LPSTR szName);
-#endif
+void              ReplacePrivateProfileStrCR(LPSTR aInputOutputStr);
+BOOL              IsPathWithinWindir(char *aTargetPath);
+void              VerifyAndDeleteInstallationFolder(void);
+
+#endif /* _EXTRA_H_ */
 

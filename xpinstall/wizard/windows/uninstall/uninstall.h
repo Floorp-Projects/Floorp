@@ -163,6 +163,7 @@ typedef struct uninstallStruct
   BOOL      bUninstallFiles;
   BOOL      bSharedInst;
   HFONT     definedFont;
+  char      szInstallPath[MAX_BUF];
 } uninstallGen;
 
 typedef struct sInfoLine sil;

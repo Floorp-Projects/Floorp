@@ -1576,11 +1576,10 @@ HRESULT GetAppPath()
     hkRoot = HKEY_CURRENT_USER;
 
   GetWinReg(hkRoot, szKey, "PathToExe", szTmpAppPath, sizeof(szTmpAppPath));
-
   if(FileExists(szTmpAppPath))
-  {
     lstrcpy(ugUninstall.szAppPath, szTmpAppPath);
-  }
+
+  GetWinReg(hkRoot, szKey, "Install Directory", ugUninstall.szInstallPath, sizeof(ugUninstall.szInstallPath));
 
   return(0);
 }
@@ -1786,6 +1785,133 @@ void RemovePathToExeXX(HKEY hkRootKey, LPSTR szKey, DWORD dwIndex, const DWORD d
   }        
 
   DeleteWinRegValue(hkRootKey, szKey, szName);
+}
+
+/* Function: ReplacePrivateProfileStrCR()
+ *
+ *       in: LPSTR aInputOutputStr: In/out string to containing "\\n" to replace.
+ *           
+ *  purpose: To parse for and replace "\\n" string with "\n".  Strings stored
+ *           in .ini files cannot contain "\n" because it's a key delimiter.
+ *           To work around this limination, "\\n" chars can be used to
+ *           represent '\n'.  This function will look for "\\n" and replace
+ *           them with a true "\n".
+ *           If it encounters a string of "\\\\n" (which looks like '\\n'),
+ *           then this function will strip out the extra '\\' and just show
+ *           "\\n";
+ */
+void ReplacePrivateProfileStrCR(LPSTR aInputOutputStr)
+{
+  LPSTR pSearch          = aInputOutputStr;
+  LPSTR pSearchEnd       = aInputOutputStr + lstrlen(aInputOutputStr);
+  LPSTR pPreviousSearch  = NULL;
+
+  while (pSearch < pSearchEnd)
+  {
+    if (('\\' == *pSearch) || ('n' == *pSearch))
+    {
+      // found a '\\' or 'n'.  check to see if  the prefivous char is also a '\\'.
+      if (pPreviousSearch && ('\\' == *pPreviousSearch))
+      {
+        if ('n' == *pSearch)
+          *pSearch = '\n';
+
+        memmove(pPreviousSearch, pSearch, pSearchEnd-pSearch+1);
+
+        // our string is shorter now ...
+        pSearchEnd -= pSearch - pPreviousSearch;
+      }
+    }
+
+    pPreviousSearch = pSearch;
+    pSearch = CharNext(pSearch);
+  }
+}
+
+/* Function: IsPathWithinWindir()
+ *       in: char *aTargetPath
+ *      out: returns a BOOL type indicating whether the install path chosen
+ *           by the user is within the %windir% or not.
+ *  purpose: To see if aTargetPath is within the %windir% path.
+ */
+BOOL IsPathWithinWindir(char *aTargetPath)
+{
+  char    windir[MAX_PATH];
+  char    targetPath[MAX_PATH];
+  HRESULT rv;
+
+  assert(aTargetPath);
+
+  rv = GetWindowsDirectory(windir, sizeof(windir));
+  assert(rv);
+  MozCopyStr(aTargetPath, targetPath, sizeof(targetPath));
+  RemoveBackSlash(targetPath);
+  CharUpperBuff(targetPath, sizeof(targetPath));
+  RemoveBackSlash(windir);
+  CharUpperBuff(windir, sizeof(windir));
+
+  if(strstr(targetPath, windir))
+    return(TRUE);
+
+  return(FALSE);
+}
+
+/* Function: VerifyAndDeleteInstallationFolder()
+ *       in: none
+ *      out: none
+ *  purpose: To verify that the installation folder has been completely
+ *           deleted, else prompt the user if they would like to delete
+ *           the folder and it's left over contents.
+ *           It will also check to make sure that the installation
+ *           folder is not within the %windir% folder.  If it is,
+ *           it will warn the user and not perform the deletion of the
+ *           installation folder.
+ */
+void VerifyAndDeleteInstallationFolder()
+{
+  if(FileExists(ugUninstall.szInstallPath))
+  {
+    char buf[MAX_BUF];
+    char msg[MAX_BUF];
+    char msgBoxTitle[MAX_BUF];
+    char installationPath[MAX_BUF];
+
+    MozCopyStr(ugUninstall.szInstallPath, installationPath, sizeof(installationPath));
+    RemoveBackSlash(installationPath);
+
+    if(ugUninstall.mode == NORMAL)
+    {
+      GetPrivateProfileString("Messages", "MB_ATTENTION_STR", "", msgBoxTitle, sizeof(msgBoxTitle), szFileIniUninstall);
+      GetPrivateProfileString("Messages", "MSG_DELETE_INSTALLATION_PATH", "", buf, sizeof(buf), szFileIniUninstall);
+      _snprintf(msg, sizeof(msg), buf, installationPath);
+      msg[sizeof(msg) - 1] = '\0';
+      ReplacePrivateProfileStrCR(msg);
+
+      /* Prompt user on if they want the completely remove the
+       * installation folder */
+      if(MessageBox(hWndMain, msg, msgBoxTitle, MB_ICONQUESTION | MB_YESNO) == IDYES)
+      {
+        if(IsPathWithinWindir(installationPath))
+        {
+          GetPrivateProfileString("Messages", "MSG_INSTALLATION_PATH_WITHIN_WINDIR",
+              "", msg, sizeof(msg), szFileIniUninstall);
+          MessageBox(hWndMain, msg, NULL, MB_ICONEXCLAMATION);
+          return;
+        }
+
+        /* Remove the installation folder here */
+        AppendBackSlash(installationPath, sizeof(installationPath));
+        DirectoryRemove(installationPath, TRUE);
+      }
+    }
+    else
+    {
+      /* If uninstall is running in !NORMAL mode, assume user wants to
+       * completely delete the installation folder */
+      AppendBackSlash(installationPath, sizeof(installationPath));
+      DirectoryRemove(installationPath, TRUE);
+    }
+  }
 }
 
 HRESULT GetUninstallLogPath()
