@@ -25,6 +25,8 @@ static NS_DEFINE_IID(kIImageIID, NS_IIMAGE_IID);
 
 NS_IMPL_ISUPPORTS1(nsImagePh, nsIImage)
 
+//#define NO_MASK
+
 // ----------------------------------------------------------------
 nsImagePh :: nsImagePh()
 {
@@ -70,7 +72,7 @@ nsImagePh :: ~nsImagePh()
  */
 nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMaskRequirements aMaskRequirements)
 {
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init (%p) - aWidth=%d aHeight=%d aDepth=%d\n", this, aWidth, aHeight, aDepth));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Init (%p) - aWidth=%d aHeight=%d aDepth=%d aMaskRequirements=%d\n", this, aWidth, aHeight, aDepth, aMaskRequirements));
 
   CleanUp(PR_TRUE);
 
@@ -160,9 +162,13 @@ nsresult nsImagePh :: Init(PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth,nsMas
   mImage.ghost_bpl     = 0;
   mImage.spare1        = 0;
   mImage.ghost_bitmap  = nsnull;
+#ifdef NO_MASK
+  mImage.mask_bpl      = 0;
+  mImage.mask_bm       = nsnull;
+#else
   mImage.mask_bpl      = mARowBytes;
   mImage.mask_bm       = (char *)mAlphaBits;
-//  mImage.palette       = nsnull;   // REVISIT - not handling palette yet
+#endif
   if( mColorMap )
     mImage.palette     = (PgColor_t *) mColorMap->Index;
   else
@@ -284,10 +290,6 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw1 this=<%p> mImage.size=(%ld,%ld)\n", this, mImage.size.w, mImage.size.h));
 
 
-/* Kirk Hack to see what this does 9/27/99 */
-/* I think this is needed... but I can't find anything that calls it... */
-/* This draw may be able to call the other draw to save space */
-#if 1
   if( mAlphaBits )
   {
     err=PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
@@ -306,8 +308,8 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	  return NS_ERROR_FAILURE;
     }
   }
-#endif
 
+  PgFlush();	// kedl
   return NS_OK;
 }
 
@@ -328,26 +330,80 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=(%p) dest=(%ld,%ld,%ld,%ld) aSurface=<%p>\n", this, aX, aY, aWidth, aHeight, aSurface ));
 
-  // REVISIT - this is a brute-force implementation. We currently have no h/w blit
-  // capabilities.
-
   if( !mImage.image )
   {
-    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 - mImageBits is NULL!\n" ));
-    return NS_OK;
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 - mImage.image is NULL!\n" ));
+	NS_ASSERTION(mImage.image, "nsImagePh::Draw2 - mImageBits is NULL!");
+    return NS_ERROR_FAILURE;
   }
 
+  if( !aSurface )
+  {
+    PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 - aSurface is NULL!\n" ));
+	NS_ASSERTION(mImage.image, "nsImagePh::Draw2 - aSurface is NULL!");
+    return NS_ERROR_FAILURE;
+  }
+
+  // XXX kipp: this is temporary code until we eliminate the
+  // width/height arguments from the draw method.
+  if ((aWidth != mWidth) || (aHeight != mHeight))
+  {
+	NS_ASSERTION(0, "nsImagePh::Draw2 - Width or Height don't match!");
+
+    aWidth = mWidth;
+    aHeight = mHeight;
+  }
+  
   PhPoint_t pos = { aX, aY };
   int       err;
   
-  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld)\n", this, mImage.size.w, mImage.size.h));
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> mImage.size=(%ld,%ld) mAlphaBits=<%p> mARowBytes=%d mImage.type=%d mImage.mask_bpl=%d\n", this, mImage.size.w, mImage.size.h, mAlphaBits, mARowBytes, mImage.type, mImage.mask_bpl));
 
-
-/* Kirk Hack to see what this does 9/27/99 */
-/* No Images draw without this  enabled.. Check out Test 2 */
-#if 1
+#ifndef NO_MASK
   if( mAlphaBits )
   {
+#if 1
+	int x,y;
+	for(x=0; x < mHeight; x++)
+	{
+#if 1
+ /* Use PR_LOG */
+      unsigned char a = mAlphaBits[(x*4)+0];
+      unsigned char b = mAlphaBits[(x*4)+1];
+      unsigned char c = mAlphaBits[(x*4)+2];
+      unsigned char d = mAlphaBits[(x*4)+3];
+
+	  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 %2d => %d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d %d%d%d%d%d%d%d%d ",x,
+		  ((a&1)==1), ((a&2)==2), ((a&4)==4), ((a&8)==8),
+		  ((a&16)==16), ((a&32)==32), ((a&64)==64), ((a&128)==128),
+
+  		  ((b&1)==1), ((b&2)==2), ((b&4)==4), ((b&8)==8),
+		  ((b&16)==16), ((b&32)==32), ((b&64)==64), ((b&128)==128),
+		  
+		  ((c&1)==1), ((c&2)==2), ((c&4)==4), ((c&8)==8),
+		  ((c&16)==16), ((c&32)==32), ((c&64)==64), ((c&128)==128),	  
+
+		  ((d&1)==1), ((d&2)==2), ((d&4)==4), ((d&8)==8),
+		  ((d&16)==16), ((d&32)==32), ((d&64)==64), ((d&128)==128) ));
+	}
+#else
+  /* use Printfs */
+      printf("%2d => ",x);
+	  for(y=0; 	y<mARowBytes; y++)
+	  {
+		//printf("(%d)", (x*mARowBytes)+y );
+		unsigned char c = mAlphaBits[(x*mARowBytes)+y];
+		printf("%d%d%d%d%d%d%d%d ",
+		  ((c&1)==1), ((c&2)==2), ((c&4)==4), ((c&8)==8),
+		  ((c&16)==16), ((c&32)==32), ((c&64)==64), ((c&128)==128) );
+	  }
+	  printf("\n");
+
+	}
+    printf("\n");
+#endif
+#endif    
+
     err=PgDrawTImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0, mAlphaBits, mARowBytes );
     if (err == -1)
     {
@@ -356,6 +412,7 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
     }
   }
   else
+#endif
   {
     err=PgDrawImage( mImage.image, mImage.type, &pos, &mImage.size, mImage.bpl, 0 );
     if (err == -1)
@@ -364,8 +421,10 @@ NS_IMETHODIMP nsImagePh :: Draw(nsIRenderingContext &aContext, nsDrawingSurface 
 	  return NS_ERROR_FAILURE;
     }
   }
-#endif
 
+  PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::Draw2 this=<%p> finished \n", this));
+
+  PgFlush();	//kedl
   return NS_OK;
 }
 
@@ -415,27 +474,6 @@ PRInt32  nsImagePh :: CalcBytesSpan(PRUint32  aWidth)
 void nsImagePh :: CleanUp(PRBool aCleanUpAll)
 {
   PR_LOG(PhGfxLog, PR_LOG_DEBUG,("nsImagePh::CleanUp\n" ));
-
-#if 0
-  /* from windows */
-  // this only happens when we need to clean up everything
-  if (aCleanUpAll == PR_TRUE)
-  {
-    if (mHBitmap != nsnull)
-	  ::DeleteObject(mHBitmap);
-	if (mAlphaHBitmap != nsnull)
-	  ::DeleteObject(mAlphaHBitmap);
-	if(mBHead)
-	{
-	  delete[] mBHead;
-	  mBHead = nsnull;
-	}
-															  
-	mHBitmap = nsnull;
-	mAlphaHBitmap = nsnull;
-	mIsOptimized = PR_FALSE;
-  }
-#endif
 
   if (mImageBits != nsnull)
   {
