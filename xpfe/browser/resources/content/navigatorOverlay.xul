@@ -85,8 +85,6 @@
     <key id="key_findPrev"   key="&findPrevCmd.commandkey;"       command="Browser:FindPrev"  modifiers="accel,shift"/>
     <key keycode="&findAgainCmd.commandkey2;" command="Browser:FindAgain"/>
     <key keycode="&findPrevCmd.commandkey2;"  command="Browser:FindPrev" modifiers="shift"/>
-    <key id="key_findTypeText"/>
-    <key id="key_findTypeLinks"/>
 
     <!-- Go Menu -->
 
@@ -150,9 +148,7 @@
     <command id="Browser:Find" oncommand="BrowserFind();" observes="isImage"/>
     <command id="Browser:FindAgain" oncommand="BrowserFindAgain(false);" observes="isImage"/>
     <command id="Browser:FindPrev"  oncommand="BrowserFindAgain(true);"  observes="isImage"/>
-    <command id="cmd_findTypeText" observes="isImage"/>
-    <command id="cmd_findTypeLinks" observes="isImage"/>
-
+  
     <!-- Bookmarks Menu -->
     <command id="Browser:AddBookmark" label="&addCurPageCmd.label;" accesskey="&addCurPageCmd.accesskey;" 
              oncommand="BookmarksUtils.addBookmarkForBrowser(document.getElementById('content').webNavigation, false);"/>
@@ -235,10 +231,6 @@
         <menuitem id="menu_find" label="&findOnCmd.label;" accesskey="&findOnCmd.accesskey;" key="key_find" command="Browser:Find"/>
         <menuitem id="menu_findAgain" label="&findAgainCmd.label;" accesskey="&findAgainCmd.accesskey;" key="key_findAgain" command="Browser:FindAgain"/>
         <menuitem id="menu_findPrev"  label="&findPrevCmd.label;"  accesskey="&findPrevCmd.accesskey;" key="key_findPrev" command="Browser:FindPrev"/>
-        <menuseparator/> 
-        <menuitem id="menu_findTypeLinks"/>
-        <menuitem id="menu_findTypeText"/>
-
         <menuseparator id="menu_PrefsSeparator"/> 
         <menuitem id="menu_preferences" oncommand="goPreferences('navigator', 'chrome://communicator/content/pref/pref-navigator.xul', 'navigator')"/>
       </menupopup>
