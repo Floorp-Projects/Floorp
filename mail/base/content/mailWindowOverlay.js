@@ -614,10 +614,13 @@ function InitMessageMark()
 function UpdateJunkToolbarButton()
 {
   var junkButtonDeck = document.getElementById("junk-deck");
-  if (SelectedMessagesAreJunk())
-    junkButtonDeck.selectedIndex = 1;
-  else
-    junkButtonDeck.selectedIndex = 0;
+  if (junkButtonDeck)
+  {
+    if (SelectedMessagesAreJunk())
+      junkButtonDeck.selectedIndex = 1;
+    else
+      junkButtonDeck.selectedIndex = 0;
+  }
 }
 
 function UpdateDeleteCommand()
