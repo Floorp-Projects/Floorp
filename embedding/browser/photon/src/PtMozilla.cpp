@@ -35,6 +35,7 @@
 #include "nsILoadGroup.h"
 #include "nsIHistoryEntry.h"
 
+#include "nsIWebBrowserPrint.h"
 #include "nsIPrintOptions.h"
 
 #include "nsIDOMEventReceiver.h"
@@ -307,21 +308,20 @@ mozilla_modify( PtWidget_t *widget, PtArg_t const *argt )
 					moz->EmbedRef->Back();
 				else 
 				{
-				PhDim_t dim;
+					PhDim_t dim;
 
-				PtWidgetDim(widget, &dim);
-				dim.w = (argt->value * dim.w)/100;
-				dim.h = (argt->value * dim.h)/100;
-				printf("Scroll: V: %d P: (%d, %d) \n", argt->value, dim.w, dim.h);
+					PtWidgetDim(widget, &dim);
+					dim.w = (argt->value * dim.w)/100;
+					dim.h = (argt->value * dim.h)/100;
 
-				if (argt->value == WWW_DIRECTION_UP)
-					moz->EmbedRef->ScrollUp(dim.h);
-				else if (argt->value ==	WWW_DIRECTION_DOWN)
-					moz->EmbedRef->ScrollDown(dim.h);
-				else if (argt->value ==	WWW_DIRECTION_LEFT)
-					moz->EmbedRef->ScrollLeft(dim.w);
-				else if (argt->value == WWW_DIRECTION_RIGHT)
-					moz->EmbedRef->ScrollRight(dim.w);
+					if (argt->value == WWW_DIRECTION_UP)
+						moz->EmbedRef->ScrollUp(dim.h);
+					else if (argt->value ==	WWW_DIRECTION_DOWN)
+						moz->EmbedRef->ScrollDown(dim.h);
+					else if (argt->value ==	WWW_DIRECTION_LEFT)
+						moz->EmbedRef->ScrollLeft(dim.w);
+					else if (argt->value == WWW_DIRECTION_RIGHT)
+						moz->EmbedRef->ScrollRight(dim.w);
 				}
 			}
 			break;
@@ -500,7 +500,6 @@ mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 {
 	PtMozillaWidget_t *moz = (PtMozillaWidget_t *) widget;
 	nsIPref *pref = moz->EmbedRef->GetPrefs();
-	int retval;
 
 	switch (argt->type)
 	{
@@ -555,9 +554,9 @@ mozilla_get_info(PtWidget_t *widget, PtArg_t *argt)
 					strncpy( HistoryReplyBuf[j].title, ToNewCString(stitle), 127 );
 					HistoryReplyBuf[j].title[127] = '\0';
 
-					char *urlspec;
-					url->GetSpec( &urlspec );
-					strcpy( HistoryReplyBuf[j].url, urlspec );
+					nsCAutoString specString;
+					url->GetSpec(specString);
+					strcpy( HistoryReplyBuf[j].url, (char *) specString.get() );
 				}
 			}
 			break;
@@ -1015,7 +1014,8 @@ StartupEmbedding()
 
 	profile_dir = (char *)alloca(strlen(getenv("HOME")) + strlen("/.ph") + 1);
 	sprintf(profile_dir, "%s/.ph", getenv("HOME"));
-    rv = StartupProfile(profile_dir, "mozilla");
+    //rv = StartupProfile(profile_dir, "mozilla");
+    rv = StartupProfile("/home/briane", ".mozilla");
     if (NS_FAILED(rv))
       	NS_WARNING("Warning: Failed to start up profiles.\n");
     
@@ -1097,7 +1097,7 @@ PtWidgetClass_t *PtCreateMozillaClass( void )
 	if (StartupEmbedding() == -1)
 		return (NULL);
 
-	Init_nsUnknownContentTypeHandler_Factory( );
+//	Init_nsUnknownContentTypeHandler_Factory( );
 
 	nsCOMPtr<nsIFactory> promptFactory;
 	NS_NewPromptServiceFactory(getter_AddRefs(promptFactory));

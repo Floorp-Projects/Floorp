@@ -100,8 +100,11 @@ NS_IMETHODIMP nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher
 	PRInt64 dummy;
 	nsCOMPtr<nsIFile> aFile;
 	aLauncher->GetDownloadInfo( getter_AddRefs(aSourceUrl), &dummy, getter_AddRefs(aFile) );
+
 	char *url;
-	aSourceUrl->GetSpec( &url );
+	nsCAutoString specString;
+	aSourceUrl->GetSpec(specString);
+	url	= (char *) specString.get();
 
 	PtCallbackInfo_t cbinfo;
 	PtWebUnknownCallback_t cb;
@@ -226,7 +229,7 @@ NS_IMETHODIMP className::QueryInterface( REFNSIID anIID, void **anInstancePtr ) 
 NS_GENERIC_FACTORY_CONSTRUCTOR( nsUnknownContentTypeHandler )
 
 // The list of components we register
-static const nsModuleComponentInfo info[] = {
+static nsModuleComponentInfo info[] = {
 	"nsUnknownContentTypeHandler",
 	NS_IHELPERAPPLAUNCHERDIALOG_IID,
 	NS_IHELPERAPPLAUNCHERDLG_CONTRACTID,

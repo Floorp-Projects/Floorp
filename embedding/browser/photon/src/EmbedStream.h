@@ -17,7 +17,6 @@
  * 
  * Contributor(s):
  *   Christopher Blizzard <blizzard@mozilla.org>
- *   Brian Edmond <briane@qnx.com>
  */
 
 #include <nsISupports.h>

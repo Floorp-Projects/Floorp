@@ -58,6 +58,7 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
 	PtCallbackList_t    *cb = NULL;
 	PtCallbackInfo_t    cbinfo;
 	PtMozillaUrlCb_t    url;
+	nsCAutoString specString;
 
 	if (!moz->open_cb)
 		return NS_OK;
@@ -66,7 +67,9 @@ EmbedContentListener::OnStartURIOpen(nsIURI     *aURI,
 	cbinfo.cbdata = &url;
 	cbinfo.reason = Pt_CB_MOZ_OPEN;
 	cb = moz->open_cb;
-	aURI->GetSpec(&(url.url));
+
+	aURI->GetSpec(specString);
+	url.url = (char *) specString.get();
 
 	if (PtInvokeCallbackList(cb, (PtWidget_t *) moz, &cbinfo) == Pt_END)
 	{
