@@ -634,26 +634,21 @@ PK11_GetKeyData(PK11SymKey *symKey)
 }
 
 /*
- * take an attribute and copy it into a secitem, converting unsigned to signed.
+ * take an attribute and copy it into a secitem
  */
 static CK_RV
-pk11_Attr2SecItem(PRArenaPool *arena, CK_ATTRIBUTE *attr, SECItem *item) {
-    unsigned char *dataPtr;
+pk11_Attr2SecItem(PRArenaPool *arena, CK_ATTRIBUTE *attr, SECItem *item) 
+{
+    item->data = NULL;
 
-    item->len = attr->ulValueLen;
-    dataPtr = (unsigned char*) PORT_ArenaAlloc(arena, item->len+1);
-    if ( dataPtr == NULL) {
+    (void)SECITEM_AllocItem(arena, item, attr->ulValueLen);
+    if (item->data == NULL) {
 	return CKR_HOST_MEMORY;
     } 
-    *dataPtr = 0;
-    item->data = dataPtr+1;
-    PORT_Memcpy(item->data,attr->pValue,item->len);
-    if (item->data[0] & 0x80) {
-	item->data = item->data-1;
-	item->len++;
-    }
+    PORT_Memcpy(item->data, attr->pValue, item->len);
     return CKR_OK;
 }
+
 /*
  * extract a public key from a slot and id
  */
