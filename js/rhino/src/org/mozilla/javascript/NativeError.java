@@ -126,10 +126,7 @@ final class NativeError extends IdScriptable
 
     private static String js_toString(Scriptable thisObj)
     {
-        Object name = ScriptRuntime.getStrIdElem(thisObj, "name");
-        Object message = ScriptRuntime.getStrIdElem(thisObj, "message");
-        return ScriptRuntime.toString(name)
-            +": "+ScriptRuntime.toString(message);
+        return getName(thisObj)+": "+getMessage(thisObj);
     }
 
     public String getClassName()
@@ -142,18 +139,16 @@ final class NativeError extends IdScriptable
         return js_toString(this);
     }
 
-    String getName()
+    static String getName(Scriptable obj)
     {
-        Object val = nameValue;
-        return ScriptRuntime.toString(val != NOT_FOUND ? val
-                                                       : Undefined.instance);
+        Object value = ScriptRuntime.getStrIdElem(obj, "name");
+        return ScriptRuntime.toString(value);
     }
 
-    String getMessage()
+    static String getMessage(Scriptable obj)
     {
-        Object val = messageValue;
-        return ScriptRuntime.toString(val != NOT_FOUND ? val
-                                                       : Undefined.instance);
+        Object value = ScriptRuntime.getStrIdElem(obj, "message");
+        return ScriptRuntime.toString(value);
     }
 
     protected String getIdName(int id)

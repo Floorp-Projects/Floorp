@@ -49,7 +49,8 @@ public class EcmaError extends RuntimeException {
      * Errors internal to the JavaScript engine will simply throw a
      * RuntimeException.
      *
-     * @param nativeError the NativeError object constructed for this error
+     * @param nativeError the Scriptable object constructed for this error.
+              Scripts will get it as an argument to catch statement.
      * @param sourceName the name of the source reponsible for the error
      * @param lineNumber the line number of the source
      * @param columnNumber the columnNumber of the source (may be zero if
@@ -57,7 +58,7 @@ public class EcmaError extends RuntimeException {
      * @param lineSource the source of the line containing the error (may be
      *                   null if unknown)
      */
-    public EcmaError(NativeError nativeError, String sourceName,
+    public EcmaError(Scriptable nativeError, String sourceName,
                      int lineNumber, int columnNumber, String lineSource)
     {
         super("EcmaError");
@@ -103,7 +104,7 @@ public class EcmaError extends RuntimeException {
      * @return the name of the error.
      */
     public String getName() {
-        return errorObject.getName();
+        return NativeError.getName(errorObject);
     }
 
     /**
@@ -114,7 +115,7 @@ public class EcmaError extends RuntimeException {
      * @return an implemenation-defined string describing the error.
      */
     public String getMessage() {
-        return errorObject.getMessage();
+        return NativeError.getMessage(errorObject);
     }
 
     /**
@@ -154,7 +155,7 @@ public class EcmaError extends RuntimeException {
         return lineSource;
     }
 
-    private NativeError errorObject;
+    private Scriptable errorObject;
     private String sourceName;
     private int lineNumber;
     private int columnNumber;
