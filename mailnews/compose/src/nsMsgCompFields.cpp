@@ -613,7 +613,7 @@ nsresult nsMsgCompFields::AddForwardURL(const char* url)
 {
 	NS_ASSERTION(url && *url, "empty url");
 	if (!url || !*url)
-		return -1;
+		return NS_ERROR_NULL_POINTER;
 
 	if (m_numforward >= m_maxforward) {
 		m_maxforward += 10;
