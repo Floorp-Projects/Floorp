@@ -141,7 +141,7 @@ nsScrollFrame::GetClipSize(   nsIPresContext* aPresContext,
 /**
 * Get information about whether the vertical and horizontal scrollbars
 * are currently visible
-*/
+*/ 
 NS_IMETHODIMP
 nsScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext, 
                                       PRBool *aVerticalVisible,
@@ -158,6 +158,15 @@ nsScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
     }
 
    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsScrollFrame::SetScrollbarVisibility(nsIPresContext* aPresContext, 
+                                      PRBool aVerticalVisible,
+                                      PRBool aHorizontalVisible)
+{
+  NS_ASSERTION(0,"Write me!");
+  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP 
