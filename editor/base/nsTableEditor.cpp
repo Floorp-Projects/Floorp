@@ -1721,6 +1721,23 @@ nsHTMLEditor::SplitTableCell()
   return res;
 }
 
+nsresult
+nsHTMLEditor::CopyCellBackgroundColor(nsIDOMElement *destCell, nsIDOMElement *sourceCell)
+{
+  if (!destCell || !sourceCell) return NS_ERROR_NULL_POINTER;
+
+  // Copy backgournd color to new cell
+  nsAutoString bgcolor; bgcolor.AssignWithConversion("bgcolor");
+  nsAutoString color;
+  PRBool isSet;
+  nsresult res = GetAttributeValue(sourceCell, bgcolor, color, isSet);
+
+  if (NS_SUCCEEDED(res) && isSet)
+    res = SetAttribute(destCell, bgcolor, color);
+
+  return res;
+}
+
 NS_IMETHODIMP 
 nsHTMLEditor::SplitCellIntoColumns(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt32 aColIndex,
                                    PRInt32 aColSpanLeft, PRInt32 aColSpanRight,
@@ -1746,7 +1763,10 @@ nsHTMLEditor::SplitCellIntoColumns(nsIDOMElement *aTable, PRInt32 aRowIndex, PRI
   if (NS_FAILED(res)) return res;
   
   // Insert new cell after using the remaining span;
-  return InsertCell(cell, actualRowSpan, aColSpanRight, PR_TRUE, PR_FALSE, aNewCell);
+  res = InsertCell(cell, actualRowSpan, aColSpanRight, PR_TRUE, PR_FALSE, aNewCell);
+  if (NS_FAILED(res)) return res;
+
+  return CopyCellBackgroundColor(*aNewCell, cell);
 }
 
 NS_IMETHODIMP
@@ -1837,7 +1857,10 @@ nsHTMLEditor::SplitCellIntoRows(nsIDOMElement *aTable, PRInt32 aRowIndex, PRInt3
   res = SetRowSpan(cell, aRowSpanAbove);
   if (NS_FAILED(res)) return res;
 
-  return InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, PR_FALSE, aNewCell);
+  res = InsertCell(cell2, aRowSpanBelow, actualColSpan, insertAfter, PR_FALSE, aNewCell);
+  if (NS_FAILED(res)) return res;
+
+  return CopyCellBackgroundColor(*aNewCell, cell);
 }
 
 NS_IMETHODIMP
