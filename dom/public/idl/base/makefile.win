@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 
 MODULE=raptor 
 
-IDLSRCS= Navigator.idl Location.idl WindowCollection.idl
+IDLSRCS= Navigator.idl Location.idl WindowCollection.idl Screen.idl History.idl
 
 GLOBAL_IDLSRC= Window.idl
 
