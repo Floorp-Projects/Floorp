@@ -370,8 +370,8 @@ nsXPCWrappedJSClass::BuildPropertyEnumerator(XPCCallContext& ccx,
             goto out;
 
         nsCOMPtr<nsIProperty> property = 
-            new xpcProperty(JS_GetStringChars(name), 
-                            JS_GetStringLength(name),
+            new xpcProperty((const PRUnichar*) JS_GetStringChars(name), 
+                            (PRUint32) JS_GetStringLength(name),
                             value);
         if(!property)
             goto out;
