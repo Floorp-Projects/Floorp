@@ -23,6 +23,7 @@ EXPORTS=nsIFormManager.h \
   nsIRadioControlFrame.h \
   nsIFormControlFrame.h \
   nsIFormSubmitObserver.h \
+  nsIFormProcessor.h \
   nsISelectControlFrame.h
 
 MODULE=raptor 
