@@ -212,7 +212,8 @@
   ;                                           ;  written since the last hard break.
   (surplus 0 :type integer)                   ;Value to subtract from position if soft breaks were hard breaks in this logical block
   (n-soft-breaks nil :type (or null integer)) ;Number of soft-breaks in the current paragraph or nil if not inside a depict-logical-block
-  (indent 0 :type (or null integer)))         ;Indent for next line
+  (indent 0 :type (or null integer))          ;Indent for next line
+  (force-compact-next-break nil))             ;If true, the next break is :force-compact.
 
 
 ; Return the value the position would have if soft breaks became hard breaks in this logical block.
@@ -265,9 +266,9 @@
 
 
 ; Return a freshly consed markup list for a hard line break followed by indent spaces.
-(defun hard-break-markup (indent)
+(defun hard-break-markup (indent force-compact)
   (cond
-   (*compact-breaks* (list :space))
+   (*compact-breaks* (if force-compact (list :new-line) (list :space)))
    ((zerop indent) (list :new-line))
    (t (list :new-line (make-string indent :initial-element #\space :element-type #-mcl 'character #+mcl 'base-character)))))
 
@@ -281,7 +282,7 @@
   (substitute-soft-breaks
    tree
    #'(lambda (soft-break)
-       (nconc (hard-break-markup indent)
+       (nconc (hard-break-markup indent nil)
               (copy-list (soft-break-groups soft-break))))))
 
 
@@ -573,6 +574,7 @@
             (incf (logical-position-n-hard-breaks logical-position) (+ inner-n-hard-breaks inner-n-soft-breaks))
             (setf (logical-position-position logical-position) (logical-position-minimal-position inner-logical-position))
             (setf (logical-position-surplus logical-position) 0))))
+        (setf (logical-position-force-compact-next-break logical-position) (logical-position-force-compact-next-break inner-logical-position))
         (setf (markup-stream-logical-position markup-stream) logical-position)))
     (funcall emitter markup-stream)))
 
@@ -591,6 +593,7 @@
 
 ; Emit a conditional line break.  If the line break is not needed, emit width spaces instead.
 ; If width is t or omitted, the line break is unconditional.
+; If width is :force-compact, the line break is unconditional even if *compact-breaks* is true.
 ; If width is nil, do nothing.
 ; If the line break is needed, the new line is indented to the current indent level and groups, if provided,
 ; are added to the beginning of the new line.  The width of these groups is currently not taken into account.
@@ -600,9 +603,12 @@
   (when width
     (let* ((logical-position (markup-stream-logical-position markup-stream))
            (indent (logical-position-indent logical-position)))
-      (if (eq width t)
+      (when (logical-position-force-compact-next-break logical-position)
+        (setq width :force-compact)
+        (setf (logical-position-force-compact-next-break logical-position) nil))
+      (if (member width '(t :force-compact))
         (progn
-          (depict-item-or-list markup-stream (hard-break-markup indent))
+          (depict-item-or-list markup-stream (hard-break-markup indent (eq width :force-compact)))
           (dolist (item groups)
             (markup-stream-append1 markup-stream item)))
         (progn
@@ -615,6 +621,12 @@
           (when *show-logical-blocks*
             (markup-stream-append1 markup-stream '(:invisible :bullet)))
           (markup-stream-append1 markup-stream (make-soft-break width groups)))))))
+
+
+; Override the next break emitted to have the :force-compact width.
+(defun force-compact-next-break (markup-stream)
+  (let ((logical-position (markup-stream-logical-position markup-stream)))
+    (setf (logical-position-force-compact-next-break logical-position) t)))
 
 
 ; Depict the string unquoted, except that replace each space with a one-character break.
