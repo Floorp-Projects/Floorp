@@ -1624,6 +1624,11 @@ SI_LoadSignonData() {
   /* read the reject list */
   si_lock_signon_list();
   while (!NS_FAILED(si_ReadLine(strm, buffer))) {
+    if (buffer.Length() == 0) {
+      /* something's wrong */
+      si_unlock_signon_list();
+      return -1;
+    }
     if (buffer.CharAt(0) == '.') {
       break; /* end of reject list */
     }
@@ -1635,6 +1640,11 @@ SI_LoadSignonData() {
 
   /* read the URL line */
   while(!NS_FAILED(si_ReadLine(strm, buffer))) {
+    if (buffer.Length() == 0) {
+      /* something's wrong */
+      si_unlock_signon_list();
+      return -1;
+    }
     si_StripLF(buffer);
     passwordRealm = buffer.ToNewCString();
 
