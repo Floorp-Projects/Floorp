@@ -5473,12 +5473,28 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
   if (!mContext || !mDocument || !sSecMan)
     return NS_ERROR_FAILURE;
 
-  // get the JSContext from the call stack
-  nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
-  if (stack)
-    stack->Peek(&cx);
-  if (!cx)        // not bloody likely. but if there's no JS on the call stack,
-    return NS_OK; // then we should pass the security check.
+  nsCOMPtr<nsIDOMChromeWindow> chrome_win =
+    do_QueryInterface(NS_STATIC_CAST(nsIDOMWindow *, this));
+
+  if (IsCallerChrome() && !chrome_win) {
+    // If open() is called from chrome on a non-chrome window, we'll
+    // use the context from the window on which open() is being called
+    // to prevent giving chrome priveleges to new windows opened in
+    // such a way. This also makes us get the appropriate base URI for
+    // the below URI resolution code.
+
+    cx = (JSContext *)mContext->GetNativeContext();
+  } else {
+    // get the JSContext from the call stack
+    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService(sJSStackContractID));
+    if (stack)
+      stack->Peek(&cx);
+    if (!cx) {
+      // if there's no JS on the call stack, then we should pass the
+      // security check.
+      return NS_OK;
+    }
+  }
 
   /* resolve the URI, which could be relative to the calling window
      (note the algorithm to get the base URI should match the one
@@ -5497,7 +5513,7 @@ GlobalWindowImpl::SecurityCheckURL(const char *aURL)
       caller->GetDocument(getter_AddRefs(callerDOMdoc));
       nsCOMPtr<nsIDocument> callerDoc(do_QueryInterface(callerDOMdoc));
       if (callerDoc)
-        baseURI = callerDoc->GetDocumentURI();
+        baseURI = callerDoc->GetBaseURI();
     }
   }
 
