@@ -402,7 +402,7 @@ nsWebShell::Init(nsNativeWidget aNativeParent,
   //XXX make sure plugins have started up. this really needs to
   //be associated with the nsIContentViewerContainer interfaces,
   //not the nsIWebShell interfaces. this is a hack. MMP
-//  CreatePluginHost();
+  CreatePluginHost();
 
   mScrollPref = aScrolling;
 
