@@ -2054,7 +2054,8 @@ nsHTTPChannel::Authenticate(const char *iChallenge, PRBool iProxyAuth)
         nsXPIDLCString urlCString; 
         mURI->GetPrePath(getter_Copies(urlCString));
             
-        nsAutoString prePath(NS_ConvertToString(urlCString)); // XXX i18n
+        nsAutoString prePath; // XXX i18n
+        CopyASCIItoUCS2(nsLiteralCString(NS_STATIC_CAST(const char*, urlCString)), prePath);
         rv = mPrompter->PromptUsernameAndPassword(nsnull,
                                                   message.GetUnicode(),
                                                   prePath.GetUnicode(),
