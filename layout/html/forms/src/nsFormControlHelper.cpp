@@ -302,7 +302,7 @@ nsFormControlHelper::CalcNavQuirkSizing(nsIPresContext&      aPresContext,
   } else if (NS_FORM_INPUT_BUTTON == type ||
              NS_FORM_INPUT_SUBMIT == type ||
              NS_FORM_INPUT_RESET  == type) {
-    nscoord charWidth = GetTextSize(aPresContext, aFrame, *aSpec.mColDefaultValue, aSize, aRendContext);
+    GetTextSize(aPresContext, aFrame, *aSpec.mColDefaultValue, aSize, aRendContext);
     aSize.width  = NSToCoordRound(aSize.width * t2p);
     aSize.height = NSToCoordRound(aSize.height * t2p);
     width  = 3 * aSize.width / 2;
