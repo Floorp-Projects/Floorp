@@ -1184,6 +1184,8 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
   if (! mVisible)
     return;
   
+  GrafPtr oldPort;
+  ::GetPort(&oldPort);
   ::SetPort(GetQuickDrawPort());
         
   // initialize the paint event
@@ -1210,6 +1212,8 @@ nsChildView::UpdateWidget(nsRect& aRect, nsIRenderingContext* aContext)
       Flash(paintEvent);
   }
   EndDraw();
+  
+  ::SetPort(oldPort);
 }
 
 
