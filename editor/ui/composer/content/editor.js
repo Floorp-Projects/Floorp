@@ -2493,7 +2493,8 @@ function SwitchInsertCharToAnotherEditorOrClose()
     while ( enumerator.hasMoreElements()  )
     {
       var  tempWindow = enumerator.getNext();
-      if (tempWindow != window && ("editorShell" in tempWindow) && tempWindow.editorShell)
+      if (tempWindow != window && tempWindow != window.InsertCharWindow && 
+          ("editorShell" in tempWindow) && tempWindow.editorShell)
       {
         var type = tempWindow.editorShell.editorType;
         if (type == "html" || type == "text" || type == "htmlmail")
