@@ -41,7 +41,7 @@ $pull{netlib} 		= 0;
 $pull{nglayout} 	= 0;
 $pull{mac} 			= 0;
 
-$build{all} 			= 0;			# turn off to do individual builds, or to do "most"
+$build{all} 			= 1;			# turn off to do individual builds, or to do "most"
 $build{most} 			= 0;			# turn off to do individual builds
 $build{dist} 			= 0;
 $build{dist_runtime}	= 0;			# implied by $build{dist}
