@@ -842,20 +842,54 @@ SearchDataSource::DoSearch(nsIRDFResource *source, nsIRDFResource *engine, nsStr
 		return(NS_RDF_NO_VALUE);
 	}
 
-	nsCOMPtr<nsIRDFNode>	dataTarget;
-	if (NS_FAILED(rv = mInner->GetTarget(engine, kNC_Data, PR_TRUE, getter_AddRefs(dataTarget))))
-		return(rv);
-	if (!dataTarget)
-		return(NS_ERROR_NULL_POINTER);
+	// get data
+	nsAutoString		data("");
+	nsCOMPtr<nsIRDFNode>	dataTarget = nsnull;
+	if (NS_SUCCEEDED((rv = mInner->GetTarget(engine, kNC_Data, PR_TRUE, getter_AddRefs(dataTarget)))) && (dataTarget))
+	{
+		nsCOMPtr<nsIRDFLiteral>	dataLiteral = do_QueryInterface(dataTarget);
+		if (!dataLiteral)
+			return(rv);
+		PRUnichar	*dataUni;
+		if (NS_FAILED(rv = dataLiteral->GetValue(&dataUni)))
+			return(rv);
+		data = dataUni;
+	}
+	else
+	{
+		nsXPIDLCString	engineURI;
+		if (NS_FAILED(rv = engine->GetValue(getter_Copies(engineURI))))
+			return(rv);
+		nsAutoString	engineStr(engineURI);
+		if (engineStr.Find("engine://") != 0)
+			return(rv);
+		engineStr.Cut(0, strlen("engine://"));
+		char	*basename = engineStr.ToNewCString();
+		if (!basename)
+			return(rv);
+		basename = nsUnescape(basename);
+		if (!basename)
+			return(rv);
+		rv = ReadFileContents(basename, data);
+		delete [] basename;
+		basename = nsnull;
+		if (NS_FAILED(rv))
+		{
+			return(rv);
+		}
 
-	nsCOMPtr<nsIRDFLiteral>	dataLiteral = do_QueryInterface(dataTarget);
-	if (!dataLiteral)
-		return(rv);
-	PRUnichar	*dataUni;
-	nsAutoString	data;
-	if (NS_FAILED(rv = dataLiteral->GetValue(&dataUni)))
-		return(rv);
-	data = dataUni;
+		// save file contents
+		nsCOMPtr<nsIRDFLiteral>	dataLiteral;
+		if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(dataLiteral))))
+		{
+			if (mInner)
+			{
+				mInner->Assert(engine, kNC_Data, dataLiteral, PR_TRUE);
+			}
+		}
+	}
+	if (data.Length() < 1)
+		return(NS_RDF_NO_VALUE);
 	
 	nsAutoString	action, method, input;
 
@@ -1005,12 +1039,14 @@ SearchDataSource::GetSearchEngineList()
 							{
 								mInner->Assert(kNC_SearchRoot, kNC_Child, searchRes, PR_TRUE);
 
+#if 0
 								// save file contents
 								nsCOMPtr<nsIRDFLiteral>	dataLiteral;
 								if (NS_SUCCEEDED(rv = gRDFService->GetLiteral(data.GetUnicode(), getter_AddRefs(dataLiteral))))
 								{
 									mInner->Assert(searchRes, kNC_Data, dataLiteral, PR_TRUE);
 								}
+#endif
 
 								// save name of search engine (as specified in file)
 								nsAutoString	nameValue;
@@ -1456,9 +1492,13 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 	delete [] mLine;
 	mLine = nsnull;
 
+	// get data out of graph
+	nsAutoString		data("");
 	nsCOMPtr<nsIRDFNode>	dataNode;
 	if (NS_FAILED(rv = mDataSource->GetTarget(mEngine, kNC_Data, PR_TRUE, getter_AddRefs(dataNode))))
+	{
 		return(rv);
+	}
 	nsCOMPtr<nsIRDFLiteral>	dataLiteral = do_QueryInterface(dataNode);
 	if (!dataLiteral)	return(NS_ERROR_NULL_POINTER);
 
@@ -1466,8 +1506,10 @@ SearchDataSourceCallback::OnStopBinding(nsIURL* aURL, nsresult aStatus, const PR
 	if (NS_FAILED(rv = dataLiteral->GetValue(&dataUni)))
 		return(rv);
 	if (!dataUni)	return(NS_ERROR_NULL_POINTER);
+	data = dataUni;
+	if (data.Length() < 1)
+		return(rv);
 
-	nsAutoString	data(dataUni);
 	nsAutoString	resultListStartStr(""), resultListEndStr("");
 	nsAutoString	resultItemStartStr(""), resultItemEndStr("");
 	nsAutoString	relevanceStartStr(""), relevanceEndStr("");
