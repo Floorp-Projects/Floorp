@@ -271,7 +271,7 @@ SECMOD_LoadPKCS11Module(SECMODModule *mod) {
 
 	/* Initialize each slot */
 	for (i=0; i < (int)slotCount; i++) {
-	    mod->slots[i] = PK11_NewSlotInfo();
+	    mod->slots[i] = PK11_NewSlotInfo(mod);
 	    PK11_InitSlot(mod,slotIDs[i],mod->slots[i]);
 	    /* look down the slot info table */
 	    PK11_LoadSlotList(mod->slots[i],mod->slotInfo,mod->slotInfoCount);
