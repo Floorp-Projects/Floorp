@@ -100,7 +100,7 @@ void nsSimpleCharString::operator = (const nsString& inString)
     ReallocData(len);
     if (!mData)
         return;
-    inString.ToCString(mData->mString, len);  
+    inString.ToCString(mData->mString, len + 1);  
 } // nsSimpleCharString::operator =
 
 //----------------------------------------------------------------------------------------
