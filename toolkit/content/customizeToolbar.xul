@@ -35,7 +35,7 @@
 
 <window id="CustomizeToolbarWindow"
         title="&dialog.title;"
-        onload="onLoad();" onunload="onAccept();"
+        onload="onLoad();"
         xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 
 <script type="application/x-javascript" src="chrome://global/content/customizeToolbar.js"/>
@@ -73,7 +73,7 @@
   <separator class="groove"/>
 
   <hbox align="center" pack="end">
-    <button label="&saveChanges.label;" oncommand="close();" default="true"/>
+    <button label="&saveChanges.label;" oncommand="onAccept();" default="true"/>
   </hbox>
 </vbox>
 
