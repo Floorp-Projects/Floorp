@@ -58,7 +58,7 @@ typedef	struct	_findTokenStruct
 
 
 
-class LocalSearchDataSource : public nsILocalSearchService
+class LocalSearchDataSource : public nsIRDFDataSource
 {
 private:
 	nsCOMPtr<nsISupportsArray> mObservers;
@@ -242,11 +242,9 @@ LocalSearchDataSource::Init()
 {
 	nsresult	rv = NS_ERROR_OUT_OF_MEMORY;
 
-#if 0
 	// register this as a named data source with the service manager
 	if (NS_FAILED(rv = gRDFService->RegisterDataSource(this, PR_FALSE)))
 		return(rv);
-#endif
 
 	return(rv);
 }
