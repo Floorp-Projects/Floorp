@@ -60,6 +60,8 @@ install::
 	$(MAKE_INSTALL) aw-accname.js		$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-done.xul			$(DIST)\bin\chrome\messenger\content\default
 	$(MAKE_INSTALL) aw-done.js			$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) accountUtils.js		$(DIST)\bin\chrome\messenger\content\default
+	$(MAKE_INSTALL) ispUtils.js			$(DIST)\bin\chrome\messenger\content\default
 
 clobber::
 	rm -f $(DIST)\chrome\messenger\content\default\AccountManager.xul

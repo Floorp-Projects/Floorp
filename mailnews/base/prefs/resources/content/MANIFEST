@@ -22,6 +22,8 @@
 
 AccountManager.xul
 AccountManager.js
+ispUtils.js
+accountUtils.js
 am-main.xul
 am-server.xul
 am-serverwithnoidentities.xul
