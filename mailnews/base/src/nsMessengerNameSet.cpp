@@ -30,12 +30,6 @@
 #include "nsIDOMMsgAppCore.h"
 #include "nsMsgAppCore.h"
 
-static NS_DEFINE_IID(kIScriptExternalNameSetIID, NS_ISCRIPTEXTERNALNAMESET_IID);
-
-
-
-
-
 nsMessengerNameSet::nsMessengerNameSet():
     mRefCnt(0)
 {
@@ -75,7 +69,10 @@ nsMessengerNameSet::AddNameSet(nsIScriptContext *aScriptContext)
       rv = manager->RegisterGlobalName("MsgAppCore",
                                        kCMsgAppCoreCID,
                                        PR_TRUE);
-                                       
+
+  // don't release the manager because that (Supposedly) removes
+  // the registered names from the namespace
+  
   return rv;
 
 }
