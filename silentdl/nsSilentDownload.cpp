@@ -1,4 +1,3 @@
-
 /* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
@@ -146,19 +145,19 @@ GetSilentDownloadDirectory(char* directory)
 }
 
 static void 
-GetSilentDownloadDefaults(XP_Bool* enabled, PRInt32 *bytes_range, PRInt32 *interval)
+GetSilentDownloadDefaults(PRBool* enabled, PRInt32 *bytes_range, PRInt32 *interval)
 {
-    PREF_GetBoolPref( "SilentDownload.enabled", enabled);
+    PREF_GetBoolPref( "SilentDownload.enabled", (XP_Bool*)enabled);
     if (!enabled)
         return;
 
    
-    if (PREF_OK != PREF_GetIntPref("SilentDownload.range", (long*)*bytes_range)) 
+    if (PREF_OK != PREF_GetIntPref("SilentDownload.range", (int32*)*bytes_range)) 
     {
         *bytes_range = 3000;
     }
 
-    if (PREF_OK != PREF_GetIntPref("SilentDownload.interval", (long*)*interval)) 
+    if (PREF_OK != PREF_GetIntPref("SilentDownload.interval", (int32*)*interval)) 
     {
         *interval = 10000;
     }
