@@ -37,53 +37,56 @@
 
 static nsCacheManager TheManager;
 
-nsCacheManager::nsCacheManager(): m_pFirstModule(0), m_pPref(new nsCachePref())
+nsCacheManager::nsCacheManager(): m_pFirstModule(0)
 {
     Init();
 }
 
 nsCacheManager::~nsCacheManager()
 {
-	if (m_pFirstModule)
-		delete m_pFirstModule;
-    delete m_pPref;
+    if (m_pFirstModule)
+        delete m_pFirstModule;
 }
 
-nsCacheManager* nsCacheManager::GetInstance()
+nsCacheManager* 
+nsCacheManager::GetInstance()
 {
-	return &TheManager;
+    return &TheManager;
 }
 
 /* Caller must free returned char* */
-const char* nsCacheManager::Trace() const
+const char* 
+nsCacheManager::Trace() const
 {
 
-	char linebuffer[128];
-	char* total;
-	
+    char linebuffer[128];
+    char* total;
+
     sprintf(linebuffer, "nsCacheManager: Modules = %d\n", Entries());
 
-	total = new char[strlen(linebuffer) + 1];
+    total = new char[strlen(linebuffer) + 1];
     strcpy(total, linebuffer);
-	return total;
+    return total;
 }
 
-PRInt32	nsCacheManager::AddModule(nsCacheModule* pModule)
+PRInt32 
+nsCacheManager::AddModule(nsCacheModule* pModule)
 {
-	if (pModule) 
-	{
-		if (m_pFirstModule)
-			LastModule()->Next(pModule);
-		else
-			m_pFirstModule = pModule;
-		
-		return Entries()-1;
-	}
-	else
-		return -1;
+    if (pModule) 
+    {
+    if (m_pFirstModule)
+        LastModule()->Next(pModule);
+    else
+        m_pFirstModule = pModule;
+
+    return Entries()-1;
+    }
+    else
+        return -1;
 }
 
-PRBool nsCacheManager::Contains(const char* i_url) const
+PRBool 
+nsCacheManager::Contains(const char* i_url) const
 {
     if (m_pFirstModule)
     {
@@ -100,7 +103,8 @@ PRBool nsCacheManager::Contains(const char* i_url) const
     return PR_FALSE;
 }
 
-nsCacheObject* nsCacheManager::GetObject(const char* i_url) const
+nsCacheObject* 
+nsCacheManager::GetObject(const char* i_url) const
 {
     if (m_pFirstModule) 
     {
@@ -117,67 +121,74 @@ nsCacheObject* nsCacheManager::GetObject(const char* i_url) const
     return 0;
 }
 
-PRInt32 nsCacheManager::Entries() const
+PRInt32 
+nsCacheManager::Entries() const
 {
-	if (m_pFirstModule) 
-	{
-		PRInt32 count=1;
-		nsCacheModule* pModule = m_pFirstModule;
-		while (pModule = pModule->Next()) 
-		{
-			count++;
-		}
-		return count;
-	}
-	return 0;
+    if (m_pFirstModule) 
+    {
+        PRInt32 count=1;
+        nsCacheModule* pModule = m_pFirstModule;
+        while (pModule = pModule->Next()) 
+        {
+            count++;
+        }
+        return count;
+    }
+    return 0;
 }
 
-nsCacheModule* nsCacheManager::GetModule(PRInt32 i_index) const
+nsCacheModule* 
+nsCacheManager::GetModule(PRInt32 i_index) const
 {
-	if ((i_index < 0) || (i_index >= Entries()))
-		return 0;
-	nsCacheModule* pModule = m_pFirstModule;
-	for (PRInt32 i=0; i<=i_index; pModule = pModule->Next())
-		i++;
-	PR_ASSERT(pModule);
-	return pModule;
+    if ((i_index < 0) || (i_index >= Entries()))
+        return 0;
+    nsCacheModule* pModule = m_pFirstModule;
+    for (PRInt32 i=0; i<=i_index; pModule = pModule->Next())
+        i++;
+    PR_ASSERT(pModule);
+    return pModule;
 }
 
-nsMemModule* nsCacheManager::GetMemModule() const
+nsMemModule* 
+nsCacheManager::GetMemModule() const
 {
     return (nsMemModule*) m_pFirstModule;
 }
 
-nsDiskModule* nsCacheManager::GetDiskModule() const
+nsDiskModule* 
+nsCacheManager::GetDiskModule() const
 {
     return (m_pFirstModule) ? (nsDiskModule*) m_pFirstModule->Next() : NULL;
 }
 
 
-void nsCacheManager::Init() 
+void 
+nsCacheManager::Init() 
 {
     if (m_pFirstModule)
         delete m_pFirstModule;
 
-     m_pFirstModule = new nsMemModule(m_pPref->MemCacheSize());
- //  m_pFirstModule->Next((new nsDiskModule(m_pPref->DiskCacheSize()));
+    m_pFirstModule = new nsMemModule(nsCachePref::MemCacheSize());
+     //  m_pFirstModule->Next((new nsDiskModule(nsCachePref::DiskCacheSize()));
 
 }
 
-nsCacheModule* nsCacheManager::LastModule() const 
+nsCacheModule* 
+nsCacheManager::LastModule() const 
 {
-	if (m_pFirstModule) 
-	{
-		nsCacheModule* pModule = m_pFirstModule;
-		while(pModule->Next()) {
-			pModule = pModule->Next();
-		}
-		return pModule;
-	}
-	return 0;
+    if (m_pFirstModule) 
+    {
+        nsCacheModule* pModule = m_pFirstModule;
+        while(pModule->Next()) {
+            pModule = pModule->Next();
+        }
+        return pModule;
+    }
+    return 0;
 }
 
-PRUint32 nsCacheManager::WorstCaseTime() const 
+PRUint32 
+nsCacheManager::WorstCaseTime(void) const 
 {
     PRIntervalTime start = PR_IntervalNow();
     while (this->Contains("a vague string that should not be in any of the modules"));

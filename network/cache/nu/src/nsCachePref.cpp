@@ -21,22 +21,40 @@
 static const PRUint32 MEM_CACHE_SIZE_DEFAULT = 1024*1024;
 static const PRUint32 DISK_CACHE_SIZE_DEFAULT = 5*MEM_CACHE_SIZE_DEFAULT;
 
-nsCachePref::nsCachePref()
+static nsCachePref ThePrefs;
+
+nsCachePref::nsCachePref(void)
 {
+    //Read all the stuff from pref here. 
 }
 
 nsCachePref::~nsCachePref()
 {
 }
 
-PRUint32 nsCachePref::MemCacheSize() const
-{
-    return MEM_CACHE_SIZE_DEFAULT;
-}
-
-PRUint32 nsCachePref::DiskCacheSize() const
+PRUint32 nsCachePref::DiskCacheSize()
 {
     return DISK_CACHE_SIZE_DEFAULT;
+}
+
+const char* nsCachePref::DiskCacheDBFilename(void)
+{
+    return "fat.db";
+}
+
+const char* nsCachePref::DiskCacheFolder(void)
+{
+    return 0;
+}
+
+nsCachePref* nsCachePref::GetInstance()
+{
+    return &ThePrefs;
+}
+
+PRUint32 nsCachePref::MemCacheSize()
+{
+    return MEM_CACHE_SIZE_DEFAULT;
 }
 
 /*
