@@ -19,7 +19,6 @@
   <RDF:Seq about="urn:mozilla:overlays">
     <RDF:li resource="chrome://navigator/content/navigator.xul"/>
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
-    <RDF:li resource="chrome://communicator/content/contentAreaContextOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
   </RDF:Seq>
 
@@ -29,10 +28,6 @@
 
   <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
     <RDF:li>chrome://wallet/content/walletTasksOverlay.xul</RDF:li>
-  </RDF:Seq>
-
-  <RDF:Seq about="chrome://communicator/content/contentAreaContextOverlay.xul">
-    <RDF:li>chrome://wallet/content/walletContextOverlay.xul</RDF:li>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
