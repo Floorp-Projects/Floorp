@@ -34,7 +34,7 @@
 /*
  * Base64 decoding (ascii to binary).
  *
- * $Id: nssb64d.c,v 1.4 2002/09/07 00:20:14 jpierre%netscape.com Exp $
+ * $Id: nssb64d.c,v 1.5 2002/09/07 03:19:56 jpierre%netscape.com Exp $
  */
 
 #include "nssb64.h"
@@ -282,7 +282,7 @@ pl_base64_decode_buffer (PLBase64Decoder *data, const unsigned char *in,
 	}
 	i = 0;
 
-	PR_ASSERT((3) <= data->output_buflen);
+	PR_ASSERT((out - data->output_buffer + 3) <= data->output_buflen);
 
 	/*
 	 * Assume we are not at the end; the following function only works
