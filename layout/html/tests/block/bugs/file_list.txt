@@ -143,6 +143,7 @@ file:///s:/mozilla/layout/html/tests/block/bugs/48057.html
 file:///s:/mozilla/layout/html/tests/block/bugs/48653.html
 file:///s:/mozilla/layout/html/tests/block/bugs/50480.html
 file:///s:/mozilla/layout/html/tests/block/bugs/50758.html
+file:///s:/mozilla/layout/html/tests/block/bugs/52242.html
 file:///s:/mozilla/layout/html/tests/block/bugs/52265.html
 file:///s:/mozilla/layout/html/tests/block/bugs/52307.html
 file:///s:/mozilla/layout/html/tests/block/bugs/52773.html
