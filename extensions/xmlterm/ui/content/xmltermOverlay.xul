@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 
-<!DOCTYPE window SYSTEM "chrome://xmlterm/locale/xmltermOverlay.dtd" >
+<!DOCTYPE overlay SYSTEM "chrome://xmlterm/locale/xmltermOverlay.dtd" >
 
 <!-- This is the overlay that adds "XMLterm" to the (global) task menu. -->
 
