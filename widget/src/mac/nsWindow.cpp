@@ -407,8 +407,10 @@ NS_IMETHODIMP nsWindow::ModalEventFilter(PRBool aRealEvent, void *aEvent,
 
 		switch ( theEvent->what ) {
 			// is it a mouse event?
-			case mouseDown:
 			case mouseUp:
+					*aForWindow = PR_TRUE;
+				break;
+			case mouseDown:
 				// is it in the given window?
 				// (note we also let some events questionable for modal dialogs pass through.
 				// but it makes sense that the draggability et.al. of a modal window should
