@@ -997,13 +997,6 @@
     "windowcollection.length", \
     "windowcollection.nameditem", \
     "xulbrowserelement.webbrowser", \
-    "xulcheckboxelement.accesskey", \
-    "xulcheckboxelement.checked", \
-    "xulcheckboxelement.crop", \
-    "xulcheckboxelement.disabled", \
-    "xulcheckboxelement.imgalign", \
-    "xulcheckboxelement.src", \
-    "xulcheckboxelement.value", \
     "xulcommanddispatcher.active", \
     "xulcommanddispatcher.addcommandupdater", \
     "xulcommanddispatcher.focusedelement", \
@@ -1025,6 +1018,7 @@
     "xulelement.addbroadcastlistener", \
     "xulelement.anonymouscontent", \
     "xulelement.blur", \
+    "xulelement.boxobject", \
     "xulelement.builder", \
     "xulelement.classname", \
     "xulelement.click", \
@@ -1047,20 +1041,6 @@
     "xulmenulistelement.value", \
     "xulpopupelement.closepopup", \
     "xulpopupelement.openpopup", \
-    "xulradioelement.accesskey", \
-    "xulradioelement.checked", \
-    "xulradioelement.crop", \
-    "xulradioelement.disabled", \
-    "xulradioelement.imgalign", \
-    "xulradioelement.src", \
-    "xulradioelement.value", \
-    "xulradiogroupelement.selecteditem", \
-    "xultitledbuttonelement.accesskey", \
-    "xultitledbuttonelement.crop", \
-    "xultitledbuttonelement.disabled", \
-    "xultitledbuttonelement.imgalign", \
-    "xultitledbuttonelement.src", \
-    "xultitledbuttonelement.value", \
     "xultreeelement.addcelltoselection", \
     "xultreeelement.additemtoselection", \
     "xultreeelement.clearcellselection", \
