@@ -87,7 +87,7 @@ public class Main {
             skip = 1;
             fileList.addElement(args[0]);
         }
-        if (processStdin)
+        if (processStdin) 
             fileList.addElement(null);
 
         // get the command line arguments after the name of the script,
@@ -182,6 +182,11 @@ public class Main {
      */
     public static void processSource(Context cx, String filename) {
         if (filename == null || filename.equals("-")) {
+            if (filename == null) {
+                // print implementation version 
+                System.out.println(cx.getImplementationVersion());
+            }
+
             // Use the interpreter for interactive input
             cx.setOptimizationLevel(-1);
             
