@@ -3932,9 +3932,7 @@ nsTableFrame::CalcBorderBoxWidth(const nsHTMLReflowState& aState)
       width = aState.availableWidth;
     }
     if (NS_UNCONSTRAINEDSIZE != aState.availableWidth) {
-      nsMargin margin(0,0,0,0);
-      aState.mStyleMargin->GetMargin(margin);
-      width = aState.availableWidth - margin.left - margin.right;
+      width = aState.availableWidth;
     }
   }
   else if (width != NS_UNCONSTRAINEDSIZE) {

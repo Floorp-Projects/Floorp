@@ -505,7 +505,7 @@ nsTableOuterFrame::GetChildAvailWidth(nsIPresContext*          aPresContext,
   GetMarginPadding(aPresContext, aOuterRS, aChildFrame, marginIgnore, aMarginNoAuto, aPadding);
   nscoord width = aOuterWidth;
   if (NS_UNCONSTRAINEDSIZE != width) {
-    width = aOuterWidth - aMarginNoAuto.left + aMarginNoAuto.right;
+    width = aOuterWidth - aMarginNoAuto.left - aMarginNoAuto.right;
     width = PR_MAX(width, mMinCaptionWidth);
   }
   return width;
