@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.43 $ $Date: 2002/03/07 23:21:39 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.44 $ $Date: 2002/03/08 00:02:35 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -829,10 +829,12 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
     NSSTrust *nssTrust;
     NSSCryptoContext *context = c->object.cryptoContext;
     nssCryptokiInstance *instance = get_cert_instance(c);
-    NSSUTF8 *stanNick;
-    /* must live somewhere */
-    PORT_Assert(instance != NULL || context != NULL);
-    stanNick = instance ? instance->label : c->object.tempName;
+    NSSUTF8 *stanNick = NULL;
+    if (instance) {
+	stanNick = instance->label;
+    } else if (context) {
+	stanNick = c->object.tempName;
+    }
     /* fill other fields needed by NSS3 functions using CERTCertificate */
     if ((!cc->nickname && stanNick) || forced) {
 	PRStatus nssrv;
