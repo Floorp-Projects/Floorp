@@ -21,6 +21,7 @@
 
 
 #include "nsIDateTimeFormat.h"
+#include <windows.h>
 
 
 class nsDateTimeFormatWin : public nsIDateTimeFormat {
