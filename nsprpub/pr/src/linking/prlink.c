@@ -1753,6 +1753,7 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
     struct ld_info *info;
     unsigned int info_length = LD_INFO_INCREMENT * sizeof(struct ld_info);
     struct ld_info *infop;
+    int loadflags = L_GETINFO | L_IGNOREUNLOAD;
 
     for (;;) {
         info = PR_Malloc(info_length);
@@ -1760,8 +1761,21 @@ PR_GetLibraryFilePathname(const char *name, PRFuncPtr addr)
             return NULL;
         }
         /* If buffer is too small, loadquery fails with ENOMEM. */
-        if (loadquery(L_GETINFO | L_IGNOREUNLOAD, info, info_length) != -1) {
+        if (loadquery(loadflags, info, info_length) != -1) {
             break;
+        }
+        /*
+         * Calling loadquery when compiled for 64-bit with the
+         * L_IGNOREUNLOAD flag can cause an invalid argument error
+         * on AIX 5.1. Detect this error the first time that
+         * loadquery is called, and try calling it again without
+         * this flag set.
+         */
+        if (errno == EINVAL && (loadflags & L_IGNOREUNLOAD)) {
+            loadflags &= ~L_IGNOREUNLOAD;
+            if (loadquery(loadflags, info, info_length) != -1) {
+                break;
+            }
         }
         PR_Free(info);
         if (errno != ENOMEM) {
