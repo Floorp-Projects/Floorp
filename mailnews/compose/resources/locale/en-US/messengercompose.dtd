@@ -10,7 +10,7 @@
 <!-- File menu items -->
 <!ENTITY newMessage.label				"New Message">  
 	<!ENTITY newMessage.accesskey			"n">  
-<!ENTITY saveCmd.label ".Save">
+<!ENTITY saveCmd.label "Save">
 	<!ENTITY saveCmd.key "S">
 <!ENTITY saveAsCmd.label "Save As">
 	<!ENTITY saveAsCmd.accesskey "s">

@@ -465,9 +465,7 @@ nsresult nsMsgCompose::UnregisterStateListener(nsIMsgComposeStateListener *state
   return mStateListeners->RemoveElement(iSupports);
 }
 
-nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
-                               nsIMsgIdentity *identity,
-                               const PRUnichar *callback)
+nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity)
 {
   nsresult rv = NS_OK;
   
@@ -596,7 +594,7 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
                     nsnull,             					// const struct nsMsgAttachmentData  *attachments,
                     nsnull,             					// const struct nsMsgAttachedFile    *preloaded_attachments,
                     nsnull,             					// nsMsgSendPart                     *relatedPart,
-                    tArray, listeners);      			// listener array
+                    tArray, listeners);           // listener array
       
       // Cleanup converted body...
       if (newBody)
@@ -612,17 +610,6 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
   
   if (NS_SUCCEEDED(rv))
   {
-  /*TODO, don't close the window but just hide it, we will close it later when we receive a call back from the BE
-  if (nsnull != mScriptContext) {
-		const char* url = "";
-    PRBool isUndefined = PR_FALSE;
-    nsString rVal;
-    
-      mScriptContext->EvaluateString(mScript, url, 0, rVal, &isUndefined);
-      CloseWindow();
-      }
-      else // If we don't have a JS callback, then close the window by default!
-    */
     // rhp:
     // We shouldn't close the window if we are just saving a draft or a template
     // so do this check
@@ -630,13 +617,14 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
          (deliverMode != nsIMsgSend::nsMsgSaveAsTemplate) )
       ShowWindow(PR_FALSE);
   }
+  else
+    NotifyStateListeners(eSaveAndSendProcessDone);
+
 		
   return rv;
 }
 
-nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
-                               nsIMsgIdentity *identity,
-                               const PRUnichar *callback)
+nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *identity)
 {
 	nsresult rv = NS_OK;
 
@@ -695,7 +683,7 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,
     }
 	}
 
-  rv = _SendMsg(deliverMode, identity, callback);
+  rv = _SendMsg(deliverMode, identity);
 	if (NS_FAILED(rv))
 	{
 		ShowWindow(PR_TRUE);
@@ -712,8 +700,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
                         nsIMsgIdentity *identity,
                         const PRUnichar *addrTo, const PRUnichar *addrCc,
                         const PRUnichar *addrBcc, const PRUnichar *newsgroup,
-                        const PRUnichar *subject, const PRUnichar *body,
-                        const PRUnichar *callback)
+                        const PRUnichar *subject, const PRUnichar *body)
 {
 	nsresult rv = NS_OK;
 
@@ -791,7 +778,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
       m_compFields->SetBody(bodyCStr);
     }
 
-		rv = _SendMsg(deliverMode, identity, callback);
+		rv = _SendMsg(deliverMode, identity);
 	}
 	else
 		rv = NS_ERROR_NOT_INITIALIZED;
@@ -799,7 +786,7 @@ nsMsgCompose::SendMsgEx(MSG_DeliverMode deliverMode,
 	if (NS_FAILED(rv))
 	{
 		ShowWindow(PR_TRUE);
-    	if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
+    if (rv != NS_ERROR_BUT_DONT_SHOW_ALERT)
 			nsMsgDisplayMessageByID(rv);
 	}
 	return rv;
@@ -1708,13 +1695,19 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
       {
         if (fieldsFCC && *fieldsFCC)
         {
-			if (nsCRT::strcasecmp(fieldsFCC, "nocopy://") == 0)
+			    if (nsCRT::strcasecmp(fieldsFCC, "nocopy://") == 0)
+			    {
+			      mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
             mComposeObj->CloseWindow();
+          }
         }
       }
       else
+      {
+			  mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
         mComposeObj->CloseWindow();  // if we fail on the simple GetFcc call, close the window to be safe and avoid
                                      // windows hanging around to prevent the app from exiting.
+      }
 
       NS_IF_RELEASE(compFields);
 		}
@@ -1723,6 +1716,7 @@ nsresult nsMsgComposeSendListener::OnStopSending(const char *aMsgID, nsresult aS
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: the message send operation failed!\n");
 #endif
+			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
 		}
 	}
@@ -1764,6 +1758,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: Success on the message copy operation!\n");
 #endif
+			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
       // We should only close the window if we are done. Things like templates
       // and drafts aren't done so their windows should stay open
       if ( (mDeliverMode != nsIMsgSend::nsMsgSaveAsDraft) &&
@@ -1775,6 +1770,7 @@ nsMsgComposeSendListener::OnStopCopy(nsresult aStatus)
 #ifdef NS_DEBUG
 			printf("nsMsgComposeSendListener: the message copy operation failed!\n");
 #endif
+			mComposeObj->NotifyStateListeners(nsMsgCompose::eSaveAndSendProcessDone);
 			mComposeObj->ShowWindow(PR_TRUE);
 		}
 	}
@@ -2161,27 +2157,30 @@ nsresult nsMsgCompose::NotifyStateListeners(TStateListenerNotification aNotifica
   if (NS_FAILED(rv)) return rv;
 
   PRUint32 i;
-  switch (aNotificationType)
+  for (i = 0; i < numListeners;i++)
   {
-    case eComposeFieldsReady:
-      for (i = 0; i < numListeners;i++)
+    nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mStateListeners->ElementAt(i));
+    nsCOMPtr<nsIMsgComposeStateListener> thisListener = do_QueryInterface(iSupports);
+    if (thisListener)
+    {
+      switch (aNotificationType)
       {
-        nsCOMPtr<nsISupports> iSupports = getter_AddRefs(mStateListeners->ElementAt(i));
-        nsCOMPtr<nsIMsgComposeStateListener> thisListener = do_QueryInterface(iSupports);
-        if (thisListener)
-        {
-          rv = thisListener->NotifyComposeFieldsReady();
-          if (NS_FAILED(rv))
-            break;
-        }
+        case eComposeFieldsReady:
+          thisListener->NotifyComposeFieldsReady();
+          break;
+        
+        case eSaveAndSendProcessDone:
+          thisListener->SendAndSaveProcessDone();
+          break;
+        
+        default:
+          NS_NOTREACHED("Unknown notification");
+          break;
       }
-      break;
-    
-    default:
-      NS_NOTREACHED("Unknown notification");
+    }
   }
 
-  return rv;
+  return NS_OK;
 }
 
 nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _retval)

@@ -37,6 +37,7 @@ var msgCompose = null;
 var MAX_RECIPIENTS = 0;
 var currentAttachment = null;
 var documentLoaded = false;
+var windowLocked = false;
 var contentChanged = false;
 
 var Bundle = srGetStrBundle("chrome://messenger/locale/messengercompose/composeMsgs.properties"); 
@@ -65,9 +66,13 @@ if (prefs) {
 
 var stateListener = {
 	NotifyComposeFieldsReady: function() {
-//		dump("\n RECEIVE NotifyComposeFieldsReady\n\n");
 		documentLoaded = true;
-		msgCompose.UnregisterStateListener(stateListener);
+	},
+
+	SendAndSaveProcessDone: function() {
+		dump("\n RECEIVE SaveAndSendProcessDone\n\n");
+		windowLocked = false;
+	  CommandUpdate_MsgCompose();
 	}
 };
 
@@ -75,6 +80,92 @@ var stateListener = {
 var currentMailSendCharset = null;
 var g_send_default_charset = null;
 var g_charsetTitle = null;
+
+
+var defaultController =
+{
+  supportsCommand: function(command)
+  {
+    switch (command)
+    {
+      case "cmd_sendNow":
+      case "cmd_sendLater":
+      case "cmd_saveDefault":
+      case "cmd_saveAsDraft":
+      case "cmd_saveAsTemplate":
+      case "cmd_attachFile":
+      case "cmd_selectAddress":
+        return true;
+
+      default: return false;
+    }
+  },
+  
+  isCommandEnabled: function(command)
+  {
+    switch (command)
+    {
+      case "cmd_sendNow":
+      case "cmd_sendLater":
+      case "cmd_saveDefault":
+      case "cmd_saveAsDraft":
+      case "cmd_saveAsTemplate":
+      case "cmd_attachFile":
+      case "cmd_selectAddress":
+        return !windowLocked;
+
+      default: return false;
+    }
+  },
+  
+  doCommand: function(command)
+  {
+    dump("DefaultController:doCommand\n");
+    /* Because disabled button still fire oncommand event, we need to test again!!! */
+    if (defaultController.isCommandEnabled(command))
+      switch (command)
+      {
+        case "cmd_sendNow"        : SendMessage();        break;
+        case "cmd_sendLater"      : SendMessageLater();   break;
+        case "cmd_saveDefault"    : SaveAsDraft();        break; /* TEMPORARY: We should save either as file, as draft or template, depending of last save type */
+        case "cmd_saveAsDraft"    : SaveAsDraft();        break;
+        case "cmd_saveAsTemplate" : SaveAsTemplate();     break;
+        case "cmd_attachFile"     : AttachFile();         break;
+        case "cmd_selectAddress"  : SelectAddress();     break;
+
+        default: return;
+      }
+  },
+  
+  onEvent: function(event)
+  {
+    dump("DefaultController:onEvent\n");
+  }
+}
+
+function SetupCommandUpdateHandlers()
+{
+  dump("SetupCommandUpdateHandlers\n");
+  top.controllers.insertControllerAt(0, defaultController);
+}
+
+function CommandUpdate_MsgCompose()
+{
+  dump("CommandUpdate_MsgCompose\n");
+  goUpdateCommand("cmd_sendNow");
+  goUpdateCommand("cmd_sendLater");
+  goUpdateCommand("cmd_saveDefault");
+  goUpdateCommand("cmd_saveAsDraft");
+  goUpdateCommand("cmd_saveAsTemplate");
+  goUpdateCommand("cmd_attachFile");
+  goUpdateCommand("cmd_selectAddress");
+}
+
+function ToggleWindowLock()
+{
+  windowLocked = !windowLocked;
+  CommandUpdate_MsgCompose();
+}
 
 function GetArgs()
 {
@@ -304,6 +395,8 @@ function ComposeStartup()
 function ComposeLoad()
 {
 	dump("\nComposeLoad from XUL\n");
+	
+	SetupCommandUpdateHandlers();
 
 	verifyAccounts();	// this will do migration, if we need to.
 
@@ -330,6 +423,7 @@ function ComposeUnload(calledFromExit)
 {
 	dump("\nComposeUnload from XUL\n");
 	
+	msgCompose.UnregisterStateListener(stateListener);
 	if (msgCompose && msgComposeService)
 		msgComposeService.DisposeCompose(msgCompose, false);
 	//...and what's about the editor appcore, how can we release it?
@@ -552,12 +646,16 @@ function GenericSendMessage( msgType )
 				}
 			}
 			try {
+			  windowLocked = true;
+			  CommandUpdate_MsgCompose();
 				msgCompose.SendMsg(msgType, getCurrentIdentity(), null);
 				contentChanged = false;
 				msgCompose.bodyModified = false;
 			}
 			catch (ex) {
 				dump("failed to SendMsg\n");
+			  windowLocked = false;
+			  CommandUpdate_MsgCompose();
 			}
 		}
 	}

@@ -72,16 +72,21 @@ Rights Reserved.
 <script language="JavaScript" src="chrome://messenger/content/messengercompose/MsgComposeCommands.js"/>
 
 <commands id="commands">
-	<commandset id="globalEditMenuItems"/>
-	<commandset id="selectEditMenuItems"/>
-	<commandset id="undoEditMenuItems"/>
+  <commandset id="msgComposeCommandUpdate"
+    commandupdater="true"
+    events="focus,tree-select"
+    oncommandupdate="CommandUpdate_MsgCompose()"
+  />
+  <commandset id="globalEditMenuItems"/>
+  <commandset id="selectEditMenuItems"/>
+  <commandset id="undoEditMenuItems"/>
 
-    <commandset id="composerMenuItems"/>
-    <commandset id="composerEditMenuItems"/>
-    <commandset id="composerSaveMenuItems"/>    
-    <commandset id="composerStyleMenuItems"/>
-    <commandset id="composerTableMenuItems"/>
-    <commandset id="composerListMenuItems"/>
+  <commandset id="composerMenuItems"/>
+  <commandset id="composerEditMenuItems"/>
+  <commandset id="composerSaveMenuItems"/>    
+  <commandset id="composerStyleMenuItems"/>
+  <commandset id="composerTableMenuItems"/>
+  <commandset id="composerListMenuItems"/>
 </commands>
 
 <broadcasterset id="broadcasterset">
@@ -89,10 +94,13 @@ Rights Reserved.
 	<broadcaster id="cmd_newNavigator"/>
 	<broadcaster id="cmd_newEditor"/>
 	<broadcaster id="cmd_close" oncommand="if (ComposeCanClose()) CloseWindow()"/>
-	<broadcaster id="cmd_attachFile" oncommand="AttachFile()"/>
-	<broadcaster id="cmd_selectAddress" oncommand="SelectAddress()"/>
-	<broadcaster id="cmd_sendNow" oncommand="SendMessage()"/>
-	<broadcaster id="cmd_sendLater" oncommand="SendMessageLater()"/>
+	<broadcaster id="cmd_saveDefault" oncommand="goDoCommand('cmd_saveDefault')"/>
+	<broadcaster id="cmd_saveAsDraft" oncommand="goDoCommand('cmd_saveAsDraft')"/>
+	<broadcaster id="cmd_saveAsTemplate" oncommand="goDoCommand('cmd_saveAsTemplate')"/>
+	<broadcaster id="cmd_attachFile" oncommand="goDoCommand('cmd_attachFile')"/>
+	<broadcaster id="cmd_selectAddress" oncommand="goDoCommand('cmd_selectAddress')"/>
+	<broadcaster id="cmd_sendNow" oncommand="goDoCommand('cmd_sendNow')"/>
+	<broadcaster id="cmd_sendLater" oncommand="goDoCommand('cmd_sendLater')"/>
 	<broadcaster id="cmd_print" oncommand="nsCmd:BrowserPrint"/>
  	<broadcaster id="cmd_quit"/>
 	<!-- Edit Menu -->
@@ -124,7 +132,7 @@ Rights Reserved.
 	<!-- File Menu -->
 	<key id="key_newNavigator"/>
 	<key id="key_close"/>
-	<key id="key_save" xulkey="true" key="&saveCmd.key;" disabled="true"/>
+	<key id="key_save" xulkey="true" key="&saveCmd.key;" observes="cmd_saveDefault"/>
 	<!-- key id="key_attachFile" xulkey="true" key="&attachFileCmd.key;" observes="cmd_attachFile"/ -->
 	<!-- key id="key_selectAddresses" xulkey="true" key="&selectAddressCmd.key;" observes="cmd_selectAddress"/ -->
 	<!-- key id="key_sendNow" xulkey="true" keycode="&sendNowCmd.keycode;" observes="cmd_sendNow"/ -->
@@ -187,13 +195,13 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 		<menuseparator/>
 
 		<menuitem id="menu_close"/>
-		<menuitem value="&saveCmd.label;" disabled="true" key="key_save"/>
+		<menuitem value="&saveCmd.label;" key="key_save" observes="cmd_saveDefault"/>
 		<menu value="&saveAsCmd.label;" accessKey="&saveAsCmd.accesskey;">
           <menupopup>
             <menuitem value="&saveAsFileCmd.label;" disabled="true" accessKey="&saveAsFileCmd.accesskey;"/>
             <menuseparator/>
-            <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" oncommand="SaveAsDraft()"/>
-            <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" oncommand="SaveAsTemplate()"/>
+            <menuitem value="&saveAsDraftCmd.label;" accessKey="&saveAsDraftCmd.accesskey;" observes="cmd_saveAsDraft"/>
+            <menuitem value="&saveAsTemplateCmd.label;" accessKey="&saveAsTemplateCmd.accesskey;" observes="cmd_saveAsTemplate"/>
           </menupopup>
 		</menu>
 		<menuseparator/>
@@ -257,43 +265,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 			<menuseparator/>
 			<menuitem value="&pageInfoCmd.label;" disabled="true" accesskey="&pageInfoCmd.accesskey;" cmd="nsCmd:ComposeNYI"/>
 			<menuseparator/>
-<!-- Deprecated BEGIN
-			<menu value="&dcharMenu.label;" oncreate="InitCharsetMenuCheckMark();">
-			<menupopup>
-			<menuitem id="ISO-8859-1" type="radio" name="charsetGroup" value="&dcharIso1Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id="ISO-8859-2" type="radio" name="charsetGroup" value="&dcharIso2Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id="ISO-8859-3" type="radio" name="charsetGroup" value="&dcharIso3Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id="ISO-8859-4" type="radio" name="charsetGroup" value="&dcharIso4Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id="ISO-8859-9" type="radio" name="charsetGroup" value="&dcharIso9Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id="ISO-8859-10" type="radio" name="charsetGroup" value="&dcharIso10Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id= "ISO-8859-14" type="radio" name="charsetGroup" value="&dcharIso14Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id="ISO-8859-15" type="radio" name="charsetGroup" value="&dcharIso15Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="ISO-2022-JP" type="radio" name="charsetGroup" value="&dcharJapanCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="BIG5" type="radio" name="charsetGroup" value="&dcharTradChiBigCmd.label;" oncommand="SetDocumentCharacterSet('Big5');"/>
-			<menuitem id="GB2312" type="radio" name="charsetGroup" value="&dcharSimpChiGbCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="EUC-KR" type="radio" name="charsetGroup" value="&dcharKoreanCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="UTF-8" type="radio" name="charsetGroup" value="&dcharUtf8Cmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="KOI8-R" type="radio" name="charsetGroup" value="&dcharRusCmd.label; " oncommand="SetDocumentCharacterSet(this.id);"/>
-			<menuitem id="KOI8-U" type="radio" name="charsetGroup" value="&dcharUkrCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="ISO-8859-7" type="radio" name="charsetGroup" value="&dcharIsoGreekCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="VISCII" type="radio" name="charsetGroup" value="&dcharVietViCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="TIS-620" type="radio" name="charsetGroup" value="&dcharThaiCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem id="ARMSCII-8" type="radio" name="charsetGroup" value="&dcharArmCmd.label;" oncommand="SetDocumentCharacterSet(this.id);"/>
-			 <menuseparator />
-			<menuitem value="&dcharDEFAULT.label;" oncommand="SetDefaultMailSendCharacterSet();"/>
-			</menupopup>
-		</menu>
-END of Deprecated -->
-            <menu id = "maileditCharsetMenu" />
+      <menu id = "maileditCharsetMenu" />
 	</menupopup>
     </menu>
 
@@ -402,15 +374,15 @@ END of Deprecated -->
   </menubar>
     <toolbar class="toolbar-primary" id="composeToolbar" persist="collapsed">
 		<box id="toolbar_button_box">
-	 		<button class="button-toolbar-2 top" id="button-send" value="&sendButton.label;" tooltip="aTooltip" tooltiptext="&sendButton.tooltip;"  onclick="SendMessage()"/>
+	 		<button class="button-toolbar-2 top" id="button-send" value="&sendButton.label;" tooltip="aTooltip" tooltiptext="&sendButton.tooltip;" observes="cmd_sendNow"/>
             <toolbarseparator/>
-	 		<button class="button-toolbar-2 top" id="button-address" value="&addressButton.label;" tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" onclick="SelectAddress()"/>
-	 		<button class="button-toolbar-2 top" id="button-attach" value="&attachButton.label;" tooltip="aTooltip" tooltiptext="&attachButton.tooltip;"  onclick="AttachFile()"/>
-	 		<button class="button-toolbar-2 top" id="button-quote" disabled="true" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  onclick="QuoteMessage()"/>
+	 		<button class="button-toolbar-2 top" id="button-address" value="&addressButton.label;" tooltip="aTooltip" tooltiptext="&addressButton.tooltip;" observes="cmd_selectAddress"/>
+	 		<button class="button-toolbar-2 top" id="button-attach" value="&attachButton.label;" tooltip="aTooltip" tooltiptext="&attachButton.tooltip;" observes="cmd_attachFile"/>
+	 		<button class="button-toolbar-2 top" id="button-quote" disabled="true" value="&quoteButton.label;" tooltip="aTooltip" tooltiptext="&quoteButton.tooltip;"  onclick="if (this.getAttribute('disabled') != 'true') QuoteMessage()"/>
             <button class="button-toolbar-2 top" id="spellingButton" value="&spellingButton.label;" observes="cmd_spelling"/>
             <toolbarseparator/>
-	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;"  onclick="SaveAsDraft()"/>
-	 		<button class="button-toolbar-2 top" id="button-stop" disabled="true" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"  onclick="Stop()"/>
+	 		<button class="button-toolbar-2 top" id="button-save" value="&saveButton.label;" tooltip="aTooltip" tooltiptext="&saveButton.tooltip;" observes="cmd_saveDefault"/>
+	 		<button class="button-toolbar-2 top" id="button-stop" disabled="true" value="&stopButton.label;" tooltip="aTooltip" tooltiptext="&stopButton.tooltip;"  onclick="if (this.getAttribute('disabled') != 'true') Stop()"/>
 	    	<spring flex="100%"/>
 		</box>
     <button class="plain" id="navigator-throbber" oncommand='goClickThrobber("compose.throbber.url")'>

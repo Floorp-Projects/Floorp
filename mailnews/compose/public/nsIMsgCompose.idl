@@ -95,8 +95,8 @@ interface nsIMsgComposeStateListener : nsISupports
 {
 	/* ... */
 	void        NotifyComposeFieldsReady();
+	void        SendAndSaveProcessDone();
 };
-
 
 [scriptable, uuid(4E606270-B588-11D2-8289-00805F2A0107)]
 interface nsIMsgCompose : nsISupports {
@@ -118,15 +118,13 @@ interface nsIMsgCompose : nsISupports {
 
 	/* ... */
 	void SendMsg(in MSG_DeliverMode deliverMode,
-                 in nsIMsgIdentity identity,
-                 in wstring callback);
+                 in nsIMsgIdentity identity);
 
 	/* ... */
     void SendMsgEx(in MSG_DeliverMode deliverMode,
                    in nsIMsgIdentity identity,
                    in wstring addrTo, in wstring addrCc, in wstring addrBcc,
-                   in wstring newsgroup, in wstring subject, in wstring body,
-                   in wstring callback);
+                   in wstring newsgroup, in wstring subject, in wstring body);
     
 	/* ... */
     void CloseWindow();

@@ -89,13 +89,14 @@ class nsMsgCompose : public nsIMsgCompose
                                 }
 
  private:
-	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity, const PRUnichar *callback);
+	nsresult _SendMsg(MSG_DeliverMode deliverMode, nsIMsgIdentity *identity);
 	nsresult CreateMessage(const PRUnichar * originalMsgURI, MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgCompFields* compFields);
 	void CleanUpRecipients(nsString& recipients);
   nsresult GetABDirectories(nsString& filePath, nsStringArray* directoriesArray, PRBool searchSubDirectory);
 
 	typedef enum {
-    	eComposeFieldsReady
+    	eComposeFieldsReady,
+    	eSaveAndSendProcessDone
 	} TStateListenerNotification;
   
 	// tell the doc state listeners that the doc state has changed
@@ -124,8 +125,9 @@ class nsMsgCompose : public nsIMsgCompose
 	MSG_ComposeType				  mType;		//Message type
     nsCOMPtr<nsISupportsArray> 	  mStateListeners;		// contents are nsISupports
     
-    friend class QuotingOutputStreamListener;
+  friend class QuotingOutputStreamListener;
 	friend class nsMsgDocumentStateListener;
+	friend class nsMsgComposeSendListener;
 };
 
 ////////////////////////////////////////////////////////////////////////////////////
