@@ -44,8 +44,7 @@ function onJunkMailLoad()
 {
   gMessengerBundle = document.getElementById("bundle_messenger");
   if (window.arguments && window.arguments[0]) {
-    // XXX todo, what if no folder?
-    setupForAccountFromFolder(window.arguments[0].folder.URI);
+    setupForAccountFromFolder(window.arguments[0].folder ? window.arguments[0].folder.URI : null);
   }
 }
 
@@ -64,15 +63,24 @@ function onServerClick(event)
 
 function setupForAccountFromFolder(aURI)
 {
-  // XXX todo
-  // XXX make sure we do the right thing for the stand alone msg window
-  // XXX if no folders are selected or if a folder that doesn't get mail (news, local?) is selected
   try {
+    if (!aURI)
+      throw "this can happen if no folder is selected in the folder pane"
     var msgFolder = GetMsgFolderFromUri(aURI, false);
     gCurrentServer = msgFolder.server;
+
+    var protocolInfo = Components.classes["@mozilla.org/messenger/protocol/info;1?type=" + gCurrentServer.type];
+    protocolInfo = protocolInfo.getService(Components.interfaces.nsIMsgProtocolInfo);
+    if (!protocolInfo.canGetIncomingMessages)
+      throw "this can happen if the selected folder (or account) doesn't have junk controls (like news or local folder)"
   }
   catch (ex) {
     // get server for default account
+    // XXX TODO
+    // edge cases to worry about later:
+    // what if there is no default account? 
+    // what if default account is of a type where canGetIncomingMessages == true?
+    // what if no accounts are of a type where canGetIncomingMessages == true?
     var accountManager = Components.classes["@mozilla.org/messenger/account-manager;1"]
                .getService(Components.interfaces.nsIMsgAccountManager);
     var account = accountManager.defaultAccount;
