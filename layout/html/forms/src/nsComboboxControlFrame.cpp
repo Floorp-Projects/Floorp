@@ -1939,6 +1939,13 @@ nsComboboxControlFrame::SelectionChanged()
   return rv;
 }
 
+NS_IMETHODIMP
+nsComboboxControlFrame::GetIndexOfDisplayArea(PRInt32* aSelectedIndex)
+{
+  NS_ENSURE_ARG_POINTER(aSelectedIndex);
+  *aSelectedIndex = mSelectedIndex;
+  return NS_OK;
+}
 
 //----------------------------------------------------------------------
 // nsISelectControlFrame
