@@ -40,6 +40,7 @@
 #define __inScreenCapturer_h__
 
 #include "inIScreenCapturer.h"
+#include "nsIInspectorCSSUtils.h"
 #include <windows.h>
 
 class inScreenCapturer : public inIScreenCapturer                            
@@ -55,6 +56,8 @@ protected:
   static NS_IMETHODIMP DoCopy8(PRUint8* aBits, HDC aHDC, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   static NS_IMETHODIMP DoCopy16(PRUint8* aBits, HDC aHDC, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
   static NS_IMETHODIMP DoCopy32(PRUint8* aBits, HDC aHDC, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+
+  nsCOMPtr<nsIInspectorCSSUtils> mCSSUtils;
 
 };
 

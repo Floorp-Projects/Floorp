@@ -53,12 +53,16 @@
 
 #include "inIBitmap.h"
 #include "inLayoutUtils.h"
+#include "nsIServiceManager.h"
+
+static NS_DEFINE_CID(kInspectorCSSUtilsCID, NS_INSPECTORCSSUTILS_CID);
 
 ///////////////////////////////////////////////////////////////////////////////
 
 inScreenCapturer::inScreenCapturer()
 {
   NS_INIT_REFCNT();
+  mCSSUtils = do_GetService(kInspectorCSSUtilsCID);
 }
 
 inScreenCapturer::~inScreenCapturer()
@@ -90,7 +94,7 @@ inScreenCapturer::CaptureElement(nsIDOMElement *aElement, inIBitmap **_retval)
   rect.y = screenpos.y;
   
   // adjust rect for margins
-  inLayoutUtils::AdjustRectForMargins(aElement, rect);
+  mCSSUtils->AdjustRectForMargins(frame, rect);
   
   // get scale for converting frame dimensions to pixels
   nsCOMPtr<nsIPresContext> pcontext;
