@@ -40,7 +40,6 @@ CPPSRCS		= \
 		FilesTest.cpp \
 		TestAutoLock.cpp \
 		TestObserverService.cpp \
-		TestBuffers.cpp \
 		TestPipes.cpp \
 		TestThreads.cpp \
 		$(NULL)
