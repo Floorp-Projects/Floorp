@@ -262,51 +262,51 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceNumber(int nodeIndex)
 
 nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceNumber(int nodeIndex, EIMAPNamespaceType type)
 {
-	int nodeCount, count = 0;
-	for (nodeCount=m_NamespaceList.Count()-1; nodeCount >= 0; nodeCount--)
-	{
-		nsIMAPNamespace *nspace = (nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeCount);
-		if (nspace->GetType() == type)
-		{
-			count++;
-			if (count == nodeIndex)
-				return nspace;
-		}
-	}
-	return nsnull;
+  int nodeCount, count = 0;
+  for (nodeCount=m_NamespaceList.Count()-1; nodeCount >= 0; nodeCount--)
+  {
+    nsIMAPNamespace *nspace = (nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeCount);
+    if (nspace->GetType() == type)
+    {
+      count++;
+      if (count == nodeIndex)
+        return nspace;
+    }
+  }
+  return nsnull;
 }
 
 nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceForMailbox(const char *boxname)
 {
-	// We want to find the LONGEST substring that matches the beginning of this mailbox's path.
-	// This accounts for nested namespaces  (i.e. "Public/" and "Public/Users/")
-	
-	// Also, we want to match the namespace's mailbox to that namespace also:
-	// The Personal box will match the Personal/ namespace, etc.
-
-	// these lists shouldn't be too long (99% chance there won't be more than 3 or 4)
-	// so just do a linear search
-
-	int lengthMatched = -1;
-	int currentMatchedLength = -1;
-	nsIMAPNamespace *rv = nsnull;
-	int nodeIndex = 0;
-
-	if (!PL_strcasecmp(boxname, "INBOX"))
-		return GetDefaultNamespaceOfType(kPersonalNamespace);
-
-	for (nodeIndex=m_NamespaceList.Count()-1; nodeIndex >= 0; nodeIndex--)
-	{
-		nsIMAPNamespace *nspace = (nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeIndex);
-		currentMatchedLength = nspace->MailboxMatchesNamespace(boxname);
-		if (currentMatchedLength > lengthMatched)
-		{
-			rv = nspace;
-			lengthMatched = currentMatchedLength;
-		}
-	}
-
-	return rv;
+  // We want to find the LONGEST substring that matches the beginning of this mailbox's path.
+  // This accounts for nested namespaces  (i.e. "Public/" and "Public/Users/")
+  
+  // Also, we want to match the namespace's mailbox to that namespace also:
+  // The Personal box will match the Personal/ namespace, etc.
+  
+  // these lists shouldn't be too long (99% chance there won't be more than 3 or 4)
+  // so just do a linear search
+  
+  int lengthMatched = -1;
+  int currentMatchedLength = -1;
+  nsIMAPNamespace *rv = nsnull;
+  int nodeIndex = 0;
+  
+  if (!PL_strcasecmp(boxname, "INBOX"))
+    return GetDefaultNamespaceOfType(kPersonalNamespace);
+  
+  for (nodeIndex=m_NamespaceList.Count()-1; nodeIndex >= 0; nodeIndex--)
+  {
+    nsIMAPNamespace *nspace = (nsIMAPNamespace *) m_NamespaceList.ElementAt(nodeIndex);
+    currentMatchedLength = nspace->MailboxMatchesNamespace(boxname);
+    if (currentMatchedLength > lengthMatched)
+    {
+      rv = nspace;
+      lengthMatched = currentMatchedLength;
+    }
+  }
+  
+  return rv;
 }
 
 #define SERIALIZER_SEPARATORS ","

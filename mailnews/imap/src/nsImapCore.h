@@ -245,12 +245,13 @@ typedef enum {
 	kBringUpSubscribeUI
 } EIMAPSubscriptionUpgradeState;
 
-typedef enum {
-    	eContinue,
-		eContinueNew,
-    	eListMyChildren,
-    	eNewServerDirectory,
-    	eCancelled 
+typedef enum 
+{
+    eContinue,
+    eContinueNew,
+    eListMyChildren,
+    eNewServerDirectory,
+    eCancelled 
 } EMailboxDiscoverStatus;
 
 

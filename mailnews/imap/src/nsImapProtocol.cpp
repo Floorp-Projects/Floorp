@@ -6125,109 +6125,109 @@ void nsImapProtocol::FindMailboxesIfNecessary()
 
 void nsImapProtocol::DiscoverAllAndSubscribedBoxes()
 {
-	// used for subscribe pane
-	// iterate through all namespaces
-    PRUint32 count = 0;
-    m_hostSessionList->GetNumberOfNamespacesForHost(GetImapServerKey(), count);
-
-	for (PRUint32 i = 0; i < count; i++ )
-	{
-		nsIMAPNamespace *ns = nsnull;
-
-        m_hostSessionList->GetNamespaceNumberForHost(GetImapServerKey(), i,
-                                                     ns);
-		if (ns &&
-			gHideOtherUsersFromList ? (ns->GetType() != kOtherUsersNamespace)
-            : PR_TRUE)
-		{
-			const char *prefix = ns->GetPrefix();
-			if (prefix)
-			{
-				if (!gHideUnusedNamespaces && *prefix &&
-                    PL_strcasecmp(prefix, "INBOX.")) /* only do it for
-                     non-empty namespace prefixes */
-				{
-					// Explicitly discover each Namespace, just so they're
-                    // there in the subscribe UI 
-					nsImapMailboxSpec *boxSpec = new nsImapMailboxSpec;
-					if (boxSpec)
-					{
-                        NS_ADDREF(boxSpec);
-						boxSpec->folderSelected = PR_FALSE;
-						boxSpec->hostName = nsCRT::strdup(GetImapHostName());
-						boxSpec->connection = this;
-						boxSpec->flagState = nsnull;
-						boxSpec->discoveredFromLsub = PR_TRUE;
-						boxSpec->onlineVerified = PR_TRUE;
-						boxSpec->box_flags = kNoselect;
-						boxSpec->hierarchySeparator = ns->GetDelimiter();
-						m_runningUrl->AllocateCanonicalPath(
-                            ns->GetPrefix(), ns->GetDelimiter(),
-                            &boxSpec->allocatedPathName);
-						boxSpec->namespaceForFolder = ns;
-                        boxSpec->box_flags |= kNameSpace;
-
-						switch (ns->GetType())
-						{
-						case kPersonalNamespace:
-							boxSpec->box_flags |= kPersonalMailbox;
-							break;
-						case kPublicNamespace:
-							boxSpec->box_flags |= kPublicMailbox;
-							break;
-						case kOtherUsersNamespace:
-							boxSpec->box_flags |= kOtherUsersMailbox;
-							break;
-						default:	// (kUnknownNamespace)
-							break;
-						}
-
-						DiscoverMailboxSpec(boxSpec);
-					}
-					else
-						HandleMemoryFailure();
-				}
-
-                nsCAutoString allPattern(prefix);
-                allPattern += '*';
-
-                nsCAutoString topLevelPattern(prefix);
-                topLevelPattern += '%';
-
-                nsCAutoString secondLevelPattern;
-
-				char delimiter = ns->GetDelimiter();
-				if (delimiter)
-				{
-					// Hierarchy delimiter might be NIL, in which case there's no hierarchy anyway
-                    secondLevelPattern = prefix;
-                    secondLevelPattern += '%';
-                    secondLevelPattern += delimiter;
-                    secondLevelPattern += '%';
-				}
-
-				nsresult rv;
-    			nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryReferent(m_server, &rv);
-				if (NS_FAILED(rv) || !imapServer) return;
-
-				if (!allPattern.IsEmpty())
-				{
-					imapServer->SetDoingLsub(PR_TRUE);
-					Lsub(allPattern.get(), PR_TRUE);	// LSUB all the subscribed
-				}
-				if (!topLevelPattern.IsEmpty())
-				{
-					imapServer->SetDoingLsub(PR_FALSE);
-					List(topLevelPattern.get(), PR_TRUE);	// LIST the top level
-				}
-				if (!secondLevelPattern.IsEmpty())
-				{
-					imapServer->SetDoingLsub(PR_FALSE);
-					List(secondLevelPattern.get(), PR_TRUE);	// LIST the second level
-				}
-			}
-		}
-	}
+  // used for subscribe pane
+  // iterate through all namespaces
+  PRUint32 count = 0;
+  m_hostSessionList->GetNumberOfNamespacesForHost(GetImapServerKey(), count);
+  
+  for (PRUint32 i = 0; i < count; i++ )
+  {
+    nsIMAPNamespace *ns = nsnull;
+    
+    m_hostSessionList->GetNamespaceNumberForHost(GetImapServerKey(), i,
+      ns);
+    if (ns &&
+      gHideOtherUsersFromList ? (ns->GetType() != kOtherUsersNamespace)
+      : PR_TRUE)
+    {
+      const char *prefix = ns->GetPrefix();
+      if (prefix)
+      {
+        if (!gHideUnusedNamespaces && *prefix &&
+        PL_strcasecmp(prefix, "INBOX.")) /* only do it for
+        non-empty namespace prefixes */
+        {
+          // Explicitly discover each Namespace, just so they're
+          // there in the subscribe UI 
+          nsImapMailboxSpec *boxSpec = new nsImapMailboxSpec;
+          if (boxSpec)
+          {
+            NS_ADDREF(boxSpec);
+            boxSpec->folderSelected = PR_FALSE;
+            boxSpec->hostName = nsCRT::strdup(GetImapHostName());
+            boxSpec->connection = this;
+            boxSpec->flagState = nsnull;
+            boxSpec->discoveredFromLsub = PR_TRUE;
+            boxSpec->onlineVerified = PR_TRUE;
+            boxSpec->box_flags = kNoselect;
+            boxSpec->hierarchySeparator = ns->GetDelimiter();
+            m_runningUrl->AllocateCanonicalPath(
+              ns->GetPrefix(), ns->GetDelimiter(),
+              &boxSpec->allocatedPathName);
+            boxSpec->namespaceForFolder = ns;
+            boxSpec->box_flags |= kNameSpace;
+            
+            switch (ns->GetType())
+            {
+            case kPersonalNamespace:
+              boxSpec->box_flags |= kPersonalMailbox;
+              break;
+            case kPublicNamespace:
+              boxSpec->box_flags |= kPublicMailbox;
+              break;
+            case kOtherUsersNamespace:
+              boxSpec->box_flags |= kOtherUsersMailbox;
+              break;
+            default:	// (kUnknownNamespace)
+              break;
+            }
+            
+            DiscoverMailboxSpec(boxSpec);
+          }
+          else
+            HandleMemoryFailure();
+        }
+        
+        nsCAutoString allPattern(prefix);
+        allPattern += '*';
+        
+        nsCAutoString topLevelPattern(prefix);
+        topLevelPattern += '%';
+        
+        nsCAutoString secondLevelPattern;
+        
+        char delimiter = ns->GetDelimiter();
+        if (delimiter)
+        {
+          // Hierarchy delimiter might be NIL, in which case there's no hierarchy anyway
+          secondLevelPattern = prefix;
+          secondLevelPattern += '%';
+          secondLevelPattern += delimiter;
+          secondLevelPattern += '%';
+        }
+        
+        nsresult rv;
+        nsCOMPtr<nsIImapIncomingServer> imapServer = do_QueryReferent(m_server, &rv);
+        if (NS_FAILED(rv) || !imapServer) return;
+        
+        if (!allPattern.IsEmpty())
+        {
+          imapServer->SetDoingLsub(PR_TRUE);
+          Lsub(allPattern.get(), PR_TRUE);	// LSUB all the subscribed
+        }
+        if (!topLevelPattern.IsEmpty())
+        {
+          imapServer->SetDoingLsub(PR_FALSE);
+          List(topLevelPattern.get(), PR_TRUE);	// LIST the top level
+        }
+        if (!secondLevelPattern.IsEmpty())
+        {
+          imapServer->SetDoingLsub(PR_FALSE);
+          List(secondLevelPattern.get(), PR_TRUE);	// LIST the second level
+        }
+      }
+    }
+  }
 }
 
 // DiscoverMailboxList() is used to actually do the discovery of folders
@@ -6689,20 +6689,20 @@ void nsImapProtocol::Subscribe(const char *mailboxName)
 
 void nsImapProtocol::Unsubscribe(const char *mailboxName)
 {
-    ProgressEventFunctionUsingIdWithString (IMAP_STATUS_UNSUBSCRIBE_MAILBOX, mailboxName);
-    IncrementCommandTagNumber();
-    
-    char *escapedName = CreateEscapedMailboxName(mailboxName);
+  ProgressEventFunctionUsingIdWithString (IMAP_STATUS_UNSUBSCRIBE_MAILBOX, mailboxName);
+  IncrementCommandTagNumber();
+  
+  char *escapedName = CreateEscapedMailboxName(mailboxName);
     
   nsCString command (GetServerCommandTag());
   command += " unsubscribe \"";
   command += escapedName;
   command += "\""CRLF;
-    nsMemory::Free(escapedName);
+  nsMemory::Free(escapedName);
 
   nsresult rv = SendData(command.get());  
-    if (NS_SUCCEEDED(rv))
-        ParseIMAPandCheckForNewMail();
+  if (NS_SUCCEEDED(rv))
+      ParseIMAPandCheckForNewMail();
 }
 
 

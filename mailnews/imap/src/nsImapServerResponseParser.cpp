@@ -810,158 +810,158 @@ void nsImapServerResponseParser::mailbox_data()
 
 void nsImapServerResponseParser::mailbox_list(PRBool discoveredFromLsub)
 {
-	nsImapMailboxSpec *boxSpec = new nsImapMailboxSpec;
-	NS_ADDREF(boxSpec);
-    PRBool needsToFreeBoxSpec = PR_TRUE;
-	if (!boxSpec)
-		HandleMemoryFailure();
-	else
-	{
-		boxSpec->folderSelected = PR_FALSE;
-		boxSpec->box_flags = kNoFlags;
-		boxSpec->allocatedPathName = nsnull;
-		boxSpec->hostName = nsnull;
-		boxSpec->connection = &fServerConnection;
-		boxSpec->flagState = nsnull;
-		boxSpec->discoveredFromLsub = discoveredFromLsub;
-		boxSpec->onlineVerified = PR_TRUE;
-		boxSpec->box_flags &= ~kNameSpace;
-		
-		PRBool endOfFlags = PR_FALSE;
-		fNextToken++;	// eat the first "("
-		do {
-			if (!PL_strncasecmp(fNextToken, "\\Marked", 7))
-				boxSpec->box_flags |= kMarked;	
-			else if (!PL_strncasecmp(fNextToken, "\\Unmarked", 9))
-				boxSpec->box_flags |= kUnmarked;	
-			else if (!PL_strncasecmp(fNextToken, "\\Noinferiors", 12))
-				boxSpec->box_flags |= kNoinferiors;	
-			else if (!PL_strncasecmp(fNextToken, "\\Noselect", 9))
-				boxSpec->box_flags |= kNoselect;	
-			// we ignore flag extensions
-			
-			endOfFlags = *(fNextToken + strlen(fNextToken) - 1) == ')';
-			fNextToken = GetNextToken();
-		} while (!endOfFlags && ContinueParse());
-		
-		if (ContinueParse())
-		{
-			if (*fNextToken == '"')
-			{
-				fNextToken++;
-				if (*fNextToken == '\\')	// handle escaped char
-					boxSpec->hierarchySeparator = *(fNextToken + 1);
-				else
-					boxSpec->hierarchySeparator = *fNextToken;
-			}
-			else	// likely NIL.  Discovered late in 4.02 that we do not handle literals here (e.g. {10} <10 chars>), although this is almost impossibly unlikely
-				boxSpec->hierarchySeparator = kOnlineHierarchySeparatorNil;
-			fNextToken = GetNextToken();	
-			if (ContinueParse())
-            {
-                // nsImapProtocol::DiscoverMailboxSpec() eventually frees the
-                // boxSpec
-                needsToFreeBoxSpec = PR_FALSE;
-				mailbox(boxSpec);
-            }
-		}
-	}
-    if (needsToFreeBoxSpec)
-        NS_RELEASE(boxSpec); // mscott - do we have any fields we need to
-                            // release?
+  nsImapMailboxSpec *boxSpec = new nsImapMailboxSpec;
+  NS_ADDREF(boxSpec);
+  PRBool needsToFreeBoxSpec = PR_TRUE;
+  if (!boxSpec)
+    HandleMemoryFailure();
+  else
+  {
+    boxSpec->folderSelected = PR_FALSE;
+    boxSpec->box_flags = kNoFlags;
+    boxSpec->allocatedPathName = nsnull;
+    boxSpec->hostName = nsnull;
+    boxSpec->connection = &fServerConnection;
+    boxSpec->flagState = nsnull;
+    boxSpec->discoveredFromLsub = discoveredFromLsub;
+    boxSpec->onlineVerified = PR_TRUE;
+    boxSpec->box_flags &= ~kNameSpace;
+    
+    PRBool endOfFlags = PR_FALSE;
+    fNextToken++;	// eat the first "("
+    do {
+      if (!PL_strncasecmp(fNextToken, "\\Marked", 7))
+        boxSpec->box_flags |= kMarked;	
+      else if (!PL_strncasecmp(fNextToken, "\\Unmarked", 9))
+        boxSpec->box_flags |= kUnmarked;	
+      else if (!PL_strncasecmp(fNextToken, "\\Noinferiors", 12))
+        boxSpec->box_flags |= kNoinferiors;	
+      else if (!PL_strncasecmp(fNextToken, "\\Noselect", 9))
+        boxSpec->box_flags |= kNoselect;	
+      // we ignore flag extensions
+      
+      endOfFlags = *(fNextToken + strlen(fNextToken) - 1) == ')';
+      fNextToken = GetNextToken();
+    } while (!endOfFlags && ContinueParse());
+    
+    if (ContinueParse())
+    {
+      if (*fNextToken == '"')
+      {
+        fNextToken++;
+        if (*fNextToken == '\\')	// handle escaped char
+          boxSpec->hierarchySeparator = *(fNextToken + 1);
+        else
+          boxSpec->hierarchySeparator = *fNextToken;
+      }
+      else	// likely NIL.  Discovered late in 4.02 that we do not handle literals here (e.g. {10} <10 chars>), although this is almost impossibly unlikely
+        boxSpec->hierarchySeparator = kOnlineHierarchySeparatorNil;
+      fNextToken = GetNextToken();	
+      if (ContinueParse())
+      {
+        // nsImapProtocol::DiscoverMailboxSpec() eventually frees the
+        // boxSpec
+        needsToFreeBoxSpec = PR_FALSE;
+        mailbox(boxSpec);
+      }
+    }
+  }
+  if (needsToFreeBoxSpec)
+    NS_RELEASE(boxSpec); // mscott - do we have any fields we need to
+  // release?
 }
 
 /* mailbox         ::= "INBOX" / astring
 */
 void nsImapServerResponseParser::mailbox(nsImapMailboxSpec *boxSpec)
 {
-	char *boxname = nsnull;
-    const char *serverKey = fServerConnection.GetImapServerKey();
-	
-	if (!PL_strcasecmp(fNextToken, "INBOX"))
-	{
-		boxname = PL_strdup("INBOX");
-		fNextToken = GetNextToken();
-	}
-	else 
-	{
-		boxname = CreateAstring();
-		// handle a literal ending the line here
-		if (fTokenizerAdvanced)
-		{
-			fTokenizerAdvanced = PR_FALSE;
-			if (!PL_strcmp(fCurrentTokenPlaceHolder, CRLF))
-				fAtEndOfLine = PR_FALSE;
-		}
-		fNextToken = GetNextToken();
-	}
-	
-    if (boxname && fHostSessionList)
+  char *boxname = nsnull;
+  const char *serverKey = fServerConnection.GetImapServerKey();
+  
+  if (!PL_strcasecmp(fNextToken, "INBOX"))
+  {
+    boxname = PL_strdup("INBOX");
+    fNextToken = GetNextToken();
+  }
+  else 
+  {
+    boxname = CreateAstring();
+    // handle a literal ending the line here
+    if (fTokenizerAdvanced)
     {
-		// should the namespace check go before or after the Utf7 conversion?
-		fHostSessionList->SetNamespaceHierarchyDelimiterFromMailboxForHost(
-            serverKey, boxname, boxSpec->hierarchySeparator);
-
-		
-		nsIMAPNamespace *ns = nsnull;
-		fHostSessionList->GetNamespaceForMailboxForHost(serverKey, boxname, ns);
-		if (ns)
-		{
-			switch (ns->GetType())
-			{
-			case kPersonalNamespace:
-				boxSpec->box_flags |= kPersonalMailbox;
-				break;
-			case kPublicNamespace:
-				boxSpec->box_flags |= kPublicMailbox;
-				break;
-			case kOtherUsersNamespace:
-				boxSpec->box_flags |= kOtherUsersMailbox;
-				break;
-			default:	// (kUnknownNamespace)
-				break;
-			}
-			boxSpec->namespaceForFolder = ns;
-		}
-
-//    	char *convertedName =
-//            fServerConnection.CreateUtf7ConvertedString(boxname, PR_FALSE);
-//		PRUnichar *unicharName;
-//        unicharName = fServerConnection.CreatePRUnicharStringFromUTF7(boxname);
-//    	PL_strfree(boxname);
-//    	boxname = convertedName;
+      fTokenizerAdvanced = PR_FALSE;
+      if (!PL_strcmp(fCurrentTokenPlaceHolder, CRLF))
+        fAtEndOfLine = PR_FALSE;
     }
-
-	if (!boxname)
-	{
-		if (!fServerConnection.DeathSignalReceived())
-			HandleMemoryFailure();
-	}
-	else
-	{
-		NS_ASSERTION(boxSpec->connection, "box spec has null connection");
-		NS_ASSERTION(boxSpec->connection->GetCurrentUrl(), "box spec has connection with null url");
-		//boxSpec->hostName = nsnull;
-		//if (boxSpec->connection && boxSpec->connection->GetCurrentUrl())
-		boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
-		nsIURI * aURL = nsnull;
-		boxSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aURL);
-		if (aURL) {
-            nsCAutoString host;
-			aURL->GetHost(host);
-            boxSpec->hostName = ToNewCString(host);
-        }
-		NS_IF_RELEASE(aURL);
-        if (boxname)
-            PL_strfree( boxname);
-		// storage for the boxSpec is now owned by server connection
-		fServerConnection.DiscoverMailboxSpec(boxSpec);
-		
-		// if this was cancelled by the user,then we sure don't want to
-		// send more mailboxes their way
-		if (fServerConnection.GetConnectionStatus() < 0)
-			SetConnected(PR_FALSE);
-	}
+    fNextToken = GetNextToken();
+  }
+  
+  if (boxname && fHostSessionList)
+  {
+    // should the namespace check go before or after the Utf7 conversion?
+    fHostSessionList->SetNamespaceHierarchyDelimiterFromMailboxForHost(
+      serverKey, boxname, boxSpec->hierarchySeparator);
+    
+    
+    nsIMAPNamespace *ns = nsnull;
+    fHostSessionList->GetNamespaceForMailboxForHost(serverKey, boxname, ns);
+    if (ns)
+    {
+      switch (ns->GetType())
+      {
+      case kPersonalNamespace:
+        boxSpec->box_flags |= kPersonalMailbox;
+        break;
+      case kPublicNamespace:
+        boxSpec->box_flags |= kPublicMailbox;
+        break;
+      case kOtherUsersNamespace:
+        boxSpec->box_flags |= kOtherUsersMailbox;
+        break;
+      default:	// (kUnknownNamespace)
+        break;
+      }
+      boxSpec->namespaceForFolder = ns;
+    }
+    
+    //    	char *convertedName =
+    //            fServerConnection.CreateUtf7ConvertedString(boxname, PR_FALSE);
+    //		PRUnichar *unicharName;
+    //        unicharName = fServerConnection.CreatePRUnicharStringFromUTF7(boxname);
+    //    	PL_strfree(boxname);
+    //    	boxname = convertedName;
+  }
+  
+  if (!boxname)
+  {
+    if (!fServerConnection.DeathSignalReceived())
+      HandleMemoryFailure();
+  }
+  else
+  {
+    NS_ASSERTION(boxSpec->connection, "box spec has null connection");
+    NS_ASSERTION(boxSpec->connection->GetCurrentUrl(), "box spec has connection with null url");
+    //boxSpec->hostName = nsnull;
+    //if (boxSpec->connection && boxSpec->connection->GetCurrentUrl())
+    boxSpec->connection->GetCurrentUrl()->AllocateCanonicalPath(boxname, boxSpec->hierarchySeparator, &boxSpec->allocatedPathName);
+    nsIURI * aURL = nsnull;
+    boxSpec->connection->GetCurrentUrl()->QueryInterface(NS_GET_IID(nsIURI), (void **) &aURL);
+    if (aURL) {
+      nsCAutoString host;
+      aURL->GetHost(host);
+      boxSpec->hostName = ToNewCString(host);
+    }
+    NS_IF_RELEASE(aURL);
+    if (boxname)
+      PL_strfree( boxname);
+    // storage for the boxSpec is now owned by server connection
+    fServerConnection.DiscoverMailboxSpec(boxSpec);
+    
+    // if this was cancelled by the user,then we sure don't want to
+    // send more mailboxes their way
+    if (fServerConnection.GetConnectionStatus() < 0)
+      SetConnected(PR_FALSE);
+  }
 }
 
 

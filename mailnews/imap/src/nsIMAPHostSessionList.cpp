@@ -243,24 +243,24 @@ NS_IMETHODIMP nsIMAPHostSessionList::SetPasswordVerifiedOnline(const char *serve
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetPasswordVerifiedOnline(const char *serverKey, PRBool &result)
 {
-
-	PR_EnterMonitor(gCachedHostInfoMonitor);
-	nsIMAPHostInfo *host = FindHost(serverKey);
-	if (host)
-		result = host->fPasswordVerifiedOnline;
-	PR_ExitMonitor(gCachedHostInfoMonitor);
-	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+  
+  PR_EnterMonitor(gCachedHostInfoMonitor);
+  nsIMAPHostInfo *host = FindHost(serverKey);
+  if (host)
+    result = host->fPasswordVerifiedOnline;
+  PR_ExitMonitor(gCachedHostInfoMonitor);
+  return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
 NS_IMETHODIMP nsIMAPHostSessionList::GetOnlineDirForHost(const char *serverKey,
                                                          nsString &result)
 {
-	PR_EnterMonitor(gCachedHostInfoMonitor);
-	nsIMAPHostInfo *host = FindHost(serverKey);
-	if (host)
-        result.AssignWithConversion(host->fOnlineDir);
-	PR_ExitMonitor(gCachedHostInfoMonitor);
-	return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
+  PR_EnterMonitor(gCachedHostInfoMonitor);
+  nsIMAPHostInfo *host = FindHost(serverKey);
+  if (host)
+    result.AssignWithConversion(host->fOnlineDir);
+  PR_ExitMonitor(gCachedHostInfoMonitor);
+  return (host == NULL) ? NS_ERROR_ILLEGAL_VALUE : NS_OK;
 }
 
 NS_IMETHODIMP nsIMAPHostSessionList::SetOnlineDirForHost(const char *serverKey,

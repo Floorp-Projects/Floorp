@@ -2903,52 +2903,54 @@ nsImapIncomingServer::GetDelimiter(char *aDelimiter)
 NS_IMETHODIMP
 nsImapIncomingServer::SetDelimiter(char aDelimiter)
 {
-    nsresult rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-	return mInner->SetDelimiter(aDelimiter);
+  nsresult rv = EnsureInner();
+  NS_ENSURE_SUCCESS(rv,rv);
+  return mInner->SetDelimiter(aDelimiter);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::SetAsSubscribed(const char *path)
 {
-    nsresult rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-	return mInner->SetAsSubscribed(path);
+  nsresult rv = EnsureInner();
+  NS_ENSURE_SUCCESS(rv,rv);
+  return mInner->SetAsSubscribed(path);
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::UpdateSubscribed()
 {
 #ifdef DEBUG_sspitzer
-	printf("for imap, do this when we populate\n");
+  printf("for imap, do this when we populate\n");
 #endif
-	return NS_OK;
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsImapIncomingServer::AddTo(const char *aName, PRBool addAsSubscribed,PRBool changeIfExists)
 {
-    nsresult rv = EnsureInner();
-    NS_ENSURE_SUCCESS(rv,rv);
-
-    // quick check if the name we are passed is really modified UTF-7
-    // if it isn't, ignore it.  (otherwise, we'll crash.  see #63186)
-    // there is a bug in the UW IMAP server where it can send us
-    // folder names as literals, instead of MUTF7
-    unsigned char *ptr = (unsigned char *)aName;
-    PRBool nameIsClean = PR_TRUE;
-    while (*ptr) {
-        if (*ptr > 127) {
-            nameIsClean = PR_FALSE;
-            break;
-        }
-        ptr++;
+  nsresult rv = EnsureInner();
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  // quick check if the name we are passed is really modified UTF-7
+  // if it isn't, ignore it.  (otherwise, we'll crash.  see #63186)
+  // there is a bug in the UW IMAP server where it can send us
+  // folder names as literals, instead of MUTF7
+  unsigned char *ptr = (unsigned char *)aName;
+  PRBool nameIsClean = PR_TRUE;
+  while (*ptr) 
+  {
+    if (*ptr > 127) 
+    {
+      nameIsClean = PR_FALSE;
+      break;
     }
-
-    NS_ASSERTION(nameIsClean,"folder path was not in UTF7, ignore it");
-    if (!nameIsClean) return NS_OK;
-
-    return mInner->AddTo(aName, addAsSubscribed, changeIfExists);
+    ptr++;
+  }
+  
+  NS_ASSERTION(nameIsClean,"folder path was not in UTF7, ignore it");
+  if (!nameIsClean) return NS_OK;
+  
+  return mInner->AddTo(aName, addAsSubscribed, changeIfExists);
 }
 
 NS_IMETHODIMP
