@@ -39,7 +39,7 @@
 
 #include "nsCOMPtr.h"
 #include "nsAutoPtr.h"
-#include "nsIHTMLContent.h"
+#include "nsIXMLContent.h"
 #include "nsIDOMElement.h"
 #include "nsIDOMDocumentFragment.h"
 #include "nsIDOMEventReceiver.h"
@@ -63,6 +63,7 @@ class nsDOMAttributeMap;
 class nsIURI;
 class nsVoidArray;
 class nsINodeInfo;
+class nsIControllers;
 
 typedef unsigned long PtrBits;
 
@@ -88,8 +89,20 @@ typedef unsigned long PtrBits;
 /** Whether this content has had any properties set on it */
 #define GENERIC_ELEMENT_HAS_PROPERTIES         0x00000010U
 
+/**
+ * Next three bits are used for XUL Element's lazy state.
+ * @see nsIXULContent
+ */
+#define GENERIC_ELEMENT_CHILDREN_TO_REBUILT    0x00000020U
+
+#define GENERIC_ELEMENT_TEMPLATE_BUILT         0x00000040U
+
+#define GENERIC_ELEMENT_CONTAINER_BUILT        0x00000080U
+
+#define GENERIC_ELEMENT_LAZY_STATE_OFFSET 5
+
 /** The number of bits to shift the bit field to get at the content ID */
-#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 5
+#define GENERIC_ELEMENT_CONTENT_ID_BITS_OFFSET 8
 
 /** This mask masks out the bits that are used for the content ID */
 #define GENERIC_ELEMENT_CONTENT_ID_MASK \
@@ -168,11 +181,18 @@ public:
    */
   nsRefPtr<nsDOMAttributeMap> mAttributeMap;
 
-  /**
-   * The nearest enclosing content node with a binding that created us.
-   * @see nsGenericElement::GetBindingParent
-   */
-  nsIContent* mBindingParent; // [Weak]
+  union {
+    /**
+    * The nearest enclosing content node with a binding that created us.
+    * @see nsGenericElement::GetBindingParent
+    */
+    nsIContent* mBindingParent;  // [Weak]
+
+    /**
+    * The controllers of the XUL Element.
+    */
+    nsIControllers* mControllers; // [OWNER]
+  };
 
   // DEPRECATED, DON'T USE THIS
   PRUint32 mContentID;
@@ -335,7 +355,7 @@ private:
  * A generic base class for DOM elements, implementing many nsIContent,
  * nsIDOMNode and nsIDOMElement methods.
  */
-class nsGenericElement : public nsIHTMLContent
+class nsGenericElement : public nsIXMLContent
 {
 public:
   nsGenericElement(nsINodeInfo *aNodeInfo);
@@ -459,12 +479,6 @@ public:
 
   // nsIXMLContent interface methods
   NS_IMETHOD MaybeTriggerAutoLink(nsIDocShell *aShell);
-
-  // nsIHTMLContent interface methods
-  NS_IMETHOD Compact();
-  NS_IMETHOD GetHTMLAttribute(nsIAtom* aAttribute,
-                              nsHTMLValue& aValue) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
 
   // nsIDOMNode method implementation
   NS_IMETHOD GetNodeName(nsAString& aNodeName);

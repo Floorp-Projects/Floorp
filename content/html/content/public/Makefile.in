@@ -55,7 +55,6 @@ EXPORTS		= \
 		nsIForm.h \
 		nsIFormProcessor.h \
 		nsIFormSubmitObserver.h \
-		nsIHTMLContent.h \
 		nsILink.h \
 		nsIOptionElement.h \
 		nsIRadioControlElement.h \

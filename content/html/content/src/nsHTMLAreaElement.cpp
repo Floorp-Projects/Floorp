@@ -38,7 +38,6 @@
 #include "nsIDOMHTMLAreaElement.h"
 #include "nsIDOMNSHTMLAreaElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsILink.h"
 #include "nsIPresShell.h"

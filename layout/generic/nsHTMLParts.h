@@ -47,7 +47,6 @@ class nsIContent;
 class nsIContentIterator;
 class nsIDocument;
 class nsIFrame;
-class nsIHTMLContent;
 class nsIHTMLContentSink;
 class nsIFragmentContentSink;
 class nsPresContext;

@@ -37,7 +37,6 @@
 #include "nsIDOMHTMLImageElement.h"
 #include "nsIDOMNSHTMLImageElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsHTMLAtoms.h"
@@ -124,7 +123,7 @@ public:
   virtual nsChangeHint GetAttributeChangeHint(const nsIAtom* aAttribute,
                                               PRInt32 aModType) const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   virtual nsresult HandleDOMEvent(nsPresContext* aPresContext,
                                   nsEvent* aEvent, nsIDOMEvent** aDOMEvent,
                                   PRUint32 aFlags,
@@ -155,7 +154,7 @@ protected:
   nsSize GetWidthHeight();
 };
 
-nsIHTMLContent*
+nsGenericHTMLElement*
 NS_NewHTMLImageElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   /*
@@ -497,11 +496,10 @@ nsHTMLImageElement::IsAttributeMapped(const nsIAtom* aAttribute) const
 }
 
 
-NS_IMETHODIMP
-nsHTMLImageElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsHTMLImageElement::GetAttributeMappingFunction() const
 {
-  aMapRuleFunc = &MapAttributesIntoRule;
-  return NS_OK;
+  return &MapAttributesIntoRule;
 }
 
 

@@ -45,7 +45,7 @@
 #include "nsIFrame.h"
 #include "nsISupports.h"
 #include "nsIAtom.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsHTMLParts.h"
 #include "nsHTMLAtoms.h"
 #include "nsLayoutAtoms.h"
@@ -147,7 +147,7 @@ PRInt32 nsLegendFrame::GetAlign()
   }
 #endif // IBMBIDI
 
-  nsCOMPtr<nsIHTMLContent> content(do_QueryInterface(mContent));
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
 
   if (content) {
     nsHTMLValue value;

@@ -38,7 +38,6 @@
 #include "nsIDOMHTMLDListElement.h"
 #include "nsIDOMHTMLUListElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
 #include "nsStyleConsts.h"
@@ -82,7 +81,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 };
 
@@ -237,15 +236,13 @@ nsHTMLSharedListElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
-NS_IMETHODIMP
-nsHTMLSharedListElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsHTMLSharedListElement::GetAttributeMappingFunction() const
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::ol) ||
       mNodeInfo->Equals(nsHTMLAtoms::ul)) {
-    aMapRuleFunc = &MapAttributesIntoRule;
+    return &MapAttributesIntoRule;
   }
-  else {
-    nsGenericHTMLElement::GetAttributeMappingFunction(aMapRuleFunc);
-  }
-  return NS_OK;
+
+  return nsGenericHTMLElement::GetAttributeMappingFunction();
 }

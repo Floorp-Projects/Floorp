@@ -61,7 +61,7 @@
 #include "nsHTMLAtoms.h"
 #include "nsHTMLValue.h"
 #include "nsIDOMEvent.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "prprf.h"
 #include "nsLayoutAtoms.h"
 #include "nsITextContent.h"
@@ -6852,7 +6852,7 @@ nsBlockFrame::RenumberLists(nsPresContext* aPresContext)
   // XXX Map html's start property to counter-reset style
   PRInt32 ordinal = 1;
 
-  nsCOMPtr<nsIHTMLContent> hc(do_QueryInterface(mContent));
+  nsGenericHTMLElement *hc = nsGenericHTMLElement::FromContent(mContent);
 
   if (hc) {
     nsHTMLValue value;

@@ -82,7 +82,6 @@
 #include "nsIFrameUtil.h"
 #include "nsIGenericFactory.h"
 #include "nsIHTMLCSSStyleSheet.h"
-#include "nsIHTMLContent.h"
 #include "nsIFragmentContentSink.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLToTextSink.h"
@@ -646,7 +645,7 @@ CreateHTMLImgElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLImageElement is special cased to handle a null nodeinfo
-  nsIHTMLContent* inst = NS_NewHTMLImageElement(nsnull);
+  nsIContent* inst = NS_NewHTMLImageElement(nsnull);
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   if (inst) {
     NS_ADDREF(inst);
@@ -697,7 +696,7 @@ CreateHTMLOptionElement(nsISupports* aOuter, REFNSIID aIID, void** aResult)
   if (aOuter)
     return NS_ERROR_NO_AGGREGATION;
   // Note! NS_NewHTMLOptionElement is special cased to handle a null nodeinfo
-  nsIHTMLContent* inst = NS_NewHTMLOptionElement(nsnull);
+  nsIContent* inst = NS_NewHTMLOptionElement(nsnull);
   nsresult rv = NS_ERROR_OUT_OF_MEMORY;
   if (inst) {
     NS_ADDREF(inst);

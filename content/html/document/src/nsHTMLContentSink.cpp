@@ -48,7 +48,6 @@
 #include "nsIParser.h"
 #include "nsParserUtils.h"
 #include "nsIScriptLoader.h"
-#include "nsIHTMLContent.h"
 #include "nsIURI.h"
 #include "nsNetUtil.h"
 #include "nsIPresShell.h"
@@ -180,9 +179,9 @@ static PRLogModuleInfo* gSinkLogModuleInfo;
 // sampling the clock too often.
 #define NS_MAX_TOKENS_DEFLECTED_IN_LOW_FREQ_MODE 200
 
-typedef nsIHTMLContent* (*contentCreatorCallback)(nsINodeInfo*, PRBool aFromParser);
+typedef nsGenericHTMLElement* (*contentCreatorCallback)(nsINodeInfo*, PRBool aFromParser);
 
-nsIHTMLContent*
+nsGenericHTMLElement*
 NS_NewHTMLNOTUSEDElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   NS_NOTREACHED("The element ctor should never be called");
@@ -286,7 +285,7 @@ protected:
   nsresult AddAttributes(const nsIParserNode& aNode, nsIContent* aContent,
                          PRBool aNotify = PR_FALSE,
                          PRBool aCheckIfPresent = PR_FALSE);
-  already_AddRefed<nsIHTMLContent>
+  already_AddRefed<nsGenericHTMLElement>
   CreateContentObject(const nsIParserNode& aNode, nsHTMLTag aNodeType,
                       nsIDOMHTMLFormElement* aForm,
                       nsIDocShell* aDocShell);
@@ -334,10 +333,10 @@ protected:
   // The maximum length of a text run
   PRInt32 mMaxTextRun;
 
-  nsIHTMLContent* mRoot;
-  nsIHTMLContent* mBody;
-  nsIHTMLContent* mFrameset;
-  nsIHTMLContent* mHead;
+  nsGenericHTMLElement* mRoot;
+  nsGenericHTMLElement* mBody;
+  nsGenericHTMLElement* mFrameset;
+  nsGenericHTMLElement* mHead;
 
   nsString mSkippedContent;
 
@@ -349,7 +348,7 @@ protected:
 
   PRInt32 mInNotification;
   nsCOMPtr<nsIDOMHTMLFormElement> mCurrentForm;
-  nsCOMPtr<nsIHTMLContent> mCurrentMap;
+  nsCOMPtr<nsIContent> mCurrentMap;
 
   nsAutoVoidArray mContextStack;
   SinkContext* mCurrentContext;
@@ -407,7 +406,7 @@ protected:
   nsresult ProcessAREATag(const nsIParserNode& aNode);
   nsresult ProcessBASETag(const nsIParserNode& aNode);
   nsresult ProcessLINKTag(const nsIParserNode& aNode);
-  nsresult ProcessMAPTag(nsIHTMLContent* aContent);
+  nsresult ProcessMAPTag(nsIContent* aContent);
   nsresult ProcessMETATag(const nsIParserNode& aNode);
   nsresult ProcessSCRIPTTag(const nsIParserNode& aNode);
   nsresult ProcessSTYLETag(const nsIParserNode& aNode);
@@ -709,12 +708,12 @@ public:
     mPreAppend = aPreAppend;
   }
 
-  nsresult Begin(nsHTMLTag aNodeType, nsIHTMLContent* aRoot,
+  nsresult Begin(nsHTMLTag aNodeType, nsGenericHTMLElement* aRoot,
                  PRUint32 aNumFlushed, PRInt32 aInsertionPoint);
   nsresult OpenContainer(const nsIParserNode& aNode);
   nsresult CloseContainer(const nsHTMLTag aTag);
   nsresult AddLeaf(const nsIParserNode& aNode);
-  nsresult AddLeaf(nsIHTMLContent* aContent);
+  nsresult AddLeaf(nsGenericHTMLElement* aContent);
   nsresult AddComment(const nsIParserNode& aNode);
   nsresult End();
 
@@ -731,7 +730,7 @@ public:
 
   PRBool   IsCurrentContainer(nsHTMLTag mType);
   PRBool   IsAncestorContainer(nsHTMLTag mType);
-  nsIHTMLContent* GetCurrentContainer();
+  nsGenericHTMLElement* GetCurrentContainer();
 
   void DidAddContent(nsIContent* aContent, PRBool aDidNotify = PR_FALSE);
   void UpdateChildCounts();
@@ -744,7 +743,7 @@ public:
 
   struct Node {
     nsHTMLTag mType;
-    nsIHTMLContent* mContent;
+    nsGenericHTMLElement* mContent;
     PRUint32 mFlags;
     PRUint32 mNumFlushed;
     PRInt32 mInsertionPoint;
@@ -850,7 +849,7 @@ HTMLContentSink::AddAttributes(const nsIParserNode& aNode,
 }
 
 static void
-SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
+SetForm(nsGenericHTMLElement* aContent, nsIDOMHTMLFormElement* aForm)
 {
   nsCOMPtr<nsIFormControl> formControl(do_QueryInterface(aContent));
   NS_ASSERTION(formControl, "nsIDOMHTMLFormElement doesn't implement nsIFormControl?");
@@ -858,7 +857,7 @@ SetForm(nsIHTMLContent* aContent, nsIDOMHTMLFormElement* aForm)
   formControl->SetForm(aForm);
 }
 
-static already_AddRefed<nsIHTMLContent>
+static already_AddRefed<nsGenericHTMLElement>
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
                   nsIDOMHTMLFormElement* aForm,
                   PRBool aInsideNoXXXTag, PRBool aFromParser);
@@ -866,7 +865,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
 /**
  * Factory subroutine to create all of the html content objects.
  */
-already_AddRefed<nsIHTMLContent>
+already_AddRefed<nsGenericHTMLElement>
 HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
                                      nsHTMLTag aNodeType,
                                      nsIDOMHTMLFormElement* aForm,
@@ -911,7 +910,7 @@ HTMLContentSink::CreateContentObject(const nsIParserNode& aNode,
   }
 
   // Make the content object
-  nsIHTMLContent* result = MakeContentObject(aNodeType, nodeInfo, aForm,
+  nsGenericHTMLElement* result = MakeContentObject(aNodeType, nodeInfo, aForm,
                                              !!mInsideNoXXXTag, PR_TRUE).get();
   if (!result) {
     return nsnull;
@@ -965,7 +964,7 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
   nsIAtom *name = aNodeInfo->NameAtom();
 
   PRInt32 id;
-  nsCOMPtr<nsIHTMLContent> result;
+  nsRefPtr<nsGenericHTMLElement> result;
   if (aNodeInfo->NamespaceEquals(kNameSpaceID_XHTML)) {
     // Find tag in tag table
     parserService->HTMLCaseSensitiveAtomTagToId(name, &id);
@@ -1004,10 +1003,11 @@ NS_NewHTMLElement(nsIContent** aResult, nsINodeInfo *aNodeInfo)
                                PR_FALSE, PR_FALSE);
   }
 
-  return result ? CallQueryInterface(result, aResult) : NS_ERROR_OUT_OF_MEMORY;
+  return result ? CallQueryInterface(result.get(), aResult)
+    : NS_ERROR_OUT_OF_MEMORY;
 }
 
-already_AddRefed<nsIHTMLContent>
+already_AddRefed<nsGenericHTMLElement>
 MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
                   nsIDOMHTMLFormElement* aForm,
                   PRBool aInsideNoXXXTag, PRBool aFromParser)
@@ -1016,11 +1016,11 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
   if (aNodeType == eHTMLTag_form) {
     if (aForm) {
       // the form was already created
-      nsIHTMLContent* result;
+      nsGenericHTMLElement* result;
       CallQueryInterface(aForm, &result);
       return result;
     }
-    nsIHTMLContent* result = NS_NewHTMLFormElement(aNodeInfo);
+    nsGenericHTMLElement* result = NS_NewHTMLFormElement(aNodeInfo);
     NS_IF_ADDREF(result);
     return result;
   }
@@ -1030,7 +1030,7 @@ MakeContentObject(nsHTMLTag aNodeType, nsINodeInfo *aNodeInfo,
   NS_ASSERTION(cb != NS_NewHTMLNOTUSEDElement,
                "Don't know how to construct tag element!");
 
-  nsIHTMLContent* result = cb(aNodeInfo, aFromParser);
+  nsGenericHTMLElement* result = cb(aNodeInfo, aFromParser);
   if (!result) {
     return nsnull;
   }
@@ -1085,7 +1085,7 @@ SinkContext::~SinkContext()
 
 nsresult
 SinkContext::Begin(nsHTMLTag aNodeType,
-                   nsIHTMLContent* aRoot,
+                   nsGenericHTMLElement* aRoot,
                    PRUint32 aNumFlushed,
                    PRInt32 aInsertionPoint)
 {
@@ -1133,10 +1133,10 @@ SinkContext::IsAncestorContainer(nsHTMLTag aTag)
   return PR_FALSE;
 }
 
-nsIHTMLContent*
+nsGenericHTMLElement*
 SinkContext::GetCurrentContainer()
 {
-  nsIHTMLContent* content = mStack[mStackPos - 1].mContent;
+  nsGenericHTMLElement* content = mStack[mStackPos - 1].mContent;
   NS_ADDREF(content);
 
   return content;
@@ -1212,7 +1212,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
   nsIDocShell *docshell = nsnull;
   if (mSink->mFrameset) docshell = (nsIDocShell *) mSink->mDocShell;
-  nsIHTMLContent* content =
+  nsGenericHTMLElement* content =
     mSink->CreateContentObject(aNode, nodeType, mSink->mCurrentForm,
                                docshell).get();
   if (!content) {
@@ -1265,7 +1265,7 @@ SinkContext::OpenContainer(const nsIParserNode& aNode)
       return NS_ERROR_FAILURE;
     }
 
-    nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
+    nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
 
     if (mStack[mStackPos - 1].mInsertionPoint != -1) {
       parent->InsertChildAt(content,
@@ -1331,7 +1331,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
   --mStackPos;
   nsHTMLTag nodeType = mStack[mStackPos].mType;
 
-  nsIHTMLContent* content = mStack[mStackPos].mContent;
+  nsGenericHTMLElement* content = mStack[mStackPos].mContent;
 
   content->Compact();
 
@@ -1342,7 +1342,7 @@ SinkContext::CloseContainer(const nsHTMLTag aTag)
       return NS_ERROR_FAILURE;
     }
 
-    nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
+    nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
 
     // If the parent has an insertion point, insert rather than
     // append.
@@ -1459,7 +1459,7 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 
       // Create new leaf content object
       nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
-      nsCOMPtr<nsIHTMLContent> content =
+      nsRefPtr<nsGenericHTMLElement> content =
         mSink->CreateContentObject(aNode, nodeType,
                                    mSink->mCurrentForm, mSink->mDocShell);
       NS_ENSURE_TRUE(content, NS_ERROR_OUT_OF_MEMORY);
@@ -1542,14 +1542,14 @@ SinkContext::AddLeaf(const nsIParserNode& aNode)
 }
 
 nsresult
-SinkContext::AddLeaf(nsIHTMLContent* aContent)
+SinkContext::AddLeaf(nsGenericHTMLElement* aContent)
 {
   NS_ASSERTION(mStackPos > 0, "leaf w/o container");
   if (mStackPos <= 0) {
     return NS_ERROR_FAILURE;
   }
 
-  nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
+  nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
 
   // If the parent has an insertion point, insert rather than append.
   if (mStack[mStackPos - 1].mInsertionPoint != -1) {
@@ -1601,7 +1601,7 @@ SinkContext::AddComment(const nsIParserNode& aNode)
     return NS_ERROR_FAILURE;
   }
 
-  nsIHTMLContent* parent;
+  nsGenericHTMLElement* parent;
   if (!mSink->mBody && !mSink->mFrameset && mSink->mHead) {
     parent = mSink->mHead;
   } else {
@@ -1737,7 +1737,7 @@ SinkContext::FlushTags(PRBool aNotify)
   FlushText();
 
   PRUint32 childCount;
-  nsIHTMLContent* content;
+  nsGenericHTMLElement* content;
 
   // Start from the top of the stack (growing upwards) and append
   // all content that hasn't been previously appended to the tree
@@ -1745,7 +1745,7 @@ SinkContext::FlushTags(PRBool aNotify)
 
   while ((stackPos > 0) && ((mStack[stackPos].mFlags & APPENDED) == 0)) {
     content = mStack[stackPos].mContent;
-    nsIHTMLContent* parent = mStack[stackPos - 1].mContent;
+    nsGenericHTMLElement* parent = mStack[stackPos - 1].mContent;
 
     mStack[stackPos].mFlags |= APPENDED;
 
@@ -1809,7 +1809,7 @@ SinkContext::FlushTags(PRBool aNotify)
 void
 SinkContext::UpdateChildCounts()
 {
-  nsIHTMLContent* content;
+  nsGenericHTMLElement* content;
 
   // Start from the top of the stack (growing upwards) and see if any
   // new content has been appended. If so, we recognize that reflows
@@ -1878,7 +1878,7 @@ SinkContext::FlushText(PRBool* aDidFlush, PRBool aReleaseLast)
         return NS_ERROR_FAILURE;
       }
 
-      nsIHTMLContent* parent = mStack[mStackPos - 1].mContent;
+      nsGenericHTMLElement* parent = mStack[mStackPos - 1].mContent;
       if (mStack[mStackPos - 1].mInsertionPoint != -1) {
         parent->InsertChildAt(mLastTextNode,
                               mStack[mStackPos - 1].mInsertionPoint++,
@@ -2508,7 +2508,7 @@ HTMLContentSink::BeginContext(PRInt32 aPosition)
 
   PRInt32 insertionPoint = -1;
   nsHTMLTag nodeType      = mCurrentContext->mStack[aPosition].mType;
-  nsIHTMLContent* content = mCurrentContext->mStack[aPosition].mContent;
+  nsGenericHTMLElement* content = mCurrentContext->mStack[aPosition].mContent;
 
   // If the content under which the new context is created
   // has a child on the stack, the insertion point is
@@ -2739,7 +2739,7 @@ HTMLContentSink::OpenBody(const nsIParserNode& aNode)
 
   if (mCurrentContext->mStackPos > 1) {
     PRInt32 parentIndex    = mCurrentContext->mStackPos - 2;
-    nsIHTMLContent *parent = mCurrentContext->mStack[parentIndex].mContent;
+    nsGenericHTMLElement *parent = mCurrentContext->mStack[parentIndex].mContent;
     PRInt32 numFlushed     = mCurrentContext->mStack[parentIndex].mNumFlushed;
     PRInt32 insertionPoint =
       mCurrentContext->mStack[parentIndex].mInsertionPoint;
@@ -2828,7 +2828,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
                                            getter_AddRefs(nodeInfo));
     NS_ENSURE_SUCCESS(result, result);
 
-    nsCOMPtr<nsIHTMLContent> content = NS_NewHTMLFormElement(nodeInfo);
+    nsRefPtr<nsGenericHTMLElement> content = NS_NewHTMLFormElement(nodeInfo);
     if (!content) {
       return NS_ERROR_OUT_OF_MEMORY;
     }
@@ -2841,7 +2841,7 @@ HTMLContentSink::OpenForm(const nsIParserNode& aNode)
     // Otherwise the form can be a content parent.
     result = mCurrentContext->OpenContainer(aNode);
     if (NS_SUCCEEDED(result)) {
-      nsCOMPtr<nsIHTMLContent> content =
+      nsRefPtr<nsGenericHTMLElement> content =
         dont_AddRef(mCurrentContext->GetCurrentContainer());
 
       mCurrentForm = do_QueryInterface(content);
@@ -2926,7 +2926,7 @@ HTMLContentSink::CloseFrameset()
                    this);
 
   SinkContext* sc = mCurrentContext;
-  nsIHTMLContent* fs = sc->mStack[sc->mStackPos - 1].mContent;
+  nsGenericHTMLElement* fs = sc->mStack[sc->mStackPos - 1].mContent;
   PRBool done = fs == mFrameset;
   nsresult rv = sc->CloseContainer(eHTMLTag_frameset);
 
@@ -3158,7 +3158,7 @@ HTMLContentSink::SetDocumentTitle(const nsAString& aTitle)
                                               getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> it = NS_NewHTMLTitleElement(nodeInfo);
+  nsRefPtr<nsGenericHTMLElement> it = NS_NewHTMLTitleElement(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -3686,7 +3686,7 @@ HTMLContentSink::ProcessAREATag(const nsIParserNode& aNode)
 
   nsHTMLTag nodeType = nsHTMLTag(aNode.GetNodeType());
 
-  nsCOMPtr<nsIHTMLContent> area =
+  nsRefPtr<nsGenericHTMLElement> area =
     CreateContentObject(aNode, nodeType, nsnull, nsnull);
   if (!area) {
     return NS_ERROR_OUT_OF_MEMORY;
@@ -3807,7 +3807,7 @@ nsresult
 HTMLContentSink::ProcessBASETag(const nsIParserNode& aNode)
 {
   nsresult result = NS_OK;
-  nsIHTMLContent* parent = nsnull;
+  nsGenericHTMLElement* parent = nsnull;
 
   if (mCurrentContext) {
     parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
@@ -3854,7 +3854,7 @@ nsresult
 HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 {
   nsresult  result = NS_OK;
-  nsIHTMLContent* parent = nsnull;
+  nsGenericHTMLElement* parent = nsnull;
 
   if (mCurrentContext) {
     parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
@@ -3931,7 +3931,7 @@ HTMLContentSink::ProcessLINKTag(const nsIParserNode& aNode)
 }
 
 nsresult
-HTMLContentSink::ProcessMAPTag(nsIHTMLContent* aContent)
+HTMLContentSink::ProcessMAPTag(nsIContent* aContent)
 {
   mCurrentMap = nsnull;
 
@@ -3955,7 +3955,7 @@ HTMLContentSink::ProcessMAPTag(nsIHTMLContent* aContent)
 nsresult
 HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
 {
-  nsIHTMLContent* parent = nsnull;
+  nsGenericHTMLElement* parent = nsnull;
 
   if (mCurrentContext) {
     parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
@@ -3974,7 +3974,7 @@ HTMLContentSink::ProcessMETATag(const nsIParserNode& aNode)
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> it = NS_NewHTMLMetaElement(nodeInfo);
+  nsRefPtr<nsGenericHTMLElement> it = NS_NewHTMLMetaElement(nodeInfo);
   if (!it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -4158,7 +4158,7 @@ HTMLContentSink::ProcessSCRIPTTag(const nsIParserNode& aNode)
   // Inserting the element into the document may execute a script.
   // This can potentially make the parent go away. So, hold
   // on to it till we are done.
-  nsCOMPtr<nsIHTMLContent> parent =
+  nsRefPtr<nsGenericHTMLElement> parent =
     mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;
   nsCOMPtr<nsIContent> element;
   nsCOMPtr<nsINodeInfo> nodeInfo;
@@ -4266,7 +4266,7 @@ nsresult
 HTMLContentSink::ProcessSTYLETag(const nsIParserNode& aNode)
 {
   nsresult rv = NS_OK;
-  nsIHTMLContent* parent = nsnull;
+  nsGenericHTMLElement* parent = nsnull;
 
   if (mCurrentContext) {
     parent = mCurrentContext->mStack[mCurrentContext->mStackPos - 1].mContent;

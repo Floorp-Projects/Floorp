@@ -57,6 +57,9 @@ REQUIRES	= xpcom \
 		  accessibility \
 		  necko \
 		  webshell \
+		  js \
+		  xpconnect \
+		  pref \
 		  $(NULL)
 
 EXPORTS		= \
@@ -89,4 +92,6 @@ LOCAL_INCLUDES	= \
 		-I$(srcdir)/../base \
 		-I$(srcdir)/../generic \
 		-I$(srcdir)/../xul/base/src \
+		-I$(srcdir)/../../content/html/content/src \
+		-I$(srcdir)/../../content/base/src \
 		$(NULL)

@@ -43,7 +43,7 @@
 #include "nsIURL.h"
 #include "nsISupportsArray.h"
 #include "nsHashtable.h"
-#include "nsIHTMLContent.h"
+#include "nsIStyledContent.h"
 #include "nsIHTMLDocument.h"
 #include "nsIStyleRule.h"
 #include "nsIFrame.h"

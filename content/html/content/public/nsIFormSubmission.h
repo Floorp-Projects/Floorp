@@ -42,7 +42,7 @@ class nsAString;
 class nsACString;
 class nsIURI;
 class nsIInputStream;
-class nsIHTMLContent;
+class nsGenericHTMLElement;
 class nsPresContext;
 class nsIContent;
 class nsIFormControl;
@@ -129,7 +129,7 @@ public:
  * @param aPresContext the presentation context
  * @param aFormSubmission the form submission object (out param)
  */
-nsresult GetSubmissionFromForm(nsIHTMLContent* aForm,
+nsresult GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                                nsPresContext* aPresContext,
                                nsIFormSubmission** aFormSubmission);
 

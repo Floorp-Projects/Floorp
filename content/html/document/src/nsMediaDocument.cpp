@@ -240,7 +240,7 @@ nsMediaDocument::CreateSyntheticDocument()
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> root = NS_NewHTMLHtmlElement(nodeInfo);
+  nsRefPtr<nsGenericHTMLElement> root = NS_NewHTMLHtmlElement(nodeInfo);
   if (!root) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -252,7 +252,7 @@ nsMediaDocument::CreateSyntheticDocument()
                                      getter_AddRefs(nodeInfo));
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIHTMLContent> body = NS_NewHTMLBodyElement(nodeInfo);
+  nsRefPtr<nsGenericHTMLElement> body = NS_NewHTMLBodyElement(nodeInfo);
   if (!body) {
     return NS_ERROR_OUT_OF_MEMORY;
   }

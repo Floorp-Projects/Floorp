@@ -51,7 +51,6 @@ typedef   nsTextControlFrame nsNewFrame;
 
 class nsIPresState;
 class nsISupportsArray;
-class nsIHTMLContent;
 
 class nsIsIndexFrame : public nsAreaFrame,
                        public nsIAnonymousContentCreator,

@@ -63,7 +63,6 @@
 #include "nsMappedAttributes.h"
 #include "nsHTMLStyleSheet.h"
 #include "nsIHTMLDocument.h"
-#include "nsIHTMLContent.h"
 #include "nsILink.h"
 #include "nsILinkHandler.h"
 #include "nsPIDOMWindow.h"
@@ -232,10 +231,6 @@ NS_INTERFACE_MAP_END_AGGREGATED(mElement)
 static nsICSSOMFactory* gCSSOMFactory = nsnull;
 static NS_DEFINE_CID(kCSSOMFactoryCID, NS_CSSOMFACTORY_CID);
 
-NS_INTERFACE_MAP_BEGIN(nsGenericHTMLElement)
-  NS_INTERFACE_MAP_ENTRY(nsIHTMLContent)
-NS_INTERFACE_MAP_END_INHERITING(nsGenericElement)
- 
 NS_IMPL_INT_ATTR(nsGenericHTMLElement, TabIndex, tabindex)
 
 nsresult
@@ -2206,12 +2201,10 @@ nsGenericHTMLElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
-NS_IMETHODIMP
-nsGenericHTMLElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsGenericHTMLElement::GetAttributeMappingFunction() const
 {
-  aMapRuleFunc = &MapCommonAttributesInto;
-
-  return NS_OK;
+  return &MapCommonAttributesInto;
 }
 
 // static
@@ -2270,7 +2263,7 @@ nsGenericHTMLElement::GetFormControlFrameFor(nsIContent* aContent,
 }
 
 nsresult
-nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
+nsGenericHTMLElement::GetPrimaryPresState(nsGenericHTMLElement* aContent,
                                           nsIPresState** aPresState)
 {
   NS_ENSURE_ARG_POINTER(aPresState);
@@ -2298,7 +2291,7 @@ nsGenericHTMLElement::GetPrimaryPresState(nsIHTMLContent* aContent,
 
 
 nsresult
-nsGenericHTMLElement::GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
+nsGenericHTMLElement::GetLayoutHistoryAndKey(nsGenericHTMLElement* aContent,
                                              nsILayoutHistoryState** aHistory,
                                              nsACString& aKey)
 {
@@ -2344,7 +2337,7 @@ nsGenericHTMLElement::GetLayoutHistoryAndKey(nsIHTMLContent* aContent,
 }
 
 PRBool
-nsGenericHTMLElement::RestoreFormControlState(nsIHTMLContent* aContent,
+nsGenericHTMLElement::RestoreFormControlState(nsGenericHTMLElement* aContent,
                                               nsIFormControl* aControl)
 {
   nsCOMPtr<nsILayoutHistoryState> history;

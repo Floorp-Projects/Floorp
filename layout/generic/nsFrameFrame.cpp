@@ -38,7 +38,7 @@
  * ***** END LICENSE BLOCK ***** */
 #include "nsCOMPtr.h"
 #include "nsLeafFrame.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellLoadInfo.h"
 #include "nsIDocShellTreeItem.h"
@@ -572,9 +572,8 @@ nsSubDocumentFrame::Destroy(nsPresContext* aPresContext)
 nsSize nsSubDocumentFrame::GetMargin()
 {
   nsSize result(-1, -1);
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(mContent, &rv);
-  if (NS_SUCCEEDED(rv) && content) {
+  nsGenericHTMLElement *content = nsGenericHTMLElement::FromContent(mContent);
+  if (content) {
     nsHTMLValue value;
     content->GetHTMLAttribute(nsHTMLAtoms::marginwidth, value);
     if (eHTMLUnit_Integer == value.GetUnit())

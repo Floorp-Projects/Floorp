@@ -40,7 +40,6 @@
 #include "nsIDOMHTMLTableCellElement.h"
 #include "nsIDOMEventReceiver.h"
 #include "nsDOMError.h"
-#include "nsIHTMLContent.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsContentList.h"
@@ -83,7 +82,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
@@ -95,7 +94,7 @@ protected:
 #ifdef XXX_debugging
 static
 void DebugList(nsIDOMHTMLTableElement* aTable) {
-  nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(aTable);
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aTable);
   if (content) {
     nsCOMPtr<nsIDocument> doc;
     result = content->GetDocument(getter_AddRefs(doc));
@@ -305,7 +304,7 @@ nsHTMLTableRowElement::InsertCell(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
   nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::td,
                               getter_AddRefs(nodeInfo));
 
-  nsCOMPtr<nsIHTMLContent> cellContent = NS_NewHTMLTableCellElement(nodeInfo);
+  nsCOMPtr<nsIContent> cellContent = NS_NewHTMLTableCellElement(nodeInfo);
   if (!cellContent) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -489,9 +488,8 @@ nsHTMLTableRowElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
-NS_IMETHODIMP
-nsHTMLTableRowElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsHTMLTableRowElement::GetAttributeMappingFunction() const
 {
-  aMapRuleFunc = &MapAttributesIntoRule;
-  return NS_OK;
+  return &MapAttributesIntoRule;
 }

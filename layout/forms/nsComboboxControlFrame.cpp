@@ -41,7 +41,6 @@
 #include "nsIDOMEventReceiver.h"
 #include "nsFrameManager.h"
 #include "nsFormControlFrame.h"
-#include "nsIHTMLContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsCSSAnonBoxes.h"
 #include "nsHTMLParts.h"

@@ -796,7 +796,7 @@ nsImageMap::Init(nsIPresShell* aPresShell, nsIFrame* aImageFrame, nsIDOMHTMLMapE
 
   nsresult rv;
   mMap = do_QueryInterface(aMap, &rv);
-  NS_ASSERTION(mMap, "aMap is not an nsIHTMLContent!");
+  NS_ASSERTION(mMap, "aMap is not an nsIContent!");
   mDocument = mMap->GetDocument();
   if (mDocument) {
     mDocument->AddObserver(this);

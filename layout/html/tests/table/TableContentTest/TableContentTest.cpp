@@ -49,7 +49,6 @@
 #include "nsIFrame.h"
 #include "nsIStyleSet.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
 #include "..\..\..\src\nsTablePart.h"
 
 #include "nsContentCID.h"
@@ -158,8 +157,8 @@ BasicTest::BasicTest()
 
 nsresult BasicTest::AppendSimpleSpan(nsIContent* aContainer, const char* aTag, const char* aText)
 {
-  nsIHTMLContent* span;
-  nsIHTMLContent* text;
+  nsIContent* span;
+  nsIContent* text;
   nsIAtom* atom = NS_NewAtom(aTag);
   nsresult rv = NS_NewHTMLContainer(&span, atom);
   if (NS_OK == rv) {
@@ -180,14 +179,14 @@ nsresult BasicTest::AppendSimpleSpan(nsIContent* aContainer, const char* aTag, c
 void BasicTest::CreateCorrectContent(int aRows, int aCols)
 {
   fprintf(out, "CreateCorrectContent %d %d\n", aRows, aCols);
-  nsIHTMLContent* root;
+  nsIContent* root;
   nsresult rv = NS_NewRootPart(&root, this);  // does a SetRootPart on the returned root object
   if (NS_OK != rv) {
     fprintf(out, "NS_NewRootPart failed\n");
     NS_ASSERTION(PR_FALSE, "NS_NewRootPart failed");
   }
 
-  nsIHTMLContent* body;
+  nsIContent* body;
   nsIAtom* atom = NS_NewAtom("body");
   rv = NS_NewBodyPart(&body, atom);
   if (NS_OK != rv) {
@@ -196,9 +195,9 @@ void BasicTest::CreateCorrectContent(int aRows, int aCols)
   }
   NS_RELEASE(atom);
 
-  nsIHTMLContent* table;
-  nsIHTMLContent* row;
-  nsIHTMLContent* cell;
+  nsIContent* table;
+  nsIContent* row;
+  nsIContent* cell;
 
   nsIAtom* tatom = NS_NewAtom("table");
   rv = NS_NewTablePart(&table, tatom);
@@ -236,14 +235,14 @@ void BasicTest::CreateCorrectContent(int aRows, int aCols)
 void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
 {
   fprintf(out, "CreateCorrectFullContent %d %d, 1 caption\n", aRows, aCols);
-  nsIHTMLContent* root;
+  nsIContent* root;
   nsresult rv = NS_NewRootPart(&root, this);  // does a SetRootPart on the returned root object
   if (NS_OK != rv) {
     fprintf(out, "NS_NewRootPart failed\n");
     NS_ASSERTION(PR_FALSE, "NS_NewRootPart failed\n");
   }
 
-  nsIHTMLContent* body;
+  nsIContent* body;
   nsIAtom* atom = NS_NewAtom("body");
   rv = NS_NewBodyPart(&body, atom);
   if (NS_OK != rv) {
@@ -252,12 +251,12 @@ void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
   }
   NS_RELEASE(atom);
 
-  nsIHTMLContent* table;
-  nsIHTMLContent* caption;
-  nsIHTMLContent* colGroup;
-  nsIHTMLContent* col;
-  nsIHTMLContent* row;
-  nsIHTMLContent* cell;
+  nsIContent* table;
+  nsIContent* caption;
+  nsIContent* colGroup;
+  nsIContent* col;
+  nsIContent* row;
+  nsIContent* cell;
 
   nsIAtom* tatom = NS_NewAtom("table");
   rv = NS_NewTablePart(&table, tatom);
@@ -317,14 +316,14 @@ void BasicTest::CreateCorrectFullContent(int aRows, int aCols)
 void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
 {
   fprintf(out, "CreateOutOfOrderContent %d %d, 2 captions\n", aRows, aCols);
-  nsIHTMLContent* root;
+  nsIContent* root;
   nsresult rv = NS_NewRootPart(&root, this);  // does a SetRootPart on the returned root object
   if (NS_OK != rv) {
     fprintf(out, "NS_NewRootPart failed\n");
     NS_ASSERTION(PR_FALSE, "NS_NewRootPart failed\n");
   }
 
-  nsIHTMLContent* body;
+  nsIContent* body;
   nsIAtom* atom = NS_NewAtom("body");
   rv = NS_NewBodyPart(&body, atom);
   if (NS_OK != rv) {
@@ -333,12 +332,12 @@ void BasicTest::CreateOutOfOrderContent(int aRows, int aCols)
   }
   NS_RELEASE(atom);
 
-  nsIHTMLContent* table;
-  nsIHTMLContent* caption;
-  nsIHTMLContent* colGroup;
-  nsIHTMLContent* col;
-  nsIHTMLContent* row;
-  nsIHTMLContent* cell;
+  nsIContent* table;
+  nsIContent* caption;
+  nsIContent* colGroup;
+  nsIContent* col;
+  nsIContent* row;
+  nsIContent* cell;
 
   nsIAtom* tatom = NS_NewAtom("table");
   rv = NS_NewTablePart(&table, tatom);

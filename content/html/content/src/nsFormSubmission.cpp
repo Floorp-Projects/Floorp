@@ -50,7 +50,7 @@
 #include "nsIDOMHTMLFormElement.h"
 #include "nsDOMError.h"
 #include "nsHTMLValue.h"
-#include "nsGenericElement.h"
+#include "nsGenericHTMLElement.h"
 #include "nsISaveAsCharset.h"
 
 // JBK added for submit move from content frame
@@ -185,7 +185,7 @@ public:
    *        builds.
    * @param aCharset the returned charset [OUT]
    */
-  static void GetSubmitCharset(nsIHTMLContent* aForm,
+  static void GetSubmitCharset(nsGenericHTMLElement* aForm,
                                PRUint8 aCtrlsModAtSubmit,
                                nsACString& aCharset);
   /**
@@ -195,7 +195,7 @@ public:
    * @param aCharset the charset of the form
    * @param aEncoder the returned encoder [OUT]
    */
-  static nsresult GetEncoder(nsIHTMLContent* aForm,
+  static nsresult GetEncoder(nsGenericHTMLElement* aForm,
                              nsPresContext* aPresContext,
                              const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder);
@@ -207,7 +207,7 @@ public:
    *        exist on the form, so *make sure you provide a default value*.)
    *        [OUT]
    */
-  static void GetEnumAttr(nsIHTMLContent* aForm,
+  static void GetEnumAttr(nsGenericHTMLElement* aForm,
                           nsIAtom* aAtom, PRInt32* aValue);
 };
 
@@ -222,7 +222,7 @@ public:
  *        layout/html/forms/src/HtmlProperties.js
  */
 static nsresult
-SendJSWarning(nsIHTMLContent* aContent,
+SendJSWarning(nsIContent* aContent,
               const char* aWarningName);
 /**
  * Send a warning to the JS console
@@ -232,7 +232,7 @@ SendJSWarning(nsIHTMLContent* aContent,
  * @param aWarningArg1 an argument to replace a %S in the warning
  */
 static nsresult
-SendJSWarning(nsIHTMLContent* aContent,
+SendJSWarning(nsIContent* aContent,
               const char* aWarningName,
               const nsAFlatString& aWarningArg1);
 /**
@@ -244,7 +244,7 @@ SendJSWarning(nsIHTMLContent* aContent,
  * @param aWarningArgsLen the number of strings in the array
  */
 static nsresult
-SendJSWarning(nsIHTMLContent* aContent,
+SendJSWarning(nsIContent* aContent,
               const char* aWarningName,
               const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen);
 
@@ -338,7 +338,7 @@ nsFSURLEncoded::AddNameValuePair(nsIDOMHTMLElement* aSource,
   if (!mWarnedFileControl) {
     nsCOMPtr<nsIFormControl> formControl = do_QueryInterface(aSource);
     if (formControl->GetType() == NS_FORM_INPUT_FILE) {
-      nsCOMPtr<nsIHTMLContent> content = do_QueryInterface(aSource);
+      nsCOMPtr<nsIContent> content = do_QueryInterface(aSource);
       SendJSWarning(content, "ForgotFileEnctypeWarning");
       mWarnedFileControl = PR_TRUE;
     }
@@ -1076,14 +1076,14 @@ NS_INTERFACE_MAP_END
 // submission
 
 static nsresult
-SendJSWarning(nsIHTMLContent* aContent,
+SendJSWarning(nsIContent* aContent,
                const char* aWarningName)
 {
   return SendJSWarning(aContent, aWarningName, nsnull, 0);
 }
 
 static nsresult
-SendJSWarning(nsIHTMLContent* aContent,
+SendJSWarning(nsIContent* aContent,
                const char* aWarningName,
                const nsAFlatString& aWarningArg1)
 {
@@ -1092,7 +1092,7 @@ SendJSWarning(nsIHTMLContent* aContent,
 }
 
 static nsresult
-SendJSWarning(nsIHTMLContent* aContent,
+SendJSWarning(nsIContent* aContent,
               const char* aWarningName,
               const PRUnichar** aWarningArgs, PRUint32 aWarningArgsLen)
 {
@@ -1115,7 +1115,7 @@ SendJSWarning(nsIHTMLContent* aContent,
 }
 
 nsresult
-GetSubmissionFromForm(nsIHTMLContent* aForm,
+GetSubmissionFromForm(nsGenericHTMLElement* aForm,
                       nsPresContext* aPresContext,
                       nsIFormSubmission** aFormSubmission)
 {
@@ -1218,7 +1218,7 @@ nsFormSubmission::SubmitTo(nsIURI* aActionURI, const nsAString& aTarget,
 // JBK moved from nsFormFrame - bug 34297
 // static
 void
-nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
+nsFormSubmission::GetSubmitCharset(nsGenericHTMLElement* aForm,
                                    PRUint8 aCtrlsModAtSubmit,
                                    nsACString& oCharset)
 {
@@ -1291,7 +1291,7 @@ nsFormSubmission::GetSubmitCharset(nsIHTMLContent* aForm,
 // JBK moved from nsFormFrame - bug 34297
 // static
 nsresult
-nsFormSubmission::GetEncoder(nsIHTMLContent* aForm,
+nsFormSubmission::GetEncoder(nsGenericHTMLElement* aForm,
                              nsPresContext* aPresContext,
                              const nsACString& aCharset,
                              nsISaveAsCharset** aEncoder)
@@ -1392,7 +1392,7 @@ nsFormSubmission::UnicodeToNewBytes(const PRUnichar* aStr, PRUint32 aLen,
 
 // static
 void
-nsFormSubmission::GetEnumAttr(nsIHTMLContent* aContent,
+nsFormSubmission::GetEnumAttr(nsGenericHTMLElement* aContent,
                               nsIAtom* atom, PRInt32* aValue)
 {
   nsHTMLValue value;

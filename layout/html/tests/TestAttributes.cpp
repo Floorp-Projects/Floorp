@@ -39,7 +39,7 @@
 #include "nsIAtom.h"
 #include "nsCRT.h"
 #include "nsHTMLParts.h"
-#include "nsIHTMLContent.h"
+#include "nsGenericHTMLElement.h"
 #include "nsITextContent.h"
 #include "nsString.h"
 #include "nsIDocument.h"
@@ -49,7 +49,7 @@
 #include "nsIDOMText.h"
 #include "nsINameSpaceManager.h"
 
-void testAttributes(nsIHTMLContent* content) {
+void testAttributes(nsGenericHTMLElement* content) {
   nsIAtom* sBORDER = NS_NewAtom("border");
   nsIAtom* sHEIGHT = NS_NewAtom("height");
   nsIAtom* sSRC = NS_NewAtom("src");
@@ -284,7 +284,7 @@ int main(int argc, char** argv)
 #endif
 
   // Create a simple container.
-  nsIHTMLContent* container;
+  nsGenericHTMLElement* container;
   nsIAtom* li = NS_NewAtom("li");
 
   nsCOMPtr<nsINodeInfo> ni;

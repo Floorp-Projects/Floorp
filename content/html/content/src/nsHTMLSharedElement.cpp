@@ -43,7 +43,6 @@
 #include "nsIDOMHTMLQuoteElement.h"
 #include "nsIDOMHTMLBaseFontElement.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsImageLoadingContent.h"
 #include "nsHTMLAtoms.h"
@@ -119,7 +118,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
@@ -484,22 +483,19 @@ nsHTMLSharedElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return nsGenericHTMLElement::IsAttributeMapped(aAttribute);
 }
 
-NS_IMETHODIMP
-nsHTMLSharedElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsHTMLSharedElement::GetAttributeMappingFunction() const
 {
   if (mNodeInfo->Equals(nsHTMLAtoms::embed)) {
-    aMapRuleFunc = &EmbedMapAttributesIntoRule;
+    return &EmbedMapAttributesIntoRule;
   }
-  else if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
-    aMapRuleFunc = &SpacerMapAttributesIntoRule;
+  if (mNodeInfo->Equals(nsHTMLAtoms::spacer)) {
+    return &SpacerMapAttributesIntoRule;
   }
   else if (mNodeInfo->Equals(nsHTMLAtoms::dir) ||
            mNodeInfo->Equals(nsHTMLAtoms::menu)) {
-    aMapRuleFunc = &DirectoryMenuMapAttributesIntoRule;
+    return &DirectoryMenuMapAttributesIntoRule;
   }
-  else {
-    nsGenericHTMLElement::GetAttributeMappingFunction(aMapRuleFunc);
-  }
-  
-  return NS_OK;
+
+  return nsGenericHTMLElement::GetAttributeMappingFunction();
 }

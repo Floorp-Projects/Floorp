@@ -43,7 +43,6 @@
 #include "nsIHTMLDocument.h"
 #include "nsIDOMNSHTMLFormControlList.h"
 #include "nsIDOMEventReceiver.h"
-#include "nsIHTMLContent.h"
 #include "nsGenericHTMLElement.h"
 #include "nsEventStateManager.h"
 #include "nsHTMLAtoms.h"
@@ -409,7 +408,7 @@ ShouldBeInElements(nsIFormControl* aFormControl)
 // nsHTMLFormElement implementation
 
 // construction, destruction
-nsIHTMLContent*
+nsGenericHTMLElement*
 NS_NewHTMLFormElement(nsINodeInfo *aNodeInfo, PRBool aFromParser)
 {
   nsHTMLFormElement* it = new nsHTMLFormElement(aNodeInfo);

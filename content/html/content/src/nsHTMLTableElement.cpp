@@ -42,7 +42,6 @@
 #include "nsDOMError.h"
 #include "nsContentList.h"
 #include "nsGenericDOMHTMLCollection.h"
-#include "nsIHTMLContent.h"
 #include "nsMappedAttributes.h"
 #include "nsGenericHTMLElement.h"
 #include "nsHTMLAtoms.h"
@@ -88,7 +87,7 @@ public:
   NS_IMETHOD AttributeToString(nsIAtom* aAttribute,
                                const nsHTMLValue& aValue,
                                nsAString& aResult) const;
-  NS_IMETHOD GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const;
+  virtual nsMapRuleToAttributesFunc GetAttributeMappingFunction() const;
   NS_IMETHOD_(PRBool) IsAttributeMapped(const nsIAtom* aAttribute) const;
 
 protected:
@@ -523,7 +522,7 @@ nsHTMLTableElement::CreateTHead(nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::thead,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIHTMLContent> newHead = NS_NewHTMLTableSectionElement(nodeInfo);
+    nsCOMPtr<nsIContent> newHead = NS_NewHTMLTableSectionElement(nodeInfo);
 
     if (newHead) {
       nsCOMPtr<nsIDOMNode> child;
@@ -579,7 +578,7 @@ nsHTMLTableElement::CreateTFoot(nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::tfoot,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIHTMLContent> newFoot = NS_NewHTMLTableSectionElement(nodeInfo);
+    nsCOMPtr<nsIContent> newFoot = NS_NewHTMLTableSectionElement(nodeInfo);
 
     if (newFoot) {
       rv = AppendChildTo(newFoot, PR_TRUE, PR_FALSE);
@@ -625,7 +624,7 @@ nsHTMLTableElement::CreateCaption(nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::caption,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIHTMLContent> newCaption = NS_NewHTMLTableCaptionElement(nodeInfo);
+    nsCOMPtr<nsIContent> newCaption = NS_NewHTMLTableCaptionElement(nodeInfo);
 
     if (newCaption) {
       rv = AppendChildTo(newCaption, PR_TRUE, PR_FALSE);
@@ -701,7 +700,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
     nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::tr,
                                 getter_AddRefs(nodeInfo));
 
-    nsCOMPtr<nsIHTMLContent> newRow = NS_NewHTMLTableRowElement(nodeInfo);
+    nsCOMPtr<nsIContent> newRow = NS_NewHTMLTableRowElement(nodeInfo);
 
     if (newRow) {
       nsCOMPtr<nsIDOMNode> newRowNode(do_QueryInterface(newRow));
@@ -749,8 +748,8 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::tbody,
                                   getter_AddRefs(nodeInfo));
 
-      nsCOMPtr<nsIHTMLContent> newRowGroup
-        = NS_NewHTMLTableSectionElement(nodeInfo);
+      nsCOMPtr<nsIContent> newRowGroup =
+        NS_NewHTMLTableSectionElement(nodeInfo);
 
       if (newRowGroup) {
         rv = AppendChildTo(newRowGroup, PR_TRUE, PR_FALSE);
@@ -764,7 +763,7 @@ nsHTMLTableElement::InsertRow(PRInt32 aIndex, nsIDOMHTMLElement** aValue)
       nsContentUtils::NameChanged(mNodeInfo, nsHTMLAtoms::tr,
                                   getter_AddRefs(nodeInfo));
 
-      nsCOMPtr<nsIHTMLContent> newRow = NS_NewHTMLTableRowElement(nodeInfo);
+      nsCOMPtr<nsIContent> newRow = NS_NewHTMLTableRowElement(nodeInfo);
       if (newRow) {
         nsCOMPtr<nsIDOMNode> firstRow;
 
@@ -1357,9 +1356,8 @@ nsHTMLTableElement::IsAttributeMapped(const nsIAtom* aAttribute) const
   return FindAttributeDependence(aAttribute, map, NS_ARRAY_LENGTH(map));
 }
 
-NS_IMETHODIMP
-nsHTMLTableElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
+nsMapRuleToAttributesFunc
+nsHTMLTableElement::GetAttributeMappingFunction() const
 {
-  aMapRuleFunc = &MapAttributesIntoRule;
-  return NS_OK;
+  return &MapAttributesIntoRule;
 }

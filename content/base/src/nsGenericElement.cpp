@@ -1296,7 +1296,14 @@ nsGenericElement::GetAttribute(const nsAString& aName,
   const nsAttrName* name = InternalGetExistingAttrNameFromQName(aName);
 
   if (!name) {
-    SetDOMStringToNull(aReturn);
+    if (mNodeInfo->NamespaceID() == kNameSpaceID_XUL) {
+      // XXX should be SetDOMStringToNull(aReturn);
+      // See bug 232598
+      aReturn.Truncate();
+    }
+    else {
+      SetDOMStringToNull(aReturn);
+    }
 
     return NS_OK;
   }
@@ -1976,7 +1983,7 @@ nsGenericElement::HandleDOMEvent(nsPresContext* aPresContext,
     aEvent->flags |= aFlags;
 
     nsCOMPtr<nsIDOMEventTarget> curTarg =
-      do_QueryInterface(NS_STATIC_CAST(nsIHTMLContent *, this));
+      do_QueryInterface(NS_STATIC_CAST(nsIXMLContent *, this));
 
     lm->HandleEvent(aPresContext, aEvent, aDOMEvent, curTarg, aFlags,
                     aEventStatus);
@@ -2219,27 +2226,6 @@ nsGenericElement::GetExistingAttrNameFromQName(const nsAString& aStr) const
   }
 
   return nodeInfo;
-}
-
-NS_IMETHODIMP
-nsGenericElement::Compact()
-{
-  mAttrsAndChildren.Compact();
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetHTMLAttribute(nsIAtom* aAttribute,
-                                   nsHTMLValue& aValue) const
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
-}
-
-NS_IMETHODIMP
-nsGenericElement::GetAttributeMappingFunction(nsMapRuleToAttributesFunc& aMapRuleFunc) const
-{
-  return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 already_AddRefed<nsIURI>
@@ -2532,7 +2518,7 @@ nsGenericElement::GetListenerManager(nsIEventListenerManager **aResult)
       return rv;
     }
 
-    entry->mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIHTMLContent *,
+    entry->mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIXMLContent *,
                                                               this));
 
     SetFlags(GENERIC_ELEMENT_HAS_LISTENERMANAGER);
