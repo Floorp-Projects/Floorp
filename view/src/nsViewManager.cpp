@@ -111,10 +111,10 @@ static NS_DEFINE_CID(kEventQueueServiceCID, NS_EVENTQUEUESERVICE_CID);
 
 // The following number is used in OptimizeDisplayList to decide when the
 // opaque region is getting too complicated.  When we get to an opaque region
-// with MAX_OPAQUE_REGION_COMPLEXITY rets in it, we stop adding views' rects to
-// the opaque region.  On "normal" pages (those without hundreds to thousands
-// of positioned elements) there are usually not that many opaque views around;
-// 10 is plenty for such pages.
+// with MAX_OPAQUE_REGION_COMPLEXITY rects in it, we stop adding views' rects
+// to the opaque region.  On "normal" pages (those without hundreds to
+// thousands of positioned elements) there are usually not that many opaque
+// views around; 10 is plenty for such pages.
 #define MAX_OPAQUE_REGION_COMPLEXITY 10
 
 /*
