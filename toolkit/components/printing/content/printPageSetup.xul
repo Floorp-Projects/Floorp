@@ -161,7 +161,7 @@
               <column/>
             </columns>
             <rows>
-              <row>
+              <row dir="ltr">
                 <menulist id="hLeftOption" oncommand="customize(this)" tooltiptext="&headerLeft.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
@@ -196,7 +196,7 @@
                   </menupopup>
                 </menulist>
               </row>
-              <row>
+              <row dir="ltr">
                 <vbox align="center">
                   <label value="&hfLeft.label;"/>
                 </vbox>
@@ -207,7 +207,7 @@
                   <label value="&hfRight.label;"/>
                 </vbox>
               </row>
-              <row>
+              <row dir="ltr">
                 <menulist id="fLeftOption" oncommand="customize(this)" tooltiptext="&footerLeft.tip;">
                   <menupopup>
                     <menuitem value="0" label="&hfBlank;"/>
