@@ -42,7 +42,7 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- * $Id: primegen.c,v 1.1 2000/07/14 00:45:00 nelsonb%netscape.com Exp $
+ * $Id: primegen.c,v 1.2 2000/07/22 05:54:21 nelsonb%netscape.com Exp $
  */
 
 #include <stdio.h>
@@ -52,6 +52,7 @@
 #include <time.h>
 
 #include "mpi.h"
+#include "mplogic.h"
 #include "mpprime.h"
 
 #undef MACOS		/* define if running on a Macintosh */
@@ -62,16 +63,154 @@
 
 #define NUM_TESTS 5  /* Number of Rabin-Miller iterations to test with */
 
-int    g_strong = 0;
+unsigned long ntries;
+
+mp_err mpp_sieve(mp_int *trial, const mp_digit *primes, unsigned int nPrimes, 
+		 unsigned char *sieve, unsigned int nSieve)
+{
+  mp_err       res;
+  mp_digit     rem;
+  unsigned int ix;
+  unsigned long offset;
+
+  memset(sieve, 0, nSieve);
+
+  for(ix = 0; ix < nPrimes; ix++) {
+    mp_digit prime = primes[ix];
+    unsigned int i;
+    if((res = mp_mod_d(trial, prime, &rem)) != MP_OKAY) 
+      return res;
+
+    if (rem == 0) {
+      offset = 0;
+    } else {
+      offset = prime - (rem / 2);
+    }
+    for (i = offset; i < nSieve ; i += prime) {
+      sieve[i] = 1;
+    }
+  }
+
+  return MP_OKAY;
+}
+
+mp_err mpp_make_prime(mp_int *start, unsigned int nBits, unsigned int strong)
+{
+  mp_digit      np;
+  mp_err        res;
+  int           i;
+  mp_int        trial;
+  mp_int        q;
+  unsigned char sieve[32*1024];
+
+  ARGCHK(start != 0, MP_BADARG);
+  ARGCHK(nBits > 16, MP_RANGE);
+
+  mp_init(&trial);
+  mp_init(&q);
+  if (strong) 
+    --nBits;
+  res = mpl_set_bit(start, nBits - 1, 1);  if (res != MP_OKAY) goto loser;
+  res = mpl_set_bit(start,         0, 1);  if (res != MP_OKAY) goto loser;
+  for (i = mpl_significant_bits(start) - 1; i >= nBits; --i) {
+    res = mpl_set_bit(start, i, 0);  if (res != MP_OKAY) goto loser;
+  }
+  /* start sieveing with prime value of 3. */
+  res = mpp_sieve(start, prime_tab + 1, prime_tab_size - 1, 
+			 sieve, sizeof sieve);
+  if (res != MP_OKAY) goto loser;
+#ifdef DEBUG
+  res = 0;
+  for (i = 0; i < sizeof sieve; ++i) {
+    if (!sieve[i])
+      ++res;
+  }
+  fprintf(stderr,"sieve found %d potential primes.\n", res);
+#define FPUTC(x,y) fputc(x,y)
+#else
+#define FPUTC(x,y) 
+#endif
+  res = MP_NO;
+  for(i = 0; i < sizeof sieve; ++i) {
+    if (sieve[i])	/* this number is composite */
+      continue;
+    res = mp_add_d(start, 2 * i, &trial); if (res != MP_OKAY) goto loser;
+    FPUTC('.', stderr);
+    /* run a Fermat test */
+    res = mpp_fermat(&trial, 2);
+    if (res != MP_OKAY) {
+      if (res == MP_NO)
+	continue;	/* was composite */
+      goto loser;
+    }
+      
+    FPUTC('+', stderr);
+    /* If that passed, run some Miller-Rabin tests	*/
+    res = mpp_pprime(&trial, NUM_TESTS);
+    if (res != MP_OKAY) {
+      if (res == MP_NO)
+	continue;	/* was composite */
+      goto loser;
+    }
+    FPUTC('!', stderr);
+
+    if (!strong) 
+      break;	/* success !! */
+
+    /* At this point, we have strong evidence that our candidate
+       is itself prime.  If we want a strong prime, we need now
+       to test q = 2p + 1 for primality...
+     */
+    mp_mul_2(&trial, &q);
+    mp_add_d(&q, 1, &q);
+
+    /* Test q for small prime divisors ... */
+    np = prime_tab_size;
+    if (mpp_divis_primes(&q, &np) == MP_YES) { /* is composite */
+      mp_clear(&q);
+      continue;
+    }
+
+    /* And test with Fermat, as with its parent ... */
+    res = mpp_fermat(&q, 2);
+    if (res != MP_YES) {
+      mp_clear(&q);
+      if (res == MP_NO)
+	continue;	/* was composite */
+      goto loser;
+    }
+
+    /* And test with Miller-Rabin, as with its parent ... */
+    res = mpp_pprime(&q, NUM_TESTS);
+    if (res != MP_YES) {
+      mp_clear(&q);
+      if (res == MP_NO)
+	continue;	/* was composite */
+      goto loser;
+    }
+
+    /* If it passed, we've got a winner */
+    mp_exch(&q, &trial);
+    mp_clear(&q);
+    break;
+
+  } /* end of loop through sieved values */
+  if (res == MP_YES)
+    mp_exch(&trial, start);
+loser:
+  mp_clear(&trial);
+  ntries += i;
+  return res;
+}
 
 int main(int argc, char *argv[])
 {
   unsigned char *raw;
   char          *out;
   int		rawlen, bits, outlen, ngen, ix, jx;
-  mp_int	testval, ntries;
+  int           g_strong = 0;
+  mp_int	testval;
   mp_err	res;
-  mp_digit      np;
   clock_t	start, end;
 
 #ifdef MACOS
@@ -113,8 +252,7 @@ int main(int argc, char *argv[])
     g_strong = 1;
 
   /* testval - candidate being tested; ntries - number tried so far */
-  if((res = mp_init(&testval)) != MP_OKAY ||
-     (res = mp_init(&ntries)) != MP_OKAY) {
+  if ((res = mp_init(&testval)) != MP_OKAY) {
     fprintf(stderr, "%s: error: %s\n", argv[0], mp_strerror(res));
     return 1;
   }
@@ -151,126 +289,25 @@ int main(int argc, char *argv[])
     /* Make an mp_int out of the initializer */
     mp_read_raw(&testval, (char *)raw, rawlen);
 
-    /* If we asked for a strong prime, shift down one bit so that when
-       we double, we're still within the right range of bits ... this
-       is why we OR'd with 3 instead of 1 above
-     */
-    if(g_strong)
-      mp_div_2(&testval, &testval);
-
     /* Initialize candidate counter */
-    mp_zero(&ntries);
-    mp_add_d(&ntries, 1, &ntries);
+    ntries = 0;
 
     start = clock(); /* time generation for this prime */
-    for(;;) {
-      /*
-	Test for divisibility by small primes (of which there is a table 
-	conveniently stored in mpprime.c)
-      */
-      np = prime_tab_size;
-      if(mpp_divis_primes(&testval, &np) == MP_NO) {
-	/* If that passed, run a Fermat test */
-	res = mpp_fermat(&testval, 2);
-	switch(res) {
-	case MP_NO:     /* composite        */
-	  goto NEXT_CANDIDATE;
-	case MP_YES:    /* may be prime     */
-	  break;
-	default:
-	  goto CLEANUP; /* some other error */
-	}
-	
-	/* If that passed, run some Miller-Rabin tests	*/
-	res = mpp_pprime(&testval, NUM_TESTS);
-	switch(res) {
-	case MP_NO:     /* composite        */
-	  goto NEXT_CANDIDATE;
-	case MP_YES:    /* may be prime     */
-	  break;
-	default:
-	  goto CLEANUP; /* some other error */
-	}
-
-	/* At this point, we have strong evidence that our candidate
-	   is itself prime.  If we want a strong prime, we need now
-	   to test q = 2p + 1 for primality...
-	 */
- 	if(g_strong) {
-	  if(res == MP_YES) {
-	    mp_int  q;
-
-	    fputc('.', stderr);
-	    mp_init_copy(&q, &testval);
-	    mp_mul_2(&q, &q);
-	    mp_add_d(&q, 1, &q);
-
-	    /* Test q for small prime divisors ... */
-	    np = prime_tab_size;
-	    if(mpp_divis_primes(&q, &np) == MP_YES) {
-	      mp_clear(&q);
-	      goto NEXT_CANDIDATE;
-	    }
-
-	    /* And, with Fermat, as with its parent ... */
-	    res = mpp_fermat(&q, 2);
-	    switch(res) {
-	    case MP_NO:     /* composite        */
-	      mp_clear(&q);
-	      goto NEXT_CANDIDATE;
-	    case MP_YES:    /* may be prime     */
-	      break;
-	    default:
-	      mp_clear(&q);
-	      goto CLEANUP; /* some other error */
-	    }
-
-	    /* And, with Miller-Rabin, as with its parent ... */
-	    res = mpp_pprime(&q, NUM_TESTS);
-	    switch(res) {
-	    case MP_NO:     /* composite        */
-	      mp_clear(&q);
-	      goto NEXT_CANDIDATE;
-	    case MP_YES:    /* may be prime     */
-	      break;
-	    default:
-	      mp_clear(&q);
-	      goto CLEANUP; /* some other error */
-	    }
-	  
-	    /* If it passed, we've got a winner */
-	    if(res == MP_YES) {
-	      fputc('\n', stderr);
-	      mp_copy(&q, &testval);
-	      mp_clear(&q);
-	      break;
-	    }
-
-	    mp_clear(&q);
-
-	  } /* end if(res == MP_YES) */
-
-	} else {
-	  /* We get here if g_strong is false */
-	  if(res == MP_YES)
-	    break;
-	}
-      } /* end if(not divisible by small primes) */
-      
-      /*
-	If we're testing strong primes, skip to the next odd value
-	congruent to 3 (mod 4).  Otherwise, just skip to the next odd
-	value
-       */
-    NEXT_CANDIDATE:
-      if(g_strong)
-	mp_add_d(&testval, 4, &testval);
-      else
-	mp_add_d(&testval, 2, &testval);
-      mp_add_d(&ntries, 1, &ntries);
-    } /* end of loop to generate a single prime */
+    do {
+      res = mpp_make_prime(&testval, bits, g_strong);
+      if (res != MP_NO)
+	break;
+      /* This code works whether digits are 16 or 32 bits */
+      res = mp_add_d(&testval, 32 * 1024, &testval);
+      res = mp_add_d(&testval, 32 * 1024, &testval);
+      FPUTC(',', stderr);
+    } while (1);
     end = clock();
-    
+
+    if (res != MP_YES) {
+      break;
+    }
+    FPUTC('\n', stderr);
     printf("After %d tests, the following value is still probably prime:\n",
 	   NUM_TESTS);
     outlen = mp_radix_size(&testval, 10);
@@ -281,20 +318,13 @@ int main(int argc, char *argv[])
     printf("16: %s\n\n", out);
     free(out);
     
-    printf("Number of candidates tried: ");
-    outlen = mp_radix_size(&ntries, 10);
-    out = calloc(outlen, sizeof(unsigned char));
-    mp_toradix(&ntries, (char *)out, 10);
-    printf("%s\n", out);
-    free(out);
-
+    printf("Number of candidates tried: %d\n", ntries);
     printf("This computation took %ld clock ticks (%.2f seconds)\n",
 	   (end - start), ((double)(end - start) / CLOCKS_PER_SEC));
     
-    fputc('\n', stdout);
+    FPUTC('\n', stderr);
   } /* end of loop to generate all requested primes */
   
- CLEANUP:
   if(res != MP_OKAY) 
     fprintf(stderr, "%s: error: %s\n", argv[0], mp_strerror(res));
 
