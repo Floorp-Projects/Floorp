@@ -11,6 +11,7 @@ my $TBOX      = lc($req->param('tbox'));
 my $AUTOSCALE = lc($req->param('autoscale'));
 my $DAYS      = lc($req->param('days'));
 my $LTYPE     = lc($req->param('ltype'));
+my $POINTS    = lc($req->param('points'));
 my $DATAFILE  = "db/$TESTNAME/$TBOX";
 
 sub make_filenames_list {
@@ -135,8 +136,13 @@ sub show_graph {
   my $ltype = "lines";
   if($LTYPE eq "steps") {
 	$ltype = "steps";
-  } elsif($LTYPE eq "points") {
-	$ltype = "points ps 1";
+  }
+
+  my $plot_cmd;
+  if($POINTS) {
+	$plot_cmd = "plot \"$DATAFILE\" using 1:2 with $ltype, \"$DATAFILE\" using 1:2 with points ps 1";
+  } else {
+	$plot_cmd = "plot \"$DATAFILE\" using 1:2 with $ltype";
   }
 
   # interpolate params into gnuplot command
@@ -159,7 +165,7 @@ sub show_graph {
 				set timestamp "Generated: %d/%b/%y %H:%M" 0,-1
 				set nokey
 				set grid
-				plot "$DATAFILE" using 1:2 with $ltype
+				$plot_cmd
 			   };
 
 # plot "$DATAFILE" using 1:2 with points ps 1, "$DATAFILE" using 1:2 with lines ls 2
