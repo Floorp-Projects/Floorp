@@ -232,6 +232,18 @@ nsMsgAccount::createIncomingServer()
 NS_IMETHODIMP
 nsMsgAccount::SetIncomingServer(nsIMsgIncomingServer * aIncomingServer)
 {
+  nsresult rv;
+  
+  nsXPIDLCString key;
+  rv = aIncomingServer->GetKey(getter_Copies(key));
+  
+  if (NS_SUCCEEDED(rv)) {
+    char* serverPrefName =
+      PR_smprintf("mail.account.%s.server", m_accountKey);
+    m_prefs->SetCharPref(serverPrefName, key);
+    PR_smprintf_free(serverPrefName);
+  }
+
   m_incomingServer = dont_QueryInterface(aIncomingServer);
   return NS_OK;
 }
@@ -337,6 +349,18 @@ nsMsgAccount::AddIdentity(nsIMsgIdentity *identity)
   // hack hack - need to add this to the list of identities.
   // for now just tread this as a Setxxx accessor
   // when this is actually implemented, don't refcount the default identity
+  nsresult rv;
+  
+  nsXPIDLCString key;
+  rv = identity->GetKey(getter_Copies(key));
+
+  if (NS_SUCCEEDED(rv)) {
+    char *identitiesKeyPref = PR_smprintf("mail.account.%s.identities",
+                                          m_accountKey);
+    m_prefs->SetCharPref(identitiesKeyPref, key);
+    PR_smprintf_free(identitiesKeyPref);
+  }
+  
   m_identities->AppendElement(identity);
   if (!m_defaultIdentity)
     SetDefaultIdentity(identity);
