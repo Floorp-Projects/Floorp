@@ -176,14 +176,3 @@ interface nsIMIMEInfo : nsISupports {
     attribute boolean alwaysAskBeforeHandling;
 };
 
-%{C++
-#define NS_MIMEINFO_CID                           \
-{ /* {95df6583-0001-11d4-a12b-a66ef662f0bc} */         \
-    0x95df6583,                                      \
-    0x0001,                                          \
-    0x11d4,                                          \
-    { 0xa1, 0x2b, 0xa6, 0x6e, 0xf6, 0x62, 0xf0, 0xbc } \
-}
-
-#define NS_MIMEINFO_CONTRACTID "@mozilla.org/mime-info;1"
-%}
