@@ -74,12 +74,14 @@ NS_METHOD nsPrivateTextRange::SetRangeType(PRUint16 aRangeType)
 }
 
 
-nsPrivateTextRangeList::nsPrivateTextRangeList(PRUint16 aLength,nsIPrivateTextRange** aList)
-:	mLength(aLength),
-	mList(aList)
+nsPrivateTextRangeList::nsPrivateTextRangeList(PRUint16 aLength,
+                                               nsIPrivateTextRange** aList)
+:	mLength(aLength), mList(aList)
 {
-	if (aList==nsnull)
-		aLength = 0;
+        if(! aList) {
+           NS_WARN_IF_FALSE(!aLength, "Geez, this deosn't make sense");
+           mLength = 0;
+        }
 
 	NS_INIT_REFCNT();
 }
@@ -105,7 +107,7 @@ NS_METHOD nsPrivateTextRangeList::GetLength(PRUint16* aLength)
 
 NS_METHOD nsPrivateTextRangeList::Item(PRUint16 aIndex, nsIPrivateTextRange** aReturn)
 {
-	if (aIndex>mLength) {
+	if (aIndex>=mLength) {
 		*aReturn = nsnull;
 		return NS_ERROR_FAILURE;
 	}

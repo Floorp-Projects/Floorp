@@ -184,9 +184,13 @@ nsDOMEvent::nsDOMEvent(nsIPresContext* aPresContext, nsEvent* aEvent, const nsAR
 			}
 		}
 		
-		mTextRange = (nsIPrivateTextRangeList*) new nsPrivateTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
-		if (mTextRange!=nsnull)  mTextRange->AddRef();
 	  }
+	  // We need to create mTextRange even rangeCount is 0. 
+	  // if rangeCount is 0, mac carbon will return 0 for new and tempTextRangeList will be null. but we should still
+	  // create mTextRange, otherwise, we will crash it later when some code call GetInputRange and AddRef to the result
+	mTextRange = (nsIPrivateTextRangeList*) new nsPrivateTextRangeList(((nsTextEvent*)aEvent)->rangeCount,tempTextRangeList);
+	if (mTextRange!=nsnull)  
+		mTextRange->AddRef();
   }
 
   NS_INIT_REFCNT();
