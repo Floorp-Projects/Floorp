@@ -432,10 +432,6 @@
     </menu>
     <menu name="&demoMenu.label;">
       <menuitem name="&displayNewsArticle1Cmd.label;" onclick="MsgLoadNewsMessage('news://news.mozilla.org:119/37099AC5.8D0EB52@netscape.com');"/>
-	  <menuitem name="&displayInboxMsg1Cmd.label;" onclick="MsgLoadNewsMessage('mailbox:0');"/>
-	  <menuitem name="&displayInboxMsg2Cmd.label;" onclick="MsgLoadNewsMessage('mailbox:1');"/>
-	  <menuitem name="&displayInboxMsg3Cmd.label;" onclick="MsgLoadNewsMessage('mailbox:2');"/>
-	  <menuitem name="&displayInboxMsg4Cmd.label;" onclick="MsgLoadNewsMessage('mailbox:3');"/>
     </menu>
   </menubar>
 
