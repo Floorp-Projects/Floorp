@@ -461,9 +461,9 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
   if (ioString.mCharSize == eTwoByte)
   {
     PRUnichar  *stringBuf = ioString.mUStr;
-    PRInt32    theLen = ioString.mLength + 1;
+    PRInt32    newLen, theLen = ioString.mLength + 1;
     
-    rv = ConvertUnicharLineBreaksInSitu(&stringBuf, aSrcBreaks, aDestBreaks, theLen);
+    rv = ConvertUnicharLineBreaksInSitu(&stringBuf, aSrcBreaks, aDestBreaks, theLen, &newLen);
     if (NS_FAILED(rv)) return rv;
     
     if (stringBuf != ioString.mUStr)  // we reallocated
@@ -471,24 +471,24 @@ nsresult nsLinebreakConverter::ConvertStringLineBreaks(nsString& ioString,
       // this is pretty evil. Is there a better way?
       nsAllocator::Free(ioString.mUStr);
       ioString.mUStr = stringBuf;
-      ioString.mLength = theLen - 1;
-      ioString.mCapacity = theLen;
+      ioString.mLength = newLen - 1;
+      ioString.mCapacity = newLen;
     }
   }
   else
   {
     char     *stringBuf = ioString.mStr;
-    PRInt32  theLen = ioString.mLength + 1;
+    PRInt32  newLen, theLen = ioString.mLength + 1;
     
-    rv = ConvertLineBreaksInSitu(&stringBuf, aSrcBreaks, aDestBreaks, theLen);
+    rv = ConvertLineBreaksInSitu(&stringBuf, aSrcBreaks, aDestBreaks, theLen, &newLen);
     if (NS_FAILED(rv)) return rv;
     
     if (stringBuf != ioString.mStr)  // we reallocated
     {
       nsAllocator::Free(ioString.mStr);
       ioString.mStr = stringBuf;
-      ioString.mLength = theLen - 1;
-      ioString.mCapacity = theLen;
+      ioString.mLength = newLen - 1;
+      ioString.mCapacity = newLen;
     }
   }
   
