@@ -107,13 +107,13 @@ nsIMAPGenericParser::nsIMAPGenericParser() :
 	fNextToken(nil),
 	fCurrentLine(nil),
 	fLineOfTokens(nil),
+    fStartOfLineOfTokens(nil),
 	fCurrentTokenPlaceHolder(nil),
-	fStartOfLineOfTokens(nil),
-	fSyntaxErrorLine(nil),
 	fAtEndOfLine(PR_FALSE),
+    fTokenizerAdvanced(PR_FALSE),
+    fSyntaxErrorLine(nil),
 	fDisconnected(PR_FALSE),
-	fSyntaxError(PR_FALSE),
-	fTokenizerAdvanced(PR_FALSE)
+	fSyntaxError(PR_FALSE)
 {
 }
 
