@@ -506,7 +506,7 @@ outlinerrows {
  -moz-binding: url("chrome://global/content/bindings/outliner.xml#outlinerrows");
 }
 
-outlinercol.outliner-columnpicker {
+outlinercolpicker {
   -moz-binding: url("chrome://global/content/bindings/outliner.xml#columnpicker");
 }
 
