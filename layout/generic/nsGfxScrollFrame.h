@@ -25,6 +25,7 @@
 #include "nsHTMLContainerFrame.h"
 #include "nsIAnonymousContentCreator.h"
 #include "nsIBox.h"
+#include "nsIScrollableFrame.h"
 
 class nsISupportsArray;
 class nsGfxScrollFrameInner;
@@ -40,7 +41,8 @@ class nsGfxScrollFrameInner;
  */
 class nsGfxScrollFrame : public nsHTMLContainerFrame, 
                          public nsIAnonymousContentCreator,
-                         public nsIBox {
+                         public nsIBox,
+                         public nsIScrollableFrame {
 public:
   friend nsresult NS_NewGfxScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, 
                                        nsIDocument* aDocument);
@@ -111,6 +113,17 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
   NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
 
+  // nsIScrollableFrame
+  NS_IMETHOD  SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame);
+  NS_IMETHOD  GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
+  NS_IMETHOD  GetScrollbarVisibility(nsIPresContext* aPresContext,
+                                     PRBool *aVerticalVisible,
+                                     PRBool *aHorizontalVisible) const;
+  NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
+                         nscoord *aWidth, 
+                         nscoord *aHeight) const;
+  /**
+  
   /**
    * Get the "type" of the frame
    *

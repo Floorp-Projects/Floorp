@@ -38,6 +38,7 @@
 #include "nsLayoutAtoms.h"
 #include "nsIWebShell.h"
 #include "nsIBox.h"
+#include "nsIScrollableFrame.h"
 
 #undef NOISY_SECOND_REFLOW
 
@@ -49,6 +50,8 @@ static NS_DEFINE_IID(kViewCID, NS_VIEW_CID);
 
 static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
+static NS_DEFINE_IID(kAreaFrameIID, NS_IAREAFRAME_IID);
+static NS_DEFINE_IID(kIScrollableFrameIID,             NS_ISCROLLABLE_FRAME_IID);
 
 //----------------------------------------------------------------------
 
@@ -85,6 +88,93 @@ nsScrollFrame::Init(nsIPresContext*  aPresContext,
   // Create the scrolling view
   CreateScrollingView(aPresContext);
   return rv;
+}
+
+/**
+* Set the view that we are scrolling within the scrolling view. 
+*/
+NS_IMETHODIMP
+nsScrollFrame::SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame)
+{
+   // remove the first child and add in the new one
+   nsIFrame* child = mFrames.FirstChild();
+   mFrames.DestroyFrame(aPresContext, child);
+   mFrames.InsertFrame(nsnull, nsnull, aScrolledFrame);
+   return NS_OK;
+}
+
+/**
+* Get the view that we are scrolling within the scrolling view. 
+* @result child view
+*/
+NS_IMETHODIMP
+nsScrollFrame::GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
+{
+   // our first and only child is the scrolled child
+   nsIFrame* child = mFrames.FirstChild();
+   aScrolledFrame = child;
+   return NS_OK;  
+}
+
+NS_IMETHODIMP
+nsScrollFrame::GetClipSize(   nsIPresContext* aPresContext, 
+                              nscoord *aWidth, 
+                              nscoord *aHeight) const
+{
+    nsIScrollableView* scrollingView;
+    nsIView*           view;
+    GetView(aPresContext, &view);
+    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+       const nsIView* clip = nsnull;
+       scrollingView->GetClipView(&clip);
+       clip->GetDimensions(aWidth, aHeight);
+    } else {
+       *aWidth = 0;
+       *aHeight = 0;
+    }
+
+   return NS_OK;
+}
+
+
+/**
+* Get information about whether the vertical and horizontal scrollbars
+* are currently visible
+*/
+NS_IMETHODIMP
+nsScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext, 
+                                      PRBool *aVerticalVisible,
+                                      PRBool *aHorizontalVisible) const
+{
+    nsIScrollableView* scrollingView;
+    nsIView*           view;
+    GetView(aPresContext, &view);
+    if (NS_SUCCEEDED(view->QueryInterface(kScrollViewIID, (void**)&scrollingView))) {
+      scrollingView->GetScrollbarVisibility(aVerticalVisible, aHorizontalVisible);
+    } else {
+        aVerticalVisible = PR_FALSE;
+        aHorizontalVisible = PR_FALSE;
+    }
+
+   return NS_OK;
+}
+
+NS_IMETHODIMP 
+nsScrollFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIScrollableFrameIID)) {                                         
+    *aInstancePtr = (void*)(nsIScrollableFrame*) this;                                        
+    return NS_OK;                                                        
+  }   
+
+
+  return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);                                  
 }
   
 NS_IMETHODIMP

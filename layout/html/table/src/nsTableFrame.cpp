@@ -56,6 +56,7 @@
 #include "nsIDOMHTMLElement.h"
 #include "nsIDOMHTMLBodyElement.h"
 #include "nsISizeOfHandler.h"
+#include "nsIScrollableFrame.h"
 
 NS_DEF_PTR(nsIStyleContext);
 NS_DEF_PTR(nsIContent);
@@ -63,6 +64,7 @@ NS_DEF_PTR(nsIContent);
 static NS_DEFINE_IID(kIHTMLElementIID, NS_IDOMHTMLELEMENT_IID);
 static NS_DEFINE_IID(kIBodyElementIID, NS_IDOMHTMLBODYELEMENT_IID);
 static NS_DEFINE_IID(kITableRowGroupFrameIID, NS_ITABLEROWGROUPFRAME_IID);
+static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 
 static const PRInt32 kColumnWidthIncrement=10;
 
@@ -3940,7 +3942,10 @@ nsTableFrame::GetFrameName(nsString& aResult) const
 nsTableRowGroupFrame*
 nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDisplay) 
 {
+
   nsIFrame* result = nsnull;
+
+/*
   if (IsRowGroup(aDisplay->mDisplay)) {
     nsresult rv = aFrame->QueryInterface(kITableRowGroupFrameIID, (void **)&result);
     if (NS_SUCCEEDED(rv) && (nsnull != result)) {
@@ -3949,6 +3954,20 @@ nsTableFrame::GetRowGroupFrameFor(nsIFrame* aFrame, const nsStyleDisplay* aDispl
       aFrame->FirstChild(nsnull, &result);
       mBits.mHasScrollableRowGroup = PR_TRUE;
     }
+  }
+*/
+
+  // ok this code looks to see if it is a scrollable frame. If it is it asks it for the scrolled
+  // frame that should be the row group frame. -EDV
+  nsIScrollableFrame* scrollable = nsnull;
+  nsresult rv = aFrame->QueryInterface(kIScrollableFrameIID, (void **)&scrollable);
+  if (NS_SUCCEEDED(rv) && (nsnull != scrollable)) {
+      scrollable->GetScrolledFrame(nsnull, result);
+
+      // this is scary? Why do we need this.
+      mBits.mHasScrollableRowGroup = PR_TRUE;
+  } else {
+      result = aFrame;
   }
 
   return (nsTableRowGroupFrame*)result;

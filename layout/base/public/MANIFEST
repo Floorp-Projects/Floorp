@@ -49,3 +49,4 @@ nsIAnonymousContent.h
 nsILayoutHistoryState.h
 nsIStatefulFrame.h
 nsISelfScrollingFrame.h
+nsIScrollableFrame.h

@@ -55,6 +55,7 @@ static NS_DEFINE_IID(kIViewIID, NS_IVIEW_IID);
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
 static NS_DEFINE_IID(kIAnonymousContentCreatorIID,     NS_IANONYMOUS_CONTENT_CREATOR_IID);
+static NS_DEFINE_IID(kIScrollableFrameIID,             NS_ISCROLLABLE_FRAME_IID);
 
 //----------------------------------------------------------------------
 
@@ -257,6 +258,57 @@ nsGfxScrollFrame::~nsGfxScrollFrame()
     mInner->mOuter = nsnull;
     mInner->Release();
     mPresContext = nsnull;
+}
+
+/**
+* Set the view that we are scrolling within the scrolling view. 
+*/
+NS_IMETHODIMP
+nsGfxScrollFrame::SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame)
+{
+   mFrames.DestroyFrame(aPresContext, mInner->mScrollAreaFrame);
+   mInner->mScrollAreaFrame = aScrolledFrame;
+   mFrames.InsertFrame(nsnull, nsnull, mInner->mScrollAreaFrame);
+   return NS_OK;
+}
+
+/**
+* Get the view that we are scrolling within the scrolling view. 
+* @result child view
+*/
+NS_IMETHODIMP
+nsGfxScrollFrame::GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const
+{
+   return mInner->mScrollAreaFrame->FirstChild(nsnull, &aScrolledFrame);
+}
+
+/**
+ * Gets the size of the area that lies inside the scrollbars but clips the scrolled frame
+ */
+NS_IMETHODIMP
+nsGfxScrollFrame::GetClipSize(nsIPresContext* aPresContext, 
+                              nscoord *aWidth, 
+                              nscoord *aHeight) const
+{
+   nsSize size;
+   mInner->mScrollAreaFrame->GetSize(size);
+   *aWidth = size.width;
+   *aHeight = size.height;
+   return NS_OK;
+}
+
+/**
+* Get information about whether the vertical and horizontal scrollbars
+* are currently visible
+*/
+NS_IMETHODIMP
+nsGfxScrollFrame::GetScrollbarVisibility(nsIPresContext* aPresContext,
+                                         PRBool *aVerticalVisible,
+                                         PRBool *aHorizontalVisible) const
+{
+   *aVerticalVisible   = mInner->mHasVerticalScrollbar;
+   *aHorizontalVisible = mInner->mHasHorizontalScrollbar;
+   return NS_OK;
 }
 
 nsresult NS_CreateAnonymousNode(nsIContent* aParent, nsIAtom* aTag, PRInt32 aNameSpaceId, nsCOMPtr<nsIContent>& aNewNode);
@@ -645,13 +697,15 @@ nsGfxScrollFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)
                                                                                         
   if (aIID.Equals(kIAnonymousContentCreatorIID)) {                                         
     *aInstancePtr = (void*)(nsIAnonymousContentCreator*) this;                                        
-    NS_ADDREF_THIS();                                                    
     return NS_OK;                                                        
   } else if (aIID.Equals(kIBoxIID)) {                                         
     *aInstancePtr = (void*)(nsIBox*) this;                                        
-    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  } else if (aIID.Equals(kIScrollableFrameIID)) {                                         
+    *aInstancePtr = (void*)(nsIScrollableFrame*) this;                                        
     return NS_OK;                                                        
   }   
+
 
   return nsHTMLContainerFrame::QueryInterface(aIID, aInstancePtr);                                  
 }

@@ -23,6 +23,7 @@
 #define nsScrollFrame_h___
 
 #include "nsHTMLContainerFrame.h"
+#include "nsIScrollableFrame.h"
 
 /**
  * The scroll frame creates and manages the scrolling view
@@ -33,7 +34,8 @@
  * Scroll frames don't support incremental changes, i.e. you can't replace
  * or remove the scrolled frame
  */
-class nsScrollFrame : public nsHTMLContainerFrame {
+class nsScrollFrame : public nsHTMLContainerFrame,
+                      public nsIScrollableFrame {
 public:
   friend nsresult NS_NewScrollFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame);
 
@@ -87,6 +89,21 @@ public:
    * @see nsLayoutAtoms::scrollFrame
    */
   NS_IMETHOD GetFrameType(nsIAtom** aType) const;
+
+    // nsIScrollableFrame
+  NS_IMETHOD  SetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *aScrolledFrame);
+  NS_IMETHOD  GetScrolledFrame(nsIPresContext* aPresContext, nsIFrame *&aScrolledFrame) const;
+  NS_IMETHOD  GetScrollbarVisibility(nsIPresContext* aPresContext,
+                                     PRBool *aVerticalVisible,
+                                     PRBool *aHorizontalVisible) const;
+  NS_IMETHOD GetClipSize(nsIPresContext* aPresContext, 
+                         nscoord *aWidth, 
+                         nscoord *aHeight) const;
+
+  NS_IMETHOD QueryInterface(REFNSIID aIID, void** aInstancePtr); 
+  NS_IMETHOD_(nsrefcnt) AddRef(void) { return NS_OK; }
+  NS_IMETHOD_(nsrefcnt) Release(void) { return NS_OK; }
+
   
 #ifdef DEBUG
   NS_IMETHOD GetFrameName(nsString& aResult) const;
