@@ -5166,7 +5166,7 @@ nsXULTemplateBuilder::IsVarInSet(nsXULTemplateBuilder* aThis,
     // See if this was one of the variables that was modified. If it
     // *was*, then this attribute *will* be impacted by the modified
     // variable set...
-    c->result = c->modifiedVars.Contains(var);
+    c->result = c->result || c->modifiedVars.Contains(var);
 }
 
 PRBool
@@ -7491,7 +7491,7 @@ nsXULTemplateBuilder::AddBindingsFor(nsXULTemplateBuilder* aThis,
     const nsAReadableString& propertyStr = Substring(aVariable, PRUint32(4), aVariable.Length() - 4);
 
     nsCOMPtr<nsIRDFResource> property;
-    gRDFService->GetUnicodeResource(nsPromiseFlatString(propertyStr), getter_AddRefs(property));
+    gRDFService->GetUnicodeResource(nsAutoString(propertyStr).GetUnicode(), getter_AddRefs(property));
 
     // Create a new variable that we'll binding to the
     // property's value
