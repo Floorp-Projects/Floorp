@@ -247,6 +247,10 @@ NS_COM void nsDebug::Assertion(const char* aStr, const char* aExpr,
 #endif
 
 #if defined(XP_OS2)
+   char* assertBehavior = getenv("XPCOM_DEBUG_BREAK");
+   if (assertBehavior && strcmp(assertBehavior, "warn") == 0)
+     return;
+
       char msg[1200];
       PR_snprintf(msg, sizeof(msg),
                 "%s\n\nClick Cancel to Debug Application.\n"
