@@ -29,7 +29,7 @@
 #include "nsIComponentManager.h"
 #include <ctype.h>  // for isalpha, tolower & isspace
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include <windows.h>
 #endif
 #if defined(XP_UNIX) || defined(XP_BEOS)  || defined(XP_OS2)
@@ -43,7 +43,7 @@
 NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 #endif
@@ -112,7 +112,7 @@ nsLocaleFactory::nsLocaleFactory(void)
 	  fCategoryList[i] = temp;
 	}
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
    fWin32LocaleInterface = nsnull;
    result = nsComponentManager::CreateInstance(kWin32LocaleFactoryCID,
 									NULL,
@@ -151,7 +151,7 @@ nsLocaleFactory::~nsLocaleFactory(void)
 	if (fApplicationLocale)
 		fApplicationLocale->Release();
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 	if (fWin32LocaleInterface)
 		fWin32LocaleInterface->Release();
 #endif
@@ -240,7 +240,7 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 	//
 	// for Windows
 	//
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 	LCID				sysLCID;
   nsString*   systemLocaleName;
 	
@@ -379,7 +379,7 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	//
 	// for Windows
 	//
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 	LCID				appLCID;
   nsString*   applicationLocaleName;
 	
@@ -554,7 +554,7 @@ nsLocaleFactory::GetLocaleFromAcceptLanguage(const char* acceptLanguage, nsILoca
 
 }
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 // XXX I had to add this because I changed the link order on Windows
 void notCalled()
 {

@@ -31,7 +31,7 @@
 #include <OSUtils.h>
 #include <OpenTransport.h>
 #include <OpenTptInternet.h>
-#elif defined (XP_PC) && !defined(XP_OS2)
+#elif defined (XP_WIN)
 #include <windows.h>
 #include <Winsock2.h>
 #endif
@@ -88,7 +88,7 @@ protected:
     OTNotifyUPP           nsDnsServiceNotifierRoutineUPP;
 #endif /* XP_MAC */
 
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     PRUint32   AllocMsgID(void);
     void       FreeMsgID(PRUint32 msgID);
 
@@ -96,7 +96,7 @@ protected:
     LRESULT ProcessLookup(HWND hWnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
     HWND                mDNSWindow;
     PRUint32            mMsgIDBitVector[4];
-#endif /* XP_PC */
+#endif /* XP_WIN */
 
 #ifdef DNS_TIMING
     double              mCount;

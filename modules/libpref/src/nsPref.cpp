@@ -1439,7 +1439,7 @@ PrefResult pref_OpenFileSpec(
     //   don't clobber the file when we try to save it
     if ((!readBuf || result != PREF_NOERROR) && is_error_fatal)
         gErrorOpeningUserPrefs = PR_TRUE;
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     if (gErrorOpeningUserPrefs && is_error_fatal)
         MessageBox(nsnull,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
 #endif
@@ -1617,12 +1617,12 @@ extern "C" JSBool pref_InitInitialObjects()
 		"initpref.js"
 #ifdef XP_MAC
 	,	"macprefs.js"
-#elif defined(XP_OS2)
-   ,	"os2pref.js"
-#elif defined(XP_PC)
+#elif defined(XP_WIN)
 	,	"winpref.js"
 #elif defined(XP_UNIX)
 	,	"unix.js"
+#elif defined(XP_OS2)
+   ,	"os2pref.js"
 #endif
 	};
     

@@ -314,7 +314,7 @@ PrefResult pref_OpenFile(
            don't clobber the file when we try to save it. */
         if ((!readBuf || ok != PREF_NOERROR) && is_error_fatal)
             gErrorOpeningUserPrefs = PR_TRUE;
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
         if (gErrorOpeningUserPrefs && is_error_fatal)
             MessageBox(NULL,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
 #endif
@@ -1097,7 +1097,7 @@ PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc)
         return PREF_NOT_INITIALIZED;
 
     /* ?! Don't save (blank) user prefs if there was an error reading them */
-#if defined(XP_PC) || defined(XP_OS2)
+#if defined(XP_WIN) || defined(XP_OS2)
     if (!filename)
 #else
     if (!filename || gErrorOpeningUserPrefs)
@@ -1145,7 +1145,7 @@ PREF_SavePrefFileWith(const char *filename, PLHashEnumerator heSaveProc)
 #ifdef PREF_SUPPORT_OLD_PATH_STRINGS
 PrefResult PREF_SavePrefFile()
 {
-#if 0 /* defined(XP_MAC) || defined(XP_PC) */
+#if 0 /* defined(XP_MAC) || defined(XP_WIN) || defined(XP_OS2) */
     return (PrefResult)pref_SaveProfile();
 #else
     if (!gHashTable)
@@ -2267,7 +2267,7 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
 {
 #ifdef MOZ_ADMIN_LIB
     ldap_func get_ldap_attributes = NULL;
-#if (defined (XP_MAC) && defined(powerc)) || defined (XP_PC) || defined(XP_UNIX) || defined(XP_BEOS)
+#if (defined (XP_MAC) && defined(powerc)) || defined (XP_WIN) || defined(XP_UNIX) || defined(XP_BEOS) || defined(XP_OS2)
     if (!gAutoAdminLib)
         gAutoAdminLib = pref_LoadAutoAdminLib();
         
@@ -2500,10 +2500,10 @@ void pref_Alert(char* msg)
     fputs(msg, stderr);
 #endif
 #endif
-#if defined(XP_OS2)
-      WinMessageBox (HWND_DESKTOP, 0, msg, "Netscape -- JS Preference Warning", 0, MB_WARNING | MB_OK | MB_APPLMODAL | MB_MOVEABLE);
-#elif defined(XP_PC)
+#if defined(XP_WIN)
         MessageBox (NULL, msg, "Netscape -- JS Preference Warning", MB_OK);
+#elif defined(XP_OS2)
+      WinMessageBox (HWND_DESKTOP, 0, msg, "Netscape -- JS Preference Warning", 0, MB_WARNING | MB_OK | MB_APPLMODAL | MB_MOVEABLE);
 #endif
 }
 
@@ -2511,7 +2511,7 @@ void pref_Alert(char* msg)
 
 #ifdef XP_WIN16
 #define ADMNLIBNAME "adm1640.dll"
-#elif defined XP_PC || defined XP_OS2
+#elif defined XP_WIN || defined XP_OS2
 #define ADMNLIBNAME "adm3240.dll"
 #elif defined(XP_UNIX) || defined(XP_BEOS)
 #define ADMNLIBNAME "libAutoAdmin.so"

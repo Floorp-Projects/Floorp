@@ -29,7 +29,7 @@
 #include "nsRelatedLinksHandlerImpl.h"
 #include "nsTimeBomb.h"
 #include "nsUrlbarHistory.h"
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 #include "nsUrlWidget.h"
 #include "nsWindowsHooks.h"
 #endif // Windows
@@ -46,7 +46,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(InternetSearchDataSource, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(RelatedLinksHandlerImpl, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsTimeBomb)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
@@ -86,7 +86,7 @@ static nsModuleComponentInfo components[] = {
       NS_URLBARHISTORY_CONTRACTID, nsUrlbarHistoryConstructor },
     { "nsUrlbarHistory", NS_URLBARHISTORY_CID,
       NS_URLBARAUTOCOMPLETE_CONTRACTID, nsUrlbarHistoryConstructor },
-#if defined(XP_PC) && !defined(XP_OS2)
+#if defined(XP_WIN)
     { NS_IURLWIDGET_CLASSNAME, NS_IURLWIDGET_CID, NS_IURLWIDGET_CONTRACTID, 
       nsUrlWidgetConstructor }, 
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID, 
