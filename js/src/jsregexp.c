@@ -359,36 +359,36 @@ processOp(CompilerState *state, REOpData *opData, RENode **operandStack, intN op
             state->progLength += 13;
         }
         else
-            if ((((RENode *)(result->kid))->op == REOP_CLASS)
-                    && (((RENode *)(result->kid))->u.ucclass.index < 256)
-                    && (((RENode *)(result->u.kid2))->op == REOP_FLAT)
-                    && ((state->flags & JSREG_FOLD) == 0) ) {
-                result->op = REOP_ALTPREREQ2;
-                result->u.altprereq.ch1 
-                    = ((RENode *)(result->u.kid2))->u.flat.chr;
-                result->u.altprereq.ch2 
-                    = ((RENode *)(result->kid))->u.ucclass.index;
-                /* ALTPREREQ2, <end>, uch1, uch2, <next>, ..., 
-                                                JUMP, <end> ... ENDALT */
-                state->progLength += 13;
-            }
-            else
-                if ((((RENode *)(result->kid))->op == REOP_FLAT)
-                        && (((RENode *)(result->u.kid2))->op == REOP_CLASS)
-                        && (((RENode *)(result->u.kid2))->u.ucclass.index < 256)
-                        && ((state->flags & JSREG_FOLD) == 0) ) {
-                    result->op = REOP_ALTPREREQ2;
-                    result->u.altprereq.ch1 
-                        = ((RENode *)(result->kid))->u.flat.chr;
-                    result->u.altprereq.ch2 
-                        = ((RENode *)(result->u.kid2))->u.ucclass.index;
-                    /* ALTPREREQ2, <end>, uch1, uch2, <next>, ..., 
-                                                  JUMP, <end> ... ENDALT */
-                    state->progLength += 13;
-                }
-                else
-                    /* ALT, <next>, ..., JUMP, <end> ... ENDALT */
-                    state->progLength += 7;
+        if ((((RENode *)(result->kid))->op == REOP_CLASS)
+                && (((RENode *)(result->kid))->u.ucclass.index < 256)
+                && (((RENode *)(result->u.kid2))->op == REOP_FLAT)
+                && ((state->flags & JSREG_FOLD) == 0) ) {
+            result->op = REOP_ALTPREREQ2;
+            result->u.altprereq.ch1 
+                = ((RENode *)(result->u.kid2))->u.flat.chr;
+            result->u.altprereq.ch2 
+                = ((RENode *)(result->kid))->u.ucclass.index;
+            /* ALTPREREQ2, <end>, uch1, uch2, <next>, ..., 
+                                            JUMP, <end> ... ENDALT */
+            state->progLength += 13;
+        }
+        else
+        if ((((RENode *)(result->kid))->op == REOP_FLAT)
+                && (((RENode *)(result->u.kid2))->op == REOP_CLASS)
+                && (((RENode *)(result->u.kid2))->u.ucclass.index < 256)
+                && ((state->flags & JSREG_FOLD) == 0) ) {
+            result->op = REOP_ALTPREREQ2;
+            result->u.altprereq.ch1 
+                = ((RENode *)(result->kid))->u.flat.chr;
+            result->u.altprereq.ch2 
+                = ((RENode *)(result->u.kid2))->u.ucclass.index;
+            /* ALTPREREQ2, <end>, uch1, uch2, <next>, ..., 
+                                          JUMP, <end> ... ENDALT */
+            state->progLength += 13;
+        }
+        else
+            /* ALT, <next>, ..., JUMP, <end> ... ENDALT */
+            state->progLength += 7;
         break;
     case REOP_CONCAT:
         result = operandStack[operandSP - 2];
@@ -2360,30 +2360,24 @@ executeREBytecode(REGlobalData *gData, REMatchState *x)
                 pc += ARG_LEN;
 
                 if (x->cp != gData->cpend) {
+                    if (*x->cp == matchCh2)
+                        goto doAlt;
+
                     charSet = &gData->regexp->classList[k];
                     if (!charSet->converted)
                         if (!processCharSet(gData, charSet))
                             return JS_FALSE;
                     matchCh1 = *x->cp;
                     k = matchCh1 / 8;
-                    if ((charSet->length != 0) && 
-                           ( (matchCh1 <= charSet->length)
-                           && ((charSet->u.bits[k] 
-                                    & (1 << (matchCh1 & 0x7))) != 0) )) {
-                        result = NULL;
-                        break;
+                    if ((charSet->length == 0 ||
+                         matchCh1 > charSet->length ||
+                         (charSet->u.bits[k] & (1 << (matchCh1 & 0x7))) == 0)
+                        ^ charSet->sense) {
+                        goto doAlt;
                     }
                 }
-                else {
-                    result = NULL;
-                    break;
-                }
-
-                if ((x->cp == gData->cpend) || (*x->cp != matchCh2)) {
-                    result = NULL;
-                    break;
-                }
-                goto doAlt;
+                result = NULL;
+                break;
 
             case REOP_ALTPREREQ:
                 nextpc = pc + GET_OFFSET(pc);   /* start of next op */
@@ -3457,7 +3451,8 @@ regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
                 jsval *rval)
 {
     JSRegExp *re;
-    jschar *source, *chars;
+    const jschar *source;
+    jschar *chars;
     size_t length, nflags;
     uintN flags;
     JSString *str;
