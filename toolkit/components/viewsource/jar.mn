@@ -6,4 +6,3 @@ toolkit.jar:
 
 en-US.jar:
   locale/en-US/global/viewSource.dtd        (locale/viewSource.dtd)
-  locale/en-US/global/viewSource.properties (locale/viewSource.properties)
