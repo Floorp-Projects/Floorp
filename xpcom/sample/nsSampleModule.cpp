@@ -25,14 +25,21 @@
 #include "nsSample.h"
 
 ////////////////////////////////////////////////////////////////////////
-// Define the contructor function for the object nsSample
+// With the below sample, you can define an implementation glue
+// that talks with xpcom for creation of component nsSampleImpl
+// that implement the interface nsISample. This can be extended for
+// any number of components.
+////////////////////////////////////////////////////////////////////////
+
+////////////////////////////////////////////////////////////////////////
+// Define the contructor function for the object nsSampleImpl
 //
-// What this does is defines a functions nsSampleConstructor which we
-// will specific in the nsModuleComponentInfo table. This functions will
-// be used the generic factory to create an instance of nsSample.
+// What this does is defines a function nsSampleImplConstructor which we
+// will specific in the nsModuleComponentInfo table. This function will
+// be used by the generic factory to create an instance of nsSampleImpl.
 //
-// NOTE: This creates an instance of nsSample by using the default
-//		 constructor.
+// NOTE: This creates an instance of nsSampleImpl by using the default
+//		 constructor nsSampleImpl::nsSampleImpl()
 //
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsSampleImpl)
 
@@ -48,5 +55,6 @@ static nsModuleComponentInfo components[] =
 
 ////////////////////////////////////////////////////////////////////////
 // Implement the NSGetModule() exported function for your module
+// and the entire implementation of the module object.
 //
 NS_IMPL_NSGETMODULE("nsSampleModule", components)
