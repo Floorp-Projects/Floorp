@@ -483,6 +483,10 @@ README_FILE = $(topsrcdir)/README.txt
 endif
 
 libs::
+ifeq ($(OS_ARCH),OS2)
+	cp $(README_FILE) $(DIST)/bin/README.txt
+else
 	$(INSTALL) $(README_FILE) $(DIST)/bin
+endif
 	$(INSTALL) $(topsrcdir)/LICENSE $(DIST)/bin
 
