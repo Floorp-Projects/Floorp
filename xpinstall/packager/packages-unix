@@ -52,6 +52,7 @@ bin/libgkgfx.so
 bin/run-mozilla.sh
 bin/regExport
 bin/regxpcom
+bin/regchrome
 bin/splash.xpm
 ; this is used by gtk embedding clients
 bin/libgtkembedmoz.so
@@ -196,6 +197,7 @@ bin/chrome/comm.jar
 bin/chrome/modern.jar
 bin/chrome/classic.jar
 bin/chrome/embed.jar
+bin/chrome/installed-chrome.txt
 ;-bin/chrome/comm/content/editor/EditorInitPage.html
 ;-bin/chrome/comm/content/editor/content/EditorInitPagePlain.html
 ;Include this for "debug" testing - remove for actual beta release:
