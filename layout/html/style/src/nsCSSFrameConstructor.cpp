@@ -466,6 +466,15 @@ IsInlineFrame(nsIFrame* aFrame)
   return PR_FALSE;
 }
 
+// NeedSpecialFrameReframe uses this until we decide what to do about IsInlineFrame() above
+static PRBool
+IsInlineFrame2(nsIFrame* aFrame)
+{
+  const nsStyleDisplay* display;
+  aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) display);
+  return (display) ? !display->IsBlockLevel() : PR_TRUE;
+}
+
 //----------------------------------------------------------------------
 
 // Block/inline frame construction logic. We maintain a few invariants here:
@@ -8656,6 +8665,111 @@ nsCSSFrameConstructor::RemoveDummyFrameFromSelect(nsIPresContext* aPresContext,
   return NS_ERROR_FAILURE;
 }
 
+// Return TRUE if the insertion of aChild into aParent1,2 should force a reframe. aParent1 is 
+// the special inline container which contains a block. aParentFrame is approximately aParent1's
+// primary frame and will be set to the correct parent of aChild if a reframe is not necessary. 
+// aParent2 is aParentFrame's content. aPrevSibling will be set to the correct prev sibling of
+// aChild if a reframe is not necessary.
+PRBool
+nsCSSFrameConstructor::NeedSpecialFrameReframe(nsIPresShell*   aPresShell,
+                                               nsIPresContext* aPresContext,
+                                               nsIContent*     aParent1,     
+                                               nsIContent*     aParent2,     
+                                               nsIFrame*&      aParentFrame, 
+                                               nsIContent*     aChild,
+                                               PRInt32         aIndexInContainer,
+                                               nsIFrame*&      aPrevSibling,
+                                               nsIFrame*       aNextSibling)
+{
+  NS_ENSURE_TRUE(aPrevSibling || aNextSibling, PR_TRUE);
+
+  if (!IsInlineFrame2(aParentFrame)) 
+    return PR_FALSE;
+
+  // find out if aChild is a block or inline
+  PRBool childIsBlock = PR_FALSE;
+  if (aChild->IsContentOfType(nsIContent::eELEMENT)) {
+    nsCOMPtr<nsIStyleContext> styleContext;
+    ResolveStyleContext(aPresContext, aParentFrame, aChild, getter_AddRefs(styleContext)); 
+    const nsStyleDisplay* display = 
+      (const nsStyleDisplay*) styleContext->GetStyleData(eStyleStruct_Display);  
+    childIsBlock = display->IsBlockLevel();
+  }
+  nsIFrame* prevParent; // parent of prev sibling
+  nsIFrame* nextParent; // parent of next sibling
+
+  if (childIsBlock) { 
+    if (aPrevSibling) {
+      aPrevSibling->GetParent(&prevParent); 
+      NS_ASSERTION(prevParent, "program error - null parent frame");
+      if (IsInlineFrame2(prevParent)) { // prevParent is an inline
+        // XXX we need to find out if prevParent is the 1st inline or the last. If it
+        // is the 1st, then aChild and the frames after aPrevSibling within the 1st inline
+        // need to be moved to the block(inline). If it is the last, then aChild and the
+        // frames before aPrevSibling within the last need to be moved to the block(inline). 
+        return PR_TRUE; // For now, bail.
+      }        
+      aParentFrame = prevParent; // prevParent is a block, put aChild there
+    }
+    else {
+      nsIFrame* nextSibling = (aIndexInContainer >= 0)
+                              ? FindNextSibling(aPresShell, aParent2, aIndexInContainer)
+                              : FindNextAnonymousSibling(aPresShell, mDocument, aParent1, aChild);
+      if (nextSibling) {
+        nextSibling->GetParent(&nextParent); 
+        NS_ASSERTION(nextParent, "program error - null parent frame");
+        if (IsInlineFrame2(nextParent)) {
+          // XXX we need to move aChild, aNextSibling and all the frames after aNextSibling within
+          // the 1st inline to the block(inline).
+          return PR_TRUE; // for now, bail
+        }
+        // put aChild in nextParent which is the block(inline) and leave aPrevSibling null
+        aParentFrame = nextParent;
+      }
+    }           
+  }
+  else { // aChild is an inline
+    if (aPrevSibling) {
+      aPrevSibling->GetParent(&prevParent); 
+      NS_ASSERTION(prevParent, "program error - null parent frame");
+      if (IsInlineFrame2(prevParent)) { // prevParent is an inline
+        // aChild goes into the same inline frame as aPrevSibling
+        aPrevSibling->GetParent(&aParentFrame);
+        NS_ASSERTION(aParentFrame, "program error - null parent frame");
+      }
+      else { // prevParent is a block
+        nsIFrame* nextSibling = (aIndexInContainer >= 0)
+                                ? FindNextSibling(aPresShell, aParent2, aIndexInContainer)
+                                : FindNextAnonymousSibling(aPresShell, mDocument, aParent1, aChild);
+        if (nextSibling) {
+          nextSibling->GetParent(&nextParent);
+          NS_ASSERTION(nextParent, "program error - null parent frame");
+          if (IsInlineFrame2(nextParent)) {
+            // nextParent is the ending inline frame. Put aChild there and
+            // set aPrevSibling to null so aChild is its first element.
+            nextSibling->GetParent(&aParentFrame); 
+            NS_ASSERTION(aParentFrame, "program error - null parent frame");
+            aPrevSibling = nsnull; 
+          }
+          else { // nextParent is a block
+            // prevParent and nextParent should be the same, and aChild goes there
+            NS_ASSERTION(prevParent == nextParent, "special frame error");
+            aParentFrame = prevParent;
+          }
+        }
+        else { 
+          // there is no ending enline frame (which should never happen) but aChild needs to go 
+          // there, so for now just bail and force a reframe.
+          NS_ASSERTION(PR_FALSE, "no last inline frame");
+          return PR_TRUE;
+        }
+      }
+    }
+    // else aChild goes into the 1st inline frame which is aParentFrame
+  }
+  return PR_FALSE;
+}
+
 NS_IMETHODIMP
 nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
                                        nsIContent*            aContainer,
@@ -8831,14 +8945,18 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
       : FindNextAnonymousSibling(shell, mDocument, aContainer, aChild);
   }
 
+  PRBool handleSpecialFrame = IsFrameSpecial(parentFrame) && !aInContentReplaced;
+
   // Now, find the geometric parent so that we can handle
   // continuations properly. Use the prev sibling if we have it;
   // otherwise use the next sibling.
   if (prevSibling) {
-    prevSibling->GetParent(&parentFrame);
+    if (!handleSpecialFrame)
+      prevSibling->GetParent(&parentFrame);
   }
   else if (nextSibling) {
-    nextSibling->GetParent(&parentFrame);
+    if (!handleSpecialFrame)
+      nextSibling->GetParent(&parentFrame);
   }
   else {
     // No previous or next sibling, so treat this like an appended frame.
@@ -8854,18 +8972,11 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
     }
   }
 
-  // If the frame we are manipulating is a special frame then do
-  // something different instead of just inserting newly created
-  // frames. 
-  // NOTE: if we are in ContentReplaced, 
-  //       then do not reframe as we are already doing just that!
-  if (IsFrameSpecial(parentFrame) && !aInContentReplaced) {
-    // We are pretty harsh here (and definitely not optimal) -- we
-    // wipe out the entire containing block and recreate it from
-    // scratch. The reason is that because we know that a special
-    // inline frame has propagated some of its children upward to be
-    // children of the block and that those frames may need to move
-    // around. This logic guarantees a correct answer.
+  // If the frame we are manipulating is a special frame then see if we need to reframe 
+  // NOTE: if we are in ContentReplaced, then don't reframe as we are already doing just that!
+  if (handleSpecialFrame) {
+    // a special inline frame has propagated some of its children upward to be children 
+    // of the block and those frames may need to move around. Sometimes we may need to reframe
 #ifdef DEBUG
     if (gNoisyContentUpdates) {
       printf("nsCSSFrameConstructor::ContentInserted: parentFrame=");
@@ -8873,7 +8984,11 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext*        aPresContext,
       printf(" is special\n");
     }
 #endif
-    return ReframeContainingBlock(aPresContext, parentFrame);
+    // if we don't need to reframe then set parentFrame and prevSibling to the correct values
+    if (NeedSpecialFrameReframe(shell, aPresContext, aContainer, container, parentFrame, 
+                                aChild, aIndexInContainer, prevSibling, nextSibling)) {
+      return ReframeContainingBlock(aPresContext, parentFrame);
+    }
   }
 
   nsFrameItems            frameItems;
