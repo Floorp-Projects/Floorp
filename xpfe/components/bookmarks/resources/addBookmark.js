@@ -285,7 +285,7 @@ function getNormalizedURL(url)
       var fileHandler = ioService.getProtocolHandler("file")
                                  .QueryInterface(Components.interfaces.nsIFileProtocolHandler);
 
-      url = ioService.getURLSpecFromFile(kLF);
+      url = fileHandler.getURLSpecFromFile(kLF);
     }
   }
   catch (e) {
