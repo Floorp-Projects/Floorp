@@ -21,6 +21,7 @@
  * Contributor(s): Alec Flett       <alecf@netscape.com>
  *                 Bill Law         <law@netscape.com>
  *                 Blake Ross       <blakeross@telocity.com>
+ *                 Dean Tessman     <dean_tessman@hotmail.com>
  *                 Matt Fisher      <matt@netscape.com>
  *                 Simon Fraser     <sfraser@netscape.com>
  *                 Stuart Parmenter <pavlov@netscape.com>
@@ -82,6 +83,7 @@ function onLoad()
 
   // Change "OK" to "Find".
   dialog.find.label = document.getElementById("fBLT").getAttribute("label");
+  dialog.find.accessKey = document.getElementById("fBLT").getAttribute("accesskey");
 
   // get the find instance
   var finder = window.arguments[0];
