@@ -337,6 +337,15 @@ LOOP_OVER_MOZ_DIRS = \
 
 endif
 
+ifdef TOOL_DIRS
+LOOP_OVER_TOOL_DIRS = \
+    @$(EXIT_ON_ERROR) \
+    for d in $(TOOL_DIRS); do \
+	    $(UPDATE_TITLE) \
+	    $(MAKE) -C $$d $@; \
+	done
+endif
+
 #
 # Now we can differentiate between objects used to build a library, and
 # objects used to build an executable in the same directory.
@@ -351,8 +360,8 @@ endif
 
 # SUBMAKEFILES: List of Makefiles for next level down.
 #   This is used to update or create the Makefiles before invoking them.
-ifneq ($(DIRS),)
-SUBMAKEFILES		:= $(addsuffix /Makefile, $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
+ifneq ($(DIRS)$(TOOL_DIRS),)
+SUBMAKEFILES		:= $(addsuffix /Makefile, $(TOOL_DIRS) $(filter-out $(STATIC_MAKEFILES), $(DIRS)))
 endif
 
 # MAKE_DIRS: List of directories to build while looping over directories.
@@ -592,8 +601,8 @@ endif
 
 # Target to only regenerate makefiles
 makefiles: $(SUBMAKEFILES)
-ifdef DIRS
-	@for d in $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do\
+ifneq (,$(DIRS)$(TOOL_DIRS))
+	@for d in $(TOOL_DIRS) $(filter-out $(STATIC_MAKEFILES), $(DIRS)); do\
 		$(UPDATE_TITLE) 				\
 		$(MAKE) -C $$d $@;				\
 	done
@@ -601,6 +610,15 @@ endif
 
 export:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
+
+tools:: $(SUBMAKEFILES) $(MAKE_DIRS)
+	+$(LOOP_OVER_DIRS)
+	@for d in $(TOOL_DIRS); do \
+	    $(UPDATE_TITLE) \
+	    $(MAKE) -C $$d libs; \
+	done
+		
 
 #
 # Rule to create list of libraries for final link
@@ -739,10 +757,14 @@ ifdef HOST_LIBRARY
 endif
 endif # !NO_DIST_INSTALL
 	+$(LOOP_OVER_DIRS)
+ifndef MOZ_ENABLE_LIBXUL
+	+$(LOOP_OVER_TOOL_DIRS)
+endif
 
 ##############################################
 install:: $(SUBMAKEFILES) $(MAKE_DIRS)
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 
 install:: $(EXPORTS)
 ifndef NO_INSTALL
@@ -813,9 +835,11 @@ clean clobber realclean clobber_all:: $(SUBMAKEFILES)
 	-rm -f $(ALL_TRASH)
 	-rm -rf $(ALL_TRASH_DIRS)
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 
 distclean:: $(SUBMAKEFILES)
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 	-rm -rf $(ALL_TRASH_DIRS) 
 	-rm -f $(ALL_TRASH)  \
 	Makefile .HSancillary \
@@ -1429,6 +1453,7 @@ export-idl:: $(XPIDLSRCS) $(SDK_XPIDLSRCS) $(IDL_DIR)
 endif
 endif
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 
 
 
@@ -1565,6 +1590,7 @@ endif
 chrome::
 	$(MAKE) realchrome
 	+$(LOOP_OVER_MOZ_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 
 libs realchrome:: $(CHROME_DEPS)
 ifndef NO_DIST_INSTALL
@@ -1671,10 +1697,12 @@ else
 depend:: $(SUBMAKEFILES)
 endif
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 
 dependclean:: $(SUBMAKEFILES)
 	rm -f $(MDDEPFILES)
 	+$(LOOP_OVER_DIRS)
+	+$(LOOP_OVER_TOOL_DIRS)
 
 endif # MOZ_AUTO_DEPS
 
@@ -1747,7 +1775,7 @@ endif
 # Fake targets.  Always run these rules, even if a file/directory with that
 # name already exists.
 #
-.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner $(DIRS) FORCE
+.PHONY: all all_platforms alltags boot checkout chrome realchrome clean clobber clobber_all export install libs makefiles realclean run_viewer run_apprunner tools $(DIRS) $(TOOL_DIRS) FORCE
 
 # Used as a dependency to force targets to rebuild
 FORCE:
