@@ -83,6 +83,8 @@ REQUIRES += xremoteservice
 CPPSRCS += nsPhMozRemoteHelper.cpp
 endif
 
+# always include the PHOTON_DND in the build - the bookmarks in firefox require it
+PHOTON_DND=1
 ifdef PHOTON_DND
 CPPSRCS += nsDragService.cpp
 endif
@@ -99,3 +101,6 @@ include $(topsrcdir)/config/rules.mk
 DEFINES		+=  -D_IMPL_NS_WIDGET -I$(srcdir)/../xpwidgets -I$(srcdir) 
 CXXFLAGS	+= $(TK_CFLAGS)
 
+ifdef PHOTON_DND
+CXXFLAGS += -DPHOTON_DND
+endif

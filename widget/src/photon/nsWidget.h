@@ -97,6 +97,7 @@ public:
   NS_IMETHOD Destroy(void);
   inline nsIWidget* GetParent(void)
 		{
+		if( mIsDestroying ) return nsnull;
 		nsIWidget* result = mParent;
 		if( mParent ) NS_ADDREF( result );
 		return result;
@@ -130,12 +131,6 @@ public:
 		{
 		if(PtWidgetFlags(mWidget) & Pt_BLOCKED) *aState = PR_FALSE;
 		else *aState = PR_TRUE;
-		return NS_OK;
-		}
-
-  inline NS_IMETHOD SetFocus(PRBool aRaise)
-		{
-		if( mWidget ) PtContainerGiveFocus( mWidget, NULL );
 		return NS_OK;
 		}
 
@@ -361,7 +356,6 @@ protected:
    
   // Focus used global variable
   static nsWidget* sFocusWidget; //Current Focus Widget
-  static PRBool    sJustGotDeactivated;
   static PRBool    sJustGotActivated; //For getting rid of the ASSERT ERROR due to reducing suppressing of focus.
   
   static nsILookAndFeel *sLookAndFeel;

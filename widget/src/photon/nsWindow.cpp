@@ -654,6 +654,8 @@ int nsWindow::WindowWMHandler( PtWidget_t *widget, void *data, PtCallbackInfo_t 
 			if( we->event_state == Ph_WM_EVSTATE_FOCUSLOST ) {
       	/* rollup the menus */
       	if( gRollupWidget && gRollupListener ) gRollupListener->Rollup();
+
+				if( sFocusWidget ) sFocusWidget->DispatchStandardEvent(NS_DEACTIVATE);
 				}
 			break;
 	}
@@ -950,4 +952,24 @@ int nsWindow::MenuRegionDestroyed( PtWidget_t *widget, void *data, PtCallbackInf
 			parent->mLastMenu = nsnull;
 		}
 	return Pt_CONTINUE;
+}
+
+NS_IMETHODIMP nsWindow::SetFocus(PRBool aRaise)
+{
+	sFocusWidget = this;
+
+	if( PtIsFocused( mWidget ) == 2 ) return NS_OK;
+
+	if( mWidget ) {
+		PtWidget_t *disjoint;
+		disjoint = PtFindDisjoint( mWidget );
+		if( PtWidgetIsClass( disjoint, PtWindow ) ) {
+			if( !( PtWindowGetState( disjoint ) & Ph_WM_STATE_ISFOCUS ) ) {
+				nsWindow *pWin = (nsWindow *) GetInstance( disjoint );
+				pWin->GetAttention( -1 );
+				}
+			}
+		PtContainerGiveFocus( mWidget, NULL );
+		}
+	return NS_OK;
 }
