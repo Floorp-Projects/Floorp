@@ -89,7 +89,7 @@
                         jsr(phase, fWrap->bCon, base(argCount + 1) - execStack, baseVal, fWrap->env);
 						parameterSlots = pFrame->argSlots;
 						parameterCount = length;
-						thisVal = a;
+						thisVal = baseVal;
                         meta->env->addFrame(pFrame);
                         parameterFrame = pFrame;
                         pFrame = NULL;
@@ -174,7 +174,7 @@ doCall:
 						parameterSlots = NULL;
 						parameterCount = 0;
 						thisVal = a;
-
+                        pFrame->thisObject = a;
                     }
                 }
             }

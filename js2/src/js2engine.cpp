@@ -509,7 +509,8 @@ namespace MetaData {
                   parameterFrame(NULL),
                   localFrame(NULL),
                   parameterSlots(NULL),
-                  traceInstructions(false)
+                  traceInstructions(false),
+                  thisVal(JS2VAL_VOID)
     {
         for (int i = 0; i < 256; i++)
             float64Table[i] = NULL;
@@ -1117,6 +1118,11 @@ namespace MetaData {
             GCMARKOBJECT(f->newEnv);
             if (f->bCon)
                 f->bCon->mark();
+            if (f->parameterSlots) {
+                for (i = 0; i < f->parameterCount; i++)
+                    GCMARKVALUE(f->parameterSlots[i]);
+            }
+        	GCMARKVALUE(thisVal);
         }
         for (js2val *e = execStack; (e < sp); e++) {
             GCMARKVALUE(*e);
@@ -1134,6 +1140,7 @@ namespace MetaData {
             }
         }
         GCMARKVALUE(retval);
+        GCMARKVALUE(thisVal);
     }
 
     void JS2Engine::pushHandler(uint8 *pc)

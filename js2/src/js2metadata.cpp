@@ -3600,7 +3600,6 @@ rescan:
             // need to reset the environment to the one in operation when eval was called so
             // that eval code can affect the apppropriate scopes.
             meta->engine->jsr(meta->engine->phase, NULL, meta->engine->sp - meta->engine->execStack, JS2VAL_VOID, meta->engine->activationStackTop[-1].env);
-//            meta->engine->localFrame = meta->engine->activationStackTop[-1].localFrame;
             js2val result = meta->readEvalString(*meta->toString(argv[0]), widenCString("Eval Source"));
             meta->engine->rts();
             return result;
@@ -4232,8 +4231,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         case PackageKind:
             return packageClass;
 
-        case SystemKind:
         case ParameterFrameKind: 
+            return objectClass;
+
+        case SystemKind:
         case BlockFrameKind: 
         default:
             ASSERT(false);
@@ -5265,8 +5266,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     // Assume that instantiate has been called, the plural frame will contain
     // the cloned Variables assigned into this (singular) frame. Use the 
     // incoming values to initialize the positionals.
-    // Pad out to 'length' args with undefined values if argCount is insufficient
-    js2val *ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argBase, uint32 argCount, uint32 &argsLength)
+    // Pad out to 'length' args with undefined values if argc is insufficient
+    js2val *ParameterFrame::assignArguments(JS2Metadata *meta, JS2Object *fnObj, js2val *argv, uint32 argc, uint32 &argsLength)
     {
         uint32 i;
         
@@ -5280,8 +5281,8 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             // If we're building an arguments object, the slots for the parameter frame are located
             // there so that the arguments object itself can survive beyond the life of the function.
             argsObj = new (meta) ArgumentsInstance(meta, meta->objectClass->prototype, meta->argumentsClass);
-			if (argCount > slotCount)
-				slotCount = argCount;
+			if (argc > slotCount)
+				slotCount = argc;
             if (slotCount) {
                 argsObj->mSlots = new js2val[slotCount];
                 argsObj->count = slotCount;
@@ -5291,31 +5292,41 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
             }
             argSlots = argsObj->mSlots;
             // Add the 'arguments' property
+
             const StringAtom &name = meta->world.identifiers["arguments"];
-            ASSERT(localBindings[name] == NULL);
-            LocalBindingEntry *lbe = new LocalBindingEntry(name);
-            LocalBinding *sb = new LocalBinding(ReadWriteAccess, new Variable(meta->objectClass, OBJECT_TO_JS2VAL(argsObj), false), false);
-            lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
-            localBindings.insert(name, lbe);
+            LocalBindingEntry **lbeP = localBindings[name];
+            if (lbeP == NULL) {
+                LocalBindingEntry *lbe = new LocalBindingEntry(name);
+                LocalBinding *sb = new LocalBinding(ReadWriteAccess, new Variable(meta->objectClass, OBJECT_TO_JS2VAL(argsObj), false), false);
+                lbe->bindingList.push_back(LocalBindingEntry::NamespaceBinding(meta->publicNamespace, sb));
+                localBindings.insert(name, lbe);
+            }
+            else {
+                LocalBindingEntry::NamespaceBinding &ns = *((*lbeP)->begin());
+                ASSERT(ns.first == meta->publicNamespace);
+                ASSERT(ns.second->content->memberKind == Member::VariableMember);
+                (checked_cast<Variable *>(ns.second->content))->value = OBJECT_TO_JS2VAL(argsObj);
+            }
         }
         else {
-			if (argCount > slotCount)
-				slotCount = argCount;
+			if (argc > slotCount)
+				slotCount = argc;
             if (slotCount)
                 argSlots = new js2val[slotCount];
         }
+        argCount = slotCount;
         argsLength = slotCount;
 
-        for (i = 0; (i < argCount); i++) {
+        for (i = 0; (i < argc); i++) {
             if (i < slotCount) {
-                argSlots[i] = argBase[i];
+                argSlots[i] = argv[i];
             }
         }
         for ( ; (i < slotCount); i++) {
 			argSlots[i] = JS2VAL_UNDEFINED;
         }
         if (buildArguments) {
-            setLength(meta, argsObj, argCount);
+            setLength(meta, argsObj, argc);
             meta->argumentsClass->WritePublic(meta, OBJECT_TO_JS2VAL(argsObj), meta->world.identifiers["callee"], true, OBJECT_TO_JS2VAL(fnObj));
         }
         return argSlots;
@@ -5327,6 +5338,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         NonWithFrame::markChildren();
         GCMARKVALUE(thisObject);
+        if (argSlots) {
+            for (uint32 i = 0; i < argCount; i++)
+                GCMARKVALUE(argSlots[i]);
+        }
     }
 
     ParameterFrame::~ParameterFrame()
@@ -5467,9 +5482,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
                     p->resetMark();      // might have lingering mark from previous gc
                     p->clearFlags();
                     p->setFlag(flag);
-//#ifdef DEBUG
+#ifdef DEBUG
                     memset((p + 1), 0xB7, p->getSize() - sizeof(PondScum));
-//#endif
+#endif
                     return (p + 1);
                 }
                 pre = p;
@@ -5487,9 +5502,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         }
         // there was room, so acquire it
         PondScum *p = (PondScum *)pondTop;
-//#ifdef DEBUG
+#ifdef DEBUG
         memset(p, 0xB7, sz);
-//#endif
+#endif
         p->owner = this;
         p->setSize(sz);
         p->setFlag(flag);
@@ -5503,9 +5518,9 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
     {
         p->owner = (Pond *)freeHeader;
         uint8 *t = (uint8 *)(p + 1);
-//#ifdef DEBUG
+#ifdef DEBUG
         memset(t, 0xB3, p->getSize() - sizeof(PondScum));
-//#endif
+#endif
         freeHeader = p;
         return p->getSize() - sizeof(PondScum);
     }
