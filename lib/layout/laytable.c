@@ -3697,14 +3697,6 @@ lo_BeginTableCellAttributes(MWContext *context,
 		return;
 	}
 
-#if DOM
-    /*
-     * Unsafe cast, but code that operates on the Nodes will
-     * know that <TD> elements need special care.
-     */
-    lo_SetNodeElement(state, (LO_Element *)table_cell);
-#endif
-
 	if (state->is_a_subdoc != SUBDOC_NOT) 
 	{
 		table_cell->in_nested_table = TRUE;
@@ -4409,7 +4401,7 @@ lo_BeginTableRowAttributes(MWContext *context,
 	lo_table_span *span_rec;
 	char *bgcolor_from_style=NULL;
 #ifdef LOCAL_DEBUG
- fprintf(stderr, "lo_BeginTableRow called\n");
+    fprintf(stderr, "lo_BeginTableRow called\n");
 #endif /* LOCAL_DEBUG */
 
 	table_row = XP_NEW(lo_TableRow);
@@ -4417,12 +4409,11 @@ lo_BeginTableRowAttributes(MWContext *context,
 	{
 		return;
 	}
+
 #if DOM
-    /*
-     * So this is a little unsafe, on the surface.
-     * The code that does the reordering of LO_Elements will have to
-     * think important, special-case thoughts about <TR> nodes,
-     * but that's OK.
+    /* 
+     * need to make lo_TableRow have a DOM_Node at the same place as all
+     * the LO_Elements.
      */
     lo_SetNodeElement(state, (LO_Element *)table_row);
 #endif

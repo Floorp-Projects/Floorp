@@ -38,6 +38,7 @@
 #include "stystruc.h"
 #ifdef DOM
 #include "domstyle.h"
+#include "lm_dom.h"
 #endif
 #include "pics.h"
 
@@ -629,11 +630,11 @@ lo_ProcessHeader(MWContext *context, lo_DocState *state,
 {
   if (header->is_end)
     {
-      Bool aligned_header;
+      Bool aligned_header = FALSE;
 
       if (state->align_stack 
           && state->align_stack->type == P_HEADER_1)
-        aligned_header = TRUE;
+          aligned_header = TRUE;
 
       if (aligned_header != FALSE)
         {
@@ -4324,6 +4325,75 @@ static void lo_ProcessFontTag( lo_DocState *state, MWContext *context, PA_Tag *t
 	}
 }
 
+#ifdef DOM
+char *element_names[] = {
+    "NONE",
+    "TEXT",
+    "LINEFEED",
+    "HRULE",
+    "IMAGE",
+    "BULLET",
+    "FORM_ELE",
+    "SUBDOC",
+    "TABLE",
+    "CELL",
+    "EMBED",
+    "EDGE",
+    "JAVA",
+    "SCRIPT",
+    "OBJECT",
+    "PARAGRAPH",
+    "CENTER",
+    "MULTICOL",
+    "FLOAT",
+    "TEXTBLOCK",
+    "LIST",
+    "DESCTITLE",
+    "DESCTEXT",
+    "BLOCKQUOTE",
+    "LAYER",
+    "HEADING",
+    "SPAN",
+    "BUILTIN",
+    "SPACER",
+    "SUPER",
+    "SUB"
+};
+
+#ifdef DEBUG_shaver_verbose
+static void
+DumpNodeElements(DOM_Node *node)
+{
+#ifdef DEBUG_shaver
+    LO_Element *eptr;
+    if (node->type != NODE_TYPE_ELEMENT &&
+        node->type != NODE_TYPE_TEXT)
+        return;
+    fprintf(stderr, "%s %s elements:",
+            PA_TagString(ELEMENT_PRIV(node)->tagtype),
+            node->name ? node->name : "");
+    if (ELEMENT_PRIV(node)->tagtype == P_TABLE_ROW ||
+        ELEMENT_PRIV(node)->tagtype == P_TABLE_DATA) {
+        fprintf(stderr, " <NOT REALLY AN ELEMENT>\n");
+        return;
+    }
+    eptr = ELEMENT_PRIV(node)->ele_start;
+    if (!eptr) {
+        fprintf(stderr, " <none> (SHOULD REMOVE FROM TREE!)\n");
+        return;
+    }
+    while (eptr && eptr != ELEMENT_PRIV(node)->ele_end) {
+        fprintf(stderr, " %s", element_names[eptr->type]);
+        eptr = eptr->lo_any.next;
+    }
+    if (eptr)
+        fprintf(stderr, " %s", element_names[eptr->type]);
+    fprintf(stderr, "\n");
+#endif
+}
+#endif
+#endif
+
 /*************************************
  * Function: lo_LayoutTag
  *
@@ -6537,8 +6607,8 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 		 */
 		case P_FORM:
 #if defined(SingleSignon)
-                        /* Notify the signon module of the new form */
-                        SI_StartOfForm();
+            /* Notify the signon module of the new form */
+            SI_StartOfForm();
 #endif
 			/*
 			 * No forms in the scrolling document
@@ -6903,7 +6973,7 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
 				lo_ProcessScriptTag(context, state, tag, NULL);
 			break;
 
-	        case P_STYLE:
+        case P_STYLE:
 			if(!state->hide_content)
 				lo_ProcessStyleTag(context, state, tag);
 			break;
@@ -7560,6 +7630,65 @@ XP_TRACE(("lo_LayoutTag(%d)\n", tag->type));
     /* the last argument is TRUE if we started in the head 
      */
 	lo_PostLayoutTag( context, state, tag, started_in_head);
+
+#ifdef DOM
+    /*
+     * Ending the processing of a tag.
+     * Here we pop all the style state we need to, and wire up the
+     * Node->LO_Element end-element links.
+     */
+    if (tag->is_end) {
+        LO_Element *eptr;
+        DOM_Node *node;
+
+        /* find the last element on the line list and its node */
+#define FIND_LAST_ELEMENT(eptr)                                               \
+        eptr = state->line_list;                                              \
+        if (eptr) {                                                           \
+            while (eptr->lo_any.next != NULL) {                               \
+                eptr = eptr->lo_any.next;                                     \
+            }                                                                 \
+        } else {                                                              \
+            eptr = state->end_last_line;                                      \
+        }
+        FIND_LAST_ELEMENT(eptr);
+        if (!eptr)
+          return;
+        node = eptr->lo_any.node;
+        if (!node)
+          return;
+
+        if (node->type == NODE_TYPE_ELEMENT ||
+            node->type == NODE_TYPE_TEXT) {
+            PRBool resyncElements = PR_FALSE;
+            DOM_HTMLElementPrivate *priv = ELEMENT_PRIV(node);
+            XP_ASSERT(priv);
+            
+            if (priv->flags & STYLE_NODE_NEED_TO_POP_LAYER) {
+                resyncElements = PR_TRUE;
+                lo_EndLayer(context, state, PR_TRUE);
+                LM_ClearNodeFlags(node, STYLE_NODE_NEED_TO_POP_LAYER);
+            }
+
+            /* if we popped stuff, resync the end pointer */
+            if (resyncElements) {
+                FIND_LAST_ELEMENT(eptr);
+                XP_ASSERT(eptr->lo_any.node == node);
+            }
+
+            priv->ele_end = eptr;
+        } else {
+#ifdef DEBUG_shaver
+            fprintf(stderr, "node on LO_Element %d is type %d\n",
+                    eptr->lo_any.type, node->type);
+#endif
+        }
+
+#ifdef DEBUG_shaver_old
+            DumpNodeElements(last_node);
+#endif
+    }
+#endif /* DOM */
 
 
 	LO_UnlockLayout();

@@ -4074,74 +4074,6 @@ static void *hooked_data_object = NULL;
 static intn hooked_status = 0;
 static PA_Tag *hooked_tag = NULL;
 
-#ifdef DOM
-char *element_names[] = {
-    "NONE",
-    "TEXT",
-    "LINEFEED",
-    "HRULE",
-    "IMAGE",
-    "BULLET",
-    "FORM_ELE",
-    "SUBDOC",
-    "TABLE",
-    "CELL",
-    "EMBED",
-    "EDGE",
-    "JAVA",
-    "SCRIPT",
-    "OBJECT",
-    "PARAGRAPH",
-    "CENTER",
-    "MULTICOL",
-    "FLOAT",
-    "TEXTBLOCK",
-    "LIST",
-    "DESCTITLE",
-    "DESCTEXT",
-    "BLOCKQUOTE",
-    "LAYER",
-    "HEADING",
-    "SPAN",
-    "BUILTIN",
-    "SPACER",
-    "SUPER",
-    "SUB"
-};
-
-#ifdef DEBUG_shaver_verbose
-static void
-DumpNodeElements(DOM_Node *node)
-{
-#ifdef DEBUG_shaver
-    LO_Element *eptr;
-    if (node->type != NODE_TYPE_ELEMENT &&
-        node->type != NODE_TYPE_TEXT)
-        return;
-    fprintf(stderr, "%s %s elements:",
-            PA_TagString(ELEMENT_PRIV(node)->tagtype),
-            node->name ? node->name : "");
-    if (ELEMENT_PRIV(node)->tagtype == P_TABLE_ROW ||
-        ELEMENT_PRIV(node)->tagtype == P_TABLE_DATA) {
-        fprintf(stderr, " <NOT REALLY AN ELEMENT>\n");
-        return;
-    }
-    eptr = ELEMENT_PRIV(node)->ele_start;
-    if (!eptr) {
-        fprintf(stderr, " <none> (SHOULD REMOVE FROM TREE!)\n");
-        return;
-    }
-    while (eptr && eptr != ELEMENT_PRIV(node)->ele_end) {
-        fprintf(stderr, " %s", element_names[eptr->type]);
-        eptr = eptr->lo_any.next;
-    }
-    if (eptr)
-        fprintf(stderr, " %s", element_names[eptr->type]);
-    fprintf(stderr, "\n");
-#endif
-}
-#endif
-#endif
 
 /*************************************
  * Function: LO_ProcessTag
@@ -4901,43 +4833,6 @@ XP_TRACE(("Initializing new doc %d\n", doc_id));
 		top_state->state_pops = 0;
 		
 		lo_LayoutTag(context, state, tag);
-
-#ifdef DOM
-        /*
-         * If we're ending a tag, then we're also ending a node.
-         * In this case, LM_RefectTagNode will have returned the closing
-         * node, so we can fill it in.
-         * Otherwise, if it's a text tag, LM_ReflectTagNode will
-         * return the Text block and we want to mark it as done.  (Text nodes
-         * will probably only ever have one LO_Element, but why take
-         * chances?)
-         */
-        if (last_node &&
-            ((tag->is_end && last_node->type == NODE_TYPE_ELEMENT) ||
-             last_node->type == NODE_TYPE_TEXT)) {
-            /* mark the end LO_Element for the _last_ node */
-            LO_Element *eptr;
-            if (ELEMENT_PRIV(last_node)->flags & STYLE_NODE_NEED_TO_POP_LAYER)
-                lo_EndLayer(context, state, PR_TRUE);
-            eptr = state->line_list;
-            if (eptr) {
-                while (eptr->lo_any.next != NULL) {
-                    eptr = eptr->lo_any.next;
-                }
-            } else {
-                eptr = state->end_last_line;
-            }
-#if 0
-            /* there are Nodes (TITLE,HEAD) that don't generate LO_Elements */
-            XP_ASSERT(eptr);
-            XP_ASSERT(ELEMENT_PRIV(last_node)->ele_start);
-#endif
-            ELEMENT_PRIV(last_node)->ele_end = eptr;
-#ifdef DEBUG_shaver_old
-            DumpNodeElements(last_node);
-#endif
-        }
-#endif
 
 		if (top_state->wedged_on_mocha) {
 			top_state->wedged_on_mocha = FALSE;

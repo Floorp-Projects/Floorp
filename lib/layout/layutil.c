@@ -2125,6 +2125,9 @@ lo_NewElement(MWContext *context, lo_DocState *state, intn type,
 	}
 	else
 	{
+#ifdef DOM
+                eptr->lo_any.node = NULL;
+#endif
 		eptr->lo_any.width = 0;
 		eptr->lo_any.height = 0;
 		eptr->lo_any.x_offset = 0;
@@ -2605,10 +2608,12 @@ lo_SetNodeElement(lo_DocState *state, LO_Element *element)
         /* this the first element for this node, so mark it */
         ELEMENT_PRIV(node)->ele_start = element;
     }
-#if 0 /* XXX waiting on proper LO_Elements for tables and cells and stuff */
-    if (!element->lo_any.node)
-        element->lo_any.node = node;
+#ifdef DEBUG_shaver
+    if (element->lo_any.node)
+      fprintf(stderr, "element %p (type %d) already has node %x\n",
+              element, element->lo_any.type, element->lo_any.node);
 #endif
+    element->lo_any.node = node;
 }
 #endif
 

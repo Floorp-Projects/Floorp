@@ -34,6 +34,9 @@
 #include "stystack.h"
 
 #include "libmocha.h"
+#ifdef DOM
+struct DOM_Node;
+#endif
 
 #define MEMORY_ARENAS 1
 
@@ -272,6 +275,10 @@ typedef struct lo_TableCell_struct {
 
 
 typedef struct lo_TableRow_struct {
+    int16 type;                 /* to match lo_Any */
+#ifdef DOM
+    struct DOM_Node *node;				/* to match lo_Any */
+#endif
 	Bool row_done;
 	Bool has_percent_width_cells;
     lo_Backdrop backdrop;       /* default for cells to inherit */
