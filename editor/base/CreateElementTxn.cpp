@@ -167,7 +167,8 @@ NS_IMETHODIMP CreateElementTxn::Undo(void)
 
     PRInt32 offset=0;
     if (mRefNode) {
-      nsEditor::GetChildOffset(mRefNode, mParent, offset);
+      result = nsEditor::GetChildOffset(mRefNode, mParent, offset);
+      if (NS_FAILED(result)) return result;
     }
     result = selection->Collapse(mParent, offset);
     NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
@@ -200,9 +201,11 @@ NS_IMETHODIMP CreateElementTxn::Redo(void)
 		if (NS_FAILED(result)) return result;
 		if (!selection) return NS_ERROR_NULL_POINTER;
     PRInt32 offset=0;
-    nsEditor::GetChildOffset(mNewNode, mParent, offset);
-    result = selection->Collapse(mParent, offset);
-    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after undo of insert.");
+    result = nsEditor::GetChildOffset(mNewNode, mParent, offset);
+    if (NS_FAILED(result)) return result;
+
+    result = selection->Collapse(mParent, offset+1);
+    NS_ASSERTION((NS_SUCCEEDED(result)), "selection could not be collapsed after redo of insert.");
   }
   return result;
 }
