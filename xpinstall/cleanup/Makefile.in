@@ -33,8 +33,13 @@ REQUIRES	= libreg
 
 CPPSRCS		= \
         InstallCleanup.cpp \
-	InstallCleanupUnix.cpp \
         $(NULL)
+
+ifeq ($(OS_ARCH),OS2)
+CPPSRCS += InstallCleanupOS2.cpp
+else
+CPPSRCS += InstallCleanupUnix.cpp
+endif
 
 LIBS        = \
         -lmozregsa_s \

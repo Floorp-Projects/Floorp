@@ -25,6 +25,14 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+#ifdef XP_OS2
+#define INCL_DOS
+#include <os2.h>
+#include <sys\types.h>
+#include <sys\stat.h>
+#include <string.h>
+#endif
+
 #include "prtypes.h"
 #include "VerReg.h"
 
