@@ -37,6 +37,26 @@ use Date::Format ();
 
 use base qw(Template);
 
+# Convert the constants in the Bugzilla::Constants module into a hash we can
+# pass to the template object.  To do so, we have to traverse the symbol table
+# for the module, pulling out the functions (which is how Perl constants are
+# implemented) and ignoring the rest (i.e. things like the @EXPORT array).
+use Bugzilla::Constants ();
+my %constants;
+foreach my $constant (keys %Bugzilla::Constants::) {
+    if (defined &{$Bugzilla::Constants::{$constant}}) {
+        # Constants can be lists, and we can't know whether we're getting
+        # a scalar or a list in advance, since they come to us as the return
+        # value of a function call, so we have to retrieve them all in list
+        # context into anonymous arrays, then extract the scalar ones (i.e.
+        # the ones whose arrays contain a single element) from their arrays.
+        $constants{$constant} = [&{$Bugzilla::Constants::{$constant}}];
+        if (scalar(@{$constants{$constant}}) == 1) {
+            $constants{$constant} = @{$constants{$constant}}[0];
+        }
+    }
+}
+
 # XXX - mod_perl
 my $template_include_path;
 
@@ -360,6 +380,8 @@ sub create {
         },
 
         PLUGIN_BASE => 'Bugzilla::Template::Plugin',
+
+        CONSTANTS => \%constants,
 
         # Default variables for all templates
         VARIABLES => {
