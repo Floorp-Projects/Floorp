@@ -42,13 +42,8 @@ LIBS		= \
 		$(XPCOM_LIBS) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
+		$(TK_LIBS) \
 		$(NULL)
-
-# The Timer libs for Photon/Neutrino require the Toolkit libs to also be linked
-#  in.
-ifeq ($(TARGET_OS),nto)
-EXTRA_LIBS         +=  		$(TK_LIBS)
-endif
 
 include $(topsrcdir)/config/rules.mk
 
