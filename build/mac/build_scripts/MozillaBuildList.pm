@@ -132,7 +132,7 @@ sub InstallDefaultsFiles()
 
     InstallResources(":mozilla:profile:defaults:chrome:MANIFEST",                             "$default_profile_chrome_dir", 1);
 
-    # make a dup in en-US
+    # make a dup in US
     my($default_profile_dir_US) = "$default_profile_dir"."US:";
     mkdir($default_profile_dir_US, 0);
 
@@ -144,6 +144,16 @@ sub InstallDefaultsFiles()
     InstallResources(":mozilla:profile:defaults:chrome:MANIFEST",                             "$default_profile_chrome_dir_US", 1);
 
     }
+    
+    # Default _messenger_ directory stuff
+    my($default_messenger_dir) = "$defaults_dir"."messenger:";
+    mkdir($default_messenger_dir, 0);
+    InstallResources(":mozilla:mailnews:extensions:mailviews:resources:content:MANIFEST", "$default_messenger_dir", 1);
+    
+    # make a dup in US dir
+    my($default_messenger_dir_US) = "$default_messenger_dir"."US:";
+    mkdir($default_messenger_dir_US, 0);
+    InstallResources(":mozilla:mailnews:extensions:mailviews:resources:content:MANIFEST", "$default_messenger_dir_US", 1);
     
     # Default _pref_ directory stuff
     {
@@ -611,6 +621,7 @@ sub ProcessJarManifests()
     if ($main::options{mdn}) {
     	CreateJarFromManifest(":mozilla:mailnews:extensions:mdn:jar.mn", $chrome_dir, \%jars);
     }
+    CreateJarFromManifest(":mozilla:mailnews:extensions:mailviews:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:netwerk:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:pref-migrator:resources:jar.mn", $chrome_dir, \%jars);
     CreateJarFromManifest(":mozilla:profile:resources:jar.mn", $chrome_dir, \%jars);
@@ -1483,6 +1494,7 @@ sub BuildIDLProjects()
     if ($main::options{smime} && $main::options{psm}) {
     	BuildIDLProject(":mozilla:mailnews:extensions:smime:macbuild:msgsmimeIDL.xml",  "msgsmime");
     }
+    BuildIDLProject(":mozilla:mailnews:extensions:mailviews:macbuild:mailviewsIDL.xml",  "mailviews");
 
     BuildIDLProject(":mozilla:caps:macbuild:CapsIDL.xml",                           "caps");
 
@@ -2393,6 +2405,7 @@ sub BuildMailNewsProjects()
 	  if ($main::options{mdn}) {
     	BuildOneProject(":mozilla:mailnews:extensions:mdn:macbuild:msgmdn.xml",         "msgmdn$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
     }
+    BuildOneProject(":mozilla:mailnews:extensions:mailviews:macbuild:mailviews.xml",  "mailviews$D.$S", 1, $main::ALIAS_SYM_FILES, 1);
 
     if ($main::options{mdn}) {
     	InstallResources(":mozilla:mailnews:extensions:mdn:src:MANIFEST",				 "${dist_dir}Components");
