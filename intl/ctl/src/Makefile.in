@@ -48,6 +48,7 @@ CPPSRCS		= \
 	nsULE.cpp \
 	nsUnicodeToTIS620.cpp \
 	nsUnicodeToSunIndic.cpp \
+	nsUnicodeToThaiTTF.cpp \
 	nsCtlLEModule.cpp \
 	$(NULL)
 
