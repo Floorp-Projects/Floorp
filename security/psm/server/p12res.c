@@ -974,15 +974,15 @@ void SSMPKCS12Context_BackupMultipleCertsThread(void *arg)
      * XXX -javi
      */
     PR_Sleep(PR_TicksPerSecond());
-#if 0
     /*
-     * Disable this for now, until we figure out how we're really gonna
-     * support putting multiple cert/key pairs in one P12 file.
+     * Create a single P12 file containing all of the certs that 
+     * were just issued.
      */
     SSMPKCS12Context_CreatePKCS12FileForMultipleCerts(p12Cxt, PR_FALSE,
                                                       p12Cxt->arg->certs,
                                                       p12Cxt->arg->numCerts);
-#endif
+
+#if 0
     for (i=0; i<p12Cxt->arg->numCerts;i++) {
         p12Cxt->m_cert = p12Cxt->arg->certs[i];
         SSMPKCS12Context_CreatePKCS12File(p12Cxt, PR_FALSE);
@@ -993,6 +993,7 @@ void SSMPKCS12Context_BackupMultipleCertsThread(void *arg)
          */
         PR_Sleep(PR_TicksPerSecond());
     }
+#endif
     PR_Free(p12Cxt->arg->certs);
     PR_Free(p12Cxt->arg);
     p12Cxt->arg = NULL;
