@@ -919,7 +919,6 @@ js_SaveScriptFilename(JSContext *cx, const char *filename)
     JSHashNumber hash;
     JSHashEntry **hep;
     ScriptFilenameEntry *sfe;
-    const char *result;
 
     JS_ACQUIRE_LOCK(script_filename_table_lock);
     table = script_filename_table;
@@ -931,6 +930,7 @@ js_SaveScriptFilename(JSContext *cx, const char *filename)
         sft_savings += strlen(sfe->filename);
 #endif
     if (!sfe) {
+        /* XXX this assumes NULL puns as JS_FALSE in the mark byte... */
         sfe = (ScriptFilenameEntry *)
               JS_HashTableRawAdd(table, hep, hash, filename, NULL);
         if (sfe)
@@ -938,9 +938,8 @@ js_SaveScriptFilename(JSContext *cx, const char *filename)
         else
             JS_ReportOutOfMemory(cx);
     }
-    result = sfe ? sfe->filename : NULL;
     JS_RELEASE_LOCK(script_filename_table_lock);
-    return result;
+    return sfe ? sfe->filename : NULL;
 }
 
 void
