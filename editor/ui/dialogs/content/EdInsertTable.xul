@@ -1,8 +1,33 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://editordlgs/skin/EditorDialog.css" type="text/css"?>
-<!DOCTYPE window>
-<xul:window class="dialog" title="Insert Table"
+<!DOCTYPE window
+[
+
+<!-- These entity declarations will go into a separate, locale file at some point -->
+<!-- Window title -->
+<!ENTITY windowTitle.label "Insert Table">
+
+<!ENTITY numRowsEditField.label "Number of rows">
+<!ENTITY numColumnsEditField.label "Number of columns">
+<!ENTITY widthEditField.label "Table Width">
+<!ENTITY borderEditField.label "Border">
+
+<!ENTITY alignmentFieldset.label "Alignment">
+<!ENTITY leftPopup.value "Left">
+<!ENTITY centerPopup.value "Center">
+<!ENTITY rightPopup.value "Right">
+
+<!ENTITY pixelsPopup.value "pixels">
+<!ENTITY percentPopup.value "percent">
+
+<!ENTITY OKButton.label "OK">
+<!ENTITY CancelButton.label "Cancel">
+<!ENTITY advancedEditingButton.label "More Attributes...">
+
+]>
+
+<xul:window class="dialog" title="&windowTitle.label;"
     xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
@@ -18,34 +43,35 @@
   <table>
     <tr class="vcenter">
       <td align="right">
-        <span>Number of rows:</span>
+        <label for="rows"> &numRowsEditField.label; </label>
       </td>
       <td cellspan="2">
-        <input type="text" id="rows" size="4"/>
+        <input type="text" id="rows" maxlength="4" size="4"/>
       </td>
     </tr>
     <tr class="vcenter">
       <td align="right">
-        <span>Number of columns:</span>
+        <label for="columns"> &numColumnsEditField.label; </label>
       </td>
       <td cellspan="2">
-        <input type="text" id="columns" size="4"/>
+        <input type="text" id="columns" maxlength="4" size="4"/>
       </td>
     </tr>
     <tr class="vcenter">
       <td align="right" valign="middle">
-        <span>Width:</span>
+        <label for="width" > &widthEditField.label; </label>
       </td>
       <td>
         <input type="text" id="width" size="4" maxlength="4"/>
        </td>
        <td>
-        <xul:titledbutton class="popup PixelOrPercent" id="pixelOrPercentButton" value="percent" align="left" popup="PixelOrPercentMenu" popupanchor="bottomleft"/>
+        <xul:titledbutton class="popup PixelOrPercent" id="pixelOrPercentButton" 
+        		value="&percentPopup.value;" align="left" popup="PixelOrPercentMenu" popupanchor="bottomleft"/>
       </td>
     </tr>
     <tr class="vcenter">
       <td align="right">
-        <span>Border:</span>
+        <label for="border"> &borderEditField.label; </label>
       </td>
       <td>
         <!-- THIS IS DUMB Can't figure out how to put "pixels" after the 
@@ -53,16 +79,16 @@
         <input type="text" id="border" size="4"/>
       </td>
       <td>
-        <span>pixels</span>
+        <label for="border"> &pixelsPopup.value; </label>
       </td>
     </tr>
   </table>
   <hr width="100%"/>
   <xul:box>
-    <xul:titledbutton class="spaced" id="Advanced" onclick="onAdvanced()" value="More Attributes..."/>
+    <xul:titledbutton class="spaced" id="Advanced" onclick="onAdvanced()" value="&advancedEditingButton.label;"/>
     <xul:spring flex="100%"/>    
-    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="OK"/>  
-    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="Cancel"/>
+    <xul:titledbutton class="spaced" id="OK" onclick="onOK()" value="&OKButton.label;"/>  
+    <xul:titledbutton class="spaced" id="Cancel" onclick="onCancel()" value="&CancelButton.label;"/>
   </xul:box>
 
 <xul:popup id="PixelOrPercentMenu">
