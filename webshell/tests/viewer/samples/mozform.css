@@ -215,18 +215,18 @@ option {
 }
 
 /* Combobox item style */
-select option[-moz-option-selected] {
+select option[_moz-option-selected] {
  color:black;
  background-color:white; 
 }
 
 /* List box item selected style */
-select[size] option[-moz-option-selected] {
+select[size] option[_moz-option-selected] {
  color:white;
  background-color:rgb(51,51,102); 
 }
 
-select[size="1"] option[-moz-option-selected] {
+select[size="1"] option[_moz-option-selected] {
   color:black;
   background-color:white;
 }
