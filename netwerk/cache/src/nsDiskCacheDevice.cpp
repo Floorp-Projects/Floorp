@@ -18,7 +18,8 @@
  * Rights Reserved.
  * 
  * Contributor(s): 
- *    Gordon Sheridan, 22-February-2001
+ *    Gordon Sheridan <gordon@netscape.com>
+ *    Patrick C. Beard <beard@netscape.com>
  */
 
 #include "nsDiskCacheDevice.h"
@@ -108,6 +109,7 @@ static nsresult RemovePrefListeners(nsDiskCacheDevice* device)
 // XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 
 nsDiskCacheDevice::nsDiskCacheDevice()
+    :   mTotalCachedDataSize(LL_ZERO)
 {
 }
 
@@ -276,11 +278,15 @@ nsDiskCacheDevice::GetTransportForEntry(nsCacheEntry * entry,
     return rv;
 }
 
+/**
+ * This routine will get called every time an open descriptor.
+ */
 nsresult
 nsDiskCacheDevice::OnDataSizeChange(nsCacheEntry * entry, PRInt32 deltaSize)
 {
-    //** keep track of totals
-    return NS_ERROR_NOT_IMPLEMENTED;
+    PRInt64 delta = LL_INIT(deltaSize < 0 ? -1 : 0, deltaSize);
+    LL_ADD(mTotalCachedDataSize, mTotalCachedDataSize, delta);
+    return NS_OK;
 }
 
 void nsDiskCacheDevice::setCacheDirectory(nsILocalFile* cacheDirectory)

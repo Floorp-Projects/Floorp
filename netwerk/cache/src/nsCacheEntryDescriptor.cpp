@@ -26,6 +26,7 @@
 #include "nsCacheEntryDescriptor.h"
 #include "nsCacheEntry.h"
 #include "nsReadableUtils.h"
+#include "nsIOutputStream.h"
 
 NS_IMPL_ISUPPORTS2(nsCacheEntryDescriptor, nsICacheEntryDescriptor, nsITransport)
 
@@ -385,6 +386,77 @@ nsCacheEntryDescriptor::OpenInputStream(PRUint32           offset,
 }
 
 
+class nsCacheOutputStream : public nsIOutputStream {
+    nsCacheEntryDescriptor* mDescriptor;
+    nsCOMPtr<nsIOutputStream> mOutput;
+public:
+    NS_DECL_ISUPPORTS
+
+    nsCacheOutputStream(nsCacheEntryDescriptor* descriptor, nsIOutputStream* output)
+        : mDescriptor(nsnull), mOutput(output)
+    {
+        NS_INIT_ISUPPORTS();
+        NS_ADDREF(mDescriptor = descriptor);
+    }
+    
+    ~nsCacheOutputStream()
+    {
+        NS_RELEASE(mDescriptor);
+    }
+
+    NS_IMETHOD Close() { return mOutput->Close(); }
+    NS_IMETHOD Flush() { return mOutput->Flush(); }
+    NS_IMETHOD Write(const char *buf, PRUint32 count, PRUint32 *_retval);
+    NS_IMETHOD WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval);
+    NS_IMETHOD WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval);
+    NS_IMETHOD GetNonBlocking(PRBool *aNonBlocking) { return mOutput->GetNonBlocking(aNonBlocking); }
+    NS_IMETHOD SetNonBlocking(PRBool aNonBlocking) { return mOutput->SetNonBlocking(aNonBlocking); }
+    NS_IMETHOD GetObserver(nsIOutputStreamObserver * *aObserver) { return mOutput->GetObserver(aObserver); }
+    NS_IMETHOD SetObserver(nsIOutputStreamObserver * aObserver) { return mOutput->SetObserver(aObserver); }
+
+private:
+    nsresult OnWrite(PRUint32 count);
+};
+
+NS_IMPL_ISUPPORTS1(nsCacheOutputStream, nsIOutputStream);
+
+NS_IMETHODIMP
+nsCacheOutputStream::Write(const char *buf, PRUint32 count, PRUint32 *_retval)
+{
+    nsresult rv = OnWrite(count);
+    if (NS_FAILED(rv)) return rv;
+    return mOutput->Write(buf, count, _retval);
+}
+
+NS_IMETHODIMP
+nsCacheOutputStream::WriteFrom(nsIInputStream *inStr, PRUint32 count, PRUint32 *_retval)
+{
+    nsresult rv = OnWrite(count);
+    if (NS_FAILED(rv)) return rv;
+    return mOutput->WriteFrom(inStr, count, _retval);
+}
+
+NS_IMETHODIMP
+nsCacheOutputStream::WriteSegments(nsReadSegmentFun reader, void * closure, PRUint32 count, PRUint32 *_retval)
+{
+    nsresult rv = OnWrite(count);
+    if (NS_FAILED(rv)) return rv;
+    return mOutput->WriteSegments(reader, closure, count, _retval);
+}
+
+nsresult
+nsCacheOutputStream::OnWrite(PRUint32 count)
+{
+    nsCacheEntry* cacheEntry = mDescriptor->CacheEntry();
+    if (!cacheEntry) return NS_ERROR_NOT_AVAILABLE;
+    nsCacheDevice* device = cacheEntry->CacheDevice();
+    if (!device) return NS_ERROR_NOT_AVAILABLE;
+    nsresult rv = device->OnDataSizeChange(cacheEntry, count);
+    if (NS_FAILED(rv)) return rv;
+    cacheEntry->SetDataSize(cacheEntry->DataSize() + count);
+    return NS_OK;
+}
+
 NS_IMETHODIMP
 nsCacheEntryDescriptor::OpenOutputStream(PRUint32            offset,
                                          PRUint32            count,
@@ -395,18 +467,25 @@ nsCacheEntryDescriptor::OpenOutputStream(PRUint32            offset,
     if (!mCacheEntry)  return NS_ERROR_NOT_AVAILABLE;
     if (!(mAccessGranted & nsICache::ACCESS_WRITE))
         return NS_ERROR_CACHE_WRITE_ACCESS_DENIED;
+
+    nsresult rv;
     if (!mTransport) {
-        nsresult rv;
         rv = nsCacheService::GlobalInstance()->
             GetTransportForEntry(mCacheEntry,
                                  mAccessGranted,
                                  getter_AddRefs(mTransport));
         if (NS_FAILED(rv))  return rv;
     }
-    
-    return mTransport->OpenOutputStream(offset, count, flags, result);
-}
 
+    nsCOMPtr<nsIOutputStream> output;    
+    rv = mTransport->OpenOutputStream(offset, count, flags, getter_AddRefs(output));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsIOutputStream> wrapper = new nsCacheOutputStream(this, output);
+    if (!wrapper) return NS_ERROR_OUT_OF_MEMORY;
+    NS_ADDREF(*result = wrapper);
+    return NS_OK;
+}
 
 NS_IMETHODIMP
 nsCacheEntryDescriptor::AsyncRead(nsIStreamListener * listener,
