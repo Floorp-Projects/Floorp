@@ -459,7 +459,7 @@ MRJPluginInstance::MRJPluginInstance(MRJPlugin* plugin)
 	:	SupportsMixin(this, sInterfaces, kInterfaceCount),
 		mPeer(NULL), mWindowlessPeer(NULL),
 		mPlugin(plugin), mSession(plugin->getSession()),
-		mContext(NULL), mApplet(NULL),
+		mContext(NULL), mApplet(NULL), mPluginWindow(NULL),
 		mNext(NULL)
 {
 	// add this instance to the instance list.
@@ -474,6 +474,7 @@ MRJPluginInstance::~MRJPluginInstance()
 	// Remove this instance from the global list.
 	popInstance();
 
+#if 0
 	if (mContext != NULL) {
 		delete mContext;
 		mContext = NULL;
@@ -499,7 +500,10 @@ MRJPluginInstance::~MRJPluginInstance()
 		env->DeleteGlobalRef(mApplet);
 		mApplet = NULL;
 	}
+#endif
 }
+
+static const char* kGetCodeBaseScriptURL = "javascript:var href = window.location.href; href.substring(0, href.lastIndexOf('/') + 1)";
 
 NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 {
@@ -514,9 +518,40 @@ NS_METHOD MRJPluginInstance::Initialize(nsIPluginInstancePeer* peer)
 	// create a context for the applet we will run.
 	mContext = new MRJContext(mSession, this);
 
-	mContext->processAppletTag();
-	mContext->createContext();
+	if (mWindowlessPeer != NULL) {
+		mContext->processAppletTag();
+		mContext->createContext();
+	} else {
+		// we'll be using JavaScript to create windows.
+		// fire up a JavaScript URL to get the current document's location.
+		nsIPluginInstance* pluginInstance = this;
+		nsIPluginStreamListener* listener = this;
+		result = thePluginManager->GetURL(pluginInstance, kGetCodeBaseScriptURL, NULL, listener);
+	}
 
+	return NS_OK;
+}
+
+NS_METHOD MRJPluginInstance::OnDataAvailable(const char* url, nsIInputStream* input,
+                    PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo)
+{
+	// hopefully all our data is available.
+	char* codeBase = new char[length + 1];
+	if (codeBase != NULL) {
+		if (input->Read(codeBase, 0, length, &length) == NS_OK) {
+			// We've delayed processing the applet tag, because we
+			// don't know the location of the curren document yet.
+			codeBase[length] = '\0';
+			
+			mContext->setCodeBase(codeBase);
+			mContext->processAppletTag();
+			mContext->createContext();
+			
+			// SetWindow is called at an inopportune time.
+			if (mPluginWindow != NULL)
+				mContext->setWindow(mPluginWindow);
+		}
+	}
 	return NS_OK;
 }
 
@@ -549,7 +584,34 @@ NS_METHOD MRJPluginInstance::Stop()
 
 NS_METHOD MRJPluginInstance::Destroy()
 {
-	// Release();
+	// Use this opportunity to break any cycles that might exist, and reduce
+	// reference counts to their minimum values.
+	if (mContext != NULL) {
+		delete mContext;
+		mContext = NULL;
+	}
+
+	if (mPlugin != NULL) {
+		mPlugin->Release();
+		mPlugin = NULL;
+	}
+
+	if (mWindowlessPeer != NULL) {
+		mWindowlessPeer->Release();
+		mWindowlessPeer = NULL;
+	}
+
+	if (mPeer != NULL) {
+		mPeer->Release();
+		mPeer = NULL;
+	}
+
+	if (mApplet != NULL) {
+		JNIEnv* env = mSession->getCurrentEnv();
+		env->DeleteGlobalRef(mApplet);
+		mApplet = NULL;
+	}
+
 	return NS_OK;
 }
 
@@ -557,6 +619,8 @@ NS_METHOD MRJPluginInstance::Destroy()
 
 NS_METHOD MRJPluginInstance::SetWindow(nsPluginWindow* pluginWindow)
 {
+	mPluginWindow = pluginWindow;
+
 	mContext->setWindow(pluginWindow);
 
    	return NS_OK;

@@ -32,6 +32,7 @@
 #include "nsIPluginInstance.h"
 #include "nsIJVMPluginInstance.h"
 #include "nsIEventHandler.h"
+#include "nsIPluginStreamListener.h"
 #include "SupportsMixin.h"
 
 class MRJPlugin;
@@ -237,9 +238,8 @@ private:
 	static const UInt32 kInterfaceCount;
 };
 
-class MRJPluginInstance :	public nsIPluginInstance,
-							public nsIJVMPluginInstance,
-							public nsIEventHandler,
+class MRJPluginInstance :	public nsIPluginInstance, public nsIJVMPluginInstance,
+							public nsIEventHandler, public nsIPluginStreamListener,
 							private SupportsMixin {
 public:
 	MRJPluginInstance(MRJPlugin* plugin);
@@ -331,8 +331,9 @@ public:
     NS_IMETHOD
     NewStream(nsIPluginStreamListener** listener)
 	{
-		*listener = NULL;
-		return NS_ERROR_NOT_IMPLEMENTED;
+		*listener = this;
+		AddRef();
+		return NS_OK;
 	}
 #else
     /**
@@ -396,6 +397,74 @@ public:
     	return NS_OK;
     }
 
+	// nsIPluginStreamListener implementation.
+	
+    /**
+     * Notify the observer that the URL has started to load.  This method is
+     * called only once, at the beginning of a URL load.<BR><BR>
+     *
+     * @return The return value is currently ignored.  In the future it may be
+     * used to cancel the URL load..
+     */
+    NS_IMETHOD
+    OnStartBinding(const char* url, nsIPluginStreamInfo* pluginInfo)
+    {
+    	return NS_OK;
+    }
+
+    /**
+     * Notify the client that data is available in the input stream.  This
+     * method is called whenver data is written into the input stream by the
+     * networking library...<BR><BR>
+     * 
+     * @param aIStream  The input stream containing the data.  This stream can
+     * be either a blocking or non-blocking stream.
+     * @param length    The amount of data that was just pushed into the stream.
+     * @return The return value is currently ignored.
+     */
+    NS_IMETHOD
+    OnDataAvailable(const char* url, nsIInputStream* input,
+                    PRUint32 offset, PRUint32 length, nsIPluginStreamInfo* pluginInfo);
+
+    NS_IMETHOD
+    OnFileAvailable(const char* url, const char* fileName)
+    {
+		return NS_ERROR_NOT_IMPLEMENTED;
+	}
+	
+    /**
+     * Notify the observer that the URL has finished loading.  This method is 
+     * called once when the networking library has finished processing the 
+     * URL transaction initiatied via the nsINetService::Open(...) call.<BR><BR>
+     * 
+     * This method is called regardless of whether the URL loaded successfully.<BR><BR>
+     * 
+     * @param status    Status code for the URL load.
+     * @param msg   A text string describing the error.
+     * @return The return value is currently ignored.
+     */
+    NS_IMETHOD
+    OnStopBinding(const char* url, nsresult status, nsIPluginStreamInfo* pluginInfo)
+    {
+    	return NS_OK;
+    }
+
+    NS_IMETHOD
+    OnNotify(const char* url, nsresult status)
+    {
+    	return NS_OK;
+    }
+
+	/**
+	 * What is this method supposed to do?
+	 */
+    NS_IMETHOD
+    GetStreamType(nsPluginStreamType *result)
+    {
+    	*result = nsPluginStreamType_Normal;
+    	return NS_OK;
+    }
+
     // Accessing the list of instances.
     static MRJPluginInstance* getInstances(void);
     MRJPluginInstance* getNextInstance(void);
@@ -414,6 +483,7 @@ private:
     MRJSession* mSession;
     MRJContext* mContext;
     jobject mApplet;
+    nsPluginWindow* mPluginWindow;
     
     // maintain a list of instances.
     MRJPluginInstance* mNext;
