@@ -75,15 +75,7 @@ public:
   NS_DECL_NSINNTPNEWSGROUPLIST
 private:
   NS_METHOD CleanUp();
-    
-#ifdef HAVE_MASTER
-  MSG_Master		*GetMaster() {return m_master;}
-  void			SetMaster(MSG_Master *master) {m_master = master;}
-#endif
-  
-#ifdef HAVE_PANES
-  void			SetPane(MSG_Pane *pane) {m_pane = pane;}
-#endif
+     
   PRBool          m_finishingXover;
   nsINNTPHost*	GetHost() {return m_host;}
   const char *	GetURI() {return m_uri;}
@@ -101,9 +93,6 @@ private:
 
 protected:
   nsIMsgDatabase	*m_newsDB;
-#ifdef HAVE_PANES
-  MSG_Pane		*m_pane;
-#endif
   PRBool			m_startedUpdate;
   PRBool			m_getOldMessages;
   PRBool			m_promptedAlready;
@@ -115,9 +104,6 @@ protected:
   char 			*m_username;			
   char 			*m_hostname;
   char			*m_uri;
-#ifdef HAVE_MASTER
-  MSG_Master		*m_master;
-#endif
   
   nsMsgKey		m_lastProcessedNumber;
   nsMsgKey		m_firstMsgNumber;
