@@ -197,6 +197,23 @@ class nsTAString_CharT
       NS_COM PRBool Equals( const char_type* ) const;
       NS_COM PRBool Equals( const char_type*, const comparator_type& ) const;
 
+        /**
+         * An efficient comparison with ASCII that can be used even for
+         * wide strings.
+         */
+      NS_COM PRBool EqualsASCII( const char* data, size_type len ) const;
+#ifdef NS_DISABLE_LITERAL_TEMPLATE
+      inline PRBool EqualsLiteral( const char* str ) const
+        {
+          return EqualsASCII(str, strlen(str));
+        }
+#else
+      template<int N>
+      inline PRBool EqualsLiteral( const char (&str)[N] ) const
+        {
+          return EqualsASCII(str, N-1);
+        }
+#endif
 
         /**
          * A string always references a non-null data pointer.  In some

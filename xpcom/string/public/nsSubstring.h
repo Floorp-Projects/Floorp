@@ -45,6 +45,11 @@
 
 #define kNotFound -1
 
+// If some platform(s) can't handle our template that matches literal strings,
+// then we'll disable it on those platforms.
+// #define NS_DISABLE_LITERAL_TEMPLATE
+
+#include <string.h>
 
   // declare nsSubstring
 #include "string-template-def-unichar.h"

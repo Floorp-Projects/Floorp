@@ -555,6 +555,12 @@ nsTSubstring_CharT::Equals( const char_type* data, const comparator_type& comp )
     return mLength == length && comp(mData, data, mLength) == 0;
   }
 
+PRBool
+nsTSubstring_CharT::EqualsASCII( const char* data, size_type len ) const
+  {
+    return mLength == len && char_traits::compareASCII(mData, data, len) == 0;
+  }
+
 nsTSubstring_CharT::size_type
 nsTSubstring_CharT::CountChar( char_type c ) const
   {
