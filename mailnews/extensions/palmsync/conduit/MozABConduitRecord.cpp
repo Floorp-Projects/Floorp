@@ -513,3 +513,47 @@ int CMozABConduitRecord::StripCRs(TCHAR* pDest, const TCHAR* pSrc, int len)
 
     return(retval);
 }
+
+void CMozABConduitRecord::CleanUpABCOMCardStruct(nsABCOMCardStruct * card)
+{
+    if(!card)
+        return;
+
+    CoTaskMemFree(card->firstName);
+    CoTaskMemFree(card->lastName);
+    CoTaskMemFree(card->displayName);
+    CoTaskMemFree(card->nickName);
+    CoTaskMemFree(card->primaryEmail);
+    CoTaskMemFree(card->secondEmail);
+    CoTaskMemFree(card->workPhone);
+    CoTaskMemFree(card->homePhone);
+    CoTaskMemFree(card->faxNumber);
+    CoTaskMemFree(card->pagerNumber);
+    CoTaskMemFree(card->cellularNumber);
+    CoTaskMemFree(card->homeAddress);
+    CoTaskMemFree(card->homeAddress2);
+    CoTaskMemFree(card->homeCity);
+    CoTaskMemFree(card->homeState);
+    CoTaskMemFree(card->homeZipCode);
+    CoTaskMemFree(card->homeCountry);
+    CoTaskMemFree(card->workAddress);
+    CoTaskMemFree(card->workAddress2);
+    CoTaskMemFree(card->workCity);
+    CoTaskMemFree(card->workState);
+    CoTaskMemFree(card->workZipCode);
+    CoTaskMemFree(card->workCountry);
+    CoTaskMemFree(card->jobTitle);
+    CoTaskMemFree(card->department);
+    CoTaskMemFree(card->company);
+    CoTaskMemFree(card->webPage1);
+    CoTaskMemFree(card->webPage2);
+    CoTaskMemFree(card->birthYear);
+    CoTaskMemFree(card->birthMonth);
+    CoTaskMemFree(card->birthDay);
+    CoTaskMemFree(card->custom1);
+    CoTaskMemFree(card->custom2);
+    CoTaskMemFree(card->custom3);
+    CoTaskMemFree(card->custom4);
+    CoTaskMemFree(card->notes);
+    CoTaskMemFree(card->mailListURI);
+}

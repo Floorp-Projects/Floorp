@@ -115,9 +115,9 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
 
     PRInt16 count = DIR_GetDirectories()->Count();
     // freed by MSCOM??
-    m_ServerDescList = (lpnsMozABDesc) malloc(sizeof(nsMozABDesc) * count);
-    m_FirstTimeSyncList = (BOOL *) malloc(sizeof(BOOL) * count);
-    m_CatIDList = (long *) malloc(sizeof(long) * count);
+    m_ServerDescList = (lpnsMozABDesc) CoTaskMemAlloc(sizeof(nsMozABDesc) * count);
+    m_FirstTimeSyncList = (BOOL *) CoTaskMemAlloc(sizeof(BOOL) * count);
+    m_CatIDList = (long *) CoTaskMemAlloc(sizeof(long) * count);
 
     *aABListCount = count;
     *aABList = m_ServerDescList;
@@ -145,12 +145,12 @@ STDMETHODIMP CPalmSyncImp::nsGetABList(BOOL aIsUnicode, short * aABListCount,
             if (NS_FAILED(rv))
                 break;
             // add to the list
-            m_ServerDescList->lpszABDesc = (LPTSTR) malloc(sizeof(PRUnichar) * (abName.Length()+1));
+            m_ServerDescList->lpszABDesc = (LPTSTR) CoTaskMemAlloc(sizeof(PRUnichar) * (abName.Length()+1));
             wcscpy(m_ServerDescList->lpszABDesc, abName.get());
         }
         else {
             // we are just typecasting ascii to unichar and back for the ascii description
-            m_ServerDescList->lpszABDesc = (LPTSTR) malloc(sizeof(char) * (strlen(server->description)+1));
+            m_ServerDescList->lpszABDesc = (LPTSTR) CoTaskMemAlloc(sizeof(char) * (strlen(server->description)+1));
             strcpy((char*)m_ServerDescList->lpszABDesc, server->description);
         }
         m_ServerDescList++;
@@ -246,15 +246,6 @@ STDMETHODIMP CPalmSyncImp::nsAckSyncDone(BOOL aIsSuccess, int aCatID, int aNewRe
         delete tempPalmHotSync;
     }
     m_PalmHotSync = nsnull;
-
-    free(m_ServerDescList);
-    m_ServerDescList = nsnull;
-
-    free(m_FirstTimeSyncList);
-    m_FirstTimeSyncList = nsnull;
-
-    free(m_CatIDList);
-    m_CatIDList = nsnull;
 
     return S_OK;
 }

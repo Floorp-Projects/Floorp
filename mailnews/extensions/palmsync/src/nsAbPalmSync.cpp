@@ -142,13 +142,6 @@ nsAbPalmHotSync::nsAbPalmHotSync(PRBool aIsUnicode, PRUnichar * aAbDescUnicode, 
 
 nsAbPalmHotSync::~nsAbPalmHotSync()
 {
-    if(mCardListForPalm) {
-        for(PRUint32 i=0; i<mCardForPalmCount; i++)
-            nsAbIPCCard::CleanUpABCOMCardStruct(&mCardListForPalm[i]);
-        free(mCardListForPalm);
-        mCardListForPalm = nsnull;
-    }
-
     // clear the nsVoidArray, donot free the stored pointers since it is freed by calling app (Conduit)
     mPalmRecords.Clear();
 
@@ -227,6 +220,7 @@ nsresult nsAbPalmHotSync::AddAllRecordsInNewAB(PRInt32 aCount, lpnsABCOMCardStru
     DIR_Server * server = nsnull;
     nsAutoString fileName(mAbName.get());
     fileName.AppendWithConversion(".mab");
+    fileName.StripWhitespace();
     nsresult rv = DIR_AddNewAddressBook(mAbName.get(), NS_ConvertUCS2toUTF8(fileName).get(),
                                             PR_FALSE, MAPIDirectory, &server);
     if(NS_FAILED(rv))
@@ -300,7 +294,7 @@ nsresult nsAbPalmHotSync::GetAllCards(PRInt32 * aCount, lpnsABCOMCardStruct * aC
         return NS_OK;
     }
 
-    mCardListForPalm = (lpnsABCOMCardStruct) calloc(mTotalCardCount, sizeof(nsABCOMCardStruct));
+    mCardListForPalm = (lpnsABCOMCardStruct) CoTaskMemAlloc(sizeof(nsABCOMCardStruct) * mTotalCardCount);
     if(!mCardListForPalm) {
         mABDB->Close(PR_FALSE);
         return NS_ERROR_OUT_OF_MEMORY;
@@ -340,11 +334,6 @@ nsresult nsAbPalmHotSync::GetAllCards(PRInt32 * aCount, lpnsABCOMCardStruct * aC
         mNewCardCount++;
     }
 
-    // this should really never happen but just to make sure there is no memory leaks!
-    if(!mCardForPalmCount && mCardListForPalm) {
-        free(mCardListForPalm);
-        mCardListForPalm = nsnull;
-    }
 
     *aCount = mCardForPalmCount;
     *aCardList = mCardListForPalm;
@@ -383,7 +372,7 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
     mABDB->GetDeletedCardCount(&deletedCardCount);
     mTotalCardCount += deletedCardCount;
     if(mTotalCardCount) {
-        mCardListForPalm = (lpnsABCOMCardStruct) calloc(mTotalCardCount, sizeof(nsABCOMCardStruct));
+        mCardListForPalm = (lpnsABCOMCardStruct) CoTaskMemAlloc(sizeof(nsABCOMCardStruct) * mTotalCardCount);
         if(!mCardListForPalm) {
             mABDB->Close(PR_FALSE);
             return NS_ERROR_OUT_OF_MEMORY;
@@ -404,11 +393,6 @@ nsresult nsAbPalmHotSync::DoSyncAndGetUpdatedCards(PRInt32 aPalmCount, lpnsABCOM
     if(NS_SUCCEEDED(rv))
         // update local DB for sync
         rv = UpdateMozABWithPalmRecords();
-
-    if(!mCardForPalmCount && mCardListForPalm) {
-        free(mCardListForPalm);
-        mCardListForPalm = nsnull;
-    }
 
     // if there are no new cards to be added in Palm close DB
     // else wait for Done to be called.

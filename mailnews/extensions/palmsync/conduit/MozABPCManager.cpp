@@ -125,9 +125,10 @@ long MozABPCManager::GetPCABList(DWORD * pCategoryCount, DWORD ** pCategoryIdLis
         else {
             return GEN_ERR_LOW_MEMORY;
         }
+        CoTaskMemFree(mozABNameList[i].lpszABDesc);
     }
     
-    // free(mozABNameList); // we donot free this, allocated on another heap (COM), COM takes care of it.
+    CoTaskMemFree(mozABNameList);
     return retval;
 }
 
@@ -160,7 +161,7 @@ long MozABPCManager::SynchronizePCAB(DWORD categoryId, CPString & categoryName,
         HRESULT hres = pNsPalmSync->nsSynchronizeAB(FALSE, categoryId, categoryName.GetBuffer(0),
                                                 updatedPalmRecCount, palmCardList,
                                                 &dwMozCardCount, &mozCardList);
-        if(hres == S_OK) {
+        if(hres == S_OK && mozCardList) {
             *pUpdatedPCRecListCount = dwMozCardCount;
             CPalmRecord ** mozRecordList = (CPalmRecord **) malloc(sizeof(CPalmRecord *) * dwMozCardCount);
             *updatedPCRecList = mozRecordList;
@@ -174,10 +175,12 @@ long MozABPCManager::SynchronizePCAB(DWORD categoryId, CPString & categoryName,
                     *mozRecordList = pMozRecord;
                     mozRecordList++;
                     delete pConduitRecord;
+                    CMozABConduitRecord::CleanUpABCOMCardStruct(&mozCardList[i]);
                 }
             }
             else
                 retval = GEN_ERR_LOW_MEMORY;
+            CoTaskMemFree(mozCardList);
         }
         else
             retval = (long) hres;
@@ -254,7 +257,7 @@ long MozABPCManager::LoadAllRecords(CPString & ABName, DWORD * pPCRecListCount, 
     // get the ABList
     HRESULT hres = pNsPalmSync->nsGetAllABCards(FALSE, -1, ABName.GetBuffer(0),
                                             &dwMozCardCount, &mozCardList);
-    if (hres == S_OK) {
+    if (hres == S_OK && mozCardList) {
         *pPCRecListCount = dwMozCardCount;
         CPalmRecord ** mozRecordList = (CPalmRecord **) malloc(sizeof(CPalmRecord *) * dwMozCardCount);
         *pPCRecList = mozRecordList;
@@ -267,10 +270,12 @@ long MozABPCManager::LoadAllRecords(CPString & ABName, DWORD * pPCRecListCount, 
                 *mozRecordList = pMozRecord;
                 mozRecordList++;
                 delete pConduitRecord;
+                CMozABConduitRecord::CleanUpABCOMCardStruct(&mozCardList[i]);
             }
         }
         else
             retval = GEN_ERR_LOW_MEMORY;
+        CoTaskMemFree(mozCardList);
     }
     else
         retval = (long) hres;

@@ -42,7 +42,7 @@
 #include <memory.h>
 #include <sys/stat.h>
 #include <TCHAR.H>
-
+#include <malloc.h>
 #include <syncmgr.h>
 #include <Pgenerr.h>
 

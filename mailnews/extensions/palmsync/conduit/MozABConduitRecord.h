@@ -159,6 +159,8 @@ public:
     // converts from self(Mozilla AB) type to Palm record type
     long ConvertToGeneric(CPalmRecord &rec);
 
+    static void CleanUpABCOMCardStruct(nsABCOMCardStruct * card);
+
 };
 
 #endif

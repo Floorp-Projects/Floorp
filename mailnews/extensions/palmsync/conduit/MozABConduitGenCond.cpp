@@ -10,6 +10,9 @@
 #define TRACE0(sz)
 #define TRACE(sz)
 
+#include <malloc.h>
+
+
 #include <CPalmRec.cpp>
 #include <CPString.cpp>
 #include <CPCatgry.cpp>

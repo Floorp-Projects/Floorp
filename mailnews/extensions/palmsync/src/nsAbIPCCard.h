@@ -72,9 +72,8 @@ public:
     nsresult ConvertToUnicodeAndCopy(nsABCOMCardStruct * srcCard);
 
     // this function will allocate new memory for the passed in card struct data members
-    // the caller needs to call CleanUpABCOMCardStruct once it is done using the card struct
+    // the caller needs to CoTaskMemFree once it is done using the card struct
     nsresult GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * card);
-    static void CleanUpABCOMCardStruct(nsABCOMCardStruct * card);
 
     nsAbIPCCard();
     nsAbIPCCard(nsIAbCard *card);

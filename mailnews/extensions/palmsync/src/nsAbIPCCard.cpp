@@ -675,17 +675,17 @@ PRBool nsAbIPCCard::Same(nsIAbCard *card)
 
 void nsAbIPCCard::CopyValue(PRBool isUnicode, nsString & attribValue, LPTSTR * result)
 {
-    if(attribValue.Length()) {                                    
+    *result = NULL;
+    if(attribValue.Length() && attribValue.get()) {
         if(isUnicode) {                                 
-            PRUnichar * Str = new PRUnichar[attribValue.Length()+1];
+            PRUnichar * Str = (PRUnichar *) CoTaskMemAlloc(sizeof(PRUnichar) * attribValue.Length()+1);
             wcscpy(Str, attribValue.get());
             *result = Str;
         } 
         else { 
-            char * str = new char[attribValue.Length()+1];
             nsCAutoString cStr; 
-            if(attribValue.get()) 
-                cStr = NS_ConvertUCS2toUTF8(attribValue);
+            cStr = NS_ConvertUCS2toUTF8(attribValue);
+            char * str = (char *) CoTaskMemAlloc(cStr.Length()+1);
             strcpy(str, cStr.get()); 
             *result = (LPTSTR) str;
         } 
@@ -752,47 +752,4 @@ nsresult nsAbIPCCard::GetABCOMCardStruct(PRBool isUnicode, nsABCOMCardStruct * c
     return NS_OK;
 }
 
-void nsAbIPCCard::CleanUpABCOMCardStruct(nsABCOMCardStruct * card)
-{
-    if(!card)
-        return;
-
-    delete (card->firstName);
-    delete (card->lastName);
-    delete (card->displayName);
-    delete (card->nickName);
-    delete card->primaryEmail;
-    delete card->secondEmail;
-    delete card->workPhone;
-    delete card->homePhone;
-    delete card->faxNumber;
-    delete card->pagerNumber;
-    delete card->cellularNumber;
-    delete card->homeAddress;
-    delete card->homeAddress2;
-    delete card->homeCity;
-    delete card->homeState;
-    delete card->homeZipCode;
-    delete card->homeCountry;
-    delete card->workAddress;
-    delete card->workAddress2;
-    delete card->workCity;
-    delete card->workState;
-    delete card->workZipCode;
-    delete card->workCountry;
-    delete card->jobTitle;
-    delete card->department;
-    delete card->company;
-    delete card->webPage1;
-    delete card->webPage2;
-    delete card->birthYear;
-    delete card->birthMonth;
-    delete card->birthDay;
-    delete card->custom1;
-    delete card->custom2;
-    delete card->custom3;
-    delete card->custom4;
-    delete card->notes;
-    delete card->mailListURI;
-}
 
