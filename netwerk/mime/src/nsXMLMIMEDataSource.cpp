@@ -116,7 +116,7 @@ nsXMLMIMEDataSource::AddMapping(const char* mimeType,
     nsMIMEInfoImpl* anInfo = new nsMIMEInfoImpl(mimeType);
     if (!anInfo) return NS_ERROR_OUT_OF_MEMORY;
 
-    anInfo->mExtensions.AppendCString(extension);
+    anInfo->mExtensions.AppendCString(nsCString(extension));
     anInfo->mDescription.AssignWithConversion(description);
     anInfo->mURI = dataURI;
 
@@ -233,7 +233,7 @@ nsXMLMIMEDataSource::AppendExtension(const char* mimeType, const char* extension
     nsMIMEInfoImpl* info = (nsMIMEInfoImpl*)mInfoObjects->Get(&key);
     if (!info) return NS_ERROR_FAILURE;
 
-    info->mExtensions.AppendCString(extension);
+    info->mExtensions.AppendCString(nsCString(extension));
 
     // Add another file extension mapping.
     key = extension;
@@ -255,7 +255,7 @@ nsXMLMIMEDataSource::RemoveExtension(const char* aExtension) {
     
     // Next remove the root MIME mapping from the array and hash
     // IFF this was the only file extension mapping left.
-    PRBool removed = info->mExtensions.RemoveCString(aExtension);
+    PRBool removed = info->mExtensions.RemoveCString(nsCString(aExtension));
     NS_ASSERTION(removed, "mapping problem");
 
     if (info->GetExtCount() == 0) {

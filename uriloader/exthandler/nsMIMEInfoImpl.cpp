@@ -96,7 +96,7 @@ nsMIMEInfoImpl::FirstExtension(char **_retval) {
 
 NS_IMETHODIMP nsMIMEInfoImpl::AppendExtension(const char *aExtension)
 {
-	mExtensions.AppendCString( aExtension );
+	mExtensions.AppendCString( nsCString(aExtension) );
 	return NS_OK;
 }
 

@@ -1066,7 +1066,7 @@ nsHTTPChannel::CheckCache()
     if (header) {
         PRInt32 offset;
 
-        nsCAutoString cacheControlHeader = (const char*)header;
+        nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char*, header));
         offset = cacheControlHeader.Find("must-revalidate", PR_TRUE);
         if (offset != kNotFound)
             mustRevalidate = PR_TRUE;
@@ -1258,7 +1258,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     if (header) {
         PRInt32 offset;
 
-        nsCAutoString cacheControlHeader = (const char*)header;
+        nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char*, header));
         offset = cacheControlHeader.Find("no-store", PR_TRUE);
         if (offset != kNotFound)
             return NS_OK;
@@ -1271,7 +1271,7 @@ nsHTTPChannel::CacheReceivedResponse(nsIStreamListener *aListener,
     if (header) {
         PRInt32 offset;
 
-        nsCAutoString pragmaHeader = (const char*)header;
+        nsCAutoString pragmaHeader(NS_STATIC_CAST(const char*, header));
         offset = pragmaHeader.Find("no-cache", PR_TRUE);
         if (offset != kNotFound)
             return NS_OK;
@@ -1775,7 +1775,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
     if (header) {
         PRInt32 offset;
 
-        nsCAutoString cacheControlHeader = (const char*)header;
+        nsCAutoString cacheControlHeader(NS_STATIC_CAST(const char*, header));
         offset = cacheControlHeader.Find("no-store", PR_TRUE);
         if (offset != kNotFound) {
             if (mCacheEntry)
@@ -1792,7 +1792,7 @@ nsresult nsHTTPChannel::ResponseCompleted(nsIStreamListener *aListener,
     if (header) {
         PRInt32 offset;
 
-        nsCAutoString pragmaHeader = (const char*)header;
+        nsCAutoString pragmaHeader(NS_STATIC_CAST(const char*, header));
         offset = pragmaHeader.Find("no-cache", PR_TRUE);
         if (offset != kNotFound) {
             if (mCacheEntry)
