@@ -383,6 +383,13 @@ nsHTMLImageElement::GetWidthHeight(PRInt32* aWidth, PRInt32* aHeight)
     *aWidth = 0;
   }
 
+  if (mDocument) {
+    // Flush all pending notifications so that our frames are up to date.
+    // If we're not in a document, we don't have a frame anyway, so we
+    // don't care.
+    mDocument->FlushPendingNotifications();
+  }
+
   nsIImageFrame* imageFrame;
   GetImageFrame(&imageFrame);
 
