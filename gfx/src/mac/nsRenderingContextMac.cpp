@@ -87,6 +87,12 @@ void GraphicState::Clear()
 		mClipRegion = nsnull;
 	}
 
+	if (mOriginalClipRegion)
+	{
+		::DisposeRgn(mOriginalClipRegion);
+		mOriginalClipRegion = nsnull;
+	}
+
   NS_IF_RELEASE(mFontMetrics);
 
   mOffx						= 0;
@@ -122,8 +128,9 @@ void GraphicState::Init(GrafPtr aPort)
 	if (rgn)
 	  ::RectRgn(rgn, &aPort->portRect);
 
-  mMainRegion			= rgn;
-  mClipRegion			= DuplicateRgn(rgn);
+  mMainRegion					= rgn;
+  mClipRegion					= DuplicateRgn(rgn);
+  mOriginalClipRegion	= DuplicateRgn(rgn);
 
 }
 
@@ -139,8 +146,9 @@ void GraphicState::Init(nsIWidget* aWindow)
   mOffy						= (PRInt32)aWindow->GetNativeData(NS_NATIVE_OFFSETY);
 
 	RgnHandle widgetRgn = (RgnHandle)aWindow->GetNativeData(NS_NATIVE_REGION);
-	mMainRegion			= DuplicateRgn(widgetRgn);
-  mClipRegion			= DuplicateRgn(widgetRgn);
+	mMainRegion					= DuplicateRgn(widgetRgn);
+  mClipRegion					= DuplicateRgn(widgetRgn);
+  mOriginalClipRegion	= DuplicateRgn(widgetRgn);
 }
 
 //------------------------------------------------------------------------
@@ -159,8 +167,9 @@ void GraphicState::Duplicate(GraphicState* aGS)
 	mOffx						= aGS->mOffx;
 	mOffy						= aGS->mOffy;
 
-	mMainRegion			= DuplicateRgn(aGS->mMainRegion);
-	mClipRegion			= DuplicateRgn(aGS->mClipRegion);
+	mMainRegion					= DuplicateRgn(aGS->mMainRegion);
+	mClipRegion					= DuplicateRgn(aGS->mClipRegion);
+	mOriginalClipRegion	= DuplicateRgn(aGS->mOriginalClipRegion);
 
 	mColor					= aGS->mColor;
 	mFont						= aGS->mFont;
@@ -272,46 +281,14 @@ NS_IMETHODIMP nsRenderingContextMac::Init(nsIDeviceContext* aContext, nsIWidget*
 	mFrontSurface->Init(aWindow);
 	SelectDrawingSurface(mFrontSurface);
 
-	// clip out the children from the GS main region
-	nsCOMPtr<nsIEnumerator> children ( dont_AddRef(aWindow->GetChildren()) );
-  nsresult result = NS_OK;
-	if (children)
-	{
-		RgnHandle myRgn = ::NewRgn();
-		if (!myRgn) return NS_ERROR_OUT_OF_MEMORY;
+	// NOTE: here, we used to clip out the children from mGS->mMainRegion and copy
+	// the resulting region into mMainRegion, mClipRegion and mOriginalClipRegion.
+	// This is no longer necessary because when initializing mGS from an nsIWidget, we
+	// call GetNativeData(NS_NATIVE_REGION) that now returns the widget's visRegion
+	// with the children already clipped out (as well as the areas masked by the 
+	// widget's parents).
 
-		RgnHandle childRgn = ::NewRgn();
-		if (!childRgn) return NS_ERROR_OUT_OF_MEMORY;
-
-		::CopyRgn(mGS->mMainRegion, myRgn);
-
-		children->First();
-		do
-		{
-			nsCOMPtr<nsISupports> child;
-			if ( NS_SUCCEEDED(children->CurrentItem(getter_AddRefs(child))) )
-			{	
-				// thanks to sdr@camsoft.com for pointing out a memory leak here,
-				// leading to the use of nsCOMPtr
-				nsCOMPtr<nsIWidget> childWidget;
-        childWidget = do_QueryInterface( child, &result);
-				if ( childWidget ) {
-					nsRect childRect;
-					Rect macRect;
-					childWidget->GetBounds(childRect);
-					::SetRect(&macRect, childRect.x, childRect.y, childRect.x + childRect.width, childRect.y + childRect.height);
-					::RectRgn(childRgn, &macRect);
-					::DiffRgn(myRgn, childRgn, myRgn);
-				}	
-			}
-		} while (NS_SUCCEEDED(children->Next()));			
-
-		::CopyRgn(myRgn, mGS->mMainRegion);
-		::CopyRgn(myRgn, mGS->mClipRegion);
-		::DisposeRgn(myRgn);
-		::DisposeRgn(childRgn);
-	}
-  return result;
+  return NS_OK;
 }
 
 //------------------------------------------------------------------------
@@ -560,7 +537,8 @@ NS_IMETHODIMP nsRenderingContextMac :: CopyOffScreenBits(nsDrawingSurface aSrcSu
   if (aCopyFlags & NS_COPYBITS_USE_SOURCE_CLIP_REGION)
   	clipRgn = srcPort->clipRgn;
   else
-  	clipRgn = nil;
+		clipRgn = mGS->mOriginalClipRegion;
+//	clipRgn = nil;		
 
 	// get the destination port and surface
   GrafPtr destPort;
@@ -727,46 +705,37 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRectInPixels(const nsRect& aRect, 
 	Rect macRect;
 	::SetRect(&macRect, aRect.x, aRect.y, aRect.x + aRect.width, aRect.y + aRect.height);
 
+	RgnHandle rectRgn = ::NewRgn();
+	::RectRgn(rectRgn, &macRect);
+
 	RgnHandle clipRgn = mGS->mClipRegion;
-	if (!clipRgn)
-	{
+	if (clipRgn == nsnull)
 		clipRgn = ::NewRgn();
-		if (!clipRgn) return NS_ERROR_OUT_OF_MEMORY;
-	}
 
-	if (aCombine == nsClipCombine_kReplace)
+	switch (aCombine)
 	{
-		StartDraw();
-			::RectRgn(clipRgn, &macRect);
-			::SetClip(clipRgn);
-		EndDraw();
+	  case nsClipCombine_kIntersect:
+	  	::SectRgn(clipRgn, rectRgn, clipRgn);
+	  	break;
+
+	  case nsClipCombine_kUnion:
+	  	::UnionRgn(clipRgn, rectRgn, clipRgn);
+	  	break;
+
+	  case nsClipCombine_kSubtract:
+	  	::DiffRgn(clipRgn, rectRgn, clipRgn);
+	  	break;
+
+	  case nsClipCombine_kReplace:
+//  	::CopyRgn(rectRgn, clipRgn);
+	  	::SectRgn(rectRgn, mGS->mOriginalClipRegion, clipRgn);
+	  	break;
 	}
-	else
-	{
-		RgnHandle rectRgn = ::NewRgn();
-		if (!rectRgn) return NS_ERROR_OUT_OF_MEMORY;
-		::RectRgn(rectRgn, &macRect);
+	::DisposeRgn(rectRgn);
 
-		switch (aCombine)
-		{
-		  case nsClipCombine_kIntersect:
-		  	::SectRgn(clipRgn, rectRgn, clipRgn);
-		  	break;
-
-		  case nsClipCombine_kUnion:
-		  	::UnionRgn(clipRgn, rectRgn, clipRgn);
-		  	break;
-
-		  case nsClipCombine_kSubtract:
-		  	::DiffRgn(clipRgn, rectRgn, clipRgn);
-		  	break;
-		}
-		::DisposeRgn(rectRgn);
-
-		StartDraw();
-			::SetClip(clipRgn);
-		EndDraw();
-	}
+	StartDraw();
+		::SetClip(clipRgn);
+	EndDraw();
 
 	mGS->mClipRegion = clipRgn;
 	aClipEmpty = ::EmptyRgn(clipRgn);
@@ -835,7 +804,8 @@ NS_IMETHODIMP nsRenderingContextMac :: SetClipRegion(const nsIRegion& aRegion, n
 	  	break;
 
 	  case nsClipCombine_kReplace:
-	  	::CopyRgn(regionH, clipRgn);
+//  	::CopyRgn(regionH, clipRgn);
+	  	::SectRgn(regionH, mGS->mOriginalClipRegion, clipRgn);
 	  	break;
 	}
 
