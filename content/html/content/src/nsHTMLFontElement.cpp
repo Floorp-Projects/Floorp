@@ -149,7 +149,7 @@ nsHTMLFontElement::StringToAttribute(nsIAtom* aAttribute,
     PRInt32 ec, v = tmp.ToInteger(&ec);
     if(NS_SUCCEEDED(ec)){
       tmp.CompressWhitespace(PR_TRUE, PR_FALSE);
-      PRUnichar ch = tmp.First();
+      PRUnichar ch = tmp.IsEmpty() ? 0 : tmp.First();
       aResult.SetIntValue(v, ((ch == '+') || (ch == '-')) ?
                           eHTMLUnit_Integer : eHTMLUnit_Enumerated);
       return NS_CONTENT_ATTR_HAS_VALUE;

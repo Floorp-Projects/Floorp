@@ -242,6 +242,7 @@ nsXIFDTD::nsXIFDTD() : nsIDTD(){
   mLowerCaseAttributes=PR_TRUE;
   mCharset.SetLength(0);
   mSink=0;
+  mDTDState=NS_OK;
 
   mXIFContext=new nsDTDContext();
   mNodeRecycler=0;
