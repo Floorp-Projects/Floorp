@@ -1076,6 +1076,7 @@ foreach my $id (@idlist) {
         }
         $i++;
     }
+    $oldhash{'product'} = get_product_name($oldhash{'product_id'});
     if ($requiremilestone) {
         my $value = $::FORM{'target_milestone'};
         if (!defined $value || $value eq $::dontchange) {
