@@ -1620,39 +1620,88 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
   }
 
   PRInt32 y;
+  PRInt32 ValidWidth = ( aDWidth < ( dest->mWidth - aDX ) ) ? aDWidth : ( dest->mWidth - aDX ); 
+  PRInt32 ValidHeight = ( aDHeight < ( dest->mHeight - aDY ) ) ? aDHeight : ( dest->mHeight - aDY );
+
   // now composite the two images together
   switch (mAlphaDepth) {
   case 1:
-    for (y=0; y<aDHeight; y++) {
-      PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
-      PRUint8 *dstAlpha = dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes;
-      PRUint8 *src = rgbPtr + y*rgbStride; 
-      PRUint8 *alpha = alphaPtr + y*alphaStride;
-      for (int x=0; x<aDWidth; x++, dst+=3, src+=3) {
-#define NS_GET_BIT(rowptr, x) (rowptr[(x)>>3] &  (1<<(7-(x)&0x7)))
-#define NS_SET_BIT(rowptr, x) (rowptr[(x)>>3] |= (1<<(7-(x)&0x7)))
+    {
+      PRUint8 *dst = dest->mImageBits + aDY*dest->mRowBytes + 3*aDX;
+      PRUint8 *dstAlpha = dest->mAlphaBits + aDY*dest->mAlphaRowBytes;
+      PRUint8 *src = rgbPtr;
+      PRUint8 *alpha = alphaPtr;
+      PRUint8 offset = aDX & 0x7; // x starts at 0
+      int iterations = (ValidWidth+7)/8; // round up
 
-        // if this pixel is opaque then copy into the destination image
-        if (NS_GET_BIT(alpha, x)) {
-          dst[0] = src[0];
-          dst[1] = src[1];
-          dst[2] = src[2];
-          NS_SET_BIT(dstAlpha, aDX+x);
+      for (y=0; y<aDHeight; y++) {
+        for (int x=0; x<ValidWidth; x += 8, dst += 3*8, src += 3*8) {
+          PRUint8 alphaPixels = *alpha++;
+          if (alphaPixels == 0) {
+            // all 8 transparent; jump forward
+            continue;
+          }
+
+          // 1 or more bits are set, handle dstAlpha now - may not be aligned.
+          // Are all 8 of these alpha pixels used?
+          if (x+7 >= ValidWidth) {
+            alphaPixels &= 0xff << (8 - (ValidWidth-x)); // no, mask off unused
+            if (alphaPixels == 0)
+              continue;  // no 1 alpha pixels left
+          }
+          if (offset == 0) {
+            dstAlpha[(aDX+x)>>3] |= alphaPixels; // the cheap aligned case
+          }
+          else {
+            dstAlpha[(aDX+x)>>3]       |= alphaPixels >> offset;
+            // avoid write if no 1's to write - also avoids going past end of array
+            // compiler should merge the common sub-expressions
+            if (alphaPixels << (8U - offset))
+              dstAlpha[((aDX+x)>>3) + 1] |= alphaPixels << (8U - offset);
+          }
+
+          if (alphaPixels == 0xff) {
+            // fix - could speed up by gathering a run of 0xff's and doing 1 memcpy
+            // all 8 pixels set; copy and jump forward
+            memcpy(dst,src,8*3);
+            continue;
+          }
+          else {
+            // else mix of 1's and 0's in alphaPixels, do 1 bit at a time
+            // Don't go past end of line!
+            PRUint8 *d = dst, *s = src;
+            for (PRUint8 aMask = 1<<7, j = 0; aMask && j < ValidWidth-x; aMask >>= 1, j++) {
+              // if this pixel is opaque then copy into the destination image
+              if (alphaPixels & aMask) {
+                // might be faster with *d++ = *s++ 3 times?
+                d[0] = s[0];
+                d[1] = s[1];
+                d[2] = s[2];
+                // dstAlpha bit already set
+              }
+              d += 3;
+              s += 3;
+            }
+          }
         }
-
-#undef NS_GET_BIT
-#undef NS_SET_BIT
+        // at end of each line, bump pointers.  Use wordy code because of
+        // bug 127455 to avoid possibility of unsigned underflow
+        dst = (dst - 3*8*iterations) + dest->mRowBytes;
+        src = (src - 3*8*iterations) + rgbStride;
+        alpha = (alpha - iterations) + alphaStride;
+        dstAlpha += dest->mAlphaRowBytes;
       }
     }
     break;
   case 8:
-    for (y=0; y<aDHeight; y++) {
+    // fix? Does this matter?  GTK doesn't support this.  Others?
+    for (y=0; y<ValidHeight; y++) {
       PRUint8 *dst = dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX;
       PRUint8 *dstAlpha = 
         dest->mAlphaBits + (y+aDY)*dest->mAlphaRowBytes + aDX;
       PRUint8 *src = rgbPtr + y*rgbStride; 
       PRUint8 *alpha = alphaPtr + y*alphaStride;
-      for (int x=0; x<aDWidth; x++, dst+=3, dstAlpha++, src+=3, alpha++) {
+      for (int x=0; x<ValidWidth; x++, dst+=3, dstAlpha++, src+=3, alpha++) {
 
         // blend this pixel over the destination image
         unsigned val = *alpha;
@@ -1665,10 +1714,10 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
     break;
   case 0:
   default:
-    for (y=0; y<aDHeight; y++)
+    for (y=0; y<ValidHeight; y++)
       memcpy(dest->mImageBits + (y+aDY)*dest->mRowBytes + 3*aDX, 
              rgbPtr + y*rgbStride,
-             3*aDWidth);
+             3*ValidWidth);
   }
   if (scaledAlpha)
     nsMemory::Free(scaledAlpha);
@@ -1677,5 +1726,3 @@ NS_IMETHODIMP nsImageXlib::DrawToImage(nsIImage* aDstImage,
 
   return NS_OK;
 }
-
-
