@@ -34,23 +34,44 @@
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 
 CDragBar::CDragBar(LStream* inStream)
-	:	LView(inStream)
-{
-	mPatternWorld = CSharedPatternWorld::CreateSharedPatternWorld(10000);
-	ThrowIfNULL_(mPatternWorld);
-	mPatternWorld->AddUser(this);
-	
-	inStream->ReadPString(mTitle);
-	*inStream >> mIsDocked;
+		:	LView(inStream)
+	{
+		inStream->ReadPString(mTitle);
+		*inStream >> mIsDocked;
 
-	::SetEmptyRgn(mDockedMask);
-	
-	mIsTracking = false;
-	// The visible flag will be off or latent at this point.  If it's invisible in the
-	// resource, we want to mark it as fully hidden (ie, not docked either)
-	mIsAvailable = (mVisible != triState_Off);
-	SetRefreshAllWhenResized(false);
-}
+		common_initialization();
+	}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+CDragBar::CDragBar( const SPaneInfo& inPaneInfo, const SViewInfo& inViewInfo, bool inDocked )
+		: LView(inPaneInfo, inViewInfo),
+			mIsDocked(inDocked)
+	{
+		common_initialization();
+	}
+
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+//	¥	
+// ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
+
+void
+CDragBar::common_initialization()
+	{
+		mPatternWorld = CSharedPatternWorld::CreateSharedPatternWorld(10000);
+		ThrowIfNULL_(mPatternWorld);
+		mPatternWorld->AddUser(this);
+
+		::SetEmptyRgn(mDockedMask);
+
+		mIsTracking = false;
+		// The visible flag will be off or latent at this point.  If it's invisible in the
+		// resource, we want to mark it as fully hidden (ie, not docked either)
+		mIsAvailable = (mVisible != triState_Off);
+		SetRefreshAllWhenResized(false);
+	}
 
 // ÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑÑ
 //	¥	

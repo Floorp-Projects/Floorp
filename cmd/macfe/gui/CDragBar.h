@@ -40,6 +40,7 @@ class CDragBar :
 		enum { class_ID = 'DgBr' };
 		
 								CDragBar(LStream* inStream);
+								CDragBar(const SPaneInfo&, const SViewInfo&, bool inDocked);
 		virtual					~CDragBar();
 		
 		virtual	void			Dock(void);
@@ -58,6 +59,10 @@ class CDragBar :
 		virtual void			SetAvailable(Boolean inAvailable); // for javascript
 		
 		virtual Boolean			IsAvailable(); // for javascript
+
+	private:
+		void common_initialization();
+
 	protected:
 		
 		virtual	void			DrawSelf(void);
