@@ -635,7 +635,12 @@ NS_IMETHODIMP nsMsgFolder::CreateSubfolder(const char *folderName)
 
 NS_IMETHODIMP nsMsgFolder::Compact()
 {
-  return NS_OK;
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsMsgFolder::EmptyTrash()
+{
+    return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsMsgFolder::Rename(const char *name)
