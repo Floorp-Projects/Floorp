@@ -128,6 +128,7 @@ static NS_DEFINE_CID(kCDeviceContextSpecCID, NS_DEVICE_CONTEXT_SPEC_CID);
 static NS_DEFINE_CID(kCDeviceContextSpecFactoryCID, NS_DEVICE_CONTEXT_SPEC_FACTORY_CID);
 static NS_DEFINE_CID(kImageManagerCID, NS_IMAGEMANAGER_CID);
 static NS_DEFINE_CID(kScreenManagerCID, NS_SCREENMANAGER_CID);
+static NS_DEFINE_CID(kPrintOptionsCID,NS_PRINTOPTIONS_CID);
 #endif
 
 // VIEW
@@ -222,6 +223,7 @@ NS_SetupRegistry()
   nsComponentManager::RegisterComponentLib(kCDeviceContextSpecFactoryCID, "Device Context Spec Factory", "@mozilla.org/gfx/devicecontextspecfactory;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kImageManagerCID, "Image Manager", "@mozilla.org/gfx/imagemanager;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
   nsComponentManager::RegisterComponentLib(kScreenManagerCID, "Screen Manager", "@mozilla.org/gfx/screenmanager;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
+  nsComponentManager::RegisterComponentLib(kPrintOptionsCID, "PrintOptions", "@mozilla.org/gfx/printoptions;1", GFXWIN_DLL, PR_FALSE, PR_FALSE);
 #endif
 
   // VIEW
