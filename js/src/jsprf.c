@@ -1166,8 +1166,8 @@ JS_PUBLIC_API(JSUint32) JS_vsnprintf(char *out, JSUint32 outlen,const char *fmt,
     (void) dosprintf(&ss, fmt, ap);
 
     /* If we added chars, and we didn't append a null, do it now. */
-    if( (ss.cur != ss.base) && (*(ss.cur - 1) != '\0') )
-        *(--ss.cur) = '\0';
+    if( (ss.cur != ss.base) && (ss.cur[-1] != '\0') )
+        ss.cur[-1] = '\0';
 
     n = ss.cur - ss.base;
     return n ? n - 1 : n;
