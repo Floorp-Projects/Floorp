@@ -259,8 +259,7 @@ mozXMLTermShell::Init(nsIDOMWindowInternal* aContentWin,
   if (NS_FAILED(result) || !globalObj)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIDocShell> docShell;
-  globalObj->GetDocShell(getter_AddRefs(docShell));
+  nsIDocShell *docShell = globalObj->GetDocShell();
   if (!docShell)
     return NS_ERROR_FAILURE;
     
