@@ -56,7 +56,7 @@ sub cmdUserPrefs {
 
     # get the list of users to edit
     my @userIDs = $app->input->peekArgument('userPrefs.userID');
-    if (not scalar(@userIDs)) {
+    if (not @userIDs) {
         # no users selected - so user wants to edit themselves
         @userIDs = ($user->userID);
     } else {
@@ -86,7 +86,7 @@ sub cmdUserPrefs {
         }
     }
 
-    if (not scalar(@notifications)) {
+    if (not @notifications) {
         # put it all together
         $app->output->userPrefs(\@userIDs, $userData, $self->populateUserPrefsMetaData($app, $userDataSource));
     } else {
@@ -135,18 +135,18 @@ sub populateUserPrefsHash {
 
     $userData->{'groups'} = {};
     if ($rightGroups) {
-        foreach my $group (@{$userDataSource->getGroups($app)}) {
+        foreach my $group (@{$userDataSource->getGroups($app)}) { # XXX should be cached
             # $group contains [groupID, name, [rightName]*]
             # give status of user in group
             my $groupID = $group->[0];
             $userData->{'groups'}->{$groupID} = $targetUser->levelInGroup($groupID);
         }
     } else {
-        foreach my $group (@{$userDataSource->getGroups($app)}) {
+        foreach my $group (@{$userDataSource->getGroups($app)}) { # XXX should be cached
             # $group contains [groupID, name, [rightName]*]
             # if $user is an op or better in this group, give status of $targetUser in group
             my $groupID = $group->[0];
-            if ($user->levelInGroup($groupID) > 2) { # XXX BARE CONSTANT ALERT
+            if ($user->levelInGroup($groupID) >= 2) { # XXX BARE CONSTANT ALERT
                 $userData->{'groups'}->{$groupID} = $targetUser->levelInGroup($groupID);
             }
         }
@@ -187,7 +187,7 @@ sub cmdUserPrefsSet {
 
     # get the list of users to edit
     my @userIDs = $app->input->peekArgument('userPrefs.userID');
-    if (not scalar(@userIDs)) {
+    if (not @userIDs) {
         # no users selected - so user wants to edit themselves
         @userIDs = ($user->userID);
     } else {
@@ -219,7 +219,7 @@ sub cmdUserPrefsSet {
         }
     }
 
-    if (scalar(@notifications)) {
+    if (@notifications) {
         # the user needs to be notified of stuff
         # this can include (examples of such notifications in brackets):
         #    request for confirmation of e-mail address ($userID, 'fields.contact.email', 'contact.confirmationSent')
@@ -336,7 +336,7 @@ sub applyUserPrefsChanges {
                         $self->warn(2, "user $userID tried to change user $targetUserID's group $groupID permissions from $targetUserLevel to $newValue while at level $userLevel: denied");
                         push(@notifications, [$targetUserID, "groups.$groupID", 'accessDenied']);
                     }
-                } elsif (($userLevel > 3) or ($rightGroups)) {
+                } elsif (($userLevel > 2) or ($rightGroups)) {
                     $targetUser->joinGroup($groupID, $newValue);
                 } else {
                     my $userID = $user->userID;
