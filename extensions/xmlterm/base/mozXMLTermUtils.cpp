@@ -91,10 +91,11 @@ mozXMLTermUtils::ConvertDOMWindowToDocShell(nsIDOMWindowInternal* aDOMWindow,
   if (!globalObject)
     return NS_ERROR_FAILURE;
 
-  globalObject->GetDocShell(aDocShell);
-
+  *aDocShell = globalObject->GetDocShell();
   if (!*aDocShell)
     return NS_ERROR_FAILURE;
+
+  NS_ADDREF(*aDocShell);
 
   return NS_OK;
 }
@@ -215,7 +216,10 @@ mozXMLTermUtils::GetScriptContext(nsIDOMDocument* aDOMDocument,
   if (!scriptGlobalObject)
     return NS_ERROR_FAILURE;
 
-  return scriptGlobalObject->GetContext(aScriptContext);
+  *aScriptContext = scriptGlobalObject->GetContext();
+  NS_IF_ADDREF(*aScriptContext);
+
+  return NS_OK;
 }
 
 
