@@ -503,11 +503,10 @@ NS_IMETHODIMP nsXULRadioButtonAccessible::GetAccState(PRUint32 *_retval)
     // If our parent radio group is focused, then consider this radio button focused
     nsCOMPtr<nsIDOMNode> parentNode;
     mDOMNode->GetParentNode(getter_AddRefs(parentNode));
-    nsCOMPtr<nsIDOMElement> parentElement(do_QueryInterface(parentNode));
-    if (parentElement) {
-      nsCOMPtr<nsIDOMElement> focusedElement;
-      GetFocusedElement(getter_AddRefs(focusedElement));
-      if (focusedElement == parentElement)
+    if (parentNode) {
+      nsCOMPtr<nsIDOMNode> focusedNode;
+      GetFocusedNode(getter_AddRefs(focusedNode));
+      if (focusedNode == parentNode)
         *_retval |= STATE_FOCUSED;
     }
   }
