@@ -4996,53 +4996,50 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
                             // the rest is optional
     
 #if defined (XP_WIN)
-  nsCOMPtr<nsIFile> dirToScan;
-
-  // Scan 4.x plugins location.
-  // Specifying PR_TRUE for the last param to ScanPluginsDirectory, we make sure that:
-  //   1. we search for a match in the list of MOZ_LOCAL plugins, ignore if found, 
-  //      add if not found (check for dups)
-  //   2. we ignore 4.x Java plugins no matter what and other 
-  //      unwanted plugins as per temporary decision described in bug #23856
-  rv = dirService->Get("NS_4DOTX_PLUGINS_DIR", NS_GET_IID(nsIFile), getter_AddRefs(dirToScan));
-  if (NS_SUCCEEDED(rv)) {
-    ScanPluginsDirectory(dirToScan, compManager, layoutPath, aCreatePluginList, &pluginschanged, PR_TRUE);
-
-    if (pluginschanged)
-      *aPluginsChanged = PR_TRUE;
-
-    // if we are just looking for possible changes, 
-    // no need to proceed if changes are detected
-    if (!aCreatePluginList && *aPluginsChanged) {
-      ClearCachedPluginInfoList();
-      return NS_OK;
-    }
-  }
-  
-  // Scan the installation path of Sun's JRE if the prefs are enabled
-  nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
-  if (prefService)     // we got the pref service
-  {
-    PRBool javaEnabled = PR_FALSE;         // don't bother the scan if java is OFF
-    PRBool doJREPluginScan = PR_FALSE;
+  // 3. Scan the installation paths of our popular plugins if the prefs are enabled
     
-    if (NS_SUCCEEDED(prefService->GetBoolPref("security.enable_java",&javaEnabled)) &&
-        NS_SUCCEEDED(prefService->GetBoolPref("plugin.do_JRE_Plugin_Scan",&doJREPluginScan)) &&
-        javaEnabled && doJREPluginScan)
-    {
-      rv = dirService->Get("NS_WIN_JAVA_JRE_DIR", NS_GET_IID(nsIFile), getter_AddRefs(dirToScan));
-      if (NS_SUCCEEDED(rv)) {
-        ScanPluginsDirectory(dirToScan, compManager, layoutPath, aCreatePluginList, &pluginschanged);
+  // This table controls the order of scanning
+  const char *prefs[] = {NS_WIN_JRE_SCAN_KEY,         nsnull,
+                         NS_WIN_ACROBAT_SCAN_KEY,     nsnull,
+                         NS_WIN_QUICKTIME_SCAN_KEY,   nsnull,
+                         NS_WIN_WMP_SCAN_KEY,         nsnull,
+                         NS_WIN_4DOTX_SCAN_KEY,       "1"  /*  second column is flag for 4.x folder */ };
 
-        if (pluginschanged)
-          *aPluginsChanged = PR_TRUE;
+  PRUint32 size = sizeof(prefs) / sizeof(prefs[0]);
 
-        // if we are just looking for possible changes, 
-        // no need to proceed if changes are detected
-        if (!aCreatePluginList && *aPluginsChanged) {
-          ClearCachedPluginInfoList();
-          return NS_OK;
-        }
+  for (PRUint32 i = 0; i < size; i+=2) {
+    nsCOMPtr<nsIFile> dirToScan;
+    PRBool bExists;
+    if (NS_SUCCEEDED(dirService->Get(prefs[i], NS_GET_IID(nsIFile), getter_AddRefs(dirToScan))) &&
+        dirToScan &&
+        NS_SUCCEEDED(dirToScan->Exists(&bExists)) && 
+        bExists) {
+      
+      PRBool bFilterUnwanted = PR_FALSE;
+
+      // 4.x plugins folder stuff: 
+      // Normally we "filter" the 4.x folder through |IsUnwantedPlugin|
+      // Check for a pref to see if we want to scan the entire 4.x plugins folder
+      if (prefs[i+1]) {
+        PRBool bScanEverything;
+        bFilterUnwanted = PR_TRUE;  // default to filter 4.x folder
+        nsCOMPtr<nsIPref> prefService = do_GetService(NS_PREF_CONTRACTID);
+        if (prefService &&
+            NS_SUCCEEDED(prefService->GetBoolPref(prefs[i], &bScanEverything)) &&
+            bScanEverything)
+          bFilterUnwanted = PR_FALSE;
+
+      }
+      ScanPluginsDirectory(dirToScan, compManager, layoutPath, aCreatePluginList, &pluginschanged, bFilterUnwanted);
+
+      if (pluginschanged)
+        *aPluginsChanged = PR_TRUE;
+
+      // if we are just looking for possible changes, 
+      // no need to proceed if changes are detected
+      if (!aCreatePluginList && *aPluginsChanged) {
+        ClearCachedPluginInfoList();
+        return NS_OK;
       }
     }
   }
@@ -5079,6 +5076,15 @@ nsresult nsPluginHostImpl::FindPlugins(PRBool aCreatePluginList, PRBool * aPlugi
 
   // No more need for cached plugins. Clear it up.
   ClearCachedPluginInfoList();
+
+  /*
+   * XXX Big time hack alert!!!!
+   *     Because Real Player 8 installs in the components folder, we must have this one off
+   *     scan for nppl3260.dll because XPCOM has shut off nsGetFactory type plugins.
+   *     When we stop supporting Real 8 or they fix their installer, this can go away.
+   */
+  if (aCreatePluginList)
+    ScanForRealInComponentsFolder(compManager, layoutPath);
 
   // reverse our list of plugins 
   nsPluginTag *next,*prev = nsnull;
@@ -6447,5 +6453,72 @@ nsPluginHostImpl::CreateTmpFileToPost(const char *postDataURL, char **pTmpFileNa
         *pTmpFileName = ToNewCString(path);
     }
   }
+  return rv;
+}
+
+nsresult
+nsPluginHostImpl::ScanForRealInComponentsFolder(nsIComponentManager * aCompManager, nsIFile * aLayoutPath)
+{
+  nsresult rv = NS_OK;
+
+#ifdef XP_WIN
+  
+  // First, lets check if we already have Real. No point in doing this if it's installed correctly
+  if (NS_SUCCEEDED(IsPluginEnabledForType("audio/x-pn-realaudio-plugin")))
+    return rv;
+  
+  // Next, maybe the pref wants to override
+  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
+  PRBool bSkipRealPlayerHack = PR_FALSE;
+  if (!prefs ||
+     (NS_SUCCEEDED(prefs->GetBoolPref("plugin.skip_real_player_hack", &bSkipRealPlayerHack)) &&
+     bSkipRealPlayerHack))
+  return rv;
+    
+  // now we need the XPCOM components folder
+  nsCOMPtr<nsIFile> RealPlugin;
+  if (NS_FAILED(NS_GetSpecialDirectory(NS_XPCOM_COMPONENT_DIR, getter_AddRefs(RealPlugin))) || !RealPlugin)
+    return rv;
+    
+  // make sure the file is actually there
+  RealPlugin->Append(nsDependentCString("nppl3260.dll"));
+  PRBool exists;
+  nsCAutoString filePath;
+  RealPlugin->Exists(&exists);
+  if (!exists || NS_FAILED(RealPlugin->GetNativePath(filePath)))
+    return rv;
+
+  // now make sure it's a plugin
+  nsFileSpec file(filePath.get());
+  if (!nsPluginsDir::IsPluginFile(file))
+    return rv;
+  
+  // try to get the mime info and descriptions out of the plugin
+  nsPluginFile pluginFile(file);
+  nsPluginInfo info = { sizeof(info) };
+  if (NS_FAILED(pluginFile.GetPluginInfo(info)))
+    return rv;
+  
+  nsCOMPtr<nsIFile> layoutPath;
+  nsCOMPtr<nsIComponentManager> compManager = do_GetService(kComponentManagerCID, &rv);
+  
+  // finally, create our "plugin tag" and add it to the list
+  if (info.fMimeTypeArray) {
+    nsPluginTag *pluginTag = new nsPluginTag(&info);
+    if (pluginTag) {
+      pluginTag->mNext = mPlugins;
+      mPlugins = pluginTag;
+      
+      // last thing we need is to register this plugin with layout so it can be used in full-page mode
+      if(aLayoutPath)
+        RegisterPluginMimeTypesWithLayout(pluginTag, aCompManager, aLayoutPath);
+    }
+  }
+          
+  // free allocated strings in GetPluginInfo
+  pluginFile.FreePluginInfo(info);
+
+#endif
+
   return rv;
 }

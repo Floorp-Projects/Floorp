@@ -461,6 +461,9 @@ private:
   
   nsresult EnsurePrivateDirServiceProvider();
 
+  // one-off hack to include nppl3260.dll from the components folder
+  nsresult ScanForRealInComponentsFolder(nsIComponentManager * aCompManager, nsIFile * aLayoutPath);
+
   char        *mPluginPath;
   nsPluginTag *mPlugins;
   nsPluginTag *mCachedPlugins;
