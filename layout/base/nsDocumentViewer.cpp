@@ -27,6 +27,7 @@
 #include "nsIContent.h"
 #include "nsIContentViewerContainer.h"
 #include "nsIDocumentViewer.h"
+#include "nsIDOMWindow.h"
 
 #include "nsIImageGroup.h"
 #include "nsIImageObserver.h"
@@ -84,13 +85,59 @@ static NS_DEFINE_CID(kEventQueueService, NS_EVENTQUEUESERVICE_CID);
 #undef NOISY_VIEWER
 #endif
 
+
+class DocumentViewerImpl;
+
+// a small delegate class used to avoid circular references
+
+#ifdef XP_MAC
+#pragma mark ** nsDocViwerSelectionListener **
+#endif
+
+class nsDocViwerSelectionListener : public nsIDOMSelectionListener
+{
+public:
+
+  // nsISupports interface...
+  NS_DECL_ISUPPORTS
+
+  // nsIDOMSelectionListerner interface
+  NS_DECL_IDOMSELECTIONLISTENER
+  
+
+                       nsDocViwerSelectionListener()
+                       : mDocViewer(NULL)
+                       , mGotSelectionState(PR_FALSE)
+                       , mSelectionWasCollapsed(PR_FALSE)
+                       {
+                         NS_INIT_REFCNT();
+                       }
+                       
+  virtual              ~nsDocViwerSelectionListener() {}
+   
+  nsresult             Init(DocumentViewerImpl *aDocViewer);
+
+protected:
+
+  DocumentViewerImpl*  mDocViewer;
+  PRPackedBool         mGotSelectionState;
+  PRPackedBool         mSelectionWasCollapsed;
+  
+};
+
+
+#ifdef XP_MAC
+#pragma mark ** DocumentViewerImpl **
+#endif
+
 class DocumentViewerImpl : public nsIDocumentViewer,
                            public nsIContentViewerEdit,
                            public nsIContentViewerFile,
                            public nsIMarkupDocumentViewer,
-                           public nsIImageGroupObserver,
-                           public nsIDOMSelectionListener
+                           public nsIImageGroupObserver
 {
+  friend class nsDocViwerSelectionListener;
+  
 public:
   DocumentViewerImpl();
   DocumentViewerImpl(nsIPresContext* aPresContext);
@@ -138,9 +185,6 @@ public:
   // nsIImageGroupObserver interface
   virtual void Notify(nsIImageGroup *aImageGroup,
                       nsImageGroupNotification aNotificationType);
-
-  // nsIDOMSelectionListerner interface
-  NS_DECL_IDOMSELECTIONLISTENER
   
 protected:
   virtual ~DocumentViewerImpl();
@@ -183,6 +227,8 @@ protected:
 
   nsCOMPtr<nsIStyleSheet>  mUAStyleSheet;
 
+  nsCOMPtr<nsIDOMSelectionListener> mSelectionListener;
+  
   PRBool  mEnableRendering;
   PRInt16 mNumURLStarts;
   PRBool  mIsPrinting;
@@ -292,12 +338,6 @@ DocumentViewerImpl::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   }
   if (aIID.Equals(NS_GET_IID(nsIContentViewerEdit))) {
     nsIContentViewerEdit* tmp = this;
-    *aInstancePtr = (void*) tmp;
-    NS_ADDREF_THIS();
-    return NS_OK;
-  }
-  if (aIID.Equals(NS_GET_IID(nsIDOMSelectionListener))) {
-    nsIDOMSelectionListener* tmp = this;
     *aInstancePtr = (void*) tmp;
     NS_ADDREF_THIS();
     return NS_OK;
@@ -474,20 +514,27 @@ DocumentViewerImpl::Init(nsNativeWidget aNativeParent,
         }
       }
 
-#if 0
-  // enable this when we resolve the ref cycle issues.
   // now register ourselves as a selection listener, so that we get called
   // when the selection changes in the window
+  nsDocViwerSelectionListener *selectionListener;
+  NS_NEWXPCOM(selectionListener, nsDocViwerSelectionListener);
+  if (!selectionListener) return NS_ERROR_OUT_OF_MEMORY;
+  selectionListener->Init(this);
+  
+  // this is the owning reference. The nsCOMPtr will take care of releasing
+  // our ref to the listener on destruction.
+  NS_ADDREF(selectionListener);
+  rv = selectionListener->QueryInterface(NS_GET_IID(nsIDOMSelectionListener), getter_AddRefs(mSelectionListener));
+  NS_RELEASE(selectionListener);
+  if (NS_FAILED(rv)) return rv;
+  
   nsCOMPtr<nsIDOMSelection> selection;
   rv = GetDocumentSelection(getter_AddRefs(selection));
   if (NS_FAILED(rv)) return rv;
   
-  rv = selection->AddSelectionListener(this);		// this creates a circular ref, causing leaks. Fix this.
+  rv = selection->AddSelectionListener(mSelectionListener);
   if (NS_FAILED(rv)) return rv;
   
-  // we need to RemoveSelectionListener somewhere too
-#endif
-
   return rv;
 }
 
@@ -1067,7 +1114,7 @@ NS_IMETHODIMP DocumentViewerImpl::GetCopyable(PRBool *aCopyable)
   PRBool isCollapsed;
   selection->GetIsCollapsed(&isCollapsed);
   
-  *aCopyable = PR_TRUE;	// !isCollapsed;  because of current focus bugs, lie for now.
+  *aCopyable = !isCollapsed;
   return NS_OK;
 }
 
@@ -1603,17 +1650,61 @@ NS_IMETHODIMP DocumentViewerImpl::SizeToContent()
 
    return NS_OK;
 }
-// nsIDOMSelectionListener interface
-NS_IMETHODIMP DocumentViewerImpl::NotifySelectionChanged(void)
+
+
+
+#ifdef XP_MAC
+#pragma mark -
+#endif
+
+NS_IMPL_ISUPPORTS(nsDocViwerSelectionListener, NS_GET_IID(nsIDOMSelectionListener));
+
+nsresult nsDocViwerSelectionListener::Init(DocumentViewerImpl *aDocViewer)
 {
-  // we need to do an UpdateCommands here, but there is no way to get
-  // to the right nsIDOMXULCommandDispatcher yet.
+  mDocViewer = aDocViewer;
   return NS_OK;
 }
 
-NS_IMETHODIMP DocumentViewerImpl::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
+
+NS_IMETHODIMP nsDocViwerSelectionListener::NotifySelectionChanged()
+{
+  NS_ASSERTION(mDocViewer, "Should have doc viewer!");
+
+  // get the selection state
+  nsCOMPtr<nsIDOMSelection> selection;
+  nsresult rv = mDocViewer->GetDocumentSelection(getter_AddRefs(selection));
+  if (NS_FAILED(rv)) return rv;
+
+  PRBool selectionCollapsed;
+  selection->GetIsCollapsed(&selectionCollapsed);
+  // we only call UpdateCommands when the selection changes from collapsed
+  // to non-collapsed or vice versa. We might need another update string
+  // for simple selection changes, but that would be expenseive.
+  if (!mGotSelectionState || mSelectionWasCollapsed != selectionCollapsed)
+  {
+    nsCOMPtr<nsIDocument> theDoc;
+    mDocViewer->GetDocument(*getter_AddRefs(theDoc));  
+    if (!theDoc) return NS_ERROR_FAILURE;
+    
+    nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject;
+    theDoc->GetScriptGlobalObject(getter_AddRefs(scriptGlobalObject));
+
+    nsCOMPtr<nsIDOMWindow> domWindow = do_QueryInterface(scriptGlobalObject);
+    if (!domWindow) return NS_ERROR_FAILURE;
+    
+    domWindow->UpdateCommands(nsAutoString("select"));
+    mGotSelectionState = PR_TRUE;
+    mSelectionWasCollapsed = selectionCollapsed;
+  }  
+  
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP nsDocViwerSelectionListener::TableCellNotification(nsIDOMNode* aNode, PRInt32 aOffset)
 {
   //stub
   return NS_OK;
 }
+
 
