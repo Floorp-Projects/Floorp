@@ -4,6 +4,9 @@
 // Call this function to dump the contents of the DOM starting at the specified node.
 // Use node = document.documentElement to dump every element of the current document.
 // Use node = top.window.document.documentElement to dump every element.
+//
+// 8-13-99 Updated to dump almost all attributes of every node.  There are still some attributes
+//         that are purposely skipped to make it more readable.
 // ----------------------
 function DumpDOM(node)
 {
@@ -20,21 +23,38 @@ function DumpNodeAndChildren(node, prefix)
 {
 	dump(prefix + "<" + node.nodeName);
 
+	var attributes = node.attributes;
+	
+	if ( attributes && attributes.length )
+	{
+		var item, name, value;
+		
+		for ( var index = 0; index < attributes.length; index++ )
+		{
+			item = attributes.item(index);
+			name = item.nodeName;
+			value = item.nodeValue;
+			
+			if ( (name == 'lazycontent' && value == 'true') ||
+				 (name == 'xulcontentsgenerated' && value == 'true') ||
+				 (name == 'id') ||
+				 (name == 'instanceOf') )
+			{
+				// ignore these
+			}
+			else
+			{
+				dump(" " + name + "=\"" + value + "\"");
+			}
+		}
+	}
+	
 	if ( node.nodeType == 1 )
 	{
 		// id
 		var text = node.getAttribute('id');
 		if ( text && text[0] != '$' )
 			dump(" id=\"" + text + "\"");
-		
-		DumpAttribute(node, "name");
-		DumpAttribute(node, "class");
-		DumpAttribute(node, "style");
-		DumpAttribute(node, "flex");
-		DumpAttribute(node, "value");
-		DumpAttribute(node, "src");
-		DumpAttribute(node, "onclick");
-		DumpAttribute(node, "onchange");
 	}
 	
 	if ( node.nodeName == "#text" )
@@ -62,12 +82,4 @@ function DumpNodeAndChildren(node, prefix)
 		for ( var child = 0; child < node.childNodes.length; child++ )
 			DumpNodeAndChildren(node.childNodes[child], prefix + "  ");
 	} 
-}
-
-
-function DumpAttribute(node, attribute)
-{
-	var text = node.getAttribute(attribute);
-	if ( text )
-		dump(" " + attribute + "=\"" + text + "\"");
 }
