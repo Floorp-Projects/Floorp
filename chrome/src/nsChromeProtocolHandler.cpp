@@ -56,7 +56,6 @@ static NS_DEFINE_CID(kChromeRegistryCID,         NS_CHROMEREGISTRY_CID);
 static NS_DEFINE_CID(kEventQueueServiceCID,      NS_EVENTQUEUESERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID,              NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStandardURLCID,            NS_STANDARDURL_CID);
-static NS_DEFINE_CID(kXULDocumentCID,            NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULPrototypeCacheCID,      NS_XULPROTOTYPECACHE_CID);
 
 //----------------------------------------------------------------------
