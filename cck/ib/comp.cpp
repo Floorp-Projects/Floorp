@@ -24,6 +24,7 @@ extern CString nsinstPath;
 extern CString xpiDir;
 extern CString tarfile;
 extern CString tarfile1;
+extern CString quotes;
 
 extern COMPONENT Components[100];
 extern int numComponents;
@@ -130,6 +131,7 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 		if ((direxist == -1) && (linuxblobPath != "")) 
 		// nscpxpiLinux directory does not exist	
 		{
+			quotes = "\"";
 			char currentdir[_MAX_PATH];
 			_getcwd(currentdir, _MAX_PATH);
 			_chdir(rootPath);
@@ -140,8 +142,9 @@ int GenerateComponentList(CString parms, WIDGET *curWidget)
 			tnscpxpilinuxPath.Insert(0,"/cygdrive/");
 			CString command = "gzip -d " + tarfile;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
-			command = "tar -xvf " + tarfile1 + " -C " + tnscpxpilinuxPath;
- 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
+//			command = "tar -xvf " + tarfile1 + " -C " + tnscpxpilinuxPath;
+			command = "tar -xvf " + tarfile1 + " -C " + quotes + tnscpxpilinuxPath + quotes;
+			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 			command = "gzip " + tarfile1;
 			ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 			

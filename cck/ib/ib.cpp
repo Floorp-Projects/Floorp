@@ -1129,7 +1129,8 @@ void CreateLinuxInstaller()
 	templinuxPath.Insert(0,"/cygdrive/");
 	DeleteFile(tarfile1);
 	DeleteFile(tarfile);
-	CString command = "tar -cvf " + tarfile1 + " -C " + templinuxPath + "/" + templinuxDir + spaces + nsinstallerDir;    
+//	CString command = "tar -cvf " + tarfile1 + " -C " + templinuxPath + "/" + templinuxDir + spaces + nsinstallerDir;    
+	CString command = "tar -cvf " + tarfile1 + " -C " +quotes+ templinuxPath + "/" + templinuxDir +quotes+ spaces + nsinstallerDir;    
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
 	command = "gzip " + tarfile1;
 	ExecuteCommand((char *)(LPCTSTR) command, SW_HIDE, INFINITE);
