@@ -35,7 +35,7 @@
 /*
  * RSA key generation, public key op, private key op.
  *
- * $Id: rsa.c,v 1.23 2001/01/12 14:29:47 mcgreer%netscape.com Exp $
+ * $Id: rsa.c,v 1.24 2001/01/31 15:49:19 mcgreer%netscape.com Exp $
  */
 
 #include "secerr.h"
@@ -176,7 +176,7 @@ generate_prime(mp_int *prime, int primeLen)
 {
     mp_err   err = MP_OKAY;
     SECStatus rv = SECSuccess;
-    unsigned long counter;
+    unsigned long counter = 0;
     int piter;
     unsigned char *pb = NULL;
     pb = PORT_Alloc(primeLen);
@@ -230,14 +230,6 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return NULL;
     }
-    /* length of primes p and q (in bytes) */
-    primeLen = keySizeInBits / (2 * BITS_PER_BYTE);
-    MP_DIGITS(&p) = 0;
-    MP_DIGITS(&q) = 0;
-    MP_DIGITS(&e) = 0;
-    CHECK_MPI_OK( mp_init(&p) );
-    CHECK_MPI_OK( mp_init(&q) );
-    CHECK_MPI_OK( mp_init(&e) );
     /* 1. Allocate arena & key */
     arena = PORT_NewArena(NSS_FREEBL_DEFAULT_CHUNKSIZE);
     if (!arena) {
@@ -251,6 +243,14 @@ RSA_NewKey(int keySizeInBits, SECItem *publicExponent)
 	return NULL;
     }
     key->arena = arena;
+    /* length of primes p and q (in bytes) */
+    primeLen = keySizeInBits / (2 * BITS_PER_BYTE);
+    MP_DIGITS(&p) = 0;
+    MP_DIGITS(&q) = 0;
+    MP_DIGITS(&e) = 0;
+    CHECK_MPI_OK( mp_init(&p) );
+    CHECK_MPI_OK( mp_init(&q) );
+    CHECK_MPI_OK( mp_init(&e) );
     /* 2.  Set the version number (PKCS1 v1.5 says it should be zero) */
     SECITEM_AllocItem(arena, &key->version, 1);
     key->version.data[0] = 0;
@@ -437,6 +437,7 @@ cleanup:
     mp_clear(&m2);
     mp_clear(&b2);
     mp_clear(&h);
+    mp_clear(&ctmp);
     if (err) {
 	MP_TO_SEC_ERROR(err);
 	rv = SECFailure;
@@ -632,6 +633,13 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
 	PORT_SetError(SEC_ERROR_INVALID_ARGS);
 	return SECFailure;
     }
+    /* check input out of range (needs to be in range [0..n-1]) */
+    modLen = rsa_modulusLen(&key->modulus);
+    offset = (key->modulus.data[0] == 0) ? 1 : 0; /* may be leading 0 */
+    if (memcmp(input, key->modulus.data + offset, modLen) >= 0) {
+	PORT_SetError(SEC_ERROR_INVALID_ARGS);
+	return SECFailure;
+    }
     MP_DIGITS(&n) = 0;
     MP_DIGITS(&c) = 0;
     MP_DIGITS(&m) = 0;
@@ -642,13 +650,6 @@ RSA_PrivateKeyOp(RSAPrivateKey *key,
     CHECK_MPI_OK( mp_init(&m) );
     CHECK_MPI_OK( mp_init(&f) );
     CHECK_MPI_OK( mp_init(&g) );
-    /* check input out of range (needs to be in range [0..n-1]) */
-    modLen = rsa_modulusLen(&key->modulus);
-    offset = (key->modulus.data[0] == 0) ? 1 : 0; /* may be leading 0 */
-    if (memcmp(input, key->modulus.data + offset, modLen) >= 0) {
-	PORT_SetError(SEC_ERROR_INVALID_ARGS);
-	return SECFailure;
-    }
     SECITEM_TO_MPINT(key->modulus, &n);
     OCTETS_TO_MPINT(input, &c, modLen);
     /* If blinding, compute pre-image of ciphertext by multiplying by

@@ -34,7 +34,7 @@
 /*
  * PQG parameter generation/verification.  Based on FIPS 186-1.
  *
- * $Id: pqg.c,v 1.6 2001/01/18 16:39:10 mcgreer%netscape.com Exp $
+ * $Id: pqg.c,v 1.7 2001/01/31 15:49:19 mcgreer%netscape.com Exp $
  */
 
 #include "prerr.h"
@@ -412,6 +412,7 @@ PQG_ParamGenSeedLen(unsigned int j, unsigned int seedBytes,
     arena = PORT_NewArena(NSS_FREEBL_DEFAULT_CHUNKSIZE);
     if (!arena) {
 	PORT_SetError(SEC_ERROR_NO_MEMORY);
+	PORT_FreeArena(params->arena, PR_TRUE);
 	return SECFailure;
     }
     verify = (PQGVerify *)PORT_ArenaZAlloc(arena, sizeof(PQGVerify));
