@@ -120,14 +120,6 @@ public:
   {
   }
 
-  virtual ~nsIDocument()
-  {
-    // XXX The cleanup of mNodeInfoManager (calling DropDocumentReference and
-    //     releasing it) happens in the nsDocument destructor. We'd prefer to
-    //     do it here but nsNodeInfoManager is a concrete class that we don't
-    //     want to expose to users of the nsIDocument API outside of Gecko.
-  }
-
   virtual nsresult StartDocumentLoad(const char* aCommand,
                                      nsIChannel* aChannel,
                                      nsILoadGroup* aLoadGroup,
@@ -630,6 +622,14 @@ public:
   nsPropertyTable* PropertyTable() { return &mPropertyTable; }
 
 protected:
+  ~nsIDocument()
+  {
+    // XXX The cleanup of mNodeInfoManager (calling DropDocumentReference and
+    //     releasing it) happens in the nsDocument destructor. We'd prefer to
+    //     do it here but nsNodeInfoManager is a concrete class that we don't
+    //     want to expose to users of the nsIDocument API outside of Gecko.
+  }
+
   nsString mDocumentTitle;
   nsCOMPtr<nsIURI> mDocumentURI;
   nsCOMPtr<nsIURI> mDocumentBaseURI;
