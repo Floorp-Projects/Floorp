@@ -541,7 +541,7 @@ public:
     if (aURI) {
       aURI->GetSpec(*this);
     } else {
-      Assign("[no background image]");
+      Assign("[none]");
     }
   }
 
