@@ -7,6 +7,11 @@ use Benchmark;
 #some vars that depend on the location of apprunner.
 $layout_time = 4; # seconds after document is loaded successfully before apprunner is killed
 $test_duration = 120; # seconds before i deem this url timed out
+
+# TODO: get apprunner working with relative paths. the problem with 
+#       this is LD_LIBRARY_PATH and MOZILLA_FIVE_HOME want absolute
+#       paths, so we need to get the pwd and replace 'tools/tests/unix'
+#       with 'dist/bin' -- then we're golden.
 $apprunner_bin = '/u/phillip/seamonkey/linux/package';
 #$apprunner_bin = '../../../dist/bin';
 
@@ -85,30 +90,6 @@ sub main {
     print (REPORT_FILE "</font></CENTER></B>\n");
     
     &get_url_list;
-    #@url_list = ("http://www.yahoo.com",
-                #"http://www.netscape.com",
-                ####"http://www.excite.com",
-                #"http://www.microsoft.com",
-                #"http://www.city.net",
-                #"http://www.mirabilis.com",
-                #"http://www.pathfinder.com/welcome",
-                #"http://www.warnerbros.com/home_moz3_day.html",
-                #"http://www.cnn.com",
-                #"http://www.usatoday.com",
-                #"http://www.disney.go.com",
-                #"http://www.hotwired.com",
-                #"http://www.hotbot.com",
-                #"http://slip/projects/marvin/bft/browser/bft_frame_index.html",
-                #"file://$apprunner_samples/test6.html", 
-                #"http://slip/projects/marvin/bft/browser/bft_browser_applet.html",
-                #"http://www.abcnews.com",
-                #"http://slip/projects/marvin/bft/browser/bft_browser_imagemap.html",
-                #"file://$apprunner_samples/test2.html",
-                #"file://$apprunner_samples/test13.html",
-                #"file://$apprunner_samples/test13.html",
-                #"file://$apprunner_samples/test2.html",
-                #"http://slip/projects/marvin/bft/browser/bft_browser_html_mix3.html",
-                #"http://slip/projects/marvin/bft/browser/bft_browser_link.html");
     
     my $i;
     my $style;
