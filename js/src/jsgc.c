@@ -189,7 +189,7 @@ js_AllocGCThing(JSContext *cx, uintN flags)
 #ifdef TOO_MUCH_GC
     /*
      * This breaks modern code that holds unpinned, unrooted atoms.  It dates
-     * from before atoms became garbage collected (they used be ref-counted).
+     * from before atoms became garbage collected (they were once ref-counted).
      * Therefore defining TOO_MUCH_GC also pins all atoms (see jsatom.c).
      */
     js_GC(cx);
