@@ -1,0 +1,46 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+
+<title>form sizing button submit strict mode</title>
+<style type="text/css">
+ .fixed {width:50px}
+.tight {width:20px}
+div {border:blue 1px solid}
+.pct {width:10%}
+.cellpct{width:100%}
+.wide {width:200px}
+</style>
+</head>
+<p>intrinsic width:</p>
+<p><button type="submit"></button></p>
+<p>intrinsic width long nonbreakable text</p>
+<p><button type="submit" >xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</button></p>
+<p>fixed width</p>
+<p><button type="submit" class="fixed"></button></p>
+<p>intrinsic width inside table</p>
+<table border><tr><td><button type="submit"></button></td></tr></table>
+<p>intrinsic width inside tight table cell</p>
+<table border><tr><td class="tight"><button type="submit"></button></td></tr></table>
+<p>fixed width inside table</p>
+<table border><tr><td><button type="submit" class="fixed"></button></td></tr></table>
+<p>fixed width inside smaller table cell</p>
+<table border><tr><td class="tight"><button type="submit" class="fixed"></button></td></tr></table>
+<p>pctwidth inside auto table</p>
+<table border><tr><td><button type="submit" class="pct"></button></td></tr></table>
+<p>pct width inside fixed width table cell</p>
+<table border><tr><td class="tight"><button type="submit" class="pct"></button></td></tr></table>
+<p>pct width inside pct width table cell</p>
+<table border class="wide"><tr><td class="cellpct"><button type="submit" class="pct"></button></td></tr></table>
+
+
+<a href="input_button_strict.html">previous:&nbsp;&nbsp;input type:button</a>&nbsp;&nbsp;&nbsp;<a href="button_reset_strict.html">next:&nbsp;&nbsp; button type:reset</a>
+
+
+
+
+</body>
+
+</html>

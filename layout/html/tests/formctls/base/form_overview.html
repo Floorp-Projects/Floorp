@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN">
+<html>
+<head>
+ <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Form control size parameter</title>
+</head>
+
+<body>
+<h1>Form control size parameter</h1>
+<p>The testcases below apply the same style information to various form controls.
+<ol>
+ <li>intrinsic width
+ <li>intrinsic width with a long nonbreakable text
+ <li> a fixed width (20px)
+</ol>
+Then various widths scenarios are tested inside table cells. This tests the maxElementWidth computation.
+<ol start="4">
+ <li>intrinsic width inside a auto width table
+ <li>intrinsic width inside a fixed width table cell which might be smaller than the intrinsic width of the control
+ <li>fixed width inside a auto width table
+ <li>fixed width inside a fixed width table cell which might be smaller than the intrinsic width of the control
+ <li>percentage width inside a auto width table
+  <li>percentage width inside a fixed width table cell which might be smaller than the intrinsic width of the control
+  <li>percentage width inside 100% wide table cell in a fixed width table.
+</ol>
+</p>
+<ul>
+<li>input
+<ul>
+	<li> <a href="input_text_strict.html">text</a>
+	<li> <a href="input_password_strict.html">password</a>
+	<li> <a href="input_checkbox_strict.html">checkbox</a>
+	<li> <a href="input_radio_strict.html">radio</a>
+	<li> <a href="input_submit_strict.html">submit</a>
+	<li> <a href="input_reset_strict.html">reset</a>
+	<li> <a href="input_file_strict.html">file</a>
+	<li> <a href="input_hidden_strict.html">hidden</a>
+	<li> <a href="input_image_strict.html">image</a>
+	<li> <a href="input_button_strict.html">button</a>
+</ul>
+
+<li>button 
+
+<ul>
+	<li> <a href="button_submit_strict.html">submit</a>
+	<li> <a href="button_reset_strict.html">reset</a>
+	<li> <a href="button_button_strict.html">button</a>
+</ul>
+
+
+	<li> <a href="textarea_strict.html">textarea</a>
+	<li> <a href="select_strict.html">select</a>
+	<li> <a href="fieldset_strict.html">fieldset</a> 
+	<li> <a href="legend_strict.html">legend</a>
+	<li> <a href="isindex_strict.html">isindex</a>
+</ul>
+
+</body>
+
+</html>

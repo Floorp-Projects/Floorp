@@ -17,4 +17,23 @@ file:///s|/mozilla/layout/html/tests/formctls/base/radio_disabled.html
 file:///s|/mozilla/layout/html/tests/formctls/base/radio_jsadd.html
 file:///s|/mozilla/layout/html/tests/formctls/base/radio_onchange.html
 file:///s|/mozilla/layout/html/tests/formctls/base/radio_init.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_text_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_password_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_checkbox_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_radio_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_submit_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_reset_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_file_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_hidden_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_image_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/input_button_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/button_submit_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/button_reset_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/button_button_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/textarea_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/select_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/fieldset_strict.html 
+file:///s|/mozilla/layout/html/tests/formctls/base/legend_strict.html
+file:///s|/mozilla/layout/html/tests/formctls/base/isindex_strict.html
+
 
