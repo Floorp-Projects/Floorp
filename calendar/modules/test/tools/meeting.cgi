@@ -201,36 +201,36 @@ sub mail_the_message {
     printf(S "To: %s\n",$vals{'who'} );
     printf(S "Subject:Event Request - %s\n",$vals{'SUMMARY'});
     printf(S "Mime-Version: 1.0\n");
-    printf(S "Content-Type:multipart/mized; boundary=\"$boundary\"\n");
-    printf(S "\n");
-
-    printf(S "--%s\n",$boundary);
-    printf(S "Content-Type:text/plain; charset=US-ASCII\n");
-    printf(S "Content-Transfer-Encoding: 7bit\n");
-    printf(S "\n");
-
-    printf(S "%s has invited you to a meeting\n", $vals{'organizer'});
-    printf(S "\n");
-    printf(S "    When: %s\n", &fmtDate($vals{'DTSTART'}));
-    printf(S "    With: ");
-    foreach $i (@attendees) 
-    {
-	if ( $i eq $vals{'organizer'})
-	{
-	    printf(S "$i (Organizer)\n");
-	}
-	else
-	{
-	    printf(S "$i\n");
-	}
-	printf(S "          ");
-    }
-    printf(S "\n\n");
-    printf(S "Description: %s",$vals{'DESCRIPTION'});
-    printf(S "\n\n");
-
-   
-    printf(S "--%s\n",$boundary);
+#     printf(S "Content-Type:multipart/mixed; boundary=\"$boundary\"\n");
+#     printf(S "\n");
+# 
+#     printf(S "--%s\n",$boundary);
+#      printf(S "Content-Type:text/plain; charset=US-ASCII\n");
+#      printf(S "Content-Transfer-Encoding: 7bit\n");
+#      printf(S "\n");
+#  
+#      printf(S "%s has invited you to a meeting\n", $vals{'organizer'});
+#      printf(S "\n");
+#      printf(S "    When: %s\n", &fmtDate($vals{'DTSTART'}));
+#      printf(S "    With: ");
+#      foreach $i (@attendees) 
+#      {
+#  	if ( $i eq $vals{'organizer'})
+#  	{
+#  	    printf(S "$i (Organizer)\n");
+#  	}
+#  	else
+#  	{
+#  	    printf(S "$i\n");
+#  	}
+#  	printf(S "          ");
+#      }
+#      printf(S "\n\n");
+#      printf(S "Description: %s",$vals{'DESCRIPTION'});
+#      printf(S "\n\n");
+#  
+#     
+#      printf(S "--%s\n",$boundary);
     printf(S "Content-Type:text/calendar; method=REQUEST; component=VEVENT; charset=US-ASCII\n");
     printf(S "Content-Transfer-Encoding: 7bit\n");
     # printf(S "Content-Disposition: inline; filename=\"event.ics\"\n");
@@ -258,7 +258,7 @@ sub mail_the_message {
     printf(S "DTSTAMP:%s",`date +19%y%m%dT%H%M%SZ`);
     $ENV{'TZ'} = "PST8PDT";
     printf(S "SUMMARY:%s\n",$vals{'SUMMARY'});
-    printf(S "DESCRIPTION:%s\n",$vals{'DESCRIPTION'});
+    printf(S "DESCRIPTION:%s",$vals{'DESCRIPTION'});
     chop($h = `hostname`);
     chop($dm = `domainname`);
     chop($d = `date +%y%m%d%H%M%S`);
@@ -270,8 +270,8 @@ sub mail_the_message {
     printf(S "STATUS:CONFIRMED\n");
     printf(S "END:VEVENT\n");
     printf(S "END:VCALENDAR\n");
-    printf(S "\n");
-    printf(S "--%s\n",$boundary);
+#      printf(S "\n");
+#      printf(S "--%s\n",$boundary);
 
     print S ".\n";
     get_response_code(250);

@@ -3,51 +3,66 @@
    <META HTTP-EQUIV="Content-Type" CONTENT="text/html; charset=iso-8859-1">
    <META NAME="GENERATOR" CONTENT="Mozilla/4.09 [en] (X11; I; IRIX 6.3 IP32) [Netscape]">
 </HEAD>
-<BODY>
+<BODY bgcolor="#336699">
 
 <CENTER>
-<H1>Make An IMIP Meeting Request</H1>
+<font color="white" face="Tahoma,Arial,helvetica">
+<H1>IMIP Meeting Request</H1>
 </CENTER>
 
 <FORM ACTION="http://seasnake/cgi-bin/sm/meeting.cgi" METHOD=GET>
-<TABLE>
-<TR>
-<TH ALIGN=RIGHT>Organizer:&nbsp;</TH>
 
-<TD><INPUT TYPE="TEXT" NAME="organizer" VALUE="" SIZE="20">
-<FONT SIZE=-1>example:
-<tt>jsun@netscape.com</tt>
-<I>(typically your e-mail address)</I></FONT>&nbsp;</TD>
-</TR>
-<tr>
-<th valign="TOP" align="right">
-Send request to:
-</th>
-<td>
-<INPUT TYPE="TEXT" NAME="who" VALUE="" SIZE="60">
-<br><font size=-1>space delimited addresses, example:
-<tt>sman@netscape.com eyork@netscape.com spider@netscape.com</tt></font>
-</td>
-</tr>
-<tr>
-<th valign="TOP" align="right">
-Meeting Attendees:
-</th>
-<td>
-<INPUT TYPE="TEXT" NAME="ATTENDEE" VALUE="" SIZE="60">
-<br><font size=-1>space delimited addresses, usually the same as who
-you're sending the request to, but not always.  Example:
-<tt>sman@netscape.com&nbsp;eyork@netscape.com&nbsp;spider@netscape.com</tt></font>
-</td>
-</tr>
-<tr>
-    <th align="right">
-	Summary:
-    </th>
-    <td>
-	<INPUT TYPE="TEXT" NAME="SUMMARY" VALUE="" SIZE="60">
-    </td>
-</tr>
+<TABLE bgcolor="#dddddd" cellspacing=0 cellpadding=4 border=0>
+    <TR>
+	<TH ALIGN=RIGHT>
+	    <font face="Tahoma,Arial,helvetica">
+	    Organizer:&nbsp;
+	</TH>
+	<TD>
+	    <font face="Tahoma,Arial,helvetica">
+	    <INPUT TYPE="TEXT" NAME="organizer" VALUE="" SIZE="20">
+	    <FONT SIZE=-1>example:</font>
+	    <tt>jsun@netscape.com</tt>
+	    <FONT SIZE=-1>
+	    <I>(typically your e-mail address)</I></FONT>&nbsp;
+	</TD>
+    </TR>
+
+    <tr>
+	<th valign="TOP" align="right">
+	    <font face="Tahoma,Arial,helvetica">
+	    Send request to:
+	</th>
+	<td>
+	    <font face="Tahoma,Arial,helvetica">
+	    <INPUT TYPE="TEXT" NAME="who" VALUE="" SIZE="60">
+	    <br><font size=-1>space delimited addresses, example:
+	    <tt>sman@netscape.com eyork@netscape.com spider@netscape.com</tt></font>
+	</td>
+    </tr>
+
+    <tr>
+	<th valign="TOP" align="right">
+	    <font face="Tahoma,Arial,helvetica">
+	    Meeting Attendees:
+	</th>
+	<td>
+	    <font face="Tahoma,Arial,helvetica">
+	    <INPUT TYPE="TEXT" NAME="ATTENDEE" VALUE="" SIZE="60">
+	    <br><font size=-1>space delimited addresses, usually the same as who
+	    you're sending the request to, but not always.  Example:
+	    <tt>sman@netscape.com&nbsp;eyork@netscape.com&nbsp;spider@netscape.com</tt></font>
+	</td>
+    </tr>
+
+    <tr>
+	<th align="right">
+	    Summary:
+	</th>
+	<td>
+	    <INPUT TYPE="TEXT" NAME="SUMMARY" VALUE="" SIZE="60">
+	</td>
+    </tr>
 <tr>
 <th align="right">
 Start time:
