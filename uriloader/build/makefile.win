@@ -29,6 +29,8 @@ EXPORTS =              		  \
 ################################################################################
 ## library
 
+LINCS=-I..\base
+
 CPP_OBJS=									                \
 			.\$(OBJDIR)\nsURILoaderModule.obj   \
 			$(NULL)

@@ -24,20 +24,17 @@ include <$(DEPTH)\config\config.mak>
 ## exports
 
 
-EXPORTS=						        \
-          nsURIDispatcher.h \
-	        $(NULL)
-
 XPIDLSRCS=						\
-		.\nsIURIContentListener.idl		\
+		.\nsCURILoader.idl			\
 		.\nsIContentHandler.idl			\
-		.\nsIURIDispatcher.idl			\
+		.\nsIURIContentListener.idl		\
+		.\nsIURILoader.idl			\
 		$(NULL)
 
 LIBRARY_NAME=uriloaderbase_s
 
 CPP_OBJS =                                         \
-        .\$(OBJDIR)\nsURIDispatcher.obj            \
+        .\$(OBJDIR)\nsURILoader.obj            \
         $(NULL)
 
 INCS = $(INCS)                  \

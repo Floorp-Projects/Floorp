@@ -22,14 +22,12 @@
 #include "nsIGenericFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
-#include "nsURILoaderCIDs.h"
+#include "nsURILoader.h"
 #include "nsCOMPtr.h"
 
-#include "nsURIDispatcher.h"
+static NS_DEFINE_CID(kURILoaderCID,          NS_URI_LOADER_CID);
 
-static NS_DEFINE_CID(kURIDispatcherCID,          NS_URIDISPATCHER_CID);
-
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsURIDispatcher)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsURILoader)
 
 
 // Module implementation for the sample library
@@ -50,7 +48,7 @@ protected:
 
     PRBool mInitialized;
 
-    nsCOMPtr<nsIGenericFactory> mURIDispatcherFactory;
+    nsCOMPtr<nsIGenericFactory> mURILoaderFactory;
 };
 
 nsURILoaderModule::nsURILoaderModule()
@@ -80,7 +78,7 @@ nsresult nsURILoaderModule::Initialize()
 void nsURILoaderModule::Shutdown()
 {
     // Release the factory object
-    mURIDispatcherFactory = null_nsCOMPtr();
+    mURILoaderFactory = null_nsCOMPtr();
 
 }
 
@@ -109,11 +107,11 @@ NS_IMETHODIMP nsURILoaderModule::GetClassObject(nsIComponentManager *aCompMgr,
     // class type (aClass).
     nsCOMPtr<nsIGenericFactory> fact;
 
-    if (aClass.Equals(kURIDispatcherCID))
+    if (aClass.Equals(kURILoaderCID))
     {
-        if (!mURIDispatcherFactory)
-            rv = NS_NewGenericFactory(getter_AddRefs(mURIDispatcherFactory), &nsURIDispatcherConstructor);
-        fact = mURIDispatcherFactory;
+        if (!mURILoaderFactory)
+            rv = NS_NewGenericFactory(getter_AddRefs(mURILoaderFactory), &nsURILoaderConstructor);
+        fact = mURILoaderFactory;
     } 
     
     if (fact)
@@ -130,8 +128,8 @@ struct Components {
 
 // The list of components we register
 static Components gComponents[] = {
-    { "Netscape URI Dispatcher Service", &kURIDispatcherCID,
-      NS_URIDISPATCHER_PROGID }
+    { "Netscape URI Loader Service", &kURILoaderCID,
+      NS_URI_LOADER_PROGID }
 };
 
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))

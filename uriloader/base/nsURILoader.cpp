@@ -16,26 +16,26 @@
  * Reserved.
  */
 
-#include "nsURIDispatcher.h"
+#include "nsURILoader.h"
 #include "nsVoidArray.h"
 #include "nsXPIDLString.h"
 #include "nsString.h"
 
-nsURIDispatcher::nsURIDispatcher()
+nsURILoader::nsURILoader()
 {
   NS_INIT_ISUPPORTS();
   m_listeners = new nsVoidArray();
 }
 
-nsURIDispatcher::~nsURIDispatcher()
+nsURILoader::~nsURILoader()
 {
   if (m_listeners)
     delete m_listeners;
 }
 
-NS_IMPL_ISUPPORTS1(nsURIDispatcher, nsIURIDispatcher)
+NS_IMPL_ISUPPORTS1(nsURILoader, nsIURILoader)
 
-NS_IMETHODIMP nsURIDispatcher::RegisterContentListener(nsIURIContentListener * aContentListener)
+NS_IMETHODIMP nsURILoader::RegisterContentListener(nsIURIContentListener * aContentListener)
 {
   nsresult rv = NS_OK;
   if (m_listeners)
@@ -46,7 +46,7 @@ NS_IMETHODIMP nsURIDispatcher::RegisterContentListener(nsIURIContentListener * a
   return rv;
 } 
 
-NS_IMETHODIMP nsURIDispatcher::UnRegisterContentListener(nsIURIContentListener * aContentListener)
+NS_IMETHODIMP nsURILoader::UnRegisterContentListener(nsIURIContentListener * aContentListener)
 {
   if (m_listeners)
     m_listeners->RemoveElement(aContentListener);
@@ -54,7 +54,7 @@ NS_IMETHODIMP nsURIDispatcher::UnRegisterContentListener(nsIURIContentListener *
   
 }
 
-NS_IMETHODIMP nsURIDispatcher::OpenURI(nsIURI *aURI, nsIStreamObserver *aStreamObserver, 
+NS_IMETHODIMP nsURILoader::OpenURI(nsIURI *aURI, nsIStreamObserver *aStreamObserver, 
                                        nsIURIContentListener *aContentListener, nsISupports *aContext, 
                                        nsIURI *aReferringURI)
 {
