@@ -153,6 +153,7 @@ PRBool PK11_NeedLogin(PK11SlotInfo *slot);
 PRBool PK11_IsFriendly(PK11SlotInfo *slot);
 PRBool PK11_IsHW(PK11SlotInfo *slot);
 PRBool PK11_NeedUserInit(PK11SlotInfo *slot);
+PRBool PK11_ProtectedAuthenticationPath(PK11SlotInfo *slot);
 int PK11_GetSlotSeries(PK11SlotInfo *slot);
 int PK11_GetCurrentWrapIndex(PK11SlotInfo *slot);
 unsigned long PK11_GetDefaultFlags(PK11SlotInfo *slot);
