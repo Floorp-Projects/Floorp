@@ -72,7 +72,7 @@ static nsITextWidget  *gQualMessage;
 #ifdef OLDWAY
 extern void    Compositetest(PRInt32 aTestNum,nsIImage *aImage,nsIImage *aBImage,nsIImage *aMImage, PRInt32 aX, PRInt32 aY);
 #else
-extern void    Compositetest(PRInt32 aTestNum,HDC aSrcDC,HDC aDestDC);
+extern void    Compositetest(nsIImage *aImage,PRInt32 aTestNum,HDC aSrcDC,HDC aDestDC);
 #endif
 
 extern PRInt32 speedtest(nsIImage *aTheImage,nsIRenderingContext *aSurface, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
@@ -80,6 +80,8 @@ extern PRInt32 drawtest(nsIRenderingContext *aSurface);
 extern PRInt32 filltest(nsIRenderingContext *aSurface);
 extern PRInt32 arctest(nsIRenderingContext *aSurface);
 extern PRBool  IsImageLoaded();
+extern nsresult BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth);
+extern PRInt32  CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel);
 
 
 
@@ -151,11 +153,12 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           Compositetest(gTestNum,gImage,gBlendImage,gMaskImage,gXOff,gYOff);
 #else
           {
-          HBITMAP dobits,sobits,srcbits,destbits;
-          HDC     destdc,srcdc,screendc;
-          void    *bits1,*bits2;
+          HBITMAP           dobits,sobits,srcbits,destbits;
+          HDC               destdc,srcdc,screendc;
+          void              *bits1,*bits2;
 
           screendc = ::GetDC(gHwnd);
+
           // create everything we need from this DC
           srcdc = ::CreateCompatibleDC(screendc);
           destdc = ::CreateCompatibleDC(screendc);
@@ -164,19 +167,20 @@ MyBlendObserver::Notify(nsIImageRequest *aImageRequest,
           bits2 = gImage->GetBits();
           srcbits = ::CreateDIBitmap(screendc,(BITMAPINFOHEADER*)gBlendImage->GetBitInfo(), CBM_INIT, bits1, (LPBITMAPINFO)gBlendImage->GetBitInfo(), DIB_RGB_COLORS);
           destbits = ::CreateDIBitmap(screendc,(BITMAPINFOHEADER*)gImage->GetBitInfo(), CBM_INIT, bits2, (LPBITMAPINFO)gImage->GetBitInfo(), DIB_RGB_COLORS);
-          
           sobits = ::SelectObject(srcdc, srcbits);
           dobits = ::SelectObject(destdc, destbits);
 
-          Compositetest(gTestNum,srcdc,destdc);
+          Compositetest(gImage,gTestNum,srcdc,destdc);
 
           ::SelectObject(srcdc, sobits);
           ::SelectObject(destdc,dobits);
+
           DeleteDC(srcdc);
           DeleteDC(destdc);
           DeleteObject(srcbits);
           DeleteObject(destbits);
-          }
+          ReleaseDC(gHwnd,screendc);
+        }
 #endif
 
           }
@@ -382,7 +386,7 @@ nsString        str;
         aImage->CompositeImage(aBImage,&location,quality);
         // let everyone know that the colors have changed
         aImage->ImageUpdated(dx, nsImageUpdateFlags_kColorMapChanged, nsnull);
-        drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+        //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
         }
       NS_IF_RELEASE(dx);
       }
@@ -446,7 +450,7 @@ nsString        str;
         }
     }
 
-  //drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
+  drawCtx->DrawImage(aImage, 0, 0, aImage->GetWidth(), aImage->GetHeight());
 
   // we are finished with this
   if (gBlendImage) 
@@ -458,18 +462,58 @@ nsString        str;
 }
 #else
 void
-Compositetest(PRInt32 aTestNum,HDC aSrcHDC,HDC DestHDC)
+Compositetest(nsIImage *aImage,PRInt32 aTestNum,HDC aSrcHDC,HDC DestHDC)
 {
-nsIBlender   *imageblender;
+PRUint8       *thebytes,*curbyte,*srcbytes,*cursourcebytes;
+PRInt32       w,h,ls,x,y,numbytes,sls,numerror;
+float         blendamount;
+nsIBlender    *imageblender;
 nsresult      rv;
-
+HBITMAP       srcbits,tb1;
+BITMAP        srcinfo;
+LPBITMAPINFOHEADER  srcbinfo;
+nsString      str;
 
   static NS_DEFINE_IID(kBlenderCID, NS_BLENDER_CID);
   static NS_DEFINE_IID(kBlenderIID, NS_IBLENDER_IID);
 
+  gBlendMessage->GetText(str,3);
+  blendamount = (float)(str.ToInteger(&numerror))/100.0f;
+  if(blendamount < 0.0)
+    blendamount = 0.0f;
+  if(blendamount > 1.0)
+    blendamount = 1.0f;
+
   rv = NSRepository::CreateInstance(kBlenderCID, nsnull, kBlenderIID, (void **)&imageblender);
   imageblender->Init();
-  imageblender->Blend(nsDrawingSurface (aSrcHDC),0,0,0,0,(DestHDC),0, 0,(float).5);
+  imageblender->Blend(nsDrawingSurface (aSrcHDC),0,0,0,0,(DestHDC),0, 0,blendamount);
+
+
+  // this takes the Destination DC and copies the information into aImage
+  tb1 = CreateCompatibleBitmap(DestHDC,3,3);
+  srcbits = ::SelectObject(DestHDC, tb1);
+  numbytes = ::GetObject(srcbits,sizeof(BITMAP),&srcinfo);
+  // put into a DIB
+  BuildDIB(&srcbinfo,&srcbytes,srcinfo.bmWidth,srcinfo.bmHeight,srcinfo.bmBitsPixel);
+  numbytes = ::GetDIBits(DestHDC,srcbits,1,srcinfo.bmHeight,srcbytes,(LPBITMAPINFO)srcbinfo,DIB_RGB_COLORS);
+
+  thebytes = aImage->GetBits();
+  h = aImage->GetHeight();
+  w = aImage->GetWidth();
+  ls = aImage->GetLineStride();
+  sls = CalcBytesSpan(srcinfo.bmWidth,srcinfo.bmBitsPixel);
+  for(y=0;y<h;y++)
+    {
+    curbyte = thebytes + (y*ls);
+    cursourcebytes = srcbytes + (y*sls);
+    for(x=0;x<ls;x++)
+      {
+      *curbyte = *cursourcebytes;
+      curbyte++;
+      cursourcebytes++;
+      }
+    
+    }
 
 }
 #endif
@@ -1063,4 +1107,74 @@ WinMain(HANDLE instance, HANDLE prevInstance, LPSTR cmdParam, int nCmdShow)
 void main(int argc, char **argv)
 {
   WinMain(GetModuleHandle(NULL), NULL, 0, SW_SHOW);
+}
+
+//------------------------------------------------------------
+
+
+PRInt32  
+CalcBytesSpan(PRUint32  aWidth,PRUint32  aBitsPixel)
+{
+PRInt32 spanbytes;
+
+  spanbytes = (aWidth * aBitsPixel) >> 5;
+
+	if ((aWidth * aBitsPixel) & 0x1F) 
+		spanbytes++;
+
+	spanbytes <<= 2;
+
+  return(spanbytes);
+}
+
+//------------------------------------------------------------
+
+nsresult
+BuildDIB(LPBITMAPINFOHEADER  *aBHead,unsigned char **aBits,PRInt32 aWidth, PRInt32 aHeight, PRInt32 aDepth)
+{
+PRInt32   numpalletcolors,imagesize,spanbytes;
+PRUint8   *colortable;
+
+
+	switch (aDepth) 
+    {
+		case 8:
+			numpalletcolors = 256;
+      break;
+		case 24:
+			numpalletcolors = 0;
+      break;
+		default:
+			numpalletcolors = -1;
+      break;
+    }
+
+  if (numpalletcolors >= 0)
+    {
+	  (*aBHead) = (LPBITMAPINFOHEADER) new char[sizeof(BITMAPINFOHEADER) + sizeof(RGBQUAD) * numpalletcolors];
+    (*aBHead)->biSize = sizeof(BITMAPINFOHEADER);
+	  (*aBHead)->biWidth = aWidth;
+	  (*aBHead)->biHeight = aHeight;
+	  (*aBHead)->biPlanes = 1;
+	  (*aBHead)->biBitCount = (unsigned short) aDepth;
+	  (*aBHead)->biCompression = BI_RGB;
+	  (*aBHead)->biSizeImage = 0;            // not compressed, so we dont need this to be set
+	  (*aBHead)->biXPelsPerMeter = 0;
+	  (*aBHead)->biYPelsPerMeter = 0;
+	  (*aBHead)->biClrUsed = numpalletcolors;
+	  (*aBHead)->biClrImportant = numpalletcolors;
+
+    spanbytes = CalcBytesSpan(aWidth,aDepth);
+
+    imagesize = spanbytes * (*aBHead)->biHeight;    // no compression
+
+    // set the color table in the info header
+	  colortable = (PRUint8 *)(*aBHead) + sizeof(BITMAPINFOHEADER);
+
+	  memset(colortable, 0, sizeof(RGBQUAD) * numpalletcolors);
+    *aBits = new unsigned char[imagesize];
+    memset(*aBits, 128, imagesize);
+  }
+
+  return NS_OK;
 }
