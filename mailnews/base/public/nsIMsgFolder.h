@@ -190,8 +190,8 @@ class nsIMsgFolder : public nsIFolder {
   /* void GetExpansionArray (in nsISupportsArray expansionArray); */
   NS_IMETHOD GetExpansionArray(nsISupportsArray *expansionArray) = 0;
 
-  /* void DeleteMessage (in nsIMessage message); */
-  NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
+  /* void DeleteMessages (in nsISupportsArray message); */
+  NS_IMETHOD DeleteMessages(nsISupportsArray *message) = 0;
 
   /* void AcquireSemaphore (in nsISupports semHolder); */
   NS_IMETHOD AcquireSemaphore(nsISupports *semHolder) = 0;

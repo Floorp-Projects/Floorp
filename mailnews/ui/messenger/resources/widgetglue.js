@@ -59,7 +59,7 @@ function MsgDeleteMessage()
     var messageList = tree.getElementsByAttribute("selected", "true");
 	//get the current folder
 	var srcFolder = tree.childNodes[5];
-    appCore.DeleteMessage(tree, srcFolder, messageList);
+    appCore.DeleteMessages(tree, srcFolder, messageList);
   }
 }
 

@@ -300,10 +300,10 @@ MsgAppCoreOpenURL(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *
 }
 
 //
-// Native method DeleteMessage
+// Native method DeleteMessages
 //
 PR_STATIC_CALLBACK(JSBool)
-MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+MsgAppCoreDeleteMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 {
   nsIDOMMsgAppCore *nativeThis = (nsIDOMMsgAppCore*)JS_GetPrivate(cx, obj);
   JSBool rBool = JS_FALSE;
@@ -339,7 +339,7 @@ MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 									argv[2]);
 
 		
-    if (!rBool || NS_OK != nativeThis->DeleteMessage(tree, srcFolder, nodeList)) {
+    if (!rBool || NS_OK != nativeThis->DeleteMessages(tree, srcFolder, nodeList)) {
       return JS_FALSE;
     }
 
@@ -348,7 +348,7 @@ MsgAppCoreDeleteMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
     *rval = JSVAL_VOID;
   }
   else {
-    JS_ReportError(cx, "Function DeleteMessage requires 2 parameters");
+    JS_ReportError(cx, "Function DeleteMessages requires 2 parameters");
     return JS_FALSE;
   }
 
@@ -751,7 +751,7 @@ static JSFunctionSpec MsgAppCoreMethods[] =
   {"Open3PaneWindow",          MsgAppCoreOpen3PaneWindow,     0},
   {"SetWindow",          MsgAppCoreSetWindow,     1},
   {"OpenURL",          MsgAppCoreOpenURL,     1},
-  {"DeleteMessage",          MsgAppCoreDeleteMessage,     3},
+  {"DeleteMessages",          MsgAppCoreDeleteMessages,     3},
   {"GetRDFResourceForMessage",    MsgAppCoreGetRDFResourceForMessage,     2},
   {"exit",				MsgAppCoreExit, 0},
   {"CopyMessages",		MsgAppCoreCopyMessages, 3},

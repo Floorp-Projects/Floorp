@@ -1039,21 +1039,37 @@ NS_IMETHODIMP nsMsgLocalMailFolder::GetPath(nsFileSpec& aPathName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
+NS_IMETHODIMP nsMsgLocalMailFolder::DeleteMessages(nsISupportsArray *messages)
 {
 	nsresult rv = GetDatabase();
 	if(NS_SUCCEEDED(rv))
 	{
-		nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
-		nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
+		PRUint32 messageCount = messages->Count();
+		for(PRUint32 i = 0; i < messageCount; i++)
+		{
+			nsCOMPtr<nsISupports> msgSupports = getter_AddRefs(messages->ElementAt(i));
+			nsCOMPtr<nsIMessage> message(do_QueryInterface(msgSupports));
+			if(message)
+			{
+				DeleteMessage(message);
+			}
+		}
+	}
+	return rv;
+}
 
+nsresult nsMsgLocalMailFolder::DeleteMessage(nsIMessage *message)
+{
+	nsresult rv;
+	nsCOMPtr <nsIMsgDBHdr> msgDBHdr;
+	nsCOMPtr<nsIDBMessage> dbMessage(do_QueryInterface(message, &rv));
+
+	if(NS_SUCCEEDED(rv))
+	{
+		rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
 		if(NS_SUCCEEDED(rv))
 		{
-			rv = dbMessage->GetMsgDBHdr(getter_AddRefs(msgDBHdr));
-			if(NS_SUCCEEDED(rv))
-			{
-				rv =mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
-			}
+			rv =mDatabase->DeleteHeader(msgDBHdr, nsnull, PR_TRUE, PR_TRUE);
 		}
 	}
 	return rv;

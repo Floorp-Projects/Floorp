@@ -111,7 +111,7 @@ interface nsIMsgFolder : nsIFolder {
 
 	void GetExpansionArray(in nsISupportsArray expansionArray);
 
-	void DeleteMessage(in nsIMessage message);
+	void DeleteMessages(in nsISupportsArray message);
 
     void AcquireSemaphore (in nsISupports semHolder);
     void ReleaseSemaphore (in nsISupports semHolder);

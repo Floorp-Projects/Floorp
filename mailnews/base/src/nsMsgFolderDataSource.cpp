@@ -741,16 +741,31 @@ nsMsgFolderDataSource::createFolderMessageNode(nsIMsgFolder *folder,
 nsresult nsMsgFolderDataSource::DoDeleteFromFolder(nsIMsgFolder *folder, nsISupportsArray *arguments)
 {
 	nsresult rv = NS_OK;
+	nsCOMPtr<nsISupportsArray> messageArray, folderArray;
+	NS_NewISupportsArray(getter_AddRefs(messageArray));
+	NS_NewISupportsArray(getter_AddRefs(folderArray));
+
 	PRUint32 itemCount = arguments->Count();
+	
+	//Split up deleted items into different type arrays to be passed to the folder
+	//for deletion.
 	for(PRUint32 item = 0; item < itemCount; item++)
 	{
 		nsCOMPtr<nsISupports> supports = getter_AddRefs((*arguments)[item]);
-		nsCOMPtr<nsIMessage> deletedMessage(do_QueryInterface(supports, &rv));
-		if (NS_SUCCEEDED(rv))
+		nsCOMPtr<nsIMessage> deletedMessage(do_QueryInterface(supports));
+		nsCOMPtr<nsIMsgFolder> deletedFolder(do_QueryInterface(supports));
+		if (deletedMessage)
 		{
-			rv = folder->DeleteMessage(deletedMessage);
+			messageArray->AppendElement(deletedMessage);
+		}
+		else if(deletedFolder)
+		{
+			folderArray->AppendElement(deletedFolder);
 		}
 	}
+	if(messageArray->Count() > 0)
+		rv = folder->DeleteMessages(messageArray);
+
 	return rv;
 }
 

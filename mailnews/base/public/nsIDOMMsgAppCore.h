@@ -1,9 +1,9 @@
 /*
- * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIDOMMsgAppCore.idl
+ * DO NOT EDIT.  THIS FILE IS GENERATED FROM nsIDOMMsgAppcore.idl
  */
 
-#ifndef __gen_nsIDOMMsgAppCore_h__
-#define __gen_nsIDOMMsgAppCore_h__
+#ifndef __gen_nsIDOMMsgAppcore_h__
+#define __gen_nsIDOMMsgAppcore_h__
 
 #include "nsISupports.h" /* interface nsISupports */
 #include "nsIDOMWindow.h" /* interface nsIDOMWindow */
@@ -12,7 +12,6 @@
 #include "nsIDOMXULTreeElement.h" /* interface nsIDOMXULTreeElement */
 #include "nsIDOMBaseAppCore.h" /* interface nsIDOMBaseAppCore */
 #include "nsIDOMNodeList.h" /* interface nsIDOMNodeList */
-#include "nsrootidl.h"
 
 #ifdef XPIDL_JS_STUBS
 #include "jsapi.h"
@@ -42,8 +41,8 @@ class nsIDOMMsgAppCore : public nsIDOMBaseAppCore {
   /* void OpenURL (in string str); */
   NS_IMETHOD OpenURL(const char *str) = 0;
 
-  /* void DeleteMessage (in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node); */
-  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolder, nsIDOMNodeList *node) = 0;
+  /* void DeleteMessages (in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node); */
+  NS_IMETHOD DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolder, nsIDOMNodeList *node) = 0;
 
   /* void CopyMessages (in nsIDOMXULElement srcFolderElement, in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages, in boolean isMove); */
   NS_IMETHOD CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *dstFolderElement, nsIDOMNodeList *messages, PRBool isMove) = 0;
@@ -79,4 +78,4 @@ nsresult NS_InitMsgAppCoreClass(nsIScriptContext *aContext, void **aPrototype);
  
 
 
-#endif /* __gen_nsIDOMMsgAppCore_h__ */
+#endif /* __gen_nsIDOMMsgAppcore_h__ */

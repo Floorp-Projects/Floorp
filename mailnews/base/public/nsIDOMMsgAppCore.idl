@@ -31,7 +31,7 @@ interface nsIDOMMsgAppCore : nsIDOMBaseAppCore {
 	void Open3PaneWindow();
     void SetWindow(in nsIDOMWindow ptr);
     void OpenURL(in string str);
-    void DeleteMessage(in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
+    void DeleteMessages(in nsIDOMXULTreeElement tree, in nsIDOMXULElement srcFolder, in nsIDOMNodeList node);
 	void CopyMessages(in nsIDOMXULElement srcFolderElement, in nsIDOMXULElement dstFolderElement, in nsIDOMNodeList messages,
 					  in boolean isMove);
     nsISupports GetRDFResourceForMessage(in nsIDOMXULTreeElement tree, in nsIDOMNodeList node);

@@ -104,7 +104,7 @@ public:
   NS_IMETHOD GetNewMessages(nsIRDFCompositeDataSource *db, nsIDOMXULElement *folderElement);
   NS_IMETHOD SetWindow(nsIDOMWindow* aWin);
   NS_IMETHOD OpenURL(const char * url);
-  NS_IMETHOD DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
+  NS_IMETHOD DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList);
   NS_IMETHOD CopyMessages(nsIDOMXULElement *srcFolderElement, nsIDOMXULElement *folderElement, nsIDOMNodeList *nodeList,
 						  PRBool isMove);
   NS_IMETHOD GetRDFResourceForMessage(nsIDOMXULTreeElement *tree,
@@ -538,7 +538,7 @@ nsMsgAppCore::OpenURL(const char * url)
 }
 
 NS_IMETHODIMP
-nsMsgAppCore::DeleteMessage(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
+nsMsgAppCore::DeleteMessages(nsIDOMXULTreeElement *tree, nsIDOMXULElement *srcFolderElement, nsIDOMNodeList *nodeList)
 {
 	nsresult rv;
 	nsIRDFCompositeDataSource *database;

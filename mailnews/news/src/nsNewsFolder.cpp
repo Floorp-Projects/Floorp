@@ -978,7 +978,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetPath(nsFileSpec& aPathName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgNewsFolder::DeleteMessage(nsIMessage *message)
+NS_IMETHODIMP nsMsgNewsFolder::DeleteMessages(nsISupportsArray *messages)
 {
 #if 0
 	nsresult rv = GetDatabase();

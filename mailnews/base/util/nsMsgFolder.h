@@ -237,7 +237,7 @@ public:
   NS_IMETHOD GetHostName(char **hostName);
 
 	virtual nsresult GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, nsIMsgDatabase **db) = 0;
-	NS_IMETHOD DeleteMessage(nsIMessage *message) = 0;
+	NS_IMETHOD DeleteMessages(nsISupportsArray *messages) = 0;
 	NS_IMETHOD GetNewMessages();
 
 protected:

@@ -92,7 +92,12 @@ static nsresult DeleteMessage(nsIURL *aURL, nsIMsgFolder *srcFolder)
 
 	rv = GetMessage(aURL, getter_AddRefs(message));
 	if(NS_SUCCEEDED(rv) && srcFolder)
-		rv = srcFolder->DeleteMessage(message);
+	{
+		nsCOMPtr<nsISupportsArray> messageArray;
+		NS_NewISupportsArray(getter_AddRefs(messageArray));
+		messageArray->AppendElement(message);
+		rv = srcFolder->DeleteMessages(messageArray);
+	}
 	return rv;
 }
 
