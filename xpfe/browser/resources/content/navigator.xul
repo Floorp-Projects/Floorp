@@ -274,7 +274,7 @@ Contributor(s): ______________________________________. -->
         <template>
           <rule iscontainer="true">
             <menupopup>
-              <menu class="menu-iconic bookmarkitem" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" >
+              <menu class="menu-iconic bookmarkfolder" uri="rdf:*" value="rdf:http://home.netscape.com/NC-rdf#Name" >
                 <menupopup/>
               </menu>
             </menupopup>
