@@ -534,19 +534,28 @@ nsDocLoaderImpl::LoadDocument(nsIURI * aUri,
   if (NS_SUCCEEDED(rv))
     prefs->GetBoolPref("browser.uriloader", &useURILoader);
 
-  nsXPIDLCString aUrlSpec;
+  nsXPIDLCString aUrlScheme;
+  if (aUri)
+    aUri->GetScheme(getter_Copies(aUrlScheme));
+
+  // temporary hack alert! whether uri loading is turned on or off,
+  // I want mailto urls to properly get sent to the uri loader because
+  // it works so well...=)
+  // so for now, if the protocol scheme is mailto, for useURILoader to true
+  if (nsCRT::strcasecmp(aUrlScheme, "mailto") == 0)
+    useURILoader = PR_TRUE;
+
   // right now, uri dispatching is only hooked up to work with imap, mailbox and
   //  news urls...so as a hack....check the protocol scheme and only call the 
   // dispatching code for those schemes which work with uri dispatching...
   if (useURILoader && aUri)
-  {
-    aUri->GetScheme(getter_Copies(aUrlSpec));   
-    if (nsCRT::strcasecmp(aUrlSpec, "imap") == 0
-      || nsCRT::strcasecmp(aUrlSpec, "news") == 0
-      || nsCRT::strcasecmp(aUrlSpec, "mailbox") == 0
-      || nsCRT::strcasecmp(aUrlSpec, "mailboxMessage") ==0
-      || nsCRT::strcasecmp(aUrlSpec, "mailto") == 0
-      || nsCRT::strcasecmp(aUrlSpec, "http") == 0)
+  { 
+    if (nsCRT::strcasecmp(aUrlScheme, "imap") == 0
+      || nsCRT::strcasecmp(aUrlScheme, "news") == 0
+      || nsCRT::strcasecmp(aUrlScheme, "mailbox") == 0
+      || nsCRT::strcasecmp(aUrlScheme, "mailboxMessage") ==0
+      || nsCRT::strcasecmp(aUrlScheme, "mailto") == 0
+      || nsCRT::strcasecmp(aUrlScheme, "http") == 0)
     {
       nsCOMPtr<nsIProgressEventSink> progressSink = do_QueryInterface(aContainer);
       nsCOMPtr<nsIURIContentListener> contentListener = do_QueryInterface(aContainer);
