@@ -274,6 +274,7 @@ function saveAccount(accountValues, account)
 function updateButtons(tree,serverId) {
   var canDuplicate = true;
   var canDelete = true;
+  var canSetDefault = true;
 
   //dump("updateButtons\n");
   //dump("serverId = " + serverId + "\n");
@@ -284,11 +285,15 @@ function updateButtons(tree,serverId) {
 	var server = account.incomingServer;
 	var type = server.type;
 
+    if (account.identities.Count() < 1)
+      canSetDefault = false;
+    
 	//dump("servertype = " + type + "\n");
 
 	var protocolinfo = Components.classes["component://netscape/messenger/protocol/info;type=" + type].getService(Components.interfaces.nsIMsgProtocolInfo);
     canDuplicate = protocolinfo.canDuplicate;
 	canDelete = protocolinfo.canDelete;
+
   }
   else {
 	// HACK
@@ -298,27 +303,21 @@ function updateButtons(tree,serverId) {
 	canDuplicate = false;
   }
 
-  if (tree.selectedItems.length > 0) {
-    if (canDuplicate) {
-      if (duplicateButton) duplicateButton.removeAttribute("disabled");
-    }
-    else { 
-      if (duplicateButton) duplicateButton.setAttribute("disabled", "true");
-    }
+  if (tree.selectedItems.length < 1)
+    canDuplicate = canSetDefault = canDelete = false;
+  
+  setEnabled(duplicateButton, canDuplicate);
+  setEnabled(setDefaultButton, canSetDefault);
+  setEnabled(deleteButton, canDelete);
+  
+}
 
-    if (setDefaultButton) setDefaultButton.removeAttribute("disabled");
-
-    if (canDelete) {
-      if (deleteButton) deleteButton.removeAttribute("disabled");
-    }
-    else { 
-      if (deleteButton) deleteButton.setAttribute("disabled", "true");
-    }
-  } else {
-    if (duplicateButton) duplicateButton.setAttribute("disabled", "true");
-    if (setDefaultButton) setDefaultButton.setAttribute("disabled", "true");
-    if (deleteButton) deleteButton.setAttribute("disabled", "true");
-  }
+function setEnabled(control, enabled)
+{
+  if (enabled)
+    control.removeAttribute("disabled");
+  else
+    control.setAttribute("disabled", true);
 }
 
 //
