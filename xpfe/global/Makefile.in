@@ -38,7 +38,7 @@ build.dtd: build.dtd.in $(DEPTH)/config/build_number
 	@$(RM) -f $@
 	$(PERL) -I$(topsrcdir)/config $(topsrcdir)/config/aboutime.pl $@ $(DEPTH)/config/build_number $<
 
-chrome::
+install::
 	@$(REGCHROME) content global toolkit.jar
 	@$(REGCHROME) content global-region toolkit.jar
 	@$(REGCHROME) content global-platform toolkit.jar

@@ -28,6 +28,6 @@ VPATH		= @srcdir@
 include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	$(REGCHROME) content pippki pippki.jar
 	$(REGCHROME) locale en-US/pippki pippki.jar

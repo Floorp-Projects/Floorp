@@ -30,7 +30,7 @@ DIRS		= public src samples resources
 
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	@$(REGCHROME) content navigator comm.jar
 	@$(REGCHROME) content navigator-region comm.jar
 	@$(REGCHROME) content navigator-platform comm.jar

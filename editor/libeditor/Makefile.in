@@ -37,7 +37,7 @@ endif
 
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	@$(REGCHROME) content editor comm.jar
 	@$(REGCHROME) content editor-region comm.jar
 	@$(REGCHROME) locale en-US/editor en-US.jar

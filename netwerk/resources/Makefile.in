@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	@$(REGCHROME) content necko comm.jar
 	@$(REGCHROME) locale en-US/necko en-US.jar
 

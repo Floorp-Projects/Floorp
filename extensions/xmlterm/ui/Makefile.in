@@ -45,7 +45,7 @@ include $(srcdir)/../config/xmlterm_config.mk
 
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	@$(REGCHROME) content xmlterm xmlterm.jar
 	@$(REGCHROME) locale en-US/xmlterm xmlterm.jar
 	@$(REGCHROME) skin modern/xmlterm xmlterm.jar

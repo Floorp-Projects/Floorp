@@ -1218,12 +1218,10 @@ else
 _JAR_REGCHROME_DISABLE_JAR=0
 endif
 
-chrome:: $(CHROME_DEPS)
+install:: $(CHROME_DEPS)
 	@if test -f $(JAR_MANIFEST); then $(PERL) $(MOZILLA_DIR)/config/make-jars.pl -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(srcdir) < $(JAR_MANIFEST); fi
 
-install:: chrome
-
-REGCHROME = $(PERL) $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
+REGCHROME = $(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/add-chrome.pl $(DIST)/bin/chrome/installed-chrome.txt $(_JAR_REGCHROME_DISABLE_JAR)
 
 ##############################################################################
 

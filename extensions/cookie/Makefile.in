@@ -74,6 +74,6 @@ EXTRA_DSO_LDOPTS = \
 
 include $(topsrcdir)/config/rules.mk
 
-chrome::
+install::
 	@$(REGCHROME) content cookie comm.jar
 	@$(REGCHROME) locale en-US/cookie en-US.jar
