@@ -794,7 +794,6 @@ CallQueryInterface( nsISupports* aSource, DestinationType** aDestination )
 ////////////////////////////////////////////////////////////////////////////////
 // Macros for checking state and arguments upon entering interface boundaries
 ////////////////////////////////////////////////////////////////////////////////
-#if defined(NS_DEBUG)
 
 #define NS_ENSURE(x, ret)							\
 PR_BEGIN_MACRO											\
@@ -804,16 +803,6 @@ PR_BEGIN_MACRO											\
 		return ret;										\
 		}													\
 PR_END_MACRO
-
-#else // !NS_DEBUG
-
-#define NS_ENSURE(x, ret)				\
-PR_BEGIN_MACRO								\
-	if(!(x))									\
-		return ret;							\
-PR_END_MACRO
-
-#endif // !NS_DEBUG
 
 #define NS_ENSURE_NOT(x, ret) \
 NS_ENSURE(!(x), ret)
