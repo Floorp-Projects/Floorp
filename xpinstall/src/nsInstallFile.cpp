@@ -170,7 +170,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
          * to be an existing dir
          */
         int dirPermissions = 0755; // std default for UNIX, ignored otherwise
-        mFinalFile->Create(1, dirPermissions);
+        mFinalFile->Create(nsIFile::DIRECTORY_TYPE, dirPermissions);
     }
 
     //Need to parse the inPartialPath to remove any separators
@@ -225,7 +225,7 @@ nsInstallFile::nsInstallFile(nsInstall* inInstall,
         nsCOMPtr<nsIFile> parent;
         mFinalFile->GetParent(getter_AddRefs(parent));
         //nsFileSpec makeDirs(parent.GetCString(), PR_TRUE);
-        parent->Create(1, 0755); //nsIFileXXX: What kind of permissions are required here?
+        parent->Create(nsIFile::DIRECTORY_TYPE, 0755);
     }
 
     mVersionRegistryName  = new nsString(inComponentName);
