@@ -31,9 +31,9 @@
 	<menuitem id="menu_newMessage" value="&newMessageCmd.label;" accesskey="&newMessageCmd.accesskey;" key="key_newMessage" observes="cmd_newMessage"/>
 	<menuitem id="menu_newCard" value="&newCardCmd.label;" accesskey="&newCardCmd.accesskey;" key="key_newCard" observes="cmd_newCard"/>
 
-	<key id="key_newBlankPage"  command="true" shift="true" key="&newBlankPageCmd.key;" observes="cmd_newEditor"/>
-	<key id="key_newNavigator"  command="true" key="&newNavigatorCmd.key;" observes="cmd_newNavigator"/>
-	<key id="key_newMessage"    command="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
+	<key id="key_newBlankPage"  xulkey="true" shift="true" key="&newBlankPageCmd.key;" observes="cmd_newEditor"/>
+	<key id="key_newNavigator"  xulkey="true" key="&newNavigatorCmd.key;" observes="cmd_newNavigator"/>
+	<key id="key_newMessage"    xulkey="true" key="&newMessageCmd.key;" observes="cmd_newMessage"/>
 
 	<!-- Page Setup menu item -->
 	<menuitem id="menu_pageSetup" value="&pageSetupCmd.label;" oncommand="goPageSetup()"/>
@@ -47,13 +47,13 @@
 	<menuitem id="menu_delete" value="&deleteCmd.label;" key="key_delete" accesskey="&deleteCmd.accesskey;" observes="cmd_delete"/>
 	<menuitem id="menu_selectAll" value="&selectAllCmd.label;" key="key_selectAll" accesskey="&selectAllCmd.accesskey;" observes="cmd_selectAll"/>
 	
-	<key id="key_undo" command="true" key="&undoCmd.key;" observes="cmd_undo"/>
-	<key id="key_cut" command="true" key="&cutCmd.key;" observes="cmd_cut"/>
-	<key id="key_copy" command="true" key="&copyCmd.key;" observes="cmd_copy"/>
-	<key id="key_paste" command="true" key="&pasteCmd.key;" observes="cmd_paste"/>
-	<key id="key_delete" command="true" key="&deleteCmd.key;" observes="cmd_delete"/>
-	<key id="key_selectAll" command="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
-	<key id="key_preferences" command="true" key="&preferencesCmd.key;" observes="cmd_preferences"/>
+	<key id="key_undo" xulkey="true" key="&undoCmd.key;" observes="cmd_undo"/>
+	<key id="key_cut" xulkey="true" key="&cutCmd.key;" observes="cmd_cut"/>
+	<key id="key_copy" xulkey="true" key="&copyCmd.key;" observes="cmd_copy"/>
+	<key id="key_paste" xulkey="true" key="&pasteCmd.key;" observes="cmd_paste"/>
+	<key id="key_delete" xulkey="true" key="&deleteCmd.key;" observes="cmd_delete"/>
+	<key id="key_selectAll" xulkey="true" key="&selectAllCmd.key;" observes="cmd_selectAll"/>
+	<key id="key_preferences" xulkey="true" key="&preferencesCmd.key;" observes="cmd_preferences"/>
 
 	<commandset id="globalEditMenuItems"
 					commandupdater="true"

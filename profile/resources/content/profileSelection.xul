@@ -106,6 +106,6 @@
   </box>
 
   <keyset>
-    <key id="fooKey" key="s" command="true" shift="true" onkeydown="foo()"/>
+    <key id="fooKey" key="s" xulkey="true" shift="true" onkeydown="foo()"/>
   </keyset>
 </window>
