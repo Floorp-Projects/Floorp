@@ -157,7 +157,7 @@
       border-bottom       : 1px solid ThreeDDarkShadow;
       border-left         : 1px solid ThreeDHighlight;
       background-color    : ThreeDFace;
-      -moz-user-focus     : ignore;  
+      -moz-user-focus     : normal;  
     }    
     
   .menulist-compact-internal-box

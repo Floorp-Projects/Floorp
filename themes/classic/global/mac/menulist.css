@@ -382,7 +382,7 @@
   min-width: 0px;
   min-height: 0px;
   background-color: #D6DFDF;
-  -moz-user-focus: ignore;
+  -moz-user-focus: normal;
 }
 
 .menulist-compact-text {
