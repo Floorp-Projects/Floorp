@@ -2346,6 +2346,9 @@ public class Context
                     String lineStr = s.substring(colon + 1, close);
                     try {
                         linep[0] = Integer.parseInt(lineStr);
+                        if (linep[0] < 0) {
+                            linep[0] = 0;
+                        }
                         return fileStr;
                     }
                     catch (NumberFormatException e) {
