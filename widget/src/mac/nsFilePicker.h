@@ -69,7 +69,6 @@ protected:
   const PRUnichar**      mFilters;
   nsString               mDefault;
   nsCOMPtr<nsILocalFile> mDisplayDirectory;
-  nsCOMPtr<nsILocalFile> mFile;
   PRInt16                mSelectResult;
   
   void GetFilterListArray(nsString& aFilterList);
