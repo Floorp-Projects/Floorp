@@ -146,7 +146,7 @@ static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 static PRInt32 gMaxRCProcessingTime = -1;
 
 // Largest chunk size we recycle
-static const int  gMaxRecycledSize = 200;
+static const size_t gMaxRecycledSize = 200;
 
 // Flag for enabling/disabling asynchronous reflow
 // Set via the "layout.reflow.async" pref
@@ -220,7 +220,7 @@ nsresult
 FrameArena::FreeFrame(size_t aSize, void* aPtr)
 {
   // Round size to multiple of 4
-  PR_ROUNDUP(aSize, 4);
+  aSize = PR_ROUNDUP(aSize, 4);
 
   // See if it's a size that we recycle
   if (aSize < gMaxRecycledSize) {
