@@ -118,7 +118,6 @@ static NS_DEFINE_CID(kCharsetConverterManagerCID,  NS_ICHARSETCONVERTERMANAGER_C
 //XXX for nsIPostData; this is wrong; we shouldn't see the nsIDocument type
 #include "nsIDocument.h"
 
-//#define DOCSHELL_LOAD 1
 
 #ifdef DEBUG
 #undef NOISY_LINKS
@@ -176,7 +175,6 @@ class nsWebShell : public nsDocShell,
                    public nsILinkHandler,
                    public nsIDocumentLoaderObserver,
                    public nsIProgressEventSink, // should go away (nsIDocLoaderObs)
-                   public nsIURIContentListener,
                    public nsIClipboardCommands
 {
 public:
@@ -187,8 +185,6 @@ public:
 
   // nsISupports
   NS_DECL_ISUPPORTS_INHERITED
-
-  NS_DECL_NSIURICONTENTLISTENER
 
   // nsIInterfaceRequestor
   NS_DECL_NSIINTERFACEREQUESTOR
@@ -214,7 +210,7 @@ public:
   // Document load api's
   NS_IMETHOD GetDocumentLoader(nsIDocumentLoader*& aResult);
 
-  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
+/*  NS_IMETHOD LoadURL(const PRUnichar *aURLSpec,
                      const char* aCommand,
                      nsIInputStream* aPostDataStream=nsnull,
                      PRBool aModifyHistory=PR_TRUE,
@@ -231,19 +227,7 @@ public:
                      nsISupports * aHistoryState=nsnull,
                      const PRUnichar* aReferrer=nsnull,
                      const char * aWindowTarget = nsnull);
-
-  NS_IMETHOD SessionHistoryInternalLoadURL(const PRUnichar *aURLSpec,
-   nsLoadFlags aType, nsISupports * aHistoryState, const PRUnichar* aReferrer);
-
-
-  NS_IMETHOD GetCanGoBack(PRBool* aCanGoBack);
-  NS_IMETHOD GetCanGoForward(PRBool* aCanGoForward);
-  NS_IMETHOD GoBack();
-  NS_IMETHOD GoForward();
-  NS_IMETHOD LoadURI(const PRUnichar* aURI);
-  NS_IMETHOD InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-      const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType);
-
+  */
   void SetReferrer(const PRUnichar* aReferrer);
 
   // History api's
@@ -312,20 +296,13 @@ public:
                             const PRUnichar* aTargetSpec,
                             nsIInputStream* aPostDataStream = 0);
 
-  void ShowHistory();
-
   static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
 
-  NS_IMETHOD SetSessionHistory(nsISessionHistory * aSHist);
-  NS_IMETHOD GetSessionHistory(nsISessionHistory *& aResult);
-  NS_IMETHOD SetIsInSHist(PRBool aIsFrame);
-  NS_IMETHOD GetIsInSHist(PRBool& aIsFrame);
   NS_IMETHOD SetURL(const PRUnichar* aURL);
 
 protected:
   void GetRootWebShellEvenIfChrome(nsIWebShell** aResult);
   void InitFrameData();
-  nsresult CheckForTrailingSlash(nsIURI* aURL);
   nsresult InitDialogVars(void);
 
   nsIEventQueue* mThreadEventQueue;
@@ -339,38 +316,15 @@ protected:
   nsString mDefaultCharacterSet;
 
 
-  nsVoidArray mHistory;
-  PRInt32 mHistoryIndex;
-
   PRBool mFiredUnloadEvent;
 
-  nsIGlobalHistory* mHistoryService;
-  nsISessionHistory * mSHist;
-
   nsRect   mBounds;
-
-  PRPackedBool mIsInSHist;
-  PRPackedBool mFailedToLoadHistoryService;
 
   eCharsetReloadState mCharsetReloadState;
 
   nsISupports* mHistoryState; // Weak reference.  Session history owns this.
 
   nsresult FireUnloadForChildren();
-  nsresult DoLoadURL(nsIURI * aUri, 
-                     const char* aCommand,
-                     nsIInputStream* aPostDataStream,
-                     nsLoadFlags aType,
-                     const PRUnichar* aReferrer,
-                     const char * aWindowTarget,
-                     PRBool aKickOffLoad = PR_TRUE);
-
-  nsresult PrepareToLoadURI(nsIURI * aUri, 
-                            nsIInputStream * aPostStream,
-                            PRBool aModifyHistory,
-                            nsLoadFlags aType,
-                            nsISupports * aHistoryState,
-                            const PRUnichar * aReferrer);
 
   nsresult CreateViewer(nsIChannel* aChannel,
                         const char* aContentType,
@@ -427,7 +381,6 @@ static NS_DEFINE_IID(kITimerCallbackIID,      NS_ITIMERCALLBACK_IID);
 static NS_DEFINE_IID(kIWebShellContainerIID,  NS_IWEB_SHELL_CONTAINER_IID);
 static NS_DEFINE_IID(kIClipboardCommandsIID,  NS_ICLIPBOARDCOMMANDS_IID);
 static NS_DEFINE_IID(kIEventQueueServiceIID,  NS_IEVENTQUEUESERVICE_IID);
-static NS_DEFINE_IID(kISessionHistoryIID,     NS_ISESSIONHISTORY_IID);
 static NS_DEFINE_IID(kIDOMHTMLDocumentIID,    NS_IDOMHTMLDOCUMENT_IID);
 static NS_DEFINE_CID(kCDOMRangeCID,           NS_RANGE_CID);
 // XXX not sure
@@ -447,17 +400,12 @@ nsWebShell::nsWebShell() : nsDocShell()
 #endif
 
   NS_INIT_REFCNT();
-  mHistoryIndex = -1;
   mThreadEventQueue = nsnull;
   InitFrameData();
   mItemType = typeContent;
-  mSHist = nsnull;
-  mIsInSHist = PR_FALSE;
-  mFailedToLoadHistoryService = PR_FALSE;
   mDefaultCharacterSet = "";
   mProcessedEndDocumentLoad = PR_FALSE;
   mCharsetReloadState = eCharsetReloadInit;
-  mHistoryService = nsnull;
   mHistoryState = nsnull;
   mFiredUnloadEvent = PR_FALSE;
   mBounds.SetRect(0, 0, 0, 0);
@@ -466,10 +414,6 @@ nsWebShell::nsWebShell() : nsDocShell()
 nsWebShell::~nsWebShell()
 {
    Destroy();
-  if (nsnull != mHistoryService) {
-    nsServiceManager::ReleaseService(kGlobalHistoryCID, mHistoryService);
-    mHistoryService = nsnull;
-  }
 
   // Stop any pending document loads and destroy the loader...
   if (nsnull != mDocLoader) {
@@ -484,7 +428,6 @@ nsWebShell::~nsWebShell()
   ++mRefCnt; // following releases can cause this destructor to be called
              // recursively if the refcount is allowed to remain 0
 
-  NS_IF_RELEASE(mSHist);
   NS_IF_RELEASE(mThreadEventQueue);
   mContentViewer=nsnull;
   mDeviceContext=nsnull;
@@ -500,13 +443,6 @@ nsWebShell::~nsWebShell()
   }
 
   InitFrameData();
-
-  // Free up history memory
-  PRInt32 i, n = mHistory.Count();
-  for (i = 0; i < n; i++) {
-    nsString* s = (nsString*) mHistory.ElementAt(i);
-    delete s;
-  }
 
 #ifdef DETECT_WEBSHELL_LEAKS
   // We're counting the number of |nsWebShells| to help find leaks
@@ -583,7 +519,6 @@ NS_INTERFACE_MAP_BEGIN(nsWebShell)
    NS_INTERFACE_MAP_ENTRY(nsIWebShellContainer)
    NS_INTERFACE_MAP_ENTRY(nsILinkHandler)
    NS_INTERFACE_MAP_ENTRY(nsIClipboardCommands)
-   NS_INTERFACE_MAP_ENTRY(nsIURIContentListener)
 #if 0 // inherits from nsDocShell:
    NS_INTERFACE_MAP_ENTRY(nsIScriptGlobalObjectOwner)
    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor)
@@ -616,14 +551,6 @@ nsWebShell::GetInterface(const nsIID &aIID, void** aInstancePtr)
       NS_ADDREF((nsISupports*)*aInstancePtr);
       return NS_OK;
       }
-#ifndef DOCSHELL_LOAD
-   else if (aIID.Equals(NS_GET_IID(nsIURIContentListener)))
-   {
-      *aInstancePtr = NS_STATIC_CAST(nsIURIContentListener*, this);
-      NS_ADDREF((nsISupports*)*aInstancePtr);
-      return NS_OK;
-   }
-#endif /* DOCSHELL_LOAD */
    else if(aIID.Equals(NS_GET_IID(nsIScriptGlobalObject)))
       {
       NS_ENSURE_SUCCESS(EnsureScriptEnvironment(), NS_ERROR_FAILURE);
@@ -681,19 +608,6 @@ nsWebShell::SetContainer(nsIWebShellContainer* aContainer)
   mContainer = aContainer;
   NS_IF_ADDREF(mContainer);
 
-  // uri dispatching change.....if you set a container for a webshell
-  // and that container is a content listener itself....then use
-  // it as our parent container. 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIURIContentListener> contentListener = do_QueryInterface(mContainer, &rv);
-  if (NS_SUCCEEDED(rv) && contentListener)
-    SetParentContentListener(contentListener);
-
-  // if the container is getting set to null, then our parent must be going away
-  // so clear out our knowledge of the content listener represented by the container
-  if (!aContainer)
-    SetParentContentListener(nsnull);
-
   return NS_OK;
 }
 
@@ -721,23 +635,6 @@ nsWebShell::GetTopLevelWindow(nsIWebShellContainer** aTopLevelWindow)
    rootWebShell->GetContainer(*aTopLevelWindow);
 
    return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetSessionHistory(nsISessionHistory* aSHist)
-{
-  NS_IF_RELEASE(mSHist);
-  mSHist = aSHist;
-  NS_IF_ADDREF(aSHist);
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::GetSessionHistory(nsISessionHistory *& aResult)
-{
-  aResult = mSHist;
-  NS_IF_ADDREF(mSHist);
-  return NS_OK;
 }
 
 nsEventStatus PR_CALLBACK
@@ -813,20 +710,6 @@ nsWebShell::SetURL(const PRUnichar* aURL)
   return NS_OK;
 }
 
-NS_IMETHODIMP
-nsWebShell::GetIsInSHist(PRBool& aResult)
-{
-  aResult = mIsInSHist;
-  return NS_OK;
-}
-
-NS_IMETHODIMP
-nsWebShell::SetIsInSHist(PRBool aIsInSHist)
-{
-  mIsInSHist = aIsInSHist;
-  return NS_OK;
-}
-
 /**
  * Document Load methods
  */
@@ -866,6 +749,7 @@ static PRBool EqualBaseURLs(nsIURI* url1, nsIURI* url2)
   return rv;
 }
 
+#if 0
 nsresult
 nsWebShell::DoLoadURL(nsIURI * aUri,
                       const char* aCommand,
@@ -1033,223 +917,6 @@ nsWebShell::DoLoadURL(nsIURI * aUri,
   return rv;
 }
 
-NS_IMETHODIMP nsWebShell::GetCanGoBack(PRBool* aCanGoBack)
-{
-#ifdef DOCSHELL_LOAD
-   return nsDocShell::GetCanGoBack(aCanGoBack);
-#else  /*!DOCSHELL_LOAD*/
-   *aCanGoBack = (mHistoryIndex - 1) > - 1 ? PR_TRUE : PR_FALSE;
-   return NS_OK;
-#endif /*!DOCSHELL_LOAD*/
-}
-
-NS_IMETHODIMP nsWebShell::GetCanGoForward(PRBool* aCanGoForward)
-{
-#ifdef DOCSHELL_LOAD
-   return nsDocShell::GetCanGoForward(aCanGoForward);
-#else  /*!DOCSHELL_LOAD*/
-   *aCanGoForward = mHistoryIndex  < mHistory.Count() - 1 ? PR_TRUE : PR_FALSE;
-   return NS_OK;
-#endif /*!DOCSHELL_LOAD*/
-}
-
-NS_IMETHODIMP nsWebShell::GoBack()
-{
-#ifdef DOCSHELL_LOAD
-   return nsDocShell::GoBack();
-#else  /*!DOCSHELL_LOAD*/
-   NS_ENSURE_SUCCESS(GoTo(mHistoryIndex - 1), NS_ERROR_FAILURE);
-   return NS_OK;
-#endif /*!DOCSHELL_LOAD*/
-}
-
-NS_IMETHODIMP nsWebShell::GoForward()
-{
-#ifdef DOCSHELL_LOAD
-   return nsDocShell::GoForward();
-#else  /*!DOCSHELL_LOAD*/
-   NS_ENSURE_SUCCESS(GoTo(mHistoryIndex + 1), NS_ERROR_FAILURE);
-   return NS_OK;
-#endif /*!DOCSHELL_LOAD*/
-}
-
-NS_IMETHODIMP nsWebShell::LoadURI(const PRUnichar* aURI)
-{
-#ifdef DOCSHELL_LOAD
-   return nsDocShell::LoadURI(aURI);
-#else  /*!DOCSHELL_LOAD*/
-   return LoadURL(aURI, "view");
-#endif /*!DOCSHELL_LOAD*/
-}
-
-NS_IMETHODIMP nsWebShell::InternalLoad(nsIURI* aURI, nsIURI* aReferrer,
-   const char* aWindowTarget, nsIInputStream* aPostData, loadType aLoadType)
-{
-#ifdef DOCSHELL_LOAD
-   return nsDocShell::InternalLoad(aURI, aReferrer, aWindowTarget, aPostData, 
-      aLoadType);
-#else /*!DOCSHELL_LOAD*/
-   PRBool updateHistory = PR_TRUE;
-   switch(aLoadType)
-      {
-      case loadHistory:
-      case loadReloadNormal:
-      case loadReloadBypassCache:
-      case loadReloadBypassProxy:
-      case loadRelaodBypassProxyAndCache:
-         updateHistory = PR_FALSE;
-         break;
-
-      default:
-         NS_ERROR("Need to update case");
-         // Fall through to a normal type of load.
-      case loadNormalReplace:
-      case loadNormal:
-      case loadLink:
-         updateHistory = PR_TRUE;
-         break;
-      } 
-
-   nsXPIDLCString referrer;
-   if(aReferrer)
-      aReferrer->GetSpec(getter_Copies(referrer));
-
-   return LoadURI(aURI, "view", nsnull, updateHistory, nsIChannel::LOAD_NORMAL,
-      nsnull, nsAutoString(referrer).GetUnicode(), aWindowTarget);
-#endif /*!DOCSHELL_LOAD*/
-}
-
-// nsIURIContentListener support
-NS_IMETHODIMP nsWebShell::OnStartURIOpen(nsIURI* aURI, 
-   const char* aWindowTarget, PRBool* aAbortOpen)
-{
-   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-   return mContentListener->OnStartURIOpen(aURI, aWindowTarget, aAbortOpen);
-}
-
-NS_IMETHODIMP
-nsWebShell::GetProtocolHandler(nsIURI *aURI, nsIProtocolHandler **aProtocolHandler)
-{
-   // Farm this off to our content listener
-   NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-   return mContentListener->GetProtocolHandler(aURI, aProtocolHandler);
-}
-
-NS_IMETHODIMP nsWebShell::IsPreferred(const char * aContentType,
-                                      nsURILoadCommand aCommand,
-                                      const char * aWindowTarget,
-                                      char ** aDesiredContentType,
-                                      PRBool * aCanHandleContent)
-{
-  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-  return mContentListener->IsPreferred(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
-                                       aCanHandleContent);
-}
-
-NS_IMETHODIMP nsWebShell::CanHandleContent(const char * aContentType,
-                                           nsURILoadCommand aCommand,
-                                           const char * aWindowTarget,
-                                           char ** aDesiredContentType,
-                                           PRBool * aCanHandleContent)
-
-{
-  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-  return mContentListener->CanHandleContent(aContentType, aCommand, aWindowTarget, aDesiredContentType, 
-                                       aCanHandleContent);
-} 
-
-NS_IMETHODIMP 
-nsWebShell::DoContent(const char * aContentType,
-                      nsURILoadCommand aCommand,
-                      const char * aWindowTarget,
-                      nsIChannel * aOpenedChannel,
-                      nsIStreamListener ** aContentHandler,
-                      PRBool * aAbortProcess)
-{
-  NS_ENSURE_ARG(aOpenedChannel);
-  nsresult rv = NS_OK;
-  if (aAbortProcess)
-    *aAbortProcess = PR_FALSE;
-
-  // determine if the channel has just been retargeted to us...
-  nsLoadFlags loadAttribs = 0;
-  aOpenedChannel->GetLoadAttributes(&loadAttribs);
-  // first, run any uri preparation stuff that we would have run normally
-  // had we gone through OpenURI
-  nsCOMPtr<nsIURI> aUri;
-  aOpenedChannel->GetURI(getter_AddRefs(aUri));
-  if (loadAttribs & nsIChannel::LOAD_RETARGETED_DOCUMENT_URI)
-  {
-    PrepareToLoadURI(aUri, nsnull, PR_TRUE, nsIChannel::LOAD_NORMAL, nsnull, nsnull);
-    // mscott: when I called DoLoadURL I found that we ran into problems because
-    // we currently don't have channel retargeting yet. Basically, what happens is that
-    // DoLoadURL calls StopBeforeRequestingURL and this cancels the current load group
-    // however since we can't retarget yet, we were basically canceling our very
-    // own load group!!! So the request would get canceled out from under us...
-    // after retargeting we may be able to safely call DoLoadURL. 
-    DoLoadURL(aUri, "view", nsnull, nsIChannel::LOAD_NORMAL, nsnull, nsnull, PR_FALSE);
-    SetFocus(); // force focus to get set on the retargeted window...
-  }
-
-  OnLoadingSite(aOpenedChannel);
-
-   return CreateContentViewer(aContentType, aOpenedChannel, aContentHandler); 
-}
-
-nsresult nsWebShell::PrepareToLoadURI(nsIURI * aUri, 
-                                      nsIInputStream * aPostStream,
-                                      PRBool aModifyHistory,
-                                      nsLoadFlags aType,
-                                      nsISupports * aHistoryState,
-                                      const PRUnichar * aReferrer)
-{
-  nsresult rv;
-  CancelRefreshURITimers();
-  nsXPIDLCString scheme, CUriSpec;
-
-  if (!aUri) return NS_ERROR_NULL_POINTER;
-
-  rv = aUri->GetScheme(getter_Copies(scheme));
-  if (NS_FAILED(rv)) return rv;
-  rv = aUri->GetSpec(getter_Copies(CUriSpec));
-  if (NS_FAILED(rv)) return rv;
-
-  nsAutoString uriSpec(CUriSpec);
-
-  nsXPIDLCString spec;
-  rv = aUri->GetSpec(getter_Copies(spec));
-  if (NS_FAILED(rv)) return rv;
-
-  nsString* url = new nsString(uriSpec);
-  if (aModifyHistory) {
-    // Discard part of history that is no longer reachable
-    PRInt32 i, n = mHistory.Count();
-    i = mHistoryIndex + 1;
-    while (--n >= i) {
-      nsString* u = (nsString*) mHistory.ElementAt(n);
-      delete u;
-      mHistory.RemoveElementAt(n);
-    }
-
-    // Tack on new url
-    mHistory.AppendElement(url);
-    mHistoryIndex++;
-  }
-  else {
-    
-    // Replace the current history index with this URL
-    nsString* u = (nsString*) mHistory.ElementAt(mHistoryIndex);
-    if (nsnull != u) {
-      delete u;
-    }
-    mHistory.ReplaceElementAt(url, mHistoryIndex);
-  }
-  ShowHistory();
-
-  return rv;
-}
-
-
 NS_IMETHODIMP 
 nsWebShell::LoadURI(nsIURI * aUri,
                     const char * aCommand,
@@ -1260,12 +927,7 @@ nsWebShell::LoadURI(nsIURI * aUri,
                     const PRUnichar* aReferrer,
                     const char * aWindowTarget)
 {
-  nsresult rv = PrepareToLoadURI(aUri, aPostDataStream,
-                                 aModifyHistory, aType,
-                                 aHistoryState, aReferrer);
-  if (NS_SUCCEEDED(rv))
-    rv =  DoLoadURL(aUri, aCommand, aPostDataStream, aType, aReferrer, aWindowTarget);
-  return rv;
+   return DoLoadURL(aUri, aCommand, aPostDataStream, aType, aReferrer, aWindowTarget);
 }
 
 
@@ -1432,104 +1094,75 @@ nsWebShell::LoadURL(const PRUnichar *aURLSpec,
       }
    return rv;
 }
-
+#endif
 //----------------------------------------
-
-NS_IMETHODIMP nsWebShell::SessionHistoryInternalLoadURL(const PRUnichar *aURLSpec,
-   nsLoadFlags aType, nsISupports * aHistoryState, const PRUnichar* aReferrer)
-{
-   return LoadURL(aURLSpec, "view", nsnull, PR_FALSE, aType, aHistoryState, aReferrer);
-}
 
 // History methods
 
-NS_IMETHODIMP
-nsWebShell::GoTo(PRInt32 aHistoryIndex)
+NS_IMETHODIMP nsWebShell::GoTo(PRInt32 aIndex)
 {
-  nsresult rv = NS_ERROR_ILLEGAL_VALUE;
-  if ((aHistoryIndex >= 0) &&
-      (aHistoryIndex < mHistory.Count())) {
-    nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
+   NS_ENSURE_STATE(mSessionHistory);
+   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
 
-#ifdef DEBUG
-    printf("Goto %d\n", aHistoryIndex);
-#endif
-    mHistoryIndex = aHistoryIndex;
-    ShowHistory();
+   nsCOMPtr<nsISHEntry> entry;
 
-    nsAutoString urlSpec(*s);
+   NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(aIndex, PR_TRUE, 
+      getter_AddRefs(entry)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
 
-    // convert the uri spec into a url and then pass it to DoLoadURL
-    nsCOMPtr<nsIURI> uri;
-    rv = NS_NewURI(getter_AddRefs(uri), urlSpec, nsnull);
-    if (NS_FAILED(rv)) return rv;
+   UpdateCurrentSessionHistory();  
 
-    rv = DoLoadURL(uri,       // URL string
-                   "view",        // Command
-                   nsnull,        // Post Data
-                   nsISessionHistory::LOAD_HISTORY,  // the reload type
-                   nsnull,        // referrer
-                   nsnull,        // window target
-                   PR_TRUE);      // kick off load?
-  }
-  return rv;
+   NS_ENSURE_SUCCESS(LoadHistoryEntry(entry), NS_ERROR_FAILURE);
 
+   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::GetHistoryLength(PRInt32& aResult)
 {
-  aResult = mHistory.Count();
-  return NS_OK;
+   NS_ENSURE_STATE(mSessionHistory);
+   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
+   
+   NS_ENSURE_SUCCESS(mSessionHistory->GetCount(&aResult), NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
 NS_IMETHODIMP
 nsWebShell::GetHistoryIndex(PRInt32& aResult)
 {
-  aResult = mHistoryIndex;
-  return NS_OK;
+   NS_ENSURE_STATE(mSessionHistory);
+   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
+   
+   NS_ENSURE_SUCCESS(mSessionHistory->GetIndex(&aResult), NS_ERROR_FAILURE);
+   return NS_OK;
 }
 
 NS_IMETHODIMP
-nsWebShell::GetURL(PRInt32 aHistoryIndex, const PRUnichar** aURLResult)
+nsWebShell::GetURL(PRInt32 aIndex, const PRUnichar** aURLResult)
 {
-  nsresult rv = NS_ERROR_ILLEGAL_VALUE;
+   NS_ENSURE_STATE(mSessionHistory);
+   NS_ENSURE_TRUE(!IsFrame(), NS_ERROR_FAILURE);
 
-  // XXX Ownership rules for the string passed back from this
-  // method are not XPCOM compliant. If they were correct, 
-  // the caller would deallocate the string.
-  if ((aHistoryIndex >= 0) &&
-      (aHistoryIndex <= mHistory.Count() - 1)) {
-    nsString* s = (nsString*) mHistory.ElementAt(aHistoryIndex);
-    if (nsnull != s) {
-      *aURLResult = s->GetUnicode();
-    }
-    rv = NS_OK;
-  }
-  return rv;
+   nsCOMPtr<nsISHEntry> entry;
+
+   NS_ENSURE_SUCCESS(mSessionHistory->GetEntryAtIndex(aIndex, PR_TRUE, 
+      getter_AddRefs(entry)), NS_ERROR_FAILURE);
+   NS_ENSURE_TRUE(entry, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsIURI> uri;
+
+   entry->GetURI(getter_AddRefs(uri));
+
+   NS_ENSURE_TRUE(uri, NS_ERROR_FAILURE);
+
+   nsXPIDLCString spec;
+   uri->GetSpec(getter_Copies(spec));
+
+   nsAutoString uriSpec(spec);
+   *aURLResult = uriSpec.ToNewUnicode();
+
+   return NS_OK;
 }
-
-void
-nsWebShell::ShowHistory()
-{
-#if defined(NS_DEBUG)
-  if (WEB_LOG_TEST(gLogModule, WEB_TRACE_HISTORY)) {
-    PRInt32 i, n = mHistory.Count();
-    for (i = 0; i < n; i++) {
-      if (i == mHistoryIndex) {
-        printf("**");
-      }
-      else {
-        printf("  ");
-      }
-      nsString* u = (nsString*) mHistory.ElementAt(i);
-      fputs(*u, stdout);
-      printf("\n");
-    }
-  }
-#endif
-}
-
 
 //----------------------------------------
 
@@ -1751,12 +1384,10 @@ nsWebShell::HandleLinkClickEvent(nsIContent *aContent,
         // for now, just hack the verb to be view-link-clicked
         // and down in the load document code we'll detect this and
         // set the correct uri loader command
-        nsXPIDLCString spec;
-        mCurrentURI->GetSpec(getter_Copies(spec));
-        nsAutoString specString(spec);
-        LoadURL(aURLSpec, "view-link-click", aPostDataStream,
-                            PR_TRUE, nsIChannel::LOAD_NORMAL, 
-                            nsnull, specString.GetUnicode(), nsCAutoString(aTargetSpec));
+        nsCOMPtr<nsIURI> uri;
+        NS_NewURI(getter_AddRefs(uri), aURLSpec, nsnull);
+
+        InternalLoad(uri, mCurrentURI, nsCAutoString(aTargetSpec), aPostDataStream, loadLink); 
       }
       break;
     case eLinkVerb_Embed:
@@ -1791,24 +1422,14 @@ nsWebShell::GetLinkState(nsIURI* aLinkURI, nsLinkState& aState)
 
   nsresult rv;
 
-  // XXX: GlobalHistory is going to be moved out of the webshell into a more appropriate place.
-  if ((nsnull == mHistoryService) && !mFailedToLoadHistoryService) {
-    rv = nsServiceManager::GetService(kGlobalHistoryCID,
-                                      NS_GET_IID(nsIGlobalHistory),
-                                      (nsISupports**) &mHistoryService);
+  EnsureGlobalHistory();
 
-    if (NS_FAILED(rv)) {
-      mFailedToLoadHistoryService = PR_TRUE;
-    }
-  }
-
-  if (mHistoryService) {
-    // XXX aURLSpec should really be a char*, not a PRUnichar*.
+  if (mGlobalHistory) {
     nsXPIDLCString url;
     aLinkURI->GetSpec(getter_Copies(url));
 
     PRInt64 lastVisitDate;
-    rv = mHistoryService->GetLastVisitDate(url, &lastVisitDate);
+    rv = mGlobalHistory->GetLastVisitDate(url, &lastVisitDate);
     if (NS_FAILED(rv)) return rv;
 
     // a last-visit-date of zero means we've never seen it before; so
@@ -1952,9 +1573,6 @@ nsWebShell::OnEndDocumentLoad(nsIDocumentLoader* loader,
     }
     else
     {
-      /* Take care of the Trailing slash situation */
-      if (mSHist)
-        CheckForTrailingSlash(aURL);
       dlObserver = do_QueryInterface(mDocLoaderObserver);  // we need this to addref
     }
 
@@ -2177,45 +1795,6 @@ nsWebShell::OnEndURLLoad(nsIDocumentLoader* loader,
   {
       mDocLoaderObserver->OnEndURLLoad(mDocLoader, channel, aStatus);
   }
-  return NS_OK;
-}
-
-//----------------------------------------------------------------------
-
-/*
- * There are cases where netlib does things like add a trailing slash
- * to the url being retrieved.  We need to watch out for such
- * changes and update the currently loading url's entry in the history
- * list. UpdateHistoryEntry() does this.
- *
- * Assumptions:
- *
- *   1) aURL is the URL that was inserted into the history list in LoadURL()
- *   2) The load of aURL is in progress and this function is being called
- *      from one of the functions in nsIStreamListener implemented by nsWebShell.
- */
-nsresult nsWebShell::CheckForTrailingSlash(nsIURI* aURL)
-{
-
-  PRInt32     curIndex=0;
-  nsresult rv;
-
-  /* Get current history index and url for it */
-  rv = mSHist->GetCurrentIndex(&curIndex);
-
-  /* Get the url that netlib passed us */
-  char* spec;
-  aURL->GetSpec(&spec);
- 
-  //Set it in session history
-  if (NS_SUCCEEDED(rv) && !mTitle.IsEmpty()) {
-    mSHist->SetTitleForIndex(curIndex, mTitle.GetUnicode());
-    // Replace the top most history entry with the new url
-    mSHist->SetURLForIndex(curIndex, spec);
-  }
-  nsCRT::free(spec);
-
-
   return NS_OK;
 }
 
@@ -2597,28 +2176,6 @@ NS_IMETHODIMP nsWebShell::SetDocument(nsIDOMDocument *aDOMDoc,
   NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);  // test the resulting out-param separately
 
   return NS_OK;
-}
-
-NS_IMETHODIMP nsWebShell::GetParentContentListener(nsIURIContentListener** aParent)
-{
-  return GetParentURIContentListener(aParent);
-}
-
-NS_IMETHODIMP nsWebShell::SetParentContentListener(nsIURIContentListener* aParent)
-{
-  return SetParentURIContentListener(aParent);
-}
-
-NS_IMETHODIMP nsWebShell::GetLoadCookie(nsISupports ** aLoadCookie)
-{
-  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-  return mContentListener->GetLoadCookie(aLoadCookie);
-}
-
-NS_IMETHODIMP nsWebShell::SetLoadCookie(nsISupports * aLoadCookie)
-{
-  NS_ENSURE_SUCCESS(EnsureContentListener(), NS_ERROR_FAILURE);
-  return mContentListener->SetLoadCookie(aLoadCookie);
 }
 
 //----------------------------------------------------------------------
