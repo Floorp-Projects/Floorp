@@ -210,7 +210,6 @@ protected:
 
   nsresult setSubfolderFlag(PRUnichar *aFolderName, PRUint32 flags);
   nsresult DeleteMsgsOnPop3Server(nsISupportsArray *messages);
-  static nsIAtom* mCompactCompletedAtom;
 };
 
 #endif // nsMsgLocalMailFolder_h__

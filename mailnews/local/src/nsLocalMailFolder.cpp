@@ -103,7 +103,7 @@ extern char* ReadPopData(const char *hostname, const char* username, nsIFileSpec
 extern void SavePopData(char *data, nsIFileSpec* maildirectory);
 extern void net_pop3_delete_if_in_server(char *data, char *uidl, PRBool *changed);
 extern void KillPopData(char* data);
-nsIAtom* nsMsgLocalMailFolder::mCompactCompletedAtom=nsnull;
+
 //////////////////////////////////////////////////////////////////////////////
 // nsLocal
 /////////////////////////////////////////////////////////////////////////////
@@ -144,16 +144,11 @@ nsMsgLocalMailFolder::nsMsgLocalMailFolder(void)
     mCheckForNewMessagesAfterParsing(PR_FALSE), mParsingInbox(PR_FALSE)
 
 {
-  if (mInstanceCount == 1)
-    mCompactCompletedAtom = NS_NewAtom("CompactCompleted");
 //  NS_INIT_REFCNT(); done by superclass
 }
 
 nsMsgLocalMailFolder::~nsMsgLocalMailFolder(void)
 {
-  if (mInstanceCount == 1)
-    NS_IF_RELEASE(mCompactCompletedAtom);
-
 }
 
 NS_IMPL_ADDREF_INHERITED(nsMsgLocalMailFolder, nsMsgFolder)
@@ -895,8 +890,7 @@ NS_IMETHODIMP nsMsgLocalMailFolder::CompactAll(nsIUrlListener *aListener, nsIMsg
       NS_ENSURE_SUCCESS(rv,rv);
       if (cnt == 0 )
       {
-        NotifyFolderEvent(mCompactCompletedAtom);
-        return NS_OK;
+        return NotifyCompactCompleted();
     }
   }
   }
@@ -926,12 +920,11 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWin
 
     rv = GetExpungedBytes(&expungedBytes);
 
-      // check if we need to compact the folder
+    // check if we need to compact the folder
     if (expungedBytes > 0)
     {
-
       rv = GetMsgDatabase(nsnull, getter_AddRefs(db));
-      if (NS_FAILED(rv)) goto done;
+      if (NS_FAILED(rv)) return rv;
 
       rv = GetPath(getter_AddRefs(pathSpec));
     
@@ -943,10 +936,10 @@ NS_IMETHODIMP nsMsgLocalMailFolder::Compact(nsIUrlListener *aListener, nsIMsgWin
       }
     }
     else
-      NotifyFolderEvent(mCompactCompletedAtom);
+      rv = NotifyCompactCompleted();
+
     return rv;
   }
-  done:
   return rv;
 }
 
@@ -3172,7 +3165,9 @@ nsMsgLocalMailFolder::GetParsingInbox(PRBool *aParsingInbox)
 NS_IMETHODIMP
 nsMsgLocalMailFolder::NotifyCompactCompleted()
 {
-  NotifyFolderEvent(mCompactCompletedAtom);
+  nsCOMPtr <nsIAtom> compactCompletedAtom;
+  compactCompletedAtom = getter_AddRefs(NS_NewAtom("CompactCompleted"));
+  NotifyFolderEvent(compactCompletedAtom);
   return NS_OK;
 }
 
