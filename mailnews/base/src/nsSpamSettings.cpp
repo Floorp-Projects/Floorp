@@ -1,0 +1,276 @@
+#include "nsSpamSettings.h"
+#include "nsISupportsObsolete.h"
+#include "nsILocalFile.h"
+#include "plstr.h"
+#include "prmem.h"
+#include "nsIFileStreams.h"
+
+nsSpamSettings::nsSpamSettings()
+{
+  NS_INIT_ISUPPORTS();
+
+  mLevel = 0;
+  mMoveOnSpam = PR_FALSE;
+  mPurge = PR_FALSE;
+  mPurgeInterval = 15; // 15 days
+  mUseWhiteList = PR_FALSE;
+  mLoggingEnabled = PR_FALSE;
+}
+
+nsSpamSettings::~nsSpamSettings()
+{
+}
+
+NS_IMPL_ISUPPORTS1(nsSpamSettings, nsISpamSettings)
+
+NS_IMETHODIMP 
+nsSpamSettings::GetLevel(PRInt32 *aLevel)
+{
+  NS_ENSURE_ARG_POINTER(aLevel);
+  *aLevel = mLevel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetLevel(PRInt32 aLevel)
+{
+  NS_ASSERTION((aLevel >= 0 && aLevel <= 100), "bad level");
+  mLevel = aLevel;
+  return NS_OK;
+}
+
+NS_IMPL_GETSET(nsSpamSettings, LoggingEnabled, PRBool, mLoggingEnabled);
+NS_IMPL_GETSET(nsSpamSettings, MoveOnSpam, PRBool, mMoveOnSpam);
+NS_IMPL_GETSET(nsSpamSettings, Purge, PRBool, mPurge);
+NS_IMPL_GETSET(nsSpamSettings, UseWhiteList, PRBool, mUseWhiteList);
+
+
+NS_IMETHODIMP nsSpamSettings::GetWhiteListAbURI(char * *aWhiteListAbURI)
+{
+  NS_ENSURE_ARG_POINTER(aWhiteListAbURI);
+  *aWhiteListAbURI = ToNewCString(mWhiteListAbURI);
+  return NS_OK;
+}
+NS_IMETHODIMP nsSpamSettings::SetWhiteListAbURI(const char * aWhiteListAbURI)
+{
+  mWhiteListAbURI = aWhiteListAbURI;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::GetActionTargetFolder(char * *aActionTargetFolder)
+{
+  NS_ENSURE_ARG_POINTER(aActionTargetFolder);
+  *aActionTargetFolder = ToNewCString(mActionTargetFolder);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetActionTargetFolder(const char * aActionTargetFolder)
+{
+  mActionTargetFolder = aActionTargetFolder;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::GetPurgeInterval(PRBool *aPurgeInterval)
+{
+  NS_ENSURE_ARG_POINTER(aPurgeInterval);
+  *aPurgeInterval = mPurgeInterval;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetPurgeInterval(PRBool aPurgeInterval)
+{
+  NS_ASSERTION(aPurgeInterval >= 0, "bad purge interval");
+  mPurgeInterval = aPurgeInterval;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSpamSettings::SetLogStream(nsIOutputStream *aLogStream)
+{
+  // if there is a log stream already, close it
+  if (mLogStream) {
+    // will flush
+    nsresult rv = mLogStream->Close();
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+
+  mLogStream = aLogStream;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsSpamSettings::GetLogStream(nsIOutputStream **aLogStream)
+{
+  NS_ENSURE_ARG_POINTER(aLogStream);
+
+  nsresult rv;
+
+  if (!mLogStream) {
+    nsCOMPtr <nsIFileSpec> file;
+    rv = GetLogFileSpec(getter_AddRefs(file));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsXPIDLCString nativePath;
+    rv = file->GetNativePath(getter_Copies(nativePath));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsCOMPtr <nsILocalFile> logFile = do_CreateInstance(NS_LOCAL_FILE_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    rv = logFile->InitWithNativePath(nsDependentCString(nativePath));
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    // append to the end of the log file
+    rv = NS_NewLocalFileOutputStream(getter_AddRefs(mLogStream),
+                                   logFile,
+                                   PR_CREATE_FILE | PR_WRONLY | PR_APPEND,
+                                   0600);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    if (!mLogStream)
+      return NS_ERROR_FAILURE;
+  }
+ 
+  NS_ADDREF(*aLogStream = mLogStream);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::GetServer(nsIMsgIncomingServer **aServer)
+{
+  NS_ENSURE_ARG_POINTER(aServer);
+  NS_IF_ADDREF(*aServer = mServer);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::SetServer(nsIMsgIncomingServer *aServer)
+{
+  mServer = aServer;
+  return NS_OK;
+}
+
+nsresult
+nsSpamSettings::GetLogFileSpec(nsIFileSpec **aFileSpec)
+{
+  NS_ENSURE_ARG_POINTER(aFileSpec);
+
+  nsCOMPtr <nsIMsgIncomingServer> server;
+  nsresult rv = GetServer(getter_AddRefs(server));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = server->GetLocalPath(aFileSpec);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = (*aFileSpec)->AppendRelativeUnixPath("spamlog.html");
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::GetLogURL(char * *aLogURL)
+{
+  NS_ENSURE_ARG_POINTER(aLogURL);
+
+  nsCOMPtr <nsIFileSpec> file;
+  nsresult rv = GetLogFileSpec(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = file->GetURLString(aLogURL);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return NS_OK;
+}
+
+nsresult nsSpamSettings::TruncateLog()
+{
+  // this will flush and close the steam
+  nsresult rv = SetLogStream(nsnull);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsCOMPtr <nsIFileSpec> file;
+  rv = GetLogFileSpec(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = file->Truncate(0);
+  NS_ENSURE_SUCCESS(rv,rv);
+  return rv;
+}
+
+NS_IMETHODIMP nsSpamSettings::ClearLog()
+{
+  PRBool loggingEnabled = mLoggingEnabled;
+  
+  // disable logging while clearing
+  mLoggingEnabled = PR_FALSE;
+
+  nsresult rv = TruncateLog();
+  NS_ASSERTION(NS_SUCCEEDED(rv), "failed to truncate filter log");
+
+  mLoggingEnabled = loggingEnabled;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::EnsureLogFile()
+{
+  nsCOMPtr <nsIFileSpec> file;
+  nsresult rv = GetLogFileSpec(getter_AddRefs(file));
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  PRBool exists;
+  rv = file->Exists(&exists);
+  if (NS_SUCCEEDED(rv) && !exists) {
+    rv = file->Touch();
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsSpamSettings::FlushLogIfNecessary()
+{
+  // only flush the log if we are logging
+  PRBool loggingEnabled = PR_FALSE;
+  nsresult rv = GetLoggingEnabled(&loggingEnabled);
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  if (loggingEnabled) 
+  {
+    nsCOMPtr <nsIOutputStream> logStream;
+    rv = GetLogStream(getter_AddRefs(logStream));    
+    if (NS_SUCCEEDED(rv) && logStream) {
+      rv = logStream->Flush();
+      NS_ENSURE_SUCCESS(rv,rv);
+    }
+  }
+  return rv;
+}
+
+NS_IMETHODIMP nsSpamSettings::Clone(nsISpamSettings *aSpamSettings)
+{
+  NS_ENSURE_ARG_POINTER(aSpamSettings);
+
+  nsresult rv = aSpamSettings->GetServer(getter_AddRefs(mServer)); 
+  NS_ENSURE_SUCCESS(rv,rv);
+  
+  rv = aSpamSettings->GetUseWhiteList(&mUseWhiteList); 
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = aSpamSettings->GetMoveOnSpam(&mMoveOnSpam); 
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = aSpamSettings->GetPurge(&mPurge); 
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = aSpamSettings->GetPurgeInterval(&mPurgeInterval); 
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  rv = aSpamSettings->GetLevel(&mLevel); 
+  NS_ENSURE_SUCCESS(rv,rv);
+
+  nsXPIDLCString actionTargetFolder;
+  rv = aSpamSettings->GetActionTargetFolder(getter_Copies(actionTargetFolder)); 
+  NS_ENSURE_SUCCESS(rv,rv);
+  mActionTargetFolder = actionTargetFolder;
+
+  nsXPIDLCString whiteListAbURI;
+  rv = aSpamSettings->GetWhiteListAbURI(getter_Copies(whiteListAbURI)); 
+  NS_ENSURE_SUCCESS(rv,rv);
+  mWhiteListAbURI = whiteListAbURI;
+  
+  return rv;
+}
