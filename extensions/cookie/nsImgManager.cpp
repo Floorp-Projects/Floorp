@@ -22,6 +22,11 @@
 
 #include "nsImgManager.h"
 #include "nsImages.h"
+#include "nsIDocument.h"
+#include "nsIContent.h"
+#include "nsCOMPtr.h"
+#include "nsXPIDLString.h"
+#include "nsIURI.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -29,11 +34,13 @@
 ////////////////////////////////////////////////////////////////////////////////
 // nsImgManager Implementation
 
-NS_IMPL_ISUPPORTS1(nsImgManager, nsIImgManager);
+NS_IMPL_ISUPPORTS2(nsImgManager, 
+                   nsIImgManager, 
+                   nsIContentPolicy);
 
 nsImgManager::nsImgManager()
 {
-  NS_INIT_REFCNT();
+    NS_INIT_REFCNT();
 }
 
 nsImgManager::~nsImgManager(void)
@@ -42,17 +49,62 @@ nsImgManager::~nsImgManager(void)
 
 nsresult nsImgManager::Init()
 {
-  IMAGE_RegisterPrefCallbacks();
-  return NS_OK;
+    IMAGE_RegisterPrefCallbacks();
+    return NS_OK;
 }
 
 
-NS_IMETHODIMP nsImgManager::Block(const char * imageURL) {
-  ::IMAGE_Block(imageURL);
-  return NS_OK;
+NS_IMETHODIMP nsImgManager::Block(const char * imageURL)
+{
+    ::IMAGE_Block(imageURL);
+    return NS_OK;
 }
 
-NS_IMETHODIMP nsImgManager::CheckForPermission
-    (const char * hostname, const char * firstHostname, PRBool *permission) {
-  return ::IMAGE_CheckForPermission(hostname, firstHostname, permission);
+// nsIContentPolicy Implementation
+NS_IMETHODIMP nsImgManager::ShouldLoad(PRInt32 aContentType, 
+                                       nsIURI *aContentLoc,
+                                       nsISupports *aContext,
+                                       nsIDOMWindow *aWindow,
+                                       PRBool *_retval)
+{
+    *_retval = PR_TRUE;
+    nsresult rv = NS_OK;
+    
+    switch (aContentType) {
+        case nsIContentPolicy::IMAGE:
+        {
+            nsCOMPtr<nsIURI> baseURI;
+            nsCOMPtr<nsIDocument> doc;
+            nsCOMPtr<nsIContent> content(do_QueryInterface(aContext));
+            NS_ASSERTION(content, "no content avail");
+            if (content) {
+                rv = content->GetDocument(*getter_AddRefs(doc));
+                if (NS_FAILED(rv)) return rv;
+
+                rv = doc->GetBaseURL(*getter_AddRefs(baseURI));
+                if (NS_FAILED(rv)) return rv;
+
+                nsXPIDLCString baseHost;
+                rv = baseURI->GetHost(getter_Copies(baseHost));
+                if (NS_FAILED(rv)) return rv;
+
+                nsXPIDLCString host;
+                rv = aContentLoc->GetHost(getter_Copies(host));
+                if (NS_FAILED(rv)) return rv;
+
+                return ::IMAGE_CheckForPermission(host, baseHost,
+                                                  _retval);
+            }
+        }
+        break;
+    }
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsImgManager::ShouldProcess(PRInt32 aContentType,
+                                          nsIURI *aDocumentLoc,
+                                          nsISupports *aContext,
+                                          nsIDOMWindow *aWindow,
+                                          PRBool *_retval) {
+  return NS_ERROR_NOT_IMPLEMENTED;
 }

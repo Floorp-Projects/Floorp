@@ -32,7 +32,6 @@
 interface nsIImgManager : nsISupports
 {
   void block(in string imageURL);
-  boolean checkForPermission(in string hostname, in string firstHostname);
 };
 
 %{ C++

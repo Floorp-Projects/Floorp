@@ -24,15 +24,19 @@
 #define nsImgManager_h__
 
 #include "nsIImgManager.h"
+#include "nsIContentPolicy.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 
-class nsImgManager : public nsIImgManager {
+class nsImgManager : public nsIImgManager,
+                     public nsIContentPolicy
+{
 public:
 
   // nsISupports
   NS_DECL_ISUPPORTS
   NS_DECL_NSIIMGMANAGER
+  NS_DECL_NSICONTENTPOLICY
 
   nsImgManager();
   virtual ~nsImgManager(void);
