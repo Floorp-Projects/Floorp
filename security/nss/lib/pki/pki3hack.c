@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.24 $ $Date: 2002/01/10 15:30:06 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.25 $ $Date: 2002/01/18 03:36:44 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -199,32 +199,39 @@ nss3certificate_getIssuerIdentifier(nssDecodedCert *dc)
     CERTAuthKeyID *cAuthKeyID;
     PRArenaPool *tmpArena = NULL;
     SECItem issuerCertKey;
-    SECItem *identifier = NULL;
     NSSItem *rvID = NULL;
     SECStatus secrv;
     tmpArena = PORT_NewArena(512);
     cAuthKeyID = CERT_FindAuthKeyIDExten(tmpArena, c);
-    if (cAuthKeyID) {
-	if (cAuthKeyID->keyID.data) {
-	    identifier = &cAuthKeyID->keyID;
-	} else if (cAuthKeyID->authCertIssuer) {
-	    SECItem *caName;
-	    caName = (SECItem *)CERT_GetGeneralNameByType(
+    if (cAuthKeyID == NULL) {
+	goto done;
+    }
+    if (cAuthKeyID->keyID.data) {
+	rvID = nssItem_Create(NULL, NULL, cAuthKeyID->keyID.len, 
+						cAuthKeyID->keyID.data);
+    } else if (cAuthKeyID->authCertIssuer) {
+	SECItem *caName = NULL;
+	CERTIssuerAndSN issuerSN;
+	CERTCertificate *issuer = NULL;
+
+	caName = (SECItem *)CERT_GetGeneralNameByType(
 	                                        cAuthKeyID->authCertIssuer,
 						certDirectoryName, PR_TRUE);
-	    if (caName) {
-		secrv = CERT_KeyFromIssuerAndSN(tmpArena, caName,
-		                           &cAuthKeyID->authCertSerialNumber,
-		                           &issuerCertKey);
-		if (secrv == SECSuccess) {
-		    identifier = &issuerCertKey;
-		}
-	    }
+	if (caName == NULL) {
+	    goto done;
+	}
+	issuerSN.derIssuer.data = caName->data;
+	issuerSN.derIssuer.len = caName->len;
+	issuerSN.serialNumber.data = cAuthKeyID->authCertSerialNumber.data;
+	issuerSN.serialNumber.len = cAuthKeyID->authCertSerialNumber.len;
+	issuer = PK11_FindCertByIssuerAndSN(NULL, &issuerSN, NULL);
+	if (issuer) {
+	    rvID = nssItem_Create(NULL, NULL, issuer->subjectKeyID.len, 
+	    			issuer->subjectKeyID.data);
+	    CERT_DestroyCertificate(issuer);
 	}
     }
-    if (identifier) {
-	rvID = nssItem_Create(NULL, NULL, identifier->len, identifier->data);
-    }
+done:
     if (tmpArena) PORT_FreeArena(tmpArena, PR_FALSE);
     return rvID;
 }
