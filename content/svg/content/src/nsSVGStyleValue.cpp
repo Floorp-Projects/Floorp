@@ -100,7 +100,7 @@ nsSVGStyleValue::nsSVGStyleValue()
 
 NS_IMPL_ISUPPORTS2(nsSVGStyleValue,
                    nsISVGValue,
-                   nsISVGStyleValue);
+                   nsISVGStyleValue)
 
 
 //----------------------------------------------------------------------
