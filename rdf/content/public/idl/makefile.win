@@ -33,10 +33,6 @@ IDLSRCS =  \
         XULTreeElement.idl      \
         XULEditorElement.idl      \
 		XULPopupElement.idl \
-		XULTitledButtonElement.idl \
-		XULCheckboxElement.idl \
-		XULRadioElement.idl \
-		XULRadioGroupElement.idl \
 		XULMenuListElement.idl \
        $(NULL)
 
