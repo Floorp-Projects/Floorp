@@ -40,6 +40,7 @@
 #include "nsIStreamListener.h"
 #include "nsCOMPtr.h"
 #include "nsIFileSystem.h"
+#include "nsIFile.h"        /* Solaris/gcc needed this here. */
 
 class nsFileChannel : public nsIFileChannel,
                       public nsIStreamListener
