@@ -2103,7 +2103,9 @@ nsBaseIBFrame::ReflowBlockFrame(nsBlockReflowState& aState,
       aLine->mCarriedOutTopMargin = 0;
       aLine->mCarriedOutBottomMargin = 0;
       aLine->SetMarginFlags(0);
+#if XXX_need_line_outside_children
       aLine->ClearOutsideChildren();
+#endif
       aLine->mBreakType = NS_STYLE_CLEAR_NONE;
 //XXX        aFrame->WillReflow(aState.mPresContext);
       frame->SetRect(r);
@@ -2777,20 +2779,19 @@ nsBaseIBFrame::PostPlaceLine(nsBlockReflowState& aState,
     }
   }
 
+#if XXX_need_line_outside_children
   // Compute LINE_OUTSIDE_CHILDREN state for this line. The bit is set
   // if any child frame has outside children.
-  aLine->ClearOutsideChildren();
-  nsIFrame* frame = aLine->mFirstChild;
-  PRInt32 n = aLine->ChildCount();
-  while (--n >= 0) {
-    nsFrameState state;
-    frame->GetFrameState(state);
-    if (NS_FRAME_OUTSIDE_CHILDREN & state) {
-      aLine->SetOutsideChildren();
-      break;
-    }
-    frame->GetNextSibling(frame);
+  if ((aLine->mCombinedArea.x < aLine->mBounds.x) ||
+      (aLine->mCombinedArea.XMost() > aLine->mBounds.XMost()) ||
+      (aLine->mCombinedArea.y < aLine->mBounds.y) ||
+      (aLine->mCombinedArea.YMost() > aLine->mBounds.YMost())) {
+    aLine->SetOutsideChildren();
   }
+  else {
+    aLine->ClearOutsideChildren();
+  }
+#endif
 
   // Update xmost
   nscoord xmost = aLine->mBounds.XMost();
@@ -3722,8 +3723,8 @@ nsBaseIBFrame::GetSkipSides() const
 
 NS_IMETHODIMP
 nsBaseIBFrame::Paint(nsIPresContext&      aPresContext,
-                    nsIRenderingContext& aRenderingContext,
-                    const nsRect&        aDirtyRect)
+                     nsIRenderingContext& aRenderingContext,
+                     const nsRect&        aDirtyRect)
 {
   const nsStyleDisplay* disp = (const nsStyleDisplay*)
     mStyleContext->GetStyleData(eStyleStruct_Display);
@@ -3792,9 +3793,8 @@ nsBaseIBFrame::PaintChildren(nsIPresContext& aPresContext,
   for (nsLineBox* line = mLines; nsnull != line; line = line->mNext) {
     // If the line has outside children or if the line intersects the
     // dirty rect then paint the children in the line.
-    if (line->OutsideChildren() ||
-        !((line->mBounds.YMost() <= aDirtyRect.y) ||
-          (line->mBounds.y >= aDirtyRect.YMost()))) {
+    if (!((line->mCombinedArea.YMost() <= aDirtyRect.y) ||
+          (line->mCombinedArea.y >= aDirtyRect.YMost()))) {
       nsIFrame* kid = line->mFirstChild;
       PRInt32 n = line->ChildCount();
       while (--n >= 0) {
