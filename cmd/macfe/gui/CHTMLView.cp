@@ -2287,7 +2287,9 @@ void CHTMLView::FindCommandStatus(CommandT inCommand,
 				outEnabled = false;
 			}
 			break;
-
+		case cmd_FTPUpload:  // fix for #313498
+			outEnabled = false;
+			break;
 		default:
 			if(inCommand >= ENCODING_BASE && inCommand < ENCODING_CEILING)
 			{
