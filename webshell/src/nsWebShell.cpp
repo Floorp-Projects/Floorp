@@ -2207,7 +2207,7 @@ nsWebShell::OnOverLink(nsIContent* aContent,
     nsCOMPtr<nsIWebBrowserChrome> browserChrome(do_GetInterface(mTreeOwner));
 
     if (browserChrome)
-      browserChrome->SetJSStatus(aURLSpec);
+      browserChrome->SetOverLink(aURLSpec);
   }
   return NS_OK;
 }
