@@ -23,8 +23,10 @@ include <$(DEPTH)\config\rules.mak>
 install:: 
 	$(MAKE_INSTALL) messengercompose.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
 	$(MAKE_INSTALL) addressingWidgetOverlay.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
+	$(MAKE_INSTALL) MsgAttachPage.dtd $(DIST)\bin\chrome\messengercompose\locale\en-US
 
 clobber::
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\messengercompose.dtd
 	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\addressingWidgetOverlay.dtd
+	rm -f $(DIST)\bin\chrome\messengercompose\locale\en-US\MsgAttachPage.dtd
 
