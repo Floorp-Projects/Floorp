@@ -4476,6 +4476,11 @@ PK11_DigestKey(PK11Context *context, PK11SymKey *key)
     SECStatus rv = SECSuccess;
     PK11SymKey *newKey = NULL;
 
+    if (!context || !key) {
+        PORT_SetError(SEC_ERROR_INVALID_ARGS);
+        return SECFailure;
+    }
+
     /* if we ran out of session, we need to restore our previously stored
      * state.
      */
