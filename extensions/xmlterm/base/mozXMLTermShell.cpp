@@ -204,10 +204,10 @@ NS_IMETHODIMP mozXMLTermShell::SetPrompt(const PRUnichar* aPrompt,
 
 /** Ignore key press events
  * (workaround for form input being transmitted to xmlterm)
- * @param aIgnore ignore flag (true/false)
+ * @param aIgnore ignore flag (PR_TRUE/PR_FALSE)
  * @param aCookie document.cookie string for authentication
  */
-NS_IMETHODIMP mozXMLTermShell::IgnoreKeyPress(const PRBool aIgnore,
+NS_IMETHODIMP mozXMLTermShell::IgnoreKeyPress(PRBool aIgnore,
                                               const PRUnichar* aCookie)
 {
   if (mXMLTerminal) {

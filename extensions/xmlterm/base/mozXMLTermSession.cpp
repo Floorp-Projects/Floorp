@@ -121,7 +121,7 @@ mozXMLTermSession::mozXMLTermSession() :
   mStartEntryNumber(0),
   mCurrentEntryNumber(0),
 
-  mEntryHasOutput(false),
+  mEntryHasOutput(PR_FALSE),
 
   mPromptSpanNode(nsnull),
   mCommandSpanNode(nsnull),
@@ -140,7 +140,7 @@ mozXMLTermSession::mozXMLTermSession() :
   mMetaCommandType(NO_META_COMMAND),
   mAutoDetect(FIRST_LINE),
 
-  mFirstOutputLine(false),
+  mFirstOutputLine(PR_FALSE),
 
   mEntryOutputLines(0),
   mPreTextBufferLines(0),
@@ -154,7 +154,7 @@ mozXMLTermSession::mozXMLTermSession() :
   mTopScrollRow(0),
   mBotScrollRow(0),
 
-  mRestoreInputEcho(false),
+  mRestoreInputEcho(PR_FALSE),
 
   mShellPrompt(""),
   mPromptHTML(""),
@@ -241,7 +241,7 @@ NS_IMETHODIMP mozXMLTermSession::Init(mozIXMLTerminal* aXMLTerminal,
 #if 0
   nsAutoString prefaceText ("Preface");
   nsAutoString nullStyle ("");
-  result = AppendOutput(prefaceText, nullStyle, true);
+  result = AppendOutput(prefaceText, nullStyle, PR_TRUE);
 #endif
 
   mInitialized = PR_TRUE;
@@ -325,8 +325,8 @@ NS_IMETHODIMP mozXMLTermSession::Resize(mozILineTermAux* lineTermAux)
 
 /** Preprocesses user input before it is transmitted to LineTerm
  * @param aString (inout) input data to be preprocessed
- * @param consumed (output) true if input data has been consumed
- * @param checkSize (output) true if terminal size needs to be checked
+ * @param consumed (output) PR_TRUE if input data has been consumed
+ * @param checkSize (output) PR_TRUE if terminal size needs to be checked
  */
 NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
                                             PRBool& consumed,
@@ -335,8 +335,8 @@ NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
 
   XMLT_LOG(mozXMLTermSession::Preprocess,70,("\n"));
 
-  consumed = false;
-  checkSize = false;
+  consumed = PR_FALSE;
+  checkSize = PR_FALSE;
 
   if (mMetaCommandType == TREE_META_COMMAND) {
     if (aString.Length() == 1) {
@@ -345,7 +345,7 @@ NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
 
       XMLT_LOG(mozXMLTermSession::Preprocess,60,("char=0x%x\n", uch));
 
-      consumed = true;
+      consumed = PR_TRUE;
       switch (uch) {
       case U_CTL_B:
         TraverseDOMTree(stderr, mBodyNode, mCurrentDebugNode,
@@ -397,7 +397,7 @@ NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
         (aString.FindCharInSet("\r\n\017") >= 0)) {
       // C-Return or Newline or Control-O found in string; not screen mode;
       // resize terminal, if need be
-      checkSize = true;
+      checkSize = PR_TRUE;
       XMLT_LOG(mozXMLTermSession::Preprocess,72,("checkSize\n"));
     }
   }
@@ -409,7 +409,7 @@ NS_IMETHODIMP mozXMLTermSession::Preprocess(const nsString& aString,
 /** Reads all available data from LineTerm and displays it;
  * returns when no more data is available.
  * @param lineTermAux LineTermAux object to read data from
- * @param processedData (output) true if any data was processed
+ * @param processedData (output) PR_TRUE if any data was processed
  */
 NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
                                          PRBool& processedData)
@@ -422,15 +422,15 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
   XMLT_LOG(mozXMLTermSession::ReadAll,60,("\n"));
 
-  processedData = false;
+  processedData = PR_FALSE;
 
   if (lineTermAux == nsnull)
     return NS_ERROR_FAILURE;
 
   nsresult result = NS_OK;
-  PRBool flushOutput = false;
+  PRBool flushOutput = PR_FALSE;
 
-  PRBool metaNextCommand = false;
+  PRBool metaNextCommand = PR_FALSE;
 
   // NOTE: Do not execute return statements within this loop ;
   //       always break out of the loop after setting result to an error value,
@@ -451,7 +451,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
     if (opcodes == 0) break;
 
-    processedData = true;
+    processedData = PR_TRUE;
 
     screenData = (opcodes & LTERM_SCREENDATA_CODE);
     streamData = (opcodes & LTERM_STREAMDATA_CODE);
@@ -487,8 +487,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       mOutputType = SCREEN_OUTPUT;
 
       // Disable input echo
-      lineTermAux->SetEchoFlag(false);
-      mRestoreInputEcho = true;
+      lineTermAux->SetEchoFlag(PR_FALSE);
+      mRestoreInputEcho = PR_TRUE;
     }
 
     if (!screenData && (mOutputType == SCREEN_OUTPUT)) {
@@ -506,8 +506,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       mScreenNode = nsnull;
 
       if (mRestoreInputEcho) {
-        lineTermAux->SetEchoFlag(true);
-        mRestoreInputEcho = false;
+        lineTermAux->SetEchoFlag(PR_TRUE);
+        mRestoreInputEcho = PR_FALSE;
       }
 
       // Show the caret
@@ -523,8 +523,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         mOutputType = STREAM_OUTPUT;
 
         // Disable input echo
-        lineTermAux->SetEchoFlag(false);
-        mRestoreInputEcho = true;
+        lineTermAux->SetEchoFlag(PR_FALSE);
+        mRestoreInputEcho = PR_TRUE;
 
         // Determine effective stream URL and default markup type
         nsAutoString streamURL;
@@ -569,14 +569,14 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
       // Process stream output
       bufStyle = "";
-      result = ProcessOutput(bufString, bufStyle, false, true);
+      result = ProcessOutput(bufString, bufStyle, PR_FALSE, PR_TRUE);
       if (NS_FAILED(result))
         break;
 
       if (newline) {
         if (!mEntryHasOutput) {
           // Start of command output
-          mEntryHasOutput = true;
+          mEntryHasOutput = PR_TRUE;
         }
 
         if (errorFlag) {
@@ -589,7 +589,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           break;
 
         mOutputType = LINE_OUTPUT;
-        flushOutput = true;
+        flushOutput = PR_TRUE;
       }
 
     } else if (screenData) {
@@ -719,13 +719,13 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
 
       result = PositionScreenCursor(cursorRow, cursorCol);
 
-      flushOutput = false;
+      flushOutput = PR_FALSE;
 
     } else {
       // Process line data
       PRBool promptLine, inputLine, metaCommand, completionRequested;
 
-      flushOutput = true;
+      flushOutput = PR_TRUE;
 
       inputLine =   (opcodes & LTERM_INPUT_CODE);
       promptLine =  (opcodes & LTERM_PROMPT_CODE);
@@ -777,15 +777,15 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
       if (!metaCommand && inputLine) {
         if (metaNextCommand) {
           // Echo of transmitted meta command
-          metaNextCommand = false;
+          metaNextCommand = PR_FALSE;
 
         } else {
           // No meta command; enable input echo
           mMetaCommandType = NO_META_COMMAND;
 
           if (mRestoreInputEcho) {
-            lineTermAux->SetEchoFlag(true);
-            mRestoreInputEcho = false;
+            lineTermAux->SetEchoFlag(PR_TRUE);
+            mRestoreInputEcho = PR_FALSE;
           }
         }
       }
@@ -924,7 +924,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           case LS_META_COMMAND:
             {
               // Disable input echo and transmit command
-              lineTermAux->SetEchoFlag(false);
+              lineTermAux->SetEchoFlag(PR_FALSE);
               nsAutoString lsCommand ("");
 
               if (commandArgs.Length() > 0) {
@@ -938,8 +938,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               //mXMLTerminal->SendText(lsCommand);
 
               /* Set flag to recognize transmitted command */
-              metaNextCommand = true;
-              mRestoreInputEcho = true;
+              metaNextCommand = PR_TRUE;
+              mRestoreInputEcho = PR_TRUE;
             }
             break;
 
@@ -950,7 +950,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           if ((mMetaCommandType == DEFAULT_META_COMMAND) ||
               (mMetaCommandType == JS_META_COMMAND)) {
             // Display metacommand output
-            mEntryHasOutput = true;
+            mEntryHasOutput = PR_TRUE;
 
             XMLT_LOG(mozXMLTermSession::ReadAll,62,("metaCommandOutput\n"));
 
@@ -959,12 +959,12 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
               metaCommandOutput = "";
 
             // Check metacommand output for markup (secure)
-            result = AutoDetectMarkup(metaCommandOutput, true, true);
+            result = AutoDetectMarkup(metaCommandOutput, PR_TRUE, PR_TRUE);
             if (NS_FAILED(result))
               break;
 
             nsAutoString nullStyle ("");
-            result = ProcessOutput(metaCommandOutput, nullStyle, true,
+            result = ProcessOutput(metaCommandOutput, nullStyle, PR_TRUE,
                                    mOutputMarkupType != PLAIN_TEXT);
             if (NS_FAILED(result))
               break;
@@ -974,7 +974,7 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
           }
 
           // Reset newline flag
-          newline = false;
+          newline = PR_FALSE;
         }
 
         // Clear the meta command from the string nuffer
@@ -1018,8 +1018,8 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         if (newline) {
           // Start of command output
           // (this is needed to properly handle commands with no output!)
-          mEntryHasOutput = true;
-          mFirstOutputLine = true;
+          mEntryHasOutput = PR_TRUE;
+          mFirstOutputLine = PR_TRUE;
 
         }
 
@@ -1027,30 +1027,30 @@ NS_IMETHODIMP mozXMLTermSession::ReadAll(mozILineTermAux* lineTermAux,
         // Not prompt line
         if (!mEntryHasOutput) {
           // Start of command output
-          mEntryHasOutput = true;
-          mFirstOutputLine = true;
+          mEntryHasOutput = PR_TRUE;
+          mFirstOutputLine = PR_TRUE;
         }
 
         if (newline) {
           // Complete line; check for markup (insecure)
-          result = AutoDetectMarkup(bufString, mFirstOutputLine, false);
+          result = AutoDetectMarkup(bufString, mFirstOutputLine, PR_FALSE);
           if (NS_FAILED(result))
             break;
 
           // Not first output line anymore
-          mFirstOutputLine = false;
+          mFirstOutputLine = PR_FALSE;
         }
 
         if (mOutputMarkupType == PLAIN_TEXT) {
           // Display plain text output
-          result = ProcessOutput(bufString, bufStyle, newline, false);
+          result = ProcessOutput(bufString, bufStyle, newline, PR_FALSE);
           if (NS_FAILED(result))
             break;
 
         } else if (newline) {
           // Process autodetected stream output (complete lines only)
           bufStyle = "";
-          result = ProcessOutput(bufString, bufStyle, true, true);
+          result = ProcessOutput(bufString, bufStyle, PR_TRUE, PR_TRUE);
           if (NS_FAILED(result))
             break;
         }
@@ -1205,9 +1205,9 @@ NS_IMETHODIMP mozXMLTermSession::DisplayInput(const nsString& aString,
 
 /** Autodetects markup in current output line
  * @param aString string to be displayed
- * @param firstOutputLine true if this is the first output line
- * @param secure true if output data is secure
- *               (usually true for metacommand output only)
+ * @param firstOutputLine PR_TRUE if this is the first output line
+ * @param secure PR_TRUE if output data is secure
+ *               (usually PR_TRUE for metacommand output only)
  */
 NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
                                                   PRBool firstOutputLine,
@@ -1270,7 +1270,7 @@ NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
   if (newMarkupType != PLAIN_TEXT) {
     // Markup found; initialize (insecure) stream
     nsAutoString streamURL = "http://in.sec.ure";
-    result = InitStream(streamURL, newMarkupType, false);
+    result = InitStream(streamURL, newMarkupType, PR_FALSE);
     if (NS_FAILED(result))
       return result;
 
@@ -1289,7 +1289,7 @@ NS_IMETHODIMP mozXMLTermSession::AutoDetectMarkup(const nsString& aString,
 /** Initializes display of stream output with specified markup type
  * @param streamURL effective URL of stream output
  * @param streamMarkupType stream markup type
- * @param streamIsSecure true if stream is secure
+ * @param streamIsSecure PR_TRUE if stream is secure
  */
 NS_IMETHODIMP mozXMLTermSession::InitStream(const nsString& streamURL,
                                             OutputMarkupType streamMarkupType,
@@ -1523,8 +1523,8 @@ NS_IMETHODIMP mozXMLTermSession::BreakOutput(PRBool positionCursorBelow)
  * @param aString string to be processed
  * @param aStyle style values for string (see lineterm.h)
  *               (if it is a null string, STDOUT style is assumed)
- * @param newline true if this is a complete line of output
- * @param streamOutput true if string represents stream output
+ * @param newline PR_TRUE if this is a complete line of output
+ * @param streamOutput PR_TRUE if string represents stream output
  */
 NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
                                                const nsString& aStyle,
@@ -1612,7 +1612,7 @@ NS_IMETHODIMP mozXMLTermSession::ProcessOutput(const nsString& aString,
 
 /** Ensures the total number of output lines stays within a limit
  * by deleting the oldest output line.
- * @param deleteAllOld if true, delete all previous display nodes
+ * @param deleteAllOld if PR_TRUE, delete all previous display nodes
  *                     (excluding the current one)
  */
 NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
@@ -1758,7 +1758,7 @@ NS_IMETHODIMP mozXMLTermSession::LimitOutputLines(PRBool deleteAllOld)
  * @param aStyle style values for string (see lineterm.h)
  *               (may be a single Unichar, for uniform style)
  *               (if it is a null string, STDOUT style is assumed)
- * @param newline true if this is a complete line of output
+ * @param newline PR_TRUE if this is a complete line of output
  */
 NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
                                               const nsString& aStyle,
@@ -1877,7 +1877,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
       if (mPreTextBufferLines > 300) {
         // Delete all earlier PRE/mixed blocks and first line of current block
 
-        result = LimitOutputLines(true);
+        result = LimitOutputLines(PR_TRUE);
         if (NS_FAILED(result))
           return result;
 
@@ -1894,7 +1894,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
       } else if (mEntryOutputLines+mPreTextBufferLines > 300) {
         // Delete oldest PRE/mixed line so as to stay within the limit
 
-        result = LimitOutputLines(false);
+        result = LimitOutputLines(PR_FALSE);
         if (NS_FAILED(result))
           return result;
       }
@@ -2000,7 +2000,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendOutput(const nsString& aString,
 
       if (mEntryOutputLines > 300) {
         // Delete oldest PRE/mixed line so as to stay within the limit
-        result = LimitOutputLines(false);
+        result = LimitOutputLines(PR_FALSE);
         if (NS_FAILED(result))
           return result;
       }
@@ -2204,8 +2204,8 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
  * @param beforeNode child node before which to insert fragment;
  *                   if null, insert after last child node
  *                   (default value is null)
- * @param replace if true, replace beforeNode with inserted fragment
- *                (default value is false)
+ * @param replace if PR_TRUE, replace beforeNode with inserted fragment
+ *                (default value is PR_FALSE)
  */
  NS_IMETHODIMP mozXMLTermSession::InsertFragment(const nsString& aString,
                                               nsIDOMNode* parentNode,
@@ -2326,7 +2326,7 @@ NS_IMETHODIMP mozXMLTermSession::AppendLineLS(const nsString& aString,
 
         if (NS_SUCCEEDED(result) && newBeforeNode) {
           beforeNode = newBeforeNode.get();
-          replaceTem = false;
+          replaceTem = PR_FALSE;
         }
 
       } else {
@@ -2688,7 +2688,7 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
                                              getter_AddRefs(resultNode));
 
         // Check if PRE node has any child nodes
-        PRBool hasChildNodes = true;
+        PRBool hasChildNodes = PR_TRUE;
         result = mOutputDisplayNode->HasChildNodes(&hasChildNodes);
 
         if (!hasChildNodes) {
@@ -2749,7 +2749,7 @@ NS_IMETHODIMP mozXMLTermSession::FlushOutput(FlushActionType flushAction)
 
         XMLT_LOG(mozXMLTermSession::FlushOutput,72,("splitting\n"));
 
-        AppendOutput(preTextSplit, styleStr, false);
+        AppendOutput(preTextSplit, styleStr, PR_FALSE);
 
         FlushOutput(DISPLAY_INCOMPLETE_FLUSH);
       }
@@ -2973,7 +2973,7 @@ NS_IMETHODIMP mozXMLTermSession::NewPreface(void)
   mOutputTextNode = nsnull;
 
   // Command output being processed
-  mEntryHasOutput = true;
+  mEntryHasOutput = PR_TRUE;
 
   return NS_OK;
 }
@@ -3204,7 +3204,7 @@ NS_IMETHODIMP mozXMLTermSession::NewEntry(const nsString& aPrompt)
   mOutputTextNode = nsnull;
 
   // No command output processed yet
-  mEntryHasOutput = false;
+  mEntryHasOutput = PR_FALSE;
 
   mEntryOutputLines = 0;
 
@@ -3947,7 +3947,7 @@ NS_IMETHODIMP mozXMLTermSession::SetDOMText(nsCOMPtr<nsIDOMNode>& textNode,
 
 /** Checks if node is a text node
  * @param aNode DOM node to be checked
- * @return true if node is a text node
+ * @return PR_TRUE if node is a text node
  */
 PRBool mozXMLTermSession::IsTextNode(nsIDOMNode *aNode)
 {
@@ -3970,17 +3970,17 @@ PRBool mozXMLTermSession::IsTextNode(nsIDOMNode *aNode)
 /** Checks if node is a text, span, or anchor node
  * (i.e., allowed inside a PRE element)
  * @param aNode DOM node to be checked
- * @return true if node is a text, span or anchor node
+ * @return PR_TRUE if node is a text, span or anchor node
  */
 PRBool mozXMLTermSession::IsPREInlineNode(nsIDOMNode* aNode)
 {
   nsresult result;
-  PRBool isPREInlineNode = false;
+  PRBool isPREInlineNode = PR_FALSE;
 
   nsCOMPtr<nsIDOMText> domText = do_QueryInterface(aNode);
 
   if (domText) {
-    isPREInlineNode = true;
+    isPREInlineNode = PR_TRUE;
 
   } else {
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(aNode);
@@ -4003,11 +4003,11 @@ PRBool mozXMLTermSession::IsPREInlineNode(nsIDOMNode* aNode)
  * @param aNode DOM node to be serialized
  * @param indentString indentation prefix string
  * @param htmlString (output) serialized HTML fragment
- * @param deepContent if true, serialize children of node as well
- *                    (defaults to false)
- * @param insidePREnode set to true if aNode is embedded inside a PRE node
+ * @param deepContent if PR_TRUE, serialize children of node as well
+ *                    (defaults to PR_FALSE)
+ * @param insidePREnode set to PR_TRUE if aNode is embedded inside a PRE node
  *                      control formatting
- *                      (defaults to false)
+ *                      (defaults to PR_FALSE)
  */
 NS_IMETHODIMP mozXMLTermSession::ToHTMLString(nsIDOMNode* aNode,
                                               nsString& indentString,
@@ -4241,7 +4241,7 @@ void mozXMLTermSession::TraverseDOMTree(FILE* fileStream,
 
   case TREE_PRINT_ATTS:
   case TREE_PRINT_HTML:
-    if (true) {
+    if (PR_TRUE) {
       nsAutoString indentString ("");
       nsAutoString htmlString;
       ToHTMLString(currentNode, indentString, htmlString,

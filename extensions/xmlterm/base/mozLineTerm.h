@@ -109,7 +109,7 @@ public:
 
 protected:
   /** Checks if Mozilla preference settings are secure
-   * @param _retval (output) true if settings are secure
+   * @param _retval (output) PR_TRUE if settings are secure
    */
   NS_IMETHOD ArePrefsSecure(PRBool *_retval);
 

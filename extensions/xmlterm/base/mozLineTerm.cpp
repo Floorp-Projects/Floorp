@@ -90,13 +90,13 @@ NS_NewLineTermAux(mozILineTermAux** aLineTermAux)
 /////////////////////////////////////////////////////////////////////////
 // mozLineTerm implementaion
 /////////////////////////////////////////////////////////////////////////
-PRBool mozLineTerm::mLoggingEnabled = false;
+PRBool mozLineTerm::mLoggingEnabled = PR_FALSE;
 
 mozLineTerm::mozLineTerm() :
   mCursorRow(0),
   mCursorColumn(0),
-  mSuspended(false),
-  mEchoFlag(true),
+  mSuspended(PR_FALSE),
+  mEchoFlag(PR_TRUE),
   mObserver(nsnull),
   mCookie(""),
   mLastTime(LL_ZERO)
@@ -162,7 +162,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
   if (!_retval)
     return NS_ERROR_FAILURE;
 
-  *_retval = false;
+  *_retval = PR_FALSE;
 
   nsIPref* prefService;
   nsServiceManager::GetService(kPrefServiceCID, NS_GET_IID(nsIPref), 
@@ -180,7 +180,7 @@ NS_IMETHODIMP mozLineTerm::ArePrefsSecure(PRBool *_retval)
     XMLT_ERROR("mozLineTerm::ArePrefsSecure: Error - Please add the line\n"
     "  pref(\"security.checkxpcconnect\",true);\n"
     "to your preferences file (.mozilla/prefs.js)\n");
-    *_retval = false;
+    *_retval = PR_FALSE;
 #if 0  // Temporarily comented out
     return NS_OK;
 #endif
@@ -267,7 +267,7 @@ NS_IMETHODIMP mozLineTerm::GetSecurePrincipal(nsIDOMDocument *domDoc,
                                                *aPrincipalStr));
 
   // Check if principal is secure
-  PRBool insecure = false;
+  PRBool insecure = PR_FALSE;
   if (insecure) {
     // Return null string
     XMLT_ERROR("mozLineTerm::GetSecurePrincipal: Error - "
@@ -539,12 +539,12 @@ NS_IMETHODIMP mozLineTerm::Write(const PRUnichar *buf,
   nsresult result;
   UNICHAR ubuf[MAXCOL];
   int jLen, retCode;
-  PRBool newline = false;
+  PRBool newline = PR_FALSE;
 
   jLen = 0;
   while ((jLen < MAXCOL-1) && (buf[jLen] != 0)) {
     if (buf[jLen] == U_LINEFEED)
-      newline = true;
+      newline = PR_TRUE;
 
     ubuf[jLen] = (UNICHAR) buf[jLen];
 

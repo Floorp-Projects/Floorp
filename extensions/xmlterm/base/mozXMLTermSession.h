@@ -71,8 +71,8 @@ class mozXMLTermSession
 
   /** Preprocesses user input before it is transmitted to LineTerm
    * @param aString (inout) input data to be preprocessed
-   * @param consumed (output) true if input data has been consumed
-   * @param checkSize (output) true if terminal size needs to be checked
+   * @param consumed (output) PR_TRUE if input data has been consumed
+   * @param checkSize (output) PR_TRUE if terminal size needs to be checked
    */
   NS_IMETHOD Preprocess(const nsString& aString,
                         PRBool& consumed,
@@ -81,7 +81,7 @@ class mozXMLTermSession
   /** Reads all available data from LineTerm and displays it;
    * returns when no more data is available.
    * @param lineTermAux LineTermAux object to read data from
-   * @param processedData (output) true if any data was processed
+   * @param processedData (output) PR_TRUE if any data was processed
    */
   NS_IMETHOD ReadAll(mozILineTermAux* lineTermAux, PRBool& processedData);
 
@@ -237,9 +237,9 @@ protected:
 
   /** Autodetects markup in current output line
    * @param aString string to be displayed
-   * @param firstOutputLine true if this is the first output line
-   * @param secure true if output data is secure
-   *               (usually true for metacommand output only)
+   * @param firstOutputLine PR_TRUE if this is the first output line
+   * @param secure PR_TRUE if output data is secure
+   *               (usually PR_TRUE for metacommand output only)
    */
   NS_IMETHOD AutoDetectMarkup(const nsString& aString,
                               PRBool firstOutputLine,
@@ -248,7 +248,7 @@ protected:
   /** Initializes display of stream output with specified markup type
    * @param streamURL effective URL of stream output
    * @param streamMarkupType stream markup type
-   * @param streamIsSecure true if stream is secure
+   * @param streamIsSecure PR_TRUE if stream is secure
    */
   NS_IMETHOD InitStream(const nsString& streamURL,
                         OutputMarkupType streamMarkupType,
@@ -261,8 +261,8 @@ protected:
    * @param aString string to be processed
    * @param aStyle style values for string (see lineterm.h)
    *               (if it is a null string, STDOUT style is assumed)
-   * @param newline true if this is a complete line of output
-   * @param streamOutput true if string represents stream output
+   * @param newline PR_TRUE if this is a complete line of output
+   * @param streamOutput PR_TRUE if string represents stream output
    */
   NS_IMETHOD ProcessOutput(const nsString& aString,
                            const nsString& aStyle,
@@ -271,7 +271,7 @@ protected:
 
   /** Ensures the total number of output lines stays within a limit
    * by deleting the oldest output line.
-   * @param deleteAllOld if true, delete all previous display nodes
+   * @param deleteAllOld if PR_TRUE, delete all previous display nodes
    *                     (excluding the current one)
    */
   NS_IMETHOD LimitOutputLines(PRBool deleteAllOld);
@@ -281,7 +281,7 @@ protected:
    * @param aString string to be processed
    * @param aStyle style values for string (see lineterm.h)
    *               (if it is a null string, STDOUT style is assumed)
-   * @param newline true if this is a complete line of output
+   * @param newline PR_TRUE if this is a complete line of output
    */
   NS_IMETHOD AppendOutput(const nsString& aString,
                           const nsString& aStyle,
@@ -305,14 +305,14 @@ protected:
    * @param beforeNode child node before which to insert fragment;
    *                   if null, insert after last child node
    *                   (default value is null)
-   * @param replace if true, replace beforeNode with inserted fragment
-   *                (default value is false)
+   * @param replace if PR_TRUE, replace beforeNode with inserted fragment
+   *                (default value is PR_FALSE)
    */
   NS_IMETHOD InsertFragment(const nsString& aString,
                             nsIDOMNode* parentNode,
                             PRInt32 entryNumber = -1,
                             nsIDOMNode* beforeNode = nsnull,
-                            PRBool replace = false);
+                            PRBool replace = PR_FALSE);
 
   /** Substitute all occurrences of the '#' character in aString with
    * aNumber, if aNumber >= 0;
@@ -522,14 +522,14 @@ protected:
 
   /** Checks if node is a text node
    * @param aNode DOM node to be checked
-   * @return true if node is a text node
+   * @return PR_TRUE if node is a text node
    */
   PRBool IsTextNode(nsIDOMNode *aNode);
 
   /** Checks if node is a text, span, or anchor node
    * (i.e., allowed inside a PRE element)
    * @param aNode DOM node to be checked
-   * @return true if node is a text, span or anchor node
+   * @return PR_TRUE if node is a text, span or anchor node
    */
   PRBool IsPREInlineNode(nsIDOMNode* aNode);
 
@@ -537,17 +537,17 @@ protected:
    * @param aNode DOM node to be serialized
    * @param indentString indentation prefix string
    * @param htmlString (output) serialized HTML fragment
-   * @param deepContent if true, serialize children of node as well
-   *                    (defaults to false)
-   * @param insidePREnode set to true if aNode is embedded inside a PRE node
+   * @param deepContent if PR_TRUE, serialize children of node as well
+   *                    (defaults to PR_FALSE)
+   * @param insidePREnode set to PR_TRUE if aNode is embedded inside a PRE node
    *                      control formatting
-   *                      (defaults to false)
+   *                      (defaults to PR_FALSE)
    */
   NS_IMETHOD ToHTMLString(nsIDOMNode* aNode,
                           nsString& indentString,
                           nsString& htmlString,
-                          PRBool deepContent = false,
-                          PRBool insidePRENode = false);
+                          PRBool deepContent = PR_FALSE,
+                          PRBool insidePRENode = PR_FALSE);
 
   /** Implements the "tree:" meta command to traverse DOM tree
    * @param fileStream file stream for displaying tree traversal output
