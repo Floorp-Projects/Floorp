@@ -1,7 +1,6 @@
 <?xml version="1.0"?>
 <rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
-         xmlns:nc="http://home.netscape.com/NC-rdf#">
-
+  xmlns:nc="http://home.netscape.com/NC-rdf#">
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
@@ -88,6 +87,16 @@
        <rdf:Description ID="adding_groups"
          nc:name="adding groups"
 	 nc:link="chrome://help/locale/icq_help.html#adding_groupsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="adding_ICQ_contacts"
+         nc:name="adding ICQ contacts"
+	 nc:link="chrome://help/locale/im_help.html#adding_ICQ_contactsSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1195,6 +1204,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="Groupmark_as_home_page"
+         nc:name="Groupmark as home page"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#Groupmark_as_home_pageSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="GroupMarks"
          nc:name="GroupMarks"
 	 nc:link="chrome://help/locale/customize_help.html#GroupMarksSDX"/>
@@ -1238,6 +1257,16 @@
        <rdf:Description ID="home_page"
          nc:name="home page"
 	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#home_pageSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="Home_Page_Group"
+         nc:name="Home Page Group"
+	 nc:link="chrome://help/locale/cs_nav_prefs_navigator.html#Home_Page_GroupSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1465,9 +1494,19 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
-       <rdf:Description ID="importing_intermediate_CA certificates"
+       <rdf:Description ID="importing_intermediate_CA_certificates"
          nc:name="importing intermediate CA certificates"
-	 nc:link="chrome://help/locale/certs_help.html#importing_intermediate_CA certificatesSDX"/>
+	 nc:link="chrome://help/locale/certs_help.html#importing_intermediate_CA_certificatesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="importing_server_CA_certificates"
+         nc:name="importing server CA certificates"
+	 nc:link="chrome://help/locale/cert_dialog_help.html#importing_server_CA_certificatesSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -1845,6 +1884,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="mark_as_new"
+         nc:name="mark as new"
+	 nc:link="chrome://help/locale/mail_help.html#mark_as_newSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="MDN_receipt"
          nc:name="MDN receipt"
 	 nc:link="chrome://help/locale/mail_help.html#MDN_receiptSDX"/>
@@ -1898,6 +1947,16 @@
        <rdf:Description ID="message_privacy_and_security"
          nc:name="message privacy and security"
 	 nc:link="chrome://help/locale/mail_help.html#message_privacy_and_securitySDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="message_status"
+         nc:name="message status"
+	 nc:link="chrome://help/locale/mail_help.html#message_statusSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2435,6 +2494,26 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="popup_preferences"
+         nc:name="popup preferences"
+	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_preferencesSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="popup_windows"
+         nc:name="popup windows"
+	 nc:link="chrome://help/locale/cs_priv_prefs_popup.html#popup_windowsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="posting"
          nc:name="posting"
 	 nc:link="chrome://help/locale/mail_help.html#postingSDX"/>
@@ -2955,6 +3034,16 @@
 <rdf:Description about="urn:root">
    <nc:subheadings>
      <rdf:Seq><rdf:li>
+       <rdf:Description ID="server_certificate_problems"
+         nc:name="server certificate problems"
+	 nc:link="chrome://help/locale/cert_dialog_help.html#server_certificate_problemsSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
        <rdf:Description ID="setting_ICQ_preferences"
          nc:name="setting ICQ preferences"
 	 nc:link="chrome://help/locale/icq_help.html#setting_ICQ_preferencesSDX"/>
@@ -3318,6 +3407,16 @@
        <rdf:Description ID="validate_html_in_a_document"
          nc:name="validate html in a document"
 	 nc:link="chrome://help/locale/composer_help.html#validate_html_in_a_documentSDX"/>
+     </rdf:li></rdf:Seq>
+   </nc:subheadings>
+</rdf:Description>
+
+<rdf:Description about="urn:root">
+   <nc:subheadings>
+     <rdf:Seq><rdf:li>
+       <rdf:Description ID="VeriSign_server_certificate"
+         nc:name="VeriSign server certificate"
+	 nc:link="chrome://help/locale/cert_dialog_help.html#VeriSign_server_certificateSDX"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
