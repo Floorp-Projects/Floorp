@@ -767,7 +767,7 @@ done
 *-msvc*)
     _WIN32_MSVC=1
     ;;
-*-mksnt*)
+*-mks*)
     _WIN32_MSVC=1
     ;;
 esac
@@ -1063,7 +1063,7 @@ EOF
     beos*)
         DEFINES="$DEFINES -DDEBUG_${USER}"
         ;;
-    msvc*|mksnt*|cygwin*|mingw*)
+    msvc*|mks*|cygwin*|mingw*)
         DEFINES="$DEFINES -DDEBUG_`echo ${USERNAME} | sed -e 's| |_|g'`"
         ;;
     *) 
@@ -2796,7 +2796,7 @@ OS_CONFIG="${OS_TARGET}${OS_RELEASE}"
 
 
 case "$host" in
-*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
     ;;
 *-beos*)
     HOST_CFLAGS="$HOST_CFLAGS -DXP_BEOS -DBeOS -DBEOS -D_POSIX_SOURCE"
@@ -3736,7 +3736,7 @@ EOF
     esac    
     ;;
 
-*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
     cat >> confdefs.h <<\EOF
 #define XP_PC 1
 EOF
@@ -5388,7 +5388,7 @@ EOF
 
     fi
     ;;
-*-mingw*|*-cygwin*|*-msvc*|*-mksnt*)
+*-mingw*|*-cygwin*|*-msvc*|*-mks*)
         USE_PTHREADS=
     _PTHREAD_LDFLAGS=
     USE_USER_PTHREADS=
@@ -5495,7 +5495,7 @@ fi
 RELEASE_OBJDIR_NAME="${OS_CONFIG}${CPU_ARCH_TAG}${COMPILER_TAG}${IMPL_STRATEGY}${OBJDIR_TAG}.${OBJDIR_SUFFIX}"
 
 case "$target_os" in
-mingw*|cygwin*|msvc*|mksnt*)
+mingw*|cygwin*|msvc*|mks*)
     CC="\$(CYGWIN_WRAPPER) $CC"
     CXX="\$(CYGWIN_WRAPPER) $CXX"
     RC="\$(CYGWIN_WRAPPER) $RC"
