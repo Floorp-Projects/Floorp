@@ -46,6 +46,7 @@ install::
 	$(MAKE_INSTALL) pref.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) preftree.xul  $(DIST)\bin\chrome\pref\content\default
 	$(MAKE_INSTALL) pref-mousewheel.xul  $(DIST)\bin\chrome\pref\content\default
+	$(MAKE_INSTALL) fontScalingOverlay.xul  $(DIST)\bin\chrome\pref\content\default
 
 clobber::
   rm -f $(DIST)\bin\chrome\pref\content\default\*.*

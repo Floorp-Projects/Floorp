@@ -20,3 +20,4 @@ PrefsWindow.js
 pref.xul
 preftree.xul
 pref-mousewheel.xul
+fontScalingOverlay.xul
