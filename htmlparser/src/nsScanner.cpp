@@ -549,7 +549,7 @@ nsresult nsScanner::SkipWhitespace(void) {
       break;
     }
     else {
-      current++;
+      ++current;
     }
   }
 
@@ -738,7 +738,7 @@ nsresult nsScanner::GetIdentifier(nsString& aString,PRBool allowPunct) {
         break;
       }
     }
-    current++;
+    ++current;
   }
 
   SetPosition(current);  
@@ -800,7 +800,7 @@ nsresult nsScanner::ReadIdentifier(nsString& aString,PRBool allowPunct) {
         break;
       }
     }
-    current++;
+    ++current;
   }
   
   SetPosition(current);
@@ -858,7 +858,7 @@ nsresult nsScanner::ReadIdentifier(nsReadingIterator<PRUnichar>& aStart,
         break;
       }
     }
-    current++;
+    ++current;
   }
   
   SetPosition(current);
@@ -915,7 +915,7 @@ nsresult nsScanner::ReadNumber(nsString& aString) {
         break;
       }
     }
-    current++;
+    ++current;
   }
 
   SetPosition(current);
@@ -965,7 +965,7 @@ nsresult nsScanner::ReadNumber(nsReadingIterator<PRUnichar>& aStart,
         break;
       }
     }
-    current++;
+    ++current;
   }
 
   SetPosition(current);
@@ -1024,7 +1024,7 @@ nsresult nsScanner::ReadWhitespace(nsString& aString) {
         break;
       }
     }
-    current ++;
+    ++current;
   }
 
   SetPosition(current);
@@ -1076,7 +1076,7 @@ nsresult nsScanner::ReadWhitespace(nsReadingIterator<PRUnichar>& aStart,
         break;
       }
 
-      current ++;
+      ++current;
     }
   }
 
@@ -1125,12 +1125,12 @@ nsresult nsScanner::ReadWhile(nsString& aString,
       PRInt32 pos=aValidSet.FindChar(theChar);
       if(kNotFound==pos) {
         if(addTerminal)
-          current++;
+          ++current;
         AppendUnicodeTo(origin, current, aString);
         break;
       }
     }
-    current++;
+    ++current;
   }
 
   SetPosition(current);
@@ -1180,14 +1180,14 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
       while (*setcurrent) {
         if (*setcurrent == theChar) {
           if(addTerminal)
-            current++;
+            ++current;
           AppendUnicodeTo(origin, current, aString);
           goto found;
         }
-        setcurrent++;
+        ++setcurrent;
       }
     }
-    current++;
+    ++current;
   }
 found:
 
@@ -1238,14 +1238,14 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
       while (*setcurrent) {
         if (*setcurrent == theChar) {
           if(addTerminal)
-            current++;
+            ++current;
           AppendUnicodeTo(origin, current, aString);
           goto found;
         }
-        setcurrent++;
+        ++setcurrent;
       }
     }
-    current++;
+    ++current;
   }
 found:
 
@@ -1286,15 +1286,15 @@ nsresult nsScanner::ReadUntil(nsReadingIterator<PRUnichar>& aStart,
       while (*setcurrent) {
         if (*setcurrent == theChar) {
           if(addTerminal)
-            current++;
+            ++current;
           aStart = origin;
           aEnd = current;
           goto found;
         }
-        setcurrent++;
+        ++setcurrent;
       }
     }
-    current++;
+    ++current;
   }
 found:
 
@@ -1337,12 +1337,12 @@ nsresult nsScanner::ReadUntil(nsAWritableString& aString,
     if(theChar) {
       if(aTerminalChar==theChar) {
         if(addTerminal)
-          current++;
+          ++current;
         AppendUnicodeTo(origin, current, aString);
         break;
       }
     }
-    current++;
+    ++current;
   }
 
   SetPosition(current);

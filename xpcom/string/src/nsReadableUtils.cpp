@@ -835,9 +835,9 @@ CountCharInReadable( const nsAString& aStr,
   
   while (begin != end) {
     if (*begin == aChar) {
-      count++;
+      ++count;
     }
-    begin++;
+    ++begin;
   }
 
   return count;
@@ -856,9 +856,9 @@ CountCharInReadable( const nsACString& aStr,
   
   while (begin != end) {
     if (*begin == aChar) {
-      count++;
+      ++count;
     }
-    begin++;
+    ++begin;
   }
 
   return count;

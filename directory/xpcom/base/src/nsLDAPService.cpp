@@ -962,7 +962,7 @@ nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
         // move past any leading spaces
         //
         while (aIter != aIterEnd && nsCRT::IsAsciiSpace(*aIter)) {
-            aIter++;
+            ++aIter;
         }
 
         // move past all chars in this token
@@ -970,11 +970,11 @@ nsLDAPService::CountTokens(nsReadingIterator<PRUnichar> aIter,
         while (aIter != aIterEnd) {
 
             if (nsCRT::IsAsciiSpace(*aIter)) {
-                count++;    // token finished; increment the count
-                aIter++;    // move past the space
+                ++count;    // token finished; increment the count
+                ++aIter;    // move past the space
                 break;
             }
-            aIter++; // move to next char and continue with this token
+            ++aIter; // move to next char and continue with this token
         }
     }
 
@@ -992,14 +992,14 @@ nsLDAPService::NextToken(nsReadingIterator<PRUnichar> & aIter,
     // move past any leading whitespace
     //
     while ( aIter != aIterEnd && nsCRT::IsAsciiSpace(*aIter) ) {
-        aIter++;
+        ++aIter;
     }
 
     // copy the token into our local variable
     //
     while ( aIter != aIterEnd && !nsCRT::IsAsciiSpace(*aIter) ) {
         token.Append(*aIter);
-        aIter++;
+        ++aIter;
     }
 
     return token.ToNewCString();
