@@ -347,7 +347,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
 
   // Initialize the 'top' and 'bottom' computed offsets
   PRBool  bottomIsAuto = PR_FALSE;
-  if (eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) {
+  if ((eStyleUnit_Auto == aPosition->mOffset.GetTopUnit()) ||
+      ((NS_AUTOHEIGHT == containingBlockHeight) &&
+       (eStyleUnit_Percent == aPosition->mOffset.GetTopUnit()))) {
     // Use the placeholder position
     computedOffsets.top = placeholderOffset.y;
   } else {
@@ -355,7 +357,9 @@ nsHTMLReflowState::InitAbsoluteConstraints(nsIPresContext& aPresContext,
     ComputeVerticalValue(containingBlockHeight, aPosition->mOffset.GetTopUnit(),
                          aPosition->mOffset.GetTop(coord), computedOffsets.top);
   }
-  if (eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit()) {
+  if ((eStyleUnit_Auto == aPosition->mOffset.GetBottomUnit()) ||
+      ((NS_AUTOHEIGHT == containingBlockHeight) &&
+       (eStyleUnit_Percent == aPosition->mOffset.GetBottomUnit()))) {
     if (eStyleUnit_Auto == heightUnit) {
       computedOffsets.bottom = 0;        
     } else {
