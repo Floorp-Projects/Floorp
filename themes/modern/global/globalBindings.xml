@@ -42,6 +42,7 @@
         <xul:box class="button-text-box" autostretch="never">
          <xul:image class="button-icon-mid" inherits="src"/>
          <xul:text class="button-text-mid" inherits="default,value=label,crop,accesskey"/>
+         <children/>
        </xul:box>
      </xul:stack>
       
@@ -115,10 +116,12 @@
     </content>
   </binding>
 
-  <binding id="menubutton-single">
+  <binding id="menubutton-single" extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
     <content>
-      <xul:box class="menubutton-internal-box" autostretch="never" flex="1">
-        <xul:button class="menubutton-single-button" inherits="label,disabled" allowevents="true"/>
+      <xul:box class="menubutton-single-internal-box" flex="1">
+        <xul:button class="menubutton-single-button" flex="1" inherits="open,label,disabled">
+          <xul:image class="menubutton-single-dropmarker" inherits="open,disabled"/>
+        </xul:button>
       </xul:box>
       <children includes="menupopup"/>
     </content>
@@ -167,20 +170,6 @@
   </binding>
  
   <!-- :::/ scrollbar \ ::::::::::::::::::::::::::::::::::::::::::::::::::: -->
-
-  <binding id="scrollbar" extends="chrome://global/content/bindings/scrollbar.xml#scrollbar">
-    <content>
-      <xul:scrollbarbutton type="decrement" inherits="sborient=align">
-        <xul:image inherits="src"/>
-      </xul:scrollbarbutton>
-      <xul:slider flex="1" inherits="curpos,maxpos,pageincrement,increment,align">
-      	<xul:thumb inherits="align,src" flex="1"/>
-      </xul:slider>
-      <xul:scrollbarbutton type="increment" inherits="sborient=align">
-        <xul:image inherits="src"/>
-      </xul:scrollbarbutton>
-    </content>
-  </binding>
 
   <binding id="thumb-vertical"
            extends="chrome://global/content/bindings/scrollbar.xml#thumb">

@@ -68,6 +68,11 @@
       -moz-binding          : url("chrome://global/skin/menulistBindings.xml#menulist-editable") !important;
     }
 
+  menubutton
+    {
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#menubutton-single");
+    }
+
   grippy, grippy[collapse="before"]
     {
       -moz-binding          : url("chrome://global/skin/classicBindings.xml#grippy");

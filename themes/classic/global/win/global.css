@@ -63,6 +63,11 @@
       -moz-binding        : url("chrome://global/skin/menulistBindings.xml#menulist-compact");
     }
     
+  menubutton
+    {
+      -moz-binding        : url("chrome://global/skin/classicBindings.xml#menubutton-single");
+    }
+    
   radio 
     {
       -moz-binding        : url("chrome://global/skin/classicBindings.xml#radio");

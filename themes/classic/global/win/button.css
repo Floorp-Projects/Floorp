@@ -42,22 +42,26 @@
 			border              : 1px solid ThreeDFace;	
     }
     
-  button:hover:active 
+  button:hover:active,
+  button[open="true"]
     {
       border              : 1px solid ThreeDDarkShadow;
     }
 
-  button:hover:active > .button-box-1
+  button:hover:active > .button-box-1,
+  button[open="true"] > .button-box-1
     {
       border              : 1px solid ThreeDShadow;
     }
 
-  button:hover:active > .button-box-1 > .button-box-2
+  button:hover:active > .button-box-1 > .button-box-2,
+  button[open="true"] > .button-box-1 > .button-box-2
     {
       border              : 1px solid ThreeDFace;
     }
 
-  button:hover:active > .button-box-1 > .button-box-2 > .button-box-text
+  button:hover:active > .button-box-1 > .button-box-2 > .button-box-text,
+  button[open="true"] > .button-box-1 > .button-box-2 > .button-box-text
     {
       padding             : 1px 2px 0px 3px; 
     }

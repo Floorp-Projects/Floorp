@@ -181,5 +181,16 @@
     </content>
   </binding>
 
+  <binding id="menubutton-single" extends="chrome://global/content/bindings/menubutton.xml#menubutton-base">
+    <content>
+      <xul:box class="menubutton-single-internal-box" flex="1">
+        <xul:button class="menubutton-single-button" flex="1" inherits="open,label,disabled">
+          <xul:image class="menubutton-single-dropmarker" inherits="open,disabled"/>
+        </xul:button>
+      </xul:box>
+      <children includes="menupopup"/>
+    </content>
+  </binding>
+
 </bindings>
 

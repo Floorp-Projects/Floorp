@@ -1,119 +1,14 @@
-/*
-.menubutton-dual,
-.menubutton-dual[disabled="true"]:hover,
-.menubutton-dual[disabled="true"]:hover:active,
-.menubutton-dual[buttondown="true"][disabled="true"],
-.menubutton-dual[buttonover="true"][disabled="true"]
-  {
-    -moz-binding          : url("chrome://global/skin/menubuttonBindings.xml#menubutton-toolbar-top");
-    border                : 1px solid transparent;
-  }
 
-.menubutton-dual:hover,
-.menubutton-dual[open="true"],
-.menubutton-dual[buttonover="true"],
-.menubutton-dual[buttondown="true"]
-  {
-    border                : 1px solid ThreeDDarkShadow;
-  }
+@namespace url("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul");
 
-.classic-dropmarker-box,
-.menubutton-dual:hover > .classic-dropmarker-box[disabled="true"],
-.menubutton-dual:hover:active > .classic-dropmarker-box[disabled="true"],
-.menubutton-dual[disabled="true"][buttonover="true"] > .classic-dropmarker-box
-  {
-    border                : 1px solid transparent;
-  }
-  
-.menubutton-dual:hover > .classic-dropmarker-box 
-  {
-    border-left           : 1px solid ThreeDHighlight;
-    border-top            : 1px solid ThreeDHighlight;
-    border-right          : 1px solid ThreeDShadow;
-    border-bottom         : 1px solid ThreeDShadow;
-  } 
-  
-.menubutton-dual[open="true"] > .classic-dropmarker-box
-  {
-    border-left           : 1px solid ThreeDShadow;
-    border-top            : 1px solid ThreeDShadow;
-    border-right          : 1px solid ThreeDHighlight;
-    border-bottom         : 1px solid ThreeDHighlight;
-  }
+/* ::::: regular menubutton ::::::::::
+   :: Shows a caption and brings up a popup menu which executes a command.
+   ::::: */
 
-.classic-simplebutton,
-.classic-simplebutton[disabled="true"]:hover,
-.classic-simplebutton[disabled="true"]:hover:active,
-.menubutton[disabled="true"]:hover > .classic-simplebutton,
-.menubutton[disabled="true"]:hover:active > .classic-simplebutton,
-.menubutton-dual[buttonover="true"][disabled="true"] > .classic-simplebutton,
-.menubutton-dual[buttondown="true"][disabled="true"] > .classic-simplebutton
-  {
-    -moz-binding          : url("chrome://global/skin/menubuttonBindings.xml#buttontop");
-    margin                : 0px;
-    border                : 1px solid transparent;
-    min-width             : 0px;
-    padding               : 2px 8px 2px 7px;
-    text-align            : center;
-  }  
-  
-.classic-simplebutton:hover,
-.menubutton-dual:hover > .classic-simplebutton,
-.menubutton-dual[open="true"] > .classic-simplebutton
-  {
-    border-left           : 1px solid ThreeDHighlight;
-    border-top            : 1px solid ThreeDHighlight;
-    border-right          : 1px solid ThreeDShadow;
-    border-bottom         : 1px solid ThreeDShadow;
-  }  
-  
-.menubutton-dual[buttonover="true"] > .classic-dropmarker-box
-  {
-    border-left           : 1px solid ThreeDHighlight;
-    border-top            : 1px solid ThreeDHighlight;
-    border-right          : 1px solid ThreeDShadow;
-    border-bottom         : 1px solid ThreeDShadow;
-  } 
-  
-.classic-simplebutton:hover:active
-  {
-    border-left           : 1px solid ThreeDShadow;
-    border-top            : 1px solid ThreeDShadow;
-    border-right          : 1px solid ThreeDHighlight;
-    border-bottom         : 1px solid ThreeDHighlight;
-    padding               : 3px 7px 1px 8px;
-  }  
-  
-.menubutton-dual[buttondown="true"] > .classic-dropmarker-box
-  {
-    border-left           : 1px solid ThreeDShadow;
-    border-top            : 1px solid ThreeDShadow;
-    border-right          : 1px solid ThreeDHighlight;
-    border-bottom         : 1px solid ThreeDHighlight;
-  }  
-  
-.classic-dropmarker
-  {
-    list-style-image      : url("chrome://global/skin/dropmarker-down-on.gif");
-  }  
-  
-.classic-dropmarker:hover
-  {
-    list-style-image      : url("chrome://global/skin/dropmarker-down-on-hover.gif");
-  }    
-  
-.classic-dropmarker:hover:active
-  {
-    list-style-image      : url("chrome://global/skin/dropmarker-down-on-active.gif");
-  }    
-  
-.classic-dropmarker[disabled="true"]
-  {
-    list-style-image      : url("chrome://global/skin/dropmarker-down-disabled.gif");
-  }  
+.menubutton-single-dropmarker {
+  list-style-image: url("chrome://global/skin/scroll-down.gif");
+}
 
-.menubutton-toolbar
-  {
-    margin                : 0px;
-  }
-*/
+.menubutton-single-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/scroll-down-disabled.gif");
+}

@@ -31,20 +31,12 @@
    :: Shows a caption and brings up a popup menu which executes a command.
    ::::: */
 
-menubutton {
-  margin: 3px 5px 3px 5px;
-}
-
-menubutton[disabled="true"] {
-  color: #85959E;
-}
-
-.menubutton-single-button {
-  margin: 0px;
-}
-
 .menubutton-single-dropmarker {
   list-style-image: url("chrome://global/skin/arrow/arrow-dn.gif");
+}
+
+.menubutton-single-dropmarker[disabled="true"] {
+  list-style-image: url("chrome://global/skin/arrow/arrow-dn-dis.gif");
 }
 
 /* ::::: dual menubutton ::::::::::

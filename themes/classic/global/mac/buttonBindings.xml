@@ -12,6 +12,7 @@
           <xul:image class="button-icon" inherits="src"/>
           <xul:box class="button-box-text" flex="1" autostretch="never">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
+            <children/>
           </xul:box>
         </xul:box>
       </xul:box>
@@ -24,6 +25,7 @@
         <xul:box class="button-box-2" autostretch="never" flex="1">
           <xul:box class="button-box-text" flex="1" autostretch="never">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
+            <children/>
           </xul:box>
           <xul:image class="button-icon" inherits="src"/>
         </xul:box>
@@ -38,6 +40,7 @@
           <xul:image class="button-icon" inherits="src"/>
           <xul:box class="button-box-text" flex="1" autostretch="never">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
+            <children/>
           </xul:box>
         </xul:box>
       </xul:box>
@@ -50,6 +53,7 @@
         <xul:box class="button-box-2" autostretch="never" flex="1" orient="vertical" align="center">
           <xul:box class="button-box-text" flex="1" autostretch="never">
             <xul:text class="button-text" inherits="disabled,value=label,accesskey,crop"/>
+            <children/>
           </xul:box>
           <xul:image class="button-icon" inherits="src"/>
         </xul:box>
@@ -67,6 +71,7 @@
           <xul:box class="button-text-box" flex="1">
           <xul:text inherits="disabled,valu=labele,crop,accesskey"/>
           </xul:box>
+          <children/>
         </xul:box>
         <xul:spring flex="1" class="button-bottom-spring"/>
       </xul:box>
@@ -92,6 +97,7 @@
         <xul:box class="button-text-box" autostretch="never">
          <xul:image class="button-icon-mid" inherits="src"/>
          <xul:text class="button-text-mid" inherits="default,disabled,value=label,crop,accesskey"/>
+         <children/>
        </xul:box>
      </xul:stack>
       
@@ -134,6 +140,7 @@
     <content orient="vertical" autostretch="never" align="center">
       <xul:image class="simplebutton-icon" inherits="src,disabled"/>
       <xul:text class="simplebutton-text" inherits="value=label,accesskey,crop,disabled"/>
+      <children/>
     </content>
   </binding>
 
