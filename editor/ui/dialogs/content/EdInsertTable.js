@@ -49,6 +49,7 @@ function Startup()
   gDialog.widthInput = document.getElementById("widthInput");
   gDialog.borderInput = document.getElementById("borderInput");
   gDialog.widthPixelOrPercentMenulist = document.getElementById("widthPixelOrPercentMenulist");
+  gDialog.OkButton = document.documentElement.getButton("accept");
 
   // Make a copy to use for AdvancedEdit
   globalElement = tableElement.cloneNode(false);
@@ -100,7 +101,7 @@ function ChangeRowOrColumn(id)
                               gDialog.columnsInput.value.length > 0 &&
                               gDialog.columnsInput.value > 0;
 
-  SetElementEnabledById("ok", enable);
+  SetElementEnabled(gDialog.OkButton, enable);
   SetElementEnabledById("AdvancedEditButton1", enable);
 }
 
