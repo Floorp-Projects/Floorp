@@ -93,7 +93,7 @@ function InitDialog()
   dialog.rightAlign.checked  = (align == "right");
   dialog.leftAlign.checked   = (align == "left");
 
-  // This is tricky! Since the "noshade" attribute doesn't have a value,
+  // This is tricky! Since the "noshade" attribute doesn't always have a value,
   //  we can't use getAttribute to figure out if it's set!
   // This gets the attribute NODE from the attributes NamedNodeMap
   if (globalElement.attributes.getNamedItem("noshade"))
@@ -124,6 +124,8 @@ function onSaveDefault()
       var percentIndex = width.search(/%/);
       var percent;
       var widthInt;
+      var heightInt;
+
       if (width)
       {
         if (percentIndex > 0) {
@@ -139,12 +141,12 @@ function onSaveDefault()
         percent = true;
         widthInt = Number(100);
       }
+
+      heightInt = height ? Number(height) : 2;
+
       prefs.SetIntPref("editor.hrule.width", widthInt);
       prefs.SetBoolPref("editor.hrule.width_percent", percent);
-
-      // Convert string to number
-      prefs.SetIntPref("editor.hrule.height", Number(height));
-
+      prefs.SetIntPref("editor.hrule.height", heightInt);
       prefs.SetBoolPref("editor.hrule.shading", shading);
 
       // Write the prefs out NOW!
@@ -185,7 +187,7 @@ function ValidateData()
     globalElement.removeAttribute("noshade");
   } else {
     shading = false;
-    globalElement.setAttribute("noshade", "");
+    globalElement.setAttribute("noshade", "noshade");
   }
   return true;
 }
