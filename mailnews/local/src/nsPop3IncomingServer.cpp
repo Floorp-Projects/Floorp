@@ -205,7 +205,7 @@ NS_IMETHODIMP nsPop3IncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
 	PRBool exists;
 	if (!path) return NS_ERROR_NULL_POINTER;
 
-  rv =path->AppendRelativeUnixPath("Inbox");
+  rv = path->AppendRelativeUnixPath("Inbox");
 	if (NS_FAILED(rv)) return rv;
 	rv = path->Exists(&exists);
 	if (!exists) {
