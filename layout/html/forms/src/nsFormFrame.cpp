@@ -25,6 +25,7 @@
 
 #define NS_IMPL_IDS
 #include "nsICharsetConverterManager.h"
+#include "nsIPlatformCharset.h"
 #undef NS_IMPL_IDS 
 
 #include "nsCOMPtr.h"
@@ -109,6 +110,7 @@ static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 #include "nsIScriptSecurityManager.h"
 
 static NS_DEFINE_CID(kCharsetConverterManagerCID, NS_ICHARSETCONVERTERMANAGER_CID);
+static NS_DEFINE_CID(kPlatformCharsetCID, NS_PLATFORMCHARSET_CID);
 static NS_DEFINE_CID(kMIMEServiceCID, NS_MIMESERVICE_CID);
 
 //----------------------------------------------------------------------
@@ -984,6 +986,44 @@ NS_IMETHODIMP nsFormFrame::GetEncoder(nsIUnicodeEncoder** encoder)
   return NS_OK;
 }
 
+NS_IMETHODIMP nsFormFrame::GetPlatformEncoder(nsIUnicodeEncoder** encoder)
+{
+  *encoder = nsnull;
+  nsAutoString localeCharset;
+  nsresult rv = NS_OK;
+  
+  // Get Charset, get the encoder.
+  nsICharsetConverterManager * ccm = nsnull;
+  rv = nsServiceManager::GetService(kCharsetConverterManagerCID ,
+                                    NS_GET_IID(nsICharsetConverterManager),
+                                    (nsISupports**)&ccm);
+
+  if(NS_SUCCEEDED(rv) && (nsnull != ccm)) {
+
+     nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &rv);
+
+     if (NS_SUCCEEDED(rv)) {
+        rv = platformCharset->GetCharset(kPlatformCharsetSel_FileName, localeCharset);
+     }
+
+     if (NS_FAILED(rv)) {
+       NS_ASSERTION(0, "error getting locale charset, using ISO-8859-1");
+       localeCharset.SetString("ISO-8859-1");
+       rv = NS_OK;
+     }
+
+     // get unicode converter mgr
+     //NS_WITH_SERVICE(nsICharsetConverterManager, ccm, kCharsetConverterManagerCID, &rv); 
+
+     if (NS_SUCCEEDED(rv)) {
+       rv = ccm->GetUnicodeEncoder(&localeCharset, encoder);
+     }
+   } 
+
+  return NS_OK;
+}
+
+
 #define CRLF "\015\012"   
 nsresult nsFormFrame::ProcessAsURLEncoded(nsIFormProcessor* aFormProcessor, PRBool isPost, nsString& aData, nsIFormControlFrame* aFrame)
 {
@@ -1147,6 +1187,11 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
   if(NS_FAILED( GetEncoder(&encoder) ) )
      encoder = nsnull;
 
+  nsIUnicodeEncoder *platformencoder = nsnull;
+  if(NS_FAILED(GetPlatformEncoder(&platformencoder)))  // Non-fatal error
+     platformencoder = nsnull;
+
+
   PRInt32 boundaryLen = PL_strlen(boundary);
   PRInt32 contDispLen = PL_strlen(CONTENT_DISP);
   PRInt32 crlfLen     = PL_strlen(CRLF);
@@ -1181,11 +1226,21 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
           if (aFormProcessor) {
             ProcessValue(*aFormProcessor, child, names[valueX], valueStr);
           }
-   
+
           if(encoder) {
               name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
-              value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), encoder);
           }
+   
+          //use the platformencoder only for values containing file names 
+          if (NS_FORM_INPUT_FILE == type) { 
+            if(platformencoder) {
+                value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), platformencoder);
+            }
+          } else { 
+            if(encoder) {
+                value  = UnicodeToNewBytes(valueStr.GetUnicode(), valueStr.Length(), encoder);
+            }
+          } 
 
           if(nsnull == name)
             name  = names[valueX].ToNewCString();
@@ -1304,8 +1359,18 @@ nsresult nsFormFrame::ProcessAsMultipart(nsIFormProcessor* aFormProcessor,nsIFil
 
             if(encoder) {
               name  = UnicodeToNewBytes(names[valueX].GetUnicode(), names[valueX].Length(), encoder);
-              value = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
             }
+
+            //use the platformencoder only for values containing file names 
+            if (NS_FORM_INPUT_FILE == type) { 
+              if(platformencoder) {
+                  value = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), platformencoder);
+              }
+            } else { 
+              if(encoder) {
+                  value = UnicodeToNewBytes(values[valueX].GetUnicode(), values[valueX].Length(), encoder);
+              }
+            } 
 
             if(nsnull == name)
               name  = names[valueX].ToNewCString();
