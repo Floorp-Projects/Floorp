@@ -5362,7 +5362,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
     return NS_OK;
 
   return CreateAnonymousFrames(aPresShell, aPresContext, aState, aParent,
-                               mDocument, aNewFrame, aAppendToExisting, aChildItems);
+                               mDocument, aNewFrame, PR_FALSE,
+                               aAppendToExisting, aChildItems);
 }
 
 // after the node has been constructed and initialized create any
@@ -5374,6 +5375,7 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
                                              nsIContent*              aParent,
                                              nsIDocument*             aDocument,
                                              nsIFrame*                aParentFrame,
+                                             PRBool                   aForceBindingParent,
                                              PRBool                   aAppendToExisting,
                                              nsFrameItems&            aChildItems)
 {
@@ -5381,15 +5383,6 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
 
   if (!creator)
     return NS_OK;
-
-#ifdef MOZ_XTF_disabled
-  PRBool forceBindingParent = PR_FALSE;
-  nsCOMPtr<nsIXTFVisualWrapperPrivate> xtfElem = do_QueryInterface(aParent);
-  if (xtfElem) {
-    if (xtfElem->ApplyDocumentStyleSheets()) 
-      forceBindingParent = PR_TRUE;
-  }
-#endif
 
   nsCOMPtr<nsISupportsArray> anonymousItems;
   NS_NewISupportsArray(getter_AddRefs(anonymousItems));
@@ -5453,8 +5446,8 @@ nsCSSFrameConstructor::CreateAnonymousFrames(nsIPresShell*            aPresShell
       }
       else
 #endif
-#ifdef MOZ_XTF_disabled
-      if (forceBindingParent)
+#ifdef MOZ_XTF
+      if (aForceBindingParent)
         rv = content->SetBindingParent(aParent);
       else
 #endif
@@ -6290,7 +6283,7 @@ nsCSSFrameConstructor::InitGfxScrollFrame(nsIPresShell*            aPresShell,
 
   // if there are any anonymous children for the scroll frame, create frames for them.
   CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, aDocument, aNewFrame,
-                        PR_FALSE, aAnonymousFrames);
+                        PR_FALSE, PR_FALSE, aAnonymousFrames);
 
   return NS_OK;
 } 
@@ -7026,8 +7019,14 @@ nsCSSFrameConstructor::ConstructXTFFrame(nsIPresShell*            aPresShell,
     // explicit child content can be appended to the correct anonymous
     // frame. Call version of CreateAnonymousFrames that doesn't check
     // tag:
+
+    nsCOMPtr<nsIXTFVisualWrapperPrivate> visual = do_QueryInterface(xtfElem);
+    NS_ASSERTION(visual,
+                 "xtf wrapper not implementing nsIXTFVisualWrapperPrivate");
+
     nsFrameItems childItems;
     CreateAnonymousFrames(aPresShell, aPresContext, aState, aContent, mDocument, newFrame,
+                          visual->ApplyDocumentStyleSheets(),
                           PR_FALSE, childItems);
 
     // Set the frame's initial child list

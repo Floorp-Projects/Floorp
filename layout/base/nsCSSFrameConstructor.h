@@ -604,6 +604,7 @@ private:
                                  nsIContent*              aParent,
                                  nsIDocument*             aDocument,
                                  nsIFrame*                aNewFrame,
+                                 PRBool                   aForceBindingParent,
                                  PRBool                   aAppendToExisting,
                                  nsFrameItems&            aChildItems);
 
