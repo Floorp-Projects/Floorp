@@ -367,6 +367,11 @@ isSeparator (RDF_Resource r)
   return (startsWith("separator", resourceID(r)) || startsWith("nc:separator", resourceID(r))) ;
 }
 
+extern char* gBookmarkURL;
+PR_PUBLIC_API(void) 
+SetBookmarkURL(const char* url) {
+  gBookmarkURL = copyString(url);
+}
 
 
 char *

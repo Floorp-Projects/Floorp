@@ -163,11 +163,13 @@ public:
   NS_METHOD CreateDatabase(const char** url,
                            nsIRDFDataBase** db);
 
-  NS_IMETHOD ResourceIdentifier(RDF_Resource r,
+  NS_METHOD ResourceIdentifier(RDF_Resource r,
                             char**   url /* out */);
-
-
+#ifdef MOZILLA_CLIENT
+  NS_METHOD SetBookmarkFile(const char* bookmarkFilePath);
+#endif
 };
+
 
 
 class rdfServiceFactory : public nsIFactory {
@@ -545,7 +547,7 @@ rdfDatabaseWrapper::DeleteAllArcs(RDF_Resource resource)
 */
 
 
-NS_IMPL_ISUPPORTS( rdfServiceWrapper, NS_IRDFSERVICE_IID )
+NS_IMPL_ISUPPORTS(rdfServiceWrapper, NS_IRDFSERVICE_IID )
 
 rdfServiceWrapper::rdfServiceWrapper()
 {
@@ -592,7 +594,14 @@ rdfServiceWrapper::ResourceIdentifier(RDF_Resource r,
   *url = RDF_ResourceID(r);
   return NS_OK;
 }
-  
+
+#ifdef MOZILLA_CLIENT
+NS_METHOD 
+rdfServiceWrapper::SetBookmarkFile(const char* bookmarkFilePath) {
+  SetBookmarkURL(bookmarkFilePath);
+  return NS_OK;
+}
+#endif  
 
 
 /*
