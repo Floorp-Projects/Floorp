@@ -65,9 +65,9 @@ static void ForceDrawFrame(nsIFrame * aFrame)
 // Creates a new tree cell frame
 //
 nsresult
-NS_NewTreeCellFrame (nsIFrame*& aNewFrame)
+NS_NewTreeCellFrame (nsIFrame*& aNewFrame, PRBool allowEvents)
 {
-  nsTreeCellFrame* theFrame = new nsTreeCellFrame;
+  nsTreeCellFrame* theFrame = new nsTreeCellFrame(allowEvents);
   if (theFrame == nsnull)
     return NS_ERROR_OUT_OF_MEMORY;
 
@@ -78,8 +78,8 @@ NS_NewTreeCellFrame (nsIFrame*& aNewFrame)
 
 
 // Constructor
-nsTreeCellFrame::nsTreeCellFrame()
-:nsTableCellFrame() { mIsHeader = PR_FALSE; mBeenReflowed = PR_FALSE; }
+nsTreeCellFrame::nsTreeCellFrame(PRBool allowEvents)
+:nsTableCellFrame() { mAllowEvents = allowEvents; mIsHeader = PR_FALSE; mBeenReflowed = PR_FALSE; }
 
 // Destructor
 nsTreeCellFrame::~nsTreeCellFrame()
@@ -165,8 +165,15 @@ NS_IMETHODIMP
 nsTreeCellFrame::GetFrameForPoint(const nsPoint& aPoint, 
                                   nsIFrame**     aFrame)
 {
-  *aFrame = this; // Capture all events so that we can perform selection and expand/collapse.
-  return NS_OK;
+  if (mAllowEvents)
+  {
+	  return nsTableCellFrame::GetFrameForPoint(aPoint, aFrame);
+  }
+  else
+  {
+    *aFrame = this; // Capture all events so that we can perform selection and expand/collapse.
+    return NS_OK;
+  }
 }
 
 NS_IMETHODIMP 

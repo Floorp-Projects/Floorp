@@ -41,6 +41,7 @@ nsIAtom* nsXULAtoms::treerow;
 nsIAtom* nsXULAtoms::treecell;
 nsIAtom* nsXULAtoms::treechildren;
 nsIAtom* nsXULAtoms::treeindentation;
+nsIAtom* nsXULAtoms::treeallowevents;
 
 nsIAtom* nsXULAtoms::widget;
 nsIAtom* nsXULAtoms::window;
@@ -77,6 +78,7 @@ void nsXULAtoms::AddrefAtoms() {
 	treeitem = NS_NewAtom("treeitem");
 	treechildren = NS_NewAtom("treechildren");
 	treeindentation = NS_NewAtom("treeindentation");
+    treeallowevents = NS_NewAtom("treeallowevents");
 
     widget = NS_NewAtom("widget");
     window = NS_NewAtom("window");
@@ -104,6 +106,7 @@ void nsXULAtoms::ReleaseAtoms() {
 	NS_RELEASE(treeitem);
 	NS_RELEASE(treechildren);
 	NS_RELEASE(treeindentation);
+    NS_RELEASE(treeallowevents);
 
 	NS_RELEASE(widget);
     NS_RELEASE(window);

@@ -24,7 +24,7 @@ class nsTreeFrame;
 class nsTreeCellFrame : public nsTableCellFrame
 {
 public:
-  friend nsresult NS_NewTreeCellFrame(nsIFrame*& aNewFrame);
+  friend nsresult NS_NewTreeCellFrame(nsIFrame*& aNewFrame, PRBool allowEvents);
 
   NS_IMETHOD GetFrameForPoint(const nsPoint& aPoint, // Overridden to capture events
                               nsIFrame**     aFrame);
@@ -46,7 +46,7 @@ public:
   void Select(nsIPresContext& presContext, PRBool isSelected);
 
 protected:
-  nsTreeCellFrame();
+  nsTreeCellFrame(PRBool allowEvents);
   virtual ~nsTreeCellFrame();
 
   nsresult HandleMouseDownEvent(nsIPresContext& aPresContext, 
@@ -64,6 +64,7 @@ protected:
   nsIStyleContext* mSelectedContext; // The style context to use when the tree item is selected
   nsIStyleContext* mNormalContext; // The style context to use normally.
   nsTreeFrame* mTreeFrame; // Our parent tree frame.
+  PRBool mAllowEvents; // Whether we let events go through.
 
   PRBool mBeenReflowed; // Hack for now.
 }; // class nsTableCellFrame
