@@ -1125,6 +1125,8 @@ nsString& nsString::Append(PRUnichar aChar) {
  * @return
  */
 nsString& nsString::Append(PRInt32 aInteger,PRInt32 aRadix) {
+
+#if 0
   char buf[128]={0,0};
   char* buffer=buf;
 
@@ -1145,7 +1147,20 @@ nsString& nsString::Append(PRInt32 aInteger,PRInt32 aRadix) {
   int len=strlen(buffer);
   buf[len] = "0123456789abcdefghijklmnopqrstuvwxyz"[(int)r.rem];
   buf[len+1] =0;
-  
+
+#endif
+
+  char* fmt = "%d";
+  if (8 == aRadix) {
+    fmt = "%o";
+  } else if (16 == aRadix) {
+    fmt = "%x";
+  }
+  char buf[40];
+  // *** XX UNCOMMENT THIS LINE
+  //PR_snprintf(buf, sizeof(buf), fmt, aInteger);
+  sprintf(buf,fmt,aInteger);
+
   return Append(buf);
 }
 
