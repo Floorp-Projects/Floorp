@@ -1001,6 +1001,9 @@ function nonBrowserWindowDelayedStartup()
   // init global pref service
   gPrefService = Components.classes["@mozilla.org/preferences-service;1"]
                            .getService(Components.interfaces.nsIPrefBranch);
+
+  // Set up Sanitize Item
+  gSanitizeListener = new SanitizeListener();
 }
 #endif
  
