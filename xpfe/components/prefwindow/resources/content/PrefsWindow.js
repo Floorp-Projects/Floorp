@@ -141,7 +141,7 @@ function PrefCacheSelectFolder() {
     fp.init(window, "", nsIFilePicker.modeGetFolder);
     fp.setFilters(nsIFilePicker.filterAll);
     fp.show();
-    var field = document.getElementById "pref:string:browser.cache.directory");
+    var field = document.getElementById("pref:string:browser.cache.directory");
     field.setAttribute("value", fp.file.path);
   } catch(ex) { }
 }
