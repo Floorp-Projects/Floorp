@@ -24,9 +24,23 @@ const nsIX509CertDB = Components.interfaces.nsIX509CertDB;
 const nsX509CertDB = "@mozilla.org/security/x509certdb;1";
 const nsICrlEntry = Components.interfaces.nsICrlEntry;
 const nsISupportsArray = Components.interfaces.nsISupportsArray;
+const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
+const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
+const nsIPref             = Components.interfaces.nsIPref;
 
 var certdb;
 var crls;
+var prefs;
+
+var autoupdateEnabledBaseString   = "security.crl.autoupdate.enable.";
+var autoupdateTimeTypeBaseString  = "security.crl.autoupdate.timingType.";
+var autoupdateTimeBaseString      = "security.crl.autoupdate.nextInstant.";
+var autoupdateURLTypeBaseString   = "security.crl.autoupdate.urlType.";
+var autoupdateURLBaseString       = "security.crl.autoupdate.url.";
+var autoupdateErrCntBaseString    = "security.crl.autoupdate.errCount.";
+var autoupdateErrDetailBaseString = "security.crl.autoupdate.errDetail.";
+var autoupdateDayCntString        = "security.crl.autoupdate.dayCnt.";
+var autoupdateFreqCntString       = "security.crl.autoupdate.freqCnt.";
 
 function onLoad()
 {
@@ -34,15 +48,37 @@ function onLoad()
   var i;
 
   certdb = Components.classes[nsX509CertDB].getService(nsIX509CertDB);
+  prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
   crls = certdb.getCrls();
+  var autoupdateEnabledString;
+  var autoupdateErrCntString;
 
   for (i=0; i<crls.Count(); i++) {
     crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
     var org = crlEntry.org;
     var orgUnit = crlEntry.orgUnit;
-    var lastUpdate = crlEntry.lastUpdate;
-    var nextUpdate = crlEntry.nextUpdate;
-    AddItem("crlList", [org, orgUnit, lastUpdate, nextUpdate], "crltree_", i);
+    var lastUpdate = crlEntry.lastUpdateLocale;
+    var nextUpdate = crlEntry.nextUpdateLocale;
+    autoupdateEnabledString    = autoupdateEnabledBaseString + crlEntry.nameInDb;
+    autoupdateErrCntString    = autoupdateErrCntBaseString + crlEntry.nameInDb;
+    var enabled = false;
+    var enabledStr = "Not Enabled";
+    var status = "";
+    try{
+      enabled = prefs.GetBoolPref(autoupdateEnabledString)
+      if(enabled){
+        enabledStr = "Enabled";
+      }
+      var cnt;
+      cnt = prefs.GetIntPref(autoupdateErrCntString);
+      if(cnt > 0){
+        status = "FAILED";
+      } else {
+        status = "OK";
+      }
+    }catch(exception){}
+    
+    AddItem("crlList", [org, orgUnit, lastUpdate, nextUpdate, enabledStr, status], "crltree_", i);
   }
 }
 
@@ -69,20 +105,69 @@ function DeleteCrlSelected() {
   // delete selected item
   var crltree = document.getElementById("crltree");
   var i = crltree.selectedIndex;
+  if(i<0){
+    return;
+  }
+  crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
+    
+  var autoupdateEnabled = false;
+  var autoupdateParamAvailable = false;
+  var id = crlEntry.nameInDb;
+  
+  //First, check if autoupdate was enabled for this crl
+  try {
+    autoupdateEnabled = prefs.GetBoolPref(autoupdateEnabledBaseString + id);
+    //Note, if the pref is not present, we get an exception right here,
+    //and autoupdateEnabled remains false
+    autoupdateParamAvailable = true;
+    prefs.ClearUserPref(autoupdateEnabledBaseString + id);
+    prefs.ClearUserPref(autoupdateTimeTypeBaseString + id);
+    prefs.ClearUserPref(autoupdateTimeBaseString + id);
+    prefs.ClearUserPref(autoupdateURLTypeBaseString + id);
+    prefs.ClearUserPref(autoupdateURLBaseString + id);
+    prefs.ClearUserPref(autoupdateDayCntString + id);
+    prefs.ClearUserPref(autoupdateFreqCntString + id);
+    prefs.ClearUserPref(autoupdateErrCntBaseString + id);
+    prefs.ClearUserPref(autoupdateErrDetailBaseString + id);
+  } catch(Exception){}
 
-  // Delete it
-  certdb.deleteCrl(i);
-  DeleteItemSelected("crltree", "crltree_", "crlList");
+  //Once we have deleted the prefs that can be deleted, we save the 
+  //file if relevant, restart the scheduler, and once we are successful 
+  //in doind that, we try to delete the crl 
+  try{
+    if(autoupdateParamAvailable){
+      prefs.savePrefFile(null);
+    }
+
+    if(autoupdateEnabled){
+      certdb.rescheduleCRLAutoUpdate();
+    }
+          
+    // Now, try to delete it
+    certdb.deleteCrl(i);
+    DeleteItemSelected("crltree", "crltree_", "crlList");
+    //To do: If delete fails, we should be able to retrieve the deleted
+    //settings
+    //XXXXXXXXXXXXXXXXXXXXX
+  
+  }catch(exception) {
+    //To Do: Possibly show an error ...
+    //XXXXXXXXXXXX
+  }
+
   if( !crltree.selectedItems.length ) {
     if( !document.getElementById("deleteCrl").disabled ) {
-      document.getElementById("deleteCrl").setAttribute("disabled", "true")
+      document.getElementById("deleteCrl").disabled = true;
+      document.getElementById("editPrefs").disabled = true;
+      document.getElementById("updateCRL").disabled = true;
     }
   }
 }
 
 function EnableCrlActions() {
   document.getElementById("deleteCrl").removeAttribute("disabled", "true");
-  // document.getElementById("updateCrl").removeAttribute("disabled", "true");
+  document.getElementById("editPrefs").removeAttribute("disabled", "true");
+  document.getElementById("updateCRL").removeAttribute("disabled", "true");
 }
 
 function DeleteItemSelected(tree, prefix, kids) {
@@ -102,4 +187,31 @@ function DeleteItemSelected(tree, prefix, kids) {
     document.getElementById(kids).removeChild(delnarray[i]);
   }
   return rv;
+}
+
+function EditAutoUpdatePrefs() {
+  var crlEntry;
+
+  // delete selected item
+  var crltree = document.getElementById("crltree");
+  var i = crltree.selectedIndex;
+  if(i<0){
+    return;
+  }
+  crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
+  var params = Components.classes[nsPKIParamBlock].createInstance(nsIPKIParamBlock);
+  params.setISupportAtIndex(1, crlEntry);
+  window.openDialog("chrome://pippki/content/pref-crlupdate.xul","",
+                                   "chrome,resizable=1,modal=1,dialog=1",params);
+}
+
+function UpdateCRL()
+{
+  var crltree = document.getElementById("crltree");
+  var i = crltree.selectedIndex;
+  if(i<0){
+    return;
+  }
+  crlEntry = crls.GetElementAt(i).QueryInterface(nsICrlEntry);
+  certdb.updateCRLFromURL(crlEntry.lastFetchURL, crlEntry.nameInDb);
 }

@@ -22,7 +22,7 @@
 
 #include "nsISupports.idl"
 #include "nsIX509Cert.idl"
-
+#include "nsIX509CertDB.idl"
 interface nsIInterfaceRequestor;
 interface nsIKeygenThread;
 
@@ -108,6 +108,9 @@ interface nsICertificateDialogs : nsISupports
                              out boolean canceled);
 
   void viewCert(in nsIX509Cert cert);
+
+  void crlImportStatusDialog(in nsIInterfaceRequestor ctx, 
+                             in nsICrlEntry nameInDB);
 };
 
 /**
