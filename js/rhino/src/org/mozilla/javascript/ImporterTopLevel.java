@@ -143,6 +143,13 @@ public class ImporterTopLevel extends ScriptableObject {
         }
     }
 
+
+    public void importPackage(Context cx, Scriptable thisObj, Object[] args,
+                              Function funObj)
+    {
+        importPackage(cx, thisObj, args);
+    }
+
     void importPackage(Context cx, Scriptable thisObj, Object[] args)
     {
         for (int i = 0; i != args.length; i++) {
