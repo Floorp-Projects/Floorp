@@ -110,20 +110,7 @@
 #
 #
 
-###########################################################################
-# Global definitions
-###########################################################################
-
 use strict;
-
-use Bugzilla::Config qw(:DEFAULT :admin);
-
-# 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
-# variables from this location.  We don't want these declared here.  They'll
-# automatically get declared in the process of reading in localconfig, and
-# this way we can look in the symbol table to see if they've been declared
-# yet or not.
-
 use vars qw( $db_name %answer );
 
 ###########################################################################
@@ -237,6 +224,10 @@ my $modules = [
         name => 'File::Spec', 
         version => '0.82' 
     }, 
+    {
+        name => 'File::Temp',
+        version => '0'
+    },
     { 
         name => 'Template', 
         version => '2.07' 
@@ -294,6 +285,24 @@ if (%missing) {
     exit;
 }
 
+###########################################################################
+# Global definitions
+###########################################################################
+
+# We use require + import here instead of "use" to load Bugzilla::Config
+# because Bugzilla::Config has dependencies on some of the modules tested
+# for above, so we need to wait until those dependency checks have been
+# done before loading it, rather than loading it at compile time.
+# see http://bugzilla.mozilla.org/show_bug.cgi?id=170073
+
+require Bugzilla::Config;
+import Bugzilla::Config qw(:DEFAULT :admin);
+
+# 12/17/00 justdave@syndicomm.com - removed declarations of the localconfig
+# variables from this location.  We don't want these declared here.  They'll
+# automatically get declared in the process of reading in localconfig, and
+# this way we can look in the symbol table to see if they've been declared
+# yet or not.
 
 ###########################################################################
 # Check and update local configuration
