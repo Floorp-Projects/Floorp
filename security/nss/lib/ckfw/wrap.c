@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.8 $ $Date: 2002/10/10 22:39:23 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: wrap.c,v $ $Revision: 1.9 $ $Date: 2002/10/31 22:02:10 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -208,9 +208,6 @@ NSSCKFWC_Finalize
 
   /* In any case */
   *pFwInstance = (NSSCKFWInstance *)NULL;
-
-  /* clean up the arena pool records */
-  PL_ArenaFinish();
 
  loser:
   switch( error ) {
