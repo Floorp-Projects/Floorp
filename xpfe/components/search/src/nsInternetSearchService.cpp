@@ -3789,7 +3789,17 @@ InternetSearchDataSource::OnStopRequest(nsIChannel* channel, nsISupports *ctxt,
 	if ((contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT) ||
 	    (contextType == nsIInternetSearchContext::ICON_DOWNLOAD_CONTEXT))
 	{
-		rv = saveContents(channel, context, contextType);
+		nsCOMPtr<nsIHTTPChannel>	httpChannel = do_QueryInterface(channel);
+		if (httpChannel)
+		{
+			// check HTTP status to ensure success
+			PRUint32	httpStatus = 0;
+			if (NS_SUCCEEDED(rv = httpChannel->GetResponseStatus(&httpStatus)) &&
+				(httpStatus == 200))
+			{
+				rv = saveContents(channel, context, contextType);
+			}
+		}
 		return(rv);
 	}
 
