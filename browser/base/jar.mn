@@ -40,6 +40,7 @@ classic.jar:
         skin/classic/browser/Toolbar.png              (skin/Toolbar.png)
         skin/classic/browser/lock-insecure.gif        (skin/lock-insecure.gif)
         skin/classic/browser/lock-mixed.gif           (skin/lock-mixed.gif)
+        skin/classic/browser/page-themes.png          (skin/page-themes.png)
 
 en-US.jar:
         locale/en-US/browser/contents.rdf             (locale/contents.rdf)

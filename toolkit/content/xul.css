@@ -813,15 +813,19 @@ autorepeatbutton {
 
 statusbar 
 {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbar");
+  -moz-binding: url("chrome://global/content/widgets/general.xml#statusbar");
 }
 
 statusbarpanel {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel");
+  -moz-binding: url("chrome://global/content/widgets/general.xml#statusbarpanel");
 }
 
 .statusbarpanel-iconic {
-  -moz-binding: url("chrome://global/content/bindings/general.xml#statusbarpanel-iconic");
+  -moz-binding: url("chrome://global/content/widgets/general.xml#statusbarpanel-iconic");
+}
+
+.statusbarpanel-menu-iconic {
+  -moz-binding: url("chrome://global/content/widgets/general.xml#statusbarpanel-menu-iconic");
 }
 
 /********** spinbuttons ***********/

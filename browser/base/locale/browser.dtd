@@ -288,3 +288,8 @@
 <!ENTITY bringAllToFront.label "Bring All to Front">
 <!ENTITY zoomWindow.label "Zoom Window">
 
+<!ENTITY pageThemeButton.label "Page Themes">
+<!ENTITY pageThemeNoTheme.label "Plain">
+<!ENTITY pageThemeNoTheme.accesskey "p">
+<!ENTITY pageThemePersistentOnly.label "Normal">
+<!ENTITY pageThemePersistentOnly.accesskey "n">
