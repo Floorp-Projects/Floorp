@@ -5149,6 +5149,14 @@ nsCSSFrameConstructor::CreateContinuingFrame(nsIPresContext* aPresContext,
                                                styleContext, PR_FALSE);
     }
   
+  } else if (nsLayoutAtoms::positionedInlineFrame == frameType) {
+    rv = NS_NewPositionedInlineFrame(newFrame);
+    if (NS_SUCCEEDED(rv)) {
+      newFrame->Init(*aPresContext, content, aParentFrame, styleContext, aFrame);
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
+                                               styleContext, PR_FALSE);
+    }
+
   } else if (nsLayoutAtoms::pageFrame == frameType) {
     rv = NS_NewPageFrame(newFrame);
     if (NS_SUCCEEDED(rv)) {
