@@ -133,7 +133,9 @@ public:
   NS_IMETHOD Move(PRInt32 aX, PRInt32 aY);
   NS_IMETHOD Show();
   NS_IMETHOD Hide();
-  NS_IMETHOD Print(void);
+  NS_IMETHOD Print();
+  NS_IMETHOD SetEnableRendering(PRBool aOn);
+  NS_IMETHOD GetEnableRendering(PRBool* aResult);
 
   virtual ~PluginViewerImpl();
 
@@ -159,6 +161,7 @@ public:
   nsIURL* mURL;
   nsString mContentType;
   pluginInstanceOwner *mOwner;
+  PRBool mEnableRendering;
 };
 
 //----------------------------------------------------------------------
@@ -456,10 +459,28 @@ PluginViewerImpl::Hide()
   return NS_OK;
 }
 
-NS_IMETHODIMP PluginViewerImpl :: Print(void)
+NS_IMETHODIMP
+PluginViewerImpl::Print(void)
 {
   // need to call the plugin from here somehow
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::SetEnableRendering(PRBool aOn)
+{
+  mEnableRendering = aOn;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+PluginViewerImpl::GetEnableRendering(PRBool* aResult)
+{
+  NS_PRECONDITION(nsnull != aResult, "null OUT ptr");
+  if (aResult) {
+    *aResult = mEnableRendering;
+  }
   return NS_OK;
 }
 
