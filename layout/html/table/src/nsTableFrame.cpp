@@ -698,7 +698,7 @@ nsReflowStatus nsTableFrame::ResizeReflowPass1(nsIPresContext* aPresContext,
   nscoord rightInset = borderPadding.right;
   nscoord bottomInset = borderPadding.bottom;
   nscoord leftInset = borderPadding.left;
-  nsReflowReason  reflowReason = eReflowReason_Resize;
+  nsReflowReason  reflowReason = aReflowState.reason;
 
   /* assumes that Table's children are in the following order:
    *  Captions
