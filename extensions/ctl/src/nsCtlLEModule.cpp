@@ -45,8 +45,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsULE)
 PRInt32 g_InstanceCount = 0;
 PRInt32 g_LockCount = 0;
 
+NS_CONVERTER_REGISTRY_START
+NS_UCONV_REG_UNREG("Unicode", "tis620-2", NS_UNICODETOTIS620_CID)
+NS_CONVERTER_REGISTRY_END
+
 NS_IMPL_NSUCONVERTERREGSELF
-NS_UCONV_REG_UNREG(nsUnicodeToTIS620, "Unicode", "tis620-2", NS_UNICODETOTIS620_CID);
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsUnicodeToTIS620);
 
@@ -55,7 +58,7 @@ static const nsModuleComponentInfo components[] =
   { ENCODER_NAME_BASE "tis620-2" , NS_UNICODETOTIS620_CID,
     NS_UNICODEENCODER_CONTRACTID_BASE "tis620-2",
     nsUnicodeToTIS620Constructor,
-    nsUnicodeToTIS620RegSelf, nsUnicodeToTIS620UnRegSelf },
+    nsUConverterRegSelf, nsUConverterUnregSelf },
   { "Unicode Layout Engine", NS_ULE_CID, NS_ULE_PROGID, 
     nsULEConstructor, NULL, NULL }
 };
