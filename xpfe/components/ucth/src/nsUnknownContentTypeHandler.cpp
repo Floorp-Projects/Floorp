@@ -246,7 +246,7 @@ nsUnknownContentTypeHandler::Show( nsIHelperAppLauncher *aLauncher, nsISupports 
                                                     "sss%ip",
                                                     "chrome://global/content/helperAppLauncher.xul",
                                                     "_blank",
-                                                    "chrome,titlebar,modal",
+                                                    "chrome,titlebar",
                                                     (const nsIID*)(&NS_GET_IID(nsIHelperAppLauncher)),
                                                     (nsISupports*)aLauncher );
                     if ( argv ) {
