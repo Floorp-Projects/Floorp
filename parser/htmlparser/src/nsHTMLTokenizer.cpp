@@ -470,9 +470,9 @@ nsresult nsHTMLTokenizer::ConsumeStartTag(PRUnichar aChar,CToken*& aToken,nsScan
         if((eHTMLTag_style==theTag) || (eHTMLTag_script==theTag)) {
         nsAutoString endTag(nsHTMLTags::GetStringValue(theTag));
         endTag.Insert("</",0,2);
-        CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag,endTag);
+        CToken* textToken=theRecycler->CreateTokenOfType(eToken_text,theTag);
         result=((CTextToken*)textToken)->ConsumeUntil(0,PR_TRUE,aScanner,endTag);  //tell new token to finish consuming text...    
-        //endTag.Append(">");        
+        //endTag.Append(">");
         CToken* endToken=theRecycler->CreateTokenOfType(eToken_end,theTag,endTag);
         AddToken(textToken,result,mTokenDeque,theRecycler);
         AddToken(endToken,result,mTokenDeque,theRecycler);
