@@ -158,4 +158,18 @@
 <!-- Statusbar -->
 <!ENTITY  statusText.label            "Document: Done">
 
+<!ENTITY textZoomEnlargeCmd.label       "Larger">
+<!ENTITY textZoomEnlargeCmd.accesskey   "L">
+<!ENTITY textZoomEnlargeCmd.commandkey  "+">
+<!ENTITY textZoomEnlargeCmd.commandkey2 "="> <!-- + is above this key on many keyboards -->
+
+<!ENTITY textZoomReduceCmd.label        "Smaller">
+<!ENTITY textZoomReduceCmd.accesskey    "S">
+<!ENTITY textZoomReduceCmd.commandkey   "-">
+
+<!ENTITY textZoomResetCmd.commandkey    "0">
+
+<!-- see textZoomOtherLabel in navigator.properties -->
+<!ENTITY textZoomMenu.accesskey         "z">
+<!ENTITY textZoomOtherCmd.accesskey     "o">
 
