@@ -1578,7 +1578,7 @@ PRInt32 nsNNTPProtocol::NewsResponse(nsIInputStream * inputStream, PRUint32 leng
 	}
 
 	if(!line)
-		return status;
+		return NS_ERROR_FAILURE;
 
     ClearFlag(NNTP_PAUSE_FOR_READ);  /* don't pause if we got a line */
 
