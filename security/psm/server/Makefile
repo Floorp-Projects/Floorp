@@ -207,7 +207,6 @@ I18N_COMPONENTS = \
 	$(NULL)
 
 XPCOM_LIBS = \
-	$(DIST)/lib/mozreg.$(DLL_SUFFIX) \
 	$(DIST)/lib/xpcom.$(DLL_SUFFIX) \
 	$(NULL)
 
