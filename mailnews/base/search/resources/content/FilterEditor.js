@@ -65,6 +65,25 @@ function filterEditorOnLoad()
 
 function onOk()
 {
+    if (isDuplicateFilterNameExists())
+    {
+        var commonDialogsService 
+            = Components.classes["@mozilla.org/appshell/commonDialogs;1"].getService();
+        commonDialogsService 
+            = commonDialogsService.QueryInterface(Components.interfaces.nsICommonDialogs);
+
+        if (commonDialogsService)
+        {
+            commonDialogsService.Alert(window,
+                Bundle.GetStringFromName("cannotHaveDuplicateFilterTitle"), 
+                Bundle.GetStringFromName("cannotHaveDuplicateFilterMessage")
+            );
+        }
+
+        return;
+    }
+
+
     if (!saveFilter()) return;
 
     // parent should refresh filter list..
@@ -72,6 +91,31 @@ function onOk()
     // are displayed in the filter dialog, like the filter name
     window.arguments[0].refresh = true;
     window.close();
+}
+
+function isDuplicateFilterNameExists()
+{
+    var args = window.arguments[0];
+    var myFilterList = args.filterList;
+    var numOfFilters = myFilterList.filterCount;
+
+    var filterName= gFilterNameElement.value;
+    var currentFilter;
+    var alreadyExists = false;
+    for (var i = 0; i < numOfFilters; i++)
+    {
+        currentFilter = (myFilterList.getFilterAt(i)).filterName;
+        if (filterName == currentFilter)
+        {
+            alreadyExists = true;
+            break;
+        }
+    }
+
+    if (alreadyExists)
+        return true;
+    else
+        return false;
 }
 
 function getScopeFromFilterList(filterList)
