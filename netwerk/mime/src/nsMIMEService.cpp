@@ -86,7 +86,7 @@ nsMIMEService::Init() {
 // nsIMIMEService methods
 NS_IMETHODIMP
 nsMIMEService::GetFromExtension(const char *aFileExt, nsIMIMEInfo **_retval) {
-    nsresult rv;
+    nsresult rv = NS_OK;
   	if( !mXML || NS_FAILED (rv = mXML->GetFromExtension( aFileExt, _retval ) ) )
   	{
   		if ( mNative )

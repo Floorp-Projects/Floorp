@@ -125,7 +125,7 @@ public:
 
     NS_IMETHOD
     OnStartRequest(nsIChannel *channel, nsISupports *aContext) {
-        nsresult rv;
+        nsresult rv = NS_OK;
 		
 		NS_ASSERTION(mDownstreamListener, "no downstream listener");
 
@@ -141,7 +141,7 @@ public:
     NS_IMETHOD
     OnStopRequest(nsIChannel *channel, nsISupports *aContext,
                   nsresult aStatus, const PRUnichar* aStatusArg) {
-        nsresult rv;
+        nsresult rv = NS_OK;
 
 		
 		NS_ASSERTION(mDownstreamListener, "no downstream listener");

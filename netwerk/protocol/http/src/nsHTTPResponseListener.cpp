@@ -834,7 +834,7 @@ nsresult nsHTTPServerListener::Abort()
 nsresult nsHTTPServerListener::FireSingleOnData(nsIStreamListener *aListener, 
         nsISupports *aContext) 
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     if (mHeadersDone) {
         rv = FinishedResponseHeaders() ;
