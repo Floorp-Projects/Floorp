@@ -207,7 +207,7 @@ var gDownloadObserver = {
       XPInstallDownloadManager.addDownloads(params, installObserver);
       break;  
     case "xpinstall-dialog-close":
-      if (gDownloadManager) {
+      if ("gDownloadManager" in window) {
         var mgr = gDownloadManager.QueryInterface(Components.interfaces.nsIXPInstallManagerUI);
         gCanAutoClose = mgr.hasActiveXPIOperations;
         autoClose();
@@ -520,8 +520,11 @@ var XPInstallDownloadManager = {
       // MIME Info
       var mimeInfo = mimeService.getFromTypeAndExtension(null, url.fileExtension);
       
-      var download = gDownloadManager.addDownload(uri, localTarget, displayName, mimeInfo, 0, null,
-                                                  Components.interfaces.nsIXPInstallManagerUI.DOWNLOAD_TYPE_INSTALL);
+      if (!iconURL) 
+        iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
+      
+      var download = gDownloadManager.addDownload(Components.interfaces.nsIXPInstallManagerUI.DOWNLOAD_TYPE_INSTALL, 
+                                                  uri, localTarget, displayName, iconURL, mimeInfo, 0, null);
       
       // Advance the enumerator
       var certName = aParams.GetString(i++);
