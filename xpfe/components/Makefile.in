@@ -29,7 +29,6 @@ include $(DEPTH)/config/autoconf.mk
 DIRS	= \
 			bookmarks \
 			directory \
-			download-manager \
 			filepicker \
 			find history \
 			search \
@@ -48,6 +47,10 @@ DIRS	= \
 			killAll \
 			windowds \
 			$(NULL)
+
+ifndef MOZ_PHOENIX
+DIRS		+= download-manager
+endif
 
 ifdef MOZ_ENABLE_XREMOTE
 DIRS		+= xremote
