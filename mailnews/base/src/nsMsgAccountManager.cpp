@@ -298,7 +298,7 @@ nsMsgAccountManager::AddAccount(nsIMsgAccount *account)
 
     
     
-#ifdef DEBUG_alecf
+#ifdef DEBUG_ACCOUNTMANAGER
     printf("Adding account %s\n", (const char *)accountKey);
 #endif
 
@@ -526,7 +526,7 @@ nsMsgAccountManager::hashTableFindFirst(nsHashKey *aKey,
   entry->account = (nsIMsgAccount *)aData;
   entry->found = PR_TRUE;
 
-#ifdef DEBUG_alecf
+#ifdef DEBUG_ACCOUNTMANAGER
   printf("hashTableFindFirst: returning first account %p/%p\n",
          aData, entry->account);
 #endif
@@ -776,7 +776,7 @@ NS_IMETHODIMP nsMsgAccountManager::WriteToFolderCache(nsIMsgFolderCache *folderC
 nsresult
 nsMsgAccountManager::MigratePrefs()
 {
-#ifdef DEBUG_sspitzer
+#ifdef DEBUG_ACCOUNTMANAGER
 	printf("nsMsgAccountManager::MigratePrefs()\n");
 #endif
 
@@ -795,7 +795,7 @@ nsMsgAccountManager::LoadAccount(nsString& accountKey)
                                           nsnull,
                                           nsCOMTypeInfo<nsIMsgAccount>::GetIID(),
                                           (void **)&account);
-#ifdef DEBUG_alecf
+#ifdef DEBUG_ACCOUNTMANAGER
   if (NS_FAILED(rv)) printf("Could not create an account\n");
 #endif
   

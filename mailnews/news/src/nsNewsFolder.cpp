@@ -567,7 +567,7 @@ nsresult nsMsgNewsFolder::GetDatabase()
 NS_IMETHODIMP
 nsMsgNewsFolder::GetMessages(nsIEnumerator* *result)
 {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
   printf("nsMsgNewsFolder::GetMessages(%s)\n",mURI);
 #endif
   // number_to_show is a tempory hack to allow newsgroups
@@ -1010,7 +1010,7 @@ nsresult  nsMsgNewsFolder::GetDBFolderInfoAndDB(nsIDBFolderInfo **folderInfo, ns
 
 NS_IMETHODIMP nsMsgNewsFolder::UpdateSummaryTotals()
 {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
 	printf("nsMsgNewsFolder::UpdateSummaryTotals(%s)\n",mURI);
 #endif
 
@@ -1252,7 +1252,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetNewMessages()
 		return NS_OK;
   }
 
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
   char *setStr = nsnull;
   // caller needs to use delete [] to free
   rv = GetUnreadSetStr(&setStr);

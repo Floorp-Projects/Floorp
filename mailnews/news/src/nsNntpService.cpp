@@ -61,10 +61,6 @@
 
 #define PREF_NETWORK_HOSTS_NNTP_SERVER	"network.hosts.nntp_server"
 
-#if defined(DEBUG_sspitzer_) || defined (DEBUG_seth_)
-#define DEBUG_NEWS 1
-#endif
-
 // we need this because of an egcs 1.0 (and possibly gcc) compiler bug
 // that doesn't allow you to call ::nsISupports::GetIID() inside of a class
 // that multiply inherits from nsISupports
@@ -363,7 +359,7 @@ nsresult nsNntpService::DetermineHostForPosting(nsString &host, const char *news
         str.Right(theRest, str.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */);
       }
       else if (str.Find(":/") != -1) {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
 	printf("we have x:/y where x != news. this is bad, return failure\n");
 #endif
         PR_FREEIF(list);
@@ -434,7 +430,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
   if (!newsgroupsNames) return NS_ERROR_NULL_POINTER;
   if (PL_strlen(newsgroupsNames) == 0) return NS_ERROR_FAILURE;
 
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
   printf("newsgroupsNames == %s\n",newsgroupsNames);
 #endif
   
@@ -461,7 +457,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
     str.StripWhitespace();
 
     if (str != "") {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
       printf("value = %s\n", str.GetBuffer());
 #endif
       nsString currentHost("", eOneByte);
@@ -474,7 +470,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
         str.Right(theRest, str.Length() - kNewsRootURILen /* for news:/ */ - 1 /* for the slash */);
       }
       else if (str.Find(":/") != -1) {
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
 	printf("we have x:/y where x != news. this is bad, return failure\n");
 #endif
         PR_FREEIF(list);
@@ -484,7 +480,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
         theRest = str;
       }
       
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
       printf("theRest == %s\n",theRest.GetBuffer());
 #endif
       
@@ -496,7 +492,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
         // theRest is "host/group"
         theRest.Left(currentHost, slashpos);
         
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
         printf("currentHost == %s\n", currentHost.GetBuffer());
 #endif
         // from "host/group", put "group" into currentGroup;
@@ -550,7 +546,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
       str = "";
       currentHost = "";
     }
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
     else {
         printf("nothing between two commas. ignore and keep going...\n");
     }
@@ -563,7 +559,7 @@ nsresult nsNntpService::ConvertNewsgroupsString(const char *newsgroupsNames, cha
   *_retval = PL_strdup(retvalStr.GetBuffer());
   if (!*_retval) return NS_ERROR_OUT_OF_MEMORY;
   
-#ifdef DEBUG_seth
+#ifdef DEBUG_NEWS
   printf("Newsgroups header = %s\n", *_retval);
 #endif
 

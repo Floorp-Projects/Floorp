@@ -22,7 +22,7 @@
 #include "nsMsgKeySet.h"
 #include "prprf.h"
 
-#ifdef DEBUG_seth
+#if defined(DEBUG_seth) || defined(DEBUG_sspitzer)
 #define DEBUG_MSGKEYSET 1
 #endif
 
