@@ -85,7 +85,17 @@ use Template::Context;
 sub new {
     my $class = shift;
     my($app, $output, $session, $protocol) = @_;
-    my $self = $class->SUPER::new({});
+    my $self = $class->SUPER::new({
+        'FILTERS' => {
+            'htmlcomment' => \&html_comment_filter, # for use in an html comment
+            'xmlcomment' => \&xml_comment_filter, # for use in an xml comment
+            'xml' => \&xml_filter, # for use in xml
+            'cdata' => \&cdata_filter, # for use in an xml CDATA block
+            'htmljs' => \&html_js_filter, # for use in strings in JS in HTML <script> blocks
+            'js' => \&js_filter, # for use in strings in JS
+            'css' => \&css_filter, # for use in strings in CSS
+        }
+    });
     if (defined($self)) {
         $self->{'__PLIF__app'} = $app;
         $self->{'__PLIF__output'} = $output; # unused (it's a handle to the dataSource.strings service but we look one up instead of using it directly)
@@ -121,11 +131,30 @@ sub process {
 
     # expand strings and append
     my $result = '';
-    foreach my $string (@$strings) {
+    string: foreach my $string (@$strings) {
         if (ref($string)) {
             # probably already compiled
             $result .= $self->SUPER::process($string, $params);
         } else {
+            # iterate through the BLKSTACK list to see if any of the
+            # Template::Documents we're visiting define this BLOCK
+            foreach my $blocks (@{$self->{'BLKSTACK'}}) {
+                if (defined($blocks)) {
+                    my $template = $blocks->{$string};
+                    if (defined($template)) {
+                        if (ref $template eq 'CODE') {
+                            $result .= &$template($self);
+                        } elsif (ref $template) {
+                            $result .= $template->process($self);
+                        } else {
+                            $self->throw('file', "invalid template reference: $template");
+                        }
+                        # ok, jump to next string
+                        next string;
+                    }
+                }
+            }
+            # ok, it's not a defined block, do our own thing with it
             $result .= $dataSource->getExpandedString($app, $session, $protocol, $string, $self->{'STASH'});
         }
     }
@@ -181,4 +210,57 @@ sub insert {
     }
 
     return $result;
+}
+
+
+# FILTERS
+# (are these right? XXX)
+
+sub html_comment_filter {
+    my $text = shift;
+    $text =~ s/--/- - /go;
+    return $text;
+}
+
+sub xml_comment_filter {
+    my $text = shift;
+    $text =~ s/--/- - /go;
+    return $text;
+}
+
+sub xml_filter {
+    my $text = shift;
+    $text =~ s/&/&amp;/go;
+    $text =~ s/</&lt;/go;
+    $text =~ s/>/&gt;/go;
+    $text =~ s/"/&quot;/go;
+    $text =~ s/'/&apos;/go;
+    return $text;
+}
+
+sub cdata_filter {
+    my $text = shift;
+    $text =~ s/ ]]> / ]]> ]]&gt; <![CDATA[ /gox; # escape the special "]]>" string
+    return $text;
+}
+
+sub html_js_filter {
+    my $text = shift;
+    $text =~ s/([\\'"])/\\$1/go; # escape backslashes and quotes
+    $text =~ s/\n/\\n/go; # escape newlines
+    $text =~ s| </ | <\\/ |gox; # escape the special "</" string
+    return $text;
+}
+
+sub js_filter {
+    my $text = shift;
+    $text =~ s/([\\'"])/\\$1/go; # escape backslashes and quotes
+    $text =~ s/\n/\\n/go; # escape newlines
+    return $text;
+}
+
+sub css_filter {
+    my $text = shift;
+    $text =~ s/([\\'"])/\\$1/go; # escape backslashes and quotes
+    return $text;
 }
