@@ -27,10 +27,12 @@
 #include "nsFileSpec.h"
 #include "nsCOMPtr.h"
 
+#if defined(OJI) && defined(XP_MAC)
 #include "nsIDocument.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptObjectOwner.h"
+#endif
 
 #ifdef XP_PC
 #include "windows.h"
@@ -760,6 +762,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
 {
 	*outJSWindow = NULL;
 	nsresult rv = NS_ERROR_FAILURE;
+#if defined(OJI) && defined(XP_MAC)
 	nsIDocument* document = nsnull;
 	if (mOwner->GetDocument(&document) == NS_OK) {
 		nsIScriptContextOwner* contextOwner = document->GetScriptContextOwner();
@@ -782,6 +785,7 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSWindow(JSObject* *outJSWindow)
 		}
 		NS_RELEASE(document);	
 	}
+#endif
 	return rv;
 }
 
