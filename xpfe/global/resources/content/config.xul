@@ -59,6 +59,12 @@ Neil Rashbrook <neil@parkwaycc.co.uk>
   <key keycode="VK_RETURN" oncommand="ModifySelected();"/>
 </keyset>
 
+<hbox align="center">
+  <label value="&filterPrefs.label;" accesskey="&filterPrefs.accesskey;" control="textbox"/>
+  <textbox id="textbox" flex="1" type="timed" timeout="500" oncommand="FilterPrefs();"/>
+  <button id="button" label="&showAll.label;" accesskey="&showAll.accesskey;" oncommand="ClearFilter();" disabled="true"/>
+</hbox>
+
 <tree id="configTree" flex="1" class="plain focusring" seltype="single"
       enableColumnDrag="true" context="configContext">
   <treecols>
