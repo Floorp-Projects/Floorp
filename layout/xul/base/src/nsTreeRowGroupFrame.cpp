@@ -745,7 +745,7 @@ nsTreeRowGroupFrame::PositionChanged(nsIPresContext* aPresContext, PRInt32 aOldI
       // Ensure all reflows happen first.
       nsCOMPtr<nsIPresShell> shell;
       aPresContext->GetShell(getter_AddRefs(shell));
-      shell->ProcessReflowCommands(PR_FALSE);
+      shell->FlushPendingNotifications();
     }
 
     PRInt32 loseRows = delta;
@@ -1431,7 +1431,7 @@ void nsTreeRowGroupFrame::OnContentAdded(nsIPresContext* aPresContext)
   
   nsCOMPtr<nsIPresShell> shell;
   aPresContext->GetShell(getter_AddRefs(shell));
-  shell->ProcessReflowCommands(PR_FALSE);
+  shell->FlushPendingNotifications();
 }
 
 void nsTreeRowGroupFrame::OnContentInserted(nsIPresContext* aPresContext, nsIFrame* aNextSibling, PRInt32 aIndex)
@@ -1507,7 +1507,7 @@ void nsTreeRowGroupFrame::OnContentRemoved(nsIPresContext* aPresContext,
      // deal with cleaning out the content chain.
      nsCOMPtr<nsIPresShell> shell;
      aPresContext->GetShell(getter_AddRefs(shell));
-     shell->ProcessReflowCommands(PR_FALSE);
+     shell->FlushPendingNotifications();
 
      return; // All frames got deleted anyway by the pos change.
   }

@@ -1413,12 +1413,8 @@ nsGfxTextControlFrame::CreateSubDoc(nsRect *aSizeOfSubdocContainer)
     nsCOMPtr<nsIPresShell> shell;
     rv = mFramePresContext->GetShell(getter_AddRefs(shell));
     if (NS_FAILED(rv)) { return rv; }
-    if (!shell) { return NS_ERROR_NULL_POINTER; }
-    rv = shell->EnterReflowLock();
-    if (NS_FAILED(rv)) { return rv; }
-    rv = shell->AppendReflowCommand(cmd);
-    // must do this next line regardless of result of AppendReflowCommand
-    shell->ExitReflowLock(PR_TRUE);
+    if (!shell) { return NS_ERROR_NULL_POINTER; }    
+    rv = shell->AppendReflowCommand(cmd);    
   }
   return rv;
 }

@@ -763,15 +763,19 @@ nsBulletFrame::UpdateBulletCB(nsIPresContext* aPresContext,
     // a reflow of the bullet frame.
     nsCOMPtr<nsIPresShell> shell;
     rv = aPresContext->GetShell(getter_AddRefs(shell));
-    if (NS_SUCCEEDED(rv) && shell) {
-      nsIReflowCommand* cmd;
-      rv = NS_NewHTMLReflowCommand(&cmd, aFrame,
-                                   nsIReflowCommand::ContentChanged);
-      if (NS_OK == rv) {
-        shell->EnterReflowLock();
-        shell->AppendReflowCommand(cmd);
-        NS_RELEASE(cmd);
-        shell->ExitReflowLock(PR_TRUE);
+    if (NS_SUCCEEDED(rv) && shell) {      
+      nsIFrame* parent;      
+      aFrame->GetParent(&parent);      
+      if (parent) {
+        // Mark the bullet frame dirty and ask its parent to reflow it.
+        nsFrameState state;
+        aFrame->GetFrameState(&state);
+        state |= NS_FRAME_IS_DIRTY;
+        aFrame->SetFrameState(state);
+	      parent->ReflowDirtyChild(shell, aFrame);
+      }
+      else {
+       NS_ASSERTION(0, "No parent to pass the reflow request up to.");
       }
     }
   }
