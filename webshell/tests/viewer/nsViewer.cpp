@@ -68,6 +68,11 @@
 #include "nsINetContainerApplication.h"
 #include "nsIButton.h"
 #include "nsITextWidget.h"
+#include "nsIImageObserver.h"
+#include "nsFont.h"
+#include "nsIFontMetrics.h"
+#include "nsIImageRequest.h"
+#include "nsITimer.h"
 
 // Class ID's
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
@@ -103,18 +108,25 @@ static NS_DEFINE_IID(kIButtonIID, NS_IBUTTON_IID);
 static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 static NS_DEFINE_IID(kIDocumentLoaderIID, NS_IDOCUMENTLOADER_IID);
 static NS_DEFINE_IID(kIScriptContextOwnerIID, NS_ISCRIPTCONTEXTOWNER_IID);
+static NS_DEFINE_IID(kIChildWidgetIID, NS_IWIDGET_IID);
 
 #define VIEWER_UI
 #define VIEWER_UI
 #undef INSET_WEBWIDGET
 
 #ifdef VIEWER_UI
-#define BUTTON_WIDTH 100
-#define BUTTON_HEIGHT 30
+#define THROBBER_WIDTH 32
+#define THROBBER_HEIGHT 32
+#define BUTTON_WIDTH 90
 #else
+#define THROBBER_WIDTH 0
+#define THROBBER_HEIGHT 0
 #define BUTTON_WIDTH 0
-#define BUTTON_HEIGHT 0
 #endif
+
+#define BUTTON_HEIGHT THROBBER_HEIGHT
+#define THROB_NUM 20
+#define THROBBER_AT "resource:/res/throbber/anims%02d.gif"
 
 #ifdef INSET_WEBWIDGET
 #define WEBWIDGET_LEFT_INSET 5
@@ -463,6 +475,11 @@ DocObserver::OnProgress(PRInt32 aProgress, PRInt32 aProgressMax,
 NS_IMETHODIMP
 DocObserver::OnStartBinding(const char *aContentType)
 {
+  //start the throbber...
+
+  if (nsnull != mViewer)
+    mViewer->mUpdateThrobber = PR_TRUE;
+
   fputs("Loading ", stdout);
   fputs(mURL, stdout);
   fputs("\n", stdout);
@@ -475,6 +492,18 @@ DocObserver::OnStopBinding(PRInt32 status, const nsString& aMsg)
   fputs("Done loading ", stdout);
   fputs(mURL, stdout);
   fputs("\n", stdout);
+
+  //stop the throbber...
+
+  if (nsnull != mViewer)
+  {
+    nsRect trect;
+    mViewer->mUpdateThrobber = PR_FALSE;
+    mViewer->mThrobberIdx = 0;
+    mViewer->mThrobber->GetBounds(trect);
+    mViewer->mThrobber->Invalidate(PR_FALSE);
+  }
+
   return NS_OK;
 }
 
@@ -674,8 +703,17 @@ nsViewer::Layout(WindowData* aWindowData, int aWidth, int aHeight)
 
     // position location bar (it's stretchy)
     if (mLocation) {
-      mLocation->Resize(2*BUTTON_WIDTH, 0, rr.width - 2*BUTTON_WIDTH,
-                        BUTTON_HEIGHT, PR_TRUE);
+      if (mThrobber)
+        mLocation->Resize(2*BUTTON_WIDTH, 0, rr.width - (2*BUTTON_WIDTH + THROBBER_WIDTH),
+                          BUTTON_HEIGHT, PR_TRUE);
+      else
+        mLocation->Resize(2*BUTTON_WIDTH, 0, rr.width - 2*BUTTON_WIDTH,
+                          BUTTON_HEIGHT, PR_TRUE);
+    }
+
+    if (mThrobber) {
+        mThrobber->Resize(rr.width - THROBBER_WIDTH, 0, THROBBER_WIDTH,
+                          THROBBER_HEIGHT, PR_TRUE);
     }
 
     // inset the web widget
@@ -803,6 +841,195 @@ void nsViewer::ProcessArguments(int argc, char **argv)
   if (i < argc) {
     startURL = argv[i];
   }
+}
+
+//----------------------------------------------------------------------
+// Throbber Implementation
+//----------------------------------------------------------------------
+
+class ThrobObserver : public nsIImageRequestObserver {
+public:
+    ThrobObserver();
+    ~ThrobObserver();
+ 
+    NS_DECL_ISUPPORTS
+
+    virtual void Notify(nsIImageRequest *aImageRequest,
+                        nsIImage *aImage,
+                        nsImageNotification aNotificationType,
+                        PRInt32 aParam1, PRInt32 aParam2,
+                        void *aParam3);
+
+    virtual void NotifyError(nsIImageRequest *aImageRequest,
+                             nsImageError aErrorType);
+};
+
+ThrobObserver::ThrobObserver()
+{
+}
+
+ThrobObserver::~ThrobObserver()
+{
+}
+
+static NS_DEFINE_IID(kIImageObserverIID, NS_IIMAGEREQUESTOBSERVER_IID);
+
+NS_IMPL_ISUPPORTS(ThrobObserver, kIImageObserverIID)
+
+void  
+ThrobObserver::Notify(nsIImageRequest *aImageRequest,
+                   nsIImage *aImage,
+                   nsImageNotification aNotificationType,
+                   PRInt32 aParam1, PRInt32 aParam2,
+                   void *aParam3)
+{
+}
+
+void 
+ThrobObserver::NotifyError(nsIImageRequest *aImageRequest,
+                        nsImageError aErrorType)
+{
+}
+
+static void throb_timer_callback(nsITimer *aTimer, void *aClosure)
+{
+  nsViewer *viewer = (nsViewer *)aClosure;
+
+  if (viewer->mUpdateThrobber)
+  {
+    nsRect trect;
+
+    viewer->mThrobberIdx++;
+
+    if (viewer->mThrobberIdx >= THROB_NUM)
+      viewer->mThrobberIdx = 0;
+
+    viewer->mThrobber->GetBounds(trect);
+    viewer->mThrobber->Invalidate(PR_TRUE);
+  }
+
+  nsresult rv = NS_NewTimer(&viewer->mThrobTimer);
+
+  if (NS_OK == rv)
+     viewer->mThrobTimer->Init(throb_timer_callback, viewer, 33);
+}
+
+void nsViewer::LoadThrobberImages()
+{
+  char url[2000];
+
+  mThrobberImages = new nsVoidArray(THROB_NUM);
+
+  if ((nsnull != mThrobberImages) &&
+      (NS_OK == NS_NewImageGroup(&mThrobberImageGroup)))
+  {
+    nsIRenderingContext *drawCtx = mThrobber->GetRenderingContext();
+    mThrobberImageGroup->Init(drawCtx);
+    NS_RELEASE(drawCtx);
+  }
+
+  nsresult rv = NS_NewTimer(&mThrobTimer);
+
+  if (NS_OK == rv)
+     mThrobTimer->Init(throb_timer_callback, this, 33);
+  
+  for (PRInt32 cnt = 0; cnt < THROB_NUM; cnt++)
+  {
+    sprintf(url, THROBBER_AT, cnt);
+    ThrobObserver *observer = new ThrobObserver();
+    mThrobberImages->InsertElementAt(mThrobberImageGroup->GetImage(url,
+                                                                   observer,
+                                                                   NS_RGB(0, 0, 0),
+                                                                   THROBBER_WIDTH - 2,
+                                                                   THROBBER_HEIGHT - 2, 0), cnt);
+  }
+}
+
+void nsViewer::DestroyThrobberImages()
+{
+  if (nsnull != mThrobberImageGroup)
+  {
+    if (nsnull != mThrobTimer)
+    {
+      mThrobTimer->Cancel();     //XXX this should not be necessary. MMP
+      NS_RELEASE(mThrobTimer);
+    }
+
+    mThrobberImageGroup->Interrupt();
+
+    for (PRInt32 cnt = 0; cnt < THROB_NUM; cnt++)
+    {
+      nsIImageRequest *imgreq;
+
+      imgreq = (nsIImageRequest *)mThrobberImages->ElementAt(cnt);
+
+      if (nsnull != imgreq)
+      {
+        NS_RELEASE(imgreq);
+        mThrobberImages->ReplaceElementAt(nsnull, cnt);
+      }
+    }
+
+    delete mThrobberImages;
+  }
+}
+
+nsEventStatus PR_CALLBACK HandleThrobberEvent(nsGUIEvent *aEvent)
+{
+  switch (aEvent->message)
+  {
+    case NS_PAINT:
+    {
+      nsPaintEvent *pe = (nsPaintEvent *)aEvent;
+      nsIRenderingContext *cx = pe->renderingContext;
+      nsRect bounds;
+      nsIImageRequest *imgreq;
+      nsIImage *img;
+   
+      pe->widget->GetBounds(bounds);
+
+      cx->SetClipRect(*pe->rect, nsClipCombine_kReplace);
+
+      cx->SetColor(NS_RGB(255, 255, 255));
+      cx->DrawLine(0, bounds.height - 1, 0, 0);
+      cx->DrawLine(0, 0, bounds.width, 0);
+
+      cx->SetColor(NS_RGB(128, 128, 128));
+      cx->DrawLine(bounds.width - 1, 1, bounds.width - 1, bounds.height - 1);
+      cx->DrawLine(bounds.width - 1, bounds.height - 1, 0, bounds.height - 1);
+
+      imgreq = (nsIImageRequest *)gTheViewer->mThrobberImages->ElementAt(gTheViewer->mThrobberIdx);
+
+      if ((nsnull == imgreq) || (nsnull == (img = imgreq->GetImage())))
+      {
+        char str[3];
+        nsFont tfont = nsFont("monospace", 0, 0, 0, 0, 10);
+        nsIFontMetrics *met;
+        nscoord w, h;
+
+        cx->SetColor(NS_RGB(0, 0, 0));
+        cx->FillRect(1, 1, bounds.width - 2, bounds.height - 2);
+
+        sprintf(str, "%02d", gTheViewer->mThrobberIdx);
+
+        cx->SetColor(NS_RGB(255, 255, 255));
+        cx->SetFont(tfont);
+        met = cx->GetFontMetrics();
+        w = met->GetWidth(str[0]) + met->GetWidth(str[1]);
+        h = met->GetHeight();
+        cx->DrawString(str, 2, (bounds.width - w) >> 1, (bounds.height - h) >> 1, 0);
+      }
+      else
+      {
+        cx->DrawImage(img, 1, 1);
+        NS_RELEASE(img);
+      }
+
+      break;
+    }
+  }
+
+  return nsEventStatus_eIgnore;
 }
 
 //----------------------------------------------------------------------
@@ -1472,7 +1699,7 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
 
     // Add a location box
   rect.SetRect(2*BUTTON_WIDTH, 0,
-               bounds.width - 2*BUTTON_WIDTH, BUTTON_HEIGHT);
+               bounds.width - 2*BUTTON_WIDTH - THROBBER_WIDTH, BUTTON_HEIGHT);
   NSRepository::CreateInstance(kCTextFieldCID, nsnull, kITextWidgetIID,
                                (void**)&mLocation);
   mLocation->Create(wd->windowWidget, rect, HandleLocationEvent, NULL);
@@ -1480,6 +1707,17 @@ nsDocLoader* nsViewer::SetupViewer(nsIWidget **aMainWindow, int argc, char **arg
   mLocation->Show(PR_TRUE);
   mLocation->SetForegroundColor(NS_RGB(255, 0, 0));
   mLocation->SetBackgroundColor(NS_RGB(255, 255, 255));
+
+    // Add a throbber
+  rect.SetRect(bounds.width - THROBBER_WIDTH, 0,
+               THROBBER_WIDTH, THROBBER_HEIGHT);
+  NSRepository::CreateInstance(kCChildIID, nsnull, kIChildWidgetIID,
+                               (void**)&mThrobber);
+  mThrobber->Create(wd->windowWidget, rect, HandleThrobberEvent, NULL);
+  mThrobber->Show(PR_TRUE);
+
+  LoadThrobberImages();
+
   wd->windowWidget->SetBackgroundColor(NS_RGB(255, 0, 0));
 #endif
   wd->mViewer = this;
