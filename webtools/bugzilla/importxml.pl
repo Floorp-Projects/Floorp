@@ -35,8 +35,17 @@ require "CGI.pl";
 require "globals.pl";
 $::lockcount = 0;
 
+# figure out which path this script lives in. Set the current path to
+# this and add it to @INC so this will work when run as part of mail
+# alias by the mailer daemon
+my $path = $0;
+$path =~ s#(.*)/[^/]+#$1#;
+chdir $path;
+use lib ($path);
+
 GetVersionTable();
 ConnectToDatabase();
+
 
 sub sillyness {
     my $zz;
@@ -182,7 +191,7 @@ if (defined $tree->[1][0]->{'urlbase'}) {
   
 
 my $bugqty = ($#{@{$tree}->[1]} +1 -3) / 4;
-my $log = "Importing $bugqty bug(s) from $urlbase,\n  sent by $exporter.\n";
+my $log = "Imported $bugqty bug(s) from $urlbase,\n  sent by $exporter.\n";
 for (my $k=1 ; $k <= $bugqty ; $k++) {
   my $cur = $k*4;
 
