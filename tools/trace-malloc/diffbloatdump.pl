@@ -173,7 +173,7 @@ sub print_calltree() {
         }
     }
 
-    print_node_indent(".root", $calltree, 0);
+    print_node_indent("malloc", $calltree, 0);
 }
 
 add_file($ARGV[0], -1);
