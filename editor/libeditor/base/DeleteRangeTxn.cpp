@@ -32,9 +32,6 @@
 #include "nsIDOMElement.h"
 #endif
 
-static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
-static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
-
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
 #else
@@ -238,7 +235,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent
   if (textNode)
   { // if the node is a text node, then delete text content
     DeleteTextTxn *txn;
-    result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)&txn);
+    result = TransactionFactory::GetNewTransaction(DeleteTextTxn::GetCID(), (EditTxn **)&txn);
     if (nsnull!=txn)
     {
       PRInt32 numToDel;
@@ -267,7 +264,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteBetween(nsIDOMNode *aStartParent
         if ((NS_SUCCEEDED(result)) && child)
         {
           DeleteElementTxn *txn;
-          result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
+          result = TransactionFactory::GetNewTransaction(DeleteElementTxn::GetCID(), (EditTxn **)&txn);
           if (nsnull!=txn)
           {
             txn->Init(child);
@@ -308,7 +305,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteContent(nsIDOMNode *aParent,
     if (numToDelete)
     {
       DeleteTextTxn *txn;
-      result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)&txn);
+      result = TransactionFactory::GetNewTransaction(DeleteTextTxn::GetCID(), (EditTxn **)&txn);
       if (nsnull!=txn)
       {
         txn->Init(mEditor, textNode, start, numToDelete);
@@ -350,7 +347,7 @@ NS_IMETHODIMP DeleteRangeTxn::CreateTxnsToDeleteNodesBetween()
     if ((NS_SUCCEEDED(result)) && node)
     {
       DeleteElementTxn *txn;
-      result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)&txn);
+      result = TransactionFactory::GetNewTransaction(DeleteElementTxn::GetCID(), (EditTxn **)&txn);
       if (nsnull!=txn)
       {
         txn->Init(node);

@@ -19,8 +19,6 @@
 #include "IMECommitTxn.h"
 #include "nsEditor.h"
 
-static NS_DEFINE_IID(kIMECommitTxnIID, IME_COMMIT_TXN_IID);
-
 nsIAtom *IMECommitTxn::gIMECommitTxnName = nsnull;
 
 nsresult IMECommitTxn::ClassInit()
@@ -103,7 +101,7 @@ IMECommitTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kIMECommitTxnIID)) {
+  if (aIID.Equals(IMECommitTxn::GetCID())) {
     *aInstancePtr = (void*)(IMECommitTxn*)this;
     NS_ADDREF_THIS();
     return NS_OK;

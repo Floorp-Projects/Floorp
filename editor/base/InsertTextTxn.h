@@ -23,7 +23,7 @@
 #include "nsIDOMCharacterData.h"
 #include "nsCOMPtr.h"
 
-#define INSERT_TEXT_TXN_IID \
+#define INSERT_TEXT_TXN_CID \
 {/* 93276f00-ab2c-11d2-8f4b-006008159b0c*/ \
 0x93276f00, 0xab2c, 0x11d2, \
 {0x8f, 0xb4, 0x0, 0x60, 0x8, 0x15, 0x9b, 0xc} }
@@ -36,6 +36,9 @@ class nsIPresShell;
 class InsertTextTxn : public EditTxn
 {
 public:
+
+  static const nsIID& GetCID() { static nsIID iid = INSERT_TEXT_TXN_CID; return iid; }
+
   virtual ~InsertTextTxn();
 
   /** used to name aggregate transactions that consist only of a single InsertTextTxn,
@@ -76,9 +79,6 @@ public:
 
   // override QueryInterface to handle InsertTextTxn request
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  static const nsIID& GetIID() { static nsIID iid = INSERT_TEXT_TXN_IID; return iid; }
-
 
   /** return the string data associated with this transaction */
   NS_IMETHOD GetData(nsString& aResult);

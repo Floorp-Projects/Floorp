@@ -125,22 +125,6 @@ static NS_DEFINE_CID(kCContentIteratorCID,  NS_CONTENTITERATOR_CID);
 // transaction manager
 static NS_DEFINE_CID(kCTransactionManagerCID, NS_TRANSACTIONMANAGER_CID);
 
-// transactions
-static NS_DEFINE_IID(kEditAggregateTxnIID,  EDIT_AGGREGATE_TXN_IID);
-static NS_DEFINE_IID(kInsertTextTxnIID,     INSERT_TEXT_TXN_IID);
-static NS_DEFINE_IID(kDeleteTextTxnIID,     DELETE_TEXT_TXN_IID);
-static NS_DEFINE_IID(kCreateElementTxnIID,  CREATE_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kInsertElementTxnIID,  INSERT_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kDeleteElementTxnIID,  DELETE_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kDeleteRangeTxnIID,    DELETE_RANGE_TXN_IID);
-static NS_DEFINE_IID(kChangeAttributeTxnIID,CHANGE_ATTRIBUTE_TXN_IID);
-static NS_DEFINE_IID(kSplitElementTxnIID,   SPLIT_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kJoinElementTxnIID,    JOIN_ELEMENT_TXN_IID);
-static NS_DEFINE_IID(kIMETextTxnIID,		IME_TEXT_TXN_IID);
-static NS_DEFINE_IID(kIMECommitTxnIID,		IME_COMMIT_TXN_IID);
-static NS_DEFINE_IID(kAddStyleSheetTxnIID,		 ADD_STYLESHEET_TXN_IID);
-static NS_DEFINE_IID(kRemoveStyleSheetTxnIID,	 REMOVE_STYLESHEET_TXN_IID);
-
 static NS_DEFINE_CID(kComponentManagerCID,  NS_COMPONENTMANAGER_CID);
 static NS_DEFINE_CID(kCDOMRangeCID, NS_RANGE_CID);
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
@@ -701,7 +685,7 @@ nsEditor::CreateTxnForSetAttribute(nsIDOMElement *aElement,
   nsresult result = NS_ERROR_NULL_POINTER;
   if (nsnull != aElement)
   {
-    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(ChangeAttributeTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
       result = (*aTxn)->Init(this, aElement, aAttribute, aValue, PR_FALSE);
     }
@@ -749,7 +733,7 @@ nsEditor::CreateTxnForRemoveAttribute(nsIDOMElement *aElement,
   nsresult result = NS_ERROR_NULL_POINTER;
   if (nsnull != aElement)
   {
-    result = TransactionFactory::GetNewTransaction(kChangeAttributeTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(ChangeAttributeTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  
     {
       nsAutoString value;
@@ -1634,7 +1618,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForCreateElement(const nsString& aTag,
   nsresult result = NS_ERROR_NULL_POINTER;
   if (nsnull != aParent)
   {
-    result = TransactionFactory::GetNewTransaction(kCreateElementTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(CreateElementTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
       result = (*aTxn)->Init(this, aTag, aParent, aPosition);
     }
@@ -1686,7 +1670,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertElement(nsIDOMNode * aNode,
   nsresult result = NS_ERROR_NULL_POINTER;
   if (aNode && aParent && aTxn)
   {
-    result = TransactionFactory::GetNewTransaction(kInsertElementTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(InsertElementTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result)) {
       result = (*aTxn)->Init(aNode, aParent, aPosition, this);
     }
@@ -1734,7 +1718,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteElement(nsIDOMNode * aElement,
   nsresult result = NS_ERROR_NULL_POINTER;
   if (nsnull != aElement)
   {
-    result = TransactionFactory::GetNewTransaction(kDeleteElementTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(DeleteElementTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result)) {
       result = (*aTxn)->Init(aElement);
     }
@@ -1748,7 +1732,7 @@ NS_IMETHODIMP nsEditor::CreateAggregateTxnForDeleteSelection(nsIAtom *aTxnName, 
   if (aAggTxn)
   {
     *aAggTxn = nsnull;
-    result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn**)aAggTxn); 
+    result = TransactionFactory::GetNewTransaction(EditAggregateTxn::GetCID(), (EditTxn**)aAggTxn); 
 
     if (NS_FAILED(result) || !*aAggTxn) {
       return NS_ERROR_OUT_OF_MEMORY;
@@ -1810,33 +1794,37 @@ nsEditor::InsertText(const nsString& aStringToInsert)
   else if (NS_ERROR_EDITOR_NO_TEXTNODE==result) 
   {
     BeginTransaction();
-    nsCOMPtr<nsIDOMSelection> selection;
-    result = GetSelection(getter_AddRefs(selection));
-    if ((NS_SUCCEEDED(result)) && selection)
+    result = Do(aggTxn);
+    if (NS_SUCCEEDED(result))
     {
-      nsCOMPtr<nsIDOMNode> selectedNode;
-      PRInt32 offset;
-      result = selection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(selectedNode));
-      if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && selectedNode)
+      nsCOMPtr<nsIDOMSelection> selection;
+      result = GetSelection(getter_AddRefs(selection));
+      if ((NS_SUCCEEDED(result)) && selection)
       {
-        nsCOMPtr<nsIDOMNode> newNode;
-        result = CreateNode(GetTextNodeTag(), selectedNode, offset, // offset+1, why the +1???
-                            getter_AddRefs(newNode));
-        if (NS_SUCCEEDED(result) && newNode)
+        nsCOMPtr<nsIDOMNode> selectedNode;
+        PRInt32 offset;
+        result = selection->GetAnchorNode(SELECTION_NORMAL, getter_AddRefs(selectedNode));
+        if (NS_SUCCEEDED(result) && NS_SUCCEEDED(selection->GetAnchorOffset(SELECTION_NORMAL, &offset)) && selectedNode)
         {
-          nsCOMPtr<nsIDOMCharacterData>newTextNode;
-          newTextNode = do_QueryInterface(newNode);
-          if (newTextNode)
+          nsCOMPtr<nsIDOMNode> newNode;
+          result = CreateNode(GetTextNodeTag(), selectedNode, offset, 
+                              getter_AddRefs(newNode));
+          if (NS_SUCCEEDED(result) && newNode)
           {
-            nsAutoString placeholderText(" ");
-            newTextNode->SetData(placeholderText);
-            selection->Collapse(newNode, 0, SELECTION_NORMAL);
-            selection->Extend(newNode, 1, SELECTION_NORMAL);
-            result = InsertText(aStringToInsert);
+            nsCOMPtr<nsIDOMCharacterData>newTextNode;
+            newTextNode = do_QueryInterface(newNode);
+            if (newTextNode)
+            {
+              nsAutoString placeholderText(" ");
+              newTextNode->SetData(placeholderText);
+              selection->Collapse(newNode, 0, SELECTION_NORMAL);
+              selection->Extend(newNode, 1, SELECTION_NORMAL);
+              result = InsertText(aStringToInsert);
+            }
           }
         }
-      }
-    }            
+      }            
+    }
     EndTransaction();
   }
   return result;
@@ -1913,7 +1901,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForInsertText(const nsString & aStringToInsert,
   }
   if (NS_SUCCEEDED(result) && nodeAsText)
   {
-    result = TransactionFactory::GetNewTransaction(kInsertTextTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(InsertTextTxn::GetCID(), (EditTxn **)aTxn);
     if (nsnull!=*aTxn) {
       result = (*aTxn)->Init(nodeAsText, offset, aStringToInsert, mPresShell);
     }
@@ -2013,7 +2001,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteText(nsIDOMCharacterData *aElement,
   nsresult result=NS_ERROR_NULL_POINTER;
   if (nsnull != aElement)
   {
-    result = TransactionFactory::GetNewTransaction(kDeleteTextTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(DeleteTextTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
       result = (*aTxn)->Init(this, aElement, aOffset, aLength);
     }
@@ -2246,7 +2234,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelecti
       return NS_OK;
 
     // allocate the out-param transaction
-    result = TransactionFactory::GetNewTransaction(kEditAggregateTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(EditAggregateTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_FAILED(result)) {
       return result;
     }
@@ -2266,7 +2254,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForDeleteSelection(nsIEditor::ECollapsedSelecti
           if (PR_FALSE==isCollapsed)
           {
             DeleteRangeTxn *txn;
-            result = TransactionFactory::GetNewTransaction(kDeleteRangeTxnIID, (EditTxn **)&txn);
+            result = TransactionFactory::GetNewTransaction(DeleteRangeTxn::GetCID(), (EditTxn **)&txn);
             if ((NS_SUCCEEDED(result)) && (nsnull!=txn))
             {
               txn->Init(this, range);
@@ -2499,7 +2487,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForSplitNode(nsIDOMNode *aNode,
   nsresult result=NS_ERROR_NULL_POINTER;
   if (nsnull != aNode)
   {
-    result = TransactionFactory::GetNewTransaction(kSplitElementTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(SplitElementTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
       result = (*aTxn)->Init(this, aNode, aOffset);
     }
@@ -2551,7 +2539,7 @@ NS_IMETHODIMP nsEditor::CreateTxnForJoinNode(nsIDOMNode  *aLeftNode,
   nsresult result=NS_ERROR_NULL_POINTER;
   if ((nsnull != aLeftNode) && (nsnull != aRightNode))
   {
-    result = TransactionFactory::GetNewTransaction(kJoinElementTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(JoinElementTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_SUCCEEDED(result))  {
       result = (*aTxn)->Init(this, aLeftNode, aRightNode);
     }
@@ -3561,7 +3549,7 @@ nsEditor::EndComposition(void)
 	//
 	// create the commit transaction..we can do it directly from the transaction mgr
 	//
-	result = TransactionFactory::GetNewTransaction(kIMECommitTxnIID,(EditTxn**)&commitTxn);
+  result = TransactionFactory::GetNewTransaction(IMECommitTxn::GetCID(), (EditTxn**)&commitTxn);
 	if (NS_SUCCEEDED(result) && commitTxn!=nsnull)
 	{
 		commitTxn->Init();
@@ -3816,7 +3804,7 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
 {
 	nsresult	result;
 
-	result = TransactionFactory::GetNewTransaction(kIMETextTxnIID, (EditTxn **)aTxn);
+  result = TransactionFactory::GetNewTransaction(IMETextTxn::GetCID(), (EditTxn **)aTxn);
 	if (nsnull!=*aTxn) {
 		result = (*aTxn)->Init(mIMETextNode,mIMETextOffset,mIMEBufferLength,aTextRangeList,aStringToInsert,mPresShell);
 	}
@@ -3830,7 +3818,7 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
 NS_IMETHODIMP 
 nsEditor::CreateTxnForAddStyleSheet(nsICSSStyleSheet* aSheet, AddStyleSheetTxn* *aTxn)
 {
-  nsresult rv = TransactionFactory::GetNewTransaction(kAddStyleSheetTxnIID, (EditTxn **)aTxn);
+  nsresult rv = TransactionFactory::GetNewTransaction(AddStyleSheetTxn::GetCID(), (EditTxn **)aTxn);
   if (NS_FAILED(rv))
     return rv;
     
@@ -3845,7 +3833,7 @@ nsEditor::CreateTxnForAddStyleSheet(nsICSSStyleSheet* aSheet, AddStyleSheetTxn* 
 NS_IMETHODIMP 
 nsEditor::CreateTxnForRemoveStyleSheet(nsICSSStyleSheet* aSheet, RemoveStyleSheetTxn* *aTxn)
 {
-  nsresult rv = TransactionFactory::GetNewTransaction(kRemoveStyleSheetTxnIID, (EditTxn **)aTxn);
+  nsresult rv = TransactionFactory::GetNewTransaction(RemoveStyleSheetTxn::GetCID(), (EditTxn **)aTxn);
   if (NS_FAILED(rv))
     return rv;
     
@@ -4244,7 +4232,7 @@ nsEditor::GetEndNodeAndOffset(nsIDOMSelection *aSelection,
     
   nsCOMPtr<nsIEnumerator> enumerator;
   nsresult result = aSelection->GetEnumerator(SELECTION_NORMAL, getter_AddRefs(enumerator));
-  if (NS_FAILED(result) || enumerator)
+  if (NS_FAILED(result) || !enumerator)
     return NS_ERROR_FAILURE;
     
   enumerator->First(); 

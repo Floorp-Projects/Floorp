@@ -34,7 +34,6 @@
 #include "nsLayoutCID.h"
 #include "nsIEditProperty.h"
 
-static NS_DEFINE_IID(kPlaceholderTxnIID,  PLACEHOLDER_TXN_IID);
 static NS_DEFINE_CID(kCContentIteratorCID,   NS_CONTENTITERATOR_CID);
 static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
 
@@ -233,10 +232,10 @@ nsresult
 nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection, 
                                 PRBool          *aCancel,
                                 PlaceholderTxn **aTxn,
-                                const nsString *aInString,
-                                nsString       *aOutString,
-                                TypeInState    typeInState,
-                                PRInt32         aMaxLength)
+                                const nsString  *aInString,
+                                nsString        *aOutString,
+                                TypeInState      aTypeInState,
+                                PRInt32          aMaxLength)
 {
   if (!aSelection || !aCancel || !aInString || !aOutString) {return NS_ERROR_NULL_POINTER;}
   CANCEL_OPERATION_IF_READONLY_OR_DISABLED
@@ -246,7 +245,7 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   nsString inString = *aInString; // we might want to mutate the input 
                                   // before setting the output, do that in a local var
 
-  if (-1 != aMaxLength && (mFlags&TEXT_EDITOR_FLAG_PLAINTEXT))
+  if ((-1 != aMaxLength) && (mFlags&TEXT_EDITOR_FLAG_PLAINTEXT))
   {
     // get the current text length
     // get the length of inString
@@ -301,9 +300,9 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
     *aOutString = inString;
   }
   
-  if (mBogusNode || (PR_TRUE==typeInState.IsAnySet()))
+  if (mBogusNode || (PR_TRUE==aTypeInState.IsAnySet()))
   {
-    result = TransactionFactory::GetNewTransaction(kPlaceholderTxnIID, (EditTxn **)aTxn);
+    result = TransactionFactory::GetNewTransaction(PlaceholderTxn::GetCID(), (EditTxn **)aTxn);
     if (NS_FAILED(result)) { return result; }
     if (!*aTxn) { return NS_ERROR_NULL_POINTER; }
     (*aTxn)->SetName(InsertTextTxn::gInsertTextTxnName);
@@ -312,9 +311,9 @@ nsTextEditRules::WillInsertText(nsIDOMSelection *aSelection,
   result = WillInsert(aSelection, aCancel);
   if (NS_SUCCEEDED(result) && (PR_FALSE==*aCancel))
   {
-    if (PR_TRUE==typeInState.IsAnySet())
+    if (PR_TRUE==aTypeInState.IsAnySet())
     { // for every property that is set, insert a new inline style node
-      result = CreateStyleForInsertText(aSelection, typeInState);
+      result = CreateStyleForInsertText(aSelection, aTypeInState);
     }
   }
   return result;

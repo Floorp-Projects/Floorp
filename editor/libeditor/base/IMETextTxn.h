@@ -25,7 +25,7 @@
 #include "nsCOMPtr.h"
 
 // {D4D25721-2813-11d3-9EA3-0060089FE59B}
-#define IME_TEXT_TXN_IID							\
+#define IME_TEXT_TXN_CID							\
 {0xd4d25721, 0x2813, 0x11d3,						\
 {0x9e, 0xa3, 0x0, 0x60, 0x8, 0x9f, 0xe5, 0x9b }}
 
@@ -40,6 +40,8 @@ class nsIPresShell;
 class IMETextTxn : public EditTxn
 {
 public:
+  static const nsIID& GetCID() { static nsIID iid = IME_TEXT_TXN_CID; return iid; }
+
   virtual ~IMETextTxn();
 
   /** used to name aggregate transactions that consist only of a single IMETextTxn,
@@ -83,9 +85,6 @@ public:
 
   // override QueryInterface to handle IMETextTxn request
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
-
-  static const nsIID& GetIID() { static nsIID iid = IME_TEXT_TXN_IID; return iid; }
-
 
   /** return the string data associated with this transaction */
   NS_IMETHOD GetData(nsString& aResult, nsIDOMTextRangeList** aTextRangeList);

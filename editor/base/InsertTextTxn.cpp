@@ -23,9 +23,7 @@
 #include "nsIPresShell.h"
 #include "EditAggregateTxn.h"
 
-static NS_DEFINE_IID(kInsertTextTxnIID, INSERT_TEXT_TXN_IID);
 static NS_DEFINE_IID(kIDOMSelectionIID, NS_IDOMSELECTION_IID);
-static NS_DEFINE_IID(kEditAggregateTxnIID, EDIT_AGGREGATE_TXN_IID);
 
 #ifdef NS_DEBUG
 static PRBool gNoisy = PR_FALSE;
@@ -117,7 +115,7 @@ NS_IMETHODIMP InsertTextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransacti
     // if aTransaction isa InsertTextTxn, and if the selection hasn't changed, 
     // then absorb it
     InsertTextTxn *otherInsTxn = nsnull;
-    aTransaction->QueryInterface(kInsertTextTxnIID, (void **)&otherInsTxn);
+    aTransaction->QueryInterface(InsertTextTxn::GetCID(), (void **)&otherInsTxn);
     if (otherInsTxn)
     {
       if (PR_TRUE==IsSequentialInsert(otherInsTxn))
@@ -201,7 +199,7 @@ InsertTextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
   if (nsnull == aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
-  if (aIID.Equals(kInsertTextTxnIID)) {
+  if (aIID.Equals(InsertTextTxn::GetCID())) {
     *aInstancePtr = (void*)(InsertTextTxn*)this;
     NS_ADDREF_THIS();
     return NS_OK;

@@ -23,7 +23,7 @@
 #include "nsIAtom.h"
 #include "nsCOMPtr.h"
 
-#define EDIT_AGGREGATE_TXN_IID \
+#define EDIT_AGGREGATE_TXN_CID \
 {/* 345921a0-ac49-11d2-86d8-000064657374 */ \
 0x345921a0, 0xac49, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
@@ -40,7 +40,7 @@ public:
 
   NS_DECL_ISUPPORTS_INHERITED
 
-  static const nsIID& GetCID() { static nsIID cid = EDIT_AGGREGATE_TXN_IID; return cid; }
+  static const nsIID& GetCID() { static nsIID cid = EDIT_AGGREGATE_TXN_CID; return cid; }
 
   EditAggregateTxn();
 

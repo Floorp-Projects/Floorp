@@ -22,7 +22,7 @@
 #include "nsITransaction.h"
 #include "nsCOMPtr.h"
 
-#define EDIT_TXN_IID \
+#define EDIT_TXN_CID \
 {/* c5ea31b0-ac48-11d2-86d8-000064657374 */ \
 0xc5ea31b0, 0xac48, 0x11d2, \
 {0x86, 0xd8, 0x0, 0x0, 0x64, 0x65, 0x73, 0x74} }
@@ -36,6 +36,8 @@
 class EditTxn : public nsITransaction
 {
 public:
+
+  static const nsIID& GetCID() { static nsIID iid = EDIT_TXN_CID; return iid; }
 
   NS_DECL_ISUPPORTS
 
