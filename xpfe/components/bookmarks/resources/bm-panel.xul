@@ -51,7 +51,7 @@
       ondragover="return DragOverTree(event);"
       ondraggesture="return BeginDragTree(event);"
       ondragdrop="return DropOnTree(event);"
-      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch" 
+      datasources="rdf:bookmarks rdf:files rdf:localsearch rdf:internetsearch rdf:httpindex" 
       onclick="return clicked(event, event.target.parentNode.parentNode)">
 
       <template>
