@@ -77,6 +77,7 @@
 
 // hack for copying panels.rdf into migrated profile dir
 #define PANELS_RDF_FILE                "panels.rdf"
+#define HELPERAPPS_RDF_FILE				"helperApps.rdf"
 
 // A default profile name, in case automigration 4x profile fails
 #define DEFAULT_PROFILE_NAME           "default"
@@ -1309,6 +1310,22 @@ NS_IMETHODIMP nsProfile::MigrateProfileInfo()
 	return rv;
 }
 
+nsresult
+nsProfile::CopyDefaultFile(nsIFileSpec *profDefaultsDir, nsFileSpec& newProfDir, const char *fileName)
+{
+    nsFileSpec defaultsDirSpecFile;
+
+    profDefaultsDir->GetFileSpec(&defaultsDirSpecFile);
+    
+    defaultsDirSpecFile += fileName;
+
+    if (defaultsDirSpecFile.Exists())
+    {
+        defaultsDirSpecFile.CopyToDir(newProfDir);
+    }
+
+	return NS_OK;
+}
 
 // Migrate a selected profile
 // Set the profile to the current profile....debatable.
@@ -1380,7 +1397,7 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     if (NS_FAILED(rv)) return rv;
 
     // you can do this a bunch of times.
-    rv = pPrefMigrator->AddProfilePaths(oldProfDirStr,  newProfDirStr);  
+    rv = pPrefMigrator->AddProfilePaths(oldProfDirStr, newProfDirStr);  
 
     rv = pPrefMigrator->ProcessPrefs(showProgressAsModalWindow);
     if (NS_FAILED(rv)) return rv;
@@ -1400,19 +1417,12 @@ nsProfile::MigrateProfile(const PRUnichar* profileName, PRBool showProgressAsMod
     // Copy panels.rdf file
     // This is a hack. Once the localFileSpec implementation
     // is complete, this will be removed.
-    nsFileSpec defaultsDirSpecFile;
-
-    profDefaultsDir->GetFileSpec(&defaultsDirSpecFile);
-
-    defaultsDirSpecFile += PANELS_RDF_FILE;
-
-    if (defaultsDirSpecFile.Exists())
-    {
-        defaultsDirSpecFile.CopyToDir(newProfDir);
-    }
+	rv = CopyDefaultFile(profDefaultsDir, newProfDir, PANELS_RDF_FILE);
+	if (NS_FAILED(rv)) return rv;
+	rv = CopyDefaultFile(profDefaultsDir, newProfDir, HELPERAPPS_RDF_FILE);
+	if (NS_FAILED(rv)) return rv;
     // hack finish.
-
-
+	
     rv = SetProfileDir(profileName, newProfDir);
     if (NS_FAILED(rv)) return rv;
 

@@ -28,6 +28,7 @@ FILES=\
         bookmarks.html			\
         panels.rdf                      \
         search.rdf			\
+		helperApps.rdf		\
         $(NULL)
 
 install::

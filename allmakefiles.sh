@@ -393,6 +393,7 @@ uriloader/build/Makefile
 uriloader/extprotocol/Makefile
 uriloader/extprotocol/base/Makefile
 uriloader/extprotocol/unix/Makefile
+uriloader/exthandler/Makefile
 "
 
 MAKEFILES_profile="
