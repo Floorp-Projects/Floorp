@@ -91,4 +91,22 @@ LOCAL_INCLUDES	= \
 
 include $(topsrcdir)/config/rules.mk
 
+
+# convert AppleScript dictionary .sdef file into .r format, and thence to .rsrc
+SDP_TOOL = /Developer/Tools/sdp
+REZ_TOOL = /Developer/Tools/Rez
+SDEF_SRC = $(srcdir)/mozilla.sdef
+RES_DEST = mozillaSuite.r
+RSRC_DEST = mozillaSuite.rsrc
+
+$(RSRC_DEST): $(SDEF_SRC)
+	$(SDP_TOOL) -fa -o $(RES_DEST) $(SDEF_SRC) 
+	$(REZ_TOOL) -useDF -o $(RSRC_DEST) $(RES_DEST) 
+	cp $(RSRC_DEST) $(DIST)/package/
+	rm -f $(RES_DEST) $(RSRC_DEST)
+
+libs:: $(RSRC_DEST)
+
+GARBAGE += $(RES_DEST) $(RSRC_DEST)
+
 OS_CXXFLAGS += -fexceptions

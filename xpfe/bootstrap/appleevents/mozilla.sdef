@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE dictionary SYSTEM "file://localhost/System/Library/DTDs/sdef.dtd">
+
+<!--
+This file describes Mozilla's AppleScript dictionary. It's compiled into a .r file
+like this:
+/Developer/Tools/sdp -f a mozilla.sdef
+-->
+
+<dictionary title="">
+	<suite name="Mozilla" code="MOZZ">
+
+	</suite>
+
+	<suite name="Spyglass" code="WWW!">
+
+		<commands>
+			<command name="OpenURL" code="WWW!OURL" description="Load a URL">
+				<direct-parameter type="string" description="URL to load"/>
+			</command>
+
+			<command name="register URL echo" code="WWW!RGUE" description="Register a URL echo handler. The handler will get called whenever a new URL is loaded">
+				<direct-parameter type="type" description="signature of listener"/>
+			</command>
+
+			<command name="unregister URL echo" code="WWW!UNRU" description="Cancels URL echo">
+				<direct-parameter type="type" description="signature of listener"/>
+			</command>
+
+		</commands>
+
+	</suite>
+
+
+	<suite name="Get URL" code="GURL">
+
+		<commands>
+			<command name="Get URL" code="GURLGURL" description="Load a URL">
+				<direct-parameter type="string" description="URL to load"/>
+				<parameter name="inside" code="HWIN" optional="optional" type="object" description="the window to load the URL in"/>
+			</command>
+		</commands>
+
+	</suite>
+
+</dictionary>
