@@ -130,6 +130,8 @@ public:
 #endif
 
 protected:
+    PRLock                *mLock;
+
     nsStringKey           mHashKey;
 
     nsCOMPtr<nsProxyEventClass>  mClass;
@@ -172,7 +174,6 @@ public:
                               void** aProxyObject);
     
     
-    
     static NS_METHOD Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
     
     nsProxyObjectManager();
@@ -180,14 +181,14 @@ public:
     
     static nsProxyObjectManager *GetInstance();
     
-    nsHashtable *GetRealObjectToProxyObjectMap();
-    nsHashtable *GetIIDToProxyClassMap();
-    
+    PRLock*      GetMapLock() const { return mMapLock; }
+    nsHashtable* GetRealObjectToProxyObjectMap() const { return mProxyObjectMap;}   
+    nsHashtable* GetIIDToProxyClassMap() const { return mProxyClassMap; }   
+        
     
 private:
     static nsProxyObjectManager* mInstance;
-    
-    PRLock      *mLock;
+    PRLock* mMapLock;
     nsHashtable *mProxyObjectMap;
     nsHashtable *mProxyClassMap;
 };

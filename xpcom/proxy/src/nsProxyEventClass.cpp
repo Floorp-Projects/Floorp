@@ -33,7 +33,7 @@
 #include "nsIAllocator.h"
 #include "nsHashtable.h"
 
-
+#include "nsAutoLock.h"
 #include "nsIInterfaceInfoManager.h"
 #include "xptcall.h"
 
@@ -55,7 +55,12 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
     /* find in our hash table */
     
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
+    if (manager == nsnull) return nsnull;
+	
+	// dont need to lock the map, because this is only called
+	// by nsProxyEventClass::GetNewOrUsed which locks it for us.
+
+	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
     
     if (iidToClassMap == nsnull)
     {
@@ -64,7 +69,7 @@ nsProxyEventClass::GetNewOrUsedClass(REFNSIID aIID)
 
     nsProxyEventClass* clazz = nsnull;
     nsIDKey key(aIID);
-
+    
     if(iidToClassMap->Exists(&key))
     {
         clazz = (nsProxyEventClass*) iidToClassMap->Get(&key);
@@ -129,7 +134,11 @@ nsProxyEventClass::nsProxyEventClass(REFNSIID aIID, nsIInterfaceInfo* aInfo)
     nsIDKey key(aIID);
 
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
+    if (manager == nsnull) return;
+	// dont need to lock the map, because this is only called
+	// by GetNewOrUsed which locks it for us.
+
+	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
     
     if (iidToClassMap == nsnull)
     {
@@ -162,7 +171,9 @@ nsProxyEventClass::~nsProxyEventClass()
     nsIDKey key(mIID);
     
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
-    nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
+    if (manager == nsnull) return;
+	nsAutoLock lock(manager->GetMapLock());
+	nsHashtable *iidToClassMap =  manager->GetIIDToProxyClassMap();
     
     if (iidToClassMap != nsnull)
     {

@@ -33,6 +33,8 @@
 #include "nsIInterfaceInfoManager.h"
 #include "xptcall.h"
 
+#include "nsAutoLock.h"
+
 static NS_DEFINE_IID(kProxyObject_Identity_Class_IID, NS_PROXYEVENT_IDENTITY_CLASS_IID);
 
 #ifdef DEBUG_dougt
@@ -143,7 +145,7 @@ nsProxyEventObject::GetNewOrUsedProxy(nsIEventQueue *destQueue,
     /* get our hash table */    
     nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
     if (manager == nsnull) return nsnull;
-    
+    nsAutoLock lock(manager->GetMapLock());
     nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
     if (realToProxyMap == nsnull) return nsnull;
 
@@ -315,6 +317,7 @@ DebugDump("Delete", 0);
     else
     {
         nsProxyObjectManager *manager = nsProxyObjectManager::GetInstance();
+        nsAutoLock lock(manager->GetMapLock());
         nsHashtable *realToProxyMap = manager->GetRealObjectToProxyObjectMap();
 
         if (realToProxyMap != nsnull && mHashKey.HashValue() != 0)

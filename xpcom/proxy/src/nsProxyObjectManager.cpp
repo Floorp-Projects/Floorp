@@ -93,7 +93,8 @@ NS_IMPL_ISUPPORTS1(nsProxyObjectManager, nsIProxyObjectManager)
 nsProxyObjectManager::nsProxyObjectManager()
 {
     NS_INIT_REFCNT();
-
+    
+    mMapLock = PR_NewLock();
     mProxyClassMap = new nsHashtable(256, PR_TRUE);
     mProxyObjectMap = new nsHashtable(256, PR_TRUE);
 }
@@ -103,6 +104,8 @@ nsProxyObjectManager::~nsProxyObjectManager()
     delete mProxyClassMap;
     delete mProxyObjectMap;
     nsProxyObjectManager::mInstance = nsnull;
+    
+    PR_DestroyLock(mMapLock);
 }
 
 nsProxyObjectManager *
@@ -233,23 +236,6 @@ nsProxyObjectManager::GetProxyObject(nsIEventQueue *destQueue,
 
     return rv;   
 }
-
-nsHashtable* 
-nsProxyObjectManager::GetRealObjectToProxyObjectMap()
-{
-    NS_VERIFY(mProxyObjectMap, "no hashtable");
-    return mProxyObjectMap;
-}   
-
-nsHashtable*
-nsProxyObjectManager::GetIIDToProxyClassMap()
-{
-    NS_VERIFY(mProxyClassMap, "no hashtable");
-    return mProxyClassMap;
-}   
-
-
-
 /////////////////////////////////////////////////////////////////////////
 // nsProxyEventFactory
 /////////////////////////////////////////////////////////////////////////
