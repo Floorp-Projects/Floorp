@@ -191,7 +191,10 @@ NS_IMETHODIMP
 nsEventQueueImpl::ProcessPendingEvents()
 {
   PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
+  /* until dougt fixes #22943, turning this off of the mac */
+#ifndef XP_MAC
   NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
+#endif /* XP_MAC */
 
   if (!correctThread)
     return NS_ERROR_FAILURE;
@@ -204,7 +207,10 @@ NS_IMETHODIMP
 nsEventQueueImpl::EventLoop()
 {
   PRBool correctThread = PL_IsQueueOnCurrentThread(mEventQueue);
+  /* until dougt fixes #22943, turning this off of the mac */
+#ifndef XP_MAC
   NS_ASSERTION(correctThread, "attemping to process events on the wrong thread");
+#endif /* XP_MAC */
   if (!correctThread)
     return NS_ERROR_FAILURE;
 
