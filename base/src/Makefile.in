@@ -31,6 +31,7 @@ LIBRARY_NAME = raptorbase
 CPPSRCS =                       \
     nsArena.cpp                 \
     nsAtomTable.cpp             \
+    nsBaseDLL.cpp               \
     nsBTree.cpp                 \
     nsByteBuffer.cpp            \
     nsCRT.cpp                   \
@@ -38,6 +39,7 @@ CPPSRCS =                       \
     nsEscape.cpp                \
     nsFileSpec.cpp              \
     nsFileStream.cpp            \
+    nsProperties.cpp            \
     nsRBTree.cpp                \
     nsSizeOfHandler.cpp		\
     nsString.cpp                \
