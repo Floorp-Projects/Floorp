@@ -317,47 +317,50 @@ URIUtils::ParsedURI* URIUtils::parseURI(const String& uri) {
 
 #else /* TX_EXE */
 
+
+nsIScriptSecurityManager *gTxSecurityManager = 0;
+
 // static
-MBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
+PRBool URIUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
-  // DISABLED UNTIL THE SLOWDOWN IN TXUL, TP AND TS GETS RESOLVED
-  // (SEE BUG 156452).
-  return PR_TRUE;
+    // Make sure that this is a real node. We do this by first QI'ing to
+    // nsIContent (which is important performance wise) and if that QI
+    // fails we QI to nsIDocument. If both those QI's fail we won't let
+    // the caller access this unknown node.
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
+    nsCOMPtr<nsIDocument> doc;
 
-  if (!doc) {
-    // Make sure that this is a real node.
     nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
     if (!content) {
-      return MB_FALSE;
+        doc = do_QueryInterface(aNode);
+
+        if (!doc) {
+            // aNode is neither a nsIContent nor an nsIDocument, something
+            // weird is going on...
+            return PR_FALSE;
+        }
     }
 
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    aNode->GetOwnerDocument(getter_AddRefs(domDoc));
-    if (!domDoc) {
-      // aNode is not part of a document, let any caller access it.
-      return PR_TRUE;
+    if (!doc) {
+        nsCOMPtr<nsIDOMDocument> domDoc;
+        aNode->GetOwnerDocument(getter_AddRefs(domDoc));
+        if (!domDoc) {
+            // aNode is not part of a document, let any caller access it.
+            return PR_TRUE;
+        }
+        doc = do_QueryInterface(domDoc);
+        NS_ASSERTION(doc, "QI to nsIDocument failed");
     }
-    doc = do_QueryInterface(domDoc);
-    NS_ASSERTION(doc, "QI to nsIDocument failed");
-  }
 
-  nsCOMPtr<nsIURI> uri;
-  doc->GetDocumentURL(getter_AddRefs(uri));
+    if (!gTxSecurityManager) {
+        // No security manager available, let any calls go through...
+        return PR_TRUE;
+    }
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
+    nsCOMPtr<nsIURI> uri;
+    doc->GetDocumentURL(getter_AddRefs(uri));
 
-  // If we can't get the security manager service we'll assume that's
-  // because it's not installed, if that's the case then the installer
-  // didn't care about security in the first place.
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-  rv = securityManager->CheckSameOrigin(nsnull, uri);
-
-  return NS_SUCCEEDED(rv);
+    return NS_SUCCEEDED(gTxSecurityManager->CheckSameOrigin(nsnull, uri));
 }
 
 

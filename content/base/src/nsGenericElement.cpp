@@ -2336,7 +2336,8 @@ nsGenericElement::doInsertBefore(nsIDOMNode* aNewChild,
 
   nsCOMPtr<nsIDocument> old_doc;
   newContent->GetDocument(*getter_AddRefs(old_doc));
-  if (old_doc != mDocument && !nsContentUtils::CanCallerAccess(aNewChild)) {
+  if (old_doc && old_doc != mDocument &&
+      !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 
@@ -2552,7 +2553,8 @@ nsGenericElement::doReplaceChild(nsIDOMNode* aNewChild,
 
   nsCOMPtr<nsIDocument> old_doc;
   newContent->GetDocument(*getter_AddRefs(old_doc));
-  if (old_doc != mDocument && !nsContentUtils::CanCallerAccess(aNewChild)) {
+  if (old_doc && old_doc != mDocument &&
+      !nsContentUtils::CanCallerAccess(aNewChild)) {
     return NS_ERROR_DOM_SECURITY_ERR;
   }
 

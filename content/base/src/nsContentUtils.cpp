@@ -62,6 +62,7 @@ static const char *sJSStackContractID = "@mozilla.org/js/xpc/ContextStack;1";
 
 nsIDOMScriptObjectFactory *nsContentUtils::sDOMScriptObjectFactory = nsnull;
 nsIXPConnect *nsContentUtils::sXPConnect = nsnull;
+nsIScriptSecurityManager *nsContentUtils::sSecurityManager = nsnull;
 
 // static
 nsresult
@@ -74,10 +75,17 @@ nsContentUtils::Init()
                                              (nsISupports **)&sXPConnect);
   NS_ENSURE_SUCCESS(rv, rv);
 
+  rv = nsServiceManager::GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID,
+                                    nsIScriptSecurityManager::GetIID(),
+                                    (nsISupports **)&sSecurityManager);
+  if (NS_FAILED(rv)) {
+    sSecurityManager = nsnull;
+  }
+
   return rv;
 }
 
-// static 
+// static
 nsresult
 nsContentUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
                                      nsIScriptGlobalObject** aNativeGlobal)
@@ -120,16 +128,16 @@ nsContentUtils::GetStaticScriptContext(JSContext* aContext,
 {
   nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
   GetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
-  if (!nativeGlobal)    
+  if (!nativeGlobal)
     return NS_ERROR_FAILURE;
   nsIScriptContext* scriptContext = nsnull;
   nativeGlobal->GetContext(&scriptContext);
   *aScriptContext = scriptContext;
   return scriptContext ? NS_OK : NS_ERROR_FAILURE;
-}  
+}
 
 //static
-nsresult 
+nsresult
 nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext,
                                       nsIScriptGlobalObject** aNativeGlobal)
 {
@@ -140,16 +148,16 @@ nsContentUtils::GetDynamicScriptGlobal(JSContext* aContext,
     return NS_ERROR_FAILURE;
   }
   return scriptCX->GetGlobalObject(aNativeGlobal);
-}  
+}
 
 //static
-nsresult 
+nsresult
 nsContentUtils::GetDynamicScriptContext(JSContext *aContext,
                                        nsIScriptContext** aScriptContext)
 {
   *aScriptContext = nsnull;
 
-  // XXX We rely on the rule that if any JSContext in our JSRuntime has a 
+  // XXX We rely on the rule that if any JSContext in our JSRuntime has a
   // private set then that private *must* be a pointer to an nsISupports.
   nsISupports *supports = (nsIScriptContext*)JS_GetContextPrivate(aContext);
   if (!supports) {
@@ -159,7 +167,7 @@ nsContentUtils::GetDynamicScriptContext(JSContext *aContext,
   return CallQueryInterface(supports, aScriptContext);
 }
 
-template <class OutputIterator> 
+template <class OutputIterator>
 struct NormalizeNewlinesCharTraits {
   public:
     typedef typename OutputIterator::value_type value_type;
@@ -181,7 +189,7 @@ struct NormalizeNewlinesCharTraits<CharT*> {
   public:
     typedef CharT value_type;
 
-  public: 
+  public:
     NormalizeNewlinesCharTraits(CharT* aCharPtr) : mCharPtr(aCharPtr) { }
     void writechar(CharT aChar) {
       *mCharPtr++ = aChar;
@@ -189,7 +197,7 @@ struct NormalizeNewlinesCharTraits<CharT*> {
 
   private:
     CharT* mCharPtr;
-}; 
+};
 
 #else
 
@@ -198,7 +206,7 @@ struct NormalizeNewlinesCharTraits<char*> {
   public:
     typedef char value_type;
 
-  public: 
+  public:
     NormalizeNewlinesCharTraits(char* aCharPtr) : mCharPtr(aCharPtr) { }
     void writechar(char aChar) {
       *mCharPtr++ = aChar;
@@ -213,7 +221,7 @@ struct NormalizeNewlinesCharTraits<PRUnichar*> {
   public:
     typedef PRUnichar value_type;
 
-  public: 
+  public:
     NormalizeNewlinesCharTraits(PRUnichar* aCharPtr) : mCharPtr(aCharPtr) { }
     void writechar(PRUnichar aChar) {
       *mCharPtr++ = aChar;
@@ -225,21 +233,22 @@ struct NormalizeNewlinesCharTraits<PRUnichar*> {
 
 #endif
 
-template <class OutputIterator> 
+template <class OutputIterator>
 class CopyNormalizeNewlines
 {
   public:
     typedef typename OutputIterator::value_type value_type;
 
   public:
-    CopyNormalizeNewlines(OutputIterator* aDestination,PRBool aLastCharCR=PR_FALSE) : 
+    CopyNormalizeNewlines(OutputIterator* aDestination,
+                          PRBool aLastCharCR=PR_FALSE) :
       mLastCharCR(aLastCharCR),
       mDestination(aDestination),
-      mWritten(0) 
+      mWritten(0)
     { }
-    
-    PRUint32 GetCharsWritten() { 
-      return mWritten; 
+
+    PRUint32 GetCharsWritten() {
+      return mWritten;
     }
 
     PRBool IsLastCharCR() {
@@ -247,9 +256,9 @@ class CopyNormalizeNewlines
     }
 
     PRUint32 write(const typename OutputIterator::value_type* aSource, PRUint32 aSourceLength) {
-      
+
       const typename OutputIterator::value_type* done_writing = aSource + aSourceLength;
-      
+
       // If the last source buffer ended with a CR...
       if (mLastCharCR) {
         // ..and if the next one is a LF, then skip it since
@@ -280,7 +289,7 @@ class CopyNormalizeNewlines
         }
         ++num_written;
       }
-       
+
       mWritten += num_written;
       return aSourceLength;
     }
@@ -292,11 +301,11 @@ class CopyNormalizeNewlines
 };
 
 // static
-PRUint32 
-nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAString& aSource, 
-                                               PRUint32 aSrcOffset, 
-                                               PRUnichar* aDest, 
-                                               PRUint32 aLength, 
+PRUint32
+nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAString& aSource,
+                                               PRUint32 aSrcOffset,
+                                               PRUnichar* aDest,
+                                               PRUint32 aLength,
                                                PRBool& aLastCharCR)
 {
   typedef NormalizeNewlinesCharTraits<PRUnichar*> sink_traits;
@@ -304,15 +313,15 @@ nsContentUtils::CopyNewlineNormalizedUnicodeTo(const nsAString& aSource,
   sink_traits dest_traits(aDest);
   CopyNormalizeNewlines<sink_traits> normalizer(&dest_traits,aLastCharCR);
   nsReadingIterator<PRUnichar> fromBegin, fromEnd;
-  copy_string(aSource.BeginReading(fromBegin).advance( PRInt32(aSrcOffset) ), 
-              aSource.BeginReading(fromEnd).advance( PRInt32(aSrcOffset+aLength) ), 
+  copy_string(aSource.BeginReading(fromBegin).advance( PRInt32(aSrcOffset) ),
+              aSource.BeginReading(fromEnd).advance( PRInt32(aSrcOffset+aLength) ),
               normalizer);
   aLastCharCR = normalizer.IsLastCharCR();
   return normalizer.GetCharsWritten();
 }
 
 // static
-PRUint32 
+PRUint32
 nsContentUtils::CopyNewlineNormalizedUnicodeTo(nsReadingIterator<PRUnichar>& aSrcStart, const nsReadingIterator<PRUnichar>& aSrcEnd, nsAString& aDest)
 {
   typedef nsWritingIterator<PRUnichar> WritingIterator;
@@ -332,6 +341,7 @@ nsContentUtils::Shutdown()
 {
   NS_IF_RELEASE(sDOMScriptObjectFactory);
   NS_IF_RELEASE(sXPConnect);
+  NS_IF_RELEASE(sSecurityManager);
 }
 
 // static
@@ -354,102 +364,146 @@ nsContentUtils::GetClassInfoInstance(nsDOMClassInfoID aID)
   return sDOMScriptObjectFactory->GetClassInfoInstance(aID);
 }
 
+/**
+ * Checks whether two nodes come from the same origin. aTrustedNode is
+ * considered 'safe' in that a user can operate on it and that it isn't
+ * a js-object that implements nsIDOMNode.
+ * Never call this function with the first node provided by script, it
+ * must always be known to be a 'real' node!
+ */
 // static
 nsresult
-nsContentUtils::CheckSameOrigin(nsIDOMNode *aNode1, nsIDOMNode *aNode2)
+nsContentUtils::CheckSameOrigin(nsIDOMNode *aTrustedNode,
+                                nsIDOMNode *aUnTrustedNode)
 {
-  nsCOMPtr<nsIDocument> doc1 = do_QueryInterface(aNode1);
-  if (!doc1) {
-    // Make sure that this is a real node.
-    nsCOMPtr<nsIContent> cont1 = do_QueryInterface(aNode1);
-    if (!cont1) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
+  NS_PRECONDITION(aTrustedNode, "There must be a trusted node");
+  // In most cases this is a document, so lets try that first
+  nsCOMPtr<nsIDocument> doc1 = do_QueryInterface(aTrustedNode);
 
-    nsCOMPtr<nsIDOMDocument> domDoc1;
-    aNode1->GetOwnerDocument(getter_AddRefs(domDoc1));
-    if (!domDoc1) {
-      // aNode1 is not part of a document, let any caller access it.
-      return NS_OK;
+  if (!doc1) {
+#ifdef DEBUG
+    nsCOMPtr<nsIContent> trustCont = do_QueryInterface(aTrustedNode);
+    NS_ASSERTION(trustCont,
+                 "aTrustedNode is neither nsIContent nor nsIDocument!");
+#endif
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      // aTrustedNode isn't part of a document so we can't check security
+      // against it.
+
+      return NS_ERROR_UNEXPECTED;
     }
-    doc1 = do_QueryInterface(domDoc1);
+    doc1 = do_QueryInterface(domDoc);
+
     NS_ASSERTION(doc1, "QI to nsIDocument failed");
   }
-  
-  nsCOMPtr<nsIDocument> doc2 = do_QueryInterface(aNode2);
-  if (!doc2) {
-    // Make sure that this is a real node.
-    nsCOMPtr<nsIContent> cont2 = do_QueryInterface(aNode2);
-    if (!cont2) {
-      return NS_ERROR_DOM_SECURITY_ERR;
-    }
 
-    nsCOMPtr<nsIDOMDocument> domDoc2;
-    aNode2->GetOwnerDocument(getter_AddRefs(domDoc2));
-    if (!domDoc2) {
-      // aNode2 is not part of a document, let any caller access it.
+
+  // For performance reasons it's important to try to QI the node to
+  // nsIContent before trying to QI to nsIDocument since a QI miss on
+  // a node is potentially expensive.
+  nsCOMPtr<nsIContent> content = do_QueryInterface(aUnTrustedNode);
+
+  nsCOMPtr<nsIDocument> doc2;
+
+  if (!content) {
+    doc2 = do_QueryInterface(aUnTrustedNode);
+
+    if (!doc2) {
+      // aUnTrustedNode is neither a nsIContent nor an nsIDocument, something
+      // weird is going on...
+
+      NS_ERROR("aUnTrustedNode is neither an nsIContent nor an nsIDocument!");
+
+      return NS_ERROR_UNEXPECTED;
+    }
+  }
+
+  if (!doc2) {
+    nsCOMPtr<nsIDOMDocument> domDoc;
+    aUnTrustedNode->GetOwnerDocument(getter_AddRefs(domDoc));
+    if (!domDoc) {
+      // aUnTrustedNode is not part of a document, let any caller access it.
       return NS_OK;
     }
-    doc2 = do_QueryInterface(domDoc2);
+
+    doc2 = do_QueryInterface(domDoc);
+
     NS_ASSERTION(doc2, "QI to nsIDocument failed");
   }
-  
+
   if (doc1 == doc2)
     return NS_OK;
-  
+
   nsCOMPtr<nsIURI> uri1;
   doc1->GetDocumentURL(getter_AddRefs(uri1));
   nsCOMPtr<nsIURI> uri2;
   doc2->GetDocumentURL(getter_AddRefs(uri2));
-
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
   
-  return securityManager->CheckSameOriginURI(uri1, uri2);
+  // The untrusted node doesn't have a uri so we'll allow it to be accessed.
+  if (!uri2) {
+    return NS_OK;
+  }
+
+  // If there isn't a security manager it is probably because it is not
+  // installed so we don't care about security anyway
+  if (!sSecurityManager) {
+    return NS_OK;
+  }
+
+  return sSecurityManager->CheckSameOriginURI(uri1, uri2);
 }
 
 // static
 PRBool
 nsContentUtils::CanCallerAccess(nsIDOMNode *aNode)
 {
-  // DISABLED UNTIL THE SLOWDOWN IN TXUL, TP AND TS GETS RESOLVED
-  // (SEE BUG 156452).
-  return PR_TRUE;
+  // Make sure that this is a real node. We do this by first QI'ing to
+  // nsIContent (which is important performance wise) and if that QI
+  // fails we QI to nsIDocument. If both those QI's fail we won't let
+  // the caller access this unknown node.
 
-  nsCOMPtr<nsIDocument> doc(do_QueryInterface(aNode));
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
 
-  if (!doc) {
-    // Make sure that this is a real node.
-    nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-    if (!content) {
+  nsCOMPtr<nsIDocument> doc;
+
+  if (!content) {
+    doc = do_QueryInterface(aNode);
+
+    if (!doc) {
+      // aNode is neither a nsIContent nor an nsIDocument, something
+      // weird is going on...
+
+      NS_ERROR("aNode is neither an nsIContent nor an nsIDocument!");
+
       return PR_FALSE;
     }
+  }
 
+  if (!doc) {
     nsCOMPtr<nsIDOMDocument> domDoc;
     aNode->GetOwnerDocument(getter_AddRefs(domDoc));
     if (!domDoc) {
       // aNode is not part of a document, let any caller access it.
       return PR_TRUE;
     }
+
     doc = do_QueryInterface(domDoc);
+
     NS_ASSERTION(doc, "QI to nsIDocument failed");
+  }
+
+  if (!sSecurityManager) {
+    // No security manager available, let any calls go through...
+
+    return PR_TRUE;
   }
 
   nsCOMPtr<nsIURI> uri;
   doc->GetDocumentURL(getter_AddRefs(uri));
 
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-
-  // If we can't get the security manager service we'll assume that's
-  // because it's not installed, if that's the case then the installer
-  // didn't care about security in the first place.
-  NS_ENSURE_SUCCESS(rv, PR_TRUE);
-
-  rv = securityManager->CheckSameOrigin(nsnull, uri);
+  nsresult rv = sSecurityManager->CheckSameOrigin(nsnull, uri);
 
   return NS_SUCCEEDED(rv);
 }
@@ -631,13 +685,12 @@ nsContentUtils::ReparentContentWrapper(nsIContent *aContent,
 PRBool
 nsContentUtils::IsCallerChrome()
 {
-  nsresult rv = NS_OK;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager = 
-    do_GetService(NS_SCRIPTSECURITYMANAGER_CONTRACTID, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (!sSecurityManager) {
+    return NS_OK;
+  }
 
   PRBool is_caller_chrome = PR_FALSE;
-  rv = securityManager->SubjectPrincipalIsSystem(&is_caller_chrome);
+  nsresult rv = sSecurityManager->SubjectPrincipalIsSystem(&is_caller_chrome);
   if (NS_FAILED(rv)) {
     return PR_FALSE;
   }

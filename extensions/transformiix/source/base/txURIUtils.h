@@ -42,8 +42,11 @@
 #include <fstream.h>
 #else
 #include "nsIDOMNode.h"
-#endif
 
+class nsIScriptSecurityManager;
+extern nsIScriptSecurityManager *gTxSecurityManager;
+
+#endif
 
 /**
  * A utility class for URI handling
@@ -94,7 +97,7 @@ public:
     /*
      * Checks if a caller is allowed to access a given node
      */
-    static MBool CanCallerAccess(nsIDOMNode *aNode);
+    static PRBool CanCallerAccess(nsIDOMNode *aNode);
 
 #endif /* TX_EXE */
 
