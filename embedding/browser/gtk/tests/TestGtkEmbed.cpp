@@ -537,7 +537,13 @@ void
 reload_clicked_cb  (GtkButton *button, TestGtkBrowser *browser)
 {
   g_print("reload_clicked_cb\n");
+  GdkModifierType state = (GdkModifierType)0;
+  gint x, y;
+  gdk_window_get_pointer(NULL, &x, &y, &state);
+  
   gtk_moz_embed_reload(GTK_MOZ_EMBED(browser->mozEmbed),
+		       (state & GDK_SHIFT_MASK) ?
+		       GTK_MOZ_EMBED_FLAG_RELOADBYPASSCACHE : 
 		       GTK_MOZ_EMBED_FLAG_RELOADNORMAL);
 }
 

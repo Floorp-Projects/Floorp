@@ -86,6 +86,8 @@ static GtkFlagValue gtk_moz_embed_reload_flags_values[] = {
   { GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE,
     "GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE",
     "reloadbypassproxyandcache" },
+  { GTK_MOZ_EMBED_FLAG_RELOADCHARSETCHANGE,
+    "GTK_MOZ_EMBED_FLAG_RELOADCHARSETCHANGE", "reloadcharset" },
   { 0,
     NULL, NULL }
 };
@@ -947,8 +949,33 @@ gtk_moz_embed_reload(GtkMozEmbed *embed, gint32 flags)
 
   embedPrivate = (EmbedPrivate *)embed->data;
 
+  PRUint32 reloadFlags = 0;
+  
+  // map the external API to the internal web navigation API.
+  switch (flags) {
+  case GTK_MOZ_EMBED_FLAG_RELOADNORMAL:
+    reloadFlags = 0;
+    break;
+  case GTK_MOZ_EMBED_FLAG_RELOADBYPASSCACHE:
+    reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE;
+    break;
+  case GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXY:
+    reloadFlags = nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY;
+    break;
+  case GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE:
+    reloadFlags = (nsIWebNavigation::LOAD_FLAGS_BYPASS_PROXY |
+		   nsIWebNavigation::LOAD_FLAGS_BYPASS_CACHE);
+    break;
+  case GTK_MOZ_EMBED_FLAG_RELOADCHARSETCHANGE:
+    reloadFlags = nsIWebNavigation::LOAD_FLAGS_CHARSET_CHANGE;
+    break;
+  default:
+    reloadFlags = 0;
+    break;
+  }
+
   if (embedPrivate->mNavigation)
-    embedPrivate->mNavigation->Reload(flags);
+    embedPrivate->mNavigation->Reload(reloadFlags);
 }
 
 void

@@ -161,14 +161,17 @@ typedef enum
   GTK_MOZ_EMBED_STATUS_FAILED_USERCANCELED = 2152398850U
 } GtkMozEmbedStatusFlags;
 
-/* These are straight out of nsIWebNavigation.h */
+/* These used to be straight out of nsIWebNavigation.h until the API
+   changed.  Now there's a mapping table that maps these values to the
+   internal values. */
 
 typedef enum 
 {
   GTK_MOZ_EMBED_FLAG_RELOADNORMAL = 0,
   GTK_MOZ_EMBED_FLAG_RELOADBYPASSCACHE = 1,
   GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXY = 2,
-  GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE = 3 
+  GTK_MOZ_EMBED_FLAG_RELOADBYPASSPROXYANDCACHE = 3,
+  GTK_MOZ_EMBED_FLAG_RELOADCHARSETCHANGE = 4
 } GtkMozEmbedReloadFlags;
 
 /* These are straight out of nsIWebBrowserChrome.h */
