@@ -26,7 +26,37 @@
 #include "nsStringUtil.h"
 
 static NS_DEFINE_IID(kMenuBarIID, NS_IMENUBAR_IID);
-NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
+static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+//NS_IMPL_ISUPPORTS(nsMenuBar, kMenuBarIID)
+
+nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{                                                                        
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(kIMenuBarIID)) {                                         
+    *aInstancePtr = (void*) ((nsIMenuBar*) this);                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                                      
+  if (aIID.Equals(kISupportsIID)) {                                      
+    *aInstancePtr = (void*) ((nsISupports*)(nsIMenuBar*) this);                     
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }
+  if (aIID.Equals(kIMenuListenerIID)) {                                      
+    *aInstancePtr = (void*) ((nsIMenuListener*)this);                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }                                                     
+  return NS_NOINTERFACE;                                                 
+}
+
+NS_IMPL_ADDREF(nsMenuBar)
+NS_IMPL_RELEASE(nsMenuBar)
 
 //-------------------------------------------------------------------------
 //
