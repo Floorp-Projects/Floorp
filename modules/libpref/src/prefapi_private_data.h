@@ -40,9 +40,9 @@
 extern JSContext *			gMochaContext;
 extern PRBool				gErrorOpeningUserPrefs;
 extern PLDHashTable			gHashTable;
-PLDHashOperator pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUint32, void *arg);
+PLDHashOperator PR_CALLBACK pref_savePref(PLDHashTable*, PLDHashEntryHdr *, PRUint32, void *arg);
 
-int pref_CompareStrings(const void *v1, const void *v2, void* unused);
+int PR_CALLBACK pref_CompareStrings(const void *v1, const void *v2, void* unused);
 extern JSBool pref_InitInitialObjects(void);
 extern PRIntn pref_HashTableEnumerateEntries(PLDHashEnumerator f, void *arg);
 
