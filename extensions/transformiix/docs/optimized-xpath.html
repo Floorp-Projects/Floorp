@@ -167,7 +167,7 @@
           These expressions can be optimised:
         </p>
 
-        <p>
+        <p><h4><a name="usecase01" href="#usecase01">Use case 1</a></h4>
           <h4>Class:</h4>
             Steps along the attribute axis which doesn't contain wildcards
           <h4>Example:</h4>
@@ -181,7 +181,7 @@
             an empty nodeset if NULL is returned.
         </p>
 
-        <p>
+        <p><h4><a name="usecase02" href="#usecase02">Use case 2</a></h4>
           <h4>Class:</h4>
             Union expressions where each expression consists of a LocationStep and
           all LocationSteps have the same axis. None of the LocationSteps have any
@@ -202,7 +202,7 @@
             orderInfo objects.
         </p>
 
-        <p>
+        <p><h4><a name="usecase03" href="#usecase03">Use case 3</a></h4>
           <h4>Class:</h4>
             Steps where the predicates isn't context-node-list sensitive.
           <h4>Example:</h4>
@@ -221,7 +221,7 @@
             sensitive, but only up until the first that isn't.)
         </p>
 
-        <p>
+        <p><h4><a name="usecase04" href="#usecase04">Use case 4</a></h4>
           <h4>Class:</h4>
             PathExprs that only contains steps that from the child:: and attribute::
             axes.
@@ -239,7 +239,7 @@
             are after each other in node order.
         </p>
 
-        <p>
+        <p><h4><a name="usecase05" href="#usecase05">Use case 5</a></h4>
           <h4>Class:</h4>
             List of predicates where some predicate are not context-list sensitive
           <h4>Example:</h4>
@@ -255,7 +255,7 @@
             Which only requires two node-shuffles
         </p>
 
-        <p>
+        <p><h4><a name="usecase06" href="#usecase06">Use case 6</a></h4>
           <h4>Class:</h4>
             Predicates that are only context-list-position sensitive and not
             context-list-size sensitive
@@ -270,7 +270,7 @@
             override the code that calculates the context-list-position.
         </p>
 
-        <p>
+        <p><h4><a name="usecase07" href="#usecase07">Use case 7</a></h4>
           <h4>Class:</h4>
             Predicates that are constants
           <h4>Example:</h4>
@@ -292,7 +292,7 @@
             constant.
         </p>
 
-        <p>
+        <p><h4><a name="usecase08" href="#usecase08">Use case 8</a></h4>
           <h4>Class:</h4>
             PathExprs that contains '//' followed by an unpredicated child-step.
           <h4>Example:</h4>
@@ -310,7 +310,7 @@
             isn't context-node-list sensitive" optimization.
         </p>
 
-        <p>
+        <p><h4><a name="usecase09" href="#usecase09">Use case 9</a></h4>
           <h4>Class:</h4>
             PathExprs where the first step is '.'
           <h4>Example:</h4>
@@ -324,7 +324,7 @@
             single Step-object.
         </p>
 
-        <p>
+        <p><h4><a name="usecase10" href="#usecase10">Use case 10</a></h4>
           <h4>Class:</h4>
             Steps along the attribute axis which doesn't contain wildcards and
             we only care about the boolean value.
@@ -338,7 +338,7 @@
             requested name and return a bool-result.
         </p>
 
-        <p>
+        <p><h4><a name="usecase11" href="#usecase11">Use case 11</a></h4>
           <h4>Class:</h4>
             Unpredicated steps where we only care about the boolean value.
           <h4>Example:</h4>
@@ -355,7 +355,7 @@
             <code>PathExpr</code>s by getting the boolvalue of the last step.
         </p>
 
-        <p>
+        <p><h4><a name="usecase12" href="#usecase12">Use case 12</a></h4>
           <h4>Class:</h4>
             Unpredicated steps where we only care about the string-value.
           <h4>Example:</h4>
@@ -376,7 +376,7 @@
             <code>PathExpr</code>s.
         </p>
 
-        <p>
+        <p><h4><a name="usecase13" href="#usecase13">Use case 13</a></h4>
           <h4>Class:</h4>
             Expressions where the value of an attribute is compared to
             a literal.
@@ -392,7 +392,7 @@
             resulting string with 'value'.
         </p>
 
-        <p>
+        <p><h4><a name="usecase14" href="#usecase14">Use case 14</a></h4>
           <h4>Class:</h4>
             PathExprs where the last step has a predicate that is not
             context-nodeset dependent and that contains a part that is not
@@ -406,7 +406,7 @@
             all nodes in the nodeset from "foo/*".
         </p>
 
-        <p>
+        <p><h4><a name="usecase15" href="#usecase15">Use case 15</a></h4>
           <h4>Class:</h4>
             local-name() or namespace-uri() compared to a literal
           <h4>Example:</h4>
@@ -421,7 +421,7 @@
             previous class.
         </p>
 
-        <p>
+        <p><h4><a name="usecase16" href="#usecase16">Use case 16</a></h4>
           <h4>Class:</h4>
             Comparisons where one side is a nodeset and the other is not a
             bool-value.
@@ -438,7 +438,7 @@
             by making it the left-hand-side expression).
         </p>
 
-        <p>
+        <p><h4><a name="usecase17" href="#usecase17">Use case 17</a></h4>
           <h4>Class:</h4>
             Comparisons where one side is a PathExpr and the other is a
             bool-value.
@@ -451,7 +451,7 @@
             value"-optimization on the PathExpr-side and then evaluate as usual.
         </p>
 
-        <p>
+        <p><h4><a name="usecase18" href="#usecase18">Use case 18</a></h4>
           <h4>Class:</h4>
             Subexpressions that will be evaluated more then once where the only
             change is in context it doesn't depend on
