@@ -74,27 +74,31 @@ information to our crash-data newsgroup.
 
 *Mac OS
 
-	-Mac OS 8.6 or later
-	-PowerPC 604e 266 MHz or faster processor, or G3/G4
+	-Mac OS X or later
+	-PowerPC processor (266 MHz or faster recommended)
 	-64 MB RAM
 	-36 MB of free hard disk space
 
 *Windows
 
-	-Windows 9x/Me or Windows NT 4/2000/XP
-	-Intel Pentium-class 233 MHz (or faster) processor
+	-Windows 95, 98, Me, NT4, 2000 or XP
+	-Intel Pentium class processor (233 MHz or faster 
+	 recommended)
 	-64 MB RAM
 	-26 MB free hard disk space
 
 *Linux
 
-	-Red Hat Linux 6.x or 7 with X11 R6
-	 [Note: Mozilla is certified and fully supported on
-	 Red Hat Linux, but will run on other Linux
-	 distributions, such as Debian 2.1 (or later) or
-	 SuSE 6.2 (or later). The libraries glibc 2.1 (or
-	 higher) and libjpeg.so.62 (or higher) are required.]
-	-Intel Pentium-class 233 MHz (or faster) processor
+	-The following library versions (or compatible) are 
+	 required: glibc 2.1, XFree86 3.3.x, GTK 1.2.x, Glib
+	 1.2.x, Libstdc++ 2.9.0. Red Hat Linux 6.0, 
+	 Debian 2.1, and SuSE 6.2 (or later) installations 
+	 should work.
+	-Red Hat 6.x users who want to install the Mozilla 
+	 RPM must have at least version 4.0.2 of rpm
+	 installed.
+	-Intel Pentium class processor (233 MHz or faster 
+	 recommended)
 	-64MB RAM
 	-26MB free hard disk space
 
@@ -171,61 +175,38 @@ with Administrator privileges.
 	extracted Mozilla to and double-click the Mozilla.exe
 	icon.
 
-	
-Mac OS Installation Instructions
---------------------------------
 
-Note: If the downloaded file does not expand automatically
-you must expand the file using a program such as StuffIt
-Expander. Expander ships with all new Macs and comes with the
-default system install, so you may want to do a find in
-Sherlock for "StuffIt" to make sure that you don't already
-have it installed.
+Mac OS X Installation Instructions
+----------------------------------
 
-If you don't have Expander, you can get a copy at the
-following Web site:
+    To install Mozilla by downloading the Mozilla disk image, 
+    follow these steps:
 
-  http://www.aladdinsys.com/expander/expander_mac_login.html
+	1. Click the mozilla-mac-MachO.dmg.gz link to download 
+	it to your machine. By default, the download file is 
+	downloaded to your desktop.
 
-If you do already have Expander, you need to set it to start
-by default. See the above URL for info on using Expander.
+	2. Once you have downloaded the .dmg.gz file, drag it 
+	onto Stuffit Expander to decompress it. If the disk 
+	image doesn't mount automatically, double-click on the 
+	.dmg file to mount it. If that fails, and the file 
+	does not look like a disk image file, do a "Show Info" 
+	on the file, and, in the "Open with application" 
+	category, choose Disk Copy. In Mac OS 10.2, you can 
+	use "Open with" from the context menu.
 
+	3. Once the disk image mounts, open it, and drag the 
+	Mozilla icon onto your hard disk.
 
-    To install Mozilla by downloading the Mozilla installer,
-    (recommended) follow these steps:
+	4. We recommend that you copy it to the Applications 
+	folder.
 
-	1. Click the MacMozillaInstaller.sea.bin link on the
-	site you're downloading Mozilla from to	download the
-	file to your Mac's desktop. A MozillaInstaller
-	folder is created.
-	
-	2. Double-click the MozillaInstaller folder in the
-	Finder.
+	5. Now Eject the disk image.
 
-	3. Double-click the Mozilla Installer icon.
-
-	4. Follow the on-screen instructions to complete the
-	installation process.
-
-	5. To start Mozilla, open the folder where you
-	installed Mozilla and double-click the Mozilla icon.
-
-
-    To install Mozilla by downloading the .bin file and
-    installing manually, follow these steps:
-
-	1. Click the mozilla-mac-*.sea.bin link on the site
-	you're downloading Mozilla from to download the
-	Mozilla binary to your Mac's desktop.
-
-	2. Double-click the mozilla-mac-*.sea.sit.bin icon
-	on your desktop.
-
-	3. Choose the directory where you want to install
-	Mozilla.
-
-	4. To start Mozilla, open the folder where you
-	installed Mozilla and double-click the Mozilla icon.
+	6. If you like, you can drag Mozilla to your dock to 
+	have it easily accessible at all times. You might also 
+	wish to select Mozilla as your default browser in the 
+	Internet system preferences pane (under the Web tab).
 
 
 Linux Installation Instructions
