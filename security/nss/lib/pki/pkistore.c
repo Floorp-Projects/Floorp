@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.13 $ $Date: 2002/03/05 16:54:16 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pkistore.c,v $ $Revision: 1.14 $ $Date: 2002/03/07 20:42:40 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIM_H
@@ -276,10 +276,10 @@ remove_certificate_entry
     if (entry) {
 	nssHash_Remove(store->issuer_and_serial, cert);
 	if (entry->trust) {
-	    nssPKIObject_Destroy(&entry->trust->object);
+	    nssTrust_Destroy(entry->trust);
 	}
 	if (entry->profile) {
-	    nssPKIObject_Destroy(&entry->profile->object);
+	    nssSMIMEProfile_Destroy(entry->profile);
 	}
 	nss_ZFreeIf(entry);
     }
@@ -627,7 +627,7 @@ nssCertificateStore_AddTrust
     entry = (certificate_hash_entry *)
                               nssHash_Lookup(store->issuer_and_serial, cert);
     if (entry) {
-	entry->trust = trust;
+	entry->trust = nssTrust_AddRef(trust);
     }
     PZ_Unlock(store->lock);
     return (entry) ? PR_SUCCESS : PR_FAILURE;
@@ -641,14 +641,15 @@ nssCertificateStore_FindTrustForCertificate
 )
 {
     certificate_hash_entry *entry;
+    NSSTrust *rvTrust = NULL;
     PZ_Lock(store->lock);
     entry = (certificate_hash_entry *)
                               nssHash_Lookup(store->issuer_and_serial, cert);
-    PZ_Unlock(store->lock);
-    if (entry) {
-	return entry->trust;
+    if (entry && entry->trust) {
+	rvTrust = nssTrust_AddRef(entry->trust);
     }
-    return NULL;
+    PZ_Unlock(store->lock);
+    return rvTrust;
 }
 
 NSS_EXTERN PRStatus
@@ -665,7 +666,7 @@ nssCertificateStore_AddSMIMEProfile
     entry = (certificate_hash_entry *)
                               nssHash_Lookup(store->issuer_and_serial, cert);
     if (entry) {
-	entry->profile = profile;
+	entry->profile = nssSMIMEProfile_AddRef(profile);
     }
     PZ_Unlock(store->lock);
     return (entry) ? PR_SUCCESS : PR_FAILURE;
@@ -679,14 +680,15 @@ nssCertificateStore_FindSMIMEProfileForCertificate
 )
 {
     certificate_hash_entry *entry;
+    nssSMIMEProfile *rvProfile = NULL;
     PZ_Lock(store->lock);
     entry = (certificate_hash_entry *)
                               nssHash_Lookup(store->issuer_and_serial, cert);
-    PZ_Unlock(store->lock);
-    if (entry) {
-	return entry->profile;
+    if (entry && entry->profile) {
+	rvProfile = nssSMIMEProfile_AddRef(entry->profile);
     }
-    return NULL;
+    PZ_Unlock(store->lock);
+    return rvProfile;
 }
 
 /* XXX this is also used by cache and should be somewhere else */

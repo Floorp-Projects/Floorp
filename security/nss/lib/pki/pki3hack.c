@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.39 $ $Date: 2002/03/04 22:39:28 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.40 $ $Date: 2002/03/07 20:42:40 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -777,7 +777,7 @@ nssTrust_GetCERTCertTrustForCert(NSSCertificate *c, CERTCertificate *cc)
 	         myTrustOrder < lastTrustOrder) {
 		t.codeSigning = tokenTrust->codeSigning;
 	    }
-	    (void)nssPKIObject_Destroy(&tokenTrust->object);
+	    (void)nssTrust_Destroy(tokenTrust);
 	    lastTrustOrder = myTrustOrder;
 	}
     }
@@ -856,7 +856,7 @@ fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced
 	nssTrust = nssCryptoContext_FindTrustForCertificate(context, c);
 	if (nssTrust) {
 	    cc->trust = cert_trust_from_stan_trust(nssTrust, cc->arena);
-	    nssPKIObject_Destroy(&nssTrust->object);
+	    nssTrust_Destroy(nssTrust);
 	}
     } else if (instance) {
 	/* slot */
@@ -1047,15 +1047,13 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
 	NSSCryptoContext *cc = c->object.cryptoContext;
 	nssrv = nssCryptoContext_ImportTrust(cc, nssTrust);
 	if (nssrv != PR_SUCCESS) {
-	    nssPKIObject_Destroy(&nssTrust->object);
+	    nssTrust_Destroy(nssTrust);
 	    return nssrv;
 	}
 	if (nssList_Count(c->object.instanceList) == 0) {
 	    /* The context is the only instance, finished */
 	    return nssrv;
 	}
-	/* prevent it from being destroyed */
-	nssPKIObject_AddRef(&nssTrust->object);
     }
     td = STAN_GetDefaultTrustDomain();
     if (PK11_IsReadOnly(cc->slot)) {
@@ -1087,7 +1085,7 @@ STAN_ChangeCertTrust(CERTCertificate *cc, CERTCertTrust *trust)
     } else {
 	nssrv = PR_FAILURE;
     }
-    (void)nssPKIObject_Destroy(&nssTrust->object);
+    (void)nssTrust_Destroy(nssTrust);
     return nssrv;
 }
 

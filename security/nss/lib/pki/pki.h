@@ -35,7 +35,7 @@
 #define PKI_H
 
 #ifdef DEBUG
-static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.8 $ $Date: 2001/12/14 17:32:19 $ $Name:  $";
+static const char PKI_CVS_ID[] = "@(#) $RCSfile: pki.h,v $ $Revision: 1.9 $ $Date: 2002/03/07 20:42:40 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -81,6 +81,30 @@ nssCryptoContext_FindSMIMEProfileForCertificate
 (
   NSSCryptoContext *cc,
   NSSCertificate *cert
+);
+
+NSS_EXTERN NSSTrust *
+nssTrust_AddRef
+(
+  NSSTrust *trust
+);
+
+NSS_EXTERN PRStatus
+nssTrust_Destroy
+(
+  NSSTrust *trust
+);
+
+NSS_EXTERN nssSMIMEProfile *
+nssSMIMEProfile_AddRef
+(
+  nssSMIMEProfile *profile
+);
+
+NSS_EXTERN PRStatus
+nssSMIMEProfile_Destroy
+(
+  nssSMIMEProfile *profile
 );
 
 NSS_EXTERN nssSMIMEProfile *
