@@ -702,26 +702,28 @@ nsresult nsParser::ResumeParse(nsIDTD* aDefaultDTD) {
   nsresult result=NS_OK;
   if(mParserContext->mParserEnabled) {
     result=WillBuildModel(mParserContext->mScanner->GetFilename(),aDefaultDTD);
-    mParserContext->mDTD->WillResumeParse();
-    if(NS_OK==result) {
-     
-      result=Tokenize();
-      result=BuildModel();
+    if (mParserContext->mDTD) {
+	  mParserContext->mDTD->WillResumeParse();
+	  if(NS_OK==result) {
+	   
+	    result=Tokenize();
+	    result=BuildModel();
 
-      if((!mParserContext->mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
-        DidBuildModel(mStreamStatus);
-      }
-      else {
-        mParserContext->mDTD->WillInterruptParse();
-      // If we're told to block the parser, we disable
-      // all further parsing (and cache any data coming
-      // in) until the parser is enabled.
-        PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
-        if(NS_ERROR_HTMLPARSER_BLOCK==result) {
-          EnableParser(PR_FALSE);
-          result=NS_OK;
+        if((!mParserContext->mMultipart) || ((eOnStop==mParserContext->mStreamListenerState) && (NS_OK==result))){
+          DidBuildModel(mStreamStatus);
         }
-      }//if
+        else {
+          mParserContext->mDTD->WillInterruptParse();
+          // If we're told to block the parser, we disable
+          // all further parsing (and cache any data coming
+          // in) until the parser is enabled.
+	      PRUint32 b1=NS_ERROR_HTMLPARSER_BLOCK;
+	      if(NS_ERROR_HTMLPARSER_BLOCK==result) {
+	        EnableParser(PR_FALSE);
+	        result=NS_OK;
+	      }
+	    }//if
+	  }//if
     }//if
   }//if
   return result;
