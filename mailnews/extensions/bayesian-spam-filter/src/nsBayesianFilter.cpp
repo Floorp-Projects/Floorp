@@ -46,6 +46,7 @@
 #include "nsNetUtil.h"
 #include "nsQuickSort.h"
 #include "nsIProfileInternal.h"
+#include "nsIStreamConverterService.h"
 
 static const char* kBayesianFilterTokenDelimiters = " \t\n\r\f!\"#%&()*+,./:;<=>?@[\\]^_`{|}~";
 
@@ -360,12 +361,28 @@ nsresult nsBayesianFilter::tokenizeMessage(const char* messageURL, TokenAnalyzer
     nsCOMPtr<nsIIOService> ioService = do_GetIOService(&rv);
     if (NS_FAILED(rv)) return rv;
     
+    // Tell mime we just want to scan the message data
+    nsCAutoString aUrl(messageURL);
+    aUrl.FindChar('?') == kNotFound ? aUrl += "?" : aUrl += "&";
+    aUrl += "header=spam";
+
     nsCOMPtr<nsIChannel> channel;
-    rv = ioService->NewChannel(nsCString(messageURL), NULL, NULL, getter_AddRefs(channel));
+    rv = ioService->NewChannel(aUrl, NULL, NULL, getter_AddRefs(channel));
     if (NS_FAILED(rv)) return rv;
     
     nsCOMPtr<nsIStreamListener> tokenListener = new TokenStreamListener(messageURL, analyzer);
-    rv = channel->AsyncOpen(tokenListener, NULL);
+
+    static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
+    nsCOMPtr<nsIStreamConverterService> streamConverter = do_GetService(kIStreamConverterServiceCID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr<nsIStreamListener> newListener;
+    rv = streamConverter->AsyncConvertData(NS_LITERAL_STRING("message/rfc822").get(),
+                                           NS_LITERAL_STRING("*/*").get(),
+                                           tokenListener, channel, getter_AddRefs(newListener));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    rv = channel->AsyncOpen(newListener, NULL);
     return rv;
 }
 
@@ -608,26 +625,27 @@ static nsresult getTrainingFile(nsCOMPtr<nsIFile>& file)
 
 static void writeTokens(FILE* stream, Tokenizer& tokenizer)
 {
-    PRUint32 i, count = tokenizer.countTokens();
     Token ** tokens = tokenizer.getTokens();
-    if (!tokens) return;
+    if (tokens) {
+        // compute the maximum word length, so we can use a fixed buffer size when reading back in.
+        PRUint32 i, count = tokenizer.countTokens(), maxWordLength = 0;
+        for (i = 0; i < count; ++i) {
+            PRUint32 wordLength = tokens[i]->mWord.Length();
+            if (wordLength > maxWordLength)
+                maxWordLength = wordLength;
+        }
 
-    // compute the maximum word length, so we can use a fixed buffer size when reading back in.
-    PRUint32 maxWordLength = 0;
-    for (i = 0; i < count; ++i) {
-        PRUint32 wordLength = tokens[i]->mWord.Length();
-        if (wordLength > maxWordLength)
-            maxWordLength = wordLength;
-    }
-
-    fprintf(stream, "count = %lu, maxWordLength = %lu\n", count, maxWordLength);
+        fprintf(stream, "count = %lu, maxWordLength = %lu\n", count, maxWordLength);
     
-    for (PRUint32 i = 0; i < count; ++i) {
-        Token* token = tokens[i];
-        fprintf(stream, "%s : %lu\n", token->mWord.get(), token->mCount);
+        for (PRUint32 i = 0; i < count; ++i) {
+            Token* token = tokens[i];
+            fprintf(stream, "%s : %lu\n", token->mWord.get(), token->mCount);
+        }
+        
+        delete[] tokens;
+    } else {
+        fprintf(stream, "count = 0, maxWordLength = 0\n");
     }
-    
-    delete[] tokens;
 }
 
 static void readTokens(FILE* stream, Tokenizer& tokenizer)
