@@ -1976,14 +1976,14 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	if (!context)	return(NS_ERROR_UNEXPECTED);
 
 	// get real URI
-	nsCOMPtr<nsIURI>	uri;
-	if (NS_FAILED(rv = channel->GetURI(getter_AddRefs(uri))))
+	nsCOMPtr<nsIURI>	channelURI;
+	if (NS_FAILED(rv = channel->GetURI(getter_AddRefs(channelURI))))
 		return(rv);
-	if (!uri)
+	if (!channelURI)
 		return(NS_ERROR_NULL_POINTER);
 
 	char			*spec = nsnull;
-	if (NS_FAILED(rv = uri->GetSpec(&spec)))
+	if (NS_FAILED(rv = channelURI->GetSpec(&spec)))
 		return(rv);
 	if (!spec)
 		return(NS_ERROR_NULL_POINTER);
@@ -2002,7 +2002,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	if (contextType == nsIInternetSearchContext::ENGINE_DOWNLOAD_CONTEXT)
 	{
 		extensionOffset = baseName.RFind(".src", PR_TRUE);
-		if ((extensionOffset < 0) || (extensionOffset != (baseName.Length()-4)))
+		if ((extensionOffset < 0) || (extensionOffset != (PRInt32)(baseName.Length()-4)))
 		{
 			return(NS_ERROR_UNEXPECTED);
 		}
@@ -2029,7 +2029,7 @@ InternetSearchDataSource::saveContents(nsIChannel* channel, nsIInternetSearchCon
 	nsOutputFileStream	outputStream(fileSpec);
 	if (!outputStream.failed())
 	{
-		for (PRUint32 loop=0; loop < bufferLength; loop++)
+		for (PRInt32 loop=0; loop < bufferLength; loop++)
 		{
 			outputStream.put((char)(dataBuf[loop]));
 		}
