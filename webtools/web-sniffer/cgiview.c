@@ -277,6 +277,7 @@ main(int argc, char *argv[])
 	char		*ampersand;
 	App		*app;
 	unsigned char	*equals;
+	HTTPNameValue	*h;
 	HTTPNameValue	*headers;
 	char		*name;
 	unsigned char	*newURL;
@@ -435,6 +436,14 @@ main(int argc, char *argv[])
 				return 1;
 			}
 			httpFree(httpProcess(app, u, version, headers));
+			h = headers;
+			while (h->name)
+			{
+				free(h->name);
+				free(h->value);
+				h++;
+			}
+			free(headers);
 		}
 		else
 		{
