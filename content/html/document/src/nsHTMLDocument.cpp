@@ -71,7 +71,6 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsJSUtils.h"
 #include "nsDOMPropEnums.h"
-#include "CNavDTD.h"
 
 #include "nsIIOService.h"
 #include "nsICookieService.h"
@@ -2122,8 +2121,11 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
       
       if (NS_OK == result) {
         nsCOMPtr<nsIDTD> theDTD;
-        NS_NewNavHTMLDTD(getter_AddRefs(theDTD));
-        mParser->RegisterDTD(theDTD);
+        static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+        result=nsComponentManager::CreateInstance(kNavDTDCID,nsnull,NS_GET_IID(nsIDTD),getter_AddRefs(theDTD));
+        if(NS_SUCCEEDED(result)) {
+          mParser->RegisterDTD(theDTD);
+        }
         mParser->SetContentSink(sink); 
       }
     }
