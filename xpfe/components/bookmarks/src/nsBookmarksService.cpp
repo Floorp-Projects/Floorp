@@ -5007,37 +5007,60 @@ nsBookmarksService::LoadBookmarks()
 }
 
 nsresult
-nsBookmarksService::WriteBookmarks(nsFileSpec *bookmarksFile, nsIRDFDataSource *ds,
-				   nsIRDFResource *root)
+nsBookmarksService::WriteBookmarks(nsFileSpec* aBookmarksFile, nsIRDFDataSource* aDataSource,
+                                   nsIRDFResource *aRoot)
 {
-	if (!bookmarksFile)	return(NS_ERROR_NULL_POINTER);
-	if (!ds)		return(NS_ERROR_NULL_POINTER);
-	if (!root)		return(NS_ERROR_NULL_POINTER);
+  if (!aBookmarksFile || !aDataSource || !aRoot)
+    return NS_ERROR_NULL_POINTER;
 
-	nsresult			rv;
-	nsCOMPtr<nsISupportsArray>	parentArray;
-	if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(parentArray))))
-		return(rv);
+  nsresult rv;
+  nsCOMPtr<nsISupportsArray> parentArray;
+  if (NS_FAILED(rv = NS_NewISupportsArray(getter_AddRefs(parentArray))))
+    return rv;
 
-	rv = NS_ERROR_FAILURE;
-	nsOutputFileStream	strm(*bookmarksFile);
-	if (strm.is_open())
-	{
-		strm << "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n";
-		strm << "<!-- This is an automatically generated file.\n";
-		strm << "It will be read and overwritten.\n";
-		strm << "Do Not Edit! -->\n";
+  nsFileSpec tempFile(*aBookmarksFile);
+  tempFile.MakeUnique();
 
-		// Note: we write out bookmarks in UTF-8
-		strm << "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n";
+  // Scope the stream so that it closes when we're done with it. 
+  {
+    nsOutputFileStream	strm(tempFile);
+    if (strm.is_open()) {
+      strm << "<!DOCTYPE NETSCAPE-Bookmark-file-1>\n";
+      strm << "<!-- This is an automatically generated file.\n";
+      strm << "It will be read and overwritten.\n";
+      strm << "Do Not Edit! -->\n";
 
-		strm << "<TITLE>Bookmarks</TITLE>\n";
-		strm << "<H1>Bookmarks</H1>\n\n";
+      // Note: we write out bookmarks in UTF-8
+      strm << "<META HTTP-EQUIV=\"Content-Type\" CONTENT=\"text/html; charset=UTF-8\">\n";
 
-		rv = WriteBookmarksContainer(ds, strm, root, 0, parentArray);
-		mDirty = PR_FALSE;
-	}
-	return(rv);
+      strm << "<TITLE>Bookmarks</TITLE>\n";
+      strm << "<H1>Bookmarks</H1>\n\n";
+
+      rv = WriteBookmarksContainer(aDataSource, strm, aRoot, 0, parentArray);
+      mDirty = PR_FALSE;
+    }
+
+    // If WriteBookmarksContainer failed for some reason, return that value. 
+    // Otherwise,  report the status of the stream operation. 
+    rv = NS_FAILED(rv) ? rv : strm.error();
+  }
+
+  // If we wrote to the file successfully (i.e. if the disk wasn't full) 
+  // then trash the old bookmarks file and rename the temp file so it takes
+  // its place. 
+  if (NS_SUCCEEDED(rv)) {
+    char* bookmarksFileName = aBookmarksFile->GetLeafName();
+    aBookmarksFile->Delete(PR_FALSE);
+
+    tempFile.Rename(bookmarksFileName);
+
+    nsCRT::free(bookmarksFileName);
+  }
+  else
+    // Failed. Delete the temporary. 
+    tempFile.Delete(PR_FALSE);
+
+  return rv;
 }
 
 
