@@ -33,6 +33,7 @@ var cnActual = '\nActual: ';
 var cnSingleQuote = "'";
 var cnBracketL =  '[';
 var cnBracketR =  ']';
+var cnNewLine = '\n';
 
 
 
@@ -62,7 +63,7 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
           reportFailure( 
                         getStatus(i) + ERR_LENGTH +
                         cnExpect + format(expectedmatch) +
-                        cnActual + format(actualmatch)
+                        cnActual + format(actualmatch) + cnNewLine
                        );
           continue;
         }
@@ -94,9 +95,9 @@ function testRegExp(patterns, strings, actualmatches, expectedmatches)
 }
 
 
-function getStatus(i, j)
+function getStatus(i,j)
 {
-  if ( j )
+  if (j)
   {
     return (statprefix + patterns[i] + statmiddle + quote(strings[i]) + statsuffix + j);
   }
