@@ -539,26 +539,6 @@ a:focus img {
   outline: 1px dotted black;
 }
 
-select:focus {
-  border: 1px dotted black;
-}
-
-select[multiple]:focus {
-  border: 1px dotted black;
-}
-
-select[size]:focus {
-  border: 1px dotted black;
-}
-
-select[size="1"]:focus {
-  border: 1px dotted black;
-}
-
-select[size="1"]:focus input#-moz-display {
-  border: none;
-}
-
 input[type=radio]:focus {
   border: 2px inset rgb(153, 153, 153);
 }
@@ -952,7 +932,8 @@ input[type=text] {
   padding: 0px;                         /* for Nav Quirks */
   background-color: white;
   color: black;
-}
+  padding: 0px;
+} 
 
 input[type=text][disabled] {
   color: gray;
@@ -983,18 +964,23 @@ select:-moz-dummy-option {
 }
 
 select[size] {
+  font-family: sans-serif;
+  font-size: small;
   background-color: white;
   border: 2px inset rgb(153, 153, 153);
   padding-left:   0px;
-  padding-top:    0px;
-  padding-right:  3px;
-  padding-bottom: 0px;
+  padding-top:    1px;
+  padding-right:  0px;
+  padding-bottom: 1px;
 }
 
 select, select[size="1"] {
   background-color: white;
-  border: inset 1px rgb(192, 192, 192);
-  padding: 0px 4px 0px 0px;
+  border: inset 2px rgb(192, 192, 192);
+  padding-left:   0px;
+  padding-top:    0px;
+  padding-right:  0px;
+  padding-bottom: 0px;
   margin: 0px 0px 0px 0px;
   vertical-align: bottom;
   background-color:rgb(204, 204, 204);  
@@ -1005,7 +991,7 @@ select, select[size="1"] {
 
 select[size][disabled] {
   background-color:rgb(204, 204, 204);  
-  border: 1px inset rgb(153, 153, 153);
+  border: 2px inset rgb(153, 153, 153);
 }
 
 select[multiple] {
@@ -1019,12 +1005,12 @@ select[multiple] {
 
 select[multiple][disabled] {
   background-color:rgb(204, 204, 204);  
-  border: 1px inset rgb(153, 153, 153);
+  border: 2px inset rgb(153, 153, 153);
 }
 
 select[disabled] {
   background-color: rgb(204, 204, 204);
-  border: 1px inset rgb(153, 153, 153);
+  border: 2px inset rgb(153, 153, 153);
 }
 
 select[multiple][size="1"] {
@@ -1061,6 +1047,8 @@ select[disabled] input[type=button] {
 
 /* combobox display area */
 select input#-moz-display {
+  font-family: sans-serif;
+  font-size: small;
   box-sizing: border-box;
   border: none;
   background-color: white;
@@ -1074,6 +1062,8 @@ select input#-moz-display {
 }
 
 select[disabled] input#-moz-display {
+  font-family: sans-serif;
+  font-size: small;
   border: none;
   color: gray;
   background-color: white;
@@ -1087,6 +1077,8 @@ select[disabled] input#-moz-display {
 
 /* combbox display area - active */
 select input#-moz-display:active {
+  font-family: sans-serif;
+  font-size: small;
   border: none;
   background-color:white;
   background-image: none;
@@ -1102,9 +1094,6 @@ select input#-moz-display:active {
 option {
   min-height: 1em;
   display:block;
-  padding-left:3px;
-  padding-right:3px;
-  padding-bottom:1px;
   font-family: sans-serif;
   font-size: small;
 }
@@ -1115,6 +1104,19 @@ option[label]:before {
   content:attr(label);
 }
 
+select[size] option {
+  padding-left:   3px;
+  padding-top:    0px;
+  padding-right:  11px;
+  padding-bottom: 0px;
+}
+
+select option, select[size="1"] option {
+  padding-left:   3px;
+  padding-top:    0px;
+  padding-right:  5px;
+  padding-bottom: 0px;
+}
 
 select[disabled] option {
   color:rgb(153, 153, 153);
@@ -1139,8 +1141,8 @@ select option[disabled] {
 }
 
 select[size] option[-moz-option-selected] {
- color:white;
- background-color:rgb(51,51,102); 
+  color:white;
+  background-color:rgb(51,51,102); 
 }
 
 select[size][disabled] option[-moz-option-selected] {
@@ -1215,6 +1217,65 @@ optgroup:before {
   content:attr(label);
 }
 
+select[size]:focus {
+  border: 2px dotted rgb(128,128,128);
+  padding-left:   0px;
+  padding-top:    1px;
+  padding-right:  0px;
+  padding-bottom: 1px;
+}
+
+select, select[size="1"]:focus {
+  border: 2px dotted black;
+  padding-left:   0px;
+  padding-top:    0px;
+  padding-right:  0px;
+  padding-bottom: 0px;
+}
+
+select[multiple]:focus {
+  border: 2px dotted black;
+  padding-left:   0px;
+  padding-top:    0px;
+  padding-right:  3px;
+  padding-bottom: 0px;
+}
+
+select[size="1"]:focus input#-moz-display {
+  border: none;
+}
+
+/* Begin - Margin setting for form controls inside tables for Nav Quirks */
+
+td select[size] {
+  margin-top:    0px;
+  margin-bottom: 1px;
+}
+
+td select, td select[size="1"] {
+  margin-top:    2px;
+  margin-bottom: 2px;
+}
+
+td input[type="text"] {
+  margin-top:    1px;
+  margin-bottom: 1px;
+}
+
+td input[type="checkbox"] {
+  margin-bottom: 1px;
+}
+
+td input[type="radio"] {
+  margin-bottom: 1px;
+}
+
+td textarea {
+  margin-top: 1px;
+  margin-bottom: 2px;
+}
+
+/* End - Margin setting for form controls inside tables for Nav Quirks */
 
 textarea {
   box-sizing: border-box;
@@ -1224,7 +1285,10 @@ textarea {
   border: 2px inset #c0c0c0;
   background-color:white;
   color:black;
-  padding: 0px;
+  padding-left:   1px;
+  padding-top:    1px;
+  padding-right:  1px;
+  padding-bottom: 2px;
 }
 
 textarea[disabled] {
