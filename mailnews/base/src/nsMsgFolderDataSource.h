@@ -156,7 +156,8 @@ protected:
 	nsresult createTotalMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **target);
-	nsresult createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createBiffStateNodeFromFolder(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createBiffStateNodeFromFlag(PRUint32 flag, nsIRDFNode **target);
 	nsresult createHasUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createNewMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
 	nsresult createSubfoldersHaveUnreadMessagesNode(nsIMsgFolder *folder, nsIRDFNode **target);
@@ -165,7 +166,7 @@ protected:
     nsresult createFolderSynchronizeNode(nsIMsgFolder *folder, nsIRDFNode **target);
     nsresult createFolderSyncDisabledNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
-	nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
+  nsresult createFolderChildNode(nsIMsgFolder *folder, nsIRDFNode **target);
 
   nsresult getFolderArcLabelsOut(nsISupportsArray **arcs);
   
@@ -188,9 +189,7 @@ protected:
 													 PRBool tv, PRBool *hasAssertion);
 
 	nsresult GetBiffStateString(PRUint32 biffState, nsCAutoString & biffStateStr);
-	nsresult GetNewMessagesString(PRBool newMessages, nsCAutoString & newMessagesStr);
 
-	nsresult CreateNameSortString(nsIMsgFolder *folder, nsAutoString &name);
 	nsresult CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString);
 	nsresult CreateArcsOutEnumerator();
 

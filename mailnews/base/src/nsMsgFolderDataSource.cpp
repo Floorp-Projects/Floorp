@@ -918,9 +918,9 @@ nsMsgFolderDataSource::OnItemBoolPropertyChanged(nsISupports *item,
     else if (kSynchronizeAtom == property) {
       NotifyPropertyChanged(resource, kNC_Synchronize, literalNode); 
     }
-	else if (kOpenAtom == property) {
+    else if (kOpenAtom == property) {
       NotifyPropertyChanged(resource, kNC_Open, literalNode);
-	}
+    }
   } 
 
   return rv;
@@ -931,14 +931,15 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
                                                  nsIAtom *property,
                                                  PRUint32 oldFlag,
                                                  PRUint32 newFlag)
-  {
-    nsresult rv;
-    //Suresh: for Incoming biff(to turn it on) the item is of type nsIFolder (see nsMsgFolder::SetBiffState)
-    //For clearing the biff the item is of type nsIMsgDBHdr (see nsMsgDBFolder::OnKeyChange)
-    //so check for both of these here!!
+{
+  nsresult rv;
+
+  if (kBiffStateAtom == property) {
+    // for Incoming biff (to turn it on) the item is of type nsIFolder (see nsMsgFolder::SetBiffState)
+    // for clearing the biff the item is of type nsIMsgDBHdr (see nsMsgDBFolder::OnKeyChange)
+    // so check for both of these here
     nsCOMPtr<nsIMsgFolder> folder(do_QueryInterface(item));
-   	if(!folder)
-    {
+    if(!folder) {
       nsCOMPtr<nsIMsgDBHdr> msgHdr  = do_QueryInterface(item);
       if (msgHdr)
         rv = msgHdr->GetFolder(getter_AddRefs(folder));
@@ -947,20 +948,19 @@ nsMsgFolderDataSource::OnItemPropertyFlagChanged(nsISupports *item,
     }
 
     nsCOMPtr<nsIRDFResource> resource(do_QueryInterface(folder));
-    if(resource)
-    {
-      if (kBiffStateAtom == property)
-      {
-        nsCAutoString newBiffStateStr;
-        rv = GetBiffStateString(newFlag, newBiffStateStr);
-        if(NS_FAILED(rv))
-          return rv;
-        NotifyPropertyChanged(resource, kNC_BiffState, newBiffStateStr);
-      }
+    if(resource) {
+      // be careful about skipping if oldFlag == newFlag
+      // see the comment in nsMsgFolder::SetBiffState() about filters
+
+      nsCOMPtr<nsIRDFNode> biffNode;
+      rv = createBiffStateNodeFromFlag(newFlag, getter_AddRefs(biffNode));
+      NS_ENSURE_SUCCESS(rv,rv);
+
+      NotifyPropertyChanged(resource, kNC_BiffState, biffNode);
     }
+  }
 
-    return NS_OK;
-
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1019,7 +1019,7 @@ nsresult nsMsgFolderDataSource::createFolderNode(nsIMsgFolder* folder,
 	else if ((kNC_Charset == property))
 		rv = createCharsetNode(folder, target);
 	else if ((kNC_BiffState == property))
-		rv = createBiffStateNode(folder, target);
+		rv = createBiffStateNodeFromFolder(folder, target);
 	else if ((kNC_HasUnreadMessages == property))
 		rv = createHasUnreadMessagesNode(folder, target);
 	else if ((kNC_NewMessages == property))
@@ -1049,9 +1049,22 @@ nsMsgFolderDataSource::createFolderNameNode(nsIMsgFolder *folder,
   if (NS_FAILED(rv)) return rv;
 
   if (sort) {
-    nsAutoString nameString(name);
-    CreateNameSortString(folder, nameString);
-    createNode(nameString, target, getRDFService());
+    // to create the sort string, we get the sort order
+    // append the name, and make the whole thing lower case
+    // because we want AAA to be next to aaa.
+    PRInt32 order;
+    rv = folder->GetSortOrder(&order);
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    nsAutoString orderString;
+    orderString.AppendInt(order);
+
+    orderString.Append(name.get());
+
+    // make sort insensitive to case
+    orderString.ToLowerCase();
+
+    createNode(orderString.get(), target, getRDFService());
   }
   else {
     createNode(name.get(), target, getRDFService());
@@ -1087,22 +1100,6 @@ nsresult nsMsgFolderDataSource::createFolderTreeSimpleNameNode(nsIMsgFolder * fo
 
   createNode(name.get(), target, getRDFService());
   return NS_OK;
-}
-
-nsresult nsMsgFolderDataSource::CreateNameSortString(nsIMsgFolder *folder, nsAutoString &name)
-{
-	PRInt32 order;
-	nsresult rv = folder->GetSortOrder(&order);
-        NS_ENSURE_SUCCESS(rv,rv);
-
-	nsAutoString orderString;
-	orderString.AppendInt(order);
-
-        // sort is insensitive to case
-        name.ToLowerCase();
-	name.Insert(orderString, 0);
-
-	return NS_OK;
 }
 
 nsresult nsMsgFolderDataSource::CreateUnreadMessagesNameString(PRInt32 unreadMessages, nsAutoString &nameString)
@@ -1504,31 +1501,36 @@ nsMsgFolderDataSource::createCharsetNode(nsIMsgFolder *folder, nsIRDFNode **targ
 }
 
 nsresult
-nsMsgFolderDataSource::createBiffStateNode(nsIMsgFolder *folder, nsIRDFNode **target)
+nsMsgFolderDataSource::createBiffStateNodeFromFolder(nsIMsgFolder *folder, nsIRDFNode **target)
 {
-	nsresult rv;
-	PRUint32 biffState;
-	rv = folder->GetBiffState(&biffState);
-	if(NS_FAILED(rv)) return rv;
+  nsresult rv;
+  PRUint32 biffState;
+  rv = folder->GetBiffState(&biffState);
+  if(NS_FAILED(rv)) return rv;
 
-	nsCAutoString biffString;
-	GetBiffStateString(biffState, biffString);
-	nsAutoString uniStr;uniStr.AssignWithConversion(biffString);
-	createNode(uniStr, target, getRDFService());
-	return NS_OK;
+  rv = createBiffStateNodeFromFlag(biffState, target);
+  NS_ENSURE_SUCCESS(rv,rv);
 }
 
 nsresult
-nsMsgFolderDataSource::GetBiffStateString(PRUint32 biffState, nsCAutoString& biffStateStr)
+nsMsgFolderDataSource::createBiffStateNodeFromFlag(PRUint32 flag, nsIRDFNode **target)
 {
-	if(biffState == nsIMsgFolder::nsMsgBiffState_NewMail)
-		biffStateStr = "NewMail";
-	else if(biffState == nsIMsgFolder::nsMsgBiffState_NoMail)
-		biffStateStr = "NoMail";
-	else 
-		biffStateStr = "UnknownMail";
+  const PRUnichar *biffStateStr;
 
-	return NS_OK;
+  switch (flag) {
+    case nsIMsgFolder::nsMsgBiffState_NewMail:
+      biffStateStr = NS_LITERAL_STRING("NewMail").get();
+      break;
+    case nsIMsgFolder::nsMsgBiffState_NoMail:
+      biffStateStr = NS_LITERAL_STRING("NoMail").get();
+      break;
+    default:
+      biffStateStr = NS_LITERAL_STRING("UnknownMail").get();
+      break;
+  }
+
+  createNode(biffStateStr, target, getRDFService());
+  return NS_OK;
 }
 
 nsresult 
@@ -1725,19 +1727,6 @@ nsMsgFolderDataSource::OnUnreadMessagePropertyChanged(nsIMsgFolder *folder, PRIn
 }
 
 **/
-
-nsresult
-nsMsgFolderDataSource::GetNewMessagesString(PRBool newMessages, nsCAutoString& newMessagesStr)
-{
-	if(newMessages)
-		newMessagesStr = "true";
-	else 
-		newMessagesStr = "false";
-
-
-
-	return NS_OK;
-}
 
 nsresult
 nsMsgFolderDataSource::OnTotalMessagePropertyChanged(nsIMsgFolder *folder, PRInt32 oldValue, PRInt32 newValue)

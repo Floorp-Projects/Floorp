@@ -362,17 +362,6 @@ nsMsgRDFDataSource::getRDFService()
 
 nsresult nsMsgRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
 													  nsIRDFResource *propertyResource,
-													  const char *newValue)
-{
-	nsCOMPtr<nsIRDFNode> newValueNode;
-	nsAutoString newValueStr; newValueStr.AssignWithConversion(newValue);
-	createNode(newValueStr, getter_AddRefs(newValueNode), getRDFService());
-	NotifyPropertyChanged(resource, propertyResource, newValueNode);
-	return NS_OK;
-}
-
-nsresult nsMsgRDFDataSource::NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
 													  nsIRDFNode *newNode)
 {
 

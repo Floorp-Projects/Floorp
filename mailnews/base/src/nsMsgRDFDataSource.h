@@ -76,9 +76,7 @@ class nsMsgRDFDataSource : public nsIRDFDataSource,
 	static PRBool changeEnumFunc(nsISupports *aElement, void *aData);
 	nsresult  NotifyObservers(nsIRDFResource *subject, nsIRDFResource *property,
 								nsIRDFNode *object, PRBool assert, PRBool change);
-	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
-													  nsIRDFResource *propertyResource,
-													  const char *newValue);
+
 	nsresult NotifyPropertyChanged(nsIRDFResource *resource,
 													  nsIRDFResource *propertyResource,
 													  nsIRDFNode *newNode);
