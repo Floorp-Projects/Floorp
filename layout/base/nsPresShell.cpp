@@ -1887,8 +1887,6 @@ PresShell::Destroy()
   }
 
   if (mViewManager) {
-    // Disable paints during tear down of the frame tree
-    mViewManager->DisableRefresh();
     // Clear the view manager's weak pointer back to |this| in case it
     // was leaked.
     mViewManager->SetViewObserver(nsnull);
