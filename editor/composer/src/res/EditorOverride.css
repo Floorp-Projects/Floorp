@@ -64,7 +64,16 @@ a:link {
   color: -moz-hyperlinktext;
 }
 
-input, button, select, textarea {
+/* Allow double-clicks on these widgets to open properties dialogs
+   XXX except when the widget has disabled attribute */
+input, button, textarea {
+  -moz-user-select: all !important;
+  -moz-user-input: auto !important;
+  -moz-user-focus: none !important;
+}
+
+/* XXX Still need a better way of blocking other events to these widgets */
+select, input[disabled], input[type="checkbox"], input[type="radio"], input[type="file"] {
   -moz-user-select: all !important;
   -moz-user-input: none !important;
   -moz-user-focus: none !important;
