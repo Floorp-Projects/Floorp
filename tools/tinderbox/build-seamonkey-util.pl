@@ -23,7 +23,7 @@ use Config;         # for $Config{sig_name} and $Config{sig_num}
 use File::Find ();
 use File::Copy;
 
-$::UtilsVersion = '$Revision: 1.250 $ ';
+$::UtilsVersion = '$Revision: 1.251 $ ';
 
 package TinderUtils;
 
@@ -521,6 +521,33 @@ sub print_log {
     print $text;
 }
 
+sub run_shell_command_with_timeout {
+    my ($shell_command, $timeout_secs) = @_;
+    my $now = localtime();
+    local $_;
+
+    chomp($shell_command);
+    print_log "Begin: $now\n";
+    print_log "$shell_command\n";
+
+    my $pid = fork; # Fork off a child process.
+
+    unless ($pid) { # child
+        my $status = 0;
+        open CMD, "$shell_command $Settings::TieStderr |" or die "open: $!";
+        print_log $_ while <CMD>;
+        close CMD or $status = 1;
+        exit($status);
+    }
+    my $result = wait_for_pid($pid, $timeout_secs);
+
+    $now = localtime();
+    print_log "End:   $now\n";
+
+    return $result;
+}
+
+
 sub run_shell_command {
     my ($shell_command) = @_;
     local $_;
@@ -820,6 +847,42 @@ sub BuildIt {
                 }
               }
             }
+
+            my $status = 0;
+
+            # Pull using separate step so that we can timeout if necessary
+            my $make_co = "$Settings::Make -f $Settings::moz_client_mk " .
+                "$TreeSpecific::checkout_target";
+            if ($Settings::FastUpdate) {
+                $make_co = "$Settings::Make -f $Settings::moz_client_mk fast-update";
+            }
+
+            # Run the checkout command.
+            if ($build_status ne 'busted') {
+                $status = run_shell_command_with_timeout("$make_co", 
+                                         $Settings::CVSCheckoutTimeout);
+                if ($status->{exit_value} != 0) {
+                    $build_status = 'busted';
+                    if ($status->{timed_out}) {
+                        print_log "Error: CVS checkout timed out.\n";
+                        # Need to figure out how to kill rogue cvs processes
+                        my $_cvs_pid=`ps -u $ENV{USER} | grep cvs`;
+                        $_cvs_pid =~ s/[a-zA-Z]*\s*(\d+).*/$1/;
+                        chomp($_cvs_pid);
+                        if ("$_cvs_pid" eq "" ) {
+                            print_log "Cannot find cvs process to kill.\n";
+                        } else {
+                            print "cvs pid $_cvs_pid\n";
+                            kill_process($_cvs_pid);
+                        }
+                    } else {
+                        print_log "Error: CVS checkout failed.\n";
+                    }
+                } else {
+                    $build_status = 'success';
+                }
+            }
+
             # Build up initial make command.
             my $make = "$Settings::Make -f $Settings::moz_client_mk $Settings::MakeOverrides CONFIGURE_ENV_ARGS='$Settings::ConfigureEnvArgs'";
             if ($Settings::FastUpdate) {
@@ -827,22 +890,24 @@ sub BuildIt {
             }
 
             # Build up target string.
-            my $targets = $TreeSpecific::checkout_target;
-            $targets = $TreeSpecific::checkout_clobber_target unless $Settings::BuildDepend;
+            my $targets;
+            $targets = $TreeSpecific::clobber_target unless $Settings::BuildDepend;
+            $targets .= " $TreeSpecific::build_target";
 
             # Make sure we have an ObjDir if we need one.
             mkdir $Settings::ObjDir, 0777 if ($Settings::ObjDir && ! -e $Settings::ObjDir);
 
             # Run the make command.
-            my $status = 0;
-            $status = run_shell_command "$make $targets";
-            if ($status != 0) {
-              $build_status = 'busted';
-            } elsif (not BinaryExists($full_binary_name)) {
-              print_log "Error: binary not found: $binary_basename\n";
-              $build_status = 'busted';
-            } else {
-              $build_status = 'success';
+            if ($build_status ne 'busted') {
+                $status = run_shell_command "$make $targets";
+                if ($status != 0) {
+                    $build_status = 'busted';
+                } elsif (not BinaryExists($full_binary_name)) {
+                    print_log "Error: binary not found: $binary_basename\n";
+                    $build_status = 'busted';
+                } else {
+                    $build_status = 'success';
+                }
             }
 
             # TestGtkEmbed is only built by default on certain platforms.
@@ -1141,6 +1206,7 @@ sub kill_process {
     # Try to kill and wait 10 seconds, then try a kill -9
     my $sig;
     for $sig ('TERM', 'KILL') {
+        print "kill $sig $target_pid\n";
         kill $sig => $target_pid;
         my $interval_start = time;
         while (time - $interval_start < 10) {
