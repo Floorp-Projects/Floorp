@@ -20,7 +20,12 @@
  * Contributor(s): 
  */
 
-
+////////////////////////////////////////////////////////////////////////////
+// XXX - WARNING - XXX
+// This file is being reimplemented for Mozilla 0.8. Do NOT make modifications
+// to this file without consulting ben@netscape.com first. This code is being
+// rewritten to use the nsDragAndDrop library so changes you make here will
+// likely be lost. 
 
 var NC_NS  = "http://home.netscape.com/NC-rdf#";
 var RDF_NS = "http://www.w3.org/1999/02/22-rdf-syntax-ns#";
