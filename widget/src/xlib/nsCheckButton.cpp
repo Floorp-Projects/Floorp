@@ -66,21 +66,6 @@ NS_METHOD nsCheckButton::GetLabel(nsString& aBuffer)
   return NS_OK;
 }
 
-PRBool nsCheckButton::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsCheckButton::OnPaint()
-{
-    return PR_FALSE;
-}
-
-PRBool nsCheckButton::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 NS_METHOD nsCheckButton::Paint(nsIRenderingContext& aRenderingContext,
                                const nsRect&        aDirtyRect)
 {

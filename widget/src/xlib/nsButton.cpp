@@ -57,21 +57,6 @@ NS_METHOD nsButton::GetLabel (nsString &aBuffer)
   return NS_OK;
 }
 
-PRBool nsButton::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsButton::OnPaint()
-{
-  return PR_FALSE;
-}
-
-PRBool nsButton::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 NS_METHOD nsButton::Paint(nsIRenderingContext& aRenderingContext,
                           const nsRect& aDirtyRect)
 {

@@ -64,21 +64,6 @@ NS_METHOD nsLabel::GetLabel(nsString& aBuffer)
   return NS_OK;
 }
 
-PRBool nsLabel::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsLabel::OnPaint()
-{
-  return PR_FALSE;
-}
-
-PRBool nsLabel::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 NS_METHOD nsLabel::GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight)
 {
   return NS_OK;

@@ -23,6 +23,7 @@
 #include <X11/Xutil.h>
 #include <X11/Xos.h>
 #include "nsBaseWidget.h"
+#include "nsHashtable.h"
 
 class nsWidget : public nsBaseWidget
 {
@@ -94,14 +95,27 @@ public:
   NS_IMETHOD              SetPreferredSize(PRInt32 aWidth, PRInt32 aHeight);
   NS_IMETHOD              DispatchEvent(nsGUIEvent* event, nsEventStatus & aStatus);
 
+  PRBool                  OnPaint(nsPaintEvent &event);
+  static nsWidget        *getWidgetForWindow(Window aWindow);
 protected:
+  // create the native window for this class
   virtual void CreateNative(Window aParent, nsRect aRect);
-  PRUint32   mPreferredWidth;
-  PRUint32   mPreferredHeight;
-  nsIWidget *parentWidget;
+  virtual void DestroyNative(void);
+
+  // these will add and delete a window
+  static void  AddWindowCallback   (Window aWindow, nsWidget *aWidget);
+  static void  DeleteWindowCallback(Window aWindow);
+  static       nsHashtable *window_list;
+  PRUint32     mPreferredWidth;
+  PRUint32     mPreferredHeight;
+  nsIWidget   *parentWidget;
+
+  // private event functions
+  PRBool nsWidget::DispatchWindowEvent(nsGUIEvent* event);
+  PRBool nsWidget::ConvertStatus(nsEventStatus aStatus);
 
   // All widgets have at least these items.
-  Window mBaseWindow;
+  Window        mBaseWindow;
   PRUint32      bg_rgb;
   unsigned long bg_pixel;
   GC            mGC; // until we get gc pooling working...

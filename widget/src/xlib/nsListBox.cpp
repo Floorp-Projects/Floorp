@@ -122,21 +122,6 @@ nsresult nsListBox::QueryInterface(const nsIID& aIID, void** aInstancePtr)
   return result;
 }
 
-PRBool nsListBox::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsListBox::OnPaint()
-{
-    return PR_FALSE;
-}
-
-PRBool nsListBox::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 PRBool nsListBox::AutoErase()
 {
   return(PR_TRUE);

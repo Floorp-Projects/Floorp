@@ -31,6 +31,18 @@ nsWindow::~nsWindow()
 }
 
 void
+nsWindow::DestroyNative(void)
+{
+  if (mGC)
+    XFreeGC(gDisplay, mGC);
+  if (mBaseWindow) {
+    XDestroyWindow(gDisplay, mBaseWindow);
+    DeleteWindowCallback(mBaseWindow);
+  }
+}
+
+
+void
 nsWindow::CreateNative(Window aParent, nsRect aRect)
 {
   XSetWindowAttributes attr;
@@ -79,6 +91,8 @@ nsWindow::CreateNative(Window aParent, nsRect aRect)
                               gVisual,        // get the visual from xlibrgb
                               attr_mask,
                               &attr);
+  // add the callback for this
+  AddWindowCallback(mBaseWindow, this);
   // map this window and flush the connection.  we want to see this
   // thing now.
   XMapWindow(gDisplay,

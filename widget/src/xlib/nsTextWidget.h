@@ -35,10 +35,6 @@ public:
   NS_IMETHOD_(nsrefcnt) AddRef(void);                                       
   NS_IMETHOD_(nsrefcnt) Release(void);          
   
-  virtual PRBool  OnPaint();
-  virtual PRBool  OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool  OnResize(nsRect &aWindowRect);
-  
   NS_IMETHOD      Paint(nsIRenderingContext& aRenderingContext,
 			const nsRect& aDirtyRect);
   

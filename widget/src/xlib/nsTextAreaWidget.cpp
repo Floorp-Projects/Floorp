@@ -51,21 +51,6 @@ nsresult nsTextAreaWidget::QueryInterface(const nsIID& aIID, void** aInstancePtr
   return nsWidget::QueryInterface(aIID, aInstancePtr);
 }
 
-PRBool nsTextAreaWidget::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsTextAreaWidget::OnPaint()
-{
-    return PR_FALSE;
-}
-
-PRBool nsTextAreaWidget::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 NS_METHOD nsTextAreaWidget::Paint(nsIRenderingContext& aRenderingContext,
                                   const nsRect& aDirtyRect)
 {

@@ -63,21 +63,6 @@ NS_METHOD nsRadioButton::GetLabel(nsString& aBuffer)
   return NS_OK;
 }
 
-PRBool nsRadioButton::OnMove(PRInt32, PRInt32)
-{
-  return PR_FALSE;
-}
-
-PRBool nsRadioButton::OnPaint()
-{
-    return PR_FALSE;
-}
-
-PRBool nsRadioButton::OnResize(nsRect &aWindowRect)
-{
-    return PR_FALSE;
-}
-
 NS_METHOD nsRadioButton::Paint(nsIRenderingContext& aRenderingContext,
 			       const nsRect&        aDirtyRect)
 {

@@ -39,10 +39,6 @@ public:
   NS_IMETHOD SetTabs(PRUint32 aNumberOfTabs, const nsString aTabLabels[]);
   NS_IMETHOD GetSelectedTab(PRUint32& aTabNumber);
   
-  // nsIWidget overrides
-  virtual PRBool OnPaint();
-  virtual PRBool OnResize(nsRect &aWindowRect);
-
 };
 
 #endif // nsTabWidget_h__

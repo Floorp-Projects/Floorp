@@ -44,10 +44,6 @@ public:
   NS_IMETHOD GetLabel(nsString &aBuffer);
   NS_IMETHOD SetAlignment(nsLabelAlignment aAlignment);
 
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool OnPaint();
-  virtual PRBool OnResize(nsRect &aWindowRect);
-
   NS_IMETHOD   PreCreateWidget(nsWidgetInitData *aInitData);
 
   NS_IMETHOD GetPreferredSize(PRInt32& aWidth, PRInt32& aHeight);

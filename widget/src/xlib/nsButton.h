@@ -42,10 +42,6 @@ class nsButton : public nsWidget,
   NS_IMETHOD Paint(nsIRenderingContext& aRenderingContext,
 		   const nsRect& aDirtyRect);
   
-  virtual PRBool OnMove(PRInt32 aX, PRInt32 aY);
-  virtual PRBool OnPaint();
-  virtual PRBool OnResize(nsRect &aWindowRect);
-  
  protected:
   nsString mLabel;
 };
