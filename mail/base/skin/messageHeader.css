@@ -135,6 +135,12 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   background-color: transparent;
 }
 
+.headerValueUrl {
+  cursor: pointer;
+  color: #0000FF;
+  text-decoration: underline;
+}
+
 .subjectvalue {
   font-weight: bold;
   background-color: transparent;
@@ -150,6 +156,7 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   background-color: transparent;
 }
 
+.headerValueUrl:hover,
 .emailDisplayButton:hover {
   color: #FF0000;
 }

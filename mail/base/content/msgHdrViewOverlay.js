@@ -110,7 +110,8 @@ var gExpandedHeaderList = [ {name:"subject"},
                             {name:"cc", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"bcc", useToggle:true, outputFunction:OutputEmailAddresses},
                             {name:"newsgroups", outputFunction:OutputNewsgroups},
-                            {name:"followup-to", outputFunction:OutputNewsgroups} ];
+                            {name:"followup-to", outputFunction:OutputNewsgroups},
+                            {name:"content-base"} ];
 
 // Now, for each view the message pane can generate, we need a global table of headerEntries. These
 // header entry objects are generated dynamically based on the static date in the header lists (see above)

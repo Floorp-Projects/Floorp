@@ -558,9 +558,6 @@ const MESSAGE_TEMPLATE = "\n\
     </style>\n\
   </head>\n\
   <body>\n\
-    <div id=\"toolbar\">\n\
-      <a href=\"%URL%\">view in browser</a>\n\
-    </div>\n\
     %CONTENT_TEMPLATE%\n\
   </body>\n\
 </html>\n\

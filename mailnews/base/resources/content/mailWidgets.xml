@@ -612,6 +612,17 @@
     </implementation>
   </binding>
 
+  <binding id="mail-urlfield" extends="chrome://messenger/content/mailWidgets.xml#mail-headerfield">
+    <content>
+      <xul:hbox class="headerNameBox" align="start">
+        <xul:label class="headerName" xbl:inherits="value=label" flex="1"/>
+      </xul:hbox>
+      <xul:label originalclass="headerValue plain headerValueUrl" onclick="if (!event.button) messenger.launchExternalURL(event.target.value);" 
+                 appendoriginalclass="true" keywordrelated="true" class="headerValue plain headerValueUrl" 
+                 anonid="headerValue" flex="1" readonly="true"/> 
+    </content>
+  </binding>
+
   <binding id="mail-emailheaderfield">
     <content>
       <xul:hbox class="headerNameBox" align="start">

@@ -151,6 +151,16 @@ description[selectable="true"]:focus > descriptionitem[selected="true"]
   padding: 0px;
 }
 
+.headerValueUrl {
+  cursor: pointer;
+  color: #0000FF;
+  text-decoration: underline;
+}
+
+.headerValueUrl:hover {
+  color: red;
+}
+
 .subjectvalue {
   font-weight: bold;
   background-color: transparent;

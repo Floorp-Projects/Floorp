@@ -120,6 +120,7 @@
         <mail-headerfield keywordrelated="true" id="expandednewsgroupsBox"  label="&newsgroupsField.label;" collapsed="true"/>
         <mail-headerfield keywordrelated="true" id="expandedfollowup-toBox" label="&followupToField.label;" collapsed="true"/>
         <mail-headerfield keywordrelated="true" id="expandeduser-agentBox"  label="&userAgentField.label;"  collapsed="true"/> 
+        <mail-urlfield    keywordrelated="true" id="expandedcontent-baseBox" label="&originalWebsite.label;" collapsed="true"/>
       </vbox>
 
       <vbox id="expandedKeywordBox">
