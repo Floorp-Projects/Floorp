@@ -28,6 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 PROGRAM		= embed_xlib_into_xt
 
 CPPSRCS		= \
+			EmbedMozilla.c \
 			nsEmbedXlibIntoXt.cpp \
 			nsSetupRegistry.cpp \
 			$(NULL)
