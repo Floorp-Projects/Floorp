@@ -45,4 +45,5 @@ interface gfxIImageFrameWin : nsISupports
   void getDDB(out HBITMAP aBitmap, out HBITMAP aMask);
   void getAlphaStuff(out HBITMAP aBitmap, out LPBITMAPINFOHEADER aInfoHeader, out voidPtr aBits);
   void getBitmap(in HDC aHDC, out HBITMAP aBitmap, out HBITMAP aMask, out gfx_depth aAlphaDepth);
+  readonly attribute gfx_depth alphaDepth;
 };

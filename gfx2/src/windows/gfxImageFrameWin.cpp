@@ -275,6 +275,10 @@ NS_IMETHODIMP gfxImageFrameWin::GetImageData(PRUint8 **aData, PRUint32 *length)
 
   NS_ASSERTION(mMutable, "trying to get data on a mutable frame");
 
+  if (gOSVerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+    ::GdiFlush();
+  }
+
   *aData = (PRUint8*)mImage.mDIBBits;
   *length = mImageRowSpan * mSize.height;
 
@@ -313,19 +317,6 @@ NS_IMETHODIMP gfxImageFrameWin::SetImageData(const PRUint8 *aData, PRUint32 aLen
 
   memcpy(imgData + newOffset, aData, aLength);
 
-  /*
-  PRInt32 row = (aOffset / row_stride);
-
-  
-  PRInt32 decY2 = mImage->GetDecodedY2();
-  if (decY2 != mSize.height) {
-    mImage->SetDecodedRect(0, 0, mSize.width, row + 1);
-  }
-  
-  PRInt32 numnewrows = (aLength / row_stride);
-  nsRect r(0, row, mSize.width, numnewrows);
-  mImage->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-  */
   return NS_OK;
 }
 
@@ -374,6 +365,10 @@ NS_IMETHODIMP gfxImageFrameWin::GetAlphaData(PRUint8 **aData, PRUint32 *length)
     return NS_ERROR_NOT_INITIALIZED;
 
   NS_ASSERTION(mMutable, "trying to get data on a mutable frame");
+
+  if (gOSVerInfo.dwPlatformId == VER_PLATFORM_WIN32_NT) {
+    ::GdiFlush();
+  }
 
   *aData = (PRUint8*)mAlphaImage.mDIBBits;
   *length = mAlphaRowSpan * mSize.height;
@@ -442,17 +437,22 @@ NS_IMETHODIMP gfxImageFrameWin::UnlockAlphaData()
 /* void drawTo */
 NS_IMETHODIMP gfxImageFrameWin::DrawTo(gfxIImageFrame *aDstFrame, nscoord aDX, nscoord aDY, nscoord aDWidth, nscoord aDHeight)
 {
+  // Note: This function does not have to take care of compositing the alpha bits together...
+  // it will be done externally.
+  
   if (!mInitalized)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  gfxImageFrameWin *dstFrameWin = NS_STATIC_CAST(gfxImageFrameWin*, aDstFrame); 
+
+  if (!dstFrameWin->mInitalized)
     return NS_ERROR_NOT_INITIALIZED;
 
   // Create a memory DC that is compatible with the screen
   HDC dstMemDC = ::CreateCompatibleDC(nsnull);
 
-  gfxImageFrameWin *imgWin = NS_STATIC_CAST(gfxImageFrameWin*, aDstFrame); 
-
-  HBITMAP dstImage = imgWin->mImage.mDDB ? imgWin->mImage.mDDB : imgWin->mImage.mDIB;
-
-  HBITMAP oldDstBits = (HBITMAP)::SelectObject(dstMemDC, dstImage);
+  HBITMAP dstBitmap = dstFrameWin->mImage.mDIB;
+  HBITMAP oldBitmap = (HBITMAP)::SelectObject(dstMemDC, dstBitmap);
 
   DWORD rop = SRCCOPY;
 
@@ -465,9 +465,9 @@ NS_IMETHODIMP gfxImageFrameWin::DrawTo(gfxIImageFrame *aDstFrame, nscoord aDX, n
   ::StretchDIBits(dstMemDC, aDX, aDY, aDWidth, aDHeight, 0, 0, mSize.width, mSize.height, mImage.mDIBBits,
                   (LPBITMAPINFO)mImage.mBMI, DIB_RGB_COLORS, rop);
 
-  ::SelectObject(dstMemDC, oldDstBits);
+  ::SelectObject(dstMemDC, oldBitmap);
   ::DeleteDC(dstMemDC);
-  
+
   return NS_OK;
 }
 
@@ -677,5 +677,11 @@ NS_IMETHODIMP gfxImageFrameWin::GetAlphaStuff(HBITMAP *aBitmap, LPBITMAPINFOHEAD
   *aInfoHeader = mAlphaImage.mBMI;
   *aBits = mAlphaImage.mDIBBits;
 
+  return NS_OK;
+}
+
+NS_IMETHODIMP gfxImageFrameWin::GetAlphaDepth(gfx_depth *aDepth)
+{
+  *aDepth = mAlphaDepth;
   return NS_OK;
 }
