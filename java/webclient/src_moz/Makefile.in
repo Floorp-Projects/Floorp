@@ -95,6 +95,15 @@ INCLUDES := -I$(JDKHOME)/include -I$(JDKHOME)/include/solaris $(INCLUDES) \
 endif
 
 
+ifneq ($(PACKAGE_BUILD),)
+ifneq ($(VERSION_NUMBER),)
+VERSION_NUMBER=0.9
+endif # VERSION_NUMBER
+PACKAGE_DIR=$(topsrcdir)/dist/javadev
+PACKAGE_LIB=$(PACKAGE_DIR)/lib
+PACKAGE_EXAMPLE=$(PACKAGE_DIR)/example
+endif # PACKAGE_BUILD
+
 export:: linkSetupRegistry
 
 linkSetupRegistry:
@@ -106,11 +115,52 @@ clobber_all::
 
 buildRunems:
 ifeq ($(BAL_INTERFACE),)
+ifeq ($(PACKAGE_BUILD),)
 	@echo +++ Creating runem.  Use this to run the test browser.
 	rm -f runem
 	@echo #!/bin/sh > runem
 	@echo $(PERL) ../src_share/runem.pl $(DIST)/bin org.mozilla.webclient.test.EmbeddedMozilla $(DEPTH) "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
 	chmod 755 runem
-endif
+else
+	@echo +++ Commercial Packaging - Creating runem. Used to run test
+	rm -f runem
+	@echo #!/bin/sh > runem
+	@echo $(PERL) runem.pl ../../ org.mozilla.test.EmbeddedMozilla "$$"1 "$$"2 "$$"3 "$$"4 "$$"4 "$$"6 >> runem
+	chmod 755 runem
+	if test ! -d $(PACKAGE_EXAMPLE) ; then mkdir $(PACKAGE_EXAMPLE) ; else true ; fi ;
+	cp $(topsrcdir)/dist/bin/libwebclientstub.so $(PACKAGE_LIB)/libwebclientstub.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/libwebclient.so $(PACKAGE_LIB)/libwebclient.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/lib/libwc_share.a $(PACKAGE_LIB)/libwc_share.a.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/libjavadomjni.so $(PACKAGE_LIB)/libjavadomjni.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/libplugletjni.so $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libpluglet.so $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libjavadom.so $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libpluglet.so $(topsrcdir)/dist/bin/components/libpluglet.so.$(VERSION_NUMBER)
+	cp $(topsrcdir)/dist/bin/components/libjavadom.so $(topsrcdir)/dist/bin/components/libjavadom.so.$(VERSION_NUMBER)
+	rm -r $(topsrcdir)/dist/bin/components/libpluglet.so
+	rm -r $(topsrcdir)/dist/bin/components/libjavadom.so
+	chmod 555 $(PACKAGE_LIB)/libwebclientstub.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libwebclient.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libwc_share.a.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libjavadomjni.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libplugletjni.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libpluglet.so.$(VERSION_NUMBER)
+	chmod 555 $(PACKAGE_LIB)/libjavadom.so.$(VERSION_NUMBER)
+	chmod 555 $(topsrcdir)/dist/bin/components/libpluglet.so.$(VERSION_NUMBER)
+	chmod 555 $(topsrcdir)/dist/bin/components/libjavadom.so.$(VERSION_NUMBER)
+	if test ! -d $(PACKAGE_LIB)/libwc_share.a ; then ln -s libwc_share.a.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwc_share.a ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libwebclientstub.so ; then ln -s libwebclientstub.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclientstub.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libwebclient.so ; then ln -s libwebclient.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libwebclient.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libjavadomjni.so ; then ln -s libjavadomjni.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavadomjni.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libplugletjni.so ; then ln -s libplugletjni.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libplugletjni.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libpluglet.so ; then ln -s libpluglet.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libpluglet.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/libjavadom.so ; then ln -s libjavadom.so.$(VERSION_NUMBER) $(PACKAGE_LIB)/libjavadom.so ; else true ; fi ;
+	if test ! -d $(topsrcdir)/dist/bin/components/libpluglet.so ; then ln -s libpluglet.so.$(VERSION_NUMBER) $(topsrcdir)/dist/bin/components/libpluglet.so ; else true ; fi ;
+	if test ! -d $(topsrcdir)/dist/bin/components/libjavadom.so ; then ln -s libjavadom.so.$(VERSION_NUMBER) $(topsrcdir)/dist/bin/components/libjavadom.so ; else true ; fi ;
+	if test ! -d $(PACKAGE_EXAMPLE)/runem ; then cp $(topsrcdir)/java/webclient/src_moz/runem $(PACKAGE_EXAMPLE)/runem ; else true ; fi ;
+	if test ! -d $(PACKAGE_EXAMPLE)/runem.pl ; then cp $(topsrcdir)/java/webclient/src_share/runem_commercial.pl $(PACKAGE_EXAMPLE)/runem.pl ; else true ; fi ;
+	chmod 755 $(PACKAGE_EXAMPLE)/runem.pl
+endif # PACKAGE_BUILD
+endif # BAL_INTERFACE
 
 install:: buildRunems

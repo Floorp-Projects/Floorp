@@ -27,6 +27,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS=   util		\
 	dom		\
+	plugins		\
 	webclient	\
 	$(NULL)
 

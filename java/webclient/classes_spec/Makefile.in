@@ -31,10 +31,10 @@ include $(DEPTH)/config/autoconf.mk
 
 MODULE		= webclient
 
-JMODS		= org/mozilla/webclient \
-	org/mozilla/webclient/wrapper_native \
-	org/mozilla/webclient/wrapper_native/motif \
-	org/mozilla/webclient/test 
+JMODS			 = org/mozilla/webclient \
+		org/mozilla/webclient/wrapper_native \
+		org/mozilla/webclient/wrapper_native/motif \
+		org/mozilla/webclient/test 
 
 #
 # JDIRS is dependant on JAVA_DESTPATH in config/rules.m[a]k. 
@@ -55,8 +55,31 @@ JAVA_OR_NSJVM = 1
 
 include $(topsrcdir)/config/rules.mk
 
-JAVA_SOURCEPATH	= $(topsrcdir)/java/webclient/classes_spec
-JAVAC_FLAGS = -classpath $(CLASSPATH):$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+ifneq ($(PACKAGE_BUILD),)
+ifneq ($(VERSION_NUMBER),)
+VERSION_NUMBER=0.9
+endif # VERSION_NUMBER
+BLACKWOOD_JAR_NAME=blackwood$(VERSION_NUMBER).jar
+PACKAGE_DIR=$(topsrcdir)/dist/javadev
+PACKAGE_LIB=$(PACKAGE_DIR)/lib
+endif # PACKAGE_BUILD
+
+JAVA_SOURCEPATH=$(topsrcdir)/java/webclient/classes_spec
+JAVAC_FLAGS=-classpath $(CLASSPATH):$(JAVA_DESTPATH) -d $(JAVA_DESTPATH)
+
+
+install:: jarEmUp
+
+jarEmUp:
+ifneq ($(PACKAGE_BUILD),)
+	if test ! -d $(PACKAGE_DIR) ; then mkdir $(PACKAGE_DIR) ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB) ; then mkdir $(PACKAGE_LIB) ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/blackwood.$(VERSION_NUMBER).jar ; then rm -f $(PACKAGE_LIB)/blackwood.$(VERSION_NUMBER).jar ; else true ; fi ;
+	if test ! -d $(PACKAGE_LIB)/blackwood.jar ; then rm -f $(PACKAGE_LIB)/blackwood.jar ; else true ; fi ;
+	jar -xvf $(topsrcdir)/java/external/dom2.jar $(topsrcdir)/dist/classes/.
+	jar -cvf $(PACKAGE_LIB)/blackwood.$(VERSION_NUMBER).jar  $(topsrcdir)/dist/classes/org
+	ln -s blackwood.$(VERSION_NUMBER).jar $(PACKAGE_LIB)/blackwood.jar
+endif
 
 doc::
 	$(JAVADOC) -d $(DIST)/doc org.mozilla.util
@@ -73,3 +96,7 @@ check_natives:: natives_list
 	diff found_natives natives_list
 
 FORCE:
+
+
+
+
