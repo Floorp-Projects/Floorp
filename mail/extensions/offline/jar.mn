@@ -1,9 +1,9 @@
 messenger.jar:
-+   content/messenger/msgOfflineOverlay.xul                (content/msgOfflineOverlay.xul)
+*+  content/messenger/msgOfflineOverlay.xul                (content/msgOfflineOverlay.xul)
 +   content/messenger/mail-offline.js                      (content/mail-offline.js)
     content/messenger-offline/contents.rdf                 (content/contents.rdf)
-    content/messenger/pref-offline.xul                     (content/pref-offline.xul)
-    content/messenger/pref-offlineOverlay.xul              (content/pref-offlineOverlay.xul)
+*+  content/messenger/pref-offline.xul                     (content/pref-offline.xul)
+*+  content/messenger/pref-offlineOverlay.xul              (content/pref-offlineOverlay.xul)
     
 en-US.jar:
 +   locale/en-US/messenger/offline.properties              (locale/offline.properties)

@@ -4,7 +4,7 @@ classic.jar:
 messenger.jar:
 +   content/messenger/addressbook/abCardViewOverlay.js          (content/abCardViewOverlay.js)
 +   content/messenger/addressbook/addressbook.js                (content/addressbook.js)
-+   content/messenger/addressbook/addressbook.xul               (content/addressbook.xul)
+*+  content/messenger/addressbook/addressbook.xul               (content/addressbook.xul)
 
 en-US.jar:
 +   locale/en-US/messenger/addressbook/abMainWindow.dtd         (locale/abMainWindow.dtd)

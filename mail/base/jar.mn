@@ -1,17 +1,18 @@
 messenger.jar:
 +   content/messenger/contents.rdf                  (content/contents.rdf)
-+   content/messenger/mail3PaneWindowVertLayout.xul (content/mail3PaneWindowVertLayout.xul)
+*+  content/messenger/mail3PaneWindowVertLayout.xul (content/mail3PaneWindowVertLayout.xul)
 +   content/messenger/mailTasksOverlay.xul          (content/mailTasksOverlay.xul)
 +   content/messenger/mailWindow.js                 (content/mailWindow.js)
 +   content/messenger/mailWindowOverlay.js          (content/mailWindowOverlay.js)
-+   content/messenger/mailWindowOverlay.xul         (content/mailWindowOverlay.xul)
-+   content/messenger/messageWindow.xul             (content/messageWindow.xul)
-+   content/messenger/folderPane.xul                (content/folderPane.xul)
+*+  content/messenger/mailWindowOverlay.xul         (content/mailWindowOverlay.xul)
+*+  content/messenger/messageWindow.xul             (content/messageWindow.xul)
+*+  content/messenger/folderPane.xul                (content/folderPane.xul)
 +   content/messenger/messageWindow.js              (content/messageWindow.js)
-+   content/messenger/messenger.xul                 (content/messenger.xul)
+*+  content/messenger/messenger.xul                 (content/messenger.xul)
 +   content/messenger/msgMail3PaneWindow.js         (content/msgMail3PaneWindow.js)
 +   content/messenger/mailCore.js                   (content/mailCore.js)
-+   content/messenger/SearchDialog.xul              (content/SearchDialog.xul)
+*+  content/messenger/SearchDialog.xul              (content/SearchDialog.xul)
+*+  content/messenger/subscribe.xul                 (content/subscribe.xul)
 *+  content/messenger/aboutDialog.xul               (content/aboutDialog.xul)
     content/messenger/about-thunderbird.png         (content/about-thunderbird.png)
     
@@ -36,15 +37,15 @@ classic.jar:
     skin/classic/messenger/icons/throbber-small.png (skin/icons/throbber-small.png)
 
 comm.jar:
-+   content/navigator/viewSource.xul                (content/viewSource.xul)
+*+  content/navigator/viewSource.xul                (content/viewSource.xul)
 +   content/navigator/contents.rdf                  (content/navigator.rdf)
-+   content/communicator/askViewZoom.xul            (content/askViewZoom.xul)
+*+  content/communicator/askViewZoom.xul            (content/askViewZoom.xul)
     content/help/contents.rdf                       (content/help.rdf)
     content/help/contextHelp.js                     (content/contextHelp.js)
     content/communicator/contentAreaClick.js        (content/contentAreaClick.js)
 
 toolkit.jar:
-+   content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
+*+  content/global/customizeToolbar.xul             (content/customizeToolbar.xul)
 +   content/global/customizeToolbar.js              (content/customizeToolbar.js)
 +   content/communicator/nsContextMenu.js           (content/nsContextMenu.js)
 +   content/communicator/tasksOverlay.xul           (content/tasksOverlay.xul)

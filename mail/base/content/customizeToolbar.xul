@@ -1,6 +1,5 @@
 <?xml version="1.0"?> 
 
-<!--
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
 # except in compliance with the License. You may obtain a copy of
@@ -22,7 +21,6 @@
 # Contributor(s): 
 #   David Hyatt (hyatt@apple.com)
 #   Blake Ross (blaker@netscape.com)
--->
 
 <!DOCTYPE dialog [
 <!ENTITY % customizeToolbarDTD SYSTEM "chrome://global/locale/customizeToolbar.dtd">
