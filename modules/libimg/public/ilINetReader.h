@@ -53,6 +53,9 @@ public:
   virtual PRBool StreamCreated(ilIURL *urls, char* type)=0;
   
   virtual PRBool IsMulti()=0;
+
+  NS_IMETHOD FlushImgBuffer()=0;
+
 };
 
 #endif
