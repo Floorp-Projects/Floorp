@@ -129,7 +129,16 @@ function initHost(obj)
     obj.networks["hybridnet"] =
         new CIRCNetwork ("hybridnet", [{name: "irc.ssc.net", port: 6667}],
                          obj.eventPump);
-
+    obj.networks["slashnet"] =
+        new CIRCNetwork ("slashnet", [{name: "irc.slashnet.org", port:6667}],
+                         obj.eventPump);
+    obj.networks["dalnet"] =
+        new CIRCNetwork ("dalnet", [{name: "irc.dalnet.org", port:6667}],
+                         obj.eventPump);
+    obj.networks["undernet"] =
+        new CIRCNetwork ("undernet", [{name: "irc.undernet.org", port:6667}],
+                         obj.eventPump);
+    
     obj.primNet = obj.networks["efnet"];
 
     if (DEBUG)
