@@ -336,6 +336,13 @@ public:
    */
   NS_IMETHOD NotifyTagObservers(nsIParserNode* aNode)=0;
 
+  /**
+   * Call this method to determnine if a FORM is on the sink's stack
+   *
+   * @return PR_TRUE if found else PR_FALSE
+   */
+  NS_IMETHOD_(PRBool) IsFormOnStack() = 0;
+
 };
 
 #ifdef NS_DEBUG
@@ -345,3 +352,4 @@ extern nsresult NS_NewHTMLNullSink(nsIContentSink** aInstancePtrResult);
 #endif
 
 #endif /* nsIHTMLContentSink_h___ */
+
