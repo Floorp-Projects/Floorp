@@ -568,9 +568,6 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         nsCOMPtr<nsIFile>  profileSpec;
         nsXPIDLCString     profilePath;
         
-        NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
-        if (NS_FAILED(rv)) goto failure;
-        
         rv = NS_GetSpecialDirectory(NS_APP_USER_PROFILE_50_DIR, getter_AddRefs(profileSpec));
         if (NS_FAILED(rv)) goto failure;
         
@@ -580,9 +577,13 @@ nsPSMComponent::GetControlConnection( CMT_CONTROL * *_retval )
         profileSpec->Create(nsIFile::DIRECTORY_TYPE, 0);
 #endif
         
-        rv = profile->GetCurrentProfile(getter_Copies(profileName));
-        if (NS_FAILED(rv)) goto failure;
-          
+        NS_WITH_SERVICE(nsIProfile, profile, kProfileCID, &rv);
+        if (NS_SUCCEEDED(rv))
+          {
+            rv = profile->GetCurrentProfile(getter_Copies(profileName));
+            if (NS_FAILED(rv)) goto failure;
+          }
+        
         CMTStatus psmStatus;
         nsCAutoString profilenameC;
         profilenameC.AssignWithConversion(profileName);
