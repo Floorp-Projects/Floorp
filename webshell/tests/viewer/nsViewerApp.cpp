@@ -37,6 +37,7 @@
 #include "nsITextWidget.h"
 #include "nsILookAndFeel.h"
 #include "nsColor.h"
+#include "nsWidgetSupport.h"
 
 // XXX For font setting below
 #include "nsFont.h"
@@ -62,6 +63,9 @@ static NS_DEFINE_IID(kIBrowserWindowIID, NS_IBROWSER_WINDOW_IID);
 static NS_DEFINE_IID(kINetContainerApplicationIID,
                      NS_INETCONTAINERAPPLICATION_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
+
+
+
 
 nsViewerApp::nsViewerApp()
 {
@@ -558,6 +562,20 @@ static NS_DEFINE_IID(kICheckButtonIID, NS_ICHECKBUTTON_IID);
 static NS_DEFINE_IID(kILabelIID,       NS_ILABEL_IID);
 
 
+static void* GetWidgetNativeData(nsISupports* aObject)
+{
+	void* 			result = nsnull;
+	nsIWidget* 	widget;
+	if (NS_OK == aObject->QueryInterface(kIWidgetIID,(void**)&widget))
+	{
+		result = widget->GetNativeData(NS_NATIVE_WIDGET);
+		NS_RELEASE(widget);
+	}
+	return result;
+}
+
+
+
 
 #ifdef XP_PC
 extern JSConsole *gConsole;
@@ -601,12 +619,14 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
 
   switch(aEvent->message) {
     case NS_MOUSE_LEFT_BUTTON_UP: {
-      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mCancelBtn->GetNativeData(NS_NATIVE_WIDGET)) {
-        mRobotDialog->Show(PR_FALSE);
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mStartBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mCancelBtn)) {
+        NS_ShowWidget(mRobotDialog,PR_FALSE);
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mStartBtn)) {
 
         nsString str;
-        mStopAfterTxt->GetText(str, 255);
+        PRUint32 size;
+
+        mStopAfterTxt->GetText(str, 255, size);
         char * cStr = str.ToNewCString();
         sscanf(cStr, "%d", &gDebugRobotLoads);
         if (gDebugRobotLoads <= 0) {
@@ -614,12 +634,14 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
         }
         delete[] cStr;
 
-        mVerDirTxt->GetText(str, 255);
+        mVerDirTxt->GetText(str, 255, size);
         str.ToCString(gVerifyDir, (PRInt32)_MAX_PATH);
         if (!strcmp(gVerifyDir,DEBUG_EMPTY)) {
           gVerifyDir[0] = '\0';
         }
-        gVisualDebug = mUpdateChkBtn->GetState() ? TRUE: FALSE;
+        PRBool state = PR_FALSE;
+        mUpdateChkBtn->GetState(state);
+        gVisualDebug = state ? TRUE: FALSE;
 
       } 
 
@@ -628,7 +650,7 @@ nsEventStatus PR_CALLBACK HandleRobotEvent(nsGUIEvent *aEvent)
     case NS_PAINT: 
 #ifndef XP_UNIX
         // paint the background
-      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mRobotDialog->GetNativeData(NS_NATIVE_WIDGET) ) {
+      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mRobotDialog ) {
           nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
           drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
           drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
@@ -654,8 +676,8 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   PRBool result = TRUE;
 
   if (mRobotDialog != nsnull) {
-    mRobotDialog->Show(PR_TRUE);
-    mStartBtn->SetFocus();
+    NS_ShowWidget(mRobotDialog,PR_TRUE);
+    NS_SetFocusToWidget(mStartBtn);
     return TRUE;
   }
 
@@ -676,7 +698,7 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   rect.SetRect(0, 0, dialogWidth, 162);  
 
   nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mRobotDialog);
-  mRobotDialog->Create(aParent, rect, HandleRobotEvent, NULL);
+  NS_CreateDialog(aParent, mRobotDialog,rect,HandleRobotEvent,&font);
   mRobotDialog->SetLabel("Debug Robot Options");
 
   nscoord txtHeight   = 24;
@@ -698,10 +720,8 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   // Create Update CheckButton
   rect.SetRect(x, y, 150, 24);  
   nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mUpdateChkBtn);
-  mUpdateChkBtn->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
+  NS_CreateCheckButton(mRobotDialog, mUpdateChkBtn,rect,HandleRobotEvent,&font);
   mUpdateChkBtn->SetLabel("Update Display (Visual)");
-  mUpdateChkBtn->SetFont(font);
-  mUpdateChkBtn->Show(PR_TRUE);
   mUpdateChkBtn->SetState(PR_TRUE);
   y += 24 + 2;
 
@@ -709,25 +729,24 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   w = 115;
   rect.SetRect(x, y+3, w, 24);  
   nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+  NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
-  label->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
   label->SetLabel("Verfication Directory:");
-  label->Show(PR_TRUE);
-  label->SetFont(font);
   x += w + 1;
 
   // Create TextField
+  nsIWidget* widget = nsnull;
   rect.SetRect(x, y, 225, txtHeight);  
   nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mVerDirTxt);
-  mVerDirTxt->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
-  mVerDirTxt->SetBackgroundColor(textBGColor);
-  mVerDirTxt->SetForegroundColor(textFGColor);
-  mVerDirTxt->SetFont(font);
-  mVerDirTxt->SetText(DEBUG_EMPTY);
-  mVerDirTxt->Show(PR_TRUE);
-
+  NS_CreateTextWidget(mRobotDialog,mVerDirTxt,rect,HandleRobotEvent,&font);
+  if (mVerDirTxt && NS_OK == mVerDirTxt->QueryInterface(kIWidgetIID,(void**)&widget))
+  {
+    widget->SetBackgroundColor(textBGColor);
+    widget->SetForegroundColor(textFGColor);
+  }
   nsString str(DEBUG_EMPTY);
-  mVerDirTxt->SetText(str);
+  PRUint32 size;
+  mVerDirTxt->SetText(str,size);
 
   y += txtHeight + 2;
   
@@ -735,33 +754,29 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   w = 55;
   rect.SetRect(x, y+4, w, 24);  
   nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+  NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Right);
-  label->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
   label->SetLabel("Stop after:");
-  label->Show(PR_TRUE);
-  label->SetFont(font);
   x += w + 2;
 
   // Create TextField
   rect.SetRect(x, y, 75, txtHeight);  
   nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mStopAfterTxt);
-  mStopAfterTxt->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
-  mStopAfterTxt->SetBackgroundColor(textBGColor);
-  mStopAfterTxt->SetForegroundColor(textFGColor);
-  mStopAfterTxt->SetFont(font);
-  mStopAfterTxt->Show(PR_TRUE);
-
-  mStopAfterTxt->SetText("5000");
+  NS_CreateTextWidget(mRobotDialog,mStopAfterTxt,rect,HandleRobotEvent,&font);
+  if (mStopAfterTxt && NS_OK == mStopAfterTxt->QueryInterface(kIWidgetIID,(void**)&widget))
+  {
+    widget->SetBackgroundColor(textBGColor);
+    widget->SetForegroundColor(textFGColor);
+    mStopAfterTxt->SetText("5000",size);
+  }
   x += 75 + 2;
 
   w = 75;
   rect.SetRect(x, y+4, w, 24);  
   nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+  NS_CreateLabel(mRobotDialog,label,rect,HandleRobotEvent,&font);
   label->SetAlignment(eAlign_Left);
-  label->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
   label->SetLabel("(page loads)");
-  label->Show(PR_TRUE);
-  label->SetFont(font);
   y += txtHeight + 2;
   
 
@@ -771,22 +786,18 @@ PRBool CreateRobotDialog(nsIWidget * aParent)
   // Create Find Start Button
   rect.SetRect(xx, y, w, 24);  
   nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mStartBtn);
-  mStartBtn->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
+  NS_CreateButton(mRobotDialog,mStartBtn,rect,HandleRobotEvent,&font);
   mStartBtn->SetLabel("Start");
-  mStartBtn->SetFont(font);
-  mStartBtn->Show(PR_TRUE);
   
   xx += w + xx;
   // Create Cancel Button
   rect.SetRect(xx, y, w, 24);  
   nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
-  mCancelBtn->Create(mRobotDialog, rect, HandleRobotEvent, NULL);
+  NS_CreateButton(mRobotDialog,mCancelBtn,rect,HandleRobotEvent,&font);
   mCancelBtn->SetLabel("Cancel");
-  mCancelBtn->SetFont(font);
-  mCancelBtn->Show(PR_TRUE);
   
-  mRobotDialog->Show(PR_TRUE);
-  mStartBtn->SetFocus();
+  NS_ShowWidget(mRobotDialog,PR_TRUE);
+  NS_SetFocusToWidget(mStartBtn);
   return result;
 }
 
@@ -969,22 +980,22 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
   switch(aEvent->message) {
 
     case NS_MOUSE_LEFT_BUTTON_UP: {
-      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mSiteCancelBtn->GetNativeData(NS_NATIVE_WIDGET)) {
-        mSiteDialog->Show(PR_FALSE);
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mSitePrevBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+      if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSiteCancelBtn)) {
+        NS_ShowWidget(mSiteDialog,PR_FALSE);
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSitePrevBtn)) {
         if (gTop100Pointer > 0) {
-          mSiteNextBtn->Enable(PR_TRUE);
+          NS_EnableWidget(mSiteNextBtn,PR_TRUE);
           if (gWinData) {
             nsString urlStr(gTop100List[--gTop100Pointer]);
             mSiteLabel->SetLabel(urlStr);
             gWinData->GoTo(urlStr);
           }
         } else  {
-          mSitePrevBtn->Enable(PR_FALSE);
-          mSiteNextBtn->Enable(PR_TRUE);
+          NS_EnableWidget(mSitePrevBtn,PR_FALSE);
+          NS_EnableWidget(mSiteNextBtn,PR_TRUE);
         }
 
-      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mSiteNextBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+      } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSiteNextBtn)) {
 
         char * p = gTop100List[++gTop100Pointer];
         if (p) {
@@ -993,10 +1004,10 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
             mSiteLabel->SetLabel(urlStr);
             gWinData->GoTo(urlStr);
           }
-          mSitePrevBtn->Enable(PR_TRUE);
+          NS_EnableWidget(mSitePrevBtn,PR_TRUE);
         } else {
-          mSitePrevBtn->Enable(PR_TRUE);
-          mSiteNextBtn->Enable(PR_FALSE);
+          NS_EnableWidget(mSitePrevBtn,PR_TRUE);
+          NS_EnableWidget(mSiteNextBtn,PR_FALSE);
           mSiteLabel->SetLabel("[END OF LIST]");
         }
       }
@@ -1005,7 +1016,7 @@ nsEventStatus PR_CALLBACK HandleSiteEvent(nsGUIEvent *aEvent)
       case NS_PAINT: 
 #ifndef XP_UNIX
         // paint the background
-        if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mSiteDialog->GetNativeData(NS_NATIVE_WIDGET) ) {
+        if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetWidgetNativeData(mSiteDialog) ) {
             nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
             drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
             drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
@@ -1058,9 +1069,13 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     nsRect rect;
     rect.SetRect(0, 0, dialogWidth, 125);  
 
+    nsIWidget* widget = nsnull;
     nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mSiteDialog);
-    mSiteDialog->Create(aParent, rect, HandleSiteEvent, NULL);
-    mSiteDialog->SetLabel("Top 100 Site Walker");
+    if (mSiteDialog && NS_OK == mSiteDialog->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+      widget->Create(aParent, rect, HandleSiteEvent, NULL);
+      mSiteDialog->SetLabel("Top 100 Site Walker");
+    }
     //mSiteDialog->SetClientData(this);
 
     nscoord w  = 65;
@@ -1072,21 +1087,17 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     w = 50;
     rect.SetRect(x, y+3, w, 24);  
     nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&label);
+    NS_CreateLabel(mSiteDialog,label,rect,HandleSiteEvent,&font);
     label->SetAlignment(eAlign_Right);
-    label->Create(mSiteDialog, rect, HandleSiteEvent, NULL);
     label->SetLabel("Site:");
-    label->Show(PR_TRUE);
-    label->SetFont(font);
     x += w + 1;
 
     w = 250;
     rect.SetRect(x, y+3, w, 24);  
     nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mSiteLabel);
+    NS_CreateLabel(mSiteDialog,mSiteLabel,rect,HandleSiteEvent,&font);
     mSiteLabel->SetAlignment(eAlign_Left);
-    mSiteLabel->Create(mSiteDialog, rect, HandleSiteEvent, NULL);
     mSiteLabel->SetLabel("");
-    mSiteLabel->Show(PR_TRUE);
-    mSiteLabel->SetFont(font);
 
     y += 34;
     w = 75;
@@ -1095,35 +1106,30 @@ PRBool CreateSiteDialog(nsIWidget * aParent)
     // Create Previous Button
     rect.SetRect(x, y, w, 24);  
     nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSitePrevBtn);
-    mSitePrevBtn->Create(mSiteDialog, rect, HandleSiteEvent, NULL);
+    NS_CreateButton(mSiteDialog,mSitePrevBtn,rect,HandleSiteEvent,&font);
     mSitePrevBtn->SetLabel("<< Previous");
-    mSitePrevBtn->SetFont(font);
-    mSitePrevBtn->Show(PR_TRUE);
     x += spacing + w;
 
     // Create Next Button
     rect.SetRect(x, y, w, 24);  
     nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteNextBtn);
-    mSiteNextBtn->Create(mSiteDialog, rect, HandleSiteEvent, NULL);
+    NS_CreateButton(mSiteDialog,mSiteNextBtn,rect,HandleSiteEvent,&font);
     mSiteNextBtn->SetLabel("Next >>");
-    mSiteNextBtn->SetFont(font);
-    mSiteNextBtn->Show(PR_TRUE);
     x += spacing + w;
   
     // Create Cancel Button
     rect.SetRect(x, y, w, 24);  
     nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mSiteCancelBtn);
-    mSiteCancelBtn->Create(mSiteDialog, rect, HandleSiteEvent, NULL);
+    NS_CreateButton(mSiteDialog,mSiteCancelBtn,rect,HandleSiteEvent,&font);
     mSiteCancelBtn->SetLabel("Cancel");
-    mSiteCancelBtn->SetFont(font);
-    mSiteCancelBtn->Show(PR_TRUE);
   }
 
-  mSiteDialog->Show(PR_TRUE);
-  mSiteNextBtn->SetFocus();
+  NS_ShowWidget(mSiteDialog,PR_TRUE);
+  NS_SetFocusToWidget(mSiteNextBtn);
 
   // Init
-  mSitePrevBtn->Enable(PR_FALSE);
+  NS_EnableWidget(mSitePrevBtn,PR_FALSE);
+ 
   if (gWinData) {
     nsString urlStr(gTop100List[gTop100Pointer]);
     gWinData->GoTo(urlStr);

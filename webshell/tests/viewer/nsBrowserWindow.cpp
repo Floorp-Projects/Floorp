@@ -60,6 +60,8 @@
 #include "nsICheckButton.h"
 #include "nsIRadioButton.h"
 #include "nsILabel.h"
+#include "nsWidgetSupport.h"
+
 
 #include "resources.h"
 
@@ -136,7 +138,10 @@ static NS_DEFINE_IID(kILabelIID, NS_ILABEL_IID);
 static const char* gsAOLFormat = "AOLMAIL";
 static const char* gsHTMLFormat = "text/html";
 
+
+// prototypes
 static nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent);
+static void* GetItemsNativeData(nsISupports* aObject);
 
 //----------------------------------------------------------------------
 
@@ -287,7 +292,8 @@ HandleLocationEvent(nsGUIEvent *aEvent)
   case NS_KEY_UP:
     if (NS_VK_RETURN == ((nsKeyEvent*)aEvent)->keyCode) {
       nsAutoString text;
-      bw->mLocation->GetText(text, 1000);
+      PRUint32 size;
+      bw->mLocation->GetText(text, 1000,size);
       bw->GoTo(text);
     }
     break;
@@ -497,10 +503,28 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
   return result;
 }
+
+
+
+static void* GetItemsNativeData(nsISupports* aObject)
+{
+	void* 			result = nsnull;
+	nsIWidget* 	widget;
+	if (NS_OK == aObject->QueryInterface(kIWidgetIID,(void**)&widget))
+	{
+		result = widget->GetNativeData(NS_NATIVE_WIDGET);
+		NS_RELEASE(widget);
+	}
+	return result;
+}
+
 /**--------------------------------------------------------------------------------
  * Main Handler
  *--------------------------------------------------------------------------------
  */
+
+ 
+ 
 nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
 { 
   nsEventStatus result = nsEventStatus_eIgnore;
@@ -511,10 +535,13 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
         case NS_KEY_DOWN: {
           nsKeyEvent* keyEvent = (nsKeyEvent*)aEvent;
           if (NS_VK_RETURN == keyEvent->keyCode) {
-            PRBool matchCase   = mMatchCheckBtn->GetState();
-            PRBool findDwn     = mDwnRadioBtn->GetState();
+            PRBool matchCase   = PR_FALSE;
+            mMatchCheckBtn->GetState(matchCase);
+            PRBool findDwn     = PR_FALSE;
+            mDwnRadioBtn->GetState(findDwn);
             nsString searchStr;
-            mTextField->GetText(searchStr, 255);
+            PRUint32 actualSize;
+            mTextField->GetText(searchStr, 255,actualSize);
 
             nsIPresShell* shell = GetPresShell();
             if (nsnull != shell) {
@@ -534,14 +561,21 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
         } break;
 
         case NS_MOUSE_LEFT_BUTTON_UP: {
-          if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mCancelBtn->GetNativeData(NS_NATIVE_WIDGET)) {
-            mDialog->Show(PR_FALSE);
-          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mFindBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+        	nsIWidget* dialogWidget = nsnull;        	
+         	if (NS_OK !=  mDialog->QueryInterface(kIWidgetIID,(void**)&dialogWidget))
+         		break;
+ 				
+          if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mCancelBtn)) {
+            dialogWidget->Show(PR_FALSE);
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mFindBtn)) {
 
-            PRBool matchCase   = mMatchCheckBtn->GetState();
-            PRBool findDwn     = mDwnRadioBtn->GetState();
+            PRBool matchCase   = PR_FALSE;
+            mMatchCheckBtn->GetState(matchCase);
+            PRBool findDwn     = PR_FALSE;
+            mDwnRadioBtn->GetState(findDwn);
+            PRUint32 actualSize;
             nsString searchStr;
-            mTextField->GetText(searchStr, 255);
+            mTextField->GetText(searchStr, 255,actualSize);
 
             nsIPresShell* shell = GetPresShell();
             if (nsnull != shell) {
@@ -558,21 +592,23 @@ nsEventStatus nsBrowserWindow::ProcessDialogEvent(nsGUIEvent *aEvent)
               NS_RELEASE(shell);
             }
 
-          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mUpRadioBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mUpRadioBtn)) {
             mUpRadioBtn->SetState(PR_TRUE);
             mDwnRadioBtn->SetState(PR_FALSE);
-          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mDwnRadioBtn->GetNativeData(NS_NATIVE_WIDGET)) {
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDwnRadioBtn)) {
             mDwnRadioBtn->SetState(PR_TRUE);
             mUpRadioBtn->SetState(PR_FALSE);
-          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mMatchCheckBtn->GetNativeData(NS_NATIVE_WIDGET)) {
-            mMatchCheckBtn->SetState(!mMatchCheckBtn->GetState());
+          } else if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mMatchCheckBtn)) {
+            PRBool state = PR_FALSE;
+          	mMatchCheckBtn->GetState(state);
+            mMatchCheckBtn->SetState(!state);
           }
           } break;
         
         case NS_PAINT: 
 #ifndef XP_UNIX
               // paint the background
-            if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == mDialog->GetNativeData(NS_NATIVE_WIDGET) ) {
+            if (aEvent->widget->GetNativeData(NS_NATIVE_WIDGET) == GetItemsNativeData(mDialog)) {
                 nsIRenderingContext *drawCtx = ((nsPaintEvent*)aEvent)->renderingContext;
                 drawCtx->SetColor(aEvent->widget->GetBackgroundColor());
                 drawCtx->FillRect(*(((nsPaintEvent*)aEvent)->rect));
@@ -621,31 +657,41 @@ nsBrowserWindow::DoFind()
     rect.SetRect(0, 0, 380, 110);  
 
     nsRepository::CreateInstance(kDialogCID, nsnull, kIDialogIID, (void**)&mDialog);
-    mDialog->Create(mWindow, rect, HandleEvent, NULL);
+    nsIWidget* widget = nsnull;
+    NS_CreateDialog(mWindow,mDialog,rect,HandleEvent,&font);
+    if (NS_OK == mDialog->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+    	widget->SetClientData(this);
+    	NS_RELEASE(widget);
+    }
     mDialog->SetLabel("Find");
-    mDialog->SetClientData(this);
 
     nscoord xx = 5;
     // Create Label
     rect.SetRect(xx, 8, 75, 24);  
     nsRepository::CreateInstance(kLabelCID, nsnull, kILabelIID, (void**)&mLabel);
-    mLabel->SetAlignment(eAlign_Right);
-    mLabel->Create(mDialog, rect, HandleEvent, NULL);
-    mLabel->SetLabel("Find what:");
-    mLabel->Show(PR_TRUE);
-    mLabel->SetFont(font);
-    mLabel->SetClientData(this);
+    NS_CreateLabel(mDialog,mLabel,rect,HandleEvent,&font);
+    if (NS_OK == mLabel->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+    	widget->SetClientData(this);
+    	mLabel->SetAlignment(eAlign_Right);
+    	mLabel->SetLabel("Find what:");
+    	NS_RELEASE(widget);
+    }
     xx += 75 + 5;
 
     // Create TextField
     rect.SetRect(xx, 5, 200, txtHeight);  
     nsRepository::CreateInstance(kTextFieldCID, nsnull, kITextWidgetIID, (void**)&mTextField);
-    mTextField->Create(mDialog, rect, HandleEvent, NULL);
-    mTextField->SetBackgroundColor(textBGColor);
-    mTextField->SetForegroundColor(textFGColor);
-    mTextField->SetFont(font);
-    mTextField->Show(PR_TRUE);
-    mTextField->SetClientData(this);
+    NS_CreateTextWidget(mDialog,mTextField,rect,HandleEvent,&font);
+    if (NS_OK == mTextField->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+      widget->SetBackgroundColor(textBGColor);
+      widget->SetForegroundColor(textFGColor);
+      widget->SetClientData(this);
+      widget->SetFocus();
+    	NS_RELEASE(widget);
+    }
     xx += 200 + 5;
   
     nscoord w = 65;
@@ -656,30 +702,36 @@ nsBrowserWindow::DoFind()
     // Create Up RadioButton
     rect.SetRect(x, y, w, h);  
     nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mUpRadioBtn);
-    mUpRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
-    mUpRadioBtn->SetLabel("Up");
-    mUpRadioBtn->SetFont(font);
-    mUpRadioBtn->Show(PR_TRUE);
-    mUpRadioBtn->SetClientData(this);
+    NS_CreateRadioButton(mDialog,mUpRadioBtn,rect,HandleEvent,&font);
+    if (NS_OK == mUpRadioBtn->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+      widget->SetClientData(this);
+      mUpRadioBtn->SetLabel("Up");
+    	NS_RELEASE(widget);
+    }
     y += h + 2;
   
     // Create Up RadioButton
     rect.SetRect(x, y, w, h);  
     nsRepository::CreateInstance(kRadioButtonCID, nsnull, kIRadioButtonIID, (void**)&mDwnRadioBtn);
-    mDwnRadioBtn->Create(mDialog, rect, HandleEvent, NULL);
-    mDwnRadioBtn->SetLabel("Down");
-    mDwnRadioBtn->SetFont(font);
-    mDwnRadioBtn->Show(PR_TRUE);
-    mDwnRadioBtn->SetClientData(this);
+    NS_CreateRadioButton(mDialog,mDwnRadioBtn,rect,HandleEvent,&font);
+    if (NS_OK == mDwnRadioBtn->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+	    widget->SetClientData(this);
+	    mDwnRadioBtn->SetLabel("Down");
+    	NS_RELEASE(widget);
+    }
   
     // Create Match CheckButton
     rect.SetRect(5, y, 125, 24);  
     nsRepository::CreateInstance(kCheckButtonCID, nsnull, kICheckButtonIID, (void**)&mMatchCheckBtn);
-    mMatchCheckBtn->Create(mDialog, rect, HandleEvent, NULL);
-    mMatchCheckBtn->SetLabel("Match Case");
-    mMatchCheckBtn->SetFont(font);
-    mMatchCheckBtn->Show(PR_TRUE);
-    mMatchCheckBtn->SetClientData(this);
+    NS_CreateCheckButton(mDialog,mMatchCheckBtn,rect,HandleEvent,&font);
+    if (NS_OK == mMatchCheckBtn->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+	    widget->SetClientData(this);
+	    mMatchCheckBtn->SetLabel("Match Case");
+    	NS_RELEASE(widget);
+    }
 
     mUpRadioBtn->SetState(PR_FALSE);
     mDwnRadioBtn->SetState(PR_TRUE);
@@ -687,24 +739,25 @@ nsBrowserWindow::DoFind()
     // Create Find Next Button
     rect.SetRect(xx, 5, 75, 24);  
     nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mFindBtn);
-    mFindBtn->Create(mDialog, rect, HandleEvent, NULL);
-    mFindBtn->SetLabel("Find Next");
-    mFindBtn->SetFont(font);
-    mFindBtn->Show(PR_TRUE);
-    mFindBtn->SetClientData(this);
+    NS_CreateButton(mDialog,mFindBtn,rect,HandleEvent,&font);
+    if (NS_OK == mFindBtn->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+	    widget->SetClientData(this);
+	    mFindBtn->SetLabel("Find Next");
+    	NS_RELEASE(widget);
+    }
   
     // Create Cancel Button
     rect.SetRect(xx, 35, 75, 24);  
     nsRepository::CreateInstance(kButtonCID, nsnull, kIButtonIID, (void**)&mCancelBtn);
-    mCancelBtn->Create(mDialog, rect, HandleEvent, NULL);
-    mCancelBtn->SetLabel("Cancel");
-    mCancelBtn->SetFont(font);
-    mCancelBtn->Show(PR_TRUE);
-    mCancelBtn->SetClientData(this);
-  
+    NS_CreateButton(mDialog,mCancelBtn,rect,HandleEvent,&font);
+    if (NS_OK == mCancelBtn->QueryInterface(kIWidgetIID,(void**)&widget))
+    {
+	    widget->SetClientData(this);
+	    mCancelBtn->SetLabel("Cancel");
+    	NS_RELEASE(widget);
+    }  
   }
-  mDialog->Show(PR_TRUE);
-  mTextField->SetFocus();
   mTextField->SelectAll();
 
 }
@@ -893,10 +946,16 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
     return rv;
   }
   nsRect r(0, 0, BUTTON_WIDTH, BUTTON_HEIGHT);
-  mBack->Create(mWindow, r, HandleBackEvent, NULL);
-  mBack->SetLabel("Back");
-  mBack->SetFont(font);
-  mBack->Show(PR_TRUE);
+	
+	nsIWidget* widget = nsnull;
+
+  NS_CreateButton(mWindow,mBack,r,HandleBackEvent,&font);
+  if (NS_OK == mBack->QueryInterface(kIWidgetIID,(void**)&widget))
+	{
+    mBack->SetLabel("Back");
+		NS_RELEASE(widget);
+	}
+
 
   // Create and place forward button
   r.SetRect(BUTTON_WIDTH, 0, BUTTON_WIDTH, BUTTON_HEIGHT);  
@@ -905,10 +964,15 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   if (NS_OK != rv) {
     return rv;
   }
-  mForward->Create(mWindow, r, HandleForwardEvent, NULL);
-  mForward->SetLabel("Forward");
-  mForward->SetFont(font);
-  mForward->Show(PR_TRUE);
+	if (NS_OK == mForward->QueryInterface(kIWidgetIID,(void**)&widget))
+	{
+    widget->Create(mWindow, r, HandleBackEvent, NULL);
+    widget->SetFont(font);
+    widget->Show(PR_TRUE);
+    mForward->SetLabel("Forward");
+		NS_RELEASE(widget);
+	}
+
 
   // Create and place location bar
   r.SetRect(2*BUTTON_WIDTH, 0,
@@ -919,12 +983,16 @@ nsBrowserWindow::CreateToolBar(PRInt32 aWidth)
   if (NS_OK != rv) {
     return rv;
   }
-  mLocation->Create(mWindow, r, HandleLocationEvent, NULL);
-  mLocation->SetText("");
-  mLocation->SetForegroundColor(NS_RGB(0, 0, 0));
-  mLocation->SetBackgroundColor(NS_RGB(255, 255, 255));
-  mLocation->Show(PR_TRUE);
-  mLocation->SetFont(font);
+
+  NS_CreateTextWidget(mWindow,mLocation,r,HandleLocationEvent,&font);
+	if (NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&widget))
+  { 
+    widget->SetForegroundColor(NS_RGB(0, 0, 0));
+    widget->SetBackgroundColor(NS_RGB(255, 255, 255));
+    PRUint32 size;
+    mLocation->SetText("",size);
+		NS_RELEASE(widget);
+  }
 
   // Create and place throbber
   r.SetRect(aWidth - THROBBER_WIDTH, 0,
@@ -959,11 +1027,16 @@ nsBrowserWindow::CreateStatusBar(PRInt32 aWidth)
   if (NS_OK != rv) {
     return rv;
   }
-  mStatus->Create(mWindow, r, HandleLocationEvent, NULL);
-  mStatus->SetText("");
-  mStatus->SetForegroundColor(NS_RGB(0, 0, 0));
-  mStatus->SetFont(font);
-  mStatus->Show(PR_TRUE);
+
+  nsIWidget* widget = nsnull;
+  NS_CreateTextWidget(mWindow,mStatus,r,HandleLocationEvent,&font);
+	if (NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&widget))
+	{
+    widget->SetForegroundColor(NS_RGB(0, 0, 0));
+    PRUint32 size;
+    mStatus->SetText("",size);
+    NS_RELEASE(widget);
+  }
 
   return NS_OK;
 }
@@ -980,47 +1053,56 @@ nsBrowserWindow::Layout(PRInt32 aWidth, PRInt32 aHeight)
     txtHeight = 24;
   }
 
+  nsIWidget* locationWidget = nsnull;
 
-  // position location bar (it's stretchy)
-  if (mLocation) {
+  if (NS_OK == mLocation->QueryInterface(kIWidgetIID,(void**)&locationWidget))
+  {
+    // position location bar (it's stretchy)
+    if (mLocation) {
+      if (mThrobber) {
+        locationWidget->Resize(2*BUTTON_WIDTH, 0,
+                          aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
+                          BUTTON_HEIGHT,
+                          PR_TRUE);
+      }
+      else {
+        locationWidget->Resize(2*BUTTON_WIDTH, 0,
+                          aWidth - 2*BUTTON_WIDTH,
+                          BUTTON_HEIGHT,
+                          PR_TRUE);
+      }
+    }
+
     if (mThrobber) {
-      mLocation->Resize(2*BUTTON_WIDTH, 0,
-                        aWidth - (2*BUTTON_WIDTH + THROBBER_WIDTH),
-                        BUTTON_HEIGHT,
-                        PR_TRUE);
+      mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
     }
-    else {
-      mLocation->Resize(2*BUTTON_WIDTH, 0,
-                        aWidth - 2*BUTTON_WIDTH,
-                        BUTTON_HEIGHT,
-                        PR_TRUE);
+
+    nsRect rr(0, 0, aWidth, aHeight);
+
+    if (mLocation) {
+      rr.y += BUTTON_HEIGHT;
+      rr.height -= BUTTON_HEIGHT;
     }
+
+    nsIWidget* statusWidget = nsnull;
+
+    if (NS_OK == mStatus->QueryInterface(kIWidgetIID,(void**)&statusWidget))
+    {
+      if (mStatus) {
+        statusWidget->Resize(0, aHeight - txtHeight,
+                        aWidth, txtHeight,
+                        PR_TRUE);
+        rr.height -= txtHeight;
+      }
+    }
+    // inset the web widget
+    rr.x += WEBSHELL_LEFT_INSET;
+    rr.y += WEBSHELL_TOP_INSET;
+    rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
+    rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
+    mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
+    NS_RELEASE(locationWidget);
   }
-
-  if (mThrobber) {
-    mThrobber->MoveTo(aWidth - THROBBER_WIDTH, 0);
-  }
-
-  nsRect rr(0, 0, aWidth, aHeight);
-
-  if (mLocation) {
-    rr.y += BUTTON_HEIGHT;
-    rr.height -= BUTTON_HEIGHT;
-  }
-
-  if (mStatus) {
-    mStatus->Resize(0, aHeight - txtHeight,
-                    aWidth, txtHeight,
-                    PR_TRUE);
-    rr.height -= txtHeight;
-  }
-
-  // inset the web widget
-  rr.x += WEBSHELL_LEFT_INSET;
-  rr.y += WEBSHELL_TOP_INSET;
-  rr.width -= WEBSHELL_LEFT_INSET + WEBSHELL_RIGHT_INSET;
-  rr.height -= WEBSHELL_TOP_INSET + WEBSHELL_BOTTOM_INSET;
-  mWebShell->SetBounds(rr.x, rr.y, rr.width, rr.height);
 }
 
 NS_IMETHODIMP
@@ -1073,6 +1155,7 @@ nsBrowserWindow::Close()
   return NS_OK;
 }
 
+
 NS_IMETHODIMP
 nsBrowserWindow::SetChrome(PRUint32 aChromeMask)
 {
@@ -1118,7 +1201,8 @@ NS_IMETHODIMP
 nsBrowserWindow::SetStatus(const PRUnichar* aStatus)
 {
   if (nsnull != mStatus) {
-    mStatus->SetText(aStatus);
+    PRUint32 size;
+    mStatus->SetText(aStatus,size);
   }
   return NS_OK;
 }
@@ -1141,7 +1225,8 @@ nsBrowserWindow::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadT
   if (mStatus) {
     nsAutoString url("Connecting to ");
     url.Append(aURL);
-    mStatus->SetText(url);
+    PRUint32 size;
+    mStatus->SetText(url,size);
   }
   return NS_OK;
 }
@@ -1151,7 +1236,8 @@ nsBrowserWindow::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
 {
   if (mThrobber) {
     mThrobber->Start();
-    mLocation->SetText(aURL);
+    PRUint32 size;
+    mLocation->SetText(aURL,size);
   }
   return NS_OK;
 }
@@ -1170,6 +1256,7 @@ nsBrowserWindow::EndLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, PRInt32 
   }
   return NS_OK;
 }
+
 
 NS_IMETHODIMP
 nsBrowserWindow::NewWebShell(nsIWebShell *&aNewWebShell)
@@ -1224,7 +1311,8 @@ nsBrowserWindow::OnProgress(nsIURL* aURL,
       url.Append(aProgressMax, 10);
       url.Append(")");
     }
-    mStatus->SetText(url);
+    PRUint32 size;
+    mStatus->SetText(url,size);
   }
   return NS_OK;
 }
@@ -1233,7 +1321,8 @@ NS_IMETHODIMP
 nsBrowserWindow::OnStatus(nsIURL* aURL, const nsString& aMsg)
 {
   if (mStatus) {
-    mStatus->SetText(aMsg);
+    PRUint32 size;
+    mStatus->SetText(aMsg,size);
   }
   return NS_OK;
 }
@@ -1247,7 +1336,8 @@ nsBrowserWindow::OnStartBinding(nsIURL* aURL, const char *aContentType)
       aURL->ToString(url);
     }
     url.Append(": start");
-    mStatus->SetText(url);
+    PRUint32 size;
+    mStatus->SetText(url,size);
   }
   return NS_OK;
 }
@@ -1266,7 +1356,8 @@ nsBrowserWindow::OnStopBinding(nsIURL* aURL,
       aURL->ToString(url);
     }
     url.Append(": stop");
-    mStatus->SetText(url);
+    PRUint32 size;
+    mStatus->SetText(url,size);
   }
   return NS_OK;
 }

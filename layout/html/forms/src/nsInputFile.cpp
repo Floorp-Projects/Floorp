@@ -77,6 +77,7 @@ GetWindowTemp(nsIView *aView)
 
 static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
 static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
+static NS_DEFINE_IID(kITextWidgetIID, NS_ITEXTWIDGET_IID);
 
 // this is in response to the MouseClick from the containing browse button
 // XXX still need to get filters from accept attribute
@@ -109,9 +110,10 @@ void nsInputFileFrame::MouseClicked(nsIPresContext* aPresContext)
   PRUint32 result = fileWidget->Show();
 
   if (result) {
+    PRUint32 size;
     nsString fileName;
     fileWidget->GetFile(fileName);
-    ((nsITextWidget *)textWidget)->SetText(fileName);
+    ((nsITextWidget *)textWidget)->SetText(fileName,size);
   }
   NS_RELEASE(fileWidget);
   NS_RELEASE(parentWidget);
@@ -266,12 +268,19 @@ nsInputFile::GetNamesValues(PRInt32 aMaxNumValues, PRInt32& aNumValues,
   }
   // use our name and the text widgets value 
   aNames[0] = *mName;
-  nsITextWidget* textWidget = (nsITextWidget *)mTextField->GetWidget();
-  textWidget->GetText(aValues[0], 0);  // the last parm is not used
+  nsIWidget*      widget = mTextField->GetWidget();
+  nsITextWidget*  textWidget = nsnull;
+    
 
-  aNumValues = 1;
-
-  return PR_TRUE;
+  if (widget != nsnull && NS_OK == widget->QueryInterface(kITextWidgetIID,(void**)textWidget))
+  {
+    PRUint32 actualSize;
+    textWidget->GetText(aValues[0], 0, actualSize);
+    aNumValues = 1;
+    NS_RELEASE(textWidget);
+    return PR_TRUE;
+  }
+  return PR_FALSE;
 }
 
 NS_IMETHODIMP
