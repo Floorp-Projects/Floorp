@@ -354,7 +354,9 @@ struct URL_Struct_ {
 				 * to track loads by URL and not context
 				 */
 #endif /* XP_WIN */
-
+    uint32 localIP;                       /* a local ip address that should be
+                                           * bound to the socket. */
+               
     int     history_num;                  /* == add this to history list 
 										   * dflt TRUE 
 										   */
@@ -404,6 +406,7 @@ struct URL_Struct_ {
 										   * buffer
 										   */
 	PRPackedBool
+            bypassProxy,                /* should we bypass the proxy (if any) */
 			dontAllowDiffHostRedirect,  /* Do we want to allow a redirect from host A to host B */		
 		    post_data_is_file,			/* is the post_data field a filename? */
     	    address_modified,			/* was the address modified? */
