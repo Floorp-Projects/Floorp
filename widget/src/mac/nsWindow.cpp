@@ -1554,13 +1554,13 @@ PRBool nsWindow::DispatchMouseEvent(nsMouseEvent &aEvent)
         	{
           //if (mWindowPtr == NULL || mWindowPtr != this) 
           	//{
-            printf("Mouse enter");
+            // printf("Mouse enter");
             //mCurrentWindow = this;
           	//}
         	} 
         else 
         	{
-          printf("Mouse exit");
+          // printf("Mouse exit");
         	}
 
       } break;
@@ -1992,8 +1992,7 @@ NS_IMETHODIMP nsWindow::GetAttention()
 	// After all that checking we install a notification manager request to mark the app's icon
 	// in the process menu and play the default alert sound
   
-    Handle icon;
-    OSErr err;
+  OSErr err;
     
 	if (we_are_front_process())
 		return NS_OK;
