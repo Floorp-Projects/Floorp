@@ -30,12 +30,17 @@
 
       <property name="open" onget="return this.hasAttribute('open');">
         <setter><![CDATA[
-          // Note that the QI may throw if we're not a menu, but we want that
-          // to happen, since in that case setting our "open" property is
-          // somewhat bogus
-          this.boxObject
-              .QueryInterface(Components.interfaces.nsIMenuBoxObject)
-              .openMenu(val);
+          if (this.boxObject instanceof
+              Components.interfaces.nsIMenuBoxObject) {
+            this.boxObject.openMenu(val);
+          } else {
+            // Fall back to just setting the attribute
+            if (val) {
+              this.setAttribute('open', 'true');
+            } else {
+              this.removeAttribute('open');
+            }
+          }
           return val;
         ]]></setter>
       </property>
