@@ -284,9 +284,6 @@ protected:
   MWContext *m_context;
   void initializeMWContext(EFrameType frame_type, MWContext *context_to_copy = NULL);
 
-  void hackTranslations(Widget widget);
-  void hackTextTranslations(Widget widget);
-
   // Add Z order support
   void zaxis_AddSupport();
 
