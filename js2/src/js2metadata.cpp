@@ -3271,6 +3271,17 @@ static const uint8 urlCharType[256] =
     {
         return thisValue;
     }
+
+bool nullClass_ReadProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, Phase phase, js2val *rval) { return false; }
+bool nullClass_ReadPublicProperty(JS2Metadata *meta, js2val *base, JS2Class *limit, const String *name, Phase phase, js2val *rval) { return false; }
+bool nullClass_BracketRead(JS2Metadata *meta, js2val *base, JS2Class *limit, Multiname *multiname, Phase phase, js2val *rval) { return false; }
+bool nullClass_arrayWriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue) { return false; }
+bool nullClass_WriteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool createIfMissing, js2val newValue) { return false; }
+bool nullClass_WritePublicProperty(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool createIfMissing, js2val newValue) { return false; }
+bool nullClass_BracketWrite(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, js2val newValue) { return false; }
+bool nullClass_DeleteProperty(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, LookupKind *lookupKind, bool *result) { return false; }
+bool nullClass_DeletePublic(JS2Metadata *meta, js2val base, JS2Class *limit, const String *name, bool *result) { return false; }
+bool nullClass_BracketDelete(JS2Metadata *meta, js2val base, JS2Class *limit, Multiname *multiname, bool *result) { return false; }
     
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name, defaultVal) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true; c->defaultValue = defaultVal;
 
@@ -3293,6 +3304,16 @@ static const uint8 urlCharType[256] =
         MAKEBUILTINCLASS(objectClass, NULL, false, true, false, engine->Object_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(undefinedClass, objectClass, false, false, true, engine->undefined_StringAtom, JS2VAL_VOID);
         MAKEBUILTINCLASS(nullClass, objectClass, false, true, true, engine->null_StringAtom, JS2VAL_NULL);
+        nullClass->read = nullClass_ReadProperty;
+        nullClass->readPublic = nullClass_ReadPublicProperty;
+        nullClass->write = nullClass_WriteProperty;
+        nullClass->writePublic = nullClass_WritePublicProperty;
+        nullClass->deleteProperty = nullClass_DeleteProperty;
+        nullClass->deletePublic = nullClass_DeletePublic;
+        nullClass->bracketRead = nullClass_BracketRead;
+        nullClass->bracketWrite = nullClass_BracketWrite;
+        nullClass->bracketDelete = nullClass_BracketDelete;
+
         MAKEBUILTINCLASS(booleanClass, objectClass, false, false, true, engine->allocStringPtr(&world.identifiers["Boolean"]), JS2VAL_FALSE);
         MAKEBUILTINCLASS(generalNumberClass, objectClass, false, false, false, engine->allocStringPtr(&world.identifiers["general number"]), engine->nanValue);
         MAKEBUILTINCLASS(numberClass, generalNumberClass, false, false, true, engine->allocStringPtr(&world.identifiers["Number"]), engine->nanValue);
