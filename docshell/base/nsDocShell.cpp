@@ -459,13 +459,15 @@ NS_IMETHODIMP nsDocShell::SetViewMode(PRInt32 aViewMode)
 {
    NS_ENSURE_ARG((viewNormal == aViewMode) || (viewSource == aViewMode));
 
-   if(mViewMode != aViewMode)
-      {
-      mViewMode = aViewMode;
+   PRBool reload = PR_FALSE;
+
+   if((mViewMode != aViewMode) && mCurrentURI)
+      reload = PR_TRUE;
+
+   mViewMode = aViewMode;
+
+   if(reload)
       Reload(reloadNormal);
-      }
-   else
-      mViewMode = aViewMode;
 
    return NS_OK;
 }
