@@ -307,10 +307,10 @@ NS_IMETHODIMP nsWidget::CaptureMouse(PRBool aCapture)
     mGrabTime = gdk_time_get();
 
     GdkCursor *cursor = gdk_cursor_new (GDK_ARROW);
-    gdk_pointer_grab (mWidget->window, TRUE,
-                      GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
+    gdk_pointer_grab (mWidget->window, TRUE, (GdkEventMask)
+                      (GDK_BUTTON_PRESS_MASK | GDK_BUTTON_RELEASE_MASK |
                       GDK_ENTER_NOTIFY_MASK | GDK_LEAVE_NOTIFY_MASK |
-                      GDK_POINTER_MOTION_MASK,
+                      GDK_POINTER_MOTION_MASK),
                       NULL, cursor, mGrabTime);
     gtk_grab_add(mWidget);
   }
