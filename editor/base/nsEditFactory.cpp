@@ -30,17 +30,21 @@ static NS_DEFINE_CID(kEditorCID,       NS_EDITOR_CID);
 nsresult
 GetEditFactory(nsIFactory **aFactory, const nsCID & aClass)
 {
-  static nsCOMPtr<nsIFactory>  g_pNSIFactory;
+  
+  // XXX Note static which never gets released, even on library unload.
+  // XXX Was an nsCOMPtr but that caused a crash on exit,
+  // XXX http://bugzilla.mozilla.org/show_bug.cgi?id=7938
   PR_EnterMonitor(GetEditorMonitor());
-  nsresult result = NS_ERROR_FAILURE;
-  if (!g_pNSIFactory)
-  {
-    nsEditFactory *factory = new nsEditFactory(aClass);
-    g_pNSIFactory = do_QueryInterface(factory);
-    if (factory)
-      result = NS_OK;
-  }
-  result = g_pNSIFactory->QueryInterface(nsIFactory::GetIID(), (void **)aFactory);
+
+  nsEditFactory *factory = new nsEditFactory(aClass);
+  if (!factory)
+    return NS_ERROR_OUT_OF_MEMORY;
+  nsCOMPtr<nsIFactory> pNSIFactory = do_QueryInterface(factory);
+  if (!pNSIFactory)
+    return NS_ERROR_NO_INTERFACE;
+
+  nsresult result = pNSIFactory->QueryInterface(nsIFactory::GetIID(),
+                                                (void **)aFactory);
   PR_ExitMonitor(GetEditorMonitor());
   return result;
 }
