@@ -48,8 +48,7 @@
 #include "nsIWeakReference.h"
 
 #define NS_WEAK_OBSERVERS
-
-
+#define NOTIFY_GLOBAL_OBSERVERS
 
 #if defined(PR_LOGGING)
 // Log module for nsObserverService logging...
@@ -111,8 +110,8 @@ nsresult nsObserverService::GetObserverList(const char* aTopic, nsObserverList**
 {
     if (anObserverList == nsnull)
         return NS_ERROR_NULL_POINTER;
-	
-	if(mObserverTopicTable == nsnull) 
+    
+    if(mObserverTopicTable == nsnull) 
     {
         mObserverTopicTable = new nsObjectHashtable(nsnull, 
                                                     nsnull,   // should never be cloned
@@ -123,16 +122,16 @@ nsresult nsObserverService::GetObserverList(const char* aTopic, nsObserverList**
         if (mObserverTopicTable == nsnull)
             return NS_ERROR_OUT_OF_MEMORY;
     }
-	
+    
 
-	nsCStringKey key(aTopic);
+    nsCStringKey key(aTopic);
 
     nsObserverList *topicObservers;
     topicObservers = (nsObserverList *) mObserverTopicTable->Get(&key);
 
     if (topicObservers) 
     {
-        *anObserverList = topicObservers;	
+        *anObserverList = topicObservers;    
         return NS_OK;
     }
 
@@ -143,84 +142,111 @@ nsresult nsObserverService::GetObserverList(const char* aTopic, nsObserverList**
     *anObserverList = topicObservers;
     mObserverTopicTable->Put(&key, topicObservers);
     
-	return NS_OK;
+    return NS_OK;
 }
 
 NS_IMETHODIMP nsObserverService::AddObserver(nsIObserver* anObserver, const char* aTopic, PRBool ownsWeak)
 {
-	nsObserverList* anObserverList;
-	nsresult rv;
+    nsObserverList* anObserverList;
+    nsresult rv;
 
     if (anObserver == nsnull || aTopic == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-	rv = GetObserverList(aTopic, &anObserverList);
-	if (NS_FAILED(rv)) return rv;
+    rv = GetObserverList(aTopic, &anObserverList);
+    if (NS_FAILED(rv)) return rv;
 
     return anObserverList->AddObserver(anObserver, ownsWeak);
 }
 
 NS_IMETHODIMP nsObserverService::RemoveObserver(nsIObserver* anObserver, const char* aTopic)
 {
-	nsObserverList* anObserverList;
-	nsresult rv;
+    nsObserverList* anObserverList;
+    nsresult rv;
 
     if (anObserver == nsnull || aTopic == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-	rv = GetObserverList(aTopic, &anObserverList);
-	if (NS_FAILED(rv)) return rv;
+    rv = GetObserverList(aTopic, &anObserverList);
+    if (NS_FAILED(rv)) return rv;
 
     return anObserverList->RemoveObserver(anObserver);
 }
 
 NS_IMETHODIMP nsObserverService::EnumerateObservers(const char* aTopic, nsISimpleEnumerator** anEnumerator)
 {
-	nsObserverList* anObserverList;
-	nsresult rv;
+    nsObserverList* anObserverList;
+    nsresult rv;
 
     if (anEnumerator == nsnull || aTopic == nsnull)
         return NS_ERROR_NULL_POINTER;
 
-	rv = GetObserverList(aTopic, &anObserverList);
-	if (NS_FAILED(rv)) return rv;
+    rv = GetObserverList(aTopic, &anObserverList);
+    if (NS_FAILED(rv)) return rv;
 
     return anObserverList->GetObserverList(anEnumerator);
 }
 
 // Enumerate observers of aTopic and call Observe on each.
-NS_IMETHODIMP nsObserverService::NotifyObservers( nsISupports *aSubject,
-                                                  const char *aTopic,
-                                                  const PRUnichar *someData ) {
+NS_IMETHODIMP nsObserverService::NotifyObservers(nsISupports *aSubject,
+                                                 const char *aTopic,
+                                                 const PRUnichar *someData) {
     nsresult rv = NS_OK;
+#ifdef NOTIFY_GLOBAL_OBSERVERS
+    nsCOMPtr<nsISimpleEnumerator> globalObservers;
+#endif
     nsCOMPtr<nsISimpleEnumerator> observers;
     nsCOMPtr<nsISupports> observerRef;
 
-    rv = EnumerateObservers( aTopic, getter_AddRefs(observers) );
-    if ( NS_FAILED( rv ) )
-        return rv;
-    PRBool loop = PR_TRUE;
-    while( NS_SUCCEEDED(observers->HasMoreElements(&loop)) && loop) 
-    {
-        observers->GetNext(getter_AddRefs(observerRef));
-        nsCOMPtr<nsIObserver> observer = do_QueryInterface(observerRef);
-        if ( observer ) 
-            observer->Observe( aSubject, aTopic, someData );
-#ifdef NS_WEAK_OBSERVERS
-        else
-        {  // check for weak reference.
-             nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(observerRef);     
-             if ( weakRef )                                                              
-                weakRef->QueryReferent(NS_GET_IID(nsIObserver), getter_AddRefs(observer));
-
-             if ( observer ) 
-                observer->Observe( aSubject, aTopic, someData );
-
-             PR_LOG(observerServiceLog, PR_LOG_DEBUG, ("Notification - %s\n", aTopic ? aTopic : "undefined"));
-
-        }
+#ifdef NOTIFY_GLOBAL_OBSERVERS
+    EnumerateObservers("*", getter_AddRefs(globalObservers));
 #endif
-    }
+    rv = EnumerateObservers(aTopic, getter_AddRefs(observers));
+#ifdef NOTIFY_GLOBAL_OBSERVERS
+    /* If there are no global observers and we failed to get normal observers
+     * then we return the error indicating failure to get normal observers.
+     */
+    if (!globalObservers && NS_FAILED(rv))
+        return rv;
+#endif
+
+    do
+    {
+        PRBool more = PR_FALSE;
+        /* If observers is non null then null it out unless it really
+         * has more elements (i.e. that call doesn't fail).
+         */
+        if (observers && NS_FAILED(observers->HasMoreElements(&more)) || !more)
+        {
+#ifdef NOTIFY_GLOBAL_OBSERVERS
+            if (observers = globalObservers) 
+                globalObservers = nsnull;
+#else
+            observers = nsnull;
+#endif
+        }
+        else
+        {
+            observers->GetNext(getter_AddRefs(observerRef));
+            nsCOMPtr<nsIObserver> observer = do_QueryInterface(observerRef);
+            if (observer) 
+                observer->Observe(aSubject, aTopic, someData);
+#ifdef NS_WEAK_OBSERVERS
+            else
+            {  // check for weak reference.
+                nsCOMPtr<nsIWeakReference> weakRef = do_QueryInterface(observerRef);     
+                if (weakRef)                                                              
+                    weakRef->QueryReferent(NS_GET_IID(nsIObserver), getter_AddRefs(observer));
+
+                if (observer) 
+                    observer->Observe(aSubject, aTopic, someData);
+
+                PR_LOG(observerServiceLog, PR_LOG_DEBUG, ("Notification - %s\n", aTopic ? aTopic : "undefined"));
+
+            }
+#endif
+        }
+    } while (observers);
     return NS_OK;
 }
 ////////////////////////////////////////////////////////////////////////////////
