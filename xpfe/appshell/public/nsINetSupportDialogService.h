@@ -56,3 +56,4 @@ public:
 
 nsresult NS_NewNetSupportDialogFactory(nsIFactory** result);
 #endif
+
