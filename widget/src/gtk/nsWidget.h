@@ -170,6 +170,8 @@ public:
 
   // nsIKBStateControl
   NS_IMETHOD ResetInputState();
+  NS_IMETHOD SetIMEOpenState(PRBool aState);
+  NS_IMETHOD GetIMEOpenState(PRBool* aState);
 
   void InitEvent(nsGUIEvent& event, nsPoint* aPoint = nsnull);
     

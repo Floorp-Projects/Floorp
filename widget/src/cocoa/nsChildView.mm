@@ -2036,6 +2036,16 @@ NS_IMETHODIMP nsChildView::ResetInputState()
   return NS_ERROR_ABORT;
 }
 
+NS_IMETHODIMP nsChildView::SetIMEOpenState(PRBool aState)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsChildView::GetIMEOpenState(PRBool* aState)
+{
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
 
 //
 // GetQuickDrawPort
