@@ -285,7 +285,8 @@ function restorePreSearchView()
     // if we didn't just scroll, 
     // scroll to the first new message
     // but don't select it
-    scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+    if (pref.getBoolPref("mailnews.scroll_to_new_message"))
+      scrolled = ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
     if (!scrolled) 
     {
       // if we still haven't scrolled,
