@@ -3377,28 +3377,35 @@ NS_IMETHODIMP nsPluginHostImpl::GetPluginFactory(const char *aMimeType, nsIPlugi
 	return rv;
 }
 
-static PRBool areTheSameFileNames(char * name1, char * name2)
+static PRBool areTheSameFileNames(char * aPath1, char * aPath2)
 {
-  if((name1 == nsnull) || (name2 == nsnull))
+  if((aPath1 == nsnull) || (aPath2 == nsnull))
     return PR_FALSE;
 
-  char * filename1 = PL_strrchr(name1, '\\');
-	if(filename1 != nsnull)
-		filename1++;
-	else
-		filename1 = name1;
+  nsresult rv = NS_OK;
 
-  char * filename2 = PL_strrchr(name2, '\\');
-	if(filename2 != nsnull)
-		filename2++;
-	else
-		filename2 = name2;
+  char * filename1 = nsnull;
+  char * filename2 = nsnull;
 
+  nsCOMPtr<nsILocalFile> file1;
+  nsCOMPtr<nsILocalFile> file2;
+
+  rv = NS_NewLocalFile(aPath1, PR_FALSE, getter_AddRefs(file1));
+  if(NS_FAILED(rv))
+    return PR_FALSE;
+
+  rv = NS_NewLocalFile(aPath2, PR_FALSE, getter_AddRefs(file2));
+  if(NS_FAILED(rv))
+    return PR_FALSE;
+
+  file1->GetLeafName(&filename1);
+  file2->GetLeafName(&filename2);
+  
   if(PL_strlen(filename1) != PL_strlen(filename2))
     return PR_FALSE;
 
-  // this one MUST be case insensitive for Windows and MUST be case sensitive
-  // for Unix. How about Win2000?
+  // XXX this one MUST be case insensitive for Windows and MUST be case 
+  // sensitive for Unix. How about Win2000?
   return (nsnull == PL_strncasecmp(filename1, filename2, PL_strlen(filename1)));
 }
 
