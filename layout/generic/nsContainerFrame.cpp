@@ -111,12 +111,7 @@ nsContainerFrame::DidReflow(nsIPresContext& aPresContext,
       nsIFrame* kid;
       FirstChild(listName, &kid);
       while (nsnull != kid) {
-        nsIHTMLReflow* htmlReflow;
-        nsresult rv;
-        rv = kid->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-        if (NS_SUCCEEDED(rv)) {
-          htmlReflow->DidReflow(aPresContext, aStatus);
-        }
+        kid->DidReflow(aPresContext, aStatus);
         kid->GetNextSibling(&kid);
       }
       NS_IF_RELEASE(listName);
@@ -354,13 +349,7 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 {
   NS_PRECONDITION(aReflowState.frame == aKidFrame, "bad reflow state");
 
-  // Query for the nsIHTMLReflow interface
-  nsIHTMLReflow*  htmlReflow;
-  nsresult        result;
-  result = aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  if (NS_FAILED(result)) {
-    return result;
-  }
+  nsresult  result;
 
 #ifdef DEBUG
   nsSize* saveMaxElementSize = aDesiredSize.maxElementSize;
@@ -373,9 +362,9 @@ nsContainerFrame::ReflowChild(nsIFrame*                aKidFrame,
 #endif
 
   // Send the WillReflow notification, and reflow the child frame
-  htmlReflow->WillReflow(aPresContext);
-  result = htmlReflow->Reflow(aPresContext, aDesiredSize, aReflowState,
-                              aStatus);
+  aKidFrame->WillReflow(aPresContext);
+  result = aKidFrame->Reflow(aPresContext, aDesiredSize, aReflowState,
+                             aStatus);
 
 #ifdef DEBUG
   if (saveMaxElementSize != aDesiredSize.maxElementSize) {

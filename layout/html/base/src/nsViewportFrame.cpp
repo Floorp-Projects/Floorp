@@ -326,42 +326,38 @@ ViewportFrame::ReflowFixedFrame(nsIPresContext&          aPresContext,
                                 nsReflowStatus&          aStatus) const
 {
   // Reflow the frame
-  nsIHTMLReflow* htmlReflow;
-  nsresult       rv;
+  nsresult  rv;
 
-  rv = aKidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  if (NS_SUCCEEDED(rv)) {
-    htmlReflow->WillReflow(aPresContext);
+  aKidFrame->WillReflow(aPresContext);
     
-    nsHTMLReflowMetrics kidDesiredSize(nsnull);
-    nsSize              availSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
-    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
-                                       availSize);
+  nsHTMLReflowMetrics kidDesiredSize(nsnull);
+  nsSize              availSize(aReflowState.availableWidth, NS_UNCONSTRAINEDSIZE);
+  nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
+                                     availSize);
     
-    // If it's the initial reflow, then override the reflow reason. This is
-    // used when frames are inserted incrementally
-    if (aInitialReflow) {
-      kidReflowState.reason = eReflowReason_Initial;
-    }
-    
-    htmlReflow->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
-
-    // XXX If the child had a fixed height, then make sure it respected it...
-    if (NS_AUTOHEIGHT != kidReflowState.mComputedHeight) {
-      if (kidDesiredSize.height < kidReflowState.mComputedHeight) {
-        kidDesiredSize.height = kidReflowState.mComputedHeight;
-        kidDesiredSize.height += kidReflowState.mComputedBorderPadding.top +
-                                 kidReflowState.mComputedBorderPadding.bottom;
-      }
-    }
-
-    // Position the child
-    nsRect  rect(kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
-                 kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
-                 kidDesiredSize.width, kidDesiredSize.height);
-    aKidFrame->SetRect(&aPresContext, rect);
-    htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+  // If it's the initial reflow, then override the reflow reason. This is
+  // used when frames are inserted incrementally
+  if (aInitialReflow) {
+    kidReflowState.reason = eReflowReason_Initial;
   }
+    
+  rv = aKidFrame->Reflow(aPresContext, kidDesiredSize, kidReflowState, aStatus);
+
+  // XXX If the child had a fixed height, then make sure it respected it...
+  if (NS_AUTOHEIGHT != kidReflowState.mComputedHeight) {
+    if (kidDesiredSize.height < kidReflowState.mComputedHeight) {
+      kidDesiredSize.height = kidReflowState.mComputedHeight;
+      kidDesiredSize.height += kidReflowState.mComputedBorderPadding.top +
+                               kidReflowState.mComputedBorderPadding.bottom;
+    }
+  }
+
+  // Position the child
+  nsRect  rect(kidReflowState.mComputedOffsets.left + kidReflowState.mComputedMargin.left,
+               kidReflowState.mComputedOffsets.top + kidReflowState.mComputedMargin.top,
+               kidDesiredSize.width, kidDesiredSize.height);
+  aKidFrame->SetRect(&aPresContext, rect);
+  aKidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
 
   return rv;
 }
@@ -507,20 +503,17 @@ ViewportFrame::Reflow(nsIPresContext&          aPresContext,
                                            kidFrame, availableSpace);
 
         // Reflow the frame
-        nsIHTMLReflow* htmlReflow;
-        if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-          kidReflowState.mComputedHeight = aReflowState.availableHeight;
-          ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
-                      aStatus);
+        kidReflowState.mComputedHeight = aReflowState.availableHeight;
+        ReflowChild(kidFrame, aPresContext, kidDesiredSize, kidReflowState,
+                    aStatus);
 
-          nsRect  rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
-          kidFrame->SetRect(&aPresContext, rect);
-          kidRect = rect;
+        nsRect  rect(0, 0, kidDesiredSize.width, kidDesiredSize.height);
+        kidFrame->SetRect(&aPresContext, rect);
+        kidRect = rect;
 
-          // XXX We should resolve the details of who/when DidReflow()
-          // notifications are sent...
-          htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-        }
+        // XXX We should resolve the details of who/when DidReflow()
+        // notifications are sent...
+        kidFrame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
       }
 
       // If it's a 'initial', 'resize', or 'style change' reflow command (anything

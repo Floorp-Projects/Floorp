@@ -20,7 +20,6 @@
 #include "nsIStyleContext.h"
 #include "nsStyleConsts.h"
 #include "nsFrame.h"
-#include "nsIHTMLReflow.h"
 #include "nsIContent.h"
 #include "nsHTMLAtoms.h"
 #include "nsIPresContext.h"
@@ -177,7 +176,7 @@ nsHTMLReflowState::Init(nsIPresContext& aPresContext,
 }
 
 const nsHTMLReflowState*
-nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
+nsHTMLReflowState::GetContainingBlockReflowState(const nsHTMLReflowState* aParentRS)
 {
   while (nsnull != aParentRS) {
     if (nsnull != aParentRS->frame) {
@@ -186,7 +185,7 @@ nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
       // reflow state...
       nsresult rv = aParentRS->frame->IsPercentageBase(isContainingBlock);
       if (NS_SUCCEEDED(rv) && isContainingBlock) {
-        return (const nsHTMLReflowState*) aParentRS;
+        return aParentRS;
       }
     }
     aParentRS = aParentRS->parentReflowState;
@@ -195,20 +194,20 @@ nsHTMLReflowState::GetContainingBlockReflowState(const nsReflowState* aParentRS)
 }
 
 const nsHTMLReflowState*
-nsHTMLReflowState::GetPageBoxReflowState(const nsReflowState* aParentRS)
+nsHTMLReflowState::GetPageBoxReflowState(const nsHTMLReflowState* aParentRS)
 {
   // XXX write me as soon as we can ask a frame if it's a page frame...
   return nsnull;
 }
 
 nscoord
-nsHTMLReflowState::GetContainingBlockContentWidth(const nsReflowState* aParentRS)
+nsHTMLReflowState::GetContainingBlockContentWidth(const nsHTMLReflowState* aParentRS)
 {
   nscoord width = 0;
   const nsHTMLReflowState* rs =
     GetContainingBlockReflowState(aParentRS);
   if (nsnull != rs) {
-    return ((nsHTMLReflowState*)aParentRS)->mComputedWidth;/* XXX cast */
+    return aParentRS->mComputedWidth;
   }
   return width;
 }

@@ -19,7 +19,6 @@
 #define nsAbsoluteContainingBlock_h___
 
 #include "nslayout.h"
-#include "nsIHTMLReflow.h"
 #include "nsFrameList.h"
 
 class nsIAtom;

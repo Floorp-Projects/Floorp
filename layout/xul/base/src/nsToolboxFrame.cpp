@@ -32,7 +32,6 @@
 
 #include "nsIStyleContext.h"
 #include "nsCSSRendering.h"
-#include "nsIHTMLReflow.h"
 #include "nsIReflowCommand.h"
 #include "nsHTMLIIDs.h"
 #include "nsIPresContext.h"

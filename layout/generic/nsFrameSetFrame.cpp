@@ -771,22 +771,19 @@ nsHTMLFramesetFrame::ReflowPlaceChild(nsIFrame*                aChild,
   }
 
   // reflow and place the child
-  nsIHTMLReflow* htmlReflow;
-  if (NS_OK == aChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
-    nsHTMLReflowMetrics metrics(nsnull);
-    metrics.width = aSize.width;
-    metrics.height= aSize.height;
-    nsReflowStatus status;
+  nsHTMLReflowState  reflowState(aPresContext, aReflowState, aChild, aSize);
+  nsHTMLReflowMetrics metrics(nsnull);
+  metrics.width = aSize.width;
+  metrics.height= aSize.height;
+  nsReflowStatus status;
   
-    ReflowChild(aChild, aPresContext, metrics, reflowState, status);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
+  ReflowChild(aChild, aPresContext, metrics, reflowState, status);
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(status), "bad status");
   
-    // Place and size the child
-    nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
-    aChild->SetRect(&aPresContext, rect);
-    htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // this call is needed
-  }
+  // Place and size the child
+  nsRect rect(aOffset.x, aOffset.y, aSize.width, aSize.height);
+  aChild->SetRect(&aPresContext, rect);
+  aChild->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED); // this call is needed
 }
 
 static

@@ -19,7 +19,7 @@
 #ifndef nsBlockReflowContext_h___
 #define nsBlockReflowContext_h___
 
-#include "nsIHTMLReflow.h"
+#include "nsIFrame.h"
 
 class nsBlockFrame;
 class nsIFrame;

@@ -1331,11 +1331,7 @@ nsInlineFrame::FindTextRuns(nsLineLayout& aLineLayout)
   else {
     nsIFrame* frame = mFrames.FirstChild();
     while (nsnull != frame) {
-      nsIHTMLReflow* ihr;
-      nsresult rv = frame->QueryInterface(kIHTMLReflowIID, (void**)&ihr);
-      if (NS_SUCCEEDED(rv)) {
-        ihr->FindTextRuns(aLineLayout);
-      }
+      frame->FindTextRuns(aLineLayout);
       frame->GetNextSibling(&frame);
     }
   }
@@ -1353,9 +1349,6 @@ nsInlineFrame::DrainOverflow(nsIPresContext* aPresContext)
     if (prevOverflowFrames) {
       // When pushing and pulling frames we need to check for whether any
       // views need to be reparented.
-      // XXX Doing it this way means an extra pass over the frames. We could
-      // change InsertFrames() to do this, but that's a general purpose
-      // function and it doesn't seem like this functionality belongs there...
       for (nsIFrame* f = prevOverflowFrames; f; f->GetNextSibling(&f)) {
         nsHTMLContainerFrame::ReparentFrameView(aPresContext, f, prevInFlow, this);
       }

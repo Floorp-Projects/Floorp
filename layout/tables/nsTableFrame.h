@@ -24,7 +24,6 @@
 #include "nsStyleCoord.h"
 #include "nsStyleConsts.h"
 #include "nsIStyleContext.h"
-#include "nsIFrameReflow.h"   // for nsReflowReason enum
 #include "nsITableLayout.h"
 
 class nsCellMap;
@@ -315,7 +314,7 @@ public:
 
   virtual void AddColumnFrame (nsTableColFrame *aColFrame);
 
-  static PRBool IsFinalPass(const nsReflowState& aReflowState);
+  static PRBool IsFinalPass(const nsHTMLReflowState& aReflowState);
 
   nsTableCellFrame* GetCellInfoAt(PRInt32            aRowX, 
                                   PRInt32            aColX, 

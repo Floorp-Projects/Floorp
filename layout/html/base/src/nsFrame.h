@@ -19,7 +19,6 @@
 #define nsFrame_h___
 
 #include "nsIFrame.h"
-#include "nsIHTMLReflow.h"
 #include "nsRect.h"
 #include "nsString.h"
 #include "prlog.h"
@@ -93,7 +92,7 @@
  * Sets the NS_FRAME_SYNCHRONIZE_FRAME_AND_VIEW bit, so the default
  * behavior is to keep the frame and view position and size in sync.
  */
-class nsFrame : public nsIFrame, public nsIHTMLReflow
+class nsFrame : public nsIFrame
 {
 public:
   /**

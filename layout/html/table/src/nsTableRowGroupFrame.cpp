@@ -826,11 +826,7 @@ nsTableRowGroupFrame::AdjustSiblingsAfterReflow(nsIPresContext&      aPresContex
       kidFrame->GetOrigin(origin);
       origin.y += aDeltaY;
   
-      nsIHTMLReflow* htmlReflow;
-      if (NS_OK == kidFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        htmlReflow->WillReflow(aPresContext);
-      }
-      
+      kidFrame->WillReflow(aPresContext);
       kidFrame->MoveTo(&aPresContext, origin.x, origin.y);
     }
 

@@ -21,7 +21,6 @@
 #include "nsXULAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsINameSpaceManager.h"
-#include "nsIFrameReflow.h"
 #include "nsTreeFrame.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"

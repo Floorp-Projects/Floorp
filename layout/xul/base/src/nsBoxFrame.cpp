@@ -1119,13 +1119,8 @@ nsBoxFrame::FlowChildAt(nsIFrame* childFrame,
    printf("because (%s)\n", ch);
 #endif
         // do the flow
-        nsIHTMLReflow*      htmlReflow;
-
-        rv = childFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-        NS_ASSERTION(rv == NS_OK,"failed to get htmlReflow interface.");
-
-        htmlReflow->WillReflow(aPresContext);
-        htmlReflow->Reflow(aPresContext, desiredSize, reflowState, aStatus);
+        childFrame->WillReflow(aPresContext);
+        childFrame->Reflow(aPresContext, desiredSize, reflowState, aStatus);
 
         NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
 

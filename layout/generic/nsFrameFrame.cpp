@@ -350,16 +350,12 @@ nsHTMLFrameOuterFrame::Reflow(nsIPresContext&          aPresContext,
   nsHTMLReflowMetrics kidMetrics(aDesiredSize.maxElementSize);
   nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, firstChild,
                                      innerSize);
-  nsIHTMLReflow*      htmlReflow;
-
-  if (NS_OK == firstChild->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-    ReflowChild(firstChild, aPresContext, kidMetrics, kidReflowState, aStatus);
-    NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
+  ReflowChild(firstChild, aPresContext, kidMetrics, kidReflowState, aStatus);
+  NS_ASSERTION(NS_FRAME_IS_COMPLETE(aStatus), "bad status");
   
-    // Place and size the child
-    nsRect rect(offset.x, offset.y, innerSize.width, innerSize.height);
-    firstChild->SetRect(&aPresContext, rect);
-  }
+  // Place and size the child
+  nsRect rect(offset.x, offset.y, innerSize.width, innerSize.height);
+  firstChild->SetRect(&aPresContext, rect);
 
   // XXX what should the max-element-size of an iframe be? Shouldn't
   // iframe's normally shrink wrap around their content when they

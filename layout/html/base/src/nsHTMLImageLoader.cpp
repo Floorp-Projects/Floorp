@@ -16,7 +16,6 @@
  * Reserved.
  */
 #include "nsHTMLImageLoader.h"
-#include "nsIHTMLReflow.h"
 #include "nsFrame.h"
 #include "nsIURL.h"
 #include "nsNeckoUtil.h"

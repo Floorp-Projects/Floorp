@@ -843,7 +843,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
     reason = eReflowReason_StyleChange;
   }
   else {
-    const nsReflowState* rs = psd->mReflowState;
+    const nsHTMLReflowState* rs = psd->mReflowState;
     if (rs->reason == eReflowReason_Incremental) {
       // If the incremental reflow command is a StyleChanged reflow and
       // it's target is the current span, then make sure we send
@@ -906,10 +906,8 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   // Let frame know that are reflowing it
   nscoord x = pfd->mBounds.x;
   nscoord y = pfd->mBounds.y;
-  nsIHTMLReflow* htmlReflow;
 
-  aFrame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow);
-  htmlReflow->WillReflow(mPresContext);
+  aFrame->WillReflow(mPresContext);
 
   // Adjust spacemanager coordinate system for the frame. The
   // spacemanager coordinates are <b>inside</b> the current spans
@@ -935,7 +933,7 @@ nsLineLayout::ReflowFrame(nsIFrame* aFrame,
   nscoord tx = x - psd->mReflowState->mComputedBorderPadding.left;
   nscoord ty = y - psd->mReflowState->mComputedBorderPadding.top;
   mSpaceManager->Translate(tx, ty);
-  htmlReflow->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
+  aFrame->Reflow(mPresContext, metrics, reflowState, aReflowStatus);
 
   // XXX See if the frame is a placeholderFrame and if it is process
   // the floater.
@@ -2177,46 +2175,42 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
     }
     else if (pfd->mIsNonEmptyTextFrame) {
       nscoord deltaWidth = 0;
-      nsIHTMLReflow* hr;
-      nsresult rv = pfd->mFrame->QueryInterface(kIHTMLReflowIID, (void**)&hr);
-      if (NS_SUCCEEDED(rv)) {
-        hr->TrimTrailingWhiteSpace(&mPresContext,
-                                   *mBlockReflowState->rendContext,
-                                   deltaWidth);
+      pfd->mFrame->TrimTrailingWhiteSpace(&mPresContext,
+                                          *mBlockReflowState->rendContext,
+                                          deltaWidth);
 #ifdef NOISY_TRIM
-        nsFrame::ListTag(stdout, (psd == mRootSpan
-                                  ? mBlockReflowState->frame
-                                  : psd->mFrame->mFrame));
-        printf(": trim of ");
-        nsFrame::ListTag(stdout, pfd->mFrame);
-        printf(" returned %d\n", deltaWidth);
+      nsFrame::ListTag(stdout, (psd == mRootSpan
+                                ? mBlockReflowState->frame
+                                : psd->mFrame->mFrame));
+      printf(": trim of ");
+      nsFrame::ListTag(stdout, pfd->mFrame);
+      printf(" returned %d\n", deltaWidth);
 #endif
-        if (deltaWidth) {
-          pfd->mBounds.width -= deltaWidth;
-          pfd->mCombinedArea.width -= deltaWidth;
-          if (0 == pfd->mBounds.width) {
-            pfd->mMaxElementSize.width = 0;
-            pfd->mMaxElementSize.height = 0;
-          }
+      if (deltaWidth) {
+        pfd->mBounds.width -= deltaWidth;
+        pfd->mCombinedArea.width -= deltaWidth;
+        if (0 == pfd->mBounds.width) {
+          pfd->mMaxElementSize.width = 0;
+          pfd->mMaxElementSize.height = 0;
+        }
 
-          // See if the text frame has already been placed in its parent
-          if (psd != mRootSpan) {
-            // The frame was already placed during psd's
-            // reflow. Update the frames rectangle now.
-            pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
-          }
+        // See if the text frame has already been placed in its parent
+        if (psd != mRootSpan) {
+          // The frame was already placed during psd's
+          // reflow. Update the frames rectangle now.
+          pfd->mFrame->SetRect(&mPresContext, pfd->mBounds);
+        }
 
-          // Adjust containing span's right edge
-          psd->mX -= deltaWidth;
+        // Adjust containing span's right edge
+        psd->mX -= deltaWidth;
 
-          // Slide any frames that follow the text frame over by the
-          // right amount. The only thing that can follow the text
-          // frame is empty stuff, so we are just making things
-          // sensible (keeping the combined area honest).
-          while (pfd->mNext) {
-            pfd = pfd->mNext;
-            pfd->mBounds.x -= deltaWidth;
-          }
+        // Slide any frames that follow the text frame over by the
+        // right amount. The only thing that can follow the text
+        // frame is empty stuff, so we are just making things
+        // sensible (keeping the combined area honest).
+        while (pfd->mNext) {
+          pfd = pfd->mNext;
+          pfd->mBounds.x -= deltaWidth;
         }
       }
 
@@ -2226,6 +2220,7 @@ nsLineLayout::TrimTrailingWhiteSpaceIn(PerSpanData* psd,
     }
     pfd = pfd->mPrev;
   }
+
   *aDeltaWidth = 0;
   return PR_FALSE;
 }

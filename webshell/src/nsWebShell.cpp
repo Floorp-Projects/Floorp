@@ -47,6 +47,7 @@
 #include "prprf.h"
 #include "nsIPluginHost.h"
 #include "nsplugin.h"
+#include "nsIFrame.h"
 //#include "nsPluginsCID.h"
 #include "nsIPluginManager.h"
 #include "nsIPref.h"
@@ -65,7 +66,6 @@
 #include "nsIDOMHTMLDocument.h"
 #include "nsLayoutCID.h"
 #include "nsIDOMRange.h"
-#include "nsIFrameReflow.h"
 #include "stopwatch.h"
 
 #include "nsILocaleService.h"

@@ -117,29 +117,26 @@ NS_METHOD nsPageFrame::Reflow(nsIPresContext&          aPresContext,
                                        maxSize);
       kidReflowState.isTopOfPage = PR_TRUE;
 
-      nsIHTMLReflow*    htmlReflow;
-      if (NS_OK == frame->QueryInterface(kIHTMLReflowIID, (void**)&htmlReflow)) {
-        // Get the child's desired size
-        ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
-  
-        // Make sure the child is at least as tall as our max size (the containing window)
-        if (aDesiredSize.height < aReflowState.availableHeight) {
-          aDesiredSize.height = aReflowState.availableHeight;
-        }
-  
-        // Place and size the child
-        nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
-        frame->SetRect(&aPresContext, rect);
-        // XXX Should we be sending the DidReflow?
-        htmlReflow->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
-  
-        // Is the frame complete?
-        if (NS_FRAME_IS_COMPLETE(aStatus)) {
-          nsIFrame* childNextInFlow;
-  
-          frame->GetNextInFlow(&childNextInFlow);
-          NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
-        }
+      // Get the child's desired size
+      ReflowChild(frame, aPresContext, aDesiredSize, kidReflowState, aStatus);
+
+      // Make sure the child is at least as tall as our max size (the containing window)
+      if (aDesiredSize.height < aReflowState.availableHeight) {
+        aDesiredSize.height = aReflowState.availableHeight;
+      }
+
+      // Place and size the child
+      nsRect  rect(0, 0, aDesiredSize.width, aDesiredSize.height);
+      frame->SetRect(&aPresContext, rect);
+      // XXX Should we be sending the DidReflow?
+      frame->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
+
+      // Is the frame complete?
+      if (NS_FRAME_IS_COMPLETE(aStatus)) {
+        nsIFrame* childNextInFlow;
+
+        frame->GetNextInFlow(&childNextInFlow);
+        NS_ASSERTION(nsnull == childNextInFlow, "bad child flow list");
       }
     }
 
