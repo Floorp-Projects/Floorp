@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.56 $ $Date: 2002/06/24 22:36:59 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.57 $ $Date: 2002/06/25 22:33:37 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -546,6 +546,48 @@ get_cert_instance(NSSCertificate *c)
     nssCryptokiObjectArray_Destroy(instances);
     return instance;
 }
+
+char * 
+STAN_GetCERTCertificateName(NSSCertificate *c)
+{
+    nssCryptokiInstance *instance = get_cert_instance(c);
+    NSSCryptoContext *context = c->object.cryptoContext;
+    PRStatus nssrv;
+    int nicklen, tokenlen, len;
+    NSSUTF8 *tokenName = NULL;
+    NSSUTF8 *stanNick = NULL;
+    char *nickname = NULL;
+    char *nick;
+
+    if (instance) {
+	stanNick = instance->label;
+    } else if (context) {
+	stanNick = c->object.tempName;
+    }
+    if (stanNick) {
+	/* fill other fields needed by NSS3 functions using CERTCertificate */
+	if (instance && !PK11_IsInternal(instance->token->pk11slot)) {
+	    tokenName = nssToken_GetName(instance->token);
+	    tokenlen = nssUTF8_Size(tokenName, &nssrv);
+	} else {
+	/* don't use token name for internal slot; 3.3 didn't */
+	    tokenlen = 0;
+	}
+	nicklen = nssUTF8_Size(stanNick, &nssrv);
+	len = tokenlen + nicklen;
+	nickname = PORT_Alloc(len);
+	nick = nickname;
+	if (tokenName) {
+	    memcpy(nick, tokenName, tokenlen-1);
+	    nick += tokenlen-1;
+	    *nick++ = ':';
+	}
+	memcpy(nick, stanNick, nicklen-1);
+	nickname[len-1] = '\0';
+    }
+    return nickname;
+}
+
 
 static void
 fill_CERTCertificateFields(NSSCertificate *c, CERTCertificate *cc, PRBool forced)
