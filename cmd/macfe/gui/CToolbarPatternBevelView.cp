@@ -21,7 +21,7 @@
 #include <LArrayIterator.h>
 
 #include "CToolbarPatternBevelView.h"
-#include "CToolbarButton.h"
+#include "CToolbarBevelButton.h"
 #include "StRegionHandle.h"
 
 #include <stddef.h>
@@ -72,7 +72,7 @@ void CToolbarPatternBevelView::CalcArrangement( Boolean inRotateArrangement, Int
 		// ...once to calculate the old and new grid cell-size, and change the mode of each button;
 	LPane* current_subview_ptr = 0;
 	for ( LArrayIterator iter(mSubPanes); iter.Next(&current_subview_ptr); )
-		if ( CToolbarButton* button = dynamic_cast<CToolbarButton*>(current_subview_ptr) )
+		if ( CToolbarBevelButton* button = dynamic_cast<CToolbarBevelButton*>(current_subview_ptr) )
 			{
 				++number_of_buttons;
 
@@ -133,7 +133,7 @@ void CToolbarPatternBevelView::CalcArrangement( Boolean inRotateArrangement, Int
 	if ( number_of_buttons > 0 )
 		{
 			for ( LArrayIterator iter(mSubPanes); (number_of_buttons > 0) && iter.Next(&current_subview_ptr); )
-				if ( CToolbarButton* button = dynamic_cast<CToolbarButton*>(current_subview_ptr) )
+				if ( CToolbarBevelButton* button = dynamic_cast<CToolbarBevelButton*>(current_subview_ptr) )
 					{
 						--number_of_buttons;
 

@@ -52,20 +52,23 @@
 	#include <LProgressBar.h>
 	#include <LPushButton.h>
 	#include <LAMPushButtonImp.h>
-
+	#include <LBevelButton.h>
+	#include <LCmdBevelButton.h>
+	
 // еее Things that will go away after appearance conversion complete
 	#include "CProgressBar.h"
 	#include "CPatternBevelView.h"
-	
+	#include "CBevelButton.h"
+	#include "CPatternButtonPopup.h"
+		
 // еее PowerPlant Grayscale Classes
 	#include <UGALibRegistry.h>
 
 // еее General Purpose UI Classes
-	#include "CBevelButton.h"
+	#include "CToolbarBevelButton.h"
 	#include "CPatternButton.h"	
 	#include "CAMSavvyBevelView.h"
-	#include "CPatternButtonPopup.h"
-	#include "CGuidePopupMenu.h"
+
 	#include "CNavigationButtonPopup.h"
 	#include "CCloseAllAttachment.h"
 	#include "CColorEraseAttachment.h"
@@ -233,18 +236,20 @@ void RegisterAllBrowserClasses(void)
 	RegisterClassID_(LAMPushButtonImp, LPushButton::imp_class_ID);
 //	RegisterClass_(LBevelButton);
 //	RegisterClassID_(LAMControlImp, LBevelButton::imp_class_ID);
+	RegisterClass_(LCmdBevelButton);
+	RegisterClassID_(LAMControlImp, LCmdBevelButton::imp_class_ID);
 
 	// еее Things that will go away after appearance port complete
 	RegisterClass_(CProgressBar);
 	RegisterClass_(CPatternBevelView);
-
-	// еее General Purpose UI Classes
 	RegisterClass_(CBevelButton);
 	RegisterClass_(CDeluxeBevelButton);
 	RegisterClass_(CPatternButton);
 	RegisterClass_(CPatternButtonPopup);
-	RegisterClass_(CAMSavvyBevelView);
-	
+
+	// еее General Purpose UI Classes
+	RegisterClass_(CToolbarBevelButton);	
+	RegisterClass_(CAMSavvyBevelView);	
 		
 	RegisterClass_(CIncludeView);
 	RegisterClass_(CPlaceHolderView);
@@ -283,7 +288,6 @@ void RegisterAllBrowserClasses(void)
 	RegisterClass_(CTextEdit);
 	RegisterClass_(CEditBroadcaster);
 
-	RegisterClass_(CGuidePopupMenu);
 	RegisterClass_(CNavigationButtonPopup);
 	
 	// *** Browser Specific UI Classes

@@ -27,7 +27,7 @@
 
 // Includes
 
-#include "CPatternButtonPopup.h"
+#include "CToolbarBevelButton.h"
 #include "shist.h"
 
 // Forward declarations
@@ -36,19 +36,21 @@ class CBrowserContext;
 
 // Class declaration
 
-class CNavigationButtonPopup : public CPatternButtonPopup
+class CNavigationButtonPopup : public CToolbarBevelButton
 {
 public:
-	enum { class_ID = 'PbNv' };
+	enum { class_ID = 'TbNv' };
 
-	typedef CPatternButtonPopup super;
+	typedef CToolbarBevelButton super;
 							
 							CNavigationButtonPopup(LStream* inStream);
 	virtual	 				~CNavigationButtonPopup();
 	
 protected:
-	virtual void			AdjustMenuContents();
+	virtual void			ClickSelf ( const SMouseDownEvent & inEvent );
 
+	virtual void			AdjustMenuContents();
+	
 	virtual void			InsertHistoryItemIntoMenu(
 												Int32				inHistoryItemIndex,
 												Int16				inAfterItem);

@@ -506,6 +506,13 @@ void CBrowserWindow::FindCommandStatus(
 	//
 	switch (inCommand)
 	{
+		// the bevel button for the branding icon asks us if this command should be enabled
+		// so that the button can be enabled. We always want this button enabled, so return 
+		// true.
+		case LOGO_BUTTON:
+			outEnabled = true;
+			break;
+			
 		case cmd_DocumentInfo:
 		case cmd_ViewSource:
 			if (mContext && (mIsRootDocInfo || mIsViewSource || mIsHTMLHelp))

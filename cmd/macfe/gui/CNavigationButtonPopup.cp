@@ -71,30 +71,26 @@ CNavigationButtonPopup::~CNavigationButtonPopup()
 void
 CNavigationButtonPopup::AdjustMenuContents()
 {
-	if (!GetMenu() || !GetMenu()->GetMacMenuH())
-	{
+	if (!GetMenuHandle())
 		return;
-	}
 	
 	if (!AssertPreconditions())
-	{
 		return;
-	}
 		
 	// Purge the menu
 
-	UMenuUtils::PurgeMenuItems(GetMenu()->GetMacMenuH());
+	UMenuUtils::PurgeMenuItems(GetMenuHandle());
 	
 	// Fill the menu
 	
-	if (GetQuickClickValueOrCommand() == cmd_GoBack)
+	if (GetCommandNumber() == cmd_GoBack)
 	{
 		for (int insertAfterItem = 0, i = mCurrentEntryIndex - 1; i >= 1; i--, insertAfterItem++)
 		{
 			InsertHistoryItemIntoMenu(i, insertAfterItem);
 		}
 	}
-	else if (GetQuickClickValueOrCommand() == cmd_GoForward)
+	else if (GetCommandNumber() == cmd_GoForward)
 	{
 		for (int insertAfterItem = 0, i = mCurrentEntryIndex + 1; i <= mNumItemsInHistory; i++, insertAfterItem++)
 		{
@@ -104,7 +100,7 @@ CNavigationButtonPopup::AdjustMenuContents()
 	
 	// Set the min/max values of the control since we populated the menu
 	
-	SetPopupMinMaxValues();
+//	SetPopupMinMaxValues();
 }
 
 // ---------------------------------------------------------------------------
@@ -116,7 +112,7 @@ CNavigationButtonPopup::InsertHistoryItemIntoMenu(
 	Int32				inHistoryItemIndex,
 	Int16				inAfterItem)
 {
-	Assert_(GetMenu() && GetMenu()->GetMacMenuH());
+	Assert_(GetMenuHandle());
 	Assert_(mBrowserContext);
 
 	CAutoPtr<cstring> theTitle = mBrowserContext->GetHistoryEntryTitleByIndex(inHistoryItemIndex);
@@ -133,11 +129,11 @@ CNavigationButtonPopup::InsertHistoryItemIntoMenu(
 
 	// Insert a "blank" item first...
 	
-	::InsertMenuItem(GetMenu()->GetMacMenuH(), "\p ", inAfterItem + 1);
+	::InsertMenuItem(GetMenuHandle(), "\p ", inAfterItem + 1);
 	
 	// Then change it. We do this so that no interpretation of metacharacters will occur.
 	
-	::SetMenuItemText(GetMenu()->GetMacMenuH(), inAfterItem + 1, thePString);
+	::SetMenuItemText(GetMenuHandle(), inAfterItem + 1, thePString);
 }
 	
 #pragma mark -
@@ -154,19 +150,13 @@ CNavigationButtonPopup::HandleNewValue(
 	{
 		Int32 historyIndex = 0;
 
-		if (GetQuickClickValueOrCommand() == cmd_GoBack)
-		{
+		if (GetCommandNumber() == cmd_GoBack)
 			historyIndex = SHIST_GetIndex(mHistory, mCurrentEntry) - inNewValue;
-		}
-		else if (GetQuickClickValueOrCommand() == cmd_GoForward)
-		{
+		else if (GetCommandNumber() == cmd_GoForward)
 			historyIndex = SHIST_GetIndex(mHistory, mCurrentEntry) + inNewValue;
-		}
 
 		if (historyIndex)
-		{
 			mBrowserContext->LoadHistoryEntry(historyIndex);
-		}
 	}
 	
 	return true;
@@ -183,35 +173,38 @@ CNavigationButtonPopup::AssertPreconditions()
 	CMediatedWindow* topWindow = CWindowMediator::GetWindowMediator()->FetchTopWindow(WindowType_Any, regularLayerType);
 	
 	if (!topWindow || topWindow->GetWindowType() != WindowType_Browser)
-	{
 		return false;
-	}
 	
 	CBrowserWindow* browserWindow = dynamic_cast<CBrowserWindow*>(topWindow);
 
 	if (!browserWindow)
-	{
 		return false;
-	}
 	
 	if (!(mBrowserContext = (CBrowserContext*)browserWindow->GetWindowContext()))
-	{
 		return false;
-	}
 
 	if (!(mHistory = &((MWContext*)(*mBrowserContext))->hist))
-	{
 		return false;
-	}
 	
 	if (!(mCurrentEntry = mBrowserContext->GetCurrentHistoryEntry()))
-	{
 		return false;
-	}
 
 	mCurrentEntryIndex = SHIST_GetIndex(mHistory, mCurrentEntry);
 	
 	mNumItemsInHistory = mBrowserContext->GetHistoryListCount();
 	
 	return true;
+}
+
+
+//
+// ClickSelf
+//
+// Override to fixup the menus before we show them
+//
+void
+CNavigationButtonPopup :: ClickSelf ( const SMouseDownEvent & inEvent )
+{
+	AdjustMenuContents();
+	super::ClickSelf(inEvent);
 }
