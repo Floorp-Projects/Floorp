@@ -1,0 +1,59 @@
+<?xml version="1.0"?> 
+<?xml-stylesheet href="chrome://global/skin/xul.css" type="text/css"?> 
+<?xml-stylesheet href="resource:/res/xpinstall/xpistatus.css" type="text/css"?> 
+<!DOCTYPE window SYSTEM "chrome://xpinstall/locale/xpistatus.dtd" >
+
+
+<window xmlns:html="http://www.w3.org/TR/REC-html40"
+        xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+        onload="onLoad()"
+        title="Items to Install"> 
+
+    <html:script language="javascript" src="xpistatus.js">
+    </html:script>
+  
+    <box align="vertical" style="height: 30%; width: 50%">
+
+        <box align="horizontal">
+          <box align="horizontal" flex="100%" >
+            <html:div> <html:h3> &dialogTitle.label; </html:h3> </html:div>
+          </box>
+          <spring flex="100%"/>
+          <box align="horizontal">
+            <html:img src="resource:/res/throbber/anims00.gif"/>
+          </box>
+        </box>
+
+        <box align="vertical">
+          <html:div style="height:10px; width:100%"><html:hr/></html:div>
+        </box>
+
+        <box align="horizontal">
+          <spring style="width:10px"/>  
+          <html:div> <html:h5> &currentlyProcessing.text; </html:h5> </html:div>
+        </box>
+
+        <spring style="height:10px"/>  
+
+        <box align="horizontal">  
+          <spring style="width:10px"/>  
+          <html:div> &downloadBeforeUpdate.text; </html:div>
+        </box>
+
+        <spring style="height:20px"></spring>
+
+        <box align="horizontal">
+          <spring style="width:10px"/>
+          <box align="vertical">
+            <spring style="height:6px"/>
+            <progressmeter id="dialog.progress" mode="undetermined" style="width:200px;height:10px">
+            </progressmeter>
+          </box>
+          <box align="horizontal">
+            <html:button id="dialog.cancel" onclick="cancel()">&dialogCancel.label;</html:button>
+          </box>
+        </box>
+
+    </box>
+
+</window>
