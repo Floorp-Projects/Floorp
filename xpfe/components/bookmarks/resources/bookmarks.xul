@@ -161,12 +161,12 @@
       </menu>
       <menuseparator/>
       <menuitem value="&menuitem.newbookmarkfolder.label;" accesskey="&menuitem.newbookmarkfolder.accesskey;"
-        oncommand="return doContextCmd(NC+'command?cmd=setnewbookmarkfolder')"/>
+        oncommand="return doContextCmd(NC_NS + 'command?cmd=setnewbookmarkfolder')"/>
       <menuitem value="&menuitem.newinternetsearchfolder.label;"
-        oncommand="return doContextCmd(NC+'command?cmd=setnewsearchfolder')"
+        oncommand="return doContextCmd(NC_NS + 'command?cmd=setnewsearchfolder')"
         accesskey="&menuitem.newinternetsearchfolder.accesskey;"/>
       <menuitem value="&menuitem.personaltoolbarfolder.label;"
-        oncommand="return doContextCmd(NC+'command?cmd=setpersonaltoolbarfolder')"
+        oncommand="return doContextCmd(NC_NS + 'command?cmd=setpersonaltoolbarfolder')"
         accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
     </menupopup>
   </menu>
