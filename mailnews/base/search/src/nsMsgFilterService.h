@@ -21,6 +21,18 @@
 
 #include "nsIMsgFilterService.h"
 
+//f5aacb00-072d-11d3-8d70-00805f8a6617
+#define NS_MSGFILTERSERVICE_CID							\
+{ 0xf5aacb00, 0x072d, 0x11d3,							\
+    { 0x8d, 0x70, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x17 } }
+
+NS_BEGIN_EXTERN_C
+
+nsresult
+NS_NewMsgFilterService(const nsIID& iid, void **result);
+
+NS_END_EXTERN_C
+
 // The filter service is used to acquire and manipulate filter lists.
 
 class nsMsgFilterService : public nsIMsgFilterService

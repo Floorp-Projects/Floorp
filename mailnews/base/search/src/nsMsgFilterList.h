@@ -75,11 +75,14 @@ public:
 
 	NS_IMETHOD CreateFilter(char *name,	nsIMsgFilter **result);
 
+	nsresult		Close();
 	nsresult		LoadTextFilters();
 
 	PRInt16			GetVersion() {return m_fileVersion;}
 protected:
-		nsresult	WriteIntAttr( nsMsgFilterFileAttrib attrib, int value);
+		// type-safe accessor when you really have to have an nsMsgFilter
+		nsresult GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter);
+		nsresult WriteIntAttr( nsMsgFilterFileAttrib attrib, int value);
 		nsresult WriteStrAttr(nsMsgFilterFileAttrib attrib, const char *str);
 		nsresult WriteBoolAttr(nsMsgFilterFileAttrib attrib, XP_Bool boolVal);
 #ifdef DEBUG

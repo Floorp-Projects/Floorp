@@ -19,14 +19,14 @@
 #ifndef _nsIMsgFilterService_H_
 #define _nsIMsgFilterService_H_
 
-// The filter service is used to acquire and manipulate filter lists.
-#define NS_IMSGFILTERSERVICE_IID                         \
-{ 0x5cbb0700, 0x04bc, 0x11d3,                 \
-    { 0xa5, 0x0a, 0x0, 0x60, 0xb0, 0xfc, 0x04, 0xb7 } }
-
-// 5cbb0700-04bc-11d3-a50a-0060b0fc04b7
 
 #include "nsISupports.h"
+
+//6673cad0-072e-11d3-8d70-00805f8a6617
+#define NS_IMSGFILTERSERVICE_IID                         \
+{ 0x6673cad0, 0x072e, 0x11d3,                  \
+    { 0x8d, 0x70, 0x0, 0x80, 0x5f, 0x8a, 0x66, 0x17 } }
+
 
 class nsIMsgFilterList;
 

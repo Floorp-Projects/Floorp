@@ -27,11 +27,9 @@
 typedef struct nsMsgRuleAction
 {
         nsMsgRuleActionType      m_type;
-        union
-        {
-                nsMsgPriority m_priority;  /* priority to set rule to */
-                nsString2     m_folderName;    /* Or some folder identifier, if such a thing is invented */
-        } m_value;
+		// this used to be a union - why bother?
+        nsMsgPriority m_priority;  /* priority to set rule to */
+        nsString2     m_folderName;    /* Or some folder identifier, if such a thing is invented */
         char	*m_originalServerPath;
 } nsMsgRuleAction;
 
@@ -94,7 +92,7 @@ public:
 	PRInt16			GetVersion() {return (m_filterList) ? m_filterList->GetVersion() : 0;}
 	nsMsgFilterList	*GetFilterList() {return m_filterList;}
     void            SetDontFileMe(PRBool bDontFileMe) {m_dontFileMe = bDontFileMe;}
-    nsMsgSearchTermArray GetTermList() {return m_termList;}       /* linked list of criteria terms */
+    nsMsgSearchTermArray* GetTermList() {return &m_termList;}       /* linked list of criteria terms */
 #ifdef DEBUG
 	void	Dump();
 #endif

@@ -20,7 +20,7 @@ IGNORE_MANIFEST=1
 
 include <$(DEPTH)\config\config.mak>
 
-LIBRARY_NAME=search
+LIBRARY_NAME=msgsearch
 MODULE= mailnews
 REQUIRES=
 
@@ -37,7 +37,7 @@ CPP_OBJS=   .\$(OBJDIR)\nsMsgFilterService.obj  \
 			$(NULL)
 
 
-EXPORTS=	\
+EXPORTS=	nsMsgFilterService.h\
 			$(NULL)
 
 

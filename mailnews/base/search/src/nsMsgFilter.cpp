@@ -27,7 +27,7 @@ nsMsgFilter::nsMsgFilter()
 	m_filterList = nsnull;
 }
 
-nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
+void nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
 {
 	m_filterList = filterList;
 }
@@ -35,7 +35,7 @@ nsMsgFilter::SetFilterList(nsMsgFilterList *filterList)
 nsresult nsMsgFilter::ConvertMoveToFolderValue(nsString2 &relativePath)
 {
 
-	m_action.m_value.m_folderName = relativePath;
+	m_action.m_folderName = relativePath;
 	return NS_OK;
 	// set m_action.m_value.m_folderName
 }

@@ -23,6 +23,7 @@
 #include "nsMsgFilter.h"
 
 #include "nsFileStream.h"
+#include "nsMsgUtils.h"
 
 const int16 kFileVersion = 6;
 const int16 kFileVersionOldMoveTarget = 5;
@@ -37,10 +38,8 @@ nsMsgFilterList::nsMsgFilterList(nsIOFileStream *fileStream)
 	m_fileStream = fileStream;
 	// I don't know how we're going to report this error if we failed to create the isupports array...
 	nsresult rv = NS_NewISupportsArray(getter_AddRefs(m_filters));
-}
-
-nsMsgFilterList::~nsMsgFilterList()
-{
+	m_loggingEnabled = PR_FALSE;
+	m_curFilter = nsnull;
 }
 
 #if 0
@@ -350,7 +349,17 @@ nsresult nsMsgFilterList::LoadTextFilters()
 			if (m_curFilter->m_action.m_type == nsMsgFilterActionMoveToFolder)
 				err = m_curFilter->ConvertMoveToFolderValue(value);
 			else if (m_curFilter->m_action.m_type == nsMsgFilterActionChangePriority)
-				m_curFilter->SetAction(m_curFilter->m_action.m_type, (void *) (int32) MSG_GetPriorityFromString(value));
+			{
+				nsMsgPriority outPriority;
+				nsresult res = NS_MsgGetPriorityFromString(value.GetBuffer(), &outPriority);
+				if (NS_SUCCEEDED(res))
+				{
+					m_curFilter->SetAction(m_curFilter->m_action.m_type, (void *) (int32) outPriority);
+				}
+				else
+					NS_ASSERTION(PR_FALSE, "invalid priority in filter file");
+
+			}
 			break;
 		case nsMsgFilterAttribCondition:
 			err = ParseCondition(value);
@@ -401,7 +410,7 @@ nsresult nsMsgFilterList::ParseCondition(nsString2 &value)
 				int termLen = curPtr - openParen - 1;
 				termDup = (char *) PR_Malloc(termLen + 1);
 				if (termDup)
-					PL_strcnpy(termDup, openParen + 1, termLen + 1);
+					PL_strncpy(termDup, openParen + 1, termLen + 1);
 				else
 				{
 					err = NS_ERROR_OUT_OF_MEMORY;
@@ -417,7 +426,7 @@ nsresult nsMsgFilterList::ParseCondition(nsString2 &value)
 			if (newTerm)
 				newTerm->m_booleanOp = ANDTerm ? nsMsgSearchBooleanAND : nsMsgSearchBooleanOR;
 			if (newTerm->DeStreamNew(termDup, PL_strlen(termDup)) == NS_OK)
-				m_curFilter->GetTermList().Add(newTerm);
+				m_curFilter->GetTermList()->AppendElement(newTerm);
 			PR_FREEIF(termDup);
 		}
 		else
@@ -431,16 +440,16 @@ nsresult nsMsgFilterList::WriteIntAttr(nsMsgFilterFileAttrib attrib, int value)
 	const char *attribStr = GetStringForAttrib(attrib);
 	if (attribStr)
 	{
-		m_fileStream >> attribStr;
-		m_fileStream >> "=\"";
-		m_fileStream >> value;
-		m_fileStream >> "\"" LINEBREAK;
+		*m_fileStream << attribStr;
+		*m_fileStream << "=\"";
+		*m_fileStream << value;
+		*m_fileStream << "\"" LINEBREAK;
 	}
 //		XP_FilePrintf(fid, "%s=\"%d\"%s", attribStr, value, LINEBREAK);
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterAttrib attrib, const char *str)
+nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterFileAttrib attrib, const char *str)
 {
 	if (str && m_fileStream) // only proceed if we actually have a string to write out. 
 	{
@@ -451,10 +460,10 @@ nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterAttrib attrib, const char *str
 		const char *attribStr = GetStringForAttrib(attrib);
 		if (attribStr)
 		{
-			m_fileStream >> attribStr;
-			m_fileStream >> "=\"";
-			m_fileStream >> (escapedStr) ? escapedStr : str;
-			m_fileStream >> "\"" LINEBREAK;
+			*m_fileStream << attribStr;
+			*m_fileStream << "=\"";
+			*m_fileStream << ((escapedStr) ? escapedStr : str);
+			*m_fileStream << "\"" LINEBREAK;
 //			XP_FilePrintf(fid, "%s=\"%s\"%s", attribStr, (escapedStr) ? escapedStr : str, LINEBREAK);
 		}
 		PR_FREEIF(escapedStr);
@@ -462,7 +471,7 @@ nsresult nsMsgFilterList::WriteStrAttr(nsMsgFilterAttrib attrib, const char *str
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterAttrib attrib, PRBool boolVal)
+nsresult nsMsgFilterList::WriteBoolAttr(nsMsgFilterFileAttrib attrib, PRBool boolVal)
 {
 	return WriteStrAttr(attrib, (boolVal) ? "yes" : "no");
 }
@@ -479,10 +488,10 @@ nsresult nsMsgFilterList::SaveTextFilters()
 	for (int i = 0; i < filterCount; i ++)
 	{
 		nsMsgFilter *filter;
-		if (GetFilterAt(i, &filter) == NS_OK && filter != nsnull)
+		if (GetMsgFilterAt(i, &filter) == NS_OK && filter != nsnull)
 		{
 			filter->SetFilterList(this);
-			if ((err = filter->SaveToTextFile(fid)) != NS_OK)
+			if ((err = filter->SaveToTextFile(m_fileStream)) != NS_OK)
 				break;
 		}
 		else
@@ -491,59 +500,14 @@ nsresult nsMsgFilterList::SaveTextFilters()
 	return err;
 }
 
-nsMsgFilterList::nsMsgFilterList()
-{
-	m_loggingEnabled = PR_FALSE;
-	m_curFilter = nsnull;
-}
-
 nsMsgFilterList::~nsMsgFilterList()
 {
-	for (int32 i = 0; i < m_filters->Count(); i++)
+	for (PRUint32 i = 0; i < m_filters->Count(); i++)
 	{
-		nsMsgFilter *filter;
+		nsIMsgFilter *filter;
 		if (GetFilterAt(i, &filter) == NS_OK)
 			delete filter;
 	}
-}
-
-uint32 nsMsgFilterList::GetExpectedMagic ()
-{
-	return m_expectedMagic; 
-}
-
-// What should we do about file errors here? If we blow away the
-// filter list even when we have an error, we can't let the user
-// correct the problem. But if we don't blow it away, we'll have
-// memory leaks.
-nsresult MSG_CloseFilterList(nsMsgFilterList *filterList)
-{
-	nsresult err;
-
-	if (filterList == nsnull)
-		return NS_ERROR_NULL_POINTER;
-
-	err = filterList->Close();
-	if (err == NS_OK)
-		delete filterList;
-	return err;
-}
-
-nsresult MSG_CancelFilterList(nsMsgFilterList *filterList)
-{
-	if (filterList == nsnull)
-		return NS_ERROR_NULL_POINTER;
-
-	delete filterList;
-	return NS_OK;
-}
-
-nsresult	MSG_SaveFilterList(nsMsgFilterList *filterList)
-{
-	if (filterList == nsnull)
-		return NS_ERROR_NULL_POINTER;
-
-	return filterList->Close();
 }
 
 nsresult nsMsgFilterList::Close()
@@ -590,33 +554,43 @@ nsresult nsMsgFilterList::GetFilterCount(PRInt32 *pCount)
 	return NS_OK;
 }
 
-nsresult nsMsgFilterList::GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filter)
+nsresult nsMsgFilterList::GetMsgFilterAt(PRUint32 filterIndex, nsMsgFilter **filter)
 {
-	if (!m_filters->IsValidIndex(filterIndex))
-		return FilterError_InvalidIndex;
+
+	if (! (m_filters->Count() >= filterIndex))
+		return NS_ERROR_INVALID_ARG;
 	if (filter == nsnull)
 		return NS_ERROR_NULL_POINTER;
-	*filter = (nsIMsgFilter *) m_filters->GetAt(filterIndex);
+	*filter = (nsMsgFilter *) m_filters->ElementAt(filterIndex);
 	return NS_OK;
 }
 
+nsresult nsMsgFilterList::GetFilterAt(PRUint32 filterIndex, nsIMsgFilter **filter)
+{
+	if (! (m_filters->Count() >= filterIndex))
+		return NS_ERROR_INVALID_ARG;
+	if (filter == nsnull)
+		return NS_ERROR_NULL_POINTER;
+	*filter = (nsIMsgFilter *) m_filters->ElementAt(filterIndex);
+	return NS_OK;
+}
 
 nsresult nsMsgFilterList::SetFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)
 {
-	m_filters->SetElementAtGrow(filterIndex, filter);
+	m_filters->ReplaceElementAt(filter, filterIndex);
 	return NS_OK;
 }
 
 
 nsresult nsMsgFilterList::RemoveFilterAt(PRUint32 filterIndex)
 {
-	m_filters->RemoveAt(filterIndex, 1);
+	m_filters->RemoveElementAt(filterIndex);
 	return NS_OK;
 }
 
 nsresult nsMsgFilterList::InsertFilterAt(PRUint32 filterIndex, nsIMsgFilter *filter)
 {
-	m_filters->InsertAt(filterIndex, filter);
+	m_filters->InsertElementAt(filter, filterIndex);
 	return NS_OK;
 }
 
@@ -628,27 +602,27 @@ nsresult nsMsgFilterList::MoveFilterAt(PRUint32 filterIndex,
 {
 	nsIMsgFilter	*tempFilter;
 
-	if (!m_filters->IsValidIndex(filterIndex))
-		return FilterError_InvalidIndex;
+	if (! (m_filters->Count() >= filterIndex))
+		return NS_ERROR_INVALID_ARG;
 
-	tempFilter = (nsIMsgFilter *) m_filters->GetAt(filterIndex);
-	if (motion == filterUp)
+	tempFilter = (nsIMsgFilter *) m_filters->ElementAt(filterIndex);
+	if (motion == nsMsgFilterUp)
 	{
 		if (filterIndex == 0)
 			return NS_OK;
-		m_filters->SetElementAt(filterIndex, m_filters->GetAt(filterIndex - 1));
-		m_filters->SetElementAt(filterIndex - 1, tempFilter);
+		m_filters->ReplaceElementAt(m_filters->ElementAt(filterIndex - 1), filterIndex);
+		m_filters->ReplaceElementAt(tempFilter, filterIndex - 1);
 	}
-	else if (motion == filterDown)
+	else if (motion == nsMsgFilterDown)
 	{
 		if (filterIndex + 1 > (PRUint32) (m_filters->Count() - 1))
 			return NS_OK;
-		m_filters->SetElementAt(filterIndex, m_filters->GetAt(filterIndex + 1));
-		m_filters->SetElementAt(filterIndex + 1, tempFilter);
+		m_filters->ReplaceElementAt(m_filters->ElementAt(filterIndex + 1), filterIndex);
+		m_filters->ReplaceElementAt(tempFilter, filterIndex + 1);
 	}
 	else
 	{
-		return FilterError_InvalidMotion;
+		return NS_ERROR_INVALID_ARG;
 	}
 	return NS_OK;
 }
@@ -660,8 +634,8 @@ void nsMsgFilterList::Dump()
 
 	for (int32 i = 0; i < m_filters->Count(); i++)
 	{
-		nsIMsgFilter *filter;
-		if (GetFilterAt(i, &filter) == NS_OK)
+		nsMsgFilter *filter;
+		if (GetMsgFilterAt(i, &filter) == NS_OK)
 			filter->Dump();
 	}
 
