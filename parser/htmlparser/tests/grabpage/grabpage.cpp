@@ -105,7 +105,7 @@ NS_IMETHODIMP
 StreamToFile::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream,
                               PRInt32 length) 
 {
-  PRInt32 len;
+  PRUint32 len;
   do {
     char buffer[4000];
     nsresult err = pIStream->Read(buffer, 0, sizeof(buffer), &len);
