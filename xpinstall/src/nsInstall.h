@@ -220,7 +220,7 @@ class nsInstall
         PRInt32    FileOpFileMove(nsFileSpec& aSrc, nsFileSpec& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileRename(nsFileSpec& aSrc, nsString& aTarget, PRInt32* aReturn);
         PRInt32    FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutPath, nsString& aDescription, nsFileSpec& aWorkingPath, nsString& aParams, nsFileSpec& aIcon, PRInt32 aIconId, PRInt32* aReturn);
-        PRInt32    FileOpFileMacAlias(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
+        PRInt32    FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt32* aReturn);
         PRInt32    FileOpFileUnixLink(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn);
 
         void       LogComment(nsString& aComment);

@@ -1756,8 +1756,42 @@ nsInstall::FileOpFileWindowsShortcut(nsFileSpec& aTarget, nsFileSpec& aShortcutP
 }
 
 PRInt32
-nsInstall::FileOpFileMacAlias(nsFileSpec& aTarget, PRInt32 aFlags, PRInt32* aReturn)
+nsInstall::FileOpFileMacAlias(nsString& aSourcePath, nsString& aAliasPath, PRInt32* aReturn)
 {
+  *aReturn = nsInstall::SUCCESS;
+
+#ifdef XP_MAC
+  nsFileSpec nsfsSource(aSourcePath, PR_FALSE);
+  nsFileSpec nsfsAlias(aAliasPath, PR_TRUE);
+  
+  nsInstallFileOpItem* ifop = new nsInstallFileOpItem(this, NS_FOP_MAC_ALIAS, nsfsSource, nsfsAlias, aReturn);
+
+  PRInt32 result = SanityCheck();
+  if (result != nsInstall::SUCCESS)
+  {
+      *aReturn = SaveError( result );
+      return NS_OK;
+  }
+
+  if (ifop == nsnull)
+  {
+      *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+      return NS_OK;
+  }
+
+  if (*aReturn == nsInstall::SUCCESS) 
+  {
+      *aReturn = ScheduleForInstall( ifop );
+  }
+      
+  if (*aReturn == nsInstall::FILE_DOES_NOT_EXIST) 
+  {
+      *aReturn = nsInstall::SUCCESS;
+  }
+
+  SaveError(*aReturn);
+#endif
+
   return NS_OK;
 }
 
