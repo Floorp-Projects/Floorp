@@ -595,6 +595,20 @@ MOZ_ARG_DISABLE_BOOL(async-dns,
 [  --disable-async-dns     Disable separate dns thread],
   NO_UNIX_ASYNC_DNS=1)
 
+dnl build mozilla/nsprpub by default
+MOZ_BUILD_NSPR=1
+
+MOZ_ARG_DISABLE_BOOL(build-nspr,
+[  --disable-build-nspr    Dont build mozilla/nsprpub],
+  MOZ_BUILD_NSPR= )
+
+dnl build mozilla/xpfe by default
+MOZ_BUILD_XPFE=1
+
+MOZ_ARG_DISABLE_BOOL(build-xpfe,
+[  --disable-build-xpfe    Dont build mozilla/xpfe],
+  MOZ_BUILD_XPFE= )
+
 MOZ_ARG_ENABLE_BOOL(editor,
 [  --enable-editor         Enable editor],
   MOZ_EDITOR=1)
@@ -608,13 +622,6 @@ dnl [ NO_UNIX_LDAP=1 ])
 MOZ_ARG_ENABLE_BOOL(mailnews,
 [  --enable-mailnews       Enable Mail & News],
   MOZ_MAIL_NEWS=1)
-
-dnl build mozilla/nsprpub by default
-MOZ_BUILD_NSPR=1
-
-MOZ_ARG_DISABLE_BOOL(build-nspr,
-[  --disable-build-nspr    Dont build mozilla/nsprpub],
-  MOZ_BUILD_NSPR= )
 
 dnl Note: This conflicts with --disable-shared
 MOZ_ARG_ENABLE_BOOL(oji,
@@ -649,13 +656,6 @@ if test "$MOZ_TOOLKIT" = "USE_DEFAULT"; then
     MOZ_TOOLKIT="gtk"
   fi
 fi
-
-dnl build mozilla/xpfe by default
-MOZ_BUILD_XPFE=1
-
-MOZ_ARG_DISABLE_BOOL(build-xpfe,
-[  --disable-build-xpfe    Dont build mozilla/xpfe],
-  MOZ_BUILD_XPFE= )
 
 
 MOZ_ARG_HEADER(Compiler Options)
