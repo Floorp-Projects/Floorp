@@ -1,5 +1,4 @@
-#include <iostream>
-using namespace std;
+#include <iostream.h>
 
 #include "nsString.h"
 #include "nsSharedString.h"
@@ -7,7 +6,7 @@ using namespace std;
 
 // #define NS_USE_WCHAR_T
 
-
+#if 0
 static
 ostream&
 print_string( const nsAReadableString& s )
@@ -20,6 +19,7 @@ print_string( const nsAReadableString& s )
     transform(s.BeginReading(), s.EndReading(), ostream_iterator<char>(cout), PRUnichar_to_char());
     return cout;
   }
+#endif
 
 
 template <class CharT>
@@ -87,65 +87,6 @@ test_multifragment_iterators( const basic_nsAReadableString<CharT>& aString )
 
     return tests_failed;
   }
-
-#if 0
-template <class CharT>
-int
-test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<CharT>& aReadable )
-  {
-    int tests_failed = 0;
-
-    if ( aReadable.GetBuffer() || aReadable.GetUnicode() )
-      {
-        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: non-zero result." << endl;
-        ++tests_failed;
-      }
-
-    return tests_failed;
-  }
-
-NS_SPECIALIZE_TEMPLATE
-int
-test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<char>& aReadable )
-  {
-    int tests_failed = 0;
-
-    if ( !aReadable.GetBuffer() )
-      {
-        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetBuffer()| returned 0." << endl;
-        ++tests_failed;
-      }
-
-    if ( aReadable.GetUnicode() )
-      {
-        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetUnicode()| returned a non-zero result." << endl;
-        ++tests_failed;
-      }
-
-    return tests_failed;
-  }
-
-NS_SPECIALIZE_TEMPLATE
-int
-test_deprecated_GetBufferGetUnicode( const basic_nsAReadableString<PRUnichar>& aReadable )
-  {
-    int tests_failed = 0;
-
-    if ( aReadable.GetBuffer() )
-      {
-        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetBuffer()| returned a non-zero result." << endl;
-        ++tests_failed;
-      }
-
-    if ( !aReadable.GetUnicode() )
-      {
-        cout << "FAILED |test_deprecated_GetBufferGetUnicode()|: |GetUnicode()| returned 0." << endl;
-        ++tests_failed;
-      }
-
-    return tests_failed;
-  }
-#endif
 
 template <class CharT>
 int
@@ -352,7 +293,7 @@ main()
 
       nsSharedString* s15 = new_nsSharedString( s7 + s8 + s9 );
       tests_failed += test_readable_hello(*s15);
-      cout << "Here's a string: \""; print_string(*s15) << "\"" << endl;
+      // cout << "Here's a string: \""; print_string(*s15) << "\"" << endl;
 
       nsCString         s10("He");
       nsLiteralCString  s11("l");

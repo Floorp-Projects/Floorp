@@ -2,7 +2,7 @@
 
 #include "nscore.h"
 #include "prlong.h"
-#include <iostream>
+#include <iostream.h>
 #include <string>
 #include <iomanip>
 
@@ -20,11 +20,7 @@ typedef nsStdCString nsCString;
 static const int kTestSucceeded = 0;
 static const int kTestFailed = 1;
 
-#if 0
-#define N 1000
-#else
-#define N 100000
-#endif
+static const size_t N = 100000;
 
 
 template <class T>
