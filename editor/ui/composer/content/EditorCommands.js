@@ -401,7 +401,7 @@ function EditorSetParagraphFormat(paraFormat)
 function EditorSelectFontFace() 
 {
   var select = document.getElementById("FontFaceSelect");
-dump("EditorSelectFontFace: "+gFontFaceNames[select.selectedIndex]+"\n");
+//dump("EditorSelectFontFace: "+gFontFaceNames[select.selectedIndex]+"\n");
   if (select)
   { 
     if (select.selectedIndex == -1)
@@ -419,6 +419,7 @@ function onFontFaceChange()
     // Default selects "Variable Width"
     var newIndex = 0;
   	var face = select.getAttribute("face");
+//dump("onFontFaceChange: face="+face+"\n");
     if ( face == "mixed")
     {
       // No single type selected
@@ -514,6 +515,26 @@ function EditorSetFontSize(size)
     editorShell.SetTextProperty("font", "size", size);
   }
   contentWindow.focus();
+}
+
+function EditorIncreaseFontSize()
+{
+  editorShell.IncreaseFontSize();
+}
+
+function EditorDecreaseFontSize()
+{
+  editorShell.DecreaseFontSize();
+}
+
+function EditorSelectTextColor()
+{
+  dump("EditorSelectTextColor\n");
+}
+
+function EditorSelectBackColor()
+{
+  dump("EditorSelectBackColor\n");
 }
 
 function EditorSetFontColor(color)
@@ -1254,8 +1275,8 @@ function EditorUnitTests()
 function EditorExit()
 {
 	dump("Exiting\n");
- // editorShell.Exit();
- goQuitApplication();
+  // This is in globalOverlay.js
+  goQuitApplication();
 }
 
 function EditorTestDocument()

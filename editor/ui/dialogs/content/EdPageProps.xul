@@ -27,30 +27,40 @@
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?> 
 <?xul-overlay href="chrome://editor/content/EdDialogOverlay.xul"?> 
 
-<!DOCTYPE window SYSTEM "chrome://editor/locale/EdNamedAnchorProperties.dtd">
+<!DOCTYPE window SYSTEM "chrome://editor/locale/EditorPageProperties.dtd">
 
-<xul:window class="dialog" title="&windowTitle.label;"
-    xmlns:xul ="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-    xmlns="http://www.w3.org/TR/REC-html40"
-    onload = "Startup()"
+<window class="dialog" title="&tableWindow.title;"
+    xmlns:html="http://www.w3.org/TR/REC-html40"
+    xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+    onload="Startup()"
+    width="450" height="430"
     align="vertical">
 
   <!-- Methods common to all editor dialogs -->
-  <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js">
-  </script>
-  <script language="JavaScript" src="chrome://editor/content/EdNamedAnchorProps.js">
-  </script>
-  <script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
+  <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
+  <html:script language="JavaScript" src="chrome://editor/content/EdPageProps.js"/>
+  <html:script language="JavaScript" src="chrome://global/content/dialogOverlay.js" />
 
-  <xul:keyset id="keyset"/>
-
-  <label for="nameInput"> &anchorNameEditField.label; </label>
-  <input type="text" id="nameInput" size="30" maxlength="255" />
-  <div>&noSpacesMsg.label;</div>
-  <xul:spring class="spacer"/>
-  <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEdit"/>
-  <!-- from global dialogOverlay -->
-  <xul:box id="okCancelButtons"/> 
-
-</xul:window>
+  <broadcaster id="args" value=""/>
+  <keyset id="keyset"/>
+    <tabcontrol align="vertical">
+	    <tabbox align="horizontal" flex="100%">
+		    <tab>&tableTab.label;</tab>
+		    <tab>&cellTab.label;</tab>
+	    </tabbox>
+ 
+    	<tabpanel flex="100%">
+        <!-- table tab -->
+    		<box align="vertical" class="panel">
+        </box>
+  
+        <!-- cell tab -->
+    		<box align="vertical" class="panel">
+        </box>
+    	</tabpanel> 
+    </tabcontrol>
+    <!-- from EdDialogOverlay -->
+    <box id="AdvancedEdit"/>
+    <spring flex="100%"/>
+	  <box id="okCancelButtons"/> 
+</window>

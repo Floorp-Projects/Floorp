@@ -32,6 +32,8 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/EdLinkProps.js \
 		$(srcdir)/EdListProps.xul \
 		$(srcdir)/EdListProps.js \
+		$(srcdir)/EdPageProps.xul \
+		$(srcdir)/EdPageProps.js \
 		$(srcdir)/EdImageProps.xul \
 		$(srcdir)/EdImageProps.js \
 		$(srcdir)/EdInsSrc.xul \

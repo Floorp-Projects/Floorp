@@ -18,21 +18,9 @@
    - Rights Reserved.
    - 
    - Contributor(s): 
-   -   Dan Haddix (dan6992@hotmail.com)
   -->
 
-<!-- These strings are for use specifically in the editor's image map dialog. -->
-<!-- Window title -->
-<!ENTITY windowTitle.label "Image Map Editor">
 
-<!-- Toolbar image locations -->
-<!ENTITY pointerIcon.url "chrome://editor/skin/images/pointertool.gif">
-<!ENTITY rectangleIcon.url "chrome://editor/skin/images/rectangletool.gif">
-<!ENTITY circleIcon.url "chrome://editor/skin/images/circletool.gif">
-<!ENTITY polygonIcon.url "chrome://editor/skin/images/polygontool.gif">
-<!ENTITY cutIcon.url "chrome://editor/skin/images/cut.gif">
-<!ENTITY copyIcon.url "chrome://editor/skin/images/copy.gif">
-<!ENTITY pasteIcon.url "chrome://editor/skin/images/paste.gif">
-<!ENTITY zoomInIcon.url "chrome://editor/skin/images/zoomin.gif">
-<!ENTITY zoomOutIcon.url "chrome://editor/skin/images/zoomout.gif">
-<!ENTITY contrastIcon.url "chrome://editor/skin/images/contrast.gif">
+<!-- Window title -->
+<!ENTITY windowTitle.label "Page Properties">
+

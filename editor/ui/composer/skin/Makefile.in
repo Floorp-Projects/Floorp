@@ -55,6 +55,8 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/undo.gif \
 		$(srcdir)/images/text-color.gif \
 		$(srcdir)/images/backcolor.gif \
+		$(srcdir)/images/back-color1.gif \
+		$(srcdir)/images/back-color2.gif \
 		$(srcdir)/images/align.gif \
 		$(srcdir)/images/object-popup.gif \
 		$(srcdir)/images/newfile.gif \
@@ -70,7 +72,13 @@ EXPORT_RESOURCE_TOOLBAR = \
 		$(srcdir)/images/img-align-middle.gif \
 		$(srcdir)/images/img-align-right.gif \
 		$(srcdir)/images/img-align-top.gif \
-		$(srcdir)/images/hover-teal.gif \
+		$(srcdir)/images/link-white.gif   \
+		$(srcdir)/images/anchor-white.gif \
+		$(srcdir)/images/image-white.gif  \
+		$(srcdir)/images/table-white.gif  \
+		$(srcdir)/images/hline-white.gif  \
+		$(srcdir)/images/dec-font-size.gif  \
+		$(srcdir)/images/inc-font-size.gif  \
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk

@@ -47,12 +47,14 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\redo.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\spell.gif			$(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\table.gif			$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\anchor.gif           $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\anchor-in-doc.gif    $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\underline.gif	$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\undo.gif			$(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\text-color.gif $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\backcolor.gif	$(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\anchor.gif         $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\anchor-in-doc.gif  $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\underline.gif	    $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\undo.gif			      $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\text-color.gif     $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\backcolor.gif      $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\back-color1.gif    $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\back-color2.gif    $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\newfile.gif   $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\openfile.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\savefile.gif  $(DIST)\bin\chrome\editor\skin\default\images
@@ -66,8 +68,13 @@ install:: $(DLL)
   $(MAKE_INSTALL) images\img-align-middle.gif $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\img-align-right.gif  $(DIST)\bin\chrome\editor\skin\default\images
   $(MAKE_INSTALL) images\img-align-top.gif    $(DIST)\bin\chrome\editor\skin\default\images
-  $(MAKE_INSTALL) images\hover-teal.gif       $(DIST)\bin\chrome\editor\skin\default\images
-
+  $(MAKE_INSTALL) images\link-white.gif       $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\anchor-white.gif     $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\image-white.gif      $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\table-white.gif      $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\hline-white.gif      $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\dec-font-size.gif    $(DIST)\bin\chrome\editor\skin\default\images
+  $(MAKE_INSTALL) images\inc-font-size.gif    $(DIST)\bin\chrome\editor\skin\default\images
 
 clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\editor.css
@@ -94,12 +101,14 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\table.gif			
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor-in-doc.gif
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\underline.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\undo.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\text-color.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\backcolor.gif			
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\underline.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\undo.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\text-color.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\backcolor.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\back-color1.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\back-color2.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\object-popup.gif			
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\newfile.gif 
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\newfile.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\openfile.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\savefile.gif
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\savemod.gif
@@ -112,4 +121,10 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-middle.gif    
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-right.gif    
   rm -f $(DIST)\bin\chrome\editor\skin\default\images\img-align-top.gif    
-  rm -f $(DIST)\bin\chrome\editor\skin\default\images\hover-teal.gif    
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\link-white.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\anchor-white.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\image-white.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\table-white.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\hline-white.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\dec-font-size.gif
+  rm -f $(DIST)\bin\chrome\editor\skin\default\images\inc-font-size.gif

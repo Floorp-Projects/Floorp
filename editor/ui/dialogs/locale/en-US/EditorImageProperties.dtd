@@ -61,4 +61,4 @@
 <!ENTITY makePageBackgroundCheckbox.label "Make Page Background">
 <!ENTITY editImageButton.label "Edit Image">
 <!ENTITY removeImageMapButton.label "Remove Image Map">
-<!ENTITY addImageMapButton.label "Add Image Map">
+<!ENTITY editImageMapButton.label "Edit Image Map...">

@@ -65,6 +65,8 @@ images:undo.gif
 images:bold.gif
 images:text-color.gif
 images:backcolor.gif
+images:back-color1.gif
+images:back-color2.gif
 images:align.gif
 images:object-popup.gif
 images:newfile.gif
@@ -75,4 +77,11 @@ images:publish.gif
 images:preview.gif
 images:print.gif
 images:find.gif
-images:hover-teal.gif
+images:link-white.gif
+images:anchor-white.gif
+images:image-white.gif
+images:table-white.gif
+images:hline-white.gif
+images:dec-font-size.gif
+images:inc-font-size.gif
+

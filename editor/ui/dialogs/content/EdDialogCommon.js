@@ -63,7 +63,6 @@ function StringExists(string)
 
 function ClearList(list)
 {
-  dump("Clear List: list="+list+"\n");
   if (list) {
     list.selectedIndex = -1;
     for( i=list.length-1; i >= 0; i--)
@@ -75,16 +74,6 @@ function ReplaceStringInList(list, index, string)
 {
   if (index < list.options.length)
   {
-  //Hmmm... We should be able to simply set the "text" and "value"
-  //  properties of the option element, but setting "text" doesn't work.
-  //  Replace with a new node instead:
-/*
-    node = list.options[index];
-    dump("BEFORE Option node text: "+node.text+" Value: "+node.value+"\n");
-    node.text = string;
-    node.value = string;
-    dump("AFTER Option node text: "+node.text+" Value: "+node.value+"\n");
-*/
     // Save and remove selection else we have trouble below!
     //  (This must be a bug!)
     selIndex = list.selectedIndex;
@@ -231,6 +220,7 @@ function SetElementEnabledByID( elementID, doEnable )
   element = document.getElementById(elementID);
   if ( element )
   {
+//dump("*** SetElementEnabledByID: Element="+element+" ID="+elementID+"\n");
     if ( doEnable )
     {
       element.removeAttribute( "disabled" );
@@ -239,6 +229,10 @@ function SetElementEnabledByID( elementID, doEnable )
     {
       element.setAttribute( "disabled", "true" );
     }
+  }
+  else
+  {
+    dump("Element "+elementID+" not found in SetElementEnabledByID\n");
   }
 }
 
@@ -466,3 +460,24 @@ function getContainer ()
      return null;
 }
 
+// setColorWell assumes the following UI pattern:
+/*
+<menu>
+	<titledbutton value="&????" class="popup" align="right"/>
+The colorWell:
+  <html:div style="width:30px; background-color:white"/> 
+	<menupopup>
+		<colorpicker palettename="standard" onclick="setColorWell(this.parentNode.parentNode);"/>
+	</menupopup>
+</menu>
+*/
+function setColorWell(menu)
+{
+  // Find the colorWell and colorPicker in the hierarchy.
+  var colorWell = menu.firstChild.nextSibling;
+  var colorPicker = menu.firstChild.nextSibling.nextSibling.firstChild;
+
+  // Extract color from colorPicker and assign to colorWell.
+  var color = colorPicker.getAttribute('color');
+  colorWell.style.backgroundColor = color;
+}

@@ -91,7 +91,7 @@
   </table>
   <xul:spring class="spacer"/>
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEditButton"/>
+  <xul:box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 

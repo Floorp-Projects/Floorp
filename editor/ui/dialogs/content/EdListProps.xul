@@ -64,7 +64,7 @@
   </xul:box>
   <xul:broadcaster id="args" value=""/>
   <!-- from EdDialogOverlay -->
-  <xul:box id="AdvancedEditButton"/>
+  <xul:box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
 	<xul:box id="okCancelButtons"/> 
 

@@ -324,6 +324,201 @@ nsEditorShell::Init()
   return NS_OK;
 }
 
+NS_IMETHODIMP    
+nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
+{
+  if (!mContentAreaWebShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  if (mEditor)
+  {
+    // Mmm, we have an editor already. That means that someone loaded more than
+    // one URL into the content area. Let's tear down what we have, and rip 'em a
+    // new one.
+
+    // first, unregister the selection listener, if there was one
+    if (mStateMaintainer)
+    {
+      nsCOMPtr<nsIDOMSelection> domSelection;
+      // using a scoped result, because we don't really care if this fails
+      nsresult result = GetEditorSelection(getter_AddRefs(domSelection));
+      if (NS_SUCCEEDED(result) && domSelection)
+      {
+        domSelection->RemoveSelectionListener(mStateMaintainer);
+        NS_IF_RELEASE(mStateMaintainer);
+      }
+    }
+    
+    mEditorType = eUninitializedEditorType;
+    mEditor = 0;  // clear out the nsCOMPtr
+
+    // and tell them that they are doing bad things
+    NS_WARNING("Multiple loads of the editor's document detected.");
+    // Note that if you registered doc state listeners before the second
+    // URL load, they don't get transferred to the new editor.
+  }
+  
+  nsresult rv = DoEditorMode(mContentAreaWebShell);
+  if (NS_FAILED(rv)) return rv;
+  
+  // transfer the doc state listeners to the editor
+  rv = TransferDocumentStateListeners();
+  if (NS_FAILED(rv)) return rv;
+  
+  // make the UI state maintainer
+  mStateMaintainer = new nsInterfaceState;
+  if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
+  mStateMaintainer->AddRef();      // the owning reference
+  rv = mStateMaintainer->Init(mEditor, mWebShell);
+  if (NS_FAILED(rv)) return rv;
+  
+  // set it up as a selection listener
+  nsCOMPtr<nsIDOMSelection> domSelection;
+  rv = GetEditorSelection(getter_AddRefs(domSelection));
+  if (NS_FAILED(rv)) return rv;
+
+  rv = domSelection->AddSelectionListener(mStateMaintainer);
+  if (NS_FAILED(rv)) return rv;
+
+  // and set it up as a doc state listener
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
+  if (NS_FAILED(rv)) return rv;
+  rv = editor->AddDocumentStateListener(mStateMaintainer);
+  if (NS_FAILED(rv)) return rv;
+  
+  // now all the listeners are set up, we can call PostCreate
+  rv = editor->PostCreate();
+  if (NS_FAILED(rv)) return rv;
+  
+  // get the URL of the page we are editing
+  char* pageURLString = nsnull;
+  if (aUrl)
+  {
+    aUrl->GetSpec(&pageURLString);
+    // Don't save the name if we're a new blank document
+    if (0 != nsCRT::strncmp(pageURLString,"about:blank",nsCRT::strlen(pageURLString)))
+    {
+      nsFileURL    pageURL(pageURLString);
+      nsFileSpec   pageSpec(pageURL);
+
+      nsCOMPtr<nsIDOMDocument>  domDoc;
+      editor->GetDocument(getter_AddRefs(domDoc));
+    
+      if (domDoc)
+      {
+        nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(domDoc);
+        if (diskDoc)
+          diskDoc->InitDiskDocument(&pageSpec);
+      }
+    }
+    if (pageURLString)
+      nsCRT::free(pageURLString);
+  }
+  // Set the editor-specific Window caption
+  UpdateWindowTitle();
+
+  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
+  if (!styleSheets)
+    return NS_NOINTERFACE;
+
+  // Load style sheet with settings that should never
+  //  change, even in "Browser" mode
+  styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorOverride.css");
+
+  // Load the edit mode override style sheet
+  // This will be remove for "Browser" mode
+  SetDisplayMode(eDisplayModeEdit);
+
+  // Force initial focus to the content window -- HOW?
+//  mWebShellWin->SetFocus();
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SetToolbarWindow(nsIDOMWindow* aWin)
+{
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (!aWin)
+      return NS_ERROR_NULL_POINTER;
+
+  mToolbarWindow = aWin;
+  //NS_ADDREF(aWin);
+  //mToolbarScriptContext = GetScriptContext(aWin);
+
+  return NS_OK;
+}
+
+NS_IMETHODIMP    
+nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
+{
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (!aWin)
+      return NS_ERROR_NULL_POINTER;
+
+  mContentWindow = aWin;
+  //mContentScriptContext = GetScriptContext(mContentWindow);    // XXX does this AddRef?
+
+  nsresult  rv;
+  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow, &rv);
+  if (NS_FAILED(rv) || !globalObj)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWebShell> webShell;
+  globalObj->GetWebShell(getter_AddRefs(webShell));
+  if (!webShell)
+    return NS_ERROR_FAILURE;
+    
+  mContentAreaWebShell = webShell;      // dont AddRef
+  return mContentAreaWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
+}
+
+
+NS_IMETHODIMP    
+nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
+{
+  NS_PRECONDITION(aWin != nsnull, "null ptr");
+  if (!aWin)
+      return NS_ERROR_NULL_POINTER;
+
+//  if (!mContentWindow) {
+//    return NS_ERROR_FAILURE;
+//  }
+  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
+  if (!globalObj) {
+    return NS_ERROR_FAILURE;
+  }
+
+  nsresult  rv = NS_OK;
+  
+  nsCOMPtr<nsIWebShell> webShell;
+  globalObj->GetWebShell(getter_AddRefs(webShell));
+  if (!webShell)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  mWebShell = webShell;
+  //NS_ADDREF(mWebShell);
+  
+#ifdef APP_DEBUG
+  const PRUnichar * name;
+  webShell->GetName( &name);
+  nsAutoString str(name);
+
+  char* cstr = str.ToNewCString();
+  printf("Attaching to WebShellWindow[%s]\n", cstr);
+  nsCRT::free(cstr);
+#endif
+
+  nsCOMPtr<nsIWebShellContainer> webShellContainer;
+  mWebShell->GetContainer(*getter_AddRefs(webShellContainer));
+  if (!webShellContainer)
+    return NS_ERROR_NOT_INITIALIZED;
+
+  nsCOMPtr<nsIWebShellWindow> webShellWin = do_QueryInterface(webShellContainer, &rv);
+  mWebShellWin = webShellWin;
+    
+  return rv;
+}
+
 nsIPresShell*
 nsEditorShell::GetPresShellFor(nsIWebShell* aWebShell)
 {
@@ -637,7 +832,31 @@ nsEditorShell::GetTextProperty(const PRUnichar *prop, const PRUnichar *attr, con
   return err;
 }
 
-NS_IMETHODIMP nsEditorShell::SetBackgroundColor(const PRUnichar *color)
+NS_IMETHODIMP
+nsEditorShell::IncreaseFontSize()
+{
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+
+  if (htmlEditor)
+    err = htmlEditor->IncreaseFontSize();
+  return err;
+}
+
+NS_IMETHODIMP
+nsEditorShell::DecreaseFontSize()
+{
+  nsresult  err = NS_NOINTERFACE;
+  nsCOMPtr<nsIHTMLEditor>  htmlEditor = do_QueryInterface(mEditor);
+
+  if (htmlEditor)
+    err = htmlEditor->DecreaseFontSize();
+  return err;
+}
+
+
+NS_IMETHODIMP 
+nsEditorShell::SetBackgroundColor(const PRUnichar *color)
 {
   nsresult result = NS_NOINTERFACE;
   
@@ -648,7 +867,8 @@ NS_IMETHODIMP nsEditorShell::SetBackgroundColor(const PRUnichar *color)
   return result;
 }
 
-NS_IMETHODIMP nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
+NS_IMETHODIMP 
+nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 {
   nsresult result = NS_NOINTERFACE;
   
@@ -662,7 +882,8 @@ NS_IMETHODIMP nsEditorShell::ApplyStyleSheet(const PRUnichar *url)
 }
 
 // Note: This is not undoable action (on purpose!)
-NS_IMETHODIMP nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
+NS_IMETHODIMP 
+nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
 {
   // We are already in EditMode
   if (aDisplayMode == eDisplayModeEdit && mEditModeStyleSheet)
@@ -765,7 +986,8 @@ NS_IMETHODIMP nsEditorShell::SetDisplayMode(PRInt32 aDisplayMode)
   return rv;
 }
 
-NS_IMETHODIMP nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
+NS_IMETHODIMP 
+nsEditorShell::SetBodyAttribute(const PRUnichar *attr, const PRUnichar *value)
 {
   nsresult result = NS_NOINTERFACE;
   
@@ -890,211 +1112,6 @@ nsEditorShell::TransferDocumentStateListeners()
   // free the array
   mDocStateListeners = 0;
   return NS_OK;
-}
-
-
-NS_IMETHODIMP    
-nsEditorShell::PrepareDocumentForEditing(nsIURI *aUrl)
-{
-  if (!mContentAreaWebShell)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  if (mEditor)
-  {
-    // Mmm, we have an editor already. That means that someone loaded more than
-    // one URL into the content area. Let's tear down what we have, and rip 'em a
-    // new one.
-
-    // first, unregister the selection listener, if there was one
-    if (mStateMaintainer)
-    {
-      nsCOMPtr<nsIDOMSelection> domSelection;
-      // using a scoped result, because we don't really care if this fails
-      nsresult result = GetEditorSelection(getter_AddRefs(domSelection));
-      if (NS_SUCCEEDED(result) && domSelection)
-      {
-        domSelection->RemoveSelectionListener(mStateMaintainer);
-        NS_IF_RELEASE(mStateMaintainer);
-      }
-    }
-    
-    mEditorType = eUninitializedEditorType;
-    mEditor = 0;  // clear out the nsCOMPtr
-
-    // and tell them that they are doing bad things
-    NS_WARNING("Multiple loads of the editor's document detected.");
-    // Note that if you registered doc state listeners before the second
-    // URL load, they don't get transferred to the new editor.
-  }
-  
-  nsresult rv = DoEditorMode(mContentAreaWebShell);
-  if (NS_FAILED(rv)) return rv;
-  
-  // transfer the doc state listeners to the editor
-  rv = TransferDocumentStateListeners();
-  if (NS_FAILED(rv)) return rv;
-  
-  // make the UI state maintainer
-  mStateMaintainer = new nsInterfaceState;
-  if (!mStateMaintainer) return NS_ERROR_OUT_OF_MEMORY;
-  mStateMaintainer->AddRef();      // the owning reference
-  rv = mStateMaintainer->Init(mEditor, mWebShell);
-  if (NS_FAILED(rv)) return rv;
-  
-    // set it up as a selection listener
-  nsCOMPtr<nsIDOMSelection> domSelection;
-  rv = GetEditorSelection(getter_AddRefs(domSelection));
-  if (NS_FAILED(rv)) return rv;
-
-  rv = domSelection->AddSelectionListener(mStateMaintainer);
-  if (NS_FAILED(rv)) return rv;
-
-  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor, &rv);
-  if (NS_FAILED(rv)) return rv;
-
-  // and set it up as a doc state listener
-  rv = editor->AddDocumentStateListener(mStateMaintainer);
-  if (NS_FAILED(rv)) return rv;
-  
-  // now all the listeners are set up, we can call PostCreate
-  rv = editor->PostCreate();
-  if (NS_FAILED(rv)) return rv;
-  
-  // get the URL of the page we are editing
-  if (aUrl)
-  {
-    char* pageURLString = nsnull;
-    char* pageScheme = nsnull;
-
-    aUrl->GetScheme(&pageScheme);
-    aUrl->GetSpec(&pageURLString);
-    // only save the file spec if this is a local file, and is not
-    // about:blank
-    if (nsCRT::strncmp(pageScheme, "file", 4) == 0 &&
-        nsCRT::strncmp(pageURLString,"about:blank", 11) != 0)
-    {
-      nsFileURL    pageURL(pageURLString);
-      nsFileSpec   pageSpec(pageURL);
-
-      nsCOMPtr<nsIDOMDocument>  domDoc;
-      editor->GetDocument(getter_AddRefs(domDoc));
-    
-      if (domDoc)
-      {
-        nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(domDoc);
-        if (diskDoc)
-          diskDoc->InitDiskDocument(&pageSpec);
-      }
-    }
-
-    if (pageURLString)
-      nsCRT::free(pageURLString);
-    if (pageScheme)
-      nsCRT::free(pageScheme);
-  }
-  // Set the editor-specific Window caption
-  UpdateWindowTitle();
-
-  nsCOMPtr<nsIEditorStyleSheets> styleSheets = do_QueryInterface(mEditor);
-  if (!styleSheets)
-    return NS_NOINTERFACE;
-
-  // Load style sheet with settings that should never
-  //  change, even in "Browser" mode
-  styleSheets->ApplyOverrideStyleSheet("chrome://editor/content/EditorOverride.css");
-
-  // Load the edit mode override style sheet
-  // This will be remove for "Browser" mode
-  SetDisplayMode(eDisplayModeEdit);
-
-  // Force initial focus to the content window -- HOW?
-//  mWebShellWin->SetFocus();
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::SetToolbarWindow(nsIDOMWindow* aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (!aWin)
-      return NS_ERROR_NULL_POINTER;
-
-  mToolbarWindow = aWin;
-  //NS_ADDREF(aWin);
-  //mToolbarScriptContext = GetScriptContext(aWin);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP    
-nsEditorShell::SetContentWindow(nsIDOMWindow* aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (!aWin)
-      return NS_ERROR_NULL_POINTER;
-
-  mContentWindow = aWin;
-  //mContentScriptContext = GetScriptContext(mContentWindow);    // XXX does this AddRef?
-
-  nsresult  rv;
-  nsCOMPtr<nsIScriptGlobalObject> globalObj = do_QueryInterface(mContentWindow, &rv);
-  if (NS_FAILED(rv) || !globalObj)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
-  if (!webShell)
-    return NS_ERROR_FAILURE;
-    
-  mContentAreaWebShell = webShell;      // dont AddRef
-  return mContentAreaWebShell->SetDocLoaderObserver((nsIDocumentLoaderObserver *)this);
-}
-
-
-NS_IMETHODIMP    
-nsEditorShell::SetWebShellWindow(nsIDOMWindow* aWin)
-{
-  NS_PRECONDITION(aWin != nsnull, "null ptr");
-  if (!aWin)
-      return NS_ERROR_NULL_POINTER;
-
-//  if (!mContentWindow) {
-//    return NS_ERROR_FAILURE;
-//  }
-  nsCOMPtr<nsIScriptGlobalObject> globalObj( do_QueryInterface(aWin) );
-  if (!globalObj) {
-    return NS_ERROR_FAILURE;
-  }
-
-  nsresult  rv = NS_OK;
-  
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
-  if (!webShell)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  mWebShell = webShell;
-  //NS_ADDREF(mWebShell);
-  
-#ifdef APP_DEBUG
-  const PRUnichar * name;
-  webShell->GetName( &name);
-  nsAutoString str(name);
-
-  char* cstr = str.ToNewCString();
-  printf("Attaching to WebShellWindow[%s]\n", cstr);
-  nsCRT::free(cstr);
-#endif
-
-  nsCOMPtr<nsIWebShellContainer> webShellContainer;
-  mWebShell->GetContainer(*getter_AddRefs(webShellContainer));
-  if (!webShellContainer)
-    return NS_ERROR_NOT_INITIALIZED;
-
-  nsCOMPtr<nsIWebShellWindow> webShellWin = do_QueryInterface(webShellContainer, &rv);
-  mWebShellWin = webShellWin;
-    
-  return rv;
 }
 
 // Utility function to open an editor window and pass a URL to it.
@@ -1364,8 +1381,8 @@ nsEditorShell::SaveDocument(PRBool saveAs, PRBool saveCopy, PRBool *_retval)
             nsString title;
             res = HTMLDoc->GetTitle(title);
 
-            // Prompt for title if it's empty or user selected "Save As"
-            if (NS_SUCCEEDED(res) && (saveAs || title.Length() == 0))
+            // Prompt for title ONLY if it's empty
+            if (NS_SUCCEEDED(res) && title.Length() == 0)
             {
               // Use a "prompt" common dialog to get title string from user
               NS_WITH_SERVICE(nsICommonDialogs, dialog, kCommonDialogsCID, &res); 
@@ -1563,7 +1580,7 @@ nsEditorShell::Print()
   }
   return NS_OK;
 }
-
+// NO LONGER CALLED Global JS method goQuitApplication() is called instead
 NS_IMETHODIMP    
 nsEditorShell::Exit()
 {  
@@ -1683,13 +1700,46 @@ nsEditorShell::GetLocalFileURL(nsIDOMWindow *parent, const PRUnichar *filterType
 NS_IMETHODIMP
 nsEditorShell::UpdateWindowTitle()
 {
-  if (!mContentAreaWebShell)
-    return NS_ERROR_NOT_INITIALIZED;
+  nsresult res = NS_ERROR_NOT_INITIALIZED;
+
+  if (!mContentAreaWebShell || !mEditor)
+    return res;
+
+  nsCOMPtr<nsIEditor> editor = do_QueryInterface(mEditor);
+  if (!editor)
+    return res;
 
   nsAutoString windowCaption;
-  nsresult res = GetDocumentTitle(windowCaption);
+  res = GetDocumentTitle(windowCaption);
+
+  // Append just the 'leaf' filename to the Doc. Title for the window caption
   if (NS_SUCCEEDED(res))
+  {
+    nsCOMPtr<nsIDOMDocument>  domDoc;
+    editor->GetDocument(getter_AddRefs(domDoc));
+    if (domDoc)
+    {
+      nsCOMPtr<nsIDiskDocument> diskDoc = do_QueryInterface(domDoc);
+      if (diskDoc)
+      {
+        // find out if the doc already has a fileSpec associated with it.
+        nsFileSpec    docFileSpec;
+        PRBool noFileSpec = (diskDoc->GetFileSpec(docFileSpec) == NS_ERROR_NOT_INITIALIZED);
+        if (!noFileSpec && docFileSpec)
+        {
+          char *name = docFileSpec.GetLeafName();
+          if (name)
+          {
+            windowCaption += " [";
+            windowCaption += name;
+            windowCaption += "]";
+            nsCRT::free(name);
+          }
+        }
+      }
+    }
     res = mContentAreaWebShell->SetTitle(windowCaption.GetUnicode());
+  }
   return res;
 }
 

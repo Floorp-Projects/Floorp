@@ -158,11 +158,10 @@
     </toolbar>
     
     <toolbar id="FormatToolbar" persist="collapsed">
-      <html:div class="toolbar-middle">
+      <html:div>
         <!-- items are filled out from editorOverlay -->
         <html:select id="ParagraphSelect"/>
         <html:select id="FontFaceSelect"/>
-        <html:select id="FontSizeSelect"/>
       </html:div>
 
       <menu>
@@ -173,7 +172,12 @@
         <titledbutton id="BackColorPopupButton"/>
         <menupopup id="BackColorPopup"/>
       </menu>
+<!-- The new Color Picker
+      <box id="ColorButtons"/>
+-->
       
+      <titledbutton id="DecreaseFontSizeButton"/>
+      <titledbutton id="IncreaseFontSizeButton"/>
       <titledbutton id="boldButton"/>
       <titledbutton id="italicButton"/>
       <titledbutton id="underlineButton"/>

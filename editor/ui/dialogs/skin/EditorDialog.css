@@ -69,32 +69,34 @@ select#alignTypeSelect,label#alignLabel {
   margin-left: 5px;
 }
 
-titledbutton#AdvancedEdit {
+/* For right-aligned buttons - TODO: RESOLVE PROBLEM WITH FIELDSET MARGINS */
+titledbutton#AdvancedEditButton,titledbutton#AdvancedEditExtraButton,titledbutton#SaveDefault {
+  margin-right: 6px;
+  min-width: 8em;
+}
+
+titledbutton#editImageMap,titledbutton#removeImageMap {
   margin-left: 6px;
-  min-width: 10em;
+  margin-right: 6px;
+  min-width: 8em;
 }
 
 titledbutton#MoreFewerButton[more="0"] {
   margin-left: 6px;
   list-style-image: url(chrome://global/skin/scroll-down.gif);
-  /* use this after Eric fixes button width bug */
-  /* width: 10em */
+  /* bug 9459 - changing button text doesn't resize width.
+     This covers that problem, but we want this size anyway */
+  width: 10em;
 }
 titledbutton#MoreFewerButton[more="1"] {
   margin-left: 6px;
   list-style-image: url(chrome://global/skin/scroll-up.gif);
-  /* width: 10em */
+  width: 10em;
 }
 
 /* THIS SHOULD BE IN GLOBAL.CSS */
 label.dialog[disabled],legend.dialog[disabled] {
     color: gray;
-}
-
-/* Link Properties */
-titledbutton#SaveDefault {
-  margin-right: 6px;
-  width: 7em;
 }
 
 titledbutton[class~=SizeToParent] {

@@ -1195,6 +1195,17 @@ NS_IMETHODIMP nsHTMLEditor::RemoveInlineProperty(nsIAtom *aProperty, const nsStr
   return result;
 }
 
+NS_IMETHODIMP nsHTMLEditor::IncreaseFontSize()
+{
+  //TODO: Write this!
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
+
+NS_IMETHODIMP nsHTMLEditor::DecreaseFontSize()
+{
+  //TODO: Write this!
+  return NS_ERROR_NOT_IMPLEMENTED;
+}
 
 NS_IMETHODIMP nsHTMLEditor::GetTypingState(nsIAtom *aProperty, PRBool &aSet)
 {

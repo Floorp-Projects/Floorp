@@ -60,7 +60,7 @@ function Startup()
   HeadingsList    = document.getElementById("HeadingsList");
   MoreSection     = document.getElementById("MoreSection");
   MoreFewerButton  = document.getElementById("MoreFewerButton");
-  AdvancedEditSection = document.getElementById("AdvancedEditButton");
+  AdvancedEditSection = document.getElementById("AdvancedEdit");
 
   // Get a single selected anchor element
   anchorElement = editorShell.GetSelectedElement(tagName);
@@ -232,7 +232,8 @@ function FillListboxes()
       //  (this may miss nearby anchors, but at least we don't insert another
       //   under the same heading)
       var child = heading.firstChild;
-      dump(child.name+" = Child.name. Length="+child.name.length+"\n");
+      if( child && child.name )
+        dump(child.name+" = Child.name. Length="+child.name.length+"\n");
       if (child && child.nodeName == "A" && child.name && (child.name.length>0)) {
         continue;
       }

@@ -380,11 +380,9 @@
           </box>
     	  </tabpanel> 
       </tabcontrol>
-      <box align="horizontal">
-        <!-- from EdDialogOverlay -->
-        <box id="AdvancedEditButton"/>
-        <spring flex="100%"/>
-	      <box id="okCancelButtons"/> 
-      </box>
+      <!-- from EdDialogOverlay -->
+      <box id="AdvancedEdit"/>
+      <spring flex="100%"/>
+	    <box id="okCancelButtons"/> 
 
 </window>

@@ -82,7 +82,7 @@
     <titledbutton class="push" id="SaveDefault" onclick="onSaveDefault()" value="&saveSettings.label;"/>
   </box>
   <!-- from EdDialogOverlay -->
-  <box id="AdvancedEditButton"/>
+  <box id="AdvancedEdit"/>
   <!-- from global dialogOverlay -->
 	<box id="okCancelButtons"/> 
 </window>

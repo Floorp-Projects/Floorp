@@ -48,6 +48,8 @@ EdAdvancedEdit.xul
 EdAdvancedEdit.js
 EdListProps.xul
 EdListProps.js
+EdPageProps.xul
+EdPageProps.js
 EdAECSSAttributes.js
 EdAEHTMLAttributes.js
 EdAEJSEAttributes.js
