@@ -142,6 +142,10 @@ void CnsIHttpChannelTests::RunAllTests()
 	   return;
 	}
 	QAOutput("   nsIHttpChannel request tests:");
+	SetRequestMethodTest(theHttpChannel, "get", 1);
+	GetRequestMethodTest(theHttpChannel, 1);
+	SetRequestMethodTest(theHttpChannel, "PUT", 1);
+	GetRequestMethodTest(theHttpChannel, 1);
 	SetRequestMethodTest(theHttpChannel, "POST", 1);
 	GetRequestMethodTest(theHttpChannel, 1);
 	SetRequestMethodTest(theHttpChannel, "HEAD", 1);
@@ -162,19 +166,20 @@ void CnsIHttpChannelTests::RunAllTests()
 	SetRedirectionLimitTest(theHttpChannel, 5, 1);
 	GetRedirectionLimitTest(theHttpChannel, 1);
 
-	// see nsIRequestObserver->OnStartRequest for Successful response tests
+	// see nsIRequestObserver->OnStartRequest for response tests
 	CnsIChannelTests *channelObj = new CnsIChannelTests(qaWebBrowser, qaBrowserImpl);
 	if (!channelObj)
 	{
-	   QAOutput("Didn't get nsIHttpChannel object. GetChannelObject not run.", 1);
+	   QAOutput("Didn't get nsIHttpChannel object. GetChannelObject will not be run.", 1);
 	   return;
 	}
 	theChannel = channelObj->GetChannelObject(theSpec);
 	if (!theChannel)
 	{
-	   QAOutput("Didn't get nsIChannel object. AsyncOpenTest not run.", 1);
+	   QAOutput("Didn't get nsIChannel object. AsyncOpenTest will not be run.", 1);
 	   return;
 	}
+	// this will open the channel and run the httpChannel response tests
 	channelObj->AsyncOpenTest(theChannel, 1);
 	QAOutput("\n");
 }
@@ -386,7 +391,6 @@ void CnsIHttpChannelTests::CallResponseTests(nsIHttpChannel *theHttpChannel,
 	GetResponseStatusTest(theHttpChannel, displayMode);
 	GetResponseStatusTextTest(theHttpChannel, displayMode);
 	GetRequestSucceededTest(theHttpChannel, displayMode);
-	GetResponseHeaderTest(theHttpChannel, "Set-Cookie", displayMode);
 	SetResponseHeaderTest(theHttpChannel, "Refresh", "1001", PR_TRUE, displayMode);
 	GetResponseHeaderTest(theHttpChannel, "Refresh", displayMode);
 	SetResponseHeaderTest(theHttpChannel, "Set-Cookie", "MyCookie", PR_TRUE, displayMode);

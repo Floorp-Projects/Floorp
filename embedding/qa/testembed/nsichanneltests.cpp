@@ -376,9 +376,16 @@ void CnsIChannelTests::AsyncOpenTest(nsIChannel *theChannel, PRInt16 displayMode
 		RvTestResultDlg(rv, "AsyncOpen()");
 }
 
-void CnsIChannelTests::PostAsyncTests(nsIChannel *theChannel, PRInt16 displayMode)
+void CnsIChannelTests::PostAsyncOpenTests(nsIChannel *theChannel, PRInt16 displayMode)
 {
-	//  tests which need to be run after the channel is opened (using AsyncOpen())
+	// These tests are run after the channel is opened (using AsyncOpen())
+	// To run them in TestEmbed, select Tests > asyncOpen menu and enter complete URL with protocol
+		GetOriginalURITest(theChannel, displayMode);
+		GetURITest(theChannel, displayMode);
+		SetOwnerTest(theChannel, displayMode);
+		GetOwnerTest(theChannel, displayMode);
+		SetNotificationsTest(theChannel, displayMode);
+		GetNotificationsTest(theChannel, displayMode);
 		GetSecurityInfoTest(theChannel, displayMode);
 		SetContentTypeTest(theChannel, displayMode);
 		GetContentTypeTest(theChannel, displayMode);
@@ -473,7 +480,7 @@ void CnsIChannelTests::RunAllTests()
 		   QAOutput("Didn't get nsIChannel object. RunAllTests not run.", 2);
 		   return;
 		}
-
+		QAOutput("\nStart nsIChannel Tests: ");
 		SetOriginalURITest(theChannel, theSpec, 1);
 		GetOriginalURITest(theChannel, 1);
 		GetURITest(theChannel, 1);
@@ -482,7 +489,7 @@ void CnsIChannelTests::RunAllTests()
 		SetNotificationsTest(theChannel, 1);
 		GetNotificationsTest(theChannel, 1);
 		AsyncOpenTest(theChannel, 1);
-	 // PostAsyncTests() called from nsIRequestObservor::OnStartRequest (in BrowserImpl.cpp)
+	 // PostAsyncOpenTests() called from nsIRequestObservor::OnStartRequest (in BrowserImpl.cpp)
 		OpenTest(theChannel, 1);
 		QAOutput("\n");
 	}
