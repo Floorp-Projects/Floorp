@@ -181,6 +181,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       }
     }
     break;
+#ifndef tague_keyboard_patch
   case NS_KEY_DOWN:
     ret = DispatchKeyPressEvent(aPresContext, (nsKeyEvent*)aEvent, aStatus);
     if (nsEventStatus_eConsumeNoDefault != aStatus) {
@@ -231,6 +232,7 @@ nsEventStateManager::PostHandleEvent(nsIPresContext& aPresContext,
       }
     }
     break;
+#endif
   }
   return ret;
 }

@@ -105,7 +105,7 @@ nsTextEditorKeyListener::HandleEvent(nsIDOMEvent* aEvent)
   return NS_OK;
 }
 
-#ifdef DEBUG_TAGUE
+#ifdef tague_keyboard_patch
 nsresult
 nsTextEditorKeyListener::KeyDown(nsIDOMEvent* aKeyEvent)
 {
@@ -265,7 +265,7 @@ nsTextEditorKeyListener::KeyUp(nsIDOMEvent* aKeyEvent)
 }
 
 
-#ifdef DEBUG_TAGUE
+#ifdef tague_keyboard_patch
 nsresult
 nsTextEditorKeyListener::KeyPress(nsIDOMEvent* aKeyEvent)
 {

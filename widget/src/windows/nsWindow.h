@@ -173,7 +173,7 @@ protected:
     virtual PRBool          OnPaint();
     virtual PRBool          OnResize(nsRect &aWindowRect);
 
-#ifdef DEBUG_tague
+#ifdef tague_keyboard_patch
     BOOL                    OnChar(UINT aVirtualKeyCode, bool isMultibyte);
 #else
    BOOL                    OnChar(UINT aVirtualKeyCode);
@@ -242,7 +242,7 @@ protected:
 	PRUnichar*	mIMECompositionUniString;
 	PRInt32		mIMECompositionStringLength;
 	PRInt32		mIMECompositionStringSize;
-#ifdef DEBUG_tague
+#ifdef tague_keyboard_patch
 	BOOL		mHaveDBCSLeadByte;
 	unsigned char mDBCSLeadByte;
 #endif
