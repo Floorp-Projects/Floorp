@@ -37,13 +37,12 @@
 
 #include "ImageCache.h"
 
-#include "prlog.h"
+#include "ImageLogging.h"
 
 #if defined(PR_LOGGING)
 PRLogModuleInfo *gImgLog = PR_NewLogModule("imgRequest");
-#else
-#define gImgLog
 #endif
+
 
 NS_IMPL_ISUPPORTS5(imgRequest, imgIRequest, 
                    imgIDecoderObserver, gfxIImageContainerObserver,
@@ -129,8 +128,7 @@ nsresult imgRequest::RemoveObserver(imgIDecoderObserver *observer, nsresult stat
 /* void cancel (in nsresult status); */
 NS_IMETHODIMP imgRequest::Cancel(nsresult status)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::Cancel\n", this));
+  LOG_SCOPE("imgRequest::Cancel");
 
   if (mChannel) {
     mChannel->GetOriginalURI(getter_AddRefs(mURI));
@@ -146,11 +144,10 @@ NS_IMETHODIMP imgRequest::Cancel(nsresult status)
 
   ImageCache::Remove(mURI);
 
-  nsresult rv = NS_OK;
   if (mChannel && mProcessing)
-    rv = mChannel->Cancel(status);
+    return mChannel->Cancel(status);
 
-  return rv;
+  return NS_OK;
 }
 
 /* readonly attribute gfxIImageContainer image; */
@@ -197,8 +194,7 @@ NS_IMETHODIMP imgRequest::GetURI(nsIURI **aURI)
 /* [noscript] void frameChanged (in gfxIImageContainer container, in nsISupports cx, in gfxIImageFrame newframe, in nsRect dirtyRect); */
 NS_IMETHODIMP imgRequest::FrameChanged(gfxIImageContainer *container, nsISupports *cx, gfxIImageFrame *newframe, nsRect * dirtyRect)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::FrameChanged {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::FrameChanged");
 
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -208,9 +204,6 @@ NS_IMETHODIMP imgRequest::FrameChanged(gfxIImageContainer *container, nsISupport
     if (ob) ob->FrameChanged(container, cx, newframe, dirtyRect);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::FrameChanged {EXIT}\n", this));
-
   return NS_OK;
 }
 
@@ -219,8 +212,7 @@ NS_IMETHODIMP imgRequest::FrameChanged(gfxIImageContainer *container, nsISupport
 /* void onStartDecode (in imgIRequest request, in nsISupports cx); */
 NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStartDecode {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::OnStartDecode");
 
   mState |= onStartDecode;
 
@@ -232,17 +224,13 @@ NS_IMETHODIMP imgRequest::OnStartDecode(imgIRequest *request, nsISupports *cx)
     if (ob) ob->OnStartDecode(request, cx);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStartDecode {EXIT}\n", this));
-
   return NS_OK;
 }
 
 /* void onStartContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
 NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStartContainer {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::OnStartContainer");
 
   mState |= onStartContainer;
 
@@ -256,17 +244,13 @@ NS_IMETHODIMP imgRequest::OnStartContainer(imgIRequest *request, nsISupports *cx
     if (ob) ob->OnStartContainer(request, cx, image);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStartContainer {EXIT}\n", this));
-
   return NS_OK;
 }
 
 /* void onStartFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
 NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStartFrame {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::OnStartFrame");
 
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -276,17 +260,13 @@ NS_IMETHODIMP imgRequest::OnStartFrame(imgIRequest *request, nsISupports *cx, gf
     if (ob) ob->OnStartFrame(request, cx, frame);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStartFrame {EXIT}\n", this));
-
   return NS_OK;
 }
 
 /* [noscript] void onDataAvailable (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame, [const] in nsRect rect); */
 NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame, const nsRect * rect)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnDataAvailable {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::OnDataAvailable");
 
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -296,17 +276,13 @@ NS_IMETHODIMP imgRequest::OnDataAvailable(imgIRequest *request, nsISupports *cx,
     if (ob) ob->OnDataAvailable(request, cx, frame, rect);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnDataAvailable {EXIT}\n", this));
-
   return NS_OK;
 }
 
 /* void onStopFrame (in imgIRequest request, in nsISupports cx, in gfxIImageFrame frame); */
 NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfxIImageFrame *frame)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStopFrame {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::OnStopFrame");
 
   PRInt32 i = -1;
   PRInt32 count = mObservers.Count();
@@ -316,17 +292,13 @@ NS_IMETHODIMP imgRequest::OnStopFrame(imgIRequest *request, nsISupports *cx, gfx
     if (ob) ob->OnStopFrame(request, cx, frame);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStopFrame {EXIT}\n", this));
-
   return NS_OK;
 }
 
 /* void onStopContainer (in imgIRequest request, in nsISupports cx, in gfxIImageContainer image); */
 NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx, gfxIImageContainer *image)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStopContainer {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::OnStopContainer");
 
   mState |= onStopContainer;
 
@@ -338,17 +310,13 @@ NS_IMETHODIMP imgRequest::OnStopContainer(imgIRequest *request, nsISupports *cx,
     if (ob) ob->OnStopContainer(request, cx, image);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStopContainer {EXIT}\n", this));
-
   return NS_OK;
 }
 
 /* void onStopDecode (in imgIRequest request, in nsISupports cx, in nsresult status, in wstring statusArg); */
 NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *request, nsISupports *cx, nsresult status, const PRUnichar *statusArg)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStopDecode {ENTER}\n", this));
+  LOG_SCOPE("imgRequest::OnStopDecode");
 
   mState |= onStopDecode;
 
@@ -363,9 +331,6 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *request, nsISupports *cx, ns
     if (ob) ob->OnStopDecode(request, cx, status, statusArg);
   }
 
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStopDecode {EXIT}\n", this));
-
   return NS_OK;
 }
 
@@ -379,12 +344,9 @@ NS_IMETHODIMP imgRequest::OnStopDecode(imgIRequest *request, nsISupports *cx, ns
 /* void onStartRequest (in nsIRequest request, in nsISupports ctxt); */
 NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt)
 {
-  PR_LOG(gImgLog, PR_LOG_DEBUG,
-         ("[this=%p] imgRequest::OnStartRequest\n", this));
+  LOG_SCOPE("imgRequest::OnStartRequest");
 
   NS_ASSERTION(!mDecoder, "imgRequest::OnStartRequest -- we already have a decoder");
-
-  
 
   nsCOMPtr<nsIChannel> chan(do_QueryInterface(aRequest));
 
@@ -403,8 +365,9 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   nsresult rv = mChannel->GetContentType(getter_Copies(contentType));
 
   if (NS_FAILED(rv)) {
-    PR_LOG(gImgLog, PR_LOG_ALWAYS,
-           (" `->  Error getting content type\n"));
+    PR_LOG(gImgLog, PR_LOG_ERROR,
+           ("[this=%p] imgRequest::OnStartRequest -- Content type unavailable from the channel\n",
+            this));
 
     this->Cancel(NS_BINDING_ABORTED);
 
@@ -423,6 +386,9 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   mDecoder = do_CreateInstance(conid);
 
   if (!mDecoder) {
+    PR_LOG(gImgLog, PR_LOG_WARNING,
+           ("[this=%p] imgRequest::OnStartRequest -- Decoder not available\n", this));
+
     // no image decoder for this mimetype :(
     this->Cancel(NS_BINDING_ABORTED);
 
@@ -432,6 +398,7 @@ NS_IMETHODIMP imgRequest::OnStartRequest(nsIRequest *aRequest, nsISupports *ctxt
   }
 
   mDecoder->Init(NS_STATIC_CAST(imgIRequest*, this));
+
   return NS_OK;
 }
 
