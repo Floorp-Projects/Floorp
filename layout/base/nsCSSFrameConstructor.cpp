@@ -6559,6 +6559,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
   // If the frame is absolutely positioned, then create a placeholder frame
  nearly_done:
+  nsFrameItems& frameItems = (pseudoParent) ? aState.mPseudoFrames.mCellInner.mChildList 
+                                            : aFrameItems;
   if (isAbsolutelyPositioned || isFixedPositioned) {
     nsIFrame* placeholderFrame;
 
@@ -6573,7 +6575,7 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     }
 
     // Add the placeholder frame to the flow
-    aFrameItems.AddChild(placeholderFrame);
+    frameItems.AddChild(placeholderFrame);
 
   } else if (isFloating) {
     nsIFrame* placeholderFrame;
@@ -6584,10 +6586,8 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
     aState.mFloatedItems.AddChild(newFrame);
 
     // Add the placeholder frame to the flow
-    aFrameItems.AddChild(placeholderFrame);
+    frameItems.AddChild(placeholderFrame);
   } else if (nsnull != newFrame) {
-    nsFrameItems& frameItems = (pseudoParent) ? aState.mPseudoFrames.mCellInner.mChildList 
-                                              : aFrameItems;
     // Add the frame we just created to the flowed list
     frameItems.AddChild(newFrame);
     if (newBlock) {
