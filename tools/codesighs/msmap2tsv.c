@@ -1746,6 +1746,8 @@ int map2tsv(Options* inOptions)
         {
             symbol = &module.mSymbols[symLoop];
             section = getSymbolSection(&module, symbol);
+            if (!section)
+                continue;
 
             /*
             **  Use the symbol DB size if available.
@@ -1832,7 +1834,7 @@ int map2tsv(Options* inOptions)
         {
             section = &module.mSegments[secLoop];
 
-            if(section->mUsed < section->mLength)
+            if(section && section->mUsed < section->mLength)
             {
                 retval = tsvout(inOptions,
                     section->mLength - section->mUsed,
