@@ -326,7 +326,7 @@ nsStreamListenerProxy::OnDataAvailable(nsIRequest *request,
     if (!ev) return NS_ERROR_OUT_OF_MEMORY;
 
     // Reuse the event queue of the observer proxy
-    LOG(("post dataevent=%8lX queue=%8lX\n",(long)ev,(long)mObserverProxy->GetEventQueue()));
+    LOG(("post dataevent=%8lX queue=%8lX\n",(long)ev,(long)mObserverProxy->EventQueue()));
     rv = mObserverProxy->FireEvent(ev);
     if (NS_FAILED(rv))
         delete ev;
