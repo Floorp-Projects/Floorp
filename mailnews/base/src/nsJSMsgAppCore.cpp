@@ -507,9 +507,8 @@ MsgAppCoreViewAllMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
   }
 
   if (argc >= 1) {
-		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
+		rBool = nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&db,
 									nsIRDFCompositeDataSource::GetIID(),
-									typeName,
 									cx,
 									argv[0]);
 
@@ -545,9 +544,8 @@ MsgAppCoreViewUnreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   }
 
   if (argc >= 1) {
-		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
+		rBool = nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&db,
 									nsIRDFCompositeDataSource::GetIID(),
-									typeName,
 									cx,
 									argv[0]);
 
@@ -583,14 +581,12 @@ MsgAppCoreViewAllThreadMessages(JSContext *cx, JSObject *obj, uintN argc, jsval 
   }
 
   if (argc >= 1) {
-		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
-									nsIRDFCompositeDataSource::GetIID(),
-									typeName,
-									cx,
-									argv[0]);
-
+		rBool = nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&db,
+                                                 nsIRDFCompositeDataSource::GetIID(),
+                                                 cx,
+                                                 argv[0]);
 		
-    if (!rBool || NS_OK != nativeThis->ViewAllThreadMessages(db)) {
+     if (!rBool || NS_OK != nativeThis->ViewAllThreadMessages(db)) {
       return JS_FALSE;
     }
 
@@ -625,9 +621,8 @@ MsgAppCoreNewFolder(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval
 
 	if (argc >= 2) {
 
-		rBool = nsJSUtils::nsConvertJSValToObject((nsISupports**)&db,
+		rBool = nsJSUtils::nsConvertJSValToXPCObject((nsISupports**)&db,
 									nsIRDFCompositeDataSource::GetIID(),
-									typeName,
 									cx,
 									argv[0]);
 		
