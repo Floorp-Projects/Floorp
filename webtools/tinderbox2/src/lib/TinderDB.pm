@@ -19,8 +19,8 @@
 #       notice board display,  build display (colored squares)
 
 
-# $Revision: 1.17 $ 
-# $Date: 2003/04/20 19:34:28 $ 
+# $Revision: 1.18 $ 
+# $Date: 2003/05/26 13:38:41 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/lib/TinderDB.pm,v $ 
 # $Name:  $ 
@@ -830,6 +830,19 @@ status_table_row().
 =item B<event_times_vec>
 
 return a list of all the times where an even occured.
+
+
+
+=back
+
+=over 4
+
+=item B<notice_association>
+
+return a list of all the columns which users can attach notices to.
+This is important for companies like Netscape where they do not have a
+notice column but they attach comments to individual builds which are
+not green.
 
 
 
