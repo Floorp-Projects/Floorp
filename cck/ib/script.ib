@@ -18,7 +18,7 @@ modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/navigator-region/region.p
 modifyProperties(regus.xpi,bin/chrome/US.jar,locale/US/navigator-region/region.properties,browser.throbber.url,%AnimatedLogoURL%)
 modifyJS(browser.xpi,no.jar,bin/defaults/pref/all-ns.js,general.useragent.vendorComment,%OrganizationName%)
 addrdfFile(deflenus.xpi,no.jar,bin/defaults/isp,mailaccount.rdf,%IspRDF%)
-addrdfFile(regus.xpi,no.jar,bin/defaults/isp/Us,mailaccount.rdf,%IspRDF%)
+addrdfFile(regus.xpi,no.jar,bin/defaults/isp/US,mailaccount.rdf,%IspRDF%)
 addrdfFile(deflenus.xpi,no.jar,bin/defaults/isp,newsaccount.rdf,%NewsRDF%)
-addrdfFile(regus.xpi,no.jar,bin/defaults/isp/Us,newsaccount.rdf,%NewsRDF%)
+addrdfFile(regus.xpi,no.jar,bin/defaults/isp/US,newsaccount.rdf,%NewsRDF%)
 
