@@ -2526,12 +2526,13 @@ nsresult nsPluginHostImpl::CreateInstance(nsISupports *aOuter,
   if (inst == NULL)
     return NS_ERROR_OUT_OF_MEMORY;  
 
+  // XXX Doh, we never get here... what is going on???
+
+  NS_ADDREF(inst);  // Stabilize
+  
   nsresult res = inst->QueryInterface(aIID, aResult);
 
-  if (res != NS_OK) {  
-    // We didn't get the right interface, so clean up  
-    delete inst;  
-  }  
+  NS_RELEASE(inst); // Destabilize and avoid leaks. Avoid calling delete <interface pointer>  
 
   return res;  
 }  

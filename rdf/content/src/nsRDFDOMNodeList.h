@@ -31,7 +31,7 @@ class nsRDFDOMNodeList : public nsIDOMNodeList,
                          public nsIScriptObjectOwner
 {
 private:
-    nsISupports* mInner;
+    //nsISupports* mInner; Not being used?
     nsISupportsArray* mElements;
     void* mScriptObject;
 
