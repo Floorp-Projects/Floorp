@@ -188,7 +188,7 @@ while (@row = FetchSQLData()) {
 
 foreach my $ref (@checklist) {
     my ($product, $version) = (@$ref);
-    SendSQL("select count(*) from versions where program = '$product' and value = '$version'");
+    SendSQL("select count(*) from versions where program = " . SqlQuote($product) . " and value = " . SqlQuote($version));
     if (FetchOneColumn() != 1) {
         Alert("Bug(s) found with invalid product/version: $product/$version");
     }
@@ -206,7 +206,7 @@ while (@row = FetchSQLData()) {
 
 foreach my $ref (@checklist) {
     my ($product, $milestone) = (@$ref);
-    SendSQL("SELECT count(*) FROM milestones WHERE product = '$product' AND value = '$milestone'");
+    SendSQL("SELECT count(*) FROM milestones WHERE product = " . SqlQuote($product) . " AND value = " . SqlQuote($milestone));
     if(FetchOneColumn() != 1) {
         Alert("Bug(s) found with invalud product/milestone: $product/$milestone");
     }
@@ -225,7 +225,7 @@ while (@row = FetchSQLData()) {
 
 foreach my $ref (@checklist) {
     my ($product, $component) = (@$ref);
-    SendSQL("select count(*) from components where program = '$product' and value = '$component'");
+    SendSQL("select count(*) from components where program = " . SqlQuote($product) . " and value = " . SqlQuote($component));
     if (FetchOneColumn() != 1) {
         Alert("Bug(s) found with invalid product/component: $product/$component");
     }
