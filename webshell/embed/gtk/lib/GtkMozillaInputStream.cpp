@@ -65,7 +65,7 @@ NS_IMPL_ADDREF(GtkMozillaInputStream)
 
   // nsIInputStream interface
 NS_IMETHODIMP
-GtkMozillaInputStream::GetLength(PRUint32 *aLength)
+GtkMozillaInputStream::Available(PRUint32 *aLength)
 {
   *aLength = mCount;
   return NS_OK;
