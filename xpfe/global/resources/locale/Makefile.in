@@ -28,6 +28,7 @@ EXPORT_RESOURCE_CONTENT = \
 	$(srcdir)/globalOverlay.dtd \
 	$(srcdir)/dialogOverlay.dtd \
 	$(srcdir)/tasksOverlay.dtd \
+	$(srcdir)/commonDialog.dtd \
 	$(NULL)
 
 install:: 

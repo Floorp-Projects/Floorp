@@ -26,6 +26,7 @@ install::
 	$(MAKE_INSTALL) globalOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) dialogOverlay.dtd $(DISTBROWSER)
 	$(MAKE_INSTALL) tasksOverlay.dtd $(DISTBROWSER)
+	$(MAKE_INSTALL) commonDialog.dtd $(DISTBROWSER)
 
 clobber::
   rm -f $(DIST)\bin\chrome\global\locale\en-US\*.*
