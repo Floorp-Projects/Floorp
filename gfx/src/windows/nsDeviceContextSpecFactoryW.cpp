@@ -513,102 +513,101 @@ NS_IMETHODIMP nsDeviceContextSpecFactoryWin :: CreateDeviceContextSpec(nsIWidget
 
   BOOL result = ::PrintDlg(&prntdlg);
 
-  if (TRUE == result)
-  {
+  if (TRUE == result){
     DEVNAMES *devnames = (DEVNAMES *)::GlobalLock(prntdlg.hDevNames);
+    if ( NULL != devnames ) {
 
-    char device[200], driver[200];
+      char device[200], driver[200];
 
-    //print something...
+      //print something...
 
-    PL_strcpy(device, &(((char *)devnames)[devnames->wDeviceOffset]));
-    PL_strcpy(driver, &(((char *)devnames)[devnames->wDriverOffset]));
+      PL_strcpy(device, &(((char *)devnames)[devnames->wDeviceOffset]));
+      PL_strcpy(driver, &(((char *)devnames)[devnames->wDriverOffset]));
 
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-    printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
-#endif
+  #if defined(DEBUG_rods) || defined(DEBUG_dcone)
+      printf("printer: driver %s, device %s  flags: %d\n", driver, device, prntdlg.Flags);
+  #endif
 
-    // fill the print options with the info from the dialog
-    if (printService) {
+      // fill the print options with the info from the dialog
+      if (printService) {
 
-      if (prntdlg.Flags & PD_SELECTION) {
-        printService->SetPrintRange(nsIPrintOptions::kRangeSelection);
+        if (prntdlg.Flags & PD_SELECTION) {
+          printService->SetPrintRange(nsIPrintOptions::kRangeSelection);
 
-      } else if (prntdlg.Flags & PD_PAGENUMS) {
-        printService->SetPrintRange(nsIPrintOptions::kRangeSpecifiedPageRange);
-        printService->SetStartPageRange(prntdlg.nFromPage);
-        printService->SetEndPageRange( prntdlg.nToPage);
+        } else if (prntdlg.Flags & PD_PAGENUMS) {
+          printService->SetPrintRange(nsIPrintOptions::kRangeSpecifiedPageRange);
+          printService->SetStartPageRange(prntdlg.nFromPage);
+          printService->SetEndPageRange( prntdlg.nToPage);
 
-      } else { // (prntdlg.Flags & PD_ALLPAGES)
-        printService->SetPrintRange(nsIPrintOptions::kRangeAllPages);
-      }
-
-      if (howToEnableFrameUI != nsIPrintOptions::kFrameEnableNone) {
-        // make sure the dialog got extended
-        if (gDialogWasExtended) {
-          // check to see about the frame radio buttons
-          switch (gFrameSelectedRadioBtn) {
-            case rad4: 
-              printService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
-              break;
-            case rad5: 
-              printService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
-              break;
-            case rad6: 
-              printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
-              break;
-          } // switch
-        } else {
-          // if it didn't get extended then have it default to printing
-          // each frame separately
-          printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+        } else { // (prntdlg.Flags & PD_ALLPAGES)
+          printService->SetPrintRange(nsIPrintOptions::kRangeAllPages);
         }
-      } else {
-        printService->SetPrintFrameType(nsIPrintOptions::kNoFrames);
+
+        if (howToEnableFrameUI != nsIPrintOptions::kFrameEnableNone) {
+          // make sure the dialog got extended
+          if (gDialogWasExtended) {
+            // check to see about the frame radio buttons
+            switch (gFrameSelectedRadioBtn) {
+              case rad4: 
+                printService->SetPrintFrameType(nsIPrintOptions::kFramesAsIs);
+                break;
+              case rad5: 
+                printService->SetPrintFrameType(nsIPrintOptions::kSelectedFrame);
+                break;
+              case rad6: 
+                printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+                break;
+            } // switch
+          } else {
+            // if it didn't get extended then have it default to printing
+            // each frame separately
+            printService->SetPrintFrameType(nsIPrintOptions::kEachFrameSep);
+          }
+        } else {
+          printService->SetPrintFrameType(nsIPrintOptions::kNoFrames);
+        }
       }
-    }
 
 
-#if defined(DEBUG_rods) || defined(DEBUG_dcone)
-    PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
-    PRBool  printAllPages  = prntdlg.Flags & PD_ALLPAGES;
-    PRBool  printNumPages  = prntdlg.Flags & PD_PAGENUMS;
-    PRInt32 fromPageNum    = 0;
-    PRInt32 toPageNum      = 0;
+  #if defined(DEBUG_rods) || defined(DEBUG_dcone)
+      PRBool  printSelection = prntdlg.Flags & PD_SELECTION;
+      PRBool  printAllPages  = prntdlg.Flags & PD_ALLPAGES;
+      PRBool  printNumPages  = prntdlg.Flags & PD_PAGENUMS;
+      PRInt32 fromPageNum    = 0;
+      PRInt32 toPageNum      = 0;
 
-    if (printNumPages) {
-      fromPageNum = prntdlg.nFromPage;
-      toPageNum   = prntdlg.nToPage;
-    } 
-    if (printSelection) {
-      printf("Printing the selection\n");
+      if (printNumPages) {
+        fromPageNum = prntdlg.nFromPage;
+        toPageNum   = prntdlg.nToPage;
+      } 
+      if (printSelection) {
+        printf("Printing the selection\n");
 
-    } else if (printAllPages) {
-      printf("Printing all the pages\n");
+      } else if (printAllPages) {
+        printf("Printing all the pages\n");
 
-    } else {
-      printf("Printing from page no. %d to %d\n", fromPageNum, toPageNum);
-    }
-#endif
+      } else {
+        printf("Printing from page no. %d to %d\n", fromPageNum, toPageNum);
+      }
+  #endif
     
 
-    nsIDeviceContextSpec  *devspec = nsnull;
+      nsIDeviceContextSpec  *devspec = nsnull;
 
-    nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devspec);
+      nsComponentManager::CreateInstance(kDeviceContextSpecCID, nsnull, kIDeviceContextSpecIID, (void **)&devspec);
 
-    if (nsnull != devspec)
-    {
-      //XXX need to QI rather than cast... MMP
-      if (NS_OK == ((nsDeviceContextSpecWin *)devspec)->Init(driver, device, prntdlg.hDevMode))
-      {
-        aNewSpec = devspec;
-        rv = NS_OK;
+      if (nsnull != devspec){
+        //XXX need to QI rather than cast... MMP
+        if (NS_OK == ((nsDeviceContextSpecWin *)devspec)->Init(driver, device, prntdlg.hDevMode)){
+          aNewSpec = devspec;
+          rv = NS_OK;
+        }
       }
-    }
 
-    //don't free the DEVMODE because the device context spec now owns it...
-    ::GlobalUnlock(prntdlg.hDevNames);
-    ::GlobalFree(prntdlg.hDevNames);
+      //don't free the DEVMODE because the device context spec now owns it...
+      ::GlobalUnlock(prntdlg.hDevNames);
+      ::GlobalFree(prntdlg.hDevNames);
+    }
   }
 
   return rv;
