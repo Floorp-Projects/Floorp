@@ -54,8 +54,8 @@ DIRS =				\
   modules/security/freenav	\
   modules/libpref		\
   modules/libimg		\
-  modules/plugin		\
   modules/oji		\
+  modules/plugin		\
   base				\
   lib/xp			\
   lib/libpwcac			\
@@ -120,8 +120,8 @@ pull_imglib:
 
 pull_plugin:
 	cd $(MOZ_SRC)/.; \
-	$(CVSCO_PLUGIN) mozilla/modules/plugin
 	$(CVSCO_LIZARD) mozilla/modules/oji
+	$(CVSCO_PLUGIN) mozilla/modules/plugin
 
 pull_netlib:
 	cd $(MOZ_SRC)/.; \
