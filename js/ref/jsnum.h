@@ -140,11 +140,27 @@ js_ValueToUint16(JSContext *cx, jsval v, uint16 *ip);
 extern jsdouble
 js_DoubleToInteger(jsdouble d);
 
+/*
+ * Similar to strtod except that replaces overflows with infinities of the correct
+ * sign and underflows with zeros of the correct sign.  Guaranteed to return the
+ * closest double number to the given input in dp.
+ * Also allows inputs of the form [+|-]Infinity, which produce an infinity of the
+ * appropriate sign.  The case of the "Infinity" string must match.
+ * If the string does not have a number in it, set *ep to s and return 0.0 in dp.
+ * Return false if out of memory.
+ */
 extern JSBool
-js_strtod(const jschar *s, jschar **ep, jsdouble *dp);
+js_strtod(JSContext *cx, const jschar *s, const jschar **ep, jsdouble *dp);
 
+/*
+ * Similar to strtol except that handles integers of arbitrary size.  Guaranteed to
+ * return the closest double number to the given input when radix is 10 or a power of 2.
+ * May experience roundoff errors for very large numbers of a different radix.
+ * If the string does not have a number in it, set *ep to s and return 0.0 in dp.
+ * Return false if out of memory.
+ */
 extern JSBool
-js_strtol(const jschar *s, jschar **ep, jsint radix, jsdouble *dp);
+js_strtointeger(JSContext *cx, const jschar *s, const jschar **ep, jsint radix, jsdouble *dp);
 
 PR_END_EXTERN_C
 
