@@ -86,18 +86,13 @@ SignonViewerImpl::GetSignonValue(char** aValue)
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  nsIWalletService *walletservice;
   nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != walletservice)) {
-    nsAutoString signonList;
-    res = walletservice->SI_GetSignonListForViewer(signonList);
-    if (NS_SUCCEEDED(res)) {
-      *aValue = signonList.ToNewCString();
-    }
+  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString signonList;
+  res = walletservice->SI_GetSignonListForViewer(signonList);
+  if (NS_SUCCEEDED(res)) {
+    *aValue = signonList.ToNewCString();
   }
   return res;
 }
@@ -109,18 +104,13 @@ SignonViewerImpl::GetRejectValue(char** aValue)
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  nsIWalletService *walletservice;
   nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != walletservice)) {
-    nsAutoString RejectList;
-    res = walletservice->SI_GetRejectListForViewer(RejectList);
-    if (NS_SUCCEEDED(res)) {
-      *aValue = RejectList.ToNewCString();
-    }
+  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString rejectList;
+  res = walletservice->SI_GetRejectListForViewer(rejectList);
+  if (NS_SUCCEEDED(res)) {
+    *aValue = rejectList.ToNewCString();
   }
   return res;
 }
@@ -132,18 +122,13 @@ SignonViewerImpl::GetNopreviewValue(char** aValue)
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  nsIWalletService *walletservice;
   nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != walletservice)) {
-    nsAutoString NopreviewList;
-    res = walletservice->WALLET_GetNopreviewListForViewer(NopreviewList);
-    if (NS_SUCCEEDED(res)) {
-      *aValue = NopreviewList.ToNewCString();
-    }
+  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString nopreviewList;
+  res = walletservice->WALLET_GetNopreviewListForViewer(nopreviewList);
+  if (NS_SUCCEEDED(res)) {
+    *aValue = nopreviewList.ToNewCString();
   }
   return res;
 }
@@ -155,18 +140,13 @@ SignonViewerImpl::GetNocaptureValue(char** aValue)
   if (!aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-
-  nsIWalletService *walletservice;
   nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != walletservice)) {
-    nsAutoString NocaptureList;
-    res = walletservice->WALLET_GetNocaptureListForViewer(NocaptureList);
-    if (NS_SUCCEEDED(res)) {
-      *aValue = NocaptureList.ToNewCString();
-    }
+  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString nocaptureList;
+  res = walletservice->WALLET_GetNocaptureListForViewer(nocaptureList);
+  if (NS_SUCCEEDED(res)) {
+    *aValue = nocaptureList.ToNewCString();
   }
   return res;
 }
@@ -217,14 +197,10 @@ SignonViewerImpl::SetValue(const char* aValue, nsIDOMWindow* win)
   if (! aValue) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsIWalletService *walletservice;
   nsresult res;
-  res = nsServiceManager::GetService(kWalletServiceCID,
-                                     kIWalletServiceIID,
-                                     (nsISupports **)&walletservice);
-  if ((NS_SUCCEEDED(res)) && (nsnull != walletservice)) {
-    nsAutoString walletList = aValue;
-    res = walletservice->SI_SignonViewerReturn(walletList);
-  }
+  NS_WITH_SERVICE(nsIWalletService, walletservice, kWalletServiceCID, &res);
+  if (NS_FAILED(res)) return res;
+  nsAutoString walletList = aValue;
+  res = walletservice->SI_SignonViewerReturn(walletList);
   return res;
 }
