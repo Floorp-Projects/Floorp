@@ -799,7 +799,7 @@ _pr_solx86_clock_gettime(clockid_t clock_id, struct timespec *tp)
 	return -1;
     }
 
-    gettimeofday(&tv);
+    gettimeofday(&tv, NULL);
     tp->tv_sec = tv.tv_sec;
     tp->tv_nsec = tv.tv_usec * 1000;
     return 0;

@@ -24,14 +24,24 @@ extern void _PR_Win32InitTimeZone(void);  /* defined in ntmisc.c */
 /* --- globals ------------------------------------------------ */
 PRLock                       *_pr_schedLock = NULL;
 _PRInterruptTable             _pr_interruptTable[] = { { 0 } };
+
+#ifdef _PR_USE_STATIC_TLS
 __declspec(thread) PRThread  *_pr_current_fiber;
 __declspec(thread) PRThread  *_pr_fiber_last_run;
 __declspec(thread) _PRCPU    *_pr_current_cpu;
 __declspec(thread) PRUintn    _pr_ints_off;
+#else /* _PR_USE_STATIC_TLS */
+DWORD _pr_currentFiberIndex;
+DWORD _pr_lastFiberIndex;
+DWORD _pr_currentCPUIndex;
+DWORD _pr_intsOffIndex;
+#endif /* _PR_USE_STATIC_TLS */
 
 _MDLock                       _nt_idleLock;
 PRCList                       _nt_idleList;
 PRUint32                        _nt_idleCount;
+
+#ifdef _PR_USE_STATIC_TLS
 
 extern __declspec(thread) PRThread *_pr_io_restarted_io;
 
@@ -40,6 +50,21 @@ extern __declspec(thread) PRThread *_pr_io_restarted_io;
     if (_pr_io_restarted_io) \
         _nt_handle_restarted_io(_pr_io_restarted_io); \
     _PR_MD_LAST_THREAD()->no_sched = 0;
+
+#else /* _PR_USE_STATIC_TLS */
+
+extern DWORD _pr_io_restartedIOIndex;
+
+/* Must check the restarted_io *before* decrementing no_sched to 0 */
+#define POST_SWITCH_WORK() \
+PR_BEGIN_MACRO \
+    PRThread *restarted_io = (PRThread *) TlsGetValue(_pr_io_restartedIOIndex); \
+    if (restarted_io) \
+        _nt_handle_restarted_io(restarted_io); \
+    _PR_MD_LAST_THREAD()->no_sched = 0; \
+PR_END_MACRO
+
+#endif /* _PR_USE_STATIC_TLS */
 
 void
 _nt_handle_restarted_io(PRThread *restarted_io)
@@ -69,7 +94,11 @@ _nt_handle_restarted_io(PRThread *restarted_io)
 
     _PR_THREAD_UNLOCK(restarted_io);
 
+#ifdef _PR_USE_STATIC_TLS
     _pr_io_restarted_io = NULL;
+#else
+    TlsSetValue(_pr_io_restartedIOIndex, NULL);
+#endif
 }
 
 void
@@ -87,11 +116,27 @@ _PR_MD_EARLY_INIT()
         PR_ASSERT(0);
     }
 #endif
+
+#ifndef _PR_USE_STATIC_TLS
+    _pr_currentFiberIndex = TlsAlloc();
+    _pr_lastFiberIndex = TlsAlloc();
+    _pr_currentCPUIndex = TlsAlloc();
+    _pr_intsOffIndex = TlsAlloc();
+    _pr_io_restartedIOIndex = TlsAlloc();
+#endif
 }
 
 void _PR_MD_CLEANUP_BEFORE_EXIT(void)
 {
     WSACleanup();
+
+#ifndef _PR_USE_STATIC_TLS
+    TlsFree(_pr_currentFiberIndex);
+    TlsFree(_pr_lastFiberIndex);
+    TlsFree(_pr_currentCPUIndex);
+    TlsFree(_pr_intsOffIndex);
+    TlsFree(_pr_io_restartedIOIndex);
+#endif
 }
 
 void

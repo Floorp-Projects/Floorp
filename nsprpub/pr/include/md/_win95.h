@@ -39,9 +39,6 @@
 #define HAVE_SOCKET_KEEPALIVE
 #define _PR_HAVE_ATOMIC_OPS
 
-typedef char * caddr_t;
-typedef int    ptrdiff_t;   /* used in prnetdb.h */
-
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 
 /* --- Globals --- */
@@ -378,15 +375,15 @@ extern __declspec(thread) struct PRThread *_pr_currentThread;
 
 extern __declspec(thread) struct PRThread *_pr_thread_last_run;
 #define _MD_LAST_THREAD() _pr_thread_last_run
-#define _MD_SET_LAST_THREAD(_thread) (_pr_thread_last_run = (0))
+#define _MD_SET_LAST_THREAD(_thread) (_pr_thread_last_run = 0)
 
 extern __declspec(thread) struct _PRCPU *_pr_currentCPU;
 #define _MD_CURRENT_CPU() _pr_currentCPU
-#define _MD_SET_CURRENT_CPU(_cpu) (_pr_currentCPU = (0))
+#define _MD_SET_CURRENT_CPU(_cpu) (_pr_currentCPU = 0)
 #else /* _PR_USE_STATIC_TLS */
 extern DWORD _pr_currentThreadIndex;
 #define _MD_CURRENT_THREAD() ((PRThread *) TlsGetValue(_pr_currentThreadIndex))
-#define _MD_SET_CURRENT_THREAD(_thread) TlsSetValue(_pr_currentThreadIndex, _thread)
+#define _MD_SET_CURRENT_THREAD(_thread) TlsSetValue(_pr_currentThreadIndex, (_thread))
 
 extern DWORD _pr_lastThreadIndex;
 #define _MD_LAST_THREAD() ((PRThread *) TlsGetValue(_pr_lastThreadIndex))
@@ -396,12 +393,6 @@ extern DWORD _pr_currentCPUIndex;
 #define _MD_CURRENT_CPU() ((struct _PRCPU *) TlsGetValue(_pr_currentCPUIndex))
 #define _MD_SET_CURRENT_CPU(_cpu) TlsSetValue(_pr_currentCPUIndex, 0)
 #endif /* _PR_USE_STATIC_TLS */
-
-// wtc. extern __declspec(thread) PRUintn _pr_ints_off;
-// lth. #define _MD_SET_INTSOFF(_val) (_pr_ints_off = (_val))
-// lth. #define _MD_GET_INTSOFF() _pr_ints_off
-// lth. #define _MD_INCREMENT_INTSOFF() (_pr_ints_off++)
-// lth. #define _MD_DECREMENT_INTSOFF() (_pr_ints_off--)
 
 /* --- Scheduler stuff --- */
 #define LOCK_SCHEDULER()                 0

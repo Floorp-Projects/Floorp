@@ -105,11 +105,6 @@ endif
 
 ifeq (5.5,$(findstring 5.5,$(OS_RELEASE)))
 OS_DEFINES		+= -DSOLARIS2_5
-SOL_CFLAGS		= -D_SVID_GETTOD
-endif
-
-ifeq ($(OS_RELEASE),5.6)
-SOL_CFLAGS		= -D_SVID_GETTOD
 endif
 
 ifneq ($(LOCAL_THREADS_ONLY),1)

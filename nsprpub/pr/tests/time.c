@@ -87,7 +87,7 @@ static void timeGettimeofday(void)
     struct timeval tp;
  
     for (;index--;)
-        rv = gettimeofday(&tp);
+        rv = gettimeofday(&tp, NULL);
 }
 
 static void timePRTime32(void)

@@ -238,11 +238,7 @@ PRUint32 ticks = PR_TicksPerSecond();
 											tmo.tv_nsec);
 
 		/* pthreads wants this in absolute time, off we go ... */
-#if defined(SOLARIS) && defined(_SVID_GETTOD)
-		(void)gettimeofday(&now);
-#else
-		(void)gettimeofday(&now, NULL);
-#endif
+		(void)GETTIMEOFDAY(&now);
 		/* that one's usecs, this one's nsecs - grrrr! */
 		tmo.tv_sec += now.tv_sec;
 		tmo.tv_nsec += (PT_NANOPERMICRO * now.tv_usec);

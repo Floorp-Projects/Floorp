@@ -50,10 +50,6 @@
 #define HAVE_SOCKET_KEEPALIVE
 #define _PR_HAVE_ATOMIC_OPS
 
-typedef char * caddr_t;
-typedef int    ptrdiff_t;   /* used in prnetdb.h */
-
-
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 
 /* --- Globals --- */
@@ -374,6 +370,8 @@ extern PRStatus _PR_KillWindowsProcess(struct PRProcess *process);
 
 /* --- Native-Thread Specific Definitions ------------------------------- */
 
+#ifdef _PR_USE_STATIC_TLS
+
 extern __declspec(thread) struct PRThread *_pr_current_fiber;
 #define _MD_CURRENT_THREAD() _pr_current_fiber
 #define _MD_SET_CURRENT_THREAD(_thread) (_pr_current_fiber = (_thread))
@@ -389,8 +387,26 @@ extern __declspec(thread) struct _PRCPU *_pr_current_cpu;
 extern __declspec(thread) PRUintn _pr_ints_off;
 #define _MD_SET_INTSOFF(_val) (_pr_ints_off = (_val))
 #define _MD_GET_INTSOFF() _pr_ints_off
-#define _MD_INCREMENT_INTSOFF() (_pr_ints_off++)
-#define _MD_DECREMENT_INTSOFF() (_pr_ints_off--)
+
+#else /* _PR_USE_STATIC_TLS */
+
+extern DWORD _pr_currentFiberIndex;
+#define _MD_CURRENT_THREAD() ((PRThread *) TlsGetValue(_pr_currentFiberIndex))
+#define _MD_SET_CURRENT_THREAD(_thread) TlsSetValue(_pr_currentFiberIndex, (_thread))
+
+extern DWORD _pr_lastFiberIndex;
+#define _MD_LAST_THREAD() ((PRThread *) TlsGetValue(_pr_lastFiberIndex))
+#define _MD_SET_LAST_THREAD(_thread) TlsSetValue(_pr_lastFiberIndex, (_thread))
+
+extern DWORD _pr_currentCPUIndex;
+#define _MD_CURRENT_CPU() ((struct _PRCPU *) TlsGetValue(_pr_currentCPUIndex))
+#define _MD_SET_CURRENT_CPU(_cpu) TlsSetValue(_pr_currentCPUIndex, (_cpu))
+
+extern DWORD _pr_intsOffIndex;
+#define _MD_SET_INTSOFF(_val) TlsSetValue(_pr_intsOffIndex, (LPVOID) (_val))
+#define _MD_GET_INTSOFF() ((PRUintn) TlsGetValue(_pr_intsOffIndex))
+
+#endif /* _PR_USE_STATIC_TLS */
 
 /* --- Initialization stuff --- */
 #define _MD_INIT_LOCKS()

@@ -402,11 +402,6 @@ PR_IMPLEMENT(void) _PR_MD_ENSURE_TLS();
 #define _MD_CURRENT_CPU() pThreadLocalStorage->_pr_currentCPU
 #define _MD_SET_CURRENT_CPU(_cpu) _PR_MD_ENSURE_TLS(); pThreadLocalStorage->_pr_currentCPU = (_cpu)
 
-/* lth. #define _MD_SET_INTSOFF(_val) (_pr_ints_off = (_val)) */
-/* lth. #define _MD_GET_INTSOFF() _pr_ints_off */
-/* lth. #define _MD_INCREMENT_INTSOFF() (_pr_ints_off++) */
-/* lth. #define _MD_DECREMENT_INTSOFF() (_pr_ints_off--) */
-
 /* --- Scheduler stuff --- */
 #define LOCK_SCHEDULER()                 0
 #define UNLOCK_SCHEDULER()               0

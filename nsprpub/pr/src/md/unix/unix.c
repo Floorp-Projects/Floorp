@@ -2857,11 +2857,7 @@ PR_Now(void)
 	struct timeval tv;
 	PRInt64 s, us, s2us;
 
-#if (defined(SOLARIS) && defined(_SVID_GETTOD)) || defined(SONY)
-	gettimeofday(&tv);
-#else
-	gettimeofday(&tv, 0);
-#endif
+	GETTIMEOFDAY(&tv);
 	LL_I2L(s2us, PR_USEC_PER_SEC);
 	LL_I2L(s, tv.tv_sec);
 	LL_I2L(us, tv.tv_usec);
@@ -2875,11 +2871,7 @@ PRIntervalTime _PR_UNIX_GetInterval()
 	struct timeval time;
 	PRIntervalTime ticks;
 
-#if defined(_SVID_GETTOD) || defined(SONY)
-	(void)gettimeofday(&time);  /* fallicy of course */
-#else
-	(void)gettimeofday(&time, NULL);  /* fallicy of course */
-#endif
+	(void)GETTIMEOFDAY(&time);  /* fallicy of course */
 	ticks = (PRUint32)time.tv_sec * PR_MSEC_PER_SEC;  /* that's in milliseconds */
 	ticks += (PRUint32)time.tv_usec / PR_USEC_PER_MSEC;  /* so's that */
 	return ticks;

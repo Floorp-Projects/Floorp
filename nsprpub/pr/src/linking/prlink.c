@@ -946,6 +946,8 @@ PR_LoadStaticLibrary(const char *name, const PRStaticLinkTable *slt)
     PRLibrary *lm=NULL;
     PRLibrary* result = NULL;
 
+    if (!_pr_initialized) _PR_ImplicitInitialization();
+
     /* See if library is already loaded */
     PR_EnterMonitor(pr_linker_lock);
 

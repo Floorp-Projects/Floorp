@@ -53,7 +53,7 @@ MKSHLIB			= $(LD) -G -z defs -h $(@:$(OBJDIR)/%.so=%.so)
 #DSO_LDOPTS		= -G -W l,-Blargedynsym
 endif
 
-ODD_CFLAGS		+= -DSVR4 -DSNI -DRELIANTUNIX -Dsinix -D_SVID_GETTOD
+ODD_CFLAGS		+= -DSVR4 -DSNI -DRELIANTUNIX -Dsinix -DHAVE_SVID_GETTOD
 
 # On SINIX 5.43, need to define IP_MULTICAST in order to get the
 # IP multicast macro and struct definitions in netinet/in.h.

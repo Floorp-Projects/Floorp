@@ -34,6 +34,19 @@
 extern void SetupMacPrintfLog(char *logFile);
 #endif
 
+/* lth. re-define PR_LOG() */
+#if 0
+#undef PR_LOG_TEST
+#undef PR_LOG
+#define PR_LOG_TEST(_module,_level) ((_module)->level <= (_level))
+#define PR_LOG(_module,_level,_args)    \
+  {                                     \
+    if (PR_LOG_TEST(_module,_level))    \
+       PR_LogPrint _args   ;             \
+  }
+#endif
+
+
 static void Error(const char* msg)
 {
     printf("\t%s\n", msg);
@@ -65,6 +78,28 @@ static void PR_CALLBACK forked(void *arg)
     PR_LogPrint("%s forked thread exiting\n", (const char*)arg);
 }
 
+static void UserLogStuff( void )
+{
+    PRLogModuleInfo *myLM;
+    PRIntn i;
+
+    myLM = PR_NewLogModule( "userStuff" );
+    if (! myLM )
+      {
+        printf("UserLogStuff(): can't create new log module\n" );
+        return;
+      }
+
+    PR_LOG( myLM, PR_LOG_NOTICE, ("Log a Notice %d\n", 1 ));
+
+    for (i = 0; i < 10 ; i++ )
+      {
+        PR_LOG( myLM, PR_LOG_DEBUG, ("Log Debug number: %d\n", i));
+        PR_Sleep( 300 );
+      }
+
+} /* end UserLogStuff() */
+
 int main(PRIntn argc, const char **argv)
 {
     PRThread *thread;
@@ -93,6 +128,8 @@ int main(PRIntn argc, const char **argv)
 	    PR_USER_THREAD, forked, (void*)argv[0], PR_PRIORITY_NORMAL,
 	    PR_LOCAL_THREAD, PR_JOINABLE_THREAD, 0);
     PR_LogPrint("%s joining thread\n", argv[0]);
+
+    UserLogStuff();
 
     PR_JoinThread(thread);
 

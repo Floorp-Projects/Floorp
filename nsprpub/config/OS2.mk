@@ -74,7 +74,7 @@ DEFINES += -D_X86_
 DEFINES += -D_PR_GLOBAL_THREADS_ONLY
 
 # Name of the binary code directories
-ifeq ($(CPU_ARCH),x386)
+ifeq ($(CPU_ARCH),x86)
 ifdef MOZ_LITE
 OBJDIR_NAME = $(subst OS2,NAV,$(OS_CONFIG))$(OBJDIR_TAG).OBJ
 else

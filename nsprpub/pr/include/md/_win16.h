@@ -45,8 +45,6 @@
 #define HAVE_SOCKET_KEEPALIVE
 #define _PR_HAVE_ATOMIC_OPS
 
-typedef char * caddr_t;
-
 /* --- Common User-Thread/Native-Thread Definitions --------------------- */
 
 extern struct PRLock        *_pr_schedLock;
