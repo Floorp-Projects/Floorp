@@ -238,7 +238,7 @@ int WideCharToMultiByte( int CodePage, const PRUnichar *pText, ULONG ulLength, c
         UniChar codepage[20];
         int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
         if (unirc == ULS_SUCCESS) {
-           ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
+           unirc = ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
            if (unirc == ULS_SUCCESS) {
               ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
                                     NULL, NULL, NULL);
@@ -316,7 +316,7 @@ int MultiByteToWideChar( int CodePage, const char*pText, ULONG ulLength, PRUnich
         UniChar codepage[20];
         int unirc = ::UniMapCpToUcsCp( CodePage, codepage, 20);
         if (unirc == ULS_SUCCESS) {
-           int unirc = ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
+           unirc = ::UniCreateUconvObject( codepage, &pnsUconvInfo->mConverter);
            if (unirc == ULS_SUCCESS) {
               ::UniQueryUconvObject(pnsUconvInfo->mConverter, &attr, sizeof(uconv_attribute_t), 
                                     NULL, NULL, NULL);
