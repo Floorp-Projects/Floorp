@@ -56,6 +56,7 @@
 #include "nsIMsgMailSession.h"
 #include "nsParseMailbox.h"
 #include "nsIFolder.h"
+#include "nsIPrompt.h"
 
 #include "nsILocalFile.h"
 #include "nsFileStream.h"
@@ -72,13 +73,14 @@
 
 #define PREF_MAIL_ROOT_MOVEMAIL "mail.root.movemail"
 
-static NS_DEFINE_CID(kPrefCID,           NS_PREF_CID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 
 nsMovemailService::nsMovemailService()
 {
 #ifdef MOVEMAIL_DEBUG
     fprintf(stderr, "*** MURRR, new nsMovemailService\n");
 #endif
+    mStringService = do_GetService(NS_MSG_POPSTRINGSERVICE_CONTRACTID);
 }
 
 nsMovemailService::~nsMovemailService()
@@ -106,6 +108,39 @@ nsMovemailService::CheckForNewMail(nsIUrlListener * aUrlListener,
 }
 
 
+void
+nsMovemailService::Error(PRInt32 errorCode,
+                         const PRUnichar **params,
+                         PRUint32 length)
+{
+    if (!mStringService) return;
+    if (!mMsgWindow) return;
+
+    nsCOMPtr<nsIPrompt> dialog;
+    nsresult rv = mMsgWindow->GetPromptDialog(getter_AddRefs(dialog));
+    if (NS_FAILED(rv))
+        return;
+
+    nsXPIDLString errStr;
+
+    // Format the error string if necessary
+    if (params) {
+        nsCOMPtr<nsIStringBundle> bundle;
+        rv = mStringService->GetBundle(getter_AddRefs(bundle));
+        if (NS_SUCCEEDED(rv))
+            bundle->FormatStringFromID(errorCode, params, length,
+                                       getter_Copies(errStr));
+    }
+    else {
+        mStringService->GetStringByID(errorCode, getter_Copies(errStr));
+    }
+
+    if (!errStr.IsEmpty()) {
+        dialog->Alert(nsnull, errStr.get());
+    }
+}
+
+
 PRBool ObtainSpoolLock(const char *spoolnameStr,
                        int seconds /* number of seconds to retry */)
 {
@@ -128,22 +163,10 @@ PRBool ObtainSpoolLock(const char *spoolnameStr,
 
     nsresult rv;
 
-    // Create nsFileSpec and nsILocalFile for the spool file
-    nsFileSpec spoollocspec(spoolnameStr);
-    nsCOMPtr<nsILocalFile> spoollocfile;
-    rv = NS_FileSpecToIFile(&spoollocspec, getter_AddRefs(spoollocfile));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
     // Create nsFileSpec and nsILocalFile for the spool.mozlock file
     nsFileSpec tmplocspec(mozlockstr.get());
     nsCOMPtr<nsILocalFile> tmplocfile;
     rv = NS_FileSpecToIFile(&tmplocspec, getter_AddRefs(tmplocfile));
-    if (NS_FAILED(rv))
-        return PR_FALSE;
-    // Create nsFileSpec and nsILocalFile for the spool.lock file
-    nsFileSpec locklocspec(lockstr.get());
-    nsCOMPtr<nsILocalFile> locklocfile;
-    rv = NS_FileSpecToIFile(&locklocspec, getter_AddRefs(locklocfile));
     if (NS_FAILED(rv))
         return PR_FALSE;
     // THOUGHT: hmm, perhaps use MakeUnique to generate us a unique mozlock?
@@ -306,236 +329,212 @@ nsMovemailService::GetNewMail(nsIMsgWindow *aMsgWindow,
 
     nsCOMPtr<nsIMsgIncomingServer> in_server =
         do_QueryInterface(movemailServer);
+    if (!in_server)
+        return NS_MSG_INVALID_OR_MISSING_SERVER;
+    mMsgWindow = aMsgWindow;
     nsCAutoString wholeboxname;
 
-    if (in_server) {   
-        in_server->SetServerBusy(PR_TRUE);
+    in_server->SetServerBusy(PR_TRUE);
 
-        // FUN STUFF starts here
-        {
-            // we now quest for the mail spool file...
-            nsInputFileStream * spoolfile = nsnull;
-            PRBool found_spool_but_it_is_locked = PR_FALSE;
+    // FUN STUFF starts here
+    {
+        // we now quest for the mail spool file...
+        nsInputFileStream * spoolfile = nsnull;
+        PRBool found_spool_but_it_is_locked = PR_FALSE;
 
-            // If $(MAIL) is set then we have things easy.
-            char * wholeboxname_from_env = PR_GetEnv("MAIL");
-            if (wholeboxname_from_env) {
-                wholeboxname.Assign(wholeboxname_from_env);
-                spoolfile = Probe_SpoolFilePath(wholeboxname_from_env,
+        // If $(MAIL) is set then we have things easy.
+        char * wholeboxname_from_env = PR_GetEnv("MAIL");
+        if (wholeboxname_from_env) {
+            wholeboxname.Assign(wholeboxname_from_env);
+            spoolfile = Probe_SpoolFilePath(wholeboxname_from_env,
+                                            &found_spool_but_it_is_locked);
+        } else {
+            // Otherwise try to build the mailbox path from the
+            // username and a number of guessed spool directory
+            // paths.
+            char * boxfilename;
+            boxfilename = PR_GetEnv("USER"); // UNIXy
+            if (!boxfilename) {
+                boxfilename = PR_GetEnv("USERNAME"); // WIN32 (!)
+            }
+
+            if (boxfilename) {
+                // We have the username which is probably also the
+                //  mailbox file name, so now try to find the mailbox
+                //  in a number of likely places.
+
+                wholeboxname = "/var/spool/mail/";
+                wholeboxname += boxfilename;
+                spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
                                                 &found_spool_but_it_is_locked);
-            } else {
-                // Otherwise try to build the mailbox path from the
-                // username and a number of guessed spool directory
-                // paths.
-                char * boxfilename;
-                boxfilename = PR_GetEnv("USER"); // UNIXy
-                if (!boxfilename) {
-                    boxfilename = PR_GetEnv("USERNAME"); // WIN32 (!)
-                }
-
-                if (boxfilename) {
-                    // We have the username which is probably also the
-                    //  mailbox file name, so now try to find the mailbox
-                    //  in a number of likely places.
-
-                    wholeboxname = "/var/spool/mail/";
+                
+                if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
+                    wholeboxname = "/usr/spool/mail/";
                     wholeboxname += boxfilename;
                     spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
                                                     &found_spool_but_it_is_locked);
-                    
-                    if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
-                        wholeboxname = "/usr/spool/mail/";
-                        wholeboxname += boxfilename;
-                        spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
-                                                        &found_spool_but_it_is_locked);
-                    }
-
-                    if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
-                        wholeboxname = "/var/mail/";
-                        wholeboxname += boxfilename;
-                        spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
-                                                        &found_spool_but_it_is_locked);
-                    }
-
-                    if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
-                        wholeboxname = "/usr/mail/";
-                        wholeboxname += boxfilename;
-                        spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
-                                                        &found_spool_but_it_is_locked);
-                    }
                 }
-            }             
-            
-            if (!spoolfile) {
-#ifdef MOVEMAIL_DEBUG
-                fprintf(stderr,
-                        "Nope, no luck getting spool file name at all.\n");
-#endif
-                return NS_ERROR_FAILURE;
+
+                if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
+                    wholeboxname = "/var/mail/";
+                    wholeboxname += boxfilename;
+                    spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
+                                                    &found_spool_but_it_is_locked);
+                }
+
+                if ((!spoolfile) && (!found_spool_but_it_is_locked)) {
+                    wholeboxname = "/usr/mail/";
+                    wholeboxname += boxfilename;
+                    spoolfile = Probe_SpoolFilePath(wholeboxname.get(),
+                                                    &found_spool_but_it_is_locked);
+                }
             }
+        }             
             
-            if (spoolfile &&
-                found_spool_but_it_is_locked) {
+        if (!spoolfile) {
 #ifdef MOVEMAIL_DEBUG
-                fprintf(stderr,
-                        "Well, got the spool file but not the lock.\n");
+            fprintf(stderr,
+                    "Nope, no luck getting spool file name at all.\n");
 #endif
-                return NS_ERROR_FAILURE;
-            }
+            return NS_ERROR_FAILURE;
+        }
+            
+        if (spoolfile && found_spool_but_it_is_locked) {
+#ifdef MOVEMAIL_DEBUG
+            fprintf(stderr,
+                    "Well, got the spool file but not the lock.\n");
+#endif
+            return NS_ERROR_FAILURE;
+        }
             
 #define READBUFSIZE 4096
-            char * buffer = (char*)PR_CALLOC(READBUFSIZE);
-            if (!buffer)
+        char * buffer = (char*)PR_CALLOC(READBUFSIZE);
+        if (!buffer)
+            rv = NS_ERROR_OUT_OF_MEMORY;
+        else {
+            nsIOFileStream* outFileStream;
+            nsParseNewMailState *newMailParser;
+                        
+            nsCOMPtr<nsIFileSpec> mailDirectory;
+            rv = in_server->GetLocalPath(getter_AddRefs(mailDirectory));
+            if (NS_FAILED(rv))
+                goto freebuff_and_unlock;
+                        
+            nsFileSpec fileSpec;
+            mailDirectory->GetFileSpec(&fileSpec);
+            fileSpec += "Inbox";
+            outFileStream = new nsIOFileStream(fileSpec);
+            if (!outFileStream) {
                 rv = NS_ERROR_OUT_OF_MEMORY;
-            else {
-                if (!spoolfile->failed()) {
-                    nsIOFileStream* outFileStream;
-                    nsParseNewMailState *newMailParser;
-                        
-                    nsCOMPtr<nsIFileSpec> mailDirectory;
-                    rv = in_server->GetLocalPath(getter_AddRefs(mailDirectory));
-                    if (NS_FAILED(rv))
-                        goto freebuff_and_unlock;
-                        
-                    nsFileSpec fileSpec;
-                    mailDirectory->GetFileSpec(&fileSpec);
-                    fileSpec += "Inbox";
-                    outFileStream =
-                        new nsIOFileStream(fileSpec /*, PR_CREATE_FILE */);
-                    if (outFileStream) {
-                        outFileStream->seek(fileSpec.GetFileSize());
-                    }
-                    else {
-                        rv = NS_ERROR_UNEXPECTED;
-                        goto freebuff_and_unlock;
-                    }
-                        
-                    // create a new mail parser
-                    newMailParser = new nsParseNewMailState;
-                    if (newMailParser == nsnull) {
-                        rv = NS_ERROR_OUT_OF_MEMORY;
-                        goto freebuff_and_unlock;
-                    }
-                        
-                    nsCOMPtr <nsIMsgParseMailMsgState> iParseMailMsgState = NS_STATIC_CAST(nsIMsgParseMailMsgState*, newMailParser);
-                    nsCOMPtr <nsIFolder> serverFolder;
-                    rv =
-                        in_server->GetRootFolder(getter_AddRefs(serverFolder));
-
-                    if (NS_FAILED(rv))
-                        goto freebuff_and_unlock;
-                    
-	            nsCOMPtr<nsIMsgFolder> inbox;
-	            if(NS_SUCCEEDED(rv))
-	            {
-		      nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(serverFolder);
-		      if(rootMsgFolder)
-		      {
-			      PRUint32 numFolders;
-			      rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
-                                                         &numFolders,
-                                                         getter_AddRefs(inbox));
-                      }
-                    }
-                    rv = newMailParser->Init(serverFolder, inbox, 
-                                               fileSpec, outFileStream, nsnull);
-                    if (NS_FAILED(rv))
-                        goto freebuff_and_unlock;
-                        
-                        
-                    // MIDDLE of the FUN : consume the mailbox data.
-                    {
-                        int numlines = 0;
-
-                        // main parsing loop
-                        while (!spoolfile->eof() &&
-                               !spoolfile->failed() &&
-                               spoolfile->is_open())
-                            {
-                                spoolfile->readline(buffer,
-                                                    READBUFSIZE-(1+PL_strlen(MSG_LINEBREAK)));
-
-                                // 'From' lines delimit messages
-                                if ((numlines>0) &&
-                                    nsCRT::strncmp(buffer, "From ", 5) == 0) {
-                                    numlines = 0;
-                                }
-
-                                // If first string is empty and we're now at EOF
-                                // (or, alternatively, we got a 'From' line and
-                                // then the file mysteriously ended) then abort
-                                // parsing.
-                                if (numlines == 0 &&
-                                    !*buffer &&
-                                    spoolfile->eof()) {
-#ifdef MOVEMAIL_DEBUG
-                                    fprintf(stderr, "*** Utterly empty spool file\n");
-#endif
-                                    break;   // end the parsing loop right here
-                                }
-
-                                PL_strcpy(&buffer[PL_strlen(buffer)], MSG_LINEBREAK);
-
-                                //     fprintf(stderr, "%d: %s", numlines, buffer);
-
-                                newMailParser->HandleLine(buffer, PL_strlen(buffer));
-                                *outFileStream << buffer;
-
-                                numlines++;
-
-                                if (numlines == 1 &&
-                                    !spoolfile->eof()) {
-                                    PL_strcpy(buffer, "X-Mozilla-Status: 8000"
-                                              MSG_LINEBREAK);
-                                    newMailParser->HandleLine(buffer,
-                                                                PL_strlen(buffer));
-                                    *outFileStream << buffer;
-                                    PL_strcpy(buffer, "X-Mozilla-Status2: 00000000"
-                                              MSG_LINEBREAK);
-                                    newMailParser->HandleLine(buffer,
-                                                                PL_strlen(buffer));
-                                    *outFileStream << buffer;
-                                            
-                                }
-                            }
-                    }
-                        
-                        
-                    // END
-                    outFileStream->flush();	// try this.
-                    newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
-                    if (outFileStream->is_open())
-                      outFileStream->close();
-                    delete outFileStream;
-                    outFileStream = 0;
-
-                    // truncate the spool file here.
-                    nsFileSpec * filespecForTrunc =
-                        new nsFileSpec(wholeboxname.get());
-                    if (filespecForTrunc) {
-                        filespecForTrunc->Truncate(0);
-                        delete filespecForTrunc;
-                        filespecForTrunc = nsnull;
-                    }
-                    if (spoolfile->is_open())
-                      spoolfile->close();
-                    delete spoolfile;
-                }
-           
-            freebuff_and_unlock:
-                PR_Free(buffer);
+                goto freebuff_and_unlock;
             }
+            outFileStream->seek(fileSpec.GetFileSize());
+                    
+            // create a new mail parser
+            newMailParser = new nsParseNewMailState;
+            if (newMailParser == nsnull) {
+                rv = NS_ERROR_OUT_OF_MEMORY;
+                goto freebuff_and_unlock;
+            }
+                        
+            nsCOMPtr <nsIMsgParseMailMsgState> iParseMailMsgState = NS_STATIC_CAST(nsIMsgParseMailMsgState*, newMailParser);
+            nsCOMPtr <nsIFolder> serverFolder;
+            rv = in_server->GetRootFolder(getter_AddRefs(serverFolder));
 
-            YieldSpoolLock(wholeboxname.get());
+            if (NS_FAILED(rv))
+                goto freebuff_and_unlock;
+                
+            nsCOMPtr<nsIMsgFolder> inbox;
+            nsCOMPtr<nsIMsgFolder> rootMsgFolder = do_QueryInterface(serverFolder);
+            if (!rootMsgFolder)
+                goto freebuff_and_unlock;
+            PRUint32 numFolders;
+            rv = rootMsgFolder->GetFoldersWithFlag(MSG_FOLDER_FLAG_INBOX, 1,
+                                                   &numFolders,
+                                                   getter_AddRefs(inbox));
+            if (NS_FAILED(rv))
+                goto freebuff_and_unlock;
+            rv = newMailParser->Init(serverFolder, inbox, 
+                                     fileSpec, outFileStream, nsnull);
+            if (NS_FAILED(rv))
+                goto freebuff_and_unlock;
+                       
+                        
+            // MIDDLE of the FUN : consume the mailbox data.
+            {
+                int numlines = 0;
+
+                // main parsing loop
+                while (!spoolfile->eof() &&
+                       !spoolfile->failed() &&
+                       spoolfile->is_open())
+                {
+                    spoolfile->readline(buffer,
+                                        READBUFSIZE-(1+PL_strlen(MSG_LINEBREAK)));
+
+                    // 'From' lines delimit messages
+                    if ((numlines>0) &&
+                        nsCRT::strncmp(buffer, "From ", 5) == 0) {
+                        numlines = 0;
+                    }
+
+                    // If first string is empty and we're now at EOF
+                    // (or, alternatively, we got a 'From' line and
+                    // then the file mysteriously ended) then abort
+                    // parsing.
+                    if (numlines == 0 && !*buffer && spoolfile->eof()) {
+#ifdef MOVEMAIL_DEBUG
+                        fprintf(stderr, "*** Utterly empty spool file\n");
+#endif
+                        break;   // end the parsing loop right here
+                    }
+
+                    PL_strcpy(&buffer[PL_strlen(buffer)], MSG_LINEBREAK);
+
+                    newMailParser->HandleLine(buffer, PL_strlen(buffer));
+                    *outFileStream << buffer;
+
+                    numlines++;
+
+                    if (numlines == 1 && !spoolfile->eof()) {
+                        PL_strcpy(buffer, "X-Mozilla-Status: 8000"
+                                  MSG_LINEBREAK);
+                        newMailParser->HandleLine(buffer,
+                                                  PL_strlen(buffer));
+                        *outFileStream << buffer;
+                        PL_strcpy(buffer, "X-Mozilla-Status2: 00000000"
+                                  MSG_LINEBREAK);
+                        newMailParser->HandleLine(buffer,
+                                                  PL_strlen(buffer));
+                        *outFileStream << buffer;
+                                            
+                    }
+                }
+            }
+                        
+                        
+            // END
+            outFileStream->flush(); // try this.
+            newMailParser->OnStopRequest(nsnull, nsnull, NS_OK);
+            if (outFileStream->is_open())
+                outFileStream->close();
+            delete outFileStream;
+            outFileStream = 0;
+
+            // truncate the spool file here.
+            nsFileSpec filespecForTrunc(wholeboxname.get());
+            filespecForTrunc.Truncate(0);
+            if (spoolfile->is_open())
+                spoolfile->close();
+            delete spoolfile;
         }
 
-        in_server->SetServerBusy(PR_FALSE);
-
-    } else {
-#ifdef MOVEMAIL_DEBUG
-        fprintf(stderr, "*** NONONO get:noserv\n");
-#endif
+freebuff_and_unlock:
+        PR_Free(buffer);
+        YieldSpoolLock(wholeboxname.get());
     }
+
+    in_server->SetServerBusy(PR_FALSE);
 
 #ifdef MOVEMAIL_DEBUG
     fprintf(stderr, "*** YEAHYEAHYEAH get, %s\n",
@@ -615,38 +614,33 @@ nsMovemailService::GetServerIID(nsIID* *aServerIID)
 NS_IMETHODIMP
 nsMovemailService::GetRequiresUsername(PRBool *aRequiresUsername)
 {
-        NS_ENSURE_ARG_POINTER(aRequiresUsername);
-
-#ifdef MOVEMAIL_DEBUG
-        fprintf(stderr, "XXX Yah, got asked for info\n");
-#endif
-
-        *aRequiresUsername = PR_FALSE;
-        return NS_OK;
+    NS_ENSURE_ARG_POINTER(aRequiresUsername);
+    *aRequiresUsername = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMovemailService::GetPreflightPrettyNameWithEmailAddress(PRBool *aPreflightPrettyNameWithEmailAddress)
 {
-        NS_ENSURE_ARG_POINTER(aPreflightPrettyNameWithEmailAddress);
-        *aPreflightPrettyNameWithEmailAddress = PR_TRUE;
-        return NS_OK;
+    NS_ENSURE_ARG_POINTER(aPreflightPrettyNameWithEmailAddress);
+    *aPreflightPrettyNameWithEmailAddress = PR_TRUE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMovemailService::GetCanLoginAtStartUp(PRBool *aCanLoginAtStartUp)
 {
-        NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
-        *aCanLoginAtStartUp = PR_FALSE;
-        return NS_OK;
+    NS_ENSURE_ARG_POINTER(aCanLoginAtStartUp);
+    *aCanLoginAtStartUp = PR_FALSE;
+    return NS_OK;
 }
 
 NS_IMETHODIMP
 nsMovemailService::GetCanDelete(PRBool *aCanDelete)
 {
-        NS_ENSURE_ARG_POINTER(aCanDelete);
-        *aCanDelete = PR_TRUE;
-        return NS_OK;
+    NS_ENSURE_ARG_POINTER(aCanDelete);
+    *aCanDelete = PR_TRUE;
+    return NS_OK;
 }  
 
 NS_IMETHODIMP
@@ -668,9 +662,9 @@ nsMovemailService::GetCanGetIncomingMessages(PRBool *aCanGetIncomingMessages)
 NS_IMETHODIMP
 nsMovemailService::GetCanDuplicate(PRBool *aCanDuplicate)
 {
-        NS_ENSURE_ARG_POINTER(aCanDuplicate);
-        *aCanDuplicate = PR_FALSE;
-        return NS_OK;
+    NS_ENSURE_ARG_POINTER(aCanDuplicate);
+    *aCanDuplicate = PR_FALSE;
+    return NS_OK;
 }  
 
 NS_IMETHODIMP 

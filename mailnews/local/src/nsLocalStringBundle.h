@@ -87,5 +87,11 @@ private:
 #define MOVING_MSGS_STATUS                                  4028
 #define POP3_MESSAGE_FOLDER_BUSY                            4029
 #define CANNOT_PROCESS_SECURE_AUTH                          4030
+#define MOVEMAIL_SPOOL_FILE_NOT_FOUND                       4031
+#define MOVEMAIL_SPOOL_FILE_LOCKED                          4032
+#define MOVEMAIL_CANT_OPEN_SPOOL_FILE                       4033
+#define MOVEMAIL_CANT_CREATE_LOCK                           4034
+#define MOVEMAIL_CANT_DELETE_LOCK                           4035
+#define MOVEMAIL_CANT_TRUNCATE_SPOOL_FILE                   4036
 
 #endif /* _nsLocalStringBundle_H__ */

@@ -45,6 +45,8 @@
 #include "nsIMovemailService.h"
 #include "nsFileSpec.h"
 #include "nsIMsgProtocolInfo.h"
+#include "nsIMsgStringService.h"
+#include "nsIMsgWindow.h"
 
 class nsParseNewMailState;
 class nsIFolder;
@@ -57,10 +59,14 @@ public:
   virtual ~nsMovemailService();
   
   NS_DECL_ISUPPORTS
-  //  NS_DECL_ISUbleh
   NS_DECL_NSIMOVEMAILSERVICE
   NS_DECL_NSIMSGPROTOCOLINFO
   
+private:
+  void Error(PRInt32 errorCode, const PRUnichar **params, PRUint32 length);
+
+  nsCOMPtr<nsIMsgStringService> mStringService;
+  nsCOMPtr<nsIMsgWindow> mMsgWindow;
 };
 
 #endif /* nsMovemailService_h___ */
