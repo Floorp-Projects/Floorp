@@ -124,6 +124,9 @@ public:
 
   // From nsIScriptObjectOwner interface, implemented by nsDocument
   NS_IMETHOD GetScriptObject(nsIScriptContext *aContext, void** aScriptObject);
+  
+  // From nsJSScriptObject interface, implemented by nsDocument
+  virtual PRBool Resolve(JSContext *aContext, jsval aID);
 
   /**
     * Finds text in content

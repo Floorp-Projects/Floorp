@@ -61,6 +61,7 @@
 #include "nsIHTMLContentContainer.h"
 #include "nsHTMLParts.h"
 #include "nsString.h"
+#include "nsLayoutAtoms.h"
 #include "nsHTMLAtoms.h"
 #include "nsDOMEventsIIDs.h"
 #include "nsIEventStateManager.h"
@@ -632,36 +633,36 @@ nsGenericHTMLElement::SetAttribute(PRInt32 aNameSpaceID,
   }
   else {
     // Check for event handlers
-    if ((nsHTMLAtoms::onclick == aAttribute) || 
-             (nsHTMLAtoms::ondblclick == aAttribute) ||
-             (nsHTMLAtoms::onmousedown == aAttribute) ||
-             (nsHTMLAtoms::onmouseup == aAttribute) ||
-             (nsHTMLAtoms::onmouseover == aAttribute) ||
-             (nsHTMLAtoms::onmouseout == aAttribute))
+    if ((nsLayoutAtoms::onclick == aAttribute) || 
+             (nsLayoutAtoms::ondblclick == aAttribute) ||
+             (nsLayoutAtoms::onmousedown == aAttribute) ||
+             (nsLayoutAtoms::onmouseup == aAttribute) ||
+             (nsLayoutAtoms::onmouseover == aAttribute) ||
+             (nsLayoutAtoms::onmouseout == aAttribute))
       AddScriptEventListener(aAttribute, aValue, kIDOMMouseListenerIID); 
-    else if ((nsHTMLAtoms::onkeydown == aAttribute) ||
-             (nsHTMLAtoms::onkeyup == aAttribute) ||
-             (nsHTMLAtoms::onkeypress == aAttribute))
+    else if ((nsLayoutAtoms::onkeydown == aAttribute) ||
+             (nsLayoutAtoms::onkeyup == aAttribute) ||
+             (nsLayoutAtoms::onkeypress == aAttribute))
       AddScriptEventListener(aAttribute, aValue, kIDOMKeyListenerIID); 
-    else if (nsHTMLAtoms::onmousemove == aAttribute)
+    else if (nsLayoutAtoms::onmousemove == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMMouseMotionListenerIID); 
-    else if (nsHTMLAtoms::onload == aAttribute)
-      AddScriptEventListener(nsHTMLAtoms::onload, aValue, kIDOMLoadListenerIID); 
-    else if ((nsHTMLAtoms::onunload == aAttribute) ||
-             (nsHTMLAtoms::onabort == aAttribute) ||
-             (nsHTMLAtoms::onerror == aAttribute))
+    else if (nsLayoutAtoms::onload == aAttribute)
+      AddScriptEventListener(nsLayoutAtoms::onload, aValue, kIDOMLoadListenerIID); 
+    else if ((nsLayoutAtoms::onunload == aAttribute) ||
+             (nsLayoutAtoms::onabort == aAttribute) ||
+             (nsLayoutAtoms::onerror == aAttribute))
       AddScriptEventListener(aAttribute, aValue, kIDOMLoadListenerIID); 
-    else if ((nsHTMLAtoms::onfocus == aAttribute) ||
-             (nsHTMLAtoms::onblur == aAttribute))
+    else if ((nsLayoutAtoms::onfocus == aAttribute) ||
+             (nsLayoutAtoms::onblur == aAttribute))
       AddScriptEventListener(aAttribute, aValue, kIDOMFocusListenerIID); 
-    else if ((nsHTMLAtoms::onsubmit == aAttribute) ||
-             (nsHTMLAtoms::onreset == aAttribute) ||
-             (nsHTMLAtoms::onchange == aAttribute) ||
-             (nsHTMLAtoms::onselect == aAttribute))
+    else if ((nsLayoutAtoms::onsubmit == aAttribute) ||
+             (nsLayoutAtoms::onreset == aAttribute) ||
+             (nsLayoutAtoms::onchange == aAttribute) ||
+             (nsLayoutAtoms::onselect == aAttribute))
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID); 
-    else if (nsHTMLAtoms::onpaint == aAttribute)
+    else if (nsLayoutAtoms::onpaint == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMPaintListenerIID); 
-    else if (nsHTMLAtoms::oninput == aAttribute)
+    else if (nsLayoutAtoms::oninput == aAttribute)
       AddScriptEventListener(aAttribute, aValue, kIDOMFormListenerIID);
   }
  

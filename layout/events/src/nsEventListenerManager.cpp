@@ -41,10 +41,14 @@
 #include "nsIPrivateDOMEvent.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIScriptEventListener.h"
+#include "nsIJSEventListener.h"
 #include "nsDOMEventsIIDs.h"
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsIScriptGlobalObjectData.h"
+#include "nsLayoutAtoms.h"
+#include "nsINameSpaceManager.h"
+#include "nsIContent.h"
 #include "nsCOMPtr.h"
 
 static NS_DEFINE_IID(kIEventListenerManagerIID, NS_IEVENTLISTENERMANAGER_IID);
@@ -236,6 +240,7 @@ nsresult nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener
       ls->mListener = aListener;
       ls->mFlags = aFlags;
       ls->mSubType = aSubType;
+      ls->mHandlerIsString = 0;
       (*listeners)->InsertElementAt((void*)ls, (*listeners)->Count());
       NS_ADDREF(aListener);
     }
@@ -288,133 +293,133 @@ nsresult nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *a
   return NS_OK;
 }
 
-nsresult nsEventListenerManager::GetIdentifiersForType(const nsString& aType, nsIID& aIID, PRInt32* aFlags)
+nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, nsIID& aIID, PRInt32* aFlags)
 {
-  if (aType == "mousedown") {
+  if (aType == nsLayoutAtoms::onmousedown) {
     aIID = kIDOMMouseListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSE_MOUSEDOWN;
   }
-  else if (aType == "mouseup") {
+  else if (aType == nsLayoutAtoms::onmouseup) {
     aIID = kIDOMMouseListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSE_MOUSEUP;
   }
-  else if (aType == "click") {
+  else if (aType == nsLayoutAtoms::onclick) {
     aIID = kIDOMMouseListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSE_CLICK;
   }
-  else if (aType == "dblclick") {
+  else if (aType == nsLayoutAtoms::ondblclick) {
     aIID = kIDOMMouseListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSE_DBLCLICK;
   }
-  else if (aType == "mouseover") {
+  else if (aType == nsLayoutAtoms::onmouseover) {
     aIID = kIDOMMouseListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSE_MOUSEOVER;
   }
-  else if (aType == "mouseout") {
+  else if (aType == nsLayoutAtoms::onmouseout) {
     aIID = kIDOMMouseListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSE_MOUSEOUT;
   }
-  else if (aType == "keydown") {
+  else if (aType == nsLayoutAtoms::onkeydown) {
     aIID = kIDOMKeyListenerIID;
     *aFlags = NS_EVENT_BITS_KEY_KEYDOWN;
   }
-  else if (aType == "keyup") {
+  else if (aType == nsLayoutAtoms::onkeyup) {
     aIID = kIDOMKeyListenerIID;
     *aFlags = NS_EVENT_BITS_KEY_KEYUP;
   }
-  else if (aType == "keypress") {
+  else if (aType == nsLayoutAtoms::onkeypress) {
     aIID = kIDOMKeyListenerIID;
     *aFlags = NS_EVENT_BITS_KEY_KEYPRESS;
   }
-  else if (aType == "mousemove") {
+  else if (aType == nsLayoutAtoms::onmousemove) {
     aIID = kIDOMMouseMotionListenerIID;
     *aFlags = NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE;
   }
-  else if (aType == "focus") {
+  else if (aType == nsLayoutAtoms::onfocus) {
     aIID = kIDOMFocusListenerIID;
     *aFlags = NS_EVENT_BITS_FOCUS_FOCUS;
   }
-  else if (aType == "blur") {
+  else if (aType == nsLayoutAtoms::onblur) {
     aIID = kIDOMFocusListenerIID;
     *aFlags = NS_EVENT_BITS_FOCUS_BLUR;
   }
-  else if (aType == "submit") {
+  else if (aType == nsLayoutAtoms::onsubmit) {
     aIID = kIDOMFormListenerIID;
     *aFlags = NS_EVENT_BITS_FORM_SUBMIT;
   }
-  else if (aType == "reset") {
+  else if (aType == nsLayoutAtoms::onreset) {
     aIID = kIDOMFormListenerIID;
     *aFlags = NS_EVENT_BITS_FORM_RESET;
   }
-  else if (aType == "change") {
+  else if (aType == nsLayoutAtoms::onchange) {
     aIID = kIDOMFormListenerIID;
     *aFlags = NS_EVENT_BITS_FORM_CHANGE;
   }
-  else if (aType == "select") {
+  else if (aType == nsLayoutAtoms::onselect) {
     aIID = kIDOMFormListenerIID;
     *aFlags = NS_EVENT_BITS_FORM_SELECT;
   }
-  else if (aType == "input") {
+  else if (aType == nsLayoutAtoms::oninput) {
     aIID = kIDOMFormListenerIID;
     *aFlags = NS_EVENT_BITS_FORM_INPUT;
   }
-  else if (aType == "load") {
+  else if (aType == nsLayoutAtoms::onload) {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_LOAD;
   }
-  else if (aType == "unload") {
+  else if (aType == nsLayoutAtoms::onunload) {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_UNLOAD;
   }
-  else if (aType == "abort") {
+  else if (aType == nsLayoutAtoms::onabort) {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_ABORT;
   }
-  else if (aType == "error") {
+  else if (aType == nsLayoutAtoms::onerror) {
     aIID = kIDOMLoadListenerIID;
     *aFlags = NS_EVENT_BITS_LOAD_ERROR;
   }
-  else if (aType == "paint") {
+  else if (aType == nsLayoutAtoms::onpaint) {
     aIID = kIDOMPaintListenerIID;
     *aFlags = NS_EVENT_BITS_PAINT_PAINT;
   } // extened this to handle IME related events
-  else if (aType == "create") {
+  else if (aType == nsLayoutAtoms::oncreate) {
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_CREATE;
   }
-  else if (aType == "destroy") {
+  else if (aType == nsLayoutAtoms::ondestroy) {
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_DESTROY;
   }
-  else if (aType == "command") {
+  else if (aType == nsLayoutAtoms::oncommand) {
     aIID = kIDOMMenuListenerIID; 
     *aFlags = NS_EVENT_BITS_MENU_ACTION;
   }
-  else if (aType == "broadcast") {
+  else if (aType == nsLayoutAtoms::onbroadcast) {
     aIID = kIDOMMenuListenerIID;
     *aFlags = NS_EVENT_BITS_XUL_BROADCAST;
   }
-  else if (aType == "commandupdate") {
+  else if (aType == nsLayoutAtoms::oncommandupdate) {
     aIID = kIDOMMenuListenerIID;
     *aFlags = NS_EVENT_BITS_XUL_COMMAND_UPDATE;
   }
-  else if (aType == "dragenter") {
+  else if (aType == nsLayoutAtoms::ondragenter) {
     aIID = NS_GET_IID(nsIDOMDragListener);
     *aFlags = NS_EVENT_BITS_DRAG_ENTER;
   }
-  else if (aType == "dragover") {
+  else if (aType == nsLayoutAtoms::ondragover) {
     aIID = NS_GET_IID(nsIDOMDragListener); 
     *aFlags = NS_EVENT_BITS_DRAG_OVER;
   }
-  else if (aType == "dragexit") {
+  else if (aType == nsLayoutAtoms::ondragexit) {
     aIID = NS_GET_IID(nsIDOMDragListener); 
     *aFlags = NS_EVENT_BITS_DRAG_EXIT;
   }
-  else if (aType == "dragdrop") {
+  else if (aType == nsLayoutAtoms::ondragdrop) {
     aIID = NS_GET_IID(nsIDOMDragListener); 
     *aFlags = NS_EVENT_BITS_DRAG_DROP;
   }
-  else if (aType == "draggesture") {
+  else if (aType == nsLayoutAtoms::ondraggesture) {
     aIID = NS_GET_IID(nsIDOMDragListener); 
     *aFlags = NS_EVENT_BITS_DRAG_GESTURE;
   }
@@ -429,10 +434,17 @@ nsresult nsEventListenerManager::AddEventListenerByType(nsIDOMEventListener *aLi
 {
   PRInt32 subType;
   nsIID iid;
+  nsAutoString str("on");
+  nsIAtom* atom;
 
-  if (NS_OK == GetIdentifiersForType(aType, iid, &subType)) {
+  str.Append(aType);
+  atom = NS_NewAtom(str);
+
+  if (NS_OK == GetIdentifiersForType(atom, iid, &subType)) {
     AddEventListener(aListener, iid, aFlags, subType);
   }
+
+  NS_IF_RELEASE(atom);
 
   return NS_OK;
 }
@@ -443,38 +455,81 @@ nsresult nsEventListenerManager::RemoveEventListenerByType(nsIDOMEventListener *
   PRInt32 subType;
   nsIID iid;
 
-  if (NS_OK == GetIdentifiersForType(aType, iid, &subType)) {
+  nsAutoString str("on");
+  nsIAtom* atom;
+
+  str.Append(aType);
+  atom = NS_NewAtom(str);
+
+  if (NS_OK == GetIdentifiersForType(atom, iid, &subType)) {
     RemoveEventListener(aListener, iid, aFlags, subType);
   }
+
+  NS_IF_RELEASE(atom);
 
   return NS_OK;
 }
 
-nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, JSObject *aObject, REFNSIID aIID)
+nsListenerStruct*
+nsEventListenerManager::FindJSEventListener(REFNSIID aIID)
 {
-  nsVoidArray *mListeners;
+  nsVoidArray *listeners;
 
-  if (NS_OK == GetEventListeners(&mListeners, aIID)) {
+  nsresult result = GetEventListeners(&listeners, aIID);
+  if (NS_SUCCEEDED(result)) {
     //Run through the listeners for this IID and see if a script listener is registered
-    //If so, we're set.
-    if (nsnull != mListeners) {
+    if (nsnull != listeners) {
       nsListenerStruct *ls;
-      for (int i=0; i<mListeners->Count(); i++) {
-        ls = (nsListenerStruct*)mListeners->ElementAt(i);
+      for (int i=0; i<listeners->Count(); i++) {
+        ls = (nsListenerStruct*)listeners->ElementAt(i);
         if (ls->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) {
-          return NS_OK;
+          return ls;
         }
       }
     }
+  }
+
+  return nsnull;
+}
+
+nsresult nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext, 
+                                                    nsIScriptObjectOwner *aOwner, 
+                                                    nsIAtom* aName,
+                                                    REFNSIID aIID,
+                                                    PRBool aIsString)
+{
+  nsIDOMEventListener* theListener = nsnull;
+  nsresult result = NS_OK;
+  nsListenerStruct *ls;
+
+  ls = FindJSEventListener(aIID);
+
+  if (nsnull == ls) {
     //If we didn't find a script listener or no listeners existed create and add a new one.
-    nsIDOMEventListener *mScriptListener;
-    if (NS_OK == NS_NewJSEventListener(&mScriptListener, aContext, aObject)) {
-      AddEventListenerByIID(mScriptListener, aIID, NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT);
-      NS_RELEASE(mScriptListener);
-      return NS_OK;
+    nsIDOMEventListener* scriptListener;
+    result = NS_NewJSEventListener(&scriptListener, aContext, aOwner);
+    if (NS_SUCCEEDED(result)) {
+      AddEventListenerByIID(scriptListener, aIID, NS_EVENT_FLAG_BUBBLE | NS_PRIV_EVENT_FLAG_SCRIPT);
+      NS_RELEASE(scriptListener);
+      ls = FindJSEventListener(aIID);
     }
   }
-  return NS_ERROR_FAILURE;
+
+  if (NS_SUCCEEDED(result) && ls) {
+    PRInt32 flags;
+    nsIID iid;
+    result = GetIdentifiersForType(aName, iid, &flags);
+    if (NS_SUCCEEDED(result)) {
+      if (aIsString) {
+        ls->mHandlerIsString |= flags;
+      }
+      else {
+        ls->mHandlerIsString &= ~flags;
+      }
+    }
+  }
+
+  return result;
 }
 
 nsresult
@@ -482,28 +537,82 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
                                                nsIScriptObjectOwner *aScriptObjectOwner,
                                                nsIAtom *aName,
                                                const nsString& aBody,
-                                               REFNSIID aIID)
+                                               REFNSIID aIID,
+                                               PRBool aDeferCompilation)
 {
   JSObject *scriptObject;
   nsresult rv;
   
-  rv = aScriptObjectOwner->GetScriptObject(aContext, (void**)&scriptObject);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  rv = aContext->CompileFunction(scriptObject, aName, aBody);
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
-  return SetJSEventListener(aContext, scriptObject, aIID);
+  if (!aDeferCompilation) {
+    rv = aScriptObjectOwner->GetScriptObject(aContext, (void**)&scriptObject);
+    if (NS_FAILED(rv))
+      return rv;
+    rv = aContext->CompileFunction(scriptObject, aName, aBody);
+    if (NS_FAILED(rv))
+      return rv;
+  }
+  return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, aDeferCompilation);
 }
 
-nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
-                                     REFNSIID aIID)
+nsresult nsEventListenerManager::RegisterScriptEventListener(nsIScriptContext *aContext, 
+                                                             nsIScriptObjectOwner *aScriptObjectOwner, 
+                                                             nsIAtom *aName,
+                                                             REFNSIID aIID)
 {
-  JSObject *scriptObject;
-  if (NS_SUCCEEDED(aScriptObjectOwner->GetScriptObject(aContext, (void**)&scriptObject))) {
-    return SetJSEventListener(aContext, scriptObject, aIID);
+  return SetJSEventListener(aContext, aScriptObjectOwner, aName, aIID, PR_FALSE);
+}
+
+nsresult
+nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
+                                           nsIDOMEvent* aDOMEvent,
+                                           PRUint32 aSubType)
+{
+  nsresult result = NS_OK;
+
+  // If this is a script handler and we haven't yet
+  // compiled the event handler itself
+  if ((aListenerStruct->mFlags & NS_PRIV_EVENT_FLAG_SCRIPT) &&
+      (aListenerStruct->mHandlerIsString & aSubType)) {
+    nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListenerStruct->mListener);
+    if (jslistener) {
+      nsCOMPtr<nsIScriptObjectOwner> owner;
+      nsCOMPtr<nsIScriptContext> scriptCX;
+      result = jslistener->GetEventTarget(getter_AddRefs(scriptCX), getter_AddRefs(owner));
+
+      if (NS_SUCCEEDED(result)) {
+        JSObject* jsobj;
+        result = owner->GetScriptObject(scriptCX, (void**)&jsobj);
+        // This should never happen for anything but content
+        // XXX I don't like that we have to reference content
+        // from here. The alternative is to store the event handler
+        // string on the JS object itself.
+        if (NS_SUCCEEDED(result)) {
+          nsCOMPtr<nsIContent> content = do_QueryInterface(owner);
+          NS_ASSERTION(content, "only content should have event handler attributes");
+          if (content) {
+            nsAutoString eventString;
+            if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+
+              eventString.Insert("on", 0, 2);
+              nsCOMPtr<nsIAtom> atom = getter_AddRefs(NS_NewAtom(eventString));
+              nsString handlerBody;
+              result = content->GetAttribute(kNameSpaceID_None, atom, handlerBody);
+              if (NS_SUCCEEDED(result)) {
+                result = scriptCX->CompileFunction(jsobj, atom, handlerBody);
+                aListenerStruct->mHandlerIsString &= ~aSubType;
+              }
+            }
+          }
+        }
+      }
+    }
   }
-  return NS_ERROR_FAILURE;
+
+  if (NS_SUCCEEDED(result)) {
+    result = aListenerStruct->mListener->HandleEvent(aDOMEvent);
+  }
+
+  return result;
 }
 
 /**
@@ -548,7 +657,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
             nsIDOMMouseListener *mMouseListener;
 
             ls = (nsListenerStruct*)mMouseListeners->ElementAt(i);
-
+            
             if (ls->mFlags & aFlags) {
               if (NS_OK == ls->mListener->QueryInterface(kIDOMMouseListenerIID, (void**)&mMouseListener)) {
                 switch(aEvent->message) {
@@ -585,10 +694,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_MOUSE_LEFT_BUTTON_DOWN:
                   case NS_MOUSE_MIDDLE_BUTTON_DOWN:
                   case NS_MOUSE_RIGHT_BUTTON_DOWN:
+                    subType = NS_EVENT_BITS_MOUSE_MOUSEDOWN;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEDOWN) {
                       correctSubType = PR_TRUE;
                     }
@@ -596,6 +707,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_MOUSE_LEFT_BUTTON_UP:
                   case NS_MOUSE_MIDDLE_BUTTON_UP:
                   case NS_MOUSE_RIGHT_BUTTON_UP:
+                    subType = NS_EVENT_BITS_MOUSE_MOUSEUP;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEUP) {
                       correctSubType = PR_TRUE;
                     }
@@ -603,6 +715,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_MOUSE_LEFT_CLICK:
                   case NS_MOUSE_MIDDLE_CLICK:
                   case NS_MOUSE_RIGHT_CLICK:
+                    subType = NS_EVENT_BITS_MOUSE_CLICK;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_CLICK) {
                       correctSubType = PR_TRUE;
                     }
@@ -610,16 +723,19 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                   case NS_MOUSE_LEFT_DOUBLECLICK:
                   case NS_MOUSE_MIDDLE_DOUBLECLICK:
                   case NS_MOUSE_RIGHT_DOUBLECLICK:
+                    subType = NS_EVENT_BITS_MOUSE_DBLCLICK;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_DBLCLICK) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_MOUSE_ENTER:
+                    subType = NS_EVENT_BITS_MOUSE_MOUSEOVER;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEOVER) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_MOUSE_EXIT:
+                    subType = NS_EVENT_BITS_MOUSE_MOUSEOUT;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSE_MOUSEOUT) {
                       correctSubType = PR_TRUE;
                     }
@@ -628,7 +744,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -662,8 +778,10 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_MOUSE_MOVE:
+                    subType = NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE;
                     if (ls->mSubType & NS_EVENT_BITS_MOUSEMOTION_MOUSEMOVE) {
                       correctSubType = PR_TRUE;
                     }
@@ -672,7 +790,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -709,13 +827,16 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 					  }
 					  else {
 						  PRBool correctSubType = PR_FALSE;
+              PRUint32 subType = 0;
 						  switch(aEvent->message) {
 						    case NS_COMPOSITION_START:
+                  subType = NS_EVENT_BITS_COMPOSITION_START;
 							    if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_START) {
 							      correctSubType = PR_TRUE;
 							    }
 							    break;
 						    case NS_COMPOSITION_END:
+                  subType = NS_EVENT_BITS_COMPOSITION_END;
 							    if (ls->mSubType & NS_EVENT_BITS_COMPOSITION_END) {
 							      correctSubType = PR_TRUE;
 							    }
@@ -724,7 +845,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
 							    break;
 						  }
 						  if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-						    ret = ls->mListener->HandleEvent(*aDOMEvent);
+						    ret = HandleEventSubType(ls, *aDOMEvent, subType);
 						  }
 					  }
 					}
@@ -754,11 +875,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = NS_EVENT_BITS_TEXT_TEXT;
                 if (ls->mSubType & NS_EVENT_BITS_TEXT_TEXT) {
                   correctSubType = PR_TRUE;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -800,18 +922,22 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_KEY_UP:
+                    subType = NS_EVENT_BITS_KEY_KEYUP;
                     if (ls->mSubType & NS_EVENT_BITS_KEY_KEYUP) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_KEY_DOWN:
+                    subType = NS_EVENT_BITS_KEY_KEYDOWN;
                     if (ls->mSubType & NS_EVENT_BITS_KEY_KEYDOWN) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_KEY_PRESS:
+                    subType = NS_EVENT_BITS_KEY_KEYPRESS;
                     if (ls->mSubType & NS_EVENT_BITS_KEY_KEYPRESS) {
                       correctSubType = PR_TRUE;
                     }
@@ -820,7 +946,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -858,13 +984,16 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_FOCUS_CONTENT:
+                    subType = NS_EVENT_BITS_FOCUS_FOCUS;
                     if (ls->mSubType & NS_EVENT_BITS_FOCUS_FOCUS) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_BLUR_CONTENT:
+                    subType = NS_EVENT_BITS_FOCUS_BLUR;
                     if (ls->mSubType & NS_EVENT_BITS_FOCUS_BLUR) {
                       correctSubType = PR_TRUE;
                     }
@@ -873,7 +1002,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -923,28 +1052,34 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_FORM_SUBMIT:
+                    subType = NS_EVENT_BITS_FORM_SUBMIT;
                     if (ls->mSubType & NS_EVENT_BITS_FORM_SUBMIT) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_FORM_RESET:
+                    subType = NS_EVENT_BITS_FORM_RESET;
                     if (ls->mSubType & NS_EVENT_BITS_FORM_RESET) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_FORM_CHANGE:
+                    subType = NS_EVENT_BITS_FORM_CHANGE;
                     if (ls->mSubType & NS_EVENT_BITS_FORM_CHANGE) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_FORM_SELECTED:
+                    subType = NS_EVENT_BITS_FORM_SELECT;
                     if (ls->mSubType & NS_EVENT_BITS_FORM_SELECT) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_FORM_INPUT:
+                    subType = NS_EVENT_BITS_FORM_INPUT;
                     if (ls->mSubType & NS_EVENT_BITS_FORM_INPUT) {
                       correctSubType = PR_TRUE;
                     }
@@ -953,7 +1088,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -992,13 +1127,16 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_PAGE_LOAD:
+                    subType = NS_EVENT_BITS_LOAD_LOAD;
                     if (ls->mSubType & NS_EVENT_BITS_LOAD_LOAD) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_PAGE_UNLOAD:
+                    subType = NS_EVENT_BITS_LOAD_UNLOAD;
                     if (ls->mSubType & NS_EVENT_BITS_LOAD_UNLOAD) {
                       correctSubType = PR_TRUE;
                     }
@@ -1007,7 +1145,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -1036,11 +1174,12 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = NS_EVENT_BITS_PAINT_PAINT;
                 if (ls->mSubType & NS_EVENT_BITS_PAINT_PAINT) {
                   correctSubType = PR_TRUE;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }
@@ -1088,24 +1227,30 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_DRAGDROP_ENTER:
+                    subType = NS_EVENT_BITS_DRAG_ENTER;
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_ENTER)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_OVER:
+                    subType = NS_EVENT_BITS_DRAG_OVER;
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_OVER)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_EXIT:
+                    subType = NS_EVENT_BITS_DRAG_EXIT;
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_EXIT)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_DROP:
+                    subType = NS_EVENT_BITS_DRAG_DROP;
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_DROP)
                       correctSubType = PR_TRUE;
                     break;
                   case NS_DRAGDROP_GESTURE:
+                    subType = NS_EVENT_BITS_DRAG_GESTURE;
                     if (dragStruct->mSubType & NS_EVENT_BITS_DRAG_GESTURE)
                       correctSubType = PR_TRUE;
                     break;
@@ -1113,7 +1258,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || dragStruct->mSubType == NS_EVENT_BITS_DRAG_NONE)
-                  ret = dragStruct->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(dragStruct, *aDOMEvent, subType);
               }
             }
           }
@@ -1162,28 +1307,34 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
               }
               else {
                 PRBool correctSubType = PR_FALSE;
+                PRUint32 subType = 0;
                 switch(aEvent->message) {
                   case NS_MENU_CREATE:
+                    subType = NS_EVENT_BITS_MENU_CREATE;
                     if (ls->mSubType & NS_EVENT_BITS_MENU_CREATE) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_MENU_DESTROY:
+                    subType = NS_EVENT_BITS_MENU_DESTROY;
                     if (ls->mSubType & NS_EVENT_BITS_MENU_DESTROY) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_MENU_ACTION:
+                    subType = NS_EVENT_BITS_MENU_ACTION;
                     if (ls->mSubType & NS_EVENT_BITS_MENU_ACTION) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_XUL_BROADCAST:
+                    subType = NS_EVENT_BITS_XUL_BROADCAST;
                     if (ls->mSubType & NS_EVENT_BITS_XUL_BROADCAST) {
                       correctSubType = PR_TRUE;
                     }
                     break;
                   case NS_XUL_COMMAND_UPDATE:
+                    subType = NS_EVENT_BITS_XUL_COMMAND_UPDATE;
                     if (ls->mSubType & NS_EVENT_BITS_XUL_COMMAND_UPDATE) {
                       correctSubType = PR_TRUE;
                     }
@@ -1192,7 +1343,7 @@ nsresult nsEventListenerManager::HandleEvent(nsIPresContext* aPresContext,
                     break;
                 }
                 if (correctSubType || ls->mSubType == NS_EVENT_BITS_NONE) {
-                  ret = ls->mListener->HandleEvent(*aDOMEvent);
+                  ret = HandleEventSubType(ls, *aDOMEvent, subType);
                 }
               }
             }

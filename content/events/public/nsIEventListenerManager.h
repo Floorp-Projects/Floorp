@@ -85,15 +85,21 @@ public:
   * @param an event listener
   */
 
-  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
-                                          nsIAtom *aName, const nsString& aFunc, REFNSIID aIID) = 0; 
+  virtual nsresult AddScriptEventListener(nsIScriptContext*aContext, 
+                                          nsIScriptObjectOwner *aScriptObjectOwner, 
+                                          nsIAtom *aName, 
+                                          const nsString& aFunc, 
+                                          REFNSIID aIID,
+                                          PRBool aDeferCompilation) = 0; 
   /**
   * Registers an event listners which already exists on the given script object with the event
   * listener manager.
   * @param an event listener
   */
 
-  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, nsIScriptObjectOwner *aScriptObjectOwner, 
+  virtual nsresult RegisterScriptEventListener(nsIScriptContext *aContext, 
+                                               nsIScriptObjectOwner *aScriptObjectOwner,
+                                               nsIAtom* aName,
                                                REFNSIID aIID) = 0;
 
   /**
