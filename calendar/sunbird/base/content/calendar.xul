@@ -564,7 +564,6 @@
                          flex="8"
                          maxheight="300"
                          onchange="gCalendarWindow.goToDay( this.value );"/>
-              <button observes="go_today_command" label="&calendar.gototoday.button.label;"/>
               <spacer id="spacebelowleftminimonth" flex="1" orient="vertical"/>
             </vbox>
           </tabpanel>
