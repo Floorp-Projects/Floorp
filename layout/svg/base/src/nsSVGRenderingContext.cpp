@@ -309,7 +309,7 @@ void nsSVGRenderingContext::InitializeBuffer()
   		break;
   		
   	default:
-  		 NS_ASSERTION(false, "unsupported pixel depth");
+  		 NS_ASSERTION(PR_FALSE, "unsupported pixel depth");
   	}
     
     PRInt32 bytesPerWidth;
