@@ -184,9 +184,11 @@ void CProgressMac::SetProgressRange(int32 minimum, int32 maximum)
 {
 	if (maximum > minimum)
 	{
-		Range32T	r(minimum, maximum);
-		fProgress->SetValueRange(r);
+		Assert_(minimum==0);
+		//Range32T	r(minimum, maximum);
+		//fProgress->SetValueRange(r);
 		fProgress->SetValue(minimum);
+		fProgress->SetValueRange(maximum - minimum);
 	}
 	else
 	{
