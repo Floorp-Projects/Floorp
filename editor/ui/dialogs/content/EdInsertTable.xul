@@ -47,35 +47,32 @@
   <grid>
     <columns><column/><column/><column/></columns>
     <rows>
-      <row vertical-align="baseline"  autostretch="never">
-        <text class="dialog align-right" value="&numRowsEditField.label;"/>
-        <textfield class="narrow" id="rows" onkeyup="forceInteger(this.id)" />
+      <row vertical-align="baseline" text-align="right" autostretch="never">
+        <text class="label align-right" text-align="right" value="&numRowsEditField.label;"/>
+        <textfield class="narrow" id="rowsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
-      <spring class="spacer"/>
-      <row vertical-align="baseline"  autostretch="never">
-        <text class="dialog align-right" value="&numColumnsEditField.label;"/>
-        <textfield class="narrow" id="columns" onkeyup="forceInteger(this.id)" />
+      <row vertical-align="baseline" text-align="right" autostretch="never">
+        <text class="label align-right" value="&numColumnsEditField.label;"/>
+        <textfield class="narrow" id="columnsInput" onkeyup="forceInteger(this.id)" />
         <spring/>
       </row>
-      <spring class="spacer"/>
-      <row vertical-align="baseline"  autostretch="never">
-        <text class="dialog align-right" value="&widthEditField.label;"/>
-        <textfield class="narrow" id="width" onkeyup="forceInteger(this.id)" />
-        <spring/>
-      </row>
-      <spring class="spacer"/>
-      <row vertical-align="baseline"  autostretch="never">
-        <text class="dialog align-right" value="&widthEditField.label;"/>
-        <textfield class="narrow" id="width" onkeyup="forceInteger(this.id)" />
-        <menulist id="pixelOrPercentMenulist"><menupopup/></menulist>
+      <row vertical-align="baseline" text-align="right" autostretch="never">
+        <text class="label align-right" value="&widthEditField.label;"/>
+        <textfield class="narrow" id="widthInput" onkeyup="forceInteger(this.id)" />
+        <menulist id="widthPixelOrPercentMenulist"><menupopup/></menulist>
           <!-- child elements are appended by JS -->
       </row>
-      <spring class="spacer"/>
+      <row vertical-align="baseline" text-align="right" autostretch="never">
+        <text class="label align-right" value="&heightEditField.label;"/>
+        <textfield class="narrow" id="heightInput" onkeyup="forceInteger(this.id)" />
+        <menulist id="heightPixelOrPercentMenulist"><menupopup/></menulist>
+          <!-- child elements are appended by JS -->
+      </row>
       <row vertical-align="baseline" autostretch="never">
-        <text class="dialog align-right" value="&borderEditField.label;"/>
+        <text class="label align-right" text-align="right" value="&borderEditField.label;"/>
         <textfield class="narrow" id="borderInput" onkeyup="forceInteger(this.id)" />
-        <text value="&pixelsPopup.value;"/>  
+        <text value="&pixels.label;"/>  
       </row>
     </rows>
   </grid>

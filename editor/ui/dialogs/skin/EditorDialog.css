@@ -25,101 +25,77 @@
    THIS FILE IS LOCKED DOWN.  YOU ARE NOT ALLOWED TO MODIFY IT WITHOUT FIRST HAVING YOUR
    CHANGES REVIEWED BY cmanske@netscape.com.
 */
-
-
-table { 
-  border-collapse: separate; 
-  border-spacing:  0px; 
-  margin: 0px; 
-  border: 0px;
-}
-
-td { border: 0px;}
-
-/* Use to center vertically in a table cell */
-tr { 
-  vertical-align: middle;
-}
-
-.margin-left-right {
-  margin-left:  10px;
-  margin-right:  5px;
-}
-
-*.color-well {
-  width:20px;
-  height: 1em; 
-  border: 1px inset #CCCCCC;
-  /* Background color is set at runtime */
-}
-
-*.color-well[default="true"] {
-  border: 1px solid transparent;
-  background-color: inherit;
-}
-
-image.popup-trigger {
-  list-style-image: url(chrome://global/skin/scroll-down.gif);
-}
-
 /* Most should be moved to global files */
 
 titledbox {
   padding-bottom: 4px;
 }
 
-*.MinWidth10em {
+.MinWidth5em {
+  min-width: 5em;
+}
+
+.MinWidth10em {
   min-width: 10em;
 }
 
-*.MinWidth20em {
+.MinWidth20em {
   min-width: 20em;
 }
 
-*.big-left-margin {
+.big-left-margin {
   margin-left:    10px;
 }
 
-*.middle {
+.middle {
   vertical-align: middle:
 }
 
-text.dialog {
-  margin: 1px 2px 1px 4px;
-}
-
-text.bold {
+.bold {
   font-weight: bold;
 }
 
-text.italic {
+.italic {
   font-style: italic;
 }
 
+
+.narrow {
+  width: 3em;
+}
+
+.align-right {
+  text-align: right;
+}
+
+/* end of "should be in global.css" */
+
+.color-well {
+  width:20px;
+  height: 1em; 
+  border: 1px inset #CCCCCC;
+  /* Background color is set at runtime */
+}
+
+.color-well[default="true"] {
+  border: 1px solid transparent;
+  background-color: inherit;
+}
+
+.popup-trigger {
+  list-style-image: url(chrome://global/skin/scroll-down.gif);
+}
+
+/* temporary -- we need a simple box-based list defined in XBL */
 tree.list {
   border: 1px inset #CCCCCC;
   margin: 1px 4px 2px 4px;
   width: 10em;
   height: 3em;
+  /* use rows="#" in XUL to define height */
 }
 
-textfield.narrow {
-  width: 3em;
-}
-
-*.align-right {
-  text-align: right;
-}
-
-text {
-  text-align: left;
-}
-
-text[hidden="true"], input[hidden="true"] {
-  display: none;
-}
-
-box#ColorPreview {
+#ColorPreview {
   border: 1px inset #CCCCCC;
   margin-left:    10px;
   padding-left:    5px;
@@ -128,95 +104,82 @@ box#ColorPreview {
   min-height:     50px;
 }
 
-select#alignTypeSelect,label#alignLabel {
+#alignTypeSelect,label#alignLabel {
   margin-left: 5px;
 }
 
-button#MoreFewerButton[more="0"] {
+#MoreFewerButton[more="0"] {
   list-style-image: url(chrome://global/skin/scroll-down.gif);
   /* bug 9459 - changing button text doesn't resize width.
      This covers that problem, but we want this size anyway */
   min-width: 10em;
 }
 
-button#MoreFewerButton[more="1"] {
+#MoreFewerButton[more="1"] {
   list-style-image: url(chrome://global/skin/scroll-up.gif);
   min-width: 10em;
 }
 
 /* We use a borderless button to show misspelled word in dialog */
-text#MisspelledWord {
+#MisspelledWord {
   font-weight: bold;
 }
 
 /* For a column of right-aligned text before 
    a column of input fields, e.g., InsertTable dialog
 */
-text.right {
+.right {
   /* doesn't work yet! must use align="right" in <text> */
   text-align:   right;
-  margin-right: 5px;
-  /* Kludge: this needs to be wide enoungh for longest string */
-  min-width:    10em;
 }
 
 /* use outset shape for a button look */
-menu.colorpicker {
+.colorpicker {
   border: 1px outset #CCCCCC;
   /* For a little extra space between buttons */
   margin-bottom: 2px;
 }
 
 
-menu.colorpicker:active {
+.colorpicker:active {
   border: 1px inset #CCCCCC;
 }
 
 /* THIS SHOULD BE IN GLOBAL.CSS */
-label.dialog[disabled],legend.dialog[disabled] {
-    color: gray;
-}
-
-spring.smallspacer {
+.smallspacer {
   width:  3px;
   height: 3px;
   min-width:  3px;
   min-height: 3px;
 }
 
-spring.spacer {
+.spacer {
   width:  5px;
   height: 5px;
   min-width:  5px;
   min-height: 5px;
 }
 
-spring.bigspacer {
+.bigspacer {
   width:  10px;
   height: 10px;
   min-width:  10px;
   min-height: 10px;
 }
 
-img.AlignIcon {
-  margin-right: 5px;
-  /* To make all align the same */
-  /*vertical-align: middle;*/
-}
-
-image#img-align-top {
+#img-align-top {
 	list-style-image:url("chrome://editor/skin/images/img-align-top.gif");
 }
-image#img-align-middle {
+#img-align-middle {
 	list-style-image:url("chrome://editor/skin/images/img-align-middle.gif");
 }
-image#img-align-bottom {
+#img-align-bottom {
 	list-style-image:url("chrome://editor/skin/images/img-align-bottom.gif");
 }
-image#img-align-right {
+#img-align-right {
 	list-style-image:url("chrome://editor/skin/images/img-align-right.gif");
 }
-image#img-align-left {
+#img-align-left {
 	list-style-image:url("chrome://editor/skin/images/img-align-left.gif");
 }
 
@@ -228,17 +191,8 @@ image#img-align-left {
    viewers. */
 
 
-div.tagname {
-    font-weight: bold;
-}
-
-div#tagLabel {
+#tagLabel {
   font-weight: bold;
-}
-
-/* In Color Properties dialog */
-div#SaveImageMsg {
-  max-width: 150px;
 }
 
 /* styles for an attribute tree-table */

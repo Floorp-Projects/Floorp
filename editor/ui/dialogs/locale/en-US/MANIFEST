@@ -25,6 +25,7 @@
 EditorHLineProperties.dtd
 EditorImageProperties.dtd
 EditorInsertSource.dtd
+EditorInsertChars.dtd
 EditorInsertTable.dtd
 EditorLinkProperties.dtd
 EditorListProperties.dtd
@@ -38,3 +39,4 @@ EdDialogOverlay.dtd
 EdAdvancedEdit.dtd
 EditorImageMap.dtd
 EditorImageMapHotSpot.dtd
+EditorInsertChars.dtd

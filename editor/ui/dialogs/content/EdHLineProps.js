@@ -66,7 +66,7 @@ dump("3 Init called...\n");
 dump("1\n");
 
   // SET FOCUS TO FIRST CONTROL
-  dialog.heightInput.focus();
+  dialog.widthInput.focus();
 
   // Resize window
   window.sizeToContent();

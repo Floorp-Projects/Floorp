@@ -267,11 +267,10 @@ function onMoreFewerImage()
     dialog.doConstrain = dialog.constrainCheckbox.checked;
     SetGlobalElementToCurrentDialogSettings();
     
-    dialog.MoreSection.setAttribute("style","display: none");
-    //TODO: Bugs in box layout prevent us from using this:
-    //dialog.MoreSection.setAttribute("style","visibility: collapse");
+    //dialog.MoreSection.setAttribute("style","display: none");
+    dialog.MoreSection.setAttribute("collapsed","true");
     // Show the "Advanced Edit" button on same line as "More Properties"
-    dialog.AdvancedEditButton2.setAttribute("style","display: inherit");
+    //dialog.AdvancedEditButton2.setAttribute("style","display: inherit");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
@@ -279,8 +278,8 @@ function onMoreFewerImage()
   }
   else
   {
-    dialog.MoreSection.setAttribute("style","display: inherit");
-    //dialog.MoreSection.setAttribute("style","visibility: inherit");
+    //dialog.MoreSection.setAttribute("style","display: inherit");
+    dialog.MoreSection.removeAttribute("collapsed");
     // Hide the "Advanced Edit" next to "More..." Use button at bottom right of dialog
     dialog.AdvancedEditButton2.setAttribute("style","display: none");
     window.sizeToContent();
@@ -291,6 +290,7 @@ function onMoreFewerImage()
     
     InitDialog();
     
+    //TODO: We won't need to do this when we convert to using "collapsed"
     if (dialog.isCustomSize)
     {
       dialog.customsizeRadio.checked = true;

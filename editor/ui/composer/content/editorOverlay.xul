@@ -139,6 +139,7 @@
 
     <broadcaster id="Editor:InsertLink"   value="&insertLinkCmd.label;"    oncommand="EditorInsertOrEditLink()"/>
     <broadcaster id="Editor:InsertAnchor" value="&insertAnchorCmd.label;"  oncommand="EditorInsertOrEditNamedAnchor()"/>
+    <broadcaster id="Editor:InsertChars"  value="&insertCharsCmd.label;"   oncommand="EditorInsertChars()"/>
     <broadcaster id="Editor:InsertImage"  value="&insertImageCmd.label;"   oncommand="EditorInsertOrEditImage()"/>
     <broadcaster id="Editor:InsertHLine"  value="&insertHLineCmd.label;"   oncommand="EditorInsertOrEditHLine()"/>
     <broadcaster id="Editor:InsertTable"  value="&insertTableCmd.label;"   oncommand="EditorInsertTable()"/>
@@ -317,6 +318,7 @@
       <menuitem accesskey="&inserthline.accesskey;"                              observes="Editor:InsertHLine"/>
       <menuitem accesskey="&inserttable.accesskey;"                              observes="Editor:InsertTable"/>
       <menuitem accesskey="&insertsource.accesskey;" key="inserthtmlkb"          observes="Editor:InsertHTML"/>
+      <menuitem accesskey="&insertchars.accesskey;"                              observes="Editor:InsertChars"/>
       <menuseparator />
       <menuitem accesskey="&insertlinebreak.accesskey;"  disabled="true"         observes="Editor:InsertBreak"/>
       <menuitem accesskey="&insertbreak.accesskey;"      disabled="true"         observes="Editor:InsertBreakAll"/>
@@ -508,43 +510,17 @@
     </menu>
     <menuseparator position="13"/>
 
-    <!-- Stylesheet submenu -->
-<!-- 
-function EditorApplyStyleSheet(styleSheetURL)
-{
-  // Second param is true for "override" type of sheet
-  // We don't let users use that option
-  editorShell.ApplyStyleSheet(styleSheetURL);
-  contentWindow.focus();
-}
-
-    <menu id="stylesheetMenu" value="&stylesheetMenu.label;"
-          accesskey="&formatstylesheetmenu.accesskey;"
-          position="14">
-    <menupopup>
-      <menuitem value="&stylesheetOldstyleCmd.label;"      accesskey="&ssoldstyle.accesskey;"    oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Oldstyle')"/>
-      <menuitem value="&stylesheetModernistCmd.label;"     accesskey="&ssmodernist.accesskey;"   oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Modernist')"/>
-      <menuitem value="&stylesheetMidnightCmd.label;"      accesskey="&ssmidnight.accesskey;"    oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Midnight')"/>
-      <menuitem value="&stylesheetUltramarineCmd.label;"   accesskey="&ssultramarine.accesskey;" oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Ultramarine')"/>
-      <menuitem value="&stylesheetChocolateCmd.label;"     accesskey="&sschocolate.accesskey;"   oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Chocolate')"/>
-      <menuitem value="&stylesheetSteelyCmd.label;"        accesskey="&sssteely.accesskey;"      oncommand="EditorApplyStyleSheet('http://www.w3.org/StyleSheets/Core/Steely')"/>
-    </menupopup>
-    </menu>
-
-    <menuseparator position="15"/>
--->
-
     <menuitem id="increaseIndent" value="&increaseIndent.label;"
               accesskey="&increaseindent.accesskey;" 
               key="increaseindentkb"
               oncommand="EditorIndent('indent')"
-              position="16"/>
+              position="14"/>
     <menuitem id="decreaseIndent" value="&decreaseIndent.label;"
               accesskey="&decreaseindent.accesskey;"
               key="decreaseindentkb"
               oncommand="EditorIndent('outdent')"
-              position="17"/>
-    <menuseparator position="18"/>
+              position="15"/>
+    <menuseparator position="16"/>
     <!-- Merge Table Menu and separator in Messenger Composer here -->
     <!-- Merge property items here -->
   </menupopup>
@@ -811,7 +787,7 @@ function EditorApplyStyleSheet(styleSheetURL)
   <!-- Window bottom -->
   <box id="status-bar" chromeclass="status">
     <box id="state-box" align="horizontal" flex="100%" style="min-width: 1px">
-      <box align="vertical" style="width:100px">
+      <box orient="vertical" style="width:100px">
         <spring flex="100%"/>
         <progressmeter id="statusbar-icon" mode="normal" align="horizontal" value="0">
             <observes element="Editor:Throbber" attribute="busy"/>

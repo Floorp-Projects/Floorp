@@ -22,6 +22,8 @@
 
 #dialogs:content directory
 
+EdInsertChars.js
+EdInsertChars.xul
 EdDialogCommon.js
 EdHLineProps.xul
 EdHLineProps.js

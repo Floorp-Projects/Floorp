@@ -43,6 +43,8 @@ install::
 	$(MAKE_INSTALL) EdTableProps.js        $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EdInsSrc.xul           $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EdInsSrc.js            $(DIST)\bin\chrome\editor\content
+  $(MAKE_INSTALL) EdInsertChars.xul      $(DIST)\bin\chrome\editor\content
+  $(MAKE_INSTALL) EdInsertChars.js       $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EdDialogOverlay.xul    $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EdAdvancedEdit.xul     $(DIST)\bin\chrome\editor\content
 	$(MAKE_INSTALL) EdAdvancedEdit.js      $(DIST)\bin\chrome\editor\content
@@ -83,6 +85,8 @@ clobber::
   rm -f $(DIST)\bin\chrome\editor\content\EdInsertTable.js
   rm -f $(DIST)\bin\chrome\editor\content\EdInsSrc.xul
   rm -f $(DIST)\bin\chrome\editor\content\EdInsSrc.js
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdInsertChars.xul
+  rm -f $(DIST)\bin\chrome\editor\content\default\EdInsertChars.js
   rm -f $(DIST)\bin\chrome\editor\content\EdDialogOverlay.xul
   rm -f $(DIST)\bin\chrome\editor\content\EdAdvancedEdit.xul
   rm -f $(DIST)\bin\chrome\editor\content\EdAdvancedEdit.js

@@ -30,6 +30,7 @@ EXPORT_RESOURCE_CONTENT = \
 		$(srcdir)/EditorHLineProperties.dtd \
 		$(srcdir)/EditorImageProperties.dtd \
 		$(srcdir)/EditorInsertSource.dtd \
+		$(srcdir)/EditorInsertChars.dtd \
 		$(srcdir)/EditorInsertTable.dtd \
 		$(srcdir)/EditorLinkProperties.dtd \
 		$(srcdir)/EditorListProperties.dtd \

@@ -31,33 +31,33 @@
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload = "Startup()"
-    align="vertical">
+    orient="vertical">
 
   <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <html:script language="JavaScript" src="chrome://editor/content/EdSpellCheck.js"/>
   <!-- The argument to ShowWindowWithArgs (the editor appCore name) is placed here -->
   <broadcaster id="args" value=""/>
 
-<box align="vertical">
+<box orient="vertical">
   <box align="horizontal">
     <!-- value is set in JS -->
-    <text class="dialog" id="MisspelledWordLabel"/>
+    <text class="label" id="MisspelledWordLabel"/>
     <spring class="bigspacer"/>
-    <text class="dialog bold" id="MisspelledWord"/>
+    <text class="label bold" id="MisspelledWord"/>
   </box>
-  <text class="dialog" id="ReplaceWordLabel" value="&wordEditField.label;"/>
+  <text class="label" id="ReplaceWordLabel" value="&wordEditField.label;"/>
   <box align="horizontal">
     <textfield class="MinWidth20em" id="ReplaceWord" onkeyup="ChangeReplaceWord()"/>
     <spring class="spacer"/>
     <box flex="1">
-      <button class="dialog MinWidth10em" flex="1" id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
+      <button class="label MinWidth5em" flex="1" id="CheckWord" oncommand="CheckWord()" value="&checkwordButton.label;"/>
       <spring class="MinWidth20em" flex="1"/>
     </box>
   </box>
   <spring class="spacer"/>
-  <text class="dialog" id="SuggestedListLabel" value="&suggestions.label;"/>
+  <text class="label" id="SuggestedListLabel" value="&suggestions.label;"/>
   <box align="horizontal">
-    <tree class="list MinWidth20em" id="SuggestedList" oncommand="SelectSuggestedWord()"/>
+    <tree rows="8" class="list MinWidth20em" id="SuggestedList" onselect="SelectSuggestedWord()" onclick="SelectSuggestedWord()"/>
     <spring class="spacer"/>
     <grid flex="1">
       <columns><column flex="1"/><column flex="1"/></columns>
@@ -71,7 +71,7 @@
           <button class="dialog" flex="1" id="ReplaceAll" oncommand="ReplaceAll()" value="&changeAllButton.label;"/>
         </row>
         <row>
-          <text class="dialog" flex="1" value="&userDictionary.label;"/>
+          <text class="label" flex="1" value="&userDictionary.label;"/>
           <spring/>
         </row>
         <row>
@@ -81,7 +81,7 @@
       </rows> 
     </grid>
   </box>
-  <text class="dialog" value ="&languagePopup.label;"/>
+  <text class="label" value ="&languagePopup.label;"/>
   <box>
     <menulist class="MinWidth20em" id="LanguageMenulist" oncommand="SelectLanguage()">
       <menupopup>

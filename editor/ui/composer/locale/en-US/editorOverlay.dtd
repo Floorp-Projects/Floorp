@@ -232,6 +232,8 @@
 <!ENTITY insertlink.accesskey "l">
 <!ENTITY insertAnchorCmd.label "Named Anchor...">
 <!ENTITY insertanchor.accesskey "a">
+<!ENTITY insertCharsCmd.label "Characters...">
+<!ENTITY insertchars.accesskey "c">
 <!ENTITY insertImageCmd.label "Image...">
 <!ENTITY insertimage.accesskey "i">
 <!ENTITY insertImageMapCmd.label "Image Map...">

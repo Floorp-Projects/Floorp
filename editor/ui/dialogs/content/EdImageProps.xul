@@ -56,7 +56,7 @@
       <columns><column/><column/><column/></columns>
       <rows>
         <row>
-          <text class = "dialog" 
+          <text class = "label" 
             for   = "srcInput"
             value = "&locationEditField.label;"
             align = "right" />
@@ -70,7 +70,7 @@
           <button id="ChooseFile"/>
         </row>
         <row>
-          <text class = "dialog"
+          <text class = "label"
             id    = "altTextLabel" 
             for   = "altTextInput"
             value = "&altTextEditField.label;" />
@@ -118,7 +118,7 @@
             <rows>
               <!--//////  IMAGE WIDTH  //////-->
               <row vertical-align="baseline" autostretch="never">
-                <text class = "dialog" 
+                <text class = "label" 
                   id    = "widthLabel"
                   for   = "widthInput"
                   value = "&widthEditField.label;" />
@@ -133,7 +133,7 @@
               </row>
               <!--////// IMAGE HEIGHT //////-->
               <row vertical-align="baseline" autostretch="never">
-                <text class = "dialog" 
+                <text class = "label" 
                   id    = "heightLabel"
                   for   = "heightInput"
                   value = "&heightEditField.label;" />
@@ -173,14 +173,14 @@
       <box orient="vertical" flex="1">
         <!--//////// Alignment ////////-->
         <titledbox flex="1" orient="vertical">
-          <title><text class="dialog" id="alignLabel" value="&alignment.label;"/></title>
+          <title><text class="label" id="alignLabel" value="&alignment.label;"/></title>
           <menulist id = "alignTypeSelect" onchange ="doOverallEnabling()">
             <menupopup vertical-align="middle">
-              <menuitem class="middle"><image id="img-align-top"/>   <text class="dialog" value = "&topPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-middle"/><text class="dialog" value = "&centerPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-bottom"/><text class="dialog" value = "&bottomPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-left"/>  <text class="dialog" value = "&wrapLeftPopup.value;"/></menuitem>
-              <menuitem class="middle"><image id="img-align-right"/> <text class="dialog" value = "&wrapRightPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-top"/>   <text class="label" value = "&topPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-middle"/><text class="label" value = "&centerPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-bottom"/><text class="label" value = "&bottomPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-left"/>  <text class="label" value = "&wrapLeftPopup.value;"/></menuitem>
+              <menuitem class="middle"><image id="img-align-right"/> <text class="label" value = "&wrapRightPopup.value;"/></menuitem>
             </menupopup>
           </menulist>
         </titledbox>
@@ -193,7 +193,7 @@
             <rows>
               <row vertical-align="baseline" autostretch="never">
                 <text 
-                  class = "dialog align-right" 
+                  class = "label align-right" 
                   id    = "leftrightLabel"
                   value = "&leftRightEditField.label;"/>
                 <textfield 
@@ -202,13 +202,13 @@
                   onkeyup   = "forceInteger(this.id)" 
                   onchange  = "doOverallEnabling()"/>
                 <text 
-                  class = "dialog" 
+                  class = "label" 
                   id    = "leftrighttypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
               <row vertical-align="baseline" autostretch="never">
                 <text 
-                  class = "dialog align-right" 
+                  class = "label align-right" 
                   id    = "topbottomLabel"
                   value = "&topBottomEditField.label;"/>
                 <textfield 
@@ -217,12 +217,12 @@
                   onkeyup   = "forceInteger(this.id)"
                   onchange  = "doOverallEnabling()"/>
                 <text
-                  class = "dialog" 
+                  class = "label" 
                   id    = "topbottomtypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>
               <row vertical-align="baseline" autostretch="never">
-                <text class = "dialog align-right" 
+                <text class = "label align-right" 
                   id    = "borderLabel"
                   value = "&borderEditField.label;"/>
                 <textfield
@@ -231,7 +231,7 @@
                   onkeyup   = "forceInteger(this.id)"
                   onchange  = "doOverallEnabling()" />
                 <text 
-                  class = "dialog" 
+                  class = "label" 
                   id    = "bordertypeLabel"
                   value = "&pixelsPopup.value;" />
               </row>

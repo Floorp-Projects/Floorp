@@ -35,7 +35,7 @@
 	 xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
 	 xmlns:html="http://www.w3.org/TR/REC-html40"
    onload = "Startup()"
-   align="vertical" >
+   orient="vertical" >
 
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
   <script language="JavaScript" src="chrome://editor/content/EdLinkProps.js"/>
@@ -44,14 +44,14 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
 
-  <box align="vertical" style="min-width: 20em">
+  <box orient="vertical" style="min-width: 20em">
     <titledbox orient="vertical"><title><text id="linkTextCaption" align="left" value="&LinkTitle.label;"/></title>
-      <text class="dialog" id="linkTextMessage"/> 
+      <text class="label" id="linkTextMessage"/> 
 	    <textfield id="linkTextInput" flex="1"/>
     </titledbox>
 
-    <titledbox orient="vertical"><title><text class="dialog" value="&LinkURLBox.label;"/></title>
-      <text class="dialog" value="&LinkURLEditField.label;"/>
+    <titledbox orient="vertical"><title><text class="label" value="&LinkURLBox.label;"/></title>
+      <text class="label" value="&LinkURLEditField.label;"/>
       <box autostretch="never"  valign="middle">
         <textfield id="hrefInput" flex="1"/>
         <spring class="spacer"/>
@@ -65,14 +65,14 @@
         <spring flex="1"/>
         <button class="dialog" id="RemoveLink" oncommand="RemoveLink()" value="&RemoveLinkButton.label;" style="width: 7em"/>
       </box>
-      <box id="MoreSection" align="vertical">
+      <box id="MoreSection" orient="vertical">
         <spring class="bigspacer"/>
-        <text class="dialog" align="left" value="&NamedAnchorMsg.label;"/>
-        <tree class="list" id="NamedAnchorList" oncommand="SelectNamedAnchor()"/>
+        <text class="label" align="left" value="&NamedAnchorMsg.label;"/>
+        <tree rows="4" class="list" id="NamedAnchorList" onselect="SelectNamedAnchor()" onclick="SelectNamedAnchor()"/>
         <spring class="spacer"/>
-        <text class="dialog" align="left" value="&HeadingMsg.label;"/>
-        <tree class="list" id="HeadingsList" oncommand="SelectHeading()"/>
-        <text class="dialog" flex="1" value="&HeadingMsg2.label;"/>
+        <text class="label" align="left" value="&HeadingMsg.label;"/>
+        <tree rows="4" class="list" id="HeadingsList" onselect="SelectHeading()" onclick="SelectHeading()"/>
+        <text class="label" flex="1" value="&HeadingMsg2.label;"/>
       </box>
     </titledbox>
   </box>

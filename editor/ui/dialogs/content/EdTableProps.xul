@@ -35,7 +35,7 @@
     xmlns:html="http://www.w3.org/TR/REC-html40"
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     onload="Startup()"
-    align="vertical">
+    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <html:script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -45,7 +45,7 @@
   <broadcaster id="args" value=""/>
   <keyset id="keyset"/>
 
-  <tabcontrol align="vertical">
+  <tabcontrol orient="vertical">
 	  <tabbox align="horizontal" flex="100%">
 		  <tab id="TableTab" selected="true" oncommand="SelectTableTab()" value="&tableTab.label;"/>
 		  <tab id="CellTab" oncommand="SelectCellTab()" value="&cellTab.label;"/>
@@ -84,7 +84,7 @@
           <spring flex="1"/>
         </titledbox>
         <box>
-          <titledbox align="vertical"><title><text align="left" value="&tableBorderSpacing.label;"/></title>
+          <titledbox orient="vertical"><title><text align="left" value="&tableBorderSpacing.label;"/></title>
             <box valign="middle" autostretch="never">
               <text align="left" for="BorderWidthInput" value="&tableBorderWidth.label;"/>
               <spring class="spacer"/>
@@ -130,7 +130,7 @@
           </box>
           <spring class="bigspacer"/>
         </box>
-        <titledbox align="vertical"><title><text align="left" value="&background.label;"/></title>
+        <titledbox orient="vertical"><title><text align="left" value="&background.label;"/></title>
           <box valign="middle" autostretch="never">
             <text class="MinWidth50" align="left" value="&color.label;"/>
             <menu class="colorpicker">

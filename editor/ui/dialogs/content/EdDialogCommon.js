@@ -72,7 +72,7 @@ function ClearList(list)
       list.remove(i);
   }
 }
-
+//TODO: WE NEED EQUIVALENT OF THIS FOR "TREELIST"
 function ReplaceStringInList(list, index, string)
 {
   if (index < list.options.length)
@@ -328,7 +328,7 @@ function AppendStringToMenulist(menulist, string)
         menulist.appendChild(menupopup);
       else
       {
-dump("Failed to create menupoup\n");
+        dump("Failed to create menupoup\n");
         return null;
       }
     }
@@ -337,7 +337,6 @@ dump("Failed to create menupoup\n");
     {
       menuItem.setAttribute("value", string);
       menupopup.appendChild(menuItem);
-dump("AppendStringToMenulist, menuItem="+menuItem+", value="+string+"\n");
       return menuItem;
     }
   }
@@ -350,7 +349,6 @@ function ClearMenulist(menulist)
   //  but look for > 1 children anyway.
   // Note -- this doesn't remove menuitems from the menupopop -- SHOULD WE?
   if (menulist) {
-dump(menulist+"=menulist in ClearMenulist\n");
     menulist.selectedItem = null;
     while (menulist.firstChild)
       menulist.removeChild(menulist.firstChild);
@@ -383,7 +381,7 @@ function AppendStringToTreelist(tree, string)
         tree.appendChild(treechildren);
       else
       {
-dump("Failed to create <treechildren>\n");
+        dump("Failed to create <treechildren>\n");
         return null;
       }
     }
@@ -409,6 +407,7 @@ function ClearTreelist(tree)
 {
   if (tree)
   {
+    tree.clearItemSelection();
     while (tree.firstChild)
       tree.removeChild(tree.firstChild);
     
@@ -419,16 +418,12 @@ function ClearTreelist(tree)
 
 function GetSelectedTreelistValue(tree)
 {
-  var treeCell = tree.selectedCell;
-  if (treeCell)
-    return treeCell.getAttribute("value");
-  
-  return ""; 
+  if (tree)
+    return tree.selectedCells[0].getAttribute("value");
+
+  return "";
 }
 
-function SetSelectedTreelistItem()
-{
-}
 
 // USE onkeyup!
 // forceInteger by petejc (pete@postpagan.com)
@@ -506,30 +501,25 @@ function getContainer ()
   selImage = editorShell.GetSelectedElement(tagName);
   if (selImage)  // existing image
   {
-    dump("Is an image element\n");
+    //dump("Is an image element\n");
     oneup = selImage.parentNode;
-    dump("Parent = " + oneup.nodeName + "\n");
+    //dump("Parent = " + oneup.nodeName + "\n");
     //twoup = oneup.parentNode;
     //dump("Grand Parent is " + twoup.nodeName + "\n");
     return oneup;
   }
   else if (!selImage)  // new image insertion
   {
-    dump("Not an image element\n");
-    dump("Trying for caret selection\n");
+    dump("Not an image element -- Trying for caret selection\n");
     var selection = window.editorShell.editorSelection;
     if (selection)
     {
-        dump("Got selection\n");
-        //dump("Selection is " + selection.nodeName + "\n");
         var focusN = selection.focusNode;
-        dump("FOCUS is now on " + focusN.nodeName + "\n");
         if (focusN.nodeName == "TD")
           return focusN
                 else
         {
           oneup = focusN.parentNode;
-          dump("PARENT is " + oneup.nodeName + "\n");
           return oneup;
          }  
     }
@@ -628,7 +618,6 @@ function InitMoreFewer()
   //   attribute on the dialog.MoreFewerButton button
   //   onMoreFewer will toggle it and redraw the dialog
   SeeMore = (dialog.MoreFewerButton.getAttribute("more") != "1");
-dump(SeeMore+"=SeeMore - InitMoreFewer\n");
   onMoreFewer();
 }
 
@@ -637,8 +626,7 @@ function onMoreFewer()
   if (SeeMore)
   {
     dialog.MoreSection.setAttribute("style","display: none");
-    //TODO: Bugs in box layout prevent us from using this:
-    //dialog.MoreSection.setAttribute("style","visibility: collapse");
+    //dialog.MoreSection.setAttribute("collapsed","true");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","0");
     dialog.MoreFewerButton.setAttribute("value",GetString("MoreProperties"));
@@ -647,7 +635,7 @@ function onMoreFewer()
   else
   {
     dialog.MoreSection.setAttribute("style","display: inherit");
-    //dialog.MoreSection.setAttribute("style","visibility: inherit");
+    //dialog.MoreSection.removeAttribute("collapsed");
     window.sizeToContent();
     dialog.MoreFewerButton.setAttribute("more","1");
     dialog.MoreFewerButton.setAttribute("value",GetString("FewerProperties"));

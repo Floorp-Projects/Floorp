@@ -28,7 +28,7 @@
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     xmlns:html="http://www.w3.org/TR/REC-html40"
     onload = "Startup()"
-    align="vertical">
+    orient="vertical">
 
   <!-- Methods common to all editor dialogs -->
   <script language="JavaScript" src="chrome://editor/content/EdDialogCommon.js"/>
@@ -36,7 +36,7 @@
 
   <broadcaster id="args" value=""/>
 
-<box align="vertical">
+<box orient="vertical">
   <html:label for="WordInput">&wordEditField.label;</html:label>
   <box align="horizontal">
     <html:input type="text" class="SpellCheckWord" id="WordInput"/>
@@ -49,7 +49,7 @@
   <box align="horizontal">
     <html:select class="SpellCheckList" id="DictionaryList" size="10"/>
     <spring class="bigspacer"/>
-    <box align="vertical">
+    <box orient="vertical">
       <button class="dialog"  id="ReplaceWord" oncommand="ReplaceWord()" value="&ReplaceButton.label;"/>
       <spring class="spacer"/>
       <button class="dialog"  id="RemoveWord" oncommand="RemoveWord()" value="&RemoveButton.label;"/>
