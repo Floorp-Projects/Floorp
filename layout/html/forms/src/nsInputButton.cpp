@@ -569,8 +569,10 @@ nsInputButtonFrame::PostCreateWidget(nsIPresContext* aPresContext, nsIView *aVie
         widgetFont.name = "Arail";  // XXX windows specific font
         widgetFont.weight = NS_FONT_WEIGHT_NORMAL; 
         const nsFont& normal = aPresContext->GetDefaultFont();
-        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(widgetFont.size, (PRInt32)normal.size);
-        widgetFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size);
+        PRInt32 scaler = aPresContext->GetFontScaler();
+        float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
+        PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(widgetFont.size, (PRInt32)normal.size, scaleFactor);
+        widgetFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
         button->SetFont(widgetFont);
       }
     }
