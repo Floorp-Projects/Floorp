@@ -27,9 +27,8 @@ include $(DEPTH)/config/autoconf.mk
 include $(topsrcdir)/config/rules.mk
 
 ifeq ($(OS_ARCH),WINNT)
-BASEMAIL = basemail-win
-endif
-ifeq ($(OS_ARCH),Linux)
+  BASEMAIL = basemail-win
+else
   BASEMAIL = basemail-unix
 endif
 
@@ -40,15 +39,12 @@ PREF = pref-win
 APP_NAME=thunderbird
 
 ifeq ($(OS_ARCH),WINNT)
-_PLATFORM = dos
-endif
-ifeq ($(OS_ARCH),Linux)
+  _PLATFORM = dos
+else
   _PLATFORM = unix
 endif
 
 mail_chrome: mail-jar.mn
-
-#	-$(RM) -rf $(DIST)/$(APP_NAME)/
 
 	$(NSINSTALL) -D $(DIST)/$(APP_NAME)/tmpchrome/comm
 	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/comm $(DIST)/bin/chrome/comm.jar
@@ -76,8 +72,6 @@ ifdef MOZ_PSM
 	$(UNZIP) -o -d $(DIST)/$(APP_NAME)/tmpchrome/pippki $(DIST)/bin/chrome/pippki.jar
 endif
 
-
-
 	$(PERL) -I$(srcdir) $(srcdir)/gen_mn.pl -manifest $(MOZILLA_DIR)/mail/config/mail-jar.mn -mozpath $(MOZILLA_DIR) -jarfile mail.jar -chrome $(DIST)/$(APP_NAME)/tmpchrome > $(MOZILLA_DIR)/mail/config/mail-tmp.mn
 	$(PERL) -I$(MOZILLA_DIR)/config $(MOZILLA_DIR)/config/make-jars.pl -a -v -f $(MOZ_CHROME_FILE_FORMAT) -d $(DIST)/bin/chrome -s $(DIST)/$(APP_NAME)/tmpchrome -z $(ZIP) < $(MOZILLA_DIR)/mail/config/mail-tmp.mn
 
@@ -98,8 +92,12 @@ ifneq (,$(findstring pref,$(MOZ_EXTENSIONS)))
 	$(PERL) $(topsrcdir)/xpinstall/packager/pkgcp.pl -s $(DIST)/bin -d $(DIST) --f $(srcdir)/$(PREF) -o $(_PLATFORM) -v
 endif
 	$(NSINSTALL) -t $(DIST)/bin/$(APP_NAME)$(BIN_SUFFIX) $(DIST)/$(APP_NAME)/
+ifeq ($(OS_ARCH),WINNT)
+	cp $(MOZILLA_DIR)/mail/config/installed-chrome-win.txt $(DIST)/$(APP_NAME)/chrome/installed-chrome.txt
+else
+	cp $(MOZILLA_DIR)/mail/config/installed-chrome-unix.txt $(DIST)/$(APP_NAME)/chrome/installed-chrome.txt
+endif
 
-	$(NSINSTALL) -t $(MOZILLA_DIR)/mail/config/installed-chrome.txt $(DIST)/$(APP_NAME)/chrome
 
 libs::
 	$(MAKE) mail_chrome
