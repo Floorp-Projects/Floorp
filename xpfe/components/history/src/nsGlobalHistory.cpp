@@ -106,7 +106,6 @@ nsIMdbFactory* nsGlobalHistory::gMdbFactory = nsnull;
 nsIPrefBranch* nsGlobalHistory::gPrefBranch = nsnull;
 
 #define PREF_BRANCH_BASE                        "browser."
-#define PREF_BROWSER_HISTORY_LAST_PAGE_VISITED  "history.last_page_visited"
 #define PREF_BROWSER_HISTORY_EXPIRE_DAYS        "history_expire_days"
 #define PREF_BROWSER_STARTUP_PAGE               "startup.page"
 #define PREF_AUTOCOMPLETE_ONLY_TYPED            "urlbar.matchOnlyTyped"
@@ -1195,24 +1194,27 @@ nsresult
 nsGlobalHistory::SaveLastPageVisited(const char *aURL)
 {
   NS_ENSURE_TRUE(aURL, NS_ERROR_FAILURE);
-  NS_ENSURE_STATE(gPrefBranch);
+  NS_ENSURE_STATE(mMetaRow);
 
-  return gPrefBranch->SetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED, aURL);
+  mdb_err err = SetRowValue(mMetaRow, kToken_LastPageVisited, aURL);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsGlobalHistory::GetLastPageVisited(char **_retval)
 { 
+  NS_ENSURE_SUCCESS(OpenDB(), NS_ERROR_FAILURE);
+
   NS_ENSURE_ARG_POINTER(_retval);
-  NS_ENSURE_STATE(gPrefBranch);
+  NS_ENSURE_STATE(mMetaRow);
 
-  nsXPIDLCString lastPageVisited;
-  nsresult rv =
-    gPrefBranch->GetCharPref(PREF_BROWSER_HISTORY_LAST_PAGE_VISITED,
-                             getter_Copies(lastPageVisited));
 
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsCAutoString lastPageVisited;
+  mdb_err err = GetRowValue(mMetaRow, kToken_LastPageVisited, lastPageVisited);
+  NS_ENSURE_TRUE(err == 0, NS_ERROR_FAILURE);
+  
   *_retval = ToNewCString(lastPageVisited);
   NS_ENSURE_TRUE(*_retval, NS_ERROR_OUT_OF_MEMORY);
 
@@ -2480,6 +2482,10 @@ nsGlobalHistory::OpenExistingFile(nsIMdbFactory *factory, const char *filePath)
     return NS_ERROR_FAILURE;
   }
 
+  err = mTable->GetMetaRow(mEnv, &oid, nsnull, getter_AddRefs(mMetaRow));
+  if (err != 0)
+    NS_WARNING("Could not get meta row\n");
+
   CheckHostnameEntries();
 
   if (err != 0) return NS_ERROR_FAILURE;
@@ -2683,6 +2689,9 @@ nsGlobalHistory::CreateTokens()
   err = mStore->StringToToken(mEnv, "Typed", &kToken_TypedColumn);
   if (err != 0) return NS_ERROR_FAILURE;
 
+  // meta-data tokens
+  err = mStore->StringToToken(mEnv, "LastPageVisited", &kToken_LastPageVisited);
+
   return NS_OK;
 }
 
@@ -2789,6 +2798,9 @@ nsGlobalHistory::CloseDB()
   ExpireEntries(PR_FALSE /* don't notify */);
   err = Commit(kSessionCommit);
 
+  // order is important here - logically smallest objects first
+  mMetaRow = nsnull;
+  
   if (mTable)
     mTable->Release();
 
@@ -4040,6 +4052,9 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
                                             kToken_TypedColumn,
                                             mAutocompleteOnlyTyped,
                                             aSearchString, aExclude);
+    
+    nsCOMPtr<nsISupports> kungFuDeathGrip(enumerator);
+
     rv = enumerator->Init(mEnv, mTable);
     if (NS_FAILED(rv)) return rv;
   
@@ -4061,7 +4076,7 @@ nsGlobalHistory::AutoCompleteSearch(const nsAString& aSearchString,
       enumerator->GetNext(&entry);
       array.AppendElement(entry);
     }
-  
+
     // turn auto array into flat array for quick sort, now that we
     // know how many items there are
     PRUint32 count = array.Count();
