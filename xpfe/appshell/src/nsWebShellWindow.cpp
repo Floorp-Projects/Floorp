@@ -489,7 +489,7 @@ nsWebShellWindow::HandleEvent(nsGUIEvent *aEvent)
         printf("nsWebShellWindow::NS_ACTIVATE\n");
 #endif
 // Sucky platform specific code to get around event dispatch ordering
-#if defined(WIN32) || defined(XP_OS2)
+#if defined(WIN32) || defined(XP_OS2) || defined (MOZ_WIDGET_GTK)
 
         nsCOMPtr<nsIDOMWindowInternal> domWindow;
         eventWindow->ConvertWebShellToDOMWindow(webShell, getter_AddRefs(domWindow));
