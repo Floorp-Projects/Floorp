@@ -1049,6 +1049,11 @@ PRIVATE nsresult DecryptString (const char * crypt, char *& text) {
 
   /* otherwise do our own de-obscuring */
 
+  if (PL_strlen(crypt) == PL_strlen(PREFIX)) {
+    text = (char *)PR_Malloc(1);
+    text[0] = '\0';
+    return NS_OK;
+  }
   text = PL_Base64Decode(&crypt[PL_strlen(PREFIX)], 0, NULL);
   if (!text) {
     return NS_ERROR_FAILURE;
