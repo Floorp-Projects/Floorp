@@ -13,7 +13,6 @@ toolkit.jar:
         content/global/logo.gif                     (resources/content/logo.gif) 
         content/global/aboutAbout.html              (resources/content/aboutAbout.html) 
         content/global/about.xul                    (resources/content/about.xul) 
-        content/global/about.js                     (resources/content/about.js) 
         content/global/config.xul                   (resources/content/config.xul) 
         content/global/config.css                   (resources/content/config.css) 
         content/global/config.js                    (resources/content/config.js) 

@@ -21,23 +21,17 @@ Rights Reserved.
 Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
-<?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
-<!DOCTYPE window [
+<!DOCTYPE dialog [
 <!ENTITY % brandDTD SYSTEM "chrome://global/locale/brand.dtd" >
 %brandDTD;
 <!ENTITY % aboutDTD SYSTEM "chrome://global/locale/about.dtd" >
 %aboutDTD;
 ]>
 
-<window xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-        class="dialog"
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
         title="&title.label;"
-        onload="aboutStartUp();">
-        
-<script type="application/x-javascript" src="chrome://global/content/about.js"/>
-
-<keyset id="dialogKeys"/>
+        buttons="accept">
 
 <vbox flex="100%" style="margin: 0.5em;">
 
@@ -48,15 +42,10 @@ Contributor(s): Michael Lowe <michael.lowe@bigfoot.com> -->
   </tabs>
 
   <tabpanels flex="100%">
-    <iframe id="aboutframe"  src="about:"/>
-    <iframe id="creditsframe"  src="about:blank"/>
+    <iframe src="about:"/>
+    <iframe src="about:credits"/>
   </tabpanels>
 </tabbox>
 
-<hbox style="margin-top: 1em;">
-  <spacer flex="100%"/>
-  <button id="ok" label="&okButton.label;" default="true" onclick="doOKButton()"/>
-</hbox>
-
 </vbox>
-</window>
+</dialog>
