@@ -400,7 +400,6 @@ nsHTMLEditor::AddBlockParent(nsString& aParentTag)
           range->GetEndParent(getter_AddRefs(endParent));
           if (startParent.get()==endParent.get()) 
           { // the range is entirely contained within a single node
-            // commonParent==aStartParent, so get the "real" parent of the selection
             result = ReParentContentOfNode(startParent, aParentTag);
           }
           else
@@ -672,10 +671,184 @@ nsHTMLEditor::CanContainBlock(nsString &aBlockChild, nsString &aBlockParent, PRB
 NS_IMETHODIMP 
 nsHTMLEditor::RemoveBlockParent()
 {
-  nsresult result = NS_ERROR_NOT_IMPLEMENTED;
-  printf("remove block parent not implemented.\n");
+  if (gNoisy) { 
+    printf("---------- nsHTMLEditor::RemoveBlockParent ----------\n"); 
+  }
+  
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
+  {
+    nsEditor::BeginTransaction();
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = do_QueryInterface(selection);
+    if (enumerator)
+    {
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      {
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        nsCOMPtr<nsIDOMNode>commonParent;
+        result = range->GetCommonParent(getter_AddRefs(commonParent));
+        if ((NS_SUCCEEDED(result)) && commonParent)
+        {
+          PRInt32 startOffset, endOffset;
+          range->GetStartOffset(&startOffset);
+          range->GetEndOffset(&endOffset);
+          nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
+          range->GetStartParent(getter_AddRefs(startParent));
+          range->GetEndParent(getter_AddRefs(endParent));
+          if (startParent.get()==endParent.get()) 
+          { // the range is entirely contained within a single node
+            nsCOMPtr<nsIDOMElement>blockParentElement;
+            result = nsTextEditor::GetBlockParent(startParent, getter_AddRefs(blockParentElement));
+            while ((NS_SUCCEEDED(result)) && blockParentElement)
+            {
+              nsAutoString childTag;  // leave as empty string
+              nsAutoString blockParentTag;
+              blockParentElement->GetTagName(blockParentTag);
+              PRBool canContain;
+              CanContainBlock(childTag, blockParentTag, canContain);
+              if (PR_TRUE==canContain) {
+                break;
+              }
+              else 
+              {
+                // go through list backwards so deletes don't interfere with the iteration
+                nsCOMPtr<nsIDOMNodeList> childNodes;
+                result = blockParentElement->GetChildNodes(getter_AddRefs(childNodes));
+                if ((NS_SUCCEEDED(result)) && (childNodes))
+                {
+                  nsCOMPtr<nsIDOMNode>grandParent;
+                  blockParentElement->GetParentNode(getter_AddRefs(grandParent));
+                  PRInt32 offsetInParent;
+                  result = nsIEditorSupport::GetChildOffset(blockParentElement, grandParent, offsetInParent);
+                  PRUint32 childCount;
+                  childNodes->GetLength(&childCount);
+                  PRInt32 i=childCount-1;
+                  for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
+                  {
+                    nsCOMPtr<nsIDOMNode> childNode;
+                    result = childNodes->Item(i, getter_AddRefs(childNode));
+                    if ((NS_SUCCEEDED(result)) && (childNode))
+                    {
+                      result = nsTextEditor::DeleteNode(childNode);
+                      if (NS_SUCCEEDED(result)) {
+                        result = nsTextEditor::InsertNode(childNode, grandParent, offsetInParent);
+                      }
+                    }
+                  }
+                  if (NS_SUCCEEDED(result)) {
+                    result = nsTextEditor::DeleteNode(blockParentElement);
+                  }
+                }
+              }
+              result = nsTextEditor::GetBlockParent(startParent, getter_AddRefs(blockParentElement));
+            }
+          }
+        }
+      }
+    }
+    nsEditor::EndTransaction();
+  }
   return result;
 }
+
+NS_IMETHODIMP 
+nsHTMLEditor::RemoveParent(const nsString &aParentTag)
+{
+  if (gNoisy) { 
+    printf("---------- nsHTMLEditor::RemoveParent %s----------\n", aParentTag); 
+  }
+  
+  nsresult result=NS_ERROR_NOT_INITIALIZED;
+  nsCOMPtr<nsIDOMSelection>selection;
+  result = nsEditor::GetSelection(getter_AddRefs(selection));
+  if ((NS_SUCCEEDED(result)) && selection)
+  {
+    nsEditor::BeginTransaction();
+    nsCOMPtr<nsIEnumerator> enumerator;
+    enumerator = do_QueryInterface(selection);
+    if (enumerator)
+    {
+      enumerator->First(); 
+      nsISupports *currentItem;
+      result = enumerator->CurrentItem(&currentItem);
+      if ((NS_SUCCEEDED(result)) && (nsnull!=currentItem))
+      {
+        nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
+        nsCOMPtr<nsIDOMNode>commonParent;
+        result = range->GetCommonParent(getter_AddRefs(commonParent));
+        if ((NS_SUCCEEDED(result)) && commonParent)
+        {
+          PRInt32 startOffset, endOffset;
+          range->GetStartOffset(&startOffset);
+          range->GetEndOffset(&endOffset);
+          nsCOMPtr<nsIDOMNode> startParent;  nsCOMPtr<nsIDOMNode> endParent;
+          range->GetStartParent(getter_AddRefs(startParent));
+          range->GetEndParent(getter_AddRefs(endParent));
+          if (startParent.get()==endParent.get()) 
+          { // the range is entirely contained within a single node
+            nsCOMPtr<nsIDOMNode>parentNode;
+            nsCOMPtr<nsIDOMElement>parentElement;
+            result = startParent->GetParentNode(getter_AddRefs(parentNode));
+            while ((NS_SUCCEEDED(result)) && parentNode)
+            {
+              parentElement = do_QueryInterface(parentNode);
+              nsAutoString childTag;  // leave as empty string
+              nsAutoString parentTag;
+              parentElement->GetTagName(parentTag);
+              PRBool canContain;
+              CanContainBlock(childTag, parentTag, canContain);
+              if (aParentTag.EqualsIgnoreCase(parentTag))
+              {
+                // go through list backwards so deletes don't interfere with the iteration
+                nsCOMPtr<nsIDOMNodeList> childNodes;
+                result = parentElement->GetChildNodes(getter_AddRefs(childNodes));
+                if ((NS_SUCCEEDED(result)) && (childNodes))
+                {
+                  nsCOMPtr<nsIDOMNode>grandParent;
+                  parentElement->GetParentNode(getter_AddRefs(grandParent));
+                  PRInt32 offsetInParent;
+                  result = nsIEditorSupport::GetChildOffset(parentElement, grandParent, offsetInParent);
+                  PRUint32 childCount;
+                  childNodes->GetLength(&childCount);
+                  PRInt32 i=childCount-1;
+                  for ( ; ((NS_SUCCEEDED(result)) && (0<=i)); i--)
+                  {
+                    nsCOMPtr<nsIDOMNode> childNode;
+                    result = childNodes->Item(i, getter_AddRefs(childNode));
+                    if ((NS_SUCCEEDED(result)) && (childNode))
+                    {
+                      result = nsTextEditor::DeleteNode(childNode);
+                      if (NS_SUCCEEDED(result)) {
+                        result = nsTextEditor::InsertNode(childNode, grandParent, offsetInParent);
+                      }
+                    }
+                  }
+                  if (NS_SUCCEEDED(result)) {
+                    result = nsTextEditor::DeleteNode(parentElement);
+                  }
+                }
+                break;
+              }
+              else if (PR_TRUE==canContain) {  // hit a subdoc, terminate?
+                break;
+              }
+              result = parentElement->GetParentNode(getter_AddRefs(parentNode));
+            }
+          }
+        }
+      }
+    }
+    nsEditor::EndTransaction();
+  }
+  return result;
+}
+
 
 NS_IMETHODIMP
 nsHTMLEditor::InsertLink(nsString& aURL)

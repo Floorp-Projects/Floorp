@@ -99,15 +99,19 @@ public:
    */
 
   /** Add a block parent node around the selected content.
-    * If the selected content already has a block parent, it is changed to  the type given by aParentTag
+    * If the selected content already has a block parent that is not a sub-document,
+    * that block parent is changed to  the type given by aParentTag.
+    * Otherwise, the new block parent is nested in the closest sub-document.
     * @param aParentTag  The tag from which the new parent is created.
     */
   NS_IMETHOD AddBlockParent(nsString& aParentTag)=0;
 
-  /** Remove the most deeply nested block parent node from around the selected content.
-    * @param aParentTag  The tag from which the new parent is created.
+  /** remove block parent of type aTagToRemove from the selection.
+    * if aTagToRemove is null, the nearest enclosing block that 
+    * is <B>not</B> a sub-document is removed.
     */
   NS_IMETHOD RemoveBlockParent()=0;
+  NS_IMETHOD RemoveParent(const nsString &aParentTag)=0;
 
   NS_IMETHOD InsertLink(nsString& aURL)=0;
   NS_IMETHOD InsertImage(nsString& aURL,
