@@ -1699,7 +1699,7 @@ nsBlockFrame::PrepareResizeReflow(nsBlockReflowState& aState)
         newAvailWidth += aState.mReflowState.availableWidth;
       }
     } else {
-      if (NS_UNCONSTRAINEDSIZE != aState.mReflowState.mComputedMaxWidth) {
+      if (NS_UNCONSTRAINEDSIZE != aState.mReflowState.mComputedWidth) {
         newAvailWidth += aState.mReflowState.mComputedWidth;
       }
       else {
