@@ -173,7 +173,7 @@ nsresult nsContentIterator::Init(nsIContent* aRoot)
   if (!aRoot) 
     return NS_ERROR_NULL_POINTER; 
 
-  nsCOMPtr<nsIContent> root( dont_QueryInterface(aRoot) );
+  nsCOMPtr<nsIContent> root( do_QueryInterface(aRoot) );
   mFirst = GetDeepFirstChild(root); 
   mLast = root;
   mCommonParent = root;
@@ -349,6 +349,7 @@ nsresult nsContentIterator::GetNextSibling(nsCOMPtr<nsIContent> aNode, nsCOMPtr<
   
   if (!NS_SUCCEEDED(aNode->GetParent(*getter_AddRefs(parent))))
     return NS_ERROR_FAILURE;
+
   if (!NS_SUCCEEDED(parent->IndexOf(aNode, indx)))
     return NS_ERROR_FAILURE;
 
@@ -358,7 +359,7 @@ nsresult nsContentIterator::GetNextSibling(nsCOMPtr<nsIContent> aNode, nsCOMPtr<
   }
   else if (parent != mCommonParent)
   {
-    GetNextSibling(parent, aSibling);
+    return GetNextSibling(parent, aSibling);
   }
   else
   {
@@ -382,6 +383,7 @@ nsresult nsContentIterator::GetPrevSibling(nsCOMPtr<nsIContent> aNode, nsCOMPtr<
   
   if (!NS_SUCCEEDED(aNode->GetParent(*getter_AddRefs(parent))))
     return NS_ERROR_FAILURE;
+
   if (!NS_SUCCEEDED(parent->IndexOf(aNode, indx)))
     return NS_ERROR_FAILURE;
 
@@ -391,7 +393,7 @@ nsresult nsContentIterator::GetPrevSibling(nsCOMPtr<nsIContent> aNode, nsCOMPtr<
   }
   else if (parent != mCommonParent)
   {
-    GetPrevSibling(parent, aSibling);
+    return GetPrevSibling(parent, aSibling);
   }
   else
   {
@@ -612,7 +614,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   if (!aRange) 
     return NS_ERROR_NULL_POINTER; 
 
-  mRange = dont_QueryInterface(aRange);
+  mRange = do_QueryInterface(aRange);
   
   // get the start node and offset, convert to nsIContent
   nsCOMPtr<nsIDOMNode> commonParent;
@@ -621,7 +623,8 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   nsCOMPtr<nsIContent> cStartP;
   nsCOMPtr<nsIContent> cEndP;
   nsCOMPtr<nsIContent> cN;
-  nsCOMPtr<nsIContent> candidate;
+  nsCOMPtr<nsIContent> firstCandidate;
+  nsCOMPtr<nsIContent> lastCandidate;
 
   // get common content parent
   if (!NS_SUCCEEDED(aRange->GetCommonParent(getter_AddRefs(commonParent))) || !commonParent)
@@ -646,7 +649,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   PRInt32 numChildren;
   cStartP->ChildCount(numChildren);
   
-  if (numChildren) // no children, must be a text node
+  if (!numChildren) // no children, must be a text node
   {
     cN = cStartP; 
   }
@@ -659,28 +662,28 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
     }
     else
     {
-      candidate = cChild;
+      firstCandidate = cChild;
     }
   }
   
-  if (!candidate)
+  if (!firstCandidate)
   {
-    // then candidate is next node after cN
-    if (!NS_SUCCEEDED(GetNextSibling(cN,  &candidate)))
+    // then firstCandidate is next node after cN
+    if (!NS_SUCCEEDED(GetNextSibling(cN,  &firstCandidate)))
     {
       MakeEmpty();
       return NS_OK;
     }
   }
   
-  candidate = GetDeepFirstChild(candidate);
+  firstCandidate = GetDeepFirstChild(firstCandidate);
   
   // confirm that this first possible contained node
   // is indeed contained.  Else we have a range that
   // does not fully contain any node.
   
   PRBool nodeBefore, nodeAfter;
-  if (!NS_SUCCEEDED(CompareNodeToRange(candidate, aRange, &nodeBefore, &nodeAfter)))
+  if (!NS_SUCCEEDED(CompareNodeToRange(firstCandidate, aRange, &nodeBefore, &nodeAfter)))
     return NS_ERROR_FAILURE;
   if (nodeBefore || nodeAfter)
   {
@@ -691,7 +694,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // cool, we have the first node in the range.  Now we walk
   // up it's ancestors to find the most senior that is still
   // in the range.  That's the real first node.
-  if (!NS_SUCCEEDED(GetTopAncestorInRange(candidate, &mFirst)))
+  if (!NS_SUCCEEDED(GetTopAncestorInRange(firstCandidate, &mFirst)))
     return NS_ERROR_FAILURE;
   
   
@@ -706,7 +709,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   {
     cEndP->ChildCount(numChildren);
   
-    if (numChildren) // no children, must be a text node
+    if (!numChildren) // no children, must be a text node
     {
       cN = cEndP; 
     }
@@ -720,28 +723,28 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
       }
       else
       {
-        candidate = cChild;
+        lastCandidate = cChild;
       }
     }
   }
   
-  if (!candidate)
+  if (!lastCandidate)
   {
-    // then candidate is prev node before cN
-    if (!NS_SUCCEEDED(GetPrevSibling(cN, &candidate)))
+    // then lastCandidate is prev node before cN
+    if (!NS_SUCCEEDED(GetPrevSibling(cN, &lastCandidate)))
     {
       MakeEmpty();
       return NS_OK;
     }
   }
   
-  candidate = GetDeepLastChild(candidate);
+  lastCandidate = GetDeepLastChild(lastCandidate);
   
   // confirm that this first possible contained node
   // is indeed contained.  Else we have a range that
   // does not fully contain any node.
   
-  if (!NS_SUCCEEDED(CompareNodeToRange(candidate, aRange, &nodeBefore, &nodeAfter)))
+  if (!NS_SUCCEEDED(CompareNodeToRange(lastCandidate, aRange, &nodeBefore, &nodeAfter)))
     return NS_ERROR_FAILURE;
   if (nodeBefore || nodeAfter)
   {
@@ -752,7 +755,7 @@ nsresult nsContentSubtreeIterator::Init(nsIDOMRange* aRange)
   // cool, we have the last node in the range.  Now we walk
   // up it's ancestors to find the most senior that is still
   // in the range.  That's the real first node.
-  if (!NS_SUCCEEDED(GetTopAncestorInRange(candidate, &mLast)))
+  if (!NS_SUCCEEDED(GetTopAncestorInRange(lastCandidate, &mLast)))
     return NS_ERROR_FAILURE;
   
   mCurNode = mFirst;
