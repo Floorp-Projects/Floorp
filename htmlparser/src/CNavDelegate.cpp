@@ -27,7 +27,7 @@
 //       1) If you see </>, simply treat it as a bad tag.
 //       2) If you see </ ...>, treat it like a comment.
 //       3) If you see <> or <_ (< space) simply treat it as text.
-//       4) If you see <~ (< followed by non-alpha), treat it as text.
+//       4) If you see <[!a..z] (< followed by non-alpha), treat it as text.
 
 static char gIdentChars[] = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_";
 

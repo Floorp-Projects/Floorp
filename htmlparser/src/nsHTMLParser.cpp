@@ -191,8 +191,17 @@ eHTMLTags nsHTMLParser::NodeAt(PRInt32 aPos) const {
  *  @param   
  *  @return  
  */
-PRBool nsHTMLParser::HasOpenForm() const {
-  return mHasOpenForm;
+PRBool nsHTMLParser::HasOpenContainer(PRInt32 aContainer) const {
+  PRBool result=PR_FALSE;
+
+  switch((eHTMLTags)aContainer) {
+    case eHTMLTag_form:
+      result=mHasOpenForm; break;
+
+    default:
+      result=(kNotFound!=GetTopmostIndex((eHTMLTags)aContainer)); break;
+  }
+  return result;
 }
 
 /**
@@ -789,8 +798,6 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
 
   nsCParserNode theNode((CHTMLToken*)aToken);
   switch(tokenTagType) {
-    case eHTMLTag_html:
-      result=CloseContainersTo(tokenTagType); break;
 
     case eHTMLTag_style:
     case eHTMLTag_link:
@@ -798,6 +805,7 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
     case eHTMLTag_textarea:
     case eHTMLTag_title:
     case eHTMLTag_head:
+    case eHTMLTag_script:
       result=PR_TRUE; 
       break;
 
@@ -806,9 +814,6 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
       result=CloseHead(theNode);
       break;
 
-    case eHTMLTag_body:
-      result=CloseContainersTo(eHTMLTag_body); break;
-
     case eHTMLTag_form:
       {
         nsCParserNode aNode((CHTMLToken*)aToken);
@@ -816,12 +821,9 @@ PRBool nsHTMLParser::HandleEndToken(CToken* aToken) {
       }
       break;
 
-    case eHTMLTag_script:
-      result=PR_TRUE; break;
-
     default:
       if(mDTD->IsContainer(tokenTagType)){
-        result=CloseContainer(theNode);
+        result=CloseContainersTo(tokenTagType); 
       }
       result=PR_TRUE;
       //
