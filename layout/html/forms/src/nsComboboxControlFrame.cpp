@@ -1518,6 +1518,11 @@ nsComboboxControlFrame::Reflow(nsPresContext*          aPresContext,
     size.height = firstPassState.mComputedHeight;
   }
 
+  if (mCacheSize.height != size.height) {
+    // if the cached height is not equal to the current height,
+    // the cached height is reset.
+    mCacheSize.height = kSizeNotSet;
+  }
 
   // this reflows and makes and last minute adjustments
   ReflowCombobox(aPresContext, firstPassState, aDesiredSize, aStatus, 
