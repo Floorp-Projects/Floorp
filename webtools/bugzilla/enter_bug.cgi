@@ -281,15 +281,18 @@ $default{'rep_platform'} = pickplatform();
 $vars->{'op_sys'} = \@legal_opsys; 
 $default{'op_sys'} = pickos();
 
-# Posting a bug sets a cookie for the current version, if one exists. Else,
-# the default version is the last one in the list (hopefully the latest one).
-# Eventually maybe each product should have a "current version" parameter.
+# Use the version specified in the URL, if one is supplied. If not,
+# then use the cookie-specified value. (Posting a bug sets a cookie
+# for the current version.) If no URL or cookie version, the default
+# version is the last one in the list (hopefully the latest one).
+# Eventually maybe each product should have a "current version"
+# parameter.
 $vars->{'version'} = $::versions{$product} || [];
-if (exists $::COOKIE{"VERSION-$product"} &&
+if (formvalue('version')) {
+    $default{'version'} = formvalue('version');
+} elsif (exists $::COOKIE{"VERSION-$product"} &&
     lsearch($vars->{'version'}, $::COOKIE{"VERSION-$product"}) != -1) {
     $default{'version'} = $::COOKIE{"VERSION-$product"};
-} elsif (formvalue('version')) {
-    $default{'version'} = formvalue('version');
 } else {
     $default{'version'} = $vars->{'version'}->[$#{$vars->{'version'}}];
 }
