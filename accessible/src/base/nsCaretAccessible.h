@@ -79,7 +79,13 @@ public:
   NS_DECL_NSISELECTIONLISTENER
 
   /* ----- nsIAccessNode ----- */
-  NS_IMETHOD Init() { mIsInitialized = PR_TRUE; return NS_OK; }
+  NS_IMETHOD Init()
+  {
+#ifdef DEBUG
+    mIsInitialized = PR_TRUE;
+#endif
+    return NS_OK;
+  }
   NS_IMETHOD Shutdown();
 
 private:
