@@ -225,11 +225,12 @@ EmbedPrompter::Create(PromptType aType, GtkWindow* aParentWindow)
 
     if (aType == TYPE_UNIVERSAL) {
         // Create buttons based on the flags passed in.
-        for (int i = 0; i < EMBED_MAX_BUTTONS; ++i) {
+        for (int i = EMBED_MAX_BUTTONS; i >= 0; --i) {
             if (!mButtonLabels[i].IsEmpty())
                 gtk_dialog_add_button(GTK_DIALOG(mWindow),
                                       mButtonLabels[i].get(), i);
         }
+        gtk_dialog_set_default_response(GTK_DIALOG(mWindow), 0);
     } else {
         // Create standard ok and cancel buttons
         if (widgetFlags & INCLUDE_CANCEL)
