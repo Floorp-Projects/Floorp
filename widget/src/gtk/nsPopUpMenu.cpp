@@ -62,7 +62,8 @@ NS_METHOD nsPopUpMenu::Create(nsIWidget *aParent)
   mParent = aParent;
   NS_ADDREF(mParent);
 
-  GtkWidget *parentWidget = (GtkWidget *) mParent->GetNativeData(NS_NATIVE_WINDOW);
+  GtkWidget *parentWidget = GTK_WIDGET(mParent->GetNativeData(NS_NATIVE_WINDOW));
+  mMenu = gtk_menu_new();
   /*mMenu = XmCreatePopupMenu(parentWidget, "_popup", NULL, 0); */
   return NS_OK;
 }
@@ -89,6 +90,9 @@ NS_METHOD nsPopUpMenu::AddMenu(nsIMenu * aMenu)
 //-------------------------------------------------------------------------
 NS_METHOD nsPopUpMenu::AddSeparator() 
 {
+  GtkWidget *widget;
+  widget = gtk_menu_item_new ();
+  gtk_menu_append (GTK_MENU (mMenu), widget);
 #if 0
   Widget widget = XtVaCreateManagedWidget("__sep", xmSeparatorGadgetClass,
                                           mMenu,

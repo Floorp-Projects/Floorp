@@ -19,13 +19,13 @@
 #ifndef nsLabel_h__
 #define nsLabel_h__
 
-#include "nsWindow.h"
+#include "nsWidget.h"
 #include "nsILabel.h"
 
 /**
  * Native Motif Label wrapper
  */
-class nsLabel :  public nsWindow,
+class nsLabel :  public nsWidget,
                  public nsILabel
 {
 
