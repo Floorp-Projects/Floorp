@@ -15,3 +15,5 @@ PATCHES:
   stdint.diff - select between inttypes.h and stdint.h for AIX.
 
   quartz.diff - update cairo quartz/atsui backend for 0.4.0, reenable.
+
+  xlib.diff - include X11/xlib.h in cairo-xlib.h - needed for Solaris.
