@@ -45,8 +45,6 @@
 
 #include <X11/Xatom.h>
 
-#include "nsIScreenManager.h"
-
 #ifdef USE_XPRINT
 #include "nsDeviceContextSpecG.h"
 #endif
@@ -82,6 +80,7 @@ nsDeviceContextGTK::nsDeviceContextGTK()
   mHeightFloat = 0.0f;
   mWidth = -1;
   mHeight = -1;
+  mDeviceWindow = nsnull;
 }
 
 nsDeviceContextGTK::~nsDeviceContextGTK()
@@ -99,33 +98,53 @@ NS_IMETHODIMP nsDeviceContextGTK::Init(nsNativeWidget aNativeWidget)
 {
   GtkRequisition req;
   GtkWidget *sb;
-
+  
   // get the screen object and its width/height
   // XXXRight now this will only get the primary monitor.
 
   nsresult ignore;
-  nsCOMPtr<nsIScreenManager> sm ( do_GetService("@mozilla.org/gfx/screenmanager;1", &ignore) );
-  if ( sm ) {
-    nsCOMPtr<nsIScreen> screen;
-    sm->GetPrimaryScreen ( getter_AddRefs(screen) );
-    if ( screen ) {
-      PRInt32 x, y, width, height, depth;
-      screen->GetAvailRect ( &x, &y, &width, &height );
-      screen->GetPixelDepth ( &depth );
-      mWidthFloat = float(width);
-      mHeightFloat = float(height);
-      mDepth = NS_STATIC_CAST ( PRUint32, depth );
+  if (!mScreenManager)
+    mScreenManager = do_GetService("@mozilla.org/gfx/screenmanager;1");
+  if (!mScreenManager) {
+    return NS_ERROR_FAILURE;
+  }
+
+  if (aNativeWidget) {
+    // superwin?
+    if (GDK_IS_SUPERWIN(aNativeWidget)) {
+      mDeviceWindow = GDK_SUPERWIN(aNativeWidget)->shell_window;
     }
+    // gtk widget?
+    else if (GTK_IS_WIDGET(aNativeWidget)) {
+      mDeviceWindow = GTK_WIDGET(aNativeWidget)->window;
+    }
+    // must be a bin_window
+    else {
+      mDeviceWindow = NS_STATIC_CAST(GdkWindow *, aNativeWidget);
+    }
+  }
+
+  nsCOMPtr<nsIScreen> screen;
+  mScreenManager->GetPrimaryScreen ( getter_AddRefs(screen) );
+  if ( screen ) {
+    PRInt32 x, y, width, height, depth;
+    screen->GetAvailRect ( &x, &y, &width, &height );
+    screen->GetPixelDepth ( &depth );
+    mWidthFloat = float(width);
+    mHeightFloat = float(height);
+    mDepth = NS_STATIC_CAST ( PRUint32, depth );
   }
     
   static int initialized = 0;
   if (!initialized) {
     initialized = 1;
 
-    // Set prefVal the value of the preference "browser.display.screen_resolution"
+    // Set prefVal the value of the preference
+    // "browser.display.screen_resolution"
     // or -1 if we can't get it.
     // If it's negative, we pretend it's not set.
-    // If it's 0, it means force use of the operating system's logical resolution.
+    // If it's 0, it means force use of the operating system's logical
+    // resolution.
     // If it's positive, we use it as the logical resolution
     PRInt32 prefVal = -1;
     nsresult res;
@@ -405,20 +424,40 @@ NS_IMETHODIMP nsDeviceContextGTK::GetDeviceSurfaceDimensions(PRInt32 &aWidth, PR
 
 NS_IMETHODIMP nsDeviceContextGTK::GetRect(nsRect &aRect)
 {
-  PRInt32 width, height;
-  nsresult rv;
-  rv = GetDeviceSurfaceDimensions(width, height);
-  aRect.x = 0;
-  aRect.y = 0;
-  aRect.width = width;
-  aRect.height = height;
-  return rv;
+  // if we have an initialized widget for this device context, use it
+  // to try and get real screen coordinates.
+  if (mDeviceWindow) {
+    gint x, y, width, height, depth;
+    x = y = width = height = 0;
+
+    gdk_window_get_geometry(mDeviceWindow, &x, &y, &width, &height,
+                            &depth);
+    gdk_window_get_origin(mDeviceWindow, &x, &y);
+
+    nsCOMPtr<nsIScreen> screen;
+    mScreenManager->ScreenForRect(x, y, width, height, getter_AddRefs(screen));
+    screen->GetRect(&aRect.x, &aRect.y, &aRect.width, &aRect.height);
+    aRect.x = NSToIntRound(mDevUnitsToAppUnits * aRect.x);
+    aRect.y = NSToIntRound(mDevUnitsToAppUnits * aRect.y);
+    aRect.width = NSToIntRound(mDevUnitsToAppUnits * aRect.width);
+    aRect.height = NSToIntRound(mDevUnitsToAppUnits * aRect.height);
+  }
+  else {
+    PRInt32 width, height;
+    GetDeviceSurfaceDimensions(width, height);
+    aRect.x = 0;
+    aRect.y = 0;
+    aRect.width = width;
+    aRect.height = height;
+  }
+  return NS_OK;
 }
 
 
 NS_IMETHODIMP nsDeviceContextGTK::GetClientRect(nsRect &aRect)
 {
-//XXX do we know if the client rect should ever differ from the screen rect?
+  // The client rect is never different from the standard rect on
+  // linux because we don't have the concept of the title bar.
   return GetRect ( aRect );
 }
 

@@ -30,6 +30,8 @@
 #include "nsIRenderingContext.h"
 
 #include "nsRenderingContextGTK.h"
+#include "nsIScreenManager.h"
+#include "gdksuperwin.h"
 
 class nsDeviceContextGTK : public DeviceContextImpl
 {
@@ -91,6 +93,9 @@ private:
   float         mHeightFloat;
   PRInt32       mWidth;
   PRInt32       mHeight;
+  GdkWindow    *mDeviceWindow;
+
+  nsCOMPtr<nsIScreenManager> mScreenManager;
 
   nsresult GetSystemFontInfo(GdkFont* iFont, nsSystemAttrID anID, nsFont* aFont) const;
 };

@@ -36,8 +36,11 @@ public:
   NS_DECL_ISUPPORTS
   NS_DECL_NSISCREEN
 
-private:
-
+  PRUint32 mScreenNum;
+  PRUint32 mXOrg;
+  PRUint32 mYOrg;
+  PRUint32 mWidth;
+  PRUint32 mHeight;
 };
 
 #endif  // nsScreenGtk_h___ 
