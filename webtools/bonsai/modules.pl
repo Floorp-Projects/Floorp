@@ -107,7 +107,7 @@ sub parse_modules {
             }
             if ( $flag eq '-l' ){ # then keep it
                 push @finaloptions, ($flag, shift @params);
-                $flag= shift @options;
+                $flag= shift @params;
                 next;
             }
             if( $flag =~ /^-.$/ ){ 
