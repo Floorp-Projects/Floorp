@@ -175,6 +175,8 @@ nsThread::Join()
 
     PR_LOG(nsIThreadLog, PR_LOG_DEBUG,
            ("nsIThread %p start join\n", this));
+    if (!mThread)
+        return NS_ERROR_NOT_INITIALIZED;
     PRStatus status = PR_JoinThread(mThread);
     // XXX can't use NS_RELEASE here because the macro wants to set
     // this to null (bad c++)
@@ -193,6 +195,8 @@ nsThread::GetPriority(PRThreadPriority *result)
 {
     if (mDead)
         return NS_ERROR_FAILURE;
+    if (!mThread)
+        return NS_ERROR_NOT_INITIALIZED;
     *result = PR_GetThreadPriority(mThread);
     return NS_OK;
 }
@@ -202,6 +206,8 @@ nsThread::SetPriority(PRThreadPriority value)
 {
     if (mDead)
         return NS_ERROR_FAILURE;
+    if (!mThread)
+        return NS_ERROR_NOT_INITIALIZED;
     PR_SetThreadPriority(mThread, value);
     return NS_OK;
 }
@@ -211,6 +217,8 @@ nsThread::Interrupt()
 {
     if (mDead)
         return NS_ERROR_FAILURE;
+    if (!mThread)
+        return NS_ERROR_NOT_INITIALIZED;
     PRStatus status = PR_Interrupt(mThread);
     return status == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
@@ -220,6 +228,8 @@ nsThread::GetScope(PRThreadScope *result)
 {
     if (mDead)
         return NS_ERROR_FAILURE;
+    if (!mThread)
+        return NS_ERROR_NOT_INITIALIZED;
     *result = PR_GetThreadScope(mThread);
     return NS_OK;
 }
@@ -229,6 +239,8 @@ nsThread::GetState(PRThreadState *result)
 {
     if (mDead)
         return NS_ERROR_FAILURE;
+    if (!mThread)
+        return NS_ERROR_NOT_INITIALIZED;
     *result = PR_GetThreadState(mThread);
     return NS_OK;
 }
