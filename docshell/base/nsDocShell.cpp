@@ -258,7 +258,7 @@ NS_INTERFACE_MAP_END_THREADSAFE
 //*****************************************************************************   
 NS_IMETHODIMP nsDocShell::GetInterface(const nsIID & aIID, void **aSink)
 {
-    NS_ENSURE_ARG_POINTER(aSink);
+   NS_ENSURE_ARG_POINTER(aSink);
 
     if (aIID.Equals(NS_GET_IID(nsIURIContentListener)) &&
         NS_SUCCEEDED(EnsureContentListener())) {
@@ -5115,12 +5115,44 @@ void
 nsDocShell::SetCurrentURI(nsIURI * aURI)
 {
     mCurrentURI = aURI;         //This assignment addrefs
+    PRBool isRoot = PR_FALSE;   // Is this the root docshell
+    PRBool  isSubFrame=PR_FALSE;  // Is this a subframe navigation?
 
-    nsCOMPtr<nsIDocumentLoader> loader(do_GetInterface(mLoadCookie));
+    if (!mLoadCookie)
+      return; 
+
+    nsCOMPtr<nsIDocumentLoader> loader(do_GetInterface(mLoadCookie)); 
+    nsCOMPtr<nsIWebProgress> webProgress(do_QueryInterface(mLoadCookie));
+    nsCOMPtr<nsIDocShellTreeItem> root;
+
+    GetSameTypeRootTreeItem(getter_AddRefs(root));
+    if (root.get() == NS_STATIC_CAST(nsIDocShellTreeItem *, this)) 
+    {
+        // This is the root docshell
+        isRoot = PR_TRUE;
+    }
+    if (LSHE) {
+      nsCOMPtr<nsIHistoryEntry> historyEntry(do_QueryInterface(LSHE));
+      
+      // Check if this is a subframe navigation
+      if (historyEntry) {
+        historyEntry->GetIsSubFrame(&isSubFrame);
+      }
+    }
+ 
+    if (!isSubFrame && !isRoot) {
+      /* 
+       * We don't want to send OnLocationChange notifications when
+       * a subframe is being loaded for the first time, while
+       * visiting a frameset page
+       */
+      return;
+    }
+    
 
     NS_ASSERTION(loader, "No document loader");
     if (loader) {
-        loader->FireOnLocationChange(nsnull, nsnull, aURI);
+        loader->FireOnLocationChange(webProgress, nsnull, aURI);
     }
 }
 
