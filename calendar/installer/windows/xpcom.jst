@@ -1,0 +1,111 @@
+function upgradeCleanup()
+{
+  deleteThisFile("Program",    "zlib.dll");
+  deleteThisFile("Program",    "component.reg");
+  deleteThisFile("Components", "compreg.dat");
+  deleteThisFile("Components", "xpti.dat");
+  deleteThisFile("Components", "xptitemp.dat");
+}
+
+// main
+var srDest;
+var err;
+var szUninstall;
+var fProgram;
+var fWindowsSystem;
+var fileComponentReg;
+var fileComponentRegStr;
+var fileMsvcrt;
+var fileMsvcirt;
+
+srDest = $SpaceRequired$:bin;
+err    = initInstall("Mozilla XPCOM", "XPCOM", "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram  = getFolder("Program");
+fWindowsSystem = getFolder("Win System");
+logComment("fProgram: " + fProgram);
+
+// build the uninstall folder path
+szUninstall = fProgram + "Uninstall";
+
+// Log component.reg file so it can be deleted by the uninstaller.
+// These two files are created after installation is done, thus
+// are normally not logged for uninstall.
+logComment("Installing: " + fProgram + "component.reg");
+
+if(verifyDiskSpace(fProgram, srDest))
+{
+  setPackageFolder(fProgram);
+
+  upgradeCleanup();
+  err = addDirectory("",
+                     "$Version$",
+                     "bin",              // dir name in jar to extract 
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
+                     true);              // Force Flag 
+  logComment("addDirectory() of Program returned: " + err);
+
+  if( err == SUCCESS )
+  {
+    // install msvcrt.dll *only* if it does not exist
+    // we don't care if addFile() fails (if the file does not exist in the archive)
+    // bacause it will still install
+    fileMsvcrt = getFolder(fWindowsSystem, "msvcrt.dll");
+    rv         = File.exists(fileMsvcrt);
+    logComment("fileExists() returned: " + rv);
+    if(rv == false)
+    {
+      logComment("File not found: " + fileMsvcrt);
+      addFile("/Microsoft/Shared/msvcrt.dll",
+              "$Version$",
+              "msvcrt.dll",         // dir name in jar to extract 
+              fWindowsSystem,       // Where to put this file (Returned from getFolder) 
+              "",                   // subdir name to create relative to fProgram
+              WIN_SHARED_FILE);
+      logComment("addFile() of msvcrt.dll returned: " + err);
+    }
+    else
+    {
+      logComment("File found: " + fileMsvcrt);
+    }
+
+    // install msvcirt.dll *only* if it does not exist
+    // we don't care if addFile() fails (if the file does not exist in the archive)
+    // bacause it will still install
+    fileMsvcirt = getFolder(fWindowsSystem, "msvcirt.dll");
+    rv          = File.exists(fileMsvcirt);
+    logComment("fileExists() returned: " + rv);
+    if(rv == false)
+    {
+      logComment("File not found: " + fileMsvcirt);
+      addFile("/Microsoft/Shared/msvcirt.dll",
+              "$Version$",
+              "msvcirt.dll",        // dir name in jar to extract 
+              fWindowsSystem,       // Where to put this file (Returned from getFolder) 
+              "",                   // subdir name to create relative to fProgram
+              WIN_SHARED_FILE);
+      logComment("addFile() of msvcirt.dll returned: " + err);
+    }
+    else
+    {
+      logComment("File found: " + fileMsvcirt);
+    }
+  }
+
+  // check return value
+  if( err == SUCCESS )
+  {
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
+  }
+  else
+    cancelInstall(err);
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+
+// end main
+

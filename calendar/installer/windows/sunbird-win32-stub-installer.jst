@@ -1,0 +1,49 @@
+// main
+var srDest;
+var err;
+var fDesktop;
+var szFolderDesktop;
+
+srDest = $SpaceRequired$;
+err    = initInstall("Sunbird Installer", "/mozilla.org/Sunbird Installer", "$Version$"); 
+logComment("initInstall: " + err);
+
+// Find the current user's desktop
+winreg = getWinRegistry();
+winreg.setRootKey(winreg.HKEY_CURRENT_USER);
+subkey              = "SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Explorer\\Shell Folders";
+valname             = "Desktop";
+szFolderDesktop     = winreg.getValueString(subkey, valname);
+
+fDesktop = getFolder("file:///", szFolderDesktop);
+logComment("Desktop location: " + fDesktop);
+
+if(verifyDiskSpace(fDesktop, srDest))
+{
+  setPackageFolder(fDesktop);
+
+  err =  addFile("",
+                 "",
+                 "SunbirdNetSetup.exe", // dir name in jar to extract 
+                 fDesktop,             // Where to put this file (Returned from getFolder) 
+                 "");                  // subdir name to create relative to fProgram
+
+  logComment("addFile() returned: " + err);
+
+  err = execute("SunbirdNetSetup.exe", "", false);
+  logComment("execute() returned: " + err);
+
+  // check return value
+  if(err==SUCCESS)
+  {
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
+  }
+  else
+    cancelInstall(err);
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+// end main
+

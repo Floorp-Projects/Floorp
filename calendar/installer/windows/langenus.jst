@@ -1,0 +1,91 @@
+// main
+var srDest;
+var err;
+var fProgram;
+var platformNode;
+
+platformNode = getPlatform();
+logComment("initInstall: platformNode=" + platformNode);
+// end
+// end - OS type detection
+
+// ----LOCALIZATION NOTE: translate only these ------
+var prettyName = "English (US) Language Pack";
+var langcode = "en";
+var chromeNode = langcode + "-US";
+// --- END CHANGABLE STUFF ---
+var regName    = "locales/mozilla/" + chromeNode;
+var chromeName = chromeNode + ".jar";
+var platformName = langcode + "-" + platformNode + ".jar";
+var localeName = "locale/" + chromeNode + "/";
+
+srDest = $SpaceRequired$:bin;
+err    = initInstall(prettyName, "en-US", "$Version$"); 
+logComment("initInstall: " + err);
+
+fProgram = getFolder("Program");
+logComment("fProgram: " + fProgram);
+
+if(verifyDiskSpace(fProgram, srDest))
+{
+  var chromeType = LOCALE;
+  err = addDirectory("",
+                     "bin",     // dir name in jar to extract 
+                     fProgram,  // Where to put this file (Returned from GetFolder) 
+                     "");       // Force Flag 
+  logComment("addDirectory() returned: " + err);
+
+  if (err != SUCCESS)
+  {
+    logComment("addDirectory() to " + fProgram + "failed!");
+    // couldn't install globally, try installing to the profile
+    resetError();
+    chromeType |= PROFILE_CHROME;
+    fProgram = getFolder("Profile");
+    logComment("try installing to the user profile:" + fProgram);
+    err = addDirectory("","bin",fProgram,"");
+  }
+ 
+  setPackageFolder(fProgram);
+ 
+  // check return value
+  if (err == SUCCESS)
+  {
+    // register chrome
+    var cf = getFolder(fProgram, "chrome/"+chromeName);
+    var pf = getFolder(fProgram, "chrome/"+platformName);
+
+    registerChrome(chromeType, cf, localeName + "global/");
+    registerChrome(chromeType, pf, localeName + "global-platform/");
+
+    registerChrome(chromeType, cf, "locale/browser/");
+    registerChrome(chromeType, cf, "locale/browser-region/");
+    registerChrome(chromeType, cf, localeName + "passwordmgr/");
+    registerChrome(chromeType, cf, localeName + "mozapps/");
+
+    registerChrome(chromeType, cf, localeName + "necko/");
+    registerChrome(chromeType, cf, localeName + "autoconfig/");
+    registerChrome(chromeType, cf, localeName + "cookie/");
+    registerChrome(chromeType, cf, localeName + "wallet/");
+    registerChrome(chromeType, cf, localeName + "pippki/");
+    registerChrome(chromeType, cf, localeName + "pipnss/");
+
+    // XXXben Soon to be obsolete.
+    registerChrome(chromeType, cf, localeName + "communicator/");
+    registerChrome(chromeType, pf, localeName + "communicator-platform/");
+    registerChrome(chromeType, cf, localeName + "navigator/");
+    registerChrome(chromeType, pf, localeName + "navigator-platform/");
+
+    err = performInstall(); 
+    logComment("performInstall() returned: " + err);
+  }
+  else
+  {
+    cancelInstall(err);
+    logComment("cancelInstall due to error: " + err);
+  }
+}
+else
+  cancelInstall(INSUFFICIENT_DISK_SPACE);
+
+// end main

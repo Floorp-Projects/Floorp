@@ -1,0 +1,1191 @@
+[General]
+; Run Mode values:
+;   Normal - Shows all dialogs.  Requires user input.
+;   Auto   - Shows some dialogs, but none requiring user input.  It will
+;            automatically install the product using default values.
+;   Silent - Show no dialogs at all.  It will install product using default
+;            values.
+Run Mode=Normal
+
+Company Name=$CompanyName$
+Product Name=$ProductName$
+Product NameInternal=$ProductName$
+User Agent=$UserAgent$
+
+; Destination Path values:
+;   PROGRAMFILESDIR
+;   WINDISK
+;   WINDIR
+;   WINSYSDIR
+Path=[PROGRAMFILESDIR]\$ProductName$
+
+; Sub Path, when set will indicate to Setup to create a subfolder from
+; what is offered to the user to change.  It will not be shown to the user
+; but simply created:
+;
+; ie: shown to user   : [Path]
+;     actually created: [Path]\[Sub Path]
+;     (where [Path] is the Path= key above)
+Sub Path=
+
+; Controls the Browse button that allows the user to 
+; change the destination path of the product.
+; Default value is FALSE;
+Lock Path=FALSE
+
+Program Name=$MainExeFile$
+
+; Program Folder Path values:
+;   COMMON_STARTUP
+;   COMMON_PROGRAMS
+;   COMMON_STARTMENU
+;   COMMON_DESKTOP
+;
+;   PERSONAL_STARTUP
+;   PERSONAL_PROGRAMS
+;   PERSONAL_STARTMENU
+;   PERSONAL_DESKTOP
+;
+;   PERSONAL_APPDATA
+;   PERSONAL_CACHE
+;   PERSONAL_COOKIES
+;   PERSONAL_FAVORITES
+;   PERSONAL_FONTS
+;   PERSONAL_HISTORY
+;   PERSONAL_NETHOOD
+;   PERSONAL_PERSONAL
+;   PERSONAL_PRINTHOOD (supported only under Windows NT)
+;   PERSONAL_RECENT
+;   PERSONAL_SENDTO
+;   PERSONAL_TEMPLATES
+;
+;   PROGRAMS (Default value is the same as COMMON_PROGRAMS, but if the user
+;             has restricted access to the system, then it's the same as
+;             PERSONAL_PROGRAMS)
+;
+;   PROGRAMFILESDIR
+;   COMMONFILESDIR
+;   MEDIAPATH
+;   CONFIGPATH (supported only under Windows95 and Windows98)
+;   DEVICEPATH
+Program Folder Name=$ProductName$
+Program Folder Path=[PROGRAMS]
+
+Uninstall Filename=$UninstallFile$
+
+; This key is used as a fail over key.  This url will be used when the
+; url in the Site Selector fails.
+url=$ArchiveUrl$
+
+; Default Setup Type values:
+;   Setup Type 0 - first radio button (easy install)
+;   Setup Type 1 - second radio button (custom)
+Default Setup Type=Setup Type 0
+
+; Forces the icons on the system to be refreshed.
+; Default value is FALSE.
+; Possible values:
+;   FALSE
+;   TRUE
+Refresh Icons=FALSE
+
+; Setting to control whether or not GRE should be installed to app's dir
+; to be used as a private/local GRE.
+;
+; Possible values (default is 'Shared'):
+;   Local
+;   Shared
+;
+; If this key is set to 'Local', make
+; sure to provide a GRE Private Key= below!
+GRE Type=Shared
+GRE ID=$GreUniqueID$
+
+; Private key that overrides the default shared key
+; (HKEY_LOCAL_MACHINE\Software\mozilla.org\GRE) set by GRE's installer.
+; This key will be created under HKEY_LOCAL_MACHINE and should be 
+; declared in the following format:
+;
+;   Software\[company name]\[product name]
+;   (ie: Software\mozilla.org\GRE_1.4a_0000000000_PRIVATE)
+;
+; If it is not in the above format, the GRE installer/uninstaller can
+; fail to work properly.
+; The value to Prodduct Name Internal= (at the beginning of this
+; config.ini file) will be appended as follows:
+;
+;   Software\mozilla.org\GRE_1.4a_0000000000_PRIVATE_[Product Name Internal]
+GRE Private Key=Software\mozilla.org\GRE_$GreUniqueID$_PRIVATE_$ProductNameInternal$
+
+; Controls the display of the banner image in the download and install progress dialogs.
+; Default value is TRUE.
+Show Banner Image=TRUE
+
+; Controls the check to see if user is installing on top of a previous
+; installation of the product. If so, then prompt the user that cleanup
+; of destination folder is highly recommended, or instability of product
+; can occurr.
+[Cleanup On Upgrade]
+Cleanup=TRUE
+ObjectToIgnore0=plugins
+ObjectToIgnore1=uninstall
+ObjectToIgnore2=install_status.log
+
+; List of files/dirs that is used to determine if a directory is a profile
+; or not.  This is so the directory is not deleted as part of the Cleanup
+; On Upgrade.
+; All of the object files must be found in order for a dir to be assumed
+; to be a Profile dir.
+[Profile Dir Object List]
+Object0=chrome
+Object1=bookmarks.html
+Object2=localstore.rdf
+
+; This section contains info on how to send error information in case of
+; either a download or xpinstall error.
+; By default, this feature is enabled, unless disabled.
+[Message Stream]
+; Values:
+;   Enabled
+;   Disabled
+;   default is Enabled.
+Status=Disabled
+
+; URL to cgi script to send error information to.  The information will
+; be appended to the url in the form of parameters to the cgi script.
+url=http://orb.mcom.com/install/error.cgi
+
+; Indicates whether to show a confirmation dialog or not.  If this
+; dialog is not shown, the error information will be *automatically*
+; sent without any indication to the user unless the Status= is set
+; to Disabled.
+;
+; Default value is TRUE if nothing is set.
+Show Confirmation=TRUE
+Confirmation Message=There was an error encountered during installation of $ProductShortName$.  The following information will be sent back to us to help us improve the product: %s
+
+
+
+; HKey:              valid decryptable setup key is [Product CurrentVersion] or [Product PreviousVersion]
+; Decrypt HKey:      there are times when '[' and ']' are valid part of windows registry key names.
+; Contains Filename: tells setup that the path contains filename needed to be removed before
+;                    using it as a path.
+; Verify Existence:  FILE or PATH
+;
+[Locate Previous Product Path0]
+HRoot=HKEY_LOCAL_MACHINE
+HKey=[Product CurrentVersion]\Main
+Name=Install Directory
+Decrypt HKey=TRUE
+Contains Filename=FALSE
+Verify Existence=
+
+[Dialog Welcome]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductShortName$ Setup
+;*** LOCALIZE ME BABY ***
+MessageWelcome=Welcome to %s.
+;*** LOCALIZE ME BABY ***
+Message0=You are about to install %s $Version$.
+;*** LOCALIZE ME BABY ***
+Message1=It is strongly recommended that you exit all Windows programs before running this Setup program.
+;*** LOCALIZE ME BABY ***
+Message2=Click Cancel to quit Setup and then close any programs you have running.  Click Next to continue the Setup program.
+;*** LOCALIZE ME BABY ***
+Message3=Click Next to continue installing %s $Version$.
+
+[Dialog License]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Software License Agreement
+;*** LOCALIZE ME BABY ***
+Sub Title=Terms and conditions for using this software.
+License File=license.txt
+;*** LOCALIZE ME BABY ***
+Message0=Please read the following license agreement. Use the scroll bar to view the rest of this agreement.
+;*** LOCALIZE ME BABY ***
+RadioAccept=I Accept the terms of the License Agreement
+;*** LOCALIZE ME BABY ***
+RadioDecline=I do NOT Accept the terms of the License Agreement
+
+[Dialog Setup Type]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Setup Type
+;*** LOCALIZE ME BABY ***
+Sub Title=Choose setup options.
+;*** LOCALIZE ME BABY ***
+Message0=Choose the type of Setup you prefer, then click Next.
+
+; at least one Setup Type needs to be set, and up to 4 can be
+; set (Setup Type0, Setup Type1, Setup Type2, Setup Type3).
+[Setup Type0]
+;*** LOCALIZE ME BABY ***
+Description Short=&Standard
+;*** LOCALIZE ME BABY ***
+Description Long=Browser will be installed with the most common options.
+
+; List of components to install/enable for this Setup Type.
+; All other components not listed here will be disabled if
+; this Setup Type is selected.
+C0=Component XPCOM
+C1=Component Browser
+C2=Component Uninstaller
+C3=Component US English Profile Defaults
+C4=Component En US lang pack
+C5=Component US region pack
+C6=Component Help
+; Make sure Component QFA is LAST so 3rd party developers who might not want
+; this component can easily remove it.
+; C7=Component QFA
+
+[Setup Type1]
+;*** LOCALIZE ME BABY ***
+Description Short=&Custom
+;*** LOCALIZE ME BABY ***
+Description Long=You may choose individual options to be installed. Recommended for experienced users. 
+
+; List of components to install/enable for this Setup Type.
+; All other components not listed here will be disabled if
+; this Setup Type is selected.
+C0=Component XPCOM
+C1=Component Browser
+C2=Component ABE
+C3=Component ADT
+C4=Component Uninstaller
+C5=Component US English Profile Defaults
+C6=Component En US lang pack
+C7=Component US region pack
+C8=Component Help
+; Make sure Component QFA is LAST so 3rd party developers who might not want
+; this component can easily remove it.
+; C9=Component QFA
+
+[Dialog Select Components]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Select Components
+;*** LOCALIZE ME BABY ***
+Sub Title=Additional components that enhance $ProductShortName$.
+;*** LOCALIZE ME BABY ***
+Message0=Choose additional components you want to install, then click Next.
+
+[Dialog Select Install Path]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Install Folder
+;*** LOCALIZE ME BABY ***
+Sub Title=Where $ProductShortName$ will be installed.
+;*** LOCALIZE ME BABY ***
+Message0=$ProductShortName$ will be installed into the following folder:
+
+[Dialog Upgrade]
+Show Dialog=FALSE
+Show In Easy Install=FALSE
+;*** LOCALIZE ME BABY ***
+Title=Upgrade
+;*** LOCALIZE ME BABY ***
+Sub Title=Upgrades an existing $ProductShortName$ installation.
+;*** LOCALIZE ME BABY ***
+Message Cleanup=A previous $ProductNameInternal$ installation has been found in the chosen folder.
+; XXXben - we need a strategy for uninstallation that obviates the need for "Safe Upgrade" which can doing nasty things if you have installed the app into a stupid location.
+;*** LOCALIZE ME BABY ***
+;Checkbox Clean Install=Perform a Safe Upgrade
+Checkbox Clean Install=Perform a Clean Install
+;*** LOCALIZE ME BABY ***
+;Message Clean Install=A Safe Upgrade will completely remove the old installation. Any third party components you have installed will be lost. This is recommended as it may prevent incompatibilities. 
+Message Clean Install=A Clean Install will COMPLETELY REMOVE the contents of the install folder! Any third party components you have installed will be lost. This is recommended as it may prevent incompatibilities. (XXXben) 
+;*** LOCALIZE ME BABY ***
+;Message Install Over=If you choose not to perform a Safe Upgrade, third party components will not be removed, which may cause unpredictable behavior. 
+Message Install Over=If you choose not to perform a Clean Install, third party components will not be removed, which may cause unpredictable behavior. 
+;*** LOCALIZE ME BABY ***
+Message Install Over Windir=A Safe Upgrade of $ProductNameInternal$ cannot be performed because the program is installed within the Windows folder. It is recommended that you choose another folder to install $ProductNameInternal$ into. 
+
+[Dialog Select Additional Components]
+Show Dialog=FALSE
+;*** LOCALIZE ME BABY ***
+Title=$ProductShortName$ Setup - Select Additional Components
+;*** LOCALIZE ME BABY ***
+Message0=Select or clear the additional components you want to install.
+
+[Dialog Windows Integration]
+; Note - this dialog isn't actually used yet!
+Show Dialog=TRUE
+Registry Key=SOFTWARE\\$CompanyName$\\$ProductName$\\$UserAgent$\\Main
+;*** LOCALIZE ME BABY ***
+Title=Set Up Shortcuts
+;*** LOCALIZE ME BABY ***
+Sub Title=Creates Program Icons
+;*** LOCALIZE ME BABY ***
+Message0=Create icons for $ProductShortName$:
+
+
+; Only a maximum of 3 "Windows Integration-Item"s are allowded.  Each Item
+; shows up as a checkbox in the Windows Integration dialog.
+[Windows Integration-Item0]
+CheckBoxState=FALSE
+;*** LOCALIZE ME BABY ***
+Description=On my Desktop
+Archive=
+
+[Windows Integration-Item1]
+CheckBoxState=TRUE 
+;*** LOCALIZE ME BABY ***
+Description=In my Start Menu Programs folder
+Archive=
+
+[Windows Integration-Item2]
+CheckBoxState=TRUE
+;*** LOCALIZE ME BABY ***
+Description=In my Quick Launch bar
+Archive=
+
+[Dialog Program Folder]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductShortName$ Setup - Select Program Folder
+;*** LOCALIZE ME BABY ***
+Message0=Setup will add program icons to the Program Folder listed below.  You may type a new folder name, or select one from the Existing Folders list.  Click Next to continue.
+
+[Dialog Additional Options]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductShortName$ Setup - Additional Options
+;*** LOCALIZE ME BABY ***
+Message1=Select the following option if you wish to save downloaded Setup files on your own computer.  This allows you to re-run Setup without downloading the files again.  The Setup files will be saved to the path below.
+Save Installer=
+; The following settings control whether the Recapture Homepage checkbox is displayed.
+;    For this option to work the file nsResetPref.js must be installed into the 
+;    components directory
+Message0=The following checkbox gives users the option of reverting to
+the default home page
+Show Homepage Option=FALSE
+Recapture Homepage=FALSE
+
+[Dialog Advanced Settings]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductShortName$ Setup - Advanced Settings
+;*** LOCALIZE ME BABY ***
+Message0=If your Internet connection requires a proxy server, enter your server name and port information.  If your Internet connection doesn't require a proxy server, leave the fields blank.
+Proxy Server=
+Proxy Port=
+Proxy User=
+Proxy Password=
+; Use Protocol accepts only two options:
+;   FTP
+;   HTTP
+; Default is FTP if key is not set.
+Use Protocol=HTTP
+; Use Protocol Settings key shows or hides the
+; Use FTP/Use HTTP radio buttons in the Download Dialog.
+; Default value is ENABLED unless DISABLED is specified.
+Use Protocol Settings=ENABLED
+; Controls the radio buttons visibility
+; Default value is TRUE
+Show Protocols=TRUE
+
+[Dialog Quick Launch]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductShortName$ Setup - Quick Launch
+;*** LOCALIZE ME BABY ***
+Message0=Quick Launch starts Mozilla faster by keeping portions of the program in computer memory.
+;*** LOCALIZE ME BABY ***
+Message1=You can access Quick Launch through the icon on the Windows taskbar tray.
+;*** LOCALIZE ME BABY ***
+Message2=Check the box below to activate Quick Launch when you restart your computer.
+; Turbo Mode (Quick Launch) values: TRUE, FALSE
+; Defaults to FALSE if not set
+Turbo Mode=FALSE
+; Turbo Mode Settings value: TRUE, FALSE
+; Defaults to FALSE if not set.
+; This will hide the turbo mode checkbox in the Start Install dialog
+; and ignore the Turbo Mode= key, thus disabling it.
+Turbo Mode Enabled=TRUE
+
+[Dialog Start Install]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Summary
+;*** LOCALIZE ME BABY ***
+Sub Title=Ready to start installing $ProductShortName$.
+;*** LOCALIZE ME BABY ***
+Message Install=Setup will now install the following components:
+;*** LOCALIZE ME BABY ***
+Message Download=Setup will now download and install the following components:
+;*** LOCALIZE ME BABY ***
+Message0=Click Next to continue.
+
+[Dialog Downloading]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Downloading
+;*** LOCALIZE ME BABY ***
+Sub Title=Downloading required components...
+;*** LOCALIZE ME BABY ***
+Blurb=Setup is downloading the files required to install $ProductShortName$.
+;*** LOCALIZE ME BABY ***
+File Name=Currently Downloading:
+;*** LOCALIZE ME BABY ***
+Time Remaining=Time Remaining:
+
+[Dialog Installing]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Installing
+;*** LOCALIZE ME BABY ***
+Sub Title=Installing $ProductShortName$...
+;*** LOCALIZE ME BABY ***
+Blurb=Setup is installing application files. 
+;*** LOCALIZE ME BABY ***
+Status File=Preparing File:
+;*** LOCALIZE ME BABY ***
+Status Component=Currently Installing:
+
+[Dialog Install Successful]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=Install Complete
+;*** LOCALIZE ME BABY ***
+MessageHeader=Install Complete
+;*** LOCALIZE ME BABY ***
+Message0=%s $Version$ was successfully installed.
+;*** LOCALIZE ME BABY ***
+Message1=Click Finish to complete Setup. 
+;*** LOCALIZE ME BABY ***
+Launch App=Launch %s $Version$ now.
+Launch App Checked=TRUE
+
+[Dialog Download]
+Show Dialog=TRUE
+;*** LOCALIZE ME BABY ***
+Title=$ProductShortName$ Setup - Download
+;*** LOCALIZE ME BABY ***
+Message Download0=Setup is downloading the required files now.  This may take some time depending on your network connection speed.
+;*** LOCALIZE ME BABY ***
+Message Retry0=Some files have failed the CRC check and are being downloaded again.  Only those files that have failed will be downloaded.
+
+[Dialog Reboot]
+; Show Dialog values are:
+;   TRUE  - Always show
+;   FALSE - Don't show unless at least one component has its reboot show value set
+;           to TRUE.  This will not show even if some files were in use and a reboot
+;           is necessary.
+;   AUTO  - Don't show unless a component has its reboot show value set to
+;           TRUE or there was at least one file in use and a reboot is
+;           is required for the file to be replaced correctly.
+Show Dialog=AUTO
+
+[Check Instance0]
+Class Name=SunbirdMessageWindow
+Window Name=
+Process Name=$MainExeFile$
+Pretty Name=$ProductNameInternal$
+;*** LOCALIZE ME BABY ***
+Message=Download of $ProductShortName$ was successful. $ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
+;*** LOCALIZE ME BABY ***
+Message Full Installer=$ProductNameInternal$ must be closed to proceed with installation. Click OK to exit $ProductNameInternal$ automatically and to begin installation.
+;*** LOCALIZE ME BABY ***
+Message wait=Shutting down $ProductNameInternal$.  Please wait...
+
+; This key indicates whether or not to close all the windows associated with
+; the process id of this app instance window found.
+Close All Process Windows=TRUE
+
+; These keys are not normally necessary for checking instances.  They are
+; set here because Mozilla requires a way to shut down its turbo mode.
+Extra Cmd0 Reg Key Root=HKEY_LOCAL_MACHINE
+Extra Cmd0 Reg Key=Software\Microsoft\Windows\CurrentVersion\App Paths\$MainExeFile$
+Extra Cmd0 Reg Name=
+Extra Cmd0 Parameter=-kill
+
+;DependeeX=Component A means
+;  - if Component A gets checked this component gets checked
+;  - if Component A gets unchecked this component gets unchecked
+;  - if this component is visible it can still be checked/unchecked
+;      independantly after Component A has changed its state.  I.e
+;      this components checkbox will not be disabled or hidden.
+;Dependee0=
+;
+;DependencyX= is not supported at this time. 
+;Dependency0=
+;
+; Attributes can be the following values:
+;
+;   The following Attributes can be overridden:
+;   ------------------------------------------
+;
+;   SELECTED      - Component is selected to be installed by default.
+;
+;   UNSELECTED    - Component is to be displayed unselected in the Options
+;                   dialog.  If the component is listed in the non-custom
+;                   Setup Type section, it will be assumed to be selected
+;                   by default.
+;
+;   ADDITIONAL    - Component is to be shown in the Additional Options
+;                   dialog (2nd Options dialog) instead of the 1st Options
+;                   dialog.
+;
+;   NOTADDITIONAL - Component will be shown (if visible) in the 1st
+;                   1st Options dialog rather than the Additional Options
+;                   dialog (default).
+;
+;   VISIBLE       - Component is shown in one of the two Options dialogs
+;                   (default).
+;
+;   INVISIBLE     - Component is not shown in either of the two Options dialogs.
+;
+;   ENABLED       - Component is to be shown as enabled (not greyed out) in
+;                   either of the two Options dialogs.
+;                   (default).
+;
+;   DISABLED      - Component is to be shown as disabled (greyed out) in
+;                   either of two Options dialog.
+;
+;
+;   The following attributes cannot be overridden:
+;   ---------------------------------------------
+;
+;   LAUNCHAPP     - Component is downloaded and simply run (like a .exe file)
+;                   after all the components have been downloaded and
+;                   xpinstall'ed.
+;
+;   DOWNLOAD_ONLY - Component is to be only downloaded to the ns_temp folder,
+;                   then deleted as Setup is quitting.
+;
+;   FORCE_UPGRADE - Force Upgrade checks for a particular file or directory
+;                   provided in the Force Upgrade FileX= key(s).  If any of
+;                   the listed file or directory exists, then this component
+;                   will have its SELECTED and DISABLED Attributes set
+;                   automatically.  Force Upgrade will override the following:
+;
+;                       Random Install Percentage= setting
+;                       UNSELECTED Attribute setting
+;                       Dependency settings
+;                       Dependee settings
+;                       Setup Type settings - meaning that even if this
+;                                             component is not listed in the
+;                                             selected Setup Type, it will be
+;                                             affected.
+;
+;   IGNORE_DOWNLOAD_ERROR  - If the component needs to be downloaded from a
+;                            server, setting this attribute will indicate that
+;                            any download error encountered will be ignored
+;                            and treated as if there were no error.
+;                            If the component does not need to be downloaded,
+;                            then this attribute has no effect.
+;
+;   IGNORE_XPINSTALL_ERROR - If the component is a .xpi file, then any error
+;                            resulting from the installation of the .xpi file
+;                            will be ignored.  If the .xpi file is not to be
+;                            installed, then this attribute is ignored.
+;
+;   SUPERSEDE     - Component is to be shown as disabled and unselected
+;                   if a file exists.
+;                   Use SupersedeType=File Exists to specify the type of comparison
+;                   Use SupersedeFileX=File Name to specify the file
+;                   Use SupersedeMinVersionX=a.b.c.d (optional) to specify the 
+;                   minimum version of the file.  If the version of the existing file
+;                   is greater than or equal to the SupersedeMinVersion the component
+;                   will be superseded.
+;
+
+;We're not installing Component XPCOM because we're using it
+;for it's xpinstall engine from the TEMP dir.  The files that
+;this component has are already in Component GRE.
+[Component XPCOM]
+Description Short=Cross Platform COM
+;*** LOCALIZE ME BABY ***
+Description Long=Cross Platform COM
+Archive=xpcom.xpi
+$InstallSize$:xpcom
+$InstallSizeSystem$
+$InstallSizeArchive$:xpcom.xpi
+Attributes=SELECTED|INVISIBLE
+FileCount=$FileCount$
+
+[Component Browser]
+Description Short=$ProductShortName$
+;*** LOCALIZE ME BABY ***
+Description Long=The $ProductShortName$
+Archive=browser.xpi
+$InstallSize$:browser
+$InstallSizeSystem$
+$InstallSizeArchive$:browser.xpi
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE|MAIN_COMPONENT
+Force Upgrade File0=[SETUP PATH]\$MainExeFile$
+FileCount=$FileCount$
+
+[Component ABE]
+Description Short=Additional Browsing Enhancements
+;*** LOCALIZE ME BABY ***
+Description Long=Additional tools including mouse-gesture navigation, a site navigation bar and other enhanced functionality. 
+Archive=abe.xpi
+$InstallSize$:abe
+$InstallSizeArchive$:abe.xpi
+Attributes=VISIBLE|DISABLED
+FileCount=$FileCount$
+
+[Component ADT]
+Description Short=Developer Tools
+;*** LOCALIZE ME BABY ***
+Description Long=Tools for web developers including an error console, the Document Inspector and a JavaScript Debugger. 
+Archive=adt.xpi
+$InstallSize$:adt
+$InstallSizeArchive$:adt.xpi
+Attributes=FORCE_UPGRADE|VISIBLE
+;Force Upgrade File0=[SETUP PATH]\chrome\venkman.jar
+Force Upgrade File0=[SETUP PATH]\chrome\inspector.jar
+FileCount=$FileCount$
+
+[Component Help]
+Description Short=$ProductShortName$ Help
+;*** LOCALIZE ME BABY ***
+Description Long=Offline Help for learning about and using $ProductShortName$.
+Archive=help.xpi
+$InstallSize$:help
+$InstallSizeArchive$:help.xpi
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\chrome\help.jar
+FileCount=$FileCount$
+
+[Component Uninstaller]
+Description Short=$CompanyName$ Uninstaller
+;*** LOCALIZE ME BABY ***
+Description Long=Uninstaller for $ProductShortName$
+Archive=$UninstallFileZip$
+$InstallSize$:$UninstallFileZip$
+$InstallSizeSystem$
+$InstallSizeArchive$:$UninstallFileZip$
+Attributes=SELECTED|INVISIBLE|DOWNLOAD_ONLY
+FileCount=$FileCount$
+
+;Since the uninstaller program is going to be installed into the Windows folder,
+;Setup.exe needs to know to calculate the disk space required for the Windows folder.
+;This section overrides the default user-chosen path for the Uninstaller only.
+[Component Uninstaller-Destination Path0]
+Path=[WINDIR]
+
+[Component US English Profile Defaults]
+Description Short=US English Defaults
+;*** LOCALIZE ME BABY ***
+Description Long=US English Default Profile Data
+Archive=deflenus.xpi
+$InstallSize$:deflenus
+$InstallSizeSystem$
+$InstallSizeArchive$:deflenus.xpi
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\defaults\profile\bookmarks.html
+FileCount=$FileCount$
+
+[Component En US lang pack]
+;*** LOCALIZE ME BABY ***
+Description Short=English (US) Language Pack
+;*** LOCALIZE ME BABY ***
+Description Long=English (US) Language Pack
+Archive=langenus.xpi
+$InstallSize$:langenus
+$InstallSizeSystem$
+$InstallSizeArchive$:langenus.xpi
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\chrome\en-US.jar
+FileCount=$FileCount$
+
+[Component US region pack]
+;*** LOCALIZE ME BABY ***
+Description Short=US Region Pack
+;*** LOCALIZE ME BABY ***
+Description Long=Regional content for US users
+Archive=regus.xpi
+$InstallSize$:regus
+$InstallSizeSystem$
+$InstallSizeArchive$:regus.xpi
+Attributes=SELECTED|INVISIBLE|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\chrome\US.jar
+FileCount=$FileCount$
+
+[Component QFA]
+Description Short=Quality Feedback Agent
+;*** LOCALIZE ME BABY ***
+Description Long=for reporting $ProductShortName$ crash information
+Archive=talkback.xpi
+Install Size=870
+Install Size System=1
+Install Size Archive=248
+Attributes=SELECTED|FORCE_UPGRADE
+Force Upgrade File0=[SETUP PATH]\components\fullsoft.dll
+FileCount=$FileCount$
+
+; This is to randomly set the default checkbox for this component.
+; This particular value will set the checkbox checked [number]% of the time.
+; This logic is done only during the initialization of setup, not in any
+; particular dialog.
+Random Install Percentage=100
+
+[Core]
+Source=[XPI PATH]\xpcom.xpi
+Destination=[WIZTEMP]\xpcom.ns
+$InstallSize$:xpcom
+Cleanup=TRUE
+;*** LOCALIZE ME BABY ***
+Message=Preparing Install, please wait...
+; Status= values: Disabled, Enabled
+; If nothing is set, default value is Enabled.  If set to Disabled,
+; it will then use GRE as the xpinstall engine, in which case, there
+; should be a GRE component in this installer package!
+Status=Enabled
+
+[Redirect]
+Status=Disabled
+; This is used in conjunction with the Site Selector info to build a
+; url to where to download the needed redirect.ini file from.
+; If there's more than one server path, they will be used as fail
+; over paths.
+;
+; The Server Path= keys need to be named in the following convention:
+;
+;   Server Path0=
+;   Server Path1=
+;   Server Path2=
+;
+; and so on...
+Server Path=redirect.ini
+;*** LOCALIZE ME BABY ***
+Description=Redirect File
+Message=
+
+
+; The Timing key needs to be one of the following values:
+;   pre download     - process before any files have been downloaded.
+;   post download    - process after all files have been downloaded.
+;   pre xpcom        - process before the xpcom file has been uncompressed.
+;   post xpcom       - process after the xpcom file has been uncompressed.
+;   pre smartupdate  - process before the smartupdate engine has been launched.
+;   post smartupdate - process after the smartupdate engine has been launched.
+;   pre launchapp    - process before the launching of executables.
+;   post launchapp   - process after the launching of executables.
+;   pre archive      - process before the launching of each individual archive file.
+;   post archive     - process after the launching of each individual archive file.
+;   depend reboot    - process depending on if a reboot is necessary or not.
+;                      if reboot is necessary, installer can set it up so
+;                      the app runs once upon windows reboot.
+
+;Uncompress FileX sections
+[Uncompress File0]
+Timing=post smartupdate
+Source=[XPI PATH]\$UninstallFileZip$
+Destination=[WINDIR]
+;*** LOCALIZE ME BABY ***
+Message=Installing the uninstaller, please wait...
+Only If Exists=FALSE
+
+
+;Copy FileX sections
+;Copy the uninstaller to the [Setup Path]\uninstall folder.
+;This copy is to be used when the user installed on a system with
+;restricted access.
+[Copy File0]
+Timing=post smartupdate
+Source=[WINDIR]\$UninstallFile$
+Destination=[SETUP PATH]\uninstall
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File1]
+Timing=post smartupdate
+Source=[XPI PATH]\$UninstallFile$
+Destination=[WINDIR]
+Fail If Exists=FALSE
+Do Not Uninstall=TRUE
+
+; nss3.dll, softokn3.dll, ssl3.dll, and smime3.dll all need to be copied from
+; the GRE dir to the destination app folder (see bug 202326)
+[Copy File2]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\nss3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File3]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\softokn3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File4]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\softokn3.chk
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File5]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\ssl3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Copy File6]
+Timing=post smartupdate
+Source=[$GRE_INSTALL_DIR]\smime3.dll
+Destination=[SETUP PATH]
+Fail If Exists=FALSE
+Do Not Uninstall=FALSE
+
+[Path Lookup $GRE_INSTALL_DIR]
+Path Reg Key Root=HKEY_LOCAL_MACHINE
+Path Reg Key=Software\mozilla.org\GRE\$GreUniqueID$\Main
+Path Reg Name=Install Directory
+Strip Filename=FALSE
+
+
+;Copy File SequentialX sections
+[Copy File Sequential0]
+Timing=post smartupdate
+Filename=install_wizard.log
+Source=[SETUP PATH]
+Destination=[SETUP PATH]\uninstall
+
+
+;Create DirectoryX sections
+[Create Directory0]
+Timing=post download
+Destination=[SETUP PATH]\plugins
+
+
+;Delete FileX sections
+[Delete File0]
+Timing=post download
+Destination=[COMMON_PROGRAMS]\Mozilla Seamonkey\Mozilla AppRunner.lnk
+
+[Delete File1]
+Timing=post smartupdate
+Destination=[SETUP PATH]\install_wizard.log
+
+
+;Remove DirectoryX sections
+;[Remove Directory0]
+;Timing=post launchapp
+;Destination=[TEMP]\xtratest
+;Remove subdirs=TRUE
+
+
+;RunAppX sections
+[RunApp0]
+Timing=depend reboot
+Wait=FALSE
+Target=[SETUP PATH]\$MainExeFile$
+Parameters=-installer
+WorkingDir=[SETUP PATH]
+;  Additional Options dialog.
+Condition=not RecaptureHPChecked
+
+[RunApp1]
+Timing=depend reboot
+Wait=FALSE
+Target=[SETUP PATH]\$MainExeFile$
+Parameters=-installer -resetPref browser.startup.homepage
+WorkingDir=[SETUP PATH]
+;  Additional Options dialog.
+Condition=RecaptureHPChecked
+
+[Windows Registry0]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry1]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry2]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry3]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
+Name=Program Folder Path
+Name Value=[Default Folder]
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry4]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Description
+Name Value=$ProductName$ ($UserAgentShort$)
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry5]
+Root Key=HKEY_LOCAL_MACHINE
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Uninstall Log Folder
+Name Value=[SETUP PATH]\uninstall
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry6]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry7]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry8]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry9]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Main
+Name=Program Folder Path
+Name Value=[Default Folder]
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry10]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Description
+Name Value=$ProductName$ ($UserAgentShort$)
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry11]
+Root Key=HKEY_CURRENT_USER
+;*** LOCALIZE ME BABY ***
+Key=Software\$CompanyName$\$ProductName$\$UserAgent$\Uninstall
+Name=Uninstall Log Folder
+Name Value=[SETUP PATH]\uninstall
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Windows Registry12]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=DisplayName
+Name Value=$ProductName$ ($UserAgentShort$)
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=FALSE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+[Windows Registry13]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Microsoft\Windows\CurrentVersion\Uninstall\$ProductName$ ($UserAgentShort$)
+Name=UninstallString
+;*** LOCALIZE ME BABY ***
+Name Value=[WINDIR]\$UninstallFile$ /ua "$UserAgent$"
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=post smartupdate
+
+; The following keys are to help JRE's installer locate where mozilla gets
+; installed to.  It has not been updated to look for the new keys.
+[Windows Registry14]
+Root Key=HKEY_LOCAL_MACHINE
+Key=Software\Mozilla
+Name=
+Name Value=
+Type=REG_SZ
+Decrypt Key=FALSE
+Decrypt Name=FALSE
+Decrypt Name Value=TRUE
+Overwrite Key=TRUE
+Overwrite Name=TRUE
+Timing=pre smartupdate
+
+[Cleanup Previous Product RegKeys]
+Reg Key Root0=HKEY_LOCAL_MACHINE
+Product Name0=Mozilla
+Product Reg Key0=Software\Mozilla.org\Mozilla
+Current Version0=$UserAgent$
+
+Reg Key Root1=HKEY_CURRENT_USER
+Product Name1=Mozilla
+Product Reg Key1=Software\Mozilla.org\Mozilla
+Current Version1=$UserAgent$
+
+[Strings]
+;*** LOCALIZE ME BABY ***
+Message Unfinished Download Restart=A previous session of Setup did not finish downloading all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
+;*** LOCALIZE ME BABY ***
+Message Unfinished Install Xpi Restart=A previous session of Setup did not finish with installation of all the necessary files.  Would you like to use the files previously downloaded, to avoid downloading them again?
+;*** LOCALIZE ME BABY ***
+Error Corrupted Archives Detected=Setup has detected that the following archives within this Setup are corrupted:%sYou will need to obtain another copy of the $ProductShortName$ Setup in order for installation to proceed.
+;*** LOCALIZE ME BABY ***
+Error Corrupted Archives Detected AUTO mode=Setup has detected that at least one archive within this Setup is corrupt.  You will need to obtain another copy of the $ProductShortName$ Setup in order for installation to proceed.
+;*** LOCALIZE ME BABY ***
+Error Too Many CRC Failures=Too many download failures.  Setup will cancel.  Any files already downloaded will not be deleted.  The next time Setup is run, these files will be taken into account during the download.
+;*** LOCALIZE ME BABY ***
+Error Too Many Network Errors=Too many network errors trying to download %s.  Setup will now Pause.  Please click Resume to retry downloading the files.
+;*** LOCALIZE ME BABY ***
+Message Verifying Archives=Verifying integrity of archives, please wait...
+;*** LOCALIZE ME BABY ***
+Error Undefined=Error undefined
+;*** LOCALIZE ME BABY ***
+Error Out Of Memory=Out of memory!
+;*** LOCALIZE ME BABY ***
+Status Download=%s at %.2f KB/sec (%u KB of %u KB downloaded)
+;*** LOCALIZE ME BABY ***
+Status Retry=%s at %.2f KB/sec (%u KB of %u KB downloaded)
+;*** LOCALIZE ME BABY ***
+Status File Info=%s
+;*** LOCALIZE ME BABY ***
+Status Percentage Completed=%d%%
+;*** LOCALIZE ME BABY ***
+Dialog Download Title Minimized=%d%% completed
+;*** LOCALIZE ME BABY ***
+STR Force Upgrade Required=(Required)
+;*** LOCALIZE ME BABY ***
+Message Cancel Setup AUTO mode=Canceling Setup, please wait...
+;*** LOCALIZE ME BABY ***
+Error File Uncompress=Error uncompressing file %s: %d
+;*** LOCALIZE ME BABY ***
+UsageMsg Usage=Usage: %s [options]\n	[options] can be any of the following combination:\n		-h: This help.\n		-a [path]: Alternate archive search path.\n		-app [app id]: ID of application which is launching the installer (shared installs)\n		-app_path [app]: Points to (full path) representative file of application (Shared installs)\n	*	-dd [path]: Suggested install destination directory. (Shared installs)\n	*	-greLocal: Forces GRE to be installed into the application dir.\n	*	-greShared: Forces GRE to be installed into a global, shared dir (normally)\n			c:\program files\common files\mozilla.org\GRE\n		-reg_path [path]: Where to make entries in the Windows registry. (Shared installs)\n		-f: Force install of GRE installer (Shared installs), though it'll work\n			for non GRE installers too.\n		-greForce: Force 'Component GRE' to be downloaded, run, and installed.  This\n			bypasses GRE's logic of determining when to install by running its\n			installer with a '-f' flag.\n		-n [filename]: Setup's parent process filename.\n	*	-ma: Run setup in Auto mode.\n	*	-ms: Run setup in Silent mode.\n		-ira: Ignore the [RunAppX] sections\n		-ispf: Ignore the [Program FolderX] sections that show\n			the Start Menu shortcut folder at the end of installation.\n	*	-showBanner: Show the banner image in the download and install progress dialogs\n	*	-hideBanner: Hide the banner image in the download and install progress dialogs\n	*	-cleanupOnUpgrade: Tells Setup to check to see if user is upgrading (installing on top\n		of previous version of product).  If user is upgrading:\n			* NORMAL mode: prompt user on how to proceed\n			* All other modes: assume user wants to cleanup.\n	*	-noCleanupOnUpgrade: Tells Setup to not check if user is upgrading (installing on top\n		of previous version of product).  This will disable the cleanup feature.\n\n	* means it will override config.ini
+;*** LOCALIZE ME BABY ***
+IDC Use FTP=Use &FTP for downloading files
+;*** LOCALIZE ME BABY ***
+IDC Use HTTP=Use &HTTP for downloading files
+;*** LOCALIZE ME BABY ***
+IDC Save Installer Files=&Save installer files locally
+;*** LOCALIZE ME BABY ***
+IDC Recapture Homepage=&Make Netscape.com my home page
+;*** LOCALIZE ME BABY ***
+IDC Turbo Mode=&Use Quick Launch for faster startup times when possible
+;*** LOCALIZE ME BABY ***
+Message Download Paused=Setup has encountered a network problem and has paused the download.  If you have just lost your network connection, please click Resume once your network has been reestablished.
+;*** LOCALIZE ME BABY ***
+Message NORMAL Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  It is highly recommended that you do not continue with the installation of $ProductShortName$, or it may not function properly.  Would you still like to continue?
+;*** LOCALIZE ME BABY ***
+Message AUTO Restricted Access=Setup has detected that you do not have the appropriate Administrator privileges to this system.  Setup cannot continue with the installation of $ProductShortName$.
+
+
+[Site Selector]
+; Dictates whether or not to show the pull down menu.
+; Default value is SHOW.
+; If Status= is set to HIDE, then Indentifier0 will be used
+; and all other IdentifiersX will be ignored.
+Status=HIDE
+
+Identifier0=Site0
+;*** LOCALIZE ME BABY ***
+Description0=Default
+;*** LOCALIZE ME BABY ***
+Domain0=$ArchiveUrl$
+
+Identifier1=Site1
+;*** LOCALIZE ME BABY ***
+Description1=North America
+;*** LOCALIZE ME BABY ***
+Domain1=$ArchiveUrl$
+

@@ -1,0 +1,288 @@
+; Package file for Win32 static Sunbird build. 
+;
+; File format:
+;
+; [] designates a toplevel component. Example: [xpcom]
+; - in front of a file specifies it to be removed from the destination
+; * wildcard support to recursively copy the entire directory
+; ; file comment
+;
+
+bin/.autoreg
+
+[langenus]
+; en-US 
+bin\chrome\en-US.jar
+bin\chrome\en-win.jar
+
+[regus]
+; US
+; If you add a new directory you must explicitly call addDirectory in regus.jst
+bin\chrome\US.jar
+bin\defaults\profile\US\*
+bin\searchplugins\*
+
+[deflenus]
+; Default files for US
+bin\defaults\profile\bookmarks.html
+bin\defaults\profile\localstore.rdf
+;!4sunbird bin\defaults\profile\prefs.js
+bin\defaults\profile\search.rdf
+bin\defaults\profile\mimeTypes.rdf
+bin\defaults\profile\extensions\Extensions.rdf
+bin\defaults\profile\extensions\installed-extensions.txt
+;!4sunbird bin\defaults\profile\extensions\{641d8d09-7dda-4850-8228-ac0ab65e2ac9}\install.rdf
+;!4sunbird bin\defaults\profile\extensions\{972ce4c6-7e08-4474-a285-3208198ce6fd}\install.rdf
+
+[xpcom]
+bin\js3250.dll
+bin\plc4.dll
+bin\plds4.dll
+bin\xpcom.dll
+bin\xpistub.dll
+bin\nspr4.dll
+bin\components\xpinstal.dll
+bin\components\jar50.dll
+bin\xpcom_compat.dll
+
+[browser]
+; [Base Calendar Files]
+bin\sunbird.exe
+bin\plugins\npnul32.dll
+bin\res\cmessage.txt
+bin\xpicleanup.exe
+bin\LICENSE
+bin\README.txt
+
+; [Components]
+bin\components\alerts.xpt
+bin\components\accessibility.xpt
+bin\components\accessibility-msaa.xpt
+bin\components\appshell.xpt
+bin\components\autocomplete.xpt
+bin\components\autoconfig.xpt
+bin\components\bookmarks.xpt
+bin\components\calendar.xpt
+bin\components\caps.xpt
+bin\components\chardet.xpt
+;!4sunbird bin\components\chrome.xpt
+bin\components\commandhandler.xpt
+bin\components\content_base.xpt
+bin\components\content_html.xpt
+bin\components\content_htmldoc.xpt
+bin\components\content_xmldoc.xpt
+bin\components\content_xslt.xpt
+;!4sunbird bin\components\cookie.xpt
+;!4sunbird bin\components\directory.xpt
+bin\components\docshell_base.xpt
+bin\components\dom.xpt
+bin\components\dom_base.xpt
+bin\components\dom_core.xpt
+bin\components\dom_css.xpt
+bin\components\dom_events.xpt
+bin\components\dom_html.xpt
+bin\components\dom_range.xpt
+bin\components\dom_stylesheets.xpt
+bin\components\dom_traversal.xpt
+bin\components\dom_views.xpt
+bin\components\dom_xbl.xpt
+bin\components\dom_xpath.xpt
+bin\components\dom_xul.xpt
+;!4sunbird bin\components\downloads.xpt
+bin\components\editor.xpt
+bin\components\embed_base.xpt
+bin\components\exthandler.xpt
+bin\components\find.xpt
+bin\components\gfx.xpt
+bin\components\helperAppDlg.xpt
+bin\components\history.xpt
+bin\components\htmlparser.xpt
+bin\components\imglib2.xpt
+bin\components\imgicon.xpt
+bin\components\intl.xpt
+bin\components\intlcmpt.xpt
+bin\components\jar.xpt
+bin\components\jsconsole.xpt
+bin\components\jsconsole-clhandler.js
+;!4sunbird bin\components\jsd3250.dll
+;!4sunbird bin\components\jsdservice.xpt
+bin\components\jsurl.xpt
+bin\components\layout_base.xpt
+bin\components\layout_xul.xpt
+bin\components\layout_xul_tree.xpt
+bin\components\locale.xpt
+bin\components\lwbrk.xpt
+;!4sunbird bin\components\migration.xpt
+bin\components\mimetype.xpt
+bin\components\mozbrwsr.xpt
+bin\components\mozfind.xpt
+bin\components\necko.xpt
+bin\components\necko_cache.xpt
+bin\components\necko_cookie.xpt
+bin\components\necko_strconv.xpt
+bin\components\necko_about.xpt
+bin\components\necko_data.xpt
+bin\components\necko_dns.xpt
+bin\components\necko_file.xpt
+bin\components\necko_ftp.xpt
+bin\components\necko_http.xpt
+bin\components\necko_jar.xpt
+bin\components\necko_res.xpt
+bin\components\necko_viewsource.xpt
+;!4sunbird bin\components\oji.xpt
+bin\components\passwordmgr.xpt
+bin\components\plugin.xpt
+bin\components\pref.xpt
+bin\components\prefetch.xpt
+bin\components\prefmigr.xpt
+bin\components\profile.xpt
+bin\components\progressDlg.xpt
+bin\components\proxyObject.xpt
+bin\components\rdf.xpt
+;!4sunbird bin\components\related.xpt
+;!4sunbird bin\components\satchel.xpt
+;!4sunbird bin\components\search.xpt
+bin\components\shistory.xpt
+bin\components\sidebar.xpt
+;!4sunbird bin\components\signonviewer.xpt
+bin\components\txtsvc.xpt
+bin\components\txmgr.xpt
+;!4sunbird bin\components\typeaheadfind.xpt
+;!4sunbird bin\components\ucnative.xpt
+bin\components\uconv.xpt
+bin\components\unicharutil.xpt
+bin\components\uriloader.xpt
+;!4sunbird bin\components\util.xpt
+;!4sunbird bin\components\wallet.xpt
+;!4sunbird bin\components\walleteditor.xpt
+;!4sunbird bin\components\walletpreview.xpt
+bin\components\webBrowser_core.xpt
+bin\components\webbrowserpersist.xpt
+bin\components\webshell_idls.xpt
+;!4sunbird bin\components\websrvcs.xpt
+bin\components\widget.xpt
+bin\components\windowds.xpt
+bin\components\windowwatcher.xpt
+;!4sunbird bin\components\shellservice.xpt
+;!4sunbird bin\components\xml-rpc.xpt
+;!4sunbird bin\components\xmlextras.xpt
+bin\components\xpcom_base.xpt
+bin\components\xpcom_components.xpt
+bin\components\xpcom_ds.xpt
+bin\components\xpcom_io.xpt
+bin\components\xpcom_thread.xpt
+bin\components\xpcom_xpti.xpt
+bin\components\xpcom_obsolete.xpt
+bin\components\xpconnect.xpt
+bin\components\xpinstall.xpt
+bin\components\xuldoc.xpt
+bin\components\xultmpl.xpt
+; JavaScript components
+bin\components\nsSetDefaultBrowser.js
+bin\components\nsCloseAllWindows.js
+;!4sunbird bin\components\nsDictionary.js
+bin\components\nsHelperAppDlg.js
+bin\components\nsProxyAutoConfig.js
+;!4sunbird bin\components\nsSidebar.js
+;!4sunbird bin\components\nsXmlRpcClient.js
+bin\components\nsExtensionManager.js
+bin\components\nsBackgroundUpdateService.js
+bin\components\extensions.xpt
+bin\components\update.xpt
+bin\components\calendarService.js
+
+; [Browser Chrome Files]
+bin\chrome\calendar.jar
+bin\chrome\classic.jar
+bin\chrome\comm.jar
+bin\chrome\toolkit.jar
+
+; [Default Preferences]
+; All the pref files must be part of base to prevent migration bugs
+bin\defaults\pref\sunbird.js
+bin\greprefs\all.js
+bin\greprefs\security-prefs.js
+bin\greprefs\xpinstall.js
+bin\defaults\autoconfig\platform.js
+bin\defaults\autoconfig\prefcalls.js
+
+; [Layout Engine Resources]
+; Style Sheets, Graphics and other Resources used by the layout engine. 
+bin\res\ua.css
+bin\res\html.css
+bin\res\quirk.css
+bin\res\forms.css
+bin\res\platform-forms.css
+;!4sunbird bin\res\EditorOverride.css
+;!4sunbird bin\res\table-add-column-after-active.gif
+;!4sunbird bin\res\table-add-column-after-hover.gif
+;!4sunbird bin\res\table-add-column-after.gif
+;!4sunbird bin\res\table-add-column-before-active.gif
+;!4sunbird bin\res\table-add-column-before-hover.gif
+;!4sunbird bin\res\table-add-column-before.gif
+;!4sunbird bin\res\table-add-row-after-active.gif
+;!4sunbird bin\res\table-add-row-after-hover.gif
+;!4sunbird bin\res\table-add-row-after.gif
+;!4sunbird bin\res\table-add-row-before-active.gif
+;!4sunbird bin\res\table-add-row-before-hover.gif
+;!4sunbird bin\res\table-add-row-before.gif
+;!4sunbird bin\res\table-remove-column-active.gif
+;!4sunbird bin\res\table-remove-column-hover.gif
+;!4sunbird bin\res\table-remove-column.gif
+;!4sunbird bin\res\table-remove-row-active.gif
+;!4sunbird bin\res\table-remove-row-hover.gif
+;!4sunbird bin\res\table-remove-row.gif
+;!4sunbird bin\res\arrowd.gif
+;!4sunbird bin\res\grabber.gif
+bin\res\viewsource.css
+bin\res\mathml.css
+bin\res\arrow.gif
+;!4sunbird bin\res\loading-image.gif
+;!4sunbird bin\res\broken-image.gif
+bin\res\fonts\*
+bin\res\dtd\*
+bin\res\html\*
+bin\res\wincharset.properties
+bin\res\charsetalias.properties
+bin\res\charsetData.properties
+bin\res\langGroups.properties
+bin\res\language.properties
+bin\res\entityTables\*
+bin\res\builtin\htmlBindings.xml
+bin\res\builtin\platformHTMLBindings.xml
+
+; [Personal Security Manager]
+;
+bin\nssckbi.dll
+bin\components\pipboot.xpt
+bin\components\pipnss.xpt
+bin\components\pippki.xpt
+bin\nss3.dll
+bin\smime3.dll
+bin\softokn3.chk
+bin\softokn3.dll
+bin\ssl3.dll
+bin\chrome\pipnss.jar
+bin\chrome\pippki.jar
+
+; [Additional Developer Tools]
+[adt]
+; [Document Inspector]
+;!4sunbird bin\components\inspector-cmdline.js
+;!4sunbird bin\components\inspector.dll
+;!4sunbird bin\components\inspector.xpt
+;!4sunbird bin\chrome\inspector.jar
+;!4sunbird bin\defaults\pref\inspector.js
+;!4sunbird bin\res\inspector\viewer-registry.rdf
+;!4sunbird bin\res\inspector\search-registry.rdf
+; [Venkman JavaScript Debugger]
+; bin\components\venkman-service.js
+; bin\chrome\venkman.jar
+
+; [Help]
+[help]
+bin\chrome\help.jar
+
+; [Additional Browsing Enhancements]
+[abe]
+
