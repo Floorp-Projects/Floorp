@@ -36,6 +36,15 @@
 ** 12-June-97 Revert to return code 0 and 1.
 ***********************************************************************/
 
+#ifdef XP_BEOS
+#include <stdio.h>
+int main()
+{
+    printf( "This test currently does not run on BeOS\n" );
+    return 0;
+}
+#else
+
 /***********************************************************************
 ** Includes
 ***********************************************************************/
@@ -335,3 +344,5 @@ exit_now:
 	else
 		return 0;
 }
+
+#endif /* XP_BEOS */
