@@ -25,6 +25,8 @@
 #include "nsIURL.h"
 #include "nsIFile.h"
 #include "nsIChannel.h"
+#include "nsIDirectoryService.h"
+#include "nsAppDirectoryServiceDefs.h"
 #include "nsXPIDLString.h"
 #include "nsMemory.h"
 #include "nsIStreamListener.h"
@@ -35,9 +37,7 @@
 #include "rdf.h"
 #include "nsIRDFService.h"
 #include "nsIRDFRemoteDataSource.h"
-#include "nsIFileLocator.h"
 #include "nsIFileSpec.h"
-#include "nsFileLocations.h"
 #include "nsHelperAppRDF.h"
 #include "nsIMIMEInfo.h"
 #include "nsDirectoryServiceDefs.h"
@@ -79,16 +79,20 @@ nsresult nsExternalHelperAppService::Init()
   mOverRideDataSource = do_QueryInterface(remoteDS);
   NS_ENSURE_SUCCESS(rv,rv);
 
-  nsCOMPtr<nsIFileLocator> locator = do_GetService(NS_FILELOCATOR_PROGID, &rv);
+  nsCOMPtr<nsIFile> mimeTypesFile;
+  nsXPIDLCString pathBuf;
+  nsCOMPtr<nsIFileSpec> mimeTypesFileSpec;
+
+  rv = NS_GetSpecialDirectory(NS_APP_USER_MIMETYPES_50_FILE, getter_AddRefs(mimeTypesFile));
   NS_ENSURE_SUCCESS(rv, rv);
   
-  nsCOMPtr<nsIFileSpec> mimeTypesFile;
-  rv = locator->GetFileLocation(nsSpecialFileSpec::App_UsersMimeTypes50,
-                                getter_AddRefs(mimeTypesFile));
+  rv = mimeTypesFile->GetPath(getter_Copies(pathBuf));
+  NS_ENSURE_SUCCESS(rv, rv);
+  rv = NS_NewFileSpec(getter_AddRefs(mimeTypesFileSpec));
   NS_ENSURE_SUCCESS(rv, rv);
 
   nsXPIDLCString url;
-  rv = mimeTypesFile->GetURLString(getter_Copies(url));
+  rv = mimeTypesFileSpec->GetURLString(getter_Copies(url));
   NS_ENSURE_SUCCESS(rv, rv);
 
   rv = remoteDS->Init(url);
