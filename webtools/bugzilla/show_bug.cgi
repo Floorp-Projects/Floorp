@@ -33,7 +33,7 @@ if ($::FORM{'GoAheadAndLogIn'}) {
 print "Content-type: text/html\n";
 print "\n";
 
-if (!defined $::FORM{'id'}) {
+if (!defined $::FORM{'id'} || $::FORM{'id'} !~ /^\s*\d+\s*$/) {
     print "<H2>Search By Bug Number</H2>\n";
     print "<FORM METHOD=GET ACTION=\"show_bug.cgi\">\n";
     print "You may find a single bug by entering its bug id here: \n";
