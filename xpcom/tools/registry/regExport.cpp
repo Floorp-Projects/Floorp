@@ -22,6 +22,7 @@
 #include "nsIEnumerator.h"
 #include "nsIFactory.h"
 #include "prmem.h"
+#include "plstr.h"
 
 // Hack to get to nsRegistry implementation.                                                                                       
 extern "C" NS_EXPORT nsresult
@@ -92,14 +93,25 @@ int main( int argc, char *argv[] ) {
 }
 
 void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
-    // Enumerate all subkeys under the given node.
+    // Print out key name.
+    printf( "%s\n", rootName );
+
+    // Make sure it isn't a "root" key.
+    if ( root != nsIRegistry::Common
+         &&
+         root != nsIRegistry::Users
+         &&
+         root != nsIRegistry::CurrentUser ) {
+        // Print values stored under this key.
+        displayValues( reg, root );
+    }
+
+    // Enumerate all subkeys (immediately) under the given node.
     nsIEnumerator *keys;
-    nsresult rv = reg->EnumerateAllSubtrees( root, &keys );
+    nsresult rv = reg->EnumerateSubtrees( root, &keys );
 
     // Check result.
     if ( rv == NS_OK ) {
-        // Print out root name.
-        printf( "%s\n", rootName );
         // Set enumerator to beginning.
         rv = keys->First();
         // Enumerate subkeys till done.
@@ -119,17 +131,21 @@ void display( nsIRegistry *reg, nsIRegistry::Key root, const char *rootName ) {
                     rv = node->GetName( &name );
                     // Test result.
                     if ( rv == NS_OK ) {
-                        // Print name:
-                        printf( "\t%s\n", name );
-                        // Display values under this key.
+                        // Build complete name.
+                        char *fullName = new char[ PL_strlen(rootName) + PL_strlen(name) + 2 ];
+                        PL_strcpy( fullName, rootName );
+                        PL_strcat( fullName, "/" );
+                        PL_strcat( fullName, name );
+                        // Display contents under this subkey.
                         nsIRegistry::Key key;
                         rv = reg->GetSubtree( root, name, &key );
                         if ( rv == NS_OK ) {
-                            displayValues( reg, key );
+                            display( reg, key, fullName );
                             printf( "\n" );
                         } else {
                             printf( "Error getting key, rv=0x%08X\n", (int)rv );
                         }
+                        delete [] fullName;
                     } else {
                         printf( "Error getting subtree name, rv=0x%08X\n", (int)rv );
                     }
