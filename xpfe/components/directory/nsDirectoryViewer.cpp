@@ -203,7 +203,7 @@ nsHTTPIndexParser::Init()
   if (gRefCntParser++ == 0) {
     rv = nsServiceManager::GetService("component://netscape/rdf/rdf-service",
                                       NS_GET_IID(nsIRDFService),
-                                      NS_REINTERPRET_CAST(nsISupports**, &gDirRDF));
+                                      NS_REINTERPRET_CAST(nsISupports**, &gRDF));
     if (NS_FAILED(rv)) return rv;
 
     rv = nsServiceManager::GetService(NS_ITEXTTOSUBURI_PROGID,
@@ -211,30 +211,30 @@ nsHTTPIndexParser::Init()
                                       NS_REINTERPRET_CAST(nsISupports**, &gTextToSubURI));
     if (NS_FAILED(rv)) return rv;
 
-    rv = gDirRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Comment",  &kHTTPIndex_Comment);
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Comment",  &kHTTPIndex_Comment);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gDirRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Name", &kHTTPIndex_Filename);
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "Name", &kHTTPIndex_Filename);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gDirRDF->GetResource(HTTPINDEX_NAMESPACE_URI "File-Type", &kHTTPIndex_Filetype);
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "File-Type", &kHTTPIndex_Filetype);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gDirRDF->GetResource(HTTPINDEX_NAMESPACE_URI "loading",  &kHTTPIndex_Loading);
+    rv = gRDF->GetResource(HTTPINDEX_NAMESPACE_URI "loading",  &kHTTPIndex_Loading);
     if (NS_FAILED(rv)) return rv;
 
-	rv = gDirRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
+	rv = gRDF->GetResource(NC_NAMESPACE_URI "child",   &kNC_Child);
     if (NS_FAILED(rv)) return rv;
 
-    rv = gDirRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
+    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(), &kTrueLiteral);
     if (NS_FAILED(rv)) return rv;
-    rv = gDirRDF->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(), &kFalseLiteral);
+    rv = gRDF->GetLiteral(NS_ConvertASCIItoUCS2("false").GetUnicode(), &kFalseLiteral);
     if (NS_FAILED(rv)) return rv;
 
     for (Field* field = gFieldTable; field->mName; ++field) {
       nsCAutoString str(field->mResName);
 
-      rv = gDirRDF->GetResource(str, &field->mProperty);
+      rv = gRDF->GetResource(str, &field->mProperty);
       if (NS_FAILED(rv)) return rv;
     }
   }
@@ -258,10 +258,10 @@ nsHTTPIndexParser::~nsHTTPIndexParser()
       NS_IF_RELEASE(field->mProperty);
     }
 
-    if (gDirRDF)
+    if (gRDF)
     {
-        nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gDirRDF);
-        gDirRDF = nsnull;
+        nsServiceManager::ReleaseService("component://netscape/rdf/rdf-service", gRDF);
+        gRDF = nsnull;
     }
     if (gTextToSubURI)
     {
@@ -376,7 +376,7 @@ nsHTTPIndexParser::OnStartRequest(nsIChannel* aChannel, nsISupports* aContext)
   	mURI.Append('/');
   }
 
-  rv = gDirRDF->GetResource(mURI, getter_AddRefs(mDirectory));
+  rv = gRDF->GetResource(mURI, getter_AddRefs(mDirectory));
   if (NS_FAILED(rv)) return rv;
 
   // Mark the directory as "loading"
@@ -414,7 +414,7 @@ nsHTTPIndexParser::OnStopRequest(nsIChannel* aChannel,
   nsresult rv;
 
   nsCOMPtr<nsIRDFLiteral> comment;
-  rv = gDirRDF->GetLiteral(mComment.GetUnicode(), getter_AddRefs(comment));
+  rv = gRDF->GetLiteral(mComment.GetUnicode(), getter_AddRefs(comment));
   if (NS_FAILED(rv)) return rv;
 
   rv = mDataSource->Assert(mDirectory, kHTTPIndex_Comment, comment, PR_TRUE);
@@ -769,7 +769,7 @@ nsHTTPIndexParser::ParseData(nsString* values, const char *baseStr, const char *
       }
 
       nsCOMPtr<nsIRDFResource> entry;
-      rv = gDirRDF->GetResource(entryuriC, getter_AddRefs(entry));
+      rv = gRDF->GetResource(entryuriC, getter_AddRefs(entry));
 
   // At this point, we'll (hopefully) have found the filename and
   // constructed a resource for it, stored in entry. So now take a
@@ -819,14 +819,14 @@ nsHTTPIndexParser::ParseLiteral(nsIRDFResource *arc, const nsString& aValue, nsI
             {
                 nsAutoString  temp(aValue);
                 temp.SetLength(len - 1);
-                rv = gDirRDF->GetLiteral(temp.GetUnicode(), getter_AddRefs(result));
+                rv = gRDF->GetLiteral(temp.GetUnicode(), getter_AddRefs(result));
             }
         }
     }
 
     if (!result)
     {
-        rv = gDirRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
+        rv = gRDF->GetLiteral(aValue.GetUnicode(), getter_AddRefs(result));
     }
     if (NS_FAILED(rv)) return rv;
 
@@ -847,7 +847,7 @@ nsHTTPIndexParser::ParseDate(nsIRDFResource *arc, const nsString& aValue, nsIRDF
 
   nsresult rv;
   nsCOMPtr<nsIRDFDate> result;
-  rv = gDirRDF->GetDateLiteral(tm, getter_AddRefs(result));
+  rv = gRDF->GetDateLiteral(tm, getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
   return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
@@ -872,7 +872,7 @@ nsHTTPIndexParser::ParseInt(nsIRDFResource *arc, const nsString& aValue, nsIRDFN
 
   nsresult rv;
   nsCOMPtr<nsIRDFInt> result;
-  rv = gDirRDF->GetIntLiteral(i, getter_AddRefs(result));
+  rv = gRDF->GetIntLiteral(i, getter_AddRefs(result));
   if (NS_FAILED(rv)) return rv;
 
   return result->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) aResult);
