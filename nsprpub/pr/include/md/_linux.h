@@ -111,6 +111,8 @@ extern PRInt32 _PR_ia64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _PR_STAT_HAS_ONLY_ST_ATIME
 #if defined(__alpha) || defined(__ia64__)
 #define _PR_HAVE_LARGE_OFF_T
+#elif (__GLIBC__ > 2) || (__GLIBC__ == 2 && __GLIBC_MINOR__ >= 1)
+#define _PR_HAVE_OFF64_T
 #else
 #define _PR_NO_LARGE_FILES
 #endif

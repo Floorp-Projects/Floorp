@@ -32,8 +32,6 @@
  * GPL.
  */
 
-#undef _FILE_OFFSET_BITS
-
 #include "primpl.h"
 
 
