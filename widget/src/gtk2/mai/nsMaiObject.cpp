@@ -270,10 +270,9 @@ GetNSAccessibleUniqueID(nsIAccessible *aObj)
 {
     g_return_val_if_fail(aObj != NULL, 0);
 
-    nsCOMPtr<nsIDOMNode> domNode;
-    aObj->AccGetDOMNode(getter_AddRefs(domNode));
-    guint uid = -NS_REINTERPRET_CAST(gint, (domNode.get()));
-    return uid;
+    PRInt32 accId = 0;
+    aObj->GetAccId(&accId);
+    return accId;
 }
 
 /* static functions for ATK callbacks */

@@ -44,6 +44,7 @@
 
 #include "nsMaiObject.h"
 #include "nsMaiInterface.h"
+#include "nsAccessibleEventData.h"
 
 /* MaiAtkWidget */
 
@@ -92,6 +93,7 @@ public:
     MaiInterface *GetMaiInterface(MaiInterfaceType aInterfacefaceType);
     AtkRole GetAtkRole();
     static MaiWidget *CreateAndCache(nsIAccessible *aAcc);
+    void ChildrenChange(AtkChildrenChange *event);
 public:
     /* callbacks and their virtual functions */
 
