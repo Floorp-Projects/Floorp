@@ -312,8 +312,8 @@ endif
 ## GUI link path
 ##
 XFE_GUI_LD_PATH			=\
-						$(XFE_X_LD_PATH) \
-						$(XFE_XM_LD_PATH)
+						$(XFE_XM_LD_PATH) \
+						$(XFE_X_LD_PATH)
 
 ##
 ## GUI libs
