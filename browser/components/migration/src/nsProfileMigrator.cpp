@@ -84,23 +84,7 @@ nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
   nsresult rv;
 
   nsCAutoString key;
-  nsCOMPtr<nsIBrowserProfileMigrator> bpm;
-
-  rv = GetDefaultBrowserMigratorKey(key, bpm);
-  if (NS_FAILED(rv)) return rv;
-
-  if (!bpm) {
-    nsCAutoString contractID =
-      NS_LITERAL_CSTRING(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX) + key;
-
-    bpm = do_CreateInstance(contractID.get());
-    if (!bpm) return NS_ERROR_FAILURE;
-  }
-
-  PRBool sourceExists;
-  rv = bpm->GetSourceExists(&sourceExists);
-  NS_ENSURE_SUCCESS(rv, rv);
-  if (!sourceExists) return NS_ERROR_FAILURE;
+  GetDefaultBrowserMigratorKey(key);
 
   nsCOMPtr<nsISupportsCString> cstr
     (do_CreateInstance("@mozilla.org/supports-cstring;1"));
@@ -115,7 +99,6 @@ nsProfileMigrator::Migrate(nsIProfileStartup* aStartup)
   if (!ww || !params) return NS_ERROR_FAILURE;
 
   params->AppendElement(cstr);
-  params->AppendElement(bpm);
   params->AppendElement(aStartup);
 
   nsCOMPtr<nsIDOMWindow> migrateWizard;
@@ -156,9 +139,8 @@ typedef struct {
 #define INTERNAL_NAME_OPERA           "Opera"
 #endif
 
-nsresult
-nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
-                                                nsCOMPtr<nsIBrowserProfileMigrator>& bpm)
+void
+nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey)
 {
 #if XP_WIN
   HKEY hkey;
@@ -223,26 +205,26 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
 
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_IEXPLORE)) {
               aKey = "ie";
-              return NS_OK;
+              return;
             }
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_SEAMONKEY)) {
               aKey = "seamonkey";
-              return NS_OK;
+              return;
             }
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_DOGBERT)) {
               aKey = "dogbert";
-              return NS_OK;
+              return;
             }
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_OPERA)) {
               aKey = "opera";
-              return NS_OK;
+              return;
             }
             // Migrate data from any existing Application Data\Phoenix\* installations.
             if (!nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREBIRD) || 
                 !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_FIREFOX) ||
                 !nsCRT::strcasecmp((char*)internalName, INTERNAL_NAME_PHOENIX)) {
               aKey = "phoenix";
-              return NS_OK;
+              return;
             }
           }
         }
@@ -253,12 +235,13 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
   // XXXben - until we figure out what to do here with default browsers on MacOS and
   // GNOME, simply copy data from a previous Seamonkey install. 
   PRBool exists = PR_FALSE;
-  bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
+  nsCOMPtr<nsIBrowserProfileMigrator> bpm =
+    do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "phoenix");
   if (bpm)
     bpm->GetSourceExists(&exists);
   if (exists) {
     aKey = "phoenix";
-    return NS_OK;
+    return;
   }
 
   bpm = do_CreateInstance(NS_BROWSERPROFILEMIGRATOR_CONTRACTID_PREFIX "seamonkey");
@@ -266,11 +249,8 @@ nsProfileMigrator::GetDefaultBrowserMigratorKey(nsACString& aKey,
     bpm->GetSourceExists(&exists);
   if (exists) {
     aKey = "seamonkey";
-    return NS_OK;
   }
 #endif
-
-  return NS_ERROR_FAILURE;
 }
 
 PRBool
