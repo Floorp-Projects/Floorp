@@ -46,6 +46,7 @@ CPPSRCS =				\
 	nsFrameTraversal.cpp            \
 	nsFrameUtil.cpp			\
 	nsGalleyContext.cpp		\
+	nsGeneratedIterator.cpp\
 	nsNameSpaceManager.cpp		\
 	nsPluginViewer.cpp		\
 	nsPresContext.cpp		\
@@ -93,6 +94,7 @@ CPP_OBJS=					\
 	.\$(OBJDIR)\nsFrameTraversal.obj        \
 	.\$(OBJDIR)\nsFrameUtil.obj		\
 	.\$(OBJDIR)\nsGalleyContext.obj		\
+	.\$(OBJDIR)\nsGeneratedIterator.obj 	\
 	.\$(OBJDIR)\nsNameSpaceManager.obj	\
 	.\$(OBJDIR)\nsPluginViewer.obj		\
 	.\$(OBJDIR)\nsPresContext.obj		\
