@@ -51,13 +51,17 @@ CPU_ARCH_TAG		= _$(CPU_ARCH)
 
 OS_CFLAGS		= $(DSO_CFLAGS) $(OS_REL_CFLAGS) -ansi -Wall -pipe $(THREAD_FLAG) -DFREEBSD -DHAVE_STRERROR -DHAVE_BSD_FLOCK
 
-ifeq ($(USE_PTHREADS),1)
+#
+# The default implementation strategy for FreeBSD is pthreads.
+#
+ifeq ($(CLASSIC_NSPR),1)
+IMPL_STRATEGY		= _EMU
+DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
+else
+USE_PTHREADS		= 1
 IMPL_STRATEGY		= _PTH
 DEFINES			+= -D_THREAD_SAFE
 THREAD_FLAG		+= -pthread
-else
-IMPL_STRATEGY		= _EMU
-DEFINES			+= -D_PR_LOCAL_THREADS_ONLY
 endif
 
 ARCH			= freebsd
