@@ -764,11 +764,10 @@ MyObserver::Notify(nsIImageRequest *aImageRequest,
 
 	    if (gImage) 
 	      { 
-	      nsRect	rect;
-        scribbleData.drawPane->GetBounds(rect);
-        nscoord	x = rect.x;
-        nscoord	y = rect.y;
+        nscoord	x = 0;
+        nscoord	y = 0;
 
+				scribbleData.drawPane->ConvertToDeviceCoordinates(x,y);
 	      drawCtx->DrawImage(gImage,x, y, gImage->GetWidth(), gImage->GetHeight()); 
 	      } 
 	   } 

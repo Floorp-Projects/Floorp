@@ -496,6 +496,7 @@ Rect								macrect;
 	GetBounds(therect);
 	nsRectToMacRect(therect,macrect);
 	::ClipRect(&macrect);
+	
 }
 
     
@@ -1443,6 +1444,22 @@ void nsWindow::RemoveTooltips()
 {
 }
 
+//=================================================================
+/*  Convert the coordinates to some device coordinates so GFX can draw.
+ *  @update  dc 09/16/98
+ *  @param   nscoord -- X coordinate to convert
+ *  @param   nscoord -- Y coordinate to convert
+ *  @return  NONE
+ */
+void  nsWindow::ConvertToDeviceCoordinates(nscoord	&aX,nscoord	&aY)
+{
+nsRect	rect;
+        
+	this->GetBounds(rect);
+  aX +=rect.x;
+  aY +=rect.y;
+
+}
 
 //-------------------------------------------------------------------------
 //
