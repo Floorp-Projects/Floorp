@@ -104,6 +104,12 @@ PRIntn main(PRIntn argc, char *argv)
         PRUint32 ttl = 20;
         PRBool boolean = PR_TRUE;
         PRUint32 segment = 1024;
+        PRNetAddr addr;
+
+        rv = PR_InitializeNetAddr(PR_IpAddrAny, 0, &addr);
+        if (PR_FAILURE == rv) Failed("PR_InitializeNetAddr()", NULL);
+        rv = PR_Bind(udp, &addr);
+        if (PR_FAILURE == rv) Failed("PR_Bind()", NULL);
         for(option = PR_SockOpt_Linger; option < PR_SockOpt_Last; Incr(&option))
         {
             void *value;
@@ -162,8 +168,7 @@ PRIntn main(PRIntn argc, char *argv)
 			 */
             if (option != PR_SockOpt_MaxSegment) {
 #ifdef WIN32
-            	if ((option != PR_SockOpt_McastTimeToLive) &&
-								(option != PR_SockOpt_McastLoopback))
+            	if (option != PR_SockOpt_McastLoopback)
 #endif
 				{
             		rv = PR_SetSockOpt(socket, option, value, *size);
@@ -235,8 +240,7 @@ PRIntn main(PRIntn argc, char *argv)
 			 */
             if (option != PR_SockOpt_MaxSegment) {
 #ifdef WIN32
-            	if ((option != PR_SockOpt_McastTimeToLive) &&
-								(option != PR_SockOpt_McastLoopback))
+            	if (option != PR_SockOpt_McastLoopback)
 #endif
 				{
             		rv = PR_SetSocketOption(fd, &data);
