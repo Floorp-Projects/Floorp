@@ -1372,11 +1372,11 @@ EarlyExit:
 }
 
 nsresult
-nsAbSync::PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID)
+nsAbSync::PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID, PRInt32 aMultiplier)
 {
   for (PRUint32 i = 0; i < mNewTableSize; i++)
   {
-    if (mNewSyncMapingTable[i].localID == (clientID * -1))
+    if (mNewSyncMapingTable[i].localID == (clientID * aMultiplier))
     {
 #ifdef DEBUG_rhp
   printf("ABSYNC: PATCHING History Table - Client: %d - Server: %d\n", clientID, serverID);
@@ -1529,7 +1529,7 @@ nsAbSync::ProcessOpReturn()
         rv += ExtractInteger(renop, SERVER_OP_RETURN_SID, ' ', &serverID);
         if (NS_SUCCEEDED(rv))
         {
-          PatchHistoryTableWithNewID(clientID, serverID);
+          PatchHistoryTableWithNewID(clientID, serverID, -1);
         }
       }
     }
@@ -2170,6 +2170,115 @@ nsAbSync::ProcessNewRecords()
   return rv;
 }
 
+nsresult
+nsAbSync::FindCardByClientID(PRInt32           aClientID,
+                             nsIAddrDatabase  *aDatabase,
+                             nsIAbDirectory   *directory,
+                             nsIAbCard        **aReturnCard)
+{
+  nsIEnumerator           *cardEnum = nsnull;
+  nsCOMPtr<nsISupports>   obj = nsnull;
+  PRUint32                aKey;
+  nsresult                rv = NS_ERROR_FAILURE;
+
+  // Time to find the entry to play with!
+  //
+  *aReturnCard = nsnull;
+  rv = aDatabase->EnumerateCards(directory, &cardEnum);
+  if (NS_FAILED(rv) || (!cardEnum))
+  {
+    rv = NS_ERROR_FAILURE;
+    goto EarlyExit;
+  }
+
+  //
+  // Now we have to find the entry and return it!
+  //
+  cardEnum->First();
+  do
+  {
+    if (NS_FAILED(cardEnum->CurrentItem(getter_AddRefs(obj))))
+      continue;
+    else
+    {
+      nsCOMPtr<nsIAbCard> card;
+      card = do_QueryInterface(obj, &rv);
+
+      if (NS_FAILED(card->GetKey(&aKey)))
+        continue;
+
+      // Found IT!
+      if ((PRInt32) aKey == aClientID)
+      {
+        *aReturnCard = card;
+        rv = NS_OK;
+        break;
+      }
+    }
+
+  } while (NS_SUCCEEDED(cardEnum->Next()));
+
+EarlyExit:
+  if (cardEnum)
+    delete cardEnum;
+
+  return rv;
+}
+
+// 
+// This will look for an entry in the address book for this particular person and return 
+// the address book card and the client ID if found...otherwise, it will return ZERO
+// 
+PRInt32
+nsAbSync::HuntForExistingABEntryInServerRecord(PRInt32          aPersonIndex, 
+                                               nsIAddrDatabase  *aDatabase,
+                                               nsIAbDirectory   *directory,
+                                               PRInt32          *aServerID, 
+                                               nsIAbCard        **newCard)
+{
+  PRInt32   clientID;
+  PRInt32   j;
+
+  //
+  // Ok, first thing is to find out what the server ID is for this person?
+  //
+  *aServerID = 0;
+  *newCard = nsnull;
+  for (j = 0; j < mNewRecordTags->Count(); j++)
+  {
+    nsString *val = mNewRecordValues->StringAt((aPersonIndex*(mNewRecordTags->Count())) + j);
+    if ( (val) && (!val->IsEmpty()) )
+    {
+      // See if this is the record_id...
+      nsString *tagVal = mNewRecordTags->StringAt(j);
+      if (tagVal->CompareWithConversion("record_id") == 0)
+      {
+        PRInt32 errorCode;
+        *aServerID = val->ToInteger(&errorCode);
+        break;
+      }      
+    }
+  }
+
+  // Hmm...no server ID...not good...well, better return anyway
+  if (*aServerID == 0)
+    return 0;
+
+  // If didn't find the client ID, better bail out!
+  if (NS_FAILED(LocateClientIDFromServerID(*aServerID, &clientID)))
+    return 0;
+
+  // Now, we have the clientID, need to find the address book card in the
+  // database for this client ID...
+  if (NS_FAILED(FindCardByClientID(clientID, aDatabase, directory, newCard)))
+  {
+    *aServerID = 0;
+    return 0;
+  }
+  else
+    return clientID;
+}
+
 nsresult        
 nsAbSync::AddNewUsers()
 {
@@ -2180,7 +2289,9 @@ nsAbSync::AddNewUsers()
   PRInt32         serverID;
   PRUint32        localID;
   nsCOMPtr<nsIAbCard> newCard;
+  nsIAbCard       *tCard = nsnull;
   nsString        tempProtocolLine;
+  PRBool          isNewCard = PR_TRUE;
  
   // Get the address book entry
   nsCOMPtr <nsIRDFResource>     resource = nsnull;
@@ -2233,10 +2344,31 @@ nsAbSync::AddNewUsers()
   // database...
   //
   for (i = 0; i < addCount; i++)
-  {
-    serverID = 0;
-    rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, NS_GET_IID(nsIAbCard), 
-                                            getter_AddRefs(newCard));
+  {    
+    serverID = 0;     // for safety
+
+    // 
+    // Ok, if we are here, then we need to figure out if this is really a NEW card
+    // or just an update of an existing card that is already on this client. 
+    //
+    // NOTE: i is the entry of the person we are working on!
+    //
+    localID = HuntForExistingABEntryInServerRecord(i, aDatabase, directory, &serverID, &tCard);
+    if ( (localID > 0) && (nsnull != tCard))
+    {
+      // This is an existing entry in the local address book
+      // We need to dig out the card entry or just assign something here
+      newCard = tCard;
+      isNewCard = PR_FALSE;
+    }
+    else
+    {
+      // This is a new entry!
+      rv = nsComponentManager::CreateInstance(kAbCardPropertyCID, nsnull, NS_GET_IID(nsIAbCard), 
+                                              getter_AddRefs(newCard));
+      isNewCard = PR_TRUE;
+    }
+
     if (NS_FAILED(rv) || !newCard)
     {
       rv = NS_ERROR_OUT_OF_MEMORY;
@@ -2280,11 +2412,14 @@ nsAbSync::AddNewUsers()
     // Now do the phone numbers...they are special???
     ProcessPhoneNumbersTheyAreSpecial(newCard);
 
-    // Ok, now we need to add the card!
-    rv = aDatabase->CreateNewCardAndAddToDBWithKey(newCard, PR_TRUE, &localID);
+    // Ok, now we need to modify or add the card!
+    if (!isNewCard)
+      rv = aDatabase->EditCard(newCard, PR_TRUE);
+    else
+      rv = aDatabase->CreateNewCardAndAddToDBWithKey(newCard, PR_TRUE, &localID);
 
     //
-    // Now, calculate the CRC for the new card...
+    // Now, calculate the NEW CRC for the new or updated card...
     //
     syncMappingRecord *newSyncRecord = (syncMappingRecord *)PR_Malloc(sizeof(syncMappingRecord));
     if (newSyncRecord)
@@ -2297,11 +2432,25 @@ nsAbSync::AddNewUsers()
       if (!tLine)
         continue;
 
-      nsCRT::memset(newSyncRecord, 0, sizeof(syncMappingRecord));
-      newSyncRecord->CRC = GetCRC(tLine);
-      newSyncRecord->serverID = serverID;
-      newSyncRecord->localID = localID;
-      mNewServerTable->AppendElement((void *)newSyncRecord);
+      if (!isNewCard)
+      {
+        // First try to patch the old table if this is an old card...if that
+        // fails, then flip the flag to TRUE and have a new record created
+        // in newSyncRecord
+        //
+        if (NS_FAILED(PatchHistoryTableWithNewID(localID, serverID, 1)))
+          isNewCard = PR_TRUE;
+      }
+
+      if (isNewCard)
+      {
+        nsCRT::memset(newSyncRecord, 0, sizeof(syncMappingRecord));
+        newSyncRecord->CRC = GetCRC(tLine);
+        newSyncRecord->serverID = serverID;
+        newSyncRecord->localID = localID;
+        mNewServerTable->AppendElement((void *)newSyncRecord);
+      }
+
       nsCRT::free(tLine);
     }
 

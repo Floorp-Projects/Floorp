@@ -209,7 +209,7 @@ private:
   nsresult        ExtractInteger(char *aLine, char *aTag, char aDelim, PRInt32 *aRetVal);
   char            *ExtractCharacterString(char *aLine, char *aTag, char aDelim);
 
-  nsresult        PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID);
+  nsresult        PatchHistoryTableWithNewID(PRInt32 clientID, PRInt32 serverID, PRInt32 aMultiplier);
   nsresult        DeleteRecord();
   nsresult        DeleteList();
   nsresult        DeleteGroup();
@@ -227,6 +227,18 @@ private:
   nsresult        ProcessLastChange();
   nsresult        ProcessPhoneNumbersTheyAreSpecial(nsIAbCard *aCard);
   PRInt32         GetTypeOfPhoneNumber(nsString tagName);
+
+  // For updating...
+  PRInt32         HuntForExistingABEntryInServerRecord(PRInt32          aPersonIndex, 
+                                                       nsIAddrDatabase  *aDatabase,
+                                                       nsIAbDirectory   *directory,
+                                                       PRInt32          *aServerID, 
+                                                       nsIAbCard        **newCard);
+
+  nsresult        FindCardByClientID(PRInt32          aClientID, 
+                                     nsIAddrDatabase  *aDatabase, 
+                                     nsIAbDirectory   *directory,
+                                     nsIAbCard        **aReturnCard);
 
   nsString        mLocale;                                // Charset of returned data!
   nsStringArray   *mDeletedRecordTags;                    // The deleted record tags from the server...
