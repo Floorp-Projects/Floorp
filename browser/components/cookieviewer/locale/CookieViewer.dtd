@@ -36,7 +36,6 @@
 
 <!ENTITY     tab.cookiesonsystem.label      "Stored Cookies">
 <!ENTITY     tab.bannedservers.label        "Cookie Sites">
-<!ENTITY     div.bannedservers.label        "Sites that can and cannot store cookies on your computer.">
 <!ENTITY     div.cookiesonsystem.label      "View and remove cookies that are stored on your computer.">
 <!ENTITY     treehead.cookiename.label      "Cookie Name">
 <!ENTITY     treehead.cookiedomain.label    "Site"> 
@@ -53,19 +52,6 @@
 <!ENTITY     props.expires.label            "Expires:">
 <!ENTITY     props.policy.label             "Policy:"> 
 
-<!ENTITY     treehead.sitename.label        "Site">
-<!ENTITY     treehead.status.label          "Status">
-<!ENTITY     windowtitle.label              "Cookie Manager">
-
-<!ENTITY     addpermission.label            "New Site">
-<!ENTITY     removepermission.label         "Remove Site">
-<!ENTITY     removeallpermissions.label     "Remove All Sites">
-<!ENTITY     removeimage.label              "Remove Site">
-<!ENTITY     removeallimages.label          "Remove All Sites">
-
-<!ENTITY     canSet.label                   "can set cookies">
-<!ENTITY     cannotSet.label                "cannot set cookies">
-<!ENTITY     canLoad.label                  "can load images">
-<!ENTITY     cannotLoad.label               "cannot load images">
+<!ENTITY     window.title                   "Cookie Manager">
 
 <!ENTITY     checkbox.label                 "Don't allow sites that set removed cookies to set future cookies">

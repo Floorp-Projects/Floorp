@@ -38,8 +38,7 @@
 
 var _elementIDs = ["histDay", "browserCacheDiskCache", "enableCookies",
                     "enableCookiesForOriginatingSiteOnly", "enableCookiesForCurrentSessionOnly",
-                    "enableCookiesButAskFirst", "enableFormFill", "enablePasswords", 
-                    "downloadsRetentionPolicy"];
+                    "enableCookiesButAskFirst", "enableFormFill", "enablePasswords"];
 
 function Startup() {
   var cookiesEnabled = document.getElementById("enableCookies").checked;
@@ -93,11 +92,11 @@ function Startup() {
   // the bound element. dbaron is helping me with this with a reduced test case, but in 
   // the meantime, I'm working around this bug by placing the menulist outside the bound element
   // until it is completely initialized and then scooting it in, which is what this code does. 
-  var drb = document.getElementById("downloadsRetentionBox");
-  var drp = document.getElementById("downloadsRetentionPolicy");
-  drp.removeAttribute("hidden");
-  document.documentElement.removeChild(drp);
-  drb.appendChild(drp);
+  // var drb = document.getElementById("downloadsRetentionBox");
+  // var drp = document.getElementById("downloadsRetentionPolicy");
+  // drp.removeAttribute("hidden");
+  // document.documentElement.removeChild(drp);
+  // drb.appendChild(drp);
 }
 
 function unload()
@@ -107,6 +106,22 @@ function unload()
     var expander = categories.childNodes[i];
     document.persist(expander.id, "open");
   }  
+}
+
+function cookieViewerOnPrefsOK()
+{
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/cookieviewer/CookieViewer.xul"];
+  if ('deletedCookies' in dataObject) {
+    var cookiemanager = Components.classes["@mozilla.org/cookiemanager;1"].getService();
+    cookiemanager = cookiemanager.QueryInterface(Components.interfaces.nsICookieManager);
+
+    for (var p = 0; p < dataObject.deletedCookies.length; ++p) {
+      cookiemanager.remove(dataObject.deletedCookies[p].host,
+                           dataObject.deletedCookies[p].name,
+                           dataObject.deletedCookies[p].path,
+                           dataObject.cookieBool);
+    }
+  }
 }
 
 var PrivacyPanel = {
@@ -278,6 +293,12 @@ function viewCookies()
                     "chrome,resizable=yes", "cookieManager");
 }
 
+function cookieExceptions()
+{
+  window.openDialog("chrome://browser/content/cookieviewer/CookieExceptions.xul","_blank",
+                    "chrome,resizable=yes", "cookieExceptions");
+}
+
 function viewSignons() 
 {
     window.openDialog("chrome://passwordmgr/content/passwordManager.xul","_blank",
@@ -298,4 +319,28 @@ function updateBroadcaster(aDisable)
   }
   else
     broadcaster.removeAttribute("disabled");
+}
+
+function onPrefsOK()
+{
+  var permissionmanager = Components.classes["@mozilla.org/permissionmanager;1"].getService();
+  permissionmanager = permissionmanager.QueryInterface(Components.interfaces.nsIPermissionManager);
+
+  var dataObject = parent.hPrefWindow.wsm.dataManager.pageData["chrome://browser/content/cookieviewer/CookieExceptions.xul"];
+  if ('deletedPermissions' in dataObject) {
+    for (var p = 0; p < dataObject.deletedPermissions.length; ++p) {
+      permissionmanager.remove(dataObject.deletedPermissions[p].host, dataObject.deletedPermissions[p].type);
+    }
+  }
+  
+  if ('permissions' in dataObject) {
+    var uri = Components.classes["@mozilla.org/network/standard-url;1"]
+                        .createInstance(Components.interfaces.nsIURI);    
+
+    for (p = 0; p < dataObject.permissions.length; ++p) {
+      uri.spec = dataObject.permissions[p].host;
+      if (permissionmanager.testPermission(uri, "cookie") != dataObject.permissions[p].perm)
+        permissionmanager.add(uri, "cookie", dataObject.permissions[p].perm);
+    }
+  }
 }
