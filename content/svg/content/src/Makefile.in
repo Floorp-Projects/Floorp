@@ -61,7 +61,8 @@ REQUIRES	= xpcom \
 		  xpconnect \
 		  webshell \
 		  unicharutil \
-		  imglib2
+		  imglib2 \
+		  docshell
 
 CPPSRCS		= \
 		nsSVGAngle.cpp \
