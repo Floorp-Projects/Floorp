@@ -100,6 +100,14 @@ const PRUint32 kPresContext_UseDocumentColors = 0x01;
 const PRUint32 kPresContext_UseDocumentFonts = 0x02;
 const PRUint32 kPresContext_UnderlineLinks = 0x03;
 
+// supported values for cached integer pref types
+const PRUint32 kPresContext_MinimumFontSize = 0x01;
+
+// IDs for the default variable and fixed fonts (not to be changed, see nsFont.h)
+// To be used for Get/SetDefaultFont(). The other IDs in nsFont.h are also supported.
+const PRUint8 kPresContext_DefaultVariableFont_ID = 0x00; // kGenericFont_moz_variable
+const PRUint8 kPresContext_DefaultFixedFont_ID    = 0x01; // kGenericFont_moz_fixed
+
 // An interface for presentation contexts. Presentation contexts are
 // objects that provide an outer context for a presentation shell.
 class nsIPresContext : public nsISupports {
@@ -226,24 +234,24 @@ public:
    */
   NS_IMETHOD GetMetricsFor(const nsFont& aFont, nsIFontMetrics** aResult) = 0;
 
-  /** Get the default font */
-  NS_IMETHOD GetDefaultFont(nsFont& aResult) = 0;
-  /** Set the default font */
-  NS_IMETHOD SetDefaultFont(const nsFont& aFont) = 0;
-  virtual const nsFont& GetDefaultFontDeprecated() = 0;
-
-  /** Get the default fixed pitch font */
-  NS_IMETHOD GetDefaultFixedFont(nsFont& aResult) = 0;
-  /** Set the default fixed pitch font */
-  NS_IMETHOD SetDefaultFixedFont(const nsFont& aFont) = 0;
-  virtual const nsFont& GetDefaultFixedFontDeprecated() = 0;
+  /** Get the default font correponding to the given ID */
+  NS_IMETHOD GetDefaultFont(const PRUint8 aFontID, nsFont& aResult) = 0;
+  /** Set the default font correponding to the given ID */
+  NS_IMETHOD SetDefaultFont(const PRUint8 aFontID, const nsFont& aFont) = 0;
 
   /** Get a cached boolean pref, by its type
-       if the type is not supported, then NS_ERROR_FAILURE is returned
-       and the aValue argument is undfined, otherwise aValue is set
+       if the type is not supported, then NS_ERROR_INVALID_ARG is returned
+       and the aValue argument is undefined, otherwise aValue is set
        to the value of the boolean pref */
   // *  - initially created for bugs 31816, 20760, 22963
-  NS_IMETHOD GetCachedBoolPref(PRUint32 prefType, PRBool &aValue) = 0;
+  NS_IMETHOD GetCachedBoolPref(const PRUint32 aPrefType, PRBool& aValue) = 0;
+
+  /** Get a cached integer pref, by its type
+       if the type is not supported, then NS_ERROR_INVALID_ARG is returned
+       and the aValue argument is undefined, otherwise aValue is set
+       to the value of the integer pref */
+  // *  - initially created for bugs 30910, 61883, 74186, 84398
+  NS_IMETHOD GetCachedIntPref(const PRUint32 aPrefType, PRInt32& aValue) = 0;
 
   /**
    * Access Nav's magic font scaler value
