@@ -1456,17 +1456,18 @@ function addBookmarkForTabBrowser(aTabBrowser, aSelect)
       var doc = webNav.document;
       name = doc.title || url;
       charSet = doc.characterSet;
+      description = BookmarksUtils.getDescriptionFromDocument(doc);
     } catch (e) {
       name = url;
     }
-    tabsInfo[i] = { name: name, url: url, charset: charSet };
+    tabsInfo[i] = { name: name, url: url, charset: charSet, description: description, bAddGroup: true };
     if (browsers[i] == activeBrowser)
       currentTabInfo = tabsInfo[i];
   }
+  var dialogArgs = currentTabInfo;
+  dialogArgs.objGroup = tabsInfo;
   openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             "centerscreen,chrome,dialog,resizable,dependent",
-             currentTabInfo.name, currentTabInfo.url, null,
-             currentTabInfo.charset, "addGroup" + (aSelect ? ",group" : ""), tabsInfo);
+             "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
 }
 
 function addBookmarkForBrowser(aDocShell, aIsWebPanel)
@@ -1481,11 +1482,12 @@ function addBookmarkForBrowser(aDocShell, aIsWebPanel)
   try {
     title = aDocShell.document.title || url;
     charSet = aDocShell.document.characterSet;
+    description = BookmarksUtils.getDescriptionFromDocument(aDocShell.document);
   }
   catch (e) {
     title = url;
   }
-  BookmarksUtils.addBookmark(url, title, charSet, aIsWebPanel);
+  BookmarksUtils.addBookmark(url, title, charSet, aIsWebPanel, description);
 }
 
 function openLocation()
@@ -2352,9 +2354,12 @@ var bookmarksButtonObserver = {
     var split = aXferData.data.split("\n");
     var url = split[0];
     if (url != aXferData.data) {  //do nothing if it's not a valid URL
-      var name = split[1];
+      var dialogArgs = {
+        name: split[1],
+        url: url
+      }
       openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                 "centerscreen,chrome,dialog,resizable,dependent", name, url);
+                 "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
     }
   },
 
@@ -4217,15 +4222,17 @@ nsContextMenu.prototype = {
       var docshell = document.getElementById( "content" ).webNavigation;
       BookmarksUtils.addBookmark( docshell.currentURI.spec,
                                   docshell.document.title,
-                                  docshell.document.charset);
+                                  docshell.document.charset,
+                                  BookmarksUtils.getDescriptionFromDocument(docshell.document));
     },
     addBookmarkForFrame : function() {
       var doc = this.target.ownerDocument;
       var uri = doc.location.href;
       var title = doc.title;
+      var description = BookmarksUtils.getDescriptionFromDocument(doc);
       if ( !title )
         title = uri;
-      BookmarksUtils.addBookmark(uri, title, doc.charset);
+      BookmarksUtils.addBookmark(uri, title, doc.charset, description);
     },
     // Open Metadata window for node
     showMetadata : function () {
@@ -4574,10 +4581,13 @@ function asyncOpenWebPanel(event)
          // This is the Opera convention for a special link that - when clicked - allows
          // you to add a sidebar panel.  We support the Opera convention here.  The link's
          // title attribute contains the title that should be used for the sidebar panel.
+         var dialogArgs = {
+           name: wrapper.getAttribute("title"),
+           url: wrapper.href,
+           bWebPanel: true
+         }
          openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-                    "centerscreen,chrome,dialog,resizable,dependent",
-                    wrapper.getAttribute("title"), 
-                    wrapper.href, null, null, null, null, true);
+                    "centerscreen,chrome,dialog,resizable,dependent", dialogArgs);
          event.preventDefault();
          return false;
        }
@@ -5427,10 +5437,17 @@ function AddKeywordForSearchField()
 	 spec += "&" + escape(e.name) + "=" + escape(e.value);
     }
   }
-  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-             "centerscreen,chrome,dialog,resizable,dependent",
-             "", spec, null, node.ownerDocument.characterSet, null, null, 
-             false, "", true, postData);
+  var dialogArgs = {
+    name: "",
+    url: spec,
+    charset: node.ownerDocument.characterSet,
+    bWebPanel: false,
+    keyword: "",
+    bNeedKeyword: true,
+    postData: postData,
+    description: BookmarksUtils.getDescriptionFromDocument(node.ownerDocument)
+  }
+  openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", dialogArgs);
 }
 
 /////////////// livemark handling
@@ -5557,7 +5574,8 @@ function livemarkFillPopup(menuPopup)
 
 function livemarkAddMark(wincontent, data) {
   var title = wincontent.document.title;
-  BookmarksUtils.addLivemark(wincontent.document.baseURI, data, title);
+  var description = BookmarksUtils.getDescriptionFromDocument(wincontent.document);
+  BookmarksUtils.addLivemark(wincontent.document.baseURI, data, title, description);
 }
 
 function updatePageFavIcon(aBrowser, aListener) {

@@ -1623,18 +1623,39 @@ var BookmarksUtils = {
   },
 
   // should update the caller, aShowDialog is no more necessary
-  addBookmark: function (aURL, aTitle, aCharset, aIsWebPanel)
+  addBookmark: function (aURL, aTitle, aCharset, aIsWebPanel, aDescription)
   {
+    var dArgs = {
+      name: aTitle,
+      url: aURL,
+      charset: aCharset,
+      bWebPanel: aIsWebPanel,
+      description: aDescription
+    }
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-               "centerscreen,chrome,dialog,resizable,dependent", aTitle, aURL, null, aCharset,
-               null, null, aIsWebPanel);
+               "centerscreen,chrome,dialog,resizable,dependent", dArgs);
   },
  
-  addLivemark: function (aURL, aFeedURL, aTitle)
+  addLivemark: function (aURL, aFeedURL, aTitle, aDescription)
   {
+    var dArgs = {
+      name: aTitle,
+      url: aURL,
+      bWebPanel: false,
+      feedURL: aFeedURL,
+      description: aDescription
+    }
     openDialog("chrome://browser/content/bookmarks/addBookmark2.xul", "",
-               "centerscreen,chrome,dialog,resizable,dependent", aTitle, aURL, null, null,
-               null, null, false, null, null, null, aFeedURL);
+               "centerscreen,chrome,dialog,resizable,dependent", dArgs);
+  },
+ 
+  getDescriptionFromDocument: function (aDocument) {
+    var metaElements = aDocument.getElementsByTagName('META');
+    for (var m = 0; m < metaElements.length; m++) {
+      if (metaElements[m].name.toLowerCase() == 'description' || metaElements[m].httpEquiv.toLowerCase() == 'description')
+        return metaElements[m].content;
+    }
+    return '';
   },
  
   loadFavIcon: function (aURL, aFavIconURL) {
