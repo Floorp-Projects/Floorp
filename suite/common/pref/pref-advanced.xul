@@ -99,22 +99,23 @@
 	</box>
 
 	<box align="vertical" style="width: 100%;">
-	<html:fieldset width="100%">
+	<html:fieldset style="width: 100%;">
 			<html:div>
 			<html:label for="pref:string:wallet.Server" accesskey="c" tabindex="0">
 				&server.label;
-			</html:label>
-			<html:input name="Wallet Server:" type="text"	id="pref:char:wallet.Server" size="25" /> 
-			</html:div>
+			</html:label> 
+			<html:input name="Wallet Server:" type="text"	id="pref:string:wallet.Server" size="25" /> 
+			</html:div> 
+			<spring style="height:10px" /> 
 	</html:fieldset>
-	</box>
+    </box>
 
 
 	<box align="vertical" style="width: 100%;">
-	<html:fieldset width="100%">
+	<html:fieldset style="width: 100%;">
 			<html:legend align="left">
 				 <html:div>&cookies;</html:div> 
-			</html:legend>
+			</html:legend>  
 			<html:div>
     	    <html:input name="cookies" type="radio" id="pref:0:int:network.cookie.cookieBehavior"  />
 			<html:label for="pref:2:int:network.cookie.cookieBehavior" accesskey="a" tabindex="0">
@@ -138,10 +139,9 @@
 				<html:label for="pref:0:bool:network.cookie.warnAboutCookies" accesskey="w" tabindex="0">
 					&warnCookCheck.label;
 				</html:label>
-			</html:div>
-				
-	</html:fieldset>
-	</box>
+			</html:div>				
+	</html:fieldset> 
+	</box>  
 
 </html:div>
 </window>
