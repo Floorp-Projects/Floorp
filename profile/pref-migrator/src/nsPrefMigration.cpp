@@ -65,7 +65,7 @@
 #define SUMMARY_SUFFIX_IN_5x ".msf"
 #define COOKIES_FILE_NAME_IN_5x "cookies.txt"
 #define MAIL_FILTER_FILE_NAME_IN_5x "rules.dat"
-#define BOOKMARKS_FILE_NAME_IN_5x "bookmarks.htm"
+#define BOOKMARKS_FILE_NAME_IN_5x "bookmarks.html"
 
 #define PREMIGRATION_PREFIX "premigration"
 #define PREF_MAIL_DIRECTORY "mail.directory"
