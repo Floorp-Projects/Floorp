@@ -115,6 +115,8 @@ protected:
         nsIChannel* channel,
         nsresult aStatus);
 
+    nsresult NormalizeURI(nsACString& aURLSpec);
+
     PRThread *mThread;
 
     nsIWebShellContainer* mContainer;
@@ -133,6 +135,14 @@ protected:
 
     // cached io service for NS_NewURI
     nsCOMPtr<nsIIOService> mIOService;
+
+    // these are specifically cached for these
+    // protocols, because we're optimizing for link coloring -
+    // most links are http, https, or ftp
+    nsCOMPtr<nsIURI> mCachedHttpUrl;
+    nsCOMPtr<nsIURI> mCachedHttpsUrl;
+    nsCOMPtr<nsIURI> mCachedFtpUrl;
+    
     
 #ifdef DEBUG
 private:
