@@ -49,6 +49,7 @@ CPPSRCS	= nsCacheObject.cpp 	\
 		  CacheStubs.cpp		\
 		  nsFileStream.cpp		\
 		  nsMemStream.cpp		\
+		  nsMonitorable.cpp		\
 	 	  $(NULL)
 
 REQUIRES = dbm pref js xpcom 
