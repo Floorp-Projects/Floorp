@@ -647,7 +647,8 @@ orkinRow::AddRow( // add all cells in another row to this one
   if ( ev )
   {
     morkRow* source = 0;
-    if ( this->CanUseRow(mev, morkBool_kFalse, &outErr, &source) )
+    orkinRow* unsafeSource = (orkinRow*) ioSourceRow; // unsafe cast
+    if ( unsafeSource->CanUseRow(mev, morkBool_kFalse, &outErr, &source) )
     {
       row->AddRow(ev, source);
     }
@@ -668,7 +669,8 @@ orkinRow::SetRow( // make exact duplicate of another row
   if ( ev )
   {
     morkRow* source = 0;
-    if ( this->CanUseRow(mev, morkBool_kFalse, &outErr, &source) )
+    orkinRow* unsafeSource = (orkinRow*) ioSourceRow; // unsafe cast
+    if ( unsafeSource->CanUseRow(mev, morkBool_kFalse, &outErr, &source) )
     {
       row->SetRow(ev, source);
     }
@@ -676,6 +678,7 @@ orkinRow::SetRow( // make exact duplicate of another row
   }
   return outErr;
 }
+
 // } ----- end row methods -----
 
 // } ===== end nsIMdbRow methods =====

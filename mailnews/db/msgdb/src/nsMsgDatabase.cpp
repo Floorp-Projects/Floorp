@@ -1968,28 +1968,34 @@ NS_IMETHODIMP nsMsgDatabase::CopyHdrFromExistingHdr(nsMsgKey key, nsIMsgDBHdr *e
 
 	if (existingHdr)
 	{
+#define MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 #ifdef MDB_DOES_CELL_CURSORS_OR_COPY_ROW
 	    nsMsgHdr* sourceMsgHdr = NS_STATIC_CAST(nsMsgHdr*, existingHdr);      // closed system, cast ok
 		nsMsgHdr *destMsgHdr = nsnull;
-		CreateNewHdr(key, &destMsgHdr);
-		nsIMdbRow	sourceRow = sourceMsgHdr->GetMDBRow() ;
-		{
-			nsIMdbRowCellCursor* cellCursor = nsnull;
-			mdb_err res = sourceRow->GetRowCellCursor(GetEnv(), -1, &cellCursor) ; // acquire new cursor instance
-			if (res == 0 && cellCursor)
-			{
-				do
-				{
-					nsIMdbCell ioCell;
-					mdb_column outColumn;
-					mdb_pos outPos;
+		CreateNewHdr(key, (nsIMsgDBHdr **) &destMsgHdr);
+		nsIMdbRow	*sourceRow = sourceMsgHdr->GetMDBRow() ;
+		nsIMdbRow	*destRow = destMsgHdr->GetMDBRow();
+		err = destRow->SetRow(GetEnv(), sourceRow);
+		if (NS_SUCCEEDED(err))
+			err = AddNewHdrToDB(destMsgHdr, PR_TRUE);
 
-					res = cellCursor->NextCell(GetEnv(), &ioCell, &outColumn, &outPos);
+//		{
+//			nsIMdbRowCellCursor* cellCursor = nsnull;
+//			mdb_err res = sourceRow->GetRowCellCursor(GetEnv(), -1, &cellCursor) ; // acquire new cursor instance
+//			if (res == 0 && cellCursor)
+//			{
+//				do
+//				{
+//					nsIMdbCell ioCell;
+//					mdb_column outColumn;
+//					mdb_pos outPos;
+
+//					res = cellCursor->NextCell(GetEnv(), &ioCell, &outColumn, &outPos);
     
-				}
-				while (outPos >= 0 && res == 0);
-			}
-		}
+//				}
+//				while (outPos >= 0 && res == 0);
+//			}
+//		}
 #else
 		nsMsgHdrStruct hdrStruct;
 		err = GetMsgHdrStructFromnsMsgHdr(existingHdr, &hdrStruct);
