@@ -411,14 +411,15 @@ nsListCommand::GetCurrentState(nsIEditorShell *aEditorShell, const char* aTagNam
   
   // tagStr will hold the list state when we're done.
   nsAutoString  tagStr; 
-  PRBool bMixed, bOL, bUL;
-  nsresult rv = htmlEditor->GetListState(bMixed, bOL, bUL);
+  PRBool bMixed, bOL, bUL, bDL;
+  nsresult rv = htmlEditor->GetListState(bMixed, bOL, bUL, bDL);
   if (NS_FAILED(rv)) return rv; 
 
   if (!bMixed)
   {
     if (bOL) tagStr.AssignWithConversion("ol");
     else if (bUL) tagStr.AssignWithConversion("ul");
+    else if (bDL) tagStr.AssignWithConversion("dl");
   }
   
   outInList = tagStr.EqualsWithConversion(mTagName);
@@ -622,7 +623,18 @@ nsParagraphStateCommand::GetCurrentState(nsIEditorShell *aEditorShell, nsString&
   aEditorShell->GetEditor(getter_AddRefs(editor));
   nsCOMPtr<nsIHTMLEditor> htmlEditor = do_QueryInterface(editor);
   if (!htmlEditor) return NS_ERROR_FAILURE;
-
+#if 0
+  // some proof of concept code for list item state.  
+  // Just leaving in for Charlie to see.
+  PRBool bLI,bDT,bDD;
+  htmlEditor->GetListItemState(outMixed, bLI, bDT, bDD);
+  if (!outMixed && (bDT || bDD))
+  {
+    if (bDT) outStateString.AssignWithConversion("DT");
+    if (bDD) outStateString.AssignWithConversion("DD");
+    return NS_OK;
+  }
+#endif
   return htmlEditor->GetParagraphState(outMixed, outStateString);
 }
 

@@ -33,7 +33,8 @@ class nsIHTMLEditRules : public nsISupports
 public:
   static const nsIID& GetIID() { static nsIID iid = NS_IHTMLEDITRULES_IID; return iid; }
   
-  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)=0;
+  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL)=0;
+  NS_IMETHOD GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD)=0;
   NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent)=0;
   NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFormat)=0;
 };

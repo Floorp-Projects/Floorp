@@ -297,8 +297,19 @@ public:
    * @param aOL       The company that employs me.  No, really, it's 
    *                  true if an "ol" list is selected.
    * @param aUL       true if an "ul" list is selected.
+   * @param aDL       true if a "dl" list is selected.
    */
-  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL)=0;
+  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL)=0;
+  
+  /** 
+   * GetListItemState returns what list item type is in the selection.
+   * @param aMixed    True if there is more than one type of list item, or
+   *                  if there is some list and non-list
+   * @param aLI       true if "li" list items are selected.
+   * @param aDT       true if "dt" list items are selected.
+   * @param aDD       true if "dd" list items are selected.
+   */
+  NS_IMETHOD GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD)=0;
   
   /**
    * Document me!

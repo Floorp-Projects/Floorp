@@ -53,7 +53,8 @@ public:
   NS_IMETHOD DidDoAction(nsIDOMSelection *aSelection, nsRulesInfo *aInfo, nsresult aResult);
 
   // nsIHTMLEditRules methods
-  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL);
+  NS_IMETHOD GetListState(PRBool &aMixed, PRBool &aOL, PRBool &aUL, PRBool &aDL);
+  NS_IMETHOD GetListItemState(PRBool &aMixed, PRBool &aLI, PRBool &aDT, PRBool &aDD);
   NS_IMETHOD GetIndentState(PRBool &aCanIndent, PRBool &aCanOutdent);
   NS_IMETHOD GetParagraphState(PRBool &aMixed, nsString &outFormat);
 
@@ -109,8 +110,7 @@ protected:
 
   nsresult AlignTableElement(nsIDOMNode *aNode, const nsString *alignType);
   nsresult AlignTableCellContents(nsIDOMNode *aNode, const nsString *alignType);
-  nsresult GetTableContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
-  nsresult GetListContent(nsIDOMNode *aNode, nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
+  nsresult GetInnerContent(nsIDOMNode *aNode, nsISupportsArray *outArrayOfNodes, PRBool aList = PR_TRUE, PRBool aTble = PR_TRUE);
 
   nsresult InsertTab(nsIDOMSelection *aSelection, nsString *outString);
 
@@ -143,6 +143,7 @@ protected:
   nsresult GetChildNodesForOperation(nsIDOMNode *inNode, 
                                      nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
   nsresult GetListActionNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
+  nsresult GetDefinitionListItemTypes(nsIDOMNode *aNode, PRBool &aDT, PRBool &aDD);
   nsresult GetParagraphFormatNodes(nsCOMPtr<nsISupportsArray> *outArrayOfNodes, PRBool aDontTouchContent=PR_FALSE);
   nsresult BustUpInlinesAtBRs(nsIDOMNode *inNode, 
                                    nsCOMPtr<nsISupportsArray> *outArrayOfNodes);
