@@ -16,7 +16,7 @@ Begin VB.Form frmMozilla
       OleObjectBlob   =   "browser.frx":0000
       TabIndex        =   0
       Top             =   0
-      Width           =   7575
+      Width           =   7695
    End
 End
 Attribute VB_Name = "frmMozilla"

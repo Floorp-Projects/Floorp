@@ -3,8 +3,8 @@ Object = "{6B7E6392-850A-101B-AFC0-4210102A8DA7}#1.2#0"; "comctl32.ocx"
 Begin VB.Form frmToolBar 
    Caption         =   "Control Bar"
    ClientHeight    =   1215
-   ClientLeft      =   60
-   ClientTop       =   345
+   ClientLeft      =   165
+   ClientTop       =   735
    ClientWidth     =   7965
    LinkTopic       =   "Form2"
    ScaleHeight     =   81
@@ -142,14 +142,12 @@ Begin VB.Form frmToolBar
             AutoSize        =   1
             Object.Width           =   11404
             MinWidth        =   2646
-            TextSave        =   ""
             Object.Tag             =   ""
          EndProperty
          BeginProperty Panel2 {0713E89F-850A-101B-AFC0-4210102A8DA7} 
             Alignment       =   2
             Object.Width           =   2117
             MinWidth        =   2117
-            TextSave        =   ""
             Object.Tag             =   ""
          EndProperty
       EndProperty
@@ -207,6 +205,12 @@ Begin VB.Form frmToolBar
             Key             =   "gofind"
          EndProperty
       EndProperty
+   End
+   Begin VB.Menu debug 
+      Caption         =   "Debug"
+      Begin VB.Menu verbs 
+         Caption         =   "OLE Verbs"
+      End
    End
 End
 Attribute VB_Name = "frmToolBar"
@@ -276,3 +280,19 @@ Private Sub Toolbar1_ButtonClick(ByVal Button As ComctlLib.Button)
     End Select
 End Sub
 
+Private Sub verbs_Click()
+    ' Query the browser to see what IOleCommandTarget commands it supports
+    Dim nCmd As Integer
+    Dim nStatus As Integer
+    For nCmd = 1 To 40
+        nStatus = browser.QueryStatusWB(nCmd)
+        If nStatus And 1 Then
+            Debug.Print "Command " & nCmd & " is supported"
+        Else
+            Debug.Print "Command " & nCmd & " is not supported"
+        End If
+        If nStatus And 2 Then
+            Debug.Print "Command " & nCmd & " is disabled"
+        End If
+    Next
+End Sub
