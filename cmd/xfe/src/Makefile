@@ -79,6 +79,7 @@ endif
 
 CPPSRCS		= \
 		  ToolbarButton.cpp \
+		  ToolbarCascade.cpp \
 		  ToolbarItem.cpp \
 		  ToolbarSeparator.cpp \
 		  ToolbarUrlBar.cpp \
