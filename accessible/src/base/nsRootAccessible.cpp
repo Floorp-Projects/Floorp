@@ -109,20 +109,20 @@ nsRootAccessible::~nsRootAccessible()
 
 // helpers
 /* readonly attribute nsIAccessible accParent; */
-NS_IMETHODIMP nsRootAccessible::GetAccParent(nsIAccessible * *aAccParent) 
+NS_IMETHODIMP nsRootAccessible::GetParent(nsIAccessible * *aParent) 
 { 
-  *aAccParent = nsnull;
+  *aParent = nsnull;
   return NS_OK;
 }
 
 /* readonly attribute unsigned long accRole; */
-NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole) 
+NS_IMETHODIMP nsRootAccessible::GetRole(PRUint32 *aRole) 
 { 
   if (!mDocument) {
     return NS_ERROR_FAILURE;
   }
 
-  *aAccRole = ROLE_PANE;
+  *aRole = ROLE_PANE;
 
   // If it's a <dialog>, use ROLE_DIALOG instead
   nsCOMPtr<nsIContent> rootContent;
@@ -133,7 +133,7 @@ NS_IMETHODIMP nsRootAccessible::GetAccRole(PRUint32 *aAccRole)
       nsAutoString name;
       rootElement->GetLocalName(name);
       if (name.Equals(NS_LITERAL_STRING("dialog"))) 
-        *aAccRole = ROLE_DIALOG;
+        *aRole = ROLE_DIALOG;
     }
   }
 
@@ -255,7 +255,7 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *focusAccessible, 
     privateFocusAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_FOCUS, focusAccessible, nsnull);
     NS_IF_RELEASE(gLastFocusedNode);
     PRUint32 role = ROLE_NOTHING;
-    focusAccessible->GetAccRole(&role);
+    focusAccessible->GetRole(&role);
     if (role != ROLE_MENUITEM && role != ROLE_LISTITEM) {
       // It must report all focus events on menu and list items
       gLastFocusedNode = focusNode;
@@ -414,9 +414,9 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUSTART, accessible, nsnull);
   else if (eventType.EqualsIgnoreCase("DOMMenuBarInactive")) {
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_MENUEND, accessible, nsnull);
-    GetAccFocused(getter_AddRefs(accessible));
+    GetFocusedChild(getter_AddRefs(accessible));
     if (accessible) {
-      accessible->AccGetDOMNode(getter_AddRefs(targetNode));
+      accessible->GetDOMNode(getter_AddRefs(targetNode));
       FireAccessibleFocusEvent(accessible, targetNode);
     }
   }
@@ -429,7 +429,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
       menuEvent = nsIAccessibleEvent::EVENT_MENUPOPUPEND;
     if (menuEvent) {
       PRUint32 role = ROLE_NOTHING;
-      accessible->GetAccRole(&role);
+      accessible->GetRole(&role);
       if (role == ROLE_MENUPOPUP)
         privAcc->FireToolkitEvent(menuEvent, accessible, nsnull);
     }
@@ -474,7 +474,7 @@ NS_IMETHODIMP nsRootAccessible::HandleEvent(nsIDOMEvent* aEvent)
   }
   else if (eventType.EqualsIgnoreCase("CheckboxStateChange") || // it's a XUL <checkbox>
            eventType.EqualsIgnoreCase("RadioStateChange")) { // it's a XUL <radio>
-    accessible->GetAccState(&stateData.state);
+    accessible->GetState(&stateData.state);
     stateData.enable = (stateData.state & STATE_CHECKED) != 0;
     stateData.state = STATE_CHECKED;
     privAcc->FireToolkitEvent(nsIAccessibleEvent::EVENT_STATE_CHANGE, accessible, &stateData);

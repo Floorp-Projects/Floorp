@@ -348,10 +348,10 @@ nsAccessibilityService::CreateHTML4ButtonAccessible(nsISupports *aFrame, nsIAcce
 }
 
 NS_IMETHODIMP
-nsAccessibilityService::CreateHTMLAreaAccessible(nsIWeakReference *aShell, nsIDOMNode *aDOMNode, nsIAccessible *aAccParent, 
+nsAccessibilityService::CreateHTMLAreaAccessible(nsIWeakReference *aShell, nsIDOMNode *aDOMNode, nsIAccessible *aParent, 
                                                                nsIAccessible **_retval)
 {
-  *_retval = new nsHTMLAreaAccessible(aDOMNode, aAccParent, aShell);
+  *_retval = new nsHTMLAreaAccessible(aDOMNode, aParent, aShell);
 
   if (! *_retval) 
     return NS_ERROR_OUT_OF_MEMORY;
@@ -561,7 +561,7 @@ nsAccessibilityService::CreateHTMLObjectFrameAccessible(nsObjectFrame *aFrame,
   nsCOMPtr<nsIDOMNode> node;
   nsCOMPtr<nsIWeakReference> weakShell;
   nsIFrame *frame;
-  nsresult rv = GetInfo(NS_STATIC_CAST(nsIFrame*, aFrame), &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
+  GetInfo(NS_STATIC_CAST(nsIFrame*, aFrame), &frame, getter_AddRefs(weakShell), getter_AddRefs(node));
 
   // 1) for object elements containing either HTML or TXT documents
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -645,9 +645,9 @@ nsAccessibilityService::CreateHTMLRadioButtonAccessibleXBL(nsIDOMNode *aNode, ns
 
 NS_IMETHODIMP 
 nsAccessibilityService::CreateHTMLSelectOptionAccessible(nsIDOMNode* aDOMNode, 
-																												 nsIAccessible *aAccParent, 
-																												 nsISupports* aPresContext, 
-																												 nsIAccessible **_retval)
+                                                         nsIAccessible *aParent, 
+                                                         nsISupports* aPresContext, 
+                                                         nsIAccessible **_retval)
 {
   nsCOMPtr<nsIPresContext> presContext(do_QueryInterface(aPresContext));
   NS_ASSERTION(presContext,"Error non prescontext passed to accessible factory!!!");
@@ -1578,10 +1578,10 @@ nsresult nsAccessibilityService::GetAccessible(nsIDOMNode *aNode,
     if (! newAcc)
       return NS_ERROR_FAILURE;
     PRUint32 role, state;
-    newAcc->GetAccRole(&role);
+    newAcc->GetRole(&role);
     // don't create the accessible object for popup widget when it's not visible
     if (role == nsIAccessible::ROLE_MENUPOPUP) {
-      newAcc->GetAccState(&state);
+      newAcc->GetState(&state);
       if (state & (nsIAccessible::STATE_INVISIBLE | nsIAccessible::STATE_OFFSCREEN))
         return NS_ERROR_FAILURE;
     }

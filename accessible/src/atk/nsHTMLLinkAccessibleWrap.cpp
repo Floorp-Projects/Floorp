@@ -135,7 +135,7 @@ nsHTMLImageAccessible(aDomNode, aShell)
 /* readonly attribute long anchors; */
 NS_IMETHODIMP nsHTMLImageMapAccessible::GetAnchors(PRInt32 *aAnchors)
 {
-  return GetAccChildCount(aAnchors);
+  return GetChildCount(aAnchors);
 }
 
 /* readonly attribute long startIndex; */

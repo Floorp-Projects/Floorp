@@ -46,8 +46,8 @@ nsLinkableAccessible(aDomNode, aShell)
 { 
 }
 
-/* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(nsAString& _retval)
+/* wstring getName (); */
+NS_IMETHODIMP nsHTMLLinkAccessible::GetName(nsAString& _retval)
 { 
   if (!IsALink())  // Also initializes private data members
     return NS_ERROR_FAILURE;
@@ -55,17 +55,17 @@ NS_IMETHODIMP nsHTMLLinkAccessible::GetAccName(nsAString& _retval)
   return AppendFlatStringFromSubtree(mLinkContent,&_retval);
 }
 
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAccRole(PRUint32 *_retval)
+/* unsigned long getRole (); */
+NS_IMETHODIMP nsHTMLLinkAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_LINK;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLinkAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLLinkAccessible::GetState(PRUint32 *_retval)
 {
-  nsLinkableAccessible::GetAccState(_retval);
+  nsLinkableAccessible::GetState(_retval);
   *_retval &= ~(STATE_READONLY|STATE_SELECTABLE);
 
   return NS_OK;

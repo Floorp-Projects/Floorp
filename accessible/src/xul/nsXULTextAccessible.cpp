@@ -50,8 +50,8 @@ nsTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
-/* wstring getAccName (); */
-NS_IMETHODIMP nsXULTextAccessible::GetAccName(nsAString& _retval)
+/* wstring getName (); */
+NS_IMETHODIMP nsXULTextAccessible::GetName(nsAString& _retval)
 { 
   nsCOMPtr<nsIDOMXULDescriptionElement> descriptionElement(do_QueryInterface(mDOMNode));
   if (descriptionElement) {
@@ -61,7 +61,7 @@ NS_IMETHODIMP nsXULTextAccessible::GetAccName(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsXULTextAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTextAccessible::GetState(PRUint32 *_retval)
 {
   // Labels and description can only have read only state
   // They are not focusable or selectable
@@ -77,22 +77,22 @@ nsLeafAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsXULTooltipAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULTooltipAccessible::GetName(nsAString& _retval)
 {
   //XXX, kyle.yuan@sun.com, we don't know how to get at this information at the moment,
   //  because it is not loaded until it shows.
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTooltipAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTooltipAccessible::GetState(PRUint32 *_retval)
 {
-  nsLeafAccessible::GetAccState(_retval);
+  nsLeafAccessible::GetState(_retval);
   *_retval &= ~STATE_FOCUSABLE;
   *_retval |= STATE_READONLY;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULTooltipAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULTooltipAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_TOOLTIP;
   return NS_OK;

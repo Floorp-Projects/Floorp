@@ -55,7 +55,7 @@ NS_IMPL_ISUPPORTS_INHERITED0(nsTextAccessible, nsLinkableAccessible)
 /**
   * We are text
   */
-NS_IMETHODIMP nsTextAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsTextAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_TEXT;
   return NS_OK;
@@ -64,7 +64,7 @@ NS_IMETHODIMP nsTextAccessible::GetAccRole(PRUint32 *_retval)
 /**
   * No Children
   */
-NS_IMETHODIMP nsTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
+NS_IMETHODIMP nsTextAccessible::GetFirstChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
@@ -73,7 +73,7 @@ NS_IMETHODIMP nsTextAccessible::GetAccFirstChild(nsIAccessible **_retval)
 /**
   * No Children
   */
-NS_IMETHODIMP nsTextAccessible::GetAccLastChild(nsIAccessible **_retval)
+NS_IMETHODIMP nsTextAccessible::GetLastChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
@@ -82,7 +82,7 @@ NS_IMETHODIMP nsTextAccessible::GetAccLastChild(nsIAccessible **_retval)
 /**
   * No Children
   */
-NS_IMETHODIMP nsTextAccessible::GetAccChildCount(PRInt32 *_retval)
+NS_IMETHODIMP nsTextAccessible::GetChildCount(PRInt32 *_retval)
 {
   *_retval = 0;
   return NS_OK;

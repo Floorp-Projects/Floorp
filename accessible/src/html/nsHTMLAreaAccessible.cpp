@@ -49,35 +49,35 @@
 
 // --- area -----
 
-nsHTMLAreaAccessible::nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aAccParent, nsIWeakReference* aShell):
+nsHTMLAreaAccessible::nsHTMLAreaAccessible(nsIDOMNode *aDomNode, nsIAccessible *aParent, nsIWeakReference* aShell):
 nsLinkableAccessible(aDomNode, aShell)
 { 
   Init(); // Make sure we're in cache
-  mParent = aAccParent;
+  mParent = aParent;
 }
 
-/* wstring getAccName (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccName(nsAString & _retval)
+/* wstring getName (); */
+NS_IMETHODIMP nsHTMLAreaAccessible::GetName(nsAString & _retval)
 {
   nsCOMPtr<nsIDOMElement> elt(do_QueryInterface(mDOMNode));
   if (elt) {
     nsAutoString hrefString;
     elt->GetAttribute(NS_LITERAL_STRING("title"), _retval);
     if (_retval.IsEmpty())
-      GetAccValue(_retval);
+      GetValue(_retval);
   }
   return NS_OK;
 }
 
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccRole(PRUint32 *_retval)
+/* unsigned long getRole (); */
+NS_IMETHODIMP nsHTMLAreaAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_LINK;
   return NS_OK;
 }
 
-/* wstring getAccDescription (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccDescription(nsAString& _retval)
+/* wstring getDescription (); */
+NS_IMETHODIMP nsHTMLAreaAccessible::GetDescription(nsAString& _retval)
 {
   // Still to do - follow IE's standard here
   nsCOMPtr<nsIDOMHTMLAreaElement> area(do_QueryInterface(mDOMNode));
@@ -87,32 +87,32 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccDescription(nsAString& _retval)
 }
 
 
-/* nsIAccessible getAccFirstChild (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccFirstChild(nsIAccessible **_retval)
+/* nsIAccessible getFirstChild (); */
+NS_IMETHODIMP nsHTMLAreaAccessible::GetFirstChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
 }
 
-/* nsIAccessible getAccLastChild (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccLastChild(nsIAccessible **_retval)
+/* nsIAccessible getLastChild (); */
+NS_IMETHODIMP nsHTMLAreaAccessible::GetLastChild(nsIAccessible **_retval)
 {
   *_retval = nsnull;
   return NS_OK;
 }
 
 /* long getAccChildCount (); */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccChildCount(PRInt32 *_retval)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetChildCount(PRInt32 *_retval)
 {
   *_retval = 0;
   return NS_OK;
 }
 
 
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccParent(nsIAccessible * *aAccParent) 
+NS_IMETHODIMP nsHTMLAreaAccessible::GetParent(nsIAccessible * *aParent) 
 { 
-  *aAccParent = mParent;
-  NS_IF_ADDREF(*aAccParent);
+  *aParent = mParent;
+  NS_IF_ADDREF(*aParent);
   return NS_OK;
 }
 
@@ -131,18 +131,18 @@ nsIAccessible *nsHTMLAreaAccessible::GetAreaAccessible(nsIDOMNode *aDOMNode)
 
 }
 
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling) 
+NS_IMETHODIMP nsHTMLAreaAccessible::GetNextSibling(nsIAccessible * *aNextSibling) 
 { 
-  *aAccNextSibling = nsnull;
+  *aNextSibling = nsnull;
   nsCOMPtr<nsIDOMNode> nextNode;
   mDOMNode->GetNextSibling(getter_AddRefs(nextNode));
   if (nextNode)
-    *aAccNextSibling = GetAreaAccessible(nextNode);
+    *aNextSibling = GetAreaAccessible(nextNode);
   return NS_OK;  
 }
 
 /* readonly attribute nsIAccessible accPreviousSibling; */
-NS_IMETHODIMP nsHTMLAreaAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPrevSibling) 
+NS_IMETHODIMP nsHTMLAreaAccessible::GetPreviousSibling(nsIAccessible * *aAccPrevSibling) 
 {
   *aAccPrevSibling = nsnull;
   nsCOMPtr<nsIDOMNode> prevNode;
@@ -154,7 +154,7 @@ NS_IMETHODIMP nsHTMLAreaAccessible::GetAccPreviousSibling(nsIAccessible * *aAccP
 
 
 /* void accGetBounds (out long x, out long y, out long width, out long height); */
-NS_IMETHODIMP nsHTMLAreaAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
+NS_IMETHODIMP nsHTMLAreaAccessible::GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height)
 {
   // Essentially this uses GetRect on mAreas of nsImageMap from nsImageFrame
 

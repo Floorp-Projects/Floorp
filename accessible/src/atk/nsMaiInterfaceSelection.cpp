@@ -115,7 +115,7 @@ addSelectionCB(AtkSelection *aSelection, gint i)
                             getter_AddRefs(accSelection));
     NS_ENSURE_TRUE(accSelection, FALSE);
 
-    return NS_SUCCEEDED(accSelection->AddSelection(i));
+    return NS_SUCCEEDED(accSelection->AddChildToSelection(i));
 }
 
 gboolean
@@ -200,7 +200,7 @@ removeSelectionCB(AtkSelection *aSelection, gint i)
                             getter_AddRefs(accSelection));
     NS_ENSURE_TRUE(accSelection, FALSE);
 
-    nsresult rv = accSelection->RemoveSelection(i);
+    nsresult rv = accSelection->RemoveChildFromSelection(i);
     return (NS_FAILED(rv)) ? FALSE : TRUE;
 }
 

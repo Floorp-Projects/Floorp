@@ -57,7 +57,7 @@ nsFormControlAccessible(aNode, aShell)
 /**
   * We are a pushbutton
   */
-NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULColorPickerTileAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PUSHBUTTON;
   return NS_OK;
@@ -66,10 +66,10 @@ NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccRole(PRUint32 *_retval)
 /**
   * Possible states: focused, focusable, selected
   */
-NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULColorPickerTileAccessible::GetState(PRUint32 *_retval)
 {
   // get focus and disable status from base class
-  nsFormControlAccessible::GetAccState(_retval);
+  nsFormControlAccessible::GetState(_retval);
   *_retval |= STATE_FOCUSABLE;
 
   // Focused?
@@ -88,12 +88,12 @@ NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsXULColorPickerTileAccessible::GetName(nsAString& _retval)
 {
-  return GetXULAccName(_retval);
+  return GetXULName(_retval);
 }
 
-NS_IMETHODIMP nsXULColorPickerTileAccessible::GetAccValue(nsAString& _retval)
+NS_IMETHODIMP nsXULColorPickerTileAccessible::GetValue(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No XUL Element for colorpicker");
@@ -115,16 +115,16 @@ nsXULColorPickerTileAccessible(aNode, aShell)
 /**
   * Possible states: focused, focusable, unavailable(disabled)
   */
-NS_IMETHODIMP nsXULColorPickerAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsXULColorPickerAccessible::GetState(PRUint32 *_retval)
 {
   // get focus and disable status from base class
-  nsFormControlAccessible::GetAccState(_retval);
+  nsFormControlAccessible::GetState(_retval);
   *_retval |= STATE_FOCUSABLE | STATE_HASPOPUP;
 
   return NS_OK;
 }
 
-NS_IMETHODIMP nsXULColorPickerAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsXULColorPickerAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_BUTTONDROPDOWNGRID;
   return NS_OK;

@@ -51,7 +51,7 @@ nsTextAccessibleWrap(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& aName)
+NS_IMETHODIMP nsHTMLTextAccessible::GetName(nsAString& aName)
 { 
   nsAutoString accName;
   if (NS_FAILED(mDOMNode->GetNodeValue(accName)))
@@ -61,9 +61,9 @@ NS_IMETHODIMP nsHTMLTextAccessible::GetAccName(nsAString& aName)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTextAccessible::GetAccState(PRUint32 *aState)
+NS_IMETHODIMP nsHTMLTextAccessible::GetState(PRUint32 *aState)
 {
-  nsTextAccessible::GetAccState(aState);
+  nsTextAccessible::GetState(aState);
   // Get current selection and find out if current node is in it
   nsCOMPtr<nsIPresShell> shell(GetPresShell());
   if (!shell) {
@@ -108,15 +108,15 @@ nsLeafAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLHRAccessible::GetAccRole(PRUint32 *aRole)
+NS_IMETHODIMP nsHTMLHRAccessible::GetRole(PRUint32 *aRole)
 {
   *aRole = ROLE_SEPARATOR;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLHRAccessible::GetAccState(PRUint32 *aState)
+NS_IMETHODIMP nsHTMLHRAccessible::GetState(PRUint32 *aState)
 {
-  nsLeafAccessible::GetAccState(aState);
+  nsLeafAccessible::GetState(aState);
   *aState &= ~STATE_FOCUSABLE;
   return NS_OK;
 }
@@ -126,7 +126,7 @@ nsTextAccessible(aDomNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLLabelAccessible::GetAccName(nsAString& aReturn)
+NS_IMETHODIMP nsHTMLLabelAccessible::GetName(nsAString& aReturn)
 { 
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -144,35 +144,35 @@ NS_IMETHODIMP nsHTMLLabelAccessible::GetAccName(nsAString& aReturn)
   return rv;
 }
 
-NS_IMETHODIMP nsHTMLLabelAccessible::GetAccRole(PRUint32 *aRole)
+NS_IMETHODIMP nsHTMLLabelAccessible::GetRole(PRUint32 *aRole)
 {
   *aRole = ROLE_STATICTEXT;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLabelAccessible::GetAccState(PRUint32 *aState)
+NS_IMETHODIMP nsHTMLLabelAccessible::GetState(PRUint32 *aState)
 {
-  nsTextAccessible::GetAccState(aState);
+  nsTextAccessible::GetState(aState);
   *aState &= (STATE_LINKED|STATE_TRAVERSED);  // Only use link states
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLLabelAccessible::GetAccFirstChild(nsIAccessible **aAccFirstChild) 
+NS_IMETHODIMP nsHTMLLabelAccessible::GetFirstChild(nsIAccessible **aFirstChild) 
 {  
   // A <label> is not necessarily a leaf!
-  return nsAccessible::GetAccFirstChild(aAccFirstChild);
+  return nsAccessible::GetFirstChild(aFirstChild);
 }
 
   /* readonly attribute nsIAccessible accFirstChild; */
-NS_IMETHODIMP nsHTMLLabelAccessible::GetAccLastChild(nsIAccessible **aAccLastChild)
+NS_IMETHODIMP nsHTMLLabelAccessible::GetLastChild(nsIAccessible **aLastChild)
 {  
   // A <label> is not necessarily a leaf!
-  return nsAccessible::GetAccLastChild(aAccLastChild);
+  return nsAccessible::GetLastChild(aLastChild);
 }
 
 /* readonly attribute long accChildCount; */
-NS_IMETHODIMP nsHTMLLabelAccessible::GetAccChildCount(PRInt32 *aAccChildCount) 
+NS_IMETHODIMP nsHTMLLabelAccessible::GetChildCount(PRInt32 *aAccChildCount) 
 {
   // A <label> is not necessarily a leaf!
-  return nsAccessible::GetAccChildCount(aAccChildCount);
+  return nsAccessible::GetChildCount(aAccChildCount);
 }

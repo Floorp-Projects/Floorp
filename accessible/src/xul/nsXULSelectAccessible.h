@@ -81,7 +81,7 @@ public:
   nsXULSelectableAccessible(nsIDOMNode* aDOMNode, nsIWeakReference* aShell);
   virtual ~nsXULSelectableAccessible() {}
 
-  NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetName(nsAString& _retval);
 
 protected:
   NS_IMETHOD ChangeSelection(PRInt32 aIndex, PRUint8 aMethod, PRBool *aSelState);
@@ -98,8 +98,8 @@ public:
   virtual ~nsXULSelectListAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
 };
 
 /*
@@ -113,8 +113,8 @@ public:
   virtual ~nsXULSelectOptionAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
 };
 
 /** ------------------------------------------------------ */
@@ -132,10 +132,10 @@ public:
   virtual ~nsXULListboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD GetChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetValue(nsAString& _retval);
 
 };
 
@@ -151,9 +151,9 @@ public:
   virtual ~nsXULListitemAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccName(nsAString& _retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
 
 };
 
@@ -172,10 +172,10 @@ public:
   virtual ~nsXULComboboxAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
 
-  NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD GetValue(nsAString& _retval);
 };
 
 #endif

@@ -54,39 +54,39 @@ nsOuterDocAccessible::nsOuterDocAccessible(nsIDOMNode* aNode,
 }
 
   /* attribute wstring accName; */
-NS_IMETHODIMP nsOuterDocAccessible::GetAccName(nsAString& aAccName) 
+NS_IMETHODIMP nsOuterDocAccessible::GetName(nsAString& aName) 
 { 
   nsCOMPtr<nsIAccessibleDocument> accDoc(do_QueryInterface(mFirstChild));
   if (!accDoc) {
     return NS_ERROR_FAILURE;
   }
-  nsresult rv = accDoc->GetTitle(aAccName);
-  if (NS_FAILED(rv) || aAccName.IsEmpty())
-    rv = accDoc->GetURL(aAccName);
+  nsresult rv = accDoc->GetTitle(aName);
+  if (NS_FAILED(rv) || aName.IsEmpty())
+    rv = accDoc->GetURL(aName);
   return rv;
 }
 
-NS_IMETHODIMP nsOuterDocAccessible::GetAccValue(nsAString& aAccValue) 
+NS_IMETHODIMP nsOuterDocAccessible::GetValue(nsAString& aValue) 
 { 
   return NS_OK;
 }
 
-/* unsigned long getAccRole (); */
-NS_IMETHODIMP nsOuterDocAccessible::GetAccRole(PRUint32 *_retval)
+/* unsigned long getRole (); */
+NS_IMETHODIMP nsOuterDocAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_CLIENT;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsOuterDocAccessible::GetAccState(PRUint32 *aAccState)
+NS_IMETHODIMP nsOuterDocAccessible::GetState(PRUint32 *aState)
 {
-  return nsAccessible::GetAccState(aAccState);
+  return nsAccessible::GetState(aState);
 }
 
-NS_IMETHODIMP nsOuterDocAccessible::AccGetBounds(PRInt32 *x, PRInt32 *y, 
+NS_IMETHODIMP nsOuterDocAccessible::GetBounds(PRInt32 *x, PRInt32 *y, 
                                                  PRInt32 *width, PRInt32 *height)
 {
-  return mFirstChild? mFirstChild->AccGetBounds(x, y, width, height): NS_ERROR_FAILURE;
+  return mFirstChild? mFirstChild->GetBounds(x, y, width, height): NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP nsOuterDocAccessible::Init()
@@ -121,8 +121,8 @@ NS_IMETHODIMP nsOuterDocAccessible::Init()
                                    getter_AddRefs(innerAccessible));
   NS_ENSURE_TRUE(innerAccessible, NS_ERROR_FAILURE);
 
-  SetAccFirstChild(innerAccessible); // weak ref
+  SetFirstChild(innerAccessible); // weak ref
   nsCOMPtr<nsPIAccessible> privateInnerAccessible = 
     do_QueryInterface(innerAccessible);
-  return privateInnerAccessible->SetAccParent(this);
+  return privateInnerAccessible->SetParent(this);
 }

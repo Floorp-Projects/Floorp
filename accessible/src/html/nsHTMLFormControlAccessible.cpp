@@ -55,24 +55,24 @@ nsFormControlAccessible(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLCheckboxAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_CHECKBUTTON;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsHTMLCheckboxAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTMLCheckboxAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {    // 0 is the magic value for default action
     // check or uncheck
     PRUint32 state;
-    GetAccState(&state);
+    GetState(&state);
 
     if (state & STATE_CHECKED)
       nsAccessible::GetTranslatedString(NS_LITERAL_STRING("uncheck"), _retval); 
@@ -84,7 +84,7 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccActionName(PRUint8 index, nsAStrin
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsHTMLCheckboxAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {   // 0 is the magic value for default action
     nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
@@ -97,9 +97,9 @@ NS_IMETHODIMP nsHTMLCheckboxAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLCheckboxAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLCheckboxAccessible::GetState(PRUint32 *_retval)
 {
-  nsFormControlAccessible::GetAccState(_retval);
+  nsFormControlAccessible::GetState(_retval);
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlCheckboxElement(do_QueryInterface(mDOMNode));
@@ -119,7 +119,7 @@ nsRadioButtonAccessible(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLRadioButtonAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsHTMLRadioButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
     nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
@@ -131,9 +131,9 @@ NS_IMETHODIMP nsHTMLRadioButtonAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLRadioButtonAccessible::GetState(PRUint32 *_retval)
 {
-  nsFormControlAccessible::GetAccState(_retval);
+  nsFormControlAccessible::GetState(_retval);
   PRBool checked = PR_FALSE;   // Radio buttons and check boxes can be checked
 
   nsCOMPtr<nsIDOMHTMLInputElement> htmlRadioElement(do_QueryInterface(mDOMNode));
@@ -153,13 +153,13 @@ nsFormControlAccessible(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
@@ -168,7 +168,7 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccActionName(PRUint8 index, nsAString&
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsHTMLButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == eAction_Click) {
     nsCOMPtr<nsIDOMHTMLInputElement> element(do_QueryInterface(mDOMNode));
@@ -180,9 +180,9 @@ NS_IMETHODIMP nsHTMLButtonAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetState(PRUint32 *_retval)
 {
-  nsFormControlAccessible::GetAccState(_retval);
+  nsFormControlAccessible::GetState(_retval);
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   NS_ASSERTION(element, "No nsIDOMElement for button node!");
 
@@ -194,13 +194,13 @@ NS_IMETHODIMP nsHTMLButtonAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLButtonAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLButtonAccessible::GetName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMHTMLInputElement> button(do_QueryInterface(mDOMNode));
 
@@ -228,13 +228,13 @@ nsLeafAccessible(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccNumActions(PRUint8 *_retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetNumActions(PRUint8 *_retval)
 {
   *_retval = eSingle_Action;
   return NS_OK;;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAString& _retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetActionName(PRUint8 index, nsAString& _retval)
 {
   if (index == eAction_Click) {
     nsAccessible::GetTranslatedString(NS_LITERAL_STRING("press"), _retval); 
@@ -243,7 +243,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccActionName(PRUint8 index, nsAString
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::AccDoAction(PRUint8 index)
+NS_IMETHODIMP nsHTML4ButtonAccessible::DoAction(PRUint8 index)
 {
   if (index == 0) {
     nsCOMPtr<nsIDOMNSHTMLButtonElement> buttonElement(do_QueryInterface(mDOMNode));
@@ -257,15 +257,15 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::AccDoAction(PRUint8 index)
   return NS_ERROR_INVALID_ARG;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PUSHBUTTON;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetState(PRUint32 *_retval)
 {
-  nsAccessible::GetAccState(_retval);
+  nsAccessible::GetState(_retval);
   *_retval |= STATE_FOCUSABLE;
 
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
@@ -279,7 +279,7 @@ NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTML4ButtonAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsHTML4ButtonAccessible::GetName(nsAString& _retval)
 {
   nsresult rv = NS_ERROR_FAILURE;
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
@@ -307,16 +307,16 @@ nsFormControlAccessible(aNode, aShell)
 
 NS_IMPL_ISUPPORTS_INHERITED0(nsHTMLTextFieldAccessible, nsFormControlAccessible)
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_TEXT;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccValue(nsAString& _retval)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetValue(nsAString& _retval)
 {
   PRUint32 state;
-  GetAccState(&state);
+  GetState(&state);
   if (state & STATE_PROTECTED)    // Don't return password text!
     return NS_ERROR_FAILURE;
 
@@ -340,7 +340,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccValue(nsAString& _retval)
   return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLTextFieldAccessible::GetState(PRUint32 *_retval)
 {
   // can be
   // focusable, focused, protected. readonly, unavailable, selected
@@ -356,7 +356,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
     // to get the accessible state from. Doesn't add to cache
     // because Init() is not called.
     nsHTMLTextFieldAccessible tempAccessible(inputField, mWeakShell);
-    return tempAccessible.GetAccState(_retval);
+    return tempAccessible.GetState(_retval);
   }
 #endif
 
@@ -364,7 +364,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
     return NS_ERROR_FAILURE;  // Node has been Shutdown()
   }
 
-  nsAccessible::GetAccState(_retval);
+  nsAccessible::GetState(_retval);
   *_retval |= STATE_FOCUSABLE;
 
   nsCOMPtr<nsIDOMHTMLTextAreaElement> textArea(do_QueryInterface(mDOMNode));
@@ -406,7 +406,7 @@ NS_IMETHODIMP nsHTMLTextFieldAccessible::GetAccState(PRUint32 *_retval)
     if (inputElement) {
       /////// ====== Must be a password field, so it uses nsIDOMHTMLFormControl ==== ///////
       PRUint32 moreStates = 0;
-      nsresult rv = nsFormControlAccessible::GetAccState(&moreStates);
+      nsresult rv = nsFormControlAccessible::GetState(&moreStates);
       *_retval |= moreStates;
       return rv;
     }
@@ -432,13 +432,13 @@ nsAccessibleWrap(aNode, aShell)
 { 
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_GROUPING;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccState(PRUint32 *_retval)
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetState(PRUint32 *_retval)
 {
   // Groupbox doesn't support any states!
   *_retval = 0;
@@ -446,7 +446,7 @@ NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccState(PRUint32 *_retval)
   return NS_OK;
 }
 
-NS_IMETHODIMP nsHTMLGroupboxAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsHTMLGroupboxAccessible::GetName(nsAString& _retval)
 {
   nsCOMPtr<nsIDOMElement> element(do_QueryInterface(mDOMNode));
   if (element) {

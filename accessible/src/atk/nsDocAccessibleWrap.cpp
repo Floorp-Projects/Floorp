@@ -70,7 +70,7 @@ static char * sAtkPropertyNameArray[PROP_LAST] = {
     "accessible_table_summary"
 };
 
-static  AtkStateType TranslateAState(PRUint32 aAccState);
+static  AtkStateType TranslateAState(PRUint32 aState);
 
 nsDocAccessibleWrap::nsDocAccessibleWrap(nsIDOMNode *aDOMNode,
                                          nsIWeakReference *aShell): 
@@ -405,9 +405,9 @@ NS_IMETHODIMP nsDocAccessibleWrap::FireToolkitEvent(PRUint32 aEvent,
 
 /* static */
 AtkStateType
-TranslateAState(PRUint32 aAccState)
+TranslateAState(PRUint32 aState)
 {
-    switch (aAccState) {
+    switch (aState) {
     case nsIAccessible::STATE_SELECTED:
         return ATK_STATE_SELECTED;
     case nsIAccessible::STATE_FOCUSED:

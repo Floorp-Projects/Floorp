@@ -47,11 +47,11 @@ class nsHTMLCheckboxAccessible : public nsFormControlAccessible
 
 public:
   nsHTMLCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
 class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
@@ -59,8 +59,8 @@ class nsHTMLRadioButtonAccessible : public nsRadioButtonAccessible
 
 public:
   nsHTMLRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
 class nsHTMLButtonAccessible : public nsFormControlAccessible
@@ -68,12 +68,12 @@ class nsHTMLButtonAccessible : public nsFormControlAccessible
 
 public:
   nsHTMLButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
 };
 
 class nsHTML4ButtonAccessible : public nsLeafAccessible
@@ -81,12 +81,12 @@ class nsHTML4ButtonAccessible : public nsLeafAccessible
 
 public:
   nsHTML4ButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
 };
 
 class nsHTMLTextFieldAccessible : public nsFormControlAccessible
@@ -97,18 +97,18 @@ public:
 
   nsHTMLTextFieldAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccValue(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetValue(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval);
 };
 
 class nsHTMLGroupboxAccessible : public nsAccessibleWrap
 {
 public:
   nsHTMLGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval);
 };
 
 #endif  

@@ -65,8 +65,8 @@ class nsRootAccessible : public nsDocAccessibleWrap,
     virtual ~nsRootAccessible();
 
     /* attribute wstring accName; */
-    NS_IMETHOD GetAccParent(nsIAccessible * *aAccParent);
-    NS_IMETHOD GetAccRole(PRUint32 *aAccRole);
+    NS_IMETHOD GetParent(nsIAccessible * *aParent);
+    NS_IMETHOD GetRole(PRUint32 *aRole);
 
     // ----- nsIDOMEventListener --------------------------
     NS_IMETHOD HandleEvent(nsIDOMEvent* aEvent);

@@ -48,12 +48,12 @@ class nsXULTabAccessible : public nsLeafAccessible
 {
 public:
   nsXULTabAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
 };
 
 /** 
@@ -65,9 +65,9 @@ class nsXULTabBoxAccessible : public nsAccessibleWrap
 {
 public:
   nsXULTabBoxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  //NS_IMETHOD GetAccChildCount(PRInt32 *_retval); // aaronl remove this?
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  //NS_IMETHOD GetChildCount(PRInt32 *_retval); // aaronl remove this?
 };
 
 /** 
@@ -78,9 +78,9 @@ class nsXULTabPanelsAccessible : public nsAccessibleWrap
 {
 public:
   nsXULTabPanelsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval);
 
 protected:
   nsresult GetAccPluginChild(nsIAccessible **_retval);
@@ -95,11 +95,11 @@ class nsXULTabsAccessible : public nsAccessibleWrap
 {
 public:
   nsXULTabsAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAString& _retval);
-  NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetValue(nsAString& _retval);
+  NS_IMETHOD GetName(nsAString& _retval);
 };
 
 #endif  

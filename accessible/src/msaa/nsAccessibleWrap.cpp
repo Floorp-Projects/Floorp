@@ -104,7 +104,7 @@ STDMETHODIMP nsAccessibleWrap::QueryInterface(REFIID iid, void** ppv)
     *ppv = NS_STATIC_CAST(IAccessible*, this);
   else if (IID_IEnumVARIANT == iid && !gIsEnumVariantSupportDisabled) {
     PRInt32 numChildren;
-    GetAccChildCount(&numChildren);
+    GetChildCount(&numChildren);
     if (numChildren > 0)  // Don't support this interface for leaf elements
       *ppv = NS_STATIC_CAST(IEnumVARIANT*, this);
   }
@@ -162,7 +162,7 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
     return E_FAIL;  // We've been shut down
 
   nsCOMPtr<nsIAccessible> xpParentAccessible;
-  GetAccParent(getter_AddRefs(xpParentAccessible));
+  GetParent(getter_AddRefs(xpParentAccessible));
 
   if (xpParentAccessible) {
     *ppdispParent = NativeAccessible(xpParentAccessible);
@@ -196,7 +196,7 @@ STDMETHODIMP nsAccessibleWrap::get_accParent( IDispatch __RPC_FAR *__RPC_FAR *pp
 STDMETHODIMP nsAccessibleWrap::get_accChildCount( long __RPC_FAR *pcountChildren)
 {
   PRInt32 numChildren;
-  GetAccChildCount(&numChildren);
+  GetChildCount(&numChildren);
   *pcountChildren = numChildren;
 
   return S_OK;
@@ -233,7 +233,7 @@ STDMETHODIMP nsAccessibleWrap::get_accName(
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString name;
-    if (NS_FAILED(xpAccessible->GetAccName(name)))
+    if (NS_FAILED(xpAccessible->GetName(name)))
       return S_FALSE;
 
     *pszName = ::SysAllocString(name.get());
@@ -253,7 +253,7 @@ STDMETHODIMP nsAccessibleWrap::get_accValue(
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString value;
-    if (NS_FAILED(xpAccessible->GetAccValue(value)))
+    if (NS_FAILED(xpAccessible->GetValue(value)))
       return S_FALSE;
 
     *pszValue = ::SysAllocString(value.get());
@@ -272,7 +272,7 @@ STDMETHODIMP nsAccessibleWrap::get_accDescription(
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
      nsAutoString description;
-     if (NS_FAILED(xpAccessible->GetAccDescription(description)))
+     if (NS_FAILED(xpAccessible->GetDescription(description)))
        return S_FALSE;
 
      *pszDescription = ::SysAllocString(description.get());
@@ -295,7 +295,7 @@ STDMETHODIMP nsAccessibleWrap::get_accRole(
     return E_FAIL;
 
   PRUint32 role = 0;
-  if (NS_FAILED(xpAccessible->GetAccRole(&role)))
+  if (NS_FAILED(xpAccessible->GetRole(&role)))
     return E_FAIL;
 
   pvarRole->lVal = role;
@@ -316,7 +316,7 @@ STDMETHODIMP nsAccessibleWrap::get_accState(
     return E_FAIL;
 
   PRUint32 state;
-  if (NS_FAILED(xpAccessible->GetAccState(&state)))
+  if (NS_FAILED(xpAccessible->GetState(&state)))
     return E_FAIL;
 
   pvarState->lVal = state;
@@ -352,7 +352,7 @@ STDMETHODIMP nsAccessibleWrap::get_accKeyboardShortcut(
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString shortcut;
-    nsresult rv = xpAccessible->GetAccKeyboardShortcut(shortcut);
+    nsresult rv = xpAccessible->GetKeyboardShortcut(shortcut);
     if (NS_FAILED(rv))
       return S_FALSE;
 
@@ -369,7 +369,7 @@ STDMETHODIMP nsAccessibleWrap::get_accFocus(
   VariantInit(pvarChild);
 
   nsCOMPtr<nsIAccessible> focusedAccessible;
-  if (NS_SUCCEEDED(GetAccFocused(getter_AddRefs(focusedAccessible)))) {
+  if (NS_SUCCEEDED(GetFocusedChild(getter_AddRefs(focusedAccessible)))) {
     pvarChild->vt = VT_DISPATCH;
     pvarChild->pdispVal = NativeAccessible(focusedAccessible);
     return S_OK;
@@ -467,7 +467,7 @@ STDMETHODIMP nsAccessibleWrap::get_accDefaultAction(
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
   if (xpAccessible) {
     nsAutoString defaultAction;
-    if (NS_FAILED(xpAccessible->GetAccActionName(0, defaultAction)))
+    if (NS_FAILED(xpAccessible->GetActionName(0, defaultAction)))
       return S_FALSE;
 
     *pszDefaultAction = ::SysAllocString(defaultAction.get());
@@ -487,13 +487,13 @@ STDMETHODIMP nsAccessibleWrap::accSelect(
   if (flagsSelect & (SELFLAG_TAKEFOCUS|SELFLAG_TAKESELECTION|SELFLAG_REMOVESELECTION))
   {
     if (flagsSelect & SELFLAG_TAKEFOCUS)
-      xpAccessible->AccTakeFocus();
+      xpAccessible->TakeFocus();
 
     if (flagsSelect & SELFLAG_TAKESELECTION)
-      xpAccessible->AccTakeSelection();
+      xpAccessible->TakeSelection();
 
     if (flagsSelect & SELFLAG_REMOVESELECTION)
-      xpAccessible->AccRemoveSelection();
+      xpAccessible->RemoveSelection();
 
     return S_OK;
   }
@@ -513,7 +513,7 @@ STDMETHODIMP nsAccessibleWrap::accLocation(
 
   if (xpAccessible) {
     PRInt32 x, y, width, height;
-    if (NS_FAILED(xpAccessible->AccGetBounds(&x, &y, &width, &height)))
+    if (NS_FAILED(xpAccessible->GetBounds(&x, &y, &width, &height)))
       return E_FAIL;
 
     *pxLeft = x;
@@ -540,28 +540,28 @@ STDMETHODIMP nsAccessibleWrap::accNavigate(
 
   switch(navDir) {
     case NAVDIR_DOWN: 
-      xpAccessibleStart->AccGetFromBelow(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetAccessibleBelow(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_FIRSTCHILD:
-      xpAccessibleStart->GetAccFirstChild(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetFirstChild(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_LASTCHILD:
-      xpAccessibleStart->GetAccLastChild(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetLastChild(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_LEFT:
-      xpAccessibleStart->AccGetFromLeft(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetAccessibleToLeft(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_NEXT:
-      xpAccessibleStart->GetAccNextSibling(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetNextSibling(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_PREVIOUS:
-      xpAccessibleStart->GetAccPreviousSibling(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetPreviousSibling(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_RIGHT:
-      xpAccessibleStart->AccGetFromRight(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetAccessibleToRight(getter_AddRefs(xpAccessibleResult));
       break;
     case NAVDIR_UP:
-      xpAccessibleStart->AccGetFromAbove(getter_AddRefs(xpAccessibleResult));
+      xpAccessibleStart->GetAccessibleAbove(getter_AddRefs(xpAccessibleResult));
       break;
   }
 
@@ -587,7 +587,7 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
   xLeft = xLeft;
   yTop = yTop;
 
-  AccGetAt(xLeft, yTop, getter_AddRefs(xpAccessible));
+  GetChildAtPoint(xLeft, yTop, getter_AddRefs(xpAccessible));
 
   // if we got a child
   if (xpAccessible) {
@@ -599,7 +599,7 @@ STDMETHODIMP nsAccessibleWrap::accHitTest(
       pvarChild->vt = VT_DISPATCH;
       pvarChild->pdispVal = NativeAccessible(xpAccessible);
       nsCOMPtr<nsIDOMNode> domNode;
-      xpAccessible->AccGetDOMNode(getter_AddRefs(domNode));
+      xpAccessible->GetDOMNode(getter_AddRefs(domNode));
       if (!domNode) {
         // Has already been shut down
         pvarChild->vt = VT_EMPTY;
@@ -621,7 +621,7 @@ STDMETHODIMP nsAccessibleWrap::accDoDefaultAction(
   nsCOMPtr<nsIAccessible> xpAccessible;
   GetXPAccessibleFor(varChild, getter_AddRefs(xpAccessible));
 
-  if (!xpAccessible || FAILED(xpAccessible->AccDoAction(0))) {
+  if (!xpAccessible || FAILED(xpAccessible->DoAction(0))) {
     return E_FAIL;
   }
   return S_OK;
@@ -667,7 +667,7 @@ nsAccessibleWrap::Next(ULONG aNumElementsRequested, VARIANT FAR* pvar, ULONG FAR
   *aNumElementsFetched = 0;
 
   PRInt32 numChildren;
-  GetAccChildCount(&numChildren);
+  GetChildCount(&numChildren);
 
   if (aNumElementsRequested <= 0 || !pvar ||
       mEnumVARIANTPosition >= numChildren) {
@@ -705,7 +705,7 @@ nsAccessibleWrap::Skip(ULONG aNumElements)
   mEnumVARIANTPosition += aNumElements;
 
   PRInt32 numChildren;
-  GetAccChildCount(&numChildren);
+  GetChildCount(&numChildren);
   
   if (mEnumVARIANTPosition > numChildren)
   {
@@ -825,7 +825,7 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
     // We can come back it do it later, if there are perf problems
     // with a specific assistive technology
     nsCOMPtr<nsIAccessible> xpAccessible, nextAccessible;
-    GetAccFirstChild(getter_AddRefs(xpAccessible));
+    GetFirstChild(getter_AddRefs(xpAccessible));
     for (PRInt32 index = 0; xpAccessible; index ++) {
       if (!xpAccessible)
         break; // Failed
@@ -834,7 +834,7 @@ void nsAccessibleWrap::GetXPAccessibleFor(const VARIANT& aVarChild, nsIAccessibl
         break;
       }
       nextAccessible = xpAccessible;
-      nextAccessible->GetAccNextSibling(getter_AddRefs(xpAccessible));
+      nextAccessible->GetNextSibling(getter_AddRefs(xpAccessible));
     }
   }
   NS_IF_ADDREF(*aXPAccessible);

@@ -119,7 +119,7 @@ STDMETHODIMP nsTextAccessibleWrap::get_clippedSubstringBounds(
   nsCOMPtr<nsIAccessible> accessible(do_QueryInterface(docAccessible));
   NS_ASSERTION(accessible, "There must always be a doc accessible, but there isn't");
 
-  accessible->AccGetBounds(&docX, &docY, &docWidth, &docHeight);
+  accessible->GetBounds(&docX, &docY, &docWidth, &docHeight);
 
   nsRect unclippedRect(x, y, width, height);
   nsRect docRect(docX, docY, docWidth, docHeight);
@@ -153,7 +153,7 @@ STDMETHODIMP nsTextAccessibleWrap::get_unclippedSubstringBounds(
 
   // Add offsets for entire accessible
   PRInt32 nodeX, nodeY, nodeWidth, nodeHeight;
-  AccGetBounds(&nodeX, &nodeY, &nodeWidth, &nodeHeight);
+  GetBounds(&nodeX, &nodeY, &nodeWidth, &nodeHeight);
   *aX += nodeX;
   *aY += nodeY;
 

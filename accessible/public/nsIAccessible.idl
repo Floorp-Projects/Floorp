@@ -60,91 +60,92 @@ interface nsIAccessible : nsISupports
   /**
    * Parent node in accessible tree.
    */
-  readonly attribute nsIAccessible accParent;
+  readonly attribute nsIAccessible parent;
 
   /**
    * Next sibling in accessible tree
    */
-  readonly attribute nsIAccessible accNextSibling;
+  readonly attribute nsIAccessible nextSibling;
 
   /**
    * Previous sibling in accessible tree
    */
-  readonly attribute nsIAccessible accPreviousSibling;
+  readonly attribute nsIAccessible previousSibling;
 
   /**
    * First child in accessible tree
    */
-  readonly attribute nsIAccessible accFirstChild;
+  readonly attribute nsIAccessible firstChild;
 
   /**
    * Last child in accessible tree
    */
-  readonly attribute nsIAccessible accLastChild;
+  readonly attribute nsIAccessible lastChild;
 
   /**
    * Number of accessible children
    */
-  readonly attribute long accChildCount;
+  readonly attribute long childCount;
 
   /**
    * Accessible name -- the main text equivalent for this node
    */
-  attribute AString accName;
+  attribute AString name;
 
   /**
    * Accessible value -- a number or a secondary text equivalent for this node
    */
-  readonly attribute AString accValue;
+  readonly attribute AString value;
 
   /**
    * Accessible description -- long text associated with this node
    */
-  readonly attribute AString accDescription;
+  readonly attribute AString description;
 
   /**
    * Provides localized string of accesskey name, such as Alt+D.
    * The modifier may be affected by user and platform preferences.
    * Usually alt+letter, or just the letter alone for menu items. 
    */
-  readonly attribute AString accKeyboardShortcut;
+  readonly attribute AString keyboardShortcut;
 
   /**
-   * First child in accessible tree
+   * Provides localized string of global keyboard accelerator, such
+   * as Ctrl+O for Open file
    */
-  readonly attribute AString accKeybinding;
+  readonly attribute AString keyBinding;
 
   /**
    * Enumerated accessible role. The values depend on platform because of variations.
    * See the ROLE_* constants defined later in this file.
    */
-  readonly attribute unsigned long accRole;
+  readonly attribute unsigned long role;
 
   /**
    * Accessible states -- bit field which describes boolean properties of node. 
    * See the STATE_* constants defined later in this file.
    */
-  readonly attribute unsigned long accState;
+  readonly attribute unsigned long state;
 
   /**
    * Extended accessible states -- second bit field describing node
    */
-  readonly attribute unsigned long accExtState;
+  readonly attribute unsigned long extState;
 
   /**
    * Help text associated with node
    */
-  readonly attribute AString accHelp;
+  readonly attribute AString help;
 
   /**
    * Focused accessible child of node
    */
-  readonly attribute nsIAccessible accFocused;
+  readonly attribute nsIAccessible focusedChild;
 
   /**
    * Accessible child which contains the coordinate at x,y
    */
-  nsIAccessible accGetAt(in long x, in long y);
+  nsIAccessible getChildAtPoint(in long x, in long y);
 
   /**
    * Nth accessible child using zero-based index
@@ -154,24 +155,24 @@ interface nsIAccessible : nsISupports
   /**
    * Accessible node geometrically to the right of this one
    */
-  nsIAccessible accGetFromRight();
+  nsIAccessible getAccessibleToRight();
 
   /**
    * Accessible node geometrically to the left of this one
    */
-  nsIAccessible accGetFromLeft();
+  nsIAccessible getAccessibleToLeft();
 
   /**
    * Accessible node geometrically above this one
    */
-  nsIAccessible accGetFromAbove();
+  nsIAccessible getAccessibleAbove();
 
   /**
    * Accessible node geometrically below this one
    */
-  nsIAccessible accGetFromBelow();
+  nsIAccessible getAccessibleBelow();
 
-  void accGetBounds(out long x, 
+  void getBounds(out long x, 
                     out long y, 
                     out long width, 
                     out long height);
@@ -179,23 +180,23 @@ interface nsIAccessible : nsISupports
   /**
    * Add this accessible to the current selection
    */
-  void accAddSelection();
+  void addSelection();
 
   /**
    * Remove this accessible from the current selection
    */
-  void accRemoveSelection();
+  void removeSelection();
 
   /**
    * Extend the current selection from its current accessible anchor node
    * to this accessible
    */
-  void accExtendSelection();
+  void extendSelection();
 
   /**
    * Select this accessible node only
    */
-  void accTakeSelection();
+  void takeSelection();
 
   /**
    * Focus this accessible node,
@@ -205,28 +206,28 @@ interface nsIAccessible : nsISupports
    * will still set focus on that node, although normally that will not be visually 
    * indicated in most style sheets.
    */
-  void accTakeFocus();
+  void takeFocus();
 
   /**
    * The number of accessible actions associated with this accessible
    */
-  readonly attribute PRUint8 accNumActions;
+  readonly attribute PRUint8 numActions;
 
   /**
    * The name of the accessible action at the given zero-based index
    */
-  AString getAccActionName(in PRUint8 index);
+  AString getActionName(in PRUint8 index);
 
   /**
    * Perform the accessible action at the given zero-based index
    * Action number 0 is the default action
    */
-  void accDoAction(in PRUint8 index);   
+  void doAction(in PRUint8 index);   
 
   /**
    * Get the DOM node described by this accessible node
    */
-  nsIDOMNode accGetDOMNode();
+  nsIDOMNode getDOMNode();
 
   /**
    * Get a pointer to accessibility interface for this node, which is specific 

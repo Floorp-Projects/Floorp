@@ -82,7 +82,7 @@ public:
   nsHTMLTableHeadAccessible(nsIDOMNode *aDomNode, nsIWeakReference *aShell);
 
   /* nsIAccessible */
-  NS_IMETHOD GetAccRole(PRUint32 *aResult);
+  NS_IMETHOD GetRole(PRUint32 *aResult);
 
   /* nsIAccessibleTable */
   NS_IMETHOD GetCaption(nsIAccessible **aCaption);

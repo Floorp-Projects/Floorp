@@ -52,11 +52,11 @@ class nsFormControlAccessible : public nsAccessibleWrap
 public:
   nsFormControlAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
   NS_DECL_ISUPPORTS_INHERITED
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetChildCount(PRInt32 *_retval);
 };
 
 /**
@@ -67,9 +67,9 @@ class nsRadioButtonAccessible : public nsFormControlAccessible
 
 public:
   nsRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
 };
 
 

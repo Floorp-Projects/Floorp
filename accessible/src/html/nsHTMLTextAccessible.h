@@ -49,8 +49,8 @@ class nsHTMLTextAccessible : public nsTextAccessibleWrap
 
 public:
   nsHTMLTextAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& _retval);
-  NS_IMETHOD GetAccState(PRUint32 *aState);
+  NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetState(PRUint32 *aState);
 };
 
 class nsHTMLHRAccessible : public nsLeafAccessible
@@ -58,8 +58,8 @@ class nsHTMLHRAccessible : public nsLeafAccessible
 
 public:
   nsHTMLHRAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *aRole); 
-  NS_IMETHOD GetAccState(PRUint32 *aState); 
+  NS_IMETHOD GetRole(PRUint32 *aRole); 
+  NS_IMETHOD GetState(PRUint32 *aState); 
 };
 
 class nsHTMLLabelAccessible : public nsTextAccessible 
@@ -67,12 +67,12 @@ class nsHTMLLabelAccessible : public nsTextAccessible
 
 public:
   nsHTMLLabelAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& _retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **aAccFirstChild);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **aAccLastChild);
-  NS_IMETHOD GetAccChildCount(PRInt32 *aAccChildCount);
+  NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetFirstChild(nsIAccessible **aFirstChild);
+  NS_IMETHOD GetLastChild(nsIAccessible **aLastChild);
+  NS_IMETHOD GetChildCount(PRInt32 *aAccChildCount);
 };
 
 #endif  

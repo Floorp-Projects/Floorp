@@ -57,13 +57,13 @@ public:
   virtual ~nsXULTreeAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccValue(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetValue(nsAString& _retval);
 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetChildCount(PRInt32 *_retval);
 
   static void GetTreeBoxObject(nsIDOMNode* aDOMNode, nsITreeBoxObject** aBoxObject);
 
@@ -86,22 +86,22 @@ public:
   virtual ~nsXULTreeitemAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccName(nsAString& _retval);
-  NS_IMETHOD GetAccValue(nsAString& _retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetValue(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
 
-  NS_IMETHOD GetAccParent(nsIAccessible **_retval);
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval);
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetParent(nsIAccessible **_retval);
+  NS_IMETHOD GetNextSibling(nsIAccessible **_retval);
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval);
 
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD AccGetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
-  NS_IMETHOD AccRemoveSelection(void); 
-  NS_IMETHOD AccTakeSelection(void); 
-  NS_IMETHOD AccTakeFocus(void); 
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetBounds(PRInt32 *x, PRInt32 *y, PRInt32 *width, PRInt32 *height);
+  NS_IMETHOD RemoveSelection(void); 
+  NS_IMETHOD TakeSelection(void); 
+  NS_IMETHOD TakeFocus(void); 
 
   /* ------ nsIAccessNode ----- */
   NS_IMETHOD GetUniqueID(void **aUniqueID);
@@ -122,15 +122,15 @@ public:
   virtual ~nsXULTreeColumnsAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
 
-  NS_IMETHOD GetAccNextSibling(nsIAccessible **_retval); 
-  NS_IMETHOD GetAccPreviousSibling(nsIAccessible **_retval); 
+  NS_IMETHOD GetNextSibling(nsIAccessible **_retval); 
+  NS_IMETHOD GetPreviousSibling(nsIAccessible **_retval); 
 
-  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD DoAction(PRUint8 index);
 };
 
 class nsXULTreeColumnitemAccessible : public nsLeafAccessible
@@ -142,13 +142,13 @@ public:
   virtual ~nsXULTreeColumnitemAccessible() {}
 
   /* ----- nsIAccessible ----- */
-  NS_IMETHOD GetAccName(nsAString& _retval);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval);
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD GetName(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval);
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
 
-  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD DoAction(PRUint8 index);
 };
 
 #endif

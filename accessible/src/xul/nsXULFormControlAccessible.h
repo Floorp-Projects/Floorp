@@ -49,37 +49,37 @@ class nsXULButtonAccessible : public nsAccessibleWrap
 {
 public:
   nsXULButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& aResult);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccChildCount(PRInt32 *_retval);
+  NS_IMETHOD GetName(nsAString& aResult);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval);
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetChildCount(PRInt32 *_retval);
 };
 
 class nsXULCheckboxAccessible : public nsFormControlAccessible
 {
 public:
   nsXULCheckboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
 class nsXULDropmarkerAccessible : public nsFormControlAccessible
 {
 public:
   nsXULDropmarkerAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccNumActions(PRUint8 *_retval);
-  NS_IMETHOD GetAccActionName(PRUint8 index, nsAString& _retval);
-  NS_IMETHOD AccDoAction(PRUint8 index);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetNumActions(PRUint8 *_retval);
+  NS_IMETHOD GetActionName(PRUint8 index, nsAString& _retval);
+  NS_IMETHOD DoAction(PRUint8 index);
 
 private:
   PRBool DropmarkerOpen(PRBool aToggleOpen);
@@ -89,9 +89,9 @@ class nsXULGroupboxAccessible : public nsAccessibleWrap
 {
 public:
   nsXULGroupboxAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccName(nsAString& _retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetName(nsAString& _retval);
 };
 
 class nsXULProgressMeterAccessible : public nsFormControlAccessible
@@ -100,9 +100,9 @@ class nsXULProgressMeterAccessible : public nsFormControlAccessible
 
 public:
   nsXULProgressMeterAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccValue(nsAString &_retval);
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetValue(nsAString &_retval);
 };
 
 class nsXULRadioButtonAccessible : public nsRadioButtonAccessible
@@ -110,41 +110,41 @@ class nsXULRadioButtonAccessible : public nsRadioButtonAccessible
 
 public:
   nsXULRadioButtonAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD AccDoAction(PRUint8 index);
-  NS_IMETHOD GetAccParent(nsIAccessible **_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval);
+  NS_IMETHOD DoAction(PRUint8 index);
+  NS_IMETHOD GetParent(nsIAccessible **_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval);
 };
 
 class nsXULRadioGroupAccessible : public nsAccessibleWrap
 {
 public:
   nsXULRadioGroupAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
 class nsXULStatusBarAccessible : public nsAccessibleWrap
 {
 public:
   nsXULStatusBarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
 class nsXULToolbarAccessible : public nsAccessibleWrap
 {
 public:
   nsXULToolbarAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
 class nsXULToolbarSeparatorAccessible : public nsLeafAccessible
 {
 public:
   nsXULToolbarSeparatorAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
 };
 
 #endif  

@@ -130,7 +130,7 @@ refAccessibleAtPointCB(AtkComponent *aComponent,
     }
 
     nsCOMPtr<nsIAccessible> pointAcc;
-    nsresult rv = accWrap->AccGetAt(aAccX, aAccY, getter_AddRefs(pointAcc));
+    nsresult rv = accWrap->GetChildAtPoint(aAccX, aAccY, getter_AddRefs(pointAcc));
     if (NS_FAILED(rv))
         return nsnull;
 
@@ -157,7 +157,7 @@ getExtentsCB(AtkComponent *aComponent,
         return;
 
     PRInt32 nsAccX, nsAccY, nsAccWidth, nsAccHeight;
-    nsresult rv = accWrap->AccGetBounds(&nsAccX, &nsAccY,
+    nsresult rv = accWrap->GetBounds(&nsAccX, &nsAccY,
                                            &nsAccWidth, &nsAccHeight);
     if (NS_FAILED(rv))
         return;
@@ -178,6 +178,6 @@ grabFocusCB(AtkComponent *aComponent)
     nsAccessibleWrap *accWrap = GetAccessibleWrap(ATK_OBJECT(aComponent));
     NS_ENSURE_TRUE(accWrap, FALSE);
 
-    nsresult rv = accWrap->AccTakeFocus();
+    nsresult rv = accWrap->TakeFocus();
     return (NS_FAILED(rv)) ? FALSE : TRUE;
 }

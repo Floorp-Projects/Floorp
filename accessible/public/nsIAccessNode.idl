@@ -75,32 +75,32 @@ interface nsIAccessNode : nsISupports
    * @param childNum Zero-based child index
    * @return The nth nsIAccessNode child
    */
-  nsIAccessNode getChildAt(in long childNum);
+  nsIAccessNode getChildNodeAt(in long childNum);
   
   /**
    * The parent nsIAccessNode
    */
-  readonly attribute nsIAccessNode parent;
+  readonly attribute nsIAccessNode parentNode;
 
   /**
    * The first nsIAccessNode child
    */
-  readonly attribute nsIAccessNode firstChild;
+  readonly attribute nsIAccessNode firstChildNode;
 
   /**
    * The last nsIAccessNode child
    */
-  readonly attribute nsIAccessNode lastChild;
+  readonly attribute nsIAccessNode lastChildNode;
   
   /**
    * The previous nsIAccessNode sibling
    */
-  readonly attribute nsIAccessNode previousSibling;
+  readonly attribute nsIAccessNode previousSiblingNode;
 
   /**
    * The next nsIAccessNode sibling
    */
-  readonly attribute nsIAccessNode nextSibling;
+  readonly attribute nsIAccessNode nextSiblingNode;
 
   /**
    * The nsIAccessibleDocument that this nsIAccessNode

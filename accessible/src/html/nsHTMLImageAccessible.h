@@ -53,11 +53,11 @@ class nsHTMLImageAccessible : public nsLinkableAccessible
 
 public:
   nsHTMLImageAccessible(nsIDOMNode* aDomNode, nsIWeakReference* aShell);
-  NS_IMETHOD GetAccName(nsAString& _retval); 
-  NS_IMETHOD GetAccState(PRUint32 *_retval); 
-  NS_IMETHOD GetAccRole(PRUint32 *_retval); 
-  NS_IMETHOD GetAccFirstChild(nsIAccessible **_retval);
-  NS_IMETHOD GetAccLastChild(nsIAccessible **_retval);
+  NS_IMETHOD GetName(nsAString& _retval); 
+  NS_IMETHOD GetState(PRUint32 *_retval); 
+  NS_IMETHOD GetRole(PRUint32 *_retval); 
+  NS_IMETHOD GetFirstChild(nsIAccessible **_retval);
+  NS_IMETHOD GetLastChild(nsIAccessible **_retval);
 
 protected:
   nsIAccessible *CreateAreaAccessible(PRInt32 areaNum);

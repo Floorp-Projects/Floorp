@@ -560,27 +560,27 @@ NS_IMETHODIMP nsAppRootAccessible::Shutdown()
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccName(nsAString& _retval)
+NS_IMETHODIMP nsAppRootAccessible::GetName(nsAString& _retval)
 {
     _retval = NS_LITERAL_STRING("Mozilla");
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccDescription(nsAString& aDescription)
+NS_IMETHODIMP nsAppRootAccessible::GetDescription(nsAString& aDescription)
 {
     aDescription = NS_LITERAL_STRING("Mozilla Root Accessible");
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccRole(PRUint32 *aAccRole)
+NS_IMETHODIMP nsAppRootAccessible::GetRole(PRUint32 *aRole)
 {
-    *aAccRole = ROLE_APPLICATION;
+    *aRole = ROLE_APPLICATION;
     return NS_OK;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccParent(nsIAccessible **  aAccParent)
+NS_IMETHODIMP nsAppRootAccessible::GetParent(nsIAccessible **  aParent)
 {
-    *aAccParent = nsnull;
+    *aParent = nsnull;
     return NS_OK;
 }
 
@@ -616,7 +616,7 @@ NS_IMETHODIMP nsAppRootAccessible::GetChildAt(PRInt32 aChildNum,
     return rv;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccChildCount(PRInt32 *aAccChildCount) 
+NS_IMETHODIMP nsAppRootAccessible::GetChildCount(PRInt32 *aAccChildCount) 
 {
     PRUint32 count = 0;
     nsresult rv = NS_OK;
@@ -632,27 +632,27 @@ NS_IMETHODIMP nsAppRootAccessible::GetAccChildCount(PRInt32 *aAccChildCount)
     return rv;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccFirstChild(nsIAccessible * *aAccFirstChild) 
+NS_IMETHODIMP nsAppRootAccessible::GetFirstChild(nsIAccessible * *aFirstChild) 
 {
     nsCOMPtr<nsIAccessible> firstChild;
-    *aAccFirstChild = nsnull;
+    *aFirstChild = nsnull;
     nsresult rv = NS_OK;
     rv = mChildren->QueryElementAt(0, NS_GET_IID(nsIAccessible),
                                    getter_AddRefs(firstChild));
     if (firstChild)
-        NS_IF_ADDREF(*aAccFirstChild = firstChild);
+        NS_IF_ADDREF(*aFirstChild = firstChild);
     return rv;
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccNextSibling(nsIAccessible * *aAccNextSibling) 
+NS_IMETHODIMP nsAppRootAccessible::GetNextSibling(nsIAccessible * *aNextSibling) 
 { 
-    *aAccNextSibling = nsnull; 
+    *aNextSibling = nsnull; 
     return NS_OK;  
 }
 
-NS_IMETHODIMP nsAppRootAccessible::GetAccPreviousSibling(nsIAccessible * *aAccPreviousSibling) 
+NS_IMETHODIMP nsAppRootAccessible::GetPreviousSibling(nsIAccessible * *aPreviousSibling) 
 {
-    *aAccPreviousSibling = nsnull;
+    *aPreviousSibling = nsnull;
     return NS_OK;  
 }
 

@@ -133,27 +133,27 @@ NS_INTERFACE_MAP_END_INHERITING(nsBlockAccessible)
 NS_IMPL_ADDREF_INHERITED(nsDocAccessible, nsBlockAccessible)
 NS_IMPL_RELEASE_INHERITED(nsDocAccessible, nsBlockAccessible)
 
-NS_IMETHODIMP nsDocAccessible::GetAccName(nsAString& aAccName) 
+NS_IMETHODIMP nsDocAccessible::GetName(nsAString& aName) 
 { 
-  return GetTitle(aAccName);
+  return GetTitle(aName);
 }
 
-NS_IMETHODIMP nsDocAccessible::GetAccRole(PRUint32 *_retval)
+NS_IMETHODIMP nsDocAccessible::GetRole(PRUint32 *_retval)
 {
   *_retval = ROLE_PANE;
   return NS_OK;
 }
 
-NS_IMETHODIMP nsDocAccessible::GetAccValue(nsAString& aAccValue)
+NS_IMETHODIMP nsDocAccessible::GetValue(nsAString& aValue)
 {
-  return GetURL(aAccValue);
+  return GetURL(aValue);
 }
 
-NS_IMETHODIMP nsDocAccessible::GetAccState(PRUint32 *aAccState)
+NS_IMETHODIMP nsDocAccessible::GetState(PRUint32 *aState)
 {
-  *aAccState = STATE_FOCUSABLE;
+  *aState = STATE_FOCUSABLE;
   if (mBusy == eBusyStateLoading)
-    *aAccState |= STATE_BUSY;
+    *aState |= STATE_BUSY;
 
 #ifdef DEBUG
   PRBool isEditable;
@@ -162,7 +162,7 @@ NS_IMETHODIMP nsDocAccessible::GetAccState(PRUint32 *aAccState)
   if (isEditable) {
     // Just for debugging, to show we're in editor on pane object
     // We don't use STATE_MARQUEED for anything else
-    *aAccState |= STATE_MARQUEED; 
+    *aState |= STATE_MARQUEED; 
   }
 #endif
   return NS_OK;
@@ -346,10 +346,10 @@ NS_IMETHODIMP nsDocAccessible::Init()
           // It should be changed to use GetAccessibleInWeakShell()
           nsCOMPtr<nsIAccessible> accParent;
           accService->GetAccessibleFor(ownerNode, getter_AddRefs(accParent));
-          nsCOMPtr<nsPIAccessible> privateAccParent(do_QueryInterface(accParent));
-          if (privateAccParent) {
-            SetAccParent(accParent);
-            privateAccParent->SetAccFirstChild(this);
+          nsCOMPtr<nsPIAccessible> privateParent(do_QueryInterface(accParent));
+          if (privateParent) {
+            SetParent(accParent);
+            privateParent->SetFirstChild(this);
           }
         }
       }
@@ -412,7 +412,7 @@ nsIFrame* nsDocAccessible::GetFrame()
   return root;
 }
 
-void nsDocAccessible::GetBounds(nsRect& aBounds, nsIFrame** aRelativeFrame)
+void nsDocAccessible::GetBoundsRect(nsRect& aBounds, nsIFrame** aRelativeFrame)
 {
   *aRelativeFrame = GetFrame();
 
