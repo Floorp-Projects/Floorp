@@ -216,7 +216,7 @@ nsspkcs5_PFXPBE(const SECHashObject *hashObj, NSSPKCS5PBEParameter *pbe_param,
 	PORT_Memcpy(state, pbe_param->salt.data, pbe_param->salt.len);
     }
 
-    cx = HMAC_Create(hashObj, init_hash->data, init_hash->len);
+    cx = HMAC_Create(hashObj, init_hash->data, init_hash->len, PR_TRUE);
     if (cx == NULL) {
 	rv = SECFailure;
 	goto loser;
@@ -329,7 +329,7 @@ nsspkcs5_PBKFD2_F(const SECHashObject *hashobj, SECItem *pwitem, SECItem *salt,
     unsigned char *last = NULL;
     int lastLength = salt->len + 4;
 
-    cx=HMAC_Create(hashobj,pwitem->data,pwitem->len);
+    cx=HMAC_Create(hashobj,pwitem->data,pwitem->len,PR_TRUE);
     if (cx == NULL) {
 	goto loser;
     }

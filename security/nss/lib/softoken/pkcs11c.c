@@ -64,7 +64,7 @@
 #include "alghmac.h"
 #include "softoken.h"
 #include "secasn1.h"
-/*#include "secmodi.h" */
+#include "secerr.h"
 
 #include "pcert.h"
 #include "ssl3prot.h" 	/* for SSL3_RANDOM_LENGTH */
@@ -88,7 +88,7 @@
 
 /* forward static declaration. */
 static SECStatus pk11_PRF(const SECItem *secret, const char *label, 
-                          SECItem *seed, SECItem *result);  
+                          SECItem *seed, SECItem *result, PRBool isFIPS);  
 
 #define PK11_OFFSETOF(str, memb) ((PRPtrdiff)(&(((str *)0)->memb)))
 
@@ -1283,17 +1283,26 @@ pk11_doHMACInit(PK11SessionContext *context,HASH_HashType hash,
     HMACContext *HMACcontext;
     CK_ULONG *intpointer;
     const SECHashObject *hashObj = &SECRawHashObjects[hash];
+    PRBool isFIPS = (key->slot->slotID == FIPS_SLOT_ID);
+
+    /* required by FIPS 198 Section 4 */
+    if (isFIPS && (mac_size < 4 || mac_size < hashObj->length/2)) {
+	return CKR_BUFFER_TOO_SMALL;
+    }
 
     keyval = pk11_FindAttribute(key,CKA_VALUE);
     if (keyval == NULL) return CKR_KEY_SIZE_RANGE;
 
     HMACcontext = HMAC_Create(hashObj, 
 		(const unsigned char*)keyval->attrib.pValue,
-						 keyval->attrib.ulValueLen);
+		keyval->attrib.ulValueLen, isFIPS);
     context->hashInfo = HMACcontext;
     context->multi = PR_TRUE;
     pk11_FreeAttribute(keyval);
     if (context->hashInfo == NULL) {
+	if (PORT_GetError() == SEC_ERROR_INVALID_ARGS) {
+	    return CKR_KEY_SIZE_RANGE;
+	}
 	return CKR_HOST_MEMORY;
     }
     context->hashUpdate = (PK11Hash) HMAC_Update;
@@ -1439,6 +1448,7 @@ typedef struct {
     PRUint32	cxKeyLen;	/* number of bytes of cxBuf containing key.  */
     PRUint32	cxDataLen;	/* number of bytes of cxBuf containing data. */
     SECStatus	cxRv;		/* records failure of void functions.        */
+    PRBool	cxIsFIPS;	/* true if conforming to FIPS 198.           */
     unsigned char cxBuf[512];	/* actual size may be larger than 512.       */
 } TLSPRFContext;
 
@@ -1505,7 +1515,7 @@ pk11_TLSPRFUpdate(TLSPRFContext *cx,
     sigItem.data = sig;
     sigItem.len  = maxLen;
 
-    rv = pk11_PRF(&secretItem, NULL, &seedItem, &sigItem);
+    rv = pk11_PRF(&secretItem, NULL, &seedItem, &sigItem, cx->cxIsFIPS);
     if (rv == SECSuccess && sigLen != NULL)
     	*sigLen = sigItem.len;
     return rv;
@@ -1572,6 +1582,7 @@ pk11_TLSPRFInit(PK11SessionContext *context,
     prf_cx->cxKeyLen  = keySize;
     prf_cx->cxDataLen = 0;
     prf_cx->cxRv        = SECSuccess;
+    prf_cx->cxIsFIPS  = (key->slot->slotID == FIPS_SLOT_ID);
     if (keySize)
 	PORT_Memcpy(prf_cx->cxBuf, keyVal->attrib.pValue, keySize);
 
@@ -4124,7 +4135,7 @@ pk11_MapKeySize(CK_KEY_TYPE keyType) {
 /* TLS P_hash function */
 static SECStatus
 pk11_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label, 
-	SECItem *seed, SECItem *result)
+	SECItem *seed, SECItem *result, PRBool isFIPS)
 {
     unsigned char state[PHASH_STATE_MAX_LEN];
     unsigned char outbuf[PHASH_STATE_MAX_LEN];
@@ -4146,7 +4157,7 @@ pk11_P_hash(HASH_HashType hashType, const SECItem *secret, const char *label,
     if (label != NULL)
 	label_len = PORT_Strlen(label);
 
-    cx = HMAC_Create(hashObj, secret->data, secret->len);
+    cx = HMAC_Create(hashObj, secret->data, secret->len, isFIPS);
     if (cx == NULL)
 	goto loser;
 
@@ -4196,7 +4207,7 @@ loser:
 
 static SECStatus
 pk11_PRF(const SECItem *secret, const char *label, SECItem *seed, 
-         SECItem *result)
+         SECItem *result, PRBool isFIPS)
 {
     SECStatus rv = SECFailure, status;
     unsigned int i;
@@ -4221,11 +4232,11 @@ pk11_PRF(const SECItem *secret, const char *label, SECItem *seed,
 	goto loser;
     tmp.len = result->len;
 
-    status = pk11_P_hash(HASH_AlgMD5, &S1, label, seed, result);
+    status = pk11_P_hash(HASH_AlgMD5, &S1, label, seed, result, isFIPS);
     if (status != SECSuccess)
 	goto loser;
 
-    status = pk11_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp);
+    status = pk11_P_hash(HASH_AlgSHA1, &S2, label, seed, &tmp, isFIPS);
     if (status != SECSuccess)
 	goto loser;
 
@@ -4291,6 +4302,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
     unsigned char   sha_out[SHA1_LENGTH];
     unsigned char   key_block[NUM_MIXERS * MD5_LENGTH];
     unsigned char   key_block2[MD5_LENGTH];
+    PRBool          isFIPS;		
 
     /*
      * now lets create an object to hang the attributes off of
@@ -4301,6 +4313,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
     if (key == NULL) {
 	return CKR_HOST_MEMORY;
     }
+    isFIPS = (slot->slotID == FIPS_SLOT_ID);
 
     /*
      * load the template values into the object
@@ -4443,7 +4456,7 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 	    PORT_Memcpy(crsrdata + SSL3_RANDOM_LENGTH, 
 		ssl3_master->RandomInfo.pServerRandom, SSL3_RANDOM_LENGTH);
 
-	    status = pk11_PRF(&pms, "master secret", &crsr, &master);
+	    status = pk11_PRF(&pms, "master secret", &crsr, &master, isFIPS);
 	    if (status != SECSuccess) {
 	    	crv = CKR_FUNCTION_FAILED;
 		break;
@@ -4574,7 +4587,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		        ssl3_keys->RandomInfo.pClientRandom, 
 			SSL3_RANDOM_LENGTH);
 
-	    status = pk11_PRF(&master, "key expansion", &srcr, &keyblk);
+	    status = pk11_PRF(&master, "key expansion", &srcr, &keyblk,
+			      isFIPS);
 	    if (status != SECSuccess) {
 		goto key_and_mac_derive_fail;
 	    }
@@ -4774,7 +4788,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		i          += effKeySize;
 		keyblk.data = key_block2;
 		keyblk.len  = sizeof key_block2;
-		status = pk11_PRF(&secret, "client write key", &crsr, &keyblk);
+		status = pk11_PRF(&secret, "client write key", &crsr, &keyblk,
+				  isFIPS);
 		if (status != SECSuccess) {
 		    goto key_and_mac_derive_fail;
 		}
@@ -4795,7 +4810,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		i          += effKeySize;
 		keyblk.data = key_block2;
 		keyblk.len  = sizeof key_block2;
-		status = pk11_PRF(&secret, "server write key", &crsr, &keyblk);
+		status = pk11_PRF(&secret, "server write key", &crsr, &keyblk,
+				  isFIPS);
 		if (status != SECSuccess) {
 		    goto key_and_mac_derive_fail;
 		}
@@ -4816,7 +4832,8 @@ CK_RV NSC_DeriveKey( CK_SESSION_HANDLE hSession,
 		    secret.len  = 0;
 		    keyblk.data = &key_block[i];
 		    keyblk.len  = 2 * IVSize;
-		    status = pk11_PRF(&secret, "IV block", &crsr, &keyblk);
+		    status = pk11_PRF(&secret, "IV block", &crsr, &keyblk,
+				      isFIPS);
 		    if (status != SECSuccess) {
 			goto key_and_mac_derive_fail;
 		    }
