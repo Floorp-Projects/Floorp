@@ -33,9 +33,9 @@
     [% FOREACH bug = bugs %]
       <li>
         
-        <bz:bug rdf:about="[% Param('urlbase') %]show_bug.cgi?id=[% bug.id %]">
+        <bz:bug rdf:about="[% Param('urlbase') %]show_bug.cgi?id=[% bug.bug_id %]">
           
-          <bz:id nc:parseType="Integer">[% bug.id %]</bz:id>
+          <bz:id nc:parseType="Integer">[% bug.bug_id %]</bz:id>
         
         [% FOREACH column = displaycolumns %]
           <bz:[% column %]>[% bug.$column FILTER html %]</bz:[% column %]>
