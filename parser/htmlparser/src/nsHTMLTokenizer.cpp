@@ -659,10 +659,13 @@ nsresult nsHTMLTokenizer::ConsumeAttributes(PRUnichar aChar,
         }
       }
       else { //if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result){
-        aToken->SetEmpty(PR_TRUE);
         IF_FREE(theToken, mTokenAllocator);
-        if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result)
+        //Bad attributes are not a reason to set empty.
+        if(NS_ERROR_HTMLPARSER_BADATTRIBUTE==result) {
           result=NS_OK;
+        } else {
+          aToken->SetEmpty(PR_TRUE);
+        }
       }
     }//if
     
