@@ -54,6 +54,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIRefreshUrl.h               \
 	      nsIConnectionInfo.h		\
           nsILoadAttribs.h          \
+          nsIURLGroup.h             \
           $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

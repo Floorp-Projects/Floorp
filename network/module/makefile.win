@@ -34,6 +34,7 @@ EXPORTS = nsIStreamListener.h           \
           nsIConnectionInfo.h           \
           nsINetFile.h                  \
           nsILoadAttribs.h              \
+          nsIURLGroup.h                 \
           $(NULL)
 
 DIRS = tests

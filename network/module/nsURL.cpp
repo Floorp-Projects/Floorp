@@ -19,6 +19,7 @@
 #include "nsIInputStream.h"
 #include "nsINetService.h"
 #include "nsIServiceManager.h"
+#include "nsIURLGroup.h"
 #include "nsIHttpUrl.h"     /* NS_NewHttpUrl(...) */
 #include "nsString.h"
 #include <stdlib.h>
@@ -33,9 +34,10 @@
 
 class URLImpl : public nsIURL {
 public:
-  URLImpl(const nsString& aSpec);
-  URLImpl(const nsString& aSpec, nsISupports* container);
-  URLImpl(const nsIURL* aURL, const nsString& aSpec);
+  URLImpl(const nsIURL* aURL, 
+          const nsString& aSpec, 
+          nsISupports* container = nsnull, 
+          nsIURLGroup* aGroup = nsnull);
   virtual ~URLImpl();
 
   NS_DECL_ISUPPORTS
@@ -58,6 +60,7 @@ public:
   virtual nsISupports* GetContainer() const;
   virtual PRInt32 GetReloadType() const;
   virtual nsILoadAttribs* GetLoadAttribs() const;
+  virtual nsIURLGroup* GetURLGroup() const;
 
   virtual void ToString(nsString& aString) const;
 
@@ -67,8 +70,9 @@ public:
   char* mFile;
   char* mRef;
   char* mSearch;
-  nsISupports* mContainer;
+  nsISupports*    mContainer;
   nsILoadAttribs* mLoadAttribs;
+  nsIURLGroup*    mURLGroup;
 
   // The reload type can be set to one of the following.
   // 0 - normal reload (uses cache) (defined as nsReload in nsIWebShell.h)
@@ -83,30 +87,17 @@ public:
   void CreateProtocolURL();
 
 private:
-  void Init(nsISupports *aContainer);
+  void Init(nsISupports *aContainer, nsIURLGroup* aGroup);
 };
 
-URLImpl::URLImpl(const nsString& aSpec)
+URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec, 
+                 nsISupports* aContainer, nsIURLGroup* aGroup)
 {
-  Init(nsnull);
-
-  ParseURL(nsnull, aSpec);
-}
-
-URLImpl::URLImpl(const nsString& aSpec, nsISupports* aContainer)
-{
-  Init(aContainer);
-
-  ParseURL(nsnull, aSpec);
-}
-
-URLImpl::URLImpl(const nsIURL* aURL, const nsString& aSpec)
-{
-  Init(nsnull);
+  Init(aContainer, aGroup);
   ParseURL(aURL, aSpec);
 }
 
-void URLImpl::Init(nsISupports* aContainer) 
+void URLImpl::Init(nsISupports* aContainer, nsIURLGroup* aGroup) 
 {
   NS_INIT_REFCNT();
   mProtocolUrl = nsnull;
@@ -120,6 +111,9 @@ void URLImpl::Init(nsISupports* aContainer)
   mSpec = nsnull;
   mReloadType = 0;
   mLoadAttribs = nsnull;
+
+  mURLGroup = aGroup;
+  NS_IF_ADDREF(mURLGroup);
 
   mContainer = aContainer;
   NS_IF_ADDREF(mContainer);
@@ -180,6 +174,7 @@ URLImpl::~URLImpl()
   NS_IF_RELEASE(mProtocolUrl);
   NS_IF_RELEASE(mContainer);
   NS_IF_RELEASE(mLoadAttribs);
+  NS_IF_RELEASE(mURLGroup);
 
   PR_FREEIF(mSpec);
   PR_FREEIF(mProtocol);
@@ -210,14 +205,12 @@ nsresult URLImpl::SetReloadType(const PRInt32 type)
 
 nsresult URLImpl::SetLoadAttribs(nsILoadAttribs *aLoadAttrib)
 {
-    NS_PRECONDITION( (aLoadAttrib != nsnull), "Null pointer.");
+  NS_LOCK_INSTANCE();
+  mLoadAttribs = aLoadAttrib;
+  NS_IF_ADDREF(mLoadAttribs);
+  NS_UNLOCK_INSTANCE();
 
-    NS_LOCK_INSTANCE();
-    mLoadAttribs = aLoadAttrib;
-    NS_ADDREF(mLoadAttribs);
-    NS_UNLOCK_INSTANCE();
-
-    return NS_OK;
+  return NS_OK;
 }
 
 
@@ -345,6 +338,18 @@ nsILoadAttribs* URLImpl::GetLoadAttribs() const
   NS_UNLOCK_INSTANCE();
 
   return loadAttribs;
+}
+
+nsIURLGroup* URLImpl::GetURLGroup() const
+{
+  nsIURLGroup* group;
+
+  NS_LOCK_INSTANCE();
+  group = mURLGroup;
+  NS_IF_ADDREF(group);
+  NS_UNLOCK_INSTANCE();
+
+  return group;
 }
 
 void URLImpl::ToString(nsString& aString) const
@@ -730,12 +735,16 @@ nsresult URLImpl::Open(nsIStreamListener *aListener)
   nsINetService *inet = nsnull;
   nsresult rv;
 
-  rv = nsServiceManager::GetService(kNetServiceCID,
-                                    kINetServiceIID,
-                                    (nsISupports **)&inet);
-  if (NS_OK == rv) {
-    rv = inet->OpenStream(this, aListener);
-    NS_RELEASE(inet);
+  if (nsnull != mURLGroup) {
+    rv = mURLGroup->OpenStream(this, aListener);
+  } else {
+    rv = nsServiceManager::GetService(kNetServiceCID,
+                                      kINetServiceIID,
+                                      (nsISupports **)&inet);
+    if (NS_OK == rv) {
+      rv = inet->OpenStream(this, aListener);
+      NS_RELEASE(inet);
+    }
   }
   return rv;
 }
@@ -756,7 +765,7 @@ NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  URLImpl* it = new URLImpl(aSpec);
+  URLImpl* it = new URLImpl(nsnull, aSpec);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -765,20 +774,11 @@ NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
 
 NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
                           const nsIURL* aURL,
-                          const nsString& aSpec)
-{
-  URLImpl* it = new URLImpl(aURL, aSpec);
-  if (nsnull == it) {
-    return NS_ERROR_OUT_OF_MEMORY;
-  }
-  return it->QueryInterface(kURLIID, (void **) aInstancePtrResult);
-}
-
-NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
                           const nsString& aSpec,
-                          nsISupports* container)
+                          nsISupports* aContainer,
+                          nsIURLGroup* aGroup)
 {
-  URLImpl* it = new URLImpl(aSpec, container);
+  URLImpl* it = new URLImpl(aURL, aSpec, aContainer, aGroup);
   if (nsnull == it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -791,7 +791,7 @@ NS_NET nsresult NS_MakeAbsoluteURL(nsIURL* aURL,
                                    nsString& aResult)
 {
   if (0 < aBaseURL.Length()) {
-    URLImpl base(aBaseURL);
+    URLImpl base(nsnull, aBaseURL);
     URLImpl url(&base, aSpec);
     url.ToString(aResult);
   } else {

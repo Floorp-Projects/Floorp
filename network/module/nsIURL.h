@@ -25,6 +25,7 @@
 class nsIInputStream;
 class nsIStreamListener;
 class nsString;
+class nsIURLGroup;
 
 #define NS_IURL_IID           \
 { 0x6ecb2900, 0x93b5, 0x11d1, \
@@ -84,6 +85,9 @@ public:
 
   /** @return the loadAttributes pointer */
   virtual nsILoadAttribs* GetLoadAttribs() const = 0;
+
+  /** @return the nsIURLGroup associated with the URL (if any) */
+  virtual nsIURLGroup* GetURLGroup() const = 0;
   //@}
 
   /** Write the URL to aString, overwriting previous contents. */
@@ -94,15 +98,12 @@ public:
 extern NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
                                  const nsString& aSpec);
 
-/** Create a new URL, interpreting aSpec as relative to aURL. */
+/** Create a new URL, interpreting aSpec as relative to aURL (if non-null). */
 extern NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
                                  const nsIURL* aURL,
-                                 const nsString& aSpec);
-
-/** Create a new URL from aSpec, set it's mWebShell field to webshell. */
-extern NS_NET nsresult NS_NewURL(nsIURL** aInstancePtrResult,
                                  const nsString& aSpec,
-                                 nsISupports* container);
+                                 nsISupports* container = nsnull,
+                                 nsIURLGroup* aGroup = nsnull);
 
 /**
  * Utility routine to take a url (may be nsnull) and a base url (may
