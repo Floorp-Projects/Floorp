@@ -965,6 +965,10 @@ nsRenderingContextXlib::InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
   NS_ENSURE_TRUE(mTranMatrix != nsnull, NS_ERROR_FAILURE);
   NS_ENSURE_TRUE(mSurface    != nsnull, NS_ERROR_FAILURE);
   
+  // Back up the current color, and use GXxor against white to get a
+  // visible result.
+  nscolor backupColor = mCurrentColor;
+  mCurrentColor = NS_RGB(255, 255, 255);
   nscoord x,y,w,h;
 
   x = aX;
@@ -992,6 +996,9 @@ nsRenderingContextXlib::InvertRect(nscoord aX, nscoord aY, nscoord aWidth, nscoo
                    h);
   
   mFunction = GXcopy;
+
+  // Restore current color
+  mCurrentColor = backupColor;
 
   return NS_OK;
 }

@@ -979,6 +979,10 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
     return NS_ERROR_FAILURE;
   }
 
+  // Back up the current color, and use GXxor against white to get a
+  // visible result.
+  nscolor backupColor = mCurrentColor;
+  mCurrentColor = NS_RGB(255, 255, 255);
   nscoord x,y,w,h;
 
   x = aX;
@@ -993,7 +997,7 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
   // It's all way off the screen anyway.
   ConditionRect(x,y,w,h);
 
-  mFunction = GDK_INVERT;
+  mFunction = GDK_XOR;
 
   UpdateGC();
 
@@ -1004,6 +1008,9 @@ NS_IMETHODIMP nsRenderingContextGTK::InvertRect(nscoord aX, nscoord aY, nscoord 
 
   // Back to normal copy drawing mode
   mFunction = GDK_COPY;
+
+  // Restore current color
+  mCurrentColor = backupColor;
 
   return NS_OK;
 }
