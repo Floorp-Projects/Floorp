@@ -498,7 +498,7 @@ void nsFormFrame::AddFormControlFrame(nsIPresContext* aPresContext, nsIFormContr
         if (thisControl) {
           nsCOMPtr<nsIContent> thisContent;
           nsIFrame* thisFrame = nsnull;
-          nsresult rv = thisControl->QueryInterface(kIFrameIID, (void **)&thisFrame);
+          rv = thisControl->QueryInterface(kIFrameIID, (void **)&thisFrame);
           if (NS_SUCCEEDED(rv) && thisFrame) {
             rv = thisFrame->GetContent(getter_AddRefs(thisContent));
             if (NS_SUCCEEDED(rv) && thisContent) {
@@ -641,6 +641,7 @@ NS_NewFormFrame(nsIPresShell* aPresShell, nsIFrame** aNewFrame, PRUint32 aFlags)
   return NS_OK;
 }
 
+#ifdef NS_DEBUG
 
 PRIVATE
 void DebugPrint(char* aLabel, nsString aString)
@@ -650,7 +651,7 @@ void DebugPrint(char* aLabel, nsString aString)
   delete [] out;
 }
 
-
+#endif
 
 // Give the form process observer a chance to modify the value passed for form submission
 nsresult
@@ -887,10 +888,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     nsIInputStream* postDataStream = nsnull;
     if (isPost) {
       nsresult rv;
-      char* postBuffer = data.ToNewCString();
+      nsCAutoString postBuffer;
+      postBuffer.AssignWithConversion(data);
 
       if (isURLEncoded) {
-        rv = NS_NewPostDataStream(&postDataStream, !isURLEncoded, postBuffer, 0);
+        rv = NS_NewPostDataStream(&postDataStream, !isURLEncoded, postBuffer.GetBuffer(), 0);
       } else {
 // Cut-and-paste of NS_NewPostDataStream
         NS_WITH_SERVICE(nsIIOService, serv, kIOServiceCID, &rv);
@@ -910,10 +912,6 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
 	rv = http->NewEncodeStream(rawStream, nsIHTTPProtocolHandler::ENCODE_NORMAL, &postDataStream);
         NS_RELEASE(rawStream);
 // End Cut-and-pastisms
-      }
-
-      if (NS_OK != rv) {
-        delete [] postBuffer;
       }
 
       /* The postBuffer is now owned by the IPostData instance */
