@@ -36,6 +36,7 @@ static NS_DEFINE_IID(kStyleFontSID, NS_STYLEFONT_SID);
 static NS_DEFINE_IID(kStyleColorSID, NS_STYLECOLOR_SID);
 static NS_DEFINE_IID(kStyleListSID, NS_STYLELIST_SID);
 static NS_DEFINE_IID(kStyleSpacingSID, NS_STYLESPACING_SID);
+static NS_DEFINE_IID(kStylePositionSID, NS_STYLEPOSITION_SID);
 static NS_DEFINE_IID(kStyleMoleculeSID, NS_STYLEMOLECULE_SID);
 
 static NS_DEFINE_IID(kCSSFontSID, NS_CSS_FONT_SID);
@@ -660,12 +661,29 @@ void CSSStyleRuleImpl::MapStyleInto(nsIStyleContext* aContext, nsIPresContext* a
     nsCSSPosition*  ourPosition;
     if (NS_OK == mDeclaration->GetData(kCSSPositionSID, (nsCSSStruct**)&ourPosition)) {
       if (nsnull != ourPosition) {
-        nsStyleMolecule* hack = (nsStyleMolecule*)aContext->GetData(kStyleMoleculeSID);
+        nsStylePosition* position = (nsStylePosition*)aContext->GetData(kStylePositionSID);
 
+        // positioning scheme
         if (ourPosition->mPosition.GetUnit() == eCSSUnit_Enumerated) {
-          hack->positionFlags = ourPosition->mPosition.GetIntValue();
-        } else {
-          hack->positionFlags = NS_STYLE_POSITION_STATIC;
+          position->mPosition = ourPosition->mPosition.GetIntValue();
+        }
+
+        // box offsets
+        if (ourPosition->mLeft.IsLengthUnit()) {
+          position->mLeftOffset = CalcLength(ourPosition->mLeft, font, aPresContext);
+          position->mLeftOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        }
+        if (ourPosition->mTop.IsLengthUnit()) {
+          position->mTopOffset = CalcLength(ourPosition->mTop, font, aPresContext);
+          position->mTopOffsetFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        }
+        if (ourPosition->mWidth.IsLengthUnit()) {
+          position->mWidth = CalcLength(ourPosition->mWidth, font, aPresContext);
+          position->mWidthFlags = NS_STYLE_POSITION_VALUE_LENGTH;
+        }
+        if (ourPosition->mHeight.IsLengthUnit()) {
+          position->mHeight = CalcLength(ourPosition->mHeight, font, aPresContext);
+          position->mHeightFlags = NS_STYLE_POSITION_VALUE_LENGTH;
         }
       }
     }
