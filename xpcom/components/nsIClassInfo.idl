@@ -82,15 +82,6 @@ interface nsIClassInfo : nsISupports
     readonly attribute nsCIDPtr classID;
 
     /**
-     * Also a class ID through which an instance of this class can be created
-     * (or accessed as a service, if |flags & SINGLETON|).  If the class does
-     * not have a CID, it should return NS_ERROR_NOT_AVAILABLE.  This attribute
-     * exists so C++ callers can avoid allocating and freeing a CID, as would
-     * happen if they used classID.
-     */
-    [notxpcom] readonly attribute nsCID classIDNoAlloc;
-
-    /**
      * Return language type from list in nsIProgrammingLanguage
      */
 
@@ -115,4 +106,20 @@ interface nsIClassInfo : nsISupports
 
 
     readonly attribute PRUint32 flags;
+
+    /////////////////////////////////////////////////////////////////////////
+    // The above methods and attributes existed in Netscape6.1 and mozilla0.9.2. 
+    // New methods and attributes must be added to the *end* of the interface
+    // RESIST THE INCLINATION TO PLACE THEM ABOVE WHERE THEY *SEEM* TO BELONG.
+    /////////////////////////////////////////////////////////////////////////
+
+    /**
+     * Also a class ID through which an instance of this class can be created
+     * (or accessed as a service, if |flags & SINGLETON|).  If the class does
+     * not have a CID, it should return NS_ERROR_NOT_AVAILABLE.  This attribute
+     * exists so C++ callers can avoid allocating and freeing a CID, as would
+     * happen if they used classID.
+     */
+    [notxpcom] readonly attribute nsCID classIDNoAlloc;
+
 };
