@@ -1518,7 +1518,7 @@ msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset)
   {
     /* Convert to unicode */
     nsAutoString uStr;
-    rv = ConvertToUnicode(msgCompFileSystemCharset(), attachment->m_real_name, uStr);
+    rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), attachment->m_real_name, uStr);
     if (NS_FAILED(rv)) 
       uStr.Assign(attachment->m_real_name);
 

@@ -108,6 +108,9 @@ interface nsIMsgCompFields : nsISupports {
 	void SetTemplateName(in wstring value);
 	wstring GetTemplateName();
 
+	void SetDraftId(in wstring value);
+	wstring GetDraftId();
+
 	void SetReturnReceipt(in boolean value);
 	boolean GetReturnReceipt();
 

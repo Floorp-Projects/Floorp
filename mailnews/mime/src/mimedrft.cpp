@@ -216,7 +216,7 @@ mime_dump_attachments ( attachmentList );
 		curAttachment++;
 	  }
 	if (attachments.Length())
-	  compFields->SetAttachments(attachments.ToNewUnicode());
+	  compFields->SetAttachments(attachments.GetUnicode());
   }
 
   NS_WITH_SERVICE(nsIMsgComposeService, msgComposeService,
@@ -1338,7 +1338,11 @@ mime_parse_stream_complete (nsMIMESession *stream)
 		if (mdd->forwardInline)
         	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, composeFormat, mdd->identity);
         else
+        {
+            nsString urlStr(mdd->url_name);
+            fields->SetDraftId(urlStr.GetUnicode());
         	CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, composeFormat, mdd->identity);
+        }
       }
       
       PR_FREEIF(body);
@@ -1365,7 +1369,11 @@ mime_parse_stream_complete (nsMIMESession *stream)
 		if (mdd->forwardInline)
 	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::ForwardInline, nsIMsgCompFormat::Default, mdd->identity);
 	    else
+	    {
+            nsString urlStr(mdd->url_name);
+            fields->SetDraftId(urlStr.GetUnicode());
 	        CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::Draft, nsIMsgCompFormat::Default, mdd->identity);
+	    }
       }
     }    
   }
@@ -1640,7 +1648,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   	nsresult rv = ConvertToUnicode(msgCompHeaderInternalCharset(), newAttachment->real_name, outStr);
   	if (NS_SUCCEEDED(rv))
   	{
-  		rv = ConvertFromUnicode(msgCompFileSystemCharset(), outStr, &fileName);
+  		rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), outStr, &fileName);
   		if (NS_FAILED(rv))
   			fileName = PL_strdup(newAttachment->real_name);
    	}

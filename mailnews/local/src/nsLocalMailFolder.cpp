@@ -218,7 +218,7 @@ nsMsgLocalMailFolder::CreateSubFolders(nsFileSpec &path)
 	nsresult rv = NS_OK;
 	nsAutoString currentFolderNameStr;
     nsAutoString convertedFolderNameStr;
-    const nsString fileCharset = msgCompFileSystemCharset();
+    const nsString fileCharset = nsMsgI18NFileSystemCharset();
 	nsCOMPtr<nsIMsgFolder> child;
 	char *folderName;
 	for (nsDirectoryIterator dir(path, PR_FALSE); dir.Exists(); dir++) {

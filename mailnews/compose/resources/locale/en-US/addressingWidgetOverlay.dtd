@@ -3,7 +3,7 @@
 <!ENTITY toAddr.label   "To:"> 
 <!ENTITY ccAddr.label   "Cc:"> 
 <!ENTITY bccAddr.label  "Bcc:"> 
-<!ENTITY replyAddr.label   "Reply:"> 
+<!ENTITY replyAddr.label   "Reply-To:"> 
 <!ENTITY newsgroupsAddr.label   "Newsgroup:"> 
-<!ENTITY followupAddr.label   "Followup:"> 
+<!ENTITY followupAddr.label   "Followup-To:"> 
 

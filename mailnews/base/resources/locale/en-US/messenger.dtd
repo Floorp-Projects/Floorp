@@ -226,7 +226,7 @@ Rights Reserved.
 <!ENTITY forwardAsMenu.label "Forward As">  
 <!ENTITY forwardAsInline.label "Inline">  
 <!ENTITY forwardAsAttachmentCmd.label "Attachment">  
-<!ENTITY editMsgAsNewCmd.label ".Edit Message As New">  
+<!ENTITY editMsgAsNewCmd.label "Edit Message As New">  
 <!ENTITY moveMsgMenu.label "Move Message">  
 <!ENTITY copyMsgMenu.label "Copy Message">  
 <!ENTITY fileHereMenu.label "File Here">

@@ -625,7 +625,7 @@ Rights Reserved.
         <menuitem value="&forwardAsAttachmentCmd.label;" oncommand="MsgForwardAsAttachment(event);"/>
 		</menupopup>
       </menu>
-      <menuitem value="&editMsgAsNewCmd.label;" disabled="true" oncommand="MsgEditMessageAsNew();"/>
+      <menuitem value="&editMsgAsNewCmd.label;" oncommand="MsgEditMessageAsNew();"/>
       <menuseparator/>
       <menu value="&moveMsgMenu.label;" id="moveMenu" datasources="rdf:null"
 		    rdf:ignore="http://home.netscape.com/NC-rdf#MessageChild">

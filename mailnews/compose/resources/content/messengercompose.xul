@@ -34,10 +34,11 @@ Rights Reserved.
 		onunload="ComposeUnload()"
 		onload="ComposeLoad()"
         onclose="return ComposeCanClose()"
-		width="640" height="480"
 		title="&msgComposeWindow.title;"
-		align="vertical"> 
-  
+		align="vertical"
+		width="640" height="480"
+		persist="width height x y"
+		> 
 
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommands.js"/>
 <html:script language="JavaScript" src="chrome://editor/content/EditorCommandsDebug.js"/>
@@ -395,8 +396,7 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 				<box align="horizontal">
 					<html:div>&fromAddr.label;</html:div>
 					<spring style="width:0.5em"/>
-					<html:select id="msgIdentity" flex="100%"
-						onchange="contentChanged=true;"/>
+					<html:select id="msgIdentity" onchange="contentChanged=true;"/>
 				</box>
 				<spring style="height:0.5em"/>
 
@@ -408,8 +408,14 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 					<html:div>&subject.label;</html:div>
 					<spring style="width:0.5em"/>
 				    <html:input id="msgSubject" type="text" flex="100%"
-						onkeyup="SetComposeWindowTitle(event.which);"
-						onkeydown="if (event.which == 9) contentWindow.focus();"
+						onkeyup="SetComposeWindowTitle(event.which);
+						         if (event.which == 13)
+						            contentWindow.focus();"
+						onkeypress="if (event.which == 9)
+						                if (event.shiftKey == false) {
+						                    contentWindow.focus();
+						                    event.preventDefault();
+						                }"
 						onchange="contentChanged=true;"
 						/>
 				</box>
@@ -473,7 +479,13 @@ ACTUALLY, EVERY TIME YOU TYPE ANY OF THE KEY DEFINED HERE AFTER WITHOUT ANY OF T
 </toolbox>
 
     <!-- The main mail three pane frame -->
-    <html:iframe type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"/>
+    <html:iframe type="content-primary" id="content-frame" src="about:blank" name="browser.message.body" flex="100%"
+		onkeypress="if (event.which == 9)
+		                if (event.shiftKey == true) {
+		                    document.getElementById('msgSubject').focus();
+		                    event.preventDefault();
+		                }"
+        />
 
     <box id="status-bar">
 		<box align="vertical" style="width:100px">

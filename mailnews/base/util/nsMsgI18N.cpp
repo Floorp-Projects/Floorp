@@ -201,7 +201,7 @@ const char *msgCompHeaderInternalCharset()
 }
 
 // Charset used by the file system.
-const nsString& msgCompFileSystemCharset()
+const nsString& nsMsgI18NFileSystemCharset()
 {
 	/* Get a charset used for the file. */
 	static nsString aPlatformCharset;

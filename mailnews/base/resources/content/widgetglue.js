@@ -1078,7 +1078,12 @@ function MsgPreviousFlaggedMessage()
 
 function MsgGoBack() {}
 function MsgGoForward() {}
-function MsgEditMessageAsNew() {}
+
+function MsgEditMessageAsNew()
+{
+    ComposeMessage(msgComposeType.Template, msgComposeFormat.Default);
+}
+
 function MsgAddSenderToAddressBook() {}
 function MsgAddAllToAddressBook() {}
 

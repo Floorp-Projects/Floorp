@@ -39,15 +39,25 @@ Rights Reserved.
 				  onclick="awClickEmptySpace(true)"
 				  style="width:0px;height:0px;border:solid black 1px">
 				  
-				<treecol style="width:9em"/>
-				<treecol style="width:2em"/>
-
 				<treechildren id="addressWidgetBody">
 					<treeitem>
 						<treerow>
-							<treecell allowevents="true" onclick="awNotAnEmptyArea(event)">
+							<treecell allowevents="true">
+							    <!--menulist id="msgRecipientType#1" style="width:0px"
+								    onclick="awNotAnEmptyArea(event)"
+								    onchange="contentChanged=true;">
+							        <menupopup>
+							            <menuitem value="&toAddr.label;"/>
+							            <menuitem value="&ccAddr.label;"/>
+							            <menuitem value="&bccAddr.label;"/>
+							            <menuitem value="&replyAddr.label;"/>
+							            <menuitem value="&newsgroupsAddr.label;"/>
+							            <menuitem value="&followupAddr.label;"/>
+							        </menupopup>
+							    </menulist-->
 								<html:select id="msgRecipientType#1"
-									onchange="contentChanged=true;">
+								    onclick="awNotAnEmptyArea(event)"
+								    onchange="contentChanged=true;">
 									<html:option value="addr_to">&toAddr.label;</html:option>
 									<html:option value="addr_cc">&ccAddr.label;</html:option>
 									<html:option value="addr_bcc">&bccAddr.label;</html:option>
@@ -55,13 +65,9 @@ Rights Reserved.
 									<html:option value="addr_newsgroups">&newsgroupsAddr.label;</html:option>
 									<html:option value="addr_followup">&followupAddr.label;</html:option>
 								</html:select>
-							</treecell>
 							
-							<treecell onclick="awNotAnEmptyArea(event)">
-								<image/>
-							</treecell>
+								<image onclick="awNotAnEmptyArea(event)"/>
 							
-							<treecell allowevents="true" onclick="awNotAnEmptyArea(event);">
 								<html:input id="msgRecipient#1"
 											flex="100%"
 											class="addressingWidget"
@@ -70,6 +76,7 @@ Rights Reserved.
 											{ AutoCompleteAddress(this); awReturnHit(this); }"
 											onkeydown="if (event.which == 9) awTabFromRecipient(this, event);"
 											onchange="contentChanged=true; awInputChanged(this);"
+											onclick="awNotAnEmptyArea(event);"
 											/>
 							</treecell>
 						</treerow>

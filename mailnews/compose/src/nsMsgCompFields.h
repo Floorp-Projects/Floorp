@@ -184,6 +184,9 @@ public:
 	NS_IMETHOD SetTemplateName(const char *value) {return SetAsciiHeader(MSG_X_TEMPLATE_HEADER_MASK, value);}
 	const char* GetTemplateName() {return GetHeader(MSG_X_TEMPLATE_HEADER_MASK);}
 
+	NS_IMETHOD SetDraftId(const PRUnichar *value);
+	NS_IMETHOD GetDraftId(PRUnichar **_retval);
+
 	NS_IMETHOD SetReturnReceipt(PRBool value);
 	NS_IMETHOD GetReturnReceipt(PRBool *_retval);
 	PRBool GetReturnReceipt() {return GetBoolHeader(MSG_RETURN_RECEIPT_BOOL_HEADER_MASK);}
@@ -247,7 +250,12 @@ protected:
 	PRBool		m_multipart_alt;
 	PRInt32		m_receiptType; /* 0:None 1:DSN 2:MDN 3:BOTH */
 	nsString	m_internalCharSet;
-
+    nsString    m_draftID;
+    
+    /* WARNING:
+        If you add any new member variable, you must update the function
+        nsMsgCompFields::Copy as well else they will not be copied automatically!
+    */
 };
 
 

@@ -452,9 +452,27 @@ nsMessenger::OpenAttachment(const char * url, const char * displayName,
   if (!fileSpec) goto done;
   unescapedDisplayName = nsCRT::strdup(displayName);
   if (!unescapedDisplayName) goto done;
+  
+  nsUnescape(unescapedDisplayName);
     
+  /* we need to convert the UTF-8 fileName to platform specific character set.
+     The display name is in UTF-8 because it has been escaped from JS
+  */ 
+  
+  nsAutoString tempStr;
+  rv = ConvertToUnicode("UTF-8", unescapedDisplayName, tempStr);
+  if (NS_SUCCEEDED(rv))
+  {
+    char * tempCStr;
+    rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), tempStr, &tempCStr);
+    if (NS_SUCCEEDED(rv))
+    {
+        nsCRT::free(unescapedDisplayName);
+        unescapedDisplayName = tempCStr;
+    }
+  }      
   rv = fileSpec->ChooseOutputFile("Save Attachment",
-                                  nsUnescape(unescapedDisplayName),
+                                  unescapedDisplayName,
                                   nsIFileSpecWithUI::eAllFiles);
   nsCRT::free(unescapedDisplayName);
 
@@ -1609,7 +1627,7 @@ nsSaveAsListener::OnStopRequest(nsIChannel* aChannel, nsISupports* aSupport,
     if (m_outputFormat == TEXT_PLAIN)
     {
       ConvertBufToPlainText(m_msgBuffer);
-      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(msgCompFileSystemCharset()), 
+      rv = nsMsgI18NSaveAsCharset(TEXT_PLAIN, (const char *)nsAutoCString(nsMsgI18NFileSystemCharset()), 
                                   m_msgBuffer.GetUnicode(), &conBuf); 
       if ( NS_SUCCEEDED(rv) && (conBuf) )
         conLength = m_msgBuffer.Length();

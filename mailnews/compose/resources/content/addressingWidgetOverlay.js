@@ -19,19 +19,7 @@
  * Contributor(s): 
  */
 
-function FillRecipientTypeCombobox()
-{
-	top.MAX_RECIPIENTS = 1;
-	
-	var body;
-
-	for ( var row = 2; row <= top.MAX_RECIPIENTS; row++ )
-	{
-		body = document.getElementById('addressWidgetBody');
-		
-		awCopyNode(awGetTreeItem(1), body, 0);
-	}
-}
+top.MAX_RECIPIENTS = 0;
 
 function Recipients2CompFields(msgCompFields)
 {
@@ -82,99 +70,83 @@ function Recipients2CompFields(msgCompFields)
 		dump("Message Compose Error: msgCompFields is null (ExtractRecipients)");
 }
 
-function CompFields2Recipients(msgCompFields)
+function CompFields2Recipients(msgCompFields, msgType)
 {
 	if (msgCompFields)
 	{
-		var row = 1;
+	    var treeChildren = document.getElementById('addressWidgetBody');
+	    var newTreeChildrenNode = treeChildren.cloneNode(false);
+//	    var templateNode = treeChildren.firstChild();  // doesn't work!
+	    var templateNode = awGetTreeItem(1);	    
 		
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetTo(), false), "addr_to");
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetCc(), false), "addr_cc");
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetBcc(), false), "addr_bcc");
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetReplyTo(), false), "addr_reply");
-		row = awSetInputAndPopup(row, msgCompFields.GetOtherRandomHeaders(), "addr_other");
-		row = awSetInputAndPopup(row, msgCompFields.GetNewsgroups(), "addr_newsgroups");
-		row = awSetInputAndPopup(row, msgCompFields.GetFollowupTo(), "addr_followup");
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetReplyTo(), false), "addr_reply", newTreeChildrenNode, templateNode);
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetTo(), false), "addr_to", newTreeChildrenNode, templateNode);
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetCc(), false), "addr_cc", newTreeChildrenNode, templateNode);
+		awSetInputAndPopupFromArray(msgCompFields.SplitRecipients(msgCompFields.GetBcc(), false), "addr_bcc", newTreeChildrenNode, templateNode);
+		awSetInputAndPopup(msgCompFields.GetOtherRandomHeaders(), "addr_other", newTreeChildrenNode, templateNode);
+		awSetInputAndPopup(msgCompFields.GetNewsgroups(), "addr_newsgroups", newTreeChildrenNode, templateNode);
+		awSetInputAndPopup(msgCompFields.GetFollowupTo(), "addr_followup", newTreeChildrenNode, templateNode);
 		
-		if ( row > 1 )   row--;
-			
-		// remove extra rows
-		while ( top.MAX_RECIPIENTS > row )
-			awRemoveRow(top.MAX_RECIPIENTS);
-		
-		setTimeout("awFinishCopyNodes();", 0);
+        if (top.MAX_RECIPIENTS == 0)
+		    top.MAX_RECIPIENTS = 1;
+		else
+		{
+		    //If it's a new message, we need to add an extrat empty recipient.
+		    var msgComposeType = Components.interfaces.nsIMsgCompType;
+		    if (msgType == msgComposeType.New)
+		        _awSetInputAndPopup("", "addr_to", newTreeChildrenNode, templateNode);
+//	        var parent = treeChildren.parentNode();     // doesn't work!
+	        var parent = document.getElementById('addressingWidgetTree')
+	        parent.replaceChild(newTreeChildrenNode, treeChildren);
+            setTimeout("awFinishCopyNodes();", 0);
+        }
 	}
 }
 
-function awSetInputAndPopup(firstRow, inputValue, popupValue)
+function _awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
 {
-	var		row = firstRow;
+	// remove leading spaces
+	while (inputValue[0] == " " )
+		inputValue = inputValue.substring(1, inputValue.length);
 	
+    top.MAX_RECIPIENTS++;
+
+    var newNode = templateNode.cloneNode(true);
+    parentNode.appendChild(newNode); // we need to insert the new node before we set the value of the select element!
+
+    var input = newNode.getElementsByTagName('INPUT');
+    if ( input && input.length == 1 )
+    {
+	    input[0].setAttribute("value", inputValue);
+	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
+	}
+    var select = newNode.getElementsByTagName('SELECT');
+    if ( select && select.length == 1 )
+    {
+//Doesn't work!	    select[0].setAttribute("value", popupValue);
+        select[0].value = popupValue;
+	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
+	}
+}
+
+function awSetInputAndPopup(inputValue, popupValue, parentNode, templateNode)
+{
 	if ( inputValue && popupValue )
 	{
 		var addressArray = inputValue.split(",");
 		
 		for ( var index = 0; index < addressArray.length; index++ )
-		{
-			// remove leading spaces
-			while ( addressArray[index][0] == " " )
-				addressArray[index] = addressArray[index].substring(1, addressArray[index].length);
-			
-			// we can add one row if trying to add just beyond current size
-			if ( row == (top.MAX_RECIPIENTS + 1))
-			{
-				var body = document.getElementById('addressWidgetBody');
-				awCopyNode(awGetTreeItem(1), body, 0);
-				top.MAX_RECIPIENTS++;
-			}
-			
-			// if row is legal then set the values
-			if ( row <= top.MAX_RECIPIENTS )
-			{
-				awGetInputElement(row).value = addressArray[index];
-				awGetPopupElement(row).value = popupValue;
-				row++;
-			}
-		}
-		
-		return(row);
+		    _awSetInputAndPopup(addressArray[index], popupValue, parentNode, templateNode);
 	}
-	return(firstRow);		
 }
 
-function awSetInputAndPopupFromArray(firstRow, inputArray, popupValue)
+function awSetInputAndPopupFromArray(inputArray, popupValue, parentNode, templateNode)
 {
-	var		row = firstRow;
-	
 	if ( inputArray && popupValue )
 	{
 		for ( var index = 0; index < inputArray.count; index++ )
-		{
-			// remove leading spaces
-			inputValue = inputArray.StringAt(index);
-			while ( inputValue[0] == " " )
-				inputValue = inputValue.substring(1, inputValue.length);
-			
-			// we can add one row if trying to add just beyond current size
-			if ( row == (top.MAX_RECIPIENTS + 1))
-			{
-				var body = document.getElementById('addressWidgetBody');
-				awCopyNode(awGetTreeItem(1), body, 0);
-				top.MAX_RECIPIENTS++;
-			}
-			
-			// if row is legal then set the values
-			if ( row <= top.MAX_RECIPIENTS )
-			{
-				awGetInputElement(row).value = inputValue;
-				awGetPopupElement(row).value = popupValue;
-				row++;
-			}
-		}
-		
-		return(row);
+		    _awSetInputAndPopup(inputArray.StringAt(index), popupValue, parentNode, templateNode);
 	}
-	return(firstRow);		
 }
 
 function awNotAnEmptyArea(event)
@@ -234,19 +206,28 @@ function awAppendNewRow(setFocus)
 	
 	if ( body && treeitem1 )
 	{
-		var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).value;
+	    var lastRecipientType = awGetPopupElement(top.MAX_RECIPIENTS).value;
 
-		awCopyNode(treeitem1, body, 0);
+		newNode = awCopyNode(treeitem1, body, 0);
 		top.MAX_RECIPIENTS++;
 
-		awGetPopupElement(top.MAX_RECIPIENTS).value = lastRecipientType;
+        var input = newNode.getElementsByTagName('INPUT');
+        if ( input && input.length == 1 )
+        {
+    	    input[0].setAttribute("value", "");
+    	    input[0].setAttribute("id", "msgRecipient#" + top.MAX_RECIPIENTS);
+    	}
+        var select = newNode.getElementsByTagName('SELECT');
+        if ( select && select.length == 1 )
+        {
+//doesn't work!    	    select[0].setAttribute("value", lastRecipientType);
+    	    select[0].value = lastRecipientType;
+    	    select[0].setAttribute("id", "msgRecipientType#" + top.MAX_RECIPIENTS);
+    	}
+
 		// focus on new input widget
-		if (setFocus)
-		{
-			var newInput = awGetInputElement(top.MAX_RECIPIENTS);
-			if ( newInput )
-				awSetFocus(top.MAX_RECIPIENTS, newInput);
-		}
+		if (setFocus && input[0] )
+			awSetFocus(top.MAX_RECIPIENTS, input[0]);
 	}
 }
 
@@ -255,28 +236,12 @@ function awAppendNewRow(setFocus)
 
 function awGetPopupElement(row)
 {
-	var treerow = awGetTreeRow(row);
-	
-	if ( treerow )
-	{
-		var popup = treerow.getElementsByTagName('SELECT');
-		if ( popup && popup.length == 1 )
-			return popup[0];
-	}
-	return 0;
+    return document.getElementById("msgRecipientType#" + row);
 }
 
 function awGetInputElement(row)
 {
-	var treerow = awGetTreeRow(row);
-	
-	if ( treerow )
-	{
-		var input = treerow.getElementsByTagName('INPUT');
-		if ( input && input.length == 1 )
-			return input[0];
-	}
-	return 0;
+    return document.getElementById("msgRecipient#" + row);
 }
 
 function awGetTreeRow(row)
@@ -328,97 +293,14 @@ function awGetRowByInputElement(inputElement)
 // Copy Node - copy this node and insert ahead of the (before) node.  Append to end if before=0
 function awCopyNode(node, parentNode, beforeNode)
 {
-	dump("awCopyNode\n");
-
-        // XXXwaterson Ideally, we'd just do this, but for bug 26528
-        // (and some of the funky logic about the 'id' attribute in
-        // awCopyNodeAndChildren).
-        //
-	//var newNode = node.cloneNode(true);
-	var newNode = awCopyNodeAndChildren(node);
+	var newNode = node.cloneNode(true);
 	
 	if ( beforeNode )
 		parentNode.insertBefore(newNode, beforeNode);
 	else
 		parentNode.appendChild(newNode);
-}
 
-function awCopyNodeAndChildren(node)
-{
-	var newNode;
-	if ( node.nodeName == "#text" )
-	{
-		// create new text node
-		newNode = document.createTextNode(node.data);
-	}
-	else
-	{
-		// create new node
-		if ( node.nodeName[0] >= 'A' && node.nodeName[0] <= 'Z' )
-			newNode = createHTML(node.nodeName);
-		else
-			newNode = document.createElement(node.nodeName);
-		
-		var attributes = node.attributes;
-		
-		if ( attributes && attributes.length )
-		{
-			var attrNode, name, value;
-			
-			// copy attributes into new node
-			for ( var index = 0; index < attributes.length; index++ )
-			{
-				attrNode = attributes.item(index);
-				name = attrNode.nodeName;
-				value = attrNode.nodeValue;
-				if ( name != 'id' )
-					newNode.setAttribute(name, value);
-			}
-		}
-	
-		if ( node.nodeName == "SELECT" )
-		{
-			// copy options inside of SELECT
-			if ( newNode )
-			{
-				for ( var index = 0; index < node.options.length; index++ )
-				{
-					var option = new Option(node.options.item(index).text,
-											node.options.item(index).value)
-					newNode.add(option, null);
-				}
-			}
-		}
-		else
-		{
-			// children of nodes
-			if ( node.childNodes )
-			{
-				var childNode;
-				
-				for ( var child = 0; child < node.childNodes.length; child++ )
-				{
-					childNode = awCopyNodeAndChildren(node.childNodes[child]);
-				
-					newNode.appendChild(childNode);
-				}
-			}
-		}
-
-                if ( node.nodeName == "INPUT" )
-                {
-                        // copy the event handler, as it's not
-                        // sufficient to just set the attribute.
-                        newNode.onkeyup = node.onkeyup;
-                }
-	}
-	
-	return newNode;
-}
-
-function createHTML(tag)
-{
-    return document.createElementWithNameSpace(tag, "http://www.w3.org/TR/REC-html40");
+    return newNode;
 }
 
 // remove row
@@ -482,46 +364,18 @@ function _awSetFocus()
 }
 
 
-//temporary patch for bug 26344
+//temporary patch for bug 26344 & 26528
 function awFinishCopyNode(node)
 {
-//	dump ("awFinishCopyNode, node name=" + node.nodeName + "\n");
-	// Because event handler attributes set into a node before this node is inserted 
-	// into the DOM are not recognised (in fact not compiled), we need to parsed again
-	// the whole node and reset event handlers.
-
-	var attributes = node.attributes;
-	if ( attributes && attributes.length )
-	{
-		var attrNode, name;
-		
-		for ( var index = 0; index < attributes.length; index++ )
-		{
-			attrNode = attributes.item(index);
-			name = attrNode.nodeName;
-			if (name.substring(0, 2) == 'on')
-			{
-				node.setAttribute(name, attrNode.nodeValue);
-//				dump("  -->reset attribute " + name + "\n");
-			}
-		}
-	}
-	
-	// children of nodes
-	if ( node.childNodes )
-	{
-		var childNode;
-				
-		for ( var child = 0; child < node.childNodes.length; child++ )
-			childNode = awFinishCopyNode(node.childNodes[child]);
-	}
+    msgCompose.ResetNodeEventHandlers(node);
+    return;
 }
 
 
 function awFinishCopyNodes()
 {
-    for ( var row = 2; row <= top.MAX_RECIPIENTS; row++ )
-        awFinishCopyNode(awGetTreeRow(row));
+	var treeChildren = document.getElementById('addressWidgetBody');
+    awFinishCopyNode(treeChildren);
 }
 
 
@@ -530,4 +384,9 @@ function awTabFromRecipient(element, event)
 	//If we are le last element in the tree, we don't want to create a new row.
 	if (element == awGetInputElement(top.MAX_RECIPIENTS))
 		top.doNotCreateANewRow = true;
+}
+
+function awGetNumberOfRecipients()
+{
+    return top.MAX_RECIPIENTS;
 }

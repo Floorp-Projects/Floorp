@@ -17,9 +17,10 @@
  * Copyright (C) 1998-1999 Netscape Communications Corporation. All
  * Rights Reserved.
  */
-
+ 
 var msgCompDeliverMode = Components.interfaces.nsIMsgCompDeliverMode;
 var msgCompSendFormat = Components.interfaces.nsIMsgCompSendFormat;
+var msgCompType = Components.interfaces.nsIMsgCompType;
 
 var accountManagerProgID   = "component://netscape/messenger/account-manager";
 var accountManager = Components.classes[accountManagerProgID].getService(Components.interfaces.nsIMsgAccountManager);
@@ -131,16 +132,27 @@ function GetArgs()
 	return args;
 }
 
-function WaitFinishLoadingDocument()
+function WaitFinishLoadingDocument(msgType)
 {
 	if (documentLoaded)
 	{
-		CompFields2Recipients(msgCompose.compFields);
+	    //If we are in plain text, we nee to set the wrap column
+		if (! msgCompose.composeHTML)
+    		try
+    		{
+    			window.editorShell.wrapColumn = msgCompose.wrapLength;
+    		}
+    		catch (e)
+    		{
+    			dump("### window.editorShell.wrapColumn exception text: " + e + " - failed\n");
+    		}
+		    
+		CompFields2Recipients(msgCompose.compFields, msgType);
 		SetComposeWindowTitle(13);
 		AdjustFocus();
 	}
 	else
-		setTimeout("WaitFinishLoadingDocument();", 200);
+		setTimeout("WaitFinishLoadingDocument(" + msgType + ");", 200);
 }
 
 function ComposeStartup()
@@ -169,9 +181,6 @@ function ComposeStartup()
     }
     identitySelect.value = identity.key;
 
-    // fill in Recipient type combobox
-    FillRecipientTypeCombobox();
-    
 	if (msgComposeService)
 	{
         // this is frustrating, we need to convert the preselect identity key
@@ -206,18 +215,11 @@ function ComposeStartup()
 			}
 			else
 			{
-			    //Remove HTML toolbar as we are editing in plain text mode
+			    //Remove HTML toolbar and format menu as we are editing in plain text mode
 			    document.getElementById("FormatToolbar").setAttribute("hidden", true);
+			    document.getElementById("formatMenu").setAttribute("hidden", true);
 
 				window.editorShell.SetEditorType("text");
-				try
-				{
-					window.editorShell.wrapColumn = msgCompose.wrapLength;
-				}
-				catch (e)
-				{
-					dump("### window.editorShell.wrapColumn exception text: " + e + " - failed\n");
-				}
 				dump("editor initialized in PLAIN TEXT mode\n");
 			}
 
@@ -234,20 +236,14 @@ function ComposeStartup()
                     if (args.bodyislink == "true")
 					{
 						if (msgCompose.composeHTML)
-						{
 							msgCompFields.SetBody("<BR><A HREF=\"" + args.body +
 													  "\">" + unescape(args.body)
 													  + "</A><BR>");
-						}
 						else
-						{
-							msgCompFields.SetBody("\n" + args.body + "\n");
-						}
+							msgCompFields.SetBody("\n<" + args.body + ">\n");
 					}
                     else
-                    {
                         msgCompFields.SetBody(args.body);
-                    }
                 }
 
 	    		if (args.to)
@@ -281,7 +277,7 @@ function ComposeStartup()
 			msgCompose.editor = window.editorShell;
 
 			msgCompose.RegisterStateListener(stateListener);
-			WaitFinishLoadingDocument();
+			WaitFinishLoadingDocument(args.type);
 		}
 	}
 }
@@ -578,7 +574,7 @@ function SaveAsDraft()
 
 function SaveAsTemplate()
 {
-	dump("SaveAsDraft from XUL\n");
+	dump("SaveAsTemplate from XUL\n");
 
   // 5 = nsMsgSaveAsTemplate
   // RICHIE: We should really have a way of using constants and not
@@ -761,11 +757,11 @@ function getIdentityForKey(key)
 
 function AdjustFocus()
 {
-    var element = document.getElementById("msgRecipient#1");
+    var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
 	if (element.value == "")
 	{
 		dump("set focus on the recipient\n");
-		element.focus();
+		awSetFocus(awGetNumberOfRecipients(), element);
 	}
 	else
 	{

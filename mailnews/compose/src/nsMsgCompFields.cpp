@@ -120,7 +120,11 @@ nsresult nsMsgCompFields::Copy(nsIMsgCompFields* pMsgCompFields)
 	for (i = 0; i < MSG_LAST_BOOL_HEADER_MASK; i ++)
         m_boolHeaders[i] = pFields->m_boolHeaders[i];
 
+	m_force_plain_text = pFields->m_force_plain_text;
+	m_multipart_alt = pFields->m_multipart_alt;
 	m_receiptType = pFields->m_receiptType;
+	m_internalCharSet = pFields->m_internalCharSet;
+    m_draftID = pFields->m_draftID;
 
 	return NS_OK;
 }
@@ -450,6 +454,22 @@ nsresult nsMsgCompFields::SetTemplateName(const PRUnichar *value)
 nsresult nsMsgCompFields::GetTemplateName(PRUnichar **_retval)
 {
 	return GetHeader(MSG_X_TEMPLATE_HEADER_MASK, _retval);
+}
+
+nsresult nsMsgCompFields::SetDraftId(const PRUnichar *value)
+{
+    m_draftID = value;
+    return NS_OK;
+}
+
+nsresult nsMsgCompFields::GetDraftId(PRUnichar **_retval)
+{
+    if (_retval)
+    {
+        *_retval = m_draftID.ToNewUnicode();
+        return NS_OK;
+    }
+    return NS_ERROR_NULL_POINTER;
 }
 
 nsresult nsMsgCompFields::SetReturnReceipt(PRBool value)

@@ -100,20 +100,25 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 			// get the incoming server associated with this uri
 			var server = FindIncomingServer(uri);
 
-			// if they hit new and they are reading a newsgroup
-			// turn this into a new post, not a new mail message
-			if (type == msgComposeType.New) {
-				if (server.type == "nntp") {
-					type = msgComposeType.NewsPost;
+			// if they hit new or reply and they are reading a newsgroup
+			// turn this into a new post or a reply to group.
+			if (server.type == "nntp")
+			{
+			    if (type == msgComposeType.Reply)
+			        type = msgComposeType.ReplyToGroup;
+			    else
+			        if (type == msgComposeType.New)
+			        {
+					    type = msgComposeType.NewsPost;
 
-					// from the uri, get the newsgroup name
-					var resource = RDF.GetResource(uri);
-					var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder); 
-					if (msgfolder.isServer) 
-						newsgroup = "";
-					else 
-      					newsgroup = msgfolder.name; 
-				}
+    					// from the uri, get the newsgroup name
+    					var resource = RDF.GetResource(uri);
+    					var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder); 
+    					if (msgfolder.isServer) 
+    						newsgroup = "";
+    					else 
+          					newsgroup = msgfolder.name; 
+				    }
 			}
 		}
         
@@ -166,6 +171,7 @@ function ComposeMessage(type, format) //type is a nsIMsgCompType and format is a
 				dump('i = '+ i);
 				dump('\n');				
 				if (type == msgComposeType.Reply || type == msgComposeType.ReplyAll || type == msgComposeType.ForwardInline ||
+					type == msgComposeType.ReplyToGroup || type == msgComposeType.ReplyToSenderAndGroup ||
 					type == msgComposeType.Template || type == msgComposeType.Draft)
 				{
 					msgComposeService.OpenComposeWindow(null, nodeList[i].getAttribute('id'), type, format, identity);

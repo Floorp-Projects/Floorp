@@ -37,7 +37,7 @@ NS_MSG_BASE PRBool    nsMsgI18N7bit_data_part(const char *charset, const char *s
 NS_MSG_BASE char      *nsMsgI18NGetAcceptLanguage(void); 
 
 NS_MSG_BASE const char *msgCompHeaderInternalCharset(void);
-NS_MSG_BASE const nsString& msgCompFileSystemCharset(void);
+NS_MSG_BASE const nsString& nsMsgI18NFileSystemCharset(void);
 
 NS_MSG_BASE char * nsMsgI18NGetDefaultMailCharset(void);
 NS_MSG_BASE nsresult ConvertFromUnicode(const nsString& aCharset, 

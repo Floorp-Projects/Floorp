@@ -27,6 +27,8 @@
 #include "nsIDOMNodeList.h"
 #include "nsIDOMHTMLInputElement.h"
 #include "nsIDOMDocument.h"
+#include "nsIDOMSelection.h"
+#include "nsIDOMNamedNodeMap.h"
 #include "nsMsgI18N.h"
 #include "nsMsgCompCID.h"
 #include "nsMsgSend.h"
@@ -49,8 +51,6 @@
 #include "nsTextFormatter.h"
 #include "nsIEditor.h"
 #include "nsIHTMLEditor.h"
-#include "nsIDOMSelection.h"
-#include "nsIDOMNode.h"
 #include "nsEscape.h"
 #include "plstr.h"
 #include "nsIDocShell.h"
@@ -480,12 +480,10 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
     // Pref values are supposed to be stored as UTF-8, so no conversion
     nsXPIDLCString email;
     nsXPIDLString fullName;
-    nsXPIDLCString replyTo;
     nsXPIDLString organization;
     
     identity->GetEmail(getter_Copies(email));
     identity->GetFullName(getter_Copies(fullName));
-    identity->GetReplyTo(getter_Copies(replyTo));
     identity->GetOrganization(getter_Copies(organization));
     
 	char * sender = nsnull;
@@ -504,10 +502,6 @@ nsresult nsMsgCompose::_SendMsg(MSG_DeliverMode deliverMode,
 		m_compFields->SetFrom(sender);
 	PR_FREEIF(sender);
 
-	//Set the reply-to only if the user have not specified one in the message
-	const char * reply = m_compFields->GetReplyTo();
-	if (reply == nsnull || *reply == 0)
-		m_compFields->SetReplyTo(replyTo);
     m_compFields->SetOrganization(organization);
     
 #if defined(DEBUG_ducarroz) || defined(DEBUG_seth_)
@@ -814,28 +808,28 @@ nsresult nsMsgCompose::GetEditor(nsIEditorShell * *aEditor)
 
 nsresult nsMsgCompose::SetEditor(nsIEditorShell * aEditor) 
 { 
-  // First, store the editor shell.
-  m_editor = aEditor;
+    // First, store the editor shell.
+    m_editor = aEditor;
 
-  //
-  // Now this routine will create a listener for state changes
-  // in the editor and set us as the compose object of interest.
-  //
-  mDocumentListener = new nsMsgDocumentStateListener();
-  if (!mDocumentListener)
-    return NS_ERROR_OUT_OF_MEMORY;
+    //
+    // Now this routine will create a listener for state changes
+    // in the editor and set us as the compose object of interest.
+    //
+    mDocumentListener = new nsMsgDocumentStateListener();
+    if (!mDocumentListener)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-  mDocumentListener->SetComposeObj(this);      
-  NS_ADDREF(mDocumentListener);
+    mDocumentListener->SetComposeObj(this);      
+    NS_ADDREF(mDocumentListener);
 
-  // Make sure we setup to listen for editor state changes...
-  m_editor->RegisterDocumentStateListener(mDocumentListener);
+    // Make sure we setup to listen for editor state changes...
+    m_editor->RegisterDocumentStateListener(mDocumentListener);
 
-  // Now, lets init the editor here!
-  // Just get a blank editor started...
-  m_editor->LoadUrl(nsAutoString("about:blank").GetUnicode());
+    // Now, lets init the editor here!
+    // Just get a blank editor started...
+    m_editor->LoadUrl(nsAutoString("about:blank").GetUnicode());
 
-  return NS_OK;
+    return NS_OK;
 } 
 
 nsresult nsMsgCompose::GetBodyModified(PRBool * modified)
@@ -941,6 +935,37 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
 			rv = m_compFields->Copy(compFields);
 		return rv;
 	}
+	
+	if (m_identity)
+	{
+	    /* Setup reply-to field */
+	    nsXPIDLCString replyTo;
+	    m_identity->GetReplyTo(getter_Copies(replyTo));
+	    m_compFields->SetReplyTo(replyTo);
+	    
+	    /* Setup bcc field */
+	    PRBool  aBool;
+	    nsString bccStr;
+	    
+	    m_identity->GetBccSelf(&aBool);
+	    if (aBool)
+	    {
+	        nsXPIDLCString email;
+	        m_identity->GetEmail(getter_Copies(email));
+	        bccStr = email;
+	    }
+	    
+	    m_identity->GetBccOthers(&aBool);
+	    if (aBool)
+	    {
+	        nsXPIDLCString bccList;
+	        m_identity->GetBccList(getter_Copies(bccList));
+	        if (bccStr.Length() > 0)
+	            bccStr += ',';
+	        bccStr += bccList;
+	    }
+	    m_compFields->SetBcc(bccStr.GetUnicode());
+	}
 
     /* In case of forwarding multiple messages, originalMsgURI will contains several URI separated by a comma. */
     /* we need to extract only the first URI*/
@@ -969,6 +994,8 @@ nsresult nsMsgCompose::CreateMessage(const PRUnichar * originalMsgURI,
       default: break;        
       case nsIMsgCompType::Reply : 
       case nsIMsgCompType::ReplyAll:
+      case nsIMsgCompType::ReplyToGroup:
+      case nsIMsgCompType::ReplyToSenderAndGroup:
         {
           mQuotingToFollow = PR_TRUE;
           NS_WITH_SERVICE(nsIPref, prefs, kPrefCID, &rv);
@@ -1186,7 +1213,8 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
     if (mCiteReference != "")
       mComposeObj->mCiteReference = mCiteReference;
 
-    if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll))
+    if (mHeaders && (type == nsIMsgCompType::Reply || type == nsIMsgCompType::ReplyAll ||
+                     type == nsIMsgCompType::ReplyToGroup || type == nsIMsgCompType::ReplyToSenderAndGroup))
     {
       nsIMsgCompFields *compFields = nsnull;
       mComposeObj->GetCompFields(&compFields); //GetCompFields will addref, you need to release when your are done with it
@@ -1250,8 +1278,9 @@ NS_IMETHODIMP QuotingOutputStreamListener::OnStopRequest(nsIChannel *aChannel, n
         
         if (! newgroups.IsEmpty())
         {
-          compFields->SetNewsgroups(newgroups.GetUnicode());
-          if (type == nsIMsgCompType::Reply)
+          if (type != nsIMsgCompType::Reply)
+            compFields->SetNewsgroups(newgroups.GetUnicode());
+          if (type == nsIMsgCompType::ReplyToGroup)
             compFields->SetTo(&emptyUnichar);
         }
         
@@ -2015,6 +2044,8 @@ nsMsgCompose::BuildBodyMessageAndSignature()
   	case nsIMsgCompType::ForwardAsAttachment :	/* should not append! but just in case */
   	case nsIMsgCompType::ForwardInline :
   	case nsIMsgCompType::NewsPost :
+  	case nsIMsgCompType::ReplyToGroup :
+  	case nsIMsgCompType::ReplyToSenderAndGroup :
   		addSignature = PR_TRUE;
   		break;
 
@@ -2101,7 +2132,7 @@ nsresult nsMsgCompose::AttachmentPrettyName(const PRUnichar* url, PRUnichar** _r
 		if (leafName && *leafName)
 		{
     		nsAutoString tempStr;
-    		nsresult rv = ConvertToUnicode(msgCompFileSystemCharset(), leafName, tempStr);
+    		nsresult rv = ConvertToUnicode(nsMsgI18NFileSystemCharset(), leafName, tempStr);
     		if (NS_FAILED(rv))
     			tempStr = leafName;
 			*_retval = tempStr.ToNewUnicode();
@@ -2273,3 +2304,72 @@ nsresult nsMsgCompose::GetNoHtmlNewsgroups(const PRUnichar *newsgroups, PRUnicha
     *_retval = nsnull;
     return rv;
 }
+
+nsresult nsMsgCompose::ResetNodeEventHandlers(nsIDOMNode *node)
+{
+	// Because event handler attributes set into a node before this node is inserted 
+	// into the DOM are not recognised (in fact not compiled), we need to parsed again
+	// the whole node and reset event handlers.
+    
+    nsresult rv;
+    nsAutoString aStr;
+    PRUint32 i;
+    PRUint32 nbrOfElements;
+    nsCOMPtr<nsIDOMNode> pItem;
+
+    if (nsnull == node)
+        return NS_ERROR_NULL_POINTER;
+    
+    nsCOMPtr<nsIDOMNamedNodeMap> pAttributes;
+    rv = node->GetAttributes(getter_AddRefs(pAttributes));
+    if (NS_SUCCEEDED(rv) && pAttributes)
+    {
+        rv = pAttributes->GetLength(&nbrOfElements);
+        if (NS_FAILED(rv))
+            return rv;
+
+        for (i = 0; i < nbrOfElements; i ++)
+        {
+            rv = pAttributes->Item(i, getter_AddRefs(pItem));
+            if (NS_SUCCEEDED(rv) && pItem)
+            {
+                rv = pItem->GetNodeName(aStr);
+                if (NS_SUCCEEDED(rv))
+                {
+                    if (aStr.Find("on", PR_FALSE, 0, 2) == 0)   //name start with "on"
+                    {
+                        rv = pItem->GetNodeValue(aStr);
+                        if (NS_SUCCEEDED(rv))
+                            rv = pItem->SetNodeValue(aStr);
+                        //Do not abort if it failed, let do the next one...
+                    }
+                }
+            }
+        }
+        
+        PRBool hasChild;
+        rv = node->HasChildNodes(&hasChild);
+        if (NS_SUCCEEDED(rv) && hasChild)
+        {
+            nsCOMPtr<nsIDOMNodeList> children;
+            rv = node->GetChildNodes(getter_AddRefs(children));
+            if (NS_SUCCEEDED(rv) && children)
+            {
+                rv = children->GetLength(&nbrOfElements);
+                if (NS_FAILED(rv))
+                    return rv;
+                
+                for (i = 0; i < nbrOfElements; i ++)
+                {
+                    rv = children->Item(i, getter_AddRefs(pItem));
+                    if (NS_SUCCEEDED(rv) && pItem)
+                       ResetNodeEventHandlers(pItem);
+                    //Do not abort if it failed, let do the next one...
+                }
+            }
+        }
+    }
+    
+    return rv;
+}
+
