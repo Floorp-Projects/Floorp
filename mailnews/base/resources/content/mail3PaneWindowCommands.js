@@ -396,10 +396,10 @@ var DefaultController =
         return IsRenameFolderEnabled();
       case "cmd_sendUnsentMsgs":
         return IsSendUnsentMsgsEnabled(null);
-      case "button_getNewMessages":
-      case "cmd_getNewMessages":
       case "cmd_properties":
         return IsPropertiesEnabled();
+      case "button_getNewMessages":
+      case "cmd_getNewMessages":
       case "cmd_getMsgsForAuthAccounts":
         return IsGetNewMessagesEnabled();
       case "cmd_getNextNMessages":
