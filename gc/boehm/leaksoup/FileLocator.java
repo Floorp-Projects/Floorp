@@ -68,19 +68,9 @@ public class FileLocator {
         // generalize for Linux & Mac versions of the Leak detector.
         String fullPath;
         int lineNumber, lineAnchor;
-        int colon = line.indexOf(':', leftBracket + 1);
-        if (colon != -1) {
-            // Linux format: unmangled_symbol[unix_path:line_number]
-            fullPath = line.substring(leftBracket + 1, colon);
-            try {
-                lineNumber = Integer.parseInt(line.substring(colon + 1, rightBracket));
-            } catch (NumberFormatException nfe) {
-                return line;
-            }
-            lineAnchor = lineNumber;
-        } else {
+        int comma = line.indexOf(',', leftBracket + 1);
+        if (comma != -1) {
             // Mac format: unmangled_symbol[mac_path,byte_offset]
-            int comma = line.indexOf(',', leftBracket + 1);
             String macPath = line.substring(leftBracket + 1, comma);
             fullPath = "/" + macPath.replace(':', '/');
 		
@@ -104,8 +94,18 @@ public class FileLocator {
             }
             lineNumber = 1 + table.getLine(offset);
             lineAnchor = lineNumber;
+        } else {
+            // Linux format: unmangled_symbol[unix_path:line_number]
+            int colon = line.indexOf(':', leftBracket + 1);
+            fullPath = line.substring(leftBracket + 1, colon);
+            try {
+                lineNumber = Integer.parseInt(line.substring(colon + 1, rightBracket));
+            } catch (NumberFormatException nfe) {
+                return line;
+            }
+            lineAnchor = lineNumber;
         }
-
+        
 		// compute the URL of the file.
 		int mozillaIndex = fullPath.indexOf(MOZILLA_BASE);
 		String locationURL = null, blameInfo = "";
