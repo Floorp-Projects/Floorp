@@ -6076,6 +6076,13 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
                aDisplay->IsBlockLevel(),
                "Style system did not apply CSS2.1 section 9.7 fixups");
 
+  // See if it's absolute positioned or fixed positioned.
+  if (NS_STYLE_POSITION_ABSOLUTE == aDisplay->mPosition) {
+    isAbsolutelyPositioned = PR_TRUE;
+  } else if (NS_STYLE_POSITION_FIXED == aDisplay->mPosition) {
+    isFixedPositioned = PR_TRUE;
+  }
+
   nsIFrame* adjParentFrame = aParentFrame;
   // if the new frame is not table related and the parent is a table, row group, or row,
   // then we need to get or create the pseudo table cell frame and use it as the parent.
@@ -6126,12 +6133,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
     if (!pseudoParent && !aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-    }
-    // See if it's absolute positioned or fixed positioned
-    if (NS_STYLE_POSITION_ABSOLUTE == aDisplay->mPosition) {
-      isAbsolutelyPositioned = PR_TRUE;
-    } else if (NS_STYLE_POSITION_FIXED == aDisplay->mPosition) {
-      isFixedPositioned = PR_TRUE;
     }
 
      // Initialize it
@@ -6201,11 +6202,6 @@ nsCSSFrameConstructor::ConstructFrameByDisplayType(nsIPresShell*            aPre
 
     if (!pseudoParent && !aState.mPseudoFrames.IsEmpty()) { // process pending pseudo frames
       ProcessPseudoFrames(aPresContext, aState.mPseudoFrames, aFrameItems); 
-    }
-    if (NS_STYLE_POSITION_ABSOLUTE == aDisplay->mPosition) {
-      isAbsolutelyPositioned = PR_TRUE;
-    } else {
-      isFixedPositioned = PR_TRUE;
     }
 
     // Create a frame to wrap up the absolute positioned item
