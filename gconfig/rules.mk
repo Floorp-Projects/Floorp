@@ -235,8 +235,10 @@ $(LIBRARY): $(OBJS) $(AR_LIBS)
 	@$(MAKE_OBJDIR)
 	rm -f $@
 	$(AR) $(OBJS) $(AR_LIBS)
+ifeq ($(OS_ARCH), WINNT)
 ifdef AR_LIBS
 	+$(EXTRACT_OBJS)
+endif
 endif
 	$(RANLIB) $@
 

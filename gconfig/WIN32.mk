@@ -43,7 +43,7 @@ PDB          = /PDB:$(PDBFILE)
 IMPFILE      = $(PROGRAM:.exe=.lib)
 IMP          = /IMPLIB:$(IMPFILE)
 XP_DEFINE   += -DXP_PC
-LIB_SUFFIX   = .lib
+LIB_SUFFIX   = lib
 DLL_SUFFIX   = dll
 OUT_NAME     = -out:
 ARCHIVE_SUFFIX = _s

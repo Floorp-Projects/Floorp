@@ -38,10 +38,11 @@ MKDEPENDENCIES  = $(NSINSTALL_DIR)/$(OBJDIR_NAME)/depend.mk
 GUI_LIBS        = -lXt -lX11
 OPT_SLASH       = /
 LIB_PREFIX      = lib
-LIB_SUFFIX      = .a
+LIB_SUFFIX      = a
 NSPR_LIBS       = plds21 plc21 nspr21 msgc21
 LINK_PROGRAM    = $(CC)
 XP_REG_LIB      = reg
+ARCHIVE_SUFFIX  = 
 
 ####################################################################
 #

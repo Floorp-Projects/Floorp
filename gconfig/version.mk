@@ -60,6 +60,10 @@ ifndef RELEASE_VERSION
 	RELEASE_VERSION = 
 endif
 
+ifndef LIBRARY_VERSION
+	LIBRARY_VERSION = 10
+endif
+
 #
 # Set <component>-specific versions for compiliation and linkage.
 #

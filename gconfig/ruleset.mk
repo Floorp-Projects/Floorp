@@ -106,14 +106,14 @@ ifdef LIBRARY_NAME
 		# Win16 requires library names conforming to the 8.3 rule.
 		# other platforms do not.
 		#
-		LIBRARY        = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(LIB_SUFFIX)
-ifdef MKSHLIB
+		LIBRARY        = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)
+ifndef ARCHIVE_ONLY
 	    SHARED_LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION).dll
 		IMPORT_LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)$(LIB_SUFFIX)
 endif
 	else
-		LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME).$(LIB_SUFFIX)
-ifdef MKSHLIB
+		LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)$(LIBRARY_VERSION)$(STATIC_LIB_SUFFIX)
+ifndef ARCHIVE_ONLY
 		ifeq ($(OS_ARCH)$(OS_RELEASE), AIX4.1)
 			SHARED_LIBRARY = $(OBJDIR)/lib$(LIBRARY_NAME)_shr.a
 		else
@@ -147,17 +147,17 @@ endif
 
 # Rules to convert EXTRA_LIBS to platform-dependent naming scheme
 ifdef EXTRA_LIBS
-	EXTRA_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(EXTRA_LIBS:%=%$(LIB_SUFFIX)))
+	EXTRA_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(EXTRA_LIBS:%=%$(STATIC_LIB_SUFFIX)))
 endif
 
 # Rules to convert EXTRA_LIBS to platform-dependent naming scheme
 ifdef AR_LIBS
-	AR_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(AR_LIBS:%=%$(LIB_SUFFIX)))
+	AR_LIBS := $(addprefix $(CONFIG_DIST_LIB)$(OPT_SLASH)$(LIB_PREFIX), $(AR_LIBS:%=%$(LIBRARY_VERSION)$(ARCHIVE_SUFFIX)$(STATIC_LIB_SUFFIX)))
 endif
 
 ifdef LIBRARY
 #	LIBRARY := $(addprefix $(OBJDIR)/, $(LIBRARY))
-	ifdef MKSHLIB
+	ifndef ARCHIVE_ONLY
 		ifeq ($(OS_ARCH),WINNT)
 ifndef LIBRARY_NAME
 			SHARED_LIBRARY = $(LIBRARY:.lib=.dll)
