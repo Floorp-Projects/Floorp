@@ -84,7 +84,7 @@ static int signon_lock_count = 0;
 /* load states */
 
 static PRBool si_PartiallyLoaded = PR_FALSE;
-static PRBool si_UserHasBeenSelected = PR_FALSE;
+static PRInt32 si_LastFormForWhichUserHasBeenSelected = -1;
 
 /* apple keychain stuff */
 
@@ -380,8 +380,8 @@ si_3ButtonConfirm(PRUnichar * szMessage, nsIDOMWindowInternal* window) {
 }
 
 PRIVATE PRBool
-si_SelectDialog(const PRUnichar* szMessage, nsIPrompt* dialog, PRUnichar** pList, PRInt32* pCount) {
-  if (si_UserHasBeenSelected) {
+si_SelectDialog(const PRUnichar* szMessage, nsIPrompt* dialog, PRUnichar** pList, PRInt32* pCount, PRUint32 formNumber) {
+  if (si_LastFormForWhichUserHasBeenSelected == (PRInt32)formNumber) {
     /* a user was already selected for this form, use same one again */
     *pCount = 0; /* last user selected is now at head of list */
     return PR_TRUE;
@@ -396,7 +396,9 @@ si_SelectDialog(const PRUnichar* szMessage, nsIPrompt* dialog, PRUnichar** pList
     return PR_FALSE; // out-of-range selection
   }
   *pCount = selectedIndex;
-  si_UserHasBeenSelected = PR_TRUE;
+  if (rtnValue) {
+    si_LastFormForWhichUserHasBeenSelected = formNumber;
+  }
   return rtnValue;  
 }
 
@@ -914,6 +916,23 @@ si_CheckForUser(const char *passwordRealm, const nsString& userName) {
 }
 
 /*
+ * Get first data node that is not a password
+ */
+
+PRIVATE si_SignonDataStruct *
+si_GetFirstNonPasswordData(si_SignonUserStruct* user) {
+  PRInt32 dataCount = user->signonData_list.Count();
+  for (PRInt32 j=0; j<dataCount; j++) {
+    si_SignonDataStruct * data =
+      NS_STATIC_CAST(si_SignonDataStruct *, user->signonData_list.ElementAt(j));
+    if (!data->isPassword) {
+      return data;
+    }
+  }
+  return nsnull;
+}
+
+/*
  * Get the user node for a given URL
  *
  * This routine is called only when holding the signon lock!!!
@@ -921,7 +940,7 @@ si_CheckForUser(const char *passwordRealm, const nsString& userName) {
  * This routine is called only if signon pref is enabled!!!
  */
 PRIVATE si_SignonUserStruct*
-si_GetUser(nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, const nsString& userText) {
+si_GetUser(nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, const nsString& userText, PRUint32 formNumber) {
   si_SignonURLStruct* url;
   si_SignonUserStruct* user = nsnull;
   si_SignonDataStruct* data;
@@ -983,6 +1002,7 @@ si_GetUser(nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, c
           continue;
         }
         nsAutoString userName;
+        data = si_GetFirstNonPasswordData(user);
         if (NS_SUCCEEDED(si_Decrypt (data->value, userName))) {
           *(list2++) = ToNewUnicode(userName);
           *(users2++) = user;
@@ -1005,7 +1025,7 @@ si_GetUser(nsIPrompt* dialog, const char* passwordRealm, PRBool pickFirstUser, c
       } else if (user_count == 1) {
         /* only one user for this form at this url, so select it */
         user = users[0];
-      } else if ((user_count > 1) && si_SelectDialog(selectUser, dialog, list, &user_count)) {
+      } else if ((user_count > 1) && si_SelectDialog(selectUser, dialog, list, &user_count, formNumber)) {
         /* user pressed OK */
         if (user_count == -1) {
           user_count = 0; /* user didn't select, so use first one */
@@ -1175,7 +1195,8 @@ si_GetURLAndUserForChangeForm(nsIPrompt* dialog, const nsString& password)
 
   /* query user */
   PRUnichar * msg = Wallet_Localize("SelectUserWhosePasswordIsBeingChanged");
-  if (user_count && si_SelectDialog(msg, dialog, list, &user_count)) {
+//@@@@ is 0 correct?
+  if (user_count && si_SelectDialog(msg, dialog, list, &user_count, 0)) {
     user = users[user_count];
     url = urls[user_count];
     /*
@@ -2097,7 +2118,7 @@ SINGSIGN_RememberSignonData
 }
 
 PRIVATE void
-si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 formNumber, PRUint32 elementNumber) {
   si_SignonUserStruct* user;
   si_SignonDataStruct* data;
   nsAutoString correctedName;
@@ -2109,7 +2130,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 
   si_lock_signon_list();
   if (elementNumber == 0) {
-    si_UserHasBeenSelected = PR_FALSE;
+    si_LastFormForWhichUserHasBeenSelected = -1;
   }
 
   /* Correct the field name to avoid mistaking for fields in browser-generated form
@@ -2130,7 +2151,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 
   /* determine if name has been saved (avoids unlocking the database if not) */
   PRBool nameFound = PR_FALSE;
-  user = si_GetUser(dialog, passwordRealm, PR_FALSE, correctedName);
+  user = si_GetUser(dialog, passwordRealm, PR_FALSE, correctedName, formNumber);
   if (user) {
     PRInt32 dataCount = user->signonData_list.Count();
     for (PRInt32 i=0; i<dataCount; i++) {
@@ -2154,7 +2175,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
    */
   /* see if this is first item in form and is a password */
   /* get first saved user just so we can see the name of the first item on the form */
-  user = si_GetUser(passwordRealm, PR_TRUE, NULL); /* this is the first saved user */
+  user = si_GetUser(passwordRealm, PR_TRUE, NULL, formNumber); /* this is the first saved user */
   if (user) {
     data = NS_STATIC_CAST(si_SignonDataStruct *,
                     user->signonData_list.ElementAt(0)); /* 1st item on form */
@@ -2182,7 +2203,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 
   /* restore the data from previous time this URL was visited */
 
-  user = si_GetUser(dialog, passwordRealm, PR_FALSE, correctedName);
+  user = si_GetUser(dialog, passwordRealm, PR_FALSE, correctedName, formNumber);
   if (user) {
     PRInt32 dataCount = user->signonData_list.Count();
     for (PRInt32 i=0; i<dataCount; i++) {
@@ -2201,7 +2222,7 @@ si_RestoreSignonData(nsIPrompt* dialog, const char* passwordRealm, const PRUnich
 }
 
 PUBLIC void
-SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber) {
+SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 formNumber, PRUint32 elementNumber) {
   if (!passwordRealm)
     return;  
   nsCAutoString strippedRealm;
@@ -2213,7 +2234,7 @@ SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUni
   if (NS_FAILED(rv))
     return;
 
-  si_RestoreSignonData(dialog, strippedRealm.get(), name, value, elementNumber);
+  si_RestoreSignonData(dialog, strippedRealm.get(), name, value, formNumber, elementNumber);
 }
 
 /*
@@ -2261,8 +2282,8 @@ si_RestoreOldSignonDataFromBrowser
   if (username.Length() != 0) {
     user = si_GetSpecificUser(passwordRealm, username, NS_ConvertASCIItoUCS2(USERNAMEFIELD));
   } else {
-    si_UserHasBeenSelected = PR_FALSE;
-    user = si_GetUser(dialog, passwordRealm, pickFirstUser, NS_ConvertASCIItoUCS2(USERNAMEFIELD));
+    si_LastFormForWhichUserHasBeenSelected = -1;
+    user = si_GetUser(dialog, passwordRealm, pickFirstUser, NS_ConvertASCIItoUCS2(USERNAMEFIELD), 0);
   }
   if (!user) {
     /* leave original username and password from caller unchanged */

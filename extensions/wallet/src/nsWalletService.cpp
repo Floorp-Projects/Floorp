@@ -525,7 +525,7 @@ nsWalletlibService::OnStateChange(nsIWebProgress* aWebProgress,
                                     wwatch->GetNewPrompter(0, getter_AddRefs(prompter));
                                 }
                                 if (prompter) {
-                                  SINGSIGN_RestoreSignonData(prompter, uri, nameString, &valueString, elementNumber++);
+                                   SINGSIGN_RestoreSignonData(prompter, uri, nameString, &valueString, formX, elementNumber++);
                                 }
                                 if (valueString) {
                                   value = valueString;

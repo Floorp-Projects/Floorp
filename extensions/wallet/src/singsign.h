@@ -80,7 +80,7 @@ extern void
 SINGSIGN_SignonViewerReturn(const nsString& results);
 
 extern void
-SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 elementNumber);
+SINGSIGN_RestoreSignonData(nsIPrompt* dialog, nsIURI* passwordRealm, const PRUnichar* name, PRUnichar** value, PRUint32 formNumber, PRUint32 elementNumber);
 
 extern nsresult
 SINGSIGN_PromptUsernameAndPassword
