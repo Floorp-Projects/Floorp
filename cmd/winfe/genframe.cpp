@@ -50,9 +50,9 @@
 #elif defined(JAVA)
 #include "java.h"
 #endif
-#ifdef PRIVACY_POLICIES
+//ifdef PRIVACY_POLICIES
 #include "privacy.h"
-#endif
+//#endif
 
 // for whitebox testing
 //#define DEBUG_WHITEBOX
@@ -82,7 +82,7 @@ extern CGenericFrame *wfe_pLastFrame;
 // bookmark menu before we add the bookmark items. We need this so we
 // know how many menu items to delete when the menu goes away
 static int      nExistingBookmarkMenuItems;
-
+s
 // We destroy the menu items we added when we receive the WM_MENUSELECT.
 // Because Windows sends the WM_MENUSELECT that the menu is going away
 // before they send the WM_COMMAND, we need to remember the last menu item
@@ -95,8 +95,8 @@ static void*    nLastSelectedData;
 // This is used by both Navigator and Composer frames,
 //  so we check if Editor is blocked
 #define CAN_INTERACT_IF_EDITOR  (GetMainContext() != NULL && GetMainContext()->GetContext() != NULL \
-                       && !GetMainContext()->GetContext()->waitingMode  \
-                       && (!EDT_IS_EDITOR(GetMainContext()->GetContext()) \
+		       && !GetMainContext()->GetContext()->waitingMode  \
+		       && (!EDT_IS_EDITOR(GetMainContext()->GetContext()) \
 						   || !EDT_IsBlocked(GetMainContext()->GetContext())))
 
 #ifndef _AFXDLL
@@ -133,7 +133,7 @@ extern "C" void WFE_StartCalendar()
 	{
 		executable = installDirectory + executable;
 
-		if(	WinExec(executable, SW_SHOW) >= 31)
+		if(     WinExec(executable, SW_SHOW) >= 31)
 			return;
 	}
 	::MessageBox(NULL, szLoadString(IDS_CANTCALENDAR), szLoadString(IDS_CALENDAR), MB_OK);
@@ -210,7 +210,7 @@ CGenericFrame::CGenericFrame()
     m_bSkipSaveEditChanges = FALSE;
 #endif
 
-	//	Initially we'll be allowing the frame to resize.
+	//      Initially we'll be allowing the frame to resize.
 	m_bCanResize = TRUE;
 	m_bDisableHotkeys = FALSE;
 	m_bPreCreated = FALSE;
@@ -228,12 +228,12 @@ CGenericFrame::CGenericFrame()
 	// jliu added the following to support CJK caption print
 	m_bActive = FALSE;
 	m_csid    = CIntlWin::GetSystemLocaleCsid();
-	SetupCapFont( m_csid );		// setup the default font first
+	SetupCapFont( m_csid );         // setup the default font first
 	DWORD dwVersion = ::GetVersion();
 	if( LOBYTE(dwVersion) < 4 )
-		capStyle = DT_CENTER;	// for NT 3.51
+		capStyle = DT_CENTER;   // for NT 3.51
 	else
-		capStyle = DT_LEFT;		// for NT 4.0 and Win95
+		capStyle = DT_LEFT;             // for NT 4.0 and Win95
 #endif
 }
 
@@ -278,11 +278,11 @@ void CGenericFrame::SetupCapFont( int16 csid, BOOL force )
 	BOOL b = SystemParametersInfo( SPI_GETNONCLIENTMETRICS, sizeof(NONCLIENTMETRICS), &nc, 0 );
 	XP_ASSERT( b );
 
-	LOGFONT lf = nc.lfCaptionFont;	// get the logic font used to paint the caption
+	LOGFONT lf = nc.lfCaptionFont;  // get the logic font used to paint the caption
 	csid = CIntlWin::GetSystemLocaleCsid();
-	if( force || ( m_csid !=  csid ) ){		// in case user changes system font
+	if( force || ( m_csid !=  csid ) ){             // in case user changes system font
 		lf.lfCharSet = IntlGetLfCharset( m_csid );
- 		_tcscpy( lf.lfFaceName, IntlGetUIPropFaceName( m_csid ) );
+		_tcscpy( lf.lfFaceName, IntlGetUIPropFaceName( m_csid ) );
 		hCapFont.CreateFontIndirect( &lf );
 	}
 
@@ -323,7 +323,7 @@ LRESULT CGenericFrame::OnSetText(WPARAM wParam, LPARAM lParam)
 	if( dwStyle & WS_VISIBLE )
 		SetWindowLong( m_hWnd, GWL_STYLE, dwStyle );
 
-	SendMessage(WM_NCPAINT);	// paint non-client area (frame too)
+	SendMessage(WM_NCPAINT);        // paint non-client area (frame too)
 
 	return lRet;
 }
@@ -337,7 +337,7 @@ BOOL CGenericFrame::OnNcActivate(BOOL bActive)
 		bActive = TRUE;
 	if( !IsWindowEnabled() )
 		bActive = FALSE;
-	if( bActive == m_bActive )	
+	if( bActive == m_bActive )      
 		return TRUE;
 
 	MSG& msg = AfxGetThreadState()->m_lastSentMsg;
@@ -351,11 +351,11 @@ BOOL CGenericFrame::OnNcActivate(BOOL bActive)
 	DWORD dwStyle = GetStyle();
 	if( dwStyle & WS_VISIBLE )
 		::SetWindowLong(m_hWnd, GWL_STYLE, (dwStyle & ~WS_VISIBLE));
-	DefWindowProc(WM_NCACTIVATE, bActive, 0L);	// don't call CFrameWnd::OnNcActivate()
+	DefWindowProc(WM_NCACTIVATE, bActive, 0L);      // don't call CFrameWnd::OnNcActivate()
 	if( dwStyle & WS_VISIBLE )
 		::SetWindowLong(m_hWnd, GWL_STYLE, dwStyle);
 
-	SendMessage( WM_NCPAINT );	// paint non-client area and frame
+	SendMessage( WM_NCPAINT );      // paint non-client area and frame
 
 	return TRUE;
 }
@@ -365,7 +365,7 @@ void CGenericFrame::OnNcPaint()
 {
 	DWORD dwStyle = GetStyle();
 	if( !( dwStyle & WS_CAPTION )  ){
-		CFrameWnd::OnNcPaint();			// do the default one first
+		CFrameWnd::OnNcPaint();                 // do the default one first
 		return;
 	}
 
@@ -378,13 +378,13 @@ void CGenericFrame::OnNcPaint()
 	int dxIcon = GetSystemMetrics(SM_CXSIZE); // width of caption icon/button
 
 	// Compute rectangle
-	CRect rc;		// window rect in screen coords
+	CRect rc;               // window rect in screen coords
 	GetWindowRect( &rc );
-	rc.left  += szFrame.cx;				// frame
-	rc.right -= szFrame.cx;				// frame
-	rc.top   += szFrame.cy;				// top = end of frame
+	rc.left  += szFrame.cx;                         // frame
+	rc.right -= szFrame.cx;                         // frame
+	rc.top   += szFrame.cy;                         // top = end of frame
 	rc.bottom = rc.top + GetSystemMetrics(SM_CYCAPTION)  // height of caption
-		- GetSystemMetrics(SM_CYBORDER);				  // minus gray shadow border
+		- GetSystemMetrics(SM_CYBORDER);                                  // minus gray shadow border
 
 
 	MSG& msg = AfxGetThreadState()->m_lastSentMsg;
@@ -392,8 +392,8 @@ void CGenericFrame::OnNcPaint()
 	// Don't paint if the caption doesn't lie within the region.
 	//
 	if (msg.wParam > 1 && !::RectInRegion((HRGN)msg.wParam, &rc)) {
-		CFrameWnd::OnNcPaint();			// do the default one first
-		return;							// quit
+		CFrameWnd::OnNcPaint();                 // do the default one first
+		return;                                                 // quit
 	}
 
 
@@ -418,12 +418,12 @@ void CGenericFrame::OnNcPaint()
 
 	// call the default NcPaint
 
-	WPARAM savewp = msg.wParam;		// save original wParam
-	msg.wParam = (WPARAM)hRgnNew;	// set new region for DefWindowProc
-	CFrameWnd::OnNcPaint();			// paint the caption bar except title text
-	DeleteObject( hRgnCaption );	// clean up
-	DeleteObject( hRgnNew );		// clean up
-	msg.wParam = savewp;			// restore original wParam
+	WPARAM savewp = msg.wParam;             // save original wParam
+	msg.wParam = (WPARAM)hRgnNew;   // set new region for DefWindowProc
+	CFrameWnd::OnNcPaint();                 // paint the caption bar except title text
+	DeleteObject( hRgnCaption );    // clean up
+	DeleteObject( hRgnNew );                // clean up
+	msg.wParam = savewp;                    // restore original wParam
 
 
 	// Compute rectangle
@@ -435,21 +435,21 @@ void CGenericFrame::OnNcPaint()
 	rectCaption -= rectCaption.TopLeft(); // convert caption rectangle origin to (0,0)
 	rectCaption.left  += (szFrame.cx + 2 + dxIcon);
 	rectCaption.right -= (szFrame.cx + 2 + dxIcon);
-	rectCaption.top   += szFrame.cy;				// top = end of frame
-	rectCaption.bottom = rectCaption.top + GetSystemMetrics(SM_CYCAPTION)	// height of caption
-		- GetSystemMetrics(SM_CYBORDER);			// minus gray shadow border
+	rectCaption.top   += szFrame.cy;                                // top = end of frame
+	rectCaption.bottom = rectCaption.top + GetSystemMetrics(SM_CYCAPTION)   // height of caption
+		- GetSystemMetrics(SM_CYBORDER);                        // minus gray shadow border
 
 
 	// i don't know why MS supports this feature ...
 	if( ( dwStyle & WS_MAXIMIZEBOX ) || ( dwStyle & WS_MINIMIZEBOX ) ){
 		rectCaption.right -= ( dxIcon + 2 + dxIcon );
-		if( capStyle != DT_LEFT )	// for NT 3.51
+		if( capStyle != DT_LEFT )       // for NT 3.51
 			rectCaption.right += dxIcon + 4;
 	}
 
 	// create a brush for caption background
 	CBrush brCaption;
-	brCaption.CreateSolidBrush(	
+	brCaption.CreateSolidBrush(     
 		::GetSysColor( m_bActive ? COLOR_ACTIVECAPTION : COLOR_INACTIVECAPTION ) );
 
 	CString strTitle;
@@ -461,7 +461,7 @@ void CGenericFrame::OnNcPaint()
 
 	int titleLen = _tcslen( strTitle );
 	UINT cs = capStyle;
-	if( cs != DT_LEFT ){	// it is NT 3.51
+	if( cs != DT_LEFT ){    // it is NT 3.51
 		CSize size = dc.GetTextExtent( strTitle, titleLen );
 		if( size.cx >= rectCaption.Width() )
 			cs = DT_LEFT;
@@ -472,7 +472,7 @@ void CGenericFrame::OnNcPaint()
 	dc.SelectObject(hFontOld);
 }
 
-#endif	// #ifdef XP_WIN32
+#endif  // #ifdef XP_WIN32
 
 
 CGenericFrame::~CGenericFrame()
@@ -489,7 +489,7 @@ CGenericFrame::~CGenericFrame()
 #endif
 
 	if (m_pHotlistMenuMap) {
-    	delete m_pHotlistMenuMap;
+	delete m_pHotlistMenuMap;
 		m_pHotlistMenuMap = NULL;
 	}
 
@@ -520,22 +520,22 @@ CGenericFrame::~CGenericFrame()
     //      list as OnClose never gets called if not active when
     //      deleted.
     if(theApp.m_pFrameList == this) {
-        // first one
-        theApp.m_pFrameList = m_pNext;
+	// first one
+	theApp.m_pFrameList = m_pNext;
 
-        // Reset the global last frame
-        //  (this is unlikely unless we are only frame left)
-        if( wfe_pLastFrame == this )
-            wfe_pLastFrame = NULL;
+	// Reset the global last frame
+	//  (this is unlikely unless we are only frame left)
+	if( wfe_pLastFrame == this )
+	    wfe_pLastFrame = NULL;
     } else {
-        // loop through for the one pointing to me
-        for(CGenericFrame * f = theApp.m_pFrameList; f; f = f->m_pNext)
-            if(f->m_pNext == this){
-                // Change the "last frame" to the one before
-                if( wfe_pLastFrame == this )
-                    wfe_pLastFrame = f;    
-                f->m_pNext = m_pNext;
-            }
+	// loop through for the one pointing to me
+	for(CGenericFrame * f = theApp.m_pFrameList; f; f = f->m_pNext)
+	    if(f->m_pNext == this){
+		// Change the "last frame" to the one before
+		if( wfe_pLastFrame == this )
+		    wfe_pLastFrame = f;    
+		f->m_pNext = m_pNext;
+	    }
     }
 }
 
@@ -551,7 +551,7 @@ void CGenericFrame::BuildDirectoryMenu(CMenu * pMenu)
 	}
 
     int idx =0, idx2=0;
-    int iItems = pMenu->GetMenuItemCount();	
+    int iItems = pMenu->GetMenuItemCount();     
     char *label;
 	int bOK = PREF_NOERROR;
   
@@ -594,7 +594,7 @@ void CGenericFrame::BuildFileBookmarkMenu(CTreeMenu* pMenu, HT_Resource pRoot)
 	CTreeItem *item= new CTreeItem(NULL, NULL, FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems, CString(entryName));
 
 	pMenu->AddItem(item, 0, NULL);
-	m_pHotlistMenuMap->SetAt(FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems++,	pRoot);
+	m_pHotlistMenuMap->SetAt(FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems++,  pRoot);
 
 	pMenu->InsertMenu(FIRST_FILE_BOOKMARK_MENU_ID + m_nFileBookmarkItems++, MF_BYPOSITION | MF_SEPARATOR);
 
@@ -663,8 +663,8 @@ void CGenericFrame::FinishMenuExpansion(HT_Resource pRoot)
 	HT_Resource pEntry = NULL;
 	while (theCursor && (pEntry = HT_GetNextItem(theCursor)) && bStillRoom)
 	{
-    	char*   lpszShortName = NULL;
-		CString	csAmpersandName;
+	char*   lpszShortName = NULL;
+		CString csAmpersandName;
 	
 		// Don't add more menu items than we can handle
 		if((FIRST_BOOKMARK_MENU_ID + m_nBookmarkItems) > LAST_BOOKMARK_MENU_ID) 
@@ -732,7 +732,7 @@ void CGenericFrame::FinishMenuExpansion(HT_Resource pRoot)
 			// Add the URL to the map. We need to do this because Windows doesn't
 			// allow any client data to be associated with menu items.
 			m_pHotlistMenuMap->SetAt(FIRST_BOOKMARK_MENU_ID + m_nBookmarkItems, pEntry);
-		} 	
+		}       
 
 		// Even though separators and pull-right sub-menus don't have command IDs,
 		// increment the count of bookmark items for all three, because we rely
@@ -905,13 +905,13 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
 
 
 #ifdef ON_COMMAND_RANGE
-        ON_COMMAND_RANGE(ID_OPTIONS_ENCODING_1, ID_OPTIONS_ENCODING_70, OnToggleEncoding)
-        ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_ENCODING_1, ID_OPTIONS_ENCODING_70, OnUpdateEncoding)
+	ON_COMMAND_RANGE(ID_OPTIONS_ENCODING_1, ID_OPTIONS_ENCODING_70, OnToggleEncoding)
+	ON_UPDATE_COMMAND_UI_RANGE(ID_OPTIONS_ENCODING_1, ID_OPTIONS_ENCODING_70, OnUpdateEncoding)
 #endif
 
 #ifdef EDITOR
 	ON_COMMAND(ID_EDT_NEW_DOC_BLANK, OnEditNewBlankDocument)
-  	ON_UPDATE_COMMAND_UI(ID_EDT_NEW_DOC_BLANK, OnUpdateCanInteract)
+	ON_UPDATE_COMMAND_UI(ID_EDT_NEW_DOC_BLANK, OnUpdateCanInteract)
     ON_COMMAND(ID_ACTIVATE_SITE_MANAGER, OnActivateSiteManager)
     ON_UPDATE_COMMAND_UI(ID_ACTIVATE_SITE_MANAGER, OnUpdateActivateSiteManager)
 	ON_COMMAND(ID_EDIT_DOCUMENT, OnNavigateToEdit)
@@ -919,7 +919,7 @@ BEGIN_MESSAGE_MAP(CGenericFrame, CFrameWnd)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_DOCUMENT, OnUpdateCanInteract)
 	ON_UPDATE_COMMAND_UI(ID_EDIT_FRAME, OnUpdateEditFrame)
 	ON_COMMAND(ID_EDT_NEW_DOC_FROM_TEMPLATE, OnEditNewDocFromTemplate)
-  	ON_UPDATE_COMMAND_UI(ID_EDT_NEW_DOC_FROM_TEMPLATE, OnUpdateCanInteract)
+	ON_UPDATE_COMMAND_UI(ID_EDT_NEW_DOC_FROM_TEMPLATE, OnUpdateCanInteract)
 #ifdef XP_WIN32
     ON_REGISTERED_MESSAGE(WM_SITE_MANAGER, OnSiteMgrMessage)
 	// jliu added the following to support CJK caption print
@@ -958,7 +958,7 @@ END_MESSAGE_MAP()
 void CGenericFrame::RecalcLayout ( BOOL bNotify )
 {
     for(CGenericFrame * f = theApp.m_pFrameList; f; f = f->m_pNext)
-        f->CFrameWnd::RecalcLayout ( );
+	f->CFrameWnd::RecalcLayout ( );
 }
 
 void CGenericFrame::GetMessageString( UINT nID, CString& rMessage ) const
@@ -1018,10 +1018,10 @@ BOOL CGenericFrame::PreCreateWindow(CREATESTRUCT& cs)
 #ifdef WIN32
 	// Modify Ex_Styles set by MFC.
 	cs.dwExStyle |= m_wAddedExStyles;
-        cs.dwExStyle &= ~m_wRemovedExStyles;
+	cs.dwExStyle &= ~m_wRemovedExStyles;
 #endif
 
-        return(retval);
+	return(retval);
 }
 
 //
@@ -1159,7 +1159,7 @@ void CGenericFrame::OnDestroy()
 {
 	ASSERT(!m_pHotlistMenuMap || m_pHotlistMenuMap->IsEmpty());
 	ASSERT(!m_pSubmenuMap || m_pSubmenuMap->IsEmpty());
-//	ASSERT(!m_pFileSubmenuMap || m_pFileSubmenuMap->IsEmpty());
+//      ASSERT(!m_pFileSubmenuMap || m_pFileSubmenuMap->IsEmpty());
 
 	// Unload the bookmark bitmaps and delete them
 	if ( m_pBookmarkBitmap ) {
@@ -1204,19 +1204,19 @@ void CGenericFrame::OnDestroy()
     // this frame is serving an OLE container the status bar's parent is the container, hence
     // we need to destroy the window now.  Note the status bar is an auto-delete CWnd object.
     //
- 	LPNSSTATUSBAR pIStatusBar = NULL;
- 	if( GetChrome() && 
-        SUCCEEDED(GetChrome()->QueryInterface( IID_INSStatusBar, (LPVOID *)&pIStatusBar )) && 
-        pIStatusBar ) 
- 	{
-        CNetscapeStatusBar *pStatusBar = ((CGenericStatusBar *)pIStatusBar)->GetNetscapeStatusBar();
-        
-        if( pStatusBar )
-        {
-            pStatusBar->DestroyWindow();
-        }
- 		pIStatusBar->Release();
- 	}
+	LPNSSTATUSBAR pIStatusBar = NULL;
+	if( GetChrome() && 
+	SUCCEEDED(GetChrome()->QueryInterface( IID_INSStatusBar, (LPVOID *)&pIStatusBar )) && 
+	pIStatusBar ) 
+	{
+	CNetscapeStatusBar *pStatusBar = ((CGenericStatusBar *)pIStatusBar)->GetNetscapeStatusBar();
+	
+	if( pStatusBar )
+	{
+	    pStatusBar->DestroyWindow();
+	}
+		pIStatusBar->Release();
+	}
     
 	// we no longer need a taskbar.
 #ifdef MOZ_TASKBAR
@@ -1231,12 +1231,12 @@ BOOL CGenericFrame::OnQueryNewPalette()
 	CWinCX *pWinCX = GetMainWinContext();
 	CView* focusWnd = GetActiveView();
 	BOOL retval = FALSE;
-	HPALETTE hPal = WFE_GetUIPalette(this);	
+	HPALETTE hPal = WFE_GetUIPalette(this); 
 	if (pWinCX) {
 		if (!pWinCX->IsDestroyed()) {
-		//	Make sure this is needed.
+		//      Make sure this is needed.
 			if(pWinCX->GetPalette() != NULL) {
-				//	Realize the palette.
+				//      Realize the palette.
 				retval = CFrameGlue::GetFrameGlue(this)->RealizePalette(this, pWinCX->GetPane(), FALSE);
 			}
 		}
@@ -1256,34 +1256,34 @@ BOOL CGenericFrame::OnQueryNewPalette()
 		}
 
 	}
-	return retval;	
+	return retval;  
 }
 
 // Only top-level windows will receive this message
 void CGenericFrame::OnPaletteChanged(CWnd* pFocusWnd) 
 {
 
-//	CFrameWnd::OnPaletteChanged(pFocusWnd);
+//      CFrameWnd::OnPaletteChanged(pFocusWnd);
 	
-	//	Don't do this if we caused it to happen.
-	if(pFocusWnd == (CWnd *)this)	{
+	//      Don't do this if we caused it to happen.
+	if(pFocusWnd == (CWnd *)this)   {
 		return;
 	}
 
 	TRACE("CGenericFrame::OnPaletteChanged(%p)\n", pFocusWnd);
-	// Tell the main context to realize the palette and redraw.		   f
+	// Tell the main context to realize the palette and redraw.                f
 	CWinCX *pWinCX = GetActiveWinContext();
-	if(pWinCX && !pWinCX->IsDestroyed())	{
-        HPALETTE pPal = pWinCX->GetPalette();
-		//	Make sure this is needed.
-		if( pPal )	{
-			//	Realize the palette.
-            //	Detect if it's a child view, and don't do anything.	 If we cause a
+	if(pWinCX && !pWinCX->IsDestroyed())    {
+	HPALETTE pPal = pWinCX->GetPalette();
+		//      Make sure this is needed.
+		if( pPal )      {
+			//      Realize the palette.
+	    //  Detect if it's a child view, and don't do anything.      If we cause a
 			//  palette change.
 
 			if ((IsChild(pFocusWnd) == TRUE) && FEU_IsNetscapeFrame(pFocusWnd)) {
 					TRACE("Blocking child view palette change\n");
-            }
+	    }
 			else {
 				// Either a plug-in or a Java child window realized its
 				// palette, or a different top-level window realized
@@ -1302,112 +1302,112 @@ BOOL CGenericFrame::OnCmdMsg(UINT nID, int nCode, void* pExtra, AFX_CMDHANDLERIN
    if( nID >= ID_OPTIONS_ENCODING_1 && nID <= ID_OPTIONS_ENCODING_70 && 
        (nCode == CN_UPDATE_COMMAND_UI))  
    {
-          OnUpdateEncoding( (CCmdUI*) pExtra );
-          return TRUE;
+	  OnUpdateEncoding( (CCmdUI*) pExtra );
+	  return TRUE;
    }
     // give me extra randomness for the first couple of messages
     static int s_nLibSecCount = 0;
     if(s_nLibSecCount < 300) {
-        FE_PokeLibSecOnIdle();
-        s_nLibSecCount++;
+	FE_PokeLibSecOnIdle();
+	s_nLibSecCount++;
     }
-        
+	
 
-	//	Pump through any active child first.
-	//	This will catch active control bars, etc.
+	//      Pump through any active child first.
+	//      This will catch active control bars, etc.
 	CWnd *pFocus = GetFocus();
-	if( pFocus )	{
-		//	Make sure it's a child of us, and not a CGenericView (we handle those below).
-		//	Also make sure it's not a child of our main view.
-		//		Those are handled by the view, not us.
+	if( pFocus )    {
+		//      Make sure it's a child of us, and not a CGenericView (we handle those below).
+		//      Also make sure it's not a child of our main view.
+		//              Those are handled by the view, not us.
 		BOOL bFrameChild = IsChild(pFocus);
 		BOOL bGenericView = pFocus->IsKindOf(RUNTIME_CLASS(CGenericView));
 		BOOL bViewChild = FALSE;
-		if(GetMainWinContext() && GetMainWinContext()->GetPane())	{
-            bViewChild = ::IsChild(GetMainWinContext()->GetPane(), pFocus->m_hWnd);
+		if(GetMainWinContext() && GetMainWinContext()->GetPane())       {
+	    bViewChild = ::IsChild(GetMainWinContext()->GetPane(), pFocus->m_hWnd);
 		}
 
-		if(bFrameChild == TRUE && bGenericView == FALSE && bViewChild == FALSE)	{
-			//	Try an OnCmdMessage, probably a URL bar, or message list.
-			//	Walk up the list of parents until we reach ourselves.
+		if(bFrameChild == TRUE && bGenericView == FALSE && bViewChild == FALSE) {
+			//      Try an OnCmdMessage, probably a URL bar, or message list.
+			//      Walk up the list of parents until we reach ourselves.
 			CWnd *pTarget = pFocus;
-			while(pTarget != NULL && pTarget != (CWnd *)this)	{
-				if(pTarget->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))	{
+			while(pTarget != NULL && pTarget != (CWnd *)this)       {
+				if(pTarget->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo)) {
 					return(TRUE);
 				}
 				pTarget = pTarget->GetParent();
 				
-                //  There are cases now where a child is actually a CGenericView
-                //      such as the NavCenter HTML pane.  Do not allow it to
-                //      receive these messages.
-                if(pTarget->IsKindOf(RUNTIME_CLASS(CGenericView))) {
-                    pTarget = NULL;
-                }
+		//  There are cases now where a child is actually a CGenericView
+		//      such as the NavCenter HTML pane.  Do not allow it to
+		//      receive these messages.
+		if(pTarget->IsKindOf(RUNTIME_CLASS(CGenericView))) {
+		    pTarget = NULL;
+		}
 			}
 		}
 	}
 
-	//	Pump the message through our active context first.
+	//      Pump the message through our active context first.
     CWinCX *pActiveCX = GetActiveWinContext();
     CGenericView *pGenView = pActiveCX ? pActiveCX->GetView() : NULL;
     if(pGenView)    {
-        if(pGenView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))  {
-            return(TRUE);
-        }
+	if(pGenView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))  {
+	    return(TRUE);
+	}
     }
 
-	//	Next, pump the message through our main context.
+	//      Next, pump the message through our main context.
     pActiveCX = GetMainWinContext();
     pGenView = pActiveCX ? pActiveCX->GetView() : NULL;
     if(pGenView)    {
-        if(pGenView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))  {
-            return(TRUE);
-        }
+	if(pGenView->OnCmdMsg(nID, nCode, pExtra, pHandlerInfo))  {
+	    return(TRUE);
+	}
     }
 
     // always enable bookmark entries
     if((nID >= FIRST_BOOKMARK_MENU_ID) && (nID < LAST_BOOKMARK_MENU_ID) && (nCode == CN_UPDATE_COMMAND_UI))  {
-        ASSERT(pExtra);
-        CCmdUI* pCmdUI = (CCmdUI*)pExtra;
-        pCmdUI->Enable();
-        return(TRUE);
+	ASSERT(pExtra);
+	CCmdUI* pCmdUI = (CCmdUI*)pExtra;
+	pCmdUI->Enable();
+	return(TRUE);
     }
 
     // always enable windows menu entries
     if((nID >= ID_WINDOW_WINDOW_0) && (nID < ID_WINDOW_WINDOW_0 + 10) && (nCode == CN_UPDATE_COMMAND_UI))  {
-        ASSERT(pExtra);
-        CCmdUI* pCmdUI = (CCmdUI*)pExtra;
-        pCmdUI->Enable();
-        return(TRUE);
+	ASSERT(pExtra);
+	CCmdUI* pCmdUI = (CCmdUI*)pExtra;
+	pCmdUI->Enable();
+	return(TRUE);
     }
 
     // was this a windows menu selection ?
     if((nID >= ID_WINDOW_WINDOW_0) && (nID < ID_WINDOW_WINDOW_0 + 10) && (nCode == CN_COMMAND))  {
-        CGenericFrame * pFrame = theApp.m_pFrameList;
+	CGenericFrame * pFrame = theApp.m_pFrameList;
 		BOOL bDone = FALSE;
-        // walk down frame list till we get to the one we wanted
-        int iToGo = CASTINT(nID - ID_WINDOW_WINDOW_0);
-        while( pFrame && !bDone ) {
+	// walk down frame list till we get to the one we wanted
+	int iToGo = CASTINT(nID - ID_WINDOW_WINDOW_0);
+	while( pFrame && !bDone ) {
 			if (iToGo == 0) {
 				bDone = TRUE;
-	            break;
+		    break;
 			} else {
 				iToGo--;
 				// Fall through to default to move to next frame.
 			}
 			pFrame = pFrame->m_pNext;
-        }
+	}
 
-        // if we got something un-minimize it and pop it to the front
-        if(pFrame) {
-            if(pFrame->IsIconic())  {
-                pFrame->ShowWindow(SW_RESTORE);
-            }
-            pFrame->BringWindowToTop();
-        }
+	// if we got something un-minimize it and pop it to the front
+	if(pFrame) {
+	    if(pFrame->IsIconic())  {
+		pFrame->ShowWindow(SW_RESTORE);
+	    }
+	    pFrame->BringWindowToTop();
+	}
 
-        // assume we got something or at least the message was for us
-        return(TRUE);
+	// assume we got something or at least the message was for us
+	return(TRUE);
     }
 
 	// then pump through frame  
@@ -1438,7 +1438,7 @@ void CGenericFrame::OnUpdateEditFrame(CCmdUI *pCmdUI)
 void CGenericFrame::BuildHelpMenu(CMenu * pMenu) 
 {
 	if (!pMenu) return; 
-	if(GetMainContext() == NULL)	{
+	if(GetMainContext() == NULL)    {
 		return;
 	}
 	//static bChanged = TRUE;
@@ -1446,7 +1446,7 @@ void CGenericFrame::BuildHelpMenu(CMenu * pMenu)
 	//if (!bChanged) return;
 
     int idx =0, idx2=0;
-    int iItems = pMenu->GetMenuItemCount();	
+    int iItems = pMenu->GetMenuItemCount();     
     char *label;
 	int bOK = PREF_NOERROR;
 
@@ -1497,18 +1497,18 @@ void CGenericFrame::BuildHelpMenu(CMenu * pMenu)
 
 /****************************************************************************
 *
-*	CGenericFrame::OnToolsWeb
+*       CGenericFrame::OnToolsWeb
 *
-*	PARAMETERS:
-*		None
+*       PARAMETERS:
+*               None
 *
-*	RETURNS:
-*		void
+*       RETURNS:
+*               void
 *
-*	DESCRIPTION:
-*		Handles the Tools->Web menu item, and can be called by anyone else
-*		(such as the task bar) that wants to perform the trick of getting the
-*		proper browser window up.
+*       DESCRIPTION:
+*               Handles the Tools->Web menu item, and can be called by anyone else
+*               (such as the task bar) that wants to perform the trick of getting the
+*               proper browser window up.
 *
 ****************************************************************************/
 
@@ -1540,7 +1540,7 @@ void CGenericFrame::OnToolsWeb()
 			if(pFrame)
 			{
 				if(pFrame->IsIconic())
-		            pFrame->ShowWindow(SW_RESTORE);
+			    pFrame->ShowWindow(SW_RESTORE);
 
 #ifdef _WIN32
 				pFrame->SetForegroundWindow();
@@ -1551,7 +1551,7 @@ void CGenericFrame::OnToolsWeb()
 		}
 	}
 			
-} // END OF	FUNCTION CGenericFrame::OnToolsWeb()
+} // END OF     FUNCTION CGenericFrame::OnToolsWeb()
 
 //
 // Build the "Window" menu 
@@ -1562,7 +1562,7 @@ void CGenericFrame::OnConstructWindowMenu(CMenu * pPopup)
 
     ASSERT(pPopup);
     if(!pPopup)
-        return;
+	return;
 
 	if(theApp.m_hPostalLib)
 		FEU_AltMail_SetAltMailMenus(pPopup); 
@@ -1590,21 +1590,21 @@ void CGenericFrame::OnConstructWindowMenu(CMenu * pPopup)
 
 	// We can't have more than 10 window menu items because we only reserved 10 IDs. Sigh.
     for(pFrame = theApp.m_pFrameList; pFrame && nItemCount < 10; pFrame = pFrame->m_pNext) {
-        CAbstractCX * pContext = pFrame->GetMainContext();
+	CAbstractCX * pContext = pFrame->GetMainContext();
 
-        // all better be enabled
-        nFlags = MF_STRING | MF_ENABLED;
-        if(!pContext)
-            continue;
+	// all better be enabled
+	nFlags = MF_STRING | MF_ENABLED;
+	if(!pContext)
+	    continue;
 
-        MWContext * pXPContext = pContext->GetContext();
-        if(!pXPContext)
-            continue;
+	MWContext * pXPContext = pContext->GetContext();
+	if(!pXPContext)
+	    continue;
 
-        if(pFrame == this)
-            nFlags |= MF_CHECKED;
+	if(pFrame == this)
+	    nFlags |= MF_CHECKED;
 
-  		CString csContext = "";
+		CString csContext = "";
 		CString csTitle;
 
 		csContext.Format(_T("&%d "), nItemCount);
@@ -1612,11 +1612,11 @@ void CGenericFrame::OnConstructWindowMenu(CMenu * pPopup)
 
 		switch (pXPContext->type) {
 		case MWContextBrowser:
-            if( EDT_IS_EDITOR(pXPContext) ){
+	    if( EDT_IS_EDITOR(pXPContext) ){
 			    csContext += szLoadString(IDS_TITLE_COMPOSE_PAGE);
-            } else {
+	    } else {
 			    csContext += szLoadString(IDS_TITLE_WEB);
-            }
+	    }
 			break;
 #ifdef MOZ_MAIL_NEWS         
 		case MWContextMessageComposition:
@@ -1651,12 +1651,12 @@ void CGenericFrame::OnConstructWindowMenu(CMenu * pPopup)
 			break;
 		}
 
-        if(pFrame == this)
-            nFlags |= MF_CHECKED;
+	if(pFrame == this)
+	    nFlags |= MF_CHECKED;
 		pPopup->AppendMenu( nFlags, CASTUINT(ID_WINDOW_WINDOW_0 + nItemCount), csContext);
 
-        // we added an item
-        nItemCount++;
+	// we added an item
+	nItemCount++;
     }
 
     // keep windows happy
@@ -1773,7 +1773,7 @@ void CGenericFrame::LoadFrameMenu(CMenu *pPopup, UINT nIndex)
 				if(pSrcPopup && pID)
 				{
 					// load the menu and copy it into pPopup.
-					if(pSrcPopup->LoadMenu(*pID));	
+					if(pSrcPopup->LoadMenu(*pID));  
 						CopyMenu(pSrcPopup, pPopup);
 					delete pSrcPopup;
 				}
@@ -1865,7 +1865,7 @@ void CGenericFrame::OnInitMenuPopup(CMenu * pPopup, UINT nIndex, BOOL bSysMenu)
 					pPopup->InsertMenu(nCount - ITEMS_AFTER_BOOKMARKS_END, MF_SEPARATOR | MF_BYPOSITION);
 			}
 
-			((CTreeMenu*)pPopup)->CalculateItemDimensions();		
+			((CTreeMenu*)pPopup)->CalculateItemDimensions();                
 		}  
 		else if (pPopup->GetMenuItemID(0) == IDC_FIRST_PLACES_MENU_ID) 
 		{
@@ -1949,20 +1949,20 @@ LRESULT CGenericFrame::OnSetMessageString(WPARAM wParam, LPARAM lParam)
 	}
 
     if( csStatus.IsEmpty() ) {
-        CAbstractCX *pContext = GetMainContext();
+	CAbstractCX *pContext = GetMainContext();
 
-        if( pContext ) {
-            wfe_Progress( pContext->GetContext(), NULL );
-        }
+	if( pContext ) {
+	    wfe_Progress( pContext->GetContext(), NULL );
+	}
     }
     else {
-    	CStatusBar* pMessageBar = (CStatusBar *) GetMessageBar();
-    	if ( pMessageBar ) {
-    		int nIndex = pMessageBar->CommandToIndex( ID_SEPARATOR );
-    		if ( nIndex >= 0 ) {
-    			pMessageBar->SetPaneText( nIndex, csStatus );
-    		}
-    	}
+	CStatusBar* pMessageBar = (CStatusBar *) GetMessageBar();
+	if ( pMessageBar ) {
+		int nIndex = pMessageBar->CommandToIndex( ID_SEPARATOR );
+		if ( nIndex >= 0 ) {
+			pMessageBar->SetPaneText( nIndex, csStatus );
+		}
+	}
     }
 	UINT nIDLast = m_nIDLastMessage;
 	m_nIDLastMessage = (UINT)wParam;    // new ID (or 0)
@@ -1973,8 +1973,8 @@ LRESULT CGenericFrame::OnSetMessageString(WPARAM wParam, LPARAM lParam)
 void CGenericFrame::OnMenuSelect(UINT nItemID, UINT nFlags, HMENU hSysMenu)
 {
 	if ( nFlags == 0xffff ) {
-        
- 		DeleteMenuMapMenus();
+	
+		DeleteMenuMapMenus();
 
 		HMENU hMenu = ::GetMenu(m_hWnd);
 
@@ -2145,7 +2145,7 @@ static CMenu* FindPopupMenu(CMenu* pMenu, UINT nID, DWORD userData)
 		    // otherwise check to see if it is the menu item that we want
 		    else if( nID == pMenu->GetMenuItemID(i) )
 		    {
-                return pMenu;
+		return pMenu;
 		    }
 	    }
     }
@@ -2154,18 +2154,18 @@ static CMenu* FindPopupMenu(CMenu* pMenu, UINT nID, DWORD userData)
 
 /****************************************************************************
 *
-*	CGenericFrame::OnMeasureItem
+*       CGenericFrame::OnMeasureItem
 *
-*	PARAMETERS:
-*		nIDCtl	- control ID
-*		lpMI	- pointer to MEASUREITEMSTRUCT
+*       PARAMETERS:
+*               nIDCtl  - control ID
+*               lpMI    - pointer to MEASUREITEMSTRUCT
 *
-*	RETURNS:
-*		void
+*       RETURNS:
+*               void
 *
-*	DESCRIPTION:
-*		We must override this handler because MFC has a bug that prevents
-*		the CMenu::MeasureItem() from being called for owner draw sub-menus.
+*       DESCRIPTION:
+*               We must override this handler because MFC has a bug that prevents
+*               the CMenu::MeasureItem() from being called for owner draw sub-menus.
 *
 ****************************************************************************/
 
@@ -2188,10 +2188,10 @@ void CGenericFrame::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMI)
 			// start from menubar
 			pMenu = GetMenu();
 		}
-#else	// WIN16
+#else   // WIN16
 		// start from menubar
 		pMenu = GetMenu();
-#endif	// WIN32
+#endif  // WIN32
 			
 		ASSERT(pMenu != NULL);
 		pMenu = FindPopupMenu(pMenu, lpMI->itemID, lpMI->itemData);
@@ -2206,18 +2206,18 @@ void CGenericFrame::OnMeasureItem(int nIDCtl, LPMEASUREITEMSTRUCT lpMI)
 		CFrameWnd::OnMeasureItem(nIDCtl, lpMI);
 	}
 
-} // END OF	FUNCTION CGenericFrame::OnMeasureItem()
+} // END OF     FUNCTION CGenericFrame::OnMeasureItem()
 
 //  Scroll to the top of the document
 //
 void CGenericFrame::OnDocumentTop()  
 {
-   	MWContext *pContext = GetActiveWinContext() != NULL ? GetActiveWinContext()->GetContext() : NULL;
+	MWContext *pContext = GetActiveWinContext() != NULL ? GetActiveWinContext()->GetContext() : NULL;
 	if (pContext)
 #ifdef EDITOR
 		if (EDT_IS_EDITOR(pContext))
-            EDT_BeginOfDocument(pContext, FALSE);
-        else
+	    EDT_BeginOfDocument(pContext, FALSE);
+	else
 #endif // EDITOR
 			FE_SetDocPosition(GetActiveWinContext()->GetContext(), FE_VIEW, 0, 0);
 }
@@ -2226,7 +2226,7 @@ void CGenericFrame::OnDocumentTop()
 //
 void CGenericFrame::OnDocumentBottom() 
 {
-   	MWContext *pContext = GetActiveWinContext() != NULL ? GetActiveWinContext()->GetContext() : NULL;
+	MWContext *pContext = GetActiveWinContext() != NULL ? GetActiveWinContext()->GetContext() : NULL;
     if (pContext)
 #ifdef EDITOR
 		if (EDT_IS_EDITOR(pContext))
@@ -2239,12 +2239,12 @@ void CGenericFrame::OnDocumentBottom()
 void CGenericFrame::OnAbout()
 {
     CAbstractCX * pContext = GetMainContext();
-	if(pContext)	{
-        if (pContext->GetContext()->type != MWContextBrowser ||
-            EDT_IS_EDITOR(pContext->GetContext()))
-    		pContext->NormalGetUrl(szLoadString(IDS_ABOUT_PAGE),NULL,NULL,TRUE);
-        else
-    		pContext->NormalGetUrl(szLoadString(IDS_ABOUT_PAGE));
+	if(pContext)    {
+	if (pContext->GetContext()->type != MWContextBrowser ||
+	    EDT_IS_EDITOR(pContext->GetContext()))
+		pContext->NormalGetUrl(szLoadString(IDS_ABOUT_PAGE),NULL,NULL,TRUE);
+	else
+		pContext->NormalGetUrl(szLoadString(IDS_ABOUT_PAGE));
 	}
 }
 
@@ -2312,15 +2312,15 @@ void CGenericFrame::OnDisplayPrivacyPolicy()
     History_entry *he = SHIST_GetCurrent(&context->hist);
     char * policy_url = PRVCY_GetCurrentPrivacyPolicyURL(context);
 
-        if (!policy_url) return;
-        //      Create the URL to load, assign a referrer field.
-        URL_Struct *pUrl = NET_CreateURLStruct(policy_url, NET_DONT_RELOAD);
-        if(he->address != NULL) {
-                pUrl->referer = XP_STRDUP(he->address);
-        }
+	if (!policy_url) return;
+	//      Create the URL to load, assign a referrer field.
+	URL_Struct *pUrl = NET_CreateURLStruct(policy_url, NET_DONT_RELOAD);
+	if(he->address != NULL) {
+		pUrl->referer = XP_STRDUP(he->address);
+	}
 
-        //      Always set the window_target for a new window.
-        pUrl->window_target = XP_STRDUP("");
+	//      Always set the window_target for a new window.
+	pUrl->window_target = XP_STRDUP("");
 
 #ifdef EDITOR
     // Question: Does it matter if referer and window_target are set
@@ -2328,15 +2328,15 @@ void CGenericFrame::OnDisplayPrivacyPolicy()
     // This code is probably not needed, but it can't hurt in this
     // context.
     if ( EDT_IS_EDITOR(context) ) {
-        if ( pUrl ) {
-            // Must clear this to correctly load URL into new context
-            pUrl->fe_data = NULL;
-            // Create new Context
-            CFE_CreateNewDocWindow(NULL, pUrl);
-        }
+	if ( pUrl ) {
+	    // Must clear this to correctly load URL into new context
+	    pUrl->fe_data = NULL;
+	    // Create new Context
+	    CFE_CreateNewDocWindow(NULL, pUrl);
+	}
     } else
 #endif
-        CFE_CreateNewDocWindow(GetMainContext()->GetContext(), pUrl);
+	CFE_CreateNewDocWindow(GetMainContext()->GetContext(), pUrl);
 #endif
 }
 
@@ -2386,15 +2386,15 @@ void CGenericFrame::OnToggleJavaConsole()
 #ifdef OJI
     JVMMgr* jvmMgr = JVM_GetJVMMgr();
     if (jvmMgr == NULL) 
-        return;
+	return;
     NPIJVMPlugin* jvm = jvmMgr->GetJVM();
     if (jvm) {
-        if (jvm->IsConsoleVisible()) {
-            jvm->HideConsole();
-        } else {
-            jvm->ShowConsole();
-        }
-        jvm->Release();
+	if (jvm->IsConsoleVisible()) {
+	    jvm->HideConsole();
+	} else {
+	    jvm->ShowConsole();
+	}
+	jvm->Release();
     }
     jvmMgr->Release();
 #else
@@ -2411,23 +2411,23 @@ void CGenericFrame::OnUpdateJavaConsole(CCmdUI* pCmdUI)
 #ifdef OJI
     JVMMgr* jvmMgr = JVM_GetJVMMgr();
     if (jvmMgr == NULL) {
-        pCmdUI->Enable(FALSE);
+	pCmdUI->Enable(FALSE);
     }
     NPIJVMPlugin* jvm = jvmMgr->GetJVM();
     if (jvm) {
-        if (jvm->GetJVMStatus() != JVMStatus_Failed) {
-            pCmdUI->SetCheck(jvm->IsConsoleVisible());
-        } else {
-            pCmdUI->Enable(FALSE);
-        }
-        jvm->Release();
+	if (jvm->GetJVMStatus() != JVMStatus_Failed) {
+	    pCmdUI->SetCheck(jvm->IsConsoleVisible());
+	} else {
+	    pCmdUI->Enable(FALSE);
+	}
+	jvm->Release();
     }
     jvmMgr->Release();
 #else
     if (LJJavaStatus_Failed != LJ_GetJavaStatus()) {
-        pCmdUI->SetCheck( LJ_IsConsoleShowing() );
+	pCmdUI->SetCheck( LJ_IsConsoleShowing() );
     } else {
-        pCmdUI->Enable(FALSE);
+	pCmdUI->Enable(FALSE);
     }
 #endif
 }
@@ -2448,10 +2448,10 @@ void CGenericFrame::OnUpdateTaskbar(CCmdUI *pCmdUI)
 #ifdef MOZ_TASKBAR
 	BOOL bUndocked = theApp.GetTaskBarMgr().IsFloating();
     if( pCmdUI->m_pMenu ){
-        pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_WINDOW_TASKBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_WINDOW_TASKBAR),
-                                    szLoadString(CASTUINT(bUndocked ? IDS_DOCK_TASKBAR : IDS_SHOW_TASKBAR)) );
+	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_WINDOW_TASKBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_WINDOW_TASKBAR),
+				    szLoadString(CASTUINT(bUndocked ? IDS_DOCK_TASKBAR : IDS_SHOW_TASKBAR)) );
     } else {
-        pCmdUI->SetCheck(bUndocked);
+	pCmdUI->SetCheck(bUndocked);
     }
 #endif /* MOZ_TASKBAR */
 
@@ -2553,10 +2553,10 @@ void CGenericFrame::OnUpdateViewCommandToolbar(CCmdUI *pCmdUI)
 {
 	BOOL bShow = GetChrome()->GetToolbarVisible(ID_NAVIGATION_TOOLBAR);
     if( pCmdUI->m_pMenu ){
-        pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_COMMANDTOOLBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_COMMANDTOOLBAR),
-                                    szLoadString(CASTUINT(bShow ? IDS_HIDE_COMMANDTOOLBAR : IDS_SHOW_COMMANDTOOLBAR)) );
+	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_COMMANDTOOLBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_COMMANDTOOLBAR),
+				    szLoadString(CASTUINT(bShow ? IDS_HIDE_COMMANDTOOLBAR : IDS_SHOW_COMMANDTOOLBAR)) );
     } else {
-        pCmdUI->SetCheck(bShow);
+	pCmdUI->SetCheck(bShow);
     }
 }
 
@@ -2575,12 +2575,12 @@ void CGenericFrame::OnUpdateViewNavCenter(CCmdUI *pCmdUI)
 
     if( pCmdUI->m_pMenu )
 	{
-        pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_NAVCENTER), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_NAVCENTER),
-                                    szLoadString(CASTUINT(bShow ? IDS_HIDE_NAVCENTER : IDS_SHOW_NAVCENTER)) );
+	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_NAVCENTER), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_NAVCENTER),
+				    szLoadString(CASTUINT(bShow ? IDS_HIDE_NAVCENTER : IDS_SHOW_NAVCENTER)) );
     } 
 	else 
 	{
-        pCmdUI->SetCheck(bShow);
+	pCmdUI->SetCheck(bShow);
     }
 }
 
@@ -2593,10 +2593,10 @@ void CGenericFrame::OnUpdateViewLocationToolbar(CCmdUI *pCmdUI)
 {
 	BOOL bShow = GetChrome()->GetToolbarVisible(ID_LOCATION_TOOLBAR);
     if( pCmdUI->m_pMenu ){
-        pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_LOCATIONTOOLBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_LOCATIONTOOLBAR),
-                                    szLoadString(CASTUINT(bShow ? IDS_HIDE_LOCATIONTOOLBAR : IDS_SHOW_LOCATIONTOOLBAR)) );
+	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_LOCATIONTOOLBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_LOCATIONTOOLBAR),
+				    szLoadString(CASTUINT(bShow ? IDS_HIDE_LOCATIONTOOLBAR : IDS_SHOW_LOCATIONTOOLBAR)) );
     } else {
-        pCmdUI->SetCheck(bShow);
+	pCmdUI->SetCheck(bShow);
     }
 }
 
@@ -2631,7 +2631,7 @@ void CGenericFrame::OnIncreaseFont()
 int CGenericFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
     if(CFrameWnd::OnCreate(lpCreateStruct) == -1)
-        return(-1);
+	return(-1);
 
 	ApiApiPtr(api);
 	LPUNKNOWN pUnk = api->CreateClassInstance(APICLASS_CHROME, NULL);
@@ -2681,26 +2681,26 @@ int CGenericFrame::OnCreate(LPCREATESTRUCT lpCreateStruct)
 					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_IBMHOSTONDEMAND, szLoadString(IDS_IBMHOSTONDEMAND_MENU));
 			}
 
- 			if(FEU_IsNetcasterAvailable())
- 			{
- 				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
+			if(FEU_IsNetcasterAvailable())
+			{
+				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
 
 	#ifndef MOZ_TASKBAR
 				if (nTaskBarPosition == -1)
 					nTaskBarPosition = 2 ;  // Right below &Navigator on Lite version
 	#endif
  
- 				if(nTaskBarPosition != -1)
- 					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_NETCASTER, szLoadString(IDS_NETCASTER_MENU));
- 			}
+				if(nTaskBarPosition != -1)
+					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_NETCASTER, szLoadString(IDS_NETCASTER_MENU));
+			}
  
 			if(FEU_IsAimAvailable())
- 			{
- 				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
+			{
+				int nTaskBarPosition = WFE_FindMenuItem(pWindowMenu, ID_WINDOW_TASKBAR);
  
- 				if(nTaskBarPosition != -1)
- 					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_AIM, szLoadString(IDS_AIM_MENU));
- 			}
+				if(nTaskBarPosition != -1)
+					pWindowMenu->InsertMenu(nTaskBarPosition - 1, MF_BYPOSITION, ID_WINDOW_AIM, szLoadString(IDS_AIM_MENU));
+			}
 
 	#ifdef XP_WIN32
 			// We can start or activate LiveWire SiteManager
@@ -2773,10 +2773,10 @@ void CGenericFrame::OnUpdateViewCustomToolbar(CCmdUI *pCmdUI)
 {
 	BOOL bShow = GetChrome()->GetToolbarVisible(ID_PERSONAL_TOOLBAR);
     if( pCmdUI->m_pMenu ){
-        pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_CUSTOMTOOLBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_CUSTOMTOOLBAR),
-                                    szLoadString(CASTUINT(bShow ? IDS_HIDE_CUSTOMTOOLBAR : IDS_SHOW_CUSTOMTOOLBAR)) );
+	pCmdUI->m_pMenu->ModifyMenu(CASTUINT(ID_VIEW_CUSTOMTOOLBAR), CASTUINT(MF_BYCOMMAND | MF_STRING), CASTUINT(ID_VIEW_CUSTOMTOOLBAR),
+				    szLoadString(CASTUINT(bShow ? IDS_HIDE_CUSTOMTOOLBAR : IDS_SHOW_CUSTOMTOOLBAR)) );
     } else {
-        pCmdUI->SetCheck(bShow);
+	pCmdUI->SetCheck(bShow);
     }
 }
 
@@ -2834,7 +2834,7 @@ void CGenericFrame::OnSaveConfiguration()
 #ifdef DEBUG_WHITEBOX
 void CGenericFrame::OnWhiteBox() 
 {
- 	CWhiteBoxDlg WhiteBoxDlg;
+	CWhiteBoxDlg WhiteBoxDlg;
 	WhiteBoxDlg.DoModal();
 
 }
@@ -2854,7 +2854,7 @@ BEGIN_MESSAGE_MAP(CNetscapePropertySheet, CPropertySheet)
 END_MESSAGE_MAP()
 
 CNetscapePropertySheet::CNetscapePropertySheet(const char * pName, CWnd * pParent, UINT nStart,
-                                               MWContext *pMWContext, BOOL bUseApplyButton)
+					       MWContext *pMWContext, BOOL bUseApplyButton)
     : CPropertySheet(pName, pParent, nStart),
       m_pMWContext(pMWContext),
       m_bUseApplyButton(bUseApplyButton)
@@ -2864,7 +2864,7 @@ CNetscapePropertySheet::CNetscapePropertySheet(const char * pName, CWnd * pParen
     //  but in the Editor, Apply is very useful, so I added this param
     //  Default behavior is to not use apply button
     if( !bUseApplyButton )
-        m_psh.dwFlags |= PSH_NOAPPLYNOW;
+	m_psh.dwFlags |= PSH_NOAPPLYNOW;
 
 #endif
 }
@@ -2895,9 +2895,9 @@ void CNetscapePropertySheet::OnHelp()
 {
     CNetscapePropertyPage * pPage = (CNetscapePropertyPage *) GetActivePage();
     if(pPage)
-        pPage->OnHelp();
+	pPage->OnHelp();
 }
-                          
+			  
 
 #ifdef XP_WIN32
 BOOL CNetscapePropertySheet::OnHelpInfo(HELPINFO *)//32bit messagemapping.
@@ -2922,10 +2922,10 @@ void CNetscapePropertySheet::OnOK()
 
     if (GetActivePage()->OnKillActive())
 	{
-        // call OnOK for everyone
-        int count = m_pages.GetSize();
-        for(int i = 0; i < count; i++)
-            ((CPropertyPage *) m_pages[i])->OnOK();
+	// call OnOK for everyone
+	int count = m_pages.GetSize();
+	for(int i = 0; i < count; i++)
+	    ((CPropertyPage *) m_pages[i])->OnOK();
 
 		if (!m_bModeless)
 			EndDialog(IDOK);
@@ -2942,27 +2942,27 @@ BOOL CNetscapePropertySheet::SetCurrentPage(int iPage)
 	int nCurPage = 0;
 
     if(iPage < m_pages.GetSize())
-        nCurPage = iPage;
+	nCurPage = iPage;
 
     m_nCurrentPage = nCurPage;
     return(SetActivePage(nCurPage));
-            
+	    
 }
-#else	
+#else   
 //
 // Make sure the starting page is actually a page that exists
 //
 int CNetscapePropertySheet::SetCurrentPage(int iPage)
 {
     if(iPage < m_pages.GetSize())
-        m_nCurPage = iPage;
+	m_nCurPage = iPage;
     else
-        m_nCurPage = 0;
+	m_nCurPage = 0;
 
     return(m_nCurPage);
-            
+	    
 }
-#endif	// MSVC4
+#endif  // MSVC4
 
 #if defined(MSVC4)
 // A change to MFC broke this -- it doesn't return last page
@@ -2970,7 +2970,7 @@ int CNetscapePropertySheet::SetCurrentPage(int iPage)
 int CNetscapePropertySheet::GetCurrentPage()
 {
     if( m_hWnd ){
-        m_nCurrentPage = GetActiveIndex();
+	m_nCurrentPage = GetActiveIndex();
     }
     // We will set this in OnOK so it reflects
     //  correct page just before exiting dialog
@@ -2981,39 +2981,39 @@ int CNetscapePropertySheet::GetCurrentPage()
 int CNetscapePropertySheet::OnCreate(LPCREATESTRUCT lpCreateStruct)
 {
     if( CPropertySheet::OnCreate(lpCreateStruct) == -1 ){
-        return -1;
+	return -1;
     }
 
 #ifdef XP_WIN16    
     // Since we can't remove Apply button using PSH_NOAPPLYNOW
     //   in MFC 1.52, let's do it ourselves
     if( !m_bUseApplyButton ){
-        CWnd *pButton = GetDlgItem(ID_APPLY_NOW);
-        CRect crRectApply;
-        CRect crRectCancel;
+	CWnd *pButton = GetDlgItem(ID_APPLY_NOW);
+	CRect crRectApply;
+	CRect crRectCancel;
 
-        if( pButton ){
-            pButton->GetWindowRect(&crRectApply);
-            ScreenToClient(&crRectApply);
-            // Hide Apply button
-            GetDlgItem(ID_APPLY_NOW)->ShowWindow(SW_HIDE);
+	if( pButton ){
+	    pButton->GetWindowRect(&crRectApply);
+	    ScreenToClient(&crRectApply);
+	    // Hide Apply button
+	    GetDlgItem(ID_APPLY_NOW)->ShowWindow(SW_HIDE);
 
-            // Move the Cancel button to the Apply position
-            pButton = GetDlgItem(IDCANCEL);
-            if( pButton ){
-                pButton->GetWindowRect(&crRectCancel);
-                ScreenToClient(&crRectCancel);
-                pButton->SetWindowPos(NULL, crRectApply.left, crRectApply.top, 0,0,
-                                      SWP_NOACTIVATE | SWP_NOSIZE);
+	    // Move the Cancel button to the Apply position
+	    pButton = GetDlgItem(IDCANCEL);
+	    if( pButton ){
+		pButton->GetWindowRect(&crRectCancel);
+		ScreenToClient(&crRectCancel);
+		pButton->SetWindowPos(NULL, crRectApply.left, crRectApply.top, 0,0,
+				      SWP_NOACTIVATE | SWP_NOSIZE);
 
-                // Move the OK button to the Cancel position
-                pButton = GetDlgItem(IDOK);
-                if( pButton ){
-                    pButton->SetWindowPos(NULL, crRectCancel.left, crRectCancel.top, 0,0, 
-                                          SWP_NOACTIVATE | SWP_NOSIZE);
-                }
-            }
-        }
+		// Move the OK button to the Cancel position
+		pButton = GetDlgItem(IDOK);
+		if( pButton ){
+		    pButton->SetWindowPos(NULL, crRectCancel.left, crRectCancel.top, 0,0, 
+					  SWP_NOACTIVATE | SWP_NOSIZE);
+		}
+	    }
+	}
     }
 #endif
     return 0;
@@ -3053,7 +3053,7 @@ void CGenericFrame::OnDoFortezzaInfo()
 {
 	MWContext *pContext = GetMainContext() != NULL ? 
 					GetMainContext()->GetContext() : NULL;
-	SSL_FortezzaMenu(pContext,SSL_FORTEZZA_CARD_INFO);		
+	SSL_FortezzaMenu(pContext,SSL_FORTEZZA_CARD_INFO);              
 }
 void CGenericFrame::OnDoFortezzaLog()
 {
@@ -3075,17 +3075,17 @@ void CGenericFrame::OnSetFocus(CWnd* pOldWnd)
 {
 	CFrameWnd::OnSetFocus(pOldWnd);
 
-	//	Put us on the active stack.
+	//      Put us on the active stack.
 	SetAsActiveFrame();
 }
 
 void CGenericFrame::OnWindowPosChanged(WINDOWPOS *lpWndPos)
 {
-	//	Call the base.
+	//      Call the base.
 	CFrameWnd::OnWindowPosChanged(lpWndPos);
 
-	//	Tell ncapi people window is changing position.
-	if(GetMainContext() && GetMainContext()->GetContext()->type == MWContextBrowser)	{
+	//      Tell ncapi people window is changing position.
+	if(GetMainContext() && GetMainContext()->GetContext()->type == MWContextBrowser)        {
 		CWindowChangeItem::Sizing(GetMainContext()->GetContextID(), lpWndPos->x, lpWndPos->y, lpWndPos->cx, lpWndPos->cy);
 	}
 }
@@ -3105,18 +3105,18 @@ void CGenericFrame::OnSize(UINT nType, int cx, int cy)
 	CFrameWnd::OnSize(nType, cx, cy);
 	
     //  See what type of information we're going to be sending to our window tracking service.
-	//	ncapi
-	if(GetMainContext() != NULL && GetMainContext()->GetContext()->type == MWContextBrowser)	{
+	//      ncapi
+	if(GetMainContext() != NULL && GetMainContext()->GetContext()->type == MWContextBrowser)        {
 	    switch(nType)   {
-	        case SIZE_MAXIMIZED:
-	            CWindowChangeItem::Maximizing(GetMainContext()->GetContextID());
-	            break;
-	        case SIZE_MINIMIZED:
-	            CWindowChangeItem::Minimizing(GetMainContext()->GetContextID());
-	            break;
-	        case SIZE_RESTORED:
-	            CWindowChangeItem::Normalizing(GetMainContext()->GetContextID());
-	            break;
+		case SIZE_MAXIMIZED:
+		    CWindowChangeItem::Maximizing(GetMainContext()->GetContextID());
+		    break;
+		case SIZE_MINIMIZED:
+		    CWindowChangeItem::Minimizing(GetMainContext()->GetContextID());
+		    break;
+		case SIZE_RESTORED:
+		    CWindowChangeItem::Normalizing(GetMainContext()->GetContextID());
+		    break;
 	    }
 	}
 }
@@ -3133,8 +3133,8 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
     UINT nID = LOWORD(wParam);
     if( nID >= ID_OPTIONS_ENCODING_1 && nID <= ID_OPTIONS_ENCODING_70)
     {
-          OnToggleEncoding( nID );
-          return TRUE;
+	  OnToggleEncoding( nID );
+	  return TRUE;
     }
     if (m_bDisableHotkeys && nCode==1) {
 	switch (LOWORD(wParam)) {
@@ -3149,8 +3149,8 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
 	}
     }
     
-    if(CFrameWnd::OnCommand(wParam, lParam))	{
-    	return(TRUE);
+    if(CFrameWnd::OnCommand(wParam, lParam))    {
+	return(TRUE);
 	}
 
 
@@ -3165,10 +3165,10 @@ BOOL CGenericFrame::OnCommand(UINT wParam,LONG lParam)
 		char* nodeURL = HT_GetNodeURL((HT_Resource)nLastSelectedData);
 
 #ifdef EDITOR        
-        // It is much safer to go through Composer's LoadUrl routine
+	// It is much safer to go through Composer's LoadUrl routine
 	    if(EDT_IS_EDITOR(GetMainContext()->GetContext()))
-    	    FE_LoadUrl(nodeURL, TRUE);
-        else
+	    FE_LoadUrl(nodeURL, TRUE);
+	else
 #endif
 		{
 			// Add HT_Launch support
@@ -3211,7 +3211,7 @@ void CGenericFrame::OnAnimationBonk()
 void CGenericFrame::OnUpdateFileRoot(CCmdUI* pCmdUI)
 {
     if( pCmdUI->m_pMenu ){
-        pCmdUI->m_pMenu->ModifyMenu(ID_BOOKMARKS_FILEROOT, MF_BYCOMMAND | MF_STRING, ID_BOOKMARKS_FILEROOT,
+	pCmdUI->m_pMenu->ModifyMenu(ID_BOOKMARKS_FILEROOT, MF_BYCOMMAND | MF_STRING, ID_BOOKMARKS_FILEROOT,
 									HT_GetNodeName(HT_TopNode(HT_GetSelectedView(m_BookmarkMenuPane))));
     }
 
@@ -3325,7 +3325,7 @@ void CGenericFrame::OnNextWindow()
 void CGenericFrame::OnSaveOptions()
 {
 	// Save Encoding Info
-	theApp.m_iCSID = m_iCSID ;	// Change Global default CSID
+	theApp.m_iCSID = m_iCSID ;      // Change Global default CSID
 	PREF_SetIntPref("intl.character_set",m_iCSID);
 }
 
@@ -3335,10 +3335,10 @@ LRESULT CGenericFrame::OnFindReplace(WPARAM wParam, LPARAM lParam)
     CWinCX *pContext = GetActiveWinContext();
 
     if(!pContext)
-        pContext = GetMainWinContext();
+	pContext = GetMainWinContext();
 
     if(pContext && pContext->GetPane())
-        return(pContext->GetView()->OnFindReplace(wParam, lParam));
+	return(pContext->GetView()->OnFindReplace(wParam, lParam));
 
     return(FALSE);
 
@@ -3348,21 +3348,21 @@ void CGenericFrame::OnMove(int x, int y)
 {
 	CFrameWnd::OnMove(x, y);
 	
-	//	Tell our main context that we've moved.
-	if(GetMainWinContext())	{
+	//      Tell our main context that we've moved.
+	if(GetMainWinContext()) {
 		GetMainWinContext()->OnMoveCX();
 	}
 }
 
 void CGenericFrame::OnGetMinMaxInfo(MINMAXINFO FAR* lpMMI) 
 {
-	//	Do the default first.
+	//      Do the default first.
 	CFrameWnd::OnGetMinMaxInfo(lpMMI);
 
-	//	If we're not allowing resize, be sure and set the min max tracking information
-	//		which effectively blocks the user from resizing the window.
-	if(m_bCanResize == FALSE && IsIconic() == FALSE && IsZoomed() == FALSE)	{
-		//	Set up the min and max tracking info to be the same to block resize.
+	//      If we're not allowing resize, be sure and set the min max tracking information
+	//              which effectively blocks the user from resizing the window.
+	if(m_bCanResize == FALSE && IsIconic() == FALSE && IsZoomed() == FALSE) {
+		//      Set up the min and max tracking info to be the same to block resize.
 		lpMMI->ptMinTrackSize.x = lpMMI->ptMaxTrackSize.x = m_crMinMaxRect.Width();
 		lpMMI->ptMinTrackSize.y = lpMMI->ptMaxTrackSize.y = m_crMinMaxRect.Height();
 	}
@@ -3450,21 +3450,21 @@ LONG CGenericFrame::OnHackedMouseWheel(WPARAM wParam, LPARAM lParam)
     BOOL bUs = TRUE;
     HWND hFocus = ::GetFocus();
     if(hFocus)  {
-        //  Is the focus window our child?
-        BOOL bChild = ::IsChild(m_hWnd, hFocus);
-        if(bChild)    {
-            //  Pass along.
-            bUs = FALSE;
-        }
+	//  Is the focus window our child?
+	BOOL bChild = ::IsChild(m_hWnd, hFocus);
+	if(bChild)    {
+	    //  Pass along.
+	    bUs = FALSE;
+	}
     }
 
     //  Either call ourselves or pass along.
     if(bUs == TRUE) {
-        //  Zero means not handled.
-        return(0);
+	//  Zero means not handled.
+	return(0);
     }
     else    {
-        return(::SendMessage(hFocus, msg_MouseWheel, wParam, lParam));
+	return(::SendMessage(hFocus, msg_MouseWheel, wParam, lParam));
     }
 }
 #endif
@@ -3478,12 +3478,12 @@ MWContext * wfe_CreateNavigator(char * pUrl)
     
     if ( pUrl != NULL && XP_STRLEN(pUrl) > 0 )
     {
-        // Create a new URL structure and copy URL string to it
-        pUrlStruct = NET_CreateURLStruct(pUrl, NET_DONT_RELOAD);
-        // Must clear this to correctly load URL
-        if ( pUrlStruct ) {
-	        pUrlStruct->fe_data = NULL;
-        }
+	// Create a new URL structure and copy URL string to it
+	pUrlStruct = NET_CreateURLStruct(pUrl, NET_DONT_RELOAD);
+	// Must clear this to correctly load URL
+	if ( pUrlStruct ) {
+		pUrlStruct->fe_data = NULL;
+	}
     }
 
     // Always create a new context 
