@@ -358,12 +358,6 @@ xpcom/typelib/xpt/src/Makefile
 xpcom/typelib/xpt/tests/Makefile
 xpcom/typelib/xpt/tools/Makefile
 xpcom/typelib/xpidl/Makefile
-xpcom/typelib/xpidl/glib/glib-1.2.1/Makefile
-xpcom/typelib/xpidl/glib/glib-1.2.1/docs/Makefile
-xpcom/typelib/xpidl/glib/glib-1.2.1/gmodule/Makefile
-xpcom/typelib/xpidl/glib/glib-1.2.1/gthread/Makefile
-xpcom/typelib/xpidl/glib/glib-1.2.1/tests/Makefile
-xpcom/typelib/xpidl/libidl/libIDL-0.6.5/Makefile
 xpcom/reflect/xptcall/Makefile
 xpcom/reflect/xptcall/public/Makefile
 xpcom/reflect/xptcall/src/Makefile
