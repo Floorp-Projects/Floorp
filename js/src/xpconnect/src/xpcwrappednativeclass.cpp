@@ -443,7 +443,7 @@ nsXPCWrappedNativeClass::CallWrappedMethod(JSContext* cx,
     if(!xpcc)
         goto done;
 
-    nsXPConnect::GetXPConnect()->SetPendingException(nsnull);
+    xpcc->GetXPConnect()->SetPendingException(nsnull);
     xpcc->SetLastResult(NS_ERROR_UNEXPECTED);
 
     // make sure we have what we need...

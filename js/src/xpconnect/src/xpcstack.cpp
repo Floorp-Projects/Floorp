@@ -59,8 +59,7 @@ public:
     /* string toString (); */
     NS_IMETHOD ToString(char **_retval);
 
-    static XPCJSStackFrame* CreateStack(JSContext* cx, XPCJSStack* stack,
-                                        JSStackFrame* fp);
+    static XPCJSStackFrame* CreateStack(JSContext* cx, JSStackFrame* fp);
 
     static XPCJSStackFrame* CreateStackFrameLocation(
                                         JSBool isJSFrame,
@@ -73,7 +72,6 @@ public:
     virtual ~XPCJSStackFrame();
 
 private:
-    XPCJSStack* mStack;
     nsIJSStackFrameLocation* mCaller;
 
     char* mFilename;
@@ -84,51 +82,14 @@ private:
 
 /**********************************************/
 
-XPCJSStack::XPCJSStack()
-    :   mTopFrame(nsnull),
-        mRefCount(0)
-{
-    // empty body
-}
-
-XPCJSStack::~XPCJSStack()
-{
-    if(mTopFrame)
-        NS_RELEASE(mTopFrame);
-}
-
-void
-XPCJSStack::AddRef()
-{
-    mRefCount++;
-}
-
-void
-XPCJSStack::Release()
-{
-    if(0 == --mRefCount)
-        delete this;
-}
-
 // static
 nsIJSStackFrameLocation*
 XPCJSStack::CreateStack(JSContext* cx)
 {
-    if(!cx)
-        return nsnull;
-    if(!cx->fp)
+    if(!cx || !cx->fp)
         return nsnull;
 
-    XPCJSStack* self = new XPCJSStack();
-    if(!self)
-        return nsnull;
-
-    if(!(self->mTopFrame = XPCJSStackFrame::CreateStack(cx, self, cx->fp)))
-        return nsnull;
-
-    NS_ADDREF(self->mTopFrame);
-    self->mRefCount = 1;
-    return self->mTopFrame;
+    return XPCJSStackFrame::CreateStack(cx, cx->fp);
 }
 
 // static
@@ -151,8 +112,7 @@ XPCJSStack::CreateStackFrameLocation(JSBool isJSFrame,
 /**********************************************/
 
 XPCJSStackFrame::XPCJSStackFrame()
-    :   mStack(nsnull),
-        mCaller(nsnull),
+    :   mCaller(nsnull),
         mFilename(nsnull),
         mFunname(nsnull),
         mLineno(0),
@@ -171,49 +131,20 @@ XPCJSStackFrame::~XPCJSStackFrame()
         NS_RELEASE(mCaller);
 }
 
-
-NS_IMPL_QUERY_INTERFACE1(XPCJSStackFrame, nsIJSStackFrameLocation)
-
-// do chained ref counting
-
-nsrefcnt
-XPCJSStackFrame::AddRef(void)
-{
-    if(mStack)
-        mStack->AddRef();
-    ++mRefCnt;
-    NS_LOG_ADDREF(this, mRefCnt, "XPCJSStackFrame", sizeof(*this));
-    return mRefCnt;
-}
-
-nsrefcnt
-XPCJSStackFrame::Release(void)
-{
-    // use a local since there can be recursion here.
-    nsrefcnt count = --mRefCnt;
-    NS_LOG_RELEASE(this, mRefCnt, "XPCJSStackFrame");
-    if(0 == count)
-    {
-        NS_DELETEXPCOM(this);
-        return 0;
-    }
-    if(mStack)
-        mStack->Release();
-    return count;
-}
-
+NS_IMPL_ISUPPORTS1(XPCJSStackFrame, nsIJSStackFrameLocation)
 
 XPCJSStackFrame*
-XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStack* stack,
-                             JSStackFrame* fp)
+XPCJSStackFrame::CreateStack(JSContext* cx, JSStackFrame* fp)
 {
     XPCJSStackFrame* self = new XPCJSStackFrame();
     JSBool failed = JS_FALSE;
     if(self)
     {
+        NS_ADDREF(self);
+
         if(fp->down)
         {
-            if(!(self->mCaller = CreateStack(cx, stack, fp->down)))
+            if(!(self->mCaller = CreateStack(cx, fp->down)))
                 failed = JS_TRUE;
         }
 
@@ -255,17 +186,8 @@ XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStack* stack,
                 }
             }
         }
-
-        if(!failed)
-        {
-            NS_ADDREF(self);
-            self->mStack = stack;
-        }
-        else
-        {
-            delete self;
-            self = nsnull;
-        }
+        if(failed)
+            NS_RELEASE(self);
     }
 
     return self;
@@ -273,12 +195,11 @@ XPCJSStackFrame::CreateStack(JSContext* cx, XPCJSStack* stack,
 
 // static
 XPCJSStackFrame*
-XPCJSStackFrame::CreateStackFrameLocation(
-                                        JSBool isJSFrame,
-                                        const char* aFilename,
-                                        const char* aFunctionName,
-                                        PRInt32 aLineNumber,
-                                        nsIJSStackFrameLocation* aCaller)
+XPCJSStackFrame::CreateStackFrameLocation(JSBool isJSFrame,
+                                          const char* aFilename,
+                                          const char* aFunctionName,
+                                          PRInt32 aLineNumber,
+                                          nsIJSStackFrameLocation* aCaller)
 {
     JSBool failed = JS_FALSE;
     XPCJSStackFrame* self = new XPCJSStackFrame();

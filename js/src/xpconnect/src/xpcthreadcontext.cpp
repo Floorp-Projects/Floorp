@@ -90,16 +90,19 @@ GetMyStack()
 * is using it.
 */
 
+NS_IMPL_ISUPPORTS1(nsXPCThreadJSContextStackImpl, nsIJSContextStack)
+
+static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack = nsnull;
+
 nsXPCThreadJSContextStackImpl::nsXPCThreadJSContextStackImpl()
 {
     NS_INIT_ISUPPORTS();
 }
 
-nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl() {}
-
-NS_IMPL_ISUPPORTS1(nsXPCThreadJSContextStackImpl, nsIJSContextStack)
-
-static nsXPCThreadJSContextStackImpl* gXPCThreadJSContextStack = nsnull;
+nsXPCThreadJSContextStackImpl::~nsXPCThreadJSContextStackImpl()
+{
+    gXPCThreadJSContextStack = nsnull;
+}
 
 //static
 nsXPCThreadJSContextStackImpl*
@@ -108,7 +111,9 @@ nsXPCThreadJSContextStackImpl::GetSingleton()
     if(!gXPCThreadJSContextStack)
     {
         gXPCThreadJSContextStack = new nsXPCThreadJSContextStackImpl();
-        if(gXPCThreadJSContextStack) {
+        if(gXPCThreadJSContextStack)
+        {
+            // hold an extra reference to lock it down    
             NS_ADDREF(gXPCThreadJSContextStack);
         }
     }
@@ -119,7 +124,16 @@ nsXPCThreadJSContextStackImpl::GetSingleton()
 void
 nsXPCThreadJSContextStackImpl::FreeSingleton()
 {
-    NS_IF_RELEASE(gXPCThreadJSContextStack);
+    nsXPCThreadJSContextStackImpl* tcs = gXPCThreadJSContextStack;
+    if (tcs) {
+        nsrefcnt cnt;
+        NS_RELEASE2(tcs, cnt);
+#if defined(DEBUG_kipp) || defined(DEBUG_jband)
+        if (0 != cnt) {
+            printf("*** dangling reference to nsXPCThreadJSContextStackImpl: refcnt=%d\n", cnt);
+        }
+#endif
+    }
 }
 
 /* readonly attribute PRInt32 Count; */

@@ -715,7 +715,7 @@ ConstructException(nsresult rv, const char* message,
     else
         sz = (char*) msg; // I promise to play nice after casting away const
 
-    e = nsXPCException::NewException(sz, rv, nsnull, data, 0);
+    e = nsXPCException::NewException(sz, rv, nsnull, data);
 
     if(sz && sz != msg)
         JS_smprintf_free(sz);

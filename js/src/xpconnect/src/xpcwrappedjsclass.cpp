@@ -92,7 +92,6 @@ nsXPCWrappedJSClass::nsXPCWrappedJSClass(XPCContext* xpcc, REFNSIID aIID,
       mDescriptors(nsnull)
 {
     NS_ADDREF(mInfo);
-
     NS_INIT_REFCNT();
     NS_ADDREF_THIS();
 
@@ -986,6 +985,8 @@ done:
 
     if(cx)
         JS_SetErrorReporter(cx, older);
+
+    NS_IF_RELEASE(xpc);
 
     return retval;
 }

@@ -106,22 +106,26 @@ XPCJSThrower::ThrowBadResultException(nsresult rv,
 
     nsIXPCException* e;
     nsXPConnect* xpc = nsXPConnect::GetXPConnect();
-    if(xpc && NS_SUCCEEDED(xpc->GetPendingException(&e)) && e)
+    JSBool success = JS_FALSE;
+    if(xpc)
     {
-        JSBool success = JS_FALSE;
-        xpc->SetPendingException(nsnull);
-        nsresult e_result;
-
-        if(NS_SUCCEEDED(e->GetResult(&e_result)) && e_result == result)
+        if(NS_SUCCEEDED(xpc->GetPendingException(&e)) && e)
         {
-            if(!ThrowExceptionObject(cx, e))
-                JS_ReportOutOfMemory(cx);
-            success = JS_TRUE;
+            xpc->SetPendingException(nsnull);
+            nsresult e_result;
+        
+            if(NS_SUCCEEDED(e->GetResult(&e_result)) && e_result == result)
+            {
+                if(!ThrowExceptionObject(cx, e))
+                    JS_ReportOutOfMemory(cx);
+                success = JS_TRUE;
+            }
+            NS_RELEASE(e);
         }
-        NS_RELEASE(e);
-        if(success)
-            return;
     }
+    NS_IF_RELEASE(xpc);
+    if(success)
+        return;
 
     // else...
 
@@ -193,7 +197,7 @@ void
 XPCJSThrower::BuildAndThrowException(JSContext* cx, nsresult rv, const char* sz)
 {
     JSBool success = JS_FALSE;
-    nsIXPCException* e = nsXPCException::NewException(sz,rv,nsnull,nsnull,1);
+    nsIXPCException* e = nsXPCException::NewException(sz, rv, nsnull, nsnull);
 
     if(e)
     {
@@ -211,8 +215,13 @@ XPCJSThrower::ThrowExceptionObject(JSContext* cx, nsIXPCException* e)
     if(e)
     {
         nsIXPConnectWrappedNative* wrapper;
-        if(NS_SUCCEEDED(nsXPConnect::GetXPConnect()->
-                    WrapNative(cx, e, NS_GET_IID(nsIXPCException), &wrapper)))
+        nsresult rv;
+        nsXPConnect* xpc = nsXPConnect::GetXPConnect();
+        if(!xpc)
+            return JS_FALSE;
+        rv = xpc->WrapNative(cx, e, NS_GET_IID(nsIXPCException), &wrapper);
+        NS_RELEASE(xpc);
+        if(NS_SUCCEEDED(rv))
         {
             JSObject* obj;
             if(NS_SUCCEEDED(wrapper->GetJSObject(&obj)))
