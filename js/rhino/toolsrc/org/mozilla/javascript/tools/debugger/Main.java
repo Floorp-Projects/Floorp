@@ -1809,13 +1809,13 @@ class Menubar extends JMenuBar implements ActionListener {
         debugMenu.add(breakOnExceptions);
 
         breakOnEnter = new JCheckBoxMenuItem("Break on Function Enter");
-        breakOnEnter.setMnemonic('X');
+        breakOnEnter.setMnemonic('E');
         breakOnEnter.addActionListener(this);
         breakOnEnter.setSelected(false);
         debugMenu.add(breakOnEnter);
 
         breakOnReturn = new JCheckBoxMenuItem("Break on Function Return");
-        breakOnReturn.setMnemonic('X');
+        breakOnReturn.setMnemonic('R');
         breakOnReturn.addActionListener(this);
         breakOnReturn.setSelected(false);
         debugMenu.add(breakOnReturn);
