@@ -239,6 +239,7 @@ private:
 
 	char			*m_dataOutputBuf;
 	char			*m_dataInputBuf; // Note: no one should manipulate this buffer except for ReadLineFromBuffer!!!
+	char			*m_dataInputOffset; // used by ReadLineFromBuffer
     PRUint32		m_allocatedSize; // allocated size
     PRUint32        m_totalDataSize; // total data size
     PRUint32        m_curReadIndex;  // current read index
@@ -257,7 +258,7 @@ private:
 	// a complete line, we WAIT for more data to arrive by waiting onthe m_dataAvailable monitor. So this function
 	// BLOCKS until we get a new line. Eventually I'd like to move this method out into a utiliity method
 	// so I can resuse it for the other mail protocols...
-	char * ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataBufferSize, nsIInputStream * aInputStream);
+	char * ReadNextLineFromInput(char * aDataBuffer,char *& aStartPos, PRUint32 aDataBufferSize, nsIInputStream * aInputStream);
 
     // ******* Thread support *******
     PLEventQueue *m_sinkEventQueue;

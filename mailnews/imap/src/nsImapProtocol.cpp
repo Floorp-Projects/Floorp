@@ -219,6 +219,7 @@ nsImapProtocol::nsImapProtocol() :
 
 	// used to buffer incoming data by ReadNextLineFromInput
 	m_dataInputBuf = (char *) PR_CALLOC(sizeof(char) * OUTPUT_BUFFER_SIZE);
+	m_dataInputOffset = m_dataInputBuf;
 
 	m_currentBiffState = nsMsgBiffState_Unknown;
 
@@ -3039,21 +3040,27 @@ void nsImapProtocol::ClearAllFolderRights(const char *mailboxName,
 
 // the design for this method has an inherit bug: if the length of the line is greater than the size of aDataBufferSize, 
 // then we'll never find the next line because we can't hold the whole line in memory. 
-char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataBufferSize, nsIInputStream * aInputStream)
+// aDataBuffer - a caller allocated buffer which is persistant across multiple calls to read next line. We store bytes we read
+//				 from the stream but have not formed a complete next line in this buffer. 
+// aStartPos  - ptr into aDataBuffer to the next byte of unprocessed data. ReadNextLineFromInput also modifies this value.
+// aDataBufferSize - the size of the allocated aDataBuffer
+// aInputStream - the input stream we want to read a line from
+
+char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, char *& aStartPos, PRUint32 aDataBufferSize, nsIInputStream * aInputStream)
 {
 	// try to extract a line from m_inputBuffer. If we don't have an entire line, 
 	// then read more bytes out from the stream. If the stream is empty then wait
 	// on the monitor for more data to come in.
 
+	NS_PRECONDITION(aStartPos && aDataBufferSize > 0, "invalid input arguments for read next line from input");
+
 	do
 	{
 		char * endOfLine = nsnull;
-		PRUint32 numBytesInBuffer = PL_strlen(aDataBuffer);
+		PRUint32 numBytesInBuffer = PL_strlen(aStartPos);
 
 		if (numBytesInBuffer > 0) // any data in our internal buffer?
-		{
-			endOfLine = PL_strstr(aDataBuffer, CRLF); // see if we already have a line ending...
-		}
+			endOfLine = PL_strstr(aStartPos, CRLF); // see if we already have a line ending...
 
 		// it's possible that we got here before the first time we receive data from the server
 		// so m_inputStream will be nsnull...
@@ -3062,18 +3069,31 @@ char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataB
 			PRUint32 numBytesInStream = 0;
 			PRUint32 numBytesCopied = 0;
 			m_inputStream->GetLength(&numBytesInStream);
-			PRUint32 numBytesToCopy = PR_MIN(aDataBufferSize - numBytesInBuffer - 1, numBytesInStream);
+			// if the number of bytes we want to read from the stream, is greater than the number
+			// of bytes left in our buffer, then we need to shift the start pos and its contents
+			// down to the beginning of aDataBuffer...
+			PRUint32 numFreeBytesInBuffer = (aDataBuffer + aDataBufferSize) - (aStartPos + numBytesInBuffer);
+			if (numBytesInStream > numFreeBytesInBuffer)
+			{
+				nsCRT::memcpy(aDataBuffer, aStartPos, numBytesInBuffer);
+				aDataBuffer[numBytesInBuffer] = '\0'; // make sure the end of the buffer is terminated
+				aStartPos = aDataBuffer; // update the new start position
+				// update the number of free bytes in the buffer
+				numFreeBytesInBuffer = aDataBufferSize - numBytesInBuffer;
+			}
+
+			PRUint32 numBytesToCopy = PR_MIN(numFreeBytesInBuffer, numBytesInStream);
 			// read the data into the end of our data buffer
 			if (numBytesToCopy > 0)
 			{
-				m_inputStream->Read(aDataBuffer + numBytesInBuffer, numBytesToCopy, &numBytesCopied);
+				m_inputStream->Read(aStartPos + numBytesInBuffer, numBytesToCopy, &numBytesCopied);
 				Log("OnDataAvailable", nsnull, aDataBuffer + numBytesInBuffer);
-				aDataBuffer[numBytesInBuffer + numBytesCopied] = '\0';
+				aStartPos[numBytesInBuffer + numBytesCopied] = '\0';
 			}
 
 			// okay, now that we've tried to read in more data from the stream, look for another end of line 
 			// character 
-			endOfLine = PL_strstr(aDataBuffer, CRLF);
+			endOfLine = PL_strstr(aStartPos, CRLF);
 		}
 
 		// okay, now check again for endOfLine.
@@ -3081,31 +3101,30 @@ char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataB
 		{
 			endOfLine += 2; // count for CRLF
 			// PR_CALLOC zeros out the allocated line
-			char* newLine = (char*) PR_CALLOC(endOfLine-aDataBuffer+1);
+			char* newLine = (char*) PR_CALLOC(endOfLine-aStartPos+1);
 			if (!newLine)
 				return nsnull;
 
-			nsCRT::memcpy(newLine, aDataBuffer, endOfLine-aDataBuffer); // copy the string into the new line buffer
-			// now we need to shift the rest of the data in the buffer down into the base
+			nsCRT::memcpy(newLine, aStartPos, endOfLine-aStartPos); // copy the string into the new line buffer
+
+			// now we need to update the data buffer to go past the line we just read out. 
 			if (PL_strlen(endOfLine) <= 0) // if no more data in the buffer, then just zero out the buffer...
-				aDataBuffer[0] = '\0';
+				aStartPos[0] = '\0';
 			else
 			{
-				nsCRT::memcpy(aDataBuffer, endOfLine, PL_strlen(endOfLine)); 
-				aDataBuffer[PL_strlen(endOfLine)] = '\0';
+				// advance 
+				aStartPos = endOfLine; // move us up to the end of the line
+//				nsCRT::memcpy(aDataBuffer, endOfLine, PL_strlen(endOfLine)); 
+//				aDataBuffer[PL_strlen(endOfLine)] = '\0';
 			}
 #ifdef DEBUG_bienvenu
 			printf("read next line: %s\n", newLine);
+			printf("remaining data: %s\n\n", aStartPos);
 #endif
 			return newLine;
 		}
 		else // we were unable to extract the next line and we now need to wait for data!
 		{
-
-			// mscott: this is bogus....fortunately we haven't gotten in this spot yet.
-			// we need to be pumping events here instead of just blocking on the on data available call.
-			// If we don't pump events how will we get the on data available signal?
-
 			// wait on the data available monitor!!
 			PR_EnterMonitor(m_dataAvailableMonitor);
 			// wait for data arrival
@@ -3121,7 +3140,7 @@ char * nsImapProtocol::ReadNextLineFromInput(char * aDataBuffer, PRUint32 aDataB
 char* 
 nsImapProtocol::CreateNewLineFromSocket()
 {
-	char * newLine = ReadNextLineFromInput(m_dataInputBuf, OUTPUT_BUFFER_SIZE, m_inputStream);
+	char * newLine = ReadNextLineFromInput(m_dataInputBuf, m_dataInputOffset, OUTPUT_BUFFER_SIZE, m_inputStream);
 	SetConnectionStatus(newLine ? PL_strlen(newLine) : 0);
 	return newLine;
 #if 0
