@@ -19,9 +19,21 @@
 
 #include "nsSampleWordBreaker.h"
 
-NS_DEFINE_IID(kIWordBreaker, NS_IWORDBREAKER_IID);
+#include "pratom.h"
+#include "nsLWBRKDll.h"
+nsSampleWordBreaker::nsSampleWordBreaker()
+{
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
+}
+nsSampleWordBreaker::~nsSampleWordBreaker()
+{
+  PR_AtomicDecrement(&g_InstanceCount);
+}
 
-NS_IMPL_ISUPPORTS(nsSampleWordBreaker, NS_IWORDBREAKER_IID);
+NS_DEFINE_IID(kIWordBreakerIID, NS_IWORDBREAKER_IID);
+
+NS_IMPL_ISUPPORTS(nsSampleWordBreaker, kIWordBreakerIID);
 
 nsresult nsSampleWordBreaker::BreakInBetween(
   PRUnichar* aText1 , PRUint32 aTextLen1,

@@ -19,15 +19,21 @@
 
 #include "nsJISx4501LineBreaker.h"
 
-NS_DEFINE_IID(kILineBreaker, NS_ILINEBREAKER_IID);
+#include "pratom.h"
+#include "nsLWBRKDll.h"
+nsJISx4501LineBreaker::nsJISx4501LineBreaker()
+{
+  NS_INIT_REFCNT();
+  PR_AtomicIncrement(&g_InstanceCount);
+}
+nsJISx4501LineBreaker::~nsJISx4501LineBreaker()
+{
+  PR_AtomicDecrement(&g_InstanceCount);
+}
 
-NS_IMPL_ISUPPORTS(nsJISx4501LineBreaker, NS_ILINEBREAKER_IID);
+NS_DEFINE_IID(kILineBreakerIID, NS_ILINEBREAKER_IID);
 
-
-
-
-
-
+NS_IMPL_ISUPPORTS(nsJISx4501LineBreaker, kILineBreakerIID);
 
 nsresult nsJISx4501LineBreaker::BreakInBetween(
   PRUnichar* aText1 , PRUint32 aTextLen1,

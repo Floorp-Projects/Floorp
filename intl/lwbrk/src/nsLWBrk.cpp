@@ -29,20 +29,18 @@
 NS_DEFINE_CID(kLWBrkCID, NS_LWBRK_CID);
 
 NS_DEFINE_IID(kFactoryIID, NS_IFACTORY_IID);
-NS_DEFINE_IID(kILineBreakerFactoryIID, NS_ILINEBREAKERFACTORY_IID);
-NS_DEFINE_IID(kIWordBreakerFactoryIID, NS_IWORDBREAKERFACTORY_IID);
 
-static PRInt32 g_FactoryCount = 0;
-static PRInt32 g_LockCount = 0;
+extern "C" PRInt32 g_InstanceCount = 0;
+extern "C" PRInt32 g_LockCount = 0;
 
 class nsLWBrkFactory : public nsIFactory {
   NS_DECL_ISUPPORTS
   nsLWBrkFactory() {
     NS_INIT_REFCNT();
-    PR_AtomicIncrement(&g_FactoryCount);
+    PR_AtomicIncrement(&g_InstanceCount);
   };
   ~nsLWBrkFactory() {
-    PR_AtomicDecrement(&g_FactoryCount);
+    PR_AtomicDecrement(&g_InstanceCount);
   };
 
   NS_IMETHOD CreateInstance(nsISupports *aDelegate,
@@ -100,7 +98,7 @@ extern "C" NS_EXPORT nsresult NSGetFactory(const nsCID &aCID, nsISupports* servi
 }
 
 extern "C" NS_EXPORT PRBool NSCanUnload() {
-  return PRBool(g_FactoryCount == 0 && g_LockCount == 0);
+  return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
 }
 
 extern "C" NS_EXPORT nsresult NSRegisterSelf(const char *path)
