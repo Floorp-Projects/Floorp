@@ -45,7 +45,7 @@
   <!-- Commented out until new tree content model and template builder can play nice -->
   <template>
     <rule rdf:type="http://home.netscape.com/NC-rdf#BookmarkSeparator">
-      <treechildren>
+      <treechildren flex="1">
         <treeitem uri="...">
           <treerow>
             <treecell>
@@ -57,7 +57,7 @@
     </rule>
   	
     <rule>
-      <treechildren>
+      <treechildren flex="1">
         <treeitem uri="...">
           <treerow>
             <treecell>
@@ -70,7 +70,9 @@
       </treechildren>
     </rule>
   </template>
-  <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name"/>
+  <treecolgroup>
+    <treecol id="NameColumn" rdf:resource="http://home.netscape.com/NC-rdf#Name" flex="1"/>
+  </treecolgroup>
 </tree>
 
 </window>
