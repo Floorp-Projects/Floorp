@@ -19,6 +19,7 @@
 #include "mkutils.h"
 #include "autoupdt.h"
 #include "client.h"
+#include "prefapi.h"
 
 #ifndef MAXPATHLEN
 #define  MAXPATHLEN   1024
@@ -267,7 +268,12 @@ autoupdate_resume()
 }
 
 
-void
+
+#ifdef	XP_MAC
+PR_PUBLIC_API(void)
+#else
+PUBLIC void
+#endif
 checkForAutoUpdate(void *cx, char* url, int32 file_size, int32 bytes_range, uint32 interval)
 {
   char *directory = NULL;
@@ -279,8 +285,24 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size, int32 bytes_range, uint
   char *filename;
   char *slash;
   PRInt32 cur_size;
-  AutoUpdateConnnection autoupdt = PR_Malloc(sizeof(AutoUpdateConnnectionStruct));
+  AutoUpdateConnnection autoupdt;
+  XP_Bool enabled;
 
+  PREF_GetBoolPref( "autoupdate.background_download_enabled", &enabled);
+  if (!enabled)
+    return;
+  
+  if (PREF_OK != PREF_CopyCharPref("autoupdate.background_download_directory",
+                                   &directory)) {
+    directory = NULL;
+  } else {
+    if ((directory) && (XP_STRCMP(directory, "") == 0)) {
+      directory = NULL;
+    }
+  }
+  
+
+  autoupdt = PR_Malloc(sizeof(AutoUpdateConnnectionStruct));
   memset(autoupdt, '\0', sizeof(AutoUpdateConnnectionStruct));
 
   autoupdt->url = copyString(url);
@@ -296,26 +318,43 @@ checkForAutoUpdate(void *cx, char* url, int32 file_size, int32 bytes_range, uint
 
 #ifdef XP_UNIX
 
-  directory = getenv("MOZILLA_HOME");
   if (directory) {
     PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
+    PR_FREEIF(directory);
   } else {
-    fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
+    directory = getenv("MOZILLA_HOME");
+    if (directory) {
+      PR_snprintf( Path, MAXPATHLEN, "%s/", directory);
+    } else {
+      fe_GetProgramDirectory( Path, MAXPATHLEN-1 );
+    }
   }
   autoupdt->outFile = PR_smprintf("%sautoupdt/%s", Path, filename);
 
 #elif defined(WIN32)
 
-  FE_GetProgramDirectory( Path, _MAX_PATH );
+  if (directory) {
+    PR_snprintf( Path, MAXPATHLEN, "%s\\", directory);
+    PR_FREEIF(directory);
+  } else {
+    FE_GetProgramDirectory( Path, _MAX_PATH );
+  }
   autoupdt->outFile = PR_smprintf("%sautoupdt\\%s", Path, filename);
 
 #elif defined(MAC)
   /* XXX: Fix it for Mac with the correct folder */
-  directory = XP_TempDirName();
-  autoupdt->outFile = PR_smprintf("%s%s", directory, filename);
+  if (directory) {
+    PR_snprintf( Path, MAXPATHLEN, "%s:", directory);
+    PR_FREEIF(directory);
+  } else {
+    directory = XP_TempDirName();
+    PR_snprintf( Path, MAXPATHLEN, "%s:", directory);
+  }
+  autoupdt->outFile = PR_smprintf("%s:%s", Path, filename);
 #else
   autoupdt->outFile = NULL;
 #endif
+
   if (autoupdt->outFile == NULL) {
     autoupdt_free(autoupdt);
     PR_FREEIF(autoupdt);

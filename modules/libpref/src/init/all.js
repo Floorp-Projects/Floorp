@@ -228,6 +228,8 @@ localDefPref("security.directory",              "");
 
 pref("autoupdate.enabled",              true);
 pref("autoupdate.confirm_install",				false);
+pref("autoupdate.background_download_enabled",  false);
+pref("autoupdate.background_download_directory",  "");
 
 pref("imap.io.mac.logging", false);
 
