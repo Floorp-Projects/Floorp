@@ -28,6 +28,7 @@
 #include "nsICachedNetData.h"
 #include "nsCOMPtr.h"
 #include "nsINetDataCacheRecord.h"
+#include "prinrval.h"
 
 class nsINetDataCache;
 class nsIStreamAsFileObserver;
