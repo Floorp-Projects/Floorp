@@ -40,6 +40,10 @@
 #include "nsIDeviceContext.h"
 #include "nsIPresShell.h"
 
+#if THIS_IS_THE_LINK_FIX
+#include "nsHTMLAtoms.h"
+#endif
+
 // Some Misc #defines
 #define SELECTION_DEBUG        0
 #define FORCE_SELECTION_UPDATE 1
@@ -564,7 +568,9 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
 {
   aEventStatus = nsEventStatus_eIgnore;
   
-  if (nsnull != mContent) {
+  //if (nsnull != mContent && (aEvent->message != NS_MOUSE_LEFT_BUTTON_UP ||
+  //    (aEvent->message == NS_MOUSE_LEFT_BUTTON_UP && !mDoingSelection))) {
+  if (nsnull != mContent &&  !mDoingSelection) {
     mContent->HandleDOMEvent(aPresContext, (nsEvent*)aEvent, nsnull, DOM_EVENT_INIT, aEventStatus);
   }
 
@@ -575,9 +581,32 @@ NS_METHOD nsFrame::HandleEvent(nsIPresContext& aPresContext,
   }
 
   if(nsEventStatus_eIgnore == aEventStatus) {
-    if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
-        aEvent->message == NS_MOUSE_LEFT_BUTTON_UP || 
-        aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+    if (aEvent->message == NS_MOUSE_LEFT_BUTTON_DOWN) {
+#if THIS_IS_THE_LINK_FIX
+      nsIContent * content = mContent;
+      nsIAtom    * atom    = content->GetTag();
+      NS_ADDREF(content);
+      while (atom == nsnull) {
+        nsIContent * oldContent = content;
+        content = oldContent->GetParent();
+        NS_RELEASE(oldContent);
+        atom = content->GetTag();
+      }
+      NS_RELEASE(content);
+
+      if (atom == nsHTMLAtoms::a) {
+        nsString href;
+        content->GetAttribute(nsString("href"), href);
+        if (href.Length() > 0) {
+          NS_RELEASE(atom);
+          return NS_OK;
+        }
+      }
+      NS_RELEASE(atom);
+#endif
+    } else if (aEvent->message == NS_MOUSE_MOVE && mDoingSelection ||
+               aEvent->message == NS_MOUSE_LEFT_BUTTON_UP) {
+      // no-op
     } else {
       aEventStatus = nsEventStatus_eIgnore;
       return NS_OK;
@@ -668,14 +697,20 @@ NS_METHOD nsFrame::HandlePress(nsIPresContext& aPresContext,
       if (newContent == selStartContent && newContent == selEndContent) {
         addRangeToSelectionTrackers(newContent, newContent,   kInsertInAddList);
       } else {
-        nsIContent * prevContent = gDoc->GetPrevContent(newContent); // doesn't ref count
-        nsIContent * nextContent = gDoc->GetNextContent(newContent); // doesn't ref count
-
-        addRangeToSelectionTrackers(selStartContent, prevContent,   kInsertInRemoveList);
-        addRangeToSelectionTrackers(nextContent,     selEndContent, kInsertInRemoveList);
-
-        NS_RELEASE(prevContent);
-        NS_RELEASE(nextContent);
+        if (selStartContent == newContent) {
+          // Trackers just do painting so add all the content nodes in the remove list
+          // even though you might think you shouldn't put the start content node there
+          addRangeToSelectionTrackers(selStartContent, selEndContent,   kInsertInRemoveList);
+        } else if (selEndContent == newContent) {
+          // just repaint the end content node
+          addRangeToSelectionTrackers(selEndContent, selEndContent, kInsertInAddList);
+        } else {
+          if (gDoc->IsBefore(newContent, selEndContent)) {
+            addRangeToSelectionTrackers(newContent,  selEndContent, kInsertInRemoveList);
+          } else {
+            addRangeToSelectionTrackers(selEndContent,  newContent, kInsertInRemoveList);
+          }
+        }
       } 
       mEndSelectionPoint->SetPoint(newContent, mStartPos, PR_FALSE);
     } else {
@@ -832,7 +867,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
       NS_RELEASE(currentContent);
       NS_RELEASE(newContent);
     } else {
-      //if (SELECTION_DEBUG) printf("HandleDrag::Same Frame.\n");
+      if (SELECTION_DEBUG) printf("HandleDrag::Same Frame.\n");
 
       // Same Frame as before
       //if (SELECTION_DEBUG) printf("\nSame Start: %s\n", mStartSelectionPoint->ToString());
@@ -843,10 +878,10 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
       nsIContent * selEndContent   = mEndSelectionPoint->GetContent();
 
       if (selStartContent == selEndContent) {
-        //if (SELECTION_DEBUG) printf("Start & End Frame are the same: \n");
+        if (SELECTION_DEBUG) printf("Start & End Frame are the same: \n");
         AdjustPointsInSameContent(aPresContext, aEvent);
       } else {
-        //if (SELECTION_DEBUG) printf("Start & End Frame are different: \n");
+        if (SELECTION_DEBUG) printf("Start & End Frame are different: \n");
 
         // Get Content for New Frame
         nsIContent * newContent;
@@ -857,11 +892,11 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
         newPos = GetPosition(aPresContext, aEvent, aFrame, actualOffset);
 
         if (newContent == selStartContent) {
-          //if (SELECTION_DEBUG) printf("New Content equals Start Content\n");
+          if (SELECTION_DEBUG) printf("New Content equals Start Content\n");
           mStartSelectionPoint->SetOffset(newPos);
           mSelectionRange->SetStartPoint(mStartSelectionPoint);
         } else if (newContent == selEndContent) {
-          //if (SELECTION_DEBUG) printf("New Content equals End Content\n");
+          if (SELECTION_DEBUG) printf("New Content equals End Content\n");
           mEndSelectionPoint->SetOffset(newPos);
           mSelectionRange->SetEndPoint(mEndSelectionPoint);
         } else {
@@ -870,7 +905,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
 
         //if (SELECTION_DEBUG) printf("*Same Start: "+mStartSelectionPoint->GetOffset()+
         //                               " "+mStartSelectionPoint->IsAnchor()+
-         //                               "  End: "+mEndSelectionPoint->GetOffset()  +
+        //                                "  End: "+mEndSelectionPoint->GetOffset()  +
         //                               " "+mEndSelectionPoint->IsAnchor());
         NS_RELEASE(newContent);
       }
@@ -878,6 +913,7 @@ NS_METHOD nsFrame::HandleDrag(nsIPresContext& aPresContext,
       NS_IF_RELEASE(selEndContent);
     }
   }
+
 
   NS_IF_RELEASE(startContent);
   NS_IF_RELEASE(endContent);
