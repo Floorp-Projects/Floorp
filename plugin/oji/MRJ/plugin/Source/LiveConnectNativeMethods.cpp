@@ -258,7 +258,7 @@ MRJSecurityContext::GetOrigin(char* buf, int len)
 {
 #ifdef NOT_BROKEN_BY_DARIN
     nsCAutoString origin;
-    if (mLocation && NS_SUCCEEDED(mLocation->GetUserPass(origin))) {
+    if (mLocation && NS_SUCCEEDED(mLocation->GetPrePath(origin))) {
         ::strncpy(buf, origin.get(), len);
         return NS_OK;
     }
