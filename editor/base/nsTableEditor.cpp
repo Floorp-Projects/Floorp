@@ -254,7 +254,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
   if (!tableNode) return NS_ERROR_NULL_POINTER;
 
   nsCOMPtr<nsIDOMNode> tableChild;
-  res = GetFirstEditableChild(tableNode, &tableChild);
+  res = GetFirstEditableChild(tableNode, address_of(tableChild));
   if (NS_FAILED(res)) return res;
 
   while (tableChild)
@@ -283,7 +283,7 @@ nsHTMLEditor::GetFirstRow(nsIDOMElement* aTableElement, nsIDOMElement* &aRow)
       {
         nsCOMPtr<nsIDOMNode> rowNode;
         // All children should be rows
-        res = GetFirstEditableChild(tableChild, &rowNode);
+        res = GetFirstEditableChild(tableChild, address_of(rowNode));
         if (NS_FAILED(res)) return res;
         if (rowNode && IsRowNode(rowNode))
         {
