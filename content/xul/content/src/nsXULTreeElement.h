@@ -63,6 +63,7 @@ public:
     static nsIAtom*             kOpenAtom;
     static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kTreeItemAtom;
+    static nsIAtom*             kTreeChildrenAtom;
     static int gRefCnt;
 
 protected:
@@ -75,7 +76,9 @@ protected:
     void RemoveCellFromSelectionInternal(nsIDOMXULElement* aTreeCell);
     
     static nsresult IndexOfContent(nsIContent *aRoot, nsIContent *aContent,
-                               PRInt32* aResult);
+                                   PRBool aDescendIntoRows,
+                                   PRBool aParentIsOpen,
+                                   PRInt32* aResult);
 protected:
     nsRDFDOMNodeList* mSelectedItems;
     nsRDFDOMNodeList* mSelectedCells;
