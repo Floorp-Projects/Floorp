@@ -1502,9 +1502,10 @@ nsBrowserAppCore::OpenWindow()
                         "*.*"};
   fileWidget->SetFilterList(5, titles, filters);
 
-  fileWidget->Create(nsnull, title, eMode_load, nsnull, nsnull);
 
 #if 0 // Old way
+  fileWidget->Create(nsnull, title, eMode_load, nsnull, nsnull);
+
   nsAutoString fileURL;
   PRBool result = fileWidget->Show();
   if (result) {
