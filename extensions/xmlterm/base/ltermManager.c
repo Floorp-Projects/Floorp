@@ -933,7 +933,8 @@ int lterm_write(int lterm, const UNICHAR *buf, int count, int dataType)
         uch = buf[j+sentCount];
         temLine[j+PIPEHEADER] = uch;
 
-        if ((uch < U_SPACE) && ((uch != U_ESCAPE) || (j > 0)))
+        if ((uch < (UNICHAR)U_SPACE) &&
+            ((uch != (UNICHAR)U_ESCAPE) || (j > 0)))
           break;
       }
 

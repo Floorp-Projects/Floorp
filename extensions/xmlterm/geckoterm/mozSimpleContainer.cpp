@@ -20,23 +20,25 @@
  */
 
 // mozSimpleContainer.cpp: Implements mozISimpleContainer
-// which provides a WebShell container for use in simple programs
+// which provides a DocShell container for use in simple programs
 // using the layout engine
 
 #include "nscore.h"
 #include "nsCOMPtr.h"
 
+#include "nsISupports.h"
 #include "nsRepository.h"
 
-#include "nsISupports.h"
-
-#include "nsIWebShell.h"
-#include "nsIBaseWindow.h"
+#include "nsIURI.h"
+#include "nsIDocShell.h"
 #include "nsIDOMDocument.h"
 #include "nsIDocumentViewer.h"
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsIDocument.h"
+
+#include "nsIWebShell.h"
+#include "nsIBaseWindow.h"
 
 #include "mozSimpleContainer.h"
 
@@ -46,9 +48,6 @@ static NS_DEFINE_IID(kWebShellCID,           NS_WEB_SHELL_CID);
 
 // Define Interface IDs
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
-static NS_DEFINE_IID(kIWebShellIID,          NS_IWEB_SHELL_IID);
-static NS_DEFINE_IID(kIDOMDocumentIID,       NS_IDOMDOCUMENT_IID);
-static NS_DEFINE_IID(kIDocumentViewerIID,    NS_IDOCUMENT_VIEWER_IID);
 
 /////////////////////////////////////////////////////////////////////////
 // mozSimpleContainer factory
@@ -74,7 +73,7 @@ NS_NewSimpleContainer(mozISimpleContainer** aSimpleContainer)
 /////////////////////////////////////////////////////////////////////////
 
 mozSimpleContainer::mozSimpleContainer() :
-  mWebShell(nsnull)
+  mDocShell(nsnull)
 {
   NS_INIT_REFCNT();
 }
@@ -82,7 +81,7 @@ mozSimpleContainer::mozSimpleContainer() :
 
 mozSimpleContainer::~mozSimpleContainer()
 {
-  mWebShell = nsnull;
+  mDocShell = nsnull;
 }
 
 #define NS_IMPL_ADDREF_TRACE(_class)                         \
@@ -129,8 +128,8 @@ mozSimpleContainer::QueryInterface(REFNSIID aIID,void** aInstancePtr)
   } else if ( aIID.Equals(NS_GET_IID(mozISimpleContainer)) ) {
     *aInstancePtr = NS_STATIC_CAST(mozISimpleContainer*,this);
 
-  } else if ( aIID.Equals(NS_GET_IID(nsIWebShellContainer)) ) {
-    *aInstancePtr = NS_STATIC_CAST(nsIWebShellContainer*,this);
+  } else if ( aIID.Equals(NS_GET_IID(nsIDocumentLoaderObserver)) ) {
+    *aInstancePtr = NS_STATIC_CAST(nsIDocumentLoaderObserver*,this);
 
   } else {
     return NS_ERROR_NO_INTERFACE;
@@ -154,135 +153,105 @@ NS_IMETHODIMP mozSimpleContainer::Init(nsNativeWidget aNativeWidget,
                                        PRInt32 width, PRInt32 height,
                                        nsIPref* aPref)
 {
-  // Create web shell and show it
-  nsresult result = nsRepository::CreateInstance(kWebShellCID, nsnull,
-                                                 kIWebShellIID,
-                                                 getter_AddRefs(mWebShell));
-
-  if (NS_FAILED(result) || !mWebShell) {
-    fprintf(stderr, "Failed to create create web shell\n");
-    return NS_ERROR_FAILURE;
-  }
-  
-  mWebShell->Init(aNativeWidget, 0, 0, width, height);
-
-  mWebShell->SetContainer(this);
-  if (aPref) {
-    mWebShell->SetPrefs(aPref);
-  }
-
-  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mWebShell);
-  if (window) {
-    window->SetVisibility(PR_TRUE);
-  }
-
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozSimpleContainer::WillLoadURL(nsIWebShell* aShell, const PRUnichar* aURL, nsLoadType aReason)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozSimpleContainer::BeginLoadURL(nsIWebShell* aShell, const PRUnichar* aURL)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozSimpleContainer::ProgressLoadURL(nsIWebShell* aShell,
-          const PRUnichar* aURL, PRInt32 aProgress, PRInt32 aProgressMax)
-{
-  return NS_OK;
-}
-
-
-NS_IMETHODIMP mozSimpleContainer::EndLoadURL(nsIWebShell* aShell,
-                                             const PRUnichar* aURL,
-                                             nsresult aStatus)
-{
-  nsCOMPtr<nsIDOMSelection> selection;
   nsresult result;
 
-  if (aShell == mWebShell.get()) {
-    nsCOMPtr<nsIDOMDocument> domDoc;
-    nsCOMPtr<nsIPresShell> presShell;
+  // Create doc shell and show it
+  result = nsComponentManager::CreateInstance(kWebShellCID, nsnull,
+                                              NS_GET_IID(nsIDocShell),
+                                              getter_AddRefs(mDocShell));
 
-    result = GetDocument(*getter_AddRefs(domDoc));
-    if (NS_FAILED(result) || !domDoc) return result;
-
-    result = GetPresShell(*getter_AddRefs(presShell));
-    if (NS_FAILED(result) || !presShell) return result;
+  if (NS_FAILED(result) || !mDocShell) {
+    fprintf(stderr, "Failed to create create doc shell\n");
+    return NS_ERROR_FAILURE;
   }
 
-  return NS_OK;
-}
+  // We are the document loader observer for the doc shell
+  mDocShell->SetDocLoaderObserver(this);
 
+  // Initialize web shell and show it
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
+  webShell->Init(aNativeWidget, 0, 0, width, height);
 
-NS_IMETHODIMP mozSimpleContainer::NewWebShell(PRUint32 aChromeMask,
-                                              PRBool aVisible,
-                                              nsIWebShell*& aNewWebShell)
-{
-  aNewWebShell = nsnull;
-  return NS_ERROR_FAILURE;
-}
-
-
-NS_IMETHODIMP mozSimpleContainer::FindWebShellWithName(const PRUnichar* aName,
-                                                       nsIWebShell*& aResult)
-{
-  aResult = nsnull;
-  nsString aNameStr(aName);
-
-  nsIWebShell *aWebShell;
-    
-  if (NS_OK == GetWebShell(aWebShell)) {
-    const PRUnichar *name;
-    if (NS_OK == aWebShell->GetName(&name)) {
-      if (aNameStr.Equals(name)) {
-        aResult = aWebShell;
-        NS_ADDREF(aResult);
-        return NS_OK;
-      }
-    }      
+  if (aPref) {
+    mDocShell->SetPrefs(aPref);
   }
 
-  if (NS_OK == aWebShell->FindChildWithName(aName, aResult)) {
-    if (nsnull != aResult) {
-      return NS_OK;
-    }
-  }
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  docShellWin->SetVisibility(PR_TRUE);
 
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-mozSimpleContainer::ContentShellAdded(nsIWebShell* aChildShell,
-                                  nsIContent* frameNode)
+// nsIDocumentLoaderObserver interface
+
+NS_IMETHODIMP mozSimpleContainer::OnStartDocumentLoad(
+                      nsIDocumentLoader *aLoader,
+                      nsIURI *aURL,
+                      const char *aCommand)
 {
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-mozSimpleContainer::CreatePopup(nsIDOMElement* aElement, 
-                            nsIDOMElement* aPopupContent, 
-                            PRInt32 aXPos, PRInt32 aYPos, 
-                            const nsString& aPopupType,
-                            const nsString& anAnchorAlignment,
-                            const nsString& aPopupAlignment,
-                            nsIDOMWindow* aWindow, nsIDOMWindow** outPopup)
+NS_IMETHODIMP mozSimpleContainer::OnEndDocumentLoad(nsIDocumentLoader *loader,
+                                                    nsIChannel *aChannel,
+                                                    PRUint32 aStatus)
+{
+  nsresult result;
+
+  fprintf(stderr, "mozSimpleContainer::OnEndDocumentLoad\n");
+
+  nsCOMPtr<nsIDOMDocument> domDoc;
+  result = mDocShell->GetDocument(getter_AddRefs(domDoc));
+  if (NS_FAILED(result) || !domDoc)
+    return result;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  result = mDocShell->GetPresShell(getter_AddRefs(presShell));
+  if (NS_FAILED(result) || !presShell)
+    return result;
+
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozSimpleContainer::OnStartURLLoad(nsIDocumentLoader *aLoader,
+                                                 nsIChannel *channel)
 {
   return NS_OK;
 }
 
 
-NS_IMETHODIMP
-mozSimpleContainer::FocusAvailable(nsIWebShell* aFocusedWebShell,
-                                   PRBool& aFocusTaken)
+NS_IMETHODIMP mozSimpleContainer::OnProgressURLLoad(nsIDocumentLoader *aLoader,
+                                                    nsIChannel *aChannel,
+                                                    PRUint32 aProgress,
+                                                    PRUint32 aProgressMax)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozSimpleContainer::OnStatusURLLoad(nsIDocumentLoader *loader,
+                                                  nsIChannel *channel,
+                                                  nsString & aMsg)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozSimpleContainer::OnEndURLLoad(nsIDocumentLoader *aLoader,
+                                               nsIChannel *aChannel,
+                                               PRUint32 aStatus)
+{
+  return NS_OK;
+}
+
+
+NS_IMETHODIMP mozSimpleContainer::HandleUnknownContentType(
+               nsIDocumentLoader *aLoader,
+               nsIChannel *aChannel,
+               const char *aContentType, const char *aCommand)
 {
   return NS_OK;
 }
@@ -294,12 +263,14 @@ mozSimpleContainer::FocusAvailable(nsIWebShell* aFocusedWebShell,
  */
 NS_IMETHODIMP mozSimpleContainer::Resize(PRInt32 aWidth, PRInt32 aHeight)
 {
-  if (!mWebShell) return NS_ERROR_FAILURE;
+  fprintf(stderr, "mozSimpleContainer::Resize\n");
 
-  nsCOMPtr<nsIBaseWindow> window = do_QueryInterface(mWebShell);
-  if (window) {
-    window->SetPositionAndSize(0, 0, aWidth, aHeight, PR_FALSE);
-  }
+  if (!mDocShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIBaseWindow> docShellWin(do_QueryInterface(mDocShell));
+  docShellWin->SetPositionAndSize(0, 0, aWidth, aHeight, PR_FALSE);
+
   return NS_OK;
 }
 
@@ -309,97 +280,25 @@ NS_IMETHODIMP mozSimpleContainer::Resize(PRInt32 aWidth, PRInt32 aHeight)
  */
 NS_IMETHODIMP mozSimpleContainer::LoadURL(const char* aURL)
 {
-  if (!mWebShell) return NS_ERROR_FAILURE;
+  nsresult result;
+
+  if (!mDocShell)
+    return NS_ERROR_FAILURE;
+
+  nsCOMPtr<nsIWebShell> webShell(do_QueryInterface(mDocShell));
 
   nsString aStr(aURL);
-  mWebShell->LoadURL(aStr.GetUnicode());
-  return NS_OK;
+  result = webShell->LoadURL(aStr.GetUnicode());
+  return result;
 }
 
 
-/** Gets web shell in container
- * @param aWebShell (output) web shell object
+/** Gets doc shell in container
+ * @param aDocShell (output) doc shell object
  */
-NS_IMETHODIMP mozSimpleContainer::GetWebShell(nsIWebShell*& aWebShell)
+NS_IMETHODIMP mozSimpleContainer::GetDocShell(nsIDocShell*& aDocShell)
 {
-  aWebShell = mWebShell.get();
-  NS_IF_ADDREF(aWebShell);      // Add ref'ed; needs to be released
-  return NS_OK;
-}
-
-
-/** Gets DOM document in container
- * @param aDocument (output) DOM document
- */
-NS_IMETHODIMP mozSimpleContainer::GetDocument(nsIDOMDocument*& aDocument)
-{
-
-  aDocument = nsnull;
-
-  if (mWebShell) {
-    nsIContentViewer* contViewer;
-    mWebShell->GetContentViewer(&contViewer);
-
-    if (nsnull != contViewer) {
-      nsIDocumentViewer* docViewer;
-      if (NS_OK == contViewer->QueryInterface(kIDocumentViewerIID,
-                                            (void**) &docViewer)) 
-      {
-        nsIDocument* vDoc;
-        docViewer->GetDocument(vDoc);
-
-        if (nsnull != vDoc) {
-          nsIDOMDocument* vDOMDoc;
-          if (NS_OK == vDoc->QueryInterface(kIDOMDocumentIID,
-                                            (void**) &vDOMDoc)) 
-            {
-              aDocument = vDOMDoc; // Add ref'ed; needs to be released
-            }
-          NS_RELEASE(vDoc);
-        }
-
-        NS_RELEASE(docViewer);
-      }
-
-      NS_RELEASE(contViewer);
-    }
-  }
-  return NS_OK;
-}
-
-
-/** Gets presentation shell associated with container
- * @param aPresShell (output) presentation shell
- */
-NS_IMETHODIMP mozSimpleContainer::GetPresShell(nsIPresShell*& aPresShell)
-{
-  aPresShell = nsnull;
-
-  nsIPresShell* presShell = nsnull;
-
-  if (mWebShell) {
-    nsIContentViewer* contViewer = nsnull;
-    mWebShell->GetContentViewer(&contViewer);
-
-    if (nsnull != contViewer) {
-      nsIDocumentViewer* docViewer = nsnull;
-      contViewer->QueryInterface(kIDocumentViewerIID, (void**) &docViewer);
-
-      if (nsnull != docViewer) {
-        nsIPresContext* presContext;
-        docViewer->GetPresContext(presContext);
-
-        if (nsnull != presContext) {
-          presContext->GetShell(&presShell);  // Add ref'ed
-          aPresShell = presShell;
-          NS_RELEASE(presContext);
-        }
-
-        NS_RELEASE(docViewer);
-      }
-
-      NS_RELEASE(contViewer);
-    }
-  }
+  aDocShell = mDocShell.get();
+  NS_IF_ADDREF(aDocShell);      // Add ref'ed; needs to be released
   return NS_OK;
 }

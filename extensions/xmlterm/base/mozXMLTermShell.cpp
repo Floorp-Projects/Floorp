@@ -32,8 +32,7 @@
 #include "nsIDocumentViewer.h"
 #include "nsIDocument.h"
 
-#include "nsIWebShell.h"
-#include "nsIWebShellWindow.h"
+#include "nsIDocShell.h"
 #include "nsIPresShell.h"
 #include "nsIPresContext.h"
 #include "nsIScriptGlobalObject.h"
@@ -42,9 +41,7 @@
 
 #include "nsIAppShellService.h"
 #include "nsAppShellCIDs.h"
-#include "nsAppCoresCIDs.h"
 
-#include "nsIDOMToolkitCore.h"
 #include "nsIDOMDocument.h"
 #include "nsIDOMSelection.h"
 #include "nsIDOMWindow.h"
@@ -54,7 +51,6 @@
 
 // Define Class IDs
 static NS_DEFINE_IID(kAppShellServiceCID,    NS_APPSHELL_SERVICE_CID);
-static NS_DEFINE_CID(kToolkitCoreCID,        NS_TOOLKITCORE_CID);
 
 // Define Interface IDs
 static NS_DEFINE_IID(kISupportsIID,          NS_ISUPPORTS_IID);
@@ -86,7 +82,7 @@ NS_NewXMLTermShell(mozIXMLTermShell** aXMLTermShell)
 mozXMLTermShell::mozXMLTermShell() :
   mInitialized(PR_FALSE),
   mContentWindow(nsnull),
-  mContentAreaWebShell(nsnull),
+  mContentAreaDocShell(nsnull),
   mXMLTerminal(nsnull)
 {
   NS_INIT_REFCNT();
@@ -205,12 +201,12 @@ mozXMLTermShell::Init(nsIDOMWindow* aContentWin,
   if (NS_FAILED(result) || !globalObj)
     return NS_ERROR_FAILURE;
 
-  nsCOMPtr<nsIWebShell> webShell;
-  globalObj->GetWebShell(getter_AddRefs(webShell));
-  if (!webShell)
+  nsCOMPtr<nsIDocShell> docShell;
+  globalObj->GetDocShell(getter_AddRefs(docShell));
+  if (!docShell)
     return NS_ERROR_FAILURE;
     
-  mContentAreaWebShell = webShell;  // SVN: does this assignment addref?
+  mContentAreaDocShell = docShell;  // SVN: does this assignment addref?
 
   // Create XMLTerminal
   nsCOMPtr<mozIXMLTerminal> newXMLTerminal;
@@ -221,7 +217,7 @@ mozXMLTermShell::Init(nsIDOMWindow* aContentWin,
 
   if (NS_SUCCEEDED(result)) {
     // Initialize XMLTerminal with non-owning reference to us
-    result = newXMLTerminal->Init(mContentAreaWebShell, this, URL, args);
+    result = newXMLTerminal->Init(mContentAreaDocShell, this, URL, args);
 
     if (NS_SUCCEEDED(result)) {
       mXMLTerminal = newXMLTerminal;
@@ -244,7 +240,7 @@ mozXMLTermShell::Finalize(void)
     mXMLTerminal = nsnull;
   }
 
-  mContentAreaWebShell = nsnull;
+  mContentAreaDocShell = nsnull;
   mContentWindow =       nsnull;
 
   mInitialized = PR_FALSE;
@@ -285,23 +281,6 @@ mozXMLTermShell::NewXMLTermWindow(const PRUnichar* args)
   nsresult result = NS_OK;
 
   XMLT_LOG(mozXMLTermShell::NewXMLTermWindow,10,("\n"));
-
-  // Create the toolkit core instance...
-  nsIDOMToolkitCore* toolkit = nsnull;
-  result = nsServiceManager::GetService(kToolkitCoreCID,
-                                        NS_GET_IID(nsIDOMToolkitCore),
-                                        (nsISupports**)&toolkit);
-  if (NS_FAILED(result))
-    return result;
-
-  nsAutoString argStr (args);
-  toolkit->ShowWindowWithArgs( "chrome://xmlterm/content/XMLTermFrame.xul",
-                               nsnull, argStr );
-  
-  /* Release the toolkit... */
-  if (nsnull != toolkit) {
-    nsServiceManager::ReleaseService(kToolkitCoreCID, toolkit);
-  }
 
   return result;
 }

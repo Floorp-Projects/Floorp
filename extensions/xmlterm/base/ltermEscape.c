@@ -264,14 +264,16 @@ static int ltermProcessCSISequence(struct lterms *lts, const UNICHAR *buf,
   /* Process numerical parameters */
   paramCount = 0;
   while ((offset < count) &&
-         ((buf[offset] >= U_ZERO) && (buf[offset] <= U_NINE)) ) {
+         ((buf[offset] >= (UNICHAR)U_ZERO) &&
+          (buf[offset] <= (UNICHAR)U_NINE)) ) {
     /* Starts with a digit */
     value = buf[offset] - U_ZERO;
     offset++;
 
     /* Process all contiguous digits */
     while ((offset < count) &&
-           ((buf[offset] >= U_ZERO) && (buf[offset] <= U_NINE)) ) {
+       ((buf[offset] >= (UNICHAR)U_ZERO) &&
+        (buf[offset] <= (UNICHAR)U_NINE)) ) {
       value = value * 10 + buf[offset] - U_ZERO;
       offset++;
     }
@@ -931,7 +933,8 @@ static int ltermProcessXTERMSequence(struct lterms *lts, const UNICHAR *buf,
   /* Process numerical parameter */
   paramValue = 0;
   while ((offset < count) &&
-         ((buf[offset] >= U_ZERO) && (buf[offset] <= U_NINE)) ) {
+         ((buf[offset] >= (UNICHAR)U_ZERO) &&
+          (buf[offset] <= (UNICHAR)U_NINE)) ) {
     paramValue = paramValue * 10 + buf[offset] - U_ZERO;
     offset++;
   }
@@ -1023,14 +1026,16 @@ static int ltermProcessXMLTermSequence(struct lterms *lts, const UNICHAR *buf,
   /* Process numerical parameters */
   paramCount = 0;
   while ((offset < count) &&
-         ((buf[offset] >= U_ZERO) && (buf[offset] <= U_NINE)) ) {
+         ((buf[offset] >= (UNICHAR)U_ZERO) &&
+          (buf[offset] <= (UNICHAR)U_NINE)) ) {
     /* Starts with a digit */
     value = buf[offset] - U_ZERO;
     offset++;
 
     /* Process all contiguous digits */
     while ((offset < count) &&
-           ((buf[offset] >= U_ZERO) && (buf[offset] <= U_NINE)) ) {
+           ((buf[offset] >= (UNICHAR)U_ZERO) &&
+            (buf[offset] <= (UNICHAR)U_NINE)) ) {
       value = value * 10 + buf[offset] - U_ZERO;
       offset++;
     }
@@ -1459,6 +1464,11 @@ int ltermInsDelEraseLine(struct lterms *lts, int count, int row, int action)
       }
     }
 
+    break;
+
+  default:
+    kblank1 = 0;
+    kblank2 = -1;
     break;
   }
 

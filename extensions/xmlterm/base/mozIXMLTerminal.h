@@ -28,7 +28,7 @@
 
 #include "nsISupports.h"
 #include "nsIDOMDocument.h"
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIPresShell.h"
 #include "nsIScriptContext.h"
 
@@ -46,14 +46,14 @@ public:
   NS_DEFINE_STATIC_IID_ACCESSOR(MOZIXMLTERMINAL_IID)
 
   /** Initializes XMLterm in specified web shell
-   * @param aWebShell web shell in which to embed XMLterm
+   * @param aDocShell web shell in which to embed XMLterm
    * @param aXMLTermShell scriptable wrapper shell for XMLterm
    * @param URL URL of document to be loaded in the window
    *            (set to null string if document is already loaded in window)
    * @param args argument string to be passed to XMLterm
    *             (at the moment this just contains any initial input data)
    */
-  NS_IMETHOD Init(nsIWebShell* aWebShell,
+  NS_IMETHOD Init(nsIDocShell* aDocShell,
                   mozIXMLTermShell* aXMLTermShell,
                   const PRUnichar* aURL,
                   const PRUnichar* args) = 0;
@@ -112,9 +112,9 @@ public:
   NS_IMETHOD GetDocument(nsIDOMDocument** aDoc) = 0;
 
   /** Gets web shell associated with XMLterm
-   * @param aWebShell (output) web shell
+   * @param aDocShell (output) web shell
    */
-  NS_IMETHOD GetWebShell(nsIWebShell** aWebShell) = 0;
+  NS_IMETHOD GetDocShell(nsIDocShell** aDocShell) = 0;
 
   /** Gets presentation shell associated with XMLterm
    * @param aPresShell (output) presentation shell

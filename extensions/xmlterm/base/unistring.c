@@ -160,15 +160,15 @@ void ucsprint(FILE* stream, const UNICHAR* us, int nus)
   for (k=0; k<nus; k++) {
     uch = us[k];
 
-    if (uch < U_SPACE) {
+    if (uch < (UNICHAR)U_SPACE) {
       /* ASCII control character */
       fprintf(stream, "^%c", (char) uch+U_ATSIGN);
 
-    } else if (uch == U_CARET) {
+    } else if (uch == (UNICHAR)U_CARET) {
       /* Caret */
       fprintf(stream, "^^");
 
-    } else if (uch < U_DEL) {
+    } else if (uch < (UNICHAR)U_DEL) {
       /* Printable ASCII character */
       fprintf(stream, "%c", (char) uch);
 

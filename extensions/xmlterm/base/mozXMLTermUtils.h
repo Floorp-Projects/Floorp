@@ -28,48 +28,31 @@
 
 #include "nsString.h"
 
-#include "nsIWebShell.h"
+#include "nsIDocShell.h"
 #include "nsIDOMWindow.h"
 #include "nsIDOMDocument.h"
 
 class mozXMLTermUtils
 {
  public:
-  /** Gets presentation context for web shell
-   * @param aWebShell web shell
-   * @param aPresContext returned presentation context
-   * @return NS_OK on success
-   */
-  static NS_EXPORT nsresult
-    GetWebShellPresContext(nsIWebShell* aWebShell,
-                           nsIPresContext** aPresContext);
 
-  /** Gets DOM document for web shell
-   * @param aWebShell web shell
-   * @param aDOMDocument returned DOM document
-   * @return NS_OK on success
-   */
-  static NS_EXPORT nsresult
-    GetWebShellDOMDocument(nsIWebShell* aWebShell,
-                           nsIDOMDocument** aDOMDocument);
-
-  /** Gets DOM window for web shell
-   * @param aWebShell web shell
+  /** Gets DOM window for doc shell
+   * @param aDocShell doc shell
    * @param aDOMWindow returned DOM window (frame)
    * @return NS_OK on success
    */
   static NS_EXPORT nsresult
-    ConvertWebShellToDOMWindow(nsIWebShell* aWebShell,
+    ConvertDocShellToDOMWindow(nsIDocShell* aDocShell,
                                nsIDOMWindow** aDOMWindow);
 
-  /** Gets web shell for DOM window
+  /** Gets doc shell for DOM window
    * @param aDOMWindow DOM window (frame)
-   * @param aWebShell returned web shell
+   * @param aDocShell returned doc shell
    * @return NS_OK on success
    */
   static NS_EXPORT nsresult
-    ConvertDOMWindowToWebShell(nsIDOMWindow* aDOMWindow,
-                               nsIWebShell** aWebShell);
+    ConvertDOMWindowToDocShell(nsIDOMWindow* aDOMWindow,
+                               nsIDocShell** aDocShell);
 
   /** Locates named inner DOM window (frame) inside outer DOM window
    * @param outerDOMWindow outer DOM window (frame)

@@ -20,7 +20,7 @@
 
 // mozSimpleContainer.h: declaration of mozSimpleContainer class
 // implementing mozISimpleContainer,
-// which provides a WebShell container for use in simple programs
+// which provides a DocShell container for use in simple programs
 // using the layout engine
 
 #include "nscore.h"
@@ -38,44 +38,8 @@ public:
   // nsISupports
   NS_DECL_ISUPPORTS
 
-  // nsIWebShellContainer interface
-  NS_IMETHOD WillLoadURL(nsIWebShell* aShell,
-                         const PRUnichar* aURL,
-                         nsLoadType aReason);
- 
-  NS_IMETHOD BeginLoadURL(nsIWebShell* aShell,
-                          const PRUnichar* aURL);
- 
-
-  NS_IMETHOD ProgressLoadURL(nsIWebShell* aShell,
-                             const PRUnichar* aURL,
-                             PRInt32 aProgress,
-                             PRInt32 aProgressMax);
- 
-  NS_IMETHOD EndLoadURL(nsIWebShell* aShell,
-                        const PRUnichar* aURL,
-                        nsresult aStatus);
- 
-  NS_IMETHOD NewWebShell(PRUint32 aChromeMask,
-                         PRBool aVisible,
-                         nsIWebShell *&aNewWebShell);
-  
-  NS_IMETHOD FindWebShellWithName(const PRUnichar* aName,
-                                  nsIWebShell*& aResult);
-  
-  NS_IMETHOD ContentShellAdded(nsIWebShell* aChildShell,
-                               nsIContent* frameNode);
-
-  NS_IMETHOD CreatePopup(nsIDOMElement* aElement,
-                         nsIDOMElement* aPopupContent, 
-                         PRInt32 aXPos, PRInt32 aYPos, 
-                         const nsString& aPopupType,
-                         const nsString& anAnchorAlignment,
-                         const nsString& aPopupAlignment,
-                         nsIDOMWindow* aWindow, nsIDOMWindow** outPopup);
-
-  NS_IMETHOD FocusAvailable(nsIWebShell* aFocusedWebShell,
-                            PRBool& aFocusTaken);
+  // nsIDocumentLoaderObserver interface
+  NS_DECL_NSIDOCUMENTLOADEROBSERVER \
 
   // other
   NS_IMETHOD Init(nsNativeWidget aNativeWidget,
@@ -86,15 +50,11 @@ public:
 
   NS_IMETHOD LoadURL(const char* aURL);
 
-  NS_IMETHOD GetWebShell(nsIWebShell*& aWebShell);
-
-  NS_IMETHOD GetDocument(nsIDOMDocument*& aDocument);
-
-  NS_IMETHOD GetPresShell(nsIPresShell*& aPresShell);
+  NS_IMETHOD GetDocShell(nsIDocShell*& aDocShell);
 
 protected:
 
-  /** owning reference to web shell created by us */
-  nsCOMPtr<nsIWebShell> mWebShell;
+  /** owning reference to doc shell created by us */
+  nsCOMPtr<nsIDocShell> mDocShell;
 
 };

@@ -45,110 +45,23 @@
 
 /////////////////////////////////////////////////////////////////////////
 
-/** Gets presentation context for web shell
- * @param aWebShell web shell
- * @param aPresContext returned presentation context
- * @return NS_OK on success
- */
-NS_EXPORT nsresult
-mozXMLTermUtils::GetWebShellPresContext(nsIWebShell* aWebShell,
-                                        nsIPresContext** aPresContext)
-{
-  nsresult result;
-
-  XMLT_LOG(mozXMLTermUtils::GetWebShellPresContext,30,("\n"));
-
-  if (!aPresContext)
-    return NS_ERROR_FAILURE;
-
-  *aPresContext = nsnull;
-
-  nsCOMPtr<nsIContentViewer> contViewer;
-  result = aWebShell->GetContentViewer(getter_AddRefs(contViewer));
-  if (NS_FAILED(result) || !contViewer)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocumentViewer> docViewer;
-  result = contViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer),
-                                      (void**)getter_AddRefs(docViewer));
-  if (NS_FAILED(result) || !docViewer)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIPresContext> presContext;
-  result = docViewer->GetPresContext(*getter_AddRefs(presContext));
-  if (NS_FAILED(result) || !presContext)
-    return NS_ERROR_FAILURE;
-
-  *aPresContext = presContext.get();
-  NS_ADDREF(*aPresContext);
-
-  return NS_OK;
-}
-
-
-/** Gets DOM document for web shell
- * @param aWebShell web shell
- * @param aDOMDocument returned DOM document
- * @return NS_OK on success
- */
-NS_EXPORT nsresult
-mozXMLTermUtils::GetWebShellDOMDocument(nsIWebShell* aWebShell,
-                                        nsIDOMDocument** aDOMDocument)
-{
-  nsresult result;
-
-  XMLT_LOG(mozXMLTermUtils::GetWebShellDOMDocument,30,("\n"));
-
-  if (!aDOMDocument)
-    return NS_ERROR_FAILURE;
-
-  *aDOMDocument = nsnull;
-
-  nsCOMPtr<nsIContentViewer> contViewer;
-  result = aWebShell->GetContentViewer(getter_AddRefs(contViewer));
-  if (NS_FAILED(result) || !contViewer)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocumentViewer> docViewer;
-  result = contViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer),
-                                      (void**)getter_AddRefs(docViewer));
-  if (NS_FAILED(result) || !docViewer)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDocument> document;
-  result = docViewer->GetDocument(*getter_AddRefs(document));
-
-  if (NS_FAILED(result) || !document)
-    return NS_ERROR_FAILURE;
-
-  nsCOMPtr<nsIDOMDocument> domDocument = do_QueryInterface(document);
-  if (!domDocument)
-    return NS_ERROR_FAILURE;
-
-  *aDOMDocument = domDocument.get();
-  NS_ADDREF(*aDOMDocument);
-
-  return NS_OK;
-}
-
-
-/** Gets DOM window for web shell
- * @param aWebShell web shell
+/** Gets DOM window for doc shell
+ * @param aDocShell doc shell
  * @param aDOMWindow returned DOM window (frame)
  * @return NS_OK on success
  */
 NS_EXPORT nsresult
-mozXMLTermUtils::ConvertWebShellToDOMWindow(nsIWebShell* aWebShell,
+mozXMLTermUtils::ConvertDocShellToDOMWindow(nsIDocShell* aDocShell,
                                     nsIDOMWindow** aDOMWindow)
 {
-  XMLT_LOG(mozXMLTermUtils::ConvertWebShellToDOMWindow,30,("\n"));
+  XMLT_LOG(mozXMLTermUtils::ConvertDocShellToDOMWindow,30,("\n"));
 
   if (!aDOMWindow)
     return NS_ERROR_FAILURE;
 
   *aDOMWindow = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject(do_GetInterface(aWebShell));
+  nsCOMPtr<nsIScriptGlobalObject> scriptGlobalObject(do_GetInterface(aDocShell));
 
   nsCOMPtr<nsIDOMWindow> domWindow(do_QueryInterface(scriptGlobalObject));
   if (!domWindow)
@@ -161,24 +74,24 @@ mozXMLTermUtils::ConvertWebShellToDOMWindow(nsIWebShell* aWebShell,
 }
 
 
-/** Gets web shell for DOM window
+/** Gets doc shell for DOM window
  * @param aDOMWindow DOM window (frame)
- * @param aWebShell returned web shell
+ * @param aDocShell returned doc shell
  * @return NS_OK on success
  */
 NS_EXPORT nsresult
-mozXMLTermUtils::ConvertDOMWindowToWebShell(nsIDOMWindow* aDOMWindow,
-                                             nsIWebShell** aWebShell)
+mozXMLTermUtils::ConvertDOMWindowToDocShell(nsIDOMWindow* aDOMWindow,
+                                             nsIDocShell** aDocShell)
 {
-  XMLT_LOG(mozXMLTermUtils::ConvertDOMWindowToWebShell,30,("\n"));
+  XMLT_LOG(mozXMLTermUtils::ConvertDOMWindowToDocShell,30,("\n"));
 
   nsCOMPtr<nsIScriptGlobalObject> globalObject = do_QueryInterface(aDOMWindow);
   if (!globalObject)
     return NS_ERROR_FAILURE;
 
-  globalObject->GetWebShell(aWebShell);
+  globalObject->GetDocShell(aDocShell);
 
-  if (!*aWebShell)
+  if (!*aDocShell)
     return NS_ERROR_FAILURE;
 
   return NS_OK;
