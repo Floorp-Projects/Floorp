@@ -1139,6 +1139,9 @@ PRIntn  whichSide=0;
         {
           nsRect borderInside(borderOutside);
           nsBorderEdge * neighbor;
+          // XXX Adding check to make sure segment->mInsideNeighbor is not null
+          // so it will do the else part, at this point we are assuming this is an
+          // ok thing to do (Bug 52130)
           if (PR_TRUE==aBorderEdges->mOutsideEdge && segment->mInsideNeighbor)
             neighbor = (nsBorderEdge *)(segment->mInsideNeighbor->mEdges[NS_SIDE_LEFT].ElementAt(0));
           else
