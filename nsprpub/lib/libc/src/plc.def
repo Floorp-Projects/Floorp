@@ -42,8 +42,8 @@ PL_strstr;
 libVersionPoint;
     local: *;
 };
+
 NSPR_4.2 {
     global:
 PL_strtok_r;
-    local: *;
-};
+} NSPR_4.0;
