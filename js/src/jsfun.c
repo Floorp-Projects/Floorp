@@ -800,6 +800,7 @@ fun_enumProperty(JSContext *cx, JSObject *obj)
 	    }
 	}
     }
+    JS_UNLOCK_OBJ(cx, obj);
     return JS_TRUE;
 }
 
