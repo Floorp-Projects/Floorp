@@ -29,6 +29,8 @@ include $(DEPTH)/config/autoconf.mk
 REQUIRES	= xpcom \
 		  chrome \
 		  necko \
+		  string \
+		  rdf \
 		  $(NULL)
 
 CPPSRCS		= regchrome.cpp
