@@ -176,11 +176,45 @@ nsMsgFilterList::GetLogFileSpec(nsIFileSpec **aFileSpec)
   rv = folder->GetServer(getter_AddRefs(server));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = server->GetLocalPath(aFileSpec);
+  nsXPIDLCString type;
+  rv = server->GetType(getter_Copies(type));
   NS_ENSURE_SUCCESS(rv,rv);
 
-  rv = (*aFileSpec)->AppendRelativeUnixPath("filterlog.html");
-  NS_ENSURE_SUCCESS(rv,rv);
+  // for news, the filter file is
+  // mcom.test.dat
+  // where the summary file is 
+  // mcom.test.msf
+  // since the log is an html file we make it
+  // mcom.test.htm
+  if (type.Equals("nntp")) {
+    nsCOMPtr<nsIFileSpec> thisFolder;
+    rv = m_folder->GetPath(getter_AddRefs(thisFolder));
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    nsCOMPtr <nsIFileSpec> filterLogFile = do_CreateInstance(NS_FILESPEC_CONTRACTID, &rv);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    rv = filterLogFile->FromFileSpec(thisFolder);
+    NS_ENSURE_SUCCESS(rv, rv);
+    
+    nsXPIDLCString filterLogName;
+    rv = filterLogFile->GetLeafName(getter_Copies(filterLogName));
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    filterLogName.Append(".htm");
+    
+    rv = filterLogFile->SetLeafName(filterLogName.get());
+    NS_ENSURE_SUCCESS(rv,rv);
+
+    NS_IF_ADDREF(*aFileSpec = filterLogFile);
+  }
+  else {
+    rv = server->GetLocalPath(aFileSpec);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    rv = (*aFileSpec)->AppendRelativeUnixPath("filterlog.html");
+    NS_ENSURE_SUCCESS(rv,rv);
+  }
   return NS_OK;
 }
 
