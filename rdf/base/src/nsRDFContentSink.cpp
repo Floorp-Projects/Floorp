@@ -411,6 +411,11 @@ RDFContentSinkImpl::~RDFContentSinkImpl()
         }
 
         NS_IF_RELEASE(kRDF_type);
+        NS_IF_RELEASE(kRDF_instanceOf);
+        NS_IF_RELEASE(kRDF_Alt);
+        NS_IF_RELEASE(kRDF_Bag);
+        NS_IF_RELEASE(kRDF_Seq);
+        NS_IF_RELEASE(kRDF_nextVal);
 
         NS_IF_RELEASE(kAboutAtom);
         NS_IF_RELEASE(kIdAtom);
