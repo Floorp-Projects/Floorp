@@ -30,7 +30,7 @@ LOCALIZATION NOTE : Do not translate any of the occurances of the word "&brandSh
 <!ENTITY importTitle.label        "&brandShortName; Mail Import Wizard">
 <!ENTITY importDesc.label         "Import Mail, Address Books and Settings from other programs">
 
-<!ENTITY importDescription.label  "This wizard will import mail messages, addressbook entries, and/or preferences from other mail programs and common addressbook formats into &brandShortName; Mail.">
+<!ENTITY importDescription.label  "This wizard will import mail messages, address book entries, and/or preferences from other mail programs and common address book formats into &brandShortName; Mail.">
 <!ENTITY importDescription2.label "Once they have been imported, you will be able to access them from within &brandShortName; Mail and/or Address Book.">
 
 <!ENTITY selectDescription.label  "Please select the program from which you would like to import:">
@@ -46,7 +46,7 @@ LOCALIZATION NOTE : Do not translate any of the occurances of the word "&brandSh
 <!ENTITY processing.label         "Importing...">
 
 <!ENTITY FieldDiscInputText1.label  "Netscape Communicator 4.x has one mailing address for each card, while &brandShortName; has two (Home and Work).">
-<!ENTITY FieldDiscInputText2.label	"Select the category in which you want to store the imported mailing addresses:">
+<!ENTITY FieldDiscInputText2.label  "Select the category in which you want to store the imported mailing addresses:">
 <!ENTITY FieldDiscWarning.label  "This category will be used for all the entries of the selected address book: ">
-<!ENTITY importDialog.homeTitle   "Home">
-<!ENTITY importDialog.workTitle "Work">
+<!ENTITY importDialog.homeTitle  "Home">
+<!ENTITY importDialog.workTitle  "Work">
