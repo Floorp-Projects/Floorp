@@ -1069,7 +1069,7 @@ function MsgSynchronizeOffline()
 {
     dump("in MsgSynchronize() \n"); 
     window.openDialog("chrome://messenger/content/msgSynchronize.xul",
-          "", "centerscreen,chrome,titlebar,resizable=yes",{msgWindow:msgWindow}); 		     
+          "", "centerscreen,chrome,modal,titlebar,resizable=yes",{msgWindow:msgWindow}); 		     
 }
 
 
