@@ -677,7 +677,6 @@ nsString& nsString::operator=(const PRUnichar* aStr) {
  * @return  this
  *------------------------------------------------------*/
 nsString& nsString::operator=(PRUnichar aChar) {
-  mLength=1;
   if(mCapacity<1) 
     EnsureCapacityFor(kGrowthDelta);
   mStr[0]=aChar;
