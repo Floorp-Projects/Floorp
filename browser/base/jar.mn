@@ -38,6 +38,7 @@ classic.jar:
         skin/classic/browser/o3-imap-close-v2.png    (skin/o3-imap-close-v2.png)
         skin/classic/browser/o3-imap-newtab.png      (skin/o3-imap-newtab.png)
         skin/classic/browser/customizeToolbar.css    (skin/customizeToolbar.css)
+        skin/classic/browser/browser.xml    (skin/browser.xml)
 
 en-US.jar:
         locale/en-US/browser/contents.rdf            (locale/contents.rdf)
