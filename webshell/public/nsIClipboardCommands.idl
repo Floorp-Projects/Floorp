@@ -37,7 +37,7 @@ interface nsIClipboardCommands : nsISupports {
 	 * Returns whether the current contents of the clipboard can be
 	 * pasted and if the current selection is not read-only.
 	 */
-	boolean canPasteSelection();
+	boolean canPaste();
 
 	/**
 	 * Cut the current selection onto the clipboard.
@@ -48,11 +48,16 @@ interface nsIClipboardCommands : nsISupports {
 	 * Copy the current selection onto the clipboard.
 	 */
 	void copySelection();
+	
+	/**
+	 * Copy the URL of the current selection, say for an <IMG> inside an <A>
+	 */
+	void copyLinkLocation();
 
 	/**
 	 * Paste the contents of the clipboard into the current selection.
 	 */
-	void pasteSelection();
+	void paste();
 
 	/**
 	 * Select the entire contents.
@@ -60,7 +65,8 @@ interface nsIClipboardCommands : nsISupports {
 	void selectAll();
 
 	/**
-	 * Clear the current selection (if any).
+	 * Clear the current selection (if any). Insertion point ends up
+	 * at beginning of current selection.
 	 */
 	void selectNone();
 };

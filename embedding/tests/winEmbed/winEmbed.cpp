@@ -342,14 +342,14 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
 
     PRBool canCutSelection = PR_FALSE;
     PRBool canCopySelection = PR_FALSE;
-    PRBool canPasteSelection = PR_FALSE;
+    PRBool canPaste = PR_FALSE;
 
     nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
     if (nsIClipboardCommands)
     {
         clipCmds->CanCutSelection(&canCutSelection);
         clipCmds->CanCopySelection(&canCopySelection);
-        clipCmds->CanPasteSelection(&canPasteSelection);
+        clipCmds->CanPaste(&canPaste);
     }
 
     HMENU hmenu = GetMenu(hwndDlg);
@@ -365,7 +365,7 @@ void UpdateUI(nsIWebBrowserChrome *aChrome)
         EnableMenuItem(hmenu, MOZ_Copy, MF_BYCOMMAND |
                 ((canCopySelection) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
         EnableMenuItem(hmenu, MOZ_Paste, MF_BYCOMMAND |
-                ((canPasteSelection) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
+                ((canPaste) ? MF_ENABLED : (MF_DISABLED | MF_GRAYED)));
     }
 
     EnableWindow(GetDlgItem(hwndDlg, IDC_BACK), canGoBack);
@@ -499,7 +499,7 @@ BOOL CALLBACK BrowserDlgProc(HWND hwndDlg, UINT uMsg, WPARAM wParam, LPARAM lPar
         case MOZ_Paste:
             {
                 nsCOMPtr<nsIClipboardCommands> clipCmds = do_GetInterface(webBrowser);
-                clipCmds->PasteSelection();
+                clipCmds->Paste();
             }
             break;
 

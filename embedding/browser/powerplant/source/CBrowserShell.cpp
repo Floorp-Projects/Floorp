@@ -287,7 +287,7 @@ Boolean CBrowserShell::ObeyCommand(PP_PowerPlant::CommandT inCommand, void* ioPa
         case cmd_Paste:
             rv = GetClipboardHandler(getter_AddRefs(clipCmd));
             if (NS_SUCCEEDED(rv))
-                clipCmd->PasteSelection();
+                clipCmd->Paste();
             break;
 
         case cmd_SelectAll:
@@ -374,7 +374,7 @@ void CBrowserShell::FindCommandStatus(PP_PowerPlant::CommandT inCommand,
         case cmd_Paste:
             rv = GetClipboardHandler(getter_AddRefs(clipCmd));
             if (NS_SUCCEEDED(rv)) {
-                rv = clipCmd->CanPasteSelection(&canDo);
+                rv = clipCmd->CanPaste(&canDo);
                 outEnabled = NS_SUCCEEDED(rv) && canDo;
             }
             break;

@@ -1264,7 +1264,7 @@ nsWebShell::CanCopySelection(PRBool* aResult)
 }
 
 NS_IMETHODIMP
-nsWebShell::CanPasteSelection(PRBool* aResult)
+nsWebShell::CanPaste(PRBool* aResult)
 {
   nsresult rv = NS_ERROR_NULL_POINTER;
 
@@ -1287,7 +1287,13 @@ nsWebShell::CopySelection(void)
 }
 
 NS_IMETHODIMP
-nsWebShell::PasteSelection(void)
+nsWebShell::CopyLinkLocation(void)
+{
+  return DoCommand ( NS_LITERAL_STRING("cmd_copy_link") );
+}
+
+NS_IMETHODIMP
+nsWebShell::Paste(void)
 {
   return DoCommand ( NS_LITERAL_STRING("cmd_paste") );
 }
@@ -1297,16 +1303,14 @@ nsWebShell::SelectAll(void)
 {
   nsresult rv;
 
-  nsCOMPtr<nsIDocumentViewer> docViewer;
-  rv = mContentViewer->QueryInterface(NS_GET_IID(nsIDocumentViewer),
-                                      getter_AddRefs(docViewer));
+  nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(mContentViewer, &rv) );
   if (NS_FAILED(rv) || !docViewer) return rv;
 
   nsCOMPtr<nsIPresShell> presShell;
   rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
   if (NS_FAILED(rv) || !presShell) return rv;
   
-  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell);
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell, &rv);
   if (NS_FAILED(rv) || !selCon) return rv;
 
   nsCOMPtr<nsISelection> selection;
@@ -1353,10 +1357,33 @@ nsWebShell::SelectAll(void)
   return rv;
 }
 
+
+//
+// SelectNone
+//
+// Collapses the current selection, insertion point ends up at beginning
+// of previous selection.
+//
 NS_IMETHODIMP
 nsWebShell::SelectNone(void)
 {
-  return NS_ERROR_FAILURE;
+  nsresult rv = NS_OK;
+  
+  nsCOMPtr<nsIDocumentViewer> docViewer ( do_QueryInterface(mContentViewer, &rv) );
+  if (NS_FAILED(rv) || !docViewer) return rv;
+
+  nsCOMPtr<nsIPresShell> presShell;
+  rv = docViewer->GetPresShell(*getter_AddRefs(presShell));
+  if (NS_FAILED(rv) || !presShell) return rv;
+  
+  nsCOMPtr<nsISelectionController> selCon = do_QueryInterface(presShell, &rv);
+  if (NS_FAILED(rv) || !selCon) return rv;
+
+  nsCOMPtr<nsISelection> selection;
+  rv = selCon->GetSelection(nsISelectionController::SELECTION_NORMAL, getter_AddRefs(selection));
+  if (NS_FAILED(rv) || !selection) return rv;
+  
+  return selection->CollapseToStart();
 }
 
 
