@@ -23,6 +23,7 @@
 #include "nsIStyleSet.h"
 #include "nsIDocument.h"
 #include "nsHTMLParts.h"
+#include "nsINameSpaceManager.h"
 
 void XXXNeverCalled()
 {
@@ -47,4 +48,6 @@ void XXXNeverCalled()
   NS_NewHTMLFrame(f);
   NS_NewScrollFrame(f);
   NS_NewSimplePageSequenceFrame(f);
+  nsINameSpaceManager* nsm;
+  NS_NewNameSpaceManager(&nsm);
 }
