@@ -1310,14 +1310,14 @@ nsSetProofOfPossession(CRMFCertReqMsg *certReqMsg,
 
 }
 
-static void
+static void PR_CALLBACK
 nsCRMFEncoderItemCount(void *arg, const char *buf, unsigned long len)
 {
   unsigned long *count = (unsigned long *)arg;
   *count += len;
 }
 
-static void
+static void PR_CALLBACK
 nsCRMFEncoderItemStore(void *arg, const char *buf, unsigned long len)
 {
   SECItem *dest = (SECItem *)arg;
