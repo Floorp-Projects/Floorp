@@ -130,7 +130,6 @@ friend class CTokenHandler;
      */
     virtual PRInt32 Parse(nsIURL* aURL,
                           nsIStreamListener* aListener,
-                          PRBool aIncremental=PR_TRUE,
                           nsIParserDebug * aDebug = 0);
 
     /**
@@ -140,7 +139,7 @@ friend class CTokenHandler;
      * @param   aMode is the desired parser mode (Nav, other, etc.)
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug * aDebug = 0);
+    virtual PRInt32 Parse(const char* aFilename,nsIParserDebug * aDebug = 0);
 
     /**
      * @update	gess5/11/98
@@ -171,9 +170,10 @@ friend class CTokenHandler;
      * be consumed by this node.
      * @update	gess5/11/98
      * @param   node to consume skipped-content
-     * @return  number of skipped-content tokens consumed.
+     * @param   holds the number of skipped content elements encountered
+     * @return  Error condition.
      */
-    virtual PRInt32 CollectSkippedContent(nsCParserNode& aNode);
+    virtual PRInt32 CollectSkippedContent(nsCParserNode& aNode,PRInt32& aCount);
 
     /**
      *  This debug routine is used to cause the tokenizer to
@@ -205,7 +205,7 @@ protected:
      * @param 
      * @return
      */
-    PRInt32 WillBuildModel(void);
+    PRInt32 WillBuildModel(const char* aFilename=0,const char* aContentType=0, nsIParserDebug* aDebug=0);
 
     /**
      * 
@@ -224,7 +224,6 @@ protected:
     virtual PRInt32 IterateTokens(void);
   
 private:
-    PRInt32 ParseFileIncrementally(const char* aFilename);  //XXX ONLY FOR DEBUG PURPOSES...
 
     /*******************************************
       These are the tokenization methods...
@@ -249,7 +248,7 @@ private:
      *  @param   
      *  @return  TRUE if it's ok to proceed
      */
-    PRBool WillTokenize(PRBool aIncremental);
+    PRBool WillTokenize(void);
 
     /**
      *  
@@ -277,7 +276,7 @@ private:
      *  @param   
      *  @return  TRUE if all went well
      */
-    PRBool DidTokenize(PRBool aIncremental);
+    PRBool DidTokenize(void);
 
     /**
      *  This debug routine is used to cause the tokenizer to
@@ -289,6 +288,19 @@ private:
      *  @return  
      */
     void DebugDumpTokens(ostream& out);
+
+    
+    /**
+     * This method is used as a backstop to compute the kind of content
+     * that is contained in the scanner stream. This method is important
+     * because it allows us to defer the resolution of our DTD (and hence)
+     * filters and maybe eventually sinks based on the input type.
+     *
+     * @update	gess6/22/98
+     * @param 
+     * @return  TRUE if we figured it out.
+     */
+    PRBool DetermineContentType(const char* aContentType);
 
 
 protected:
@@ -305,7 +317,6 @@ protected:
 
     nsIDTD*             mDTD;
     eParseMode          mParseMode;
-    PRBool              mIncremental;
     char*               mTransferBuffer;
 
     PRInt32             mMajorIteration;
@@ -313,7 +324,8 @@ protected:
 
     nsDeque             mTokenDeque;
     CScanner*           mScanner;
-
+    nsIParserDebug*     mParserDebug;
+    nsIURL*             mURL;
 };
 
 

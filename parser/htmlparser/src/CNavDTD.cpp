@@ -66,7 +66,7 @@ static nsAutoString gEmpty;
 static char formElementTags[]= {  
     eHTMLTag_button,  eHTMLTag_fieldset,  eHTMLTag_input,
     eHTMLTag_isindex, eHTMLTag_label,     eHTMLTag_legend,
-    eHTMLTag_select,  eHTMLTag_textarea,0};
+    eHTMLTag_option,  eHTMLTag_select,    eHTMLTag_textarea,0};
 
 static char gHeadingTags[]={
   eHTMLTag_h1,  eHTMLTag_h2,  eHTMLTag_h3,  
@@ -232,7 +232,7 @@ static CNavTokenDeallocator gTokenKiller;
 CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
   NS_INIT_REFCNT();
   mParser=0;
-  mURLRef=0;
+  mFilename=0;
   mParserDebug=0;
   nsCRT::zero(mLeafBits,sizeof(mLeafBits));
   nsCRT::zero(mContextStack,sizeof(mContextStack));
@@ -254,10 +254,11 @@ CNavDTD::CNavDTD() : nsIDTD(), mTokenDeque(gTokenKiller)  {
  */
 CNavDTD::~CNavDTD(){
   DeleteTokenHandlers();
-  if (mURLRef)
-     PL_strfree(mURLRef);
+  if (mFilename)
+    PL_strfree(mFilename);
+
   if (mParserDebug)
-     NS_RELEASE(mParserDebug);
+    NS_RELEASE(mParserDebug);
 //  NS_RELEASE(mSink);
 }
 
@@ -267,8 +268,19 @@ CNavDTD::~CNavDTD(){
  * @param 
  * @return
  */
-PRInt32 CNavDTD::WillBuildModel(void){
+PRInt32 CNavDTD::WillBuildModel(const char* aFilename, nsIParserDebug* aParserDebug){
   PRInt32 result=0;
+
+  if (mFilename) {
+    PL_strfree(mFilename);
+    mFilename=0;
+  }
+  if(aFilename) {
+    mFilename = PL_strdup(aFilename);
+  }
+
+  mParserDebug = aParserDebug;
+  NS_IF_ADDREF(mParserDebug);
 
   if(mSink)
     mSink->WillBuildModel();
@@ -318,7 +330,7 @@ PRInt32 CNavDTD::HandleToken(CToken* aToken){
     if(aHandler) {
       result=(*aHandler)(theToken,this);
       if (mParserDebug)
-         mParserDebug->Verify(this, mParser, mContextStackPos, mContextStack, mURLRef);
+         mParserDebug->Verify(this, mParser, mContextStackPos, mContextStack, mFilename);
     }
 
   }//if
@@ -400,6 +412,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
   //Begin by gathering up attributes...
   nsCParserNode attrNode((CHTMLToken*)aToken);
   PRInt16       attrCount=aToken->GetAttributeCount();
+  PRInt32       theCount;
   PRInt32       result=(0==attrCount) ? kNoError : mParser->CollectAttributes(attrNode,attrCount);
 
   if(kNoError==result) {
@@ -416,7 +429,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
             nsCParserNode theNode(st);
             result=OpenHead(theNode); //open the head...
             if(kNoError==result) {
-              mParser->CollectSkippedContent(attrNode);
+              result=mParser->CollectSkippedContent(attrNode,theCount);
               mSink->SetTitle(attrNode.GetSkippedContent());
               result=CloseHead(theNode); //close the head...
             }
@@ -425,7 +438,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
 
         case eHTMLTag_textarea:
           {
-            mParser->CollectSkippedContent(attrNode);
+            mParser->CollectSkippedContent(attrNode,theCount);
             result=AddLeaf(attrNode);
           }
           break;
@@ -451,7 +464,7 @@ PRInt32 CNavDTD::HandleStartToken(CToken* aToken) {
             nsCParserNode theNode((CHTMLToken*)aToken);
             result=OpenHead(theNode);
             if(kNoError==result) {
-              mParser->CollectSkippedContent(attrNode);
+              mParser->CollectSkippedContent(attrNode,theCount);
               if(kNoError==result) {
                 result=AddLeaf(attrNode);
                 if(kNoError==result)
@@ -658,26 +671,11 @@ PRInt32 CNavDTD::HandleAttributeToken(CToken* aToken) {
 PRInt32 CNavDTD::HandleScriptToken(CToken* aToken) {
   NS_PRECONDITION(0!=aToken,kNullToken);
 
-  /*
-  CScriptToken*   st = (CScriptToken*)(aToken);
+  nsCParserNode theNode((CHTMLToken*)aToken);
+  PRInt32       theCount=0;
+  PRInt32       result=mParser->CollectSkippedContent(theNode,theCount);
 
-  eHTMLTokenTypes subtype=eToken_attribute;
-  nsDeque&        deque=mTokenizer->GetDeque();
-  nsDequeIterator end=deque.End();
-
-  if(*mCurrentPos!=end) {
-    CHTMLToken* tkn=(CHTMLToken*)(++(*mCurrentPos));
-    subtype=eHTMLTokenTypes(tkn->GetTokenType());
-    if(eToken_skippedcontent==subtype) {
-      //WE INTENTIONALLY DROP THE TOKEN ON THE FLOOR!
-      //LATER, we'll pass this onto the javascript system.
-      return kNoError;
-    } 
-    else (*mCurrentPos)--;
-  }
-  */
-  return kInterrupted;
-
+  return result;
 }
 
 /**
@@ -780,6 +778,28 @@ nsIContentSink* CNavDTD::SetContentSink(nsIContentSink* aSink) {
   return old;
 }
 
+
+/**
+ *  This method is called to determine whether or not a tag
+ *  can contain an explict style tag (font, italic, bold, etc.)
+ *  Most can -- but some, like option, cannot. Therefore we
+ *  don't bother to open transient styles within these elements.
+ *  
+ *  @update  gess 4/8/98
+ *  @param   aParent -- tag enum of parent container
+ *  @param   aChild -- tag enum of child container
+ *  @return  PR_TRUE if parent can contain child
+ */
+PRBool CNavDTD::CanContainStyles(eHTMLTags aParent) const {
+  PRBool result=PR_TRUE;
+  switch(aParent) {
+    case eHTMLTag_option:
+      result=PR_FALSE; break;
+    default:
+      break;
+  }
+  return result;
+}
 
 /**
  *  This method is called to determine whether or not a tag
@@ -1663,28 +1683,31 @@ PRInt32 CNavDTD::OpenTransientStyles(eHTMLTags aTag){
 
   if(0==strchr(gWhitespaceTags,aTag)){
     PRInt32 pos=0;
-    for(pos=0;pos<mStyleStackPos;pos++) {
 
-      eHTMLTags theTag=mStyleStack[pos]; 
-      if(PR_FALSE==HasOpenContainer(theTag)) {
+    eHTMLTags parentTag=(eHTMLTags)GetTopNode();
+    if(CanContainStyles(parentTag)) {
+      for(pos=0;pos<mStyleStackPos;pos++) {
+        eHTMLTags theTag=mStyleStack[pos]; 
+        if(PR_FALSE==HasOpenContainer(theTag)) {
 
-        CStartToken   token(GetTagName(theTag));
-        nsCParserNode theNode(&token);
+          CStartToken   token(GetTagName(theTag));
+          nsCParserNode theNode(&token);
 
-        switch(theTag) {
-          case eHTMLTag_secret_h1style: case eHTMLTag_secret_h2style: 
-          case eHTMLTag_secret_h3style: case eHTMLTag_secret_h4style:
-          case eHTMLTag_secret_h5style: case eHTMLTag_secret_h6style:
-            break;
-          default:
-            token.SetTypeID(theTag);  //open the html container...
-            result=OpenContainer(theNode,PR_FALSE);
-            mLeafBits[mContextStackPos-1]=PR_TRUE;
-        } //switch
-      }
-      if(kNoError!=result)
-        break;
-    }//for
+          switch(theTag) {
+            case eHTMLTag_secret_h1style: case eHTMLTag_secret_h2style: 
+            case eHTMLTag_secret_h3style: case eHTMLTag_secret_h4style:
+            case eHTMLTag_secret_h5style: case eHTMLTag_secret_h6style:
+              break;
+            default:
+              token.SetTypeID(theTag);  //open the html container...
+              result=OpenContainer(theNode,PR_FALSE);
+              mLeafBits[mContextStackPos-1]=PR_TRUE;
+          } //switch
+        }
+        if(kNoError!=result)
+          break;
+      }//for
+    }
   }//if
   return result;
 }
@@ -2737,24 +2760,3 @@ void CNavDTD::WillInterruptParse(void){
 }
 
 
-/************************************************************************
-  Here's a bunch of stuff JEvering put into the parser to do debugging.
- ************************************************************************/
-
-
-void CNavDTD::SetURLRef(char * aURLRef){
-   if (mURLRef) {
-      PL_strfree(mURLRef);
-      mURLRef=0;
-   }
-   if (aURLRef)
-      mURLRef = PL_strdup(aURLRef);
-}
-
-void CNavDTD::SetParserDebug(nsIParserDebug * aParserDebug)
-{
-   if (aParserDebug) {
-      mParserDebug = aParserDebug;
-      NS_ADDREF(mParserDebug);
-   }
-}

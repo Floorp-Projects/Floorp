@@ -76,7 +76,7 @@ class COtherDTD : public nsIDTD {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(void);
+    virtual PRInt32 WillBuildModel(const char* aFilename=0, nsIParserDebug* aIParserDebug=0);
 
     /**
      * 
@@ -200,22 +200,6 @@ class COtherDTD : public nsIDTD {
      * @return  TRUE if ok, FALSE if error
      */
     virtual eHTMLTags GetDefaultParentTagFor(eHTMLTags aTag) const;
-
-    /**
-     * 
-     * @update	jevering 6/18/98
-     * @param  aURLRef if the current URL reference (for debugger)
-     * @return
-     */
-    virtual void SetURLRef(char * aURLRef);
-
-    /**
-     * 
-     * @update	jevering 6/18/98
-     * @param  aParserDebug   created debug parser object
-     * @return
-     */
-    virtual void SetParserDebug(nsIParserDebug * aParserDebug);
 
     /**
      * This method tries to design a context map (without actually
@@ -696,7 +680,7 @@ protected:
     PRBool              mHasOpenForm;
     PRBool              mHasOpenMap;
     nsDeque             mTokenDeque;
-    char*               mURLRef;
+    char*               mFilename;
     nsIParserDebug*     mParserDebug;
 };
 

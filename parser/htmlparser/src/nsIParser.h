@@ -62,10 +62,9 @@ class nsIParser : public nsISupports {
 
     virtual PRInt32 Parse(nsIURL* aURL,
                           nsIStreamListener* aListener,
-                          PRBool aIncremental=PR_TRUE,
                           nsIParserDebug * aDebug = 0) = 0;
 
-    virtual PRInt32 Parse(const char* aFilename,PRBool aIncremental, nsIParserDebug * aDebug = 0)=0;
+    virtual PRInt32 Parse(const char* aFilename,nsIParserDebug * aDebug = 0)=0;
 
     virtual PRInt32 Parse(nsString& anHTMLString,PRBool appendTokens)=0;
 

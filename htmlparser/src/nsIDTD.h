@@ -38,6 +38,7 @@ class nsIParser;
 class CToken;
 class nsIContentSink;
 class nsIParserDebug;
+class nsIURL;
 
 class nsIDTD : public nsISupports {
             
@@ -68,7 +69,7 @@ class nsIDTD : public nsISupports {
      * @param 
      * @return
      */
-    virtual PRInt32 WillBuildModel(void)=0;
+    virtual PRInt32 WillBuildModel(const char* aFilename=0, nsIParserDebug* aParserDebug=0)=0;
 
     /**
      * 
@@ -117,27 +118,12 @@ class nsIDTD : public nsISupports {
     /**
      * 
      * @update	jevering 6/18/98
-     * @param  aURLRef if the current URL reference (for debugger)
-     * @return
-     */
-    virtual void SetURLRef(char * aURLRef) = 0;
-
-    /**
-     * 
-     * @update	jevering 6/18/98
      * @param  aParent  parent tag
      * @param  aChild   child tag
      * @return PR_TRUE if valid container
      */
     virtual PRBool CanContain(PRInt32 aParent, PRInt32 aChild) = 0;
 
-    /**
-     * 
-     * @update	jevering 6/18/98
-     * @param  aParserDebug   created debug parser object
-     * @return
-     */
-    virtual void SetParserDebug(nsIParserDebug * aParserDebug) = 0;
 };
 
 
