@@ -450,6 +450,11 @@ nsHTMLDocument::BaseResetToURI(nsIURI *aURL)
 
   mBaseTarget.Truncate();
 
+  // Make the content type default to "text/html", we are a HTML
+  // document, after all. Once we start getting data, this may be
+  // changed.
+  mContentType = "text/html";
+
   return rv;
 }
 
@@ -2496,10 +2501,6 @@ nsHTMLDocument::OpenCommon(nsIURI* aSourceURL)
   if (NS_FAILED(rv)) {
     return rv;
   }
-
-  // Set the content type to "text/html" since we're always producing
-  // HTML when calling document.write().
-  mContentType = "text/html";
 
   if (root) {
     // Tear down the frames for the root element.
