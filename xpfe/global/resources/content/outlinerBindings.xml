@@ -412,6 +412,10 @@
 		   var obj = {};
            var b = this.parentNode.outlinerBoxObject;
            b.getCellAt(event.clientX, event.clientY, row, col, obj);
+
+           try {
+             if (row.value >= b.view.rowCount) return;
+           } catch (e) { return; }
            
 		   if (obj.value != "twisty") {
 		     var column = document.getElementById(col.value);
@@ -437,6 +441,11 @@
 		 var obj = {};
          var b = this.parentNode.outlinerBoxObject;
          b.getCellAt(event.clientX, event.clientY, row, col, obj);
+
+         try {
+           if (row.value >= b.view.rowCount) return;
+         } catch (e) { return; }
+
 		 if (obj.value == "twisty") {
            b.view.toggleOpenState(row.value);
 		   return;
@@ -473,6 +482,10 @@
 		   var obj = {};
            var b = this.parentNode.outlinerBoxObject;
            b.getCellAt(event.clientX, event.clientY, row, col, obj);
+
+           try {
+             if (row.value >= b.view.rowCount) return;
+           } catch (e) { return; }
 		   var column = document.getElementById(col.value);
 		   var cycler = column.getAttribute('cycler') == 'true';
 
