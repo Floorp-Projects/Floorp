@@ -32,13 +32,14 @@ nsresult
 NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aTargetFrame,
                         nsIReflowCommand::ReflowType aReflowType,
-                        nsIFrame*                    aChildFrame)
+                        nsIFrame*                    aChildFrame,
+                        nsIAtom*                     aAttribute)
 {
   NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
   if (nsnull == aInstancePtrResult) {
     return NS_ERROR_NULL_POINTER;
   }
-  nsHTMLReflowCommand* cmd = new nsHTMLReflowCommand(aTargetFrame, aReflowType, aChildFrame);
+  nsHTMLReflowCommand* cmd = new nsHTMLReflowCommand(aTargetFrame, aReflowType, aChildFrame, aAttribute);
   if (nsnull == cmd) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
@@ -69,11 +70,14 @@ NS_NewHTMLReflowCommand(nsIReflowCommand** aInstancePtrResult,
 // and optional child frame
 nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
                                          ReflowType aReflowType,
-                                         nsIFrame*  aChildFrame)
+                                         nsIFrame*  aChildFrame,
+                                         nsIAtom*   aAttribute)
   : mType(aReflowType), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mPrevSiblingFrame(nsnull)
+    mAttribute(aAttribute), mPrevSiblingFrame(nsnull)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
+  if (nsnull!=mAttribute)
+    NS_ADDREF(mAttribute);
   NS_INIT_REFCNT();
 }
 
@@ -81,7 +85,7 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
                                          nsIFrame*  aChildFrame,
                                          nsIFrame*  aPrevSiblingFrame)
   : mType(FrameInserted), mTargetFrame(aTargetFrame), mChildFrame(aChildFrame),
-    mPrevSiblingFrame(aPrevSiblingFrame)
+    mPrevSiblingFrame(aPrevSiblingFrame), mAttribute(nsnull)
 {
   NS_PRECONDITION(mTargetFrame != nsnull, "null target frame");
   NS_INIT_REFCNT();
@@ -89,6 +93,7 @@ nsHTMLReflowCommand::nsHTMLReflowCommand(nsIFrame*  aTargetFrame,
 
 nsHTMLReflowCommand::~nsHTMLReflowCommand()
 {
+  NS_IF_RELEASE(mAttribute);
 }
 
 NS_IMPL_ISUPPORTS(nsHTMLReflowCommand, kIReflowCommandIID);
@@ -196,6 +201,14 @@ NS_IMETHODIMP nsHTMLReflowCommand::SetTarget(nsIFrame* aTargetFrame)
 NS_IMETHODIMP nsHTMLReflowCommand::GetType(ReflowType& aReflowType) const
 {
   aReflowType = mType;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsHTMLReflowCommand::GetAttribute(nsIAtom *& aAttribute) const
+{
+  aAttribute = mAttribute;
+  if (nsnull!=aAttribute)
+    NS_ADDREF(aAttribute);
   return NS_OK;
 }
 

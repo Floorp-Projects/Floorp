@@ -417,7 +417,8 @@ extern nsresult
 NS_NewHTMLReflowCommand(nsIReflowCommand**           aInstancePtrResult,
                         nsIFrame*                    aTargetFrame,
                         nsIReflowCommand::ReflowType aReflowType,
-                        nsIFrame*                    aChildFrame = nsnull);
+                        nsIFrame*                    aChildFrame = nsnull,
+                        nsIAtom*                     aAttribute = nsnull);
 
 /** Create a new HTML 'FrameInserted' reflow command */
 extern nsresult
