@@ -35,7 +35,12 @@ installed to see anything</p>
 	<input type="button" value="Next Day >>" onclick="nextDay()"></input><br>
 	Change the current day: <input name="day_to_set" type="text" size="3"  value="1"></input>
 	<input type="button" value="Set" onclick="setDay()"></input><br>
-	<input type="button" value="Sanity test" onclick="document.cal.x(1)"></input>
+	<input type="button" value="Sanity test" onclick="document.cal.x(1)"></input><br>
+	These tests should cause exceptions by calling with duff property names etc.</br>
+	<input type="button" value="Invoke (no such method)" onclick="document.cal.invoke('blah')"></input>
+	<input type="button" value="Invoke (bad args)" onclick="document.cal.invoke('nextMonth', 20, 200)"></input>
+	<input type="button" value="setProperty (no such method)" onclick="document.cal.setProperty('dayz', 20)"></input>
+	<input type="button" value="setProperty (bad args)" onclick="document.cal.setProperty('day', 'xxxx')"></input>
   </form>
   <p>
   <script>

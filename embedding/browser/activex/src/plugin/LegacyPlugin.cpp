@@ -43,6 +43,8 @@
 #include "nsISupports.h"
 
 #ifdef MOZ_ACTIVEX_PLUGIN_LIVECONNECT
+#include "_gen/java_lang_Throwable.h"
+#include "_gen/java_lang_Error.h"
 #include "_gen/java_lang_String.h"
 #include "_gen/java_lang_Boolean.h"
 #include "_gen/java_lang_Number.h"
@@ -106,6 +108,7 @@ void NPP_Shutdown(void)
 	if (env) {
         unuse_MozAxPlugin(env);
         unuse_netscape_plugin_Plugin(env);
+        unuse_java_lang_Error(env);
 //        unuse_java_lang_String(env);
         unuse_java_lang_Number(env);
         unuse_java_lang_Boolean(env);
@@ -136,6 +139,7 @@ jref NPP_GetJavaClass(void)
         //       without testing the new order!
         use_netscape_plugin_Plugin(env);
         jref myClass = (jref) use_MozAxPlugin(env);
+        use_java_lang_Error(env);
 //        use_java_lang_String(env);
         use_java_lang_Number(env);
         use_java_lang_Boolean(env);
@@ -1236,7 +1240,9 @@ _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *f
         if (FAILED(_JRIObjectToVariant(env, args[i], &vargs[i])))
         {
             delete []vargs;
-            // TODO throw JRI exception
+            char error[64];
+            sprintf(error, "Argument %d could not be converted into a variant", i);
+            JRI_ThrowNew(env, class_java_lang_Error(env), error); 
             return NULL;
         }
     }
@@ -1246,7 +1252,10 @@ _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *f
 	hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 
-        // TODO throw JRI exception
+        char error[128];
+        memset(error, 0, sizeof(error));
+        _snprintf(error, sizeof(error) - 1, "invoke failed, member \"%s\" not found, hr=0x%08x", funcName, hr);
+        JRI_ThrowNew(env, class_java_lang_Error(env), error); 
         return NULL; 
     }
 
@@ -1263,7 +1272,9 @@ _InvokeFromJRI(JRIEnv *env, struct MozAxPlugin* self, struct java_lang_String *f
     
     if (FAILED(hr))
     { 
-        // TODO throw JRI exception
+        char error[64];
+        sprintf(error, "invoke failed, result from object = 0x%08x", hr);
+        JRI_ThrowNew(env, class_java_lang_Error(env), error); 
         return NULL; 
     }
 
@@ -1359,6 +1370,10 @@ native_MozAxPlugin_xgetProperty(JRIEnv* env, struct MozAxPlugin* self, struct ja
     hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 
+        char error[128];
+        memset(error, 0, sizeof(error));
+        _snprintf(error, sizeof(error) - 1, "getProperty failed, member \"%s\" not found, hr=0x%08x", szMember, hr);
+        JRI_ThrowNew(env, class_java_lang_Error(env), error); 
         return NULL; 
     }
     DISPPARAMS dispparamsNoArgs = {NULL, NULL, 0, 0};
@@ -1370,6 +1385,9 @@ native_MozAxPlugin_xgetProperty(JRIEnv* env, struct MozAxPlugin* self, struct ja
         &dispparamsNoArgs, &VarResult, NULL, NULL);
     if (FAILED(hr))
     { 
+        char error[64];
+        sprintf(error, "getProperty failed, result from object = 0x%08x", hr);
+        JRI_ThrowNew(env, class_java_lang_Error(env), error); 
         return NULL; 
     }
 
@@ -1411,6 +1429,10 @@ native_MozAxPlugin_xsetProperty2(JRIEnv* env, struct MozAxPlugin* self, struct j
     hr = disp->GetIDsOfNames(IID_NULL, &szMember, 1, LOCALE_USER_DEFAULT, &dispid);
     if (FAILED(hr))
     { 
+        char error[128];
+        memset(error, 0, sizeof(error));
+        _snprintf(error, sizeof(error) - 1, "setProperty failed, member \"%s\" not found, hr=0x%08x", szMember, hr);
+        JRI_ThrowNew(env, class_java_lang_Error(env), error); 
         return;
     }
 
@@ -1418,7 +1440,9 @@ native_MozAxPlugin_xsetProperty2(JRIEnv* env, struct MozAxPlugin* self, struct j
     if (FAILED(_JRIObjectToVariant(env, b, &pvars[0])))
     {
         delete []pvars;
-        // TODO throw JRI exception
+        char error[64];
+        sprintf(error, "Property value could not be converted into a variant");
+        JRI_ThrowNew(env, class_java_lang_Error(env), error); 
         return;
     }
 
@@ -1441,7 +1465,9 @@ native_MozAxPlugin_xsetProperty2(JRIEnv* env, struct MozAxPlugin* self, struct j
     
     if (FAILED(hr))
     {
-        // TODO throw JRI exception
+        char error[64];
+        sprintf(error, "setProperty failed, result from object = 0x%08x", hr);
+        JRI_ThrowNew(env, class_java_lang_Error(env), error); 
         return;
     }
 }
@@ -1453,6 +1479,21 @@ native_MozAxPlugin_xsetProperty1(JRIEnv* env, struct MozAxPlugin* self, struct j
     native_MozAxPlugin_xsetProperty2(env, self, a, reinterpret_cast<java_lang_Object *>(b));
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+/*** private native printStackTrace0 (Ljava/io/PrintStream;)V ***/
+extern "C" JRI_PUBLIC_API(void)
+native_java_lang_Throwable_printStackTrace0(JRIEnv* env, struct java_lang_Throwable* self, struct java_io_PrintStream *a)
+{
+}
+
+/*** public native fillInStackTrace ()Ljava/lang/Throwable; ***/
+extern "C" JRI_PUBLIC_API(struct java_lang_Throwable *)
+native_java_lang_Throwable_fillInStackTrace(JRIEnv* env, struct java_lang_Throwable* self)
+{
+    return self;
+}
 
 
 #endif
