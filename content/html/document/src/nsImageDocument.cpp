@@ -230,9 +230,6 @@ nsImageDocument::StartImageLoad(nsIURI* aURL, nsIStreamListener*& aListener)
   // Finally, start the layout going
   StartLayout();
 
-  // now update the title
-  UpdateTitle();
-
   return NS_OK;
 }
 
@@ -328,8 +325,9 @@ nsImageDocument::EndLayout(nsISupports *ctxt,
                            nsresult status, 
                            const PRUnichar *errorMsg)
 {
-  // We are being told to stop the layout (in the middle of image loading)
-  // - nothing to do here...
+  // Layout has completed: now update the title
+  UpdateTitle();
+
   return NS_OK;
 }
 
@@ -347,7 +345,7 @@ nsresult nsImageDocument::UpdateTitle( void )
   if (mImageRequest) {
     PRUint32 width, height;
     mImageRequest->GetNaturalDimensions(&width, &height);
-    // if we got a valid size (often we do not) then display it
+    // if we got a valid size (sometimes we do not) then display it
     if (width != 0 && height != 0){
       titleStr.Append( " " );
       titleStr.Append((PRInt32)width);
