@@ -43,6 +43,12 @@ public:
 protected:
   ~nsMessage();
 
+private:
+  nsString mSender;
+  nsString mRecipients;
+  nsString mSubject;
+  nsString mBody;
+
 };
 
 #endif /* nsMessage_h___ */
