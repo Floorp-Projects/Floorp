@@ -278,20 +278,19 @@ real_checkout:
 ####################################
 # Web configure
 
-WEBCONFIG_URL   := http://webtools.mozilla.org/build/config.cgi
 WEBCONFIG_FILE  := $(HOME)/.mozconfig
 
-MOZCONFIG2URL := build/autoconf/mozconfig2url
+MOZCONFIG2CONFIGURATOR := build/autoconf/mozconfig2configurator
 webconfig:
-	cd $(TOPSRCDIR); \
-	url=$(WEBCONFIG_URL)`$(MOZCONFIG2URL) $(TOPSRCDIR)`; \
+	@cd $(TOPSRCDIR); \
+	url=`$(MOZCONFIG2CONFIGURATOR) $(TOPSRCDIR)`; \
 	echo Running netscape with the following url: ;\
 	echo ;\
 	echo $$url ;\
 	netscape -remote "openURL($$url)" || netscape $$url ;\
 	echo ;\
 	echo   1. Fill out the form on the browser. ;\
-	echo   2. Save the results to $(WEBCONFIG_FILE).
+	echo   2. Save the results to $(WEBCONFIG_FILE)
 
 #####################################################
 # First Checkout
