@@ -53,8 +53,7 @@ sub sillyness {
 # Use global template variables.
 use vars qw($vars $template);
 
-ConnectToDatabase();
-my $user = confirm_login();
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 

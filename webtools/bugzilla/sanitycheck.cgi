@@ -70,9 +70,7 @@ sub BugListLinks {
 # Start
 ###########################################################################
 
-ConnectToDatabase();
-
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 

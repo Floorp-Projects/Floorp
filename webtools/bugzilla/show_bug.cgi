@@ -25,10 +25,9 @@ use strict;
 use lib qw(.);
 
 use Bugzilla;
+use Bugzilla::Constants;
 
 require "CGI.pl";
-
-ConnectToDatabase();
 
 use vars qw($template $vars $userid);
 
@@ -37,9 +36,9 @@ use Bugzilla::Bug;
 my $cgi = Bugzilla->cgi;
 
 if ($::FORM{'GoAheadAndLogIn'}) {
-    confirm_login();
+    Bugzilla->login(LOGIN_REQUIRED);
 } else {
-    quietly_check_login();
+    Bugzilla->login();
 }
 
 # Editable, 'single' HTML bugs are treated slightly specially in a few places

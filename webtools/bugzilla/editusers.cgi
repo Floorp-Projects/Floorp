@@ -36,6 +36,7 @@ require "globals.pl";
 
 use Bugzilla;
 use Bugzilla::User;
+use Bugzilla::Constants;
 
 # Shut up misguided -w warnings about "used only once".  "use vars" just
 # doesn't work for me.
@@ -238,8 +239,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 

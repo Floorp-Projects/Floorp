@@ -23,7 +23,6 @@
 
 use vars qw(
   %legal_product
-  $userid
 );
 
 use strict;
@@ -31,11 +30,11 @@ use strict;
 use lib qw(.);
 
 use Bugzilla;
+use Bugzilla::Constants;
 
 require "CGI.pl";
 
-ConnectToDatabase();
-quietly_check_login();
+Bugzilla->login();
 
 GetVersionTable();
 
@@ -48,7 +47,7 @@ if (!defined $product) {
 
     if (AnyEntryGroups()) {
         # OK, now only add products the user can see
-        confirm_login() unless $::userid;
+        Bugzilla->login(LOGIN_REQUIRED) unless Bugzilla->user;
         foreach my $p (@::legal_product) {
             if (CanEnterProduct($p)) {
                 $products{$p} = $::proddesc{$p};

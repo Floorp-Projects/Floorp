@@ -31,9 +31,7 @@ require "CGI.pl";
 # Use global template variables.
 use vars qw($template $vars);
 
-ConnectToDatabase();
-
-quietly_check_login();
+Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
 

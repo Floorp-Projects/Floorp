@@ -30,11 +30,9 @@ use lib qw(.);
 require "CGI.pl";
 
 # We don't want to remove a random logincookie from the db, so
-# call quietly_check_login. If we're logged in after this, then
+# call Bugzilla->login(). If we're logged in after this, then
 # the logincookie must be correct
-
-ConnectToDatabase();
-quietly_check_login();
+Bugzilla->login();
 
 Bugzilla->logout();
 

@@ -30,14 +30,12 @@ use vars qw ($template $vars);
 require "CGI.pl";
 my $cgi = Bugzilla->cgi;
 
-ConnectToDatabase();
-
 ###############################################################################
 # Begin Data/Security Validation
 ###############################################################################
 
 # Check whether or not the user is currently logged in. 
-quietly_check_login();
+Bugzilla->login();
 
 # Make sure the bug ID is a positive integer representing an existing
 # bug that the user is authorized to access.

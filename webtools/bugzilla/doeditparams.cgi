@@ -26,12 +26,12 @@ use strict;
 use lib qw(.);
 
 use Bugzilla;
+use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin $datadir);
 
 require "CGI.pl";
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 

@@ -55,8 +55,7 @@ use vars qw(%versions
           %legal_severity
            );
 
-ConnectToDatabase();
-my $user = confirm_login();
+my $user = Bugzilla->login(LOGIN_REQUIRED);
 my $whoid = $user->id;
 
 my $cgi = Bugzilla->cgi;

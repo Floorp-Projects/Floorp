@@ -25,6 +25,7 @@ use lib ".";
 
 require "CGI.pl";
 
+use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
 my $cgi = Bugzilla->cgi;
@@ -53,8 +54,7 @@ sub Validate ($$) {
 # Preliminary checks:
 #
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 

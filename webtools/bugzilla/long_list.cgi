@@ -33,9 +33,7 @@ use vars qw($userid @legal_keywords);
 # Use global template variables.
 use vars qw($template $vars);
 
-ConnectToDatabase();
-
-quietly_check_login();
+Bugzilla->login();
 
 GetVersionTable();
 

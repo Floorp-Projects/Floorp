@@ -26,8 +26,7 @@ use vars qw(
   $vars
 );
 
-ConnectToDatabase();
-quietly_check_login();
+Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
 

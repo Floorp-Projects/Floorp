@@ -33,10 +33,6 @@ use strict;
 use lib qw(.);
 require "CGI.pl";
 
-# Connect to the database so we can check whether the user is a member
-# of each product group.
-ConnectToDatabase();
-
 # Retrieve this installation's configuration.
 GetVersionTable();
 

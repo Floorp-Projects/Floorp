@@ -31,6 +31,7 @@ require "CGI.pl";
 use vars qw($template $userid %COOKIE);
 
 use Bugzilla;
+use Bugzilla::Constants;
 use Bugzilla::Bug;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::BugMail;
@@ -43,8 +44,7 @@ unless ( Param("move-enabled") ) {
   exit;
 }
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 

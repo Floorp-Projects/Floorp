@@ -38,9 +38,7 @@ require "CGI.pl";
 
 use vars qw($template $vars);
 
-ConnectToDatabase();
-
-quietly_check_login();
+Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
 

@@ -198,10 +198,6 @@ sub PasswordForLogin {
     return $result;
 }
 
-sub quietly_check_login {
-    return Bugzilla->login($_[0] ? LOGIN_OPTIONAL : LOGIN_NORMAL);
-}
-
 sub CheckEmailSyntax {
     my ($addr) = (@_);
     my $match = Param('emailregexp');
@@ -222,10 +218,6 @@ sub MailPassword {
     open SENDMAIL, "|/usr/lib/sendmail -t -i";
     print SENDMAIL $msg;
     close SENDMAIL;
-}
-
-sub confirm_login {
-    return Bugzilla->login(LOGIN_REQUIRED);
 }
 
 sub PutHeader {

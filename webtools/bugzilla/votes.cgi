@@ -27,13 +27,12 @@ use strict;
 use lib ".";
 
 use Bugzilla;
+use Bugzilla::Constants;
 
 require "CGI.pl";
 
 # Use global template variables
 use vars qw($template $vars);
-
-ConnectToDatabase();
 
 my $cgi = Bugzilla->cgi;
 
@@ -51,10 +50,10 @@ my $action = $::FORM{'action'} ||
 if ($action eq "show_bug" ||
     ($action eq "show_user" && defined($::FORM{'user'}))) 
 {
-    quietly_check_login();
+    Bugzilla->login();
 }
 else {
-    confirm_login();
+    Bugzilla->login(LOGIN_REQUIRED);
 }
 
 ################################################################################

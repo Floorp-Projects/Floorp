@@ -38,7 +38,7 @@
 #
 # You need to work with bug_email.pl the MIME::Parser installed.
 # 
-# $Id: bug_email.pl,v 1.18 2004/01/20 06:03:38 justdave%syndicomm.com Exp $
+# $Id: bug_email.pl,v 1.19 2004/03/27 03:51:44 kiko%async.com.br Exp $
 ###############################################################
 
 # 02/12/2000 (SML)
@@ -745,8 +745,6 @@ $Message_ID = $entity->get( 'Message-Id' );
 die (" *** Cant find Sender-adress in sent mail ! ***\n" ) unless defined( $Sender );
 chomp( $Sender );
 chomp( $Message_ID );
-
-ConnectToDatabase();
 
 $SenderShort = $Sender;
 $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1/;

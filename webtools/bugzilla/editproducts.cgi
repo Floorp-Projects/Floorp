@@ -179,8 +179,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 

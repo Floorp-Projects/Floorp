@@ -32,6 +32,7 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
+use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 
 # TestProduct:  just returns if the specified product does exists
@@ -153,8 +154,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 

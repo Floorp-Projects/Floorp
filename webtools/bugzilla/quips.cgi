@@ -36,8 +36,9 @@ use lib qw(.);
 
 require "CGI.pl";
 
-ConnectToDatabase();
-confirm_login();
+use Bugzilla::Constants;
+
+Bugzilla->login(LOGIN_REQUIRED);
 
 my $cgi = Bugzilla->cgi;
 

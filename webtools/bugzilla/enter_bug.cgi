@@ -57,20 +57,15 @@ use vars qw(
   $proddesc
 );
 
-# We have to connect to the database, even though we don't use it in this code,
-# because we might occasionally rebuild the version cache, which causes tokens
-# to get deleted from the database, which needs a database connection.
-ConnectToDatabase();
-
 # If we're using bug groups to restrict bug entry, we need to know who the 
 # user is right from the start. 
-confirm_login() if AnyEntryGroups();
+Bugzilla->login(LOGIN_REQUIRED) if AnyEntryGroups();
 
 my $cgi = Bugzilla->cgi;
 
 if (!defined $::FORM{'product'}) {
     GetVersionTable();
-    quietly_check_login();
+    Bugzilla->login();
 
     my %products;
 
@@ -225,7 +220,7 @@ sub pickos {
 # End of subroutines
 ##############################################################################
 
-confirm_login() if (!(AnyEntryGroups()));
+Bugzilla->login(LOGIN_REQUIRED) if (!(AnyEntryGroups()));
 
 # We need to check and make sure
 # that the user has permission to enter a bug against this product.

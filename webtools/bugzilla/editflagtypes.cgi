@@ -31,18 +31,16 @@ use lib ".";
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
-# Establish a connection to the database backend.
-ConnectToDatabase();
-
 # Use Bugzilla's flag modules for handling flag types.
 use Bugzilla;
+use Bugzilla::Constants;
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
 
 use vars qw( $template $vars );
 
 # Make sure the user is logged in and is an administrator.
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 UserInGroup("editcomponents")
   || ThrowUserError("authorization_failure", 
                     { action => "administer flag types" });

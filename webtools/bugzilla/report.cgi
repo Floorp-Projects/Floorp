@@ -29,6 +29,7 @@ require "CGI.pl";
 use vars qw($template $vars);
 
 use Bugzilla;
+use Bugzilla::Constants;
 
 my $cgi = Bugzilla->cgi;
 
@@ -44,11 +45,9 @@ if (grep(/^cmd-/, $cgi->param())) {
 
 use Bugzilla::Search;
 
-ConnectToDatabase();
-
 GetVersionTable();
 
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 Bugzilla->switch_to_shadow_db();
 

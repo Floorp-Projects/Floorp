@@ -31,9 +31,7 @@ use Bugzilla::Config qw(:DEFAULT $webdotdir);
 
 require "CGI.pl";
 
-ConnectToDatabase();
-
-quietly_check_login();
+Bugzilla->login();
 
 my $cgi = Bugzilla->cgi;
 

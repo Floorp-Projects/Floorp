@@ -31,6 +31,7 @@ use lib ".";
 require "CGI.pl";
 require "globals.pl";
 
+use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT $datadir);
 use Bugzilla::Series;
 
@@ -195,8 +196,7 @@ sub PutTrailer (@)
 # Preliminary checks:
 #
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 

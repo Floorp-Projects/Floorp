@@ -28,6 +28,8 @@ use lib ".";
 
 require "CGI.pl";
 
+use Bugzilla::Constants;
+
 use vars qw(
     @CheckOptionValues
     @legal_resolution
@@ -49,16 +51,14 @@ use vars qw(
     $vars
 );
 
-ConnectToDatabase();
-
 my $cgi = Bugzilla->cgi;
 
 if (defined $::FORM{"GoAheadAndLogIn"}) {
     # We got here from a login page, probably from relogin.cgi.  We better
     # make sure the password is legit.
-    confirm_login();
+    Bugzilla->login(LOGIN_REQUIRED);
 } else {
-    quietly_check_login();
+    Bugzilla->login();
 }
 
 my $user = Bugzilla->user;

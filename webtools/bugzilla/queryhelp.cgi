@@ -28,8 +28,7 @@ use lib qw(.);
 
 require "CGI.pl";
 
-ConnectToDatabase();
-quietly_check_login();
+Bugzilla->login();
 
 GetVersionTable();
 

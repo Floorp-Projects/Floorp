@@ -36,13 +36,11 @@ use vars qw(
   $vars
 );
 
-ConnectToDatabase();
-
 # If we're using LDAP for login, then we can't create a new account here.
 unless (Bugzilla::Auth->can_edit) {
   # Just in case someone already has an account, let them get the correct
   # footer on the error message
-  quietly_check_login();
+  Bugzilla->login();
   ThrowUserError("auth_cant_create_account");
 }
 

@@ -45,6 +45,7 @@ use strict;
 use lib qw(.);
 
 require "CGI.pl";
+use Bugzilla::Constants;
 use Bugzilla::Chart;
 use Bugzilla::Series;
 
@@ -81,9 +82,7 @@ if ($action eq "search") {
     exit;
 }
 
-ConnectToDatabase();
-
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 # Only admins may create public queries
 UserInGroup('admin') || $cgi->delete('public');

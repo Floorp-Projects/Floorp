@@ -56,8 +56,7 @@ use Bugzilla;
 
 # If we're using bug groups for products, we should apply those restrictions
 # to viewing reports, as well.  Time to check the login in that case.
-ConnectToDatabase();
-quietly_check_login();
+Bugzilla->login();
 
 GetVersionTable();
 

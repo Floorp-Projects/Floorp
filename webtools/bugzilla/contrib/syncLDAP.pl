@@ -74,8 +74,6 @@ foreach my $arg (@ARGV)
    }
 }
 
-ConnectToDatabase();
-
 my %bugzilla_users;
 my %ldap_users;
 

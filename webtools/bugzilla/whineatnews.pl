@@ -31,8 +31,6 @@ use strict;
 
 require "globals.pl";
 
-ConnectToDatabase();
-
 SendSQL("select bug_id,short_desc,login_name from bugs,profiles where " .
         "(bug_status = 'NEW' or bug_status = 'REOPENED') and " . 
         "to_days(now()) - to_days(delta_ts) > " . Param('whinedays') .

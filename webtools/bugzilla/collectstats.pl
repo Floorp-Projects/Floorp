@@ -51,7 +51,6 @@ if (chdir("graphs")) {
     chdir("..");
 }
 
-ConnectToDatabase();
 GetVersionTable();
 
 Bugzilla->switch_to_shadow_db();

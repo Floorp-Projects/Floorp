@@ -68,8 +68,6 @@ chomp( $Message_ID );
 
 print "Dealing with the sender $Sender\n";
 
-ConnectToDatabase();
-
 my $SenderShort = $Sender;
 $SenderShort =~ s/^.*?([a-zA-Z0-9_.-]+?\@[a-zA-Z0-9_.-]+\.[a-zA-Z0-9_.-]+).*$/$1/;
 

@@ -54,7 +54,6 @@ if (defined $cgi->param('ctype') && $cgi->param('ctype') eq "xul") {
 # Use global templatisation variables.
 use vars qw($template $vars);
 
-ConnectToDatabase();
 GetVersionTable();
 
 # collectstats.pl uses duplicates.cgi to generate the RDF duplicates stats.
@@ -64,7 +63,7 @@ if ($::ENV{'GATEWAY_INTERFACE'} eq "cmdline") {
     Bugzilla->login(LOGIN_OPTIONAL);
 }
 else {
-    Bugzilla->login(LOGIN_NORMAL);
+    Bugzilla->login();
 }
 
 Bugzilla->switch_to_shadow_db();

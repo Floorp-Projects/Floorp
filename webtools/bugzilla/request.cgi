@@ -31,9 +31,6 @@ use strict;
 use lib qw(.);
 require "CGI.pl";
 
-# Establish a connection to the database backend.
-ConnectToDatabase();
-
 # Use Bugzilla's Request module which contains utilities for handling requests.
 use Bugzilla::Flag;
 use Bugzilla::FlagType;
@@ -44,7 +41,7 @@ use Bugzilla::User;
 use vars qw($template $vars @legal_product @legal_components %components);
 
 # Make sure the user is logged in.
-quietly_check_login();
+Bugzilla->login();
 
 ################################################################################
 # Main Body Execution

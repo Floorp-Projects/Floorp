@@ -32,14 +32,14 @@ use lib qw(.);
 use vars qw($template $vars);
 
 use Bugzilla;
+use Bugzilla::Constants;
+
 my $cgi = Bugzilla->cgi;
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
 
-# Establish a connection to the database backend.
-ConnectToDatabase();
-quietly_check_login('permit_anonymous');
+Bugzilla->login(LOGIN_OPTIONAL);
 
 # Use the "Bugzilla::Token" module that contains functions for doing various
 # token-related tasks.

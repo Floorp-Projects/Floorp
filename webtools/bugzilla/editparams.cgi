@@ -25,12 +25,12 @@
 use strict;
 use lib ".";
 
+use Bugzilla::Constants;
 use Bugzilla::Config qw(:DEFAULT :admin);
 
 require "CGI.pl";
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 

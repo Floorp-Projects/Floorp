@@ -33,7 +33,7 @@ use base qw(Exporter);
 
 %Bugzilla::DB::EXPORT_TAGS =
   (
-   deprecated => [qw(ConnectToDatabase SendSQL SqlQuote
+   deprecated => [qw(SendSQL SqlQuote
                      MoreSQLData FetchSQLData FetchOneColumn
                      PushGlobalSQLState PopGlobalSQLState)
                  ],
@@ -48,10 +48,6 @@ use Bugzilla::Util;
 # This is old cruft which will be removed, so theres not much use in
 # having a separate package for it, or otherwise trying to avoid the circular
 # dependancy
-
-sub ConnectToDatabase {
-    # We've already been connected in Bugzilla.pm
-}
 
 # XXX - mod_perl
 # These use |our| instead of |my| because they need to be cleared from
@@ -219,10 +215,6 @@ Several database routines are deprecated. They should not be used in new code,
 and so are not documented.
 
 =over 4
-
-=item *
-
-ConnectToDatabase
 
 =item *
 

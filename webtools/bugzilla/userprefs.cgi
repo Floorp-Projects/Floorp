@@ -308,8 +308,7 @@ sub DoSavedSearches() {
 # Live code (not subroutine definitions) starts here
 ###############################################################################
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 GetVersionTable();
 

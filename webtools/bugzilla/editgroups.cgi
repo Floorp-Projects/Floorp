@@ -34,8 +34,7 @@ require "CGI.pl";
 
 use vars qw($template $vars);
 
-ConnectToDatabase();
-confirm_login();
+Bugzilla->login(LOGIN_REQUIRED);
 
 print Bugzilla->cgi->header();
 

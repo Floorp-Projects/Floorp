@@ -71,7 +71,6 @@ require "CGI.pl";
 require "globals.pl";
 $::lockcount = 0;
 
-ConnectToDatabase();
 GetVersionTable();
 
 

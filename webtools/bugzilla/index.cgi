@@ -36,11 +36,9 @@ use vars qw(
   $vars
 );
 
-# Establish a connection to the database backend.
-ConnectToDatabase();
-
 # Check whether or not the user is logged in and, if so, set the $::userid 
-quietly_check_login('permit_anonymous');
+use Bugzilla::Constants;
+Bugzilla->login(LOGIN_OPTIONAL);
 
 ###############################################################################
 # Main Body Execution

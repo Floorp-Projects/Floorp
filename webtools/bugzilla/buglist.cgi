@@ -37,6 +37,7 @@ use vars qw($template $vars);
 
 use Bugzilla;
 use Bugzilla::Search;
+use Bugzilla::Constants;
 
 # Include the Bugzilla CGI and general utility library.
 require "CGI.pl";
@@ -63,8 +64,6 @@ if (length($::buffer) == 0) {
     ThrowUserError("buglist_parameters_required");
 }
 
-ConnectToDatabase();
-
 ################################################################################
 # Data and Security Validation
 ################################################################################
@@ -74,12 +73,12 @@ my $dotweak = $::FORM{'tweak'} ? 1 : 0;
 
 # Log the user in
 if ($dotweak) {
-    confirm_login();
+    Bugzilla->login(LOGIN_REQUIRED);
     UserInGroup("editbugs") || ThrowUserError("insufficient_privs_for_multi");
     GetVersionTable();
 }
 else {
-    quietly_check_login();
+    Bugzilla->login();
 }
 
 # Hack to support legacy applications that think the RDF ctype is at format=rdf.
@@ -182,7 +181,7 @@ sub iCalendarDateTime {
 
 sub LookupNamedQuery {
     my ($name) = @_;
-    confirm_login();
+    Bugzilla->login(LOGIN_REQUIRED);
     my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
     my $qname = SqlQuote($name);
     SendSQL("SELECT query FROM namedqueries WHERE userid = $userid AND name = $qname");
@@ -305,7 +304,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
         $order = $params->param('order') || $order;
     }
     elsif ($::FORM{'remaction'} eq "forget") {
-        confirm_login();
+        Bugzilla->login(LOGIN_REQUIRED);
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::FORM{'namedcmd'});
         SendSQL("DELETE FROM namedqueries WHERE userid = $userid AND name = $qname");
@@ -325,7 +324,7 @@ if ($::FORM{'cmdtype'} eq "dorem") {
 }
 elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
     if ($::FORM{'remtype'} eq "asdefault") {
-        confirm_login();
+        Bugzilla->login(LOGIN_REQUIRED);
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
         my $qname = SqlQuote($::defaultqueryname);
         my $qbuffer = SqlQuote($::buffer);
@@ -335,7 +334,7 @@ elsif (($::FORM{'cmdtype'} eq "doit") && $::FORM{'remtype'}) {
         $vars->{'message'} = "buglist_new_default_query";
     }
     elsif ($::FORM{'remtype'} eq "asnamed") {
-        confirm_login();
+        Bugzilla->login(LOGIN_REQUIRED);
         my $userid = DBNameToIdAndCheck($::COOKIE{"Bugzilla_login"});
 
         my $name = trim($::FORM{'newqueryname'});

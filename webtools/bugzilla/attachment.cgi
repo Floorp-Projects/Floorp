@@ -42,16 +42,14 @@ use vars qw(
 require "CGI.pl";
 
 # Use these modules to handle flags.
+use Bugzilla::Constants;
 use Bugzilla::Flag; 
 use Bugzilla::FlagType; 
 use Bugzilla::User;
 use Bugzilla::Util;
 
-# Establish a connection to the database backend.
-ConnectToDatabase();
-
 # Check whether or not the user is logged in and, if so, set the $::userid 
-quietly_check_login();
+Bugzilla->login();
 
 # The ID of the bug to which the attachment is attached.  Gets set
 # by validateID() (which validates the attachment ID, not the bug ID, but has
@@ -104,14 +102,14 @@ elsif ($action eq "viewall")
 }
 elsif ($action eq "enter") 
 { 
-  confirm_login();
+  Bugzilla->login(LOGIN_REQUIRED);
   ValidateBugID($::FORM{'bugid'});
   validateCanChangeBug($::FORM{'bugid'});
   enter(); 
 }
 elsif ($action eq "insert")
 {
-  confirm_login();
+  Bugzilla->login(LOGIN_REQUIRED);
   ValidateBugID($::FORM{'bugid'});
   validateCanChangeBug($::FORM{'bugid'});
   ValidateComment($::FORM{'comment'});
@@ -125,14 +123,13 @@ elsif ($action eq "insert")
 }
 elsif ($action eq "edit") 
 { 
-  quietly_check_login();
   validateID();
   validateCanEdit($::FORM{'id'});
   edit(); 
 }
 elsif ($action eq "update") 
 { 
-  confirm_login();
+  Bugzilla->login(LOGIN_REQUIRED);
   ValidateComment($::FORM{'comment'});
   validateID();
   validateCanEdit($::FORM{'id'});
@@ -216,9 +213,10 @@ sub validateCanEdit
     my ($attach_id) = (@_);
 
     # If the user is not logged in, claim that they can edit. This allows
-    # the edit scrren to be displayed to people who aren't logged in.
+    # the edit screen to be displayed to people who aren't logged in.
     # People not logged in can't actually commit changes, because that code
-    # calls confirm_login, not quietly_check_login, before calling this sub
+    # calls Bugzilla->login with LOGIN_REQUIRED, not with LOGIN_NORMAL,
+    # before calling this sub
     return if $::userid == 0;
 
     # People in editbugs can edit all attachments
