@@ -19,26 +19,41 @@
 #
 # Contributor(s): 
 
-DEPTH=..\..\..\.. 
+DEPTH=..\..\..
 
-LIBRARY_NAME=layoutxulcontent_s 
+LIBRARY_NAME=contentshared_s 
+DEFINES=-D_IMPL_NS_LAYOUT -DWIN32_LEAN_AND_MEAN
+!if defined(XP_NEW_SELECTION)
+DEFINES = $(DEFINES) -DXP_NEW_SELECTION
+!endif
+
+CPPSRCS =				\
+  nsCSSAtoms.cpp \
+  nsCSSKeywords.cpp \
+  nsCSSProps.cpp \
+  nsHTMLAtoms.cpp \
+  nsHTMLValue.cpp \
+  nsLayoutAtoms.cpp \
+  nsStyleUtil.cpp \
+  nsTextFragment.cpp \
+  nsXULAtoms.cpp \
+  nsStyleCoord.cpp \
+	$(NULL)
+
 MODULE=raptor 
 
-DEFINES=-D_IMPL_NS_HTML -DWIN32_LEAN_AND_MEAN
-
-CPPSRCS=					\
-	nsXULAtoms.cpp				\
-	$(NULL)
-
 CPP_OBJS=					\
-	.\$(OBJDIR)\nsXULAtoms.obj		\
+  .\$(OBJDIR)\nsCSSAtoms.obj \
+  .\$(OBJDIR)\nsCSSKeywords.obj \
+  .\$(OBJDIR)\nsCSSProps.obj \
+  .\$(OBJDIR)\nsHTMLAtoms.obj \
+  .\$(OBJDIR)\nsHTMLValue.obj \
+  .\$(OBJDIR)\nsLayoutAtoms.obj \
+  .\$(OBJDIR)\nsStyleUtil.obj \
+  .\$(OBJDIR)\nsTextFragment.obj \
+  .\$(OBJDIR)\nsXULAtoms.obj \
+  .\$(OBJDIR)\StyleCoord.obj \
 	$(NULL)
-
-EXPORTS =					\
-	$(NULL)
-
-LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\js \
-  -I$(PUBLIC)\dom -I$(PUBLIC)\netlib -I$(PUBLIC)\pref
 
 LCFLAGS = \
         $(LCFLAGS) \
@@ -52,3 +67,4 @@ install:: $(LIBRARY)
 
 clobber::
 	rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+	rm -f $(PDBFILE).pdb

@@ -53,7 +53,7 @@ LIBS		= \
 		$(DIST)/lib/libgkconxmlcon_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkconxmldoc_s.$(LIB_SUFFIX) \
 		$(DIST)/lib/libgkxulbase_s.$(LIB_SUFFIX) \
-		$(DIST)/lib/libgkxulcon_s.$(LIB_SUFFIX) \
+		$(DIST)/lib/libgkconshared_s.$(LIB_SUFFIX) \
 		$(MOZ_JS_LIBS) \
 		$(EXTRA_DSO_LIBS) \
 		$(TK_LIBS) \

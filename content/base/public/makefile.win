@@ -43,7 +43,6 @@ EXPORTS =				\
 	nsIStyleRuleProcessor.h	\
 	nsITextContent.h		\
 	nsContentUtils.h			\
-	nsTextFragment.h		\
 	nsIPrivateDOMImplementation.h \
 	nsIContentSerializer.h \
 	nsIHTMLToTextSink.h \

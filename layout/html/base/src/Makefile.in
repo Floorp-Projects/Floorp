@@ -45,7 +45,6 @@ CPPSRCS		= \
 		nsFrame.cpp \
 		nsFrameManager.cpp \
 		nsHRFrame.cpp \
-		nsHTMLAtoms.cpp \
 		nsHTMLContainerFrame.cpp \
 		nsHTMLIIDs.cpp \
 		nsHTMLFrame.cpp \

@@ -46,7 +46,6 @@ CPPSRCS		= \
 		nsGenericDOMDataNode.cpp \
 		nsGenericDOMNodeList.cpp \
 		nsGenericElement.cpp \
-		nsLayoutAtoms.cpp \
 		nsContentUtils.cpp \
 		nsNameSpaceManager.cpp \
 		nsNodeInfo.cpp \
@@ -56,7 +55,6 @@ CPPSRCS		= \
 		nsStyleContext.cpp \
 		nsStyleSet.cpp \
 		nsTextContentChangeData.cpp \
-		nsTextFragment.cpp \
 		nsTextNode.cpp \
 		nsXMLContentSerializer.cpp \
 		nsHTMLContentSerializer.cpp \

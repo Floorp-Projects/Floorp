@@ -5,3 +5,5 @@
 nsILineIterator.h
 nsIHTMLContent.h
 nsHTMLParts.h
+nsHTMLAtoms.h
+nsHTMLAtomList.h

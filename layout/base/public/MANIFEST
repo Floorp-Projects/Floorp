@@ -31,12 +31,8 @@ nsIStatefulFrame.h
 nsIStyleContext.h
 nsIStyleSet.h
 nslayout.h
-nsLayoutAtomList.h
-nsLayoutAtoms.h
-nsLayoutUtils.h
 nsStyleChangeList.h
 nsStyleConsts.h
-nsStyleCoord.h
 nsIStyleFrameConstruction.h
 nsStyleStruct.h
 nsIFrameTraversal.h

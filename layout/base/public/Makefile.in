@@ -58,14 +58,10 @@ nsIStyleContext.h \
 nsIMutableStyleContext.h \
 nsIStyleFrameConstruction.h \
 nsIStyleSet.h \
-nsLayoutAtoms.h \
-nsLayoutAtomList.h \
-nsLayoutUtils.h \
 nsFrameList.h \
 nsFrameTraversal.h \
 nsStyleChangeList.h \
 nsStyleConsts.h \
-nsStyleCoord.h \
 nsStyleStruct.h \
 nsILayoutHistoryState.h \
 nsIStatefulFrame.h \

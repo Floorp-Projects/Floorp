@@ -28,7 +28,7 @@ include $(DEPTH)/config/autoconf.mk
 
 DIRS		= base html xml xul xbl xsl
 
-DIRS           += events build
+DIRS           += events shared build
 
 include $(topsrcdir)/config/rules.mk
 

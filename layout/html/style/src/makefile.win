@@ -32,23 +32,13 @@ EXPORTS =			\
 	$(NULL)
 
 CPPSRCS=				\
-	nsCSSAtoms.cpp 		\
-	nsCSSKeywords.cpp 		\
   nsCSSFrameConstructor.cpp   \
-	nsCSSProps.cpp			\
 	nsCSSRendering.cpp 		\
-#	nsHTMLStyleSheet.cpp 		\
-	nsStyleUtil.cpp 		\
 	$(NULL)
 
 CPP_OBJS =					\
-	.\$(OBJDIR)\nsCSSAtoms.obj 		\
-	.\$(OBJDIR)\nsCSSKeywords.obj 		\
   .\$(OBJDIR)\nsCSSFrameConstructor.obj  \
-	.\$(OBJDIR)\nsCSSProps.obj 		\
 	.\$(OBJDIR)\nsCSSRendering.obj 		\
-#	.\$(OBJDIR)\nsHTMLStyleSheet.obj 	\
-	.\$(OBJDIR)\nsStyleUtil.obj 		\
 	$(NULL)
 
 LINCS=-I$(PUBLIC)\xpcom -I$(PUBLIC)\raptor -I$(PUBLIC)\netlib \

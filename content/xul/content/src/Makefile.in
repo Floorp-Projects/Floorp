@@ -33,7 +33,6 @@ REQUIRES	= xpcom string widget htmlparser necko dom webshell js caps rdf xpconne
 CPPSRCS		= \
 		nsAnonymousElement.cpp \
 		nsRDFDOMNodeList.cpp \
-		nsXULAtoms.cpp \
 		nsXULAttributeValue.cpp \
 		nsXULAttributes.cpp \
 		nsXULElement.cpp \

@@ -24,4 +24,4 @@ nsIStyleRuleSupplier.h
 nsIStyleSheet.h
 nsIStyleSheetLinkingElement.h
 nsITextContent.h
-nsTextFragment.h
+

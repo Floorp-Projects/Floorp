@@ -513,33 +513,6 @@ nsContentDLF::CreateXULDocumentFromStream(nsIInputStream& aXULStream,
   return status;
 }
 
-static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
-
-static nsresult
-RegisterTypes(nsIComponentManager* aCompMgr,
-              const char* aCommand,
-              nsIFile* aPath,
-              char** aTypes)
-{
-  nsresult rv = NS_OK;
-  while (*aTypes) {
-    char contractid[500];
-    char* contentType = *aTypes++;
-    PR_snprintf(contractid, sizeof(contractid),
-                NS_DOCUMENT_LOADER_FACTORY_CONTRACTID_PREFIX "%s;1?type=%s",
-                aCommand, contentType);
-#ifdef NOISY_REGISTRY
-    printf("Register %s => %s\n", contractid, aPath);
-#endif
-    rv = aCompMgr->RegisterComponentSpec(kDocumentFactoryImplCID, "Content",
-                                         contractid, aPath, PR_TRUE, PR_TRUE);
-    if (NS_FAILED(rv)) {
-      break;
-    }
-  }
-  return rv;
-}
-
 nsresult
 nsContentModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
                                           nsIFile* aPath)
@@ -548,6 +521,8 @@ nsContentModule::RegisterDocumentFactories(nsIComponentManager* aCompMgr,
   // that is for layout. Now load-as-data might be a different story...
   return NS_OK;
 }
+
+static NS_DEFINE_IID(kDocumentFactoryImplCID, NS_CONTENT_DOCUMENT_LOADER_FACTORY_CID);
 
 void
 nsContentModule::UnregisterDocumentFactories(nsIComponentManager* aCompMgr,
