@@ -27,6 +27,7 @@
 #include "nsIWebProgress.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDOMWindow.h"
+#include "nsIDOMWindowInternal.h"
 #include "nsIInterfaceRequestor.h"
 #include "nsIRequest.h"
 #include "nsIChannel.h"
@@ -46,6 +47,7 @@ WebBrowserChrome::WebBrowserChrome()
 {
     NS_INIT_REFCNT();
     mNativeWindow = nsnull;
+    mSizeSet = PR_FALSE;
 }
 
 WebBrowserChrome::~WebBrowserChrome()
@@ -196,6 +198,9 @@ NS_IMETHODIMP WebBrowserChrome::CreateBrowserWindow(PRUint32 aChromeFlags,
     if (NS_SUCCEEDED(rv))
     {
         newChrome->GetWebBrowser(_retval);
+        // leave chrome windows hidden until the chrome is loaded
+        if (!(aChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME))
+          WebBrowserChromeUI::ShowWindow(this, PR_TRUE);
     }
 
     return rv;
@@ -211,7 +216,12 @@ NS_IMETHODIMP WebBrowserChrome::DestroyBrowserWindow(void)
 
 NS_IMETHODIMP WebBrowserChrome::SizeBrowserTo(PRInt32 aCX, PRInt32 aCY)
 {
-    return NS_ERROR_NOT_IMPLEMENTED;
+  /* This isn't exactly correct: we're setting the whole window to
+     the size requested for the browser. At time of writing, though,
+     it's fine and useful for winEmbed's purposes. */
+  WebBrowserChromeUI::SizeTo(this, aCX, aCY);
+  mSizeSet = PR_TRUE;
+  return NS_OK;
 }
 
 
@@ -266,6 +276,7 @@ NS_IMETHODIMP WebBrowserChrome::OnStateChange(nsIWebProgress *progress, nsIReque
         WebBrowserChromeUI::UpdateBusyState(this, PR_FALSE);
         WebBrowserChromeUI::UpdateProgress(this, 0, 100);
         WebBrowserChromeUI::UpdateStatusBarText(this, nsnull);
+        ContentFinishedLoading();
     }
 
     return NS_OK;
@@ -425,6 +436,22 @@ WebBrowserChrome::SendHistoryStatusMessage(nsIURI * aURI, char * operation, PRIn
 
     return NS_OK;
 }
+
+void WebBrowserChrome::ContentFinishedLoading()
+{
+  // if it was a chrome window and no one has already specified a size,
+  // size to content
+  if (mWebBrowser && !mSizeSet &&
+     (mChromeFlags & nsIWebBrowserChrome::CHROME_OPENAS_CHROME)) {
+    nsCOMPtr<nsIDOMWindow> contentWin;
+    mWebBrowser->GetContentDOMWindow(getter_AddRefs(contentWin));
+    nsCOMPtr<nsIDOMWindowInternal> contentIWin(do_QueryInterface(contentWin));
+    if (contentIWin)
+      contentIWin->SizeToContent();
+    WebBrowserChromeUI::ShowWindow(this, PR_TRUE);
+  }
+}
+
 
 //*****************************************************************************
 // WebBrowserChrome::nsIEmbeddingSiteWindow
