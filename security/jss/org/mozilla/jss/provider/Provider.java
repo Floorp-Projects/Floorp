@@ -35,8 +35,8 @@ package org.mozilla.jss.provider;
 public class Provider extends java.security.Provider {
 
     public Provider() {
-        super("Netscape", 1.4,
-                "Provides Signature and Message Digesting");
+        super("Mozilla-JSS", 3.1,
+                "Provides Signature, Message Digesting, and RNG");
 
         /////////////////////////////////////////////////////////////
         // Signature
