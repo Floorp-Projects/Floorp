@@ -1510,9 +1510,7 @@ nsSelection::MoveCaret(PRUint32 aKeycode, PRBool aContinue, nsSelectionAmount aA
   if (NS_SUCCEEDED(result) && NS_SUCCEEDED(result = frame->PeekOffset(context, &pos)) && pos.mResultContent)
   {
     tHint = (HINT)pos.mPreferLeft;
-    PRBool bidiEnabled = PR_FALSE;
-    context->GetBidiEnabled(&bidiEnabled);
-    if (bidiEnabled)
+    if (context->BidiEnabled())
     {
       nsIFrame *theFrame;
       PRInt32 currentOffset, frameStart, frameEnd;
@@ -2596,9 +2594,7 @@ nsSelection::HandleDrag(nsIPresContext *aPresContext, nsIFrame *aFrame, nsPoint&
   if (NS_SUCCEEDED(result))
   {
 #ifdef VISUALSELECTION
-    PRBool bidiEnabled = PR_FALSE;
-    aPresContext->GetBidiEnabled(&bidiEnabled);
-    if (bidiEnabled) {
+    if (aPresContext->BidiEnabled()) {
       PRUint8 level;
       nsPeekOffsetStruct pos;
       //set data using mLimiter to stop on scroll views.  If we have a limiter then we stop peeking

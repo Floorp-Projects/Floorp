@@ -676,9 +676,7 @@ nsBlockFrame::Reflow(nsIPresContext*          aPresContext,
       mState & NS_FRAME_IS_DIRTY || mState & NS_FRAME_HAS_DIRTY_CHILDREN) {
 #ifdef IBMBIDI
     if (! mLines.empty()) {
-      PRBool bidiEnabled;
-      aPresContext->GetBidiEnabled(&bidiEnabled);
-      if (bidiEnabled) {
+      if (aPresContext->BidiEnabled()) {
         nsBidiPresUtils* bidiUtils;
         aPresContext->GetBidiUtils(&bidiUtils);
         if (bidiUtils) {
@@ -3960,10 +3958,7 @@ nsBlockFrame::PlaceLine(nsBlockReflowState& aState,
 #ifdef IBMBIDI
   // XXXldb Why don't we do this earlier?
   else {
-    PRBool bidiEnabled;
-    aState.mPresContext->GetBidiEnabled(&bidiEnabled);
-
-    if (bidiEnabled) {
+    if (aState.mPresContext->BidiEnabled()) {
       if (!aState.mPresContext->IsVisualMode()) {
         nsBidiPresUtils* bidiUtils;
         aState.mPresContext->GetBidiUtils(&bidiUtils);

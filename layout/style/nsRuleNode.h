@@ -67,9 +67,7 @@ struct nsInheritedStyleData
 #undef STYLE_STRUCT_RESET
 
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
-    void* result = nsnull;
-    aContext->AllocateFromShell(sz, &result);
-    return result;
+    return aContext->AllocateFromShell(sz);
   };
 
   void ClearInheritedData(PRUint32 aBits) {
@@ -126,9 +124,7 @@ struct nsResetStyleData
   };
 
   void* operator new(size_t sz, nsIPresContext* aContext) CPP_THROW_NEW {
-    void* result = nsnull;
-    aContext->AllocateFromShell(sz, &result);
-    return result;
+    return aContext->AllocateFromShell(sz);
   }
 
   void ClearInheritedData(PRUint32 aBits) {

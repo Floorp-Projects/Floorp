@@ -68,9 +68,7 @@ nsTextEditRules::CheckBidiLevelForDeletion(nsIDOMNode           *aSelNode,
   if (!context)
     return NS_ERROR_NULL_POINTER;
   
-  PRBool bidiEnabled;
-  context->GetBidiEnabled(&bidiEnabled);
-  if (!bidiEnabled)
+  if (!context->BidiEnabled())
     return NS_OK;
   
   nsCOMPtr<nsIContent> content = do_QueryInterface(aSelNode);

@@ -342,8 +342,7 @@ void*
 nsBoxLayoutState::Allocate(size_t sz, nsIPresShell* aPresShell)
 {
   // Check the recycle list first.
-  void* result = nsnull;
-  aPresShell->AllocateFrame(sz, &result);
+  void* result = aPresShell->AllocateFrame(sz);
   
   if (result) {
     memset(result, 0, sz);

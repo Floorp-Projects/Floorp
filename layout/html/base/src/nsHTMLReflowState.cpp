@@ -2514,9 +2514,7 @@ nsHTMLReflowState::IsBidiFormControl(nsIPresContext* aPresContext)
   // display correctly on native widgets in OSs with Bidi support.
   // So bail out if the page is not Bidi, or not visual, or if the pref is
   // set to use visual order on forms in visual pages
-  PRBool bidiEnabled;
-  aPresContext->GetBidiEnabled(&bidiEnabled);
-  if (!bidiEnabled) {
+  if (!aPresContext->BidiEnabled()) {
     return PR_FALSE;
   }
 

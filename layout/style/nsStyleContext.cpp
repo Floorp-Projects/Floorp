@@ -859,9 +859,7 @@ void*
 nsStyleContext::operator new(size_t sz, nsIPresContext* aPresContext) CPP_THROW_NEW
 {
   // Check the recycle list first.
-  void* result = nsnull;
-  aPresContext->AllocateFromShell(sz, &result);
-  return result;
+  return aPresContext->AllocateFromShell(sz);
 }
 
 // Overridden to prevent the global delete from being called, since the memory

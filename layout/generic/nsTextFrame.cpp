@@ -1440,8 +1440,7 @@ nsTextFrame::Paint(nsIPresContext*      aPresContext,
       aRenderingContext.GetHints(hints);
 
 #ifdef IBMBIDI
-      PRBool bidiEnabled;
-      aPresContext->GetBidiEnabled(&bidiEnabled);
+      PRBool bidiEnabled = aPresContext->BidiEnabled();
 #else
       const PRBool bidiEnabled = PR_FALSE;
 #endif // IBMBIDI
@@ -2234,10 +2233,8 @@ nsTextFrame::PaintUnicodeText(nsIPresContext* aPresContext,
 #ifdef IBMBIDI
     PRBool isRightToLeftOnBidiPlatform = PR_FALSE;
     PRBool isBidiSystem = PR_FALSE;
-    PRBool bidiEnabled;
     nsCharType charType = eCharType_LeftToRight;
-    aPresContext->GetBidiEnabled(&bidiEnabled);
-    if (bidiEnabled) {
+    if (aPresContext->BidiEnabled()) {
       isBidiSystem = aPresContext->IsBidiSystem();
       GetBidiProperty(aPresContext, nsLayoutAtoms::embeddingLevel, (void**) &level,sizeof(level));
       GetBidiProperty(aPresContext, nsLayoutAtoms::charType, (void**) &charType,sizeof(charType));
@@ -2931,12 +2928,10 @@ nsTextFrame::PaintTextSlowly(nsIPresContext* aPresContext,
 
   if (0 != textLength) {
 #ifdef IBMBIDI
-    PRBool bidiEnabled;
     PRUint8 level = 0;
     nsCharType charType = eCharType_LeftToRight;
-    aPresContext->GetBidiEnabled(&bidiEnabled);
 
-    if (bidiEnabled) {
+    if (aPresContext->BidiEnabled()) {
       nsBidiPresUtils* bidiUtils;
       aPresContext->GetBidiUtils(&bidiUtils);
 
@@ -5223,9 +5218,7 @@ nsTextFrame::Reflow(nsIPresContext*          aPresContext,
     startingOffset = mContentOffset;
   }
 
-  PRBool bidiEnabled;
-  aPresContext->GetBidiEnabled(&bidiEnabled);
-  if (bidiEnabled) {
+  if (aPresContext->BidiEnabled()) {
     nsCharType charType = eCharType_LeftToRight;
     PRUint32 hints = 0;
     aReflowState.rendContext->GetHints(hints);
