@@ -22,6 +22,7 @@
 #include "nsIMsgIncomingServer.idl"
 #include "nsIFileSpec.idl"
 #include "nsISupportsArray.idl"
+#include "nsIMsgCopyServiceListener.idl"
 
 %{ C++
 #include "nsIMessage.h"
@@ -125,11 +126,12 @@ interface nsIMsgFolder : nsIFolder {
                       txnMgr,in boolean deleteStorage);
 
   void CopyMessages(in nsIMsgFolder srcFolder, in nsISupportsArray messages,
-                    in boolean isMove, in nsITransactionManager txnMgr);
+                    in boolean isMove, in nsITransactionManager txnMgr,
+                    in nsIMsgCopyServiceListener listener);
 
   void CopyFileMessage(in nsIFileSpec fileSpec, in nsIMessage msgToReplace,
-                       in boolean isDraft, in nsISupports aSupport, 
-                       in nsITransactionManager txnMgr);
+                       in boolean isDraft, in nsITransactionManager txnMgr,
+                       in nsIMsgCopyServiceListener listener);
 
   void AcquireSemaphore (in nsISupports semHolder);
   void ReleaseSemaphore (in nsISupports semHolder);

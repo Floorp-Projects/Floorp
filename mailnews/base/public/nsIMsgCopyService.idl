@@ -41,7 +41,6 @@ interface nsIMsgCopyService : nsISupports {
 					  in nsIMsgFolder dstFolder,
 					  in boolean isMove,
                       in nsIMsgCopyServiceListener listener,
-                      in nsISupports listenerData,
 					  in nsITransactionManager txnMgr);
 
     /**
@@ -50,9 +49,8 @@ interface nsIMsgCopyService : nsISupports {
 	void CopyFileMessage(in nsIFileSpec fileSpec,
                          in nsIMsgFolder dstFolder,
                          in nsIMessage msgToReplace,
-                         in boolean isDraft,
+                         in boolean isDraftOrTemplate,
                          in nsIMsgCopyServiceListener listener,
-                         in nsISupports listenerData,
                          in nsITransactionManager txnMgr);
 
     /**
