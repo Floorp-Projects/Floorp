@@ -1193,7 +1193,7 @@
           </menu>
 
           <menu id="viewBodyMenu" accesskey="&bodyMenu.accesskey;" label="&bodyMenu.label;">
-            <menupopup onpopupshowing="InitViewBodyMenu()">
+            <menupopup id="viewBodyPopMenu" onpopupshowing="InitViewBodyMenu()">
               <menuitem id="bodyAllowHTML" type="radio" name="bodyPlaintextVsHTMLPref" label="&bodyAllowHTML.label;"
                         accesskey="&bodyAllowHTML.accesskey;" oncommand="MsgBodyAllowHTML()"/>
               <menuitem id="bodySanitized" type="radio" name="bodyPlaintextVsHTMLPref" label="&bodySanitized.label;"
