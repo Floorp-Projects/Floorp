@@ -59,7 +59,7 @@ public:
 					nsMacMessagePump(nsToolkit *aToolKit, nsMacMessageSink* aSink);
 	virtual 		~nsMacMessagePump();
   
-	PRBool			DoMessagePump();
+	void			DoMessagePump();
 	void			StopRunning() {mRunning = PR_FALSE;}
 
 private:

@@ -93,8 +93,7 @@ nsMacMessagePump::~nsMacMessagePump()
  *  @param   NONE
  *  @return  A boolean which states how the pump terminated
  */
-PRBool 
-nsMacMessagePump::DoMessagePump()
+void nsMacMessagePump::DoMessagePump()
 {
 	Boolean					haveEvent;
 	EventRecord			theEvent;
@@ -175,8 +174,6 @@ nsMacMessagePump::DoMessagePump()
 		if (mRunning)
 			Repeater::DoRepeaters(theEvent);
 	}
-
-  return NS_OK;		// a PR_BOOL? Should be PR_TRUE or PR_FALSE. Which is unclear
 }
 
 #pragma mark -
