@@ -338,6 +338,7 @@ class CSkippedContentToken: public CAttributeToken {
     virtual nsresult    Consume(PRUnichar aChar,nsScanner& aScanner);
     virtual const char* GetClassName(void);
     virtual PRInt32     GetTokenType(void);
+    virtual void        DebugDumpSource(ostream& out);
   protected:
 };
 

@@ -32,6 +32,7 @@ CPPSRCS=					\
 	nsDTDUtils.cpp				\
 	nsHTMLTokenizer.cpp \
 	nsXMLTokenizer.cpp \
+  nsElementTable.cpp \
 	CNavDTD.cpp				\
 	COtherDTD.cpp				\
 	CRtfDTD.cpp				\
@@ -67,6 +68,7 @@ EXPORTS =     \
   nsILoggingSink.h   \
   nsIParserNode.h   \
   nsIParser.h   \
+  nsParser.h   \
   nsIDTD.h \
   nsIParserFilter.h \
   nsToken.h   \

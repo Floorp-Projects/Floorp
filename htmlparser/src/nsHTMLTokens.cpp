@@ -908,9 +908,17 @@ nsresult CAttributeToken::Consume(PRUnichar aChar, nsScanner& aScanner) {
       if(kQuote==aChar) {               //if you're here, handle quoted key...
         result=aScanner.GetChar(aChar);        //skip the quote sign...
         if(NS_OK==result) {
-          mTextKey=aChar;
-          result=ConsumeQuotedString(aChar,mTextKey,aScanner);
-        }
+          result=aScanner.Peek(aChar);  //peek ahead to make sure the next char is a legal attr-key
+          if(NS_OK==result) {
+            if(nsString::IsAlpha(aChar) || nsString::IsDigit(aChar)){
+              mTextKey=aChar;
+              result=ConsumeQuotedString(aChar,mTextKey,aScanner);
+            }
+            else {
+              return NS_ERROR_HTMLPARSER_BADATTRIBUTE;
+            }
+          } //if
+        }//if
       }
       else if(kHashsign==aChar) {
         result=aScanner.GetChar(aChar);        //skip the hash sign...
@@ -1432,6 +1440,21 @@ nsresult CSkippedContentToken::Consume(PRUnichar aChar,nsScanner& aScanner) {
   mTextKey=temp; 
   return result; 
 } 
+
+/*
+ *  Dump contents of this token to givne output stream
+ *  
+ *  @update  gess 3/25/98
+ *  @param   out -- ostream to output content
+ *  @return  
+ */
+void CSkippedContentToken::DebugDumpSource(ostream& out) {
+  static char buffer[1000];
+  mTextKey.ToCString(buffer,sizeof(buffer)-1);
+  out << " " << buffer;
+  if(mLastAttribute)
+    out<<">";
+}
 
 
 /**

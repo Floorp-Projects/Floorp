@@ -61,6 +61,7 @@
 #include "nsIURL.h"
 #include "CParserContext.h"
 #include "nsParserCIID.h"
+#include "nsITokenizer.h"
 
 class IContentSink;
 class nsIHTMLContentSink;
@@ -69,7 +70,9 @@ class nsScanner;
 class nsIParserFilter;
 #include <fstream.h>
 
-class nsParser : public nsIParser, public nsIStreamListener {
+#pragma warning( disable : 4275 )
+
+CLASS_EXPORT_HTMLPARS nsParser : public nsIParser, public nsIStreamListener {
             
   public:
 friend class CTokenHandler;
@@ -81,7 +84,7 @@ friend class CTokenHandler;
      * default constructor
      * @update	gess5/11/98
      */
-    nsParser();
+    nsParser(nsITokenObserver* anObserver=0);
 
 
     /**
@@ -160,7 +163,7 @@ friend class CTokenHandler;
      * @param   appendTokens tells us whether we should insert tokens inline, or append them.
      * @return  TRUE if all went well -- FALSE otherwise
      */
-    virtual nsresult Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE);
+    virtual nsresult Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE,PRBool aLastCall=PR_FALSE);
 
 
     /**
@@ -193,6 +196,18 @@ friend class CTokenHandler;
     NS_IMETHOD OnStartBinding(nsIURL* aURL, const char *aContentType);
     NS_IMETHOD OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRUint32 length);
     NS_IMETHOD OnStopBinding(nsIURL* aURL, nsresult status, const PRUnichar* aMsg);
+
+    void              PushContext(CParserContext& aContext);
+    CParserContext*   PopContext();
+    CParserContext*   PeekContext() {return mParserContext;}
+
+    /**
+     * 
+     * @update	gess 1/22/99
+     * @param 
+     * @return
+     */
+    virtual nsITokenizer* GetTokenizer(void);
 
 protected:
 
@@ -271,8 +286,6 @@ private:
      */
     eAutoDetectResult AutoDetectContentType(nsString& aBuffer,nsString& aType);
 
-    void              PushContext(CParserContext& aContext);
-    CParserContext*   PopContext();
 
 protected:
     //*********************************************
@@ -290,6 +303,7 @@ protected:
     PRBool              mDTDVerification;
     nsString            mCommand;
     PRInt32             mStreamStatus;
+    nsITokenObserver*   mTokenObserver;
 };
 
 

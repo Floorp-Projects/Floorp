@@ -43,6 +43,7 @@ class CParserContext {
 public:
 
     enum {eTransferBufferSize=4096};
+    enum eContextType {eCTNone,eCTURL,eCTString,eCTStream};
 
     CParserContext( nsScanner* aScanner,
                     void* aKey=0,
@@ -68,6 +69,7 @@ public:
     PRBool              mParserEnabled;
     eStreamState        mStreamListenerState; //this is really only here for debug purposes.
     PRBool              mMultipart;
+    eContextType        mContextType;
 
     // nsDeque          mTokenDeque;
 };

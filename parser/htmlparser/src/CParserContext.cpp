@@ -8,7 +8,7 @@
  * Software distributed under the NPL is distributed on an "AS IS" basis,
  * WITHOUT WARRANTY OF ANY KIND, either express or implied. See the NPL
  * for the specific language governing rights and limitations under the
- * NPL.
+ * NPL. 
  *  
  * The Initial Developer of this code under the NPL is Netscape
  * Communications Corporation.  Portions created by Netscape are
@@ -59,6 +59,7 @@ CParserContext::CParserContext(nsScanner* aScanner,void* aKey,nsIStreamObserver*
   mParserEnabled=PR_TRUE;
   mStreamListenerState=eNone;
   mMultipart=PR_TRUE;
+  mContextType=eCTNone;
 }
 
 
@@ -80,5 +81,4 @@ CParserContext::~CParserContext(){
   //Remember that it's ok to simply ingore the PrevContext.
 
 }
-
 

@@ -213,7 +213,7 @@ eAutoDetectResult CValidDTD::AutoDetectContentType(nsString& aBuffer,nsString& a
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser){
+NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
   return result;
 }
@@ -226,7 +226,7 @@ NS_IMETHODIMP CValidDTD::WillBuildModel(nsString& aFilename,PRBool aNotifySink,n
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP CValidDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
+NS_IMETHODIMP CValidDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
   return result;
 }
@@ -237,7 +237,7 @@ NS_IMETHODIMP CValidDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer)
  * @param 
  * @return
  */
-NS_IMETHODIMP CValidDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser){
+NS_IMETHODIMP CValidDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
   return result;

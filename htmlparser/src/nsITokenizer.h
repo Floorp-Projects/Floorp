@@ -46,13 +46,22 @@ public:
     virtual void RecycleToken(CToken* aToken)=0;
 };
 
+/**
+ * This interface is used as a callback to objects interested
+ * in observing the token stream created from the parse process.
+ */
+class nsITokenObserver {
+public:
+  virtual PRBool  operator()(CToken* aToken)=0;
+};
+
 /***************************************************************
   Notes: 
  ***************************************************************/
 
 class nsITokenizer : public nsISupports {
 public:
-    
+
   virtual nsresult          ConsumeToken(nsScanner& aScanner)=0;
   virtual nsITokenRecycler* GetTokenRecycler(void)=0;
 

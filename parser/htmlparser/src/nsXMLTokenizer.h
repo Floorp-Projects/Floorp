@@ -51,7 +51,7 @@
 CLASS_EXPORT_HTMLPARS nsXMLTokenizer : public nsHTMLTokenizer {
 public:
             nsXMLTokenizer();
-            ~nsXMLTokenizer();
+  virtual   ~nsXMLTokenizer();
 
             NS_DECL_ISUPPORTS
 

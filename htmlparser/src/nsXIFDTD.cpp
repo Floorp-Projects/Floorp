@@ -419,7 +419,7 @@ eAutoDetectResult nsXIFDTD::AutoDetectContentType(nsString& aBuffer,nsString& aT
  * @param 
  * @return
  */
-nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser){
+nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
   if(aParser){
@@ -439,7 +439,7 @@ nsresult nsXIFDTD::WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIPars
   * @param	aFilename is the name of the file being parsed.
   * @return	error code (almost always 0)
   */
-NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) {
+NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver,nsIContentSink* aSink) {
   nsresult result=NS_OK;
   return result;
 }
@@ -450,7 +450,7 @@ NS_IMETHODIMP nsXIFDTD::BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer) 
  * @param 
  * @return
  */
-nsresult nsXIFDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser){
+nsresult nsXIFDTD::DidBuildModel(nsresult anErrorCode,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink){
   nsresult result=NS_OK;
 
   if(aParser){

@@ -128,7 +128,7 @@ class nsIParser : public nsISupports {
     virtual PRBool    EnableParser(PRBool aState) = 0;
     virtual nsresult  Parse(nsIURL* aURL,nsIStreamObserver* aListener = nsnull,PRBool aEnableVerify=PR_FALSE) = 0;
     virtual nsresult  Parse(fstream& aStream,PRBool aEnableVerify=PR_FALSE) = 0;
-    virtual nsresult  Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify=PR_FALSE) = 0;
+    virtual nsresult  Parse(nsString& aSourceBuffer,PRBool anHTMLString,PRBool aEnableVerify,PRBool aLastCall) = 0;
 
     /**
      * This method gets called when the tokens have been consumed, and it's time
@@ -147,7 +147,7 @@ class nsIParser : public nsISupports {
      */
     virtual eParseMode GetParseMode(void)=0;
 
-
+#pragma
 };
 
 /* ===========================================================*
@@ -166,6 +166,7 @@ class nsIParser : public nsISupports {
 #define NS_ERROR_HTMLPARSER_INVALIDPARSERCONTEXT  NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1006)
 #define NS_ERROR_HTMLPARSER_INTERRUPTED           NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1007)
 #define NS_ERROR_HTMLPARSER_BADTOKENIZER          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1008)
+#define NS_ERROR_HTMLPARSER_BADATTRIBUTE          NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_HTMLPARSER,1009)
 
 /**
  * Return codes for parsing routines.

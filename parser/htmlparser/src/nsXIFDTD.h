@@ -164,7 +164,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    NS_IMETHOD WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD WillBuildModel(nsString& aFileName,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);
 
     /**
       * The parser uses a code sandwich to wrap the parsing process. Before
@@ -174,7 +174,7 @@ class nsXIFDTD : public nsIDTD {
       * @param	aFilename is the name of the file being parsed.
       * @return	error code (almost always 0)
       */
-    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer);
+    NS_IMETHOD BuildModel(nsIParser* aParser,nsITokenizer* aTokenizer,nsITokenObserver* anObserver=0,nsIContentSink* aSink=0);
 
     /**
      *  
@@ -182,7 +182,7 @@ class nsXIFDTD : public nsIDTD {
      * @param 
      * @return
      */
-    NS_IMETHOD DidBuildModel(nsresult aQualityLevel,PRBool aNotifySink,nsIParser* aParser);
+    NS_IMETHOD DidBuildModel(nsresult aQualityLevel,PRBool aNotifySink,nsIParser* aParser,nsIContentSink* aSink=0);
 
     /**
      *  
