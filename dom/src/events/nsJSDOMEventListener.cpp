@@ -25,6 +25,7 @@
 #include "nsIScriptSecurityManager.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsJSUtils.h"
+#include "nsIServiceManager.h"
 #include "jsapi.h"
 
 static NS_DEFINE_IID(kIScriptEventListenerIID, NS_ISCRIPTEVENTLISTENER_IID);
@@ -34,12 +35,14 @@ static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 /*
  * nsJSDOMEventListener implementation
  */
-nsJSDOMEventListener::nsJSDOMEventListener(JSContext *aContext, JSObject *aTarget, JSObject *aHandler) 
+nsJSDOMEventListener::nsJSDOMEventListener(nsIScriptContext* aContext,
+                                           JSObject *aTarget,
+                                           JSObject *aHandler)
+  : mContext(aContext),
+    mTarget(aTarget),
+    mHandler(aHandler)
 {
   NS_INIT_REFCNT();
-  mContext = aContext;
-  mTarget = aTarget;
-  mHandler = aHandler;
 }
 
 nsJSDOMEventListener::~nsJSDOMEventListener() 
@@ -48,7 +51,7 @@ nsJSDOMEventListener::~nsJSDOMEventListener()
 
 nsresult nsJSDOMEventListener::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 {
-  if (NULL == aInstancePtr) {
+  if (! aInstancePtr) {
     return NS_ERROR_NULL_POINTER;
   }
   if (aIID.Equals(kIDOMEventListenerIID)) {
@@ -75,23 +78,14 @@ NS_IMPL_RELEASE(nsJSDOMEventListener)
 
 nsresult nsJSDOMEventListener::HandleEvent(nsIDOMEvent* aEvent)
 {
-  jsval argv[1];
   JSObject *eventObj;
-
-  nsCOMPtr<nsIScriptContext> scriptCX;
-  nsJSUtils::nsGetStaticScriptContext(mContext, mTarget, 
-                                      getter_AddRefs(scriptCX));
-  if (!scriptCX) {
+  if (NS_OK != NS_NewScriptKeyEvent(mContext, aEvent, nsnull, (void**)&eventObj))
     return NS_ERROR_FAILURE;
-  }
 
-  if (NS_OK != NS_NewScriptKeyEvent(scriptCX, aEvent, nsnull, (void**)&eventObj)) {
-    return NS_ERROR_FAILURE;
-  }
-
+  jsval argv[1];
   argv[0] = OBJECT_TO_JSVAL(eventObj);
   PRBool jsBoolResult;
-  if (NS_FAILED(scriptCX->CallEventHandler(mTarget, mHandler, 1, argv, &jsBoolResult, PR_FALSE))) {
+  if (NS_FAILED(mContext->CallEventHandler(mTarget, mHandler, 1, argv, &jsBoolResult, PR_FALSE))) {
     return NS_ERROR_FAILURE;
   }
   return jsBoolResult ? NS_OK : NS_ERROR_FAILURE;
@@ -116,10 +110,16 @@ NS_NewScriptEventListener(nsIDOMEventListener ** aInstancePtrResult,
                           void* aTarget,
                           void *aHandler)
 {
-  JSContext *mCX = (JSContext*)aContext->GetNativeContext();
-  
-  nsJSDOMEventListener* it = new nsJSDOMEventListener(mCX, (JSObject*)aTarget, (JSObject*)aHandler);
-  if (NULL == it) {
+  NS_PRECONDITION(aContext != nsnull, "null ptr");
+  if (! aContext)
+    return NS_ERROR_NULL_POINTER;
+
+  nsJSDOMEventListener* it =
+    new nsJSDOMEventListener(aContext,
+                             NS_STATIC_CAST(JSObject*, aTarget),
+                             NS_STATIC_CAST(JSObject*, aHandler));
+
+  if (! it) {
     return NS_ERROR_OUT_OF_MEMORY;
   }
 

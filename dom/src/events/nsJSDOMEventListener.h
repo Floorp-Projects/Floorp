@@ -23,7 +23,9 @@
 #ifndef nsJSEventListener_h__
 #define nsJSEventListener_h__
 
+#include "nsCOMPtr.h"
 #include "nsIDOMKeyEvent.h"
+#include "nsIScriptContext.h"
 #include "nsIScriptEventListener.h"
 #include "nsIDOMMouseListener.h"
 #include "jsapi.h"
@@ -31,7 +33,7 @@
 //nsIDOMMouseListener interface
 class nsJSDOMEventListener : public nsIDOMEventListener, public nsIScriptEventListener {
 public:
-  nsJSDOMEventListener(JSContext *aContext, JSObject *aTarget, JSObject *aHandler);
+  nsJSDOMEventListener(nsIScriptContext* aContext, JSObject *aTarget, JSObject *aHandler);
   virtual ~nsJSDOMEventListener();
 
   NS_DECL_ISUPPORTS
@@ -43,10 +45,9 @@ public:
   virtual nsresult CheckIfEqual(nsIScriptEventListener *aListener);
 
 protected:
-  JSContext *mContext;
+  nsCOMPtr<nsIScriptContext> mContext;
   JSObject  *mTarget;
   JSObject  *mHandler;
-
 };
 
 #endif //nsJSEventListener_h__
