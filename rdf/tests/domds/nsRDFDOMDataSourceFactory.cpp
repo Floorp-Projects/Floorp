@@ -18,6 +18,7 @@
 
 #include "nsIGenericFactory.h"
 #include "nsRDFDOMDataSource.h"
+#include "nsRDFDOMResourceFactory.h"
 #include "nsIComponentManager.h"
 #include "nsIServiceManager.h"
 #include "rdf.h"
@@ -26,7 +27,8 @@
 #include <stdio.h>
 #endif
 
-static NS_DEFINE_CID(kRDFDataSourceCID, NS_RDF_DOMDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFDOMDataSourceCID, NS_RDF_DOMDATASOURCE_CID);
+static NS_DEFINE_CID(kRDFDOMResourceFactoryCID, NS_RDF_DOMRESOURCEFACTORY_CID);
 static NS_DEFINE_CID(kComponentManagerCID, NS_COMPONENTMANAGER_CID);
 
 nsresult
@@ -38,8 +40,10 @@ NSGetFactory(nsISupports* aServMgr,
 {
   nsresult rv=NS_OK;
   nsIGenericFactory* fact;
-  if (aClass.Equals(kRDFDataSourceCID))
+  if (aClass.Equals(kRDFDOMDataSourceCID))
     rv = NS_NewGenericFactory(&fact, NS_NewRDFDOMDataSource);
+  if (aClass.Equals(kRDFDOMDataSourceCID))
+    rv = NS_NewGenericFactory(&fact, NS_NewRDFDOMResourceFactory);
   else
     rv = NS_ERROR_FAILURE;
 
@@ -64,11 +68,15 @@ NSRegisterSelf(nsISupports* aServMgr, const char* aPath)
   
   if (NS_FAILED(rv)) return rv;
 
-  rv = compMgr->RegisterComponent(kRDFDataSourceCID,
+  rv = compMgr->RegisterComponent(kRDFDOMDataSourceCID,
                                   "Generic DataSource DataSource",
                                   NS_RDF_DATASOURCE_PROGID_PREFIX "domds",
                                   aPath, PR_TRUE, PR_TRUE);
 
+  rv = compMgr->RegisterComponent(kRDFDOMResourceFactoryCID,
+                                  "DOM element resource factory",
+                                  NS_RDF_RESOURCE_FACTORY_PROGID_PREFIX "dom",
+                                  aPath, PR_TRUE, PR_TRUE);
   return rv;
 
 }
@@ -81,7 +89,8 @@ NSUnregisterSelf(nsISupports* aServMgr, const char* aPath)
                      aServMgr, kComponentManagerCID, &rv);
     if (NS_FAILED(rv)) return rv;
 
-    rv = compMgr->UnregisterComponent(kRDFDataSourceCID, aPath);
+    rv = compMgr->UnregisterComponent(kRDFDOMDataSourceCID, aPath);
+    rv = compMgr->UnregisterComponent(kRDFDOMResourceFactoryCID, aPath);
 
     return rv;
 }

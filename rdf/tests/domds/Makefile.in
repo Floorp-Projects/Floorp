@@ -27,11 +27,15 @@ LIBRARY_NAME=rdfdomds
 IS_COMPONENT=1
 DIRS = resources
 
-XPIDLSRCS = nsIDOMDataSource.idl
+XPIDLSRCS = \
+	nsIDOMDataSource.idl \
+	nsIDOMViewerElement.idl	\
+	$(NULL)
 
 CPPSRCS = \
 	nsRDFDOMDataSource.cpp	\
 	nsRDFDOMDataSourceFactory.cpp	\
+    nsRDFDOMResourceFactory.cpp \
 	$(NULL)
 
 EXTRA_DSO_LDOPTS 	+=	\
