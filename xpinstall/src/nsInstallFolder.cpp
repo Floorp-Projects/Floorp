@@ -587,9 +587,11 @@ nsInstallFolder::MapNameToEnum(const nsString& name)
 	if ( name.IsEmpty())
         return -1;
 
+	// safe because all strings in DirectoryTable are ASCII
+	NS_LossyConvertUCS2toASCII asciiName(name);
 	while ( DirectoryTable[i].directoryName[0] != 0 )
 	{
-		if ( name.EqualsIgnoreCase(DirectoryTable[i].directoryName) )
+		if ( asciiName.EqualsIgnoreCase(DirectoryTable[i].directoryName) )
 			return DirectoryTable[i].folderEnum;
 		i++;
 	}
