@@ -202,6 +202,12 @@ function GetNewMessages()
 	if(selectedFolderList.length > 0)
 	{
 		var selectedFolder = selectedFolderList[0];
+
+		//Whenever we do get new messages, clear the old new messages.
+		var msgFolder = GetMsgFolderFromNode(selectedFolder);
+		if(msgFolder && msgFolder.hasNewMessages())
+			msgFolder.clearNewMessages();
+
 		messenger.GetNewMessages(folderTree.database, selectedFolder.resource);
 	}
 	else {
@@ -209,6 +215,25 @@ function GetNewMessages()
 	}
 }
 
+function GetMsgFolderFromNode(folderNode)
+{
+	var folderURI = folderNode.getAttribute("id");
+	return GetMsgFolderFromURI(folderURI);
+}
+
+function GetMsgFolderFromURI(folderURI)
+{
+	var folderResource = RDF.GetResource(folderURI);
+	if(folderResource)
+	{
+		var msgFolder = folderResource.QueryInterface(Components.interfaces.nsIMsgFolder);
+		return msgFolder;
+	}
+
+	return null;
+
+
+}
 
 function LoadMessage(messageNode)
 {
@@ -345,6 +370,15 @@ function RerootFolder(uri, newFolder, isThreaded, sortID, sortDirection)
 
   //Set threaded state
   ShowThreads(isThreaded);
+  
+  //Clear the new messages of the old folder
+  var oldFolderURI = folder.getAttribute("ref");
+  if(oldFolderURI != "null")
+  {
+	var oldFolder = GetMsgFolderFromURI(oldFolderURI);
+	if(oldFolder && oldFolder.hasNewMessages())
+		oldFolder.clearNewMessages();
+  }
   
   //Clear out the thread pane so that we can sort it with the new sort id without taking any time.
   folder.setAttribute('ref', "");

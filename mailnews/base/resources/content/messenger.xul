@@ -449,7 +449,7 @@ Rights Reserved.
             <menuitem value="&sortByStatusCmd.label;" oncommand="MsgSortByStatus();"/>
             <menuitem value="&sortBySubjectCmd.label;" oncommand="MsgSortBySubject();"/>
             <menuitem value="&sortByUnreadCmd.label;" disabled="true" oncommand="MsgSortByUnread();"/>
-            <menuitem value="&sortByOrderReceivedCmd.label;" disabled="true" oncommand="MsgSortByOrderReceived();"/>
+            <menuitem value="&sortByOrderReceivedCmd.label;"  oncommand="MsgSortByOrderReceived();"/>
             <menuseparator/>
             <menuitem value="&sortAscendCmd.label;" disabled="true" oncommand="MsgSortAscending();"/>
             <menuitem value="&sortDescendCmd.label;" disabled="true" oncommand="MsgSortDescending();"/>

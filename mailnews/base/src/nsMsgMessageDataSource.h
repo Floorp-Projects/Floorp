@@ -142,6 +142,8 @@ protected:
 								   nsIRDFNode **target);
 
 	nsresult createMessageIsUnreadNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageOrderReceivedNode(nsIMessage *message, nsIRDFNode **target);
+	nsresult createMessageOrderReceivedSortNode(nsIMessage *message, nsIRDFNode **target);
 
 	nsresult createMessageUnreadNode(nsIMessage *message, nsIRDFNode **target);
 	nsresult createMessageTotalNode(nsIMessage *message, nsIRDFNode **target);
@@ -191,6 +193,8 @@ protected:
 	static nsIRDFResource* kNC_Unread;
 	static nsIRDFResource* kNC_MessageChild;
 	static nsIRDFResource* kNC_IsUnread;
+	static nsIRDFResource* kNC_OrderReceived;
+	static nsIRDFResource* kNC_OrderReceivedSort;
 
 
 	// commands

@@ -678,7 +678,7 @@ function MsgSortByUnread()
 }
 function MsgSortByOrderReceived()
 {
-	dump("not implemented yet.\n");
+	SortThreadPane('OrderReceivedColumn', 'http://home.netscape.com/NC-rdf#OrderReceived','http://home.netscape.com/NC-rdf#Date', true, null);
 }
 function MsgSortAscending() 
 {
@@ -840,7 +840,7 @@ function MsgSaveAsFile()
       var uri = messageList[0].getAttribute('id');
       dump (uri);
       if (uri)
-          messenger.saveAs(uri, true, null);
+          messenger.saveAs(uri, true, null, msgWindow);
   }
 }
 
@@ -858,7 +858,7 @@ function MsgSaveAsTemplate()
       if (uri)
       {
           var identity = getIdentityForSelectedServer();
-          messenger.saveAs(uri, false, identity);
+          messenger.saveAs(uri, false, identity, msgWindow);
       }
   }
 }

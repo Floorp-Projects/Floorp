@@ -61,6 +61,8 @@ nsIRDFResource* nsMsgMessageDataSource::kNC_Total = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_Unread = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_MessageChild = nsnull;
 nsIRDFResource* nsMsgMessageDataSource::kNC_IsUnread = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_OrderReceived = nsnull;
+nsIRDFResource* nsMsgMessageDataSource::kNC_OrderReceivedSort = nsnull;
 
 
 //commands
@@ -112,6 +114,8 @@ nsMsgMessageDataSource::~nsMsgMessageDataSource (void)
 		NS_RELEASE2(kNC_Unread, refcnt);
 		NS_RELEASE2(kNC_MessageChild, refcnt);
 		NS_RELEASE2(kNC_IsUnread, refcnt);
+		NS_RELEASE2(kNC_OrderReceived, refcnt);
+		NS_RELEASE2(kNC_OrderReceivedSort, refcnt);
 
 		NS_RELEASE2(kNC_MarkRead, refcnt);
 		NS_RELEASE2(kNC_MarkUnread, refcnt);
@@ -164,6 +168,8 @@ nsresult nsMsgMessageDataSource::Init()
 		rdf->GetResource(NC_RDF_TOTALUNREADMESSAGES,   &kNC_Unread);
 		rdf->GetResource(NC_RDF_MESSAGECHILD,   &kNC_MessageChild);
 		rdf->GetResource(NC_RDF_ISUNREAD, &kNC_IsUnread);
+		rdf->GetResource(NC_RDF_ORDERRECEIVED, &kNC_OrderReceived);
+		rdf->GetResource(NC_RDF_ORDERRECEIVED_SORT, &kNC_OrderReceivedSort);
 
 		rdf->GetResource(NC_RDF_MARKREAD, &kNC_MarkRead);
 		rdf->GetResource(NC_RDF_MARKUNREAD, &kNC_MarkUnread);
@@ -386,7 +392,7 @@ NS_IMETHODIMP nsMsgMessageDataSource::GetTargets(nsIRDFResource* source,
 		else if((kNC_Subject == property) || (kNC_Date == property) ||
 				(kNC_Status == property) || (kNC_Flagged == property) ||
 				(kNC_Priority == property) || (kNC_Size == property) ||
-				(kNC_IsUnread == property))
+				(kNC_IsUnread == property) || (kNC_OrderReceived == property))
 		{
 			nsSingletonEnumerator* cursor =
 				new nsSingletonEnumerator(source);
@@ -511,6 +517,7 @@ nsMsgMessageDataSource::getMessageArcLabelsOut(PRBool showThreads,
 	(*arcs)->AppendElement(kNC_Priority);
 	(*arcs)->AppendElement(kNC_Size);
 	(*arcs)->AppendElement(kNC_IsUnread);
+	(*arcs)->AppendElement(kNC_OrderReceived);
 
 	return NS_OK;
 }
@@ -893,6 +900,10 @@ nsMsgMessageDataSource::createMessageNode(nsIMessage *message,
 		rv = createMessageIsUnreadNode(message, target);
   else if ((kNC_MessageChild == property))
     rv = createMessageMessageChildNode(message, target);
+  else if ((kNC_OrderReceived == property))
+    rv = createMessageOrderReceivedNode(message, target);
+  else if ((kNC_OrderReceivedSort == property))
+    rv = createMessageOrderReceivedSortNode(message, target);
 
   if (NS_FAILED(rv))
     return NS_RDF_NO_VALUE;
@@ -1016,6 +1027,29 @@ nsMsgMessageDataSource::createMessageIsUnreadNode(nsIMessage *message, nsIRDFNod
 		*target = kTrueLiteral;
 
 	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageOrderReceivedNode(nsIMessage *message, nsIRDFNode **target)
+{
+	//there's no visual string for order received.
+	*target = kEmptyStringLiteral;
+	NS_IF_ADDREF(*target);
+	return NS_OK;
+}
+
+nsresult
+nsMsgMessageDataSource::createMessageOrderReceivedSortNode(nsIMessage *message, nsIRDFNode **target)
+{
+	nsMsgKey msgKey;
+	nsresult rv;
+
+	rv = message->GetMessageKey(&msgKey);
+	if(NS_FAILED(rv))
+		return rv;
+
+	createIntNode(msgKey, target, getRDFService());
 	return NS_OK;
 }
 

@@ -155,6 +155,20 @@ nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfServic
 	return rv;
 }
 
+nsresult createIntNode(PRInt32 value, nsIRDFNode **node, nsIRDFService *rdfService)
+{
+	*node = nsnull;
+	nsresult rv; 
+	if (!rdfService) return NS_ERROR_NULL_POINTER;  
+	nsCOMPtr<nsIRDFInt> num;
+	rv = rdfService->GetIntLiteral(value, getter_AddRefs(num));
+	if(NS_SUCCEEDED(rv)) {
+		*node = num;
+		NS_IF_ADDREF(*node);
+	}
+	return rv;
+}
+
 nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* folderResource,
 							   nsIRDFResource *property,PRBool tv, nsIRDFNode *target,PRBool* hasAssertion)
 {

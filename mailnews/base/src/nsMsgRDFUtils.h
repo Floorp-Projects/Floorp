@@ -46,6 +46,7 @@ typedef struct _nsMsgRDFNotification {
 #define NC_RDF_PRIORITY				NC_NAMESPACE_URI "Priority"
 #define NC_RDF_SIZE					NC_NAMESPACE_URI "Size"
 #define NC_RDF_ISUNREAD				NC_NAMESPACE_URI "IsUnread"
+#define NC_RDF_ORDERRECEIVED		NC_NAMESPACE_URI "OrderReceived"
 
 #define NC_RDF_CHILD				NC_NAMESPACE_URI "child"
 #define NC_RDF_MESSAGECHILD			NC_NAMESPACE_URI "MessageChild"
@@ -71,6 +72,7 @@ typedef struct _nsMsgRDFNotification {
 //Sort Properties
 #define NC_RDF_SUBJECT_COLLATION_SORT	NC_NAMESPACE_URI "Subject?collation=true"
 #define NC_RDF_SENDER_COLLATION_SORT	NC_NAMESPACE_URI "Sender?collation=true"
+#define NC_RDF_ORDERRECEIVED_SORT		NC_NAMESPACE_URI "OrderReceived?sort=true"
 
 #define NC_RDF_NAME_SORT				NC_NAMESPACE_URI "Name?sort=true"
 #define NC_RDF_FOLDERTREENAME_SORT		NC_NAMESPACE_URI "FolderTreeName?sort=true"
@@ -116,7 +118,10 @@ nsresult createNode(const PRUnichar *str, nsIRDFNode **, nsIRDFService *rdfServi
 //Given a PRTime create an nsIRDFNode that is really a date literal.
 nsresult createDateNode(PRTime time, nsIRDFNode **node, nsIRDFService *rdfService);
 
-//Has Assertion for a datasource that will just call GetTarget on property.  When all of our 
+//Given an PRInt32 creates an nsIRDFNode that is really an int literal.
+nsresult createIntNode(PRInt32 value, nsIRDFNode **node, nsIRDFService *rdfService);
+
+//s Assertion for a datasource that will just call GetTarget on property.  When all of our 
 //datasource derive from our datasource baseclass, this should be moved there and the first
 //parameter will no longer be needed.
 nsresult GetTargetHasAssertion(nsIRDFDataSource *dataSource, nsIRDFResource* folderResource,

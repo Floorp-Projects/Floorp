@@ -270,46 +270,53 @@ NS_IMETHODIMP nsMsgDBFolder::HasNewMessages(PRBool *hasNewMessages)
 	if(!hasNewMessages)
 		return NS_ERROR_NULL_POINTER;
 
-	nsresult rv = GetDatabase(nsnull);
-
-	if(NS_SUCCEEDED(rv))
+	nsresult rv;
+	//If there's no database then there are no new messages.
+	if(mDatabase)
 	{
 		rv = mDatabase->HasNew(hasNewMessages);
 	}
+	else
+	{
+		*hasNewMessages = PR_FALSE;
+		rv = NS_OK;
+	}
+
 	return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::GetFirstNewMessage(nsIMessage **firstNewMessage)
 {
-	nsresult rv = GetDatabase(nsnull);
+	//If there's not a db then there can't be new messages.  Return failure since you
+	//should use HasNewMessages first.
+	if(!mDatabase)
+		return NS_ERROR_FAILURE;
 
-	if(NS_SUCCEEDED(rv))
-	{
-		nsMsgKey key;
-		rv = mDatabase->GetFirstNew(&key);
-		if(NS_FAILED(rv))
-			return rv;
+	nsresult rv;
+	nsMsgKey key;
+	rv = mDatabase->GetFirstNew(&key);
+	if(NS_FAILED(rv))
+		return rv;
 
-		nsCOMPtr<nsIMsgDBHdr> hdr;
-		rv = mDatabase->GetMsgHdrForKey(key, getter_AddRefs(hdr));
-		if(NS_FAILED(rv))
-			return rv;
+	nsCOMPtr<nsIMsgDBHdr> hdr;
+	rv = mDatabase->GetMsgHdrForKey(key, getter_AddRefs(hdr));
+	if(NS_FAILED(rv))
+		return rv;
 
-		rv = CreateMessageFromMsgDBHdr(hdr, firstNewMessage);
-		if(NS_FAILED(rv))
-			return rv;
+	rv = CreateMessageFromMsgDBHdr(hdr, firstNewMessage);
+	if(NS_FAILED(rv))
+		return rv;
 
-	}
 	return rv;
 }
 
 NS_IMETHODIMP nsMsgDBFolder::ClearNewMessages()
 {
-	nsresult rv = GetDatabase(nsnull);
-
-	if(NS_SUCCEEDED(rv))
+	nsresult rv = NS_OK;
+	//If there's no db then there's nothing to clear.
+	if(mDatabase)
 	{
-		rv = mDatabase->ClearNewList(PR_FALSE);
+		rv = mDatabase->ClearNewList(PR_TRUE);
 	}
 	return rv;
 }

@@ -27,3 +27,4 @@ Rights Reserved.
 <!ENTITY sizeColumn.label "Size">
 <!ENTITY unreadColumn.label "Unread">
 <!ENTITY totalColumn.label "Total">
+<!ENTITY orderReceivedColumn.label "Order Received">

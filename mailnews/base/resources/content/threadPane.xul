@@ -67,6 +67,7 @@ Rights Reserved.
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#Size"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 				<treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
+				<treecell value="rdf:http://home.netscape.com/NC-rdf#OrderReceived"/>
 				<treecell/>
 	  		</treerow>
 		</treeitem>
@@ -86,6 +87,7 @@ Rights Reserved.
 	  <treecol persist="hidden width" width="1*" id="SizeColumn" rdf:resource="http://home.netscape.com/NC-rdf#Size"/>
 	  <treecol persist="hidden width" width="1*" id="UnreadColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalUnreadMessages"/>
 	  <treecol persist="hidden width" width="1*" id="TotalColumn" rdf:resource="http://home.netscape.com/NC-rdf#TotalMessages"/>
+	  <treecol persist="hidden width" fixed="true" width="1" id="OrderReceivedColumn" rdf:resource="http://home.netscape.com/NC-rdf#OrderReceived"/>
 	  <treecol persist="width" fixed="true" width="14" id="PopupColumn"/>
   </treecolgroup>
 
@@ -102,6 +104,7 @@ Rights Reserved.
 		<treecell value="&sizeColumn.label;" onclick="return top.MsgSortBySize();"/>
 		<treecell value="&unreadColumn.label;" onclick="return top.MsgSortByUnread();"/>
 		<treecell value="&totalColumn.label;" onclick="return top.MsgSortByTotal();"/>
+		<treecell value="&orderReceivedColumn.label;" onclick="return top.MsgSortByOrderReceived();"/>
 		<treecell allowevents="true" id="popupCell">
 		  <menu>
 		    <titledbutton src="chrome://global/skin/opentwisty.gif"/>
