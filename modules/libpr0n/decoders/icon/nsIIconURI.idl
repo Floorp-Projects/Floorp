@@ -24,19 +24,23 @@
 //
 //  moz-icon URLs have the following syntax
 // 
-//  -moz-icon:<file-uri>?size=&contentType=....
+//  moz-icon:<file-uri>?size=16&contentType=text/html
+// OR
+// moz-icon://dummyfile.html
+// moz-icon://dummyfile.html?size=32
 // 
-//  EXAMPLE: -moz-icon:file://test.html?size=16&contentType=text//html
-//  The content type field is optional. If you don't have a file extension on your file and the file doesn't exist,
-//  you can
+//  The content type field is optional. The size field is optional. You only need to specify a file url inside the icon
+// if the file you want the icon for actually exists. Otherwise you can omit the file:// and just place a dummy file name with the extension
+// or content type you want: moz-icon://dummy.html. 
 // 
 
 [scriptable, uuid(733A7A16-2D36-11d5-9907-001083010E9B)]
 interface nsIMozIconURI : nsIURI 
 {
   // Returns the file URL contained within this -moz-icon url.
-  attribute nsIURI IconFile;
+  attribute nsIURI IconFile; // maybe null if there isn't a real file we are trying to fetch
 
   attribute unsigned long imageSize; // measured by # of pixels in a row. defaults to 16.
-  attribute string contentType;
+  attribute string contentType;      // may be an empty string
+  readonly attribute string fileExtension;    
 };

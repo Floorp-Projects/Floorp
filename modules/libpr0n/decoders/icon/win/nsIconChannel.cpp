@@ -38,6 +38,11 @@
 #include <windows.h>
 #include <shellapi.h>
 
+// forward declarations of a couple of helper methods.
+// Takes a bitmap from the windows registry and converts it into 4 byte RGB data.
+void ConvertColorBitMap(unsigned char * aBitmapBuffer, PBITMAPINFOHEADER pBitMapInfo, nsCString& iconBuffer);
+void ConvertMaskBitMap(unsigned char * aBitMaskBuffer, PBITMAPINFOHEADER pBitMapInfo, nsCString& iconBuffer);
+
 // nsIconChannel methods
 nsIconChannel::nsIconChannel()
 {
@@ -145,52 +150,117 @@ void InvertRows(unsigned char * aInitialBuffer, PRUint32 sizeOfBuffer, PRUint32 
     lastRow -= numBytesPerRow;
     currentRow += numBytesPerRow;
   }
+
+  nsMemory::Free(temporaryRowHolder);
 }
 
-nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType)
+nsresult nsIconChannel::ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType, char ** aFileExtension)
 {
   nsresult rv = NS_OK;
   nsCOMPtr<nsIMozIconURI> iconURI (do_QueryInterface(mUrl, &rv));
   NS_ENSURE_SUCCESS(rv, rv);
 
+  iconURI->GetImageSize(aDesiredImageSize);
+  iconURI->GetContentType(aContentType);
+  iconURI->GetFileExtension(aFileExtension);
+
   nsCOMPtr<nsIURI> fileURI;
   rv = iconURI->GetIconFile(getter_AddRefs(fileURI));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv) || !fileURI) return NS_OK;
 
   nsCOMPtr<nsIFileURL>    fileURL = do_QueryInterface(fileURI, &rv);
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv) || !fileURL) return NS_OK;
 
   nsCOMPtr<nsIFile> file;
   rv = fileURL->GetFile(getter_AddRefs(file));
-  NS_ENSURE_SUCCESS(rv, rv);
+  if (NS_FAILED(rv) || !file) return NS_OK;
   
   *aLocalFile = file;
   NS_IF_ADDREF(*aLocalFile);
-
-  iconURI->GetImageSize(aDesiredImageSize);
-  iconURI->GetContentType(aContentType);
-
   return NS_OK;
+}
+
+void ConvertColorBitMap(unsigned char * buffer, PBITMAPINFOHEADER pBitMapHeaderInfo, nsCString& iconBuffer)
+{
+  // windows invers the row order in their bitmaps. So we need to invert the rows back into a top-down order.
+
+  PRUint32 bytesPerPixel = pBitMapHeaderInfo->biBitCount / 8;
+  InvertRows(buffer, pBitMapHeaderInfo->biSizeImage, pBitMapHeaderInfo->biWidth * bytesPerPixel);
+  
+  PRUint32 index = 0;
+  // if each pixel uses 16 bits to describe the color then each R, G, and B value uses 5 bites. Use some fancy
+  // bit operations to blow up the 16 bit case into 1 byte per component color.
+  if (pBitMapHeaderInfo->biBitCount == 16)
+  {
+    PRUint8 redValue, greenValue, blueValue;
+    while (index < pBitMapHeaderInfo->biSizeImage)
+    {                            
+      DWORD dst=(DWORD) buffer[index];
+      PRUint16 num = 0;
+      num = (PRUint8) buffer[index];
+      num <<= 8;
+      num |= (PRUint8) buffer[index+1];
+
+      redValue = ((PRUint32) (((float)(num & 0x7c00) / 0x7c00) * 0xFF0000) & 0xFF0000)>> 16;
+      greenValue =  ((PRUint32)(((float)(num & 0x03E0) / 0x03E0) * 0x00FF00) & 0x00FF00)>> 8;
+      blueValue =  ((PRUint32)(((float)(num & 0x001F) / 0x001F) * 0x0000FF) & 0x0000FF);
+
+      // now we have the right RGB values...
+      iconBuffer.Append((char) redValue);
+      iconBuffer.Append((char) greenValue);
+      iconBuffer.Append((char) blueValue);
+      index += bytesPerPixel;
+    }
+  }
+  else // otherwise we must be using 32 bits per pixel so each component value is getting one byte...
+  {
+    while (index < pBitMapHeaderInfo->biSizeImage)
+    {
+      iconBuffer.Append((char) buffer[index]);
+      iconBuffer.Append((char) buffer[index+1]);
+      iconBuffer.Append((char) buffer[index+2]);
+      index += bytesPerPixel;
+    }
+  }
+}
+
+void ConvertMaskBitMap(unsigned char * aBitMaskBuffer, PBITMAPINFOHEADER pBitMapHeaderInfo, nsCString& iconBuffer)
+{
+  InvertRows(aBitMaskBuffer, pBitMapHeaderInfo->biSizeImage, 4);
+  PRUint32 index = 0;
+  // for some reason the bit mask on windows are flipped from the values we really want for transparency. 
+  // So complement each byte in the bit mask.
+  while (index < pBitMapHeaderInfo->biSizeImage)
+  {
+    aBitMaskBuffer[index]^=255;
+    index += 1;
+  }
+  iconBuffer.Append((char *) aBitMaskBuffer, pBitMapHeaderInfo->biSizeImage);
 }
 
 NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports *ctxt)
 {
   nsXPIDLCString contentType;
+  nsXPIDLCString filePath;
   nsCOMPtr<nsIFile> localFile; // file we want an icon for
   PRUint32 desiredImageSize;
-  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, getter_Copies(contentType));
+  nsresult rv = ExtractIconInfoFromUrl(getter_AddRefs(localFile), &desiredImageSize, getter_Copies(contentType), getter_Copies(filePath));
   NS_ENSURE_SUCCESS(rv, rv);
 
   // if the file exists, we are going to use it's real attributes...otherwise we only want to use it for it's extension...
   SHFILEINFO      sfi;
   UINT infoFlags = SHGFI_ICON;
+  
   PRBool fileExists = PR_FALSE;
-  nsXPIDLCString filePath;
-  localFile->GetPath(getter_Copies(filePath));
+ 
+  if (localFile)
+  {
+    localFile->GetPath(getter_Copies(filePath));
+    localFile->Exists(&fileExists);
+  }
 
-  localFile->Exists(&fileExists);
   if (!fileExists)
-    infoFlags |= SHGFI_USEFILEATTRIBUTES;
+   infoFlags |= SHGFI_USEFILEATTRIBUTES;
 
   if (desiredImageSize > 16)
     infoFlags |= SHGFI_LARGEICON;
@@ -206,67 +276,29 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
     result = GetIconInfo(sfi.hIcon, &pIconInfo);
     if (result > 0)
     {
-      // now we have the bit map we need to get info about the bitmap
+      nsCString iconBuffer;
+      // we have the bit map we need to get info about the bitmap
       BITMAPINFO pBitMapInfo;
       BITMAPINFOHEADER pBitMapInfoHeader;
       pBitMapInfo.bmiHeader.biBitCount = 0;
       pBitMapInfo.bmiHeader.biSize = sizeof(pBitMapInfoHeader);
 
       HDC pDC = CreateCompatibleDC(NULL); // get a device context for the screen.
-      result = GetDIBits(pDC, pIconInfo.hbmColor, 0, 0, NULL, &pBitMapInfo, DIB_RGB_COLORS);
+      LONG result = GetDIBits(pDC, pIconInfo.hbmColor, 0, 0, NULL, &pBitMapInfo, DIB_RGB_COLORS);
       if (result > 0 && pBitMapInfo.bmiHeader.biSizeImage > 0)
       {
         // allocate a buffer to hold the bit map....this should be a buffer that's biSizeImage...
         unsigned char * buffer = (PRUint8 *) nsMemory::Alloc(pBitMapInfo.bmiHeader.biSizeImage);
         result = GetDIBits(pDC, pIconInfo.hbmColor, 0, pBitMapInfo.bmiHeader.biHeight, (void *) buffer, &pBitMapInfo, DIB_RGB_COLORS);
         if (result > 0)
-        {
-          PRUint32 bytesPerPixel = pBitMapInfo.bmiHeader.biBitCount / 8;
-          InvertRows(buffer, pBitMapInfo.bmiHeader.biSizeImage, pBitMapInfo.bmiHeader.biWidth * bytesPerPixel);
-          // Convert our little icon buffer which is padded to 4 bytes per pixel into a nice 3 byte per pixel
-          // description.
-          nsCString iconBuffer;
+        { 
+          // The first 2 bytes into our output buffer needs to be the width and the height (in pixels) of the icon
+          // as specified by our data format.
           iconBuffer.Assign((char) pBitMapInfo.bmiHeader.biWidth);
           iconBuffer.Append((char) pBitMapInfo.bmiHeader.biHeight);
+
+          ConvertColorBitMap(buffer, &pBitMapInfo.bmiHeader, iconBuffer);
           
-          PRInt32 index = 0;
-          if (pBitMapInfo.bmiHeader.biBitCount == 16)
-          {
-            PRUint8 redValue, greenValue, blueValue, partialGreen;
-            while (index < pBitMapInfo.bmiHeader.biSizeImage)
-            {                            
-              DWORD dst=(DWORD) buffer[index];
-              PRUint16 num = 0;
-              num = (PRUint8) buffer[index];
-              num <<= 8;
-              num |= (PRUint8) buffer[index+1];
-
-              //blueValue = (PRUint8)((*dst)&(0x1F));
-              //greenValue = (PRUint8)(((*dst)>>5)&(0x1F));
-              //redValue = (PRUint8)(((*dst)>>10)&(0x1F));
-
-              redValue = ((PRUint32) (((float)(num & 0x7c00) / 0x7c00) * 0xFF0000) & 0xFF0000)>> 16;
-              greenValue =  ((PRUint32)(((float)(num & 0x03E0) / 0x03E0) * 0x00FF00) & 0x00FF00)>> 8;
-              blueValue =  ((PRUint32)(((float)(num & 0x001F) / 0x001F) * 0x0000FF) & 0x0000FF);
-
-              // now we have the right RGB values...
-              iconBuffer.Append((char) redValue);
-              iconBuffer.Append((char) greenValue);
-              iconBuffer.Append((char) blueValue);
-              index += bytesPerPixel;
-            }
-          }
-          else
-          {
-            while (index <pBitMapInfo.bmiHeader.biSizeImage)
-            {
-              iconBuffer.Append((char) buffer[index]);
-              iconBuffer.Append((char) buffer[index+1]);
-              iconBuffer.Append((char) buffer[index+2]);
-              index += bytesPerPixel;
-            }
-          }
-
           // now we need to tack on the alpha data...which is hbmMask
           pBitMapInfo.bmiHeader.biBitCount = 0;
           pBitMapInfo.bmiHeader.biSize = sizeof(pBitMapInfoHeader);
@@ -276,45 +308,30 @@ NS_IMETHODIMP nsIconChannel::AsyncOpen(nsIStreamListener *aListener, nsISupports
             // allocate a buffer to hold the bit map....this should be a buffer that's biSizeImage...
             unsigned char * maskBuffer = (PRUint8 *) nsMemory::Alloc(pBitMapInfo.bmiHeader.biSizeImage);
             result = GetDIBits(pDC, pIconInfo.hbmMask, 0, pBitMapInfo.bmiHeader.biHeight, (void *) maskBuffer, &pBitMapInfo, DIB_RGB_COLORS);
-            if (result > 0)
-            {
-              InvertRows(maskBuffer, pBitMapInfo.bmiHeader.biSizeImage, 4);
-              index = 0;
-              // for some reason the bit mask on windows are flipped from the values we really want for transparency. 
-              // So complement each byte in the bit mask.
-              while (index < pBitMapInfo.bmiHeader.biSizeImage)
-              {
-                maskBuffer[index]^=255;
-                index += 1;
-              }
-              iconBuffer.Append((char *) maskBuffer, pBitMapInfo.bmiHeader.biSizeImage);
-            }
-
+            if (result > 0)          
+               ConvertMaskBitMap(maskBuffer, &pBitMapInfo.bmiHeader, iconBuffer);           
             nsMemory::Free(maskBuffer);
+
+            // turn our nsString into a stream looking object...
+            aListener->OnStartRequest(this, ctxt);
+
+            // turn our string into a stream...and make the appropriate calls on our consumer
+            nsCOMPtr<nsISupports> streamSupports;
+            NS_NewByteInputStream(getter_AddRefs(streamSupports), iconBuffer.get(), iconBuffer.Length());
+            nsCOMPtr<nsIInputStream> inputStr (do_QueryInterface(streamSupports));
+            aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
+            aListener->OnStopRequest(this, ctxt, NS_OK);
           } // if we have a mask buffer to apply
+        } // if we got the color bit map
 
-          // turn our nsString into a stream looking object...
-          aListener->OnStartRequest(this, ctxt);
-
-          // turn our string into a stream...
-          nsCOMPtr<nsISupports> streamSupports;
-          NS_NewByteInputStream(getter_AddRefs(streamSupports), iconBuffer.get(), iconBuffer.Length());
-
-          nsCOMPtr<nsIInputStream> inputStr (do_QueryInterface(streamSupports));
-          aListener->OnDataAvailable(this, ctxt, inputStr, 0, iconBuffer.Length());
-          aListener->OnStopRequest(this, ctxt, NS_OK);
-
-        } // if we got valid bits for the main bitmap mask
-        
         nsMemory::Free(buffer);
-
-      }
+      } // if we got color info
 
       DeleteDC(pDC);
-    }
-  }
+    } // if we got icon info
+  } // if we got sfi
 
-  return NS_OK;
+  return rv;
 }
 
 NS_IMETHODIMP nsIconChannel::GetLoadFlags(PRUint32 *aLoadAttributes)

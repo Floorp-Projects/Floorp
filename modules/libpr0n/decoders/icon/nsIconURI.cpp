@@ -22,6 +22,7 @@
 #include "nsIconURI.h"
 #include "nsNetUtil.h"
 #include "nsIIOService.h"
+#include "nsIURL.h"
 #include "nsCRT.h"
 
 static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
@@ -53,15 +54,21 @@ nsresult
 nsMozIconURI::FormatSpec(char* *result)
 {
   nsresult rv = NS_OK;
-  nsXPIDLCString fileIconSpec;
+  nsCString spec(NS_MOZICON_SCHEME);
+
   if (mFileIcon)
   {
+    nsXPIDLCString fileIconSpec;
     rv = mFileIcon->GetSpec(getter_Copies(fileIconSpec));
     NS_ENSURE_SUCCESS(rv, rv);
+    spec += fileIconSpec;
+  }
+  else
+  {
+    spec += "//";
+    spec += mDummyFilePath;
   }
 
-  nsCString spec(NS_MOZICON_SCHEME);
-  spec += fileIconSpec;
   spec += NS_MOZ_ICON_DELIMITER;
   spec += "size=";
   spec.AppendInt(mSize);
@@ -132,16 +139,15 @@ nsMozIconURI::SetSpec(const char * aSpec)
     return NS_ERROR_MALFORMED_URI;
 
   nsCAutoString mozIconPath(aSpec);
-  nsCAutoString filePath;
   PRInt32 pos = mozIconPath.FindChar(NS_MOZ_ICON_DELIMITER);
 
   if (pos == -1) // no size or content type specified
   {
-    mozIconPath.Right(filePath, mozIconPath.Length() - endPos);
+    mozIconPath.Right(mDummyFilePath, mozIconPath.Length() - endPos);
   }
   else
   {
-    mozIconPath.Mid(filePath, endPos, pos - endPos);
+    mozIconPath.Mid(mDummyFilePath, endPos, pos - endPos);
     // fill in any size and content type values...
     nsXPIDLCString sizeString;
     nsXPIDLCString contentTypeString;
@@ -158,8 +164,27 @@ nsMozIconURI::SetSpec(const char * aSpec)
     }
   }
 
-  rv = ioService->NewURI(filePath, nsnull, getter_AddRefs(mFileIcon));
-  if (NS_FAILED(rv)) return rv;
+  // Okay now we have a bit of a hack here...filePath can have two forms:
+  // (1) file://<some valid platform specific file url>
+  // (2) //<some dummy file with an extension>
+  // We need to determine which case we are and behave accordingly...
+  if (mDummyFilePath.Length() > 2) // we should at least have two forward slashes followed by a file or a file://
+  {
+    if (!nsCRT::strncmp("//", mDummyFilePath.get(), 2))// must not have a url here..
+    {
+      // in this case the string looks like //somefile.html or // somefile.extension. So throw away the "//" part
+      // and remember the rest in mDummyFilePath
+      mDummyFilePath.Cut(0, 2); // cut the first 2 bytes....
+    }
+    else // we must have a url
+    {
+      // we have a file url.....so store it...
+      rv = ioService->NewURI(mDummyFilePath, nsnull, getter_AddRefs(mFileIcon));
+      if (NS_FAILED(rv)) return NS_ERROR_MALFORMED_URI;
+    }
+  }
+  else
+    return NS_ERROR_MALFORMED_URI; // they didn't include a file path...
   return rv;
 }
 
@@ -301,13 +326,13 @@ nsMozIconURI::Resolve(const char *relativePath, char **result)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-// nsIJARUri methods:
+// nsIIconUri methods:
 
 NS_IMETHODIMP
 nsMozIconURI::GetIconFile(nsIURI* * aFileUrl)
 {
   *aFileUrl = mFileIcon;
-  NS_ADDREF(*aFileUrl);
+  NS_IF_ADDREF(*aFileUrl);
   return NS_OK;
 }
 
@@ -345,5 +370,51 @@ nsMozIconURI::SetContentType(const char * aContentType)
   mContentType = aContentType;
   return NS_OK;
 }
+
+NS_IMETHODIMP
+nsMozIconURI::GetFileExtension(char ** aFileExtension)  
+{
+  nsCAutoString fileExtension;
+  nsresult rv = NS_OK;
+
+  // First, try to get the extension from mFileIcon if we have one
+  if (mFileIcon)
+  {
+    nsXPIDLCString fileExt;
+    nsCOMPtr<nsIURL> url (do_QueryInterface(mFileIcon, &rv));
+    if (NS_SUCCEEDED(rv) && url)
+    {
+      rv = url->GetFileExtension(getter_Copies(fileExt));
+      if (NS_SUCCEEDED(rv))
+      {
+        // unfortunately, this code doesn't give us the required '.' in front of the extension
+        // so we have to do it ourselves..
+        nsCAutoString tempFileExt;
+        tempFileExt = ".";
+        tempFileExt.Append(fileExt);
+
+        *aFileExtension = tempFileExt.ToNewCString();
+        return NS_OK;
+      }
+    }
+    
+    mFileIcon->GetSpec(getter_Copies(fileExt));
+    fileExtension = fileExt;
+  }
+  else
+  {
+    fileExtension = mDummyFilePath;
+  }
+
+  // truncate the extension out of the file path...
+  const char * chFileName = fileExtension.get(); // get the underlying buffer
+  const char * fileExt = PL_strrchr(chFileName, '.');
+  if (!fileExt) return NS_ERROR_FAILURE; // no file extension to work from.
+  else
+    *aFileExtension = nsCRT::strdup(fileExt);
+
+  return NS_OK;
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////

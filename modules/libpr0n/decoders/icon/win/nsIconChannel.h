@@ -54,7 +54,7 @@ protected:
   nsCOMPtr<nsISupports>  mOwner; 
   nsresult mStatus;
 
-  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType);
+  nsresult ExtractIconInfoFromUrl(nsIFile ** aLocalFile, PRUint32 * aDesiredImageSize, char ** aContentType, char ** aFileExtension);
 };
 
 #endif /* nsIconChannel_h___ */
