@@ -99,26 +99,24 @@ JSBool pref_InitInitialObjects()
  * Convert between cross-platform file/folder pathname strings
  * and Mac aliases flattened into binary strings
  */
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
 {
-	int dirSize, result;
-	AliasHandle aliasH = NULL;
+	int dirSize;
 	char *dirAliasBuf = NULL;
-	OSErr err;
-	FSSpec fileSpec;
-	Boolean changed;
-
-	result = PREF_CopyBinaryPref(pref_name, &dirAliasBuf, &dirSize);
+	PrefResult result = PREF_CopyBinaryPref(pref_name, &dirAliasBuf, &dirSize);
 	if (result != PREF_NOERROR)
 		return result;
 
 	// Cast to an alias record and resolve.
-	err = PtrToHand(dirAliasBuf, &(Handle) aliasH, dirSize);
+	AliasHandle aliasH = NULL;
+	OSErr err = PtrToHand(dirAliasBuf, &(Handle) aliasH, dirSize);
 	free(dirAliasBuf);
 	if (err != noErr)
 		return PREF_ERROR; // not enough memory?
 
+	FSSpec fileSpec;
+	Boolean changed;
 	err = ::ResolveAlias(NULL, aliasH, &fileSpec, &changed);
 	DisposeHandle((Handle) aliasH);
 	if (err != noErr)
@@ -129,7 +127,7 @@ PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
 	return PREF_NOERROR;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 {
 	FSSpec fileSpec;
@@ -142,7 +140,7 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 	if (err != noErr)
 		return PREF_ERROR;
 
-	int result;
+	PrefResult result;
 	Size bytes = GetHandleSize((Handle) aliasH);
 	HLock((Handle) aliasH);
 	

@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -79,23 +79,17 @@ JSObject *			    m_GlobalConfigObject = NULL;
 static char *				m_filename = NULL;
 static char *				m_lifilename = NULL;
 static struct CallbackNode*	m_Callbacks = NULL;
-static PRBool				m_ErrorOpeningUserPrefs = FALSE;
-static PRBool				m_CallbacksEnabled = FALSE;
-static PRBool				m_IsAnyPrefLocked = FALSE;
+static PRBool				m_ErrorOpeningUserPrefs = PR_FALSE;
+static PRBool				m_CallbacksEnabled = PR_FALSE;
+static PRBool				m_IsAnyPrefLocked = PR_FALSE;
 static PRHashTable*			m_HashTable = NULL;
-
-/* LI_STUFF - PREF_LILOCAL here to flag prefs as transferable or not */
-typedef enum { PREF_LOCKED = 1, PREF_USERSET = 2, PREF_CONFIG = 4,
-			   PREF_STRING = 8, PREF_INT = 16, PREF_BOOL = 32, 
-			   PREF_LILOCAL = 64 } PrefType;
-/* LI_STUFF  PREF_SETLI here to flag prefs as transferable or not */
-typedef enum { PREF_SETDEFAULT, PREF_SETUSER, 
-			   PREF_LOCK, PREF_SETCONFIG, PREF_SETLI } PrefAction;
+static char *               m_SavedLine = NULL;       
 
 #define PREF_IS_LOCKED(pref)			((pref)->flags & PREF_LOCKED)
 #define PREF_IS_CONFIG(pref)			((pref)->flags & PREF_CONFIG)
 #define PREF_HAS_USER_VALUE(pref)		((pref)->flags & PREF_USERSET)
 #define PREF_HAS_LI_VALUE(pref)			((pref)->flags & PREF_LILOCAL) /* LI_STUFF */
+#define PREF_TYPE(pref)                 (PrefType)((pref)->flags & PREF_VALUETYPE_MASK)
 
 typedef union
 {
@@ -112,6 +106,7 @@ typedef struct
 } PrefNode;
 
 static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action);
+static XP_Bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type);
 
 /* Hash table allocation */
 PR_IMPLEMENT(void *)
@@ -168,19 +163,24 @@ struct CallbackNode {
 };
 
 /* -- Prototypes */
-int pref_DoCallback(const char* changed_pref);
-int pref_OpenFile(const char* filename, PRBool is_error_fatal, PRBool verifyHash, PRBool bGlobalContext);
+PrefResult pref_DoCallback(const char* changed_pref);
+PrefResult pref_OpenFile(
+    const char* filename,
+    PRBool is_error_fatal,
+    PRBool verifyHash,
+    PRBool bGlobalContext,
+    PRBool skipFirstLine);
 PRBool pref_VerifyLockFile(char* buf, long buflen);
 
-int pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default);
-int pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default);
-int pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_default);
-int pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBool get_default);
+PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default);
+PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default);
+PrefResult pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_default);
+PrefResult pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBool get_default);
 
 JSBool PR_CALLBACK pref_BranchCallback(JSContext *cx, JSScript *script);
 void pref_ErrorReporter(JSContext *cx, const char *message,JSErrorReport *report);
 void pref_Alert(char* msg);
-int pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
+PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action);
 
 /* -- Platform specific function extern */
 #if !defined(XP_WIN) && !defined(XP_OS2)
@@ -233,12 +233,17 @@ static JSClass autoconf_class = {
     JS_EnumerateStub, JS_ResolveStub, JS_ConvertStub, JS_FinalizeStub
 };
 
-int pref_OpenFile(const char* filename, PRBool is_error_fatal, PRBool verifyHash, PRBool bGlobalContext)
+PrefResult pref_OpenFile(
+    const char* filename,
+    PRBool is_error_fatal,
+    PRBool verifyHash,
+    PRBool bGlobalContext,
+    PRBool skipFirstLine)
 {
-	int ok = PREF_ERROR;
+	PrefResult ok = PREF_ERROR;
 	FILE *fp;
 	struct stat stats;
-	long fileLength;
+	size_t fileLength;
 
 	stats.st_size = 0;
 	if ( stat(filename, (struct stat *) &stats) == -1 )
@@ -254,12 +259,12 @@ int pref_OpenFile(const char* filename, PRBool is_error_fatal, PRBool verifyHash
 		if (readBuf) {
 			fileLength = fread(readBuf, sizeof(char), fileLength, fp);
 
-			if ( verifyHash && pref_VerifyLockFile(readBuf, fileLength) == FALSE )
+			if ( verifyHash && pref_VerifyLockFile(readBuf, fileLength) == PR_FALSE )
 			{
 				ok = PREF_BAD_LOCKFILE;
 			}
 			else if ( PREF_EvaluateConfigScript(readBuf, fileLength,
-						filename, bGlobalContext, FALSE ) == JS_TRUE )
+						filename, bGlobalContext, PR_FALSE, skipFirstLine ) == JS_TRUE )
 			{
 				ok = PREF_NOERROR;
 			}
@@ -270,7 +275,7 @@ int pref_OpenFile(const char* filename, PRBool is_error_fatal, PRBool verifyHash
 		/* If the user prefs file exists but generates an error,
 		   don't clobber the file when we try to save it. */
 		if ((!readBuf || ok != PREF_NOERROR) && is_error_fatal)
-			m_ErrorOpeningUserPrefs = TRUE;
+			m_ErrorOpeningUserPrefs = PR_TRUE;
 #ifdef XP_PC
 		if (m_ErrorOpeningUserPrefs && is_error_fatal)
 			MessageBox(NULL,"Error in preference file (prefs.js).  Default preferences will be used.","Netscape - Warning", MB_OK);
@@ -287,14 +292,14 @@ int pref_OpenFile(const char* filename, PRBool is_error_fatal, PRBool verifyHash
 PRBool pref_VerifyLockFile(char* buf, long buflen)
 {
 #ifndef NO_SECURITY
-	PRBool success = FALSE;
+	PRBool success = PR_FALSE;
 	const int obscure_value = 7;
 	const long hash_length = 51;		/* len = 48 chars of MD5 + // + EOL */
     unsigned char digest[16];
     char szHash[64];
 
 	/* Unobscure file by subtracting some value from every char. */
-	unsigned int i;
+	long i;
 	for (i = 0; i < buflen; i++) {
 		buf[i] -= obscure_value;
 	}
@@ -328,43 +333,43 @@ PRBool pref_VerifyLockFile(char* buf, long buflen)
 #else	
 	/*
 	 * Should return 'success', but since the MD5 code is stubbed out,
-	 * just return 'TRUE' until we have a replacement.
+	 * just return 'PR_TRUE' until we have a replacement.
 	 */
-	return TRUE;
+	return PR_TRUE;
 #endif
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_ReadLIJSFile(char *filename)
 {
-	int ok;
+	PrefResult ok;
 
     if (filename) m_lifilename = strdup(filename);
 
-	ok = pref_OpenFile(filename, FALSE, FALSE, FALSE);
+	ok = pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_FALSE, PR_FALSE);
 
 	return ok;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_ReadUserJSFile(char *filename)
 {
-	int ok = pref_OpenFile(filename, FALSE, FALSE, TRUE);
+	PrefResult ok = pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_TRUE, PR_FALSE);
 
 	return ok;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PRBool)
 PREF_Init(char *filename)
 {
-    JSBool ok = JS_TRUE;
+    PRBool ok = PR_TRUE;
 
 	/* --ML hash test */
 	if (!m_HashTable)
 	m_HashTable = PR_NewHashTable(2048, PR_HashString, PR_CompareStrings,
 		PR_CompareValues, &pref_HashAllocOps, NULL);
 	if (!m_HashTable)
-		return 0;
+		return PR_FALSE;
 
     if (filename) {
         if (m_filename) /* happens if PREF_Init is called twice (it is) */
@@ -378,7 +383,7 @@ PREF_Init(char *filename)
     if (!m_mochaContext) {
 		m_mochaContext = JS_NewContext(m_mochaTaskState, 8192);  /* ???? What size? */
 		if (!m_mochaContext) {
-			return 0;
+			return PR_FALSE;
 		}
 
 		JS_BeginRequest(m_mochaContext);
@@ -386,7 +391,7 @@ PREF_Init(char *filename)
 		m_GlobalConfigObject = JS_NewObject(m_mochaContext, &global_class, NULL, NULL);
 		if (!m_GlobalConfigObject)  {
 		    JS_EndRequest(m_mochaContext);
-		    return 0;
+		    return PR_FALSE;
                 }
 
                 /* MLM - need a global object for set version call now. */
@@ -397,7 +402,7 @@ PREF_Init(char *filename)
 		if (!JS_InitStandardClasses(m_mochaContext, 
 					    m_GlobalConfigObject))  {
 		    JS_EndRequest(m_mochaContext);
-		    return 0;
+		    return PR_FALSE;
 	 	}
 
 		JS_SetBranchCallback(m_mochaContext, pref_BranchCallback);
@@ -415,14 +420,14 @@ PREF_Init(char *filename)
 					     m_mochaPrefObject,
 					     autoconf_props)) {
 		        JS_EndRequest(m_mochaContext);
-			return 0;
+			return PR_FALSE;
 		    }
 
 		    if (!JS_DefineFunctions(m_mochaContext,
 					    m_mochaPrefObject,
 					    autoconf_methods)) {
 		        JS_EndRequest(m_mochaContext);
-			return 0;
+			return PR_FALSE;
 		    }
 
 		}
@@ -435,19 +440,19 @@ PREF_Init(char *filename)
 	}
 
 	if (ok && filename) {
-	    ok = (JSBool) (pref_OpenFile(filename, TRUE, FALSE, FALSE) == PREF_NOERROR);
+	    ok = (JSBool) (pref_OpenFile(filename, PR_TRUE, PR_FALSE, PR_FALSE, PR_TRUE) == PREF_NOERROR);
 	}
 	else if (!ok) {
-		m_ErrorOpeningUserPrefs = TRUE;
+		m_ErrorOpeningUserPrefs = PR_TRUE;
 	}
 	JS_EndRequest(m_mochaContext);
 	return ok;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetConfigContext(JSContext **js_context)
 {
-	if (!js_context) return FALSE;
+	if (!js_context) return PREF_ERROR;
 
 	*js_context = NULL;
     if (m_mochaContext)  {
@@ -455,31 +460,31 @@ PREF_GetConfigContext(JSContext **js_context)
 		JS_SetContextThread(m_mochaContext);
     }
 
-	return TRUE;
+	return PREF_NOERROR;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetGlobalConfigObject(JSObject **js_object)
 {
-	if (!js_object) return FALSE;
+	if (!js_object) return PREF_ERROR;
 
 	*js_object = NULL;
     if (m_GlobalConfigObject)
 		*js_object = m_GlobalConfigObject;
 
-	return TRUE;
+	return PREF_NOERROR;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetPrefConfigObject(JSObject **js_object)
 {
-	if (!js_object) return FALSE;
+	if (!js_object) return PREF_ERROR;
 
 	*js_object = NULL;
     if (m_mochaPrefObject)
 		*js_object = m_mochaPrefObject;
 
-	return TRUE;
+	return PREF_NOERROR;
 }
 
 /* Frees the callback list. */
@@ -504,11 +509,11 @@ PREF_Cleanup()
 		PR_HashTableDestroy(m_HashTable);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_ReadLockFile(const char *filename)
 {
 /*
-	return pref_OpenFile(filename, FALSE, FALSE, TRUE);
+	return pref_OpenFile(filename, PR_FALSE, PR_FALSE, PR_TRUE);
 
 	Lock files are obscured, and the security code to read them has
 	been removed from the free source.  So don't even try to read one.
@@ -518,10 +523,16 @@ PREF_ReadLockFile(const char *filename)
 	return PREF_ERROR;
 }
 
+void PREF_SetCallbacksStatus( PRBool status )
+{
+	m_CallbacksEnabled = status;
+}
+
 /* This is more recent than the below 3 routines which should be obsoleted */
 PR_IMPLEMENT(JSBool)
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
-	const char* filename, PRBool bGlobalContext, PRBool bCallbacks)
+	const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
+	PRBool skipFirstLine)
 {
 	JSBool ok;
 	jsval result;
@@ -540,28 +551,54 @@ PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
 	errReporter = JS_SetErrorReporter(m_mochaContext, pref_ErrorReporter);
 	m_CallbacksEnabled = bCallbacks;
 
+    if (skipFirstLine) {
+        /* In order to protect the privacy of the JavaScript preferences file 
+         * from loading by the browser, we make the first line unparseable
+         * by JavaScript. We must skip that line here before executing 
+         * the JavaScript code.
+         */
+        unsigned int i=0;
+        while (i < length) {
+            char c = js_buffer[i++];
+            if (c == '\r') {
+                if (js_buffer[i] == '\n')
+                    i++;
+                break;
+            }
+            if (c == '\n')
+                break;
+        }
+        m_SavedLine = malloc(i+1);
+        if (!m_SavedLine)
+            return JS_FALSE;
+        memcpy(m_SavedLine, js_buffer, i);
+        m_SavedLine[i] = '\0';
+        length -= i;
+        js_buffer += i;
+    }
+
 	ok = JS_EvaluateScript(m_mochaContext, scope,
 			js_buffer, length, filename, 0, &result);
 	
-	m_CallbacksEnabled = TRUE;		/* ?? want to enable after reading user/lock file */
+	m_CallbacksEnabled = PR_TRUE;		/* ?? want to enable after reading user/lock file */
 	JS_SetErrorReporter(m_mochaContext, errReporter);
 	
 	JS_EndRequest(m_mochaContext);
 	return ok;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(JSBool)
 PREF_EvaluateJSBuffer(const char * js_buffer, size_t length)
 {
 /* old routine that no longer triggers callbacks */
-	int ret;
+	JSBool ret;
 
 	ret = PREF_QuietEvaluateJSBuffer(js_buffer, length);
 	
 	return ret;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(JSBool)
 PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
 {
 	JSBool ok;
@@ -579,7 +616,7 @@ PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length)
 	return ok;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(JSBool)
 PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 {
 	JSBool ok;
@@ -626,9 +663,9 @@ static char * str_escape(const char * original) {
 }
 
 /*
-// External calls
- */
-PR_IMPLEMENT(int)
+** External calls
+*/
+PR_IMPLEMENT(PrefResult)
 PREF_SetCharPref(const char *pref_name, const char *value)
 {
 	PrefValue pref;
@@ -637,7 +674,7 @@ PREF_SetCharPref(const char *pref_name, const char *value)
 	return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetIntPref(const char *pref_name, int32 value)
 {
 	PrefValue pref;
@@ -646,7 +683,7 @@ PREF_SetIntPref(const char *pref_name, int32 value)
 	return pref_HashPref(pref_name, pref, PREF_INT, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetBoolPref(const char *pref_name, PRBool value)
 {
 	PrefValue pref;
@@ -655,7 +692,7 @@ PREF_SetBoolPref(const char *pref_name, PRBool value)
 	return pref_HashPref(pref_name, pref, PREF_BOOL, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetBinaryPref(const char *pref_name, void * value, long size)
 {
 	char* buf = PL_Base64Encode(value, size, NULL);
@@ -669,7 +706,7 @@ PREF_SetBinaryPref(const char *pref_name, void * value, long size)
 		return PREF_ERROR;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue)
 {
 	char colstr[63];
@@ -684,7 +721,7 @@ PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue)
 #define MYGetGValue(rgb)   ((uint8) (((uint16) (rgb)) >> 8)) 
 #define MYGetRValue(rgb)   ((uint8) (rgb)) 
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetColorPrefDWord(const char *pref_name, uint32 colorref)
 {
 	int red,green,blue;
@@ -700,7 +737,7 @@ PREF_SetColorPrefDWord(const char *pref_name, uint32 colorref)
 	return pref_HashPref(pref_name, pref, PREF_STRING, PREF_SETUSER);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom)
 {
 	char rectstr[63];
@@ -712,9 +749,9 @@ PREF_SetRectPref(const char *pref_name, int16 left, int16 top, int16 right, int1
 }
 
 /*
-// DEFAULT VERSIONS:  Call internal with (set_default == TRUE)
- */
-PR_IMPLEMENT(int)
+** DEFAULT VERSIONS:  Call internal with (set_default == PR_TRUE)
+*/
+PR_IMPLEMENT(PrefResult)
 PREF_SetDefaultCharPref(const char *pref_name,const char *value)
 {
 	PrefValue pref;
@@ -724,7 +761,7 @@ PREF_SetDefaultCharPref(const char *pref_name,const char *value)
 }
 
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetDefaultIntPref(const char *pref_name,int32 value)
 {
 	PrefValue pref;
@@ -733,7 +770,7 @@ PREF_SetDefaultIntPref(const char *pref_name,int32 value)
 	return pref_HashPref(pref_name, pref, PREF_INT, PREF_SETDEFAULT);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
 {
 	PrefValue pref;
@@ -742,7 +779,7 @@ PREF_SetDefaultBoolPref(const char *pref_name,PRBool value)
 	return pref_HashPref(pref_name, pref, PREF_BOOL, PREF_SETDEFAULT);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
 {
 	char* buf = PL_Base64Encode(value, size, NULL);
@@ -755,7 +792,7 @@ PREF_SetDefaultBinaryPref(const char *pref_name,void * value,long size)
 		return PREF_ERROR;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue)
 {
 	char colstr[63];
@@ -764,7 +801,7 @@ PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 bl
 	return PREF_SetDefaultCharPref(pref_name, colstr);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetDefaultRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom)
 {
 	char rectstr[63];
@@ -780,7 +817,10 @@ pref_saveLIPref(PRHashEntry *he, int i, void *arg)
 {
 	char **prefArray = (char**) arg;
 	PrefNode *pref = (PrefNode *) he->value;
-	if (pref && PREF_HAS_USER_VALUE(pref) && !PREF_HAS_LI_VALUE(pref)) {
+	if (pref && PREF_HAS_USER_VALUE(pref) && !PREF_HAS_LI_VALUE(pref) && 
+		pref_ValueChanged(pref->defaultPref, 
+						  pref->userPref, 
+						  (PrefType) PREF_TYPE(pref))) {
 		char buf[2048];
 
 		if (pref->flags & PREF_STRING) {
@@ -833,7 +873,14 @@ pref_savePref(PRHashEntry *he, int i, void *arg)
 	char **prefArray = (char**) arg;
 	PrefNode *pref = (PrefNode *) he->value;
 
-	if (pref && PREF_HAS_USER_VALUE(pref)) {
+	PR_ASSERT(pref);
+	if (!pref)
+		return 0;
+
+	if (PREF_HAS_USER_VALUE(pref) && 
+		pref_ValueChanged(pref->defaultPref, 
+						  pref->userPref, 
+						  (PrefType) PREF_TYPE(pref))) {
 		char buf[2048];
 
 		if (pref->flags & PREF_STRING) {
@@ -910,12 +957,12 @@ This is called by them and does the right thing.
 #define PREF_FILE_BANNER "// Netscape User Preferences" LINEBREAK \
 			 "// This is a generated file!  Do not edit." LINEBREAK LINEBREAK
 
-PR_IMPLEMENT(int)
-PREF_SavePrefFileWith(const char *filename, PRHashEnumerator heSaveProc) {
-	int success = PREF_ERROR;
+PR_IMPLEMENT(PrefResult)
+PREF_SavePrefFileWith(const char *filename, PRHashEnumerator heSaveProc)
+{
+	PrefResult success = PREF_ERROR;
 	FILE * fp;
 	char **valueArray = NULL;
-	int valueIdx;
 
 	if (!m_HashTable)
 		return PREF_NOT_INITIALIZED;
@@ -933,14 +980,16 @@ PREF_SavePrefFileWith(const char *filename, PRHashEnumerator heSaveProc) {
 		return PREF_OUT_OF_MEMORY;
 
 	fp = fopen(filename, "w");
-	if (fp) {
+	if (fp)
+	{
+		PRUint32 valueIdx;
 		fwrite(PREF_FILE_BANNER, sizeof(char), PL_strlen(PREF_FILE_BANNER), fp);
 		
 		/* LI_STUFF here we pass in the heSaveProc proc used so that li can do its own thing */
 		PR_HashTableEnumerateEntries(m_HashTable, heSaveProc, valueArray);
 		
 		/* Sort the preferences to make a readable file on disk */
-		XP_QSORT (valueArray, m_HashTable->nentries, sizeof(char*), pref_CompareStrings);
+		XP_QSORT(valueArray, m_HashTable->nentries, sizeof(char*), pref_CompareStrings);
 		for (valueIdx = 0; valueIdx < m_HashTable->nentries; valueIdx++)
 		{
 			if (valueArray[valueIdx])
@@ -955,7 +1004,7 @@ PREF_SavePrefFileWith(const char *filename, PRHashEnumerator heSaveProc) {
 		success = PREF_NOERROR;
 	}
 	else 
-		success = errno;
+		success = (PrefResult)errno; /* Really? */
 
 	PR_Free(valueArray);
 
@@ -963,33 +1012,116 @@ PREF_SavePrefFileWith(const char *filename, PRHashEnumerator heSaveProc) {
 }
 
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SavePrefFile()
 {
-	if (!m_HashTable)
+#if 0// defined(XP_MAC) || defined(XP_PC)
+    return (PrefResult)pref_SaveProfile();
+#else
+    if (!m_HashTable)
 		return PREF_NOT_INITIALIZED;
-	return (PREF_SavePrefFileWith(m_filename, pref_savePref));
+
+    return (PREF_SavePrefFileWith(m_filename, pref_savePref));
+#endif
 }
 
-/* LI_STUFF  Create a saveprefFile for LI for outsiders to call */
-PR_IMPLEMENT(int)
+/* 
+ *  We need to flag a bunch of prefs as local that aren't initialized via all.js.
+ *  This seems the safest way to do this.
+ */
+PR_IMPLEMENT(PrefResult)
+PREF_SetSpecialPrefsLocal(void)
+{
+	static char *prefName[] = {
+	"ab_dir.outliner_geometry",
+	"addressbook.outliner_geometry",
+	"bookmarks.outliner_geometry",
+	"browser.bookmark_columns_win",
+	"browser.history_file",
+	"browser.sarcache.directory",
+	"browser.user_history_file",
+	"browser.win_height",
+	"browser.win_width",
+	"category.thread_columns_win",
+	"comppicker.outliner_geometry",
+	"editor.html_editor",
+	"editor.template_history_0",
+	"editor.template_last_loc",
+	"editor.win_height",
+	"editor.win_width",
+	"helpers.global_mailcap_file",
+	"helpers.global_mime_types_file",
+	"helpers.private_mailcap_file",
+	"helpers.private_mime_types_file",
+	"history.outliner_geometry",
+	"intl.font_charset",
+	"intl.font_spec_list",
+	"mail.addr_book.sliderwidth",
+	"mail.addr_picker.sliderwidth",
+	"mail.compose.win_height",
+	"mail.compose.win_width",
+	"mail.composition.addresspane.outliner_geometry",
+	"mail.folder.win_height",
+	"mail.folder.win_width",
+	"mail.folderpane.outliner_geometry",
+	"mail.imap.root_dir",
+	"mail.mailfilter.outliner_geometry",
+	"mail.msg.win_height",
+	"mail.msg.win_width",
+	"mail.subscribepane.all_groups.outliner_geometry",
+	"mail.subscribepane.new_groups.outliner_geometry",
+	"mail.subscribepane.search_groups.outliner_geometry",
+	"mail.thread.win_height",
+	"mail.thread.win_width",
+	"mail.thread_columns_win",
+	"mail.threadpane.messagepane_height",
+	"mail.threadpane.outliner_geometry",
+	"mailnews.3Pane_folder_columns_win",
+	"mailnews.3pane_folder_width",
+	"mailnews.3pane_thread_height",
+	"mailnews.abook_columns_win",
+	"mailnews.folder_columns_win",
+	"mailnews.ldapsearch_columns_win",
+	"news.thread_columns_win",
+	"preferences.lang.outliner_geometry",
+	"profile.name",
+	"profile.numprofiles",
+	"taskbar.x",
+	"taskbar.y",
+	"profile.directory"
+	};
+    PrefNode* pref;
+	int       i;
+
+	if (!m_HashTable)
+		return PREF_NOT_INITIALIZED;
+
+	for (i = 0; i < (sizeof(prefName)/sizeof(prefName[0])); i++) {
+		pref = (PrefNode*) PR_HashTableLookup(m_HashTable, prefName[i]);
+		if (pref) 
+			pref->flags |= PREF_LILOCAL;
+	}
+	return PREF_OK;
+}
+
+PR_IMPLEMENT(PrefResult)
 PREF_SaveLIPrefFile(const char *filename)
 {
 
 	if (!m_HashTable)
 		return PREF_NOT_INITIALIZED;
+	PREF_SetSpecialPrefsLocal();
 	return (PREF_SavePrefFileWith(((filename) ? filename : m_lifilename), pref_saveLIPref));
 }
 
-/* LI_STUFF  pass in the pref_savePref proc used instead of assuming it so that li can share that code too */
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SavePrefFileAs(const char *filename) {
 	return PREF_SavePrefFileWith(filename, pref_savePref);
 }
 
-int pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default)
+PrefResult pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, PRBool get_default)
 {
-	int result = PREF_ERROR;
+	PrefResult result = PREF_ERROR;
 	char* stringVal;
 	
 	PrefNode* pref;
@@ -999,17 +1131,19 @@ int pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, 
 
 	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
 
-	if (pref) {
+	if (pref)
+	{
 		if (get_default || PREF_IS_LOCKED(pref) || !PREF_HAS_USER_VALUE(pref))
 			stringVal = pref->defaultPref.stringVal;
 		else
 			stringVal = pref->userPref.stringVal;
 		
-		if (stringVal) {
-			if (*length == 0) {
+		if (stringVal)
+		{
+			if (*length == 0)
 				*length = strlen(stringVal) + 1;
-			}
-			else {
+			else
+			{
 				PL_strncpy(return_buffer, stringVal, PR_MIN(*length - 1, strlen(stringVal) + 1));
 				return_buffer[*length - 1] = '\0';
 			}
@@ -1019,9 +1153,9 @@ int pref_GetCharPref(const char *pref_name, char * return_buffer, int * length, 
 	return result;
 }
 
-int pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default)
+PrefResult pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_default)
 {
-	int result = PREF_ERROR;
+	PrefResult result = PREF_ERROR;
 	char* stringVal;	
 	PrefNode* pref;
 
@@ -1044,9 +1178,9 @@ int pref_CopyCharPref(const char *pref_name, char ** return_buffer, PRBool get_d
 	return result;
 }
 
-int pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_default)
+PrefResult pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_default)
 {
-	int result = PREF_ERROR;	
+	PrefResult result = PREF_ERROR;	
 	PrefNode* pref;
 
 	if (!m_HashTable)
@@ -1063,9 +1197,9 @@ int pref_GetIntPref(const char *pref_name,int32 * return_int, PRBool get_default
 	return result;
 }
 
-int pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBool get_default)
+PrefResult pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBool get_default)
 {
-	int result = PREF_ERROR;
+	PrefResult result = PREF_ERROR;
 	PrefNode* pref;
 
 	if (!m_HashTable)
@@ -1083,37 +1217,37 @@ int pref_GetBoolPref(const char *pref_name, XP_Bool * return_value, PRBool get_d
 }
 
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetCharPref(const char *pref_name, char * return_buffer, int * length)
 {
-	return pref_GetCharPref(pref_name, return_buffer, length, FALSE);
+	return pref_GetCharPref(pref_name, return_buffer, length, PR_FALSE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyCharPref(const char *pref_name, char ** return_buffer)
 {
-	return pref_CopyCharPref(pref_name, return_buffer, FALSE);
+	return pref_CopyCharPref(pref_name, return_buffer, PR_FALSE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetIntPref(const char *pref_name,int32 * return_int)
 {
-	return pref_GetIntPref(pref_name, return_int, FALSE);
+	return pref_GetIntPref(pref_name, return_int, PR_FALSE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetBoolPref(const char *pref_name, XP_Bool * return_value)
 {
-	return pref_GetBoolPref(pref_name, return_value, FALSE);
+	return pref_GetBoolPref(pref_name, return_value, PR_FALSE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
 {
 	char colstr[8];
 	int iSize = 8;
 
-	int result = PREF_GetCharPref(pref_name, colstr, &iSize);
+	PrefResult result = PREF_GetCharPref(pref_name, colstr, &iSize);
 	
 	if (result == PREF_NOERROR) {
 		int r, g, b;
@@ -1128,32 +1262,29 @@ PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
 
 #define MYRGB(r, g ,b)  ((uint32) (((uint8) (r) | ((uint16) (g) << 8)) | (((uint32) (uint8) (b)) << 16))) 
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetColorPrefDWord(const char *pref_name, uint32 *colorref)
 {
-	char colstr[8];
-	int iSize = 8;
-	uint8 red=0, green=0, blue=0;
+    uint8 red, green, blue;
+    PrefResult   result;
 
-	int result = PREF_GetCharPref(pref_name, colstr, &iSize);
-	
-	if (result == 0) {
-		int r, g, b;
-		sscanf(colstr, "#%02X%02X%02X", &r, &g, &b);
-		red = r;
-		green = g;
-		blue = b;
-	}
-	*colorref = MYRGB(red,green,blue);
+    PR_ASSERT(colorref);
+
+    result = PREF_GetColorPref(pref_name, &red, &green, &blue);
+
+    if (result == PREF_NOERROR) {
+    	*colorref = MYRGB(red,green,blue);
+    }
+
 	return result;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom)
 {
 	char rectstr[64];
 	int iSize=64;
-	int result = PREF_GetCharPref(pref_name, rectstr, &iSize);
+	PrefResult result = PREF_GetCharPref(pref_name, rectstr, &iSize);
 	
 	if (result == PREF_NOERROR) {
 		int l, t, r, b;
@@ -1164,20 +1295,20 @@ PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, i
 	return result;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size)
 {
 	char* buf;
-	int result;
+	PrefResult result;
 
-	if (!m_mochaPrefObject || !return_value) return -1;
+	if (!m_mochaPrefObject || !return_value) return PREF_ERROR;
 
 	result = PREF_CopyCharPref(pref_name, &buf);
 
 	if (result == PREF_NOERROR) {
 		if (strlen(buf) == 0) {		/* don't decode empty string ? */
 			PR_Free(buf);
-			return -1;
+			return PREF_ERROR;
 		}
 	
 		PL_Base64Decode(buf, *size, return_value);
@@ -1187,16 +1318,16 @@ PREF_GetBinaryPref(const char *pref_name, void * return_value, int *size)
 	return result;
 }
 
-typedef int (*CharPrefReadFunc)(const char*, char**);
+typedef PrefResult (*CharPrefReadFunc)(const char*, char**);
 
-static int
+static PrefResult
 ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPrefReadFunc inFunc)
 {
 	char* buf;
-	int result;
+	PrefResult result;
 
 	if (!m_mochaPrefObject || !return_value)
-		return -1;
+		return PREF_ERROR;
 	*return_value = NULL;
 
 	result = inFunc(pref_name, &buf);
@@ -1204,7 +1335,7 @@ ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPre
 	if (result == PREF_NOERROR) {
 		if (strlen(buf) == 0) {		/* do not decode empty string? */
 			PR_Free(buf);
-			return -1;
+			return PREF_ERROR;
 		}
 	
 		*return_value = PL_Base64Decode(buf, 0, NULL);
@@ -1215,26 +1346,26 @@ ReadCharPrefUsing(const char *pref_name, void** return_value, int *size, CharPre
 	return result;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyBinaryPref(const char *pref_name, void  ** return_value, int *size)
 {
 	return ReadCharPrefUsing(pref_name, return_value, size, PREF_CopyCharPref);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyDefaultBinaryPref(const char *pref_name, void  ** return_value, int *size)
 {
 	return ReadCharPrefUsing(pref_name, return_value, size, PREF_CopyDefaultCharPref);
 }
 
 #ifndef XP_MAC
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyPathPref(const char *pref_name, char ** return_buffer)
 {
 	return PREF_CopyCharPref(pref_name, return_buffer);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 {
 	PrefAction action = set_default ? PREF_SETDEFAULT : PREF_SETUSER;
@@ -1246,44 +1377,44 @@ PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default)
 #endif /* XP_MAC */
 
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultCharPref(const char *pref_name, char * return_buffer, int * length)
 {
-	return pref_GetCharPref(pref_name, return_buffer, length, TRUE);
+	return pref_GetCharPref(pref_name, return_buffer, length, PR_TRUE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyDefaultCharPref(const char *pref_name, char  ** return_buffer)
 {
-	return pref_CopyCharPref(pref_name, return_buffer, TRUE);
+	return pref_CopyCharPref(pref_name, return_buffer, PR_TRUE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultIntPref(const char *pref_name, int32 * return_int)
 {
-	return pref_GetIntPref(pref_name, return_int, TRUE);
+	return pref_GetIntPref(pref_name, return_int, PR_TRUE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultBoolPref(const char *pref_name, XP_Bool * return_value)
 {
-	return pref_GetBoolPref(pref_name, return_value, TRUE);
+	return pref_GetBoolPref(pref_name, return_value, PR_TRUE);
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultBinaryPref(const char *pref_name, void * return_value, int * length)
 {
-	PR_ASSERT( FALSE );
-	return TRUE;
+	PR_ASSERT( PR_FALSE );
+	return PREF_ERROR;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue)
 {
 	char colstr[8];
 	int iSize = 8;
 
-	int result = PREF_GetDefaultCharPref(pref_name, colstr, &iSize);
+	PrefResult result = PREF_GetDefaultCharPref(pref_name, colstr, &iSize);
 	
 	if (result == PREF_NOERROR) {
 		int r, g, b;
@@ -1296,32 +1427,29 @@ PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 
 	return result;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultColorPrefDWord(const char *pref_name, uint32 * colorref)
 {
-	char colstr[8];
-	int iSize = 8;
-	uint8 red=0, green=0, blue=0;
+    uint8 red, green, blue;
+    PrefResult   result;
 
-	int result = PREF_GetDefaultCharPref(pref_name, colstr, &iSize);
-	
-	if (result == PREF_NOERROR) {
-		int r, g, b;
-		sscanf(colstr, "#%02X%02X%02X", &r, &g, &b);
-		red = r;
-		green = g;
-		blue = b;
-	}
-	*colorref = MYRGB(red,green,blue);
+    PR_ASSERT(colorref);
+
+    result = PREF_GetDefaultColorPref(pref_name, &red, &green, &blue);
+
+    if (result == PREF_NOERROR) {
+    	*colorref = MYRGB(red,green,blue);
+    }
+
 	return result;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom)
 {
 	char rectstr[256];
 	int iLen = 256;
-	int result = PREF_GetDefaultCharPref(pref_name, (char *)&rectstr, &iLen);
+	PrefResult result = PREF_GetDefaultCharPref(pref_name, (char *)&rectstr, &iLen);
 	
 	if (result == PREF_NOERROR) {
 		sscanf(rectstr, "%d,%d,%d,%d", left, top, right, bottom);
@@ -1345,7 +1473,7 @@ pref_DeleteItem(PRHashEntry *he, int i, void *arg)
 		return HT_ENUMERATE_NEXT;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_DeleteBranch(const char *branch_name)
 {
 	char* branch_dot = PR_smprintf("%s.", branch_name);
@@ -1355,17 +1483,22 @@ PREF_DeleteBranch(const char *branch_name)
 	PR_HashTableEnumerateEntries(m_HashTable, pref_DeleteItem, (void*) branch_dot);
 	
 	PR_Free(branch_dot);
-	return 0;
+	return PREF_NOERROR;
 }
 
 /* LI_STUFF  add a function to clear the li pref 
    does anyone use this??
 */
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_ClearLIPref(const char *pref_name)
 {
-	int success = PREF_ERROR;
-	PrefNode* pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
+	PrefResult success = PREF_ERROR;
+    PrefNode*       pref;
+
+    if (!m_HashTable)
+		return PREF_NOT_INITIALIZED;
+
+	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
 	if (pref && PREF_HAS_LI_VALUE(pref)) {
 		pref->flags &= ~PREF_LILOCAL;
 		if (m_CallbacksEnabled)
@@ -1377,11 +1510,16 @@ PREF_ClearLIPref(const char *pref_name)
 
 
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_ClearUserPref(const char *pref_name)
 {
-	int success = PREF_ERROR;
-	PrefNode* pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
+	PrefResult success = PREF_ERROR;
+    PrefNode*       pref;
+
+    if (!m_HashTable)
+		return PREF_NOT_INITIALIZED;
+
+	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
 	if (pref && PREF_HAS_USER_VALUE(pref)) {
 		pref->flags &= ~PREF_USERSET;
 		if (m_CallbacksEnabled)
@@ -1392,21 +1530,21 @@ PREF_ClearUserPref(const char *pref_name)
 }
 
 /* Prototype Admin Kit support */
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
 	int index, const char *field)
 {
-	PR_ASSERT( FALSE );
-	return -1;
+	PR_ASSERT( PR_FALSE );
+	return PREF_ERROR;
 }
 
 /*
  * Administration Kit support 
  */
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyConfigString(const char *obj_name, char **return_buffer)
 {
-	int success = PREF_ERROR;
+	PrefResult success = PREF_ERROR;
 	PrefNode* pref = (PrefNode*) PR_HashTableLookup(m_HashTable, obj_name);
 	
 	if (pref && pref->flags & PREF_STRING) {
@@ -1417,11 +1555,11 @@ PREF_CopyConfigString(const char *obj_name, char **return_buffer)
     return success;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyIndexConfigString(const char *obj_name,
 	int index, const char *field, char **return_buffer)
 {
-	int success = PREF_ERROR;
+	PrefResult success = PREF_ERROR;
 	PrefNode* pref;
 	char* setup_buf = PR_smprintf("%s_%d.%s", obj_name, index, field);
 
@@ -1436,10 +1574,10 @@ PREF_CopyIndexConfigString(const char *obj_name,
     return success;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetConfigInt(const char *obj_name, int32 *return_int)
 {
-	int success = PREF_ERROR;
+	PrefResult success = PREF_ERROR;
 	
 	PrefNode* pref = (PrefNode*) PR_HashTableLookup(m_HashTable, obj_name);
 	
@@ -1451,10 +1589,10 @@ PREF_GetConfigInt(const char *obj_name, int32 *return_int)
 	return success;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_GetConfigBool(const char *obj_name, XP_Bool *return_bool)
 {
-	int success = PREF_ERROR;
+	PrefResult success = PREF_ERROR;
 	
 	PrefNode* pref = (PrefNode*) PR_HashTableLookup(m_HashTable, obj_name);
 	
@@ -1466,35 +1604,72 @@ PREF_GetConfigBool(const char *obj_name, XP_Bool *return_bool)
 	return success;
 }
 
+PrefResult pref_UnlockPref(const char *key)
+{
+	PrefNode* pref;
+	PrefResult result = PREF_OK;
+
+	if (!m_HashTable)
+		return PREF_NOT_INITIALIZED;
+
+	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, key);
+	if (!pref) {
+        return PREF_DOES_NOT_EXIST;
+    }
+
+	if (PREF_IS_LOCKED(pref)) {
+		pref->flags &= ~PREF_LOCKED;
+		if (m_CallbacksEnabled) {
+			pref_DoCallback(key);
+		}
+    }
+
+    return PREF_OK;
+}
+
+PrefResult pref_LockPref(const char *key)
+{
+	PrefNode* pref;
+	PrefResult result = PREF_OK;
+
+	if (!m_HashTable)
+		return PREF_NOT_INITIALIZED;
+
+	pref = (PrefNode*) PR_HashTableLookup(m_HashTable, key);
+	if (!pref) {
+        return PREF_DOES_NOT_EXIST;
+    }
+
+   
+    return pref_HashPref(key, pref->defaultPref, (PrefType)pref->flags, PREF_LOCK);
+}
+
+PR_IMPLEMENT(PrefResult)
+PREF_LockPref(const char *key)
+{
+	return pref_LockPref(key);
+}
+
 /*
  * Hash table functions
  */
-static PRBool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
+static XP_Bool pref_ValueChanged(PrefValue oldValue, PrefValue newValue, PrefType type)
 {
-	PRBool changed = TRUE;
-	switch (type) {
-		case PREF_STRING:
-			if (oldValue.stringVal && newValue.stringVal)
-				changed = (strcmp(oldValue.stringVal, newValue.stringVal) != 0);
-			break;
-		
-		case PREF_INT:
-			changed = oldValue.intVal != newValue.intVal;
-			break;
-			
-		case PREF_BOOL:
-            changed = oldValue.boolVal != newValue.boolVal;
-			break;
-        default:
-          /* PREF_LOCKED, PREF_USERSET, PREF_CONFIG, PREF_LILOCAL */
-          break;
-	}
+	PRBool changed = PR_TRUE;
+	if (type & PREF_STRING) {
+		if (oldValue.stringVal && newValue.stringVal)
+			changed = (strcmp(oldValue.stringVal, newValue.stringVal) != 0);
+    } else if (type & PREF_INT) {		
+		changed = oldValue.intVal != newValue.intVal;
+    } else if (type & PREF_BOOL) {
+		changed = oldValue.boolVal != newValue.boolVal;
+    }
 	return changed;
 }
 
 static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type)
 {
-	switch (type) {
+	switch (type & PREF_VALUETYPE_MASK) {
 		case PREF_STRING:
 			PR_ASSERT(newValue.stringVal);
 			PR_FREEIF(oldValue->stringVal);
@@ -1506,10 +1681,10 @@ static void pref_SetValue(PrefValue* oldValue, PrefValue newValue, PrefType type
 	}
 }
 
-int pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action)
+PrefResult pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction action)
 {
 	PrefNode* pref;
-	int result = PREF_OK;
+	PrefResult result = PREF_OK;
 
 	if (!m_HashTable)
 		return PREF_NOT_INITIALIZED;
@@ -1528,7 +1703,7 @@ int pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction ac
 			pref->defaultPref.intVal = (int32) -5632;
     	PR_HashTableAdd(m_HashTable, PL_strdup(key), pref);
     }
-    else if (!(pref->flags & type)) {
+    else if ((pref->flags & PREF_VALUETYPE_MASK) != (type & PREF_VALUETYPE_MASK)) {
 		PR_ASSERT(0);			/* this shouldn't happen */
 		return PREF_TYPE_CHANGE_ERR;
     }
@@ -1586,19 +1761,19 @@ int pref_HashPref(const char *key, PrefValue value, PrefType type, PrefAction ac
 		    	result = PREF_VALUECHANGED;
 		    }
 		    pref->flags |= PREF_LOCKED;
-		    m_IsAnyPrefLocked = TRUE;
+		    m_IsAnyPrefLocked = PR_TRUE;
 		    break;
 	}
 
     if (result == PREF_VALUECHANGED && m_CallbacksEnabled) {
-    	int result2 = pref_DoCallback(key);
+    	PrefResult result2 = pref_DoCallback(key);
     	if (result2 < 0)
     		result = result2;
     }
     return result;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefType)
 PREF_GetPrefType(const char *pref_name)
 {
 	PrefNode* pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
@@ -1610,7 +1785,7 @@ PREF_GetPrefType(const char *pref_name)
 		else if (pref->flags & PREF_BOOL)
 			return PREF_BOOL;
 	}
-	return PREF_ERROR;
+	return PREF_INVALID;
 }
 
 JSBool PR_CALLBACK pref_NativeDefaultPref
@@ -1691,7 +1866,7 @@ JSBool PR_CALLBACK pref_NativeGetPref
 {
 	void* value = NULL;
 	PrefNode* pref;
-	PRBool prefExists = TRUE;
+	PRBool prefExists = PR_TRUE;
 	
     if (argc >= 1 && JSVAL_IS_STRING(argv[0]))
     {
@@ -1721,11 +1896,11 @@ JSBool PR_CALLBACK pref_NativeGetPref
 PR_IMPLEMENT(PRBool)
 PREF_PrefIsLocked(const char *pref_name)
 {
-	PRBool result = FALSE;
+	PRBool result = PR_FALSE;
 	if (m_IsAnyPrefLocked) {
 		PrefNode* pref = (PrefNode*) PR_HashTableLookup(m_HashTable, pref_name);
 		if (pref && PREF_IS_LOCKED(pref))
-			result = TRUE;
+			result = PR_TRUE;
 	}
 	
 	return result;
@@ -1755,7 +1930,7 @@ pref_addChild(PRHashEntry *he, int i, void *arg)
 		char* nextdelim;
 		int parentlen = strlen(pcs->parent);
 		char* substring;
-		PRBool substringBordersSeparator = FALSE;
+		PRBool substringBordersSeparator = PR_FALSE;
 
 		strncpy(buf, he->key, PR_MIN(512, strlen(he->key) + 1));
 		nextdelim = buf + parentlen;
@@ -1794,7 +1969,7 @@ pref_addChild(PRHashEntry *he, int i, void *arg)
 	return 0;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CreateChildList(const char* parent_node, char **child_list)
 {
 	PrefChildIter pcs;
@@ -1805,7 +1980,10 @@ PREF_CreateChildList(const char* parent_node, char **child_list)
 	pcs.bufsize = 2048;
 #endif
 	pcs.childList = (char*) malloc(sizeof(char) * pcs.bufsize);
-	pcs.parent = PR_smprintf("%s.", parent_node);
+	if (*parent_node > 0)
+		pcs.parent = PR_smprintf("%s.", parent_node);
+	else
+		pcs.parent = PL_strdup("");
 	if (!pcs.parent || !pcs.childList)
 		return PREF_OUT_OF_MEMORY;
 	pcs.childList[0] = '\0';
@@ -1826,7 +2004,7 @@ PREF_NextChild(char *child_list, int *index)
 		*index += strlen(child) + 1;
 	return child;
 }
-#if 0 /* LANDING HACK */
+
 /*----------------------------------------------------------------------------------------
 *	pref_copyTree
 *
@@ -1842,25 +2020,25 @@ PREF_NextChild(char *child_list, int *index)
 *		Copy all the prefs under mail. to newmail.:	pref_copyTree("mail", "newmail", "mail")
 *
 --------------------------------------------------------------------------------------*/ 
-int pref_copyTree(const char *srcPrefix, const char *destPrefix, const char *curSrcBranch)
+PrefResult pref_copyTree(const char *srcPrefix, const char *destPrefix, const char *curSrcBranch)
 {
-	int		result = PREF_NOERROR;
+	PrefResult		result = PREF_NOERROR;
 
 	char* 	children = NULL;
 	
 	if ( PREF_CreateChildList(curSrcBranch, &children) == PREF_NOERROR )
 	{	
 		int 	index = 0;
-		int		srcPrefixLen = XP_STRLEN(srcPrefix);
+		int		srcPrefixLen = PL_strlen(srcPrefix);
 		char* 	child = NULL;
 		
 		while ( (child = PREF_NextChild(children, &index)) != NULL)
 		{
-			int		prefType;
+			PrefType prefType;
 			char	*destPrefName = NULL;
 			char	*childStart = (srcPrefixLen > 0) ? (child + srcPrefixLen + 1) : child;
 			
-			XP_ASSERT( XP_STRNCMP(child, curSrcBranch, srcPrefixLen) == 0 );
+			PR_ASSERT( PL_strncmp(child, curSrcBranch, srcPrefixLen) == 0 );
 							
 			if (*destPrefix > 0)
 				destPrefName = PR_smprintf("%s.%s", destPrefix, childStart);
@@ -1876,7 +2054,7 @@ int pref_copyTree(const char *srcPrefix, const char *destPrefix, const char *cur
 			if ( ! PREF_PrefIsLocked(destPrefName) )		/* returns true if the prefs exists, and is locked */
 			{
 				/*	PREF_GetPrefType masks out the other bits of the pref flag, so we only
-					every get the values in the switch.
+					ever get the values in the switch.
 				*/
 				prefType = PREF_GetPrefType(child);
 				
@@ -1890,7 +2068,7 @@ int pref_copyTree(const char *srcPrefix, const char *destPrefix, const char *cur
 							if (result == PREF_NOERROR)
 								result = PREF_SetCharPref(destPrefName, prefVal);
 								
-							XP_FREEIF(prefVal);
+							PR_FREEIF(prefVal);
 						}
 						break;
 					
@@ -1922,34 +2100,33 @@ int pref_copyTree(const char *srcPrefix, const char *destPrefix, const char *cur
 						
 					default:
 						/* we should never get here */
-						XP_ASSERT(FALSE);
+						PR_ASSERT(PR_FALSE);
 						break;
 				}
 				
 			}	/* is not locked */
 			
-			XP_FREEIF(destPrefName);
+			PR_FREEIF(destPrefName);
 			
 			/* Recurse */
 			if (result == PREF_NOERROR || result == PREF_VALUECHANGED)
 				result = pref_copyTree(srcPrefix, destPrefix, child);
 		}
 		
-		XP_FREE(children);
+		PR_Free(children);
 	}
 	
 	return result;
 }
 
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot)
 {
-	XP_ASSERT(srcRoot != NULL);
-	XP_ASSERT(destRoot != NULL);
+	PR_ASSERT(srcRoot != NULL);
+	PR_ASSERT(destRoot != NULL);
 	
 	return pref_copyTree(srcRoot, destRoot, srcRoot);
 }
-#endif /* LANDING HACK */
 
 
 /* Adds a node to the beginning of the callback list. */
@@ -1970,12 +2147,12 @@ PREF_RegisterCallback(const char *pref_node,
 }
 
 /* Deletes a node from the callback list. */
-PR_IMPLEMENT(int)
+PR_IMPLEMENT(PrefResult)
 PREF_UnregisterCallback(const char *pref_node,
 						 PrefChangedFunc callback,
 						 void * instance_data)
 {
-	int result = PREF_ERROR;
+	PrefResult result = PREF_ERROR;
 	struct CallbackNode* node = m_Callbacks;
 	struct CallbackNode* prev_node = NULL;
 	
@@ -2003,32 +2180,29 @@ PREF_UnregisterCallback(const char *pref_node,
 	return result;
 }
 
-int pref_DoCallback(const char* changed_pref)
+PrefResult pref_DoCallback(const char* changed_pref)
 {
-	int result = PREF_OK;
+	PrefResult result = PREF_OK;
 	struct CallbackNode* node;
 	for (node = m_Callbacks; node != NULL; node = node->next)
 	{
 		if ( PL_strncmp(changed_pref, node->domain, strlen(node->domain)) == 0 ) {
 			int result2 = (*node->func) (changed_pref, node->data);
-			if (result2 != PREF_OK)
-				result = result2;
+			if (result2 != 0)
+				result = (PrefResult)result2;
 		}
 	}
 	return result;
 }
 
 /* !! Front ends need to implement */
-#ifndef XP_MAC
+#ifndef XP_MAC // see macpref.cp
 PR_IMPLEMENT(PRBool)
 PREF_IsAutoAdminEnabled()
 {
-	if (m_AutoAdminLib == NULL)
-		m_AutoAdminLib = pref_LoadAutoAdminLib();
-	
-	return (m_AutoAdminLib != NULL);
+	return PR_TRUE;
 }
-#endif
+#endif // XP_MAC
 
 /* Called from JavaScript */
 typedef char* (*ldap_func)(char*, char*, char*, char*, char**); 
@@ -2093,7 +2267,6 @@ JSBool PR_CALLBACK pref_NativeGetLDAPAttr
 	return JS_TRUE;
 }
 
-/* LI_STUFF ?? add some debugging stuff here. */
 /* Dump debugging info in response to about:config.
  */
 PR_IMPLEMENT(int)
@@ -2104,28 +2277,36 @@ pref_printDebugInfo(PRHashEntry *he, int i, void *arg)
 	PrefChildIter* pcs = (PrefChildIter*) arg;
 	PrefNode *pref = (PrefNode *) he->value;
 	
-	if (PREF_HAS_USER_VALUE(pref) && !PREF_IS_LOCKED(pref)) {
+	PR_ASSERT(pref);
+	if (!pref)
+		return PREF_NOERROR;
+
+	if (PREF_HAS_USER_VALUE(pref) && 
+		pref_ValueChanged(pref->defaultPref, 
+						  pref->userPref, 
+						  (PrefType) PREF_TYPE(pref)) && 
+		!PREF_IS_LOCKED(pref))
+	{
 		buf1 = PR_smprintf("<font color=\"blue\">%s = ", (char*) he->key);
 		val = pref->userPref;
 	}
-	else {
+	else
+	{
 		buf1 = PR_smprintf("<font color=\"%s\">%s = ",
 			PREF_IS_LOCKED(pref) ? "red" : (PREF_IS_CONFIG(pref) ? "black" : "green"),
 			(char*) he->key);
 		val = pref->defaultPref;
 	}
 	
-	if (pref->flags & PREF_STRING) {
+	if (pref->flags & PREF_STRING)
 		buf2 = PR_smprintf("%s %s</font><br>", buf1, val.stringVal);
-	}
-	else if (pref->flags & PREF_INT) {
+	else if (pref->flags & PREF_INT)
 		buf2 = PR_smprintf("%s %d</font><br>", buf1, val.intVal);
-	}
-	else if (pref->flags & PREF_BOOL) {
+	else if (pref->flags & PREF_BOOL)
 		buf2 = PR_smprintf("%s %s</font><br>", buf1, val.boolVal ? "true" : "false");
-	}
 	
-	if ((PL_strlen(buf2) + PL_strlen(pcs->childList) + 1) > pcs->bufsize) {
+	if ((PL_strlen(buf2) + PL_strlen(pcs->childList) + 1) > pcs->bufsize)
+	{
 		pcs->bufsize *= 3;
 		pcs->childList = (char*) realloc(pcs->childList, sizeof(char) * pcs->bufsize);
 		if (!pcs->childList)
@@ -2291,18 +2472,18 @@ pref_LoadAutoAdminLib()
 		{
 			if (getenv("MOZILLA_HOME"))
 			{
-				strcpy(aalib, getenv("MOZILLA_HOME"));
-				lib = PR_LoadLibrary(strcat(aalib, ADMNLIBNAME));
+				PL_strcpy(aalib, getenv("MOZILLA_HOME"));
+				lib = PR_LoadLibrary(PL_strcat(aalib, ADMNLIBNAME));
 			}
 			if (lib == NULL)
 			{
 				fe_GetProgramDirectory(aalib, sizeof(aalib)-1);
-				lib = PR_LoadLibrary(strcat(aalib, ADMNLIBNAME));
+				lib = PR_LoadLibrary(PL_strcat(aalib, ADMNLIBNAME));
 			}
 			if (lib == NULL)
 			{
-				(void) strcpy(aalib, "/usr/local/netscape/");
-				lib = PR_LoadLibrary(strcat(aalib, ADMNLIBNAME));
+				(void) PL_strcpy(aalib, "/usr/local/netscape/");
+				lib = PR_LoadLibrary(PL_strcat(aalib, ADMNLIBNAME));
 			}
 		}
 	}
@@ -2378,4 +2559,153 @@ static JSBool pref_HashJSPref(unsigned int argc, jsval *argv, PrefAction action)
 	return JS_TRUE;
 }
 
+/*
+ * pref_CountListMembers
+ */
+static int
+pref_CountListMembers(char* list)
+{
+	int members = 0;
+	char* p = list = PL_strdup(list);
 
+	for ( p = strtok(p, ","); p != NULL; p = strtok(NULL, ",") ) {
+		members++;
+	}
+
+	PR_FREEIF(list);
+
+	return members;
+}
+
+
+/*
+ * PREF_GetListPref
+ * Splits a comma separated strings into an array of strings.
+ * The array of strings is actually just an array of pointers into a copy
+ * of the value returned by PREF_CopyCharPref().  So, we don't have to
+ * allocate each string separately.
+ */
+PR_IMPLEMENT(PrefResult)
+PREF_GetListPref(const char* pref, char*** list)
+{
+	char* value;
+	char** p;
+	int num_members;
+
+	*list = NULL;
+
+	if ( PREF_CopyCharPref(pref, &value) != PREF_OK || value == NULL ) {
+		return PREF_ERROR;
+	}
+
+	num_members = pref_CountListMembers(value);
+
+	p = *list = (char**) PR_MALLOC((num_members+1) * sizeof(char**));
+	if ( *list == NULL ) return PREF_ERROR;
+
+	for ( *p = strtok(value, ","); 
+          *p != NULL; 
+          *(++p) = strtok(NULL, ",") ) /* Empty body */ ;
+
+	/* Copy each entry so that users can free them. */
+	for ( p = *list; *p != NULL; p++ ) {
+		*p = PL_strdup(*p);
+	}
+
+	PR_Free(value);
+
+	return PREF_OK;
+}
+
+
+/*
+ * PREF_SetListPref
+ * TODO: Call Javascript callback to make sure user is allowed to make this
+ * change.
+ */
+PR_IMPLEMENT(PrefResult)
+PREF_SetListPref(const char* pref, char** list)
+{
+	PrefResult status;
+	int len;
+	char** p;
+	char* value = NULL;
+
+	if ( pref == NULL || list == NULL ) return PREF_ERROR;
+
+	for ( len = 0, p = list; p != NULL && *p != NULL; p++ ) {
+		len+= (PL_strlen(*p)+1); /* The '+1' is for a comma or '\0' */
+	}
+
+	if ( len <= 0 || (value = PR_MALLOC(len)) == NULL ) {
+		return PREF_ERROR;
+	}
+
+	(void) PL_strcpy(value, *list);
+	for ( p = list+1; p != NULL && *p != NULL; p++ ) {
+		(void) PL_strcat(value, ",");
+		(void) PL_strcat(value, *p);
+	}
+
+	status = PREF_SetCharPref(pref, value);
+
+	PR_FREEIF(value);
+
+	return status;	
+}
+
+
+PR_IMPLEMENT(PrefResult)
+PREF_AppendListPref(const char* pref, const char* value)
+{
+	char *pListPref = NULL, *pNewList = NULL;
+    int nPrefLen = 0;
+
+	PREF_CopyCharPref(pref, &pListPref);
+
+	if (pListPref)
+	{
+        nPrefLen = PL_strlen(pListPref);
+    }
+
+    if (nPrefLen == 0) {
+		PREF_SetCharPref(pref, value);
+    } else {
+        pNewList = (char *) PR_MALLOC((nPrefLen + PL_strlen(value) + 2));
+        if (pNewList) {
+            PL_strcpy(pNewList, pListPref);
+			PL_strcat(pNewList, ",");
+			PL_strcat(pNewList, value);
+    		PREF_SetCharPref(pref, pNewList);
+            PR_Free(pNewList);
+        }
+
+    }
+
+    PR_FREEIF(pListPref);
+
+    return PREF_NOERROR;
+}
+
+/*
+ * PREF_FreeListPref
+ * Free each element in the list, then free the list, then NULL the
+ * list out.
+ */
+PR_IMPLEMENT(PrefResult)
+PREF_FreeListPref(char*** list)
+{
+	char** p;
+
+	if ( list == NULL ) return PREF_ERROR;
+
+	for ( p = *list; *p != NULL; p++ ) {
+		PR_Free(*p);
+	}
+
+	PR_FREEIF(*list);
+
+	*list = NULL;
+
+	return PREF_OK;
+}

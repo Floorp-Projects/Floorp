@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Netscape Public License
  * Version 1.0 (the "NPL"); you may not use this file except in
@@ -31,12 +31,44 @@
 #include "plhash.h"
 #endif
 
+#define NEW_PREF_ARCH
+
 NSPR_BEGIN_EXTERN_C
 
-#ifdef XP_PC
+/*
+// <font color=blue>
+// Error codes
+// </font>
+*/
+
+typedef int PROFILE_ERROR;
+
+
+/* Error numbers between -100 and -999 are reserved for individual stores */
+/* Error numbers less than -1000 are reserved for the profile manager */
+
+typedef enum {
+    PREF_BAD_PASSWORD			    = -12,
+    PREF_CANT_DELETE_NET_PROFILE    = -11,
+    PREF_NETPROFILE_DIR_EXISTS      = -10,
+    PREF_PROFILE_DIR_EXISTS         = -9,
+    PREF_PROFILE_EXISTS             = -8,
+    PREF_BAD_PARAMETER              = -7,
+    PREF_DOES_NOT_EXIST             = -6,
+	PREF_OUT_OF_MEMORY		= -5,
+	PREF_TYPE_CHANGE_ERR	= -4,
+	PREF_NOT_INITIALIZED	= -3,
+	PREF_BAD_LOCKFILE		= -2,
+	PREF_ERROR				= -1,
+	PREF_NOERROR			= 0,
+	PREF_OK					= 0,	/* same as PREF_NOERROR */
+	PREF_VALUECHANGED		        = 1,
+	PREF_PROFILE_UPGRADE	        = 2
+} PrefResult;
+
+#if defined(XP_PC) 
 // horrible pre-declaration...so kill me.
-int pref_InitInitialObjects(JSContext *js_context,JSObject *js_object);
-PR_EXTERN(int) pref_savePref(PRHashEntry *he, int i, void *arg);
+PrefResult pref_InitInitialObjects(JSContext *js_context,JSObject *js_object);
 #endif
 
 /*
@@ -61,23 +93,34 @@ PR_EXTERN(int) pref_savePref(PRHashEntry *he, int i, void *arg);
 // </font>
 */
 
-PR_EXTERN(int)
+PR_EXTERN(PrefResult)
 PREF_ReadUserJSFile(char *filename);
 
-/* LI_STUFF read in an li prefs file and give it a name- preobably temporary */
-PR_EXTERN(int)
+PR_EXTERN(PrefResult)
 PREF_ReadLIJSFile(char *filename);
 
-PR_EXTERN(int) 
+#if defined (XP_PC) || defined (XP_MAC)
+/* PREF_Init actually returns a profile object */
+PR_EXTERN(void *)
+PREF_InitProfile(void);
+
+PR_EXTERN(void *)
+PREF_GetCurrentProfile(void);
+#endif
+
+PR_EXTERN(PRBool) 
 PREF_Init(char *filename);
 
-PR_EXTERN(int)
+PR_EXTERN(PrefResult)
+PREF_LockPref(const char *key);
+
+PR_EXTERN(PrefResult)
 PREF_GetConfigContext(JSContext **js_context);
 
-PR_EXTERN(int)
+PR_EXTERN(PrefResult)
 PREF_GetGlobalConfigObject(JSObject **js_object);
 
-PR_EXTERN(int)
+PR_EXTERN(PrefResult)
 PREF_GetPrefConfigObject(JSObject **js_object);
 
 /*
@@ -94,7 +137,7 @@ PREF_Cleanup();
 // otherwise, evaluates the contents of the file as a JS buffer.
 // </font>
 */
-PR_EXTERN(int)
+PR_EXTERN(PrefResult)
 PREF_ReadLockFile(const char *filename);
 
 /*
@@ -113,19 +156,19 @@ PREF_ReadLockFile(const char *filename);
 // PREF_RegisterCallback() for any user values that have changed.
 // </font>
 */
-PR_EXTERN(int)
+PR_EXTERN(JSBool)
 PREF_EvaluateJSBuffer(const char * js_buffer, size_t length);
 
 /*
 // Like the above but does not generate callbacks.
 */
-PR_EXTERN(int)
+PR_EXTERN(JSBool)
 PREF_QuietEvaluateJSBuffer(const char * js_buffer, size_t length);
 
 /*
 // Like the above but does not generate callbacks and executes in scope of global config object
 */
-PR_EXTERN(int)
+PR_EXTERN(JSBool)
 PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length);
 
 /*
@@ -135,24 +178,30 @@ PREF_QuietEvaluateJSBufferWithGlobalScope(const char * js_buffer, size_t length)
 */
 PR_EXTERN(JSBool)
 PREF_EvaluateConfigScript(const char * js_buffer, size_t length,
-	const char* filename, PRBool bGlobalContext, PRBool bCallbacks);
+	const char* filename, PRBool bGlobalContext, PRBool bCallbacks,
+	PRBool skipFirstLine);
 
 
 /*
 // <font color=blue>
-// Error codes
+// Actions that can be passed to various functions to perform an operation on a pref key
 // </font>
 */
-enum {
-	PREF_OUT_OF_MEMORY		= -5,
-	PREF_TYPE_CHANGE_ERR	= -4,
-	PREF_NOT_INITIALIZED	= -3,
-	PREF_BAD_LOCKFILE		= -2,
-	PREF_ERROR				= -1,
-	PREF_NOERROR			= 0,
-	PREF_OK					= 0,	/* same as PREF_NOERROR */
-	PREF_VALUECHANGED		= 1
-};
+
+typedef enum { PREF_SETDEFAULT, PREF_SETUSER, 
+			   PREF_LOCK, PREF_SETCONFIG, PREF_SETLI } PrefAction;
+
+/*
+// <font color=blue>
+// Preference flags, including the native type of the preference
+// </font>
+*/
+
+typedef enum { PREF_INVALID = 0,
+               PREF_LOCKED = 1, PREF_USERSET = 2, PREF_CONFIG = 4, PREF_REMOTE = 8,
+			   PREF_LILOCAL = 16, PREF_STRING = 32, PREF_INT = 64, PREF_BOOL = 128,
+			   PREF_VALUETYPE_MASK = (PREF_STRING | PREF_INT | PREF_BOOL)
+			  } PrefType;
 
 /*
 // <font color=blue>
@@ -165,13 +214,13 @@ enum {
 // (triggering a callback), or PREF_NOERROR if the value was unchanged.
 // </font>
 */
-PR_EXTERN(int) PREF_SetCharPref(const char *pref,const char* value);
-PR_EXTERN(int) PREF_SetIntPref(const char *pref,int32 value);
-PR_EXTERN(int) PREF_SetBoolPref(const char *pref,PRBool value);
-PR_EXTERN(int) PREF_SetBinaryPref(const char *pref,void * value, long size);
-PR_EXTERN(int) PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
-PR_EXTERN(int) PREF_SetColorPrefDWord(const char *pref_name, uint32 colorref);
-PR_EXTERN(int) PREF_SetRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom);
+PR_EXTERN(PrefResult) PREF_SetCharPref(const char *pref,const char* value);
+PR_EXTERN(PrefResult) PREF_SetIntPref(const char *pref,int32 value);
+PR_EXTERN(PrefResult) PREF_SetBoolPref(const char *pref,PRBool value);
+PR_EXTERN(PrefResult) PREF_SetBinaryPref(const char *pref,void * value, long size);
+PR_EXTERN(PrefResult) PREF_SetColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
+PR_EXTERN(PrefResult) PREF_SetColorPrefDWord(const char *pref_name, uint32 colorref);
+PR_EXTERN(PrefResult) PREF_SetRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom);
 
 /*
 // <font color=blue>
@@ -182,12 +231,12 @@ PR_EXTERN(int) PREF_SetRectPref(const char *pref_name, int16 left, int16 top, in
 // be saved out to disk.
 // </font>
 */
-PR_EXTERN(int) PREF_SetDefaultCharPref(const char *pref,const char* value);
-PR_EXTERN(int) PREF_SetDefaultIntPref(const char *pref,int32 value);
-PR_EXTERN(int) PREF_SetDefaultBoolPref(const char *pref,PRBool value);
-PR_EXTERN(int) PREF_SetDefaultBinaryPref(const char *pref,void * value, long size);
-PR_EXTERN(int) PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
-PR_EXTERN(int) PREF_SetDefaultRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom);
+PR_EXTERN(PrefResult) PREF_SetDefaultCharPref(const char *pref,const char* value);
+PR_EXTERN(PrefResult) PREF_SetDefaultIntPref(const char *pref,int32 value);
+PR_EXTERN(PrefResult) PREF_SetDefaultBoolPref(const char *pref,PRBool value);
+PR_EXTERN(PrefResult) PREF_SetDefaultBinaryPref(const char *pref,void * value, long size);
+PR_EXTERN(PrefResult) PREF_SetDefaultColorPref(const char *pref_name, uint8 red, uint8 green, uint8 blue);
+PR_EXTERN(PrefResult) PREF_SetDefaultRectPref(const char *pref_name, int16 left, int16 top, int16 right, int16 bottom);
 
 /*
 // <font color=blue>
@@ -207,13 +256,13 @@ PR_EXTERN(int) PREF_SetDefaultRectPref(const char *pref_name, int16 left, int16 
 // (if it is reasonably possible)
 // </font>
 */
-PR_EXTERN(int) PREF_GetCharPref(const char *pref, char * return_buf, int * buf_length);
-PR_EXTERN(int) PREF_GetIntPref(const char *pref, int32 * return_int);	
-PR_EXTERN(int) PREF_GetBoolPref(const char *pref, XP_Bool * return_val);	
-PR_EXTERN(int) PREF_GetBinaryPref(const char *pref, void * return_val, int * buf_length);	
-PR_EXTERN(int) PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue);
-PR_EXTERN(int) PREF_GetColorPrefDWord(const char *pref_name, uint32 *colorref);
-PR_EXTERN(int) PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom);
+PR_EXTERN(PrefResult) PREF_GetCharPref(const char *pref, char * return_buf, int * buf_length);
+PR_EXTERN(PrefResult) PREF_GetIntPref(const char *pref, int32 * return_int);	
+PR_EXTERN(PrefResult) PREF_GetBoolPref(const char *pref, XP_Bool * return_val);	
+PR_EXTERN(PrefResult) PREF_GetBinaryPref(const char *pref, void * return_val, int * buf_length);	
+PR_EXTERN(PrefResult) PREF_GetColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue);
+PR_EXTERN(PrefResult) PREF_GetColorPrefDWord(const char *pref_name, uint32 *colorref);
+PR_EXTERN(PrefResult) PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom);
 
 /*
 // <font color=blue>
@@ -222,11 +271,11 @@ PR_EXTERN(int) PREF_GetRectPref(const char *pref_name, int16 *left, int16 *top, 
 // the caller will need to be responsible for freeing it...
 // </font>
 */
-PR_EXTERN(int) PREF_CopyCharPref(const char *pref, char ** return_buf);
-PR_EXTERN(int) PREF_CopyBinaryPref(const char *pref_name, void ** return_value, int *size);
+PR_EXTERN(PrefResult) PREF_CopyCharPref(const char *pref, char ** return_buf);
+PR_EXTERN(PrefResult) PREF_CopyBinaryPref(const char *pref_name, void ** return_value, int *size);
 
-PR_EXTERN(int) PREF_CopyDefaultCharPref( const char *pref_name,  char ** return_buffer );
-PR_EXTERN(int) PREF_CopyDefaultBinaryPref(const char *pref, void ** return_val, int * size);	
+PR_EXTERN(PrefResult) PREF_CopyDefaultCharPref( const char *pref_name,  char ** return_buffer );
+PR_EXTERN(PrefResult) PREF_CopyDefaultBinaryPref(const char *pref, void ** return_val, int * size);	
 
 /*
 // <font color=blue>
@@ -237,8 +286,8 @@ PR_EXTERN(int) PREF_CopyDefaultBinaryPref(const char *pref, void ** return_val, 
 // between paths and aliases flattened into binary strings.
 // </font>
 */
-PR_EXTERN(int) PREF_CopyPathPref(const char *pref, char ** return_buf);
-PR_EXTERN(int) PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default);
+PR_EXTERN(PrefResult) PREF_CopyPathPref(const char *pref, char ** return_buf);
+PR_EXTERN(PrefResult) PREF_SetPathPref(const char *pref_name, const char *path, PRBool set_default);
 
 /*
 // <font color=blue>
@@ -248,13 +297,13 @@ PR_EXTERN(int) PREF_SetPathPref(const char *pref_name, const char *path, PRBool 
 //
 // </font>
 */
-PR_EXTERN(int) PREF_GetDefaultCharPref(const char *pref, char * return_buf, int * buf_length);
-PR_EXTERN(int) PREF_GetDefaultIntPref(const char *pref, int32 * return_int);	
-PR_EXTERN(int) PREF_GetDefaultBoolPref(const char *pref, XP_Bool * return_val);	
-PR_EXTERN(int) PREF_GetDefaultBinaryPref(const char *pref, void * return_val, int * buf_length);	
-PR_EXTERN(int) PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue);
-PR_EXTERN(int) PREF_GetDefaultColorPrefDWord(const char *pref_name, uint32 *colorref);
-PR_EXTERN(int) PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom);
+PR_EXTERN(PrefResult) PREF_GetDefaultCharPref(const char *pref, char * return_buf, int * buf_length);
+PR_EXTERN(PrefResult) PREF_GetDefaultIntPref(const char *pref, int32 * return_int);	
+PR_EXTERN(PrefResult) PREF_GetDefaultBoolPref(const char *pref, XP_Bool * return_val);	
+PR_EXTERN(PrefResult) PREF_GetDefaultBinaryPref(const char *pref, void * return_val, int * buf_length);	
+PR_EXTERN(PrefResult) PREF_GetDefaultColorPref(const char *pref_name, uint8 *red, uint8 *green, uint8 *blue);
+PR_EXTERN(PrefResult) PREF_GetDefaultColorPrefDWord(const char *pref_name, uint32 *colorref);
+PR_EXTERN(PrefResult) PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16 *top, int16 *right, int16 *bottom);
 
 /*
 // <font color=blue>
@@ -270,35 +319,43 @@ PR_EXTERN(int) PREF_GetDefaultRectPref(const char *pref_name, int16 *left, int16
 // The caller is responsible for freeing the returned string.
 // </font>
 */
-PR_EXTERN(int) PREF_CopyConfigString(const char *obj_name, char **return_buffer);
-PR_EXTERN(int) PREF_CopyIndexConfigString(const char *obj_name, int index,
+PR_EXTERN(PrefResult) PREF_CopyConfigString(const char *obj_name, char **return_buffer);
+PR_EXTERN(PrefResult) PREF_CopyIndexConfigString(const char *obj_name, int index,
 	const char *field, char **return_buffer);
-PR_EXTERN(int) PREF_GetConfigInt(const char *obj_name, int32 *return_int);
-PR_EXTERN(int) PREF_GetConfigBool(const char *obj_name, XP_Bool *return_bool);
+PR_EXTERN(PrefResult) PREF_GetConfigInt(const char *obj_name, int32 *return_int);
+PR_EXTERN(PrefResult) PREF_GetConfigBool(const char *obj_name, XP_Bool *return_bool);
 
-/* OLD:: */PR_EXTERN(int) PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
+/* OLD:: */PR_EXTERN(PrefResult) PREF_GetConfigString(const char *obj_name, char * return_buffer, int size,
 	int index, const char *field);
 
 /*
+ * Listpref API
+ */
+PR_EXTERN(PrefResult) PREF_GetListPref(const char *pref_name, char*** list);
+PR_EXTERN(PrefResult) PREF_SetListPref(const char *pref_name, char** list);
+PR_EXTERN(PrefResult) PREF_AppendListPref(const char *pref_name, const char *value);
+PR_EXTERN(PrefResult) PREF_FreeListPref(char*** list);
+
+/*
 // <font color=blue>
-// PRBool funtion that returns whether or not the preference is locked and therefore
+// PRBool function that returns whether or not the preference is locked and therefore
 // cannot be changed.
 // </font>
 */
 PR_EXTERN(PRBool) PREF_PrefIsLocked(const char *pref_name);
 
-PR_EXTERN(int) PREF_GetPrefType(const char *pref_name);
+PR_EXTERN(PrefType) PREF_GetPrefType(const char *pref_name);
 
 /*
 // <font color=blue>
 // Cause the preference file to be written to disk
 // </font>
 */
-PR_EXTERN(int) PREF_SavePrefFile(void);
-PR_EXTERN(int) PREF_SavePrefFileAs(const char *filename);
+PR_EXTERN(PrefResult) PREF_SavePrefFile(void);
+PR_EXTERN(PrefResult) PREF_SavePrefFileAs(const char *filename);
 
 /* LI_STUFF */
-PR_EXTERN(int) PREF_SaveLIPrefFile(const char *filename);
+PR_EXTERN(PrefResult) PREF_SaveLIPrefFile(const char *filename);
 
 
 /*
@@ -310,12 +367,12 @@ PR_EXTERN(char *) PREF_AboutConfig();
 /*
  * Delete a branch of the tree
  */
-PR_EXTERN(int) PREF_DeleteBranch(const char *branch_name);
+PR_EXTERN(PrefResult) PREF_DeleteBranch(const char *branch_name);
 
 /*
  * Clears the given pref (reverts it to its default value)
  */
-PR_EXTERN(int) PREF_ClearUserPref(const char *pref_name);
+PR_EXTERN(PrefResult) PREF_ClearUserPref(const char *pref_name);
 
 /*
  * Creates an iterator over the children of a node.  Sample code:
@@ -332,7 +389,7 @@ PR_EXTERN(int) PREF_ClearUserPref(const char *pref_name);
  *     "mime.image_gif", then
  *     "mime.image_jpeg", etc.
  */
-PR_EXTERN(int) PREF_CreateChildList(const char* parent_node, char **child_list);
+PR_EXTERN(PrefResult) PREF_CreateChildList(const char* parent_node, char **child_list);
 PR_EXTERN(char*) PREF_NextChild(char *child_list, int *index);
 
 /*
@@ -346,13 +403,13 @@ PR_EXTERN(char*) PREF_NextChild(char *child_list, int *index);
  *
  *
 */
-PR_EXTERN(int) PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot);
+PR_EXTERN(PrefResult) PREF_CopyPrefsTree(const char *srcRoot, const char *destRoot);
 
 /*
 // <font color=blue>
 // The callback function will get passed the pref_node which triggered the call
 // and the void * instance_data which was passed to the register callback function.
-// Return a non-zero result to pass an error up to the caller.
+// Return a non-zero result (a PrefResult enumerated value) to pass an error up to the caller.
 // </font>
 */
 typedef int (*PrefChangedFunc) (const char *, void *); 
@@ -367,7 +424,7 @@ typedef int (*PrefChangedFunc) (const char *, void *);
 */
 PR_EXTERN(void) PREF_RegisterCallback( const char* domain,
 								PrefChangedFunc callback, void* instance_data );
-PR_EXTERN(int) PREF_UnregisterCallback( const char* domain,
+PR_EXTERN(PrefResult) PREF_UnregisterCallback( const char* domain,
 								PrefChangedFunc callback, void* instance_data );
 
 /*
@@ -376,11 +433,14 @@ PR_EXTERN(int) PREF_UnregisterCallback( const char* domain,
 PR_EXTERN(PRBool) PREF_IsAutoAdminEnabled(void);
 
 #ifdef XP_UNIX
+struct fe_icon_data;
 typedef void* XmStringPtr;
 typedef void* KeySymPtr;
 PR_EXTERN(void) PREF_AlterSplashIcon(struct fe_icon_data*);
 PR_EXTERN(PRBool) PREF_GetLabelAndMnemonic(char*, char**, XmStringPtr xmstring, KeySymPtr keysym);
 PR_EXTERN(PRBool) PREF_GetUrl(char*, char**);
+PR_EXTERN(void) PREF_SetCallbacksStatus(PRBool status);
+PR_EXTERN(PrefResult) PREF_LoadLDAPPrefs(void);
 #endif
 
 NSPR_END_EXTERN_C

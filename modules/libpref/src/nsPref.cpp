@@ -255,7 +255,8 @@ NS_IMETHODIMP nsPref::EvaluateConfigScript(const char * js_buffer,
 					       length,
 					       filename,
 					       bGlobalContext,
-					       bCallbacks));
+					       bCallbacks,
+					       PR_TRUE));
 }
 
 /*
