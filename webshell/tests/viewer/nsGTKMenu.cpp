@@ -27,8 +27,8 @@
 typedef GtkItemFactoryCallback GIFC;
 
 void gtk_ifactory_cb (nsBrowserWindow *nbw,
-	guint callback_action, 
-	GtkWidget *widget)
+                      guint callback_action, 
+                      GtkWidget *widget)
 {
   nbw->DispatchMenuItem(callback_action);
 }
@@ -126,20 +126,48 @@ GtkItemFactoryEntry menu_items[] =
   { "/Tools/_Editor Mode",		nsnull,	(GIFC)gtk_ifactory_cb,	EDITOR_MODE,	nsnull }
 };
 
-void CreateViewerMenus(GtkWidget *aParent, gpointer data) 
+void CreateViewerMenus(nsIWidget *aParent, gpointer data) 
 {
   GtkItemFactory *item_factory;
+  GtkWidget *window;
   GtkWidget *menubar;
+  GtkWidget *vbox;
   
+  GtkWidget *aNParent = (GtkWidget*)aParent->GetNativeData(NS_NATIVE_WIDGET);
+
   int nmenu_items = sizeof (menu_items) / sizeof (menu_items[0]);
   item_factory = gtk_item_factory_new (GTK_TYPE_MENU_BAR, "<main>", nsnull);
+
   gtk_item_factory_create_items (item_factory, nmenu_items, menu_items, data);
+
 /* HACK HACK HACK */
+  // apprunner no longer needs a vbox, so we're going to remove it
+  // viewer still use native menus, so we need a vbox, so we'll do a little reparenting dance
+  // and hack a vbox in.
+
+  // we no longer listen to the actual sizes of windows, and instead only listen to the size requested.
+  // this causes the menu to push the layout down, but the main window stays the same size.
+  // this means the status area at the bottom is off the page
+  // to fix that, the layout engine needs to think that the GTK Layout widget is mBounds.height - menubarheight
+  // i'm not entirely sure how to do this correctly.  you could try calling GetBounds on aParent,
+  //  then look at menubar->allocation.height and subtract the two, then call
+  //  gtk_widget_set_usize(aNParent, mBounds.width, newheight)
+
+  // or something like that.  i'm not entirely sure.  this may work
+
   menubar = gtk_item_factory_get_widget (item_factory, "<main>");
   gtk_widget_show(menubar);
 
   gtk_menu_bar_set_shadow_type (GTK_MENU_BAR(menubar), GTK_SHADOW_NONE);
 
-  gtk_box_pack_start(GTK_BOX(aParent->parent), menubar, PR_FALSE, PR_FALSE, 0);
-  gtk_box_reorder_child(GTK_BOX(aParent->parent), menubar, 0);
+  window = aNParent->parent;
+
+  vbox = gtk_vbox_new(PR_FALSE, PR_FALSE);
+  gtk_widget_reparent(aNParent, vbox);
+
+  gtk_box_pack_start(GTK_BOX(vbox), menubar, PR_FALSE, PR_FALSE, 0);
+  gtk_box_reorder_child(GTK_BOX(vbox), menubar, 0);
+
+  gtk_container_add(GTK_CONTAINER(window), vbox);
+  gtk_widget_show(vbox);
 }
