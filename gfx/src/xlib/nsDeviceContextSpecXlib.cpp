@@ -205,8 +205,12 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
       if (buttonPressed == 0) {
         canPrint = PR_TRUE;
       }
+      else {
+        rv = NS_ERROR_ABORT;
+      }
     }
-  } else {
+  }
+  else {
     canPrint = PR_TRUE;
   }
 
@@ -280,7 +284,7 @@ NS_IMETHODIMP nsDeviceContextSpecXlib::Init(PRBool aQuiet)
     return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecXlib::GetToPrinter(PRBool &aToPrinter)

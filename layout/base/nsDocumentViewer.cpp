@@ -4479,8 +4479,9 @@ nsresult rv;
 
     /* cleanup done, let's fire-up an error dialog to notify the user
      * what went wrong... 
-     */   
-    ShowPrintErrorDialog(rv);
+     */
+    if (rv != NS_ERROR_ABORT)
+      ShowPrintErrorDialog(rv);
   }
       
   return rv;

@@ -218,8 +218,12 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
       if (buttonPressed == 0) {
         canPrint = PR_TRUE;
       }
+      else {
+        rv = NS_ERROR_ABORT;
+      }
     }
-  } else {
+  }
+  else {
     canPrint = PR_TRUE;
   }
 
@@ -293,7 +297,7 @@ NS_IMETHODIMP nsDeviceContextSpecGTK::Init(PRBool aQuiet)
     return NS_OK;
   }
 
-  return NS_ERROR_FAILURE;
+  return rv;
 }
 
 NS_IMETHODIMP nsDeviceContextSpecGTK :: GetToPrinter( PRBool &aToPrinter )     
