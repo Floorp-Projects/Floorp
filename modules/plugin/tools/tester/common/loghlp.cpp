@@ -816,8 +816,22 @@ int formatLogItem(LogItemStruct * plis, LPSTR szOutput, LPSTR szEndOfItem, BOOL 
           strcpy(szMode, "[Invalide mode]");
           break;
       }
-      wsprintf(szString, "NPP_New(\"%s\", %#08lx, %s, %i, %#08lx, %#08lx, %#08lx)%s%s", 
-               (LPSTR)dw1,dw2,szMode,(int)dw4,dw5,dw6,dw7,szEOL,szRet);
+      char szArgs[512] = "\0";
+      int count = (int)dw4;
+      char** names = (char **)dw5;
+      char** values = (char **)dw6;
+      if ((count > 0) && names && values) {
+        wsprintf(szArgs, "\tArgument arrays:%s", szEOL);
+        for (int i = 0; i < count; i++) {
+          strcat(szArgs, "\t\t");
+          strcat(szArgs, names[i]);
+          strcat(szArgs, " -- ");
+          strcat(szArgs, values[i]);
+          strcat(szArgs, szEOL);
+        }
+      }
+      wsprintf(szString, "NPP_New(\"%s\", %#08lx, %s, %i, %#08lx, %#08lx, %#08lx)%s%s%s", 
+               (LPSTR)dw1,dw2,szMode,(int)dw4,dw5,dw6,dw7,szEOL,szArgs,szRet);
       break;
     }
     case action_npp_destroy:
