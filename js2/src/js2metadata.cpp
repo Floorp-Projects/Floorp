@@ -2969,6 +2969,7 @@ doUnary:
 #define JS7_ISHEX(c)    ((c) < 128 && isxdigit(c))
 #define JS7_UNHEX(c)    (uint32)(isdigit(c) ? (c) - '0' : 10 + tolower(c) - 'a')
 
+    /* See ECMA-262 15.1.2.5 */
     static js2val GlobalObject_unescape(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
     {
         const String *str = meta->toString(argv[0]);
@@ -3005,6 +3006,125 @@ doUnary:
         newchars[ni] = 0;
         
         return STRING_TO_JS2VAL(meta->engine->allocStringPtr(&meta->world.identifiers[newchars]));
+    }
+
+    // Taken from jsstr.c...
+/*
+ * Stuff to emulate the old libmocha escape, which took a second argument
+ * giving the type of escape to perform.  Retained for compatibility, and
+ * copied here to avoid reliance on net.h, mkparse.c/NET_EscapeBytes.
+ */
+
+#define URL_XALPHAS     ((uint8) 1)
+#define URL_XPALPHAS    ((uint8) 2)
+#define URL_PATH        ((uint8) 4)
+
+static const uint8 urlCharType[256] =
+/*      Bit 0           xalpha          -- the alphas
+ *      Bit 1           xpalpha         -- as xalpha but
+ *                             converts spaces to plus and plus to %20
+ *      Bit 2 ...       path            -- as xalphas but doesn't escape '/'
+ */
+    /*   0 1 2 3 4 5 6 7 8 9 A B C D E F */
+    {    0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,       /* 0x */
+         0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,       /* 1x */
+         0,0,0,0,0,0,0,0,0,0,7,4,0,7,7,4,       /* 2x   !"#$%&'()*+,-./  */
+         7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,0,       /* 3x  0123456789:;<=>?  */
+         7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,       /* 4x  @ABCDEFGHIJKLMNO  */
+         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,7,       /* 5X  PQRSTUVWXYZ[\]^_  */
+         0,7,7,7,7,7,7,7,7,7,7,7,7,7,7,7,       /* 6x  `abcdefghijklmno  */
+         7,7,7,7,7,7,7,7,7,7,7,0,0,0,0,0,       /* 7X  pqrstuvwxyz{\}~  DEL */
+         0, };
+
+/* This matches the ECMA escape set when mask is 7 (default.) */
+
+#define IS_OK(C, mask) (urlCharType[((uint8) (C))] & (mask))
+
+    /* See ECMA-262 15.1.2.4. */
+    static js2val GlobalObject_escape(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+    {
+        uint32 newlength;
+        char16 ch;
+        const char digits[] = {'0', '1', '2', '3', '4', '5', '6', '7',
+                               '8', '9', 'A', 'B', 'C', 'D', 'E', 'F' };
+
+        int32 mask = URL_XALPHAS | URL_XPALPHAS | URL_PATH;
+        if (argc > 1) {
+            float64 d = meta->toFloat64(argv[1]);
+            if (!JSDOUBLE_IS_FINITE(d) ||
+                (mask = (int32)d) != d ||
+                mask & ~(URL_XALPHAS | URL_XPALPHAS | URL_PATH))
+            {
+                meta->reportError(Exception::badValueError,  "Need integral non-zero mask for escape", meta->engine->errorPos());
+            }
+        }
+
+        const String *str = meta->toString(argv[0]);
+        const char16 *chars = str->data();
+        uint32 length = newlength = str->length();
+
+        /* Take a first pass and see how big the result string will need to be. */
+        uint32 i;
+        for (i = 0; i < length; i++) {
+            if ((ch = chars[i]) < 128 && IS_OK(ch, mask))
+                continue;
+            if (ch < 256) {
+                if (mask == URL_XPALPHAS && ch == ' ')
+                    continue;   /* The character will be encoded as '+' */
+                newlength += 2; /* The character will be encoded as %XX */
+            } else {
+                newlength += 5; /* The character will be encoded as %uXXXX */
+            }
+        }
+
+        char16 *newchars = new char16[newlength + 1];
+        uint32 ni;
+        for (i = 0, ni = 0; i < length; i++) {
+            if ((ch = chars[i]) < 128 && IS_OK(ch, mask)) {
+                newchars[ni++] = ch;
+            } else if (ch < 256) {
+                if (mask == URL_XPALPHAS && ch == ' ') {
+                    newchars[ni++] = '+'; /* convert spaces to pluses */
+                } else {
+                    newchars[ni++] = '%';
+                    newchars[ni++] = digits[ch >> 4];
+                    newchars[ni++] = digits[ch & 0xF];
+                }
+            } else {
+                newchars[ni++] = '%';
+                newchars[ni++] = 'u';
+                newchars[ni++] = digits[ch >> 12];
+                newchars[ni++] = digits[(ch & 0xF00) >> 8];
+                newchars[ni++] = digits[(ch & 0xF0) >> 4];
+                newchars[ni++] = digits[ch & 0xF];
+            }
+        }
+        ASSERT(ni == newlength);
+        newchars[newlength] = 0;
+
+        return STRING_TO_JS2VAL(meta->engine->allocStringPtr(&meta->world.identifiers[newchars]));
+    }
+
+    static js2val GlobalObject_parseInt(JS2Metadata *meta, const js2val /* thisValue */, js2val argv[], uint32 argc)
+    {
+        const String *str = meta->toString(argv[0]);
+        const char16 *chars = str->data();
+        uint32 length = str->length();
+        char16 *numEnd;
+        uint base = 10;
+        
+        if (argc > 1) {
+            float64 d = meta->toFloat64(argv[1]);
+            if (!JSDOUBLE_IS_FINITE(d) || ((base = (int32)d) != d))
+                return meta->engine->nanValue;
+            if (base == 0)
+                base = 10;
+            else
+                if ((base < 2) || (base > 36))
+                    return meta->engine->nanValue;
+        }
+        
+        return meta->engine->allocNumber(stringToInteger(chars, chars + length, numEnd, base));
     }
 
     void JS2Metadata::addGlobalObjectFunction(char *name, NativeCode *code, uint32 length)
@@ -3080,8 +3200,10 @@ XXX see EvalAttributeExpression, where identifiers are being handled for now...
         // Function properties of the global object 
         addGlobalObjectFunction("isNaN", GlobalObject_isNaN, 1);
         addGlobalObjectFunction("eval", GlobalObject_eval, 1);
-        addGlobalObjectFunction("toString", GlobalObject_toString, 0);
-        addGlobalObjectFunction("unescape", GlobalObject_unescape, 0);
+        addGlobalObjectFunction("toString", GlobalObject_toString, 1);
+        addGlobalObjectFunction("unescape", GlobalObject_unescape, 1);
+        addGlobalObjectFunction("escape", GlobalObject_escape, 1);
+        addGlobalObjectFunction("parseInt", GlobalObject_parseInt, 2);
 
 
 /*** ECMA 3  Object Class ***/

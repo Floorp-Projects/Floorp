@@ -394,7 +394,7 @@ static void regexpSplitMatch(JS2Metadata *meta, const String *S, uint32 q, RESta
                 if (match->parens[i].index != -1)
                     result.captures[i] = meta->engine->allocString(S->substr((uint32)(match->parens[i].index + q), 
                                                                     (uint32)(match->parens[i].length)));
-		else
+                else
                     result.captures[i] = JS2VAL_UNDEFINED;
             }
         }
