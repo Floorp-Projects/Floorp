@@ -143,7 +143,7 @@ enum nsBorderStyle
   eBorderStyle_menu     = 1 << 4,
 
   // enables the minimize button so the user can minimize the window.
-  //   turned off for tranient windows since they can not be minimized seperate from their parent
+  //   turned off for tranient windows since they can not be minimized separate from their parent
   eBorderStyle_minimize = 1 << 5,
 
   // enables the maxmize button so the user can maximize the window

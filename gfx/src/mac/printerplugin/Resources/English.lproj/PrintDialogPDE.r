@@ -76,7 +76,7 @@ resource 'CNTL' (ePrintSelectedFrameControlID, "Print Selected Frame", purgeable
 };
 
 
-resource 'CNTL' (ePrintFramesSeperatlyControlID, "Print Frames Seperately", purgeable) {
+resource 'CNTL' (ePrintFramesSeparatelyControlID, "Print Frames Separately", purgeable) {
 {170, 72, 185, 250},					
  0, 							
  invisible,						

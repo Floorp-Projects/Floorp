@@ -630,7 +630,7 @@ nsTextEditRules::WillInsertText(PRInt32          aAction,
     nsCOMPtr<nsIDOMNode> unused;
     PRInt32 pos = 0;
         
-    // for efficiency, break out the pre case seperately.  This is because
+    // for efficiency, break out the pre case separately.  This is because
     // its a lot cheaper to search the input string for only newlines than
     // it is to search for both tabs and newlines.
     if (isPRE)

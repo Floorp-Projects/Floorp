@@ -2070,7 +2070,7 @@ NS_IMETHODIMP nsChildView::SetTitle(const nsString& title)
 
 NS_IMETHODIMP nsChildView::GetAttention()
 {
-  // Since the Mac doesn't consider each window a seperate process this call functions
+  // Since the Mac doesn't consider each window a separate process this call functions
   // slightly different than on other platforms.  We first check to see if we're the
   // foreground process and, if so, ignore the call.  We also check to see if a notification
   // is already pending and, if so, remove it since we only have one notification per process.

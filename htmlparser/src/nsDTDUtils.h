@@ -369,7 +369,7 @@ public:
   PRInt32         mResidualStyleCount;
   PRInt32         mContextTopIndex;
 
-    //break this struct out seperately so that lame compilers don't gack.
+    //break this struct out separately so that lame compilers don't gack.
     //By using these bits instead of bools, we have a bit-o-memory.
   struct CFlags {
     PRUint8  mHadBody:1;

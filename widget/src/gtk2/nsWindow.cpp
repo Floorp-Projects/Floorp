@@ -2529,7 +2529,7 @@ nsWindow::SetupPluginPort(void)
         return nsnull;
 
     // we have to flush the X queue here so that any plugins that
-    // might be running on seperate X connections will be able to use
+    // might be running on separate X connections will be able to use
     // this window in case it was just created
     XWindowAttributes xattrs;
     XGetWindowAttributes(GDK_DISPLAY (),

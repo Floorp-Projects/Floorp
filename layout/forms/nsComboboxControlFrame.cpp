@@ -2427,7 +2427,7 @@ NS_IMETHODIMP
 nsComboboxControlFrame::GetAdditionalChildListName(PRInt32   aIndex,
                                          nsIAtom** aListName) const
 {
-   // Maintain a seperate child list for the dropdown list (i.e. popup listbox)
+   // Maintain a separate child list for the dropdown list (i.e. popup listbox)
    // This is necessary because we don't want the listbox to be included in the layout
    // of the combox's children because it would take up space, when it is suppose to
    // be floating above the display.

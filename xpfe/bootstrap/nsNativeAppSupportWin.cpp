@@ -437,7 +437,7 @@ nsSplashScreenWin::Hide() {
         //  http://bugzilla.mozilla.org/show_bug.cgi?id=65974
         //  http://bugzilla.mozilla.org/show_bug.cgi?id=29172
         //  http://bugzilla.mozilla.org/show_bug.cgi?id=45805
-        // As the splash-screen is in a seperate thread, Windows considers
+        // As the splash-screen is in a separate thread, Windows considers
         // this the "foreground" thread.  When our main windows on the main
         // thread are activated, they are treated like windows from a different
         // application, so Windows 2000 and 98 both leave the window in the background.

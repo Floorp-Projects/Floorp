@@ -230,7 +230,7 @@ nsPrintingPromptService::ShowPrintDialog(nsIDOMWindow *parent, nsIWebBrowserPrin
                 printSettings->SetPrintFrameType(nsIPrintSettings::kFramesAsIs);
             if (printData.mPrintSelectedFrame)
                 printSettings->SetPrintFrameType(nsIPrintSettings::kSelectedFrame);
-            if (printData.mPrintFramesSeperatly)
+            if (printData.mPrintFramesSeparately)
                 printSettings->SetPrintFrameType(nsIPrintSettings::kEachFrameSep);
 
             printSettings->SetShrinkToFit(printData.mShrinkToFit);

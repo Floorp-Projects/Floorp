@@ -165,7 +165,7 @@ struct AttributeRuleProcessorData : public RuleProcessorData {
 #define NS_ISTYLE_RULE_PROCESSOR_IID     \
 {0x015575fe, 0x7b6c, 0x11d3, {0xba, 0x05, 0x00, 0x10, 0x83, 0x02, 0x3c, 0x2b}}
 
-/* The style rule processor interface is a mechanism to seperate the matching
+/* The style rule processor interface is a mechanism to separate the matching
  * of style rules from style sheet instances.
  * Simple style sheets can and will act as their own processor. 
  * Sheets where rule ordering interlaces between multiple sheets, will need to 

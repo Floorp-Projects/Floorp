@@ -47,7 +47,7 @@
 #define strtok_r(s1, s2, x) PL_strtok_r((s1), (s2), (x))
 #endif /* USE_MOZILLA_TYPES */
 
-/* List of tokens which can be used to seperate entries in the 
+/* List of tokens which can be used to separate entries in the 
  * $XPSERVERLIST env var */
 static const char XPServerListSeparators[] = " \t\v\n\r\f";
 
@@ -664,7 +664,7 @@ Bool XpuParseMediumSourceSize( const char *value,
   while(*s);
   *d = '\0';
     
-  /* seperate medium name from string */
+  /* separate medium name from string */
   d = (char *)search_next_space(name);
   if( !d )
   {

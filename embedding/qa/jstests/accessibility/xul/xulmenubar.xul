@@ -114,7 +114,7 @@
       <!-- There are five elements associated with creating a menu bar and its menus.
       menubar - The container for the row of menus.
       menu - Despite the name, this is actually only the title of the menu on the menubar.
-      This element can be placed on a menubar or can be placed seperately.
+      This element can be placed on a menubar or can be placed separately.
       menupopup - The popup box that appears when you click on the menu title. This box 
       contains the list of menu commands.
       menuitem - An individual command on the menu. This would be placed on a menupopup.

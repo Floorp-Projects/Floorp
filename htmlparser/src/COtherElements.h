@@ -117,7 +117,7 @@ inline PRBool ListContainsTag(eHTMLTags* aTagList,eHTMLTags aTag) {
 class CElement {
 public:
 
-    //break this struct out seperately so that lame compilers don't gack.
+    //break this struct out separately so that lame compilers don't gack.
   struct CFlags {
     PRUint32  mOmitEndTag:1;
     PRUint32  mIsContainer:1;

@@ -69,7 +69,7 @@
 #define PLUGIN_LOG_NOISY  7
 #define PLUGIN_LOG_MAX    9
 
-// 2. You can combine logs and levels by seperating them with a comma:
+// 2. You can combine logs and levels by separating them with a comma:
 //    My favorite Win32 Example: SET NSPR_LOG_MODULES=Plugin:5,PluginNPP:5,PluginNPN:5
 
 // 3. Instead of output going to the console, you can log to a file. Additionally, set the

@@ -99,7 +99,7 @@ typedef struct{
   ControlRef  thePrintSelectionOnly;
   ControlRef  thePrintFrameAsIs;
   ControlRef  thePrintSelectedFrame;
-  ControlRef  thePrintFramesSeperatly;
+  ControlRef  thePrintFramesSeparately;
   ControlRef  theShrinkToFit;
   ControlRef  theRadioGroup;
 } PrintDialogPDEOnlyContext, *PrintDialogPDEOnlyContextPtr;
@@ -470,7 +470,7 @@ MozPDEInitialize( PMPDEContext    aContext,
     theContext->thePrintSelectionOnly = GetNewControl(ePrintSelectionControlID, theWindow);
     theContext->thePrintFrameAsIs = GetNewControl(ePrintFrameAsIsControlID, theWindow);
     theContext->thePrintSelectedFrame = GetNewControl(ePrintSelectedFrameControlID, theWindow);
-    theContext->thePrintFramesSeperatly = GetNewControl(ePrintFramesSeperatlyControlID, theWindow);
+    theContext->thePrintFramesSeparately = GetNewControl(ePrintFramesSeparatelyControlID, theWindow);
     theContext->theShrinkToFit = GetNewControl(eShrinkToFiControlID, theWindow);
     theContext->theRadioGroup = GetNewControl(eRadioGroupControlID, theWindow);
 
@@ -479,7 +479,7 @@ MozPDEInitialize( PMPDEContext    aContext,
     EmbedControl(theContext->theShrinkToFit, aParentUserPane);
     EmbedControl(theContext->thePrintFrameAsIs, theContext->theRadioGroup);
     EmbedControl(theContext->thePrintSelectedFrame, theContext->theRadioGroup);
-    EmbedControl(theContext->thePrintFramesSeperatly, theContext->theRadioGroup);
+    EmbedControl(theContext->thePrintFramesSeparately, theContext->theRadioGroup);
     EmbedControl(theContext->theRadioGroup, aParentUserPane);    
 
     // set controls as visible
@@ -487,14 +487,14 @@ MozPDEInitialize( PMPDEContext    aContext,
     SetControlVisibility(theContext->thePrintSelectionOnly, true, false);
     SetControlVisibility(theContext->thePrintFrameAsIs, true, false);
     SetControlVisibility(theContext->thePrintSelectedFrame, true, false);
-    SetControlVisibility(theContext->thePrintFramesSeperatly, true, false);
+    SetControlVisibility(theContext->thePrintFramesSeparately, true, false);
     SetControlVisibility(theContext->theShrinkToFit, true, false);
 
     // Set default value
     SetControlValue(theContext->thePrintSelectionOnly, 0);
     SetControlValue(theContext->thePrintFrameAsIs, 0);
     SetControlValue(theContext->thePrintSelectedFrame, 0);
-    SetControlValue(theContext->thePrintFramesSeperatly, 0);
+    SetControlValue(theContext->thePrintFramesSeparately, 0);
     SetControlValue(theContext->theShrinkToFit, 0);
 
     // Set flags
@@ -613,7 +613,7 @@ MozPDESync(PMPDEContext aContext,PMPrintSession  aPrintSession,Boolean aSyncDire
       printSettings.mPrintSelection = false;
       printSettings.mPrintFrameAsIs = false;
       printSettings.mPrintSelectedFrame = false;
-      printSettings.mPrintFramesSeperatly = false;
+      printSettings.mPrintFramesSeparately = false;
       printSettings.mShrinkToFit = false;
                
       switch (aSyncDirection){
@@ -647,17 +647,17 @@ MozPDESync(PMPDEContext aContext,PMPrintSession  aPrintSession,Boolean aSyncDire
                 SetControlValue(theContext->thePrintSelectedFrame, 0);
               }
             
-              // control to print all frames seperately
-              EnableControl((ControlHandle)theContext->thePrintFramesSeperatly);
-              theControlValue = (printSettings.mPrintFramesSeperatly) ? 1 : 0;
-              SetControlValue(theContext->thePrintFramesSeperatly, theControlValue);
+              // control to print all frames separately
+              EnableControl((ControlHandle)theContext->thePrintFramesSeparately);
+              theControlValue = (printSettings.mPrintFramesSeparately) ? 1 : 0;
+              SetControlValue(theContext->thePrintFramesSeparately, theControlValue);
             } else {
               DisableControl((ControlHandle)theContext->thePrintFrameAsIs);
               SetControlValue(theContext->thePrintFrameAsIs, 0);
               DisableControl((ControlHandle)theContext->thePrintSelectedFrame);
               SetControlValue(theContext->thePrintSelectedFrame, 0);
-              DisableControl((ControlHandle)theContext->thePrintFramesSeperatly);
-              SetControlValue(theContext->thePrintFramesSeperatly, 0);
+              DisableControl((ControlHandle)theContext->thePrintFramesSeparately);
+              SetControlValue(theContext->thePrintFramesSeparately, 0);
             }
           
             // shrink to fit
@@ -673,8 +673,8 @@ MozPDESync(PMPDEContext aContext,PMPrintSession  aPrintSession,Boolean aSyncDire
            printSettings.mPrintFrameAsIs = theControlValue != 0;
            theControlValue = GetControlValue(theContext->thePrintSelectedFrame);
            printSettings.mPrintSelectedFrame = theControlValue != 0;
-           theControlValue = GetControlValue(theContext->thePrintFramesSeperatly);
-           printSettings.mPrintFramesSeperatly = theControlValue != 0;
+           theControlValue = GetControlValue(theContext->thePrintFramesSeparately);
+           printSettings.mPrintFramesSeparately = theControlValue != 0;
            theControlValue = GetControlValue(theContext->theShrinkToFit);
            printSettings.mShrinkToFit = theControlValue != 0;
          

@@ -46,7 +46,7 @@ enum {
 ePrintSelectionControlID = 4000,
 ePrintFrameAsIsControlID,
 ePrintSelectedFrameControlID,
-ePrintFramesSeperatlyControlID,
+ePrintFramesSeparatelyControlID,
 eShrinkToFiControlID,
 eRadioGroupControlID,
 };

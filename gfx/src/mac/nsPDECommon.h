@@ -50,7 +50,7 @@ typedef struct {
   Boolean mPrintSelection;
   Boolean mPrintFrameAsIs;
   Boolean mPrintSelectedFrame;
-  Boolean mPrintFramesSeperatly;
+  Boolean mPrintFramesSeparately;
   Boolean mShrinkToFit;
 } nsPrintExtensions;
 

@@ -435,7 +435,7 @@ void nsTransform2D :: TransformCoord(nscoord *ptX, nscoord *ptY)
     case MG_2DSCALE | MG_2DTRANSLATION:
       // You can not use a translation that is not rounded to calculate a 
       // final destination and get consistent results.  The translation is rounded 
-      // seperatly only for the final coordinate location.  Its ok 
+      // separately only for the final coordinate location.  Its ok 
       // to keep the tranlation in floating for the matrix.. just don't use it
       // pre-rounded for coordinate locations.  Its not valid to translate 1.333 pixels for example
       // on output since .33 pixel is not a valid output unit and can cause inconsistencies. (dcone)

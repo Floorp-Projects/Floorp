@@ -1338,7 +1338,7 @@ nsHTMLEditRules::WillInsertText(PRInt32          aAction,
     PRInt32 pos = 0;
     NS_NAMED_LITERAL_STRING(newlineStr, LFSTR);
         
-    // for efficiency, break out the pre case seperately.  This is because
+    // for efficiency, break out the pre case separately.  This is because
     // its a lot cheaper to search the input string for only newlines than
     // it is to search for both tabs and newlines.
     if (isPRE || bPlaintext)
@@ -5881,7 +5881,7 @@ nsHTMLEditRules::MakeTransitionList(nsCOMArray<nsIDOMNode>& inArrayOfNodes,
     transNode->GetParentNode(getter_AddRefs(curElementParent));
     if (curElementParent != prevElementParent)
     {
-      // different parents, or seperated by <br>: transition point
+      // different parents, or separated by <br>: transition point
       inTransitionArray.InsertElementAt((void*)PR_TRUE,i);  
     }
     else
@@ -6763,7 +6763,7 @@ nsHTMLEditRules::JoinNodesSmart( nsIDOMNode *aNodeLeft,
   res = mHTMLEditor->GetLengthOfDOMNode(aNodeLeft, *((PRUint32*)aOutMergeOffset));
   if (NS_FAILED(res)) return res;
 
-  // seperate join rules for differing blocks
+  // separate join rules for differing blocks
   if (nsHTMLEditUtils::IsParagraph(aNodeLeft))
   {
     // for para's, merge deep & add a <br> after merging
@@ -7361,7 +7361,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
         if (NS_FAILED(res)) return res;
         if (bIsEmptyNode)
         {
-          if (bIsMailCite)  // mailcites go on a seperate list from other empty nodes
+          if (bIsMailCite)  // mailcites go on a separate list from other empty nodes
           {
             arrayOfEmptyCites.AppendObject(node);
           }
@@ -7393,7 +7393,7 @@ nsHTMLEditRules::RemoveEmptyNodes()
   }
   
   // now delete the empty mailcites
-  // this is a seperate step because we want to pull out any br's and preserve them.
+  // this is a separate step because we want to pull out any br's and preserve them.
   nodeCount = arrayOfEmptyCites.Count();
   for (j = 0; j < nodeCount; j++)
   {

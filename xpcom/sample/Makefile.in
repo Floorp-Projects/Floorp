@@ -62,7 +62,7 @@ include $(topsrcdir)/config/config.mk
 
 EXTRA_COMPONENTS = nsSample.js
 
-# seperate libraries linked in.
+# separate libraries linked in.
 EXTRA_DSO_LDOPTS = \
 		$(DIST)/lib/$(LIB_PREFIX)xpcomglue.$(LIB_SUFFIX) \
 		$(DIST)/lib/$(LIB_PREFIX)embedstring.$(LIB_SUFFIX) \

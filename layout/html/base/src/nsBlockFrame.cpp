@@ -131,7 +131,7 @@ ShowDebugFlags()
   for (; bdf < end; bdf++) {
     printf("  %s\n", bdf->name);
   }
-  printf("Note: GECKO_BLOCK_DEBUG_FLAGS is a comma seperated list of flag\n");
+  printf("Note: GECKO_BLOCK_DEBUG_FLAGS is a comma separated list of flag\n");
   printf("names (no whitespace)\n");
 }
 
