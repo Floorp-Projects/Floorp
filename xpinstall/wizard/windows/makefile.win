@@ -21,7 +21,7 @@ DEPTH=..\..\..
 
 DIRS=nsinstall setuprsc setup
 
-!ifndef MOZ_NO_MFC
+!ifdef MOZ_MFC
 DIRS=$(DIRS) nszip
 !endif
 
