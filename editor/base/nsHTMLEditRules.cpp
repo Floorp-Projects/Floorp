@@ -1578,7 +1578,7 @@ nsHTMLEditRules::GetPriorHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outN
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode || !InBody(*outNode))
+  if (*outNode && !InBody(*outNode))
   {
     *outNode = nsnull;
   }
@@ -1597,7 +1597,7 @@ nsHTMLEditRules::GetPriorHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMP
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode || !InBody(*outNode))
+  if (*outNode && !InBody(*outNode))
   {
     *outNode = nsnull;
   }
@@ -1617,7 +1617,7 @@ nsHTMLEditRules::GetNextHTMLNode(nsIDOMNode *inNode, nsCOMPtr<nsIDOMNode> *outNo
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode || !InBody(*outNode))
+  if (*outNode && !InBody(*outNode))
   {
     *outNode = nsnull;
   }
@@ -1636,7 +1636,7 @@ nsHTMLEditRules::GetNextHTMLNode(nsIDOMNode *inParent, PRInt32 inOffset, nsCOMPt
   if (NS_FAILED(res)) return res;
   
   // if it's not in the body, then zero it out
-  if (*outNode || !InBody(*outNode))
+  if (*outNode && !InBody(*outNode))
   {
     *outNode = nsnull;
   }
