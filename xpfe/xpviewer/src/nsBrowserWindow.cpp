@@ -780,7 +780,8 @@ void
 nsBrowserWindow::Back()
 {
    //XXX use javascript instead of mWebShell->Back();
-  ExecuteJavaScriptString(mWebShell, nsString("window.back();"));
+  nsString str("window.back();");
+  ExecuteJavaScriptString(mWebShell, str);
   printf("Back executed using JavaScript");
 }
 
@@ -789,7 +790,8 @@ void
 nsBrowserWindow::Forward()
 {
    //XXX use javascript instead  of mWebShell->Forward();
-  ExecuteJavaScriptString(mWebShell, nsString("window.forward();"));
+  nsString str("window.forward();");
+  ExecuteJavaScriptString(mWebShell, str);
 }
 
 //---------------------------------------------------------------
@@ -2030,7 +2032,8 @@ nsBrowserWindow::NotifyImageButtonEvent(nsIImageButton * aImgBtn, nsGUIEvent* an
 
     case kHomeCmd : {
       //XXX This test using javascript instead of calling directly
-      ExecuteJavaScriptString(mWebShell, nsString("window.home();"));
+      nsString str("window.home();");
+      ExecuteJavaScriptString(mWebShell, str);
    
       // nsString homeURL("http://www.netscape.com");
      // mWebShell->LoadURL(homeURL);
