@@ -134,6 +134,9 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
     else
         return Notify(aDocumentID, keys, values);
 }
+
+#define IS_SPACE_CHARS(ch)  (ch == ' ' || ch == '\b' || ch == '\r' || ch == '\n')
+
 NS_IMETHODIMP nsMetaCharsetObserver::Notify(
                     nsISupports* aDocumentID, 
                     const nsStringArray* keys, const nsStringArray* values)
@@ -183,27 +186,36 @@ NS_IMETHODIMP nsMetaCharsetObserver::Notify(
 
       for(i=0;i<(numOfAttributes-3);i++)
       {
-        if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "HTTP-EQUIV"))
+        const PRUnichar *keyStr;
+        keyStr = (keys->StringAt(i))->get();
+
+        //Change 3.190 in nsHTMLTokens.cpp allow  ws/tab/cr/lf exist before 
+        // and after text value, this need to be skipped before comparison
+        while(IS_SPACE_CHARS(*keyStr)) 
+          keyStr++;
+
+        if(0 == nsCRT::strncasecmp(keyStr, "HTTP-EQUIV", 10))
               httpEquivValue=((values->StringAt(i))->get());
-        else if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "content"))
+        else if(0 == nsCRT::strncasecmp(keyStr, "content", 7))
               contentValue=(values->StringAt(i))->get();
-        else if(0 == nsCRT::strcasecmp((keys->StringAt(i))->get(), "charset"))
-              charsetValue=(values->StringAt(i))->get();
+        else if (0 == nsCRT::strncasecmp(keyStr, "charset", 7))
+              charsetValue =(values->StringAt(i))->get();
       }
       NS_NAMED_LITERAL_STRING(contenttype, "Content-Type");
       NS_NAMED_LITERAL_STRING(texthtml, "text/html");
 
-      PRInt32 lastIdx =0;
-      if(nsnull != httpEquivValue)
-         lastIdx = nsCRT::strlen(httpEquivValue)-1;
+      if(nsnull == httpEquivValue || nsnull == contentValue)
+        return NS_OK;
 
-      if((nsnull != httpEquivValue) && 
-         (nsnull != contentValue) && 
+      while(IS_SPACE_CHARS(*httpEquivValue)) 
+        httpEquivValue++;
+      while(IS_SPACE_CHARS(*contentValue)) 
+        contentValue++;
+
+      if(
          ((0==nsCRT::strcasecmp(httpEquivValue,contenttype.get())) ||
-          ((((httpEquivValue[0]=='\'') &&
-             (httpEquivValue[lastIdx]=='\'')) ||
-            ((httpEquivValue[0]=='\"') &&
-             (httpEquivValue[lastIdx]=='\"'))) && 
+          (( (httpEquivValue[0]=='\'') ||
+             (httpEquivValue[0]=='\"') ) && 
            (0==nsCRT::strncasecmp(httpEquivValue+1,
                       contenttype.get(),
                       contenttype.Length()))
