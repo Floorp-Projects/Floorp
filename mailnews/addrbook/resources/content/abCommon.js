@@ -180,9 +180,20 @@ function AbNewMessage()
   var msgComposFormat = Components.interfaces.nsIMsgCompFormat;
   var msgComposeService = Components.classes["@mozilla.org/messengercompose;1"].getService();
   msgComposeService = msgComposeService.QueryInterface(Components.interfaces.nsIMsgComposeService);
-  msgComposeService.OpenComposeWindowWithValues(null, msgComposeType.New, msgComposFormat.Default,
-                                                GetSelectedAddresses(), null, null,
-                                                null, null, null, null, null);
+
+  params = Components.classes["@mozilla.org/messengercompose/composeparams;1"].createInstance(Components.interfaces.nsIMsgComposeParams);
+  if (params)
+  {
+    params.type = msgComposeType.New;
+    params.format = msgComposFormat.Default;
+    composeFields = Components.classes["@mozilla.org/messengercompose/composefields;1"].createInstance(Components.interfaces.nsIMsgCompFields);
+    if (composeFields)
+    {
+      composeFields.to = GetSelectedAddresses();
+      params.composeFields = composeFields;
+      msgComposeService.OpenComposeWindowWithParams(null, params);
+    }
+  }
 }
 
 function GetSelectedAddresses()

@@ -99,11 +99,11 @@ function enableEditableFields()
 }
 
 var stateListener = {
-	NotifyComposeFieldsReady: function() {
-		ComposeFieldsReady();
-	},
+  NotifyComposeFieldsReady: function() {
+    ComposeFieldsReady();
+  },
 
-	ComposeProcessDone: function(aResult) {
+  ComposeProcessDone: function(aResult) {
     dump("\n RECEIVE ComposeProcessDone\n\n");
     gWindowLocked = false;
     CommandUpdate_MsgCompose();
@@ -119,7 +119,7 @@ var stateListener = {
     }
    
     gCloseWindowAfterSave = false;
-	},
+  },
 
   SaveInFolderDone: function(folderURI) {
     DisplaySaveFolderDlg(folderURI);
@@ -166,7 +166,7 @@ var progressListener = {
       }
     },
 
-	  onLocationChange: function(aWebProgress, aRequest, aLocation)
+    onLocationChange: function(aWebProgress, aRequest, aLocation)
     {
       // we can ignore this notification
     },
@@ -898,7 +898,7 @@ function DoCommandClose()
 {
   var retVal;
   if ((retVal = ComposeCanClose()))
-	MsgComposeCloseWindow();
+  MsgComposeCloseWindow();
   return retVal;
 }
 
@@ -929,67 +929,67 @@ function ToggleWindowLock()
 /* This function will go away soon as now arguments are passed to the window using a object of type nsMsgComposeParams instead of a string */
 function GetArgs(originalData)
 {
-	var args = new Object();
+  var args = new Object();
 
-	if (originalData == "")
-	  return null;
+  if (originalData == "")
+    return null;
 
-	var data = "";
-	var separator = String.fromCharCode(1);
+  var data = "";
+  var separator = String.fromCharCode(1);
 
-	var quoteChar = "";
-	var prevChar = "";
-	var nextChar = "";
-	for (var i = 0; i < originalData.length; i ++, prevChar = aChar)
-	{
-		var aChar = originalData.charAt(i)
-		var aCharCode = originalData.charCodeAt(i)
-		if ( i < originalData.length - 1)
-			nextChar = originalData.charAt(i + 1);
-		else
-			nextChar = "";
+  var quoteChar = "";
+  var prevChar = "";
+  var nextChar = "";
+  for (var i = 0; i < originalData.length; i ++, prevChar = aChar)
+  {
+    var aChar = originalData.charAt(i)
+    var aCharCode = originalData.charCodeAt(i)
+    if ( i < originalData.length - 1)
+      nextChar = originalData.charAt(i + 1);
+    else
+      nextChar = "";
 
-		if (aChar == quoteChar && (nextChar == "," || nextChar == ""))
-		{
-			quoteChar = "";
-			data += aChar;
-		}
-		else if ((aCharCode == 39 || aCharCode == 34) && prevChar == "=") //quote or double quote
-		{
-			if (quoteChar == "")
-				quoteChar = aChar;
-			data += aChar;
-		}
-		else if (aChar == ",")
-		{
-			if (quoteChar == "")
-				data += separator;
-			else
-				data += aChar
-		}
-		else
-			data += aChar
-	}
+    if (aChar == quoteChar && (nextChar == "," || nextChar == ""))
+    {
+      quoteChar = "";
+      data += aChar;
+    }
+    else if ((aCharCode == 39 || aCharCode == 34) && prevChar == "=") //quote or double quote
+    {
+      if (quoteChar == "")
+        quoteChar = aChar;
+      data += aChar;
+    }
+    else if (aChar == ",")
+    {
+      if (quoteChar == "")
+        data += separator;
+      else
+        data += aChar
+    }
+    else
+      data += aChar
+  }
 
-	var pairs = data.split(separator);
-//	dump("Compose: argument: {" + data + "}\n");
+  var pairs = data.split(separator);
+//  dump("Compose: argument: {" + data + "}\n");
 
-	for (i = pairs.length - 1; i >= 0; i--)
-	{
-		var pos = pairs[i].indexOf('=');
-		if (pos == -1)
-			continue;
-		var argname = pairs[i].substring(0, pos);
-		var argvalue = pairs[i].substring(pos + 1);
-		if (argvalue.charAt(0) == "'" && argvalue.charAt(argvalue.length - 1) == "'")
-			args[argname] = argvalue.substring(1, argvalue.length - 1);
-		else
-		  try {
+  for (i = pairs.length - 1; i >= 0; i--)
+  {
+    var pos = pairs[i].indexOf('=');
+    if (pos == -1)
+      continue;
+    var argname = pairs[i].substring(0, pos);
+    var argvalue = pairs[i].substring(pos + 1);
+    if (argvalue.charAt(0) == "'" && argvalue.charAt(argvalue.length - 1) == "'")
+      args[argname] = argvalue.substring(1, argvalue.length - 1);
+    else
+      try {
         args[argname] = unescape(argvalue);
       } catch (e) {args[argname] = argvalue;}
-		dump("[" + argname + "=" + args[argname] + "]\n");
-	}
-	return args;
+    dump("[" + argname + "=" + args[argname] + "]\n");
+  }
+  return args;
 }
 
 function ComposeFieldsReady(msgType)
@@ -1047,21 +1047,30 @@ function ComposeStartup()
         params.originalMsgURI = args.originalMsg;
       if (args.preselectid)
         params.identity = getIdentityForKey(args.preselectid);
-  		if (args.to)
-  			composeFields.to = args.to;
-  		if (args.cc)
-  			composeFields.cc = args.cc;
-  		if (args.bcc)
-  			composeFields.bcc = args.bcc;
-  		if (args.newsgroups)
-  			composeFields.newsgroups = args.newsgroups;
-  		if (args.subject)
-  			composeFields.subject = args.subject;
-  		if (args.attachment)
-  			composeFields.attachments = args.attachment;
-			if (args.newshost)
-				composeFields.newshost = args.newshost;
-			if (args.body)
+      if (args.to)
+        composeFields.to = args.to;
+      if (args.cc)
+        composeFields.cc = args.cc;
+      if (args.bcc)
+        composeFields.bcc = args.bcc;
+      if (args.newsgroups)
+        composeFields.newsgroups = args.newsgroups;
+      if (args.subject)
+        composeFields.subject = args.subject;
+      if (args.attachment)
+      {
+        var attachmentList = args.attachment.split(",");
+        var attachment;
+        for (var i = 0; i < attachmentList.length; i ++)
+        {
+          attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
+          attachment.url = attachmentList[i];
+          composeFields.addAttachment(attachment);
+        }
+      }
+      if (args.newshost)
+        composeFields.newshost = args.newshost;
+      if (args.body)
          composeFields.body = args.body;
     }
   }
@@ -1087,55 +1096,55 @@ function ComposeStartup()
     }
   }
   LoadIdentity(true);
-	if (msgComposeService)
-	{
-		msgCompose = msgComposeService.InitCompose(window, params);
-		if (msgCompose)
-		{
-			//Creating a Editor Shell
-			var editorElement = document.getElementById("content-frame");
-			if (!editorElement)
-			{
-				dump("Failed to get editor element!\n");
-				return;
-			}
-			var editorShell = editorElement.editorShell;
-			if (!editorShell)
-			{
-				dump("Failed to create editorShell!\n");
-				return;
-			}
+  if (msgComposeService)
+  {
+    msgCompose = msgComposeService.InitCompose(window, params);
+    if (msgCompose)
+    {
+      //Creating a Editor Shell
+      var editorElement = document.getElementById("content-frame");
+      if (!editorElement)
+      {
+        dump("Failed to get editor element!\n");
+        return;
+      }
+      var editorShell = editorElement.editorShell;
+      if (!editorShell)
+      {
+        dump("Failed to create editorShell!\n");
+        return;
+      }
 
-			// save the editorShell in the window. The editor JS expects to find it there.
-			window.editorShell = editorShell;
-//			dump("Created editorShell\n");
+      // save the editorShell in the window. The editor JS expects to find it there.
+      window.editorShell = editorShell;
+//      dump("Created editorShell\n");
 
-			// setEditorType MUST be call before setContentWindow
-			if (msgCompose.composeHTML)
-			{
-				window.editorShell.editorType = "htmlmail";
-			}
-			else
-			{
-		    //Remove HTML toolbar, format and insert menus as we are editing in plain text mode
+      // setEditorType MUST be call before setContentWindow
+      if (msgCompose.composeHTML)
+      {
+        window.editorShell.editorType = "htmlmail";
+      }
+      else
+      {
+        //Remove HTML toolbar, format and insert menus as we are editing in plain text mode
         document.getElementById("outputFormatMenu").setAttribute("hidden", true);
         document.getElementById("FormatToolbar").setAttribute("hidden", true);
         document.getElementById("formatMenu").setAttribute("hidden", true);
         document.getElementById("insertMenu").setAttribute("hidden", true);
         document.getElementById("menu_showFormatToolbar").setAttribute("hidden", true);
 
-				window.editorShell.editorType = "textmail";
-//				dump("editor initialized in PLAIN TEXT mode\n");
-			}
-			window.editorShell.webShellWindow = window;
-			window.editorShell.contentWindow = window._content;
+        window.editorShell.editorType = "textmail";
+//        dump("editor initialized in PLAIN TEXT mode\n");
+      }
+      window.editorShell.webShellWindow = window;
+      window.editorShell.contentWindow = window._content;
 
-			// Do setup common to Message Composer and Web Composer
-			EditorSharedStartup();
+      // Do setup common to Message Composer and Web Composer
+      EditorSharedStartup();
 
-    	var msgCompFields = msgCompose.compFields;
-    	if (msgCompFields)
-    	{
+      var msgCompFields = msgCompose.compFields;
+      if (msgCompFields)
+      {
         if (params.bodyIsLink)
         {
           var body = msgCompFields.body;
@@ -1152,41 +1161,39 @@ function ComposeStartup()
             msgCompFields.body = "\n<" + body + ">\n";
         }
 
-				var subjectValue = msgCompFields.subject;
-				if (subjectValue != "") {
-					document.getElementById("msgSubject").value = subjectValue;
-				}
-
-        var attachmentValue = msgCompFields.attachments;
-        if (attachmentValue != "") {
-           var atts =  attachmentValue.split(",");
-            for (var i=0; i < atts.length; i++)
-                AddAttachment(atts[i], null);
+        var subjectValue = msgCompFields.subject;
+        if (subjectValue != "") {
+          document.getElementById("msgSubject").value = subjectValue;
         }
-			}
 
-			// Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
-			msgCompose.editor = window.editorShell;
+        var attachments = msgCompFields.attachmentsArray;
+        if (attachments)
+          for (var i = 0; i < attachments.Count(); i ++)
+            AddAttachment(attachments.QueryElementAt(i, Components.interfaces.nsIMsgAttachment));
+        }
 
-			msgCompose.RegisterStateListener(stateListener);
+      // Now that we have an Editor AppCore, we can finish to initialize the Compose AppCore
+      msgCompose.editor = window.editorShell;
+
+      msgCompose.RegisterStateListener(stateListener);
 
 
-		}
-	}
+    }
+  }
 }
 function WizCallback(state)
 {
-	if (state){
-		ComposeStartup();
-	}
-	else
-	{
-		if (msgCompose)
-		  msgCompose.CloseWindow();
-		else
-		  window.close();
-//	window.tryToClose=ComposeCanClose;
-	}
+  if (state){
+    ComposeStartup();
+  }
+  else
+  {
+    if (msgCompose)
+      msgCompose.CloseWindow();
+    else
+      window.close();
+//  window.tryToClose=ComposeCanClose;
+  }
 }
 
 function ComposeLoad()
@@ -1219,7 +1226,7 @@ function ComposeLoad()
   try {
     SetupCommandUpdateHandlers();
     var wizardcallback = true;
-    var state =	verifyAccounts(wizardcallback);	// this will do migration, or create a new account if we need to.
+    var state = verifyAccounts(wizardcallback); // this will do migration, or create a new account if we need to.
 
     if (other_header != "") {
       var selectNode = document.getElementById('msgRecipientType#1');
@@ -1258,13 +1265,13 @@ function ComposeLoad()
 
 function ComposeUnload()
 {
-	dump("\nComposeUnload from XUL\n");
-	RemoveMessageComposeOfflineObserver();
+  dump("\nComposeUnload from XUL\n");
+  RemoveMessageComposeOfflineObserver();
     RemoveDirectoryServerObserver(null);
     RemoveDirectoryServerObserver("mail.identity." + gCurrentIdentity.key);
     if (currentAutocompleteDirectory)
        RemoveDirectorySettingsObserver(currentAutocompleteDirectory);
-	msgCompose.UnregisterStateListener(stateListener);
+  msgCompose.UnregisterStateListener(stateListener);
 }
 
 function SetDocumentCharacterSet(aCharset)
@@ -1380,65 +1387,59 @@ function GetCharsetUIString()
 
 function GenericSendMessage( msgType )
 {
-	dump("GenericSendMessage from XUL\n");
+  dump("GenericSendMessage from XUL\n");
 
   dump("Identity = " + getCurrentIdentity() + "\n");
 
-	if (msgCompose != null)
-	{
-	    var msgCompFields = msgCompose.compFields;
-	    if (msgCompFields)
-	    {
-			Recipients2CompFields(msgCompFields);
-			var subject = document.getElementById("msgSubject").value;
-			msgCompFields.subject = subject;
-			dump("attachments = " + GenerateAttachmentsString() + "\n");
-			try {
-				msgCompFields.attachments = GenerateAttachmentsString();
-			}
-			catch (ex) {
-				dump("failed to SetAttachments\n");
-			}
+  if (msgCompose != null)
+  {
+      var msgCompFields = msgCompose.compFields;
+      if (msgCompFields)
+      {
+      Recipients2CompFields(msgCompFields);
+      var subject = document.getElementById("msgSubject").value;
+      msgCompFields.subject = subject;
+      Attachments2CompFields(msgCompFields);
 
-			if (msgType == msgCompDeliverMode.Now || msgType == msgCompDeliverMode.Later)
-			{
-			  //Do we need to check the spelling?
+      if (msgType == msgCompDeliverMode.Now || msgType == msgCompDeliverMode.Later)
+      {
+        //Do we need to check the spelling?
         if (prefs.getBoolPref("mail.SpellCheckBeforeSend"))
-	        goDoCommand('cmd_spelling');
+          goDoCommand('cmd_spelling');
 
-				//Check if we have a subject, else ask user for confirmation
-				if (subject == "")
-				{
-				if (!gPromptService) {
-				  gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
+        //Check if we have a subject, else ask user for confirmation
+        if (subject == "")
+        {
+        if (!gPromptService) {
+          gPromptService = Components.classes["@mozilla.org/embedcomp/prompt-service;1"].getService();
                                   gPromptService = gPromptService.QueryInterface(Components.interfaces.nsIPromptService);
                                 }
-    				if (gPromptService)
-    				{
-						var result = {value:gComposeMsgsBundle.getString("defaultSubject")};
-        				if (gPromptService.prompt(
-        					window,
-        					gComposeMsgsBundle.getString("subjectDlogTitle"),
-        					gComposeMsgsBundle.getString("subjectDlogMessage"),
+            if (gPromptService)
+            {
+            var result = {value:gComposeMsgsBundle.getString("defaultSubject")};
+                if (gPromptService.prompt(
+                  window,
+                  gComposeMsgsBundle.getString("subjectDlogTitle"),
+                  gComposeMsgsBundle.getString("subjectDlogMessage"),
                             result,
-        					null,
-        					{value:0}
-        					))
-        				{
-        					msgCompFields.subject = result.value;
-        					var subjectInputElem = document.getElementById("msgSubject");
-        					subjectInputElem.value = result.value;
-        				}
-        				else
-        				  return;
-        			}
-    			}
+                  null,
+                  {value:0}
+                  ))
+                {
+                  msgCompFields.subject = result.value;
+                  var subjectInputElem = document.getElementById("msgSubject");
+                  subjectInputElem.value = result.value;
+                }
+                else
+                  return;
+              }
+          }
 
-				// Before sending the message, check what to do with HTML message, eventually abort.
+        // Before sending the message, check what to do with HTML message, eventually abort.
         var convert = DetermineConvertibility();
         var action = DetermineHTMLAction(convert);
         if (action == msgCompSendFormat.AskUser)
-				{
+        {
                     var recommAction = convert == msgCompConvertible.No
                                    ? msgCompSendFormat.AskUser
                                    : msgCompSendFormat.PlainText;
@@ -1448,28 +1449,28 @@ function GenericSendMessage( msgType )
                     window.openDialog("chrome://messenger/content/messengercompose/askSendFormat.xul",
                                       "askSendFormatDialog", "chrome,modal,titlebar,centerscreen",
                                       result2);
-					if (result2.abort)
-						return;
-					action = result2.action;
-				}
-				switch (action)
-				{
-					case msgCompSendFormat.PlainText:
-						msgCompFields.forcePlainText = true;
-						msgCompFields.useMultipartAlternative = false;
-						break;
-					case msgCompSendFormat.HTML:
-						msgCompFields.forcePlainText = false;
-						msgCompFields.useMultipartAlternative = false;
-						break;
-					case msgCompSendFormat.Both:
-						msgCompFields.forcePlainText = false;
-						msgCompFields.useMultipartAlternative = true;
-						break;
-				   default: dump("\###SendMessage Error: invalid action value\n"); return;
-				}
-			}
-			try {
+          if (result2.abort)
+            return;
+          action = result2.action;
+        }
+        switch (action)
+        {
+          case msgCompSendFormat.PlainText:
+            msgCompFields.forcePlainText = true;
+            msgCompFields.useMultipartAlternative = false;
+            break;
+          case msgCompSendFormat.HTML:
+            msgCompFields.forcePlainText = false;
+            msgCompFields.useMultipartAlternative = false;
+            break;
+          case msgCompSendFormat.Both:
+            msgCompFields.forcePlainText = false;
+            msgCompFields.useMultipartAlternative = true;
+            break;
+           default: dump("\###SendMessage Error: invalid action value\n"); return;
+        }
+      }
+      try {
         gWindowLocked = true;
         CommandUpdate_MsgCompose();
         disableEditableFields();
@@ -1480,24 +1481,24 @@ function GenericSendMessage( msgType )
           progress.registerListener(progressListener);
           sendOrSaveOperationInProgress = true;
         }
-				msgCompose.SendMsg(msgType, getCurrentIdentity(), progress);
-			}
-			catch (ex) {
+        msgCompose.SendMsg(msgType, getCurrentIdentity(), progress);
+      }
+      catch (ex) {
         dump("failed to SendMsg: " + ex + "\n");
         gWindowLocked = false;
         enableEditableFields();
         CommandUpdate_MsgCompose();
-			}
-		}
-	}
-	else
-		dump("###SendMessage Error: composeAppCore is null!\n");
+      }
+    }
+  }
+  else
+    dump("###SendMessage Error: composeAppCore is null!\n");
 }
 
 function SendMessage()
 {
-	dump("SendMessage from XUL\n");
-	GenericSendMessage(msgCompDeliverMode.Now);
+  dump("SendMessage from XUL\n");
+  GenericSendMessage(msgCompDeliverMode.Now);
 }
 
 function SendMessageWithCheck()
@@ -1528,40 +1529,40 @@ function SendMessageWithCheck()
         }
     }
 
-	GenericSendMessage(isOffline ? msgCompDeliverMode.Later
+  GenericSendMessage(isOffline ? msgCompDeliverMode.Later
                                  : msgCompDeliverMode.Now);
 }
 
 function SendMessageLater()
 {
-	dump("SendMessageLater from XUL\n");
-	GenericSendMessage(msgCompDeliverMode.Later);
+  dump("SendMessageLater from XUL\n");
+  GenericSendMessage(msgCompDeliverMode.Later);
 }
 
 function Save()
 {
-	dump("Save from XUL\n");
-	switch (defaultSaveOperation)
-	{
-	  case "file"     : SaveAsFile(false);      break;
-	  case "template" : SaveAsTemplate(false);  break;
-	  default         : SaveAsDraft(false);     break;
-	}
+  dump("Save from XUL\n");
+  switch (defaultSaveOperation)
+  {
+    case "file"     : SaveAsFile(false);      break;
+    case "template" : SaveAsTemplate(false);  break;
+    default         : SaveAsDraft(false);     break;
+  }
 }
 
 function SaveAsFile(saveAs)
 {
-	dump("SaveAsFile from XUL\n");
+  dump("SaveAsFile from XUL\n");
   if (msgCompose.bodyConvertible() == msgCompConvertible.Plain)
-  	editorShell.saveDocument(saveAs, false, "text/plain");
+    editorShell.saveDocument(saveAs, false, "text/plain");
   else
-  	editorShell.saveDocument(saveAs, false, "text/html");
+    editorShell.saveDocument(saveAs, false, "text/html");
   defaultSaveOperation = "file";
 }
 
 function SaveAsDraft()
 {
-	dump("SaveAsDraft from XUL\n");
+  dump("SaveAsDraft from XUL\n");
 
   GenericSendMessage(msgCompDeliverMode.SaveAsDraft);
   defaultSaveOperation = "draft";
@@ -1569,7 +1570,7 @@ function SaveAsDraft()
 
 function SaveAsTemplate()
 {
-	dump("SaveAsTemplate from XUL\n");
+  dump("SaveAsTemplate from XUL\n");
 
   GenericSendMessage(msgCompDeliverMode.SaveAsTemplate);
   defaultSaveOperation = "template";
@@ -1578,98 +1579,98 @@ function SaveAsTemplate()
 
 function MessageFcc(menuItem)
 {
-	// Get the id for the folder we're FCC into
+  // Get the id for the folder we're FCC into
   // This is the additional FCC in addition to the
   // default FCC
-	destUri = menuItem.getAttribute('id');
-	if (msgCompose)
-	{
-		var msgCompFields = msgCompose.compFields;
-		if (msgCompFields)
-		{
-			if (msgCompFields.fcc2 == destUri)
-			{
-				msgCompFields.fcc2 = "nocopy://";
-				dump("FCC2: none\n");
-			}
-			else
-			{
-				msgCompFields.fcc2 = destUri;
-				dump("FCC2: " + destUri + "\n");
-			}
-		}
-	}
+  destUri = menuItem.getAttribute('id');
+  if (msgCompose)
+  {
+    var msgCompFields = msgCompose.compFields;
+    if (msgCompFields)
+    {
+      if (msgCompFields.fcc2 == destUri)
+      {
+        msgCompFields.fcc2 = "nocopy://";
+        dump("FCC2: none\n");
+      }
+      else
+      {
+        msgCompFields.fcc2 = destUri;
+        dump("FCC2: " + destUri + "\n");
+      }
+    }
+  }
 }
 
 function PriorityMenuSelect(target)
 {
-	dump("Set Message Priority to " + target.getAttribute('id') + "\n");
-	if (msgCompose)
-	{
-		var msgCompFields = msgCompose.compFields;
-		if (msgCompFields)
-			msgCompFields.priority = target.getAttribute('id');
-	}
+  dump("Set Message Priority to " + target.getAttribute('id') + "\n");
+  if (msgCompose)
+  {
+    var msgCompFields = msgCompose.compFields;
+    if (msgCompFields)
+      msgCompFields.priority = target.getAttribute('id');
+  }
 }
 
 function ReturnReceiptMenuSelect()
 {
-	if (msgCompose)
-	{
-		var msgCompFields = msgCompose.compFields;
-		if (msgCompFields)
-		{
-			if (msgCompFields.returnReceipt)
-			{
-				msgCompFields.returnReceipt = false;
-			}
-			else
-			{
-				msgCompFields.returnReceipt = true;
-			}
-		}
-	}
+  if (msgCompose)
+  {
+    var msgCompFields = msgCompose.compFields;
+    if (msgCompFields)
+    {
+      if (msgCompFields.returnReceipt)
+      {
+        msgCompFields.returnReceipt = false;
+      }
+      else
+      {
+        msgCompFields.returnReceipt = true;
+      }
+    }
+  }
 }
 
 function OutputFormatMenuSelect(target)
 {
-	dump("Set Message Format to " + target.getAttribute('id') + "\n");
-	if (msgCompose)
-	{
-		var msgCompFields = msgCompose.compFields;
+  dump("Set Message Format to " + target.getAttribute('id') + "\n");
+  if (msgCompose)
+  {
+    var msgCompFields = msgCompose.compFields;
 
         if (msgCompFields)
         {
             switch (target.getAttribute('id'))
-    	    {
-    		    case "1": sendFormat = msgCompSendFormat.AskUser;     break;
-    		    case "2": sendFormat = msgCompSendFormat.PlainText;   break;
-    		    case "3": sendFormat = msgCompSendFormat.HTML;        break;
+          {
+            case "1": sendFormat = msgCompSendFormat.AskUser;     break;
+            case "2": sendFormat = msgCompSendFormat.PlainText;   break;
+            case "3": sendFormat = msgCompSendFormat.HTML;        break;
             case "4": sendFormat = msgCompSendFormat.Both;        break;
-    	    }
+          }
         }
-	}
+  }
 }
 
 function SelectAddress()
 {
-	var msgCompFields = msgCompose.compFields;
+  var msgCompFields = msgCompose.compFields;
 
-	Recipients2CompFields(msgCompFields);
+  Recipients2CompFields(msgCompFields);
 
-	var toAddress = msgCompFields.to;
-	var ccAddress = msgCompFields.cc;
-	var bccAddress = msgCompFields.bcc;
+  var toAddress = msgCompFields.to;
+  var ccAddress = msgCompFields.cc;
+  var bccAddress = msgCompFields.bcc;
 
-	dump("toAddress: " + toAddress + "\n");
-	window.openDialog("chrome://messenger/content/addressbook/abSelectAddressesDialog.xul",
-					  "",
-					  "chrome,resizable,titlebar,modal",
-					  {composeWindow:top.window,
-					   msgCompFields:msgCompFields,
-					   toAddress:toAddress,
-					   ccAddress:ccAddress,
-					   bccAddress:bccAddress});
+  dump("toAddress: " + toAddress + "\n");
+  window.openDialog("chrome://messenger/content/addressbook/abSelectAddressesDialog.xul",
+            "",
+            "chrome,resizable,titlebar,modal",
+            {composeWindow:top.window,
+             msgCompFields:msgCompFields,
+             toAddress:toAddress,
+             ccAddress:ccAddress,
+             bccAddress:bccAddress});
   // We have to set focus to the addressingwidget because we seem to loose focus often 
   // after opening the SelectAddresses Dialog- bug # 89950
   AdjustFocus();
@@ -1701,20 +1702,20 @@ function fillIdentityListPopup(popup)
 
     for (var i=0; i<identities.length; i++)
     {
-		var identity = identities[i];
+    var identity = identities[i];
 
-		//dump(i + " = " + identity.identityName + "," +identity.key + "\n");
+    //dump(i + " = " + identity.identityName + "," +identity.key + "\n");
 
-		//Get server prettyName for each identity
+    //Get server prettyName for each identity
 
-		var serverSupports = accountManager.GetServersForIdentity(identity);
+    var serverSupports = accountManager.GetServersForIdentity(identity);
 
-		//dump(i + " = " + identity.identityName + "," +identity.key + "\n");
+    //dump(i + " = " + identity.identityName + "," +identity.key + "\n");
 
-		if(serverSupports.GetElementAt(0))
-			var	result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
-		//dump ("The account name is = "+result.prettyName+ "\n");
-		var accountName = " - "+result.prettyName;
+    if(serverSupports.GetElementAt(0))
+      var result = serverSupports.GetElementAt(0).QueryInterface(Components.interfaces.nsIMsgIncomingServer);
+    //dump ("The account name is = "+result.prettyName+ "\n");
+    var accountName = " - "+result.prettyName;
 
         var item=document.createElement('menuitem');
         item.setAttribute('label', identity.identityName);
@@ -1747,45 +1748,45 @@ function getIdentityForKey(key)
 function AdjustFocus()
 {
     var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
-	if (element.value == "")
-	{
-		dump("set focus on the recipient\n");
-		awSetFocus(awGetNumberOfRecipients(), element);
-	}
-	else
-	{
-	    element = document.getElementById("msgSubject");
-	    if (element.value == "")
-	    {
-    		dump("set focus on the subject\n");
-    		element.focus();
-	    }
-	    else
-    	{
-    		dump("set focus on the body\n");
-    		editorShell.contentWindow.focus();
-    	}
+  if (element.value == "")
+  {
+    dump("set focus on the recipient\n");
+    awSetFocus(awGetNumberOfRecipients(), element);
+  }
+  else
+  {
+      element = document.getElementById("msgSubject");
+      if (element.value == "")
+      {
+        dump("set focus on the subject\n");
+        element.focus();
+      }
+      else
+      {
+        dump("set focus on the body\n");
+        editorShell.contentWindow.focus();
+      }
     }
 }
 
 function SetComposeWindowTitle(event)
 {
-	/* dump("event = " + event + "\n"); */
+  /* dump("event = " + event + "\n"); */
 
-	/* only set the title when they hit return (or tab?)
-	 */
+  /* only set the title when they hit return (or tab?)
+   */
 
-	var newTitle = document.getElementById('msgSubject').value;
+  var newTitle = document.getElementById('msgSubject').value;
 
-	/* dump("newTitle = " + newTitle + "\n"); */
+  /* dump("newTitle = " + newTitle + "\n"); */
 
-	if (newTitle == "" ) {
-		newTitle = gComposeMsgsBundle.getString("defaultSubject");
-	}
+  if (newTitle == "" ) {
+    newTitle = gComposeMsgsBundle.getString("defaultSubject");
+  }
 
-	newTitle += GetCharsetUIString();
+  newTitle += GetCharsetUIString();
 
-	window.title = gComposeMsgsBundle.getString("windowTitlePrefix") + " " + newTitle;
+  window.title = gComposeMsgsBundle.getString("windowTitlePrefix") + " " + newTitle;
 }
 
 // Check for changes to document and allow saving before closing
@@ -1824,14 +1825,14 @@ function ComposeCanClose()
           }
       }
   }
-	// Returns FALSE only if user cancels save action
-	if (contentChanged || msgCompose.bodyModified)
-	{
-		// call window.focus, since we need to pop up a dialog
-		// and therefore need to be visible (to prevent user confusion)
-		window.focus();
-		if (gPromptService)
-		{
+  // Returns FALSE only if user cancels save action
+  if (contentChanged || msgCompose.bodyModified)
+  {
+    // call window.focus, since we need to pop up a dialog
+    // and therefore need to be visible (to prevent user confusion)
+    window.focus();
+    if (gPromptService)
+    {
             result = {value:0};
             gPromptService.confirmEx(window,
                               gComposeMsgsBundle.getString("saveDlogTitle"),
@@ -1842,56 +1843,63 @@ function ComposeCanClose()
                               null, null, null,
                               null, {value:0}, result);
 
-			if (result)
-			{
-				switch (result.value)
-				{
-					case 0: //Save
+      if (result)
+      {
+        switch (result.value)
+        {
+          case 0: //Save
                         if (LastToClose())
                             NotifyQuitApplication();
             gCloseWindowAfterSave = true;
-						SaveAsDraft();
+            SaveAsDraft();
             return false;
-					case 1:	//Cancel
-						return false;
-					case 2:	//Don't Save
-						break;
-				}
-			}
-		}
+          case 1: //Cancel
+            return false;
+          case 2: //Don't Save
+            break;
+        }
+      }
+    }
 
-		msgCompose.bodyModified = false;
-		contentChanged = false;
-	}
+    msgCompose.bodyModified = false;
+    contentChanged = false;
+  }
 
-	return true;
+  return true;
 }
 
 function MsgComposeCloseWindow()
 {
-	if (msgCompose)
-		msgCompose.CloseWindow();
+  if (msgCompose)
+    msgCompose.CloseWindow();
 }
 
 function AttachFile()
 {
 //  dump("AttachFile()\n");
-	currentAttachment = "";
-	//Get file using nsIFilePicker and convert to URL
+  currentAttachment = "";
+  //Get file using nsIFilePicker and convert to URL
     try {
-			var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
-			fp.init(window, gComposeMsgsBundle.getString("chooseFileToAttach"), nsIFilePicker.modeOpen);
-			fp.appendFilters(nsIFilePicker.filterAll);
-			if (fp.show() == nsIFilePicker.returnOK) {
-			currentAttachment = fp.fileURL.spec;
-			dump("nsIFilePicker - "+currentAttachment+"\n");
-			}
+      var fp = Components.classes["@mozilla.org/filepicker;1"].createInstance(nsIFilePicker);
+      fp.init(window, gComposeMsgsBundle.getString("chooseFileToAttach"), nsIFilePicker.modeOpen);
+      fp.appendFilters(nsIFilePicker.filterAll);
+      if (fp.show() == nsIFilePicker.returnOK) {
+      currentAttachment = fp.fileURL.spec;
+      dump("nsIFilePicker - "+currentAttachment+"\n");
+      }
     }
-	catch (ex) {
-		dump("failed to get the local file to attach\n");
-	}
+  catch (ex) {
+    dump("failed to get the local file to attach\n");
+  }
+  if (currentAttachment == "")
+    return;
+
   if (!(DuplicateFileCheck(currentAttachment)))
-	  AddAttachment(currentAttachment, null);
+  {
+    var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
+    attachment.url = currentAttachment;
+    AddAttachment(attachment);
+  }
   else
   {
     dump("###ERROR ADDING DUPLICATE FILE \n");
@@ -1906,34 +1914,34 @@ function AttachFile()
     else
       window.alert(errorMsg);
   }
-
 }
 
-function AddAttachment(attachment, prettyName)
+function AddAttachment(attachment)
 {
-	if (attachment && (attachment != ""))
-	{
-		var bucketBody = document.getElementById("bucketBody");
-		var item = document.createElement("treeitem");
-		var row = document.createElement("treerow");
-		var cell = document.createElement("treecell");
+  if (attachment && attachment.url)
+  {
+    var bucketBody = document.getElementById("bucketBody");
+    var item = document.createElement("treeitem");
+    var row = document.createElement("treerow");
+    var cell = document.createElement("treecell");
 
-		if (msgCompose && !prettyName)
-			prettyName = msgCompose.AttachmentPrettyName(attachment);
-		cell.setAttribute("label", prettyName);				//use for display only
-		cell.setAttribute("attachment", attachment);		//full url stored here
-		cell.setAttribute("tooltip", "aTooltip");
-		try {
-			cell.setAttribute("tooltiptext", unescape(attachment));
-		}
-		catch(e) {cell.setAttribute("tooltiptext", attachment);}
+    if (!attachment.name)
+      attachment.name = msgCompose.AttachmentPrettyName(attachment.url);
+    cell.setAttribute("label", attachment.name);    //use for display only
+    cell.attachment = attachment;   //full attachment object stored here
+    cell.setAttribute("tooltip", "aTooltip");
+    try {
+      cell.setAttribute("tooltiptext", unescape(attachment.url));
+    }
+    catch(e) {cell.setAttribute("tooltiptext", attachment.url);}
     cell.setAttribute("class", "treecell-iconic");
-    cell.setAttribute('src', "moz-icon:" + attachment);
-		row.appendChild(cell);
-		item.appendChild(row);
-		bucketBody.appendChild(item);
-	}
+    cell.setAttribute('src', "moz-icon:" + attachment.url);
+    row.appendChild(cell);
+    item.appendChild(row);
+    bucketBody.appendChild(item);
+  }
 }
+
 
 function AttachPage()
 {
@@ -1946,100 +1954,98 @@ function AttachPage()
      {
         var result = {value:"http://"};
         if (gPromptService.prompt(
-        	window,
-        	gComposeMsgsBundle.getString("attachPageDlogTitle"),
-        	gComposeMsgsBundle.getString("attachPageDlogMessage"),
+          window,
+          gComposeMsgsBundle.getString("attachPageDlogTitle"),
+          gComposeMsgsBundle.getString("attachPageDlogMessage"),
             result,
-        	null,
-        	{value:0}))
+          null,
+          {value:0}))
         {
-			AddAttachment(result.value, null);
+          var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
+          attachment.url = result.value;
+          AddAttachment(attachment);
         }
      }
 }
 function DuplicateFileCheck(FileUrl)
 {
-	var body = document.getElementById('bucketBody');
-	var item, row, cell, text, colon;
+  var body = document.getElementById('bucketBody');
+  var item, row, cell, colon;
+  var attachment;
 
-	for (var index = 0; index < body.childNodes.length; index++)
-	{
-		item = body.childNodes[index];
-		if (item.childNodes && item.childNodes.length)
-		{
-			row = item.childNodes[0];
-			if (row.childNodes &&  row.childNodes.length)
-			{
-				cell = row.childNodes[0];
-				if (cell)
-				{
-					text = cell.getAttribute("attachment");
-					if (text.length)
-					{
-            if (FileUrl == text)
+  for (var index = 0; index < body.childNodes.length; index++)
+  {
+    item = body.childNodes[index];
+    if (item.childNodes && item.childNodes.length)
+    {
+      row = item.childNodes[0];
+      if (row.childNodes &&  row.childNodes.length)
+      {
+        cell = row.childNodes[0];
+        if (cell)
+        {
+          attachment = cell.attachment;
+          if (attachment)
+          {
+            if (FileUrl == attachment.url)
                return true;
           }
-				}
-			}
-		}
-	}
+        }
+      }
+    }
+  }
 
-	return false;
+  return false;
 }
 
-function GenerateAttachmentsString()
+function Attachments2CompFields(compFields)
 {
-	var attachments = "";
-	var body = document.getElementById('bucketBody');
-	var item, row, cell, text, colon;
+  var body = document.getElementById('bucketBody');
+  var item, row, text, colon;
+  var attachment;
 
-	for (var index = 0; index < body.childNodes.length; index++)
-	{
-		item = body.childNodes[index];
-		if (item.childNodes && item.childNodes.length)
-		{
-			row = item.childNodes[0];
-			if (row.childNodes &&  row.childNodes.length)
-			{
-				cell = row.childNodes[0];
-				if (cell)
-				{
-					text = cell.getAttribute("attachment");
-					if (text.length)
-					{
-            text = text.replace(/\,/g, "%2C");
-						if (attachments == "")
-							attachments = text;
-						else
-							attachments = attachments + "," + text;
-					}
-				}
-			}
-		}
-	}
+  //First, we need to clear all attachment in the compose fields
+  compFields.removeAttachments();
 
-	return attachments;
+  for (var index = 0; index < body.childNodes.length; index++)
+  {
+    item = body.childNodes[index];
+    if (item.childNodes && item.childNodes.length)
+    {
+      row = item.childNodes[0];
+      if (row.childNodes &&  row.childNodes.length)
+      {
+        cell = row.childNodes[0];
+        if (cell)
+          {
+          attachment = cell.attachment;
+          if (attachment)
+            compFields.addAttachment(attachment);
+        }
+      }
+    }
+  }
 }
 
 function RemoveSelectedAttachment()
 {
-	var bucketTree = document.getElementById("attachmentBucket");
-	if ( bucketTree )
-	{
-		var body = document.getElementById("bucketBody");
+  var bucketTree = document.getElementById("attachmentBucket");
+  if ( bucketTree )
+  {
+    var body = document.getElementById("bucketBody");
 
-		if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
-		{
-			for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
-				body.removeChild(bucketTree.selectedItems[item]);
-		}
-	}
+    if ( body && bucketTree.selectedItems && bucketTree.selectedItems.length )
+    {
+      for ( var item = bucketTree.selectedItems.length - 1; item >= 0; item-- )
+        body.removeChild(bucketTree.selectedItems[item]);
+    }
+  }
 
 }
 
 function AttachVCard()
 {
-	dump("AttachVCard()\n");
+  dump("AttachVCard()\n");
 }
 
 function DetermineHTMLAction(convertible)
@@ -2114,13 +2120,13 @@ function DetermineHTMLAction(convertible)
         else
             return msgCompSendFormat.HTML;
     }
-	  else
-	  {
-		  try {
+    else
+    {
+      try {
                        obj = new Object;
                        msgCompose.CheckAndPopulateRecipients(true, false, obj);
-		  } catch(ex) { dump("msgCompose.CheckAndPopulateRecipients failed: " + ex + "\n"); }
-	  }
+      } catch(ex) { dump("msgCompose.CheckAndPopulateRecipients failed: " + ex + "\n"); }
+    }
 
     return sendFormat;
 }
@@ -2298,11 +2304,16 @@ var attachmentBucketObserver = {
         }
         break;
       case "application/x-moz-file":
-    	  rawData = aData.data.URL;
+        rawData = aData.data.URL;
         break;
       }
       if (!(DuplicateFileCheck(rawData)))
-        AddAttachment(rawData, prettyName);
+      {
+        var attachment = Components.classes["@mozilla.org/messengercompose/attachment;1"].createInstance(Components.interfaces.nsIMsgAttachment);
+        attachment.url = rawData;
+        attachment.name = prettyName;
+        AddAttachment(attachment);
+      }
       else {
         var errorTitle = gComposeMsgsBundle.getString("DuplicateFileErrorDlogTitle");
         var errorMsg = gComposeMsgsBundle.getString("DuplicateFileErrorDlogMessage");
@@ -2341,9 +2352,9 @@ var attachmentBucketObserver = {
 
 function GetMsgFolderFromUri(uri)
 {
-	try {
-  	var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
-  	RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
+  try {
+    var RDF = Components.classes['@mozilla.org/rdf/rdf-service;1'].getService();
+    RDF = RDF.QueryInterface(Components.interfaces.nsIRDFService);
     var resource = RDF.GetResource(uri);
 		var msgfolder = resource.QueryInterface(Components.interfaces.nsIMsgFolder);
         if (msgfolder && ( msgfolder.parent || msgfolder.isServer))
@@ -2366,7 +2377,7 @@ function DisplaySaveFolderDlg(folderURI)
     var msgfolder = GetMsgFolderFromUri(folderURI);
     if (!msgfolder)
       return;
-		var checkbox = {value:0};
+    var checkbox = {value:0};
     var SaveDlgTitle = gComposeMsgsBundle.getString("SaveDialogTitle");
     var dlgMsg = gComposeMsgsBundle.getFormattedString("SaveDialogMsg",
                                                        [msgfolder.name,

@@ -108,7 +108,7 @@ nsMsgComposeService::nsMsgComposeService()
   mStartTime = PR_IntervalNow();
   mPreviousTime = mStartTime;
 #endif
-	NS_INIT_REFCNT();
+  NS_INIT_REFCNT();
 }
 
 /* the following macro actually implement addref, release and query interface for our component. */
@@ -157,36 +157,36 @@ static nsresult openWindow( const char *chrome, nsIMsgComposeParams *params )
 
 NS_IMETHODIMP
 nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const char *originalMsgURI,
-	MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity, nsIMsgWindow *aMsgWindow)
+  MSG_ComposeType type, MSG_ComposeFormat format, nsIMsgIdentity * identity, nsIMsgWindow *aMsgWindow)
 {
-	nsresult rv;
-	
-	/* Actually, the only way to implement forward inline is to simulate a template message. 
-	   Maybe one day when we will have more time we can change that
-	*/
+  nsresult rv;
+  
+  /* Actually, the only way to implement forward inline is to simulate a template message. 
+     Maybe one day when we will have more time we can change that
+  */
   if (type == nsIMsgCompType::ForwardInline || type == nsIMsgCompType::Draft || type == nsIMsgCompType::Template)
-	{
+  {
     nsCOMPtr<nsIMsgDraft> pMsgDraft (do_CreateInstance(NS_MSGDRAFT_CONTRACTID, &rv));
     if (NS_SUCCEEDED(rv) && pMsgDraft)
-		{
+    {
       nsCAutoString uriToOpen(originalMsgURI);
       uriToOpen.Append("?fetchCompleteMessage=true"); 
 
-			switch(type)
-			{
-				case nsIMsgCompType::ForwardInline:
-	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_TRUE, aMsgWindow);
-					break;
-				case nsIMsgCompType::Draft:
-	    			rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_FALSE, aMsgWindow);
-					break;
-				case nsIMsgCompType::Template:
-	    			rv = pMsgDraft->OpenEditorTemplate(uriToOpen.get(), nsnull, identity, aMsgWindow);
-					break;
-			}
-		}
-		return rv;
-	}
+      switch(type)
+      {
+        case nsIMsgCompType::ForwardInline:
+            rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_TRUE, aMsgWindow);
+          break;
+        case nsIMsgCompType::Draft:
+            rv = pMsgDraft->OpenDraftMsg(uriToOpen.get(), nsnull, identity, PR_FALSE, aMsgWindow);
+          break;
+        case nsIMsgCompType::Template:
+            rv = pMsgDraft->OpenEditorTemplate(uriToOpen.get(), nsnull, identity, aMsgWindow);
+          break;
+      }
+    }
+    return rv;
+  }
 
   nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && pMsgComposeParams)
@@ -198,8 +198,8 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
       pMsgComposeParams->SetFormat(format);
       pMsgComposeParams->SetIdentity(identity);
       
-  	  if (originalMsgURI && *originalMsgURI)
-  		  if (type == nsIMsgCompType::NewsPost) 
+      if (originalMsgURI && *originalMsgURI)
+        if (type == nsIMsgCompType::NewsPost) 
         {
           nsCAutoString newsURI(originalMsgURI);
           nsCAutoString group;
@@ -217,8 +217,8 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
 
           pMsgCompFields->SetNewsgroups(group.get());
           pMsgCompFields->SetNewshost(host.get());
-  		}
-  		else
+      }
+      else
         pMsgComposeParams->SetOriginalMsgURI(originalMsgURI);
         
       pMsgComposeParams->SetComposeFields(pMsgCompFields);
@@ -237,7 +237,7 @@ nsMsgComposeService::OpenComposeWindow(const char *msgComposeWindowURL, const ch
       rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
     }
   }
-	return rv;
+  return rv;
 }
 
 NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgComposeWindowURL, nsIURI * aURI)
@@ -255,7 +255,6 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
        nsXPIDLCString aBccPart;
        nsXPIDLCString aSubjectPart;
        nsXPIDLCString aBodyPart;
-       nsXPIDLCString aAttachmentPart;
        nsXPIDLCString aNewsgroup;
 
        aMailtoUrl->GetMessageContents(getter_Copies(aToPart), getter_Copies(aCcPart), 
@@ -263,7 +262,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
                                     nsnull /* follow */, nsnull /* organization */, 
                                     nsnull /* reply to part */, getter_Copies(aSubjectPart),
                                     getter_Copies(aBodyPart), nsnull /* html part */, 
-                                    nsnull /* a ref part */, getter_Copies(aAttachmentPart),
+                                    nsnull /* a ref part */, nsnull /* attachment part */,
                                     nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
                                     &aPlainText);
 
@@ -271,18 +270,29 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
        if (aPlainText)
          format = nsIMsgCompFormat::PlainText;
 
+      nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
+      if (NS_SUCCEEDED(rv) && pMsgComposeParams)
+      {
+        pMsgComposeParams->SetType(nsIMsgCompType::MailToUrl);
+        pMsgComposeParams->SetFormat(format);
+
+
+        nsCOMPtr<nsIMsgCompFields> pMsgCompFields (do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv));
+        if (pMsgCompFields)
+        {
        //ugghh more conversion work!!!!
-       rv = OpenComposeWindowWithValues(aMsgComposeWindowURL,
-       									nsIMsgCompType::MailToUrl,
-       									format,
-       									NS_ConvertUTF8toUCS2(aToPart).get(), 
-                        NS_ConvertUTF8toUCS2(aCcPart).get(),
-                        NS_ConvertUTF8toUCS2(aBccPart).get(), 
-                        aNewsgroup, 
-                        NS_ConvertUTF8toUCS2(aSubjectPart).get(),
-                        NS_ConvertUTF8toUCS2(aBodyPart).get(), 
-                        aAttachmentPart,
-                        nsnull);
+          pMsgCompFields->SetTo(NS_ConvertUTF8toUCS2(aToPart).get());
+          pMsgCompFields->SetCc(NS_ConvertUTF8toUCS2(aCcPart).get());
+          pMsgCompFields->SetBcc(NS_ConvertUTF8toUCS2(aBccPart).get());
+          pMsgCompFields->SetNewsgroups(aNewsgroup);
+          pMsgCompFields->SetSubject(NS_ConvertUTF8toUCS2(aSubjectPart).get());
+          pMsgCompFields->SetBody(NS_ConvertUTF8toUCS2(aBodyPart).get());
+
+          pMsgComposeParams->SetComposeFields(pMsgCompFields);
+
+          rv = OpenComposeWindowWithParams(aMsgComposeWindowURL, pMsgComposeParams);
+        }
+      }
     }
   }
 
@@ -290,42 +300,46 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithValues(const char *msgComposeWindowURL,
-														  MSG_ComposeType type,
-														  MSG_ComposeFormat format,
-														  const PRUnichar *to,
-														  const PRUnichar *cc,
-														  const PRUnichar *bcc,
-														  const char *newsgroups,
-														  const PRUnichar *subject,
-														  const PRUnichar *body,
-														  const char *attachment,
-														  nsIMsgIdentity *identity)
+                              MSG_ComposeType type,
+                              MSG_ComposeFormat format,
+                              const PRUnichar *to,
+                              const PRUnichar *cc,
+                              const PRUnichar *bcc,
+                              const char *newsgroups,
+                              const PRUnichar *subject,
+                              const PRUnichar *body,
+                              const char *attachment,
+                              nsIMsgIdentity *identity)
 {
-	nsresult rv;
+  NS_ASSERTION(0, "nsMsgComposeService::OpenComposeWindowWithValues is not supported anymore, use OpenComposeWindowWithParams instead\n");
+
+  nsresult rv;
   nsCOMPtr<nsIMsgCompFields> pCompFields (do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && pCompFields)
   {
-		if (to)			    {pCompFields->SetTo(to);}
-		if (cc)			    {pCompFields->SetCc(cc);}
-		if (bcc)		    {pCompFields->SetBcc(bcc);}
-		if (newsgroups)	{pCompFields->SetNewsgroups(newsgroups);}
-		if (subject)	  {pCompFields->SetSubject(subject);}
-		if (attachment)	{pCompFields->SetAttachments(attachment);}
-		if (body)		    {pCompFields->SetBody(body);}
-	
-		rv = OpenComposeWindowWithCompFields(msgComposeWindowURL, type, format, pCompFields, identity);
+    if (to)         {pCompFields->SetTo(to);}
+    if (cc)         {pCompFields->SetCc(cc);}
+    if (bcc)        {pCompFields->SetBcc(bcc);}
+    if (newsgroups) {pCompFields->SetNewsgroups(newsgroups);}
+    if (subject)    {pCompFields->SetSubject(subject);}
+//    if (attachment) {pCompFields->SetAttachments(attachment);}
+    if (body)       {pCompFields->SetBody(body);}
+  
+    rv = OpenComposeWindowWithCompFields(msgComposeWindowURL, type, format, pCompFields, identity);
   }
     
   return rv;
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const char *msgComposeWindowURL,
-														  MSG_ComposeType type,
-														  MSG_ComposeFormat format,
-														  nsIMsgCompFields *compFields,
-														  nsIMsgIdentity *identity)
+                              MSG_ComposeType type,
+                              MSG_ComposeFormat format,
+                              nsIMsgCompFields *compFields,
+                              nsIMsgIdentity *identity)
 {
-	nsresult rv;
+  NS_ASSERTION(0, "nsMsgComposeService::OpenComposeWindowWithCompFields is not supported anymore, use OpenComposeWindowWithParams instead\n");
+
+  nsresult rv;
 
   nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
   if (NS_SUCCEEDED(rv) && pMsgComposeParams)
@@ -344,11 +358,11 @@ nsresult nsMsgComposeService::OpenComposeWindowWithCompFields(const char *msgCom
       rv = openWindow(msgComposeWindowURL, pMsgComposeParams);
   }
 
-	return rv;
+  return rv;
 }
 
 nsresult nsMsgComposeService::OpenComposeWindowWithParams(const char *msgComposeWindowURL,
-														  nsIMsgComposeParams *params)
+                              nsIMsgComposeParams *params)
 {
   NS_ENSURE_ARG_POINTER(params);
   if(mLogComposePerformance)
@@ -364,19 +378,19 @@ nsresult nsMsgComposeService::InitCompose(nsIDOMWindowInternal *aWindow,
                                           nsIMsgComposeParams *params,
                                           nsIMsgCompose **_retval)
 {
-	nsresult rv;
-	nsIMsgCompose * msgCompose = nsnull;
-	
-	rv = nsComponentManager::CreateInstance(kMsgComposeCID, nsnull,
-	                                        NS_GET_IID(nsIMsgCompose),
-	                                        (void **) &msgCompose);
-	if (NS_SUCCEEDED(rv) && msgCompose)
-	{
-		msgCompose->Initialize(aWindow, params);
-		*_retval = msgCompose;
-	}
-	
-	return rv;
+  nsresult rv;
+  nsIMsgCompose * msgCompose = nsnull;
+  
+  rv = nsComponentManager::CreateInstance(kMsgComposeCID, nsnull,
+                                          NS_GET_IID(nsIMsgCompose),
+                                          (void **) &msgCompose);
+  if (NS_SUCCEEDED(rv) && msgCompose)
+  {
+    msgCompose->Initialize(aWindow, params);
+    *_retval = msgCompose;
+  }
+  
+  return rv;
 }
 
 /* readonly attribute boolean logComposePerformance; */

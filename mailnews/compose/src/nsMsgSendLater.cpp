@@ -398,7 +398,7 @@ SendOperationListener::OnStopSending(const char *aMsgID, nsresult aStatus, const
       //
       nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID, &rv)); 
       if (NS_SUCCEEDED(rv) && prefs)
-    		prefs->GetBoolPref("mail.really_delete_draft", &deleteMsgs);
+        prefs->GetBoolPref("mail.really_delete_draft", &deleteMsgs);
 
       if (deleteMsgs)
       {
@@ -477,7 +477,7 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   if (NS_FAILED(mMessage->GetRecipients(getter_Copies(recips))))
     return NS_ERROR_UNEXPECTED;
   else
-  	mMessage->GetCcList(getter_Copies(ccList));
+    mMessage->GetCcList(getter_Copies(ccList));
 
   // Get the composition fields interface
   nsresult res = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, NS_GET_IID(nsIMsgCompFields), 
@@ -506,13 +506,13 @@ nsCOMPtr<nsIMsgSend>        pMsgSend = nsnull;
   fields->SetFrom(author.get());
 
   if (m_to)
-  	fields->SetTo(m_to);
+    fields->SetTo(m_to);
 
   if (m_bcc)
-  	fields->SetBcc(m_bcc);
+    fields->SetBcc(m_bcc);
 
   if (m_fcc)
-  	fields->SetFcc(m_fcc);
+    fields->SetFcc(m_fcc);
 
   if (m_newsgroups)
     fields->SetNewsgroups(m_newsgroups);
@@ -593,15 +593,15 @@ nsMsgSendLater::StartNextMailFileSend()
 #endif
 
   mTempFileSpec = nsMsgCreateTempFileSpec("nsqmail.tmp"); 
-	if (!mTempFileSpec)
+  if (!mTempFileSpec)
     return NS_ERROR_FAILURE;
 
   NS_NewFileSpecWithSpec(*mTempFileSpec, &mTempIFileSpec);
-	if (!mTempIFileSpec)
+  if (!mTempIFileSpec)
     return NS_ERROR_FAILURE;
 
   nsIMsgMessageService * messageService = nsnull;
-	rv = GetMessageServiceFromURI(aMessageURI, &messageService);
+  rv = GetMessageServiceFromURI(aMessageURI, &messageService);
   if (NS_FAILED(rv) && !messageService)
     return NS_ERROR_FACTORY_NOT_LOADED;
 
@@ -635,7 +635,7 @@ nsMsgSendLater::StartNextMailFileSend()
   ReleaseMessageServiceFromURI(aMessageURI, messageService);
   Release();
 
-	if (NS_FAILED(rv))
+  if (NS_FAILED(rv))
     return rv;
 
   return NS_OK;
@@ -696,7 +696,7 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
   // ### fix me - if we need to reparse the folder, this will be asynchronous
   nsCOMPtr<nsISimpleEnumerator> enumerator;
   nsresult ret = mMessageFolder->GetMessages(m_window, getter_AddRefs(enumerator));
-	if (NS_FAILED(ret) || (!enumerator))
+  if (NS_FAILED(ret) || (!enumerator))
   {
     NS_IF_RELEASE(mIdentity);
     mIdentity = nsnull;
@@ -717,7 +717,7 @@ nsMsgSendLater::SendUnsentMessages(nsIMsgIdentity *identity)
   // now get an enumerator for our array
   mMessagesToSend->Enumerate(getter_AddRefs(mEnumerator));
 
-	return StartNextMailFileSend();
+  return StartNextMailFileSend();
 }
 
 nsresult
@@ -759,72 +759,72 @@ nsMsgSendLater::DeleteCurrentMessage()
 nsresult
 nsMsgSendLater::BuildHeaders()
 {
-	char *buf = m_headers;
-	char *buf_end = buf + m_headersFP;
+  char *buf = m_headers;
+  char *buf_end = buf + m_headersFP;
 
-	PR_FREEIF(m_to);
-	PR_FREEIF(m_bcc);
-	PR_FREEIF(m_newsgroups);
-	PR_FREEIF(m_newshost);
-	m_flags = 0;
+  PR_FREEIF(m_to);
+  PR_FREEIF(m_bcc);
+  PR_FREEIF(m_newsgroups);
+  PR_FREEIF(m_newshost);
+  m_flags = 0;
 
-	while (buf < buf_end)
-	{
-		PRBool prune_p = PR_FALSE;
-		PRBool  do_flags_p = PR_FALSE;
-		PRBool  do_return_receipt_p = PR_FALSE;
-		char *colon = PL_strchr(buf, ':');
-		char *end;
-		char *value = 0;
-		char **header = 0;
-		char *header_start = buf;
+  while (buf < buf_end)
+  {
+    PRBool prune_p = PR_FALSE;
+    PRBool  do_flags_p = PR_FALSE;
+    PRBool  do_return_receipt_p = PR_FALSE;
+    char *colon = PL_strchr(buf, ':');
+    char *end;
+    char *value = 0;
+    char **header = 0;
+    char *header_start = buf;
 
-		if (! colon)
-			break;
+    if (! colon)
+      break;
 
-		end = colon;
-		while (end > buf && (*end == ' ' || *end == '\t'))
-			end--;
+    end = colon;
+    while (end > buf && (*end == ' ' || *end == '\t'))
+      end--;
 
-		switch (buf [0])
-		{
-		case 'B': case 'b':
-		  if (!PL_strncasecmp ("BCC", buf, end - buf))
-			{
-			  header = &m_bcc;
-			  prune_p = PR_TRUE;
-			}
-		  break;
-		case 'C': case 'c':
-		  if (!PL_strncasecmp ("CC", buf, end - buf))
-			header = &m_to;
-		  else if (!PL_strncasecmp (HEADER_CONTENT_LENGTH, buf, end - buf))
-			prune_p = PR_TRUE;
-		  break;
-		case 'F': case 'f':
-		  if (!PL_strncasecmp ("FCC", buf, end - buf))
-			{
-			  header = &m_fcc;
-			  prune_p = PR_TRUE;
-			}
-		  break;
-		case 'L': case 'l':
-		  if (!PL_strncasecmp ("Lines", buf, end - buf))
-			prune_p = PR_TRUE;
-		  break;
-		case 'N': case 'n':
-		  if (!PL_strncasecmp ("Newsgroups", buf, end - buf))
-  			header = &m_newsgroups;
-		  break;
-		case 'S': case 's':
-		  if (!PL_strncasecmp ("Sender", buf, end - buf))
-			prune_p = PR_TRUE;
-		  break;
-		case 'T': case 't':
-		  if (!PL_strncasecmp ("To", buf, end - buf))
-			header = &m_to;
-		  break;
-		case 'X': case 'x':
+    switch (buf [0])
+    {
+    case 'B': case 'b':
+      if (!PL_strncasecmp ("BCC", buf, end - buf))
+      {
+        header = &m_bcc;
+        prune_p = PR_TRUE;
+      }
+      break;
+    case 'C': case 'c':
+      if (!PL_strncasecmp ("CC", buf, end - buf))
+      header = &m_to;
+      else if (!PL_strncasecmp (HEADER_CONTENT_LENGTH, buf, end - buf))
+      prune_p = PR_TRUE;
+      break;
+    case 'F': case 'f':
+      if (!PL_strncasecmp ("FCC", buf, end - buf))
+      {
+        header = &m_fcc;
+        prune_p = PR_TRUE;
+      }
+      break;
+    case 'L': case 'l':
+      if (!PL_strncasecmp ("Lines", buf, end - buf))
+      prune_p = PR_TRUE;
+      break;
+    case 'N': case 'n':
+      if (!PL_strncasecmp ("Newsgroups", buf, end - buf))
+        header = &m_newsgroups;
+      break;
+    case 'S': case 's':
+      if (!PL_strncasecmp ("Sender", buf, end - buf))
+      prune_p = PR_TRUE;
+      break;
+    case 'T': case 't':
+      if (!PL_strncasecmp ("To", buf, end - buf))
+      header = &m_to;
+      break;
+    case 'X': case 'x':
       {
         PRInt32 headLen = PL_strlen(HEADER_X_MOZILLA_STATUS2);
         if (headLen == end - buf &&
@@ -847,110 +847,110 @@ nsMsgSendLater::BuildHeaders()
         }
         break;
       }
-		}
+    }
 
-	  buf = colon + 1;
-	  while (*buf == ' ' || *buf == '\t')
-		buf++;
+    buf = colon + 1;
+    while (*buf == ' ' || *buf == '\t')
+    buf++;
 
-	  value = buf;
+    value = buf;
 
 SEARCH_NEWLINE:
-	  while (*buf != 0 && *buf != nsCRT::CR && *buf != nsCRT::LF)
-		  buf++;
+    while (*buf != 0 && *buf != nsCRT::CR && *buf != nsCRT::LF)
+      buf++;
 
-	  if (buf+1 >= buf_end)
-		  ;
-	  // If "\r\n " or "\r\n\t" is next, that doesn't terminate the header.
-	  else if (buf+2 < buf_end &&
-			   (buf[0] == nsCRT::CR  && buf[1] == nsCRT::LF) &&
-			   (buf[2] == ' ' || buf[2] == '\t'))
-		{
-		  buf += 3;
-		  goto SEARCH_NEWLINE;
-		}
-	  // If "\r " or "\r\t" or "\n " or "\n\t" is next, that doesn't terminate
-		// the header either. 
-	  else if ((buf[0] == nsCRT::CR  || buf[0] == nsCRT::LF) &&
-			   (buf[1] == ' ' || buf[1] == '\t'))
-		{
-		  buf += 2;
-		  goto SEARCH_NEWLINE;
-		}
+    if (buf+1 >= buf_end)
+      ;
+    // If "\r\n " or "\r\n\t" is next, that doesn't terminate the header.
+    else if (buf+2 < buf_end &&
+         (buf[0] == nsCRT::CR  && buf[1] == nsCRT::LF) &&
+         (buf[2] == ' ' || buf[2] == '\t'))
+    {
+      buf += 3;
+      goto SEARCH_NEWLINE;
+    }
+    // If "\r " or "\r\t" or "\n " or "\n\t" is next, that doesn't terminate
+    // the header either. 
+    else if ((buf[0] == nsCRT::CR  || buf[0] == nsCRT::LF) &&
+         (buf[1] == ' ' || buf[1] == '\t'))
+    {
+      buf += 2;
+      goto SEARCH_NEWLINE;
+    }
 
-	  if (header)
-		{
-		  int L = buf - value;
-		  if (*header)
-			{
-			  char *newh = (char*) PR_Realloc ((*header),
-											   PL_strlen(*header) + L + 10);
-			  if (!newh) return NS_ERROR_OUT_OF_MEMORY;
-			  *header = newh;
-			  newh = (*header) + PL_strlen (*header);
-			  *newh++ = ',';
-			  *newh++ = ' ';
+    if (header)
+    {
+      int L = buf - value;
+      if (*header)
+      {
+        char *newh = (char*) PR_Realloc ((*header),
+                         PL_strlen(*header) + L + 10);
+        if (!newh) return NS_ERROR_OUT_OF_MEMORY;
+        *header = newh;
+        newh = (*header) + PL_strlen (*header);
+        *newh++ = ',';
+        *newh++ = ' ';
         nsCRT::memcpy(newh, value, L);
-			  newh [L] = 0;
-			}
-		  else
-			{
-			  *header = (char *) PR_Malloc(L+1);
-			  if (!*header) return NS_ERROR_OUT_OF_MEMORY;
+        newh [L] = 0;
+      }
+      else
+      {
+        *header = (char *) PR_Malloc(L+1);
+        if (!*header) return NS_ERROR_OUT_OF_MEMORY;
         nsCRT::memcpy((*header), value, L);
-			  (*header)[L] = 0;
-			}
-		}
-	  else if (do_flags_p)
-		{
-		  int i;
-		  char *s = value;
-		  PR_ASSERT(*s != ' ' && *s != '\t');
-		  m_flags = 0;
-		  for (i=0 ; i<4 ; i++) {
-			m_flags = (m_flags << 4) | UNHEX(*s);
-			s++;
-		  }
-		}
-	  else if (do_return_receipt_p)
-		{
-		  int L = buf - value;
-		  char *draftInfo = (char*) PR_Malloc(L+1);
-		  char *receipt = NULL;
-		  if (!draftInfo) return NS_ERROR_OUT_OF_MEMORY;
+        (*header)[L] = 0;
+      }
+    }
+    else if (do_flags_p)
+    {
+      int i;
+      char *s = value;
+      PR_ASSERT(*s != ' ' && *s != '\t');
+      m_flags = 0;
+      for (i=0 ; i<4 ; i++) {
+      m_flags = (m_flags << 4) | UNHEX(*s);
+      s++;
+      }
+    }
+    else if (do_return_receipt_p)
+    {
+      int L = buf - value;
+      char *draftInfo = (char*) PR_Malloc(L+1);
+      char *receipt = NULL;
+      if (!draftInfo) return NS_ERROR_OUT_OF_MEMORY;
       nsCRT::memcpy(draftInfo, value, L);
-		  *(draftInfo+L)=0;
-		  receipt = PL_strstr(draftInfo, "receipt=");
-		  if (receipt) 
-			{
-			  char *s = receipt+8;
-			  int requestForReturnReceipt = 0;
-			  PR_sscanf(s, "%d", &requestForReturnReceipt);
-			  
+      *(draftInfo+L)=0;
+      receipt = PL_strstr(draftInfo, "receipt=");
+      if (receipt) 
+      {
+        char *s = receipt+8;
+        int requestForReturnReceipt = 0;
+        PR_sscanf(s, "%d", &requestForReturnReceipt);
+        
         if ((requestForReturnReceipt == 2 || requestForReturnReceipt == 3))
           mRequestReturnReceipt = PR_TRUE;
-			}
-		  PR_FREEIF(draftInfo);
-		}
+      }
+      PR_FREEIF(draftInfo);
+    }
 
-	  if (*buf == nsCRT::CR || *buf == nsCRT::LF)
-		{
-		  if (*buf == nsCRT::CR && buf[1] == nsCRT::LF)
-			buf++;
-		  buf++;
-		}
+    if (*buf == nsCRT::CR || *buf == nsCRT::LF)
+    {
+      if (*buf == nsCRT::CR && buf[1] == nsCRT::LF)
+      buf++;
+      buf++;
+    }
 
-	  if (prune_p)
-		{
-		  char *to = header_start;
-		  char *from = buf;
-		  while (from < buf_end)
-			*to++ = *from++;
-		  buf = header_start;
-		  buf_end = to;
-		  m_headersFP = buf_end - m_headers;
-		}
-	}
+    if (prune_p)
+    {
+      char *to = header_start;
+      char *from = buf;
+      while (from < buf_end)
+      *to++ = *from++;
+      buf = header_start;
+      buf_end = to;
+      m_headersFP = buf_end - m_headers;
+    }
+  }
 
   m_headers[m_headersFP++] = nsCRT::CR;
   m_headers[m_headersFP++] = nsCRT::LF;
@@ -962,7 +962,7 @@ SEARCH_NEWLINE:
 
 int
 DoGrowBuffer(PRInt32 desired_size, PRInt32 element_size, PRInt32 quantum,
-    				char **buffer, PRInt32 *size)
+            char **buffer, PRInt32 *size)
 {
   if (*size <= desired_size)
   {
@@ -987,7 +987,7 @@ DoGrowBuffer(PRInt32 desired_size, PRInt32 element_size, PRInt32 quantum,
 #define do_grow_headers(desired_size) \
   (((desired_size) >= m_headersSize) ? \
    DoGrowBuffer ((desired_size), sizeof(char), 1024, \
-				   &m_headers, &m_headersSize) \
+           &m_headers, &m_headersSize) \
    : 0)
 
 nsresult
@@ -1017,7 +1017,7 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
   {
     if (m_headersPosition == 0)
     {
-		  // This line is the first line in a header block.
+      // This line is the first line in a header block.
       // Remember its position.
       m_headersPosition = m_position;
       
@@ -1041,11 +1041,11 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
     
     if (line[0] == nsCRT::CR || line[0] == nsCRT::LF || line[0] == 0)
     {
-		  // End of headers.  Now parse them; open the temp file;
+      // End of headers.  Now parse them; open the temp file;
       // and write the appropriate subset of the headers out. 
       m_inhead = PR_FALSE;
 
-			mOutFile = new nsOutputFileStream(*mTempFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
+      mOutFile = new nsOutputFileStream(*mTempFileSpec, PR_WRONLY | PR_CREATE_FILE, 00600);
       if ( (!mOutFile) || (!mOutFile->is_open()) )
         return NS_MSG_ERROR_WRITING_FILE;
 
@@ -1058,7 +1058,7 @@ nsMsgSendLater::DeliverQueuedLine(char *line, PRInt32 length)
     }
     else
     {
-		  // Otherwise, this line belongs to a header.  So append it to the
+      // Otherwise, this line belongs to a header.  So append it to the
       // header data.
       
       if (!PL_strncasecmp (line, HEADER_X_MOZILLA_STATUS, PL_strlen(HEADER_X_MOZILLA_STATUS)))
@@ -1225,7 +1225,7 @@ nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity,
       nsCOMPtr<nsISupportsArray> identities;
       if (NS_SUCCEEDED(defAcc->GetIdentities(getter_AddRefs(identities))))
       {
-        nsIMsgIdentity    *lookupIdentity = nsnull;
+        nsCOMPtr<nsIMsgIdentity>  lookupIdentity;
         PRUint32          count = 0;
         char              *tName = nsnull;
 
@@ -1233,7 +1233,7 @@ nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity,
         for (PRUint32 i=0; i < count; i++)
         {
           rv = identities->QueryElementAt(0, NS_GET_IID(nsIMsgIdentity),
-                                    (void **)&lookupIdentity);
+                                    getter_AddRefs(lookupIdentity));
           if (NS_FAILED(rv))
             continue;
 
@@ -1242,14 +1242,12 @@ nsMsgSendLater::DealWithTheIdentityMojo(nsIMsgIdentity  *identity,
           {
             PR_FREEIF(tName);
             NS_IF_RELEASE(mIdentity);
-            mIdentity = lookupIdentity;
+            mIdentity = lookupIdentity.get();
             NS_IF_ADDREF(mIdentity);
             return NS_OK;
           }
           else
-          {
             PR_FREEIF(tName);
-          }
         }
       }
     }

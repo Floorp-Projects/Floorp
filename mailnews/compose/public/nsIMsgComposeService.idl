@@ -48,35 +48,45 @@ interface nsIMsgWindow;
 [scriptable, uuid(B004F4AE-1AC2-11d3-A715-0060B0EB39B5)]
 interface nsIMsgComposeService : nsISupports {
 
-	/* we need a msg window because when we forward inline we may need progress */
-	void OpenComposeWindow(in string msgComposeWindowURL, in string originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
-						   in nsIMsgIdentity identity,
+  /* we need a msg window because when we forward inline we may need progress */
+  void OpenComposeWindow(in string msgComposeWindowURL, in string originalMsgURI, in MSG_ComposeType type, in MSG_ComposeFormat format,
+               in nsIMsgIdentity identity,
                                                    in nsIMsgWindow aMsgWindow);
 
     /* use this method to invoke a compose window given a mailto url.
-	   aMsgComposeWindowURL --> can be null in most cases. If you have your own chrome
-	   url you want to use in brining up a compose window, pass it in here. 
-	   aURI --> the mailto url you want to use as the foundation for the data inside
-	   the compose window  */
-	void OpenComposeWindowWithURI(in string msgComposeWindowURL, in nsIURI aURI);
+     aMsgComposeWindowURL --> can be null in most cases. If you have your own chrome
+     url you want to use in brining up a compose window, pass it in here. 
+     aURI --> the mailto url you want to use as the foundation for the data inside
+     the compose window  */
+  void OpenComposeWindowWithURI(in string msgComposeWindowURL, in nsIURI aURI);
 
-	/* ... */
-	void OpenComposeWindowWithValues(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
-							in wstring to, in wstring cc, in wstring bcc, in string newsgroups,
-							in wstring subject, in wstring body, in string attachment, in nsIMsgIdentity identity);
+  /**
+  * OpenComposeWindowWithValues
+  *
+  * @NOT SUPPORTED ANYMORE, USE OpenComposeWindowWithParams INSTEAD.
+  * @THIS API WILL BE REMOVED
+  */
+  void OpenComposeWindowWithValues(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
+              in wstring to, in wstring cc, in wstring bcc, in string newsgroups,
+              in wstring subject, in wstring body, in string attachment, in nsIMsgIdentity identity);
 
-	/* ... */
-	void OpenComposeWindowWithCompFields(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
-										in nsIMsgCompFields compFields, in nsIMsgIdentity identity);
+  /**
+  * OpenComposeWindowWithCompFields
+  *
+  * @NOT SUPPORTED ANYMORE, USE OpenComposeWindowWithParams INSTEAD.
+  * @THIS API WILL BE REMOVED
+  */
+  void OpenComposeWindowWithCompFields(in string msgComposeWindowURL, in MSG_ComposeType type, in MSG_ComposeFormat format,
+                    in nsIMsgCompFields compFields, in nsIMsgIdentity identity);
 
-	/* ... */
-	void OpenComposeWindowWithParams(in string msgComposeWindowURL, in nsIMsgComposeParams params);
+  /* ... */
+  void OpenComposeWindowWithParams(in string msgComposeWindowURL, in nsIMsgComposeParams params);
 
-	/* ... */
-	nsIMsgCompose InitCompose(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams params);
+  /* ... */
+  nsIMsgCompose InitCompose(in nsIDOMWindowInternal aWindow, in nsIMsgComposeParams params);
 
- 	/* This function is use for debugging purpose only and may go away at anytime without warning */
- 	void TimeStamp(in string label, in boolean resetTime);	
+  /* This function is use for debugging purpose only and may go away at anytime without warning */
+  void TimeStamp(in string label, in boolean resetTime);  
   
   /* This attribute is use for debugging purposes for determining whether to PR_LOG or not */
   readonly attribute boolean logComposePerformance;

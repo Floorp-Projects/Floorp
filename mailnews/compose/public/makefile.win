@@ -23,6 +23,7 @@ DEPTH=..\..\..
 MODULE=msgcompo
 
 XPIDLSRCS =										            \
+				.\nsIMsgAttachment.idl				\
 				.\nsIMsgComposeProgressParams.idl	\
 				.\nsIMsgComposeParams.idl		      \
 				.\nsIMsgComposeService.idl		    \

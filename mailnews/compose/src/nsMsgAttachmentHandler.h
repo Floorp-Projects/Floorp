@@ -35,8 +35,8 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#ifndef _nsMsgAttachment_H_
-#define _nsMsgAttachment_H_
+#ifndef _nsMsgAttachmentHandler_H_
+#define _nsMsgAttachmentHandler_H_
 
 #include "nsIURL.h"
 #include "nsIMimeConverter.h"
@@ -52,9 +52,9 @@
 
 typedef struct _AppledoubleEncodeObject
 {
-	appledouble_encode_object   ap_encode_obj;
-	char                        *buff;					// the working buff
-	PRInt32	                    s_buff;         // the working buff size
+  appledouble_encode_object   ap_encode_obj;
+  char                        *buff;          // the working buff
+  PRInt32                     s_buff;         // the working buff size
   nsIOFileStream              *fileStream;    // file to hold the encoding
 } AppleDoubleEncodeObject;
 
@@ -77,10 +77,10 @@ public:
   //
 public:
   nsresult              SnarfAttachment(nsMsgCompFields *compFields);
-  int	                  PickEncoding (const char *charset, nsIMsgSend* mime_delivery_state);
+  int                   PickEncoding (const char *charset, nsIMsgSend* mime_delivery_state);
   void                  AnalyzeSnarfedFile ();      // Analyze a previously-snarfed file.
-  									                                // (Currently only used for plaintext
-  									                                // converted from HTML.) 
+                                                    // (Currently only used for plaintext
+                                                    // converted from HTML.) 
   nsresult              Abort();
   nsresult              UrlExit(nsresult status, const PRUnichar* aMsg);
 
@@ -96,7 +96,7 @@ private:
   //
 public:
   nsIURI                *mURL;
-  nsFileSpec            *mFileSpec;					// The temp file to which we save it 
+  nsFileSpec            *mFileSpec;         // The temp file to which we save it 
   nsCOMPtr<nsIFileOutputStream>  mOutFile;          
   nsIRequest            *mRequest;          // The live request used while fetching an attachment
   nsMsgCompFields       *mCompFields;       // Message composition fields for the sender
@@ -104,7 +104,7 @@ public:
 
 #ifdef XP_MAC
   nsFileSpec            *mAppleFileSpec;    // The temp file holds the appledouble
-									                          // encoding of the file we want to send.
+                                            // encoding of the file we want to send.
 #endif
   char                  *m_x_mac_type;      // Mac file type
   char                  *m_x_mac_creator;   // Mac file creator
@@ -114,27 +114,27 @@ public:
   char                  *m_content_id;      // This is for mutipart/related Content-ID's
   char                  *m_type;            // The real type, once we know it.
   char                  *m_override_type;   // The type we should assume it to be
-									                          // or 0, if we should get it from the
-									                          // server)
+                                            // or 0, if we should get it from the
+                                            // server)
   char                  *m_override_encoding; // Goes along with override_type 
 
-  char                  *m_desired_type;		// The type it should be converted to. 
+  char                  *m_desired_type;    // The type it should be converted to. 
   char                  *m_description;     // For Content-Description header
-  char                  *m_real_name;				// The name for the headers, if different
-									                          // from the URL. 
-  char                  *m_encoding;				// The encoding, once we've decided. */
+  char                  *m_real_name;       // The name for the headers, if different
+                                            // from the URL. 
+  char                  *m_encoding;        // The encoding, once we've decided. */
   PRBool                m_already_encoded_p; // If we attach a document that is already
-									                           // encoded, we just pass it through.
+                                             // encoded, we just pass it through.
 
-  PRBool                m_decrypted_p;	/* S/MIME -- when attaching a message that was
-							                             encrypted, it's necessary to decrypt it first
-							                             (since nobody but the original recipient can
-							                             read it -- if you forward it to someone in the
-							                             raw, it will be useless to them.)  This flag
-							                             indicates whether decryption occurred, so that
-							                             libmsg can issue appropriate warnings about
-							                             doing a cleartext forward of a message that was
-							                             originally encrypted. */
+  PRBool                m_decrypted_p;  /* S/MIME -- when attaching a message that was
+                                           encrypted, it's necessary to decrypt it first
+                                           (since nobody but the original recipient can
+                                           read it -- if you forward it to someone in the
+                                           raw, it will be useless to them.)  This flag
+                                           indicates whether decryption occurred, so that
+                                           libmsg can issue appropriate warnings about
+                                           doing a cleartext forward of a message that was
+                                           originally encrypted. */
 
   PRBool                mDeleteFile;      // If this is true, Delete the file...its 
                                           // NOT the original file!
@@ -146,7 +146,7 @@ public:
   //
   // Vars for analyzing file data...
   //
-  PRUint32              m_size;					/* Some state used while filtering it */
+  PRUint32              m_size;         /* Some state used while filtering it */
   PRUint32              m_unprintable_count;
   PRUint32              m_highbit_count;
   PRUint32              m_ctl_count;
@@ -166,4 +166,4 @@ private:
 };
 
 
-#endif /* _nsMsgAttachment_H_ */
+#endif /* _nsMsgAttachmentHandler_H_ */

@@ -49,6 +49,8 @@
 #include "nsMsgMimeCID.h"
 #include "nsMimeTypes.h"
 #include "prmem.h"
+#include "nsMsgPrompts.h"
+#include "nsMsgComposeStringBundle.h"
 
 // defined in msgCompGlue.cpp
 static char *mime_mailto_stream_read_buffer = 0;
@@ -73,7 +75,7 @@ nsresult MIME_EncoderWrite(MimeEncoderData *data, const char *buffer, PRInt32 si
 
 nsMsgSendPart::nsMsgSendPart(nsIMsgSend* state, const char *part_charset)
 {
-	m_state = nsnull;
+  m_state = nsnull;
 
   PL_strcpy(m_charset_name, part_charset ? part_charset : "us-ascii");
   m_children = nsnull;
@@ -99,19 +101,19 @@ nsMsgSendPart::nsMsgSendPart(nsIMsgSend* state, const char *part_charset)
 
 nsMsgSendPart::~nsMsgSendPart()
 {
-	if (m_encoder_data) {
-		MIME_EncoderDestroy(m_encoder_data, PR_FALSE);
-		m_encoder_data = nsnull;
-	}
-	for (int i=0 ; i < m_numchildren; i++)
-		delete m_children[i];
+  if (m_encoder_data) {
+    MIME_EncoderDestroy(m_encoder_data, PR_FALSE);
+    m_encoder_data = nsnull;
+  }
+  for (int i=0 ; i < m_numchildren; i++)
+    delete m_children[i];
 
-	delete [] m_children;
+  delete [] m_children;
     PR_FREEIF(m_buffer);
-	PR_FREEIF(m_other);
-	if (m_filespec)
+  PR_FREEIF(m_other);
+  if (m_filespec)
     delete m_filespec;
-	PR_FREEIF(m_type);
+  PR_FREEIF(m_type);
 }
 
 int nsMsgSendPart::CopyString(char** dest, const char* src)
@@ -175,22 +177,22 @@ int nsMsgSendPart::SetMimeDeliveryState(nsIMsgSend *state)
 
 int nsMsgSendPart::AppendOtherHeaders(const char* more)
 {
-	if (!m_other)
-		return SetOtherHeaders(more);
+  if (!m_other)
+    return SetOtherHeaders(more);
 
-	if (!more || !*more)
-		return 0;
+  if (!more || !*more)
+    return 0;
 
-	char* tmp = (char *) PR_Malloc(sizeof(char) * (PL_strlen(m_other) + PL_strlen(more) + 2));
-	if (!tmp)
-		return NS_ERROR_OUT_OF_MEMORY;
+  char* tmp = (char *) PR_Malloc(sizeof(char) * (PL_strlen(m_other) + PL_strlen(more) + 2));
+  if (!tmp)
+    return NS_ERROR_OUT_OF_MEMORY;
 
-	PL_strcpy(tmp, m_other);
-	PL_strcat(tmp, more);
-	PR_FREEIF(m_other);
-	m_other = tmp;
+  PL_strcpy(tmp, m_other);
+  PL_strcat(tmp, more);
+  PR_FREEIF(m_other);
+  m_other = tmp;
 
-	return 0;
+  return 0;
 }
 
 
@@ -323,7 +325,7 @@ int nsMsgSendPart::PushBody(char* buffer, PRInt32 length)
         out = buffer;
       } else {
         
-      /* 	Fix for bug #95985. We can't assume that all lines are shorter
+      /*  Fix for bug #95985. We can't assume that all lines are shorter
       than 4096 chars (MIME_BUFFER_SIZE), so we need to test
       for this here. sfraser.
         */
@@ -454,11 +456,11 @@ divide_content_headers(const char *headers,
     }
     
 #ifdef DEBUG
-    // ### mwelch	Because of the extreme difficulty we've had with
-    //			duplicate part headers, I'm going to put in an
-    //			ASSERT here which makes sure that no duplicate
-    //			Content-Type or Content-Transfer-Encoding headers
-    //			leave here undetected.
+    // ### mwelch Because of the extreme difficulty we've had with
+    //      duplicate part headers, I'm going to put in an
+    //      ASSERT here which makes sure that no duplicate
+    //      Content-Type or Content-Transfer-Encoding headers
+    //      leave here undetected.
     const char* tmp;
     if (*content_type_header) {
       tmp = PL_strstr(*content_type_header, "Content-Type");
@@ -488,11 +490,11 @@ nsMsgSendPart::Write()
   int     status = 0;
   char    *separator = nsnull;
 
-#define PUSHLEN(str, length)									\
-  do {														\
-		status = mime_write_message_body(m_state, str, length);	\
-    if (status < 0) goto FAIL;								\
-  } while (0)													\
+#define PUSHLEN(str, length)                  \
+  do {                            \
+    status = mime_write_message_body(m_state, str, length); \
+    if (status < 0) goto FAIL;                \
+  } while (0)                         \
 
 #define PUSH(str) PUSHLEN(str, PL_strlen(str))
 
@@ -504,7 +506,7 @@ nsMsgSendPart::Write()
     return SKIP_EMPTY_PART;
 
   if (m_mainpart && m_type && PL_strcmp(m_type, TEXT_HTML) == 0) 
-  {		  
+  {     
     if (m_filespec) 
     {
       // The "insert HTML links" code requires a memory buffer,
@@ -532,7 +534,7 @@ nsMsgSendPart::Write()
   }
   
   if (m_parent && m_parent->m_type &&
-				!PL_strcasecmp(m_parent->m_type, MULTIPART_DIGEST) &&
+        !PL_strcasecmp(m_parent->m_type, MULTIPART_DIGEST) &&
         m_type &&
         (!PL_strcasecmp(m_type, MESSAGE_RFC822) ||
         !PL_strcasecmp(m_type, MESSAGE_NEWS))) 
@@ -642,7 +644,7 @@ nsMsgSendPart::Write()
     }
   }
 
-  PUSH(CRLF);					// A blank line, to mark the end of headers.
+  PUSH(CRLF);         // A blank line, to mark the end of headers.
 
   m_firstBlock = PR_TRUE;
   /* only convert if we need to tag charset */
@@ -660,8 +662,18 @@ nsMsgSendPart::Write()
 
     if (!myStream.is_open())
     {
-      status = -1;		// ### Better error code for a temp file
       // mysteriously disappearing?
+      nsCOMPtr<nsIMsgSendReport> sendReport;
+      m_state->GetSendReport(getter_AddRefs(sendReport));
+      if (sendReport)
+      {
+        nsAutoString error_msg;
+        nsAutoString path;
+        m_filespec->GetNativePathString(path);
+        nsMsgBuildErrorMessageByID(NS_MSG_UNABLE_TO_OPEN_TMP_FILE, error_msg, &path, nsnull);
+        sendReport->SetMessage(nsIMsgSendReport::process_Current, error_msg.get(), PR_FALSE);
+      }
+      status = NS_MSG_UNABLE_TO_OPEN_TMP_FILE;
       goto FAIL;
     }
     /* Kludge to avoid having to allocate memory on the toy computers... */
@@ -719,7 +731,7 @@ nsMsgSendPart::Write()
         if (!PL_strncasecmp(line, "BCC:", 4) ||
           !PL_strncasecmp(line, "FCC:", 4) ||
           !PL_strncasecmp(line, CONTENT_LENGTH ":",
-								  CONTENT_LENGTH_LEN + 1) ||
+                  CONTENT_LENGTH_LEN + 1) ||
                   !PL_strncasecmp(line, "Lines:", 6) ||
                   !PL_strncasecmp(line, "Status:", 7) ||
                   !PL_strncasecmp(line, X_MOZILLA_STATUS ":",
@@ -736,7 +748,7 @@ nsMsgSendPart::Write()
         PUSH(line);
         
         if (*line == nsCRT::CR || *line == nsCRT::LF) {
-          break;	// Now can do normal reads for the body.
+          break;  // Now can do normal reads for the body.
         }
       }
     }
@@ -775,8 +787,8 @@ nsMsgSendPart::Write()
         PUSH(CRLF);
         PUSH("--");
 
-			  PUSH(separator);
-			  PUSH(CRLF);
+        PUSH(separator);
+        PUSH(CRLF);
       }
 
       status = m_children[i]->Write();
@@ -794,7 +806,7 @@ nsMsgSendPart::Write()
     PUSH(separator);
     PUSH("--");
     PUSH(CRLF);
-  }	
+  } 
   
 FAIL:
   PR_FREEIF(separator);

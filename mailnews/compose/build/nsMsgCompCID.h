@@ -45,12 +45,12 @@
 //
 // nsMsgComposeService
 //
-#define NS_MSGCOMPOSESERVICE_CID				  \
+#define NS_MSGCOMPOSESERVICE_CID          \
 { /* 588595FE-1ADA-11d3-A715-0060B0EB39B5 */      \
  0x588595fe, 0x1ada, 0x11d3,                      \
  {0xa7, 0x15, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5}}
 
-#define NS_MSGCOMPOSESERVICE_CONTRACTID			\
+#define NS_MSGCOMPOSESERVICE_CONTRACTID     \
   "@mozilla.org/messengercompose;1"
 #define NS_MSGCOMPOSESTARTUPHANDLER_CONTRACTID \
   "@mozilla.org/commandlinehandler/general-startup;1?type=compose"
@@ -58,7 +58,7 @@
 //
 // nsMsgComposeContentHandler
 //
-#define NS_MSGCOMPOSECONTENTHANDLER_CID				  \
+#define NS_MSGCOMPOSECONTENTHANDLER_CID         \
 { /* 0B63FB80-BBBA-11D4-9DAA-91B657EB313C */    \
 0x0b63fb80, 0xbbba, 0x11d4,                     \
  {0x9d, 0xaa, 0x91, 0xb6, 0x57, 0xeb, 0x31, 0x3c}}
@@ -72,7 +72,7 @@
 #define NS_MSGCOMPOSE_CONTRACTID \
   "@mozilla.org/messengercompose/compose;1"
 
-#define NS_MSGCOMPOSE_CID						  \
+#define NS_MSGCOMPOSE_CID             \
 { /* EB5BDAF8-BBC6-11d2-A6EC-0060B0EB39B5 */      \
  0xeb5bdaf8, 0xbbc6, 0x11d2,                      \
  {0xa6, 0xec, 0x0, 0x60, 0xb0, 0xeb, 0x39, 0xb5}}
@@ -83,7 +83,7 @@
 #define NS_MSGCOMPOSEPARAMS_CONTRACTID \
   "@mozilla.org/messengercompose/composeparams;1"
 
-#define NS_MSGCOMPOSEPARAMS_CID						  \
+#define NS_MSGCOMPOSEPARAMS_CID             \
 { /* CB998A00-C079-11D4-9DAA-8DF64BAB2EFC */      \
  0xcb998a00, 0xc079, 0x11d4,                      \
  {0x9d, 0xaa, 0x8d, 0xf6, 0x4b, 0xab, 0x2e, 0xfc}}
@@ -94,7 +94,7 @@
 #define NS_MSGCOMPOSESENDLISTENER_CONTRACTID \
   "@mozilla.org/messengercompose/composesendlistener;1"
 
-#define NS_MSGCOMPOSESENDLISTENER_CID						  \
+#define NS_MSGCOMPOSESENDLISTENER_CID             \
 { /* acc72781-2cea-11d5-9daa-bacdeac1eefc */      \
  0xacc72781, 0x2cea, 0x11d5,                      \
  {0x9d, 0xaa, 0xba, 0xcd, 0xea, 0xc1, 0xee, 0xfc}}
@@ -105,7 +105,7 @@
 #define NS_MSGCOMPOSEPROGRESSPARAMS_CONTRACTID \
   "@mozilla.org/messengercompose/composeprogressparameters;1"
 
-#define NS_MSGCOMPOSEPROGRESSPARAMS_CID						  \
+#define NS_MSGCOMPOSEPROGRESSPARAMS_CID             \
 { /* 1e0e7c01-3e4c-11d5-9daa-f88d288130fc */      \
  0x1e0e7c01, 0x3e4c, 0x11d5,                      \
  {0x9d, 0xaa, 0xf8, 0x8d, 0x28, 0x81, 0x30, 0xfc}}
@@ -116,10 +116,21 @@
 #define NS_MSGCOMPFIELDS_CONTRACTID \
   "@mozilla.org/messengercompose/composefields;1"
 
-#define NS_MSGCOMPFIELDS_CID	                  \
+#define NS_MSGCOMPFIELDS_CID                    \
 { /* 6D222BA0-BD46-11d2-8293-000000000000 */      \
  0x6d222ba0, 0xbd46, 0x11d2,                      \
  {0x82, 0x93, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}}
+
+//
+// nsMsgAttachment
+//
+#define NS_MSGATTACHMENT_CONTRACTID \
+  "@mozilla.org/messengercompose/attachment;1"
+
+#define NS_MSGATTACHMENT_CID                    \
+{ /* 27B8D045-8D9F-4fa8-BFB6-8A0F8D09CE89 */    \
+ 0x27b8d045, 0x8d9f, 0x4fa8,                    \
+ {0xbf, 0xb6, 0x8a, 0xf, 0x8d, 0x9, 0xce, 0x89}}
 
 //
 // nsMsgSend
@@ -127,7 +138,7 @@
 #define NS_MSGSEND_CONTRACTID \
   "@mozilla.org/messengercompose/send;1"
 
-#define NS_MSGSEND_CID							  \
+#define NS_MSGSEND_CID                \
 { /* 935284E0-C5D8-11d2-8297-000000000000 */      \
  0x935284e0, 0xc5d8, 0x11d2,                      \
  {0x82, 0x97, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0}}
@@ -135,10 +146,10 @@
 //
 // nsMsgSendLater
 //
-#define NS_MSGSENDLATER_CONTRACTID							              \
+#define NS_MSGSENDLATER_CONTRACTID                            \
   "@mozilla.org/messengercompose/sendlater;1"
 
-#define NS_MSGSENDLATER_CID							              \
+#define NS_MSGSENDLATER_CID                           \
 { /* E15C83F1-1CF4-11d3-8EF0-00A024A7D144 */      \
  0xe15c83f1, 0x1cf4, 0x11d3,                      \
  {0x8e, 0xf0, 0x0, 0xa0, 0x24, 0xa7, 0xd1, 0x44 }}
@@ -173,7 +184,7 @@
 
 #define NS_SMTPSERVER_CID                      \
 { /* 60dc861a-56ce-11d3-9118-00a0c900d445 */   \
-  0x60dc861a,0x56ce,0x11d3,										\
+  0x60dc861a,0x56ce,0x11d3,                   \
   {0x91,0x18, 0x0, 0xa0, 0xc9, 0x0, 0xd4, 0x45 }}
 
 //
@@ -185,7 +196,7 @@
 #define NS_MAILTOHANDLER_CONTRACTID \
   NS_NETWORK_PROTOCOL_CONTRACTID_PREFIX "mailto"
 
-#define NS_SMTPSERVICE_CID						  \
+#define NS_SMTPSERVICE_CID              \
 { /* 5B6419F1-CA9B-11d2-8063-006008128C4E */      \
  0x5b6419f1, 0xca9b, 0x11d2,                      \
  {0x80, 0x63, 0x0, 0x60, 0x8, 0x12, 0x8c, 0x4e}}

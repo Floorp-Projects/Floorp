@@ -63,43 +63,43 @@ char        *nsMsgCreateTempFileName(char *tFileName);
 // messages during message composition
 //
 nsresult    mime_sanity_check_fields (
-					                  const char *from,
-					                  const char *reply_to,
-					                  const char *to,
-					                  const char *cc,
-					                  const char *bcc,
-					                  const char *fcc,
-					                  const char *newsgroups,
-					                  const char *followup_to,
-					                  const char * /*subject*/,
-					                  const char * /*references*/,
-					                  const char * /*organization*/,
-					                  const char * /*other_random_headers*/);
+                            const char *from,
+                            const char *reply_to,
+                            const char *to,
+                            const char *cc,
+                            const char *bcc,
+                            const char *fcc,
+                            const char *newsgroups,
+                            const char *followup_to,
+                            const char * /*subject*/,
+                            const char * /*references*/,
+                            const char * /*organization*/,
+                            const char * /*other_random_headers*/);
 
 char        *mime_generate_headers (nsMsgCompFields *fields,
-									                  const char *charset,
-									                  nsMsgDeliverMode deliver_mode, nsIPrompt * aPrompt, PRInt32 *status);
+                                    const char *charset,
+                                    nsMsgDeliverMode deliver_mode, nsIPrompt * aPrompt, PRInt32 *status);
 
 char        *mime_make_separator(const char *prefix);
 char        *mime_gen_content_id(PRUint32 aPartNum, const char *aEmailAddress);
 
 char        *mime_generate_attachment_headers (const char *type,
-											     const char *encoding,
-											     const char *description,
-											     const char *x_mac_type,
-											     const char *x_mac_creator,
-											     const char *real_name,
-											     const char *base_url,
-											     PRBool digest_p,
-											     nsMsgAttachmentHandler *ma,
-											     const char *charset,
+                           const char *encoding,
+                           const char *description,
+                           const char *x_mac_type,
+                           const char *x_mac_creator,
+                           const char *real_name,
+                           const char *base_url,
+                           PRBool digest_p,
+                           nsMsgAttachmentHandler *ma,
+                           const char *charset,
                            const char *content_id,
                            PRBool     aBodyDocument);
 
 char        *msg_generate_message_id (nsIMsgIdentity*);
 
 char        *RFC2231ParmFolding(const char *parmName, const char *charset, 
-                      				  const char *language, const char *parmValue);
+                                const char *language, const char *parmValue);
 
 PRBool      mime_7bit_data_p (const char *string, PRUint32 size);
 
@@ -114,7 +114,7 @@ PRBool      mime_type_needs_charset (const char *type);
 char        *msg_make_filename_qtext(const char *srcText, PRBool stripCRLFs);
 
 // Rip apart the URL and extract a reasonable value for the `real_name' slot.
-void        msg_pick_real_name (nsMsgAttachmentHandler *attachment, const char *charset);
+void        msg_pick_real_name (nsMsgAttachmentHandler *attachment, const PRUnichar *proposedName, const char *charset);
 
 //
 // Informational calls...

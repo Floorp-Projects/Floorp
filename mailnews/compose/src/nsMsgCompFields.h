@@ -38,8 +38,8 @@
 #ifndef _MsgCompFields_H_
 #define _MsgCompFields_H_
 
-#include "msgCore.h"
 #include "nsIMsgCompFields.h"
+#include "msgCore.h"
 
 
 /* Note that all the "Get" methods never return NULL (except in case of serious
@@ -48,12 +48,12 @@
 
 class nsMsgCompFields : public nsIMsgCompFields {
 public:
-	nsMsgCompFields();
-	virtual ~nsMsgCompFields();
+  nsMsgCompFields();
+  virtual ~nsMsgCompFields();
 
-	/* this macro defines QueryInterface, AddRef and Release for this class */
-	NS_DECL_ISUPPORTS
-	NS_DECL_NSIMSGCOMPFIELDS
+  /* this macro defines QueryInterface, AddRef and Release for this class */
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIMSGCOMPFIELDS
 
   typedef enum MsgHeaderID
   {
@@ -77,111 +77,109 @@ public:
     MSG_MESSAGE_ID_HEADER_ID,
     MSG_X_TEMPLATE_HEADER_ID,
     MSG_DRAFT_ID_HEADER_ID,
-	MSG_TEMPORARY_FILES_HEADER_ID,
+  MSG_TEMPORARY_FILES_HEADER_ID,
     
     MSG_MAX_HEADERS   //Must be the last one.
   } MsgHeaderID;
 
-	nsresult Copy(nsIMsgCompFields* pMsgCompFields);
+  nsresult SetAsciiHeader(MsgHeaderID header, const char *value);
+  const char* GetAsciiHeader(MsgHeaderID header); //just return the address of the internal header variable, don't dispose it
 
-	nsresult SetAsciiHeader(MsgHeaderID header, const char *value);
-	const char* GetAsciiHeader(MsgHeaderID header); //just return the address of the internal header variable, don't dispose it
+  nsresult SetUnicodeHeader(MsgHeaderID header, const PRUnichar *value);
+  nsresult GetUnicodeHeader(MsgHeaderID header, PRUnichar **_retval); //Will return a copy of the header, must be free using PR_Free() 
 
-	nsresult SetUnicodeHeader(MsgHeaderID header, const PRUnichar *value);
-	nsresult GetUnicodeHeader(MsgHeaderID header, PRUnichar **_retval); //Will return a copy of the header, must be free using PR_Free() 
+  /* Convenience routines to get and set header's value...
+  
+    IMPORTANT:
+    all routines const char* GetXxx(void) will return a pointer to the header, please don't free it.
+  */
 
-	/* Convenience routines to get and set header's value...
-	
-		IMPORTANT:
-		all routines const char* GetXxx(void) will return a pointer to the header, please don't free it.
-	*/
+  nsresult SetFrom(const char *value) {return SetAsciiHeader(MSG_FROM_HEADER_ID, value);}
+  const char* GetFrom(void) {return GetAsciiHeader(MSG_FROM_HEADER_ID);}
 
-	nsresult SetFrom(const char *value) {return SetAsciiHeader(MSG_FROM_HEADER_ID, value);}
-	const char* GetFrom(void) {return GetAsciiHeader(MSG_FROM_HEADER_ID);}
+  nsresult SetReplyTo(const char *value) {return SetAsciiHeader(MSG_REPLY_TO_HEADER_ID, value);}
+  const char* GetReplyTo() {return GetAsciiHeader(MSG_REPLY_TO_HEADER_ID);}
 
-	nsresult SetReplyTo(const char *value) {return SetAsciiHeader(MSG_REPLY_TO_HEADER_ID, value);}
-	const char* GetReplyTo() {return GetAsciiHeader(MSG_REPLY_TO_HEADER_ID);}
+  nsresult SetTo(const char *value) {return SetAsciiHeader(MSG_TO_HEADER_ID, value);}
+  const char* GetTo() {return GetAsciiHeader(MSG_TO_HEADER_ID);}
 
-	nsresult SetTo(const char *value) {return SetAsciiHeader(MSG_TO_HEADER_ID, value);}
-	const char* GetTo() {return GetAsciiHeader(MSG_TO_HEADER_ID);}
+  nsresult SetCc(const char *value) {return SetAsciiHeader(MSG_CC_HEADER_ID, value);}
+  const char* GetCc() {return GetAsciiHeader(MSG_CC_HEADER_ID);}
 
-	nsresult SetCc(const char *value) {return SetAsciiHeader(MSG_CC_HEADER_ID, value);}
-	const char* GetCc() {return GetAsciiHeader(MSG_CC_HEADER_ID);}
+  nsresult SetBcc(const char *value) {return SetAsciiHeader(MSG_BCC_HEADER_ID, value);}
+  const char* GetBcc() {return GetAsciiHeader(MSG_BCC_HEADER_ID);}
 
-	nsresult SetBcc(const char *value) {return SetAsciiHeader(MSG_BCC_HEADER_ID, value);}
-	const char* GetBcc() {return GetAsciiHeader(MSG_BCC_HEADER_ID);}
+  nsresult SetFcc(const char *value) {return SetAsciiHeader(MSG_FCC_HEADER_ID, value);}
+  const char* GetFcc() {return GetAsciiHeader(MSG_FCC_HEADER_ID);}
 
-	nsresult SetFcc(const char *value) {return SetAsciiHeader(MSG_FCC_HEADER_ID, value);}
-	const char* GetFcc() {return GetAsciiHeader(MSG_FCC_HEADER_ID);}
+  nsresult SetFcc2(const char *value) {return SetAsciiHeader(MSG_FCC2_HEADER_ID, value);}
+  const char* GetFcc2() {return GetAsciiHeader(MSG_FCC2_HEADER_ID);}
 
-	nsresult SetFcc2(const char *value) {return SetAsciiHeader(MSG_FCC2_HEADER_ID, value);}
-	const char* GetFcc2() {return GetAsciiHeader(MSG_FCC2_HEADER_ID);}
+  const char* GetNewsgroups() {return GetAsciiHeader(MSG_NEWSGROUPS_HEADER_ID);}
 
-	const char* GetNewsgroups() {return GetAsciiHeader(MSG_NEWSGROUPS_HEADER_ID);}
+  const char* GetNewshost() {return GetAsciiHeader(MSG_NEWSPOSTURL_HEADER_ID);}
 
-	const char* GetNewshost() {return GetAsciiHeader(MSG_NEWSPOSTURL_HEADER_ID);}
+  const char* GetFollowupTo() {return GetAsciiHeader(MSG_FOLLOWUP_TO_HEADER_ID);}
 
-	const char* GetFollowupTo() {return GetAsciiHeader(MSG_FOLLOWUP_TO_HEADER_ID);}
+  nsresult SetSubject(const char *value) {return SetAsciiHeader(MSG_SUBJECT_HEADER_ID, value);}
+  const char* GetSubject() {return GetAsciiHeader(MSG_SUBJECT_HEADER_ID);}
 
-	nsresult SetSubject(const char *value) {return SetAsciiHeader(MSG_SUBJECT_HEADER_ID, value);}
-	const char* GetSubject() {return GetAsciiHeader(MSG_SUBJECT_HEADER_ID);}
+  const char* GetAttachments() {
+    NS_ASSERTION(0, "nsMsgCompFields::GetAttachments is not supported anymore, please use nsMsgCompFields::GetAttachmentsArray");
+    return GetAsciiHeader(MSG_ATTACHMENTS_HEADER_ID);
+    }
 
-	const char* GetAttachments() {return GetAsciiHeader(MSG_ATTACHMENTS_HEADER_ID);}
+  const char* GetTemporaryFiles() {
+    NS_ASSERTION(0, "nsMsgCompFields::GetTemporaryFiles is not supported anymore, please use nsMsgCompFields::GetAttachmentsArray");
+    return GetAsciiHeader(MSG_TEMPORARY_FILES_HEADER_ID);
+    }
 
-	const char* GetTemporaryFiles() {return GetAsciiHeader(MSG_TEMPORARY_FILES_HEADER_ID);}
+  nsresult SetOrganization(const char *value) {return SetAsciiHeader(MSG_ORGANIZATION_HEADER_ID, value);}
+  const char* GetOrganization() {return GetAsciiHeader(MSG_ORGANIZATION_HEADER_ID);}
 
-	nsresult SetOrganization(const char *value) {return SetAsciiHeader(MSG_ORGANIZATION_HEADER_ID, value);}
-	const char* GetOrganization() {return GetAsciiHeader(MSG_ORGANIZATION_HEADER_ID);}
+  const char* GetReferences() {return GetAsciiHeader(MSG_REFERENCES_HEADER_ID);}
 
-	const char* GetReferences() {return GetAsciiHeader(MSG_REFERENCES_HEADER_ID);}
+  nsresult SetOtherRandomHeaders(const char *value) {return SetAsciiHeader(MSG_OTHERRANDOMHEADERS_HEADER_ID, value);}
+  const char* GetOtherRandomHeaders() {return GetAsciiHeader(MSG_OTHERRANDOMHEADERS_HEADER_ID);}
 
-	nsresult SetOtherRandomHeaders(const char *value) {return SetAsciiHeader(MSG_OTHERRANDOMHEADERS_HEADER_ID, value);}
-	const char* GetOtherRandomHeaders() {return GetAsciiHeader(MSG_OTHERRANDOMHEADERS_HEADER_ID);}
+  const char* GetNewspostUrl() {return GetAsciiHeader(MSG_NEWSPOSTURL_HEADER_ID);}
 
-	const char* GetNewspostUrl() {return GetAsciiHeader(MSG_NEWSPOSTURL_HEADER_ID);}
+  const char* GetPriority() {return GetAsciiHeader(MSG_PRIORITY_HEADER_ID);}
 
-	const char* GetPriority() {return GetAsciiHeader(MSG_PRIORITY_HEADER_ID);}
+  const char* GetCharacterSet() {return GetAsciiHeader(MSG_CHARACTER_SET_HEADER_ID);}
 
-	const char* GetCharacterSet() {return GetAsciiHeader(MSG_CHARACTER_SET_HEADER_ID);}
+  const char* GetMessageId() {return GetAsciiHeader(MSG_MESSAGE_ID_HEADER_ID);}
 
-	const char* GetMessageId() {return GetAsciiHeader(MSG_MESSAGE_ID_HEADER_ID);}
+  nsresult SetTemplateName(const char *value) {return SetAsciiHeader(MSG_X_TEMPLATE_HEADER_ID, value);}
+  const char* GetTemplateName() {return GetAsciiHeader(MSG_X_TEMPLATE_HEADER_ID);}
 
-	nsresult SetTemplateName(const char *value) {return SetAsciiHeader(MSG_X_TEMPLATE_HEADER_ID, value);}
-	const char* GetTemplateName() {return GetAsciiHeader(MSG_X_TEMPLATE_HEADER_ID);}
+  const char* GetDraftId() {return GetAsciiHeader(MSG_DRAFT_ID_HEADER_ID);}
 
-	const char* GetDraftId() {return GetAsciiHeader(MSG_DRAFT_ID_HEADER_ID);}
+  PRBool GetReturnReceipt() {return m_returnReceipt;}
+  PRBool GetAttachVCard() {return m_attachVCard;}
+  PRBool GetForcePlainText() {return m_forcePlainText;}
+  PRBool GetUseMultipartAlternative() {return m_useMultipartAlternative;}
+  PRBool GetUuEncodeAttachments() {return m_uuEncodeAttachments;}
 
-	PRBool GetReturnReceipt() {return m_returnReceipt;}
-	PRBool GetAttachVCard() {return m_attachVCard;}
-	PRBool GetForcePlainText() {return m_forcePlainText;}
-	PRBool GetUseMultipartAlternative() {return m_useMultipartAlternative;}
-	PRBool GetUuEncodeAttachments() {return m_uuEncodeAttachments;}
+  nsresult SetBody(const char *value);
+  const char* GetBody();
 
-	nsresult SetBody(const char *value);
-	const char* GetBody();
+  nsresult SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray); 
 
-	nsresult SplitRecipientsEx(const PRUnichar *recipients, nsIMsgRecipientArray ** fullAddrsArray, nsIMsgRecipientArray ** emailsArray); 
-
-	PRInt32 GetReturnReceiptType() { return m_receiptType; };
-	void SetReturnReceiptType(PRInt32 type) {m_receiptType = type;};
-
-	nsresult CleanUpTempFiles();
+  PRInt32 GetReturnReceiptType() { return m_receiptType; };
+  void SetReturnReceiptType(PRInt32 type) {m_receiptType = type;};
 
 protected:
-	char*       m_headers[MSG_MAX_HEADERS];
-	char*       m_body;
+  char*       m_headers[MSG_MAX_HEADERS];
+  char*       m_body;
+  nsCOMPtr<nsISupportsArray>  m_attachments;
   PRBool      m_attachVCard;
   PRBool      m_forcePlainText;
   PRBool      m_useMultipartAlternative;
   PRBool      m_uuEncodeAttachments;
   PRBool      m_returnReceipt;
-	PRInt32     m_receiptType;        /* 0:None 1:DSN 2:MDN 3:BOTH */
-	nsString    m_internalCharSet;
-    
-  /* WARNING:
-      If you add any new member variable, you must update the function
-      nsMsgCompFields::Copy as well else they will not be copied automatically!
-  */
+  PRInt32     m_receiptType;        /* 0:None 1:DSN 2:MDN 3:BOTH */
+  nsString    m_internalCharSet;
 };
 
 

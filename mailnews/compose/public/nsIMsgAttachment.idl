@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
+/* -*- Mode: idl; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*- */
 /* ***** BEGIN LICENSE BLOCK *****
  * Version: NPL 1.1/GPL 2.0/LGPL 2.1
  *
@@ -36,70 +36,69 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsISupports.idl"
-#include "nsIMsgRecipientArray.idl"
-#include "nsIMsgAttachment.idl"
-#include "nsISupportsArray.idl"
 
-
-[scriptable, uuid(3E89CAE3-BD2D-11d2-8293-000000000000)]
-interface nsIMsgCompFields : nsISupports {
-
-  attribute wstring from;
-  attribute wstring replyTo;
-  attribute wstring to;
-  attribute wstring cc;
-  attribute wstring bcc;
-  
-  attribute wstring fcc;
-  attribute wstring fcc2;
-  
-  attribute string  newsgroups;
-  attribute string  newshost;
-  attribute string  newspostUrl;
-  attribute string  followupTo;
-
-  attribute wstring subject;
-  
-  /**
-   * attachments
-   *
-   * @OBSOLETE, DO NOT USE ANYMORE
-   */
-  attribute string  attachments;
-
-  attribute wstring organization;
-  attribute string  references;
-  attribute string  priority;
-  attribute string  messageId;
-  attribute string  characterSet;
-
-  attribute wstring templateName;
-  attribute string  draftId;
-
-  attribute boolean returnReceipt;
-  attribute boolean attachVCard;
-  attribute boolean forcePlainText;
-  attribute boolean useMultipartAlternative;
-  attribute boolean uuEncodeAttachments;
-
-  attribute wstring otherRandomHeaders;
-
-  attribute wstring body;
+[scriptable, uuid(5FB62950-9A0B-41b4-8D11-F6888DFF835E)]
+interface nsIMsgAttachment : nsISupports {
 
   /**
-   * temporaryFiles
+   * name attribute
    *
-   * @OBSOLETE, DO NOT USE ANYMORE
+   * @Attachment real name, will be sent with the attachment's header.
+   * @If no name has been provided, a name will be generated using the url.
    */
-  attribute string  temporaryFiles;
-  
-  readonly attribute nsISupportsArray attachmentsArray;
-  void addAttachment(in nsIMsgAttachment attachment);
-  void removeAttachment(in nsIMsgAttachment attachment);
-  void removeAttachments();
+	attribute wstring   name;
+	
+  /**
+   * url attribute
+   *
+   * @specify where the attachment live (localy or remotely)
+   */
+	attribute string    url;
 
-  /* some utility functions */
-  nsIMsgRecipientArray SplitRecipients(in wstring recipients, in boolean emailAddressOnly);    
-  void ConvertBodyToPlainText();
+  /**
+   * temporary attribute
+   *
+   * @If set to true, the file pointed by the url will be destroyed when tis object is destroyed.
+   * @This is only for local attachment.
+   */
+	attribute boolean   temporary;
+
+  /**
+   * contentLocation attribute
+   *
+   * @Specify the origin url of the attachment, used normaly when attaching a locally saved html document.
+   */
+  attribute string    contentLocation;
+  
+  /**
+   * contentType attribute
+   *
+   * @Specify the content-type of the attachment
+   * @If ommitted, it will be determined base on either the url or the content of the file.
+   */
+  attribute string    contentType;
+
+  
+  /**
+   * macType attribute
+   *
+   * @Specify the Mac file type of the attachment
+   * @If omitted, will be determined automatically on Macintosh OS.
+   */
+  attribute string    macType;
+
+  /**
+   * macCreator attribute
+   *
+   * @Specify the Mac file creator of the attachment
+   * @If omitted, will be determined automatically on Macintosh OS.
+   */
+  attribute string    macCreator;
+
+  /**
+    * equalsUrl
+    *
+    * @ determines if both attachments have the same url.
+    */
+  boolean equalsUrl(in nsIMsgAttachment attachment);
 };
-

@@ -32,6 +32,7 @@ EXPORTS		= \
 		$(NULL)
 
 XPIDLSRCS	= \
+		nsIMsgAttachment.idl \
 		nsIMsgComposeProgressParams.idl \
 		nsIMsgComposeParams.idl \
 		nsIMsgComposeService.idl \

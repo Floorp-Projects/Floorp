@@ -58,6 +58,7 @@
 #include "nsMsgCompose.h"
 #include "nsMsgComposeParams.h"
 #include "nsMsgComposeProgressParams.h"
+#include "nsMsgAttachment.h"
 #include "nsMsgSend.h"
 #include "nsMsgQuote.h"
 #include "nsIMsgDraft.h"
@@ -77,6 +78,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeParams);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeSendListener);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeProgressParams);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgCompFields);
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgAttachment);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgComposeAndSend);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgSendLater);
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsMsgDraft)
@@ -132,6 +134,10 @@ static nsModuleComponentInfo components[] =
     NS_MSGCOMPFIELDS_CID,
     NS_MSGCOMPFIELDS_CONTRACTID,
     nsMsgCompFieldsConstructor },
+  { "Msg Compose Attachment",
+    NS_MSGATTACHMENT_CID,
+    NS_MSGATTACHMENT_CONTRACTID,
+    nsMsgAttachmentConstructor },
   { "Msg Draft",
     NS_MSGDRAFT_CID,
     NS_MSGDRAFT_CONTRACTID,

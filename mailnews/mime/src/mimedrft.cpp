@@ -159,13 +159,13 @@ nsMsgCreateTempFileSpec(char *tFileName)
 ////////////////////////////////////////////////////////////////////////////////////
 
 typedef enum {
-	nsMsg_RETURN_RECEIPT_BOOL_HEADER_MASK = 0,
-	nsMsg_ENCRYPTED_BOOL_HEADER_MASK,
-	nsMsg_SIGNED_BOOL_HEADER_MASK,
-	nsMsg_UUENCODE_BINARY_BOOL_HEADER_MASK,
-	nsMsg_ATTACH_VCARD_BOOL_HEADER_MASK,
-	nsMsg_LAST_BOOL_HEADER_MASK			// last boolean header mask; must be the last one 
-										              // DON'T remove.
+  nsMsg_RETURN_RECEIPT_BOOL_HEADER_MASK = 0,
+  nsMsg_ENCRYPTED_BOOL_HEADER_MASK,
+  nsMsg_SIGNED_BOOL_HEADER_MASK,
+  nsMsg_UUENCODE_BINARY_BOOL_HEADER_MASK,
+  nsMsg_ATTACH_VCARD_BOOL_HEADER_MASK,
+  nsMsg_LAST_BOOL_HEADER_MASK     // last boolean header mask; must be the last one 
+                                  // DON'T remove.
 } nsMsgBoolHeaderSet;
 
 extern "C" void
@@ -176,19 +176,19 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
 
   while ( (tmp) && (tmp->real_name) )
   {
-	  printf("Real Name         : %s\n", tmp->real_name);
+    printf("Real Name         : %s\n", tmp->real_name);
 
     if ( tmp->url ) 
     {
       char *spec = nsnull;
 
       tmp->url->GetSpec(&spec);
-  	  printf("URL               : %s\n", spec);
+      printf("URL               : %s\n", spec);
     }
 
-	  printf("Desired Type      : %s\n", tmp->desired_type);
+    printf("Desired Type      : %s\n", tmp->desired_type);
     printf("Real Type         : %s\n", tmp->real_type);
-	  printf("Real Encoding     : %s\n", tmp->real_encoding); 
+    printf("Real Encoding     : %s\n", tmp->real_encoding); 
     printf("Description       : %s\n", tmp->description);
     printf("Mac Type          : %s\n", tmp->x_mac_type);
     printf("Mac Creator       : %s\n", tmp->x_mac_creator);
@@ -200,43 +200,46 @@ mime_dump_attachments ( nsMsgAttachmentData *attachData )
 nsresult
 CreateTheComposeWindow(nsIMsgCompFields     *compFields,
                        nsMsgAttachmentData  *attachmentList,
-                       MSG_ComposeType		composeType,
+                       MSG_ComposeType    composeType,
                        MSG_ComposeFormat    composeFormat,
-                       nsIMsgIdentity *		identity)
+                       nsIMsgIdentity *       identity
+                       )
 {
 nsresult            rv;
 MSG_ComposeFormat   format = nsIMsgCompFormat::Default;
 
 #ifdef NS_DEBUG
-printf("RICHIE: Need to do something with the attachment data!!!!\n");
 mime_dump_attachments ( attachmentList );
 #endif
 
   nsMsgAttachmentData *curAttachment = attachmentList;
   if (curAttachment)
   {
-	nsCAutoString attachments;
-	char* spec = nsnull;
+    nsXPIDLCString spec;
 
-	while (curAttachment && curAttachment->real_name)
-	  {
-		rv = curAttachment->url->GetSpec(&spec);
-		if (NS_SUCCEEDED(rv) && spec)
-		  {
-			if (attachments.Length())
-			  attachments.Append(',');
-			attachments.Append(spec);
-			nsCRT::free(spec);
-			spec = nsnull;
-		  }
-		curAttachment++;
-	  }
-	if (attachments.Length())
-	{
-	  compFields->SetAttachments(attachments.get());
-	  // remember the temp files to delete
-	  compFields->SetTemporaryFiles(attachments.get());
-	}
+    while (curAttachment && curAttachment->real_name) //JFD: Why do we check for real_name?
+    {
+      rv = curAttachment->url->GetSpec(getter_Copies(spec));
+      if (NS_SUCCEEDED(rv))
+      {
+        nsCOMPtr<nsIMsgAttachment> attachment = do_CreateInstance(NS_MSGATTACHMENT_CONTRACTID, &rv);
+        if (NS_SUCCEEDED(rv) && attachment)
+        {
+          nsAutoString nameStr;
+          rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), curAttachment->real_name, nameStr);
+          if (NS_FAILED(rv))
+            nameStr.AssignWithConversion(curAttachment->real_name);
+          attachment->SetName(nameStr.get());
+          attachment->SetUrl(spec.get());
+          attachment->SetTemporary(PR_TRUE);
+          attachment->SetContentType(curAttachment->real_type);
+          attachment->SetMacType(curAttachment->x_mac_type);
+          attachment->SetMacCreator(curAttachment->x_mac_creator);
+          compFields->AddAttachment(attachment);
+        }
+      }
+      curAttachment++;
+    }
   }
 
   nsCOMPtr<nsIMsgComposeService> msgComposeService = 
@@ -246,56 +249,63 @@ mime_dump_attachments ( attachmentList );
   
   if (identity && composeType == nsIMsgCompType::ForwardInline)
   {
-  	PRBool composeHtml = PR_FALSE;
-  	identity->GetComposeHtml(&composeHtml);
-  	if (composeHtml)
-		format = nsIMsgCompFormat::HTML;
-	else
-	{
-		format = nsIMsgCompFormat::PlainText;
-		/* do we we need to convert the HTML body to plain text? */
-		if (composeFormat == nsIMsgCompFormat::HTML)
-			compFields->ConvertBodyToPlainText();
-	}
+    PRBool composeHtml = PR_FALSE;
+    identity->GetComposeHtml(&composeHtml);
+    if (composeHtml)
+      format = nsIMsgCompFormat::HTML;
+    else
+    {
+      format = nsIMsgCompFormat::PlainText;
+      /* do we we need to convert the HTML body to plain text? */
+      if (composeFormat == nsIMsgCompFormat::HTML)
+        compFields->ConvertBodyToPlainText();
+    }
   }
   else
     format = composeFormat;
+  
+  nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
+  if (NS_SUCCEEDED(rv) && pMsgComposeParams)
+  {
+    pMsgComposeParams->SetType(composeType);
+    pMsgComposeParams->SetFormat(format);
+    pMsgComposeParams->SetIdentity(identity);
+    pMsgComposeParams->SetComposeFields(compFields);    
     
-  rv = msgComposeService->OpenComposeWindowWithCompFields(nsnull, /* default chrome */
-                                                          composeType, format, compFields, identity);
+    rv = msgComposeService->OpenComposeWindowWithParams(nsnull /* default chrome */, pMsgComposeParams);
+  }
   return rv;
 }
 
-nsIMsgCompFields * 
+nsresult
 CreateCompositionFields(const char        *from,
-									      const char        *reply_to,
-									      const char        *to,
-									      const char        *cc,
-									      const char        *bcc,
-									      const char        *fcc,
-									      const char        *newsgroups,
-									      const char        *followup_to,
-									      const char        *organization,
-									      const char        *subject,
-									      const char        *references,
-									      const char        *other_random_headers,
-									      const char        *priority,
-									      const char        *attachment,
+                        const char        *reply_to,
+                        const char        *to,
+                        const char        *cc,
+                        const char        *bcc,
+                        const char        *fcc,
+                        const char        *newsgroups,
+                        const char        *followup_to,
+                        const char        *organization,
+                        const char        *subject,
+                        const char        *references,
+                        const char        *other_random_headers,
+                        const char        *priority,
                         const char        *newspost_url,
                         PRBool            xlate_p,
                         PRBool            sign_p,
-                        char              *charset)
+                        char              *charset,
+                        nsIMsgCompFields  **_retval)
 {
-  nsIMsgCompFields *cFields = nsnull;
-  char *val;
+  NS_ENSURE_ARG_POINTER(_retval);
 
-  // Create the compose fields...
-  nsresult rv = nsComponentManager::CreateInstance(kMsgCompFieldsCID, NULL, 
-                                                   NS_GET_IID(nsIMsgCompFields), 
-                                                   (void **) &cFields);   
-  if (NS_FAILED(rv) || !cFields) 
-    return nsnull;
-  NS_ADDREF(cFields);
+  nsresult rv;
+  *_retval = nsnull;
+
+  char *val;
+  nsCOMPtr<nsIMsgCompFields> cFields = do_CreateInstance(NS_MSGCOMPFIELDS_CONTRACTID, &rv);
+  NS_ENSURE_SUCCESS(rv, rv);
+  NS_ENSURE_TRUE(cFields, NS_ERROR_OUT_OF_MEMORY);
 
   // Now set all of the passed in stuff...
   cFields->SetCharacterSet(charset);
@@ -352,15 +362,14 @@ CreateCompositionFields(const char        *from,
   cFields->SetPriority(val ? val : priority);
   PR_FREEIF(val);
 
-  val = MIME_DecodeMimeHeader(attachment, charset, PR_FALSE, PR_TRUE);
-  cFields->SetAttachments(val ? val : attachment);
-  PR_FREEIF(val);
-
   val = MIME_DecodeMimeHeader(newspost_url, charset, PR_FALSE, PR_TRUE);
   cFields->SetNewspostUrl(val ? val : newspost_url);
   PR_FREEIF(val);
 
-  return cFields;
+  *_retval = cFields;
+  NS_IF_ADDREF(*_retval);
+
+  return rv;
 }
 
 // RICHIE:
@@ -423,13 +432,13 @@ mime_free_attach_data ( nsMsgAttachmentData *attachData, int cleanupCount)
 
   for ( i=0; i < cleanupCount; i++, tmp++ ) 
   {
-	  if ( tmp->url ) 
+    if ( tmp->url ) 
       delete tmp->url;
     PR_FREEIF(tmp->real_name);
 
-	  PR_FREEIF(tmp->desired_type);
+    PR_FREEIF(tmp->desired_type);
     PR_FREEIF(tmp->real_type);
-	  PR_FREEIF(tmp->real_encoding); 
+    PR_FREEIF(tmp->real_encoding); 
     PR_FREEIF(tmp->description);
     PR_FREEIF(tmp->x_mac_type);
     PR_FREEIF(tmp->x_mac_creator);
@@ -448,19 +457,19 @@ mime_free_attachments ( nsMsgAttachedFile *attachments, int count )
 
   for ( i = 0; i < count; i++, cur++ ) 
   {
-	  if ( cur->orig_url )
+    if ( cur->orig_url )
       NS_RELEASE(cur->orig_url);
 
-	  PR_FREEIF ( cur->type );
-	  PR_FREEIF ( cur->encoding );
-	  PR_FREEIF ( cur->description );
-	  PR_FREEIF ( cur->x_mac_type );
-	  PR_FREEIF ( cur->x_mac_creator );
-	  if ( cur->file_spec ) 
+    PR_FREEIF ( cur->type );
+    PR_FREEIF ( cur->encoding );
+    PR_FREEIF ( cur->description );
+    PR_FREEIF ( cur->x_mac_type );
+    PR_FREEIF ( cur->x_mac_creator );
+    if ( cur->file_spec ) 
     {
       cur->file_spec->Delete(PR_FALSE);
-	    delete ( cur->file_spec );
-	  }
+      delete ( cur->file_spec );
+    }
   }
 
   PR_FREEIF( attachments );
@@ -477,7 +486,7 @@ mime_draft_process_attachments(mime_draft_data *mdd)
   NS_ASSERTION ( mdd->attachments_count && mdd->attachments, "processing attachments but there aren't any" );
 
   if ( !mdd->attachments || !mdd->attachments_count )
-  	return nsnull;
+    return nsnull;
 
   attachData = (nsMsgAttachmentData *) PR_MALLOC( ( (mdd->attachments_count+1) * sizeof (nsMsgAttachmentData) ) );
   if ( !attachData ) 
@@ -490,13 +499,13 @@ mime_draft_process_attachments(mime_draft_data *mdd)
 
   for ( i=0; i < mdd->attachments_count; i++, tmp++, tmpFile++ ) 
   {
-	  if (tmpFile->type) 
+    if (tmpFile->type) 
     {
-		  if (nsCRT::strcasecmp ( tmpFile->type, "text/x-vcard") == 0)
-			  NS_MsgSACopy (&(tmp->real_name), tmpFile->description);
-	  }
+      if (nsCRT::strcasecmp ( tmpFile->type, "text/x-vcard") == 0)
+        NS_MsgSACopy (&(tmp->real_name), tmpFile->description);
+    }
 
-	  if ( tmpFile->orig_url ) 
+    if ( tmpFile->orig_url ) 
     {
       char  *tmpSpec = nsnull;
       if (NS_FAILED(tmpFile->orig_url->GetSpec(&tmpSpec)))
@@ -513,35 +522,40 @@ mime_draft_process_attachments(mime_draft_data *mdd)
       }
 
       NS_ADDREF(tmp->url);
-	    if (!tmp->real_name)
-  	   NS_MsgSACopy ( &(tmp->real_name), tmpSpec );
-	  }
+      if (!tmp->real_name)
+      {
+        if (tmpFile->real_name)
+          NS_MsgSACopy ( &(tmp->real_name), tmpFile->real_name );
+        else
+       NS_MsgSACopy ( &(tmp->real_name), tmpSpec );
+    }
+    }
 
-	  if ( tmpFile->type ) 
+    if ( tmpFile->type ) 
     {
-	    NS_MsgSACopy ( &(tmp->desired_type), tmpFile->type );
-	    NS_MsgSACopy ( &(tmp->real_type), tmpFile->type );
-	  }
+      NS_MsgSACopy ( &(tmp->desired_type), tmpFile->type );
+      NS_MsgSACopy ( &(tmp->real_type), tmpFile->type );
+    }
 
-	  if ( tmpFile->encoding ) 
+    if ( tmpFile->encoding ) 
     {
-	    NS_MsgSACopy ( &(tmp->real_encoding), tmpFile->encoding );
-	  }
+      NS_MsgSACopy ( &(tmp->real_encoding), tmpFile->encoding );
+    }
 
-	  if ( tmpFile->description ) 
+    if ( tmpFile->description ) 
     {
-	    NS_MsgSACopy ( &(tmp->description), tmpFile->description );
-	  }
+      NS_MsgSACopy ( &(tmp->description), tmpFile->description );
+    }
 
-	  if ( tmpFile->x_mac_type ) 
+    if ( tmpFile->x_mac_type ) 
     {
-	    NS_MsgSACopy ( &(tmp->x_mac_type), tmpFile->x_mac_type );
-	  }
+      NS_MsgSACopy ( &(tmp->x_mac_type), tmpFile->x_mac_type );
+    }
 
-	  if ( tmpFile->x_mac_creator ) 
+    if ( tmpFile->x_mac_creator ) 
     {
-	    NS_MsgSACopy ( &(tmp->x_mac_creator), tmpFile->x_mac_creator );
-	  }
+      NS_MsgSACopy ( &(tmp->x_mac_creator), tmpFile->x_mac_creator );
+    }
   }
 
   return (attachData);
@@ -555,27 +569,27 @@ FAIL:
 static void 
 mime_fix_up_html_address( char **addr)
 {
-	//
+  //
   // We need to replace paired <> they are treated as HTML tag 
   //
-	if (addr && *addr && PL_strchr(*addr, '<') && PL_strchr(*addr, '>'))
-	{
-		char *lt = NULL;
-		PRInt32 newLen = 0;
-		do 
-		{
-			newLen = nsCRT::strlen(*addr) + 3 + 1;
-			*addr = (char *) PR_REALLOC(*addr, newLen);
-			NS_ASSERTION (*addr, "out of memory fixing up html address");
-			lt = PL_strchr(*addr, '<');
-			NS_ASSERTION(lt, "couldn't find < char in address");
+  if (addr && *addr && PL_strchr(*addr, '<') && PL_strchr(*addr, '>'))
+  {
+    char *lt = NULL;
+    PRInt32 newLen = 0;
+    do 
+    {
+      newLen = nsCRT::strlen(*addr) + 3 + 1;
+      *addr = (char *) PR_REALLOC(*addr, newLen);
+      NS_ASSERTION (*addr, "out of memory fixing up html address");
+      lt = PL_strchr(*addr, '<');
+      NS_ASSERTION(lt, "couldn't find < char in address");
       nsCRT::memmove(lt+4, lt+1, newLen - 4 - (lt - *addr));
-			*lt++ = '&';
-			*lt++ = 'l';
-			*lt++ = 't';
-			*lt = ';';
-		} while (PL_strchr(*addr, '<'));
-	}
+      *lt++ = '&';
+      *lt++ = 'l';
+      *lt++ = 't';
+      *lt = ';';
+    } while (PL_strchr(*addr, '<'));
+  }
 }
 
 static void  
@@ -585,53 +599,53 @@ mime_intl_mimepart_2_str(char **str, char *mcharset)
   // Converting these header values for UTF-8 for proper display
   // in the text input widgets.
   //
-	if (str && *str)
-	{
+  if (str && *str)
+  {
     // Now do conversion to UTF-8???
     char  *newStr = NULL;
     PRInt32 newStrLen;
     PRInt32 res = MIME_ConvertCharset(PR_TRUE, mcharset, "UTF-8", *str, nsCRT::strlen(*str), 
                                     &newStr, &newStrLen, NULL);
-		if ( (NS_SUCCEEDED(res)) && (newStr && newStr != *str))
-		{
-			PR_FREEIF(*str);
-			*str = newStr;
-		}
-		else
-		{
-			MIME_StripContinuations(*str);
-		}
-	}
+    if ( (NS_SUCCEEDED(res)) && (newStr && newStr != *str))
+    {
+      PR_FREEIF(*str);
+      *str = newStr;
+    }
+    else
+    {
+      MIME_StripContinuations(*str);
+    }
+  }
 }
 
 static void 
 mime_intl_insert_message_header_1(char        **body, 
                                   char        **hdr_value,
-											            char        *hdr_str, 
-											            const char  *html_hdr_str,
-											            char        *mailcharset,
-											            PRBool      htmlEdit)
+                                  char        *hdr_str, 
+                                  const char  *html_hdr_str,
+                                  char        *mailcharset,
+                                  PRBool      htmlEdit)
 {
-	if (!body || !hdr_value || !hdr_str)
-		return;
+  if (!body || !hdr_value || !hdr_str)
+    return;
 
-	if (htmlEdit)
-	{
-		NS_MsgSACat(body, HEADER_START_JUNK);
-	}
-	else
-	{
-		NS_MsgSACat(body, MSG_LINEBREAK);
-	}
-	if (!html_hdr_str)
-		html_hdr_str = hdr_str;
-	NS_MsgSACat(body, html_hdr_str);
-	if (htmlEdit)
-	{
-		NS_MsgSACat(body, HEADER_MIDDLE_JUNK);
-	}
-	else
-		NS_MsgSACat(body, ": ");
+  if (htmlEdit)
+  {
+    NS_MsgSACat(body, HEADER_START_JUNK);
+  }
+  else
+  {
+    NS_MsgSACat(body, MSG_LINEBREAK);
+  }
+  if (!html_hdr_str)
+    html_hdr_str = hdr_str;
+  NS_MsgSACat(body, html_hdr_str);
+  if (htmlEdit)
+  {
+    NS_MsgSACat(body, HEADER_MIDDLE_JUNK);
+  }
+  else
+    NS_MsgSACat(body, ": ");
 
     // MIME decode header
     char* utf8 = MIME_DecodeMimeHeader(*hdr_value, mailcharset, PR_FALSE,
@@ -643,8 +657,8 @@ mime_intl_insert_message_header_1(char        **body,
         NS_MsgSACat(body, *hdr_value); // raw MIME encoded string
     }
 
-	if (htmlEdit)
-		NS_MsgSACat(body, HEADER_END_JUNK);
+  if (htmlEdit)
+    NS_MsgSACat(body, HEADER_END_JUNK);
 }
 
 char *
@@ -663,442 +677,442 @@ MimeGetNamedString(PRInt32 id)
 
 static void 
 mime_insert_all_headers(char            **body,
-									      MimeHeaders     *headers,
-									      MSG_ComposeFormat composeFormat,
-									      char            *mailcharset)
+                        MimeHeaders     *headers,
+                        MSG_ComposeFormat composeFormat,
+                        char            *mailcharset)
 {
-	PRBool htmlEdit = (composeFormat == nsIMsgCompFormat::HTML);
-	char *newBody = NULL;
-	char *html_tag = PL_strcasestr(*body, "<HTML>");
-	int i;
+  PRBool htmlEdit = (composeFormat == nsIMsgCompFormat::HTML);
+  char *newBody = NULL;
+  char *html_tag = PL_strcasestr(*body, "<HTML>");
+  int i;
 
-	if (!headers->done_p)
-	{
-		MimeHeaders_build_heads_list(headers);
-		headers->done_p = PR_TRUE;
-	}
+  if (!headers->done_p)
+  {
+    MimeHeaders_build_heads_list(headers);
+    headers->done_p = PR_TRUE;
+  }
 
-	if (htmlEdit)
-	{
-		if (html_tag)
-		{
-			*html_tag = 0;
-			NS_MsgSACopy(&(newBody), *body);
-			*html_tag = '<';
-			NS_MsgSACat(&newBody, "<HTML> <BR><BR>");
-		}
-		else
-			NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+  if (htmlEdit)
+  {
+    if (html_tag)
+    {
+      *html_tag = 0;
+      NS_MsgSACopy(&(newBody), *body);
+      *html_tag = '<';
+      NS_MsgSACat(&newBody, "<HTML> <BR><BR>");
+    }
+    else
+      NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
 
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
-		NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
-	}
-	else
+    NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
+  }
+  else
   {
-		NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
   }
 
-	for (i = 0; i < headers->heads_size; i++)
-	{
-	  char *head = headers->heads[i];
-	  char *end = (i == headers->heads_size-1
-				   ? headers->all_headers + headers->all_headers_fp
-				   : headers->heads[i+1]);
-	  char *colon, *ocolon;
-	  char *contents;
-	  char *name = 0;
-	  char *c2 = 0;
+  for (i = 0; i < headers->heads_size; i++)
+  {
+    char *head = headers->heads[i];
+    char *end = (i == headers->heads_size-1
+           ? headers->all_headers + headers->all_headers_fp
+           : headers->heads[i+1]);
+    char *colon, *ocolon;
+    char *contents;
+    char *name = 0;
+    char *c2 = 0;
 
-	  // Hack for BSD Mailbox delimiter. 
-	  if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
-		{
-		  colon = head + 4;
-		  contents = colon + 1;
-		}
-	  else
-		{
-		  /* Find the colon. */
-		  for (colon = head; colon < end; colon++)
-			if (*colon == ':') break;
+    // Hack for BSD Mailbox delimiter. 
+    if (i == 0 && head[0] == 'F' && !nsCRT::strncmp(head, "From ", 5))
+    {
+      colon = head + 4;
+      contents = colon + 1;
+    }
+    else
+    {
+      /* Find the colon. */
+      for (colon = head; colon < end; colon++)
+      if (*colon == ':') break;
 
-		  if (colon >= end) continue;   /* junk */
+      if (colon >= end) continue;   /* junk */
 
-		  /* Back up over whitespace before the colon. */
-		  ocolon = colon;
-		  for (; colon > head && nsCRT::IsAsciiSpace(colon[-1]); colon--)
-			;
+      /* Back up over whitespace before the colon. */
+      ocolon = colon;
+      for (; colon > head && nsCRT::IsAsciiSpace(colon[-1]); colon--)
+      ;
 
-		  contents = ocolon + 1;
-		}
+      contents = ocolon + 1;
+    }
 
-	  /* Skip over whitespace after colon. */
-	  while (contents <= end && nsCRT::IsAsciiSpace(*contents))
-		contents++;
+    /* Skip over whitespace after colon. */
+    while (contents <= end && nsCRT::IsAsciiSpace(*contents))
+    contents++;
 
-	  /* Take off trailing whitespace... */
-	  while (end > contents && nsCRT::IsAsciiSpace(end[-1]))
-		end--;
+    /* Take off trailing whitespace... */
+    while (end > contents && nsCRT::IsAsciiSpace(end[-1]))
+    end--;
 
-	  name = (char *)PR_MALLOC(colon - head + 1);
-	  if (!name) 
+    name = (char *)PR_MALLOC(colon - head + 1);
+    if (!name) 
       return /* MIME_OUT_OF_MEMORY */;
-	  nsCRT::memcpy(name, head, colon - head);
-	  name[colon - head] = 0;
+    nsCRT::memcpy(name, head, colon - head);
+    name[colon - head] = 0;
 
-	  c2 = (char *)PR_MALLOC(end - contents + 1);
-	  if (!c2)
-		{
-		  PR_Free(name);
-		  return /* MIME_OUT_OF_MEMORY */;
-		}
-	  nsCRT::memcpy(c2, contents, end - contents);
-	  c2[end - contents] = 0;
-	  
+    c2 = (char *)PR_MALLOC(end - contents + 1);
+    if (!c2)
+    {
+      PR_Free(name);
+      return /* MIME_OUT_OF_MEMORY */;
+    }
+    nsCRT::memcpy(c2, contents, end - contents);
+    c2[end - contents] = 0;
+    
     /* Do not reveal bcc recipients when forwarding a message!
        See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
     */
     if (nsCRT::strcasecmp(name, "bcc") != 0)
     {
-	    if (htmlEdit) mime_fix_up_html_address(&c2);
-		    
-	    mime_intl_insert_message_header_1(&newBody, &c2, name, name, mailcharset,
-										  htmlEdit);
+      if (htmlEdit) mime_fix_up_html_address(&c2);
+        
+      mime_intl_insert_message_header_1(&newBody, &c2, name, name, mailcharset,
+                      htmlEdit);
     }
-	  PR_Free(name);
-	  PR_Free(c2);
-	}
+    PR_Free(name);
+    PR_Free(c2);
+  }
 
-	if (htmlEdit)
-	{
-		NS_MsgSACat(&newBody, "</TABLE>");
-		NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
-		if (html_tag)
-			NS_MsgSACat(&newBody, html_tag+6);
-		else
-			NS_MsgSACat(&newBody, *body);
-	}
-	else
-	{
-		NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-		NS_MsgSACat(&newBody, *body);
-	}
+  if (htmlEdit)
+  {
+    NS_MsgSACat(&newBody, "</TABLE>");
+    NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
+    if (html_tag)
+      NS_MsgSACat(&newBody, html_tag+6);
+    else
+      NS_MsgSACat(&newBody, *body);
+  }
+  else
+  {
+    NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACat(&newBody, *body);
+  }
 
-	if (newBody)
-	{
-		PR_FREEIF(*body);
-		*body = newBody;
-	}
+  if (newBody)
+  {
+    PR_FREEIF(*body);
+    *body = newBody;
+  }
 }
 
 static void 
 mime_insert_normal_headers(char             **body,
-									         MimeHeaders      *headers,
-									         MSG_ComposeFormat  composeFormat,
-									         char             *mailcharset)
+                           MimeHeaders      *headers,
+                           MSG_ComposeFormat  composeFormat,
+                           char             *mailcharset)
 {
-	char *newBody = NULL;
-	char *subject = MimeHeaders_get(headers, HEADER_SUBJECT, PR_FALSE, PR_FALSE);
-	char *resent_comments = MimeHeaders_get(headers, HEADER_RESENT_COMMENTS,
-											PR_FALSE, PR_FALSE);
-	char *resent_date = MimeHeaders_get(headers, HEADER_RESENT_DATE, PR_FALSE,
-										PR_TRUE); 
-	char *resent_from = MimeHeaders_get(headers, HEADER_RESENT_FROM, PR_FALSE,
-										PR_TRUE);
-	char *resent_to = MimeHeaders_get(headers, HEADER_RESENT_TO, PR_FALSE, PR_TRUE);
-	char *resent_cc = MimeHeaders_get(headers, HEADER_RESENT_CC, PR_FALSE, PR_TRUE);
-	char *date = MimeHeaders_get(headers, HEADER_DATE, PR_FALSE, PR_TRUE);
-	char *from = MimeHeaders_get(headers, HEADER_FROM, PR_FALSE, PR_TRUE);
-	char *reply_to = MimeHeaders_get(headers, HEADER_REPLY_TO, PR_FALSE, PR_TRUE);
-	char *organization = MimeHeaders_get(headers, HEADER_ORGANIZATION,
-										 PR_FALSE, PR_FALSE);
-	char *to = MimeHeaders_get(headers, HEADER_TO, PR_FALSE, PR_TRUE);
-	char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
-	char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
-									   PR_TRUE);
-	char *followup_to = MimeHeaders_get(headers, HEADER_FOLLOWUP_TO, PR_FALSE,
-										PR_TRUE);
-	char *references = MimeHeaders_get(headers, HEADER_REFERENCES, PR_FALSE, PR_TRUE);
-	const char *html_tag = PL_strcasestr(*body, "<HTML>");
-	PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
-	
-	if (!from)
-		from = MimeHeaders_get(headers, HEADER_SENDER, PR_FALSE, PR_TRUE);
-	if (!resent_from)
-		resent_from = MimeHeaders_get(headers, HEADER_RESENT_SENDER, PR_FALSE,
-									  PR_TRUE); 
-	
-	if (htmlEdit)
-	{
-		NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+  char *newBody = NULL;
+  char *subject = MimeHeaders_get(headers, HEADER_SUBJECT, PR_FALSE, PR_FALSE);
+  char *resent_comments = MimeHeaders_get(headers, HEADER_RESENT_COMMENTS,
+                      PR_FALSE, PR_FALSE);
+  char *resent_date = MimeHeaders_get(headers, HEADER_RESENT_DATE, PR_FALSE,
+                    PR_TRUE); 
+  char *resent_from = MimeHeaders_get(headers, HEADER_RESENT_FROM, PR_FALSE,
+                    PR_TRUE);
+  char *resent_to = MimeHeaders_get(headers, HEADER_RESENT_TO, PR_FALSE, PR_TRUE);
+  char *resent_cc = MimeHeaders_get(headers, HEADER_RESENT_CC, PR_FALSE, PR_TRUE);
+  char *date = MimeHeaders_get(headers, HEADER_DATE, PR_FALSE, PR_TRUE);
+  char *from = MimeHeaders_get(headers, HEADER_FROM, PR_FALSE, PR_TRUE);
+  char *reply_to = MimeHeaders_get(headers, HEADER_REPLY_TO, PR_FALSE, PR_TRUE);
+  char *organization = MimeHeaders_get(headers, HEADER_ORGANIZATION,
+                     PR_FALSE, PR_FALSE);
+  char *to = MimeHeaders_get(headers, HEADER_TO, PR_FALSE, PR_TRUE);
+  char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
+  char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
+                     PR_TRUE);
+  char *followup_to = MimeHeaders_get(headers, HEADER_FOLLOWUP_TO, PR_FALSE,
+                    PR_TRUE);
+  char *references = MimeHeaders_get(headers, HEADER_REFERENCES, PR_FALSE, PR_TRUE);
+  const char *html_tag = PL_strcasestr(*body, "<HTML>");
+  PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
+  
+  if (!from)
+    from = MimeHeaders_get(headers, HEADER_SENDER, PR_FALSE, PR_TRUE);
+  if (!resent_from)
+    resent_from = MimeHeaders_get(headers, HEADER_RESENT_SENDER, PR_FALSE,
+                    PR_TRUE); 
+  
+  if (htmlEdit)
+  {
+    NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
-		NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
-	}
-	else
-	{
-		NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
+  }
+  else
+  {
+    NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
-	}
-	if (subject)
-		mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
-										  MimeGetNamedString(MIME_MHTML_SUBJECT),
-											mailcharset, htmlEdit);
-	if (resent_comments)
-		mime_intl_insert_message_header_1(&newBody, &resent_comments,
-										  HEADER_RESENT_COMMENTS, 
-										  MimeGetNamedString(MIME_MHTML_RESENT_COMMENTS),
-											mailcharset, htmlEdit);
-	if (resent_date)
-		mime_intl_insert_message_header_1(&newBody, &resent_date,
-										  HEADER_RESENT_DATE,
-										  MimeGetNamedString(MIME_MHTML_RESENT_DATE),
-											mailcharset, htmlEdit);
-	if (resent_from)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&resent_from);
-		mime_intl_insert_message_header_1(&newBody, &resent_from,
-										  HEADER_RESENT_FROM,
-										  MimeGetNamedString(MIME_MHTML_RESENT_FROM),
-											mailcharset, htmlEdit);
-	}
-	if (resent_to)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&resent_to);
-		mime_intl_insert_message_header_1(&newBody, &resent_to,
-										  HEADER_RESENT_TO,
-										  MimeGetNamedString(MIME_MHTML_RESENT_TO),
-											mailcharset, htmlEdit);
-	}
-	if (resent_cc)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&resent_cc);
-		mime_intl_insert_message_header_1(&newBody, &resent_cc,
-										  HEADER_RESENT_CC,
-										  MimeGetNamedString(MIME_MHTML_RESENT_CC),
-											mailcharset, htmlEdit);
-	}
-	if (date)
-		mime_intl_insert_message_header_1(&newBody, &date, HEADER_DATE,
-										  MimeGetNamedString(MIME_MHTML_DATE),
-										  mailcharset, htmlEdit);
-	if (from)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&from);
-		mime_intl_insert_message_header_1(&newBody, &from, HEADER_FROM,
-										  MimeGetNamedString(MIME_MHTML_FROM),
-										  mailcharset, htmlEdit);
-	}
-	if (reply_to)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&reply_to);
-		mime_intl_insert_message_header_1(&newBody, &reply_to, HEADER_REPLY_TO,
-										  MimeGetNamedString(MIME_MHTML_REPLY_TO),
-										  mailcharset, htmlEdit);
-	}
-	if (organization)
-		mime_intl_insert_message_header_1(&newBody, &organization,
-										  HEADER_ORGANIZATION,
-										  MimeGetNamedString(MIME_MHTML_ORGANIZATION),
-										  mailcharset, htmlEdit);
-	if (to)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&to);
-		mime_intl_insert_message_header_1(&newBody, &to, HEADER_TO,
-										  MimeGetNamedString(MIME_MHTML_TO),
-										  mailcharset, htmlEdit);
-	}
-	if (cc)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&cc);
-		mime_intl_insert_message_header_1(&newBody, &cc, HEADER_CC,
-										  MimeGetNamedString(MIME_MHTML_CC),
-										  mailcharset, htmlEdit);
-	}
+  }
+  if (subject)
+    mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
+                      MimeGetNamedString(MIME_MHTML_SUBJECT),
+                      mailcharset, htmlEdit);
+  if (resent_comments)
+    mime_intl_insert_message_header_1(&newBody, &resent_comments,
+                      HEADER_RESENT_COMMENTS, 
+                      MimeGetNamedString(MIME_MHTML_RESENT_COMMENTS),
+                      mailcharset, htmlEdit);
+  if (resent_date)
+    mime_intl_insert_message_header_1(&newBody, &resent_date,
+                      HEADER_RESENT_DATE,
+                      MimeGetNamedString(MIME_MHTML_RESENT_DATE),
+                      mailcharset, htmlEdit);
+  if (resent_from)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&resent_from);
+    mime_intl_insert_message_header_1(&newBody, &resent_from,
+                      HEADER_RESENT_FROM,
+                      MimeGetNamedString(MIME_MHTML_RESENT_FROM),
+                      mailcharset, htmlEdit);
+  }
+  if (resent_to)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&resent_to);
+    mime_intl_insert_message_header_1(&newBody, &resent_to,
+                      HEADER_RESENT_TO,
+                      MimeGetNamedString(MIME_MHTML_RESENT_TO),
+                      mailcharset, htmlEdit);
+  }
+  if (resent_cc)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&resent_cc);
+    mime_intl_insert_message_header_1(&newBody, &resent_cc,
+                      HEADER_RESENT_CC,
+                      MimeGetNamedString(MIME_MHTML_RESENT_CC),
+                      mailcharset, htmlEdit);
+  }
+  if (date)
+    mime_intl_insert_message_header_1(&newBody, &date, HEADER_DATE,
+                      MimeGetNamedString(MIME_MHTML_DATE),
+                      mailcharset, htmlEdit);
+  if (from)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&from);
+    mime_intl_insert_message_header_1(&newBody, &from, HEADER_FROM,
+                      MimeGetNamedString(MIME_MHTML_FROM),
+                      mailcharset, htmlEdit);
+  }
+  if (reply_to)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&reply_to);
+    mime_intl_insert_message_header_1(&newBody, &reply_to, HEADER_REPLY_TO,
+                      MimeGetNamedString(MIME_MHTML_REPLY_TO),
+                      mailcharset, htmlEdit);
+  }
+  if (organization)
+    mime_intl_insert_message_header_1(&newBody, &organization,
+                      HEADER_ORGANIZATION,
+                      MimeGetNamedString(MIME_MHTML_ORGANIZATION),
+                      mailcharset, htmlEdit);
+  if (to)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&to);
+    mime_intl_insert_message_header_1(&newBody, &to, HEADER_TO,
+                      MimeGetNamedString(MIME_MHTML_TO),
+                      mailcharset, htmlEdit);
+  }
+  if (cc)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&cc);
+    mime_intl_insert_message_header_1(&newBody, &cc, HEADER_CC,
+                      MimeGetNamedString(MIME_MHTML_CC),
+                      mailcharset, htmlEdit);
+  }
     /*
       Do not reveal bcc recipients when forwarding a message!
       See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
     */
     if (newsgroups)
-		mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
-										  MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
-										  mailcharset, htmlEdit);
-	if (followup_to)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&followup_to);
-		mime_intl_insert_message_header_1(&newBody, &followup_to,
-										  HEADER_FOLLOWUP_TO,
-										  MimeGetNamedString(MIME_MHTML_FOLLOWUP_TO),
-										  mailcharset, htmlEdit);
-	}
-	if (references)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&references);
-		mime_intl_insert_message_header_1(&newBody, &references,
-										  HEADER_REFERENCES,
-										  MimeGetNamedString(MIME_MHTML_REFERENCES),
-										  mailcharset, htmlEdit);
-	}
-	if (htmlEdit)
-	{
-		NS_MsgSACat(&newBody, "</TABLE>");
-		NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
-		if (html_tag)
-			NS_MsgSACat(&newBody, html_tag+6);
-		else
-			NS_MsgSACat(&newBody, *body);
-	}
-	else
-	{
-		NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-		NS_MsgSACat(&newBody, *body);
-	}
-	if (newBody)
-	{
-		PR_Free(*body);
-		*body = newBody;
-	}
-	PR_FREEIF(subject);
-	PR_FREEIF(resent_comments);
-	PR_FREEIF(resent_date);
-	PR_FREEIF(resent_from);
-	PR_FREEIF(resent_to);
-	PR_FREEIF(resent_cc);
-	PR_FREEIF(date);
-	PR_FREEIF(from);
-	PR_FREEIF(reply_to);
-	PR_FREEIF(organization);
-	PR_FREEIF(to);
-	PR_FREEIF(cc);
-	PR_FREEIF(newsgroups);
-	PR_FREEIF(followup_to);
-	PR_FREEIF(references);
+    mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
+                      MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
+                      mailcharset, htmlEdit);
+  if (followup_to)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&followup_to);
+    mime_intl_insert_message_header_1(&newBody, &followup_to,
+                      HEADER_FOLLOWUP_TO,
+                      MimeGetNamedString(MIME_MHTML_FOLLOWUP_TO),
+                      mailcharset, htmlEdit);
+  }
+  if (references)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&references);
+    mime_intl_insert_message_header_1(&newBody, &references,
+                      HEADER_REFERENCES,
+                      MimeGetNamedString(MIME_MHTML_REFERENCES),
+                      mailcharset, htmlEdit);
+  }
+  if (htmlEdit)
+  {
+    NS_MsgSACat(&newBody, "</TABLE>");
+    NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
+    if (html_tag)
+      NS_MsgSACat(&newBody, html_tag+6);
+    else
+      NS_MsgSACat(&newBody, *body);
+  }
+  else
+  {
+    NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACat(&newBody, *body);
+  }
+  if (newBody)
+  {
+    PR_Free(*body);
+    *body = newBody;
+  }
+  PR_FREEIF(subject);
+  PR_FREEIF(resent_comments);
+  PR_FREEIF(resent_date);
+  PR_FREEIF(resent_from);
+  PR_FREEIF(resent_to);
+  PR_FREEIF(resent_cc);
+  PR_FREEIF(date);
+  PR_FREEIF(from);
+  PR_FREEIF(reply_to);
+  PR_FREEIF(organization);
+  PR_FREEIF(to);
+  PR_FREEIF(cc);
+  PR_FREEIF(newsgroups);
+  PR_FREEIF(followup_to);
+  PR_FREEIF(references);
 }
 
 static void 
 mime_insert_micro_headers(char            **body,
-									        MimeHeaders     *headers,
-									        MSG_ComposeFormat composeFormat,
-									        char            *mailcharset)
+                          MimeHeaders     *headers,
+                          MSG_ComposeFormat composeFormat,
+                          char            *mailcharset)
 {
-	char *newBody = NULL;
-	char *subject = MimeHeaders_get(headers, HEADER_SUBJECT, PR_FALSE, PR_FALSE);
-	char *from = MimeHeaders_get(headers, HEADER_FROM, PR_FALSE, PR_TRUE);
-	char *resent_from = MimeHeaders_get(headers, HEADER_RESENT_FROM, PR_FALSE,
-										PR_TRUE); 
-	char *date = MimeHeaders_get(headers, HEADER_DATE, PR_FALSE, PR_TRUE);
-	char *to = MimeHeaders_get(headers, HEADER_TO, PR_FALSE, PR_TRUE);
-	char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
-	char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
-									   PR_TRUE);
-	const char *html_tag = PL_strcasestr(*body, "<HTML>");
-	PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
-	
-	if (!from)
-		from = MimeHeaders_get(headers, HEADER_SENDER, PR_FALSE, PR_TRUE);
-	if (!resent_from)
-		resent_from = MimeHeaders_get(headers, HEADER_RESENT_SENDER, PR_FALSE,
-									  PR_TRUE); 
-	if (!date)
-		date = MimeHeaders_get(headers, HEADER_RESENT_DATE, PR_FALSE, PR_TRUE);
-	
-	if (htmlEdit)
-	{
-		NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
+  char *newBody = NULL;
+  char *subject = MimeHeaders_get(headers, HEADER_SUBJECT, PR_FALSE, PR_FALSE);
+  char *from = MimeHeaders_get(headers, HEADER_FROM, PR_FALSE, PR_TRUE);
+  char *resent_from = MimeHeaders_get(headers, HEADER_RESENT_FROM, PR_FALSE,
+                    PR_TRUE); 
+  char *date = MimeHeaders_get(headers, HEADER_DATE, PR_FALSE, PR_TRUE);
+  char *to = MimeHeaders_get(headers, HEADER_TO, PR_FALSE, PR_TRUE);
+  char *cc = MimeHeaders_get(headers, HEADER_CC, PR_FALSE, PR_TRUE);
+  char *newsgroups = MimeHeaders_get(headers, HEADER_NEWSGROUPS, PR_FALSE,
+                     PR_TRUE);
+  const char *html_tag = PL_strcasestr(*body, "<HTML>");
+  PRBool htmlEdit = composeFormat == nsIMsgCompFormat::HTML;
+  
+  if (!from)
+    from = MimeHeaders_get(headers, HEADER_SENDER, PR_FALSE, PR_TRUE);
+  if (!resent_from)
+    resent_from = MimeHeaders_get(headers, HEADER_RESENT_SENDER, PR_FALSE,
+                    PR_TRUE); 
+  if (!date)
+    date = MimeHeaders_get(headers, HEADER_RESENT_DATE, PR_FALSE, PR_TRUE);
+  
+  if (htmlEdit)
+  {
+    NS_MsgSACopy(&(newBody), "<HTML> <BR><BR>");
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
     NS_MsgSACat(&newBody, MIME_HEADER_TABLE);
-	}
-	else
+  }
+  else
   {
-		NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACopy(&(newBody), MSG_LINEBREAK MSG_LINEBREAK);
     NS_MsgSACat(&newBody, MimeGetNamedString(MIME_FORWARDED_MESSAGE_HTML_USER_WROTE));
   }
 
   if (from)
-	{
-		if (htmlEdit) 
+  {
+    if (htmlEdit) 
       mime_fix_up_html_address(&from);
-		mime_intl_insert_message_header_1(&newBody, &from, HEADER_FROM,
-										MimeGetNamedString(MIME_MHTML_FROM),
-										mailcharset, htmlEdit);
-	}
-	if (subject)
-		mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
-										MimeGetNamedString(MIME_MHTML_SUBJECT),
-											mailcharset, htmlEdit);
+    mime_intl_insert_message_header_1(&newBody, &from, HEADER_FROM,
+                    MimeGetNamedString(MIME_MHTML_FROM),
+                    mailcharset, htmlEdit);
+  }
+  if (subject)
+    mime_intl_insert_message_header_1(&newBody, &subject, HEADER_SUBJECT,
+                    MimeGetNamedString(MIME_MHTML_SUBJECT),
+                      mailcharset, htmlEdit);
 /*
-	if (date)
-		mime_intl_insert_message_header_1(&newBody, &date, HEADER_DATE,
-										MimeGetNamedString(MIME_MHTML_DATE),
-										mailcharset, htmlEdit);
+  if (date)
+    mime_intl_insert_message_header_1(&newBody, &date, HEADER_DATE,
+                    MimeGetNamedString(MIME_MHTML_DATE),
+                    mailcharset, htmlEdit);
 */
-	if (resent_from)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&resent_from);
-		mime_intl_insert_message_header_1(&newBody, &resent_from,
-										HEADER_RESENT_FROM,
-										MimeGetNamedString(MIME_MHTML_RESENT_FROM),
-										mailcharset, htmlEdit);
-	}
-	if (to)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&to);
-		mime_intl_insert_message_header_1(&newBody, &to, HEADER_TO,
-										MimeGetNamedString(MIME_MHTML_TO),
-										mailcharset, htmlEdit);
-	}
-	if (cc)
-	{
-		if (htmlEdit) mime_fix_up_html_address(&cc);
-		mime_intl_insert_message_header_1(&newBody, &cc, HEADER_CC,
-										MimeGetNamedString(MIME_MHTML_CC),
-										mailcharset, htmlEdit);
-	}
+  if (resent_from)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&resent_from);
+    mime_intl_insert_message_header_1(&newBody, &resent_from,
+                    HEADER_RESENT_FROM,
+                    MimeGetNamedString(MIME_MHTML_RESENT_FROM),
+                    mailcharset, htmlEdit);
+  }
+  if (to)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&to);
+    mime_intl_insert_message_header_1(&newBody, &to, HEADER_TO,
+                    MimeGetNamedString(MIME_MHTML_TO),
+                    mailcharset, htmlEdit);
+  }
+  if (cc)
+  {
+    if (htmlEdit) mime_fix_up_html_address(&cc);
+    mime_intl_insert_message_header_1(&newBody, &cc, HEADER_CC,
+                    MimeGetNamedString(MIME_MHTML_CC),
+                    mailcharset, htmlEdit);
+  }
   /*
     Do not reveal bcc recipients when forwarding a message!
     See http://bugzilla.mozilla.org/show_bug.cgi?id=41150
   */
-	if (newsgroups)
-		mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
-										MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
-										mailcharset, htmlEdit);
-	if (htmlEdit)
-	{
-		NS_MsgSACat(&newBody, "</TABLE>");
-		NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
-		if (html_tag)
-			NS_MsgSACat(&newBody, html_tag+6);
-		else
-			NS_MsgSACat(&newBody, *body);
-	}
-	else
-	{
-		NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
-		NS_MsgSACat(&newBody, *body);
-	}
-	if (newBody)
-	{
-		PR_Free(*body);
-		*body = newBody;
-	}
-	PR_FREEIF(subject);
-	PR_FREEIF(from);
-	PR_FREEIF(resent_from);
-	PR_FREEIF(date);
-	PR_FREEIF(to);
-	PR_FREEIF(cc);
-	PR_FREEIF(newsgroups);
+  if (newsgroups)
+    mime_intl_insert_message_header_1(&newBody, &newsgroups, HEADER_NEWSGROUPS,
+                    MimeGetNamedString(MIME_MHTML_NEWSGROUPS),
+                    mailcharset, htmlEdit);
+  if (htmlEdit)
+  {
+    NS_MsgSACat(&newBody, "</TABLE>");
+    NS_MsgSACat(&newBody, MSG_LINEBREAK "<BR><BR>");
+    if (html_tag)
+      NS_MsgSACat(&newBody, html_tag+6);
+    else
+      NS_MsgSACat(&newBody, *body);
+  }
+  else
+  {
+    NS_MsgSACat(&newBody, MSG_LINEBREAK MSG_LINEBREAK);
+    NS_MsgSACat(&newBody, *body);
+  }
+  if (newBody)
+  {
+    PR_Free(*body);
+    *body = newBody;
+  }
+  PR_FREEIF(subject);
+  PR_FREEIF(from);
+  PR_FREEIF(resent_from);
+  PR_FREEIF(date);
+  PR_FREEIF(to);
+  PR_FREEIF(cc);
+  PR_FREEIF(newsgroups);
 
 }
 
 static void 
 mime_insert_forwarded_message_headers(char            **body, 
-												              MimeHeaders     *headers,
-												              MSG_ComposeFormat composeFormat,
-												              char            *mailcharset)
+                                      MimeHeaders     *headers,
+                                      MSG_ComposeFormat composeFormat,
+                                      char            *mailcharset)
 {
-	if (body && *body && headers)
-	{
-		PRInt32     show_headers = 0;
+  if (body && *body && headers)
+  {
+    PRInt32     show_headers = 0;
     nsresult    res;
     
     // convert body from mail charset to UTF-8
@@ -1116,27 +1130,27 @@ mime_insert_forwarded_message_headers(char            **body,
     if (NS_SUCCEEDED(res) && prefs)
       res = prefs->GetIntPref("mail.show_headers", &show_headers);
 
-		switch (show_headers)
-		{
-		case 0:
-			mime_insert_micro_headers(body, headers, composeFormat, mailcharset);
-			break;
-		default:
-		case 1:
-			mime_insert_normal_headers(body, headers, composeFormat, mailcharset);
-			break;
-		case 2:
-			mime_insert_all_headers(body, headers, composeFormat, mailcharset);
-			break;
-		}
-	}
+    switch (show_headers)
+    {
+    case 0:
+      mime_insert_micro_headers(body, headers, composeFormat, mailcharset);
+      break;
+    default:
+    case 1:
+      mime_insert_normal_headers(body, headers, composeFormat, mailcharset);
+      break;
+    case 2:
+      mime_insert_all_headers(body, headers, composeFormat, mailcharset);
+      break;
+    }
+  }
 }
 
 static void PR_CALLBACK
 mime_parse_stream_complete (nsMIMESession *stream)
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream->data_object;
-  nsIMsgCompFields *fields = NULL;
+  nsCOMPtr<nsIMsgCompFields> fields;
   int htmlAction = 0;
   int lineWidth = 0;
   
@@ -1160,8 +1174,8 @@ mime_parse_stream_complete (nsMIMESession *stream)
   char *priority = 0;
   char *draftInfo = 0;
   
-  PRBool xlate_p = PR_FALSE;	/* #### how do we determine this? */
-  PRBool sign_p = PR_FALSE;		/* #### how do we determine this? */
+  PRBool xlate_p = PR_FALSE;  /* #### how do we determine this? */
+  PRBool sign_p = PR_FALSE;   /* #### how do we determine this? */
   PRBool forward_inline = PR_FALSE;
   
   NS_ASSERTION (mdd, "null mime draft data");
@@ -1233,7 +1247,7 @@ mime_parse_stream_complete (nsMIMESession *stream)
           subj = newSubj;
         }
       }
-    }	
+    } 
     else
     {
       repl = MimeHeaders_get(mdd->headers, HEADER_REPLY_TO, PR_FALSE, PR_FALSE);
@@ -1272,9 +1286,10 @@ mime_parse_stream_complete (nsMIMESession *stream)
     }
     
     
-    fields = CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
-      org, subj, refs, 0, priority, 0, news_host,
-      xlate_p, sign_p, mdd->mailcharset);
+    CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
+      org, subj, refs, 0, priority, news_host,
+      xlate_p, sign_p, mdd->mailcharset,
+      getter_AddRefs(fields));
     
     draftInfo = MimeHeaders_get(mdd->headers, HEADER_X_MOZILLA_DRAFT_INFO, PR_FALSE, PR_FALSE);
     if (draftInfo && fields && !forward_inline) 
@@ -1469,11 +1484,12 @@ mime_parse_stream_complete (nsMIMESession *stream)
   }
   else
   {
-    fields = CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
-      org, subj, refs, 0, priority, 0, news_host,
+    CreateCompositionFields( from, repl, to, cc, bcc, fcc, grps, foll,
+      org, subj, refs, 0, priority, news_host,
       GetMailXlateionPreference(), 
       GetMailSigningPreference(),
-      mdd->mailcharset);
+      mdd->mailcharset,
+      getter_AddRefs(fields));
     if (fields)
       CreateTheComposeWindow(fields, newAttachData, nsIMsgCompType::New, nsIMsgCompFormat::Default, mdd->identity);
   }
@@ -1504,8 +1520,6 @@ mime_parse_stream_complete (nsMIMESession *stream)
   }
   
   PR_FREEIF(mdd);
-  if (fields)
-    NS_RELEASE(fields);
   
   // Release the prefs service
   MimeObject *obj = (mdd ? mdd->obj : 0);  
@@ -1665,7 +1679,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
       NS_ASSERTION (mdd->attachments, "no attachments");
       
       attachments = (nsMsgAttachedFile *)PR_REALLOC(mdd->attachments, 
-								                                    sizeof (nsMsgAttachedFile) * 
+                                                    sizeof (nsMsgAttachedFile) * 
                                                     (nAttachments + 2));
     if (!attachments)
         return MIME_OUT_OF_MEMORY;
@@ -1739,21 +1753,21 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
   nsFileSpec *tmpSpec = nsnull;
   if (newAttachment->real_name && *newAttachment->real_name)
   {
-  	//Need some convertion to native file system character set
-  	nsAutoString outStr;
-  	char * fileName = nsnull;
-  	nsresult rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), newAttachment->real_name, outStr);
-  	if (NS_SUCCEEDED(rv))
-  	{
-  		rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), outStr, &fileName);
-  		if (NS_FAILED(rv))
-  			fileName = PL_strdup(newAttachment->real_name);
-   	}
-   	else
-  		fileName = PL_strdup(newAttachment->real_name);
+    //Need some convertion to native file system character set
+    nsAutoString outStr;
+    char * fileName = nsnull;
+    nsresult rv = ConvertToUnicode(NS_ConvertASCIItoUCS2(msgCompHeaderInternalCharset()), newAttachment->real_name, outStr);
+    if (NS_SUCCEEDED(rv))
+    {
+      rv = ConvertFromUnicode(nsMsgI18NFileSystemCharset(), outStr, &fileName);
+      if (NS_FAILED(rv))
+        fileName = PL_strdup(newAttachment->real_name);
+    }
+    else
+      fileName = PL_strdup(newAttachment->real_name);
 
     tmpSpec = nsMsgCreateTempFileSpec(fileName);
-  	PR_FREEIF(fileName);
+    PR_FREEIF(fileName);
   }
   else
   {
@@ -1813,7 +1827,7 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
     return MIME_OUT_OF_MEMORY;
 
   NS_NewFileSpecWithSpec(*tmpSpec, &mdd->tmpFileSpec);
-	if (!mdd->tmpFileSpec)
+  if (!mdd->tmpFileSpec)
     return MIME_OUT_OF_MEMORY;
   
   newAttachment->file_spec = tmpSpec;
@@ -1858,8 +1872,8 @@ mime_decompose_file_init_fn ( void *stream_closure, MimeHeaders *headers )
 
 nsresult 
 mime_decompose_file_output_fn (char     *buf,
-								               PRInt32  size,
-								               void     *stream_closure )
+                               PRInt32  size,
+                               void     *stream_closure )
 {
   struct mime_draft_data *mdd = (struct mime_draft_data *) stream_closure;
   int ret = 0;
@@ -1973,7 +1987,7 @@ mime_bridge_create_draft_stream(
 
   mdd->options->url = nsCRT::strdup(mdd->url_name);
   mdd->options->format_out = format_out;     // output format
-  mdd->options->decompose_file_p = PR_TRUE;	/* new field in MimeDisplayOptions */
+  mdd->options->decompose_file_p = PR_TRUE; /* new field in MimeDisplayOptions */
   mdd->options->stream_closure = mdd;
   mdd->options->html_closure = mdd;
   mdd->options->decompose_headers_info_fn = make_mime_headers_copy;
@@ -1983,16 +1997,16 @@ mime_bridge_create_draft_stream(
 
   rv = nsServiceManager::GetService(kPrefCID, NS_GET_IID(nsIPref), (nsISupports**)&(mdd->options->prefs));
   if (! (mdd->options->prefs && NS_SUCCEEDED(rv)))
-	{
+  {
     PR_FREEIF(mdd);
     return nsnull;
   }
 
 #ifdef FO_MAIL_MESSAGE_TO
   /* If we're attaching a message (for forwarding) then we must eradicate all
-	 traces of xlateion from it, since forwarding someone else a message
-	 that wasn't xlated for them doesn't work.  We have to dexlate it
-	 before sending it.
+   traces of xlateion from it, since forwarding someone else a message
+   that wasn't xlated for them doesn't work.  We have to dexlate it
+   before sending it.
    */
 // RICHIE  mdd->options->dexlate_p = PR_TRUE;
 #endif /* FO_MAIL_MESSAGE_TO */
