@@ -90,6 +90,7 @@ si_SaveSignonDataInKeychain();
 
 extern nsresult Wallet_ProfileDirectory(nsFileSpec& dirSpec);
 extern PRUnichar * Wallet_Localize(char * genericString);
+extern void Wallet_StreamGeneratorReset();
 
 
 /***********
@@ -1713,6 +1714,19 @@ si_ReadLine
 }
 
 /*
+ * Note: low-order four bits of saveCount will designate the type of file being accessed.
+ * Whenever saveCount is incremented, it will be by 16.  That guarentees that the initial
+ * value given to the low-order four bits will never change.
+ *
+ * The various file types in use by wallet and single signon are:
+ *    Password files (.p and .u)
+ *    Wallet file (.w)
+ *    Key file (.k)
+ */
+#define INITIAL_SAVECOUNTP 1
+static nsKeyType saveCountP = INITIAL_SAVECOUNTP;
+
+/*
  * Load signon data from disk file
  */
 PUBLIC int
@@ -1734,7 +1748,6 @@ SI_LoadSignonData(PRBool fullLoad) {
   PRBool badInput = PR_FALSE;
 
   nsKeyType readCount = 0;
-  nsKeyType saveCount = 0;
 
   if (si_FullyLoaded && fullLoad) {
     return 0;
@@ -1761,6 +1774,8 @@ SI_LoadSignonData(PRBool fullLoad) {
   }
 
   if (!strmu.is_open()) {
+    /* this means no data was previously saved, so we must be fully loaded at this time */
+    si_FullyLoaded = fullLoad;
     return -1;
   }
 
@@ -1815,7 +1830,7 @@ SI_LoadSignonData(PRBool fullLoad) {
     if (error) {
       return -1;
     }
-    saveCount = temp;
+    saveCountP = temp;
 
     /* readCount */
 
@@ -1830,6 +1845,8 @@ SI_LoadSignonData(PRBool fullLoad) {
       return -1;
     }
     readCount = temp;
+
+    Wallet_StreamGeneratorReset();
   }
 
   /* read the reject list */
@@ -1881,14 +1898,14 @@ SI_LoadSignonData(PRBool fullLoad) {
         isPassword = PR_TRUE;
         nsAutoString temp;
         buffer.Mid(name, 1, buffer.Length()-1);
-        ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCount, &readCount);
+        ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCountP, &readCount);
       } else {
         isPassword = PR_FALSE;
         name = buffer;
         if (si_oldFormat) {
           ret = si_ReadLine(strmu, strmp, buffer, PR_FALSE);
         } else {
-          ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCount, &readCount);
+          ret = si_ReadLine(strmu, strmp, buffer, fullLoad, saveCountP, &readCount);
         }
       }
 
@@ -1985,7 +2002,6 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   si_SignonUserStruct * user;
   si_SignonDataStruct * data;
   si_Reject * reject;
-  nsKeyType saveCount = 0;
   nsKeyType writeCount = 0;
   PRBool fullSave2 = fullSave || si_oldFormat;
 
@@ -2070,7 +2086,8 @@ si_SaveSignonDataLocked(PRBool fullSave) {
 
   nsAutoString buffer;
   buffer = "";
-  buffer.Append(PRInt32(saveCount),10);
+  saveCountP += 16; /* preserve low order four bits which designate the file type */
+  buffer.Append(PRInt32(saveCountP),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
 
@@ -2080,6 +2097,8 @@ si_SaveSignonDataLocked(PRBool fullSave) {
   buffer.Append(PRInt32(writeCount),10);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
   si_WriteLine(strmu, strmp, buffer, PR_FALSE, fullSave2, 0, 0, PR_TRUE);
+
+  Wallet_StreamGeneratorReset();
 
   /* format for next part of file shall be:
    * URLName -- first url/username on reject list
@@ -2127,7 +2146,7 @@ si_SaveSignonDataLocked(PRBool fullSave) {
           }
           si_WriteLine(strmu, strmp, nsAutoString(data->name), PR_FALSE, fullSave2);
           si_WriteLine(strmu, strmp, nsAutoString(data->value), PR_TRUE,
-            fullSave2, saveCount, &writeCount);
+            fullSave2, saveCountP, &writeCount);
         }
         si_WriteLine(strmu, strmp, nsAutoString("."), PR_FALSE, fullSave2);
       }

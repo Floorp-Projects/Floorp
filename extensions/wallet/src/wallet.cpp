@@ -1354,10 +1354,10 @@ Wallet_GetMasterPassword(PRUnichar ** password)
 PUBLIC PRUnichar
 Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   nsresult rv = NS_OK;
-  PRUint8 keyByte = 0;
+  PRUint8 keyByte1 = 0, keyByte2 = 0;
   if (!gKeyedStreamGenerator)
   {
-    // Get a keyed stream generator
+    /* Get a keyed stream generator */
     // XXX how do we get to the NS_BASIC_STREAM_GENERATOR progid/CID here
     nsCOMPtr<nsIKeyedStreamGenerator> keyGenerator = do_CreateInstance("component://netscape/keyed-stream-generator/basic", &rv);
     if (NS_FAILED(rv)) {
@@ -1369,7 +1369,7 @@ Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
   }
   if (gNeedsSetup)
   {
-    // Call setup on the keyed stream generator
+    /* Call setup on the keyed stream generator */
     nsCOMPtr<nsIWalletService> walletService = do_GetService(NS_WALLETSERVICE_PROGID, &rv);
     if (NS_FAILED(rv)) {
       goto backup;
@@ -1382,21 +1382,34 @@ Wallet_GetKey(nsKeyType saveCount, nsKeyType writeCount) {
     gNeedsSetup = PR_FALSE;
   }
 
-  // Get the byte using the keyed stream generator
-  rv = gKeyedStreamGenerator->GetByte(writeCount, &keyByte);
+  /* Get two bytes using the keyed stream generator */
+  rv = gKeyedStreamGenerator->GetByte(writeCount, &keyByte1);
   if (NS_FAILED(rv)) {
     goto backup;
   }
-  return (PRUnichar)keyByte;
+  rv = gKeyedStreamGenerator->GetByte(writeCount, &keyByte2);
+  if (NS_FAILED(rv)) {
+    goto backup;
+  }
+  return (((PRUnichar)keyByte1)<<32) + (PRUnichar)keyByte2;
 
 backup:
-  // Fallback to doing old access. This should never happen.
+  /* Fallback to doing old access. This should never happen. */
   NS_ASSERTION(0, "Bad! Using backup stream generator. Email dp@netscape.com");
   NS_ASSERTION(key.Length()>0, "Master Password was never established");
   if (key.Length() > 0 ) {
     return key.CharAt((PRInt32)(writeCount % key.Length()));
   } else {
     return '~'; /* What else can we do?  We can't recover from this. */
+  }
+}
+
+PUBLIC void
+Wallet_StreamGeneratorReset() {
+  if (gKeyedStreamGenerator)
+  {
+    (void) gKeyedStreamGenerator->Setup(0, NULL);
+    gNeedsSetup = PR_TRUE;
   }
 }
 
@@ -1407,10 +1420,9 @@ Wallet_InitKeySet(PRBool b) {
   // When transitioning from key set to not set, we need to make sure
   // the keyedStreamGenerator also forgets all state. The reverse,
   // setting it up properly after we have a key, happens lazily in GetKey.
-  if (oldIsKeySet == PR_TRUE && gIsKeySet == PR_FALSE && gKeyedStreamGenerator)
+  if (oldIsKeySet == PR_TRUE && gIsKeySet == PR_FALSE)
   {
-    (void) gKeyedStreamGenerator->Setup(0, NULL);
-    gNeedsSetup = PR_TRUE;
+    Wallet_StreamGeneratorReset();
   }
   return oldIsKeySet;
 }
@@ -1553,9 +1565,25 @@ wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCo
 void
 wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCount);
 
+/*
+ * Note: low-order four bits of saveCount will designate the type of file being accessed.
+ * Whenever saveCount is incremented, it will be by 16.  That guarentees that the initial
+ * value given to the low-order four bits will never change.
+ *
+ * The various file types in use by wallet and single signon are:
+ *    Password files (.p and .u)
+ *    Wallet file (.w)
+ *    Key file (.k)
+ */
+#define INITIAL_SAVECOUNTW 2
+#define INITIAL_SAVECOUNTK 3
+
+static nsKeyType saveCountW = INITIAL_SAVECOUNTW;
+static nsKeyType saveCountK = INITIAL_SAVECOUNTK;
+
+
 PRBool
 wallet_ReadKeyFile(PRBool useDefaultKey) {
-  nsKeyType saveCount = 0;
   nsKeyType writeCount = 0;
 
   if (useDefaultKey && (Wallet_KeySize() == 0) ) {
@@ -1570,9 +1598,9 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
     return PR_FALSE;
   }
   nsInputFileStream strm(dirSpec + keyFileName);
-  saveCount = writeCount = 0;
+  writeCount = 0;
   if (!wallet_IsOldKeyFormat()) {
-    wallet_GetHeader(strm, saveCount, writeCount);
+    wallet_GetHeader(strm, saveCountK, writeCount);
   }
 
   /*
@@ -1582,7 +1610,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
    */
 
   for (PRInt32 j = 1; j < key.Length(); j++) {
-    if (Wallet_UTF8Get(strm) != ((key.CharAt(j))^Wallet_GetKey(saveCount, writeCount++))
+    if (Wallet_UTF8Get(strm) != ((key.CharAt(j))^Wallet_GetKey(saveCountK, writeCount++))
         || strm.eof()) {
       strm.close();
       Wallet_InitKeySet(PR_FALSE);
@@ -1591,7 +1619,7 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
       return PR_FALSE;
     }
   }
-  if (Wallet_UTF8Get(strm) != ((key.CharAt(0))^Wallet_GetKey(saveCount, writeCount++))
+  if (Wallet_UTF8Get(strm) != ((key.CharAt(0))^Wallet_GetKey(saveCountK, writeCount++))
       || strm.eof()) {
     strm.close();
     Wallet_InitKeySet(PR_FALSE);
@@ -1616,7 +1644,6 @@ wallet_ReadKeyFile(PRBool useDefaultKey) {
 
 PRBool
 wallet_WriteKeyFile(PRBool useDefaultKey) {
-  nsKeyType saveCount = 0;
   nsKeyType writeCount = 0;
 
   nsFileSpec dirSpec;
@@ -1640,7 +1667,8 @@ wallet_WriteKeyFile(PRBool useDefaultKey) {
   }
 
   /* write out the header information */
-  wallet_PutHeader(strm2, saveCount, writeCount);
+  saveCountK += 16; /* preserve low order four bits which designate the file type */
+  wallet_PutHeader(strm2, saveCountK, writeCount);
 
   /* If we store the key obscured by the key itself, then the result will be zero
    * for all keys (since we are using XOR to obscure).  So instead we store
@@ -1649,9 +1677,9 @@ wallet_WriteKeyFile(PRBool useDefaultKey) {
 
   if (!useDefaultKey && (key.Length() != 0)) {
     for (PRInt32 i = 1; i < key.Length(); i++) {
-      Wallet_UTF8Put(strm2, (key.CharAt(i))^Wallet_GetKey(saveCount, writeCount++));
+      Wallet_UTF8Put(strm2, (key.CharAt(i))^Wallet_GetKey(saveCountK, writeCount++));
     }
-    Wallet_UTF8Put(strm2, (key.CharAt(0))^Wallet_GetKey(saveCount, writeCount++));
+    Wallet_UTF8Put(strm2, (key.CharAt(0))^Wallet_GetKey(saveCountK, writeCount++));
   }
   strm2.flush();
   strm2.close();
@@ -1665,9 +1693,6 @@ Wallet_SetKey(PRBool isNewkey) {
   if (Wallet_IsKeySet() && !isNewkey) {
     return PR_TRUE;
   }
-  nsKeyType saveCount = 0;
-  nsKeyType writeCount = 0;
-
   nsAutoString newkey;
   PRBool useDefaultKey = PR_FALSE;
 
@@ -1754,7 +1779,6 @@ Wallet_SetKey(PRBool isNewkey) {
   }
   Wallet_InitKeySet(PR_TRUE);
   key = newkey;
-  saveCount = writeCount = 0;
 
   if (isNewkey || (Wallet_KeySize() < 0)) {
     /* Either key is to be changed or the file containing the saved key doesn't exist */
@@ -1858,6 +1882,8 @@ wallet_GetHeader(nsInputFileStream strm, nsKeyType& saveCount, nsKeyType& readCo
     return;
   }
   readCount = (nsKeyType)(buffer.ToInteger(&error));
+
+  Wallet_StreamGeneratorReset();
 }
 
 /*
@@ -1895,6 +1921,8 @@ wallet_PutHeader(nsOutputFileStream strm, nsKeyType saveCount, nsKeyType writeCo
   buffer.Append(PRInt32(writeCount),10);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
   wallet_PutLine(strm, buffer, PR_FALSE, 0, 0, PR_TRUE);
+
+  Wallet_StreamGeneratorReset();
 }
 
 /*
@@ -1932,30 +1960,30 @@ wallet_WriteToFile(const char * filename, nsVoidArray* list, PRBool obscure) {
   if(!list) {
     return;
   }
-  nsKeyType saveCount = 0;
   nsKeyType writeCount = 0;
 
   /* put out the header */
   if (filename == schemaValueFileName) {
-    wallet_PutHeader(strm, saveCount, writeCount);
+    saveCountW += 16; /* preserve low order four bits which designate the file type */
+    wallet_PutHeader(strm, saveCountW, writeCount);
   }
 
   /* traverse the list */
   PRInt32 count = LIST_COUNT(list);
   for (PRInt32 i=0; i<count; i++) {
     ptr = NS_STATIC_CAST(wallet_MapElement*, list->ElementAt(i));
-    wallet_PutLine(strm, (*ptr).item1, obscure, saveCount, &writeCount);
+    wallet_PutLine(strm, (*ptr).item1, obscure, saveCountW, &writeCount);
     if ((*ptr).item2 != "") {
-      wallet_PutLine(strm, (*ptr).item2, obscure, saveCount, &writeCount);
+      wallet_PutLine(strm, (*ptr).item2, obscure, saveCountW, &writeCount);
     } else {
       wallet_Sublist * ptr1;
       PRInt32 count2 = LIST_COUNT(ptr->itemList);
       for (PRInt32 j=0; j<count2; j++) {
         ptr1 = NS_STATIC_CAST(wallet_Sublist*, ptr->itemList->ElementAt(j));
-        wallet_PutLine(strm, (*ptr1).item, obscure, saveCount, &writeCount);
+        wallet_PutLine(strm, (*ptr1).item, obscure, saveCountW, &writeCount);
       }
     }
-    wallet_PutLine(strm, "", obscure, saveCount, &writeCount);
+    wallet_PutLine(strm, "", obscure, saveCountW, &writeCount);
   }
 
   /* close the stream */
@@ -1986,17 +2014,16 @@ wallet_ReadFromFile
     /* file doesn't exist -- that's not an error */
     return;
   }
-  nsKeyType saveCount = 0;
   nsKeyType readCount = 0;
 
   /* read in the header */
   if (filename == schemaValueFileName && !wallet_oldFormat) {
-    wallet_GetHeader(strm, saveCount, readCount);
+    wallet_GetHeader(strm, saveCountW, readCount);
   }
 
   for (;;) {
     nsAutoString item1;
-    if (NS_FAILED(wallet_GetLine(strm, item1, obscure, saveCount, &readCount))) {
+    if (NS_FAILED(wallet_GetLine(strm, item1, obscure, saveCountW, &readCount))) {
       /* end of file reached */
       break;
     }
@@ -2011,13 +2038,13 @@ wallet_ReadFromFile
 #endif
 
     nsAutoString item2;
-    if (NS_FAILED(wallet_GetLine(strm, item2, obscure, saveCount, &readCount))) {
+    if (NS_FAILED(wallet_GetLine(strm, item2, obscure, saveCountW, &readCount))) {
       /* unexpected end of file reached */
       break;
     }
 
     nsAutoString item3;
-    if (NS_FAILED(wallet_GetLine(strm, item3, obscure, saveCount, &readCount))) {
+    if (NS_FAILED(wallet_GetLine(strm, item3, obscure, saveCountW, &readCount))) {
       /* end of file reached */
       nsVoidArray* dummy = NULL;
       wallet_WriteToList(item1, item2, dummy, list, placement);
@@ -2052,7 +2079,7 @@ wallet_ReadFromFile
       for (;;) {
         /* get next item for sublist */
         item3 = "";
-        if (NS_FAILED(wallet_GetLine(strm, item3, obscure, saveCount, &readCount))) {
+        if (NS_FAILED(wallet_GetLine(strm, item3, obscure, saveCountW, &readCount))) {
           /* end of file reached */
           wallet_WriteToList(item1, dummy2, itemList, list, placement);
           strm.close();
@@ -3237,11 +3264,11 @@ WLLT_PostEdit(nsAutoString walletList) {
     NS_ERROR("unable to open file");
     return;
   }
-  nsKeyType saveCount = 0;
+  saveCountW += 16; /* preserve low order four bits which designate the file type */
   nsKeyType writeCount = 0;
 
   /* write the values in the walletList to the file */
-  wallet_PutHeader(strm, saveCount, writeCount);
+  wallet_PutHeader(strm, saveCountW, writeCount);
   for (;;) {
     separator = tail.FindChar(BREAK);
     if (-1 == separator) {
@@ -3251,7 +3278,7 @@ WLLT_PostEdit(nsAutoString walletList) {
     tail.Mid(temp, separator+1, tail.Length() - (separator+1));
     tail = temp;
 
-    wallet_PutLine(strm, head, PR_TRUE, saveCount, &writeCount);
+    wallet_PutLine(strm, head, PR_TRUE, saveCountW, &writeCount);
   }
 
   /* close the file and read it back into the SchemaToValue list */
