@@ -1942,8 +1942,10 @@ JS_NewScriptObject(JSContext *cx, JSScript *script)
     obj = js_NewObject(cx, &js_ScriptClass, NULL, NULL);
     if (!obj)
     	return NULL;
-    JS_SetPrivate(cx, obj, script);
-    script->object = obj;
+    if (script) {
+        JS_SetPrivate(cx, obj, script);
+        script->object = obj;
+    }
     return obj;
 }
 
