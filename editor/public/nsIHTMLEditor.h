@@ -173,6 +173,10 @@ public:
     */  
   NS_IMETHOD InsertElementAtSelection(nsIDOMElement* aElement, PRBool aDeleteSelection)=0;
 
+  /** Set the documents title.
+   */
+  NS_IMETHOD SetDocumentTitle(const PRUnichar *aTitle)=0;
+
   /* ------------ Selection manipulation -------------- */
   /* Should these be moved to nsISelection? */
   
@@ -307,7 +311,7 @@ public:
     *     If it is null, the anchor node of the current selection is used
     * Returns NS_EDITOR_ELEMENT_NOT_FOUND if an element is not found (passes NS_SUCCEEDED macro)
     */
-  NS_IMETHOD GetElementOrParentByTagName(const nsString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD GetElementOrParentByTagName(const nsAReadableString& aTagName, nsIDOMNode *aNode, nsIDOMElement** aReturn)=0;
 
   /** Return an element only if it is the only node selected,
     *    such as an image, horizontal rule, etc.
@@ -350,7 +354,7 @@ public:
     *    Use "anchor" or "namedanchor" to get a named anchor node
     *      (an "A" tag with the "name" attribute set)
     */
-  NS_IMETHOD CreateElementWithDefaults(const nsString& aTagName, nsIDOMElement** aReturn)=0;
+  NS_IMETHOD CreateElementWithDefaults(const nsAReadableString& aTagName, nsIDOMElement** aReturn)=0;
 
   /** Insert an link element as the parent of the current selection
     *
