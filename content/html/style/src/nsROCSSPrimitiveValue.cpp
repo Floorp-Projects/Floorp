@@ -42,6 +42,7 @@
 #include "nsDOMError.h"
 #include "prprf.h"
 #include "nsContentUtils.h"
+#include "nsXPIDLString.h"
 
 nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(nsISupports *aOwner, float aT2P)
   : mType(CSS_PX), mOwner(aOwner), mT2P(aT2P)
@@ -54,6 +55,39 @@ nsROCSSPrimitiveValue::nsROCSSPrimitiveValue(nsISupports *aOwner, float aT2P)
 nsROCSSPrimitiveValue::~nsROCSSPrimitiveValue()
 {
   Reset();
+}
+
+void
+nsROCSSPrimitiveValue::GetEscapedURI(PRUnichar *aURI, PRUnichar **aReturn)
+{
+  PRUint16 length = nsCRT::strlen(aURI);
+  PRUnichar *escaped = (PRUnichar *)nsMemory::Alloc(length * 2 * sizeof(PRUnichar) + sizeof(PRUnichar('\0')));
+
+  if (escaped) {
+    PRUnichar *ptr = escaped;
+
+    for (PRUint16 i = 0; i < length; ++i) {
+      switch (aURI[i]) {
+        case ' ' : // space
+        case '\t': // tab
+        case '(' : // opening parenthesis
+        case ')' : // closing parenthesis
+        case '\'': // single quote
+        case '"' : // double quote
+        case ',' : // comma
+        case '\\': // backslash
+          // We have one of the above special characters.
+          // Prepend it with a backslash.
+          *ptr++ = '\\';
+          break;
+        default:
+          break;
+      }
+      *ptr++ = aURI[i];
+    }
+    *ptr = 0;
+  }
+  *aReturn = escaped;
 }
 
 
@@ -124,8 +158,10 @@ nsROCSSPrimitiveValue::GetCssText(nsAString& aCssText)
       }
     case CSS_URI :
       {
+        nsXPIDLString uri;
+        GetEscapedURI(mValue.mString, getter_Copies(uri));
         tmpStr.Assign(NS_LITERAL_STRING("url(") +
-                      nsDependentString(mValue.mString) +
+                      uri +
                       NS_LITERAL_STRING(")"));
         break;
       }
@@ -365,12 +401,8 @@ nsROCSSPrimitiveValue::GetStringValue(nsAString& aReturn)
   switch (mType) {
     case CSS_IDENT:
     case CSS_STRING:
-      aReturn.Assign(mValue.mString);
-      break;
     case CSS_URI:
-      aReturn.Assign(NS_LITERAL_STRING("url(") +
-                     nsDependentString(mValue.mString) +
-                     NS_LITERAL_STRING(")"));
+      aReturn.Assign(mValue.mString);
       break;
     case CSS_ATTR:
     default:

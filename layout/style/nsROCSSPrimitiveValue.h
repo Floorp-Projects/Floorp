@@ -180,6 +180,8 @@ public:
   }
 
 private:
+  void GetEscapedURI(PRUnichar *aURI, PRUnichar **aReturn);
+
   PRUint16 mType;
 
   union {
