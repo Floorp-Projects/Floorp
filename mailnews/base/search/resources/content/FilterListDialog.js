@@ -322,6 +322,9 @@ function getServerThatCanHaveFilters()
 
 function onFilterDoubleClick(event)
 {
-    onEditFilter();
+    var t = event.originalTarget;
+
+    if (t.parentNode.parentNode.localName == "treeitem")
+        onEditFilter();
 }
 

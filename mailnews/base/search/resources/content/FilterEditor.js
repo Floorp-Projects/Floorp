@@ -251,7 +251,12 @@ function onActionChanged(event)
 function showActionElementFor(menuitem)
 {
     if (!menuitem) return;
-    gActionValueDeck.setAttribute("index", menuitem.getAttribute("actionvalueindex"));
+    var indexValue = menuitem.getAttribute("actionvalueindex");
+
+    gActionValueDeck.setAttribute("index", indexValue);
+
+    // Disable the "New Folder..." button if any other action than MoveToFolder is chosen
+    document.getElementById("newFolderButton").setAttribute("disabled", indexValue == "0" ? "false" : "true");
 }
 
 function GetFirstSelectedMsgFolder()
