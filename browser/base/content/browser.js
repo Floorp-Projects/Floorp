@@ -2690,8 +2690,14 @@ nsBrowserStatusHandler.prototype =
         // If the url has "wyciwyg://" as the protocol, strip it off.
         // Nobody wants to see it on the urlbar for dynamically generated
         // pages. 
-        if (/^\s*wyciwyg:\/\/\d+\//.test(location))
-          location = RegExp.rightContext;
+        if (!gURIFixup)
+          gURIFixup = Components.classes["@mozilla.org/docshell/urifixup;1"]
+                                .getService(Components.interfaces.nsIURIFixup);
+        if (location && gURIFixup)
+          try {
+            var locationURI = gURIFixup.createExposableURI(aLocation);
+            location = locationURI.spec;
+          } catch (exception) {}
         
         setTimeout(function(loc, aloc) { gURLBar.value = loc; SetPageProxyState("valid", aloc);}, 0, location, aLocation);
         
