@@ -35,6 +35,8 @@ mailnews/base/tests/identity/Makefile
 mailnews/base/resources/Makefile
 mailnews/base/resources/content/Makefile
 mailnews/base/resources/skin/Makefile
+mailnews/base/resources/locale/Makefile
+mailnews/base/resources/locale/en-US/Makefile
 mailnews/base/prefs/Makefile
 mailnews/base/prefs/resources/Makefile
 mailnews/base/prefs/resources/content/Makefile
