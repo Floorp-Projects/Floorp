@@ -3081,8 +3081,10 @@ GetFontNames(const char* aPattern, nsFontNodeArray* aNodes)
       familyCharSetName.Append('-');
       familyCharSetName.Append(charSetName);
       nsCStringKey familyCharSetKey(familyCharSetName);
-      charSetInfo =
-        (nsFontCharSetInfo*) gSpecialCharSets->Get(&familyCharSetKey);
+      charSetMap = NS_STATIC_CAST(nsFontCharSetMap*, gSpecialCharSets->Get(&familyCharSetKey));
+      if (!charSetMap)
+        charSetMap = gNoneCharSetMap;
+      charSetInfo = charSetMap->mInfo;
     }
     if (!charSetInfo) {
 #ifdef NOISY_FONTS
