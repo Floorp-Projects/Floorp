@@ -35,6 +35,8 @@ install::
 	$(MAKE_INSTALL) widgetglue.js	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) commandglue.js	$(DIST)\bin\res\samples
 	$(MAKE_INSTALL) shareglue.js	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) 3panemail.html 	$(DIST)\bin\res\samples
+	$(MAKE_INSTALL) messagePane.xul	$(DIST)\bin\res\samples
 
 clobber::
 	rm -f $(DIST)\res\samples\mailshell.xul
@@ -47,3 +49,5 @@ clobber::
 	rm -f $(DIST)\res\samples\widgetglue.js
 	rm -f $(DIST)\res\samples\commandglue.js
 	rm -f $(DIST)\res\samples\shareglue.js
+	rm -f $(DIST)\res\samples\3panemail.html
+	rm -f $(DIST)\res\samples\messagePane.xul

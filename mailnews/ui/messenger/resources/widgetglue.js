@@ -48,7 +48,7 @@ function MsgGetMessage()
 function MsgDeleteMessage()
 {
 	dump("\nMsgDeleteMessage from XUL\n");
-	var tree = frames[0].document.getElementById('threadTree');
+	var tree = frames[0].frames[1].document.getElementById('threadTree');
 	if(tree)
 		dump("tree is valid\n");
 	var appCore = new MsgAppCore();
@@ -64,7 +64,7 @@ function MsgDeleteMessage()
 function MsgReplyMessage()
 {
 	dump("\nMsgReplyMessage from XUL\n");
-    var tree = frames[0].document.getElementById('threadTree');
+    var tree = frames[0].frames[1].document.getElementById('threadTree');
     if(tree)
 		dump("tree is valid\n")
     var appCore = new MsgAppCore();
@@ -82,7 +82,7 @@ function MsgReplyMessage()
 function MsgForwardMessage()
 {
       dump("\nMsgForwardMessage from XUL\n");
-      var tree = frames[0].document.getElementById('threadTree');
+      var tree = frames[0].frames[1].document.getElementById('threadTree');
       if(tree)
               dump("tree is valid\n")
       var appCore = new MsgAppCore();

@@ -17,43 +17,6 @@
         left: 0;
         background-color: #cccccc;
       }
-      #folder {
-        position: fixed;
-        width: 15em;
-        height: auto;
-        top: 80px;
-        right: 15em;
-        bottom: 34px;
-        left: 0;
-        font-style: italic;
-        background-color: #ffffff;
-      }
-      #message {
-        position: fixed;
-        width: auto;
-        height: auto;
-        top: 200px;
-        right: 0;
-        bottom: 34px;
-        left: 15em;
-        overflow: auto;
-        padding: 2px .5em;
-        border: solid 1px black;
-        background-color: #ffffff;
-      }
-      #thread {
-        position: fixed;
-        width: auto;
-        height: 120px;
-        top: 80px;
-        right: 0;
-        bottom: auto;
-        left: 15em;
-        overflow: auto;
-        padding: 2px .5em;
-        border: solid 1px white
-        background-color: #cccccc;
-      }
       #footer {
         position: fixed;
         width: 100%;
@@ -339,16 +302,8 @@
 	</toolbox>
 </html:div>
 
-<html:div id="thread">
-<html:iframe align=right src="threadPane.xul" id="threadPane" width="650" height="370" > </html:iframe>
-</html:div>
-
-<html:div id="message">
-<html:iframe align=right src="message.html" name="browser.webwindow" width="650" height="370" > </html:iframe>
-</html:div>
-
-<html:div id="folder">
-<html:iframe src="folderPane.xul" name="browser.sidebar" width="340" height="740"></html:iframe>
+<html:div id="3panemail">
+<html:iframe src="3panemail.html" name="browser.3panemail" width="100%" height="700" > </html:iframe>
 </html:div>
 
 <html:div id="footer">
