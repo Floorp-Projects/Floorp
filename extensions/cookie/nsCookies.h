@@ -66,28 +66,28 @@ extern void COOKIE_DeletePersistentUserData(void);
 extern PRInt32 COOKIE_Count();
 extern nsresult COOKIE_Enumerate
     (PRInt32 count,
-     nsACString & name,
-     nsACString & value,
-     PRBool * isDomain,
-     nsACString & host,
-     nsACString & path,
-     PRBool * isSecure,
-     PRUint64 * expires,
-     nsCookieStatus * status,
-     nsCookiePolicy * policy);
+     nsACString &name,
+     nsACString &value,
+     PRBool &isDomain,
+     nsACString &host,
+     nsACString &path,
+     PRBool &isSecure,
+     PRUint64 &expires,
+     nsCookieStatus &status,
+     nsCookiePolicy &policy);
 extern void COOKIE_Remove
-  (const char* host, const char* name, const char* path, const PRBool blocked);
-extern nsresult COOKIE_AddCookie(char *aDomain, char *aPath,
-                  char *aName, char *aValue,
+  (const nsACString &host, const nsACString &name, const nsACString &path, const PRBool blocked);
+extern nsresult COOKIE_AddCookie(const nsACString &aDomain, const nsACString &aPath,
+                  const nsACString &aName, const nsACString &aValue,
                   PRBool aSecure, PRBool aIsDomain,
                   time_t aExpires,
                   nsCookieStatus aStatus, nsCookiePolicy aPolicy);
 
 typedef struct _cookie_CookieStruct {
-  char * path;
-  char * host;
-  char * name;
-  char * cookie;
+  nsCString path;
+  nsCString host;
+  nsCString name;
+  nsCString cookie;
   time_t expires;
   time_t lastAccessed;
   PRBool isSecure;
