@@ -1175,7 +1175,17 @@ typedef struct fe_ContextData
   Cursor save_next_nonlink_cursor;
   Cursor editable_text_cursor;     /* maybe others want to use this */
 
-  Cursor tab_sel_cursor;    /* new table cursors... */
+#ifdef EDITOR
+  Cursor left_cursor;		/* resizing cursors */
+  Cursor right_cursor;
+  Cursor top_cursor;
+  Cursor bottom_cursor;
+  Cursor top_left_cursor;
+  Cursor top_right_cursor;
+  Cursor bottom_left_cursor;
+  Cursor bottom_right_cursor;
+
+  Cursor tab_sel_cursor;	/* table cursors */
   Cursor row_sel_cursor;
   Cursor col_sel_cursor;
   Cursor cel_sel_cursor;
@@ -1184,6 +1194,7 @@ typedef struct fe_ContextData
   Cursor resize_tab_cursor;
   Cursor add_col_cursor;
   Cursor add_row_cursor;
+#endif /* EDITOR */
 
   struct fe_bookmark_data* bmdata; /* Bookmark data (used only by hot.c) */
   struct fe_MailComposeContextData* mailcomposer;  /*mail compose data*/

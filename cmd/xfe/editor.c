@@ -57,9 +57,7 @@
 
 #include "il_icons.h"           /* Image icon enumeration. */
 
-#ifdef JAVA
 #include "edtplug.h"
-#endif
 
 #define CB_STATIC static      /* let commands.c see it */
 
@@ -107,6 +105,19 @@ extern int XFE_SAVING_FILE;
 extern int XFE_LOADING_IMAGE_FILE;
 extern int XFE_FILE_N_OF_N;
 extern int XFE_PREPARE_UPLOAD;
+
+extern int XP_EDT_SEL_TABLE;
+extern int XP_EDT_SEL_ALL_CELLS;
+extern int XP_EDT_SEL_COL;
+extern int XP_EDT_SEL_ROW;
+extern int XP_EDT_SEL_CELL;
+extern int XP_EDT_SIZE_TABLE_WIDTH;
+extern int XP_EDT_SIZE_TABLE_HEIGHT;
+extern int XP_EDT_SIZE_COL;
+extern int XP_EDT_SIZE_ROW;
+extern int XP_EDT_ADD_ROWS;
+extern int XP_EDT_ADD_COLS;
+extern int XP_EDT_DRAG_TABLE;
 
 extern void fe_MailComposeDocumentLoaded(MWContext*);
 extern void fe_HackEditorNotifyToolbarUpdated(MWContext* context);
@@ -6069,6 +6080,35 @@ fe_action_name(char* buf,
     return buf;
 }
 
+#ifdef DEBUG_akkana_not
+#define DEBUG_TABLE_SELECTION
+#endif /* DEBUG_akkana */
+
+static GC getXorGC(MWContext* context)
+{
+    XGCValues gcv;
+
+#ifdef DEBUG_TABLE_SELECTION
+    printf("getting new XOR GC\n");
+#endif /* DEBUG_TABLE_SELECTION */
+
+#if FEEDBACK_WITH_TABLE_BORDER_COLOR
+    /* colors come back as 0, 0, 0 and don't show up */
+    if (edElement->lo_any.type == LO_TABLE)
+    {
+        LO_TableStruct* ts = &(edElement->lo_table);
+        gcv.foreground = fe_GetPixel(context,
+                                     ts->border_color.red,
+                                     ts->border_color.green,
+                                     ts->border_color.blue);
+    }
+    else
+#endif /* FEEDBACK_WITH_TABLE_BORDER_COLOR */
+        gcv.foreground = fe_GetPixel(context, 0xff, 0xff, 0xff);
+    gcv.function = GXxor;
+    return fe_GetGC(CONTEXT_WIDGET(context), GCForeground|GCFunction, &gcv);
+}
+
 void xfe_GetShiftAndCtrl(XEvent* event, Boolean* shiftP, Boolean* ctrlP)
 {
     if (event->type == KeyPress || event->type == KeyRelease) {
@@ -6097,8 +6137,9 @@ void xfe_GetShiftAndCtrl(XEvent* event, Boolean* shiftP, Boolean* ctrlP)
  */
 static LO_Element* edElement = 0;
 static XP_Bool crossedCellBoundary = FALSE;
-static m_resizingTable = FALSE;
+static XP_Bool m_resizingTable = FALSE;
 static XP_Rect m_sizingRect;
+static GC m_gc = 0;
 
 
 /*
@@ -6115,44 +6156,43 @@ static XP_Rect m_sizingRect;
 void
 fe_EditorGrabFocus(MWContext* context, XEvent *event)
 {
-	Widget da = NULL;
-	XEvent ev;
+  Widget da = NULL;
+  XEvent ev;
   unsigned long x, y;
   Time time;
-    LO_Element*   leHit = 0;
-    ED_HitType    iTableHit; 
+  LO_Element*   leHit = 0;
+  ED_HitType    iTableHit; 
 
-#undef DEBUG_TABLE_SELECTION
 #ifdef DEBUG_TABLE_SELECTION
-    printf("fe_EditorGrabFocus\n");
+  printf("fe_EditorGrabFocus\n");
 #endif /* DEBUG_TABLE_SELECTION */
 
 #ifdef DREDD_EDITOR
   fe_UserActivity(context); /* tell the app who has focus */
 #else
 
-	da = CONTEXT_DATA(context)->drawing_area;
+  da = CONTEXT_DATA(context)->drawing_area;
 
-    ev.type              = FocusIn;
-    ev.xfocus.type       = FocusIn;
-	ev.xfocus.send_event = False;
-	ev.xfocus.display    = XtDisplay(da);
-	ev.xfocus.window     = XtWindow(da);
-	ev.xfocus.mode       = NotifyNormal;
-    ev.xfocus.detail     = NotifyDetailNone;
+  ev.type              = FocusIn;
+  ev.xfocus.type       = FocusIn;
+  ev.xfocus.send_event = False;
+  ev.xfocus.display    = XtDisplay(da);
+  ev.xfocus.window     = XtWindow(da);
+  ev.xfocus.mode       = NotifyNormal;
+  ev.xfocus.detail     = NotifyDetailNone;
 
-	XtDispatchEvent(&ev);
+  XtDispatchEvent(&ev);
 
-	XSync(XtDisplay(da), False);
+  XSync(XtDisplay(da), False);
 
-	/*
-	XtSetKeyboardFocus(CONTEXT_WIDGET(context), da);
-	*/
+  /*
+  XtSetKeyboardFocus(CONTEXT_WIDGET(context), da);
+   */
 #endif
 
   /* don't do this -- Japanese input method requires focus
   fe_NeutralizeFocus(context);
-  */
+   */
 
   time = fe_getTimeFromEvent(context, event); /* get the time */
 
@@ -6166,13 +6206,31 @@ fe_EditorGrabFocus(MWContext* context, XEvent *event)
       || iTableHit == ED_HIT_ADD_ROWS || iTableHit == ED_HIT_ADD_COLS)
   {
 #ifdef DEBUG_TABLE_SELECTION
-      printf("resizing\n");
+      printf("resizing a table\n");
 #endif /* DEBUG_TABLE_SELECTION */
       if( EDT_StartSizing(context, leHit, x, y, FALSE, &m_sizingRect) )
       {
+          Drawable drawable = CONTEXT_DATA(context)->drawable->xdrawable;
+
           m_resizingTable = TRUE;
           edElement = leHit;
+
+          /* Begin the sizing feedback: */
+          m_gc = getXorGC(context);
+          XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, m_gc,
+                         m_sizingRect.left, m_sizingRect.top,
+                         m_sizingRect.right - m_sizingRect.left,
+                         m_sizingRect.bottom - m_sizingRect.top);
+#ifdef DEBUG_TABLE_SELECTION
+          printf("fe_EditorGrabFocus: sizing rect (%d - %d) x (%d - %d)\n",
+                 m_sizingRect.left, m_sizingRect.right,
+                 m_sizingRect.bottom, m_sizingRect.top);
+#endif /* DEBUG_TABLE_SELECTION */
       }
+#ifdef DEBUG_TABLE_SELECTION
+      else
+          printf("EDT_StartSizing returned 0\n");
+#endif /* DEBUG_TABLE_SELECTION */
       return;
   }
   m_resizingTable = FALSE;
@@ -6186,12 +6244,27 @@ fe_EditorGrabFocus(MWContext* context, XEvent *event)
   {
       Boolean shift, ctrl;
       xfe_GetShiftAndCtrl(event, &shift, &ctrl);
+      if (iTableHit == ED_HIT_SEL_TABLE && ctrl)
+          iTableHit = ED_HIT_SEL_ALL_CELLS;
+/* SUPPORT_DRAG_TABLE_ELEMENTS: as long as the XFE doesn't support
+ * dragging table elements, it might be nice to make it easier for users
+ * by mapping ED_HIT_DRAG_TABLE (which is used as the shorthand for
+ * select-element-to-drag) to something more useful like cell selection.
+ * But this needs more work.
+ */
+#define SUPPORT_DRAG_TABLE_ELEMENTS
+#ifndef SUPPORT_DRAG_TABLE_ELEMENTS
+      else if (iTableHit == ED_HIT_DRAG_TABLE)
+          iTableHit = ED_HIT_SEL_CELL;
+#endif /* SUPPORT_DRAG_TABLE_ELEMENTS */
 #ifdef DEBUG_TABLE_SELECTION
       printf("iTableHit: %d\n", iTableHit);
 #endif /* DEBUG_TABLE_SELECTION */
 
       if (iTableHit == ED_HIT_SEL_CELL)
           edElement = leHit;
+      else
+          edElement = 0;
       EDT_SelectTableElement(context, x, y,
                              leHit, iTableHit,
                              ctrl,      /* bModifierKeyPressed */
@@ -6244,7 +6317,29 @@ fe_EditorGrabFocus(MWContext* context, XEvent *event)
   }
   else
   {
-      edElement = 0;
+      int i;
+      /* See if we're on an element which can resize, like an image */
+      edElement = LO_XYToElement(context, (int32)x, (int32)y, NULL);
+      if ((i = EDT_CanSizeObject(context, edElement, x, y)) != ED_SIZE_NONE)
+      {
+#ifdef DEBUG_TABLE_SELECTION
+          printf("resizing a non-table element\n");
+#endif /* DEBUG_TABLE_SELECTION */
+          /* Begin the sizing feedback: */
+          m_gc = getXorGC(context);
+          if( EDT_StartSizing(context, edElement, x, y, FALSE, &m_sizingRect) )
+          {
+              XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)),
+                             CONTEXT_DATA(context)->drawable->xdrawable,
+                             m_gc,
+                             m_sizingRect.left, m_sizingRect.top,
+                             m_sizingRect.right - m_sizingRect.left,
+                             m_sizingRect.bottom - m_sizingRect.top);
+              m_resizingTable = TRUE;
+          }
+      }
+      else
+          edElement = 0;
       crossedCellBoundary = FALSE;
   }
 
@@ -6360,36 +6455,35 @@ fe_EditorSelectionExtend(MWContext* context, XEvent *event)
 
     if (m_resizingTable)
     {
-        GC gc;
-        XGCValues gcv;
         Drawable drawable = CONTEXT_DATA(context)->drawable->xdrawable;
-#if FEEDBACK_WITH_TABLE_BORDER_COLOR
-        /* colors come back as 0, 0, 0 and don't show up */
-        LO_TableStruct* ts = &(edElement->lo_table);
-        gcv.foreground = fe_GetPixel(context,
-                                     ts->border_color.red,
-                                     ts->border_color.green,
-                                     ts->border_color.blue);
-        printf("RGB = %d %d %d\n", ts->border_color.red,
-               ts->border_color.green, ts->border_color.blue);
-#else /* FEEDBACK_WITH_TABLE_BORDER_COLOR */
-        gcv.foreground = fe_GetPixel(context, 0xff, 0xff, 0xff);
-#endif /* FEEDBACK_WITH_TABLE_BORDER_COLOR */
-        gcv.function = GXxor;
-        gc = fe_GetGC(CONTEXT_WIDGET(context),
-                      GCForeground|GCFunction, &gcv);
-        XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, gc,
+        XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, m_gc,
                        m_sizingRect.left, m_sizingRect.top,
                        m_sizingRect.right - m_sizingRect.left,
                        m_sizingRect.bottom - m_sizingRect.top);
-        if (EDT_GetSizingRect(context, x, y, FALSE, &m_sizingRect))
-        {
-            /* show feedback */
-            XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, gc,
-                           m_sizingRect.left, m_sizingRect.top,
-                           m_sizingRect.right - m_sizingRect.left,
-                           m_sizingRect.bottom - m_sizingRect.top);
-        }
+#ifdef DEBUG_TABLE_SELECTION
+        printf("fe_EditorSelectionExtend: sizing rect (%d - %d) x (%d - %d)\n",
+               m_sizingRect.left, m_sizingRect.right,
+               m_sizingRect.bottom, m_sizingRect.top);
+#endif /* DEBUG_TABLE_SELECTION */
+
+        /* Don't check the return value from EDT_GetSizingRect;
+         * sometimes CSizingObject::GetSizingRect says the rect
+         * hasn't changed, and returns FALSE, which unfortunately is
+         * the same as CEditBuf::GetSizingRect's error code that
+         * we're not in the middle of a sizing operation.
+         */
+        EDT_GetSizingRect(context, x, y, FALSE, &m_sizingRect);
+
+#ifdef DEBUG_TABLE_SELECTION
+        printf("                        : sizing rect (%d - %d) x (%d - %d)\n",
+               m_sizingRect.left, m_sizingRect.right,
+               m_sizingRect.bottom, m_sizingRect.top);
+#endif /* DEBUG_TABLE_SELECTION */
+        /* show feedback */
+        XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, m_gc,
+                       m_sizingRect.left, m_sizingRect.top,
+                       m_sizingRect.right - m_sizingRect.left,
+                       m_sizingRect.bottom - m_sizingRect.top);
         return;
     }
 
@@ -6467,6 +6561,7 @@ fe_EditorSelectionEnd(MWContext *context, XEvent *event)
     unsigned long y;
     LO_Element*   leHit = 0;
     ED_HitType    iTableHit; 
+    Boolean shift, ctrl;
 
 #ifdef DEBUG_TABLE_SELECTION
     printf("fe_EditorSelectionEnd\n");
@@ -6484,6 +6579,22 @@ fe_EditorSelectionEnd(MWContext *context, XEvent *event)
 
     if (m_resizingTable)
     {
+        Drawable drawable = CONTEXT_DATA(context)->drawable->xdrawable;
+        /* clear resizing feedback */
+        XDrawRectangle(XtDisplay(CONTEXT_WIDGET(context)), drawable, m_gc,
+                       m_sizingRect.left, m_sizingRect.top,
+                       m_sizingRect.right - m_sizingRect.left,
+                       m_sizingRect.bottom - m_sizingRect.top);
+        /*
+         * XXX After resizing an object then leaving the
+         * mouse at the same position where the button was released,
+         * calling LO_XYToElement will return a different object
+         * (maybe a border?) which is not resizable.
+         * So try to turn off the cursor after resizing so the
+         * user doesn't think it's still draggable.
+         */
+        fe_SetCursor (context, False);
+
 #ifdef DEBUG_TABLE_SELECTION
         printf("Ending table resize: [%d, %d, %d, %d]\n",
                m_sizingRect.left, m_sizingRect.right, m_sizingRect.top,
@@ -6496,23 +6607,34 @@ fe_EditorSelectionEnd(MWContext *context, XEvent *event)
 
     /* see if we're in a table first... */
     iTableHit = EDT_GetTableHitRegion( context, x, y, &leHit, FALSE );
+    xfe_GetShiftAndCtrl(event, &shift, &ctrl);
+#ifdef DEBUG_TABLE_SELECTION
+    printf("iTableHit = %d\n", iTableHit);
+#endif /* DEBUG_TABLE_SELECTION */
+    if (iTableHit == ED_HIT_SEL_TABLE && ctrl)
+        iTableHit = ED_HIT_SEL_ALL_CELLS;
+#ifndef SUPPORT_DRAG_TABLE_ELEMENTS
+    else if (iTableHit == ED_HIT_DRAG_TABLE)
+        iTableHit = ED_HIT_SEL_CELL;
+#endif /* SUPPORT_DRAG_TABLE_ELEMENTS */
+#ifdef DEBUG_TABLE_SELECTION
+    printf(" ... iTableHit = %d\n", iTableHit);
+#endif /* DEBUG_TABLE_SELECTION */
     if ( iTableHit == ED_HIT_SEL_TABLE
         || iTableHit == ED_HIT_SEL_CELL
         || iTableHit == ED_HIT_SEL_ALL_CELLS
         || iTableHit == ED_HIT_SEL_COL
-        || iTableHit == ED_HIT_SEL_ROW )
+        || iTableHit == ED_HIT_SEL_ROW
+        || iTableHit == ED_HIT_DRAG_TABLE ) 
     {
-        Boolean shift, ctrl;
-        xfe_GetShiftAndCtrl(event, &shift, &ctrl);
-        EDT_SelectTableElement(context, x, y,
-                               leHit, iTableHit,
-                               ctrl,    /* bModifierKeyPressed */
-                               shift);  /*bExtendSelection*/
-        /*return;*/
+        if (!ctrl)      /* don't double-toggle the selection */
+            EDT_SelectTableElement(context, x, y,
+                                   leHit, iTableHit,
+                                   ctrl,    /* bModifierKeyPressed */
+                                   shift);  /*bExtendSelection*/
     }
-
-    /* need to implement own */
-    EDT_EndSelection(context, x, y);
+    else
+        EDT_EndSelection(context, x, y);
 
     fe_EditorOwnSelection(context, time, False, False);
 }
@@ -6793,6 +6915,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
     unsigned long x, y;
     Cursor        cursor = None;
     char*         progress_string = NULL;
+    int           status_msg = 0;
     char buf[80];
     char num[32];
 
@@ -6805,7 +6928,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                                        x, y, 
                                        &leHit,
                                        FALSE );
-    if ( iTableHit ) { 
+    if ( iTableHit ) {
         if ((fe_editor_motion_action_last_hit_type == iTableHit) &&
             (fe_editor_motion_action_last_hit_le == leHit)) {
             return;  /* NOTE:  no change... */
@@ -6823,6 +6946,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SEL_TABLE:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->tab_sel_cursor;
+                status_msg = XP_EDT_SEL_TABLE;
                 break; 
 
             case ED_HIT_SEL_ALL_CELLS: 
@@ -6830,6 +6954,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SEL_ALL_CELLS:\n");
 #endif
                 cursor = None;
+                status_msg = XP_EDT_SEL_ALL_CELLS;
                 break; 
 
             case ED_HIT_SEL_COL:  
@@ -6837,6 +6962,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SEL_COL:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->col_sel_cursor;
+                status_msg = XP_EDT_SEL_COL;
                 break; 
 
             case ED_HIT_SEL_ROW:  
@@ -6844,6 +6970,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SEL_ROW:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->row_sel_cursor;
+                status_msg = XP_EDT_SEL_ROW;
                 break; 
 
             case ED_HIT_SEL_CELL:  
@@ -6851,13 +6978,20 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SEL_CELL:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->cel_sel_cursor;
+                status_msg = XP_EDT_SEL_CELL;
                 break; 
 
             case ED_HIT_DRAG_TABLE:  
 #ifdef DEBUG_motion
                 fprintf(stderr, "ED_HIT_DRAG_TABLE:\n");
 #endif
+#ifdef SUPPORT_DRAG_TABLE_ELEMENTS
                 cursor = CONTEXT_DATA(context)->resize_tab_cursor;
+                status_msg = XP_EDT_DRAG_TABLE;
+#else /* SUPPORT_DRAG_TABLE_ELEMENTS */
+                cursor = CONTEXT_DATA(context)->cel_sel_cursor;
+                status_msg = XP_EDT_SEL_CELL;
+#endif /* SUPPORT_DRAG_TABLE_ELEMENTS */
                 break; 
 
             case ED_HIT_SIZE_TABLE_WIDTH:
@@ -6865,6 +6999,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SIZE_TABLE_WIDTH:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->resize_tab_cursor;
+                status_msg = XP_EDT_SIZE_TABLE_WIDTH;
                 break; 
 
             case ED_HIT_SIZE_TABLE_HEIGHT:
@@ -6872,6 +7007,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SIZE_TABLE_HEIGHT:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->resize_tab_cursor;
+                status_msg = XP_EDT_SIZE_TABLE_HEIGHT;
                 break; 
 
             case ED_HIT_SIZE_ROW:
@@ -6879,6 +7015,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SIZE_ROW:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->resize_row_cursor;
+                status_msg = XP_EDT_SIZE_ROW;
                 break; 
 
             case ED_HIT_SIZE_COL:
@@ -6886,6 +7023,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_SIZE_COL:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->resize_col_cursor;
+                status_msg = XP_EDT_SIZE_COL;
                 break;
 
             case ED_HIT_ADD_ROWS:  
@@ -6893,6 +7031,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_ADD_ROWS:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->add_row_cursor;
+                status_msg = XP_EDT_ADD_ROWS;
                 break; 
 
             case ED_HIT_ADD_COLS:  
@@ -6900,6 +7039,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "ED_HIT_ADD_COLS:\n");
 #endif
                 cursor = CONTEXT_DATA(context)->add_col_cursor;
+                status_msg = XP_EDT_ADD_COLS;
                 break; 
 
             default:  
@@ -6908,13 +7048,52 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 fprintf(stderr, "fe_editor_motion_action default:  WARNING ***************\n");
 #endif
                 cursor = None;
-        } 
+        }
+        if (status_msg != 0)
+            progress_string = XP_GetString(status_msg);
     } 
     else {
-        /* NOTE:  let's check for the other elements... */
+      int sizeType;
 
-        le = LO_XYToElement(context, (int32)x, (int32)y, NULL);
+      /* NOTE:  let's check for the other elements... */
 
+      le = LO_XYToElement(context, (int32)x, (int32)y, NULL);
+
+      /* See if we should show a resize cursor */
+      sizeType = EDT_CanSizeObject(context, le, x, y);
+      if (sizeType != ED_SIZE_NONE)
+      {
+          switch(sizeType)
+          {
+              case ED_SIZE_TOP:
+                  cursor = CONTEXT_DATA(context)->top_cursor;
+                  break;
+              case ED_SIZE_BOTTOM:
+                  cursor = CONTEXT_DATA(context)->bottom_cursor;
+                  break;
+              case ED_SIZE_RIGHT:
+                  cursor = CONTEXT_DATA(context)->right_cursor;
+                  break;
+              case ED_SIZE_LEFT:
+                  cursor = CONTEXT_DATA(context)->left_cursor;
+                  break;
+              case ED_SIZE_TOP_RIGHT:
+                  cursor = CONTEXT_DATA(context)->top_right_cursor;
+                  break;
+              case ED_SIZE_BOTTOM_RIGHT:
+                  cursor = CONTEXT_DATA(context)->bottom_right_cursor;
+                  break;
+              case ED_SIZE_TOP_LEFT:
+                  cursor = CONTEXT_DATA(context)->top_left_cursor;
+                  break;
+              case ED_SIZE_BOTTOM_LEFT:
+                  cursor = CONTEXT_DATA(context)->bottom_left_cursor;
+                  break;
+          }
+      }
+
+      else
+      {
         if (le == fe_editor_motion_action_last_le &&
             !fe_editor_motion_action_last_le_is_image &&
             (fe_editor_motion_action_last_hit_type == 0)) {
@@ -6966,6 +7145,7 @@ fe_editor_motion_action(Widget widget, XEvent *event,
                 }
             }
         }
+      }
     }
 
     if (CONTEXT_DATA(context)->clicking_blocked ||
@@ -7057,21 +7237,22 @@ fe_EditorStaticInit()
 }
 
 /*
- * Note: this routine is untested.  It's called for dragging columns,
- * not for highlighting selected columns.
+ * Note: this routine is untested.  It's called on dragging to
+ * create new rows or columns,
+ * not for highlighting selected rows/columns.
  */
 void
 FE_DisplayAddRowOrColBorder(MWContext* context, XP_Rect *pRect,
                             XP_Bool bErase)
 {
+    GC gc;
     XGCValues gcv;
     unsigned long gc_flags;
-    GC gc;
     fe_Drawable *fe_drawable = CONTEXT_DATA(context)->drawable;
 
-#ifdef DEBUG_akkana
+#ifdef DEBUG_TABLE_SELECTION
     printf("FE_DisplayAddRowOrColBorder\n");
-#endif /* DEBUG_akkana */
+#endif /* DEBUG_TABLE_SELECTION */
 
     if (bErase)
     {
@@ -7085,8 +7266,8 @@ FE_DisplayAddRowOrColBorder(MWContext* context, XP_Rect *pRect,
         gcv.line_style = LineOnOffDash;
     }
     /*gcv.line_width = iSelectionBorderThickness;*/
-    gc = fe_GetGCfromDW(fe_display, fe_drawable->xdrawable,
-                        gc_flags, &gcv, fe_drawable->clip_region);
+    gc = fe_GetGC(CONTEXT_WIDGET(context),
+                    GCForeground|GCFunction, &gcv);
     XDrawRectangle(fe_display,
                    XtWindow(CONTEXT_DATA(context)->drawing_area), gc,
                    pRect->left, pRect->top,
