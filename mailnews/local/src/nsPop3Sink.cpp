@@ -352,9 +352,6 @@ nsresult
 nsPop3Sink::IncorporateWrite(const char* block,
                              PRInt32 length)
 {
-    if(length > 1 && *block == '.' && 
-       (*(block+1) == '\r' || *(block+1) == '\n')) return NS_OK;
-
 	PRInt32 blockOffset = 0;
 	if (!PL_strncmp(block, "From ", 5))
 	{

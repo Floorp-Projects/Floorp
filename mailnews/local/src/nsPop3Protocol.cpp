@@ -2237,17 +2237,17 @@ nsPop3Protocol::RetrResponse(nsIInputStream* inputStream,
 		{
             PR_LOG(POP3LOGMODULE, PR_LOG_ALWAYS,("RECV: %s", line));
 			PRInt32 res = BufferInput(line, buffer_size);
-            if (res < 0) return res;
+            if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
 			// BufferInput(CRLF, 2);
             res = BufferInput(MSG_LINEBREAK, MSG_LINEBREAK_LEN);
-            if (res < 0) return res;
+            if (res < 0) return(Error(POP3_MESSAGE_WRITE_ERROR));
 
             m_pop3ConData->parsed_bytes += (buffer_size+2); // including CRLF
     
 			// now read in the next line
 			PR_FREEIF(line);
-			line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
-                                                    pauseForMoreData);
+		    line = m_lineStreamBuffer->ReadNextLine(inputStream, buffer_size,
+                                                    pauseForMoreData);            
 			status += (buffer_size+2); // including CRLF
 		} while (/* !pauseForMoreData && */ line);
     }
@@ -2402,10 +2402,6 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
             line[line_length-1] = ch;
         }
     }
-    
-    rv = m_nsIPop3Sink->IncorporateWrite(line, line_length);
-    if(NS_FAILED(rv))
-      return(Error(POP3_MESSAGE_WRITE_ERROR));
 
     if ((line[0] == '.') &&
         ((line[1] == CR) || (line[1] == LF)))
@@ -2427,8 +2423,27 @@ nsPop3Protocol::HandleLine(char *line, PRUint32 line_length)
                 return(Error(POP3_MESSAGE_WRITE_ERROR));
 
             m_pop3ConData->msg_closure = 0;
+            return 0;
         }
     }
+      /*When examining a multi-line response, the client checks
+      to see if the line begins with the termination octet.  If so and if
+      octets other than CRLF follow, the first octet of the line (the
+      termination octet) is stripped away.*/
+    else if (line_length > 1  && line[0] == '.' && line[1] == '.' ) 
+    {
+        PRUint32 i=0;
+        while ( i < line_length -1 ){
+           line[i] = line[i+1];
+           i++;
+        }
+        line[i] = '\0';
+        line_length -= 1;
+    
+    }
+    rv = m_nsIPop3Sink->IncorporateWrite(line, line_length);
+    if(NS_FAILED(rv))
+      return(Error(POP3_MESSAGE_WRITE_ERROR));
     
     return 0;
 }
