@@ -91,10 +91,6 @@ EXTRA_SHARED_LIBS += \
 
 endif
 
-ifeq ($(OS_ARCH),WINNT)
-OS_DLLFLAGS += /NODEFAULTLIB:MSVCRTD
-endif
-
 # Include "funky" link path to pick up ALL native libraries for OSF/1.
 ifeq ($(OS_ARCH), OSF1)
 	JAVA_LIBS += -L$(JAVA_HOME)/$(JAVA_LIBDIR).no
