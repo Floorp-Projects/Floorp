@@ -28,6 +28,7 @@
 #include "nsINameSpaceManager.h"
 #include "nsLayoutAtoms.h"
 #include "nsMenuPopupFrame.h"
+#include "nsMenuBarFrame.h"
 
 #define NS_MENU_POPUP_LIST_INDEX   (NS_AREA_FRAME_ABSOLUTE_LIST_INDEX + 1)
 
@@ -50,15 +51,50 @@ NS_NewMenuFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsrefcnt) 
+nsMenuFrame::AddRef(void)
+{
+  return NS_OK;
+}
+
+NS_IMETHODIMP_(nsrefcnt) 
+nsMenuFrame::Release(void)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMenuFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                  
+  *aInstancePtr = NULL;
+  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
+}
 
 //
 // nsMenuFrame cntr
 //
 nsMenuFrame::nsMenuFrame()
-:mMenuOpen(PR_FALSE),mOnMenuBar(PR_TRUE)
+:mMenuOpen(PR_FALSE),mMenuParent(nsnull)
 {
 
 } // cntr
+
+NS_IMETHODIMP
+nsMenuFrame::Init(nsIPresContext&  aPresContext,
+                     nsIContent*      aContent,
+                     nsIFrame*        aParent,
+                     nsIStyleContext* aContext,
+                     nsIFrame*        aPrevInFlow)
+{
+  nsresult  rv = nsBoxFrame::Init(aPresContext, aContent, aParent, aContext, aPrevInFlow);
+
+  // Set our menu parent.
+  nsCOMPtr<nsIMenuParent> menuparent = do_QueryInterface(aParent);
+  mMenuParent = menuparent.get();
+  return rv;
+}
 
 // The following methods are all overridden to ensure that the xpmenuchildren frame
 // is placed in the appropriate list.
@@ -156,28 +192,67 @@ nsMenuFrame::HandleEvent(nsIPresContext& aPresContext,
     if (frame) {
       // We have children.
       nsMenuPopupFrame* popup = (nsMenuPopupFrame*)frame;
-      popup->SyncViewWithFrame(mOnMenuBar);
+      PRBool onMenuBar = PR_TRUE;
+      popup->SyncViewWithFrame(onMenuBar);
       ToggleMenuState();
     }
+  }
+  else if (aEvent->message == NS_MOUSE_EXIT) {
+    // Deactivate the menu.
+    if (mMenuParent && !mMenuOpen)
+      mMenuParent->SetCurrentMenuItem(nsnull);
+  }
+  else if (aEvent->message == NS_MOUSE_ENTER) {
+    // Let the menu parent know we're the new item.
+    if (mMenuParent)
+      mMenuParent->SetCurrentMenuItem(mContent);
   }
   return NS_OK;
 }
 
 void
 nsMenuFrame::ToggleMenuState()
+{  
+  if (mMenuOpen) {
+    OpenMenu(PR_FALSE);
+  }
+  else {
+    OpenMenu(PR_TRUE);
+  }
+}
+
+void
+nsMenuFrame::SelectMenu(PRBool aActivateFlag)
+{
+  if (aActivateFlag) {
+    // Highlight the menu.
+    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+  }
+  else {
+    // Unhighlight the menu.
+    mContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+  }
+}
+
+void 
+nsMenuFrame::OpenMenu(PRBool aActivateFlag) 
 {
   nsCOMPtr<nsIContent> child;
   GetMenuChildrenElement(getter_AddRefs(child));
-    
-  if (mMenuOpen) {
-    // Close the menu.
-    child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "false", PR_TRUE);
-    mMenuOpen = PR_FALSE;
+  
+  if (aActivateFlag) {
+    // Open the menu.
+    mContent->SetAttribute(kNameSpaceID_None, nsXULAtoms::open, "true", PR_TRUE);
+    if (child)
+      child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
+    mMenuOpen = PR_TRUE;
   }
   else {
-    // Open the menu.
-    child->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
-    mMenuOpen = PR_TRUE;
+    // Close the menu.
+    mContent->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::open, PR_TRUE);
+    if (child)
+      child->UnsetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, PR_TRUE);
+    mMenuOpen = PR_FALSE;
   }
 }
 

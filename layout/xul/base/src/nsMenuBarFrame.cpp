@@ -57,7 +57,34 @@ NS_NewMenuBarFrame(nsIFrame** aNewFrame)
   return NS_OK;
 }
 
+NS_IMETHODIMP_(nsrefcnt) 
+nsMenuBarFrame::AddRef(void)
+{
+  return NS_OK;
+}
 
+NS_IMETHODIMP_(nsrefcnt) 
+nsMenuBarFrame::Release(void)
+{
+    return NS_OK;
+}
+
+NS_IMETHODIMP nsMenuBarFrame::QueryInterface(REFNSIID aIID, void** aInstancePtr)      
+{           
+  if (NULL == aInstancePtr) {                                            
+    return NS_ERROR_NULL_POINTER;                                        
+  }                                                                      
+                                                                         
+  *aInstancePtr = NULL;                                                  
+                                                                                        
+  if (aIID.Equals(nsIMenuParent::GetIID())) {                                         
+    *aInstancePtr = (void*)(nsIMenuParent*) this;                                        
+    NS_ADDREF_THIS();                                                    
+    return NS_OK;                                                        
+  }   
+
+  return nsBoxFrame::QueryInterface(aIID, aInstancePtr);                                     
+}
 //
 // nsMenuBarFrame cntr
 //
@@ -101,7 +128,7 @@ nsMenuBarFrame::Init(nsIPresContext&  aPresContext,
 void
 nsMenuBarFrame::ToggleMenuActiveState()
 {
-  if (IsActive()) {
+  if (mIsActive) {
     // Deactivate the menu bar
     mIsActive = PR_FALSE;
     if (mCurrentMenu) {
@@ -152,7 +179,7 @@ nsMenuBarFrame::KeyboardNavigation(PRUint32 aDirection)
   }
 }
 
-void
+NS_IMETHODIMP
 nsMenuBarFrame::GetNextMenuItem(nsIContent* aStart, nsIContent** aResult)
 {
   PRInt32 index = 0;
@@ -177,7 +204,7 @@ nsMenuBarFrame::GetNextMenuItem(nsIContent* aStart, nsIContent** aResult)
     if (tag.get() == nsXULAtoms::xpmenu) {
       *aResult = current;
       NS_IF_ADDREF(*aResult);
-      return;
+      return NS_OK;
     }
   }
 
@@ -192,16 +219,18 @@ nsMenuBarFrame::GetNextMenuItem(nsIContent* aStart, nsIContent** aResult)
     if (tag.get() == nsXULAtoms::xpmenu) {
       *aResult = current;
       NS_IF_ADDREF(*aResult);
-      return;
+      return NS_OK;
     }
   }
 
   // No luck. Just return our start value.
   *aResult = aStart;
   NS_IF_ADDREF(aStart);
+
+  return NS_OK;
 }
 
-void
+NS_IMETHODIMP
 nsMenuBarFrame::GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult)
 {
   PRInt32 count;
@@ -227,7 +256,7 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult)
     if (tag.get() == nsXULAtoms::xpmenu) {
       *aResult = current;
       NS_IF_ADDREF(*aResult);
-      return;
+      return NS_OK;
     }
   }
 
@@ -242,19 +271,21 @@ nsMenuBarFrame::GetPreviousMenuItem(nsIContent* aStart, nsIContent** aResult)
     if (tag.get() == nsXULAtoms::xpmenu) {
       *aResult = current;
       NS_IF_ADDREF(*aResult);
-      return;
+      return NS_OK;
     }
   }
 
   // No luck. Just return our start value.
   *aResult = aStart;
   NS_IF_ADDREF(aStart);
+
+  return NS_OK;
 }
 
-void nsMenuBarFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
+NS_IMETHODIMP nsMenuBarFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
 {
   if (mCurrentMenu == aMenuItem)
-    return;
+    return NS_OK;
 
   // Unset the current child.
   if (mCurrentMenu)
@@ -264,4 +295,6 @@ void nsMenuBarFrame::SetCurrentMenuItem(nsIContent* aMenuItem)
   if (aMenuItem)
     aMenuItem->SetAttribute(kNameSpaceID_None, nsXULAtoms::menuactive, "true", PR_TRUE);
   mCurrentMenu = aMenuItem;
+
+  return NS_OK;
 }
