@@ -116,7 +116,7 @@ function onOK()
     if (!replace)
     {
       window.close();
-      return;
+      return false;
     }
   }
   
@@ -178,5 +178,6 @@ function onOK()
 
   window.opener.gNewTypeRV = gMIMEField.value;
   window.close();  
+  return false;
 }
 
