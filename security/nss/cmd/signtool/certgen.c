@@ -45,8 +45,8 @@ static SECStatus ChangeTrustAttributes(CERTCertDBHandle *db,
 	CERTCertificate *cert, char *trusts);
 static SECStatus set_cert_type(CERTCertificate *cert, unsigned int type);
 static SECItem *sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk);
-static CERTCertificate* install_cert(CERTCertDBHandle *db, PK11SlotInfo *slot,
-            SECItem *derCert, char *nickname);
+static CERTCertificate* install_cert(CERTCertDBHandle *db, SECItem *derCert,
+            char *nickname);
 static SECStatus GenerateKeyPair(PK11SlotInfo *slot, SECKEYPublicKey **pubk,
 	SECKEYPrivateKey **privk, int keysize);
 static CERTCertificateRequest* make_cert_request(char *subject,
@@ -333,7 +333,7 @@ GenerateSelfSignedObjectSigningCert(char *nickname, CERTCertDBHandle *db,
 	}
 
 	derCert = sign_cert (temp_cert, privk);
-	cert = install_cert(db, slot, derCert, nickname);
+	cert = install_cert(db, derCert, nickname);
 	if(ChangeTrustAttributes(db, cert, ",,uC") != SECSuccess) {
 		FatalError("Unable to change trust on generated certificate");
 	}
@@ -491,11 +491,9 @@ sign_cert(CERTCertificate *cert, SECKEYPrivateKey *privk)
  * Installs the cert in the permanent database.
  */
 static CERTCertificate*
-install_cert(CERTCertDBHandle *db, PK11SlotInfo *slot, SECItem *derCert,
-        char *nickname)
+install_cert(CERTCertDBHandle *db, SECItem *derCert, char *nickname)
 {
 	CERTCertificate *newcert;
-	CERTCertTrust trust;
     PK11SlotInfo *newSlot;
 
 	newcert = CERT_DecodeDERCertificate(derCert, PR_TRUE, NULL);
@@ -507,31 +505,12 @@ install_cert(CERTCertDBHandle *db, PK11SlotInfo *slot, SECItem *derCert,
 	}
 
     newSlot = PK11_ImportCertForKey(newcert, nickname, NULL /*wincx*/);
-    if( slot == NULL ) {
+    if( newSlot == NULL ) {
         PR_fprintf(errorFD, "Unable to install certificate\n");
         errorCount++;
         exit(ERRX);
     }
-
-	PORT_Memset ((void *) &trust, 0, sizeof(trust));
-	trust.objectSigningFlags |= CERTDB_USER;
-
-    if( newSlot == PK11_GetInternalKeySlot() ) {
-        /* newcert is now a permanent cert */
-        if( CERT_ChangeCertTrust(db, newcert, &trust) != SECSuccess) {
-            PR_fprintf(errorFD,
-                "Failed to change trust of generated certificate\n");
-            errorCount++;
-            exit(ERRX);
-        }
-    } else {
-	    if (CERT_AddTempCertToPerm (newcert, nickname, &trust) != SECSuccess) {
-		    PR_fprintf(errorFD, "%s: Failure adding \"%s\" certificate to "
-		        "permanent DB\n", PROGRAM_NAME, nickname);
-		    errorCount++;
-		    exit (ERRX);
-	    } 
-    }
+    PK11_FreeSlot(newSlot);
 
     if(verbosity >= 0){
 	   PR_fprintf(outputFD, "certificate \"%s\" added to database\n", nickname);
