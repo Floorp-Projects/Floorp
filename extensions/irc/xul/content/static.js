@@ -420,6 +420,15 @@ function initIcons()
     }
 }
 
+function getFindData(e)
+{
+    var findData = new nsFindInstData();
+    findData.browser = e.sourceObject.frame;
+    findData.rootSearchWindow = e.sourceObject.frame.contentWindow;
+    findData.currentSearchWindow = e.sourceObject.frame.contentWindow;
+    return findData;
+}
+
 function importFromFrame(method)
 {
     client.__defineGetter__(method, import_wrapper);

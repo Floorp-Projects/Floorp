@@ -95,6 +95,8 @@ function initCommands()
          ["echo",              cmdEcho,                            CMD_CONSOLE],
          ["enable-plugin",     cmdAblePlugin,                      CMD_CONSOLE],
          ["eval",              cmdEval,                            CMD_CONSOLE],
+         ["find",              cmdFind,                                      0],
+         ["find-again",        cmdFindAgain,                                 0],
          ["focus-input",       cmdFocusInput,                      CMD_CONSOLE],
          ["font-family",       cmdFont,                            CMD_CONSOLE],
          ["font-family-other", cmdFont,                                      0],
@@ -3421,6 +3423,17 @@ function cmdInputTextDirection(e)
     }
 
     return true;
+}
+
+function cmdFind(e)
+{
+    findInPage(getFindData(e));
+}
+
+function cmdFindAgain(e)
+{
+    if (canFindAgainInPage())
+        findAgainInPage(getFindData(e));
 }
 
 function cmdURLs(e)

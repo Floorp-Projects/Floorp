@@ -55,10 +55,13 @@
   orient="vertical" onload="onLoad();" onunload="onUnload();"
   onclose="return onClose();" onmouseover="onMouseOver(event);"
   persist="width height screenX screenY sizemode" windowtype="irc:chatzilla">
-
+  
   <overlaytarget id="scripts-overlay-target"/>
   <overlaytarget id="popup-overlay-target"/>
   <overlaytarget id="menu-overlay-target"/>
+  <stringbundleset id="chatzilla-stringbundle">
+    <stringbundle id="findBundle" src="chrome://global/locale/finddialog.properties"/>
+  </stringbundleset>
 
   <vbox id="outer-box" flex="1">
     <vbox id="upper-box" flex="1">
