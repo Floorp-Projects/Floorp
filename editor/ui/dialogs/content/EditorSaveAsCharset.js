@@ -86,6 +86,8 @@ function onOK()
 {
  if(ValidateData())
  {
+   editorShell.BeginBatchChanges();
+
    if(titleWasEdited) {
       editorShell.SetDocumentTitle(title);
    }
@@ -95,6 +97,9 @@ function onOK()
       SetMetaElementContent(contenttypeElement, "text/html; charset=" + charset, insertNewContentType);     
       editorShell.SetDocumentCharacterSet(charset);
    }
+
+   editorShell.EndBatchChanges();
+
    window.opener.ok = true;
    SaveWindowLocation();
    return true;

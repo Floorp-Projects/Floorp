@@ -140,6 +140,7 @@ function onOK()
 {
   if (ValidateData())
   {
+    editorShell.BeginBatchChanges();
     if (titleWasEdited)
     {
       // Set title contents even if string is empty
@@ -151,6 +152,8 @@ function onOK()
       SetMetaElementContent(authorElement, author, insertNewAuthor);
     if (descWasEdited)
       SetMetaElementContent(descriptionElement, description, insertNewDescription);
+
+    editorShell.EndBatchChanges();
 
     SaveWindowLocation();
     return true; // do close the window

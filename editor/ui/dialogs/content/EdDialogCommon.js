@@ -383,7 +383,7 @@ function AppendValueAndDataToMenulist(menulist, valueStr, dataStr)
         return null;
       }
     }
-    menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
+    var menuItem = document.createElementNS("http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul", "menuitem");
     if (menuItem)
     {
       menuItem.setAttribute("value", valueStr);
@@ -926,7 +926,14 @@ function AppendHeadElement(element)
 {
   var head = GetHeadElement();
   if (head)
-    head.appendChild(element);
+  {
+    var position = 0;
+    if (head.hasChildNodes())
+      position = head.childNodes.length;
+
+    // Use editor's undoable transaction
+    editorShell.InsertElement(element, head, position);
+  }
 }
 
 function SetWindowLocation()
