@@ -161,8 +161,9 @@ protected:
   PRBool ParseString(PRInt32& aErrorCode, PRInt32 aChar, nsCSSToken& aResult);
 #if 0
   PRBool ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aResult);
-#endif
   PRBool ParseCComment(PRInt32& aErrorCode, nsCSSToken& aResult);
+#endif
+  PRBool SkipCComment(PRInt32& aErrorCode);
 
   PRBool GatherString(PRInt32& aErrorCode, PRInt32 aStop,
                       nsString& aString);

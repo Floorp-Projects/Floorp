@@ -227,6 +227,10 @@ void nsCSSScanner::Init(nsIUnicharInputStream* aInput, nsIURI* aURI)
 
 #ifdef CSS_REPORT_PARSE_ERRORS
 
+// @see REPORT_UNEXPECTED_EOF in nsCSSParser.cpp
+#define REPORT_UNEXPECTED_EOF(err_) \
+  AddToError(NS_LITERAL_STRING("Unexpected end of file while searching for ") + err_ + NS_LITERAL_STRING("."))
+
 void nsCSSScanner::AddToError(const nsAString& aErrorText)
 {
   if (mError.IsEmpty()) {
@@ -497,10 +501,17 @@ PRBool nsCSSScanner::Next(PRInt32& aErrorCode, nsCSSToken& aToken)
       PRInt32 nextChar = Peek(aErrorCode);
       if (nextChar == '*') {
         (void) Read(aErrorCode);
+#if 0
+        // If we change our storage data structures such that comments are
+        // stored (for Editor), we should reenable this code, condition it
+        // on being in editor mode, and apply glazou's patch from bug
+        // 60290.
         aToken.mIdent.SetCapacity(2);
         aToken.mIdent.Assign(PRUnichar(ch));
         aToken.mIdent.Append(PRUnichar(nextChar));
         return ParseCComment(aErrorCode, aToken);
+#endif
+        return SkipCComment(aErrorCode) && Next(aErrorCode, aToken);
       }
     }
     if (ch == '<') {  // consume HTML comment tags
@@ -585,10 +596,17 @@ PRBool nsCSSScanner::NextURL(PRInt32& aErrorCode, nsCSSToken& aToken)
       PRInt32 nextChar = Peek(aErrorCode);
       if (nextChar == '*') {
         (void) Read(aErrorCode);
+#if 0
+        // If we change our storage data structures such that comments are
+        // stored (for Editor), we should reenable this code, condition it
+        // on being in editor mode, and apply glazou's patch from bug
+        // 60290.
         aToken.mIdent.SetCapacity(2);
         aToken.mIdent.Assign(PRUnichar(ch));
         aToken.mIdent.Append(PRUnichar(nextChar));
         return ParseCComment(aErrorCode, aToken);
+#endif
+        return SkipCComment(aErrorCode) && Next(aErrorCode, aToken);
       }
     }
 
@@ -858,6 +876,23 @@ PRBool nsCSSScanner::ParseNumber(PRInt32& aErrorCode, PRInt32 c,
   return PR_TRUE;
 }
 
+PRBool nsCSSScanner::SkipCComment(PRInt32& aErrorCode)
+{
+  for (;;) {
+    PRInt32 ch = Read(aErrorCode);
+    if (ch < 0) break;
+    if (ch == '*') {
+      if (LookAhead(aErrorCode, '/')) {
+        return PR_TRUE;
+      }
+    }
+  }
+
+  REPORT_UNEXPECTED_EOF(NS_LITERAL_STRING("end of comment"));
+  return PR_FALSE;
+}
+
+#if 0
 PRBool nsCSSScanner::ParseCComment(PRInt32& aErrorCode, nsCSSToken& aToken)
 {
   nsString& ident = aToken.mIdent;
@@ -878,6 +913,7 @@ PRBool nsCSSScanner::ParseCComment(PRInt32& aErrorCode, nsCSSToken& aToken)
   aToken.mType = eCSSToken_WhiteSpace;
   return PR_TRUE;
 }
+#endif
 
 #if 0
 PRBool nsCSSScanner::ParseEOLComment(PRInt32& aErrorCode, nsCSSToken& aToken)
