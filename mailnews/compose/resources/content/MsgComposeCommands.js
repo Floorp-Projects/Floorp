@@ -83,7 +83,7 @@ var gSendFormat;
 var gLogComposePerformance;
 
 var gMsgIdentityElement;
-var gMsgAddressingWidgetTreeElement;
+var gMsgAddressingWidgetElement;
 var gMsgSubjectElement;
 var gMsgAttachmentElement;
 var gMsgHeadersToolbarElement;
@@ -2317,7 +2317,7 @@ function FocusOnFirstAttachment()
   var bucketList = document.getElementById("attachmentBucket");
 
   if (bucketList && bucketList.hasChildNodes())
-    bucketTree.selectItem(bucketList.firstChild);
+    bucketList.selectItem(bucketList.firstChild);
 }
 
 function AttachmentElementHasItems()
@@ -2563,7 +2563,7 @@ function subjectKeyPress(event)
 {  
   switch(event.keyCode) {
   case 9:
-    if (!event.shiftKey) {
+    if (!event.shiftKey && !event.ctrlKey && !event.altKey && !event.metaKey) {
       window.content.focus();
       event.preventDefault();
     }
@@ -2722,9 +2722,9 @@ function DisplaySaveFolderDlg(folderURI)
 
 
 
-function SetMsgAddressingWidgetTreeElementFocus()
+function SetMsgAddressingWidgetElementFocus()
 {
-  var element = document.getElementById("msgRecipient#" + awGetNumberOfRecipients());
+  var element = awGetInputElement(awGetNumberOfRecipients());
   awSetFocus(awGetNumberOfRecipients(), element);
 }
 
@@ -2749,12 +2749,12 @@ function SetMsgBodyFrameFocus()
   window.content.focus();
 }
 
-function GetMsgAddressingWidgetTreeElement()
+function GetMsgAddressingWidgetElement()
 {
-  if (!gMsgAddressingWidgetTreeElement)
-    gMsgAddressingWidgetTreeElement = document.getElementById("addressingWidgetTree");
+  if (!gMsgAddressingWidgetElement)
+    gMsgAddressingWidgetElement = document.getElementById("addressingWidget");
 
-  return gMsgAddressingWidgetTreeElement;
+  return gMsgAddressingWidgetElement;
 }
 
 function GetMsgIdentityElement()
@@ -2800,10 +2800,10 @@ function IsMsgHeadersToolbarCollapsed()
 
 function WhichElementHasFocus()
 {
-  var msgIdentityElement             = GetMsgIdentityElement();
-  var msgAddressingWidgetTreeElement = GetMsgAddressingWidgetTreeElement();
-  var msgSubjectElement              = GetMsgSubjectElement();
-  var msgAttachmentElement           = GetMsgAttachmentElement();
+  var msgIdentityElement         = GetMsgIdentityElement();
+  var msgAddressingWidgetElement = GetMsgAddressingWidgetElement();
+  var msgSubjectElement          = GetMsgSubjectElement();
+  var msgAttachmentElement       = GetMsgAttachmentElement();
 
   if (top.document.commandDispatcher.focusedWindow == content)
     return content;
@@ -2812,7 +2812,7 @@ function WhichElementHasFocus()
   while (currentNode)
   {
     if (currentNode == msgIdentityElement ||
-        currentNode == msgAddressingWidgetTreeElement ||
+        currentNode == msgAddressingWidgetElement ||
         currentNode == msgSubjectElement ||
         currentNode == msgAttachmentElement)
       return currentNode;
@@ -2827,7 +2827,7 @@ function WhichElementHasFocus()
 // one element to another in the mail compose window.
 // The default element to switch to when going in either
 // direction (shift or no shift key pressed), is the
-// AddressingWidgetTreeElement.
+// AddressingWidgetElement.
 //
 // The only exception is when the MsgHeadersToolbar is
 // collapsed, then the focus will always be on the body of
@@ -2840,7 +2840,7 @@ function SwitchElementFocus(event)
   {
     if (IsMsgHeadersToolbarCollapsed())
       SetMsgBodyFrameFocus();
-    else if (focusedElement == gMsgAddressingWidgetTreeElement)
+    else if (focusedElement == gMsgAddressingWidgetElement)
       SetMsgIdentityElementFocus();
     else if (focusedElement == gMsgIdentityElement)
       SetMsgBodyFrameFocus();
@@ -2856,13 +2856,13 @@ function SwitchElementFocus(event)
     else if (focusedElement == gMsgAttachmentElement)
       SetMsgSubjectElementFocus();
     else
-      SetMsgAddressingWidgetTreeElementFocus();
+      SetMsgAddressingWidgetElementFocus();
   }
   else
   {
     if (IsMsgHeadersToolbarCollapsed())
       SetMsgBodyFrameFocus();
-    else if (focusedElement == gMsgAddressingWidgetTreeElement)
+    else if (focusedElement == gMsgAddressingWidgetElement)
       SetMsgSubjectElementFocus();
     else if (focusedElement == gMsgSubjectElement)
     {
@@ -2878,7 +2878,7 @@ function SwitchElementFocus(event)
     else if (focusedElement == content)
       SetMsgIdentityElementFocus();
     else
-      SetMsgAddressingWidgetTreeElementFocus();
+      SetMsgAddressingWidgetElementFocus();
   }
 }
 
