@@ -73,7 +73,11 @@
  { 0xa6cf9051, 0x15b3, 0x11d2,{0x93, 0x2e, 0x00, 0x80, 0x5f, 0x8a, 0xdd, 0x32}}
 
 
-#define MAX_REFLOW_DEPTH  200
+#ifdef XP_MAC
+#define MAX_REFLOW_DEPTH  75    //setting to 75 to prevent layout from crashing on mac. Bug 55095.
+#else
+#define MAX_REFLOW_DEPTH  200   //windows and linux (etc) can do much deeper structures.
+#endif
 
 
 class nsIHTMLContentSink : public nsIContentSink {
