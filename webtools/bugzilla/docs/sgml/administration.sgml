@@ -38,27 +38,24 @@
 
       <step>
         <para>
-        <command>usebuggroups</command>:
-        This dictates whether or not to implement group-based security for
-        Bugzilla. If set, Bugzilla bugs can have an associated 'group',
-        defining which users are allowed to see and edit the
-        bug.</para>
-
-        <para>Set "usebuggroups" to "on" 
-        <emphasis>only</emphasis>
-        if you may wish to restrict access to particular bugs to certain
-        groups of users. I suggest leaving
-        this parameter <emphasis>off</emphasis>
-        while initially testing your Bugzilla.</para>
+        <command>makeproductgroups</command>:
+        This dictates whether or not to automatically create groups
+        when new products are created.
+        </para>
       </step>
 
       <step>
         <para>
-        <command>usebuggroupsentry</command>:
-        Bugzilla Products can have a group associated with them, so that
-        certain users can only see bugs in certain products. When this parameter
-        is set to <quote>on</quote>, this places all newly-created bugs in the
-        group for their product immediately.</para>
+        <command>useentrygroupdefault</command>:
+        Bugzilla products can have a group associated with them, so that
+        certain users can only see bugs in certain products. When this 
+        parameter is set to <quote>on</quote>, this 
+        causes the initial group controls on newly created products 
+        to place all newly-created bugs in the group 
+        having the same name as the product immediately.
+        After a product is initially created, the group controls
+        can be further adjusted without interference by 
+        this mechanism.</para>
       </step>
 
       <step>
@@ -648,44 +645,83 @@
 
     <para>Groups allow the administrator
     to isolate bugs or products that should only be seen by certain people.
-    There are two types of group - Generic Groups, and Product-Based Groups.
+    The association between products and groups is controlled from
+    the product edit page under <quote>Edit Group Controls.</quote>
+    </para>
+
+    <para>
+    If the makeproductgroups param is on, a new group will be automatically
+    created for every new product.
     </para>
     
     <para>
-    Product-Based Groups are matched with products, and allow you to restrict
-    access to bugs on a per-product basis. They are enabled using the 
-    usebuggroups Param. Turning on the usebuggroupsentry
-    Param will mean bugs automatically get added to their product group when 
-    filed.   
+    On the product edit page, there is a page to edit the 
+    <quote>Group Controls</quote> 
+    for a product and determine which groups are applicable, default, 
+    and mandatory for each product as well as controlling entry 
+    for each product and being able to set bugs in a product to be 
+    totally read-only unless some group restrictions are met. 
     </para>
     
     <para>
-    Generic Groups have no special relationship to products; 
-    you create them, and put bugs in them
-    as required. One example of the use of Generic Groups 
-    is Mozilla's "Security" group,
-    into which security-sensitive bugs are placed until fixed. Only the
-    Mozilla Security Team are members of this group.
+    For each group, it is possible to specify if membership in that
+    group is...
     </para>
+    <orderedlist>
+      <listitem>
+        <para>
+        required for bug entry, 
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        Not applicable to this product(NA),
+        a possible restriction for a member of the 
+        group to place on a bug in this product(Shown),
+        a default restriction for a member of the 
+        group to place on a bug in this product(Default),
+        or a mandatory restriction to be placed on bugs 
+        in this product(Mandatory).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        Not applicable by non-members to this product(NA),
+        a possible restriction for a non-member of the 
+        group to place on a bug in this product(Shown),
+        a default restriction for a non-member of the 
+        group to place on a bug in this product(Default),
+        or a mandatory restriction to be placed on bugs 
+        in this product when entered by a non-member(Mandatory).
+        </para>
+      </listitem>
+      <listitem>
+        <para>
+        required in order to make <emphasis>any</emphasis> change
+        to bugs in this product <emphasis>including comments.</emphasis>
+        </para>
+      </listitem>
+    </orderedlist>
     
-    <para>To create Generic Groups:</para>
+    <para>To create Groups:</para>
 
     <orderedlist>
       <listitem>
-        <para>Select the "groups"
+        <para>Select the <quote>groups</quote>
         link in the footer.</para>
       </listitem>
 
       <listitem>
-        <para>Take a moment to understand the instructions on the "Edit
-        Groups" screen, then select the "Add Group" link.</para>
+        <para>Take a moment to understand the instructions on the <quote>Edit
+        Groups</quote> screen, then select the <quote>Add Group</quote> link.</para>
       </listitem>
 
       <listitem>
-        <para>Fill out the "Group", "Description", and 
-        "User RegExp" fields. "New User RegExp" allows you to automatically
+        <para>Fill out the <quote>Group</quote>, <quote>Description</quote>, 
+         and <quote>User RegExp</quote> fields. 
+         <quote>User RegExp</quote> allows you to automatically
          place all users who fulfill the Regular Expression into the new group. 
-         When you have finished, click "Add".</para>
+         When you have finished, click <quote>Add</quote>.</para>
          <warning>
            <para>The User Regexp is a perl regexp and, if not anchored, will match 
            any part of an address.  So, if you do not want to grant access
@@ -701,28 +737,15 @@
       </listitem>
     </orderedlist>
 
-    <para>To use Product-Based Groups:</para>
-
-    <orderedlist>
-      <listitem>
-        <para>Turn on "usebuggroups" and "usebuggroupsentry" in the "Edit
-        Parameters" screen.</para>
-
-      </listitem>
-
-      <listitem>
-        <para>In future, when you create a Product, a matching group will be
-        automatically created. If you need to add a Product Group to
-        a Product which was created before you turned on usebuggroups,
-        then simply create a new group, as outlined above, with the
-        same name as the Product.</para>
-      </listitem>
-    </orderedlist>
-
     <para>
       Note that group permissions are such that you need to be a member
       of <emphasis>all</emphasis> the groups a bug is in, for whatever
-      reason, to see that bug.
+      reason, to see that bug. Similarly, you must be a member 
+      of <emphasis>all</emphasis> of the entry groups for a product 
+      to add bugs to a product and you must be a member 
+      of <emphasis>all</emphasis> of the canedit groups for a product
+      in order to make <emphasis>any</emphasis> change to bugs in that
+      product.
     </para>    
   </section>
 
