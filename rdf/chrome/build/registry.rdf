@@ -286,6 +286,24 @@
     </locale> 
 
   </chrome> 
+
+  <chrome about="chrome://xpinstall/"> 
+
+    <content> 
+      <RDF:Description about="chrome://xpinstall/content/">
+	      <base>resource:/chrome/xpinstall/content/default/</base>
+      </RDF:Description> 
+    </content> 
+
+    <locale> 
+      <RDF:Description about="chrome://xpinstall/locale/">
+        <name>en-US</name>
+      </RDF:Description> 
+    </locale> 
+
+  </chrome> 
+
+
 </RDF:RDF> 
 
 
