@@ -1,0 +1,11 @@
+;----------------------------------------------------------------------------
+; ProductName = Mozilla Thunderbird Installer
+; Description = Mozilla Thunderbird Installer is a delivery vehicle for Mozilla
+;             = Thunderbird for easy, large-scale deployment.
+; Installed   = WINDOWS_ALL
+; MsiName     = thunderbird
+; Guid.UpgradeCode = {06863EB1-787F-462D-89BD-D7A82A276303}
+
+VERSION : 1.0
+DATE    : 07 Jan 2005
+CHANGES : Initial version.
