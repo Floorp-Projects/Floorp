@@ -4081,40 +4081,42 @@ nsresult nsMsgDatabase::PurgeMessagesOlderThan(PRUint32 daysToKeepHdrs, PRBool k
 {
   nsresult rv = NS_OK;
   PRInt32 numPurged = 0;
-	nsMsgHdr		*pHeader;
+  nsMsgHdr		*pHeader;
   nsCOMPtr <nsISimpleEnumerator> hdrs;
   rv = EnumerateMessages(getter_AddRefs(hdrs));
+  nsMsgKeyArray keysToDelete;
+  
   if (NS_FAILED(rv))
-  	return rv;
-	PRBool hasMore = PR_FALSE;
-
-	PRTime now = PR_Now();
-	PRTime cutOffDay;
-
-	PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDay;
-	
-	LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
+    return rv;
+  PRBool hasMore = PR_FALSE;
+  
+  PRTime now = PR_Now();
+  PRTime cutOffDay;
+  
+  PRInt64 microSecondsPerSecond, secondsInDays, microSecondsInDay;
+  
+  LL_I2L(microSecondsPerSecond, PR_USEC_PER_SEC);
   LL_UI2L(secondsInDays, 60 * 60 * 24 * daysToKeepHdrs);
-	LL_MUL(microSecondsInDay, secondsInDays, microSecondsPerSecond);
-
-	LL_SUB(cutOffDay, now, microSecondsInDay); // = now - term->m_value.u.age * 60 * 60 * 24; 
+  LL_MUL(microSecondsInDay, secondsInDays, microSecondsPerSecond);
+  
+  LL_SUB(cutOffDay, now, microSecondsInDay); // = now - term->m_value.u.age * 60 * 60 * 24; 
   // so now cutOffDay is the PRTime cut-off point. Any msg with a date less than that will get purged.
-	while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
-	{
+  while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+  {
     PRBool purgeHdr = PR_FALSE;
-
+    
     rv = hdrs->GetNext((nsISupports**)&pHeader);
     NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
     if (NS_FAILED(rv)) 
       break;
-
+    
     if (keepUnreadMessagesOnly)
     {
       PRBool isRead;
       IsHeaderRead(pHeader, &isRead);
       if (isRead)
         purgeHdr = PR_TRUE;
-
+      
     }
     if (!purgeHdr)
     {
@@ -4125,15 +4127,18 @@ nsresult nsMsgDatabase::PurgeMessagesOlderThan(PRUint32 daysToKeepHdrs, PRBool k
     }
     if (purgeHdr)
     {
-      DeleteHeader(pHeader, nsnull, PR_FALSE, PR_TRUE);
-		  numPurged++;
+      nsMsgKey msgKey;
+      pHeader->GetMessageKey(&msgKey);
+      keysToDelete.Add(msgKey);
     }
-		NS_RELEASE(pHeader);
-	}
-
-	if (numPurged > 10)	// commit every once in a while
-		Commit(nsMsgDBCommitType::kCompressCommit);
-  else if (numPurged > 0)
+    NS_RELEASE(pHeader);
+  }
+  
+  DeleteMessages(&keysToDelete, nsnull);
+  
+  if (keysToDelete.GetSize() > 10)	// compress commit if we deleted more than 10
+    Commit(nsMsgDBCommitType::kCompressCommit);
+  else if (keysToDelete.GetSize() > 0)
     Commit(nsMsgDBCommitType::kLargeCommit);
   return rv;
 }
@@ -4142,54 +4147,59 @@ nsresult nsMsgDatabase::PurgeExcessMessages(PRUint32 numHeadersToKeep, PRBool ke
 {
   nsresult rv = NS_OK;
   PRInt32 numPurged = 0;
-	nsMsgHdr		*pHeader;
+  nsMsgHdr		*pHeader;
   nsCOMPtr <nsISimpleEnumerator> hdrs;
   rv = EnumerateMessages(getter_AddRefs(hdrs));
   if (NS_FAILED(rv))
-  	return rv;
-	PRBool hasMore = PR_FALSE;
-
+    return rv;
+  PRBool hasMore = PR_FALSE;
+  nsMsgKeyArray keysToDelete;
+  
   mdb_count numHdrs = 0;
   if (m_mdbAllMsgHeadersTable)
     m_mdbAllMsgHeadersTable->GetCount(GetEnv(), &numHdrs);
   else
     return NS_ERROR_NULL_POINTER;
-
-	while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
-	{
+  
+  while (NS_SUCCEEDED(rv = hdrs->HasMoreElements(&hasMore)) && (hasMore == PR_TRUE)) 
+  {
     PRBool purgeHdr = PR_FALSE;
     rv = hdrs->GetNext((nsISupports**)&pHeader);
     NS_ASSERTION(NS_SUCCEEDED(rv), "nsMsgDBEnumerator broken");
     if (NS_FAILED(rv)) 
       break;
-
+    
     if (keepUnreadMessagesOnly)
     {
       PRBool isRead;
       IsHeaderRead(pHeader, &isRead);
       if (isRead)
         purgeHdr = PR_TRUE;
-
+      
     }
     // this isn't quite right - we want to prefer unread messages (keep all of those we can)
     if (numHdrs > numHeadersToKeep)
       purgeHdr = PR_TRUE;
-
+    
     if (purgeHdr)
     {
-      DeleteHeader(pHeader, nsnull, PR_FALSE, PR_TRUE);
+      nsMsgKey msgKey;
+      pHeader->GetMessageKey(&msgKey);
+      keysToDelete.Add(msgKey);
       numHdrs--;
-		  numPurged++;
     }
-		NS_RELEASE(pHeader);
-	}
-
-	if (numPurged > 10)	// commit every once in a while
-		Commit(nsMsgDBCommitType::kCompressCommit);
-  else if (numPurged > 0)
-    Commit(nsMsgDBCommitType::kLargeCommit);
-  return rv;
-
+    NS_RELEASE(pHeader);
+  }
+  
+  PRInt32 numKeysToDelete = keysToDelete.GetSize();
+  if (numKeysToDelete > 0)
+  {
+    DeleteMessages(&keysToDelete, nsnull);
+    if (numKeysToDelete > 10)	// compress commit if we deleted more than 10
+      Commit(nsMsgDBCommitType::kCompressCommit);
+    else
+      Commit(nsMsgDBCommitType::kLargeCommit);
+  }
   return rv;
 }
 
