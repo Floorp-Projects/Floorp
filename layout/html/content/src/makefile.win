@@ -32,7 +32,7 @@ CPPSRCS=				\
 	nsAttributeContent.cpp		\
 	nsGenericHTMLElement.cpp	\
 	nsGenericDOMHTMLCollection.cpp	\
-        nsHTMLUtils.cpp                 \
+	nsHTMLUtils.cpp                 \
 	GenericElementCollection.cpp    \
 	nsHTMLAnchorElement.cpp		\
 	nsHTMLAppletElement.cpp		\
@@ -63,7 +63,6 @@ CPPSRCS=				\
 	nsHTMLIsIndexElement.cpp	\
 	nsHTMLLIElement.cpp		\
 	nsHTMLLabelrElement.cpp		\
-	nsHTMLLayerElement.cpp		\
 	nsHTMLLegendElement.cpp		\
 	nsHTMLLinkElement.cpp		\
 	nsHTMLMapElement.cpp		\
@@ -101,7 +100,7 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsAttributeContent.obj		\
 	.\$(OBJDIR)\nsGenericHTMLElement.obj		\
 	.\$(OBJDIR)\nsGenericDOMHTMLCollection.obj	\
-        .\$(OBJDIR)\nsHTMLUtils.obj                     \
+	.\$(OBJDIR)\nsHTMLUtils.obj                     \
 	.\$(OBJDIR)\GenericElementCollection.obj    	\
 	.\$(OBJDIR)\nsHTMLAnchorElement.obj		\
 	.\$(OBJDIR)\nsHTMLAppletElement.obj		\
@@ -132,7 +131,6 @@ CPP_OBJS=						\
 	.\$(OBJDIR)\nsHTMLIsIndexElement.obj		\
 	.\$(OBJDIR)\nsHTMLLIElement.obj			\
 	.\$(OBJDIR)\nsHTMLLabelElement.obj		\
-	.\$(OBJDIR)\nsHTMLLayerElement.obj		\
 	.\$(OBJDIR)\nsHTMLLegendElement.obj		\
 	.\$(OBJDIR)\nsHTMLLinkElement.obj		\
 	.\$(OBJDIR)\nsHTMLMapElement.obj		\

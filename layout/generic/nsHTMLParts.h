@@ -139,9 +139,6 @@ extern nsresult
 NS_NewHTMLLabelElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult
-NS_NewHTMLLayerElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
-
-extern nsresult
 NS_NewHTMLLegendElement(nsIHTMLContent** aResult, nsINodeInfo *aNodeInfo);
 
 extern nsresult

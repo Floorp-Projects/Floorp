@@ -64,7 +64,6 @@ CPPSRCS		= \
 		nsHTMLIsIndexElement.cpp \
 		nsHTMLLIElement.cpp \
 		nsHTMLLabelElement.cpp \
-		nsHTMLLayerElement.cpp \
 		nsHTMLLegendElement.cpp \
 		nsHTMLLinkElement.cpp \
 		nsHTMLMapElement.cpp \
