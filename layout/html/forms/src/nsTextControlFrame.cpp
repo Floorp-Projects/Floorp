@@ -1717,7 +1717,7 @@ nsTextControlFrame::CreateAnonymousContent(nsIPresContext* aPresContext,
     if (disp->mOverflow == NS_STYLE_OVERFLOW_SCROLL)
       divStr += NS_LITERAL_STRING("overflow:scroll;");
     else if (disp->mOverflow == NS_STYLE_OVERFLOW_HIDDEN)
-      divStr += NS_LITERAL_STRING("overflow:hidden;");
+      divStr += NS_LITERAL_STRING("overflow:-moz-scrollbars-none;");
     else divStr += NS_LITERAL_STRING("overflow:auto;");
     rv = divContent->SetAttr(kNameSpaceID_None,nsHTMLAtoms::style, divStr, PR_FALSE);
   }
