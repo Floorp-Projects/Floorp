@@ -1171,9 +1171,9 @@ nsXMLContentSink::CreateStyleSheetURL(nsIURI** aUrl,
        result = NS_NewURL(aUrl, absURL);
      }
 #else
-     result = NS_MakeAbsoluteURL(docURL, nsnull, aHref, absURL);
+     result = NS_MakeAbsoluteURI(aHref, docURL, absURL);
      if (NS_SUCCEEDED(result)) {
-       result = NS_NewURL(aUrl, absURL);
+       result = NS_NewURI(aUrl, absURL);
      }
 #endif // NECKO
    }

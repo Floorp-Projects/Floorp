@@ -1485,6 +1485,7 @@ static PRBool SelectorMatches(nsIPresContext* aPresContext,
 
                     char *absUrlStr = nsnull;
                     char *urlSpec = href.ToNewCString();
+                    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
                     rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
                     nsCRT::free(urlSpec);
                     NS_RELEASE(baseUri);

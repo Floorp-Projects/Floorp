@@ -94,6 +94,7 @@ nsHTMLImageLoader::SetURL(const nsString& aNewSpec)
 
     char *absUrl = nsnull;
     char *urlSpec = mURLSpec.ToNewCString();
+    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
     rv = service->MakeAbsolute(urlSpec, baseUri, &absUrl);
     NS_RELEASE(baseUri);
     nsCRT::free(urlSpec);

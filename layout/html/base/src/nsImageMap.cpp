@@ -863,8 +863,10 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
 
       if ((area->mBase).Length() > 0) {
         // use the area->base as the base uri
-        const char *uriStr = (area->mBase).GetBuffer();
+        char *uriStr = (area->mBase).ToNewCString();
+        if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
         rv = service->NewURI(uriStr, nsnull, &baseUri);
+        nsCRT::free(uriStr);
       } else {
         rv = aDocURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
       }
@@ -872,6 +874,7 @@ nsImageMap::IsInside(nscoord aX, nscoord aY,
 
       char *absUrlStr = nsnull;
       char *urlSpec = (area->mHREF).ToNewCString();
+      if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
       rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
       NS_RELEASE(baseUri);
       aAbsURL = absUrlStr;

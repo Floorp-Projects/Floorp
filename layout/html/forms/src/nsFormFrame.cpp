@@ -549,9 +549,11 @@ nsFormFrame::OnSubmit(nsIPresContext* aPresContext, nsIFrame* aFrame)
     if (NS_FAILED(result)) return result;
 
     char *absUrlStr = nsnull;
-    const char *urlSpec = href.GetBuffer();
+    char *urlSpec = href.ToNewCString();
+    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
     result = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
     NS_RELEASE(baseUri);
+    nsCRT::free(urlSpec);
     absURLSpec = absUrlStr;
     delete [] absUrlStr;
 #endif // NECKO

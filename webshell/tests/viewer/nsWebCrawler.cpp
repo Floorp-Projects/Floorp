@@ -685,15 +685,18 @@ nsWebCrawler::FindURLsIn(nsIDocument* aDocument, nsIContent* aNode)
     nsIURI *baseUri = nsnull;
 
     if (base.Length() > 0) {
-        const char *uriStr = base.GetBuffer();
+        char *uriStr = base.ToNewCString();
+        if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
         rv = service->NewURI(uriStr, nsnull, &baseUri);
+        nsCRT::free(uriStr);
     } else {
         rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
     }
     if (NS_FAILED(rv)) return;
 
     char *absUrlStr = nsnull;
-    const char *urlSpec = src.GetBuffer();
+    char *urlSpec = src.ToNewCString();
+    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
     rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
     NS_RELEASE(baseUri);
     absURLSpec = absUrlStr;

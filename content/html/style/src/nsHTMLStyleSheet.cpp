@@ -598,9 +598,11 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
                   if (NS_FAILED(rv)) return 0;
 
                   char *absUrlStr = nsnull;
-                  const char *urlSpec = href.GetBuffer();
+                  char *urlSpec = href.ToNewCString();
+                  if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
                   rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
                   NS_RELEASE(baseUri);
+                  nsCRT::free(urlSpec);
                   absURLSpec = absUrlStr;
                   delete [] absUrlStr;
 #endif // NECKO

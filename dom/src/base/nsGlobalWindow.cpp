@@ -1881,9 +1881,11 @@ GlobalWindowImpl::OpenInternal(JSContext *cx,
     if (NS_FAILED(rv)) return rv;
 
     char *absUrl = nsnull;
-    const char *urlSpec = mURL.GetBuffer();
+    char *urlSpec = mURL.ToNewCString();
+    if (!urlSpec) return NS_ERROR_OUT_OF_MEMORY;
     rv = service->MakeAbsolute(urlSpec, baseUri, &absUrl);
     NS_RELEASE(baseUri);
+    nsCRT::free(urlSpec);
     if (NS_FAILED(rv)) return rv;
     mAbsURL = absUrl;
     delete [] absUrl;

@@ -2474,11 +2474,12 @@ PRBool CSSParserImpl::ParseURL(PRInt32& aErrorCode, nsCSSValue& aValue)
         }
         if (NS_FAILED(rv)) return PR_FALSE;
         
-        const char* str = tk->mIdent.GetBuffer();
-        if (str == nsnull) return PR_FALSE;
+        char* str = tk->mIdent.ToNewCString();
+        if (!str) return NS_ERROR_OUT_OF_MEMORY;
 
         rv = NS_MakeAbsoluteURI(str, base, absURL);
         NS_RELEASE(base);
+        nsCRT::free(str);
 #else
         rv = NS_MakeAbsoluteURL(mURL, baseURL, tk->mIdent, absURL);
 #endif // NECKO

@@ -1226,7 +1226,7 @@ nsGenericElement::TriggerLink(nsIPresContext& aPresContext,
 
       char *absUrl = nsnull;
       char *uriStr = aURLSpec.ToNewCString();
-
+      if (!uriStr) return NS_ERROR_OUT_OF_MEMORY;
       rv = service->MakeAbsolute(uriStr, baseUri, &absUrl);
       nsCRT::free(uriStr);
       NS_RELEASE(baseUri);

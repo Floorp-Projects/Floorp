@@ -681,6 +681,7 @@ nsImageFrame::HandleEvent(nsIPresContext& aPresContext,
 
         char *absUrlStr = nsnull;
         char *baseSpec = src.ToNewCString();
+        if (!baseSpec) return NS_ERROR_OUT_OF_MEMORY;
         rv = service->MakeAbsolute(baseSpec, baseUri, &absUrlStr);
         NS_RELEASE(baseUri);
         absURL = absUrlStr;
