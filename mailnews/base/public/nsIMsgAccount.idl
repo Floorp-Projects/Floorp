@@ -54,4 +54,7 @@ interface nsIMsgAccount : nsISupports {
 
   /* remove an identity from this account (probably does not work) */
   void removeIdentity(in nsIMsgIdentity identity);
+
+  /* name in javascript */
+  wstring toString();
 };

@@ -47,28 +47,8 @@ public:
   virtual ~nsMsgAccount();
    
   NS_DECL_ISUPPORTS
-
-  NS_IMETHOD Init();
-
-  NS_IMETHOD GetKey(char ** aKey);
-  NS_IMETHOD SetKey(char * aKey);
-  
-  NS_IMETHOD GetIncomingServer(nsIMsgIncomingServer * *aIncomingServer);
-  NS_IMETHOD SetIncomingServer(nsIMsgIncomingServer * aIncomingServer);
-
-  /* nsISupportsArray getIdentities (); */
-  NS_IMETHOD GetIdentities(nsISupportsArray **_retval);
-
-  /* attribute nsIMsgIdentity defaultIdentity; */
-  NS_IMETHOD GetDefaultIdentity(nsIMsgIdentity * *aDefaultIdentity);
-  NS_IMETHOD SetDefaultIdentity(nsIMsgIdentity * aDefaultIdentity);
-
-  /* void addIdentity (in nsIMsgIdentity identity); */
-  NS_IMETHOD AddIdentity(nsIMsgIdentity *identity);
-
-  /* void removeIdentity (in nsIMsgIdentity identity); */
-  NS_IMETHOD RemoveIdentity(nsIMsgIdentity *identity);
-
+    
+  NS_DECL_NSIMSGACCOUNT
   // nsIShutdownListener
 
   NS_IMETHOD OnShutdown(const nsCID& aClass, nsISupports *service);
@@ -413,6 +393,16 @@ nsMsgAccount::SetKey(char *accountKey)
   m_accountKey = PL_strdup(accountKey);
   
   return Init();
+}
+
+NS_IMETHODIMP
+nsMsgAccount::ToString(PRUnichar **aResult)
+{
+  nsString val("[nsIMsgAccount: ");
+  val += m_accountKey;
+  val += "]";
+  *aResult = val.ToNewUnicode();
+  return NS_OK;
 }
 
 /* called if the prefs service goes offline */
