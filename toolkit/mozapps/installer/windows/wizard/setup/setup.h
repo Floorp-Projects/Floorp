@@ -448,6 +448,26 @@ typedef struct dlgStartInstall
   LPSTR szMessage0;
 } diSI;
 
+typedef struct dlgDownloading
+{
+  BOOL  bShowDialog;
+  LPSTR szTitle;
+  LPSTR szSubTitle;
+  LPSTR szBlurb;
+  LPSTR szFileNameKey;
+  LPSTR szTimeRemainingKey;
+} diDL;
+
+typedef struct dlgInstalling
+{
+  BOOL bShowDialog;
+  LPSTR szTitle;
+  LPSTR szSubTitle;
+  LPSTR szBlurb;
+  LPSTR szStatusFile;
+  LPSTR szStatusComponent;
+} diI;
+
 typedef struct dlgDownload
 {
   BOOL  bShowDialog;

@@ -2369,6 +2369,7 @@ LRESULT CALLBACK DlgProcQuickLaunch(HWND hDlg, UINT msg, WPARAM wParam, LONG lPa
 LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
 {
   LPSTR szMessage = NULL;
+  LPNMHDR header;
 
   switch(msg)
   {
@@ -2409,26 +2410,67 @@ LRESULT CALLBACK DlgProcStartInstall(HWND hDlg, UINT msg, WPARAM wParam, LONG lP
       }
 
       break;
+    
+    case WM_NOTIFY:
+      header = (LPNMHDR)lParam;
+      switch (header->code) 
+      {
+        case PSN_WIZNEXT:
+//          SetWindowLong(hDlg, DWL_MSGRESULT, DLG_DOWNLOADING);
+          break;
+      }
 
     case WM_COMMAND:
       switch(LOWORD(wParam))
       {
-        case IDWIZNEXT:
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(NEXT_DLG);
-          break;
 
-        case IDWIZBACK:
-          SaveWindowPosition(hDlg);
-          DestroyWindow(hDlg);
-          DlgSequence(PREV_DLG);
+        default:
           break;
+      }
+      break;
+  }
+  return(0);
+}
 
-        case IDCANCEL:
-          AskCancelDlg(hDlg);
+LRESULT CALLBACK DlgProcDownloading(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
+      SetWindowText(hDlg, diDownloading.szTitle);
+
+      SetDlgItemText(hDlg, IDC_MESSAGE0, diDownloading.szBlurb);
+      SetDlgItemText(hDlg, IDC_STATIC0, diDownloading.szFileNameKey);
+      SetDlgItemText(hDlg, IDC_STATIC1, diDownloading.szTimeRemainingKey);
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
+        default:
           break;
+      }
+      break;
+  }
+  return(0);
+}
 
+LRESULT CALLBACK DlgProcInstalling(HWND hDlg, UINT msg, WPARAM wParam, LONG lParam)
+{
+  switch(msg)
+  {
+    case WM_INITDIALOG:
+      DisableSystemMenuItems(hDlg, FALSE);
+      SetWindowText(hDlg, diInstalling.szTitle);
+
+      SetDlgItemText(hDlg, IDC_STATUS0, diInstalling.szStatusFile);
+      SetDlgItemText(hDlg, IDC_STATUS3, diInstalling.szStatusComponent);
+      break;
+
+    case WM_COMMAND:
+      switch(LOWORD(wParam))
+      {
         default:
           break;
       }
@@ -2748,6 +2790,26 @@ void InitSequence(HINSTANCE hInstance)
     psp.pszHeaderSubTitle = diStartInstall.szSubTitle;
     psp.pfnDlgProc        = DlgProcStartInstall;
     psp.pszTemplate       = MAKEINTRESOURCE(DLG_START_INSTALL);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diDownloading.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diDownloading.szTitle;
+    psp.pszHeaderSubTitle = diDownloading.szSubTitle;
+    psp.pfnDlgProc        = DlgProcDownloading;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_DOWNLOADING);
+
+    pages[count++]        = CreatePropertySheetPage(&psp);
+  }
+
+  if (diInstalling.bShowDialog) {
+    psp.dwFlags           = PSP_DEFAULT|PSP_USEHEADERTITLE|PSP_USEHEADERSUBTITLE;
+    psp.pszHeaderTitle    = diInstalling.szTitle;
+    psp.pszHeaderSubTitle = diInstalling.szSubTitle;
+    psp.pfnDlgProc        = DlgProcInstalling;
+    psp.pszTemplate       = MAKEINTRESOURCE(DLG_EXTRACTING);
 
     pages[count++]        = CreatePropertySheetPage(&psp);
   }

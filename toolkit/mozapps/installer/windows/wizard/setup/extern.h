@@ -94,6 +94,8 @@ extern diPF             diProgramFolder;
 extern diDO             diAdditionalOptions;
 extern diAS             diAdvancedSettings;
 extern diSI             diStartInstall;
+extern diDL             diDownloading;
+extern diI              diInstalling;
 extern diD              diDownload;
 extern diR              diReboot;
 extern siSD             siSDObject;

@@ -3651,6 +3651,58 @@ void DeInitDlgStartInstall(diSI *diDialog)
   FreeMemory(&(diDialog->szMessage0));
 }
 
+HRESULT InitDlgDownloading(diDL *diDialog)
+{
+  diDialog->bShowDialog = FALSE;
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szBlurb = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szFileNameKey = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szTimeRemainingKey = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return(0);
+}
+
+void DeInitDlgDownloading(diDL *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
+  FreeMemory(&(diDialog->szBlurb));
+  FreeMemory(&(diDialog->szFileNameKey));
+  FreeMemory(&(diDialog->szTimeRemainingKey));
+}
+
+HRESULT InitDlgInstalling(diI *diDialog)
+{
+  diDialog->bShowDialog = FALSE;
+  if((diDialog->szTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szSubTitle = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szBlurb = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szStatusFile = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+  if((diDialog->szStatusComponent = NS_GlobalAlloc(MAX_BUF)) == NULL)
+    return(1);
+
+  return(0);
+}
+
+void DeInitDlgInstalling(diI *diDialog)
+{
+  FreeMemory(&(diDialog->szTitle));
+  FreeMemory(&(diDialog->szSubTitle));
+  FreeMemory(&(diDialog->szBlurb));
+  FreeMemory(&(diDialog->szStatusFile));
+  FreeMemory(&(diDialog->szStatusComponent));
+}
+
 HRESULT InitDlgDownload(diD *diDialog)
 {
   diDialog->bShowDialog = FALSE;
@@ -7028,6 +7080,10 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
     return(1);
   if(InitDlgStartInstall(&diStartInstall))
     return(1);
+  if(InitDlgDownloading(&diDownloading))
+    return(1);
+  if(InitDlgInstalling(&diInstalling))
+    return(1);
   if(InitDlgDownload(&diDownload))
     return(1);
   if(InitDlgReboot(&diReboot))
@@ -7399,9 +7455,30 @@ HRESULT ParseConfigIni(LPSTR lpszCmdLine)
   GetPrivateProfileString("Dialog Start Install",       "Sub Title",        "", diStartInstall.szSubTitle,        MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Message Install",  "", diStartInstall.szMessageInstall,  MAX_BUF, szFileIniConfig);
   GetPrivateProfileString("Dialog Start Install",       "Message Download", "", diStartInstall.szMessageDownload, MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Start Install",       "Message0",         "", diStartInstall.szMessage0,        MAX_BUF, szFileIniConfig);
   if(lstrcmpi(szShowDialog, "TRUE") == 0)
     diStartInstall.bShowDialog = TRUE;
- 
+
+  /* Downloading dialog */
+  GetPrivateProfileString("Dialog Downloading",         "Show Dialog",      "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
+  GetPrivateProfileString("Dialog Downloading",         "Title",            "", diDownloading.szTitle,            MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Downloading",         "Sub Title",        "", diDownloading.szSubTitle,         MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Downloading",         "Message Install",  "", diDownloading.szBlurb,            MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Downloading",         "Message Download", "", diDownloading.szFileNameKey,      MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Downloading",         "Message0",         "", diDownloading.szTimeRemainingKey, MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diDownloading.bShowDialog = TRUE;
+
+  /* Downloading dialog */
+  GetPrivateProfileString("Dialog Installing",          "Show Dialog",      "", szShowDialog,                     sizeof(szShowDialog), szFileIniConfig);
+  GetPrivateProfileString("Dialog Installing",          "Title",            "", diInstalling.szTitle,             MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Installing",          "Sub Title",        "", diInstalling.szSubTitle,          MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Installing",          "Blurb",            "", diInstalling.szBlurb,             MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Installing",          "Status File",      "", diInstalling.szStatusFile,        MAX_BUF, szFileIniConfig);
+  GetPrivateProfileString("Dialog Installing",          "Status Component", "", diInstalling.szStatusComponent,   MAX_BUF, szFileIniConfig);
+  if(lstrcmpi(szShowDialog, "TRUE") == 0)
+    diInstalling.bShowDialog = TRUE;
+
   /* Download dialog */
   GetPrivateProfileString("Dialog Download",       "Show Dialog",        "", szShowDialog,                   sizeof(szShowDialog),        szFileIniConfig);
   GetPrivateProfileString("Dialog Download",       "Title",              "", diDownload.szTitle,             MAX_BUF_TINY,   szFileIniConfig);
@@ -8945,6 +9022,8 @@ void DeInitialize()
   DeInitDlgReboot(&diReboot);
   DeInitDlgDownload(&diDownload);
   DeInitDlgStartInstall(&diStartInstall);
+  DeInitDlgDownloading(&diDownloading);
+  DeInitDlgInstalling(&diInstalling);
   DeInitDlgAdditionalOptions(&diAdditionalOptions);
   DeInitDlgAdvancedSettings(&diAdvancedSettings);
   DeInitDlgProgramFolder(&diProgramFolder);

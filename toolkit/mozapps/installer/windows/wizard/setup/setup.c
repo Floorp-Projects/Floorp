@@ -95,6 +95,8 @@ diPF            diProgramFolder;
 diDO            diAdditionalOptions;
 diAS            diAdvancedSettings;
 diSI            diStartInstall;
+diDL            diDownloading;
+diI             diInstalling;
 diD             diDownload;
 diR             diReboot;
 siSD            siSDObject;
