@@ -73,7 +73,7 @@
     <rows>
       <row flex="1">
         <!-- BUG! setting class="MinWidth20em" on tree doesn't work (width=0) -->
-        <tree rows="8" class="list" id="SuggestedList" onselect="SelectSuggestedWord()" style="min-height:8em">
+        <tree rows="6" class="list" id="SuggestedList" onselect="SelectSuggestedWord()">
           <treecolgroup>
             <treecol flex="1"/>
           </treecolgroup>
@@ -83,12 +83,12 @@
             <columns><column class="spell-check" flex="1"/><column class="spell-check" flex="1"/></columns>
             <rows>
               <row>
-                <button id="Ignore"    oncommand="Ignore()" label="&ignoreButton.label;"/>
-                <button id="IgnoreAll" oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
+                <button id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
+                <button id="Ignore"  oncommand="Ignore()" label="&ignoreButton.label;"/>
               </row>
               <row>
-                <button id="Replace" oncommand="Replace()" label="&changeButton.label;"/>
                 <button id="ReplaceAll" oncommand="ReplaceAll()" label="&changeAllButton.label;"/>
+                <button id="IgnoreAll"  oncommand="IgnoreAll()" label="&ignoreAllButton.label;"/>
               </row>
             </rows> 
           </grid>
