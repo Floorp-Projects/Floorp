@@ -917,6 +917,7 @@ $(XPIDL_GEN_DIR)/%.h: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
 export:: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.h, $(XPIDLSRCS)) $(XPDIST)/include
 	$(INSTALL) -m 444 $^
 
+ifndef NO_GEN_XPT
 # generate intermediate .xpt files into $(XPIDL_GEN_DIR), then link
 # into $(MODULE).xpt and export it to $(DIST)/bin/components.
 $(XPIDL_GEN_DIR)/%.xpt: %.idl $(IDL_COMPILE) $(XPIDL_GEN_DIR)
@@ -927,6 +928,8 @@ $(XPIDL_GEN_DIR)/$(MODULE).xpt: $(patsubst %.idl,$(XPIDL_GEN_DIR)/%.xpt,$(XPIDLS
 
 install:: $(XPIDL_GEN_DIR)/$(MODULE).xpt
 	$(INSTALL) -m 444 $(XPIDL_GEN_DIR)/$(MODULE).xpt $(DIST)/bin/components
+
+endif
 
 GARBAGE += $(XPIDL_GEN_DIR) # add $(XPIDL_GEN_DIR) to clobber candidates
 endif
@@ -1107,6 +1110,12 @@ endif
 
 # Used as a dependency to force targets to rebuild
 FORCE:
+
+tags: TAGS
+
+TAGS: $(CSRCS) $(CPPSRCS) $(wildcard *.h)
+	-etags $(CSRCS) $(CPPSRCS) $(wildcard *.h)
+	+$(LOOP_OVER_DIRS)
 
 envirocheck::
 	@echo -----------------------------------
