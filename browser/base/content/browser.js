@@ -186,6 +186,7 @@ function UpdateBackForwardButtons()
 {
   var backBroadcaster = document.getElementById("Browser:Back");
   var forwardBroadcaster = document.getElementById("Browser:Forward");
+  
   var webNavigation = getWebNavigation();
 
   // Avoid setting attributes on broadcasters if the value hasn't changed!
@@ -193,19 +194,24 @@ function UpdateBackForwardButtons()
   // get inherited into anonymous content, broadcast to other widgets, etc.!
   // Don't do it if the value hasn't changed! - dwh
 
-  var backDisabled = backBroadcaster.hasAttribute("disabled");
-  var forwardDisabled = forwardBroadcaster.hasAttribute("disabled");
-  if (backDisabled == webNavigation.canGoBack) {
-    if (backDisabled)
-      backBroadcaster.removeAttribute("disabled");
-    else
-      backBroadcaster.setAttribute("disabled", true);
+  if (backBroadcaster) {
+    var backDisabled = backBroadcaster.hasAttribute("disabled");
+    var forwardDisabled = forwardBroadcaster.hasAttribute("disabled");
+    if (backDisabled == webNavigation.canGoBack) {
+      if (backDisabled)
+        backBroadcaster.removeAttribute("disabled");
+      else
+        backBroadcaster.setAttribute("disabled", true);
+    }
   }
-  if (forwardDisabled == webNavigation.canGoForward) {
-    if (forwardDisabled)
-      forwardBroadcaster.removeAttribute("disabled");
-    else
-      forwardBroadcaster.setAttribute("disabled", true);
+  
+  if (forwardBroadcaster) {
+    if (forwardDisabled == webNavigation.canGoForward) {
+      if (forwardDisabled)
+        forwardBroadcaster.removeAttribute("disabled");
+      else
+        forwardBroadcaster.setAttribute("disabled", true);
+    }
   }
 }
 
