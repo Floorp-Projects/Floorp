@@ -46,11 +46,6 @@ CPPSRCS=				\
 	nsSpacerFrame.cpp		\
 	nsTextFrame.cpp			\
 	nsWBRFrame.cpp			\
-	nsDOMNodeList.cpp		\
-	nsDOMAttributes.cpp		\
-	nsHTMLContainer.cpp		\
-	nsHTMLContent.cpp		\
-	nsHTMLTagContent.cpp		\
 	$(NULL)
 
 EXPORTS =				\
