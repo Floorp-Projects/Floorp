@@ -6,7 +6,6 @@
 #
 # packages and delivers mozilla bits
 # Assumptions:
-#  no objdir 
 #  mozilla tree
 #  produced builds get put in Topsrcdir/installer/sea
 #
@@ -159,10 +158,6 @@ sub main {
   # Get build directory from caller.
   my ($mozilla_build_dir) = @_;
   TinderUtils::print_log "Post-Build packaging/uploading commencing.\n";
-  unless ( -e $mozilla_build_dir) {
-    TinderUtils::print_log "No $mozilla_build_dir to make packages in.\n";
-    return (("testfailed")) ;
-  }
 
   if (is_windows()) {
     #$mozilla_build_dir = `cygpath $mozilla_build_dir`; # cygnusify the path
@@ -174,12 +169,20 @@ sub main {
     #}
   }
 
+  my $objdir = "$mozilla_build_dir/${Settings::Topsrcdir}";
+  if ($Settings::ObjDir ne '') {
+    $objdir .= "/${Settings::ObjDir}";
+  }
+  unless ( -e $objdir) {
+    TinderUtils::print_log "No $objdir to make packages in.\n";
+    return (("testfailed")) ;
+  }
+
   # set up variables with default values
   my $last_build_day = 0;
   # need to modify the settings from tinder-config.pl
-  my $package_creation_path = $mozilla_build_dir . "/" . $Settings::package_creation_path;
-  my $package_location = $mozilla_build_dir . "/" . $Settings::package_location;
-  my $upload_file = $mozilla_build_dir . "/" . $Settings::upload_file;
+  my $package_creation_path = $objdir . "/xpinstall/packager";
+  my $package_location = $objdir . "/installer";
   my $ftp_path = $Settings::ftp_path;
   my $url_path = $Settings::url_path;
 
