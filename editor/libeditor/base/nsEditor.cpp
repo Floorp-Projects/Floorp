@@ -164,6 +164,7 @@ nsEditor::nsEditor()
 ,  mAction(nsnull)
 ,  mDirection(eNone)
 ,  mInIMEMode(PR_FALSE)
+,  mIsIMEComposing(PR_FALSE)
 ,  mIMETextRangeList(nsnull)
 ,  mIMETextNode(nsnull)
 ,  mIMETextOffset(0)
@@ -1946,6 +1947,7 @@ nsEditor::EndComposition(void)
   mIMETextOffset = 0;
   mIMEBufferLength = 0;
   mInIMEMode = PR_FALSE;
+  mIsIMEComposing = PR_FALSE;
 
   // notify editor observers of action
   NotifyEditorObservers();
@@ -4481,6 +4483,49 @@ nsEditor::DeleteSelectionAndCreateNode(const nsAString& aTag,
 
 
 /* Non-interface, protected methods */
+
+nsresult
+nsEditor::GetIMEBufferLength(PRInt32* length)
+{
+  *length = mIMEBufferLength;
+  return NS_OK;
+}
+
+void
+nsEditor::SetIsIMEComposing(){  
+  // We set mIsIMEComposing according to mIMETextRangeList.
+  nsCOMPtr<nsIPrivateTextRange> rangePtr;
+  PRUint16 listlen, type;
+
+  mIsIMEComposing = PR_FALSE;
+  nsresult result = mIMETextRangeList->GetLength(&listlen);
+  if (NS_FAILED(result)) return;
+
+  for (PRUint16 i = 0; i < listlen; i++)
+  {
+      result = mIMETextRangeList->Item(i, getter_AddRefs(rangePtr));
+      if (NS_FAILED(result)) continue;
+      result = rangePtr->GetRangeType(&type);
+      if (NS_FAILED(result)) continue;
+      if ( type == nsIPrivateTextRange::TEXTRANGE_RAWINPUT ||
+           type == nsIPrivateTextRange::TEXTRANGE_CONVERTEDTEXT ||
+           type == nsIPrivateTextRange::TEXTRANGE_SELECTEDRAWTEXT ||
+           type == nsIPrivateTextRange::TEXTRANGE_SELECTEDCONVERTEDTEXT )
+      {
+        mIsIMEComposing = PR_TRUE;
+#ifdef DEBUG_IME
+        printf("nsEditor::mIsIMEComposing = PR_TRUE\n");
+#endif
+        break;
+      }
+  }
+  return;
+}
+
+PRBool
+nsEditor::IsIMEComposing() {
+  return mIsIMEComposing;
+}
 
 NS_IMETHODIMP
 nsEditor::DeleteSelectionAndPrepareToCreateNode(nsCOMPtr<nsIDOMNode> &parentSelectedNode, PRInt32& offsetOfNewNode)

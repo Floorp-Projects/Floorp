@@ -459,27 +459,13 @@ nsHTMLEditRules::AfterEditInner(PRInt32 action, nsIEditor::EDirection aDirection
       res = AdjustWhitespace(selection);
       if (NS_FAILED(res)) return res;
       
-      // also do this for original selection endpoints.  The checks for the remembered
-      // selection endpoints are a performance fidgit.  Otherwise 
-      // nsRangeUpdater::SelAdjDeleteNode() would have to do much more expensive
-      // work (see comment in that routine in nsSelection.cpp)
-      nsCOMPtr<nsIDOMElement> bodyNode; 
-      PRInt32 unused;
-      res = mHTMLEditor->GetRootElement(getter_AddRefs(bodyNode));
-      if (NS_FAILED(res)) return res;
-      if (nsHTMLEditUtils::IsDescendantOf(mRangeItem.startNode, bodyNode, &unused))
-      {
-        nsWSRunObject(mHTMLEditor, mRangeItem.startNode, mRangeItem.startOffset).AdjustWhitespace();
-      }
+      // also do this for original selection endpoints. 
+      nsWSRunObject(mHTMLEditor, mRangeItem.startNode, mRangeItem.startOffset).AdjustWhitespace();
       // we only need to handle old selection endpoint if it was different from start
       if ((mRangeItem.startNode != mRangeItem.endNode) || (mRangeItem.startOffset != mRangeItem.endOffset))
       {
-        if (nsHTMLEditUtils::IsDescendantOf(mRangeItem.endNode, bodyNode, &unused))
-        {
-          nsWSRunObject(mHTMLEditor, mRangeItem.endNode, mRangeItem.endOffset).AdjustWhitespace();
-        }
+        nsWSRunObject(mHTMLEditor, mRangeItem.endNode, mRangeItem.endOffset).AdjustWhitespace();
       }
-     
     }
     
     // if we created a new block, make sure selection lands in it
@@ -1693,7 +1679,7 @@ nsHTMLEditRules::SplitMailCites(nsISelection *aSelection, PRBool aPlaintext, PRB
       {
         // ok, we are just before a break.  is it inside the mailquote?
         PRInt32 unused;
-        if (nsHTMLEditUtils::IsDescendantOf(visNode, citeNode, &unused))
+        if (nsEditorUtils::IsDescendantOf(visNode, citeNode, &unused))
         {
           // it is.  so lets reset our selection to be just after it.
           res = mHTMLEditor->GetNodeLocation(visNode, address_of(selNode), &selOffset);
@@ -1874,7 +1860,12 @@ nsHTMLEditRules::WillDeleteSelection(nsISelection *aSelection,
         so--; 
         eo--; 
       }
-      return nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(visNode), &so, address_of(visNode), &eo);
+      res = nsWSRunObject::PrepareToDeleteRange(mHTMLEditor, address_of(visNode), &so, address_of(visNode), &eo);
+      if (NS_FAILED(res)) return res;
+      nsCOMPtr<nsIDOMCharacterData> nodeAsText(do_QueryInterface(visNode));
+      res = mHTMLEditor->DeleteText(nodeAsText,so,1);
+      *aHandled = PR_TRUE;
+      return res;
     }
     else if ( (wsType==nsWSRunObject::eSpecial)  || 
               (wsType==nsWSRunObject::eBreak)    ||
@@ -2240,8 +2231,8 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
       // the other lists' items.  Note that it is ok for them to be descendants
       // of the other lists themselves, which is the usual case for sublists
       // in our impllementation.
-      if (!nsHTMLEditUtils::IsDescendantOf(leftList, *aRightBlock, &theOffset) &&
-          !nsHTMLEditUtils::IsDescendantOf(rightList, *aLeftBlock, &theOffset))
+      if (!nsEditorUtils::IsDescendantOf(leftList, *aRightBlock, &theOffset) &&
+          !nsEditorUtils::IsDescendantOf(rightList, *aLeftBlock, &theOffset))
       {
         *aLeftBlock = leftList;
         *aRightBlock = rightList;
@@ -2260,7 +2251,7 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
 
   // theOffset below is where you find yourself in aRightBlock when you traverse upwards
   // from aLeftBlock
-  if (nsHTMLEditUtils::IsDescendantOf(*aLeftBlock, *aRightBlock, &rightOffset))
+  if (nsEditorUtils::IsDescendantOf(*aLeftBlock, *aRightBlock, &rightOffset))
   {
     // tricky case.  left block is inside right block.
     // Do ws adjustment.  This just destroys non-visible ws at boundaries we will be joining.
@@ -2297,7 +2288,7 @@ nsHTMLEditRules::JoinBlocks(nsCOMPtr<nsIDOMNode> *aLeftBlock,
   }
   // theOffset below is where you find yourself in aLeftBlock when you traverse upwards
   // from aRightBlock
-  else if (nsHTMLEditUtils::IsDescendantOf(*aRightBlock, *aLeftBlock, &leftOffset))
+  else if (nsEditorUtils::IsDescendantOf(*aRightBlock, *aLeftBlock, &leftOffset))
   {
     // tricky case.  right block is inside left block.
     // Do ws adjustment.  This just destroys non-visible ws at boundaries we will be joining.
@@ -2643,7 +2634,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
       res = mHTMLEditor->GetTagString(curNode, existingListStr);
       ToLowerCase(existingListStr);
       // do we have a curList already?
-      if (curList && !nsHTMLEditUtils::IsDescendantOf(curNode, curList))
+      if (curList && !nsEditorUtils::IsDescendantOf(curNode, curList))
       {
         // move all of our children into curList.
         // cheezy way to do it: move whole list and then
@@ -2678,7 +2669,7 @@ nsHTMLEditRules::WillMakeList(nsISelection *aSelection,
         // list item is in wrong type of list.  
         // if we dont have a curList, split the old list
         // and make a new list of correct type.
-        if (!curList || nsHTMLEditUtils::IsDescendantOf(curNode, curList))
+        if (!curList || nsEditorUtils::IsDescendantOf(curNode, curList))
         {
           res = mHTMLEditor->SplitNode(curParent, offset, getter_AddRefs(newBlock));
           if (NS_FAILED(res)) return res;
@@ -3505,7 +3496,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
       if (curBlockQuote)
       {
         // if so, is this node a descendant?
-        if (nsHTMLEditUtils::IsDescendantOf(curNode, curBlockQuote))
+        if (nsEditorUtils::IsDescendantOf(curNode, curBlockQuote))
         {
           lastBQChild = curNode;
           continue;  // then we dont need to do anything different for this node
@@ -3614,7 +3605,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
       nsCOMPtr<nsIDOMNode> sNode;
       PRInt32 sOffset;
       mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(sNode), &sOffset);
-      if ((sNode == rememberedLeftBQ) || nsHTMLEditUtils::IsDescendantOf(sNode, rememberedLeftBQ))
+      if ((sNode == rememberedLeftBQ) || nsEditorUtils::IsDescendantOf(sNode, rememberedLeftBQ))
       {
         // selection is inside rememberedLeftBQ - push it past it.
         nsEditor::GetNodeLocation(rememberedLeftBQ, address_of(sNode), &sOffset);
@@ -3623,7 +3614,7 @@ nsHTMLEditRules::WillOutdent(nsISelection *aSelection, PRBool *aCancel, PRBool *
       }
       // and pull selection before beginning of rememberedRightBQ
       mHTMLEditor->GetStartNodeAndOffset(aSelection, address_of(sNode), &sOffset);
-      if ((sNode == rememberedRightBQ) || nsHTMLEditUtils::IsDescendantOf(sNode, rememberedRightBQ))
+      if ((sNode == rememberedRightBQ) || nsEditorUtils::IsDescendantOf(sNode, rememberedRightBQ))
       {
         // selection is inside rememberedRightBQ - push it before it.
         nsEditor::GetNodeLocation(rememberedRightBQ, address_of(sNode), &sOffset);
@@ -5984,18 +5975,44 @@ nsHTMLEditRules::ReturnInListItem(nsISelection *aSelection,
       res = CreateMozBR(prevItem, 0, address_of(brNode));
       if (NS_FAILED(res)) return res;
     }
-    else {
+    else 
+    {
       res = mHTMLEditor->IsEmptyNode(aListItem, &bIsEmptyNode, PR_TRUE);
       if (NS_FAILED(res)) return res;
-      if (bIsEmptyNode) {
+      if (bIsEmptyNode) 
+      {
         nsCOMPtr<nsIDOMNode> brNode;
         res = mHTMLEditor->CopyLastEditableChildStyles(prevItem, aListItem, getter_AddRefs(brNode));
         if (NS_FAILED(res)) return res;
-        if (brNode) {
+        if (brNode) 
+        {
           nsCOMPtr<nsIDOMNode> brParent;
           PRInt32 offset;
           res = nsEditor::GetNodeLocation(brNode, address_of(brParent), &offset);
           return aSelection->Collapse(brParent, offset);
+        }
+      }
+      else
+      {
+        nsWSRunObject wsObj(mHTMLEditor, aListItem, 0);
+        nsCOMPtr<nsIDOMNode> visNode;
+        PRInt32 visOffset = 0;
+        PRInt16 wsType;
+        res = wsObj.NextVisibleNode(aListItem, 0, address_of(visNode), &visOffset, &wsType);
+        if (NS_FAILED(res)) return res;
+        if ( (wsType==nsWSRunObject::eSpecial)  || 
+             (wsType==nsWSRunObject::eBreak)    ||
+             nsHTMLEditUtils::IsHR(visNode) ) 
+        {
+          nsCOMPtr<nsIDOMNode> parent;
+          PRInt32 offset;
+          res = nsEditor::GetNodeLocation(visNode, address_of(parent), &offset);
+          if (NS_FAILED(res)) return res;
+          return aSelection->Collapse(parent, offset);
+        }
+        else
+        {
+          return aSelection->Collapse(visNode, visOffset);
         }
       }
     }
@@ -6163,7 +6180,7 @@ nsHTMLEditRules::RemoveBlockStyle(nsCOMArray<nsIDOMNode>& arrayOfNodes)
       if (curBlock)
       {
         // if so, is this node a descendant?
-        if (nsHTMLEditUtils::IsDescendantOf(curNode, curBlock))
+        if (nsEditorUtils::IsDescendantOf(curNode, curBlock))
         {
           lastNode = curNode;
           continue;  // then we dont need to do anything different for this node
@@ -7162,7 +7179,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult)
         *aResult = PR_TRUE;
         return NS_OK;
       }
-      if (nsHTMLEditUtils::IsDescendantOf(startParent, aNode)) 
+      if (nsEditorUtils::IsDescendantOf(startParent, aNode)) 
       {
         *aResult = PR_TRUE;
         return NS_OK;
@@ -7177,7 +7194,7 @@ nsHTMLEditRules::SelectionEndpointInNode(nsIDOMNode *aNode, PRBool *aResult)
         *aResult = PR_TRUE;
         return NS_OK;
       }
-      if (nsHTMLEditUtils::IsDescendantOf(endParent, aNode))
+      if (nsEditorUtils::IsDescendantOf(endParent, aNode))
       {
         *aResult = PR_TRUE;
         return NS_OK;

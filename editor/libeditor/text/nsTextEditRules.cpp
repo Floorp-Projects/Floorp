@@ -1304,7 +1304,8 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
   nsresult res = NS_OK;
   *aOutString = *aInString;
   
-  if ((-1 != aMaxLength) && (mFlags & nsIPlaintextEditor::eEditorPlaintextMask))
+  if ((-1 != aMaxLength) && (mFlags & nsIPlaintextEditor::eEditorPlaintextMask)
+      && !mEditor->IsIMEComposing() )
   {
     // Get the current text length.
     // Get the length of inString.
@@ -1313,6 +1314,8 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
     //   Subtract the length of the selection from the len(doc) 
     //   since we'll delete the selection on insert.
     //   This is resultingDocLength.
+    // Get old length of IME composing string
+    //   which will be replaced by new one.
     // If (resultingDocLength) is at or over max, cancel the insert
     // If (resultingDocLength) + (length of input) > max, 
     //    set aOutString to subset of inString so length = max
@@ -1324,7 +1327,10 @@ nsTextEditRules::TruncateInsertionIfNeeded(nsISelection *aSelection,
     if (NS_FAILED(res)) { return res; }
     PRInt32 selectionLength = end-start;
     if (selectionLength<0) { selectionLength *= (-1); }
-    PRInt32 resultingDocLength = docLength - selectionLength;
+    PRInt32 oldCompStrLength;
+    res = mEditor->GetIMEBufferLength(&oldCompStrLength);
+    if (NS_FAILED(res)) { return res; }
+    PRInt32 resultingDocLength = docLength - selectionLength - oldCompStrLength;
     if (resultingDocLength >= aMaxLength) 
     {
       aOutString->SetLength(0);

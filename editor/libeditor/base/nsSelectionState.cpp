@@ -43,6 +43,7 @@
 #include "nsISelection.h"
 #include "nsEditor.h"
 #include "nsLayoutCID.h"
+#include "nsEditorUtils.h"
 
 static NS_DEFINE_CID(kCRangeCID, NS_RANGE_CID);
 
@@ -308,6 +309,7 @@ nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
   nsresult res = nsEditor::GetNodeLocation(aNode, address_of(parent), &offset);
   NS_ENSURE_SUCCESS(res, res);
   
+  // check for range endpoints that are after aNode and in the same parent
   for (i=0; i<count; i++)
   {
     item = (nsRangeStore*)mArray.ElementAt(i);
@@ -318,8 +320,35 @@ nsRangeUpdater::SelAdjDeleteNode(nsIDOMNode *aNode)
     if ((item->endNode.get() == parent) && (item->endOffset > offset))
       item->endOffset--;
   }
-  // MOOSE: also check inside of aNode, expensive.  But in theory, we shouldn't
-  // actually hit this case in the usage i forsee for this.
+
+  // check for range endpoints that are in aNode
+  if (item->startNode == aNode)
+  {
+    item->startNode   = parent;
+    item->startOffset = offset;
+  }
+  if (item->endNode == aNode)
+  {
+    item->endNode   = parent;
+    item->endOffset = offset;
+  }
+
+  // check for range endpoints that are in descendants of aNode
+  nsCOMPtr<nsIDOMNode> oldStart;
+  if (nsEditorUtils::IsDescendantOf(item->startNode, aNode))
+  {
+    oldStart = item->startNode;  // save for efficiency hack below.
+    item->startNode   = parent;
+    item->startOffset = offset;
+  }
+
+  // avoid having to call IsDescendantOf() for common case of range startnode == range endnode.
+  if ((item->endNode == oldStart) || nsEditorUtils::IsDescendantOf(item->endNode, aNode))
+  {
+    item->endNode   = parent;
+    item->endOffset = offset;
+  }
+
   return NS_OK;
 }
 
@@ -427,6 +456,11 @@ nsRangeUpdater::SelAdjJoinNodes(nsIDOMNode *aLeftNode,
       item->startOffset += aOldLeftNodeLength;
     if (item->endNode.get() == aRightNode)
       item->endOffset += aOldLeftNodeLength;
+    // adjust endpoints in aLeftNode
+    if (item->startNode.get() == aLeftNode)
+      item->startNode = aRightNode;
+    if (item->endNode.get() == aLeftNode)
+      item->endNode = aRightNode;
   }
   
   return NS_OK;

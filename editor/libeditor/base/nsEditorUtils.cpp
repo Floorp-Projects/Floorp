@@ -203,3 +203,47 @@ nsDOMSubtreeIterator::Init(nsIDOMNode* aNode)
   return mIter->Init(content);
 }
 
+/******************************************************************************
+ * some general purpose editor utils
+ *****************************************************************************/
+
+PRBool 
+nsEditorUtils::IsDescendantOf(nsIDOMNode *aNode, nsIDOMNode *aParent, PRInt32 *aOffset) 
+{
+  if (!aNode && !aParent) return PR_FALSE;
+  if (aNode == aParent) return PR_FALSE;
+  
+  nsCOMPtr<nsIDOMNode> parent, node = do_QueryInterface(aNode);
+  nsresult res;
+  
+  do
+  {
+    res = node->GetParentNode(getter_AddRefs(parent));
+    if (NS_FAILED(res)) return PR_FALSE;
+    if (parent.get() == aParent) 
+    {
+      if (aOffset)
+      {
+        nsCOMPtr<nsIContent> pCon(do_QueryInterface(parent));
+        nsCOMPtr<nsIContent> cCon(do_QueryInterface(node));
+        if (pCon && cCon)
+        {
+          pCon->IndexOf(cCon, *aOffset);
+        }
+      }
+      return PR_TRUE;
+    }
+    node = parent;
+  } while (parent);
+  
+  return PR_FALSE;
+}
+
+PRBool
+nsEditorUtils::IsLeafNode(nsIDOMNode *aNode)
+{
+  if (!aNode) return PR_FALSE;
+  PRBool hasChildren = PR_FALSE;
+  aNode->HasChildNodes(&hasChildren);
+  return !hasChildren;
+}

@@ -489,6 +489,9 @@ public:
   nsresult GetLastEditableNode(nsIDOMNode *aRoot, nsCOMPtr<nsIDOMNode> *outLastNode);
 #endif
 
+  nsresult GetIMEBufferLength(PRInt32* length);
+  PRBool   IsIMEComposing();    /* test if IME is in composition state */
+  void     SetIsIMEComposing(); /* call this before |IsIMEComposing()| */
 
   /** from html rules code - migration in progress */
   static nsresult GetTagString(nsIDOMNode *aNode, nsAString& outString);
@@ -564,11 +567,13 @@ protected:
   EDirection        mDirection;          // the current direction of editor action
   
   // data necessary to build IME transactions
-  PRBool						mInIMEMode;          // are we inside an IME composition?
-  nsIPrivateTextRangeList*      mIMETextRangeList;   // IME special selection ranges
-  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;        // current IME text node
-  PRUint32						mIMETextOffset;      // offset in text node where IME comp string begins
-  PRUint32						mIMEBufferLength;    // current length of IME comp string
+  PRBool                        mInIMEMode;        // are we inside an IME composition?
+  nsIPrivateTextRangeList*      mIMETextRangeList; // IME special selection ranges
+  nsCOMPtr<nsIDOMCharacterData> mIMETextNode;      // current IME text node
+  PRUint32                      mIMETextOffset;    // offset in text node where IME comp string begins
+  PRUint32                      mIMEBufferLength;  // current length of IME comp string
+  PRBool                        mIsIMEComposing;   // is IME in composition state?
+                                                   // This is different from mInIMEMode. see Bug 98434.
 
   // various listeners
   nsVoidArray*                  mActionListeners;  // listens to all low level actions on the doc

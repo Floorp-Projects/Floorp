@@ -3947,7 +3947,61 @@ nsHTMLEditor::GetEmbeddedObjects(nsISupportsArray** aNodeList)
 #pragma mark -
 #endif
 
-// Undo, Redo, Cut, CanCut, Copy, CanCopy, all inherited from nsPlaintextEditor
+NS_IMETHODIMP nsHTMLEditor::DeleteNode(nsIDOMNode * aNode)
+{
+  nsCOMPtr<nsIDOMNode> selectAllNode = FindUserSelectAllNode(aNode);
+  
+  if (selectAllNode)
+  {
+    return nsEditor::DeleteNode(selectAllNode);
+  }
+  return nsEditor::DeleteNode(aNode);
+}
+
+NS_IMETHODIMP nsHTMLEditor::DeleteText(nsIDOMCharacterData *aTextNode,
+                                       PRUint32             aOffset,
+                                       PRUint32             aLength)
+{
+  nsCOMPtr<nsIDOMNode> selectAllNode = FindUserSelectAllNode(aTextNode);
+  
+  if (selectAllNode)
+  {
+    return nsEditor::DeleteNode(selectAllNode);
+  }
+  return nsEditor::DeleteText(aTextNode, aOffset, aLength);
+}
+
+
+#ifdef XP_MAC
+#pragma mark -
+#pragma mark  support utils
+#pragma mark -
+#endif
+
+/* This routine examines aNode and it's ancestors looking for any node which has the
+   -moz-user-select: all style lit.  Return the ighest such ancestor.  */
+nsCOMPtr<nsIDOMNode> nsHTMLEditor::FindUserSelectAllNode(nsIDOMNode *aNode)
+{
+  nsCOMPtr<nsIDOMNode> resultNode;  // starts out empty
+  nsCOMPtr<nsIDOMNode> node = aNode;
+
+  // retrieve the computed style of -moz-user-select for aNode
+  nsAutoString mozUserSelectValue;
+  while (node)
+  {
+    mHTMLCSSUtils->GetComputedProperty(node, nsIEditProperty::cssMozUserSelect, mozUserSelectValue);
+    if (!mozUserSelectValue.Equals(NS_LITERAL_STRING("all")))
+    {
+      return resultNode;
+    }
+    resultNode = node;
+    nsCOMPtr<nsIDOMNode> tmp;
+    node->GetParentNode(getter_AddRefs(tmp));
+    node = tmp;
+  }
+  
+  return resultNode;
+}
 
 static nsresult SetSelectionAroundHeadChildren(nsCOMPtr<nsISelection> aSelection, nsWeakPtr aDocWeak)
 {
@@ -5186,7 +5240,7 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
   nsCOMPtr<nsIDOMNode> child;
   nsresult res = NS_OK;
   child = GetLeftmostChild(aNode);  
-  while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
+  while (child && (!IsEditable(child) || !nsEditorUtils::IsLeafNode(child)))
   {
     nsCOMPtr<nsIDOMNode> tmp;
     res = GetNextHTMLNode(child, address_of(tmp));
@@ -5194,7 +5248,7 @@ nsHTMLEditor::GetFirstEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOu
     if (!tmp) return NS_ERROR_FAILURE;
     
     // only accept nodes that are descendants of aNode
-    if (nsHTMLEditUtils::IsDescendantOf(tmp, aNode))
+    if (nsEditorUtils::IsDescendantOf(tmp, aNode))
       child = tmp;
     else
     {
@@ -5220,7 +5274,7 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
   nsCOMPtr<nsIDOMNode> child;
   nsresult res = NS_OK;
   child = GetRightmostChild(aNode, PR_FALSE);  
-  while (child && (!IsEditable(child) || !nsHTMLEditUtils::IsLeafNode(child)))
+  while (child && (!IsEditable(child) || !nsEditorUtils::IsLeafNode(child)))
   {
     nsCOMPtr<nsIDOMNode> tmp;
     res = GetPriorHTMLNode(child, address_of(tmp));
@@ -5228,7 +5282,7 @@ nsHTMLEditor::GetLastEditableLeaf( nsIDOMNode *aNode, nsCOMPtr<nsIDOMNode> *aOut
     if (!tmp) return NS_ERROR_FAILURE;
     
     // only accept nodes that are descendants of aNode
-    if (nsHTMLEditUtils::IsDescendantOf(tmp, aNode))
+    if (nsEditorUtils::IsDescendantOf(tmp, aNode))
       child = tmp;
     else
     {
@@ -5413,7 +5467,7 @@ nsHTMLEditor::IsEmptyNodeImpl( nsIDOMNode *aNode,
             return NS_OK;
           }
           
-          PRBool isEmptyNode;
+          PRBool isEmptyNode = PR_TRUE;
           res = IsEmptyNodeImpl(node, &isEmptyNode, aSingleBRDoesntCount, 
                                 aListOrCellNotEmpty, aSafeToAskFrames, aSeenBR);
           if (NS_FAILED(res)) return res;

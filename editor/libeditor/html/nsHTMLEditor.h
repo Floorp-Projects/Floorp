@@ -416,6 +416,11 @@ public:
 
   virtual PRBool NodesSameType(nsIDOMNode *aNode1, nsIDOMNode *aNode2);
 
+  NS_IMETHODIMP DeleteNode(nsIDOMNode * aNode);
+  NS_IMETHODIMP DeleteText(nsIDOMCharacterData *aTextNode,
+                           PRUint32             aOffset,
+                           PRUint32             aLength);
+
   /* ------------ nsICSSLoaderObserver -------------- */
   NS_IMETHOD StyleSheetLoaded(nsICSSStyleSheet*aSheet, PRBool aNotify);
 
@@ -425,6 +430,7 @@ public:
                               nsCOMPtr<nsIDOMNode> *ioParent, 
                               PRInt32 *ioOffset, 
                               PRBool aNoEmptyNodes);
+  nsCOMPtr<nsIDOMNode> FindUserSelectAllNode(nsIDOMNode *aNode);
                                 
 
   /** returns the absolute position of the end points of aSelection

@@ -134,7 +134,6 @@ nsPlaintextEditor::nsPlaintextEditor()
 : nsEditor()
 , mIgnoreSpuriousDragEvent(PR_FALSE)
 , mRules(nsnull)
-, mIsComposing(PR_FALSE)
 , mWrapToWindow(PR_FALSE)
 , mWrapColumn(0)
 , mMaxTextLength(-1)
@@ -1973,6 +1972,8 @@ nsPlaintextEditor::SetCompositionString(const nsAString& aCompositionString, nsI
   // therefore, we put the nsAutoPlaceHolderBatch into a inner block
   {
     nsAutoPlaceHolderBatch batch(this, gIMETxnName);
+
+    SetIsIMEComposing(); // We set mIsIMEComposing properly.
 
     result = InsertText(aCompositionString);
 
