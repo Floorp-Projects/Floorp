@@ -26,7 +26,6 @@ EXPORTS =	\
 MAKE_OBJ_TYPE	= DLL
 DLLNAME = raptorplugin
 DLL=.\$(OBJDIR)\$(DLLNAME).dll
-MISCDEP = $(OURLIBS)
 
 MODULE=raptor 
 
@@ -70,7 +69,7 @@ CACHELIBNAME=cache.lib
 CACHELIBNAME=netcache.lib
 !endif
 
-OURLIBS = \
+LLIBS = \
  $(DIST)\lib\xpcom.lib \
  $(DIST)\lib\plc3.lib \
 !ifdef NECKO
@@ -83,8 +82,7 @@ OURLIBS = \
  $(DIST)\lib\dbm32.lib \
  $(LIBNSPR)  
 
-LLIBS = \
-  $(OURLIBS) \
+WIN_LIBS = \
   version.lib
 
 include <$(DEPTH)\config\rules.mak>

@@ -30,7 +30,7 @@ CPP_OBJS =                             \
         .\$(OBJDIR)\nsWalletViewerFactory.obj        \
        $(NULL)
 
-OURLIBS =                               \
+LLIBS =                               \
 	$(DIST)\lib\cookieviewer_s.lib  \
         $(DIST)\lib\signonviewer_s.lib  \
         $(DIST)\lib\walletpreview_s.lib \
@@ -38,8 +38,7 @@ OURLIBS =                               \
         $(DIST)\lib\xpcom.lib  \
         $(NULL)
 
-LLIBS =                                \
-        $(OURLIBS)                     \
+WIN_LIBS =                            \
         shell32.lib                    \
 	$(NULL)
 

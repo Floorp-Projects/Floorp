@@ -21,19 +21,14 @@ IGNORE_MANIFEST=1
 MAKE_OBJ_TYPE   = EXE
 PROGRAM = .\$(OBJDIR)\htmlrobot.exe
 
-MISCDEP=			\
+LLIBS=				\
  $(DIST)\lib\DebugRobot.lib	\
  $(DIST)\lib\xpcom.lib	\
  $(NULL)
 
-MYLIBS=				\
- $(DIST)\lib\DebugRobot.lib	\
- $(DIST)\lib\xpcom.lib	\
- $(NULL)
+WIN_LIBS= shell32.lib           
 
-LLIBS= $(MYLIBS)                \
- shell32.lib                    \
- -SUBSYSTEM:CONSOLE
+LLFLAGS=-SUBSYSTEM:CONSOLE
 
 CPPSRCS=			\
  RobotMain.cpp			\

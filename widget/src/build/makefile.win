@@ -53,13 +53,15 @@ LCFLAGS =                               \
 	-D_IMPL_NS_WIDGET               \
 	$(NULL)
 
-LLIBS=                                  \
+WIN_LIBS=                               \
  comctl32.lib                           \
  comdlg32.lib                           \
  imm32.lib								\
  Uuid.lib								\
  ole32.lib								\
- shell32.lib                           \
+ shell32.lib
+
+LLIBS= \
  $(DIST)\lib\xpcom.lib                \
  $(DIST)\lib\raptorhtmlpars.lib		\
  $(DIST)\lib\raptorgfxwin.lib           \

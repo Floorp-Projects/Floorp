@@ -37,7 +37,7 @@ LINCS=  -I$(PUBLIC)\raptor					\
 		-I$(PUBLIC)\rdf						\
 		-I$(PUBLIC)\js						\
 
-MYLIBS=							\
+LLIBS=							\
  $(DIST)\lib\xpcom.lib		\
  $(LIBNSPR)						\
  $(DIST)\lib\raptorgfxwin.lib	\
@@ -49,8 +49,7 @@ MYLIBS=							\
  $(DIST)\lib\mork.lib			\
  $(NULL)
 
-LLIBS= $(MYLIBS)				\
- -SUBSYSTEM:CONSOLE 
+LLFLAGS= -SUBSYSTEM:CONSOLE 
 
 include <$(DEPTH)\config\rules.mak>
 

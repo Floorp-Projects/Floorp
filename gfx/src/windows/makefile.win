@@ -83,11 +83,15 @@ LLIBS=				\
 !endif
  $(DIST)\lib\raptorgfx_s.lib \
 !if defined(NGLAYOUT_DDRAW)
- ole32.lib \
  $(NGLAYOUT_DDRAW)\lib\ddraw.lib \
 !endif
- comdlg32.lib \
  $(LIBNSPR)  
+
+WIN_LIBS=   \
+!if defined(NGLAYOUT_DDRAW)
+ ole32.lib \
+!endif
+ comdlg32.lib
 
 LLFLAGS = \
 		$(LLFLAGS) \

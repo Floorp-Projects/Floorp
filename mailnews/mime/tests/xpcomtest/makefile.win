@@ -69,8 +69,8 @@ PROGRAM=.\$(OBJDIR)\$(EXENAME).EXE
 #//
 #//------------------------------------------------------------------------
 LCFLAGS=-DNETSCAPE
-LLIBS=	 $(LLIBS) ole32.lib	\
-        	 $(DIST)\lib\xpcom.lib
+WIN_LIBS= ole32.lib
+LLIBS= $(DIST)\lib\xpcom.lib
 	
 # clobber and clobber_all will remove the following garbage:
 GARBAGE	= $(GARBAGE) _gen

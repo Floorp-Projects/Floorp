@@ -108,7 +108,7 @@ LCFLAGS =                               \
   $(DEFINES) \
 	$(NULL)
 
-LLIBS=                                  \
+WIN_LIBS=                        \
  ole32.lib                           
 
 include <$(DEPTH)\config\rules.mak>

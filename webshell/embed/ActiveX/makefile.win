@@ -93,7 +93,7 @@ LINCS=  \
   -I$(PUBLIC)\profile \
   $(NULL) 
 
-MYLIBS=                         \
+LLIBS=                         \
 !ifdef MOZ_ACTIVEX_CONTROL_SUPPORT
  $(DIST)\lib\raptorgfxwin.lib   \
  $(DIST)\lib\raptorweb.lib      \
@@ -102,16 +102,17 @@ MYLIBS=                         \
 !endif
  $(NULL)
 
-LLIBS = $(MYLIBS)               \
+WIN_LIBS = \
  comdlg32.lib                   \
  ole32.lib                      \
  oleaut32.lib                   \
  uuid.lib                       \
  shell32.lib                    \
- -SUBSYSTEM:windows
+ $(NULL)
+
 
 LCFLAGS = /D "WIN32" /GX /FR /U "ClientWallet"
-LFLAGS = /DLL
+LLFLAGS = -SUBSYSTEM:windows /DLL
 
 include <$(DEPTH)\config\rules.mak>
 

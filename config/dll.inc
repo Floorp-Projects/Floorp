@@ -32,7 +32,7 @@ CONFIG_DLL_INC=1
 #// Rule to build a 16-bit DLL using the DLL target
 #//
 #//------------------------------------------------------------------------
-$(DLL): $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 	echo +++ make: Creating DLL: $@
 #   //
 #   // create response file for the command.  The format is:
@@ -46,7 +46,7 @@ $(DLL): $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 !ifdef MAPFILE
         echo $(MAPFILE),                     >> $(CFGFILE)
 !endif
-        echo $(LLIBS) $(OS_LIBS)             >> $(CFGFILE)
+        echo $(LLIBS) $(WIN_LIBS) $(OS_LIBS) >> $(CFGFILE)
 !ifdef DEFFILE
         echo $(DEFFILE),                     >> $(CFGFILE)
 !else
@@ -68,7 +68,7 @@ $(DLL): $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 #// Rule to build a 32-bit DLL using the DLL target
 #//
 #//------------------------------------------------------------------------
-$(DLL): $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
+$(DLL): $(OBJDIR) $(OBJS) $(LLIBS) $(RESFILE) $(DEFFILE) $(MISCDEP)
 	echo +++ make: Creating DLL: $@
     $(LD) @<<$(CFGFILE)
         /NOLOGO /DLL /OUT:$@ 
@@ -83,7 +83,7 @@ $(DLL): $(OBJDIR) $(OBJS) $(RESFILE) $(DEFFILE) $(MISCDEP)
         $(LFLAGS)
         $(OBJS) 
         $(RESFILE)
-        $(LLIBS) $(OS_LIBS)
+        $(LLIBS) $(WIN_LIBS) $(OS_LIBS)
 <<KEEP
 !endif
 

@@ -29,15 +29,14 @@ OBJS =  \
 LINCS=-I$(PUBLIC)\raptor \
       -I$(PUBLIC)\xpcom -I\ns\raptor\ui\src\windows
 
-MYLIBS=                         \
+LLIBS=                         \
  $(DIST)\lib\xpcom.lib        \
  $(LIBNSPR)                     \
  $(DIST)\lib\raptorwidget.lib   \
  $(DIST)\lib\raptorgfxwin.lib   \
  $(NULL)
 
-LLIBS= $(MYLIBS)                \
- -SUBSYSTEM:CONSOLE 
+LLFLAGS=-SUBSYSTEM:CONSOLE 
 
 include <$(DEPTH)\config\rules.mak>
 

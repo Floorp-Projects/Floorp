@@ -149,7 +149,7 @@ CONFIG_OBJ_INC=1
         $(OBJDIR)\$(*B).obj,
         $(OBJDIR)\$(*B).exe,
         $(MAPFILE),
-        $(LLIBS) $(OS_LIBS),
+        $(LLIBS) $(WIN_LIBS) $(OS_LIBS),
         $(DEFFILE),
         $(RESFILE),
 <<
@@ -171,6 +171,23 @@ CONFIG_OBJ_INC=1
         -Fe.\$(OBJDIR)\
         $(CURDIR)$(*B).c
 <<KEEP
+
+.cpp{.\$(OBJDIR)\}.exe:
+    $(CC) @<<$(CFGFILE)
+        $(CFLAGS)
+        $(LCFLAGS)
+        $(LINCS)
+        $(LINCS_1)
+        $(INCS)
+        $(LLIBS)
+        $(WIN_LIBS)
+        $(OS_LIBS)
+        -Fd$(PDBFILE)
+        -Fe.\$(OBJDIR)\
+        -Fo.\$(OBJDIR)\
+        $(CURDIR)$(*B).cpp
+<<KEEP
+
 !endif
 
 
