@@ -897,7 +897,6 @@ public abstract class ScriptableObject implements Scriptable {
                             "jsStaticFunction must be used with static method.");
                     }
                 } else if (name.startsWith(propertyPrefix)) {
-                    name = name.substring(propertyPrefix.length());
                     prefix = propertyPrefix;
                 } else if (name.startsWith(getterPrefix)) {
                     prefix = getterPrefix;
