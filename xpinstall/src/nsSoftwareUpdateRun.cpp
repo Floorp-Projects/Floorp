@@ -274,7 +274,7 @@ static nsresult SetupInstallContext(const char* jarFile,
 ///////////////////////////////////////////////////////////////////////////////////////////////
 PRInt32 RunInstall(nsInstallInfo *installInfo)
 {   
-    if (installInfo->GetFlags() == 0x00000001)
+    if (installInfo->GetFlags() == 0x0000FFFF) // XXX bogus value -- do we want this feature?
     {
         RunInstallOnThread((void *)installInfo);
     }
