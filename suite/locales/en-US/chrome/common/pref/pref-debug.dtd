@@ -8,9 +8,6 @@
 
 <!-- Debug: Turn on gfx-rendered widgets -->
 <!ENTITY widgetRendering.label "Debug: Widget rendering">
-<!ENTITY nativeWidgets.label "native">
-<!ENTITY partialGfxWidgets.label "partial-gfx">
-<!ENTITY gfxWidgets.label "gfx">
 <!ENTITY gfxScrollbars.label "gfx scrollbars">
 <!ENTITY debugWindow.label "debug window">
 
@@ -26,4 +23,5 @@
 <!-- Miscelleneous -->
 <!ENTITY debugMiscellaneous.label   "Miscellaneous">
 <!ENTITY debugDisableXULCache.label "Disable XUL Cache">
+<!ENTITY debugEnableMemCache.label "Enable Mem Cache">
 <!ENTITY debugEnableXPCOMRefcntLog.label "Enable XPCOM Refcount Log">
