@@ -709,10 +709,9 @@ nsXULElement::GetChildNodes(nsIDOMNodeList** aChildNodes)
 {
     nsresult rv;
 
-    nsRDFDOMNodeList* children;
-    rv = nsRDFDOMNodeList::Create(&children);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create DOM node list");
-    if (NS_FAILED(rv)) return rv;
+    nsRDFDOMNodeList* children = new nsRDFDOMNodeList();
+    NS_ENSURE_TRUE(children, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(children);
 
     PRInt32 count;
     rv = ChildCount(count);
@@ -1538,10 +1537,9 @@ nsXULElement::GetElementsByAttribute(const nsAString& aAttribute,
     // _two_ strings being passed to the match func.  Ah, the ability
     // to create real closures, where art thou?
     nsresult rv;
-    nsRDFDOMNodeList* elements;
-    rv = nsRDFDOMNodeList::Create(&elements);
-    NS_ASSERTION(NS_SUCCEEDED(rv), "unable to create node list");
-    if (NS_FAILED(rv)) return rv;
+    nsRDFDOMNodeList* elements = new nsRDFDOMNodeList();
+    NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(elements);
 
     nsCOMPtr<nsIDOMNode> domElement;
     rv = QueryInterface(NS_GET_IID(nsIDOMNode), getter_AddRefs(domElement));

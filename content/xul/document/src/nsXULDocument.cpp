@@ -1501,12 +1501,10 @@ nsXULDocument::GetElementsByAttribute(const nsAString& aAttribute,
     // _two_ strings being passed to the match func.  Ah, the ability
     // to create real closures, where art thou?
     nsresult rv;
-    nsRDFDOMNodeList* elements;
-    if (NS_FAILED(rv = nsRDFDOMNodeList::Create(&elements))) {
-        NS_ERROR("unable to create node list");
-        return rv;
-    }
-
+    nsRDFDOMNodeList* elements = new nsRDFDOMNodeList();
+    NS_ENSURE_TRUE(elements, NS_ERROR_OUT_OF_MEMORY);
+    NS_ADDREF(elements);
+    
     nsCOMPtr<nsIContent> root;
     GetRootContent(getter_AddRefs(root));
 
