@@ -94,6 +94,8 @@ interface nsIProfile : nsISupports {
     boolean isCurrentProfileAvailable();
 
     attribute boolean automigrate;
+
+    readonly attribute nsIFileSpec defaultProfileDir;
 };
 
 #endif /* nsIProfile_h__ */

@@ -649,6 +649,21 @@ NS_IMETHODIMP nsProfile::GetProfileDir(const char *profileName, nsFileSpec* prof
     return rv;
 }
 
+NS_IMETHODIMP nsProfile::GetDefaultProfileDir(nsIFileSpec **aDefaultProfileDir)
+{
+    nsresult rv;
+
+    NS_WITH_SERVICE(nsIFileLocator, locator, kFileLocatorCID, &rv);
+    if (NS_FAILED(rv) || !locator) return NS_ERROR_FAILURE;
+
+    rv = locator->GetFileLocation(nsSpecialFileSpec::App_DefaultUserProfileRoot50, aDefaultProfileDir);
+    if (NS_FAILED(rv) || !aDefaultProfileDir || !*aDefaultProfileDir) return NS_ERROR_FAILURE;
+
+    rv = (*aDefaultProfileDir)->AppendRelativeUnixPath(DEFAULT_PROFILE_NAME);
+    if (NS_FAILED(rv)) return rv;
+
+    return NS_OK;
+}
 
 // Gets the number of profiles
 // Location: Common/Profiles
