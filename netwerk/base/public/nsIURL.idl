@@ -148,4 +148,36 @@ interface nsIURL : nsIURI
      * Some characters may be escaped.
      */
     attribute AUTF8String fileExtension;
+
+    /**
+     * This method takes a uri and compares the two.  The common uri portion
+     * is returned as a string.  The minimum common uri portion is the 
+     * protocol, and any of these if present:  login, password, host and port
+     * If no commonality is found, "" is returned.  If they are identical, the
+     * whole path with file/ref/etc. is returned.  For file uris, it is
+     * expected that the common spec would be at least "file:///" since '/' is
+     * a shared common root.
+     *
+     * Examples:
+     *    this.spec               aURIToCompare.spec        result
+     * 1) http://mozilla.org/     http://www.mozilla.org/   ""
+     * 2) http://foo.com/bar/     ftp://foo.com/bar/        ""
+     * 3) http://foo.com:8080/    http://foo.com/bar/       ""
+     * 4) ftp://user@foo.com/     ftp://user:pw@foo.com/    ""
+     * 5) ftp://foo.com/bar/      ftp://foo.com/bar         ftp://foo.com/
+     * 6) ftp://foo.com/bar/      ftp://foo.com/bar/b.html  ftp://foo.com/bar/
+     * 7) http://foo.com/a.htm#i  http://foo.com/b.htm      http://foo.com/
+     * 8) ftp://foo.com/c.htm#i   ftp://foo.com/c.htm       ftp://foo.com/c.htm
+     * 9) file:///a/b/c.html      file:///d/e/c.html        file:///
+     */
+    AUTF8String getCommonBaseSpec(in nsIURI aURIToCompare);
+
+    /**
+     * This method takes a uri and returns a substring of this if it can be
+     * made relative to the uri passed in.  If no commonality is found, the
+     * entire uri spec is returned.  If they are identical, "" is returned.
+     * Filename, query, etc are always returned except when uris are identical.
+     */
+    AUTF8String getRelativeSpec(in nsIURI aURIToCompare);
+
 };
