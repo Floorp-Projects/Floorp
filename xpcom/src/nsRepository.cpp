@@ -30,13 +30,12 @@
 #endif
 #include "plstr.h"
 #include "prlink.h"
+#include "prsystem.h"
 #include "nsRepository.h"
 
 #ifdef USE_NSREG
-#if !defined(XP_BEGIN_PROTOS)
 #define XP_BEGIN_PROTOS extern "C" {
 #define XP_END_PROTOS };
-#endif
 #include "NSReg.h"
 #endif
 
@@ -391,6 +390,10 @@ nsresult nsRepository::Initialize(void)
 #ifdef USE_NSREG
   NR_StartupRegistry();
 #endif
+
+// Initiate autoreg
+  AutoRegister(NS_Startup, NULL);
+
   return NS_OK;
 }
 
@@ -665,4 +668,350 @@ nsresult nsRepository::FreeLibraries(void)
   PR_ExitMonitor(monitor);
 
   return NS_OK;
+}
+
+
+/*
+ * AutoRegister(RegistrationInstant, const char *pathlist)
+ *
+ * Given a ; separated list of paths, this will ensure proper registration
+ * of all components. A default pathlist is maintained in the registry at
+ *		\\HKEYROOT_COMMON\\Classes\\PathList
+ * In addition to looking at the pathlist, the default pathlist is looked at.
+ *
+ * This will take care not loading already registered dlls, finding and
+ * registering new dlls, re-registration of modified dlls
+ *
+ */
+
+nsresult nsRepository::AutoRegister(NSRegistrationInstant when,
+									const char* pathlist)
+{
+	if (pathlist != NULL)
+	{
+		SyncComponentsInPathList(pathlist);
+	}
+	
+	//XXX get default pathlist from registry
+	//XXX Temporary hack. Registering components from current directory
+	const char *defaultPathList = ".";
+	SyncComponentsInPathList(defaultPathList);
+	return (NS_OK);
+}
+
+
+nsresult nsRepository::AddToDefaultPathList(const char *pathlist)
+{
+	//XXX add pathlist to the defaultpathlist in the registrys
+	return (NS_ERROR_FAILURE);
+}
+
+nsresult nsRepository::SyncComponentsInPathList(const char *pathlist)
+{
+	char *paths = PL_strdup(pathlist);
+
+	if (paths == NULL || *paths == NULL)
+		return(NS_ERROR_FAILURE);
+
+	char *pathsMem = paths;
+	while (paths != NULL)
+	{
+		char *nextpath = PL_strchr(paths, NS_PATH_SEPARATOR);
+		if (nextpath != NULL) *nextpath = '\0';
+		SyncComponentsInDir(paths);
+		paths = nextpath;
+	}
+	PL_strfree(pathsMem);
+	return (NS_OK);
+}
+
+nsresult nsRepository::SyncComponentsInDir(const char *dir)
+{
+	PRDir *prdir = PR_OpenDir(dir);
+	if (prdir == NULL)
+		return (NS_ERROR_FAILURE);
+	
+	// Create a buffer that has dir/ in it so we can append
+	// the filename each time in the loop
+	char fullname[NS_MAX_FILENAME_LEN];
+	PL_strncpyz(fullname, dir, sizeof(fullname));
+	int n = strlen(fullname);
+	if (n+1 < sizeof(fullname))
+	{
+		fullname[n] = PR_GetDirectorySeparator();
+		n++;
+	}
+	char *filepart = fullname + n;
+
+	PRDirEntry *dirent = NULL;
+	while ((dirent = PR_ReadDir(prdir, PR_SKIP_BOTH)) != NULL)
+	{
+		PL_strncpyz(filepart, dirent->name, sizeof(fullname)-n);
+		nsresult ret = SyncComponentsInFile(fullname);
+		if (NS_FAILED(ret) &&
+			NS_ERROR_GET_CODE(ret) == NS_XPCOM_ERRORCODE_IS_DIR)
+		{
+			SyncComponentsInDir(fullname);
+		}
+	} // foreach file
+	PR_CloseDir(prdir);
+	return (NS_OK);
+}
+
+nsresult nsRepository::SyncComponentsInFile(const char *fullname)
+{
+	const char *ValidDllExtensions[] = {
+		".dll",	/* Windows */
+			".dso",	/* Unix */
+			".so",	/* Unix */
+			"_dll",	/* Mac ? */
+			".dlm",	/* new for all platforms */
+			NULL
+	};
+
+
+	PRFileInfo64 statbuf;
+	if (PR_GetFileInfo64(fullname, &statbuf) != PR_SUCCESS)
+	{
+		// Skip files that cannot be stat
+		return (NS_ERROR_FAILURE);
+	}
+	if (statbuf.type == PR_FILE_DIRECTORY)
+	{
+		// Cant register a directory
+		return (NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_XPCOM,
+			NS_XPCOM_ERRORCODE_IS_DIR));
+	}
+	else if (statbuf.type != PR_FILE_FILE)
+	{
+		// Skip non-files
+		return (NS_ERROR_FAILURE);
+	}
+	
+	// deal with only files that have the right extension
+	PRBool validExtension = PR_FALSE;
+	int flen = PL_strlen(fullname);
+	for (int i=0; ValidDllExtensions[i] != NULL; i++)
+	{
+		int extlen = PL_strlen(ValidDllExtensions[i]);
+
+		// Does fullname end with this extension
+		if (flen >= extlen &&
+			!PL_strcasecmp(&(fullname[flen - extlen]), ValidDllExtensions[i])
+			)
+		{
+			validExtension = PR_TRUE;
+			break;
+		}
+	}
+
+	if (validExtension == PR_FALSE)
+	{
+		// Skip invalid extensions
+		return (NS_ERROR_FAILURE);
+	}
+	
+	// Check if dll is one that we have already seen
+	nsDll *dll = dllStore->Get(fullname);
+	if (dll == NULL)
+	{
+		// XXX Create nsDll for this from registry and
+		// XXX add it to our dll cache dllStore.
+	}
+	
+	if (dll != NULL)
+	{
+		// Make sure the dll is OK
+		if (dll->GetStatus() != NS_OK)
+		{
+			PR_LOG(logmodule, PR_LOG_ALWAYS, 
+				("nsRepository: + nsDll not NS_OK \"%s\". Skipping...",
+				dll->GetFullPath()));
+			return (NS_ERROR_FAILURE);
+		}
+		
+		// We already have seen this dll. Check if this dll changed
+		if (dll->GetLastModifiedTime() != statbuf.modifyTime &&
+			LL_EQ(dll->GetSize(), statbuf.size))
+		{
+			// Dll hasn't changed. Skip.
+			PR_LOG(logmodule, PR_LOG_ALWAYS, 
+				("nsRepository: + nsDll not changed and already "
+				"registered \"%s\". Skipping...",
+				dll->GetFullPath()));
+				return (NS_OK);
+		}
+		
+		// Aagh! the dll has changed since the last time we saw it.
+		// re-register dll
+		if (dll->IsLoaded())
+		{
+			// We are screwed. We loaded the old version of the dll
+			// and now we find that the on-disk copy if newer.
+			// The only thing to do would be to ask the dll if it can
+			// unload itself. It can do that if it hasn't created objects
+			// yet.
+			nsCanUnloadProc proc = (nsCanUnloadProc)
+				dll->FindSymbol("NSCanUnload");
+			if (proc != NULL)
+			{
+				PRBool res = proc(/*PR_TRUE*/);
+				if (res)
+				{
+					PR_LOG(logmodule, PR_LOG_ALWAYS, 
+						("nsRepository: + Unloading \"%s\".",
+						dll->GetFullPath()));
+					dll->Unload();
+				}
+				else
+				{
+					// THIS IS THE WORST SITUATION TO BE IN.
+					// Dll doesn't want to be unloaded. Cannot re-register
+					// this dll.
+					PR_LOG(logmodule, PR_LOG_ALWAYS,
+						("nsRepository: *** Dll already loaded. "
+						"Cannot unload either. Hence cannot re-register "
+						"\"%s\". Skipping...", dll->GetFullPath()));
+					return (NS_ERROR_FAILURE);
+				}
+			}
+			
+		} // dll isloaded
+		
+		// Sanity.
+		if (dll->IsLoaded())
+		{
+			// We went through all the above to make sure the dll
+			// is unloaded. And here we are with the dll still
+			// loaded. Whoever taught dp programming...
+			PR_LOG(logmodule, PR_LOG_ALWAYS,
+				("nsRepository: Dll still loaded. Cannot re-register "
+				"\"%s\". Skipping...", dll->GetFullPath()));
+			return (NS_ERROR_FAILURE);
+		}
+	} // dll != NULL
+	else
+	{
+		// Create and add the dll to the dllStore
+		// It is ok to do this even if the creation of nsDll
+		// didnt succeed. That way we wont do this again
+		// when we encounter the same dll.
+		dll = new nsDll(fullname);
+		dllStore->Put(fullname, dll);
+	} // dll == NULL
+	
+	// Either we are seeing the dll for the first time or the dll has
+	// changed since we last saw it and it is unloaded successfully.
+	//
+	// Now we can try register the dll for sure. 
+	nsresult res = SelfRegisterDll(dll);
+	nsresult ret = NS_OK;
+	if (NS_FAILED(res))
+	{
+		PR_LOG(logmodule, PR_LOG_ALWAYS,
+			("nsRepository: Autoregistration FAILED for "
+			"\"%s\". Skipping...", dll->GetFullPath()));
+		// XXX Mark dll as not xpcom dll along with modified time
+		// XXX and size in the registry so that in the next
+		// XXX session, we wont do all this again until
+		// XXX the dll changes.
+		ret = NS_ERROR_FAILURE;
+	}
+	else
+	{
+		PR_LOG(logmodule, PR_LOG_ALWAYS,
+			("nsRepository: Autoregistration Passed for "
+			"\"%s\". Skipping...", dll->GetFullPath()));
+		// XXX Mark dll along with modified time and size in the
+		// XXX registry.
+	}
+	return (ret);
+}
+
+
+/*
+ * SelfRegisterDll
+ *
+ * Given a dll abstraction, this will load, selfregister the dll and
+ * unload the dll.
+ *
+ */
+nsresult nsRepository::SelfRegisterDll(nsDll *dll)
+{
+	// Precondition: dll is not loaded already
+	PR_ASSERT(dll->IsLoaded() == PR_FALSE);
+
+	if (dll->Load() == PR_FALSE)
+	{
+		// Cannot load. Probably not a dll.
+		return(NS_ERROR_FAILURE);
+	}
+
+	nsRegisterProc regproc = (nsRegisterProc)dll->FindSymbol("NSRegisterSelf");
+	nsresult res;
+
+	if (regproc == NULL)
+	{
+		// Smart registration
+		NSQuickRegisterData qr = (NSQuickRegisterData)dll->FindSymbol(
+			NS_QUICKREGISTER_DATA_SYMBOL);
+		if (qr == NULL)
+		{
+			return(NS_ERROR_NO_INTERFACE);
+		}
+		// XXX register the quick registration data on behalf of the dll
+	}
+	else
+	{
+		// Call the NSRegisterSelfProc to enable dll registration
+		nsIServiceManager* serviceMgr = NULL;
+		nsresult res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+		if (res == NS_OK)
+		{
+			res = regproc(/* serviceMgr, */ dll->GetFullPath());
+		}
+		dll->Unload();
+	}
+	return (res);
+}
+
+
+nsresult nsRepository::SelfUnregisterDll(nsDll *dll)
+{
+	// Precondition: dll is not loaded
+	PR_ASSERT(dll->IsLoaded() == PR_FALSE);
+
+	if (dll->Load() == PR_FALSE)
+	{
+		// Cannot load. Probably not a dll.
+		return(NS_ERROR_FAILURE);
+	}
+
+	nsUnregisterProc unregproc =
+		(nsUnregisterProc) dll->FindSymbol("NSUnregisterSelf");
+	nsresult res = NS_OK;
+
+	if (unregproc == NULL)
+	{
+		// Smart unregistration
+		NSQuickRegisterData qr = (NSQuickRegisterData)
+			dll->FindSymbol(NS_QUICKREGISTER_DATA_SYMBOL);
+		if (qr == NULL)
+		{
+			return(NS_ERROR_NO_INTERFACE);
+		}
+		// XXX unregister the dll based on the quick registration data
+	}
+	else
+	{
+		// Call the NSUnregisterSelfProc to enable dll de-registration
+		nsIServiceManager* serviceMgr = NULL;
+		res = nsServiceManager::GetGlobalServiceManager(&serviceMgr);
+		if (res == NS_OK)
+		{
+			res = unregproc(/* serviceMgr, */dll->GetFullPath());
+		}
+		dll->Unload();
+	}
+	return (res);
 }
