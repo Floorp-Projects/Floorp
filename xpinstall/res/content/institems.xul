@@ -53,7 +53,7 @@
         ondialogcancel="return onCancel();">
 
     <script src="chrome://communicator/content/xpinstall/institems.js"/>
-    <stringbundle id="xpinstallBundle" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
+    <stringbundle id="xpinstallBundle" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
 
     <hbox flex="1" align="center">
         <hbox align="center">

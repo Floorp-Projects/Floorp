@@ -54,7 +54,7 @@
 
     <script src="chrome://communicator/content/xpinstall/xpistatus.js"/>
 
-    <stringbundle id="xpinstallBundle" src="chrome://communicator/locale/xpinstall/xpinstall.properties"/>
+    <stringbundle id="xpinstallBundle" src="chrome://global/locale/xpinstall/xpinstall.properties"/>
 
     <vbox id="mainProgressBox" flex="1">
         <groupbox id="progressGroup" orient="vertical" flex="1">
