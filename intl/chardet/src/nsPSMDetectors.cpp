@@ -302,6 +302,19 @@ void nsPSMDetector::Reset()
 //----------------------------------------------------------
 void nsPSMDetector::DataEnd()
 {
+  // since gb18030 covers almost all code points in big5, sjis, euc-xx, 
+  // it effectively make other verifiers unusable. Gb18030 is not 
+  // very popular, and it could reach Itsme state. We need to eliminate
+  // gb18030 when there are only 2 candidates left. 
+  if (mItems == 2) {
+    if ((&nsGB18030Verifier) == mVerifier[mItemIdx[0]]) {
+      Report( mVerifier[mItemIdx[1]]->charset);
+      mDone = PR_TRUE;
+    } else if ((&nsGB18030Verifier) == mVerifier[mItemIdx[1]]) {
+      Report( mVerifier[mItemIdx[0]]->charset);
+      mDone = PR_TRUE;
+    }
+  }
   if(mRunSampler)
      Sample(nsnull, 0, PR_TRUE);
 }
