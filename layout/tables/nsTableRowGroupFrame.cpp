@@ -570,9 +570,9 @@ AllocateSpecialHeight(nsIPresContext* aPresContext,
       if (rowSpan > 1) {
         // use a simple average to allocate the special row. This is not exact, 
         // but much better than nothing.
-        nsSize cellDesSize; 
+        nsSize cellDesSize = ((nsTableCellFrame*)cellFrame)->GetDesiredSize();
         ((nsTableRowFrame*)aRowFrame)->CalculateCellActualSize(cellFrame, cellDesSize.width, 
-                                                                    cellDesSize.height, cellDesSize.width);
+                                                               cellDesSize.height, cellDesSize.width);
         PRInt32 propHeight = NSToCoordRound((float)cellDesSize.height / (float)rowSpan);
         // special rows store the largest negative value 
         aHeight = PR_MIN(aHeight, -propHeight); 
@@ -681,10 +681,13 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
                                  // of the rows it spans
                 nscoord heightOfRowsSpanned = 0;
                 PRInt32 spanX;
+                PRBool cellsOrigInSpan = PR_FALSE; // do any cells originate in the spanned rows
                 for (spanX = 0; spanX < rowSpan; spanX++) {
-                  if (rowHeights[rowIndex + spanX] > 0) {
+                  PRInt32 rIndex = rowIndex + spanX;
+                  if (rowHeights[rIndex] > 0) {
                     // don't consider negative values of special rows
-                    heightOfRowsSpanned += rowHeights[rowIndex + spanX]; 
+                    heightOfRowsSpanned += rowHeights[rowIndex + spanX];
+                    cellsOrigInSpan = PR_TRUE;
                   }
                 }
                 // reduce the height by top and bottom margins
@@ -712,29 +715,32 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
                 else {
                   // the cell's height is larger than the available space of the rows it
                   // spans so distribute the excess height to the rows affected
-                  PRInt32 excessHeight = cellFrameSize.height - availHeightOfRowsSpanned;
+                  nscoord excessAvail = cellFrameSize.height - availHeightOfRowsSpanned;
+                  nscoord excessBasis = excessAvail;
   
                   nsTableRowFrame* rowFrameToBeResized = (nsTableRowFrame *)rowFrame;
-                  nscoord excessAllocated = 0;
                   // iterate every row starting at last row spanned and up to the row with
                   // the spanning cell. do this bottom up so that special rows can get a full
                   // allocation before other rows.
-                  for (PRInt32 rowX = (rowIndex + rowSpan) - 1; rowX >= rowIndex; rowX--) {
-                    nscoord excessForRow;
-                    // special rows get as much they can
-                    if (rowHeights[rowX] < 0) {
-                      nscoord excessAvail = excessHeight - excessAllocated;
-                      if (excessAvail > 0) { 
-                        // don't let the allocation excced what it needs
-                        excessForRow = (excessAvail > -rowHeights[rowX]) ? -rowHeights[rowX] : excessAvail;
+                  PRInt32 startRowIndex = rowIndex + rowSpan - 1;
+                  for (PRInt32 rowX = startRowIndex; (rowX >= rowIndex) && (excessAvail > 0); rowX--) {
+                    nscoord excessForRow = 0;
+                    // special rows gets as much as they can
+                    if (rowHeights[rowX] <= 0) {
+                      if ((rowX == startRowIndex) || (!cellsOrigInSpan)) {
+                        if (0 == rowHeights[rowX]) {
+                          // give it all since no cell originates in the row
+                          excessForRow = excessBasis;
+                        }
+                        else { // don't let the allocation excced what it needs
+                          excessForRow = (excessBasis > -rowHeights[rowX]) ? -rowHeights[rowX] : excessBasis;
+                        }
                         rowHeights[rowX] = excessForRow;
-                      }
-                      else {
-                        // nothing available so assign a zero allocation 
-                        excessForRow = rowHeights[rowX] = 0;
+                        excessBasis -= excessForRow;
+                        excessAvail -= excessForRow;
                       }
                     }
-                    else { // normal rows
+                    else if (cellsOrigInSpan) { // normal rows
                       // The amount of additional space each normal row gets is based on the
                       // percentage of space it occupies, i.e. they don't all get the
                       // same amount of available space
@@ -743,17 +749,26 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
                       // give rows their percentage, except for the first row which gets
                       // the remainder
                       excessForRow = (rowX == rowIndex) 
-                                     ? excessHeight - excessAllocated  
-                                     : NSToCoordRound(((float)(excessHeight)) * percent);
+                                     ? excessAvail  
+                                     : NSToCoordRound(((float)(excessBasis)) * percent);
                       // update the row height
                       rowHeights[rowX] += excessForRow;
+                      excessAvail -= excessForRow;
                     }
-                    excessAllocated += excessForRow;
-    
                     // Get the next row frame
                     GetNextRowSibling((nsIFrame**)&rowFrameToBeResized);
                   }
-                  NS_ASSERTION(excessAllocated == excessHeight, "excess distribution failed");
+                  // if excessAvail is > 0 it is because !cellsOrigInSpan and the 
+                  // allocation involving special rows couldn't allocate everything. 
+                  // just give the remainder to the last row spanned.
+                  if (excessAvail > 0) {
+                    if (rowHeights[startRowIndex] >= 0) {
+                      rowHeights[startRowIndex] += excessAvail;
+                    }
+                    else {
+                      rowHeights[startRowIndex] = excessAvail;
+                    }
+                  }
                 }
               }
             }
@@ -771,10 +786,11 @@ void nsTableRowGroupFrame::CalculateRowHeights(nsIPresContext* aPresContext,
             rowBounds.y += deltaY;
   
             // Adjust our running delta
-            deltaY += rowHeights[rowIndex] - rowBounds.height;
+            nscoord rowHeight = (rowHeights[rowIndex] > 0) ? rowHeights[rowIndex] : 0;
+            deltaY += rowHeight - rowBounds.height;
   
             // Resize the row to its final size and position
-            rowBounds.height = rowHeights[rowIndex];
+            rowBounds.height = rowHeight;
             rowFrame->SetRect(aPresContext, rowBounds);
 
             if (movedFrame) {
