@@ -345,17 +345,10 @@ void nsRootAccessible::FireAccessibleFocusEvent(nsIAccessible *aAccessible, nsID
     return;
   }
 
-  // Special DHTML handling
-  PRBool isHTML;  // If it is HTML we will check extra DHTML accesibility logic
-  nsCOMPtr<nsIContent> content(do_QueryInterface(aNode));
-  if (content) {
-    isHTML = content->IsContentOfType(nsIContent::eHTML);
-  }
-  else {
-    nsCOMPtr<nsIHTMLDocument> htmlDoc(do_QueryInterface(aNode));
-    isHTML = (htmlDoc != nsnull);
-  }
-  if (isHTML) {
+  // Special dynamic content handling
+  PRUint32 naturalRole; // The natural role is the role that this type of element normally has
+  aAccessible->GetRole(&naturalRole);
+  if (role != naturalRole) {  // xhtml2:role is being used to override element's natural role
     FireDHTMLFocusRelatedEvents(aAccessible, role);
   }
 

@@ -626,11 +626,19 @@ NS_IMETHODIMP nsAccessible::GetState(PRUint32 *aState)
   if (content->HasAttr(kNameSpaceID_None, nsAccessibilityAtoms::disabled)) {
     *aState |= STATE_UNAVAILABLE;
   }
-  else if ((!mRoleMapEntry && content->IsContentOfType(nsIContent::eELEMENT)) ||
-           content->IsFocusable()) {
-    // Default state for element accessible is focusable unless role manually set
-    // Subclasses of nsAccessible will clear focusable state if necessary
-    *aState |= STATE_FOCUSABLE;
+  else if (content->IsContentOfType(nsIContent::eELEMENT)) {
+    if (!mRoleMapEntry) {
+      // Default state for element accessible is focusable unless role is manually set
+      // Subclasses of nsAccessible will clear focusable state if necessary
+      *aState |= STATE_FOCUSABLE;
+    }
+    else {
+      nsIFrame *frame = GetFrame();
+      if (frame && frame->IsFocusable()) {
+        *aState |= STATE_FOCUSABLE;
+      }
+    }
+
     if (gLastFocusedNode == mDOMNode) {
       *aState |= STATE_FOCUSED;
     }
@@ -1358,14 +1366,15 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   // Definition of nsRoleMapEntry and nsStateMapEntry contains comments explaining this table.
   {"alert", ROLE_ALERT, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"button", ROLE_PUSHBUTTON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"checkbox", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
-  {"checkbox-tristate", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},
+  {"checkbox", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", 0, STATE_CHECKED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
+  {"checkbox-tristate", ROLE_CHECKBUTTON, eAggregateSubtree, 0, {"checked", 0, STATE_CHECKED}, {"checked", "mixed", STATE_MIXED}, {"readonly", 0, STATE_READONLY}},
   {"columnheader", ROLE_COLUMNHEADER, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
   {"icon", ROLE_ICON, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
+  {"list", ROLE_LIST, eTitleOnly, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
+  {"listitem", ROLE_LISTITEM, eAggregateSubtree, STATE_SELECTABLE, {"checked", 0, STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
   {"menu", ROLE_MENUPOPUP, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"menubar", ROLE_MENUBAR, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menuitem", ROLE_MENUITEM, eAggregateSubtree, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
-  {"menuitem-checkbox", ROLE_MENUITEM, eAggregateSubtree, 0, {"checked", "true", STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
+  {"menuitem", ROLE_MENUITEM, eAggregateSubtree, 0, {"checked", 0, STATE_CHECKED}, {0, 0, 0}, {0, 0, 0}},
   {"grid", ROLE_TABLE, eTitleOnly, STATE_FOCUSABLE, {"readonly", 0, STATE_READONLY}, {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
   {"gridcell", ROLE_CELL, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {"readonly", 0, STATE_READONLY}, {0, 0, 0}},
   {"option", ROLE_LISTITEM, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
@@ -1378,7 +1387,7 @@ nsRoleMapEntry nsAccessible::gWAIRoleMap[] =
   {"submit", ROLE_PUSHBUTTON, eAggregateSubtree, STATE_DEFAULT, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
   {"textarea", ROLE_TEXT, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_MULTI_LINE
   {"textfield", ROLE_TEXT, eTitleOnly, 0, {"readonly", 0, STATE_READONLY}, {0, 0, 0}, {0, 0, 0}}, // XXX Use ext state STATE_SINGLE_LINE
-  {"toolbar-icon", ROLE_PUSHBUTTON, eAggregateSubtree, 0, {"checked", "true", STATE_PRESSED}, {0, 0, 0}, {0, 0, 0}},
+  {"toolbar-icon", ROLE_PUSHBUTTON, eAggregateSubtree, 0, {"checked", 0, STATE_PRESSED}, {0, 0, 0}, {0, 0, 0}},
   {"tree", ROLE_OUTLINE, eTitleOnly, 0, {"readonly", 0, STATE_READONLY},  {"multiselect", 0, STATE_EXTSELECTABLE | STATE_MULTISELECTABLE}, {0, 0, 0}},
   {"treeitem", ROLE_OUTLINEITEM, eAggregateSubtree, STATE_SELECTABLE, {"selected", 0, STATE_SELECTED}, {0, 0, 0}, {0, 0, 0}},
   {nsnull, ROLE_NOTHING, eTitleOnly, 0, {0, 0, 0}, {0, 0, 0}, {0, 0, 0}},
@@ -1404,6 +1413,9 @@ nsStateMapEntry nsAccessible::gDisabledStateMap = {"disabled", 0, STATE_UNAVAILA
 
 NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
   if (mRoleMapEntry) {
     *aRole = mRoleMapEntry->role;
     if (*aRole != ROLE_NOTHING) {
@@ -1413,48 +1425,83 @@ NS_IMETHODIMP nsAccessible::GetFinalRole(PRUint32 *aRole)
   return GetRole(aRole);
 }
 
-PRUint32 nsAccessible::MappedAttrState(nsIContent *aContent, nsStateMapEntry *aStateMapEntry)
+PRUint32 nsAccessible::MappedAttrState(nsIContent *aContent, PRUint32 aStartState,
+                                       nsStateMapEntry *aStateMapEntry)
 {
   if (!aStateMapEntry->attributeName) {
-    return 0;
+    return aStartState;
   }
 
   nsAutoString attribValue;
   nsCOMPtr<nsIAtom> attribAtom = do_GetAtom(aStateMapEntry->attributeName); // XXX put atoms directly in entry
   if (NS_CONTENT_ATTR_HAS_VALUE == aContent->GetAttr(kNameSpaceID_StatesWAI_Unofficial,
                                                      attribAtom,
-                                                     attribValue) &&
-      (!aStateMapEntry->attributeValue || 
-        NS_ConvertUCS2toUTF8(attribValue).Equals(aStateMapEntry->attributeValue))) {
-    return aStateMapEntry->state;
+                                                     attribValue)) {
+    if (!aStateMapEntry->attributeValue) {
+      // No attribute value map specified in state map entry indicates state cleared
+      if (attribValue.EqualsLiteral("false")) {
+        return aStartState & ~aStateMapEntry->state;
+      }
+      return aStartState | aStateMapEntry->state;
+    }
+    if (NS_ConvertUTF16toUTF8(attribValue).Equals(aStateMapEntry->attributeValue)) {
+      return aStartState | aStateMapEntry->state;
+    }
   }
 
-  return 0;
+  return aStartState;
 }
 
 NS_IMETHODIMP nsAccessible::GetFinalState(PRUint32 *aState)
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
   nsresult rv = GetState(aState);
   if (NS_FAILED(rv) || !mRoleMapEntry) {
     return rv;
   }
 
-  *aState &= ~STATE_READONLY;  // Once DHTML role is used, we're only readonly if DHTML readonly used
+  PRUint32 finalState = *aState;
+  finalState &= ~STATE_READONLY;  // Once DHTML role is used, we're only readonly if DHTML readonly used
+
+  if (gLastFocusedNode == mDOMNode && (mRoleMapEntry->state & STATE_SELECTABLE)) {
+    // If we're focused and selectable and not inside a multiselect,
+    // then we're also selected
+    nsCOMPtr<nsIAccessible> container = this;
+    PRUint32 containerState = 0, containerRole;
+    while (0 == (containerState & STATE_MULTISELECTABLE)) {
+      nsCOMPtr<nsIAccessible> current;
+      current.swap(container);
+      current->GetParent(getter_AddRefs(container));      
+      if (!container || (NS_SUCCEEDED(container->GetFinalRole(&containerRole)) &&
+                         containerRole == ROLE_PANE)) {
+        finalState |= STATE_SELECTED;
+        break;
+      }
+      container->GetFinalState(&containerState);
+    }
+  }
 
   nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
   if (content) {
-    *aState |= mRoleMapEntry->state |
-               MappedAttrState(content, &mRoleMapEntry->attributeMap1) |
-               MappedAttrState(content, &mRoleMapEntry->attributeMap2) | 
-               MappedAttrState(content, &mRoleMapEntry->attributeMap3) |
-               MappedAttrState(content, &gDisabledStateMap); // Anything can be disabled/unavailable
-
+    finalState |= mRoleMapEntry->state;
+    finalState = MappedAttrState(content, finalState, &mRoleMapEntry->attributeMap1);
+    finalState = MappedAttrState(content, finalState, &mRoleMapEntry->attributeMap2);
+    finalState = MappedAttrState(content, finalState, &mRoleMapEntry->attributeMap3);
+    // Anything can be disabled/unavailable
+    finalState = MappedAttrState(content, finalState, &gDisabledStateMap);
   }
+
+  *aState = finalState;
   return rv;
 }
 
 NS_IMETHODIMP nsAccessible::GetFinalValue(nsAString& aValue)
 {
+  if (!mDOMNode) {
+    return NS_ERROR_FAILURE;  // Node already shut down
+  }
   if (mRoleMapEntry) {
     nsCOMPtr<nsIContent> content(do_QueryInterface(mDOMNode));
     if (content &&
