@@ -474,6 +474,48 @@ nsServiceManager::UnregisterService(const nsCID& aClass)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// let's do it again, this time with ProgIDs...
+
+nsresult
+nsServiceManager::GetService(const char* aProgID, const nsIID& aIID,
+                             nsISupports* *result,
+                             nsIShutdownListener* shutdownListener)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->GetService(aProgID, aIID, result, shutdownListener);
+}
+
+nsresult
+nsServiceManager::ReleaseService(const char* aProgID, nsISupports* service,
+                                 nsIShutdownListener* shutdownListener)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->ReleaseService(aProgID, service, shutdownListener);
+}
+
+nsresult
+nsServiceManager::RegisterService(const char* aProgID, nsISupports* aService)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->RegisterService(aProgID, aService);
+}
+
+nsresult
+nsServiceManager::UnregisterService(const char* aProgID)
+{
+    nsIServiceManager* mgr;
+    nsresult rv = GetGlobalServiceManager(&mgr);
+    if (NS_FAILED(rv)) return rv;
+    return mgr->UnregisterService(aProgID);
+}
+
+////////////////////////////////////////////////////////////////////////////////
 
 // XPCOM initialization
 //
