@@ -460,3 +460,4 @@ NS_IMETHODIMP nsImageControlFrame::SetSuggestedSize(nscoord aWidth, nscoord aHei
 //  mSuggestedHeight = aHeight;
   return NS_OK;
 }
+
