@@ -2765,7 +2765,9 @@ nsBoxFrame::Release(void)
 
 NS_INTERFACE_MAP_BEGIN(nsBoxFrame)
   NS_INTERFACE_MAP_ENTRY(nsIBox)
+#ifdef NS_DEBUG
   NS_INTERFACE_MAP_ENTRY(nsIFrameDebug)
+#endif
   NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIBox)
 NS_INTERFACE_MAP_END_INHERITING(nsHTMLContainerFrame)
 
@@ -2936,9 +2938,11 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                         tagString.ToCString(tagValue,100);
 
                
+#ifdef NS_DEBUG
                         printf("----- ");
                         nsFrame::ListTag(stdout, mOuter);
                         printf(" Tag='%s', id='%s' class='%s'---------------\n", tagValue, idValue, kClassValue);
+#endif
 
                         content->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::id, id);
                         id.ToCString(idValue,100);
@@ -2950,9 +2954,11 @@ nsBoxDebugInner::DisplayDebugInfoFor(nsIPresContext* aPresContext,
                         tag->ToString(tagString);
                         tagString.ToCString(tagValue,100);
 
+#ifdef NS_DEBUG
                         printf("child #%d: ", count);
                         nsFrame::ListTag(stdout, childFrame);
                         printf("Tag='%s', id='%s' class='%s'\n", tagValue, idValue, kClassValue);
+#endif
 
                         mDebugChild = childFrame;
                         nsCalculatedBoxInfoImpl aSize(childFrame);
