@@ -1150,13 +1150,13 @@ public abstract class ScriptableObject implements Scriptable, Serializable,
             }
         }
 
-        GlobalScope global = GlobalScope.get(this);
+        ClassCache cache = ClassCache.get(this);
         GetterSlot slot = new GetterSlot();
         slot.delegateTo = delegateTo;
-        slot.getter = new MemberBox(getter, global);
+        slot.getter = new MemberBox(getter, cache);
         slot.getter.prepareInvokerOptimization();
         if (setter != null) {
-            slot.setter = new MemberBox(setter, global);
+            slot.setter = new MemberBox(setter, cache);
             slot.setter.prepareInvokerOptimization();
             slot.setterReturnsValue = setter.getReturnType() != Void.TYPE;
         }

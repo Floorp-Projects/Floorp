@@ -43,8 +43,13 @@ import java.io.*;
  *
  * @author Norris Boyd
  */
-public class Shell extends GlobalScope
+public class Shell extends ScriptableObject
 {
+    public String getClassName()
+    {
+        return "global";
+    }
+
     /**
      * Main entry point.
      *
@@ -213,7 +218,7 @@ public class Shell extends GlobalScope
     public static void load(Context cx, Scriptable thisObj,
                             Object[] args, Function funObj)
     {
-        Shell shell = (Shell)GlobalScope.get(thisObj);
+        Shell shell = (Shell)getTopLevelScope(thisObj);
         for (int i = 0; i < args.length; i++) {
             shell.processSource(cx, cx.toString(args[i]));
         }

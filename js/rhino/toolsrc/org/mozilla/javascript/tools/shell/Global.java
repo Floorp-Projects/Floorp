@@ -598,10 +598,16 @@ public class Global extends ImporterTopLevel {
         errStream = err;
     }
 
-    public static Global getInstance(Scriptable scope) {
-        GlobalScope global = GlobalScope.get(scope);
-        if (global instanceof Global)
-            return (Global)global;
+    public static Global getInstance(Scriptable scope)
+    {
+        scope = ScriptableObject.getTopLevelScope(scope);
+        do {
+            if (scope instanceof Global) {
+                return (Global)scope;
+            }
+            scope = scope.getPrototype();
+        } while (scope != null);
+
         return null;
     }
 

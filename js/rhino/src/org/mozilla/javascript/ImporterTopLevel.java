@@ -70,25 +70,27 @@ import java.io.Serializable;
  *
  * @author Norris Boyd
  */
-public class ImporterTopLevel extends GlobalScope {
-
-    /**
-     * @deprecated
-     */
-    public ImporterTopLevel() {
-        init();
-    }
+public class ImporterTopLevel extends ScriptableObject
+{
+    public ImporterTopLevel() { }
 
     public ImporterTopLevel(Context cx) {
         this(cx, false);
     }
 
-    public ImporterTopLevel(Context cx, boolean sealed) {
-        cx.initStandardObjects(this, sealed);
-        init();
+    public ImporterTopLevel(Context cx, boolean sealed)
+    {
+        initStandardObjects(cx, sealed);
     }
 
-    private void init() {
+    public String getClassName()
+    {
+        return "global";
+    }
+
+    public void initStandardObjects(Context cx, boolean sealed)
+    {
+        cx.initStandardObjects(this, sealed);
         ImporterFunctions.setup(this);
     }
 

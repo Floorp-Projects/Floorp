@@ -115,12 +115,12 @@ public class FunctionObject extends BaseFunction
     public FunctionObject(String name, Member methodOrConstructor,
                           Scriptable scope)
     {
-        GlobalScope global = GlobalScope.get(scope);
+        ClassCache cache = ClassCache.get(scope);
         if (methodOrConstructor instanceof Constructor) {
-            member = new MemberBox((Constructor) methodOrConstructor, global);
+            member = new MemberBox((Constructor) methodOrConstructor, cache);
             isStatic = true; // well, doesn't take a 'this'
         } else {
-            member = new MemberBox((Method) methodOrConstructor, global);
+            member = new MemberBox((Method) methodOrConstructor, cache);
             isStatic = member.isStatic();
         }
         String methodName = member.getName();

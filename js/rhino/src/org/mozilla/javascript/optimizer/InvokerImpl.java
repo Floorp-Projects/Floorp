@@ -39,11 +39,8 @@ package org.mozilla.javascript.optimizer;
 import java.util.Hashtable;
 import java.lang.reflect.Method;
 
-import org.mozilla.javascript.Invoker;
-import org.mozilla.javascript.Context;
-import org.mozilla.javascript.GeneratedClassLoader;
-import org.mozilla.classfile.ByteCode;
-import org.mozilla.classfile.ClassFileWriter;
+import org.mozilla.javascript.*;
+import org.mozilla.classfile.*;
 
 /**
  * Avoid cost of java.lang.reflect.Method.invoke() by compiling a class to
@@ -51,28 +48,13 @@ import org.mozilla.classfile.ClassFileWriter;
  */
 public class InvokerImpl extends Invoker {
 
-    public Invoker createInvoker(Method method, Class[] types) {
+    public Invoker createInvoker(ClassCache cache,
+                                 Method method, Class[] types)
+    {
+        Invoker result = (Invoker)invokersCache.get(method);
+        if (result != null) { return result; }
 
-        Invoker result;
-        int classNum;
-        synchronized (this) {
-            if (invokersCache == null) {
-                Context cx = Context.getCurrentContext();
-                ClassLoader parentLoader = cx.getApplicationClassLoader();
-                classLoader = cx.createClassLoader(parentLoader);
-                // Initialize invokersCache after creation of classloader
-                // since it can throw SecurityException. It prevents
-                // NullPointerException when accessing classLoader on
-                // the second Invoker invocation.
-                invokersCache = new Hashtable();
-            } else {
-                result = (Invoker)invokersCache.get(method);
-                if (result != null) { return result; }
-            }
-            classNum = ++classNumber;
-        }
-
-        String className = "inv" + classNum;
+        String className = "inv"+cache.newClassSerialNumber();
 
         ClassFileWriter cfw = new ClassFileWriter(className,
                                 "org.mozilla.javascript.Invoker", "");
@@ -290,6 +272,21 @@ public class InvokerImpl extends Invoker {
         byte[] bytes = cfw.toByteArray();
 
         // Add class to our classloader.
+        boolean canCache = cache.isCachingEnabled();
+        GeneratedClassLoader classLoader;
+        synchronized (this) {
+            if (canCache && cachedClassLoader != null) {
+                classLoader = cachedClassLoader;
+            } else {
+                Context cx = Context.getCurrentContext();
+                ClassLoader parentLoader = cx.getApplicationClassLoader();
+                classLoader = cx.createClassLoader(parentLoader);
+                if (canCache) {
+                    cachedClassLoader = classLoader;
+                }
+            }
+        }
+
         Class c = classLoader.defineClass(className, bytes);
         classLoader.linkClass(c);
         try {
@@ -305,15 +302,24 @@ public class InvokerImpl extends Invoker {
                  +" on "+method.getDeclaringClass().getName()+" :: "
                  +params.toString()+" :: "+types);
         }
-        invokersCache.put(method, result);
+        if (canCache) {
+            invokersCache.put(method, result);
+        }
         return result;
+    }
+
+    public void clearMasterCaches()
+    {
+        synchronized (this) {
+            cachedClassLoader = null;
+        }
+        invokersCache = new Hashtable();
     }
 
     public Object invoke(Object that, Object [] args) {
         return null;
     }
 
-    int classNumber;
-    Hashtable invokersCache;
-    GeneratedClassLoader classLoader;
+    private Hashtable invokersCache = new Hashtable();
+    private GeneratedClassLoader cachedClassLoader;
 }

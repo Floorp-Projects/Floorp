@@ -70,7 +70,7 @@ the scripts are responsible for coordinating any accesses to shared variables.
 <p>A top-level scope is created by calling <tt>Context.initStandardObjects</tt>
  to create all the standard objects: </p>
 <pre>
-    GlobalScope scope = cx.initStandardObjects();
+    ScriptableObject scope = cx.initStandardObjects();
 </pre>
  The easiest way to embed Rhino is just to create a new scope this way whenever 
 you need one. However, <tt>initStandardObjects</tt> is an expensive method 
@@ -146,7 +146,7 @@ can be used concurrently. <br>
 <p>The ECMAScript standard defines that scripts can add properties to all standard library objects and in many cases it is also possible to change or delete their properties as well. Such behavior may not be suitable with shared scopes since if a script by mistake adds a property to a library object from the shared scope, that object would not be garbage collected until there re active references to the shared scope potentially leading to memory leaks. In addition if a script alters some of the standard objects, the library may not work properly for other scripts. Such bugs are hard to debug and to remove a possibility for them to occur one can use seal the shared scope and all its objects.
 <p>
 A notion of a sealed object is a JavaScript extension supported by Rhino and it means that properties can not be added/deleted to the object and the existing object properties can not be changed. Any attempt to modify sealed object throws an exception. To seal all objects in the standard library pass <tt>true</tt> for the sealed argument when calling <tt>Context.initStandardObjects(boolean)</tt>:
-<pre>    GlobalScope sealedSharedScope = cx.initStandardObjects(true);</pre>  
+<pre>    ScriptableObject sealedSharedScope = cx.initStandardObjects(true);</pre>  
 This seals only all standard library objects, it does not seal the shared scope itself thus after calling  <tt>initStandardObjects</tt>, <tt>sealedSharedScope</tt> cab be farther populated with application-specific objects and functions. Then after a custom initialization is done, one can seal the shared scope by calling <tt>ScriptableObject.sealObject()</tt>:
 <pre>    sealedSharedScope.sealObject();</pre>  
 

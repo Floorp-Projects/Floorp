@@ -319,23 +319,23 @@ public final class JavaAdapter
     private static Class getAdapterClass(Scriptable scope, Class superClass,
                                          Class[] interfaces, Scriptable obj)
     {
-        GlobalScope global = GlobalScope.get(scope);
-        Hashtable generated = global.javaAdapterGeneratedClasses;
+        ClassCache cache = ClassCache.get(scope);
+        Hashtable generated = cache.javaAdapterGeneratedClasses;
 
         ObjToIntMap names = getObjectFunctionNames(obj);
         JavaAdapterSignature sig;
         sig = new JavaAdapterSignature(superClass, interfaces, names);
         Class adapterClass = (Class) generated.get(sig);
         if (adapterClass == null) {
-            String adapterName;
-            synchronized (generated) {
-                adapterName = "adapter" + global.javaAdapterSerial++;
-            }
+            String adapterName = "adapter"
+                                 + cache.newClassSerialNumber();
             byte[] code = createAdapterCode(names, adapterName,
                                             superClass, interfaces, null);
 
             adapterClass = loadAdapterClass(adapterName, code);
-            generated.put(sig, adapterClass);
+            if (cache.isCachingEnabled()) {
+                generated.put(sig, adapterClass);
+            }
         }
         return adapterClass;
     }
@@ -470,8 +470,8 @@ public final class JavaAdapter
      */
     static IFGlue getIFGlueMaster(Class cl, Scriptable scope)
     {
-        GlobalScope global = GlobalScope.get(scope);
-        Hashtable masters = global.javaAdapterIFGlueMasters;
+        ClassCache cache = ClassCache.get(scope);
+        Hashtable masters = cache.javaAdapterIFGlueMasters;
 
         IFGlue glue = (IFGlue)masters.get(cl);
         if (glue == null) {
@@ -481,11 +481,8 @@ public final class JavaAdapter
             if (interfaceMethods.length != 1)
                 return null;
 
-            int serial;
-            synchronized (masters) {
-                serial = global.javaAdapterIFGlueSerial++;
-            }
-            String glueName = "ifglue"+serial;
+            String glueName = "ifglue"
+                               +cache.newClassSerialNumber();
             Method method = interfaceMethods[0];
             Class[] argTypes = method.getParameterTypes();
             byte[] code = createIFGlueCode(cl, method, argTypes, glueName);
@@ -497,7 +494,9 @@ public final class JavaAdapter
             }
             int[] argsToConvert = getArgsToConvert(argTypes);
             glue.ifglue_initMaster(argsToConvert);
-            masters.put(cl, glue);
+            if (cache.isCachingEnabled()) {
+                masters.put(cl, glue);
+            }
         }
         return glue;
     }

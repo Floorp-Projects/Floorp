@@ -671,7 +671,7 @@ public class Context {
      *
      * @return the initialized scope
      */
-    public GlobalScope initStandardObjects()
+    public ScriptableObject initStandardObjects()
     {
         return initStandardObjects(false);
     }
@@ -699,11 +699,11 @@ public class Context {
      *        cannot be modified.
      * @return the initialized scope
      */
-    public GlobalScope initStandardObjects(boolean sealed)
+    public ScriptableObject initStandardObjects(boolean sealed)
     {
-        GlobalScope global = new GlobalScope();
-        initStandardObjects(global, sealed);
-        return global;
+        NativeObject scope = new NativeObject();
+        initStandardObjects(scope, sealed);
+        return scope;
     }
 
     /**
@@ -717,10 +717,6 @@ public class Context {
      * can be evaluated in that scope.<p>
      *
      * This method does not affect the Context it is called upon.
-     *
-     * If the explicit scope argument is not null and is not an instance of
-     * {@link GlobalScope} or its subclasses, parts of the standard library
-     * will be run slower.
      *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
@@ -750,10 +746,6 @@ public class Context {
      * the current ECMA/ISO language specification, but is likely for
      * the next version.
      *
-     * If the explicit scope argument is not null and is not an instance of
-     * {@link GlobalScope} or its subclasses, parts of the standard library
-     * will be run slower.
-     *
      * @param scope the scope to initialize, or null, in which case a new
      *        object will be created to serve as the scope
      * @param sealed whether or not to create sealed standard objects that
@@ -765,10 +757,9 @@ public class Context {
                                                 boolean sealed)
     {
         if (scope == null) {
-            scope = new GlobalScope();
-        } else if (!(scope instanceof GlobalScope)) {
-            GlobalScope.embed(scope);
+            scope = new NativeObject();
         }
+        (new ClassCache()).associate(scope);
 
         BaseFunction.init(this, scope, sealed);
         NativeObject.init(this, scope, sealed);
@@ -1529,8 +1520,8 @@ public class Context {
 
     /**
      * @deprecated To enable/disable caching for a particular top scope,
-     * use {@link GlobalScope#get(Scriptable)} and
-     * {@link GlobalScope#setCachingEnabled(boolean)}.
+     * use {@link ClassCache#get(Scriptable)} and
+     * {@link ClassCache#setReflectionCachingEnabled(boolean)}.
      * The function is kept only for compatibility and does nothing.
      */
     public static void setCachingEnabled(boolean cachingEnabled)

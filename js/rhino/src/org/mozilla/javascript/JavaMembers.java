@@ -464,23 +464,23 @@ class JavaMembers
         Constructor[] constructors = cl.getConstructors();
         int N = constructors.length;
         ctors = new MemberBox[N];
-        GlobalScope global = GlobalScope.get(scope);
+        ClassCache cache = ClassCache.get(scope);
         for (int i = 0; i != N; ++i) {
-            ctors[i] = new MemberBox(constructors[i], global);
+            ctors[i] = new MemberBox(constructors[i], cache);
         }
     }
 
     private static void initNativeMethods(Hashtable ht, Scriptable scope)
     {
         Enumeration e = ht.keys();
-        GlobalScope global = GlobalScope.get(scope);
+        ClassCache cache = ClassCache.get(scope);
         while (e.hasMoreElements()) {
             String name = (String)e.nextElement();
             MemberBox[] methods;
             Object value = ht.get(name);
             if (value instanceof Method) {
                 methods = new MemberBox[1];
-                methods[0] = new MemberBox((Method)value, global);
+                methods[0] = new MemberBox((Method)value, cache);
             } else {
                 ObjArray overloadedMethods = (ObjArray)value;
                 int N = overloadedMethods.size();
@@ -488,7 +488,7 @@ class JavaMembers
                 methods = new MemberBox[N];
                 for (int i = 0; i != N; ++i) {
                     Method method = (Method)overloadedMethods.get(i);
-                    methods[i] = new MemberBox(method, global);
+                    methods[i] = new MemberBox(method, cache);
                 }
             }
             NativeJavaMethod fun = new NativeJavaMethod(methods);
@@ -595,8 +595,8 @@ class JavaMembers
                                    Class staticType)
     {
         JavaMembers members;
-        GlobalScope global = GlobalScope.get(scope);
-        Hashtable ct = global.classTable;
+        ClassCache cache = ClassCache.get(scope);
+        Hashtable ct = cache.classTable;
 
         Class cl = dynamicType;
         for (;;) {
@@ -630,7 +630,7 @@ class JavaMembers
             }
         }
 
-        if (global.isCachingEnabled)
+        if (cache.isCachingEnabled())
             ct.put(cl, members);
         return members;
     }

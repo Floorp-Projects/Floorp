@@ -48,7 +48,15 @@ public abstract class Invoker {
     public abstract Object invoke(Object that, Object [] args);
 
     /** Factory method to get invoker for given method */
-    public Invoker createInvoker(Method method, Class[] types)
+    public Invoker createInvoker(ClassCache cache,
+                                 Method method, Class[] types)
+    {
+        // should not be called unless master
+        throw new IllegalStateException();
+    }
+
+    /** Factory method to clear internal cache if any */
+    public void clearMasterCaches()
     {
         // should not be called unless master
         throw new IllegalStateException();

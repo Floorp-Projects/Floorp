@@ -50,15 +50,15 @@ import java.io.*;
 final class MemberBox implements Serializable
 {
 
-    MemberBox(Method method, GlobalScope scope)
+    MemberBox(Method method, ClassCache cache)
     {
-        this.scope = scope;
+        this.cache = cache;
         init(method);
     }
 
-    MemberBox(Constructor constructor, GlobalScope scope)
+    MemberBox(Constructor constructor, ClassCache cache)
     {
-        this.scope = scope;
+        this.cache = cache;
         init(constructor);
     }
 
@@ -70,21 +70,21 @@ final class MemberBox implements Serializable
 
     void prepareInvokerOptimization()
     {
-        if (scope.invokerOptimization) {
-            Invoker master = (Invoker)scope.invokerMaster;
+        if (cache.invokerOptimization) {
+            Invoker master = (Invoker)cache.invokerMaster;
             if (master == null) {
                 master = Invoker.makeMaster();
                 if (master == null) {
-                    scope.invokerOptimization = false;
+                    cache.invokerOptimization = false;
                 } else {
-                    scope.invokerMaster = master;
+                    cache.invokerMaster = master;
                 }
             }
             if (master != null) {
                 try {
-                    invoker = master.createInvoker(method(), argTypes);
+                    invoker = master.createInvoker(cache, method(), argTypes);
                 } catch (RuntimeException ex) {
-                    scope.invokerOptimization = false;
+                    cache.invokerOptimization = false;
                 }
             }
         }
@@ -398,7 +398,7 @@ final class MemberBox implements Serializable
         return result;
     }
 
-    private GlobalScope scope;
+    private ClassCache cache;
     private transient Member memberObject;
     transient Class[] argTypes;
     transient Invoker invoker;
