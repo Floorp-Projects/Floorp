@@ -708,7 +708,7 @@ nsImageLoadingContent::FireEvent(const nsAString& aEventType)
 
   rv = eventQ->PostEvent(evt);
 
-  if (rv == PR_SUCCESS) {
+  if (NS_SUCCEEDED(rv)) {
     // Add the dummy request (the ImageEvent) to the load group only
     // after all the early returns here!
     loadGroup->AddRequest(evt, nsnull);

@@ -1648,11 +1648,18 @@ nsFtpState::R_stor() {
         rv = mDPipe->OpenOutputStream(nsITransport::OPEN_UNBUFFERED, 0, 0,
                                       getter_AddRefs(output));
         if (NS_FAILED(rv)) return FTP_ERROR;
+
+        // perform the data copy on the socket transport thread.  we do this
+        // because "output" is a socket output stream, so the result is that
+        // all work will be done on the socket transport thread.
+        nsCOMPtr<nsIEventTarget> stEventTarget = do_GetService(kSocketTransportServiceCID, &rv);
+        if (NS_FAILED(rv)) return FTP_ERROR;
         
         nsCOMPtr<nsIAsyncStreamCopier> copier;
         rv = NS_NewAsyncStreamCopier(getter_AddRefs(copier),
                                      mWriteStream,
                                      output,
+                                     stEventTarget,
                                      PR_TRUE,   // mWriteStream is buffered
                                      PR_FALSE); // output is NOT buffered
         if (NS_FAILED(rv)) return FTP_ERROR;

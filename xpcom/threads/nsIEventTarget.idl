@@ -13,13 +13,12 @@
  *
  * The Original Code is Mozilla.
  *
- * The Initial Developer of the Original Code is
- * Netscape Communications Corporation.
- * Portions created by the Initial Developer are Copyright (C) 2002
- * the Initial Developer. All Rights Reserved.
+ * The Initial Developer of the Original Code is IBM Corporation.
+ * Portions created by IBM Corporation are Copyright (C) 2003
+ * IBM Corporation. All Rights Reserved.
  *
  * Contributor(s):
- *   Darin Fisher <darin@netscape.com>
+ *   IBM Corp.
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or
@@ -35,14 +34,34 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsIStreamTransportService.h"
+#include "nsISupports.idl"
 
-class nsStreamTransportService : public nsIStreamTransportService
+%{C++
+#include "plevent.h"
+%}
+
+[ptr] native PLEventPtr(PLEvent);
+
+/**
+ * nsIEventTarget
+ *
+ * This interface is used to dispatch events to a particular thread.  In many
+ * cases the event target also supports nsIEventQueue.
+ */
+[scriptable, uuid(ea99ad5b-cc67-4efb-97c9-2ef620a59f2a)]
+interface nsIEventTarget : nsISupports
 {
-public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISTREAMTRANSPORTSERVICE
+    /**
+     * Method for posting an asynchronous event to the event target.  If this
+     * method succeeds, then the event will be dispatched on the target thread.
+     *
+     * @param aEvent
+     *        The event to dispatched.
+     */
+    [noscript] void postEvent(in PLEventPtr aEvent);
 
-    nsStreamTransportService() {}
-    virtual ~nsStreamTransportService() {}
+    /**
+     * This method returns true if the event target is the current thread.
+     */
+    boolean isOnCurrentThread();
 };

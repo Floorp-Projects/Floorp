@@ -35,13 +35,7 @@
 
 #include "nsIRunnable.h"
 #include "nsIThread.h"
-#include "nsIThreadPool.h"
-#include "nsISupportsArray.h"
-#include "nsCOMArray.h"
-#include "prcvar.h"
 #include "nsCOMPtr.h"
-
-class nsThreadPoolBusyBody;
 
 class nsThread : public nsIThread 
 {
@@ -73,73 +67,6 @@ protected:
     nsCOMPtr<nsIRunnable>       mRunnable;
     PRBool                      mDead;
     PRLock*                     mStartLock;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsThreadPool : public nsIThreadPool
-{
-friend class nsThreadPoolBusyBody;
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIThreadPool methods:
-    NS_DECL_NSITHREADPOOL
-
-    // nsThreadPool methods:
-    nsThreadPool();
-    virtual ~nsThreadPool();
-
-    nsIRunnable* GetRequest(nsIThread* currentThread);
-    void         RequestDone(nsIRunnable *request);
-
-    static PRBool InterruptThreads(nsISupports* aElement, 
-                                   void *aData);
-
-    static NS_METHOD
-    Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr);
-    
-protected:
-    nsresult AddThread();
-    nsresult RemoveThread(nsIThread* currentThread);
-
-    nsCOMPtr<nsISupportsArray>  mThreads;
-    nsCOMArray<nsIRunnable>     mPendingRequests;
-    nsCOMArray<nsIRunnable>     mRunningRequests;
-    
-    PRLock*                     mLock;
-    PRCondVar*                  mThreadExit;
-    PRCondVar*                  mPendingRequestAdded;
-    PRCondVar*                  mPendingRequestsAtZero;
-
-    
-    PRUint32                    mStackSize;
-    PRThreadPriority            mPriority;
-    PRThreadScope               mScope;
-
-    PRUint32                    mMinThreads;
-    PRUint32                    mMaxThreads;
-    PRUint32                    mBusyThreads;
-    PRBool                      mShuttingDown;
-};
-
-////////////////////////////////////////////////////////////////////////////////
-
-class nsThreadPoolRunnable : public nsIRunnable 
-{
-public:
-    NS_DECL_ISUPPORTS
-
-    // nsIRunnable methods:
-    NS_DECL_NSIRUNNABLE
-
-    // nsThreadPoolRunnable methods:
-    nsThreadPoolRunnable(nsThreadPool* pool);
-    virtual ~nsThreadPoolRunnable();
-
-protected:
-    nsCOMPtr<nsThreadPool>      mPool;
-
 };
 
 ////////////////////////////////////////////////////////////////////////////////

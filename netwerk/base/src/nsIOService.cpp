@@ -192,10 +192,6 @@ nsIOService::Init()
     if (NS_FAILED(rv))
         NS_WARNING("failed to get socket transport service");
 
-    mStreamTransportService = do_GetService(kStreamTransportServiceCID, &rv);
-    if (NS_FAILED(rv))
-        NS_WARNING("failed to get stream transport service");
-
     mDNSService = do_GetService(kDNSServiceCID, &rv);
     if (NS_FAILED(rv))
         NS_WARNING("failed to get DNS service");
@@ -672,9 +668,6 @@ nsIOService::Observe(nsISupports *subject,
     }
     else if (!strcmp(topic, NS_XPCOM_SHUTDOWN_OBSERVER_ID)) {
         SetOffline(PR_TRUE);
-
-        if (mStreamTransportService)
-            mStreamTransportService->Shutdown();
 
         // Break circular reference.
         mProxyService = 0;

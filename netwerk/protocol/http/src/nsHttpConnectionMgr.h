@@ -44,24 +44,20 @@
 #include "nsHashtable.h"
 #include "prmon.h"
 
-#include "nsISocketTransportService.h"
+#include "nsIEventTarget.h"
 
 class nsHttpPipeline;
 
 //-----------------------------------------------------------------------------
 
-class nsHttpConnectionMgr : public nsISocketEventHandler
+class nsHttpConnectionMgr
 {
 public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSISOCKETEVENTHANDLER
-
     //-------------------------------------------------------------------------
     // NOTE: functions below may only be called on the main thread.
     //-------------------------------------------------------------------------
 
     nsHttpConnectionMgr();
-    virtual ~nsHttpConnectionMgr();
 
     // XXX cleanup the way we pass around prefs.
     nsresult Init(PRUint16 maxConnections,
@@ -77,6 +73,19 @@ public:
     // NOTE: functions below may be called on any thread.
     //-------------------------------------------------------------------------
 
+    nsrefcnt AddRef()
+    {
+        return PR_AtomicIncrement(&mRef);
+    }
+
+    nsrefcnt Release()
+    {
+        nsrefcnt n = PR_AtomicDecrement(&mRef);
+        if (n == 0)
+            delete this;
+        return n;
+    }
+
     // adds a transaction to the list of managed transactions.
     nsresult AddTransaction(nsHttpTransaction *);
 
@@ -89,7 +98,7 @@ public:
 
     // called to get a reference to the socket transport service.  the socket
     // transport service is not available when the connection manager is down.
-    nsresult GetSTS(nsISocketTransportService **);
+    nsresult GetSocketThreadEventTarget(nsIEventTarget **);
 
     // called when a connection is done processing a transaction.  if the 
     // connection can be reused then it will be added to the idle list, else
@@ -109,15 +118,7 @@ public:
     nsresult ProcessPendingQ(nsHttpConnectionInfo *);
 
 private:
-
-    enum {
-        MSG_SHUTDOWN,
-        MSG_NEW_TRANSACTION,
-        MSG_CANCEL_TRANSACTION,
-        MSG_PROCESS_PENDING_Q,
-        MSG_PRUNE_DEAD_CONNECTIONS,
-        MSG_RECLAIM_CONNECTION
-    };
+    virtual ~nsHttpConnectionMgr();
 
     // nsConnectionEntry
     //
@@ -165,8 +166,9 @@ private:
     // NOTE: these members may be accessed from any thread (use mMonitor)
     //-------------------------------------------------------------------------
 
-    PRMonitor                           *mMonitor;
-    nsCOMPtr<nsISocketTransportService>  mSTS; // cached reference to STS
+    PRInt32                   mRef;
+    PRMonitor                *mMonitor;
+    nsCOMPtr<nsIEventTarget>  mSTEventTarget; // event target for socket thread
 
     // connection limits
     PRUint16 mMaxConns;
@@ -192,14 +194,62 @@ private:
     nsresult DispatchTransaction(nsConnectionEntry *, nsAHttpTransaction *,
                                  PRUint8 caps, nsHttpConnection *);
     PRBool   BuildPipeline(nsConnectionEntry *, nsAHttpTransaction *, nsHttpPipeline **);
-    nsresult PostEvent(PRUint32 type, PRUint32 uparam, void *vparam);
+    nsresult ProcessNewTransaction(nsHttpTransaction *);
 
-    void     OnMsgShutdown();
-    nsresult OnMsgNewTransaction(nsHttpTransaction *);
-    void     OnMsgCancelTransaction(nsHttpTransaction *trans, nsresult reason);
-    void     OnMsgProcessPendingQ(nsHttpConnectionInfo *ci);
-    void     OnMsgPruneDeadConnections();
-    void     OnMsgReclaimConnection(nsHttpConnection *);
+    // message handlers have this signature
+    typedef void (nsHttpConnectionMgr:: *nsConnEventHandler)(nsresult, void *);
+
+    // nsConnEvent
+    //
+    // subclass of PLEvent used to marshall events to the socket transport
+    // thread.  this class is used to implement PostEvent.
+    //
+    class nsConnEvent : public PLEvent
+    {
+    public:
+        nsConnEvent(nsHttpConnectionMgr *mgr,
+                    nsConnEventHandler handler,
+                    nsresult status,
+                    void *param)
+            : mHandler(handler)
+            , mStatus(status)
+            , mParam(param)
+        {
+            NS_ADDREF(mgr);
+            PL_InitEvent(this, mgr, HandleEvent, DestroyEvent);
+        }
+
+        PR_STATIC_CALLBACK(void*) HandleEvent(PLEvent *event)
+        {
+            nsHttpConnectionMgr *mgr = (nsHttpConnectionMgr *) event->owner;
+            nsConnEvent *self = (nsConnEvent *) event;
+            nsConnEventHandler handler = self->mHandler;
+            (mgr->*handler)(self->mStatus, self->mParam);
+            NS_RELEASE(mgr);
+            return nsnull;
+        }
+        PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent *event)
+        {
+            delete (nsConnEvent *) event;
+        }
+
+    private:
+        nsConnEventHandler  mHandler;
+        nsresult            mStatus;
+        void               *mParam;
+    };
+
+    nsresult PostEvent(nsConnEventHandler  handler,
+                       nsresult            status = NS_OK,
+                       void               *param  = nsnull);
+
+    // message handlers
+    void OnMsgShutdown             (nsresult status, void *param);
+    void OnMsgNewTransaction       (nsresult status, void *param);
+    void OnMsgCancelTransaction    (nsresult status, void *param);
+    void OnMsgProcessPendingQ      (nsresult status, void *param);
+    void OnMsgPruneDeadConnections (nsresult status, void *param);
+    void OnMsgReclaimConnection    (nsresult status, void *param);
 
     // counters
     PRUint16 mNumActiveConns;

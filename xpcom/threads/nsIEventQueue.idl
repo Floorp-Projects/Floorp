@@ -42,11 +42,10 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-#include "nsISupports.idl"
+#include "nsIEventTarget.idl"
 
 %{C++
 #include "prthread.h"
-#include "plevent.h"
 
 // {13D86C61-00A9-11d3-9F2A-00400553EEF0}
 #define NS_EVENTQUEUE_CID \
@@ -60,7 +59,6 @@
 // some forward decls
 //
 [ptr] native PLEventQueuePtr(PLEventQueue);
-[ptr] native PLEventPtr(PLEvent);
 [ptr] native PRThreadPtr(PRThread);
 native PRStatus(PRStatus);
 [ref] native PRBoolRef(PRBool);
@@ -68,14 +66,13 @@ native PLHandleEventProc(PLHandleEventProc);
 native PLDestroyEventProc(PLDestroyEventProc);
 
 [scriptable, uuid(176AFB41-00A4-11d3-9F2A-00400553EEF0)]
-interface nsIEventQueue : nsISupports
+interface nsIEventQueue : nsIEventTarget
 {
     [noscript] void initEvent(in PLEventPtr aEvent, 
                               in voidPtr owner, 
                               in PLHandleEventProc handler, 
                               in PLDestroyEventProc destructor);
     
-    [notxpcom] PRStatus postEvent(in PLEventPtr aEvent);
     [noscript] void postSynchronousEvent(in PLEventPtr aEvent, 
                                          out voidPtr aResult);
 	
@@ -101,7 +98,6 @@ interface nsIEventQueue : nsISupports
     [noscript] void revokeEvents(in voidPtr owner);
     [noscript] PLEventQueuePtr getPLEventQueue();
 
-    boolean isQueueOnCurrentThread();
     boolean isQueueNative();
 
     // effectively kill the queue. warning: the queue is allowed to delete

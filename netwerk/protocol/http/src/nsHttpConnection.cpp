@@ -139,7 +139,7 @@ nsHttpConnection::Activate(nsAHttpTransaction *trans, PRUint8 caps)
     }
 
     // wait for the output stream to be readable
-    rv = mSocketOut->AsyncWait(this, 0, nsnull);
+    rv = mSocketOut->AsyncWait(this, 0, 0, nsnull);
     if (NS_SUCCEEDED(rv))
         return rv;
 
@@ -333,7 +333,7 @@ nsHttpConnection::OnHeadersAvailable(nsAHttpTransaction *trans,
             *reset = PR_TRUE;
             ProxyStartSSL();
             mCompletedSSLConnect = PR_TRUE;
-            nsresult rv = mSocketOut->AsyncWait(this, 0, nsnull);
+            nsresult rv = mSocketOut->AsyncWait(this, 0, 0, nsnull);
             // XXX what if this fails -- need to handle this error
             NS_ASSERTION(NS_SUCCEEDED(rv), "mSocketOut->AsyncWait failed");
         }
@@ -363,7 +363,7 @@ nsHttpConnection::ResumeSend()
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (mSocketOut)
-        return mSocketOut->AsyncWait(this, 0, nsnull);
+        return mSocketOut->AsyncWait(this, 0, 0, nsnull);
 
     NS_NOTREACHED("no socket output stream");
     return NS_ERROR_UNEXPECTED;
@@ -377,7 +377,7 @@ nsHttpConnection::ResumeRecv()
     NS_ASSERTION(PR_GetCurrentThread() == gSocketThread, "wrong thread");
 
     if (mSocketIn)
-        return mSocketIn->AsyncWait(this, 0, nsnull);
+        return mSocketIn->AsyncWait(this, 0, 0, nsnull);
 
     NS_NOTREACHED("no socket input stream");
     return NS_ERROR_UNEXPECTED;
@@ -547,7 +547,7 @@ nsHttpConnection::OnSocketWritable()
         }
         else if (NS_FAILED(mSocketOutCondition)) {
             if (mSocketOutCondition == NS_BASE_STREAM_WOULD_BLOCK)
-                rv = mSocketOut->AsyncWait(this, 0, nsnull); // continue writing
+                rv = mSocketOut->AsyncWait(this, 0, 0, nsnull); // continue writing
             else
                 rv = mSocketOutCondition;
             again = PR_FALSE;
@@ -561,7 +561,7 @@ nsHttpConnection::OnSocketWritable()
             //
             mTransaction->OnTransportStatus(nsISocketTransport::STATUS_WAITING_FOR, 0);
 
-            rv = mSocketIn->AsyncWait(this, 0, nsnull); // start reading
+            rv = mSocketIn->AsyncWait(this, 0, 0, nsnull); // start reading
             again = PR_FALSE;
         }
         // write more to the socket until error or end-of-request...
@@ -626,7 +626,7 @@ nsHttpConnection::OnSocketReadable()
         else if (NS_FAILED(mSocketInCondition)) {
             // continue waiting for the socket if necessary...
             if (mSocketInCondition == NS_BASE_STREAM_WOULD_BLOCK)
-                rv = mSocketIn->AsyncWait(this, 0, nsnull);
+                rv = mSocketIn->AsyncWait(this, 0, 0, nsnull);
             else
                 rv = mSocketInCondition;
             again = PR_FALSE;
@@ -691,13 +691,13 @@ nsHttpConnection::SetupSSLProxyConnect()
 //-----------------------------------------------------------------------------
 
 NS_IMPL_THREADSAFE_ISUPPORTS4(nsHttpConnection,
-                              nsIInputStreamNotify,
-                              nsIOutputStreamNotify,
+                              nsIInputStreamCallback,
+                              nsIOutputStreamCallback,
                               nsITransportEventSink,
                               nsIInterfaceRequestor)
 
 //-----------------------------------------------------------------------------
-// nsHttpConnection::nsIInputStreamNotify
+// nsHttpConnection::nsIInputStreamCallback
 //-----------------------------------------------------------------------------
 
 // called on the socket transport thread
@@ -721,7 +721,7 @@ nsHttpConnection::OnInputStreamReady(nsIAsyncInputStream *in)
 }
 
 //-----------------------------------------------------------------------------
-// nsHttpConnection::nsIOutputStreamNotify
+// nsHttpConnection::nsIOutputStreamCallback
 //-----------------------------------------------------------------------------
 
 NS_IMETHODIMP

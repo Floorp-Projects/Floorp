@@ -40,66 +40,72 @@
 
 #include "nscore.h"
 
-class nsIAsyncInputStream;
-class nsIAsyncOutputStream;
-class nsIInputStreamNotify;
-class nsIOutputStreamNotify;
-class nsIEventQueue;
-class nsIMemory;
+class nsIInputStream;
+class nsIOutputStream;
+class nsIInputStreamCallback;
+class nsIOutputStreamCallback;
+class nsIEventTarget;
 
 /**
  * A "one-shot" proxy of the OnInputStreamReady callback.  The resulting
  * proxy object's OnInputStreamReady function may only be called once!  The
  * proxy object ensures that the real notify object will be free'd on the
- * thread owning the given event queue regardless of what thread the proxy
- * object is destroyed on.
+ * thread corresponding to the given event target regardless of what thread
+ * the proxy object is destroyed on.
  *
  * This function is designed to be used to implement AsyncWait when the
- * aEventQ parameter is non-null.
+ * aEventTarget parameter is non-null.
  */
 extern NS_COM nsresult
-NS_NewInputStreamReadyEvent(nsIInputStreamNotify **aEvent,
-                            nsIInputStreamNotify *aNotify,
-                            nsIEventQueue *aEventQ);
+NS_NewInputStreamReadyEvent(nsIInputStreamCallback **aEvent,
+                            nsIInputStreamCallback  *aNotify,
+                            nsIEventTarget          *aEventTarget);
 
 /**
  * A "one-shot" proxy of the OnOutputStreamReady callback.  The resulting
  * proxy object's OnOutputStreamReady function may only be called once!  The
  * proxy object ensures that the real notify object will be free'd on the
- * thread owning the given event queue regardless of what thread the proxy
- * object is destroyed on.
+ * thread corresponding to the given event target regardless of what thread 
+ * the proxy object is destroyed on.
  *
  * This function is designed to be used to implement AsyncWait when the
- * aEventQ parameter is non-null.
+ * aEventTarget parameter is non-null.
  */
 extern NS_COM nsresult
-NS_NewOutputStreamReadyEvent(nsIOutputStreamNotify **aEvent,
-                             nsIOutputStreamNotify *aNotify,
-                             nsIEventQueue *aEventQ);
+NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback **aEvent,
+                             nsIOutputStreamCallback  *aNotify,
+                             nsIEventTarget           *aEventTarget);
+
+/* ------------------------------------------------------------------------- */
+
+enum nsAsyncCopyMode {
+    NS_ASYNCCOPY_VIA_READSEGMENTS,
+    NS_ASYNCCOPY_VIA_WRITESEGMENTS
+};
 
 /**
- * Asynchronously copy data from an input stream to an output stream.
+ * This function is called when the async copy process completes.  The reported
+ * status is NS_OK on success and some error code on failure.
+ */
+typedef void (* nsAsyncCopyCallbackFun)(void *closure, nsresult status);
+
+/**
+ * This function asynchronously copies data from the source to the sink. All
+ * data transfer occurs on the thread corresponding to the given event target.
+ * A null event target is not permitted.
  *
- * @param aSource
- *        the source input stream containing the data to copy.
- * @param aSink
- *        the data is copied to this output stream.
- * @param aChunkSize
- *        read/write at most this many bytes at one time.
- * @param aBufferedSource
- *        true if source implements ReadSegments.
- * @param aBufferedSink
- *        true if sink implements WriteSegments.
- *
- * NOTE: the implementation does not rely on any event queues.
+ * The copier handles blocking or non-blocking streams transparently.  If a
+ * stream operation returns NS_BASE_STREAM_WOULD_BLOCK, then the stream will
+ * be QI'd to nsIAsync{In,Out}putStream and its AsyncWait method will be used
+ * to determine when to resume copying.
  */
 extern NS_COM nsresult
-NS_AsyncCopy(nsIAsyncInputStream *aSource,
-             nsIAsyncOutputStream *aSink,
-             PRBool aBufferedSource = PR_TRUE,
-             PRBool aBufferedSink = PR_TRUE,
-             PRUint32 aSegmentSize = 4096,
-             PRUint32 aSegmentCount = 1,
-             nsIMemory *aSegmentAlloc = nsnull);
+NS_AsyncCopy(nsIInputStream         *aSource,
+             nsIOutputStream        *aSink,
+             nsIEventTarget         *aEventTarget,
+             nsAsyncCopyMode         aMode = NS_ASYNCCOPY_VIA_READSEGMENTS,
+             PRUint32                aChunkSize = 4096,
+             nsAsyncCopyCallbackFun  aCallbackFun = nsnull,
+             void                   *aCallbackClosure = nsnull);
 
 #endif // !nsStreamUtils_h__

@@ -236,13 +236,12 @@ nsHttpChannel::AsyncCall(nsAsyncCallback funcPtr)
                  nsHttpChannel::AsyncCall_EventHandlerFunc,
                  nsHttpChannel::AsyncCall_EventCleanupFunc);
 
-    PRStatus status = eventQ->PostEvent(event);
-    if (status != PR_SUCCESS) {
-        delete event;
+    nsresult rv = eventQ->PostEvent(event);
+    if (NS_FAILED(rv)) {
+        PL_DestroyEvent(event);
         NS_RELEASE_THIS();
-        return NS_ERROR_FAILURE;
     }
-    return NS_OK;
+    return rv;
 }
 
 void *PR_CALLBACK
@@ -347,24 +346,20 @@ nsHttpChannel::AsyncAbort(nsresult status)
     mStatus = status;
     mIsPending = PR_FALSE;
 
-    // create an async proxy for the listener..
-    nsCOMPtr<nsIProxyObjectManager> mgr;
-    gHttpHandler->GetProxyObjectManager(getter_AddRefs(mgr));
-    if (mgr) {
-        nsCOMPtr<nsIRequestObserver> observer;
-        mgr->GetProxyForObject(NS_CURRENT_EVENTQ,
-                               NS_GET_IID(nsIRequestObserver),
-                               mListener,
-                               PROXY_ASYNC | PROXY_ALWAYS,
-                               getter_AddRefs(observer));
-        if (observer) {
-            observer->OnStartRequest(this, mListenerContext);
-            observer->OnStopRequest(this, mListenerContext, mStatus);
-        }
-        mListener = 0;
-        mListenerContext = 0;
+    // create a proxy for the listener..
+    nsCOMPtr<nsIRequestObserver> observer;
+    NS_NewRequestObserverProxy(getter_AddRefs(observer),
+                               mListener, NS_CURRENT_EVENTQ);
+    if (observer) {
+        observer->OnStartRequest(this, mListenerContext);
+        observer->OnStopRequest(this, mListenerContext, mStatus);
     }
-    // XXX else, no proxy object manager... what do we do?
+    else {
+        NS_ERROR("unable to create request observer proxy");
+        // XXX else, no proxy object manager... what do we do?
+    }
+    mListener = 0;
+    mListenerContext = 0;
 
     // finally remove ourselves from the load group.
     if (mLoadGroup)

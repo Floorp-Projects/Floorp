@@ -109,8 +109,8 @@ PostDoneEvent()
 
 #define CHUNK_SIZE 500
 
-class MyCopier : public nsIInputStreamNotify
-               , public nsIOutputStreamNotify
+class MyCopier : public nsIInputStreamCallback
+               , public nsIOutputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
@@ -173,9 +173,9 @@ public:
             nsresult rv = mOutput->WriteSegments(FillOutputBuffer, this, CHUNK_SIZE, &n);
             if (NS_FAILED(rv) || (n == 0)) {
                 if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-                    mOutput->AsyncWait(this, 0, nsnull);
+                    mOutput->AsyncWait(this, 0, 0, nsnull);
                 else if (mInputCondition == NS_BASE_STREAM_WOULD_BLOCK)
-                    mInput->AsyncWait(this, 0, nsnull);
+                    mInput->AsyncWait(this, 0, 0, nsnull);
                 else
                     Close_Locked();
                 break;
@@ -202,7 +202,7 @@ public:
         mInput = do_QueryInterface(inStr);
         mOutput = do_QueryInterface(outStr);
 
-        return mInput->AsyncWait(this, 0, nsnull);
+        return mInput->AsyncWait(this, 0, 0, nsnull);
     }
 
     static NS_METHOD FillOutputBuffer(nsIOutputStream *outStr,
@@ -231,8 +231,8 @@ protected:
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS2(MyCopier,
-                              nsIInputStreamNotify,
-                              nsIOutputStreamNotify)
+                              nsIInputStreamCallback,
+                              nsIOutputStreamCallback)
 
 ////////////////////////////////////////////////////////////////////////////////
 

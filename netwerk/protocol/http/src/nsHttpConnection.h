@@ -34,7 +34,7 @@
 
 #include "nsIStreamListener.h"
 #include "nsISocketTransport.h"
-#include "nsIEventQueue.h"
+#include "nsIEventTarget.h"
 #include "nsIAsyncInputStream.h"
 #include "nsIAsyncOutputStream.h"
 #include "nsIInterfaceRequestor.h"
@@ -48,8 +48,8 @@
 
 class nsHttpConnection : public nsAHttpSegmentReader
                        , public nsAHttpSegmentWriter
-                       , public nsIInputStreamNotify
-                       , public nsIOutputStreamNotify
+                       , public nsIInputStreamCallback
+                       , public nsIOutputStreamCallback
                        , public nsITransportEventSink
                        , public nsIInterfaceRequestor
 {
@@ -57,8 +57,8 @@ public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSAHTTPSEGMENTREADER
     NS_DECL_NSAHTTPSEGMENTWRITER
-    NS_DECL_NSIINPUTSTREAMNOTIFY
-    NS_DECL_NSIOUTPUTSTREAMNOTIFY
+    NS_DECL_NSIINPUTSTREAMCALLBACK
+    NS_DECL_NSIOUTPUTSTREAMCALLBACK
     NS_DECL_NSITRANSPORTEVENTSINK
     NS_DECL_NSIINTERFACEREQUESTOR
 

@@ -862,7 +862,7 @@ nsresult nsMsgProtocol::PostMessage(nsIURI* url, nsIFileSpec *fileSpec)
 // nsMsgAsyncWriteProtocol subclass and related helper classes
 /////////////////////////////////////////////////////////////////////
 
-class nsMsgProtocolStreamProvider : public nsIOutputStreamNotify 
+class nsMsgProtocolStreamProvider : public nsIOutputStreamCallback 
 {
 public:
     NS_DECL_ISUPPORTS
@@ -877,7 +877,7 @@ public:
     }
 
     //
-    // nsIOutputStreamNotify implementation ...
+    // nsIOutputStreamCallback implementation ...
     //
     NS_IMETHODIMP OnOutputStreamReady(nsIAsyncOutputStream *aOutStream)
     { 
@@ -911,7 +911,7 @@ public:
 
         // try to write again...
         if (NS_SUCCEEDED(rv))
-          rv = aOutStream->AsyncWait(this, 0, mMsgProtocol->mProviderEventQ);
+          rv = aOutStream->AsyncWait(this, 0, 0, mMsgProtocol->mProviderEventQ);
 
         NS_ASSERTION(NS_SUCCEEDED(rv) || rv == NS_BINDING_ABORTED, "unexpected error writing stream");
         return NS_OK;
@@ -925,7 +925,7 @@ protected:
 
 // XXX this probably doesn't need to be threadsafe
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsMsgProtocolStreamProvider,
-                              nsIOutputStreamNotify)
+                              nsIOutputStreamCallback)
 
 class nsMsgFilePostHelper : public nsIStreamListener 
 {
@@ -1009,7 +1009,7 @@ NS_IMETHODIMP nsMsgFilePostHelper::OnDataAvailable(nsIRequest * /* aChannel */, 
     // data to write (i.e. the pipe went empty). So resume the channel to kick
     // things off again.
     mProtInstance->mSuspendedWrite = PR_FALSE;
-    mProtInstance->mAsyncOutStream->AsyncWait(mProtInstance->mProvider, 0,
+    mProtInstance->mAsyncOutStream->AsyncWait(mProtInstance->mProvider, 0, 0,
                                               mProtInstance->mProviderEventQ);
   } 
 
@@ -1042,7 +1042,7 @@ NS_IMETHODIMP nsMsgAsyncWriteProtocol::Cancel(nsresult status)
     m_request->Cancel(status);
 
   if (mAsyncOutStream)
-    mAsyncOutStream->CloseEx(status);
+    mAsyncOutStream->CloseWithStatus(status);
 
   return NS_OK;
 }
@@ -1293,17 +1293,17 @@ nsresult nsMsgAsyncWriteProtocol::SetupTransportState()
     if (NS_FAILED(rv)) return rv;
     
     // wait for the output stream to become writable
-    rv = mAsyncOutStream->AsyncWait(mProvider, 0, mProviderEventQ);
-  } // if m_transport
-  
-  return rv;
+    rv = mAsyncOutStream->AsyncWait(mProvider, 0, 0, mProviderEventQ);
+	} // if m_transport
+
+	return rv;
 }
 
 nsresult nsMsgAsyncWriteProtocol::CloseSocket()
 {
   nsresult rv = NS_OK;
   if (mAsyncOutStream)
-    mAsyncOutStream->CloseEx(NS_BINDING_ABORTED);
+    mAsyncOutStream->CloseWithStatus(NS_BINDING_ABORTED);
 
   nsMsgProtocol::CloseSocket(); 
 
@@ -1357,7 +1357,7 @@ PRInt32 nsMsgAsyncWriteProtocol::SendData(nsIURI * aURL, const char * dataBuffer
       // data to write (i.e. the pipe went empty). So resume the channel to kick
       // things off again.
       mSuspendedWrite = PR_FALSE;
-      mAsyncOutStream->AsyncWait(mProvider, 0, mProviderEventQ);
+      mAsyncOutStream->AsyncWait(mProvider, 0, 0, mProviderEventQ);
     } 
     return NS_OK;
   }

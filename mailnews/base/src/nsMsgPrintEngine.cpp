@@ -763,7 +763,13 @@ FireEvent(nsMsgPrintEngine* aMPE, PLHandleEventProc handler, PLDestroyEventProc 
   // The event owns the msgPrintEngine pointer now.
   NS_ADDREF(aMPE);
 
-  event_queue->PostEvent(event);
+  if (NS_FAILED(event_queue->PostEvent(event)))
+  {
+    NS_WARNING("Failed to post event");
+    PL_DestroyEvent(event);
+    return PR_FALSE;
+  }
+
   return PR_TRUE;
 }
 

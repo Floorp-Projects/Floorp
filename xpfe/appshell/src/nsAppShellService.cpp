@@ -624,27 +624,24 @@ nsAppShellService::Quit(PRUint32 aFerocity)
       rv = svc->GetThreadEventQueue(NS_CURRENT_THREAD, getter_AddRefs(queue));
       if (NS_SUCCEEDED(rv)) {
 
-        ExitEvent* event = new ExitEvent;
+        PLEvent* event = new PLEvent;
         if (event) {
-          PL_InitEvent(NS_REINTERPRET_CAST(PLEvent*, event),
-                       nsnull,
+          NS_ADDREF_THIS();
+          PL_InitEvent(event,
+                       this,
                        HandleExitEvent,
                        DestroyExitEvent);
 
-          event->mService = this;
-          NS_ADDREF(event->mService);
-
+          // XXXdf why enter the queue's critical section?
           rv = queue->EnterMonitor();
           if (NS_SUCCEEDED(rv))
-            rv = queue->PostEvent(NS_REINTERPRET_CAST(PLEvent*, event));
+            rv = queue->PostEvent(event);
           if (NS_SUCCEEDED(rv))
             postedExitEvent = PR_TRUE;
           queue->ExitMonitor();
 
-          if (NS_FAILED(rv)) {
-            NS_RELEASE(event->mService);
-            delete event;
-          }
+          if (NS_FAILED(rv))
+            PL_DestroyEvent(event);
         } else
           rv = NS_ERROR_OUT_OF_MEMORY;
       }
@@ -661,13 +658,14 @@ nsAppShellService::Quit(PRUint32 aFerocity)
 void* PR_CALLBACK
 nsAppShellService::HandleExitEvent(PLEvent* aEvent)
 {
-  ExitEvent* event = NS_REINTERPRET_CAST(ExitEvent*, aEvent);
+  nsAppShellService *service =
+    NS_REINTERPRET_CAST(nsAppShellService*, aEvent->owner);
 
   // Tell the appshell to exit
-  event->mService->mAppShell->Exit();
+  service->mAppShell->Exit();
 
   // We're done "shutting down".
-  event->mService->mShuttingDown = PR_FALSE;
+  service->mShuttingDown = PR_FALSE;
 
   return nsnull;
 }
@@ -675,9 +673,10 @@ nsAppShellService::HandleExitEvent(PLEvent* aEvent)
 void PR_CALLBACK
 nsAppShellService::DestroyExitEvent(PLEvent* aEvent)
 {
-  ExitEvent* event = NS_REINTERPRET_CAST(ExitEvent*, aEvent);
-  NS_RELEASE(event->mService);
-  delete event;
+  nsAppShellService *service =
+    NS_REINTERPRET_CAST(nsAppShellService*, aEvent->owner);
+  NS_RELEASE(service);
+  delete aEvent;
 }
 
 /*

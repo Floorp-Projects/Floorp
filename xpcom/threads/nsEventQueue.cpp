@@ -189,8 +189,9 @@ nsEventQueueImpl::InitFromPLQueue(PLEventQueue* aQueue)
 }
 
 /* nsISupports interface implementation... */
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsEventQueueImpl,
+NS_IMPL_THREADSAFE_ISUPPORTS3(nsEventQueueImpl,
                               nsIEventQueue,
+                              nsIEventTarget,
                               nsPIEventQueueChain)
 
 /* nsIEventQueue interface implementation... */
@@ -240,8 +241,7 @@ nsEventQueueImpl::InitEvent(PLEvent* aEvent,
 }
 
 
-
-NS_IMETHODIMP_(PRStatus)
+NS_IMETHODIMP
 nsEventQueueImpl::PostEvent(PLEvent* aEvent)
 {
   if (!mAcceptingEvents) {
@@ -251,7 +251,7 @@ nsEventQueueImpl::PostEvent(PLEvent* aEvent)
          (long)mEventQueue,(int)mAcceptingEvents,(int)mCouldHaveEvents));
   ++gEventQueueLogCount;
 #endif
-    PRStatus rv = PR_FAILURE;
+    nsresult rv = NS_ERROR_FAILURE;
     NS_ASSERTION(mElderQueue, "event dropped because event chain is dead");
     if (mElderQueue) {
       nsCOMPtr<nsIEventQueue> elder(do_QueryInterface(mElderQueue));
@@ -265,7 +265,7 @@ nsEventQueueImpl::PostEvent(PLEvent* aEvent)
          ("EventQueue: Posting event [queue=%lx]", (long)mEventQueue));
   ++gEventQueueLogCount;
 #endif
-  return PL_PostEvent(mEventQueue, aEvent);
+  return PL_PostEvent(mEventQueue, aEvent) == PR_SUCCESS ? NS_OK : NS_ERROR_FAILURE;
 }
 
 NS_IMETHODIMP
@@ -340,7 +340,7 @@ nsEventQueueImpl::GetPLEventQueue(PLEventQueue** aEventQueue)
 }
 
 NS_IMETHODIMP
-nsEventQueueImpl::IsQueueOnCurrentThread(PRBool *aResult)
+nsEventQueueImpl::IsOnCurrentThread(PRBool *aResult)
 {
     *aResult = PL_IsQueueOnCurrentThread( mEventQueue );
     return NS_OK;

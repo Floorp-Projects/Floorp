@@ -37,56 +37,12 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "nsIThread.h"
-#include "nsIThreadPool.h"
 #include "nsIRunnable.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include "nspr.h"
 #include "nsCOMPtr.h"
 #include "nsIServiceManager.h"
-
-class nsConcurrentRunner : public nsIRunnable {
-public:
-    NS_DECL_ISUPPORTS
-
-    NS_IMETHOD Run() {
-        nsCOMPtr<nsIThread> thread;
-        nsresult rv = nsIThread::GetCurrent(getter_AddRefs(thread));
-        if (NS_FAILED(rv)) {
-            printf("failed to get current thread\n");
-            return rv;
-        }
-
-        mTestInt = 666;
-        PR_Sleep(PR_SecondsToInterval(1));
-
-        if (mTestInt != 666)
-            printf("Illegal access.  Data corruption detected.\n");
-
-        mTestInt = 0;
-        PR_Sleep(PR_SecondsToInterval(2));
-
-        if (mTestInt != 0)
-            printf("Illegal access.  Data corruption detected.\n");
-
-        // if we don't do something slow, we'll never see the other
-        // worker threads run
-        PR_Sleep(PR_MillisecondsToInterval(1));
-
-        return rv;
-    }
-
-    nsConcurrentRunner(){
-        mTestInt = 0;
-    }
-
-private:
-    PRInt32 mTestInt;
-
-};
-
-NS_IMPL_THREADSAFE_ISUPPORTS1(nsConcurrentRunner, nsIRunnable)
-
 
 class nsRunner : public nsIRunnable {
 public:
@@ -173,48 +129,6 @@ TestThreads()
     PR_Sleep(PR_MillisecondsToInterval(100));       // hopefully the runner will quit here
 
     return NS_OK;
-}
-
-nsresult
-TestThreadPools(PRUint32 poolMinSize, PRUint32 poolMaxSize, 
-                PRUint32 nRequests, PRIntervalTime dispatchWaitInterval = 0)
-{
-    nsCOMPtr<nsIThreadPool> pool;
-    nsresult rv = NS_NewThreadPool(getter_AddRefs(pool), poolMinSize, poolMaxSize);
-    if (NS_FAILED(rv)) {
-        printf("failed to create thead pool\n");
-        return rv;
-    }
-
-    for (PRUint32 i = 0; i < nRequests; i++) {
-        rv = pool->DispatchRequest(new nsRunner(i+2));
-        if (dispatchWaitInterval && i % poolMaxSize == poolMaxSize - 1) {
-            PR_Sleep(dispatchWaitInterval);
-        }
-    }
-    rv = pool->Shutdown();
-    return rv;
-}
-
-nsresult
-TestThreadPoolsConcurrent(PRUint32 poolMinSize, 
-                          PRUint32 poolMaxSize, 
-                          PRUint32 nRequests)
-{
-    nsCOMPtr<nsIThreadPool> pool;
-    nsresult rv = NS_NewThreadPool(getter_AddRefs(pool), poolMinSize, poolMaxSize);
-    if (NS_FAILED(rv)) {
-        printf("failed to create thead pool\n");
-        return rv;
-    }
-    
-    nsConcurrentRunner* runner = new nsConcurrentRunner();
-
-    for (PRUint32 i = 0; i < nRequests; i++) {
-        rv = pool->DispatchRequest(runner);
-    }
-    rv = pool->Shutdown();
-    return rv;
 }
 
 class nsStressRunner : public nsIRunnable {
@@ -356,20 +270,6 @@ main(int argc, char** argv)
         }
     } else {
         rv = TestThreads();
-        if (NS_FAILED(rv)) return -1;
-
-        rv = TestThreadPools(1, 4, 100);
-        if (NS_FAILED(rv)) return -1;
-
-        rv = TestThreadPools(4, 16, 100);
-        if (NS_FAILED(rv)) return -1;
-
-        // this test delays between each request to give threads a chance to 
-        // decide to go away:
-        rv = TestThreadPools(4, 8, 32, PR_MillisecondsToInterval(1000));
-        if (NS_FAILED(rv)) return -1;
-
-        rv = TestThreadPoolsConcurrent(4, 32, 1000);
         if (NS_FAILED(rv)) return -1;
     }
 

@@ -38,7 +38,6 @@
 #include "nsISupports.idl"
 
 interface nsISocketTransport;
-interface nsISocketEventHandler;
 interface nsIProxyInfo;
 
 [scriptable, uuid(05331390-6884-11d3-9382-00104ba0fd40)]
@@ -78,39 +77,8 @@ interface nsISocketTransportService : nsISupports
     void shutdown();
 
     /**
-     * Post an event to be executed on the socket thread.
-     *
-     * @param aHandler
-     *        handler that will be executed on the socket thread.
-     * @param aType
-     *        caller defined message parameter
-     * @param aUParam
-     *        caller defined message parameter
-     * @param aVParam
-     *        caller defined message parameter
-     *
-     * The socket transport service treats each parameter as opaque data (i.e.,
-     * it is not responsible for cleaning up aVParam if it happens to be
-     * dynamically allocated).  If this function succeeds, then the message
-     * will be delivered.  All messages successfully posted will be delivered
-     * before the socket transport service shuts down.
-     */
-    [noscript] void postEvent(in nsISocketEventHandler aHandler,
-                              in unsigned long aType,
-                              in unsigned long aUParam,
-                              in voidPtr aVParam);
-
-    /**
      * controls whether or not the socket transport service should poke
      * the autodialer on connection failure.
      */
     attribute boolean autodialEnabled;
-};
-
-[uuid(c20f98be-b3e4-4f9b-a492-97a688577355)]
-interface nsISocketEventHandler : nsISupports
-{
-    [noscript] void onSocketEvent(in unsigned long aType,
-                                  in unsigned long aUParam,
-                                  in voidPtr aVParam);
 };

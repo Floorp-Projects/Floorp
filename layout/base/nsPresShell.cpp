@@ -6391,13 +6391,18 @@ PresShell::PostReflowEvent()
   if (eventQueue != mReflowEventQueue &&
       !mIsReflowing && mReflowCommands.Count() > 0) {
     ReflowEvent* ev = new ReflowEvent(NS_STATIC_CAST(nsIPresShell*, this));
-    eventQueue->PostEvent(ev);
-    mReflowEventQueue = eventQueue;
-#ifdef DEBUG
-    if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
-      printf("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", (void*)this, (void*)ev);
+    if (NS_FAILED(eventQueue->PostEvent(ev))) {
+      NS_ERROR("failed to post reflow event");
+      PL_DestroyEvent(ev);
     }
+    else {
+      mReflowEventQueue = eventQueue;
+#ifdef DEBUG
+      if (VERIFY_REFLOW_NOISY_RC & gVerifyReflowFlags) {
+        printf("\n*** PresShell::PostReflowEvent(), this=%p, event=%p\n", (void*)this, (void*)ev);
+      }
 #endif    
+    }
   }
 }
 

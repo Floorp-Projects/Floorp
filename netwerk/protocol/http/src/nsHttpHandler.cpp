@@ -417,19 +417,6 @@ nsHttpHandler::GetCacheSession(nsCacheStoragePolicy storagePolicy,
 }
 
 nsresult
-nsHttpHandler::GetProxyObjectManager(nsIProxyObjectManager **result)
-{
-    if (!mProxyMgr) {
-        nsresult rv;
-        mProxyMgr = do_GetService(NS_XPCOMPROXY_CONTRACTID, &rv);
-        if (NS_FAILED(rv)) return rv;
-    }
-    *result = mProxyMgr;
-    NS_ADDREF(*result);
-    return NS_OK;
-}
-
-nsresult
 nsHttpHandler::GetEventQueueService(nsIEventQueueService **result)
 {
     if (!mEventQueueService) {

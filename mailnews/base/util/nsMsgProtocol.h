@@ -202,9 +202,9 @@ public:
   // if we suspended the asynch write while waiting for more data to write then this will be TRUE
   PRBool mSuspendedWrite;
   nsCOMPtr<nsIRequest>     m_WriteRequest;
-  nsCOMPtr<nsIAsyncOutputStream>  mAsyncOutStream;
-  nsCOMPtr<nsIOutputStreamNotify> mProvider;
-  nsCOMPtr<nsIEventQueue>         mProviderEventQ;
+  nsCOMPtr<nsIAsyncOutputStream>    mAsyncOutStream;
+  nsCOMPtr<nsIOutputStreamCallback> mProvider;
+  nsCOMPtr<nsIEventQueue>           mProviderEventQ;
 
   // because we are reading the post data in asychronously, it's possible that we aren't sending it 
   // out fast enough and the reading gets blocked. The following set of state variables are used to 

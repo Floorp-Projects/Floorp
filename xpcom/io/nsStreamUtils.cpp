@@ -38,41 +38,41 @@
 #include "nsStreamUtils.h"
 #include "nsCOMPtr.h"
 #include "nsIPipe.h"
-#include "nsIEventQueue.h"
+#include "nsIEventTarget.h"
+#include "nsAutoLock.h"
 
 //-----------------------------------------------------------------------------
 
 class nsInputStreamReadyEvent : public PLEvent
-                              , public nsIInputStreamNotify
+                              , public nsIInputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
 
-    nsInputStreamReadyEvent(nsIInputStreamNotify *notify,
-                            nsIEventQueue *eventQ)
-        : mNotify(notify)
-        , mEventQ(eventQ)
+    nsInputStreamReadyEvent(nsIInputStreamCallback *callback,
+                            nsIEventTarget *target)
+        : mCallback(callback)
+        , mTarget(target)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsInputStreamReadyEvent()
     {
-        if (mNotify) {
+        if (mCallback) {
             nsresult rv;
             //
             // whoa!!  looks like we never posted this event.  take care to
-            // release mNotify on the correct thread.  if mEventQ lives on the
+            // release mCallback on the correct thread.  if mTarget lives on the
             // calling thread, then we are ok.  otherwise, we have to try to 
             // proxy the Release over the right thread.  if that thread is dead,
             // then there's nothing we can do... better to leak than crash.
             //
             PRBool val;
-            rv = mEventQ->IsQueueOnCurrentThread(&val);
+            rv = mTarget->IsOnCurrentThread(&val);
             if (NS_FAILED(rv) || !val) {
-                nsCOMPtr<nsIInputStreamNotify> event;
-                NS_NewInputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
-                mNotify = 0;
+                nsCOMPtr<nsIInputStreamCallback> event;
+                NS_NewInputStreamReadyEvent(getter_AddRefs(event), mCallback, mTarget);
+                mCallback = 0;
                 if (event) {
                     rv = event->OnInputStreamReady(nsnull);
                     if (NS_FAILED(rv)) {
@@ -94,7 +94,7 @@ public:
 
         PL_InitEvent(this, nsnull, EventHandler, EventCleanup);
 
-        if (mEventQ->PostEvent(this) == PR_FAILURE) {
+        if (NS_FAILED(mTarget->PostEvent(this))) {
             NS_WARNING("PostEvent failed");
             NS_RELEASE_THIS();
             return NS_ERROR_FAILURE;
@@ -104,21 +104,21 @@ public:
     }
 
 private:
-    nsCOMPtr<nsIAsyncInputStream>  mStream;
-    nsCOMPtr<nsIInputStreamNotify> mNotify;
-    nsCOMPtr<nsIEventQueue>        mEventQ;
+    nsCOMPtr<nsIAsyncInputStream>    mStream;
+    nsCOMPtr<nsIInputStreamCallback> mCallback;
+    nsCOMPtr<nsIEventTarget>         mTarget;
 
-    static void *PR_CALLBACK EventHandler(PLEvent *plevent)
+    PR_STATIC_CALLBACK(void *) EventHandler(PLEvent *plevent)
     {
         nsInputStreamReadyEvent *ev = (nsInputStreamReadyEvent *) plevent;
         // bypass event delivery if this is a cleanup event...
-        if (ev->mStream)
-            ev->mNotify->OnInputStreamReady(ev->mStream);
-        ev->mNotify = 0;
+        if (ev->mCallback)
+            ev->mCallback->OnInputStreamReady(ev->mStream);
+        ev->mCallback = 0;
         return NULL;
     }
 
-    static void PR_CALLBACK EventCleanup(PLEvent *plevent)
+    PR_STATIC_CALLBACK(void) EventCleanup(PLEvent *plevent)
     {
         nsInputStreamReadyEvent *ev = (nsInputStreamReadyEvent *) plevent;
         NS_RELEASE(ev);
@@ -126,41 +126,40 @@ private:
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsInputStreamReadyEvent,
-                              nsIInputStreamNotify)
+                              nsIInputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
 class nsOutputStreamReadyEvent : public PLEvent
-                               , public nsIOutputStreamNotify
+                               , public nsIOutputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
 
-    nsOutputStreamReadyEvent(nsIOutputStreamNotify *notify,
-                             nsIEventQueue *eventQ)
-        : mNotify(notify)
-        , mEventQ(eventQ)
+    nsOutputStreamReadyEvent(nsIOutputStreamCallback *callback,
+                             nsIEventTarget *target)
+        : mCallback(callback)
+        , mTarget(target)
     {
-        NS_INIT_ISUPPORTS();
     }
 
     virtual ~nsOutputStreamReadyEvent()
     {
-        if (mNotify) {
+        if (mCallback) {
             nsresult rv;
             //
             // whoa!!  looks like we never posted this event.  take care to
-            // release mNotify on the correct thread.  if mEventQ lives on the
+            // release mCallback on the correct thread.  if mTarget lives on the
             // calling thread, then we are ok.  otherwise, we have to try to 
             // proxy the Release over the right thread.  if that thread is dead,
             // then there's nothing we can do... better to leak than crash.
             //
             PRBool val;
-            rv = mEventQ->IsQueueOnCurrentThread(&val);
+            rv = mTarget->IsOnCurrentThread(&val);
             if (NS_FAILED(rv) || !val) {
-                nsCOMPtr<nsIOutputStreamNotify> event;
-                NS_NewOutputStreamReadyEvent(getter_AddRefs(event), mNotify, mEventQ);
-                mNotify = 0;
+                nsCOMPtr<nsIOutputStreamCallback> event;
+                NS_NewOutputStreamReadyEvent(getter_AddRefs(event), mCallback, mTarget);
+                mCallback = 0;
                 if (event) {
                     rv = event->OnOutputStreamReady(nsnull);
                     if (NS_FAILED(rv)) {
@@ -173,10 +172,10 @@ public:
         }
     }
 
-    void Init(nsIOutputStreamNotify *notify, nsIEventQueue *eventQ)
+    void Init(nsIOutputStreamCallback *callback, nsIEventTarget *target)
     {
-        mNotify = notify;
-        mEventQ = eventQ;
+        mCallback = callback;
+        mTarget = target;
 
         PL_InitEvent(this, nsnull, EventHandler, EventCleanup);
     }
@@ -190,7 +189,7 @@ public:
 
         PL_InitEvent(this, nsnull, EventHandler, EventCleanup);
 
-        if (mEventQ->PostEvent(this) == PR_FAILURE) {
+        if (NS_FAILED(mTarget->PostEvent(this))) {
             NS_WARNING("PostEvent failed");
             NS_RELEASE_THIS();
             return NS_ERROR_FAILURE;
@@ -200,20 +199,20 @@ public:
     }
 
 private:
-    nsCOMPtr<nsIAsyncOutputStream>  mStream;
-    nsCOMPtr<nsIOutputStreamNotify> mNotify;
-    nsCOMPtr<nsIEventQueue>         mEventQ;
+    nsCOMPtr<nsIAsyncOutputStream>    mStream;
+    nsCOMPtr<nsIOutputStreamCallback> mCallback;
+    nsCOMPtr<nsIEventTarget>          mTarget;
 
-    static void *PR_CALLBACK EventHandler(PLEvent *plevent)
+    PR_STATIC_CALLBACK(void *) EventHandler(PLEvent *plevent)
     {
         nsOutputStreamReadyEvent *ev = (nsOutputStreamReadyEvent *) plevent;
-        if (ev->mNotify)
-            ev->mNotify->OnOutputStreamReady(ev->mStream);
-        ev->mNotify = 0;
+        if (ev->mCallback)
+            ev->mCallback->OnOutputStreamReady(ev->mStream);
+        ev->mCallback = 0;
         return NULL;
     }
 
-    static void PR_CALLBACK EventCleanup(PLEvent *ev)
+    PR_STATIC_CALLBACK(void) EventCleanup(PLEvent *ev)
     {
         nsOutputStreamReadyEvent *event = (nsOutputStreamReadyEvent *) ev;
         NS_RELEASE(event);
@@ -221,16 +220,16 @@ private:
 };
 
 NS_IMPL_THREADSAFE_ISUPPORTS1(nsOutputStreamReadyEvent,
-                              nsIOutputStreamNotify)
+                              nsIOutputStreamCallback)
 
 //-----------------------------------------------------------------------------
 
 NS_COM nsresult
-NS_NewInputStreamReadyEvent(nsIInputStreamNotify **event,
-                            nsIInputStreamNotify *notify,
-                            nsIEventQueue *eventQ)
+NS_NewInputStreamReadyEvent(nsIInputStreamCallback **event,
+                            nsIInputStreamCallback *callback,
+                            nsIEventTarget *target)
 {
-    nsInputStreamReadyEvent *ev = new nsInputStreamReadyEvent(notify, eventQ);
+    nsInputStreamReadyEvent *ev = new nsInputStreamReadyEvent(callback, target);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*event = ev);
@@ -238,11 +237,11 @@ NS_NewInputStreamReadyEvent(nsIInputStreamNotify **event,
 }
 
 NS_COM nsresult
-NS_NewOutputStreamReadyEvent(nsIOutputStreamNotify **event,
-                             nsIOutputStreamNotify *notify,
-                             nsIEventQueue *eventQ)
+NS_NewOutputStreamReadyEvent(nsIOutputStreamCallback **event,
+                             nsIOutputStreamCallback *callback,
+                             nsIEventTarget *target)
 {
-    nsOutputStreamReadyEvent *ev = new nsOutputStreamReadyEvent(notify, eventQ);
+    nsOutputStreamReadyEvent *ev = new nsOutputStreamReadyEvent(callback, target);
     if (!ev)
         return NS_ERROR_OUT_OF_MEMORY;
     NS_ADDREF(*event = ev);
@@ -252,21 +251,224 @@ NS_NewOutputStreamReadyEvent(nsIOutputStreamNotify **event,
 //-----------------------------------------------------------------------------
 // NS_AsyncCopy implementation
 
-// this stream copier assumes the input stream is buffered (ReadSegments OK)
-class nsStreamCopierIB : public nsIInputStreamNotify
-                       , public nsIOutputStreamNotify
+// abstract stream copier...
+class nsAStreamCopier : public nsIInputStreamCallback
+                      , public nsIOutputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
 
-    nsStreamCopierIB(nsIAsyncInputStream *in,
-                     nsIAsyncOutputStream *out,
-                     PRUint32 chunksize)
-        : mSource(in)
-        , mSink(out)
-        , mChunkSize(chunksize)
-        { NS_INIT_ISUPPORTS(); }
+    nsAStreamCopier()
+        : mLock(nsnull)
+        , mCallback(nsnull)
+        , mClosure(nsnull)
+        , mChunkSize(0)
+        , mEventInProcess(PR_FALSE)
+        , mEventIsPending(PR_FALSE)
+    {
+    }
+
+    virtual ~nsAStreamCopier()
+    {
+        if (mLock)
+            PR_DestroyLock(mLock);
+    }
+
+    // kick off the async copy...
+    nsresult Start(nsIInputStream *source,
+                   nsIOutputStream *sink,
+                   nsIEventTarget *target,
+                   nsAsyncCopyCallbackFun callback,
+                   void *closure,
+                   PRUint32 chunksize)
+    {
+        mSource = source;
+        mSink = sink;
+        mTarget = target;
+        mCallback = callback;
+        mClosure = closure;
+        mChunkSize = chunksize;
+
+        mLock = PR_NewLock();
+        if (!mLock)
+            return NS_ERROR_OUT_OF_MEMORY;
+
+        mAsyncSource = do_QueryInterface(mSource);
+        mAsyncSink = do_QueryInterface(mSink);
+
+        return PostContinuationEvent();
+    }
+
+    // implemented by subclasses, returns number of bytes copied and
+    // sets source and sink condition before returning.
+    virtual PRUint32 DoCopy(nsresult *sourceCondition, nsresult *sinkCondition) = 0;
+
+    void Process()
+    {
+        if (!mSource || !mSink)
+            return;
+
+        nsresult sourceCondition, sinkCondition;
+
+        // ok, copy data from source to sink.
+        for (;;) {
+            PRUint32 n = DoCopy(&sourceCondition, &sinkCondition);
+            if (NS_FAILED(sourceCondition) || NS_FAILED(sinkCondition) || n == 0) {
+                if (sourceCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSource) {
+                    // need to wait for more data from source.  while waiting for
+                    // more source data, be sure to observe failures on output end.
+                    mAsyncSource->AsyncWait(this, 0, 0, nsnull);
+
+                    if (mAsyncSink)
+                        mAsyncSink->AsyncWait(this,
+                                              nsIAsyncOutputStream::WAIT_CLOSURE_ONLY,
+                                              0, nsnull);
+                }
+                else if (sinkCondition == NS_BASE_STREAM_WOULD_BLOCK && mAsyncSink) {
+                    // need to wait for more room in the sink.  while waiting for
+                    // more room in the sink, be sure to observer failures on the
+                    // input end.
+                    mAsyncSink->AsyncWait(this, 0, 0, nsnull);
+
+                    if (mAsyncSource)
+                        mAsyncSource->AsyncWait(this,
+                                                nsIAsyncInputStream::WAIT_CLOSURE_ONLY,
+                                                0, nsnull);
+                }
+                else {
+                    // close source
+                    if (mAsyncSource)
+                        mAsyncSource->CloseWithStatus(sinkCondition);
+                    else
+                        mSource->Close();
+                    mAsyncSource = nsnull;
+                    mSource = nsnull;
+
+                    // close sink
+                    if (mAsyncSink)
+                        mAsyncSink->CloseWithStatus(sourceCondition);
+                    else
+                        mSink->Close();
+                    mAsyncSink = nsnull;
+                    mSink = nsnull;
+
+                    // notify state complete...
+                    if (mCallback) {
+                        nsresult status = sourceCondition;
+                        if (NS_SUCCEEDED(status))
+                            status = sinkCondition;
+                        if (status == NS_BASE_STREAM_CLOSED)
+                            status = NS_OK;
+                        mCallback(mClosure, status);
+                    }
+                }
+                break;
+            }
+        }
+    }
+
+    NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream *source)
+    {
+        PostContinuationEvent();
+        return NS_OK;
+    }
+
+    NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream *sink)
+    {
+        PostContinuationEvent();
+        return NS_OK;
+    }
+
+    PR_STATIC_CALLBACK(void*) HandleContinuationEvent(PLEvent *event)
+    {
+        nsAStreamCopier *self = (nsAStreamCopier *) event->owner;
+        self->Process();
+
+        // clear "in process" flag and post any pending continuation event
+        nsAutoLock lock(self->mLock);
+        self->mEventInProcess = PR_FALSE;
+        if (self->mEventIsPending) {
+            self->mEventIsPending = PR_FALSE;
+            self->PostContinuationEvent_Locked();
+        }
+        return nsnull;
+    }
+
+    PR_STATIC_CALLBACK(void) DestroyContinuationEvent(PLEvent *event)
+    {
+        nsAStreamCopier *self = (nsAStreamCopier *) event->owner;
+        NS_RELEASE(self);
+        delete event;
+    }
+
+    nsresult PostContinuationEvent()
+    {
+        // we cannot post a continuation event if there is currently
+        // an event in process.  doing so could result in Process being
+        // run simultaneously on multiple threads, so we mark the event
+        // as pending, and if an event is already in process then we 
+        // just let that existing event take care of posting the real
+        // continuation event.
+
+        nsAutoLock lock(mLock);
+        return PostContinuationEvent_Locked();
+    }
+
+    nsresult PostContinuationEvent_Locked()
+    {
+        nsresult rv = NS_OK;
+        if (mEventInProcess)
+            mEventIsPending = PR_TRUE;
+        else {
+            PLEvent *event = new PLEvent;
+            if (!event)
+                rv = NS_ERROR_OUT_OF_MEMORY;
+            else {
+                NS_ADDREF_THIS();
+                PL_InitEvent(event, this,
+                             HandleContinuationEvent,
+                             DestroyContinuationEvent);
+
+                rv = mTarget->PostEvent(event);
+                if (NS_SUCCEEDED(rv))
+                    mEventInProcess = PR_TRUE;
+                else {
+                    NS_ERROR("unable to post continuation event");
+                    PL_DestroyEvent(event);
+                }
+            }
+        }
+        return rv;
+    }
+
+protected:
+    nsCOMPtr<nsIInputStream>       mSource;
+    nsCOMPtr<nsIOutputStream>      mSink;
+    nsCOMPtr<nsIAsyncInputStream>  mAsyncSource;
+    nsCOMPtr<nsIAsyncOutputStream> mAsyncSink;
+    nsCOMPtr<nsIEventTarget>       mTarget;
+    PRLock                        *mLock;
+    nsAsyncCopyCallbackFun         mCallback;
+    void                          *mClosure;
+    PRUint32                       mChunkSize;
+    PRPackedBool                   mEventInProcess;
+    PRPackedBool                   mEventIsPending;
+};
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsAStreamCopier,
+                              nsIInputStreamCallback,
+                              nsIOutputStreamCallback)
+
+class nsStreamCopierIB : public nsAStreamCopier
+{
+public:
+    nsStreamCopierIB() : nsAStreamCopier() {}
     virtual ~nsStreamCopierIB() {}
+
+    struct ReadSegmentsState {
+        nsIOutputStream *mSink;
+        nsresult         mSinkCondition;
+    };
 
     static NS_METHOD ConsumeInputBuffer(nsIInputStream *inStr,
                                         void *closure,
@@ -275,77 +477,41 @@ public:
                                         PRUint32 count,
                                         PRUint32 *countWritten)
     {
-        nsStreamCopierIB *self = (nsStreamCopierIB *) closure;
+        ReadSegmentsState *state = (ReadSegmentsState *) closure;
 
-        nsresult rv = self->mSink->Write(buffer, count, countWritten);
+        nsresult rv = state->mSink->Write(buffer, count, countWritten);
         if (NS_FAILED(rv))
-            self->mSinkCondition = rv;
+            state->mSinkCondition = rv;
         else if (*countWritten == 0)
-            self->mSinkCondition = NS_BASE_STREAM_CLOSED;
+            state->mSinkCondition = NS_BASE_STREAM_CLOSED;
 
-        return self->mSinkCondition;
+        return state->mSinkCondition;
     }
 
-    // called on some random thread
-    NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream *in)
+    PRUint32 DoCopy(nsresult *sourceCondition, nsresult *sinkCondition)
     {
-        NS_ASSERTION(in == mSource, "unexpected stream");
-        // Do all of our work from OnOutputStreamReady.  This
-        // way we're more likely to always be working on the
-        // same thread.
-        return mSink->AsyncWait(this, 0, nsnull);
-    }
+        ReadSegmentsState state;
+        state.mSink = mSink;
+        state.mSinkCondition = NS_OK;
 
-    // called on some random thread
-    NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream *out)
-    {
-        NS_ASSERTION(out == mSink, "unexpected stream");
-        for (;;) {
-            mSinkCondition = NS_OK; // reset
-            PRUint32 n;
-            nsresult rv = mSource->ReadSegments(ConsumeInputBuffer, this, mChunkSize, &n);
-            if (NS_FAILED(rv) || (n == 0)) {
-                if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-                    mSource->AsyncWait(this, 0, nsnull);
-                else if (mSinkCondition == NS_BASE_STREAM_WOULD_BLOCK)
-                    mSink->AsyncWait(this, 0, nsnull);
-                else {
-                    mSink = 0;
-                    mSource->CloseEx(mSinkCondition);
-                    mSource = 0;
-                }
-                break;
-            }
-        }
-        return NS_OK;
+        PRUint32 n;
+        *sourceCondition =
+            mSource->ReadSegments(ConsumeInputBuffer, &state, mChunkSize, &n);
+        *sinkCondition = state.mSinkCondition;
+        return n;
     }
-
-private:
-    nsCOMPtr<nsIAsyncInputStream>  mSource;
-    nsCOMPtr<nsIAsyncOutputStream> mSink;
-    PRUint32                       mChunkSize;
-    nsresult                       mSinkCondition;
 };
 
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsStreamCopierIB,
-                              nsIInputStreamNotify,
-                              nsIOutputStreamNotify)
-
-// this stream copier assumes the output stream is buffered (WriteSegments OK)
-class nsStreamCopierOB : public nsIInputStreamNotify
-                       , public nsIOutputStreamNotify
+class nsStreamCopierOB : public nsAStreamCopier
 {
 public:
-    NS_DECL_ISUPPORTS
-
-    nsStreamCopierOB(nsIAsyncInputStream *in,
-                     nsIAsyncOutputStream *out,
-                     PRUint32 chunksize)
-        : mSource(in)
-        , mSink(out)
-        , mChunkSize(chunksize)
-        { NS_INIT_ISUPPORTS(); }
+    nsStreamCopierOB() : nsAStreamCopier() {}
     virtual ~nsStreamCopierOB() {}
+
+    struct WriteSegmentsState {
+        nsIInputStream *mSource;
+        nsresult        mSourceCondition;
+    };
 
     static NS_METHOD FillOutputBuffer(nsIOutputStream *outStr,
                                       void *closure,
@@ -354,121 +520,59 @@ public:
                                       PRUint32 count,
                                       PRUint32 *countRead)
     {
-        nsStreamCopierOB *self = (nsStreamCopierOB *) closure;
+        WriteSegmentsState *state = (WriteSegmentsState *) closure;
 
-        nsresult rv = self->mSource->Read(buffer, count, countRead);
+        nsresult rv = state->mSource->Read(buffer, count, countRead);
         if (NS_FAILED(rv))
-            self->mSourceCondition = rv;
+            state->mSourceCondition = rv;
         else if (*countRead == 0)
-            self->mSourceCondition = NS_BASE_STREAM_CLOSED;
+            state->mSourceCondition = NS_BASE_STREAM_CLOSED;
 
-        return self->mSourceCondition;
+        return state->mSourceCondition;
     }
 
-    // called on some random thread
-    NS_IMETHOD OnInputStreamReady(nsIAsyncInputStream *in)
+    PRUint32 DoCopy(nsresult *sourceCondition, nsresult *sinkCondition)
     {
-        NS_ASSERTION(in == mSource, "unexpected stream");
-        for (;;) {
-            mSourceCondition = NS_OK; // reset
-            PRUint32 n;
-            nsresult rv = mSink->WriteSegments(FillOutputBuffer, this, mChunkSize, &n);
-            if (NS_FAILED(rv) || (n == 0)) {
-                if (rv == NS_BASE_STREAM_WOULD_BLOCK)
-                    mSink->AsyncWait(this, 0, nsnull);
-                else if (mSourceCondition == NS_BASE_STREAM_WOULD_BLOCK)
-                    mSource->AsyncWait(this, 0, nsnull);
-                else {
-                    mSource = 0;
-                    mSink->CloseEx(mSourceCondition);
-                    mSink = 0;
-                }
-                break;
-            }
-        }
-        return NS_OK;
-    }
+        WriteSegmentsState state;
+        state.mSource = mSource;
+        state.mSourceCondition = NS_OK;
 
-    // called on some random thread
-    NS_IMETHOD OnOutputStreamReady(nsIAsyncOutputStream *out)
-    {
-        NS_ASSERTION(out == mSink, "unexpected stream");
-        // Do all of our work from OnInputStreamReady.  This
-        // way we're more likely to always be working on the
-        // same thread.
-        return mSource->AsyncWait(this, 0, nsnull);
+        PRUint32 n;
+        *sinkCondition =
+            mSink->WriteSegments(FillOutputBuffer, &state, mChunkSize, &n);
+        *sourceCondition = state.mSourceCondition;
+        return n;
     }
-
-private:
-    nsCOMPtr<nsIAsyncInputStream>  mSource;
-    nsCOMPtr<nsIAsyncOutputStream> mSink;
-    PRUint32                       mChunkSize;
-    nsresult                       mSourceCondition;
 };
-
-NS_IMPL_THREADSAFE_ISUPPORTS2(nsStreamCopierOB,
-                              nsIInputStreamNotify,
-                              nsIOutputStreamNotify)
 
 //-----------------------------------------------------------------------------
 
 NS_COM nsresult
-NS_AsyncCopy(nsIAsyncInputStream *source,
-             nsIAsyncOutputStream *sink,
-             PRBool bufferedSource,
-             PRBool bufferedSink,
-             PRUint32 segmentSize,
-             PRUint32 segmentCount,
-             nsIMemory *segmentAlloc)
+NS_AsyncCopy(nsIInputStream         *source,
+             nsIOutputStream        *sink,
+             nsIEventTarget         *target,
+             nsAsyncCopyMode         mode,
+             PRUint32                chunkSize,
+             nsAsyncCopyCallbackFun  callback,
+             void                   *closure)
 {
+    NS_ASSERTION(target, "non-null target required");
+
     nsresult rv;
+    nsAStreamCopier *copier;
 
-    // we need to insert a pipe if both the source and sink are not buffered.
-    if (!bufferedSource && !bufferedSink) {
-        nsCOMPtr<nsIAsyncInputStream> pipeIn;
-        nsCOMPtr<nsIAsyncOutputStream> pipeOut;
+    if (mode == NS_ASYNCCOPY_VIA_READSEGMENTS)
+        copier = new nsStreamCopierIB();
+    else
+        copier = new nsStreamCopierOB();
 
-        rv = NS_NewPipe2(getter_AddRefs(pipeIn),
-                         getter_AddRefs(pipeOut),
-                         PR_TRUE, PR_TRUE,
-                         segmentSize, segmentCount, segmentAlloc);
-        if (NS_FAILED(rv)) return rv;
+    if (!copier)
+        return NS_ERROR_OUT_OF_MEMORY;
 
-        //
-        // fire off two async copies :-)
-        //
-        rv = NS_AsyncCopy(source, pipeOut, PR_FALSE, PR_TRUE, segmentSize, 1, segmentAlloc);
-        if (NS_FAILED(rv)) return rv;
- 
-        rv = NS_AsyncCopy(pipeIn, sink, PR_TRUE, PR_FALSE, segmentSize, 1, segmentAlloc);
-
-        // maybe calling NS_AsyncCopy twice is a bad idea!
-        NS_ASSERTION(NS_SUCCEEDED(rv), "uh-oh");
-
-        return rv;
-    }
-
-    if (bufferedSource) {
-        // copy assuming ReadSegments OK
-        nsStreamCopierIB *copier = new nsStreamCopierIB(source, sink, segmentSize);
-        if (!copier)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(copier);
-        // wait on the sink
-        rv = sink->AsyncWait(copier, 0, nsnull);
-        NS_RELEASE(copier);
-    }
-    else {
-        // copy assuming WriteSegments OK
-        nsStreamCopierOB *copier = new nsStreamCopierOB(source, sink, segmentSize);
-        if (!copier)
-            return NS_ERROR_OUT_OF_MEMORY;
-        NS_ADDREF(copier);
-        // wait on the source since the sink is buffered and should therefore
-        // already have room.
-        rv = source->AsyncWait(copier, 0, nsnull);
-        NS_RELEASE(copier);
-    }
+    // Start() takes an owning ref to the copier...
+    NS_ADDREF(copier);
+    rv = copier->Start(source, sink, target, callback, closure, chunkSize);
+    NS_RELEASE(copier);
 
     return rv;
 }

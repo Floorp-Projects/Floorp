@@ -51,14 +51,12 @@ class nsHttpChunkedDecoder;
 //-----------------------------------------------------------------------------
 
 class nsHttpTransaction : public nsAHttpTransaction
-                        , public nsIOutputStreamNotify
-                        , public nsISocketEventHandler
+                        , public nsIOutputStreamCallback
 {
 public:
     NS_DECL_ISUPPORTS
     NS_DECL_NSAHTTPTRANSACTION
-    NS_DECL_NSIOUTPUTSTREAMNOTIFY
-    NS_DECL_NSISOCKETEVENTHANDLER
+    NS_DECL_NSIOUTPUTSTREAMCALLBACK
 
     nsHttpTransaction();
     virtual ~nsHttpTransaction();
@@ -90,7 +88,7 @@ public:
                   nsHttpRequestHead     *reqHeaders,
                   nsIInputStream        *reqBody,
                   PRBool                 reqBodyIncludesHeaders,
-                  nsIEventQueue         *eventQ,
+                  nsIEventQueue         *consumerEventQ,
                   nsIInterfaceRequestor *callbacks,
                   nsITransportEventSink *eventsink,
                   nsIAsyncInputStream  **responseBody);
@@ -101,7 +99,6 @@ public:
     nsHttpRequestHead     *RequestHead()    { return mRequestHead; }
     nsHttpResponseHead    *ResponseHead()   { return mHaveAllHeaders ? mResponseHead : nsnull; }
     nsISupports           *SecurityInfo()   { return mSecurityInfo; }
-    nsresult               TransportStatus(){ return mTransportStatus; }
 
     nsIInterfaceRequestor *Callbacks()      { return mCallbacks; } 
     nsIEventQueue         *ConsumerEventQ() { return mConsumerEventQ; }
@@ -162,15 +159,6 @@ private:
     nsHttpChunkedDecoder           *mChunkedDecoder;
 
     nsresult                        mStatus;
-
-    // this lock is used to protect access to members which may be accessed
-    // from both the main thread as well as the socket thread.
-    PRLock                         *mLock;
-
-    // these transport status fields are protected by mLock
-    nsresult                        mTransportStatus;
-    PRUint32                        mTransportProgress;
-    PRUint32                        mTransportProgressMax;
 
     PRUint16                        mRestartCount;        // the number of times this transaction has been restarted
     PRUint8                         mCaps;

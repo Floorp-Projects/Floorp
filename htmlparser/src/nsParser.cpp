@@ -219,40 +219,30 @@ For more details @see bugzilla bug 76722
 
 struct nsParserContinueEvent : public PLEvent {
 
-  nsParserContinueEvent(nsIParser* aParser); 
-  ~nsParserContinueEvent() { }
+  nsParserContinueEvent(nsParser* aParser)
+  {
+    NS_ADDREF(aParser); 
+    PL_InitEvent(this, aParser, HandleEvent, DestroyEvent);  
+  }
 
-  void HandleEvent() {  
-    if (mParser) {
-      nsParser* parser = NS_STATIC_CAST(nsParser*, mParser);
-      parser->HandleParserContinueEvent();
-      NS_RELEASE(mParser);
-    }
-  };
- 
-  nsIParser* mParser; 
+  ~nsParserContinueEvent()
+  {
+    nsParser *parser = (nsParser*) owner;
+    NS_RELEASE(parser);
+  }
+
+  PR_STATIC_CALLBACK(void*) HandleEvent(PLEvent* aEvent)
+  {
+    nsParser *parser = (nsParser*) aEvent->owner;
+    parser->HandleParserContinueEvent();
+    return nsnull;
+  }
+
+  PR_STATIC_CALLBACK(void) DestroyEvent(PLEvent* aEvent)
+  {
+    delete (nsParserContinueEvent*) aEvent;
+  }
 };
-
-static void PR_CALLBACK HandlePLEvent(nsParserContinueEvent* aEvent)
-{
-  NS_ASSERTION(nsnull != aEvent,"Event is null");
-  aEvent->HandleEvent();
-}
-
-static void PR_CALLBACK DestroyPLEvent(nsParserContinueEvent* aEvent)
-{
-  NS_ASSERTION(nsnull != aEvent,"Event is null");
-  delete aEvent;
-}
-
-nsParserContinueEvent::nsParserContinueEvent(nsIParser* aParser)
-{
-  NS_ASSERTION(aParser, "null parameter");  
-  mParser = aParser; 
-  PL_InitEvent(this, aParser,
-               (PLHandleEventProc) ::HandlePLEvent,
-               (PLDestroyEventProc) ::DestroyPLEvent);  
-}
 
 //-------------- End ParseContinue Event Definition ------------------------
 
@@ -417,11 +407,14 @@ nsresult
 nsParser::PostContinueEvent()
 {
   if (!(mFlags & NS_PARSER_FLAG_PENDING_CONTINUE_EVENT) && mEventQueue) {
-    nsParserContinueEvent* ev = new nsParserContinueEvent(NS_STATIC_CAST(nsIParser*, this));
-    NS_ENSURE_TRUE(ev,NS_ERROR_OUT_OF_MEMORY);
-    NS_ADDREF(this);
-    mEventQueue->PostEvent(ev);
-    mFlags |= NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
+    nsParserContinueEvent* ev = new nsParserContinueEvent(this);
+    NS_ENSURE_TRUE(ev, NS_ERROR_OUT_OF_MEMORY);
+    if (NS_FAILED(mEventQueue->PostEvent(ev))) {
+        NS_ERROR("failed to post parser continuation event");
+        PL_DestroyEvent(ev);
+    }
+    else
+        mFlags |= NS_PARSER_FLAG_PENDING_CONTINUE_EVENT;
   }
   return NS_OK;
 }

@@ -34,23 +34,25 @@ REQUIRES	= xpcom \
 		  util \
 		  $(NULL)
 
-CPPSRCS		= PropertiesTest.cpp \
-		  urltest.cpp \
-		  TestCallbacks.cpp \
-		  TestPageLoad.cpp \
-		  TestPerf.cpp \
-		  TestIDN.cpp \
-		  TestURLParser.cpp \
-		  TestStandardURL.cpp \
-		  TestSocketTransport.cpp \
-		  TestUpload.cpp \
-		  TestStreamTransport.cpp \
-		  TestStreamChannel.cpp \
-		  TestStreamPump.cpp \
-		  TestProtocols.cpp \
-		  TestBlockingSocket.cpp \
-		  TestDNS.cpp \
-		  $(NULL)
+CPPSRCS		= \
+		PropertiesTest.cpp \
+		urltest.cpp \
+		TestCallbacks.cpp \
+		TestPageLoad.cpp \
+		TestPerf.cpp \
+		TestIDN.cpp \
+		TestURLParser.cpp \
+		TestStandardURL.cpp \
+		TestSocketTransport.cpp \
+		TestUpload.cpp \
+		TestStreamTransport.cpp \
+		TestStreamChannel.cpp \
+		TestStreamPump.cpp \
+		TestProtocols.cpp \
+		TestBlockingSocket.cpp \
+		TestDNS.cpp \
+		TestIOThreads.cpp \
+		$(NULL)
 
 SIMPLE_PROGRAMS	= $(CPPSRCS:.cpp=$(BIN_SUFFIX))
 
