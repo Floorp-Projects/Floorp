@@ -1012,7 +1012,7 @@ nsBlockFrame::ReflowMapped(nsBlockReflowState& aState)
   aState.mCurrentLine = &lineLayout;
   while (nsnull != line) {
     // Initialize the line layout for this line
-    rv = lineLayout.Initialize(aState, line);
+    rv = lineLayout.Initialize(aState, line);/* XXX move out of loop */
     if (NS_OK != rv) {
       goto done;
     }
