@@ -100,6 +100,8 @@ class NS_COM nsSpecialSystemDirectory : public nsFileSpec
         ,   BeOS_HomeDirectory        =   402
         ,   BeOS_DesktopDirectory     =   403
         ,   BeOS_SystemDirectory      =   404
+
+        ,   OS2_SystemDirectory        =   501
         };
 
                     //nsSpecialSystemDirectory();

@@ -473,8 +473,9 @@ void nsFileSpecHelpers::MakeAllDirectories(const char* inPath, int mode)
 #ifdef XP_MAC
 #pragma mark -
 #endif
-
-#if defined(XP_PC)
+#if defined(XP_OS2)
+#include "nsFileSpecOS2.cpp" // OS/2-specific implementations
+#elif defined(XP_PC)
 #include "nsFileSpecWin.cpp" // Windows-specific implementations
 #elif defined(XP_MAC)
 //#include "nsFileSpecMac.cpp" // Macintosh-specific implementations
@@ -1040,7 +1041,11 @@ PRBool nsFileSpec::operator == (const nsFileSpec& inOther) const
 #if defined(XP_PC)
 #define DIR_SEPARATOR '\\'      // XXX doesn't NSPR have this?
     /* windows does not care about case. */
+#ifdef XP_OS2
+#define DIR_STRCMP     strcmp
+#else
 #define DIR_STRCMP    _stricmp
+#endif
 #else
 #define DIR_SEPARATOR '/'
 #if defined(VMS)

@@ -30,9 +30,14 @@
 #include <Files.h>
 #include <Memory.h>
 #include <Processes.h>
-#elif defined(XP_PC)
+#elif defined(XP_PC) && !defined (XP_OS2)
 #include <windows.h>
 #include <shlobj.h>
+#include <stdlib.h>
+#include <stdio.h>
+#elif defined(XP_OS2)
+#define MAX_PATH _MAX_PATH
+#include <os2.h>
 #include <stdlib.h>
 #include <stdio.h>
 #elif defined(XP_UNIX)
@@ -86,7 +91,7 @@ private:
 static nsHashtable *systemDirectoriesLocations = NULL;
 
 
-#if XP_PC
+#if defined (XP_PC) && !defined (XP_OS2)
 //----------------------------------------------------------------------------------------
 static char* MakeUpperCase(char* aPath)
 //----------------------------------------------------------------------------------------
@@ -142,7 +147,7 @@ Clean:
 
 	pMalloc->Release();
 } // GetWindowsFolder
-#endif // XP_PC
+#endif // XP_PC && !XP_OS2
 
 //----------------------------------------------------------------------------------------
 static void GetCurrentWorkingDirectory(nsFileSpec& aFileSpec)
@@ -156,7 +161,7 @@ static void GetCurrentWorkingDirectory(nsFileSpec& aFileSpec)
 static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
 //----------------------------------------------------------------------------------------
 {
-#ifdef XP_PC
+#if defined (XP_PC) && !defined (XP_OS2)
     char buf[MAX_PATH];
     if ( ::GetModuleFileName(0, buf, sizeof(buf)) ) {
         // chop of the executable name by finding the rightmost backslash
@@ -167,6 +172,17 @@ static void GetCurrentProcessDirectory(nsFileSpec& aFileSpec)
         aFileSpec = buf;
         return;
     }
+
+#elif defined(XP_OS2)
+    PPIB ppib;
+    PTIB ptib;
+    char buffer[CCHMAXPATH];
+    DosGetInfoBlocks( &ptib, &ppib);
+    DosQueryModuleName( ppib->pib_hmte, CCHMAXPATH, buffer);
+    *strrchr( buffer, '\\') = '\0'; // XXX DBCS misery
+    aFileSpec = buffer;
+    return;
+
 
 #elif defined(XP_MAC)
     // get info for the the current process to determine the directory
@@ -308,7 +324,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
     {
         
         case OS_DriveDirectory:
-#ifdef XP_PC
+#if defined (XP_PC) && !defined (XP_OS2)
         {
             char path[_MAX_PATH];
             PRInt32 len = GetWindowsDirectory( path, _MAX_PATH );
@@ -318,6 +334,20 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
                     path[3] = 0;
             }
             *this = MakeUpperCase(path);
+        }
+#elif defined(XP_OS2)
+        {
+            // printf( "*** Warning warning OS_DriveDirectory called for");
+            
+            ULONG ulBootDrive = 0;
+            char  buffer[] = " :\\OS2";
+            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                             &ulBootDrive, sizeof ulBootDrive);
+            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
+            *this = buffer;
+#ifdef DEBUG
+            printf( "Got OS_DriveDirectory: %s\n", buffer);
+#endif
         }
 #elif defined(XP_MAC)
         {
@@ -330,12 +360,26 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
 
             
         case OS_TemporaryDirectory:
-#ifdef XP_PC
+#if defined (XP_PC) && !defined (XP_OS2)
         {
             char path[_MAX_PATH];
             DWORD len = GetTempPath(_MAX_PATH, path);
             *this = MakeUpperCase(path);
         }
+#elif defined(XP_OS2)
+          {
+             char buffer[CCHMAXPATH] = "";
+             char *c = getenv( "TMP");
+             if( c) strcpy( buffer, c);
+             else
+             {
+                c = getenv( "TEMP");
+                if( c) strcpy( buffer, c);
+             }
+             if( c) *this = buffer;
+             // use exe's directory if not set
+             else GetCurrentProcessDirectory(*this);
+          }
 #elif defined(XP_MAC)
             *this = kTemporaryFolderType;
         
@@ -503,7 +547,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             break;
 #endif
             
-#ifdef XP_PC
+#if defined (XP_PC) && !defined (XP_OS2)
         case Win_SystemDirectory:
         {    
             char path[_MAX_PATH];
@@ -673,7 +717,7 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             GetWindowsFolder(CSIDL_PRINTHOOD, *this);
             break;
         }
-#endif  // XP_PC     
+#endif  // XP_PC && !XP_OS2 
 
 #ifdef XP_UNIX
         case Unix_LocalDirectory:
@@ -747,7 +791,20 @@ void nsSpecialSystemDirectory::operator = (SystemDirectories aSystemSystemDirect
             break;
 		}
 #endif        
-
+#ifdef XP_OS2
+        case OS2_SystemDirectory:
+        {
+            ULONG ulBootDrive = 0;
+            char  buffer[] = " :\\OS2\\System";
+            DosQuerySysInfo( QSV_BOOT_DRIVE, QSV_BOOT_DRIVE,
+                             &ulBootDrive, sizeof ulBootDrive);
+            buffer[0] = 'A' - 1 + ulBootDrive; // duh, 1-based index...
+            *this = buffer;
+#ifdef DEBUG
+            printf( "Got OS_SystemDirectory: %s\n", buffer);
+#endif
+        }
+#endif
         default:
             break;    
     }
