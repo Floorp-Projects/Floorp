@@ -31,6 +31,7 @@ require "CGI.pl";
 
 sub sillyness {
     my $zz;
+    $zz = $::legal_keywords;
     $zz = $::usergroupset;
     $zz = %::FORM;
 }
@@ -40,6 +41,8 @@ PutHeader ("Full Text Bug Listing");
 
 ConnectToDatabase();
 quietly_check_login();
+
+GetVersionTable();
 
 my $generic_query  = "
 select
@@ -59,7 +62,8 @@ select
   bugs.short_desc,
   bugs.target_milestone,
   bugs.qa_contact,
-  bugs.status_whiteboard
+  bugs.status_whiteboard,
+  bugs.keywords
 from bugs,profiles assign,profiles report
 where assign.userid = bugs.assigned_to and report.userid = bugs.reporter and
 bugs.groupset & $::usergroupset = bugs.groupset and";
@@ -73,7 +77,7 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
         my ($id, $product, $version, $platform, $opsys, $status, $severity,
             $priority, $resolution, $assigned, $reporter, $component, $url,
             $shortdesc, $target_milestone, $qa_contact,
-            $status_whiteboard) = (@row);
+            $status_whiteboard, $keywords) = (@row);
         print "<IMG SRC=\"1x1.gif\" WIDTH=1 HEIGHT=80 ALIGN=LEFT>\n";
         print "<TABLE WIDTH=100%>\n";
         print "<TD COLSPAN=4><TR><DIV ALIGN=CENTER><B><FONT =\"+3\">" .
@@ -104,6 +108,9 @@ foreach my $bug (split(/:/, $::FORM{'buglist'})) {
         print "<TR><TD COLSPAN=6><B>URL:</B>&nbsp;";
 	print "<A HREF=\"" . $url . "\">" .  html_quote($url) . "</A>\n"; 
         print "<TR><TD COLSPAN=6><B>Summary:</B> " . html_quote($shortdesc) . "\n";
+        if (@::legal_keywords) {
+            print "<TR><TD><B>Keywords: </B>$keywords</TD></TR>\n";
+        }
         if (Param("usestatuswhiteboard")) {
             print "<TR><TD COLSPAN=6><B>Status Whiteboard:" .
                 html_quote($status_whiteboard) . "\n";
