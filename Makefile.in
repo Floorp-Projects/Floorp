@@ -268,7 +268,7 @@ endif
 
 endif # BUILD_MODULES == all
 
-STATIC_MAKEFILES := nsprpub directory/c-sdk/ldap
+STATIC_MAKEFILES := nsprpub directory/c-sdk
 
 ifdef MOZ_PSM
 STATIC_MAKEFILES += security/nss 
@@ -301,7 +301,7 @@ ifndef MOZ_NATIVE_NSPR
 	$(MAKE) -C nsprpub $@
 endif
 ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk/ldap $@
+	$(MAKE) -C directory/c-sdk $@
 endif
 endif
 
@@ -330,8 +330,8 @@ endif
 
 ldap:
 ifdef MOZ_LDAP_XPCOM
-	$(MAKE) -C directory/c-sdk/ldap export
-	$(MAKE) -C directory/c-sdk/ldap install
+	$(MAKE) -C directory/c-sdk export
+	$(MAKE) -C directory/c-sdk install
 endif
 
 freetype:

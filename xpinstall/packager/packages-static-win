@@ -253,7 +253,8 @@ bin\res\builtin\platformHTMLBindings.xml
 
 [mail]
 bin\components\mail.dll
-bin\nsldap32v40.dll
+bin\nsldap32v50.dll
+bin\nsldappr32v50.dll
 bin\components\addrbook.xpt
 bin\components\mailnewspublic.xpt
 bin\components\mime.xpt
