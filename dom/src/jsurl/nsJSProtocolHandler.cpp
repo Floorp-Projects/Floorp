@@ -95,6 +95,7 @@ public:
     nsresult Eval() {
         nsresult rv;
 
+        //TODO Change this to GetSpec and then skip past the javascript: 
         // Get the expression:
         char* jsExpr;
         rv = mURI->GetPath(&jsExpr);

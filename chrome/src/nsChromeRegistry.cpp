@@ -256,7 +256,7 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
 #endif
 
     // Construct a chrome URL and use it to look up a resource.
-    nsAutoString windowType = nsAutoString("chrome://") + hostStr + "/";
+    nsAutoString windowType = nsAutoString("chrome://") + hostStr ;
 
     // Stash any search part of the URL for later
 #ifdef NECKO
@@ -293,12 +293,12 @@ nsChromeRegistry::ConvertChromeURL(nsIURI* aChromeURL)
         if (slashIndex == -1)
 		    slashIndex = restOfURL.Length();
 
-        restOfURL.Mid(packageType, 1, slashIndex - 1);
+        restOfURL.Mid(packageType, 0, slashIndex);
 
         if (slashIndex < restOfURL.Length()-1)
         {
             // There are some extra subdirectories to remember.
-            restOfURL.Right(path, restOfURL.Length()-slashIndex-1);
+            restOfURL.Right(path, restOfURL.Length()-slashIndex);
         }
     }
 
