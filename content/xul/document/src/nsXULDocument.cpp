@@ -3514,7 +3514,9 @@ nsXULDocument::StartLayout(void)
       if (! webShell)
           return NS_ERROR_UNEXPECTED;
 
-      webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN);
+      // Set current scrolling state (for this document) but not
+      // initial scrolling state (for this and all future documents)
+      webShell->SetScrolling(NS_STYLE_OVERFLOW_HIDDEN, PR_FALSE);
 
       nsCOMPtr<nsIWebShellContainer> webShellContainer;
       webShell->GetContainer(*getter_AddRefs(webShellContainer));
