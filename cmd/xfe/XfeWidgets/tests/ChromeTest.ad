@@ -90,6 +90,7 @@ ChromeTest*ToolBox.shadowThickness:						1
 ChromeTest*ToolBox*buttonType:							button_push
 
 ChromeTest*ToolBox*XfeToolBar*shadowThickness:			1
+ChromeTest*ToolBox*XfeToolBar.buttonLayout:			    button_label_on_bottom
 ChromeTest*ToolBox*XmForm*shadowThickness:				0
 ChromeTest*ToolBox*XmFrame*shadowThickness:				1
 ChromeTest*ToolBox*XmFrame*shadowType:					shadow_out

@@ -27,6 +27,9 @@
 
 static void		scale_cb			(Widget,XtPointer,XtPointer);
 static void		hide_cb				(Widget,XtPointer,XtPointer);
+static void		location_cb			(Widget,XtPointer,XtPointer);
+
+static Widget	_tool_bar = NULL;
 
 /*----------------------------------------------------------------------*/
 int
@@ -34,13 +37,13 @@ main(int argc,char *argv[])
 {
 	Widget		form;
 	Widget		frame;
-    Widget		tool_bar;
     Widget		scale;
     Widget		hide;
+    Widget		location_tool_bar;
     
 	XfeAppCreateSimple("ToolBarTest",&argc,argv,"MainFrame",&frame,&form);
     
-    tool_bar = XfeCreateLoadedToolBar(form,
+    _tool_bar = XfeCreateLoadedToolBar(form,
 									  "ToolBar",
 									  "Tool",
 									  50,
@@ -56,15 +59,25 @@ main(int argc,char *argv[])
                                     form,
 									NULL);
 
-	XtAddCallback(scale,XmNvalueChangedCallback,scale_cb,tool_bar);
-	XtAddCallback(scale,XmNdragCallback,scale_cb,tool_bar);
+	XtAddCallback(scale,XmNvalueChangedCallback,scale_cb,NULL);
+	XtAddCallback(scale,XmNdragCallback,scale_cb,NULL);
 
     hide = XtVaCreateManagedWidget("Hide",
                                     xmPushButtonWidgetClass,
                                     form,
 									NULL);
 
-	XtAddCallback(hide,XmNactivateCallback,hide_cb,tool_bar);
+	XtAddCallback(hide,XmNactivateCallback,hide_cb,NULL);
+
+    location_tool_bar = XfeCreateLoadedToolBar(form,
+											   "LocationToolBar",
+											   "Item",
+											   4,
+											   0,
+											   NULL,
+											   NULL,
+											   location_cb,
+											   NULL);
 
 	XtPopup(frame,XtGrabNone);
 	
@@ -76,30 +89,58 @@ main(int argc,char *argv[])
 static void
 scale_cb(Widget w,XtPointer client_data,XtPointer call_data)
 {
-	Widget		tool_bar = (Widget) client_data;
 	int			value;
 
-	assert( XfeIsAlive(tool_bar) );
+	assert( XfeIsAlive(_tool_bar) );
 
 	XmScaleGetValue(w,&value);
 
-	value = value % 10;
+	value = value / 10;
 
 	printf("%s(%s,%d)\n",__FUNCTION__,XtName(w),value);
 
-	XtVaSetValues(tool_bar,XmNindicatorPosition,value,NULL);
+	XtVaSetValues(_tool_bar,XmNindicatorPosition,value,NULL);
 }
 /*----------------------------------------------------------------------*/
 static void
 hide_cb(Widget w,XtPointer client_data,XtPointer call_data)
 {
-	Widget		tool_bar = (Widget) client_data;
-
-	assert( XfeIsAlive(tool_bar) );
-
+	assert( XfeIsAlive(_tool_bar) );
 
 	printf("%s(%s)\n",__FUNCTION__,XtName(w));
 
-	XtVaSetValues(tool_bar,XmNindicatorPosition,XmINDICATOR_DONT_SHOW,NULL);
+	XtVaSetValues(_tool_bar,XmNindicatorPosition,XmINDICATOR_DONT_SHOW,NULL);
+}
+/*----------------------------------------------------------------------*/
+static void
+location_cb(Widget w,XtPointer client_data,XtPointer call_data)
+{
+	unsigned char location = XmINDICATOR_LOCATION_NONE;
+
+	assert( XfeIsAlive(_tool_bar) );
+
+	if (strcmp(XtName(w),"Item1") == 0)
+	{
+		location = XmINDICATOR_LOCATION_NONE;
+	}
+	else if (strcmp(XtName(w),"Item2") == 0)
+	{
+		location = XmINDICATOR_LOCATION_BEGINNING;
+	}
+	else if (strcmp(XtName(w),"Item3") == 0)
+	{
+		location = XmINDICATOR_LOCATION_END;
+	}
+	else if (strcmp(XtName(w),"Item4") == 0)
+	{
+		location = XmINDICATOR_LOCATION_MIDDLE;
+	}
+
+	printf("%s(%s) location = %s\n",
+		   __FUNCTION__,
+		   XtName(w),
+		   XfeDebugRepTypeValueToName(XmRToolBarIndicatorLocation,location));
+
+	XtVaSetValues(_tool_bar,XmNindicatorLocation,location,NULL);
 }
 /*----------------------------------------------------------------------*/

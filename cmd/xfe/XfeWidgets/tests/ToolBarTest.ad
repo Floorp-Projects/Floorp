@@ -42,6 +42,8 @@ ToolBarTest*ToolBar.shadowType:				shadow_out
 ToolBarTest*ToolBar.background:				Gray70
 ToolBarTest*ToolBar.highlightThickness:		1
 ToolBarTest*ToolBar.highlighted:			True
+ToolBarTest*ToolBar.buttonLayout:		        button_label_on_bottom
+
 !ToolBarTest*ToolBar.borderWidth:			1
 !ToolBarTest*ToolBar.borderColor:			Red
 
@@ -125,5 +127,25 @@ ToolBarTest*Hide.labelString:				Hide Indicator
 
 ToolBarTest*ToolBar*Indicator.background:		Red
 
+ToolBarTest*LocationToolBar.leftAttachment:		attach_widget
+ToolBarTest*LocationToolBar.topAttachment:		attach_widget
+ToolBarTest*LocationToolBar.bottomAttachment:		attach_none
+ToolBarTest*LocationToolBar.rightAttachment:		attach_none
+ToolBarTest*LocationToolBar.leftOffset:			5
+ToolBarTest*LocationToolBar.topOffset:			50
+ToolBarTest*LocationToolBar.topWidget:			ToolBar
+ToolBarTest*LocationToolBar.leftWidget:			Hide
+ToolBarTest*LocationToolBar.leftOffset:			50
+ToolBarTest*LocationToolBar.labelString:		Hide Indicator
+ToolBarTest*LocationToolBar.buttonLayout:		button_label_only
+ToolBarTest*LocationToolBar.childForceWidth:		False
+ToolBarTest*LocationToolBar.childForceHeight:		True
+ToolBarTest*LocationToolBar.childUsePreferredWidth:	True
+ToolBarTest*LocationToolBar.childUsePreferredHeight:	False
 
+
+ToolBarTest*LocationToolBar*Item1.labelString:		None
+ToolBarTest*LocationToolBar*Item2.labelString:		Beginning
+ToolBarTest*LocationToolBar*Item3.labelString:		End
+ToolBarTest*LocationToolBar*Item4.labelString:		Middle
 
