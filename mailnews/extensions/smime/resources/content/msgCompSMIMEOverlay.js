@@ -117,7 +117,7 @@ function showNeedSetupInfo()
 
   if (promptService && gBundle && gBrandBundle) {
     var dummy = new Object;
-    var buttonPressed = new Object;
+    var buttonPressed =
     promptService.confirmEx(window,
       gBrandBundle.getString("brandShortName"),
       gBundle.getString("NeedSetup"), 
@@ -127,10 +127,9 @@ function showNeedSetupInfo()
       0,
       0,
       null,
-      dummy,
-      buttonPressed);
+      dummy);
     
-    if (0 == buttonPressed.value) {
+    if (0 == buttonPressed) {
       openHelp("sign-encrypt");
     }
   }

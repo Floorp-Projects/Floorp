@@ -1102,14 +1102,14 @@ var gEditorOutputProgressListener =
     if (!promptServ)
       return;
 
-    outButtonPressed = promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
+    promptServ.confirmEx(window, dlgTitle, text, nsIPromptService.STD_OK_CANCEL_BUTTONS,
                          "", "", "", checkBoxLabel, checkObj);
   },
   confirmEx : function(dlgTitle, text, btnFlags, btn0Title, btn1Title, btn2Title, checkBoxLabel, checkVal)
   {
     var promptServ = GetPromptService();
     if (!promptServ)
-     return;
+     return 0;
 
     return promptServ.confirmEx(window, dlgTitle, text, btnFlags,
                         btn0Title, btn1Title, btn2Title,
@@ -1764,8 +1764,6 @@ var nsRevertCommand =
 
     if (promptService)
     {
-      var result = {value:0};
-
       // Put the page title in the message string
       var title = window.editorShell.GetDocumentTitle();
       if (!title)
@@ -1773,13 +1771,13 @@ var nsRevertCommand =
 
       var msg = GetString("AbandonChanges").replace(/%title%/,title);
 
-      result = promptService.confirmEx(window, GetString("RevertCaption"), msg,
+      var result = promptService.confirmEx(window, GetString("RevertCaption"), msg,
   						      (promptService.BUTTON_TITLE_REVERT * promptService.BUTTON_POS_0) +
   						      (promptService.BUTTON_TITLE_CANCEL * promptService.BUTTON_POS_1),
   						      null, null, null, null, {value:0});
 
       // Reload page if first button (Revert) was pressed
-      if(result.value == 0)
+      if(result == 0)
       {
         FinishHTMLSource();
         window.editorShell.LoadUrl(GetDocumentUrl());

@@ -511,13 +511,11 @@ function CheckAndSaveDocument(command, allowDontSave)
     promptFlags += doPublish ?
         (promptService.BUTTON_TITLE_IS_STRING * promptService.BUTTON_POS_2)
         : (promptService.BUTTON_TITLE_DONT_SAVE * promptService.BUTTON_POS_2);
+  
+  result = promptService.confirmEx(window, dialogTitle, dialogMsg, promptFlags,
+                          button1Title, null, button3Title, null, {value:0});
 
-  result = promptService.confirmEx(
-    window, dialogTitle, dialogMsg, promptFlags,
-    button1Title, null, button3Title, null, {value:0}
-  );
-
-  if (result.value == 0)
+  if (result == 0)
   {
     // Save, but first finish HTML source mode
     if (gHTMLSourceChanged)
@@ -538,10 +536,10 @@ function CheckAndSaveDocument(command, allowDontSave)
     return success;
   }
 
-  if (result.value == 2) // "Don't Save"
+  if (result == 2) // "Don't Save"
     return true;
 
-  // Default or result.value == 1 (Cancel)
+  // Default or result == 1 (Cancel)
   return false;
 }
 
