@@ -58,12 +58,10 @@ nsPosixLocaleFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
 	NS_ADDREF_THIS(); // Increase reference count for caller   
   } else if (aIID.Equals(kIPosixLocaleIID))
   {
-#ifdef DEBUG_tague
-    fprintf(stderr,"nsLocale: nsPosixLocaleFactory--creating nsIPosixLocale\n");
-#endif
+
     nsPosixLocale *localeImpl = new nsPosixLocale();
     if(localeImpl)
-      NS_ADDREF(localeImpl);
+      localeImpl->AddRef();
     *aResult = (void*)localeImpl;
 	
   }

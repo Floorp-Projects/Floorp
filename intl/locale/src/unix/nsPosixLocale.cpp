@@ -32,9 +32,7 @@ NS_IMPL_ISUPPORTS(nsPosixLocale,kIPosixLocaleIID)
 
 nsPosixLocale::nsPosixLocale(void)
 {
-#ifdef DEBUG_tague
-  fprintf(stderr,"nsLocale: creating nsIPosixLocale implementation\n");
-#endif
+  NS_INIT_REFCNT();
 }
 
 nsPosixLocale::~nsPosixLocale(void)
@@ -51,9 +49,6 @@ nsPosixLocale::GetPlatformLocale(const nsString* locale,char* posixLocale, size_
   char  region_code[3];
   char  posix_locale[9];
 
-#ifdef DEBUG_tague
-  fprintf(stderr,"nsLocale: nsPosixLocale::GetPlatformLocale\n");
-#endif
   xp_locale = locale->ToNewCString();
   if (xp_locale!=nsnull) {
     if (!ParseLocaleString(xp_locale,lang_code,country_code,region_code,'-')) {
@@ -84,7 +79,7 @@ nsPosixLocale::GetXPLocale(const char* posixLocale, nsString* locale)
 
   if (posixLocale!=nsnull) {
     if (strcmp(posixLocale,"C")==0 || strcmp(posixLocale,"POSIX")==0) {
-      *locale = "x-user-defined";
+      *locale = "en";
       return NS_OK;
     }
     if (!ParseLocaleString(posixLocale,lang_code,country_code,region_code,'_')) {

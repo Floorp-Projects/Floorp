@@ -28,6 +28,9 @@
 #ifdef XP_PC
 #include "nsIWin32Locale.h"
 #endif
+#ifdef XP_UNIX
+#include "nsIPosixLocale.h"
+#endif
 
 class nsLocaleFactory : public nsILocaleFactory
 {
@@ -40,6 +43,8 @@ private:
   nsILocale*	fApplicationLocale;
 #ifdef XP_PC
   nsIWin32Locale*		fWin32LocaleInterface;
+#elif defined(XP_UNIX)
+  nsIPosixLocale*   fPosixLocaleInterface;
 #endif
 
 public:

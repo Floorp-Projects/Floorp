@@ -864,7 +864,7 @@ posixlocale_reverse_conversion_test()
 	locale = new nsString("");
 	result = posix_locale->GetXPLocale("C",locale);
 	NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetXPLocale failed.\n");
-  NS_ASSERTION(*locale=="x-user-defined","nsLocaleTest: GetXPLocale failed.\n");
+  NS_ASSERTION(*locale=="en","nsLocaleTest: GetXPLocale failed.\n");
 	delete locale;
 
 	locale = new nsString("");
@@ -877,6 +877,66 @@ posixlocale_reverse_conversion_test()
 
 }
 
+void
+posixlocale_test_special(void)
+{
+	nsresult			    result;
+  nsILocaleFactory* xp_factory;
+  nsILocale*        xp_locale;
+	nsString*			    locale, *result_locale;
+  nsString*         lc_message;
+
+  //
+  // create the locale objects
+  //
+	result = nsComponentManager::FindFactory(kLocaleFactoryCID,
+										(nsIFactory**)&xp_factory);
+
+	NS_ASSERTION(xp_factory!=NULL,"nsLocaleTest: factory_create_interface failed.");
+	NS_ASSERTION(result==NS_OK,"nsLocaleTest: factory_create_interface failed");
+
+  //
+  // settup strings
+  //
+  locale = new nsString("en");
+  result_locale = new nsString();
+  lc_message = new nsString("NSILOCALE_MESSAGES");
+
+	//
+	// test GetSystemLocale
+	//
+  result = xp_factory->GetSystemLocale(&xp_locale);
+  NS_ASSERTION(xp_locale!=NULL,"nsLocaleTest: GetSystemLocale failed.\n");
+  NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetSystemLocale failed.\n");
+  
+  result = xp_locale->GetCatagory(lc_message,result_locale);
+  NS_ASSERTION(*result_locale==*locale,"nsLocaleTest: GetSystemLocale failed.\n");
+  NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetSystemLocale failed.\n");
+  
+  xp_locale->Release();
+
+  result = xp_factory->GetApplicationLocale(&xp_locale);
+  NS_ASSERTION(xp_locale!=NULL,"nsLocaleTest: GetApplicationLocale failed.\n");
+  NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetApplicationLocale failed.\n");
+  
+  
+  result = xp_locale->GetCatagory(lc_message,result_locale);
+  NS_ASSERTION(*result_locale==*locale,"nsLocaleTest: GetSystemLocale failed.\n");
+  NS_ASSERTION(result==NS_OK,"nsLocaleTest: GetSystemLocale failed.\n");
+  xp_locale->Release();
+  
+  //
+  // delete strings
+  //
+  delete locale;
+  delete result_locale;
+  delete lc_message;
+
+  xp_factory->Release();
+
+
+}
+  
 #endif
 
 int
@@ -917,6 +977,7 @@ main(int argc, char** argv)
   posixlocale_test();
   posixlocale_conversion_test();
   posixlocale_reverse_conversion_test();
+  posixlocale_test_special();
 
 #endif
 

@@ -26,6 +26,11 @@
 #ifdef XP_PC
 #include <windows.h>
 #endif
+#ifdef XP_UNIX
+#include <locale.h>
+#include <stdlib.h>
+#endif
+
 
 NS_DEFINE_IID(kILocaleFactoryIID, NS_ILOCALEFACTORY_IID);
 NS_DEFINE_IID(kLocaleFactoryCID, NS_LOCALEFACTORY_CID);
@@ -35,16 +40,35 @@ NS_DEFINE_CID(kWin32LocaleFactoryCID, NS_WIN32LOCALEFACTORY_CID);
 NS_DEFINE_IID(kIWin32LocaleIID, NS_IWIN32LOCALE_IID);
 #endif
 
+#ifdef XP_UNIX
+NS_DEFINE_CID(kPosixLocaleFactoryCID,NS_POSIXLOCALEFACTORY_CID);
+NS_DEFINE_IID(kIPosixLocaleIID, NS_IPOSIXLOCALE_IID);
+#endif
+
 NS_IMPL_ISUPPORTS(nsLocaleFactory,kILocaleFactoryIID)
 
-
-char* localeCatagoryList[6] = { "NSILOCALE_TIME",
+#define LOCALE_CATAGORY_LISTLEN 6
+char* localeCatagoryList[LOCALE_CATAGORY_LISTLEN] = 
+{
 								"NSILOCALE_COLLATE",
 								"NSILOCALE_CTYPE",
 								"NSILOCALE_MONETARY",
-								"NSILOCALE_MESSAGES",
-								"NSILOCALE_NUMERIC"
+								"NSILOCALE_NUMERIC",
+                "NSILOCALE_TIME",
+                "NSILOCALE_MESSAGES"
 };
+
+#ifdef XP_UNIX
+int posix_locale_catagory[LOCALE_CATAGORY_LISTLEN] =
+{
+  LC_TIME,
+  LC_COLLATE,
+  LC_CTYPE,
+  LC_MONETARY,
+  LC_NUMERIC,
+  LC_MESSAGES
+};
+#endif
 
 nsLocaleFactory::nsLocaleFactory(void)
 :	fSystemLocale(NULL),
@@ -54,9 +78,9 @@ nsLocaleFactory::nsLocaleFactory(void)
   nsresult result;
   NS_INIT_REFCNT();
 
-  fCatagoryList = new nsString*[6];
+  fCatagoryList = new nsString*[LOCALE_CATAGORY_LISTLEN];
 
-  for(i=0;i<6;i++)
+  for(i=0;i< LOCALE_CATAGORY_LISTLEN;i++)
 	fCatagoryList[i] = new nsString(localeCatagoryList[i]);
 
 #ifdef XP_PC
@@ -65,16 +89,23 @@ nsLocaleFactory::nsLocaleFactory(void)
 									NULL,
 									kIWin32LocaleIID,
 									(void**)&fWin32LocaleInterface);
-	NS_ASSERTION(fWin32LocaleInterface!=NULL,"nsLocaleFactory: factory_create_interface failed.");
+	NS_ASSERTION(fWin32LocaleInterface!=NULL,"nsLocaleFactory: factory_create_interface failed.\n");
+#elif defined(XP_UNIX)
+  fPosixLocaleInterface = nsnull;
+  result = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID,
+                                              NULL,
+                                              kIPosixLocaleIID,
+                                              (void**)&fPosixLocaleInterface);
+	NS_ASSERTION(fPosixLocaleInterface!=NULL,"nsLocaleFactory: factory_create_interface failed.\n");
 #endif
-	
+
 }
 
 nsLocaleFactory::~nsLocaleFactory(void)
 {
 	int i;
 
-	for(i=0;i<6;i++)
+	for(i=0;i< LOCALE_CATAGORY_LISTLEN;i++)
 		delete fCatagoryList[i];
 
 	delete []fCatagoryList;
@@ -87,6 +118,10 @@ nsLocaleFactory::~nsLocaleFactory(void)
 #ifdef XP_PC
 	if (fWin32LocaleInterface)
 		fWin32LocaleInterface->Release();
+#endif
+#ifdef XP_UNIX
+  if (fPosixLocaleInterface)
+    fPosixLocaleInterface->Release();
 #endif
 
 }
@@ -130,18 +165,18 @@ nsLocaleFactory::NewLocale(const nsString* localeName, nsILocale** locale)
 	nsString**	valueList;
 	nsLocale*	newLocale;
 
-	valueList = new nsString*[6];
-	for(i=0;i<6;i++)
+	valueList = new nsString*[LOCALE_CATAGORY_LISTLEN];
+	for(i=0;i< LOCALE_CATAGORY_LISTLEN;i++)
 		valueList[i] = new nsString(*localeName);
 
-	newLocale = new nsLocale(fCatagoryList,valueList,6);
+	newLocale = new nsLocale(fCatagoryList,valueList,LOCALE_CATAGORY_LISTLEN);
 	NS_ASSERTION(newLocale!=NULL,"nsLocaleFactory: failed to create nsLocale");
 	newLocale->AddRef();
 
 	//
 	// delete temporary strings
 	//
-	for(i=0;i<6;i++)
+	for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++)
 		delete valueList[i];
 	delete [] valueList;
 
@@ -200,6 +235,69 @@ nsLocaleFactory::GetSystemLocale(nsILocale** systemLocale)
 	delete systemLocaleName;
 	return result;
 	
+#elif defined(XP_UNIX)
+ 
+  char* lc_all = setlocale(LC_ALL,NULL);
+  char* lc_temp;
+  char* lang = getenv("LANG");
+  nsString* lc_values[LOCALE_CATAGORY_LISTLEN];
+  int i;
+
+  NS_ASSERTION(fPosixLocaleInterface!=nsnull,"nsLocale::GetSystemLocale failed");
+
+  if (lc_all!=nsnull) {
+
+    //
+    // create an XP_Locale using the value in lc_all
+    //
+    lc_values[0] = new nsString();
+    fPosixLocaleInterface->GetXPLocale(lc_all,lc_values[0]);
+    char* tempvalue = lc_values[0]->ToNewCString();
+    result = NewLocale(lc_values[0],&fSystemLocale);
+    if (result!=NS_OK) {
+      delete lc_values[i];
+      *systemLocale=(nsILocale*)nsnull;
+      fSystemLocale=(nsILocale*)nsnull;
+      return result;
+    }
+    
+    fSystemLocale->AddRef();
+    *systemLocale = fSystemLocale;
+    return result;
+  }
+
+  //
+  // check to see if lang is null, if it is we can default to en
+  //  and use the same logic
+  if (lang==NULL) {
+    lang = "en";
+  }
+
+  for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++) {
+    lc_temp = setlocale(posix_locale_catagory[i],"");
+    if (lc_temp==NULL) lc_temp = lang;
+    lc_values[i] = new nsString();
+    fPosixLocaleInterface->GetXPLocale(lc_temp,lc_values[i]);
+  }
+
+  result = NewLocale(fCatagoryList,(nsString**)lc_values,
+                     LOCALE_CATAGORY_LISTLEN,&fSystemLocale);
+  if (result!=NS_OK) {
+    for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++) {
+      delete lc_values[i];
+    }
+    *systemLocale = (nsILocale*)nsnull;
+    fSystemLocale = (nsILocale*)nsnull;
+    return result;
+  }
+
+  for(i=0;i<LOCALE_CATAGORY_LISTLEN;i++) {
+    delete lc_values[i];
+  }
+  *systemLocale = fSystemLocale;
+  fSystemLocale->AddRef();
+  return NS_OK;
+
 #else
 	systemLocaleName = new nsString("en-US");
 	result = this->NewLocale(systemLocaleName,&fSystemLocale);
@@ -272,7 +370,14 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	fApplicationLocale->AddRef();
 	delete applicationLocaleName;
 	return result;
-	
+
+#elif defined(XP_UNIX)
+
+  result = GetSystemLocale(&fApplicationLocale);
+  *applicationLocale = fApplicationLocale;
+  fApplicationLocale->AddRef();
+  return result;
+
 #else
 	applicationLocaleName = new nsString("en-US");
 	result = this->NewLocale(applicationLocaleName,&fApplicationLocale);
@@ -289,6 +394,6 @@ nsLocaleFactory::GetApplicationLocale(nsILocale** applicationLocale)
 	return result;
 
 #endif
-	return result;
+
 }
 

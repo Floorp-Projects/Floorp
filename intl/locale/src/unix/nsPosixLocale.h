@@ -33,7 +33,7 @@ class nsPosixLocale : public nsIPosixLocale {
 public:
   
   nsPosixLocale();
-  ~nsPosixLocale();
+  virtual ~nsPosixLocale();
 
   NS_IMETHOD GetPlatformLocale(const nsString* locale,char* posixLocale,
                                size_t length);
