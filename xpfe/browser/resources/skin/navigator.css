@@ -92,10 +92,11 @@ box#searchbutton {
 }
 
 #sessionhist-popup { 
-	background-color: white; 
-	margin: 0px;
+	background-color: #99CCCC; 
+	margin: 0px 4px 0px 0px;
 	width: 10px; 
 	border: none; 
+	-moz-border-radius: 4px;
 	list-style-image:url("chrome://global/skin/scroll-down.gif"); 
 } 
 
