@@ -333,7 +333,11 @@ NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, const nsString& aURI,
 {
   NameSpaceImpl* child = new NameSpaceImpl(mManager, this, aPrefix, aURI);
 
-  return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
+  if (child) {
+    return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
+  }
+  aChildNameSpace = nsnull;
+  return NS_ERROR_OUT_OF_MEMORY;
 }
 
 NS_IMETHODIMP
@@ -343,7 +347,11 @@ NameSpaceImpl::CreateChildNameSpace(nsIAtom* aPrefix, PRInt32 aNameSpaceID,
   if (FindNameSpaceURI(aNameSpaceID)) {
     NameSpaceImpl* child = new NameSpaceImpl(mManager, this, aPrefix, aNameSpaceID);
 
-    return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
+    if (child) {
+      return child->QueryInterface(kINameSpaceIID, (void**)&aChildNameSpace);
+    }
+    aChildNameSpace = nsnull;
+    return NS_ERROR_OUT_OF_MEMORY;
   }
   aChildNameSpace = nsnull;
   return NS_ERROR_ILLEGAL_VALUE;
