@@ -176,10 +176,14 @@ ifeq ($(OS_ARCH),OS2)
 NSPR_LINK_LIBS = \
 	$(DIST)/lib/plc4.lib \
 	$(DIST)/lib/plds4.lib \
-	$(DIST)lib/nspr4.lib
+	$(DIST)/lib/nspr4.lib
 
 XPCOM_LINK_LIBS = $(DIST)/lib/xpcom.lib
-CPLUSPLUSRUNTIME = so32dll.lib tcp32.lib
+ifdef XP_OS2_EMX
+CPLUSPLUSRUNTIME = -lsocket
+else
+CPLUSPLUSRUNTIME = so32dll.lib tcp32dll.lib
+endif
 PROTOCOL_LIBS = $(DIST)/lib/libprotocol.lib
 endif
 
