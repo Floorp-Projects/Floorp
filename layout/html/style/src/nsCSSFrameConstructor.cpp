@@ -1336,8 +1336,6 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     nsINodeInfoManager *nimgr = aDocument->GetNodeInfoManager();
     NS_ENSURE_TRUE(nimgr, NS_ERROR_FAILURE);
 
-    // XXXldb We should not be creating an |image| element, because it
-    // matches selectors!  See bug 109216.
     nsCOMPtr<nsINodeInfo> nodeInfo;
     nimgr->GetNodeInfo(nsHTMLAtoms::img, nsnull, kNameSpaceID_None,
                        getter_AddRefs(nodeInfo));
@@ -1359,6 +1357,11 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
     // way event handling works
     content->SetParent(aContent);
     content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+    content->SetNativeAnonymous(PR_TRUE);
+    // hack to make document rules not match (not like it matters, since we
+    // already have a non-element style context... which is totally wacky, but
+    // anyway).
+    content->SetBindingParent(content);
   
     // Create an image frame and initialize it
     nsIFrame* imageFrame = nsnull;
@@ -1419,6 +1422,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
           // object. This way event handling works
           content->SetParent(aContent);
           content->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+          content->SetNativeAnonymous(PR_TRUE);
+          content->SetBindingParent(content);
 
           // Create a text frame and initialize it
           NS_NewTextFrame(shell, &textFrame);
@@ -1486,6 +1491,8 @@ nsCSSFrameConstructor::CreateGeneratedFrameFor(nsIPresContext*       aPresContex
       // way event handling works
       textContent->SetParent(aContent);
       textContent->SetDocument(aDocument, PR_TRUE, PR_TRUE);
+      textContent->SetNativeAnonymous(PR_TRUE);
+      textContent->SetBindingParent(textContent);
       
       // Create a text frame and initialize it
       NS_NewTextFrame(shell, &textFrame);
@@ -3554,6 +3561,9 @@ nsCSSFrameConstructor::ConstructRootFrame(nsIPresShell*        aPresShell,
   NS_NewViewportFrame(aPresShell, &viewportFrame);
 
 
+  // XXXbz do we _have_ to pass a null content pointer to that frame?
+  // Would it really kill us to pass in the root element or something?
+  // What would that break?
   viewportFrame->Init(aPresContext, nsnull, nsnull, viewportPseudoStyle, nsnull);
 
   // Bind the viewport frame to the root view
