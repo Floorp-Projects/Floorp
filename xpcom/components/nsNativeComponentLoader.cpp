@@ -53,7 +53,9 @@
 extern PRLogModuleInfo *nsComponentManagerLog;
 
 nsNativeComponentLoader::nsNativeComponentLoader() :
-    mCompMgr(nsnull), mDllStore(nsnull), mLoadedDependentLibs(nsnull)
+    mCompMgr(nsnull),
+    mLoadedDependentLibs(nsnull),
+    mDllStore(nsnull)
 {
 }
 

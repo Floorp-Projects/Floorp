@@ -197,8 +197,11 @@ NS_IMETHODIMP nsLeafAccessible::GetAccChildCount(PRInt32 *_retval)
 // nsLinkableAccessible
 //----------------
 
-nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell):
-nsAccessibleWrap(aNode, aShell), mIsALinkCached(PR_FALSE), mLinkContent(nsnull), mIsLinkVisited(PR_FALSE)
+nsLinkableAccessible::nsLinkableAccessible(nsIDOMNode* aNode, nsIWeakReference* aShell) :
+  nsAccessibleWrap(aNode, aShell),
+  mLinkContent(nsnull),
+  mIsALinkCached(PR_FALSE),
+  mIsLinkVisited(PR_FALSE)
 { 
 }
 

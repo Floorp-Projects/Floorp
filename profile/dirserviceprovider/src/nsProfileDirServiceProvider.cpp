@@ -92,7 +92,8 @@ nsIAtom*   nsProfileDirServiceProvider::sApp_MessengerFolderCache50;
 //*****************************************************************************   
 
 nsProfileDirServiceProvider::nsProfileDirServiceProvider(PRBool aNotifyObservers) :
-  mNotifyObservers(aNotifyObservers), mProfileDirLock(nsnull),
+  mProfileDirLock(nsnull),
+  mNotifyObservers(aNotifyObservers),
   mSharingEnabled(PR_FALSE)
 {
 }
