@@ -5,7 +5,7 @@
 # especially if you are running builds on many different OS and platforms
 # which require different command sequences.  Each build type
 # (construct, test, lint) defines a sequence of commands which is the
-# same on all build machines.  The types each have different commands
+# same on all build machines.  They types each have different commands
 # to run but the commands are simple because all the difficult work is
 # performed inside makefiles and shell scripts.  There is one parser
 # on the tinderbox server for each type of build.  This cf file will
@@ -24,8 +24,8 @@
 # variables substituted.
 
 
-# $Revision: 1.9 $ 
-# $Date: 2003/08/16 18:31:05 $ 
+# $Revision: 1.10 $ 
+# $Date: 2003/12/23 12:59:11 $ 
 # $Author: kestes%walrus.com $ 
 # $Source: /home/hwine/cvs_conversion/cvsroot/mozilla/webtools/tinderbox2/src/clientbin/generic.sample.buildcf,v $ 
 # $Name:  $ 
@@ -59,8 +59,6 @@ package UserDef;
 
 # We use the same tinderbox treedata module which is on the server
 # side to translate a treename into a module and branch.
-
-use lib '/home/build/lib';
 
 # set the standard tinderbox search path to allow us to compile on the
 # machine we run make on.
@@ -125,14 +123,10 @@ sub build_environment{
                   '/usr/bin:'.
                   '/bin:'.
                   '/usr/local/bin:'.
+		  '/usr/pvcs/oracle/bin:'.
                   '/home/build/bin'.
                   '');
 
-    $ENV{CVSROOT} = (
-                     "buildmaster\@cvs.yourcompany.com:".
-                     $TreeData::VC_TREE{tree_name()}{'root'}.
-                     "");
-    
     $ENV{CVS_RSH} = "ssh2";
     
     return 1;
@@ -142,15 +136,17 @@ sub build_environment{
 
 sub build_scripts {
     
-    my ($argv) = "@ARGV";
+    my (%args) = @_;
     
-    
+    $build_type = $args{'tree_name'};
+    $tree_name = $args{'tree_name'};
+
     my $build_dir = (
                      "/var/tmp/tinderbox_build".
                      "/".
-                     $args{'buildtype'}.
+                     $args{'build_type'}.
                      "/".
-                     $tree_name.
+                     $args{'tree_name'}.
                      "");
     
     # pick a time earlier then the current time. Check out the sources
@@ -175,17 +171,18 @@ sub build_scripts {
     chomp $time_stamp;
     my $tar_file = (
                     "/var/spool/builds/".
-                    $tree_name.
+                    $args{'tree_name'}.
                     "/".
-                    "reef-aprt.".
-                    $tree_name.
+                    $args{'tree_name'}.
                     ".".
                     $filename_time_str.
                     ".tar.gz"
                     );
+
+    my $archive_dir = "/network/archive/$module/$module";
         
   if ($dest_dir) {
-      $make_flags .= " DESTDIR=$dest_dir RELEASEDIR= ";
+      $make_flags .= " PREFIX=$dest_dir ";
    }
 
   my $branch = $TreeData::VC_TREE{$tree_name}{'branch'};
@@ -196,11 +193,12 @@ sub build_scripts {
   }
 
     # pass these variables to the Makefile.orig so that the
-    # build id can contain this information.
+    # buildid can contain this information.
 
     $ENV{'BUILD_CVS_D_TIME'} = $filename_time_str;
     $ENV{'BUILD_BRANCH'} = $branch;
     $ENV{'BUILD_MODULE'} = $module;
+
 
 
 # builds describe a sequence of steps needed to perform a "build".
@@ -247,14 +245,14 @@ $BUILDS = {
                                          "sleep $sleep_time",
 					 "show_env",
 					 "rpm -qa",
-                                         "rm -rf $build_dir",
+                                      	 "rm -rf $build_dir",
                                          "mkdir -p $build_dir",
 					],
 			   },
 			   {
 			    'phase_name' => "checkout",
 			    'error_status' => "build_failed",
-			    'dir' => "$BUILD_DIR",
+			    'dir' => "$build_dir",
 			    'script' => [
 					 "cvs checkout $cvs_checkout_flags  -D '$cvs_time_str' $module",
 					],
@@ -262,14 +260,32 @@ $BUILDS = {
 			    {
 			     'phase_name' => "build",
 			     'error_status' => "build_failed",
-			     'dir' => "$BUILD_DIR/reef",
+			     'dir' => "$build_dir",
 			     'script' => [
                                           ". ./setupenv; ./configure",
+                                          ". ./setupenv; make $make_flags all",
                                           ". ./setupenv; make $make_flags install",
                                           "tar zcf $tar_file \./install",
+                                          "mv $tar_file $archive_dir",
                                           ". ./setupenv; make $make_flags distclean",
 					 ],
+                             },
+			    {
+			     'phase_name' => "doxygen",
+			     'error_status' => "test_failed",
+			     'dir' => "$build_dir",
+			     'script' => [
+                                          "doxygen",
+					 ],
 			    },
+			     {
+                             'phase_name' => "test",
+                             'error_status' => "test_failed",
+                             'dir' => "$build_dir/$tree_name",
+                             'script' => [
+					  "source ./setupenv; make $make_flags test",
+					  ],
+			     },
 			  ],  # end construct
 	   
    
@@ -286,7 +302,7 @@ $BUILDS = {
 			   {
 			    'phase_name' => "checkout",
 			    'error_status' => "test_failed",
-			    'dir' => "$BUILD_DIR",
+			    'dir' => "$build_dir",
 			    'script' => [
 					 "cvs checkout $cvs_checkout_flags $module",
 					],
@@ -294,7 +310,7 @@ $BUILDS = {
 			    {
 			     'phase_name' => "test",
 			     'error_status' => "test_failed",
-			     'dir' => "$BUILD_DIR/reef",
+			     'dir' => "$build_dir",
 			     'script' => [
 					 ". ./setupenv; make $make_flags distclean",
 					 ". ./setupenv; make $make_flags test",
@@ -307,7 +323,7 @@ $BUILDS = {
 			   {
 			    'phase_name' => "checkout",
 			    'error_status' => "build_failed",
-			    'dir' => "$BUILD_DIR",
+			    'dir' => "$build_dir",
 			    'script' => [
 					 "cvs checkout $cvs_checkout_flags $module",
 					],
@@ -315,7 +331,7 @@ $BUILDS = {
 			    {
 			     'phase_name' => "lint",
 			     'error_status' => "lint_failed",
-			     'dir' => "$BUILD_DIR/reef",
+			     'dir' => "$build_dir",
 			     'script' => [
 					 "make $make_flags lint",
 					 ],
@@ -323,7 +339,7 @@ $BUILDS = {
 			  ],  # end lint
 	   
    
-	  }; # end $BUILDS
+	  }; # end %BUILDS
 
 return $BUILDS;
 }
@@ -334,7 +350,7 @@ return $BUILDS;
 sub error_parser_name {
   my (%args) = @_;
 
-  my $parser_name =  $args{'buildname'};
+  my $parser_name =  $args{'build_type'};
 
   return  $parser_name;
 }
@@ -350,8 +366,6 @@ sub error_parser_name {
 
 sub build_name {
   my (%args) = @_;
-
-  my ($argv) = "@ARGV";
 
     $os = `uname -s`;
     $osver = `uname -r`;
@@ -395,9 +409,17 @@ sub mail_from {
   return "tinderbox-build-daemon\@".$args{'hostname'};
 }
 
+sub mailer {
+  my (%args) = @_;
+
+  my $mailer = 'HTTPPost http://localhost/cgi-bin/cgiwrap/tbox/processmail_builds.cgi';
+
+  return $mailer;
+}
+
 
 # Tell the tinderbox webserver what page to display the build
-# information on.  In our case we use the same build instructions for
+# information.  In our case we use the same build instructions for
 # several different products so this information must be passed in on
 # the command line.  We must have this information or the build can
 # not be displayed on the webserver, so it is a fatal error not to
@@ -406,18 +428,17 @@ sub mail_from {
 
 sub tree_name {
   my (%args) = @_;
-  my ($tree);
 
-  my ($argv) = "@ARGV";
-  if ($argv =~ m/--tree\s*=?\s*([a-zA-Z0-9\-\_]+)/) {
-    $tree= $1;
-  } else {
-    die("no tree specified on command line\n");
-  }
+  my ($tree) = $args{'tree_name'};
 
-  return $1;
+#  my ($argv) = "@ARGV";
+#  if ($argv =~ m/--tree\s*=?\s*([a-zA-Z0-9\-\_]+)/) {
+#    $tree= $1;
+#  } else {
+#    die("no tree specified on command line\n");
+#  }
+
+  return $tree;
 }
 
-
 1;
-
