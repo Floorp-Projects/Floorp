@@ -138,7 +138,7 @@ Rights Reserved.
     <browser id="messagepane" context="messagePaneContext" 
       style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
       disablesecurity="true" disablehistory="true" type="content-primary" 
-      src="about:blank" onclick="contentAreaClick(event);" autofind="false"/>
+      src="about:blank" onclick="messagePaneOnClick(event);" autofind="false"/>
   </vbox>  
 </vbox>
 

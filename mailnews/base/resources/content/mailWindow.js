@@ -201,7 +201,6 @@ function InitMsgWindow()
 
   var messagepane = document.getElementById("messagepane");
   messagepane.docShell.allowAuth = false;
-  messagepane.addEventListener("click",messagePaneOnClick,true);
 }
 
 function messagePaneOnClick(event)
@@ -209,7 +208,10 @@ function messagePaneOnClick(event)
   // if this is stand alone mail (no browser)
   // or this isn't a simple left click, do nothing, and let the normal code execute
   if (event.button != 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey)
+  {
+    contentAreaClick(event);
     return;
+  }
 
   // try to determine the href for what you are clicking on.  
   // for example, it might be "" if you aren't left clicking on a link
@@ -233,10 +235,10 @@ function messagePaneOnClick(event)
   // since we are in the message pane, send it to the top most browser window 
   // (or open one) right away, instead of waiting for us to get some data and
   // determine the content type, and then open a browser window
-  openTopBrowserWith(href);
   // we want to preventDefault, so that in
   // nsGenericHTMLElement::HandleDOMEventForAnchors(), we don't try to handle the click again
   event.preventDefault();
+  openTopBrowserWith(href);
 }
 
 function AddDataSources()

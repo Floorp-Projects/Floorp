@@ -168,7 +168,7 @@ Rights Reserved.
         <grippy onclick="OnClickThreadAndMessagePaneSplitterGrippy()"/>
       </splitter>
       
-      <vbox id="messagepanebox" flex="3" persist="collapsed height" onclick="contentAreaClick(event);">
+      <vbox id="messagepanebox" flex="3" persist="collapsed height">
 
         <hbox id="junkBar"/>
 
@@ -177,7 +177,7 @@ Rights Reserved.
         <browser id="messagepane" context="messagePaneContext"
                  style="height: 0px; min-height: 1px" flex="1" name="messagepane" 
                  disablehistory="true" type="content-primary" src="about:blank"
-                 disablesecurity="true" autofind="false"/>
+                 disablesecurity="true" onclick="messagePaneOnClick(event);" autofind="false"/>
        </vbox>  
      </vbox>
    </vbox>             
