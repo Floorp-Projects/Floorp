@@ -51,17 +51,17 @@
 					<treerow>
 						<treecell>
 							<treeindentation />
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="right" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Name" align="left" />
 						</treecell>
 						<treecell>
 							<progressmeter value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="horizontal" mode="normal" />
 							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Relevance" align="left" style="list-style-image: none;" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Site" align="right" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Site" align="left" style="list-style-image: none;" />
 						</treecell>
 						<treecell>
-							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Engine" align="right" style="list-style-image: none;" />
+							<titledbutton value="rdf:http://home.netscape.com/NC-rdf#Engine" align="left" style="list-style-image: none;" />
 						</treecell>
 					</treerow>
 				</treeitem>
