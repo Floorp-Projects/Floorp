@@ -29,8 +29,8 @@
 <!ENTITY cmd.remove.accesskey             "r">
 <!ENTITY cmd.cancel.label                 "Cancel">
 <!ENTITY cmd.cancel.accesskey             "c">
-<!ENTITY cmd.openfile.label               "Launch">
-<!ENTITY cmd.openfile.accesskey           "L">
+<!ENTITY cmd.openfile.label               "Open">
+<!ENTITY cmd.openfile.accesskey           "O">
 <!ENTITY cmd.show.label                   "Show">
 <!ENTITY cmd.show.accesskey               "S">
 <!ENTITY confirmCancel "Are you sure you want to cancel the saving of this file?">
