@@ -265,14 +265,7 @@ FrameManager::SetPrimaryFrameFor(nsIContent* aContent,
     }
 
     // Add a mapping to the hash table
-    nsIFrame* oldPrimaryFrame;
-     
-    oldPrimaryFrame = (nsIFrame*)mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame);
-#ifdef NS_DEBUG
-    if (oldPrimaryFrame && (oldPrimaryFrame != aPrimaryFrame)) {
-      NS_WARNING("overwriting current primary frame");
-    }
-#endif
+    mPrimaryFrameMap->Insert(aContent, (void*)aPrimaryFrame);
   }
   return NS_OK;
 }
