@@ -199,21 +199,27 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
 
         // find or create an interface record, and set the appropriate
         // slot in the nsTypelibRecord array.
-        nsID zero =
+        static const nsID zero =
         { 0x0, 0x0, 0x0, { 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0, 0x0 } };
         nsInterfaceRecord *record = NULL;
 
         PRBool iidIsZero = current->iid.Equals(zero);
 
         // XXX fix bogus repetitive logic.
-        PRBool foundInIIDTable = PR_FALSE;
+        PRBool shouldAddToIDDTable = PR_TRUE;
 
         if (iidIsZero == PR_FALSE) {
             // prefer the iid.
             nsIDKey idKey(current->iid);
             record = (nsInterfaceRecord *)this->IIDTable->Get(&idKey);
+            // if it wasn't in the iid table then maybe it was already entered
+            // in the nametable. If so then we should reuse that record.
+            if (record == NULL) {
+                record = (nsInterfaceRecord *)
+                    PL_HashTableLookup(this->nameTable, current->name);
+            }
         } else {
-            foundInIIDTable = PR_TRUE;
+            shouldAddToIDDTable = PR_FALSE;
             // resort to using the name.  Warn?
             record = (nsInterfaceRecord *)PL_HashTableLookup(this->nameTable,
                                                              current->name);
@@ -237,7 +243,7 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
             if (iidIsZero == PR_FALSE) {
                 // Add it to the iid table too, if we have an iid.
                 // don't check against old value, b/c we shouldn't have one.
-                foundInIIDTable = PR_TRUE;
+                shouldAddToIDDTable = PR_FALSE;
                 nsIDKey idKey(current->iid);
                 this->IIDTable->Put(&idKey, record);
             }
@@ -256,7 +262,7 @@ nsInterfaceInfoManager::indexify_file(const char *filename)
             record->typelibRecord = tlrecord;
             record->iid = current->iid;
 
-            if (foundInIIDTable == PR_FALSE) {
+            if (shouldAddToIDDTable == PR_TRUE) {
                 nsIDKey idKey(current->iid);
                 this->IIDTable->Put(&idKey, record);
             }
