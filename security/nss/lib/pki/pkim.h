@@ -35,7 +35,7 @@
 #define PKIM_H
 
 #ifdef DEBUG
-static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.7 $ $Date: 2001/11/28 16:23:43 $ $Name:  $";
+static const char PKIM_CVS_ID[] = "@(#) $RCSfile: pkim.h,v $ $Revision: 1.8 $ $Date: 2001/11/29 19:34:07 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef BASE_H
@@ -232,7 +232,7 @@ nssCertificate_GetDecoding
   NSSCertificate *c
 );
 
-NSS_IMPLEMENT nssDecodedCert *
+NSS_EXTERN nssDecodedCert *
 nssDecodedCert_Create
 (
   NSSArena *arenaOpt,
@@ -240,10 +240,16 @@ nssDecodedCert_Create
   NSSCertificateType type
 );
 
-NSS_IMPLEMENT PRStatus
+NSS_EXTERN PRStatus
 nssDecodedCert_Destroy
 (
   nssDecodedCert *dc
+);
+
+NSS_EXTERN PRStatus
+nssPKIObject_Destroy
+(
+  nssPKIObject *object
 );
 
 NSS_EXTERN NSSTime *

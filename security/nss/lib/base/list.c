@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.8 $ $Date: 2001/11/28 16:23:35 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: list.c,v $ $Revision: 1.9 $ $Date: 2001/11/29 19:34:00 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -59,6 +59,7 @@ struct nssListStr {
     PRUint32        count;
     nssListCompareFunc compareFunc;
     nssListSortFunc    sortFunc;
+    PRBool i_alloced_arena;
 };
 
 struct nssListIteratorStr {
@@ -109,7 +110,14 @@ nssList_Create
 {
     NSSArena *arena;
     nssList *list;
-    arena = (arenaOpt) ? arenaOpt : nssArena_Create();
+    PRBool i_alloced;
+    if (arenaOpt) {
+	arena = arenaOpt;
+	i_alloced = PR_FALSE;
+    } else {
+	arena = nssArena_Create();
+	i_alloced = PR_TRUE;
+    }
     if (!arena) {
 	return (nssList *)NULL;
     }
@@ -128,9 +136,8 @@ nssList_Create
 	    return (nssList *)NULL;
 	}
     }
-    if (!arenaOpt) {
-	list->arena = arena;
-    }
+    list->arena = arena;
+    list->i_alloced_arena = i_alloced;
     list->compareFunc = pointer_compare;
     return list;
 }
@@ -138,15 +145,15 @@ nssList_Create
 NSS_IMPLEMENT PRStatus
 nssList_Destroy(nssList *list)
 {
-    PZLock *lock = list->lock;
-    if (list->arena) {
-	NSSArena_Destroy(list->arena);
-	list = NULL;
-    } else {
+    if (!list->i_alloced_arena) {
 	nssList_Clear(list, NULL);
     }
-    if (lock) {
-	PZ_DestroyLock(lock);
+    if (list->lock) {
+	(void)PZ_DestroyLock(list->lock);
+    }
+    if (list->i_alloced_arena) {
+	NSSArena_Destroy(list->arena);
+	list = NULL;
     }
     nss_ZFreeIf(list);
     return PR_SUCCESS;

@@ -32,7 +32,7 @@
  * may use your version of this file under either the MPL or the
  * GPL.
  *
- # $Id: nssinit.c,v 1.29 2001/11/20 18:28:41 relyea%netscape.com Exp $
+ # $Id: nssinit.c,v 1.30 2001/11/29 19:34:03 ian.mcgreer%sun.com Exp $
  */
 
 #include <ctype.h>
@@ -388,6 +388,7 @@ NSS_Shutdown(void)
 
     isInitialized = PR_FALSE;
 #endif
+    STAN_Shutdown();
 }
 
 

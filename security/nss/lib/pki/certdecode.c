@@ -32,7 +32,7 @@
  */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.3 $ $Date: 2001/11/08 00:15:19 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.4 $ $Date: 2001/11/29 19:34:06 $ $Name:  $";
 #endif /* DEBUG */
 
 #ifndef PKIT_H
@@ -42,6 +42,19 @@ static const char CVS_ID[] = "@(#) $RCSfile: certdecode.c,v $ $Revision: 1.3 $ $
 #ifndef PKIM_H
 #include "pkim.h"
 #endif /* PKIM_H */
+
+/* XXX
+ * move this to a more appropriate location
+ */
+NSS_IMPLEMENT PRStatus
+nssPKIObject_Destroy
+(
+  nssPKIObject *object
+)
+{
+    nssList_Destroy(object->instanceList);
+    nssArena_Destroy(object->arena);
+}
 
 #ifdef NSS_3_4_CODE
 /* This is defined in nss3hack.c */
