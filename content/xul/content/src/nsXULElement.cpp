@@ -376,6 +376,7 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
     { "onsubmit",      nsnull, &kIDOMFormListenerIID        },
     { "onreset",       nsnull, &kIDOMFormListenerIID        },
     { "onchange",      nsnull, &kIDOMFormListenerIID        },
+    { "onselect",      nsnull, &kIDOMFormListenerIID        },
 
     { "onpaint",       nsnull, &kIDOMPaintListenerIID       },
 

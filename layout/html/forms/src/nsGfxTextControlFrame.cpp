@@ -652,6 +652,53 @@ NS_IMETHODIMP nsGfxTextControlFrame::GetProperty(nsIAtom* aName, nsString& aValu
   return NS_OK;
 }  
 
+void nsGfxTextControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
+{
+  if (mWebShell) {
+    if (aOn) {
+      nsresult result = NS_OK;
+
+      nsIContentViewer *viewer = nsnull;
+      mWebShell->GetContentViewer(&viewer);
+      if (viewer) {
+        nsIDocumentViewer* docv = nsnull;
+        viewer->QueryInterface(kIDocumentViewerIID, (void**) &docv);
+        if (nsnull != docv) {
+          nsIPresContext* cx = nsnull;
+          docv->GetPresContext(cx);
+          if (nsnull != cx) {
+            nsIPresShell  *shell = nsnull;
+            cx->GetShell(&shell);
+            if (nsnull != shell) {
+              nsIViewManager  *vm = nsnull;
+              shell->GetViewManager(&vm);
+              if (nsnull != vm) {
+                nsIView *rootview = nsnull;
+                vm->GetRootView(rootview);
+                if (rootview) {
+                  nsIWidget* widget;
+                  rootview->GetWidget(widget);
+                  if (widget) {
+                    result = widget->SetFocus();
+                    NS_RELEASE(widget);
+                  }
+                }
+                NS_RELEASE(vm);
+              }
+              NS_RELEASE(shell);
+            }
+            NS_RELEASE(cx);
+          }
+          NS_RELEASE(docv);
+        }
+        NS_RELEASE(viewer);
+      }
+    }
+    else {
+      mWebShell->RemoveFocus();
+    }
+  }
+}
 
 /* --------------------- Ender methods ---------------------- */
 

@@ -2485,7 +2485,8 @@ PRBool    nsDocument::SetProperty(JSContext *aContext, jsval aID, jsval *aVp)
           }
         }
       }
-      else if (mPropName == "onsubmit" || mPropName == "onreset" || mPropName == "onchange") {
+      else if (mPropName == "onsubmit" || mPropName == "onreset" || mPropName == "onchange" ||
+               mPropName == "onselect") {
         if (NS_OK == GetListenerManager(&mManager)) {
           nsIScriptContext *mScriptCX = (nsIScriptContext *)JS_GetContextPrivate(aContext);
           if (NS_OK != mManager->RegisterScriptEventListener(mScriptCX, this, kIDOMFormListenerIID)) {

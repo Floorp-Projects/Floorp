@@ -156,6 +156,7 @@ protected:
 #define NS_EVENT_BITS_FORM_SUBMIT   0x01
 #define NS_EVENT_BITS_FORM_RESET    0x02
 #define NS_EVENT_BITS_FORM_CHANGE   0x04
+#define NS_EVENT_BITS_FORM_SELECT   0x08
 
 //nsIDOMLoadListener
 #define NS_EVENT_BITS_LOAD_NONE     0x00

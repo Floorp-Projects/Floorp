@@ -43,7 +43,7 @@ static char* mEventNames[] = {
   "mousedown", "mouseup", "click", "dblclick", "mouseover",
   "mouseout", "mousemove", "keydown", "keyup", "keypress",
   "focus", "blur", "load", "unload", "abort", "error",
-  "submit", "reset", "change", "paint" ,"text",
+  "submit", "reset", "change", "select", "paint" ,"text",
   "create", "destroy", "action"
 };
 
@@ -646,6 +646,8 @@ const char* nsDOMEvent::GetEventName(PRUint32 aEventType)
     return mEventNames[eDOMEvents_reset];
   case NS_FORM_CHANGE:
     return mEventNames[eDOMEvents_change];
+  case NS_FORM_SELECTED:
+    return mEventNames[eDOMEvents_select];
   case NS_PAINT:
     return mEventNames[eDOMEvents_paint];
   case NS_TEXT_EVENT:
