@@ -903,11 +903,7 @@ NS_IMETHODIMP nsPlaintextEditor::DeleteSelection(nsIEditor::EDirection aAction)
           break;
         case eToEndOfLine:
           result = selCont->IntraLineMove(PR_TRUE, PR_TRUE);
-          // Bugs 54449/54452: the selection jumps to the wrong place
-          // when deleting past a <br> and action is eNext or ePrev,
-          // so setting action to eNone makes delete-to-end marginally usable.
-          // aAction should really be set to eNext
-          aAction = eNone;
+          aAction = eNext;
           break;
         default:       // avoid several compiler warnings
           result = NS_OK;
