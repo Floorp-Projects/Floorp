@@ -41,6 +41,7 @@
 #include "nsMsgCompose.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsXPIDLString.h"
+#include "nsINntpUrl.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kIStreamConverterServiceCID, NS_STREAMCONVERTERSERVICE_CID);
@@ -159,6 +160,13 @@ nsMsgQuote::QuoteMessage(const PRUnichar *msgURI, PRBool quoteHeaders, nsIStream
   nsCOMPtr<nsIURI> aURL;
   rv = msgService->GetUrlForUri(aMsgUri, getter_AddRefs(aURL));
   if (NS_FAILED(rv)) return rv;
+
+  // we need to do this, so when we run the news url,
+  // we know to call OnDataAvailable() on the channel listener
+  nsCOMPtr<nsINntpUrl> nntpUrl = do_QueryInterface(aURL);
+  if (nntpUrl) {
+	nntpUrl->SetNewsAction(nsINntpUrl::ActionGetArticleForQuoting);
+  }
 
   // now we want to append some quote specific information to the 
   // end of the url spec. 

@@ -59,4 +59,5 @@ interface nsINntpUrl : nsISupports {
   const long ActionSaveMessageToDisk = 2;
   const long ActionCancelArticle = 3;
   const long ActionPostArticle = 4;
+  const long ActionGetArticleForQuoting = 5;
 };

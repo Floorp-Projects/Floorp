@@ -2049,7 +2049,7 @@ PRInt32 nsNNTPProtocol::BeginArticle()
   if (!cd->stream) return -1;
 #endif
 
-  if (m_newsAction == nsINntpUrl::ActionDisplayArticle)
+  if ((m_newsAction == nsINntpUrl::ActionDisplayArticle) || (m_newsAction == nsINntpUrl::ActionGetArticleForQuoting))
   {
 	  // create a pipe to pump the message into...the output will go to whoever
 	  // is consuming the message display
@@ -2161,6 +2161,7 @@ PRInt32 nsNNTPProtocol::DisplayArticle(nsIInputStream * inputStream, PRUint32 le
 	return 0;	
 }
 
+
 PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 length)
 {
 	char *line;
@@ -2172,8 +2173,9 @@ PRInt32 nsNNTPProtocol::ReadArticle(nsIInputStream * inputStream, PRUint32 lengt
 	// if we have a channel listener, spool directly to it....
 	// otherwise we must be doing something like save to disk or cancel
 	// in which case we are doing the work.
-	if (m_newsAction == nsINntpUrl::ActionDisplayArticle)
+	if ((m_newsAction == nsINntpUrl::ActionDisplayArticle) || (m_newsAction == nsINntpUrl::ActionGetArticleForQuoting)) {
 		return DisplayArticle(inputStream, length);
+        }
 
 	line = m_lineStreamBuffer->ReadNextLine(inputStream, status, pauseForMoreData);
 	if(pauseForMoreData)
