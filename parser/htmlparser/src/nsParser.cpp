@@ -743,7 +743,7 @@ nsresult nsParser::OnDataAvailable(nsIURL* aURL, nsIInputStream *pIStream, PRInt
 
       if(eUnknownDetect==mParserContext->mAutoDetectStatus) {
         if(eValidDetect==AutoDetectContentType(mParserContext->mScanner->GetBuffer(),mParserContext->mSourceType)) {
-          nsresult result=WillBuildModel(mParserContext->mScanner->GetFilename());
+          WillBuildModel(mParserContext->mScanner->GetFilename());
         } //if
       }
     } //if

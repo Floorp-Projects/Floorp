@@ -1317,16 +1317,6 @@ PRInt32 CStyleToken::GetTokenType(void) {
   return eToken_style;
 }
 
-/*
- *  default constructor
- *  
- *  @update  gess 3/25/98
- *  @param   aName -- string to init token name with
- *  @return  
- */
-CSkippedContentToken::CSkippedContentToken() : CAttributeToken() {
-}
-
 
 /*
  *  string based constructor

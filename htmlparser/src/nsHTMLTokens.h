@@ -295,7 +295,6 @@ class CStyleToken: public CHTMLToken {
  */
 class CSkippedContentToken: public CAttributeToken {
   public:
-                        CSkippedContentToken();
                         CSkippedContentToken(const nsString& aString);
     virtual nsresult    Consume(PRUnichar aChar,CScanner& aScanner);
     virtual const char* GetClassName(void);
