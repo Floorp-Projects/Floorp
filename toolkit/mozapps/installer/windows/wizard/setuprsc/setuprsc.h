@@ -2,25 +2,19 @@
 // Microsoft Developer Studio generated include file.
 // Used by setuprsc.rc
 //
-
-#ifndef WINVER
-#define WINVER 0x0400
-#endif
-#include "winresrc.h"
-
 #define IDS_ERROR_FILE_NOT_FOUND        3
 #define IDRESUME                        3
 #define IDPAUSE                         4
 #define IDS_MSG_RETRIEVE_INSTALLINI     11
 #define IDI_SETUP                       105
-#define IDI_APP           		106
+#define IDI_APP                         106
 #define IDB_BITMAP_WELCOME              108
 #define DLG_MESSAGE                     110
 #define IDB_BITMAP_BANNER               114
 #define IDB_QUICK_LAUNCH                115
 #define IDB_HEADER                      116
 #define IDB_WATERMARK                   117
-#define DLG_SELECT_INSTALL_PATH		118
+#define DLG_SELECT_INSTALL_PATH         118
 #define DLG_BROWSE_DIR                  503
 #define IDC_STATUS                      1001
 #define IDC_STATUS1                     1001
@@ -116,6 +110,7 @@
 #define DLG_INSTALL_SUCCESSFUL          1089
 #define IDC_START_APP                   1090
 #define IDC_MESSAGE_UPGRADE             1091
+#define IDC_RESET_HOMEPAGE              1091
 #define IDC_CHECK_SAFE_INSTALL          1092
 #define IDC_MESSAGE_INFO                1093
 #define IDC_APP_ICON                    1094

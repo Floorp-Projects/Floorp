@@ -489,7 +489,10 @@ typedef struct dlgInstallSuccessful
   LPSTR szMessageHeader;
   LPSTR szMessage0;
   LPSTR szMessage1;
+  LPSTR szResetHomepage;
+  LPSTR szRegistryKey;
   LPSTR szLaunchApp;
+  BOOL bResetHomepageChecked;
   BOOL bLaunchAppChecked;
 } diIS;
 

@@ -1,5 +1,6 @@
 //Microsoft Developer Studio generated resource script.
 //
+#include <windows.h>
 #include "setuprsc.h"
 
 #define APSTUDIO_READONLY_SYMBOLS
@@ -58,6 +59,7 @@ STYLE DS_MODALFRAME | WS_MINIMIZEBOX | WS_POPUP | WS_VISIBLE | WS_CAPTION |
 CLASS "MozillaSetupDlg"
 FONT 8, "MS Sans Serif"
 BEGIN
+    CONTROL         IDB_WATERMARK,IDC_STATIC,"Static",SS_BITMAP,0,0,497,313
     LTEXT           "",IDC_STATIC_TITLE,130,8,180,18,NOT WS_GROUP
     LTEXT           "",IDC_STATIC1,130,58,180,24,NOT WS_GROUP
     LTEXT           "",IDC_STATIC2,130,90,180,37,NOT WS_GROUP
@@ -359,15 +361,18 @@ BEGIN
     ICON            "",IDC_FOLDER_ICON,28,22,20,20
 END
 
-DLG_INSTALL_SUCCESSFUL DIALOGEX 0, 0, 317, 193
+DLG_INSTALL_SUCCESSFUL DIALOG DISCARDABLE  0, 0, 317, 193
 STYLE DS_MODALFRAME | WS_POPUP | WS_CAPTION | WS_SYSMENU
-FONT 8, "MS Sans Serif", 0, 0, 0x1
+FONT 8, "MS Sans Serif"
 BEGIN
+    CONTROL         IDB_WATERMARK,IDC_STATIC,"Static",SS_BITMAP,0,0,497,313
     LTEXT           "",IDC_STATIC_TITLE,130,8,180,18,NOT WS_GROUP
     LTEXT           "",IDC_STATIC1,130,169,180,15
     LTEXT           "",IDC_STATIC0,130,34,180,16,NOT WS_GROUP
     CONTROL         "",IDC_START_APP,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | 
-                    WS_TABSTOP,130,139,180,10,WS_EX_TRANSPARENT
+                    WS_TABSTOP,130,139,180,10
+    CONTROL         "",IDC_RESET_HOMEPAGE,"Button",BS_AUTOCHECKBOX | BS_NOTIFY | 
+                    WS_TABSTOP,130,124,180,10
 END
 
 
@@ -475,4 +480,5 @@ END
 
 /////////////////////////////////////////////////////////////////////////////
 #endif    // not APSTUDIO_INVOKED
+
 
