@@ -110,8 +110,9 @@ nsZipExtractor::Extract(nsComponent *aXPIEngine, int aTotal)
 
         /* update UI
          */
-        nsInstallDlg::MajorProgressCB(leaf, i, 
-            aTotal, nsInstallDlg::ACT_EXTRACT);
+        if (gCtx->opt->mMode != nsXIOptions::MODE_SILENT)
+            nsInstallDlg::MajorProgressCB(leaf, i, 
+                aTotal, nsInstallDlg::ACT_EXTRACT);
 
         sprintf(epath, "%s/%s", mDest, zpath);
         err = DirCreateRecursive(epath);
