@@ -334,12 +334,12 @@ XFE_ThreadFrame::XFE_ThreadFrame(Widget toplevel, XFE_Frame *parent_frame,
 
         m_banner->setShowFolder(show_folder); /* This has to be set before view 
 					  creation */
-	view3 = new XFE_ThreePaneView(this, getViewParent(), NULL, m_context);
+	view3 = new XFE_ThreePaneView(this, getChromeParent(), NULL, m_context);
 
 	tview = (XFE_ThreadView*)(view3->getThreadView());
 
 #else
-	tview = new XFE_ThreadView(this, getViewParent(), NULL, m_context);
+	tview = new XFE_ThreadView(this, getChromeParent(), NULL, m_context);
 #endif
 
 
@@ -358,21 +358,8 @@ XFE_ThreadFrame::XFE_ThreadFrame(Widget toplevel, XFE_Frame *parent_frame,
 
 #ifdef USE_3PANE
 	setView(view3);
-	XtVaSetValues(view3->getBaseWidget(),
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  NULL);
 #else
 	setView(tview);
-
-	XtVaSetValues(tview->getBaseWidget(),
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  NULL);
 #endif
 
 
@@ -895,9 +882,6 @@ XFE_ThreadFrame::doCommand(CommandType cmd,
 			
 			// Configure the logo
 			configureLogo();
-			
-			// Do the attachments
-			doAttachments();
 			
 			// Update prefs
 			toolboxItemChangeShowing(m_banner);

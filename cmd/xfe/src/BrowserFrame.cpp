@@ -229,7 +229,7 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
   
 #endif /* notyet */
 
-  htmlview = new XFE_HTMLView(this, getViewParent(), NULL, m_context);
+  htmlview = new XFE_HTMLView(this, getChromeParent(), NULL, m_context);
 
   // Create url bar
   m_urlBar = new XFE_URLBar(this,m_toolbox);
@@ -259,13 +259,6 @@ XFE_BrowserFrame::XFE_BrowserFrame(Widget toplevel,
   if (!chromespec || (chromespec && chromespec->show_url_bar))
 	  m_urlBar->show();
 
-  XtVaSetValues(htmlview->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
-			     
   // register drop site on HTMLView
   m_browserDropSite=new XFE_BrowserDrop(htmlview->getBaseWidget(),this);
   m_browserDropSite->enable();
@@ -348,9 +341,6 @@ XFE_BrowserFrame::doCommand(CommandType cmd,
 		  // Configure the logo
 		  configureLogo();
 		  
-          // Do the attachments
-          doAttachments();
-
 		  // Update prefs
 		  toolboxItemChangeShowing(m_urlBar);
 
@@ -370,9 +360,6 @@ XFE_BrowserFrame::doCommand(CommandType cmd,
 		  // Configure the logo
 		  configureLogo();
 		  
-          // Do the attachments
-          doAttachments();
-
 		  // Update prefs
 		  toolboxItemChangeShowing(m_personalToolbar);
 

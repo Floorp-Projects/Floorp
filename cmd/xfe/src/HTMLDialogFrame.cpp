@@ -51,18 +51,11 @@ XFE_HTMLDialogFrame::XFE_HTMLDialogFrame(Widget toplevel,
 
 	D(printf ("in XFE_HTMLDialogFrame::XFE_HTMLDialogFrame()\n");)
 
-	htmlview = new XFE_HTMLView(this, getViewParent(), NULL, m_context);
+	htmlview = new XFE_HTMLView(this, getChromeParent(), NULL, m_context);
 
 	setView(htmlview);
 
 	fe_set_scrolled_default_size(m_context);
-
-	XtVaSetValues(htmlview->getBaseWidget(),
-				  XmNleftAttachment, XmATTACH_FORM,
-				  XmNrightAttachment, XmATTACH_FORM,
-				  XmNtopAttachment, XmATTACH_FORM,
-				  XmNbottomAttachment, XmATTACH_FORM,
-				  NULL);
 
 	htmlview->show();
 

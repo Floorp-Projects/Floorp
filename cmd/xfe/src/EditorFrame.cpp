@@ -713,20 +713,13 @@ XFE_EditorFrame::XFE_EditorFrame(Widget toplevel,
 
   // create html view
   XFE_EditorView *editorview = new XFE_EditorView(this, 
-												  getViewParent(),
+												  getChromeParent(),
 												  NULL,
 												  m_context);
 
   editorview->registerInterest(XFE_EditorView::newURLLoading, 
 		this,
 		(XFE_FunctionNotification)newPageLoading_cb);
-
-  XtVaSetValues(editorview->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
 
   /*
    *    Hacks to make old XFE code work. These should go away
@@ -842,15 +835,6 @@ XFE_EditorFrame::doCommand(CommandType cmd,
 	if (cmd == xfeCmdToggleFormatToolbar) {
 			// Toggle the showing state
 			m_format_toolbar->toggle();
-
-			//
-			// The doAttachments() call is needed in case the resulting
-			// toggle operation causes all toolbars to go away.  The frame
-			// needs to attach things accordingly.
-			//
-			
-			// Do the attachments
-			doAttachments();
 
 			//
 			// The toolboxItemChangeShowing() call is needed to make the 

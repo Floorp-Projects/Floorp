@@ -266,7 +266,7 @@ XFE_MsgFrame::XFE_MsgFrame(Widget toplevel, XFE_Frame *parent_frame, Chrome *chr
   // create the msg view
   XFE_MsgView *mview;
  
-  mview = new XFE_MsgView(this, getViewParent(), NULL, m_context);
+  mview = new XFE_MsgView(this, getChromeParent(), NULL, m_context);
   mview->registerInterest(XFE_MsgView::spacebarAtMsgBottom,
 			  this,
 			  (XFE_FunctionNotification)spaceAtMsgEnd_cb);
@@ -282,13 +282,6 @@ XFE_MsgFrame::XFE_MsgFrame(Widget toplevel, XFE_Frame *parent_frame, Chrome *chr
   m_banner = new XFE_MNBanner(this, m_toolbox);
 
   setView(mview);
-
-  XtVaSetValues(mview->getBaseWidget(),
-  		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
 
   setMenubar(menu_bar_spec);
   setToolbar(toolbar_spec);
@@ -376,9 +369,6 @@ XFE_MsgFrame::doCommand(CommandType cmd,
 			
 			// Configure the logo
 			configureLogo();
-			
-			// Do the attachments
-			doAttachments();
 			
 			// Update prefs
 			toolboxItemChangeShowing(m_banner);

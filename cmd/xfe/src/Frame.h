@@ -136,8 +136,6 @@ public:
   virtual int getWidth();
   virtual int getHeight();
 
-  virtual Widget getViewParent();
-  virtual Widget getMainForm();
   virtual Widget getChromeParent();
   virtual Widget getDialogParent();
   virtual fe_colormap *getColormap();
@@ -224,11 +222,6 @@ public:
   // returns False if javascript has said the window is unclosable.
   XP_Bool isWMClosable();
 
-  // recomputes the attachments for our chunks.  If force is false,
-  // we put off the layout if the Frame is not popped up, until it
-  // is popped up.
-  void doAttachments(XP_Bool force = False);
-
   // Returns the index for the security status icon
   //    (differs between mail & browser)
   virtual int getSecurityStatus();
@@ -273,11 +266,14 @@ protected:
 	// shown, but after it is realized.
 	void realize();
 
-	// this method creates the toplevel shell of this frame.  It handles
+	// This method creates the toplevel shell of this frame.  It handles
 	// modality here as well.  So, as an offshoot, we can now support
 	// any type of modal window, not just dialogs.
-	void createShellAndChromeParent(char *name,
-									Widget parent);
+	void createBaseWidgetShell(Widget parent,String name);
+
+	// This method creates the chrome manager.  The chrome manager 
+	// takes care of placing all the chrome elements.
+	void createChromeManager(Widget parent,String name);
 
   // The bastard catch all structure from hell.  It is here now, since
   // it represents for all the FE code one toplevel window.
@@ -290,19 +286,10 @@ protected:
   // Add Z order support
   void zaxis_AddSupport();
 
-  // baseWidget() in case of a frame points to the shell.
-
-  // the widget used as the parent of the view
-  Widget m_viewparent; 
-
-  // the widget used as the parent of the m_view_parent, toolbox and above_view
-  Widget m_mainform;
-  
-  // the widget used as the parent for all the chrome.
-  Widget m_chromeparent;
+  // Widget that manages all the chrome
+  Widget m_chrome; 
 
   XFE_MenuBar *			m_menubar;
-//  XFE_ToolboxItem *		m_toolbar;
   XFE_Toolbar *			m_toolbar;
   XFE_Toolbox *			m_toolbox;
   XFE_Component *		m_aboveview;
@@ -385,7 +372,6 @@ protected:
   XP_Bool m_haveHTMLDisplay;
   XP_Bool m_destroyOnClose;
 
-  XP_Bool m_attachmentsNeeded; // if we defer the attachments, this will be true.
   Widget m_toplevelWidget; // the parent widget to this window
 
   static MenuSpec new_menu_spec[];

@@ -243,18 +243,16 @@ XDEBUG(	printf ("in XFE_ComposeFrame::XFE_ComposeFrame()\n");)
 
   // create the compose view
   XFE_ComposeView *view = new XFE_ComposeView(this, 
-		getViewParent(), NULL, m_context, 
-		old_context, fields, NULL,
-		draftInitialText, preferToUseHtml);
-  setView(view);
-  
+                                              getChromeParent(), 
+                                              NULL, 
+                                              m_context, 
+											  old_context, 
+											  fields, 
+											  NULL,
+											  draftInitialText, 
+											  preferToUseHtml);
 
-  XtVaSetValues(view->getBaseWidget(),
-                XmNleftAttachment,  XmATTACH_FORM,
-                XmNtopAttachment,   XmATTACH_FORM,
-                XmNrightAttachment, XmATTACH_FORM,
-                XmNbottomAttachment, XmATTACH_FORM,
-                NULL);
+  setView(view);
 
   view->show();
 

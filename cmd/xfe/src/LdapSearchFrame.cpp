@@ -34,7 +34,7 @@ XFE_LdapSearchFrame::XFE_LdapSearchFrame(Widget toplevel,
 {
 
   XFE_LdapSearchView *view = new XFE_LdapSearchView(this, 
-													getViewParent(), 
+													getChromeParent(), 
 													this,
 													NULL, 
 													m_context, 

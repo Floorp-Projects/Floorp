@@ -189,20 +189,11 @@ XFE_AddrBookFrame::XFE_AddrBookFrame(Widget toplevel,
    * import from XFE_BookmarkFrame::XFE_BookmarkFrame
    */
   XFE_AB2PaneView *view = new XFE_AB2PaneView(this, 
-											  getViewParent(), 
+											  getChromeParent(),
 											  NULL,
 											  m_context,
 											  AB_BOOK);
   m_abView = (XFE_AddrBookView *) view->getEntriesListView();
-
-  /* Attachment
-   */
-  XtVaSetValues(view->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
 
   setView(view);
   setMenubar(menu_bar_spec);

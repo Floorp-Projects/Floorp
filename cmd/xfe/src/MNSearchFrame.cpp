@@ -48,7 +48,7 @@ XFE_MNSearchFrame::XFE_MNSearchFrame(Widget toplevel, XFE_Frame *parent_frame,
   XP_ASSERT(mnview != NULL);
 
   XFE_MNSearchView *view = new XFE_MNSearchView(this,
-												getViewParent(), 
+												getChromeParent(), 
 												this,
 												mnview, 
 												m_context, 

@@ -133,16 +133,11 @@ XFE_BookmarkFrame::XFE_BookmarkFrame(Widget toplevel,
   XP_ASSERT( m_bookmarkFrame == NULL );
 
   // create the bookmark view
-  XFE_BookmarkView *view = new XFE_BookmarkView(this, getViewParent(), 
-												NULL, m_context);
+  XFE_BookmarkView *view = new XFE_BookmarkView(this, 
+												getChromeParent(),
+												NULL, 
+												m_context);
   setView(view);
-
-  XtVaSetValues(view->getBaseWidget(),
-  		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
 
   setMenubar(menu_bar_spec);
 
@@ -164,6 +159,7 @@ XFE_BookmarkFrame::XFE_BookmarkFrame(Widget toplevel,
   m_dashboard->setShowProgressBar(True);
 
   realize();
+  resize(600,580); //XXX Default size for now
 
   main_bm_context = m_context;
 

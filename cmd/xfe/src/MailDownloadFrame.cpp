@@ -196,7 +196,7 @@ XFE_MailDownloadFrame::XFE_MailDownloadFrame(Widget			toplevel,
 {
 	Widget form;
 
-	XFE_MailDownloadView *v = new XFE_MailDownloadView(this, getViewParent(),
+	XFE_MailDownloadView *v = new XFE_MailDownloadView(this, getChromeParent(),
 													   NULL, m_context, parent_pane);
 	XFE_Component *belowView;
 

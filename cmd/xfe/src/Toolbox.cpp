@@ -286,9 +286,7 @@ XFE_Toolbox::createMain(Widget parent)
 								xfeToolBoxWidgetClass,
 								parent,
 								XmNusePreferredWidth,		False,
-//								XmNusePreferredHeight,		True,
-								XmNusePreferredHeight,		False,
-								XmNheight,					200,
+								XmNusePreferredHeight,		True,
 								NULL);
 
 	// Create all the tab icons

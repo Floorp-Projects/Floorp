@@ -275,8 +275,10 @@ XFE_DownloadFrame::XFE_DownloadFrame(Widget toplevel, XFE_Frame *parent_frame)
 	Arg av[10];
 	int ac;
 
-	XFE_DownloadView *v = new XFE_DownloadView(this, getViewParent(),
-											   NULL, m_context);
+	XFE_DownloadView *v = new XFE_DownloadView(this, 
+                                               getChromeParent(),
+											   NULL, 
+                                               m_context);
 
 	ac = 0;
 	XtSetArg(av[ac], XmNdialogType, XmDIALOG_TEMPLATE); ac++;

@@ -1137,7 +1137,6 @@ FE_UpdateChrome(MWContext *context, /* in */
   if (frame == NULL) return;
 
   frame->respectChrome(chrome);
-  frame->doAttachments();
 }
 
 #ifdef MOZ_LDAP

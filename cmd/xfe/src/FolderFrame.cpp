@@ -155,7 +155,7 @@ XFE_FolderFrame::XFE_FolderFrame(Widget toplevel,
 D(	printf ("in XFE_FolderFrame::XFE_FolderFrame()\n");)
 
   // create the folder view
-  XFE_FolderView *view = new XFE_FolderView(this, getViewParent(), NULL, m_context);
+  XFE_FolderView *view = new XFE_FolderView(this, getChromeParent(), NULL, m_context);
   char banner_title[1024];
 
   m_banner = new XFE_MNBanner(this, m_toolbox);
@@ -176,13 +176,6 @@ D(	printf ("in XFE_FolderFrame::XFE_FolderFrame()\n");)
     	      FE_UsersFullName());
 
   setTitle(title );
-
-  XtVaSetValues(view->getBaseWidget(),
-		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
 
   setMenubar(menu_bar_spec);
   setToolbar(toolbar_spec);
@@ -262,9 +255,6 @@ XFE_FolderFrame::doCommand(CommandType cmd,
 			
 			// Configure the logo
 			configureLogo();
-			
-			// Do the attachments
-			doAttachments();
 			
 			// Update prefs
 			toolboxItemChangeShowing(m_banner);

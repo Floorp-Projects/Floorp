@@ -62,17 +62,10 @@ XFE_NavCenterFrame::XFE_NavCenterFrame(Widget toplevel,
   D(printf("XFE_NavCenterFrame SUB-SYSTEM INSTANCIATING\n");)
 
   // create the bookmark view
-  XFE_View *view = new XFE_NavCenterView(this, getViewParent(), 
+  XFE_View *view = new XFE_NavCenterView(this, getChromeParent(), 
                                          NULL, m_context);
   setView(view);
   setMenubar(menu_bar_spec);
-
-  XtVaSetValues(view->getBaseWidget(),
-  		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
 
   //setMenubar(menu_bar_spec);
 

@@ -64,8 +64,9 @@
 #include <X11/ShellP.h>
 
 #include <Xm/Protocols.h>
-#include <Xfe/ToolBox.h>
+#include <Xfe/Chrome.h>
 #include <Xfe/FrameShell.h>
+#include <Xfe/ToolBox.h>
 #include <Xm/MwmUtil.h>      // For MWM_DECOR_XXX
 
 #include "XmL/Grid.h"
@@ -806,6 +807,7 @@ XFE_Frame::XFE_Frame(char *name,
 	m_toolbar			= NULL;
 	m_toolbox			= NULL;
 	m_activeLogo		= NULL;
+	m_chrome			= NULL;
 
 #ifdef NETCASTER_ZAXIS_HACKERY
 	m_zaxis_BelowHandlerInstalled = False;
@@ -856,7 +858,14 @@ XFE_Frame::XFE_Frame(char *name,
 
 	m_haveHTMLDisplay = haveHTMLDisplay;
 
-	createShellAndChromeParent(name, toplevel);
+
+	createBaseWidgetShell(toplevel,name);
+
+	XP_ASSERT( XfeIsAlive(m_widget) );
+
+	createChromeManager(m_widget,"chrome");
+
+	XP_ASSERT( XfeIsAlive(m_chrome) );
 
 	// XXXX
 	// now we do all the funky MWContext stuff.
@@ -870,35 +879,16 @@ XFE_Frame::XFE_Frame(char *name,
 	  m_context->restricted_target=chromespec->restricted_target;
 
 	if (haveDashboard)
-		{
-			m_dashboard = new XFE_Dashboard(this, getChromeParent(), this);
-
-			if (!chromespec || (chromespec && chromespec->show_bottom_status_bar))
-				m_dashboard->show();
-
-		}
+	{
+		m_dashboard = new XFE_Dashboard(this,m_chrome,this);
+		
+		if (!chromespec || (chromespec && chromespec->show_bottom_status_bar))
+			m_dashboard->show();
+		
+	}
 	else
 		m_dashboard = NULL;
 
-	// The main form holds the toolbox, m_viewparent and possibly 
-	// the above_view component.  This new component is necessary to
-	// avoid all the annoying problems with toolbars dissapearing.
-	m_mainform = XtVaCreateManagedWidget("mainForm",
-										 xmFormWidgetClass,
-										 m_chromeparent, 
-										 XmNleftAttachment, XmATTACH_FORM,
-										 XmNrightAttachment, XmATTACH_FORM,
-										 NULL);
-	
-	m_viewparent = XtVaCreateManagedWidget("viewParent",
-										   xmFormWidgetClass,
-										   m_mainform,
- 										   XmNleftAttachment, XmATTACH_FORM,
- 										   XmNrightAttachment, XmATTACH_FORM,
- 										   XmNtopAttachment, XmATTACH_FORM,
- 										   XmNbottomAttachment, XmATTACH_FORM,
-										   NULL);
-	
 	if (chromespec)
 		{
 			m_chrome_close_callback = chromespec->close_callback;
@@ -957,20 +947,8 @@ XFE_Frame::XFE_Frame(char *name,
 	if (needToolbox)
 	{
 		// Create the toolbox as a child of the main form
-		m_toolbox = new XFE_Toolbox(this,m_mainform);
+		m_toolbox = new XFE_Toolbox(this,m_chrome);
 
-		// I was having trouble with the frame geomtry because of the
-		// dynamic nature of the toolbox (ie, collapsing toolbars) so
-		// i had to add this function which takes care of all the 
-		// layout for the main form, toolbox and possibly the above_view
-		// component.
-		//
-		// This function installs the event handers and callbacks needed
-		// to support the this.  There is probably a more sane way of 
-		// accomplishing this, bug we ran out of time for 4.x and
-		// this works.
-		XfeToolBoxAddLayoutSupport(m_mainform,m_toolbox->getBaseWidget());
-		
 		// Notify when a toolbox item is snapped in place
 		m_toolbox->registerInterest(
 			XFE_Toolbox::toolbarSnap,
@@ -1038,8 +1016,6 @@ XFE_Frame::XFE_Frame(char *name,
 	m_view = NULL;
 	m_belowview = NULL;
 
-	m_attachmentsNeeded = True;
-	
 	if (needNavigationToolbar) 
 	{
 		m_toolbar->registerInterest(Command::doCommandCallback,
@@ -1196,108 +1172,150 @@ XFE_Frame::~XFE_Frame()
 	//
 	XFE_MozillaApp::theApp()->unregisterFrame(this);
 }
-
+//////////////////////////////////////////////////////////////////////////
+//
+// This method creates the toplevel shell of this frame.  It handles
+// modality here as well.  So, as an offshoot, we can now support
+// any type of modal window, not just dialogs.
+//
+//////////////////////////////////////////////////////////////////////////
 void
-XFE_Frame::createShellAndChromeParent(char *name, Widget parent)
+XFE_Frame::createBaseWidgetShell(Widget parent,String name)
 {
-	Arg av[20];
-	int ac;
-	Widget shell;
+	XP_ASSERT( XfeIsAlive(parent) );
+	XP_ASSERT( name != NULL );
 
-	ac = 0;
-	
-	XtSetArg (av[ac], XmNvisual, XFE_DisplayFactory::theFactory()->getVisual()); ac++;
-	XtSetArg (av[ac], XmNdepth, XFE_DisplayFactory::theFactory()->getVisualDepth()); ac++;
+	Arg			av[20];
+	Cardinal	ac = 0;
+	Widget		shell = NULL;
+
+	XtSetArg(av[ac], XmNvisual, XFE_DisplayFactory::theFactory()->getVisual()); ac++;
+	XtSetArg(av[ac], XmNdepth, XFE_DisplayFactory::theFactory()->getVisualDepth()); ac++;
 	
 	if (m_haveHTMLDisplay)
-		{
-			/* we only need our own colormap if we're displaying html */
-			m_cmap = XFE_DisplayFactory::theFactory()->getPrivateColormap();
-			
-			XtSetArg (av[ac], XmNcolormap, fe_getColormap(m_cmap)); ac++;
-		}
+	{
+		/* we only need our own colormap if we're displaying html */
+		m_cmap = XFE_DisplayFactory::theFactory()->getPrivateColormap();
+		
+		XtSetArg (av[ac], XmNcolormap, fe_getColormap(m_cmap)); ac++;
+	}
 	else
-		{
-			m_cmap = XFE_DisplayFactory::theFactory()->getSharedColormap();
-			
-			XtSetArg (av[ac], XmNcolormap, fe_getColormap(m_cmap)); ac++;
-		}
+	{
+		m_cmap = XFE_DisplayFactory::theFactory()->getSharedColormap();
+		
+		XtSetArg (av[ac], XmNcolormap, fe_getColormap(m_cmap)); ac++;
+	}
 	
 	XtSetArg (av[ac], XmNallowShellResize, False); ac++;
 
-
+    // I think we should deal with modality in XfeFrameShell...that
+    // would simplify XFE_Frame a lot. -re
 	if (m_ismodal && m_parentframe)
+	{
+		XtSetArg (av[ac], XmNdialogType, XmDIALOG_PROMPT); ac++;
+		XtSetArg (av[ac], XmNautoUnmanage, False); ac++;
+		XtSetArg (av[ac], XmNborderWidth, 0); ac++;
+		
+		XtSetArg (av[ac], XmNautoUnmanage, False); ac++;
+		XtSetArg (av[ac], XmNmarginWidth, 0); ac++;
+		XtSetArg (av[ac], XmNmarginHeight, 0); ac++;
+		XtSetArg (av[ac], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); ac++;
+		
+		XtSetArg (av[ac], XmNnoResize, !m_allowresize); ac++;
+		XtSetArg (av[ac], XmNresizePolicy, XmRESIZE_ANY); ac++;
+		
+		shell = XmCreateDialogShell(m_parentframe->getDialogParent(),
+									name,av,ac);
+			
+		MWContext *fooContext = fe_WidgetToMWContext(m_parentframe->getDialogParent());
+		
+		if (fooContext && ViewGlue_getFrame(fooContext) != NULL)
 		{
-			XtSetArg (av[ac], XmNdialogType, XmDIALOG_PROMPT); ac++;
-			XtSetArg (av[ac], XmNautoUnmanage, False); ac++;
-			XtSetArg (av[ac], XmNborderWidth, 0); ac++;
-
-			XtSetArg (av[ac], XmNautoUnmanage, False); ac++;
-			XtSetArg (av[ac], XmNmarginWidth, 0); ac++;
-			XtSetArg (av[ac], XmNmarginHeight, 0); ac++;
-			XtSetArg (av[ac], XmNdialogStyle, XmDIALOG_PRIMARY_APPLICATION_MODAL); ac++;
-
-			XtSetArg (av[ac], XmNnoResize, !m_allowresize); ac++;
-			XtSetArg (av[ac], XmNresizePolicy, XmRESIZE_ANY); ac++;
+			m_parentframe = ViewGlue_getFrame(fooContext);
 			
-			m_chromeparent = XmCreateFormDialog(m_parentframe->getDialogParent(),
-												"form", av, ac);
-			
-			shell = XtParent(m_chromeparent);
-
-			MWContext *fooContext = fe_WidgetToMWContext(m_parentframe->getDialogParent());
-
-			if (fooContext && ViewGlue_getFrame(fooContext) != NULL)
-				{
-					m_parentframe = ViewGlue_getFrame(fooContext);
-					
-					fe_ProtectContext(m_parentframe->getContext());
-				}
+			fe_ProtectContext(m_parentframe->getContext());
 		}
+	}
 	else
+	{
+		m_ismodal = False;
+
+		// Warning Warning!!
+
+		// This hackery must die.  It will go away as soon as the 
+		// XfeFrameShell widget supports all the XmNiconic magic
+		// and friends.
+		//
+		// -ramiro
+		
+		// Make sure the iconic state is set before the shell gets 
+		// created or else it does not work
+		if (!fe_GetCommandLineDone() && 
+			fe_globalData.startup_iconic &&
+			!m_chromespec_provided)
 		{
-			m_ismodal = False;
-
-			// Make sure the iconic state is set before the shell gets 
-			// created or else it does not work
-			if (!fe_GetCommandLineDone() && 
-				fe_globalData.startup_iconic &&
-				!m_chromespec_provided)
-			{
-				XtSetArg (av[ac], XmNinitialState, IconicState); ac++;
-				XtSetArg (av[ac], XmNiconic, True); ac++;
-			}
-
-			shell = XfeCreateFrameShell(parent,name,av,ac);
-
-			m_chromeparent = XtCreateManagedWidget("form",
-												   xmFormWidgetClass,
-												   shell,
-												   NULL, 0);
-
-            XtAddEventHandler(shell, StructureNotifyMask,
-                              True, (XtEventHandler)resizeHandler,
-                              (XtPointer)this);
-
-			if (!m_allowresize)
-			  {
-				XtVaSetValues(shell,
-							  XmNmwmFunctions,
-							  MWM_FUNC_ALL|MWM_FUNC_RESIZE|MWM_FUNC_MAXIMIZE,
-							  NULL);
-			  }
+			XtSetArg (av[ac], XmNinitialState, IconicState); ac++;
+			XtSetArg (av[ac], XmNiconic, True); ac++;
 		}
+		
+		shell = XfeCreateFrameShell(parent,name,av,ac);
+		
+		// This hackery must die too.  It will go away as soon as the 
+		// XfeFrameShell widget supports XmNresizeCallback and
+		// XmNmoveCallback.
+		XtAddEventHandler(shell, StructureNotifyMask,
+						  True, (XtEventHandler)resizeHandler,
+						  (XtPointer)this);
+		
+		if (!m_allowresize)
+		{
+			XtVaSetValues(shell,
+						  XmNmwmFunctions,
+						  MWM_FUNC_ALL|MWM_FUNC_RESIZE|MWM_FUNC_MAXIMIZE,
+						  NULL);
+		}
+	}
 
-
+	// This hackery must die too.  It will go away as soon as the 
+	// XfeFrameShell widget supports XmNtrackEditres
 #ifndef __sgi
 	XtAddEventHandler(shell, (EventMask)0, True,
 					  (XtEventHandler)_XEditResCheckMessages, 0);
 #endif
 
+	XP_ASSERT( XfeIsAlive(shell) );
+
 	setBaseWidget(shell);
 	installDestroyHandler();
 }
+//////////////////////////////////////////////////////////////////////////
+//
+// This method creates the chrome manager.  The chrome manager 
+// takes care of placing all the chrome elements.
+//
+//////////////////////////////////////////////////////////////////////////
+void
+XFE_Frame::createChromeManager(Widget parent,String name)
+{
+	XP_ASSERT( XfeIsAlive(parent) );
+	XP_ASSERT( name != NULL );
 
+	XP_ASSERT( m_chrome == NULL );
+
+	m_chrome = XtVaCreateWidget(name,
+								xfeChromeWidgetClass,
+								m_widget, 
+								XmNusePreferredWidth,	False,
+								XmNusePreferredHeight,	False,
+								NULL);
+
+	// Manage the chrome widget if we are not modal.
+	if (!m_ismodal)
+	{
+		XtManageChild(m_chrome);
+	}
+}
+//////////////////////////////////////////////////////////////////////////
 static void resizeHandler(Widget, XtPointer p, XEvent *event, Boolean *)
 {
     if (event->type == ConfigureNotify && p != 0)
@@ -2125,71 +2143,6 @@ XFE_Frame::setToolbar(ToolbarSpec *toolbar_spec)
 	return;
 }
 
-void
-XFE_Frame::doAttachments(XP_Bool force)
-{
-	Widget	topguy = NULL;
-	Widget	bottomguy = NULL;
-
-	if (!force && !isShown())
-	{
-		m_attachmentsNeeded = True;
-		return;
-	}
-
-	// we lay things out from the top and bottom inward, since the view attaches
-	// to widgets on top and below it.
-	if (m_menubar && m_menubar->isShown())
-	{
-		XtVaSetValues(m_menubar->getBaseWidget(),
-					  XmNleftAttachment, XmATTACH_FORM,
-					  XmNrightAttachment, XmATTACH_FORM,
-					  XmNtopAttachment, XmATTACH_FORM,
-					  XmNbottomAttachment, XmATTACH_NONE,
-					  NULL);
-		topguy = m_menubar->getBaseWidget();
-	}
-
-	if (m_dashboard && m_dashboard->isShown())
-	{
-		XtVaSetValues(m_dashboard->getBaseWidget(),
-					  XmNleftAttachment, XmATTACH_FORM,
-					  XmNrightAttachment, XmATTACH_FORM,
-					  XmNbottomAttachment, XmATTACH_FORM,
-					  XmNtopAttachment, XmATTACH_NONE,
-					  NULL);
-		bottomguy = m_dashboard->getBaseWidget();
-	}
-
-	if (m_belowview && m_belowview->isShown())
-	{
-		XtVaSetValues(m_belowview->getBaseWidget(),
-					  XmNleftAttachment, XmATTACH_FORM,
-					  XmNrightAttachment, XmATTACH_FORM,
-					  XmNtopAttachment, XmATTACH_NONE,
-					  XmNbottomAttachment, (bottomguy ? XmATTACH_WIDGET : XmATTACH_FORM),
-					  XmNbottomWidget, bottomguy,
-					  NULL);
-		bottomguy = m_belowview->getBaseWidget();
-	}
-
-	// The above view component does not need to be cnfigured, since
-	// the mainform will take care of it.
-
-	// Configure the main form
-	XtVaSetValues(m_mainform,
-				  XmNleftAttachment,	XmATTACH_FORM,
-				  XmNrightAttachment,	XmATTACH_FORM,
-				  XmNtopAttachment,		(topguy ? XmATTACH_WIDGET : XmATTACH_FORM),
-				  XmNtopWidget,			topguy,
-				  XmNbottomAttachment,	(bottomguy ? XmATTACH_WIDGET : XmATTACH_FORM),
-				  XmNbottomWidget,		bottomguy,
-				  NULL);
-
-	// Attachments not needed anymore
-	m_attachmentsNeeded = False;
-}
-
 int
 XFE_Frame::getSecurityStatus()
 {
@@ -2241,7 +2194,8 @@ XFE_Frame::realize()
 {
 	Widget widget; /* the widget we want to realize */
 
-	widget = m_ismodal ? m_chromeparent : m_widget;
+//	widget = m_ismodal ? m_chromeparent : m_widget;
+	widget = m_widget;
 
 	if (!XtIsRealized(widget))
 	{
@@ -2250,12 +2204,13 @@ XFE_Frame::realize()
 
 		// Configure the logo for the first time
 		configureLogo();
-		
-		// Do attachments if needed
-		if (m_attachmentsNeeded)
-		{
-			doAttachments(True);
-		}
+
+		// Warning Warning!!
+
+		// All this geometry and command line hackery makes me sick.  
+		// The XfeFrameShell widget will eventually take care of all this
+		//
+		// -ramiro
 
 		//
 		// The forcing and saving of prefs should only happen if a chromespec
@@ -2289,6 +2244,11 @@ XFE_Frame::realize()
 				Position	fy;
 				Dimension	fwidth;
 				Dimension	fheight;
+
+				// I've found that this does not always work.  More 
+				// testing is needed to make sure that this works on 
+				// all window managers.  For sure, the function could
+				// probably be made more robust via some cleverness... -re
 					
 				// Get geometry from the app shell's XmNgeometry
 				mask = XfeShellGetGeometryFromResource(shell,&fx,&fy,
@@ -2339,6 +2299,15 @@ XFE_Frame::realize()
 		
 		XtRealizeWidget(widget);
 
+		// Add the most disgusting feature in the universe to XMozilla:
+		// Z-Axis fascist hackery, puke puke puke.
+
+		// Yeah...About a year ago I as given Netcaster koolaid to drink.
+		// After drinking the sutff, I realized how the webtop would 
+		// take over the universe and added the zaxis hackery support
+		// needed by the webtop - there remained a funny feeling in my
+		// stomach, though... -ramiro
+
 		// Add z order support if needed
 		if (XtIsTopLevelShell(m_widget) && m_chromespec_provided)
 		{
@@ -2367,7 +2336,8 @@ XFE_Frame::realize()
 						 (XFE_FunctionNotification)updateBusyState_cb,
 						 (void*)False);
 
-		hackTranslations(m_chromeparent); // XX assumes that the m_chromparent is the child of the shell
+		// XX assumes that the m_chromparent is the child of the shell
+		hackTranslations(m_chrome); 
 			
 		notifyInterested(XFE_Component::afterRealizeCallback);
 
@@ -2423,12 +2393,19 @@ XFE_Frame::show()
 			for (cons = fe_all_MWContexts ; cons; cons = cons->next)
 				fe_fixFocusAndGrab(cons->context); // XXXX No looping over contexts!!!
 			
-			D(printf ("Managing chrome parent\n");)
+			D(printf ("Managing chrome widget\n");)
 				
-			XtManageChild(m_chromeparent);
+			XtManageChild(m_chrome);
 		}
 		else
 		{
+			// Warning Warning!!
+			
+			// All this geometry and command line hackery makes me sick.  
+			// The XfeFrameShell widget will eventually take care of all this
+			//
+			// -ramiro
+			
 			// Do not XtPopup() an iconic shell the first time it is 
 			// shown and the command line is still being processed.
 			//
@@ -2492,7 +2469,7 @@ void
 XFE_Frame::hide()
 {
 	if (m_ismodal)
-		XtUnmanageChild(m_chromeparent);
+		XtUnmanageChild(m_chrome);
 	else
 		XtPopdown(m_widget);
 }
@@ -2743,9 +2720,6 @@ XFE_Frame::respectChrome(Chrome * chrome)
 	else if (m_bottommost)
 	  XLowerWindow(XtDisplay(m_widget), XtWindow(m_widget));
   }
-
-  // Do the attachments just in case
-  doAttachments();
 }
 
 XFE_View *
@@ -3078,21 +3052,11 @@ XFE_Frame::setHeight(int height)
 }
 
 Widget
-XFE_Frame::getViewParent()
-{
-	return m_viewparent;
-}
-
-Widget
-XFE_Frame::getMainForm()
-{
-	return m_mainform;
-}
-
-Widget
 XFE_Frame::getChromeParent()
 {
-	return m_chromeparent;
+	XP_ASSERT( XfeIsAlive(m_chrome) );
+
+	return m_chrome;
 }
 
 Widget
@@ -3113,30 +3077,37 @@ XFE_Frame::getContext()
 	return m_context;
 }
 
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Frame::setView(XFE_View *new_view)
 {
-	XP_ASSERT(m_view == NULL);
+	XP_ASSERT( XfeIsAlive(m_chrome) );
 
 	m_view = new_view;
 
-	doAttachments();
+	XtVaSetValues(m_chrome,XmNcenterView,m_view->getBaseWidget(),NULL);
 }
-
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Frame::setAboveViewArea(XFE_Component *above_view)
 {
-	m_aboveview = above_view;
-	doAttachments();
-}
+	XP_ASSERT( XfeIsAlive(m_chrome) );
 
+	m_aboveview = above_view;
+
+	XtVaSetValues(m_chrome,XmNtopView,m_aboveview->getBaseWidget(),NULL);
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Frame::setBelowViewArea(XFE_Component *below_view)
 {
-	m_belowview = below_view;
-	doAttachments();
-}
+	XP_ASSERT( XfeIsAlive(m_chrome) );
 
+	m_belowview = below_view;
+
+	XtVaSetValues(m_chrome,XmNbottomView,m_belowview->getBaseWidget(),NULL);
+}
+//////////////////////////////////////////////////////////////////////////
 void
 XFE_Frame::setTitle(char *title)
 {
@@ -3373,10 +3344,6 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 						else
 							m_menubar->show();
 
-						// there should probably another way to do this...  This seems fairly
-						// expensive.
-						doAttachments();
-
                         notifyInterested(XFE_View::chromeNeedsUpdating);
 					}
 			}
@@ -3389,9 +3356,6 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 					  // Configure the logo
 					  configureLogo();
 					  
-					  // Do the attachments
-					  doAttachments();
-
 					  // Update prefs
 					  toolboxItemChangeShowing(m_toolbar);
 					  
@@ -3537,7 +3501,7 @@ XFE_Frame::doCommand(CommandType cmd, void *calldata, XFE_CommandInfo* info)
 				if (m_belowview)
 					delete m_belowview;
 				
-				minibuffer = new XFE_Minibuffer(this, getChromeParent());
+				minibuffer = new XFE_Minibuffer(this,m_chrome);
 				minibuffer->show();
 				setBelowViewArea(minibuffer);
 			}

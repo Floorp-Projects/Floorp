@@ -110,15 +110,12 @@ XFE_HistoryFrame::XFE_HistoryFrame(Widget toplevel, XFE_Frame *parent_frame, Chr
 	      FRAME_HISTORY, chromespec, False, True, False, True, False)
 {
   // create the History view
-  XFE_HistoryView *view = new XFE_HistoryView(this, getViewParent(), NULL, m_context);
-  setView(view);
+  XFE_HistoryView *view = new XFE_HistoryView(this, 
+                                              getChromeParent(), 
+                                              NULL, 
+                                              m_context);
 
-  XtVaSetValues(view->getBaseWidget(),
-  		XmNleftAttachment, XmATTACH_FORM,
-		XmNtopAttachment, XmATTACH_FORM,
-		XmNrightAttachment, XmATTACH_FORM,
-		XmNbottomAttachment, XmATTACH_FORM,
-		NULL);
+  setView(view);
 
   setMenubar(menu_bar_spec);
 
@@ -138,6 +135,8 @@ XFE_HistoryFrame::XFE_HistoryFrame(Widget toplevel, XFE_Frame *parent_frame, Chr
 
   m_dashboard->setShowStatusBar(True);
   m_dashboard->setShowProgressBar(True);
+
+  resize(600,580); //XXX Default size for now
 }
 //////////////////////////////////////////////////////////////////////////
 XFE_HistoryFrame::~XFE_HistoryFrame()
