@@ -1353,7 +1353,7 @@ void edt_InitEscapes(int16 /*csid*/, XP_Bool bQuoteHiBits){
     while( pEsc->value ){
 		int ch = 0xff & (int) pEsc->value;
         if( ed_escapes[ ch ] == 0 ){
-            if ( ch == '&' || ch == '<'
+            if ( ch == '&' || ch == '<' || ch == '>'
 				|| (NON_BREAKING_SPACE == ((char) ch))			
 				|| (ch > 128 && bQuoteHiBits ) ) {
            	    ed_escapes[ ch ] = pEsc;
