@@ -17,8 +17,17 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
- * Contributor(s): 
- *   Pierre Phaneuf <pp@ludusdesign.com>
+ * Contributor(s): Doug Turner <dougt@netscape.com> (Original Author)
+ *                 Judson Valeski <valeski@netscape.com>
+ *                 Dan Matejka <danm@netscape.com>
+ *                 Scott Collins <scc@netscape.com>
+ *                 Heikki Toivonen <heiki@citec.fi>
+ *                 Patrick Beard <beard@netscape.com>
+ *                 Pierre Phaneuf <pp@ludusdesign.com>
+ *                 Warren Harris <warren@netscape.com>
+ *                 Chris Seawood <cls@seawood.org>
+ *                 Chris Waterson <waterson@netscape.com>
+ *                 Dan Mosedale <dmose@netscape.com>
  */
 
 
@@ -265,5 +274,34 @@ nsProxyObjectManager::GetProxy(  nsIEventQueue *destQueue,
     return rv;   
 }
 
+/**
+ * Helper function for code that already has a link-time dependency on
+ * libxpcom and needs to get proxies in a bunch of different places.
+ * This way, the caller isn't forced to get the proxy object manager
+ * themselves every single time, thus making the calling code more
+ * readable.
+ */
+NS_COM nsresult
+NS_GetProxyForObject(nsIEventQueue *destQueue, 
+                     REFNSIID aIID, 
+                     nsISupports* aObj, 
+                     PRInt32 proxyType, 
+                     void** aProxyObject) 
+{
+    static NS_DEFINE_CID(proxyObjMgrCID, NS_PROXYEVENT_MANAGER_CID);
 
+    nsresult rv;    // temp for return value
 
+    // get the proxy object manager
+    //
+    nsCOMPtr<nsIProxyObjectManager> proxyObjMgr = 
+        do_GetService(proxyObjMgrCID, &rv);
+
+    if (NS_FAILED(rv))
+        return NS_ERROR_FAILURE;
+    
+    // and try to get the proxy object
+    //
+    return proxyObjMgr->GetProxyForObject(destQueue, aIID, aObj,
+                                          proxyType, aProxyObject);
+}
