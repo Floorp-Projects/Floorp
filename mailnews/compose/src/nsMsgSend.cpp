@@ -1125,12 +1125,16 @@ PRUint32                  i;
   // what we got before. It always should, BUT If it doesn't, 
   // we will have memory problems and we should just return 
   // with an error.
-  if (multipartCount != mMultipartRelatedAttachmentCount)
-    return MK_MIME_MPART_ATTACHMENT_ERROR;
+  if (multipartCount != mMultipartRelatedAttachmentCount) {
+    //return MK_MIME_MPART_ATTACHMENT_ERROR;
+    return NS_ERROR_FAILURE;
+  }
 
   rv = mEditor->GetEmbeddedObjects(&aNodeList);
-  if ((NS_FAILED(rv) || (!aNodeList)))
-    return MK_MIME_MPART_ATTACHMENT_ERROR;
+  if ((NS_FAILED(rv) || (!aNodeList))) {
+    //return MK_MIME_MPART_ATTACHMENT_ERROR;
+    return NS_ERROR_FAILURE;
+  }
  
   nsMsgAttachmentData   attachment;
   PRInt32               locCount = -1;
@@ -1151,13 +1155,17 @@ PRUint32                  i;
     nsCOMPtr<nsIDOMNode>    node;
     nsISupports             *isupp = aNodeList->ElementAt(locCount);
 
-    if (!isupp)
-      return MK_MIME_MPART_ATTACHMENT_ERROR;
+    if (!isupp) {
+      //return MK_MIME_MPART_ATTACHMENT_ERROR;
+      return NS_ERROR_FAILURE;
+    }
 
     node = do_QueryInterface(isupp);
     NS_IF_RELEASE(isupp);             // make sure we cleanup
-    if (!node)
-      return MK_MIME_MPART_ATTACHMENT_ERROR;
+    if (!node) {
+      //return MK_MIME_MPART_ATTACHMENT_ERROR;
+      return NS_ERROR_FAILURE;
+    }
 
     // Now, we know the types of objects this node can be, so we will do
     // our query interface here and see what we come up with 
@@ -1173,8 +1181,10 @@ PRUint32                  i;
       nsString    tDesc;
 
       // Create the URI
-      if (NS_FAILED(image->GetSrc(tUrl)))
-        return MK_MIME_MPART_ATTACHMENT_ERROR;
+      if (NS_FAILED(image->GetSrc(tUrl))) {
+	//return MK_MIME_MPART_ATTACHMENT_ERROR;
+	return NS_ERROR_FAILURE;
+      }
       if (NS_FAILED(nsMsgNewURL(&attachment.url, tUrl)))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1194,8 +1204,11 @@ PRUint32                  i;
       nsString    tUrl;
 
       // Create the URI
-      if (NS_FAILED(link->GetHref(tUrl)))
-        return MK_MIME_MPART_ATTACHMENT_ERROR;
+      if (NS_FAILED(link->GetHref(tUrl))) {
+        //return MK_MIME_MPART_ATTACHMENT_ERROR;
+	return NS_ERROR_FAILURE;
+      }
+	
       if (NS_FAILED(nsMsgNewURL(&attachment.url, tUrl)))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1207,8 +1220,10 @@ PRUint32                  i;
       nsString    tName;
 
       // Create the URI
-      if (NS_FAILED(anchor->GetHref(tUrl)))
-        return MK_MIME_MPART_ATTACHMENT_ERROR;
+      if (NS_FAILED(anchor->GetHref(tUrl))) {
+        //return MK_MIME_MPART_ATTACHMENT_ERROR;
+	return NS_ERROR_FAILURE;
+      }
       if (NS_FAILED(nsMsgNewURL(&attachment.url, tUrl)))
         return NS_ERROR_OUT_OF_MEMORY;
 
@@ -1221,7 +1236,8 @@ PRUint32                  i;
     else
     {
       // If we get here, we got something we didn't expect!
-      return MK_MIME_MPART_ATTACHMENT_ERROR;
+      //return MK_MIME_MPART_ATTACHMENT_ERROR;
+      return NS_ERROR_FAILURE;
     }
 
     // 

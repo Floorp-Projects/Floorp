@@ -441,9 +441,6 @@ mime_generate_headers (nsMsgCompFields *fields,
 	// X-Mozilla-Draft-Info
 	if (isDraft) 
   {
-		char *htmlAction = 0;
-		char *lineWidth = 0; // force plain text hard line break info
-
 		PUSH_STRING(HEADER_X_MOZILLA_DRAFT_INFO);
 		PUSH_STRING(": internal/draft; ");
 		if (fields->GetAttachVCard())
