@@ -46,6 +46,7 @@ MODULE		= calbase
 XPIDL_MODULE	= calbase
 
 XPIDLSRCS	= 	\
+			calIDateTime.idl \
 			calIItemBase.idl \
 			calITodo.idl \
 			calIEvent.idl \

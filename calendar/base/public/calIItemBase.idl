@@ -38,12 +38,12 @@
 
 #include "nsISupports.idl"
 
-interface nsISupportsArray;
+interface nsIMutableArray;
 interface nsIWritablePropertyBag;
 
 interface calICalendar;
 interface calIDateTime;
-interface calIItemOccurence;
+interface calIItemOccurrence;
 
 //
 // calIItemBase
@@ -52,7 +52,7 @@ interface calIItemOccurence;
 //
 
 [scriptable, uuid(096b8cc5-113c-40fb-bc52-d64e3992980c)]
-interface calIItemBase
+interface calIItemBase : nsISupports
 {
   // clone interface; returns this item, but with
   // NULL id
@@ -116,29 +116,29 @@ interface calIItemBase
   attribute long recurType;
   attribute calIDateTime recurEnd; // if null, then forever
   // array of calIDateTime
-  readonly attribute nsISupportsArray recurrenceExceptions;
+  readonly attribute nsIMutableArray recurrenceExceptions;
   // rest of recurrence in properties (?)
 
   // return the next display item for this event,
   // where the start time is >= aStartTime
-  calIItemOccurence getNextOccurrence (in calIDateTime aStartTime);
+  calIItemOccurrence getNextOccurrence (in calIDateTime aStartTime);
 
   // return the previous display item for this event,
   // where the start time is < aStartTime
-  calIItemOccurence getPreviousOccurrence (in calIDateTime aStartTime);
+  calIItemOccurrence getPreviousOccurrence (in calIDateTime aStartTime);
 
   // return array of calIDisplayItems, representing all
   // occurances of this event between start and end.
-  nsISupportsArray getAllOccurrences (in calIDateTime aStartTime,
+  nsIMutableArray getAllOccurrences (in calIDateTime aStartTime,
 				      in calIDateTime aEndTime);
 
   // attachments
   // array of nsIMsgAttachment
-  readonly attribute nsISupportsArray attachments;
+  readonly attribute nsIMutableArray attachments;
 
   // contacts
   // array of nsIAbCard
-  readonly attribute nsISupportsArray contacts;
+  readonly attribute nsIMutableArray contacts;
 
   //
   // other properties come in through a property bag
@@ -168,7 +168,7 @@ interface calIItemBase
 //
 
 [scriptable, uuid(b19f3d7e-e848-4139-af3e-505a8023568d)]
-interface calIItemOccurrence
+interface calIItemOccurrence : nsISupports
 {
   //
   // The parent item for which this is the occurrence item for
@@ -182,8 +182,8 @@ interface calIItemOccurrence
   readonly attribute calIDateTime occurrenceEndDate;
 
   // same as item.getNextOccurrence(occurrenceEndDate)
-  readonly attribute calIItemOccurence next;
-  // same as item.getPreviousOccurence(occurrenceStartDate)
-  readonly attribute calIItemOccurence previous;
+  readonly attribute calIItemOccurrence next;
+  // same as item.getPreviousOccurrence(occurrenceStartDate)
+  readonly attribute calIItemOccurrence previous;
 };
 
