@@ -34,9 +34,10 @@
 package org.mozilla.jss.crypto;
 
 import java.security.spec.AlgorithmParameterSpec;
+import java.security.spec.KeySpec;
 import org.mozilla.jss.util.Password;
 
-public class PBEKeyGenParams implements AlgorithmParameterSpec {
+public class PBEKeyGenParams implements AlgorithmParameterSpec, KeySpec {
 
     private Password pass;
     private byte[] salt;
@@ -63,6 +64,26 @@ public class PBEKeyGenParams implements AlgorithmParameterSpec {
             throw new NullPointerException();
         }
         this.pass = (Password) pass.clone();
+        this.salt = salt;
+        this.iterations = iterations;
+    }
+
+    /**
+     * Creates PBE parameters.
+     *
+     * @param pass The password. It will be cloned, so the
+     *      caller is still responsible for clearing it. It must not be null.
+     * @param salt The salt for the PBE algorithm. Will <b>not</b> be cloned.
+     *      Must not be null. It is the responsibility of the caller to
+     *      use the right salt length for the algorithm. Most algorithms
+     *      use 8 bytes of salt.
+     * @param The iteration count for the PBE algorithm.
+     */
+    public PBEKeyGenParams(char[] pass, byte[] salt, int iterations) {
+        if(pass==null || salt==null) {
+            throw new NullPointerException();
+        }
+        this.pass = new Password( (char[]) pass.clone() );
         this.salt = salt;
         this.iterations = iterations;
     }
