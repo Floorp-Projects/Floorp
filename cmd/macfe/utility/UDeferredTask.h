@@ -50,7 +50,7 @@ class CDeferredTaskManager
 //	take the following action:
 //		Tell the first task to execute.  If the task returns true, the task is then
 //		deleted. If it returns false, it is left in the queue to be tried on the next idle.
-//	There are only a few public entry points: Post, Post1 and Remove.  Each of these has
+//	There are only a few public entry points: Post and Remove.  Each of these has
 //	an LPane* parameter that is used to work out which window, and hence which queue, the
 //	task belongs to.  When posting, a new queue will be opened for the window in question,
 //	if none exists.  When removing, the queue is deleted if no more tasks remain in it.
@@ -58,12 +58,11 @@ class CDeferredTaskManager
 :	public LPeriodical
 {
 	public:		// ----------   BEGIN PUBLIC API ------------- //
-		static void							Post(CDeferredTask* inTask, LPane* inPane);
-												// Post a task to the end of the queue.
-		static void							Post1(CDeferredTask* inTask, LPane* inPane);
-												// Post a task to the end of the queue,
-												// after removing all existing tasks of
-												// the same type.
+		static void							Post(CDeferredTask* inTask, LPane* inPane, 
+													bool inUnique = false);
+												// Post a task to the end of the queue. If
+												// inUnique is true all others of the same
+												// type will be removed.
 		static void							Remove(CDeferredTask*& inTask, LPane* inPane);
 												// Remove  task.
 		static void							ClearQueue(LPane* inPane);
