@@ -113,7 +113,7 @@ ifndef MOZ_NATIVE_NSPR
 _ABS_DIST=$(shell cd $(DIST) && pwd)
 libs::
 	$(RM) -rf $(DIST)/sdk/nspr
-	$(MAKE) -C $(DEPTH)/nsprpub real_install prefix=$(_ABS_DIST)/sdk/nspr includedir=$(_ABS_DIST)/sdk/nspr/include DESTDIR=
+	$(MAKE) -C $(DEPTH)/nsprpub real_install prefix=$(_ABS_DIST)/sdk/nspr exec_prefix=$(_ABS_DIST)/sdk/nspr bindir=$(_ABS_DIST)/sdk/nspr/bin includedir=$(_ABS_DIST)/sdk/nspr/include libdir=$(_ABS_DIST)/sdk/nspr/lib datadir=$(_ABS_DIST)/sdk/nspr/share DESTDIR=
 	$(RM) -rf $(DIST)/sdk/nspr/bin $(DIST)/sdk/nspr/share
 	mv $(DIST)/sdk/nspr/lib $(DIST)/sdk/nspr/bin
 endif
