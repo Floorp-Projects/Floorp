@@ -27,13 +27,15 @@
 #include "nsXPComFactory.h"
 
 // Class IDs...
-static NS_DEFINE_IID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kEventQueueServiceCID,  NS_EVENTQUEUESERVICE_CID);
+static NS_DEFINE_CID(kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
 
 // Interface IDs...
 static NS_DEFINE_IID(kIEventQueueServiceIID, NS_IEVENTQUEUESERVICE_IID);
 static NS_DEFINE_IID(kIBlockingNotificationObserverIID, 
                                              NS_IBLOCKINGNOTIFICATION_OBSERVER_IID);
 static NS_DEFINE_IID(kIBlockingNotificationIID, NS_IBLOCKINGNOTIFICATION_IID);
+
 
 // Forward declarations...
 class nsDefaultProtocolHelper;
@@ -152,13 +154,13 @@ nsDefaultProtocolHelper::Notify(nsIBlockingNotification *aCaller,
    * If no thread switch is necessary, then handle the notification
    * immediately...
    */
-   PRThread* currentThread = PR_GetCurrentThread();
- #if 0 // The mac netlib is on the same thread as the UI thread but you crash if you block right here
+#if 0 // The mac netlib is on the same thread as the UI thread but you crash if you block right here
+  PRThread* currentThread = PR_GetCurrentThread();
   if ( currentThread == aThread) {
     rv = HandleNotification(aCaller, aUrl, aCode, (void *)aExtraInfo);
   }
   else 
-  #endif 
+#endif 
   {
   
     /*
@@ -235,26 +237,20 @@ nsresult nsDefaultProtocolHelper::HandleNotification(nsIBlockingNotification *aC
   // create a dialog
 	PRBool bResult = PR_FALSE;
 	nsString password, user;
-	nsINetSupportDialogService* dialog = NULL;
  	PRInt32 result;
-    /* this is so ugly, but ProgID->CLSID mapping seems to be broken -alecf */
-
-    static NS_DEFINE_IID( kNetSupportDialogCID, NS_NETSUPPORTDIALOG_CID);
-    static NS_DEFINE_IID(kINetSupportDialogIID,   NS_INETSUPPORTDIALOGSERVICE_IID);
-    result = nsServiceManager::GetService(kNetSupportDialogCID,
-                                    kINetSupportDialogIID,
-                                    (nsISupports**)&dialog); 
- 	if ( !NS_SUCCEEDED( result ) )
+  nsresult rv;
+  
+  NS_WITH_SERVICE(nsINetSupportDialogService, dialog, kNetSupportDialogCID, &rv);
+  
+ 	if (NS_FAILED(rv))
  		return NS_ERROR_FAILURE;
-   if ( dialog )
+  if ( dialog )
    	dialog->PromptUserAndPassword( aText, aUser, aPass, &result );                  
   
   if ( result == 1 )
   	bResult =  NS_NOTIFY_SUCCEEDED;
   else
   	bResult = NS_ERROR_FAILURE;
-  
-    nsServiceManager::ReleaseService(kNetSupportDialogCID, dialog);
 
   auth_closure->user = aUser.ToNewCString();
   auth_closure->pass = aPass.ToNewCString();
