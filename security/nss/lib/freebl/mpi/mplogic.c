@@ -34,19 +34,11 @@
  * the GPL.  If you do not delete the provisions above, a recipient
  * may use your version of this file under either the MPL or the GPL.
  *
- *  $Id: mplogic.c,v 1.5 2000/07/26 05:32:30 nelsonb%netscape.com Exp $
+ *  $Id: mplogic.c,v 1.6 2000/07/27 02:37:49 nelsonb%netscape.com Exp $
  */
 
+#include "mpi-priv.h"
 #include "mplogic.h"
-#include <stdlib.h>
-
-/* Some things from the guts of the MPI library we make use of... */
-extern mp_err   s_mp_lshd(mp_int *mp, mp_size p);
-extern void     s_mp_rshd(mp_int *mp, mp_size p);
-extern mp_err   s_mp_pad(mp_int *mp, mp_size min); /* left pad with zeroes */
-
-#define  s_mp_clamp(mp)\
-   { while(USED(mp) > 1 && DIGIT((mp), USED(mp) - 1) == 0) USED(mp) -= 1; }
 
 /* {{{ Lookup table for population count */
 

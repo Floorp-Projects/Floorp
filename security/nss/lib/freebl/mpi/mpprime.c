@@ -37,6 +37,7 @@
  * may use your version of this file under either the MPL or the GPL.
  */
 
+#include "mpi-priv.h"
 #include "mpprime.h"
 #include "mplogic.h"
 #include <stdlib.h>
@@ -54,8 +55,6 @@
    the index of the integer in the vector which divided a.
  */
 mp_err    s_mpp_divp(mp_int *a, const mp_digit *vec, int size, int *which);
-
-extern mp_err s_mp_pad(mp_int *mp, mp_size min); /* left pad with zeroes  */
 
 /* {{{ mpp_divis(a, b) */
 
