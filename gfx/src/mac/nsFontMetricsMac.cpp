@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include <Fonts.h>		// for FetchFontInfo
+
 #include "nsFontMetricsMac.h"
 #include "nsDeviceContextMac.h"
 
@@ -42,7 +44,7 @@ nsFontMetricsMac :: ~nsFontMetricsMac()
 
 //------------------------------------------------------------------------
 
-NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID)
+NS_IMPL_ISUPPORTS(nsFontMetricsMac, kIFontMetricsIID);
 
 NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aCX)
 {
@@ -51,15 +53,18 @@ NS_IMETHODIMP nsFontMetricsMac :: Init(const nsFont& aFont, nsIDeviceContext* aC
   mFont = new nsFont(aFont);
   mContext = aCX;
   RealizeFont();
-  if (mFont != nsnull)
-    nsFontMetricsMac::SetFont(*mFont, mContext);
-
+	
+	TextStyle		theStyle;
+	nsFontMetricsMac::GetNativeTextStyle(*this, *mContext, theStyle);
+	
+  FontInfo fInfo;
+  // FetchFontInfo gets the font info without having to touch a grafport. It's 8.5 only
+  OSErr	err = ::FetchFontInfo(mFontNum, theStyle.tsSize, theStyle.tsFace, &fInfo);
+  NS_ASSERTION(err == noErr, "Error in FetchFontInfo");
+  
   float  dev2app;
   mContext->GetDevUnitsToAppUnits(dev2app);
 
-  FontInfo fInfo;
-  ::GetFontInfo(&fInfo);
- 
   mAscent = NSToCoordRound(float(fInfo.ascent) * dev2app);
   mDescent = NSToCoordRound(float(fInfo.descent) * dev2app);
   mLeading = NSToCoordRound(float(fInfo.leading) * dev2app);
@@ -113,7 +118,7 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
   {
     nsAutoString realFace;
     MapGenericFamilyToFont(aFamily, realFace);
-    data->mFaceName=realFace;
+    data->mFaceName = realFace;
     return PR_FALSE;  // stop
   }
   else
@@ -123,8 +128,8 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
     data->mContext->GetLocalFontName(aFamily, realFace, aliased);
     if (aliased || (NS_OK == data->mContext->CheckFontExistence(realFace)))
     {
-    	data->mFaceName=realFace;
-      	return PR_FALSE;  // stop
+    	data->mFaceName = realFace;
+      return PR_FALSE;  // stop
     }
   }
   return PR_TRUE;
@@ -132,9 +137,11 @@ static PRBool FontEnumCallback(const nsString& aFamily, PRBool aGeneric, void *a
 
 void nsFontMetricsMac::RealizeFont()
 {
-  nsString faceName;
-  FontEnumData  data(mContext,  mFont->name);
-  mFont->EnumerateFamilies(FontEnumCallback, &data);
+	nsAutoString	fontName;
+  FontEnumData  fontData(mContext, fontName);
+  mFont->EnumerateFamilies(FontEnumCallback, &fontData);
+  
+  nsDeviceContextMac::GetMacFontNumber(fontName, mFontNum);
 }
 
 
@@ -236,42 +243,57 @@ NS_IMETHODIMP nsFontMetricsMac :: GetWidths(const nscoord *&aWidths)
 
 NS_IMETHODIMP nsFontMetricsMac :: GetFontHandle(nsFontHandle &aHandle)
 {
+	// NOTE: the name in the mFont may be a comma-separated list of
+	// font names, like "Verdana, Arial, sans-serif"
+	// If you want to do the conversion again to a Mac font, you'll
+	// have to EnumerateFamilies() to resolve it to an installed
+	// font again.
+	NS_PRECONDITION(mFontNum != BAD_FONT_NUM, "Font metrics have not been initialized");
+	
 	// We have no 'font handles' on Mac like they have on Windows
 	// so let's use it for the fontNum.
-	if (mFontNum == BAD_FONT_NUM)
-		nsDeviceContextMac::GetMacFontNumber(mFont->name, mFontNum);
-
 	aHandle = (nsFontHandle)mFontNum;
 	return NS_OK;
 }
 
-//------------------------------------------------------------------------
-
-NS_GFX void nsFontMetricsMac :: SetFont(const nsFont& aFont, nsIDeviceContext* aContext)
+// A utility routine to the the text style in a convenient manner.
+// This is static, which is unfortunate, because it introduces link
+// dependencies between libraries that should not exist.
+NS_EXPORT void nsFontMetricsMac::GetNativeTextStyle(const nsIFontMetrics& inMetrics,
+		const nsIDeviceContext& inDevContext, TextStyle &outStyle)
 {
-	short fontNum;
-			//¥TODO?: This is not very efficient. Look in nsDeviceContextMac::GetMacFontNumber()
-	nsDeviceContextMac::GetMacFontNumber(aFont.name, fontNum);
-	::TextFont(fontNum);
-
+	
+	nsFont	*aFont;
+	inMetrics.GetFont(aFont);
+	
+	nsFontHandle	fontNum;
+	inMetrics.GetFontHandle(fontNum);
+	
 	float  dev2app;
-	aContext->GetDevUnitsToAppUnits(dev2app);
-	::TextSize(short(float(aFont.size) / dev2app));
+	inDevContext.GetDevUnitsToAppUnits(dev2app);
+	short		textSize = float(aFont->size) / dev2app;
 
 	Style textFace = normal;
-	switch (aFont.style)
+	switch (aFont->style)
 	{
 		case NS_FONT_STYLE_NORMAL: 								break;
 		case NS_FONT_STYLE_ITALIC: 		textFace |= italic;		break;
 		case NS_FONT_STYLE_OBLIQUE: 	textFace |= italic;		break;	//XXX
 	}
-	switch (aFont.variant)
+	switch (aFont->variant)
 	{
 		case NS_FONT_VARIANT_NORMAL: 							break;
-		case NS_FONT_VARIANT_SMALL_CAPS: textFace |= condense;	break;	//XXX
+		case NS_FONT_VARIANT_SMALL_CAPS: textFace |= condense;	break;	//XXX why?
 	}
-	if (aFont.weight > NS_FONT_WEIGHT_NORMAL)	// don't test NS_FONT_WEIGHT_BOLD
+	if (aFont->weight > NS_FONT_WEIGHT_NORMAL)	// don't test NS_FONT_WEIGHT_BOLD
 		textFace |= bold;
 
-	::TextFace(textFace);
+	RGBColor	black = {0};
+	
+	outStyle.tsFont = (short)fontNum;
+	outStyle.tsFace = textFace;
+	outStyle.tsSize = textSize;
+	outStyle.tsColor = black;
 }
+	
+	
