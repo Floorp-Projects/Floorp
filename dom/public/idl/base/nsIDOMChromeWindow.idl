@@ -38,6 +38,8 @@
 
 #include "domstubs.idl"
 
+interface nsIBrowserDOMWindow;
+
 [scriptable, uuid(934f7c7f-76cc-4246-a926-4e2b1b545f67)]
 interface nsIDOMChromeWindow : nsISupports
 {
@@ -47,6 +49,13 @@ interface nsIDOMChromeWindow : nsISupports
 
            attribute DOMString                   title;
   readonly attribute unsigned short              windowState;
+
+  /**
+   * browserDOMWindow provides access to yet another layer of
+   * utility functions implemented by chrome script. It will be null
+   * for DOMWindows not corresponding to browsers.
+   */
+           attribute nsIBrowserDOMWindow browserDOMWindow;
 
   void                      getAttention();
 
