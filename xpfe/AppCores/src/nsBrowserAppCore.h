@@ -75,6 +75,7 @@ class nsBrowserAppCore : public nsBaseAppCore,
     NS_IMETHOD    SetDisableCallback(const nsString& aScript);
     NS_IMETHOD    SetEnableCallback(const nsString& aScript);
     NS_IMETHOD    NewWindow();
+    NS_IMETHOD    OpenWindow();
     NS_IMETHOD    PrintPreview();
     NS_IMETHOD    Print();
     NS_IMETHOD    Copy();

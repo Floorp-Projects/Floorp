@@ -524,6 +524,39 @@ BrowserAppCoreNewWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, j
 
 
 //
+// Native method OpenWindow
+//
+PR_STATIC_CALLBACK(JSBool)
+BrowserAppCoreOpenWindow(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
+{
+  nsIDOMBrowserAppCore *nativeThis = (nsIDOMBrowserAppCore*)JS_GetPrivate(cx, obj);
+  JSBool rBool = JS_FALSE;
+
+  *rval = JSVAL_NULL;
+
+  // If there's no private data, this must be the prototype, so ignore
+  if (nsnull == nativeThis) {
+    return JS_TRUE;
+  }
+
+  if (argc >= 0) {
+
+    if (NS_OK != nativeThis->OpenWindow()) {
+      return JS_FALSE;
+    }
+
+    *rval = JSVAL_VOID;
+  }
+  else {
+    JS_ReportError(cx, "Function openWindow requires 0 parameters");
+    return JS_FALSE;
+  }
+
+  return JS_TRUE;
+}
+
+
+//
 // Native method PrintPreview
 //
 PR_STATIC_CALLBACK(JSBool)
@@ -803,6 +836,7 @@ static JSFunctionSpec BrowserAppCoreMethods[] =
   {"setContentWindow",          BrowserAppCoreSetContentWindow,     1},
   {"setWebShellWindow",          BrowserAppCoreSetWebShellWindow,     1},
   {"newWindow",          BrowserAppCoreNewWindow,     0},
+  {"openWindow",          BrowserAppCoreOpenWindow,     0},
   {"printPreview",          BrowserAppCorePrintPreview,     0},
   {"copy",          BrowserAppCoreCopy,     0},
   {"print",          BrowserAppCorePrint,     0},

@@ -28,6 +28,9 @@
 #include "nsAppCoresCIDs.h"
 #include "nsIDOMAppCoresManager.h"
 
+#include "nsIFileWidget.h"
+#include "nsWidgetsCID.h"
+
 #include "nsIScriptContext.h"
 #include "nsIScriptContextOwner.h"
 #include "nsIScriptGlobalObject.h"
@@ -55,6 +58,10 @@
 #include "nsIPresContext.h"
 #include "nsIPresShell.h"
 #include "nsFileSpec.h"  // needed for nsAutoCString
+
+// FileDialog
+static NS_DEFINE_IID(kCFileWidgetCID, NS_FILEWIDGET_CID);
+static NS_DEFINE_IID(kIFileWidgetIID, NS_IFILEWIDGET_IID);
 
 #ifdef ClientWallet
 #include "nsIWalletService.h"
@@ -90,6 +97,8 @@ static NS_DEFINE_IID(kIWebShellWindowIID,        NS_IWEBSHELL_WINDOW_IID);
 static NS_DEFINE_IID(kIURLListenerIID,           NS_IURL_LISTENER_IID);
 
 #define APP_DEBUG 0
+
+#define FILE_PROTOCOL "file://"
 
 /////////////////////////////////////////////////////////////////////////
 // nsBrowserAppCore
@@ -730,6 +739,66 @@ done:
   if (nsnull != appShell) {
     nsServiceManager::ReleaseService(kAppShellServiceCID, appShell);
   }
+    return NS_OK;
+}
+
+
+//----------------------------------------------------------
+static void BuildFileURL(const char * aFileName, nsString & aFileURL) 
+{
+  nsAutoString fileName(aFileName);
+  char * str = fileName.ToNewCString();
+
+  PRInt32 len = strlen(str);
+  PRInt32 sum = len + sizeof(FILE_PROTOCOL);
+  char* lpszFileURL = new char[sum];
+
+  // Translate '\' to '/'
+  for (PRInt32 i = 0; i < len; i++) {
+    if (str[i] == '\\') {
+	    str[i] = '/';
+    }
+  }
+
+  // Build the file URL
+  PR_snprintf(lpszFileURL, sum, "%s%s", FILE_PROTOCOL, str);
+
+  // create string
+  aFileURL = lpszFileURL;
+  delete[] lpszFileURL;
+  delete[] str;
+}
+
+NS_IMETHODIMP    
+nsBrowserAppCore::OpenWindow()
+{  
+  nsIFileWidget *fileWidget;
+
+  nsString title("FileWidget Title <here> mode = save");
+  nsComponentManager::CreateInstance(kCFileWidgetCID, nsnull, kIFileWidgetIID, (void**)&fileWidget);
+  
+  nsString titles[] = {"All Readable Files", "HTML Files",
+                       "XML Files", "Image Files", "All Files"};
+  nsString filters[] = {"*.htm; *.html; *.xml; *.gif; *.jpg; *.jpeg; *.png",
+                        "*.htm; *.html",
+                        "*.xml",
+                        "*.gif; *.jpg; *.jpeg; *.png",
+                        "*.*"};
+  fileWidget->SetFilterList(5, titles, filters);
+
+  fileWidget->Create(nsnull, title, eMode_load, nsnull, nsnull);
+  PRBool result = fileWidget->Show();
+
+  if (result) {
+    nsString fileName;
+    nsString dirName;
+    fileWidget->GetFile(fileName);
+
+    nsAutoString fileURL;
+    BuildFileURL(nsAutoCString(fileName), fileURL);
+    printf("If I could open a new window with [%s] I would.\n", (const char *)nsAutoCString(fileURL));
+  }
+  NS_RELEASE(fileWidget);
 
   return NS_OK;
 }
@@ -794,8 +863,8 @@ nsBrowserAppCore::Copy()
 //#define NEW_CLIPBOARD_SUPPORT
 
 #ifdef NEW_CLIPBOARD_SUPPORT
-  nsIPresShell * presShell = GetPresShellFor(mWebShell);
-  if (nsnull != nsnull) {
+  nsIPresShell * presShell = GetPresShellFor(mContentAreaWebShell);
+  if (nsnull != presShell) {
     presShell->DoCopy(nsnull);
   }
 #endif

@@ -57,6 +57,8 @@ public:
 
   NS_IMETHOD    NewWindow()=0;
 
+  NS_IMETHOD    OpenWindow()=0;
+
   NS_IMETHOD    PrintPreview()=0;
 
   NS_IMETHOD    Copy()=0;
@@ -85,6 +87,7 @@ public:
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin);  \
   NS_IMETHOD    NewWindow();  \
+  NS_IMETHOD    OpenWindow();  \
   NS_IMETHOD    PrintPreview();  \
   NS_IMETHOD    Copy();  \
   NS_IMETHOD    Print();  \
@@ -107,6 +110,7 @@ public:
   NS_IMETHOD    SetContentWindow(nsIDOMWindow* aWin) { return _to##SetContentWindow(aWin); }  \
   NS_IMETHOD    SetWebShellWindow(nsIDOMWindow* aWin) { return _to##SetWebShellWindow(aWin); }  \
   NS_IMETHOD    NewWindow() { return _to##NewWindow(); }  \
+  NS_IMETHOD    OpenWindow() { return _to##OpenWindow(); }  \
   NS_IMETHOD    PrintPreview() { return _to##PrintPreview(); }  \
   NS_IMETHOD    Copy() { return _to##Copy(); }  \
   NS_IMETHOD    Print() { return _to##Print(); }  \
