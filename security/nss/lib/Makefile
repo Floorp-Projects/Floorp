@@ -54,7 +54,9 @@ include $(CORE_DEPTH)/coreconf/config.mk
 # (4) Include "local" platform-dependent assignments (OPTIONAL).      #
 #######################################################################
 
-
+ifeq ($(OS_TARGET), WINCE)
+DIRS := $(filter-out fortcrypt,$(DIRS))
+endif
 
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
