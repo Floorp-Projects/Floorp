@@ -45,6 +45,7 @@ sub login {
     }
 
     my $cgi = Bugzilla->cgi;
+    my $dbh = Bugzilla->dbh;
 
     # First, try the actual login method against form variables
     my $username = $cgi->param("Bugzilla_login");
@@ -67,7 +68,6 @@ sub login {
         # subsequent login
         trick_taint($ipaddr);
 
-        my $dbh = Bugzilla->dbh;
         $dbh->do("INSERT INTO logincookies (userid, ipaddr, lastused)
                  VALUES (?, ?, NOW())",
                  undef,
@@ -159,8 +159,9 @@ sub login {
         # This seems like as good as time as any to get rid of old
         # crufty junk in the logincookies table.  Get rid of any entry
         # that hasn't been used in a month.
-        Bugzilla->dbh->do("DELETE FROM logincookies " .
-                          "WHERE TO_DAYS(NOW()) - TO_DAYS(lastused) > 30");
+        $dbh->do("DELETE FROM logincookies WHERE " .
+                 $dbh->sql_to_days('NOW()') . " - " .
+                 $dbh->sql_to_days('lastused') . " > 30");
 
         exit;
     }

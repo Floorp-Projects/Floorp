@@ -283,10 +283,11 @@ sub regenerate_stats {
     # Determine the start date from the date the first bug in the
     # database was created, and the end date from the current day.
     # If there were no bugs in the search, return early.
-    SendSQL("SELECT to_days(creation_ts) AS start, " .
-            "to_days(current_date) AS end, " .
-            "to_days('1970-01-01') " . 
-            "FROM bugs $from_product WHERE to_days(creation_ts) != 'NULL' " .
+    SendSQL("SELECT " . $dbh->sql_to_days('creation_ts') . " AS start, " .
+                        $dbh->sql_to_days('current_date') . " AS end, " .
+                        $dbh->sql_to_days("'1970-01-01'") . 
+            " FROM bugs $from_product WHERE " .
+            $dbh->sql_to_days('creation_ts') . " != 'NULL' " .
             $and_product .
             "ORDER BY start " . $dbh->sql_limit(1));
     

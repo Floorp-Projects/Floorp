@@ -163,8 +163,9 @@ sub IssuePasswordToken {
 sub CleanTokenTable {
     my $dbh = Bugzilla->dbh;
     $dbh->bz_lock_tables('tokens WRITE');
-    &::SendSQL("DELETE FROM tokens 
-                WHERE TO_DAYS(NOW()) - TO_DAYS(issuedate) >= " . $maxtokenage);
+    &::SendSQL("DELETE FROM tokens WHERE " .
+               $dbh->sql_to_days('NOW()') . " - " .
+               $dbh->sql_to_days('issuedate') . " >= " . $maxtokenage);
     $dbh->bz_unlock_tables();
 }
 

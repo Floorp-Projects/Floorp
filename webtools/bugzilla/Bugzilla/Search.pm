@@ -797,7 +797,8 @@ sub init {
          },
          
          "^changedin," => sub {
-             $f = "(to_days(now()) - to_days(bugs.delta_ts))";
+             $f = "(" . $dbh->sql_to_days('NOW()') . " - " .
+                        $dbh->sql_to_days('bugs.delta_ts') . ")";
          },
 
          "^component,(?!changed)" => sub {

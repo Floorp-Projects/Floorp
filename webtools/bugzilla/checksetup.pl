@@ -2289,8 +2289,9 @@ AddFDef("attachments.isprivate", "Attachment is private", 0);
 
 AddFDef("target_milestone", "Target Milestone", 0);
 AddFDef("delta_ts", "Last changed date", 0);
-AddFDef("(to_days(now()) - to_days(bugs.delta_ts))", "Days since bug changed",
-        0);
+AddFDef("(" . $dbh->sql_to_days('NOW()') . " - " .
+              $dbh->sql_to_days('bugs.delta_ts') . ")",
+        "Days since bug changed", 0);
 AddFDef("longdesc", "Comment", 0);
 AddFDef("alias", "Alias", 0);
 AddFDef("everconfirmed", "Ever Confirmed", 0);
