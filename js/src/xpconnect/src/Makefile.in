@@ -79,6 +79,7 @@ CPPSRCS=		\
 	xpclog.cpp			\
 	xpcmaps.cpp			\
 	xpcmodule.cpp	\
+	xpcthreadcontext.cpp	\
 	xpcthrower.cpp		\
 	xpcwrappedjs.cpp	\
 	xpcwrappedjsclass.cpp	\
