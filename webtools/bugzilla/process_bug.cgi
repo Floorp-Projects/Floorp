@@ -545,6 +545,28 @@ SWITCH: for ($::FORM{'knob'}) {
             PuntTryAgain("The bug id $::FORM{'id'} is invalid. Please reload this bug ".
                          "and try again.");
         }
+        # Check to see if Reporter of this bug is reporter of Dupe 
+        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($::FORM{'id'}));
+        my $reporter = FetchOneColumn();
+        SendSQL("SELECT reporter FROM bugs WHERE bug_id = " . SqlQuote($num) . " and reporter = $reporter");
+        my $isreporter = FetchOneColumn();
+        SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($num) . " and who = $reporter");
+        my $isoncc = FetchOneColumn();
+        unless ($isreporter || $isoncc) {
+            # The reporter is oblivious to the existance of the new bug... add 'em to the cc (and record activity)
+            SendSQL("SELECT who FROM cc WHERE bug_id = " . SqlQuote($num));
+            my @dupecc;
+            while (MoreSQLData()) {
+                push (@dupecc, DBID_to_name(FetchOneColumn()));
+            }
+            my @newdupecc = @dupecc;
+            push (@newdupecc, DBID_to_name($reporter));
+            my $ccid = GetFieldID("cc");
+            my $whochange = DBNameToIdAndCheck($::FORM{'who'});
+            SendSQL("INSERT INTO bugs_activity (bug_id,who,bug_when,fieldid,oldvalue,newvalue) VALUES " .
+                    "('$num','$whochange',now(),$ccid,'" . join (",", sort @dupecc) . "','" . join (",", sort @newdupecc) . "')"); 
+            SendSQL("INSERT INTO cc (who, bug_id) VALUES ($reporter, " . SqlQuote($num) . ")");
+        }
         AppendComment($num, $::FORM{'who'}, "*** Bug $::FORM{'id'} has been marked as a duplicate of this bug. ***");
         if ( Param('strictvaluechecks') ) {
           CheckFormFieldDefined(\%::FORM,'comment');
