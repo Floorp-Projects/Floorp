@@ -56,7 +56,7 @@ static NS_DEFINE_CID(kCMimeConverterCID, NS_MIME_CONVERTER_CID);
 nsMailtoUrl::nsMailtoUrl()
 {
   NS_INIT_ISUPPORTS();
-  m_forcePlainText = PR_FALSE;
+  m_htmlBody = PR_FALSE;
   nsComponentManager::CreateInstance(kSimpleURICID, nsnull, 
                                      NS_GET_IID(nsIURI), 
                                      (void **) getter_AddRefs(m_baseURL));
@@ -140,12 +140,12 @@ nsresult nsMailtoUrl::ParseMailtoUrl(char * searchPart)
 						m_followUpToPart = value;
 					else if (!nsCRT::strcasecmp (token, "from"))
 						m_fromPart = value;
-					else if (!nsCRT::strcasecmp (token, "force-plain-text"))
-						m_forcePlainText = PR_TRUE;
 					break;
         case 'H':
 				  if (!nsCRT::strcasecmp(token, "html-part"))
 						  m_htmlPart = value;
+					else if (!nsCRT::strcasecmp (token, "html-body"))
+						m_htmlBody = PR_TRUE;
           break;
 				case 'N':
 					if (!nsCRT::strcasecmp (token, "newsgroups"))
@@ -318,7 +318,7 @@ NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, 
 		char ** aFromPart, char ** aFollowUpToPart, char ** aOrganizationPart, 
 		char ** aReplyToPart, char ** aSubjectPart, char ** aBodyPart, char ** aHtmlPart, 
 		char ** aReferencePart, char ** aAttachmentPart, char ** aPriorityPart, 
-		char ** aNewsgroupPart, char ** aNewsHostPart, PRBool * aForcePlainText)
+		char ** aNewsgroupPart, char ** aNewsHostPart, PRBool * aHTMLBody)
 {
 	if (aToPart)
 		*aToPart = ToNewCString(m_toPart);
@@ -350,8 +350,8 @@ NS_IMETHODIMP nsMailtoUrl::GetMessageContents(char ** aToPart, char ** aCcPart, 
 		*aNewsgroupPart = ToNewCString(m_newsgroupPart);
 	if (aNewsHostPart)
 		*aNewsHostPart = ToNewCString(m_newsHostPart);
-	if (aForcePlainText)
-		*aForcePlainText = m_forcePlainText;
+	if (aHTMLBody)
+		*aHTMLBody = m_htmlBody;
 	return NS_OK;
 }
 

@@ -85,8 +85,18 @@
 #include "nsMsgUtils.h"
 #endif
 
+// <for functions="HTMLSantinize">
+#include "nsIParser.h"
+#include "nsParserCIID.h"
+#include "nsIContentSink.h"
+#include "mozISanitizingSerializer.h"
+
+static NS_DEFINE_CID(kParserCID, NS_PARSER_CID);
+static NS_DEFINE_CID(kNavDTDCID, NS_CNAVDTD_CID);
+// </for>
+
 #ifdef NS_DEBUG
-static PRBool _just_to_be_sure_we_create_only_on_compose_service_ = PR_FALSE;
+static PRBool _just_to_be_sure_we_create_only_one_compose_service_ = PR_FALSE;
 #endif
 
 #define DEFAULT_CHROME  "chrome://messenger/content/messengercompose/messengercompose.xul"
@@ -122,8 +132,8 @@ static PRUint32 GetMessageSizeFromURI(const char * originalMsgURI)
 nsMsgComposeService::nsMsgComposeService()
 {
 #ifdef NS_DEBUG
-  NS_ASSERTION(!_just_to_be_sure_we_create_only_on_compose_service_, "You cannot create several message compose service!");
-  _just_to_be_sure_we_create_only_on_compose_service_ = PR_TRUE;
+  NS_ASSERTION(!_just_to_be_sure_we_create_only_one_compose_service_, "You cannot create several message compose service!");
+  _just_to_be_sure_we_create_only_one_compose_service_ = PR_TRUE;
 #endif
   
   NS_INIT_REFCNT();
@@ -156,8 +166,8 @@ nsMsgComposeService::~nsMsgComposeService()
 nsresult nsMsgComposeService::Init()
 {
   nsresult rv = NS_OK;
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (!prefs)
+  nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefService)
     return NS_ERROR_FAILURE;
 
   // Register observers
@@ -171,11 +181,11 @@ nsresult nsMsgComposeService::Init()
   }
 
   // Register some pref observer
-  nsCOMPtr<nsIPrefBranch> prefBranch;
-  rv = prefs->GetBranch(nsnull, getter_AddRefs(prefBranch));
+  nsCOMPtr<nsIPrefBranch> prefs;
+  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefs));
   if (NS_SUCCEEDED(rv))
   {
-    nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefBranch, &rv);
+    nsCOMPtr<nsIPrefBranchInternal> pbi = do_QueryInterface(prefs, &rv);
     if (NS_SUCCEEDED(rv))
       rv = pbi->AddObserver(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS, this, PR_TRUE);
   }
@@ -199,8 +209,12 @@ void nsMsgComposeService::Reset()
     mMaxRecycledWindows = 0;
   }
 
-  nsCOMPtr<nsIPref> prefs = do_GetService(NS_PREF_CONTRACTID);
-  if (!prefs)
+  nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREF_CONTRACTID);
+  if (!prefService)
+    return;
+  nsCOMPtr<nsIPrefBranch> prefs;
+  rv = prefService->GetBranch(nsnull, getter_AddRefs(prefs));
+  if (NS_FAILED(rv))
     return;
 
   rv = prefs->GetIntPref(PREF_MAIL_COMPOSE_MAXRECYCLEDWINDOWS, &mMaxRecycledWindows);
@@ -482,7 +496,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
     rv = aURI->QueryInterface(NS_GET_IID(nsIMailtoUrl), getter_AddRefs(aMailtoUrl));
     if (NS_SUCCEEDED(rv))
     {
-       PRBool aPlainText = PR_FALSE;
+      PRBool aHTMLBody = PR_FALSE;
        nsXPIDLCString aToPart;
        nsXPIDLCString aCcPart;
        nsXPIDLCString aBccPart;
@@ -497,11 +511,52 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
                                     getter_Copies(aBodyPart), nsnull /* html part */, 
                                     nsnull /* a ref part */, nsnull /* attachment part */,
                                     nsnull /* priority */, getter_Copies(aNewsgroup), nsnull /* host */,
-                                    &aPlainText);
+                                    &aHTMLBody);
 
-       MSG_ComposeFormat format = nsIMsgCompFormat::Default;
-       if (aPlainText)
-         format = nsIMsgCompFormat::PlainText;
+      nsString rawBody = NS_ConvertUTF8toUCS2(aBodyPart);
+      nsString sanitizedBody;
+
+      MSG_ComposeFormat format = nsIMsgCompFormat::PlainText;
+      if (aHTMLBody)
+      {
+        //For security reason, we must sanitize the message body before accepting any html...
+
+        // Create a parser
+        nsCOMPtr<nsIParser> parser = do_CreateInstance(kParserCID);
+
+        // Create the appropriate output sink
+        nsCOMPtr<nsIContentSink> sink = do_CreateInstance(MOZ_SANITIZINGHTMLSERIALIZER_CONTRACTID);
+        
+        nsXPIDLCString allowedTags;
+        nsCOMPtr<nsIPrefService> prefService = do_GetService(NS_PREF_CONTRACTID);
+        if (prefService)
+        {
+          nsCOMPtr<nsIPrefBranch> prefs;
+          rv = prefService->GetBranch(MAILNEWS_ROOT_PREF, getter_AddRefs(prefs));
+          if (NS_SUCCEEDED(rv))        
+            prefs->GetCharPref("display.html_sanitizer.allowed_tags", getter_Copies(allowedTags));
+        }
+
+        if (parser && sink)
+        {
+          nsCOMPtr<mozISanitizingHTMLSerializer> sanSink(do_QueryInterface(sink));
+          if (sanSink)
+          {
+            sanSink->Initialize(&sanitizedBody, 0, NS_ConvertASCIItoUCS2(allowedTags.get()));
+
+            parser->SetContentSink(sink);
+            nsCOMPtr<nsIDTD> dtd = do_CreateInstance(kNavDTDCID);
+            if (dtd)
+            {
+              parser->RegisterDTD(dtd);
+
+              rv = parser->Parse(rawBody, 0, NS_LITERAL_CSTRING("text/html"), PR_FALSE, PR_TRUE);
+              if (NS_SUCCEEDED(rv))
+                format = nsIMsgCompFormat::HTML;
+            }
+          }
+        }
+      }
 
       nsCOMPtr<nsIMsgComposeParams> pMsgComposeParams (do_CreateInstance(NS_MSGCOMPOSEPARAMS_CONTRACTID, &rv));
       if (NS_SUCCEEDED(rv) && pMsgComposeParams)
@@ -519,7 +574,7 @@ NS_IMETHODIMP nsMsgComposeService::OpenComposeWindowWithURI(const char * aMsgCom
           pMsgCompFields->SetBcc(NS_ConvertUTF8toUCS2(aBccPart).get());
           pMsgCompFields->SetNewsgroups(aNewsgroup);
           pMsgCompFields->SetSubject(NS_ConvertUTF8toUCS2(aSubjectPart).get());
-          pMsgCompFields->SetBody(NS_ConvertUTF8toUCS2(aBodyPart).get());
+          pMsgCompFields->SetBody(format == nsIMsgCompFormat::HTML ? sanitizedBody.get() : rawBody.get());
 
           pMsgComposeParams->SetComposeFields(pMsgCompFields);
 
