@@ -32,6 +32,7 @@ REQUIRES = \
   widget \
   xpcom \
   locale \
+  layout_xul \
   $(NULL)
 
 CPP_OBJS = \
