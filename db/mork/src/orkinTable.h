@@ -205,11 +205,21 @@ public: // type identification
   // } ----- end row position methods -----
 
   // { ----- begin row position methods -----
-  virtual mdb_err RowPosToOid( // get row member for a table position
+  virtual mdb_err PosToOid( // get row member for a table position
     nsIMdbEnv* ev, // context
     mdb_pos inRowPos, // zero-based ordinal position of row in table
     mdbOid* outOid); // row oid at the specified position
-    
+
+  virtual mdb_err OidToPos( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    const mdbOid* inOid, // row to find in table
+    mdb_pos* outPos); // zero-based ordinal position of row in table
+     
+  virtual mdb_err PosToRow( // test for the table position of a row member
+    nsIMdbEnv* ev, // context
+    mdb_pos inRowPos, // zero-based ordinal position of row in table
+    nsIMdbRow** acqRow); // acquire row at table position inRowPos
+   
   virtual mdb_err RowToPos( // test for the table position of a row member
     nsIMdbEnv* ev, // context
     nsIMdbRow* ioRow, // row to find in table
@@ -226,11 +236,6 @@ public: // type identification
     nsIMdbEnv* ev, // context
     const mdbOid* inOid, // row to find in table
     mdb_bool* outHasOid); // whether inOid is a member row
-
-  virtual mdb_err OidToPos( // test for the table position of a row member
-    nsIMdbEnv* ev, // context
-    const mdbOid* inOid, // row to find in table
-    mdb_pos* outPos); // zero-based ordinal position of row in table
 
   virtual mdb_err CutOid( // make sure the row with inOid is not a member 
     nsIMdbEnv* ev, // context

@@ -332,7 +332,7 @@ orkinTable::DropActivity( // tell collection usage no longer expected
   if ( ev )
   {
     morkTable* table = (morkTable*) mHandle_Object;
-    ev->StubMethodOnlyError();
+    // ev->StubMethodOnlyError(); // okay to do nothing
     outErr = ev->AsErr();
   }
   return outErr;
@@ -475,18 +475,95 @@ orkinTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
 
 // { ----- begin row position methods -----
 /*virtual*/ mdb_err
-orkinTable::RowPosToOid( // get row member for a table position
+orkinTable::PosToOid( // get row member for a table position
   nsIMdbEnv* mev, // context
   mdb_pos inRowPos, // zero-based ordinal position of row in table
   mdbOid* outOid) // row oid at the specified position
 {
   mdb_err outErr = 0;
+  mdbOid roid;
+  roid.mOid_Scope = 0;
+  roid.mOid_Id = -1;
+  
   morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
   if ( ev )
   {
-    ev->StubMethodOnlyError();
+    morkTable* table = (morkTable*) mHandle_Object;
+    morkRow* row = table->SafeRowAt(ev, inRowPos);
+    if ( row )
+    	roid = row->mRow_Oid;
+    
     outErr = ev->AsErr();
   }
+  if ( outOid )
+  	*outOid = roid;
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinTable::OidToPos( // test for the table position of a row member
+  nsIMdbEnv* mev, // context
+  const mdbOid* inOid, // row to find in table
+  mdb_pos* outPos) // zero-based ordinal position of row in table
+{
+  mdb_err outErr = 0;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    mork_pos pos = ((morkTable*) mHandle_Object)->ArrayHasOid(ev, inOid);
+    if ( outPos )
+      *outPos = pos;
+    outErr = ev->AsErr();
+  }
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinTable::PosToRow( // get row member for a table position
+  nsIMdbEnv* mev, // context
+  mdb_pos inRowPos, // zero-based ordinal position of row in table
+	nsIMdbRow** acqRow) // acquire row at table position inRowPos
+{
+  mdb_err outErr = 0;
+  nsIMdbRow* outRow = 0;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkTable* table = (morkTable*) mHandle_Object;
+    morkStore* store = table->mTable_Store;
+    morkRow* row = table->SafeRowAt(ev, inRowPos);
+    if ( row && store )
+      outRow = row->AcquireRowHandle(ev, store);
+    	
+    outErr = ev->AsErr();
+  }
+  if ( acqRow )
+  	*acqRow = outRow;
+  return outErr;
+}
+
+/*virtual*/ mdb_err
+orkinTable::RowToPos( // test for the table position of a row member
+  nsIMdbEnv* mev, // context
+  nsIMdbRow* ioRow, // row to find in table
+  mdb_pos* outPos) // zero-based ordinal position of row in table
+{
+  mdb_err outErr = 0;
+  mork_pos pos = -1;
+  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
+  if ( ev )
+  {
+    morkRow* row = 0;
+    orkinRow* orow = (orkinRow*) ioRow;
+    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
+    {
+      morkTable* table = (morkTable*) mHandle_Object;
+      pos = table->ArrayHasOid(ev, &row->mRow_Oid);
+    }
+    outErr = ev->AsErr();
+  }
+  if ( outPos )
+    *outPos = pos;
   return outErr;
 }
   
@@ -521,24 +598,6 @@ orkinTable::HasOid( // test for the table position of a row member
   {
     if ( outHasOid )
       *outHasOid = ((morkTable*) mHandle_Object)->MapHasOid(ev, inOid);
-    outErr = ev->AsErr();
-  }
-  return outErr;
-}
-
-/*virtual*/ mdb_err
-orkinTable::OidToPos( // test for the table position of a row member
-  nsIMdbEnv* mev, // context
-  const mdbOid* inOid, // row to find in table
-  mdb_pos* outPos) // zero-based ordinal position of row in table
-{
-  mdb_err outErr = 0;
-  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
-  if ( ev )
-  {
-    mork_pos pos = ((morkTable*) mHandle_Object)->ArrayHasOid(ev, inOid);
-    if ( outPos )
-      *outPos = pos;
     outErr = ev->AsErr();
   }
   return outErr;
@@ -648,30 +707,6 @@ orkinTable::HasRow( // test for the table position of a row member
   return outErr;
 }
 
-
-/*virtual*/ mdb_err
-orkinTable::RowToPos( // test for the table position of a row member
-  nsIMdbEnv* mev, // context
-  nsIMdbRow* ioRow, // row to find in table
-  mdb_pos* outPos) // zero-based ordinal position of row in table
-{
-  mdb_err outErr = 0;
-  morkEnv* ev = this->CanUseTable(mev, /*inMutable*/ morkBool_kFalse, &outErr);
-  if ( ev )
-  {
-    morkRow* row = 0;
-    orkinRow* orow = (orkinRow*) ioRow;
-    if ( orow->CanUseRow(mev, /*inMutable*/ morkBool_kFalse, &outErr, &row) )
-    {
-      morkTable* table = (morkTable*) mHandle_Object;
-      mork_pos pos = table->ArrayHasOid(ev, &row->mRow_Oid);
-      if ( outPos )
-        *outPos = pos;
-    }
-    outErr = ev->AsErr();
-  }
-  return outErr;
-}
 
 /*virtual*/ mdb_err
 orkinTable::CutRow( // make sure the row with inOid is not a member 
