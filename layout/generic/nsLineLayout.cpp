@@ -2221,12 +2221,12 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   // "normally" according to css2 or should it effectively
   // "disappear".
   //
-  // In general, if the document being processed is in strict mode
-  // then it should act normally (with one exception). The exception
-  // case is when a span is continued and yet the span is empty
-  // (e.g. compressed whitespace). For this kind of span we treat it
-  // as if it were not there so that it doesn't impact the
-  // line-height.
+  // In general, if the document being processed is in strict mode then 
+  // it should act normally (with two exceptions). The 1st exception
+  // is when a span is continued and yet the span is empty (e.g. compressed 
+  // whitespace). For this kind of span we treat it as if it were not there 
+  // so that it doesn't impact the line-height. The 2nd exception is if the
+  // span's containing block is a table cell block and the content is a TD.
   //
   // In compatability mode, we should sometimes make it disappear. The
   // cases that matter are those where the span contains no real text
@@ -2248,7 +2248,7 @@ nsLineLayout::VerticalAlignFrames(PerSpanData* psd)
   PRBool zeroEffectiveSpanBox = PR_FALSE;
   // XXXldb If we really have empty continuations, then all these other
   // checks don't make sense for them.
-  if ((emptyContinuation || !InStrictMode()) &&
+  if ((emptyContinuation || !InStrictMode() || nsBlockFrame::IsTDTableCellBlock(*spanFrame)) &&
       ((psd == mRootSpan) ||
        ((0 == spanFramePFD->mBorderPadding.top) &&
         (0 == spanFramePFD->mBorderPadding.right) &&
