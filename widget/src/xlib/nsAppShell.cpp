@@ -711,7 +711,7 @@ nsAppShell::HandleButtonEvent(XEvent *event, nsWidget *aWidget)
     case 4:
     case 5:
       scrollEvent.delta = (event->xbutton.button == 4) ? -3 : 3;
-      scrollEvent.isPageScroll = PR_FALSE;
+      scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
       scrollEvent.message = NS_MOUSE_SCROLL;
       scrollEvent.widget = aWidget;
       scrollEvent.eventStructType = NS_MOUSE_SCROLL_EVENT;

@@ -1906,7 +1906,10 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
   nsMouseScrollEvent scrollEvent;
   PRUint32 eventType = 0;
 
-  if ( HandlePopup(aGdkButtonEvent->x_root, aGdkButtonEvent->y_root) )
+  /* We don't want to force a rollup here on mousewheel events.
+     This is taken care of in the XP code in nsEventStateManager */
+  if (aGdkButtonEvent->button != 4 && aGdkButtonEvent->button != 5 &&
+      HandlePopup(aGdkButtonEvent->x_root, aGdkButtonEvent->y_root))
     return;
    
   // Switch on single, double, triple click.
@@ -1935,7 +1938,7 @@ nsWidget::OnButtonPressSignal(GdkEventButton * aGdkButtonEvent)
 
     case 4:
     case 5:
-      scrollEvent.isPageScroll = PR_FALSE;
+      scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
       if (aGdkButtonEvent->button == 4)
         scrollEvent.delta = -3;
       else

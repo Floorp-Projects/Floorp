@@ -2431,25 +2431,23 @@ PRBool nsWindow::OnVScroll( MPARAM mp1, MPARAM mp2)
         scrollEvent.isControl = WinIsKeyDown( VK_CTRL);
         scrollEvent.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
         scrollEvent.isMeta = PR_FALSE;
+        scrollEvent.scrollFlags = nsMouseScrollEvent::kIsVertical;
         switch (SHORT2FROMMP(mp2)) {
           case SB_LINEUP:
-            scrollEvent.isPageScroll = PR_FALSE;
             scrollEvent.delta = -1;
             break;
           case SB_LINEDOWN:
-            scrollEvent.isPageScroll = PR_FALSE;
             scrollEvent.delta = 1;
             break;
           case SB_PAGEUP:
-            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
             scrollEvent.delta = -1;
             break;
           case SB_PAGEDOWN:
-            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
             scrollEvent.delta = 1;
             break;
           default:
-            scrollEvent.isPageScroll = PR_FALSE;
             scrollEvent.delta = 0;
             break;
         }
@@ -2470,26 +2468,24 @@ PRBool nsWindow::OnHScroll( MPARAM mp1, MPARAM mp2)
         scrollEvent.isControl = WinIsKeyDown( VK_CTRL);
         scrollEvent.isAlt = WinIsKeyDown( VK_ALT) || WinIsKeyDown( VK_ALTGRAF);
         scrollEvent.isMeta = PR_FALSE;
+        scrollEvent.scrollFlags = nsMouseScrollEvent::kIsHorizontal;
         switch (SHORT2FROMMP(mp2)) {
           case SB_LINELEFT:
-            scrollEvent.isPageScroll = PR_FALSE;
             scrollEvent.delta = -1;
             break;
           case SB_LINERIGHT:
-            scrollEvent.isPageScroll = PR_FALSE;
             scrollEvent.delta = 1;
             break;
           case SB_PAGELEFT:
-            scrollEvent.isPageScroll = PR_TRUE;
+            scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
             scrollEvent.delta = -1;
             break;
           case SB_PAGERIGHT:
-            scrollEvent.isPageScroll = PR_TRUE;
-            scrollEvent.deltaColumns = 1;
+            scrollEvent.scrollFlags |= nsMouseScrollEvent::kIsFullPage;
+            scrollEvent.delta = 1;
             break;
           default:
-            scrollEvent.isPageScroll = PR_FALSE;
-            scrollEvent.deltaColumns = 0;
+            scrollEvent.delta = 0;
             break;
         }
         DispatchWindowEvent(&scrollEvent);
