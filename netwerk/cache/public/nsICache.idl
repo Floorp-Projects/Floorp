@@ -117,17 +117,20 @@ interface nsICache
      * it belongs.  See nsICacheSession and nsICacheEntryDescriptor for more
      * details.
      *
-     * STORE_ANYWHERE  - Allows the cache entry to be stored in any device.
-     *                   The cache service decides which cache device to use
-     *                   based on "some resource management calculation."
-     * STORE_IN_MEMORY - Requires the cache entry to reside in non-persistent
-     *                   storage (ie. typically in system RAM).
-     * STORE_ON_DISK   - Requires the cache entry to reside in persistent
-     *                   storage (ie. typically on a system's hard disk).
+     * STORE_ANYWHERE        - Allows the cache entry to be stored in any device.
+     *                         The cache service decides which cache device to use
+     *                         based on "some resource management calculation."
+     * STORE_IN_MEMORY       - Requires the cache entry to reside in non-persistent
+     *                         storage (ie. typically in system RAM).
+     * STORE_ON_DISK         - Requires the cache entry to reside in persistent
+     *                         storage (ie. typically on a system's hard disk).
+     * STORE_ON_DISK_AS_DISK - Requires the cache entry to reside in persistent
+     *                         storage, and in a specific file.
      */
-    const nsCacheStoragePolicy STORE_ANYWHERE   = 0;
-    const nsCacheStoragePolicy STORE_IN_MEMORY  = 1;
-    const nsCacheStoragePolicy STORE_ON_DISK    = 2;
+    const nsCacheStoragePolicy STORE_ANYWHERE           = 0;
+    const nsCacheStoragePolicy STORE_IN_MEMORY          = 1;
+    const nsCacheStoragePolicy STORE_ON_DISK            = 2;
+    const nsCacheStoragePolicy STORE_ON_DISK_AS_FILE    = 3;
 
     /**
      * All entries for a cache session are stored as streams of data or
