@@ -267,42 +267,6 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
     CreatePsuedoFrame(aPresContext);
   }
 
-  // Determine the width we have to work with
-  nscoord cellWidth = -1;
-
-  const nsStylePosition* cellPosition = (const nsStylePosition*)
-    (mStyleContext->GetStyleData(eStyleStruct_Position));
-  switch (cellPosition->mWidth.GetUnit()) {
-    case eStyleUnit_Coord:
-      cellWidth = cellPosition->mWidth.GetCoordValue();
-      break;
-
-    case eStyleUnit_Percent: 
-    {
-      if (NS_UNCONSTRAINEDSIZE!=availSize.width)
-      {
-        nscoord tableWidth=0;
-        const nsReflowState *tableReflowState = aReflowState.parentReflowState->parentReflowState->parentReflowState;
-        nsTableFrame *tableFrame = (nsTableFrame *)(tableReflowState->frame);
-        nsIStyleContextPtr tableSC;
-        tableFrame->GetStyleContext(aPresContext, tableSC.AssignRef());
-        PRBool tableIsAutoWidth = nsTableFrame::TableIsAutoWidth(tableFrame, tableSC, *tableReflowState, tableWidth);
-        float percent = cellPosition->mWidth.GetPercentValue();
-        cellWidth = (PRInt32)(tableWidth*percent);
-      }
-      break;
-    }
-
-    case eStyleUnit_Inherit:
-      // XXX for now, do nothing
-    default:
-    case eStyleUnit_Auto:
-      break;
-  }
-  
-  if (-1!=cellWidth)
-    availSize.width = cellWidth;
-
   // reduce available space by insets
 
   if (NS_UNCONSTRAINEDSIZE!=availSize.width)
@@ -366,10 +330,11 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
     printf("  %p cellFrame height set to %d from kidSize=%d and insets %d,%d\n",
              this, cellHeight, kidSize.height, topInset, bottomInset);
   // next determine the cell's width
-  cellWidth = kidSize.width;  // at this point, we've factored in the cell's style attributes
+  nscoord cellWidth = kidSize.width;  // at this point, we've factored in the cell's style attributes
   if (NS_UNCONSTRAINEDSIZE!=cellWidth)
     cellWidth += leftInset + rightInset;
   // Nav4 hack for 0 width cells.  If the cell has any content, it must have a desired width of at least 1
+  /*
   if (0==cellWidth)
   {
     PRInt32 childCount;
@@ -387,6 +352,7 @@ NS_METHOD nsTableCellFrame::Reflow(nsIPresContext* aPresContext,
       }
     }
   }
+  */
   // end Nav4 hack for 0 width cells
 
   // set the cell's desired size and max element size

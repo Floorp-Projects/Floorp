@@ -963,6 +963,14 @@ nsTableRowFrame::ReflowUnmappedChildren( nsIPresContext*      aPresContext,
       kidPrevInFlow->CreateContinuingFrame(aPresContext, this,
                                            kidStyleContext, kidFrame);
     }
+    // Determine the width we have to work with.  By default, it's unconstrained
+    const nsStylePosition* cellPosition = (const nsStylePosition*)
+      (kidStyleContext->GetStyleData(eStyleStruct_Position));
+    if (eStyleUnit_Coord==cellPosition->mWidth.GetUnit()) 
+    {
+      kidAvailSize.width = cellPosition->mWidth.GetCoordValue();
+    }
+    // free the kid's style context
     NS_RELEASE(kidStyleContext);
 
 
