@@ -147,7 +147,7 @@ function onChangeHTMLAttribute()
 
   // First try to update existing attribute
   // If not found, add new attribute
-  if ( !UpdateExistingAttribute( name, value, "HTMLAList" ) )
+  if ( !UpdateExistingAttribute( name, value, "HTMLAList" ) && value)
     AddTreeItem ( name, value, "HTMLAList", HTMLAttrs );
 }
 
@@ -213,14 +213,13 @@ function onInputHTMLAttributeName()
 
     var newValue = "";
     var listLen = 0;
-    var deckIndex = 0;
+
+    // Index to which widget we were using to edit the value
+    var deckIndex = gDialog.AddHTMLAttributeValueDeck.getAttribute("index");
 
     if (valueListName in gHTMLAttr)
     {
       var valueList = gHTMLAttr[valueListName];
-
-      // Index to which widget we were using to edit the value
-      deckIndex = gDialog.AddHTMLAttributeValueDeck.getAttribute("index");
 
       listLen = valueList.length;
       if (listLen > 0)
