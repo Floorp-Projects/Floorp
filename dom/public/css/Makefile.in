@@ -34,8 +34,8 @@ EXPORTS =               \
   nsIDOMCSSStyleDeclaration.h \
   nsIDOMCSSStyleRule.h \
   nsIDOMCSSStyleRuleCollection.h \
-  nsIDOMCSSStyleRuleSimple.h \
-	nsIDOMCSSStyleSheet.h \
+  nsIDOMCSSStyleSheet.h \
+  nsIDOMCSSUnknownRule.h \
         $(NULL)
 
 EXPORTS := $(addprefix $(srcdir)/, $(EXPORTS))

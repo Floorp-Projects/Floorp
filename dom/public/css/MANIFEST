@@ -25,5 +25,5 @@ nsIDOMCSSRule.h
 nsIDOMCSSStyleDeclaration.h
 nsIDOMCSSStyleRule.h
 nsIDOMCSSStyleRuleCollection.h
-nsIDOMCSSStyleRuleSimple.h
 nsIDOMCSSStyleSheet.h
+nsIDOMCSSUnknownRule.h
