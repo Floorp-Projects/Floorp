@@ -166,7 +166,7 @@ PRBool
 nsGfxRadioControlFrame::GetChecked() 
 {
   PRBool checked = PR_FALSE;
-  GetDefaultCheckState(&checked);
+  GetCurrentCheckState(&checked);
   return(checked);
 }
 
@@ -175,7 +175,7 @@ PRBool
 nsGfxRadioControlFrame::GetDefaultChecked() 
 {
   PRBool checked = PR_FALSE;
-  GetCurrentCheckState(&checked);
+  GetDefaultCheckState(&checked);
   return(checked);
 }
 
