@@ -1222,6 +1222,9 @@ case "$target" in
     ia64)
         PR_MD_ASFILES=os_Linux_ia64.s
         ;;
+    x86_64)
+        PR_MD_ASFILES=os_Linux_x86_64.s
+        ;;
     m68k)
         CFLAGS="$CFLAGS -m68020-60"
         CXXFLAGS="$CXXFLAGS -m68020-60"

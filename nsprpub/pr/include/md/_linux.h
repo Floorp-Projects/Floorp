@@ -49,6 +49,8 @@
 #define _PR_SI_ARCHITECTURE "alpha"
 #elif defined(__ia64__)
 #define _PR_SI_ARCHITECTURE "ia64"
+#elif defined(__x86_64__)
+#define _PR_SI_ARCHITECTURE "x86-64"
 #elif defined(__mc68000__)
 #define _PR_SI_ARCHITECTURE "m68k"
 #elif defined(__sparc__)
@@ -107,6 +109,19 @@ extern PRInt32 _PR_ia64_AtomicAdd(PRInt32 *ptr, PRInt32 val);
 #define _MD_ATOMIC_ADD                _PR_ia64_AtomicAdd
 extern PRInt32 _PR_ia64_AtomicSet(PRInt32 *val, PRInt32 newval);
 #define _MD_ATOMIC_SET                _PR_ia64_AtomicSet
+#endif
+
+#if defined(__x86_64__)
+#define _PR_HAVE_ATOMIC_OPS
+#define _MD_INIT_ATOMIC()
+extern PRInt32 _PR_x86_64_AtomicIncrement(PRInt32 *val);
+#define _MD_ATOMIC_INCREMENT          _PR_x86_64_AtomicIncrement
+extern PRInt32 _PR_x86_64_AtomicDecrement(PRInt32 *val);
+#define _MD_ATOMIC_DECREMENT          _PR_x86_64_AtomicDecrement
+extern PRInt32 _PR_x86_64_AtomicAdd(PRInt32 *ptr, PRInt32 val);
+#define _MD_ATOMIC_ADD                _PR_x86_64_AtomicAdd
+extern PRInt32 _PR_x86_64_AtomicSet(PRInt32 *val, PRInt32 newval);
+#define _MD_ATOMIC_SET                _PR_x86_64_AtomicSet
 #endif
 
 #define USE_SETJMP
