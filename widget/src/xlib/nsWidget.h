@@ -162,6 +162,7 @@ protected:
 };
 
 extern PRLogModuleInfo *XlibWidgetsLM;
+extern PRLogModuleInfo *XlibScrollingLM;
 
 #endif
 
