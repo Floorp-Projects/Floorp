@@ -23,21 +23,85 @@
 #include "nsISupports.idl"
 #include "nsISupportsArray.idl"
 #include "nsIAtom.idl"
+%{ C++
+#include "nsIUnicodeDecoder.h"
+#include "nsIUnicodeEncoder.h"
+#include "nsString.h"
+%}
+
+[ptr] native nsDecoderPtr(nsIUnicodeDecoder);
+[ptr] native nsEncoderPtr(nsIUnicodeEncoder);
+[ptr] native nsStringPtr(nsString);
 
 /**
- * Take a long, hard, look at this interface. This is the future of 
- * nsCharsetConverterManager. Charsets are identified by nsIAtom's.
+ * Replacement interface for nsICharsetConverterManager.
+ *
+ * Here Charsets are indentified by nsIAtom's. I know, we could have our own 
+ * interface for charsets (something like nsICharacterSet). But for now, I 
+ * will attempt to use Atom's. That is because it requires minimal work, all 
+ * the support stuff is already there. The drawback is that we might have some
+ * performance loss from going to the Atom engine. Another possible problem is
+ * people creating directly the Atom instead of going through GetCharsetAtom()
+ * If these problems will hurt us, we'll switch to nsICharacterSet. The 
+ * implementation of this interface is ment to be quite flexible.
+ *
+ * @created         21/Feb/2000
+ * @author  Catalin Rotaru [CATA]
  */
-
 [scriptable, uuid(8BAFE891-E4CC-11d3-9D0D-0050040007B2)]
 interface nsICharsetConverterManager2 : nsISupports
 {
-	nsISupportsArray GetDecoderList();
+  /**
+   * Get the Unicode decoder for the given charset.
+   */
+  [noscript] nsDecoderPtr GetUnicodeDecoder([const] in nsIAtom charset);
 
-	nsIAtom GetCharsetAtom([const] in wstring charset);
+  /**
+   * Get the Unicode encoder for the given charset.
+   */
+  [noscript] nsEncoderPtr GetUnicodeEncoder([const] in nsIAtom charset);
 
-	wstring GetCharsetTitle([const] in nsIAtom charset);
+  /**
+   * Get the complete list of available decoders.
+   */
+  nsISupportsArray GetDecoderList();
 
-	wstring GetCharsetData([const] in nsIAtom charset, 
-	[const] in wstring prop);
+  /**
+   * Get the complete list of available encoders.
+   */
+  nsISupportsArray GetEncoderList();
+
+  /**
+   * Get the complete list of available charset detectors.
+   */
+  nsISupportsArray GetCharsetDetectorList();
+
+  /**
+   * Get the Atom representing the a given character set. PLEASE USE THIS 
+   * METHOD!!! Do not create Atoms directly by going to NS_NewAtom(), because 
+   * here we also do alias resolution...
+   */
+  nsIAtom GetCharsetAtom([const] in wstring charset);
+
+  /**
+   * Get the human-readable name for the given charset.
+   */
+  wstring GetCharsetTitle([const] in nsIAtom charset);
+
+  /**
+   * Get some data about the given charset.
+   */
+  wstring GetCharsetData([const] in nsIAtom charset, 
+    [const] in wstring prop);
+
+  /**
+   * Friendlier but non scriptable version.
+   */
+  [noscript] void GetCharsetData2([const] in nsIAtom charset, 
+    [const] in wstring prop, in nsStringPtr str);
+
+  /**
+   * Get the language group for the given charset.
+   */
+  nsIAtom GetCharsetLangGroup([const] in nsIAtom charset);
 };
