@@ -450,7 +450,7 @@ MRESULT nsFrameWindow::FrameMessage( ULONG msg, MPARAM mp1, MPARAM mp2)
       /* To simulate Windows better, we need to send a focus message to the */
       /* client when the frame is activated if there is a non mozilla window focused */
       case WM_ACTIVATE:
-ifdef DEBUG_FOCUS
+#ifdef DEBUG_FOCUS
          printf("[%x] WM_ACTIVATE (%d)\n", this, mWindowIdentifier);
 #endif
          if (SHORT1FROMMP(mp1)) {
