@@ -54,6 +54,15 @@ enum nsSizeMode {
 };
 
 /**
+ * different types of (top-level) window z-level positioning
+ */
+enum nsWindowZ {
+  nsWindowZTop = 0,   // on top
+  nsWindowZBottom,    // on bottom
+  nsWindowZRelative   // just below some specified widget
+};
+
+/**
  * General event
  */
 
@@ -103,6 +112,19 @@ struct nsSizeEvent : public nsGUIEvent {
 struct nsSizeModeEvent : public nsGUIEvent {
 
     nsSizeMode      mSizeMode;
+};
+
+/**
+ * Window z-level event
+ */
+
+struct nsZLevelEvent : public nsGUIEvent {
+
+  nsWindowZ  mPlacement;
+  nsIWidget *mReqBelow,    // widget we request being below, if any
+            *mActualBelow; // widget to be below, returned by handler
+  PRBool     mImmediate,   // handler should make changes immediately
+             mAdjusted;    // handler changed placement
 };
 
 /**
@@ -237,23 +259,23 @@ enum nsDragDropEventStatus {
 /**
  * Event Struct Types
  */
-#define NS_EVENT            1
-#define NS_GUI_EVENT        2
-#define NS_SIZE_EVENT       3
-#define NS_SIZEMODE_EVENT   4
-#define NS_PAINT_EVENT      5
-#define NS_SCROLLBAR_EVENT  6
-#define NS_INPUT_EVENT      7
-#define NS_KEY_EVENT        8
-#define NS_MOUSE_EVENT      9
-
-#define NS_MENU_EVENT       10
-#define NS_DRAGDROP_EVENT   11
-#define NS_TEXT_EVENT		12
-#define NS_COMPOSITION_START	13
-#define NS_COMPOSITION_END		14
-#define NS_MOUSE_SCROLL_EVENT 15
-#define NS_COMPOSITION_QUERY		16
+#define NS_EVENT               1
+#define NS_GUI_EVENT           2
+#define NS_SIZE_EVENT          3
+#define NS_SIZEMODE_EVENT      4
+#define NS_ZLEVEL_EVENT        5
+#define NS_PAINT_EVENT         6
+#define NS_SCROLLBAR_EVENT     7
+#define NS_INPUT_EVENT         8
+#define NS_KEY_EVENT           9
+#define NS_MOUSE_EVENT        10
+#define NS_MENU_EVENT         11
+#define NS_DRAGDROP_EVENT     12
+#define NS_TEXT_EVENT         13
+#define NS_COMPOSITION_START  14
+#define NS_COMPOSITION_END    15
+#define NS_MOUSE_SCROLL_EVENT 16
+#define NS_COMPOSITION_QUERY  17
  
  /**
  * GUI MESSAGES
@@ -280,6 +302,8 @@ enum nsDragDropEventStatus {
 #define NS_ACTIVATE                     (NS_WINDOW_START + 7)
 // Widget got deactivated
 #define NS_DEACTIVATE                   (NS_WINDOW_START + 8)
+// top-level window z-level change request
+#define NS_SETZLEVEL                    (NS_WINDOW_START + 9)
 // Widget needs to be repainted
 #define NS_PAINT                        (NS_WINDOW_START + 30)
 // Key is pressed within a window
