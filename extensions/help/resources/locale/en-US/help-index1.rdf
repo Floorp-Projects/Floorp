@@ -407,7 +407,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Certificates:preferences"
          nc:name="Preferences"
-	 nc:link="certs_prefs_help.html#certificates:preferencesIDX"/>
+         nc:link="certs_prefs_help.xhtml#privacy_and_security_preferences_certificates"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -417,7 +417,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="Certificates:selecting_for_client_authentication"
          nc:name="Selecting for client authentication"
-	 nc:link="certs_prefs_help.html#certificates:selecting_for_client_authenticationIDX"/>
+         nc:link="certs_prefs_help.xhtml#client_certificate_selection"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -2597,7 +2597,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="preferences:certificates"
          nc:name="certificates"
-	 nc:link="certs_prefs_help.html#preferences:certificatesIDX"/>
+         nc:link="certs_prefs_help.xhtml#privacy_and_security_preferences_certificates"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3307,7 +3307,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="settings"
          nc:name="settings"
-	 nc:link="certs_prefs_help.html#settings:certificateIDX"/>
+         nc:link="certs_prefs_help.xhtml#certificate_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>
@@ -3317,7 +3317,7 @@
      <rdf:Seq><rdf:li>
        <rdf:Description ID="settings:certificate"
          nc:name="certificate"
-	 nc:link="certs_prefs_help.html#settings:certificateIDX"/>
+         nc:link="certs_prefs_help.xhtml#certificate_settings"/>
      </rdf:li></rdf:Seq>
    </nc:subheadings>
 </rdf:Description>

@@ -951,7 +951,7 @@
         <rdf:li><rdf:Description ID="using-help-certs-devices" nc:name="Managing Smart Cards and Other Security Devices" nc:link="chrome://help/locale/using_certs_help.html#using_certs_devices"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-help-certs-ssl" nc:name="Managing SSL Warnings and Settings" nc:link="chrome://help/locale/using_certs_help.html#using_certs_ssl"/> </rdf:li>
         <rdf:li><rdf:Description ID="using-help-certs-validation" nc:name="Controlling Validation" nc:link="chrome://help/locale/using_certs_help.html#using_certs_validation"/> </rdf:li>
-        <rdf:li><rdf:Description ID="using-help-certs-context-help" nc:name="Certificate Settings" nc:link="chrome://help/locale/certs_prefs_help.html#using_certs_settings"/> </rdf:li>
+        <rdf:li><rdf:Description ID="using-help-certs-context-help" nc:name="Certificate Settings" nc:link="chrome://help/locale/certs_prefs_help.xhtml#certificate_settings"/> </rdf:li>
 
       </rdf:Seq>
     </nc:subheadings>
@@ -1034,7 +1034,7 @@
 <rdf:Description about="#using-help-certs-context-help">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li><rdf:Description ID="certs_prefs" nc:name="Certificate Preferences" nc:link="chrome://help/locale/certs_prefs_help.html#certs_prefs_help_first"/> </rdf:li>
+        <rdf:li><rdf:Description ID="certs_prefs" nc:name="Certificate Preferences" nc:link="chrome://help/locale/certs_prefs_help.xhtml#privacy_and_security_preferences_certificates"/> </rdf:li>
         <rdf:li><rdf:Description ID="certs-help" nc:name="Certificate Manager" nc:link="chrome://help/locale/certs_help.html"/> </rdf:li>
         <rdf:li><rdf:Description ID="sec_devices" nc:name="Device Manager" nc:link="chrome://help/locale/certs_help.html#Security_Devices"/> </rdf:li>
         <rdf:li><rdf:Description ID="cert-dialog-help" nc:name="Certificate Information and Decisions" nc:link="chrome://help/locale/cert_dialog_help.xhtml"/> </rdf:li>
