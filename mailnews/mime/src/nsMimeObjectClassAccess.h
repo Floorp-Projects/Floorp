@@ -28,38 +28,39 @@
 #include "prtypes.h"
 #include "nsIMimeObjectClassAccess.h"
 
-//
-// This is to access the object class of libmime which is what
-// this interface is focused on. 
-//
-#include "mimei.h"
-#include "modmime.h"
-#include "mimeobj.h"	/*  MimeObject (abstract)							*/
-#include "mimecont.h"	/*   |--- MimeContainer (abstract)					*/
-#include "mimemult.h"	/*   |     |--- MimeMultipart (abstract)			*/
-#include "mimemsig.h"	/*   |     |     |--- MimeMultipartSigned (abstract)*/
-#include "mimetext.h"	/*   |     |--- MimeInlineText (abstract)			*/
+// {403B0540-B7C3-11d2-B35E-525400E2D63A}
+#define NS_MIME_OBJECT_CLASS_ACCESS_CID   \
+        { 0x403b0540, 0xb7c3, 0x11d2,         \
+        { 0xb3, 0x5e, 0x52, 0x54, 0x0, 0xe2, 0xd6, 0x3a } };
 
-class nsMimeObjectClassAccess { 
-
+class nsMimeObjectClassAccess : public nsIMimeObjectClassAccess {
 public: 
+  nsMimeObjectClassAccess();
+  virtual ~nsMimeObjectClassAccess();
+       
+  /* this macro defines QueryInterface, AddRef and Release for this class */
+  NS_DECL_ISUPPORTS 
+
   // These methods are all implemented by libmime to be used by 
   // content type handler plugins for processing stream data. 
 
   // This is the write call for outputting processed stream data.
-  NS_IMETHOD    MimeObjectWrite(MimeObject *obj, 
+  NS_IMETHOD    MimeObjectWrite(void *mimeObject, 
                                 char *data, 
                                 PRInt32 length, 
-                                PRBool user_visible_p) = 0;
+                                PRBool user_visible_p);
 
   // The following group of calls expose the pointers for the object
   // system within libmime.
-  NS_IMETHOD    GetmimeInlineTextClass(MimeInlineTextClass **ptr);
-  NS_IMETHOD    GetmimeLeafClass(MimeLeafClass **ptr);
-  NS_IMETHOD    GetmimeObjectClass(MimeObjectClass **ptr);
-  NS_IMETHOD    GetmimeContainerClass(MimeContainerClass **ptr);
-  NS_IMETHOD    GetmimeMultipartClass(MimeMultipartClass **ptr);
-  NS_IMETHOD    GetmimeMultipartSignedClass(MimeMultipartSignedClass **ptr);
+  NS_IMETHOD    GetmimeInlineTextClass(void **ptr);
+  NS_IMETHOD    GetmimeLeafClass(void **ptr);
+  NS_IMETHOD    GetmimeObjectClass(void **ptr);
+  NS_IMETHOD    GetmimeContainerClass(void **ptr);
+  NS_IMETHOD    GetmimeMultipartClass(void **ptr);
+  NS_IMETHOD    GetmimeMultipartSignedClass(void **ptr);
 }; 
+
+/* this function will be used by the factory to generate an class access object....*/
+extern nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess **aInstancePtrResult);
 
 #endif /* nsMimeObjectClassAccess_h_ */

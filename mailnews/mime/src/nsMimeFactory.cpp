@@ -29,6 +29,9 @@ static NS_DEFINE_IID(kIFactoryIID,  NS_IFACTORY_IID);
 #include "nsRFC822toHTMLStreamConverter.h"
 static   NS_DEFINE_IID(kCMimeRFC822HTMLConverterCID, NS_RFC822_HTML_STREAM_CONVERTER_CID);
 
+#include "nsMimeObjectClassAccess.h"
+static   NS_DEFINE_IID(kCMimeMimeObjectClassAccessCID, NS_MIME_OBJECT_CLASS_ACCESS_CID);
+
 ////////////////////////////////////////////////////////////
 //
 ////////////////////////////////////////////////////////////
@@ -109,6 +112,12 @@ nsresult nsMimeFactory::CreateInstance(nsISupports *aOuter, const nsIID &aIID, v
 		if (res != NS_OK)  // was there a problem creating the object ?
 		  return res;   
 	}
+  else if (mClassID.Equals(kCMimeMimeObjectClassAccessCID))
+  {
+    res = NS_NewMimeObjectClassAccess((nsIMimeObjectClassAccess **) &inst);
+		if (res != NS_OK)  // was there a problem creating the object ?
+		  return res;   
+  }
 
 	// End of checking the interface ID code....
 	if (inst)

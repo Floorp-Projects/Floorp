@@ -15,33 +15,32 @@
  * Copyright (C) 1998 Netscape Communications Corporation.  All Rights
  * Reserved.
  */
+#include "stdio.h"
+#include "nscore.h"
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsISupports.h"
-#include "nsIStreamConverter.h"
-#include "nsRFC822toHTMLStreamConverter.h"
+#include "nsMimeObjectClassAccess.h"
 
 /* 
- * These macros are used to define a class IID for our component. Our 
- * object currently supports the nsRFC822toHTMLStreamConverter so we want 
- * to define constants for these two interfaces 
+ * These macros are used to define a class IID for our component. 
  */
-static NS_DEFINE_IID(kIStreamConverter, NS_ISTREAM_CONVERTER_IID);
+static NS_DEFINE_IID(kIMimeObjectClassAccess, NS_IMIME_OBJECT_CLASS_ACCESS_IID);
 
 /* 
  * This function will be used by the factory to generate an 
- * RFC822 Converter....
+ * mime object class object....
  */
-nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
+nsresult NS_NewMimeObjectClassAccess(nsIMimeObjectClassAccess ** aInstancePtrResult)
 {
-	/* note this new macro for assertions...they can take a string describing the assertion */
+	/* note this new macro for assertions...they can take 
+     a string describing the assertion */
 	nsresult result = NS_OK;
 	NS_PRECONDITION(nsnull != aInstancePtrResult, "nsnull ptr");
 	if (nsnull != aInstancePtrResult)
 	{
-		nsRFC822toHTMLStreamConverter *converter = new nsRFC822toHTMLStreamConverter();
-		if (converter)
-			return converter->QueryInterface(kIStreamConverter, (void**) aInstancePtrResult);
+		nsMimeObjectClassAccess *obj = new nsMimeObjectClassAccess();
+		if (obj)
+			return obj->QueryInterface(kIMimeObjectClassAccess, (void**) aInstancePtrResult);
 		else
 			return NS_ERROR_OUT_OF_MEMORY; /* we couldn't allocate the object */
 	}
@@ -49,79 +48,72 @@ nsresult NS_NewRFC822HTMLConverter(nsIStreamConverter** aInstancePtrResult)
 		return NS_ERROR_NULL_POINTER; /* aInstancePtrResult was NULL....*/
 }
 
-
 /* 
  * The following macros actually implement addref, release and 
  * query interface for our component. 
  */
-NS_IMPL_ADDREF(nsRFC822toHTMLStreamConverter)
-NS_IMPL_RELEASE(nsRFC822toHTMLStreamConverter)
-NS_IMPL_QUERY_INTERFACE(nsRFC822toHTMLStreamConverter, kIStreamConverter); /* we need to pass in the interface ID of this interface */
+NS_IMPL_ADDREF(nsMimeObjectClassAccess)
+NS_IMPL_RELEASE(nsMimeObjectClassAccess)
+NS_IMPL_QUERY_INTERFACE(nsMimeObjectClassAccess, kIMimeObjectClassAccess); /* we need to pass in the interface ID of this interface */
 
 /*
- * nsRFC822toHTMLStreamConverter definitions....
+ * nsMimeObjectClassAccess definitions....
  */
 
 /* 
- * Inherited methods for nsIStreamConverter 
+ * Inherited methods for nsMimeObjectClassAccess
  */
-nsRFC822toHTMLStreamConverter::nsRFC822toHTMLStreamConverter()
+nsMimeObjectClassAccess::nsMimeObjectClassAccess()
 {
   /* the following macro is used to initialize the ref counting data */
   NS_INIT_REFCNT();
 }
 
-nsRFC822toHTMLStreamConverter::~nsRFC822toHTMLStreamConverter()
+nsMimeObjectClassAccess::~nsMimeObjectClassAccess()
 {
 }
 
-#include "stdio.h"
-/* 
- * Inherited methods for nsIStreamListener 
- */
-nsresult nsRFC822toHTMLStreamConverter::SetOutputStream(nsIOutputStream *) 
-{
-  /* 
-  return mime_some_fun_call();
-   */
-  int x = 1;
-
-  printf("Setting that output stream!\n");
-  return NS_OK;
-}
-
-nsresult nsRFC822toHTMLStreamConverter::SetOutputListener(nsIStreamListener *)
+nsresult
+nsMimeObjectClassAccess::MimeObjectWrite(void *mimeObject, 
+                                char *data, 
+                                PRInt32 length, 
+                                PRBool user_visible_p)
 {
   return NS_OK;
 }
 
-nsresult nsRFC822toHTMLStreamConverter::OnStartBinding(nsIURL *,const char *)
+nsresult 
+nsMimeObjectClassAccess::GetmimeInlineTextClass(void **ptr)
 {
   return NS_OK;
 }
 
-nsresult nsRFC822toHTMLStreamConverter::OnProgress(nsIURL *,unsigned int,unsigned int) 
+nsresult 
+nsMimeObjectClassAccess::GetmimeLeafClass(void **ptr)
 {
   return NS_OK;
 }
 
-nsresult nsRFC822toHTMLStreamConverter::OnStatus(nsIURL *,const unsigned short *)
+nsresult 
+nsMimeObjectClassAccess::GetmimeObjectClass(void **ptr)
 {
   return NS_OK;
 }
 
-nsresult nsRFC822toHTMLStreamConverter::OnStopBinding(nsIURL *,unsigned int,const unsigned short *) 
+nsresult 
+nsMimeObjectClassAccess::GetmimeContainerClass(void **ptr)
 {
   return NS_OK;
 }
 
-nsresult nsRFC822toHTMLStreamConverter::GetBindInfo(nsIURL *,struct nsStreamBindingInfo *)
+nsresult 
+nsMimeObjectClassAccess::GetmimeMultipartClass(void **ptr)
 {
   return NS_OK;
 }
 
-nsresult nsRFC822toHTMLStreamConverter::OnDataAvailable(nsIURL *, nsIInputStream *,unsigned int)
+nsresult 
+nsMimeObjectClassAccess::GetmimeMultipartSignedClass(void **ptr)
 {
   return NS_OK;
 }
-

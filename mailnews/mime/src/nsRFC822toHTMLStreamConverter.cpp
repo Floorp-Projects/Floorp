@@ -17,7 +17,6 @@
  */
 #include "nsIFactory.h"
 #include "nsISupports.h"
-#include "nsISupports.h"
 #include "nsIStreamConverter.h"
 #include "nsRFC822toHTMLStreamConverter.h"
 
