@@ -274,8 +274,11 @@ function display(message, msgtype)
     
     function setAttribs (obj, c, attrs)
     {
-        for (var a in attrs)
-            obj.setAttribute (a, attrs[a]);
+        if (attrs)
+        {
+            for (var a in attrs)
+                obj.setAttribute (a, attrs[a]);
+        }
         obj.setAttribute("class", c);
         obj.setAttribute("msg-type", msgtype);
     }
