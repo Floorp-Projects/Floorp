@@ -31,6 +31,7 @@
 
 <?xml-stylesheet href="chrome://browser/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://browser/content/customizeToolbar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://browser/skin/customizeToolbar.css" type="text/css"?>
 
 <dialog id="main-window" onload="buildDialog()" ondialogaccept="updateToolbar()"
   xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
@@ -66,9 +67,10 @@
 <checkbox label="&useSmallIcons.label;"/>
 <button label="&restoreDefaultSet.label;"/>
 <spacer flex="1"/>
-<button label="TRASH"
+<button id="trash-can"
         ondragover="nsDragAndDrop.dragOver(event, trashObserver);"
-        ondragdrop="nsDragAndDrop.drop(event, trashObserver);"/>
+        ondragdrop="nsDragAndDrop.drop(event, trashObserver);"
+        ondragexit="this.removeAttribute('dragactive');"/>
 </box>
 
 <separator class="groove"/>
