@@ -39,7 +39,7 @@
 #define nsXPCOM_h__
 
 #include "nscore.h"
-#incldue "nsXPCOMCID.h"
+#include "nsXPCOMCID.h"
 
 class nsAString;
 class nsACString;
