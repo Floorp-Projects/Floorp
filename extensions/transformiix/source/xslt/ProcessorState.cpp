@@ -30,7 +30,7 @@
 /**
  * Implementation of ProcessorState
  * Much of this code was ported from XSL:P
- * @version $Revision: 1.30 $ $Date: 2001/06/20 06:00:35 $
+ * @version $Revision: 1.31 $ $Date: 2001/06/20 07:07:09 $
 **/
 
 #include "ProcessorState.h"
@@ -84,10 +84,6 @@ ProcessorState::ProcessorState(Document& xslDocument, Document& resultDocument) 
 **/
 ProcessorState::~ProcessorState() {
 
-  if (dfWildCardTemplate)
-      delete dfWildCardTemplate;
-  if (dfTextTemplate)
-      delete dfTextTemplate;
   delete resultNodeStack;
 
   while ( ! variableSets.empty() ) {
@@ -920,9 +916,6 @@ ProcessorState::XMLSpaceMode ProcessorState::getXMLSpaceMode(Node* node) {
  * Initializes this ProcessorState
 **/
 void ProcessorState::initialize() {
-    dfWildCardTemplate = 0;
-    dfTextTemplate = 0;
-
     //-- initialize default-space
     defaultSpace = PRESERVE;
 
@@ -1004,44 +997,8 @@ void ProcessorState::initialize() {
 
 	        } //-- end for each att
 	    } //-- end if atts are not null
-
-	    /* Create default (built-in) templates */
-
-	    //-- create default template for elements
-	    String templateName = xsltNameSpace;
-	    if (templateName.length() > 0) templateName.append(':');
-	    templateName.append(TEMPLATE);
-
-	    String actionName = xsltNameSpace;
-	    if ( actionName.length()>0) actionName.append(':');
-	    actionName.append(APPLY_TEMPLATES);
-
-	    dfWildCardTemplate = xslDocument->createElement(templateName);
-	    dfWildCardTemplate->setAttribute(MATCH_ATTR, "* | /");
-	    dfWildCardTemplate->appendChild(xslDocument->createElement(actionName));
-	    templates.add(dfWildCardTemplate);
-
-	    //-- create default "built-in" templates for text nodes
-	    dfTextTemplate = xslDocument->createElement(templateName);
-	    dfTextTemplate->setAttribute(MATCH_ATTR, "text()|@*");
-	    actionName = xsltNameSpace;
-	    if ( actionName.length()>0) actionName.append(':');
-	    actionName.append(VALUE_OF);
-	    Element* value_of = xslDocument->createElement(actionName);
-	    value_of->setAttribute(SELECT_ATTR, IDENTITY_OP);
-	    dfTextTemplate->appendChild(value_of);
-	    templates.add(dfTextTemplate);
-
-        String wild("*");
-	    //-- add PatternExpr hash for default templates
-	    patternExprHash.put("*",      new ElementExpr(wild));
-	    patternExprHash.put("/",      new RootExpr());
-	    patternExprHash.put("text()", new TextExpr());
-
-	    //cout << "XSLT namespace: " << xsltNameSpace << endl;
 	}
     
     //-- Make sure all loaded documents get deleted
     loadedDocuments.setObjectDeletion(MB_TRUE);
 }
-

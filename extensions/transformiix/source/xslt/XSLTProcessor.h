@@ -62,7 +62,7 @@
 /**
  * A class for Processing XSL Stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.22 $ $Date: 2001/06/20 06:46:12 $
+ * @version $Revision: 1.23 $ $Date: 2001/06/20 07:07:14 $
 **/
 class XSLTProcessor
 #ifndef TX_EXE
@@ -336,6 +336,14 @@ private:
 
     void processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps, NamedMap* actualParams = NULL);
     void processTemplateParams(Node* xslTemplate, Node* context, ProcessorState* ps, NamedMap* actualParams);
+
+    /**
+     * Invokes the default template for the specified node
+     * @param node  context node
+     * @param ps    current ProcessorState
+     * @param mode  template mode
+    **/
+    void processDefaultTemplate(Node* node, ProcessorState* ps, String* mode);
 
     void processTopLevel(Document* aSource, Document* aStylesheet, ProcessorState* aPs);
     void processTopLevel(Document* aSource, Element* aStylesheet, ProcessorState* aPs);

@@ -72,7 +72,7 @@
 /**
  * XSLTProcessor is a class for Processing XSL stylesheets
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.56 $ $Date: 2001/06/20 07:02:30 $
+ * @version $Revision: 1.57 $ $Date: 2001/06/20 07:07:11 $
 **/
 
 /**
@@ -624,8 +624,8 @@ void XSLTProcessor::process
 
     NodeSet nodeSet;
     nodeSet.add(&xmlDocument);
-    ps->pushCurrentNode(&xmlDocument);
-    ps->getNodeSetStack()->push(&nodeSet);
+    ps.pushCurrentNode(&xmlDocument);
+    ps.getNodeSetStack()->push(&nodeSet);
 
       //-------------------------------------------------------/
      //- index templates and process top level xsl elements -/
@@ -856,8 +856,10 @@ void XSLTProcessor::process(Node* node, Node* context, ProcessorState* ps) {
 void XSLTProcessor::process(Node* node, Node* context, String* mode, ProcessorState* ps) {
     if ( !node ) return;
     Element* xslTemplate = ps->findTemplate(node, context, mode);
-    if (!xslTemplate) return;
-    processTemplate(node, xslTemplate, ps);
+    if (xslTemplate)
+        processTemplate(node, xslTemplate, ps);
+    else
+        processDefaultTemplate(node, ps, NULL);
 } //-- process
 
 void XSLTProcessor::processAction
@@ -949,11 +951,13 @@ void XSLTProcessor::processAction
                     ps->getNodeSetStack()->push(nodeSet);
                     for (int i = 0; i < nodeSet->size(); i++) {
                         Element* xslTemplate = ps->findTemplate(nodeSet->get(i), node, mode);
-                        if ( xslTemplate ) {
+                        if (xslTemplate) {
                             NamedMap* actualParams = processParameters(actionElement, node, ps);
                             processTemplate(nodeSet->get(i), xslTemplate, ps, actualParams);
                             delete actualParams;
                         }
+                        else
+                            processDefaultTemplate(nodeSet->get(i), ps, mode);
                     }
                     //-- remove nodeSet from context stack
                     ps->getNodeSetStack()->pop();
@@ -1577,23 +1581,75 @@ void XSLTProcessor::processChildren(Node* node, Element* xslElement, ProcessorSt
 **/
 void XSLTProcessor::processTemplate(Node* node, Node* xslTemplate, ProcessorState* ps, NamedMap* params) {
 
-    if ( !xslTemplate ) {
-        //-- do default?
+    NS_ASSERTION(xslTemplate, "xslTemplate is NULL in call to XSLTProcessor::processTemplate!");
+
+    Stack* bindings = ps->getVariableSetStack();
+    NamedMap localBindings;
+    localBindings.setObjectDeletion(MB_TRUE);
+    bindings->push(&localBindings);
+    processTemplateParams(xslTemplate, node, ps, params);
+    Node* tmp = xslTemplate->getFirstChild();
+    while (tmp) {
+        processAction(node,tmp,ps);
+        tmp = tmp->getNextSibling();
     }
-    else {
-        Stack* bindings = ps->getVariableSetStack();
-        NamedMap localBindings;
-        localBindings.setObjectDeletion(MB_TRUE);
-        bindings->push(&localBindings);
-        processTemplateParams(xslTemplate, node, ps, params);
-        Node* tmp = xslTemplate->getFirstChild();
-        while (tmp) {
-            processAction(node,tmp,ps);
-            tmp = tmp->getNextSibling();
-        }
-        bindings->pop();
-    }
+    bindings->pop();
 } //-- processTemplate
+
+/**
+ * Invokes the default template for the specified node
+ * @param node  context node
+ * @param ps    current ProcessorState
+ * @param mode  template mode
+**/
+void XSLTProcessor::processDefaultTemplate(Node* node, ProcessorState* ps, String* mode)
+{
+    NS_ASSERTION(node, "context node is NULL in call to XSLTProcessor::processTemplate!");
+
+    switch(node->getNodeType())
+    {
+        case Node::ELEMENT_NODE :
+        case Node::DOCUMENT_NODE :
+        {
+            Expr* expr = ps->getPatternExpr("node()");
+            ExprResult* exprResult = expr->evaluate(node, ps);
+            if ( exprResult->getResultType() != ExprResult::NODESET ) {
+                notifyError("None-nodeset returned while processing default template");
+                delete exprResult;
+                return;
+            }
+
+            NodeSet* nodeSet = (NodeSet*)exprResult;
+
+            //-- make sure nodes are in DocumentOrder
+            //-- this isn't strictly neccecary with the current XPath engine
+            ps->sortByDocumentOrder(nodeSet);
+
+            //-- push nodeSet onto context stack
+            ps->getNodeSetStack()->push(nodeSet);
+            for (int i = 0; i < nodeSet->size(); i++) {
+                Element* xslTemplate = ps->findTemplate(nodeSet->get(i), node, mode);
+                if (xslTemplate)
+                    processTemplate(nodeSet->get(i), xslTemplate, ps, NULL);
+                else
+                    processDefaultTemplate(nodeSet->get(i), ps, mode);
+            }
+            //-- remove nodeSet from context stack
+            ps->getNodeSetStack()->pop();
+            delete exprResult;
+            break;
+        }
+        case Node::ATTRIBUTE_NODE :
+        case Node::TEXT_NODE :
+        case Node::CDATA_SECTION_NODE :
+            ps->addToResultTree(ps->getResultDocument()->createTextNode(node->getNodeValue()));
+            break;
+        default:
+            // on all other nodetypes (including namespace nodes)
+            // we do nothing
+            break;
+    }
+} //-- processDefaultTemplate
 
 /**
  * Builds the initial bindings for the template. Formal parameters (xsl:param) that

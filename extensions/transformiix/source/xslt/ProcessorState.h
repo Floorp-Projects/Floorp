@@ -21,7 +21,7 @@
  * Keith Visco, kvisco@ziplink.net
  *    -- original author.
  *
- * $Id: ProcessorState.h,v 1.13 2001/04/12 14:04:52 peterv%netscape.com Exp $
+ * $Id: ProcessorState.h,v 1.14 2001/06/20 07:07:11 sicking%bigfoot.com Exp $
  */
 
 
@@ -43,7 +43,7 @@
 /**
  * Class used for keeping the current state of the XSL Processor
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.13 $ $Date: 2001/04/12 14:04:52 $
+ * @version $Revision: 1.14 $ $Date: 2001/06/20 07:07:11 $
 **/
 class ProcessorState : public ContextState {
 
@@ -414,10 +414,6 @@ private:
     StringList     nameSpaceURIList;
     Stack          defaultNameSpaceURIStack;
     Stack          xsltNameSpaces;
-
-    //-- default templates
-    Element*      dfWildCardTemplate;
-    Element*      dfTextTemplate;
 
     /**
      * Returns the closest xml:space value for the given node
