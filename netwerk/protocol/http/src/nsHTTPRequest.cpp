@@ -62,7 +62,8 @@ nsHTTPRequest::nsHTTPRequest(nsIURI* i_URL, nsHTTPHandler* i_Handler, PRUint32 b
     mKeepAliveTimeout (0),
     mRequestSpec(0),
     mHandler (i_Handler),
-    mAbortStatus(NS_OK)
+    mAbortStatus(NS_OK),
+    mHeadersFormed (PR_FALSE)
 {   
     NS_INIT_REFCNT();
 
@@ -278,6 +279,9 @@ nsHTTPRequest::GetOverrideRequestSpec(char** o_Spec)
 nsresult
 nsHTTPRequest::formHeaders (PRUint32 capabilities)
 {
+    if (mHeadersFormed)
+        return NS_OK;
+
     nsXPIDLCString host;
     mURI -> GetHost (getter_Copies (host));
     PRInt32 port = -1;
@@ -376,6 +380,8 @@ nsHTTPRequest::formHeaders (PRUint32 capabilities)
     }
     else
         SetHeader (nsHTTPAtoms::Connection, "close");
+
+    mHeadersFormed = PR_TRUE;
 
     return NS_OK;
 }
@@ -486,8 +492,12 @@ nsHTTPPipelinedRequest::nsHTTPPipelinedRequest (nsHTTPHandler* i_Handler, const 
         mBufferSegmentSize (0),
         mBufferMaxSize (0),
         mMustCommit (PR_FALSE),
-	mHandler (i_Handler),
-        mPort (port)
+    	mHandler (i_Handler),
+        mTotalProcessed (0),
+        mTotalWritten (0),
+        mListener (nsnull),
+        mPort (port),
+        mOnStopDone (PR_TRUE)
 {   
     NS_INIT_REFCNT ();
 
@@ -546,7 +556,7 @@ nsHTTPPipelinedRequest::GetTransport (nsIChannel **aTransport)
 nsresult
 nsHTTPPipelinedRequest::WriteRequest ()
 {
-    nsresult rv;
+    nsresult rv = NS_OK;
 
     PRUint32 count = 0;
     PRUint32 index;
@@ -554,12 +564,15 @@ nsHTTPPipelinedRequest::WriteRequest ()
     if (!mRequests)
         return NS_ERROR_FAILURE;
 
+    if (!mOnStopDone)
+        return NS_OK;
+
     mRequests -> Count (&count);
 
-    if (count == 0)
-        return NS_ERROR_FAILURE;
+    if (count == 0 || mTotalWritten - mTotalProcessed >= count)
+        return NS_OK;
 
-    if (mAttempts > 2)
+    if (mAttempts > 1)
         return NS_ERROR_FAILURE;
 
     nsHTTPRequest * req = (nsHTTPRequest *) mRequests -> ElementAt (0);
@@ -579,22 +592,16 @@ nsHTTPPipelinedRequest::WriteRequest ()
     
     NS_RELEASE (req);
 
-    if (NS_FAILED (rv))
-        return rv;
-
-    if (mAttempts++ == 0)
+    for (index = mTotalWritten - mTotalProcessed; index < count; index++)
     {
-        for (index = 0; index < count; index++)
-        {
-            req = (nsHTTPRequest *) mRequests -> ElementAt (index);
-            req -> formHeaders (mCapabilities);
-            NS_RELEASE (req);
-        }
+        req = (nsHTTPRequest *) mRequests -> ElementAt (index);
+        req -> formHeaders (mCapabilities);
+        NS_RELEASE (req);
     }
 
     mRequestBuffer.Truncate ();
 
-    for (index = 0; index < count; index++)
+    for (index = mTotalWritten - mTotalProcessed; index < count; index++)
     {
         req = (nsHTTPRequest *) mRequests -> ElementAt (index);
         req -> formBuffer (&mRequestBuffer);
@@ -602,6 +609,7 @@ nsHTTPPipelinedRequest::WriteRequest ()
             mTransport -> SetNotificationCallbacks (req -> mConnection);
 
         NS_RELEASE (req);
+        mTotalWritten++;
     }
 
     //
@@ -634,8 +642,10 @@ nsHTTPPipelinedRequest::WriteRequest ()
     if (NS_FAILED(rv)) return rv;
     req = (nsHTTPRequest *) mRequests -> ElementAt (0);
 
+    mOnStopDone = PR_FALSE;
     rv = mTransport->AsyncWrite(stream, this, (nsISupports*)(nsIRequest*)req -> mConnection);
     NS_RELEASE (req);
+
     return rv;
 }
 
@@ -666,7 +676,8 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
     if (NS_SUCCEEDED (rv))
     {
         PRBool isAlive = PR_TRUE;
-        if (trans)
+
+        if (!mListener && trans)
             trans -> IsAlive (0, &isAlive);
 
         if (isAlive)
@@ -691,19 +702,26 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
                 PR_LOG(gHTTPLog, PR_LOG_ALWAYS, 
                        ("nsHTTPRequest [this=%x]. Finished writing request to server." "\tStatus: %x\n", this, iStatus));
 
-                nsHTTPResponseListener* pListener = new nsHTTPServerListener (req -> mConnection, mHandler, this);
-                if (pListener)
+                if (mListener == nsnull)
                 {
-                    NS_ADDREF  (pListener);
-                    rv = mTransport -> AsyncRead (pListener, i_Context);
-                    NS_RELEASE (pListener);
+                    nsHTTPResponseListener* pListener = new nsHTTPServerListener (req -> mConnection, mHandler, this);
+                    if (pListener)
+                    {
+                        NS_ADDREF  (pListener);
+                        rv = mTransport -> AsyncRead (pListener, i_Context);
+                        mListener  = pListener;
+                        NS_RELEASE (pListener);
+                    }
+                    else
+                        rv = NS_ERROR_OUT_OF_MEMORY;
                 }
-                else
-                    rv = NS_ERROR_OUT_OF_MEMORY;
+                mOnStopDone = PR_TRUE;
+                WriteRequest ();    // write again to see if anything else is queued up
             }
         }
         else
             rv = NS_ERROR_FAILURE; /* isAlive */
+
     } /* NS_SUCCEEDED */
 
     //
@@ -721,22 +739,31 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
     //
     if (NS_FAILED (rv))
     {
-        PRUint32 wasKeptAlive = 0;
-
-        if (trans)
-            trans  -> GetReuseCount (&wasKeptAlive);
-
-        mHandler   -> ReleaseTransport (mTransport, 0);
-        mTransport = null_nsCOMPtr ();
-
-        if (wasKeptAlive)
+        if (mListener == nsnull)
         {
-            rv = WriteRequest ();
-            
-            if (NS_SUCCEEDED (rv))
+            // the pipeline just started - we still can attempt to recover
+
+            PRUint32 wasKeptAlive = 0;
+
+            if (trans)
+                trans  -> GetReuseCount (&wasKeptAlive);
+
+            mHandler   -> ReleaseTransport (mTransport, 0);
+            mTransport = null_nsCOMPtr ();
+
+            if (wasKeptAlive)
             {
-                NS_IF_RELEASE (req);
-                return rv;
+                mAttempts++;
+                mTotalWritten = 0;
+                mOnStopDone = PR_TRUE;
+
+                rv = WriteRequest ();
+            
+                if (NS_SUCCEEDED (rv))
+                {
+                    NS_IF_RELEASE (req);
+                    return rv;
+                }
             }
         }
 
@@ -752,7 +779,7 @@ nsHTTPPipelinedRequest::OnStopRequest (nsIChannel* channel, nsISupports* i_Conte
     //
     // These resouces are no longer needed...
     //
-    mRequestBuffer.Truncate ();
+    // mRequestBuffer.Truncate ();
     mPostDataStream = null_nsCOMPtr ();
 
     return rv;
@@ -808,15 +835,18 @@ nsHTTPPipelinedRequest::AddToPipeline (nsHTTPRequest *aRequest)
     if (!mRequests )
         return NS_ERROR_FAILURE;
 
-    if (mMustCommit)
-        return NS_ERROR_FAILURE;
-
     PRUint32 count = 0;
 
     mRequests -> Count (&count);
 
-    if (count > 0 && aRequest -> mPostDataStream)
-        return NS_ERROR_FAILURE;
+    if (count > 0)
+    {
+        if (aRequest -> mPostDataStream)
+            return NS_ERROR_FAILURE;
+
+        if (mMustCommit)
+            return NS_ERROR_FAILURE;
+    }
 
     if (aRequest -> mPostDataStream)
     {
@@ -833,10 +863,6 @@ nsHTTPPipelinedRequest::AddToPipeline (nsHTTPRequest *aRequest)
         mMustCommit = PR_TRUE;
 
     mRequests -> AppendElement (aRequest);
-    aRequest  -> mPipelinedRequest = this;
-
-    if (count == 0)
-        mCurReq = aRequest;
 
     if (mBufferSegmentSize < aRequest -> mBufferSegmentSize)
         mBufferSegmentSize = aRequest -> mBufferSegmentSize;
@@ -889,6 +915,13 @@ nsHTTPPipelinedRequest::GetMustCommit (PRBool * o_Val)
 }
 
 nsresult
+nsHTTPPipelinedRequest::SetMustCommit (PRBool val)
+{
+    mMustCommit = val;
+    return NS_OK;
+}
+
+nsresult
 nsHTTPPipelinedRequest::AdvanceToNextRequest ()
 {
     PRUint32 count = 0;
@@ -902,11 +935,12 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest ()
     req = (nsHTTPRequest *) mRequests -> ElementAt (0);
     if (req)
     {
-        mTransport -> SetNotificationCallbacks (nsnull);
         req -> mPipelinedRequest = nsnull;
 
         mRequests -> RemoveElement  (req);
         NS_RELEASE (req);
+
+        mTotalProcessed++;
     }
 
     mRequests -> Count (&count);
@@ -919,6 +953,7 @@ nsHTTPPipelinedRequest::AdvanceToNextRequest ()
     if (req)
     {
         mTransport -> SetNotificationCallbacks (req -> mConnection);
+
         NS_RELEASE (req);
     }
 

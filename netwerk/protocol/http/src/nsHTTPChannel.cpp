@@ -97,8 +97,7 @@ nsHTTPChannel::nsHTTPChannel(nsIURI* i_URL, nsHTTPHandler* i_Handler):
     mBufferSegmentSize(0),
     mBufferMaxSize(0),
     mStatus(NS_OK),
-    mPipeliningAllowed (PR_FALSE),
-    mPipelinedRequest (nsnull)
+    mPipeliningAllowed (PR_TRUE)
 {
     NS_INIT_REFCNT();
 
@@ -124,7 +123,6 @@ nsHTTPChannel::~nsHTTPChannel()
 #endif
     NS_IF_RELEASE(mResponse);
     NS_IF_RELEASE(mCachedResponse);
-    NS_IF_RELEASE(mPipelinedRequest);
 
     mHandler         = null_nsCOMPtr();
     mEventSink       = null_nsCOMPtr();
@@ -1310,29 +1308,26 @@ nsHTTPChannel::Open(void)
         }
     } /* WAITING_FOR_OPEN */
 
-    nsHTTPPipelinedRequest * pReq = mPipelinedRequest;
+    nsHTTPPipelinedRequest * pReq;
 
-    if (!pReq)
-    {
+    if (mState != HS_WAITING_FOR_OPEN)
         mHandler -> GetPipelinedRequest (this, &pReq);
-        pReq -> AddToPipeline (mRequest);
-    }
+    else
+        pReq = mPipelinedRequest;
 
-    PRBool commit = PR_FALSE;
-    pReq -> GetMustCommit ( &commit);
-
-    if (!commit && !mPipeliningAllowed)
-        commit = PR_TRUE;
-
-    if (commit)
+    if (pReq)
     {
-        if (!mPipelinedRequest)
-            mPipelinedRequest = pReq;
-        
+        if (mState != HS_WAITING_FOR_OPEN)
+            pReq -> AddToPipeline (mRequest);
+
+        if (!mPipeliningAllowed)
+            pReq -> SetMustCommit (PR_TRUE);
+
         rv = pReq -> WriteRequest ();
 
         if (NS_ERROR_BUSY == rv)
         {
+            mPipelinedRequest = pReq;
             mState = HS_WAITING_FOR_OPEN;
             return NS_OK;
         }
@@ -1342,10 +1337,6 @@ nsHTTPChannel::Open(void)
             ResponseCompleted (mResponseDataListener, rv, nsnull);
             return rv;
         }
-    }
-    else
-    {
-        mHandler -> AddPipelinedRequest (pReq);
         NS_RELEASE (pReq);
     }
     

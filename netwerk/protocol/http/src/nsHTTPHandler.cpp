@@ -1298,7 +1298,7 @@ nsHTTPHandler::getCapabilities (const char *host, PRInt32 port, PRUint32 defCap)
 
 
 nsresult
-nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req, PRBool checkExists)
+nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRequest ** o_Req)
 {
     if (o_Req == NULL)
         return NS_ERROR_NULL_POINTER;
@@ -1325,26 +1325,27 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
     
     nsHTTPPipelinedRequest *pReq = nsnull;
 
-    for (index = 0; index < count; index++)
+    for (index = 0; index < count; index++, pReq = nsnull)
     {
-        nsHTTPPipelinedRequest *pReq = (nsHTTPPipelinedRequest *)mPipelinedRequests -> ElementAt (index);
+        pReq = (nsHTTPPipelinedRequest *)mPipelinedRequests -> ElementAt (index);
         if (pReq != NULL)
         {
             PRBool same = PR_TRUE;
             pReq -> GetSameRequest (host, port, &same);
             if (same)
             {
-                mPipelinedRequests -> RemoveElement (pReq);
-                break;
+                PRBool commit = PR_FALSE;
+                pReq -> GetMustCommit (&commit);
+
+                if (!commit)
+                    break;
             }
             else
-            {
                 NS_RELEASE (pReq);
-            }
         }
     } /* for */
 
-    if (!checkExists && pReq == nsnull)
+    if (pReq == nsnull)
     {
         PRBool usingProxy = PR_FALSE;
         i_Channel -> GetUsingProxy (&usingProxy);
@@ -1357,6 +1358,8 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
 
         pReq = new nsHTTPPipelinedRequest (this, host, port, capabilities);
         NS_ADDREF (pReq);
+
+        mPipelinedRequests -> AppendElement (pReq);
     }
     *o_Req = pReq;
 
@@ -1364,12 +1367,23 @@ nsHTTPHandler::GetPipelinedRequest (nsIHTTPChannel* i_Channel, nsHTTPPipelinedRe
 }
 
 nsresult
-nsHTTPHandler::AddPipelinedRequest (nsHTTPPipelinedRequest *pReq)
+nsHTTPHandler::AddPipelinedRequest     (nsHTTPPipelinedRequest *pReq)
 {
     if (pReq == NULL)
         return NS_ERROR_NULL_POINTER;
 
     mPipelinedRequests -> AppendElement (pReq);
+
+    return NS_OK;
+}
+
+nsresult
+nsHTTPHandler::ReleasePipelinedRequest (nsHTTPPipelinedRequest *pReq)
+{
+    if (pReq == NULL)
+        return NS_ERROR_NULL_POINTER;
+
+    mPipelinedRequests -> RemoveElement (pReq);
 
     return NS_OK;
 }

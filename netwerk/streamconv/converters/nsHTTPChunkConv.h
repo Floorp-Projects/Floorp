@@ -85,7 +85,7 @@ private:
 	char mLenBuf[20];
 	PRUint32	mLenBufCnt;
     
-    nsCOMPtr<nsISupports>   mAsyncConvContext;
+    void * mAsyncConvContext;
 };
 
 

@@ -38,6 +38,7 @@
 
 class nsIInputStream;
 class nsHTTPChannel;
+class nsHTTPResponseListener;
 
 /* 
     The nsHTTPRequest class is the request object created for each HTTP 
@@ -166,6 +167,7 @@ protected:
 
     nsHTTPHandler*              mHandler;
     nsresult                    mAbortStatus;
+    PRBool                      mHeadersFormed;
 };
 
 class nsHTTPPipelinedRequest : public nsIStreamObserver
@@ -188,6 +190,7 @@ public:
     nsresult    GetRequestCount (PRUint32 * aReqCount);
 
     nsresult    GetMustCommit (PRBool * aMustCommit);
+    nsresult    SetMustCommit (PRBool   aMustCommit);
     nsresult    GetSameRequest(const char *host, PRInt32 port, PRBool * aSame);
 
     nsresult    GetCurrentRequest (nsHTTPRequest ** o_Req);
@@ -209,10 +212,12 @@ protected:
     PRUint32                mBufferMaxSize;
     PRBool                  mMustCommit;   
 
+    PRUint32                mTotalWritten;
+    PRUint32                mTotalProcessed;
+
 private:
     nsCOMPtr<nsISupportsArray> mRequests;
 
-    nsHTTPRequest*          mCurReq;
     nsHTTPHandler*          mHandler;
     nsCString               mRequestBuffer;
 
@@ -220,6 +225,9 @@ private:
 
     nsXPIDLCString  mHost;
     PRInt32         mPort;
+    
+    nsHTTPResponseListener* mListener;
+    PRBool                      mOnStopDone;
 };
 
 #endif /* _nsHTTPRequest_h_ */

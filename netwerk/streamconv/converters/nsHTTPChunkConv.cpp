@@ -25,7 +25,6 @@
 #include "plstr.h"
 #include "prlog.h"
 #include "nsIChannel.h"
-#include "nsISocketTransport.h"
 #include "nsCOMPtr.h"
 #include "nsIByteArrayInputStream.h"
 #include "nsIStringStream.h"
@@ -200,11 +199,9 @@ nsHTTPChunkConv::OnDataAvailable (
                         }
                         else
                         {
-                            nsresult rv;
-                            nsCOMPtr<nsISocketTransport> trans = do_QueryInterface (mAsyncConvContext, &rv);
-
-                            if (NS_SUCCEEDED (rv))
-    							trans -> SetBytesExpected (0);
+                            PRBool * eof = (PRBool *) mAsyncConvContext;
+                            if (eof != NULL)
+                                *eof = PR_TRUE;
                         }
 
 						mState = CHUNK_STATE_INIT;
