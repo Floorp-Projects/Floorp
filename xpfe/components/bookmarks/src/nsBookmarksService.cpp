@@ -1819,9 +1819,6 @@ nsBookmarksService::Init()
     if (observerService) {
         observerService->AddObserver(this, "profile-before-change", PR_TRUE);
         observerService->AddObserver(this, "profile-after-change", PR_TRUE);
-#ifdef MOZ_PHOENIX
-        observerService->AddObserver(this, "quit-application", PR_TRUE);
-#endif
     }
 
     rv = initDatasource();
@@ -2571,15 +2568,9 @@ NS_IMETHODIMP nsBookmarksService::Observe(nsISupports *aSubject, const char *aTo
     }    
     else if (mBookmarksFile && !nsCRT::strcmp(aTopic, "profile-after-change"))
     {
-        // The profile has aleady changed.
+        // The profile has already changed.
         rv = LoadBookmarks();
     }
-#ifdef MOZ_PHOENIX
-    else if (!nsCRT::strcmp(aTopic, "quit-application"))
-    {
-        rv = Flush();
-    }
-#endif
     else if (!nsCRT::strcmp(aTopic, "nsPref:changed"))
     {
         rv = Flush();
