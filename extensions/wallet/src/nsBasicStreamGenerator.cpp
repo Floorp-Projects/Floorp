@@ -27,75 +27,73 @@ const char * nsBasicStreamGenerator::mSignature = "Basic Keyed Stream Generator"
 NS_IMPL_ISUPPORTS1(nsBasicStreamGenerator, nsIKeyedStreamGenerator)
 
 nsBasicStreamGenerator::nsBasicStreamGenerator()
-    : mLevel(NS_SECURITY_LEVEL), mSalt(0), mPassword(), mState(0)
-{
-    NS_INIT_ISUPPORTS();
+    : mLevel(NS_SECURITY_LEVEL), mSalt(0), mPassword(), mState(0) {
+  NS_INIT_ISUPPORTS();
 }
 
-nsBasicStreamGenerator::~nsBasicStreamGenerator()
-{
+nsBasicStreamGenerator::~nsBasicStreamGenerator() {
 }
 
 
-NS_IMETHODIMP nsBasicStreamGenerator::GetSignature(char **signature)
-{
-    NS_ENSURE_ARG_POINTER(signature);
-    *signature = nsCRT::strdup(mSignature);
-    return NS_OK;
+NS_IMETHODIMP nsBasicStreamGenerator::GetSignature(char **signature) {
+  NS_ENSURE_ARG_POINTER(signature);
+  *signature = nsCRT::strdup(mSignature);
+  return NS_OK;
 }
 
-NS_IMETHODIMP nsBasicStreamGenerator::Setup(PRUint32 salt, nsISupports *consumer)
-{
-    nsresult rv = NS_OK;
-    // Forget everything about previous setup
-    mWeakPasswordSink = nsnull;
-    // XXX whipe out the password to zero in memory
-    mPassword.Truncate(0);
+NS_IMETHODIMP nsBasicStreamGenerator::Setup(PRUint32 salt, nsISupports *consumer) {
+  nsresult rv = NS_OK;
 
-    // Reestablish setup
-    if (consumer)
-    {
-        mWeakPasswordSink = NS_GetWeakReference(consumer, &rv);
-        if (NS_FAILED(rv)) return rv;
+  /* forget about previous setup */
+  mWeakPasswordSink = nsnull;
+  mPassword.Truncate(0);
+
+  /* reestablish setup */
+  if (consumer) {
+    mWeakPasswordSink = NS_GetWeakReference(consumer, &rv);
+    if (NS_FAILED(rv)) return rv;
+  }
+  mSalt = salt;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBasicStreamGenerator::GetLevel(float *aLevel) {
+  NS_ENSURE_ARG_POINTER(aLevel);
+  *aLevel = mLevel;
+  return NS_OK;
+}
+
+NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval) {
+  NS_ENSURE_ARG_POINTER(retval);
+  nsresult rv = NS_OK;
+  if (mPassword.Length() == 0) {
+    /* this is the first time, so we need to get the password */
+    nsCOMPtr<nsIPasswordSink> weakPasswordSink = do_QueryReferent(mWeakPasswordSink);
+    if (!weakPasswordSink) {
+      return NS_ERROR_FAILURE;
     }
-    mSalt = salt;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsBasicStreamGenerator::GetLevel(float *aLevel)
-{
-    NS_ENSURE_ARG_POINTER(aLevel);
-    *aLevel = mLevel;
-    return NS_OK;
-}
-
-NS_IMETHODIMP nsBasicStreamGenerator::GetByte(PRUint32 offset, PRUint8 *retval)
-{
-    NS_ENSURE_ARG_POINTER(retval);
-    nsresult rv = NS_OK;
-    if (mPassword.Length() == 0)
-    {
-        // First time we need the password. Get it.
-        nsCOMPtr<nsIPasswordSink> weakPasswordSink = do_QueryReferent(mWeakPasswordSink);
-        if (!weakPasswordSink) return NS_ERROR_FAILURE;
-        PRUnichar *aPassword;
-        rv = weakPasswordSink->GetPassword(&aPassword);
-        if (NS_FAILED(rv)) return rv;
-        mPassword = aPassword;
-        nsAllocator::Free(aPassword);
-        mState = 0;
+    PRUnichar *aPassword;
+    rv = weakPasswordSink->GetPassword(&aPassword);
+    if (NS_FAILED(rv)) {
+      return rv;
     }
+    mPassword = aPassword;
+    nsAllocator::Free(aPassword);
+    mState = 0;
+  }
 
-    // Get the offset byte from the stream. Our stream is just our password
-    // repeating itself infinite times.
-    //
-    // mPassword being a nsString, its elements are PRUnichars.
-    // We want to return either the high-order or low-order 8 bits of the PRUnichar
-    // depending on whether or not this routine was called an odd or an even number of times
-    PRUnichar ret16 = mPassword.CharAt((mState>>1) % mPassword.Length());
-    if ((mState++) & 1) {
-      ret16 = ret16>>8;
-    }
-    *retval = (PRUint8)(ret16 & 0xff);
-    return rv;
+  /*
+   * Get the offset byte from the stream. Our stream is just our password
+   * repeating itself infinite times.
+   *
+   * Since mPassword is an nsString, its elements are PRUnichars.
+   * We want to return either the high-order or low-order 8 bits of the PRUnichar
+   * depending on whether or not this routine was called an odd or an even number of times
+   */
+  PRUnichar ret16 = mPassword.CharAt((mState>>1) % mPassword.Length());
+  if ((mState++) & 1) {
+    ret16 = ret16>>8;
+  }
+  *retval = (PRUint8)(ret16 & 0xff);
+  return rv;
 }

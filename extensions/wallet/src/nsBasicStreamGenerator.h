@@ -38,20 +38,20 @@
 class nsBasicStreamGenerator : public nsIKeyedStreamGenerator
 {
  public:
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSIKEYEDSTREAMGENERATOR
+  NS_DECL_ISUPPORTS
+  NS_DECL_NSIKEYEDSTREAMGENERATOR
 
-    nsBasicStreamGenerator();
+  nsBasicStreamGenerator();
 
  protected:
-    virtual ~nsBasicStreamGenerator();
+  virtual ~nsBasicStreamGenerator();
 
  private:
-    static const char *mSignature;	// read only
-    float mLevel;					// read only
-    PRUint32 mSalt;					// not used for now
-    nsString mPassword;
-    nsCOMPtr<nsIWeakReference> mWeakPasswordSink;	// nsIPasswordSink
-    PRInt32 mState;
+  static const char *mSignature; /* read only */
+  float mLevel; /* read only */
+  PRUint32 mSalt; /* not used for now */
+  nsString mPassword;
+  nsCOMPtr<nsIWeakReference> mWeakPasswordSink; /* nsIPasswordSink */
+  PRInt32 mState;
 };
 
