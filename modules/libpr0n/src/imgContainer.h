@@ -112,6 +112,7 @@ private:
   // GIF animations will use the mCompositingFrame to composite images
   // and just hand this back to the caller when it is time to draw the frame.
   nsCOMPtr<gfxIImageFrame> mCompositingFrame;
+  nsCOMPtr<gfxIImageFrame> mCompositingPrevFrame;
   
   // Private function for doing the frame compositing of animations and in cases
   // where there is a backgound color and single frame placed withing a larger
@@ -121,7 +122,10 @@ private:
 
   void BuildCompositeMask(gfxIImageFrame* aCompositingFrame, gfxIImageFrame* aOverlayFrame);
   void ZeroMask(gfxIImageFrame *aCompositingFrame);
-  void FillWithColor(gfxIImageFrame* aFrame, gfx_color color);
+  void ZeroMaskArea(gfxIImageFrame *aCompositingFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  void OneMaskArea(gfxIImageFrame *aCompositingFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
+  void BlackenFrame(gfxIImageFrame* aFrame);
+  void BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight);
 
 };
 

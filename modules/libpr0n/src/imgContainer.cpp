@@ -21,6 +21,7 @@
  *   Stuart Parmenter <pavlov@netscape.com>
  *   Chris Saari <saari@netscape.com>
  *   Asko Tontti <atontti@cc.hut.fi>
+ *   Arron Mogge <paper@animecity.nu>
  */
 
 #include "imgContainer.h"
@@ -167,7 +168,7 @@ NS_IMETHODIMP imgContainer::AppendFrame(gfxIImageFrame *item)
 
       if (NS_SUCCEEDED(firstFrame->GetBackgroundColor(&backgroundColor))) {
         mCompositingFrame->SetBackgroundColor(backgroundColor);
-        FillWithColor(mCompositingFrame, 0);
+        BlackenFrame(mCompositingFrame);
       }
 
       PRInt32 x;
@@ -472,28 +473,22 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
 {
   NS_ASSERTION(aDirtyRect, "DoComposite aDirtyRect is null");
   NS_ASSERTION(mCompositingFrame, "DoComposite mCompositingFrame is null");
-  
+
   *aFrameToUse = nsnull;
-  
+
   PRUint32 numFrames = inlinedGetNumFrames();
   PRInt32 nextFrameIndex = aNextFrame;
   PRInt32 prevFrameIndex = aPrevFrame;
-  
-  if(PRUint32(nextFrameIndex) >= numFrames) nextFrameIndex = numFrames-1;
-  if(PRUint32(prevFrameIndex) >= numFrames) prevFrameIndex = numFrames-1;
-  
+
+  if (PRUint32(nextFrameIndex) >= numFrames) nextFrameIndex = numFrames - 1;
+  if (PRUint32(prevFrameIndex) >= numFrames) prevFrameIndex = numFrames - 1;
+
   nsCOMPtr<gfxIImageFrame> prevFrame;
   inlinedGetFrameAt(prevFrameIndex, getter_AddRefs(prevFrame));
 
-  PRInt32 prevFrameDisposalMethod;
-  if(nextFrameIndex == 0)
-    prevFrameDisposalMethod = 2;
-  else
-    prevFrame->GetFrameDisposalMethod(&prevFrameDisposalMethod);
-  
   nsCOMPtr<gfxIImageFrame> nextFrame;
   inlinedGetFrameAt(nextFrameIndex, getter_AddRefs(nextFrame));
-  
+
   PRInt32 x;
   PRInt32 y;
   PRInt32 width;
@@ -503,55 +498,154 @@ void imgContainer::DoComposite(gfxIImageFrame** aFrameToUse, nsRect* aDirtyRect,
   nextFrame->GetWidth(&width);
   nextFrame->GetHeight(&height);
 
-  gfx_color color = 0;
-  gfx_color trans = 0;
-
-  switch (prevFrameDisposalMethod) {
-    default:
-    case 0: // DISPOSE_NOT_SPECIFIED
-    case 1: // DISPOSE_KEEP Leave previous frame in the framebuffer
-      *aFrameToUse = mCompositingFrame;
-      NS_ADDREF(*aFrameToUse);
-
-      nextFrame->DrawTo(mCompositingFrame, x, y, width, height);
-      BuildCompositeMask(mCompositingFrame, nextFrame);
-      break;
-
-    case 2: // DISPOSE_OVERWRITE_BGCOLOR Overwrite with background color
-      *aFrameToUse = mCompositingFrame;
-      NS_ADDREF(*aFrameToUse);
-
-      // Not actually getting the background color here, and instead filling with
-      // zeros fixes cases where the animation is transparent, but has a different
-      // background color and so on Windows, we would correctly build the bit mask, but
-      // it would blit incorrectly. Windows needs masked out bits to be zeroed out too.
-      //nextFrame->GetBackgroundColor(&color);
-      FillWithColor(mCompositingFrame, color);
-
-      // blit next frame into this clean slate
-      nextFrame->DrawTo(mCompositingFrame, x, y, width, height);
-
-      ZeroMask(mCompositingFrame);
-      BuildCompositeMask(mCompositingFrame, nextFrame);
-      break;
-
-    case 4: // DISPOSE_OVERWRITE_PREVIOUS Save-under
-      //XXX Reblit previous composite into frame buffer
-      // 
-      break;
-  }
-  
-  (*aDirtyRect).x = 0;
-  (*aDirtyRect).y = 0;
-  (*aDirtyRect).width = mSize.width;
-  (*aDirtyRect).height = mSize.height;
-
-  // Get the next frame's disposal method, if it is it DISPOSE_OVER, save off
-  // this mCompositeFrame for reblitting when this timer gets fired again 
   PRInt32 nextFrameDisposalMethod;
   nextFrame->GetFrameDisposalMethod(&nextFrameDisposalMethod);
-  //XXX if(nextFrameDisposalMethod == 4)
-  // blit mPreviousCompositeFrame with this frame
+  PRInt32 prevFrameDisposalMethod;
+  prevFrame->GetFrameDisposalMethod(&prevFrameDisposalMethod);
+
+  if (nextFrameIndex == 0) {
+    // First Frame: Blank First, then Draw Normal
+    BlackenFrame(mCompositingFrame);
+    ZeroMask(mCompositingFrame);
+    (*aDirtyRect).x = 0;
+    (*aDirtyRect).y = 0;
+    (*aDirtyRect).width = mSize.width;
+    (*aDirtyRect).height = mSize.height;
+  } else {
+    switch (prevFrameDisposalMethod) {
+      default:
+      case 0: // DISPOSE_NOT_SPECIFIED
+      case 1: // DISPOSE_KEEP Leave previous frame in the framebuffer
+        *aFrameToUse = mCompositingFrame;
+        NS_ADDREF(*aFrameToUse);
+
+        (*aDirtyRect).x = x;
+        (*aDirtyRect).y = y;
+        (*aDirtyRect).width = width;
+        (*aDirtyRect).height = height;
+        break;
+      case 2: // DISPOSE_OVERWRITE_BGCOLOR Overwrite with background color
+        {
+          PRInt32 xDispose;
+          PRInt32 yDispose;
+          PRInt32 widthDispose;
+          PRInt32 heightDispose;
+          prevFrame->GetX(&xDispose);
+          prevFrame->GetY(&yDispose);
+          prevFrame->GetWidth(&widthDispose);
+          prevFrame->GetHeight(&heightDispose);
+
+          *aFrameToUse = mCompositingFrame;
+          NS_ADDREF(*aFrameToUse);
+
+          // Blank out previous frame area (both color & Mask/Alpha)
+          BlackenFrame(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose);
+          ZeroMaskArea(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose);
+
+          // Calculate area that we need to redraw
+          // which is the combination of the previous frame and this one
+
+          // This is essentially nsRect::UnionRect()
+          nscoord xmost1 = x + width;
+          nscoord xmost2 = xDispose + widthDispose;
+          nscoord ymost1 = y + height;
+          nscoord ymost2 = yDispose + heightDispose;
+
+          (*aDirtyRect).x = PR_MIN(x, xDispose);
+          (*aDirtyRect).y = PR_MIN(y, yDispose);
+          (*aDirtyRect).width = PR_MAX(xmost1, xmost2) - (*aDirtyRect).x;
+          (*aDirtyRect).height = PR_MAX(ymost1, ymost2) - (*aDirtyRect).y;
+        }
+        break;
+
+      case 3:
+      case 4:
+      // Keep prev frame, but overwrite previous frame with this one? Let's just overwrite.
+      // Gif Specs say bit 4 (our value 4), but all gif generators I've seen use bit2 & bit3 (our value 3)
+        PRInt32 xDispose;
+        PRInt32 yDispose;
+        PRInt32 widthDispose;
+        PRInt32 heightDispose;
+        prevFrame->GetX(&xDispose);
+        prevFrame->GetY(&yDispose);
+        prevFrame->GetWidth(&widthDispose);
+        prevFrame->GetHeight(&heightDispose);
+
+        // Blank out previous frame area (both color & Mask/Alpha)
+        BlackenFrame(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose);
+        ZeroMaskArea(mCompositingFrame, xDispose, yDispose, widthDispose, heightDispose);
+
+        if (mCompositingPrevFrame) {
+          // It would be nice to just draw the area we need.
+          // but for now, draw whole frame
+          mCompositingPrevFrame->DrawTo(mCompositingFrame, 0, 0, mSize.width, mSize.height);
+          BuildCompositeMask(mCompositingFrame, mCompositingPrevFrame);
+
+          // destroy only if we don't need it for this one
+          if (nextFrameDisposalMethod != 3 && nextFrameDisposalMethod != 4)
+            mCompositingPrevFrame = nsnull;
+        }
+
+        (*aDirtyRect).x = 0;
+        (*aDirtyRect).y = 0;
+        (*aDirtyRect).width = mSize.width;
+        (*aDirtyRect).height = mSize.height;
+        break;
+    }
+  }
+
+
+  // Check if the frame we are composing wants the previous image restored afer it is done
+  // Don't store it (again) if last frame wanted it's image restored too
+  if ((nextFrameDisposalMethod == 3 || nextFrameDisposalMethod == 4) && prevFrameDisposalMethod != 3 && prevFrameDisposalMethod != 4) {
+    // We are storing the whole image.
+    // It would be better if we just stored the area that nextFrame is going to overwrite.
+    mCompositingPrevFrame = do_CreateInstance("@mozilla.org/gfx/image/frame;2");
+
+    gfx_format format;
+    mCompositingFrame->GetFormat(&format);
+
+    mCompositingPrevFrame->Init(0, 0, mSize.width, mSize.height, format);
+
+    PRUint8* aDataSrc;
+    PRUint8* aDataDest;
+    PRUint32 aDataLengthSrc;
+    PRUint32 aDataLengthDest;
+
+    // Copy Image Over
+    mCompositingPrevFrame->SetTransparentColor(0);
+    if (NS_SUCCEEDED(mCompositingPrevFrame->LockImageData())) {
+      mCompositingFrame->GetImageData(&aDataSrc, &aDataLengthSrc);
+      mCompositingPrevFrame->GetImageData(&aDataDest, &aDataLengthDest);
+      if (aDataLengthDest == aDataLengthSrc)
+        memcpy(aDataDest, aDataSrc, aDataLengthSrc);
+
+      // Tell the image that it's data has been updated
+      nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(mCompositingPrevFrame));
+      if (ireq) {
+        nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
+        nsRect r(0, 0, mSize.width, mSize.height);
+        img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+      }
+      mCompositingPrevFrame->UnlockImageData();
+    }
+
+    // Copy Alpha/Mask Over
+    if (NS_SUCCEEDED(mCompositingPrevFrame->LockAlphaData())) {
+      mCompositingFrame->GetAlphaData(&aDataSrc, &aDataLengthSrc);
+      mCompositingPrevFrame->GetAlphaData(&aDataDest, &aDataLengthDest);
+      if (aDataLengthDest == aDataLengthSrc)
+        memcpy(aDataDest, aDataSrc, aDataLengthSrc);
+
+      mCompositingPrevFrame->UnlockAlphaData();
+    }
+  }
+
+  // blit next frame into it's correct spot
+  nextFrame->DrawTo(mCompositingFrame, x, y, width, height);
+  // put the mask in
+  BuildCompositeMask(mCompositingFrame, nextFrame);
+
 }
 //******************************************************************************
 /* void onStartDecode (in imgIRequest aRequest, in nsISupports cx); */
@@ -618,125 +712,37 @@ NS_IMETHODIMP imgContainer::FrameChanged(imgIContainer *aContainer, nsISupports 
 
 //******************************************************************************
 // Yet another thing that should be in a GIF specific container.
-// Fill aFrame with color. Does not change the mask.
-void imgContainer::FillWithColor(gfxIImageFrame *aFrame, gfx_color color)
-{
-  if (!aFrame) return;
-
-  aFrame->LockImageData();
-
-  nscoord width;
-  nscoord height;
-  aFrame->GetWidth(&width);
-  aFrame->GetHeight(&height);
-
-  gfx_format format;
-  aFrame->GetFormat(&format);
-
-  switch (format) {
-    case gfxIFormats::RGB_A1:
-    case gfxIFormats::BGR_A1:
-      {
-        const PRUint8 colorBlue = (color >> 16) & 0xFF;
-        const PRUint8 colorGreen = (color >> 8) & 0xFF;
-        const PRUint8 colorRed = color & 0xFF;
-
-        // Copy in the color the fast way if we can
-        // Mac uses 4 bytes per color, with a 0x00 filler
-        // so we can only optimize Macs if all colors are 0
-#if defined(XP_MAC) || defined(XP_MACOSX)
-        if (colorRed == 0 && colorBlue == 0 && colorGreen == 0) {
-#else
-        if (colorRed == colorBlue && colorBlue == colorGreen) {
-#endif
-          PRUint8* aData;
-          PRUint32 aDataLength;
-
-          aFrame->GetImageData(&aData, &aDataLength);
-          memset(aData, colorRed, aDataLength);
-          
-          nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aFrame));
-          if (ireq) {
-            nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
-            nsRect r(0, 0, width, height);
-            
-            img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
-          }
-        }
-        else
-        {
-          PRUint32 bpr;
-          aFrame->GetImageBytesPerRow(&bpr);
-
-          PRUint8* tmpRow = NS_STATIC_CAST(PRUint8*, nsMemory::Alloc(bpr));
-          if (!tmpRow) {
-            aFrame->UnlockImageData();
-            return;
-          }
-
-          // Set up one row with color
-          PRUint8* rgbRowIndex = tmpRow;
-          for (nscoord x=0; x<width; x++) {
-#if defined(XP_WIN) || defined(MOZ_WIDGET_PHOTON)
-            *rgbRowIndex++ = colorBlue;
-            *rgbRowIndex++ = colorGreen;
-            *rgbRowIndex++ = colorRed;
-#else
-#if defined(XP_MAC) || defined(XP_MACOSX)
-            *rgbRowIndex++ = 0;
-#endif
-            *rgbRowIndex++ = colorRed;
-            *rgbRowIndex++ = colorGreen;
-            *rgbRowIndex++ = colorBlue;
-#endif
-          }
-
-          // Copy row tmpRow to every row in frame
-          for (nscoord y=0; y<height; y++) {
-            aFrame->SetImageData(tmpRow, bpr, y*bpr);
-          }
-
-          nsMemory::Free(tmpRow);
-        }
-      }
-
-      break;
-
-    default:
-      break;
-
-  }
-  aFrame->UnlockImageData();
-}
-
-//******************************************************************************
-// Yet another thing that should be in a GIF specific container.
 // This takes the mask information from the passed in aOverlayFrame and inserts
 // that information into the aCompositingFrame's mask at the proper offsets. It
 // does *not* rebuild the entire mask.
 void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIImageFrame *aOverlayFrame)
 {
-  if(!aCompositingFrame || !aOverlayFrame) return;
+  if (!aCompositingFrame || !aOverlayFrame) return;
 
   nsresult res;
   PRUint8* compositingAlphaData;
   PRUint32 compositingAlphaDataLength;
   aCompositingFrame->LockAlphaData();
   res = aCompositingFrame->GetAlphaData(&compositingAlphaData, &compositingAlphaDataLength);
-  if(!compositingAlphaData || !compositingAlphaDataLength || NS_FAILED(res)) {
+  if (!compositingAlphaData || !compositingAlphaDataLength || NS_FAILED(res)) {
     aCompositingFrame->UnlockAlphaData();
     return;
   }
 
+  nscoord widthOverlay;
+  nscoord heightOverlay;
+  PRInt32 overlayXOffset, overlayYOffset;
+  aOverlayFrame->GetWidth(&widthOverlay);
+  aOverlayFrame->GetHeight(&heightOverlay);
+  aOverlayFrame->GetX(&overlayXOffset);
+  aOverlayFrame->GetY(&overlayYOffset);
+
   // The current frame of the animation (overlay frame) is what
   // determines the transparent color.
   gfx_color color;
-  if(NS_FAILED(aOverlayFrame->GetTransparentColor(&color))) {
-    //XXX setting the entire mask on here is probably the wrong thing
-    //we should probably just set the region of the overlay frame
-    //to 255, but for the moment I can't find a case where this gives
-    //incorrect behavior
-    memset(compositingAlphaData, 255, compositingAlphaDataLength);
+  if (NS_FAILED(aOverlayFrame->GetTransparentColor(&color))) {
+    // set the region of the overlay frame to 1
+    OneMaskArea(aCompositingFrame, overlayXOffset, overlayYOffset, widthOverlay, heightOverlay);
     aCompositingFrame->UnlockAlphaData();
     return;
   }
@@ -749,16 +755,10 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
   PRUint32 abprOverlay;
   aOverlayFrame->GetAlphaBytesPerRow(&abprOverlay);
 
-  nscoord widthComposite, widthOverlay;
-  nscoord heightComposite, heightOverlay;
+  nscoord widthComposite;
+  nscoord heightComposite;
   aCompositingFrame->GetWidth(&widthComposite);
   aCompositingFrame->GetHeight(&heightComposite);
-  aOverlayFrame->GetWidth(&widthOverlay);
-  aOverlayFrame->GetHeight(&heightOverlay);
-  
-  PRInt32 overlayXOffset, overlayYOffset;
-  aOverlayFrame->GetX(&overlayXOffset);
-  aOverlayFrame->GetY(&overlayYOffset);
 
   PRUint8* overlayAlphaData;
   PRUint32 overlayAlphaDataLength;
@@ -872,16 +872,339 @@ void imgContainer::BuildCompositeMask(gfxIImageFrame *aCompositingFrame, gfxIIma
 }
 
 //******************************************************************************
-void imgContainer::ZeroMask(gfxIImageFrame *aCompositingFrame)
+//Based on BuildCompositeMask
+void imgContainer::ZeroMaskArea(gfxIImageFrame *aCompositingFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
 {
-  if(!aCompositingFrame) return;
+  if (!aCompositingFrame) return;
+
+  nsresult res;
   PRUint8* compositingAlphaData;
   PRUint32 compositingAlphaDataLength;
   aCompositingFrame->LockAlphaData();
-  nsresult res = aCompositingFrame->GetAlphaData(&compositingAlphaData, &compositingAlphaDataLength);
-  if(NS_SUCCEEDED(res) && compositingAlphaData && compositingAlphaDataLength)
-    memset(compositingAlphaData, 0, compositingAlphaDataLength);
+  res = aCompositingFrame->GetAlphaData(&compositingAlphaData, &compositingAlphaDataLength);
+  if (!compositingAlphaData || !compositingAlphaDataLength || NS_FAILED(res)) {
+    aCompositingFrame->UnlockAlphaData();
+    return;
+  }
+
+  PRUint32 abprComposite;
+  aCompositingFrame->GetAlphaBytesPerRow(&abprComposite);
+
+  nscoord widthComposite;
+  nscoord heightComposite;
+  aCompositingFrame->GetWidth(&widthComposite);
+  aCompositingFrame->GetHeight(&heightComposite);
+
+  const PRInt32 width  = PR_MIN(aWidth,(widthComposite-aX));
+  const PRInt32 height = PR_MIN(aHeight,(heightComposite-aY));
+
+  if (width <= 0 && height <= 0) {
+    aCompositingFrame->UnlockAlphaData();
+    return;
+  }
+
+  gfx_format format;
+  aCompositingFrame->GetFormat(&format);
+
+  switch (format) {
+    case gfxIFormats::RGB_A1:
+    case gfxIFormats::BGR_A1:
+      {
+        PRInt32 offset;
+
+// Windows and OS/2 have the funky bottom up data storage we need to account for
+#if defined(XP_WIN) || defined(XP_OS2)
+        offset = ((heightComposite - 1) - aY) * abprComposite;
+#else
+        offset = aY*abprComposite;
+#endif
+        PRUint8* alphaLine = compositingAlphaData + offset + (aX>>3);
+        PRUint8 mask_offset = (aX & 0x7);
+
+        for (PRInt32 i=0; i < height; i++) {
+          PRUint8 pixels;
+          PRInt32 j;
+          PRUint8 *localAlpha = alphaLine;
+
+          for (j = width; j >= 8; j -= 8) {
+            // for the last few bits of a line, we need to special-case it
+            if (mask_offset == 0) {
+              // simple case, no offset
+              *localAlpha++ = 0;
+            } else {
+              // set our part to 0
+              *localAlpha = (*localAlpha >> (8U-mask_offset)) << (8U-mask_offset);
+              *localAlpha++;
+              // Store in pixels to chop off bits
+              pixels = (*localAlpha << mask_offset);
+              *localAlpha = pixels >> mask_offset;
+            }
+          }
+          if (j > 0) {
+            // set bits we don't want to change to 1
+            pixels = ((0xFF >> (8U-j)));
+            pixels = ((pixels << (8U-j)));
+            *localAlpha++ &= ~(pixels >> (mask_offset));
+            if (j > (8 - mask_offset))
+              *localAlpha &= ~(pixels << (8U-mask_offset));
+          }
+
+/// Windows and OS/2 have the funky bottom up data storage we need to account for
+#if defined(XP_WIN) || defined(XP_OS2)
+          alphaLine -= abprComposite;
+#else
+          alphaLine += abprComposite;
+#endif
+        }
+      }
+      break;
+
+    case gfxIFormats::RGB_A8:
+    case gfxIFormats::BGR_A8:
+      {
+        // Should never get run, since gifs are all 1 bit alpha
+        // 0% Visible
+        PRInt32 offset;
+#if defined(XP_WIN) || defined(XP_OS2)
+        offset = ((heightComposite - 1) - aY) * abprComposite;
+#else
+        offset = aY*abprComposite;
+#endif
+
+        PRUint8* alphaLine = compositingAlphaData + offset + aX;
+
+        for (PRInt32 i=0; i < height; i++) {
+          memset(alphaLine, 0, width);
+
+#if defined(XP_WIN) || defined(XP_OS2)
+          alphaLine -= abprComposite;
+#else
+          alphaLine += abprComposite;
+#endif
+        }
+      }
+      break;
+
+    default:
+      break;
+  }
 
   aCompositingFrame->UnlockAlphaData();
   return;
 }
+
+//******************************************************************************
+//Based on BuildCompositeMask
+void imgContainer::OneMaskArea(gfxIImageFrame *aCompositingFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+  if (!aCompositingFrame) return;
+
+  nsresult res;
+  PRUint8* compositingAlphaData;
+  PRUint32 compositingAlphaDataLength;
+  aCompositingFrame->LockAlphaData();
+  res = aCompositingFrame->GetAlphaData(&compositingAlphaData, &compositingAlphaDataLength);
+  if (!compositingAlphaData || !compositingAlphaDataLength || NS_FAILED(res)) {
+    aCompositingFrame->UnlockAlphaData();
+    return;
+  }
+
+  PRUint32 abprComposite;
+  aCompositingFrame->GetAlphaBytesPerRow(&abprComposite);
+
+  nscoord widthComposite;
+  nscoord heightComposite;
+  aCompositingFrame->GetWidth(&widthComposite);
+  aCompositingFrame->GetHeight(&heightComposite);
+
+  const PRInt32 width  = PR_MIN(aWidth,(widthComposite-aX));
+  const PRInt32 height = PR_MIN(aHeight,(heightComposite-aY));
+
+  if (width <= 0 && height <= 0) {
+    aCompositingFrame->UnlockAlphaData();
+    return;
+  }
+  gfx_format format;
+  aCompositingFrame->GetFormat(&format);
+
+  switch (format) {
+    case gfxIFormats::RGB_A1:
+    case gfxIFormats::BGR_A1:
+      {
+        PRInt32 offset;
+
+// Windows and OS/2 have the funky bottom up data storage we need to account for
+#if defined(XP_WIN) || defined(XP_OS2)
+        offset = ((heightComposite - 1) - aY) * abprComposite;
+#else
+        offset = aY*abprComposite;
+#endif
+        PRUint8* alphaLine = compositingAlphaData + offset + (aX>>3);
+        PRUint8 mask_offset = (aX & 0x7);
+
+        for (PRInt32 i=0; i < height; i++) {
+          PRUint8 pixels;
+          PRInt32 j;
+          PRUint8 *localAlpha   = alphaLine;
+
+          for (j = width; j >= 8; j -= 8) {
+            // for the last few bits of a line, we need to special-case it
+            if (mask_offset == 0) {
+              // simple case, no offset
+              *localAlpha++ = 0xFF;
+            } else {
+              *localAlpha++ |= (0xFF >> mask_offset);
+              *localAlpha   |= (0xFF << (8U-mask_offset));
+            }
+          }
+          if (j > 0) {
+            // handle the end of the line, 1 to 7 pixels
+            // last few bits have to be handled more carefully if
+            // width is not a multiple of 8.
+
+            // set bits we don't want to change to 0
+            pixels = (0xFF >> (8U-j)) << (8U-j);
+            *localAlpha++ |= (pixels >> mask_offset);
+            // don't touch this byte unless we have bits for it
+            if (j > (8 - mask_offset))
+              *localAlpha |= (pixels << (8U-mask_offset));
+          }
+
+/// Windows and OS/2 have the funky bottom up data storage we need to account for
+#if defined(XP_WIN) || defined(XP_OS2)
+          alphaLine -= abprComposite;
+#else
+          alphaLine += abprComposite;
+#endif
+        }
+      }
+      break;
+
+    case gfxIFormats::RGB_A8:
+    case gfxIFormats::BGR_A8:
+      {
+        // Should never get run, since gifs are all 1 bit alpha
+        // 100% Visible
+        PRInt32 offset;
+#if defined(XP_WIN) || defined(XP_OS2)
+        offset = ((heightComposite - 1) - aY) * abprComposite;
+#else
+        offset = aY*abprComposite;
+#endif
+
+        PRUint8* alphaLine = compositingAlphaData + offset + aX;
+
+        for (PRInt32 i=0; i < height; i++) {
+          memset(alphaLine, 255, width);
+
+#if defined(XP_WIN) || defined(XP_OS2)
+          alphaLine -= abprComposite;
+#else
+          alphaLine += abprComposite;
+#endif
+        }
+      }
+      break;
+
+    default:
+      break;
+
+  }
+
+  aCompositingFrame->UnlockAlphaData();
+  return;
+}
+//******************************************************************************
+void imgContainer::ZeroMask(gfxIImageFrame *aCompositingFrame)
+{
+  if (!aCompositingFrame) return;
+  PRUint8* compositingAlphaData;
+  PRUint32 compositingAlphaDataLength;
+  aCompositingFrame->LockAlphaData();
+  nsresult res = aCompositingFrame->GetAlphaData(&compositingAlphaData, &compositingAlphaDataLength);
+  if (NS_SUCCEEDED(res) && compositingAlphaData && compositingAlphaDataLength)
+    memset(compositingAlphaData, 0, compositingAlphaDataLength);
+
+  aCompositingFrame->UnlockAlphaData();
+  return;
+ }
+
+//******************************************************************************
+// Yet another thing that should be in a GIF specific container.
+// Fill aFrame with black. Does not change the mask.
+void imgContainer::BlackenFrame(gfxIImageFrame *aFrame)
+{
+  if (!aFrame) return;
+
+  aFrame->LockImageData();
+
+  nscoord width;
+  nscoord height;
+  aFrame->GetWidth(&width);
+  aFrame->GetHeight(&height);
+
+  PRUint8* aData;
+  PRUint32 aDataLength;
+
+  aFrame->GetImageData(&aData, &aDataLength);
+  memset(aData, 0, aDataLength);
+  
+  nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(aFrame));
+  if (ireq) {
+    nsCOMPtr<nsIImage> img(do_GetInterface(ireq));
+    nsRect r(0, 0, width, height);
+    
+    img->ImageUpdated(nsnull, nsImageUpdateFlags_kBitsChanged, &r);
+  }
+
+  aFrame->UnlockImageData();
+}
+
+//******************************************************************************
+void imgContainer::BlackenFrame(gfxIImageFrame *aFrame, PRInt32 aX, PRInt32 aY, PRInt32 aWidth, PRInt32 aHeight)
+{
+  if (!aFrame) return;
+
+  aFrame->LockImageData();
+  
+  nscoord widthFrame;
+  nscoord heightFrame;
+  aFrame->GetWidth(&widthFrame);
+  aFrame->GetHeight(&heightFrame);
+
+  const PRInt32 width  = PR_MIN(aWidth,(widthFrame-aX));
+  const PRInt32 height = PR_MIN(aHeight,(heightFrame-aY));
+
+  if (width <= 0 || height <= 0) {
+    aFrame->UnlockImageData();
+    return;
+  }
+
+  PRUint32 bpr; // Bytes Per Row
+  aFrame->GetImageBytesPerRow(&bpr);
+
+#if defined(XP_MAC) || defined(XP_MACOSX)
+  const PRUint8 bpp = 4;
+#else
+  const PRUint8 bpp = 3;
+#endif
+  const PRUint32 bprToWrite = width * bpp;
+  const PRUint32 xOffset = aX * bpp; // offset into row to start writing
+
+  PRUint8* tmpRow = NS_STATIC_CAST(PRUint8*, nsMemory::Alloc(width * bpp));
+  
+  if (!tmpRow) {
+    aFrame->UnlockImageData();
+    return;
+  }
+
+  memset(tmpRow, 0, width * bpp);
+
+  for (PRInt32 y=0; y<height; y++) {
+    aFrame->SetImageData(tmpRow, bprToWrite, ((y+aY) * bpr) + xOffset);
+  }
+  nsMemory::Free(tmpRow);
+
+  aFrame->UnlockImageData();
+}
+
