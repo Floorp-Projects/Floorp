@@ -261,7 +261,7 @@ sub tb_find_build_record {
   chomp($log_entry);
   # Skip the logfile in the parse since it is already known.
   my ($mailtime, $buildtime, $buildname, $errorparser,
-      $buildstatus, $binaryname) = (split /\|/, $log_entry)[0..4,6];
+      $buildstatus, $binaryurl) = (split /\|/, $log_entry)[0..4,6];
 
   $buildrec = {    
     mailtime    => $mailtime,
@@ -270,7 +270,7 @@ sub tb_find_build_record {
     errorparser => $errorparser,
     buildstatus => $buildstatus,
     logfile     => $logfile,
-    binaryname  => $binaryname,
+    binaryurl   => $binaryurl,
     td          => undef
   };
   return $buildrec;
@@ -308,7 +308,7 @@ sub load_buildlog {
   while( $_ = $bw->readline ) {
     chomp;
     my ($mailtime, $buildtime, $buildname,
-     $errorparser, $buildstatus, $logfile, $binaryname) = split /\|/;
+     $errorparser, $buildstatus, $logfile, $binaryurl) = split /\|/;
     
     # Ignore stuff in the future.
     next if $buildtime > $maxdate;
@@ -331,7 +331,7 @@ sub load_buildlog {
                       errorparser => $errorparser,
                       buildstatus => $buildstatus,
                       logfile     => $logfile,
-                      binaryname  => $binaryname,
+                      binaryurl   => $binaryurl,
                       td          => $treedata
                      };
       push @{$build_list}, $buildrec;

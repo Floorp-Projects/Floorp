@@ -190,7 +190,7 @@ sub write_build_data {
   $process_time = time;
   open BUILDDATA, ">>$tbx->{tree}/build.dat" 
     or die "can't open $! for writing";
-  print BUILDDATA "$process_time|$tbx->{builddate}|$tbx->{build}|$tbx->{errorparser}|$tbx->{status}|$tbx->{logfile}|$tbx->{binaryname}\n";
+  print BUILDDATA "$process_time|$tbx->{builddate}|$tbx->{build}|$tbx->{errorparser}|$tbx->{status}|$tbx->{logfile}|$tbx->{binaryurl}\n";
   close BUILDDATA;
 }
 
@@ -210,7 +210,6 @@ sub compress_log_file {
   open ZIPLOG, "| $gzip -c > $tbx->{tree}/$tbx->{logfile}"
     or die "can't open $! for writing";
   my $inBinary = 0;
-  my $hasBinary = ($tbx->{binaryname} ne '');
   while (<LOG2>) {
     unless ($inBinary) {
       print ZIPLOG $_;
@@ -224,16 +223,4 @@ sub compress_log_file {
   }
   close ZIPLOG;
   close LOG2;
-
-  # If a uuencoded binary is part of the build, unpack it.
-  #
-  if ($hasBinary) {
-    $bin_dir = "$tbx->{tree}/bin/$tbx->{builddate}/$tbx->{build}";
-    $bin_dir =~ s/ //g;
-
-    system("mkdir -m 0777 -p $bin_dir");
-
-    # LTNOTE: I'm not sure this is cross platform.
-    system("/tools/ns/bin/uudecode --output-file=$bin_dir/$tbx->{binaryname} < $ARGV[0]");
-  }
 }

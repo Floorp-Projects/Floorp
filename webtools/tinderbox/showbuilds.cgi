@@ -197,6 +197,10 @@ sub print_page_head {
                 <td>= Show Checkins</td>
               </tr>
               <tr>
+                <td align=center><TT>D</TT></td>
+                <td>= Download Build</td>
+              </tr>
+              <tr>
               <td align=center>
               <img src="$images{star}"></td><td>= Show Log comments
             </td></tr><tr><td colspan=2>
@@ -329,7 +333,7 @@ BEGIN {
       print "<A HREF='$logurl'"
            ." onclick=\"return log(event,$build_index,'$logfile');\">"
            ."L</a>";
-      
+ 
       # What Changed
       #
       # Only add the "C" link if there have been changes since the last build.
@@ -343,6 +347,14 @@ BEGIN {
                                  $br->{buildtime} - 1);
           print "C</a>";
         }
+      }
+
+      # Binary URL
+      #
+      # Only add the "D" link if there is a url to a downloadable binary
+      if( $br->{binaryurl} ){
+          $binaryurl = $br->{binaryurl};
+          print" <A HREF=$binaryurl>D</A>";
       }
       
       # Leak/Bloat
