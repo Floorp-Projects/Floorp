@@ -108,10 +108,11 @@ Contributor(s):
             <text class="label" id="dialog.progressText" value="&#160;"/>
           </box>
         </row>
+        <separator class="thin"/>
         <row>
-           <hbox flex="1">
+          <hbox flex="1">
             <checkbox id="keepProgressDialogUp" value="&keepProgressDialogUpMsg.label;"/>
-           </hbox>
+          </hbox>
         </row>
       </rows>
     </grid>
@@ -119,11 +120,10 @@ Contributor(s):
     <separator/>
     
     <box id="CancelButton">
+      <button class="dialog" id="cancel" value="&dialogCancel.label;" oncommand="doCancelButton()"/>
       <spring flex="1"/>
-      <button class="dialog" id="open" value="&open.label;" disabled="true" onclick="doOpen()"/>
-      <button class="dialog" id="openFolder" value="&openFolder.label;" disabled="true" onclick="doOpenFolder()"/>
-      <button class="dialog" id="cancel" value="&dialogCancel.label;" onclick="doCancelButton()"/>
-      <spring flex="1"/>
+      <button class="dialog" id="open" value="&open.label;" disabled="true" oncommand="doOpen()"/>
+      <button class="dialog" id="openFolder" value="&openFolder.label;" disabled="true" oncommand="doOpenFolder()"/>      
     </box>
 
 </window>
