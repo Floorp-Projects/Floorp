@@ -202,7 +202,6 @@ XFE_EditTableDialog::XFE_EditTableDialog(Widget parent, char *name,
 
 XFE_EditTableDialog::~XFE_EditTableDialog()
 {
-    delete m_table;
 }
 
 void
