@@ -79,6 +79,7 @@ my %pubcmds = (
                "(stocks|stock)" => \&bot_pub_stocks,
                "(translate|xlate|x)" => \&bot_translate,
                "review" => \&bot_review,
+               "approve" => \&bot_approve,
                "ftp" => \&ftp_stamp
                );
 
@@ -1224,6 +1225,30 @@ sub bot_translate {
 sub bot_review {
     my ($nick, $cmd, $rest) = (@_);
     sendmsg($nick, "$::speaker, I've reviewed your code, and it looks great.  r=mozbot.");
+}
+
+sub bot_approve {
+    my ($nick, $cmd, $rest) = (@_);
+    
+    # be sneaky, and only respond some of the time.
+    my $randval = rand();
+    if ($randval < .3) {
+        if ($randval < .1)
+          { sendmsg($nick, "\"as if.\""); }
+        elsif ($randval < .2)
+          { sendmsg($nick, "rheeeeeeeet!"); }
+        elsif ($randval < .3) {
+            my $approveRand = rand();
+            my $approver;
+            
+            if ($approveRand < .2) { $approver = "marca\@ncsa.uiuc.edu"; }
+            elsif ($approveRand < .4) { $approver = "billg\@microsoft.com"; }
+            else { $approver = "mozbot"; }
+            sendmsg($nick, "$::speaker, your code is an byzantine workaround for a longstanding hack, but we need it to ship.  a=$approver.");
+        }
+    } else {
+        do_unknown($nick, $cmd, $rest);
+    }
 }
 
 sub trim {
