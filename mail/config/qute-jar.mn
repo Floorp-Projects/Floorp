@@ -9,7 +9,6 @@
 #################################################################################################
 # mail
 #################################################################################################
-
 skin/classic/messenger,                              classic/skin/classic/messenger 	
 skin/classic/messenger/icons,                        classic/skin/classic/messenger/icons 
 skin/classic/messenger/addressbook,                  classic/skin/classic/messenger/addressbook
@@ -67,17 +66,11 @@ skin/classic/global/arrow,                             classic/skin/classic/glob
 skin/classic/global/tree,                              classic/skin/classic/global/tree
 skin/classic/global/checkbox,                          classic/skin/classic/global/checkbox
 skin/classic/global/radio,                             classic/skin/classic/global/radio
-
 skin/classic/global/icons,                             classic/skin/classic/global/icons
 skin/classic/global/toolbar,                           classic/skin/classic/global/toolbar
 skin/classic/global/menu,                              classic/skin/classic/global/menu
 skin/classic/global/progressmeter,                     classic/skin/classic/global/progressmeter
-
-# mozilla/toolkit
 skin/classic/global/console,                           classic/skin/classic/global/console
-skin/classic/global/icons/Message.png                  classic/skin/classic/global/icons/Message.png
-skin/classic/global/icons/Question.png                 classic/skin/classic/global/icons/Question.png
-skin/classic/global/icons/Warning.png                  classic/skin/classic/global/cons/Warning.png
 
 #################################################################################################
 # Editor
@@ -88,4 +81,9 @@ skin/classic/editor/EdImageMapPage.css,               classic/skin/classic/edito
 skin/classic/editor/editor.css,                       classic/skin/classic/editor/editor.css
 skin/classic/editor/EditorDialog.css,                 classic/skin/classic/editor/EditorDialog.css
 skin/classic/editor/textEditor.css,                   classic/skin/classic/editor/textEditor.css
-skin/classic/editor/icons,                            classic/skin/classic/editor/icons
+skin/classic/editor/icons/btn1.gif,                   classic/skin/classic/editor/icons/btn1.gif
+skin/classic/editor/icons/img-align-bottom.gif,       classic/skin/classic/editor/icons/img-align-bottom.gif
+skin/classic/editor/icons/img-align-left.gif,         classic/skin/classic/editor/icons/img-align-left.gif
+skin/classic/editor/icons/img-align-middle.gif,       classic/skin/classic/editor/icons/img-align-middle.gif
+skin/classic/editor/icons/img-align-right.gif,        classic/skin/classic/editor/icons/img-align-right.gif
+skin/classic/editor/icons/img-align-top.gif,          classic/skin/classic/editor/icons/img-align-top.gif

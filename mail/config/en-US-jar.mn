@@ -14,7 +14,6 @@ locale/en-US/messenger/addressbook,                       en-US/locale/en-US/mes
 locale/en-US/messenger/messengercompose,                  en-US/locale/en-US/messenger/messengercompose
 locale/en-US/messenger-smime,                             en-US/locale/en-US/messenger-smime
 
-
 #################################################################################################
 # xpfe extensions (ldap, wallet, etc)
 #################################################################################################
@@ -42,9 +41,6 @@ locale/en-US/communicator/layout,                        en-US/locale/en-US/comm
 locale/en-US/communicator/contentAreaCommands.dtd,        en-US/locale/en-US/communicator/contentAreaCommands.dtd
 locale/en-US/communicator/contentAreaCommands.properties, en-US/locale/en-US/communicator/contentAreaCommands.properties
 locale/en-US/communicator/contents.rdf,                   en-US/locale/en-US/communicator/contents.rdf
-locale/en-US/communicator/printPageSetup.dtd,             en-US/locale/en-US/communicator/printPageSetup.dtd
-locale/en-US/communicator/printPageSetup.properties,      en-US/locale/en-US/communicator/printPageSetup.properties
-locale/en-US/communicator/printPreview.dtd,               en-US/locale/en-US/communicator/printPreview.dtd
 locale/en-US/communicator/utilityOverlay.dtd,             en-US/locale/en-US/communicator/utilityOverlay.dtd
 locale/en-US/communicator/utilityOverlay.properties,      en-US/locale/en-US/communicator/utilityOverlay.properties
 locale/en-US/communicator/wallet/wallet.properties,       en-US/locale/en-US/communicator/wallet/wallet.properties
@@ -95,7 +91,13 @@ locale/US/global-region,                                  US/locale/US/global-re
 #################################################################################################
 # crypto
 #################################################################################################
-locale/en-US/pippki,                                      en-US/locale/en-US/pippki
+locale/en-US/pippki/certManager.dtd,                      en-US/locale/en-US/pippki/certManager.dtd
+locale/en-US/pippki/contents.rdf,                         en-US/locale/en-US/pippki/contents.rdf
+locale/en-US/pippki/deviceManager.dtd,                    en-US/locale/en-US/pippki/deviceManager.dtd
+locale/en-US/pippki/newserver.dtd,                        en-US/locale/en-US/pippki/newserver.dtd
+locale/en-US/pippki/newserver.properties,                 en-US/locale/en-US/pippki/newserver.properties
+locale/en-US/pippki/pippki.dtd,                           en-US/locale/en-US/pippki/pippki.dtd
+locale/en-US/pippki/pippki.properties,                    en-US/locale/en-US/pippki/pippki.properties
 locale/en-US/pipnss,                                      en-US/locale/en-US/pipnss
 
 #################################################################################################

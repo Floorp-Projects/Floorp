@@ -21,7 +21,6 @@ content/messenger/addressbook,                       msg/content/messenger/addre
 #################################################################################################
 # Files we need from comm.jar
 #################################################################################################
-
 content/editor,                                       comm/content/editor
 content/editor-region,                                comm/content/editor-region
 content/communicator-region,                          comm/content/communicator-region,
@@ -31,8 +30,6 @@ content/communicator/communicator.css,                comm/content/communicator/
 content/communicator/communicatorOverlay.xul,         comm/content/communicator/communicatorOverlay.xul 
 content/communicator/utilityOverlay.xul,              comm/content/communicator/utilityOverlay.xul 
 content/communicator/utilityOverlay.js,               comm/content/communicator/utilityOverlay.js 
-content/communicator/tasksOverlay.js,                 comm/content/communicator/tasksOverlay.js 
-content/communicator/tasksOverlay.xul,                comm/content/communicator/tasksOverlay.xul 
 content/communicator/browserBindings.xul,             comm/content/communicator/browserBindings.xul 
 content/communicator/editorBindings.xul,              comm/content/communicator/editorBindings.xul 
 content/communicator/platformBrowserBindings.xul,     comm/content/communicator/platformBrowserBindings.xul 
@@ -44,7 +41,6 @@ content/communicator/contentAreaDD.js,                comm/content/communicator/
 content/communicator/contentAreaClick.js,             comm/content/communicator/contentAreaClick.js 
 content/communicator/contentAreaContextOverlay.xul,   comm/content/communicator/contentAreaContextOverlay.xul 
 content/communicator/nsContextMenu.js,                comm/content/communicator/nsContextMenu.js
-content/communicator/printPreviewBindings.xml,        comm/content/communicator/printPreviewBindings.xml
 content/communicator/printing.js,                     comm/content/communicator/printing.js
 content/communicator/XPCNativeWrapper.js,             comm/content/communicator/XPCNativeWrapper.js
 
@@ -117,6 +113,7 @@ content/global/printdialog.xul,                       toolkit/content/global/pri
 content/global/printdialog.js,                        toolkit/content/global/printdialog.js
 content/global/printProgress.xul,                     toolkit/content/global/printProgress.xul
 content/global/printProgress.js,                      toolkit/content/global/printProgress.js
+content/global/printPreviewBindings.xml,              toolkit/content/global/printPreviewBindings.xml
 content/global/printPreviewProgress.xul,              toolkit/content/global/printPreviewProgress.xul
 content/global/printPreviewProgress.js,               toolkit/content/global/printPreviewProgress.js
 content/global/printPageSetup.js,                     toolkit/content/global/printPageSetup.js
@@ -164,7 +161,6 @@ content/global/nsProgressDialog.xul,                  toolkit/content/global/nsP
 #################################################################################################
 content/pipnss/contents.rdf,                          pipnss/content/pipnss/contents.rdf
 content/pippki,                                       pippki/content/pippki
-
 
 #################################################################################################
 # files needed by the optional pref extension. These files may not necessarily exist if the extension
