@@ -306,8 +306,10 @@ alpha*-*-osf*)
     else
 	CFLAGS="$CFLAGS -std1 -ieee_with_inexact"
 	CXXFLAGS="$CXXFLAGS -std1 -ieee_with_inexact"
-        DSO_LDOPTS='-shared -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
+        DSO_LDOPTS='-shared -msym -expect_unresolved \* -soname $(@:$(OBJDIR)/%.$(DLL_SUFFIX)=%.$(DLL_SUFFIX))'
         DSO_CFLAGS=
+        MKSHLIB_FORCE_ALL='-all'
+        MKSHLIB_UNFORCE_ALL='-none'
     fi ;;
 
 *-bsdi*)
