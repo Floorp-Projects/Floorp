@@ -19,6 +19,7 @@ use Cwd;
 use File::Copy;
 use File::Path;
 use IO::File;
+use Config;
 require mozLock;
 import mozLock;
 
@@ -29,6 +30,11 @@ getopts("d:s:f:avlD:p:");
 my $baseFilesDir = ".";
 if (defined($::opt_s)) {
     $baseFilesDir = $::opt_s;
+}
+
+my $maxCmdline = 4000;
+if ($Config{'archname'} =~ /VMS/) {
+    $maxCmdline = 200;
 }
 
 my $chromeDir = ".";
@@ -142,10 +148,10 @@ sub JarIt
 
         #print "zip $zipmoveopt -u ../$jarfile.jar $args\n";
 
-	# Handle posix cmdline limits (4096)
-	while (length($args) > 4000) {
+	# Handle posix cmdline limits
+	while (length($args) > $maxCmdline) {
 	    #print "Exceeding POSIX cmdline limit: " . length($args) . "\n";
-	    my $subargs = substr($args, 0, 3999);
+	    my $subargs = substr($args, 0, $maxCmdline-1);
 	    my $pos = rindex($subargs, " ");
 	    $subargs = substr($args, 0, $pos);
 	    $args = substr($args, $pos);
@@ -167,9 +173,9 @@ sub JarIt
 	my $err = 0; 
         print "+++ overriding $overrides\n";
 
-	while (length($args) > 4000) {
+	while (length($args) > $maxCmdline) {
 	    #print "Exceeding POSIX cmdline limit: " . length($args) . "\n";
-	    my $subargs = substr($args, 0, 3999);
+	    my $subargs = substr($args, 0, $maxCmdline-1);
 	    my $pos = rindex($subargs, " ");
 	    $subargs = substr($args, 0, $pos);
 	    $args = substr($args, $pos);

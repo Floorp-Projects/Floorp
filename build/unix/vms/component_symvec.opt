@@ -1,0 +1,6 @@
+! Component global symbol file, used for all true XPCOM components (those
+! which have IS_COMPONENT defined in their Makefile.
+!
+GSMATCH=LEQUAL,1,1
+case_sensitive=YES
+SYMBOL_VECTOR=(NSGetModule=PROCEDURE)

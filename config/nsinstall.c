@@ -199,6 +199,7 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
 
   if (ftruncate(tofd, sb.st_size) < 0)
     fail("cannot truncate %s", toname);
+#if !defined(VMS)
   if (dotimes)
   {
     utb.actime = sb.st_atime;
@@ -212,6 +213,7 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
   if (chmod(toname, mode) < 0)
 #endif
     fail("cannot change mode of %s", toname);
+#endif
   if ((owner || group) && fchown(tofd, uid, gid) < 0)
     fail("cannot change owner of %s", toname);
 
@@ -219,6 +221,17 @@ copyfile( char *name, char *toname, mode_t mode, char *group, char *owner,
   if (close(tofd) < 0)
     fail("cannot write to %s", toname);
   close(fromfd);
+#if defined(VMS)
+  if (chmod(toname, (mode & (S_IREAD | S_IWRITE))) < 0)
+    fail("cannot change mode of %s", toname);
+  if (dotimes)
+  {
+    utb.actime = sb.st_atime;
+    utb.modtime = sb.st_mtime;
+    if (utime(toname, &utb) < 0)
+      fail("cannot set times of %s", toname);
+  }
+#endif
 }
 
 static void

@@ -1,0 +1,26 @@
+! Fixed section of symbol vector for LIBXPCOM (non-debug)
+!
+GSMATCH=LEQUAL,2,2
+case_sensitive=YES
+!
+! --------------------------------------------------------------------------
+! Ident 2,1 introduced for M0.9.4
+! --------------------------------------------------------------------------
+!
+SYMBOL_VECTOR=(CXX$assgnfrmhlpr13nsCMPt3okfmbt=PROCEDURE)
+SYMBOL_VECTOR=(CXX$clk16nsQeryntrfcxnk434ulf1t=PROCEDURE)
+SYMBOL_VECTOR=(CXX$clk17nsGtSrvcByCDxnk20ffnk0=PROCEDURE)
+SYMBOL_VECTOR=(__dt__13nsCOMPtr_basexv=PROCEDURE)
+!
+! --------------------------------------------------------------------------
+! Ident 2,2 introduced for Mozilla 1.1 (and hence CSWB post 1.0).
+! --------------------------------------------------------------------------
+!
+SYMBOL_VECTOR=(iid__L0__GetIID__9nsIModulexv=DATA)
+SYMBOL_VECTOR=(iid__L0__GetIID__10nsIFactoryxv=DATA)
+SYMBOL_VECTOR=(CXX$iidL0GtID11nsRnnblxv3t05kum=DATA)
+SYMBOL_VECTOR=(CXX$GtGlblSrvcMngr16nsSr1vcg2p7=PROCEDURE)
+!
+! --------------------------------------------------------------------------
+! End of fixed section
+! --------------------------------------------------------------------------

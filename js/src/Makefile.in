@@ -238,7 +238,7 @@ endif
 LDFLAGS		+= $(pathsubst -l%,$(NSPR_STATIC_PATH)/%.a,$(NSPR_LIBS))
 
 # BeOS and HP-UX do not require the extra linking of "-lm"
-ifeq (,$(filter BeOS HP-UX WINNT,$(OS_ARCH)))
+ifeq (,$(filter BeOS HP-UX WINNT OpenVMS,$(OS_ARCH)))
 LDFLAGS		+= -lm
 endif
 
@@ -294,7 +294,7 @@ endif
 
 # On OS/2 & win32 we are already linking against fdlibm, so don't bother
 # creating jsmathtemp
-ifeq (,$(filter OS2 WINNT,$(OS_ARCH)))
+ifeq (,$(filter OS2 WINNT OpenVMS,$(OS_ARCH)))
 # special rule for jsmath.o since we want to incrementally link
 # against fdlibm to pull in only what is needed
 # Do this in a single step to avoid dependency problems

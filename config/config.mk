@@ -107,9 +107,8 @@ endif
 ifneq (,$(findstring OpenVMS,$(OS_ARCH)))
 OS_ARCH		:= OpenVMS
 OS_RELEASE	:= $(shell uname -v)
-CPU_ARCH	:= $(shell uname -Wh)
+CPU_ARCH	:= $(shell uname -p)
 CPU_ARCH_TAG	:= _$(CPU_ARCH)
-PERL		:= perl
 endif
 ifeq ($(OS_ARCH),QNX)
 ifeq ($(OS_TARGET),NTO)
@@ -500,10 +499,6 @@ XPIDL_LINK	= $(DIST)/host/bin/host_xpt_link$(BIN_SUFFIX)
 else
 XPIDL_COMPILE 	= $(DIST)/bin/xpidl$(BIN_SUFFIX)
 XPIDL_LINK	= $(DIST)/bin/xpt_link$(BIN_SUFFIX)
-endif
-
-ifeq ($(OS_ARCH),OpenVMS)
-include $(topsrcdir)/config/$(OS_ARCH).mk
 endif
 
 REQ_INCLUDES	= $(foreach d,$(REQUIRES),-I$(DIST)/include/$d)
