@@ -1565,19 +1565,14 @@ nsNativeAppSupportOS2::HandleDDENotification( ULONG idInst,     // DDEML instanc
                         // Escape any double-quotes.
                         escapeQuotes( url );
 
-                        // Now for the title; first, get the "window" JS object.
+                        // Now for the title; first, get the "window" script global object.
                         nsCOMPtr<nsIScriptGlobalObject> scrGlobalObj( do_QueryInterface( internalContent ) );
                         if ( !scrGlobalObj ) {
                             break;
                         }
-                        // Then the doc shell...
-                        nsCOMPtr<nsIDocShell> docShell;
-                        scrGlobalObj->GetDocShell( getter_AddRefs( docShell ) );
-                        if ( !docShell ) {
-                            break;
-                        }
-                        // And from that the base window...
-                        nsCOMPtr<nsIBaseWindow> baseWindow( do_QueryInterface( docShell ) );
+                        // Then from its doc shell get the base window...
+                        nsCOMPtr<nsIBaseWindow> baseWindow =
+                          do_QueryInterface( scrGlobalObj->GetDocShell() );
                         if ( !baseWindow ) {
                             break;
                         }
@@ -2184,12 +2179,9 @@ HWND hwndForDOMWindow( nsISupports *window ) {
     if ( !ppScriptGlobalObj ) {
         return 0;
     }
-    nsCOMPtr<nsIDocShell> ppDocShell;
-    ppScriptGlobalObj->GetDocShell( getter_AddRefs( ppDocShell ) );
-    if ( !ppDocShell ) {
-        return 0;
-    }
-    nsCOMPtr<nsIBaseWindow> ppBaseWindow( do_QueryInterface( ppDocShell ) );
+
+    nsCOMPtr<nsIBaseWindow> ppBaseWindow =
+      do_QueryInterface( ppScriptGlobalObj->GetDocShell() );
     if ( !ppBaseWindow ) {
         return 0;
     }

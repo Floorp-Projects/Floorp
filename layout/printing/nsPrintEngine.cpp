@@ -1708,9 +1708,7 @@ nsPrintEngine::IsThereARangeSelection(nsIDOMWindow* aDOMWin)
   nsCOMPtr<nsIPresShell> presShell;
   if (aDOMWin) {
     nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWin));
-    nsCOMPtr<nsIDocShell> docShell;
-    scriptObj->GetDocShell(getter_AddRefs(docShell));
-    docShell->GetPresShell(getter_AddRefs(presShell));
+    scriptObj->GetDocShell()->GetPresShell(getter_AddRefs(presShell));
   }
 
   // check here to see if there is a range selection
@@ -4002,10 +4000,9 @@ nsPrintEngine::IsWindowsInOurSubTree(nsIDOMWindow * aDOMWindow)
   // now check to make sure it is in "our" tree of webshells
   nsCOMPtr<nsIScriptGlobalObject> scriptObj(do_QueryInterface(aDOMWindow));
   if (scriptObj) {
-    nsCOMPtr<nsIDocShell> docShell;
-    scriptObj->GetDocShell(getter_AddRefs(docShell));
+    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+      do_QueryInterface(scriptObj->GetDocShell());
 
-    nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
     if (docShellAsItem) {
       // get this DocViewer webshell
       nsCOMPtr<nsIWebShell> thisDVWebShell(do_QueryInterface(mContainer));
@@ -4440,9 +4437,8 @@ nsPrintEngine::TurnScriptingOn(PRBool aDoTurnOn)
   // get the script global object
   nsIScriptGlobalObject *scriptGlobalObj = mDocument->GetScriptGlobalObject();
   NS_ASSERTION(scriptGlobalObj, "Can't get nsIScriptGlobalObject");
-  nsCOMPtr<nsIScriptContext> scx;
-  nsresult rv = scriptGlobalObj->GetContext(getter_AddRefs(scx));
-  NS_ASSERTION(NS_SUCCEEDED(rv) && scx, "Can't get nsIScriptContext");
+  nsIScriptContext *scx = scriptGlobalObj->GetContext();
+  NS_ASSERTION(scx, "Can't get nsIScriptContext");
   scx->SetScriptsEnabled(aDoTurnOn, PR_TRUE);
 }
 

@@ -163,10 +163,8 @@ NS_NewHTMLOptionElement(nsIHTMLContent** aInstancePtrResult,
   nsresult rv;
   nsCOMPtr<nsINodeInfo> nodeInfo(aNodeInfo);
   if (!nodeInfo) {
-    nsCOMPtr<nsIDOMDocument> dom_doc;
-    nsContentUtils::GetDocumentFromCaller(getter_AddRefs(dom_doc));
-
-    nsCOMPtr<nsIDocument> doc(do_QueryInterface(dom_doc));
+    nsCOMPtr<nsIDocument> doc =
+      do_QueryInterface(nsContentUtils::GetDocumentFromCaller());
     NS_ENSURE_TRUE(doc, NS_ERROR_UNEXPECTED);
 
     nsINodeInfoManager *nodeInfoManager = doc->GetNodeInfoManager();

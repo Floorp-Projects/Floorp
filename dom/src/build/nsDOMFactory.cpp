@@ -39,7 +39,6 @@
 #include "nsIScriptGlobalObject.h"
 #include "nsDOMCID.h"
 #include "nsIDOMScriptObjectFactory.h"
-#include "nsIScriptEventListener.h"
 #include "nsIJSEventListener.h"
 #include "nsIScriptContext.h"
 #include "nsDOMClassInfo.h"

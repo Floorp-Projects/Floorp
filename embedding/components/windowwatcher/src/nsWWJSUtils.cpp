@@ -46,10 +46,8 @@
 #include "nsWWJSUtils.h"
 #include "nsIXPConnect.h"
 
-nsresult 
-nsWWJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
-                                     JSObject* aObj,
-                                     nsIScriptGlobalObject** aNativeGlobal)
+nsIScriptGlobalObject *
+nsWWJSUtils::GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj)
 {
   nsISupports* supports;
   JSClass* clazz;
@@ -57,7 +55,7 @@ nsWWJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
   JSObject* glob = aObj; // starting point for search
 
   if (!glob)
-    return NS_ERROR_FAILURE;
+    return nsnull;
 
   while (nsnull != (parent = JS_GetParent(aContext, glob)))
     glob = parent;
@@ -72,37 +70,35 @@ nsWWJSUtils::nsGetStaticScriptGlobal(JSContext* aContext,
       !(clazz->flags & JSCLASS_HAS_PRIVATE) ||
       !(clazz->flags & JSCLASS_PRIVATE_IS_NSISUPPORTS) ||
       !(supports = (nsISupports*) JS_GetPrivate(aContext, glob))) {
-    return NS_ERROR_FAILURE;
+    return nsnull;
   }
  
   nsCOMPtr<nsIXPConnectWrappedNative> wrapper(do_QueryInterface(supports));
-  NS_ENSURE_TRUE(wrapper, NS_ERROR_UNEXPECTED);
+  NS_ENSURE_TRUE(wrapper, nsnull);
 
   nsCOMPtr<nsISupports> native;
   wrapper->GetNative(getter_AddRefs(native));
 
-  return CallQueryInterface(native, aNativeGlobal);
+  nsCOMPtr<nsIScriptGlobalObject> sgo(do_QueryInterface(native));
+
+  // This will return a pointer to something we're about to release,
+  // but that's ok here.
+  return sgo;
 }
 
-nsresult 
-nsWWJSUtils::nsGetDynamicScriptContext(JSContext *aContext,
-                                       nsIScriptContext** aScriptContext)
+nsIScriptContext *
+nsWWJSUtils::GetDynamicScriptContext(JSContext *aContext)
 {
-  return GetScriptContextFromJSContext(aContext, aScriptContext);
+  return GetScriptContextFromJSContext(aContext);
 }
 
-nsresult 
-nsWWJSUtils::nsGetStaticScriptContext(JSContext* aContext,
-                                      JSObject* aObj,
-                                      nsIScriptContext** aScriptContext)
+nsIScriptContext *
+nsWWJSUtils::GetStaticScriptContext(JSContext* aContext,
+                                    JSObject* aObj)
 {
-  nsCOMPtr<nsIScriptGlobalObject> nativeGlobal;
-  nsGetStaticScriptGlobal(aContext, aObj, getter_AddRefs(nativeGlobal));
+  nsIScriptGlobalObject *nativeGlobal = GetStaticScriptGlobal(aContext, aObj);
   if (!nativeGlobal)    
-    return NS_ERROR_FAILURE;
-  nsIScriptContext* scriptContext = nsnull;
-  nativeGlobal->GetContext(&scriptContext);
-  *aScriptContext = scriptContext;
-  return scriptContext ? NS_OK : NS_ERROR_FAILURE;
+    return nsnull;
+  return nativeGlobal->GetContext();
 }  
 

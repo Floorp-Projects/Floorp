@@ -59,7 +59,6 @@
 #include "nsIEventStateManager.h"
 #include "nsPIDOMWindow.h"
 #include "nsIPrivateDOMEvent.h"
-#include "nsIScriptEventListener.h"
 #include "nsIJSEventListener.h"
 #include "prmem.h"
 #include "nsIScriptGlobalObject.h"
@@ -680,31 +679,14 @@ nsEventListenerManager::AddEventListener(nsIDOMEventListener *aListener,
 
   PRBool found = PR_FALSE;
   nsListenerStruct* ls;
-  nsresult rv;
-  
-  nsCOMPtr<nsIScriptEventListener> sel = do_QueryInterface(aListener, &rv);
-  
 
   for (int i=0; i<listeners->Count(); i++) {
     ls = (nsListenerStruct*)listeners->ElementAt(i);
-    if (ls->mListener == aListener && ls->mFlags == aFlags && ls->mGroupFlags == group) {
+    if (ls->mListener == aListener && ls->mFlags == aFlags &&
+        ls->mGroupFlags == group) {
       ls->mSubType |= aSubType;
       found = PR_TRUE;
       break;
-    }
-    else if (sel) { 
-      //Listener is an nsIScriptEventListener so we need to use its CheckIfEqual
-      //method to verify equality.
-      nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
-      if (NS_SUCCEEDED(rv) && regSel) {
-        PRBool equal;
-        if (NS_SUCCEEDED(regSel->CheckIfEqual(sel, &equal)) && equal) {
-          if (ls->mFlags & aFlags && ls->mSubType & aSubType) {
-            found = PR_TRUE;
-            break;
-          }
-        }
-      }
     }
   }
 
@@ -740,8 +722,6 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
   }
 
   nsListenerStruct* ls;
-  nsresult rv;
-  nsCOMPtr<nsIScriptEventListener> sel = do_QueryInterface(aListener, &rv);
   PRBool listenerRemoved = PR_FALSE;
 
   for (int i=0; i<listeners->Count(); i++) {
@@ -756,32 +736,18 @@ nsEventListenerManager::RemoveEventListener(nsIDOMEventListener *aListener,
       }
       break;
     }
-    else if (sel) {
-      //Listener is an nsIScriptEventListener so we need to use its CheckIfEqual
-      //method to verify equality.
-      nsCOMPtr<nsIScriptEventListener> regSel = do_QueryInterface(ls->mListener, &rv);
-      if (NS_SUCCEEDED(rv) && regSel) {
-        PRBool equal;
-        if (NS_SUCCEEDED(regSel->CheckIfEqual(sel, &equal)) && equal) {
-          if (ls->mFlags & aFlags && ls->mSubType & aSubType) {
-            NS_RELEASE(ls->mListener);
-            listeners->RemoveElement((void*)ls);
-            PR_DELETE(ls);
-            listenerRemoved = PR_TRUE;
-            break; // otherwise we'd need to adjust loop count...
-          }
-        }
-      }
-    }
   }
 
   return NS_OK;
 }
 
-nsresult nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener, 
-                                                       const nsIID& aIID, PRInt32 aFlags)
+nsresult
+nsEventListenerManager::AddEventListenerByIID(nsIDOMEventListener *aListener, 
+                                              const nsIID& aIID,
+                                              PRInt32 aFlags)
 {
-  AddEventListener(aListener, GetTypeForIID(aIID), NS_EVENT_BITS_NONE, nsnull, aFlags, nsnull);
+  AddEventListener(aListener, GetTypeForIID(aIID), NS_EVENT_BITS_NONE, nsnull,
+                   aFlags, nsnull);
   return NS_OK;
 }
 
@@ -790,11 +756,15 @@ nsEventListenerManager::RemoveEventListenerByIID(nsIDOMEventListener *aListener,
                                                  const nsIID& aIID,
                                                  PRInt32 aFlags)
 {
-  RemoveEventListener(aListener, GetTypeForIID(aIID), NS_EVENT_BITS_NONE, nsnull, aFlags, nsnull);
+  RemoveEventListener(aListener, GetTypeForIID(aIID), NS_EVENT_BITS_NONE,
+                      nsnull, aFlags, nsnull);
   return NS_OK;
 }
 
-nsresult nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType, EventArrayType* aArrayType, PRInt32* aFlags)
+nsresult
+nsEventListenerManager::GetIdentifiersForType(nsIAtom* aType,
+                                              EventArrayType* aArrayType,
+                                              PRInt32* aFlags)
 {
   if (aType == nsLayoutAtoms::onmousedown) {
     *aArrayType = eEventArrayType_Mouse;
@@ -1107,18 +1077,62 @@ nsEventListenerManager::SetJSEventListener(nsIScriptContext *aContext,
 }
 
 NS_IMETHODIMP
-nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
-                                               nsISupports *aObject,
+nsEventListenerManager::AddScriptEventListener(nsISupports *aObject,
                                                nsIAtom *aName,
                                                const nsAString& aBody,
                                                PRBool aDeferCompilation)
 {
+  nsIScriptContext *context = nsnull;
+  JSContext* cx = nsnull;
+
+  nsCOMPtr<nsIContent> content(do_QueryInterface(aObject));
+
+  if (content) {
+    // Try to get context from doc
+    nsIDocument *doc = content->GetDocument();
+    nsIScriptGlobalObject *global;
+
+    if (doc && (global = doc->GetScriptGlobalObject())) {
+      context = global->GetContext();
+    }
+  } else {
+    nsCOMPtr<nsIDocument> doc(do_QueryInterface(aObject));
+
+    nsCOMPtr<nsIScriptGlobalObject> global;
+
+    if (doc) {
+      global = doc->GetScriptGlobalObject();
+    } else {
+      global = do_QueryInterface(aObject);
+    }
+
+    if (global) {
+      context = global->GetContext();
+    }
+  }
+
+  if (!context) {
+    // Get JSContext from stack.
+    nsCOMPtr<nsIThreadJSContextStack> stack =
+      do_GetService("@mozilla.org/js/xpc/ContextStack;1");
+    NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
+
+    if (!cx) {
+      stack->GetSafeJSContext(&cx);
+      NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
+    }
+
+    context = nsContentUtils::GetDynamicScriptContext(cx);
+    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
+  }
+
   nsresult rv;
 
   if (!aDeferCompilation) {
     nsCOMPtr<nsIXPConnect> xpc(do_GetService(nsIXPConnect::GetCID()));
 
-    JSContext *cx = (JSContext *)aContext->GetNativeContext();
+    JSContext *cx = (JSContext *)context->GetNativeContext();
 
     nsCOMPtr<nsIXPConnectJSObjectHolder> holder;
 
@@ -1140,7 +1154,7 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
     if (handlerOwner) {
       rv = handlerOwner->GetCompiledEventHandler(aName, &handler);
       if (NS_SUCCEEDED(rv) && handler) {
-        rv = aContext->BindCompiledEventHandler(scriptObject, aName, handler);
+        rv = context->BindCompiledEventHandler(scriptObject, aName, handler);
         if (NS_FAILED(rv))
           return rv;
         done = PR_TRUE;
@@ -1151,20 +1165,20 @@ nsEventListenerManager::AddScriptEventListener(nsIScriptContext* aContext,
       if (handlerOwner) {
         // Always let the handler owner compile the event handler, as
         // it may want to use a special context or scope object.
-        rv = handlerOwner->CompileEventHandler(aContext, scriptObject, aName,
+        rv = handlerOwner->CompileEventHandler(context, scriptObject, aName,
                                                aBody, nsnull, 0, &handler);
       }
       else {
-        rv = aContext->CompileEventHandler(scriptObject, aName, aBody,
-                                           nsnull, 0,
-                                           (handlerOwner != nsnull),
-                                           &handler);
+        rv = context->CompileEventHandler(scriptObject, aName, aBody,
+                                          nsnull, 0,
+                                          (handlerOwner != nsnull),
+                                          &handler);
       }
       if (NS_FAILED(rv)) return rv;
     }
   }
 
-  return SetJSEventListener(aContext, aObject, aName, aDeferCompilation);
+  return SetJSEventListener(context, aObject, aName, aDeferCompilation);
 }
 
 nsresult
@@ -1392,19 +1406,14 @@ nsEventListenerManager::HandleEventSubType(nsListenerStruct* aListenerStruct,
 
       nsCOMPtr<nsIJSEventListener> jslistener = do_QueryInterface(aListenerStruct->mListener);
       if (jslistener) {
-        nsCOMPtr<nsISupports> target;
-        nsCOMPtr<nsIScriptContext> scriptCX;
-        result = jslistener->GetEventTarget(getter_AddRefs(scriptCX),
-                                            getter_AddRefs(target));
+        nsAutoString eventString;
+        if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
+          nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + eventString);
 
-        if (NS_SUCCEEDED(result)) {
-          nsAutoString eventString;
-          if (NS_SUCCEEDED(aDOMEvent->GetType(eventString))) {
-            nsCOMPtr<nsIAtom> atom = do_GetAtom(NS_LITERAL_STRING("on") + eventString);
-
-            result = CompileEventHandlerInternal(scriptCX, target, atom,
-                                                 aListenerStruct, aSubType);
-          }
+          result = CompileEventHandlerInternal(jslistener->GetEventContext(),
+                                               jslistener->GetEventTarget(),
+                                               atom, aListenerStruct,
+                                               aSubType);
         }
       }
     }

@@ -395,8 +395,7 @@ nsXBLPrototypeHandler::ExecuteHandler(nsIDOMEventReceiver* aReceiver,
   if (!boundGlobal)
     return NS_OK;
 
-  nsCOMPtr<nsIScriptContext> boundContext;
-  boundGlobal->GetContext(getter_AddRefs(boundContext));
+  nsIScriptContext *boundContext = boundGlobal->GetContext();
   if (!boundContext) return NS_OK;
 
   JSObject* scriptObject = nsnull;

@@ -340,9 +340,9 @@ nsXMLDocument::GetLoadGroup(nsILoadGroup **aLoadGroup)
   *aLoadGroup = nsnull;
 
   if (mScriptContext) {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    mScriptContext->GetGlobalObject(getter_AddRefs(global));
-    nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(global);
+    nsCOMPtr<nsIDOMWindow> window =
+      do_QueryInterface(mScriptContext->GetGlobalObject());
+
     if (window) {
       nsCOMPtr<nsIDOMDocument> domdoc;
       window->GetDocument(getter_AddRefs(domdoc));
@@ -381,15 +381,14 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   mPrincipal = principal;
   mListenerManager = elm;
 
-  nsCOMPtr<nsIScriptContext> callingContext;
+  nsIScriptContext *callingContext = nsnull;
 
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1");
   if (stack) {
     JSContext *cx;
     if (NS_SUCCEEDED(stack->Peek(&cx)) && cx) {
-      nsContentUtils::GetDynamicScriptContext(cx,
-                                              getter_AddRefs(callingContext));
+      callingContext = nsContentUtils::GetDynamicScriptContext(cx);
     }
   }
 
@@ -397,10 +396,8 @@ nsXMLDocument::Load(const nsAString& aUrl, PRBool *aReturn)
   nsCAutoString charset;
 
   if (callingContext) {
-    nsCOMPtr<nsIScriptGlobalObject> sgo;
-    callingContext->GetGlobalObject(getter_AddRefs(sgo));
-
-    nsCOMPtr<nsIDOMWindow> window(do_QueryInterface(sgo));
+    nsCOMPtr<nsIDOMWindow> window =
+      do_QueryInterface(callingContext->GetGlobalObject());
 
     if (window) {
       nsCOMPtr<nsIDOMDocument> dom_doc;

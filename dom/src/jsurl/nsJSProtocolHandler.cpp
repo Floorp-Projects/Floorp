@@ -184,12 +184,9 @@ nsresult nsJSThunk::EvaluateScript(nsIChannel *aChannel)
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    rv = global->GetContext(getter_AddRefs(scriptContext));
-    if (NS_FAILED(rv))
-        return rv;
-
-    if (!scriptContext) return NS_ERROR_FAILURE;
+    nsIScriptContext *scriptContext = global->GetContext();
+    if (!scriptContext)
+        return NS_ERROR_FAILURE;
 
     // Unescape the script
     NS_UnescapeURL(script);

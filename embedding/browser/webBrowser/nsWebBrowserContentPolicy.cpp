@@ -49,8 +49,7 @@ nsWebBrowserContentPolicy::ShouldLoad(PRInt32 contentType,
     if (!scriptGlobal)
         return NS_OK;
 
-    nsCOMPtr<nsIDocShell> shell;
-    scriptGlobal->GetDocShell(getter_AddRefs(shell));
+    nsIDocShell *shell = scriptGlobal->GetDocShell();
     /* We're going to dereference shell, so make sure it isn't null */
     if (!shell)
       return NS_OK;

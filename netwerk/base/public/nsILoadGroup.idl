@@ -96,7 +96,7 @@ interface nsILoadGroup : nsIRequest
      * Returns the count of "active" requests (ie. requests without the
      * LOAD_BACKGROUND bit set).
      */
-	readonly attribute unsigned long activeCount;
+    readonly attribute unsigned long activeCount;
 
     /**
      * Notification callbacks for the load group.

@@ -69,7 +69,8 @@
 #include "nsIProtocolHandler.h"
 #include "nsReadableUtils.h"
 
-static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
+static nsresult
+GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString& aCharset)
 {
   aCharset.Truncate();
 
@@ -83,11 +84,8 @@ static nsresult GetDocumentCharacterSetForURI(const nsAString& aHref, nsACString
   rv = stack->Peek(&cx);
   NS_ENSURE_SUCCESS(rv, rv);
 
-  nsCOMPtr<nsIScriptGlobalObject> nativeGlob;
-  nsJSUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(nativeGlob));
-  NS_ENSURE_TRUE(nativeGlob, NS_ERROR_FAILURE);
-
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob);
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx));
   NS_ENSURE_TRUE(window, NS_ERROR_FAILURE);
 
   nsCOMPtr<nsIDOMDocument> domDoc;
@@ -125,7 +123,8 @@ NS_INTERFACE_MAP_END
 NS_IMPL_ADDREF(LocationImpl)
 NS_IMPL_RELEASE(LocationImpl)
 
-NS_IMETHODIMP_(void) LocationImpl::SetDocShell(nsIDocShell *aDocShell)
+void
+LocationImpl::SetDocShell(nsIDocShell *aDocShell)
 {
    mDocShell = aDocShell; // Weak Reference
 }
@@ -573,11 +572,11 @@ LocationImpl::SetHrefWithBase(const nsAString& aHref,
 
       result = stack->Peek(&cx);
       if (cx) {
-        nsCOMPtr<nsIScriptContext> scriptContext;
-        nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(scriptContext));
+        nsIScriptContext *scriptContext =
+          nsJSUtils::GetDynamicScriptContext(cx);
 
         if (scriptContext) {
-          scriptContext->GetProcessingScriptTag(&inScriptTag);
+          inScriptTag = scriptContext->GetProcessingScriptTag();
         }  
       } //cx
     }  // stack
@@ -907,10 +906,8 @@ LocationImpl::GetSourceDocument(JSContext* cx, nsIDocument** aDocument)
   // that we can get the url of the caller.
   // XXX This will fail on non-DOM contexts :(
 
-  nsCOMPtr<nsIScriptGlobalObject> nativeGlob;
-  nsJSUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(nativeGlob));
-
-  nsCOMPtr<nsIDOMWindow> window = do_QueryInterface(nativeGlob, &rv);
+  nsCOMPtr<nsIDOMWindow> window =
+    do_QueryInterface(nsJSUtils::GetDynamicScriptGlobal(cx), &rv);
 
   if (window) {
     nsCOMPtr<nsIDOMDocument> domDoc;

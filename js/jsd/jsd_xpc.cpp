@@ -1606,7 +1606,9 @@ jsdContext::GetScriptsEnabled (PRBool *_rval)
     if (!context)
         return NS_ERROR_NO_INTERFACE;
 
-    return context->GetScriptsEnabled(_rval);
+    *_rval = context->GetScriptsEnabled();
+
+    return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1617,7 +1619,9 @@ jsdContext::SetScriptsEnabled (PRBool _rval)
     if (!context)
         return NS_ERROR_NO_INTERFACE;
 
-    return context->SetScriptsEnabled(_rval, PR_TRUE);
+    context->SetScriptsEnabled(_rval, PR_TRUE);
+
+    return NS_OK;
 }
 
 /* Stack Frames */

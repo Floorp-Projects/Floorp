@@ -42,12 +42,6 @@
 #include "nsIDOMEventTarget.h"
 
 class nsIDOMEventListener;
-class nsIDOMMouseListener;
-class nsIDOMMouseMotionListener;
-class nsIDOMKeyListener;
-class nsIDOMFocusListener;
-class nsIDOMLoadListener;
-class nsIDOMDragListener;
 class nsIEventListenerManager;
 class nsIDOMEvent;
 class nsIDOMEventGroup;

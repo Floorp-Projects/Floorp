@@ -248,8 +248,7 @@ nsXBLWindowHandler :: IsEditor()
     return PR_FALSE;
   
   nsCOMPtr<nsIScriptGlobalObject> obj(do_QueryInterface(focusedWindow));
-  nsCOMPtr<nsIDocShell> docShell;
-  obj->GetDocShell(getter_AddRefs(docShell));
+  nsIDocShell *docShell = obj->GetDocShell();
   nsCOMPtr<nsIPresShell> presShell;
   if (docShell)
     docShell->GetPresShell(getter_AddRefs(presShell));

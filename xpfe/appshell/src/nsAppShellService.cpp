@@ -911,8 +911,7 @@ nsAppShellService::GetHiddenWindowAndJSContext(nsIDOMWindowInternal **aWindow,
                 if (!sgo) { rv = NS_ERROR_FAILURE; break; }
 
                 // 4. Get script context from that.
-                nsCOMPtr<nsIScriptContext> scriptContext;
-                sgo->GetContext( getter_AddRefs( scriptContext ) );
+                nsIScriptContext *scriptContext = sgo->GetContext();
                 if (!scriptContext) { rv = NS_ERROR_FAILURE; break; }
 
                 // 5. Get JSContext from the script context.

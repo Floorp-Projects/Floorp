@@ -99,13 +99,10 @@ JSValIDToString(JSContext *cx, const jsval idval)
     return NS_REINTERPRET_CAST(PRUnichar*, JS_GetStringChars(str));
 }
 
-already_AddRefed<nsIScriptContext>
+static nsIScriptContext *
 GetScriptContext(JSContext *cx)
 {
-    nsIScriptContext *scriptContext;
-    GetScriptContextFromJSContext(cx, &scriptContext);
-
-    return scriptContext;
+    return GetScriptContextFromJSContext(cx);
 }
 
 // Helper class to get stuff from the ClassInfo and not waste extra time with
@@ -1428,16 +1425,18 @@ nsScriptSecurityManager::GetRootDocShell(JSContext *cx, nsIDocShell **result)
 {
     nsresult rv;
     *result = nsnull;
-    nsCOMPtr<nsIDocShell> docshell;
-    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
-    if (!scriptContext) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
-    if (!globalObject)  return NS_ERROR_FAILURE;
-    rv = globalObject->GetDocShell(getter_AddRefs(docshell));
+    nsIScriptContext *scriptContext = GetScriptContext(cx);
+    if (!scriptContext)
+        return NS_ERROR_FAILURE;
+
+    nsIScriptGlobalObject *globalObject = scriptContext->GetGlobalObject();
+    if (!globalObject)
+        return NS_ERROR_FAILURE;
+
+    nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem =
+        do_QueryInterface(globalObject->GetDocShell(), &rv);
     if (NS_FAILED(rv)) return rv;
-    nsCOMPtr<nsIDocShellTreeItem> docshellTreeItem(do_QueryInterface(docshell, &rv));
-    if (NS_FAILED(rv)) return rv;
+
     nsCOMPtr<nsIDocShellTreeItem> rootItem;
     rv = docshellTreeItem->GetRootTreeItem(getter_AddRefs(rootItem));
     if (NS_FAILED(rv)) return rv;
@@ -1479,15 +1478,13 @@ nsScriptSecurityManager::CanExecuteScripts(JSContext* cx,
     }
 
     //-- See if the current window allows JS execution
-    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
+    nsIScriptContext *scriptContext = GetScriptContext(cx);
     if (!scriptContext) return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
+    nsIScriptGlobalObject *globalObject = scriptContext->GetGlobalObject();
     if (!globalObject) return NS_ERROR_FAILURE;
-    
+
     nsresult rv;
-    nsCOMPtr<nsIDocShell> docshell;
-    globalObject->GetDocShell(getter_AddRefs(docshell));
+    nsCOMPtr<nsIDocShell> docshell = globalObject->GetDocShell();
     nsCOMPtr<nsIDocShellTreeItem> globalObjTreeItem = do_QueryInterface(docshell);
     if (globalObjTreeItem) 
     {
@@ -1731,16 +1728,15 @@ nsScriptSecurityManager::GetPrincipalFromContext(JSContext *cx,
 {
     *result = nsnull;
 
-    nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
+    nsIScriptContext *scriptContext = GetScriptContext(cx);
 
     if (!scriptContext)
     {
         return NS_ERROR_FAILURE;
     }
 
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    scriptContext->GetGlobalObject(getter_AddRefs(global));
-    nsCOMPtr<nsIScriptObjectPrincipal> globalData(do_QueryInterface(global));
+    nsCOMPtr<nsIScriptObjectPrincipal> globalData =
+        do_QueryInterface(scriptContext->GetGlobalObject());
     if (globalData)
         globalData->GetPrincipal(result);
 
@@ -1852,14 +1848,13 @@ nsScriptSecurityManager::GetPrincipalAndFrame(JSContext *cx,
     //   and return the innermost frame for annotations.
     if (cx)
     {
-        nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
+        nsIScriptContext *scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIScriptGlobalObject> global;
-            scriptContext->GetGlobalObject(getter_AddRefs(global));
-            NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-            nsCOMPtr<nsIScriptObjectPrincipal> globalData(do_QueryInterface(global));
+            nsCOMPtr<nsIScriptObjectPrincipal> globalData =
+                do_QueryInterface(scriptContext->GetGlobalObject());
             NS_ENSURE_TRUE(globalData, NS_ERROR_FAILURE);
+
             globalData->GetPrincipal(result);
             if (*result)
             {
@@ -2060,13 +2055,11 @@ nsScriptSecurityManager::CheckConfirmDialog(JSContext* cx, nsIPrincipal* aPrinci
     nsCOMPtr<nsIPrompt> prompter;
     if (cx)
     {
-        nsCOMPtr<nsIScriptContext> scriptContext = GetScriptContext(cx);
+        nsIScriptContext *scriptContext = GetScriptContext(cx);
         if (scriptContext)
         {
-            nsCOMPtr<nsIScriptGlobalObject> globalObject;
-            scriptContext->GetGlobalObject(getter_AddRefs(globalObject));
-            NS_ASSERTION(globalObject, "script context has no global object");
-            nsCOMPtr<nsIDOMWindowInternal> domWin(do_QueryInterface(globalObject));
+            nsCOMPtr<nsIDOMWindowInternal> domWin =
+                do_QueryInterface(scriptContext->GetGlobalObject());
             if (domWin)
                 domWin->GetPrompter(getter_AddRefs(prompter));
         }

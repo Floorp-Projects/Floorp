@@ -2588,9 +2588,7 @@ isSelfOrAncestor(nsIContent *aNode, nsIContent *aChild)
   /*
    * If aChild doesn't have children it can't be our ancestor
    */
-  PRUint32 childCount = aChild->GetChildCount();
-
-  if (childCount == 0) {
+  if (aChild->GetChildCount() == 0) {
     return PR_FALSE;
   }
 
@@ -3137,62 +3135,37 @@ nsresult
 nsGenericElement::AddScriptEventListener(nsIAtom* aAttribute,
                                          const nsAString& aValue)
 {
-  nsresult ret = NS_OK;
-  nsCOMPtr<nsIScriptContext> context;
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  JSContext* cx = nsnull;
+  nsresult rv = NS_OK;
+  nsISupports *target = NS_STATIC_CAST(nsIContent *, this);
+  PRBool defer = PR_TRUE;
 
-  // Try to get context from doc
-  if (mDocument) {
-    if ((global = mDocument->GetScriptGlobalObject())) {
-      NS_ENSURE_SUCCESS(global->GetContext(getter_AddRefs(context)), NS_ERROR_FAILURE);
-    }
-  }
-
-  if (!context) {
-    // Get JSContext from stack.
-    nsCOMPtr<nsIThreadJSContextStack> stack(do_GetService("@mozilla.org/js/xpc/ContextStack;1"));
-    NS_ENSURE_TRUE(stack, NS_ERROR_FAILURE);
-    NS_ENSURE_SUCCESS(stack->Peek(&cx), NS_ERROR_FAILURE);
-
-    if (!cx) {
-      stack->GetSafeJSContext(&cx);
-      NS_ENSURE_TRUE(cx, NS_ERROR_FAILURE);
-    }
-
-    nsContentUtils::GetDynamicScriptContext(cx, getter_AddRefs(context));
-    NS_ENSURE_TRUE(context, NS_ERROR_FAILURE);
-  }
+  nsCOMPtr<nsIEventListenerManager> manager;
 
   // Attributes on the body and frameset tags get set on the global object
   if (mNodeInfo->Equals(nsHTMLAtoms::body) ||
       mNodeInfo->Equals(nsHTMLAtoms::frameset)) {
-    if (!global && cx) {
-      nsContentUtils::GetDynamicScriptGlobal(cx, getter_AddRefs(global));
+    nsIScriptGlobalObject *sgo;
 
-      NS_ENSURE_TRUE(global, NS_ERROR_FAILURE);
-    }
-    nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(global));
-    NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
+    // If we have a document, and it has a script global, add the
+    // event listener on the global. If not, proceed as normal.
+    if (mDocument && (sgo = mDocument->GetScriptGlobalObject())) {
+      nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(sgo));
+      NS_ENSURE_TRUE(receiver, NS_ERROR_FAILURE);
 
-    nsCOMPtr<nsIEventListenerManager> manager;
-    receiver->GetListenerManager(getter_AddRefs(manager));
+      receiver->GetListenerManager(getter_AddRefs(manager));
 
-    if (manager) {
-      ret = manager->AddScriptEventListener(context, global, aAttribute,
-                                            aValue, PR_FALSE);
+      target = sgo;
+      defer = PR_FALSE;
     }
   } else {
-    nsCOMPtr<nsIEventListenerManager> manager;
     GetListenerManager(getter_AddRefs(manager));
-
-    if (manager) {
-      ret = manager->AddScriptEventListener(context, this, aAttribute, aValue,
-                                            PR_TRUE);
-    }
   }
 
-  return ret;
+  if (manager) {
+    rv = manager->AddScriptEventListener(target, aAttribute, aValue, defer);
+  }
+
+  return rv;
 }
 
 

@@ -554,38 +554,33 @@ XULPopupListenerImpl::LaunchPopup(PRInt32 aClientX, PRInt32 aClientY)
     return NS_OK;
 
   // We have some popup content. Obtain our window.
-  nsCOMPtr<nsIScriptContext> context;
-  nsCOMPtr<nsIScriptGlobalObject> global = document->GetScriptGlobalObject();
-  if (global) {
-    if ((NS_OK == global->GetContext(getter_AddRefs(context))) && context) {
-      // Get the DOM window
-      nsCOMPtr<nsIDOMWindowInternal> domWindow = do_QueryInterface(global);
-      if (domWindow != nsnull) {
-        // Find out if we're anchored.
-        mPopupContent = popupContent.get();
+  nsCOMPtr<nsIDOMWindowInternal> domWindow =
+    do_QueryInterface(document->GetScriptGlobalObject());
 
-        nsAutoString anchorAlignment;
-        mPopupContent->GetAttribute(NS_LITERAL_STRING("popupanchor"), anchorAlignment);
+  if (domWindow) {
+    // Find out if we're anchored.
+    mPopupContent = popupContent.get();
 
-        nsAutoString popupAlignment;
-        mPopupContent->GetAttribute(NS_LITERAL_STRING("popupalign"), popupAlignment);
+    nsAutoString anchorAlignment;
+    mPopupContent->GetAttribute(NS_LITERAL_STRING("popupanchor"), anchorAlignment);
 
-        PRInt32 xPos = aClientX, yPos = aClientY;
-        
-        ConvertPosition(mPopupContent, anchorAlignment, popupAlignment, yPos);
-        if (!anchorAlignment.IsEmpty() && !popupAlignment.IsEmpty())
-          xPos = yPos = -1;
+    nsAutoString popupAlignment;
+    mPopupContent->GetAttribute(NS_LITERAL_STRING("popupalign"), popupAlignment);
 
-        nsCOMPtr<nsIBoxObject> popupBox;
-        nsCOMPtr<nsIDOMXULElement> xulPopupElt(do_QueryInterface(mPopupContent));
-        xulPopupElt->GetBoxObject(getter_AddRefs(popupBox));
-        nsCOMPtr<nsIPopupBoxObject> popupBoxObject(do_QueryInterface(popupBox));
-        if (popupBoxObject)
-          popupBoxObject->ShowPopup(mElement, mPopupContent, xPos, yPos, 
-                                    type.get(), anchorAlignment.get(), 
-                                    popupAlignment.get());
-      }
-    }
+    PRInt32 xPos = aClientX, yPos = aClientY;
+
+    ConvertPosition(mPopupContent, anchorAlignment, popupAlignment, yPos);
+    if (!anchorAlignment.IsEmpty() && !popupAlignment.IsEmpty())
+      xPos = yPos = -1;
+
+    nsCOMPtr<nsIBoxObject> popupBox;
+    nsCOMPtr<nsIDOMXULElement> xulPopupElt(do_QueryInterface(mPopupContent));
+    xulPopupElt->GetBoxObject(getter_AddRefs(popupBox));
+    nsCOMPtr<nsIPopupBoxObject> popupBoxObject(do_QueryInterface(popupBox));
+    if (popupBoxObject)
+      popupBoxObject->ShowPopup(mElement, mPopupContent, xPos, yPos, 
+                                type.get(), anchorAlignment.get(), 
+                                popupAlignment.get());
   }
 
   return NS_OK;

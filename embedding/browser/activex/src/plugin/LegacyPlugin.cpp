@@ -438,16 +438,14 @@ GetPluginsContext(PluginInstanceData *pData)
     nsCOMPtr<nsIDOMWindow> window;
     NPN_GetValue(pData->pPluginInstance, NPNVDOMWindow, 
                  NS_STATIC_CAST(nsIDOMWindow **, getter_AddRefs(window)));
-    if (!window)
-        return nsnull;
 
     nsCOMPtr<nsIScriptGlobalObject> globalObject(do_QueryInterface(window));
     if (!globalObject)
         return nsnull;
 
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    if (NS_FAILED(globalObject->GetContext(getter_AddRefs(scriptContext))) ||
-        !scriptContext)
+    nsIScriptContext *scriptContext = globalObject->GetContext();
+
+    if (!scriptContext)
         return nsnull;
 
     return NS_REINTERPRET_CAST(JSContext*, scriptContext->GetNativeContext());

@@ -773,13 +773,10 @@ NS_IMETHODIMP nsPluginInstancePeerImpl::GetJSContext(JSContext* *outContext)
     nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
 
     if (global) {
-      nsCOMPtr<nsIScriptContext> context;
+      nsIScriptContext *context = global->GetContext();
 
-      if (global->GetContext(getter_AddRefs(context)) == NS_OK) {
-        if (context) {
-            *outContext = (JSContext*) context->GetNativeContext();
-            rv = NS_OK;
-        }
+      if (context) {
+        *outContext = (JSContext*) context->GetNativeContext();
       }
     }
   }

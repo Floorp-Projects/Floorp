@@ -5642,10 +5642,7 @@ NS_IMETHODIMP nsPluginHostImpl::NewPluginURLStream(const nsString& aURL,
 
         if (global) 
         {
-          nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
-          global->GetGlobalObjectOwner(getter_AddRefs(owner));
-
-          callbacks = do_QueryInterface(owner);
+          callbacks = do_QueryInterface(global->GetGlobalObjectOwner());
         }
       }
 

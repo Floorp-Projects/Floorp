@@ -123,8 +123,7 @@ public:
                                        const nsAString& type,
                                        PRInt32 aFlags,
                                        nsIDOMEventGroup* aEvtGroup);
-  NS_IMETHOD AddScriptEventListener(nsIScriptContext *aContext,
-                                    nsISupports *aObject,
+  NS_IMETHOD AddScriptEventListener(nsISupports *aObject,
                                     nsIAtom *aName,
                                     const nsAString& aFunc,
                                     PRBool aDeferCompilation); 

@@ -790,8 +790,7 @@ nsXULTemplateBuilder::InitHTMLTemplateRoot()
     if (! global)
         return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptContext> context;
-    global->GetContext(getter_AddRefs(context));
+    nsIScriptContext *context = global->GetContext();
     if (! context)
         return NS_ERROR_UNEXPECTED;
 

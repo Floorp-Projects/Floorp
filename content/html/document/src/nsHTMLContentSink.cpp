@@ -2093,8 +2093,7 @@ IsScriptEnabled(nsIDocument *aDoc, nsIDocShell *aContainer)
     NS_ENSURE_TRUE(globalObject, PR_TRUE);
   }
 
-  nsCOMPtr<nsIScriptContext> scriptContext;
-  globalObject->GetContext(getter_AddRefs(scriptContext));
+  nsIScriptContext *scriptContext = globalObject->GetContext();
   NS_ENSURE_TRUE(scriptContext, PR_TRUE);
 
   JSContext* cx = (JSContext *) scriptContext->GetNativeContext();

@@ -153,7 +153,7 @@ nsLayoutDebuggingTools::Init(nsIDOMWindow *aWin)
         nsCOMPtr<nsIScriptGlobalObject> global = do_QueryInterface(aWin);
         if (!global)
             return NS_ERROR_UNEXPECTED;
-        global->GetDocShell(getter_AddRefs(mDocShell));
+        mDocShell = global->GetDocShell();
     }
 
     mPrefs = do_GetService(NS_PREF_CONTRACTID);

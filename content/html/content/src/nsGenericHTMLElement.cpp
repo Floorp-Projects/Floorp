@@ -865,17 +865,17 @@ nsGenericHTMLElement::SetInnerHTML(const nsAString& aInnerHTML)
 
   nsCOMPtr<nsIDocument> doc = GetOwnerDocument();
 
-  nsCOMPtr<nsIScriptContext> scx;
+  nsIScriptContext *scx = nsnull;
   PRBool scripts_enabled = PR_FALSE;
 
   if (doc) {
     nsIScriptGlobalObject *sgo = doc->GetScriptGlobalObject();
 
     if (sgo) {
-      sgo->GetContext(getter_AddRefs(scx));
+      scx = sgo->GetContext();
 
       if (scx) {
-        scx->GetScriptsEnabled(&scripts_enabled);
+        scripts_enabled = scx->GetScriptsEnabled();
       }
     }
   }

@@ -126,9 +126,8 @@ NS_IMPL_ISUPPORTS4(nsEditingSession, nsIEditingSession, nsIWebProgressListener,
 NS_IMETHODIMP 
 nsEditingSession::Init(nsIDOMWindow *aWindow)
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  if (!docShell) return NS_ERROR_FAILURE;
 
   mEditingShell = do_GetWeakReference(docShell);
   if (!mEditingShell) return NS_ERROR_NO_INTERFACE;
@@ -157,11 +156,10 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   mWindowToBeEdited = do_GetWeakReference(aWindow);
 
   // disable plugins
-  nsCOMPtr<nsIDocShell> docShell;
-  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  if (!docShell) return NS_ERROR_FAILURE;
 
-  rv = docShell->SetAllowPlugins(PR_FALSE);
+  nsresult rv = docShell->SetAllowPlugins(PR_FALSE);
   if (NS_FAILED(rv)) return rv;
 
   // register as a content listener, so that we can fend off URL
@@ -173,12 +171,10 @@ nsEditingSession::MakeWindowEditable(nsIDOMWindow *aWindow,
   nsCOMPtr<nsIScriptGlobalObject> sgo (do_QueryInterface(aWindow));
   if (sgo)
   {
-    nsCOMPtr<nsIScriptContext> scriptContext;
-    sgo->GetContext(getter_AddRefs(scriptContext));
+    nsIScriptContext *scriptContext = sgo->GetContext();
     if (scriptContext)
     {
-      rv = scriptContext->SetScriptsEnabled(PR_FALSE, PR_TRUE);
-      if (NS_FAILED(rv)) return rv;
+      scriptContext->SetScriptsEnabled(PR_FALSE, PR_TRUE);
     }
   }
 
@@ -392,9 +388,8 @@ nsEditingSession::SetupEditorOnWindow(nsIDOMWindow *aWindow)
 
   // Create editor and do other things 
   //  only if we haven't found some error above,
-  nsCOMPtr<nsIDocShell> docShell;
-  rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;  
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  if (!docShell) return NS_ERROR_FAILURE;  
 
   nsCOMPtr<nsIPresShell> presShell;
   rv = docShell->GetPresShell(getter_AddRefs(presShell));
@@ -763,9 +758,8 @@ nsEditingSession::OnLocationChange(nsIWebProgress *aWebProgress,
 
   // Notify the location-changed observer that
   //  the document URL has changed
-  nsCOMPtr<nsIDocShell> docShell;
-  rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;
+  nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
+  if (!docShell) return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsICommandManager> commandManager = do_GetInterface(docShell);
   nsCOMPtr<nsPICommandUpdater> commandUpdater =
@@ -978,9 +972,8 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
       mEditorStatus = eEditorErrorFileNotFound;
   }
 
-  nsCOMPtr<nsIDocShell> docShell;
-  nsresult rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;       // better error handling?
+  nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
+  if (!docShell) return NS_ERROR_FAILURE;       // better error handling?
 
   // cancel refresh from meta tags
   // we need to make sure that all pages in editor (whether editable or not)
@@ -990,6 +983,8 @@ nsEditingSession::EndDocumentLoad(nsIWebProgress *aWebProgress,
     refreshURI->CancelRefreshURITimers();
 
   nsCOMPtr<nsIEditorDocShell> editorDocShell = do_QueryInterface(docShell);
+
+  nsresult rv = NS_OK;
 
   // did someone set the flag to make this shell editable?
   if (aIsToBeMadeEditable && mCanCreateEditor && editorDocShell)
@@ -1089,9 +1084,8 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
   nsCOMPtr<nsIDOMWindow> domWindow;
   nsresult rv = aWebProgress->GetDOMWindow(getter_AddRefs(domWindow));
   
-  nsCOMPtr<nsIDocShell> docShell;
-  rv = GetDocShellFromWindow(domWindow, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;
+  nsIDocShell *docShell = GetDocShellFromWindow(domWindow);
+  if (!docShell) return NS_ERROR_FAILURE;
 
   // cancel refresh from meta tags
   // we need to make sure that all pages in editor (whether editable or not)
@@ -1117,20 +1111,16 @@ nsEditingSession::EndPageLoad(nsIWebProgress *aWebProgress,
 
   GetDocShellFromWindow
 
-  Utility method. This will always return an error if no docShell
-  is returned.
+  Utility method. This will always return nsnull if no docShell is found.
 ----------------------------------------------------------------------------*/
-nsresult
-nsEditingSession::GetDocShellFromWindow(nsIDOMWindow *aWindow,
-                                        nsIDocShell** outDocShell)
+nsIDocShell *
+nsEditingSession::GetDocShellFromWindow(nsIDOMWindow *aWindow)
 {
   nsCOMPtr<nsIScriptGlobalObject> scriptGO = do_QueryInterface(aWindow);
-  if (!scriptGO) return NS_ERROR_FAILURE;
+  if (!scriptGO)
+    return nsnull;
 
-  nsresult rv = scriptGO->GetDocShell(outDocShell);
-  if (NS_FAILED(rv)) return rv;
-  if (!*outDocShell) return NS_ERROR_FAILURE;
-  return NS_OK;
+  return scriptGO->GetDocShell();
 }
 
 /*---------------------------------------------------------------------------
@@ -1144,9 +1134,8 @@ nsresult
 nsEditingSession::GetEditorDocShellFromWindow(nsIDOMWindow *aWindow,
                                               nsIEditorDocShell** outDocShell)
 {
-  nsCOMPtr<nsIDocShell> docShell;
-  nsresult rv = GetDocShellFromWindow(aWindow, getter_AddRefs(docShell));
-  if (NS_FAILED(rv)) return rv;
+  nsIDocShell *docShell = GetDocShellFromWindow(aWindow);
+  if (!docShell) return NS_ERROR_FAILURE;
   
   return docShell->QueryInterface(NS_GET_IID(nsIEditorDocShell), 
                                   (void **)outDocShell);

@@ -301,6 +301,13 @@ static EventHandlerMapEntry kEventHandlerMap[] = {
 static PRBool
 IsEventHandler(nsIAtom* aName)
 {
+    const char* name;
+    aName->GetUTF8String(&name);
+
+    if (name[0] != 'o' || name[1] != 'n') {
+        return PR_FALSE;
+    }
+
     EventHandlerMapEntry* entry = kEventHandlerMap;
     while (entry->mAttributeAtom) {
         if (entry->mAttributeAtom == aName) {
@@ -1380,63 +1387,51 @@ nsXULElement::GetLazyState(LazyState aFlag, PRBool& aResult)
 
 
 NS_IMETHODIMP
-nsXULElement::AddScriptEventListener(nsIAtom* aName,
-                                     const nsAString& aValue)
+nsXULElement::AddScriptEventListener(nsIAtom* aName, const nsAString& aValue)
 {
     if (! mDocument)
         return NS_OK; // XXX
 
     nsresult rv;
-    nsCOMPtr<nsIScriptContext> context;
-    nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
 
-    // This can happen normally as part of teardown code.
-    if (! global)
-        return NS_OK;
+    nsISupports *target = NS_STATIC_CAST(nsIContent *, this);
+    PRBool defer = PR_TRUE;
 
-    rv = global->GetContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) return rv;
-
-    if (!context) return NS_OK;
+    nsCOMPtr<nsIEventListenerManager> manager;
 
     nsIContent *root = mDocument->GetRootContent();
     nsCOMPtr<nsIContent> content(do_QueryInterface(NS_STATIC_CAST(nsIStyledContent*, this)));
     if ((!root || root == content) && !NodeInfo()->Equals(nsXULAtoms::overlay)) {
+        nsIScriptGlobalObject *global = mDocument->GetScriptGlobalObject();
+
         nsCOMPtr<nsIDOMEventReceiver> receiver = do_QueryInterface(global);
         if (! receiver)
             return NS_ERROR_UNEXPECTED;
 
-        nsCOMPtr<nsIEventListenerManager> manager;
         rv = receiver->GetListenerManager(getter_AddRefs(manager));
-        if (NS_FAILED(rv)) return rv;
 
-        rv = manager->AddScriptEventListener(context, global, aName,
-                                             aValue, PR_FALSE);
+        target = global;
+        defer = PR_FALSE;
     }
     else {
-        nsCOMPtr<nsIEventListenerManager> manager;
         rv = GetListenerManager(getter_AddRefs(manager));
-        if (NS_FAILED(rv)) return rv;
-
-        rv = manager->AddScriptEventListener(context,
-                                             NS_STATIC_CAST(nsIContent *,
-                                                            this),
-                                             aName, aValue, PR_TRUE);
     }
 
-    return rv;
+    if (NS_FAILED(rv)) return rv;
+
+    return manager->AddScriptEventListener(target, aName, aValue, defer);
 }
 
 nsresult
 nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 {
     if (!mListenerManager) {
-        nsresult rv;
-        mListenerManager = do_CreateInstance(kEventListenerManagerCID, &rv);
+        nsresult rv =
+            NS_NewEventListenerManager(getter_AddRefs(mListenerManager));
         if (NS_FAILED(rv))
             return rv;
 
-        mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIStyledContent*, this));
+        mListenerManager->SetListenerTarget(NS_STATIC_CAST(nsIContent*, this));
     }
 
     *aResult = mListenerManager;
@@ -1448,7 +1443,7 @@ nsXULElement::GetListenerManager(nsIEventListenerManager** aResult)
 //----------------------------------------------------------------------
 // nsIScriptEventHandlerOwner interface
 
-NS_IMETHODIMP
+nsresult
 nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
 {
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheTests);
@@ -1467,7 +1462,7 @@ nsXULElement::GetCompiledEventHandler(nsIAtom *aName, void** aHandler)
     return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
                                   void* aTarget,
                                   nsIAtom *aName,
@@ -1481,7 +1476,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
 
     XUL_PROTOTYPE_ATTRIBUTE_METER(gNumCacheSets);
 
-    nsCOMPtr<nsIScriptContext> context;
+    nsIScriptContext *context;
     if (mPrototype) {
         // It'll be shared among the instances of the prototype.
         // Use null for the scope object when precompiling shared
@@ -1509,8 +1504,7 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
         globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
         NS_ENSURE_TRUE(global, NS_ERROR_UNEXPECTED);
 
-        rv = global->GetContext(getter_AddRefs(context));
-        NS_ENSURE_SUCCESS(rv, rv);
+        context = global->GetContext();
     }
     else {
         // We don't have a prototype; do a one-off compile.
@@ -1528,6 +1522,8 @@ nsXULElement::CompileEventHandler(nsIScriptContext* aContext,
     if (! scopeObject) {
         // If it's a shared handler, we need to bind the shared
         // function object to the real target.
+
+        // XXX: Shouldn't this use context and not aContext?
         rv = aContext->BindCompiledEventHandler(aTarget, aName, *aHandler);
         if (NS_FAILED(rv)) return rv;
     }
@@ -4934,19 +4930,18 @@ nsXULPrototypeScript::Compile(const PRUnichar* aText,
     nsresult rv;
 
     // Use the prototype document's special context
-    nsCOMPtr<nsIScriptContext> context;
+    nsIScriptContext *context = nsnull;
 
     {
-        nsCOMPtr<nsIScriptGlobalObject> global;
         nsCOMPtr<nsIScriptGlobalObjectOwner> globalOwner
           = do_QueryInterface(aPrototypeDocument);
+        nsCOMPtr<nsIScriptGlobalObject> global;
         globalOwner->GetScriptGlobalObject(getter_AddRefs(global));
         NS_ASSERTION(global != nsnull, "prototype doc has no script global");
         if (! global)
             return NS_ERROR_UNEXPECTED;
 
-        rv = global->GetContext(getter_AddRefs(context));
-        if (NS_FAILED(rv)) return rv;
+        context = global->GetContext();
 
         NS_ASSERTION(context != nsnull, "no context for script global");
         if (! context)

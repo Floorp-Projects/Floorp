@@ -3252,8 +3252,7 @@ nsXULDocument::OnStreamComplete(nsIStreamLoader* aLoader,
 
                 NS_ASSERTION(global != nsnull, "master prototype w/o global?!");
                 if (global) {
-                    nsCOMPtr<nsIScriptContext> scriptContext;
-                    global->GetContext(getter_AddRefs(scriptContext));
+                    nsIScriptContext *scriptContext = global->GetContext();
                     if (scriptContext)
                         scriptProto->SerializeOutOfLine(nsnull, scriptContext);
                 }
@@ -3303,19 +3302,14 @@ nsXULDocument::ExecuteScript(JSObject* aScriptObject)
         return NS_ERROR_NULL_POINTER;
 
     // Execute the precompiled script with the given version
-    nsresult rv;
+    nsresult rv = NS_ERROR_UNEXPECTED;
 
     NS_ASSERTION(mScriptGlobalObject != nsnull, "no script global object");
-    if (! mScriptGlobalObject)
-        return NS_ERROR_UNEXPECTED;
 
-    nsCOMPtr<nsIScriptContext> context;
-    rv = mScriptGlobalObject->GetContext(getter_AddRefs(context));
-    if (NS_FAILED(rv)) return rv;
+    nsIScriptContext *context;
+    if (mScriptGlobalObject && (context = mScriptGlobalObject->GetContext()))
+        rv = context->ExecuteScript(aScriptObject, nsnull, nsnull, nsnull);
 
-    if (! context) return NS_ERROR_UNEXPECTED;
-
-    rv = context->ExecuteScript(aScriptObject, nsnull, nsnull, nsnull);
     return rv;
 }
 

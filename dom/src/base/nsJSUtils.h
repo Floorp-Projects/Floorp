@@ -53,15 +53,15 @@
 class nsIDOMEventListener;
 class nsIScriptContext;
 class nsIScriptGlobalObject;
-class nsIScriptSecurityManager;
 
-class nsJSUtils {
+class nsJSUtils
+{
 public:
   static JSBool GetCallingLocation(JSContext* aContext, const char* *aFilename,
                                    PRUint32 *aLineno);
 
-  static void ConvertStringToJSVal(const nsString& aProp, JSContext* aContext,
-                                   jsval* aReturn);
+  static jsval ConvertStringToJSVal(const nsString& aProp,
+                                    JSContext* aContext);
 
   static PRBool ConvertJSValToXPCObject(nsISupports** aSupports, REFNSIID aIID,
                                         JSContext* aContext, jsval aValue);
@@ -72,17 +72,35 @@ public:
   static PRBool ConvertJSValToUint32(PRUint32* aProp, JSContext* aContext,
                                      jsval aValue);
 
-  static nsresult GetStaticScriptGlobal(JSContext* aContext, JSObject* aObj,
-                                        nsIScriptGlobalObject** aGlobal);
+  static nsIScriptGlobalObject *GetStaticScriptGlobal(JSContext* aContext,
+                                                      JSObject* aObj);
 
-  static nsresult GetStaticScriptContext(JSContext* aContext, JSObject* aObj,
-                                         nsIScriptContext** aScriptContext);
+  static nsIScriptContext *GetStaticScriptContext(JSContext* aContext,
+                                                  JSObject* aObj);
 
-  static nsresult GetDynamicScriptGlobal(JSContext *aContext,
-                                         nsIScriptGlobalObject** aGlobal);
+  static nsIScriptGlobalObject *GetDynamicScriptGlobal(JSContext *aContext);
 
-  static nsresult GetDynamicScriptContext(JSContext *aContext,
-                                          nsIScriptContext** aScriptContext);
+  static nsIScriptContext *GetDynamicScriptContext(JSContext *aContext);
+};
+
+
+class nsDependentJSString : public nsDependentString
+{
+public:
+  explicit nsDependentJSString(jsval v)
+    : nsDependentString((PRUnichar *)::JS_GetStringChars(JSVAL_TO_STRING(v)),
+                        ::JS_GetStringLength(JSVAL_TO_STRING(v)))
+  {
+  }
+
+  explicit nsDependentJSString(JSString *str)
+    : nsDependentString(::JS_GetStringChars(str), ::JS_GetStringLength(str))
+  {
+  }
+
+  ~nsDependentJSString()
+  {
+  }
 };
 
 #endif /* nsJSUtils_h__ */

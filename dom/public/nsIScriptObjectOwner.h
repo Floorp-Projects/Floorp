@@ -116,13 +116,13 @@ public:
    * @param aLineNo the starting line number of the script for error messages
    * @param aHandler the compiled, bound handler object
    */
-  NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
-                                 void* aTarget,
-                                 nsIAtom *aName,
-                                 const nsAString& aBody,
-                                 const char* aURL,
-                                 PRUint32 aLineNo,
-                                 void** aHandler) = 0;
+  virtual nsresult CompileEventHandler(nsIScriptContext* aContext,
+                                       void* aTarget,
+                                       nsIAtom *aName,
+                                       const nsAString& aBody,
+                                       const char* aURL,
+                                       PRUint32 aLineNo,
+                                       void** aHandler) = 0;
 
   /**
    * Retrieve an already-compiled event handler that can be bound to a
@@ -131,7 +131,8 @@ public:
    * @param aName the name of the event handler to retrieve
    * @param aHandler the compiled event handler
    */
-  NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler) = 0;
+  virtual nsresult GetCompiledEventHandler(nsIAtom *aName,
+                                           void** aHandler) = 0;
 };
 
 #endif // nsIScriptObjectOwner_h__

@@ -62,10 +62,7 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
   if (!global) return NS_OK;
 
-  nsCOMPtr<nsIScriptContext> context;
-  nsresult rv = global->GetContext(getter_AddRefs(context));
-  NS_ENSURE_SUCCESS(rv, rv);
-
+  nsIScriptContext *context = global->GetContext();
   if (!context) return NS_OK;
 
   // InitTarget objects gives us back the JS object that represents the bound element and the
@@ -74,7 +71,8 @@ nsXBLProtoImpl::InstallImplementation(nsXBLPrototypeBinding* aBinding, nsIConten
   // not been built already.
   void * targetScriptObject = nsnull;
   void * targetClassObject = nsnull;
-  rv = InitTargetObjects(aBinding, context, aBoundElement, &targetScriptObject, &targetClassObject);
+  nsresult rv = InitTargetObjects(aBinding, context, aBoundElement,
+                                  &targetScriptObject, &targetClassObject);
   NS_ENSURE_SUCCESS(rv, rv); // kick out if we were unable to properly intialize our target objects
 
   // Walk our member list and install each one in turn.
@@ -153,9 +151,8 @@ nsXBLProtoImpl::CompilePrototypeMembers(nsXBLPrototypeBinding* aBinding)
   nsCOMPtr<nsIScriptGlobalObject> globalObject;
   globalOwner->GetScriptGlobalObject(getter_AddRefs(globalObject));
 
-  nsCOMPtr<nsIScriptContext> context;
-  globalObject->GetContext(getter_AddRefs(context));
- 
+  nsIScriptContext *context = globalObject->GetContext();
+
   void* classObject;
   JSObject* scopeObject = globalObject->GetGlobalJSObject();
   nsresult rv = aBinding->InitClass(mClassName, context, scopeObject, &classObject);

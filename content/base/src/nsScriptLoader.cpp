@@ -363,16 +363,13 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
   nsIScriptGlobalObject *globalObject = mDocument->GetScriptGlobalObject();
   if (globalObject)
   {
-    nsCOMPtr<nsIScriptContext> context;
-    if (NS_SUCCEEDED(globalObject->GetContext(getter_AddRefs(context)))
-        && context) {
-      PRBool scriptsEnabled = PR_TRUE;
-      context->GetScriptsEnabled(&scriptsEnabled);
-      // If scripts aren't enabled in the current context, there's no
-      // point in going on.
-      if (!scriptsEnabled) {
-        return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement, aObserver);
-      }
+    nsIScriptContext *context = globalObject->GetContext();
+
+    // If scripts aren't enabled in the current context, there's no
+    // point in going on.
+    if (context && !context->GetScriptsEnabled()) {
+      return FireErrorNotification(NS_ERROR_NOT_AVAILABLE, aElement,
+                                   aObserver);
     }
   }
 
@@ -476,12 +473,7 @@ nsScriptLoader::ProcessScriptElement(nsIDOMHTMLScriptElement *aElement,
       nsCOMPtr<nsILoadGroup> loadGroup = mDocument->GetDocumentLoadGroup();
       nsCOMPtr<nsIStreamLoader> loader;
 
-      nsCOMPtr<nsIDocShell> docshell;
-      rv = globalObject->GetDocShell(getter_AddRefs(docshell));
-      if (NS_FAILED(rv)) {
-        mPendingRequests.RemoveObject(request);
-        return FireErrorNotification(rv, aElement, aObserver);
-      }
+      nsIDocShell *docshell = globalObject->GetDocShell();
 
       nsCOMPtr<nsIInterfaceRequestor> prompter(do_QueryInterface(docshell));
 
@@ -636,9 +628,8 @@ nsScriptLoader::EvaluateScript(nsScriptLoadRequest* aRequest,
   nsIScriptGlobalObject *globalObject = mDocument->GetScriptGlobalObject();
   NS_ENSURE_TRUE(globalObject, NS_ERROR_FAILURE);
 
-  nsCOMPtr<nsIScriptContext> context;
-  rv = globalObject->GetContext(getter_AddRefs(context));
-  if (NS_FAILED(rv) || !context) {
+  nsIScriptContext *context = globalObject->GetContext();
+  if (!context) {
     return NS_ERROR_FAILURE;
   }
 

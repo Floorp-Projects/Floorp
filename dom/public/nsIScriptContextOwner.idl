@@ -1,4 +1,4 @@
-/* -*- Mode: IDL; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: IDL; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
  *
  * The contents of this file are subject to the Mozilla Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -61,8 +61,7 @@ interface nsIScriptContextOwner : nsISupports
   /**
    * Error notification method. Informs the owner that an error 
    * occurred while a script was being evaluted.
-   *
    */
 	void reportScriptError(in string aErrorString, in string aFileName,
-		in long aLineNo, in string aLineBuf);
+                         in long aLineNo, in string aLineBuf);
 };

@@ -141,14 +141,13 @@ NS_ScriptErrorReporter(JSContext *cx,
                        const char *message,
                        JSErrorReport *report)
 {
-  nsCOMPtr<nsIScriptContext> context;
+  // XXX this means we are not going to get error reports on non DOM contexts
+  nsIScriptContext *context = nsJSUtils::GetDynamicScriptContext(cx);
+
   nsEventStatus status = nsEventStatus_eIgnore;
 
-  // XXX this means we are not going to get error reports on non DOM contexts
-  nsJSUtils::GetDynamicScriptContext(cx, getter_AddRefs(context));
   if (context) {
-    nsCOMPtr<nsIScriptGlobalObject> globalObject;
-    context->GetGlobalObject(getter_AddRefs(globalObject));
+    nsIScriptGlobalObject *globalObject = context->GetGlobalObject();
 
     if (globalObject) {
       nsAutoString fileName, msg;
@@ -168,34 +167,29 @@ NS_ScriptErrorReporter(JSContext *cx,
         msg.AssignWithConversion(message);
       }
 
-      nsCOMPtr<nsIDocShell> docShell;
-      nsCOMPtr<nsIScriptGlobalObjectOwner> owner;
-      globalObject->GetGlobalObjectOwner(getter_AddRefs(owner));
-      if (owner) {
-        // First, notify the DOM that we have a script error.
-        globalObject->GetDocShell(getter_AddRefs(docShell));
-        if (docShell && !JSREPORT_IS_WARNING(report->flags)) {
-          static PRInt32 errorDepth; // Recursion prevention
-          ++errorDepth;
+      // First, notify the DOM that we have a script error.
+      nsIDocShell *docShell = globalObject->GetDocShell();
+      if (docShell && !JSREPORT_IS_WARNING(report->flags)) {
+        static PRInt32 errorDepth; // Recursion prevention
+        ++errorDepth;
 
-          nsCOMPtr<nsIPresContext> presContext;
-          docShell->GetPresContext(getter_AddRefs(presContext));
+        nsCOMPtr<nsIPresContext> presContext;
+        docShell->GetPresContext(getter_AddRefs(presContext));
 
-          if (presContext && errorDepth < 2) {
-            nsScriptErrorEvent errorevent(NS_SCRIPT_ERROR);
+        if (presContext && errorDepth < 2) {
+          nsScriptErrorEvent errorevent(NS_SCRIPT_ERROR);
 
-            errorevent.fileName = fileName.get();
-            errorevent.errorMsg = msg.get();
-            errorevent.lineNr = report ? report->lineno : 0;
+          errorevent.fileName = fileName.get();
+          errorevent.errorMsg = msg.get();
+          errorevent.lineNr = report ? report->lineno : 0;
 
-            // HandleDOMEvent() must be synchronous for the recursion block
-            // (errorDepth) to work.
-            globalObject->HandleDOMEvent(presContext, &errorevent, nsnull,
-                                         NS_EVENT_FLAG_INIT, &status);
-          }
-
-          --errorDepth;
+          // HandleDOMEvent() must be synchronous for the recursion block
+          // (errorDepth) to work.
+          globalObject->HandleDOMEvent(presContext, &errorevent, nsnull,
+                                       NS_EVENT_FLAG_INIT, &status);
         }
+
+        --errorDepth;
       }
 
       if (status != nsEventStatus_eConsumeNoDefault) {
@@ -236,6 +230,8 @@ NS_ScriptErrorReporter(JSContext *cx,
           }
 
           if (NS_SUCCEEDED(rv)) {
+            nsIScriptGlobalObjectOwner *owner =
+              globalObject->GetGlobalObjectOwner();
             if (owner) {
                 owner->ReportScriptError(errorObject);
             } else {
@@ -308,12 +304,8 @@ static JSBool
 ChangeCase(JSContext *cx, JSString *src, jsval *rval,
            void(* changeCaseFnc)(const nsAString&, nsAString&))
 {
-  nsDependentString str(NS_REINTERPRET_CAST(const PRUnichar *,
-                                            ::JS_GetStringChars(src)),
-                        ::JS_GetStringLength(src));
-
   nsAutoString result;
-  changeCaseFnc(str, result);
+  changeCaseFnc(nsDependentJSString(src), result);
 
   JSString *ucstr = JS_NewUCStringCopyN(cx, (jschar*)result.get(), result.Length());
   if (!ucstr) {
@@ -367,15 +359,10 @@ LocaleCompare(JSContext *cx, JSString *src1, JSString *src2, jsval *rval)
     }
   }
 
-  nsDependentString str1(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(src1)),
-                         ::JS_GetStringLength(src1));
-  nsDependentString str2(NS_REINTERPRET_CAST(const PRUnichar *,
-                                             ::JS_GetStringChars(src2)),
-                         ::JS_GetStringLength(src2));
-
   PRInt32 result;
-  rv = gCollation->CompareString(kCollationStrengthDefault, str1, str2,
+  rv = gCollation->CompareString(kCollationStrengthDefault,
+                                 nsDependentJSString(src1),
+                                 nsDependentJSString(src2),
                                  &result);
 
   if (NS_FAILED(rv)) {
@@ -433,12 +420,10 @@ nsJSContext::DOMBranchCallback(JSContext *cx, JSScript *script)
   // If we get here we're most likely executing an infinite loop in JS,
   // we'll tell the user about this and we'll give the user the option
   // of stopping the execution of the script.
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  ctx->GetGlobalObject(getter_AddRefs(global));
+  nsIScriptGlobalObject *global = ctx->GetGlobalObject();
   NS_ENSURE_TRUE(global, JS_TRUE);
 
-  nsCOMPtr<nsIDocShell> docShell;
-  global->GetDocShell(getter_AddRefs(docShell));
+  nsIDocShell *docShell = global->GetDocShell();
   NS_ENSURE_TRUE(docShell, JS_TRUE);
 
   nsCOMPtr<nsIInterfaceRequestor> ireq(do_QueryInterface(docShell));
@@ -622,7 +607,7 @@ NS_IMPL_ADDREF(nsJSContext)
 NS_IMPL_RELEASE(nsJSContext)
 
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
                                      void *aScopeObject,
                                      nsIPrincipal *aPrincipal,
@@ -655,11 +640,11 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
     aPrincipal->GetJSPrincipals(mContext, &jsprin);
   }
   else {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    GetGlobalObject(getter_AddRefs(global));
+    nsIScriptGlobalObject *global = GetGlobalObject();
     if (!global)
       return NS_ERROR_FAILURE;
-    nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(global, &rv);
+    nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal =
+      do_QueryInterface(global, &rv);
     if (NS_FAILED(rv))
       return NS_ERROR_FAILURE;
     rv = objPrincipal->GetPrincipal(getter_AddRefs(principal));
@@ -670,10 +655,8 @@ nsJSContext::EvaluateStringWithValue(const nsAString& aScript,
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
   PRBool ok = PR_FALSE;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager;
-  rv = GetSecurityManager(getter_AddRefs(securityManager));
-  if (NS_SUCCEEDED(rv))
-    rv = securityManager->CanExecuteScripts(mContext, principal, &ok);
+
+  rv = sSecurityManager->CanExecuteScripts(mContext, principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -805,7 +788,7 @@ JSValueToAString(JSContext *cx, jsval val, nsAString *result,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::EvaluateString(const nsAString& aScript,
                             void *aScopeObject,
                             nsIPrincipal *aPrincipal,
@@ -834,8 +817,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
     aPrincipal->GetJSPrincipals(mContext, &jsprin);
   }
   else {
-    nsCOMPtr<nsIScriptGlobalObject> global;
-    GetGlobalObject(getter_AddRefs(global));
+    nsIScriptGlobalObject *global = GetGlobalObject();
     if (!global)
       return NS_ERROR_FAILURE;
     nsCOMPtr<nsIScriptObjectPrincipal> objPrincipal = do_QueryInterface(global, &rv);
@@ -849,10 +831,8 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
   PRBool ok = PR_FALSE;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager;
-  rv = GetSecurityManager(getter_AddRefs(securityManager));
-  if (NS_SUCCEEDED(rv))
-    rv = securityManager->CanExecuteScripts(mContext, principal, &ok);
+
+  rv = sSecurityManager->CanExecuteScripts(mContext, principal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -937,7 +917,7 @@ nsJSContext::EvaluateString(const nsAString& aScript,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::CompileScript(const PRUnichar* aText,
                            PRInt32 aTextLength,
                            void *aScopeObject,
@@ -958,10 +938,8 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   // From here on, we must JSPRINCIPALS_DROP(jsprin) before returning...
 
   PRBool ok = PR_FALSE;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager;
-  rv = GetSecurityManager(getter_AddRefs(securityManager));
-  if (NS_SUCCEEDED(rv))
-    rv = securityManager->CanExecuteScripts(mContext, aPrincipal, &ok);
+
+  rv = sSecurityManager->CanExecuteScripts(mContext, aPrincipal, &ok);
   if (NS_FAILED(rv)) {
     JSPRINCIPALS_DROP(mContext, jsprin);
     return NS_ERROR_FAILURE;
@@ -1008,7 +986,7 @@ nsJSContext::CompileScript(const PRUnichar* aText,
   return rv;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::ExecuteScript(void* aScriptObject,
                            void *aScopeObject,
                            nsAString* aRetValue,
@@ -1106,7 +1084,7 @@ AtomToEventHandlerName(nsIAtom *aName)
   return name;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
                                  const nsAString& aBody,
                                  const char *aURL, PRUint32 aLineNo,
@@ -1165,7 +1143,7 @@ nsJSContext::CompileEventHandler(void *aTarget, nsIAtom *aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::CompileFunction(void* aTarget,
                              const nsACString& aName,
                              PRUint32 aArgCount,
@@ -1178,8 +1156,7 @@ nsJSContext::CompileFunction(void* aTarget,
 {
   JSPrincipals *jsprin = nsnull;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  GetGlobalObject(getter_AddRefs(global));
+  nsIScriptGlobalObject *global = GetGlobalObject();
   if (global) {
     // XXXbe why the two-step QI? speed up via a new GetGlobalObjectData func?
     nsCOMPtr<nsIScriptObjectPrincipal> globalData = do_QueryInterface(global);
@@ -1217,7 +1194,7 @@ nsJSContext::CompileFunction(void* aTarget,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
                               void *argv, PRBool *aBoolResult)
 {
@@ -1230,10 +1207,6 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   // This one's a lot easier than EvaluateString because we don't have to
   // hassle with principals: they're already compiled into the JS function.
   nsresult rv;
-  nsCOMPtr<nsIScriptSecurityManager> securityManager;
-  rv = GetSecurityManager(getter_AddRefs(securityManager));
-  if (NS_FAILED(rv))
-    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIJSContextStack> stack =
     do_GetService("@mozilla.org/js/xpc/ContextStack;1", &rv);
@@ -1250,7 +1223,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   mTerminationFunc = nsnull;
 
   // check if the event handler can be run on the object in question
-  rv = securityManager->CheckFunctionAccess(mContext, aHandler, aTarget);
+  rv = sSecurityManager->CheckFunctionAccess(mContext, aHandler, aTarget);
 
   if (NS_SUCCEEDED(rv)) {
     jsval val;
@@ -1277,7 +1250,7 @@ nsJSContext::CallEventHandler(void *aTarget, void *aHandler, PRUint32 argc,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName,
                                       void *aHandler)
 {
@@ -1301,22 +1274,20 @@ nsJSContext::BindCompiledEventHandler(void *aTarget, nsIAtom *aName,
   return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsJSContext::SetDefaultLanguageVersion(const char* aVersion)
 {
-  (void) ::JS_SetVersion(mContext, ::JS_StringToVersion(aVersion));
-  return NS_OK;
+  ::JS_SetVersion(mContext, ::JS_StringToVersion(aVersion));
 }
 
-NS_IMETHODIMP
-nsJSContext::GetGlobalObject(nsIScriptGlobalObject** aGlobalObject)
+nsIScriptGlobalObject *
+nsJSContext::GetGlobalObject()
 {
   JSObject *global = ::JS_GetGlobalObject(mContext);
-  *aGlobalObject = nsnull;
 
   if (!global) {
     NS_WARNING("Context has no global.");
-    return NS_OK;
+    return nsnull;
   }
 
   JSClass *c = JS_GET_CLASS(mContext, global);
@@ -1324,42 +1295,44 @@ nsJSContext::GetGlobalObject(nsIScriptGlobalObject** aGlobalObject)
   if (!c || ((~c->flags) & (JSCLASS_HAS_PRIVATE |
                             JSCLASS_PRIVATE_IS_NSISUPPORTS))) {
     NS_WARNING("Global is not an nsISupports.");
-    return NS_OK;
+    return nsnull;
   }
 
-  nsCOMPtr<nsISupports> native =
+  nsCOMPtr<nsIScriptGlobalObject> sgo;
+  nsISupports *priv =
     (nsISupports *)::JS_GetPrivate(mContext, global);
 
   nsCOMPtr<nsIXPConnectWrappedNative> wrapped_native =
-    do_QueryInterface(native);
+    do_QueryInterface(priv);
 
   if (wrapped_native) {
     // The global object is a XPConnect wrapped native, the native in
     // the wrapper might be the nsIScriptGlobalObject
 
+    nsCOMPtr<nsISupports> native;
     wrapped_native->GetNative(getter_AddRefs(native));
+
+    NS_WARN_IF_FALSE(native,
+                     "XPConnect wrapped native doesn't wrap anything.");
+
+    sgo = do_QueryInterface(native);
+  } else {
+    sgo = do_QueryInterface(priv);
   }
 
-  if (!native) {
-    NS_WARNING("XPConnect wrapped native doesn't wrap anything.");
-    return NS_OK;
-  }
-
-  // We have private data (either directly from ::JS_GetPrivate() or
-  // through wrapped_native->GetNative()), check if it's a
-  // nsIScriptGlobalObject
-
-  return CallQueryInterface(native, aGlobalObject);
+  // This'll return a pointer to something we're about to release, but
+  // that's ok, the JS object will hold it alive long enough.
+  return sgo;
 }
 
-NS_IMETHODIMP_(void*)
+void *
 nsJSContext::GetNativeContext()
 {
-  return (void *)mContext;
+  return mContext;
 }
 
 
-NS_IMETHODIMP
+nsresult
 nsJSContext::InitContext(nsIScriptGlobalObject *aGlobalObject)
 {
   if (!mContext)
@@ -1685,21 +1658,19 @@ nsJSContext::InitClasses()
   return rv;
 }
 
-NS_IMETHODIMP
+PRBool
 nsJSContext::IsContextInitialized()
 {
-  return (mIsInitialized) ? NS_OK : NS_ERROR_NOT_INITIALIZED;
+  return mIsInitialized;
 }
 
-NS_IMETHODIMP
+void
 nsJSContext::GC()
 {
   FireGCTimer();
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsJSContext::ScriptEvaluated(PRBool aTerminated)
 {
   if (aTerminated && mTerminationFunc) {
@@ -1716,102 +1687,73 @@ nsJSContext::ScriptEvaluated(PRBool aTerminated)
   }
 
   mBranchCallbackCount = 0;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJSContext::GetSecurityManager(nsIScriptSecurityManager **aInstancePtr)
-{
-  *aInstancePtr = sSecurityManager;
-
-  if (!sSecurityManager) {
-    return NS_ERROR_NOT_AVAILABLE;
-  }
-
-  NS_ADDREF(*aInstancePtr);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP
+void
 nsJSContext::SetOwner(nsIScriptContextOwner* owner)
 {
   // The owner should not be addrefed!! We'll be told
   // when the owner goes away.
   mOwner = owner;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJSContext::GetOwner(nsIScriptContextOwner** owner)
+nsIScriptContextOwner *
+nsJSContext::GetOwner()
 {
-  *owner = mOwner;
-  NS_IF_ADDREF(*owner);
-
-  return NS_OK;
+  return mOwner;
 }
 
-NS_IMETHODIMP
+void
 nsJSContext::SetTerminationFunction(nsScriptTerminationFunc aFunc,
                                     nsISupports* aRef)
 {
   mTerminationFunc = aFunc;
   mTerminationFuncArg = aRef;
-
-  return NS_OK;
 }
 
-NS_IMETHODIMP
-nsJSContext::GetScriptsEnabled(PRBool *aEnabled)
+PRBool
+nsJSContext::GetScriptsEnabled()
 {
-  *aEnabled = mScriptsEnabled;
-  return NS_OK;
+  return mScriptsEnabled;
 }
 
-NS_IMETHODIMP
+void
 nsJSContext::SetScriptsEnabled(PRBool aEnabled, PRBool aFireTimeouts)
 {
   mScriptsEnabled = aEnabled;
 
-  nsCOMPtr<nsIScriptGlobalObject> global;
-  GetGlobalObject(getter_AddRefs(global));
+  nsIScriptGlobalObject *global = GetGlobalObject();
 
   if (global) {
     global->SetScriptsEnabled(aEnabled, aFireTimeouts);
   }
-
-  return NS_OK;
 }
 
 
-NS_IMETHODIMP
-nsJSContext::GetProcessingScriptTag(PRBool * aResult)
+PRBool
+nsJSContext::GetProcessingScriptTag()
 {
-  *aResult = mProcessingScriptTag;
-  return NS_OK;
+  return mProcessingScriptTag;
 }
 
-NS_IMETHODIMP
+void
 nsJSContext::SetProcessingScriptTag(PRBool aFlag)
 {
   mProcessingScriptTag = aFlag;
-  return NS_OK;
 }
 
-NS_IMETHODIMP
+void
 nsJSContext::SetGCOnDestruction(PRBool aGCOnDestruction)
 {
   mGCOnDestruction = aGCOnDestruction;
-
-  return NS_OK;
 }
 
 NS_IMETHODIMP
 nsJSContext::ScriptExecuted()
 {
-  return ScriptEvaluated(PR_FALSE);
+  ScriptEvaluated(PR_FALSE);
+
+  return NS_OK;
 }
 
 NS_IMETHODIMP
@@ -1870,7 +1812,8 @@ DOMGCCallback(JSContext *cx, JSGCStatus status)
 }
 
 // static
-nsresult nsJSEnvironment::Init()
+nsresult
+nsJSEnvironment::Init()
 {
   static PRBool isInitialized;
 
@@ -1990,8 +1933,7 @@ NS_CreateScriptContext(nsIScriptGlobalObject *aGlobal,
   NS_ENSURE_SUCCESS(rv, rv);
 
   if (aGlobal) {
-    rv = aGlobal->SetContext(scriptContext);
-    NS_ENSURE_SUCCESS(rv, rv);
+    aGlobal->SetContext(scriptContext);
   }
 
   *aContext = scriptContext;

@@ -388,7 +388,7 @@ AtomImpl::EqualsUTF8(const nsACString& aString, PRBool* aResult)
 NS_IMETHODIMP
 AtomImpl::Equals(const nsAString& aString, PRBool* aResult)
 {
-  *aResult = NS_ConvertUCS2toUTF8(aString).Equals(mString);
+  *aResult = NS_ConvertUTF16toUTF8(aString).Equals(mString);
   return NS_OK;
 }
 

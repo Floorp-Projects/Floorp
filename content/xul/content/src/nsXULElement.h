@@ -539,14 +539,14 @@ public:
     NS_DECL_NSIDOMXULELEMENT
 
     // nsIScriptEventHandlerOwner
-    NS_IMETHOD CompileEventHandler(nsIScriptContext* aContext,
-                                   void* aTarget,
-                                   nsIAtom *aName,
-                                   const nsAString& aBody,
-                                   const char* aURL,
-                                   PRUint32 aLineNo,
-                                   void** aHandler);
-    NS_IMETHOD GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
+    nsresult CompileEventHandler(nsIScriptContext* aContext,
+                                 void* aTarget,
+                                 nsIAtom *aName,
+                                 const nsAString& aBody,
+                                 const char* aURL,
+                                 PRUint32 aLineNo,
+                                 void** aHandler);
+    nsresult GetCompiledEventHandler(nsIAtom *aName, void** aHandler);
 
     // nsIChromeEventHandler
     NS_DECL_NSICHROMEEVENTHANDLER

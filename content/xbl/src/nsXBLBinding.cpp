@@ -958,8 +958,7 @@ nsXBLBinding::ChangeDocument(nsIDocument* aOldDocument, nsIDocument* aNewDocumen
       if (interfaceElement) { 
         nsIScriptGlobalObject *global = aOldDocument->GetScriptGlobalObject();
         if (global) {
-          nsCOMPtr<nsIScriptContext> context;
-          global->GetContext(getter_AddRefs(context));
+          nsIScriptContext *context = global->GetContext();
           if (context) {
             JSContext *jscontext = (JSContext *)context->GetNativeContext();
  
@@ -1313,32 +1312,16 @@ nsXBLBinding::AddScriptEventListener(nsIContent* aElement, nsIAtom* aName,
   nsCOMPtr<nsIAtom> eventName = do_GetAtom(eventStr);
 
   nsresult rv;
-  nsCOMPtr<nsIDocument> document = aElement->GetDocument();
-  if (!document)
-    return NS_OK;
 
   nsCOMPtr<nsIDOMEventReceiver> receiver(do_QueryInterface(aElement));
   if (!receiver)
     return NS_OK;
 
-  nsIScriptGlobalObject *global = document->GetScriptGlobalObject();
-
-  // This can happen normally as part of teardown code.
-  if (!global)
-    return NS_OK;
-
-  nsCOMPtr<nsIScriptContext> context;
-  rv = global->GetContext(getter_AddRefs(context));
-  if (NS_FAILED(rv)) return rv;
-
-  if (!context) return NS_OK;
-
   nsCOMPtr<nsIEventListenerManager> manager;
   rv = receiver->GetListenerManager(getter_AddRefs(manager));
   if (NS_FAILED(rv)) return rv;
 
-  rv = manager->AddScriptEventListener(context, receiver, eventName,
-                                       aValue, PR_FALSE);
+  rv = manager->AddScriptEventListener(receiver, eventName, aValue, PR_FALSE);
 
   return rv;
 }

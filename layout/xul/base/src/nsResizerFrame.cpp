@@ -157,10 +157,8 @@ nsResizerFrame::HandleEvent(nsIPresContext* aPresContext,
 			   nsIScriptGlobalObject *scriptGlobalObject = document->GetScriptGlobalObject();
          NS_ENSURE_TRUE(scriptGlobalObject, NS_ERROR_FAILURE);
 
-         nsCOMPtr<nsIDocShell> docShell;
-         scriptGlobalObject->GetDocShell(getter_AddRefs(docShell));
-
-         nsCOMPtr<nsIDocShellTreeItem> docShellAsItem(do_QueryInterface(docShell));
+         nsCOMPtr<nsIDocShellTreeItem> docShellAsItem =
+           do_QueryInterface(scriptGlobalObject->GetDocShell());
          NS_ENSURE_TRUE(docShellAsItem, NS_ERROR_FAILURE);
 
          nsCOMPtr<nsIDocShellTreeOwner> treeOwner;

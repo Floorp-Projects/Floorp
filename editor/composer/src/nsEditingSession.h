@@ -98,8 +98,7 @@ public:
 
 protected:
 
-  nsresult        GetDocShellFromWindow(nsIDOMWindow *aWindow, 
-                                        nsIDocShell** outDocShell);
+  nsIDocShell *   GetDocShellFromWindow(nsIDOMWindow *aWindow);
   nsresult        GetEditorDocShellFromWindow(nsIDOMWindow *aWindow, 
                                               nsIEditorDocShell** outDocShell);
   
