@@ -21,14 +21,14 @@
  * Keith Visco, kvisco@ziplink.net
  *   -- original author.
  *    
- * $Id: BasicNodeExpr.cpp,v 1.2 2001/01/12 20:06:31 axel%pike.org Exp $
+ * $Id: BasicNodeExpr.cpp,v 1.3 2001/04/11 15:00:57 axel%pike.org Exp $
  */
 
 #include "Expr.h"
 
 /**
  * @author <a href="mailto:kvisco@ziplink.net">Keith Visco</a>
- * @version $Revision: 1.2 $ $Date: 2001/01/12 20:06:31 $
+ * @version $Revision: 1.3 $ $Date: 2001/04/11 15:00:57 $
 **/
 
 //- Constructors -/
@@ -108,6 +108,9 @@ MBool BasicNodeExpr::matches(Node* node, Node* context, ContextState* cs) {
         case NodeExpr::PI_EXPR :
             return (MBool) (node->getNodeType() == Node::PROCESSING_INSTRUCTION_NODE);
         default: //-- node()
+            if(node->getNodeType() == Node::TEXT_NODE)
+                return !cs->isStripSpaceAllowed(node);
+            return MB_TRUE;
             break;
     }
     return MB_TRUE;
