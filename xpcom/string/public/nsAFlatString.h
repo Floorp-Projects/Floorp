@@ -36,7 +36,7 @@ class NS_COM nsAFlatString
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsString| is really dead
       virtual const PRUnichar* get() const;
-      PRUnichar  operator[]( int i ) const { return get()[ i ]; }
+      PRUnichar  operator[]( PRUint32 i ) const { return get()[ i ]; }
       PRUnichar  CharAt( PRUint32 ) const;
 
       virtual PRUint32 Length() const;
@@ -53,7 +53,7 @@ class NS_COM nsAFlatCString
     public:
         // don't really want this to be virtual, and won't after |obsolete_nsCString| is really dead
       virtual const char* get() const;
-      char  operator[]( int i ) const      { return get()[ i ]; }
+      char  operator[]( PRUint32 i ) const      { return get()[ i ]; }
       char  CharAt( PRUint32 ) const;
 
       virtual PRUint32 Length() const;
@@ -69,7 +69,7 @@ PRUnichar
 nsAFlatString::CharAt( PRUint32 i ) const
   {
     NS_ASSERTION(i<Length(), "|CharAt| out-of-range");
-    return operator[](int(i));
+    return operator[](i);
   }
 
 inline
@@ -77,7 +77,7 @@ char
 nsAFlatCString::CharAt( PRUint32 i ) const
   {
     NS_ASSERTION(i<Length(), "|CharAt| out-of-range");
-    return operator[](int(i));
+    return operator[](i);
   }
 
 
