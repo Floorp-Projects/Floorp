@@ -371,6 +371,10 @@ NS_IMETHODIMP
 nsHTTPIndexParser::GetInterface(const nsIID &anIID, void **aResult ) 
 {
     if (anIID.Equals(NS_GET_IID(nsIFTPEventSink))) {
+        // If we don't have a container to store the logged data
+        // then don't report ourselves back to the caller
+        if (!mContainer)
+          return NS_ERROR_NO_INTERFACE;
         *aResult = NS_STATIC_CAST(nsIFTPEventSink*, this);
         NS_ADDREF(this);
         return NS_OK;
@@ -453,12 +457,11 @@ nsHTTPIndexParser::OnStartRequest(nsIRequest *request, nsISupports* aContext)
   nsresult rv;
 
   // This should only run once...
-  if (mBindToGlobalObject) {
+  // Unless we don't have a container to start with
+  // (ie called from bookmarks as an rdf datasource)
+  if (mBindToGlobalObject && mContainer.get()) {
     mBindToGlobalObject = PR_FALSE;
-    // We need to undo the AddRef() on the nsHTTPIndex object that
-    // happened in nsDirectoryViewerFactory::CreateInstance(). We'll
-    // stuff it into an nsCOMPtr (because we _know_ it'll get release
-    // if any errors occur)...
+
     nsCOMPtr<nsIHTTPIndex> httpindex = do_QueryInterface(mHTTPIndex);
 
     // Now get the content viewer container's script object.
