@@ -4,6 +4,7 @@ window {
 	border: thin black solid bottom;
 }
 
+
 tree {
 	display: table;
 	background-color: white;
@@ -41,7 +42,7 @@ treecell {
 	display: table-cell;
 	color: black;
 	font-family: Arial;
-	font-size: 12pt;
+	font-size: 8pt;
 }
 
 treehead treeitem treecell {

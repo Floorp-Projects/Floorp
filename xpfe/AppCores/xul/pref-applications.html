@@ -1,0 +1,50 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('Applications')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Applications</SPAN>
+</DIV>
+
+
+<table>
+  <FORM>
+			<tr><td>Description</tr><td>
+			<tr><td>
+			    <select name="textstyle" size=5>
+			    <option value="0">AOL Instant Messenger Launch
+			    </select>
+			</td><td>
+			     <input name=choose type="button" value="New Type">
+				 <br><input name=choose type="button" value="Edit...">
+                 <br><input name=choose type="button" value="Remove">
+            </td></tr>
+  </FORM>
+
+
+
+</table>
+<br>
+<table>
+   <tr><td>File type details</tr></td>
+   <FORM>
+
+
+			<tr><td>Extention:</td></tr>
+			<tr><td>Mime Type</td></tr>
+			<tr><td>Handled By:</td></tr>
+		</table>
+   </FORM>
+
+</table>
+</body>
+</html>

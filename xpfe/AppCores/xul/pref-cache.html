@@ -1,0 +1,53 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('Cache')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Cache</SPAN>
+</DIV>
+
+
+<table>
+      <tr><td>The cache is used to keep local copies of frequently accessed documents
+	  and thus reduce time connected to the network. The Reload button will always
+	  compare the cache document to the network and show the most recent one.
+	  </tr></td>
+  <FORM>
+            <tr><td>Memory Cache:<input name="disk" type="text" size="3" id="pref:string:composer.source">Kbytes<input name="clearm" type="button" value="Clear Memory Cache"><td></tr>           
+			<tr><td>Disk Cache:<input name="memory" type="text" size="3" id="pref:string:composer.source">Kbytes<input name="cleard" type="button" value="Clear Disk Cache"><td></tr>
+
+  </FORM>
+</table>
+External Editors			
+<table>
+  <FORM>		
+            <tr><td>Html Source</td></tr>
+			<tr><td><input name="Choose" type="text" id="pref:string:composer.source"></td>
+			<td><input value=Choose..."" type="button"></td></tr>
+			<tr><td>Images:</td></tr>
+			<tr><td><input name="Choose" type="text" id="pref:string:composer.images"></td>
+			<td><input value="Choose..." type="button"></td></tr>
+
+  </FORM>
+</table>
+<table>
+  <FORM>
+            Document in cache is compared to document on network:			
+			<tr><td><input name="cache" type="radio" id="pref:0:int:composer.font.size">Once per session</td></tr>
+			<tr><td><input name="cache" type="radio" id="pref:1:int:composer.font.size">Every time</td></tr>
+			<tr><td><input name="cache" type="radio" id="pref:2:int:composer.font.size">Never</td></tr>
+  </FORM>
+
+</table>
+
+</body>
+</html>

@@ -1,0 +1,52 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('Download')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Download</SPAN>
+</DIV>
+
+Newsgroup Messages
+<table>
+  <FORM>
+
+
+			<tr><td><input  type="checkbox" id="pref:0:bool:offline.news.download.unread_only">Download only unread messages</td</tr>
+			<tr><td><input  type="checkbox" id="pref:0:bool:offline.news.download.by_date">Download by date</td</tr>
+			<tr><td>
+				<input  type="radio" name="offline" id="pref:0:int:offline.news.download.use_days" checked>since
+				<select  id="pref:0:"><OPTION>1 week ago
+				                   <OPTION>2 weeks ago
+				                   <OPTION>1 month ago
+				                   <OPTION>6 months ago
+				                   <OPTION>1 year ago
+				</select></td></tr>
+
+			<tr><td><input type="radio" name="offline" id="pref:1:int:offline.news.download.use_days">since<input type="text" size="5" id="pref:2:browser.use_document_fonts">days ago</td</tr>
+
+  </FORM>
+</table>
+All Messages
+<table>
+   <tr><td>In order to read mail and newsgroup messages offline, you must
+           first select them for downloading.  Use the Select ... button to 
+		   select items for dowloading.</tr></td>
+   <FORM>
+
+
+			<tr><td><input  type="button" value="Select..." id="pref:2:offline"></td></tr>
+			</table>
+   </FORM>
+
+</table>
+</body>
+</html>

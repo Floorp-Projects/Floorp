@@ -1,0 +1,34 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('Proxies')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Proxies</SPAN>
+</DIV>
+
+
+<table>
+      A network proxy is used to provide additional security between your
+	  computer and the Internet (usually along with a firewall) and/or to increase
+	  performance between networks by reducing redundant traffic via caching.
+  <FORM>
+		
+			<tr><td><input name="" type="radio" id="pref:0:int:composer.font.size">Direct connection to the Internet</td></tr>
+			<tr><td><input name="" type="radio" id="pref:1:int:composer.font.size">Manual proxy configuration</td></tr>
+			<tr><td><input name="" type="radio" id="pref:2:int:composer.font.size">Automatic proxy configuration</td></tr>
+			<tr><td>Configuration location (URL):<input name="" type="text" size="15" id="pref:2:int:composer.font.size"></td></tr>
+
+  <FORM>
+</table>
+
+</body>
+</html>

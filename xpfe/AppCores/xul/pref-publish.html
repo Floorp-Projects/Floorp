@@ -1,0 +1,45 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('Composer')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Composer</SPAN>
+</DIV>
+
+
+<table>
+  <FORM>
+            <tr><td><input name="author" type="checkbox" id="pref:0:bool:editor.publish_keep_images">Maintain links.
+			<br>Adjust links to work from the page's location.(Links to local pages will work when
+			local versions exist.)           
+			<tr><td><input name="autosave" type="checkbox" id="pref:1:bool:bool:ceditor.publish_keep_links">Keep images with page.
+			<br>Save copies of images to the page's location.  Images will always appear in local versions
+			of the page and when page is published.</td></tr>
+			
+		Tip:Check both options if you will be using remote publishing.
+			
+			
+</table>
+
+Default publishing location
+<table>
+  <FORM>
+            <tr><td>Enter a FTP or HTTP site address to Publish to:</td></tr>           
+			<tr><td><input name="autosave" type="text" id="pref:string:composer.publish" size=30></tr></td>
+			<tr><td>If publishing to a FTP site, enter the HTTP address to browse to:</td></tr>
+			<tr><td><input name="autosave" type="text" id="pref:string:string:composer.browse" size=30></tr></td>
+			
+			
+</table>
+
+</body>
+</html>

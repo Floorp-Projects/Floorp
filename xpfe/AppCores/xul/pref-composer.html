@@ -1,0 +1,47 @@
+<html>
+<head>
+<title>Sample Prefs Panel</title>
+</head>
+
+<script language="JavaScript" src="PrefsWindow.js">
+</script>
+<style TYPE="text/css">
+@import url(pref.css);
+</style>
+
+<body ID=here onload="return StartUp('Composer')">
+
+<DIV ID=top>
+		<SPAN ID=lefttext>Composer</SPAN>
+</DIV>
+
+
+<table>
+  <FORM>
+            <tr><td>Author Name:<input name="author" type="text" id="pref:string:editor.author"></td></tr>           
+			<tr><td><input name="autosave" type="checkbox" id="pref:0:int:editor.auto_save_delay">Automatically save page every </td>
+			<td><input name="time" type="text" size="3" value="5" id="pref:5:int:editor.auto_save_delay">minutes</td></tr>
+			
+			
+</table>
+External Editors			
+<table>		
+            <tr><td>Html Source</td></tr>
+			<tr><td><input name="Choose" type="text" id="pref:string:editor.html_directory"></td>
+			<td><input name="" type="button" value="choose..."></td></tr>
+			
+			<tr><td>Images:</td></tr>
+			<tr><td><input name="Choose" type="text" id="pref:string:editor.image_editor"></td>
+			<td><input name="Choose..." type="button" value="choose..."></td></tr>
+</table>
+<table>
+            Font Size			
+			<tr><td><input name="font" type="radio" id="pref:0:int:fontsize_mode" checked>Show relavitive size as points based on your Navigator font sizes</td></tr>
+			<tr><td><input name="font" type="radio" id="pref:1:int:fontsize_mode">Show relative HTML font scale: -2, -1, 0, +1, +2, +3, +4</td></tr>
+			<tr><td><input name="font" type="radio" id="pref:2:int:fontsize_mode">Show relative HTML scale and absolute "point-size" attributes</td></tr>
+
+
+</table>
+
+</body>
+</html>

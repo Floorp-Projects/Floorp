@@ -1,33 +1,6 @@
-<style>
+<style type="text/css">
 
-body  {
-  background-color:#CCCCCC
-
-}
-   
-#righttext {
-  text-align: left;
-  font-style: bold;
-  
-}
-
-
-#righttext {
-  text-align: right;
-}
-
-#top  {
-background-color: grey
-}
-
-#tableb {
-    display:block;
-    border: groove white 2px;
-    font-size: 7pt;
-    min-height: 16px;
-    color: white;
-}
-
+@import url(pref.css);
 
 </style>
 
@@ -50,14 +23,13 @@ Navigator starts with
 		<tr><td><input name=starts type="radio"
 			id="pref:1:int:browser.startup.page" checked>Home Page</td>
 		</tr>
-		<tr>
-			<td><input name=starts type="radio"
+		<tr><td><input name=starts type="radio"
 				id="pref:2:int:browser.startup.page">Last Page visited</td>
 		</tr>
 	</FORM>
 </table>
 
-Home page
+Homepage
 <table ID="tableb">
 	<tr><td>Clicking the Home button will take you to this page.</td></tr>
 	<FORM>
@@ -66,7 +38,7 @@ Home page
 								type="text"
 								value="http://my.netscape.com"
 								id="pref:string:browser.startup.homepage"
-								size="54">
+								size="30">
 		</td></tr>
 		<tr><td><input name=starts type="button" value="Use Current Page">
 			<input name="browse" type="button" value="browsefile">
@@ -78,7 +50,7 @@ History
 <table ID="tableb">
 <tr>
 	<FORM>
-		History is a list of the pages you have previously visited.
+		<tr><td>History is a list of the pages you have previously visited.</tr></td>
 		<td>Pages in history expire after:<input type="text" value="9" size=3>days
 		</td>
 		<td><input name="Clearit" type="button" value="Clear History">
@@ -88,7 +60,7 @@ History
 </table>
 
 
-Home page
+Homepage
 <table ID="tableb">
 	<FORM>
 		<tr><td>Clear the list of sites on the location bar:   
