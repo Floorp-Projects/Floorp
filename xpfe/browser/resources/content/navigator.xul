@@ -51,8 +51,8 @@ Contributor(s): ______________________________________. -->
         titlemenuseparator="&mainWindow.titlemodifiermenuseparator;"
         windowtype="navigator:browser"
         width="610" height="450"
-        screenX="4" screenY="4" fullScreen="false"
-        persist="screenX screenY width height sizemode fullScreen"> 
+        screenX="4" screenY="4"
+        persist="screenX screenY width height sizemode"> 
 
   <!-- Generic Utility -->
   <script type="application/x-javascript" src="chrome://global/content/nsUserSettings.js"/>
@@ -154,13 +154,6 @@ Contributor(s): ______________________________________. -->
                        tooltiptext="&stopButton.tooltip;"/>
       </hbox>
  
-      <hbox id="fullscreen-extra-buttons" hidden="true">
-        <toolbarbutton id="fullscreen-exit-button" class="toolbarbutton-1"
-                       label="&exitFullScreenButton.label;"
-                       oncommand="BrowserFullScreenExit();"  
-                       tooltiptext="&exitFullScreenButton.tooltip;"/>
-      </hbox>
-                
       <hbox id="nav-bar-inner" flex="1">
         <textbox id="urlbar" class="chromeclass-location" flex="1"
                  type="autocomplete" searchSessions="history" 
@@ -398,16 +391,4 @@ Contributor(s): ______________________________________. -->
     <statusbarpanel class="statusbarpanel-iconic" id="security-button"/>
   </statusbar> 
 
-  <data id="fullScreenElementChanges">
-    <data idx="main-menubar" attribute="hidden" value="true"/>
-    <data idx="nav-bar-inner" attribute="hidden" value="true"/>
-    <data idx="print-button" attribute="hidden" value="true"/>
-    <data idx="throbber-box" attribute="hidden" value="true"/>
-    <data idx="PersonalToolbar" attribute="hidden" value="true"/>
-    <data idx="sidebar-box" attribute="hidden" value="true"/>
-    <data idx="sidebar-splitter" attribute="hidden" value="true"/>
-    <data idx="status-bar" attribute="hidden" value="true"/>
-
-    <data idx="fullscreen-extra-buttons" attribute="hidden" value=""/>
-  </data>
 </window>
