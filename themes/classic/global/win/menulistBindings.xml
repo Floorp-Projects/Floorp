@@ -12,8 +12,10 @@
   <binding id="menulist" extends="resource:/chrome/menulistBindings.xml#menulist">
     <content excludes="template,observes,menupopup" flex="1">
       <xul:box class="menulist-internal-box" flex="1">
-        <xul:image class="menulist-icon" inherits="src"/>
-        <xul:text class="menulist-text" inherits="value,accesskey,crop" crop="right" flex="1"/>
+        <xul:box class="menulist-display-box" flex="1" valign="middle" autostretch="never">
+          <xul:image class="menulist-icon" inherits="src"/>
+          <xul:text class="menulist-text" inherits="value,accesskey,crop" crop="right"/>
+        </xul:box>
         <xul:box class="menulist-dropmarker-box-1" valign="middle" inherits="open">
           <xul:box class="menulist-dropmarker-box-2" flex="1" autostretch="never" valign="middle" inherits="open">
             <xul:image class="menulist-dropmarker" inherits="disabled"/>

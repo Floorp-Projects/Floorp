@@ -53,3 +53,4 @@ install::
 	$(MAKE_INSTALL) buttonBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) classicBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
 	$(MAKE_INSTALL) menulistBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin
+	$(MAKE_INSTALL) treeBindings.xml $(DIST)\bin\chrome\skins\$(THEME)\global\skin

@@ -28,10 +28,23 @@
       border-bottom       : 1px solid threedface;
     }  
 
+  .menulist-display-box
+    {
+      border              : 1px solid window;
+      margin              : 1px;
+    }     
+    
+  menulist:focus > .menulist-internal-box > .menulist-display-box
+    {
+      border              : 1px dotted #F5DB95;
+      background-color    : highlight;
+      color               : highlighttext;
+    }
+      
 /* text display frame */
   .menulist-text 
     {
-      padding             : 2px 4px 2px 4px;
+      padding             : 0px 2px 0px 2px;
       margin:             : 0px;
     }
     
@@ -65,12 +78,12 @@
       padding             : 2px;
     }
 
-  .menulist-dropmarker-box-1[open="true"]
+  menulist:hover:active > .menulist-internal-box > .menulist-dropmarker-box-1[open="true"]
     { 
       border              : 1px solid threedshadow;
     }
     
-  .menulist-dropmarker-box-2[open="true"]
+  menulist:hover:active > .menulist-internal-box > .menulist-dropmarker-box-1 > .menulist-dropmarker-box-2[open="true"]
     {
       border              : 1px solid threedface;
       padding             : 3px 0px 1px 2px;

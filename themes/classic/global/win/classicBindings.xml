@@ -36,7 +36,22 @@
         </xul:html>
       </xul:box>
     </content>
-  
+  </binding>
+
+  <binding id="checkbox" extends="resource:/chrome/xulBindings.xml#checkbox">
+    <content excludes="observes">
+      <xul:box flex="1" class="checkbox-internal-box" autostretch="never" valign="middle">
+        <xul:box class="checkbox-checkmark-box-1" autostretch="never" inherits="disabled">
+          <xul:box class="checkbox-checkmark-box-2" autostretch="never" flex="1">
+            <xul:image class="checkbox-check" inherits="checked,disabled"/>
+          </xul:box>
+        </xul:box>
+        <xul:image class="checkbox-icon" inherits="src,disabled"/>
+        <xul:html class="checkbox-text" inherits="value,accesskey,crop,disabled" flex="1">
+          <children/>
+        </xul:html>
+      </xul:box>
+    </content>
   </binding>
   
 </bindings>
