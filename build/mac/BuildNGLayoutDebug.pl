@@ -42,11 +42,11 @@ $pull{nglayout} 		= 0;
 $pull{mac} 				= 0;
 
 $build{all} 			= 1;			# turn off to do individual builds, or to do "most"
-$build{most} 			= 0;			# turn off to do individual builds
+$build{most} 			= 1;			# turn off to do individual builds
 $build{dist} 			= 0;
 $build{dist_runtime}	= 0;			# implied by $build{dist}
-$build{idl}             = 0;
 $build{resources} 		= 0;
+$build{idl}             = 0;
 $build{stubs} 			= 0;
 $build{runtime}			= 0;
 $build{common} 			= 0;
@@ -102,16 +102,16 @@ if ($build{most})
 ### Just uncomment/comment to get the ones you want (if "most" is selected).
 #	$build{dist}		= 1;
 #	$build{dist_runtime}= 1;
-#	$build{idl}         = 1;
 #	$build{resources}	= 1;
-#   $build{stubs}		= 1;
-#   $build{runtime}		= 1;
-#	$build{common}		= 1; # Requires intl
-#   $build{intl}		= 1; 
-#	$build{nglayout}	= 1;
-#	$build{editor}		= 1;
-#	$build{mailnews}	= 1;
-#	$build{viewer}		= 1;
+	$build{idl}         = 1;
+	$build{stubs}		= 1;
+	$build{runtime}		= 1;
+	$build{common}		= 1; # Requires intl
+	$build{intl}		= 1; 
+	$build{nglayout}	= 1;
+	$build{editor}		= 1;
+	$build{mailnews}	= 1;
+	$build{viewer}		= 1;
 	$build{xpapp}		= 1;
 }
 
