@@ -1088,7 +1088,7 @@ NS_IMETHODIMP GlobalWindowImpl::GetScrollY(PRInt32* aScrollY)
 
 NS_IMETHODIMP GlobalWindowImpl::Dump(const nsString& aStr)
 {
-   char *cstr = aStr.ToNewCString();
+   char *cstr = aStr.ToNewUTF8String();
   
 #ifdef XP_MAC
    // have to convert \r to \n so that printing to the console works
