@@ -303,7 +303,7 @@ if [ -z "${INIT_SOURCED}" -o "${INIT_SOURCED}" != "TRUE" ]; then
     if  [ "${OS_ARCH}" = "Linux" ]; then
 #on linux the selfserv needs up to 30 seconds to fully die and free 
 #the socket
-        SLEEP="sleep 3" # taking the chance and trying on the tinderboxes
+        SLEEP="sleep 5" # taking the chance and trying on the tinderboxes
     fi
     if [ `uname -s` = "SunOS" ]; then
         PS="/usr/5bin/ps"
