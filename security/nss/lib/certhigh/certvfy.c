@@ -558,8 +558,9 @@ AddToVerifyLog(CERTVerifyLog *log, CERTCertificate *cert, unsigned long error,
 
 SECStatus
 __CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
-		     PRBool checkSig, SECCertUsage certUsage, int64 t,
-		     void *wincx, CERTVerifyLog *log, PRBool doCRL, PRBool* revoked)
+		     PRBool checkSig, PRBool* sigerror,
+                     SECCertUsage certUsage, int64 t, void *wincx,
+                     CERTVerifyLog *log, PRBool doCRL, PRBool* revoked)
 {
     SECTrustType trustType;
     CERTBasicConstraints basicConstraint;
@@ -713,6 +714,9 @@ __CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 				       issuerCert, t, wincx);
     
 	    if ( rv != SECSuccess ) {
+                if (sigerror) {
+                    *sigerror = PR_TRUE;
+                }
 		if ( PORT_GetError() == SEC_ERROR_EXPIRED_CERTIFICATE ) {
 		    PORT_SetError(SEC_ERROR_EXPIRED_ISSUER_CERTIFICATE);
 		    LOG_ERROR_OR_EXIT(log,issuerCert,count+1,0);
@@ -1012,7 +1016,7 @@ CERT_VerifyCertChain(CERTCertDBHandle *handle, CERTCertificate *cert,
 		     PRBool checkSig, SECCertUsage certUsage, int64 t,
 		     void *wincx, CERTVerifyLog *log)
 {
-    return __CERT_VerifyCertChain(handle, cert, checkSig, certUsage, t, wincx, log,
+    return __CERT_VerifyCertChain(handle, cert, checkSig, NULL, certUsage, t, wincx, log,
                                   PR_TRUE, NULL);
 }
 
@@ -1050,6 +1054,7 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
     PRBool checkedOCSP = PR_FALSE;
     PRBool checkAllUsages = PR_FALSE;
     PRBool revoked = PR_FALSE;
+    PRBool sigerror = PR_FALSE;
 
     if (!requiredUsages) {
         /* there are no required usages, so the user probably wants to
@@ -1117,17 +1122,11 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
                 INVALID_USAGE();
             }
             break;
-          case certUsageVerifyCA:
-            requiredKeyUsage = KU_KEY_CERT_SIGN;
-            requiredCertType = NS_CERT_TYPE_CA;
-            if ( ! ( certType & NS_CERT_TYPE_CA ) ) {
-                certType |= NS_CERT_TYPE_CA;
-            }
-            break;
 
           case certUsageAnyCA:
           case certUsageProtectedObjectSigner:
           case certUsageUserCertImport:
+          case certUsageVerifyCA:
               /* these usages cannot be verified */
               NEXT_ITERATION();
 
@@ -1234,16 +1233,15 @@ CERT_VerifyCertificate(CERTCertDBHandle *handle, CERTCertificate *cert,
             }
         }
 
-        if (PR_TRUE == revoked) {
+        if (PR_TRUE == revoked || PR_TRUE == sigerror) {
             INVALID_USAGE();
         }
 
-        /* only optionally check signature the first time */
-        /* don't check CRL as part of cert chain, we are doing that separately */
-        /* rv = __CERT_VerifyCertChain(handle, cert, (PR_TRUE == checkedChain) ? PR_FALSE : checkSig,
-            certUsage, t, wincx, log, issuerCert, PR_TRUE); */
-        rv = __CERT_VerifyCertChain(handle, cert, (PR_TRUE == checkedChain) ? PR_FALSE : checkSig,
-            certUsage, t, wincx, log, checkedChain?PR_FALSE:PR_TRUE, &revoked);
+        /* only check CRL and signature for the first usage check */
+        rv = __CERT_VerifyCertChain(handle, cert,
+            (PR_TRUE == checkedChain) ? PR_FALSE : checkSig, &sigerror,
+            certUsage, t, wincx, log,
+            (PR_TRUE ==  checkedChain) ? PR_FALSE : PR_TRUE, &revoked);
         checkedChain = PR_TRUE;
 
         if (rv != SECSuccess) {
