@@ -20,7 +20,7 @@ use File::Basename; # for basename();
 use Config; # for $Config{sig_name} and $Config{sig_num}
 
 
-$::UtilsVersion = '$Revision: 1.74 $ ';
+$::UtilsVersion = '$Revision: 1.75 $ ';
 
 package TinderUtils;
 
@@ -850,7 +850,7 @@ sub run_all_tests {
 	  # Settle OS.
 	  run_system_cmd("sync; sleep 10", 35);
 
-	  # Generate URL of form file:///<cwd>/startup-test.html?begin=986869495000
+	  # Generate URL of form file:///<path>/startup-test.html?begin=986869495000
 	  # Where begin value is current time.
 	  my ($time, $url, $cwd, $cmd);
 
@@ -862,7 +862,7 @@ sub run_all_tests {
 
 	  $cwd = Cwd::getcwd();
 	  print "cwd = $cwd\n";
-	  $url  = "\"file:$binary_dir/startup-test.html?begin=$time\"";
+	  $url  = "\"file:$build_dir/../startup-test.html?begin=$time\"";
 	  print "url = $url\n";
 
 	  # Then load startup-test.html, which will pull off the begin argument
