@@ -52,7 +52,7 @@ import org.mozilla.jss.provider.java.security.JSSMessageDigestSpi;
  * Initialization is done with static methods, and must be done before
  * an instance can be created.  All other operations are done with instance
  * methods.
- * @version $Revision: 1.10 $ $Date: 2002/07/19 00:20:21 $
+ * @version $Revision: 1.11 $ $Date: 2002/08/14 23:00:45 $
  */
 public final class CryptoManager implements TokenSupplier
 {
@@ -1304,26 +1304,14 @@ public final class CryptoManager implements TokenSupplier
 
     /**
      * Loads the JSS dynamic library if necessary.
-     * The system property "jss.load" will be set to "no" by jssjava
-     * because it is statically linked to the jss libraries. If this
-     * property is not set, that means we are not running jssjava
-     * and need to dynamically load the library.
      * <p>This method is idempotent.
      */
     synchronized static void loadNativeLibraries()
     {
-        if( ! mNativeLibrariesLoaded &&
-            ! ("no").equals(System.getProperty("jss.load")) )
+        if( ! mNativeLibrariesLoaded )
         {
-            try {
-                Debug.trace(Debug.VERBOSE, "about to load jss library");
-                System.loadLibrary("jss3");
-                Debug.trace(Debug.VERBOSE, "jss library loaded");
-            } catch( UnsatisfiedLinkError e) {
-                Debug.trace(Debug.ERROR, "ERROR: Unable to load jss library");
-                throw new UnsatisfiedLinkError(
-                    "Unable to load jss library or one of its dependencies");
-            }
+            System.loadLibrary("jss3");
+            Debug.trace(Debug.VERBOSE, "jss library loaded");
             mNativeLibrariesLoaded = true;
         }
     }
