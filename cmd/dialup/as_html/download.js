@@ -126,7 +126,7 @@ function generateRegServerList()
 	// if RegServer is not specified in ACCTSET.INI and multiple .IAS files exist, build list
 
 	var theFile = parent.parent.globals.getAcctSetupFilename( self );
-	var theRegFile = parent.parent.globals.GetNameValuePair( theFile, "New Acct Mode", "RegServer" );
+	var theRegFile = parent.parent.globals.GetNameValuePair( theFile, "New Acct Mode", "CompServer" );
 	
 	if ( theRegFile == null || theRegFile == "" )
 	{
