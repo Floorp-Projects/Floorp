@@ -1196,7 +1196,17 @@ skipline:
             atom = js_AtomizeObject(cx, obj, 0);
             if (!atom)
                 RETURN(TOK_ERROR);
-            tp->t_op = JSOP_OBJECT;
+
+            /*
+             * If the regexp's script is one-shot, we can avoid the extra
+             * fork-on-exec costs of JSOP_REGEXP by selecting JSOP_OBJECT.
+             * Otherwise, to avoid incorrect proto, parent, and lastIndex
+             * sharing among threads and sequentially across re-execution,
+             * select JSOP_REGEXP.
+             */
+            tp->t_op = (cx->fp->flags & (JSFRAME_EVAL | JSFRAME_COMPILE_N_GO))
+                       ? JSOP_OBJECT
+                       : JSOP_REGEXP;
             tp->t_atom = atom;
             RETURN(TOK_OBJECT);
         }

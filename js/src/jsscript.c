@@ -419,7 +419,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     if (xdr->mode == JSXDR_ENCODE) {
         length = script->length;
         prologLength = PTRDIFF(script->main, script->code, jsbytecode);
-        version = (int32)script->version;
+        JS_ASSERT((int16)script->version != JSVERSION_UNKNOWN);
+        version = (uint32)script->version | (script->numGlobalVars << 16);
         lineno = (uint32)script->lineno;
         depth = (uint32)script->depth;
 
@@ -461,7 +462,8 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
             return JS_FALSE;
         if (magic >= JSXDR_MAGIC_SCRIPT_2) {
             script->main += prologLength;
-            script->version = (JSVersion) version;
+            script->version = (JSVersion) (version & 0xffff);
+            script->numGlobalVars = (uint16) (version >> 16);
 
             /* If we know nsrcnotes, we allocated space for notes in script. */
             if (magic >= JSXDR_MAGIC_SCRIPT_4)
@@ -473,7 +475,7 @@ js_XDRScript(JSXDRState *xdr, JSScript **scriptp, JSBool *hasMagic)
     /*
      * Control hereafter must goto error on failure, in order for the DECODE
      * case to destroy script and conditionally free notes, which if non-null
-     * in the (DECODE and version < _4) case must point at a temporary vector
+     * in the (DECODE and magic < _4) case must point at a temporary vector
      * allocated just below.
      */
     if (!JS_XDRBytes(xdr, (char *)script->code, length * sizeof(jsbytecode)) ||
@@ -1085,6 +1087,7 @@ js_NewScriptFromCG(JSContext *cx, JSCodeGenerator *cg, JSFunction *fun)
     script->main += prologLength;
     memcpy(script->code, CG_PROLOG_BASE(cg), prologLength * sizeof(jsbytecode));
     memcpy(script->main, CG_BASE(cg), mainLength * sizeof(jsbytecode));
+    script->numGlobalVars = cg->treeContext.numGlobalVars;
     if (!js_InitAtomMap(cx, &script->atomMap, &cg->atomList))
         goto bad;
 
@@ -1216,7 +1219,8 @@ js_PCToLineNumber(JSContext *cx, JSScript *script, jsbytecode *pc)
     if (*pc == JSOP_DEFFUN) {
         atom = GET_ATOM(cx, script, pc);
         fun = (JSFunction *) JS_GetPrivate(cx, ATOM_TO_OBJECT(atom));
-        return fun->script->lineno;
+        JS_ASSERT(fun->interpreted);
+        return fun->u.script->lineno;
     }
 
     /*

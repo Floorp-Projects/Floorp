@@ -196,7 +196,7 @@ js_DestroyScope(JSContext *cx, JSScope *scope)
     JS_free(cx, scope);
 }
 
-#ifdef DEBUG_brendan
+#ifdef DUMP_SCOPE_STATS
 typedef struct JSScopeStats {
     jsrefcount          searches;
     jsrefcount          steps;
@@ -1277,7 +1277,7 @@ js_ChangeScopePropertyAttrs(JSContext *cx, JSScope *scope,
                                        child.attrs, child.flags, child.shortid);
     }
 
-#ifdef DEBUG_brendan
+#ifdef DUMP_SCOPE_STATS
     if (!newsprop)
         METER(changeFailures);
 #endif
@@ -1372,7 +1372,7 @@ js_ClearScope(JSContext *cx, JSScope *scope)
     InitMinimalScope(scope);
 }
 
-#ifdef DEBUG_brendan
+#ifdef DUMP_SCOPE_STATS
 
 #include <stdio.h>
 #include <math.h>
@@ -1433,7 +1433,47 @@ js_MeterPropertyTree(JSDHashTable *table, JSDHashEntryHdr *hdr, uint32 number,
     return JS_DHASH_NEXT;
 }
 
-#endif /* DEBUG_brendan */
+#include "jsprf.h"
+
+static void
+DumpSubtree(JSScopeProperty *sprop, int level, FILE *fp)
+{
+    char buf[10];
+    JSScopeProperty *kids, *kid;
+    PropTreeKidsChunk *chunk;
+    uintN i;
+
+    fprintf(fp, "%*sid %s g/s %p/%p slot %lu attrs %x flags %x shortid %d\n",
+            level, "",
+            JSVAL_IS_INT(sprop->id)
+            ? (JS_snprintf(buf, sizeof buf, "%ld", JSVAL_TO_INT(sprop->id)),
+               buf)
+            : JS_GetStringBytes(ATOM_TO_STRING((JSAtom *) sprop->id)),
+            (void *) sprop->getter, (void *) sprop->setter,
+            (unsigned long) sprop->slot, sprop->attrs, sprop->flags,
+            sprop->shortid);
+    kids = sprop->kids;
+    if (kids) {
+        ++level;
+        if (KIDS_IS_CHUNKY(kids)) {
+            chunk = KIDS_TO_CHUNK(kids);
+            do {
+                for (i = 0; i < MAX_KIDS_PER_CHUNK; i++) {
+                    kid = chunk->kids[i];
+                    if (!kid)
+                        break;
+                    JS_ASSERT(kid->parent == sprop);
+                    DumpSubtree(kid, level, fp);
+                }
+            } while ((chunk = chunk->next) != NULL);
+        } else {
+            kid = kids;
+            DumpSubtree(kid, level, fp);
+        }
+    }
+}
+
+#endif /* DUMP_SCOPE_STATS */
 
 void
 js_SweepScopeProperties(JSRuntime *rt)
@@ -1444,7 +1484,7 @@ js_SweepScopeProperties(JSRuntime *rt)
     PropTreeKidsChunk *chunk, *nextChunk;
     uintN i;
 
-#ifdef DEBUG_brendan
+#ifdef DUMP_SCOPE_STATS
     uint32 livePropCapacity = 0, totalLiveCount = 0;
     static FILE *logfp;
     if (!logfp)
@@ -1454,7 +1494,7 @@ js_SweepScopeProperties(JSRuntime *rt)
     JS_DHashTableEnumerate(&rt->propertyTreeHash, js_MeterPropertyTree, NULL);
 
     {
-        double mean = 0., var = 0., sigma = 0.;
+        double mean = 0.0, var = 0.0, sigma = 0.0;
         double nodesum = rt->livePropTreeNodes;
         double kidsum = js_nkids_sum;
         if (nodesum > 0 && kidsum >= 0) {
@@ -1466,7 +1506,7 @@ js_SweepScopeProperties(JSRuntime *rt)
                 var /= nodesum * (nodesum - 1);
 
             /* Windows says sqrt(0.0) is "-1.#J" (?!) so we must test. */
-            sigma = (var != 0.) ? sqrt(var) : 0.;
+            sigma = (var != 0.0) ? sqrt(var) : 0.0;
         }
 
         fprintf(logfp,
@@ -1542,7 +1582,7 @@ js_SweepScopeProperties(JSRuntime *rt)
                 FREENODE_REMOVE(sprop);
             JS_ARENA_DESTROY(&rt->propertyArenaPool, a, ap);
         } else {
-#ifdef DEBUG_brendan
+#ifdef DUMP_SCOPE_STATS
             livePropCapacity += limit - (JSScopeProperty *) a->base;
             totalLiveCount += liveCount;
 #endif
@@ -1550,10 +1590,28 @@ js_SweepScopeProperties(JSRuntime *rt)
         }
     }
 
-#ifdef DEBUG_brendan
+#ifdef DUMP_SCOPE_STATS
     fprintf(logfp, " arenautil %g%%\n",
-            (totalLiveCount * 100.) / livePropCapacity);
+            (totalLiveCount * 100.0) / livePropCapacity);
     fflush(logfp);
+#endif
+
+#ifdef DUMP_PROPERTY_TREE
+    {
+        FILE *dumpfp = fopen("/tmp/proptree.dump", "w");
+        if (dumpfp) {
+            JSPropertyTreeEntry *pte, *end;
+
+            pte = (JSPropertyTreeEntry *) rt->propertyTreeHash.entryStore;
+            end = pte + JS_DHASH_TABLE_SIZE(&rt->propertyTreeHash);
+            while (pte < end) {
+                if (pte->child)
+                    DumpSubtree(pte->child, 0, dumpfp);
+                pte++;
+            }
+            fclose(dumpfp);
+        }
+    }
 #endif
 }
 

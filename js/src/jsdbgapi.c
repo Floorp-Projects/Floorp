@@ -366,7 +366,7 @@ js_watch_set(JSContext *cx, JSObject *obj, jsval id, jsval *vp)
                 JSStackFrame frame;
 
                 memset(&frame, 0, sizeof(frame));
-                frame.script = fun->script;
+                frame.script = FUN_SCRIPT(fun);
                 frame.fun = fun;
                 frame.down = cx->fp;
                 cx->fp = &frame;
@@ -430,8 +430,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
     JSAtom *atom;
     jsid propid;
     JSObject *pobj;
+    JSProperty *prop;
     JSScopeProperty *sprop;
     JSRuntime *rt;
+    JSBool ok;
     JSWatchPoint *wp;
     JSPropertyOp watcher;
 
@@ -451,8 +453,9 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         propid = (jsid)atom;
     }
 
-    if (!js_LookupProperty(cx, obj, propid, &pobj, (JSProperty **)&sprop))
+    if (!js_LookupProperty(cx, obj, propid, &pobj, &prop))
         return JS_FALSE;
+    sprop = (JSScopeProperty *) prop;
     rt = cx->runtime;
     if (!sprop) {
         /* Check for a deleted symbol watchpoint, which holds its property. */
@@ -461,9 +464,10 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
             /* Make a new property in obj so we can watch for the first set. */
             if (!js_DefineProperty(cx, obj, propid, JSVAL_VOID,
                                    NULL, NULL, JSPROP_ENUMERATE,
-                                   (JSProperty **)&sprop)) {
-                sprop = NULL;
+                                   &prop)) {
+                return JS_FALSE;
             }
+            sprop = (JSScopeProperty *) prop;
         }
     } else if (pobj != obj) {
         /* Clone the prototype property so we can watch the right object. */
@@ -480,36 +484,45 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
             attrs = sprop->attrs;
         } else {
             if (!OBJ_GET_PROPERTY(cx, pobj, id, &value)) {
-                OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+                OBJ_DROP_PROPERTY(cx, pobj, prop);
                 return JS_FALSE;
             }
             getter = setter = JS_PropertyStub;
             attrs = JSPROP_ENUMERATE;
         }
-        OBJ_DROP_PROPERTY(cx, pobj, (JSProperty *)sprop);
+        OBJ_DROP_PROPERTY(cx, pobj, prop);
 
         if (!js_DefineProperty(cx, obj, propid, value, getter, setter, attrs,
-                               (JSProperty **)&sprop)) {
-            sprop = NULL;
+                               &prop)) {
+            return JS_FALSE;
         }
+        sprop = (JSScopeProperty *) prop;
     }
-    if (!sprop)
-        return JS_FALSE;
 
+    /*
+     * At this point, prop/sprop exists in obj, obj is locked, and we must
+     * OBJ_DROP_PROPERTY(cx, obj, prop) before returning.
+     */
+    ok = JS_TRUE;
     wp = FindWatchPoint(rt, OBJ_SCOPE(obj), propid);
     if (!wp) {
         watcher = js_WrapWatchedSetter(cx, propid, sprop->attrs, sprop->setter);
-        if (!watcher)
-            return JS_FALSE;
+        if (!watcher) {
+            ok = JS_FALSE;
+            goto out;
+        }
 
         wp = (JSWatchPoint *) JS_malloc(cx, sizeof *wp);
-        if (!wp)
-            return JS_FALSE;
+        if (!wp) {
+            ok = JS_FALSE;
+            goto out;
+        }
         wp->handler = NULL;
         wp->closure = NULL;
-        if (!js_AddRoot(cx, &wp->closure, "wp->closure")) {
+        ok = js_AddRoot(cx, &wp->closure, "wp->closure");
+        if (!ok) {
             JS_free(cx, wp);
-            return JS_FALSE;
+            goto out;
         }
         JS_APPEND_LINK(&wp->links, &rt->watchPointList);
         wp->object = obj;
@@ -517,15 +530,22 @@ JS_SetWatchPoint(JSContext *cx, JSObject *obj, jsval id,
         JS_ASSERT(sprop->setter != js_watch_set);
         wp->setter = sprop->setter;
         wp->nrefs = 1;
+
+        /* XXXbe nest in obj lock here */
         sprop = js_ChangeNativePropertyAttrs(cx, obj, sprop, 0, sprop->attrs,
                                              sprop->getter, watcher);
-        if (!sprop)
-            return DropWatchPoint(cx, wp);
+        if (!sprop) {
+            DropWatchPoint(cx, wp);
+            ok = JS_FALSE;
+            goto out;
+        }
     }
     wp->handler = handler;
     wp->closure = closure;
-    OBJ_DROP_PROPERTY(cx, obj, (JSProperty *)sprop);
-    return JS_TRUE;
+
+out:
+    OBJ_DROP_PROPERTY(cx, obj, prop);
+    return ok;
 }
 
 JS_PUBLIC_API(JSBool)
@@ -605,7 +625,7 @@ JS_LineNumberToPC(JSContext *cx, JSScript *script, uintN lineno)
 JS_PUBLIC_API(JSScript *)
 JS_GetFunctionScript(JSContext *cx, JSFunction *fun)
 {
-    return fun->script;
+    return FUN_SCRIPT(fun);
 }
 
 JS_PUBLIC_API(JSPrincipals *)
@@ -1182,8 +1202,8 @@ JS_GetFunctionTotalSize(JSContext *cx, JSFunction *fun)
             obytes = JS_HOWMANY(obytes, fun->nrefs);
         nbytes += obytes;
     }
-    if (fun->script)
-        nbytes += JS_GetScriptTotalSize(cx, fun->script);
+    if (fun->interpreted)
+        nbytes += JS_GetScriptTotalSize(cx, fun->u.script);
     atom = fun->atom;
     if (atom)
         nbytes += GetAtomTotalSize(cx, atom);

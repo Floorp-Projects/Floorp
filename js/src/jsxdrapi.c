@@ -48,6 +48,7 @@
 #include "jsprf.h"
 #include "jsapi.h"
 #include "jscntxt.h"
+#include "jsnum.h"
 #include "jsobj.h"              /* js_XDRObject */
 #include "jsscript.h"           /* js_XDRScript */
 #include "jsstr.h"
@@ -475,19 +476,14 @@ JS_XDRStringOrNull(JSXDRState *xdr, JSString **strp)
 JS_PUBLIC_API(JSBool)
 JS_XDRDouble(JSXDRState *xdr, jsdouble **dp)
 {
-    jsdouble d;
+    jsdpun u;
+
     if (xdr->mode == JSXDR_ENCODE)
-        d = **dp;
-#if IS_BIG_ENDIAN
-    if (!JS_XDRUint32(xdr, (uint32 *)&d + 1) ||
-        !JS_XDRUint32(xdr, (uint32 *)&d))
-#else
-    if (!JS_XDRUint32(xdr, (uint32 *)&d) ||
-        !JS_XDRUint32(xdr, (uint32 *)&d + 1))
-#endif
+        u.d = **dp;
+    if (!JS_XDRUint32(xdr, &u.s.lo) || !JS_XDRUint32(xdr, &u.s.hi))
         return JS_FALSE;
     if (xdr->mode == JSXDR_DECODE) {
-        *dp = JS_NewDouble(xdr->cx, d);
+        *dp = JS_NewDouble(xdr->cx, u.d);
         if (!*dp)
             return JS_FALSE;
     }

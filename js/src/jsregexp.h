@@ -53,8 +53,8 @@
 struct JSRegExpStatics {
     JSString    *input;         /* input string to match (perl $_, GC root) */
     JSBool      multiline;      /* whether input contains newlines (perl $*) */
-    uintN       parenCount;     /* number of valid elements in parens[] */
-    uintN       moreLength;     /* number of allocated elements in moreParens */
+    uint16      parenCount;     /* number of valid elements in parens[] */
+    uint16      moreLength;     /* number of allocated elements in moreParens */
     JSSubString parens[9];      /* last set of parens matched (perl $1, $2) */
     JSSubString *moreParens;    /* null or realloc'd vector for $10, etc. */
     JSSubString lastMatch;      /* last string matched (perl $&) */
@@ -72,14 +72,14 @@ struct JSRegExpStatics {
  *
  */
 typedef struct RECharSet {
-    JSBool converted;
-    JSBool sense;
-    uint16 length;
+    JSPackedBool    converted;
+    JSPackedBool    sense;
+    uint16          length;
     union {
-        uint8 *bits;
+        uint8       *bits;
         struct {
-            uint16 startIndex;
-            uint16 length;
+            uint16  startIndex;
+            uint16  length;
         } src;
     } u;
 } RECharSet;
@@ -99,12 +99,14 @@ typedef struct RENode RENode;
 
 struct JSRegExp {
     jsrefcount   nrefs;         /* reference count */
-    uint32       parenCount:24, /* number of parenthesized submatches */
-                 flags:8;       /* flags, see jsapi.h's JSREG_* defines */
-    uint32       classCount;    /* count [...] bitmaps */
+    uint16       flags;         /* flags, see jsapi.h's JSREG_* defines */
+    uint16       cloneIndex;    /* index in fp->vars or funobj->slots of
+                                   cloned regexp object */
+    uint16       parenCount;    /* number of parenthesized submatches */
+    uint16       classCount;    /* count [...] bitmaps */
     RECharSet    *classList;    /* list of [...] bitmaps */
     JSString     *source;       /* locked source string, sans // */
-    jsbytecode  program[1];     /* regular expression bytecode */
+    jsbytecode   program[1];    /* regular expression bytecode */
 };
 
 extern JSRegExp *
@@ -147,7 +149,14 @@ extern JSObject *
 js_InitRegExpClass(JSContext *cx, JSObject *obj);
 
 /*
- * Create a new RegExp object.
+ * Export js_regexp_toString to the decompiler.
+ */
+extern JSBool
+js_regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval);
+
+/*
+ * Create, serialize/deserialize, or clone a RegExp object.
  */
 extern JSObject *
 js_NewRegExpObject(JSContext *cx, JSTokenStream *ts,
@@ -159,6 +168,9 @@ js_XDRRegExp(JSXDRState *xdr, JSObject **objp);
 extern JSObject *
 js_CloneRegExpObject(JSContext *cx, JSObject *obj, JSObject *parent);
 
+/*
+ * Get and set the per-object (clone or clone-parent) lastIndex slot.
+ */
 extern JSBool
 js_GetLastIndex(JSContext *cx, JSObject *obj, jsdouble *lastIndex);
 

@@ -175,11 +175,11 @@ typedef struct CompilerState {
     const jschar    *cpbegin;
     const jschar    *cpend;
     const jschar    *cp;
-    uintN           flags;
+    uint16          flags;
     uint16          parenCount;
     uint16          classCount;   /* number of [] encountered */
+    uint16          treeDepth;    /* maximum depth of parse tree */
     size_t          progLength;   /* estimated bytecode length */
-    uintN           treeDepth;    /* maximum depth of parse tree */
     RENode          *result;
     struct {
         const jschar *start;        /* small cache of class strings */
@@ -1533,7 +1533,7 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     CompilerState state;
     size_t resize;
     jsbytecode *endPC;
-    uint32 i;
+    uintN i;
     size_t len;
 
     re = NULL;
@@ -1568,27 +1568,31 @@ js_NewRegExp(JSContext *cx, JSTokenStream *ts,
     if (!re)
         goto out;
 
+    re->nrefs = 1;
     re->classCount = state.classCount;
-    if (state.classCount) {
-        re->classList = (RECharSet *)JS_malloc(cx,
-                                               sizeof(RECharSet) *
-                                               state.classCount);
-        if (!re->classList)
+    if (re->classCount) {
+        re->classList = (RECharSet *)
+            JS_malloc(cx, re->classCount * sizeof(RECharSet));
+        if (!re->classList) {
+            js_DestroyRegExp(cx, re);
+            re = NULL;
             goto out;
-    }
-    else
+        }
+    } else {
         re->classList = NULL;
+    }
     endPC = EmitREBytecode(&state, re, state.treeDepth, re->program, state.result);
     if (!endPC) {
+        js_DestroyRegExp(cx, re);
         re = NULL;
         goto out;
     }
     *endPC++ = REOP_END;
     JS_ASSERT(endPC <= (re->program + (state.progLength + 1)));
 
-    re->nrefs = 1;
-    re->parenCount = state.parenCount;
     re->flags = flags;
+    re->cloneIndex = 0;
+    re->parenCount = state.parenCount;
     re->source = str;
 
 out:
@@ -2013,9 +2017,9 @@ ProcessCharSet(REGlobalData *gData, RECharSet *charSet)
 void
 js_DestroyRegExp(JSContext *cx, JSRegExp *re)
 {
-    uintN i;
     if (JS_ATOMIC_DECREMENT(&re->nrefs) == 0) {
         if (re->classList) {
+            uintN i;
             for (i = 0; i < re->classCount; i++) {
                 if (re->classList[i].converted)
                     JS_free(cx, re->classList[i].u.bits);
@@ -3340,9 +3344,9 @@ JSClass js_RegExpClass = {
 
 static const jschar empty_regexp_ucstr[] = {'(', '?', ':', ')', 0};
 
-static JSBool
-regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
-                jsval *rval)
+JSBool
+js_regexp_toString(JSContext *cx, JSObject *obj, uintN argc, jsval *argv,
+                   jsval *rval)
 {
     JSRegExp *re;
     const jschar *source;
@@ -3558,9 +3562,9 @@ regexp_test(JSContext *cx, JSObject *obj, uintN argc, jsval *argv, jsval *rval)
 
 static JSFunctionSpec regexp_methods[] = {
 #if JS_HAS_TOSOURCE
-    {js_toSource_str,   regexp_toString,        0,0,0},
+    {js_toSource_str,   js_regexp_toString,     0,0,0},
 #endif
-    {js_toString_str,   regexp_toString,        0,0,0},
+    {js_toString_str,   js_regexp_toString,     0,0,0},
     {"compile",         regexp_compile,         1,0,0},
     {"exec",            regexp_exec,            0,0,0},
     {"test",            regexp_test,            0,0,0},

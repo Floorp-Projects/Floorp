@@ -1288,6 +1288,9 @@ restart:
             GC_MARK_JSVALS(cx, sh->nslots, JS_STACK_SEGMENT(sh), "stack");
         }
     }
+#ifdef DUMP_CALL_TABLE
+    js_DumpCallTable(cx);
+#endif
 
     if (rt->gcCallback)
         (void) rt->gcCallback(cx, JSGC_MARK_END);

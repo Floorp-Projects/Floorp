@@ -780,7 +780,7 @@ ValueToScript(JSContext *cx, jsval v)
         fun = JS_ValueToFunction(cx, v);
         if (!fun)
             return NULL;
-        script = fun->script;
+        script = FUN_SCRIPT(fun);
     }
     return script;
 }

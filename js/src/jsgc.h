@@ -158,15 +158,15 @@ struct GCMarkNode {
     GCMarkNode  *prev;
 };
 
-#define GC_MARK(_cx, _thing, _name, _prev)                                    \
+#define GC_MARK(cx_, thing_, name_, prev_)                                    \
     JS_BEGIN_MACRO                                                            \
-        GCMarkNode _node;                                                     \
-        _node.thing = _thing;                                                 \
-        _node.name  = _name;                                                  \
-        _node.next  = NULL;                                                   \
-        _node.prev  = _prev;                                                  \
-        if (_prev) ((GCMarkNode *)(_prev))->next = &_node;                    \
-        js_MarkGCThing(_cx, _thing, &_node);                                  \
+        GCMarkNode node_;                                                     \
+        node_.thing = thing_;                                                 \
+        node_.name  = name_;                                                  \
+        node_.next  = NULL;                                                   \
+        node_.prev  = prev_;                                                  \
+        if (prev_) ((GCMarkNode *)(prev_))->next = &node_;                    \
+        js_MarkGCThing(cx_, thing_, &node_);                                  \
     JS_END_MACRO
 
 #else  /* !GC_MARK_DEBUG */
@@ -180,7 +180,7 @@ struct GCMarkNode {
  *   GC_KEEP_ATOMS      Don't sweep unmarked atoms, they may be in use by the
  *                      compiler, or by an API function that calls js_Atomize,
  *                      when the GC is called from js_AllocGCThing, due to a
- *                      malloc failure or runtime GC-thing limit.
+ *                      malloc failure or the runtime GC-thing limit.
  *   GC_LAST_CONTEXT    Called from js_DestroyContext for last JSContext in a
  *                      JSRuntime, when it is imperative that rt->gcPoke gets
  *                      cleared early in js_GC, if it is set.

@@ -437,10 +437,11 @@ JS_StringToVersion(const char *string);
 #define JSOPTION_PRIVATE_IS_NSISUPPORTS \
                                 JS_BIT(3)       /* context private data points
                                                    to an nsISupports subclass */
-#define JSOPTION_COMPILE_N_GO   JS_BIT(4)       /* one-shot compile+execute,
-                                                   enables compile-time scope
-                                                   chain resolution of consts
-                                                   in many cases, e.g. */
+#define JSOPTION_COMPILE_N_GO   JS_BIT(4)       /* caller of JS_Compile*Script
+                                                   promises to execute compiled
+                                                   script once only; enables
+                                                   compile-time scope chain
+                                                   resolution of consts. */
 
 extern JS_PUBLIC_API(uint32)
 JS_GetOptions(JSContext *cx);
@@ -730,7 +731,7 @@ struct JSClass {
     JSXDRObjectOp       xdrObject;
     JSHasInstanceOp     hasInstance;
     JSMarkOp            mark;
-    jsword              spare;
+    JSReserveSlotsOp    reserveSlots;
 };
 
 #define JSCLASS_HAS_PRIVATE             (1<<0)  /* objects have private slot */
@@ -751,10 +752,10 @@ struct JSClass {
 #define JSCLASS_RESERVED_SLOTS_SHIFT    8       /* room for 8 flags below */
 #define JSCLASS_RESERVED_SLOTS_WIDTH    8       /* and 16 above this field */
 #define JSCLASS_RESERVED_SLOTS_MASK     JS_BITMASK(JSCLASS_RESERVED_SLOTS_WIDTH)
-#define JSCLASS_HAS_RESERVED_SLOTS(n)   (((n) & JSCLASS_RESERVED_SLOTS_MASK)   \
+#define JSCLASS_HAS_RESERVED_SLOTS(n)   (((n) & JSCLASS_RESERVED_SLOTS_MASK)  \
                                          << JSCLASS_RESERVED_SLOTS_SHIFT)
 #define JSCLASS_RESERVED_SLOTS(clasp)   (((clasp)->flags                      \
-                                          >> JSCLASS_RESERVED_SLOTS_SHIFT)     \
+                                          >> JSCLASS_RESERVED_SLOTS_SHIFT)    \
                                          & JSCLASS_RESERVED_SLOTS_MASK)
 
 /* Initializer for unused members of statically initialized JSClass structs. */

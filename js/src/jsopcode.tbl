@@ -331,3 +331,14 @@ OPDEF(JSOP_BACKPATCH_PUSH,151,"backpatch_push",NULL,  3,  0,  1,  0,  JOF_JUMP|J
 /* Set and get return value pseudo-register in stack frame. */
 OPDEF(JSOP_SETRVAL,       152,"setrval",  NULL,       1,  1,  0,  0,  JOF_BYTE)
 OPDEF(JSOP_RETRVAL,       153,"retrval",  NULL,       1,  0,  0,  0,  JOF_BYTE)
+
+/* Optimized global variable ops (we don't bother doing a JSOP_FORGVAR op). */
+OPDEF(JSOP_GETGVAR,       154,"getgvar",  NULL,       3,  0,  1, 12,  JOF_CONST|JOF_NAME)
+OPDEF(JSOP_SETGVAR,       155,"setgvar",  NULL,       3,  1,  1,  1,  JOF_CONST|JOF_NAME|JOF_SET|JOF_ASSIGNING)
+OPDEF(JSOP_INCGVAR,       156,"incgvar",  NULL,       3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_INC)
+OPDEF(JSOP_DECGVAR,       157,"decgvar",  NULL,       3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_DEC)
+OPDEF(JSOP_GVARINC,       158,"gvarinc",  NULL,       3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_INC|JOF_POST)
+OPDEF(JSOP_GVARDEC,       159,"gvardec",  NULL,       3,  0,  1, 10,  JOF_CONST|JOF_NAME|JOF_DEC|JOF_POST)
+
+/* Regular expression literal requiring special fork-on-exec handling. */
+OPDEF(JSOP_REGEXP,        160,"regexp",   NULL,       3,  0,  1, 12,  JOF_CONST)
