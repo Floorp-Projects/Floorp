@@ -1629,8 +1629,11 @@ class BodyCodegen
                     addScriptRuntimeInvoke(
                         "enumNext", "(Ljava/lang/Object;)Ljava/lang/Boolean;");
                 } else {
-                    addScriptRuntimeInvoke(
-                        "enumId", "(Ljava/lang/Object;)Ljava/lang/Object;");
+                    cfw.addALoad(contextLocal);
+                    addScriptRuntimeInvoke("enumId",
+                                           "(Ljava/lang/Object;"
+                                           +"Lorg/mozilla/javascript/Context;"
+                                           +")Ljava/lang/Object;");
                 }
                 break;
               }

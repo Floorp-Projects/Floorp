@@ -1172,16 +1172,26 @@ public class ScriptRuntime {
         return -1;
     }
 
+    private static void storeIndexResult(Context cx, int index)
+    {
+        cx.scratchIndex = index;
+    }
+
+    static int lastIndexResult(Context cx)
+    {
+        return cx.scratchIndex;
+    }
+
     public static void storeUint32Result(Context cx, long value)
     {
         if ((value >>> 32) != 0)
             throw new IllegalArgumentException();
-        cx.scratchLong = value;
+        cx.scratchUint32 = value;
     }
 
     public static long lastUint32Result(Context cx)
     {
-        long value = cx.scratchLong;
+        long value = cx.scratchUint32;
         if ((value >>> 32) != 0)
             throw new IllegalStateException();
         return value;
@@ -1213,36 +1223,35 @@ public class ScriptRuntime {
         return toString(d);
     }
 
-    public static String getStringId(Object id)
+    /**
+     * If toString(id) is a decimal presentation of int32 value, then id
+     * is index. In this case return null and make the index available
+     * as ScriptRuntime.lastIndexResult(cx). Otherwise return toString(id).
+     */
+    static String toStringIdOrIndex(Context cx, Object id)
     {
         if (id instanceof Number) {
-            double d = ((Number) id).doubleValue();
-            int index = (int) d;
-            if (((double) index) == d)
+            double d = ((Number)id).doubleValue();
+            int index = (int)d;
+            if (((double)index) == d) {
+                storeIndexResult(cx, index);
                 return null;
+            }
             return toString(id);
+        } else {
+            String s;
+            if (id instanceof String) {
+                s = (String)id;
+            } else {
+                s = toString(id);
+            }
+            long indexTest = indexFromString(s);
+            if (indexTest >= 0) {
+                storeIndexResult(cx, (int)indexTest);
+                return null;
+            }
+            return s;
         }
-        String s = toString(id);
-        long indexTest = indexFromString(s);
-        if (indexTest >= 0)
-            return null;
-        return s;
-    }
-
-    public static int getIntId(Object id)
-    {
-        if (id instanceof Number) {
-            double d = ((Number) id).doubleValue();
-            int index = (int) d;
-            if (((double) index) == d)
-                return index;
-            return 0;
-        }
-        String s = toString(id);
-        long indexTest = indexFromString(s);
-        if (indexTest >= 0)
-            return (int)indexTest;
-        return 0;
     }
 
     public static Object getObjectId(Object obj, Object id,
@@ -1268,28 +1277,14 @@ public class ScriptRuntime {
             return xmlObject.ecmaGet(cx, id);
         }
 
-        int index;
-        String s;
-        if (id instanceof Number) {
-            double d = ((Number) id).doubleValue();
-            index = (int) d;
-            s = ((double) index) == d ? null : toString(id);
-        } else {
-            s = (id instanceof String) ? (String)id : toString(id);
-            long indexTest = indexFromString(s);
-            if (indexTest >= 0) {
-                index = (int)indexTest;
-                s = null;
-            } else {
-                index = 0;
-            }
-        }
-
         Object result;
-        if (s != null) {
-            result = ScriptableObject.getProperty(obj, s);
-        } else {
+
+        String s = toStringIdOrIndex(cx, id);
+        if (s == null) {
+            int index = lastIndexResult(cx);
             result = ScriptableObject.getProperty(obj, index);
+        } else {
+            result = ScriptableObject.getProperty(obj, s);
         }
 
         if (result == Scriptable.NOT_FOUND) {
@@ -1300,8 +1295,7 @@ public class ScriptRuntime {
     }
 
     /**
-     * Version of getObjectId when id is string which is not decimal
-     * presentation of int32.
+     * Version of getObjectId when id is a valid JS identifier name.
      */
     public static Object getObjectProp(Object obj, String property,
                                        Context cx, Scriptable scope)
@@ -1381,33 +1375,19 @@ public class ScriptRuntime {
             return value;
         }
 
-        int index;
-        String s;
-        if (id instanceof Number) {
-            double d = ((Number) id).doubleValue();
-            index = (int) d;
-            s = ((double) index) == d ? null : toString(id);
-        } else {
-            s = (id instanceof String) ? (String)id : toString(id);
-            long indexTest = indexFromString(s);
-            if (indexTest >= 0) {
-                index = (int)indexTest;
-                s = null;
-            } else {
-                index = 0;
-            }
-        }
-        if (s != null) {
-            ScriptableObject.putProperty(obj, s, value);
-        } else {
+        String s = toStringIdOrIndex(cx, id);
+        if (s == null) {
+            int index = lastIndexResult(cx);
             ScriptableObject.putProperty(obj, index, value);
+        } else {
+            ScriptableObject.putProperty(obj, s, value);
         }
+
         return value;
     }
 
     /**
-     * Version of setObjectId when id is string which is not decimal
-     * presentation of int32.
+     * Version of setObjectId when id is a valid JS identifier name.
      */
     public static Object setObjectProp(Object obj, String property,
                                        Object value,
@@ -1567,11 +1547,12 @@ public class ScriptRuntime {
             XMLObject xmlObject = (XMLObject)sobj;
             result = xmlObject.ecmaDelete(cx, id);
         } else {
-            String s = getStringId(id);
-            if (s != null) {
-                result = ScriptableObject.deleteProperty(sobj, s);
+            String s = toStringIdOrIndex(cx, id);
+            if (s == null) {
+                int index = lastIndexResult(cx);
+                result = ScriptableObject.deleteProperty(sobj, index);
             } else {
-                result = ScriptableObject.deleteProperty(sobj, getIntId(id));
+                result = ScriptableObject.deleteProperty(sobj, s);
             }
         }
         return result ? Boolean.TRUE : Boolean.FALSE;
@@ -1793,15 +1774,22 @@ public class ScriptRuntime {
         return Boolean.TRUE;
     }
 
-    public static Object enumId(Object enumObj)
+    public static Object enumId(Object enumObj, Context cx)
     {
         IdEnumeration x = (IdEnumeration)enumObj;
         if (!x.enumValues) return x.currentId;
 
-        String s = getStringId(x.currentId);
-        return (s == null)
-            ? x.obj.get(getIntId(x.currentId), null)
-            : x.obj.get(s, null);
+        Object result;
+
+        String s = toStringIdOrIndex(cx, x.currentId);
+        if (s == null) {
+            int index = lastIndexResult(cx);
+            result = x.obj.get(index, x.obj);
+        } else {
+            result = x.obj.get(s, x.obj);
+        }
+
+        return result;
     }
 
     private static void enumChangeObject(IdEnumeration x)
@@ -1826,17 +1814,6 @@ public class ScriptRuntime {
         }
         x.ids = ids;
         x.index = 0;
-    }
-
-    // Form used by class files generated by 1.4R3 and earlier.
-    public static Object call(Context cx, Object fun, Object thisArg,
-                              Object[] args)
-        throws JavaScriptException
-    {
-        Scriptable scope = null;
-        if (fun instanceof Scriptable)
-            scope = ((Scriptable) fun).getParentScope();
-        return call(cx, fun, thisArg, args, scope);
     }
 
     public static Object call(Context cx, Object fun, Object thisArg,
@@ -2443,15 +2420,23 @@ public class ScriptRuntime {
         if (!(b instanceof Scriptable)) {
             throw typeError0("msg.instanceof.not.object");
         }
-        String s = getStringId(a);
-        if (s == null) {
-            return ScriptableObject.hasProperty((Scriptable) b, getIntId(a));
-        }
+
+        boolean result;
+
         if (b instanceof XMLObject) {
             XMLObject xmlObject = (XMLObject)b;
-            return xmlObject.ecmaHas(cx, a);
+            result = xmlObject.ecmaHas(cx, a);
+        } else {
+            String s = toStringIdOrIndex(cx, a);
+            if (s == null) {
+                int index = lastIndexResult(cx);
+                result = ScriptableObject.hasProperty((Scriptable)b, index);
+            } else {
+                result = ScriptableObject.hasProperty((Scriptable)b, s);
+            }
         }
-        return ScriptableObject.hasProperty((Scriptable) b, s);
+
+        return result;
     }
 
     public static boolean cmp_LT(Object val1, Object val2)

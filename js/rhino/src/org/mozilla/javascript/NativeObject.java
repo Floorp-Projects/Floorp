@@ -121,28 +121,45 @@ public class NativeObject extends IdScriptable
             return thisObj;
 
           case Id_hasOwnProperty: {
-            if (args.length != 0) {
-                String property = ScriptRuntime.toString(args[0]);
-                if (thisObj.has(property, thisObj))
-                    return Boolean.TRUE;
+            boolean result;
+            if (args.length == 0) {
+                result = false;
+            } else {
+                String s = ScriptRuntime.toStringIdOrIndex(cx, args[0]);
+                if (s == null) {
+                    int index = ScriptRuntime.lastIndexResult(cx);
+                    result = thisObj.has(index, thisObj);
+                } else {
+                    result = thisObj.has(s, thisObj);
+                }
             }
-            return Boolean.FALSE;
+            return result ? Boolean.TRUE : Boolean.FALSE;
           }
 
           case Id_propertyIsEnumerable: {
-            if (args.length != 0) {
-                String name = ScriptRuntime.toString(args[0]);
-                if (thisObj.has(name, thisObj)) {
-                    if (thisObj instanceof ScriptableObject) {
+            boolean result;
+            if (args.length == 0) {
+                result = false;
+            } else {
+                String s = ScriptRuntime.toStringIdOrIndex(cx, args[0]);
+                if (s == null) {
+                    int index = ScriptRuntime.lastIndexResult(cx);
+                    result = thisObj.has(index, thisObj);
+                    if (result && thisObj instanceof ScriptableObject) {
                         ScriptableObject so = (ScriptableObject)thisObj;
-                        int a = so.getAttributes(name);
-                        if ((a & ScriptableObject.DONTENUM) == 0) {
-                            return Boolean.TRUE;
-                        }
+                        int attrs = so.getAttributes(index);
+                        result = ((attrs & ScriptableObject.DONTENUM) == 0);
+                    }
+                } else {
+                    result = thisObj.has(s, thisObj);
+                    if (result && thisObj instanceof ScriptableObject) {
+                        ScriptableObject so = (ScriptableObject)thisObj;
+                        int attrs = so.getAttributes(s);
+                        result = ((attrs & ScriptableObject.DONTENUM) == 0);
                     }
                 }
             }
-            return Boolean.FALSE;
+            return result ? Boolean.TRUE : Boolean.FALSE;
           }
 
           case Id_isPrototypeOf: {

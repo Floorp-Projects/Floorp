@@ -2856,7 +2856,7 @@ switch (op) {
         ++stackTop;
         stack[stackTop] = (op == Token.ENUM_NEXT)
                           ? (Object)ScriptRuntime.enumNext(val)
-                          : (Object)ScriptRuntime.enumId(val);
+                          : (Object)ScriptRuntime.enumId(val, cx);
         continue Loop;
     }
     case Icode_PUSH_PARENT : {
