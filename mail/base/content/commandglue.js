@@ -1147,7 +1147,7 @@ function CreateGroupedSearchTerms(searchTermsArray)
   return searchTermsArrayForQS;
 }
 
-var gViewDebug = true;
+var gViewDebug = false;
 
 function viewDebug(str)
 {

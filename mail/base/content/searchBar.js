@@ -121,6 +121,10 @@ var gSearchNotificationListener =
           var msgdb = vFolder.getMsgDatabase(msgWindow);
           msgdb.Commit(MSG_DB_LARGE_COMMIT);
 
+          // load the last used mail view for the folder...
+          var result = dbFolderInfo.getUint32Property("current-view", 0);
+          ViewChangeByValue(result);
+
           // now that we have finished loading a virtual folder, scroll to the correct message
           ScrollToMessageAfterFolderLoad(vFolder);
         }
@@ -618,6 +622,11 @@ function Search(str)
 // from FolderLoaded in order to avoid moving focus into the search bar.
 function loadVirtualFolder()
 {
+  // bit of a hack...if the underlying real folder is loaded with the same view value
+  // as the value for the virtual folder being searched, then ViewChangeByValue
+  // fails to change the view because it thinks the view is already correctly loaded.
+  // so set gCurrentViewValue back to All. 
+  gCurrentViewValue = 0; 
   onEnterInSearchBar();
 }
 
