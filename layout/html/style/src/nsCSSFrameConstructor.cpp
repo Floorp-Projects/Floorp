@@ -285,6 +285,69 @@ static NS_DEFINE_IID(kIFormControlIID, NS_IFORMCONTROL_IID);
 static NS_DEFINE_IID(kIFrameIID, NS_IFRAME_IID);
 static NS_DEFINE_IID(kIScrollableFrameIID, NS_ISCROLLABLE_FRAME_IID);
 
+//----------------------------------------------------------------------
+//
+// When inline frames get weird and have block frames in them, we
+// annotate them to help us respond to incremental content changes
+// more easily.
+
+static inline PRBool
+IsFrameSpecial(nsIFrame* aFrame)
+{
+  nsFrameState state;
+  aFrame->GetFrameState(&state);
+  return state & NS_FRAME_IS_SPECIAL;
+}
+
+static inline void
+GetSpecialSibling(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame** aResult)
+{
+  // We only store the "special sibling" annotation with the first
+  // frame in the flow. Walk back to find that frame now.
+  while (1) {
+    nsIFrame* prev = aFrame;
+    aFrame->GetPrevInFlow(&prev);
+    if (! prev)
+      break;
+    aFrame = prev;
+  }
+
+  void* value;
+  aFrameManager->GetFrameProperty(aFrame, nsLayoutAtoms::inlineFrameAnnotation, 0, &value);
+  *aResult = NS_STATIC_CAST(nsIFrame*, value);
+}
+
+
+static void
+SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame, nsIFrame* aSpecialSibling)
+{
+  NS_PRECONDITION(aFrameManager && aFrame, "bad args!");
+
+  // Mark the frame and all of its siblings as "special".
+  for (nsIFrame* frame = aFrame; frame != nsnull; frame->GetNextInFlow(&frame)) {
+    nsFrameState state;
+    frame->GetFrameState(&state);
+    state |= NS_FRAME_IS_SPECIAL;
+    frame->SetFrameState(state);
+  }
+
+  if (aSpecialSibling) {
+#ifdef DEBUG
+    // We should be the first-in-flow
+    nsIFrame* prev;
+    aFrame->GetPrevInFlow(&prev);
+    NS_ASSERTION(! prev, "assigning special sibling to other than first-in-flow!");
+#endif
+
+    // Store the "special sibling" (if we were given one) with the
+    // first frame in the flow.
+    aFrameManager->SetFrameProperty(aFrame, nsLayoutAtoms::inlineFrameAnnotation,
+                                    aSpecialSibling, nsnull);
+  }
+}
+
+
+
 // -----------------------------------------------------------
 
 // Structure used when constructing formatting object trees.
@@ -7945,7 +8008,7 @@ nsCSSFrameConstructor::ContentAppended(nsIPresContext* aPresContext,
     // something different instead of just appending newly created
     // frames. Note that only the first-in-flow is marked so we check
     // before getting to the last-in-flow.
-    if (IsFrameSpecial(aPresContext, parentFrame)) {
+    if (IsFrameSpecial(parentFrame)) {
       // We are pretty harsh here (and definitely not optimal) -- we
       // wipe out the entire containing block and recreate it from
       // scratch. The reason is that because we know that a special
@@ -8378,7 +8441,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       // If the frame we are manipulating is a special frame then do
       // something different instead of just inserting newly created
       // frames.
-      if (IsFrameSpecial(aPresContext, parentFrame)) {
+      if (IsFrameSpecial(parentFrame)) {
         // We are pretty harsh here (and definitely not optimal) -- we
         // wipe out the entire containing block and recreate it from
         // scratch. The reason is that because we know that a special
@@ -8457,7 +8520,7 @@ nsCSSFrameConstructor::ContentInserted(nsIPresContext* aPresContext,
       // If the frame we are manipulating is a special inline frame
       // then do something different instead of just inserting newly
       // created frames.
-      if (IsFrameSpecial(state.mFrameManager, parentFrame)) {
+      if (IsFrameSpecial(parentFrame)) {
         // We are pretty harsh here (and definitely not optimal) -- we
         // wipe out the entire containing block and recreate it from
         // scratch. The reason is that because we know that a special
@@ -8917,7 +8980,7 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
     // If the frame we are manipulating is a special frame then do
     // something different instead of just inserting newly created
     // frames.
-    if (IsFrameSpecial(aPresContext, parentFrame)) {
+    if (IsFrameSpecial(parentFrame)) {
       // We are pretty harsh here (and definitely not optimal) -- we
       // wipe out the entire containing block and recreate it from
       // scratch. The reason is that because we know that a special
@@ -10542,10 +10605,10 @@ keepLooking:
 
       // We search the immediate children only, but if the child frame has
       // the same content pointer as its parent then we need to search its
-      // child frames, too
-      // We also need to search the child frames' children if the child frame
+      // child frames, too.
+      // We also need to search the child frame's children if the child frame
       // is a "special" frame
-      if (kidContent.get() == aParentContent || IsFrameSpecial(aPresContext, kidFrame)) {
+      if (kidContent.get() == aParentContent || IsFrameSpecial(kidFrame)) {
         nsIFrame* matchingFrame = FindFrameWithContent(aPresContext, kidFrame, aParentContent,
                                                        aContent);
 
@@ -10616,22 +10679,17 @@ nsCSSFrameConstructor::FindPrimaryFrameFor(nsIPresContext*  aPresContext,
         aFrameManager->SetPrimaryFrameFor(aContent, *aFrame);
         break;
       }
-      else { 
-        // If this is a special frame, we need to go up the parent chain
-        // until we hit a special frame that has a next sibling.
-        nsIFrame* sibling = nsnull;
-        while (parentFrame && IsFrameSpecial(aFrameManager, parentFrame)) {
-          parentFrame->GetNextSibling(&sibling);
-          if (sibling)
-            break;
-          else
-            parentFrame->GetParent(&parentFrame);
-        }
-
-        if (sibling && IsFrameSpecial(aFrameManager, sibling))
-          parentFrame = sibling;
-        else
-          break;
+      else if (IsFrameSpecial(parentFrame)) {
+        // If it's a "special" frame (that is, part of an inline
+        // that's been split because it contained a block), we need to
+        // follow the out-of-flow "special sibling" link, and search
+        // *that* subtree as well.
+        nsIFrame* specialSibling = nsnull;
+        GetSpecialSibling(aFrameManager, parentFrame, &specialSibling);
+        parentFrame = specialSibling;
+      }
+      else {
+        break;
       }
     }
   }
@@ -12109,68 +12167,6 @@ nsCSSFrameConstructor::ProcessBlockChildren(nsIPresShell* aPresShell,
   return rv;
 }
 
-// When inline frames get weird and have block frames in them, we
-// annotate them to help us respond to incremental content changes
-// more easily.
-
-static void
-DestroyInlineFrameAnnotation(nsIPresContext* aPresContext,
-                             nsIFrame*       aFrame,
-                             nsIAtom*        aPropertyName,
-                             void*           aPropertyValue)
-{
-}
-
-PRBool
-nsCSSFrameConstructor::IsFrameSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame)
-{
-  void* value;
-  nsresult rv = aFrameManager->GetFrameProperty(aFrame, nsLayoutAtoms::inlineFrameAnnotation, 0, &value);
-  if (NS_OK == rv) {
-    return PR_TRUE;
-  }
-  return PR_FALSE;
-}
-
-PRBool
-nsCSSFrameConstructor::IsFrameSpecial(nsIPresContext* aPresContext, nsIFrame* aFrame)
-{
-  // Get to aFrame's first-in-flow; only the first-in-flow is marked
-  // with an annotation.
-  nsSplittableType splits;
-  aFrame->IsSplittable(splits);
-  if (splits != NS_FRAME_NOT_SPLITTABLE) {
-    nsIFrame* prevInFlow = aFrame;
-    while (prevInFlow) {
-      aFrame = prevInFlow;
-      prevInFlow->GetPrevInFlow(&prevInFlow);
-    }
-  }
-
-  PRBool result = PR_FALSE;
-  nsCOMPtr<nsIPresShell> shell;
-  aPresContext->GetShell(getter_AddRefs(shell));
-  if (shell) {
-    nsCOMPtr<nsIFrameManager> frameManager;
-    shell->GetFrameManager(getter_AddRefs(frameManager));
-    if (frameManager) {
-      void* value;
-      nsresult rv = frameManager->GetFrameProperty(aFrame, nsLayoutAtoms::inlineFrameAnnotation,
-                                                   0, &value);
-      if (NS_OK == rv) {
-        result = PR_TRUE;
-      }
-    }
-  }
-  return result;
-}
-
-void
-nsCSSFrameConstructor::SetFrameIsSpecial(nsIFrameManager* aFrameManager, nsIFrame* aFrame)
-{
-  aFrameManager->SetFrameProperty(aFrame, nsLayoutAtoms::inlineFrameAnnotation,
-                                  (void*) PR_TRUE, DestroyInlineFrameAnnotation);
-}
 
 PRBool
 nsCSSFrameConstructor::AreAllKidsInline(nsIFrame* aFrameList)
@@ -12286,9 +12282,9 @@ nsCSSFrameConstructor::ConstructInline(nsIPresShell* aPresShell,
   // Mark the 3 frames as special. That way if any of the
   // append/insert/remove methods try to fiddle with the children, the
   // containing block will be reframed instead.
-  SetFrameIsSpecial(aState.mFrameManager, aNewFrame);
-  SetFrameIsSpecial(aState.mFrameManager, blockFrame);
-  SetFrameIsSpecial(aState.mFrameManager, inlineFrame);
+  SetFrameIsSpecial(aState.mFrameManager, aNewFrame, blockFrame);
+  SetFrameIsSpecial(aState.mFrameManager, blockFrame, inlineFrame);
+  SetFrameIsSpecial(aState.mFrameManager, inlineFrame, nsnull);
 
 #ifdef DEBUG
   if (gNoisyInlineConstruction) {
