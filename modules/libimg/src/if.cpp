@@ -1551,7 +1551,7 @@ il_image_complete(il_container *ic)
 
 
                         /* using lclient insures we are using an active image request */
-                        (void) ic->lclient->net_cx->GetURL(ic->url, USE_IMG_CACHE, reader);
+                        (void) ic->lclient->net_cx->GetURL(ic->url, USE_IMG_CACHE, reader, PR_TRUE);
  
                         /* Release reader, GetURL will keep a ref to it. */
                         NS_RELEASE(reader);
@@ -1985,7 +1985,7 @@ IL_GetImage(const char* image_url,
         il_delete_client(ic, image_req);
         return NULL;
     }
-    err = ic->net_cx->GetURL(url, cache_reload_policy, reader);
+    err = ic->net_cx->GetURL(url, cache_reload_policy, reader, PR_FALSE);
     /* Release reader, GetURL will keep a ref to it. */
     NS_RELEASE(reader);
     return image_req;
