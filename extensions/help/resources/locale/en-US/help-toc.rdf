@@ -10,7 +10,7 @@
         <rdf:li> <rdf:Description ID="help-help" nc:name="Using the Help Window" nc:link="help_help.html"/> </rdf:li>
         <rdf:li> <rdf:Description ID="ieusers" nc:name="For Internet Explorer Users" nc:link="chrome://help/locale/forieusers.html#for_microsoft_users"/> </rdf:li>
         <rdf:li> <rdf:Description ID="nav" nc:name="Browsing the Web" nc:link="chrome://help/locale/nav_help.html#browsing_the_web"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail"	nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.html#mail_using" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail"     nc:name="Using Mail" nc:link="chrome://help/locale/mail_help.xhtml#using_mozilla_mail_and_newsgroups" /> </rdf:li>
         <rdf:li> <rdf:Description ID="comp"	nc:name="Creating Web Pages"  nc:link="chrome://help/locale/composer_help.html#comp_top"/> </rdf:li>
         <rdf:li> <rdf:Description ID="cust" nc:name="Customizing Mozilla"  nc:link="chrome://help/locale/customize_help.html#cust_main"/> </rdf:li>
         <rdf:li> <rdf:Description ID="using-priv-help" nc:name="Using Privacy Features" nc:link="chrome://help/locale/privacy_help.html"/> </rdf:li>
@@ -148,20 +148,20 @@
 <rdf:Description about="#mail">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc"	nc:name="Getting Started with Mail" nc:link="chrome://help/locale/mail_help.html#mail_start" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-read"	nc:name="Reading Messages" nc:link="chrome://help/locale/mail_help.html#READING_MESSAGES" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send"	nc:name="Sending Messages" nc:link="chrome://help/locale/mail_help.html#SENDING_MESSAGES" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html"	nc:name="Creating HTML Mail Messages" nc:link="chrome://help/locale/mail_help.html#CREATE_HTML" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-attach"	nc:name="Using Attachments" nc:link="chrome://help/locale/mail_help.html#USING_ATTACHMENTS" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-delete" nc:name="Deleting Messages" nc:link="chrome://help/locale/mail_help.html#about_deleting_email" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-address" nc:name="Using Address Books" nc:link="chrome://help/locale/mail_help.html#use_add_book" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-junk" nc:name="Controlling Junk Mail" nc:link="chrome://help/locale/mail_help.html#JUNK_MAIL" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-importing-other" nc:name="Importing Mail from Other Programs" nc:link="chrome://help/locale/mail_help.html#importing_mail" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-news" nc:name="Getting Started With Newsgroups" nc:link="chrome://help/locale/mail_help.html#STARTING_NEWSGROUPS" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-offline" nc:name="Working Offline" nc:link="chrome://help/locale/mail_help.html#WORKING_OFFLINE" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc" nc:name="Getting Started with Mail" nc:link="chrome://help/locale/mail_help.xhtml#getting_started_with_mozilla_mail_and_newsgroups" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-read"    nc:name="Reading Messages" nc:link="chrome://help/locale/mail_help.xhtml#reading_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send"    nc:name="Sending Messages" nc:link="chrome://help/locale/mail_help.xhtml#sending_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html"    nc:name="Creating HTML Mail Messages" nc:link="chrome://help/locale/mail_help.xhtml#creating_html_mail_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach"  nc:name="Using Attachments" nc:link="chrome://help/locale/mail_help.xhtml#using_attachments" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-delete" nc:name="Deleting Messages" nc:link="chrome://help/locale/mail_help.xhtml#deleting_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-address" nc:name="Using Address Books" nc:link="chrome://help/locale/mail_help.xhtml#using_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-junk" nc:name="Controlling Junk Mail" nc:link="chrome://help/locale/mail_help.xhtml#controlling_junk_mail" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-importing-other" nc:name="Importing Mail from Other Programs" nc:link="chrome://help/locale/mail_help.xhtml#importing_mail_from_other_programs" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-news" nc:name="Getting Started With Newsgroups" nc:link="chrome://help/locale/mail_help.xhtml#getting_started_with_newsgroups" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-offline" nc:name="Working Offline" nc:link="chrome://help/locale/mail_help.xhtml#working_offline" /> </rdf:li>
         <rdf:li> <rdf:Description ID="sign-encrypt" nc:name="Signing &amp; Encrypting Messages" nc:link="chrome://help/locale/mail_sec_help.html#secure_mail_first" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-account-settings" nc:name="Mail and Newsgroups Account Settings" nc:link="chrome://help/locale/mail_help.html#account_settings_intro" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-mailprefs" nc:name="Mail and Newsgroup Preferences" nc:link="chrome://help/locale/mail_help.html#SETTING_MAIL_PREFS" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-account-settings" nc:name="Mail and Newsgroups Account Settings" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroups_account_settings" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-mailprefs" nc:name="Mail and Newsgroup Preferences" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroup_preferences" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -170,8 +170,8 @@
  <rdf:Description about="#mail-doc">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-setup" nc:name="Using the Mail Account Setup Wizard"  nc:link="chrome://help/locale/mail_help.html#MAIL_NEWS_WIZARD"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add" nc:name="Setting Up Additional Accounts"  nc:link="chrome://help/locale/mail_help.html#account_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-setup" nc:name="Using the Mail Account Setup Wizard"  nc:link="chrome://help/locale/mail_help.xhtml#using_the_mail_account_setup_wizard"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add" nc:name="Setting Up Additional Accounts"  nc:link="chrome://help/locale/mail_help.xhtml#setting_up_additional_mail_and_news_accounts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -179,11 +179,11 @@
  <rdf:Description about="#mail-doc-read">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-notify" nc:name="Getting New Messages"  nc:link="chrome://help/locale/mail_help.html#notifying"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-view" nc:name="Viewing the Mail Window"  nc:link="chrome://help/locale/mail_help.html#VIEW_MESSENGER_WINDOW"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-thread" nc:name="Sorting and Threading Messages"  nc:link="chrome://help/locale/mail_help.html#thread_mail"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-printsave" nc:name="Saving and Printing Messages"  nc:link="chrome://help/locale/mail_help.html#PRINTSAVE_MAIL"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-scripts" nc:name="Controlling Images, Scripts, and Plug-ins"  nc:link="chrome://help/locale/mail_help.html#scripts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-notify" nc:name="Getting New Messages"  nc:link="chrome://help/locale/mail_help.xhtml#getting_new_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-view" nc:name="Viewing the Mail Window"  nc:link="chrome://help/locale/mail_help.xhtml#choosing_how_you_view_the_mail_window"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-thread" nc:name="Sorting and Threading Messages"  nc:link="chrome://help/locale/mail_help.xhtml#sorting_and_threading_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-printsave" nc:name="Saving and Printing Messages"  nc:link="chrome://help/locale/mail_help.xhtml#saving_and_printing_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-scripts" nc:name="Controlling Images, Scripts, and Plug-ins"  nc:link="chrome://help/locale/mail_help.xhtml#controlling_images_scripts_and_plug-ins"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -191,15 +191,15 @@
   <rdf:Description about="#mail-doc-send">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-send-compose" nc:name="Composing Messages" nc:link="chrome://help/locale/mail_help.html#COMPOSING_MESSAGES" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-new" nc:name="Using the Compose Window" nc:link="chrome://help/locale/mail_help.html#NEW_MESSAGE_WINDOW" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-address" nc:name="Addressing a Message" nc:link="chrome://help/locale/mail_help.html#ADDRESSING_MESSAGE" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-options" nc:name="Selecting Message Sending Options" nc:link="chrome://help/locale/mail_help.html#SENDING_OPTIONS" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-reply" nc:name="Replying to a Message" nc:link="chrome://help/locale/mail_help.html#mail_replyto" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-forward" nc:name="Forwarding a Message" nc:link="chrome://help/locale/mail_help.html#FORWARD_MESSAGES" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-receipt" nc:name="Confirming That Your Message Was Opened" nc:link="chrome://help/locale/mail_help.html#using_return_receipts" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-edit" nc:name="Saving and Editing a Message Draft" nc:link="chrome://help/locale/mail_help.html#saving_message_draft" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-send-template" nc:name="Creating and Using Templates" nc:link="chrome://help/locale/mail_help.html#mail_template" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-compose" nc:name="Composing Messages" nc:link="chrome://help/locale/mail_help.xhtml#composing_mail_and_newsgroup_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-new" nc:name="Using the Compose Window" nc:link="chrome://help/locale/mail_help.xhtml#using_the_message_composition_window" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-address" nc:name="Addressing a Message" nc:link="chrome://help/locale/mail_help.xhtml#addressing_a_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-options" nc:name="Selecting Message Sending Options" nc:link="chrome://help/locale/mail_help.xhtml#selecting_message_sending_options" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-reply" nc:name="Replying to a Message" nc:link="chrome://help/locale/mail_help.xhtml#replying_to_a_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-forward" nc:name="Forwarding a Message" nc:link="chrome://help/locale/mail_help.xhtml#forwarding_a_message" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-receipt" nc:name="Confirming That Your Message Was Opened" nc:link="chrome://help/locale/mail_help.xhtml#confirming_that_your_message_was_opened" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-edit" nc:name="Saving and Editing a Message Draft" nc:link="chrome://help/locale/mail_help.xhtml#saving_and_editing_a_message_draft" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-send-template" nc:name="Creating and Using Templates" nc:link="chrome://help/locale/mail_help.xhtml#creating_and_using_templates" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -207,11 +207,11 @@
   <rdf:Description about="#mail-doc-html">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-html-use" nc:name="Using HTML in Your Messages" nc:link="chrome://help/locale/mail_help.html#Using_HTML" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-options" nc:name="Choosing HTML Mail Sending Options" nc:link="chrome://help/locale/mail_help.html#About_HTML_Send" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-address" nc:name="Specifying Recipients for HTML Messages" nc:link="chrome://help/locale/mail_help.html#HTML_ADDRESSBOOK" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-source" nc:name="Viewing HTML Message Source" nc:link="chrome://help/locale/mail_help.html#View_source" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-html-question" nc:name="Using the HTML Mail Question Dialog Box" nc:link="chrome://help/locale/mail_help.html#HTML_MAIL_QUESTION" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-use" nc:name="Using HTML in Your Messages" nc:link="chrome://help/locale/mail_help.xhtml#using_html_in_your_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-options" nc:name="Choosing HTML Mail Sending Options" nc:link="chrome://help/locale/mail_help.xhtml#choosing_html_mail_sending_options" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-address" nc:name="Specifying Recipients for HTML Messages" nc:link="chrome://help/locale/mail_help.xhtml#specifying_recipients_for_html_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-source" nc:name="Viewing HTML Message Source" nc:link="chrome://help/locale/mail_help.xhtml#viewing_the_message_source_for_html_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-question" nc:name="Using the HTML Mail Question Dialog Box" nc:link="chrome://help/locale/mail_help.xhtml#using_the_html_mail_question_dialog_box" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -219,7 +219,7 @@
 <rdf:Description about="#mail-doc-html-use">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-html-edit" nc:name="Editing or Inserting HTML" nc:link="chrome://help/locale/mail_help.html#edit_HTML_elements" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-html-edit" nc:name="Editing or Inserting HTML" nc:link="chrome://help/locale/mail_help.xhtml#editing_or_inserting_html_elements" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -227,9 +227,9 @@
   <rdf:Description about="#mail-doc-attach">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-attach-file" nc:name="Attaching a File or Web Page" nc:link="chrome://help/locale/mail_help.html#attaching_file" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-attach-view" nc:name="Viewing and Opening Attachments" nc:link="chrome://help/locale/mail_help.html#viewing_attachments" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-attach-save" nc:name="Saving Attachments" nc:link="chrome://help/locale/mail_help.html#saving_attachment" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach-file" nc:name="Attaching a File or Web Page" nc:link="chrome://help/locale/mail_help.xhtml#attaching_a_file_or_web_page" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach-view" nc:name="Viewing and Opening Attachments" nc:link="chrome://help/locale/mail_help.xhtml#viewing_and_opening_attachments" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-attach-save" nc:name="Saving Attachments" nc:link="chrome://help/locale/mail_help.xhtml#saving_attachments" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -237,8 +237,8 @@
 <rdf:Description about="#mail-doc-delete">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-delete-server" nc:name="Deleting POP or IMAP Messages" nc:link="chrome://help/locale/mail_help.html#delete_POP_IMAP" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-delete-trash" nc:name="Moving Messages to and from the Trash" nc:link="chrome://help/locale/mail_help.html#moving_to_trash" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-delete-server" nc:name="Deleting POP or IMAP Messages" nc:link="chrome://help/locale/mail_help.xhtml#deleting_pop_or_imap_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-delete-trash" nc:name="Moving Messages to and from the Trash" nc:link="chrome://help/locale/mail_help.xhtml#moving_messages_to_and_from_the_trash" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -246,16 +246,16 @@
   <rdf:Description about="#mail-doc-address">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Mail Address Books" nc:link="chrome://help/locale/mail_help.html#about_address_books" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-names" nc:name="Adding Entries to Your Address Books" nc:link="chrome://help/locale/mail_help.html#adding_names" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-book" nc:name="Creating a New Address Book" nc:link="chrome://help/locale/mail_help.html#CREATE_ADD_BOOK" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-card" nc:name="Creating a New Address Book Card" nc:link="chrome://help/locale/mail_help.html#ADD_USER_PROPERTIES" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-list" nc:name="Creating a Mailing List" nc:link="chrome://help/locale/mail_help.html#ADD_LIST_MAILING_LIST" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_ab_search" nc:name="Searching Address Books" nc:link="chrome://help/locale/mail_help.html#mail_ab_search" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-listedit" nc:name="Editing a Mailing List" nc:link="chrome://help/locale/mail_help.html#EDIT_LIST_MAILING_LIST" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-export" nc:name="Exporting Address Books" nc:link="chrome://help/locale/mail_help.html#export_address_book" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-add-sync-LDAP-add" nc:name="Adding and Removing LDAP Directories" nc:link="chrome://help/locale/mail_help.html#ADD_LDAP" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-folders" nc:name="Organizing Your Messages" nc:link="chrome://help/locale/mail_help.html#ORGANIZING_MAIL" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-about" nc:name="About Mail Address Books" nc:link="chrome://help/locale/mail_help.xhtml#about_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-names" nc:name="Adding Entries to Your Address Books" nc:link="chrome://help/locale/mail_help.xhtml#adding_entries_to_your_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-book" nc:name="Creating a New Address Book" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_new_address_book" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-card" nc:name="Creating a New Address Book Card" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_new_address_book_card" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-list" nc:name="Creating a Mailing List" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_mailing_list" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_ab_search" nc:name="Searching Address Books" nc:link="chrome://help/locale/mail_help.xhtml#searching_address_book_and_directories" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-listedit" nc:name="Editing a Mailing List" nc:link="chrome://help/locale/mail_help.xhtml#editing_a_mailing_list" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-export" nc:name="Exporting Address Books" nc:link="chrome://help/locale/mail_help.xhtml#exporting_address_books" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-add-sync-LDAP-add" nc:name="Adding and Removing LDAP Directories" nc:link="chrome://help/locale/mail_help.xhtml#adding_and_removing_ldap_directories" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-folders" nc:name="Organizing Your Messages" nc:link="chrome://help/locale/mail_help.xhtml#organizing_your_messages" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -264,7 +264,7 @@
 <rdf:Description about="#mail-doc-add-card">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-card-properties" nc:name="Editing Card Properties" nc:link="chrome://help/locale/mail_help.html#mail_card_properties" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-card-properties" nc:name="Editing Card Properties" nc:link="chrome://help/locale/mail_help.xhtml#viewing_or_editing_card_properties" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -272,7 +272,7 @@
 <rdf:Description about="#mail_ab_search">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_advanced_ab_search" nc:name="Searching for Specific Entries" nc:link="chrome://help/locale/mail_help.html#mail_advanced_ab_search" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_advanced_ab_search" nc:name="Searching for Specific Entries" nc:link="chrome://help/locale/mail_help.xhtml#searching_for_specific_entries" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -280,7 +280,7 @@
 <rdf:Description about="#mail-doc-add-sync-LDAP-add">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-ldap-properties" nc:name="Directory Server Settings" nc:link="chrome://help/locale/mail_help.html#mail_ldap_properties" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-ldap-properties" nc:name="Directory Server Settings" nc:link="chrome://help/locale/mail_help.xhtml#directory_server_settings" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -288,16 +288,16 @@
   <rdf:Description about="#mail-doc-folders">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="folder-creating" nc:name="Creating a Folder" nc:link="chrome://help/locale/mail_help.html#FILING_MESSAGES"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-renaming" nc:name="Renaming a Folder" nc:link="chrome://help/locale/mail_help.html#rename_folder"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-copying" nc:name="Moving or Copying a Folder" nc:link="chrome://help/locale/mail_help.html#copy_folder"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-opening" nc:name="Filing Messages in Folders" nc:link="chrome://help/locale/mail_help.html#OPENING_FOLDERS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="folder-sharing" nc:name="Sharing Folders" nc:link="chrome://help/locale/mail_help.html#SHARING_FOLDERS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="labeling-messages" nc:name="Labeling Messages" nc:link="chrome://help/locale/mail_help.html#labeling_messages"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-flagging" nc:name="Marking or Flagging Messages" nc:link="chrome://help/locale/mail_help.html#mark_flag"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="message-views-using" nc:name="Using Message Views" nc:link="chrome://help/locale/mail_help.html#message_views"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-filters" nc:name="Creating Message Filters" nc:link="chrome://help/locale/mail_help.html#MAIL_FILTERS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="search-mailnews" nc:name="Searching Through Messages" nc:link="chrome://help/locale/mail_help.html#SEARCH_MAILNEWS"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-creating" nc:name="Creating a Folder" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_folder"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-renaming" nc:name="Renaming a Folder" nc:link="chrome://help/locale/mail_help.xhtml#renaming_a_folder"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-copying" nc:name="Moving or Copying a Folder" nc:link="chrome://help/locale/mail_help.xhtml#moving_or_copying_a_folder"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-opening" nc:name="Filing Messages in Folders" nc:link="chrome://help/locale/mail_help.xhtml#filing_messages_in_folders"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-sharing" nc:name="Sharing Folders" nc:link="chrome://help/locale/mail_help.xhtml#sharing_folders_with_other_users"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="labeling-messages" nc:name="Labeling Messages" nc:link="chrome://help/locale/mail_help.xhtml#labeling_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-flagging" nc:name="Marking or Flagging Messages" nc:link="chrome://help/locale/mail_xhelp.xhtml#marking_or_flagging_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="message-views-using" nc:name="Using Message Views" nc:link="chrome://help/locale/mail_help.xhtml#using_message_views"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-filters" nc:name="Creating Message Filters" nc:link="chrome://help/locale/mail_help.xhtml#creating_message_filters"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="search-mailnews" nc:name="Searching Through Messages" nc:link="chrome://help/locale/mail_help.xhtml#searching_through_messages"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -305,7 +305,7 @@
 <rdf:Description about="#folder-sharing">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="folder-subscribing" nc:name="Subscribing to a Shared Folder" nc:link="chrome://help/locale/mail_help.html#folder_subscribing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="folder-subscribing" nc:name="Subscribing to a Shared Folder" nc:link="chrome://help/locale/mail_help.xhtml#subscribing_to_a_shared_folder"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -313,10 +313,10 @@
 <rdf:Description about="#labeling-messages">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="label-apply" nc:name="Applying a Label" nc:link="chrome://help/locale/mail_help.html#label_apply"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-customize" nc:name="Customizing Labels" nc:link="chrome://help/locale/mail_help.html#label_customize"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-sort" nc:name="Sorting Messages by Label" nc:link="chrome://help/locale/mail_help.html#label_sort"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="label-remove" nc:name="Removing Labels" nc:link="chrome://help/locale/mail_help.html#label_remove"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-apply" nc:name="Applying a Label" nc:link="chrome://help/locale/mail_help.xhtml#applying_a_label"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-customize" nc:name="Customizing Labels" nc:link="chrome://help/locale/mail_help.xhtml#customizing_labels"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-sort" nc:name="Sorting Messages by Label" nc:link="chrome://help/locale/mail_help.xhtml#sorting_messages_by_label"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="label-remove" nc:name="Removing Labels" nc:link="chrome://help/locale/mail_help.xhtml#removing_labels"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -324,7 +324,7 @@
 <rdf:Description about="#message-views-using">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="message-views-create-new" nc:name="Creating a Custom View" nc:link="chrome://help/locale/mail_help.html#message_views_custom"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="message-views-create-new" nc:name="Creating a Custom View" nc:link="chrome://help/locale/mail_help.xhtml#creating_a_custom_view"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -332,7 +332,7 @@
 <rdf:Description about="#mail-filters">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="send-filter" nc:name="Filtering Messages from a Specific Sender" nc:link="chrome://help/locale/mail_help.html#sender_filter"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="send-filter" nc:name="Filtering Messages from a Specific Sender" nc:link="chrome://help/locale/mail_help.xhtml#filtering_messages_from_a_specific_sender"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -340,7 +340,7 @@
 <rdf:Description about="#search-mailnews">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="search_messages" nc:name="Searching for Specific Messages" nc:link="chrome://help/locale/mail_help.html#SEARCH_MESSAGES"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="search_messages" nc:name="Searching for Specific Messages" nc:link="chrome://help/locale/mail_help.xhtml#searching_for_specific_messages"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -348,7 +348,7 @@
 <rdf:Description about="#mail-junk">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-junk-controls" nc:name="Using Junk Mail Controls" nc:link="chrome://help/locale/mail_help.html#junk_controls" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-junk-controls" nc:name="Using Junk Mail Controls" nc:link="chrome://help/locale/mail_help.xhtml#using_junk_mail_controls" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -356,8 +356,8 @@
 <rdf:Description about="#mail-importing-other">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-importing-mail-messages" nc:name="Importing Mail Messages" nc:link="chrome://help/locale/mail_help.html#importing_mail_messages" /> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-importing-mail-settings" nc:name="Importing Mail Settings" nc:link="chrome://help/locale/mail_help.html#importing_mail_settings" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-importing-mail-messages" nc:name="Importing Mail Messages" nc:link="chrome://help/locale/mail_help.xhtml#importing_mail_messages" /> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-importing-mail-settings" nc:name="Importing Mail Settings" nc:link="chrome://help/locale/mail_help.xhtml#importing_mail_settings" /> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -365,13 +365,13 @@
   <rdf:Description about="#mail-doc-news">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-subscribe" nc:name="Subscribing to Newsgroups" nc:link="chrome://help/locale/mail_help.html#SUBSCRIBE_LIST_ALL"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-reading-news" nc:name="Reading Newsgroup Messages" nc:link="chrome://help/locale/mail_help.html#opening_groups_server"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-posting" nc:name="Posting Newsgroup Messages" nc:link="chrome://help/locale/mail_help.html#about_posting"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-replying-news" nc:name="Contributing to Ongoing Discussions" nc:link="chrome://help/locale/mail_help.html#REPLYING"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-monitoring" nc:name="Monitoring Threads" nc:link="chrome://help/locale/mail_help.html#MONITORING"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-delete-news" nc:name="Removing a Newsgroup" nc:link="chrome://help/locale/mail_help.html#DELETE_NEWSGROUP"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-add-newsserver" nc:name="Adding a Newsgroup Server" nc:link="chrome://help/locale/mail_help.html#ADD_SERVER"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-subscribe" nc:name="Subscribing to Newsgroups" nc:link="chrome://help/locale/mail_help.xhtml#subscribing_to_newsgroups"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-reading-news" nc:name="Reading Newsgroup Messages" nc:link="chrome://help/locale/mail_help.xhtml#reading_newsgroup_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-posting" nc:name="Posting Newsgroup Messages" nc:link="chrome://help/locale/mail_help.xhtml#posting_newsgroup_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-replying-news" nc:name="Contributing to Ongoing Discussions" nc:link="chrome://help/locale/mail_help.xhtml#contributing_to_ongoing_discussions"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-monitoring" nc:name="Monitoring Threads" nc:link="chrome://help/locale/mail_help.xhtml#monitoring_threads"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-delete-news" nc:name="Removing a Newsgroup" nc:link="chrome://help/locale/mail_help.xhtml#removing_a_newsgroup"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-add-newsserver" nc:name="Adding a Newsgroup Server" nc:link="chrome://help/locale/mail_help.xhtml#adding_a_newsgroup_server"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -379,15 +379,15 @@
 <rdf:Description about="#mail-doc-offline">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-offline-setup" nc:name="Setting Up Mail to Work Offline" nc:link="chrome://help/locale/mail_help.html#OFFLINE_SETUP"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-inbox" nc:name="Downloading Your Inbox" nc:link="chrome://help/locale/mail_help.html#OFFLINE_INBOX"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-folder" nc:name="Downloading an Individual Folder" nc:link="chrome://help/locale/mail_help.html#OFFLINE_FOLDER"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-flagged" nc:name="Downloading Selected or Flagged Messages" nc:link="chrome://help/locale/mail_help.html#OFFLINE_FLAGGED"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-directory" nc:name="Downloading Directory Entries" nc:link="chrome://help/locale/mail_help.html#OFFLINE_DIRECTORY"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-accounts" nc:name="Setting Up Your Accounts for Working Offline" nc:link="chrome://help/locale/mail_help.html#OFFLINE_ACCOUNTS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-items" nc:name="Selecting Items for Offline Viewing" nc:link="chrome://help/locale/mail_help.html#OFFLINE_ITEMS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-sync" nc:name="Downloading and Synchronizing Your Messages" nc:link="chrome://help/locale/mail_help.html#OFFLINE_SYNC"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-offline-go" nc:name="Working Offline and Reconnecting Later" nc:link="chrome://help/locale/mail_help.html#OFFLINE_GO"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-setup" nc:name="Setting Up Mail to Work Offline" nc:link="chrome://help/locale/mail_help.xhtml#setting_up_mozilla_mail_and_newsgroups_to_work_offline"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-inbox" nc:name="Downloading Your Inbox" nc:link="chrome://help/locale/mail_help.xhtml#downloading_your_inbox_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-folder" nc:name="Downloading an Individual Folder" nc:link="chrome://help/locale/mail_help.xhtml#downloading_an_individual_folder_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-flagged" nc:name="Downloading Selected or Flagged Messages" nc:link="chrome://help/locale/mail_help.xhtml#downloading_selected_or_flagged_messages_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-directory" nc:name="Downloading Directory Entries" nc:link="chrome://help/locale/mail_help.xhtml#downloading_directory_entries_for_offline_use"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-accounts" nc:name="Setting Up Your Accounts for Working Offline" nc:link="chrome://help/locale/mail_help.xhtml#setting_up_your_accounts_for_working_offline"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-items" nc:name="Selecting Items for Offline Viewing" nc:link="chrome://help/locale/mail_help.xhtml#selecting_items_for_offline_viewing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-sync" nc:name="Downloading and Synchronizing Your Messages" nc:link="chrome://help/locale/mail_help.xhtml#downloading_and_synchronizing_your_messages"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-offline-go" nc:name="Working Offline and Reconnecting Later" nc:link="chrome://help/locale/mail_help.xhtml#working_offline_and_reconnecting_later"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -419,14 +419,14 @@
 <rdf:Description about="#mail-doc-account-settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_account_identity" nc:name="Account Settings"  nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_IDENTITY"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-choose" nc:name="Server Settings"  nc:link="chrome://help/locale/mail_help.html#IMAP_and_POP3"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_copies" nc:name="Copies &amp; Folders"  nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_COPIES"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_addressing_settings" nc:name="Addressing"  nc:link="chrome://help/locale/mail_help.html#addressing_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-offline-space" nc:name="Offline and Disk Space"  nc:link="chrome://help/locale/mail_help.html#offline_prefs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_security_settings" nc:name="Security"  nc:link="chrome://help/locale/mail_help.html#security_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_local_folders_settings" nc:name="Local Folders"  nc:link="chrome://help/locale/mail_help.html#mail_local_folders_settings"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_smtp" nc:name="Outgoing Server (SMTP)"  nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_SMTP"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_account_identity" nc:name="Account Settings"  nc:link="chrome://help/locale/mail_help.xhtml#account_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-choose" nc:name="Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_copies" nc:name="Copies &amp; Folders"  nc:link="chrome://help/locale/mail_help.xhtml#copies_and_folders"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_addressing_settings" nc:name="Addressing"  nc:link="chrome://help/locale/mail_help.xhtml#addressing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-offline-space" nc:name="Offline and Disk Space"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings" nc:name="Security"  nc:link="chrome://help/locale/mail_help.xhtml#security"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_local_folders_settings" nc:name="Local Folders"  nc:link="chrome://help/locale/mail_help.xhtml#local_folders"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_smtp" nc:name="Outgoing Server (SMTP)"  nc:link="chrome://help/locale/mail_help.xhtml#outgoing_server"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -434,12 +434,12 @@
 <rdf:Description about="#mail-doc-choose">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail-doc-choose-IMAP" nc:name="About IMAP"  nc:link="chrome://help/locale/mail_help.html#IMAP_about"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-choose-POP" nc:name="About POP"  nc:link="chrome://help/locale/mail_help.html#POP_about"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_server_imap" nc:name="IMAP Server Settings"  nc:link="chrome://help/locale/mail_help.html#IMAP_SERVER"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-doc-imap-advanced" nc:name="Advanced IMAP Server Settings"  nc:link="chrome://help/locale/mail_help.html#IMAP_ADVANCED"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_server_pop3" nc:name="POP Server Settings"  nc:link="chrome://help/locale/mail_help.html#POP_SERVER"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_server_nntp" nc:name="News Server Settings"  nc:link="chrome://help/locale/mail_help.html#DISCUSSION_HOST_PROPERTIES"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-choose-IMAP" nc:name="About IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#about_internet_message_access_protocol"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-choose-POP" nc:name="About POP"  nc:link="chrome://help/locale/mail_help.xhtml#about_post_office_protocol"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_server_imap" nc:name="IMAP Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#imap_server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-doc-imap-advanced" nc:name="Advanced IMAP Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#advanced_imap_server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_server_pop3" nc:name="POP Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#pop_server_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_server_nntp" nc:name="News Server Settings"  nc:link="chrome://help/locale/mail_help.xhtml#news_server_settings"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -447,10 +447,10 @@
 <rdf:Description about="#mail-doc-offline-space">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="chrome://help/locale/mail_help.html#OFFLINE_IMAP"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_offline_pop3" nc:name="POP"  nc:link="chrome://help/locale/mail_help.html#OFFLINE_POP"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="chrome://help/locale/mail_help.html#OFFLINE_NEWS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-account-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.html#mail-account-receipts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_imap" nc:name="IMAP"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_pop3" nc:name="POP"  nc:link="chrome://help/locale/mail_help.xhtml#disk_space_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_offline_nntp" nc:name="News"  nc:link="chrome://help/locale/mail_help.xhtml#offline_and_disk_space_settings"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-account-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -458,9 +458,9 @@
 <rdf:Description about="#mail_security_settings">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_security_settings_certs" nc:name="About Certificates"  nc:link="chrome://help/locale/mail_help.html#about_email_certs"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_security_settings_sign" nc:name="Digital Signing"  nc:link="chrome://help/locale/mail_help.html#digital_signing"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_security_settings_encrypt" nc:name="Encryption"  nc:link="chrome://help/locale/mail_help.html#email_encryption"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings_certs" nc:name="About Certificates"  nc:link="chrome://help/locale/mail_help.xhtml#about_certificates"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings_sign" nc:name="Digital Signing"  nc:link="chrome://help/locale/mail_help.xhtml#digital_signing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_security_settings_encrypt" nc:name="Encryption"  nc:link="chrome://help/locale/mail_help.xhtml#encryption"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
@@ -468,16 +468,16 @@
 <rdf:Description about="#mail-doc-mailprefs">
     <nc:subheadings>
       <rdf:Seq>
-        <rdf:li> <rdf:Description ID="mail_prefs_general" nc:name="Mail and Newsgroups" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_MAIN_PANE"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_windows" nc:name="Windows" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_WINDOWS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_display" nc:name="Message Display" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_DISPLAY"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_notifications" nc:name="Notifications" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_NOTIFICATIONS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_messages" nc:name="Composition" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_MESSAGES"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_formatting" nc:name="Send Format" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_FORMATTING"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_ADDRESSING"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-prefs-labels" nc:name="Labels" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_LABELS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_RECEIPTS"/> </rdf:li>
-        <rdf:li> <rdf:Description ID="mail_prefs_offline" nc:name="Offline and Disk Space" nc:link="chrome://help/locale/mail_help.html#PREFERENCES_MAILNEWS_OFFLINE"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_general" nc:name="Mail and Newsgroups" nc:link="chrome://help/locale/mail_help.xhtml#mail_and_newsgroups"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_windows" nc:name="Windows" nc:link="chrome://help/locale/mail_help.xhtml#windows"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_display" nc:name="Message Display" nc:link="chrome://help/locale/mail_help.xhtml#message_display"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_notifications" nc:name="Notifications" nc:link="chrome://help/locale/mail_help.xhtml#notifications"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_messages" nc:name="Composition" nc:link="chrome://help/locale/mail_help.xhtml#composition"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_formatting" nc:name="Send Format" nc:link="chrome://help/locale/mail_help.xhtml#send_format"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_addressing" nc:name="Addressing" nc:link="chrome://help/locale/mail_help.xhtml#addressing"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-prefs-labels" nc:name="Labels" nc:link="chrome://help/locale/mail_help.xhtml#labels"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail-prefs-receipts" nc:name="Return Receipts" nc:link="chrome://help/locale/mail_help.xhtml#return_receipts"/> </rdf:li>
+        <rdf:li> <rdf:Description ID="mail_prefs_offline" nc:name="Offline and Disk Space" nc:link="chrome://help/locale/mail_help.xhtml#disk_space_preferences"/> </rdf:li>
       </rdf:Seq>
     </nc:subheadings>
   </rdf:Description>
