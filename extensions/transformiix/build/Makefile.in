@@ -125,6 +125,11 @@ OBJS =../source/base/ArrayList.o \
   ../source/xslt/util/NodeStack.o \
   XSLTProcessorModule.o
 
+EXTRA_DSO_LDOPTS += \
+  $(MOZ_COMPONENT_LIBS) \
+  $(MOZ_JS_LIBS) \
+  $(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 INCLUDES += -I$(srcdir)/../source/xslt -I$(srcdir)/../source/base \

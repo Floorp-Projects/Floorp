@@ -25,7 +25,7 @@
  *     - changed constant short declarations in many of the classes
  *       with enumerations, commented with //--LF
  *
- * $Id: Expr.h,v 1.12 2001/04/14 17:24:59 axel%pike.org Exp $
+ * $Id: Expr.h,v 1.13 2001/05/12 09:54:15 nisheeth%netscape.com Exp $
  */
 
 
@@ -46,7 +46,7 @@
 /*
   XPath class definitions.
   Much of this code was ported from XSL:P.
-  @version $Revision: 1.12 $ $Date: 2001/04/14 17:24:59 $
+  @version $Revision: 1.13 $ $Date: 2001/05/12 09:54:15 $
 */
 
 //necessary prototypes
@@ -1048,6 +1048,7 @@ public:
     StringExpr();
     StringExpr(String& value);
     StringExpr(const String& value);
+    StringExpr(const char* value);
     ~StringExpr();
 
     /**

@@ -26,10 +26,14 @@ VPATH           = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-DIRS            = source
+#Disable Transformiix on OS/2 until bug 53518 is fixed.
+ifneq ($(OS_ARCH),OS2)
 
+DIRS            = source
 ifdef MOZ_XSL
 DIRS += build public
+endif
+
 endif
 
 include $(topsrcdir)/config/rules.mk
