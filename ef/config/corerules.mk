@@ -650,7 +650,9 @@ endif
 
 ################################################################################
 
+ifneq ($(DEPENDENCIES),)
 -include $(DEPENDENCIES)
+endif
 
 ifneq ($(OS_ARCH),WINNT)
 # Can't use sed because of its 4000-char line length limit, so resort to perl
