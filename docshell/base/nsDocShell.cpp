@@ -5154,25 +5154,27 @@ nsDocShell::DoURILoad(nsIURI * aURI,
              * cache is free to go to the server for updated postdata. 
              */
             if (cacheChannel && cacheKey) {
-                if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) 
-                    cacheChannel->SetCacheKey(cacheKey, PR_TRUE);
+                if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
+                    cacheChannel->SetCacheKey(cacheKey);
+                    PRUint32 loadFlags;
+                    if (NS_SUCCEEDED(channel->GetLoadFlags(&loadFlags)))
+                        channel->SetLoadFlags(loadFlags | nsICachingChannel::LOAD_ONLY_FROM_CACHE);
+                }
                 else if (mLoadType == LOAD_RELOAD_NORMAL)
-                    cacheChannel->SetCacheKey(cacheKey, PR_FALSE);
+                    cacheChannel->SetCacheKey(cacheKey);
             }         
-
-         
         }
         else {
-            /* If there is no postdata, set the cache key on the channel
-             * with the readFromCacheOnly set to false, so that cache will
-             * be free to get it from net if it is not found in cache.
+            /* If there is no postdata, set the cache key on the channel, and
+             * do not set the LOAD_ONLY_FROM_CACHE flag, so that the channel
+             * will be free to get it from net if it is not found in cache.
              * New cache may use it creatively on CGI pages with GET
              * method and even on those that say "no-cache"
              */
             if (mLoadType == LOAD_HISTORY || mLoadType == LOAD_RELOAD_NORMAL 
                 || mLoadType == LOAD_RELOAD_CHARSET_CHANGE) {
                 if (cacheChannel && cacheKey)
-                    cacheChannel->SetCacheKey(cacheKey, PR_FALSE);
+                    cacheChannel->SetCacheKey(cacheKey);
             }
         }
         if (aHeadersData) {

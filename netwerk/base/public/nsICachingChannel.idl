@@ -47,6 +47,8 @@ interface nsIFile;
  * This interface provides:
  *   1) Support for "stream as file" semantics (for JAR and plugins).
  *   2) Support for "pinning" cached data in the cache (for printing and save-as).
+ *   3) Support for uniquely identifying cached data in cases when the URL
+ *      is insufficient (e.g., HTTP form submission).
  */
 [scriptable, uuid(b1f95f5e-ee05-4434-9d34-89a935d7feef)]
 interface nsICachingChannel : nsISupports
@@ -54,29 +56,37 @@ interface nsICachingChannel : nsISupports
     /**
      * Set/get the cache token... uniquely identifies the data in the cache.
      * Holding a reference to this token prevents the cached data from being
-     * removed.  A cache token retrieved from a particular instance of 
-     * nsICachingChannel could be set on another instance of nsICachingChannel
-     * provided the underlying implementations are compatible.  The implemen-
-     * tation of nsICachingChannel would be expected to only read from the
-     * cache entry identified by the cache token and not try to validate it.
+     * removed.
+     * 
+     * A cache token retrieved from a particular instance of nsICachingChannel
+     * could be set on another instance of nsICachingChannel provided the
+     * underlying implementations are compatible.  The implementation of
+     * nsICachingChannel would be expected to only read from the cache entry
+     * identified by the cache token and not try to validate it.
      *
-     * The cache token can be treated as an opaque object; however, it can be
-     * QI'd to a nsICacheEntryDescriptor if more detailed information about the
-     * cache entry is needed.
+     * The cache token can be QI'd to a nsICacheEntryInfo if more detail
+     * about the cache entry is needed (e.g., expiration time).
      */
     attribute nsISupports cacheToken;
 
     /**
-     * Set/get the cache key... uniquely identifies the data in the cache.
-     * Holding a reference to this key DOES NOT prevent the cached data from
-     * being removed.  It is otherwise similar to the cacheToken.
+     * Set/get the cache key... uniquely identifies the data in the cache
+     * for this channel.  Holding a reference to this key does NOT prevent
+     * the cached data from being removed.
+     * 
+     * A cache key retrieved from a particular instance of nsICachingChannel
+     * could be set on another instance of nsICachingChannel provided the
+     * underlying implementations are compatible and provided the new 
+     * channel instance was created with the same URI.  The implementation of
+     * nsICachingChannel would be expected to use the cache entry identified
+     * by the cache token.  Depending on the value of nsIRequest::loadFlags,
+     * the cache entry may be validated, overwritten, or simply read.
      *
-     * The fromCacheOnly flag inhibits fetching from the net if the data in the
-     * cache has been evicted.  An error of NS_ERROR_DOCUMENT_NOT_CACHED will
-     * be sent to the listener's onStopRequest in this case.
+     * The cache key may be NULL indicating that the URI of the channel is
+     * sufficient to locate the same cache entry.  Setting a NULL cache key
+     * is likewise valid.
      */
-    nsISupports getCacheKey();
-    void        setCacheKey(in nsISupports cacheKey, in boolean fromCacheOnly);
+    attribute nsISupports cacheKey;
 
     /**
      * Specifies whether or not the data should be cached to a file.  This
@@ -100,11 +110,28 @@ interface nsICachingChannel : nsISupports
      * and after the channel fires its OnStopRequest notification.
      */
     boolean isFromCache();
-};
 
-%{C++
-/**
- * nsresult passed through onStopRequest if the document could not be fetched from the cache.
- */
-#define NS_ERROR_DOCUMENT_NOT_CACHED NS_ERROR_GENERATE_FAILURE(NS_ERROR_MODULE_NETWORK, 70)
-%}
+    /**************************************************************************
+     * Caching channel specific load flags:
+     */
+
+    /**
+     * This load flag inhibits fetching from the net if the data in the cache
+     * has been evicted.  An error of NS_ERROR_DOCUMENT_NOT_CACHED will be sent
+     * to the listener's onStopRequest in this case.
+     */
+    const unsigned long LOAD_ONLY_FROM_CACHE = 1 << 30;
+
+    /**
+     * This load flag controls what happens when a document would be loaded
+     * from the cache to satisfy a call to AsyncOpen.  If this attribute is
+     * set to TRUE, then the document will not be loaded from the cache.  A
+     * stream listener can check nsICachingChannel::isFromCache to determine
+     * if the AsyncOpen will actually result in data being streamed.
+     *
+     * If this flag has been set, and the request can be satisfied via the
+     * cache, then the OnDataAvailable events will be skipped.  The listener
+     * will only see OnStartRequest followed by OnStopRequest.
+     */
+    const unsigned long LOAD_ONLY_IF_MODIFIED = 1 << 31;
+};
