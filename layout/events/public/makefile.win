@@ -19,7 +19,6 @@ DEPTH=..\..\..
 IGNORE_MANIFEST=1
 
 EXPORTS =			    \
-	nsIEventDispatcher.h	    \
 	nsIEventListenerManager.h   \
         $(NULL)
 

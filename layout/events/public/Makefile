@@ -20,7 +20,6 @@ DEPTH = ../../..
 MODULE = raptor
 
 EXPORTS =			    \
-	nsIEventDispatcher.h	    \
 	nsIEventListenerManager.h   \
         $(NULL)
 
