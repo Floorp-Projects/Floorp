@@ -27,6 +27,7 @@
 #include <windows.h>
 #include "nsGfxCIID.h"
 #include "resource.h"
+#include <commctrl.h>
 
 #include "prtime.h"
 
@@ -69,7 +70,20 @@ PRBool nsWindow::ConvertStatus(nsEventStatus aStatus)
 //-------------------------------------------------------------------------
 LRESULT CALLBACK nsWindow::WindowProc(HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam)
 {
+      // Get the window which caused the event and ask it to process the message
     nsWindow *someWindow = (nsWindow*)::GetWindowLong(hWnd, GWL_USERDATA);
+
+
+      // Re-direct a tab change message destined for it's parent window to the
+      // the actual window which generated the event.
+    if (msg == WM_NOTIFY) {
+      LPNMHDR pnmh = (LPNMHDR) lParam;
+      if (pnmh->code == TCN_SELCHANGE) {             
+        someWindow = (nsWindow*)::GetWindowLong(pnmh->hwndFrom, GWL_USERDATA); 
+      }
+    }
+
+
     if (nsnull != someWindow) {
         LRESULT retValue;
         if (PR_TRUE == someWindow->ProcessMessage(msg, wParam, lParam, &retValue)) {
@@ -963,10 +977,24 @@ PRBool nsWindow::OnKey(PRUint32 aEventType, PRUint32 aKeyCode)
 PRBool nsWindow::ProcessMessage(UINT msg, WPARAM wParam, LPARAM lParam, LRESULT *aRetValue)
 {
     PRBool result = PR_FALSE; // call the default nsWindow proc
+
             
     *aRetValue = 0;
 
     switch (msg) {
+
+        
+        case WM_NOTIFY:
+            // TAB change
+        {
+          LPNMHDR pnmh = (LPNMHDR) lParam;
+
+          if (pnmh->code == TCN_SELCHANGE) {
+            DispatchEventToCallback(NS_TABCHANGE);
+            result = PR_TRUE;
+          }
+        }
+        break;
 
         case WM_DESTROY:
             // clean up.
@@ -1424,6 +1452,40 @@ PRBool nsWindow::DispatchEvent(PRUint32 aEventType)
     return ConvertStatus(mEventListener->ProcessEvent(event));
 }
 
+
+//-------------------------------------------------------------------------
+//
+// Invokes ProcessEvent method on Event Listener object
+//
+//-------------------------------------------------------------------------
+PRBool nsWindow::DispatchEventToCallback(PRUint32 aEventType)
+{
+   // call the event callback 
+    if (mEventCallback) {
+        nsGUIEvent event;
+        event.widget = this;
+        
+        DWORD pos = ::GetMessagePos();
+        POINT cpos;
+
+        cpos.x = LOWORD(pos);
+        cpos.y = HIWORD(pos);
+
+        ::ScreenToClient(mWnd, &cpos);
+
+        event.point.x = cpos.x;
+        event.point.y = cpos.y;
+
+        event.time = ::GetMessageTime();
+        event.message = aEventType;
+
+        return(ConvertStatus((*mEventCallback)(&event)));
+    }
+    else
+        return(PR_FALSE);
+}
+
+
 //-------------------------------------------------------------------------
 //
 // Deal with all sort of mouse event
@@ -1524,7 +1586,6 @@ PRBool nsWindow::DispatchMouseEvent(PRUint32 aEventType)
   } 
   return result;
 }
-
 
 //-------------------------------------------------------------------------
 //

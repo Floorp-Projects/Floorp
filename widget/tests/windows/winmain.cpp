@@ -47,6 +47,7 @@
 #include "nsFont.h"
 #include "nsRepository.h"
 #include "nsWidgetsCID.h"
+#include "nsITabWidget.h"
 
 #include <stdio.h>
 
@@ -66,6 +67,8 @@ nsIListBox    *gMultiListBox = NULL;
 
 nsIWidget     *movingWidget  = NULL;
 nsIScrollbar  *scrollbar     = NULL;
+nsITabWidget  *tabWidget     = NULL;
+
 
 char * gFailedMsg = NULL;
 
@@ -102,6 +105,9 @@ static NS_DEFINE_IID(kCVertScrollbarCID, NS_VERTSCROLLBAR_CID);
 static NS_DEFINE_IID(kCTextAreaCID, NS_TEXTAREA_CID);
 static NS_DEFINE_IID(kCTextFieldCID, NS_TEXTFIELD_CID);
 
+static NS_DEFINE_IID(kCTabWidgetCID, NS_TABWIDGET_CID);
+
+
 // interface ids
 static NS_DEFINE_IID(kIWidgetIID,         NS_IWIDGET_IID);
 static NS_DEFINE_IID(kIButtonIID,         NS_IBUTTON_IID);
@@ -114,6 +120,7 @@ static NS_DEFINE_IID(kIRadioGroupIID,     NS_IRADIOGROUP_IID);
 static NS_DEFINE_IID(kIListBoxIID,        NS_ILISTBOX_IID);
 static NS_DEFINE_IID(kIComboBoxIID,       NS_ICOMBOBOX_IID);
 static NS_DEFINE_IID(kIFileWidgetIID,     NS_IFILEWIDGET_IID);
+static NS_DEFINE_IID(kITabWidgetIID,      NS_ITABWIDGET_IID);
 
 
 char * eval(PRInt32 aVal) {
@@ -683,15 +690,15 @@ void DumpRects()
 
 
 /**--------------------------------------------------------------------------------
-  * Main Handler
-  *--------------------------------------------------------------------------------
+ * Main Handler
+ *--------------------------------------------------------------------------------
  */
 nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 { 
-	//printf("aEvent->message %d\n", aEvent->message);
+	//  printf("aEvent->message %d\n", aEvent->message);
     nsEventStatus result = nsEventStatus_eIgnore;
     switch(aEvent->message) {
-        
+
         case NS_MOUSE_ENTER:
             if (DEBUG_MOUSE) printf("NS_MOUSE_ENTER 0x%X\n", aEvent->widget);
             break;
@@ -742,6 +749,7 @@ nsEventStatus PR_CALLBACK HandleEvent(nsGUIEvent *aEvent)
 
             break;
 
+       
         case NS_SCROLLBAR_POS:
         case NS_SCROLLBAR_PAGE_NEXT:
         case NS_SCROLLBAR_PAGE_PREV:
@@ -816,6 +824,28 @@ nsEventStatus PR_CALLBACK HandleFileButtonEvent(nsGUIEvent *aEvent)
   return(nsEventStatus_eConsumeDoDefault);
 }
 
+/*--------------------------------------------------------------------------------
+ * Tab change handler
+ *--------------------------------------------------------------------------------
+ */
+
+nsEventStatus PR_CALLBACK HandleTabEvent(nsGUIEvent *aEvent)
+{
+  switch(aEvent->message) {
+           
+    case NS_TABCHANGE:
+      PRUint32 tab = tabWidget->GetSelectedTab();
+      char buf[256];
+      sprintf(buf, "Selected tab %d", tab);
+      statusText->SetText(buf);
+    break;
+  }
+
+  return(nsEventStatus_eConsumeDoDefault);
+}
+
+
+
 
 /**--------------------------------------------------------------------------------
   *
@@ -844,6 +874,7 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     NSRepository::RegisterFactory(kCVertScrollbarCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCTextAreaCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
     NSRepository::RegisterFactory(kCTextFieldCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
+    NSRepository::RegisterFactory(kCTabWidgetCID, "raptorwidget.dll", PR_FALSE, PR_FALSE);
 
     static NS_DEFINE_IID(kCRenderingContextIID, NS_RENDERING_CONTEXT_CID); 
     static NS_DEFINE_IID(kCDeviceContextIID, NS_DEVICE_CONTEXT_CID); 
@@ -1101,6 +1132,20 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpszCmd
     x = createTestButton(window, kSetSelection,    x+150, y, 125, MultiListBoxTestHandleEvent);
     x = createTestButton(window, kRemoveSelection, x+5,   y, 125, MultiListBoxTestHandleEvent);
 
+    y += rect.height + 5;
+    x = 10;
+
+    //
+    // create a tab widget
+    //
+
+    rect.SetRect(x, y, 300, 50);  
+    NSRepository::CreateInstance(kCTabWidgetCID, nsnull, kITabWidgetIID, (LPVOID*)&tabWidget);
+    tabWidget->Create(window, rect, HandleTabEvent, NULL);
+    nsString tabs[] = {"low", "medium", "high" };
+   
+    tabWidget->SetTabs(3, tabs);
+    tabWidget->Show(PR_TRUE);
     y += rect.height + 5;
     x = 10;
 

@@ -84,6 +84,7 @@ struct nsScrollbarEvent : public nsGUIEvent {
     PRUint32        position; 
 };
 
+
 /**
  * Keyboard event
  */
@@ -98,7 +99,6 @@ struct nsKeyEvent : public nsGUIEvent {
                 /// PR_TRUE indicates the alt key in down
     PRBool          isAlt;          
 };
-
 
 /**
  * GUI MESSAGES
@@ -115,6 +115,7 @@ struct nsKeyEvent : public nsGUIEvent {
 
 #define NS_KEY_UP                       (NS_WINDOW_START + 32)
 #define NS_KEY_DOWN                     (NS_WINDOW_START + 33)
+#define NS_TABCHANGE                    (NS_WINDOW_START + 34)
 
 #define NS_MOUSE_MESSAGE_START          300
 #define NS_MOUSE_MOVE                   (NS_MOUSE_MESSAGE_START)

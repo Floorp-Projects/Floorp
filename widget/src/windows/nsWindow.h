@@ -132,6 +132,7 @@ protected:
                                         WPARAM wParam,
                                         LPARAM lParam);
     
+    PRBool DispatchEventToCallback(PRUint32 aEventType);
     static PRBool ConvertStatus(nsEventStatus aStatus);
 
 protected:
