@@ -331,6 +331,10 @@ public:
     //    where the inheritance is computed by the style system
   enum RuleDetail {
     eRuleNone, // No props have been specified at all.
+    eRulePartialReset, // At least one prop with a non-inherited value
+                       // has been specified.  No props have been
+                       // specified with an inherited value.  At least
+                       // one prop remains unspecified.
     eRulePartialMixed, // At least one prop with a non-inherited value
                        // has been specified.  Some props may also have
                        // been specified with an inherited value.  At
@@ -338,6 +342,8 @@ public:
     eRulePartialInherited, // Only props with inherited values have
                            // have been specified.  At least one prop
                            // remains unspecified.
+    eRuleFullReset, // All props have been specified.  None has an
+                    // inherited value.
     eRuleFullMixed, // All props have been specified.  At least one has
                     // a non-inherited value.
     eRuleFullInherited, // All props have been specified with inherited
@@ -348,7 +354,7 @@ public:
 
   enum { // Types of RuleBits
     eNoneBits,
-    eInheritBits
+    eDependentBits
   };
 
 private:
@@ -370,14 +376,26 @@ private:
 
   nsCachedStyleData mStyleData;   // Any data we cached on the rule node.
 
-  PRUint32 mInheritBits;          // Used to cache the fact that we can look up cached data under a parent
-                                  // rule.  This is not the same thing as CSS inheritance.  
+  PRUint32 mDependentBits; // Used to cache the fact that we can look up
+                           // cached data under a parent rule.
 
-  PRUint32 mNoneBits;             // Used to cache the fact that this entire branch specifies no data
-                                  // for a given struct type.  For example, if an entire rule branch
-                                  // specifies no color information, then a bit will be set along every
-                                  // rule node on that branch, so that you can break out of the rule tree
-                                  // early.
+  PRUint32 mNoneBits; // Used to cache the fact that the branch to this
+                      // node specifies no non-inherited data for a
+                      // given struct type.  (This usually implies that
+                      // the entire branch specifies no non-inherited
+                      // data, although not necessarily, if a
+                      // non-inherited value is overridden by an
+                      // explicit 'inherit' value.)  For example, if an
+                      // entire rule branch specifies no color
+                      // information, then a bit will be set along every
+                      // rule node on that branch, so that you can break
+                      // out of the rule tree early and just inherit
+                      // from the parent style context.  The presence of
+                      // this bit means we should just get inherited
+                      // data from the parent style context, and it is
+                      // never used for reset structs since their
+                      // Compute*Data functions don't initialize from
+                      // inherited data.
 
 friend struct nsRuleList;
 
@@ -393,10 +411,8 @@ public:
   static nsILanguageAtomService *gLangService;
 
 protected:
-  void PropagateInheritBit(PRUint32 aBit, nsRuleNode* aHighestNode);
+  void PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode);
   void PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode);
- 
-  PRBool InheritsFromParentRule(const nsStyleStructID aSID);
   
   const nsStyleStruct* SetDefaultOnRoot(const nsStyleStructID aSID, nsIStyleContext* aContext);
 

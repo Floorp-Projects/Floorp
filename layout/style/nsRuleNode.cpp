@@ -402,7 +402,7 @@ void nsRuleNode::CreateRootNode(nsIPresContext* aPresContext, nsRuleNode** aResu
 nsILanguageAtomService* nsRuleNode::gLangService = nsnull;
 
 nsRuleNode::nsRuleNode(nsIPresContext* aContext, nsIStyleRule* aRule, nsRuleNode* aParent)
-    :mPresContext(aContext), mParent(aParent), mInheritBits(0), mNoneBits(0)
+    :mPresContext(aContext), mParent(aParent), mDependentBits(0), mNoneBits(0)
 {
   MOZ_COUNT_CTOR(nsRuleNode);
   mRule = aRule;
@@ -440,8 +440,8 @@ nsresult
 nsRuleNode::GetBits(PRInt32 aType, PRUint32* aResult)
 {
   switch (aType) {
-    case eNoneBits :    *aResult = mNoneBits;    break;
-    case eInheritBits : *aResult = mInheritBits; break;
+    case eNoneBits :      *aResult = mNoneBits;      break;
+    case eDependentBits : *aResult = mDependentBits; break;
     default:
       NS_ERROR("invalid arg");
       return NS_ERROR_INVALID_ARG;
@@ -529,7 +529,7 @@ nsRuleNode::ClearCachedData(nsIStyleRule* aRule)
     nsRuleNode* curr = this;
     while (curr) {
       curr->mNoneBits &= ~NS_STYLE_INHERIT_MASK;
-      curr->mInheritBits &= ~NS_STYLE_INHERIT_MASK;
+      curr->mDependentBits &= ~NS_STYLE_INHERIT_MASK;
       if (curr->mStyleData.mResetData || curr->mStyleData.mInheritedData)
         curr->mStyleData.Destroy(0, mPresContext);
 
@@ -559,7 +559,7 @@ nsRuleNode::ClearCachedDataInSubtree(nsIStyleRule* aRule)
     if (mStyleData.mResetData || mStyleData.mInheritedData)
       mStyleData.Destroy(0, mPresContext);
     mNoneBits &= ~NS_STYLE_INHERIT_MASK;
-    mInheritBits &= ~NS_STYLE_INHERIT_MASK;
+    mDependentBits &= ~NS_STYLE_INHERIT_MASK;
     aRule = nsnull;
   }
 
@@ -586,40 +586,36 @@ inline void
 nsRuleNode::PropagateNoneBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 {
   nsRuleNode* curr = this;
-  while (curr != aHighestNode) {
+  for (;;) {
     NS_ASSERTION(!(curr->mNoneBits & aBit), "propagating too far");
     curr->mNoneBits |= aBit;
+    if (curr == aHighestNode)
+      break;
     curr = curr->mParent;
   }
 }
 
 inline void
-nsRuleNode::PropagateInheritBit(PRUint32 aBit, nsRuleNode* aHighestNode)
+nsRuleNode::PropagateDependentBit(PRUint32 aBit, nsRuleNode* aHighestNode)
 {
-  if (mInheritBits & aBit)
+  if (mDependentBits & aBit)
     return; // Already set.
 
   nsRuleNode* curr = this;
   while (curr != aHighestNode) {
-    if (curr->mInheritBits & aBit) {
+    if (curr->mDependentBits & aBit) {
 #ifdef DEBUG
       while (curr != aHighestNode) {
-        NS_ASSERTION(curr->mInheritBits & aBit, "bit not set");
+        NS_ASSERTION(curr->mDependentBits & aBit, "bit not set");
         curr = curr->mParent;
       }
 #endif
       break;
     }
 
-    curr->mInheritBits |= aBit;
+    curr->mDependentBits |= aBit;
     curr = curr->mParent;
   }
-}
-
-inline PRBool 
-nsRuleNode::InheritsFromParentRule(const nsStyleStructID aSID)
-{
-  return mInheritBits & nsCachedStyleData::GetBitForSID(aSID);
 }
 
 /*
@@ -1153,12 +1149,17 @@ nsRuleNode::CheckSpecifiedProperties(const nsStyleStructID aSID,
   }
   if (inherited == total)
     return eRuleFullInherited;
-  if (specified == total)
+  if (specified == total) {
+    if (inherited == 0)
+      return eRuleFullReset;
     return eRuleFullMixed;
+  }
   if (specified == 0)
     return eRuleNone;
   if (specified == inherited)
     return eRulePartialInherited;
+  if (inherited == 0)
+    return eRulePartialReset;
   return eRulePartialMixed;
 }
 
@@ -1471,7 +1472,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // XXXldb I don't understand why we need to check |detail| here, but
     // we do.
     if (detail == eRuleNone)
-      while (ruleNode->mInheritBits & bit) {
+      while (ruleNode->mDependentBits & bit) {
         NS_ASSERTION(ruleNode->mStyleData.GetStyleData(aSID) == nsnull,
                      "inherit bit with cached data makes no sense");
         // Climb up to the next rule in the tree (a less specific rule).
@@ -1501,7 +1502,9 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     if (oldDetail == eRuleNone && detail != eRuleNone)
       highestNode = ruleNode;
 
-    if (detail == eRuleFullMixed || detail == eRuleFullInherited)
+    if (detail == eRuleFullReset ||
+        detail == eRuleFullMixed ||
+        detail == eRuleFullInherited)
       break; // We don't need to examine any more rules.  All properties
              // have been fully specified.
 
@@ -1524,9 +1527,7 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // node in the tree to the node that specified the data that tells nodes on that
     // branch that they never need to examine their rules for this particular struct type
     // ever again.
-    PropagateInheritBit(bit, ruleNode);
-    if (eStyleStruct_Background == aSID && aRuleData->mPostResolveCallback)
-      (*aRuleData->mPostResolveCallback) ((nsStyleStruct *)startStruct, aRuleData);
+    PropagateDependentBit(bit, ruleNode);
     return startStruct;
   }
   else if (!startStruct && ((!isReset && (detail == eRuleNone || detail == eRulePartialInherited)) 
@@ -1537,14 +1538,12 @@ nsRuleNode::WalkRuleTree(const nsStyleStructID aSID,
     // We set a bit along the branch from the highest node (ruleNode)
     // down to our node (this) indicating that no non-inherited data was
     // specified.  This bit is guaranteed to be set already on the path
-    // from the highest node to the root node.  (We can only set this
-    // bit if detail == eRuleNone because an explicit inherit value
-    // could override a non-inherited value higher in the rule tree.)
-    // XXXldb But doesn't that mean we could propagate to |highestNode|
-    // (and along with that, break the invariant that the none bit always
-    // goes all the way to the top)?
-    if (detail == eRuleNone)
-      PropagateNoneBit(bit, ruleNode);
+    // from the highest node to the root node in the case where
+    // (detail == eRuleNone), which is the most common case here.
+    // We must check |!isReset| because the Compute*Data functions for
+    // reset structs wouldn't handle none bits correctly.
+    if (highestNode != this && !isReset)
+      PropagateNoneBit(bit, highestNode);
     
     // All information must necessarily be inherited from our parent style context.
     // In the absence of any computed data in the rule tree and with
@@ -2208,7 +2207,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   const nsStyleFont* parentFont = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentFont = NS_STATIC_CAST(const nsStyleFont*,
                                parentContext->GetStyleData(eStyleStruct_Font));
   if (aStartStruct)
@@ -2216,7 +2215,8 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     // computed data.
     font = new (mPresContext) nsStyleFont(*NS_STATIC_CAST(nsStyleFont*, aStartStruct));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -2322,7 +2322,7 @@ nsRuleNode::ComputeFontData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mFontData = font;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_FONT, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_FONT, aHighestNode);
   }
 
   return font;
@@ -2341,7 +2341,7 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   const nsStyleText* parentText = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentText = NS_STATIC_CAST(const nsStyleText*,
                                parentContext->GetStyleData(eStyleStruct_Text));
   if (aStartStruct)
@@ -2349,7 +2349,8 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     // computed data.
     text = new (mPresContext) nsStyleText(*NS_STATIC_CAST(nsStyleText*, aStartStruct));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -2441,7 +2442,7 @@ nsRuleNode::ComputeTextData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mTextData = text;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_TEXT, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_TEXT, aHighestNode);
   }
 
   return text;
@@ -2465,7 +2466,10 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData, const nsCSSStruct& a
     text = new (mPresContext) nsStyleTextReset();
   nsStyleTextReset* parentText = text;
 
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentText = (nsStyleTextReset*)parentContext->GetStyleData(eStyleStruct_TextReset);
   PRBool inherited = aInherited;
   
@@ -2510,7 +2514,7 @@ nsRuleNode::ComputeTextResetData(nsStyleStruct* aStartData, const nsCSSStruct& a
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mTextData = text;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_TEXT_RESET, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_TEXT_RESET, aHighestNode);
   }
 
   return text;
@@ -2529,7 +2533,7 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
   const nsStyleUserInterface* parentUI = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentUI = NS_STATIC_CAST(const nsStyleUserInterface*,
                       parentContext->GetStyleData(eStyleStruct_UserInterface));
   if (aStartData)
@@ -2537,7 +2541,8 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
     // computed data.
     ui = new (mPresContext) nsStyleUserInterface(*NS_STATIC_CAST(nsStyleUserInterface*, aStartData));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -2619,7 +2624,7 @@ nsRuleNode::ComputeUIData(nsStyleStruct* aStartData, const nsCSSStruct& aData,
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mUIData = ui;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_UI, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_UI, aHighestNode);
   }
 
   return ui;
@@ -2643,7 +2648,10 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aDa
     ui = new (mPresContext) nsStyleUIReset();
   const nsStyleUIReset* parentUI = ui;
 
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentUI = NS_STATIC_CAST(const nsStyleUIReset*,
                             parentContext->GetStyleData(eStyleStruct_UIReset));
   PRBool inherited = aInherited;
@@ -2700,7 +2708,7 @@ nsRuleNode::ComputeUIResetData(nsStyleStruct* aStartData, const nsCSSStruct& aDa
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mUIData = ui;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_UI_RESET, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_UI_RESET, aHighestNode);
   }
 
   return ui;
@@ -2724,7 +2732,10 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     display = new (mPresContext) nsStyleDisplay();
   const nsStyleDisplay* parentDisplay = display;
 
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentDisplay = NS_STATIC_CAST(const nsStyleDisplay*,
                             parentContext->GetStyleData(eStyleStruct_Display));
   PRBool inherited = aInherited;
@@ -2883,7 +2894,7 @@ nsRuleNode::ComputeDisplayData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mDisplayData = display;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_DISPLAY, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_DISPLAY, aHighestNode);
   }
 
   // CSS2 specified fixups:
@@ -2944,7 +2955,7 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
   const nsStyleVisibility* parentVisibility = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentVisibility = NS_STATIC_CAST(const nsStyleVisibility*,
                          parentContext->GetStyleData(eStyleStruct_Visibility));
   if (aStartStruct)
@@ -2952,7 +2963,8 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
     // computed data.
     visibility = new (mPresContext) nsStyleVisibility(*NS_STATIC_CAST(nsStyleVisibility*, aStartStruct));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -3034,7 +3046,7 @@ nsRuleNode::ComputeVisibilityData(nsStyleStruct* aStartStruct, const nsCSSStruct
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mVisibilityData = visibility;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_VISIBILITY, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_VISIBILITY, aHighestNode);
   }
 
   return visibility;
@@ -3053,7 +3065,7 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
   const nsStyleColor* parentColor = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentColor = NS_STATIC_CAST(const nsStyleColor*,
                               parentContext->GetStyleData(eStyleStruct_Color));
   if (aStartStruct)
@@ -3061,7 +3073,8 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
     // computed data.
     color = new (mPresContext) nsStyleColor(*NS_STATIC_CAST(nsStyleColor*, aStartStruct));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -3099,7 +3112,7 @@ nsRuleNode::ComputeColorData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mColorData = color;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_COLOR, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_COLOR, aHighestNode);
   }
 
   return color;
@@ -3123,7 +3136,10 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
     bg = new (mPresContext) nsStyleBackground(mPresContext);
   const nsStyleBackground* parentBG = bg;
 
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentBG = NS_STATIC_CAST(const nsStyleBackground*,
                          parentContext->GetStyleData(eStyleStruct_Background));
   PRBool inherited = aInherited;
@@ -3235,7 +3251,7 @@ nsRuleNode::ComputeBackgroundData(nsStyleStruct* aStartStruct, const nsCSSStruct
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mBackgroundData = bg;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_BACKGROUND, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BACKGROUND, aHighestNode);
   }
 
   return bg;
@@ -3259,7 +3275,10 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
     margin = new (mPresContext) nsStyleMargin();
   const nsStyleMargin* parentMargin = margin;
 
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentMargin = NS_STATIC_CAST(const nsStyleMargin*,
                              parentContext->GetStyleData(eStyleStruct_Margin));
   PRBool inherited = aInherited;
@@ -3296,7 +3315,7 @@ nsRuleNode::ComputeMarginData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mMarginData = margin;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_MARGIN, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_MARGIN, aHighestNode);
   }
 
   margin->RecalcData();
@@ -3321,7 +3340,10 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
     border = new (mPresContext) nsStyleBorder(mPresContext);
   
   const nsStyleBorder* parentBorder = border;
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentBorder = NS_STATIC_CAST(const nsStyleBorder*,
                              parentContext->GetStyleData(eStyleStruct_Border));
   PRBool inherited = aInherited;
@@ -3573,7 +3595,7 @@ nsRuleNode::ComputeBorderData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mBorderData = border;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_BORDER, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_BORDER, aHighestNode);
   }
 
   border->RecalcData();
@@ -3598,7 +3620,10 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     padding = new (mPresContext) nsStylePadding();
   
   const nsStylePadding* parentPadding = padding;
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentPadding = NS_STATIC_CAST(const nsStylePadding*,
                             parentContext->GetStyleData(eStyleStruct_Padding));
   PRBool inherited = aInherited;
@@ -3635,7 +3660,7 @@ nsRuleNode::ComputePaddingData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mPaddingData = padding;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_PADDING, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_PADDING, aHighestNode);
   }
 
   padding->RecalcData();
@@ -3660,7 +3685,10 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     outline = new (mPresContext) nsStyleOutline(mPresContext);
   
   const nsStyleOutline* parentOutline = outline;
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentOutline = NS_STATIC_CAST(const nsStyleOutline*,
                             parentContext->GetStyleData(eStyleStruct_Outline));
   PRBool inherited = aInherited;
@@ -3704,7 +3732,7 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mOutlineData = outline;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_OUTLINE, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_OUTLINE, aHighestNode);
   }
 
   outline->RecalcData();
@@ -3724,7 +3752,7 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
   const nsStyleList* parentList = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentList = NS_STATIC_CAST(const nsStyleList*,
                                parentContext->GetStyleData(eStyleStruct_List));
   if (aStartStruct)
@@ -3732,7 +3760,8 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
     // computed data.
     list = new (mPresContext) nsStyleList(*NS_STATIC_CAST(nsStyleList*, aStartStruct));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -3820,7 +3849,7 @@ nsRuleNode::ComputeListData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDat
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mListData = list;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_LIST, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_LIST, aHighestNode);
   }
 
   return list;
@@ -3844,7 +3873,10 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct, const nsCSSStruct& 
     pos = new (mPresContext) nsStylePosition();
   
   const nsStylePosition* parentPos = pos;
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentPos = NS_STATIC_CAST(const nsStylePosition*,
                            parentContext->GetStyleData(eStyleStruct_Position));
   PRBool inherited = aInherited;
@@ -3925,7 +3957,7 @@ nsRuleNode::ComputePositionData(nsStyleStruct* aStartStruct, const nsCSSStruct& 
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mPositionData = pos;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_POSITION, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_POSITION, aHighestNode);
   }
 
   return pos;
@@ -3949,7 +3981,10 @@ nsRuleNode::ComputeTableData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
     table = new (mPresContext) nsStyleTable();
   
   const nsStyleTable* parentTable = table;
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentTable = NS_STATIC_CAST(const nsStyleTable*,
                               parentContext->GetStyleData(eStyleStruct_Table));
   PRBool inherited = aInherited;
@@ -3992,7 +4027,7 @@ nsRuleNode::ComputeTableData(nsStyleStruct* aStartStruct, const nsCSSStruct& aDa
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mTableData = table;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_TABLE, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_TABLE, aHighestNode);
   }
 
   return table;
@@ -4011,7 +4046,7 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
   const nsStyleTableBorder* parentTable = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentTable = NS_STATIC_CAST(const nsStyleTableBorder*,
                         parentContext->GetStyleData(eStyleStruct_TableBorder));
   if (aStartStruct)
@@ -4019,7 +4054,8 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
     // computed data.
     table = new (mPresContext) nsStyleTableBorder(*NS_STATIC_CAST(nsStyleTableBorder*, aStartStruct));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -4089,7 +4125,7 @@ nsRuleNode::ComputeTableBorderData(nsStyleStruct* aStartStruct, const nsCSSStruc
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mTableData = table;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_TABLE_BORDER, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_TABLE_BORDER, aHighestNode);
   }
 
   return table;
@@ -4113,7 +4149,10 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
     content = new (mPresContext) nsStyleContent();
   
   const nsStyleContent* parentContent = content;
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentContent = NS_STATIC_CAST(const nsStyleContent*,
                             parentContext->GetStyleData(eStyleStruct_Content));
   PRBool inherited = aInherited;
@@ -4281,7 +4320,7 @@ nsRuleNode::ComputeContentData(nsStyleStruct* aStartStruct, const nsCSSStruct& a
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mContentData = content;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_CONTENT, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_CONTENT, aHighestNode);
   }
 
   return content;
@@ -4300,7 +4339,7 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
   const nsStyleQuotes* parentQuotes = nsnull;
   PRBool inherited = aInherited;
 
-  if (parentContext)
+  if (parentContext && aRuleDetail != eRuleFullReset)
     parentQuotes = NS_STATIC_CAST(const nsStyleQuotes*,
                              parentContext->GetStyleData(eStyleStruct_Quotes));
   if (aStartStruct)
@@ -4308,7 +4347,8 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
     // computed data.
     quotes = new (mPresContext) nsStyleQuotes(*NS_STATIC_CAST(nsStyleQuotes*, aStartStruct));
   else {
-    if (aRuleDetail != eRuleFullMixed) {
+    // XXXldb What about eRuleFullInherited?  Which path is faster?
+    if (aRuleDetail != eRuleFullMixed && aRuleDetail != eRuleFullReset) {
       // No question. We will have to inherit. Go ahead and init
       // with inherited vals from parent.
       inherited = PR_TRUE;
@@ -4372,7 +4412,7 @@ nsRuleNode::ComputeQuotesData(nsStyleStruct* aStartStruct, const nsCSSStruct& aD
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mQuotesData = quotes;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_QUOTES, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_QUOTES, aHighestNode);
   }
 
   return quotes;
@@ -4398,7 +4438,10 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
     xul = new (mPresContext) nsStyleXUL();
 
   const nsStyleXUL* parentXUL = xul;
-  if (parentContext)
+  if (parentContext && 
+      aRuleDetail != eRuleFullReset &&
+      aRuleDetail != eRulePartialReset &&
+      aRuleDetail != eRuleNone)
     parentXUL = NS_STATIC_CAST(const nsStyleXUL*,
                                 parentContext->GetStyleData(eStyleStruct_XUL));
 
@@ -4464,7 +4507,7 @@ nsRuleNode::ComputeXULData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
       aHighestNode->mStyleData.mResetData = new (mPresContext) nsResetStyleData;
     aHighestNode->mStyleData.mResetData->mXULData = xul;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_XUL, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_XUL, aHighestNode);
   }
 
   return xul;
@@ -4638,7 +4681,7 @@ nsRuleNode::ComputeSVGData(nsStyleStruct* aStartStruct, const nsCSSStruct& aData
       aHighestNode->mStyleData.mInheritedData = new (mPresContext) nsInheritedStyleData;
     aHighestNode->mStyleData.mInheritedData->mSVGData = svg;
     // Propagate the bit down.
-    PropagateInheritBit(NS_STYLE_INHERIT_SVG, aHighestNode);
+    PropagateDependentBit(NS_STYLE_INHERIT_SVG, aHighestNode);
   }
 
   return svg;
@@ -4704,7 +4747,7 @@ nsRuleNode::GetStyleData(nsStyleStructID aSID,
   if (cachedData)
     return cachedData; // We have a fully specified struct. Just return it.
 
-  if (InheritsFromParentRule(aSID))
+  if (mDependentBits & nsCachedStyleData::GetBitForSID(aSID))
     return GetParentData(aSID); // We inherit. Just go up the rule tree and return the first
                                 // cached struct we find.
 
