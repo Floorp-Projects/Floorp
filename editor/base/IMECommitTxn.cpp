@@ -74,31 +74,44 @@ NS_IMETHODIMP IMECommitTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransactio
 	printf("Merge IME Commit");
 #endif
 
+	NS_ASSERTION(aDidMerge, "null ptr- aDidMerge");
+	NS_ASSERTION(aTransaction, "null ptr- aTransaction");
+	if((nsnull == aDidMerge) || (nsnull == aTransaction))
+		return NS_ERROR_NULL_POINTER;
+		
 	*aDidMerge=PR_FALSE;
 	return NS_OK;
 }
 
 NS_IMETHODIMP IMECommitTxn::Write(nsIOutputStream *aOutputStream)
 {
-  return NS_OK;
+  NS_ASSERTION(aOutputStream, "null ptr- aOutputStream");
+  if(nsnull == aOutputStream)
+	return NS_ERROR_NULL_POINTER;
+  else 
+    return NS_OK;
 }
 
 NS_IMETHODIMP IMECommitTxn::GetUndoString(nsString *aString)
 {
-  if (nsnull!=aString)
-  {
+  NS_ASSERTION(aString, "null ptr- aString");
+  if(nsnull == aString) {
+	return NS_ERROR_NULL_POINTER;
+  } else {
     *aString="Remove IMECommit: ";
+    return NS_OK;
   }
-  return NS_OK;
 }
 
 NS_IMETHODIMP IMECommitTxn::GetRedoString(nsString *aString)
 {
-  if (nsnull!=aString)
-  {
+  NS_ASSERTION(aString, "null ptr- aString");
+  if(nsnull == aString) {
+	return NS_ERROR_NULL_POINTER;
+  } else {
     *aString="Insert IMECommit: ";
+    return NS_OK;
   }
-  return NS_OK;
 }
 
 /* ============= nsISupports implementation ====================== */

@@ -1363,6 +1363,7 @@ nsEditor::BeginComposition(nsTextEventReply* aReply)
           if ((NS_SUCCEEDED(result)) && (node))
           {
             nodeAsText = do_QueryInterface(node);
+            NS_ASSERTION(nodeAsText, "cannot get Text Node");
             range->GetStartOffset(&offset);
             if (!nodeAsText) {
               result = NS_ERROR_EDITOR_NO_TEXTNODE;
@@ -1402,8 +1403,12 @@ nsEditor::EndComposition(void)
   result = TransactionFactory::GetNewTransaction(IMECommitTxn::GetCID(), (EditTxn**)&commitTxn);
   if (NS_SUCCEEDED(result) && commitTxn!=nsnull)
   {
-    commitTxn->Init();
-    result = Do(commitTxn);
+    result = commitTxn->Init();
+    NS_ASSERTION(NS_SUCCEEDED(result), "commitTxt->Init failed");
+    if(NS_SUCCEEDED(result)) {
+    	result = Do(commitTxn);
+        NS_ASSERTION(NS_SUCCEEDED(result), "nsEditor::Do failed");  	
+    }
   }
 
   /* reset the data we need to construct a transaction */
@@ -1417,6 +1422,11 @@ nsEditor::EndComposition(void)
 NS_IMETHODIMP
 nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTextRangeList* aTextRangeList,nsTextEventReply* aReply)
 {
+  NS_ASSERTION(aTextRangeList, "null ptr- aTextRangeList");
+  NS_ASSERTION(aReply, "null ptr- aReply");  
+  if((nsnull == aTextRangeList) || (nsnull == aReply))
+  	return NS_ERROR_NULL_POINTER;
+  	
   nsCOMPtr<nsICaret>  caretP;
   nsresult  result = SetInputMethodText(aCompositionString,aTextRangeList);
   mIMEBufferLength = aCompositionString.Length();
@@ -1424,9 +1434,12 @@ nsEditor::SetCompositionString(const nsString& aCompositionString, nsIPrivateTex
   if (!mPresShellWeak) return NS_ERROR_NOT_INITIALIZED;
   nsCOMPtr<nsIPresShell> ps = do_QueryReferent(mPresShellWeak);
   if (!ps) return NS_ERROR_NOT_INITIALIZED;
-  ps->GetCaret(getter_AddRefs(caretP));
-  caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
-
+  result = ps->GetCaret(getter_AddRefs(caretP));
+  NS_ASSERTION(NS_SUCCEEDED(result), "cannot get caret");
+  if(NS_SUCCEEDED(result)) {
+  	result = caretP->GetWindowRelativeCoordinates(aReply->mCursorPosition,aReply->mCursorIsCollapsed);
+  	NS_ASSERTION(NS_SUCCEEDED(result), "Cannot get window relative coordinates");
+  }
   return result;
 }
 
@@ -4285,14 +4298,27 @@ nsEditor::CreateTxnForIMEText(const nsString & aStringToInsert,
                               nsIPrivateTextRangeList*  aTextRangeList,
                               IMETextTxn ** aTxn)
 {
+  NS_ASSERTION(aTextRangeList, "illegal value- null ptr- aTextRangeList");
+  NS_ASSERTION(aTxn, "illegal value- null ptr- aTxn");
+  if((nsnull == aTextRangeList) || (nsnull == aTxn))
+  	return NS_ERROR_NULL_POINTER;
+  	
   nsresult  result;
 
   if (mIMETextNode==nsnull) 
-    BeginComposition(nsnull);
+    result = BeginComposition(nsnull);
+  NS_ASSERTION( NS_SUCCEEDED(result), "BeginComposition failed");
+  if(NS_FAILED(result))
+      return result;
 
   result = TransactionFactory::GetNewTransaction(IMETextTxn::GetCID(), (EditTxn **)aTxn);
+  NS_ASSERTION( NS_SUCCEEDED(result), "TransactionFactory::GetNewTransaction failed");
+  if(NS_FAILED(result))
+  	return result;
+  	
   if (nsnull!=*aTxn) {
     result = (*aTxn)->Init(mIMETextNode,mIMETextOffset,mIMEBufferLength,aTextRangeList,aStringToInsert,mPresShellWeak);
+    NS_ASSERTION( NS_SUCCEEDED(result), "nsIMETextTxn::Init failed");
   }
   else {
     result = NS_ERROR_OUT_OF_MEMORY;

@@ -61,6 +61,10 @@ NS_IMETHODIMP IMETextTxn::Init(nsIDOMCharacterData     *aElement,
                                const nsString          &aStringToInsert,
                                nsWeakPtr                aPresShellWeak)
 {
+  NS_ASSERTION(aElement, "illegal value- null ptr- aElement");
+  NS_ASSERTION(aTextRangeList, "illegal value- null ptr - aTextRangeList");
+  if((nsnull == aElement) || (nsnull == aTextRangeList))
+     return NS_ERROR_NULL_POINTER;
   mElement = do_QueryInterface(aElement);
   mOffset = aOffset;
   mReplaceLength = aReplaceLength;
@@ -125,6 +129,11 @@ NS_IMETHODIMP IMETextTxn::Undo(void)
 
 NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 {
+  NS_ASSERTION(aDidMerge, "illegal vaule- null ptr- aDidMerge");
+  NS_ASSERTION(aTransaction, "illegal vaule- null ptr- aTransaction");
+  if((nsnull == aDidMerge) || (nsnull == aTransaction))
+  	return NS_ERROR_NULL_POINTER;
+    
   nsresult  result;
 #ifdef DEBUG_TAGUE
   printf("Merge IME Text element = %p\n", mElement.get());
@@ -190,11 +199,18 @@ NS_IMETHODIMP IMETextTxn::Merge(PRBool *aDidMerge, nsITransaction *aTransaction)
 
 NS_IMETHODIMP IMETextTxn::Write(nsIOutputStream *aOutputStream)
 {
+  NS_ASSERTION(aOutputStream, "illegal value- null ptr- aOutputStream");
+  if(nsnull == aOutputStream)
+  	return NS_ERROR_NULL_POINTER;
   return NS_OK;
 }
 
 NS_IMETHODIMP IMETextTxn::GetUndoString(nsString *aString)
 {
+  NS_ASSERTION(aString, "illegal value- null ptr- aString");
+  if(nsnull == aString)
+  	return NS_ERROR_NULL_POINTER;
+  	
   if (nsnull!=aString)
   {
     *aString="Remove Text: ";
@@ -205,6 +221,10 @@ NS_IMETHODIMP IMETextTxn::GetUndoString(nsString *aString)
 
 NS_IMETHODIMP IMETextTxn::GetRedoString(nsString *aString)
 {
+  NS_ASSERTION(aString, "illegal value- null ptr- aString");
+  if(nsnull == aString)
+  	return NS_ERROR_NULL_POINTER;
+  	
   if (nsnull!=aString)
   {
     *aString="Insert Text: ";
@@ -233,6 +253,9 @@ IMETextTxn::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 
 NS_IMETHODIMP IMETextTxn::GetData(nsString& aResult,nsIPrivateTextRangeList** aTextRangeList)
 {
+  NS_ASSERTION(aTextRangeList, "illegal value- null ptr- aTextRangeList");
+  if(nsnull == aTextRangeList)
+  	return NS_ERROR_NULL_POINTER;
   aResult = mStringToInsert;
   *aTextRangeList = mRangeList;
   return NS_OK;
