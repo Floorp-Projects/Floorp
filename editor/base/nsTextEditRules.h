@@ -158,7 +158,6 @@ protected:
   nsString      mPasswordText;  // a buffer we use to store the real value of password editors
   nsCOMPtr<nsIDOMNode> mBogusNode;  // magic node acts as placeholder in empty doc
   PRUint32 mFlags;
-  PRBool mPINSelection;  // whether to try to pin the selection inside a PRE tag
 };
 
 

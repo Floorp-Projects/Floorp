@@ -52,7 +52,6 @@ static NS_DEFINE_IID(kRangeListCID, NS_RANGELIST_CID);
 nsTextEditRules::nsTextEditRules()
 {
   mEditor = nsnull;
-  mPINSelection = PR_TRUE;
   mFlags=0;
 }
 
@@ -104,7 +103,7 @@ nsTextEditRules::WillDoAction(nsIDOMSelection *aSelection,
   // no matter what we are doing, sanity check the selection and force it
   // to be inside the PRE element
   
-  if (mPINSelection)
+  if (mFlags&TEXT_EDITOR_FLAG_PLAINTEXT)
   {
     nsresult res = PinSelectionInPRE(aSelection);
     if (NS_FAILED(res)) return res;
