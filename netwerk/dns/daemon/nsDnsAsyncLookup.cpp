@@ -446,7 +446,9 @@ spawnHelperProcess (const char *name)
 
     if (pipe(fds))
     {
+#ifdef DNS_DEBUG
         fprintf (stderr, "Can't make pipe\n");
+#endif
         return 0;
     }
 
@@ -455,7 +457,9 @@ spawnHelperProcess (const char *name)
     switch (forked = fork())
     {
     case -1:
+#ifdef DNS_DEBUG
         fprintf (stderr, "Can't fork\n");
+#endif
         removeFromDnsQueue (obj);
         break;
 
@@ -588,8 +592,12 @@ int main (int argc, char **argv)
                     obj->accept_fd = accept_fd;
                     char hId[5];
                     *(int *)&hId[0] = (int) obj->id;
-                    if (!obj)
+                    if (!obj) {
+#ifdef DNS_DEBUG
                         fprintf (stderr, "spawn Error\n");
+#endif
+                        ;
+                    }
                     else
                     {
                         send (obj->accept_fd, hId, sizeof (int), 0);

@@ -580,7 +580,9 @@ nsFileTransport::Run(void)
 
 #ifdef TIMING
     PRIntervalTime now = PR_IntervalNow();
+#ifdef DEBUG
     printf("nsFileTransport: latency=%u ticks\n", now - mStartTime);
+#endif
 #endif
     
     if (mRunState == SUSPENDED && NS_FAILED(mCancelStatus))

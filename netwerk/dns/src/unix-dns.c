@@ -177,11 +177,15 @@ static void dns_socks_kludge(void);
 /* Way kludgy debugging/logging interface, since gdb's support
    for debugging fork'ed processes is pathetic.
  */
+#ifdef DEBUG
+#define LOG_PROCn(PROC,PREFIX,BUF,SUFFIX,QL)
+#else
 #define LOG_PROCn(PROC,PREFIX,BUF,SUFFIX,QL) do{\
     fprintf(stderr, \
 	    "\t" PROC " (%lu): " PREFIX ": (ql=%ld) %s" SUFFIX, \
 	    ((unsigned long) getpid()), QL, BUF); \
   } while(0)
+#endif
 
 #ifdef PROC3_DEBUG_PRINT
 # define LOG_PROC3(PREFIX,BUF,SUFFIX) LOG_PROCn("proc3",PREFIX,BUF,SUFFIX,0L)
@@ -770,6 +774,7 @@ dns_driver_init(int argc, char **argv, int in_fd, int out_fd)
 
 	execvp(argv[0], new_argv);
 
+#ifdef DEBUG
 	fprintf(stderr,
 		"\nMozilla: execvp(\"%s\") failed!\n"
 	"\tThis means that we were unable to fork() the dns-helper process,\n"
@@ -778,6 +783,7 @@ dns_driver_init(int argc, char **argv, int in_fd, int out_fd)
 		argv[0]);
 	exit(0);
       }
+#endif
   }
 #endif /* !CHANGING_ARGV_WORKS */
 
