@@ -702,8 +702,6 @@ function log(aText) {
 // open the ones at the top-level (i.e., expose the headings underneath
 // the letters in the list.
 function displayIndex() {
-  if (!helpIndexPanel.view)
-    helpIndexPanel.view = helpIndexPanel.builder;
   var treeview = helpIndexPanel.view;
   var i = treeview.rowCount;
   while (i--)
