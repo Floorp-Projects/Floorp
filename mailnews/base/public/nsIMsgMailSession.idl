@@ -34,6 +34,7 @@
 #include "nsIFolderListener.idl"
 
 interface nsIMsgFolderCache;
+interface nsIMsgStatusFeedback;
 
 [scriptable, uuid(D5124440-D59E-11d2-806A-006008128C4E)]
 interface nsIMsgMailSession : nsISupports {
@@ -42,6 +43,8 @@ interface nsIMsgMailSession : nsISupports {
   readonly attribute nsIMsgIncomingServer currentServer;
   readonly attribute nsIMsgAccountManager accountManager;
   readonly attribute nsIMsgFolderCache folderCache;
+
+  attribute nsIMsgStatusFeedback temporaryMsgStatusFeedback;
 
   void AddFolderListener(in nsIFolderListener listener);
   void RemoveFolderListener(in nsIFolderListener listener);

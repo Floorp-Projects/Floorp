@@ -21,6 +21,8 @@
 #include "nsVoidArray.h"
 #include "nsMsgKeyArray.h"
 #include "nspr.h"
+#include "nsIMessage.h"
+#include "nsIMsgFolder.h"
 
 #ifdef XP_PC
 #include <windows.h>

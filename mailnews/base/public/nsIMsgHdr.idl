@@ -18,7 +18,9 @@
 
 #include "nsISupports.idl"
 
-/* just stub the interfaces for now */
+/******************************************************************************
+
+just stub the interfaces for now 
 
 interface nsIMsgHdr : nsISupports
 {
@@ -28,26 +30,21 @@ interface nsIMsgDBHdr : nsIMsgHdr
 {
 };
 
-/******************************************************************************
-
 this is commented out because it doesn't match nsIMessage.h, and I don't
 want anyone to try to use it yet.
 
 the problem is nsIMessage.h has interfaces that pass references to nsStrings.
 
 but, you can't do that in idl.
+*/
 
 #include "nsISupports.idl"
-#include "MailNewsTypes.idl"
+#include "MailNewsTypes2.idl"
 
 [ptr] native nsString(nsString);
-[ptr] native nsString2(nsString2);
-native nsMsgPriority(nsMsgPriority);
+[ptr] native nsCString(nsCString);
 
-%{C++
-class nsString;
-class nsString2;
-%} 
+native nsMsgPriority(nsMsgPriority);
 
 [scriptable, uuid(4e994f60-c317-11d2-8cc9-0060b0fc14a3)]
 interface nsIMsgHdr : nsISupports
@@ -59,7 +56,7 @@ interface nsIMsgHdr : nsISupports
   void SetUint32Property(in string propertyName, in unsigned long propertyVal);
 
   attribute unsigned short numReferences;
-  nsString2 GetStringReference(in long refNum);
+  nsCString GetStringReference(in long refNum);
 
   attribute long long date;
   attribute string messageId;
@@ -102,5 +99,5 @@ interface nsIMsgDBHdr : nsIMsgHdr
 {
 
 };
-*******************************************************************************/
+/* *******************************************************************************/
 

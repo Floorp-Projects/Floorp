@@ -161,8 +161,8 @@ public:
 
 	NS_IMETHOD AddOnlineDirectoryIfNecessary(const char *onlineMailboxName, char ** directory) = 0;
 
-	NS_IMETHOD	CreateSearchCriteriaString(nsString2 *aResult) = 0;
-	NS_IMETHOD	CreateListOfMessageIdsString(nsString2 *result) = 0;
+	NS_IMETHOD	CreateSearchCriteriaString(nsCString *aResult) = 0;
+	NS_IMETHOD	CreateListOfMessageIdsString(nsCString *result) = 0;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result) = 0;
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result) = 0;	// kAddMsgFlags or kSubtractMsgFlags only
     NS_IMETHOD GetChildDiscoveryDepth(PRInt32* discoveryDepth) = 0;

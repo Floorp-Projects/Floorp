@@ -626,7 +626,7 @@ NS_IMETHODIMP nsImapMailFolder::GetName(PRUnichar ** name)
         {
             char *hostName = nsnull;
             GetHostname(&hostName);
-			nsString2 unicodeHostName(hostName);
+			nsString unicodeHostName(hostName);
             SetName((PRUnichar *) unicodeHostName.GetUnicode());
             PR_FREEIF(hostName);
             m_haveReadNameFromDB = PR_TRUE;
@@ -996,7 +996,7 @@ NS_IMETHODIMP nsImapMailFolder::DeleteMessages(nsISupportsArray *messages,
     // *** jt - assuming delete is move to the trash folder for now
     nsCOMPtr<nsIEnumerator> aEnumerator;
     nsCOMPtr<nsIRDFResource> res;
-    nsString2 uri("", eOneByte);
+    nsCString uri;
     PRBool isTrashFolder = PR_FALSE;
     nsCString messageIds;
     nsMsgKeyArray srcKeyArray;
@@ -1152,7 +1152,7 @@ NS_IMETHODIMP nsImapMailFolder::PossibleImapMailbox(
 
 	nsCOMPtr <nsIMsgFolder> child;
 
-//	nsString2 possibleName(aSpec->allocatedPathName, eOneByte);
+//	nsCString possibleName(aSpec->allocatedPathName);
 
 	uri.Append('/');
 	uri.Append(aSpec->allocatedPathName);
@@ -2731,7 +2731,7 @@ nsImapMailFolder::SetAppendMsgUid(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapMailFolder::GetMessageId(nsIImapProtocol* aProtocl,
-                               nsString2* messageId,
+                               nsCString* messageId,
                                nsISupports* copyState)
 {
     nsresult rv = NS_OK;
@@ -2855,11 +2855,30 @@ NS_IMETHODIMP
 nsImapMailFolder::ProgressStatus(nsIImapProtocol* aProtocol,
                                  PRUint32 aMsgId)
 {
-#ifdef DEBUG_bienvenu
 	PRUnichar *progressMsg = IMAPGetStringByID(aMsgId);
-	nsCString cString(progressMsg);
+
+	if (aProtocol && progressMsg)
+	{
+#ifdef DEBUG_bienvenu
+	nsCString cString;
+	cString = progressMsg;
 	printf("status: %s\n", cString.GetBuffer());
 #endif
+		nsCOMPtr <nsIImapUrl> imapUrl;
+		aProtocol->GetRunningImapURL(getter_AddRefs(imapUrl));
+		if (imapUrl)
+		{
+			nsCOMPtr <nsIMsgMailNewsUrl> mailnewsUrl = do_QueryInterface(imapUrl);
+			if (mailnewsUrl)
+			{
+				nsCOMPtr <nsIMsgStatusFeedback> feedback;
+				mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
+
+				if (feedback)
+					feedback->ShowStatusString(progressMsg);
+			}
+		}
+	}
 
     return NS_OK;
 }
@@ -2884,7 +2903,10 @@ nsImapMailFolder::PercentProgress(nsIImapProtocol* aProtocol,
 				nsCOMPtr <nsIMsgStatusFeedback> feedback;
 				mailnewsUrl->GetStatusFeedback(getter_AddRefs(feedback));
 				if (feedback && aInfo->message)
+				{
+					feedback->ShowProgress(aInfo->percent);
 					feedback->ShowStatusString(aInfo->message);
+				}
 			}
 		}
 	}
@@ -3172,7 +3194,7 @@ nsImapMailFolder::CopyFileMessage(nsIFileSpec* fileSpec,
 {
     nsresult rv = NS_ERROR_NULL_POINTER;
     nsMsgKey key = 0xffffffff;
-    nsString2 messageId("", eOneByte);
+    nsCString messageId;
     nsCOMPtr<nsIUrlListener> urlListener;
     nsCOMPtr<nsISupports> srcSupport;
     nsCOMPtr<nsISupportsArray> messages;

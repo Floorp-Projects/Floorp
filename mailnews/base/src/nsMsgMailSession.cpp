@@ -26,6 +26,7 @@
 #include "nsCOMPtr.h"
 #include "nsMsgFolderCache.h"
 #include "nsIProfile.h"
+#include "nsIMsgStatusFeedback.h"
 
 NS_IMPL_ISUPPORTS(nsMsgMailSession, nsCOMTypeInfo<nsIMsgMailSession>::GetIID());
 
@@ -164,6 +165,23 @@ nsresult nsMsgMailSession::GetFolderCache(nsIMsgFolderCache* *aFolderCache)
   NS_IF_ADDREF(*aFolderCache);
   return NS_OK;
 }
+
+nsresult nsMsgMailSession::GetTemporaryMsgStatusFeedback(nsIMsgStatusFeedback* *aMsgStatusFeedback)
+{
+  if (!aMsgStatusFeedback) return NS_ERROR_NULL_POINTER;
+  
+  *aMsgStatusFeedback = m_temporaryMsgStatusFeedback;
+  NS_IF_ADDREF(*aMsgStatusFeedback);
+  return NS_OK;
+}
+
+
+nsresult nsMsgMailSession::SetTemporaryMsgStatusFeedback(nsIMsgStatusFeedback* aMsgStatusFeedback)
+{
+  m_temporaryMsgStatusFeedback = do_QueryInterface(aMsgStatusFeedback);
+  return NS_OK;
+}
+
 
 NS_IMETHODIMP nsMsgMailSession::AddFolderListener(nsIFolderListener * listener)
 {

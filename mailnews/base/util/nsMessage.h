@@ -46,7 +46,7 @@ public:
     NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult);
     NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal);
     NS_IMETHOD GetNumReferences(PRUint16 *result);
-    NS_IMETHOD GetStringReference(PRInt32 refNum, nsString2 &resultReference);
+    NS_IMETHOD GetStringReference(PRInt32 refNum, nsCString &resultReference);
     NS_IMETHOD GetDate(PRTime *result);
     NS_IMETHOD SetDate(PRTime date);
     NS_IMETHOD SetMessageId(const char *messageId);
@@ -63,7 +63,7 @@ public:
 	NS_IMETHOD GetSubject(nsString *resultSubject);
 	NS_IMETHOD GetRecipients(nsString *resultRecipients);
 	NS_IMETHOD GetCCList(nsString *ccList);
-	NS_IMETHOD GetMessageId(nsString *resultMessageId);
+	NS_IMETHOD GetMessageId(nsCString *resultMessageId);
 
 	NS_IMETHOD GetMime2DecodedAuthor(nsString *resultAuthor);
 	NS_IMETHOD GetMime2DecodedSubject(nsString *resultSubject);

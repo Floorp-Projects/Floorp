@@ -28,6 +28,7 @@
 #include "nsIMAPBodyShell.h"
 #include "nsImapFlagAndUidState.h"
 #include "nsIMAPNamespace.h"
+#include "nsImapStringBundle.h"
 ////////////////// nsImapServerResponseParser /////////////////////////
 
 extern PRLogModuleInfo* IMAP;
@@ -2163,7 +2164,7 @@ PRBool nsImapServerResponseParser::msg_fetch_literal(PRBool chunk, PRInt32 origi
 				charsReadSoFar += nsCRT::strlen(fCurrentLine);
 				if (!fDownloadingHeaders && fCurrentCommandIsSingleMessageFetch)
 				{
-					fServerConnection.ProgressEventFunctionUsingId(kImapDownloadingMessage);
+					fServerConnection.ProgressEventFunctionUsingId(IMAP_DOWNLOADING_MESSAGE);
 					if (fTotalDownloadSize > 0)
 						fServerConnection.PercentProgressUpdateEvent(0,(100*(charsReadSoFar + origin))/fTotalDownloadSize);
 				}

@@ -21,9 +21,7 @@
 #include "MailNewsTypes2.idl"
 
 interface nsIMsgDBHdr;
-%{C++
-#include "nsIMsgHdr.h"
-%}
+interface nsIMsgHdr;
 
 interface nsIDBChangeAnnouncer;
 

@@ -233,7 +233,7 @@ NS_IMETHODIMP nsMsgHdr::GetNumReferences(PRUint16 *result)
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsString2 &resultReference)
+NS_IMETHODIMP nsMsgHdr::GetStringReference(PRInt32 refNum, nsCString &resultReference)
 {
 	nsresult err = NS_OK;
 	nsAutoString	allReferences (eOneByte);
@@ -276,7 +276,7 @@ NS_IMETHODIMP nsMsgHdr::SetAuthor(const char *author)
 
 NS_IMETHODIMP nsMsgHdr::SetReferences(const char *references)
 {
-	nsString2 reference;
+	nsCString reference;
 
 	for (const char *startNextRef = references; startNextRef != nsnull;)
 	{
@@ -474,9 +474,9 @@ NS_IMETHODIMP nsMsgHdr::GetCCList(nsString *resultCCList)
 	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_ccListColumnToken, *resultCCList);
 }
 
-NS_IMETHODIMP nsMsgHdr::GetMessageId(nsString *resultMessageId)
+NS_IMETHODIMP nsMsgHdr::GetMessageId(nsCString *resultMessageId)
 {
-	return m_mdb->RowCellColumnTonsString(GetMDBRow(), m_mdb->m_messageIdColumnToken, *resultMessageId);
+	return m_mdb->RowCellColumnTonsCString(GetMDBRow(), m_mdb->m_messageIdColumnToken, *resultMessageId);
 }
 
 NS_IMETHODIMP nsMsgHdr::GetMime2DecodedAuthor(nsString *resultAuthor)
@@ -560,7 +560,7 @@ nsresult nsMsgHdr::GetUInt32Column(mdb_token token, PRUint32 *pvalue)
 }
 
 // get the next <> delimited reference from nextRef and copy it into reference,
-const char *nsMsgHdr::GetNextReference(const char *startNextRef, nsString2 &reference)
+const char *nsMsgHdr::GetNextReference(const char *startNextRef, nsCString &reference)
 {
 	const char *ptr = startNextRef;
 
@@ -578,7 +578,7 @@ const char *nsMsgHdr::GetNextReference(const char *startNextRef, nsString2 &refe
 // Get previous <> delimited reference - used to go backwards through the
 // reference string. Caller will need to make sure that prevRef is not before
 // the start of the reference string when we return.
-const char *nsMsgHdr::GetPrevReference(const char *prevRef, nsString2 &reference)
+const char *nsMsgHdr::GetPrevReference(const char *prevRef, nsCString &reference)
 {
 	const char *ptr = prevRef;
 
@@ -599,8 +599,8 @@ PRBool nsMsgHdr::IsParentOf(nsIMsgDBHdr *possibleChild)
 {
 	PRUint16 numReferences = 0;
 	possibleChild->GetNumReferences(&numReferences);
-	nsAutoString2 reference(eOneByte);
-	nsAutoString2 messageId(eOneByte);
+	nsCString reference;
+	nsCString messageId;
 
 	GetMessageId(&messageId);
 	possibleChild->GetStringReference(numReferences - 1, reference);

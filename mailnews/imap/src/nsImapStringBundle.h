@@ -73,6 +73,6 @@ NS_END_EXTERN_C
 #define	IMAP_COPYING_MESSAGE_TO                                  5043
 #define	IMAP_SELECTING_MAILBOX                                  5044
 #define IMAP_FOLDER_RECEIVING_MESSAGE_OF						5045
-
+#define IMAP_DISCOVERING_MAILBOX								5046
 
 #endif /* _nsImapStringBundle_H__ */

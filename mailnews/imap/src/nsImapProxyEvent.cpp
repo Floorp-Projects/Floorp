@@ -1175,7 +1175,7 @@ nsImapExtensionSinkProxy::SetAppendMsgUid(nsIImapProtocol* aProtocol,
 
 NS_IMETHODIMP
 nsImapExtensionSinkProxy::GetMessageId(nsIImapProtocol* aProtocol,
-                                       nsString2* messageId,
+                                       nsCString* messageId,
                                        nsISupports* copyState)
 {
     nsresult res = NS_OK;
@@ -3056,7 +3056,7 @@ SetAppendMsgUidProxyEvent::HandleEvent()
 }
 
 GetMessageIdProxyEvent::GetMessageIdProxyEvent(
-    nsImapExtensionSinkProxy* aProxy, nsString2* messageId, 
+    nsImapExtensionSinkProxy* aProxy, nsCString* messageId, 
     nsISupports* copyState) :
     nsImapExtensionSinkProxyEvent(aProxy), m_messageId(messageId)
 {

@@ -422,7 +422,7 @@ char *nsIMAPGenericParser::CreateQuoted(PRBool /*skipToEnd*/)
 	int  charIndex = 0;
 	int  tokenIndex = 0;
 	PRBool closeQuoteFound = PR_FALSE;
-	nsString2 returnString(currentChar, eOneByte);
+	nsCString returnString(currentChar);
 	
 	while (!closeQuoteFound && ContinueParse())
 	{
@@ -588,8 +588,8 @@ char *nsIMAPGenericParser::CreateParenGroup()
 
 	// build up a buffer with the paren group.
 	// start with an initial chunk, expand later if necessary
-	nsString2 buf;
-	nsString2 returnString;
+	nsCString buf;
+	nsCString returnString;
 	int bytesUsed = 0;
 	
 	// count the number of parens in the current token

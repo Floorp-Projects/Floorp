@@ -22,7 +22,7 @@
 #include "MailNewsTypes.h"
 #include "nsString.h"
 
-class nsString2;
+class nsCString;
 
 #define NS_IMSGHDR_IID                              \
 { /* 4e994f60-c317-11d2-8cc9-0060b0fc14a3 */         \
@@ -41,7 +41,7 @@ public:
     NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult) = 0;
     NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal) = 0;
     NS_IMETHOD GetNumReferences(PRUint16 *result) = 0;
-    NS_IMETHOD GetStringReference(PRInt32 refNum, nsString2 &resultReference) = 0;
+    NS_IMETHOD GetStringReference(PRInt32 refNum, nsCString &resultReference) = 0;
     NS_IMETHOD GetDate(PRTime *result) = 0;
     NS_IMETHOD SetDate(PRTime date) = 0;
     NS_IMETHOD SetMessageId(const char *messageId) = 0;
@@ -58,7 +58,7 @@ public:
 	NS_IMETHOD GetSubject(nsString *resultSubject) = 0;
 	NS_IMETHOD GetRecipients(nsString *resultRecipients) = 0;
 	NS_IMETHOD GetCCList(nsString *ccList) = 0;
-	NS_IMETHOD GetMessageId(nsString *resultMessageId) = 0;
+	NS_IMETHOD GetMessageId(nsCString *resultMessageId) = 0;
 
 	NS_IMETHOD GetMime2DecodedAuthor(nsString *resultAuthor) = 0;
 	NS_IMETHOD GetMime2DecodedSubject(nsString *resultSubject) = 0;

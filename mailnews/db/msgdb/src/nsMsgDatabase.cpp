@@ -2014,6 +2014,25 @@ nsresult nsMsgDatabase::RowCellColumnTonsString(nsIMdbRow *hdrRow, mdb_token col
 	return err;
 }
 
+nsresult nsMsgDatabase::RowCellColumnTonsCString(nsIMdbRow *hdrRow, mdb_token columnToken, nsCString &resultStr)
+{
+	nsresult	err = NS_OK;
+	nsIMdbCell	*hdrCell;
+
+	if (hdrRow)	// ### probably should be an error if hdrRow is NULL...
+	{
+		err = hdrRow->GetCell(GetEnv(), columnToken, &hdrCell);
+		if (err == NS_OK && hdrCell)
+		{
+			struct mdbYarn yarn;
+			hdrCell->AliasYarn(GetEnv(), &yarn);
+			YarnTonsCString(&yarn, &resultStr);
+			hdrCell->CutStrongRef(GetEnv()); // always release ref
+		}
+	}
+	return err;
+}
+
 nsresult nsMsgDatabase::RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr)
 {
 	nsresult err;
@@ -2207,6 +2226,12 @@ nsresult nsMsgDatabase::RowCellColumnToCharPtr(nsIMdbRow *row, mdb_token columnT
 	str->SetString((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
 }
 
+/* static */void nsMsgDatabase::YarnTonsCString(struct mdbYarn *yarn, nsCString *str)
+{
+	str->SetString((const char *) yarn->mYarn_Buf, yarn->mYarn_Fill);
+}
+
+
 /* static */void nsMsgDatabase::YarnToUInt32(struct mdbYarn *yarn, PRUint32 *pResult)
 {
 	PRUint32 result;
@@ -2307,7 +2332,7 @@ nsresult nsMsgDatabase::CreateNewThread(nsMsgKey threadId, const char *subject, 
 }
 
 
-nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID, nsIMsgDBHdr **pMsgHdr)
+nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr)
 {
 	nsIMsgDBHdr	*msgHdr = GetMsgHdrForMessageID(msgID);  
 	nsIMsgThread *thread = NULL;
@@ -2328,7 +2353,7 @@ nsIMsgThread *nsMsgDatabase::GetThreadForReference(nsString2 &msgID, nsIMsgDBHdr
 	return thread;
 }
 
-nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsString2 &subject)
+nsIMsgThread *	nsMsgDatabase::GetThreadForSubject(nsCString &subject)
 {
 //	NS_ASSERTION(PR_FALSE, "not implemented yet.");
 	nsIMsgThread *thread = NULL;
@@ -2379,7 +2404,7 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 #define SUBJ_THREADING 1// try reference threading first
 	for (PRInt32 i = numReferences - 1; i >= 0;  i--)
 	{
-		nsString2 reference(eOneByte);
+		nsCString reference;
 
 		newHdr->GetStringReference(i, reference);
 		// first reference we have hdr for is best top-level hdr.
@@ -2400,12 +2425,13 @@ nsresult nsMsgDatabase::ThreadNewHdr(nsMsgHdr* newHdr, PRBool &newThread)
 	}
 #ifdef SUBJ_THREADING
 	// try subject threading if we couldn't find a reference and the subject starts with Re:
-	nsAutoString subject (eOneByte);
+	nsAutoString subject;
 
 	newHdr->GetSubject(&subject);
 	if ((ThreadBySubjectWithoutRe() || (newHdrFlags & MSG_FLAG_HAS_RE)) && (!thread))
 	{
-		thread = getter_AddRefs(GetThreadForSubject(subject));
+		nsCAutoString cSubject = subject;
+		thread = getter_AddRefs(GetThreadForSubject(cSubject));
 		if(thread)
 		{
 			thread->GetThreadKey(&threadId);
@@ -2439,13 +2465,13 @@ nsresult nsMsgDatabase::AddToThread(nsMsgHdr *newHdr, nsIMsgThread *thread, nsIM
 	return thread->AddChild(newHdr, inReplyTo, threadInThread, announcer);
 }
 
-nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsString2 &reference)
+nsMsgHdr	*	nsMsgDatabase::GetMsgHdrForReference(nsCString &reference)
 {
 	NS_ASSERTION(PR_FALSE, "not implemented yet.");
 	return nsnull;
 }
 
-nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
+nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsCString &msgID)
 {
 	nsIMsgDBHdr	*msgHdr = nsnull;
     nsresult rv = NS_OK;
@@ -2473,7 +2499,7 @@ nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForMessageID(nsString2 &msgID)
 	return msgHdr;
 }
 
-nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsString2 &subject)
+nsIMsgDBHdr *nsMsgDatabase::GetMsgHdrForSubject(nsCString &subject)
 {
 	nsIMsgDBHdr	*msgHdr = nsnull;
     nsresult rv = NS_OK;
@@ -2569,15 +2595,17 @@ nsresult nsMsgDatabase::AddNewThread(nsMsgHdr *msgHdr)
 
 	nsMsgThread *threadHdr = nsnull;
 	
-	nsString2 subject(eOneByte);
+	nsAutoString subject;
 
 	nsresult err = msgHdr->GetSubject(&subject);
 
-	err = CreateNewThread(msgHdr->m_messageKey, subject.GetBuffer(), &threadHdr);
+	nsAutoCString cSubject(subject);
+
+	err = CreateNewThread(msgHdr->m_messageKey, (const char *) cSubject, &threadHdr);
 	msgHdr->SetThreadId(msgHdr->m_messageKey);
 	if (threadHdr)
 	{
-//		nsString2 subject(eOneByte);
+//		nsCString subject;
 
 		threadHdr->AddRef();
 //		err = msgHdr->GetSubject(subject);

@@ -424,7 +424,7 @@ PRBool nsMsgThread::TryReferenceThreading(nsIMsgDBHdr *newHeader)
 	for (int32 refIndex = newHeader->GetNumReferences() - 1; !done && refIndex >= 0; refIndex--)
 	{
 		nsCOMPtr <nsIMsgDBHdr>  refHdr;
-		nsString2 referenceStr;
+		nsCString referenceStr;
 
 		newHeader->GetStringReference(refIndex, referenceStr);
 		refHdr = m_mdbDB->GetMsgHdrForMessageID(referenceStr);

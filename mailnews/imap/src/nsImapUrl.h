@@ -68,8 +68,8 @@ public:
 	NS_IMETHOD CreateServerSourceFolderPathString(char **result) ;
 	NS_IMETHOD CreateServerDestinationFolderPathString(char **result);
 
-	NS_IMETHOD	CreateSearchCriteriaString(nsString2 *aResult);
-	NS_IMETHOD	CreateListOfMessageIdsString(nsString2 *result) ;
+	NS_IMETHOD	CreateSearchCriteriaString(nsCString *aResult);
+	NS_IMETHOD	CreateListOfMessageIdsString(nsCString *result) ;
 	NS_IMETHOD	MessageIdsAreUids(PRBool *result);
 	NS_IMETHOD	GetMsgFlags(imapMessageFlagsType *result);	// kAddMsgFlags or kSubtractMsgFlags only
     NS_IMETHOD GetChildDiscoveryDepth(PRInt32* result);

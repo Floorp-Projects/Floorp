@@ -204,6 +204,7 @@ public:
 
 	//helper function to fill in nsStrings from hdr row cell contents.
 	nsresult				RowCellColumnTonsString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
+	nsresult				RowCellColumnTonsCString(nsIMdbRow *row, mdb_token columnToken, nsCString &resultStr);
 	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 *uint32Result, PRUint32 defaultValue = 0);
 	nsresult				RowCellColumnToUInt32(nsIMdbRow *row, mdb_token columnToken, PRUint32 &uint32Result, PRUint32 defaultValue = 0);
 	nsresult				RowCellColumnToMime2DecodedString(nsIMdbRow *row, mdb_token columnToken, nsString &resultStr);
@@ -217,6 +218,7 @@ public:
 	static	struct mdbYarn *nsStringToYarn(struct mdbYarn *yarn, nsString *str);
 	static	struct mdbYarn *UInt32ToYarn(struct mdbYarn *yarn, PRUint32 i);
 	static	void			YarnTonsString(struct mdbYarn *yarn, nsString *str);
+	static	void			YarnTonsCString(struct mdbYarn *yarn, nsCString *str);
 	static	void			YarnToUInt32(struct mdbYarn *yarn, PRUint32 *i);
 	
 	// helper functions to convert a 64bits PRTime into a 32bits value (compatible time_t) and vice versa.
@@ -240,12 +242,12 @@ protected:
 	// prefs stuff - in future, we might want to cache the prefs interface
 	nsresult GetBoolPref(const char *prefName, PRBool *result);
 	// retrieval methods
-	nsIMsgThread *	GetThreadForReference(nsString2 &msgID, nsIMsgDBHdr **pMsgHdr);
-	nsIMsgThread *	GetThreadForSubject(nsString2 &subject);
+	nsIMsgThread *	GetThreadForReference(nsCString &msgID, nsIMsgDBHdr **pMsgHdr);
+	nsIMsgThread *	GetThreadForSubject(nsCString &subject);
 	nsIMsgThread *	GetThreadForThreadId(nsMsgKey threadId);
-	nsMsgHdr	*	GetMsgHdrForReference(nsString2 &reference);
-	nsIMsgDBHdr	*	GetMsgHdrForMessageID(nsString2 &msgID);
-	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsString2 &msgID);
+	nsMsgHdr	*	GetMsgHdrForReference(nsCString &reference);
+	nsIMsgDBHdr	*	GetMsgHdrForMessageID(nsCString &msgID);
+	nsIMsgDBHdr	*	GetMsgHdrForSubject(nsCString &msgID);
 	// threading interfaces
 	virtual nsresult CreateNewThread(nsMsgKey key, const char *subject, nsMsgThread **newThread);
 	virtual PRBool	ThreadBySubjectWithoutRe();

@@ -30,7 +30,7 @@ class nsIMAPNamespaceList;
 class nsIMAPBodyShell;
 class nsImapSearchResultIterator;
 class nsImapFlagAndUidState;
-class nsString2;
+class nsCString;
 
 #include "nsIMAPGenericParser.h"
 
@@ -206,7 +206,7 @@ private:
     
     char                     *fCurrentCommandTag;
     
-    nsString2					 fZeroLengthMessageUidString;
+    nsCString					 fZeroLengthMessageUidString;
 
     char                     *fSelectedMailboxName;
     

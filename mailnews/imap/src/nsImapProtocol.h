@@ -25,7 +25,7 @@
 #include "nsIStreamListener.h"
 #include "nsIOutputStream.h"
 #include "nsImapCore.h"
-#include "nsString2.h"
+#include "nsString.h"
 #include "nsCOMPtr.h"
 
 #include "nsImapServerResponseParser.h"
@@ -113,26 +113,26 @@ public:
 
 	// message id string utilities.
 	PRUint32		CountMessagesInIdString(const char *idString);
-	PRUint32		CountMessagesInIdString(nsString2 &idString);
+	PRUint32		CountMessagesInIdString(nsCString &idString);
 	static	PRBool	HandlingMultipleMessages(const char *messageIdString);
-	static	PRBool	HandlingMultipleMessages(nsString2 &messageIdString);
+	static	PRBool	HandlingMultipleMessages(nsCString &messageIdString);
 
 	// used to start fetching a message.
     PRBool GetShouldDownloadArbitraryHeaders();
     char *GetArbitraryHeadersToDownload();
     virtual void AdjustChunkSize();
-    virtual void FetchMessage(nsString2 &messageIds, 
+    virtual void FetchMessage(nsCString &messageIds, 
                               nsIMAPeFetchFields whatToFetch,
                               PRBool idAreUid,
 							  PRUint32 startByte = 0, PRUint32 endByte = 0,
 							  char *part = 0);
-	void FetchTryChunking(nsString2 &messageIds,
+	void FetchTryChunking(nsCString &messageIds,
                                             nsIMAPeFetchFields whatToFetch,
                                             PRBool idIsUid,
 											char *part,
 											PRUint32 downloadSize,
 											PRBool tryChunking);
-	virtual void PipelinedFetchMessageParts(nsString2 &uid, nsIMAPMessagePartIDArray *parts);
+	virtual void PipelinedFetchMessageParts(nsCString &uid, nsIMAPMessagePartIDArray *parts);
 
 	// used when streaming a message fetch
     virtual void BeginMessageDownLoad(PRUint32 totalSize, // for user, headers and body
@@ -156,7 +156,7 @@ public:
 	PRBool  GetPseudoInterrupted();
 	void	PseudoInterrupt(PRBool the_interrupt);
 
-	PRUint32 GetMessageSize(nsString2 &messageId, PRBool idsAreUids);
+	PRUint32 GetMessageSize(nsCString &messageId, PRBool idsAreUids);
     PRBool GetSubscribingNow();
 
 	PRBool	DeathSignalReceived();
@@ -200,14 +200,14 @@ public:
 
 	PRUnichar * CreatePRUnicharStringFromUTF7(const char * aSourceString);
 
-	void Copy(nsString2 &messageList, const char *destinationMailbox, 
+	void Copy(nsCString &messageList, const char *destinationMailbox, 
                                     PRBool idsAreUid);
-	void Search(nsString2 &searchCriteria,  PRBool useUID, 
+	void Search(nsCString &searchCriteria,  PRBool useUID, 
 									  PRBool notifyHit = PR_TRUE);
 	// imap commands issued by the parser
-	void Store(nsString2 &aMessageList, const char * aMessageData, PRBool
+	void Store(nsCString &aMessageList, const char * aMessageData, PRBool
                aIdsAreUid);
-	void ProcessStoreFlags(nsString2 &messageIds,
+	void ProcessStoreFlags(nsCString &messageIds,
                              PRBool idsAreUids,
                              imapMessageFlagsType flags,
                              PRBool addFlags);
@@ -326,7 +326,7 @@ private:
 
     PRBool GetDeleteIsMoveToTrash();
     PRMonitor *GetDataMemberMonitor();
-    nsString2 m_currentCommand;
+    nsCString m_currentCommand;
     nsImapServerResponseParser m_parser;
     nsImapServerResponseParser& GetServerStateParser() { return m_parser; };
 
@@ -347,14 +347,14 @@ private:
 	void FolderMsgDumpLoop(PRUint32 *msgUids, PRUint32 msgCount, nsIMAPeFetchFields fields);
 	void WaitForPotentialListOfMsgsToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
 	void WaitForPotentialListOfBodysToFetch(PRUint32 **msgIdList, PRUint32 &msgCount);
-	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsString2 &returnString);
+	void AllocateImapUidString(PRUint32 *msgUids, PRUint32 msgCount, nsCString &returnString);
 	void HeaderFetchCompleted();
     void UploadMessageFromFile(nsIFileSpec* fileSpec, const char* mailboxName,
                                imapMessageFlagsType flags);
 
 	// mailbox name utilities.
 	char *CreateEscapedMailboxName(const char *rawName);
-    void SetupMessageFlagsString(nsString2& flagString,
+    void SetupMessageFlagsString(nsCString & flagString,
                                  imapMessageFlagsType flags,
                                  PRUint16 userFlags);
                                  

@@ -138,7 +138,7 @@ public:
 
 protected:
 	PRBool m_childrenListed;
-	nsString2 m_mailboxName;
+	nsCString m_mailboxName;
 	char m_delimiter;
 };
 

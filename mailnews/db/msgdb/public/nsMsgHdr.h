@@ -26,7 +26,7 @@
 #include "mdb.h"
 
 class nsMsgDatabase;
-class nsString2;
+class nsCString;
 
 class nsMsgHdr : public nsIMsgDBHdr {
 public:
@@ -39,7 +39,7 @@ public:
     NS_IMETHOD GetUint32Property(const char *propertyName, PRUint32 *pResult);
     NS_IMETHOD SetUint32Property(const char *propertyName, PRUint32 propertyVal);
     NS_IMETHOD GetNumReferences(PRUint16 *result);
-    NS_IMETHOD GetStringReference(PRInt32 refNum, nsString2 &resultReference);
+    NS_IMETHOD GetStringReference(PRInt32 refNum, nsCString &resultReference);
     NS_IMETHOD GetDate(PRTime *result);
     NS_IMETHOD SetDate(PRTime date);
     NS_IMETHOD SetMessageId(const char *messageId);
@@ -55,7 +55,7 @@ public:
 	NS_IMETHOD GetAuthor(nsString *resultAuthor);
 	NS_IMETHOD GetSubject(nsString *resultSubject);
 	NS_IMETHOD GetRecipients(nsString *resultRecipients);
-	NS_IMETHOD GetMessageId(nsString *resultMessageId);
+	NS_IMETHOD GetMessageId(nsCString *resultMessageId);
 
 	NS_IMETHOD GetMime2DecodedAuthor(nsString *resultAuthor);
 	NS_IMETHOD GetMime2DecodedSubject(nsString *resultSubject);
@@ -109,8 +109,8 @@ protected:
     nsresult	GetUInt32Column(mdb_token token, PRUint32 *pvalue);
 
 	// reference and threading stuff.
-	const char*	GetNextReference(const char *startNextRef, nsString2 &reference);
-	const char* GetPrevReference(const char *prevRef, nsString2 &reference);
+	const char*	GetNextReference(const char *startNextRef, nsCString &reference);
+	const char* GetPrevReference(const char *prevRef, nsCString &reference);
 
     nsMsgKey	m_threadId; 
     nsMsgKey	m_messageKey; 	//news: article number, mail mbox offset, imap uid...
@@ -121,7 +121,7 @@ protected:
     PRUint32		m_flags;
     PRUint16		m_numReferences;	// x-ref header for threading
     PRInt16			m_csID;			// cs id of message
-	nsString2		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
+	nsCString		m_charSet;		// OK, charset of headers, since cs id's aren't supported.
     nsMsgPriority	m_priority;
 
     // nsMsgHdrs will have to know what db and row they belong to, since they are really

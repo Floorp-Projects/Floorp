@@ -111,7 +111,7 @@ nsresult nsIMAPNamespaceList::InitFromString(const char *nameSpaceString, EIMAPN
 	return rv;
 }
 
-nsresult nsIMAPNamespaceList::OutputToString(nsString &string)
+nsresult nsIMAPNamespaceList::OutputToString(nsCString &string)
 {
 	nsresult rv = NS_OK;
 
@@ -282,7 +282,7 @@ nsIMAPNamespace *nsIMAPNamespaceList::GetNamespaceForMailbox(const char *boxname
    If there is only one string, simply copy it and return it.
    Otherwise, put them in quotes and comma-delimit them. 
    Returns a newly allocated string. */
-nsresult nsIMAPNamespaceList::SerializeNamespaces(char **prefixes, int len, nsString2 &serializedNamespaces)
+nsresult nsIMAPNamespaceList::SerializeNamespaces(char **prefixes, int len, nsCString &serializedNamespaces)
 {
 	nsresult rv = NS_OK;
 	if (len <= 0)

@@ -63,7 +63,7 @@ public:
                              nsMsgKey newKey,
                              nsISupports* copyState) = 0;
   NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
-                          nsString2* messageId,
+                          nsCString* messageId,
                           nsISupports* copyState) = 0;
 };
 

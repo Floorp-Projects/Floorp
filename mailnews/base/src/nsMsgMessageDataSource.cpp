@@ -25,6 +25,7 @@
 #include "rdf.h"
 #include "nsEnumeratorUtils.h"
 #include "nsIMessage.h"
+#include "nsIMsgFolder.h"
 #include "nsCOMPtr.h"
 #include "nsXPIDLString.h"
 #include "nsIMsgMailSession.h"

@@ -67,9 +67,10 @@ nsMsgDBFactory::nsMsgDBFactory(const nsCID &aClass, const char* aClassName, cons
 
 nsMsgDBFactory::~nsMsgDBFactory()   
 {
+	nsMsgDatabase::CleanupCache();
 	NS_ASSERTION(mRefCnt == 0, "non-zero refcnt at destruction");   
-  PL_strfree(mClassName);
-  PL_strfree(mProgID);
+	PL_strfree(mClassName);
+	PL_strfree(mProgID);
 }   
 
 nsresult nsMsgDBFactory::QueryInterface(const nsIID &aIID, void **aResult)   
@@ -168,7 +169,11 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* aServMgr,
 
 extern "C" NS_EXPORT PRBool NSCanUnload(nsISupports* aServMgr) 
 {
-    return PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+	PRBool ret = PRBool(g_InstanceCount == 0 && g_LockCount == 0);
+
+	if (ret)
+		nsMsgDatabase::CleanupCache();
+	return ret;
 }
 
 extern "C" NS_EXPORT nsresult

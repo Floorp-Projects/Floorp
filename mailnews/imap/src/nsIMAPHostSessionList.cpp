@@ -740,7 +740,7 @@ NS_IMETHODIMP nsIMAPHostSessionList::AddShellToCacheForHost(const char *hostName
 
 NS_IMETHODIMP nsIMAPHostSessionList::FindShellInCacheForHost(const char *hostName, const char *userName, const char *mailboxName, const char *UID, nsIMAPBodyShell	&shell)
 {
-	nsString2 uidString = UID;
+	nsCString uidString = UID;
 
 	PR_EnterMonitor(gCachedHostInfoMonitor);
 	nsIMAPHostInfo *host = FindHost(hostName, userName);

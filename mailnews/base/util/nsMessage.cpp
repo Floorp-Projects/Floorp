@@ -18,6 +18,7 @@
 
 #include "msgCore.h"    // precompiled header...
 #include "nsMessage.h"
+#include "nsIMsgFolder.h"
 
 nsMessage::nsMessage(void)
   : nsRDFResource(), mFolder(nsnull)
@@ -91,7 +92,7 @@ NS_IMETHODIMP nsMessage::GetNumReferences(PRUint16 *result)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetStringReference(PRInt32 refNum, nsString2 &resultReference)
+NS_IMETHODIMP nsMessage::GetStringReference(PRInt32 refNum, nsCString &resultReference)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetStringReference(refNum, resultReference);
@@ -220,7 +221,7 @@ NS_IMETHODIMP nsMessage::GetCCList(nsString *ccList)
 		return NS_ERROR_FAILURE;
 }
 
-NS_IMETHODIMP nsMessage::GetMessageId(nsString *resultMessageId)
+NS_IMETHODIMP nsMessage::GetMessageId(nsCString *resultMessageId)
 {
 	if(mMsgHdr)
 		return mMsgHdr->GetMessageId(resultMessageId);

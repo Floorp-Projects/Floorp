@@ -22,7 +22,7 @@
 #include "nsMsgFolderFlags.h"
 #include "nsMsgFolder.h"
 #include "nsMsgRDFUtils.h"
-
+#include "nsIMessage.h"
 
 #include "rdf.h"
 #include "nsIRDFService.h"

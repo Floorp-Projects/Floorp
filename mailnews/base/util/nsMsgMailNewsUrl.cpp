@@ -19,9 +19,11 @@
 #include "msgCore.h"
 #include "nsMsgMailNewsUrl.h"
 #include "nsMsgBaseCID.h"
+#include "nsIMsgMailSession.h"
 
 static NS_DEFINE_CID(kUrlListenerManagerCID, NS_URLLISTENERMANAGER_CID);
 static NS_DEFINE_CID(kStandardUrlCID, NS_STANDARDURL_CID);
+static NS_DEFINE_CID(kMsgMailSessionCID, NS_MSGMAILSESSION_CID);
 
 nsMsgMailNewsUrl::nsMsgMailNewsUrl()
 {
@@ -138,15 +140,22 @@ nsresult nsMsgMailNewsUrl::GetErrorMessage (char ** errorMessage)
 NS_IMETHODIMP nsMsgMailNewsUrl::SetStatusFeedback(nsIMsgStatusFeedback *aMsgFeedback)
 {
 	if (aMsgFeedback)
-		m_statusFeedback = dont_QueryInterface(aMsgFeedback);
+		m_statusFeedback = do_QueryInterface(aMsgFeedback);
 	return NS_OK;
 }
 
 NS_IMETHODIMP nsMsgMailNewsUrl::GetStatusFeedback(nsIMsgStatusFeedback **aMsgFeedback)
 {
+	nsresult rv = NS_OK;
 	// note: it is okay to return a null status feedback and not return an error
 	// it's possible the url really doesn't have status feedback
-	nsresult rv = NS_OK;
+	if (!m_statusFeedback)
+	{
+		NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kMsgMailSessionCID, &rv); 
+
+		if(NS_SUCCEEDED(rv))
+			mailSession->GetTemporaryMsgStatusFeedback(getter_AddRefs(m_statusFeedback));
+	}
 	if (aMsgFeedback)
 	{
 		*aMsgFeedback = m_statusFeedback;

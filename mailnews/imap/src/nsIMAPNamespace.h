@@ -57,9 +57,9 @@ public:
 	static nsIMAPNamespaceList *CreatensIMAPNamespaceList();
 
 	nsresult InitFromString(const char *nameSpaceString, EIMAPNamespaceType nstype);
-	nsresult OutputToString(nsString2 &OutputString);
+	nsresult OutputToString(nsCString &OutputString);
 	int UnserializeNamespaces(const char *str, char **prefixes, int len);
-	nsresult SerializeNamespaces(char **prefixes, int len, nsString2 &serializedNamespace);
+	nsresult SerializeNamespaces(char **prefixes, int len, nsCString &serializedNamespace);
 
 	void ClearNamespaces(PRBool deleteFromPrefsNamespaces, PRBool deleteServerAdvertisedNamespaces, PRBool reallyDelete);
 	int	GetNumberOfNamespaces();

@@ -280,7 +280,7 @@ nsresult nsImapUrl::ParseUrl()
     return NS_OK;
 }
 
-NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(nsString2 *aResult)
+NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(nsCString *aResult)
 {
 	if (nsnull == aResult || !m_searchCriteriaString) 
 		return  NS_ERROR_NULL_POINTER;
@@ -292,7 +292,7 @@ NS_IMETHODIMP nsImapUrl::CreateSearchCriteriaString(nsString2 *aResult)
 }
 
 
-NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(nsString2 *aResult) 
+NS_IMETHODIMP nsImapUrl::CreateListOfMessageIdsString(nsCString *aResult) 
 {
 	if (nsnull == aResult || !m_listOfMessageIds) 
 		return  NS_ERROR_NULL_POINTER;

@@ -397,10 +397,19 @@ nsMessenger::SetWindow(nsIDOMWindow* aWin)
 			m_docLoaderObserver = do_QueryInterface(iMsgStatusFeedback);
 			docLoaderListener->SetWebShell(mWebShell, mWindow);
 			mWebShell->SetDocLoaderObserver(m_docLoaderObserver);
+
+			nsresult rv;
+
+			NS_WITH_SERVICE(nsIMsgMailSession, mailSession, kCMsgMailSessionCID, &rv); 
+
+			if(NS_SUCCEEDED(rv))
+				mailSession->SetTemporaryMsgStatusFeedback(iMsgStatusFeedback);
+
 		}
 	}
     NS_RELEASE(rootWebShell);
   }
+
 
   NS_RELEASE(webShell);
 

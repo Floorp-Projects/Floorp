@@ -16,6 +16,9 @@
  * Reserved.
  */
 
+#include "msgCore.h"
+#include "nsIMessage.h"
+#include "nsIMsgHdr.h"
 #include "nsMsgUtils.h"
 #include "nsString.h"
 #include "nsFileSpec.h"

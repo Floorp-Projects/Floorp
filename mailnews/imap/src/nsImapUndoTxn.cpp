@@ -18,6 +18,7 @@
 
 #include "msgCore.h" // for precompiled headers
 #include "nsMsgImapCID.h"
+#include "nsIMsgHdr.h"
 #include "nsImapUndoTxn.h"
 
 
@@ -86,7 +87,7 @@ nsImapMoveCopyMsgTxn::Init(
 	}
     char *uri = nsnull;
     rv = m_srcFolder->GetURI(&uri);
-    nsString2 protocolType(uri, eOneByte);
+    nsCString protocolType(uri);
     PR_FREEIF(uri);
     protocolType.SetLength(protocolType.FindChar(':'));
     // ** jt -- only do this for mailbox protocol

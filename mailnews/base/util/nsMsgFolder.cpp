@@ -20,6 +20,7 @@
 
 #include "nsMsgFolder.h"	 
 #include "nsMsgFolderFlags.h"
+#include "nsIMessage.h"
 #include "prprf.h"
 #include "nsMsgKeyArray.h"
 #include "nsMsgDatabase.h"

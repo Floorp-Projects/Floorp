@@ -256,7 +256,7 @@ public:
                                nsMsgKey aKey,
                                nsISupports* copyState);
     NS_IMETHOD GetMessageId(nsIImapProtocol* aProtocol,
-                            nsString2* messageId,
+                            nsCString* messageId,
                             nsISupports* copyState);
     
     // nsIImapMiscellaneousSink methods

@@ -16,6 +16,8 @@
  * Reserved.
  */
 
+#include "msgCore.h"
+#include "nsIMessage.h"
 #include "nsMsgDBFolder.h"
 #include "nsMsgFolderFlags.h"
 #include "nsIPref.h"
@@ -361,7 +363,7 @@ nsresult nsMsgDBFolder::ReadFromFolderCache(nsIMsgFolderCacheElement *element)
 
 	element->GetStringProperty("charset", &charset);
 
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 	char *uri;
 
 	GetURI(&uri);
@@ -424,7 +426,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
 
 	element->SetStringProperty("charset", (const char *) nsCAutoString(mCharset));
 
-#ifdef DEBUG_bienvenu
+#ifdef DEBUG_bienvenu1
 	char *uri;
 
 	GetURI(&uri);

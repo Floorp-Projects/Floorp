@@ -27,7 +27,7 @@
 #include "nsIProtocolHandler.h"
 
 class nsIImapHostSessionList; 
-class nsString2;
+class nsCString;
 class nsIImapUrl;
 class nsIMsgFolder;
 class nsIMsgStatusFeedback;
@@ -190,10 +190,10 @@ public:
 
 protected:
     nsresult GetFolderName(nsIMsgFolder* aImapFolder,
-                           nsString2& folderName);
+                           nsCString& folderName);
 	nsresult CreateStartOfImapUrl(nsIImapUrl  * &imapUrl,
                                   nsIMsgFolder* &aImapFolder,
-                                  nsString2 &urlSpec);
+                                  nsCString &urlSpec);
     nsresult GetImapConnectionAndLoadUrl(nsIEventQueue* aClientEventQueue, 
                                          nsIImapUrl* aImapUrl,
                                          nsIUrlListener* aUrlListener,

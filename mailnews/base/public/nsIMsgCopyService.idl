@@ -20,10 +20,10 @@
 #include "nsISupports.idl"
 #include "nsIMsgFolder.idl"
 #include "nsIFileSpec.idl"
-#include "nsIMessage.idl"
 #include "nsIMsgCopyServiceListener.idl"
 #include "nsISupportsArray.idl"
 
+interface nsIMessage;
 %{C++
 #include "nsITransactionManager.h"
 %}

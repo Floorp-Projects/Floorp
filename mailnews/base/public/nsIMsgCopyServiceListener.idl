@@ -19,7 +19,8 @@
 #include "nsrootidl.idl"
 #include "nsISupports.idl"
 
-interface nsString2;
+[ptr] native nsCString(nsCString);
+/* [ptr] native nsString(nsString); */
 
 [scriptable, uuid(1caa10b6-29a6-11d3-afb2-001083002da8)]
 interface nsIMsgCopyServiceListener : nsISupports {
@@ -57,7 +58,7 @@ interface nsIMsgCopyServiceListener : nsISupports {
      * uniqueness.
      * aMessageId -
      */
-    void GetMessageId(in nsString2 aMessageId);
+    void GetMessageId(in nsCString aMessageId);
 
     /**
      * Notify the observer that the message copied operation has completed.  

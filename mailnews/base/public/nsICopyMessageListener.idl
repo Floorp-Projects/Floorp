@@ -17,8 +17,8 @@
  */
 
 #include "nsISupports.idl"
-#include "nsIMessage.idl"
 
+interface nsIMessage;
 interface nsIInputStream;
 
 %{C++

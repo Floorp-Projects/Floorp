@@ -25,7 +25,6 @@
 #include "nsIMsgCopyServiceListener.idl"
 
 %{ C++
-#include "nsIMessage.h"
 #include "nsITransactionManager.h"
 #include "nsIMsgDatabase.h"
 #include "nsMsgKeyArray.h"

@@ -1558,7 +1558,7 @@ PRBool	nsIMAPBodyShellCache::AddShellToCache(nsIMAPBodyShell *shell)
 
 }
 
-nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsString2 &UID, const char *mailboxName)
+nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsCString &UID, const char *mailboxName)
 {
 	nsStringKey hashKey(UID);
 	nsIMAPBodyShell *foundShell = (nsIMAPBodyShell *) m_shellHash->Get(&hashKey);
@@ -1579,7 +1579,7 @@ nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(nsString2 &UID, const cha
 
 nsIMAPBodyShell *nsIMAPBodyShellCache::FindShellForUID(PRUint32 UID, const char *mailboxName)
 {
-	nsString2 uidString;
+	nsCString uidString;
 	
 	uidString.Append(UID, 10);
 	nsIMAPBodyShell *rv = FindShellForUID(uidString, mailboxName);
