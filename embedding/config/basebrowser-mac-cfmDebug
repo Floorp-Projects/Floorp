@@ -110,7 +110,8 @@ Components:jsurl.xpt
 
 ; layout
 Components:contentDebug.shlb
-res:dtd:*
+; res:dtd:*
+res:dtd:xhtml11.dtd
 Components:layoutDebug.shlb
 Components:htmlparserDebug.shlb
 Components:htmlparser.xpt
@@ -201,8 +202,6 @@ Components:shistory.xpt
 
 ; required l10n libraries
 
-Components:intl.xpt
-Components:locale.xpt
 Components:unicharutilDebug.shlb
 Components:unicharutil.xpt
 Components:uconvDebug.shlb
@@ -256,9 +255,10 @@ Components:xpconnect.xpt
 Components:xpcom.xpt
 
 ; 
-; Widget-Toolkit and Res (consult hyatt@netscape.com before modifying):
+; The build scripts move embed.jar manually because of how and where
+; it is generated.
 ; 
-Chrome:embed.jar
+; Chrome:embed.jar
 
 
 ; 
@@ -270,17 +270,16 @@ res:viewsource.css
 res:ua.css
 res:forms.css
 res:arrow.gif
-res:arrowd.gif
 res:loading-image.gif
 res:broken-image.gif
 res:builtin:htmlBindings.xml
 res:builtin:platformHTMLBindings.xml
 res:entityTables:*
-res:fonts:*
 
 ;
-; MathML
+; MathML (not yet built)
 ;
-res:mathml.css
-Components:ucvmathDebug.shlb
+; res:fonts:*
+; res:mathml.css
+; Components:ucvmathDebug.shlb
 
