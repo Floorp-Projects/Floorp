@@ -27,6 +27,7 @@
 #include "nsIWidget.h"
 #include "nsIDOMMouseListener.h"
 #include "nsIRollupListener.h"
+#include "nsIMenuRollup.h"
 #include "nsIDOMEventReceiver.h"
 
 class nsMenuPopupFrame;
@@ -35,7 +36,7 @@ class nsIMenuParent;
 
 /** editor Implementation of the DragListener interface
  */
-class nsMenuDismissalListener : public nsIDOMMouseListener, public nsIRollupListener
+class nsMenuDismissalListener : public nsIDOMMouseListener, public nsIMenuRollup, public nsIRollupListener
 {
 public:
   /** default constructor
@@ -55,8 +56,9 @@ public:
   virtual nsresult MouseOver(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   virtual nsresult MouseOut(nsIDOMEvent* aMouseEvent) { return NS_OK; };
   
-  NS_IMETHOD Rollup();
   NS_DECL_ISUPPORTS
+  NS_DECL_NSIROLLUPLISTENER
+  NS_DECL_NSIMENUROLLUP
 
   NS_IMETHOD EnableListener(PRBool aEnabled);
   void SetCurrentMenuParent(nsIMenuParent* aMenuParent);
