@@ -979,6 +979,11 @@ nsresult nsMsgCompose::SendMsg(MSG_DeliverMode deliverMode,  nsIMsgIdentity *ide
 
   if (m_editor && m_compFields && !m_composeHTML)
   {
+    // Reset message body previously stored in the compose fields
+    // There is 2 nsIMsgCompFields::SetBody() functions using a pointer as argument,
+    // therefore a casting is required.
+    m_compFields->SetBody((const char *)nsnull);
+
     // The plain text compose window was used
     const char contentType[] = "text/plain";
     nsAutoString msgBody;
