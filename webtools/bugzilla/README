@@ -12,8 +12,8 @@ We'd like to get there, but it wasn't clear when that would be, and so we
 decided to let people see it first.
 
    Bugzilla has not undergone a complete security review. Security holes
-may exist in the code. Great care should be taken both in the installation
-and usage of this software. Carefully consider the implications of
+may exist in the code.  Great care should be taken both in the installation
+and usage of this software.  Carefully consider the implications of
 installing other network services with Bugzilla.
 
 
@@ -28,10 +28,13 @@ machine already has MySQL and the MySQL-related perl packages installed.
 If those aren't installed yet, then that's the first order of business.  The
 other necessary ingredient is a web server set up to run cgi scripts.
 
-   Bugzilla has been successfully installed under Solaris and Linux. Windows NT
-is not officially supported. There have been a few successful installations
-of Bugzilla under Windows NT. Please see this article for a discussion of what
-one person hacked together to get it to work.
+   Bugzilla has been successfully installed under Solaris, Linux, and
+Windows NT. The peculiarities of installing on Windows NT have not
+been included in this README; please consult the Bugzilla Guide for
+detailed Windows NT installation instructions.
+
+  The Bugzilla Guide is contained in the "docs/" folder.  It is available
+in plain text (docs/txt), HTML (docs/html), or SGML source (docs/sgml).
 
 news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
 
@@ -53,7 +56,8 @@ news://news.mozilla.org/19990913183810.SVTR29939.mta02@onebox.com
 Previous versions required TCL, but it no longer needed (or used).
 
    You must also run Bugzilla on a filesystem that supports file locking via
-flock(). This is necessary for Bugzilla to operate safely with multiple instances.
+flock().  This is necessary for Bugzilla to operate safely with multiple
+instances.
 
 1.1. Getting and setting up MySQL database (3.22.5 or greater)
 
@@ -82,7 +86,7 @@ able to have attachments up to about 1 megabyte.
 for *nix systems can be gotten in source form from http://www.perl.com.
 
   Perl is now a far cry from the the single compiler/interpreter binary it
-once was. It now includes a great many required modules and quite a
+once was.  It now includes a great many required modules and quite a
 few other support files.  If you're not up to or not inclined to build
 perl from source, you'll want to install it on your machine using some
 sort of packaging system (be it RPM, deb, or what have you) to ensure
@@ -99,13 +103,13 @@ DBI module should be a breeze.  It's a mixed Perl/C module, but Perl's
 MakeMaker system simplifies the C compilation greatly.
 
   Like almost all Perl modules DBI can be found on the Comprehensive Perl
-Archive Network (CPAN) at http://www.cpan.org .  The CPAN servers have a
+Archive Network (CPAN) at http://www.cpan.org.  The CPAN servers have a
 real tendency to bog down, so please use mirrors.  The current location
 at the time of this writing (02/17/99) can be found in Appendix A.
 
   Quality, general Perl module installation instructions can be found on
 the CPAN website, but the easy thing to do is to just use the CPAN shell
-which does all the hard work for you
+which does all the hard work for you.
 
 To use the CPAN shell to install DBI:
 
@@ -204,7 +208,7 @@ versions of GD.
 1.9. HTTP server
 
    You have a freedom of choice here - Apache, Netscape or any other
-server on UNIX would do. You can easily run the web server on a different
+server on UNIX would do.  You can easily run the web server on a different
 machine than MySQL, but that makes MySQL permissions harder to manage.
 
    You'll want to make sure that your web server will run any file
@@ -252,8 +256,8 @@ for perl.
 to start preparing the database for its life as a the back end to a high
 quality bug tracker.
 
-    First, you'll want to fix MySQL permissions.  Bugzilla always logs
-in as user "bugs", with no password.  That needs to work.  MySQL
+    First, you'll want to fix MySQL permissions.  By default, Bugzilla
+logs in as user "bugs", with no password.  That needs to work.  MySQL
 permissions are a deep, nasty complicated thing.  I've just turned
 them off.  If you want to do that, too, then the magic is to do run
 "mysql mysql", and feed it commands like this (replace all instances of
@@ -296,7 +300,8 @@ Or, at the mysql prompt:
 
 mysql> flush privileges;
 
-You must explictly tell mysql to reload permissions before running checksetup.pl.
+You must explictly tell mysql to reload permissions before running
+checksetup.pl.
 
 Next, you can just run the magic checksetup.pl script.  (Many thanks
 to Holger Schurig <holgerschurig@nikocity.de> for writing this script!)
@@ -305,72 +310,55 @@ directory, and create all the MySQL tables.  Just run:
 
         ./checksetup.pl
 
-The first time you run it, it will create a file called "localconfig"
-which you should examine and perhaps tweak a bit.  Then re-run
-checksetup.pl and it will do the real work.
+   The first time you run it, it will create a file called "localconfig".
 
-It's worth noting that ./checksetup.pl will stall if it is on a filesystem
-that does not fully support file locking via flock(), such as NFS mounts.
-This support is required for Bugzilla to operate safely with multiple
-instances. If flock() is not fully supported, it will stall at:
+4. Tweaking localconfig
+
+   This file contains a variety of settings you may need to tweak including
+how Bugzilla should connect to the MySQL database.
+
+   The connection settings include:
+
+        1. server's host: just use "localhost" if the MySQL server is
+                local
+        2. database name: "bugs" if you're following these directions
+        3. MySQL username: whatever you created for your webserver user
+        4. Password for the MySQL account in item 3.
+
+   Once you are happy with the settings, re-run checksetup.pl.  On this
+second run, it will do the real work of creating the database.
+
+   One thing it will do is to automatically create an administrator account
+from information it will ask for.
+
+   When logged into an administrator account, if you go to the query page
+(off of the bugzilla main menu), you'll find an 'edit parameters' option
+that is filled with editable treats.
+
+   Should everything work, you should have a nearly empty copy of the bug
+tracking setup.
+
+   The second time around, checksetup.pl will stall if it is on a
+filesystem that does not fully support file locking via flock(), such as
+NFS mounts.  This support is required for Bugzilla to operate safely with
+multiple instances. If flock() is not fully supported, it will stall at:
 
    "Now regenerating the shadow database for all bugs."
 
-Should everything work, you should have a nearly empty copy of the bug tracking
-setup.
+   The checksetup.pl script is designed so that you can run it at any time
+without causing harm.  You should run it after any upgrade to Bugzilla.
 
-4. Tweaking the Bugzilla->MySQL Connection Data
+5. Setting Up Maintainers Manually (Optional)
 
-   If you have played with MySQL permissions, rather than just opening it
-wide open as described above, then you may need to tweak the Bugzilla
-code to connect appropriately.
-
-   In order for bugzilla to be able to connect to the MySQL database
-you'll have to tell bugzilla where the database server is, what
-database you're connecting to, and whom to connect as.  Simply open up
-the globals.pl file in the bugzilla directory and find the line that
-begins like:
-
-        $::db = Mysql->Connect("
-
-   That line does the actual database connection.  The Connect method
-takes four parameters which are (with appropriate values):
-
-        1. server's host: just use "localhost"
-        2. database name: "bugs" if you're following these directions
-        3. MySQL username: whatever you created for your webserver user
-                probably "nobody"
-        4. Password for the MySQL account in item 3.
-
-Just fill in those values and close up globals.pl
-
-5. Setting up yourself as Maintainer
-
-    Start by creating your own bugzilla account.  To do so, just try to
-"add a bug" from the main bugzilla menu (now available from your system
-through your web browser!).  You'll be prompted for logon info, and you
-should enter your email address and then select 'mail me my password'.
-When you get the password mail, log in with it.  Don't finish entering
-that new bug.
-
-    Now, add yourself to every group.  The magic checksetup.pl script
-can do this for you, if you run it again now.  That script will notice
-if there's exactly one user in the database, and if so, add that person
-to every group.
-
-    If you want to add someone to every group by hand, you can do it by
-typing the appropriate MySQL commands.  Run 'mysql bugs' (you may need
+    If you want to add someone else to every group by hand, you can do it
+by typing the appropriate MySQL commands.  Run 'mysql bugs' (you may need
 extra parameters, depending on your security settings according to
 section 3, above), and type:
 
         update profiles set groupset=0x7fffffffffffffff
         where login_name = 'XXX';
 
-replacing XXX with your Bugzilla email address.
-
-Now, if you go to the query page (off of the bugzilla main menu) where
-you'll now find a 'edit parameters' option which is filled with editable
-treats.
+replacing XXX with the Bugzilla email address.
 
 6. Setting Up the Whining Cron Job (Optional)
 
