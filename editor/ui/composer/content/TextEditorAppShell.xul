@@ -130,7 +130,7 @@ editor.xul has these - do we need them?
       <toolbarbutton id="newButton"/>
       <toolbarbutton id="openButton"/>
       <toolbarbutton id="saveButton"/>
-      <spacer class="separator_small"/>
+      <spacer class="separator-small"/>
       <toolbarbutton id="printButton"/>
       <toolbarbutton id="spellingButton"/>
       <spacer flex="1"/>
