@@ -718,7 +718,7 @@ NET_AskForAuthString(MWContext *context,
 	 */
 	if(!password || re_authorize)
 	  {
-		PRBool remember_password;
+		XP_Bool remember_password;
 	   	host = NET_ParseURL(address, GET_HOST_PART);
 
 		/* malloc memory here to prevent buffer overflow */
