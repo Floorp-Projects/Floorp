@@ -21,6 +21,7 @@
   #%]
 
 [% PROCESS global/variables.none.tmpl %]
+[% USE date %]
 
 bug_id,
 [% FOREACH column = displaycolumns %]
@@ -30,6 +31,10 @@ bug_id,
 [% FOREACH bug = bugs %]
   [% bug.bug_id %],
     [% FOREACH column = displaycolumns %]
+      [% IF column == "opendate" OR column == "changeddate" %]
+        [% rawcolumn = column.replace("date", "time") %]
+        [% bug.$column = date.format(bug.$rawcolumn, "%Y-%m-%d %H:%M:%S") %]
+      [% END %]
       [% bug.$column FILTER csv %],
     [% END %]
 
