@@ -58,9 +58,10 @@ nsXFormsSendElement::HandleAction(nsIDOMEvent* aEvent,
   if (!mElement)
     return NS_OK;
 
-  nsAutoString submission;
-  mElement->GetAttribute(NS_LITERAL_STRING("submission"), submission);
-  if (submission.IsEmpty())
+  NS_NAMED_LITERAL_STRING(submission, "submission");
+  nsAutoString submissionID;
+  mElement->GetAttribute(NS_LITERAL_STRING("submission"), submissionID);
+  if (submissionID.IsEmpty())
     return NS_OK;
 
   nsCOMPtr<nsIDOMDocument> doc;
@@ -69,11 +70,11 @@ nsXFormsSendElement::HandleAction(nsIDOMEvent* aEvent,
     return NS_OK;
 
   nsCOMPtr<nsIDOMElement> el;
-  doc->GetElementById(submission, getter_AddRefs(el));
-  if (!el)
-    return NS_OK;
-  
-  //XXX Check the element type when we have the submission element
+  doc->GetElementById(submissionID, getter_AddRefs(el));
+
+  if (!el || !nsXFormsUtils::IsXFormsElement(el, submission)) {
+    return nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+  }
   
   return nsXFormsUtils::DispatchEvent(el, eEvent_Submit);
 }

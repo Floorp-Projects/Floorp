@@ -159,8 +159,9 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
   if (!(*aHandled = type.EqualsLiteral("DOMActivate")))
     return NS_OK;
 
+  NS_NAMED_LITERAL_STRING(submission, "submission");
   nsAutoString submissionID;
-  mElement->GetAttribute(NS_LITERAL_STRING("submission"), submissionID);
+  mElement->GetAttribute(submission, submissionID);
 
   nsCOMPtr<nsIDOMDocument> ownerDoc;
   mElement->GetOwnerDocument(getter_AddRefs(ownerDoc));
@@ -168,7 +169,11 @@ nsXFormsSubmitElement::HandleDefault(nsIDOMEvent *aEvent, PRBool *aHandled)
 
   nsCOMPtr<nsIDOMElement> submissionElement;
   ownerDoc->GetElementById(submissionID, getter_AddRefs(submissionElement));
-  NS_ENSURE_STATE(submissionElement);
+  
+  if (!submissionElement ||
+      !nsXFormsUtils::IsXFormsElement(submissionElement, submission)) {
+    return nsXFormsUtils::DispatchEvent(mElement, eEvent_BindingException);
+  }
 
   nsCOMPtr<nsIDOMEventTarget> targ = do_QueryInterface(submissionElement);
   NS_ASSERTION(targ, "All elements should support nsIDOMEventTarget");
