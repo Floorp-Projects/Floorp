@@ -143,21 +143,28 @@
             
     
     <section>
-      <title>Template Formats</title>
+      <title>Template Formats and Types</title>
       
       <para>
-        Some CGIs have the ability to use more than one template. For
-        example, buglist.cgi can output bug lists as RDF or two
-        different forms of HTML (complex and simple). (Try this out
-        by appending <filename>&amp;format=simple</filename> to a buglist.cgi
-        URL on your Bugzilla installation.) This
-        mechanism, called template 'formats', is extensible.
+        Some CGI's have the ability to use more than one template. For example,
+        <filename>buglist.cgi</filename> can output itself as RDF, or as two 
+        formats of HTML (complex and simple). The mechanism that provides this 
+        feature is extensible.
+      </para>
+
+      <para>
+        Bugzilla can support different types of output, which again can have 
+        multiple formats. In order to request a certain type, you can append 
+        the &amp;ctype=&lt;contenttype&gt; (such as rdf or html) to the 
+        <filename>&lt;cginame&gt;.cgi</filename> URL. If you would like to 
+        retrieve a certain format, you can use the &amp;format=&lt;format&gt; 
+        (such as simple or complex) in the URL.
       </para>
       
       <para>
-        To see if a CGI supports multiple output formats, grep the
+        To see if a CGI supports multiple output formats and types, grep the
         CGI for "GetFormat". If it's not present, adding
-        multiple format support isn't too hard - see how it's done in
+        multiple format/type support isn't too hard - see how it's done in
         other CGIs, e.g. config.cgi.
       </para>
       
@@ -176,17 +183,27 @@
       
       <para>
         You now need to decide what content type you want your template
-        served as. Open up the <filename>localconfig</filename> file and find the 
+        served as. The content types are defined in the
+        <filename>Bugzilla/Constants.pm</filename> file in the 
         <filename>$contenttypes</filename>
         variable. If your content type is not there, add it. Remember
         the three- or four-letter tag assigned to you content type. 
         This tag will be part of the template filename.
       </para>
+
+      <note>
+        <para>
+          After adding or changing a content type, it's suitable to edit
+          <filename>Bugzilla/Constants.pm</filename> in order to reflect
+          the changes. Also, the file should be kept up to date after an
+          upgrade if content types have been customized in the past. 
+        </para>
+      </note>
       
       <para>
         Save the template as <filename>&lt;stubname&gt;-&lt;formatname&gt;.&lt;contenttypetag&gt;.tmpl</filename>. 
         Try out the template by calling the CGI as 
-        <filename>&lt;cginame&gt;.cgi?format=&lt;formatname&gt;</filename> .
+        <filename>&lt;cginame&gt;.cgi?format=&lt;formatname&gt;&amp;ctype=&lt;type&gt;</filename> .
       </para>       
     </section>
     
