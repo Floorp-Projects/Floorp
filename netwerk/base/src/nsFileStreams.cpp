@@ -120,12 +120,14 @@ nsFileStream::InitWithFileDescriptor(PRFileDesc* fd, nsISupports* parent)
 nsresult
 nsFileStream::Close()
 {
+    nsresult rv = NS_OK;
     if (mFD) {
         if (mCloseFD)
-            PR_Close(mFD);
+            if (PR_Close(mFD) == PR_FAILURE)
+                rv = NS_BASE_STREAM_OSERROR;
         mFD = nsnull;
     }
-    return NS_OK;
+    return rv;
 }
 
 NS_IMETHODIMP
@@ -135,8 +137,7 @@ nsFileStream::Seek(PRInt32 whence, PRInt64 offset)
         return NS_BASE_STREAM_CLOSED;
 
     nsInt64 cnt = PR_Seek64(mFD, offset, (PRSeekWhence)whence);
-    const nsInt64 minus1(-1);
-    if (cnt == minus1) {
+    if (cnt == nsInt64(-1)) {
         return NS_ErrorAccordingToNSPR();
     }
     return NS_OK;
@@ -149,8 +150,7 @@ nsFileStream::Tell(PRInt64 *result)
         return NS_BASE_STREAM_CLOSED;
 
     nsInt64 cnt = PR_Seek64(mFD, 0, PR_SEEK_CUR);
-    const nsInt64 minus1(-1);
-    if (cnt == minus1) {
+    if (cnt == nsInt64(-1)) {
         return NS_ErrorAccordingToNSPR();
     }
     *result = cnt;
