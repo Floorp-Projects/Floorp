@@ -421,6 +421,12 @@ nsAttrValue::GetColorValue(nscolor& aColor) const
       
       break;
     }
+    default:
+    {
+      NS_NOTREACHED("unexpected basetype");
+      
+      break;
+    }
   }
 
   return PR_TRUE;
