@@ -198,7 +198,7 @@ nsresult nsRenderingContextUnix :: CommonInit()
   ((nsDeviceContextUnix *)mContext)->SetDrawingSurface(mRenderingSurface);
   ((nsDeviceContextUnix *)mContext)->InstallColormap();
 
-  mFontCache = mContext->GetFontCache();
+  mContext->GetFontCache(mFontCache);
   mContext->GetDevUnitsToAppUnits(mP2T);
   float app2dev;
   mContext->GetAppUnitsToDevUnits(app2dev);
