@@ -289,6 +289,11 @@ public:
   NS_IMETHOD  SetZoom(float aZoom) = 0;
   NS_IMETHOD  GetZoom(float &aZoom) const = 0;
 
+  //get and set the text zoom value used for display-time
+  //scaling. default is 1.0 (no zoom)
+  NS_IMETHOD  SetTextZoom(float aTextZoom) = 0;
+  NS_IMETHOD  GetTextZoom(float &aTextZoom) const = 0;
+
   //get a low level drawing surface for rendering. the rendering context
   //that is passed in is used to create the drawing surface if there isn't
   //already one in the device context. the drawing surface is then cached
