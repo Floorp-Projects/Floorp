@@ -405,16 +405,6 @@ NS_IMETHODIMP nsDeviceContextMac :: GetSystemFont(nsSystemFontID aID, nsFont *aF
  *  See documentation in nsIDeviceContext.h
  *	@update 12/9/98 dwc
  */
-NS_IMETHODIMP nsDeviceContextMac :: GetDrawingSurface(nsIRenderingContext &aContext, nsDrawingSurface &aSurface)
-{
-  aContext.CreateDrawingSurface(nsnull, 0, aSurface);
-  return nsnull == aSurface ? NS_ERROR_OUT_OF_MEMORY : NS_OK;
-}
-
-/** ---------------------------------------------------
- *  See documentation in nsIDeviceContext.h
- *	@update 12/9/98 dwc
- */
 NS_IMETHODIMP nsDeviceContextMac::GetDepth(PRUint32& aDepth)
 {
   /*
