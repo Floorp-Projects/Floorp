@@ -316,10 +316,12 @@ nsMsgStatusFeedback.prototype =
       // Turn progress meter on.
       this.statusBar.setAttribute("mode","undetermined");
 
-      // turn throbber on
-      this.throbber.setAttribute("busy", true);
+      // start the throbber
+      if (this.throbber)
+        this.throbber.setAttribute("busy", true);
 
       //turn on stop button and menu
+      if (this.stopCmd)
     this.stopCmd.removeAttribute("disabled");
     },
   startMeteors : function()
@@ -327,7 +329,7 @@ nsMsgStatusFeedback.prototype =
       this.pendingStartRequests++;
       // if we don't already have a start meteor timeout pending
       // and the meteors aren't spinning, then kick off a start
-      if (!this.startTimeoutID && !this.meteorsSpinning)
+      if (!this.startTimeoutID && !this.meteorsSpinning && window.MsgStatusFeedback)
         this.startTimeoutID = setTimeout('window.MsgStatusFeedback._startMeteors();', 500);
 
       // since we are going to start up the throbber no sense in processing
@@ -349,8 +351,10 @@ nsMsgStatusFeedback.prototype =
       var msg = gMessengerBundle.getString("documentDone");
       this.showStatusString(msg);
       defaultStatus = msg;
-
-      this.throbber.setAttribute("busy", false);
+      
+      // stop the throbber
+      if (this.throbber)
+        this.throbber.setAttribute("busy", false);
 
       // Turn progress meter off.
       this.statusBar.setAttribute("mode","normal");
@@ -361,7 +365,9 @@ nsMsgStatusFeedback.prototype =
         this.progressMeterContainer.collapsed = true;
         this.progressMeterVisible = false;
       }
-      this.stopCmd.setAttribute("disabled", "true");
+
+      if (this.stopCmd)
+        this.stopCmd.setAttribute("disabled", "true");
 
       this.meteorsSpinning = false;
       this.stopTimeoutID = null;
@@ -382,7 +388,7 @@ nsMsgStatusFeedback.prototype =
       // AND the meteors are currently running then fire a stop timeout to shut them down.
       if (this.pendingStartRequests == 0 && !this.stopTimeoutID)
       {
-        if (this.meteorsSpinning)
+        if (this.meteorsSpinning && window.MsgStatusFeedback)
           this.stopTimeoutID = setTimeout('window.MsgStatusFeedback._stopMeteors();', 500);
       }
   },
