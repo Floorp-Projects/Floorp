@@ -338,16 +338,17 @@ EventTargetIn(nsIPresContext *aPresContext, nsEvent *aEvent,
   aPresContext->GetEventStateManager(getter_AddRefs(esm));
   nsCOMPtr<nsIContent> c;
   esm->GetEventTargetContent(aEvent, getter_AddRefs(c));
-  while (c) {
-    if (c == aChild) {
+  nsIContent *content = c;
+  while (content) {
+    if (content == aChild) {
       return PR_TRUE;
     }
 
-    if (c == aStop) {
+    if (content == aStop) {
       break;
     }
 
-    c = c->GetParent();
+    content = content->GetParent();
   }
   return PR_FALSE;
 }
