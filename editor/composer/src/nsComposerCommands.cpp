@@ -252,7 +252,6 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   if (!htmlEditor)
     return NS_ERROR_NO_INTERFACE;
 
-  PRBool styleSet;
   //create some params now...
   nsresult rv;
   nsCOMPtr<nsICommandParams> params =
@@ -260,14 +259,25 @@ nsStyleUpdatingCommand::ToggleState(nsIEditor *aEditor, const char* aTagName)
   if (NS_FAILED(rv) || !params)
     return rv;
 
-  rv = GetCurrentState(aEditor, aTagName, params);
-  if (NS_FAILED(rv)) 
-    return rv;
-  rv = params->GetBooleanValue(STATE_ALL,&styleSet);
-  if (NS_FAILED(rv)) 
-    return rv;
+  // tags "href" and "name" are special cases in the core editor 
+  // they are used to remove named anchor/link and shouldn't be used for insertion
   nsAutoString tagName; tagName.AssignWithConversion(aTagName);
-  if (styleSet)
+  PRBool doTagRemoval;
+  if (tagName.Equals(NS_LITERAL_STRING("href")) ||
+      tagName.Equals(NS_LITERAL_STRING("name")))
+    doTagRemoval = PR_TRUE;
+  else
+  {
+    // check current selection; set doTagRemoval if formatting should be removed
+    rv = GetCurrentState(aEditor, aTagName, params);
+    if (NS_FAILED(rv)) 
+      return rv;
+    rv = params->GetBooleanValue(STATE_ALL, &doTagRemoval);
+    if (NS_FAILED(rv)) 
+      return rv;
+  }
+
+  if (doTagRemoval)
     rv = RemoveTextProperty(aEditor, tagName.get(), nsnull);
   else
   {
