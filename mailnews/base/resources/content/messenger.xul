@@ -234,7 +234,7 @@ Rights Reserved.
 <!ENTITY forwardButton.label "Forward">  
 <!ENTITY deleteButton.img "chrome://messenger/skin/trash.gif">
 <!ENTITY deleteButton.label "Delete">  
-<!ENTITY throbber.img "resource:/res/throbber/anims00.gif">
+<!ENTITY throbber.img "chrome://navigator/skin/animthrob_single.gif">
 <!ENTITY throbber.url "http://www.mozilla.org/"> 
 
 ]> 
