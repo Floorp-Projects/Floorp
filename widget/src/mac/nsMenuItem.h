@@ -79,8 +79,6 @@ public:
   nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent, nsIWidget * aParentWindow, 
                                 void * menuNode, void * aWebShell);
   nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
-  nsEventStatus CheckRebuild(PRBool & aMenuEvent);
-  nsEventStatus SetRebuild(PRBool & aMenuEvent);
 
 protected:
 

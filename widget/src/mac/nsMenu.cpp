@@ -51,11 +51,6 @@
 
 #include "nsDynamicMDEF.h"
 
-extern MenuHandle gLevel2HierMenu;
-extern MenuHandle gLevel3HierMenu;
-extern MenuHandle gLevel4HierMenu;
-extern MenuHandle gLevel5HierMenu;
-
 // Beginning ID for top level menus. IDs 2-5 are the 4 Golden Hierarchical Menus
 const PRInt16 kMacMenuID = 6; 
 
@@ -120,8 +115,6 @@ nsMenu::nsMenu()
   mIsEnabled     = PR_TRUE;
   mConstructed   = nsnull;
   mDestroyHandlerCalled = PR_FALSE;
-  
-  mNeedsRebuild = PR_TRUE;
     
   //
   // create a multi-destination Unicode converter which can handle all of the installed
@@ -727,44 +720,30 @@ nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
   if(mMacMenuHandle == selectedMenuHandle)
   {
     if (mIsHelpMenu && mConstructed){
-	  RemoveAll();
-	  mConstructed = false;
-	  mNeedsRebuild = PR_TRUE;
-	}
-	  
-	    // Open the node.
-  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  if (domElement)
-    domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
-    
-    // Fire our oncreate handler. If we're told to stop, don't build the menu at all
-    PRBool keepProcessing = OnCreate();
-  
-    if(!mIsHelpMenu && !mNeedsRebuild || !keepProcessing) {
-      return nsEventStatus_eConsumeNoDefault;
-      }
-      
-	if(!mConstructed || mNeedsRebuild)
-	{
-	  if(mNeedsRebuild)
 	    RemoveAll();
-	  
-	  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
+	    mConstructed = false;
+	  }
+    
+	  if(!mConstructed)
+	  {
+		  nsCOMPtr<nsIWebShell> webShell = do_QueryReferent(mWebShellWeakRef);
       if (!webShell) {
-        NS_ERROR("No web shell");
-        return nsEventStatus_eConsumeNoDefault;
+          NS_ERROR("No web shell");
+          return nsEventStatus_eConsumeNoDefault;
       }
-	  if(mIsHelpMenu) {
-	    HelpMenuConstruct(aMenuEvent, nsnull /* mParentWindow */, mDOMNode, webShell);	      
-		mConstructed = true;
+	    if(mIsHelpMenu) {
+	      HelpMenuConstruct(aMenuEvent, nsnull /* mParentWindow */, mDOMNode, webShell);	      
+		    mConstructed = true;
+	    } else {
+	      MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, mDOMNode,   webShell);
+  		  mConstructed = true;
+  		}
+		
 	  } else {
-	    MenuConstruct(aMenuEvent, nsnull /* mParentWindow */, mDOMNode,   webShell);
-  	    mConstructed = true;
-      }	
-	} else {
-	  //printf("Menu already constructed \n");
-	}
-	eventStatus = nsEventStatus_eConsumeNoDefault;  
+	    //printf("Menu already constructed \n");
+	  }
+	  eventStatus = nsEventStatus_eConsumeNoDefault;
+	  
   }
   else
   {
@@ -808,7 +787,6 @@ nsEventStatus nsMenu::MenuConstruct(
     void              * menuNode,
 	  void              * aWebShell)
 {
-  mConstructed = false;
   gConstructingMenu = PR_TRUE;
   
   // reset destroy handler flag so that we'll know to fire it next time this menu goes away.
@@ -818,14 +796,14 @@ nsEventStatus nsMenu::MenuConstruct(
   // Begin menuitem inner loop
   
   // Open the node.
-  //nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
-  //if (domElement)
-  //  domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
+  nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
+  if (domElement)
+    domElement->SetAttribute(NS_ConvertASCIItoUCS2("open"), NS_ConvertASCIItoUCS2("true"));
   
   gCurrentMenuDepth++;
    
   // Fire our oncreate handler. If we're told to stop, don't build the menu at all
-  //PRBool keepProcessing = OnCreate();
+  PRBool keepProcessing = OnCreate();
   
   // Now get the kids. Retrieve our menupopup child.
   nsCOMPtr<nsIDOMNode> menuPopupNode;
@@ -838,7 +816,7 @@ nsEventStatus nsMenu::MenuConstruct(
   menuPopupNode->GetFirstChild(getter_AddRefs(menuitemNode));
 
   unsigned short menuIndex = 0;
-  if ( /* keepProcessing */ true )
+  if ( keepProcessing )
   {
     while (menuitemNode)
     {      
@@ -867,7 +845,6 @@ nsEventStatus nsMenu::MenuConstruct(
   }
   
   gConstructingMenu = PR_FALSE;
-  mNeedsRebuild = PR_FALSE;
   //printf("  Done building, mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
   
   gCurrentMenuDepth--;
@@ -962,21 +939,9 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
   PRBool keepProcessing = OnDestroy();
   if ( keepProcessing )
   {
-    if( mMacMenuHandle == gLevel2HierMenu ||
-        mMacMenuHandle == gLevel3HierMenu ||
-        mMacMenuHandle == gLevel4HierMenu ||
-        mMacMenuHandle == gLevel5HierMenu)
-    {
-      mNeedsRebuild = PR_TRUE;    
-    }
-
-    if(mNeedsRebuild) {
-        RemoveAll();
-        mConstructed = false;
-        //printf("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
-        // Close the node.
-        mNeedsRebuild = PR_TRUE;
-    } 
+    RemoveAll();
+    //printf("  mMenuItemVoidArray.Count() = %d \n", mMenuItemVoidArray.Count());
+    // Close the node.
     nsCOMPtr<nsIDOMElement> domElement = do_QueryInterface(mDOMNode);
     if(!domElement) {
         NS_ERROR("Unable to QI dom element.");
@@ -996,24 +961,6 @@ nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
       domElement->RemoveAttribute(NS_ConvertASCIItoUCS2("open"));
   }
   
-  return nsEventStatus_eIgnore;
-}
-
-//-------------------------------------------------------------------------
-nsEventStatus nsMenu::CheckRebuild(PRBool & aNeedsRebuild)
-{
-  aNeedsRebuild = PR_TRUE; //mNeedsRebuild;
-  return nsEventStatus_eIgnore;
-}
-
-//-------------------------------------------------------------------------
-nsEventStatus nsMenu::SetRebuild(PRBool & aNeedsRebuild)
-{
-  if(!gConstructingMenu) {
-    mNeedsRebuild = aNeedsRebuild;
-    //if(mNeedsRebuild)
-    //  RemoveAll();
-  }
   return nsEventStatus_eIgnore;
 }
 
@@ -1489,8 +1436,6 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
 
   if(aAttribute == disabledAtom.get())    // disabled
   {
-    mNeedsRebuild = PR_TRUE;
-   
     nsAutoString valueString;
     domElement->GetAttribute(NS_ConvertASCIItoUCS2("disabled"), valueString);
     if(valueString.EqualsWithConversion("true"))
@@ -1502,8 +1447,6 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
   } 
   else if(aAttribute == valueAtom.get())  // value
   {
-    mNeedsRebuild = PR_TRUE;
-    
     domElement->GetAttribute(NS_ConvertASCIItoUCS2("value"), mLabel);
 
     ::DeleteMenu(mMacMenuID);
@@ -1554,8 +1497,6 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
   }
   else if(aAttribute == hiddenAtom.get() || aAttribute == collapsedAtom.get())     // hidden of collapsed
   {
-      mNeedsRebuild = PR_TRUE;
-      
       nsAutoString hiddenValue, collapsedValue;
       domElement->GetAttribute(NS_ConvertASCIItoUCS2("hidden"), hiddenValue);
       domElement->GetAttribute(NS_ConvertASCIItoUCS2("collapsed"), collapsedValue);
@@ -1601,11 +1542,9 @@ nsMenu::AttributeChanged(nsIDocument *aDocument, PRInt32 aNameSpaceID, nsIAtom *
 
 NS_IMETHODIMP
 nsMenu :: ContentRemoved(nsIDocument *aDocument, nsIContent *aChild, PRInt32 aIndexInContainer)
-{  
+{
   if(gConstructingMenu)
     return NS_OK;
-
-  mNeedsRebuild = PR_TRUE;
 
   RemoveItem(aIndexInContainer);
   mManager->Unregister ( aChild );
