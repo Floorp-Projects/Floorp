@@ -421,24 +421,35 @@ nsHTMLEditRules::GetBlockNodeParent(nsCOMPtr<nsIContent> aContent)
 ///////////////////////////////////////////////////////////////////////////
 // GetStartNode: returns whatever the start parent is of the first range
 //               in the selection.
-nsCOMPtr<nsIDOMNode> 
-nsHTMLEditRules::GetStartNode(nsIDOMSelection *aSelection)
+nsresult 
+nsHTMLEditRules::GetStartNodeAndOffset(nsIDOMSelection *aSelection,
+                                       nsCOMPtr<nsIDOMNode> *outStartNode,
+                                       PRInt32 *outStartOffset)
 {
-  nsCOMPtr<nsIDOMNode> startNode;
+  if (!outStartNode || !outStartOffset) 
+    return NS_ERROR_NULL_POINTER;
+    
   nsCOMPtr<nsIEnumerator> enumerator;
   enumerator = do_QueryInterface(aSelection);
   if (!enumerator) 
-    return startNode;
+    return NS_ERROR_FAILURE;
+    
   enumerator->First(); 
   nsISupports *currentItem;
   if ((NS_FAILED(enumerator->CurrentItem(&currentItem))) || !currentItem)
-    return startNode;
+    return NS_ERROR_FAILURE;
 
   nsCOMPtr<nsIDOMRange> range( do_QueryInterface(currentItem) );
   if (!range)
-    return startNode;
-  range->GetStartParent(getter_AddRefs(startNode));
-  return startNode;
+    return NS_ERROR_FAILURE;
+    
+  if (NS_FAILED(range->GetStartParent(getter_AddRefs(*outStartNode))))
+    return NS_ERROR_FAILURE;
+    
+  if (NS_FAILED(range->GetStartOffset(outStartOffset)))
+    return NS_ERROR_FAILURE;
+    
+  return NS_OK;
 }
 
 
@@ -448,10 +459,57 @@ nsHTMLEditRules::GetStartNode(nsIDOMSelection *aSelection)
 nsresult 
 nsHTMLEditRules::IsPreformatted(nsCOMPtr<nsIDOMNode> aNode, PRBool *aResult)
 {
-  return PR_TRUE;
+  // XXX not yet impl
+  if (!aResult) 
+    return NS_ERROR_NULL_POINTER;
+    
+  *aResult = PR_TRUE;
+  return NS_OK;
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// IsNextCharWhitespace: checks the adjacent content in the same block
+//                       to see if following selection is whitespace
+nsresult 
+nsHTMLEditRules::IsNextCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, 
+                                      PRInt32 aOffset,
+                                      PRBool *aResult)
+{
+  // XXX not yet impl
+  if (!aResult) 
+    return NS_ERROR_NULL_POINTER;
+    
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+
+///////////////////////////////////////////////////////////////////////////
+// IsPrevCharWhitespace: checks the adjacent content in the same block
+//                       to see if following selection is whitespace
+nsresult 
+nsHTMLEditRules::IsPrevCharWhitespace(nsCOMPtr<nsIDOMNode> aParentNode, 
+                                      PRInt32 aOffset,
+                                      PRBool *aResult)
+{
+  // XXX not yet impl
+  if (!aResult) 
+    return NS_ERROR_NULL_POINTER;
+    
+  *aResult = PR_TRUE;
+  return NS_OK;
+}
+
+
+
+/********************************************************
+ *  main implemntation methods 
+ ********************************************************/
+ 
+///////////////////////////////////////////////////////////////////////////
+// InsertTab: top level logic for determining how to insert a tab
+//                       
 nsresult 
 nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection, 
                            PRBool *aCancel, 
@@ -460,12 +518,19 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
 {
   nsCOMPtr<nsIDOMNode> theNode;
   PRBool isPRE;
-  theNode = GetStartNode(aSelection);
-  if (!theNode)
-    return NS_ERROR_UNEXPECTED;
-  nsresult result = IsPreformatted(theNode,&isPRE);
+  PRInt32 offset;
+  
+  nsresult result = GetStartNodeAndOffset(aSelection, &theNode, &offset);
   if (NS_FAILED(result))
     return result;
+  
+  if (!theNode)
+    return NS_ERROR_FAILURE;
+    
+  result = IsPreformatted(theNode,&isPRE);
+  if (NS_FAILED(result))
+    return result;
+    
   if (isPRE)
   {
     outString += '\t';
@@ -474,18 +539,65 @@ nsHTMLEditRules::InsertTab(nsIDOMSelection *aSelection,
   }
   else
   {
-    
+    // XXX fix me
+    *outString += 160;
+    *outString += 160;
+    *outString += 160;
+    *outString += 160;
   }
   return NS_OK;
 }
 
 
+///////////////////////////////////////////////////////////////////////////
+// InsertSpace: top level logic for determining how to insert a space
+//                       
 nsresult 
 nsHTMLEditRules::InsertSpace(nsIDOMSelection *aSelection, 
                              PRBool *aCancel, 
                              PlaceholderTxn **aTxn,
                              nsString *outString)
 {
+  nsCOMPtr<nsIDOMNode> parentNode;
+  PRInt32 offset;
+  PRBool isWhiteSpace;
+  
+  nsresult result = GetStartNodeAndOffset(aSelection, &parentNode, &offset);
+  if (NS_FAILED(result))
+    return result;
+
+  if (!parentNode)  
+    return NS_ERROR_FAILURE;
+  
+  result = IsNextCharWhitespace(parentNode, offset, &isWhiteSpace);
+  if (NS_FAILED(result))
+    return result;
+  
+  if (isWhiteSpace)
+  {
+    // next character after us is a whitespace, so we need to insert nbsp
+    *outString += 160;
+    return NS_OK;
+  }
+  
+  result = IsPrevCharWhitespace(parentNode, offset, &isWhiteSpace);
+  if (NS_FAILED(result))
+    return result;
+  
+  if (isWhiteSpace)
+  {
+    // character after us is non-ws, but char before is ws.  Need to
+    // insert nbsp BEFORE the space
+    
+    // XXX fornow just nbsp
+    
+    *outString += 160;
+    return NS_OK;
+  }
+  
+  // else just a space
+  *outString += " ";
+  
   return NS_OK;
 }
 
