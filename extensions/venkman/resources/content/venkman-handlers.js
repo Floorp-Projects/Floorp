@@ -293,7 +293,7 @@ function cli_icommands (e)
 console.onInputCompleteLine =
 function con_icline (e)
 {
-    if (console._inputHistory.length != 0 && console._inputHistory[0] != e.line)
+    if (console._inputHistory.length == 0 || console._inputHistory[0] != e.line)
         console._inputHistory.unshift (e.line);
     
     if (console._inputHistory.length > console.prefs["input.history.max"])
