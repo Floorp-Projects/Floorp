@@ -431,13 +431,18 @@ nsHTMLEditor::InsertImage(nsString& aURL,
                           nsString& aAlt,
                           nsString& aAlignment)
 {
-  nsresult res = nsEditor::BeginTransaction();
+  nsresult res;
+
+  (void)nsEditor::BeginTransaction();
 
   nsCOMPtr<nsIDOMNode> newNode;
   nsAutoString tag("IMG");
   res = nsEditor::DeleteSelectionAndCreateNode(tag, getter_AddRefs(newNode));
   if (!NS_SUCCEEDED(res) || !newNode)
+  {
+    (void)nsEditor::EndTransaction();
     return res;
+  }
 
   nsCOMPtr<nsIDOMHTMLImageElement> image (do_QueryInterface(newNode));
   if (!image)
@@ -445,37 +450,25 @@ nsHTMLEditor::InsertImage(nsString& aURL,
 #ifdef DEBUG_akkana
     printf("Not an image element\n");
 #endif
+    (void)nsEditor::EndTransaction();
     return NS_NOINTERFACE;
   }
 
-  res = image->SetSrc(aURL);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = image->SetWidth(aWidth);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = image->SetHeight(aHeight);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = image->SetHspace(aHspace);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = image->SetVspace(aVspace);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = image->SetBorder(aBorder);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = image->SetAlt(aAlt);
-  if (!NS_SUCCEEDED(res))
-    return res;
-  res = image->SetAlign(aAlignment);
-  if (!NS_SUCCEEDED(res))
-    return res;
+  // Can't return from any of these intermediates
+  // because then we won't hit the EndTransaction()
+  if (NS_SUCCEEDED(res = image->SetSrc(aURL)))
+    if (NS_SUCCEEDED(res = image->SetWidth(aWidth)))
+      if (NS_SUCCEEDED(res = image->SetHeight(aHeight)))
+        if (NS_SUCCEEDED(res = image->SetAlt(aAlt)))
+          if (NS_SUCCEEDED(res = image->SetBorder(aBorder)))
+            if (NS_SUCCEEDED(res = image->SetAlign(aAlignment)))
+              if (NS_SUCCEEDED(res = image->SetHspace(aHspace)))
+                if (NS_SUCCEEDED(res = image->SetVspace(aVspace)))
+                  ;
 
-  nsEditor::EndTransaction();  // don't return this result!
+  (void)nsEditor::EndTransaction();  // don't return this result!
 
-  return NS_OK;
+  return res;
 }
 
 
