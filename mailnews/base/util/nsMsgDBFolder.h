@@ -157,7 +157,7 @@ protected:
 
 protected:
   nsCOMPtr<nsIMsgDatabase> mDatabase;
-  nsString mCharset;
+  nsCString mCharset;
   PRBool mCharsetOverride;
   PRBool mAddListener;
   PRBool mNewMessages;

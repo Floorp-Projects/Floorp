@@ -645,15 +645,17 @@ PRBool nsDBFolderInfo::TestFlag(PRInt32 flags)
 }
 
 NS_IMETHODIMP
-nsDBFolderInfo::GetCharacterSet(nsAString &result, PRBool *usedDefault) 
+nsDBFolderInfo::GetCharacterSet(nsACString &result, PRBool *usedDefault) 
 {
   *usedDefault = PR_FALSE;
 
-  nsresult rv = GetProperty(kCharacterSetColumnName, result);
+  nsXPIDLCString val;
+  nsresult rv = GetCharPtrProperty(kCharacterSetColumnName, getter_Copies(val));
+  result = val;
   
   if (NS_SUCCEEDED(rv) && result.IsEmpty())
   {
-    CopyASCIItoUTF16(gDefaultCharacterSet, result);
+    result = gDefaultCharacterSet;
     *usedDefault = PR_TRUE;
   }
   
@@ -683,10 +685,10 @@ nsDBFolderInfo::GetCharPtrCharacterSet(char **result)
   return (*result) ? NS_OK : NS_ERROR_OUT_OF_MEMORY;
 }
 
-NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(const PRUnichar *charSet) 
+NS_IMETHODIMP nsDBFolderInfo::SetCharacterSet(const char *charSet) 
 {
-  m_charSet.AssignWithConversion(charSet);
-  return m_mdb->SetProperty(m_mdbRow, kCharacterSetColumnName, m_charSet.get());
+  m_charSet.Assign(charSet);
+  return SetCharPtrProperty(kCharacterSetColumnName, charSet);
 }
 
 NS_IMETHODIMP nsDBFolderInfo::GetCharacterSetOverride(PRBool *characterSetOverride) 

@@ -342,9 +342,9 @@ NS_IMETHODIMP nsMsgDBFolder::SetCharset(const char * aCharset)
   rv = GetDBFolderInfoAndDB(getter_AddRefs(folderInfo), getter_AddRefs(db));
   if(NS_SUCCEEDED(rv))
   {
-    rv = folderInfo->SetCharacterSet(NS_ConvertASCIItoUTF16(aCharset).get());
+    rv = folderInfo->SetCharacterSet(aCharset);
     db->Commit(nsMsgDBCommitType::kLargeCommit);
-    mCharset.AssignWithConversion(aCharset);  // synchronize member variable
+    mCharset.AssignASCII(aCharset);  // synchronize member variable
   }
   return rv;
 }
@@ -1055,7 +1055,7 @@ NS_IMETHODIMP nsMsgDBFolder::ReadFromFolderCacheElem(nsIMsgFolderCacheElement *e
   printf("read total %ld for %s\n", mNumTotalMessages, uri);
   PR_Free(uri);
 #endif
-  mCharset.AssignWithConversion(charset.get());
+  mCharset.AssignASCII(charset);
 
   mInitializedFromCache = PR_TRUE;
   return rv;
@@ -1187,9 +1187,7 @@ NS_IMETHODIMP nsMsgDBFolder::WriteToFolderCacheElem(nsIMsgFolderCacheElement *el
   element->SetInt32Property("expungedBytes", mExpungedBytes);
   element->SetInt32Property("folderSize", mFolderSize);
 
-  nsCAutoString mcharsetC;
-  mcharsetC.AssignWithConversion(mCharset);
-  element->SetStringProperty("charset", mcharsetC.get());
+  element->SetStringProperty("charset", mCharset.get());
 
 #ifdef DEBUG_bienvenu1
   char *uri;
