@@ -46,7 +46,7 @@
 
 <?xml-stylesheet href="chrome://global/skin/global.css" type="text/css"?> 
 <?xml-stylesheet href="chrome://calendar/skin/calendar.css" type="text/css"?>
-<?xml-stylesheet href="chrome://calendar/content/datepicker/calendar.css" type="text/css"?>
+<?xml-stylesheet href="chrome://calendar/content/datetimepickers/minimonth.css" type="text/css"?>
 <?xml-stylesheet href="chrome://communicator/skin/communicator.css" type="text/css"?>
 
 <!-- Overlays -->
@@ -400,10 +400,6 @@
              observes="publish_calendar"/>
 </popup>
 
-<popup id="oe-date-picker-popup"  position="after_start" value="">
-   <datepicker id="oe-date-picker" valud="" ondatepick="gCalendarWindow.goToDay( date )"/>
-</popup>
-
 <commandset id="commands"/>
 
 <toolbox id="calendar-toolbox" class="toolbox-top" deferattached="true">
@@ -485,7 +481,7 @@
          <tabpanels>
          <tabpanel>
             <vbox flex="1">
-               <calendar flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );"/>
+               <minimonth flex="1" id="lefthandcalendar" onchange="gCalendarWindow.goToDay( this.value );" />
                <button observes="go_today_command" label="&calendar.gototoday.button.label;"/>
             </vbox>
          </tabpanel>
