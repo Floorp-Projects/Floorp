@@ -290,7 +290,7 @@ public:
   void  AnalyzeSnarfedFile ();      /* Analyze a previously-snarfed file.
   									   (Currently only used for plaintext
   									   converted from HTML.) */
-  int	PickEncoding (PRInt16 mail_csid);
+  int	PickEncoding (const char *charset);
   
   PRBool UseUUEncode_p(void);
 
@@ -300,6 +300,7 @@ public:
 
   nsMsgSendMimeDeliveryState		*m_mime_delivery_state;
 
+  char *m_charset;             /* charset name */
   char *m_type;						/* The real type, once we know it. */
   char *m_override_type;			/* The type we should assume it to be
 									   or 0, if we should get it from the

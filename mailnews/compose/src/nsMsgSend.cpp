@@ -72,6 +72,11 @@ static NS_DEFINE_CID(kNetServiceCID, NS_NETSERVICE_CID);
 
 #endif //JFD
 
+// defined in msgCompGlue.cpp
+extern char * INTL_EncodeMimePartIIStr(const char *header, const char *charset, XP_Bool bUseMime);
+extern char * INTL_GetDefaultMailCharset(void);
+extern PRBool INTL_stateful_charset(const char *charset);
+
 extern "C"
 {
 	extern int MK_MSG_ASSEMBLING_MSG;
@@ -225,7 +230,6 @@ extern "C"
 
 static PRBool mime_use_quoted_printable_p = PR_TRUE;
 static PRBool mime_headers_use_quoted_printable_p = PR_FALSE;
-
 static const char* pSmtpServer = NULL;
 
 #ifdef XP_MAC
@@ -423,7 +427,7 @@ static int mime_sanity_check_fields (const char *from,
 									 const char *organization,
 									 const char *other_random_headers);
 static char *mime_generate_headers (nsMsgCompFields *fields,
-									int csid, 
+									const char *charset, 
 									MSG_Deliver_Mode deliver_mode);
 static char *mime_generate_attachment_headers (const char *type,
 											   const char *encoding,
@@ -434,7 +438,7 @@ static char *mime_generate_attachment_headers (const char *type,
 											   const char *base_url,
 											   PRBool digest_p,
 											   MSG_DeliverMimeAttachment *ma,
-											   PRInt16 mail_csid);
+											   const char *charset);
 static char *RFC2231ParmFolding(const char *parmName, const char *charset,
 								const char *language, const char *parmValue);
 #if 0
@@ -454,6 +458,7 @@ MSG_DeliverMimeAttachment::MSG_DeliverMimeAttachment()
 	m_url = NULL;
 	m_done = PR_FALSE;
 	m_type = NULL;
+  m_charset = NULL;
 	m_override_type = NULL;
 	m_override_encoding = NULL;
 	m_desired_type = NULL;
@@ -1880,7 +1885,7 @@ static int mime_encoder_output_fn (const char *buf, /*JFD PRInt32 */int32 size, 
    decide what encoding it should have.
  */
 int
-MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
+MSG_DeliverMimeAttachment::PickEncoding (const char *charset)
 {
   // use the boolean so we only have to test for uuencode vs base64 once
   PRBool needsB64 = PR_FALSE;
@@ -1937,12 +1942,12 @@ MSG_DeliverMimeAttachment::PickEncoding (PRInt16 mail_csid)
 			  m_desired_type = 0;
 			}
 		}
-	  /* If the Mail csid is CS_JIS we force it to use Base64 for attachments (bug#104255). 
-		Use 7 bit for other STATFUL ( e.g. CS_2022_KR) csid. */
-	  if ((mail_csid == CS_JIS) &&
+	  /* If the Mail charset is ISO_2022_JP we force it to use Base64 for attachments (bug#104255). 
+		Use 7 bit for other STATFUL charsets ( e.g. ISO_2022_KR). */
+	  if ((PL_strcasecmp(charset, "iso-2022-jp") == 0) &&
 		  (PL_strcasecmp(m_type, TEXT_HTML) == 0))
          needsB64 = PR_TRUE;
-	  else if((mail_csid & STATEFUL) &&
+	  else if((INTL_stateful_charset(charset)) &&
          ((PL_strcasecmp(m_type, TEXT_HTML) == 0) ||
           (PL_strcasecmp(m_type, TEXT_MDL) == 0) ||
           (PL_strcasecmp(m_type, TEXT_PLAIN) == 0) ||
@@ -2173,11 +2178,6 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	char *buffer = 0;
 	char *buffer_tail = 0;
 	char* error_msg = 0;
-#ifndef XP_UNIX
-	PRInt16 win_csid	 = INTL_DefaultWinCharSetID(GetContext());
-#else
-    PRInt16 win_csid=0;
-#endif
  
   // to news is true if we have a m_field and we have a Newsgroup and it is not empty
 	PRBool tonews = PR_FALSE;
@@ -2190,8 +2190,6 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	INTL_MessageSendToNews(tonews);			// hack to make Korean Mail/News work correctly 
 											// Look at libi18n/doc_ccc.c for details 
 											// temp solution for bug 30725
-
-	PRInt16 mail_csid = tonews ? INTL_DefaultNewsCharSetID(win_csid) : INTL_DefaultMailCharSetID(win_csid);
 
 	nsMsgSendPart* toppart = NULL;			// The very top most container of the message
 											// that we are going to send.
@@ -2215,11 +2213,6 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 											// message body.)
 	char *hdrs = 0;
 	PRBool maincontainerISrelatedpart = PR_FALSE;
-
-	INTL_CharSetInfo c = LO_GetDocumentCharacterSetInfo(GetContext());
-	// Do we need to do this only for UTF-8?
-	if (CS_UTF8 == win_csid)
-		mail_csid = INTL_DefaultMailCharSetID(INTL_GetCSIDocCSID(c));	// need to distinguish utf8 and utf7
 
 	status = m_status;
 	if (status < 0)
@@ -2343,6 +2336,8 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		m_plaintext->m_url->content_type = PL_strdup(TEXT_HTML);
 		PR_FREEIF(m_plaintext->m_type);
 		m_plaintext->m_type = PL_strdup(TEXT_HTML);
+		PR_FREEIF(m_plaintext->m_charset);
+		m_plaintext->m_charset = PL_strdup(m_fields->GetCharacterSet());
 		PR_FREEIF(m_plaintext->m_desired_type);
 		m_plaintext->m_desired_type = PL_strdup(TEXT_PLAIN);
 		m_attachment_pending_count ++;
@@ -2397,7 +2392,8 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		m_fields->SetMessageId(msg_generate_message_id (), NULL);
 #endif /* GENERATE_MESSAGE_ID */
 
-	mainbody = new nsMsgSendPart(this, mail_csid);
+  /*TODO: should be m_fields->GetCharacterSet(), change nsMsgSendPart to take charset instead of csid*/
+	mainbody = new nsMsgSendPart(this, 0/*mail_csid*/);
 	if (!mainbody)
 		goto FAILMEM;
   
@@ -2415,7 +2411,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		just before writing it out, but that will require a fix that is less safe
 		and takes more memory. */
 	PR_FREEIF(m_attachment1_encoding);
-	if ((mail_csid & STATEFUL) || /* CS_JIS or CS_2022_KR */
+	if (INTL_stateful_charset(m_fields->GetCharacterSet()) || /* CS_JIS or CS_2022_KR */
 		  mime_7bit_data_p (m_attachment1_body, m_attachment1_body_length))
 		m_attachment1_encoding = PL_strdup (ENCODING_7BIT);
 	else if (mime_use_quoted_printable_p)
@@ -2464,7 +2460,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		// OK.  We have a plaintext version of the main body that we want to
 		// send instead of or with the text/html.  Shove it in.
 
-		plainpart = new nsMsgSendPart(this, mail_csid);
+		plainpart = new nsMsgSendPart(this, 0/*should be m_fields->GetCharacterSet()*/);
 		if (!plainpart)
 			goto FAILMEM;
 		status = plainpart->SetType(TEXT_PLAIN);
@@ -2474,7 +2470,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 		if (status < 0)
 			goto FAIL;
 		m_plaintext->AnalyzeSnarfedFile(); // look for 8 bit text, long lines, etc.
-		m_plaintext->PickEncoding(mail_csid);
+		m_plaintext->PickEncoding(m_fields->GetCharacterSet());
 		hdrs = mime_generate_attachment_headers(m_plaintext->m_type,
 											  m_plaintext->m_encoding,
 											  m_plaintext->m_description,
@@ -2483,7 +2479,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 											  m_plaintext->m_real_name, 0,
 											  m_digest_p,
 											  m_plaintext,
-											  mail_csid);
+											  m_fields->GetCharacterSet());
 		if (!hdrs)
 			goto FAILMEM;
 		status = plainpart->SetOtherHeaders(hdrs);
@@ -2569,11 +2565,10 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 	else
 		toppart = maincontainer;
 
-	/* Write out the message headers.
-	* Use document charset ID in order to distinguish UTF-8 and UTF-7 (which share the same win_csid).
-	*/
+  /* Write out the message headers.
+   */
 	headers = mime_generate_headers (m_fields,
-								   (CS_UTF8 != win_csid) ? INTL_GetCSIWinCSID(c) : INTL_GetCSIDocCSID(c),
+								   m_fields->GetCharacterSet(),
 								   m_deliver_mode);
 	if (!headers)
 		goto FAILMEM;
@@ -2643,7 +2638,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 											   0, 0, 0, 0, 0,
 											   m_digest_p,
 											   NULL, /* no "ma"! */
-											   mail_csid);
+											   m_fields->GetCharacterSet());
 		if (!hdrs)
 			goto FAILMEM;
 		status = mainbody->AppendOtherHeaders(hdrs);
@@ -2688,7 +2683,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 					goto FAILMEM;
 			}
 
-			ma->PickEncoding (mail_csid);
+			ma->PickEncoding (m_fields->GetCharacterSet());
 
 			part = new nsMsgSendPart(this);
 			if (!part)
@@ -2708,7 +2703,7 @@ int nsMsgSendMimeDeliveryState::GatherMimeAttachments ()
 												   ma->m_url_string,
 												   m_digest_p,
 												   ma,
-												   mail_csid);
+												   m_fields->GetCharacterSet());
 			if (!hdrs)
 				goto FAILMEM;
 
@@ -2899,7 +2894,7 @@ char * msg_generate_message_id (void)
 }
 
 static char * mime_generate_headers (nsMsgCompFields *fields,
-									int csid,
+									const char *charset,
 									MSG_Deliver_Mode deliver_mode)
 {
 	int size = 0;
@@ -2977,7 +2972,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			if (receipt_header_type == 1) {
 				RRT_HEADER:
 				PUSH_STRING ("Return-Receipt-To: ");
-				convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid, mime_headers_use_quoted_printable_p);
+				convbuf = INTL_EncodeMimePartIIStr((char *)pFrom, charset, mime_headers_use_quoted_printable_p);
 				if (convbuf) {    /* MIME-PartII conversion */
 					PUSH_STRING (convbuf);
 					PR_FREEIF(convbuf);
@@ -2988,7 +2983,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			}
 			else  {
 				PUSH_STRING ("Disposition-Notification-To: ");
-				convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid,
+				convbuf = INTL_EncodeMimePartIIStr((char *)pFrom, charset,
 												mime_headers_use_quoted_printable_p);
 				if (convbuf) {     /* MIME-PartII conversion */
 					PUSH_STRING (convbuf);
@@ -3006,9 +3001,9 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			PUSH_STRING ("X-Template: ");
 			char * pStr = fields->GetTemplateName();
 			if (pStr) {
-				convbuf = IntlEncodeMimePartIIStr((char *)
+				convbuf = INTL_EncodeMimePartIIStr((char *)
 									 pStr,
-									 csid,
+									 charset,
 									 mime_headers_use_quoted_printable_p);
 				if (convbuf) {
 				  PUSH_STRING (convbuf);
@@ -3047,7 +3042,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	if (pFrom && *pFrom) {
 		char *convbuf;
 		PUSH_STRING ("From: ");
-		convbuf = IntlEncodeMimePartIIStr((char *)pFrom, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pFrom, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf) {    /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
@@ -3062,7 +3057,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	{
 		char *convbuf;
 		PUSH_STRING ("Reply-To: ");
-		convbuf = IntlEncodeMimePartIIStr((char *)pReplyTo, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pReplyTo, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf) {     /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
@@ -3077,7 +3072,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	{
 		char *convbuf;
 		PUSH_STRING ("Organization: ");
-		convbuf = IntlEncodeMimePartIIStr((char *)pOrg, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pOrg, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf) {     /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
@@ -3106,7 +3101,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			PUSH_STRING("\"");
 
 			PREF_GetCharPref("mail.identity.username", tmpBuffer, &bufSize);
-			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
+			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 										mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
 				PUSH_STRING (convbuf);
@@ -3118,7 +3113,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			PUSH_STRING("\" <");
 
 			PREF_GetCharPref("mail.smtp_name", tmpBuffer, &bufSize);
-			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
+			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
 				PUSH_STRING (convbuf);
@@ -3130,7 +3125,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 			PUSH_STRING ("@");
 
 			PREF_GetCharPref("network.hosts.smtp_server", tmpBuffer, &bufSize);
-			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
+			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
 			if (convbuf) {     /* MIME-PartII conversion */
 				PUSH_STRING (convbuf);
@@ -3141,7 +3136,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 
 			PUSH_STRING(">");
 
-			convbuf = IntlEncodeMimePartIIStr((char *)tmpBuffer, csid,
+			convbuf = INTL_EncodeMimePartIIStr((char *)tmpBuffer, charset,
 											mime_headers_use_quoted_printable_p);
 
 			if (!fields->GetOwner()->GetMaster()->IsUserAuthenticated())
@@ -3241,7 +3236,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 		char *n2;
 		char *convbuf;
 
-		convbuf = IntlEncodeMimePartIIStr((char *)pNewsGrp, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pNewsGrp, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf)
 	  		n2 = XP_StripLine (convbuf);
@@ -3290,7 +3285,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 		char *n2;
 		char *convbuf;
 
-		convbuf = IntlEncodeMimePartIIStr((char *)pFollow, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pFollow, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf)
 			n2 = XP_StripLine (convbuf);
@@ -3334,7 +3329,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	if (pTo && *pTo) {
 		char *convbuf;
 		PUSH_STRING ("To: ");
-		convbuf = IntlEncodeMimePartIIStr((char *)pTo, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pTo, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf) {     /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
@@ -3349,7 +3344,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	if (pCc && *pCc) {
 		char *convbuf;
 		PUSH_STRING ("CC: ");
-		convbuf = IntlEncodeMimePartIIStr((char *)pCc, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pCc, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf) {   /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
@@ -3363,7 +3358,7 @@ static char * mime_generate_headers (nsMsgCompFields *fields,
 	if (pSubject && *pSubject) {
 		char *convbuf;
 		PUSH_STRING ("Subject: ");
-		convbuf = IntlEncodeMimePartIIStr((char *)pSubject, csid,
+		convbuf = INTL_EncodeMimePartIIStr((char *)pSubject, charset,
 										mime_headers_use_quoted_printable_p);
 		if (convbuf) {  /* MIME-PartII conversion */
 			PUSH_STRING (convbuf);
@@ -3687,25 +3682,24 @@ static char * mime_generate_attachment_headers (const char *type, const char *en
 								  const char *base_url,
 								  PRBool /*digest_p*/,
 								  MSG_DeliverMimeAttachment * /*ma*/,
-								  PRInt16 mail_csid)
+								  const char *charset)
 {
 	PRInt32 buffer_size = 2048 + (base_url ? 2*PL_strlen(base_url) : 0);
 	char *buffer = (char *) PR_Malloc (buffer_size);
 	char *buffer_tail = buffer;
-	char charset[30];
 
 	if (! buffer)
 		return 0; /* MK_OUT_OF_MEMORY */
 
 	NS_ASSERTION (encoding, "null encoding");
-	charset[0] = 0;
 
 	PUSH_STRING ("Content-Type: ");
 	PUSH_STRING (type);
 
 	if (mime_type_needs_charset (type)) {
-		/* push 7bit encoding out based on current default codeset */
-		INTL_CharSetIDToName (mail_csid, charset);
+
+	  char charset_label[65];   // Content-Type: charset
+    PL_strcpy(charset_label, charset);
 
 		/* If the characters are all 7bit, then it's better (and true) to
 		claim the charset to be US-ASCII rather than Latin1.  Should we
@@ -3714,16 +3708,16 @@ static char * mime_generate_attachment_headers (const char *type, const char *en
 		if (encoding &&
 				!PL_strcasecmp (encoding, "7bit") &&
 				!PL_strcasecmp (charset, "iso-8859-1"))
-			PL_strcpy (charset, "us-ascii");
+			PL_strcpy (charset_label, "us-ascii");
 
-		// If csid is JIS and and type is HTML
+		// If charset is JIS and and type is HTML
 		// then no charset to be specified (apply base64 instead)
 		// in order to avoid mismatch META_TAG (bug#104255).
-		if ((mail_csid != CS_JIS) ||
+		if ((PL_strcasecmp(charset, "iso-2022-jp") != 0) ||
 				(PL_strcasecmp(type, TEXT_HTML) != 0) ||
 				(PL_strcasecmp(encoding, ENCODING_BASE64) != 0)) {
 			PUSH_STRING ("; charset=");
-			PUSH_STRING (charset);
+			PUSH_STRING (charset_label);
 		}
 	}
 
@@ -3993,7 +3987,7 @@ msg_make_filename_qtext(const char *srcText, PRBool stripCRLFs)
 /* Rip apart the URL and extract a reasonable value for the `real_name' slot.
  */
 static void
-msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, PRInt16 csid)
+msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, const char *charset)
 {
   const char *s, *s2;
   char *s3;
@@ -4034,6 +4028,8 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, PRInt16 csid)
   if (s2) s = s2+1;
   s2 = PL_strrchr (s, '\\');
   
+#if 0
+//TODO: convert to unicode to do the truncation
   if (csid & MULTIBYTE)
   {
 	  // We don't want to truncate the file name in case of the double
@@ -4048,6 +4044,7 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, PRInt16 csid)
 		  *s3 = '\\';
 	  }
   }
+#endif
 	  
   if (s2) s = s2+1;
   /* Copy it into the attachment struct. */
@@ -4068,7 +4065,7 @@ msg_pick_real_name (MSG_DeliverMimeAttachment *attachment, PRInt16 csid)
   if (parmFolding == 0 || parmFolding == 1)
   {
 	  /* Try to MIME-2 encode the filename... */
-	  char *mime2Name = IntlEncodeMimePartIIStr(attachment->m_real_name, csid, 
+	  char *mime2Name = INTL_EncodeMimePartIIStr(attachment->m_real_name, charset, 
 												mime_headers_use_quoted_printable_p);
 	  if (mime2Name && (mime2Name != attachment->m_real_name))
 	  {
@@ -4187,6 +4184,8 @@ int nsMsgSendMimeDeliveryState::HackAttachments(
 			m_attachments[i].m_url_string = PL_strdup (preloaded_attachments[i].orig_url);
 			PR_FREEIF(m_attachments[i].m_type);
 			m_attachments[i].m_type = PL_strdup (preloaded_attachments[i].type);
+			PR_FREEIF(m_attachments[i].m_charset);
+			m_attachments[i].m_charset = PL_strdup (m_fields->GetCharacterSet());
 			PR_FREEIF(m_attachments[i].m_description);
 			m_attachments[i].m_description = PL_strdup (preloaded_attachments[i].description);
 			PR_FREEIF(m_attachments[i].m_real_name);
@@ -4219,7 +4218,7 @@ int nsMsgSendMimeDeliveryState::HackAttachments(
 					PL_strcasecmp (m_attachments[i].m_encoding, ENCODING_BINARY))
 				m_attachments[i].m_already_encoded_p = PR_TRUE;
 
-			msg_pick_real_name(&m_attachments[i], INTL_GetCSIWinCSID(c));
+			msg_pick_real_name(&m_attachments[i], m_fields->GetCharacterSet());
 		}
 	}
 	else 
@@ -4248,6 +4247,8 @@ int nsMsgSendMimeDeliveryState::HackAttachments(
 			m_attachments[i].m_url_string = PL_strdup (attachments[i].url);
 			PR_FREEIF(m_attachments[i].m_override_type);
 			m_attachments[i].m_override_type = PL_strdup (attachments[i].real_type);
+			PR_FREEIF(m_attachments[i].m_charset);
+			m_attachments[i].m_charset = PL_strdup (m_fields->GetCharacterSet());
 			PR_FREEIF(m_attachments[i].m_override_encoding);
 			m_attachments[i].m_override_encoding = PL_strdup (attachments[i].real_encoding);
 			PR_FREEIF(m_attachments[i].m_desired_type);
@@ -4280,7 +4281,7 @@ int nsMsgSendMimeDeliveryState::HackAttachments(
 						PL_strncasecmp(m_attachments[i].m_url_string, "snews:",6))
 					news_count++;
 
-			msg_pick_real_name(&m_attachments[i], INTL_GetCSIWinCSID(c));
+			msg_pick_real_name(&m_attachments[i], m_fields->GetCharacterSet());
 		}
 
 		/* If there is more than one mailbox URL, or more than one NNTP url,
@@ -4434,6 +4435,14 @@ nsMsgSendMimeDeliveryState::Init(
 		m_fields->AddRef();
 	else
 		return MK_OUT_OF_MEMORY;
+
+  // TODO: We should read the pref "mail.strictly_mime_headers" somewhere
+  // and pass it to MIME_ConformToStandard().
+  MIME_ConformToStandard(PR_TRUE);
+  // Get the default charset from pref, use this for the charset for now.
+  // TODO: For reply/forward, original charset need to be used instead.
+  // TODO: Also need to update charset for the charset menu.
+  m_fields->SetCharacterSet(INTL_GetDefaultMailCharset(), NULL);
 
 	m_fields->SetOwner(pane);
 

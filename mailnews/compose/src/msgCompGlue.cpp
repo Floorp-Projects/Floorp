@@ -5,6 +5,14 @@
 
 #include "msgCore.h"
 
+#include "nsISupports.h"
+#include "nsIPref.h"
+#include "nsIMimeHeaderConverter.h"
+  
+static NS_DEFINE_IID(kIPrefIID, NS_IPREF_IID);
+static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
+static NS_DEFINE_CID(kCMimeHeaderConverterCID, NS_MIME_HEADER_CONVERTER_CID);
+
 class MSG_Pane;
 
 void				FE_DestroyMailCompositionContext(MWContext*) {return;}
@@ -55,7 +63,57 @@ int16				INTL_GetCSIDocCSID(INTL_CharSetInfo obj) {return 2;}
 int16				INTL_DefaultMailCharSetID(int16 csid) {return 2;}
 int16				INTL_DefaultNewsCharSetID(int16 csid) {return 2;}
 void				INTL_MessageSendToNews(XP_Bool toNews) {return;}
-char *				INTL_EncodeMimePartIIStr(char *header, int16 wincsid, XP_Bool bUseMime) {return NULL;}
+
+// MIME encoder, output string should be freed by PR_FREE
+char *				INTL_EncodeMimePartIIStr(const char *header, const char *charset, XP_Bool bUseMime) 
+{
+  if (PR_FALSE == bUseMime) {
+    return PL_strdup(header);
+  }
+
+  char *encodedString = nsnull;
+  nsIMimeHeaderConverter *converter;
+  nsresult res = nsComponentManager::CreateInstance(kCMimeHeaderConverterCID, nsnull, 
+                                                    nsIMimeHeaderConverter::GetIID(), (void **)&converter);
+  if (NS_SUCCEEDED(res) && nsnull != converter) {
+    res = converter->EncodeMimePartIIStr(header, charset, kMIME_ENCODED_WORD_SIZE, &encodedString);
+    NS_RELEASE(converter);
+  }
+  return NS_SUCCEEDED(res) ? encodedString : nsnull;
+}
+
+char * INTL_GetDefaultMailCharset()
+{
+  char * retVal = nsnull;
+	nsIPref* prefs;
+	nsresult res = nsServiceManager::GetService(kPrefCID, kIPrefIID, (nsISupports**)&prefs);
+  if (nsnull != prefs && NS_SUCCEEDED(res))
+	{
+	  char prefValue[kMAX_CSNAME+1];
+  	PRInt32 prefLength = kMAX_CSNAME;
+		
+    prefs->Startup("prefs.js");
+		res = prefs->GetCharPref("intl.charactesr_set_name", prefValue, &prefLength);
+    if (NS_SUCCEEDED(res) && prefLength > 0) {
+      //TODO: map to mail charset (e.g. Shift_JIS -> ISO-2022-JP) bug#3941.
+			retVal = PL_strdup(prefValue);
+    }
+    else {
+			retVal = PL_strdup("us-ascii");
+    }
+		
+		nsServiceManager::ReleaseService(kPrefCID, prefs);
+	}
+
+  return (nsnull != retVal) ? retVal : PL_strdup("us-ascii");
+}
+
+PRBool INTL_stateful_charset(const char *charset)
+{
+  //TODO: use charset manager's service
+  return (PL_strcasecmp(charset, "iso-2022-jp") == 0);
+}
+
 int					INTL_IsLeadByte(int charSetID,unsigned char ch) {return 0;}
 CCCDataObject		INTL_CreateDocToMailConverter(iDocumentContext context, XP_Bool isHTML, unsigned char *buffer,uint32 buffer_size) {return NULL;}
 char *				INTL_GetAcceptLanguage() {return "en";}
