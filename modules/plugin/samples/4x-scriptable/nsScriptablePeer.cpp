@@ -33,8 +33,8 @@
 //
 #include "plugin.h"
 
-static NS_DEFINE_IID(kI4xScrPluginIID, NS_I4XSCRPLUGIN_IID);
-static NS_DEFINE_IID(kISecurityCheckedComponentIID, NS_ISECURITYCHECKEDCOMPONENT_IID);
+static NS_DEFINE_IID(kI4xScriptablePluginIID, NS_I4XSCRIPTABLEPLUGIN_IID);
+static NS_DEFINE_IID(kIClassInfoIID, NS_ICLASSINFO_IID);
 static NS_DEFINE_IID(kISupportsIID, NS_ISUPPORTS_IID);
 
 nsScriptablePeer::nsScriptablePeer(CPlugin* aPlugin)
@@ -72,20 +72,20 @@ NS_IMETHODIMP nsScriptablePeer::QueryInterface(const nsIID& aIID, void** aInstan
   if(!aInstancePtr) 
     return NS_ERROR_NULL_POINTER; 
 
-  if(aIID.Equals(kI4xScrPluginIID)) {
-    *aInstancePtr = static_cast<nsI4xScrPlugin*>(this); 
+  if(aIID.Equals(kI4xScriptablePluginIID)) {
+    *aInstancePtr = static_cast<nsI4xScriptablePlugin*>(this); 
     AddRef();
     return NS_OK;
   }
 
-  if(aIID.Equals(kISecurityCheckedComponentIID)) {
-    *aInstancePtr = static_cast<nsISecurityCheckedComponent*>(this); 
+  if(aIID.Equals(kIClassInfoIID)) {
+    *aInstancePtr = static_cast<nsIClassInfo*>(this); 
     AddRef();
     return NS_OK;
   }
 
   if(aIID.Equals(kISupportsIID)) {
-    *aInstancePtr = static_cast<nsISupports*>(static_cast<nsI4xScrPlugin*>(this)); 
+    *aInstancePtr = static_cast<nsISupports*>(static_cast<nsI4xScriptablePlugin*>(this)); 
     AddRef();
     return NS_OK;
   }
@@ -108,68 +108,6 @@ NS_IMETHODIMP nsScriptablePeer::Clear()
 {
   if (mPlugin)
     mPlugin->clear();
-
-  return NS_OK;
-}
-
-//
-// the purpose of the rest of the code is to get succesfully 
-// through the Mozilla Security Manager
-//
-static const char gAllAccess[] = "AllAccess";
-
-NS_IMETHODIMP nsScriptablePeer::CanCreateWrapper(const nsIID * iid, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptablePeer::CanCallMethod(const nsIID * iid, const PRUnichar *methodName, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptablePeer::CanGetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
-
-  return NS_OK;
-}
-
-NS_IMETHODIMP nsScriptablePeer::CanSetProperty(const nsIID * iid, const PRUnichar *propertyName, char **_retval)
-{
-  if (!_retval)
-    return NS_ERROR_NULL_POINTER;
-
-  *_retval = (char*)NPN_MemAlloc(sizeof(gAllAccess)+1);
-  if (!*_retval)
-    return NS_ERROR_OUT_OF_MEMORY;
-
-  strcpy(*_retval, gAllAccess);
 
   return NS_OK;
 }

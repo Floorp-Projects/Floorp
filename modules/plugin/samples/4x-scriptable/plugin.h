@@ -37,7 +37,7 @@ private:
 
   NPStream * m_pNPStream;
   BOOL m_bInitialized;
-  nsI4xScrPlugin * m_pScriptablePeer;
+  nsI4xScriptablePlugin * m_pScriptablePeer;
 
 public:
   char m_String[128];
@@ -53,7 +53,7 @@ public:
   void showVersion();
   void clear();
 
-  nsI4xScrPlugin* getScriptablePeer();
+  nsI4xScriptablePlugin* getScriptablePeer();
 };
 
 #endif // __PLUGIN_H__
