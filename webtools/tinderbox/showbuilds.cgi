@@ -186,7 +186,7 @@ sub print_page_head {
     print "<a NAME=\"status\"></a>$status_message<br>";  # from $::tree/status.pl
   }
 
-  # Quote and Lengend
+  # Quote and Legend
   #
   if ($form{legend}) {
     my ($imageurl,$imagewidth,$imageheight,$quote) = &get_image;
@@ -214,16 +214,26 @@ sub print_page_head {
                 <td>= Download Build</td>
               </tr>
               <tr>
-              <td align=center>
-              <img src="$images{star}"></td><td>= Show Log comments
-            </td></tr><tr><td colspan=2>
-              <table cellspacing=1 cellpadding=1 border=1>
-                <tr bgcolor="$colormap{success}"><td>Successful Build, optional bloaty stats:<br>
-                  <tt>Lk:XXX</tt> (bytes leaked)<br><tt>Bl:YYYY</tt> (bytes allocated, bloat)</td>
-                <tr bgcolor="$colormap{building}"><td>Build in Progress</td>
-                <tr bgcolor="$colormap{testfailed}"><td>Successful Build,
-                                                          but Tests Failed</td>
-                <tr bgcolor="$colormap{busted}"><td>Build Failed</td>
+                <td align=center>
+                  <img src="$images{star}"></td>
+                <td>= Show Log comments</td>
+              </tr>
+              <tr>
+                <td colspan=2>
+                  <table cellspacing=1 cellpadding=1 border=1>
+                    <tr bgcolor="$colormap{success}">
+                      <td>
+                        Successful Build, optional bloaty stats:<br>
+                        <tt>Lk:XXX</tt> (bytes leaked)<br>
+                        <tt>Bl:YYYY</tt> (bytes allocated, bloat)<br>
+                        <tt>Tpl:TTTT</tt> (page-loader time, ms)<br>
+                      </td>
+                <tr bgcolor="$colormap{building}">
+                  <td>Build in progress</td>
+                <tr bgcolor="$colormap{testfailed}">
+                  <td>Successful build, but tests failed</td>
+                <tr bgcolor="$colormap{busted}">
+                  <td>Build failed</td>
               </table>
             </td></tr></table>
           </td>
@@ -375,8 +385,17 @@ BEGIN {
       if (defined $td->{bloaty}{$logfile}) {
         my ($leaks, $bloat, $leaks_cmp, $bloat_cmp)
             = @{ $td->{bloaty}{$logfile} };
+        # ex: Lk:21KB
         print "<br>Lk:", print_bloat_delta($leaks, $leaks_cmp),
               "<br>Bl:", print_bloat_delta($bloat, $bloat_cmp);
+      }
+
+      # Pageloader data
+      if (defined $td->{pageloader}{$logfile}) {
+        my ($pageloader_time)
+            = @{ $td->{pageloader}{$logfile} };
+        # ex: Tp:8.4s
+        print sprintf "<br>Tp:%3.1fs", $pageloader_time/1000;
       }
 
       # Warnings
