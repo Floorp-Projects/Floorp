@@ -285,7 +285,7 @@ public:
   GetPluginCount(PRUint32* aPluginCount);
   
   NS_IMETHOD
-  GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[]);
+  GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray);
 
   NS_IMETHOD
   HandleBadPlugin(PRLibrary* aLibrary, nsIPluginInstance *instance);

@@ -4322,7 +4322,7 @@ nsPluginHostImpl::GetPluginCount(PRUint32* aPluginCount)
 
 ////////////////////////////////////////////////////////////////////////
 NS_IMETHODIMP
-nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin* aPluginArray[])
+nsPluginHostImpl::GetPlugins(PRUint32 aPluginCount, nsIDOMPlugin** aPluginArray)
 {
   LoadPlugins();
 
