@@ -39,9 +39,12 @@
     <![CDATA[
       function abPanelStartup() {
         var abList = document.getElementById('addressbookList');
-        if (!abList.selectedIndex)
-          abList.selectedIndex = 1;
         ChangeDirectoryByDOMNode(abList.selectedItem);
+        // XXXbar this should definitely not be necessary
+        // for some reason, the menulist is getting its label set to
+        // the label of its first item automatically even though its
+        // selectedItem is correct; this is not done in its constructor.
+        abList.label = abList.selectedItem.getAttribute('label');
       }
     ]]>
   </script>
@@ -54,7 +57,7 @@
         <menupopup id="addressbookPopup" datasources="rdf:addressdirectory" ref="moz-abdirectory://">
           <template>
             <rule nc:IsMailList="false">
-              <menuitem label="rdf:http://home.netscape.com/NC-rdf#DirName" persist="selected" uri="..."/>
+              <menuitem label="rdf:http://home.netscape.com/NC-rdf#DirName" uri="..." persist="selected"/>
             </rule>
           </template>
         </menupopup>
