@@ -221,13 +221,17 @@ nsresult nsMsgBiffManager::PerformBiff()
 		nsBiffEntry *current = (nsBiffEntry*)mBiffArray->ElementAt(i);
 		if(current->nextBiffTime < currentTime)
 		{
+			PRBool serverBusy = PR_FALSE;
 			char *password = nsnull;
 			// we don't want to prompt the user for password UI so pass in false to
 			// the server->GetPassword method. If we don't already know the passsword then 
 			// we just won't biff this server
 			current->server->GetPassword(PR_FALSE, &password);
+			current->server->GetServerBusy(&serverBusy);
+
 			//Make sure we're logged on before doing a biff
-			if(password && (nsCRT::strcmp(password, "") != 0))
+			// and make sure the server isn't already in the middle of downloading new messages
+			if(!serverBusy && password && (nsCRT::strcmp(password, "") != 0))
 				current->server->PerformBiff();
 			mBiffArray->RemoveElementAt(i);
 			i--; //Because we removed it we need to look at the one that just moved up.
