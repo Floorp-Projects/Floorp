@@ -46,6 +46,10 @@
 #ifdef XP_MACOSX
 #include "nsILocalFileMac.h"
 #endif
+#ifdef XP_BEOS
+#include <StorageDefs.h>
+#include <FindDirectory.h>
+#endif
 
 // WARNING: These hard coded names need to go away. They need to
 // come from localizable resources
