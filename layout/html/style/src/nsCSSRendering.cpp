@@ -30,6 +30,9 @@
 #include "nsIScrollableView.h"
 #include "nsLayoutAtoms.h"
 
+#ifdef DCDEBUG
+#include "nsTransform2D.h"
+#endif
 
 static NS_DEFINE_IID(kScrollViewIID, NS_ISCROLLABLEVIEW_IID);
 
@@ -1889,7 +1892,11 @@ nsCSSRendering::PaintBackground(nsIPresContext& aPresContext,
     // The actual dirty rect is the intersection of the padding area and the
     // dirty rect we were given
     nsRect  dirtyRect;
-    dirtyRect.IntersectRect(paddingArea, aDirtyRect);
+
+    if (!dirtyRect.IntersectRect(paddingArea, aDirtyRect)) {
+      // Nothing to paint
+      return;
+    }
 
     // Based on the repeat setting, compute how many tiles we should
     // lay down for each axis. The value computed is the maximum based
@@ -2211,12 +2218,9 @@ RoundedRect   outerPath;
 QBCurve       cr1,cr2,cr3,cr4;
 QBCurve       UL,UR,LL,LR;
 PRInt32       curIndex,c1Index;
-nsPoint       anc1,con,anc2;
 nsPoint       thePath[MAXPATHSIZE];
 nsPoint       polyPath[MAXPOLYPATHSIZE];
 PRInt16       np;
-nsMargin      border;
-nsStyleCoord  borderRadius;
 
   aRenderingContext.SetColor(aColor.mBackgroundColor);
 
@@ -2299,7 +2303,6 @@ QBCurve       UL,LL,UR,LR;
 QBCurve       IUL,ILL,IUR,ILR;
 QBCurve       cr1,cr2,cr3,cr4;
 QBCurve       Icr1,Icr2,Icr3,Icr4;
-nsPoint       anc1,con,anc2;
 nsPoint       thePath[MAXPATHSIZE];
 PRInt16       np;
 nsMargin      border;
@@ -2426,9 +2429,8 @@ nsCSSRendering::RenderSide(nsPoint aPoints[],nsIRenderingContext& aRenderingCont
                         const nsStyleSpacing& aBorderStyle,nsIStyleContext* aStyleContext,
                         PRUint8 aSide,nsMargin  &aBorThick,nscoord aTwipsPerPixel)
 {
-QBCurve   thecurve,cr1,cr2,cr3,cr4;
+QBCurve   thecurve;
 nscolor   sideColor;
-nsPoint   thePath[MAXPATHSIZE];
 nsPoint   polypath[MAXPOLYPATHSIZE];
 PRInt32   curIndex,c1Index,c2Index,junk;
 PRInt8    border_Style;
@@ -2613,6 +2615,10 @@ void
 RoundedRect::CalcInsetCurves(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve,nsMargin &aBorder)
 {
 PRInt32   nLeft,nTop,nRight,nBottom;
+PRInt16   adjust=0;
+
+  if(mDoRound)
+    adjust = mRoundness>>3;
 
   nLeft = mOuterLeft+aBorder.left;
   nTop = mOuterTop+aBorder.top;
@@ -2628,10 +2634,10 @@ PRInt32   nLeft,nTop,nRight,nBottom;
   }
 
   // set the passed in curves to the rounded borders of the rectangle
-  aULCurve.SetPoints(nLeft,mInnerTop,nLeft,nTop,mInnerLeft,nTop);
-  aURCurve.SetPoints(mInnerRight,nTop,nRight,nTop,nRight,mInnerTop);
-  aLRCurve.SetPoints(nRight,mInnerBottom,nRight,nBottom,mInnerRight,nBottom);
-  aLLCurve.SetPoints(mInnerLeft,nBottom,nLeft,nBottom,nLeft,mInnerBottom);
+  aULCurve.SetPoints(nLeft,mInnerTop,nLeft+adjust,nTop+adjust,mInnerLeft,nTop);
+  aURCurve.SetPoints(mInnerRight,nTop,nRight-adjust,nTop+adjust,nRight,mInnerTop);
+  aLRCurve.SetPoints(nRight,mInnerBottom,nRight-adjust,nBottom-adjust,mInnerRight,nBottom);
+  aLLCurve.SetPoints(mInnerLeft,nBottom,nLeft+adjust,nBottom-adjust,nLeft,mInnerBottom);
 
 }
 
@@ -2642,21 +2648,26 @@ PRInt32   nLeft,nTop,nRight,nBottom;
 void 
 RoundedRect::Set(nscoord aLeft,nscoord aTop,PRInt32  aWidth,PRInt32 aHeight,PRInt16 aRadius)
 {
-PRInt32 width;
 
-#ifdef DEBUG_dcone
-  printf("Starting Button\n");
-#endif
+  printf("starting button\n");
 
-  width = aLeft+aWidth;
-
-  if( aRadius > (aWidth>>1) )
-    mRoundness = aWidth>>1;
-  else
+  if( (aRadius) > (aWidth>>1) ){
+    mRoundness = (aWidth>>1); 
+  } else {
     mRoundness = aRadius;
+  }
 
   if( mRoundness > (aHeight>>1) )
     mRoundness = aHeight>>1;
+
+
+  // are we drawing a circle
+  if( (aHeight==aWidth) && (mRoundness>=(aWidth>>1)) ) {
+    mDoRound = PR_TRUE;
+    mRoundness = aWidth>>1;
+  } else {
+    mDoRound = PR_FALSE;
+  }
 
   // important coordinates that the path hits
   mOuterLeft = aLeft;
@@ -2678,11 +2689,16 @@ void
 RoundedRect::GetRoundedBorders(QBCurve &aULCurve,QBCurve &aURCurve,QBCurve &aLLCurve,QBCurve &aLRCurve)
 {
 
+PRInt16 adjust=0;
+
+  if(mDoRound)
+    adjust = mRoundness>>3;
+
   // set the passed in curves to the rounded borders of the rectangle
-  aULCurve.SetPoints(mOuterLeft,mInnerTop,mOuterLeft,mOuterTop,mInnerLeft,mOuterTop);
-  aURCurve.SetPoints(mInnerRight,mOuterTop,mOuterRight,mOuterTop,mOuterRight,mInnerTop);
-  aLRCurve.SetPoints(mOuterRight,mInnerBottom,mOuterRight,mOuterBottom,mInnerRight,mOuterBottom);
-  aLLCurve.SetPoints(mInnerLeft,mOuterBottom,mOuterLeft,mOuterBottom,mOuterLeft,mInnerBottom);
+  aULCurve.SetPoints(mOuterLeft,mInnerTop,mOuterLeft+adjust,mOuterTop+adjust,mInnerLeft,mOuterTop);
+  aURCurve.SetPoints(mInnerRight,mOuterTop,mOuterRight-adjust,mOuterTop+adjust,mOuterRight,mInnerTop);
+  aLRCurve.SetPoints(mOuterRight,mInnerBottom,mOuterRight-adjust,mOuterBottom-adjust,mInnerRight,mOuterBottom);
+  aLLCurve.SetPoints(mInnerLeft,mOuterBottom,mOuterLeft+adjust,mOuterBottom-adjust,mOuterLeft,mInnerBottom);
 }
 
 /** ---------------------------------------------------
@@ -2783,11 +2799,48 @@ PRInt16		fx,fy,smag;
     }else{
 		  // draw the curve 
 
+
       nsTransform2D *aTransform;
       aRenderingContext->GetCurrentTransform(aTransform);
 
+
+#ifdef DCDEBUG
+      nscoord x1,x2,x3,x4,y1,y2,y3,y4;
+      float fx1,fx2,fx3,fx4,fy1,fy2,fy3,fy4;
+      fx1 = x1 = curve1.mAnc1.x;
+      fx2 = x2 = curve1.mAnc2.x;
+      fx3 = x3 = curve2.mAnc1.x;
+      fx4 = x4 = curve2.mAnc2.x;
+      fy1 = y1 = curve1.mAnc1.y;
+      fy2 = y2 = curve1.mAnc2.y;
+      fy3 = y3 = curve2.mAnc1.y;
+      fy4 = y4 = curve2.mAnc2.y;
+	    aTransform->TransformCoord(&x1,&y1);
+	    aTransform->TransformCoord(&x2,&y2);
+	    aTransform->TransformCoord(&x3,&y3);
+	    aTransform->TransformCoord(&x4,&y4);
+	    aTransform->Transform(&fx1,&fy1);
+	    aTransform->Transform(&fx2,&fy2);
+	    aTransform->Transform(&fx3,&fy3);
+	    aTransform->Transform(&fx4,&fy4);
+#endif
+      
       aRenderingContext->DrawLine(curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y);
       aRenderingContext->DrawLine(curve1.mAnc2.x,curve1.mAnc2.y,curve2.mAnc2.x,curve2.mAnc2.y);
+
+#ifdef DCDEBUG      
+      printf("L1 %d %d %d %d  X %f %f %f %f Rnd  %d %d %d %d Dif %d %d\n", 
+                  curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y,
+                  fx1,fy1,fx2,fy2,
+                  x1,y1,x2,y2,
+                  x2-x1,y2-y1);
+
+      printf("L2 %d %d %d %d  X %f %f %f %f Rnd  %d %d %d %d Dif %d %d\n", 
+                  curve1.mAnc1.x,curve1.mAnc1.y,curve1.mAnc2.x,curve1.mAnc2.y,
+                  fx2,fy2,fx4,fy4,
+                  x2,y2,x4,y4,
+                  x4-x2,y4-y2);
+#endif
     }
 	}
 }
@@ -2800,7 +2853,7 @@ void
 QBCurve::MidPointDivide(QBCurve *A,QBCurve *B)
 {
 double  c1x,c1y,c2x,c2y;
-nsPoint	a1,control1,control2;
+nsPoint	a1;
 
 
   c1x = (mAnc1.x+mCon.x)/2.0;
