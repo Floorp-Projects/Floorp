@@ -76,9 +76,9 @@ _SUBDIR_CONFIG_ARGS="$ac_configure_args"
 dnl Set the version number of the libs included with mozilla
 dnl ========================================================
 MOZJPEG=62
-MOZPNG=10205
-MOZMNG="((1<<16)|(0<<8)|(5))"
-MOZZLIB=1.1.4
+MOZPNG=10200
+MOZMNG="((1<<16)|(0<<8)|(0))"
+MOZZLIB=1.0.0
 NSPR_VERSION=4
 
 dnl Set the minimum version of toolkit libs used by mozilla
