@@ -2383,12 +2383,14 @@ HTMLContentSink::Init(nsIDocument* aDoc,
   mCurrentContext->Begin(eHTMLTag_html, mRoot, 0, -1);
   mContextStack.AppendElement(mCurrentContext);
 
+#ifdef NS_DEBUG
   char* spec;
   (void)aURL->GetSpec(&spec);
   SINK_TRACE(SINK_TRACE_CALLS,
              ("HTMLContentSink::Init: this=%p url='%s'",
               this, spec));
   nsCRT::free(spec);
+#endif
 
   MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
   MOZ_TIMER_STOP(mWatch);
@@ -2443,10 +2445,18 @@ HTMLContentSink::DidBuildModel(PRInt32 aQualityLevel)
 
 
   // Reflow the last batch of content
-  if (nsnull != mBody) {
+  if (mBody) {
     SINK_TRACE(SINK_TRACE_REFLOW,
                ("HTMLContentSink::DidBuildModel: layout final content"));
     mCurrentContext->FlushTags(PR_TRUE);
+  }
+  else if (!mLayoutStarted) {
+    // We never saw the body, and layout never got started. Force
+    // layout *now*, to get an initial reflow.
+    SINK_TRACE(SINK_TRACE_REFLOW,
+               ("HTMLContentSink::DidBuildModel: forcing reflow on empty document"));
+
+    StartLayout();
   }
 
   ScrollToRef();
