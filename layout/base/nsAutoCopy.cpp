@@ -42,7 +42,7 @@ public:
   NS_DECL_ISUPPORTS
 
   nsAutoCopyService();
-  ~nsAutoCopyService(){}//someday maybe we have it able to shutdown during run
+  virtual ~nsAutoCopyService(){}//someday maybe we have it able to shutdown during run
 
   //nsIAutoCopyService interfaces
   NS_IMETHOD Listen(nsIDOMSelection *aDomSelection);
