@@ -29,6 +29,7 @@ Rights Reserved.
 
 mail-emailaddress {
   behavior: url(chrome://messenger/skin/mailWidgets.xml#mail-emailaddress);
+  display: inline;
 }
 
 spring.buttonTopSpacer     { height: .3em; }
@@ -55,6 +56,10 @@ image.emailDisplayImage
   align: right;
 }
 
+text.emailSeparator {
+  display: inline;
+}
+
 text.emailDisplayButton {
   color: blue;
   text-decoration: underline;
@@ -64,10 +69,12 @@ text.emailDisplayButton {
 
 button.showMoreAddressesButton {
   list-style-image:url("chrome://messenger/skin/more.gif");
+  display: inline;
 }
 
 button.showFewerAddressesButton {
   list-style-image:url("chrome://messenger/skin/less.gif");
+  display: inline;
 }
 
 html.headerValue   { white-space: normal; min-width: 50px; }
