@@ -1856,18 +1856,16 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
                                         nsIAtom*         aTag,
                                         nsIStyleContext* aStyleContext,
                                         nsAbsoluteItems& aAbsoluteItems,
-                                        nsFrameItems&  aFrameItems)
+                                        nsFrameItems&    aFrameItems)
 {
   PRBool    processChildren = PR_FALSE;  // whether we should process child content
-  nsresult  rv = NS_OK;
   PRBool    isAbsolutelyPositioned = PR_FALSE;
   PRBool    frameHasBeenInitialized = PR_FALSE;
-
-  // Initialize frame
-  nsIFrame* aNewFrame = nsnull;
+  nsIFrame* newFrame = nsnull;  // the frame we construct
+  nsresult  rv = NS_OK;
 
   if (nsLayoutAtoms::textTagName == aTag) {
-    rv = NS_NewTextFrame(aNewFrame);
+    rv = NS_NewTextFrame(newFrame);
   }
   else {
     nsIHTMLContent *htmlContent;
@@ -1885,72 +1883,71 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
       // Create a frame based on the tag
       if (nsHTMLAtoms::img == aTag) {
-        rv = NS_NewImageFrame(aNewFrame);
+        rv = NS_NewImageFrame(newFrame);
       }
       else if (nsHTMLAtoms::hr == aTag) {
-        rv = NS_NewHRFrame(aNewFrame);
+        rv = NS_NewHRFrame(newFrame);
       }
       else if (nsHTMLAtoms::br == aTag) {
-        rv = NS_NewBRFrame(aNewFrame);
+        rv = NS_NewBRFrame(newFrame);
       }
       else if (nsHTMLAtoms::wbr == aTag) {
-        rv = NS_NewWBRFrame(aNewFrame);
+        rv = NS_NewWBRFrame(newFrame);
       }
       else if (nsHTMLAtoms::input == aTag) {
-        rv = CreateInputFrame(aContent, aNewFrame);
+        rv = CreateInputFrame(aContent, newFrame);
       }
       else if (nsHTMLAtoms::textarea == aTag) {
-        rv = NS_NewTextControlFrame(aNewFrame);
+        rv = NS_NewTextControlFrame(newFrame);
       }
       else if (nsHTMLAtoms::select == aTag) {
         rv = ConstructSelectFrame(aPresContext, aContent, aParentFrame,
-                                  aTag, aStyleContext, aAbsoluteItems, aNewFrame, 
+                                  aTag, aStyleContext, aAbsoluteItems, newFrame, 
                                   processChildren, isAbsolutelyPositioned, frameHasBeenInitialized);
       }
       else if (nsHTMLAtoms::applet == aTag) {
-        rv = NS_NewObjectFrame(aNewFrame);
+        rv = NS_NewObjectFrame(newFrame);
       }
       else if (nsHTMLAtoms::embed == aTag) {
-        rv = NS_NewObjectFrame(aNewFrame);
+        rv = NS_NewObjectFrame(newFrame);
       }
       else if (nsHTMLAtoms::fieldset == aTag) {
-        rv = NS_NewFieldSetFrame(aNewFrame);
+        rv = NS_NewFieldSetFrame(newFrame);
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::legend == aTag) {
-        rv = NS_NewLegendFrame(aNewFrame);
+        rv = NS_NewLegendFrame(newFrame);
         processChildren = PR_TRUE;
         isAbsolutelyPositioned = PR_FALSE;  // don't absolutely position
       }
       else if (nsHTMLAtoms::object == aTag) {
-        rv = NS_NewObjectFrame(aNewFrame);
-        //rv = NS_NewObjectFrame(aContent, aParentFrame, aNewFrame);
+        rv = NS_NewObjectFrame(newFrame);
         nsIFrame *blockFrame;
         NS_NewBlockFrame(blockFrame, 0);
-        blockFrame->Init(*aPresContext, aContent, aNewFrame, aStyleContext);
-        aNewFrame = blockFrame;
+        blockFrame->Init(*aPresContext, aContent, newFrame, aStyleContext);
+        newFrame = blockFrame;
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::form == aTag) {
-        rv = NS_NewFormFrame(aNewFrame);
+        rv = NS_NewFormFrame(newFrame);
       }
       else if (nsHTMLAtoms::frameset == aTag) {
-        rv = NS_NewHTMLFramesetFrame(aNewFrame);
+        rv = NS_NewHTMLFramesetFrame(newFrame);
         isAbsolutelyPositioned = PR_FALSE;  // don't absolutely position
       }
       else if (nsHTMLAtoms::iframe == aTag) {
-        rv = NS_NewHTMLFrameOuterFrame(aNewFrame);
+        rv = NS_NewHTMLFrameOuterFrame(newFrame);
       }
       else if (nsHTMLAtoms::spacer == aTag) {
-        rv = NS_NewSpacerFrame(aNewFrame);
+        rv = NS_NewSpacerFrame(newFrame);
         isAbsolutelyPositioned = PR_FALSE;  // don't absolutely position
       }
       else if (nsHTMLAtoms::button == aTag) {
-        rv = NS_NewHTMLButtonControlFrame(aNewFrame);
+        rv = NS_NewHTMLButtonControlFrame(newFrame);
         processChildren = PR_TRUE;
       }
       else if (nsHTMLAtoms::label == aTag) {
-        rv = NS_NewLabelFrame(aNewFrame);
+        rv = NS_NewLabelFrame(newFrame);
         processChildren = PR_TRUE;
       }
     }
@@ -1958,44 +1955,44 @@ HTMLStyleSheetImpl::ConstructFrameByTag(nsIPresContext*  aPresContext,
 
   // If we succeeded in creating a frame then initialize it, process its
   // children (if requested), and set the initial child list
-  if (NS_SUCCEEDED(rv) && (nsnull != aNewFrame)) {
-
-  // Add the frame to the list of items.
-  aFrameItems.AddChild(aNewFrame);
-    
-  if (!frameHasBeenInitialized) {
+  if (NS_SUCCEEDED(rv) && (nsnull != newFrame)) {
+    if (!frameHasBeenInitialized) {
       nsIFrame* geometricParent = isAbsolutelyPositioned ? aAbsoluteItems.containingBlock :
                                                            aParentFrame;
-      aNewFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
+      newFrame->Init(*aPresContext, aContent, geometricParent, aStyleContext);
 
       // See if we need to create a view, e.g. the frame is absolutely positioned
-      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, aNewFrame,
+      nsHTMLContainerFrame::CreateViewForFrame(*aPresContext, newFrame,
                                                aStyleContext, PR_FALSE);
 
       // Process the child content if requested
       nsFrameItems childItems;
       if (processChildren) {
-        rv = ProcessChildren(aPresContext, aContent, aNewFrame, aAbsoluteItems,
+        rv = ProcessChildren(aPresContext, aContent, newFrame, aAbsoluteItems,
                              childItems);
       }
 
       // Set the frame's initial child list
-      aNewFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
+      newFrame->SetInitialChildList(*aPresContext, nsnull, childItems.childList);
     }
 
     // If the frame is absolutely positioned then create a placeholder frame
     if (isAbsolutelyPositioned) {
       nsIFrame* placeholderFrame;
 
-      CreatePlaceholderFrameFor(aPresContext, aContent, aNewFrame, aStyleContext,
+      CreatePlaceholderFrameFor(aPresContext, aContent, newFrame, aStyleContext,
                                 aParentFrame, placeholderFrame);
 
       // Add the absolutely positioned frame to its containing block's list
       // of child frames
-      aAbsoluteItems.AddAbsolutelyPositionedChild(aNewFrame);
+      aAbsoluteItems.AddAbsolutelyPositionedChild(newFrame);
 
       // Add the placeholder frame to the flow
       aFrameItems.AddChild(placeholderFrame);
+
+    } else {
+      // Add the newly constructed frame to the flow
+      aFrameItems.AddChild(newFrame);
     }
   }
 
