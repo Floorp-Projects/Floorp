@@ -1219,6 +1219,8 @@ PRInt32 nsHTMLParser::OpenForm(const nsIParserNode& aNode){
   if(mHasOpenForm)
     CloseForm(aNode);
   PRInt32 result=mSink->OpenForm(aNode);
+  if(kNoError==result)
+    mHasOpenForm=PR_TRUE;
   return result;
 }
 
