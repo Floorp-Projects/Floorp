@@ -1140,12 +1140,6 @@ nsWebShellWindow::CreatePopup(nsIDOMElement* aElement, nsIDOMElement* aPopupCont
   nsCOMPtr<nsIXULChildDocument> popupChild = do_QueryInterface(popupDocument);
   popupChild->LayoutPopupDocument();
 
-  // Fire the DESTRUCT DOM event to give JS/C++ a chance to destroy the popup contents
-  status = nsEventStatus_eIgnore;
-  event.eventStructType = NS_EVENT;
-  event.message = NS_POPUP_DESTRUCT;
-  rv = popupContent->HandleDOMEvent(*presContext, &event, nsnull, NS_EVENT_FLAG_INIT, status);
-  
   // XXX Do we return the popup document? Might want to, since it's kind of like
   // a sick and twisted distortion of a window.open call.
   return rv;
