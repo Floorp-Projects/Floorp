@@ -149,6 +149,10 @@ struct UploadData
 const PRUint32 kDefaultPersistFlags = 
     nsIWebBrowserPersist::PERSIST_FLAGS_NO_CONVERSION;
 
+// String bundle where error messages come from
+const char *kWebBrowserPersistStringBundle =
+    "chrome://global/locale/nsWebBrowserPersist.properties";
+
 nsWebBrowserPersist::nsWebBrowserPersist() :
     mFirstAndOnlyUse(PR_TRUE),
     mCancel(PR_FALSE),
@@ -420,7 +424,9 @@ NS_IMETHODIMP nsWebBrowserPersist::SaveDocument(
                     NS_OK);
             }
         }
-    } else if (mProgressListener) {
+    }
+    else if (mProgressListener)
+    {
         // tell the listener we're done
         mProgressListener->OnStateChange(nsnull, nsnull,
                                          nsIWebProgressListener::STATE_START,
@@ -603,52 +609,6 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStopRequest(
     return NS_OK;
 }
 
-// Convert error info into proper message text and send OnStatusChange notification
-// to the web progress listener.
-static void SendStatusChange( 
-    PRBool readError, nsresult rv, nsIRequest *aRequest, nsIWebProgressListener *aListener, const PRUnichar *path)
-{
-    nsAutoString msgId;
-    switch(rv)
-    {
-    case NS_ERROR_FILE_DISK_FULL:
-    case NS_ERROR_FILE_NO_DEVICE_SPACE:
-        // Out of space on target volume.
-        msgId = NS_LITERAL_STRING("diskFull");
-        break;
-
-    case NS_ERROR_FILE_READ_ONLY:
-        // Attempt to write to read/only file.
-        msgId = NS_LITERAL_STRING("readOnly");
-        break;
-
-    case NS_ERROR_FILE_ACCESS_DENIED:
-        // Attempt to write without sufficient permissions.
-        msgId = NS_LITERAL_STRING("accessError");
-        break;
-
-    default:
-        // Generic read/write error message.
-        msgId = readError ? NS_LITERAL_STRING("readError") : NS_LITERAL_STRING("writeError");
-        break;
-    }
-    // Get properties file bundle and extract status string.
-    nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID);
-    if (s)
-    {
-        nsCOMPtr<nsIStringBundle> bundle;
-        if (NS_SUCCEEDED(s->CreateBundle("chrome://global/locale/nsWebBrowserPersist.properties", getter_AddRefs(bundle))))
-        {
-            nsXPIDLString msgText;
-            const PRUnichar *strings[] = { path };
-            if(NS_SUCCEEDED(bundle->FormatStringFromName(msgId.get(), strings, 1, getter_Copies(msgText))))
-            {
-                aListener->OnStatusChange(nsnull, readError ? aRequest : nsnull, rv, msgText);
-            }
-        }
-    }
-}
-
 //*****************************************************************************
 // nsWebBrowserPersist::nsIStreamListener
 //*****************************************************************************
@@ -672,17 +632,22 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         if (!data)
             return NS_OK;  // might be uploadData
 
+        PRBool readError = PR_TRUE;
+
         // Make the output stream
         if (!data->mStream)
         {
             rv = MakeOutputStream(data->mFile, getter_AddRefs(data->mStream));
-            NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+            if (NS_FAILED(rv))
+            {
+                readError = PR_FALSE;
+                cancel = PR_TRUE;
+            }
         }
 
         // Read data from the input and write to the output
         char buffer[8192];
         PRUint32 bytesRead;
-        PRBool readError = PR_TRUE;
         while (!cancel && bytesRemaining)
         {
             readError = PR_TRUE;
@@ -753,15 +718,10 @@ NS_IMETHODIMP nsWebBrowserPersist::OnDataAvailable(
         }
 
         // Notify listener if an error occurred.
-        if (cancel && mProgressListener)
+        if (cancel)
         {
-            nsCOMPtr<nsILocalFile> file;
-            GetLocalFileFromURI(data->mFile, getter_AddRefs(file));
-            nsXPIDLString path;
-            if (file) {
-                file->GetUnicodePath(getter_Copies(path));
-            }
-            SendStatusChange(readError, rv, request, mProgressListener, path.get());
+            SendErrorStatusChange(readError, rv,
+                readError ? request : nsnull, data->mFile);
         }
     }
 
@@ -854,6 +814,80 @@ NS_IMETHODIMP nsWebBrowserPersist::OnStatus(
 //*****************************************************************************
 // nsWebBrowserPersist private methods
 //*****************************************************************************
+
+// Convert error info into proper message text and send OnStatusChange notification
+// to the web progress listener.
+nsresult nsWebBrowserPersist::SendErrorStatusChange( 
+    PRBool aIsReadError, nsresult aResult, nsIRequest *aRequest, nsIURI *aURI)
+{
+    NS_ENSURE_ARG_POINTER(aURI);
+
+    if (!mProgressListener)
+    {
+        // Do nothing
+        return NS_OK;
+    }
+
+    // Get the file path or spec from the supplied URI
+    nsCOMPtr<nsILocalFile> file;
+    GetLocalFileFromURI(aURI, getter_AddRefs(file));
+    nsAutoString path;
+    if (file)
+    {
+        nsXPIDLString filePath;
+        file->GetUnicodePath(getter_Copies(filePath));
+        path = filePath;
+    }
+    else
+    {
+        nsCAutoString fileurl;
+        aURI->GetSpec(fileurl);
+        path.Assign(NS_ConvertUTF8toUCS2(fileurl));
+    }
+    
+    nsAutoString msgId;
+    switch(aResult)
+    {
+    case NS_ERROR_FILE_DISK_FULL:
+    case NS_ERROR_FILE_NO_DEVICE_SPACE:
+        // Out of space on target volume.
+        msgId = NS_LITERAL_STRING("diskFull");
+        break;
+
+    case NS_ERROR_FILE_READ_ONLY:
+        // Attempt to write to read/only file.
+        msgId = NS_LITERAL_STRING("readOnly");
+        break;
+
+    case NS_ERROR_FILE_ACCESS_DENIED:
+        // Attempt to write without sufficient permissions.
+        msgId = NS_LITERAL_STRING("accessError");
+        break;
+
+    default:
+        // Generic read/write error message.
+        msgId = aIsReadError ? NS_LITERAL_STRING("readError") : NS_LITERAL_STRING("writeError");
+        break;
+    }
+    // Get properties file bundle and extract status string.
+    nsresult rv;
+    nsCOMPtr<nsIStringBundleService> s = do_GetService(NS_STRINGBUNDLE_CONTRACTID, &rv);
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && s, NS_ERROR_FAILURE);
+
+    nsCOMPtr<nsIStringBundle> bundle;
+    rv = s->CreateBundle(kWebBrowserPersistStringBundle, getter_AddRefs(bundle));
+    NS_ENSURE_TRUE(NS_SUCCEEDED(rv) && bundle, NS_ERROR_FAILURE);
+    
+    nsXPIDLString msgText;
+    const PRUnichar *strings[1];
+    strings[0] = path.get();
+    rv = bundle->FormatStringFromName(msgId.get(), strings, 1, getter_Copies(msgText));
+    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+
+    mProgressListener->OnStatusChange(nsnull, aRequest, aResult, msgText);
+
+    return NS_OK;
+}
 
 nsresult nsWebBrowserPersist::GetValidURIFromObject(nsISupports *aObject, nsIURI **aURI) const
 {
@@ -1531,14 +1565,13 @@ nsWebBrowserPersist::MakeOutputStream(
         nsCOMPtr<nsILocalFile> localFile;
         GetLocalFileFromURI(aURI, getter_AddRefs(localFile));
         NS_ENSURE_TRUE(localFile, NS_ERROR_FAILURE);
-
         nsresult rv = MakeOutputStreamFromFile(localFile, aOutputStream);
-        NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
     else
     {
-        nsresult res = MakeOutputStreamFromURI(aURI, aOutputStream);
-        NS_ENSURE_SUCCESS(res, NS_ERROR_FAILURE);
+        nsresult rv = MakeOutputStreamFromURI(aURI, aOutputStream);
+        NS_ENSURE_SUCCESS(rv, rv);
     }
 
     return NS_OK;
@@ -1555,7 +1588,7 @@ nsWebBrowserPersist::MakeOutputStreamFromFile(
     NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
 
     rv = fileOutputStream->Init(aFile, -1, -1);  // brade:  get the right flags here! XXX
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
 
     NS_ENSURE_SUCCESS(CallQueryInterface(fileOutputStream, aOutputStream), NS_ERROR_FAILURE);
 
@@ -1570,7 +1603,7 @@ nsWebBrowserPersist::MakeOutputStreamFromURI(
     PRUint32 maxsize = PRUint32(-1);
     nsCOMPtr<nsIStorageStream> storStream;
     nsresult rv = NS_NewStorageStream(segsize, maxsize, getter_AddRefs(storStream));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    NS_ENSURE_SUCCESS(rv, rv);
     
     NS_ENSURE_SUCCESS(CallQueryInterface(storStream, aOutputStream), NS_ERROR_FAILURE);
     return NS_OK;
@@ -2300,7 +2333,11 @@ nsWebBrowserPersist::SaveDocumentWithFixup(
     
     nsCOMPtr<nsIOutputStream> outputStream;
     rv = MakeOutputStream(aFile, getter_AddRefs(outputStream));
-    NS_ENSURE_SUCCESS(rv, NS_ERROR_FAILURE);
+    if (NS_FAILED(rv))
+    {
+        SendErrorStatusChange(PR_FALSE, rv, nsnull, aFile);
+        return NS_ERROR_FAILURE;
+    }
     NS_ENSURE_TRUE(outputStream, NS_ERROR_FAILURE);
 
     // Get a document encoder instance

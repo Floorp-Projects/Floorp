@@ -123,6 +123,8 @@ private:
     nsresult SaveSubframeContent(
         nsIDOMDocument *aFrameContent, URIData *aData);
     nsresult SetDocumentBase(nsIDOMDocument *aDocument, nsIURI *aBaseURI);
+    nsresult SendErrorStatusChange(
+        PRBool aIsReadError, nsresult aResult, nsIRequest *aRequest, nsIURI *aURI);
 
     nsresult FixRedirectedChannelEntry(nsIChannel *aNewChannel);
 
