@@ -1233,7 +1233,7 @@ nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aRetur
 #if 1
     {
       char* spec = nsnull;
-      ret = url->GetSpec(&spec);
+      ret = resFileURL->GetSpec(&spec);
       if (NS_FAILED(ret)) {
         printf("cannot get url spec\n");
         nsServiceManager::ReleaseService(kStringBundleServiceCID, service);
