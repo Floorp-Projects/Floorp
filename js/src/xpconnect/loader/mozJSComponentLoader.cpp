@@ -572,22 +572,7 @@ mozJSComponentLoader::AutoRegisterComponent(PRInt32 when,
     fprintf(stderr, "mJCL: registering JS component %s\n",
             (const char *)leafName);
 #endif
- 
-     // Notify observers, if any, of autoregistration work
-     NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
-     if (NS_SUCCEEDED(rv))
-     {
- 	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
- 	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
- 	if (NS_SUCCEEDED(rv))
- 	{
- 	    nsAutoString topic;	//	This is quite ineficient, but is how it is
- 				    //	done in every other example.
- 	    topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
- 	    (void) observerService->Notify(mgr, topic.GetUnicode(), sJSComponentReg);
-	}
-    }
-     
+      
     rv = AttemptRegistration(component, PR_FALSE);
 #ifdef DEBUG_shaver
     if (NS_SUCCEEDED(rv))
@@ -629,20 +614,6 @@ mozJSComponentLoader::AutoUnregisterComponent(PRInt32 when,
     if (len < jsExtensionLen || // too short
         PL_strcasecmp(leafName + len - jsExtensionLen, jsExtension))
         return NS_OK;
-    // Notify observers, if any, of autoregistration work
-    NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
-    if (NS_SUCCEEDED(rv))
-    {
-	nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
-	rv = nsServiceManager::GetGlobalServiceManager(&mgr);
-	if (NS_SUCCEEDED(rv))
-	{
-	    nsAutoString topic;	//	This is quite ineficient, but is how it is
-				    //	done in every other example.
-	    topic.AssignWithConversion(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID);
-	    (void) observerService->Notify(mgr, topic.GetUnicode(), sJSComponentUnreg);
-	}
-    }
 
     rv = UnregisterComponent(component);
 #ifdef DEBUG_dp
@@ -675,6 +646,36 @@ mozJSComponentLoader::AttemptRegistration(nsIFile *component,
     module = ModuleForLocation(registryLocation, component);
     if (!module)
         goto out;
+    
+    {
+      // Notify observers, if any, of autoregistration work
+      NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+        rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+        if (NS_SUCCEEDED(rv))
+        {
+          // this string can't come from a string bundle, because we don't have string
+          // bundles yet.
+          NS_ConvertASCIItoUCS2 statusMsg("Registering JS component ");            
+          NS_ConvertASCIItoUCS2 fileName("(no name)");
+
+          // get the file name
+          if (component)
+          {
+            nsXPIDLCString leafName;
+            component->GetLeafName(getter_Copies(leafName));
+            fileName.AssignWithConversion(leafName);
+          }
+          statusMsg.Append(fileName);
+          
+          (void) observerService->Notify(mgr,
+              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
+              statusMsg.GetUnicode());
+        }
+      }
+    }
     
     rv = module->RegisterSelf(mCompMgr, component, registryLocation,
                               jsComponentTypeName);
@@ -709,6 +710,22 @@ mozJSComponentLoader::UnregisterComponent(nsIFile *component)
     module = ModuleForLocation(registryLocation, component);
     if (!module)
         return NS_ERROR_FAILURE;
+    
+    {
+      // Notify observers, if any, of autoregistration work
+      NS_WITH_SERVICE (nsIObserverService, observerService, NS_OBSERVERSERVICE_PROGID, &rv);
+      if (NS_SUCCEEDED(rv))
+      {
+        nsIServiceManager *mgr;    // NO COMPtr as we dont release the service manager
+        rv = nsServiceManager::GetGlobalServiceManager(&mgr);
+        if (NS_SUCCEEDED(rv))
+        {
+          (void) observerService->Notify(mgr,
+              NS_ConvertASCIItoUCS2(NS_XPCOM_AUTOREGISTRATION_OBSERVER_ID).GetUnicode(),
+              NS_ConvertASCIItoUCS2("Unregistering JS component").GetUnicode());
+        }
+      }
+    }
     
     rv = module->UnregisterSelf(mCompMgr, component, registryLocation);
 
