@@ -299,7 +299,8 @@ ComposeAppCoreReplyMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
   nsIDOMXULTreeElement * b1;
   nsIDOMNodeList * b2;
   nsIDOMMsgAppCore * b3;
-  long b4;
+  PRInt32 b4;
+  int32 i;
   const nsString typeName;
 
   *rval = JSVAL_NULL;
@@ -328,7 +329,8 @@ ComposeAppCoreReplyMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *argv
                                   cx,
                                   argv[3]);
 
-	b4 = argv[4];
+   JS_ValueToInt32(cx, argv[4], &i);
+   b4 = i;
 
    if (!rBool || NS_OK != nativeThis->ReplyMessage(b0, b1, b2, b3, b4)) {
       return JS_FALSE;
@@ -357,7 +359,8 @@ ComposeAppCoreForwardMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
   nsIDOMXULTreeElement * b1;
   nsIDOMNodeList * b2;
   nsIDOMMsgAppCore * b3;
-  long b4;
+  PRInt32 b4;
+  int32 i;
   const nsString typeName;
 
   *rval = JSVAL_NULL;
@@ -386,7 +389,8 @@ ComposeAppCoreForwardMessage(JSContext *cx, JSObject *obj, uintN argc, jsval *ar
                                   cx,
                                   argv[3]);
 
-	b4 = argv[4];
+   JS_ValueToInt32(cx, argv[4], &i);
+   b4 = 1;
 
    if (!rBool || NS_OK != nativeThis->ForwardMessage(b0, b1, b2, b3, b4)) {
       return JS_FALSE;

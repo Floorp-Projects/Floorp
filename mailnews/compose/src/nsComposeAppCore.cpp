@@ -54,6 +54,7 @@
 // jefft
 #include "nsIXULWindowCallbacks.h"
 #include "nsIDocumentViewer.h"
+#include "nsIRDFResource.h"
 
 static NS_DEFINE_IID(kIScriptObjectOwnerIID, NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kIDocumentIID, nsIDocument::GetIID());
@@ -67,6 +68,7 @@ static NS_DEFINE_IID(kIMsgSendIID, NS_IMSGSEND_IID);
 static NS_DEFINE_CID(kMsgSendCID, NS_MSGSEND_CID);
 
 static NS_DEFINE_CID(kAppShellServiceCID, NS_APPSHELL_SERVICE_CID);
+static NS_DEFINE_IID(kIRDFResourceIID, NS_IRDFRESOURCE_IID);
 
 NS_BEGIN_EXTERN_C
 
@@ -493,26 +495,41 @@ done:
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
-		nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 replyType)
+NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, 
+                                             nsIDOMXULTreeElement *tree,
+                                             nsIDOMNodeList *nodeList,
+                                             nsIDOMMsgAppCore * msgAppCore,
+                                             const PRInt32 replyType)
 {
 	nsresult res;
 
 	if (url && tree && nodeList && msgAppCore) {
 		nsCOMPtr<nsISupports> object;
-		res = msgAppCore->GetMessageHeader(tree, nodeList, getter_AddRefs(object));
+		res = msgAppCore->GetRDFResourceForMessage(tree, nodeList,
+                                                   getter_AddRefs(object));
 		if ((NS_SUCCEEDED(res)) && object) {
 			nsCOMPtr<nsIMessage> message;
-			res = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
+			res = object->QueryInterface(nsIMessage::GetIID(),
+                                         getter_AddRefs(message));
 			if ((NS_SUCCEEDED(res)) && message) {
 				nsString aString;
 				nsString bString = "Re: ";
 
 				message->GetSubject(aString);
-				bString += aString;
+				bString = bString + aString;
 				mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
 				message->GetAuthor(aString);
 				mMsgCompFields->SetTo(aString.ToNewCString(), NULL);
+                if (replyType == 1)
+                {
+					nsString cString, dString;
+                    message->GetRecipients(cString);
+					message->GetCCList(dString);
+					if (cString.Length() > 0 && dString.Length() > 0)
+						cString = cString + ", ";
+					cString = cString + dString;
+                    mMsgCompFields->SetCc(cString.ToNewCString(), NULL);
+                }
                 /* We need to get more information out from the message. */
 				NewMessage(url);
 			}
@@ -521,27 +538,42 @@ NS_IMETHODIMP nsComposeAppCore::ReplyMessage(nsAutoString& url, nsIDOMXULTreeEle
 	return NS_OK;
 }
 
-NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url, nsIDOMXULTreeElement *tree,
-		nsIDOMNodeList *nodeList, nsIDOMMsgAppCore * msgAppCore, const PRInt32 forwardType)
+NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url,
+                                               nsIDOMXULTreeElement *tree,
+                                               nsIDOMNodeList *nodeList,
+                                               nsIDOMMsgAppCore * msgAppCore,
+                                               const PRInt32 forwardType)
 {
 	nsresult res;
 
 	if (url && tree && nodeList && msgAppCore) {
 		nsCOMPtr<nsISupports> object;
-		res = msgAppCore->GetMessageHeader(tree, nodeList, getter_AddRefs(object));
+		res = msgAppCore->GetRDFResourceForMessage(tree, nodeList,
+                                                  getter_AddRefs(object)); 
 		if ((NS_SUCCEEDED(res)) && object) {
 			nsCOMPtr<nsIMessage> message;
-			res = object->QueryInterface(nsIMessage::GetIID(), getter_AddRefs(message));
+			res = object->QueryInterface(nsIMessage::GetIID(),
+                                         getter_AddRefs(message)); 
 			if ((NS_SUCCEEDED(res)) && message && mMsgCompFields) {
 				nsString aString;
 				nsString bString = "[Fwd: ";
 				message->GetSubject(aString);
-				bString = bString + aString + "]";
+				bString += aString;
+				bString += "]";
 				mMsgCompFields->SetSubject(bString.ToNewCString(), NULL);
-				message->GetAuthor(aString);
-				mMsgCompFields->SetTo(aString.ToNewCString(), NULL);
                 /* We need to get more information out from the message. */
-				NewMessage(url);
+                nsCOMPtr<nsIRDFResource> rdfResource;
+                res = object->QueryInterface(kIRDFResourceIID,
+                                             getter_AddRefs(rdfResource));
+                if (rdfResource)
+                {	
+					const char *uri = 0;
+					rdfResource->GetValue(&uri);
+
+					nsString messageUri = uri;
+
+                    NewMessage(url);
+                }
 			}
 		}
 	}
@@ -549,8 +581,11 @@ NS_IMETHODIMP nsComposeAppCore::ForwardMessage(nsAutoString& url, nsIDOMXULTreeE
 }
 
 
-NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo, nsAutoString& aAddrCc,
-									nsAutoString& aAddrBcc, nsAutoString& aSubject, nsAutoString& aMsg)
+NS_IMETHODIMP nsComposeAppCore::SendMessage(nsAutoString& aAddrTo,
+                                            nsAutoString& aAddrCc,
+                                            nsAutoString& aAddrBcc,
+                                            nsAutoString& aSubject,
+                                            nsAutoString& aMsg)
 {
 	nsMsgCompPrefs pCompPrefs;
 	char* pUserEmail = nsnull;
