@@ -186,7 +186,7 @@ C7=Component QFA
 ;*** LOCALIZE ME BABY ***
 Description Short=C&omplete
 ;*** LOCALIZE ME BABY ***
-Description Long=Program will be installed with the most common options.
+Description Long=Program will be installed with all the options available.
 
 ; List of components to install/enable for this Setup Type.
 ; All other components not listed here will be disabled if
