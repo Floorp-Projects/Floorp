@@ -18,6 +18,9 @@
  * Rights Reserved.
  *
  * Contributor(s): 
+ *   Alec Flett <alecf@netscape.com>
+ *   Scott Putterman <putterman@netscape.com>
+ *   Seth Spitzer <sspitzer@netscape.com>
  *   Pierre Phaneuf <pp@ludusdesign.com>
  */
 
