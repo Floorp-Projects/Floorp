@@ -1692,26 +1692,26 @@
  (length (grammar-states *jg*))
  (depict-rtf-to-local-file
   "JS20/ParserGrammarJS2.rtf"
-  "JavaScript 2.0 Parser Grammar"
+  "JavaScript 2.0 Syntactic Grammar"
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *jg*)
       (depict-world-commands markup-stream *jw* :visible-semantics nil)))
  (depict-rtf-to-local-file
   "JS20/ParserSemanticsJS2.rtf"
-  "JavaScript 2.0 Parser Semantics"
+  "JavaScript 2.0 Syntactic Semantics"
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *jg*)
       (depict-world-commands markup-stream *jw*)))
  (compute-ecma-subset)
  (depict-rtf-to-local-file
   "JS20/ParserGrammarES4.rtf"
-  "ECMAScript Edition 4 Parser Grammar"
+  "ECMAScript Edition 4 Syntactic Grammar"
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
       (depict-world-commands markup-stream *ew* :visible-semantics nil)))
  (depict-rtf-to-local-file
   "JS20/ParserSemanticsES4.rtf"
-  "ECMAScript Edition 4 Parser Semantics"
+  "ECMAScript Edition 4 Syntactic Semantics"
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
       (depict-world-commands markup-stream *ew*)))
@@ -1719,7 +1719,7 @@
  (length (grammar-states *jg*))
  (depict-html-to-local-file
   "JS20/ParserGrammarJS2.html"
-  "JavaScript 2.0 Parser Grammar"
+  "JavaScript 2.0 Syntactic Grammar"
   t
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *jg*)
@@ -1727,7 +1727,7 @@
   :external-link-base "notation.html")
  (depict-html-to-local-file
   "JS20/ParserSemanticsJS2.html"
-  "JavaScript 2.0 Parser Semantics"
+  "JavaScript 2.0 Syntactic Semantics"
   t
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *jg*)
@@ -1736,7 +1736,7 @@
  (compute-ecma-subset)
  (depict-html-to-local-file
   "JS20/ParserGrammarES4.html"
-  "ECMAScript Edition 4 Parser Grammar"
+  "ECMAScript Edition 4 Syntactic Grammar"
   t
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
@@ -1744,7 +1744,7 @@
   :external-link-base "notation.html")
  (depict-html-to-local-file
   "JS20/ParserSemanticsES4.html"
-  "ECMAScript Edition 4 Parser Semantics"
+  "ECMAScript Edition 4 Syntactic Semantics"
   t
   #'(lambda (markup-stream)
       (depict-js-terminals markup-stream *eg*)
@@ -1754,7 +1754,7 @@
 
 (depict-html-to-local-file
  "JS20/ParserSemanticsJS2.html"
- "JavaScript 2.0 Parser Semantics"
+ "JavaScript 2.0 Syntactic Semantics"
  t
  #'(lambda (markup-stream)
      (depict-js-terminals markup-stream *jg*)
