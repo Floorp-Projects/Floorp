@@ -2,20 +2,20 @@
 <!DOCTYPE refentry PUBLIC 
    "-//OASIS//DTD DocBook XML V4.1.2//EN"
    "docbook/docbookx.dtd">
-<refentry id='bug-bugzilla.1'>
+<refentry id='bugzilla-submit.1'>
 <refmeta>
-<refentrytitle>bug-bugzilla</refentrytitle>
+<refentrytitle>bugzilla-submit</refentrytitle>
 <manvolnum>1</manvolnum>
 <refmiscinfo class='date'>Oct 30, 2003</refmiscinfo>
 </refmeta>
 <refnamediv id='name'>
-<refname>bug-bugzilla</refname>
+<refname>bugzilla-submit</refname>
 <refpurpose>post bugs to a Bugzilla instance</refpurpose>
 </refnamediv>
 <refsynopsisdiv id='synopsis'>
 
 <cmdsynopsis>
-  <command>bug-bugzilla</command>
+  <command>bugzilla-submit</command>
   <arg choice='opt'>--status <replaceable>bug_status</replaceable></arg>
   <arg choice='opt'>--url <replaceable>bug_file_loc</replaceable></arg>
   <arg choice='opt'>--product <replaceable>product</replaceable></arg>
@@ -40,12 +40,12 @@
 
 <refsect1 id='description'><title>DESCRIPTION</title>
 
-<para><application>bug-bugzilla</application> is a command-line tool
+<para><application>bugzilla-submit</application> is a command-line tool
 for posting bug reports to any instance of Bugzilla.  It accepts on
 standard input text resembling an RFC-822 message.  The headers of
 that message, and its body, are used to set error-report field values.
 More field values are merged in from command-line options. If required
-fields have not been set, <application>bug-bugzilla</application>
+fields have not been set, <application>bugzilla-submit</application>
 tries to compute them.  Finally, the resulting error report is
 validated.  If all required fields are present, and there are no
 illegal fields or values, the report is shipped off to the Mozilla

@@ -7,7 +7,7 @@ This file is encoded in UTF8 for purposes of contributor names.
 
 This directory includes:
 
-       bug-bugzilla/ --  A standalone bug submission script.
+    bugzilla-submit/ --  A standalone bug submission program.
 
    mysqld-watcher.pl --  This script can be installed as a frequent cron 
                          job to clean up stalled/dead queries.

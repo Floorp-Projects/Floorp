@@ -1,10 +1,10 @@
-Bug-Bugzilla
-============
+bugzilla-submit
+===============
 
 Authors: Christian Reis <kiko@async.com.br>
          Eric Raymond <esr@thyrsus.com>
 
-Bug-Bugzilla is a simple Python program that creates bugs in a Bugzilla
+bugzilla-submit is a simple Python program that creates bugs in a Bugzilla
 instance. It takes as input text resembling message headers (RFC-822
 formatted) via standard input, or optionally a number of commandline
 parameters. It communicates using HTTP, which allows it to work over a
@@ -23,10 +23,10 @@ Usage Notes
 * http://landfill.bugzilla.org/ for testing purposes -- opening test
 * bugs on production instances of Bugzilla is definitely not a good idea
 
-Run "bug-bugzilla --help" for a description of the possible options.
+Run "bugzilla-submit --help" for a description of the possible options.
 
 An example input file, named bugdata.txt, is provided. You can pipe it
-in as standard input to bug-bugzilla, providing a Bugzilla URI through
+in as standard input to bugzilla-submit, providing a Bugzilla URI through
 the command-line.
 
 Note that you must create a ~/.netrc entry to authenticate against the
@@ -41,6 +41,6 @@ your password password. An example entry follows:
 Documentation
 -------------
 
-Documentation for bug-bugzilla is provided in Docbook format; see
-bug-bugzilla.xml.
+Documentation for bugzilla-submit is provided in Docbook format; see
+bugzilla-submit.xml.
 

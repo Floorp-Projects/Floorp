@@ -1,13 +1,13 @@
 #!/usr/bin/env python 
 #
-# bug-bugzilla: a command-line script to post bugs to a Bugzilla instance
+# bugzilla-submit: a command-line script to post bugs to a Bugzilla instance
 #
 # Authors: Christian Reis <kiko@async.com.br>
 #          Eric S. Raymond <esr@thyrsus.com>
 #
 # This is version 0.5.
 # 
-# For a usage hint run bug-bugzilla --help
+# For a usage hint run bugzilla-submit --help
 #
 # TODO: use RDF output to pick up valid options, as in
 #   http://www.async.com.br/~kiko/mybugzilla/config.cgi?ctype=rdf
@@ -15,7 +15,7 @@
 import sys
 
 def error(m):
-    sys.stderr.write("bug-bugzilla: %s\n" % m)
+    sys.stderr.write("bugzilla-submit: %s\n" % m)
     sys.stderr.flush()
     sys.exit(1)
 
