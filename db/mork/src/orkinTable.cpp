@@ -565,8 +565,7 @@ orkinTable::GetTableRowCursor( // make a cursor, starting iteration at inRowPos
         // cursor->mCursor_Seed = (mork_seed) inRowPos;
         outCursor = cursor->AcquireTableRowCursorHandle(ev);
       }
-      else
-        cursor->CutStrongRef(ev);
+      cursor->CutStrongRef(ev);
     }
       
     outErr = ev->AsErr();
