@@ -37,8 +37,10 @@
 #include "nsIMsgLocalMailFolder.h"
 #include "nsFileLocations.h"
 #include "nsIFileLocator.h"
+#include "nsIChromeRegistry.h" 
 
 static NS_DEFINE_CID(kFileLocatorCID, NS_FILELOCATOR_CID);
+static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
 NS_IMPL_ISUPPORTS_INHERITED2(nsNoIncomingServer,
                             nsMsgIncomingServer,
@@ -86,11 +88,11 @@ nsNoIncomingServer::SetFlagsOnDefaultMailboxes()
     return NS_OK;
 }	
 
-nsresult nsNoIncomingServer::CopyDefaultMessages(const char *defaultFolderName, nsIFileSpec *path)
+NS_IMETHODIMP nsNoIncomingServer::CopyDefaultMessages(const char *folderNameOnDisk, nsIFileSpec *parentDir)
 {
 	nsresult rv;
     PRBool exists;
-	if (!defaultFolderName || !path) return NS_ERROR_NULL_POINTER;
+	if (!folderNameOnDisk || !parentDir) return NS_ERROR_NULL_POINTER;
 
 	nsCOMPtr<nsIFileLocator> locator = do_GetService(kFileLocatorCID, &rv);
 	if (NS_FAILED(rv)) return rv;
@@ -105,24 +107,81 @@ nsresult nsNoIncomingServer::CopyDefaultMessages(const char *defaultFolderName, 
 	if (!exists) return NS_ERROR_FAILURE;
 
 	// bin/defaults/messenger doesn't have to exist
+    // if not, return.
 	rv = defaultMessagesFile->AppendRelativeUnixPath("messenger");
 	if (NS_FAILED(rv)) return rv;
     rv = defaultMessagesFile->Exists(&exists);
 	if (NS_FAILED(rv)) return rv;
 	if (!exists) return NS_OK;
 
-	// bin/defaults/messenger/<defaultFolderName> doesn't have to exist
-	rv = defaultMessagesFile->AppendRelativeUnixPath(defaultFolderName);
+	// test if there is a locale provider
+	// this code stolen from nsMsgServiceProvider.cpp
+    nsCOMPtr<nsIChromeRegistry> chromeRegistry = do_GetService(kChromeRegistryCID, &rv);
+    if (NS_SUCCEEDED(rv)) {
+      nsXPIDLString lc_name;
+      nsAutoString tmpstr; tmpstr.AssignWithConversion("navigator");
+      rv = chromeRegistry->GetSelectedLocale(tmpstr.GetUnicode(), getter_Copies(lc_name));
+      if (NS_SUCCEEDED(rv)) {
+        nsAutoString localeStr(lc_name);
+
+        nsCOMPtr<nsIFileSpec> tmpdataFilesDir;
+        rv = NS_NewFileSpec(getter_AddRefs(tmpdataFilesDir));
+        NS_ENSURE_SUCCESS(rv,rv);
+        rv = tmpdataFilesDir->FromFileSpec(defaultMessagesFile);
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        tmpdataFilesDir->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));
+        NS_ENSURE_SUCCESS(rv,rv);
+        rv = tmpdataFilesDir->Exists(&exists);
+        NS_ENSURE_SUCCESS(rv,rv);
+        if (exists) {
+            // use locale provider instead
+            rv = defaultMessagesFile->AppendRelativeUnixPath(NS_ConvertUCS2toUTF8(lc_name));            
+			NS_ENSURE_SUCCESS(rv,rv);
+        }
+      }
+    }
+
+	// check if bin/defaults/messenger/<folderNameOnDisk> 
+	// (or bin/defaults/messenger/<locale>/<folderNameOnDisk> if we had a locale provide) exists.
+	// it doesn't have to exist.  if it doesn't, return
+	rv = defaultMessagesFile->AppendRelativeUnixPath(folderNameOnDisk);
 	if (NS_FAILED(rv)) return rv;
     rv = defaultMessagesFile->Exists(&exists);
 	if (NS_FAILED(rv)) return rv;
 	if (!exists) return NS_OK;
 
-	nsCOMPtr<nsIFileSpec> parentDir;
-	rv = path->GetParent(getter_AddRefs(parentDir));
+	// check if parentDir/<folderNameOnDisk> exists
+	nsCOMPtr <nsIFileSpec> folderFile;
+	rv = NS_NewFileSpec(getter_AddRefs(folderFile));
+	if (NS_FAILED(rv)) return rv;
+	if (!folderFile) return NS_ERROR_FAILURE;
+
+	rv = folderFile->FromFileSpec(parentDir);
 	if (NS_FAILED(rv)) return rv;
 
-	rv = defaultMessagesFile->CopyToDir(parentDir);
+	rv = folderFile->AppendRelativeUnixPath(folderNameOnDisk);
+	if (NS_FAILED(rv)) return rv;
+
+	rv = folderFile->Exists(&exists);
+	if (NS_FAILED(rv)) return rv;
+
+	// if it exists add to the end, else copy
+	if (exists) {
+#ifdef DEBUG_sspitzer
+		printf("append default %s\n",folderNameOnDisk);
+#endif
+		// todo for bug #1181
+		// open folderFile, seek to end
+		// read defaultMessagesFile, write to folderFile
+	}
+	else {
+#ifdef DEBUG_sspitzer
+		printf("copy default %s\n",folderNameOnDisk);
+#endif
+		rv = defaultMessagesFile->CopyToDir(parentDir);
+		if (NS_FAILED(rv)) return rv;
+	}
 	return NS_OK;
 }
 
@@ -162,13 +221,17 @@ NS_IMETHODIMP nsNoIncomingServer::CreateDefaultMailboxes(nsIFileSpec *path)
                 if (NS_FAILED(rv)) return rv;
         }
 
+		// copy the default templates into the Templates folder
+		nsCOMPtr<nsIFileSpec> parentDir;
+		rv = path->GetParent(getter_AddRefs(parentDir));
+		if (NS_FAILED(rv)) return rv;
+		rv = CopyDefaultMessages("Templates",parentDir);
+        if (NS_FAILED(rv)) return rv;
+
+		// we may not have had any default templates.  if so
+		// we still want to create the Templates folder
         rv = path->SetLeafName("Templates");
         if (NS_FAILED(rv)) return rv;
-
-		// if they exist, use the default templates
-		rv = CopyDefaultMessages("Templates",path);
-        if (NS_FAILED(rv)) return rv;
-
         rv = path->Exists(&exists);
         if (NS_FAILED(rv)) return rv;
         if (!exists) {

@@ -45,8 +45,6 @@ public:
     
     NS_IMETHOD GetLocalStoreType(char * *type);
 private:
-	// copies messages from bin/defaults/messenger/<defaultFolderName> into <path>
-	nsresult CopyDefaultMessages(const char *defaultFolderName, nsIFileSpec *path);
 
 };
 
