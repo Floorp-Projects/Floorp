@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -14,10 +14,12 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	Yannick Koehler <ykoehler@mythrium.com>
+ *	Chris Seawood <cls@seawood.org>
  */
 
 #ifndef __nsTimerBeOS_h
@@ -38,21 +40,22 @@ public:
 					~TimerManager();
 	void			AddRequest(nsITimer *inRequest);
 	bool			RemoveRequest(nsITimer *inRequest);
+        void			SortRequests();
 
 private:
 	BLocker			mLocker;
 	sem_id			mSyncSem;
 	thread_id		mTimerThreadID;
+        void			*mProcessing;
 	bool			mQuitRequested;
 
 	static int32	sTimerThreadFunc(void *);
 	int32			TimerThreadFunc();
-	nsITimer		*FirstRequest()				{ return (nsITimer *)FirstItem(); }
+	nsITimer		*FirstRequest()	{ return (nsITimer *)FirstItem(); }
 };
 
 class nsTimerBeOS : public nsITimer 
 {
-  friend class TimerManager;
 public:
 
   nsTimerBeOS();
@@ -88,23 +91,27 @@ public:
 
   NS_IMETHOD_(void) FireTimeout();
 
-  bigtime_t	           mSchedTime;  // Time when this request should be done
-  PRUint32             mDelay;      // The delay set in Init()
+  bigtime_t GetSchedTime() { return mSchedTime; }
+  bool IsCanceled() { return mCanceled; }
+  PRThread* GetThread() { return mThread; }
+
 private:
-  nsresult             Init(PRUint32 aDelay);  // Initialize the timer.
+  nsresult             Init(PRUint32 aDelay, PRUint32 aType);  // Initialize the timer.
 
   PRUint32             mPriority;
   PRUint32             mType;
+  PRUint32             mDelay;      // The delay set in Init()
   nsTimerCallbackFunc  mFunc;	    // The function to call back when expired
   void *               mClosure;    // The argumnet to pass it.
   nsITimerCallback *   mCallback;   // An interface to notify when expired.
 
   bool                 mCanceled;
   PRThread *           mThread;
-//  PRBool		mRepeat;    // A repeat, not implemented yet.
+
+  bigtime_t		mSchedTime;  // Time when this request should be done
 
 public:
-	static TimerManager	sTimerManager;
+  static TimerManager	sTimerManager;
 };
 
 #endif // __nsTimerBeOS_h

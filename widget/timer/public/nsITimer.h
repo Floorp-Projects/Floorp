@@ -71,7 +71,7 @@ typedef void
                                      // sucession.
 
 // --- Indicate if timers on your platform support repeating timers ---
-#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_MAC)
+#if defined(XP_PC) || defined(XP_UNIX) || defined(XP_MAC) || defined(XP_BEOS)
 #define REPEATING_TIMERS 1
 #endif
 

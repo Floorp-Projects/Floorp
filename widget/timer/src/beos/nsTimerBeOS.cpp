@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 2; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 8; indent-tabs-mode: nil; c-basic-offset: 8 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -14,19 +14,27 @@
  *
  * The Initial Developer of the Original Code is Netscape
  * Communications Corporation.  Portions created by Netscape are
- * Copyright (C) 1998 Netscape Communications Corporation. All
+ * Copyright (C) 1998-2001 Netscape Communications Corporation. All
  * Rights Reserved.
  *
  * Contributor(s): 
+ *	Yannick Koehler <ykoehler@mythrium.com>
+ *	Chris Seawood <cls@seawood.org>
  */
 
+#include "nsDebug.h"
+#include "nsCOMPtr.h"
 #include "nsVoidArray.h"
 #include "nsTimerBeOS.h"
-#include "nsCOMPtr.h"
 
+#include <OS.h>
 #include <Application.h>
 #include <Message.h>
 #include <signal.h>
+
+#define TIMER_INTERVAL 10000 // 10 millisecs
+
+//#define TIMER_DEBUG 1
 
 static NS_DEFINE_IID(kITimerIID, NS_ITIMER_IID);
 
@@ -54,11 +62,23 @@ static sem_id my_find_sem(const char *name)
 	return ret;
 }
 
+static int sort_timers (const void *a, const void *b)
+{
+        // Should state potentially stupid assumption:
+        // timers will never be null
+        if ((*(nsTimerBeOS **)a)->GetSchedTime() < (*(nsTimerBeOS **)b)->GetSchedTime())
+                return -1;
+        if ((*(nsTimerBeOS **)a)->GetSchedTime() > (*(nsTimerBeOS **)b)->GetSchedTime())
+                return 1;
+        return 0;
+}
+
 TimerManager nsTimerBeOS::sTimerManager;
 
 TimerManager::TimerManager()
- : BList(40)
+        : BList(40)
 {
+        mProcessing = 0;
 	mQuitRequested = false;
 	mSyncSem = create_sem(0, "timer sync");
 	if(mSyncSem < 0)
@@ -88,19 +108,12 @@ void TimerManager::AddRequest(nsITimer *inRequest)
 	{
 		NS_ADDREF(inRequest);	// this is for the timer list
 
-		// insert sorted into timer event list
-		int32 count = CountItems();
-		int32 pos;
-		for(pos = 0; pos < count; pos++)
-		{
-			nsITimer *entry = (nsITimer *)ItemAtFast(pos);
-			if(((nsTimerBeOS *)entry)->mSchedTime > ((nsTimerBeOS*)inRequest)->mSchedTime)
-				break;
-		}
-		AddItem(inRequest, pos);
-			
-		if(pos == 0)
-			// We need to wake the thread to wait on the newly added event
+                bool was_empty = IsEmpty();
+                AddItem(inRequest);
+                SortItems(sort_timers);
+
+                // We need to wake the thread to wait on the newly added event
+		if (was_empty)
 			release_sem(mSyncSem);
 
 		mLocker.Unlock();
@@ -109,20 +122,36 @@ void TimerManager::AddRequest(nsITimer *inRequest)
 
 bool TimerManager::RemoveRequest(nsITimer *inRequest)
 {
-	bool	found = false;
+        if ((nsTimerBeOS *)mProcessing == inRequest) {
+#ifdef TIMER_DEBUG
+                fprintf(stderr, "Request being processed, cannot remove %p\n", inRequest);
+#endif
+                return true;
+        }
 
-	if(mLocker.Lock())
-	{
-		if(RemoveItem(inRequest))
-		{
-			NS_RELEASE(inRequest);
-			found = true;
-		}
+#ifdef TIMER_DEBUG
+        fprintf(stderr, "Our request isn't being processed, delete it %p != %p\n", 
+                (nsTimerBeOS *)mProcessing, inRequest);
+#endif
+        if(mLocker.Lock())
+        {
+                if (RemoveItem(inRequest))
+                        NS_RELEASE(inRequest);
+                mLocker.Unlock();
+        } else {
+                NS_WARNING("Could not get lock for RemoveRequest");
+        }
 
-		mLocker.Unlock();
-	}
+	return true;
+}
 
-	return found;
+void TimerManager::SortRequests(void)
+{
+        if (mLocker.Lock()) 
+        {
+                SortItems(sort_timers);
+                mLocker.Unlock();
+        }
 }
 
 int32 TimerManager::sTimerThreadFunc(void *inData)
@@ -134,56 +163,165 @@ int32 TimerManager::TimerThreadFunc()
 {
 	char		portname[64];
 	char		semname[64];
-	port_id		eventport;
-	sem_id		syncsem;
+	port_id		eventport = 0;
+	sem_id		syncsem = 0;
 	PRThread	*cached = (PRThread *)-1;
-
+        bigtime_t	now = system_time();
+                
 	while(! mQuitRequested)
 	{
-		nsITimer *tobj = 0;
+                nsITimer *tobj = 0;
+                status_t ac_status;
 
-		mLocker.Lock();
-
-		bigtime_t now = system_time();
+                // Only process timers once every TIMER_INTERVAL
+                snooze_until(now + TIMER_INTERVAL, B_SYSTEM_TIMEBASE);
+                now = system_time();
 
 		// Fire expired pending requests
-		while((tobj = FirstRequest()) != 0 && ((nsTimerBeOS*)tobj)->mSchedTime <= now)
+                while (1)
 		{
-			nsTimerBeOS *tobjbeos = (nsTimerBeOS *)tobj;
-			
-			RemoveItem((int32)0);
-			mLocker.Unlock();
+			nsTimerBeOS *tobjbeos;
 
-			if(! tobjbeos->mCanceled)
-			{
-				// fire it
-				if(tobjbeos->mThread != cached)
-				{
-					sprintf(portname, "event%lx", (uint32)tobjbeos->mThread);
-					sprintf(semname, "sync%lx", (uint32)tobjbeos->mThread);
+                        if (!mLocker.Lock())
+                                continue;
 
-					eventport = find_port(portname);
-					syncsem = my_find_sem(semname);
-					cached = tobjbeos->mThread;
-				}
+                        tobj = FirstRequest();
+                        mLocker.Unlock();
 
-				// call timer synchronously so we're sure tobj is alive
-				ThreadInterfaceData	 id;
-				id.data = tobjbeos;
-				id.sync = true;
-				if(write_port(eventport, 'WMti', &id, sizeof(id)) == B_OK)
-					while(acquire_sem(syncsem) == B_INTERRUPTED)
-						;
-			}
-			NS_RELEASE(tobjbeos);
+                        // No more entries
+                        if (!tobj)
+                                break;
 
-			mLocker.Lock();
-		}
-		mLocker.Unlock();
+                        if (mProcessing)
+                                continue;
 
-		if(acquire_sem_etc(mSyncSem, 1, B_ABSOLUTE_TIMEOUT, 
-					tobj ? ((nsTimerBeOS *)tobj)->mSchedTime : B_INFINITE_TIMEOUT) == B_BAD_SEM_ID)
-			break;
+                        tobjbeos = (nsTimerBeOS *)tobj;
+                        mProcessing = tobjbeos;
+
+                        // Since requests are sorted,
+                        // exit loop if we reach a request
+                        // that's later than now
+                        if (tobjbeos->GetSchedTime() > now)
+                        {
+                                mProcessing = 0;
+                                break;
+                        }
+
+                        if (tobjbeos->IsCanceled())
+                        {
+                                if (mLocker.Lock()) 
+                                {
+                                        if (RemoveItem((int32)0))
+                                                NS_RELEASE(tobjbeos);
+                                        mLocker.Unlock();
+                                } else 
+                                {
+                                        NS_WARNING("could not get Lock()");
+                                }
+                                mProcessing = 0;
+                                continue;
+                        }
+
+                        // At this point we should have the sem
+			// fire timeout
+
+//#define FIRE_CALLBACKS_FROM_TIMER_THREAD 1
+
+#ifndef FIRE_CALLBACKS_FROM_TIMER_THREAD
+                        PRThread *thread = tobjbeos->GetThread();
+
+                        if(thread != cached)
+                        {
+                                sprintf(portname, "event%lx", (uint32)thread);
+                                sprintf(semname, "sync%lx", (uint32)thread);
+                                
+                                eventport = find_port(portname);
+                                syncsem = my_find_sem(semname);
+                                cached = thread;
+                        }
+
+			// call timer synchronously so we're sure tobj is alive
+                        ThreadInterfaceData	 id;
+                        id.data = tobjbeos;
+                        id.sync = true;
+
+                        if(write_port(eventport, 'WMti', &id, sizeof(id)) == B_OK)
+#else
+                                tobjbeos->FireTimeout();
+#endif
+                        {
+                                ac_status = B_INTERRUPTED;
+                                while(ac_status == B_INTERRUPTED)
+                                {
+                                        ac_status = acquire_sem(syncsem);
+#ifdef TIMER_DEBUG
+                                        if (ac_status == B_BAD_SEM_ID)
+                                                fprintf(stderr, "Bad semaphore id for syncsem %s\n", semname);
+#endif
+                                }
+                        }
+
+                        NS_ASSERTION(tobjbeos, "how did they delete it?");
+
+                        // Check if request has been cancelled in callback
+                        if (tobjbeos->IsCanceled())
+                        {
+                                if (mLocker.Lock()) {
+                                        if (HasItem(tobjbeos))
+                                        {
+#ifdef TIMER_DEBUG
+                                                fprintf(stderr, "Removing previously canceled item %p\n", tobjbeos);
+#endif
+                                                if (RemoveItem(tobjbeos))
+                                                        NS_RELEASE(tobjbeos);
+                                        }
+                                        mLocker.Unlock();
+                                } else
+                                {
+                                        NS_WARNING("cannot get lock");
+                                }
+                                mProcessing = 0;
+                                continue;
+                        }
+
+                        if (tobjbeos->GetType() == NS_TYPE_ONE_SHOT)
+                        {                           
+                                if (mLocker.Lock()) 
+                                {
+                                        if (RemoveItem(tobjbeos))
+                                                NS_RELEASE(tobjbeos);
+                                        mLocker.Unlock();
+                                } else 
+                                {
+                                        NS_WARNING("Unable to get lock to remove processed one shot\n");
+                                }
+                        } else
+                        {
+                                tobjbeos->SetDelay(tobjbeos->GetDelay());
+                        }
+
+                        mProcessing = 0;
+
+#ifdef TIMER_DEBUG
+                        fprintf (stderr, "Loop again\n");
+#endif
+                }
+
+                if (tobj)
+                {
+                        ac_status = acquire_sem_etc(mSyncSem, 1, B_ABSOLUTE_TIMEOUT, 
+                                                           ((nsTimerBeOS *)tobj)->GetSchedTime());
+                } else 
+                {
+                        ac_status = acquire_sem(mSyncSem);
+                }
+                if (ac_status == B_BAD_SEM_ID)
+                {
+#ifdef TIMER_DEBUG
+                        fprintf(stderr, "end loop bad sem\n");
+#endif
+                        break;
+                }
 	}
 
 	return B_OK;
@@ -194,6 +332,7 @@ int32 TimerManager::TimerThreadFunc()
 //
 void nsTimerBeOS::FireTimeout()
 {
+        NS_ADDREF_THIS();
 	if( ! mCanceled)
 	{
 		if(mFunc != NULL)
@@ -201,6 +340,7 @@ void nsTimerBeOS::FireTimeout()
 		else if(mCallback != NULL)
 			mCallback->Notify(this);    // But if there's an interface, notify it.
 	}
+        NS_RELEASE_THIS();
 }
 
 nsTimerBeOS::nsTimerBeOS()
@@ -210,12 +350,17 @@ nsTimerBeOS::nsTimerBeOS()
 	mCallback		= 0;
 	mDelay			= 0;
 	mClosure		= 0;
-	mSchedTime			= 0;
+	mSchedTime		= 0;
+        mPriority		= 0;
+        mType			= NS_TYPE_ONE_SHOT;
 	mCanceled		= false;
 }
 
 nsTimerBeOS::~nsTimerBeOS()
 {
+#ifdef TIMER_DEBUG
+        fprintf(stderr, "nsTimerBeOS Destructor\n");
+#endif
 	Cancel();
 	NS_IF_RELEASE(mCallback);
 }
@@ -225,10 +370,10 @@ void nsTimerBeOS::SetDelay(PRUint32 aDelay)
 	mDelay = aDelay;
 	mSchedTime = system_time() + mDelay * 1000;
 
-	NS_ADDREF(this);
-	if (nsTimerBeOS::sTimerManager.RemoveRequest(this))
-		nsTimerBeOS::sTimerManager.AddRequest(this);
-	Release();	
+        // Since we could be resetting the delay on a timer
+        // that the manager already knows about,
+        // make the manager resort its list
+        nsTimerBeOS::sTimerManager.SortRequests();
 }
 
 void nsTimerBeOS::SetPriority(PRUint32 aPriority)
@@ -247,41 +392,47 @@ nsresult nsTimerBeOS::Init(nsTimerCallbackFunc aFunc, void *aClosure,
     mFunc = aFunc;
     mClosure = aClosure;
 
-    return Init(aDelay);
+    return Init(aDelay, aType);
 }
 
 nsresult nsTimerBeOS::Init(nsITimerCallback *aCallback,
                 PRUint32 aDelay, PRUint32 aPriority, PRUint32 aType)
 {
     mCallback = aCallback;
-    NS_ADDREF(mCallback);
+    NS_IF_ADDREF(mCallback);
 
-    return Init(aDelay);
+    return Init(aDelay, aType);
 }
 
 
-nsresult nsTimerBeOS::Init(PRUint32 aDelay)
+nsresult nsTimerBeOS::Init(PRUint32 aDelay, PRUint32 aType)
 {
 	mDelay = aDelay;
-	NS_ADDREF(this);	// this is for clients of the timer
+        mType = aType;
 	mSchedTime = system_time() + aDelay * 1000;
 	
 	mThread = PR_GetCurrentThread();
 
 	sTimerManager.AddRequest(this);
-	
-    return NS_OK;
+
+        return NS_OK;
 }
 
-NS_IMPL_ISUPPORTS(nsTimerBeOS, kITimerIID);
+NS_IMPL_THREADSAFE_ISUPPORTS(nsTimerBeOS, kITimerIID);
 
 
 void nsTimerBeOS::Cancel()
 {
-	mCanceled = true;
-	nsTimerBeOS::sTimerManager.RemoveRequest(this);
+        if (!mCanceled) {
+                mCanceled = true;
+                nsTimerBeOS::sTimerManager.RemoveRequest(this);
+        }
+#ifdef TIMER_DEBUG
+        fprintf(stderr, "Cancel: %p with mRefCnt %d\n", this, mRefCnt);
+#endif
 }
 
+#ifdef MOZ_MONOLITHIC_TOOLKIT
 nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 {
     NS_PRECONDITION(nsnull != aInstancePtrResult, "null ptr");
@@ -294,5 +445,5 @@ nsresult NS_NewTimer(nsITimer** aInstancePtrResult)
 
     return timer->QueryInterface(kITimerIID, (void **) aInstancePtrResult);
 }
-
+#endif
 
