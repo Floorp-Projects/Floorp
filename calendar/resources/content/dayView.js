@@ -192,7 +192,7 @@ DayView.prototype.refreshEvents = function( )
    
    for ( var eventIndex = 0; eventIndex < dayEventList.length; ++eventIndex )
    {
-      var calendarEventDisplay = dayEventList[ eventIndex ];
+      calendarEventDisplay = dayEventList[ eventIndex ];
 
       //if its an all day event, don't show it in the hours stack.
       if ( calendarEventDisplay.event.allDay == true ) 

@@ -253,7 +253,7 @@ function unifinderClickEvent( id, event )
       var eventStartDate = new Date( calendarEvent.start.getTime() );
       gCalendarWindow.currentView.goToDay( eventStartDate, true);
       
-      var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
+      eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEvent );
    
       gCalendarWindow.currentView.clickEventBox( eventBox, event );
 

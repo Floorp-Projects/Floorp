@@ -208,7 +208,7 @@ WeekView.prototype.refreshEvents = function( )
       
       for ( var eventIndex = 0; eventIndex < dayEventList.length; ++eventIndex )
       {
-         var calendarEventDisplay = dayEventList[ eventIndex ];
+         calendarEventDisplay = dayEventList[ eventIndex ];
    
          // get the day box for the calendarEvent's day
          

@@ -145,15 +145,18 @@ oeTimePicker.onpopupshowing = function( popup )
    
    var hours24 = oeTimePicker.gSelectedTime.getHours();
    
+   var amPmItem = null;
+   var hours12 = null;
+
    if( oeTimePicker.isTimeAm( oeTimePicker.gSelectedTime ) )
    {
-      var amPmItem = document.getElementById( "oe-time-picker-am-box" );
-      var hours12 = hours24;
+      amPmItem = document.getElementById( "oe-time-picker-am-box" );
+      hours12 = hours24;
    }
    else
    {
-      var amPmItem = document.getElementById( "oe-time-picker-pm-box" );
-      var hours12 = hours24 - 12;
+      amPmItem = document.getElementById( "oe-time-picker-pm-box" );
+      hours12 = hours24 - 12;
    }
    
    oeTimePicker.selectAmPmItem( amPmItem );
@@ -230,13 +233,15 @@ oeTimePicker.clickHour = function( hourItem, hourNumber )
    
    // Change the hour in the selected time, add 12 if PM. 
    
+   var hour24 = null;
+
    if( oeTimePicker.isTimeAm( oeTimePicker.gSelectedTime ) )
    {
-      var hour24 = hourNumber;
+      hour24 = hourNumber;
    }
    else
    {
-      var hour24 = hourNumber + 12;
+      hour24 = hourNumber + 12;
    }
    
    oeTimePicker.gSelectedTime.setHours( hour24 );

@@ -120,10 +120,14 @@ function MonthView( calendarWindow )
    
    this.selectedEventBoxes = new Array();
    
+   this.selectedEvent = null;
+
    this.selectedTodayBox = null;
    
    this.showingLastDay = false;
   
+   this.selectedBox = null;
+
    // set up month day box's and day number text items, see notes above
    
    this.dayNumberItemArray = new Array();
@@ -176,9 +180,11 @@ MonthView.prototype.refreshEvents = function( )
    
    var eventBoxList = document.getElementsByAttribute( "eventbox", "monthview" );
 
+   var eventBox = null;
+
    for( var eventBoxIndex = 0;  eventBoxIndex < eventBoxList.length; ++eventBoxIndex )
    {
-		var eventBox = eventBoxList[ eventBoxIndex ];
+		eventBox = eventBoxList[ eventBoxIndex ];
       
       eventBox.parentNode.removeChild( eventBox );
 
@@ -229,7 +235,7 @@ MonthView.prototype.refreshEvents = function( )
 
          // Make a box item to hold the text item
          
-         var eventBox = document.createElement( "box" );
+         eventBox = document.createElement( "box" );
          eventBox.setAttribute( "id", "month-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "name", "month-view-event-box-"+calendarEventDisplay.event.id );
          eventBox.setAttribute( "event"+calendarEventDisplay.event.id, true );
@@ -315,7 +321,7 @@ MonthView.prototype.refreshEvents = function( )
          
       if( this.calendarWindow.getSelectedEvent() === calendarEventDisplay.event )
       {
-         var eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEventDisplay.event );
+         eventBox = gCalendarWindow.currentView.getVisibleEvent( calendarEventDisplay.event );
    
          gCalendarWindow.currentView.clickEventBox( eventBox ); 
 
@@ -378,7 +384,7 @@ MonthView.prototype.refreshDisplay = function( ShowEvent )
 
    var monthName = this.calendarWindow.dateFormater.getMonthName( newMonth );
    
-   monthTextItem = document.getElementById( "month-title-text" );
+   var monthTextItem = document.getElementById( "month-title-text" );
    
    monthTextItem.setAttribute( "value" , monthName + " " + newYear );  
    
@@ -444,7 +450,7 @@ MonthView.prototype.refreshDisplay = function( ShowEvent )
 MonthView.prototype.hiliteSelectedDate = function( )
 {
    // Clear the old selection if there was one
-   
+
    if( this.selectedBox )
    { 
       this.selectedBox.setAttribute( "selected" , "false" );
@@ -699,7 +705,7 @@ MonthView.prototype.clickEventBox = function( eventBox, event )
       
       var ArrayOfBoxes = document.getElementsByAttribute( "name", "month-view-event-box-"+eventBox.calendarEventDisplay.event.id );
    
-      for ( i = 0; i < ArrayOfBoxes.length; i++ ) 
+      for ( var i = 0; i < ArrayOfBoxes.length; i++ ) 
       {
          ArrayOfBoxes[i].setAttribute( "selected", "true" );
          this.selectedEventBoxes[ this.selectedEventBoxes.length ] = ArrayOfBoxes[i];
@@ -747,8 +753,8 @@ MonthView.prototype.clearSelectedEvent = function ( )
    //if ( Event && document.getElementById( "month-view-event-box-"+Event.id ) )
    if ( Event && document.getElementsByAttribute( "name", "month-view-event-box-"+Event.id ).length > 0 )
    {
-      ArrayOfElements = document.getElementsByAttribute( "id", "month-view-event-box-"+Event.id );
-      for ( i = 0; i < ArrayOfElements.length; i++ ) 
+      var ArrayOfElements = document.getElementsByAttribute( "id", "month-view-event-box-"+Event.id );
+      for ( var i = 0; i < ArrayOfElements.length; i++ ) 
       {
          ArrayOfElements[i].setAttribute( "selected", false );
       }

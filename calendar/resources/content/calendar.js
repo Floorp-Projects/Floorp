@@ -164,7 +164,7 @@ function update_date( Refresh )
    
    gCalendarWindow.currentView.hiliteTodaysDate();
 
-   gClockId = setTimeout( "update_date( )", milliSecsTillTomorrow ); 
+   var gClockId = setTimeout( "update_date( )", milliSecsTillTomorrow ); 
 }
 
 /** 
@@ -463,7 +463,7 @@ function newEventCommand()
    var startDate = gCalendarWindow.currentView.getNewEventDate();
    
    
-   Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
+   var Minutes = Math.ceil( startDate.getMinutes() / 5 ) * 5 ;
    
    startDate = new Date( startDate.getFullYear(),
                          startDate.getMonth(),
@@ -567,15 +567,15 @@ function modifyEventDialogResponse( calendarEvent )
 function getPreviewText( calendarEventDisplay )
 {
    var TextToReturn = " At "+calendarEventDisplay.displayDate+" you have an event titled: "+calendarEventDisplay.event.title;
-	HolderBox = document.createElement( "vbox" );
+	var HolderBox = document.createElement( "vbox" );
 
-   TitleHtml = document.createElement( "description" );
-   TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
+   var TitleHtml = document.createElement( "description" );
+   var TitleText = document.createTextNode( "Title: "+calendarEventDisplay.event.title );
    TitleHtml.appendChild( TitleText );
    HolderBox.appendChild( TitleHtml );
 
-   DateHtml = document.createElement( "description" );
-   DateText = document.createTextNode( "Start: "+calendarEventDisplay.event.start.toString() );
+   var DateHtml = document.createElement( "description" );
+   var DateText = document.createTextNode( "Start: "+calendarEventDisplay.event.start.toString() );
    DateHtml.appendChild( DateText );
    HolderBox.appendChild( DateHtml );
 
@@ -584,8 +584,8 @@ function getPreviewText( calendarEventDisplay )
    TimeHtml.appendChild( TimeText );
    HolderBox.appendChild( TimeHtml );
    */
-   DescriptionHtml = document.createElement( "description" );
-   DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
+   var DescriptionHtml = document.createElement( "description" );
+   var DescriptionText = document.createTextNode( "Description: "+calendarEventDisplay.event.description );
    DescriptionHtml.appendChild( DescriptionText );
    HolderBox.appendChild( DescriptionHtml );
 
@@ -975,14 +975,14 @@ CalendarWindow.prototype.switchToView = function( newView )
 
 CalendarWindow.prototype.mouseOverInfo = function( calendarEvent, event )
 {
-   Html = document.getElementById( "savetip" );
+   var Html = document.getElementById( "savetip" );
 
    while( Html.hasChildNodes() )
    {
       Html.removeChild( Html.firstChild ); 
    }
    
-   HolderBox = getPreviewText( event.currentTarget.calendarEventDisplay );
+   var HolderBox = getPreviewText( event.currentTarget.calendarEventDisplay );
    
    Html.appendChild( HolderBox );
 }

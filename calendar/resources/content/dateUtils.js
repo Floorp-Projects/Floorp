@@ -96,14 +96,15 @@ DateFormater.prototype.getFormatedTime = function( date )
    var min = date.getMinutes();
    
    // compute am and pm
-   
+   var ampm = "";
+
    if( hour < 12 )
    {
-      var ampm = this.dateStringBundle.GetStringFromName( "am-string" );
+      ampm = this.dateStringBundle.GetStringFromName( "am-string" );
    }
    else
    {
-      var ampm = this.dateStringBundle.GetStringFromName( "pm-string" );
+      ampm = this.dateStringBundle.GetStringFromName( "pm-string" );
    }
    
    // convert to 12 hour clock

@@ -83,6 +83,7 @@ var gOnOkFunction;   // function to be called when user clicks OK
 var gChangeEndTime = true; //
 var gTimeDifference = 3600000;  //when editing an event, we change the end time if the start time is changing. This is the difference for the event time.
 var gDefaultAlarmLength = 15; //number of minutes to default the alarm to
+var gCategoryManager;
 
 var gMode = ''; //what mode are we in? new or edit...
 
@@ -111,7 +112,8 @@ function loadCalendarEventDialog()
    
    gMode = args.mode;
    
-   gCategoryManager = args.CategoryManager;
+   if( args.CategoryManager )
+      gCategoryManager = args.CategoryManager;
 
    // remember function to call when OK is clicked
    
@@ -120,14 +122,15 @@ function loadCalendarEventDialog()
    
    // mode is "new or "edit"
    // show proper header
-   
+   var titleDataItem = null;
+
    if( "new" == args.mode )
    {
-      var titleDataItem = document.getElementById( "data-event-title-new" );
+      titleDataItem = document.getElementById( "data-event-title-new" );
    }
    else
    {
-      var titleDataItem = document.getElementById( "data-event-title-edit" );
+      titleDataItem = document.getElementById( "data-event-title-edit" );
    }
    
    var titleString = titleDataItem.getAttribute( "value" );
@@ -152,7 +155,7 @@ function loadCalendarEventDialog()
    //   Categories = opener.gCategoryManager.getAllCategories();
    //else
    //   Categories = gCategoryManager.getAllCategories();
-   Categories = new Array();
+   var Categories = new Array();
 
    var MenuPopup = document.getElementById( "category-field-menupopup" );
    for ( i in Categories ) 
@@ -1091,6 +1094,8 @@ function getWeekNumberText( weekNumber )
       return( "Fourth" );
    case 5:
       return( "Last" );
+   default:
+      return( false );
    }
 
 }
