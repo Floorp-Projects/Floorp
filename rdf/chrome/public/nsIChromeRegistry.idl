@@ -34,7 +34,7 @@ interface nsIChromeRegistry : nsISupports
    *   chrome://package/provider/file
    *
    * Chrome URLs are allowed to be specified in "shorthand", leaving the
-   * "file" porition off. In that case, the URL is expanded to:
+   * "file" portion off. In that case, the URL is expanded to:
    *
    *   chrome://package/provider/package.ext
    *
