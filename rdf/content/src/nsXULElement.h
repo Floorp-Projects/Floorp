@@ -332,6 +332,8 @@ protected:
 
     static nsIAtom*             kClassAtom;
     static nsIAtom*             kContextAtom;
+    static nsIAtom*             kHeightAtom;
+    static nsIAtom*             kHiddenAtom;
     static nsIAtom*             kIdAtom;
     static nsIAtom*             kObservesAtom;
     static nsIAtom*             kPopupAtom;
@@ -347,12 +349,12 @@ protected:
     static nsIAtom*             kTreeColAtom;
     static nsIAtom*             kTreeItemAtom;
     static nsIAtom*             kTreeRowAtom;
+    static nsIAtom*             kValueAtom;
     static nsIAtom*             kIFrameAtom;
     static nsIAtom*             kBrowserAtom;
     static nsIAtom*             kEditorAtom;
+    static nsIAtom*             kWidthAtom;
     static nsIAtom*             kWindowAtom;
-    
-	  static nsIAtom*             kNullAtom;
 
 public:
     static nsresult

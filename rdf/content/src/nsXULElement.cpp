@@ -265,6 +265,8 @@ PRInt32              nsXULElement::kNameSpaceID_XUL;
 
 nsIAtom*             nsXULElement::kClassAtom;
 nsIAtom*             nsXULElement::kContextAtom;
+nsIAtom*             nsXULElement::kHeightAtom;
+nsIAtom*             nsXULElement::kHiddenAtom;
 nsIAtom*             nsXULElement::kIdAtom;
 nsIAtom*             nsXULElement::kObservesAtom;
 nsIAtom*             nsXULElement::kPopupAtom;
@@ -280,11 +282,12 @@ nsIAtom*             nsXULElement::kTreeChildrenAtom;
 nsIAtom*             nsXULElement::kTreeColAtom;
 nsIAtom*             nsXULElement::kTreeItemAtom;
 nsIAtom*             nsXULElement::kTreeRowAtom;
+nsIAtom*             nsXULElement::kValueAtom;
 nsIAtom*             nsXULElement::kIFrameAtom;
 nsIAtom*             nsXULElement::kBrowserAtom;
 nsIAtom*             nsXULElement::kEditorAtom;
+nsIAtom*             nsXULElement::kWidthAtom;
 nsIAtom*             nsXULElement::kWindowAtom;
-nsIAtom*             nsXULElement::kNullAtom;
 
 #ifdef XUL_PROTOTYPE_ATTRIBUTE_METERING
 PRUint32             nsXULPrototypeAttribute::gNumElements;
@@ -329,6 +332,8 @@ nsXULElement::Init()
 
         kClassAtom          = NS_NewAtom("class");
         kContextAtom        = NS_NewAtom("context");
+        kHeightAtom         = NS_NewAtom("height");
+        kHiddenAtom         = NS_NewAtom("hidden");
         kIdAtom             = NS_NewAtom("id");
         kObservesAtom       = NS_NewAtom("observes");
         kPopupAtom          = NS_NewAtom("popup");
@@ -344,11 +349,12 @@ nsXULElement::Init()
         kTreeColAtom        = NS_NewAtom("treecol");
         kTreeItemAtom       = NS_NewAtom("treeitem");
         kTreeRowAtom        = NS_NewAtom("treerow");
+        kValueAtom          = NS_NewAtom("value");
         kIFrameAtom         = NS_NewAtom("iframe");
         kBrowserAtom        = NS_NewAtom("browser");
         kEditorAtom         = NS_NewAtom("editor");
+        kWidthAtom          = NS_NewAtom("width");
         kWindowAtom         = NS_NewAtom("window");
-        kNullAtom           = NS_NewAtom("");
 
         rv = nsComponentManager::CreateInstance(kNameSpaceManagerCID,
                                                 nsnull,
@@ -403,6 +409,8 @@ nsXULElement::~nsXULElement()
 
         NS_IF_RELEASE(kClassAtom);
         NS_IF_RELEASE(kContextAtom);
+        NS_IF_RELEASE(kHeightAtom);
+        NS_IF_RELEASE(kHiddenAtom);
         NS_IF_RELEASE(kIdAtom);
         NS_IF_RELEASE(kObservesAtom);
         NS_IF_RELEASE(kPopupAtom);
@@ -418,11 +426,12 @@ nsXULElement::~nsXULElement()
         NS_IF_RELEASE(kTreeColAtom);
         NS_IF_RELEASE(kTreeItemAtom);
         NS_IF_RELEASE(kTreeRowAtom);
+        NS_IF_RELEASE(kValueAtom);
         NS_IF_RELEASE(kIFrameAtom);
         NS_IF_RELEASE(kBrowserAtom);
         NS_IF_RELEASE(kEditorAtom);
+        NS_IF_RELEASE(kWidthAtom);
         NS_IF_RELEASE(kWindowAtom);
-        NS_IF_RELEASE(kNullAtom);
 
         NS_IF_RELEASE(gNameSpaceManager);
 
@@ -3597,15 +3606,21 @@ NS_IMETHODIMP
 nsXULElement::GetMappedAttributeImpact(const nsIAtom* aAttribute, 
                                          PRInt32& aHint) const
 {
-    aHint = NS_STYLE_HINT_CONTENT;  // we never map attributes to style
-    if (Tag() == kTreeColAtom) {
-        // Ok, we almost never map attributes to style. ;)
-        // The width attribute of a treecol is an exception to this rule.
-        nsCOMPtr<nsIAtom> widthAtom = dont_AddRef(NS_NewAtom("width"));
-        nsCOMPtr<nsIAtom> hiddenAtom = dont_AddRef(NS_NewAtom("hidden"));
-        if (widthAtom == aAttribute || hiddenAtom == aAttribute)
+    aHint = NS_STYLE_HINT_CONTENT;  // by default, never map attributes to style
+
+    nsIAtom* tag = Tag();
+
+    if (kTreeColAtom == tag) {
+        // Ignore 'width' and 'hidden' on a <treecol>
+        if (kWidthAtom == aAttribute || kHiddenAtom == aAttribute)
             aHint = NS_STYLE_HINT_REFLOW;
     }
+    else if (kWindowAtom == tag) {
+        // Ignore 'width' and 'height' on a <window>
+        if (kWidthAtom == aAttribute || kHeightAtom == aAttribute)
+            aHint = NS_STYLE_HINT_NONE;
+    }
+
     return NS_OK;
 }
 
