@@ -3992,6 +3992,8 @@ echo $MAKEFILES | $PERL $srcdir/build/autoconf/acoutput-fast.pl > conftest.sh
 . ./conftest.sh
 rm conftest.sh
 
+echo $MAKEFILES > unallmakefiles
+
 AC_OUTPUT($MAKEFILES)
 
 dnl ========================================================

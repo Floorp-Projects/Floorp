@@ -44,6 +44,9 @@ ifneq ($(origin BUILD_OFFICIAL)_$(origin MOZILLA_OFFICIAL),undefined_undefined)
 TARGETS		+= $(DEPTH)/build/build_number
 endif
 
+# Remove this on distclean regardless of "official" setting
+DIST_GARBAGE	+= $(DEPTH)/build/build_number
+
 # If this is an "official mozilla build" make them shortlived.
 ifdef MOZILLA_OFFICIAL
 export:: $(DEPTH)/modules/libpref/src/init/all.js

@@ -101,6 +101,8 @@ ifeq ($(MOZ_WIDGET_TOOLKIT),os2)
 EXPORT_OBJS	= 1
 endif
 
+GARBAGE	+= $(BUILD_DATE)
+
 include $(topsrcdir)/config/rules.mk
 
 DEFINES		+= -D_IMPL_NS_HTML
