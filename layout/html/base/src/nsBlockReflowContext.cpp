@@ -499,9 +499,9 @@ nsBlockReflowContext::PlaceBlock(PRBool aForceFit,
         }
       }
 
-      // Update the in-flow bounding box's bounds. Include the margins.
+      // Update the in-flow bounds rectangle
       aInFlowBounds.SetRect(x, y,
-                            mMetrics.width + mMargin.right,
+                            mMetrics.width,
                             mMetrics.height);
 
 
