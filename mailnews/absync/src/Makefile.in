@@ -34,6 +34,7 @@ CPPSRCS		= \
 		nsAbSync.cpp \
 		nsAbSyncCRCModel.cpp \
 		nsABSyncDriver.cpp \
+		nsSyncDecoderRing.cpp	\
 		$(NULL)
 
 EXPORTS		= \
@@ -41,6 +42,7 @@ EXPORTS		= \
 		nsAbSync.h \
 		nsAbSyncCRCModel.h \
 		nsABSyncDriver.h \
+		nsSyncDecoderRing.h	\
 		$(NULL)
 
 # we don't want the shared lib, but we want to force the creation of a static lib.
