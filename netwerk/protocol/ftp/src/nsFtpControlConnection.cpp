@@ -178,7 +178,7 @@ nsFtpControlConnection::OnStartRequest(nsIChannel *aChannel, nsISupports *aConte
     if (!myListener)
         return NS_OK;
     
-    return mListener->OnStartRequest(aChannel, aContext);
+    return myListener->OnStartRequest(aChannel, aContext);
 }
 
 NS_IMETHODIMP
@@ -201,7 +201,7 @@ nsFtpControlConnection::OnStopRequest(nsIChannel *aChannel, nsISupports *aContex
     if (!myListener)
         return NS_OK;
 
-    return mListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
+    return myListener->OnStopRequest(aChannel, aContext, aStatus, aStatusArg);
 }
 
 
