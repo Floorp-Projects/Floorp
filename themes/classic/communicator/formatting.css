@@ -44,6 +44,12 @@
     text-decoration       : underline;
   }
   
+.text-link:focus
+  {
+    color                 : red;
+    -moz-outline: 1px dotted invert;
+  }
+
 .text-link:hover
   {
     cursor                : pointer;

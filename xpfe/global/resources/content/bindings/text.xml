@@ -47,5 +47,13 @@
                                     "/>
     </handlers>
   </binding>  
+
+  <binding id="text-link" extends="chrome://global/content/bindings/text.xml#text-label">
+    <handlers>
+     <handler event="keypress" keycode="VK_ENTER" action="this.click()" />
+     <handler event="keypress" keycode="VK_RETURN" action="this.click()" />
+    </handlers>
+  </binding>
+
 </bindings>
 
