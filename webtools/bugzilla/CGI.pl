@@ -192,7 +192,8 @@ sub value_quote {
 }
 
 sub navigation_header {
-    if (defined $::COOKIE{"BUGLIST"} && $::COOKIE{"BUGLIST"} ne "") {
+    if (defined $::COOKIE{"BUGLIST"} && $::COOKIE{"BUGLIST"} ne "" &&
+        defined $::FORM{'id'}) {
 	my @bugs = split(/:/, $::COOKIE{"BUGLIST"});
 	my $cur = lsearch(\@bugs, $::FORM{"id"});
 	print "<B>Bug List:</B> (@{[$cur + 1]} of @{[$#bugs + 1]})\n";
