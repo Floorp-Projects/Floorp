@@ -39,8 +39,6 @@
 #include "nsCom.h"
 #include "nsString.h"
 
-#include "nsFixedSizeAllocator.h"
-
 class nsIObjectInputStream;
 class nsIObjectOutputStream;
 
@@ -109,7 +107,6 @@ class NS_COM nsHashtable {
     PRLock*     mLock;
     PLHashTable mHashtable;
     PRBool      mEnumerating;
-    nsFixedSizeAllocator mPool;
 
   public:
     nsHashtable(PRUint32 aSize = 16, PRBool threadSafe = PR_FALSE);
