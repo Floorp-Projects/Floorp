@@ -7899,7 +7899,7 @@ else
 #include <stdio.h>
                   #include <sys/types.h>
 int main() {
-uint foo = 0;
+uint_t foo = 0;
 ; return 0; }
 EOF
 if { (eval echo configure:7906: \"$ac_compile\") 1>&5; (eval $ac_compile) 2>&5; }; then
