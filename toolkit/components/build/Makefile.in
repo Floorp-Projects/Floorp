@@ -90,7 +90,7 @@ endif
 
 EXPORTS = nsToolkitCompsCID.h
 
-CPPSRCS = nsModule.cpp
+CPPSRCS = nsToolkitCompsModule.cpp
 
 LOCAL_INCLUDES = \
 	-I$(srcdir)/../autocomplete/src \
