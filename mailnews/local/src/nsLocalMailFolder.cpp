@@ -410,6 +410,9 @@ nsMsgLocalMailFolder::GetSubFolders(nsIEnumerator* *result)
           }
         }
         else {
+#ifdef DEBUG
+		  printf("server type is = %s\n",type);
+#endif /* DEBUG */
           NS_ASSERTION(0,"error, don't know about this server type yet.\n");
         }
       }
