@@ -95,7 +95,6 @@ input {
   word-spacing: normal;
   letter-spacing: normal;
   cursor: text;
-  -moz-user-focus: normal;
   -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#inputFields");
   text-indent: 0;
 }
@@ -116,7 +115,6 @@ textarea {
   letter-spacing: normal;
   vertical-align: text-bottom;
   cursor: text;
-  -moz-user-focus: normal;
   -moz-binding: url("resource://gre/res/builtin/platformHTMLBindings.xml#textAreas");
   -moz-appearance: textfield;
   text-indent: 0;
@@ -128,7 +126,6 @@ textarea > scrollbar {
 
 textarea > .anonymous-div,
 input > .anonymous-div {
-  -moz-user-focus: none;
   overflow: auto;
   border: 0px !important;
   padding: 0px;
@@ -150,7 +147,6 @@ select {
   cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
-  -moz-user-focus: normal;
   -moz-appearance: menulist;
   border-width: 2px;
   border-style: inset;
@@ -181,8 +177,6 @@ select > input[type="button"] {
   width: 12px;
   height: 12px;
   white-space: nowrap;
-  -moz-user-focus: none;
-
   position: static !important;
   background-image: url("arrow.gif") !important;
   background-repeat: no-repeat !important;
@@ -216,7 +210,6 @@ option {
   min-height: 1em;
   line-height: normal !important;
   -moz-user-select: none;
-  -moz-user-focus: none;
   text-indent: 0;
 }
 
@@ -237,7 +230,6 @@ optgroup {
   font-weight: bold;
   font-size: inherit;
   -moz-user-select: none;
-  -moz-user-focus: none;
   text-indent: 0;
 }
 
@@ -268,7 +260,6 @@ option[disabled],
 optgroup[disabled],
 select[disabled] {
   -moz-user-input: disabled;
-  -moz-user-focus: ignore;
   color: GrayText;
   background-color: ThreeDFace;
   cursor: default;
@@ -286,7 +277,6 @@ input[type="hidden"] {
   padding: 0;
   border: 0;
   cursor: auto;
-  -moz-user-focus: ignore;
   -moz-binding: none;
 }
 
@@ -432,7 +422,6 @@ input[type="submit"] {
   cursor: default;
   -moz-box-sizing: border-box;
   -moz-user-select: none;
-  -moz-user-focus: normal;
   -moz-binding: none;
 }
 
@@ -526,7 +515,6 @@ input[type="file"] > input[type="text"] {
 
 @media print {
   input, textarea, select, button {
-    -moz-user-focus: none !important;
     -moz-user-input: none !important;
   }
 
