@@ -241,6 +241,9 @@
 <!ENTITY copyLinkCmd.accesskey        "C">
 <!ENTITY copyImageCmd.label           "Copy Image Location">
 <!ENTITY copyImageCmd.accesskey       "o">
+<!ENTITY copyImageContentsCmd.label   "Copy Image">
+<!ENTITY copyImageContentsCmd.accesskey  "y"> 
+<!ENTITY blockImageCmd.accesskey       "g">
 <!ENTITY metadataCmd.label            "Properties">
 <!ENTITY metadataCmd.accesskey        "P">
 <!ENTITY copyEmailCmd.label           "Copy Email Address">
