@@ -50,6 +50,11 @@ nsresult nsMenuBar::QueryInterface(REFNSIID aIID, void** aInstancePtr)
 NS_IMPL_ADDREF(nsMenuBar)
 NS_IMPL_RELEASE(nsMenuBar)
 
+nsEventStatus nsMenuBar::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
@@ -58,6 +63,19 @@ nsEventStatus nsMenuBar::MenuSelected(const nsMenuEvent & aMenuEvent)
 nsEventStatus nsMenuBar::MenuDeselected(const nsMenuEvent & aMenuEvent)
 {
 	return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuConstruct(const nsMenuEvent & aMenuEvent,
+                                       nsIWidget         * aParentWindow, 
+                                       void              * menubarNode,
+                                       void              * aWebShell)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuBar::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
 }
 
 nsMenuBar::nsMenuBar() : nsIMenuBar(), nsIMenuListener()

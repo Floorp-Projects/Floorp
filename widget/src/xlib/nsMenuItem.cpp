@@ -159,6 +159,11 @@ NS_METHOD nsMenuItem::GetChecked(PRBool *aIsEnabled)
   return NS_OK;
 }
 
+nsEventStatus nsMenuItem::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenuItem::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
@@ -169,3 +174,40 @@ nsEventStatus nsMenuItem::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenuItem::MenuConstruct(const nsMenuEvent & aMenuEvent,
+                                        nsIWidget         * aParentWindow, 
+                                        void              * menubarNode,
+                                        void              * aWebShell)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenuItem::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenuItem::SetDOMElement(nsIDOMElement * aDOMElement)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenuItem::GetDOMElement(nsIDOMElement ** aDOMElement)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenuItem::SetWebShell(nsIWebShell * aWebShell)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenuItem::SetCommand(const nsString & aStrCmd)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenuItem::DoCommand()
+{
+  return NS_OK;
+}

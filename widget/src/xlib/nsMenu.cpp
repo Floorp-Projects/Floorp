@@ -168,6 +168,11 @@ NS_METHOD nsMenu::RemoveMenuListener(nsIMenuListener * aMenuListener)
   return NS_OK;
 }
 
+nsEventStatus nsMenu::MenuItemSelected(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
 nsEventStatus nsMenu::MenuSelected(const nsMenuEvent & aMenuEvent)
 {
   return nsEventStatus_eIgnore;
@@ -178,3 +183,30 @@ nsEventStatus nsMenu::MenuDeselected(const nsMenuEvent & aMenuEvent)
   return nsEventStatus_eIgnore;
 }
 
+nsEventStatus nsMenu::MenuConstruct(const nsMenuEvent & aMenuEvent,
+                                    nsIWidget         * aParentWindow, 
+                                    void              * menubarNode,
+                                    void              * aWebShell)
+{
+  return nsEventStatus_eIgnore;
+}
+
+nsEventStatus nsMenu::MenuDestruct(const nsMenuEvent & aMenuEvent)
+{
+  return nsEventStatus_eIgnore;
+}
+
+NS_METHOD nsMenu::SetDOMNode(nsIDOMNode * menuNode)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::SetDOMElement(nsIDOMElement * menuElement)
+{
+  return NS_OK;
+}
+
+NS_METHOD nsMenu::SetWebShell(nsIWebShell * aWebShell)
+{
+  return NS_OK;
+}

@@ -34,11 +34,16 @@ public:
   virtual ~nsMenuBar();
 
   // nsIMenuListener interface
+  nsEventStatus MenuItemSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuSelected(const nsMenuEvent & aMenuEvent);
   nsEventStatus MenuDeselected(const nsMenuEvent & aMenuEvent);
-  
-  NS_DECL_ISUPPORTS
+  nsEventStatus MenuConstruct(const nsMenuEvent & aMenuEvent,
+                              nsIWidget         * aParentWindow, 
+                              void              * menubarNode,
+                              void              * aWebShell);
+  nsEventStatus MenuDestruct(const nsMenuEvent & aMenuEvent);
 
+  NS_DECL_ISUPPORTS
   
   NS_IMETHOD Create(nsIWidget * aParent);
 
