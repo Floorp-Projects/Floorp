@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
+/* -*- Mode: Java; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -24,9 +24,35 @@
 function onInit() {
     fixLabels(document.getElementById("ispBox"));
 
+    preselectRadioButtons();
     
+    onTypeChanged();
 }
 
+// this is a workaround for #44713 - I can't preselect radio buttons
+// by marking them with checked="true"
+function preselectRadioButtons()
+{
+    try {
+        // select the first item in the outer group (mail account)
+        var radiogroup = document.getElementById("acctyperadio");
+        if (!radiogroup.selectedItem) {
+            radiogroup.selectedItem =
+                radiogroup.getElementsByAttribute("group", radiogroup.id)[0];
+        }
+
+        // select the last item in the inner group (other ISP)
+        radiogroup = document.getElementById("ispchoice");
+        if (!radiogroup.selectedItem) {
+            var radiobuttons =
+                radiogroup.getElementsByAttribute("group", radiogroup.id);
+            radiogroup.selectedItem = radiobuttons[radiobuttons.length-1];
+        }
+        
+    } catch (ex) {
+        dump("Error preselecting a radio button: " + ex + "!\n");
+    }
+}
 
 // this is a workaround for a template shortcoming.
 // basically: templates can't set the "id" attribute on a node, so we
@@ -36,58 +62,61 @@ function fixLabels(box) {
     if (!box) return;
     var child = box.firstChild;
 
+    dump("starting looking with " + child + "\n");
     var haveDynamicInputs = false;
     while (child) {
-        dump("Checking <" + child.localName + ">\n");
-        if (child.localName.toLowerCase() == "box") {
-            var input = child.childNodes[0];
-            var label = child.childNodes[1];
 
-            if (input.localName.toLowerCase() == "input" &&
-                label.localName.toLowerCase() == "label") {
-                
-                var fakeid = input.getAttribute("fakeid");
-                if (fakeid && fakeid != "") {
-                    input.setAttribute("id", fakeid);
-                    dump("Found dynamic inputs!\n");
-                    haveDynamicInputs = true;
-                }
-            }
+        dump("found child: " + child + "\n");
+        if (child.localName.toLowerCase() == "radio") {
+            dump("Found dynamic inputs!\n");
+            haveDynamicInputs = true;
         }
 
         child = child.nextSibling;
     }
 
     if (haveDynamicInputs) {
-        var subButtons = document.getElementById("mailSubButtons");
-        dump("hiding " + subButtons + "\n");
+        var subButtons = document.getElementById("ispchoice");
+        dump("** Have dynamic inputs: showing " + subButtons + "\n");
         subButtons.removeAttribute("hidden");
+
+        var otherIspRadio = document.getElementById("otherIspRadio");
+        dump("** Also showing the other ISP button\n");
+        otherIspRadio.removeAttribute("hidden");
     }
 }
 
-function onMailChanged(event) {
-    //    enableControls(document.getElementById("ispBox"),
-    //                   event.target.checked);
+function onTypeChanged() {
+    var ispBox = document.getElementById("ispBox");
+
+    var mailaccount = document.getElementById("mailaccount");
+    enableControls(ispBox, mailaccount.checked);
 }
 
-function enableControls(node, enabled)
+function enableControls(container, enabled)
 {
-    var localName = node.localName.toLowerCase();
-    if (localName == "input" || localName == "label") {
-        if (enabled)
-            node.setAttribute("disabled", "true");
-        else
-            node.removeAttribute("disabled");
-    }
-
-    var child = node.firstChild();
+    if (!container) return;
+    var child = container.firstChild;
     while (child) {
         enableIspButtons(child, enabled);
         child = child.nextSibling;
     }
+    var otherIspRadio = document.getElementById("otherIspRadio");
+    enableIspButtons(otherIspRadio, enabled);
+}
+
+function enableIspButtons(child, enabled)
+{
+    dump("disabling " + child.id + "\n");
+    if (enabled)
+        child.removeAttribute("disabled");
+    else
+        child.setAttribute("disabled", "true");
+
 }
 
 function onUnload() {
+    dump("OnUnload!\n");
     parent.UpdateWizardMap();
 
     initializeIspData();
@@ -105,21 +134,21 @@ function initializeIspData()
     
     var ispName;
     // now reflect the datasource up into the parent
-    var controls = document.controls;
+    var controls = document.getElementsByAttribute("wsm_persist", "true");
     
     for (var i=0; i<controls.length ;i++) {
         var formElement = controls[i];
-        if (formElement.name == "ispchoice" &&
+        if (formElement.getAttribute("group") == "ispchoice" &&
             formElement.checked) {
-            dump("ispName = " + formElement.parentNode.id + "\n");
-            ispName = formElement.parentNode.id;
+            dump("ispName = " + formElement.id + "\n");
+            ispName = formElement.id;
             break;
         }
     }
+
+    dump("initializing ISP data for " + ispName + "\n");
     
     if (!ispName || ispName == "") return;
-    
-    dump("initializing ISP data for " + ispName + "\n");
 
     parent.PrefillAccountForIsp(ispName);
     parent.UpdateWizardMap();

@@ -51,6 +51,7 @@ custreceipt.xul
 pref-diskspace.xul
 AccountWizard.xul
 AccountWizard.js
+aw-wizardAdapter.js
 aw-accounttype.xul
 aw-accounttype.js
 aw-identity.xul

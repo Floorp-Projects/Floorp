@@ -24,49 +24,49 @@ Rights Reserved.
 <?xul-overlay href="chrome://global/content/dialogOverlay.xul"?>
 
 <!DOCTYPE window SYSTEM "chrome://messenger/locale/aw-accounttype.dtd" >
-<window id="accounttype" xmlns:html="http://www.w3.org/1999/xhtml"
+<window id="accounttype" 
     xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
     class="dialog"
-    onload="parent.wizardManager.onPageLoad('accounttype');"
+    onload="dump('** acctype onload\n'); parent.wizardManager.onPageLoad('accounttype');"
     orient="vertical"
     onunload="onUnload();">
 
   <script src="aw-accounttype.js"/>
+  <script src="aw-wizardAdapter.js"/>
+  <script src="resource:/res/samples/DumpDOM.js"/>
   <box class="box-header" value="&accountTypeTitle.label;"/>
 
   <html class="desc">&accountTypeDesc.label;</html>
   <spring class="spacer"/>
   <html class="desc">&accountTypeDirections.label;</html>
-<box align="vertical">
-  <box>
-    <html:input type="radio" name="acctyperadio" id="mailaccount" onclick="onMailChanged(event);" value="mail" checked="1"/>
-    <html:label for="mailaccount">&accountTypeMail.label;</html:label>
-  </box>
-  <box orient="vertical" style="margin-left: 10px" id="mailSubButtons" hidden="true">
-  <box orient="vertical" 
-            datasources="rdf:ispdefaults" 
-            containment="http://home.netscape.com/NC-rdf#providers"
-            id="ispBox"
-            ref="NC:ispinfo">
-  <template>
-    <rule>
-      <box uri="...">
-        <html:input type="radio" name="ispchoice" value="rdf:http://home.netscape.com/NC-rdf#wizardShortName" fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"/>
-        <html:label for="rdf:http://home.netscape.com/NC-rdf#wizardShortName">
-          <text value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
-        </html:label>
+
+  <radiogroup align="vertical" name="acctyperadio" id="acctyperadio">
+    <radio id="mailaccount" group="acctyperadio" 
+           wsm_persist="true"
+           oncommand="onTypeChanged()"
+           value="&accountTypeMail.label;"/>
+    <radiogroup orient="vertical" style="margin-left: 10px"
+                id="ispchoice" >
+      <box orient="vertical"
+                  datasources="rdf:ispdefaults" 
+                  containment="http://home.netscape.com/NC-rdf#providers"
+                  id="ispBox"
+                  ref="NC:ispinfo">
+        <template>
+          <radio group="ispchoice" uri="..."
+                 wsm_persist="true"
+                 fakeid="rdf:http://home.netscape.com/NC-rdf#wizardShortName"
+                 value="rdf:http://home.netscape.com/NC-rdf#wizardLongName"/>
+        </template>
       </box>
-    </rule>
-  </template>
-  </box>
-    <box id="otherIsp">
-      <html:input type="radio" name="ispchoice" value="otherIsp" id="otherIspRadio"/>
-      <html:label for="otherIspRadio">&accountTypeISP.label;</html:label>
-    </box>
-  </box>
-  <box>
-    <html:input type="radio" name="acctyperadio" id="newsaccount" value="news"/>
-    <html:label for="newsaccount">&accountTypeNews.label;</html:label>
-  </box>
-</box>
+      <radio group="ispchoice" value="&accountTypeISP.label;"
+             wsm_persist="true" hidden="true"
+             id="otherIspRadio"/>
+    </radiogroup>
+
+    <radio group="acctyperadio" id="newsaccount"
+           wsm_persist="true"
+           oncommand="onTypeChanged()"
+           value="&accountTypeNews.label;"/>
+  </radiogroup>
 </window>
