@@ -727,13 +727,13 @@ function selectProduct(f) {
         <legend><strong>[% terms.Bug %] Changes</strong></legend>
 
 
-<dl>
+<dl class="bug_changes">
   <dt>Only [% terms.bugs %] changed between:</dt>
   <dd>
     <input name="chfieldfrom" size="10" value="[% default.chfieldfrom.0 FILTER html %]">
     and <input name="chfieldto" size="10" value="[% default.chfieldto.0 FILTER html %]">
     <br>(YYYY-MM-DD or <a href="queryhelp.cgi#changedbetween">relative dates</a>)
-  </dd><br>
+  </dd>
   <dt>where one or more of the following changed:</dt>
   <dd>
     <select name="chfield" multiple="multiple" size="4">
@@ -743,11 +743,11 @@ function selectProduct(f) {
         [% (field_descs.$field || field) FILTER html %]</option>
     [% END %]
     </select>
-  </dd><br>
+  </dd>
   <dt>and the new value was:</dt>
   <dd>
     <input name="chfieldvalue" size="20" value="[% default.chfieldvalue.0 FILTER html %]">
-  </dd><br>
+  </dd>
 </dl>
 
        </fieldset>

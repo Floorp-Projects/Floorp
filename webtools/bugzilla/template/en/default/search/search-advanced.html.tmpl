@@ -41,6 +41,9 @@
            td.unselected_tab, td.spacer {
              border-width: 0px 0px 2px 0px;
              border-style: solid; 
+           }
+           dl.bug_changes dt {
+             margin-top: 15px;
            }"
 %]
 
@@ -50,19 +53,17 @@
 
 [%# The decent help requires Javascript %]
 [% IF NOT help %]
-  <p>
   [% IF cgi.user_agent("Mozilla/5") %]
-    <script> <!--
-      document.write("<a href='query.cgi?help=1'>Give me some help</a> (reloads page.)");
+    <script type="text/javascript"> <!--
+      document.write("<p><a href='query.cgi?help=1'>Give me some help</a> (reloads page.)</p>");
       // -->
     </script>
     <noscript>
-      <a href="queryhelp.cgi">Give me help</a> with this form.
+      <p><a href="queryhelp.cgi">Give me help</a> with this form.</p>
     </noscript>
   [% ELSE %]
-      <a href="queryhelp.cgi">Give me help</a> with this form.
+      <p><a href="queryhelp.cgi">Give me help</a> with this form.</p>
   [% END %]
-  </p>
 [% ELSE %]
   <p>
       For help, mouse over the page elements.
