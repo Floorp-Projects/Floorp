@@ -69,7 +69,6 @@
 #include "nsIDOMWindow.h"
 #include "nsIScriptGlobalObject.h"
 #include "nsPresContext.h"
-#include "nsPresContext.h"
 #include "nsIDocShell.h"
 #include "nsIDocShellTreeItem.h"
 #include "nsIDocShellTreeOwner.h"
@@ -79,7 +78,10 @@
 
 #include "nsIStringBundle.h"
 
-#include "nsIPref.h"
+#include "nsIObserver.h"
+#include "nsIPrefBranch.h"
+#include "nsIPrefBranchInternal.h"
+#include "nsIPrefService.h"
 #include "lcglue.h"
 
 #include "nspr.h"
@@ -99,7 +101,6 @@ extern "C" int XP_JAVA_DEBUGGER_FAILED;
 
 static NS_DEFINE_CID(kStringBundleServiceCID, NS_STRINGBUNDLESERVICE_CID);
 
-static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kJVMManagerCID, NS_JVMMANAGER_CID);
 
 static NS_DEFINE_CID(kPluginManagerCID, NS_PLUGINMANAGER_CID);
@@ -122,7 +123,6 @@ static NS_DEFINE_IID(kILiveConnectManagerIID, NS_ILIVECONNECTMANAGER_IID);
 static NS_DEFINE_IID(kIJVMPluginIID, NS_IJVMPLUGIN_IID);
 
 #define PLUGIN_REGIONAL_URL "chrome://global-region/locale/region.properties"
-
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -367,11 +367,15 @@ nsJVMManager::Create(nsISupports* outer, const nsIID& aIID, void* *aInstancePtr)
 
 nsJVMManager::nsJVMManager(nsISupports* outer)
     : fJVM(NULL), fStatus(nsJVMStatus_Enabled),
-      fRegisteredJavaPrefChanged(PR_FALSE), fDebugManager(NULL), fJSJavaVM(NULL),
+      fDebugManager(NULL), fJSJavaVM(NULL),
       fClassPathAdditions(new nsVoidArray()), fClassPathAdditionsString(NULL),
       fStartupMessagePosted(PR_FALSE)
 {
     NS_INIT_AGGREGATED(outer);
+
+    nsCOMPtr<nsIPrefBranchInternal> branch = do_GetService(NS_PREFSERVICE_CONTRACTID);
+    if (branch)
+        branch->AddObserver("security.enable_java", this, PR_FALSE);
 }
 
 nsJVMManager::~nsJVMManager()
@@ -394,22 +398,27 @@ nsJVMManager::AggregatedQueryInterface(const nsIID& aIID, void** aInstancePtr)
 {
     if (aIID.Equals(kIJVMManagerIID)) {
         *aInstancePtr = this;
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kIThreadManagerIID)) {
         *aInstancePtr = (void*) NS_STATIC_CAST(nsIThreadManager*, this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kILiveConnectManagerIID)) {
         *aInstancePtr = (void*) NS_STATIC_CAST(nsILiveConnectManager*, this);
-        AddRef();
+        NS_ADDREF_THIS();
         return NS_OK;
     }
     if (aIID.Equals(kISupportsIID)) {
         *aInstancePtr = GetInner();
         NS_ADDREF((nsISupports*)*aInstancePtr);
+        return NS_OK;
+    }
+    if (aIID.Equals(NS_GET_IID(nsIObserver))) {
+        *aInstancePtr = (void*) NS_STATIC_CAST(nsIObserver*, this);
+        NS_ADDREF_THIS();
         return NS_OK;
     }
 #if defined(XP_WIN) || defined(XP_OS2)
@@ -750,33 +759,6 @@ nsJVMManager::ShutdownJVM(PRBool fullShutdown)
 
 ////////////////////////////////////////////////////////////////////////////////
 
-/**
-
- * This is called when the user changes the state of the
- * security.enable_java preference.  
-
- */
-
-static int PR_CALLBACK
-JavaPrefChanged(const char *prefStr, void* data)
-{
-    nsJVMManager* mgr = (nsJVMManager*)data;
-    PRBool prefBool = PR_TRUE;
-    nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID));
-    nsresult rv;
-    
-    // check for success
-    if (!prefs) {
-        return 0;
-    }
-    rv = prefs->GetBoolPref("security.enable_java", &prefBool);
-    if (NS_SUCCEEDED(rv)) {
-        mgr->SetJVMEnabled(prefBool);
-    }
-
-    return 0;
-}
-
 void
 nsJVMManager::SetJVMEnabled(PRBool enabled)
 {
@@ -789,46 +771,6 @@ nsJVMManager::SetJVMEnabled(PRBool enabled)
         if (fStatus == nsJVMStatus_Running) 
             (void)ShutdownJVM();
         fStatus = nsJVMStatus_Disabled;
-    }
-}
-
-/**
-
- * Called from GetJVMStatus. <P>
-
- * We only take action once per nsJVMManager instance.  
-
- */ 
-
-void
-nsJVMManager::EnsurePrefCallbackRegistered(void)
-{
-    if (fRegisteredJavaPrefChanged != PR_TRUE) {
-        nsCOMPtr<nsIPref> prefs(do_GetService(kPrefCID));
-        PRBool isJavaEnabled = PR_TRUE;
-        nsresult rv;
-
-        // check for success
-        if (!prefs) {
-            return;
-        }
-
-        // step one, register the callback for the pref changing.
-        rv = prefs->RegisterCallback("security.enable_java", 
-                                     JavaPrefChanged, this);
-        if (NS_SUCCEEDED(rv)) {
-            fRegisteredJavaPrefChanged = PR_TRUE;
-        }
-
-        // step two, update our fStatus ivar with the current value of the 
-        // pref
-        rv = prefs->GetBoolPref("security.enable_java", &isJavaEnabled);
-        if (NS_SUCCEEDED(rv)) {
-            if (!isJavaEnabled) {
-                fStatus = nsJVMStatus_Disabled;
-            }
-            // else, we leave it with the value it had at construction
-        }
     }
 }
 
@@ -873,10 +815,27 @@ nsJVMManager::GetChrome(nsIWebBrowserChrome **theChrome)
     return rv;
 }
 
+NS_IMETHODIMP
+nsJVMManager::Observe(nsISupports*     subject,
+                      const char*      topic,
+                      const PRUnichar* data_unicode)
+{
+    nsresult rv;
+    nsCOMPtr<nsIPrefBranch> branch = do_QueryInterface(subject, &rv);
+    if (NS_FAILED(rv)) return rv;
+
+    PRBool prefBool = PR_TRUE;
+    rv = branch->GetBoolPref("security.enable_java", &prefBool);
+    if (NS_SUCCEEDED(rv)) {
+        SetJVMEnabled(prefBool);
+    }
+
+    return rv;
+}
+
 nsJVMStatus
 nsJVMManager::GetJVMStatus(void)
 {
-    EnsurePrefCallbackRegistered();
     return fStatus;
 }
 

@@ -45,16 +45,16 @@
 #include "jsdbgapi.h"
 #include "nsError.h"
 
-
 #include "nsjvm.h"
 #include "nsAgg.h"
 #include "jsjava.h"
 #include "nsVoidArray.h"
 #include "nsILiveConnectManager.h"
 
+#include "nsIObserver.h"
+
 class nsSymantecDebugManager;
 class nsIWebBrowserChrome;
-
 
 /*******************************************************************************
  * NsJVMManager is the interface to the JVM manager that the browser sees. All
@@ -62,13 +62,15 @@ class nsIWebBrowserChrome;
  * nsIJVMManager is the more limited interface what the JVM plugin sees.
  ******************************************************************************/
 
-struct nsJVMManager : public nsIJVMManager, public nsIThreadManager, public nsILiveConnectManager {
+struct nsJVMManager : public nsIJVMManager, public nsIThreadManager, public nsILiveConnectManager, public nsIObserver {
 public:
 
     NS_DECL_AGGREGATED
 
     NS_DECL_NSIJVMMANAGER    
-    
+
+    NS_DECL_NSIOBSERVER
+
     /* from nsIThreadManager: */
     
 	/**
@@ -211,8 +213,6 @@ public:
 
 protected:    
 
-    void        EnsurePrefCallbackRegistered(void);
-
     /**
 
      * @return conjure up THE nsIWebBrowserChrome instance from thin
@@ -225,7 +225,6 @@ protected:
 
     nsIJVMPlugin*       fJVM;
     nsJVMStatus         fStatus;
-    PRBool              fRegisteredJavaPrefChanged;
     nsISupports*        fDebugManager;
     JSJavaVM *          fJSJavaVM;  
     nsVoidArray*        fClassPathAdditions;
