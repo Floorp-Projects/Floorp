@@ -574,11 +574,19 @@ endif
 # Linux
 ifeq ($(OS_ARCH),Linux)
 
-# Some linux platforms (there's so many of them) need special defines
-# for different versions of motif.  Right now the only significant 
-# define is NS_MOTIF2_XP_LD_FLAGS (-lXp needed for motif 2.x)
+# If the motif.mk file exists, it might define extra flags needed for
+# specific versions of motif.
 #
-# The file motif.mk holds such defines.
+# Currently there is only 2 flags:
+#
+# MOZILLA_XM_2_1_PRINT_SHELL_FLAGS: X Print Shell Extension available
+# starting with X11R6.3 and needed by motif 2.1.
+#
+# MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS: Needed because of currently
+# broken locale support in motif 2.1 when linked with gnu libc2.
+#
+# Please direct questions about motif and linux to ramiro@netscape.com.
+#
 -include $(DEPTH)/config/motif.mk
 
 XTOOLLIB	= -L/usr/X11R6/lib -lXt -lSM -lICE
@@ -592,8 +600,10 @@ else
 
 MOTIFLIB	=\
 			$(MOTIFPATCH_LIB) \
+			$(MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS) \
 			-L/usr/X11R6/lib -lXm \
-			$(NS_MOTIF2_XP_LD_FLAGS)
+			$(MOZILLA_XM_2_1_PRINT_SHELL_FLAGS)
+
 
 endif
 else
@@ -607,7 +617,13 @@ OTHER_LIBS	= $(MOTIFLIB) $(XTOOLLIB) $(XMULIB) $(EXTENSIONLIB) $(XLIB) -lm -ldl
 # get two identical binaries.
 #
 ifeq ($(OS_RELEASE)$(CPU_ARCH),2.0x86)
-DYN_MOTIFLIB	= $(MOTIFPATCH_LIB) -lXm $(NS_MOTIF2_XP_LD_FLAGS)
+
+DYN_MOTIFLIB		=\
+					$(MOTIFPATCH_LIB) \
+					$(MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS) \
+					-lXm \
+					$(MOZILLA_XM_2_1_PRINT_SHELL_FLAGS)
+
 
 EXTRA_EXPORT_OBJS	= $(OBJDIR)/$(XFE_PROGNAME)-motif-export
 EXTRA_EXPORT_BINARY	= $(EXTRA_EXPORT_OBJS)

@@ -20,13 +20,12 @@
 ##
 ## Name:		xmversion.sh - a fast way to get a motif lib's version
 ##
-## Description:	Print the major version number for motif libs on the
-##				system that executes the script.  Can be tweaked to output
-##				more info.  (such as cmd line args to print major/minor
-##				version numbers).  Currently prints only the major number.
+## Description:	Print the major and minor version numbers for motif libs on
+##				the system that executes the script.  Could be tweaked
+##				to output more info.
 ##
-##              Also, more checks need to be added for more platforms.  
-##              Currently this script is only usefull in the Linux Universe
+##              More checks need to be added for more platforms.  
+##              Currently this script is only useful in Linux Universe
 ##              where there are a many versions of motif.
 ##
 ## Author:		Ramiro Estrugo <ramiro@netscape.com>
@@ -101,5 +100,7 @@ fi
 VERSION=`strings $MOTIF_LIB | grep "Motif Version" | awk '{ print $3;}'`
 
 MAJOR=`echo $VERSION | awk -F"." '{ print $1; }'`
+MINOR=`echo $VERSION | awk -F"." '{ print $2; }'`
 
-echo $MAJOR
+echo $MAJOR.$MINOR
+

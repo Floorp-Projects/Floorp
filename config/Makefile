@@ -52,20 +52,40 @@ ifeq ($(OS_ARCH)$(OS_RELEASE),IRIX5)
 TARGETS		+= $(OBJDIR)/gtscc$(BIN_SUFFIX)
 endif
 
-# On linux we need to generake a motif.mk file which has special defines
-# for different motif versions.  
+# On linux we need to generake a motif.mk file which has special flags
+# for different motif versions and/or broken libraries.
+#
+# Currently there is only 2 flags:
+#
+# MOZILLA_XM_2_1_PRINT_SHELL_FLAGS: X Print Shell Extension available
+# starting with X11R6.3 and needed by motif 2.1.
+#
+# MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS: Needed because of currently
+# broken locale support in motif 2.1 when linked with gnu libc2.
+#
+# Please direct questions about motif and linux to ramiro@netscape.com.
+#
 ifeq ($(OS_ARCH),Linux)
-
-#GARBAGE         += motif.mk
 
 export:: motif.mk
 
 motif.mk:
 	@rm -f $@
-ifeq ($(shell $(DEPTH)/config/xmversion.sh),2)
-	@echo "NS_MOTIF2_XP_LD_FLAGS = -lXp" > $@
+
+# Check for motif 2.1 which needs the X Print Shell extension (-lXp)
+#
+# Also check for /lib/libc.so.6 (GNU libc2).  If we are using GLIBC2 with
+# Motif 2.1, we need to check for /usr/lib/libBrokenLocale.so.  At this 
+# time locale support on motif 2.1 seems to break with GLIBC2.
+ifeq ($(shell $(DEPTH)/config/xmversion.sh),2.1)
+
+	@echo "MOZILLA_XM_2_1_PRINT_SHELL_FLAGS = -lXp" > $@
+
+	@if test -f /lib/libc.so.6 -a -f /usr/lib/libBrokenLocale.so; then \
+	echo "MOZILLA_XM_2_1_BROKEN_LOCALE_FLAGS = -lBrokenLocale" >> $@; \
+	fi
 else
-	@echo "NS_MOTIF2_XP_LD_FLAGS =" > $@
+	@echo "" > $@
 endif
 
 endif
