@@ -44,7 +44,10 @@ nsresult nsLocaleFactoryOS2::NewLocale( nsString  **aCatList,
    if( !aCatList || !aValList || !aLocale)
       return NS_ERROR_NULL_POINTER;
 
+   *aLocale = nsnull;
    nsLocaleOS2 *aLoc = new nsLocaleOS2;
+   if(nsnull == aLoc)
+       return NS_ERROR_OUT_OF_MEMORY;
 
    nsresult rc = aLoc->Init( aCatList, aValList, aCount);
 
@@ -65,7 +68,10 @@ nsresult nsLocaleFactoryOS2::NewLocale( const nsString *aName,
    if( !aName || !aLocale)
       return NS_ERROR_NULL_POINTER;
 
+   *aLocale = nsnull;
    nsLocaleOS2 *aLoc = new nsLocaleOS2;
+   if(nsnull == aLoc)
+       return NS_ERROR_OUT_OF_MEMORY;
 
    nsresult rc = aLoc->Init( *aName);
 

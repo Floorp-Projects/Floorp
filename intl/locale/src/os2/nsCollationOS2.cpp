@@ -212,7 +212,12 @@ nsresult nsCollationFactoryOS2::CreateCollation( nsILocale *aLocale,
    if( !aLocale || !aInstance)
       return NS_ERROR_NULL_POINTER;
 
+   *aInstance = nsnull;
+
    nsCollationOS2 *coll = new nsCollationOS2;
+
+   if(nsnull == coll)
+      return NS_ERROR_OUT_OF_MEMORY;
 
    nsresult rc = coll->Initialize( aLocale);
 

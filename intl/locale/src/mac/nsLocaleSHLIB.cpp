@@ -69,13 +69,15 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	nsresult		res;
 
 	if (aFactory == NULL) return NS_ERROR_NULL_POINTER;
-
+	*aFactory = NULL;
 	//
 	// first check for the nsILocaleFactory interfaces
 	//  
 	if (aClass.Equals(kLocaleFactoryCID))
 	{
 		nsLocaleFactory *factory = new nsLocaleFactory();
+		if(nsnull == factory)
+		    return NS_ERROR_OUT_OF_MEMORY;
 		res = factory->QueryInterface(kILocaleFactoryIID, (void **) aFactory);
 
 		if (NS_FAILED(res))
@@ -90,6 +92,8 @@ extern "C" NS_EXPORT nsresult NSGetFactory(nsISupports* serviceMgr,
 	if (aClass.Equals(kMacLocaleFactoryCID))
 	{
 		nsMacLocaleFactory	*mac_factory = new nsMacLocaleFactory();
+		if(nsnull == mac_factory)
+		    return NS_ERROR_OUT_OF_MEMORY;
 		res = mac_factory->QueryInterface(kIFactoryIID,(void**) aFactory);
 		
 		if (NS_FAILED(res))
