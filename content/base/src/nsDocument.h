@@ -81,6 +81,13 @@
 
 #include "pldhash.h"
 
+
+#define XML_DECLARATION_BITS_DECLARATION_EXISTS   (1 << 0)
+#define XML_DECLARATION_BITS_ENCODING_EXISTS      (1 << 1)
+#define XML_DECLARATION_BITS_STANDALONE_EXISTS    (1 << 2)
+#define XML_DECLARATION_BITS_STANDALONE_YES       (1 << 3)
+
+
 class nsIEventListenerManager;
 class nsDOMStyleSheetList;
 class nsIOutputStream;
@@ -489,6 +496,13 @@ public:
   NS_IMETHOD SetContainer(nsISupports *aContainer);
   NS_IMETHOD GetContainer(nsISupports **aContainer);
   NS_IMETHOD GetScriptEventManager(nsIScriptEventManager **aResult);
+  NS_IMETHOD SetXMLDeclaration(const nsAString& aVersion,
+                               const nsAString& aEncoding,
+                               const nsAString& Standalone);
+  NS_IMETHOD GetXMLDeclaration(nsAString& aVersion,
+                               nsAString& aEncoding,
+                               nsAString& Standalone);
+  NS_IMETHOD_(PRBool) IsCaseSensitive();
 
   // nsIRadioGroupContainer
   NS_IMETHOD WalkRadioGroup(const nsAString& aName,
@@ -640,6 +654,8 @@ protected:
 
   // True if the document is being destroyed.
   PRPackedBool mInDestructor;
+
+  PRUint8 mXMLDeclarationBits;
 
   nsSupportsHashtable* mBoxObjectTable;
 

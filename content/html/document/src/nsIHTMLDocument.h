@@ -108,7 +108,6 @@ public:
   NS_IMETHOD GetNumFormsSynchronous(PRInt32* aNumForms) = 0;
   
   NS_IMETHOD_(PRBool) IsWriting() = 0;
-
 };
 
 #endif /* nsIHTMLDocument_h___ */

@@ -52,7 +52,6 @@
 #include "XMLUtils.h"
 #include "txUnknownHandler.h"
 #include "txXSLTProcessor.h"
-#include "nsIHTMLDocument.h"
 
 /**
  * Output Handler Factories
@@ -180,13 +179,17 @@ txToFragmentHandlerFactory::createHandlerWith(txOutputFormat* aFormat,
         {
             txOutputFormat format;
             format.merge(*aFormat);
-            nsCOMPtr<nsIDOMDocument> doc;
-            mFragment->GetOwnerDocument(getter_AddRefs(doc));
-            NS_ASSERTION(doc, "unable to get ownerdocument");
-            // Need a way for testing xhtml vs. html. But this is the best
-            // we can do for now.
-            nsCOMPtr<nsIHTMLDocument> htmldoc = do_QueryInterface(doc);
-            format.mMethod = htmldoc ? eHTMLOutput : eXMLOutput;
+            nsCOMPtr<nsIDOMDocument> domdoc;
+            mFragment->GetOwnerDocument(getter_AddRefs(domdoc));
+            NS_ASSERTION(domdoc, "unable to get ownerdocument");
+            nsCOMPtr<nsIDocument> doc = do_QueryInterface(domdoc);
+
+            if (!doc && doc->IsCaseSensitive()) {
+                format.mMethod = eXMLOutput;
+            } else {
+                format.mMethod = eHTMLOutput;
+            }
+
             *aHandler = new txMozillaXMLOutput(&format, mFragment);
             break;
         }
