@@ -82,8 +82,6 @@
 #include "nsEditorUtils.h"
 #include "nsIPref.h"
 
-#include "prprf.h"
-
 const unsigned char nbsp = 160;
 
 // HACK - CID for NavDTD until we can get at dtd via the document
@@ -2763,7 +2761,7 @@ NS_IMETHODIMP nsHTMLEditor::GetBodyWrapWidth(PRInt32 *aWrapColumn)
       *aWrapColumn = stylePosition->mWidth.GetIntValue(); 
     else {
 #ifdef DEBUG_akkana
-      printf("Can't set wrap column: style unit is %d\n",
+      printf("Can't get wrap column: style unit is %d\n",
              stylePosition->mWidth.GetUnit());
 #endif
       *aWrapColumn = -1;
@@ -3231,7 +3229,7 @@ NS_IMETHODIMP nsHTMLEditor::OutputToString(nsString& aOutputString,
   { // default processing
 
 
-    nsresult rv = NS_OK;
+    rv = NS_OK;
     
     // special-case for empty document when requesting plain text,
     // to account for the bogus text node
