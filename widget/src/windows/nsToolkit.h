@@ -168,10 +168,10 @@ public:
     void                  SetCaptureWindow(nsWindow * aNSWin);
     void                  IgnoreNextCycle() { mIgnoreNextCycle = PR_TRUE; } 
     void                  DestroyTimer();
+                          ~MouseTrailer();
 
 private:
                           MouseTrailer();
-                          ~MouseTrailer();
 
     nsresult              CreateTimer();
 
