@@ -95,6 +95,8 @@ public:
   NS_IMETHOD Insert(nsString& aInputString);
   NS_IMETHOD OutputText(nsString& aOutputString);
   NS_IMETHOD OutputHTML(nsString& aOutputString);
+  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
+  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream,nsString* aCharsetOverride = nsnull);
 
 // End of methods implemented in nsEditor
 //=============================================================
@@ -165,6 +167,8 @@ protected:
 //
 //  nsCOMPtr<nsIDOMEventListener> mKeyListenerP;
 //  nsCOMPtr<nsIDOMEventListener> mMouseListenerP;
+
+
 
 };
 

@@ -98,6 +98,8 @@ public:
   NS_IMETHOD Insert(nsString& aInputString);
   NS_IMETHOD OutputText(nsString& aOutputString);
   NS_IMETHOD OutputHTML(nsString& aOutputString);
+  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
+  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aCharsetOverride);
 
 // End of methods implemented in nsEditor
 //=============================================================
@@ -268,7 +270,10 @@ protected:
                                        const nsString *aAttribute,
                                        const nsString *aValue);
   
+
   TypeInState *GetTypeInState(); 
+  NS_IMETHOD OutputText(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
+  NS_IMETHOD OutputHTML(nsIOutputStream* aOutputStream, nsString* aOutputString, nsString* aCharsetOverride);
 
 
 // Data members

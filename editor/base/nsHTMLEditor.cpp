@@ -350,6 +350,17 @@ NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsString& aOutputString)
   return nsTextEditor::OutputHTML(aOutputString);
 }
 
+NS_IMETHODIMP nsHTMLEditor::OutputText(nsIOutputStream* aOutputStream, nsString* aCharsetOverride)
+{
+  return nsTextEditor::OutputText(aOutputStream,aCharsetOverride);
+}
+
+NS_IMETHODIMP nsHTMLEditor::OutputHTML(nsIOutputStream* aOutputStream,nsString* aCharsetOverride)
+{
+  return nsTextEditor::OutputHTML(aOutputStream,aCharsetOverride);
+}
+
+
 NS_IMETHODIMP
 nsHTMLEditor::CopyAttributes(nsIDOMNode *aDestNode, nsIDOMNode *aSourceNode)
 {
