@@ -24,6 +24,7 @@ include $(DEPTH)/config/autoconf.mk
 
 IDLSRCS = \
 		nsIMsgCompose.idl \
+		nsIMsgSend.idl \
 		nsIMsgPost.idl \
 		$(NULL)
 
