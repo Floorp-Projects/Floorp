@@ -21,6 +21,8 @@
 #include "nsLeafFrame.h"
 #include "nsIPresContext.h"
 #include "nsIRenderingContext.h"
+#include "nsIFrameImageLoader.h"
+#include "nsIPresShell.h"
 #include "nsHTMLIIDs.h"
 #include "nsIImage.h"
 #include "nsIWidget.h"
@@ -66,15 +68,14 @@ protected:
                               nsReflowMetrics& aDesiredSize,
                               const nsSize& aMaxSize);
 
-  nsresult LoadImage(nsIPresContext& aPresContext);
+  void LoadImage(nsIPresContext& aPresContext, PRBool aNeedSizeUpdate,
+                 PRIntn& aLoadStatus);
 
   nsIImageMap* GetImageMap();
 
-  nsIImage* mImage;
-  nsSize mImageSize;
+  nsIFrameImageLoader* mImageLoader;
   PRPackedBool mLoadImageFailed;
   PRPackedBool mLoadBrokenImageFailed;
-  PRUint8 mImageStatus;
 
   void TriggerLink(nsIPresContext& aPresContext,
                    const nsString& aURLSpec,
@@ -132,31 +133,60 @@ ImageFrame::ImageFrame(nsIContent* aContent, nsIFrame* aParentFrame)
 
 ImageFrame::~ImageFrame()
 {
+  NS_IF_RELEASE(mImageLoader);
 }
 
-nsresult
-ImageFrame::LoadImage(nsIPresContext& aPresContext)
+void
+ImageFrame::LoadImage(nsIPresContext& aPresContext, PRBool aNeedSizeUpdate,
+                      PRIntn& aLoadStatus)
 {
+  aLoadStatus = NS_IMAGE_LOAD_STATUS_NONE;
+
+  // Get absolute url
   nsresult rv;
   nsAutoString src;
   if (mLoadImageFailed) {
     src.Append(BROKEN_IMAGE_URL);
   } else {
-    if (eContentAttr_HasValue != mContent->GetAttribute("SRC", src)) {
+    nsAutoString srcParam;
+    if (eContentAttr_HasValue != mContent->GetAttribute("SRC", srcParam)) {
       src.Append(BROKEN_IMAGE_URL);
       mLoadImageFailed = PR_TRUE;
     }
+    else {
+      nsAutoString baseURL;
+
+      // Get documentURL
+      nsIPresShell* shell;
+      shell = aPresContext.GetShell();
+      nsIDocument* doc = shell->GetDocument();
+      nsIURL* docURL = doc->GetDocumentURL();
+
+      // Create an absolute URL
+      nsresult rv = NS_MakeAbsoluteURL(docURL, baseURL, srcParam, src);
+
+      // Release references
+      NS_RELEASE(shell);
+      NS_RELEASE(docURL);
+      NS_RELEASE(doc);
+      if (NS_OK != rv) {
+        return;
+      }
+    }
   }
 
-  // Try to load the image
-  PRInt32 loadStatus;
-  nsImageError loadError;
-  rv = aPresContext.LoadImage(src, this, loadStatus, loadError,
-                              mImageSize, mImage);
-  if (NS_OK == rv) {
-    mImageStatus |= loadStatus;
+  if (nsnull == mImageLoader) {
+    // Start image loading
+    rv = aPresContext.LoadImage(src, this, aNeedSizeUpdate, mImageLoader);
+    if (NS_OK != rv) {
+      return;
+    }
   }
-  else {
+
+  // Examine current image load status
+  mImageLoader->GetImageLoadStatus(aLoadStatus);
+  if (0 != (aLoadStatus & NS_IMAGE_LOAD_STATUS_ERROR)) {
+    NS_RELEASE(mImageLoader);
     if (mLoadImageFailed) {
       // We are doomed. Loading the broken image has just failed.
       mLoadBrokenImageFailed = PR_TRUE;
@@ -164,10 +194,9 @@ ImageFrame::LoadImage(nsIPresContext& aPresContext)
     else {
       // Try again, this time using the broke-image url
       mLoadImageFailed = PR_TRUE;
-      return LoadImage(aPresContext);
+      LoadImage(aPresContext, aNeedSizeUpdate, aLoadStatus);
     }
   }
-  return rv;
 }
 
 NS_METHOD
@@ -182,23 +211,28 @@ ImageFrame::Paint(nsIPresContext& aPresContext,
     return NS_OK;
   }
 
-  nsresult rv = LoadImage(aPresContext);
-  if (NS_OK != rv) {
-    // Don't bother informing the outside world that we can't render
+  if (nsnull == mImageLoader) {
+    // No image at all (not even the broken-image image)
     return NS_OK;
   }
-  if (nsnull == mImage) {
+  nsIImage* image;
+  mImageLoader->GetImage(image);
+  if (nsnull == image) {
+    // No image yet
     return NS_OK;
   }
 
   // First paint background and borders
   nsLeafFrame::Paint(aPresContext, aRenderingContext, aDirtyRect);
 
+  // XXX when rendering the broken image, do not scale!
+  // XXX when we don't have the image, draw the we-don't-have-an-image look
+
   // Now render the image into our inner area (the area without the
   // borders and padding)
   nsRect inner;
   GetInnerArea(&aPresContext, inner);
-  aRenderingContext.DrawImage(mImage, inner);
+  aRenderingContext.DrawImage(image, inner);
 
   if (GetShowFrameBorders()) {
     nsIImageMap* map = GetImageMap();
@@ -344,15 +378,18 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
 {
   nsSize styleSize;
   PRIntn ss = nsCSSLayout::GetStyleSize(aPresContext, this, styleSize);
+  PRIntn loadStatus;
   if (0 != ss) {
     if (NS_SIZE_HAS_BOTH == ss) {
+      LoadImage(*aPresContext, PR_FALSE, loadStatus);
       aDesiredSize.width = styleSize.width;
       aDesiredSize.height = styleSize.height;
     }
     else {
       // Preserve aspect ratio of image with unbound dimension.
-      nsresult rv = LoadImage(*aPresContext);
-      if (0 == (mImageStatus & NS_LOAD_IMAGE_STATUS_SIZE)) {
+      LoadImage(*aPresContext, PR_TRUE, loadStatus);
+      if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
+          (nsnull == mImageLoader)) {
         // Provide a dummy size for now; later on when the image size
         // shows up we will reflow to the new size.
         aDesiredSize.width = 0;
@@ -360,8 +397,10 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
       }
       else {
         float p2t = aPresContext->GetPixelsToTwips();
-        float imageWidth = mImageSize.width * p2t;
-        float imageHeight = mImageSize.height * p2t;
+        nsSize imageSize;
+        mImageLoader->GetSize(imageSize);
+        float imageWidth = imageSize.width * p2t;
+        float imageHeight = imageSize.height * p2t;
         if (0.0f != imageHeight) {
           if (0 != (ss & NS_SIZE_HAS_WIDTH)) {
             // We have a width, and an auto height. Compute height
@@ -387,16 +426,19 @@ ImageFrame::GetDesiredSize(nsIPresContext* aPresContext,
     }
   }
   else {
-    nsresult rv = LoadImage(*aPresContext);
-    if (0 == (mImageStatus & NS_LOAD_IMAGE_STATUS_SIZE)) {
+    LoadImage(*aPresContext, PR_TRUE, loadStatus);
+    if ((0 == (loadStatus & NS_IMAGE_LOAD_STATUS_SIZE_AVAILABLE)) ||
+        (nsnull == mImageLoader)) {
       // Provide a dummy size for now; later on when the image size
       // shows up we will reflow to the new size.
       aDesiredSize.width = 0;
       aDesiredSize.height = 0;
     } else {
       float p2t = aPresContext->GetPixelsToTwips();
-      aDesiredSize.width = nscoord(mImageSize.width * p2t);
-      aDesiredSize.height = nscoord(mImageSize.height * p2t);
+      nsSize imageSize;
+      mImageLoader->GetSize(imageSize);
+      aDesiredSize.width = nscoord(imageSize.width * p2t);
+      aDesiredSize.height = nscoord(imageSize.height * p2t);
     }
   }
 }

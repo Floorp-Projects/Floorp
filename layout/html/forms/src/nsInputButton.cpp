@@ -41,6 +41,7 @@
 #include "nsIFormManager.h"
 #include "nsIImage.h"
 #include "nsHTMLForms.h"
+#include "nsIFrameImageLoader.h"
 
 // XXX rewrite this to embed an html image frame in the form element
 // frame so that the html image code can be 100% reused to deal with
@@ -121,7 +122,7 @@ public:
   nsButtonType GetButtonType() const;
   nsButtonTagType GetButtonTagType() const;
 
-  nsIImage* GetImage(nsIPresContext& aPresContext, PRBool aNeedBits);
+  nsIImage* GetImage(nsIPresContext& aPresContext, PRBool aNeedSize);
 
 
 protected:
@@ -316,7 +317,7 @@ nsInputButtonFrame::GetButtonTagType() const
 }
 
 nsIImage* nsInputButtonFrame::GetImage(nsIPresContext& aPresContext,
-                                       PRBool aNeedBits)
+                                       PRBool aNeedSize)
 {
   if (kButton_Image != GetButtonType()) {
     return nsnull;
@@ -324,13 +325,14 @@ nsIImage* nsInputButtonFrame::GetImage(nsIPresContext& aPresContext,
 
   nsAutoString src;
   if (eContentAttr_HasValue == mContent->GetAttribute("SRC", src)) {
-    PRInt32 loadStatus;
-    nsImageError loadError;
-    nsIImage* image = nsnull;
-    nsSize imageSize;
-    nsresult rv = aPresContext.LoadImage(src, this, loadStatus, loadError,
-                                         imageSize, image);
-    return image;
+    nsIFrameImageLoader* loader = nsnull;
+    nsresult rv = aPresContext.LoadImage(src, this, aNeedSize, loader);
+    if ((NS_OK == rv) && (nsnull != loader)) {
+      nsIImage* image = nsnull;
+      loader->GetImage(image);
+      NS_RELEASE(loader);
+      return image;
+    }
   }
   return nsnull;
 }
@@ -344,7 +346,7 @@ NS_METHOD nsInputButtonFrame::Paint(nsIPresContext& aPresContext,
     return nsInputButtonFrameSuper::Paint(aPresContext, aRenderingContext, aDirtyRect);
   }
 
-  nsIImage* image = GetImage(aPresContext, PR_TRUE);
+  nsIImage* image = GetImage(aPresContext, PR_FALSE);
   if (nsnull == image) {
     return NS_OK;
   }
@@ -427,11 +429,13 @@ nsInputButtonFrame::GetDesiredSize(nsIPresContext* aPresContext,
     if (kButton_Image == GetButtonType()) { // there is an image
       float p2t = aPresContext->GetPixelsToTwips();
       if ((0 < styleSize.width) && (0 < styleSize.height)) {
+        GetImage(*aPresContext, PR_FALSE);
+
         // Use dimensions from style attributes
         aDesiredLayoutSize.width  = nscoord(styleSize.width  * p2t);
         aDesiredLayoutSize.height = nscoord(styleSize.height * p2t);
       } else {
-        nsIImage* image = GetImage(*aPresContext, PR_FALSE);
+        nsIImage* image = GetImage(*aPresContext, PR_TRUE);
         if (nsnull == image) {
           // XXX Here is where we trigger a resize-reflow later on; or block
           // layout or whatever our policy wants to be
