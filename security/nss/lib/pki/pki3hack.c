@@ -35,7 +35,7 @@
  * ***** END LICENSE BLOCK ***** */
 
 #ifdef DEBUG
-static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.83 $ $Date: 2004/07/29 23:38:14 $ $Name:  $";
+static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.84 $ $Date: 2004/10/07 04:36:03 $ $Name:  $";
 #endif /* DEBUG */
 
 /*
@@ -73,6 +73,7 @@ static const char CVS_ID[] = "@(#) $RCSfile: pki3hack.c,v $ $Revision: 1.83 $ $D
 #include "pk11func.h"
 #include "pkistore.h"
 #include "secmod.h"
+#include "nssrwlk.h"
 
 NSSTrustDomain *g_default_trust_domain = NULL;
 
