@@ -38,6 +38,7 @@ public:
 
   virtual nsresult AddChild(nsTransactionItem *aTransactionItem);
   virtual nsresult GetTransaction(nsITransaction **aTransaction);
+  virtual nsresult GetNumberOfChildren(PRInt32 *aNumChildren);
 
   virtual nsresult Do(void);
   virtual nsresult Undo(void);
