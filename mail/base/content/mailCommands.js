@@ -70,6 +70,8 @@ function getBestIdentity(identities, optionalHint)
 {
   var identity = null;
 
+  try
+  {
   // if we have more than one identity and a hint to help us pick one
   if (identities.Count() > 1 && optionalHint) {
     // normalize case on the optional hint to improve our chances of finding a match
@@ -106,6 +108,8 @@ function getBestIdentity(identities, optionalHint)
       }
     }
   }
+  }
+  catch (ex) {dump (ex + "\n");}
 
   // still no matches? Give up and pick the first one like we used to.
   if (!identity)
