@@ -2143,7 +2143,8 @@ nsInstall::Confirm(nsString& string, PRBool* aReturn)
 PRInt32 
 nsInstall::OpenJARFile(void)
 {    
-    nsresult rv = mJarFileData->Init(nsFileSpec(mJarFileLocation));
+    nsFileSpec loc(mJarFileLocation);
+    nsresult rv = mJarFileData->Init(loc);
     if (NS_FAILED(rv))
         return UNEXPECTED_ERROR;
 
