@@ -586,6 +586,7 @@
           
           this.securityUI = null;
           this._fastFind = null;
+          this._webBrowserFind = null;
 
           this.removeEventListener("load", this.onLoad, true);
           this.removeEventListener("unload", this.onUnload, true);
