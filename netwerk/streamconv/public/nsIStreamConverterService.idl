@@ -40,12 +40,13 @@
 
 /**
  * The nsIStreamConverterService is a higher level stream converter factory
- * responsible for locating and creating stream converters (nsIStreamConverter).
+ * responsible for locating and creating stream converters
+ * (nsIStreamConverter).
  *
- * This service retrieves an interface that can convert data from a particular MIME
- * type, to a particular MIME type. It is responsible for any intermediary
- * conversion required in order to get from X to Z, assuming direct conversion is not
- * possible.
+ * This service retrieves an interface that can convert data from a particular
+ * MIME type, to a particular MIME type. It is responsible for any intermediary
+ * conversion required in order to get from X to Z, assuming direct conversion
+ * is not possible.
  *
  * @author Jud Valeski
  * @see nsIStreamConverter
@@ -74,16 +75,17 @@ interface nsIStreamConverterService : nsISupports {
      * @param aFromStream   The stream representing the original/raw data.
      * @param aFromType     The MIME type of aFromStream.
      * @param aToType       The MIME type of the returned stream.
-     * @param aContext      Either an opaque context, or a converter specific context
-     *                      (implementation specific).
-     * @return              The converted stream. NOTE: The returned stream may not
-     *                      already be converted. An efficient stream converter
-     *                      implementation will converter data on demand rather than
-     *                      buffering the converted data until it is used.
+     * @param aContext      Either an opaque context, or a converter specific
+     *                      context (implementation specific).
+     * @return              The converted stream. NOTE: The returned stream
+     *                      may not already be converted. An efficient stream
+     *                      converter implementation will convert data on
+     *                      demand rather than buffering the converted data
+     *                      until it is used.
      */
-    nsIInputStream Convert(in nsIInputStream aFromStream,
-						   in wstring aFromType,
-						   in wstring aToType,
+    nsIInputStream convert(in nsIInputStream aFromStream,
+                           in wstring aFromType,
+                           in wstring aToType,
                            in nsISupports aContext);
 
     /**
@@ -92,17 +94,18 @@ interface nsIStreamConverterService : nsISupports {
      * nsIStreamListener::OnDataAvailable() callback, then converts and pushes 
      * the data to aListener.
      *
-     * Use this method when you want to proxy (and convert) nsIStreamListener callbacks
-     * asynchronously.
+     * Use this method when you want to proxy (and convert) nsIStreamListener
+     * callbacks asynchronously.
      *
      * @param aFromType     The MIME type of the original/raw data.
      * @param aToType       The MIME type of the converted data.
-     * @param aListener     The listener who receives the converted data.
-     * @param aCtxt         Either an opaque context, or a converter specific context
-     *                      (implementation specific).
-     * @return              A nsIStreamListener that receives data via its OnDataAvailable() method.
+     * @param aListener     The listener that receives the converted data.
+     * @param aCtxt         Either an opaque context, or a converter specific
+     *                      context (implementation specific).
+     * @return              A nsIStreamListener that receives data via its
+     *                      OnDataAvailable() method.
      */
-    nsIStreamListener AsyncConvertData(in wstring aFromType, 
+    nsIStreamListener asyncConvertData(in wstring aFromType, 
                                        in wstring aToType, 
                                        in nsIStreamListener aListener,
                                        in nsISupports aContext);
