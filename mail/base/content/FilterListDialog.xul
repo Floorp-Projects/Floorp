@@ -62,6 +62,7 @@
   <keyset id="dialogKeys"/>
 
   <keyset>
+    <key key="&closeCmd.key;" modifiers="accel" oncommand="onFilterClose();"/>
     <key keycode="VK_ESCAPE" xulkey="false" oncommand="onFilterClose();"/>
   </keyset>
 

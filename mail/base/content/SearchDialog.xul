@@ -68,6 +68,7 @@
 
   <keyset id="mailKeys">
     <key id="key_delete" oncommand="goDoCommand('cmd_delete');"/>
+    <key key="&closeCmd.key;" modifiers="accel" oncommand="onSearchStop(); closeWindow(true);"/>
     <key keycode="VK_ESCAPE" xulkey="false" oncommand="onSearchStop(); closeWindow(true);"/>
     #ifdef XP_MACOSX
       <key id="cmd_shiftDelete" keycode="VK_BACK" xulkey="false" oncommand="goDoCommand('cmd_shiftDelete');" modifiers="shift"/>

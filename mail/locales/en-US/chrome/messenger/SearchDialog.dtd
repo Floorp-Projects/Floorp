@@ -21,6 +21,7 @@
 <!ENTITY fileHereMenu.accesskey      "F">
 <!ENTITY fileButton.label            "File">
 <!ENTITY fileButton.accesskey        "i">
+<!ENTITY closeCmd.key                "W"> 
 <!ENTITY goToFolderButton.label      "Open Message Folder">
 <!ENTITY goToFolderButton.accesskey  "r">
 <!ENTITY saveAsVFButton.label      "Save as Virtual Folder">

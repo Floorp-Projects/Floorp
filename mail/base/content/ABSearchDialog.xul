@@ -64,6 +64,7 @@
   <broadcaster id="Communicator:WorkMode"/>
 
   <keyset id="mailKeys">
+    <key key="&closeCmd.key;" modifiers="accel" oncommand="onSearchStop(); closeWindow(true);"/>
     <key keycode="VK_ESCAPE" xulkey="false" oncommand="onSearchStop(); closeWindow(true);"/>
   </keyset>
 
