@@ -1208,29 +1208,6 @@ nsHTMLElement gHTMLElements[] = {
     /*special parents,kids,skip*/       0,0,eHTMLTag_unknown},
 };
 
-/**
- * This class is here to finalize the initialization of the
- * nsHTMLElement table.
- */
-class CTableInitializer {
-public:
-  CTableInitializer(){
-
-    /*now initalize tags that can contain themselves...
-    int max=sizeof(gStyleTags)/sizeof(eHTMLTag_unknown);
-    for(index=0;index<max;index++){
-      gHTMLElements[gStyleTags[index]].mSelfContained=PR_TRUE;
-    }
-    gHTMLElements[eHTMLTag_a].mSelfContained=PR_FALSE;
-    gHTMLElements[eHTMLTag_div].mSelfContained=PR_TRUE;
-    gHTMLElements[eHTMLTag_frameset].mSelfContained=PR_TRUE;
-    gHTMLElements[eHTMLTag_ol].mSelfContained=PR_TRUE;
-    gHTMLElements[eHTMLTag_ul].mSelfContained=PR_TRUE;
-    */
-  }
-};
-CTableInitializer gTableInitializer;
-
 int nsHTMLElement::GetSynonymousGroups(int aGroup) {
   int result=0;
 

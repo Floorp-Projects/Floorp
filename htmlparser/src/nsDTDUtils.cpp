@@ -611,10 +611,10 @@ void DebugDumpContainmentRules(nsIDTD& theDTD,const char* aFilename,const char* 
 
 #define POLYNOMIAL 0x04c11db7L
 
+static PRBool crc_table_initialized;
 static PRUint32 crc_table[256];
 
-static
-void gen_crc_table() {
+static void gen_crc_table() {
  /* generate the table of CRC remainders for all possible bytes */
   int i, j;  
   PRUint32 crc_accum;
@@ -630,16 +630,12 @@ void gen_crc_table() {
   return; 
 }
 
-class CRCInitializer {
-  public: 
-    CRCInitializer() {
-      gen_crc_table();
-    }
-};
-CRCInitializer gCRCInitializer;
-
-
 PRUint32 AccumulateCRC(PRUint32 crc_accum, char *data_blk_ptr, int data_blk_size)  {
+  if (!crc_table_initialized) {
+    gen_crc_table();
+    crc_table_initialized = PR_TRUE;
+  }
+
  /* update the CRC on the data block one byte at a time */
   int i, j;
   for ( j = 0;  j < data_blk_size;  j++ ) { 
