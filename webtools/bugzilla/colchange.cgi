@@ -27,6 +27,7 @@ use lib qw(.);
 
 sub sillyness { # shut up "used only once" warnings
   my $zz = @::legal_keywords;
+  $zz = $::buffer;
 }
 
 require "CGI.pl";
