@@ -19,7 +19,15 @@ DEPTH=..\..\..
 MODULE=rdf
 LIBRARY_NAME=rdfcontent_s
 
+DEFINES=-D_IMPL_NS_DOM
+
+LCFLAGS = \
+        $(LCFLAGS) \
+        $(DEFINES) \
+        $(NULL)
+
 CPP_OBJS=\
+        .\$(OBJDIR)\nsJSXULNode.obj               \
         .\$(OBJDIR)\nsRDFContentUtils.obj         \
         .\$(OBJDIR)\nsRDFDOMNodeList.obj          \
         .\$(OBJDIR)\nsRDFGenericElement.obj       \

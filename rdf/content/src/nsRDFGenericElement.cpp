@@ -43,8 +43,13 @@
 #include "nsIScriptObjectOwner.h"
 #include "nsISupportsArray.h"
 #include "nsRDFContentUtils.h"
+#include "nsCOMPtr.h"
 #include "nsString.h"
 #include "prlog.h"
+
+// The XUL interfaces implemented by the RDF content node.
+#include "nsIDOMXULNode.h"
+// End of XUL interface includes
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -57,9 +62,21 @@ static NS_DEFINE_IID(kIJSScriptObjectIID,     NS_IJSSCRIPTOBJECT_IID);
 static NS_DEFINE_IID(kIScriptObjectOwnerIID,  NS_ISCRIPTOBJECTOWNER_IID);
 static NS_DEFINE_IID(kISupportsIID,           NS_ISUPPORTS_IID);
 
+struct XULBroadcastListener
+{
+	nsString mAttribute;
+	nsCOMPtr<nsIDOMNode> mListener;
+
+	XULBroadcastListener(const nsString& attr, nsIDOMNode* listen)
+		: mAttribute(attr), mListener(listen)
+	{ // Nothing else to do 
+	}
+};
+
 ////////////////////////////////////////////////////////////////////////
 
-class RDFGenericElementImpl : public nsIDOMElement,
+class RDFGenericElementImpl : public nsIDOMXULNode,
+							  public nsIDOMElement,
                               public nsIDOMEventReceiver,
                               public nsIScriptObjectOwner,
                               public nsIJSScriptObject,
@@ -141,6 +158,14 @@ public:
     virtual PRBool Convert(JSContext *aContext, jsval aID);
     virtual void   Finalize(JSContext *aContext);
 
+	// nsIDOMXULNode
+	NS_IMETHOD DoCommand();
+
+	NS_IMETHOD AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode);
+	NS_IMETHOD RemoveBroadcastListener(const nsString& attr, nsIDOMNode* aNode);
+
+	NS_IMETHOD GetNodeWithID(const nsString& id, nsIDOMNode** aNode);
+
 protected:
     /** The document in which the element lives. */
     nsIDocument*      mDocument;
@@ -163,6 +188,12 @@ protected:
     /** An array of attribute data. Instantiated
         lazily if attributes are required */
     nsVoidArray*      mAttributes;
+
+	/** A pointer to a broadcaster. Only non-null if we are observing someone. **/
+	nsIDOMNode*		  mBroadcaster;
+
+	/** An array of broadcast listeners. **/
+	nsVoidArray		  mBroadcastListeners;
 };
 
 
@@ -192,7 +223,8 @@ RDFGenericElementImpl::RDFGenericElementImpl(PRInt32 aNameSpaceID, nsIAtom* aTag
       mParent(nsnull),
       mNameSpaceID(aNameSpaceID),
       mTag(aTag),
-      mAttributes(nsnull)
+      mAttributes(nsnull),
+	  mBroadcaster(nsnull)
 {
     NS_INIT_REFCNT();
     NS_ADDREF(aTag);
@@ -215,6 +247,14 @@ RDFGenericElementImpl::~RDFGenericElementImpl()
     //NS_IF_RELEASE(mScriptObject); XXX don't forget!
     NS_IF_RELEASE(mTag);
     NS_IF_RELEASE(mChildren);
+
+	// Release our broadcast listeners
+	PRInt32 count = mBroadcastListeners.Count();
+	for (PRInt32 i = 0; i < count; i++)
+	{
+		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[0];
+		RemoveBroadcastListener(xulListener->mAttribute, xulListener->mListener);
+	}
 }
 
 NS_IMPL_ADDREF(RDFGenericElementImpl);
@@ -857,7 +897,7 @@ RDFGenericElementImpl::SetAttribute(PRInt32 aNameSpaceID,
                                   const nsString& aValue,
                                   PRBool aNotify)
 {
-    NS_ASSERTION(kNameSpaceID_Unknown != aNameSpaceID, "must have name space ID");
+	NS_ASSERTION(kNameSpaceID_Unknown != aNameSpaceID, "must have name space ID");
     if (kNameSpaceID_Unknown == aNameSpaceID) {
         return NS_ERROR_ILLEGAL_VALUE;
     }
@@ -873,6 +913,7 @@ RDFGenericElementImpl::SetAttribute(PRInt32 aNameSpaceID,
 
     nsresult rv;
     nsGenericAttribute* attr;
+	PRBool successful = PR_FALSE;
     PRInt32 index;
     PRInt32 count = mAttributes->Count();
     for (index = 0; index < count; index++) {
@@ -880,6 +921,7 @@ RDFGenericElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         if ((aNameSpaceID == attr->mNameSpaceID) && (aName == attr->mName)) {
             attr->mValue = aValue;
             rv = NS_OK;
+			successful = PR_TRUE;
             break;
         }
     }
@@ -889,8 +931,31 @@ RDFGenericElementImpl::SetAttribute(PRInt32 aNameSpaceID,
         if (nsnull != attr) {
             mAttributes->AppendElement(attr);
             rv = NS_OK;
+			successful = PR_TRUE;
         }
     }
+
+	// XUL Only. Find out if we have a broadcast listener for this element.
+	if (successful)
+	{
+		count = mBroadcastListeners.Count();
+		for (PRInt32 i = 0; i < count; i++)
+		{
+			XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+			nsString aString;
+			aName->ToString(aString);
+			if (xulListener->mAttribute.EqualsIgnoreCase(aString))
+			{
+				// Set the attribute in the broadcast listener.
+				nsCOMPtr<nsIContent> contentNode(xulListener->mListener);
+				if (contentNode)
+				{
+					contentNode->SetAttribute(aNameSpaceID, aName, aValue, aNotify);
+				}
+			}
+		}
+	}
+	// End XUL Only Code
 
     // XXX notify doc?
     return rv;
@@ -936,7 +1001,7 @@ RDFGenericElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBo
     }
 
     nsresult rv = NS_OK;
-
+	PRBool successful = PR_FALSE;
     if (nsnull != mAttributes) {
         PRInt32 count = mAttributes->Count();
         PRInt32 index;
@@ -945,12 +1010,35 @@ RDFGenericElementImpl::UnsetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, PRBo
             if ((attr->mNameSpaceID == aNameSpaceID) && (attr->mName == aName)) {
                 mAttributes->RemoveElementAt(index);
                 delete attr;
+				successful = PR_TRUE;
                 break;
             }
         }
 
         // XXX notify document??
     }
+
+	// XUL Only. Find out if we have a broadcast listener for this element.
+	if (successful)
+	{
+		PRInt32 count = mBroadcastListeners.Count();
+		for (PRInt32 i = 0; i < count; i++)
+		{
+			XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+			nsString aString;
+			aName->ToString(aString);
+			if (xulListener->mAttribute.EqualsIgnoreCase(aString))
+			{
+				// Set the attribute in the broadcast listener.
+				nsCOMPtr<nsIContent> contentNode(xulListener->mListener);
+				if (contentNode)
+				{
+					contentNode->UnsetAttribute(aNameSpaceID, aName, aNotify);
+				}
+			}
+		}
+	}
+	// End XUL Only Code
 
     return rv;
 }
@@ -1129,4 +1217,52 @@ RDFGenericElementImpl::GetRangeList(nsVoidArray*& aResult) const
 {
     // rdf content does not yet support DOM ranges
     return NS_OK;
+}
+
+// nsIDOMXULNode
+NS_IMETHODIMP
+RDFGenericElementImpl::DoCommand()
+{
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFGenericElementImpl::AddBroadcastListener(const nsString& attr, nsIDOMNode* aNode) 
+{ 
+	// Add ourselves to the array.
+	NS_ADDREF(aNode);
+	mBroadcastListeners.AppendElement(new XULBroadcastListener(attr, aNode));
+
+	// XXX: Sync up the initial attribute value.
+
+	return NS_OK; 
+}
+	
+
+NS_IMETHODIMP
+RDFGenericElementImpl::RemoveBroadcastListener(const nsString& attr, nsIDOMNode* aNode) 
+{ 
+	// Find the node.
+	PRInt32 count = mBroadcastListeners.Count();
+	for (PRInt32 i = 0; i < count; i++)
+	{
+		XULBroadcastListener* xulListener = (XULBroadcastListener*)mBroadcastListeners[i];
+		
+		if (xulListener->mAttribute == attr &&
+			xulListener->mListener == aNode)
+		{
+			// Do the removal.
+			mBroadcastListeners.RemoveElementAt(i);
+			delete xulListener;
+			return NS_OK;
+		}
+	}
+
+	return NS_OK;
+}
+
+NS_IMETHODIMP
+RDFGenericElementImpl::GetNodeWithID(const nsString& id, nsIDOMNode** node)
+{
+	return NS_OK;
 }
