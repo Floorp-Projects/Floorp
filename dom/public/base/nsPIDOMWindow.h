@@ -50,7 +50,7 @@
 #include "nsCOMPtr.h"
 
 // Popup control state enum. The values in this enum must go from most
-// permissive to least permissive so that its safe to push state in
+// permissive to least permissive so that it's safe to push state in
 // all situations. Pushing popup state onto the stack never makes the
 // current popup state less permissive (see
 // GlobalWindowImpl::PushPopupControlState()).
@@ -177,7 +177,9 @@ public:
 #endif
 
 protected:
-  nsPIDOMWindow *mWindow; // WEAK
+#ifndef _IMPL_NS_LAYOUT
+  nsCOMPtr<nsPIDOMWindow> mWindow;
+#endif
   PopupControlState mOldState;
 
 private:

@@ -4881,7 +4881,7 @@ GlobalWindowImpl::RunTimeout(nsTimeoutImpl *aTimeout)
     mRunningTimeout = timeout;
     timeout->mRunning = PR_TRUE;
 
-    // Push this timeouts popup control state, which should only be
+    // Push this timeout's popup control state, which should only be
     // eabled the first time a timeout fires that was created while
     // popups were enabled and with a delay less than
     // "dom.disable_open_click_delay".
