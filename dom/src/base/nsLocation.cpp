@@ -234,10 +234,14 @@ LocationImpl::CheckURL(nsIURI* aURI, nsIDocShellLoadInfo** aLoadInfo)
 nsresult
 LocationImpl::GetURI(nsIURI** aURI)
 {
+  *aURI = nsnull;
+
   nsresult rv;
 
   nsCOMPtr<nsIWebNavigation> webNav(do_QueryInterface(mDocShell, &rv));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv)) {
+    return rv;
+  }
 
   return webNav->GetCurrentURI(aURI);
 }
@@ -245,10 +249,14 @@ LocationImpl::GetURI(nsIURI** aURI)
 nsresult
 LocationImpl::GetWritableURI(nsIURI** aURI)
 {
+  *aURI = nsnull;
+
   nsCOMPtr<nsIURI> uri;
 
   nsresult rv = GetURI(getter_AddRefs(uri));
-  if (NS_FAILED(rv)) return rv;
+  if (NS_FAILED(rv) || !uri) {
+    return rv;
+  }
 
   return uri->Clone(aURI);
 }
@@ -274,26 +282,24 @@ LocationImpl::SetURI(nsIURI* aURI)
 NS_IMETHODIMP
 LocationImpl::GetHash(nsAWritableString& aHash)
 {
+  aHash.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+
+  if (url) {
     nsCAutoString ref;
 
-    if (url) {
-      result = url->GetRef(ref);
-      // XXX danger... this may result in non-ASCII octets!
-      NS_UnescapeURL(ref);
-    }
+    result = url->GetRef(ref);
+    // XXX danger... this may result in non-ASCII octets!
+    NS_UnescapeURL(ref);
 
     if (NS_SUCCEEDED(result) && !ref.IsEmpty()) {
       aHash.Assign(NS_LITERAL_STRING("#") + NS_ConvertASCIItoUCS2(ref));
-    }
-    else {
-      aHash.SetLength(0);
     }
   }
 
@@ -308,21 +314,20 @@ LocationImpl::SetHash(const nsAReadableString& aHash)
 
   result = GetWritableURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &result));
-    if (url) {
-      url->SetRef(NS_ConvertUCS2toUTF8(aHash));
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
 
-      if (mDocShell) {
-        nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+  if (url) {
+    url->SetRef(NS_ConvertUCS2toUTF8(aHash));
 
-        if (NS_SUCCEEDED(CheckURL(url, getter_AddRefs(loadInfo))))
-          // We're not calling nsIWebNavigation->Stop, we don't
-          // want to stop the load when we're just scrolling to a
-          // named anchor in the document. See bug 114975.
-          mDocShell->LoadURI(url, loadInfo,
-                             nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
-      }
+    if (mDocShell) {
+      nsCOMPtr<nsIDocShellLoadInfo> loadInfo;
+
+      if (NS_SUCCEEDED(CheckURL(url, getter_AddRefs(loadInfo))))
+        // We're not calling nsIWebNavigation->Stop, we don't want to
+        // stop the load when we're just scrolling to a named anchor
+        // in the document. See bug 114975.
+        mDocShell->LoadURI(url, loadInfo,
+                           nsIWebNavigation::LOAD_FLAGS_NONE, PR_TRUE);
     }
   }
 
@@ -332,18 +337,21 @@ LocationImpl::SetHash(const nsAReadableString& aHash)
 NS_IMETHODIMP
 LocationImpl::GetHost(nsAWritableString& aHost)
 {
+  aHost.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result;
 
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     nsCAutoString hostport;
 
     result = uri->GetHostPort(hostport);
 
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result)) {
       aHost = NS_ConvertUTF8toUCS2(hostport);
+    }
   }
 
   return result;
@@ -357,7 +365,7 @@ LocationImpl::SetHost(const nsAReadableString& aHost)
 
   result = GetWritableURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     uri->SetHostPort(NS_ConvertUCS2toUTF8(aHost));
     SetURI(uri);
   }
@@ -368,18 +376,21 @@ LocationImpl::SetHost(const nsAReadableString& aHost)
 NS_IMETHODIMP
 LocationImpl::GetHostname(nsAWritableString& aHostname)
 {
+  aHostname.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result;
 
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     nsCAutoString host;
 
     result = uri->GetHost(host);
 
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result)) {
       aHostname = NS_ConvertUTF8toUCS2(host);
+    }
   }
 
   return result;
@@ -393,7 +404,7 @@ LocationImpl::SetHostname(const nsAReadableString& aHostname)
 
   result = GetWritableURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     uri->SetHost(NS_ConvertUCS2toUTF8(aHostname));
     SetURI(uri);
   }
@@ -404,18 +415,21 @@ LocationImpl::SetHostname(const nsAReadableString& aHostname)
 NS_IMETHODIMP
 LocationImpl::GetHref(nsAWritableString& aHref)
 {
+  aHref.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result;
 
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result) && uri) {
+  if (uri) {
     nsCAutoString uriString;
 
     result = uri->GetSpec(uriString);
 
-    if (NS_SUCCEEDED(result))
+    if (NS_SUCCEEDED(result)) {
       aHref = NS_ConvertUTF8toUCS2(uriString);
+    }
   }
 
   return result;
@@ -545,22 +559,21 @@ LocationImpl::SetHrefWithBase(const nsAReadableString& aHref,
 NS_IMETHODIMP
 LocationImpl::GetPathname(nsAWritableString& aPathname)
 {
+  aPathname.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
-  aPathname.Truncate();
-
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
-    if (url) {
-      nsCAutoString file;
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  if (url) {
+    nsCAutoString file;
 
-      result = url->GetFilePath(file);
+    result = url->GetFilePath(file);
 
-      if (NS_SUCCEEDED(result))
-        aPathname = NS_ConvertUTF8toUCS2(file);
+    if (NS_SUCCEEDED(result)) {
+      aPathname = NS_ConvertUTF8toUCS2(file);
     }
   }
 
@@ -575,7 +588,7 @@ LocationImpl::SetPathname(const nsAReadableString& aPathname)
 
   result = GetWritableURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     uri->SetPath(NS_ConvertUCS2toUTF8(aPathname));
     SetURI(uri);
   }
@@ -586,14 +599,14 @@ LocationImpl::SetPathname(const nsAReadableString& aPathname)
 NS_IMETHODIMP
 LocationImpl::GetPort(nsAWritableString& aPort)
 {
+  aPort.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
-    aPort.SetLength(0);
-
+  if (uri) {
     PRInt32 port;
     uri->GetPort(&port);
 
@@ -615,7 +628,7 @@ LocationImpl::SetPort(const nsAReadableString& aPort)
 
   result = GetWritableURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     // perhaps use nsReadingIterators at some point?
     NS_ConvertUCS2toUTF8 portStr(aPort);
     const char *buf = portStr.get();
@@ -629,6 +642,7 @@ LocationImpl::SetPort(const nsAReadableString& aPort)
         port = atol(buf);
       }
     }
+
     uri->SetPort(port);
     SetURI(uri);
   }
@@ -639,12 +653,14 @@ LocationImpl::SetPort(const nsAReadableString& aPort)
 NS_IMETHODIMP
 LocationImpl::GetProtocol(nsAWritableString& aProtocol)
 {
+  aProtocol.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     nsCAutoString protocol;
 
     result = uri->GetScheme(protocol);
@@ -666,7 +682,7 @@ LocationImpl::SetProtocol(const nsAReadableString& aProtocol)
 
   result = GetWritableURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
+  if (uri) {
     uri->SetScheme(NS_ConvertUCS2toUTF8(aProtocol));
     SetURI(uri);
   }
@@ -677,24 +693,22 @@ LocationImpl::SetProtocol(const nsAReadableString& aProtocol)
 NS_IMETHODIMP
 LocationImpl::GetSearch(nsAWritableString& aSearch)
 {
+  aSearch.SetLength(0);
+
   nsCOMPtr<nsIURI> uri;
   nsresult result = NS_OK;
 
   result = GetURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
-    nsCAutoString search;
-    nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
 
-    if (url) {
-      result = url->GetQuery(search);
-    }
+  if (url) {
+    nsCAutoString search;
+
+    result = url->GetQuery(search);
 
     if (NS_SUCCEEDED(result) && !search.IsEmpty()) {
       aSearch.Assign(NS_LITERAL_STRING("?") + NS_ConvertUTF8toUCS2(search));
-    }
-    else {
-      aSearch.SetLength(0);
     }
   }
 
@@ -709,12 +723,10 @@ LocationImpl::SetSearch(const nsAReadableString& aSearch)
 
   result = GetWritableURI(getter_AddRefs(uri));
 
-  if (NS_SUCCEEDED(result)) {
-    nsCOMPtr<nsIURL> url(do_QueryInterface(uri, &result));
-    if (url) {
-      result = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch));
-      SetURI(uri);
-    }
+  nsCOMPtr<nsIURL> url(do_QueryInterface(uri));
+  if (url) {
+    result = url->SetQuery(NS_ConvertUCS2toUTF8(aSearch));
+    SetURI(uri);
   }
 
   return result;
