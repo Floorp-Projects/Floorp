@@ -32,12 +32,16 @@ Rights Reserved.
 <html:script language="JavaScript" src="AccountWizard.js"/>
 
 <box align="vertical" style="width: 100%; height: 100%">
-  <html:iframe flex="100%" style="width: 100%; height: 200px; border: none" src="aw-intro.xul" name="wizardContents"/>
+  <html:iframe flex="100%" style="width: 100%; height: 200px; border: none" src="aw-accounttype.xul" name="wizardContents"/>
   <html:div>
     Click next to continue entering information.
   </html:div>
   <html:br/><html:hr/>
   <box align="horizontal" style="margin: 10px">
+<!--
+    <html:input type="text" id="newPage" flex="100%"/>
+    <titledbutton value="Load Page" onclick="onLoadPage(event);"/>
+-->
     <spring flex="100%"/>
     <titledbutton value="&lt; Back" onclick="onBack(event);"/>
     <titledbutton value="Next &gt;" onclick="onNext(event);"/>

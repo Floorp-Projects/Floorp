@@ -20,10 +20,13 @@
 
 var wizardMap = {
     intro:    { next: "identity" },
-    identity: { next: "smtp",   previous: "intro", validate: validateIdentity},
-    smtp:     { next: "server", previous: "identity", validate: validateSmtp},
-    server:   { next: "done", previous: "smtp", validate: validateServer},
-    done:     { previous: "server" }
+    accounttype: { next: "mailtype" },
+    mailtype: { next: "fullname", previous: "accounttype" },
+    fullname: { next: "email", previous: "mailtype" },
+    email:    { next: "server", previous: "fullname" },
+    server:   { next: "smtp", previous: "email", validate: validateServer},
+    smtp:     { next: "done", previous: "server", validate: validateSmtp},
+    done:     { previous: "smtp" }
 }
 
 var pagePrefix="aw-";
@@ -41,19 +44,16 @@ function init() {
 }
 // event handlers
 function onLoad() {
-    dump("Initializing the wizard..\n");
     init();
 }
 
 function wizardPageLoaded(tag) {
-    dump(tag + " has finished loading\n");
     init();
     currentPageTag=tag;
     initializePage(contentWindow, wizardContents);
 }
 
 function onNext(event) {
-    savePageInfo(contentWindow);
 
     // only run validation routine if it's there
     var validate = wizardMap[currentPageTag].validate;
@@ -61,6 +61,7 @@ function onNext(event) {
         if (!validate(contentWindow, wizardContents)) return;
 
     saveContents(contentWindow, wizardContents);
+    
     nextPage(contentWindow);
 }
 
@@ -83,9 +84,6 @@ function getUrlFromTag(title) {
 
 
 // helper functions that actually do stuff
-function savePageInfo(win) {
-    
-}
 
 
 function nextPage(win) {
@@ -106,7 +104,6 @@ function initializePage(win, hash) {
     for (var i in hash) {
         var formElement=doc.getElementById(i);
         if (formElement) {
-            dump("This page has " + i + "\n");
             formElement.value = hash[i];
         }
 
