@@ -257,7 +257,7 @@ nsFrameImageLoader::StopImageLoad(PRBool aStopChrome)
   // don't stop chrome
   if (!aStopChrome) {
       if (mURL.EqualsWithConversion("chrome:", PR_TRUE, 7))
-          return NS_OK;
+          return NS_ERROR_FAILURE;
   }
 
 #ifdef NOISY_IMAGE_LOADING
@@ -411,7 +411,7 @@ NS_IMETHODIMP
 nsFrameImageLoader::GetIntrinsicSize(nsSize& aResult)
 {
   if (mImageRequest) {
-    PRUint32  width, height;
+    PRUint32  width = 0, height = 0;
     float     p2t;
 
     mPresContext->GetScaledPixelsToTwips(&p2t);

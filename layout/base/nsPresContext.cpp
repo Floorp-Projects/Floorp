@@ -924,6 +924,7 @@ nsPresContext::StartLoadImage(const nsString& aURL,
           if (aResult) {
             *aResult = nsnull;
           }    
+          return NS_OK;
       }
   }
 
@@ -1023,13 +1024,15 @@ nsPresContext::Stop(PRBool aStopChrome)
 {
   mStopChrome = aStopChrome;
   PRInt32 n = mImageLoaders.Count();
-  for (PRInt32 i = 0; i < n; i++) {
+  for (PRInt32 i = n-1; i >= 0; i--) {
     nsIFrameImageLoader* loader;
     loader = (nsIFrameImageLoader*) mImageLoaders.ElementAt(i);
-    loader->StopImageLoad(aStopChrome);
-    NS_RELEASE(loader);
+    if (NS_SUCCEEDED(loader->StopImageLoad(aStopChrome))) {
+       mImageLoaders.RemoveElementAt(i);
+       NS_RELEASE(loader);
+    }  
   }
-  mImageLoaders.Clear();
+
   mStopped = PR_TRUE;
   return NS_OK;
 }
