@@ -187,6 +187,9 @@ var PrivacyPanel = {
                                     .getService(Components.interfaces.nsIBrowserHistory);
       globalHistory.removeAllPages();
       
+      var os = Components.classes["@mozilla.org/observer-service;1"].getService(Components.interfaces.nsIObserverService);
+      os.notifyObservers(null, "browser:purge-session-history", "");
+      
       return true;
     },
     
