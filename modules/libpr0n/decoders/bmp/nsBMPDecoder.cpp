@@ -20,6 +20,7 @@
  * Rights Reserved.
  * 
  * Contributor(s):
+ *   Neil Rashbrook <neil@parkwaycc.co.uk>
  * 
  * Alternatively, the contents of this file may be used under the terms of
  * either of the GNU General Public License Version 2 or later (the "GPL"),
@@ -36,12 +37,10 @@
  * ----- END LICENSE BLOCK ----- */
 /* I got the format description from http://www.daubnet.com/formats/BMP.html */
 
-/* This does not yet work in this version:
- * o) Compressed Bitmaps
- * This decoder was tested on Windows, Linux and Mac. */
-
 /* This is a Cross-Platform BMP Decoder, which should work everywhere, including
  * Big-Endian machines like the PowerPC. */
+
+#include <stdlib.h>
 
 #include "nsBMPDecoder.h"
 
@@ -65,11 +64,16 @@ nsBMPDecoder::nsBMPDecoder()
     NS_INIT_ISUPPORTS();
     mColors = nsnull;
     mRow = nsnull;
-    mPos = mNumColors = mRowBytes = mCurLine = 0;
+    mPos = mNumColors = mRowBytes = 0;
+    mCurLine = 1; // Otherwise decoder will never start
+    mState = eRLEStateInitial;
+    mStateData = 0;
+    mAlpha = mAlphaPtr = mDecoded = mDecoding = nsnull;
 }
 
 nsBMPDecoder::~nsBMPDecoder()
 {
+    Close();
 }
 
 NS_IMETHODIMP nsBMPDecoder::Init(imgILoad *aLoad)
@@ -103,7 +107,16 @@ NS_IMETHODIMP nsBMPDecoder::Close()
     delete[] mRow;
     mRow = nsnull;
     mRowBytes = 0;
-    mCurLine = 0;
+    mCurLine = 1;
+    if (mAlpha)
+        free(mAlpha);
+    mAlpha = nsnull;
+    if (mDecoded)
+        free(mDecoded);
+    mDecoded = nsnull;
+
+    mState = eRLEStateInitial;
+    mStateData = 0;
 
     if (mObserver) {
         mObserver->OnStopContainer(nsnull, nsnull, mImage);
@@ -140,16 +153,16 @@ NS_IMETHODIMP nsBMPDecoder::WriteFrom(nsIInputStream *aInStr, PRUint32 aCount, P
 // Actual Data Processing
 // ----------------------------------------
 
-nsresult nsBMPDecoder::SetData(PRUint8* aData)
+nsresult nsBMPDecoder::SetData()
 {
-    PRUint32 bpr;
     nsresult rv;
+    PRUint32 bpr;
 
     rv = mFrame->GetImageBytesPerRow(&bpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
-    PRUint32 line = (mBIH.height < 0) ? (-mBIH.height - mCurLine - 1) : mCurLine;
-    rv = mFrame->SetImageData(aData, bpr, line * bpr);
+    PRInt32 line = (mBIH.height < 0) ? (-mBIH.height - mCurLine--) : --mCurLine;
+    rv = mFrame->SetImageData(mDecoded, bpr, line * bpr);
     NS_ENSURE_SUCCESS(rv, rv);
 
     nsRect r(0, line, mBIH.width, 1);
@@ -157,6 +170,43 @@ nsresult nsBMPDecoder::SetData(PRUint8* aData)
     NS_ENSURE_SUCCESS(rv, rv);
 
     return NS_OK;
+}
+
+nsresult nsBMPDecoder::WriteRLERows(PRUint32 rows)
+{
+    nsresult rv;
+    PRUint32 bpr, alpha, cnt, line;
+    PRUint8 byte, bit;
+    PRUint8* pos = mAlpha;
+
+    rv = mFrame->GetImageBytesPerRow(&bpr);
+    NS_ENSURE_SUCCESS(rv, rv);
+
+    // First pack the alpha data
+    rv = mFrame->GetAlphaBytesPerRow(&alpha);
+    NS_ENSURE_SUCCESS(rv, rv);
+    for (cnt = 0; cnt < alpha; cnt++) {
+        byte = 0;
+        for (bit = 128; bit; bit >>= 1)
+            byte |= *pos++ & bit;
+        mAlpha[cnt] = byte;
+    }
+
+    for (cnt = 0; cnt < rows; cnt++) {
+        line = (mBIH.height < 0) ? (-mBIH.height - mCurLine--) : --mCurLine;
+        rv = mFrame->SetAlphaData(mAlpha, alpha, line * alpha);
+        NS_ENSURE_SUCCESS(rv, rv);
+        rv = mFrame->SetImageData(mDecoded, bpr, line * bpr);
+        NS_ENSURE_SUCCESS(rv, rv);
+        if (cnt == 0) {
+            memset(mAlpha, 0, mBIH.width);
+            memset(mDecoded, 0, bpr);
+        }
+    }
+
+    line = (mBIH.height < 0) ? (-mBIH.height - mCurLine - rows) : mCurLine;
+    nsRect r(0, line, mBIH.width, rows);
+    return mObserver->OnDataAvailable(nsnull, nsnull, mFrame, &r);
 }
 
 static void calcBitmask(PRUint32 aMask, PRUint8& aBegin, PRUint8& aLength)
@@ -197,7 +247,7 @@ NS_METHOD nsBMPDecoder::CalcBitShift()
 
 NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
 {
-    if (!aCount || (mCurLine < 0)) // aCount=0 means EOF, mCurLine < 0 means we're past end of image
+    if (!aCount || !mCurLine) // aCount=0 means EOF, mCurLine=0 means we're past end of image
         return NS_OK;
 
     nsresult rv;
@@ -232,10 +282,6 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         ProcessInfoHeader();
         PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP image is %lix%lix%lu. compression=%lu\n",
             mBIH.width, mBIH.height, mBIH.bpp, mBIH.compression));
-        if (mBIH.compression && mBIH.compression != BI_BITFIELDS) {
-            PR_LOG(gBMPLog, PR_LOG_DEBUG, ("Don't yet support compressed BMPs\n"));
-            return NS_ERROR_FAILURE;
-        }
 
         if (mBIH.bpp <= 8) {
             switch (mBIH.bpp) {
@@ -274,7 +320,7 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mObserver->OnStartContainer(nsnull, nsnull, mImage);
         NS_ENSURE_SUCCESS(rv, rv);
-        mCurLine = real_height - 1;
+        mCurLine = real_height;
 
         mRow = new PRUint8[(mBIH.width * mBIH.bpp)/8 + 4];
         // +4 because the line is padded to a 4 bit boundary, but I don't want
@@ -283,7 +329,11 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
         if (!mRow) {
             return NS_ERROR_OUT_OF_MEMORY;
         }
-        rv = mFrame->Init(0, 0, mBIH.width, real_height, BMP_GFXFORMAT, 24);
+        if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
+            rv = mFrame->Init(0, 0, mBIH.width, real_height, RLE_GFXFORMAT_ALPHA, 24);
+        } else {
+            rv = mFrame->Init(0, 0, mBIH.width, real_height, BMP_GFXFORMAT, 24);
+        }
         NS_ENSURE_SUCCESS(rv, rv);
         rv = mImage->AppendFrame(mFrame);
         NS_ENSURE_SUCCESS(rv, rv);
@@ -354,61 +404,61 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                     mRowBytes += toCopy;
                 }
                 if ((rowSize - mRowBytes) == 0) {
-                    PRUint32 bpr;
-                    rv = mFrame->GetImageBytesPerRow(&bpr);
-                    NS_ENSURE_SUCCESS(rv, rv);
-                    PRUint8* decoded = new PRUint8[bpr];
-                    if (!decoded)
-                        return NS_ERROR_OUT_OF_MEMORY;
+                    if (!mDecoded) {
+                        PRUint32 bpr;
+                        rv = mFrame->GetImageBytesPerRow(&bpr);
+                        NS_ENSURE_SUCCESS(rv, rv);
+                        mDecoded = (PRUint8*)malloc(bpr);
+                        if (!mDecoded)
+                            return NS_ERROR_OUT_OF_MEMORY;
+                    }
 
                     PRUint8* p = mRow;
-                    PRUint8* d = decoded;
-                    PRUint32 lpos = 0;
+                    PRUint8* d = mDecoded;
+                    PRUint32 lpos = mBIH.width;
                     switch (mBIH.bpp) {
                       case 1:
-                        while (lpos < mBIH.width) {
+                        while (lpos > 0) {
                           PRInt8 bit;
                           PRUint8 idx;
-                          for (bit = 7; bit >= 0; bit--) {
-                              if (lpos >= mBIH.width)
-                                  break;
+                          for (bit = 7; bit >= 0 && lpos > 0; bit--) {
                               idx = (*p >> bit) & 1;
                               SetPixel(d, idx, mColors);
-                              ++lpos;
+                              --lpos;
                           }
                           ++p;
                         }
                         break;
                       case 4:
-                        while (lpos < mBIH.width) {
-                          Set4BitPixel(d, *p, lpos, mBIH.width, mColors);
+                        while (lpos > 0) {
+                          Set4BitPixel(d, *p, lpos, mColors);
                           ++p;
                         }
                         break;
                       case 8:
-                        while (lpos < mBIH.width) {
+                        while (lpos > 0) {
                           SetPixel(d, *p, mColors);
-                          ++lpos;
+                          --lpos;
                           ++p;
                         }
                         break;
                       case 16:
-                        while (lpos < mBIH.width) {
+                        while (lpos > 0) {
                           PRUint16 val = LITTLE_TO_NATIVE16(*(PRUint16*)p);
                           SetPixel(d,
                                   (val & mBitFields.red) >> mBitFields.redRightShift << mBitFields.redLeftShift,
                                   (val & mBitFields.green) >> mBitFields.greenRightShift << mBitFields.greenLeftShift,
                                   (val & mBitFields.blue) >> mBitFields.blueRightShift << mBitFields.blueLeftShift);
-                          ++lpos;
+                          --lpos;
                           p+=2;
                         }
                         break;
                       case 32:
                       case 24:
-                        while (lpos < mBIH.width) {
+                        while (lpos > 0) {
                           SetPixel(d, p[2], p[1], p[0]);
                           p += 2;
-                          ++lpos;
+                          --lpos;
                           if (mBIH.bpp == 32)
                             p++; // Padding byte
                           ++p;
@@ -419,17 +469,193 @@ NS_METHOD nsBMPDecoder::ProcessData(const char* aBuffer, PRUint32 aCount)
                         return NS_ERROR_FAILURE;
                     }
                       
-                    nsresult rv = SetData(decoded);
-                    delete[] decoded;
+                    nsresult rv = SetData();
                     NS_ENSURE_SUCCESS(rv, rv);
 
                     if (mCurLine == 0) { // Finished last line
                         return mObserver->OnStopFrame(nsnull, nsnull, mFrame);
                     }
-                    mCurLine--; mRowBytes = 0;
+                    mRowBytes = 0;
 
                 }
             } while (aCount > 0);
+        } 
+        else if ((mBIH.compression == BI_RLE8) || (mBIH.compression == BI_RLE4)) {
+            if (((mBIH.compression == BI_RLE8) && (mBIH.bpp != 8)) 
+             || ((mBIH.compression == BI_RLE4) && (mBIH.bpp != 4) && (mBIH.bpp != 1))) {
+                PR_LOG(gBMPLog, PR_LOG_DEBUG, ("BMP RLE8/RLE4 compression only supports 8/4 bits per pixel\n"));
+                return NS_ERROR_FAILURE;
+            }
+
+            if (!mAlpha) {
+                PRUint32 alpha;
+                rv = mFrame->GetAlphaBytesPerRow(&alpha);
+                NS_ENSURE_SUCCESS(rv, rv);
+                // Allocate an unpacked buffer
+                mAlpha = (PRUint8*)calloc(alpha, 8);
+                if (!mAlpha)
+                  return NS_ERROR_OUT_OF_MEMORY;
+                mAlphaPtr = mAlpha;
+            }
+
+            if (!mDecoded) {
+                PRUint32 bpr;
+                rv = mFrame->GetImageBytesPerRow(&bpr);
+                NS_ENSURE_SUCCESS(rv, rv);
+                mDecoded = (PRUint8*)calloc(bpr, 1);
+                if (!mDecoded)
+                  return NS_ERROR_OUT_OF_MEMORY;
+                mDecoding = mDecoded;
+            }
+
+            while (aCount > 0) {
+                PRUint8 byte;
+
+                switch(mState) {
+                    case eRLEStateInitial:
+                        mStateData = (PRUint8)*aBuffer++;
+                        aCount--;
+
+                        mState = eRLEStateNeedSecondEscapeByte;
+                        continue;
+
+                    case eRLEStateNeedSecondEscapeByte:
+                        byte = *aBuffer++;
+                        aCount--;
+                        if (mStateData != RLE_ESCAPE) { // encoded mode
+                            // Encoded mode consists of two bytes: 
+                            // the first byte (mStateData) specifies the
+                            // number of consecutive pixels to be drawn 
+                            // using the color index contained in
+                            // the second byte
+                            // Work around bitmaps that specify too many pixels
+                            if (mAlphaPtr + mStateData > mAlpha + mBIH.width)
+                                mStateData = (PRUint32)(mAlpha + mBIH.width - mAlphaPtr);
+                            memset(mAlphaPtr, 0xFF, mStateData);
+                            mAlphaPtr += mStateData;
+                            if (mBIH.compression == BI_RLE8) {
+                                while (mStateData > 0) {
+                                    SetPixel(mDecoding, byte, mColors);
+                                    mStateData--;
+                                }
+                            } else {
+                                while (mStateData > 0) {
+                                    Set4BitPixel(mDecoding, byte, mStateData, mColors);
+                                }
+                            }
+                            
+                            mState = eRLEStateInitial;
+                            continue;
+                        }
+
+                        switch(byte) {
+                            case RLE_ESCAPE_EOL:
+                                // End of Line: Write out current row
+                                // and reset our row buffer
+                                rv = WriteRLERows(1);
+                                NS_ENSURE_SUCCESS(rv, rv);
+                                mAlphaPtr = mAlpha;
+                                mDecoding = mDecoded;
+
+                                mState = eRLEStateInitial;
+                                break;
+
+                            case RLE_ESCAPE_EOF: // EndOfFile
+                                rv = WriteRLERows(mCurLine);
+                                NS_ENSURE_SUCCESS(rv, rv);
+                                break;
+
+                            case RLE_ESCAPE_DELTA:
+                                mState = eRLEStateNeedXDelta;
+                                continue;
+
+                            default : // absolute mode
+                                // Save the number of pixels to read
+                                mStateData = byte;
+                                if (mAlphaPtr + mStateData > mAlpha + mBIH.width) {
+                                    // We can work around bitmaps that specify one
+                                    // pixel too many, but only if their width is odd.
+                                    mStateData -= mBIH.width & 1;
+                                    if (mAlphaPtr + mStateData > mAlpha + mBIH.width)
+                                        return NS_ERROR_FAILURE;
+                                }
+                                memset(mAlphaPtr, 0xFF, mStateData);
+                                mAlphaPtr += mStateData;
+
+                                mState = eRLEStateAbsoluteMode;
+                                continue;
+                        }
+                        break;
+
+                    case eRLEStateNeedXDelta:
+                        // Handle the XDelta and proceed to get Y Delta
+                        byte = *aBuffer++;
+                        aCount--;
+                        mAlphaPtr += byte;
+                        mDecoding += byte * GFXBYTESPERPIXEL;
+
+                        mState = eRLEStateNeedYDelta;
+                        continue;
+
+                    case eRLEStateNeedYDelta:
+                        // Get the Y Delta and then "handle" the move
+                        byte = *aBuffer++;
+                        aCount--;
+                        mState = eRLEStateInitial;
+                        if (byte == 0)
+                            continue; // Nothing more to do
+
+                        rv = WriteRLERows(PR_MIN(byte, mCurLine));
+                        NS_ENSURE_SUCCESS(rv, rv);
+                        break;
+
+                    case eRLEStateAbsoluteMode: // Absolute Mode
+                        // In absolute mode, the second byte (mStateData)
+                        // represents the number of pixels 
+                        // that follow, each of which contains 
+                        // the color index of a single pixel.
+                        if (mBIH.compression == BI_RLE8) {
+                            while (aCount > 0 && mStateData > 0) {
+                                byte = *aBuffer++;
+                                aCount--;
+                                SetPixel(mDecoding, byte, mColors);
+                                mStateData--;
+                            }
+                        } else {
+                            while (aCount > 0 && mStateData > 0) {
+                                byte = *aBuffer++;
+                                aCount--;
+                                Set4BitPixel(mDecoding, byte, mStateData, mColors);
+                            }
+                        }
+
+                        if (mStateData == 0) {
+                            // In absolute mode, each run must 
+                            // be aligned on a word boundary
+
+                            if ((((size_t)aBuffer) & 1) == 0) {  // Word Aligned
+                                mState = eRLEStateInitial;
+                            } else if (aCount > 0) {             // Not word Aligned
+                                // "next" byte is just a padding byte
+                                // so "move" past it and we can continue
+                                aBuffer++;
+                                aCount--;
+                                mState = eRLEStateInitial;
+                            }
+                        }
+                        // else state is still eRLEStateAbsoluteMode
+                        continue;
+
+                    default :
+                        NS_NOTREACHED("BMP RLE decompression: unknown state!");
+                        return NS_ERROR_FAILURE;
+                }
+                // Because of the use of the continue statement
+                // we only get here for eol, eof or y delta
+                if (mCurLine == 0) { // Finished last line
+                    return mObserver->OnStopFrame(nsnull, nsnull, mFrame);
+                }
+            }
         }
     }
     

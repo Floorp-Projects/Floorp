@@ -107,14 +107,38 @@ struct bitFields {
 
 #if defined(XP_PC) || defined(XP_BEOS) || defined(MOZ_WIDGET_PHOTON)
 #define BMP_GFXFORMAT gfxIFormats::BGR
+#define RLE_GFXFORMAT_ALPHA gfxIFormats::BGR_A1
 #else
 #define USE_RGB
 #define BMP_GFXFORMAT gfxIFormats::RGB
+#define RLE_GFXFORMAT_ALPHA gfxIFormats::RGB_A1
 #endif
 
+#if defined(XP_MAC) || defined(XP_MACOSX)
+#define GFXBYTESPERPIXEL 4
+#else
+#define GFXBYTESPERPIXEL 3
+#endif
+
+// BMPINFOHEADER.compression defines
 #define BI_RLE8 1
 #define BI_RLE4 2
 #define BI_BITFIELDS 3
+
+// RLE Escape codes
+#define RLE_ESCAPE       0
+#define RLE_ESCAPE_EOL   0
+#define RLE_ESCAPE_EOF   1
+#define RLE_ESCAPE_DELTA 2
+
+// enums for mState
+enum ERLEState {
+    eRLEStateInitial,
+    eRLEStateNeedSecondEscapeByte,
+    eRLEStateNeedXDelta,
+    eRLEStateNeedYDelta,    // mStateData will hold x delta
+    eRLEStateAbsoluteMode   // mStateData will hold count of existing data to read
+};
 
 class nsBMPDecoder : public imgIDecoder
 {
@@ -140,10 +164,15 @@ private:
      * the bitmasks from mBitFields */
     NS_METHOD CalcBitShift();
 
-    /** Sets the image data at specified position. mCurLine is used
-     * to get the row
-     * @param aData The data */
-    nsresult SetData(PRUint8* aData);
+    /** Sets the image data. mCurLine is used to get the row,
+     * mDecoded is used to get the data */
+    nsresult SetData();
+
+    /** Sets the rle data. mCurLine is used to get the row,
+     * mDecoded is used to get the data for the first row,
+     * all subsequent rows are blank.
+     * @param rows Number of rows of data to set */
+    nsresult WriteRLERows(PRUint32 rows);
 
     nsCOMPtr<imgIDecoderObserver> mObserver;
 
@@ -166,6 +195,13 @@ private:
     PRUint8 *mRow; // Holds one raw line of the image
     PRUint32 mRowBytes; // How many bytes of the row were already received
     PRInt32 mCurLine;
+    PRUint8 *mAlpha;    // Holds one line of unpacked alpha data
+    PRUint8 *mAlphaPtr; // Pointer within unpacked alpha data
+    PRUint8 *mDecoded;  // Holds one line of color image data
+    PRUint8 *mDecoding; // Pointer within image data
+
+    ERLEState mState;   // Maintains the current state of the RLE decoding
+    PRUint32 mStateData;// Decoding information that is needed depending on mState
 
     void ProcessFileHeader();
     void ProcessInfoHeader();
@@ -173,7 +209,7 @@ private:
 
 /** Sets the pixel data in aDecoded to the given values.
  * The variable passed in as aDecoded will be moved on 3 bytes! */
-inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
+inline void SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUint8 aBlue)
 {
 #if defined(XP_MAC) || defined(XP_MACOSX)
     *aDecoded++ = 0; // Mac needs this padding byte
@@ -187,37 +223,32 @@ inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 aRed, PRUint8 aGreen, PRUin
     *aDecoded++ = aGreen;
     *aDecoded++ = aRed;
 #endif
-    return NS_OK;
 }
 
-inline nsresult SetPixel(PRUint8*& aDecoded, PRUint8 idx, colorTable* aColors)
+inline void SetPixel(PRUint8*& aDecoded, PRUint8 idx, colorTable* aColors)
 {
     PRUint8 red, green, blue;
     red = aColors[idx].red;
     green = aColors[idx].green;
     blue = aColors[idx].blue;
-    return SetPixel(aDecoded, red, green, blue);
+    SetPixel(aDecoded, red, green, blue);
 }
 
-/** Sets one or two pixels; it is ensured that aPos is <= mBIH.width
+/** Sets two (or one if aCount = 1) pixels
  * @param aDecoded where the data is stored. Will be moved 3 or 6 bytes,
  * depending on whether one or two pixels are written.
  * @param aData The values for the two pixels
- * @param aPos Current position. Is incremented by one or two. */
-inline nsresult Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData,
-                             PRUint32& aPos, PRUint32 aMaxWidth, colorTable* aColors)
+ * @param aCount Current count. Is decremented by one or two. */
+inline void Set4BitPixel(PRUint8*& aDecoded, PRUint8 aData,
+                         PRUint32& aCount, colorTable* aColors)
 {
     PRUint8 idx = aData >> 4;
-    nsresult rv = SetPixel(aDecoded, idx, aColors);
-    if ((++aPos >= aMaxWidth) || NS_FAILED(rv))
-        return rv;
-
-    idx = aData & 0xF;
-    rv = SetPixel(aDecoded, idx, aColors);
-    ++aPos;
-    return rv;
+    SetPixel(aDecoded, idx, aColors);
+    if (--aCount > 0) {
+        idx = aData & 0xF;
+        SetPixel(aDecoded, idx, aColors);
+        --aCount;
+    }
 }
-
-
 
 #endif
