@@ -153,7 +153,7 @@
 <!ENTITY newtodo.status.longlabel "Tennivaló állapota">
 <!ENTITY newtodo.duetime.warning    "A kezdés ideje a határidő utánra esik.">
 <!ENTITY newtodo.duedate.warning    "A kezdés napja a határidő utánra esik.">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "Az ismétlődéshez meg kell adni a kezdődátumot.">
 
 <!ENTITY calendar.confirm.deleteevent "Biztos, hogy törölni kívánja ezt az eseményt?" >
 <!ENTITY calendar.confirm.deleteuntitledevent "Biztos, hogy törölni kívánja ezt az eseményt?" >

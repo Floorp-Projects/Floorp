@@ -154,7 +154,7 @@
 <!ENTITY newtodo.status.longlabel "タスクステータス">
 <!ENTITY newtodo.duetime.warning    "開始時間が予定時間後です。">
 <!ENTITY newtodo.duedate.warning    "開始日付が期日後です。">
-<!ENTITY newtodo.repeatstart.warning "Start date required for recurrence.">
+<!ENTITY newtodo.repeatstart.warning "開始日付が周期設定に必要です。">
 
 <!ENTITY calendar.confirm.deleteevent "このタイトルのイベントを削除しますか: " >
 <!ENTITY calendar.confirm.deleteuntitledevent "タイトルなしのイベントを削除しますか？" >
