@@ -36,8 +36,6 @@
  * ***** END LICENSE BLOCK ***** */
 
 #include "prefapi.h"
-#include "prefapi_private_data.h"
-#include "nsReadableUtils.h"
 #include "jsapi.h"
 #include "xp_core.h" /* Needed for XP_ defines */
 
@@ -110,6 +108,7 @@ PR_STATIC_CALLBACK(JSBool) pref_NativeUserPref(JSContext *cx, JSObject *obj, uns
 PR_STATIC_CALLBACK(JSBool) pref_NativeSetConfig(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 PR_STATIC_CALLBACK(JSBool) pref_NativeGetPref(JSContext *cx, JSObject *obj, unsigned int argc, jsval *argv, jsval *rval);
 /*----------------------------------------------------------------------------------------*/
+#include "prefapi_private_data.h"
 
 JS_STATIC_DLL_CALLBACK(JSBool)
 global_enumerate(JSContext *cx, JSObject *obj)
@@ -1383,7 +1382,7 @@ pref_ErrorReporter(JSContext *cx, const char *message,
     /* StandardAlert doesn't handle linefeeds. Use spaces to avoid garbage characters. */
     last = PR_sprintf_append(last, "  ");
 #else
-    last = PR_sprintf_append(last, NS_LINEBREAK NS_LINEBREAK);
+    last = PR_sprintf_append(last, LINEBREAK LINEBREAK);
 #endif
     if (!report)
         last = PR_sprintf_append(last, "%s\n", message);
