@@ -23,6 +23,7 @@
 #include "nsIMsgMessageService.h"
 #include "nsISupportsArray.h"
 #include "nsCOMPtr.h"
+#include "nsIFileSpec.h"
 
 class nsIImapHostSessionList; 
 class nsString2;
