@@ -283,8 +283,10 @@ function upgradeCleanup()
 {
   // Obsolete files from Netscape 6.0 and Netscape 6.01 that
   // need to be cleaned up.
+  deleteThisFile("Program",    "msgMapi.dll");
   deleteThisFile("Components", "signed.dll");
   deleteThisFile("Components", "smimestb.dll");
+  deleteThisFile("Components", "nsMapiRegistry.dll");
 }
 
 function updateWinIni()
