@@ -8,6 +8,7 @@
 #ifdef XP_WIN
 #include "windows.h"
 #endif
+#include "nsDebug.h"
 
 // #define MILLISECOND_RESOLUTION to track time with greater precision
 //  If not defined the resolution is to the second only
@@ -81,11 +82,15 @@ void Stopwatch::Stop() {
 void Stopwatch::SaveState() {
   if (!mCreatedStack) {
     mSavedStates = new nsDeque(nsnull);
+    if (!mSavedStates)
+      return;
     mCreatedStack = PR_TRUE;
   }
   EState* state = new EState();
-  *state = fState;
-  mSavedStates->PushFront((void*) state);
+  if (state) {
+    *state = fState;
+    mSavedStates->PushFront((void*) state);
+  }
 }
 
 void Stopwatch::RestoreState() {
@@ -99,7 +104,7 @@ void Stopwatch::RestoreState() {
     delete state;
   }
   else {
-    PR_ASSERT("Stopwatch::RestoreState(): The saved state stack is empty.\n");
+    NS_WARNING("Stopwatch::RestoreState(): The saved state stack is empty.\n");
   }
 }
 
