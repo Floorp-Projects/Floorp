@@ -114,7 +114,6 @@ W32LOBJS = $(OBJS: .= +-.)
 
 all::
     $(NMAKE) -f makefile.win export
-    $(NMAKE) -f makefile.win libs
     $(NMAKE) -f makefile.win install
 
 #//------------------------------------------------------------------------
@@ -452,11 +451,7 @@ $(OBJS)
 export:: $(DIRS)
 
 libs:: 
-    @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    @echo !! THE libs BUILD PHASE HAS BEEN CANCELED DUE TO LACK OF INTEREST  
-    @echo !! (This saves 4 minutes (out of 42.5) doing a complete build on my
-    @echo !! PII 400mhz running NT4.) 
-    @echo !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    @echo The libs build phase is obsolete.
 
 install:: $(DIRS) $(LIBRARY)
 
