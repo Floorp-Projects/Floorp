@@ -896,22 +896,22 @@ static int OutputAdvancedVcard(MimeObject *obj, VObject *v)
 		{
 			if (VALUE_TYPE(prop2)) {
 				namestring  = fakeCString (vObjectUStringZValue(prop2));
-        char *tString = NULL;
+        char *tString1 = NULL;
 				if (PL_strcmp (namestring, "0") == 0)
         {
-          tString = VCardGetStringByID(VCARD_ADDR_DEFAULT_DLS);
+          tString1 = VCardGetStringByID(VCARD_ADDR_DEFAULT_DLS);
         }
 				else 
         {
 					if (PL_strcmp (namestring, "1") == 0)
-						tString = VCardGetStringByID(VCARD_ADDR_SPECIFIC_DLS);
+						tString1 = VCardGetStringByID(VCARD_ADDR_SPECIFIC_DLS);
 					else
 						if (PL_strcmp (namestring, "2") == 0)
-							tString = VCardGetStringByID(VCARD_ADDR_HOSTNAMEIP);
+							tString1 = VCardGetStringByID(VCARD_ADDR_HOSTNAMEIP);
 				}
 
-        status = WriteLineToStream (obj, tString);
-        PR_FREEIF(tString);
+        status = WriteLineToStream (obj, tString1);
+        PR_FREEIF(tString1);
 				PR_FREEIF (namestring);
 				if (status < 0) return status;
 			}

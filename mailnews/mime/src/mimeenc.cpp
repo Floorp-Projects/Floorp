@@ -536,7 +536,7 @@ MimeDecoderDestroy (MimeDecoderData *data, PRBool abort_p)
 	  data->token[0] != '=')
 	{
 	  if (data->encoding == mime_Base64)
-		while (data->token_size < sizeof (data->token))
+		while ((unsigned int)data->token_size < sizeof (data->token))
 		  data->token [data->token_size++] = '=';
 
 	  status = data->write_buffer (data->token, data->token_size,

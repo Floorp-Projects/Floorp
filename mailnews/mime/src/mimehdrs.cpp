@@ -1355,9 +1355,9 @@ MimeHeaders_write_grouped_header_1 (MimeHeaders *hdrs, char *name,
         }
         
         if (flags & MSG_FLAG_SENDER_AUTHED) {
-          char  *tString = MimeGetStringByID(MIME_MSG_XSENDER_INTERNAL);
-          PL_strcpy (out, tString);
-          PR_FREEIF(tString);
+          char  *tString1 = MimeGetStringByID(MIME_MSG_XSENDER_INTERNAL);
+          PL_strcpy (out, tString1);
+          PR_FREEIF(tString1);
           out += PL_strlen (out);
         }
       }

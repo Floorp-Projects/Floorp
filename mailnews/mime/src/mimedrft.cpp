@@ -1444,7 +1444,7 @@ mime_parse_stream_abort (nsMIMESession *stream, int status )
   
   if (mdd->obj) 
   {
-    int status;
+    int status=0;
 
     if ( !mdd->obj->closed_p )
       status = mdd->obj->clazz->parse_eof ( mdd->obj, PR_TRUE );

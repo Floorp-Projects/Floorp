@@ -73,8 +73,8 @@ do \
 #define OUTPUTSTR(s) \
 do \
 { \
-	const char *p = s; \
-    while(*p) {OUTPUT(*p); p++;} \
+	const char *p1 = s; \
+    while(*p1) {OUTPUT(*p1); p1++;} \
 } while (0)
  
 

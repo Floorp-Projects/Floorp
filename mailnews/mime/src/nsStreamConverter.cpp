@@ -500,7 +500,7 @@ nsStreamConverter::OnDataAvailable(nsIChannel * /* aChannel */, nsISupports    *
                                    PRUint32       sourceOffset, 
                                    PRUint32       aLength)
 {
-  nsresult        rc;
+  nsresult        rc=NS_OK;     // should this be an error instead?
   PRUint32        readLen = aLength;
 
   // If this is the first time through and we are supposed to be 

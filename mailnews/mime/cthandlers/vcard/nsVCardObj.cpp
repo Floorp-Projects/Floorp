@@ -1417,9 +1417,9 @@ static void writeProp(OFile *fp, VObject *o)
 	    /* output prop as fields */
 	    appendcOFile(fp,':');
 	    while (*fields) {
-		VObject *t = isAPropertyOf(o,*fields);
+		VObject *t0 = isAPropertyOf(o,*fields);
 		i++;
-		if (t) n = i;
+		if (t0) n = i;
 		fields++;
 		}
 	    fields = fields_;
