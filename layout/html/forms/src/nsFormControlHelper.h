@@ -313,7 +313,7 @@ public:
     */
 
   static void PaintCheckMark(nsIRenderingContext& aRenderingContext,
-                             float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight);
+                             float aPixelsToTwips, const nsRect & aRect);
 
    /**
     * Paint a fixed size checkmark border

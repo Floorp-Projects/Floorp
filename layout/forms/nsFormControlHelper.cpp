@@ -663,14 +663,14 @@ nsFormControlHelper::PaintFixedSizeCheckMarkBorder(nsIRenderingContext& aRenderi
 //Draw a checkmark in any size.
 void
 nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
-                         float aPixelsToTwips, PRUint32 aWidth, PRUint32 aHeight)
+                                    float aPixelsToTwips, const nsRect & aRect)
 {
  // Width and height of the fixed size checkmark in TWIPS.
   const PRUint32 fixedSizeCheckmarkWidth = 165;
   const PRUint32 fixedSizeCheckmarkHeight = 165;
 
-  if ((fixedSizeCheckmarkWidth == aWidth)  &&
-      (fixedSizeCheckmarkHeight == aHeight)) {
+  if ((fixedSizeCheckmarkWidth == aRect.width)  &&
+      (fixedSizeCheckmarkHeight == aRect.height)) {
       // Standard size, so draw a fixed size check mark instead of a scaled check mark.
       PaintFixedSizeCheckMark(aRenderingContext, aPixelsToTwips);
     return;
@@ -693,16 +693,16 @@ nsFormControlHelper::PaintCheckMark(nsIRenderingContext& aRenderingContext,
   PRUint32 polyIndex = 0;
 
      // Scale the checkmark based on the smallest dimension
-  PRUint32 size = aWidth / checksize;
-  if (aHeight < aWidth) {
-   size = aHeight / checksize;
+  PRUint32 size = aRect.width / checksize;
+  if (aRect.height < aRect.width) {
+   size = aRect.height / checksize;
   }
   
     // Center and offset each point in the polygon definition.
   for (defIndex = 0; defIndex < (checkpoints * 2); defIndex++) {
-    checkedPolygon[polyIndex].x = nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aWidth / 2));
+    checkedPolygon[polyIndex].x = nscoord((((checkedPolygonDef[defIndex]) - centerx) * (size)) + (aRect.width / 2) + aRect.x);
     defIndex++;
-    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aHeight / 2));
+    checkedPolygon[polyIndex].y = nscoord((((checkedPolygonDef[defIndex]) - centery) * (size)) + (aRect.height / 2) + aRect.y);
     polyIndex++;
   }
   
