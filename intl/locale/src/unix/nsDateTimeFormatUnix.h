@@ -71,10 +71,13 @@ private:
   // init this interface to a specified locale
   NS_IMETHOD Initialize(nsILocale* locale);
 
+  PRBool LocalePreferred24hour();
+
   nsString    mLocale;
   nsString    mAppLocale;
   nsString    mCharset;                                    // in order to convert API result to unicode
   char        mPlatformLocale[kPlatformLocaleLength+1];    // for setlocale
+  PRBool      mLocalePreferred24hour;                       // true if 24 hour format is preferred by current locale
 };
 
 #endif  /* nsDateTimeFormatUnix_h__ */

@@ -93,16 +93,12 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     mLocale.SetString(aLocaleUnichar); // cache locale name
     nsAllocator::Free(aLocaleUnichar);
 
-    nsCOMPtr <nsIPosixLocale> posixLocale;
-    res = nsComponentManager::CreateInstance(kPosixLocaleFactoryCID, NULL, 
-                                             NS_GET_IID(nsIPosixLocale), getter_AddRefs(posixLocale));
+    nsCOMPtr <nsIPosixLocale> posixLocale = do_GetService(kPosixLocaleFactoryCID, &res);
     if (NS_SUCCEEDED(res)) {
       res = posixLocale->GetPlatformLocale(&mLocale, mPlatformLocale, kPlatformLocaleLength+1);
     }
 
-    nsCOMPtr <nsIPlatformCharset> platformCharset;
-    res = nsComponentManager::CreateInstance(kPlatformCharsetCID, NULL, 
-                                             NS_GET_IID(nsIPlatformCharset), getter_AddRefs(platformCharset));
+    nsCOMPtr <nsIPlatformCharset> platformCharset = do_GetService(NS_PLATFORMCHARSET_PROGID, &res);
     if (NS_SUCCEEDED(res)) {
       PRUnichar* mappedCharset = NULL;
       res = platformCharset->GetDefaultCharsetForLocale(mLocale.GetUnicode(), &mappedCharset);
@@ -113,7 +109,35 @@ nsresult nsDateTimeFormatUnix::Initialize(nsILocale* locale)
     }
   }
 
+  mLocalePreferred24hour = LocalePreferred24hour();
+
   return res;
+}
+
+PRBool nsDateTimeFormatUnix::LocalePreferred24hour()
+{
+  char str[100];
+  time_t tt;
+  struct tm *tmc;
+  int i;
+
+  tt = time((time_t)NULL);
+  tmc = localtime(&tt);
+
+  tmc->tm_hour=22;    // put the test sample hour to 22:00 which is 10PM
+  tmc->tm_min=0;      // set the min & sec other number than '2'
+  tmc->tm_sec=0;
+
+  char *temp = setlocale(LC_TIME, mPlatformLocale);
+  strftime(str, (size_t)99, "%X", (struct tm *)tmc);
+  (void) setlocale(LC_TIME, temp);
+
+  for (i=0; str[i]; i++)
+    if (str[i] == '2') {    // if there is any '2', that locale use 0-23 time format
+        return PR_TRUE;
+    }
+
+  return PR_FALSE;
 }
 
 nsresult nsDateTimeFormatUnix::FormatTime(nsILocale* locale, 
@@ -168,10 +192,14 @@ nsresult nsDateTimeFormatUnix::FormatTMTime(nsILocale* locale,
       PL_strncpy(fmtT, "", NSDATETIME_FORMAT_BUFFER_LEN); 
       break;
     case kTimeFormatSeconds:
-      PL_strncpy(fmtT, "%I:%M:%S %p", NSDATETIME_FORMAT_BUFFER_LEN);
+      PL_strncpy(fmtT, 
+                 mLocalePreferred24hour ? "%H:%M:%S" : "%I:%M:%S %p", 
+                 NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     case kTimeFormatNoSeconds:
-      PL_strncpy(fmtT, "%I:%M %p", NSDATETIME_FORMAT_BUFFER_LEN);
+      PL_strncpy(fmtT, 
+                 mLocalePreferred24hour ? "%H:%M" : "%I:%M %p", 
+                 NSDATETIME_FORMAT_BUFFER_LEN);
       break;
     case kTimeFormatSecondsForce24Hour:
       PL_strncpy(fmtT, "%H:%M:%S", NSDATETIME_FORMAT_BUFFER_LEN);
