@@ -39,6 +39,13 @@ public:
 
 	NS_IMETHOD GetPlatformLocale(const nsString* locale,LCID* winLCID);
 	NS_IMETHOD GetXPLocale(LCID winLCID,nsString* locale);
+
+protected:
+	inline PRBool	ParseLocaleString(const char* locale_string, char* language, char* country, char* region);
+	inline DWORD	GetLangIDFromISOCode(const char* lang);
+	inline DWORD	GetSublangIDFromISOCode(const char* lang, const char* country);
+	inline const char* GetISOCodeFromLangID(const DWORD lang_id);
+	inline const char* GetISOCodeFromSublangID(const DWORD lang_id, const char* lang);
 };
 
 #endif
