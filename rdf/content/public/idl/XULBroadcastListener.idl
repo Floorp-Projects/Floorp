@@ -1,7 +1,0 @@
-interface XULBroadcastListener {
-/* IID: { 0x2902cba1, 0xc088, 0x11d2, \
-  { 0x96, 0xed, 0x0, 0x10, 0x4b, 0x7b, 0x7d, 0xeb } } */
-
-	void getBroadcaster(out Node node);
-	void setBroadcaster(in Node node);
-};
