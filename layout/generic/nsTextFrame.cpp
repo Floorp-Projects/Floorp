@@ -2215,7 +2215,7 @@ TextFrame::Reflow(nsIPresContext& aPresContext,
   PRInt32 prevColumn = column;
   mColumn = column;
 
-  PRBool breakable = !lineLayout.LineIsEmpty();
+  PRBool breakable = lineLayout.LineIsBreakable();
   for (;;) {
     // Get next word/whitespace from the text
     PRBool isWhitespace;
