@@ -34,10 +34,12 @@
 #include "Expr.h"
 #include "ExprResult.h"
 #include "TxString.h"
-#include "ProcessorState.h"
 #include "Map.h"
+#include "NamedMap.h"
 #include "List.h"
+#include "txXSLTPatterns.h"
 
+class ProcessorState;
 /**
  * The definition for the XSLT document() function
 **/
@@ -70,7 +72,7 @@ public:
     /*
      * Creates a new key() function call
      */
-    txKeyFunctionCall(ProcessorState* aPs);
+    txKeyFunctionCall(ProcessorState* aPs, Node* aQNameResolveNode);
 
     /*
      * Evaluates a key() xslt-functioncall. First argument is name of key
@@ -82,6 +84,7 @@ public:
 
 private:
     ProcessorState* mProcessorState;
+    Node* mQNameResolveNode;
 };
 
 /*
@@ -181,7 +184,7 @@ public:
     /**
      * Creates a new format-number() function call
     **/
-    txFormatNumberFunctionCall(ProcessorState* aPs);
+    txFormatNumberFunctionCall(ProcessorState* aPs, Node* aQNameResolveNode);
 
     /**
      * Virtual function from FunctionCall
@@ -202,6 +205,7 @@ private:
     };
     
     ProcessorState* mPs;
+    Node* mQNameResolveNode;
 };
 
 /**

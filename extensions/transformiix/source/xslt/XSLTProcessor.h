@@ -298,7 +298,7 @@ private:
     void processMatchedTemplate(Node* aXslTemplate,
                                 Node* aNode,
                                 NamedMap* aParams,
-                                const String& aMode,
+                                const txExpandedName& aMode,
                                 ProcessorState::ImportFrame* aFrame,
                                 ProcessorState* aPs);
     /**
@@ -309,7 +309,7 @@ private:
     **/
     void processDefaultTemplate(Node* node,
                                 ProcessorState* ps,
-                                const String& mode);
+                                const txExpandedName& mode);
 
     void processStylesheet(Document* aSource,
                            Document* aStylesheet,

@@ -37,6 +37,7 @@
  */
 
 #include "XSLTFunctions.h"
+#include "ProcessorState.h"
 #include "XMLDOMUtils.h"
 #include "Names.h"
 #include "txIXPathContext.h"
