@@ -88,10 +88,10 @@ function CompFields2Recipients(msgCompFields)
 	{
 		var row = 1;
 		
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetTo()), false, "addr_to");
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetCc()), false, "addr_cc");
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetBcc()), false, "addr_bcc");
-		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetReplyTo()), false, "addr_reply");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetTo(), false), "addr_to");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetCc(), false), "addr_cc");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetBcc(), false), "addr_bcc");
+		row = awSetInputAndPopupFromArray(row, msgCompFields.SplitRecipients(msgCompFields.GetReplyTo(), false), "addr_reply");
 		row = awSetInputAndPopup(row, msgCompFields.GetOtherRandomHeaders(), "addr_other");
 		row = awSetInputAndPopup(row, msgCompFields.GetNewsgroups(), "addr_newsgroups");
 		row = awSetInputAndPopup(row, msgCompFields.GetFollowupTo(), "addr_followup");
