@@ -110,7 +110,7 @@ public:
 protected:
   static nscolor MakeBevelColor(PRIntn whichSide, PRUint8 style,
                                 nscolor aBackgroundColor,
-								nscolor aElementColor,
+								nscolor aBorderColor,
 								PRBool printing,PRBool aSpecialCase);
 
   static PRIntn MakeSide(nsPoint aPoints[],
@@ -134,8 +134,7 @@ protected:
                        PRIntn whichSide,
                        const PRUint8 borderStyle,
                        const nscolor borderColor,
-					   const nscolor aElementColor, 
-                       const nscolor aBackgroundColor, 
+					   const nscolor aBackgroundColor, 
 					   const nsRect& borderOutside,
                        const nsRect& borderInside,
                        PRBool printing,
