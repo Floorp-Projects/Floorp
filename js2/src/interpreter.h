@@ -84,6 +84,7 @@ namespace Interpreter {
         ICodeModule* loadClass(const char *fileName);
 
         const JSValue findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op);
+        const JSValue findUnaryOverride(JSValue &operand1, ExprNode::Kind op);
 
         JSType *findType(const StringAtom& typeName);
         JSType *extractType(ExprNode *t);

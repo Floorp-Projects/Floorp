@@ -31,8 +31,8 @@
  * file under either the NPL or the GPL.
  */
 
-#ifndef jstypes_h___
-#define jstypes_h___
+#ifndef jstypes_h
+#define jstypes_h
 
 #include "utilities.h"
 #include "gc_allocator.h"
@@ -554,6 +554,17 @@ namespace JSTypes {
         void* operator new(size_t) { return allocator::allocate(1); }
     };
         
+    class JSUnaryOperator : public JSFunction {
+   	    typedef JavaScript::gc_traits_finalizable<JSUnaryOperator> traits;
+	    typedef gc_allocator<JSUnaryOperator, traits> allocator;
+    public:
+        typedef JSValue (*JSUnaryCode)(const JSValue& arg1);
+        JSUnaryCode mCode;
+        JSUnaryOperator(JSUnaryCode code) : mCode(code) {}
+        virtual bool isNative()    { return true; }
+        void* operator new(size_t) { return allocator::allocate(1); }
+    };
+
     class JSBinaryOperator : public JSFunction {
    	    typedef JavaScript::gc_traits_finalizable<JSBinaryOperator> traits;
 	    typedef gc_allocator<JSBinaryOperator, traits> allocator;

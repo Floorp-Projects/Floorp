@@ -50,6 +50,7 @@ namespace ICG {
     using namespace VM;
     using namespace JSTypes;
     using namespace JSClasses;
+    
 
     struct VariableList {       // Maps from variable (parameter) name to a TypedRegister.
                                 // But because we also want to map from a register number to
@@ -122,6 +123,28 @@ namespace ICG {
 
     };
 
+    typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method, ClosureVar } LValueKind;
+
+    class ICodeGenerator;
+
+    class Reference {
+    public:
+        Reference(const StringAtom &name) : mKind(NoKind), mName(name) { }
+
+        LValueKind mKind;
+
+        TypedRegister mBase;
+        const StringAtom &mName;
+        
+        uint32 mSlotIndex;
+        JSClass *mClass;
+
+        JSType *mType;
+
+        TypedRegister getValue(ICodeGenerator *icg);
+        void setValue(ICodeGenerator *icg, TypedRegister value);
+        TypedRegister getCallTarget(ICodeGenerator *icg);
+    };
 
     class ICodeModule;
 
@@ -154,7 +177,7 @@ namespace ICG {
     
     class ICodeGenerator {
     public:
-        friend class ICodeModule;
+        friend ICodeModule;
         typedef enum { kNoFlags = 0, kIsTopLevel = 0x01, kIsStaticMethod = 0x02, kIsWithinWith = 0x04 } ICodeGeneratorFlags;
     private:
         InstructionStream *iCode;
@@ -232,15 +255,14 @@ namespace ICG {
 
         void setFlag(uint32 flag, bool v) { mFlags = (ICodeGeneratorFlags)((v) ? mFlags | flag : mFlags & ~flag); }
 
-        typedef enum { NoKind, Var, Property, Slot, Static, Constructor, Name, Method } LValueKind;
-
-        LValueKind getVariableByName(const StringAtom &name, TypedRegister &v);
-        LValueKind scanForVariable(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, TypedRegister &base);
-        LValueKind resolveIdentifier(const StringAtom &name, TypedRegister &v, uint32 &slotIndex, TypedRegister &base, bool lvalue);
-        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
-        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
+        bool getVariableByName(const StringAtom &name, Reference &ref);
+        bool scanForVariable(const StringAtom &name, Reference &ref);
+        bool resolveIdentifier(const StringAtom &name, Reference &ref, bool lvalue);
+//        TypedRegister handleIdentifier(IdentifierExprNode *p, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
+//        TypedRegister handleDot(BinaryExprNode *b, ExprNode::Kind use, ICodeOp xcrementOp, TypedRegister ret, ArgumentList *args, bool lvalue);
         ICodeModule *genFunction(FunctionDefinition &function, bool isStatic, bool isConstructor, JSClass *superClass);
 
+        Reference genReference(ExprNode *p);
         
         ICodeModule *readFunction(XMLNode *element, JSClass *thisClass);
 
@@ -315,6 +337,9 @@ namespace ICG {
         TypedRegister op(ICodeOp op, TypedRegister source);
         TypedRegister op(ICodeOp op, TypedRegister source1, TypedRegister source2);
         TypedRegister binaryOp(ICodeOp op, TypedRegister source1, TypedRegister source2);
+        TypedRegister unaryOp(ICodeOp op, TypedRegister source);
+        TypedRegister invokeCallOp(TypedRegister target, ArgumentList *args);
+        TypedRegister xcrementOp(ICodeOp op, TypedRegister source);
         TypedRegister call(TypedRegister target, ArgumentList *args);
         TypedRegister directCall(JSFunction *target, ArgumentList *args);
         TypedRegister bindThis(TypedRegister thisArg, TypedRegister target);

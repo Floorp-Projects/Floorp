@@ -347,6 +347,19 @@ namespace JSClasses {
             }
         }
 
+        JSOperator *findUnaryOperator(ExprNode::Kind op)
+        {
+            if (mOperators[op])
+                return *mOperators[op]->begin();
+            else {
+                JSClass *super = getSuperClass();
+                if (super)
+                    return super->findUnaryOperator(op);
+                else
+                    return NULL;
+            }
+        }
+
         void defineMethod(const String& name, JSFunction *f)
         {
             uint32 slot;

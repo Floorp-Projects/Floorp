@@ -27,6 +27,8 @@
         DIVIDE, /* dest, source1, source2 */
         ELEM_XCR, /* dest, base, index, value */
         GENERIC_BINARY_OP, /* dest, op, source1, source2 */
+        GENERIC_UNARY_OP, /* dest, op, source */
+        GENERIC_XCREMENT_OP, /* dest, op, source */
         GET_CLOSURE, /* dest, closure depth */
         GET_ELEMENT, /* dest, base, index */
         GET_METHOD, /* result, target base, index */
@@ -34,6 +36,7 @@
         GET_SLOT, /* dest, object, slot number */
         GET_STATIC, /* dest, class, index */
         INSTANCEOF, /* dest, source1, source2 */
+        INVOKE_CALL, /* result, target, args */
         JSR, /* target */
         LOAD_FALSE, /* dest */
         LOAD_IMMEDIATE, /* dest, immediate value (double) */
@@ -424,6 +427,38 @@
         }
     };
 
+    class GenericUnaryOP : public Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister> {
+    public:
+        /* dest, op, source */
+        GenericUnaryOP (TypedRegister aOp1, ExprNode::Kind aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister>
+            (GENERIC_UNARY_OP, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[GENERIC_UNARY_OP] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
+    };
+
+    class GenericXcrementOP : public Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister> {
+    public:
+        /* dest, op, source */
+        GenericXcrementOP (TypedRegister aOp1, ExprNode::Kind aOp2, TypedRegister aOp3) :
+            Instruction_3<TypedRegister, ExprNode::Kind, TypedRegister>
+            (GENERIC_XCREMENT_OP, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[GENERIC_XCREMENT_OP] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
+    };
+
     class GetClosure : public Instruction_2<TypedRegister, uint32> {
     public:
         /* dest, closure depth */
@@ -532,6 +567,22 @@
         }
         virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
             f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first) << ", " << getRegisterValue(registers, mOp3.first);
+            return f;
+        }
+    };
+
+    class InvokeCall : public Instruction_3<TypedRegister, TypedRegister, ArgumentList*> {
+    public:
+        /* result, target, args */
+        InvokeCall (TypedRegister aOp1, TypedRegister aOp2, ArgumentList* aOp3) :
+            Instruction_3<TypedRegister, TypedRegister, ArgumentList*>
+            (INVOKE_CALL, aOp1, aOp2, aOp3) {};
+        virtual Formatter& print(Formatter& f) {
+            f << opcodeNames[INVOKE_CALL] << "\t" << mOp1 << ", " << mOp2 << ", " << mOp3;
+            return f;
+        }
+        virtual Formatter& printOperands(Formatter& f, const JSValues& registers) {
+            f << getRegisterValue(registers, mOp1.first) << ", " << getRegisterValue(registers, mOp2.first);
             return f;
         }
     };
@@ -1244,85 +1295,88 @@
 #else
 
     char *opcodeNames[] = {
-        "ADD               ",
-        "AND               ",
-        "BIND_THIS         ",
-        "BITNOT            ",
-        "BRANCH            ",
-        "BRANCH_FALSE      ",
-        "BRANCH_INITIALIZED",
-        "BRANCH_TRUE       ",
-        "CALL              ",
-        "CAST              ",
-        "CLASS             ",
-        "COMPARE_EQ        ",
-        "COMPARE_GE        ",
-        "COMPARE_GT        ",
-        "COMPARE_IN        ",
-        "COMPARE_LE        ",
-        "COMPARE_LT        ",
-        "COMPARE_NE        ",
-        "DEBUGGER          ",
-        "DELETE_PROP       ",
-        "DIRECT_CALL       ",
-        "DIVIDE            ",
-        "ELEM_XCR          ",
-        "GENERIC_BINARY_OP ",
-        "GET_CLOSURE       ",
-        "GET_ELEMENT       ",
-        "GET_METHOD        ",
-        "GET_PROP          ",
-        "GET_SLOT          ",
-        "GET_STATIC        ",
-        "INSTANCEOF        ",
-        "JSR               ",
-        "LOAD_FALSE        ",
-        "LOAD_IMMEDIATE    ",
-        "LOAD_NAME         ",
-        "LOAD_NULL         ",
-        "LOAD_STRING       ",
-        "LOAD_TRUE         ",
-        "LOAD_TYPE         ",
-        "MOVE              ",
-        "MULTIPLY          ",
-        "NAME_XCR          ",
-        "NEGATE            ",
-        "NEW_ARRAY         ",
-        "NEW_CLASS         ",
-        "NEW_CLOSURE       ",
-        "NEW_FUNCTION      ",
-        "NEW_OBJECT        ",
-        "NOP               ",
-        "NOT               ",
-        "OR                ",
-        "POSATE            ",
-        "PROP_XCR          ",
-        "REMAINDER         ",
-        "RETURN            ",
-        "RETURN_VOID       ",
-        "RTS               ",
-        "SAVE_NAME         ",
-        "SET_ELEMENT       ",
-        "SET_PROP          ",
-        "SET_SLOT          ",
-        "SET_STATIC        ",
-        "SHIFTLEFT         ",
-        "SHIFTRIGHT        ",
-        "SLOT_XCR          ",
-        "STATIC_XCR        ",
-        "STRICT_EQ         ",
-        "STRICT_NE         ",
-        "SUBTRACT          ",
-        "SUPER             ",
-        "TEST              ",
-        "THROW             ",
-        "TRYIN             ",
-        "TRYOUT            ",
-        "USHIFTRIGHT       ",
-        "VAR_XCR           ",
-        "WITHIN            ",
-        "WITHOUT           ",
-        "XOR               ",
+        "ADD                ",
+        "AND                ",
+        "BIND_THIS          ",
+        "BITNOT             ",
+        "BRANCH             ",
+        "BRANCH_FALSE       ",
+        "BRANCH_INITIALIZED ",
+        "BRANCH_TRUE        ",
+        "CALL               ",
+        "CAST               ",
+        "CLASS              ",
+        "COMPARE_EQ         ",
+        "COMPARE_GE         ",
+        "COMPARE_GT         ",
+        "COMPARE_IN         ",
+        "COMPARE_LE         ",
+        "COMPARE_LT         ",
+        "COMPARE_NE         ",
+        "DEBUGGER           ",
+        "DELETE_PROP        ",
+        "DIRECT_CALL        ",
+        "DIVIDE             ",
+        "ELEM_XCR           ",
+        "GENERIC_BINARY_OP  ",
+        "GENERIC_UNARY_OP   ",
+        "GENERIC_XCREMENT_OP",
+        "GET_CLOSURE        ",
+        "GET_ELEMENT        ",
+        "GET_METHOD         ",
+        "GET_PROP           ",
+        "GET_SLOT           ",
+        "GET_STATIC         ",
+        "INSTANCEOF         ",
+        "INVOKE_CALL        ",
+        "JSR                ",
+        "LOAD_FALSE         ",
+        "LOAD_IMMEDIATE     ",
+        "LOAD_NAME          ",
+        "LOAD_NULL          ",
+        "LOAD_STRING        ",
+        "LOAD_TRUE          ",
+        "LOAD_TYPE          ",
+        "MOVE               ",
+        "MULTIPLY           ",
+        "NAME_XCR           ",
+        "NEGATE             ",
+        "NEW_ARRAY          ",
+        "NEW_CLASS          ",
+        "NEW_CLOSURE        ",
+        "NEW_FUNCTION       ",
+        "NEW_OBJECT         ",
+        "NOP                ",
+        "NOT                ",
+        "OR                 ",
+        "POSATE             ",
+        "PROP_XCR           ",
+        "REMAINDER          ",
+        "RETURN             ",
+        "RETURN_VOID        ",
+        "RTS                ",
+        "SAVE_NAME          ",
+        "SET_ELEMENT        ",
+        "SET_PROP           ",
+        "SET_SLOT           ",
+        "SET_STATIC         ",
+        "SHIFTLEFT          ",
+        "SHIFTRIGHT         ",
+        "SLOT_XCR           ",
+        "STATIC_XCR         ",
+        "STRICT_EQ          ",
+        "STRICT_NE          ",
+        "SUBTRACT           ",
+        "SUPER              ",
+        "TEST               ",
+        "THROW              ",
+        "TRYIN              ",
+        "TRYOUT             ",
+        "USHIFTRIGHT        ",
+        "VAR_XCR            ",
+        "WITHIN             ",
+        "WITHOUT            ",
+        "XOR                ",
     };
 
 #endif

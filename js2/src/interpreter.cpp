@@ -31,13 +31,18 @@
  * file under either the NPL or the GPL.
  */
 
+#ifdef _WIN32
+ // Turn off warnings about identifiers too long in browser information
+ #pragma warning(disable: 4786)
+#endif
+
+#include <algorithm>
 #include "interpreter.h"
 #include "jsclasses.h"
 #include "world.h"
 #include "parser.h"
 #include "jsmath.h"
 
-#include <algorithm>
 #include <assert.h>
 
 namespace JavaScript {
@@ -133,6 +138,8 @@ JSValue Context::readEvalFile(FILE* in, const String& fileName)
         ICodeModule* icm = genCode(parsedStatements, fileName);
         if (icm) {
             Context cx(getWorld(), getGlobalObject());
+            for (ListenerIterator i = mListeners.begin(), e = mListeners.end(); i != e; ++i)
+                cx.addListener(*i);
             result = cx.interpret(icm, emptyArgs);
             delete icm;
         }
@@ -275,6 +282,32 @@ static JSValue remainder_Default(const JSValue& r1, const JSValue& r2)
     JSValue num2(r2.toNumber());
     return JSValue(fmod(num1.f64, num2.f64));
 }
+static JSValue predecrement_Default(const JSValue& r)
+{
+    JSValue num(r.toNumber());
+    return JSValue(num.f64 - 1.0);
+}
+static JSValue preincrement_Default(const JSValue& r)
+{
+    JSValue num(r.toNumber());
+    return JSValue(num.f64 + 1.0);
+}
+static JSValue plus_Default(const JSValue& r)
+{
+    return JSValue(r.toNumber());
+}
+static JSValue minus_Default(const JSValue& r)
+{
+    JSValue num(r.toNumber());
+    return JSValue(-num.f64);
+}
+static JSValue complement_Default(const JSValue& r)
+{
+    JSValue num(r.toInt32());
+    return JSValue(~num.i32);
+}
+
+
 static JSValue less_Default(const JSValue& r1, const JSValue& r2)
 {
     JSValue lv = r1.toPrimitive(JSValue::Number);
@@ -423,30 +456,45 @@ void Context::initContext()
 
 }
 
-static JSBinaryOperator::JSBinaryCode getDefaultFunction(ExprNode::Kind op)
+static JSFunction *getDefaultFunction(ExprNode::Kind op)
 {
     switch (op) {
-    case ExprNode::add: return add_Default;
-    case ExprNode::subtract: return subtract_Default;
-    case ExprNode::multiply: return multiply_Default;
-    case ExprNode::divide: return divide_Default;
-    case ExprNode::modulo: return remainder_Default;
-    case ExprNode::leftShift: return shiftLeft_Default;
-    case ExprNode::rightShift: return shiftRight_Default;
-    case ExprNode::logicalRightShift: return UshiftRight_Default;
-    case ExprNode::bitwiseOr: return or_Default;
-    case ExprNode::bitwiseXor: return xor_Default;
-    case ExprNode::bitwiseAnd: return and_Default;
-    case ExprNode::lessThan: return less_Default;
-    case ExprNode::lessThanOrEqual: return lessOrEqual_Default;
-    case ExprNode::equal: return equal_Default;
-    case ExprNode::identical: return identical_Default;
+    case ExprNode::add: return new JSBinaryOperator(add_Default);
+    case ExprNode::subtract: return new JSBinaryOperator(subtract_Default);
+    case ExprNode::multiply: return new JSBinaryOperator(multiply_Default);
+    case ExprNode::divide: return new JSBinaryOperator(divide_Default);
+    case ExprNode::modulo: return new JSBinaryOperator(remainder_Default);
+    case ExprNode::leftShift: return new JSBinaryOperator(shiftLeft_Default);
+    case ExprNode::rightShift: return new JSBinaryOperator(shiftRight_Default);
+    case ExprNode::logicalRightShift: return new JSBinaryOperator(UshiftRight_Default);
+    case ExprNode::bitwiseOr: return new JSBinaryOperator(or_Default);
+    case ExprNode::bitwiseXor: return new JSBinaryOperator(xor_Default);
+    case ExprNode::bitwiseAnd: return new JSBinaryOperator(and_Default);
+    case ExprNode::lessThan: return new JSBinaryOperator(less_Default);
+    case ExprNode::lessThanOrEqual: return new JSBinaryOperator(lessOrEqual_Default);
+    case ExprNode::equal: return new JSBinaryOperator(equal_Default);
+    case ExprNode::identical: return new JSBinaryOperator(identical_Default);
+    case ExprNode::preDecrement: return new JSUnaryOperator(predecrement_Default);
+    case ExprNode::preIncrement: return new JSUnaryOperator(preincrement_Default);
+    case ExprNode::plus: return new JSUnaryOperator(plus_Default);
+    case ExprNode::minus: return new JSUnaryOperator(minus_Default);
+    case ExprNode::complement: return new JSUnaryOperator(complement_Default);
     default:
         NOT_REACHED("bad op");
         return NULL;
     }
 }
 
+const JSValue Context::findUnaryOverride(JSValue &operand1, ExprNode::Kind op)
+{
+    JSClass *class1 = operand1.isObject() ? dynamic_cast<JSClass*>(operand1.object->getType()) : NULL;
+    if (class1) {
+        JSOperator *candidate = class1->findUnaryOperator(op);
+        if (candidate)
+            return JSValue(candidate->mFunction);
+    }
+    return JSValue(getDefaultFunction(op));
+}
 
 const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, ExprNode::Kind op)
 {
@@ -465,7 +513,7 @@ const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, 
             class2 = class2->getSuperClass();
         }
         if (applicableList.size() == 0)
-            return JSValue(new JSBinaryOperator(getDefaultFunction(op)) );
+            return JSValue(getDefaultFunction(op));
         else {
             if (applicableList.size() == 1)
                 return JSValue(applicableList[0]->mFunction);
@@ -487,7 +535,7 @@ const JSValue Context::findBinaryOverride(JSValue &operand1, JSValue &operand2, 
             }
         }
     }
-    return JSValue(new JSBinaryOperator(getDefaultFunction(op)) );
+    return JSValue(getDefaultFunction(op));
 }
 
 
@@ -576,11 +624,12 @@ JSValue Context::interpret(ICodeModule* iCode, const JSValues& args)
                     BindThis* bt = static_cast<BindThis*>(instruction);
                     JSValue base = (*registers)[src1(bt).first];
                     JSValue target = (*registers)[src2(bt).first];
-                    ASSERT(target.isFunction());
+                    ASSERT(target.isFunction());        // XXX runtime error
                     (*registers)[dst(bt).first] = new JSBoundThis(base, target.function);
                 }
                 break;
 
+            case INVOKE_CALL:
             case CALL:
                 {
                     Call* call = static_cast<Call*>(instruction);
@@ -1161,6 +1210,56 @@ using JSString throughout.
                         static_cast<GenericBranch*>(instruction);
                     if ((*registers)[src1(bc).first].isInitialized()) {
                         mPC = mICode->its_iCode->begin() + ofs(bc);
+                        continue;
+                    }
+                }
+                break;
+            case GENERIC_XCREMENT_OP:
+                {
+                    GenericXcrementOP* gxo = static_cast<GenericXcrementOP*>(instruction);
+                    JSValue& dest = (*registers)[dst(gxo).first];
+                    JSValue& r1 = (*registers)[val3(gxo).first];
+                    const JSValue ovr = findUnaryOverride(r1, val2(gxo));
+                    JSFunction *target = ovr.function;
+                    if (target->isNative()) {
+                        JSValues argv(1);
+                        argv[0] = r1;
+                        dest = static_cast<JSUnaryOperator*>(target)->mCode(r1);
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, mGlobal, dst(gxo), mICode, mCurrentClosure);
+                        mICode = target->getICode();
+                        mActivation = new Activation(mICode->itsMaxRegister, kNullValue, r1);
+                        registers = &mActivation->mRegisters;
+                        mPC = mICode->its_iCode->begin();
+                        endPC = mICode->its_iCode->end();
+                        continue;
+                    }
+                }
+                break;
+            case GENERIC_UNARY_OP:
+                {
+                    GenericUnaryOP* guo = static_cast<GenericUnaryOP*>(instruction);
+                    JSValue& dest = (*registers)[dst(guo).first];
+                    JSValue& r1 = (*registers)[val3(guo).first];
+                    const JSValue ovr = findUnaryOverride(r1, val2(guo));
+                    JSFunction *target = ovr.function;
+                    if (target->isNative()) {
+                        JSValues argv(1);
+                        argv[0] = r1;
+                        dest = static_cast<JSUnaryOperator*>(target)->mCode(r1);
+                        break;
+                    }
+                    else {
+                        mLinkage = new Linkage(mLinkage, ++mPC,
+                                               mActivation, mGlobal, dst(guo), mICode, mCurrentClosure);
+                        mICode = target->getICode();
+                        mActivation = new Activation(mICode->itsMaxRegister, kNullValue, r1);
+                        registers = &mActivation->mRegisters;
+                        mPC = mICode->its_iCode->begin();
+                        endPC = mICode->its_iCode->end();
                         continue;
                     }
                 }

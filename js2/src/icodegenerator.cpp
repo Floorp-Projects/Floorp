@@ -31,6 +31,12 @@
 * file under either the NPL or the GPL.
 */
 
+#ifdef _WIN32
+ // Turn off warnings about identifiers too long in browser information
+ #pragma warning(disable: 4786)
+#endif
+
+#include <algorithm>
 #include "numerics.h"
 #include "world.h"
 #include "vmtypes.h"
@@ -39,11 +45,8 @@
 #include "icodegenerator.h"
 #include "interpreter.h"
 #include "exception.h"
-#ifdef TEST_ICASM
 #include "icodeasm.h"
-#endif
 
-#include <algorithm>
 #include <stdexcept>
 #include <stdio.h>
 
@@ -54,10 +57,8 @@ using namespace VM;
 using namespace JSTypes;
 using namespace JSClasses;
 using namespace Interpreter;
-#ifdef TEST_ICASM
 using namespace ICodeASM;
-#endif
-    
+
 inline char narrow(char16 ch) { return char(ch); }
 
 
@@ -496,12 +497,38 @@ TypedRegister ICodeGenerator::binaryOp(ICodeOp op, TypedRegister source1,
         iCode->push_back(instr);
     }
     return dest;
-} 
+}
+
+TypedRegister ICodeGenerator::unaryOp(ICodeOp op, TypedRegister source)
+{
+    TypedRegister dest(getTempRegister(), &Any_Type);
+    GenericUnaryOP *instr = new GenericUnaryOP(dest, mapICodeOpToExprNode(op), source);
+    iCode->push_back(instr);
+    return dest;
+}
+
+TypedRegister ICodeGenerator::xcrementOp(ICodeOp op, TypedRegister source)
+{
+    TypedRegister dest(getTempRegister(), &Any_Type);
+    GenericXcrementOP *instr = new GenericXcrementOP(dest, 
+                                    (op == ADD) ? ExprNode::preIncrement : ExprNode::preDecrement, 
+                                    source);
+    iCode->push_back(instr);
+    return dest;
+}
     
 TypedRegister ICodeGenerator::call(TypedRegister target, ArgumentList *args)
 {
     TypedRegister dest(getTempRegister(), &Any_Type);
     Call *instr = new Call(dest, target, args);
+    iCode->push_back(instr);
+    return dest;
+}
+
+TypedRegister ICodeGenerator::invokeCallOp(TypedRegister target, ArgumentList *args)
+{
+    TypedRegister dest(getTempRegister(), &Any_Type);
+    InvokeCall *instr = new InvokeCall(dest, target, args);
     iCode->push_back(instr);
     return dest;
 }
@@ -699,9 +726,7 @@ ICodeModule *ICodeGenerator::readFunction(XMLNode *element, JSClass *thisClass)
     }
     return result;
 #else
-
     return 0;
-
 #endif
 }
 
@@ -825,11 +850,8 @@ ICodeModule *ICodeGenerator::readICode(const char *fileName)
 
     }
     return result;
-
 #else
-
     return 0;
-
 #endif
 }
     
