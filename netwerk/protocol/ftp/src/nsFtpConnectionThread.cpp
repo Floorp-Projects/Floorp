@@ -53,9 +53,9 @@
 static NS_DEFINE_CID(kPrefCID, NS_PREF_CID);
 static NS_DEFINE_CID(kWalletServiceCID, NS_WALLETSERVICE_CID);
 static NS_DEFINE_CID(kStreamConverterServiceCID,    NS_STREAMCONVERTERSERVICE_CID);
-static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
+static NS_DEFINE_CID(kSocketTransportServiceCID, NS_SOCKETTRANSPORTSERVICE_CID);
 
 
 #if defined(PR_LOGGING)
@@ -504,8 +504,10 @@ nsFtpState::OnStopRequest(nsIRequest *request, nsISupports *aContext,
         Connect();
         return NS_OK;
     }        
-    
-    StopProcessing();
+
+    if (NS_FAILED(aStatus)) // aStatus will be NS_OK if we are sucessfully disconnecing the control connection. 
+        StopProcessing();
+
     return NS_OK;
 }
 
@@ -540,7 +542,9 @@ nsFtpState::EstablishControlConnection()
 
             // if we succeed, return.  Otherwise, we need to 
             // create a transport
-            return NS_OK;
+            rv = mControlConnection->Connect();
+            if (NS_SUCCEEDED(rv))
+                return rv;
         }
 #if defined(PR_LOGGING)
         else 
@@ -551,24 +555,15 @@ nsFtpState::EstablishControlConnection()
     }
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) creating control\n", this));
-
-    nsXPIDLCString host;
-    rv = mURL->GetHost(getter_Copies(host));
-    if (NS_FAILED(rv)) return rv;
-        
-    nsCOMPtr<nsITransport> transport;
-    // build our own
-    rv = CreateTransport(host, 
-                         mPort, 
-                         FTP_COMMAND_CHANNEL_SEG_SIZE, 
-                         FTP_COMMAND_CHANNEL_MAX_SIZE, 
-                         getter_AddRefs(transport)); // the command transport
-    if (NS_FAILED(rv)) return rv;
         
     mState = FTP_READ_BUF;
     mNextState = FTP_S_USER;
+    
+    nsXPIDLCString host;
+    rv = mURL->GetHost(getter_Copies(host));
+    if (NS_FAILED(rv)) return rv;
 
-    mControlConnection = new nsFtpControlConnection(transport);
+    mControlConnection = new nsFtpControlConnection(host, mPort);
     if (!mControlConnection) return NS_ERROR_OUT_OF_MEMORY;
 
     NS_ADDREF(mControlConnection);
@@ -1454,11 +1449,14 @@ nsFtpState::R_pasv() {
     const char* hostStr = mIPv6ServerAddress ? mIPv6ServerAddress : host.get();
 
     // now we know where to connect our data channel
-    rv = CreateTransport(hostStr, 
-                         port, 
-                         FTP_DATA_CHANNEL_SEG_SIZE, 
-                         FTP_DATA_CHANNEL_MAX_SIZE, 
-                         getter_AddRefs(mDPipe)); // the data channel
+    nsCOMPtr<nsISocketTransportService> sts = do_GetService(kSocketTransportServiceCID, &rv);
+        
+    rv =  sts->CreateTransport(hostStr, 
+                               port, 
+                               nsnull, -1,
+                               FTP_DATA_CHANNEL_SEG_SIZE, 
+                               FTP_DATA_CHANNEL_MAX_SIZE, 
+                               getter_AddRefs(mDPipe)); // the data channel
     if (NS_FAILED(rv)) return FTP_ERROR;
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("(%x) Created Data Transport (%s:%x)\n", this, hostStr, port));
@@ -1842,11 +1840,10 @@ nsFtpState::KillControlConnection() {
         nsresult rv = nsFtpProtocolHandler::InsertConnection(mURL, 
                                            NS_STATIC_CAST(nsISupports*, (nsIStreamListener*)mControlConnection));
         // Can't cache it?  Kill it then.  
-        if (NS_FAILED(rv))
-            mControlConnection->Disconnect();
+        mControlConnection->Disconnect(rv);
     } 
     else
-        mControlConnection->Disconnect();
+        mControlConnection->Disconnect(NS_BINDING_ABORTED);
 
     NS_RELEASE(mControlConnection);
  
@@ -1988,19 +1985,6 @@ nsFtpState::DataConnectionEstablished()
     SendFTPCommand(a);
     
     return NS_OK;
-}
-nsresult
-nsFtpState::CreateTransport(const char * host, PRInt32 port, PRUint32 bufferSegmentSize, PRUint32 bufferMaxSize, nsITransport** o_pTrans)
-{
-    nsresult rv;
-    
-    nsCOMPtr<nsISocketTransportService> sts = 
-             do_GetService(kSocketTransportServiceCID, &rv);
-        
-    return sts->CreateTransport(host, port, nsnull, PRUint32(-1),
-                                bufferSegmentSize,
-                                bufferMaxSize,
-                                o_pTrans);
 }
 
 nsresult 
