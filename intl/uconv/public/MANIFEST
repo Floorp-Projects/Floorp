@@ -4,4 +4,5 @@ nsICharsetConverterManager.h
 nsIUnicodeDecoder.h
 nsIUnicodeDecodeUtil.h
 nsIUnicodeEncoder.h
+nsIPlatformCharset.h
 uconvutil.h
