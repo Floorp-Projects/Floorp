@@ -393,7 +393,6 @@ nsMsgWindowCommands.prototype =
   },
   SelectFolder: function(folderUri)
   {
-
     SelectFolder(folderUri);
 
   },

@@ -676,22 +676,8 @@ function OnClickThreadAndMessagePaneSplitter()
   if(collapsed)
   {
     LoadSelectionIntoMessagePane();
-    setTimeout("PositionThreadPane();",0);
+    setTimeout("ScrollToMessage(new,true,true);",0);
    }
-*/
-}
-
-function PositionThreadPane()
-{
-    dump("XXX fix PositionThreadPane\n");
-/*
-       var selArray = tree.selectedItems;
-
-       if ( selArray && (selArray.length > 0))
-       try {
-       tree.ensureElementIsVisible(selArray[0]);
-       }
-       catch(e) { }
 */
 }
 

@@ -41,7 +41,7 @@ var gCurrentLoadingFolderViewFlags = 0;
 
 var gCurrentDisplayedMessage = null;
 var gNextMessageAfterDelete = null;
-var gNextMessageAfterLoad = false;
+var gNextMessageAfterLoad = null;
 var gNextMessageViewIndexAfterDelete = -1;
 
 var gActiveThreadPaneSortColumn = "";
@@ -123,12 +123,14 @@ var folderListener = {
             gCurrentLoadingFolderViewFlags = 0;
 
             SetFocusThreadPane();
+            var scrolled = false;
             if (gNextMessageAfterLoad) 
             {
-              gNextMessageAfterLoad = false;
+              var type = gNextMessageAfterLoad;
+              gNextMessageAfterLoad = null;
 
-              // should scroll to new here.
-              PositionThreadPane();
+              // scroll to and select the proper message
+              scrolled = ScrollToMessage(type, true, true /* selectMessage */);
             }
 					}
 				}
@@ -136,11 +138,15 @@ var folderListener = {
 				{
 				  gCurrentLoadingFolderURI = "";
 				  //Now let's select the first new message if there is one
-          var beforeScrollToNew;
+                  var beforeScrollToNew;
 				  if(showPerformance) {
 				    beforeScrollToNew = new Date();
                   }
-				  ScrollToFirstNewMessage();
+                  if (!scrolled) {
+                    // if we didn't just scroll, scroll to the first new message
+                    // don't select it though
+				    ScrollToMessage(nsMsgNavigationType.firstNew, true, false /* selectMessage */);
+                  }
 
 				  if(showPerformance) {
 				      var afterScrollToNew = new Date();
