@@ -48,6 +48,7 @@ CPP_OBJS =                                         \
         .\$(OBJDIR)\nsSimpleStreamListener.obj     \
         .\$(OBJDIR)\nsSimpleStreamProvider.obj     \
         .\$(OBJDIR)\nsRequestObserverProxy.obj     \
+        .\$(OBJDIR)\nsResumableEntityID.obj        \
         .\$(OBJDIR)\nsStreamListenerProxy.obj      \
         .\$(OBJDIR)\nsStreamProviderProxy.obj      \
         .\$(OBJDIR)\nsURLParsers.obj               \

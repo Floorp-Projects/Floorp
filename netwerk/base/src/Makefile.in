@@ -54,6 +54,7 @@ CPPSRCS		= \
 		nsProtocolProxyService.cpp \
 		nsProxyAutoConfigUtils.cpp \
 		nsRequestObserverProxy.cpp \
+		nsResumableEntityID.cpp \
 		nsSimpleStreamListener.cpp \
 		nsSimpleStreamProvider.cpp \
 		nsSimpleURI.cpp \

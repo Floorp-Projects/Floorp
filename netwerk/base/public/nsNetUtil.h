@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -58,6 +58,7 @@
 #include "nsMemory.h"
 #include "nsCOMPtr.h"
 #include "nsIDownloader.h"
+#include "nsIResumableEntityID.h"
 #include "nsIStreamLoader.h"
 #include "nsIStreamIO.h"
 #include "nsIPipe.h"
@@ -727,6 +728,24 @@ NS_GetURLSpecFromFile(nsIFile* aFile, char **aUrl,
         ioService = serv.get();
     }
     return ioService->GetURLSpecFromFile(aFile, aUrl);
+}
+
+inline nsresult
+NS_NewResumableEntityID(nsIResumableEntityID** aRes,
+                        PRUint32 size,
+                        PRTime lastModified)
+{
+    nsresult rv;
+    nsCOMPtr<nsIResumableEntityID> ent =
+        do_CreateInstance(NS_RESUMABLEENTITYID_CONTRACTID,&rv);
+    if (NS_FAILED(rv)) return rv;
+
+    ent->SetSize(size);
+    ent->SetLastModified(lastModified);
+
+    *aRes = ent;
+    NS_ADDREF(*aRes);
+    return NS_OK;
 }
 
 #endif // nsNetUtil_h__

@@ -261,7 +261,7 @@ nsFtpProtocolHandler::RemoveConnection(nsIURI *aKey, nsISupports* *_retval) {
     nsXPIDLCString spec;
     aKey->GetPrePath(getter_Copies(spec));
     
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Removing connection for %s\b", spec.get()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Removing connection for %s\n", spec.get()));
    
     timerStruct* ts = nsnull;
     PRInt32 i;
@@ -296,7 +296,7 @@ nsFtpProtocolHandler::InsertConnection(nsIURI *aKey, nsISupports *aConn)
 
     nsXPIDLCString spec;
     aKey->GetPrePath(getter_Copies(spec));
-    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Inserting connection for %s\b", spec.get()));
+    PR_LOG(gFTPLog, PR_LOG_DEBUG, ("Inserting connection for %s\n", spec.get()));
 
     if (!mRootConnectionList)
         return NS_ERROR_FAILURE;

@@ -99,16 +99,22 @@ nsFTPChannel::~nsFTPChannel()
     if (mLock) PR_DestroyLock(mLock);
 }
 
-NS_IMPL_THREADSAFE_ISUPPORTS9(nsFTPChannel,
-                              nsIChannel,
-                              nsIFTPChannel,
-                              nsIUploadChannel,
-                              nsIRequest,
-                              nsIInterfaceRequestor, 
-                              nsIProgressEventSink,
-                              nsIStreamListener,
-                              nsIRequestObserver,
-                              nsICacheListener);
+NS_IMPL_ADDREF(nsFTPChannel)
+NS_IMPL_RELEASE(nsFTPChannel)
+
+NS_INTERFACE_MAP_BEGIN(nsFTPChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIFTPChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIResumableChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIUploadChannel)
+    NS_INTERFACE_MAP_ENTRY(nsIRequest)
+    NS_INTERFACE_MAP_ENTRY(nsIInterfaceRequestor) 
+    NS_INTERFACE_MAP_ENTRY(nsIProgressEventSink)
+    NS_INTERFACE_MAP_ENTRY(nsIStreamListener)
+    NS_INTERFACE_MAP_ENTRY(nsIRequestObserver)
+    NS_INTERFACE_MAP_ENTRY(nsICacheListener)
+    NS_INTERFACE_MAP_ENTRY_AMBIGUOUS(nsISupports, nsIChannel)
+NS_INTERFACE_MAP_END
 
 nsresult
 nsFTPChannel::Init(nsIURI* uri, nsIProxyInfo* proxyInfo, nsICacheSession* session)
@@ -286,6 +292,21 @@ nsFTPChannel::GenerateCacheKey(nsACString &cacheKey)
 NS_IMETHODIMP
 nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
 {
+    return AsyncOpenAt(listener, ctxt, PRUint32(-1), nsnull);
+}
+
+NS_IMETHODIMP
+nsFTPChannel::GetEntityID(nsIResumableEntityID **entityID)
+{
+    *entityID = mEntityID;
+    NS_IF_ADDREF(*entityID);
+    return NS_OK;
+}
+
+NS_IMETHODIMP
+nsFTPChannel::AsyncOpenAt(nsIStreamListener *listener, nsISupports *ctxt,
+                          PRUint32 startPos, nsIResumableEntityID* entityID)
+{
     PRInt32 port;
     nsresult rv = mURL->GetPort(&port);
     if (NS_FAILED(rv))
@@ -307,7 +328,14 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
     }
     PRBool offline;
 
-    if (mCacheSession && !mUploadStream) {
+    // If we're starting from the beginning, then its OK to use the cache,
+    // because the entire file must be there (the cache doesn't support
+    // partial entries yet)
+    // Note that ftp doesn't store metadata, so disable caching if there was
+    // an entityID. Storing this metadata isn't worth it until we can
+    // get partial data out of the cache anyway...
+    if (mCacheSession && !mUploadStream && !entityID &&
+        (startPos==0 || startPos==PRUint32(-1))) {
         mIOService->GetOffline(&offline);
 
         // Set the desired cache access mode accordingly...
@@ -334,11 +362,11 @@ nsFTPChannel::AsyncOpen(nsIStreamListener *listener, nsISupports *ctxt)
                ("Opening cache entry failed [rv=%x]", rv));
     }
     
-    return SetupState();
+    return SetupState(startPos, entityID);
 }
 
 nsresult 
-nsFTPChannel::SetupState()
+nsFTPChannel::SetupState(PRUint32 startPos, nsIResumableEntityID* entityID)
 {
     if (!mFTPState) {
         NS_NEWXPCOM(mFTPState, nsFtpState);
@@ -350,7 +378,9 @@ nsFTPChannel::SetupState()
                                   mAuthPrompter, 
                                   mFTPEventSink, 
                                   mCacheEntry,
-                                  mProxyInfo);
+                                  mProxyInfo,
+                                  startPos,
+                                  entityID);
     if (NS_FAILED(rv)) return rv;
 
     (void) mFTPState->SetWriteStream(mUploadStream);
@@ -634,7 +664,10 @@ nsFTPChannel::OnStartRequest(nsIRequest *request, nsISupports *aContext)
    
     nsresult rv = NS_OK;
     request->GetStatus(&mStatus);
-
+    nsCOMPtr<nsIResumableChannel> resumable = do_QueryInterface(request);
+    if (resumable)
+        resumable->GetEntityID(getter_AddRefs(mEntityID));
+    
     if (mListener) {
         rv = mListener->OnStartRequest(this, mUserContext);
         if (NS_FAILED(rv)) return rv;
@@ -673,7 +706,7 @@ nsFTPChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
         mCacheEntry = entry;
     }
     
-    rv = SetupState();
+    rv = SetupState(PRUint32(-1),nsnull);
 
     if (NS_FAILED(rv)) {
         Cancel(rv);

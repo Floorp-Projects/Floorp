@@ -19,7 +19,7 @@
  * Portions created by the Initial Developer are Copyright (C) 1998
  * the Initial Developer. All Rights Reserved.
  *
- * Contributor(s):
+ * Contributor(s): Bradley Baetz <bbaetz@student.usyd.edu.au>
  *
  * Alternatively, the contents of this file may be used under the terms of
  * either the GNU General Public License Version 2 or later (the "GPL"), or 
@@ -59,6 +59,7 @@
 #include "nsIAuthPrompt.h"
 #include "nsITransport.h"
 #include "nsIProxyInfo.h"
+#include "nsIResumableEntityID.h"
 
 #include "nsFtpControlConnection.h"
 
@@ -88,6 +89,7 @@ typedef enum _FTP_STATE {
     FTP_S_TYPE, FTP_R_TYPE,
     FTP_S_CWD,  FTP_R_CWD,
     FTP_S_SIZE, FTP_R_SIZE,
+    FTP_S_MDTM, FTP_R_MDTM,
     FTP_S_REST, FTP_R_REST,
     FTP_S_RETR, FTP_R_RETR,
     FTP_S_STOR, FTP_R_STOR,
@@ -117,10 +119,14 @@ public:
                   nsIAuthPrompt *aAuthPrompter, 
                   nsIFTPEventSink *sink, 
                   nsICacheEntryDescriptor* cacheEntry,
-                  nsIProxyInfo* proxyInfo);
+                  nsIProxyInfo* proxyInfo,
+                  PRUint32 startPos,
+                  nsIResumableEntityID* entity);
 
     // use this to provide a stream to be written to the server.
     nsresult SetWriteStream(nsIInputStream* aInStream);
+
+    nsresult GetEntityID(nsIResumableEntityID* *aEntityID);
 
     nsresult Connect();
 
@@ -138,6 +144,7 @@ private:
     nsresult        S_cwd();  FTP_STATE       R_cwd();
 
     nsresult        S_size(); FTP_STATE       R_size();
+    nsresult        S_mdtm(); FTP_STATE       R_mdtm();
     nsresult        S_list(); FTP_STATE       R_list();
 
     nsresult        S_rest(); FTP_STATE       R_rest();
@@ -180,7 +187,8 @@ private:
     nsCOMPtr<nsITransport>          mDPipe;                   // the data transport
     nsCOMPtr<nsIRequest>            mDPipeRequest;
     DataRequestForwarder*           mDRequestForwarder;
-
+    PRUint32                        mFileSize;
+    PRTime                          mModTime;
 
         // ****** consumer vars
     nsCOMPtr<nsIFTPChannel>         mChannel;         // our owning FTP channel we pass through our events
@@ -227,6 +235,10 @@ private:
     nsCAutoString           mControlReadCarryOverBuf;
 
     nsCOMPtr<nsICacheEntryDescriptor> mCacheEntry;
+    
+    PRUint32 mStartPos;
+    nsCOMPtr<nsIResumableEntityID> mSuppliedEntityID;
+    nsCOMPtr<nsIResumableEntityID> mEntityID;
 };
 
 

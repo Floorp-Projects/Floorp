@@ -138,6 +138,11 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsStandardURL)
 
 ///////////////////////////////////////////////////////////////////////////////
 
+#include "nsResumableEntityID.h"
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsResumableEntityID)
+
+///////////////////////////////////////////////////////////////////////////////
+
 static NS_METHOD
 RegisterBuiltInURLParsers(nsIComponentManager *aCompMgr, 
                           nsIFile *aPath,
@@ -681,6 +686,12 @@ static const nsModuleComponentInfo gNetModuleInfo[] = {
       NS_URICHECKER_CID,
       NS_URICHECKER_CONTRACT_ID,
       nsURICheckerConstructor
+    },
+
+    { NS_RESUMABLEENTITYID_CLASSNAME,
+      NS_RESUMABLEENTITYID_CID,
+      NS_RESUMABLEENTITYID_CONTRACTID,
+      nsResumableEntityIDConstructor
     },
 
     // The register functions for the built-in 

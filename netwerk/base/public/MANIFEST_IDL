@@ -25,6 +25,8 @@ nsIFileStreams.idl
 nsITransport.idl
 nsIStreamLoader.idl
 nsIDownloader.idl
+nsIResumableChannel.idl
+nsIResumableEntityID.idl
 nsIRequestObserver.idl
 nsIRequestObserverProxy.idl
 nsIStreamProvider.idl
