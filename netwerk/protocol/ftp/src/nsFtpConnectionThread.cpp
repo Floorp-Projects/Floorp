@@ -102,7 +102,7 @@ nsFtpConnectionThread::Process() {
     (void)mURL->GetSpec(getter_Copies(spec));
 
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() started for %x (spec =%s)\n",
-        mURL.get(), spec));
+        mURL.get(), NS_STATIC_CAST(const char*, spec)));
 #endif // DEBUG
  
     while (mKeepRunning) {
@@ -766,7 +766,7 @@ nsFtpConnectionThread::Process() {
 
 #ifdef DEBUG
     PR_LOG(gFTPLog, PR_LOG_DEBUG, ("nsFtpConnectionThread::Process() ended for %x (spec =%s)\n\n\n",
-        mURL.get(), spec));
+        mURL.get(), NS_STATIC_CAST(const char*, spec)));
 #endif // DEBUG
 
     return NS_OK;
