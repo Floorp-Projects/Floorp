@@ -39,6 +39,12 @@ CPPSRCS	= \
 		nsFreeType.cpp \
 		$(NULL)
 
+EXTRA_DSO_LDOPTS = \
+		$(LIBS_DIR) \
+		-lgkgfx \
+		$(MOZ_COMPONENT_LIBS) \
+		$(NULL)
+
 include $(topsrcdir)/config/rules.mk
 
 LOCAL_INCLUDES	= \
