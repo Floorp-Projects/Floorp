@@ -344,6 +344,9 @@ $(LDSCRIPT): $(ORDERFILE)
 
 endif
 
+libs::
+	touch $(DIST)/bin/.autoreg
+
 ifneq (,$(filter mac cocoa,$(MOZ_WIDGET_TOOLKIT)))
 
 INCLUDES += -I$(srcdir)/../appshell/src -I$(srcdir)/appleevents
@@ -355,16 +358,15 @@ APP_NAME = Mozilla
 endif
 
 libs:: $(PROGRAM)
-	rm -rf $(DIST)/$(APP_NAME).app
-	mkdir $(DIST)/$(APP_NAME).app
+	mkdir -p $(DIST)/$(APP_NAME).app
 	cp -R $(srcdir)/macbuild/Contents $(DIST)/$(APP_NAME).app
-	cp -RL $(DIST)/bin $(DIST)/$(APP_NAME).app/Contents/MacOS
+	mkdir -p $(DIST)/$(APP_NAME).app/Contents/MacOS
+	rsync -a -L $(DIST)/bin/ $(DIST)/$(APP_NAME).app/Contents/MacOS
 	cp -RL $(srcdir)/macbuild/mach.icns $(DIST)/$(APP_NAME).app/Contents/Resources/mach.icns
 	echo APPLMOZZ > $(DIST)/$(APP_NAME).app/Contents/PkgInfo
+clean clobber::
+	rm -rf $(DIST)/$(APP_NAME).app
 endif
-
-libs::
-	touch $(DIST)/bin/.autoreg
 
 echo_objs:
 	@echo $(OBJS)
