@@ -130,6 +130,13 @@ if(verifyDiskSpace(fProgram, srDest))
                      true);              // Force Flag 
   logComment("addDirectory() of Program returned: " + err);
 
+  err = addDirectory("",
+                     "",
+                     "Embed",              // dir name in jar to extract 
+                     fProgram,           // Where to put this file (Returned from GetFolder) 
+                     "",                 // subdir name to create relative to fProgram
+                     true);              // Force Flag 
+  logComment("addDirectory() of Program returned: " + err);
   // check return value
   if( err == SUCCESS )
   {

@@ -8,6 +8,6 @@
 ; ; file comment
 ;
 
-[mfcembed]
-bin\mfcembed.exe
-bin\mfcEmbedComponents.dll
+[gre_app_support]
+mfcembed.exe
+mfcEmbedComponents.dll
