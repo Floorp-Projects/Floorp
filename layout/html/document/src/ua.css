@@ -520,10 +520,6 @@ NOFRAMES {
 
 /* Pseudo-element style */
 
-:MOZ-ANONYMOUS-BLOCK {
-  display: block;
-}
-
 :SCROLLBAR-LOOK {
   background-color: #c0c0c0;
   /* border-color: inherit; */
@@ -643,6 +639,6 @@ NOFRAMES {
   border: 1px dotted white;
 }
 
-:-MOZ-ANONYMOUS-BLOCK {
+:MOZ-ANONYMOUS-BLOCK {
   display: block;
 }
