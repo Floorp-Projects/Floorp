@@ -219,8 +219,7 @@ NS_METHOD nsMenuItem::GetLabel(nsString &aText)
 //-------------------------------------------------------------------------
 NS_METHOD nsMenuItem::SetLabel(nsString &aText)
 {
-   mLabel = aText;
-  
+  mLabel = aText;
   return NS_OK;
 }
 
