@@ -43,10 +43,10 @@
 #include "nsIBaseDOMException.h"
 #include "prprf.h"
 
-static const char* kInvalidExpressionErrName = "NS_ERROR_DOM_INVALID_EXPRESSION_ERR";
-static const char* kInvalidExpressionErrMessage = NS_ERROR_DOM_INVALID_EXPRESSION_MSG;
-static const char* kTypeErrName = "NS_ERROR_DOM_TYPE_ERR";
-static const char* kTypeErrMessage = NS_ERROR_DOM_TYPE_MSG;
+static const char kInvalidExpressionErrName[] = "NS_ERROR_DOM_INVALID_EXPRESSION_ERR";
+static const char kInvalidExpressionErrMessage[] = NS_ERROR_DOM_INVALID_EXPRESSION_MSG;
+static const char kTypeErrName[] = "NS_ERROR_DOM_TYPE_ERR";
+static const char kTypeErrMessage[] = NS_ERROR_DOM_TYPE_MSG;
 
 static void
 TXResultToNameAndMessage(nsresult aNSResult,
