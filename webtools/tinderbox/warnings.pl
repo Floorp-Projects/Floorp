@@ -336,8 +336,8 @@ sub print_summary_table
   # Summary Table (name, count)
   #
   use POSIX;
-  print "<table border=0 cellpadding=1 cellspacing=0 bgcolor=#ededed>\n";
-  my $num_columns = 6;
+  print "<table border=0 cellpadding=1 cellspacing=0 bgcolor=white>\n";
+  my $num_columns = 3;
   my $num_rows = ceil($num_whos / $num_columns);
   for (my $ii=0; $ii < $num_rows; $ii++) {
     print "<tr>";
@@ -347,13 +347,13 @@ sub print_summary_table
       my $name = $who_list_ref->[$index];
       my $count = $who_count_hash_ref->{$name};
       next if $count == 0;
-      warn "$ii\t$jj\t$index\t$name\t$count\n";
+      #warn "$ii\t$jj\t$index\t$name\t$count\n";
       $name =~ s/%.*//;
       print "  " x $jj;
       print "<td><a href='#$name'>$name</a>";
       print "</td><td>";
       print "$count";
-      print "</td><td>&nbsp;</td>\n";
+      print "</td><td>&nbsp;&nbsp;&nbsp;</td>\n";
     }
     print "</tr>\n";
   }
@@ -370,12 +370,18 @@ sub print_html_by_who {
   my $old_fh = select($fh);
 
   my $total_unignored_count = $total_warnings_count - $total_ignored_count;
+  for $who (sort { $who_count{$b} <=> $who_count{$a}
+                   || $a cmp $b } keys %who_count) {
+    next if $who_count{$who} == 0;
+    push @who_list, $who;
+  }
   print <<"__END_HEADER";
   <html>
     <head>
       <title>Blamed Build Warnings</title>
     </head>
-    <body>
+    <body BGCOLOR="#FFFFFF" TEXT="#000000" 
+          LINK="#0000EE" VLINK="#551A8B" ALINK="#FF0000">
       <font size="+2" face="Helvetica,Arial"><b>
         Blamed Build Warnings
       </b></font><br>
@@ -384,14 +390,19 @@ sub print_html_by_who {
         $total_unignored_count total warnings
       </font><p>
     
+      <table cellspacing=0 cellpadding=0 border=0><tr bgcolor="#F0A000"><td>
+      <table cellpadding=2 cellspacing=2 border=0><tr bgcolor="#FFFFFF">
+        <th colspan=2><font size="+1" face="Helvetica,Arial">
+          Summary</font></th></tr>
+      <tr bgcolor="#FFFFFF"><td><font face="Helvetica,Arial"><center><b>
+      by count</center></center></font>
 __END_HEADER
-  for $who (sort { $who_count{$b} <=> $who_count{$a}
-                   || $a cmp $b } keys %who_count) {
-    next if $who_count{$who} == 0;
-    push @who_list, $who;
-  }
   print_summary_table(\@who_list, \%who_count);
-  #print_summary_table([sort @who_list], \%who_count);
+  print "</td><td><font face='Helvetica,Arial'><center><b>";
+  print "by name</b></center></font>";
+  print_summary_table([sort @who_list], \%who_count);
+  print "</td></tr></table>";
+  print "</td></tr></table>";
 
   # Count Unblamed warnings
   #
