@@ -3484,7 +3484,7 @@ nsRuleNode::ComputeOutlineData(nsStyleStruct* aStartStruct,
   else if (eCSSUnit_Enumerated == marginData.mOutlineColor.GetUnit())
     outline->SetOutlineInvert();
 
-// -moz-border-radius: length, percent, inherit
+// -moz-outline-radius: length, percent, inherit
   nsStyleCoord  coord;
   nsStyleCoord  parentCoord;
   { // scope for compilers with broken |for| loop scoping
