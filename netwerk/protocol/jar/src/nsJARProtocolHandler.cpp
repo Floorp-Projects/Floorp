@@ -30,8 +30,11 @@
 #include "nsJARChannel.h"
 #include "nsXPIDLString.h"
 
-static NS_DEFINE_CID(kIOServiceCID,     NS_IOSERVICE_CID);
-static NS_DEFINE_CID(kJARUriCID,        NS_JARURI_CID);
+static NS_DEFINE_CID(kIOServiceCID,      NS_IOSERVICE_CID);
+static NS_DEFINE_CID(kJARUriCID,         NS_JARURI_CID);
+static NS_DEFINE_CID(kZipReaderCacheCID, NS_ZIPREADERCACHE_CID);
+
+#define NS_JAR_CACHE_SIZE       32
 
 ////////////////////////////////////////////////////////////////////////////////
 
@@ -43,7 +46,15 @@ nsJARProtocolHandler::nsJARProtocolHandler()
 nsresult
 nsJARProtocolHandler::Init()
 {
-    return NS_OK;
+    nsresult rv;
+	rv = nsComponentManager::CreateInstance(kZipReaderCacheCID,
+                                            nsnull,
+                                            NS_GET_IID(nsIZipReaderCache),
+                                            getter_AddRefs(mJARCache));
+    if (NS_FAILED(rv)) return rv;
+
+    rv = mJARCache->Init(NS_JAR_CACHE_SIZE);
+    return rv;
 }
 
 nsJARProtocolHandler::~nsJARProtocolHandler()
@@ -70,6 +81,14 @@ nsJARProtocolHandler::Create(nsISupports *aOuter, REFNSIID aIID, void **aResult)
     }
     NS_RELEASE(ph);
     return rv;
+}
+
+NS_IMETHODIMP
+nsJARProtocolHandler::GetJARCache(nsIZipReaderCache* *result)
+{
+    *result = mJARCache;
+    NS_ADDREF(*result);
+    return NS_OK;
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -22,11 +22,13 @@
 
 #include "nsIProtocolHandler.idl"
 
+interface nsIZipReaderCache;
+
 [scriptable, uuid(92c3b42c-98c4-11d3-8cd9-0060b0fc14a3)]
 interface nsIJARProtocolHandler : nsIProtocolHandler {
 
     /**
-     * Add any jar-specific methods here later.
+     * JARCache contains the collection of open jar files.
      */
-    
+    readonly attribute nsIZipReaderCache JARCache;
 };

@@ -82,6 +82,7 @@ public:
     friend class nsJARDownloadObserver;
 
 protected:
+    nsCOMPtr<nsIJARProtocolHandler>     mJARProtocolHandler;
 	nsCOMPtr<nsIJARURI>                 mURI;
 	nsCOMPtr<nsILoadGroup>              mLoadGroup;
 	nsCOMPtr<nsIInterfaceRequestor>     mCallbacks;

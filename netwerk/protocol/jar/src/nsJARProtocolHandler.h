@@ -26,6 +26,8 @@
 #include "nsIJARProtocolHandler.h"
 #include "nsIProtocolHandler.h"
 #include "nsIJARURI.h"
+#include "nsIZipReader.h"
+#include "nsCOMPtr.h"
 
 #define NS_JARPROTOCOLHANDLER_CID					 \
 { /* 0xc7e410d4-0x85f2-11d3-9f63-006008a6efe9 */     \
@@ -41,6 +43,7 @@ class nsJARProtocolHandler : public nsIJARProtocolHandler
 public:
     NS_DECL_ISUPPORTS
 	NS_DECL_NSIPROTOCOLHANDLER
+	NS_DECL_NSIJARPROTOCOLHANDLER
 
     // nsJARProtocolHandler methods:
     nsJARProtocolHandler();
@@ -52,6 +55,7 @@ public:
     nsresult Init();
 
 protected:
+    nsCOMPtr<nsIZipReaderCache> mJARCache;
 };
 
 #endif /* nsJARProtocolHandler_h___ */
