@@ -54,16 +54,16 @@
 #include "nsUrlbarHistory.h"
 #include "nsDownloadManager.h"
 #include "nsDownloadProxy.h"
+#include "nsWindowsHooks.h"
 #if defined(MOZ_LDAP_XPCOM)
 #include "nsLDAPAutoCompleteSession.h"
 #endif
 #endif
 #if defined(XP_WIN)
 #ifndef MOZ_PHOENIX
-#include "nsAlertsService.h" 
+#include "nsAlertsService.h"
 #endif
 #include "nsUrlWidget.h"
-#include "nsWindowsHooks.h"
 #endif // Windows
 
 #include "nsBrowserStatusFilter.h"
@@ -93,6 +93,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsUrlbarHistory)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsGlobalHistory, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsDownloadManager, Init)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsDownloadProxy)
+NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #if defined(MOZ_LDAP_XPCOM)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 #endif
@@ -102,7 +103,6 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsLDAPAutoCompleteSession)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsAlertsService)
 #endif
 NS_GENERIC_FACTORY_CONSTRUCTOR_INIT(nsUrlWidget, Init)
-NS_GENERIC_FACTORY_CONSTRUCTOR(nsWindowsHooks)
 #endif // Windows
 
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserStatusFilter)
@@ -110,7 +110,7 @@ NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserInstance)
 NS_GENERIC_FACTORY_CONSTRUCTOR(nsBrowserContentHandler)
 
 
-    
+
 static NS_METHOD
 RegisterProc(nsIComponentManager *aCompMgr,
              nsIFile *aPath,
@@ -204,24 +204,24 @@ static const nsModuleComponentInfo components[] = {
       nsUrlWidgetConstructor },
 #ifndef MOZ_PHOENIX
     { "nsAlertsService", NS_ALERTSSERVICE_CID, NS_ALERTSERVICE_CONTRACTID, nsAlertsServiceConstructor},
-#endif
     { NS_IWINDOWSHOOKS_CLASSNAME, NS_IWINDOWSHOOKS_CID, NS_IWINDOWSHOOKS_CONTRACTID,
       nsWindowsHooksConstructor },
+#endif
 #endif // Windows
   { "nsBrowserInstance",
     NS_BROWSERINSTANCE_CID,
-    NS_BROWSERINSTANCE_CONTRACTID, 
+    NS_BROWSERINSTANCE_CONTRACTID,
     nsBrowserInstanceConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/html", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/html",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/vnd.mozilla.xul+xml", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/vnd.mozilla.xul+xml",
+    nsBrowserContentHandlerConstructor
   },
 #ifdef MOZ_SVG
   { "Browser Content Handler",
@@ -232,77 +232,77 @@ static const nsModuleComponentInfo components[] = {
 #endif
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/rdf", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/rdf",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/xml", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/xml",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/xml", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/xml",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/xhtml+xml", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/xhtml+xml",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/css", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/css",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/plain", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"text/plain",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/gif", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/gif",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/jpeg", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/jpeg",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/jpg", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/jpg",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/png", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/png",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/bmp", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/bmp",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-icon", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-icon",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-xbitmap", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"image/x-xbitmap",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Content Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/http-index-format", 
-    nsBrowserContentHandlerConstructor 
+    NS_CONTENT_HANDLER_CONTRACTID_PREFIX"application/http-index-format",
+    nsBrowserContentHandlerConstructor
   },
   { "Browser Startup Handler",
     NS_BROWSERCONTENTHANDLER_CID,
-    NS_BROWSERSTARTUPHANDLER_CONTRACTID, 
+    NS_BROWSERSTARTUPHANDLER_CONTRACTID,
     nsBrowserContentHandlerConstructor,
     nsBrowserContentHandler::RegisterProc,
     nsBrowserContentHandler::UnregisterProc,

@@ -55,9 +55,9 @@ DIRS += \
 endif
 
 ifeq ($(OS_ARCH),WINNT)
-DIRS		+= winhooks urlwidget 
+DIRS		+= urlwidget 
 ifndef MOZ_PHOENIX
-DIRS		+= alerts
+DIRS    += winhooks alerts
 endif
 endif
 
@@ -77,11 +77,6 @@ DIRS    = \
           shistory/public \
           bookmarks/public \
           $(NULL)
-
-ifeq ($(OS_ARCH),WINNT)
-DIRS    += alerts winhooks
-endif
-
 endif
 
 ifdef MOZ_ENABLE_XREMOTE
