@@ -369,8 +369,15 @@ public class Interpreter extends LabelTable {
                     iCodeTop = addByte((byte)TokenStream.SOURCEFILE, iCodeTop);
                     
                     int childCount = 0;
+                    short nameIndex = -1;
                     while (child != null) {
                         iCodeTop = generateICode(child, iCodeTop);
+                        if (nameIndex == -1) {
+                            if (child.getType() == TokenStream.NAME)
+                                nameIndex = (short)(itsData.itsStringTableIndex - 1);
+                            else if (child.getType() == TokenStream.GETPROP)
+                                nameIndex = (short)(itsData.itsStringTableIndex - 1);
+                        }
                         child = child.getNextSibling();
                         childCount++;
                     }
@@ -381,8 +388,11 @@ public class Interpreter extends LabelTable {
                         iCodeTop = addByte((byte)(itsLineNumber & 0xff), iCodeTop);
                         iCodeTop = addString(itsSourceFile, iCodeTop);
                     }                        
-                    else
+                    else {
                         iCodeTop = addByte((byte) type, iCodeTop);
+                        iCodeTop = addByte((byte)(nameIndex >> 8), iCodeTop);
+                        iCodeTop = addByte((byte)(nameIndex & 0xFF), iCodeTop);
+                    }
                     
                     itsStackDepth -= (childCount - 1);  // always a result value
                     // subtract from child count to account for [thisObj &] fun
@@ -1631,25 +1641,31 @@ public class Interpreter extends LabelTable {
                         pc += 6;
                         break;
                     case TokenStream.CALL :
-                        count = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);
+                        name = getString(theData.itsStringTable, iCode, pc + 1);
+                        count = (iCode[pc + 3] << 8) | (iCode[pc + 4] & 0xFF);
                         outArgs = new Object[count];
                         for (i = count - 1; i >= 0; i--)
                             outArgs[i] = stack[stackTop--];
                         rhs = stack[stackTop--];
                         lhs = stack[stackTop];
+                        if (lhs == cx.getUndefinedValue())
+                            lhs = name;
                         stack[stackTop] = ScriptRuntime.call(cx, lhs, 
                                                              rhs, outArgs);
-                        pc += 2;                                                            
+                        pc += 4;                                                            
                         break;
                     case TokenStream.NEW :
-                        count = (iCode[pc + 1] << 8) | (iCode[pc + 2] & 0xFF);
+                        name = getString(theData.itsStringTable, iCode, pc + 1);
+                        count = (iCode[pc + 3] << 8) | (iCode[pc + 4] & 0xFF);
                         outArgs = new Object[count];
                         for (i = count - 1; i >= 0; i--)
                             outArgs[i] = stack[stackTop--];
                         lhs = stack[stackTop];
+                        if (lhs == cx.getUndefinedValue())
+                            lhs = name;
                         stack[stackTop] = ScriptRuntime.newObject(cx, lhs, 
                                                                   outArgs, scope);
-                        pc += 2;                                                            
+                        pc += 4;                                                            
                         break;
                     case TokenStream.TYPEOF :
                         lhs = stack[stackTop];
