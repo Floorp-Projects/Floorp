@@ -5129,7 +5129,7 @@ EOF
         MOZ_DEBUG_LDFLAGS='/DEBUG /DEBUGTYPE:CV'
     	MOZ_OPTIMIZE_FLAGS='-O1'
         MOZ_JPEG_LIBS='$(DIST)/lib/jpeg$(MOZ_BITS)$(VERSION_NUMBER).lib'
-        MOZ_ZLIB_LIBS='$(DIST)/lib/zlib.lib'
+        MOZ_ZLIB_LIBS='$(DIST)/lib/mozz.lib'
         MOZ_PNG_LIBS='$(DIST)/lib/png.lib'
         MOZ_MNG_LIBS='$(DIST)/lib/mng.lib'
         MOZ_JS_LIBS='$(DIST)/lib/js$(MOZ_BITS)$(VERSION_NUMBER).lib'
