@@ -106,6 +106,9 @@
 #include "nsIDOMCSSStyleSheet.h"
 #include "nsIDOMCSSStyleRule.h"
 #include "nsIDOMCSSStyleRuleCollection.h"
+#include "nsIDOMRange.h"
+#include "nsIDOMSelection.h"
+#include "nsIDOMSelectionListener.h"
 #include "plhash.h"
 
 static NS_DEFINE_IID(kIDOMNativeObjectRegistry, NS_IDOM_NATIVE_OBJECT_REGISTRY_IID);
@@ -712,6 +715,9 @@ void XXXDomNeverCalled()
   NS_NewScriptStyleSheetCollection(0, 0, 0, 0);
   NS_NewScriptCSSStyleRule(0, 0, 0, 0);
   NS_NewScriptCSSStyleRuleCollection(0, 0, 0, 0);
+  NS_NewScriptRange(0, 0, 0, 0);
+  NS_NewScriptSelection(0, 0, 0, 0);
+  NS_NewScriptSelectionListener(0, 0, 0, 0);
   NET_InitJavaScriptProtocol();
   NS_InitDocumentClass(nsnull, nsnull);
 }
