@@ -639,12 +639,18 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 				{
 					Rect sizeRect;
 					::GetRegionBounds(::GetGrayRgn(), &sizeRect);
-					
+
+					/* rjc sez (paraphrased) the maximum window size could also reasonably be
+					   taken from the size of ::GetRegionBounds(::GetGrayRgn(),...) (not simply
+					   the region bounds, but its width and height) or perhaps the size of the
+					   screen to which the window mostly belongs. But why be so restrictive? */
 					sizeRect.top = kMinWindowHeight;
 					sizeRect.left = kMinWindowWidth;
-			    nsWatchTask::GetTask().Suspend();			  
+					sizeRect.bottom = 0x7FFF;
+					sizeRect.right = 0x7FFF;
+					nsWatchTask::GetTask().Suspend();			  
 					long newSize = ::GrowWindow(whichWindow, anEvent.where, &sizeRect);
-			    nsWatchTask::GetTask().Resume();			  
+					nsWatchTask::GetTask().Resume();			  
 					if (newSize != 0)
 						::SizeWindow(whichWindow, newSize & 0x0FFFF, (newSize >> 16) & 0x0FFFF, true);
 					Rect portRect;
@@ -671,74 +677,27 @@ void nsMacMessagePump::DoMouseDown(EventRecord &anEvent)
 
 			case inZoomIn:
 			case inZoomOut:
-			  nsWatchTask::GetTask().Suspend();			  
-				if (::TrackBox(whichWindow, anEvent.where, partCode)) {
-					GrafPtr		savePort;
-					GDHandle	gdNthDevice;
-					GDHandle	gdZoomDevice;
-					Rect		theSect;
-					Rect		tempRect;
-					Rect		zoomRect;
-					short		wTitleHeight;
-					long		sectArea, greatestArea = 0;
-					Boolean		sectFlag;
-					
-					nsWatchTask::GetTask().Resume();			  
-
-					GetPort(&savePort);
-					::SetPortWindowPort(whichWindow);
+				nsWatchTask::GetTask().Suspend();			  
+				if (::TrackBox(whichWindow, anEvent.where, partCode))
+				{
 					Rect windRect;
 					::GetWindowPortBounds(whichWindow, &windRect);
 					::EraseRect(&windRect);
 				
-					if (partCode == inZoomOut) {
-						LocalToGlobal((Point *)&windRect.top);
-						LocalToGlobal((Point *)&windRect.bottom);
-
-						RgnHandle structRgn = ::NewRgn();
-						::GetWindowRegion ( whichWindow, kWindowStructureRgn, structRgn );
-						Rect structRgnBounds;
-						::GetRegionBounds ( structRgn, &structRgnBounds );
-						wTitleHeight = windRect.top - 1 - structRgnBounds.top;
-						::DisposeRgn ( structRgn );
-
-						windRect.top -= wTitleHeight;
-						gdNthDevice = GetDeviceList();
-						while (gdNthDevice)
-						{
-							if (TestDeviceAttribute(gdNthDevice, screenDevice))
-								if (TestDeviceAttribute(gdNthDevice, screenActive))
-								{
-									sectFlag = SectRect(&windRect, &(**gdNthDevice).gdRect, &theSect);
-									sectArea = (theSect.right - theSect.left) * (theSect.bottom - theSect.top);
-									if (sectArea > greatestArea)
-									{
-										greatestArea = sectArea;
-										gdZoomDevice = gdNthDevice;
-									}
-								}
-							gdNthDevice = GetNextDevice(gdNthDevice);
-						}
-						if (gdZoomDevice == GetMainDevice())
-							wTitleHeight += GetMBarHeight();
-						tempRect = (**gdZoomDevice).gdRect;
-						SetRect(&zoomRect,
-							tempRect.left + 3,
-							tempRect.top + wTitleHeight + 3,
-							tempRect.right - 64,
-							tempRect.bottom - 3);
-						::SetWindowStandardState ( whichWindow, &zoomRect );
+					if (partCode == inZoomOut)
+					{
+						nsMacWindow *whichMacWindow = nsMacMessageSink::GetNSWindowFromMacWindow(whichWindow);
+						if (whichMacWindow)
+							whichMacWindow->CalculateAndSetZoomedSize();
 					}
-					nsWatchTask::GetTask().Resume();
 
-					SetPort(savePort);
-					
 					// !!!	Do not call ZoomWindow before calling DispatchOSEventToRaptor
 					//		otherwise nsMacEventHandler::HandleMouseDownEvent won't get
 					//		the right partcode for the click location
 					
 					DispatchOSEventToRaptor(anEvent, whichWindow);
 				}
+				nsWatchTask::GetTask().Resume();
 				break;
 	}
 }
