@@ -1001,6 +1001,9 @@ NS_IMETHODIMP nsWindow::Invalidate(const nsRect &aRect, PRBool aIsSynchronous)
 	if (!mWindowPtr)
 		return NS_OK;
 
+  if (!mVisible || !ContainerHierarchyIsVisible())
+    return NS_OK;
+
 	nsRect wRect = aRect;
 	wRect.MoveBy(mBounds.x, mBounds.y);				// beard:  this is required, see GetNativeData(NS_NATIVE_OFFSETX).
 	LocalToWindowCoordinate(wRect);
@@ -1037,6 +1040,9 @@ NS_IMETHODIMP nsWindow::InvalidateRegion(const nsIRegion *aRegion, PRBool aIsSyn
 	if (!mWindowPtr)
 		return NS_OK;
 
+  if (!mVisible || !ContainerHierarchyIsVisible())
+    return NS_OK;
+    
 	// copy invalid region into a working region.
 	void* nativeRgn;
 	aRegion->GetNativeRegion(nativeRgn);
@@ -2224,23 +2230,42 @@ PRBool nsWindow::RgnIntersects(RgnHandle aTheRegion, RgnHandle aIntersectRgn)
  *  @return  NOTHING
  */
  
-NS_IMETHODIMP nsWindow::CalcOffset(PRInt32 &aX,PRInt32 &aY)
+void
+nsWindow::CalcOffset(PRInt32 &aX, PRInt32 &aY)
 {
-	aX = aY = 0;
-	nsIWidget* grandParent;
-	nsIWidget* theParent = this->GetParent();
-	while (theParent)
-	{
-		nsRect theRect;
-		theParent->GetBounds(theRect);
-		aX += theRect.x;
-		aY += theRect.y;
+  aX = aY = 0;
 
-		grandParent = theParent->GetParent();
-		NS_IF_RELEASE(theParent);
-		theParent = grandParent;
-	}
-	return NS_OK;
+  nsCOMPtr<nsIWidget> theParent = dont_AddRef(GetParent());
+  while (theParent)
+  {
+    nsRect theRect;
+    theParent->GetBounds(theRect);
+    aX += theRect.x;
+    aY += theRect.y;
+
+    nsIWidget* grandparent = theParent->GetParent();
+    theParent = dont_AddRef(grandparent);
+  }
+}
+
+
+PRBool
+nsWindow::ContainerHierarchyIsVisible()
+{
+  nsCOMPtr<nsIWidget> theParent = dont_AddRef(GetParent());
+  
+  while (theParent)
+  {
+    PRBool  visible;
+    theParent->IsVisible(visible);
+    if (!visible)
+      return PR_FALSE;
+    
+    nsIWidget* grandparent = theParent->GetParent();
+    theParent = dont_AddRef(grandparent);
+  }
+  
+  return PR_TRUE;
 }
 
 
@@ -2416,10 +2441,11 @@ void nsWindow::nsRectToMacRect(const nsRect& aRect, Rect& aMacRect) const
  *  @param   nscoord -- Y coordinate to convert
  *  @return  NONE
  */
-void  nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
+void
+nsWindow::ConvertToDeviceCoordinates(nscoord &aX, nscoord &aY)
 {
 	PRInt32	offX, offY;
-	this->CalcOffset(offX,offY);
+	CalcOffset(offX,offY);
 
 	aX += offX;
 	aY += offY;
