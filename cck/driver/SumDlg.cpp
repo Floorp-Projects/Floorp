@@ -79,7 +79,7 @@ BOOL CSumDlg::OnInitDialog()
 			{
 			tmp1=GlobalWidgetArray[i].name;
 			tmp2=GlobalWidgetArray[i].value;
-			str1 += "\t" + tmp1;
+			str1 += tmp1;
 			str1 += "\t=";
 			str1 += tmp2;
 			str1 += "\r\n";
