@@ -17,6 +17,7 @@ stubs           0
 runtime         0
 common          0
 imglib          0
+libimg2         0
 necko           0
 security        0
 browserutils    0
