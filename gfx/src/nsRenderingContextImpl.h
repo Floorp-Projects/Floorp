@@ -52,7 +52,7 @@ typedef struct {
 } Edge;
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY default
+#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
 class nsRenderingContextImpl : public nsIRenderingContext
 {
@@ -211,7 +211,7 @@ private:
 };
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY hidden
+#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 /** ---------------------------------------------------
  *  Class QBezierCurve, a quadratic bezier curve

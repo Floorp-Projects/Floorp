@@ -187,7 +187,7 @@ struct nsXPTCVariant : public nsXPTCMiniVariant
 /***************************************************************************/
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY default
+#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
 class nsXPTCStubBase : public nsISupports
 {
@@ -215,7 +215,7 @@ public:
 };
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY hidden
+#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 PR_BEGIN_EXTERN_C
 

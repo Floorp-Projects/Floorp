@@ -52,7 +52,7 @@
  */
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY default
+#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
 class NS_MSG_BASE nsMsgTxn : public nsITransaction
 {
@@ -83,6 +83,6 @@ protected:
 };
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY hidden
+#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif

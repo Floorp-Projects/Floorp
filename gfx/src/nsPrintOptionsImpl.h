@@ -32,7 +32,7 @@
 //class nsIPrintSettings;
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY default
+#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
 //*****************************************************************************
 //***    nsPrintOptions
@@ -80,6 +80,6 @@ protected:
 };
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY hidden
+#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif /* nsPrintOptions_h__ */

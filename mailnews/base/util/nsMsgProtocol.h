@@ -65,7 +65,7 @@ class nsMsgFilePostHelper;
 class nsIProxyInfo;
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY default
+#define IMETHOD_VISIBILITY NS_VISIBILITY_DEFAULT
 
 // This is a helper class used to encapsulate code shared between all of the
 // mailnews protocol objects (imap, news, pop, smtp, etc.) In particular,
@@ -254,6 +254,6 @@ protected:
 };
 
 #undef  IMETHOD_VISIBILITY
-#define IMETHOD_VISIBILITY hidden
+#define IMETHOD_VISIBILITY NS_VISIBILITY_HIDDEN
 
 #endif /* nsMsgProtocol_h__ */
