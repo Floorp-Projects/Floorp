@@ -2371,12 +2371,6 @@ HTMLContentSink::Init(nsIDocument* aDoc,
     }
   }
 
-  if (NS_FAILED(rv)) {
-    MOZ_TIMER_DEBUGLOG(("Stop: nsHTMLContentSink::Init()\n"));
-    MOZ_TIMER_STOP(mWatch);
-    return rv;
-  }
-
   mNotifyOnTimer = PR_TRUE;
   if (prefs) {
     prefs->GetBoolPref("content.notify.ontimer", &mNotifyOnTimer);
