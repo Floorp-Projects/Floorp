@@ -203,7 +203,7 @@ class nsNTLMSessionState : public nsISupports
 public:
     NS_DECL_ISUPPORTS
 };
-NS_IMPL_ISUPPORTS0(nsNTLMSessionState);
+NS_IMPL_ISUPPORTS0(nsNTLMSessionState)
 
 #endif
 
