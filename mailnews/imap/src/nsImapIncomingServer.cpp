@@ -2002,7 +2002,9 @@ nsresult nsImapIncomingServer::RequestOverrideInfo(nsIMsgWindow *aMsgWindow)
           return NS_OK;
       }
 
-  		rv = m_logonRedirector->Logon(userName, password, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
+      nsCOMPtr<nsIPrompt> dialogPrompter;
+      aMsgWindow->GetPromptDialog(getter_AddRefs(dialogPrompter));
+  		rv = m_logonRedirector->Logon(userName, password, dialogPrompter, logonRedirectorRequester, nsMsgLogonRedirectionServiceIDs::Imap);
 		}
 	}
 

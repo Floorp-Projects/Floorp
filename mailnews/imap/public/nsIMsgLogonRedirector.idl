@@ -1,6 +1,7 @@
 #include "nsISupports.idl"
 
 typedef long nsMsgLogonRedirectionState;
+interface nsIPrompt;
 
 [scriptable, uuid(e20261f6-df4f-11d3-b9f9-00108335942a)]
 interface nsMsgLogonRedirectionStates
@@ -46,7 +47,7 @@ interface nsIMsgLogonRedirector : nsISupports
   // wishes to log on.
   // aUserName --> the user name we wish to log in under...
   boolean requiresPassword(in string aUserName);
-  void logon(in string userName, in string password, in nsIMsgLogonRedirectionRequester listener, in nsMsgLogonRedirectionServiceID aServiceID); 
+  void logon(in string userName, in string password, in nsIPrompt aPrompt, in nsIMsgLogonRedirectionRequester listener, in nsMsgLogonRedirectionServiceID aServiceID); 
   void logoff(in string userName); /* might not need this one */ 
 }; 
 
