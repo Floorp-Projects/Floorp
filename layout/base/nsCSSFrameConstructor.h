@@ -799,24 +799,18 @@ protected:
                                       nsIContent*     aContent,
                                       nsIFrame*       aFrame);
 
+  // |aContentParentFrame| should be null if it's really the same as
+  // |aParentFrame|.
   nsresult ConstructBlock(nsIPresShell*            aPresShell, 
                           nsIPresContext*          aPresContext,
                           nsFrameConstructorState& aState,
                           const nsStyleDisplay*    aDisplay,
                           nsIContent*              aContent,
                           nsIFrame*                aParentFrame,
+                          nsIFrame*                aContentParentFrame,
                           nsStyleContext*          aStyleContext,
                           nsIFrame*                aNewFrame,
                           PRBool                   aRelPos);
-
-  nsresult ProcessBlockChildren(nsIPresShell*            aPresShell, 
-                                nsIPresContext*          aPresContext,
-                                nsFrameConstructorState& aState,
-                                nsIContent*              aContent,
-                                nsIFrame*                aFrame,
-                                PRBool                   aCanHaveGeneratedContent,
-                                nsFrameItems&            aFrameItems,
-                                PRBool                   aParentIsBlock);
 
   nsresult ConstructInline(nsIPresShell*            aPresShell, 
                            nsIPresContext*          aPresContext,
