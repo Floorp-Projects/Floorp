@@ -116,8 +116,11 @@ nsresult nsMacWindow::StandardCreate(nsIWidget *aParent,
 	theRefData->SetUserData(::GetWRefCon(mWindowPtr));	// save the actual refCon in case we did not create the window
 	::SetWRefCon(mWindowPtr, (long)theRefData);
 
+	// reset the coordinates to (0,0) because it's the top level widget
+	nsRect bounds(0, 0, aRect.width, aRect.height);
+
 	// init base class
-	nsWindow::StandardCreate(aParent, aRect, aHandleEventFunction, 
+	nsWindow::StandardCreate(aParent, bounds, aHandleEventFunction, 
 														aContext, aAppShell, aToolkit, aInitData);
 
 
@@ -169,15 +172,38 @@ NS_IMETHODIMP nsMacWindow::Show(PRBool bState)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 {
-	long	minY = ::LMGetMBarHeight() + kWindowTitleBarHeight;
-	if (aY < minY)
-		aY = minY;
-	//¥TODO:	should check that the new window location
-	//				belongs to one of the screens
+		//¥TODO:	We should check that the new window belongs to one of the screens
+		//				but "qd.screenBits.bounds" is not the right way to do it.
+	Rect screenRect = qd.screenBits.bounds;
+	::InsetRect(&screenRect, 4, 4);
+	screenRect.top += ::LMGetMBarHeight() + kWindowTitleBarHeight;
 
+	short windowWidth = mWindowPtr->portRect.right - mWindowPtr->portRect.left;
+	if (((PRInt32)aX) < screenRect.left - windowWidth)
+		aX = screenRect.left - windowWidth;
+	else if (((PRInt32)aX) > screenRect.right)
+		aX = screenRect.right;
+
+	if (((PRInt32)aY) < screenRect.top)
+		aY = screenRect.top;
+	else if (((PRInt32)aY) > screenRect.bottom)
+		aY = screenRect.bottom;
+
+	// propagate the event in global coordinates
 	nsWindow::Move(aX, aY);
 
-	::MoveWindow(mWindowPtr, aX, aY, false);
+	// reset the coordinates to (0,0) because it's the top level widget
+	mBounds.x = 0;
+	mBounds.y = 0;
+
+	// move the window if it has not been moved yet
+	// (ie. if this function isn't called in response to a DragWindow event)
+	Point macPoint;
+	macPoint = topLeft(mWindowPtr->portRect);
+	::LocalToGlobal(&macPoint);
+	if ((macPoint.h != aX) || (macPoint.v != aY)) {
+		::MoveWindow(mWindowPtr, aX, aY, false);
+	}
 	return NS_OK;
 }
 
@@ -188,7 +214,13 @@ NS_IMETHODIMP nsMacWindow::Move(PRUint32 aX, PRUint32 aY)
 //-------------------------------------------------------------------------
 NS_IMETHODIMP nsMacWindow::Resize(PRUint32 aWidth, PRUint32 aHeight, PRBool aRepaint)
 {
-	::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+	// move the window if it has not been moved yet
+	// (ie. if this function isn't called in response to a GrowWindow event)
+	Rect macRect = mWindowPtr->portRect;
+	if (((macRect.right - macRect.left) != aWidth)
+		|| ((macRect.bottom - macRect.top) != aHeight)) {
+		::SizeWindow(mWindowPtr, aWidth, aHeight, aRepaint);
+	}
 	nsWindow::Resize(aWidth, aHeight, aRepaint);
 	return NS_OK;
 }
@@ -224,23 +256,4 @@ PRBool nsMacWindow::HandleMenuCommand(
 	else
 		retVal = PR_FALSE;
 	return retVal;
-}
-
-
-//-------------------------------------------------------------------------
-//
-// Find if a point in local coordinates is inside this object
-//
-//-------------------------------------------------------------------------
-PRBool nsMacWindow::PointInWidget(Point aThePoint)
-{
-	// get widget rect: it's in global coordinates because it's the top level window
-	nsRect widgetRect;
-	GetBounds(widgetRect);
-
-	// set the origin to 0 because the point is in local coordinates
-	widgetRect.x = widgetRect.y = 0;
-
-	// finally tell whether it's a hit
-	return(widgetRect.Contains(aThePoint.h, aThePoint.v));
 }
