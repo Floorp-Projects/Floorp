@@ -477,7 +477,8 @@ MapAttributesInto(nsIHTMLAttributes* aAttributes,
     nsStyleFont* font = (nsStyleFont*)aContext->GetMutableStyleData(eStyleStruct_Font);
     const nsFont& defaultFont = aPresContext->GetDefaultFont(); 
     const nsFont& defaultFixedFont = aPresContext->GetDefaultFixedFont(); 
-    PRInt32 scaler = aPresContext->GetFontScaler();
+    PRInt32 scaler;
+    aPresContext->GetFontScaler(scaler);
     float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
     font->mFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFont.size, scaleFactor);
     font->mFixedFont.size = nsStyleUtil::CalcFontPointSize(3, (PRInt32)defaultFixedFont.size, scaleFactor);

@@ -926,7 +926,8 @@ nsFormControlFrame::GetFont(nsIPresContext* aPresContext, nsFont& aFont)
         aFont.name = "Arial";  // XXX windows specific font
         aFont.weight = NS_FONT_WEIGHT_NORMAL; 
         const nsFont& normal = aPresContext->GetDefaultFont();
-        PRInt32 scaler = aPresContext->GetFontScaler();
+        PRInt32 scaler;
+        aPresContext->GetFontScaler(scaler);
         float scaleFactor = nsStyleUtil::GetScalingFactor(scaler);
         PRInt32 fontIndex = nsStyleUtil::FindNextSmallerFontSize(aFont.size, (PRInt32)normal.size, scaleFactor);
         aFont.size = nsStyleUtil::CalcFontPointSize(fontIndex, (PRInt32)normal.size, scaleFactor);
