@@ -85,7 +85,7 @@ nsStringBundle::~nsStringBundle()
   NS_IF_RELEASE(mProps);
 }
 
-NS_IMPL_ISUPPORTS(nsStringBundle, NS_ISTRINGBUNDLE_IID)
+NS_IMPL_ISUPPORTS(nsStringBundle, kIStringBundleIID)
 
 NS_IMETHODIMP
 nsStringBundle::GetStringFromID(PRInt32 aID, nsString& aResult)
@@ -117,7 +117,7 @@ public:
     nsIStringBundle** aResult);
 };
 
-NS_IMPL_ISUPPORTS(nsStringBundleFactory, NS_ISTRINGBUNDLEFACTORY_IID)
+NS_IMPL_ISUPPORTS(nsStringBundleFactory, kIStringBundleFactoryIID)
 
 NS_IMETHODIMP
 nsStringBundleFactory::CreateInstance(nsISupports* aOuter, REFNSIID aIID,
