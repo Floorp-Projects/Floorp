@@ -2799,6 +2799,7 @@ NS_IMETHODIMP nsHTMLEditor::InsertAsPlaintextQuotation(const nsString& aQuotedTe
   // Insert blank lines after the quoted text:
   quotedStuff += "\n\n";
 
+  nsAutoEditBatch beginBatching(this);
   return InsertText(quotedStuff);
 }
 
@@ -2989,6 +2990,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
               PRUnichar* text = nsnull;
               textDataObj->ToString ( &text );
               stuffToPaste.SetString ( text, len / 2 );
+              nsAutoEditBatch beginBatching(this);
               rv = InsertHTML(stuffToPaste);
             }
           }
@@ -3000,6 +3002,7 @@ NS_IMETHODIMP nsHTMLEditor::Paste()
               char* text = nsnull;
               textDataObj->ToString ( &text );
               stuffToPaste.SetString ( text, len );
+              nsAutoEditBatch beginBatching(this);
               rv = InsertText(stuffToPaste);
             }
           }
