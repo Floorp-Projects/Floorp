@@ -101,6 +101,11 @@ public:
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
 
+  void Reset() {
+    mForegroundSet = PR_FALSE;
+    mBackgroundSet = PR_FALSE;
+  }
+
   nscolor mBackgroundColor;
   PRBool mForegroundSet;
   PRBool mBackgroundSet;
@@ -205,10 +210,9 @@ void HTMLColorRule::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSize)
 HTMLDocumentColorRule::HTMLDocumentColorRule(nsIHTMLStyleSheet* aSheet) 
   : HTMLColorRule(aSheet)
 {
-  mForegroundSet = PR_FALSE;
-  mBackgroundSet = PR_FALSE;
+  Reset();
 }
-  
+
 HTMLDocumentColorRule::~HTMLDocumentColorRule()
 {
 }
@@ -285,6 +289,10 @@ public:
   NS_IMETHOD List(FILE* out = stdout, PRInt32 aIndent = 0) const;
 
   virtual void SizeOf(nsISizeOfHandler *aSizeofHandler, PRUint32 &aSize);
+
+  void Reset()
+  {
+  }
 
   nsIHTMLStyleSheet*  mSheet; // not ref-counted, cleared by content
 };
@@ -389,6 +397,11 @@ class TableTHRule: public GenericTableRule {
 public:
   TableTHRule(nsIHTMLStyleSheet* aSheet);
   virtual ~TableTHRule();
+
+  void Reset()
+  {
+    GenericTableRule::Reset();
+  }
 
   NS_IMETHOD MapRuleInfoInto(nsRuleData* aRuleData);
 };
@@ -511,6 +524,7 @@ public:
   void operator delete(void* ptr);
 
   HTMLStyleSheetImpl(void);
+  nsresult Init();
 
   NS_IMETHOD QueryInterface(const nsIID& aIID, void** aInstancePtr);
   NS_IMETHOD_(nsrefcnt) AddRef();
@@ -668,10 +682,22 @@ HTMLStyleSheetImpl::HTMLStyleSheetImpl(void)
     mDocumentColorRule(nsnull)
 {
   NS_INIT_REFCNT();
+}
+
+nsresult
+HTMLStyleSheetImpl::Init()
+{
   mTableTHRule = new TableTHRule(this);
-  mDocumentColorRule = new HTMLDocumentColorRule(this);
-  NS_ADDREF(mDocumentColorRule);
+  if (!mTableTHRule)
+    return NS_ERROR_OUT_OF_MEMORY;
   NS_ADDREF(mTableTHRule);
+
+  mDocumentColorRule = new HTMLDocumentColorRule(this);
+  if (!mDocumentColorRule)
+    return NS_ERROR_OUT_OF_MEMORY;
+  NS_ADDREF(mDocumentColorRule);
+
+  return NS_OK;
 }
 
 PRBool PR_CALLBACK MappedDropSheet(nsHashKey *aKey, void *aData, void* closure)
@@ -820,18 +846,14 @@ HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
           aRuleWalker->Forward(mTableTHRule);
       }
       else if (tag == nsHTMLAtoms::table) {
-        if (mDocumentColorRule) {
-          nsCompatibility mode;
-          aPresContext->GetCompatibilityMode(&mode);
-          if (eCompatibility_NavQuirks == mode) {
-            aRuleWalker->Forward(mDocumentColorRule);
-          }
+        nsCompatibility mode;
+        aPresContext->GetCompatibilityMode(&mode);
+        if (eCompatibility_NavQuirks == mode) {
+          aRuleWalker->Forward(mDocumentColorRule);
         }
       }
       else if (tag == nsHTMLAtoms::html) {
-        if (mDocumentColorRule) {
-          aRuleWalker->Forward(mDocumentColorRule);
-        }
+        aRuleWalker->Forward(mDocumentColorRule);
       }
       NS_IF_RELEASE(tag);
     } // end html namespace
@@ -1005,14 +1027,8 @@ NS_IMETHODIMP HTMLStyleSheetImpl::Reset(nsIURI* aURL)
     mActiveRule->mSheet = nsnull;
     NS_RELEASE(mActiveRule);
   }
-  if (mDocumentColorRule) {
-    mDocumentColorRule->mSheet = nsnull;
-    NS_RELEASE(mDocumentColorRule);
-  }
-  if (mTableTHRule) {
-    mTableTHRule->mSheet = nsnull;
-    NS_RELEASE(mTableTHRule);
-  }
+  mDocumentColorRule->Reset();
+  mTableTHRule->Reset();
 
   mMappedAttrTable.Enumerate(MappedDropSheet);
   mMappedAttrTable.Reset();
@@ -1055,26 +1071,20 @@ NS_IMETHODIMP HTMLStyleSheetImpl::GetVisitedLinkColor(nscolor& aColor)
 
 NS_IMETHODIMP HTMLStyleSheetImpl::GetDocumentForegroundColor(nscolor& aColor)
 {
-  if ((nsnull == mDocumentColorRule) ||
-      !mDocumentColorRule->mForegroundSet) {
+  if (!mDocumentColorRule->mForegroundSet)
     return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mDocumentColorRule->mColor;
-    return NS_OK;
-  }
+
+  aColor = mDocumentColorRule->mColor;
+  return NS_OK;
 }
 
 NS_IMETHODIMP HTMLStyleSheetImpl::GetDocumentBackgroundColor(nscolor& aColor)
 {
-  if ((nsnull == mDocumentColorRule) ||
-      !mDocumentColorRule->mBackgroundSet) {
+  if (!mDocumentColorRule->mBackgroundSet)
     return NS_HTML_STYLE_PROPERTY_NOT_THERE;
-  }
-  else {
-    aColor = mDocumentColorRule->mBackgroundColor;
-    return NS_OK;
-  }
+
+  aColor = mDocumentColorRule->mBackgroundColor;
+  return NS_OK;
 }
 
 NS_IMETHODIMP HTMLStyleSheetImpl::SetLinkColor(nscolor aColor)
@@ -1349,12 +1359,12 @@ void HTMLStyleSheetImpl::SizeOf(nsISizeOfHandler *aSizeOfHandler, PRUint32 &aSiz
     tag = getter_AddRefs(NS_NewAtom("ActiveRule"));
     aSizeOfHandler->AddSize(tag,localSize);
   }
-  if(mDocumentColorRule && uniqueItems->AddItem((void*)mDocumentColorRule)){
+  if(uniqueItems->AddItem((void*)mDocumentColorRule)){
     localSize = sizeof(*mDocumentColorRule);
     tag = getter_AddRefs(NS_NewAtom("DocumentColorRule"));
     aSizeOfHandler->AddSize(tag,localSize);
   }
-  if(mTableTHRule && uniqueItems->AddItem((void*)mTableTHRule)){
+  if(uniqueItems->AddItem((void*)mTableTHRule)){
     localSize = sizeof(*mTableTHRule);
     tag = getter_AddRefs(NS_NewAtom("TableTHRule"));
     aSizeOfHandler->AddSize(tag,localSize);
@@ -1417,17 +1427,19 @@ NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult, nsIURI* aURL,
 NS_HTML nsresult
 NS_NewHTMLStyleSheet(nsIHTMLStyleSheet** aInstancePtrResult)
 {
-  if (aInstancePtrResult == nsnull) {
-    return NS_ERROR_NULL_POINTER;
-  }
+  NS_PRECONDITION(aInstancePtrResult, "null out param");
 
-  HTMLStyleSheetImpl  *it = new HTMLStyleSheetImpl();
-
-  if (nsnull == it) {
+  HTMLStyleSheetImpl *it = new HTMLStyleSheetImpl();
+  if (!it) {
+    *aInstancePtrResult = nsnull;
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
   NS_ADDREF(it);
-  *aInstancePtrResult = it;
-  return NS_OK;
+  nsresult rv = it->Init();
+  if (NS_FAILED(rv))
+    NS_RELEASE(it);
+
+  *aInstancePtrResult = it; // NS_ADDREF above, or set to null by NS_RELEASE
+  return rv;
 }
