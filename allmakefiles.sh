@@ -737,8 +737,8 @@ embedding/components/ui/helperAppDlg/Makefile
 embedding/config/Makefile
 embedding/tests/Makefile
 embedding/tests/winEmbed/Makefile
-embedding/tests/mfcEmbed/Makefile
-embedding/tests/mfcEmbed/components/Makefile
+embedding/tests/mfcembed/Makefile
+embedding/tests/mfcembed/components/Makefile
 "
 
 MAKEFILES_psm2="
