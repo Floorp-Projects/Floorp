@@ -41,6 +41,7 @@
 #include "nsImageWin.h"
 #include "nsRenderingContextWin.h"
 #include "nsDeviceContextWin.h"
+#include "imgScaler.h"
 
 static nsresult BuildDIB(LPBITMAPINFOHEADER *aBHead, PRInt32 aWidth,
                          PRInt32 aHeight, PRInt32 aDepth, PRInt8 *aNumBitPix);
@@ -636,14 +637,16 @@ nsImageWin::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
  *  This is a helper routine to do the blending for the DrawComposited method
  *  @update 1/04/02 dwc
  */
-void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWidth, int aHeight)
+void nsImageWin::DrawComposited24(unsigned char *aBits,
+                                  PRUint8 *aImageRGB, PRUint32 aStrideRGB,
+                                  PRUint8 *aImageAlpha, PRUint32 aStrideAlpha,
+                                  int aWidth, int aHeight)
 {
   PRInt32 targetRowBytes = ((aWidth * 3) + 3) & ~3;
   for (int y = 0; y < aHeight; y++) {
     unsigned char *targetRow = aBits + y * targetRowBytes;
-    unsigned char *imageRow = mImageBits + (y + aY) * mRowBytes + 3 * aX;
-    unsigned char *alphaRow = mAlphaBits + (y + aY) * mARowBytes + aX;
-
+    unsigned char *imageRow = aImageRGB + y * aStrideRGB;
+    unsigned char *alphaRow = aImageAlpha + y * aStrideAlpha;
 
     for (int x = 0; x < aWidth;
          x++, targetRow += 3, imageRow += 3, alphaRow++) {
@@ -660,14 +663,15 @@ void nsImageWin::DrawComposited24(unsigned char *aBits, int aX, int aY, int aWid
  *  Blend the image into a 24 bit buffer.. using an 8 bit alpha mask 
  *  @update 1/04/02 dwc
  */
-nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, int aDHeight,
-                    int aSX, int aSY, int aSWidth, int aSHeight)
+nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY,
+                                    int aDWidth, int aDHeight,
+                                    int aSX, int aSY, int aSWidth, int aSHeight)
 {
   HDC memDC = ::CreateCompatibleDC(TheHDC);
   if (!memDC)
     return NS_ERROR_OUT_OF_MEMORY;
   unsigned char *screenBits;
-  ALPHA24BITMAPINFO bmi(aSWidth, aSHeight);
+  ALPHA24BITMAPINFO bmi(aDWidth, aDHeight);
   HBITMAP tmpBitmap = ::CreateDIBSection(memDC, (LPBITMAPINFO)&bmi, DIB_RGB_COLORS,
                                          (LPVOID *)&screenBits, NULL, 0);
   if (!tmpBitmap) {
@@ -682,10 +686,9 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, i
     return NS_ERROR_OUT_OF_MEMORY;
   }
 
-
   /* Copy from the HDC */
-  BOOL retval = ::StretchBlt(memDC, 0, 0, aSWidth, aSHeight,
-                             TheHDC, aDX, aDY, aDWidth, aDHeight, SRCCOPY);
+  BOOL retval = ::BitBlt(memDC, 0, 0, aDWidth, aDHeight,
+                         TheHDC, aDX, aDY, SRCCOPY);
   if (!retval) {
     /* select the old object again... */
     ::SelectObject(memDC, oldBitmap);
@@ -694,13 +697,53 @@ nsresult nsImageWin::DrawComposited(HDC TheHDC, int aDX, int aDY, int aDWidth, i
     return NS_ERROR_FAILURE;
   }
 
-  /* Do composite */
-  DrawComposited24(screenBits, aSX, aSY, aSWidth, aSHeight);
+  PRUint8 *imageRGB, *imageAlpha;
+  PRUint32 strideRGB, strideAlpha;
 
+  /* Both scaled and unscaled images come through this code - save
+     work if not scaling */
+  if ((aSWidth != aDWidth) || (aSHeight != aDHeight)) {
+    /* Scale our image to match */
+    imageRGB = (PRUint8 *)nsMemory::Alloc(3*aDWidth*aDHeight);
+    imageAlpha = (PRUint8 *)nsMemory::Alloc(aDWidth*aDHeight);
+
+    if (!imageRGB || !imageAlpha) {
+      if (imageRGB)
+        nsMemory::Free(imageRGB);
+      if (imageAlpha)
+        nsMemory::Free(imageAlpha);
+      ::SelectObject(memDC, oldBitmap);
+      ::DeleteObject(tmpBitmap);
+      ::DeleteDC(memDC);
+      return NS_ERROR_FAILURE;
+    }
+
+    strideRGB = 3 * aDWidth;
+    strideAlpha = aDWidth;
+    RectStretch(aSWidth, aSHeight, aDWidth, aDHeight, 0, 0, aDWidth-1, aDHeight-1,
+                mImageBits, mRowBytes, imageRGB, strideRGB, 24);
+    RectStretch(aSWidth, aSHeight, aDWidth, aDHeight, 0, 0, aDWidth-1, aDHeight-1,
+                mAlphaBits, mARowBytes, imageAlpha, strideAlpha, 8);
+  } else {
+    imageRGB = mImageBits + aSY * mRowBytes + aSX * 3;
+    imageAlpha = mAlphaBits + aSY * mARowBytes + aSX;
+    strideRGB = mRowBytes;
+    strideAlpha = mARowBytes;
+  }
+
+  /* Do composite */
+  DrawComposited24(screenBits, imageRGB, strideRGB, imageAlpha, strideAlpha,
+                   aDWidth, aDHeight);
+
+  if ((aSWidth != aDWidth) || (aSHeight != aDHeight)) {
+    /* Free scaled images */
+    nsMemory::Free(imageRGB);
+    nsMemory::Free(imageAlpha);
+  }
 
   /* Copy back to the HDC */
-  retval = ::StretchBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
-                        memDC, 0, 0, aSWidth, aSHeight, SRCCOPY);
+  retval = ::BitBlt(TheHDC, aDX, aDY, aDWidth, aDHeight,
+                    memDC, 0, 0, SRCCOPY);
   if (!retval) {
     ::SelectObject(memDC, oldBitmap);
     ::DeleteObject(tmpBitmap);

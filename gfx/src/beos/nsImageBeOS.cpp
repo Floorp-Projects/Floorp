@@ -475,8 +475,9 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 		scaledImage = (PRUint8 *)nsMemory::Alloc(3 * aDWidth * aDHeight);
 		if (!scaledImage) return NS_ERROR_OUT_OF_MEMORY;
 		
-		RectStretch(0, 0, mWidth - 1, mHeight - 1, 0, 0, aDWidth - 1, aDHeight - 1,
-			mImageBits, mRowBytes, scaledImage, 3 * aDWidth, 24);
+		RectStretch(mWidth, mHeight, aDWidth, aDHeight,
+                0, 0, aDWidth-1, aDHeight-1,
+                mImageBits, mRowBytes, scaledImage, 3 * aDWidth, 24);
 		
 		if (mAlphaDepth) {
 			if (mAlphaDepth == 1) {
@@ -492,8 +493,9 @@ NS_IMETHODIMP nsImageBeOS::DrawToImage(nsIImage *aDstImage, nscoord aDX, nscoord
 				return NS_ERROR_OUT_OF_MEMORY;
 			}
 			
-			RectStretch(0, 0, mWidth - 1, mHeight - 1, 0, 0, aDWidth - 1, aDHeight - 1,
-				mAlphaBits, mAlphaRowBytes, scaledAlpha, alphaStride, mAlphaDepth);
+			RectStretch(mWidth, mHeight, aDWidth, aDHeight,
+                  aDWidth-1, aDHeight-1,
+                  mAlphaBits, mAlphaRowBytes, scaledAlpha, alphaStride, mAlphaDepth);
 		}
 		rgbPtr = scaledImage;
 		rgbStride = 3 * aDWidth;

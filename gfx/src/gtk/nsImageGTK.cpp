@@ -465,8 +465,8 @@ XlibRectStretch(PRInt32 srcWidth, PRInt32 srcHeight,
   xd2 = dstWidth-1;
   yd2 = dstHeight-1;
 
-//  fprintf(stderr, "%p (%ld %ld)-(%ld %ld) (%ld %ld)-(%ld %ld)\n",
-//          aDstImage, xs1, ys1, xs2, ys2, xd1, yd1, xd2, yd2);
+//  fprintf(stderr, "XRS %p (%ld %ld)-(%ld %ld) (%ld %ld)-(%ld %ld)\n",
+//          (void *)aDstImage, xs1, ys1, xs2, ys2, xd1, yd1, xd2, yd2);
   
   startColumn = aDX-dstOrigX;
   startRow    = aDY-dstOrigY;
@@ -733,7 +733,8 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
         if (!scaledRGB)
           return NS_ERROR_OUT_OF_MEMORY;
 
-        RectStretch(0, 0, mWidth-1, mHeight-1,
+        RectStretch(mWidth, mHeight,
+                    dstWidth, dstHeight,
                     0, 0, dstWidth-1, dstHeight-1,
                     mImageBits, mRowBytes, scaledRGB, 3*dstWidth, 24);
 
@@ -801,7 +802,8 @@ nsImageGTK::Draw(nsIRenderingContext &aContext, nsDrawingSurface aSurface,
 
       if (gdk_rgb_get_visual()->depth <= 8) {
         PRUint8 *scaledRGB = (PRUint8 *)nsMemory::Alloc(3*dstWidth*dstHeight);
-        RectStretch(0, 0, mWidth-1, mHeight-1,
+        RectStretch(mWidth, mHeight,
+                    dstWidth, dstHeight,
                     0, 0, dstWidth-1, dstHeight-1,
                     mImageBits, mRowBytes, scaledRGB, 3*dstWidth, 24);
     
@@ -1245,10 +1247,10 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
   readWidth = aDWidth;
   readHeight = aDHeight;
 
-  //  fprintf(stderr, "aX=%d aY=%d, aWidth=%u aHeight=%u\n", aX, aY, aWidth, aHeight);
-  //  fprintf(stderr, "surfaceWidth=%u surfaceHeight=%u\n", surfaceWidth, surfaceHeight);
-  //  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
-  //          readX, readY, readWidth, readHeight, destX, destY);
+//  fprintf(stderr, "dstOrigX=%d dstOrigY=%d, dstWidth=%u dstHeight=%u\n", dstOrigX, dstOrigY, dstWidth, dstHeight);
+//  fprintf(stderr, "srcWidth=%u srcHeight=%u\n", srcWidth, srcHeight);
+//  fprintf(stderr, "readX=%u readY=%u readWidth=%u readHeight=%u destX=%u destY=%u\n\n",
+//          readX, readY, readWidth, readHeight, destX, destY);
 
   XImage *ximage = XGetImage(dpy, drawable,
                              readX, readY, readWidth, readHeight, 
@@ -1283,11 +1285,15 @@ nsImageGTK::DrawComposited(nsIRenderingContext &aContext,
         nsMemory::Free(scaledAlpha);
       return;
     }
-    RectStretch(x1, y1, x2-1, y2-1,
-                0, 0, readWidth-1, readHeight-1,
+    RectStretch(srcWidth, srcHeight,
+                dstWidth, dstHeight,
+                destX, destY,
+                destX+aDWidth-1, destY+aDHeight-1,
                 mImageBits, mRowBytes, scaledImage, 3*readWidth, 24);
-    RectStretch(x1, y1, x2-1, y2-1,
-                0, 0, readWidth-1, readHeight-1,
+    RectStretch(srcWidth, srcHeight,
+                dstWidth, dstHeight,
+                destX, destY,
+                destX+aDWidth-1, destY+aDHeight-1,
                 mAlphaBits, mAlphaRowBytes, scaledAlpha, readWidth, 8);
     imageOrigin = scaledImage;
     imageStride = 3*readWidth;
