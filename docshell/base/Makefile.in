@@ -41,6 +41,7 @@ XPIDLSRCS	= \
 		nsIScrollable.idl		\
 		nsITextScroll.idl		\
 		nsIWebNavigation.idl		\
+		nsIContentViewer.idl		\
 		nsIContentViewerEdit.idl	\
 		nsIURIFixup.idl			\
 		$(NULL)

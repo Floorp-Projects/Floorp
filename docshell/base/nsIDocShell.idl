@@ -25,10 +25,10 @@
 #include "domstubs.idl"
 #include "nsIURIContentListener.idl"
 #include "nsIURI.idl"
+#include "nsIContentViewer.idl"
 
 %{ C++
 #include "nsIPresContext.h"
-#include "nsIContentViewer.h"
 #include "nsIDocumentLoaderObserver.h"
 %}
 
@@ -38,7 +38,6 @@
 
 [ptr] native nsIPresContext(nsIPresContext);
 [ptr] native nsIPresShell(nsIPresShell);
-[ptr] native nsIContentViewer(nsIContentViewer);
 
 interface nsIChromeEventHandler;
 interface nsIDocumentLoaderObserver;
@@ -118,7 +117,7 @@ interface nsIDocShell : nsISupports
 	Content Viewer that is currently loaded for this DocShell.  This may change
 	as the underlying content changes.
 	*/
-	[noscript] readonly attribute nsIContentViewer contentViewer;
+	readonly attribute nsIContentViewer contentViewer;
 
 	/*
 	This attribute allows chrome to tie in to handle DOM events that may be of

@@ -30,5 +30,6 @@ nsIDocShellTreeOwner.idl
 nsIMarkupDocumentViewer.idl
 nsIScrollable.idl
 nsITextScroll.idl
+nsIContentViewer.idl
 nsIContentViewerEdit.idl
 nsIURIFixup.idl
