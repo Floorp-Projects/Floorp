@@ -2094,6 +2094,11 @@ static NSArray* sToolbarDefaults = nil;
 
 - (void)openTabGroup:(NSArray*)urlArray replaceExistingTabs:(BOOL)replaceExisting
 {
+  // ensure the content area is visible. We can't rely on normal url loading
+  // to do this because for the new tabs we create below, they won't be connected
+  // to their controller until much later, so the call to ensure visibility fails.
+  [self ensureBrowserVisible:self];
+
   int curNumTabs	= [mTabBrowser numberOfTabViewItems];
   int numItems 		= (int)[urlArray count];
   
