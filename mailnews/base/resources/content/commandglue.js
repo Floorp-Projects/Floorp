@@ -293,20 +293,6 @@ function RefreshThreadTreeView()
 	currentFolder.setAttribute('ref', currentFolderID);
 }
 
-function ToggleTwisty(treeItem)
-{
-
-	var openState = treeItem.getAttribute('open');
-	if(openState == 'true')
-	{
-		treeItem.removeAttribute('open');
-	}
-	else
-	{
-		treeItem.setAttribute('open', 'true');
-	}
-}
-
 function ToggleMessageRead(treeItem)
 {
 
