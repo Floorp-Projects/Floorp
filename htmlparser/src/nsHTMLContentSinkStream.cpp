@@ -510,34 +510,27 @@ void nsHTMLContentSinkStream::EncodeToBuffer(const nsString& aSrc)
 
 void nsHTMLContentSinkStream::Write(const nsString& aString)
 {
+  // No need to re-encode strings, since they're going from UCS2 to UCS2
+  if (mString != nsnull)
+    mString->Append(aString);
+
+  if (!mStream)
+    return;
+
+  // Now handle the stream case:
+  nsOutputStream out(mStream);
 
   // If a encoder is being used then convert first convert the input string
-  if (mUnicodeEncoder != nsnull)
+  if (mUnicodeEncoder)
   {
     EncodeToBuffer(aString);
-    if (mStream != nsnull)
-    {
-      nsOutputStream out(mStream);
-      out.write(mBuffer,mBufferLength);
-    }
-    if (mString != nsnull)
-    {
-      mString->Append(mBuffer);
-    }
+    out.write(mBuffer, mBufferLength);
   }
+  // else just write the unicode
   else
   {
-    if (mStream != nsnull)
-    {
-      nsOutputStream out(mStream);
-      const PRUnichar* unicode = aString.GetUnicode();
-      PRUint32   length = aString.Length();
-      out.write(unicode,length);
-    }
-    else
-    {
-      mString->Append(aString);
-    }
+    const PRUnichar* unicode = aString.GetUnicode();
+    out.write(unicode, aString.Length());
   }
 }
 
