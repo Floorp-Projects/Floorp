@@ -112,11 +112,44 @@ nsPresContext::~nsPresContext()
   // Unregister preference callbacks
   if (mPrefs) {
     mPrefs->UnregisterCallback("browser.", PrefChangedCallback, (void*)this);
-    mPrefs->UnregisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
+    mPrefs->UnregisterCallback("font.", PrefChangedCallback, (void*)this);
   }
 }
 
 NS_IMPL_ISUPPORTS(nsPresContext, kIPresContextIID);
+
+void
+nsPresContext::GetFontPreferences()
+{
+  if (mPrefs) {
+    char* value = nsnull;
+    mPrefs->CopyCharPref("font.default", &value);
+    if (value) {
+      mDefaultFont.name = value;
+      nsAllocator::Free(value);
+      value = nsnull;
+    }
+    if (mLangGroup) {
+      nsAutoString pref("font.size.");
+      pref.Append(mDefaultFont.name);
+      pref.Append('.');
+      const PRUnichar* langGroup = nsnull;
+      mLangGroup->GetUnicode(&langGroup);
+      pref.Append(langGroup);
+      char name[128];
+      pref.ToCString(name, sizeof(name));
+      PRInt32 size = 12;
+      mPrefs->GetIntPref(name, &size);
+      mDefaultFont.size = NSIntPointsToTwips(size);
+      pref.SetString("font.size.monospace.");
+      pref.Append(langGroup);
+      pref.ToCString(name, sizeof(name));
+      size = 10;
+      mPrefs->GetIntPref(name, &size);
+      mDefaultFixedFont.size = NSIntPointsToTwips(size);
+    }
+  }
+}
 
 void
 nsPresContext::GetUserPreferences()
@@ -169,6 +202,8 @@ nsPresContext::GetUserPreferences()
       mDefaultBackgroundColor = (nscolor)colorPref;
     }
   }
+
+  GetFontPreferences();
 }
 
 void
@@ -176,6 +211,9 @@ nsPresContext::PreferenceChanged(const char* aPrefName)
 {
   // Initialize our state from the user preferences
   GetUserPreferences();
+  if (mDeviceContext) {
+    mDeviceContext->FlushFontCache();
+  }
 
   if (mShell) {
     // Have the root frame's style context remap its style based on the
@@ -210,7 +248,7 @@ nsPresContext::Init(nsIDeviceContext* aDeviceContext, nsIPref* aPrefs)
   if (mPrefs) {
     // Register callbacks so we're notified when the preferences change
     mPrefs->RegisterCallback("browser.", PrefChangedCallback, (void*)this);
-    mPrefs->RegisterCallback("intl.font2.", PrefChangedCallback, (void*)this);
+    mPrefs->RegisterCallback("font.", PrefChangedCallback, (void*)this);
 
     // Initialize our state from the user preferences
     GetUserPreferences();
@@ -240,23 +278,7 @@ nsPresContext::SetShell(nsIPresShell* aShell)
           nsAutoString charset;
           doc->GetDocumentCharacterSet(charset);
           mDeviceContext->GetLangGroup(charset, getter_AddRefs(mLangGroup));
-          if (mLangGroup && mPrefs) {
-            nsAutoString pref("font.size.serif.");
-            const PRUnichar* langGroup = nsnull;
-            mLangGroup->GetUnicode(&langGroup);
-            pref.Append(langGroup);
-            char name[128];
-            pref.ToCString(name, sizeof(name));
-            PRInt32 value = 12;
-            mPrefs->GetIntPref(name, &value);
-            mDefaultFont.size = NSIntPointsToTwips(value);
-            pref.SetString("font.size.monospace.");
-            pref.Append(langGroup);
-            pref.ToCString(name, sizeof(name));
-            value = 10;
-            mPrefs->GetIntPref(name, &value);
-            mDefaultFixedFont.size = NSIntPointsToTwips(value);
-          }
+          GetFontPreferences();
         }
       }
     }

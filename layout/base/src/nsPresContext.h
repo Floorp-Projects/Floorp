@@ -161,6 +161,7 @@ protected:
 
 protected:
   void   GetUserPreferences();
+  void   GetFontPreferences();
 
 private:
   friend int PrefChangedCallback(const char*, void*);
