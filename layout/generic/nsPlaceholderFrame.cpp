@@ -24,6 +24,7 @@
 #include "nsCSSLayout.h"
 #include "nsIView.h"
 #include "nsHTMLIIDs.h"
+#include "nsIPresContext.h"
 
 nsresult
 nsPlaceholderFrame::NewFrame(nsIFrame**  aInstancePtrResult,
@@ -132,7 +133,35 @@ nsPlaceholderFrame::Reflow(nsIPresContext&      aPresContext,
     mAnchoredItem->DidReflow(aPresContext, NS_FRAME_REFLOW_FINISHED);
   }
 
-  return nsFrame::Reflow(aPresContext, aDesiredSize, aReflowState, aStatus);
+  if (nsIFrame::GetShowFrameBorders()) {
+    float p2t = aPresContext.GetPixelsToTwips();
+    aDesiredSize.width = nscoord(p2t * 5);
+    aDesiredSize.height = aDesiredSize.width;
+  }
+  else {
+    aDesiredSize.width = 0;
+    aDesiredSize.height = 0;
+  }
+  aDesiredSize.ascent = aDesiredSize.height;
+  aDesiredSize.descent = 0;
+  if (nsnull != aDesiredSize.maxElementSize) {
+    aDesiredSize.maxElementSize->width = aDesiredSize.width;
+    aDesiredSize.maxElementSize->height = aDesiredSize.height;
+  }
+  aStatus = NS_FRAME_COMPLETE;
+  return NS_OK;
+}
+
+NS_IMETHODIMP
+nsPlaceholderFrame::Paint(nsIPresContext& aPresContext,
+                          nsIRenderingContext& aRenderingContext,
+                          const nsRect& aDirtyRect)
+{
+  if (nsIFrame::GetShowFrameBorders()) {
+    aRenderingContext.SetColor(NS_RGB(0, 255, 255));
+    aRenderingContext.FillRect(0, 0, mRect.width, mRect.height);
+  }
+  return NS_OK;
 }
 
 NS_IMETHODIMP nsPlaceholderFrame::ContentAppended(nsIPresShell*   aShell,
