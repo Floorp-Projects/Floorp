@@ -35,9 +35,9 @@
 <!ENTITY openremoteCmd.label "Open Web Location...">
 <!ENTITY fileopenremote.accesskey "l">
 <!ENTITY fileopenremote.keybinding "l">
-<!ENTITY fileRecentMenu.label "Recent Files">
+<!ENTITY fileRecentMenu.label "Recent Pages">
 <!ENTITY filerecentmenu.accesskey "r">
-<!ENTITY fileRevert.label "Revert">
+<!ENTITY fileRevert.label "Revert to Last Saved">
 <!ENTITY filerevert.accesskey "v">
 <!ENTITY saveCmd.label "Save">
 <!ENTITY filesave.accesskey "s">
