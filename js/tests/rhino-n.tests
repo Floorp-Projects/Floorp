@@ -12,22 +12,10 @@ ecma/Date/15.9.4.3.js
 ecma_3/Function/regress-94506.js
 #See bug number 9141
 js1_2/regexp/regress-9141.js
-#See bug number 100199
-ecma_3/RegExp/regress-100199.js
 #See bug number 104375
 ecma_3/String/regress-104375.js
-#See bug number 105972
-ecma_3/RegExp/regress-105972.js
 #Verify error for bad branch 
 js1_5/Regress/regress-96526.js
-#Bug 123437
-ecma_3/RegExp/regress-123437.js
-#Bug 346032 (Bugsplat). Also see Bugzilla 124339.
-ecma_2/RegExp/properties-002.js
-# Bug 125562
-ecma_3/RegExp/regress-85721.js
-# Bug 126317
-ecma_3/RegExp/15.10.6.2-2.js
 # Unfixable bugs:
 #
 # fails due to bad java implementation of number formatting on 
