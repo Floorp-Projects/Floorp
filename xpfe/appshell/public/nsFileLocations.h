@@ -35,45 +35,45 @@
 //      mozilla/base/public/nsSpecialSystemDirectory.h
 
 //========================================================================================
-class NS_EXPORT nsSpecialFileSpec : public nsFileSpec
+class NS_APPSHELL nsSpecialFileSpec : public nsFileSpec
 //========================================================================================
 {
 
     public:
-        enum LocationType
-        {
-            App_DirectoryBase              =     0
-        ,   App_PrefsDirectory30           =     1
-        ,   App_PrefsDirectory40           =     2
-        ,   App_PrefsDirectory50           =     3
-        
-        ,   App_UserProfileDirectory30     =    10
-        ,   App_UserProfileDirectory40     =    11
-        ,   App_UserProfileDirectory50     =    12
-        
-        ,   App_FileBase                   =  1000
-        ,   App_PreferencesFile30          =  1001
-        ,   App_PreferencesFile40          =  1002
-        ,   App_PreferencesFile50          =  1003
-        
-        ,   App_BookmarksFile30            =  1010
-        ,   App_BookmarksFile40            =  1011
-        ,   App_BookmarksFile50            =  1012
-        
-        ,	App_Registry40                 =  1020
-        ,   App_Registry50                 =  1021
-        };
+		enum Type
+		{
+		    App_DirectoryBase              =     0
+		,   App_PrefsDirectory30           =     1
+		,   App_PrefsDirectory40           =     2
+		,   App_PrefsDirectory50           =     3
 
+		,   App_UserProfileDirectory30     =    10
+		,   App_UserProfileDirectory40     =    11
+		,   App_UserProfileDirectory50     =    12
+
+		,   App_FileBase                   =  1000
+		,   App_PreferencesFile30          =  1001
+		,   App_PreferencesFile40          =  1002
+		,   App_PreferencesFile50          =  1003
+
+		,   App_BookmarksFile30            =  1010
+		,   App_BookmarksFile40            =  1011
+		,   App_BookmarksFile50            =  1012
+
+		,	App_Registry40                 =  1020
+		,   App_Registry50                 =  1021
+		};
                     //nsSpecialFileSpec();
-                    nsSpecialFileSpec(LocationType aType);        
+                    nsSpecialFileSpec(Type aType);        
     virtual         ~nsSpecialFileSpec();
-    void            operator = (LocationType aType);
+    void            operator = (Type aType);
+    void            operator = (const nsFileSpec& inOther) { *(nsFileSpec*)this = inOther; }
     PRBool          operator == (const nsFileSpec& inOther)
                         { return nsFileSpec::operator == (inOther); }
  
 private:
     void            operator = (const char* inPath) { *(nsFileSpec*)this = inPath; }
 
-}; // class NS_EXPORT nsSpecialFileSpec
+}; // class NS_APPSHELL nsSpecialFileSpec
 
 #endif // _NSFILELOCATIONS_H_
