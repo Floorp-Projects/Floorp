@@ -165,13 +165,13 @@ extern "C" NS_EXPORT int DebugRobot(
 
     parser->SetContentSink(sink);
     g_bReadyForNextUrl = PR_FALSE;
-    parser->Parse(url);
+    parser->Parse(url, nsnull);/* XXX hook up stream listener here! */
     while (!g_bReadyForNextUrl) {
        if (yieldProc != NULL)
           (*yieldProc)(url->GetSpec());
     }
     if (ww)
-      ww->LoadURL(url->GetSpec());
+      ww->LoadURL(url->GetSpec(), nsnull);/* XXX hook up stream listener here! */
 
     NS_RELEASE(sink);
     NS_RELEASE(parser);
