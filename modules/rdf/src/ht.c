@@ -5392,7 +5392,7 @@ HT_InNavigationMode(HT_View view)
 	/* First check this view. */
 	if (HT_GetNodeData(HT_TopNode(view), gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &answer))
 	{
-		return stricmp("Management", answer);
+		return XP_STRCASECMP("Management", answer);
 	}
 
 	/* Need to check the chrome default template to determine which mode is dominant
@@ -5400,7 +5400,7 @@ HT_InNavigationMode(HT_View view)
 	if (HT_GetNodeData(HT_TopNode(HT_GetSelectedView(gChromeTemplate)), 
 						  gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &answer))
 	{
-		return stricmp("Management", answer);
+		return XP_STRCASECMP("Management", answer);
 	}
 
 	return PR_TRUE;
@@ -5425,7 +5425,7 @@ HT_ToggleTreeMode(HT_View view)
 							gNavCenter->buttonTreeMode, HT_COLUMN_STRING, &data);
 	}
 
-	if (stricmp("Navigation", data))
+	if (XP_STRCASECMP("Navigation", data))
 	{
 		result = HT_SetNodeData(nodeToModify, gNavCenter->buttonTreeMode, HT_COLUMN_STRING, 
 						"Navigation");
