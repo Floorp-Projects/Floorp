@@ -488,11 +488,20 @@ nsHTMLSelectElement::GetValue(nsString& aValue)
     result = GetOptions(getter_AddRefs(options));
     if (NS_SUCCEEDED(result)) {
       nsCOMPtr<nsIDOMNode> node;
+      if (selectedIndex == -1) {
+        selectedIndex = 0;
+      }
       result = options->Item(selectedIndex, getter_AddRefs(node));
       if (NS_SUCCEEDED(result) && node) {
         nsCOMPtr<nsIDOMHTMLOptionElement> option = do_QueryInterface(node);
         if (option) {
           option->GetValue(aValue);
+          if (0 == aValue.Length()) {
+            option->GetLabel(aValue);
+            if (0 == aValue.Length()) {
+              option->GetText(aValue);
+            }
+          }
         }
       }
     }
