@@ -2955,29 +2955,26 @@ nsresult nsPluginInstanceOwner::EnsureCachedAttrParamArrays()
   // now fill in the PARAM name/value pairs from the cached DOM nodes
   c = 0;
   for (PRInt16 idx = 0; idx < mNumCachedParams; idx++) {
-    nsCOMPtr<nsISupports> sup = ourParams->ElementAt(idx);
-    if (sup) {
-     nsCOMPtr<nsIDOMElement> param = do_QueryInterface(sup);
-     if (param) {
-       nsAutoString name;
-       nsAutoString value;
-       param->GetAttribute(NS_LITERAL_STRING("name"), name); // check for empty done above
-       param->GetAttribute(NS_LITERAL_STRING("value"), value);
-       /*
-        * According to the HTML 4.01 spec, at
-        * http://www.w3.org/TR/html4/types.html#type-cdata
-        * ''User agents may ignore leading and trailing
-        * white space in CDATA attribute values (e.g., "
-        * myval " may be interpreted as "myval"). Authors
-        * should not declare attribute values with
-        * leading or trailing white space.''
-        */            
-       name.CompressWhitespace();  // XXX right function?
-       value.CompressWhitespace();
-       mCachedAttrParamNames [mNumCachedAttrs + 1 + c] = ToNewUTF8String(name);
-       mCachedAttrParamValues[mNumCachedAttrs + 1 + c] = ToNewUTF8String(value);
-       c++;                                                      // rules!
-     }
+    nsCOMPtr<nsIDOMElement> param = do_QueryElementAt(ourParams, idx);
+    if (param) {
+     nsAutoString name;
+     nsAutoString value;
+     param->GetAttribute(NS_LITERAL_STRING("name"), name); // check for empty done above
+     param->GetAttribute(NS_LITERAL_STRING("value"), value);
+     /*
+      * According to the HTML 4.01 spec, at
+      * http://www.w3.org/TR/html4/types.html#type-cdata
+      * ''User agents may ignore leading and trailing
+      * white space in CDATA attribute values (e.g., "
+      * myval " may be interpreted as "myval"). Authors
+      * should not declare attribute values with
+      * leading or trailing white space.''
+      */            
+     name.CompressWhitespace();  // XXX right function?
+     value.CompressWhitespace();
+     mCachedAttrParamNames [mNumCachedAttrs + 1 + c] = ToNewUTF8String(name);
+     mCachedAttrParamValues[mNumCachedAttrs + 1 + c] = ToNewUTF8String(value);
+     c++;                                                      // rules!
     }
   }
 
