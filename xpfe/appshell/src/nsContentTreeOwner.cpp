@@ -24,9 +24,17 @@
 #include "nsContentTreeOwner.h"
 #include "nsXULWindow.h"
 
+// Helper Classes
+#include "nsIGenericFactory.h"
+
+
 // Interfaces needed to be included
 #include "nsIDOMNode.h"
 #include "nsIDOMElement.h"
+#include "nsIWindowMediator.h"
+
+// CIDs
+static NS_DEFINE_CID(kWindowMediatorCID, NS_WINDOWMEDIATOR_CID);
 
 //*****************************************************************************
 //***    nsContentTreeOwner: Object Management
@@ -61,36 +69,62 @@ NS_INTERFACE_MAP_END
 NS_IMETHODIMP nsContentTreeOwner::FindItemWithName(const PRUnichar* aName,
    nsIDocShellTreeItem* aRequestor, nsIDocShellTreeItem** aFoundItem)
 {
+   NS_ENSURE_ARG_POINTER(aFoundItem);
 
-	/*
-	Return the child DocShellTreeItem with the specified name.
-	name - This is the name of the item that is trying to be found.
-	aRequestor - This is the docshellTreeItem that is requesting the find.  This
-		parameter is used to identify when the child is asking it's parent to find
-		a child with the specific name.  The parent uses this parameter to ensure
-		a resursive state does not occur by not again asking the requestor for find
-		a shell by the specified name.  Inversely the child uses it to ensure it
-		does not ask it's parent to do the search if it's parent is the one that
-		asked it to search.
-	*/
+   *aFoundItem = nsnull;
 
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   nsAutoString   name(aName);
+
+   /* Special Cases */
+   if(name.Length() == 0)
+      return NS_OK;
+   if(name.EqualsIgnoreCase("_blank"))
+      return NS_OK;
+   if(name.EqualsIgnoreCase("_content"))
+      return mXULWindow->GetPrimaryContentShell(aFoundItem);
+
+   nsCOMPtr<nsIWindowMediator> windowMediator(do_GetService(kWindowMediatorCID));
+   NS_ENSURE_TRUE(windowMediator, NS_ERROR_FAILURE);
+
+   nsCOMPtr<nsISimpleEnumerator> windowEnumerator;
+   NS_ENSURE_SUCCESS(windowMediator->GetXULWindowEnumerator(nsnull, 
+      getter_AddRefs(windowEnumerator)), NS_ERROR_FAILURE);
+   
+   PRBool more;
+   
+   windowEnumerator->HasMoreElements(&more);
+   while(more)
+      {
+      nsCOMPtr<nsISupports> nextWindow = nsnull;
+      windowEnumerator->GetNext(getter_AddRefs(nextWindow));
+      nsCOMPtr<nsIXULWindow> xulWindow(do_QueryInterface(nextWindow));
+      NS_ENSURE_TRUE(xulWindow, NS_ERROR_FAILURE);
+
+      nsCOMPtr<nsIDocShellTreeItem> shellAsTreeItem;
+      xulWindow->GetPrimaryContentShell(getter_AddRefs(shellAsTreeItem));
+      if(shellAsTreeItem)
+         {
+         if(aRequestor == shellAsTreeItem.get())
+            continue;
+         // Do this so we can pass in the tree owner as the requestor so the child knows not
+         // to call back up.
+         nsCOMPtr<nsIDocShellTreeOwner> shellOwner;
+         shellAsTreeItem->GetTreeOwner(getter_AddRefs(shellOwner));
+         nsCOMPtr<nsISupports> shellOwnerSupports(do_QueryInterface(shellOwner));
+
+         shellAsTreeItem->FindItemWithName(aName, shellOwnerSupports, aFoundItem);
+         if(*aFoundItem)
+            return NS_OK;   
+         }
+      windowEnumerator->HasMoreElements(&more);
+      }
+   return NS_OK;      
 }
 
 NS_IMETHODIMP nsContentTreeOwner::ContentShellAdded(nsIDocShellTreeItem* aContentShell,
    PRBool aPrimary, const PRUnichar* aID)
 {
-	/*
-	Called when a content shell is added to the the docShell Tree.
-	aContentShell - the docShell that has been added.
-	aPrimary - true if this is the primary content shell
-	aID - the ID of the docShell that has been added.
-	*/
-
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   mXULWindow->ContentShellAdded(aContentShell, aPrimary, aID);
    return NS_OK;
 }
 
@@ -120,23 +154,22 @@ NS_IMETHODIMP nsContentTreeOwner::GetNewBrowserChrome(PRInt32 aChromeFlags,
 NS_IMETHODIMP nsContentTreeOwner::InitWindow(nativeWindow aParentNativeWindow,
    nsIWidget* parentWidget, PRInt32 x, PRInt32 y, PRInt32 cx, PRInt32 cy)   
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
+   // Ignore wigdet parents for now.  Don't think those are a vaild thing to call.
+   NS_ENSURE_SUCCESS(SetPositionAndSize(x, y, cx, cy, PR_FALSE), NS_ERROR_FAILURE);
+
    return NS_OK;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::Create()
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::Destroy()
 {
-   // We don't support the dynamic destroy and recreate on the object.  Just
-   // create a new object!
-   return NS_ERROR_NOT_IMPLEMENTED;
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_UNEXPECTED;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::SetPosition(PRInt32 x, PRInt32 y)
@@ -205,9 +238,8 @@ NS_IMETHODIMP nsContentTreeOwner::GetParentWidget(nsIWidget** aParentWidget)
 
 NS_IMETHODIMP nsContentTreeOwner::SetParentWidget(nsIWidget* aParentWidget)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetParentNativeWindow(nativeWindow* aParentNativeWindow)
@@ -221,9 +253,8 @@ NS_IMETHODIMP nsContentTreeOwner::GetParentNativeWindow(nativeWindow* aParentNat
 
 NS_IMETHODIMP nsContentTreeOwner::SetParentNativeWindow(nativeWindow aParentNativeWindow)
 {
-   //XXX First Check In
-   NS_ASSERTION(PR_FALSE, "Not Yet Implemented");
-   return NS_OK;
+   NS_ASSERTION(PR_FALSE, "You can't call this");
+   return NS_ERROR_NOT_IMPLEMENTED;
 }
 
 NS_IMETHODIMP nsContentTreeOwner::GetVisibility(PRBool* aVisibility)
