@@ -720,12 +720,6 @@ embedding/tests/gtkEmbed/Makefile
 
 MAKEFILES_security="
 security/Makefile
-security/base/Makefile
-security/base/public/Makefile
-security/base/res/Makefile
-security/base/res/content/Makefile
-security/base/res/locale/Makefile
-security/base/res/locale/en-US/Makefile
 security/psm/Makefile
 security/psm/lib/Makefile
 security/psm/lib/client/Makefile
