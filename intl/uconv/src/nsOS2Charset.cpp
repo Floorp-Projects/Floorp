@@ -100,10 +100,24 @@ nsOS2Charset::~nsOS2Charset()
 NS_IMETHODIMP
 nsOS2Charset::GetCharset(nsPlatformCharsetSel selector, nsString& oResult)
 {
-   oResult = mCharset;
+   if (selector == kPlatformCharsetSel_4xBookmarkFile) {
+      if ((mCharset.Find("IBM850", IGNORE_CASE) != -1) || (mCharset.Find("IBM437", IGNORE_CASE) != -1)) 
+         oResult.AssignWithConversion("ISO-8859-1");
+      else if (mCharset.Find("IBM852", IGNORE_CASE) != -1)
+         oResult.AssignWithConversion("windows-1250");
+      else if ((mCharset.Find("IBM855", IGNORE_CASE) != -1) || (mCharset.Find("IBM866", IGNORE_CASE) != -1))
+         oResult.AssignWithConversion("windows-1251");
+      else if ((mCharset.Find("IBM869", IGNORE_CASE) != -1) || (mCharset.Find("IBM813", IGNORE_CASE) != -1))
+         oResult.AssignWithConversion("windows-1253");
+      else if (mCharset.Find("IBM857", IGNORE_CASE) != -1)
+         oResult.AssignWithConversion("windows-1254");
+      else
+         oResult = mCharset;
+   } else {
+      oResult = mCharset;
+   }
    return NS_OK;
 }
-
 
 class nsOS2CharsetFactory : public nsIFactory {
    NS_DECL_ISUPPORTS
