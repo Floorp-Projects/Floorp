@@ -553,8 +553,6 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
 
   PRInt32 matchCount = 0;
 
-  if (!aPresContext || !aContent || !aResults) return matchCount;
-
   nsIStyledContent* styledContent;
   if (NS_SUCCEEDED(aContent->QueryInterface(nsIStyledContent::GetIID(), (void**)&styledContent))) {
     PRInt32 nameSpace;
@@ -573,56 +571,60 @@ PRInt32 HTMLStyleSheetImpl::RulesMatching(nsIPresContext* aPresContext,
             nsresult attrState = styledContent->GetAttribute(kNameSpaceID_None, nsHTMLAtoms::href, href);
 
             if (NS_CONTENT_ATTR_HAS_VALUE == attrState) {
-              nsIURL* docURL = nsnull;
 
-              nsIHTMLContent* htmlContent;
-              if (NS_SUCCEEDED(styledContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
-                htmlContent->GetBaseURL(docURL);
-               
-                nsAutoString absURLSpec;
-                nsresult rv;
-#ifndef NECKO
-                rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
-#else
-                NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
-                if (NS_FAILED(rv)) return 0;
-
-                nsIURI *baseUri = nsnull;
-                rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
-                if (NS_FAILED(rv)) return 0;
-
-                char *absUrlStr = nsnull;
-                const char *urlSpec = href.GetBuffer();
-                rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
-                NS_RELEASE(baseUri);
-                absURLSpec = absUrlStr;
-                delete [] absUrlStr;
-#endif // NECKO
-                NS_IF_RELEASE(docURL);
-
-                nsLinkState  state;
-                if (!linkHandler) {
-                  // if there is no link handler then just use eLinkState_Unvisited rule
+              if (! linkHandler) {
+                if (nsnull != mLinkRule) {
                   aResults->AppendElement(mLinkRule);
                   matchCount++;
                 }
-                else if (NS_OK == linkHandler->GetLinkState(absURLSpec.GetUnicode(), state)) {
-                  switch (state) {
-                    case eLinkState_Unvisited:
-                      if (nsnull != mLinkRule) {
-                        aResults->AppendElement(mLinkRule);
-                        matchCount++;
-                      }
-                      break;
-                    case eLinkState_Visited:
-                      if (nsnull != mVisitedRule) {
-                        aResults->AppendElement(mVisitedRule);
-                        matchCount++;
-                      }
-                      break;
+              }
+              else {
+                nsIURL* docURL = nsnull;
+
+                nsIHTMLContent* htmlContent;
+                if (NS_SUCCEEDED(styledContent->QueryInterface(kIHTMLContentIID, (void**)&htmlContent))) {
+                  htmlContent->GetBaseURL(docURL);
+               
+                  nsAutoString absURLSpec;
+                  nsresult rv;
+#ifndef NECKO
+                  rv = NS_MakeAbsoluteURL(docURL, base, href, absURLSpec);
+#else
+                  NS_WITH_SERVICE(nsIIOService, service, kIOServiceCID, &rv);
+                  if (NS_FAILED(rv)) return 0;
+
+                  nsIURI *baseUri = nsnull;
+                  rv = docURL->QueryInterface(nsIURI::GetIID(), (void**)&baseUri);
+                  if (NS_FAILED(rv)) return 0;
+
+                  char *absUrlStr = nsnull;
+                  const char *urlSpec = href.GetBuffer();
+                  rv = service->MakeAbsolute(urlSpec, baseUri, &absUrlStr);
+                  NS_RELEASE(baseUri);
+                  absURLSpec = absUrlStr;
+                  delete [] absUrlStr;
+#endif // NECKO
+                  NS_IF_RELEASE(docURL);
+
+                  nsLinkState  state;
+                  if (NS_OK == linkHandler->GetLinkState(absURLSpec.GetUnicode(), state)) {
+                    switch (state) {
+                      case eLinkState_Unvisited:
+                        if (nsnull != mLinkRule) {
+                          aResults->AppendElement(mLinkRule);
+                          matchCount++;
+                        }
+                        break;
+                      case eLinkState_Visited:
+                        if (nsnull != mVisitedRule) {
+                          aResults->AppendElement(mVisitedRule);
+                          matchCount++;
+                        }
+                        break;
+                    }
                   }
+                  NS_RELEASE(htmlContent);
                 }
-                NS_RELEASE(htmlContent);
               }
             }
           }
