@@ -42,6 +42,7 @@
 #include "plstr.h"
 #include "prprf.h"
 #include "nsEscape.h"
+#include "nsIPasswordManager.h"
 
 static NS_DEFINE_CID(kStreamListenerTeeCID, NS_STREAMLISTENERTEE_CID);
 
@@ -1441,6 +1442,7 @@ nsHttpChannel::GetCredentials(const char *challenges,
             LOG(("clearing bad credentials from the auth cache\n"));
             // ok, we've already tried this user:pass combo, so clear the
             // corresponding entry from the auth cache.
+            ClearPasswordManagerEntry(host, port, realm.get(), entry->User());
             authCache->SetAuthEntry(host, port, nsnull, realm.get(),
                                     nsnull, nsnull, nsnull, nsnull, nsnull);
             entry = nsnull;
@@ -2740,3 +2742,22 @@ nsHttpChannel::OnCacheEntryAvailable(nsICacheEntryDescriptor *entry,
 
     return NS_OK;
 }
+
+void
+nsHttpChannel::ClearPasswordManagerEntry(const char *host, PRInt32 port, const char *realm, const PRUnichar *user)
+{
+    nsresult rv;
+    nsCOMPtr<nsIPasswordManager> passWordManager = do_GetService(NS_PASSWORDMANAGER_CONTRACTID, &rv);
+    if (passWordManager) {
+        nsCAutoString domain;
+        domain.Assign(host);
+        domain.Append(':');
+        domain.AppendInt(port);
+
+        domain.Append(" (");
+        domain.Append(realm);
+        domain.Append(')');
+
+        passWordManager->RemoveUser(domain.get(), user);
+    }
+} 
