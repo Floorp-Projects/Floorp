@@ -33,6 +33,7 @@ LIBRARY_NAME=baseembed_s
 
 CPP_OBJS=											\
     .\$(OBJDIR)\nsEmbedAPI.obj \
+    .\$(OBJDIR)\nsEmbedWin32.obj \
     .\$(OBJDIR)\nsSetupRegistry.obj \
 		$(NULL)
 
