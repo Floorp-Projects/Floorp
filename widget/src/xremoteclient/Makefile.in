@@ -49,10 +49,11 @@ EXPORTS		= \
 
 PROGRAM         = mozilla-xremote-client$(BIN_SUFFIX)
 
-PROGOBJS        = mozilla-xremote-client.$(OBJ_SUFFIX)
+PROGOBJS        = mozilla-xremote-client.$(OBJ_SUFFIX) \
+		XRemoteClient.$(OBJ_SUFFIX) \
+		$(NULL)
 
 LIBS            = \
-		XRemoteClient.$(OBJ_SUFFIX) \
 		$(XPCOM_LIBS) $(NSPR_LIBS) \
 		$(XLDFLAGS) $(XLIBS)
 
