@@ -2391,7 +2391,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
       }
 
       case TOK_STRING:
+#if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
+#endif /* JS_HAS_SHARP_VARS */
 	/* FALL THROUGH */
       case TOK_NAME:
       case TOK_OBJECT:
@@ -2414,7 +2416,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	if (!pn)
 	    return NULL;
 	pn->pn_dval = ts->token.t_dval;
+#if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
+#endif /* JS_HAS_SHARP_VARS */
 	break;
 
       case TOK_PRIMARY:
@@ -2422,7 +2426,9 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	if (!pn)
 	    return NULL;
 	pn->pn_op = ts->token.t_op;
+#if JS_HAS_SHARP_VARS
 	notsharp = JS_TRUE;
+#endif /* JS_HAS_SHARP_VARS */
 	break;
 
 #if !JS_HAS_EXPORT_IMPORT
@@ -2455,7 +2461,7 @@ PrimaryExpr(JSContext *cx, JSTokenStream *ts, JSTreeContext *tc)
 	defsharp->pn_kid = pn;
 	return defsharp;
     }
-#endif
+#endif /* JS_HAS_SHARP_VARS */
     return pn;
 }
 
@@ -2679,4 +2685,3 @@ js_FoldConstants(JSContext *cx, JSParseNode *pn)
 
     return JS_TRUE;
 }
-
