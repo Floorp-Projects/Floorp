@@ -34,7 +34,7 @@
 /*
  * Permanent Certificate database handling code 
  *
- * $Id: pcertdb.c,v 1.4 2000/10/02 23:23:50 wtc%netscape.com Exp $
+ * $Id: pcertdb.c,v 1.5 2000/12/08 03:35:29 nelsonb%netscape.com Exp $
  */
 #include "prtime.h"
 
@@ -56,6 +56,10 @@
 #include "plhash.h"
 
 #include "cdbhdl.h"
+
+/* forward declaration */
+CERTCertificate *
+CERT_FindCertByDERCertNoLocking(CERTCertDBHandle *handle, SECItem *derCert);
 
 /*
  * the following functions are wrappers for the db library that implement
@@ -4966,20 +4970,20 @@ NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert, char *nickname,
     PRArenaPool *arena = NULL;
     SECItem keyitem;
     SECStatus rv;
-    
+
+    if ( lockdb ) {
+	CERT_LockDB(handle);
+    }
+
     if ( isperm == PR_FALSE ) {
-	cert = CERT_FindCertByDERCert(handle, derCert);
+	cert = CERT_FindCertByDERCertNoLocking(handle, derCert);
 	if ( cert ) {
-	    return(cert);
+	    goto winner;
 	}
 
 	nickname = NULL;
     }
 
-    if ( lockdb ) {
-	CERT_LockDB(handle);
-    }
-    
     arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
     if ( arena == NULL ) {
 	goto loser;
@@ -5046,6 +5050,8 @@ NewTempCertificate(CERTCertDBHandle *handle, SECItem *derCert, char *nickname,
     cert->istemp = PR_TRUE;
     
     PORT_FreeArena(arena, PR_FALSE);
+
+winner:
 
     if ( lockdb ) {
 	CERT_UnlockDB(handle);
@@ -5469,6 +5475,37 @@ CERT_FindCertByDERCert(CERTCertDBHandle *handle, SECItem *derCert)
 
     /* find the certificate */
     cert = CERT_FindCertByKey(handle, &certKey);
+    
+loser:
+    PORT_FreeArena(arena, PR_FALSE);
+    return(cert);
+}
+
+/*
+ * look for the given DER certificate in the database
+ */
+CERTCertificate *
+CERT_FindCertByDERCertNoLocking(CERTCertDBHandle *handle, SECItem *derCert)
+{
+    PRArenaPool *arena;
+    SECItem certKey;
+    SECStatus rv;
+    CERTCertificate *cert = NULL;
+    
+    /* create a scratch arena */
+    arena = PORT_NewArena(DER_DEFAULT_CHUNKSIZE);
+    if ( arena == NULL ) {
+	return(NULL);
+    }
+    
+    /* extract the database key from the cert */
+    rv = CERT_KeyFromDERCert(arena, derCert, &certKey);
+    if ( rv != SECSuccess ) {
+	goto loser;
+    }
+
+    /* find the certificate */
+    cert = CERT_FindCertByKeyNoLocking(handle, &certKey);
     
 loser:
     PORT_FreeArena(arena, PR_FALSE);
