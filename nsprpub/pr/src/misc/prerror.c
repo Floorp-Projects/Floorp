@@ -65,7 +65,7 @@ PR_IMPLEMENT(void) PR_SetErrorText(PRIntn textLength, const char *text)
     {
 	    if (NULL != thread->errorString)
 	        PR_DELETE(thread->errorString);
-            thread->errorStringSize = 0;
+	    thread->errorStringSize = 0;
     }
     else
     {
@@ -82,9 +82,9 @@ PR_IMPLEMENT(void) PR_SetErrorText(PRIntn textLength, const char *text)
             }
             thread->errorStringSize = size;
 	    }
-        thread->errorStringLength = textLength;
         memcpy(thread->errorString, text, textLength+1 );
     }
+    thread->errorStringLength = textLength;
 }
 
 PR_IMPLEMENT(PRInt32) PR_GetErrorTextLength(void)
@@ -96,7 +96,7 @@ PR_IMPLEMENT(PRInt32) PR_GetErrorTextLength(void)
 PR_IMPLEMENT(PRInt32) PR_GetErrorText(char *text)
 {
     PRThread *thread = PR_GetCurrentThread();
-    if (0 != thread->errorStringSize)
+    if (0 != thread->errorStringLength)
         memcpy(text, thread->errorString, thread->errorStringLength+1);
     return thread->errorStringLength;
 }  /* PR_GetErrorText */
