@@ -408,3 +408,107 @@ nsFilePicker::AppendFilter(const PRUnichar *aTitle, const PRUnichar *aFilter)
 
   return NS_OK;
 }
+
+//-------------------------------------------------------------------------
+//
+// BeOS native File Panel
+//
+//-------------------------------------------------------------------------
+
+nsFilePanelBeOS::nsFilePanelBeOS(file_panel_mode mode, 
+      uint32 node_flavors,
+      bool allow_multiple_selection, 
+      bool modal, 
+      bool hide_when_done)
+  : BLooper()
+  , BFilePanel(mode,
+      NULL, NULL,
+      node_flavors,
+      allow_multiple_selection,
+      NULL, NULL,
+      modal,
+      hide_when_done)
+  , mSelectedActivity(nsFilePanelBeOS::NOT_SELECTED)
+  , mIsSelected(false)
+  , mSaveFileName("")
+  , mSaveDirRef()
+  , mOpenRefs()
+{
+  if ((wait_sem = create_sem(1,"FilePanel")) < B_OK) 
+  	printf("nsFilePanelBeOS::nsFilePanelBeOS : create_sem error\n");
+  if (wait_sem > 0) acquire_sem(wait_sem);
+
+  SetTarget(BMessenger(this));
+  
+  this->Run();
+}
+
+nsFilePanelBeOS::~nsFilePanelBeOS()
+{
+  int count = mOpenRefs.CountItems();
+  for (int i=0 ; i<count ; i++) {
+    delete mOpenRefs.ItemAt(i);
+  }
+  if (wait_sem > 0) {
+    delete_sem(wait_sem);
+  }
+}
+
+void nsFilePanelBeOS::MessageReceived(BMessage *msg)
+{
+  switch ( msg->what ) {
+  case B_REFS_RECEIVED: // open
+    int32 count;
+    type_code code;
+    msg->GetInfo("refs", &code, &count);
+    if (code == B_REF_TYPE) {
+      for (int i=0 ; i<count ; i++) {
+        entry_ref *ref = new entry_ref;
+        if (msg->FindRef("refs", i, ref) == B_OK) {
+          mOpenRefs.AddItem((void *) ref);
+        } else {
+          delete ref;
+        }
+      }
+    } else {
+      printf("nsFilePanelBeOS::MessageReceived() no ref!\n");
+    }
+    mSelectedActivity = OPEN_SELECTED;
+    mIsSelected = true;
+    release_sem(wait_sem);
+    break;
+
+  case B_SAVE_REQUESTED: // save
+    msg->FindString("name", &mSaveFileName);
+    msg->FindRef("directory", &mSaveDirRef);
+    mSelectedActivity = SAVE_SELECTED;
+    mIsSelected = true;
+    release_sem(wait_sem);
+    break;
+
+  case B_CANCEL: // cancel
+    if (mIsSelected) break;
+    mSelectedActivity = CANCEL_SELECTED;
+    mIsSelected = true;
+    release_sem(wait_sem);
+    break;
+  default:
+    break;
+  }
+}
+
+void nsFilePanelBeOS::WaitForSelection()
+{
+  if (wait_sem > 0) {
+    acquire_sem(wait_sem);
+    release_sem(wait_sem);
+  }
+}
+
+uint32 nsFilePanelBeOS::SelectedActivity()
+{
+  uint32 result = 0;
+  result = mSelectedActivity;
+
+  return result;
+}
