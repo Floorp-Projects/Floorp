@@ -659,8 +659,8 @@ if ($action eq 'update') {
     my $emailnotificationold  = trim($::FORM{emailnotificationold} || '');
     my $disabledtext          = trim($::FORM{disabledtext}         || '');
     my $disabledtextold       = trim($::FORM{disabledtextold}      || '');
-    my $groupsetold           = trim($::FORM{groupsetold}          || '');
-    my $blessgroupsetold      = trim($::FORM{blessgroupsetold}     || '');
+    my $groupsetold           = trim($::FORM{groupsetold}          || '0');
+    my $blessgroupsetold      = trim($::FORM{blessgroupsetold}     || '0');
 
     my $groupset = "0";
     foreach (keys %::FORM) {
@@ -681,6 +681,9 @@ if ($action eq 'update') {
     # them, be sure to test for WHERE='$product' or WHERE='$productold'
 
     if ($groupset ne $groupsetold) {
+        SendSQL("SELECT groupset FROM profiles WHERE login_name=" .
+                SqlQuote($userold));
+        $groupsetold = FetchOneColumn();
         SendSQL("UPDATE profiles
 		 SET groupset = 
                          groupset - (groupset & $opblessgroupset) + $groupset
@@ -696,7 +699,7 @@ if ($action eq 'update') {
         ($u, $groupset) = (FetchSQLData());
         if ($groupset ne $groupsetold) {
             SendSQL("INSERT INTO profiles_activity " .
-                    "(userid,who,profiles_when,fieldid,oldvalue,newvalue)" .
+                    "(userid,who,profiles_when,fieldid,oldvalue,newvalue) " .
                     "VALUES " .
                     "($u, $::userid, now(), $fieldid, " .
                     " $groupsetold, $groupset)");
