@@ -358,7 +358,6 @@ function doUnload()
 function changePassword()
 {
   getSelectedItem();
-  token = selected_slot.getToken();
   window.open("changepassword.xul",
               selected_slot.tokenName, 
               "chrome,resizable=1,modal=1,dialog=1");
