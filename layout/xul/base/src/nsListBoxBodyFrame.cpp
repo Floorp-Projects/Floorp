@@ -68,6 +68,8 @@
 #include "nsITimer.h"
 #include "nsAutoPtr.h"
 #include "nsStyleSet.h"
+#include "nsIDOMNSDocument.h"
+#include "nsPIBoxObject.h"
 
 /////////////// nsListScrollSmoother //////////////////
 
@@ -275,6 +277,31 @@ nsListBoxBodyFrame::Destroy(nsIPresContext* aPresContext)
   if (mReflowCallbackPosted)
      aPresContext->PresShell()->CancelReflowCallback(this);
 
+  // Make sure we tell our listbox's box object we're being destroyed.
+  for (nsIFrame *a = mParent; a; a = a->GetParent()) {
+    nsIContent *content = a->GetContent();
+    nsIDocument *doc;
+
+    if (content &&
+        content->GetNodeInfo()->Equals(nsXULAtoms::listbox,
+                                       kNameSpaceID_XUL) &&
+        (doc = content->GetDocument())) {
+      nsCOMPtr<nsIDOMElement> e(do_QueryInterface(content));
+      nsCOMPtr<nsIDOMNSDocument> nsdoc(do_QueryInterface(doc));
+
+      nsCOMPtr<nsIBoxObject> box;
+      nsdoc->GetBoxObjectFor(e, getter_AddRefs(box));
+
+      nsCOMPtr<nsPIBoxObject> pibox(do_QueryInterface(box));
+
+      if (pibox) {
+        pibox->InvalidatePresentationStuff();
+      }
+
+      break;
+    }
+  }
+
   return nsBoxFrame::Destroy(aPresContext);
 }
 
@@ -286,7 +313,7 @@ nsListBoxBodyFrame::AttributeChanged(nsIPresContext* aPresContext,
                                      PRInt32 aModType)
 {
   nsresult rv = NS_OK;
-   
+
   if (aAttribute == nsXULAtoms::rows) {
     nsAutoString rows;
     mContent->GetAttr(kNameSpaceID_None, nsXULAtoms::rows, rows);
