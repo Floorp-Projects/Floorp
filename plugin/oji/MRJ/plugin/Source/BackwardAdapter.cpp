@@ -787,11 +787,27 @@ public:
 		return mInputStream->RequestRead(rangeList);
 	}
 
+	NS_METHOD
+	GetStreamOffset(PRInt32 *result)
+	{
+		*result = mStreamOffset;
+		return NS_OK;
+	}
+
+
+	NS_METHOD
+	SetStreamOffset(PRInt32 offset)
+	{
+		mStreamOffset = offset;
+		return NS_OK;
+	}
+
 private:
 	const char* mURL;
 	nsIPluginInputStream* mInputStream;
 	nsMIMEType mMimeType;
 	PRBool mIsSeekable;
+	PRInt32 mStreamOffset;
 };
 
 #pragma mark CPluginInputStream
