@@ -202,8 +202,6 @@ public:
 
   PRBool CanPlaceFloatNow() const;
 
-  PRBool LineIsEmpty() const;
-
   PRBool LineIsBreakable() const;
 
   PRBool GetLineEndsInBR() const 
