@@ -28,10 +28,51 @@ protected:
 public:
     virtual ~nsForwardReference() {}
 
+    /**
+     * Priority codes returned from GetPriority()
+     */
+    enum Priority {
+        /** The initial pass, after which the content model will be
+            fully built */
+        ePriority_Construction,
+
+        /** A second pass, after which all 'magic attribute' hookup
+            will have been performed */
+        ePriority_Hookup,
+
+        /** A dummy marker, used in kPasses to indicate termination */
+        ePriority_Done
+    };
+
+    /**
+     * Forward references are categorized by 'priority', and all
+     * forward references in a higher priority are resolved before any
+     * reference in a lower priority. This variable specifies this
+     * ordering. The last Priority is guaranteed to be ePriority_Done.
+     */
+    static const Priority kPasses[];
+
+    /**
+     * Get the priority of the forward reference. 'ePriority_Construction'
+     * references are all resolved before 'ePriority_Hookup' references
+     * are resolved.
+     *
+     * @return the Priority of the reference
+     */
+    virtual Priority GetPriority() = 0;
+
+    /**
+     * Result codes returned from Resolve()
+     */
     enum Result {
-        eResolveSucceeded, // resolution succeeded, i'm done
-        eResolveLater,     // couldn't resolve, try me later
-        eResolveError      // something bad happened, don't try again
+        /** Resolution succeeded, I'm done. */
+        eResolve_Succeeded,
+
+        /** Couldn't resolve, but try me later. */
+        eResolve_Later,
+
+        /** Something bad happened, don't try again. */
+        eResolve_Error
     };
 
     /**

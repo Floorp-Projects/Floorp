@@ -27,6 +27,7 @@
 #include "nsIRDFContentSink.h"
 #include "nsIRDFService.h"
 #include "nsIXULContentSink.h"
+#include "nsIXULPrototypeCache.h"
 #include "nsISupports.h"
 #include "nsRDFBaseDataSources.h"
 #include "nsRDFBuiltInDataSources.h"
@@ -37,7 +38,6 @@
 #include "nsIXULContentUtils.h"
 #include "nsIXULDocument.h"
 #include "nsIXULSortService.h"
-#include "nsIXULDocumentInfo.h"
 #include "nsIXULPopupListener.h"
 #include "nsIXULKeyListener.h"
 #include "nsIXULCommandDispatcher.h"
@@ -66,8 +66,8 @@ static NS_DEFINE_CID(kXULContentSinkCID,                  NS_XULCONTENTSINK_CID)
 static NS_DEFINE_CID(kXULContentUtilsCID,                 NS_XULCONTENTUTILS_CID);
 static NS_DEFINE_CID(kXULDocumentCID,                     NS_XULDOCUMENT_CID);
 static NS_DEFINE_CID(kXULSortServiceCID,                  NS_XULSORTSERVICE_CID);
-static NS_DEFINE_CID(kXULDocumentInfoCID,                 NS_XULDOCUMENTINFO_CID);
 static NS_DEFINE_CID(kXULPopupListenerCID,                NS_XULPOPUPLISTENER_CID);
+static NS_DEFINE_CID(kXULPrototypeCacheCID,               NS_XULPROTOTYPECACHE_CID);
 static NS_DEFINE_CID(kXULKeyListenerCID,                  NS_XULKEYLISTENER_CID);
 static NS_DEFINE_CID(kXULCommandDispatcherCID,            NS_XULCOMMANDDISPATCHER_CID);
 static NS_DEFINE_CID(kXULControllersCID,                  NS_XULCONTROLLERS_CID);
@@ -125,7 +125,6 @@ MAKE_CTOR(RDFContainer,RDFContainer,RDFContainer)
 
 MAKE_CTOR(RDFContainerUtils,RDFContainerUtils,RDFContainerUtils)
 MAKE_CTOR(XULDocument,XULDocument,XULDocument)
-MAKE_CTOR(XULDocumentInfo,XULDocumentInfo,XULDocumentInfo)
 MAKE_CTOR(XULTemplateBuilder,XULTemplateBuilder,RDFContentModelBuilder)
 
 MAKE_CTOR(RDFContentSink,RDFContentSink,RDFContentSink)
@@ -238,9 +237,6 @@ nsRDFModule::GetClassObject(nsIComponentManager *aCompMgr,
     else if (aClass.Equals(kXULDocumentCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXULDocument);
     }
-    else if (aClass.Equals(kXULDocumentInfoCID)) {
-        rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXULDocumentInfo);
-    }
     else if (aClass.Equals(kXULPopupListenerCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), CreateNewXULPopupListener);
     }
@@ -255,6 +251,9 @@ nsRDFModule::GetClassObject(nsIComponentManager *aCompMgr,
     }
     else if (aClass.Equals(kXULContentUtilsCID)) {
         rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewXULContentUtils);
+    }
+    else if (aClass.Equals(kXULPrototypeCacheCID)) {
+        rv = NS_NewGenericFactory(getter_AddRefs(fact), NS_NewXULPrototypeCache);
     }
     else {
 		rv = NS_ERROR_FACTORY_NOT_REGISTERED;
@@ -318,8 +317,6 @@ static Components gComponents[] = {
       NS_RDF_PROGID "/xul-content-sink", },
     { "XUL Document", &kXULDocumentCID,
       NS_RDF_PROGID "/xul-document", },
-    { "XUL Document Info", &kXULDocumentInfoCID,
-      NS_RDF_PROGID "/xul-document-info", },
     { "XUL PopupListener", &kXULPopupListenerCID,
       NS_RDF_PROGID "/xul-popup-listener", },
     { "XUL KeyListener", &kXULKeyListenerCID,
@@ -330,6 +327,8 @@ static Components gComponents[] = {
       NS_RDF_PROGID "/xul-controllers", },
     { "XUL Content Utilities", &kXULContentUtilsCID,
       NS_RDF_PROGID "/xul-content-utils", },
+    { "XUL Prototype Cache", &kXULPrototypeCacheCID,
+      NS_RDF_PROGID "/xul-prototype-cache", },
 };
 #define NUM_COMPONENTS (sizeof(gComponents) / sizeof(gComponents[0]))
 

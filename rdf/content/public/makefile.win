@@ -24,12 +24,10 @@ EXPORTS	= \
         nsIDOMXULDocument.h             \
         nsIDOMXULElement.h              \
         nsIDOMXULTreeElement.h          \
-        nsIDOMXULEditorElement.h          \
-	nsIXULParentDocument.h		\
-	nsIXULChildDocument.h		\
+        nsIDOMXULEditorElement.h        \
         nsIXULContentSink.h             \
-	nsIXULDocumentInfo.h		\
 	nsIXULPopupListener.h           \
+        nsIXULPrototypeCache.h          \
 	nsIDOMXULCommandDispatcher.h    \
 	nsIXULCommandDispatcher.h       \
         nsIXULContentUtils.h            \

@@ -42,24 +42,26 @@
 #include "nsIFocusableContent.h"
 #include "nsIJSScriptObject.h"
 #include "nsINameSpace.h"
+#include "nsINameSpaceManager.h"
 #include "nsIRDFCompositeDataSource.h"
 #include "nsIRDFResource.h"
 #include "nsIScriptObjectOwner.h"
 #include "nsIStyleRule.h"
 #include "nsIStyledContent.h"
+#include "nsIURI.h"
 #include "nsIXMLContent.h"
 #include "nsIXULContent.h"
+#include "nsXULAttributes.h"
 
-class nsClassList;
 class nsIDocument;
 class nsIRDFService;
 class nsISupportsArray;
 class nsIXULContentUtils;
+class nsIXULPrototypeDocument;
 class nsRDFDOMNodeList;
 class nsString;
 class nsVoidArray;
 class nsXULAttributes;
-class nsXULPrototypeDocument;
 
 ////////////////////////////////////////////////////////////////////////
 
@@ -69,11 +71,14 @@ class nsXULPrototypeDocument;
 
  */
 
-struct nsXULPrototypeAttribute
+class nsXULPrototypeAttribute
 {
-    PRInt32     mNameSpaceID;
-    nsIAtom*    mName;
-    PRUnichar*  mValue;
+public:
+    nsXULPrototypeAttribute() : mNameSpaceID(kNameSpaceID_Unknown) {}
+
+    PRInt32           mNameSpaceID;
+    nsCOMPtr<nsIAtom> mName;
+    nsString          mValue;
 };
 
 
@@ -86,22 +91,109 @@ struct nsXULPrototypeAttribute
 
  */
 
-struct nsXULPrototypeElement
-{
-    nsXULPrototypeDocument*  mDocument;           // [OWNER] because doc is refcounted
-    PRInt32                  mNumChildren;
-    nsXULPrototypeElement*   mChildren;           // [OWNER]
+class nsXULPrototypeElement;
 
-    nsINameSpace*            mNameSpace;          // [OWNER]
-    nsIAtom*                 mNameSpacePrefix;    // [OWNER]
+class nsXULPrototypeNode
+{
+public:
+    enum Type { eType_Element, eType_Script, eType_Text };
+
+    Type                     mType;
+    PRInt32                  mLineNo;
+
+    virtual ~nsXULPrototypeNode()
+    {
+        MOZ_COUNT_CTOR(nsXULPrototypeNode);
+    }
+
+protected:
+    nsXULPrototypeNode(Type aType, PRInt32 aLineNo)
+        : mType(aType), mLineNo(aLineNo)
+    {
+        MOZ_COUNT_DTOR(nsXULPrototypeNode);
+    }
+};
+
+class nsXULPrototypeElement : public nsXULPrototypeNode
+{
+public:
+    nsXULPrototypeElement(PRInt32 aLineNo)
+        : nsXULPrototypeNode(eType_Element, aLineNo),
+          mDocument(nsnull),
+          mNumChildren(0),
+          mChildren(nsnull),
+          mNumAttributes(0),
+          mAttributes(nsnull),
+          mClassList(nsnull)
+    {
+        MOZ_COUNT_CTOR(nsXULPrototypeElement);
+    }
+
+    virtual ~nsXULPrototypeElement()
+    {
+        MOZ_COUNT_DTOR(nsXULPrototypeElement);
+
+        delete[] mAttributes;
+        delete mClassList;
+
+        for (PRInt32 i = mNumChildren - 1; i >= 0; --i)
+            delete mChildren[i];
+
+        delete[] mChildren;
+    }
+
+
+    nsIXULPrototypeDocument* mDocument;           // [WEAK] because doc is refcounted
+    PRInt32                  mNumChildren;
+    nsXULPrototypeNode**     mChildren;           // [OWNER]
+
+    nsCOMPtr<nsINameSpace>   mNameSpace;          // [OWNER]
+    nsCOMPtr<nsIAtom>        mNameSpacePrefix;    // [OWNER]
     PRInt32                  mNameSpaceID;
-    nsIAtom*                 mTag;                // [OWNER]
+    nsCOMPtr<nsIAtom>        mTag;                // [OWNER]
 
     PRInt32                  mNumAttributes;
     nsXULPrototypeAttribute* mAttributes;         // [OWNER]
 
-    nsIStyleRule*            mInlineStyleRule;    // [OWNER]
+    nsCOMPtr<nsIStyleRule>   mInlineStyleRule;    // [OWNER]
     nsClassList*             mClassList;
+
+    nsresult GetAttribute(PRInt32 aNameSpaceID, nsIAtom* aName, nsString& aValue);
+};
+
+class nsXULPrototypeScript : public nsXULPrototypeNode
+{
+public:
+    nsXULPrototypeScript(PRInt32 aLineNo)
+        : nsXULPrototypeNode(eType_Script, aLineNo)
+    {
+        MOZ_COUNT_CTOR(nsXULPrototypeScript);
+    }
+
+    virtual ~nsXULPrototypeScript()
+    {
+        MOZ_COUNT_DTOR(nsXULPrototypeScript);
+    }
+
+    nsCOMPtr<nsIURI>         mSrcURI;
+    nsString                 mInlineScript;
+};
+
+class nsXULPrototypeText : public nsXULPrototypeNode
+{
+public:
+    nsXULPrototypeText(PRInt32 aLineNo)
+        : nsXULPrototypeNode(eType_Text, aLineNo)
+    {
+        MOZ_COUNT_CTOR(nsXULPrototypeText);
+    }
+
+    virtual ~nsXULPrototypeText()
+    {
+        MOZ_COUNT_DTOR(nsXULPrototypeText);
+    }
+
+    nsString                 mValue;
 };
 
 
@@ -185,10 +277,11 @@ protected:
     static nsIAtom*             kTreeItemAtom;
     static nsIAtom*             kTreeRowAtom;
     static nsIAtom*             kEditorAtom;
+    static nsIAtom*             kWindowAtom;
 
 public:
     static nsresult
-    Create(nsXULPrototypeElement* aPrototype, nsIContent** aResult);
+    Create(nsXULPrototypeElement* aPrototype, nsIDocument* aDocument, nsIContent** aResult);
 
     static nsresult
     Create(PRInt32 aNameSpaceID, nsIAtom* aTag, nsIContent** aResult);
@@ -260,6 +353,7 @@ public:
     NS_IMETHOD SetLazyState(PRInt32 aFlags);
     NS_IMETHOD ClearLazyState(PRInt32 aFlags);
     NS_IMETHOD GetLazyState(PRInt32 aFlag, PRBool& aValue);
+    NS_IMETHOD AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
     NS_IMETHOD ForceElementToOwnResource(PRBool aForce);
 
     // nsIFocusableContent interface
@@ -317,8 +411,6 @@ protected:
     // Implementation methods
     nsresult EnsureContentsGenerated(void) const;
 
-    nsresult AddScriptEventListener(nsIAtom* aName, const nsString& aValue, REFNSIID aIID);
-
     nsresult ExecuteOnBroadcastHandler(nsIDOMElement* anElement, const nsString& attrName);
 
     PRBool ElementIsInDocument();
@@ -332,6 +424,7 @@ protected:
                                   float& aFloatValue,
                                   nsHTMLUnit& aValueUnit);
 
+    // Static helpers
     static nsresult
     GetElementsByTagName(nsIDOMNode* aNode,
                          const nsString& aTagName,
@@ -349,6 +442,8 @@ protected:
     NS_IMETHOD GetParentTree(nsIDOMXULTreeElement** aTreeElement);
 
     PRBool IsFocusableContent();
+
+    nsresult AddPopupListener(nsIAtom* aName);
 
 protected:
     // Required fields
@@ -396,9 +491,9 @@ protected:
     // appropriate default values if there are no slots defined in the
     // delegate.
     PRInt32                    NameSpaceID() const     { return mSlots ? mSlots->mNameSpaceID           : mPrototype->mNameSpaceID; }
-    nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace; }
-    nsIAtom*                   NameSpacePrefix() const { return mSlots ? mSlots->mNameSpacePrefix.get() : mPrototype->mNameSpacePrefix; }
-    nsIAtom*                   Tag() const             { return mSlots ? mSlots->mTag.get()             : mPrototype->mTag; }
+    nsINameSpace*              NameSpace() const       { return mSlots ? mSlots->mNameSpace.get()       : mPrototype->mNameSpace.get(); }
+    nsIAtom*                   NameSpacePrefix() const { return mSlots ? mSlots->mNameSpacePrefix.get() : mPrototype->mNameSpacePrefix.get(); }
+    nsIAtom*                   Tag() const             { return mSlots ? mSlots->mTag.get()             : mPrototype->mTag.get(); }
     void*                      ScriptObject() const       { return mSlots ? mSlots->mScriptObject             : nsnull; }
     nsIEventListenerManager*   ListenerManager() const    { return mSlots ? mSlots->mListenerManager.get()    : nsnull; }
     nsVoidArray*               BroadcastListeners() const { return mSlots ? mSlots->mBroadcastListeners       : nsnull; }
@@ -409,30 +504,6 @@ protected:
     nsXULAttributes*           Attributes() const         { return mSlots ? mSlots->mAttributes               : nsnull; }
     nsXULAggregateElement*     InnerXULElement() const    { return mSlots ? mSlots->mInnerXULElement          : nsnull; }
 
-protected:
-
-    // XXX Move to nsXULContentSink?
-    class ObserverForwardReference : public nsForwardReference
-    {
-    protected:
-        nsCOMPtr<nsIDOMElement> mListener;
-        nsString mTargetID;
-        nsString mAttributes;
-
-    public:
-        ObserverForwardReference(nsIDOMElement* aListener,
-                                 const nsString& aTargetID,
-                                 const nsString& aAttributes) :
-            mListener(aListener),
-            mTargetID(aTargetID),
-            mAttributes(aAttributes) {}
-
-        virtual ~ObserverForwardReference() {}
-
-        virtual Result Resolve();
-    };
-
-    friend class ObserverForwardReference;
 };
 
 

@@ -37,7 +37,7 @@
 
 class nsIURI;
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
 
 class nsClassList {
 public:
@@ -59,6 +59,15 @@ public:
 
     nsCOMPtr<nsIAtom> mAtom;
     nsClassList*      mNext;
+
+    static PRBool
+    HasClass(nsClassList* aList, nsIAtom* aClass);
+
+    static nsresult
+    GetClasses(nsClassList* aList, nsVoidArray& aArray);
+
+    static nsresult
+    ParseClasses(nsClassList** aList, const nsString& aValue);
 
 private:
     nsClassList& operator=(const nsClassList& aClassList) { return *this; } // not to be implemented
@@ -151,9 +160,6 @@ public:
 protected:
     nsXULAttributes(nsIContent* aContent);
     virtual ~nsXULAttributes();
-
-    static void
-    ParseClasses(const nsString& aClassString, nsClassList** aClassList);
 
     nsIContent*   mContent;
     nsClassList*  mClassList;

@@ -52,8 +52,84 @@ static NS_DEFINE_CID(kCSSParserCID, NS_CSSPARSER_CID);
 static NS_DEFINE_CID(kICSSParserIID, NS_ICSS_PARSER_IID);
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
+// nsClassList
+//
+
+PRBool
+nsClassList::HasClass(nsClassList* aList, nsIAtom* aClass)
+{
+    const nsClassList* classList = aList;
+    while (nsnull != classList) {
+        if (classList->mAtom.get() == aClass) {
+            return PR_TRUE;
+        }
+        classList = classList->mNext;
+    }
+    return PR_FALSE;
+}
+
+
+nsresult
+nsClassList::GetClasses(nsClassList* aList, nsVoidArray& aArray)
+{
+    aArray.Clear();
+    const nsClassList* classList = aList;
+    while (nsnull != classList) {
+        aArray.AppendElement(classList->mAtom); // NOTE atom is not addrefed
+        classList = classList->mNext;
+    }
+    return NS_OK;
+}
+
+
+
+nsresult
+nsClassList::ParseClasses(nsClassList** aList, const nsString& aClassString)
+{
+    static const PRUnichar kNullCh = PRUnichar('\0');
+
+    if (*aList != nsnull) {
+        delete *aList;
+        *aList = nsnull;
+    }
+
+    if (aClassString.Length() > 0) {
+        nsAutoString classStr(aClassString);  // copy to work buffer
+        classStr.Append(kNullCh);  // put an extra null at the end
+
+        PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr.GetUnicode();
+        PRUnichar* end   = start;
+
+        while (kNullCh != *start) {
+            while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
+                start++;
+            }
+            end = start;
+
+            while ((kNullCh != *end) && (PR_FALSE == nsString::IsSpace(*end))) { // look for space or end
+                end++;
+            }
+            *end = kNullCh; // end string here
+
+            if (start < end) {
+                *aList = new nsClassList(NS_NewAtom(start));
+                aList = &((*aList)->mNext);
+            }
+
+            start = ++end;
+        }
+    }
+    return NS_OK;
+}
+
+
+
+//----------------------------------------------------------------------
+//
 // nsXULAttribute
+//
 
 
 nsXULAttribute::nsXULAttribute(nsIContent* aContent,
@@ -356,8 +432,10 @@ nsXULAttribute::GetQualifiedName(nsString& aQualifiedName)
 }
 
 
-////////////////////////////////////////////////////////////////////////
+//----------------------------------------------------------------------
+//
 // nsXULAttributes
+//
 
 nsXULAttributes::nsXULAttributes(nsIContent* aContent)
     : mContent(aContent),
@@ -547,40 +625,18 @@ nsXULAttributes::SetScriptObject(void *aScriptObject)
 nsresult 
 nsXULAttributes::GetClasses(nsVoidArray& aArray) const
 {
-  aArray.Clear();
-  const nsClassList* classList = mClassList;
-  while (nsnull != classList) {
-    aArray.AppendElement(classList->mAtom); // NOTE atom is not addrefed
-    classList = classList->mNext;
-  }
-  return NS_OK;
+    return nsClassList::GetClasses(mClassList, aArray);
 }
 
 nsresult 
 nsXULAttributes::HasClass(nsIAtom* aClass) const
 {
-  const nsClassList* classList = mClassList;
-  while (nsnull != classList) {
-    if (classList->mAtom.get() == aClass) {
-      return NS_OK;
-    }
-    classList = classList->mNext;
-  }
-  return NS_COMFALSE;
+    return nsClassList::HasClass(mClassList, aClass) ? NS_OK : NS_COMFALSE;
 }
 
 nsresult nsXULAttributes::UpdateClassList(const nsString& aValue)
 {
-  if (mClassList != nsnull)
-  {
-    delete mClassList;
-    mClassList = nsnull;
-  }
-
-  if (aValue != "")
-    ParseClasses(aValue, &mClassList);
-  
-  return NS_OK;
+    return nsClassList::ParseClasses(&mClassList, aValue);
 }
 
 nsresult nsXULAttributes::UpdateStyleRule(nsIURI* aDocURL, const nsString& aValue)
@@ -628,39 +684,5 @@ nsresult nsXULAttributes::GetInlineStyleRule(nsIStyleRule*& aRule)
   }
 
   return result;
-}
-
-
-void
-nsXULAttributes::ParseClasses(const nsString& aClassString, nsClassList** aClassList)
-{
-static const PRUnichar kNullCh = PRUnichar('\0');
-
-  NS_ASSERTION(nsnull == *aClassList, "non null start list");
-
-  nsAutoString  classStr(aClassString);  // copy to work buffer
-  classStr.Append(kNullCh);  // put an extra null at the end
-
-  PRUnichar* start = (PRUnichar*)(const PRUnichar*)classStr.GetUnicode();
-  PRUnichar* end   = start;
-
-  while (kNullCh != *start) {
-    while ((kNullCh != *start) && nsString::IsSpace(*start)) {  // skip leading space
-      start++;
-    }
-    end = start;
-
-    while ((kNullCh != *end) && (PR_FALSE == nsString::IsSpace(*end))) { // look for space or end
-      end++;
-    }
-    *end = kNullCh; // end string here
-
-    if (start < end) {
-      *aClassList = new nsClassList(NS_NewAtom(start));
-      aClassList = &((*aClassList)->mNext);
-    }
-
-    start = ++end;
-  }
 }
 

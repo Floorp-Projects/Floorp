@@ -3,12 +3,10 @@ nsIDOMXULDocument.h
 nsIDOMXULElement.h
 nsIDOMXULTreeElement.h
 nsIDOMXULEditorElement.h
-nsIXULParentDocument.h
-nsIXULChildDocument.h
 nsIXULContentSink.h
 nsIXULContentUtils.h
-nsIXULDocumentInfo.h
 nsIXULPopupListener.h
+nsIXULPrototypeCache.h
 nsIXULCommandDispatcher.h
 nsIXULKeyListener.h
 nsIStreamLoadableDocument.h
