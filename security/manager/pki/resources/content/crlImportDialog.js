@@ -24,12 +24,11 @@ const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 const nsIX509Cert         = Components.interfaces.nsIX509Cert;
 const nsICRLInfo          = Components.interfaces.nsICRLInfo;
-const nsIPref             = Components.interfaces.nsIPref;
+const nsIPrefService      = Components.interfaces.nsIPrefService
 
 var pkiParams;
 var cert;
 var crl;
-var prefs;
 
 function onLoad()
 {
@@ -60,16 +59,17 @@ function onLoad()
     var orgUnit = document.getElementById("orgUnitText");
     orgUnit.setAttribute("value", crl.organizationalUnit);
 
-    prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
     var autoupdateEnabledString   = "security.crl.autoupdate.enable." + crl.nameInDb;
     
     var updateEnabled = false;
     try {
-      updateEnabled = prefs.GetBoolPref(autoupdateEnabledString);
+      var prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefService);
+      var prefBranch = prefService.getBranch(null);
+      updateEnabled = prefBranch.getBoolPref(autoupdateEnabledString);
       if(updateEnabled) {
         var autoupdateURLString       = "security.crl.autoupdate.url." + crl.nameInDb;
-        prefs.SetCharPref(autoupdateURLString,crl.lastFetchURL);
-        prefs.savePrefFile(null);
+        prefBranch.setCharPref(autoupdateURLString, crl.lastFetchURL);
+        prefService.savePrefFile(null);
       }
     }catch(exception){}
 

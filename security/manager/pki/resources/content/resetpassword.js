@@ -53,9 +53,9 @@ function resetPassword()
   var token = pk11db.findTokenByName(tokenName);
   token.reset();
 
-  var pref = Components.classes['@mozilla.org/preferences;1'];
+  var pref = Components.classes['@mozilla.org/preferences-service;1'].getService(Components.interfaces.nsIPrefService);
   if (pref) {
-    pref = pref.getService(Components.interfaces.nsIPrefBranch);
+    pref = pref.getBranch(null);
     try {
       if (pref.getBoolPref("wallet.crypto")) {
         // data in wallet is encrypted, clear it

@@ -36,15 +36,17 @@
  *
  * ***** END LICENSE BLOCK ***** */
 
-var gPrefs = null;
+var gPrefService = null;
+var gPrefBranch = null;
 
 function onLoad() {
   doSetOKCancel(doOK, doCancel);
 
   // Set checkboxes from prefs
-  const nsIPref = Components.interfaces.nsIPref;
+  const nsIPrefService = Components.interfaces.nsIPrefService;
 
-  gPrefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
+  gPrefService = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefService);
+  gPrefBranch = gPrefService.getBranch(null);
 
   // Enumerate each checkbox on this page and set value
   var prefElements = document.getElementsByAttribute("prefstring", "*");
@@ -54,12 +56,12 @@ function onLoad() {
     var prefValue = false;
 
     try {
-      prefValue = gPrefs.GetBoolPref(prefString);
+      prefValue = gPrefBranch.getBoolPref(prefString);
     } catch(e) { /* Put debug output here */ }
 
     element.setAttribute("checked", prefValue);
     // disable xul element if the pref is locked.
-    if (gPrefs.PrefIsLocked(prefString)) {
+    if (gPrefBranch.prefIsLocked(prefString)) {
       element.disabled=true;
     }
   }
@@ -85,10 +87,10 @@ function doOK() {
       prefValue = (prefValue == "true");
     }
 
-    gPrefs.SetBoolPref(prefString, prefValue);
+    gPrefBranch.setBoolPref(prefString, prefValue);
   }
 
-  gPrefs.savePrefFile(null);
+  gPrefService.savePrefFile(null);
  } catch(e) { }
 
  window.close();

@@ -26,11 +26,12 @@ const nsICRLInfo = Components.interfaces.nsICRLInfo;
 const nsISupportsArray = Components.interfaces.nsISupportsArray;
 const nsIPKIParamBlock    = Components.interfaces.nsIPKIParamBlock;
 const nsPKIParamBlock    = "@mozilla.org/security/pkiparamblock;1";
-const nsIPref             = Components.interfaces.nsIPref;
+const nsIPrefService      = Components.interfaces.nsIPrefService;
 
 var crlManager;
 var crls;
-var prefs;
+var prefService;
+var prefBranch;
 
 var autoupdateEnabledBaseString   = "security.crl.autoupdate.enable.";
 var autoupdateTimeTypeBaseString  = "security.crl.autoupdate.timingType.";
@@ -47,8 +48,9 @@ function onLoad()
   var i;
 
   crlManager = Components.classes[nsCRLManager].getService(nsICRLManager);
-  prefs = Components.classes["@mozilla.org/preferences;1"].getService(nsIPref);
   crls = crlManager.getCrls();
+  prefService = Components.classes["@mozilla.org/preferences-service;1"].getService(nsIPrefService);
+  prefBranch = prefService.getBranch(null);
   var bundle = srGetStrBundle("chrome://pippki/locale/pippki.properties");
   var autoupdateEnabledString;
   var autoupdateErrCntString;
@@ -65,12 +67,12 @@ function onLoad()
     var enabledStr = bundle.GetStringFromName("crlAutoupdateNotEnabled");
     var status = "";
     try{
-      enabled = prefs.GetBoolPref(autoupdateEnabledString)
+      enabled = prefBranch.getBoolPref(autoupdateEnabledString)
       if(enabled){
         enabledStr = bundle.GetStringFromName("crlAutoupdateEnabled");
       }
       var cnt;
-      cnt = prefs.GetIntPref(autoupdateErrCntString);
+      cnt = prefBranch.getIntPref(autoupdateErrCntString);
       if(cnt > 0){
         status = bundle.GetStringFromName("crlAutoupdateFailed");
       } else {
@@ -116,18 +118,18 @@ function DeleteCrlSelected() {
   
   //First, check if autoupdate was enabled for this crl
   try {
-    autoupdateEnabled = prefs.GetBoolPref(autoupdateEnabledBaseString + id);
+    autoupdateEnabled = prefBranch.getBoolPref(autoupdateEnabledBaseString + id);
     //Note, if the pref is not present, we get an exception right here,
     //and autoupdateEnabled remains false
     autoupdateParamAvailable = true;
-    prefs.ClearUserPref(autoupdateEnabledBaseString + id);
-    prefs.ClearUserPref(autoupdateTimeTypeBaseString + id);
-    prefs.ClearUserPref(autoupdateTimeBaseString + id);
-    prefs.ClearUserPref(autoupdateURLBaseString + id);
-    prefs.ClearUserPref(autoupdateDayCntString + id);
-    prefs.ClearUserPref(autoupdateFreqCntString + id);
-    prefs.ClearUserPref(autoupdateErrCntBaseString + id);
-    prefs.ClearUserPref(autoupdateErrDetailBaseString + id);
+    prefBranch.clearUserPref(autoupdateEnabledBaseString + id);
+    prefBranch.clearUserPref(autoupdateTimeTypeBaseString + id);
+    prefBranch.clearUserPref(autoupdateTimeBaseString + id);
+    prefBranch.clearUserPref(autoupdateURLBaseString + id);
+    prefBranch.clearUserPref(autoupdateDayCntString + id);
+    prefBranch.clearUserPref(autoupdateFreqCntString + id);
+    prefBranch.clearUserPref(autoupdateErrCntBaseString + id);
+    prefBranch.clearUserPref(autoupdateErrDetailBaseString + id);
   } catch(Exception){}
 
   //Once we have deleted the prefs that can be deleted, we save the 
@@ -135,7 +137,7 @@ function DeleteCrlSelected() {
   //in doind that, we try to delete the crl 
   try{
     if(autoupdateParamAvailable){
-      prefs.savePrefFile(null);
+      prefService.savePrefFile(null);
     }
 
     if(autoupdateEnabled){
