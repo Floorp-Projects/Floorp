@@ -48,9 +48,9 @@ static const char urn_prefix[] = "urn:mozilla:";
 // the ContractID because we need to guarantee that we're getting the
 // RDF-based chrome registry in order to build up chrome.rdf
 
-// {D8C7D8A2-E84C-11d2-BF87-00105A1B0627}
+// {47049e42-1d87-482a-984d-56ae185e367a}
 #define NS_CHROMEREGISTRY_CID \
-{ 0xd8c7d8a2, 0xe84c, 0x11d2, { 0xbf, 0x87, 0x0, 0x10, 0x5a, 0x1b, 0x6, 0x27 } }
+{ 0x47049e42, 0x1d87, 0x482a, { 0x98, 0x4d, 0x56, 0xae, 0x18, 0x5e, 0x36, 0x7a } }
 
 static NS_DEFINE_CID(kChromeRegistryCID, NS_CHROMEREGISTRY_CID);
 
