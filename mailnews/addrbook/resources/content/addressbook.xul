@@ -95,7 +95,7 @@ Rights Reserved.
 <popupset id="aTooltipSet"/>
 
 <toolbox class="toolbox-top">
-	<menubar>
+	<menubar id="ab-menubar">
 		<menu id="menu_File">
 			<menupopup id="menu_FilePopup">
 				<menuitem value="&newCard.label;" accesskey="&newCard.accesskey;" oncommand="AbNewCard()"/>
