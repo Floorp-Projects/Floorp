@@ -59,8 +59,8 @@ namespace MetaData {
 
 js2val String_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta->stringClass->prototype, meta->stringClass));
-    StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thisValue));
+    js2val thatValue = OBJECT_TO_JS2VAL(new StringInstance(meta->stringClass));
+    StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thatValue));
 
     if (argc > 0)
         strInst->mValue = new String(*meta->engine->toString(argv[0]));
@@ -81,8 +81,7 @@ js2val String_fromCharCode(JS2Metadata *meta, const js2val /*thisValue*/, js2val
 
 static js2val String_toString(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if ((meta->objectType(thisValue) != meta->prototypeClass)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue))->type != meta->stringClass)) )
+    if (meta->objectType(thisValue) != meta->stringClass)
         meta->reportError(Exception::typeError, "String.toString called on something other than a string thing", meta->engine->errorPos());
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return STRING_TO_JS2VAL(strInst->mValue);
@@ -90,13 +89,12 @@ static js2val String_toString(JS2Metadata *meta, const js2val thisValue, js2val 
 
 static js2val String_valueOf(JS2Metadata *meta, const js2val thisValue, js2val * /*argv*/, uint32 /*argc*/)
 {
-    if ((meta->objectType(thisValue) != meta->prototypeClass)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(thisValue))->type != meta->stringClass)) )
+    if (meta->objectType(thisValue) != meta->stringClass)
         meta->reportError(Exception::typeError, "String.toString called on something other than a string thing", meta->engine->errorPos());
     StringInstance *strInst = checked_cast<StringInstance *>(JS2VAL_TO_OBJECT(thisValue));
     return STRING_TO_JS2VAL(strInst->mValue);
 }
-#if 0
+
 /*
  * 15.5.4.12 String.prototype.search (regexp)
  *
@@ -123,12 +121,13 @@ static js2val String_search(JS2Metadata *meta, const js2val thisValue, js2val *a
     const String *str = JS2VAL_TO_STRING(S);
     REMatchState *match = REExecute(pState, str->begin(), 0, (int32)str->length(), false);
     if (match)
-        return JSValue::newNumber((float64)(match->startIndex));
+        return meta->engine->allocNumber((float64)(match->startIndex));
     else
-        return JSValue::newNumber(-1.0);
+        return meta->engine->allocNumber(-1.0);
 
 }
 
+#if 0
 /*
  * 15.5.4.10 String.prototype.match (regexp)
  * 
@@ -263,8 +262,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
     if (argc > 1) replaceValue = argv[1];
     const String *replaceStr = meta->engine->toString(replaceValue);
 
-    if ((meta->objectType(searchValue) != meta->prototypeClass)
-            || ((checked_cast<PrototypeInstance *>(JS2VAL_TO_OBJECT(searchValue))->type != meta->regexpClass)) ) {
+    if (meta->objectType(searchValue) != meta->regexpClass) {
 	REState *pState = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(searchValue)))->mRegExp;
 	REMatchState *match;
 //	uint32 m = pState->parenCount;
@@ -272,7 +270,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
         int32 lastIndex = 0;
 
 	while (true) {
-            match = REExecute(pState, S->begin(), lastIndex, (int32)S->length(), false);
+            match = REExecute(pState, S->begin(), lastIndex, toInt32(S->length()), false);
 	    if (match) {
 		String insertString;
 		uint32 start = 0;
@@ -292,7 +290,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 		    }
 		}
                 // grab everything preceding the match
-		newString += S->substr((uint32)lastIndex, (uint32)match->startIndex - lastIndex);
+		newString += S->substr(toUInt32(lastIndex), toUInt32(match->startIndex) - lastIndex);
                 // and then add the replacement string
 		newString += insertString;
 	    }
@@ -302,7 +300,7 @@ static js2val String_replace(JS2Metadata *meta, const js2val thisValue, js2val *
 	    if ((pState->flags & RE_GLOBAL) == 0)
 		break;
 	}
-        newString += S->substr((uint32)lastIndex, (uint32)S->length() - lastIndex);
+        newString += S->substr(toUInt32(lastIndex), toUInt32(S->length()) - lastIndex);
 	if ((pState->flags & RE_GLOBAL) == 0)
             JS2VAL_TO_OBJECT(searchValue)->setProperty(cx, cx->LastIndex_StringAtom, NULL, JSValue::newNumber((float64)lastIndex));
         return STRING_TO_JS2VAL(new String(newString));
@@ -375,7 +373,7 @@ static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult
     if (match) {
         result.endIndex = match->startIndex + q;
         result.failure = false;
-        result.capturesCount = (uint32)match->parenCount;
+        result.capturesCount = toUInt32(match->parenCount);
         if (match->parenCount) {
             result.captures = new js2val[match->parenCount];
             for (int32 i = 0; i < match->parenCount; i++) {
@@ -385,7 +383,7 @@ static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult
                     result.captures[i] = STRING_TO_JS2VAL(parenStr);
                 }
 		else
-                    result.captures[i] = kUndefinedValue;
+                    result.captures[i] = JS2VAL_UNDEFINED;
             }
         }
     }
@@ -394,30 +392,28 @@ static void regexpSplitMatch(const String *S, uint32 q, REState *RE, MatchResult
 
 static js2val String_split(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
 {
-    ContextStackReplacement csr(cx);
-
-    const String *S = JSValue::string(JSValue::toString(cx, thisValue));
+    const String *S = meta->engine->toString(thisValue);
 
     js2val result = Array_Type->newInstance(cx);
     JSArrayInstance *A = checked_cast<JSArrayInstance *>(JSValue::instance(result));
     uint32 lim;
-    js2val separatorV = (argc > 0) ? argv[0] : kUndefinedValue;
-    js2val limitV = (argc > 1) ? argv[1] : kUndefinedValue;
+    js2val separatorV = (argc > 0) ? argv[0] : JS2VAL_UNDEFINED;
+    js2val limitV = (argc > 1) ? argv[1] : JS2VAL_UNDEFINED;
         
-    if (JSValue::isUndefined(limitV))
-        lim = (uint32)(two32minus1);
+    if (JS2VAL_IS_UNDEFINED(limitV))
+        lim = toUInt32(two32minus1);
     else
-        lim = (uint32)meta->engine->toUInt32(limitV);
+        lim = toUInt32(limitV);
 
     uint32 s = S->size();
     uint32 p = 0;
 
     REState *RE = NULL;
     const String *R = NULL;
-    if (JSValue::getType(separatorV) == RegExp_Type)
-        RE = (checked_cast<JSRegExpInstance *>(JSValue::instance(separatorV)))->mRegExp;
+    if (meta->objectType(separatorV) == meta->regexpClass)
+        RE = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(separatorV)))->mRegExp;
     else
-        R = JSValue::string(JSValue::toString(cx, separatorV));
+        R = meta->engine->toString(separatorV);
 
     if (lim == 0) 
         return result;
@@ -486,7 +482,7 @@ static js2val String_charAt(JS2Metadata *meta, const js2val thisValue, js2val *a
 
     uint32 pos = 0;
     if (argc > 0)
-        pos = (uint32)meta->engine->toInt32(argv[0]);
+        pos = toUInt32(meta->engine->toInteger(argv[0]));
 
     if ((pos < 0) || (pos >= str->size()))
         return STRING_TO_JS2VAL(&meta->engine->Empty_StringAtom);
@@ -501,7 +497,7 @@ static js2val String_charCodeAt(JS2Metadata *meta, const js2val thisValue, js2va
 
     uint32 pos = 0;
     if (argc > 0)
-        pos = (uint32)meta->engine->toInt32(argv[0]);
+        pos = toUInt32(meta->engine->toInteger(argv[0]));
 
     if ((pos < 0) || (pos >= str->size()))
         return meta->engine->nanValue;
@@ -633,36 +629,36 @@ static js2val String_slice(JS2Metadata *meta, const js2val thisValue, js2val *ar
     uint32 start, end;
 
     if (argc > 0) {
-        int32 arg0 = (int32)meta->engine->toInt32(argv[0]);
+        int32 arg0 = meta->engine->toInteger(argv[0]);
         if (arg0 < 0) {
             arg0 += sourceLength;
             if (arg0 < 0)
                 start = 0;
             else
-                start = meta->engine->toUInt32(arg0);
+                start = toUInt32(arg0);
         }
         else {
-            if (meta->engine->toUInt32(arg0) < sourceLength)
-                start = meta->engine->toUInt32(arg0);
+            if (toUInt32(arg0) < sourceLength)
+                start = toUInt32(arg0);
             else
                 start = sourceLength;
         }            
     }
     else
-        start = 0;
+        start = 0;      // XXX argc must be > 1 since the length of the function is 1
 
     if (argc > 1) {
-        int32 arg1 = (int32)meta->engine->toInt32(argv[1]);
+        int32 arg1 = meta->engine->toInteger(argv[1]);
         if (arg1 < 0) {
             arg1 += sourceLength;
             if (arg1 < 0)
                 end = 0;
             else
-                end = meta->engine->toUInt32(arg1);
+                end = toUInt32(arg1);
         }
         else {
-            if (meta->engine->toUInt32(arg1) < sourceLength)
-                end = meta->engine->toUInt32(arg1);
+            if (toUInt32(arg1) < sourceLength)
+                end = toUInt32(arg1);
             else
                 end = sourceLength;
         }            
@@ -782,11 +778,21 @@ void initStringObject(JS2Metadata *meta)
         { NULL }
     };
 
+    NamespaceList publicNamespaceList;
+    publicNamespaceList.push_back(meta->publicNamespace);
+
+    meta->stringClass->construct = String_Constructor;
+
     PrototypeFunction *pf = &prototypeFunctions[0];
     while (pf->name) {
         FixedInstance *fInst = new FixedInstance(meta->functionClass);
         fInst->fWrap = new FunctionWrapper(true, new ParameterFrame(JS2VAL_INACCESSIBLE, true), pf->code);
+/*
+XXX not prototype object function properties, like ECMA3, but members of the String class
         meta->writeDynamicProperty(meta->stringClass->prototype, new Multiname(meta->world.identifiers[pf->name], meta->publicNamespace), true, OBJECT_TO_JS2VAL(fInst), RunPhase);
+*/
+        InstanceMember *m = new InstanceMethod(fInst);
+        meta->defineInstanceMember(meta->stringClass, &meta->cxt, meta->world.identifiers[pf->name], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, m, 0);
         pf++;
     }
 

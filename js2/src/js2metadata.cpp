@@ -1915,12 +1915,13 @@ doUnary:
             if (os2->overriddenMember == NULL) {
                 OverrideStatus *os3 = searchForOverrides(c, id, &cxt->openNamespaces, access, pos);
                 if (os3->overriddenMember == NULL) {
+                    os = new OverrideStatus(NULL, id);
                     os->multiname.addNamespace(namespaces);
                 }
                 else {
-                    os->overriddenMember = POTENTIAL_CONFLICT;  // Didn't find the member with a specified namespace, but did with
-                                                                // the use'd ones. That'll be an error unless the override is 
-                                                                // disallowed (in defineInstanceMember below)
+                    os = new OverrideStatus(POTENTIAL_CONFLICT, id);    // Didn't find the member with a specified namespace, but did with
+                                                                        // the use'd ones. That'll be an error unless the override is 
+                                                                        // disallowed (in defineInstanceMember below)
                     os->multiname.addNamespace(namespaces);
                 }
                 delete os3;
@@ -2067,6 +2068,76 @@ doUnary:
         return STRING_TO_JS2VAL(&meta->engine->object_StringAtom);
     }
 
+    js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc)
+    {
+        js2val thatValue = OBJECT_TO_JS2VAL(new RegExpInstance(meta->regexpClass));
+        RegExpInstance *thisInst = checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(thatValue));
+        REuint32 flags = 0;
+
+        const String *regexpStr = &meta->engine->Empty_StringAtom;
+        const String *flagStr = &meta->engine->Empty_StringAtom;
+        if (argc > 0) {
+            if (meta->objectType(argv[0]) == meta->regexpClass) {
+                if ((argc == 1) || JS2VAL_IS_UNDEFINED(argv[1])) {
+                    js2val src;
+                    QualifiedName qname(meta->publicNamespace, meta->world.identifiers["source"]);
+                    if (!meta->readInstanceMember(argv[0], meta->regexpClass, &qname, RunPhase, &src))
+                        ASSERT(false);
+                    ASSERT(JS2VAL_IS_STRING(src));
+                    regexpStr = JS2VAL_TO_STRING(src);
+                    REState *other = (checked_cast<RegExpInstance *>(JS2VAL_TO_OBJECT(argv[0])))->mRegExp;
+                    flags = other->flags;
+                }
+                else
+                    meta->reportError(Exception::typeError, "Illegal RegExp constructor args", meta->engine->errorPos());
+            }
+            else
+                regexpStr = meta->engine->toString(argv[0]);
+            if ((argc > 1) && !JS2VAL_IS_UNDEFINED(argv[1])) {
+                flagStr = meta->engine->toString(argv[1]);
+                if (parseFlags(flagStr->begin(), (int32)flagStr->length(), &flags) != RE_NO_ERROR) {
+                    meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), *regexpStr + "/" + *flagStr);  // XXX error message?
+                }
+            }
+        }
+        REState *pState = REParse(regexpStr->begin(), (int32)regexpStr->length(), flags, RE_VERSION_1);
+        if (pState) {
+            thisInst->mRegExp = pState;
+    // XXX ECMA spec says these are DONTENUM, but SpiderMonkey and test suite disagree
+    /*
+            thisInst->defineVariable(cx, cx->Source_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), String_Type, JSValue(regexpStr));
+            thisInst->defineVariable(cx, cx->Global_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (pState->flags & GLOBAL) ? kTrueValue : kFalseValue);
+            thisInst->defineVariable(cx, cx->IgnoreCase_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (pState->flags & IGNORECASE) ? kTrueValue : kFalseValue);
+            thisInst->defineVariable(cx, cx->Multiline_StringAtom, NULL, (Property::DontDelete | Property::ReadOnly), Boolean_Type, (pState->flags & MULTILINE) ? kTrueValue : kFalseValue);
+            thisInst->defineVariable(cx, cx->LastIndex_StringAtom, NULL, Property::DontDelete, Number_Type, kPositiveZero);
+    */
+            {
+                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["source"]);
+                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, STRING_TO_JS2VAL(regexpStr), RunPhase)) ASSERT(false);
+            }
+            {
+                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["global"]);
+                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, BOOLEAN_TO_JS2VAL((pState->flags & RE_GLOBAL) == RE_GLOBAL), RunPhase)) ASSERT(false);
+            }
+            {
+                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["ignoreCase"]);
+                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, BOOLEAN_TO_JS2VAL((pState->flags & RE_IGNORECASE) == RE_IGNORECASE), RunPhase)) ASSERT(false);
+            }
+            {
+                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["multiline"]);
+                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, BOOLEAN_TO_JS2VAL((pState->flags & RE_MULTILINE) == RE_MULTILINE), RunPhase)) ASSERT(false);
+            }
+            {
+                QualifiedName qname(meta->publicNamespace, meta->world.identifiers["lastIndex"]);
+                if (!meta->writeInstanceMember(thatValue, meta->regexpClass, &qname, INT_TO_JS2VAL(0), RunPhase)) ASSERT(false);
+            }
+        }
+        else {
+            meta->reportError(Exception::syntaxError, "Failed to parse RegExp : '{0}'", meta->engine->errorPos(), "/" + *regexpStr + "/" + *flagStr);  // XXX what about the RE parser error message?
+        }
+        return thatValue;
+    }
+
 #define MAKEBUILTINCLASS(c, super, dynamic, allowNull, final, name) c = new JS2Class(super, NULL, new Namespace(engine->private_StringAtom), dynamic, allowNull, final, name); c->complete = true
 
     JS2Metadata::JS2Metadata(World &world) :
@@ -2124,6 +2195,8 @@ doUnary:
         MAKEBUILTINCLASS(regexpClass, objectClass, true, true, true, world.identifiers["RegExp"]);
         v = new Variable(classClass, OBJECT_TO_JS2VAL(regexpClass), true);
         defineStaticMember(&env, world.identifiers["RegExp"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);
+        regexpClass->construct = RegExp_Constructor;
+
 
         v = new Variable(classClass, OBJECT_TO_JS2VAL(stringClass), true);
         defineStaticMember(&env, world.identifiers["String"], &publicNamespaceList, Attribute::NoOverride, false, ReadWriteAccess, v, 0);

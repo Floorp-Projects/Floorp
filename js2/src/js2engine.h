@@ -148,7 +148,7 @@ public:
     js2val toPrimitive(js2val x)    { if (JS2VAL_IS_PRIMITIVE(x)) return x; else return convertValueToPrimitive(x); }
     float64 toNumber(js2val x)      { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else if (JS2VAL_IS_DOUBLE(x)) return *JS2VAL_TO_DOUBLE(x); else return convertValueToDouble(x); }
     bool toBoolean(js2val x)        { if (JS2VAL_IS_BOOLEAN(x)) return JS2VAL_TO_BOOLEAN(x); else return convertValueToBoolean(x); }
-    js2val toInteger(js2val x)      { if (JS2VAL_IS_INT(x)) return x; else return allocNumber(convertValueToInteger(x)); }
+    int32 toInteger(js2val x)       { if (JS2VAL_IS_INT(x)) return JS2VAL_TO_INT(x); else return convertValueToInteger(x); }
 
     js2val assignmentConversion(js2val val, JS2Class *type)     { return val; } // XXX s'more code, please
 
@@ -215,6 +215,7 @@ public:
     js2val pop()                { ASSERT(sp > execStack); return *--sp; }
     js2val top()                { return *(sp - 1); }
     js2val top(int argCount)    { return *(sp - (1 + argCount)); }
+    js2val *base(int argCount)  { return (sp - (1 + argCount)); }
 
     void mark();
 

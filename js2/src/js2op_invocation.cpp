@@ -104,7 +104,7 @@
                     jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(runtimeFrame);
                 if (fWrap->code) {
-                    push(fWrap->code(meta, runtimeThis, NULL, argCount));
+                    push(fWrap->code(meta, runtimeThis, base(argCount - 1), argCount));
                     meta->env.removeTopFrame();
                 }
             }
@@ -117,9 +117,15 @@
                 runtimeFrame->instantiate(&meta->env);
                 runtimeFrame->thisObject = mc->thisObject;
 //                assignArguments(runtimeFrame, fWrap->compileFrame->signature);
-                jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
+                if (!fWrap->code)
+                    jsr(phase, fWrap->bCon);   // seems out of order, but we need to catch the current top frame 
                 meta->env.addFrame(meta->objectType(mc->thisObject));
                 meta->env.addFrame(runtimeFrame);
+                if (fWrap->code) {
+                    push(fWrap->code(meta, mc->thisObject, base(argCount - 1), argCount));
+                    meta->env.removeTopFrame();
+                    meta->env.removeTopFrame();
+                }
             }
         }
         break;

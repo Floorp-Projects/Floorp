@@ -59,6 +59,7 @@ typedef js2val (Constructor)(JS2Metadata *meta, const js2val thisValue, js2val *
 
 extern void initDateObject(JS2Metadata *meta);
 extern void initStringObject(JS2Metadata *meta);
+extern js2val RegExp_Constructor(JS2Metadata *meta, const js2val thisValue, js2val *argv, uint32 argc);
 
 
 // OBJECT is the semantic domain of all possible objects and is defined as:
@@ -526,29 +527,29 @@ public:
     virtual void markChildren();
 };
 
-// String instances are prototype instances created by the String class, they have an extra field 
+// Date instances are fixed (not dynamic? XXX) instances created by the Date class, they have an extra field 
 // that contains the millisecond count
-class DateInstance : public PrototypeInstance {
+class DateInstance : public FixedInstance {
 public:
-    DateInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
+    DateInstance(JS2Class *type) : FixedInstance(type) { }
 
     float64     ms;
 };
 
-// String instances are prototype instances created by the Date class, they have an extra field 
-// that contains the string
-class StringInstance : public PrototypeInstance {
+// String instances are fixed (not dynamic? XXX) instances created by the String class, they have an extra field 
+// that contains the string data
+class StringInstance : public FixedInstance {
 public:
-    StringInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
+    StringInstance(JS2Class *type) : FixedInstance(type) { }
 
     String     *mValue;
 };
 
-// RegExp instances are prototype instances created by the Date class, they have an extra field 
+// RegExp instances are fixed (not dynamic? XXX) instances created by the RegExp class, they have an extra field 
 // that contains the RegExp object
-class RegExpInstance : public PrototypeInstance {
+class RegExpInstance : public FixedInstance {
 public:
-    RegExpInstance(JS2Object *parent, JS2Class *type) : PrototypeInstance(parent, type) { }
+    RegExpInstance(JS2Class *type) : FixedInstance(type) { }
 
     REState     *mRegExp;
 };
