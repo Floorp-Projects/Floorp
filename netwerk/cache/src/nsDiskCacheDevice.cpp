@@ -32,6 +32,7 @@
 #include "nsXPIDLString.h"
 #include "nsIInputStream.h"
 #include "nsIOutputStream.h"
+#include "nsISupportsArray.h"
 
 static const char DISK_CACHE_DEVICE_ID[] = { "disk" };
 
@@ -550,8 +551,14 @@ nsDiskCacheDevice::Init()
     
     rv = mBoundEntries.Init();
     if (NS_FAILED(rv)) return rv;
+
+    // XXX implement poor man's eviction strategy right here,
+    // keep deleting cache entries from oldest to newest, until
+    // cache usage is brought below limits.
+    nsCOMPtr<nsISupportsArray> metaDataFiles;
+    rv = scanDiskCacheEntries(getter_AddRefs(metaDataFiles));
     
-    return  NS_OK;
+    return NS_OK;
 }
 
 nsresult
@@ -1191,5 +1198,110 @@ nsresult nsDiskCacheDevice::scavengeDiskCacheEntries(DiskCacheEntry * diskEntry)
         delete youngestEntry;
     }
     
+    return NS_OK;
+}
+
+nsresult nsDiskCacheDevice::scanDiskCacheEntries(nsISupportsArray ** result)
+{
+    nsCOMPtr<nsISimpleEnumerator> entries;
+    nsresult rv = mCacheDirectory->GetDirectoryEntries(getter_AddRefs(entries));
+    if (NS_FAILED(rv)) return rv;
+    
+    nsCOMPtr<nsISupportsArray> array = do_CreateInstance(NS_SUPPORTSARRAY_CONTRACTID, &rv);
+    if (NS_FAILED(rv)) return rv;
+    
+    PRUint32 newCacheSize = 0;
+    
+    for (PRBool more; NS_SUCCEEDED(entries->HasMoreElements(&more)) && more;) {
+        nsCOMPtr<nsISupports> next;
+        rv = entries->GetNext(getter_AddRefs(next));
+        if (NS_FAILED(rv)) break;
+        nsCOMPtr<nsIFile> file(do_QueryInterface(next, &rv));
+        if (NS_FAILED(rv)) break;
+        nsXPIDLCString name;
+        rv = file->GetLeafName(getter_Copies(name));
+        if (name.get()[8] == 'm') {
+            // this must be a metadata file.
+            nsCOMPtr<nsITransport> transport;
+            rv = getTransportForFile(file, nsICache::ACCESS_READ, getter_AddRefs(transport));
+            if (NS_FAILED(rv)) continue;
+            nsCOMPtr<nsIInputStream> input;
+            rv = transport->OpenInputStream(0, ULONG_MAX, 0, getter_AddRefs(input));
+            if (NS_FAILED(rv)) continue;
+
+            // read the metadata file.
+            MetaDataFile metaData;
+            rv = metaData.Read(input);
+            input->Close();
+            if (NS_FAILED(rv)) break;
+
+            // update the cache size.
+            newCacheSize += metaData.mDataSize;
+            
+            // initially, just sort them by file modification time.
+            PRInt64 modTime, modTime1;
+            file->GetLastModificationDate(&modTime);
+            PRUint32 count;
+            array->Count(&count);
+            if (count == 0) {
+                rv = array->AppendElement(file);
+                if (NS_FAILED(rv)) return rv;
+                continue;
+            }
+            PRInt32 low = 0, high = count - 1;
+            nsCOMPtr<nsIFile> file1;
+            for (;;) {
+                PRInt32 middle = (low + high) / 2;
+                rv = array->QueryElementAt(middle, NS_GET_IID(nsIFile), getter_AddRefs(file1));
+                if (NS_FAILED(rv)) return rv;
+                file1->GetLastModificationDate(&modTime1);
+                if (low >= high) {
+                    if (LL_CMP(modTime, <=, modTime1))
+                        rv = array->InsertElementAt(file, middle);
+                    else
+                        rv = array->InsertElementAt(file, middle + 1);
+                    if (NS_FAILED(rv)) return rv;
+                    break;
+                } else {
+                    if (LL_CMP(modTime, <, modTime1)) {
+                        high = middle - 1;
+                    } else if (LL_CMP(modTime, >, modTime1)) {
+                        low = middle + 1;
+                    } else {
+                        rv = array->InsertElementAt(file, middle);
+                        if (NS_FAILED(rv)) return rv;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+#if 0
+    {
+        PRUint32 count;
+        array->Count(&count);
+        for (PRUint32 i = 0; i < count; ++i) {
+            nsCOMPtr<nsIFile> file;
+            rv = array->QueryElementAt(i, NS_GET_IID(nsIFile), getter_AddRefs(file));
+            nsXPIDLCString name;
+            rv = file->GetLeafName(getter_Copies(name));
+            PRInt64 modTime;
+            file->GetLastModificationDate(&modTime);
+            printf("%s (%08X%08X)\n", name.get(), modTime.hi, modTime.lo);
+        }
+    }
+#endif
+    
+    NS_ADDREF(*result = array);
+
+    // we've successfully totaled the cache size.
+    mCacheSize = newCacheSize;
+    
+    return NS_OK;
+}
+
+nsresult nsDiskCacheDevice::evictDiskCacheEntries()
+{
     return NS_OK;
 }
