@@ -3760,6 +3760,39 @@ nsCSSFrameConstructor::ContentRemoved(nsIPresContext* aPresContext,
   return rv;
 }
 
+static void
+UpdateViewsForTree(nsIFrame* aFrame, nsIViewManager* aViewManager)
+{
+  nsIView* view;
+  aFrame->GetView(&view);
+
+  if (view) {
+    const nsStyleColor* color;
+    const nsStyleDisplay* disp; 
+    aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
+    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
+
+    view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?nsViewVisibility_kHide:nsViewVisibility_kShow); 
+
+    aViewManager->SetViewOpacity(view, color->mOpacity);
+  }
+
+  // now do children fo frame
+  PRInt32 listIndex = 0;
+  nsIAtom* childList = nsnull;
+
+  do {
+    nsIFrame* child = nsnull;
+    aFrame->FirstChild(childList, &child);
+    while (child) {
+      UpdateViewsForTree(child, aViewManager);
+      child->GetNextSibling(&child);
+    }
+    NS_IF_RELEASE(childList);
+    aFrame->GetAdditionalChildListName(listIndex++, &childList);
+  } while (childList);
+  NS_IF_RELEASE(childList);
+}
 
 static void
 ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
@@ -3795,14 +3828,7 @@ ApplyRenderingChangeToTree(nsIPresContext* aPresContext,
     if (nsnull == viewManager) {
       view->GetViewManager(viewManager);
     }
-    const nsStyleColor* color;
-    const nsStyleDisplay* disp; 
-    aFrame->GetStyleData(eStyleStruct_Color, (const nsStyleStruct*&) color);
-    aFrame->GetStyleData(eStyleStruct_Display, (const nsStyleStruct*&) disp);
-
-    view->SetVisibility(NS_STYLE_VISIBILITY_HIDDEN == disp->mVisible ?nsViewVisibility_kHide:nsViewVisibility_kShow); 
-
-    viewManager->SetViewOpacity(view, color->mOpacity);
+    UpdateViewsForTree(aFrame, viewManager);
     viewManager->UpdateView(view, r, NS_VMREFRESH_NO_SYNC);
 
     aFrame->GetNextInFlow(&aFrame);
