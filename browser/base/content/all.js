@@ -43,8 +43,9 @@ pref("browser.chromeURL","chrome://navigator/content/navigator.xul");
 
 pref("network.search.url","http://cgi.netscape.com/cgi-bin/url_search.cgi?search=");
 
-pref("keyword.URL", "http://keyword.netscape.com/keyword/");
-pref("keyword.enabled", false);
+pref("keyword.enabled", true);
+pref("keyword.URL", "http://www.google.com/search?hl=en&lr=&ie=UTF-8&oe=UTF-8&q=");
+
 pref("general.useragent.locale", "chrome://navigator/locale/navigator.properties");
 pref("general.useragent.contentlocale", "chrome://navigator-region/locale/region.properties");
 pref("general.useragent.misc", "rv:1.1b");
