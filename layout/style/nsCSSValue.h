@@ -133,7 +133,7 @@ public:
   nsCSSValue(float aValue, nsCSSUnit aUnit);
   nsCSSValue(const nsAString& aValue, nsCSSUnit aUnit);
   nsCSSValue(nscolor aValue);
-  nsCSSValue(nsCSSValue::URL* aValue);
+  nsCSSValue(URL* aValue);
   nsCSSValue(const nsCSSValue& aCopy);
   ~nsCSSValue(void)
   {
