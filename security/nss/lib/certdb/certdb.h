@@ -312,8 +312,8 @@ SECStatus SEC_OpenPermCertDB(CERTCertDBHandle *handle,
 
 SECStatus SEC_DeletePermCertificate(CERTCertificate *cert);
 
-typedef SECStatus (* PermCertCallback)(CERTCertificate *cert, SECItem *k,
-				      void *pdata);
+typedef SECStatus (PR_CALLBACK * PermCertCallback)(CERTCertificate *cert,
+                                                   SECItem *k, void *pdata);
 /*
 ** Traverse the entire permanent database, and pass the certs off to a
 ** user supplied function.
