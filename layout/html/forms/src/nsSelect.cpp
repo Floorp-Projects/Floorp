@@ -305,7 +305,7 @@ nsSelectFrame::GetDesiredSize(nsIPresContext* aPresContext,
   aDesiredWidgetSize.width  = aDesiredLayoutSize.width;
   aDesiredWidgetSize.height = aDesiredLayoutSize.height;
   if (select->mIsComboBox) {  // add in pull down size
-    aDesiredWidgetSize.height += (rowHeight * numChildren) + 100;
+    aDesiredWidgetSize.height += (rowHeight * (numChildren > 20 ? 20 : numChildren)) + 100;
   }
 
   NS_RELEASE(select);
