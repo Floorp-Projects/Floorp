@@ -93,7 +93,7 @@ public:
   NS_IMETHOD
   GetDesiredStretchSize(nsIPresContext*      aPresContext,
                         nsIRenderingContext& aRenderingContext,
-                        nsStretchMetrics&    aDesiredStretchSize);
+                        nsBoundingMetrics&   aDesiredStretchSize);
 #endif
   NS_IMETHOD
   Place(nsIPresContext*      aPresContext,
@@ -140,6 +140,10 @@ public:
   SetInitialChildList(nsIPresContext* aPresContext,
                       nsIAtom*        aListName,
                       nsIFrame*       aChildList);
+
+  NS_IMETHODIMP
+  ReflowDirtyChild(nsIPresShell* aPresShell, 
+                   nsIFrame*     aChild);
 
   NS_IMETHOD
   Reflow(nsIPresContext*          aPresContext,
@@ -259,7 +263,7 @@ public:
                                  nsBoundingMetrics&   aBoundingMetrics);
 
   // helper to check if a content has an attribute. If content is nsnull or if
-  // the attribute is not there, check if the attribute is on the mstyle frame.
+  // the attribute is not there, check if the attribute is on the mstyle hierarchy
   // @return NS_CONTENT_ATTR_HAS_VALUE --if attribute has non-empty value, attr="value"
   //         NS_CONTENT_ATTR_NO_VALUE  --if attribute has empty value, attr=""
   //         NS_CONTENT_ATTR_NOT_THERE --if attribute is not there
@@ -278,7 +282,12 @@ public:
   static nscoord 
   CalcLength(nsIPresContext*   aPresContext,
              nsIStyleContext*  aStyleContext,
-             const nsCSSValue& aValue);
+             const nsCSSValue& aCSSValue);
+
+  static PRBool
+  ParseNamedSpaceValue(nsIFrame*   aMathMLmstyleFrame,
+                       nsString&   aString,
+                       nsCSSValue& aCSSValue);
 
   // helper methods for getting sup/subdrop's from a child
   static void 
