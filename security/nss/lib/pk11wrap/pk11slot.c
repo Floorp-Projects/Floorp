@@ -4572,7 +4572,7 @@ PK11_GetObjectNickname(PK11SlotInfo *slot, CK_OBJECT_HANDLE id)
 	return NULL;
     }
 
-    nickname = PORT_ZAlloc(result.len);
+    nickname = PORT_ZAlloc(result.len+1);
     if (nickname == NULL) {
 	PORT_Free(result.data);
 	return NULL;
