@@ -1,4 +1,3 @@
-#!gmake
 #
 # The contents of this file are subject to the Netscape Public
 # License Version 1.1 (the "License"); you may not use this file
@@ -18,37 +17,52 @@
 # Rights Reserved.
 #
 # Contributor(s): John Gaunt (jgaunt@netscape.com)
+#
 
-DEPTH=..\..
-MODULE=accessibility
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
+
+include $(DEPTH)/config/autoconf.mk
+
+MODULE = accessibility
+LIBRARY_NAME = accessibility_xul_s
 REQUIRES = \
-  xpcom \
-  string \
+  content \
+  content_xul \
+  docshell \
   dom \
-  $(NULL)
-LIBRARY_NAME=accessibility
-MODULE_NAME=nsAccessibilityModule
-
-include <$(DEPTH)\config\config.mak>
-
-CPP_OBJS=\
-  .\$(OBJDIR)\nsAccessibilityFactory.obj \
-  $(NULL)
-
-LINCS = $(LINCS) -I..\src         # for implementation headers
-
-SUB_LIBRARIES=\
-  $(DIST)\lib\accessibility_base_s.lib \
-  $(DIST)\lib\accessibility_html_s.lib \
-  $(DIST)\lib\accessibility_xul_s.lib \
-  $(NULL)
-
-LLIBS=\
-  $(DIST)\lib\xpcom.lib \
-  $(DIST)\lib\timer_s.lib \
-  $(DIST)\lib\gkgfx.lib \
-  $(DIST)\lib\contentshared_s.lib \
-  $(LIBNSPR) \
+  gfx \
+  gfx2 \
+  htmlparser \
+  imglib2 \
+  intl \
+  layout \
+  locale \
+  necko \
+  string \
+  timer \
+  uriloader \
+  view \
+  webshell \
+  widget \
+  xpcom \
   $(NULL)
 
-include <$(DEPTH)\config\rules.mak>
+CPPSRCS = \
+  nsXULColorPickerAccessible.cpp \
+  nsXULFormControlAccessible.cpp \
+  nsXULMenuAccessible.cpp \
+  nsXULTextAccessible.cpp \
+  $(NULL)
+
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
+
+include $(topsrcdir)/config/rules.mk
+
+LOCAL_INCLUDES = \
+  -I$(srcdir)/../base \
+  -I$(srcdir)/../html \
+  $(NULL)

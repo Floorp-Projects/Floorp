@@ -19,36 +19,63 @@
 #
 # Contributor(s): John Gaunt (jgaunt@netscape.com)
 
-DEPTH=..\..
-MODULE=accessibility
+DEPTH = ..\..\..
+MODULE = accessibility
+LIBRARY_NAME = accessibility_base_s
 REQUIRES = \
-  xpcom \
-  string \
+  content \
+  content_xul \
+  docshell \
   dom \
+  gfx \
+  gfx2 \
+  htmlparser \
+  imglib2 \
+  intl \
+  layout \
+  locale \
+  necko \
+  string \
+  timer \
+  uriloader \
+  view \
+  webshell \
+  widget \
+  xpcom \
   $(NULL)
-LIBRARY_NAME=accessibility
-MODULE_NAME=nsAccessibilityModule
 
-include <$(DEPTH)\config\config.mak>
 
-CPP_OBJS=\
-  .\$(OBJDIR)\nsAccessibilityFactory.obj \
+CPP_OBJS = \
+  .\$(OBJDIR)\nsAccessibilityService.obj \
+  .\$(OBJDIR)\nsAccessible.obj \
+  .\$(OBJDIR)\nsBaseWidgetAccessible.obj \
+  .\$(OBJDIR)\nsFormControlAccessible.obj \
+  .\$(OBJDIR)\nsGenericAccessible.obj \
+  .\$(OBJDIR)\nsRootAccessible.obj \
+  .\$(OBJDIR)\nsSelectAccessible.obj \
   $(NULL)
 
-LINCS = $(LINCS) -I..\src         # for implementation headers
-
-SUB_LIBRARIES=\
-  $(DIST)\lib\accessibility_base_s.lib \
-  $(DIST)\lib\accessibility_html_s.lib \
-  $(DIST)\lib\accessibility_xul_s.lib \
+EXPORTS = \
+  .\nsRootAccessible.h \
   $(NULL)
 
-LLIBS=\
-  $(DIST)\lib\xpcom.lib \
-  $(DIST)\lib\timer_s.lib \
-  $(DIST)\lib\gkgfx.lib \
-  $(DIST)\lib\contentshared_s.lib \
-  $(LIBNSPR) \
+LINCS = \
+  -I..\html \
+  -I..\xul \
+  -I..\..\..\layout\html\forms\public \
+  -I..\..\..\layout\html\forms\src \
+  -I..\..\..\layout\html\base\src \
   $(NULL)
+
 
 include <$(DEPTH)\config\rules.mak>
+
+libs:: $(LIBRARY)
+        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
+
+clobber::
+        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
+
+
+
+

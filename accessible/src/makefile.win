@@ -17,73 +17,16 @@
 # Copyright (C) 1998 Netscape Communications Corporation. All
 # Rights Reserved.
 #
-# Contributor(s): 
+# Contributor(s): John Gaunt (jgaunt@netscape.com)
 
-DEPTH=..\..
-MODULE=accessibility
-LIBRARY_NAME=accessibility_s
-REQUIRES	= xpcom \
-		  string \
-		  layout \
-		  content \
-		  content_xul \
-		  widget \
-		  dom \
-		  view \
-		  locale \
-		  intl \
-		  docshell \
-		  webshell \
-		  necko \
-		  htmlparser \
-		  imglib2 \
-		  gfx \
-		  gfx2 \
-		  uriloader \
-		  timer \
-		  $(NULL)
+DEPTH = ..\..
 
-CPP_OBJS= \
-        .\$(OBJDIR)\nsAccessible.obj \
-        .\$(OBJDIR)\nsAccessibilityService.obj \
-        .\$(OBJDIR)\nsBaseWidgetAccessible.obj \
-        .\$(OBJDIR)\nsFormControlAccessible.obj \
-        .\$(OBJDIR)\nsGenericAccessible.obj \
-        .\$(OBJDIR)\nsHTMLAreaAccessible.obj \
-        .\$(OBJDIR)\nsHTMLFormControlAccessible.obj \
-        .\$(OBJDIR)\nsHTMLIFrameRootAccessible.obj \
-        .\$(OBJDIR)\nsHTMLImageAccessible.obj \
-        .\$(OBJDIR)\nsHTMLLinkAccessible.obj \
-        .\$(OBJDIR)\nsHTMLSelectAccessible.obj \
-        .\$(OBJDIR)\nsHTMLTableAccessible.obj \
-        .\$(OBJDIR)\nsHTMLTextAccessible.obj \
-        .\$(OBJDIR)\nsRootAccessible.obj \
-        .\$(OBJDIR)\nsSelectAccessible.obj \
-        .\$(OBJDIR)\nsXULFormControlAccessible.obj \
-        .\$(OBJDIR)\nsXULMenuAccessible.obj           \
-        .\$(OBJDIR)\nsXULTextAccessible.obj \
-        .\$(OBJDIR)\nsXULColorPickerAccessible.obj \
+include <$(DEPTH)\config\config.mak>
+
+DIRS = \
+  base \
+  html \
+  xul \
   $(NULL)
-
-EXPORTS = \
-  .\nsRootAccessible.h \
-  $(NULL)
-
-LINCS= \
-  -I..\..\layout\html\forms\public \
-  -I..\..\layout\html\forms\src \
-  -I..\..\layout\html\base\src \
-  $(NULL)
-
 
 include <$(DEPTH)\config\rules.mak>
-
-libs:: $(LIBRARY)
-        $(MAKE_INSTALL) $(LIBRARY) $(DIST)\lib
-
-clobber::
-        rm -f $(DIST)\lib\$(LIBRARY_NAME).lib
-
-
-
-

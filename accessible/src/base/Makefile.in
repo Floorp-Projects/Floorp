@@ -19,46 +19,59 @@
 # Contributor(s): John Gaunt (jgaunt@netscape.com)
 #
 
-DEPTH		= ../..
-topsrcdir	= @top_srcdir@
-srcdir		= @srcdir@
-VPATH		= @srcdir@
+DEPTH = ../../..
+topsrcdir = @top_srcdir@
+srcdir = @srcdir@
+VPATH = @srcdir@
 
 include $(DEPTH)/config/autoconf.mk
 
-MODULE		= accessibility
-LIBRARY_NAME	= accessibility
-EXPORT_LIBRARY = 1
-SHORT_LIBNAME	= access
-IS_COMPONENT	= 1
-MODULE_NAME	= nsAccessibilityModule
+MODULE = accessibility
+LIBRARY_NAME = accessibility_base_s
 REQUIRES = \
-    xpcom \
-    string \
-    dom \
-		  $(NULL)
+  content \
+  content_xul \
+  docshell \
+  dom \
+  gfx \
+  gfx2 \
+  htmlparser \
+  imglib2 \
+  intl \
+  layout \
+  locale \
+  necko \
+  string \
+  timer \
+  uriloader \
+  view \
+  webshell \
+  widget \
+  xpcom \
+  xuldoc \
+  $(NULL)
 
-CPPSRCS		= nsAccessibilityFactory.cpp
+CPPSRCS = \
+  nsAccessibilityService.cpp \
+  nsAccessible.cpp \
+  nsBaseWidgetAccessible.cpp \
+  nsFormControlAccessible.cpp \
+  nsGenericAccessible.cpp \
+  nsRootAccessible.cpp \
+  nsSelectAccessible.cpp \
+  $(NULL)
 
-LOCAL_INCLUDES	= -I$(srcdir)/../src
+EXPORTS = \
+  nsRootAccessible.h \
+  $(NULL)
 
-SHARED_LIBRARY_LIBS = \
-    $(DIST)/lib/libaccessibility_base_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/libaccessibility_html_s.$(LIB_SUFFIX) \
-    $(DIST)/lib/libaccessibility_xul_s.$(LIB_SUFFIX)
-    $(NULL)
-
-
-EXTRA_DSO_LIBS = \
-    gkconshared_s \
-    $(NULL)
-
-EXTRA_DSO_LDOPTS =           \
-    $(MOZ_COMPONENT_LIBS)    \
-    -L$(DIST)/lib            \
-    $(EXTRA_DSO_LIBS)        \
-    -lgkgfx                  \
-    $(NULL)
+# we don't want the shared lib, but we want to force the creation of a static lib.
+FORCE_STATIC_LIB = 1
 
 include $(topsrcdir)/config/rules.mk
 
+LOCAL_INCLUDES += \
+  -I$(srcdir) \
+  -I$(srcdir)/../html \
+  -I$(srcdir)/../xul \
+  $(NULL)
