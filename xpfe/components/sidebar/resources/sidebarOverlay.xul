@@ -29,92 +29,102 @@
   <!-- Overlay the sidebar panels -->
   <box id="sidebar-box" align="vertical"
     persist="hidden width collapsed">
-    <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
-      value="&sidebar.panels.label;" persist="hidden state" type="box"
-      collapse="after" onmouseup="PersistHeight();">
-      <menubutton id="sidebar-panel-picker" menubuttontype="sidebar-panels" class="button-toolbar-4" crop="right"
-        oncreate="SidebarBuildPickerPopup();"
-        value="&sidebar.picker.label;" >
-        <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
-          datasources="rdf:null"
-          ref="urn:sidebar:current-panel-list">
-          <template>
-            <rule>
-              <conditions>
-                <content uri="?uri"/>
-                <triple subject="?uri"
-                  predicate="http://home.netscape.com/NC-rdf#panel-list"
-                  object="?panel-list"/>
-                <member container="?panel-list" child="?panel"/>
-                <triple subject="?panel"
-                  predicate="http://home.netscape.com/NC-rdf#title"
-                  object="?title" />
-              </conditions>
-              <bindings>
-                <binding subject="?panel"
-                  predicate="http://home.netscape.com/NC-rdf#exclude"
-                  object="?exclude"/>
-              </bindings>
-              <action>
-                <menuitem uri="?panel" type="checkbox"
-                  oncommand="SidebarTogglePanel(event.target);"
-                  value="?title" exclude="?exclude"/>
-              </action>
-            </rule>
-          </template>
-          <menuitem value="&sidebar.customize.label;"
-            oncommand="SidebarCustomize();" />
-          <menuseparator />
-        </menupopup>
-      </menubutton>
-    </sidebarheader>
+    <splitter id="sidebar-panels-splitter" collapse="after"
+      onmouseup="PersistHeight();" hidden="true"/>
 
-    <box id="sidebar-panels" align="vertical"
-      datasources="rdf:null"
-      ref="urn:sidebar:current-panel-list" 
-      persist='last-selected-panel height collapsed hidden' flex="1*">
-      <template id="sidebar-template">
-        <rule>
-          <conditions>
-            <content uri="?uri"/>
-            <triple subject="?uri" object="?panel-list"
-              predicate="http://home.netscape.com/NC-rdf#panel-list" />
-            <member container="?panel-list" child="?panel"/>
-            <triple subject="?panel" object="?title"
-              predicate="http://home.netscape.com/NC-rdf#title" />
-            <triple subject="?panel" object="?content"
-              predicate="http://home.netscape.com/NC-rdf#content" />
-          </conditions>
-          <bindings>
-            <binding subject="?panel" object="?exclude"
-              predicate="http://home.netscape.com/NC-rdf#exclude" />
-          </bindings>
-          <action>
-            <box uri="?panel" class="box-texttab texttab-sidebar" align="left" 
-              onclick="SidebarSelectPanel(this)" hidden="true"
-              value="?title" exclude="?exclude" />
-            <box uri="?panel" flex='1*' hidden="true" orient="vertical">
-              <box flex='1' orient="vertical" class="iframe-panel loadarea">
-                <box orient="horizontal" flex="1" autostretch="never">
-                  <image class="image-panel-loading"/>
-                  <text class="text-panel-loading"
-                    value="&sidebar.loading.label;"/>
+    <box id="sidebar-panels-splitter-box" align="vertical" flex="1" 
+      persist="hidden">
+
+      <sidebarheader id="sidebar-title-box" class="sidebarheader-main"
+        value="&sidebar.panels.label;" persist="hidden" type="box"
+        collapse="after" onmouseup="PersistHeight();">
+        <menubutton id="sidebar-panel-picker" menubuttontype="sidebar-panels" class="button-toolbar-4" crop="right"
+          oncreate="SidebarBuildPickerPopup();"
+          value="&sidebar.picker.label;" >
+          <menupopup id="sidebar-panel-picker-popup" popupanchor="topright"
+            datasources="rdf:null"
+            ref="urn:sidebar:current-panel-list">
+            <template>
+              <rule>
+                <conditions>
+                  <content uri="?uri"/>
+                  <triple subject="?uri"
+                    predicate="http://home.netscape.com/NC-rdf#panel-list"
+                    object="?panel-list"/>
+                  <member container="?panel-list" child="?panel"/>
+                  <triple subject="?panel"
+                    predicate="http://home.netscape.com/NC-rdf#title"
+                    object="?title" />
+                </conditions>
+                <bindings>
+                  <binding subject="?panel"
+                    predicate="http://home.netscape.com/NC-rdf#exclude"
+                    object="?exclude"/>
+                </bindings>
+                <action>
+                  <menuitem uri="?panel" type="checkbox"
+                    oncommand="SidebarTogglePanel(event.target);"
+                    value="?title" exclude="?exclude"/>
+                </action>
+              </rule>
+            </template>
+            <menuitem value="&sidebar.customize.label;"
+              oncommand="SidebarCustomize();" />
+            <menuseparator />
+          </menupopup>
+        </menubutton>
+      </sidebarheader>
+  
+      <box id="sidebar-panels" align="vertical"
+        datasources="rdf:null"
+        ref="urn:sidebar:current-panel-list" 
+        persist='last-selected-panel height collapsed hidden' flex="1*">
+        <template id="sidebar-template">
+          <rule>
+            <conditions>
+              <content uri="?uri"/>
+              <triple subject="?uri" object="?panel-list"
+                predicate="http://home.netscape.com/NC-rdf#panel-list" />
+              <member container="?panel-list" child="?panel"/>
+              <triple subject="?panel" object="?title"
+                predicate="http://home.netscape.com/NC-rdf#title" />
+              <triple subject="?panel" object="?content"
+                predicate="http://home.netscape.com/NC-rdf#content" />
+            </conditions>
+            <bindings>
+              <binding subject="?panel" object="?exclude"
+                predicate="http://home.netscape.com/NC-rdf#exclude" />
+            </bindings>
+            <action>
+              <box uri="?panel" class="box-texttab texttab-sidebar" align="left" 
+                onclick="SidebarSelectPanel(this)" hidden="true"
+                value="?title" exclude="?exclude" />
+              <box uri="?panel" flex='1*' hidden="true" orient="vertical"
+                loadstate="never loaded">
+                <box flex='1' orient="vertical" class="iframe-panel loadarea">
+                  <box orient="horizontal" flex="1" autostretch="never">
+                    <image class="image-panel-loading"/>
+                    <text class="text-panel-loading"
+                      value="&sidebar.loading.label;"/>
+                    <button value="&sidebar.loading.stop.label;" hidden="true"
+                      onclick="SidebarStopPanelLoad(this.parentNode.parentNode.parentNode.previousSibling);"/>
+                  </box>
+                  <spring flex="100%"/>
                 </box>
-                <spring flex="100%"/>
+                <iframe class="iframe-panel" flex='1*' src="about:blank"
+                  hidden="true" collapsed="true" content="?content" />
+                <iframe class="iframe-panel" flex='1*' src="about:blank"
+                  hidden="true" collapsed="true" content="?content" type="content" />
               </box>
-              <iframe class="iframe-panel" flex='1*'
-                hidden="true" collapsed="true" src="?content" />
-              <iframe class="iframe-panel" flex='1*'
-                hidden="true" collapsed="true" src="?content" type="content" />
-            </box>
-          </action>
-        </rule>
-      </template>
-      <box id="sidebar-iframe-no-panels" class="iframe-panel" orient="vertical" flex="1"
-        hidden="true">
-        <html>&sidebar.no-panels.state;</html>
-        <html>&sidebar.no-panels.add;</html>
-        <html>&sidebar.no-panels.hide;</html>
+            </action>
+          </rule>
+        </template>
+        <box id="sidebar-iframe-no-panels" class="iframe-panel" orient="vertical" flex="1"
+          hidden="true">
+          <html>&sidebar.no-panels.state;</html>
+          <html>&sidebar.no-panels.add;</html>
+          <html>&sidebar.no-panels.hide;</html>
+        </box>
       </box>
     </box>
   </box>
@@ -123,26 +133,19 @@
   <splitter id="sidebar-splitter" collapse="before" persist="state hidden"
     class="chromeclass-extrachrome sidebar-splitter" autostretch="never"
     orient="vertical"
-    onmouseup="SidebarFinishDrag();">
+    onmouseup="SidebarFinishClick();">
     <grippy class="sidebar-splitter-grippy"
       onclick="SidebarExpandCollapse();"/>
   </splitter>
 
   <!-- View->Sidebar toggle -->
   <menupopup id="menu_View_Popup">
-     <menuitem id="sidebar-menu" type="checkbox"
-	value="&sidebarCmd.label;"
- 	accesskey="&sidebarCmd.accesskey;"
- 	oncommand="SidebarShowHide();"
- 	position="2"
-     />
+    <menuitem id="sidebar-menu" type="checkbox"
+      value="&sidebarCmd.label;"
+      accesskey="&sidebarCmd.accesskey;"
+      oncommand="SidebarShowHide('sidebar-title-box');"
+      position="2"/>
   </menupopup>
-
-  <!-- open/close grippy for status (not yet)
-  <box id="status-bar">
-    <image id="sidebar-status-grippy" position="1"/>
-  </box>  
-  -->
 
   <!-- Scripts go last, because they peek at state to tweak menus -->
   <script language="JavaScript"
