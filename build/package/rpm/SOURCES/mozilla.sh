@@ -89,7 +89,7 @@ set_jvm_vars() {
 	return;
     fi
 
-    JVM_LINK=`readlink /usr/lib/mozilla/plugins/libjavaplugin_oji.so`
+    JVM_LINK=`perl -e 'print readlink("/usr/lib/mozilla/plugins/libjavaplugin_oji.so")'`
 
     # is it relative?  if so append the full path
 
