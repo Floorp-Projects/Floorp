@@ -3416,7 +3416,8 @@ nsMsgLocalMailFolder::SpamFilterClassifyMessage(const char *aURI, nsIMsgWindow *
 nsresult
 nsMsgLocalMailFolder::SpamFilterClassifyMessages(const char **aURIArray, PRUint32 aURICount, nsIMsgWindow *aMsgWindow, nsIJunkMailPlugin *aJunkMailPlugin)
 {
-  mNumFilterClassifyRequests += aURICount;
+  NS_ASSERTION(!mNumFilterClassifyRequests, "shouldn't call this when already classifying messages");
+  mNumFilterClassifyRequests = aURICount;
   return aJunkMailPlugin->ClassifyMessages(aURICount, aURIArray, aMsgWindow, this);   
 }
 
