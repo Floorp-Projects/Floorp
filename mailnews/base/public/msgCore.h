@@ -130,6 +130,9 @@ nsURI2Name(const char* rootURI, char* uriStr, nsString& name);
 extern nsresult
 nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *key);
 
+extern nsresult
+nsBuildLocalMessageURI(nsFileSpec& path, PRUint32 key, char** uri);
+
 ////////////////////////////////////////////////////////////////////////////////
 
 #endif

@@ -1595,4 +1595,24 @@ nsresult nsParseLocalMessageURI(const char* uri, nsString& folderURI, PRUint32 *
 	return NS_ERROR_FAILURE;
 
 }
+
+nsresult nsBuildLocalMessageURI(nsFileSpec& path, PRUint32 key, char** uri)
+{
+	
+	if(!uri)
+		return NS_ERROR_NULL_POINTER;
+
+	char *folderURI;
+
+	nsPath2URI(kMessageRootURI, path, &folderURI);
+
+	*uri = PR_smprintf("%s#%d", folderURI, key);
+
+	delete[] folderURI;
+
+	return NS_OK;
+
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////

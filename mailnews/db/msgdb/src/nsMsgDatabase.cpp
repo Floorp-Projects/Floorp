@@ -100,12 +100,11 @@ nsMsgDatabase::CreateMsgHdr(nsIMdbRow* hdrRow, nsFileSpec& path, nsMsgKey key, n
 
     if (NS_FAILED(rv)) return rv;
 
-    char *folderURI;
-    rv = nsPath2URI(kMessageRootURI, path, &folderURI);
+	char* msgURI;
+
+	rv = nsBuildLocalMessageURI(path, key, &msgURI);
     if (NS_FAILED(rv)) return rv;
 
-    char* msgURI = PR_smprintf("%s#%d", folderURI, key);
-	delete folderURI;
 
     nsIRDFResource* res;
     rv = rdf->GetResource(msgURI, &res);
