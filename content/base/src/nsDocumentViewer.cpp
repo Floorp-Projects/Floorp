@@ -2263,7 +2263,12 @@ DocumentViewerImpl::PrintPage(nsIPresContext*  aPresContext,
   }
 
   // Print the Page
-  mPageSeqFrame->PrintNextPage(aPresContext, aPrintOptions);
+  // if a print job was cancelled externally, an EndPage or BeginPage may
+  // fail and the failure is passed back here.
+  // Returning PR_TRUE means we are done printing.
+  if (NS_FAILED(mPageSeqFrame->PrintNextPage(aPresContext, aPrintOptions))) {
+    return PR_TRUE;
+  }                
 
   // Now see if any of the SubDocs are on this page
   if (aPO->mPrintAsIs) {
