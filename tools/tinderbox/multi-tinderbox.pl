@@ -2,6 +2,7 @@
 # vim:sw=4:et:ts=4:ai:
 
 use strict;
+use Cwd;
 
 sub PrintUsage() {
     die <<END_USAGE
@@ -55,10 +56,11 @@ sub Run() {
         # It prevents sending too many messages to the tinderbox server when
         # something is broken.
         foreach my $treeentry (@{$Settings::Tinderboxes}) {
+	    my $multidir = getcwd();
             chdir($treeentry->{tree}) or
                 die "Tree $treeentry->{tree} does not exist";
             system("./build-seamonkey.pl --once $treeentry->{args}");
-            chdir("..");
+            chdir($multidir);
 
 	    # We sleep 15 seconds to open up a window for stopping a build.
 	    sleep 15;
