@@ -1043,6 +1043,11 @@ sub MakeResourceAliases()
     _InstallResources(":mozilla:xpfe:browser:resources:content:MANIFEST",             "$navigator_chrome_dir:content:default");
     _InstallResources(":mozilla:xpfe:browser:resources:skin:MANIFEST",                "$navigator_chrome_dir:content:skin");
 
+	 my($global_chrome_dir) = "$chrome_dir" . "Global";
+    _InstallResources(":mozilla:xpfe:global:resources:content:MANIFEST",             "$global_chrome_dir:content:default");
+    _InstallResources(":mozilla:xpfe:global:resources:skin:MANIFEST",                "$global_chrome_dir:content:skin:default");
+
+
 	_InstallResources(":mozilla:xpfe:browser:src:MANIFEST",								"$samples_dir");
 
 	BuildFolderResourceAliases(":mozilla:xpfe:browser:samples:", 						"$samples_dir");
