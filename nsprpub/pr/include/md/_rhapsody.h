@@ -50,7 +50,7 @@
 
 #define CONTEXT(_th) ((_th)->md.context)
 
-#define _MD_GET_SP(_th)    (_th)->md.context[2]
+#define _MD_GET_SP(_th)    (_th)->md.context[0]
 #define PR_NUM_GCREGS	_JBLEN
 
 /*
