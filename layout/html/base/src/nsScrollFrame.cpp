@@ -48,10 +48,6 @@ class nsScrollFrame : public nsHTMLContainerFrame {
 public:
   nsScrollFrame(nsIContent* aContent, nsIFrame* aParent);
 
-  NS_IMETHOD SetInitialChildList(nsIPresContext& aPresContext,
-                                 nsIAtom*        aListName,
-                                 nsIFrame*       aChildList);
-
   NS_IMETHOD DidReflow(nsIPresContext&   aPresContext,
                        nsDidReflowStatus aStatus);
 
@@ -76,29 +72,6 @@ private:
 nsScrollFrame::nsScrollFrame(nsIContent* aContent, nsIFrame* aParent)
   : nsHTMLContainerFrame(aContent, aParent)
 {
-}
-
-NS_IMETHODIMP
-nsScrollFrame::SetInitialChildList(nsIPresContext& aPresContext,
-                                   nsIAtom*        aListName,
-                                   nsIFrame*       aChildList)
-{
-  NS_PRECONDITION(nsnull != aChildList, "no child frame");
-  NS_PRECONDITION(LengthOf(aChildList) == 1, "wrong number child frames");
-
-  // Unless it's already a body frame, scrolled frames that are a container
-  // need to be wrapped in a body frame.
-  // XXX It would be nice to have a cleaner way to do this...
-  nsIAbsoluteItems* absoluteItems;
-  if (NS_FAILED(aChildList->QueryInterface(kIAbsoluteItemsIID, (void**)&absoluteItems))) {
-    nsIFrame* wrapperFrame;
-    if (CreateWrapperFrame(aPresContext, aChildList, wrapperFrame)) {
-      aChildList = wrapperFrame;
-    }
-  }
-
-  mFirstChild = aChildList;
-  return NS_OK;
 }
 
 NS_IMETHODIMP

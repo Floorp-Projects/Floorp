@@ -1476,25 +1476,49 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // XXX Applies to replaced elements, too, but how to tell if the element
         // is replaced?
         nsIFrame* scrollFrame = nsnull;
+        nsIFrame* wrapperFrame = nsnull;
 
         // If we're paginated then don't ever make the BODY scrollable
-        // XXX Use a special BODY rule for paged media
+        // XXX Use a special BODY rule for paged media...
         if (!(aPresContext->IsPaginated() && (nsHTMLAtoms::body == tag))) {
           if (display->IsBlockLevel() && IsScrollable(aPresContext, display)) {
             // Create a scroll frame which will wrap the frame that needs to
             // be scrolled
             if NS_SUCCEEDED(NS_NewScrollFrame(aContent, aParentFrame, scrollFrame)) {
+              nsIStyleContext*  scrolledPseudoStyle;
+              
               // The scroll frame gets the original style context, and the scrolled
-              // frame gets a SCROLLED-CONTENT pseudo element style context.
+              // frame gets a SCROLLED-CONTENT pseudo element style context that
+              // inherits the background properties
               scrollFrame->SetStyleContext(aPresContext, styleContext);
-
-              nsIStyleContext*  pseudoStyle;
-              pseudoStyle = aPresContext->ResolvePseudoStyleContextFor(aContent,
-                                                                       nsHTMLAtoms::scrolledContentPseudo,
-                                                                       styleContext);
+              scrolledPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                                      (aContent, nsHTMLAtoms::scrolledContentPseudo,
+                                       styleContext);
               NS_RELEASE(styleContext);
-              styleContext = pseudoStyle;
-              aParentFrame = scrollFrame;
+              
+              // If the content element can contain children then wrap it in a
+              // BODY frame. Don't do this for the BODY element, though...
+              PRBool  isContainer;
+              aContent->CanContainChildren(isContainer);
+              if (isContainer && (tag != nsHTMLAtoms::body)) {
+                NS_NewBodyFrame(aContent, scrollFrame, wrapperFrame, NS_BODY_SHRINK_WRAP);
+                wrapperFrame->SetStyleContext(aPresContext, scrolledPseudoStyle);
+
+                // The wrapped frame also gets a pseudo style context, but it doesn't
+                // inherit any background properties
+                // XXX We should define something like :WRAPPED-FRAME in ua.css
+                nsIStyleContext*  wrappedPseudoStyle;
+                wrappedPseudoStyle = aPresContext->ResolvePseudoStyleContextFor
+                                       (aContent, nsHTMLAtoms::columnPseudo,
+                                        scrolledPseudoStyle);
+                NS_RELEASE(scrolledPseudoStyle);
+                aParentFrame = wrapperFrame;
+                styleContext = wrappedPseudoStyle;
+
+              } else {
+                aParentFrame = scrollFrame;
+                styleContext = scrolledPseudoStyle;
+              }
             }
           }
         }
@@ -1514,7 +1538,12 @@ HTMLStyleSheetImpl::ConstructFrame(nsIPresContext*  aPresContext,
         // Set the scroll frame's initial child list and return the scroll frame
         // as the frame sub-tree
         if (nsnull != scrollFrame) {
-          scrollFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
+          if (nsnull != wrapperFrame) {
+            wrapperFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
+            scrollFrame->SetInitialChildList(*aPresContext, nsnull, wrapperFrame);
+          } else {
+            scrollFrame->SetInitialChildList(*aPresContext, nsnull, aFrameSubTree);
+          }
           aFrameSubTree = scrollFrame;
         }
       }
