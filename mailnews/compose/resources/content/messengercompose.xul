@@ -45,7 +45,7 @@ Rights Reserved.
 <!ENTITY saveAsCmd.label "Save As (Draft)">
 <!ENTITY saveAsTemplateCmd.label "Save As (Template)">
 <!ENTITY attachCmd.label ".Attach">
-<!ENTITY sendNowCmd.label ".Send Now">
+<!ENTITY sendNowCmd.label "Send Now">
 <!ENTITY sendLaterCmd.label "Send Later">
 <!ENTITY quoteOrigCmd.label ".Quote Original Message">
 <!ENTITY selectAddressCmd.label "Select Addresses...">
@@ -140,7 +140,7 @@ Rights Reserved.
 		<menuitem name="&saveAsTemplateCmd.label;" onclick="SaveAsTemplate()"/>
 		<menuitem name="&attachCmd.label;" cmd="nsCmd:ComposeAttach"/>
 		<separator/>
-		<menuitem name="&sendNowCmd.label;" cmd="nsCmd:ComposeSend"/>
+		<menuitem name="&sendNowCmd.label;" onclick="SendMessage()"/>
 		<menuitem name="&sendLaterCmd.label;" onclick="SendMessageLater()"/>
 		<menuitem name="&quoteOrigCmd.label;" cmd="nsCmd:ComposeQuote"/>
 		<menuitem name="&selectAddressCmd.label;" onclick="SelectAddress()"/>
@@ -228,13 +228,13 @@ Rights Reserved.
 <!-- box id="toolbar" align="vertical" style="width:100%;height:100%" -->
 <toolbox>
 	<toolbar>
- 		<titledbutton src="&sendButton.img;" align="bottom" value="&sendButton.label;" onClick="SendMessage()"/>
- 		<titledbutton src="&quoteButton.img;" align="bottom" value="&quoteButton.label;" onClick="QuoteMessage()"/>
- 		<titledbutton src="&addressButton.img;" align="bottom" value="&addressButton.label;" onClick="SelectAddress()"/>
- 		<titledbutton src="&attachButton.img;" align="bottom" value="&attachButton.label;" onClick="AttachFile()"/>
- 		<titledbutton src="&spellingButton.img;" align="bottom" value="&spellingButton.label;" onClick="Spelling()"/>
- 		<titledbutton src="&saveButton.img;" align="bottom" value="&saveButton.label;" onClick="SaveAsDraft()"/>
- 		<titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onClick="Stop()"/>
+ 		<titledbutton src="&sendButton.img;" align="bottom" value="&sendButton.label;" onclick="SendMessage()"/>
+ 		<titledbutton src="&quoteButton.img;" align="bottom" value="&quoteButton.label;" onclick="QuoteMessage()"/>
+ 		<titledbutton src="&addressButton.img;" align="bottom" value="&addressButton.label;" onclick="SelectAddress()"/>
+ 		<titledbutton src="&attachButton.img;" align="bottom" value="&attachButton.label;" onclick="AttachFile()"/>
+ 		<titledbutton src="&spellingButton.img;" align="bottom" value="&spellingButton.label;" onclick="Spelling()"/>
+ 		<titledbutton src="&saveButton.img;" align="bottom" value="&saveButton.label;" onclick="SaveAsDraft()"/>
+ 		<titledbutton src="&stopButton.img;" align="bottom" value="&stopButton.label;" onclick="Stop()"/>
 	    <spring flex="100%"/>
 		<titledbutton src="&throbberButton.img;" align="bottom" onclick="MsgHome('&throbberButton.url;')"/>
 	</toolbar>
