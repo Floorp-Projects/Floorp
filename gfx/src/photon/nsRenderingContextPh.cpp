@@ -1820,8 +1820,7 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
     PR_LOG(PhGfxLog, PR_LOG_DEBUG, ("nsRenderingContextPh::CopyOffScreenBits image2->size=(%d,%d)\n",image2->size.w, image2->size.h));
   }
 
-#if 1
-#ifdef DEBUG
+#if defined(DEBUG) && 1
 {
   PRUint32       w, h;
   unsigned char *ptr;
@@ -1848,10 +1847,9 @@ NS_IMETHODIMP nsRenderingContextPh :: CopyOffScreenBits(nsDrawingSurface aSrcSur
     }
 }
 #endif
-#endif
 
-#if 1
-  /* Find out if the area is larger than the source image */
+#if defined(DEBUG) && 0
+  /* If the area is larger than the source image display a warning */
   int x = image->size.w;
   int y = image->size.h;
 
