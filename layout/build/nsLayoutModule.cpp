@@ -177,6 +177,7 @@ extern nsresult NS_NewLayoutDebugger(nsILayoutDebugger** aResult);
 
 extern nsresult NS_NewBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewTreeBoxObject(nsIBoxObject** aResult);
+extern nsresult NS_NewListBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewScrollBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewMenuBoxObject(nsIBoxObject** aResult);
 extern nsresult NS_NewEditorBoxObject(nsIBoxObject** aResult);
@@ -220,6 +221,7 @@ MAKE_CTOR(CreateNewPrintContext,        nsIPrintContext,        NS_NewPrintConte
 MAKE_CTOR(CreateNewPrintPreviewContext, nsIPrintPreviewContext, NS_NewPrintPreviewContext)
 MAKE_CTOR(CreateNewBoxObject,           nsIBoxObject,           NS_NewBoxObject)
 MAKE_CTOR(CreateNewTreeBoxObject,       nsIBoxObject,           NS_NewTreeBoxObject)
+MAKE_CTOR(CreateNewListBoxObject,       nsIBoxObject,           NS_NewListBoxObject)
 MAKE_CTOR(CreateNewMenuBoxObject,       nsIBoxObject,           NS_NewMenuBoxObject)
 MAKE_CTOR(CreateNewPopupBoxObject,      nsIBoxObject,           NS_NewPopupBoxObject)
 MAKE_CTOR(CreateNewBrowserBoxObject,    nsIBoxObject,           NS_NewBrowserBoxObject)
@@ -294,6 +296,11 @@ static nsModuleComponentInfo gComponents[] = {
     NS_TREEBOXOBJECT_CID,
     "@mozilla.org/layout/xul-boxobject-tree;1",
     CreateNewTreeBoxObject },
+
+  { "XUL Listbox Box Object",
+    NS_LISTBOXOBJECT_CID,
+    "@mozilla.org/layout/xul-boxobject-listbox;1",
+    CreateNewListBoxObject },
 
   { "XUL Menu Box Object",
     NS_MENUBOXOBJECT_CID,
