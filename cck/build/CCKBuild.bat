@@ -25,6 +25,10 @@ REM   Make sure we are building with the right version of VC+ (6.0)
 if  not "%_MSC_VER%"=="1200" set ErrorType=1
 if  not "%_MSC_VER%"=="1200" goto Errors
 
+REM Set the BuildType
+if "%MOZ_DEBUG%"=="1" set BuildType=debug
+if "%MOZ_DEBUG%"=="0" set BuildType=release
+
 D:
 cd\builds
 
@@ -53,8 +57,7 @@ if "%MOZ_DEBUG%"=="1" NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 De
 if "%MOZ_DEBUG%"=="0" NMAKE /f "WizardMachine.mak" CFG="WizardMachine - Win32 Release"
 
 REM See if the target is there
-if "%MOZ_DEBUG%"=="1" if exist D:\builds\mozilla\cck\driver\debug\wizardmachine.exe set BuildGood=1
-if "%MOZ_DEBUG%"=="0" if exist D:\builds\mozilla\cck\driver\release\wizardmachine.exe set BuildGood=1
+if exist D:\builds\mozilla\cck\driver\"%BuildType%"\wizardmachine.exe set BuildGood=1
 
 REM If the target is there then do the right thing, Mail notification then upload it.
 echo.CCK build complete and verified.  >> tempfile.txt
@@ -75,33 +78,26 @@ Perl C:\CCKScripts\date.pl
 call C:\CCKScripts\bdate.bat
 if "%BuildID%" == "" goto set ErrorType = 3
 if "%BuildID%" == "" goto EndOfScript
+
+REM  Make the Main repository Folder using the BuildID var
 O:
-if "%MOZ_DEBUG%"=="1" md \products\client\cck\cck50\debug\"%BuildID%"
-if "%MOZ_DEBUG%"=="0" md \products\client\cck\cck50\release\"%BuildID%"
+md \products\client\cck\cck50\"%BuildType%"\"%BuildID%"
+
 
 REM  Put it where we all can get it.
-:UploadIt
-if "%MOZ_DEBUG%"=="1" goto DebugUpLoad
-if "%MOZ_DEBUG%"=="0" goto ReleaseUpload
-
-:DebugUpLoad
+:UpLoad
+    REM  Make the folder for the INI's then copy/move all of them.
+    O:
+    md \products\client\cck\cck50\"%BuildType%"\"%BuildID%"\iniFiles
+         D:
+         cd\builds\mozilla\cck\cckwiz\inifiles
+         copy *.ini O:\products\client\cck\cck50\"%BuildType%"\"%BuildID%"\iniFiles
+    REM  Copy the wizardmachine.exe to sweetlou
     D:
-    cd\builds\mozilla\cck\driver\Debug
-    copy *.exe O:\products\client\cck\cck50\debug\"%BuildID%"
-    cd\builds\mozilla\cck\cckwiz\inifiles
-    copy cck.ini O:\products\client\cck\cck50\debug\"%BuildID%"
+    cd\builds\mozilla\cck\driver\"%BuildType%"
+    copy *.exe O:\products\client\cck\cck50\"%BuildType%"\"%BuildID%"
     goto EndOfScript
 	
-:ReleaseUpload
-    D:
-    cd\builds\mozilla\cck\driver\Release
-    copy *.exe O:\products\client\cck\cck50\release\"%BuildID%"
-    cd\builds\mozilla\cck\cckwiz\inifiles
-    copy cck.ini O:\products\client\cck\cck50\release\"%BuildID%"
-    goto EndOfScript
-
-goto EndOfScript
-
 REM  Capture the errors, do something smart with them.
 :Errors
 if "%ErrorType%"=="1" echo.  Incorrect version of VC+, not 6.0! Script halted!!
