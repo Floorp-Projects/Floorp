@@ -58,7 +58,7 @@ window[wait-cursor] { cursor: wait !important; }
 window.dialog 
   { 
     background-color      : #CCCCCC;
-    padding               : 5px;
+    padding               : 7px 5px 5px 5px;
   }
 
 /**********************************
