@@ -117,12 +117,12 @@ function makeURLAbsolute(url, base)
 
 function getLinksFor(aTagName, aAttrName, aWin, aDoc)
 {
-  var i, frame, list = new Array;
+  var i, frame, length, list = new Array;
 
   // cycle through frames
-  if (aWin && aWin.frames.length > 0)
+  if (aWin)
   {
-    var length = aWin.frames.length;
+    length = aWin.frames.length;
     for (i = 0; i < length; ++i)
     {
       frame = aWin.frames[i];
@@ -133,7 +133,7 @@ function getLinksFor(aTagName, aAttrName, aWin, aDoc)
 
   // now look for tags in the leaf document
   var elts = aDoc.getElementsByTagName(aTagName);
-  var length = elts.length;
+  length = elts.length;
   for (i = 0; i < length; ++i)
   {
     var url = elts[i][aAttrName];

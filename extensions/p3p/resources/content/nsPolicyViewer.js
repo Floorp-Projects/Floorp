@@ -284,7 +284,8 @@ nsPolicyViewer.prototype =
               this.mLinkedURI.spec = node.href;
             }
             // Yay!, we have found the policy location no need to search the other link tags.
-            return this.handleURI(this.mLinkedURI, this.mFlag = nsIPolicyReference.IS_LINKED_URI);
+            this.handleURI(this.mLinkedURI, this.mFlag = nsIPolicyReference.IS_LINKED_URI);
+            return;
           }
           catch (ex) {
             // fall through to report error.
@@ -358,7 +359,8 @@ nsPolicyViewer.prototype =
             if (discuri) {
               discuri = this.mPolicyURL.resolve(discuri);
               if (discuri.match(/^\s*https?:/i)) {
-                return window.open(discuri); 
+                window.open(discuri); 
+                return;
               }
             }
             break;
@@ -441,7 +443,8 @@ nsPolicyViewer.prototype =
             if (opturi) {
               opturi = this.mPolicyURL.resolve(opturi);
               if (opturi.match(/^\s*https?:/i)) {
-                return window.open(opturi); 
+                window.open(opturi); 
+                return;
               }
             }
             break;              
