@@ -195,11 +195,7 @@ nsHTTPCacheListener::OnDataAvailable(nsIChannel *aChannel,
     mBodyBytesReceived += aCount;
 
     // Report progress
-    if (mChannel->mProgressEventSink) {
-        rv = mChannel->mProgressEventSink->OnProgress(mChannel,
-                       mChannel->mResponseContext,
-                       mBodyBytesReceived, mContentLength);
-    }
+    rv = mChannel->ReportProgress(mBodyBytesReceived, mContentLength);
 
     return rv;
 }
@@ -549,12 +545,8 @@ nsHTTPServerListener::OnDataAvailable(nsIChannel* channel,
                 mBodyBytesReceived += i_Length;
 
                 // Report progress
-                if (mChannel->mProgressEventSink) {
-                    rv = mChannel->mProgressEventSink->OnProgress(mChannel,
-                                   mChannel->mResponseContext,
-                                   mBodyBytesReceived, cl);
-                    if (NS_FAILED(rv)) return rv;
-                }
+                rv = mChannel->ReportProgress(mBodyBytesReceived, cl);
+                if (NS_FAILED(rv)) return rv;
 
                 PRBool eof = mChunkHeaderCtx.GetEOF ();
 

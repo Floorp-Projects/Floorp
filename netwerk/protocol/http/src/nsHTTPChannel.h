@@ -109,6 +109,8 @@ public:
 
     PRUint32            getChannelState ();
 
+    nsresult            ReportProgress(PRUint32 aProgress,
+                                       PRUint32 aProgressMax);
 protected:
     nsresult            CheckCache();
     nsresult            ReadFromCache();
