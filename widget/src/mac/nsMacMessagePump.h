@@ -64,16 +64,17 @@ private:
 	// CLASS METHODS
 		    	    
 public:
-					nsMacMessagePump(nsToolkit *aToolKit, nsMacMessageSink* aSink);
-	virtual 		~nsMacMessagePump();
+						nsMacMessagePump(nsToolkit *aToolKit, nsMacMessageSink* aSink);
+	virtual 	~nsMacMessagePump();
   
 	void			DoMessagePump();
-	PRBool			GetEvent(EventRecord &theEvent);
+	PRBool		GetEvent(EventRecord &theEvent);
 	void			DispatchEvent(PRBool aRealEvent, EventRecord *anEvent);
 	void			StartRunning() {mRunning = PR_TRUE;}
 	void			StopRunning() {mRunning = PR_FALSE;}
 
 private:
+
 	void 			DoMouseDown(EventRecord &anEvent);
 	void			DoMouseUp(EventRecord &anEvent);
 	void			DoMouseMove(EventRecord &anEvent);
@@ -87,9 +88,13 @@ private:
 	PRBool		DispatchOSEventToRaptor(EventRecord &anEvent, WindowPtr aWindow);
 	PRBool		DispatchMenuCommandToRaptor(EventRecord &anEvent, long menuResult);
 
+	PRBool		BrowserIsBusy();
+	
 private:
+
 	typedef void (*nsWindowlessMenuEventHandler) (PRInt32 menuResult);
 	static nsWindowlessMenuEventHandler gWindowlessMenuEventHandler;
+
 public:
 	static void SetWindowlessMenuEventHandler(nsWindowlessMenuEventHandler func)
 									{gWindowlessMenuEventHandler = func;}
