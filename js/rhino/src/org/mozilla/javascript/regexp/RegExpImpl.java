@@ -396,9 +396,11 @@ class ReplaceData extends GlobData {
             if (dp > bp && da[dp-1] == '\\')
                 return null;
 
+        if (dp+1 >= da.length)
+            return null;
         /* Interpret all Perl match-induced dollar variables. */
         dc = da[dp+1];
-        if (NativeRegExp.isDigit(dc)) {            
+        if (NativeRegExp.isDigit(dc)) {
             if ((cx.getLanguageVersion() != Context.VERSION_DEFAULT)
                      && (cx.getLanguageVersion() <= Context.VERSION_1_4)) {
                 if (dc == '0')
