@@ -25,8 +25,8 @@ pref("sidebar.messenger.open", true);
 
 // Added by mwelch 97 Feb
 pref("news.show_pretty_names",              false);
-pref("mail.wrap_long_lines",                false);
-pref("news.wrap_long_lines",                false);
+pref("mail.wrap_long_lines",                true);
+pref("news.wrap_long_lines",                true);
 pref("mail.inline_attachments",             true);
 
 // Mail server preferences, pop by default
