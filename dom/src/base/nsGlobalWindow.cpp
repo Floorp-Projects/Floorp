@@ -125,7 +125,7 @@
 #include "nsDOMClassInfo.h"
 #include "nsIJSNativeInitializer.h"
 
-class nsIPrintSettings;
+#include "nsIPrintSettings.h"
 
 #include "nsWindowRoot.h"
 
@@ -1949,7 +1949,8 @@ NS_IMETHODIMP GlobalWindowImpl::Stop()
   return webNav->Stop(nsIWebNavigation::STOP_ALL);
 }
 
-nsresult GlobalWindowImpl::DoPrint(PRBool            aDoPreview)
+nsresult GlobalWindowImpl::DoPrint(PRBool aDoPreview,
+                                   nsIPrintSettings* aPS)
 {
   if (mDocShell) {
     nsCOMPtr<nsIContentViewer> viewer;
@@ -1958,9 +1959,9 @@ nsresult GlobalWindowImpl::DoPrint(PRBool            aDoPreview)
       nsCOMPtr<nsIContentViewerFile> viewerFile(do_QueryInterface(viewer));
       if (viewerFile) {
         if (aDoPreview) {
-          return viewerFile->PrintPreview(nsnull);
+          return viewerFile->PrintPreview(aPS);
         } else {
-          return viewerFile->Print(PR_FALSE, (nsIPrintSettings*)nsnull, nsnull);
+          return viewerFile->Print(PR_FALSE, aPS, nsnull);
         }
       }
     }
@@ -1973,9 +1974,14 @@ NS_IMETHODIMP GlobalWindowImpl::Print()
   return DoPrint(PR_FALSE);
 }
 
-NS_IMETHODIMP GlobalWindowImpl::PrintPreview()
+NS_IMETHODIMP GlobalWindowImpl::PrintPreview(nsIPrintSettings* aPS)
 {
-  return DoPrint(PR_TRUE);
+  return DoPrint(PR_TRUE, aPS);
+}
+
+NS_IMETHODIMP GlobalWindowImpl::PrintWithSettings(nsIPrintSettings* aPS)
+{
+  return DoPrint(PR_FALSE, aPS);
 }
 
 NS_IMETHODIMP GlobalWindowImpl::MoveTo(PRInt32 aXPos, PRInt32 aYPos)
