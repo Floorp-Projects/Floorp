@@ -40,7 +40,9 @@
 #include "nsScreenManagerMac.h"
 #include "nsBlender.h"
 #include "nsCOMPtr.h"
+#if !TARGET_CARBON
 #include "nsPrintOptionsMac.h"
+#endif
 
 static NS_DEFINE_IID(kCFontMetrics, NS_FONT_METRICS_CID);
 static NS_DEFINE_IID(kCFontEnumerator, NS_FONT_ENUMERATOR_CID);
