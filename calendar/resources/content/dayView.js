@@ -165,17 +165,17 @@ DayView.prototype.refreshEvents = function dayview_refreshEvents( ) {
       allDayLabel.setAttribute("width", kDayViewHourLeftStart - 10);
       
       for( i = 0; i < allDayEvents.length; i++ ) {
-         eventBox = this.createAllDayEventBox( allDayEvents[i] );
-         this.insertAllDayEventBox(eventBox, allDayBox);
+         var allDayEventBox = this.createAllDayEventBox( allDayEvents[i] );
+         this.insertAllDayEventBox(allDayEventBox, allDayBox);
          
-         this.kungFooDeathGripOnEventBoxes.push( eventBox );
+         this.kungFooDeathGripOnEventBoxes.push( allDayEventBox );
       }
    }
    
    // Add non-allday events to DOM
    for ( i = 0; i < normalEvents.length; ++i )
    {
-      eventBox = this.createEventBox( normalEvents[i] );
+      var eventBox = this.createEventBox( normalEvents[i] );
       document.getElementById( "day-view-content-board" ).appendChild( eventBox );
       this.kungFooDeathGripOnEventBoxes.push( eventBox );
    }
