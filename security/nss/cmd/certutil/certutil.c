@@ -625,17 +625,17 @@ ListCerts(CERTCertDBHandle *handle, char *name, PK11SlotInfo *slot,
     SECStatus rv;
 
     if (slot == NULL) {
-	PK11SlotList *list;
-	PK11SlotListElement *le;
+	CERTCertList *list;
+	CERTCertListNode *node;
 
-	list= PK11_GetAllTokens(CKM_INVALID_MECHANISM,
-						PR_FALSE,PR_FALSE,pwdata);
-	if (list) {
-	    for (le = list->head; le; le = le->next) {
-		rv = listCerts(handle,name,le->slot,raw,ascii,outfile,pwdata);
-	    }
-	    PK11_FreeSlotList(list);
+	list = PK11_ListCerts(PK11CertListUnique, pwdata);
+	for (node = CERT_LIST_HEAD(list); !CERT_LIST_END(node, list);
+	     node = CERT_LIST_NEXT(node)) 
+	{
+	    SECU_PrintCertNickname(node->cert, stdout);
 	}
+	CERT_DestroyCertList(list);
+	return SECSuccess;
     } else {
 	rv = listCerts(handle,name,slot,raw,ascii,outfile,pwdata);
     }
