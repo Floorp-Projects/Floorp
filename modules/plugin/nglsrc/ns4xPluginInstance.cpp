@@ -465,6 +465,27 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
 #if !TARGET_CARBON
   // pinkerton
   // relies on routine descriptors, not present in carbon. We need to fix this.
+
+#ifdef XP_PC
+  // some really weird thing causes crash on 
+  // http://www.vw.com/autoshow/index_flash.html for optimized build
+  // try/catch construction misteriously prevent it
+  try
+  {
+    error = CallNPP_NewProc(fCallbacks->newp,
+                            (char *)mimetype,
+                            &fNPP,
+                            (PRUint16)mode,
+                            count,
+                            (char**)names,
+                            (char**)values,
+                            NULL); // saved data
+  }
+  catch(...)
+  {
+  }
+#else // XP_PC
+
   error = CallNPP_NewProc(fCallbacks->newp,
                           (char *)mimetype,
                           &fNPP,
@@ -473,7 +494,9 @@ nsresult ns4xPluginInstance::InitializePlugin(nsIPluginInstancePeer* peer)
                           (char**)names,
                           (char**)values,
                           NULL); // saved data
-#endif
+#endif // XP_PC
+
+#endif //!TARGET_CARBON
   
   if(error != NPERR_NO_ERROR)
     rv = NS_ERROR_FAILURE;
