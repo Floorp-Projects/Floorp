@@ -99,6 +99,7 @@ file:///s|/mozilla/layout/html/tests/table/bugs/bug2296.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug23072.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug23151.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug23235.html
+file:///s|/mozilla/layout/html/tests/table/bugs/bug23299.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug23847.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug23994.html
 file:///s|/mozilla/layout/html/tests/table/bugs/bug24627.html
