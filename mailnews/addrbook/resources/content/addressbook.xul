@@ -227,13 +227,13 @@ Rights Reserved.
 
 				<box align="vertical" flex="100%">
 					<spring flex="1"/> 
-					<html:div id="searchlabel">&showNames.label;</html:div>
+					<!--html:div id="searchlabel">&showNames.label;</html:div>
 					<html:input id="searchtext" type="text" align="bottom"/> 
-					<spring flex="1"/> 
+					<spring flex="1"/--> 
 				</box>
 
-				<titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" disabled="true" onclick="AbStop()"/>
-				<titledbutton id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" onclick="AbSearch()"/>
+				<!--titledbutton id="button_stop" class="other28" align="top" value="&stopButton.label;" disabled="true" onclick="AbStop()"/>
+				<titledbutton id="button_search" class="other28" align="top" value="&searchButton.label;" disabled="true" onclick="AbSearch()"/-->
 			</box>
 
 			<box id="toolbar_throbber_box" align="vertical">
