@@ -127,13 +127,13 @@ nsInstall::nsInstall()
     mInstalledFiles         = nsnull;           // the list of installed objects
     mRegistryPackageName    = "";               // this is the name that we will add into the registry for the component we are installing
     mUIName                 = "";               // this is the name that will be displayed in UI.
-
-    mUninstallPackage = PR_FALSE;
-    mRegisterPackage  = PR_FALSE;
-    mStatusSent       = PR_FALSE;
-
-    mJarFileLocation    = "";
-    mInstallArguments   = "";
+    mPatchList              = nsnull;
+    mUninstallPackage       = PR_FALSE;
+    mRegisterPackage        = PR_FALSE;
+    mStatusSent             = PR_FALSE;
+    mStartInstallCompleted  = PR_FALSE;
+    mJarFileLocation        = "";
+    mInstallArguments       = "";
 
     // mJarFileData is an opaque handle to the jarfile.
     nsresult rv = nsComponentManager::CreateInstance(kJARCID, nsnull, kIJARIID, 
@@ -180,12 +180,13 @@ nsInstall::SetScriptObject(void *aScriptObject)
 }
 
 #ifdef _WINDOWS
+PRInt32
 nsInstall::SaveWinRegPrototype(void *aScriptObject)
 {
   mWinRegObject = (JSObject*) aScriptObject;
   return NS_OK;
 }
-
+PRInt32
 nsInstall::SaveWinProfilePrototype(void *aScriptObject)
 {
   mWinProfileObject = (JSObject*) aScriptObject;
@@ -208,15 +209,15 @@ nsInstall::RetrieveWinProfilePrototype()
 PRInt32    
 nsInstall::GetUserPackageName(nsString& aUserPackageName)
 {
-    aUserPackageName = mUIName;
-    return NS_OK;
+  aUserPackageName = mUIName;
+  return NS_OK;
 }
 
 PRInt32    
 nsInstall::GetRegPackageName(nsString& aRegPackageName)
 {
-    aRegPackageName = mRegistryPackageName;
-    return NS_OK;
+  aRegPackageName = mRegistryPackageName;
+  return NS_OK;
 }
 
 void
@@ -544,6 +545,14 @@ nsInstall::AddSubcomponent(const nsString& aRegName,
                            const nsString& aTargetName, 
                            PRInt32* aReturn)
 {
+    PRInt32 result = SanityCheck();
+
+    if (result != nsInstall::SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
+
     nsString version;
     *aReturn = mVersionInfo->ToString(version);
 
@@ -566,6 +575,14 @@ PRInt32
 nsInstall::AddSubcomponent(const nsString& aJarSource,
                            PRInt32* aReturn)
 {
+    PRInt32 result = SanityCheck();
+
+    if (result != nsInstall::SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
+    
     if(mPackageFolder.Equals(""))
     {
         *aReturn = SaveError( nsInstall::PACKAGE_FOLDER_NOT_SET );
@@ -667,6 +684,14 @@ nsInstall::DeleteFile(const nsString& aFolder, const nsString& aRelativeFileName
 PRInt32    
 nsInstall::DiskSpaceAvailable(const nsString& aFolder, PRInt64* aReturn)
 {
+    PRInt32 result = SanityCheck();
+
+    if (result != nsInstall::SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
+    
     nsFileSpec fsFolder(aFolder);
 
     *aReturn = fsFolder.GetDiskSpaceAvailable();
@@ -825,7 +850,14 @@ PRInt32
 nsInstall::Gestalt(const nsString& aSelector, PRInt32* aReturn)
 {
     *aReturn = nsnull;
+    
+    PRInt32 result = SanityCheck();
 
+    if (result != nsInstall::SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
 #ifdef XP_MAC
 	
     long    response = 0;
@@ -957,6 +989,14 @@ PRInt32
 nsInstall::GetWinProfile(const nsString& aFolder, const nsString& aFile, JSContext* jscontext, JSClass* WinProfileClass, jsval* aReturn)
 {
     *aReturn = JSVAL_NULL;
+    
+    PRInt32 result = SanityCheck();
+
+    if (result != nsInstall::SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
 
 #ifdef _WINDOWS
     JSObject*     winProfileObject;
@@ -983,6 +1023,14 @@ PRInt32
 nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aReturn)
 {
     *aReturn = JSVAL_NULL;
+    
+    PRInt32 result = SanityCheck();
+
+    if (result != nsInstall::SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
 
 #ifdef _WINDOWS
     JSObject* winRegObject;
@@ -1008,6 +1056,13 @@ nsInstall::GetWinRegistry(JSContext* jscontext, JSClass* WinRegClass, jsval* aRe
 PRInt32
 nsInstall::LoadResources(JSContext* cx, const nsString& aBaseName, jsval* aReturn)
 {
+    PRInt32 result = SanityCheck();
+
+    if (result != nsInstall::SUCCESS)
+    {
+        *aReturn = SaveError( result );
+        return NS_OK;
+    }
     nsresult ret;
     nsFileSpec* resFile;
     nsFileURL* resFileURL = nsnull;
@@ -1162,6 +1217,13 @@ nsInstall::Patch(const nsString& aRegName, const nsString& aVersion, const nsStr
         return NS_OK;
     }
 
+    mPatchList = new nsHashtable();
+    if (mPatchList == nsnull)
+    {
+        *aReturn = SaveError(nsInstall::OUT_OF_MEMORY);
+        return NS_OK;
+    }
+ 
     nsInstallPatch* ip = new nsInstallPatch( this,
                                              qualifiedRegName,
                                              aVersion,
@@ -1266,9 +1328,8 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     mVersionInfo->Init(aVersion);
 
     mInstalledFiles = new nsVoidArray();
-    mPatchList      = new nsHashtable();
     
-    if (mInstalledFiles == nsnull || mPatchList == nsnull)
+    if (mInstalledFiles == nsnull)
     {
         *aReturn = nsInstall::OUT_OF_MEMORY;
         return nsInstall::OUT_OF_MEMORY;
@@ -1288,6 +1349,7 @@ nsInstall::StartInstall(const nsString& aUserPackageName, const nsString& aRegis
     if (mNotifier)
             mNotifier->InstallStarted(mInstallURL.GetUnicode(), mUIName.GetUnicode());
 
+    mStartInstallCompleted = PR_TRUE;
     return NS_OK;
 }
 
@@ -1795,7 +1857,7 @@ nsInstall::ScheduleForInstall(nsInstallObject* ob)
 PRInt32
 nsInstall::SanityCheck(void)
 {
-    if ( mInstalledFiles == nsnull ) 
+    if ( mInstalledFiles == nsnull || mStartInstallCompleted == PR_FALSE ) 
     {
         return INSTALL_NOT_STARTED;	
     }
@@ -2002,7 +2064,7 @@ nsInstall::CleanUp(void)
         mInstalledFiles = nsnull;
     }
 
-    if (mPatchList)
+    if (mPatchList != nsnull)
     {
         mPatchList->Enumerate(DeleteEntry, nsnull);
         mPatchList->Reset();
@@ -2010,6 +2072,7 @@ nsInstall::CleanUp(void)
     }
     
     mRegistryPackageName = ""; // used to see if StartInstall() has been called
+    mStartInstallCompleted = PR_FALSE;
 }
 
 

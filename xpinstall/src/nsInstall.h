@@ -277,10 +277,10 @@ class nsInstall
         
         PRBool              mUninstallPackage;
         PRBool              mRegisterPackage;
+        PRBool              mStartInstallCompleted;
 
         nsString            mRegistryPackageName;   /* Name of the package we are installing */
         nsString            mUIName;                /* User-readable package name */
-
         nsInstallVersion*   mVersionInfo;           /* Component version info */
         
         nsVoidArray*        mInstalledFiles;        
