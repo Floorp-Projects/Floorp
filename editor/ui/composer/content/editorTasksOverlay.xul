@@ -68,7 +68,7 @@
                    tooltiptext="&taskComposer.tooltip;"/>
   </statusbarpanel>
   
-  <menupopup id="taskPopup">
+  <menupopup id="windowPopup">
     <menuitem label="&editorCmd.label;" accesskey="&editorCmd.accesskey;" key="key_editor" command="Tasks:Editor" id="tasksMenuEditor" insertafter="tasksMenuNavigator"/>
   </menupopup>
   

@@ -84,21 +84,16 @@
     <commandset id="tasksCommands"/> 
 
     <!-- File Menu -->
-    <command id="cmd_newNavigator"/>
-    <command id="cmd_newEditor"/>
     <command id="cmd_close" oncommand="close()"/>
     <command id="cmd_quit"/>
     <!-- Edit Menu -->
     <command id="cmd_undo"/>
-    <command id="Browser:SendLink" oncommand="sendBookmarksLink();"/>
   </commands>
 
   <stringbundleset id="stringbundleset"/>
 
   <keyset id="tasksKeys">
     <!-- File Menu -->
-    <key id="key_newNavigator"/>
-    <key id="key_newEditor"/>
     <key id="key_close"/>
     <key id="key_quit"/>
     <!-- Edit Menu -->
@@ -127,30 +122,21 @@
   <toolbox id="bookmarks-toolbox">
     <menubar id="main-menubar" grippytooltiptext="&menuBar.tooltip;">
       <menu id="menu_File">
-        <menupopup id="menu_FilePopup" onpopupshowing="updateSendLinkItem();">
-          <menuitem label="&command.newBookmark.label;" 
-                    accesskey="&command.newBookmark.accesskey;"
-                    observes="cmd_bm_newbookmark"/>
-          <menuitem label="&command.newFolder.label;" 
-                    accesskey="&command.newFolder.accesskey;"
-                    observes="cmd_bm_newfolder"/>
-          <menuitem label="&command.newSeparator.label;"
-                    accesskey="&command.newSeparator.accesskey;"
-                    observes="cmd_bm_newseparator"/>
-          <menuseparator/>
+        <menupopup id="menu_FilePopup">
+          <menu id="menu_New">
+            <menupopup>
+              <menuitem label="&menuitem.newBookmark.label;" 
+                        accesskey="&command.newBookmark.accesskey;"
+                        observes="cmd_bm_newbookmark"/>
+              <menuitem label="&menuitem.newFolder.label;" 
+                        accesskey="&command.newFolder.accesskey;"
+                        observes="cmd_bm_newfolder"/>
+              <menuitem label="&menuitem.newSeparator.label;"
+                        accesskey="&command.newSeparator.accesskey;"
+                        observes="cmd_bm_newseparator"/>
+            </menupopup>
+          </menu>
           <menuitem id="menu_close"/>
-          <menuseparator/>
-          <menuitem label="&menuitem.import.label;"
-                    accesskey="&menuitem.import.accesskey;"
-                    observes="cmd_bm_import"/>
-          <menuitem label="&menuitem.export.label;"
-                    accesskey="&menuitem.export.accesskey;"
-                    observes="cmd_bm_export"/>
-          <menuseparator/>
-          <menuitem observes="cmd_bm_properties" key="bm_key_properties" 
-                    label="&command.properties.label;" 
-                    accesskey="&command.properties.accesskey;" />
-          <menuitem id="menu_sendPage" hidden="true"/>
         </menupopup>
       </menu>
       <menu id="menu_Edit">
@@ -178,9 +164,9 @@
                     accesskey="&command.fileBookmark.accesskey;"
                     command="cmd_bm_fileBookmark"/>
           <menuseparator/>
-          <menuitem command="cmd_bm_find" key="bm_key_find"
-                    label="&menuitem.find.label;" 
-                    accesskey="&menuitem.find.accesskey;"/>
+            <menuitem observes="cmd_bm_properties" key="bm_key_properties" 
+                      label="&command.properties.label;" 
+                      accesskey="&command.properties.accesskey;" />
         </menupopup>
       </menu>
   
@@ -224,14 +210,28 @@
                     accesskey="&menuitem.personaltoolbarfolder.accesskey;"/>
         </menupopup>
       </menu>
-      <menu id="tasksMenu"/>
+      <menu id="tasksMenu">
+        <menupopup id="taskPopup">
+          <menuitem command="cmd_bm_find" key="bm_key_find"
+                    label="&menuitem.find.label;" 
+                    accesskey="&menuitem.find.accesskey;"/>
+          <menuitem label="&menuitem.import.label;"
+                    accesskey="&menuitem.import.accesskey;"
+                    observes="cmd_bm_import"/>
+          <menuitem label="&menuitem.export.label;"
+                    accesskey="&menuitem.export.accesskey;"
+                    observes="cmd_bm_export"/>
+          <menuseparator/>
+        </menupopup>
+      </menu>
+      <menu id="windowMenu"/>
       <menu id="menu_Help"/>
     </menubar>
 
     <toolbar id="command-toolbar" tbalign="stretch" grippytooltiptext="&bookmarkToolbar.tooltip;">
-      <toolbarbutton id="newfolder" label="&command.newFolder.label;" 
+      <toolbarbutton id="newfolder" label="&button.newFolder.label;" 
                      command="cmd_bm_newfolder"/>
-      <toolbarbutton id="newseparator" label="&command.newSeparator.label;" 
+      <toolbarbutton id="newseparator" label="&button.newSeparator.label;" 
                      command="cmd_bm_newseparator"/>
       <toolbarseparator/>
       <toolbarbutton id="fileBookmark" label="&command.fileBookmark.label;"

@@ -291,8 +291,7 @@
    -->
   <menu id="fileMenu" label="&fileMenu.label;" accesskey="&filemenu.accesskey;">
     <menupopup id="menu_FilePopup">
-      <menuitem id="menu_newBlankPage" label="&newBlankPageCmd.label;" accesskey="&newBlankPage.accesskey;" key="key_newBlankPage" command="cmd_newEditor"/>
-      <menu id="menu_editNew" label="&newMenu.label;" accesskey="&newMenu.accesskey;">
+      <menu id="menu_New">
         <menupopup id="menu_NewPopup">
           <!-- From globalOverlay.xul -->
           <menuitem id="menu_newNavigator" observes="cmd_newNavigator"/>
@@ -354,15 +353,15 @@
       <menuitem id="menu_findnext"   accesskey="&editfindnext.accesskey;"        key="findnextkb"     observes="cmd_findNext"/>
       <menuseparator id="sep_checkspelling"/>
       <menuitem id="menu_checkspelling" accesskey="&editcheckspelling.accesskey;"   key="checkspellingkb" observes="cmd_spelling" label="&checkSpellingCmd.label;"/>
-      <menuseparator id="menu_PrefsSeparator"/>
+      <menuseparator id="menu_prefsSep"/>
       <menuitem id="menu_preferences"     observes="cmd_preferences"/>
       <!-- Note: other Edit items (menu_validate, menu_publishSettings) are inserted from composerOverlay.xul -->
     </menupopup>
   </menu>
 
   <!-- view menu items -->
-  <menu id="viewToolbar" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
-    <menupopup> 
+  <menu id="menu_Toolbars" label="&viewToolbarsMenu.label;" accesskey="&viewToolbarsMenu.accesskey;">
+    <menupopup id="view_toolbars_popup"> 
       <menuitem id="viewComposerToolbar" label="&compositionToolbarCmd.label;" type="checkbox" accesskey="&compositiontb.accesskey;" observes="cmd_viewCompToolbar"  />
       <menuitem id="viewFormatToolbar"   label="&formattingToolbarCmd.label;"  type="checkbox" accesskey="&formattingtb.accesskey;"  observes="cmd_viewFormatToolbar" />
       <menuitem id="viewEditModeToolbar" label="&editmodeToolbarCmd.label;"    type="checkbox" accesskey="&editmodetb.accesskey;"    observes="cmd_viewEditModeToolbar" />

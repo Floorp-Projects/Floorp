@@ -20,6 +20,7 @@
     <RDF:li resource="chrome://communicator/content/tasksOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/contentAreaContextOverlay.xul"/>
     <RDF:li resource="chrome://communicator/content/pref/preftree.xul"/>
+    <RDF:li resource="chrome://navigator/content/navigatorOverlay.xul"/>
   </RDF:Seq>
 
   <RDF:Seq about="chrome://communicator/content/tasksOverlay.xul">
@@ -32,6 +33,10 @@
 
   <RDF:Seq about="chrome://communicator/content/pref/preftree.xul">
     <RDF:li>chrome://cookie/content/cookiePrefsOverlay.xul</RDF:li>
+  </RDF:Seq>
+  
+  <RDF:Seq about="chrome://navigator/content/navigatorOverlay.xul">
+    <RDF:li>chrome://cookie/content/cookieNavigatorOverlay.xul</RDF:li>
   </RDF:Seq>
 
 </RDF:RDF>

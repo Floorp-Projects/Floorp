@@ -23,14 +23,5 @@
   <menupopup id="menu_FilePopup">
     <!-- XXX insert File Menu add-ins here -->
   </menupopup>
-
-  <popup id="messagePaneContext">
-    <menuitem id="context-editlink"
-              label="&editLinkCmd.label;"
-              accesskey="&editLinkCmd.accesskey;"
-              oncommand="editLink(gContextMenu.linkURL());"
-              insertafter="context-bookmarklink"/>  <!-- "context-sep-save" is the insertion hook in Navigator-->
-  </popup> 
-  
 </overlay>
 

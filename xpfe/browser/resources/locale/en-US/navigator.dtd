@@ -25,7 +25,7 @@
 <!ENTITY openFileCmd.accesskey "o">
 <!ENTITY openFileCmd.commandkey "o">
 <!ENTITY editPageCmd.label "Edit Page">
-<!ENTITY editPageCmd.accesskey "d">
+<!ENTITY editPageCmd.accesskey "E">
 <!ENTITY editPageCmd.commandkey "e">
 <!ENTITY editFrameCmd.label "Edit Frame">
 <!ENTITY editFrameCmd.accesskey "m">
@@ -118,7 +118,7 @@
 <!ENTITY findAgainCmd.commandkey "g">
 <!-- XXX - boy there's a lot of crap here. -->
 <!ENTITY searchInternetCmd.label "Search the Web">
-<!ENTITY searchInternetCmd.accesskey "w">
+<!ENTITY searchInternetCmd.accesskey "S">
 <!ENTITY searchAllMailCmd.label "Search Mail">
 <!ENTITY searchAllMailCmd.accesskey "m">
 <!ENTITY searchAddressbookCmd.label "Search Addressbook">
@@ -147,9 +147,9 @@
 
 
 <!ENTITY bookmarksMenu.label "Bookmarks">
-<!ENTITY bookmarksMenu.accesskey "b">
-<!ENTITY addCurPageCmd.label "Add Bookmark">
-<!ENTITY addCurPageCmd.accesskey "b">
+<!ENTITY bookmarksMenu.accesskey "">
+<!ENTITY addCurPageCmd.label "Add to Bookmarks">
+<!ENTITY addCurPageCmd.accesskey "B">
 <!ENTITY addCurPageCmd.commandkey "d">
 <!ENTITY addCurPageAsCmd.label "File Bookmark...">
 <!ENTITY addCurPageAsCmd.accesskey "f">
@@ -208,3 +208,8 @@
 
 <!-- Statusbar -->
 <!ENTITY  statusText.label            "Document: Done">
+
+<!ENTITY historyCmd.label           "History">  
+<!ENTITY historyCmd.accesskey       "i">
+<!ENTITY history.commandKey       "h">
+

@@ -52,8 +52,6 @@
   <command id="cmd_searchHistory" oncommand="window.openDialog('chrome://communicator/content/history/findHistory.xul', 'FindHistoryWindow', 'dialog=no,centerscreen,resizable=no,chrome,dependent');"/>
 
   <!-- File Menu -->
-  <command id="cmd_newNavigator"/>
-  <command id="cmd_newEditor"/>
   <command id="cmd_close" oncommand="window.close()"/>
   <command id="cmd_quit"/>
   <command id="bm_cmd_saveas"/>
@@ -65,8 +63,6 @@
 
 <keyset id="tasksKeys">
   <!-- File Menu -->
-  <key id="key_newNavigator"/>
-  <key id="key_newEditor"/>
   <key id="key_close"/>
   <key id="key_quit"/>
   <!-- Edit Menu -->
@@ -83,13 +79,6 @@
 <menubar id="history-menu" grippytooltiptext="&menuBar.tooltip;">
   <menu id="menu_File">
     <menupopup id="menu_FilePopup">
-      <menu id="menu_New">
-        <menupopup id="menu_NewPopup">
-      <menuitem id="menu_newNavigator" command="cmd_newNavigator"/>
-      <menuitem id="menu_newEditor"    command="cmd_newEditor"/>
-        </menupopup>
-      </menu>
-      <menuseparator/>
       <menuitem id="menu_close"/>
     </menupopup>
   </menu>
@@ -105,8 +94,6 @@
                 accesskey="&deleteDomainCmd.accesskey;"/>
       <menuseparator/>
       <menuitem id="menu_selectAll"/>
-      <menuseparator/>
-      <menuitem id="menu_searchHistory" label="&findHisCmd.label;" key="key_searchHistory" accesskey="&findHisCmd.accesskey;" command="cmd_searchHistory"/>
     </menupopup>
   </menu>
   <menu id="menu_View">
@@ -133,8 +120,15 @@
         oncommand="return SortInNewDirection('descending');"/>
     </menupopup>
   </menu>
-  <menu id="tasksMenu" accesskey="t" />
-  <menu id="menu_Help" accesskey="h" />
+  <menu id="tasksMenu">
+    <menupopup id="taskPopup">
+      <menuitem id="menu_searchHistory" label="&findHisCmd.label;" key="key_searchHistory"
+                accesskey="&findHisCmd.accesskey;" command="cmd_searchHistory"/>
+      <menuseparator/>
+    </menupopup>
+  </menu>
+  <menu id="windowMenu"/>
+  <menu id="menu_Help"/>
 </menubar>
 </toolbox>
 

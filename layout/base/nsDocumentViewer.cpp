@@ -5411,7 +5411,8 @@ DocumentViewerImpl::GetPrintPreviewNumPages(PRInt32 *aPrintPreviewNumPages)
   // in PP mPrtPreview->mPrintObject->mSeqFrame is null
   nsIFrame* seqFrame  = nsnull;
   *aPrintPreviewNumPages = 0;
-  if (NS_FAILED(GetSeqFrameAndCountPages(mPrtPreview->mPrintObject, seqFrame, *aPrintPreviewNumPages))) {
+  if (!mPrtPreview ||
+      NS_FAILED(GetSeqFrameAndCountPages(mPrtPreview->mPrintObject, seqFrame, *aPrintPreviewNumPages))) {
     return NS_ERROR_FAILURE;
   }
   return NS_OK;

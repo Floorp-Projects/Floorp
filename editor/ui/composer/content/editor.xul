@@ -120,7 +120,7 @@
     <menu id="viewMenu" label="&viewMenu.label;" accesskey="&viewmenu.accesskey;">
     <!-- id pulls in "Show Sidebar" item from sidebarOverlay -->
     <menupopup id="menu_View_Popup">
-      <menu id="viewToolbar"/>
+      <menu id="menu_Toolbars"/>
       <menuseparator id="viewSep1"/>
       <menuitem id="viewNormalMode" checked="true"/>
       <menuitem id="viewAllTagsMode"/>
@@ -144,7 +144,14 @@
     <menu id="tableMenu"/>
 
     <!-- tasks menu filled from tasksOverlay -->
-    <menu id="tasksMenu" accesskey="t"/>
+    <menu id="tasksMenu">
+      <menupopup id="taskPopup">
+        <menuitem id="menu_validate" observes="cmd_validate"/>
+        <menuseparator/>
+      </menupopup>
+    </menu>
+
+    <menu id="windowMenu"/>
 
     <!-- DEBUG only -->
     <menu id="debugMenu" /> 
