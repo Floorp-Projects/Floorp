@@ -40,7 +40,7 @@
 /*
  * secoidt.h - public data structures for ASN.1 OID functions
  *
- * $Id: secoidt.h,v 1.12 2003/02/27 01:31:38 nelsonb%netscape.com Exp $
+ * $Id: secoidt.h,v 1.13 2003/03/20 23:53:39 relyea%netscape.com Exp $
  */
 
 #include "secitem.h"
@@ -341,6 +341,7 @@ typedef enum {
     /* SEC_OID_SECG_EC_SECP256R1 is SEC_OID_ANSIX962_EC_PRIME256V1 */
     SEC_OID_SECG_EC_SECP384R1       = 220,
     SEC_OID_SECG_EC_SECP521R1       = 221,
+    SEC_OID_NETSCAPE_AOLSCREENNAME  = 222,
 
     SEC_OID_TOTAL
 } SECOidTag;
