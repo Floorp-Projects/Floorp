@@ -35,6 +35,7 @@
 #include "nsNetUtil.h"
 #include "nsString.h"
 #include "nsXPIDLString.h"
+#include "prprf.h"
 
 static NS_DEFINE_CID(kIOServiceCID, NS_IOSERVICE_CID);
 
@@ -74,82 +75,104 @@ NS_MakeAbsoluteURIWithCharset(char* *aResult,
     spec.AssignWithConversion(aSpec);
   }
   else {
-    // Otherwise, we'll need to use aDocument to cough up a character
-    // set converter, and re-encode the relative portion of the URL as
-    // 8-bit characters.
-    nsCOMPtr<nsIUnicodeEncoder> encoder;
+    // If the scheme is javascript then no charset conversion is needed,
+    // escape non ASCII in \uxxxx form.
+    PRInt32 pos = aSpec.FindChar(':');
+    static const char kJavaScript[] = "javascript";
+    nsAutoString scheme;
+    if ((pos == (PRInt32)(sizeof kJavaScript - 1)) &&
+        (aSpec.Left(scheme, pos) != -1) &&
+         scheme.EqualsIgnoreCase(kJavaScript)) {
+      char buf[6+1];	// space for \uXXXX plus a NUL at the end
+      spec.Truncate(0);
+      for (const PRUnichar* uch = aSpec.GetUnicode(); *uch; ++uch) {
+        if (!nsCRT::IsAscii(*uch)) {
+          PR_snprintf(buf, sizeof(buf), "\\u%.4x", *uch);
+          spec.Append(buf);
+        }
+        else {
+          spec.AppendWithConversion(*uch);
+        }
+      }
+    }
+    else {
+      // Otherwise, we'll need to use aDocument to cough up a character
+      // set converter, and re-encode the relative portion of the URL as
+      // 8-bit characters.
+      nsCOMPtr<nsIUnicodeEncoder> encoder;
 
-    if (aDocument) {
-      nsCOMPtr<nsICharsetConverterManager> convmgr;
-      if (aConvMgr) {
-        convmgr = aConvMgr;
+      if (aDocument) {
+        nsCOMPtr<nsICharsetConverterManager> convmgr;
+        if (aConvMgr) {
+          convmgr = aConvMgr;
+        }
+        else {
+          convmgr = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
+        }
+
+        if (! convmgr)
+          return NS_ERROR_FAILURE;
+
+        nsAutoString charSetID;
+        aDocument->GetDocumentCharacterSet(charSetID);
+
+        convmgr->GetUnicodeEncoder(&charSetID, getter_AddRefs(encoder));
+      }
+
+      if (encoder) {
+        // Got the encoder: let's party.
+        PRInt32 len = aSpec.Length();
+        PRInt32 maxlen;
+        encoder->GetMaxLength(aSpec.GetUnicode(), len, &maxlen);
+
+        char buf[64], *p = buf;
+        if (maxlen > sizeof(buf) - 1)
+          p = new char[maxlen + 1];
+
+        if (! p)
+          return NS_ERROR_OUT_OF_MEMORY;
+
+        encoder->Convert(aSpec.GetUnicode(), &len, p, &maxlen);
+        encoder->Finish(p, &len);
+        p[maxlen] = 0;
+
+        spec = p;
+
+        if (p != buf)
+          delete[] p;
       }
       else {
-        convmgr = do_GetService(NS_CHARSETCONVERTERMANAGER_CONTRACTID);
+        // No encoder, but we've got non-ASCII data. Let's UTF-8 encode
+        // by default.
+        spec = NS_ConvertUCS2toUTF8(aSpec.GetUnicode());
       }
 
-      if (! convmgr)
+      // Now we need to URL-escape the string.  Make sure we've got an
+      // nsIIOService.
+      nsCOMPtr<nsIIOService> ioservice;
+      if (aIOService) {
+        ioservice = aIOService;
+      }
+      else {
+        ioservice = do_GetService(kIOServiceCID);
+      }
+
+      if (! ioservice)
         return NS_ERROR_FAILURE;
 
-      nsAutoString charSetID;
-      aDocument->GetDocumentCharacterSet(charSetID);
+      // XXX andreas.otte has warned that using the nsIIOService::Escape
+      // method in this way may be too conservative (e.g., it won't
+      // escape a "#" character that appears in a hostname -- does that
+      // matter?) But, since there's nothing better, we'll do it...
+      static const PRInt32 kEscapeConservatively = nsIIOService::url_Forced - 1;
 
-      convmgr->GetUnicodeEncoder(&charSetID, getter_AddRefs(encoder));
+      // XXX Unfortunately, we can't escape "in place". Maybe the new string
+      // APIs will make that better some day.
+      nsXPIDLCString escaped;
+      ioservice->Escape(spec.get(), kEscapeConservatively, getter_Copies(escaped));
+
+      spec = escaped;
     }
-
-    if (encoder) {
-      // Got the encoder: let's party.
-      PRInt32 len = aSpec.Length();
-      PRInt32 maxlen;
-      encoder->GetMaxLength(aSpec.GetUnicode(), len, &maxlen);
-
-      char buf[64], *p = buf;
-      if (maxlen > sizeof(buf) - 1)
-        p = new char[maxlen + 1];
-
-      if (! p)
-        return NS_ERROR_OUT_OF_MEMORY;
-
-      encoder->Convert(aSpec.GetUnicode(), &len, p, &maxlen);
-      encoder->Finish(p, &len);
-      p[maxlen] = 0;
-
-      spec = p;
-
-      if (p != buf)
-        delete[] p;
-    }
-    else {
-      // No encoder, but we've got non-ASCII data. Let's UTF-8 encode
-      // by default.
-      spec = NS_ConvertUCS2toUTF8(aSpec.GetUnicode());
-    }
-
-    // Now we need to URL-escape the string.  Make sure we've got an
-    // nsIIOService.
-    nsCOMPtr<nsIIOService> ioservice;
-    if (aIOService) {
-      ioservice = aIOService;
-    }
-    else {
-      ioservice = do_GetService(kIOServiceCID);
-    }
-
-    if (! ioservice)
-      return NS_ERROR_FAILURE;
-
-    // XXX andreas.otte has warned that using the nsIIOService::Escape
-    // method in this way may be too conservative (e.g., it won't
-    // escape a "#" character that appears in a hostname -- does that
-    // matter?) But, since there's nothing better, we'll do it...
-    static const PRInt32 kEscapeConservatively = nsIIOService::url_Forced - 1;
-
-    // XXX Unfortunately, we can't escape "in place". Maybe the new string
-    // APIs will make that better some day.
-    nsXPIDLCString escaped;
-    ioservice->Escape(spec.get(), kEscapeConservatively, getter_Copies(escaped));
-
-    spec = escaped;
   }
 
   return aBaseURI->Resolve(spec, aResult);
