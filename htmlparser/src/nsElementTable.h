@@ -81,11 +81,6 @@ struct nsHTMLElement {
   CTagList*       GetAutoCloseEndTags(void) const {return mAutocloseEnd;}
   CTagList*       GetSynonymousTags(void) const {return mSynonymousTags;}
 
-  static  PRBool  IsBlockParent(eHTMLTags aTag);
-  static  PRBool  IsInlineParent(eHTMLTags aTag); 
-  static  PRBool  IsFlowParent(eHTMLTags aTag);
-  static  PRBool  IsSectionTag(eHTMLTags aTag);
-
   CTagList*       GetSpecialChildren(void) const {return mSpecialKids;}
   CTagList*       GetSpecialParents(void) const {return mSpecialParents;}
 
@@ -98,17 +93,24 @@ struct nsHTMLElement {
   PRBool          CanOmitEndTag(eHTMLTags aParent) const;
   PRBool          CanContainSelf() const;
   PRBool          HasSpecialProperty(PRInt32 aProperty) const;
+  PRBool          SectionContains(eHTMLTags aTag,PRBool allowDepthSearch);
  
   static  PRBool  CanContain(eHTMLTags aParent,eHTMLTags aChild);
   static  PRBool  IsContainer(eHTMLTags aTag) ;
   static  PRBool  IsStyleTag(eHTMLTags aTag) ;
   static  PRBool  IsHeadingTag(eHTMLTags aTag) ;
-  static  PRBool  IsChildOfHead(eHTMLTags aTag) ;
   static  PRBool  IsTextTag(eHTMLTags aTag);
   static  PRBool  IsWhitespaceTag(eHTMLTags aTag);
 
+  static  PRBool  IsBlockParent(eHTMLTags aTag);
+  static  PRBool  IsInlineParent(eHTMLTags aTag); 
+  static  PRBool  IsFlowParent(eHTMLTags aTag);
+  static  PRBool  IsSectionTag(eHTMLTags aTag);
+  static  PRBool  IsChildOfHead(eHTMLTags aTag) ;
+
   eHTMLTags       mTagID;
   eHTMLTags       mRequiredAncestor;
+  eHTMLTags       mExcludingAncestor; //If set, the presence of the excl-ancestor prevents this from opening.
   CTagList*       mRootNodes;         //These are the tags above which you many not autoclose a START tag
   CTagList*       mEndRootNodes;      //These are the tags above which you many not autoclose an END tag
   CTagList*       mAutocloseStart;    //these are the start tags that you can automatically close with this START tag

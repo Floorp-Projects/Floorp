@@ -43,7 +43,7 @@
 #endif
 #include "prmem.h"
 
-#define RICKG_DEBUG 1
+#define RICKG_DEBUG 0
 #ifdef  RICKG_DEBUG
 #include  <fstream.h>  
 #endif
