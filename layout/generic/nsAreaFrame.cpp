@@ -614,7 +614,7 @@ nsAreaFrame::ReflowAbsoluteFrame(nsIPresContext&          aPresContext,
 
     nsSize              availSize(aReflowState.computedWidth, NS_UNCONSTRAINEDSIZE);
     nsHTMLReflowMetrics kidDesiredSize(nsnull);
-    nsHTMLReflowState   kidReflowState(aPresContext, aKidFrame, aReflowState,
+    nsHTMLReflowState   kidReflowState(aPresContext, aReflowState, aKidFrame,
                                        availSize);
 
     // If it's the initial reflow, then override the reflow reason. This is

@@ -186,14 +186,12 @@ nsFormControlHelper::CalculateSize (nsIPresContext*       aPresContext,
                                     nscoord&              aRowHeight) 
 {
   nscoord charWidth   = 0; 
-  nscoord charHeight  = 0;
   PRInt32 numRows     = ATTR_NOTSET;
   aWidthExplicit      = PR_FALSE;
   aHeightExplicit     = PR_FALSE;
 
   aDesiredSize.width  = CSS_NOTSET;
   aDesiredSize.height = CSS_NOTSET;
-  nsSize textSize(0,0);
 
   nsIContent* iContent = nsnull;
   aFrame->GetFormContent((nsIContent*&) iContent);

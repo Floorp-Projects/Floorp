@@ -335,6 +335,7 @@ nsHTMLButtonControlFrame::MouseClicked(nsIPresContext* aPresContext)
   } 
 }
 
+#if 0
 // XXX temporary hack code until new style rules are added
 static
 void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, nsRect& aRect)
@@ -377,6 +378,7 @@ void ReflowTemp(nsIPresContext& aPresContext, nsHTMLButtonControlFrame* aFrame, 
   }
 #endif
 }
+#endif
 
 void 
 nsHTMLButtonControlFrame::SetFocus(PRBool aOn, PRBool aRepaint)
@@ -443,7 +445,7 @@ nsHTMLButtonControlFrame::ShiftContents(nsIPresContext& aPresContext, PRBool aDo
 
   mStyleContext->RecalcAutomaticData(&aPresContext);
 
-  nsRect rect(0, 0, mRect.width, mRect.height);
+  //nsRect rect(0, 0, mRect.width, mRect.height);
   //ReflowTemp(aPresContext, this, rect);
 }
 
@@ -686,7 +688,7 @@ nsHTMLButtonControlFrame::Reflow(nsIPresContext& aPresContext,
     availSize.height = PR_MAX(availSize.height,0);
   }
 
-  nsHTMLReflowState reflowState(aPresContext, firstKid, aReflowState, availSize);
+  nsHTMLReflowState reflowState(aPresContext, aReflowState, firstKid, availSize);
   // XXX remove the following when the reflow state is fixed
   ButtonHack(reflowState, "html4 button's area");
 

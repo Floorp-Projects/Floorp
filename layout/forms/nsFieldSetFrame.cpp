@@ -321,8 +321,8 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   // Try to reflow the legend into the available space. It might not fit
   nsSize legendSize(0,0);
   if (mLegendFrame) {
-    nsHTMLReflowState legendReflowState(aPresContext, mLegendFrame,
-                                        aReflowState, availSize);
+    nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
+                                        mLegendFrame, availSize);
     // XXX remove when reflow state is fixed
     FieldSetHack((nsHTMLReflowState&)legendReflowState, "fieldset's legend", PR_FALSE);
     ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);
@@ -351,8 +351,8 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
   PRBool needAnotherLegendReflow = PR_FALSE;
 
   // Try to reflow the area frame into the available space. It might not fit
-  nsHTMLReflowState contentReflowState(aPresContext, mContentFrame,
-                                       aReflowState, availSize);
+  nsHTMLReflowState contentReflowState(aPresContext, aReflowState,
+                                       mContentFrame, availSize);
   // XXX remove when reflow state is fixed
   FieldSetHack(contentReflowState, "fieldset's area", PR_FALSE);
 
@@ -378,8 +378,8 @@ nsFieldSetFrame::Reflow(nsIPresContext&          aPresContext,
 
   // need to reflow the legend a 2nd time
   if (needAnotherLegendReflow && mLegendFrame) {
-    nsHTMLReflowState legendReflowState(aPresContext, mLegendFrame,
-                                        aReflowState, availSize);
+    nsHTMLReflowState legendReflowState(aPresContext, aReflowState,
+                                        mLegendFrame, availSize);
     // XXX remove when reflow state is fixed
     FieldSetHack(legendReflowState, "fieldset's legend frame", PR_FALSE);
     ReflowChild(mLegendFrame, aPresContext, aDesiredSize, legendReflowState, aStatus);

@@ -49,12 +49,12 @@
 
 #ifdef NS_DEBUG
 static PRBool gsDebug = PR_FALSE;
-static PRBool gsDebugCLD = PR_FALSE;
+//static PRBool gsDebugCLD = PR_FALSE;
 static PRBool gsDebugNT = PR_FALSE;
 static PRBool gsDebugIR = PR_FALSE;
 #else
 static const PRBool gsDebug = PR_FALSE;
-static const PRBool gsDebugCLD = PR_FALSE;
+//static const PRBool gsDebugCLD = PR_FALSE;
 static const PRBool gsDebugNT = PR_FALSE;
 static const PRBool gsDebugIR = PR_FALSE;
 #endif
@@ -279,15 +279,15 @@ nsTableFrame::GetFrameType(nsIAtom** aType) const
 
 nsTableFrame::nsTableFrame()
   : nsHTMLContainerFrame(),
-    mCellMap(nsnull),
-    mColCache(nsnull),
-    mTableLayoutStrategy(nsnull),
-    mFirstPassValid(PR_FALSE),
     mColumnWidthsValid(PR_FALSE),
+    mFirstPassValid(PR_FALSE),
     mColumnCacheValid(PR_FALSE),
     mCellMapValid(PR_TRUE),
     mIsInvariantWidth(PR_FALSE),
-	mHasScrollableRowGroup(PR_FALSE)
+    mHasScrollableRowGroup(PR_FALSE),
+    mCellMap(nsnull),
+    mColCache(nsnull),
+    mTableLayoutStrategy(nsnull)
 {
   mEffectiveColCount = -1;  // -1 means uninitialized
   mColumnWidthsSet=PR_FALSE;
@@ -697,7 +697,6 @@ PRInt32 nsTableFrame::GetEffectiveCOLSAttribute()
   nsCellMap *cellMap = GetCellMap();
   NS_PRECONDITION (nsnull!=cellMap, "null cellMap.");
   PRInt32 result;
-  nsIFrame *tableFrame = this;
   const nsStyleTable *tableStyle=nsnull;
   GetStyleData(eStyleStruct_Table, (const nsStyleStruct *&)tableStyle);
   result = tableStyle->mCols;
@@ -2565,10 +2564,6 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
   nsSize kidMaxSize(0,0);
   nsHTMLReflowMetrics kidSize(&kidMaxSize);
   nscoord y = 0;
-  nscoord maxAscent = 0;
-  nscoord maxDescent = 0;
-  PRInt32 contentOffset=0;
-  nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
   // Compute the insets (sum of border and padding)
   // XXX: since this is pass1 reflow and where we place the rowgroup frames is irrelevant, insets are probably a waste
@@ -2586,7 +2581,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
           (NS_STYLE_DISPLAY_TABLE_FOOTER_GROUP != childDisplay->mDisplay) &&
           (NS_STYLE_DISPLAY_TABLE_ROW_GROUP    != childDisplay->mDisplay) )
       { // it's an unknown frame type, give it a generic reflow and ignore the results
-        nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+        nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame, 
                                          availSize, aReason);
         if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 1 of unknown frame %p of type %d with reason=%d\n", 
                                        kidFrame, childDisplay->mDisplay, aReason);
@@ -2594,8 +2589,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
         ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
         continue;
       }
-      nsSize maxKidElementSize(0,0);
-      nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+      nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                        availSize, aReason);
       // Note: we don't bother checking here for whether we should clear the
       // isTopOfPage reflow state flag, because we're dealing with an unconstrained
@@ -2635,8 +2629,7 @@ NS_METHOD nsTableFrame::ResizeReflowPass1(nsIPresContext&          aPresContext,
       kidFrame=mColGroups.FirstChild();   
       for ( ; nsnull != kidFrame; kidFrame->GetNextSibling(&kidFrame)) 
       {
-        nsSize maxKidElementSize(0,0);
-        nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState,
+        nsHTMLReflowState kidReflowState(aPresContext, aReflowState, kidFrame,
                                          availSize, aReason);
         if (PR_TRUE==gsDebugIR) printf("\nTIF IR: Reflow Pass 1 of colgroup frame %p with reason=%d\n", kidFrame, aReason);
         ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
@@ -2680,8 +2673,6 @@ NS_METHOD nsTableFrame::ResizeReflowPass2(nsIPresContext&          aPresContext,
   InnerTableReflowState state(aPresContext, aReflowState, borderPadding);
 
   // now that we've computed the column  width information, reflow all children
-  nsSize kidMaxSize(0,0);
-  nsIFrame* prevKidFrame = nsnull;/* XXX incremental reflow! */
 
 #ifdef NS_DEBUG
   //PreReflowCheck();
@@ -2895,7 +2886,6 @@ NS_METHOD nsTableFrame::AdjustForCollapsingCols(nsIPresContext& aPresContext,
     const nsStyleDisplay* groupDisplay;
     groupFrame->GetStyleData(eStyleStruct_Display, ((const nsStyleStruct *&)groupDisplay));
     PRBool collapseGroup = (NS_STYLE_VISIBILITY_COLLAPSE == groupDisplay->mVisible);
-    nsRect zeroRect(0, 0, 0, 0);
     nsIFrame* colFrame;
     groupFrame->FirstChild(nsnull, &colFrame);
     while (nsnull != colFrame) {
@@ -3088,6 +3078,7 @@ NS_METHOD nsTableFrame::IR_TargetIsMe(nsIPresContext&        aPresContext,
   case nsIReflowCommand::PushReflow:
   case nsIReflowCommand::CheckPullupReflow :
   case nsIReflowCommand::UserDefined :
+  default:
     NS_NOTYETIMPLEMENTED("unimplemented reflow command type");
     rv = NS_ERROR_NOT_IMPLEMENTED;
     if (PR_TRUE==gsDebugIR) printf("TIF IR: reflow command not implemented.\n");
@@ -3390,9 +3381,8 @@ NS_METHOD nsTableFrame::IR_TargetIsChild(nsIPresContext&        aPresContext,
   nsHTMLReflowMetrics desiredSize(nsnull);
   // XXX Correctly compute the available space...
   nsSize  availSpace(aReflowState.reflowState.availableWidth, aReflowState.reflowState.availableHeight);
-  nsHTMLReflowState kidReflowState(aPresContext, aNextFrame,
-                                   aReflowState.reflowState,
-                                   availSpace);
+  nsHTMLReflowState kidReflowState(aPresContext, aReflowState.reflowState,
+                                   aNextFrame, availSpace);
 
   rv = ReflowChild(aNextFrame, aPresContext, desiredSize, kidReflowState, aStatus);
 
@@ -3573,9 +3563,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
       borderPadding += padding;
 
       // Reflow the child into the available space
-      nsHTMLReflowState  kidReflowState(aPresContext, kidFrame,
-                                        aReflowState.reflowState, kidAvailSize,
-                                        reason);
+      nsHTMLReflowState  kidReflowState(aPresContext, aReflowState.reflowState,
+                                        kidFrame, kidAvailSize, reason);
       if ((nsnull != firstRowGroupFrame) && (kidFrame != firstRowGroupFrame)) {
         // If this isn't the first row group frame or the header or footer, then
         // we can't be at the top of the page anymore...
@@ -3653,7 +3642,8 @@ NS_METHOD nsTableFrame::ReflowMappedChildren(nsIPresContext& aPresContext,
     }
     else
     {// it's an unknown frame type, give it a generic reflow and ignore the results
-        nsHTMLReflowState kidReflowState(aPresContext, kidFrame, aReflowState.reflowState,
+        nsHTMLReflowState kidReflowState(aPresContext,
+                                         aReflowState.reflowState, kidFrame,
                                          nsSize(0,0), eReflowReason_Resize);
         nsHTMLReflowMetrics desiredSize(nsnull);
         if (PR_TRUE==gsDebug) printf("\nTIF : Reflow Pass 2 of unknown frame %p of type %d with reason=%d\n", 
@@ -3729,8 +3719,8 @@ NS_METHOD nsTableFrame::PullUpChildren(nsIPresContext& aPresContext,
       aStatus = NS_FRAME_NOT_COMPLETE;
       break;
     }
-    nsHTMLReflowState  kidReflowState(aPresContext, kidFrame,
-                                      aReflowState.reflowState, aReflowState.availSize,
+    nsHTMLReflowState  kidReflowState(aPresContext, aReflowState.reflowState,
+                                      kidFrame, aReflowState.availSize,
                                       eReflowReason_Resize);
 
     rv = ReflowChild(kidFrame, aPresContext, kidSize, kidReflowState, aStatus);
@@ -4014,7 +4004,6 @@ nscoord nsTableFrame::ComputeDesiredHeight(nsIPresContext& aPresContext,
         if (PR_TRUE==IsRowGroup(rowGroupDisplay->mDisplay))
         { // the rows in rowGroupFrame need to be expanded by rowHeightDelta[i]
           // and the rowgroup itself needs to be expanded by SUM(row height deltas)
-          nscoord excessForRowGroup=0;
           nsIFrame * rowFrame=nsnull;
           rv = rowGroupFrame->FirstChild(nsnull, &rowFrame);
           while ((NS_SUCCEEDED(rv)) && (nsnull!=rowFrame))
@@ -4180,7 +4169,7 @@ nsTableFrame::SetColumnStyleFromCell(nsIPresContext &  aPresContext,
             float width = cellPosition->mWidth.GetPercentValue();
             colPosition->mWidth.SetPercentValue(width);
             if (PR_TRUE==gsDebug)
-              printf("TIF SetCSFromCell: col percent width set to %d from cell", width);
+              printf("TIF SetCSFromCell: col percent width set to %g from cell", width);
           }
           colFrame->SetWidthSource(nsTableColFrame::eWIDTH_SOURCE_CELL);
         }
@@ -4584,8 +4573,6 @@ void nsTableFrame::MapHTMLBorderStyle(nsStyleSpacing& aSpacingStyle, nscoord aBo
 
 PRBool nsTableFrame::ConvertToPixelValue(nsHTMLValue& aValue, PRInt32 aDefault, PRInt32& aResult)
 {
-  PRInt32 result = 0;
-
   if (aValue.GetUnit() == eHTMLUnit_Pixel)
     aResult = aValue.GetPixelValue();
   else if (aValue.GetUnit() == eHTMLUnit_Empty)
