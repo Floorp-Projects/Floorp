@@ -206,15 +206,15 @@ sub process_log {
         # Count only successful requests (whether partial or full).
         next unless $status == 200 || $status == 206;
 
+        # Strip the URL query string, if any, from the file string.
+        $file = (split(/\?/, $file))[0];
+
         # Split up the file string into a path and a name.
         $file =~ /^(.*)\/([^\/]*)$/;
         ($path, $filename) = ($1, $2);
 
         # Only deal with releases, extensions, webtools, and language packs at this point.
 	next if $path !~ /releases/ && $path !~ /extensions/ && $path !~ /webtools/ && $path !~ /mozilla\/l10n\/lang/;
-
-        # Strip the URL query string, if any, from the filename.
-        $filename = (split(/\?/, $filename))[0];
 
         # Don't bother storing directory accesses, since we don't do anything with them.
 	next if !$filename;
