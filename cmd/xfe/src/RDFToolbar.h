@@ -91,6 +91,8 @@ private:
 
   // callbacks
     static void tooltipCB(Widget, XtPointer,  XmString *, Boolean *);
+    static void docStringSetCB(Widget, XtPointer, XmString *, Boolean *);
+    static void docStringCB(Widget, XtPointer, unsigned char, XmString);
 };
 
 #endif /*_xfe_rdftoolbar_*/

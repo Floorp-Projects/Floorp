@@ -26,6 +26,8 @@
 #include "prefapi.h"
 #include "felocale.h"
 #include "intl_csi.h"
+#include "View.h"
+
 
 #include <Xfe/ToolItem.h>
 #include <Xfe/ToolBar.h>
@@ -421,19 +423,13 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
     Arg                     av[20];
     Cardinal                ac;
     ItemCallbackStruct *    data = NULL;
-    /*     tbarTooltipCBStruct *   ttip = NULL; */
+    Boolean                 enableTooltips = True;
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
     XtSetArg(av[ac],XmNforceDimensionToMax, False);  ac++;
 
     button = XfeCreateButton(parent,"bookmarkButton",av,ac);
-
-    /* Add the tooltip Callback */
-    XfeTipStringAdd(button);
-
-
-
 
     // Set the item's label
     setItemLabelString(button,entry);
@@ -445,7 +441,17 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
 
     data->object    = this;
     data->entry        = entry;
-    XfeTipStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) data);
+
+      /* Add the tooltip Callback */
+       XfeTipStringAdd(button);
+       XfeTipStringSetObtainCallback(button, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) data);
+
+       /* Set up the status bar text */
+       XfeDocStringAdd(button);
+       XfeDocStringSetObtainCallback(button, docStringSetCB, (XtPointer)data);
+
+       XfeDocStringSetCallback(button, docStringCB, (XtPointer)data);
+
     XtAddCallback(button,
                   XmNactivateCallback,
                   &XFE_RDFMenuToolbarBase::item_activated_cb,
@@ -461,6 +467,7 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
                   &XFE_RDFMenuToolbarBase::item_disarmed_cb,
                   (XtPointer) data);
 
+    /*
     XtAddCallback(button,
                   XmNenterCallback,
                   &XFE_RDFMenuToolbarBase::item_enter_cb,
@@ -470,7 +477,7 @@ XFE_RDFToolbar::createXfeButton(Widget parent,HT_Resource entry)
                   XmNleaveCallback,
                   &XFE_RDFMenuToolbarBase::item_leave_cb,
                   (XtPointer) data);
-
+                  */
     XtAddCallback(button,
                   XmNdestroyCallback,
                   &XFE_RDFMenuToolbarBase::item_free_data_cb,
@@ -491,7 +498,6 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
     Arg                     av[5];
     Cardinal                ac;
     ItemCallbackStruct *    data = NULL;
-    /*     tbarTooltipCBStruct *   ttip = NULL; */
 
     ac = 0;
     XtSetArg(av[ac],XmNuserData, entry);  ac++;
@@ -514,11 +520,20 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
     /* Set the tooltip callback */
     XfeTipStringAdd(cascade);
     XfeTipStringSetObtainCallback(cascade, (XfeTipStringObtainCallback)tooltipCB, (XtPointer) data);
+
+    /* Set up the status bar text */
+    XfeDocStringAdd(cascade);
+    XfeDocStringSetObtainCallback(cascade, docStringSetCB, (XtPointer)data);
+    XfeDocStringSetCallback(cascade, docStringCB, (XtPointer)data);
+
+
+
     XtAddCallback(cascade,
                   XmNcascadingCallback,
                   &XFE_RDFMenuToolbarBase::item_cascading_cb,
                   (XtPointer) data);
 
+    /*
     XtAddCallback(cascade,
                   XmNenterCallback,
                   &XFE_RDFMenuToolbarBase::item_enter_cb,
@@ -528,7 +543,7 @@ XFE_RDFToolbar::createXfeCascade(Widget parent,HT_Resource entry)
                   XmNleaveCallback,
                   &XFE_RDFMenuToolbarBase::item_leave_cb,
                   (XtPointer) data);
-
+                  */
     XtAddCallback(cascade,
                   XmNdestroyCallback,
                   &XFE_RDFMenuToolbarBase::item_free_data_cb,
@@ -604,6 +619,75 @@ XFE_RDFToolbar::tooltipCB(Widget w, XtPointer client_data, XmString * string_ret
     else {
       *string_return = obj->getStringFromResource(entry);
       *need_to_free_string = True;
+    }
+
+}
+
+//////////////////////////////////////////////////////////////////////////
+/* static */
+void
+XFE_RDFToolbar::docStringSetCB(Widget w, XtPointer client_data, XmString * string_return, Boolean * need_to_free_string )
+{
+
+    ItemCallbackStruct * ttip = (ItemCallbackStruct * )client_data;
+    XFE_RDFToolbar * obj = (XFE_RDFToolbar *) ttip->object;
+    HT_Resource  entry = (HT_Resource) ttip->entry;
+
+    void *        data=NULL;
+    XmFontList    font_list;
+    XmString      str = NULL;
+
+    HT_GetTemplateData(HT_TopNode(HT_GetView(entry)), gNavCenter->buttonStatusbarText, HT_COLUMN_STRING, &data);
+    if (data) {
+      D(printf("Doc string obtained from HT = %s\n", (char *) data););
+       MWContext * context = (obj->getFrame())->getContext();
+    
+       INTL_CharSetInfo charSetInfo =
+            LO_GetDocumentCharacterSetInfo(context);
+     
+       str = fe_ConvertToXmString((unsigned char *) data,
+                                        INTL_GetCSIWinCSID(charSetInfo) ,
+                                        NULL, XmFONT_IS_FONT, &font_list);
+
+    
+       *string_return = str;
+       *need_to_free_string = True;
+    }
+    else {
+
+      Boolean isContainer = HT_IsContainer(entry);
+      
+         *string_return = obj->getStringFromResource(entry);
+         *need_to_free_string = True;
+    }
+
+}
+
+
+//////////////////////////////////////////////////////////////////////////
+/* static */
+void
+XFE_RDFToolbar::docStringCB(Widget w, XtPointer client_data, unsigned char reason, XmString string_return)
+{
+    ItemCallbackStruct * ttip = (ItemCallbackStruct * )client_data;
+    XFE_RDFToolbar * obj = (XFE_RDFToolbar *) ttip->object;
+    HT_Resource  entry = (HT_Resource) ttip->entry;
+
+    char *      str = NULL;
+
+    XmStringGetLtoR(string_return, XmSTRING_DEFAULT_CHARSET, &str);
+
+    if (reason  == XfeDOC_STRING_SET) {
+
+      obj->getFrame()->notifyInterested(XFE_View::statusNeedsUpdatingMidTruncated,
+                             (void*) str);
+
+    }
+    else if (reason == XfeDOC_STRING_CLEAR) {
+
+       obj->getFrame()->notifyInterested(XFE_View::statusNeedsUpdatingMidTruncated,
+                             (void*) "");
+
     }
 
 }
