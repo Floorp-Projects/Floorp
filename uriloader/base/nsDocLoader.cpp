@@ -2098,9 +2098,7 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, PRInt32 aStatus, const
 #endif
 #endif // DEBUG
 
-#ifdef DEBUG
     if (NS_FAILED(aStatus)) {
-
 #ifdef NECKO
         char *url;
         if (NS_SUCCEEDED(rv)) 
@@ -2115,22 +2113,16 @@ NS_METHOD nsDocumentBindInfo::OnStopRequest(nsIURI* aURL, PRInt32 aStatus, const
             url = "";      
 #endif // NECKO
 
-#ifdef DEBUG_pnunn
-        cerr << "nsDocumentBindInfo::OnStopRequest: Load of URL '" << url << "' failed.  Error code: " 
-             << NS_ERROR_GET_CODE(aStatus) << "\n";
-#endif
-
 #ifdef NECKO
         if (aStatus == NS_ERROR_UNKNOWN_HOST)
             printf("Error: Unknown host: %s\n", url);
         else if (aStatus == NS_ERROR_MALFORMED_URI)
             printf("Error: Malformed URI: %s\n", url);
-        else if (NS_FAILED(rv))
+        else if (NS_FAILED(aStatus))
             printf("Error: Can't load: %s (%x)\n", url, aStatus);
         nsCRT::free(url);
 #endif
     }
-#endif /* DEBUG */
 
     if (nsnull != m_NextStream) {
 #ifdef NECKO
