@@ -42,7 +42,7 @@ namespace JavaScript {
 	 void Assert(const char *s, const char *file, int line);
 
 	 #define ASSERT(_expr) ((_expr) ? (void)0 : JavaScript::Assert(#_expr, __FILE__, __LINE__))
-	 #define NOT_REACHED(_reasonStr) JS_Assert(_reasonStr, __FILE__, __LINE__)
+	 #define NOT_REACHED(_reasonStr) JavaScript::Assert(_reasonStr, __FILE__, __LINE__)
 	 #define DEBUG_ONLY(_stmt) _stmt
 	#else
 	 #define ASSERT(expr)
