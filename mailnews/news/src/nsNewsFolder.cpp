@@ -968,8 +968,7 @@ NS_IMETHODIMP nsMsgNewsFolder::GetSizeOnDisk(PRUint32 *size)
 
 NS_IMETHODIMP nsMsgNewsFolder::GetUsername(char** userName)
 {
-  *userName = PL_strdup("");
-  return NS_OK;
+  return nsGetNewsUsername(kNewsRootURI, mURI, userName);
 }
 
 NS_IMETHODIMP nsMsgNewsFolder::GetHostname(char** hostName)
