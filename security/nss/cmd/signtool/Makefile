@@ -54,22 +54,6 @@ include $(CORE_DEPTH)/coreconf/config.mk
 
 include ../platlibs.mk
 
-# can't do this in manifest.mn because OS_ARCH isn't defined there.
-ifeq ($(OS_ARCH), WINNT)
-
-EXTRA_LIBS += \
-	$(DIST)/lib/jar.lib \
-	$(DIST)/lib/zlib.lib \
-	$(NULL)
-
-else
-
-EXTRA_LIBS += \
-	$(DIST)/lib/libjar.$(LIB_SUFFIX) \
-	$(DIST)/lib/libzlib.$(LIB_SUFFIX) \
-	$(NULL)
-endif
-
 #######################################################################
 # (5) Execute "global" rules. (OPTIONAL)                              #
 #######################################################################
