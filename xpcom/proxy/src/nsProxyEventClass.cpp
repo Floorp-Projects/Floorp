@@ -278,3 +278,4 @@ nsProxyEventClass::GetRootProxyObject(nsProxyEventObject* anObject)
     nsProxyEventObject* result = CallQueryInterfaceOnProxy(anObject, nsISupports::GetIID());
     return result ? result : anObject;
 }
+
