@@ -654,12 +654,12 @@ nsXULElement::QueryInterface(REFNSIID iid, void** result)
       else
         return NS_NOINTERFACE;
     }
-    /*else if (mScriptObject && mDocument) {
+    else if (mScriptObject && mDocument) {
         nsCOMPtr<nsIBindingManager> manager;
         mDocument->GetBindingManager(getter_AddRefs(manager));
         return manager->GetBindingImplementation(NS_STATIC_CAST(nsIStyledContent*, this), mScriptObject, 
                                                  iid, result);
-    }*/
+    }
     else {
         *result = nsnull;
         return NS_NOINTERFACE;
@@ -2225,6 +2225,7 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
             }
         }
 
+
         if (mDocument) {
           // Notify XBL- & nsIAnonymousContentCreator-generated
           // anonymous content that the document is changing.
@@ -2234,17 +2235,15 @@ nsXULElement::SetDocument(nsIDocument* aDocument, PRBool aDeep, PRBool aCompileE
           if (bindingManager) {
             bindingManager->ChangeDocumentFor(NS_STATIC_CAST(nsIStyledContent*, this), mDocument, aDocument);
           }
+
+          nsIDOMElement* domElement = NS_STATIC_CAST(nsIDOMElement*, this);
+          nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
+          nsDoc->SetBoxObjectFor(domElement, nsnull);
         }
 
         mListenerManager = nsnull;
 
         mDocument = aDocument; // not refcounted
-
-        if (mBoxObject) {
-          nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(mBoxObject));
-          if (privateBox)
-            privateBox->SetDocument(mDocument);
-        }
 
         if (mDocument) {
             // Add a named reference to the script object.
@@ -4097,57 +4096,13 @@ nsXULElement::GetControllers(nsIControllers** aResult)
 NS_IMETHODIMP
 nsXULElement::GetBoxObject(nsIBoxObject** aResult)
 {
-  if (mBoxObject) {
-    *aResult = mBoxObject;
-    NS_ADDREF(*aResult);
-    return NS_OK;
-  }
-
-  // We need to create our object.
   *aResult = nsnull;
-  if (!mDocument)
-    return NS_OK;
 
-  nsCOMPtr<nsIPresShell> shell = getter_AddRefs(mDocument->GetShellAt(0));
-  if (!shell)
-    return NS_OK;
+  if (!mDocument) 
+    return NS_ERROR_FAILURE;
 
-  nsresult rv;
-  PRInt32 dummy;
-  nsCOMPtr<nsIAtom> tag;
-  NS_WITH_SERVICE(nsIXBLService, xblService, "@mozilla.org/xbl;1", &rv);
-  xblService->ResolveTag(NS_STATIC_CAST(nsIStyledContent*, this), &dummy, getter_AddRefs(tag));
-  
-  nsCAutoString contractID("@mozilla.org/layout/xul-boxobject");
-  if (tag.get() == nsXULAtoms::browser)
-    contractID += "-browser;1";
-  else if (tag.get() == nsXULAtoms::editor)
-    contractID += "-editor;1";
-  else if (tag.get() == nsXULAtoms::iframe)
-    contractID += "-iframe;1";
-  else if (tag.get() == nsXULAtoms::menu)
-    contractID += "-menu;1";
-  else if (tag.get() == nsXULAtoms::popupset)
-    contractID += "-popupset;1";
-  else if (tag.get() == nsXULAtoms::tree)
-    contractID += "-tree;1";
-  else if (tag.get() == nsXULAtoms::scrollbox)
-    contractID += "-scrollbox;1";
-  else
-    contractID += ";1";
-
-  mBoxObject = do_CreateInstance(contractID);
-  if (!mBoxObject)
-    return NS_OK;
-
-  nsCOMPtr<nsPIBoxObject> privateBox(do_QueryInterface(mBoxObject));
-  if (NS_FAILED(rv = privateBox->Init(NS_STATIC_CAST(nsIStyledContent*, this), shell)))
-    return rv;
-
-  *aResult = mBoxObject;
-  NS_ADDREF(*aResult);
- 
-  return NS_OK;
+  nsCOMPtr<nsIDOMNSDocument> nsDoc(do_QueryInterface(mDocument));
+  return nsDoc->GetBoxObjectFor(NS_STATIC_CAST(nsIDOMElement*, this), aResult);
 }
 
 // Methods for setting/getting attributes from nsIDOMXULElement
