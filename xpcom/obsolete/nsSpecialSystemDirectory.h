@@ -48,11 +48,6 @@
 #include <Types.h>
 #endif
 
-
-extern NS_COM_OBSOLETE void StartupSpecialSystemDirectory();
-extern NS_COM_OBSOLETE void ShutdownSpecialSystemDirectory();
-
-
 // SEE ALSO:
 //      mozilla/xpfe/appshell/public/nsFileLocations.h
 
