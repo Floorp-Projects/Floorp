@@ -120,7 +120,7 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
     char* hostName;
     infoObject->GetProxyName(&proxyName);
     infoObject->GetHostName(&hostName);
-
+    
     if (!proxyName)
     {
         // Direct connection
@@ -152,12 +152,9 @@ nsSSLIOLayerConnect(PRFileDesc *fd, const PRNetAddr *addr, PRIntervalTime timeou
 #endif
     }
 
-    Recycle(hostName);
-    Recycle(proxyName);
-    
-
-    
-    
+    if (hostName)  Recycle(hostName);
+    if (proxyName) Recycle(proxyName);
+        
     if (CMTSuccess == status)
     {
         // since our stuff can block, what we want to do is return PR_FAILURE,
@@ -187,6 +184,8 @@ nsSSLIOLayerClose(PRFileDesc *fd)
     CMT_CONTROL* control;
     CMSocket*    socket;
     
+    PR_Shutdown(fd, PR_SHUTDOWN_BOTH);
+
     infoObject->GetControlPtr(&control);
     infoObject->GetSocketPtr(&socket);
     infoObject->SetPickledStatus();
@@ -505,13 +504,13 @@ nsSSLIOLayerNewSocket( const char *host,
     sock = PR_NewTCPSocket();  
     if (! sock) return NS_ERROR_OUT_OF_MEMORY;
     
-    // Make the socket non-blocking...
-    PRSocketOptionData opt;
-    opt.option = PR_SockOpt_Nonblocking;
-    opt.value.non_blocking = PR_FALSE;
-    rv = PR_SetSocketOption(sock, &opt);
-    if (PR_SUCCESS != rv)
-        return PR_FAILURE;
+    /* disable Nagle algorithm delay for control sockets */
+    PRSocketOptionData sockopt;
+    sockopt.option = PR_SockOpt_NoDelay;
+    sockopt.value.no_delay = PR_TRUE;   
+    rv = PR_SetSocketOption(sock, &sockopt);
+    PR_ASSERT(PR_SUCCESS == rv);
+
 
     layer = PR_CreateIOLayerStub(nsSSLIOLayerIdentity, &nsSSLIOLayerMethods);
     if (! layer)

@@ -30,8 +30,12 @@
 #include <unistd.h>
 #endif
 
+#define PSM_TIMEOUT_IN_SEC 30
 
 #define NSPSMSHIMMAXFD 50
+
+
+static PRIntervalTime gTimeout  = PR_INTERVAL_NO_WAIT;
 
 CMT_SocketFuncs nsPSMShimTbl =
 {
@@ -52,6 +56,13 @@ nsPSMShimGetSocket(int unixSock)
     PRStatus   rv;
     PRFileDesc *fd;
     CMSocket   *sock;
+    PRSocketOptionData sockopt;
+
+    
+    if (PR_INTERVAL_NO_WAIT == gTimeout) 
+    {
+        gTimeout  = PR_SecondsToInterval(PSM_TIMEOUT_IN_SEC);
+    }
 
 
     if (unixSock)
@@ -65,18 +76,16 @@ nsPSMShimGetSocket(int unixSock)
     }
     else
     {
-        PRSocketOptionData sockopt;
-
         fd = PR_NewTCPSocket();
         PR_ASSERT(fd);
-
-        /* disable Nagle algorithm delay for control sockets */
-        sockopt.option = PR_SockOpt_NoDelay;
-        sockopt.value.no_delay = PR_TRUE;   
-
-        rv = PR_SetSocketOption(fd, &sockopt);
-        PR_ASSERT(PR_SUCCESS == rv);
     }
+
+    /* disable Nagle algorithm delay for control sockets */
+    sockopt.option = PR_SockOpt_NoDelay;
+    sockopt.value.no_delay = PR_TRUE;   
+    rv = PR_SetSocketOption(fd, &sockopt);
+    PR_ASSERT(PR_SUCCESS == rv);
+
 
     sock = (CMSocket *)PR_Malloc(sizeof(CMSocket));
 
@@ -85,7 +94,7 @@ nsPSMShimGetSocket(int unixSock)
     
     sock->fd     = fd;
     sock->isUnix = unixSock;
-    
+
     memset(&sock->netAddr, 0, sizeof(PRNetAddr));
     
     return (CMTSocket)sock;
@@ -94,9 +103,9 @@ nsPSMShimGetSocket(int unixSock)
 CMTStatus
 nsPSMShimConnect(CMTSocket sock, short port, char *path)
 {
+    CMTStatus   rv = CMTSuccess;
     PRStatus    err;
     PRErrorCode errcode;
-    CMTStatus   rv = CMTSuccess;
     CMSocket    *cmSock = (CMSocket *)sock;
     
     if (!sock) return CMTFailure;
@@ -128,28 +137,17 @@ nsPSMShimConnect(CMTSocket sock, short port, char *path)
         cmSock->netAddr.inet.port   = PR_htons(port);
         cmSock->netAddr.inet.ip     = PR_htonl(PR_INADDR_LOOPBACK);
     }
-
+    
     err = PR_Connect( cmSock->fd, &cmSock->netAddr, PR_INTERVAL_MAX );
     
     if (err == PR_FAILURE)    
     {
         errcode = PR_GetError();
         
-        /* TODO: verify PR_INVALID_ARGUMENT_ERROR continue with connect */
-        
-        switch (errcode)
-        {
-            case PR_IS_CONNECTED_ERROR:
-            case PR_IN_PROGRESS_ERROR:
-                rv = CMTSuccess;
-                break;
-            
-            default:
-                rv = CMTFailure;
-                break;
-        }
+        if (PR_IS_CONNECTED_ERROR != errcode)
+            rv = CMTFailure;
     }    
-
+    
     return rv;
 }
 
@@ -184,15 +182,21 @@ nsPSMShimVerifyUnixSocket(CMTSocket sock)
 size_t
 nsPSMShimSend(CMTSocket sock, void *buffer, size_t length)
 {
-    PRInt32   total;
     CMSocket *cmSock = (CMSocket *)sock;
 
     if (!sock) return CMTFailure;
+    
+   return PR_Send(cmSock->fd, buffer, length, 0, gTimeout);
+}
 
-    total = PR_Send(cmSock->fd, buffer, length, 0, PR_INTERVAL_NO_TIMEOUT);
+size_t
+nsPSMShimReceive(CMTSocket sock, void *buffer, size_t bufSize)
+{
+    CMSocket *cmSock = (CMSocket *)sock;
+    
+    if (!sock) return CMTFailure;
 
-    /* TODO: for now, return 0 if there's an error */
-    return (total < 0) ? 0 : total;
+    return PR_Recv(cmSock->fd, buffer, bufSize, 0, gTimeout);
 }
 
 
@@ -235,19 +239,6 @@ nsPSMShimSelect(CMTSocket *socks, int numsocks, int poll)
     return NULL;
 }
 
-size_t
-nsPSMShimReceive(CMTSocket sock, void *buffer, size_t bufSize)
-{
-    PRInt32   total;
-    CMSocket *cmSock = (CMSocket *)sock;
-    
-    if (!sock) return CMTFailure;
-
-    total = PR_Recv(cmSock->fd, buffer, bufSize, 0, PR_INTERVAL_NO_TIMEOUT);
-
-    /* TODO: for now, return 0 if there's an error */
-    return (total < 0) ? 0 : total;
-}
 
 CMTStatus
 nsPSMShimShutdown(CMTSocket sock)
