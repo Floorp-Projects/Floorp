@@ -20,10 +20,10 @@
 <tree datasources="rdf:mailnewsfolders rdf:mailnewsmessages" id="threadTree" onclick="return parent.parent.LoadMessage(event.target.parentNode)" containment="http://home.netscape.com/NC-rdf#MessageChild">
 
 
-  <treecol style="width:40%" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
+  <treecol style="width:47%" id="SubjectColumn" rdf:resource="http://home.netscape.com/NC-rdf#Subject"/>
   <treecol style="width:30%" id="AuthorColumn" rdf:resource="http://home.netscape.com/NC-rdf#Sender"/>
   <treecol style="width:15%" id="DateColumn" rdf:resource="http://home.netscape.com/NC-rdf#Date"/>
-  <treecol style="width:15%" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
+  <treecol style="width:8%" id="StatusColumn" rdf:resource="http://home.netscape.com/NC-rdf#Status"/>
   <treehead>
     <treeitem>
 		<treecell onclick="return parent.parent.SortThreadPane('SubjectColumn', 'http://home.netscape.com/NC-rdf#Subject');">&subjectColumn.label;</treecell>
