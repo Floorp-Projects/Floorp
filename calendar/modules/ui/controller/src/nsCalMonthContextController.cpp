@@ -60,10 +60,10 @@ nsCalMonthContextController :: nsCalMonthContextController(nsISupports* outer) :
 {
   NS_INIT_REFCNT();
     int i;
-	m_iFontSize = 10;
+	  m_iFontSize = 10;
     m_iMCRows = 0;
     m_iMCCols = 0;
-    m_sFontName = "Times New Roman";
+    m_sFontName = "Arial";  // Used to be "Times Roman"
     m_iMCVertSpacing = 10;
     m_iMCHorzSpacing = 10;
     m_iCellHorzSpacing = 4;
@@ -91,7 +91,7 @@ nsCalMonthContextController :: nsCalMonthContextController(nsISupports* outer) :
     m_bWeeks = 1;
     m_bArrows = 1;
     m_MCBGColor = GetBackgroundColor();
-	m_DIMFGColor = NS_RGB(128,64,0);
+	  m_DIMFGColor = NS_RGB(128,64,0);
     m_CurDayFGColor = NS_RGB(255,255,255);
     m_CurDayBGColor = NS_RGB(0,0,255);
     m_HighlightFGColor = NS_RGB(255,255,255);
@@ -151,7 +151,7 @@ nsresult nsCalMonthContextController :: Init()
     return res ;
   m_ActionDateList->Init();
 
-  nsFont font("Arial", NS_FONT_STYLE_NORMAL,
+  nsFont font(m_sFontName /*"Arial"*/, NS_FONT_STYLE_NORMAL,
 		    NS_FONT_VARIANT_NORMAL,
 		    NS_FONT_WEIGHT_BOLD,
 		    0,
@@ -1602,7 +1602,7 @@ void nsCalMonthContextController::SetFDOW(int i)
 
 void nsCalMonthContextController::SetDefaults()
 {
-    m_sFontName = "Times New Roman";
+    m_sFontName = "Arial";  // "Times New Roman";
 }
 
 
