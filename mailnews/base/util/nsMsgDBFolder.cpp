@@ -244,29 +244,34 @@ nsresult nsMsgDBFolder::ReadDBFolderInfo(PRBool force)
 
 	nsresult result;
 
-	nsCOMPtr <nsIMsgFolderCache> folderCache;
-
-	NS_WITH_SERVICE(nsIMsgAccountManager, accountMgr, kMsgAccountManagerCID, &result); 
-	if(NS_SUCCEEDED(result))
+	// don't need to reload from cache if we've already read from cache,
+	// and, we might get stale info, so don't do it.
+	if (!(mPrefFlags & MSG_FOLDER_PREF_CACHED))
 	{
-		result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
-		if (NS_SUCCEEDED(result) && folderCache)
+		nsCOMPtr <nsIMsgFolderCache> folderCache;
+
+		NS_WITH_SERVICE(nsIMsgAccountManager, accountMgr, kMsgAccountManagerCID, &result); 
+		if(NS_SUCCEEDED(result))
 		{
-			nsCOMPtr <nsIFileSpec> path;
-			GetPath(getter_AddRefs(path));
-			nsXPIDLCString persistentPath;
-
-			if (NS_SUCCEEDED(result) && path)
+			result = accountMgr->GetFolderCache(getter_AddRefs(folderCache));
+			if (NS_SUCCEEDED(result) && folderCache)
 			{
-				path->GetPersistentDescriptorString(getter_Copies(persistentPath));
-				nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
-				result = folderCache->GetCacheElement(persistentPath, PR_FALSE, getter_AddRefs(cacheElement));
-				if (NS_SUCCEEDED(result) && cacheElement)
-				{
-					result = ReadFromFolderCacheElem(cacheElement);
-				}
-			}
+				nsCOMPtr <nsIFileSpec> path;
+				GetPath(getter_AddRefs(path));
+				nsXPIDLCString persistentPath;
 
+				if (NS_SUCCEEDED(result) && path)
+				{
+					path->GetPersistentDescriptorString(getter_Copies(persistentPath));
+					nsCOMPtr <nsIMsgFolderCacheElement> cacheElement;
+					result = folderCache->GetCacheElement(persistentPath, PR_FALSE, getter_AddRefs(cacheElement));
+					if (NS_SUCCEEDED(result) && cacheElement)
+					{
+						result = ReadFromFolderCacheElem(cacheElement);
+					}
+				}
+
+			}
 		}
 	}
 //	if (m_master->InitFolderFromCache (this))
