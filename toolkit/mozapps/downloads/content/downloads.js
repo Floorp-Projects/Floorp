@@ -582,8 +582,9 @@ var XPInstallDownloadManager = {
       if (!iconURL) 
         iconURL = "chrome://mozapps/skin/xpinstall/xpinstallItemGeneric.png";
       
+      var targetUrl = makeFileURL(localTarget);
       var download = gDownloadManager.addDownload(Components.interfaces.nsIXPInstallManagerUI.DOWNLOAD_TYPE_INSTALL, 
-                                                  uri, localTarget, displayName, iconURL, mimeInfo, 0, null);
+                                                  uri, targetUrl, displayName, iconURL, mimeInfo, 0, null);
       
       // Advance the enumerator
       var certName = aParams.GetString(i++);
