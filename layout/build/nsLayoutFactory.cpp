@@ -40,6 +40,7 @@
 #include "nsIScriptNameSetRegistry.h"
 #include "nsIScriptNameSpaceManager.h"
 #include "nsIScriptExternalNameSet.h"
+#include "nsIEventListenerManager.h"
 
 static NS_DEFINE_IID(kCHTMLDocumentCID, NS_HTMLDOCUMENT_CID);
 static NS_DEFINE_IID(kCXMLDocumentCID, NS_XMLDOCUMENT_CID);
@@ -55,6 +56,7 @@ static NS_DEFINE_CID(kSelectionCID,  NS_SELECTION_CID);
 static NS_DEFINE_CID(kNameSpaceManagerCID,  NS_NAMESPACEMANAGER_CID);
 static NS_DEFINE_CID(kFrameUtilCID,  NS_FRAME_UTIL_CID);
 static NS_DEFINE_CID(kRangeCID,  NS_RANGE_CID);
+static NS_DEFINE_CID(kEventListenerManagerCID, NS_EVENTLISTENERMANAGER_CID);
 
 
 nsresult NS_NewRangeList(nsICollection **);
@@ -248,6 +250,11 @@ nsresult nsLayoutFactory::CreateInstance(nsISupports *aOuter,
   }
   else if (mClassID.Equals(kRangeCID)) {
     if (NS_FAILED(res = NS_NewRange((nsIDOMRange**) &inst)))
+      return res;
+    refCounted = PR_TRUE;
+  }
+  else if (mClassID.Equals(kEventListenerManagerCID)) {
+    if (NS_FAILED(res = NS_NewEventListenerManager((nsIEventListenerManager**) &inst)))
       return res;
     refCounted = PR_TRUE;
   }
