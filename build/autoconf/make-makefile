@@ -76,13 +76,15 @@ $source_subdir .= '/' unless $source_subdir eq '';
 $ac_given_srcdir = $0;
 $ac_given_srcdir =~ s|/?build/autoconf/.*$||;
 $ac_given_srcdir = '.' if $ac_given_srcdir eq '';
-
 if ($ac_given_srcdir =~ /^\./) {
   while ($depth =~ /\.\./g) {
-    $ac_given_srcdir =~ s/\/[^\/]+//;
+    if ($ac_given_srcdir =~ /\//) {
+      $ac_given_srcdir =~ s/\/[^\/]+$//;
+    } else {
+      $ac_given_srcdir = '.';
+    }
   }
 }
-
 # Build the list of makefiles to generate
 #
 @makefiles = ();
@@ -92,7 +94,7 @@ foreach $makefile (@ARGV) {
   $makefile =~ /Makefile$/ or $makefile .= "/Makefile";
   push @makefiles, "${source_subdir}$makefile";
 }
-@makefiles = "Makefile" if $#makefiles == -1;
+@makefiles = "${source_subdir}Makefile" unless @ARGV;
 
 # Create all the directories at once.
 #   This can be much faster than calling mkdir() for each one.
@@ -150,7 +152,7 @@ foreach $ac_file (@makefiles) {
   }
 
   #mkdir $subdir, 0777 unless -d $subdir;
-
+  
   if (-e $ac_file) {
     next if -M _ < -M $ac_file_in;
     warn "updating $ac_file\n";
