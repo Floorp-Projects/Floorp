@@ -1191,8 +1191,8 @@ nsIMEGtkIC::IsPreeditComposing()
     if (mPreedit && mPreedit->GetPreeditLength()) {
       return PR_TRUE;
     }
-  } else {
 #if XlibSpecificationRelease >= 6
+  } else {
     PRBool ret_flag = PR_FALSE;
     int preedit_state;
     XVaNestedList preedit_attr;
@@ -1212,8 +1212,11 @@ nsIMEGtkIC::IsPreeditComposing()
     XFree(preedit_attr);
     return ret_flag;
   }
-#endif
   return PR_FALSE;
+#else
+  }
+  return PR_TRUE;
+#endif
 }
 
 GdkFont*
