@@ -229,21 +229,16 @@ nsresult nsAbAddressCollecter::IsDomainExcluded(const char *address, nsIPref *pP
 
 nsresult nsAbAddressCollecter::SetNamesForCard(nsIAbCard *senderCard, const char *fullName)
 {
-	PRUnichar *unicodeFirstName = nsnull;
 	char *firstName = nsnull;
 	char *lastName = nsnull;
 	PRUnichar *unicodeStr = nsnull;
 	PRInt32 unicharLength = 0;
 
-	nsresult rv = senderCard->GetFirstName(&unicodeFirstName);
-	if (NS_SUCCEEDED(rv) && firstName)
-	{
-	}
 
 	INTL_ConvertToUnicode((const char *)fullName, nsCRT::strlen(fullName), (void**)&unicodeStr, &unicharLength);
 	senderCard->SetDisplayName(unicodeStr);
 	PR_Free(unicodeStr);
-	rv = SplitFullName (fullName, &firstName, &lastName);
+	nsresult rv = SplitFullName (fullName, &firstName, &lastName);
 	if (NS_SUCCEEDED(rv))
 	{
 		INTL_ConvertToUnicode((const char *)firstName, nsCRT::strlen(firstName), (void**)&unicodeStr, &unicharLength);
