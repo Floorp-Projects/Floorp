@@ -52,6 +52,7 @@ private:
     nsCOMPtr <nsIRDFResource>      kNC_Name;    
     nsCOMPtr <nsIRDFResource>      kNC_LeafName;
     nsCOMPtr <nsIRDFResource>      kNC_Subscribed;
+    nsCOMPtr <nsIRDFResource>      kNC_ServerType;
     nsCOMPtr <nsIRDFLiteral>       kTrueLiteral;
     nsCOMPtr <nsIRDFLiteral>       kFalseLiteral;
 
@@ -60,6 +61,7 @@ private:
 
     nsresult GetChildren(nsISubscribableServer *server, const char *relativePath, nsISimpleEnumerator** aResult);
     nsresult GetServerAndRelativePathFromResource(nsIRDFResource *source, nsISubscribableServer **server, char **relativePath);
+    nsresult GetServerType(nsISubscribableServer *server, char **serverType);
 
     static PRBool assertEnumFunc(nsISupports *aElement, void *aData);
     static PRBool unassertEnumFunc(nsISupports *aElement, void *aData);

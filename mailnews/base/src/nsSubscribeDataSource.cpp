@@ -81,6 +81,9 @@ nsSubscribeDataSource::Init()
     rv = mRDFService->GetResource(NC_NAMESPACE_URI "Subscribed",getter_AddRefs(kNC_Subscribed));
     NS_ENSURE_SUCCESS(rv,rv);
 
+    rv = mRDFService->GetResource(NC_NAMESPACE_URI "ServerType",getter_AddRefs(kNC_ServerType));
+    NS_ENSURE_SUCCESS(rv,rv);
+
     rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2("true").GetUnicode(),getter_AddRefs(kTrueLiteral));
     NS_ENSURE_SUCCESS(rv,rv);
   
@@ -186,6 +189,19 @@ nsSubscribeDataSource::GetTarget(nsIRDFResource *source,
             NS_IF_ADDREF(*target);
             return NS_OK;
         }
+    }
+    else if (property == kNC_ServerType.get()) {
+        nsXPIDLCString serverTypeStr;
+        rv = GetServerType(server, getter_Copies(serverTypeStr));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        nsCOMPtr<nsIRDFLiteral> serverType;
+        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)serverTypeStr).GetUnicode(), getter_AddRefs(serverType));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        if (!serverType) rv = NS_RDF_NO_VALUE;
+        if (rv == NS_RDF_NO_VALUE)	return(rv);
+        return serverType->QueryInterface(NS_GET_IID(nsIRDFNode), (void**) target);
     }
     else if (property == kNC_LeafName.get()) {
         nsXPIDLString leafNameStr;
@@ -318,6 +334,22 @@ nsSubscribeDataSource::GetTargets(nsIRDFResource *source,
         *targets = result;
         return NS_OK;
     }
+    else if (property == kNC_ServerType.get()) {
+        nsXPIDLCString serverTypeStr;
+        rv = GetServerType(server, getter_Copies(serverTypeStr));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        nsCOMPtr<nsIRDFLiteral> serverType;
+        rv = mRDFService->GetLiteral(NS_ConvertASCIItoUCS2((const char *)serverTypeStr).GetUnicode(), getter_AddRefs(serverType));
+        NS_ENSURE_SUCCESS(rv,rv);
+
+        nsISimpleEnumerator* result = new nsSingletonEnumerator(serverType);
+        if (!result) return NS_ERROR_OUT_OF_MEMORY;
+
+        NS_ADDREF(result);
+        *targets = result;
+        return NS_OK;
+    }
     else {
         // do nothing
     }
@@ -364,6 +396,22 @@ nsSubscribeDataSource::Move(nsIRDFResource* aOldSource,
 						   nsIRDFNode* aTarget)
 {
 	return NS_RDF_ASSERTION_REJECTED;
+}
+
+nsresult
+nsSubscribeDataSource::GetServerType(nsISubscribableServer *server, char **serverType)
+{
+    nsresult rv;
+
+    if (!server || !serverType) return NS_ERROR_NULL_POINTER;
+    nsCOMPtr<nsIMsgIncomingServer> incomingServer(do_QueryInterface(server, &rv));
+    NS_ENSURE_SUCCESS(rv,rv);
+    if (!incomingServer) return NS_ERROR_FAILURE;
+
+    rv = incomingServer->GetType(serverType);
+    NS_ENSURE_SUCCESS(rv,rv);
+    
+    return NS_OK;
 }
 
 nsresult
@@ -462,6 +510,10 @@ nsSubscribeDataSource::HasAssertion(nsIRDFResource *source,
         // everything is subscribed or not
         *hasAssertion = PR_TRUE;
     }
+    else if (property == kNC_ServerType.get()) {
+        // everything has a server type
+        *hasAssertion = PR_TRUE;
+    }
     else {
         // do nothing
     }
@@ -499,6 +551,7 @@ nsSubscribeDataSource::HasArcOut(nsIRDFResource *source, nsIRDFResource *aArc, P
     }
     else if ((aArc == kNC_Subscribed.get()) ||
              (aArc == kNC_LeafName.get()) ||
+             (aArc == kNC_ServerType.get()) ||
              (aArc == kNC_Name.get())) {
         *result = PR_TRUE;
         return NS_OK;
@@ -546,6 +599,7 @@ nsSubscribeDataSource::ArcLabelsOut(nsIRDFResource *source,
 
     array->AppendElement(kNC_Subscribed);
     array->AppendElement(kNC_Name);
+    array->AppendElement(kNC_ServerType);
     array->AppendElement(kNC_LeafName);
 
     PRBool hasChildren = PR_FALSE;

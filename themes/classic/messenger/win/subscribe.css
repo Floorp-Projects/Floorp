@@ -24,4 +24,35 @@
 
 .subscribedcol[value="true"] {
  list-style-image: url("chrome://messenger/skin/check.gif");
-}     
+}
+
+/* icons (newsgroup or mail folder) for the tree */
+
+.tree-cell-subscribe-icon
+{
+ list-style-image: url("chrome://messenger/skin/folder-closed.gif");
+}
+
+.tree-cell-subscribe-icon[ServerType="nntp"] {
+    list-style-image: url("chrome://messenger/skin/folder-newsgroup.gif");
+}
+
+
+/* for the server menu picker */
+
+.subscribeMenuItem {
+ list-style-image: url("chrome://messenger/skin/server-mail.gif");
+}
+
+.subscribeMenuItem[ServerType="imap"][IsSecure="true"] {
+    list-style-image: url("chrome://messenger/skin/server-remote-lock.gif");
+}
+
+.subscribeMenuItem[ServerType="nntp"] {
+    list-style-image: url("chrome://messenger/skin/server-news.gif");
+}
+
+.subscribeMenuItem[ServerType="nntp"][IsSecure="true"] {
+    list-style-image: url("chrome://messenger/skin/server-news-lock.gif");
+}
+

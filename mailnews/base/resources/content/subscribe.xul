@@ -65,7 +65,7 @@ Rights Reserved.
                 <template>
                   <rule NC:CanSubscribe="true">
                     <menupopup>
-                      <menuitem uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name"/>
+                      <menuitem class="subscribeMenuItem menuitem-iconic" uri="..." value="rdf:http://home.netscape.com/NC-rdf#Name" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType" IsSecure="rdf:http://home.netscape.com/NC-rdf#IsSecure"/>
                     </menupopup>
                   </rule>
                 </template>
@@ -91,9 +91,9 @@ Rights Reserved.
           <template>
             <rule>    
               <treechildren flex="1">
-                <treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed">
+                <treeitem uri="..." name="rdf:http://home.netscape.com/NC-rdf#Name" Subscribed="rdf:http://home.netscape.com/NC-rdf#Subscribed" ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType">
                   <treerow>
-                    <treecell indent="true" class="treecell-indent" value="rdf:http://home.netscape.com/NC-rdf#LeafName"/>
+                    <treecell indent="true" class="treecell-indent tree-cell-subscribe-icon" value="rdf:http://home.netscape.com/NC-rdf#LeafName"  ServerType="rdf:http://home.netscape.com/NC-rdf#ServerType"/>
                     <treecell class="treecell-image subscribedcol" allowevents="true" onclick="return top.ReverseStateFromNode(event.originalTarget.parentNode.parentNode.parentNode)" value="rdf:http://home.netscape.com/NC-rdf#Subscribed"/>
                     <treecell value="rdf:http://home.netscape.com/NC-rdf#TotalMessages"/>
                   </treerow>
