@@ -1766,6 +1766,13 @@ nsLocalFile::GetParent(nsIFile * *aParent)
     // cannot use nsCString::RFindChar() due to 0x5c problem
     PRInt32 offset = (PRInt32) (_mbsrchr((const unsigned char *) parentPath.get(), '\\')
                      - (const unsigned char *) parentPath.get());
+    // adding this offset check that was removed in bug 241708 fixes mail
+    // directories that aren't relative to/underneath the profile dir.
+    // e.g., on a different drive. Before you remove them, please make
+    // sure local mail directories that aren't underneath the profile dir work.
+    if (offset < 0)
+      return NS_ERROR_FILE_UNRECOGNIZED_PATH;
+
     if (offset == 1 && parentPath[0] == '\\') {
         aParent = nsnull;
         return NS_OK;
