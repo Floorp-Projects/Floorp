@@ -1548,6 +1548,7 @@ function ComposeLoad()
       ComposeStartup(false, null);
   }
   catch (ex) {
+    dump("EX: = " + ex + "\n");
     var errorTitle = sComposeMsgsBundle.getString("initErrorDlogTitle");
     var errorMsg = sComposeMsgsBundle.getFormattedString("initErrorDlogMessage",
                                                          [""]);
