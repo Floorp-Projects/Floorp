@@ -2706,6 +2706,9 @@ nsSchemaLoader::ProcessFacet(nsSchema* aSchema,
   else if (aTagName == nsSchemaAtoms::sFractionDigits_atom) {
     facetType = nsISchemaFacet::FACET_TYPE_FRACTIONDIGITS;
   }
+  else {
+    return NS_ERROR_UNEXPECTED;
+  }
   facetInst->SetFacetType(facetType);
 
   nsAutoString valueStr;
