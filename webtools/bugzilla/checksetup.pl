@@ -858,6 +858,7 @@ EOF
     fixPerms('data/webdot/.htaccess', $<, $webservergid, 027);
     fixPerms('*', $<, $webservergid, 027);
     fixPerms('template', $<, $webservergid, 027, 1);
+    fixPerms('css', $<, $webservergid, 027, 1);
     chmod 0644, 'globals.pl';
     chmod 0644, 'RelationSet.pm';
     chmod 0771, 'data';
@@ -870,6 +871,7 @@ EOF
     fixPerms('data/webdot/.htaccess', $<, $gid, 022);
     fixPerms('*', $<, $gid, 022);
     fixPerms('template', $<, $gid, 022, 1);
+    fixPerms('css', $<, $gid, 022, 1);
     chmod 01777, 'data', 'graphs';
 }
 
