@@ -1,4 +1,4 @@
-/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 2 -*-
+/* -*- Mode: C++; tab-width: 4; indent-tabs-mode: nil; c-basic-offset: 4 -*-
  *
  * The contents of this file are subject to the Netscape Public
  * License Version 1.1 (the "License"); you may not use this file
@@ -20,6 +20,11 @@
  * Contributor(s): 
  */
 
+/*
+ * nsIConsole message subclass for representing JavaScript errors and warnings.
+ */
+
+
 #include "nsISupports.idl"
 #include "nsIConsoleMessage.idl"
 
@@ -39,13 +44,13 @@ interface nsIScriptError : nsIConsoleMessage
     /** error or warning is due to strict option */
     const unsigned long STRICT = 0x4;
 
-    readonly attribute wstring fileName;
-    readonly attribute PRUint32 lineNumber;
+    readonly attribute wstring sourceName;
     readonly attribute wstring sourceLine;
+    readonly attribute PRUint32 lineNumber;
     readonly attribute PRUint32 columnNumber;
     readonly attribute PRUint32 flags;
 
-    readonly attribute wstring category;
+    readonly attribute string category;
 };
 
 // jband asks: save more info for debuggy stuff in console?

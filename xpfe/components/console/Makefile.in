@@ -39,22 +39,19 @@ CPPSRCS		=				\
 		nsConsoleMessage.cpp		\
 		nsConsoleService.cpp		\
 		nsConsoleServiceModule.cpp	\
+		nsScriptError.cpp		\
 		$(NULL)
 
-XPIDLSRCS	=			\
-		nsIConsoleService.idl	\
-		nsIConsoleMessage.idl	\
-		nsIConsoleListener.idl    \
-		nsIScriptError.idl \
+XPIDLSRCS	=				\
+		nsIConsoleService.idl		\
+		nsIConsoleMessage.idl		\
+		nsIConsoleListener.idl		\
+		nsIScriptError.idl		\
+		nsIScriptErrorLogger.idl	\
 		$(NULL)
 
 include $(topsrcdir)/config/rules.mk
 
-
-
-
-
-
-
-
+# install::
+# 	$(INSTALL) $(srcdir)/nsConsoleService.js $(DIST)/bin/components
 

@@ -24,11 +24,17 @@
  * listeners when new messages are logged.
  */
 
-#include "nsConsoleService.h"
-#include "nsConsoleMessage.h"
 #include "nsIAllocator.h"
 
-NS_IMPL_THREADSAFE_ISUPPORTS(nsConsoleService, NS_GET_IID(nsIConsoleService));
+#include "nsConsoleService.h"
+#include "nsConsoleMessage.h"
+#include "nsScriptError.h"
+
+// NS_IMPL_THREADSAFE_ISUPPORTS(nsConsoleService, NS_GET_IID(nsIConsoleService));
+
+NS_IMPL_THREADSAFE_ISUPPORTS2(nsConsoleService,
+                              nsIConsoleService,
+                              nsIScriptErrorLogger);
 
 nsConsoleService::nsConsoleService()
 {
@@ -65,6 +71,7 @@ nsConsoleService::~nsConsoleService()
     nsAllocator::Free(mMessages);
 }
 
+// nsIConsoleService methods
 NS_IMETHODIMP
 nsConsoleService::LogMessage(nsIConsoleMessage *message)
 {
@@ -188,6 +195,19 @@ nsConsoleService::UnregisterListener(nsIConsoleListener *listener) {
     return NS_OK;
 }
 
-
-
-
+// nsIScriptErrorLogger methods
+NS_IMETHODIMP
+nsConsoleService::LogScriptError(const PRUnichar *message,
+                                 const PRUnichar *sourceName,
+                                 const PRUnichar *sourceLine,
+                                 PRUint32 lineNumber,
+                                 PRUint32 columnNumber,
+                                 PRUint32 flags,
+                                 const char *category)
+{
+    // LogMessage adds a ref to this, and eventual release does delete.
+    nsScriptError *err = new nsScriptError(message, sourceName, sourceLine,
+                                           lineNumber, columnNumber,
+                                           flags, category);
+    return this->LogMessage(err);
+}

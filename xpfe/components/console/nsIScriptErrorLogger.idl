@@ -17,24 +17,24 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Contributor(s): 
  */
 
-#include "nsIConsoleMessage.h"
-#include "nsString.h"
+/*
+ * Interface (for nsConsoleService to expose) for logging script errors;
+ * logs an nsIScriptError to the console service.
+ */
 
-class nsConsoleMessage : public nsIConsoleMessage {
-public:
-    nsConsoleMessage();
+#include "nsISupports.idl"
 
-    virtual ~nsConsoleMessage();
-
-    nsConsoleMessage(const PRUnichar *message) {
-        mMessage.SetString(message);
-    }
-
-    NS_DECL_ISUPPORTS
-    NS_DECL_NSICONSOLEMESSAGE
-
-private:
-    nsAutoString mMessage;
+[scriptable, uuid(5eb93360-1dd2-11b2-9986-d1c3d4821e3f)]
+interface nsIScriptErrorLogger : nsISupports
+{
+  void logScriptError(in wstring message,
+                      in wstring sourceName,
+                      in wstring sourceLine,
+                      in PRUint32 lineNumber,
+                      in PRUint32 columnNumber,
+                      in PRUint32 flags,
+                      in string category);
 };

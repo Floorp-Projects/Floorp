@@ -20,7 +20,7 @@
  */
 
 /*
- * Base interface for console messages.
+ * Base implementation for console messages.
  */
 
 #include "nsConsoleMessage.h"
@@ -36,3 +36,4 @@ nsConsoleMessage::GetMessage(PRUnichar **result) {
 
     return NS_OK;
 }
+

@@ -17,24 +17,49 @@
  * Copyright (C) 1998 Netscape Communications Corporation. All
  * Rights Reserved.
  *
+ * Contributor(s): 
  */
 
-#include "nsIConsoleMessage.h"
+#include "nsIScriptError.h"
 #include "nsString.h"
 
-class nsConsoleMessage : public nsIConsoleMessage {
+class nsScriptError : public nsIScriptError {
 public:
-    nsConsoleMessage();
+    nsScriptError();
 
-    virtual ~nsConsoleMessage();
+    virtual ~nsScriptError();
 
-    nsConsoleMessage(const PRUnichar *message) {
+  // TODO - do something reasonable on getting null from these babies.
+
+    nsScriptError(const PRUnichar *message,
+                  const PRUnichar *sourceName, // or URL
+                  const PRUnichar *sourceLine,
+                  PRUint32 lineNumber,
+                  PRUint32 columnNumber,
+                  PRUint32 flags,
+                  const char *category)
+    {
         mMessage.SetString(message);
+        mSourceName.SetString(sourceName);
+        mLineNumber = lineNumber;
+        mSourceLine.SetString(sourceLine);
+        mColumnNumber = columnNumber;
+        mFlags = flags;
+        mCategory.SetString(category);
     }
 
     NS_DECL_ISUPPORTS
     NS_DECL_NSICONSOLEMESSAGE
+    NS_DECL_NSISCRIPTERROR
 
 private:
     nsAutoString mMessage;
+    nsAutoString mSourceName;
+    PRUint32 mLineNumber;
+    nsAutoString mSourceLine;
+    PRUint32 mColumnNumber;
+    PRUint32 mFlags;
+    nsCAutoString mCategory;
 };
+
+

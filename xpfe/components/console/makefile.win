@@ -33,11 +33,12 @@ DIRS          = resources
 EXPORTS = \
              $(NULL)
 
-XPIDLSRCS = \
-	.\nsIConsoleService.idl	\
-	.\nsIConsoleMessage.idl	\
-	.\nsIConsoleListener.idl    \
-	.\nsIScriptError.idl \
+XPIDLSRCS =					\
+	.\nsIConsoleService.idl			\
+	.\nsIConsoleMessage.idl			\
+	.\nsIConsoleListener.idl		\
+	.\nsIScriptError.idl			\
+	.\nsIScriptErrorLogger.idl		\
 	$(NULL)
 
 
@@ -51,9 +52,10 @@ LLIBS = \
 
 
 OBJS = \
-	.\$(OBJDIR)\nsConsoleMessage.obj \
-	.\$(OBJDIR)\nsConsoleService.obj \
-	.\$(OBJDIR)\nsConsoleServiceModule.obj \
+	.\$(OBJDIR)\nsConsoleMessage.obj	\
+	.\$(OBJDIR)\nsConsoleService.obj	\
+	.\$(OBJDIR)\nsConsoleServiceModule.obj	\
+	.\$(OBJDIR)\nsScriptError.obj		\
 	$(NULL)
 
 include <$(DEPTH)\config\rules.mak>
