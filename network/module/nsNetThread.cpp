@@ -538,9 +538,10 @@ OnStatusProxyEvent::OnStatusProxyEvent(nsStreamListenerProxy* aProxy,
 NS_IMETHODIMP
 OnStatusProxyEvent::HandleEvent()
 {
-    return mProxy->mRealListener->OnStatus(mURL, mMsg);
-    delete mMsg;
+    nsresult  rv = mProxy->mRealListener->OnStatus(mURL, mMsg);
+    delete []mMsg;
     mMsg = nsnull;
+    return rv;
 }
 
 
@@ -569,9 +570,10 @@ OnStopBindingProxyEvent::OnStopBindingProxyEvent(nsStreamListenerProxy* aProxy,
 NS_IMETHODIMP
 OnStopBindingProxyEvent::HandleEvent()
 {
-    return mProxy->mRealListener->OnStopBinding(mURL, mStatus, mMsg);
-    delete mMsg;
+    nsresult  rv = mProxy->mRealListener->OnStopBinding(mURL, mStatus, mMsg);
+    delete []mMsg;
     mMsg = nsnull;
+    return rv;
 }
 
 
